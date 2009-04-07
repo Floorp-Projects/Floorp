@@ -952,6 +952,21 @@ out_of_range:
     return JS_TRUE;
 }
 
+#ifdef JS_TRACER
+static jsval FASTCALL
+String_p_charAt(JSContext *cx, JSString *str, int32 i)
+{
+    if (size_t(i) >= JSSTRING_LENGTH(str))
+        return JS_GetEmptyStringValue(cx);
+    str = js_GetUnitString(cx, str, size_t(i));
+    if (!str) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
+        return JSVAL_VOID;
+    }
+    return STRING_TO_JSVAL(str);
+}
+#endif
+
 static JSBool
 str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -2374,8 +2389,8 @@ str_sub(JSContext *cx, uintN argc, jsval *vp)
 #endif /* JS_HAS_STR_HTML_HELPERS */
 
 #ifdef JS_TRACER
-JSString* FASTCALL
-js_String_getelem(JSContext* cx, JSString* str, int32 i)
+JSString * FASTCALL
+js_String_getelem(JSContext *cx, JSString *str, int32 i)
 {
     if ((size_t)i >= JSSTRING_LENGTH(str))
         return NULL;
@@ -2383,18 +2398,18 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 }
 #endif
 
-JS_DEFINE_CALLINFO_2(extern, BOOL,   js_EqualStrings, STRING, STRING,                       1, 1)
-JS_DEFINE_CALLINFO_2(extern, INT32,  js_CompareStrings, STRING, STRING,                     1, 1)
+JS_DEFINE_CALLINFO_2(extern, BOOL,  js_EqualStrings, STRING, STRING,                        1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_CompareStrings, STRING, STRING,                      1, 1)
+JS_DEFINE_CALLINFO_3(extern, STRING,js_String_getelem, CONTEXT, THIS_STRING, INT32,         1, 1)
+JS_DEFINE_CALLINFO_3(extern, STRING,js_ConcatStrings, CONTEXT, THIS_STRING, STRING,         1, 1)
 
 JS_DEFINE_TRCINFO_1(str_toString,
-    (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                        1, 1)))
+    (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                       1, 1)))
 JS_DEFINE_TRCINFO_1(str_charAt,
-    (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32,           1, 1)))
+    (3, (extern, JSVAL_FAIL,        String_p_charAt, CONTEXT, THIS_STRING, INT32,           1, 1)))
 JS_DEFINE_TRCINFO_2(str_charCodeAt,
-    (1, (extern, DOUBLE,            js_String_p_charCodeAt0, THIS_STRING,                     1, 1)),
-    (2, (extern, DOUBLE,            js_String_p_charCodeAt, THIS_STRING, DOUBLE,              1, 1)))
-JS_DEFINE_TRCINFO_1(str_concat,
-    (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,           1, 1)))
+    (1, (extern, DOUBLE,            js_String_p_charCodeAt0, THIS_STRING,                   1, 1)),
+    (2, (extern, DOUBLE,            js_String_p_charCodeAt, THIS_STRING, DOUBLE,            1, 1)))
 
 #define GENERIC           JSFUN_GENERIC_NATIVE
 #define PRIMITIVE         JSFUN_THISP_PRIMITIVE
@@ -2434,7 +2449,7 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Python-esque sequence methods. */
-    JS_TN("concat",            str_concat,            1,GENERIC_PRIMITIVE, str_concat_trcinfo),
+    JS_FN("concat",            str_concat,            1,GENERIC_PRIMITIVE),
     JS_FN("slice",             str_slice,             2,GENERIC_PRIMITIVE),
 
     /* HTML string methods. */
@@ -2536,23 +2551,8 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-#ifdef JS_TRACER
-static JSString* FASTCALL
-String_fromCharCode(JSContext* cx, int32 i)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    jschar c = (jschar)i;
-    if (c < UNIT_STRING_LIMIT)
-        return js_GetUnitStringForChar(cx, c);
-    return js_NewStringCopyN(cx, &c, 1);
-}
-#endif
-
-JS_DEFINE_TRCINFO_1(str_fromCharCode,
-    (2, (static, STRING_RETRY, String_fromCharCode, CONTEXT, INT32, 1, 1)))
-
 static JSFunctionSpec string_static_methods[] = {
-    JS_TN("fromCharCode", str_fromCharCode, 1, 0, str_fromCharCode_trcinfo),
+    JS_FN("fromCharCode", str_fromCharCode, 1, 0),
     JS_FS_END
 };
 
