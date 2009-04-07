@@ -1261,9 +1261,10 @@ static const char xml_namespace_str[] = "http://www.w3.org/XML/1998/namespace";
 static const char xmlns_namespace_str[] = "http://www.w3.org/2000/xmlns/";
 
 static JSObject *
-ParseNodeToQName(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
+ParseNodeToQName(JSCompiler *jsc, JSParseNode *pn,
                  JSXMLArray *inScopeNSes, JSBool isAttributeName)
 {
+    JSContext *cx = jsc->context;
     JSString *str, *uri, *prefix, *localName;
     size_t length, offset;
     const jschar *start, *limit, *colon;
@@ -1313,15 +1314,15 @@ ParseNodeToQName(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
         }
 
         if (!uri) {
-            js_ReportCompileErrorNumber(cx, &pc->tokenStream, pn,
+            js_ReportCompileErrorNumber(jsc->context, &jsc->tokenStream, pn,
                                         JSREPORT_ERROR,
                                         JSMSG_BAD_XML_NAMESPACE,
-                                        js_ValueToPrintableString(cx,
+                                        js_ValueToPrintableString(jsc->context,
                                             STRING_TO_JSVAL(prefix)));
             return NULL;
         }
 
-        localName = js_NewStringCopyN(cx, colon + 1, length - (offset + 1));
+        localName = js_NewStringCopyN(jsc->context, colon + 1, length - (offset + 1));
         if (!localName)
             return NULL;
     } else {
@@ -1346,12 +1347,12 @@ ParseNodeToQName(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
                     break;
                 }
             }
-            prefix = IS_EMPTY(uri) ? cx->runtime->emptyString : NULL;
+            prefix = IS_EMPTY(uri) ? jsc->context->runtime->emptyString : NULL;
         }
         localName = str;
     }
 
-    return NewXMLQName(cx, uri, prefix, localName);
+    return NewXMLQName(jsc->context, uri, prefix, localName);
 }
 
 static JSString *
@@ -1381,9 +1382,10 @@ ChompXMLWhitespace(JSContext *cx, JSString *str)
 }
 
 static JSXML *
-ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
+ParseNodeToXML(JSCompiler *jsc, JSParseNode *pn,
                JSXMLArray *inScopeNSes, uintN flags)
 {
+    JSContext *cx = jsc->context;
     JSXML *xml, *kid, *attr, *attrj;
     JSString *str;
     uint32 length, n, i, j;
@@ -1394,7 +1396,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
     int stackDummy;
 
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        js_ReportCompileErrorNumber(cx, &pc->tokenStream, pn, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn, JSREPORT_ERROR,
                                     JSMSG_OVER_RECURSED);
         return NULL;
     }
@@ -1413,7 +1415,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
       case TOK_XMLELEM:
         length = inScopeNSes->length;
         pn2 = pn->pn_head;
-        xml = ParseNodeToXML(cx, pc, pn2, inScopeNSes, flags);
+        xml = ParseNodeToXML(jsc, pn2, inScopeNSes, flags);
         if (!xml)
             goto fail;
 
@@ -1438,7 +1440,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
                 continue;
             }
 
-            kid = ParseNodeToXML(cx, pc, pn2, inScopeNSes, flags);
+            kid = ParseNodeToXML(jsc, pn2, inScopeNSes, flags);
             if (kid == PN2X_SKIP_CHILD) {
                 --n;
                 continue;
@@ -1489,7 +1491,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
                 continue;
             }
 
-            kid = ParseNodeToXML(cx, pc, pn2, inScopeNSes, flags);
+            kid = ParseNodeToXML(jsc, pn2, inScopeNSes, flags);
             if (kid == PN2X_SKIP_CHILD) {
                 --n;
                 continue;
@@ -1533,7 +1535,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
             /* Enforce "Well-formedness constraint: Unique Att Spec". */
             for (pn3 = head; pn3 != pn2; pn3 = pn3->pn_next->pn_next) {
                 if (pn3->pn_atom == pn2->pn_atom) {
-                    js_ReportCompileErrorNumber(cx, &pc->tokenStream, pn2,
+                    js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn2,
                                                 JSREPORT_ERROR,
                                                 JSMSG_DUPLICATE_XML_ATTR,
                                                 js_ValueToPrintableString(cx,
@@ -1618,7 +1620,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
 
         /* Second pass: process tag name and attributes, using namespaces. */
         pn2 = pn->pn_head;
-        qn = ParseNodeToQName(cx, pc, pn2, inScopeNSes, JS_FALSE);
+        qn = ParseNodeToQName(jsc, pn2, inScopeNSes, JS_FALSE);
         if (!qn)
             goto fail;
         xml->name = qn;
@@ -1629,7 +1631,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
             goto fail;
 
         for (i = 0; (pn2 = pn2->pn_next) != NULL; i++) {
-            qn = ParseNodeToQName(cx, pc, pn2, inScopeNSes, JS_TRUE);
+            qn = ParseNodeToQName(jsc, pn2, inScopeNSes, JS_TRUE);
             if (!qn) {
                 xml->xml_attrs.length = i;
                 goto fail;
@@ -1644,7 +1646,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
                 attrjqn = attrj->name;
                 if (js_EqualStrings(GetURI(attrjqn), GetURI(qn)) &&
                     js_EqualStrings(GetLocalName(attrjqn), GetLocalName(qn))) {
-                    js_ReportCompileErrorNumber(cx, &pc->tokenStream, pn2,
+                    js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn2,
                                                 JSREPORT_ERROR,
                                                 JSMSG_DUPLICATE_XML_ATTR,
                                                 js_ValueToPrintableString(cx,
@@ -1685,7 +1687,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->pn_type == TOK_XMLPI) {
             if (IS_XML(str)) {
-                js_ReportCompileErrorNumber(cx, &pc->tokenStream, pn,
+                js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn,
                                             JSREPORT_ERROR,
                                             JSMSG_RESERVED_ID,
                                             js_ValueToPrintableString(cx,
@@ -1696,7 +1698,7 @@ ParseNodeToXML(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
             if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)
                 goto skip_child;
 
-            qn = ParseNodeToQName(cx, pc, pn, inScopeNSes, JS_FALSE);
+            qn = ParseNodeToQName(jsc, pn, inScopeNSes, JS_FALSE);
             if (!qn)
                 goto fail;
 
@@ -1734,7 +1736,7 @@ skip_child:
 #undef PN2X_SKIP_CHILD
 
 syntax:
-    js_ReportCompileErrorNumber(cx, &pc->tokenStream, pn, JSREPORT_ERROR,
+    js_ReportCompileErrorNumber(cx, &jsc->tokenStream, pn, JSREPORT_ERROR,
                                 JSMSG_BAD_XML_MARKUP);
 fail:
     js_LeaveLocalRootScope(cx);
@@ -1828,7 +1830,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
     jschar *chars;
     const jschar *srcp, *endp;
     JSXML *xml;
-    JSParseContext pc;
     const char *filename;
     uintN lineno;
     JSStackFrame *fp;
@@ -1891,20 +1892,19 @@ ParseXMLSource(JSContext *cx, JSString *src)
         }
     }
 
-    if (!js_InitParseContext(cx, &pc, NULL, NULL, chars, length, NULL,
-                             filename, lineno))
-        goto out;
-    pn = js_ParseXMLText(cx, js_GetTopStackFrame(cx)->scopeChain, &pc,
-                         JS_FALSE);
-    if (pn && XMLArrayInit(cx, &nsarray, 1)) {
-        if (GetXMLSettingFlags(cx, &flags))
-            xml = ParseNodeToXML(cx, &pc, pn, &nsarray, flags);
+    {
+        JSCompiler jsc(cx);
+        if (jsc.init(chars, length, NULL, filename, lineno)) {
+            pn = jsc.parseXMLText(js_GetTopStackFrame(cx)->scopeChain, false);
+            if (pn && XMLArrayInit(cx, &nsarray, 1)) {
+                if (GetXMLSettingFlags(cx, &flags))
+                    xml = ParseNodeToXML(&jsc, pn, &nsarray, flags);
 
-        XMLArrayFinish(cx, &nsarray);
+                XMLArrayFinish(cx, &nsarray);
+            }
+        }
     }
-    js_FinishParseContext(cx, &pc);
 
-out:
     JS_free(cx, chars);
     return xml;
 
@@ -7433,24 +7433,24 @@ js_FinalizeXML(JSContext *cx, JSXML *xml)
 }
 
 JSObject *
-js_ParseNodeToXMLObject(JSContext *cx, JSParseContext *pc, JSParseNode *pn)
+js_ParseNodeToXMLObject(JSCompiler *jsc, JSParseNode *pn)
 {
     jsval nsval;
     JSObject *ns;
     JSXMLArray nsarray;
     JSXML *xml;
 
-    if (!js_GetDefaultXMLNamespace(cx, &nsval))
+    if (!js_GetDefaultXMLNamespace(jsc->context, &nsval))
         return NULL;
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(nsval));
     ns = JSVAL_TO_OBJECT(nsval);
 
-    if (!XMLArrayInit(cx, &nsarray, 1))
+    if (!XMLArrayInit(jsc->context, &nsarray, 1))
         return NULL;
 
-    XMLARRAY_APPEND(cx, &nsarray, ns);
-    xml = ParseNodeToXML(cx, pc, pn, &nsarray, XSF_PRECOMPILED_ROOT);
-    XMLArrayFinish(cx, &nsarray);
+    XMLARRAY_APPEND(jsc->context, &nsarray, ns);
+    xml = ParseNodeToXML(jsc, pn, &nsarray, XSF_PRECOMPILED_ROOT);
+    XMLArrayFinish(jsc->context, &nsarray);
     if (!xml)
         return NULL;
 

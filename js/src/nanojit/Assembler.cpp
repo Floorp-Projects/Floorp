@@ -863,7 +863,7 @@ namespace nanojit
 				    nPatchBranch(where,ntarg);
 			    }
                 else {
-				    _err = UnknownBranch;
+				    setError(UnknownBranch);
 				    break;
 			    }
 		    }
