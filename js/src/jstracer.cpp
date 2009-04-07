@@ -1909,6 +1909,12 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 {
     if (slot != uint16(slot)) /* we use a table of 16-bit ints, bail out if that's not enough */
         return false;
+    /*
+     * If the global object grows too large, alloca in js_ExecuteTree might fail, so
+     * abort tracing on global objects with unreasonably many slots.
+     */
+    if (globalObj->dslots[-1] > 4096)
+        return false;
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
     if (known(vp))
         return true; /* we already have it */
