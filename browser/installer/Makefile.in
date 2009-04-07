@@ -110,6 +110,11 @@ endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
+libs::
+	$(MAKE) -C $(DEPTH)/browser/locales langpack PKG_LANGPACK_PATH=
+
+UPLOAD_EXTRA_FILES += $(DIST)/$(PKG_LANGPACK_BASENAME).xpi
+
 installer:: removed-files
 ifdef INSTALLER_DIR
 	$(MAKE) -C $(INSTALLER_DIR)
