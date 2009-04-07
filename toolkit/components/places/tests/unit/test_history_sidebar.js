@@ -63,10 +63,12 @@ function add_normalized_visit(aURI, aTime, aDayOffset) {
   dateObj.setMilliseconds(0);
   // Days where DST changes should be taken in count.
   var previousDateObj = new Date(dateObj.getTime() + aDayOffset * 86400000);
-  var DSTCorrection = (dateObj.getTimezoneOffset() - previousDateObj.getTimezoneOffset()) * 60 * 1000;
+  var DSTCorrection = (dateObj.getTimezoneOffset() -
+                       previousDateObj.getTimezoneOffset()) * 60 * 1000;
   // Substract aDayOffset
   var PRTimeWithOffset = (previousDateObj.getTime() - DSTCorrection) * 1000;
-  print("Adding visit to " + aURI.spec + " at " + new Date(PRTimeWithOffset/1000));
+  var timeInMs = new Date(PRTimeWithOffset/1000);
+  print("Adding visit to " + aURI.spec + " at " + timeInMs);
   var visitId = hs.addVisit(aURI,
                             PRTimeWithOffset,
                             null,
@@ -81,13 +83,16 @@ var nowObj = new Date();
 // This test relies on en-US locale
 // Offset is number of days
 var containers = [
-  { label: "Today",               offset: 0                     },
-  { label: "Yesterday",           offset: -1                    },
-  { label: "Last 7 days",         offset: -3                    },
-  { label: "This month",          offset: -8                    },
-  { label: "",                    offset: -nowObj.getDate()-1   },
-  { label: "Older than 6 months", offset: -nowObj.getDate()-186 },
+  { label: "Today"               , offset: 0                     , visible: true },
+  { label: "Yesterday"           , offset: -1                    , visible: true },
+  { label: "Last 7 days"         , offset: -3                    , visible: true },
+  { label: "This month"          , offset: -8                    , visible: nowObj.getDate() > 8 },
+  { label: ""                    , offset: -nowObj.getDate()-1   , visible: true },
+  { label: "Older than 6 months" , offset: -nowObj.getDate()-186 , visible: true },
 ];
+
+var visibleContainers = containers.filter(
+  function(aContainer) {return aContainer.visible});
 
 /**
  * Fills history and checks containers' labels.
@@ -106,6 +111,10 @@ function fill_history() {
     add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     var testURI = uri("http://mirror"+i+".google.com/a");
     add_normalized_visit(testURI, nowObj.getTime(), container.offset);
+    // Bug 485703 - Hide date containers not containing additional entries
+    //              compared to previous ones.
+    // Check after every new container is added.
+    check_visit(container.offset);
   }
 
   var options = hs.getNewQueryOptions();
@@ -119,13 +128,51 @@ function fill_history() {
   var cc = root.childCount;
   print("Found containers:");
   for (var i = 0; i < cc; i++) {
-    var container = containers[i];
+    var container = visibleContainers[i];
     var node = root.getChild(i);
     print(node.title);
     if (container.label)
       do_check_eq(node.title, container.label);
   }
-  do_check_eq(cc, containers.length);
+  do_check_eq(cc, visibleContainers.length);
+  root.containerOpen = false;
+}
+
+/**
+ * Bug 485703 - Hide date containers not containing additional entries compared
+ *              to previous ones.
+ */
+function check_visit(aOffset) {
+  var options = hs.getNewQueryOptions();
+  options.resultType = options.RESULTS_AS_DATE_SITE_QUERY;
+  var query = hs.getNewQuery();
+  var result = hs.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  var cc = root.childCount;
+
+  var unexpected = [];
+  switch (aOffset) {
+    case 0:
+      unexpected = ["Yesterday", "Last 7 days", "This month"];
+      break;
+    case -1:
+      unexpected = ["Last 7 days", "This month"];
+      break;
+    case -3:
+      unexpected = ["This month"];
+      break;
+    default:
+      // Other containers are tested later.
+  }
+
+  print("Found containers:");
+  for (var i = 0; i < cc; i++) {
+    var node = root.getChild(i);
+    print(node.title);
+    do_check_eq(unexpected.indexOf(node.title), -1);
+  }
+
   root.containerOpen = false;
 }
 
@@ -174,10 +221,12 @@ function test_RESULTS_AS_DATE_SITE_QUERY() {
   do_check_eq(dayNode.childCount, 2);
 
   // Hosts are still sorted by title
-  var site1 = dayNode.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var site1 = dayNode.getChild(0)
+                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   do_check_eq(site1.title, "mirror0.google.com");
 
-  var site2 = dayNode.getChild(1).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var site2 = dayNode.getChild(1)
+                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   do_check_eq(site2.title, "mirror0.mozilla.com");
 
   site1.containerOpen = true;
@@ -205,10 +254,10 @@ function test_RESULTS_AS_DATE_QUERY() {
   root.containerOpen = true;
 
   var cc = root.childCount;
-  do_check_eq(cc, containers.length);
+  do_check_eq(cc, visibleContainers.length);
   print("Found containers:");
   for (var i = 0; i < cc; i++) {
-    var container = containers[i];
+    var container = visibleContainers[i];
     var node = root.getChild(i);
     print(node.title);
     if (container.label)

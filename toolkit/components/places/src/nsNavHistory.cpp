@@ -3516,52 +3516,70 @@ PlacesSQLQueryBuilder::SelectAsDay()
     // must ensure it won't change based on the time it is built.
     // So, to select till now, we really select till start of tomorrow, that is
     // a fixed timestamp.
-    nsCAutoString sqlFragmentBeginTime;
-    nsCAutoString sqlFragmentEndTime;
+    // These are used as limits for the inside containers.
+    nsCAutoString sqlFragmentContainerBeginTime, sqlFragmentContainerEndTime;
+    // These are used to query if the container should be visible.
+    nsCAutoString sqlFragmentSearchBeginTime, sqlFragmentSearchEndTime;
     switch(i) {
        case 0:
         // Today
          history->GetStringFromName(
           NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), dateName);
         // From start of today
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of day','utc')*1000000)");
         // To now (tomorrow)
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of day','+1 day','utc')*1000000)");
+        // Search for the same timeframe.
+        sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
+        sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
          break;
        case 1:
         // Yesterday
          history->GetStringFromName(
           NS_LITERAL_STRING("finduri-AgeInDays-is-1").get(), dateName);
         // From start of yesterday
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of day','-1 day','utc')*1000000)");
         // To start of today
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of day','utc')*1000000)");
+        // Search for the same timeframe.
+        sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
+        sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
         break;
       case 2:
         // Last 7 days
         history->GetAgeInDaysString(7,
           NS_LITERAL_STRING("finduri-AgeInDays-last-is").get(), dateName);
         // From start of 7 days ago
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of day','-7 days','utc')*1000000)");
         // To now (tomorrow)
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of day','+1 day','utc')*1000000)");
+        // This is an overlapped container, but we show it only if there are
+        // visits older than yesterday.
+        sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
+        sqlFragmentSearchEndTime = NS_LITERAL_CSTRING(
+          "(strftime('%s','now','localtime','start of day','-2 days','utc')*1000000)");
         break;
       case 3:
         // This month
         history->GetStringFromName(
           NS_LITERAL_STRING("finduri-AgeInMonths-is-0").get(), dateName);
         // From start of this month
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of month','utc')*1000000)");
         // To now (tomorrow)
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of day','+1 day','utc')*1000000)");
+        // This is an overlapped container, but we show it only if there are
+        // visits older than 7 days ago.
+        sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
+        sqlFragmentSearchEndTime = NS_LITERAL_CSTRING(
+          "(strftime('%s','now','localtime','start of day','-7 days','utc')*1000000)");
          break;
        default:
         if (i == additionalContainers + 6) {
@@ -3569,11 +3587,14 @@ PlacesSQLQueryBuilder::SelectAsDay()
           history->GetAgeInDaysString(6,
             NS_LITERAL_STRING("finduri-AgeInMonths-isgreater").get(), dateName);
           // From start of epoch
-          sqlFragmentBeginTime = NS_LITERAL_CSTRING(
+          sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
             "(datetime(0, 'unixepoch')*1000000)");
           // To start of 6 months ago
-          sqlFragmentEndTime = NS_LITERAL_CSTRING(
+          sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
             "(strftime('%s','now','localtime','start of day','-6 months','utc')*1000000)");
+          // Search for the same timeframe.
+          sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
+          sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
           break;
         }
         PRInt32 MonthIndex = i - additionalContainers;
@@ -3592,17 +3613,20 @@ PlacesSQLQueryBuilder::SelectAsDay()
           dateName.Append(nsPrintfCString(" %d", tm.tm_year));
 
         // From start of MonthIndex + 1 months ago
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of month','-");
-        sqlFragmentBeginTime.AppendInt(MonthIndex);
-        sqlFragmentBeginTime.Append(NS_LITERAL_CSTRING(
+        sqlFragmentContainerBeginTime.AppendInt(MonthIndex);
+        sqlFragmentContainerBeginTime.Append(NS_LITERAL_CSTRING(
             " months','utc')*1000000)"));
         // To start of MonthIndex months ago
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
+        sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
           "(strftime('%s','now','localtime','start of month','-");
-        sqlFragmentEndTime.AppendInt(MonthIndex - 1);
-        sqlFragmentEndTime.Append(NS_LITERAL_CSTRING(
+        sqlFragmentContainerEndTime.AppendInt(MonthIndex - 1);
+        sqlFragmentContainerEndTime.Append(NS_LITERAL_CSTRING(
             " months','utc')*1000000)"));
+        // Search for the same timeframe.
+        sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
+        sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
         break;
     }
  
@@ -3625,13 +3649,13 @@ PlacesSQLQueryBuilder::SelectAsDay()
            "LIMIT 1 "
         ") ",
       dateName.get(),
-      sqlFragmentBeginTime.get(),
-      sqlFragmentEndTime.get(),
-      sqlFragmentBeginTime.get(),
-      sqlFragmentEndTime.get(),
+      sqlFragmentContainerBeginTime.get(),
+      sqlFragmentContainerEndTime.get(),
+      sqlFragmentSearchBeginTime.get(),
+      sqlFragmentSearchEndTime.get(),
        nsINavHistoryService::TRANSITION_EMBED,
-      sqlFragmentBeginTime.get(),
-      sqlFragmentEndTime.get(),
+      sqlFragmentSearchBeginTime.get(),
+      sqlFragmentSearchEndTime.get(),
       nsINavHistoryService::TRANSITION_EMBED);
 
     mQueryString.Append(dayRange);
