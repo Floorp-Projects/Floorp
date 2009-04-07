@@ -49,7 +49,6 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsIWidget.h"
 #include "nsILinkHandler.h"
 #include "nsGUIEvent.h"
 #include "nsIDocument.h"
@@ -362,7 +361,7 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
               PresContext()->AppUnitsToGfxUnits(bp.top + aPt.y));
   gfxSize size(PresContext()->AppUnitsToGfxUnits(innerWidth), aSize);
   nsCSSRendering::PaintDecorationLine(aCtx, aColor, pt, size, aAscent, aOffset,
-                                      aDecoration, NS_STYLE_BORDER_STYLE_SOLID);
+                    aDecoration, nsCSSRendering::DECORATION_STYLE_SOLID);
 }
 
 void

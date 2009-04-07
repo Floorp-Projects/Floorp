@@ -65,6 +65,7 @@ REQUIRES	= \
 		imglib2 \
 		thebes \
 		view \
+		qcms \
 		$(NULL)
 
 # XXX some platforms can't handle building

@@ -1,14 +1,23 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define if building universal (internal helper macro) */
+/* #undef AC_APPLE_UNIVERSAL_BUILD */
+
+/* Maximum supported data alignment */
+
+
+/* Define to 1 if you have the `assert' function. */
+/* #undef HAVE_ASSERT */
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
 
 /* Define if have libfishsound */
-#define HAVE_FISHSOUND 
+#define HAVE_FISHSOUND /**/
 
 /* Define if we have GLUT. */
-#define HAVE_GLUT 
+#define HAVE_GLUT /**/
 
 /* Define if have Imlib2 */
 /* #undef HAVE_IMLIB2 */
@@ -20,13 +29,13 @@
 /* #undef HAVE_KATE */
 
 /* Define if have libsndfile */
-/* #undef HAVE_LIBSNDFILE1 */
+#define HAVE_LIBSNDFILE1 /**/
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
 /* Define if have liboggz */
-#define HAVE_OGGZ 
+#define HAVE_OGGZ /**/
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -46,8 +55,15 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
+/* Define if have libtiger */
+/* #undef HAVE_TIGER */
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#define LT_OBJDIR ".libs/"
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 /* #undef NO_MINUS_C_MINUS_O */
@@ -76,12 +92,17 @@
 /* Version number of package */
 #define VERSION "0.0.1"
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-/* #undef WORDS_BIGENDIAN */
-
-/* use MMX SSE2 compiler intrinsics */
-
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+/* #  undef WORDS_BIGENDIAN */
+# endif
+#endif
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
@@ -89,5 +110,6 @@
 
 #include "prcpucfg.h"
 #ifdef IS_BIG_ENDIAN
-#define WORDS_BIGENDIAN
+#define WORDS_BIGENDIAN 1
 #endif
+

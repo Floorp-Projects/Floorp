@@ -35,12 +35,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dsa.c,v 1.19 2008/11/18 19:48:23 rrelyea%redhat.com Exp $ */
+/* $Id: dsa.c,v 1.20 2009/03/29 16:51:58 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
 #endif
 
+#include "prerror.h"
 #include "secerr.h"
 
 #include "prtypes.h"
@@ -55,9 +56,107 @@
  /* XXX to be replaced by define in blapit.h */
 #define NSS_FREEBL_DSA_DEFAULT_CHUNKSIZE 2048
 
-/* DSA-specific random number function defined in prng_fips1861.c. */
-extern SECStatus 
-DSA_GenerateGlobalRandomBytes(void *dest, size_t len, const unsigned char *q);
+#define FIPS_DSA_Q     160
+#define QSIZE      (FIPS_DSA_Q / PR_BITS_PER_BYTE)
+
+/*
+ * FIPS 186-2 requires result from random output to be reduced mod q when 
+ * generating random numbers for DSA. 
+ *
+ * Input: w, 2*QSIZE bytes
+ *        q, DSA_SUBPRIME_LEN bytes
+ * Output: xj, DSA_SUBPRIME_LEN bytes
+ */
+SECStatus
+FIPS186Change_ReduceModQForDSA(const PRUint8 *w,
+                               const PRUint8 *q,
+                               PRUint8 *xj)
+{
+    mp_int W, Q, Xj;
+    mp_err err;
+    SECStatus rv = SECSuccess;
+
+    /* Initialize MPI integers. */
+    MP_DIGITS(&W) = 0;
+    MP_DIGITS(&Q) = 0;
+    MP_DIGITS(&Xj) = 0;
+    CHECK_MPI_OK( mp_init(&W) );
+    CHECK_MPI_OK( mp_init(&Q) );
+    CHECK_MPI_OK( mp_init(&Xj) );
+    /*
+     * Convert input arguments into MPI integers.
+     */
+    CHECK_MPI_OK( mp_read_unsigned_octets(&W, w, 2*QSIZE) );
+    CHECK_MPI_OK( mp_read_unsigned_octets(&Q, q, DSA_SUBPRIME_LEN) );
+    /*
+     * Algorithm 1 of FIPS 186-2 Change Notice 1, Step 3.3
+     *
+     * xj = (w0 || w1) mod q
+     */
+    CHECK_MPI_OK( mp_mod(&W, &Q, &Xj) );
+    CHECK_MPI_OK( mp_to_fixlen_octets(&Xj, xj, DSA_SUBPRIME_LEN) );
+cleanup:
+    mp_clear(&W);
+    mp_clear(&Q);
+    mp_clear(&Xj);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
+}
+
+/*
+ * The core of Algorithm 1 of FIPS 186-2 Change Notice 1.
+ *
+ * We no longer support FIPS 186-2 RNG. This function was exported
+ * for power-up self tests and FIPS tests. Keep this stub, which fails,
+ * to prevent crashes, but also to signal to test code that FIPS 186-2
+ * RNG is no longer supported.
+ */
+SECStatus
+FIPS186Change_GenerateX(PRUint8 *XKEY, const PRUint8 *XSEEDj,
+                        PRUint8 *x_j)
+{
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return SECFailure;
+}
+
+/*
+ * Specialized RNG for DSA
+ *
+ * As per Algorithm 1 of FIPS 186-2 Change Notice 1, in step 3.3 the value
+ * Xj should be reduced mod q, a 160-bit prime number.  Since this parameter
+ * is only meaningful in the context of DSA, the above RNG functions
+ * were implemented without it.  They are re-implemented below for use
+ * with DSA.
+ */
+
+/*
+** Generate some random bytes, using the global random number generator
+** object.  In DSA mode, so there is a q.
+*/
+static SECStatus 
+dsa_GenerateGlobalRandomBytes(void *dest, size_t len, const PRUint8 *q)
+{
+    SECStatus rv;
+    PRUint8 w[2*QSIZE];
+
+    PORT_Assert(q && len == DSA_SUBPRIME_LEN);
+    if (len != DSA_SUBPRIME_LEN) {
+	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+	return SECFailure;
+    }
+    if (*q == 0) {
+        ++q;
+    }
+    rv = RNG_GenerateGlobalRandomBytes(w, 2*QSIZE);
+    if (rv != SECSuccess) {
+	return rv;
+    }
+    FIPS186Change_ReduceModQForDSA(w, q, (PRUint8 *)dest);
+    return rv;
+}
 
 static void translate_mpi_error(mp_err err)
 {
@@ -150,7 +249,7 @@ DSA_NewKey(const PQGParams *params, DSAPrivateKey **privKey)
 
     do {
 	/* Generate seed bytes for x according to FIPS 186-1 appendix 3 */
-	if (DSA_GenerateGlobalRandomBytes(seed, DSA_SUBPRIME_LEN,
+	if (dsa_GenerateGlobalRandomBytes(seed, DSA_SUBPRIME_LEN,
 					  params->subPrime.data))
 	    return SECFailure;
 	/* Disallow values of 0 and 1 for x. */
@@ -299,7 +398,7 @@ DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest)
 
     PORT_SetError(0);
     do {
-	rv = DSA_GenerateGlobalRandomBytes(kSeed, DSA_SUBPRIME_LEN, 
+	rv = dsa_GenerateGlobalRandomBytes(kSeed, DSA_SUBPRIME_LEN, 
 					   key->params.subPrime.data);
 	if (rv != SECSuccess) 
 	    break;

@@ -30,8 +30,6 @@ classic.jar:
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
         skin/classic/browser/Go-arrow-rtl.png                        (Go-arrow-rtl.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
-        skin/classic/browser/Search-glass.png                        (Search-glass.png)
-        skin/classic/browser/Search-glass-rtl.png                    (Search-glass-rtl.png)
         skin/classic/browser/Search-addengines.png
         skin/classic/browser/section_collapsed.png
         skin/classic/browser/section_expanded.png
@@ -124,8 +122,6 @@ classic.jar:
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
         skin/classic/aero/browser/Go-arrow-rtl.png                   (Go-arrow-rtl-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
-        skin/classic/aero/browser/Search-glass.png                   (Search-glass-aero.png)
-        skin/classic/aero/browser/Search-glass-rtl.png               (Search-glass-rtl-aero.png)
         skin/classic/aero/browser/Search-addengines.png
         skin/classic/aero/browser/section_collapsed.png
         skin/classic/aero/browser/section_expanded.png

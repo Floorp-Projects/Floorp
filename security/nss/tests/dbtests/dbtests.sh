@@ -159,7 +159,7 @@ dbtest_main()
     ${BINDIR}/dbtest -i -d $EMPTY_DIR
     ret=$?
     if [ $ret -ne 0 ]; then
-      html_failed "Dbtest logout after empty DB Init looses key $ret"
+      html_failed "Dbtest logout after empty DB Init loses key $ret"
     else
       html_passed "Dbtest logout after empty DB Init has key" 
     fi
@@ -167,7 +167,7 @@ dbtest_main()
     ${BINDIR}/dbtest -i -p pass -d $EMPTY_DIR
     ret=$?
     if [ $ret -ne 0 ]; then
-      html_failed "Dbtest password DB Init looses needlogin state $ret"
+      html_failed "Dbtest password DB Init loses needlogin state $ret"
     else
       html_passed "Dbtest password DB Init maintains needlogin state" 
     fi

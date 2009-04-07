@@ -41,28 +41,39 @@ using namespace Gdiplus;
 
 #pragma comment(lib, "gdiplus.lib")
 
+bool
+pluginSupportsWindowMode()
+{
+  return false;
+}
+
+bool
+pluginSupportsWindowlessMode()
+{
+  return true;
+}
+
 NPError
 pluginInstanceInit(InstanceData* instanceData)
 {
   return NPERR_NO_ERROR;
 }
 
-int16_t
-pluginHandleEvent(InstanceData* instanceData, void* event)
+void
+pluginInstanceShutdown(InstanceData* instanceData)
 {
-  NPEvent * pe = (NPEvent*) event;
+}
 
-  if (pe == NULL || instanceData == NULL ||
-      instanceData->window.type != NPWindowTypeDrawable)
-    return 0;   
+void
+pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
+{
+  instanceData->window = *newWindow;
+}
 
-  switch((UINT)pe->event) {
-    case WM_PAINT:   
-      pluginDraw(instanceData);   
-      return 1;   
-  }
-  
-  return 0;
+void
+pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
+{
+  // Should never be called since we don't support window mode (yet)
 }
 
 static Color
@@ -162,4 +173,41 @@ pluginDraw(InstanceData* instanceData)
 
   // Pop our hdc changes off the resource stack
   RestoreDC(hdc, savedDCID);
+}
+
+int16_t
+pluginHandleEvent(InstanceData* instanceData, void* event)
+{
+  NPEvent * pe = (NPEvent*) event;
+
+  if (pe == NULL || instanceData == NULL ||
+      instanceData->window.type != NPWindowTypeDrawable)
+    return 0;   
+
+  switch((UINT)pe->event) {
+    case WM_PAINT:   
+      pluginDraw(instanceData);   
+      return 1;
+  }
+  
+  return 0;
+}
+
+int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
+{
+  // XXX nothing here yet since we don't support windowed plugins
+  return NPTEST_INT32_ERROR;
+}
+
+int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
+{
+  // XXX nothing here yet since we don't support windowed plugins
+  return NPTEST_INT32_ERROR;
+}
+
+int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
+    int32_t rectIndex, RectEdge edge)
+{
+  // XXX nothing here yet since we don't support windowed plugins
+  return NPTEST_INT32_ERROR;
 }

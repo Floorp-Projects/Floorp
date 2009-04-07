@@ -1114,7 +1114,7 @@ handle_connection(
 	    char *      fnEnd;
 	    PRFileInfo  info;
 	    /* try to open the file named.  
-	     * If succesful, then write it to the client.
+	     * If successful, then write it to the client.
 	     */
 	    fnEnd = strpbrk(fnBegin, " \r\n");
 	    if (fnEnd) {

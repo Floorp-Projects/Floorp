@@ -176,6 +176,9 @@ MOZCE_SHUNT_API int _unlink(const char *filename );
 
 MOZCE_SHUNT_API unsigned short* mozce_GetEnvironmentCL();
 
+  /* square root of 1/2, missing from math.h */ 
+#define M_SQRT1_2  0.707106781186547524401
+
 #ifdef __cplusplus
 };
 #endif

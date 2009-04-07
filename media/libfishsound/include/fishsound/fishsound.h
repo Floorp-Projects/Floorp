@@ -505,7 +505,7 @@ int fish_sound_command (FishSound * fsound, int command, void * data,
  * \param fsound A FishSound* handle
  * \retval 0 \a fsound uses non-interleaved PCM
  * \retval 1 \a fsound uses interleaved PCM
- * \retval -1 Invalid \a fsound
+ * \retval -1 Invalid \a fsound, or out of memory.
  */
 int fish_sound_get_interleave (FishSound * fsound);
 

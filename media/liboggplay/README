@@ -29,6 +29,15 @@ Optionally, for Kate stream support, you need
 
   * libkate -- from http://libkate.googlecode.com/
 
+To render Kate streams as video overlays, you need
+
+  * libtiger -- from http://libtiger.googlecode.com/
+
+Note that libtiger needs Pango and Cairo:
+
+  * Pango -- http://www.pango.org/
+  * Cairo -- http://cairographics.com/
+
 See the README files associated with these libraries for installation
 instructions.
 

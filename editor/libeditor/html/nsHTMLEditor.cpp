@@ -128,7 +128,6 @@
 
 #include "nsIFrame.h"
 #include "nsIView.h"
-#include "nsIWidget.h"
 #include "nsIParserService.h"
 #include "nsIEventStateManager.h"
 

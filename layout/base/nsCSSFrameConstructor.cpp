@@ -4560,26 +4560,30 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     { NS_STYLE_DISPLAY_TABLE_CAPTION,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_ALLOW_BLOCK_STYLES | FCDATA_DISALLOW_OUT_OF_FLOW |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableCaptionFrame) },
     { NS_STYLE_DISPLAY_TABLE_ROW_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableRowGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_HEADER_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableRowGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableRowGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
-                  FCDATA_DISALLOW_OUT_OF_FLOW |
+                  FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableColGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_COLUMN,
@@ -5552,7 +5556,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
           // RemoveMappingsForFrameSubtree() which would otherwise lead to a
           // crash since we cleared the placeholder map above (bug 398982).
           PRBool wasDestroyingFrameTree = mIsDestroyingFrameTree;
-          WillDestroyFrameTree(PR_FALSE);
+          WillDestroyFrameTree();
 
           rv = state.mFrameManager->RemoveFrame(docElementFrame->GetParent(),
                     GetChildListNameFor(docElementFrame), docElementFrame);
@@ -6107,8 +6111,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         }
         LAYOUT_PHASE_TEMP_EXIT();
         // Call ContentInserted with this index.
-        ContentInserted(aContainer, aContainer->GetChildAt(i), i,
-                        mTempFrameTreeState);
+        ContentInserted(aContainer, content, i, mTempFrameTreeState);
         LAYOUT_PHASE_TEMP_REENTER();
       }
 
@@ -7874,7 +7877,7 @@ NS_IMETHODIMP nsFocusUnsuppressEvent::Run()
 }
 
 void
-nsCSSFrameConstructor::WillDestroyFrameTree(PRBool aDestroyingPresShell)
+nsCSSFrameConstructor::WillDestroyFrameTree()
 {
 #if defined(DEBUG_dbaron_off)
   mCounterManager.Dump();
@@ -7889,7 +7892,7 @@ nsCSSFrameConstructor::WillDestroyFrameTree(PRBool aDestroyingPresShell)
   // Cancel all pending re-resolves
   mRestyleEvent.Revoke();
 
-  if (mFocusSuppressCount && aDestroyingPresShell) {
+  if (mFocusSuppressCount && mPresShell->IsDestroying()) {
     nsRefPtr<nsFocusUnsuppressEvent> ev =
       new nsFocusUnsuppressEvent(mFocusSuppressCount);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
@@ -9011,6 +9014,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Row group
     FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                 FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
+                FCDATA_SKIP_ABSPOS_PUSH |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                 NS_NewTableRowGroupFrame),
     &nsCSSAnonBoxes::tableRowGroup
@@ -9018,6 +9022,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Column group
     FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                 FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
+                FCDATA_SKIP_ABSPOS_PUSH |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                 NS_NewTableColGroupFrame),
     &nsCSSAnonBoxes::tableColGroup
@@ -11413,8 +11418,7 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
                                         nsReStyleHint aRestyleHint,
                                         nsChangeHint aMinChangeHint)
 {
-  if (NS_UNLIKELY(mIsDestroyingFrameTree)) {
-    NS_NOTREACHED("PostRestyleEvent after the shell is destroyed (bug 279505)");
+  if (NS_UNLIKELY(mPresShell->IsDestroying())) {
     return;
   }
 

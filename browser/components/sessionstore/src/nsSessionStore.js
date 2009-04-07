@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Michael Kraft <morac99-firefox@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -160,6 +161,9 @@ SessionStoreService.prototype = {
 
   // whether we are in private browsing mode
   _inPrivateBrowsing: false,
+
+  // whether we clearing history on shutdown
+  _clearingOnShutdown: false,
 
 /* ........ Global Event Handlers .............. */
 
@@ -352,6 +356,8 @@ SessionStoreService.prototype = {
       // Delete the private browsing backed up state, if any
       if ("_stateBackup" in this)
         delete this._stateBackup;
+      if (this._loadState == STATE_QUITTING)
+        this._clearingOnShutdown = true;
       break;
     case "browser:purge-domain-data":
       // does a session history entry contain a url for the given domain?
@@ -907,6 +913,21 @@ SessionStoreService.prototype = {
     aWindow.setTimeout(function() { content.focus(); }, 0);
     
     return tab;
+  },
+
+  forgetClosedTab: function sss_forgetClosedTab(aWindow, aIndex) {
+    if (!aWindow.__SSi)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    var closedTabs = this._windows[aWindow.__SSi]._closedTabs;
+
+    // default to the most-recently closed tab
+    aIndex = aIndex || 0;
+    if (!(aIndex in closedTabs))
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    // remove closed tab from the array
+    closedTabs.splice(aIndex, 1);
   },
 
   getWindowValue: function sss_getWindowValue(aWindow, aKey) {
@@ -2427,8 +2448,11 @@ SessionStoreService.prototype = {
    * @returns bool
    */
   _doResumeSession: function sss_doResumeSession() {
+    if (this._clearingOnShutdown)
+      return false;
+
     return this._prefBranch.getIntPref("startup.page") == 3 ||
-      this._prefBranch.getBoolPref("sessionstore.resume_session_once");
+           this._prefBranch.getBoolPref("sessionstore.resume_session_once");
   },
 
   /**

@@ -252,7 +252,7 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
                 }
                 comp = PORT_Strcasecmp(nextHeader, "content-type");
                 if (comp == 0) {
-                        client->rcvContentType = value;
+                        client->rcvContentType = PORT_Strdup(value);
                 } else {
                         comp = PORT_Strcasecmp(nextHeader, "content-length");
                         if (comp == 0) {
@@ -480,7 +480,10 @@ pkix_pl_HttpDefaultClient_Destroy(
             PKIX_PL_Free(client->rcvHeaders, plContext);
             client->rcvHeaders = NULL;
         }
-
+        if (client->rcvContentType) {
+            PORT_Free(client->rcvContentType);
+            client->rcvContentType = NULL;
+        }
         if (client->GETBuf != NULL) {
                 PR_smprintf_free(client->GETBuf);
                 client->GETBuf = NULL;

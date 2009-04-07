@@ -448,11 +448,11 @@ pkix_pl_OcspResponse_Create(
                 /* prepare initial message to HTTPClient */
 
                 /* Is there a default responder and is it enabled? */
-                if (!responder) {
-                    responder = SEC_GetRegisteredHttpClient();
+                if (responder) {
+                    httpClient = (const SEC_HttpClientFcn *)responder;
+                } else {
+                    httpClient = SEC_GetRegisteredHttpClient();
                 }
-
-                httpClient = (const SEC_HttpClientFcn *)responder;
 
                 if (httpClient && (httpClient->version == 1)) {
 
@@ -888,7 +888,7 @@ pkix_pl_OcspResponse_VerifySignature(
         } else {
             SECCertUsage certUsage;
             if (CERT_IsCACert(response->signerCert, NULL)) {
-                certUsage = certUsageVerifyCA;
+                certUsage = certUsageAnyCA;
             } else {
                 certUsage = certUsageStatusResponder;
             }

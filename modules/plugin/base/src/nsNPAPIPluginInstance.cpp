@@ -51,7 +51,6 @@
 #include "nsIPrivateBrowsingService.h"
 
 #include "nsPIPluginInstancePeer.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
 
 #include "nsJSNPRuntime.h"
@@ -833,7 +832,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
   NPError error;
 
   // Make sure the plugin didn't leave popups enabled.
-  if (mPopupStates.Count() > 0) {
+  if (mPopupStates.Length() > 0) {
     nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
 
     if (window) {
@@ -1450,7 +1449,7 @@ nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
     window->PushPopupControlState(aEnabled ? openAllowed : openAbused,
                                   PR_TRUE);
 
-  if (!mPopupStates.AppendElement(NS_INT32_TO_PTR(oldState))) {
+  if (!mPopupStates.AppendElement(oldState)) {
     // Appending to our state stack failed, push what we just popped.
     window->PopPopupControlState(oldState);
   }
@@ -1459,7 +1458,7 @@ nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
 void
 nsNPAPIPluginInstance::PopPopupsEnabledState()
 {
-  PRInt32 last = mPopupStates.Count() - 1;
+  PRInt32 last = mPopupStates.Length() - 1;
 
   if (last < 0) {
     // Nothing to pop.
@@ -1470,8 +1469,7 @@ nsNPAPIPluginInstance::PopPopupsEnabledState()
   if (!window)
     return;
 
-  PopupControlState oldState =
-    (PopupControlState)NS_PTR_TO_INT32(mPopupStates[last]);
+  PopupControlState &oldState = mPopupStates[last];
 
   window->PopPopupControlState(oldState);
 

@@ -89,11 +89,11 @@ nsPNGDecoder::~nsPNGDecoder()
   if (interlacebuf)
     nsMemory::Free(interlacebuf);
   if (mInProfile) {
-    cmsCloseProfile(mInProfile);
+    qcms_profile_release(mInProfile);
 
     /* mTransform belongs to us only if mInProfile is non-null */
     if (mTransform)
-      cmsDeleteTransform(mTransform);
+      qcms_transform_release(mTransform);
   }
 }
 
@@ -196,7 +196,7 @@ void nsPNGDecoder::EndImageFrame()
     mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
 
-  mImage->EndFrameDecode(numFrames, timeout);
+  mImage->EndFrameDecode(numFrames);
   if (mObserver)
     mObserver->OnStopFrame(nsnull, mFrame);
 }
@@ -397,12 +397,12 @@ PNGDoGammaCorrection(png_structp png_ptr, png_infop info_ptr)
 }
 
 // Adapted from http://www.littlecms.com/pngchrm.c example code
-static cmsHPROFILE
+static qcms_profile *
 PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
-                   int color_type, PRUint32 *inType, PRUint32 *intent)
+                   int color_type, qcms_data_type *inType, PRUint32 *intent)
 {
-  cmsHPROFILE profile = nsnull;
-  *intent = INTENT_PERCEPTUAL; // Our default
+  qcms_profile *profile = nsnull;
+  *intent = QCMS_INTENT_PERCEPTUAL; // Our default
 
   // First try to see if iCCP chunk is present
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_iCCP)) {
@@ -413,38 +413,40 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
     png_get_iCCP(png_ptr, info_ptr, &profileName, &compression,
                  &profileData, &profileLen);
 
-    profile = cmsOpenProfileFromMem(profileData, profileLen);
-    PRUint32 profileSpace = cmsGetColorSpace(profile);
+    profile = qcms_profile_from_memory(profileData, profileLen);
+    if (profile) {
+      PRUint32 profileSpace = qcms_profile_get_color_space(profile);
 
-    PRBool mismatch = PR_FALSE;
-    if (color_type & PNG_COLOR_MASK_COLOR) {
-      if (profileSpace != icSigRgbData)
-        mismatch = PR_TRUE;
-    } else {
-      if (profileSpace == icSigRgbData)
-        png_set_gray_to_rgb(png_ptr);
-      else if (profileSpace != icSigGrayData)
-        mismatch = PR_TRUE;
-    }
+      PRBool mismatch = PR_FALSE;
+      if (color_type & PNG_COLOR_MASK_COLOR) {
+        if (profileSpace != icSigRgbData)
+          mismatch = PR_TRUE;
+      } else {
+        if (profileSpace == icSigRgbData)
+          png_set_gray_to_rgb(png_ptr);
+        else if (profileSpace != icSigGrayData)
+          mismatch = PR_TRUE;
+      }
 
-    if (mismatch) {
-      cmsCloseProfile(profile);
-      profile = nsnull;
-    } else {
-      *intent = cmsTakeRenderingIntent(profile);
+      if (mismatch) {
+        qcms_profile_release(profile);
+        profile = nsnull;
+      } else {
+        *intent = qcms_profile_get_rendering_intent(profile);
+      }
     }
   }
 
   // Check sRGB chunk
   if (!profile && png_get_valid(png_ptr, info_ptr, PNG_INFO_sRGB)) {
-    profile = cmsCreate_sRGBProfile();
+    profile = qcms_profile_sRGB();
 
     if (profile) {
       int fileIntent;
       png_set_gray_to_rgb(png_ptr); 
       png_get_sRGB(png_ptr, info_ptr, &fileIntent);
-      PRUint32 map[] = { INTENT_PERCEPTUAL, INTENT_RELATIVE_COLORIMETRIC,
-                         INTENT_SATURATION, INTENT_ABSOLUTE_COLORIMETRIC };
+      PRUint32 map[] = { QCMS_INTENT_PERCEPTUAL, QCMS_INTENT_RELATIVE_COLORIMETRIC,
+                         QCMS_INTENT_SATURATION, QCMS_INTENT_ABSOLUTE_COLORIMETRIC };
       *intent = map[fileIntent];
     }
   }
@@ -453,49 +455,40 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
   if (!profile && 
        png_get_valid(png_ptr, info_ptr, PNG_INFO_gAMA) &&
        png_get_valid(png_ptr, info_ptr, PNG_INFO_cHRM)) {
-    cmsCIExyYTRIPLE primaries;
-    cmsCIExyY whitePoint;
+    qcms_CIE_xyYTRIPLE primaries;
+    qcms_CIE_xyY whitePoint;
 
     png_get_cHRM(png_ptr, info_ptr,
                  &whitePoint.x, &whitePoint.y,
-                 &primaries.Red.x,   &primaries.Red.y,
-                 &primaries.Green.x, &primaries.Green.y,
-                 &primaries.Blue.x,  &primaries.Blue.y);
+                 &primaries.red.x,   &primaries.red.y,
+                 &primaries.green.x, &primaries.green.y,
+                 &primaries.blue.x,  &primaries.blue.y);
     whitePoint.Y =
-      primaries.Red.Y = primaries.Green.Y = primaries.Blue.Y = 1.0;
+      primaries.red.Y = primaries.green.Y = primaries.blue.Y = 1.0;
 
     double gammaOfFile;
-    LPGAMMATABLE gammaTable[3];
 
     png_get_gAMA(png_ptr, info_ptr, &gammaOfFile);
 
-    gammaTable[0] = gammaTable[1] = gammaTable[2] =
-      cmsBuildGamma(256, 1/gammaOfFile);
-
-    if (!gammaTable[0])
-      return nsnull;
-
-    profile = cmsCreateRGBProfile(&whitePoint, &primaries, gammaTable);
+    profile = qcms_profile_create_rgb_with_gamma(whitePoint, primaries, 1/gammaOfFile);
 
     if (profile)
       png_set_gray_to_rgb(png_ptr);
-
-    cmsFreeGamma(gammaTable[0]);
   }
 
   if (profile) {
-    PRUint32 profileSpace = cmsGetColorSpace(profile);
+    PRUint32 profileSpace = qcms_profile_get_color_space(profile);
     if (profileSpace == icSigGrayData) {
       if (color_type & PNG_COLOR_MASK_ALPHA)
-        *inType = TYPE_GRAYA_8;
+        *inType = QCMS_DATA_GRAYA_8;
       else
-        *inType = TYPE_GRAY_8;
+        *inType = QCMS_DATA_GRAY_8;
     } else {
       if (color_type & PNG_COLOR_MASK_ALPHA ||
           png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-        *inType = TYPE_RGBA_8;
+        *inType = QCMS_DATA_RGBA_8;
       else
-        *inType = TYPE_RGB_8;
+        *inType = QCMS_DATA_RGB_8;
     }
   }
 
@@ -556,7 +549,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (bit_depth == 16)
     png_set_strip_16(png_ptr);
 
-  PRUint32 inType, intent, pIntent;
+  qcms_data_type inType;
+  PRUint32 intent, pIntent;
   if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
     intent = gfxPlatform::GetRenderingIntent();
     decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
@@ -566,25 +560,19 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
       intent = pIntent;
   }
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
-    PRUint32 outType;
+    qcms_data_type outType;
     PRUint32 dwFlags = 0;
 
     if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
-      outType = TYPE_RGBA_8;
+      outType = QCMS_DATA_RGBA_8;
     else
-      outType = TYPE_RGB_8;
+      outType = QCMS_DATA_RGB_8;
 
-    /* Determine if we can use the optimized floating point path. */
-    if ((inType == outType) && 
-        ((inType == TYPE_RGB_8) || (inType == TYPE_RGBA_8)))
-      dwFlags |= cmsFLAGS_FLOATSHAPER;
-
-    decoder->mTransform = cmsCreateTransform(decoder->mInProfile,
+    decoder->mTransform = qcms_transform_create(decoder->mInProfile,
                                              inType,
                                              gfxPlatform::GetCMSOutputProfile(),
                                              outType,
-                                             intent,
-                                             dwFlags);
+                                             (qcms_intent)intent);
   } else {
     png_set_gray_to_rgb(png_ptr);
     PNGDoGammaCorrection(png_ptr, info_ptr);
@@ -749,7 +737,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
 
     if (decoder->mTransform) {
       if (decoder->mCMSLine) {
-        cmsDoTransform(decoder->mTransform, line, decoder->mCMSLine, iwidth);
+        qcms_transform_data(decoder->mTransform, line, decoder->mCMSLine, iwidth);
         /* copy alpha over */
         PRUint32 channels = decoder->mChannels;
         if (channels == 2 || channels == 4) {
@@ -758,7 +746,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
         }
         line = decoder->mCMSLine;
       } else {
-        cmsDoTransform(decoder->mTransform, line, line, iwidth);
+        qcms_transform_data(decoder->mTransform, line, line, iwidth);
        }
      }
 

@@ -59,7 +59,6 @@ function loadedMetaData() {
 
 function playbackEnded() {
   if (!gEnded) {
-    dump('seeking to start\n');
     video().currentTime = 0;
     gEnded = true;
   } else {

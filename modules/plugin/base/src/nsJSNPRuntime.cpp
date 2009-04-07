@@ -1148,6 +1148,8 @@ NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
+  PluginDestructionGuard pdg(LookupNPP(npobj));
+
   // We must permit methods here since JS_DefineUCFunction() will add
   // the function as a property
   if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id) &&
@@ -1173,6 +1175,8 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
+  PluginDestructionGuard pdg(LookupNPP(npobj));
+
   if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id))
     return JS_TRUE;
 
@@ -1194,19 +1198,21 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
-  if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id)) {
-    ThrowJSException(cx, "Trying to set unsupported property on scriptable "
-                     "plugin object!");
-
-    return JS_FALSE;
-  }
-
   // Find out what plugin (NPP) is the owner of the object we're
   // manipulating, and make it own any JSObject wrappers created here.
   NPP npp = LookupNPP(npobj);
 
   if (!npp) {
     ThrowJSException(cx, "No NPP found for NPObject!");
+
+    return JS_FALSE;
+  }
+
+  PluginDestructionGuard pdg(npp);
+
+  if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id)) {
+    ThrowJSException(cx, "Trying to set unsupported property on scriptable "
+                     "plugin object!");
 
     return JS_FALSE;
   }
@@ -1245,20 +1251,19 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
+  // Find out what plugin (NPP) is the owner of the object we're
+  // manipulating, and make it own any JSObject wrappers created here.
+  NPP npp = LookupNPP(npobj);
+  if (!npp) {
+    ThrowJSException(cx, "No NPP found for NPObject!");
+
+    return JS_FALSE;
+  }
+
+  PluginDestructionGuard pdg(npp);
+
   PRBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
   PRBool hasMethod = npobj->_class->hasMethod(npobj, (NPIdentifier)id);
-  NPP npp = nsnull;
-  if (hasProperty) {
-    // Find out what plugin (NPP) is the owner of the object we're
-    // manipulating, and make it own any JSObject wrappers created
-    // here.
-    npp = LookupNPP(npobj);
-    if (!npp) {
-      ThrowJSException(cx, "No NPP found for NPObject!");
-
-      return JS_FALSE;
-    }
-  }
 
   // To support ambiguous members, we return NPObject Member class here.
   if (hasProperty && hasMethod)
@@ -1317,6 +1322,8 @@ CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     return JS_FALSE;
   }
+
+  PluginDestructionGuard pdg(npp);
 
   NPVariant npargs_buf[8];
   NPVariant *npargs = npargs_buf;
@@ -1445,6 +1452,8 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return JS_FALSE;
   }
 
+  PluginDestructionGuard pdg(LookupNPP(npobj));
+
   NS_ASSERTION(statep, "Must have a statep to enumerate!");
 
   switch(enum_op) {
@@ -1514,6 +1523,8 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     return JS_FALSE;
   }
+
+  PluginDestructionGuard pdg(LookupNPP(npobj));
 
   if (npobj->_class->hasProperty(npobj, (NPIdentifier)id)) {
     JSBool ok;

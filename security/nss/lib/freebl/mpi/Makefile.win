@@ -39,7 +39,7 @@
 # ***** END LICENSE BLOCK *****
 
 #
-# $Id: Makefile.win,v 1.6 2007/05/09 00:09:37 neil.williams%sun.com Exp $
+# $Id: Makefile.win,v 1.7 2009/03/19 02:26:47 julien.pierre.boogz%sun.com Exp $
 #
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -47,7 +47,11 @@
 #CC=cc
 #CC=gcc
 CC=cl.exe
+ifeq ($(CPU_ARCH),x86_64)
+AS=ml64.exe
+else
 AS=ml.exe
+endif
 
 ## 
 ## Define PERL to point to your local Perl interpreter.  It
@@ -66,6 +70,12 @@ AS=ml.exe
 ##
 MPICMN = -I. -DMP_API_COMPATIBLE -DMP_IOFUNC
 
+ifeq ($(CPU_ARCH),x86_64)
+AS_SRCS = mpi_x86_64.asm
+CFLAGS = -O2 -Z7 -MD -W3 -nologo -DXP_PC -UDEBUG -U_DEBUG -DNDEBUG \
+ -DWIN32 -D_WIN64 -D_AMD64_ -D_M_AMD64 -D_WINDOWS -DWIN95 $(MPICMN)
+ASFLAGS = -Cp -Sn -Zi -I.
+else
 #NT
 AS_SRCS = mpi_x86.asm
 MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
@@ -78,6 +88,7 @@ MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
 CFLAGS = -O2 -Z7 -MD -W3 -nologo -D_X86_ -DXP_PC -UDEBUG -U_DEBUG -DNDEBUG \
  -DWIN32 -D_WINDOWS -DWIN95 $(MPICMN)
 ASFLAGS = -Cp -Sn -Zi -coff -I. 
+endif
 
 ##
 ## Define LIBS to include any libraries you need to link against.

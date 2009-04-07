@@ -50,7 +50,6 @@
 #include "nsIDOMNode.h"
 #include "nsRect.h"
 #include "nsPoint.h"
-#include "nsIWidget.h"
 #include "nsIImage.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIIOService.h"

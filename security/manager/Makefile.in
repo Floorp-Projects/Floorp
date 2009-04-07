@@ -158,8 +158,15 @@ endif
 ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
 export DLLFLAGS
 endif
+
+ifdef .PYMAKE
+NSSMAKE = $(GMAKE)
+else
+NSSMAKE = $(MAKE)
+endif
+
 # NSS makefiles are not safe for parallel execution.
-DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
+DEFAULT_GMAKE_FLAGS = MAKE="$(NSSMAKE) -j1" -j1
 DEFAULT_GMAKE_FLAGS += CC="$(CC)"
 DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(ABS_DIST)
 DEFAULT_GMAKE_FLAGS += DIST=$(ABS_DIST)
@@ -266,11 +273,11 @@ export:: .nss.cleaned
 
 .nss.cleaned: .nss.checkout
 ifndef MOZ_NATIVE_NSS
-	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
-	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
 ifndef SKIP_CHK
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
 endif
 	touch $@
 endif
@@ -292,22 +299,22 @@ endif
 
 libs::
 ifndef MOZ_NATIVE_NSS
-	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
+	$(NSSMAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
 ifndef NSS_DISABLE_DBM
-	$(MAKE) -C $(topsrcdir)/security/dbm $(DEFAULT_GMAKE_FLAGS) 
+	$(NSSMAKE) -C $(topsrcdir)/security/dbm $(DEFAULT_GMAKE_FLAGS) 
 endif
-	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 ifdef ENABLE_TESTS
 	# Need certutil binary for mochitest certificates generation
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/certutil $(DEFAULT_GMAKE_FLAGS)
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/pk12util $(DEFAULT_GMAKE_FLAGS)
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/certutil $(DEFAULT_GMAKE_FLAGS)
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/pk12util $(DEFAULT_GMAKE_FLAGS)
 endif
 ifndef SKIP_CHK
 ifndef ENABLE_TESTS # Just avoid secondary compile
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
 endif
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS)
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS)
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 ifndef SKIP_CHK
@@ -425,11 +432,11 @@ ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
 ifndef MOZ_NATIVE_NSS
-	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
-	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
 ifndef SKIP_CHK
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
+	$(NSSMAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
 endif
 endif
 

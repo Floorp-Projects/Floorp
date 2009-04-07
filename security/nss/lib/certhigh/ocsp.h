@@ -37,7 +37,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.13 2008/06/14 14:19:53 wtc%google.com Exp $
+ * $Id: ocsp.h,v 1.14 2009/03/21 01:40:35 nelson%bolyard.com Exp $
  */
 
 #ifndef _OCSP_H_
@@ -455,6 +455,24 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
  */
 extern char *
 CERT_GetOCSPAuthorityInfoAccessLocation(CERTCertificate *cert);
+
+/*
+ * FUNCTION: CERT_RegisterAlternateOCSPAIAInfoCallBack
+ *   This function serves two purposes.  
+ *   1) It registers the address of a callback function that will be 
+ *   called for certs that have no OCSP AIA extension, to see if the 
+ *   callback wishes to supply an alternative URL for such an OCSP inquiry.
+ *   2) It outputs the previously registered function's address to the 
+ *   address supplied by the caller, unless that is NULL.
+ *   The registered callback function returns NULL, or an allocated string 
+ *   that may be subsequently freed by calling PORT_Free().
+ * RETURN:
+ *   SECSuccess or SECFailure (if the library is not yet intialized)
+ */
+extern SECStatus
+CERT_RegisterAlternateOCSPAIAInfoCallBack(
+			CERT_StringFromCertFcn   newCallback,
+			CERT_StringFromCertFcn * oldCallback);
 
 /*
  * FUNCTION: CERT_ParseURL

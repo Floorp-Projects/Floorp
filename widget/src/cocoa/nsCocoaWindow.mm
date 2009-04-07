@@ -64,7 +64,7 @@
 #include "nsNativeThemeColors.h"
 
 #include "gfxPlatform.h"
-#include "lcms.h"
+#include "qcms.h"
 
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
@@ -1354,13 +1354,13 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
     // to match the system appearance lame, so probably we just shouldn't color 
     // correct chrome.
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
-      cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBATransform();
+      qcms_transform *transform = gfxPlatform::GetCMSRGBATransform();
       if (transform) {
         PRUint8 color[3];
         color[0] = NS_GET_R(aColor);
         color[1] = NS_GET_G(aColor);
         color[2] = NS_GET_B(aColor);
-        cmsDoTransform(transform, color, color, 1);
+        qcms_transform_data(transform, color, color, 1);
         aColor = NS_RGB(color[0], color[1], color[2]);
       }
     }

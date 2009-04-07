@@ -373,13 +373,27 @@ ${NSS_AIA_HTTP}/${CERT_PUBLIC}
 "
 
             if [ -n "${NSS_AIA_PATH}" ]; then
-                cp ${CERT_LOCAL} ${NSS_AIA_PATH}/${CERT_PUBLIC}
+                cp ${CERT_LOCAL} ${NSS_AIA_PATH}/${CERT_PUBLIC} 2> /dev/null
                 chmod a+r ${NSS_AIA_PATH}/${CERT_PUBLIC}
                 echo ${NSS_AIA_PATH}/${CERT_PUBLIC} >> ${AIA_FILES}
             fi
         done
 
         DATA="${DATA}0
+n
+n"
+    fi
+}
+
+process_ocsp()
+{
+    if [ -n "${OCSP}" ]; then
+        OPTIONS="${OPTIONS} --extAIA"
+
+        DATA="${DATA}2
+7
+${NSS_AIA_OCSP}:${OCSP}
+0
 n
 n"
     fi
@@ -398,6 +412,7 @@ process_extensions()
     process_mapping
     process_inhibit
     process_aia
+    process_ocsp
 }
 
 ############################## sign_cert ###############################
@@ -460,6 +475,24 @@ create_pkcs7()
     html_msg $? 0 "${SCENARIO}${TESTNAME}"
 }
 
+############################# import_key ###############################
+# local shell function to import private key + cert into database
+########################################################################
+import_key()
+{
+    KEY_NAME=$1.p12
+    DB=$2
+
+    KEY_FILE=${QADIR}/libpkix/certs/${KEY_NAME}
+
+    TESTNAME="Importing p12 key ${KEY_NAME} to ${DB} database"
+    echo "${SCRIPTNAME}: ${TESTNAME}"
+    echo "${BINDIR}/pk12util -d ${DB} -i ${KEY_FILE} -k ${DB}/dbpasswd -W nssnss"
+    ${BINDIR}/pk12util -d ${DB} -i ${KEY_FILE} -k ${DB}/dbpasswd -W nssnss
+    html_msg $? 0 "${SCENARIO}${TESTNAME}"
+}
+
+
 ############################# import_cert ##############################
 # local shell function to import certificate into database
 ########################################################################
@@ -484,7 +517,7 @@ import_cert()
     IS_ASCII=`grep -c -- "-----BEGIN CERTIFICATE-----" ${CERT_FILE}`
 
     ASCII_OPT=
-    if [ ${IS_ASCII} -gt 0 ]; then
+    if [ "${IS_ASCII}" -gt 0 ]; then
         ASCII_OPT="-a"
     fi
    
@@ -635,11 +668,20 @@ verify_cert()
     echo "vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
 
     if [ -z "${MEMLEAK_DBG}" ]; then
-        ${BINDIR}/vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT} 
+        VFY_OUT=$(${BINDIR}/vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT})
         RESULT=$?
+        echo "${VFY_OUT}"
     else 
-        ${RUN_COMMAND_DBG} ${BINDIR}/vfychain ${REV_OPTS} ${DB_OPT} -pp -vv ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT} 2>> ${LOGFILE}
+        VFY_OUT=$(${RUN_COMMAND_DBG} ${BINDIR}/vfychain ${REV_OPTS} ${DB_OPT} -pp -vv ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT} 2>> ${LOGFILE})
         RESULT=$?
+        echo "${VFY_OUT}"
+    fi
+
+    echo "${VFY_OUT}" | grep "ERROR -5990: I/O operation timed out" > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "Result of this test is not valid due to network time out."
+        html_unknown "${SCENARIO}${TESTNAME}"
+        return
     fi
 
     echo "Returned value is ${RESULT}, expected result is ${EXP_RESULT}"
@@ -703,6 +745,7 @@ parse_config()
             MAPPING=
             INHIBIT=
             AIA=
+            OCSP=
             DB=
             EMAILS=
             ;;
@@ -738,6 +781,9 @@ parse_config()
         "aia")
             AIA="${AIA} ${VALUE}"
             ;;
+        "ocsp")
+            OCSP="${VALUE}"
+            ;;
         "db")
             DB="${VALUE}DB"
             create_db "${DB}"
@@ -746,6 +792,10 @@ parse_config()
             IMPORT="${VALUE}"
             import_cert "${IMPORT}" "${DB}"
             import_crl "${IMPORT}" "${DB}"
+            ;;
+        "import_key")
+            IMPORT="${VALUE}"
+            import_key "${IMPORT}" "${DB}"
             ;;
         "crl")
             ISSUER="${VALUE}"
@@ -809,6 +859,9 @@ parse_config()
                 LOGFILE="${LOGDIR}/${LOGNAME}"
             fi
             ;;
+        "sleep")
+            sleep ${VALUE}
+            ;;
         "break")
             break
             ;;
@@ -862,7 +915,7 @@ chains_main()
 
         while read AIA_FILE
         do
-            rm ${AIA_FILE} 
+            rm ${AIA_FILE} 2> /dev/null
         done < ${AIA_FILES}
         rm ${AIA_FILES}
     done < "${CHAINS_SCENARIOS}"

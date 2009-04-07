@@ -1,0 +1,18 @@
+diff --git a/media/liboggplay/src/liboggplay/config.h b/media/liboggplay/src/liboggplay/config.h
+--- a/media/liboggplay/src/liboggplay/config.h
++++ b/media/liboggplay/src/liboggplay/config.h
+@@ -102,8 +102,14 @@
+ # ifndef WORDS_BIGENDIAN
+ /* #  undef WORDS_BIGENDIAN */
+ # endif
+ #endif
+ 
+ /* Define to empty if `const' does not conform to ANSI C. */
+ /* #undef const */
+ #undef HAVE_GLUT
++
++#include "prcpucfg.h"
++#ifdef IS_BIG_ENDIAN
++#define WORDS_BIGENDIAN 1
++#endif
++

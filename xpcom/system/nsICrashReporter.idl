@@ -37,6 +37,9 @@
 
 #include "nsISupports.idl"
 
+interface nsILocalFile;
+interface nsIURL;
+
 /**
  * Provides access to crash reporting functionality.
  * @status UNSTABLE - This interface is not frozen and will probably change in
@@ -46,6 +49,30 @@
 [scriptable, uuid(D9A0F5B2-A7DF-4AEB-9775-21B9E01B4C59)]
 interface nsICrashReporter : nsISupports
 {
+  /**
+   * Enable or disable the crashreporter at runtime.
+   */
+  attribute boolean enabled;
+
+  /**
+   * Get or set the URL to which crash reports will be submitted.
+   * Only https and http URLs are allowed, as the submission is handled
+   * by OS-native networking libraries.
+   *
+   * @throw NS_ERROR_NOT_INITIALIZED if crash reporting is not initialized
+   * @throw NS_ERROR_INVALID_ARG on set if a non-http(s) URL is assigned
+   * @throw NS_ERROR_FAILURE on get if no URL is set
+   */
+  attribute nsIURL serverURL;
+
+  /**
+   * Get or set the path on the local system to which minidumps will be
+   * written when a crash happens.
+   *
+   * @throw NS_ERROR_NOT_INITIALIZED if crash reporting is not initialized
+   */
+  attribute nsILocalFile minidumpPath;
+
   /**
    * Add some extra data to be submitted with a crash report.
    * @param key

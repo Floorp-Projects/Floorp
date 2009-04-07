@@ -47,6 +47,7 @@ PRIVATE_EXPORTS	= secutil.h \
 		  NSPRerrs.h \
 		  SECerrs.h \
 		  SSLerrs.h \
+		  pk11table.h \
 		  $(NULL)
 
 CSRCS		= secutil.c \
@@ -56,6 +57,7 @@ CSRCS		= secutil.c \
 		pppolicy.c \
 		secerror.c \
 		ffs.c \
+		pk11table.c \
 		$(NULL)
 
 REQUIRES	= dbm

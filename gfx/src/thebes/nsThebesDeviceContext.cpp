@@ -38,12 +38,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsCRT.h"
 
 #include "nsThebesDeviceContext.h"
 #include "nsThebesRenderingContext.h"
 
+#include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsILookAndFeel.h"
 
@@ -177,8 +178,8 @@ nsThebesDeviceContext::SetDPI()
         // If it's positive, we use it as the logical resolution
         nsresult rv;
         PRInt32 prefDPI;
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-        if (NS_SUCCEEDED(rv) && prefs) {
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
             rv = prefs->GetIntPref("layout.css.dpi", &prefDPI);
             if (NS_FAILED(rv)) {
                 prefDPI = -1;

@@ -115,6 +115,7 @@ fs_vorbis_decode (FishSound * fsound, unsigned char * buf, long bytes)
   FishSoundVorbisInfo * fsv = (FishSoundVorbisInfo *)fsound->codec_data;
   ogg_packet op;
   long samples;
+  float * pcm_new;
   int ret;
 
   /* Make an ogg_packet structure to pass the data to libvorbis */
@@ -142,7 +143,10 @@ fs_vorbis_decode (FishSound * fsound, unsigned char * buf, long bytes)
      * start of vorbiscomment packet. */
     if (fsv->packetno == 1 && bytes > 7 && buf[0] == 0x03 &&
 	!strncmp ((char *)&buf[1], "vorbis", 6)) {
-      fish_sound_comments_decode (fsound, buf+7, bytes-7);
+      if (fish_sound_comments_decode (fsound, buf+7, bytes-7) == FISH_SOUND_ERR_OUT_OF_MEMORY) {
+        fsv->packetno++;
+        return FISH_SOUND_ERR_OUT_OF_MEMORY;
+      }
     } else if (fsv->packetno == 2) {
       vorbis_synthesis_init (&fsv->vd, &fsv->vi);
       vorbis_block_init (&fsv->vd, &fsv->vb);
@@ -162,9 +166,15 @@ fs_vorbis_decode (FishSound * fsound, unsigned char * buf, long bytes)
 
       if (fsound->interleave) {
 	if (samples > fsv->max_pcm) {
-	  fsv->ipcm = realloc (fsv->ipcm, sizeof(float) * samples *
-			       fsound->info.channels);
-	  fsv->max_pcm = samples;
+          pcm_new = realloc (fsv->ipcm, sizeof(float) * samples *
+			     fsound->info.channels);
+          if (pcm_new == NULL) {
+            /* Allocation failure; just truncate here, fail gracefully elsewhere */
+            samples = fsv->max_pcm;
+          } else {
+	    fsv->ipcm = pcm_new;
+	    fsv->max_pcm = samples;
+          }
 	}
 	_fs_interleave (fsv->pcm, (float **)fsv->ipcm, samples,
 			fsound->info.channels, 1.0);
@@ -204,12 +214,14 @@ fs_vorbis_enc_headers (FishSound * fsound)
   ogg_packet header_comm;
   ogg_packet header_code;
 
-  /* Vorbis streams begin with three headers; the initial header (with
-     most of the codec setup parameters) which is mandated by the Ogg
-     bitstream spec.  The second header holds any comment fields.  The
-     third header holds the bitstream codebook.  We merely need to
-     make the headers, then pass them to libvorbis one at a time;
-     libvorbis handles the additional Ogg bitstream constraints */
+  /* Vorbis streams begin with three headers:
+   *   1. The initial header (with most of the codec setup parameters),
+   *      which is mandated by the Ogg bitstream spec,
+   *   2. The second header which holds any comment fields,
+   *   3. The third header which contains the bitstream codebook.
+   * We merely need to make the headers, then pass them to libvorbis one at
+   * a time; libvorbis handles the additional Ogg bitstream constraints.
+   */
 
   /* Update the comments */
   for (comment = fish_sound_comment_first (fsound); comment;
@@ -333,7 +345,6 @@ fs_vorbis_encode_f (FishSound * fsound, float * pcm[], long frames)
   float ** vpcm;
   long len, remaining = frames;
   int i;
-  float ** ppcm = alloca (sizeof (float *) * fsound->info.channels);
 
   if (fsv->packetno == 0) {
     fs_vorbis_enc_headers (fsound);
@@ -342,10 +353,6 @@ fs_vorbis_encode_f (FishSound * fsound, float * pcm[], long frames)
   if (frames == 0) {
     fs_vorbis_finish (fsound);
     return 0;
-  }
-
-  for (i = 0; i < fsound->info.channels; i++) {
-    ppcm[i] = pcm[i];
   }
 
   while (remaining > 0) {
@@ -359,7 +366,7 @@ fs_vorbis_encode_f (FishSound * fsound, float * pcm[], long frames)
     vpcm = vorbis_analysis_buffer (&fsv->vd, 1024);
 
     for (i = 0; i < fsound->info.channels; i++) {
-      memcpy (vpcm[i], ppcm[i], sizeof (float) * len);
+      memcpy (vpcm[i], pcm[i], sizeof (float) * len);
     }
 
     fs_vorbis_encode_write (fsound, len);
@@ -428,7 +435,7 @@ fs_vorbis_init (FishSound * fsound)
   fsv->finished = 0;
   vorbis_info_init (&fsv->vi);
   vorbis_comment_init (&fsv->vc);
-  vorbis_dsp_init (&fsv->vd);
+  memset(&fsv->vd, 0, sizeof(fsv->vd));
   vorbis_block_init (&fsv->vd, &fsv->vb);
   fsv->pcm = NULL;
   fsv->ipcm = NULL;
@@ -475,6 +482,7 @@ fish_sound_vorbis_codec (void)
   FishSoundCodec * codec;
 
   codec = (FishSoundCodec *) fs_malloc (sizeof (FishSoundCodec));
+  if (codec == NULL) return NULL;
 
   codec->format.format = FISH_SOUND_VORBIS;
   codec->format.name = "Vorbis (Xiph.Org)";

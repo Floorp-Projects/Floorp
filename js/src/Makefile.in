@@ -61,7 +61,11 @@ LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
 GRE_MODULE	    = 1
 
-LIBS		= $(NSPR_LIBS)
+LIBS		= $(NSPR_LIBS) 
+
+ifdef WINCE
+EXTRA_LIBS += $(JEMALLOC_LIBS)
+endif
 
 ifdef GNU_CXX
 ifdef INTEL_CXX

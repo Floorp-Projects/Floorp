@@ -41,10 +41,13 @@
 #ifndef nsBaseFilePicker_h__
 #define nsBaseFilePicker_h__
 
+#include "nsISupports.h"
 #include "nsIFilePicker.h"
-#include "nsIWidget.h"
 #include "nsISimpleEnumerator.h"
 #include "nsArrayEnumerator.h"
+#include "nsCOMPtr.h"
+
+class nsIWidget;
 
 #define BASEFILEPICKER_HAS_DISPLAYDIRECTORY 1
 

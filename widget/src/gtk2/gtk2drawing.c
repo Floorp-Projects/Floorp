@@ -90,7 +90,7 @@ static GtkWidget* gMenuItemWidget;
 static GtkWidget* gImageMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
 static GtkWidget* gTreeViewWidget;
-static GtkWidget* gMiddleTreeViewColumn;
+static GtkTreeViewColumn* gMiddleTreeViewColumn;
 static GtkWidget* gTreeHeaderCellWidget;
 static GtkWidget* gTreeHeaderSortArrowWidget;
 static GtkWidget* gExpanderWidget;
@@ -707,17 +707,17 @@ ensure_tree_header_cell_widget()
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), firstTreeViewColumn);
 
         gMiddleTreeViewColumn = gtk_tree_view_column_new();
-        gtk_tree_view_column_set_title(GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn), "M");
+        gtk_tree_view_column_set_title(gMiddleTreeViewColumn, "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget),
-                                    GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn));
+                                    gMiddleTreeViewColumn);
 
         lastTreeViewColumn = gtk_tree_view_column_new();
         gtk_tree_view_column_set_title(lastTreeViewColumn, "M");
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), lastTreeViewColumn);
 
         /* Use the middle column's header for our button */
-        gTreeHeaderCellWidget = GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn)->button;
-        gTreeHeaderSortArrowWidget = GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn)->arrow;
+        gTreeHeaderCellWidget = gMiddleTreeViewColumn->button;
+        gTreeHeaderSortArrowWidget = gMiddleTreeViewColumn->arrow;
         g_object_set_data(G_OBJECT(gTreeHeaderCellWidget),
                           "transparent-bg-hint", GINT_TO_POINTER(TRUE));
         g_object_set_data(G_OBJECT(gTreeHeaderSortArrowWidget),
@@ -1655,7 +1655,7 @@ moz_gtk_tree_header_cell_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                GdkRectangle* cliprect, GtkWidgetState* state,
                                gboolean isSorted, GtkTextDirection direction)
 {
-    gtk_tree_view_column_set_sort_indicator(GTK_TREE_VIEW_COLUMN(gMiddleTreeViewColumn),
+    gtk_tree_view_column_set_sort_indicator(gMiddleTreeViewColumn,
                                             isSorted);
 
     moz_gtk_button_paint(drawable, rect, cliprect, state, GTK_RELIEF_NORMAL,

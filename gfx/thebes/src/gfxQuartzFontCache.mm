@@ -47,7 +47,8 @@
 #include "gfxAtsuiFonts.h"
 #include "gfxUserFontSet.h"
 
-#include "nsIPref.h"  // for pref changes callback notification
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"  // for pref changes callback notification
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
@@ -105,6 +106,26 @@ static NSString* GetNSStringForString(const nsAString& aSrc)
 }
 
 static PRLogModuleInfo *gFontInfoLog = PR_NewLogModule("fontInfoLog");
+
+class gfxQuartzFontCachePrefObserver : public nsIObserver {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(gfxQuartzFontCachePrefObserver, nsIObserver)
+
+NS_IMETHODIMP
+gfxQuartzFontCachePrefObserver::Observe(nsISupports     *aSubject,
+                                        const char      *aTopic,
+                                        const PRUnichar *aData)
+{
+    NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID), "invalid topic");
+    // XXX this could be made to only clear out the cache for the prefs that were changed
+    // but it probably isn't that big a deal.
+    gfxQuartzFontCache::SharedFontCache()->ClearPrefFonts();
+    return NS_OK;
+}
 
 void
 gfxQuartzFontCache::GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult)
@@ -195,7 +216,9 @@ MacOSFontEntry::ReadCMAP()
     // attempt this once, if errors occur leave a blank cmap
     mCmapInitialized = PR_TRUE;
 
-    status = ATSFontGetTable(fontRef, 'cmap', 0, 0, 0, &size);
+    PRUint32 kCMAP = TRUETYPE_TAG('c','m','a','p');
+    
+    status = ATSFontGetTable(fontRef, kCMAP, 0, 0, 0, &size);
     cmapSize = size;
     //printf( "cmap size: %s %d", NS_ConvertUTF16toUTF8(mName).get(), size );
 #if DEBUG
@@ -212,7 +235,7 @@ MacOSFontEntry::ReadCMAP()
         return NS_ERROR_OUT_OF_MEMORY;
     PRUint8 *cmap = buffer.Elements();
 
-    status = ATSFontGetTable(fontRef, 'cmap', 0, size, cmap, &size);
+    status = ATSFontGetTable(fontRef, kCMAP, 0, size, cmap, &size);
     NS_ENSURE_TRUE(status == noErr, NS_ERROR_FAILURE);
 
     nsresult rv = NS_ERROR_FAILURE;
@@ -232,13 +255,13 @@ MacOSFontEntry::ReadCMAP()
             
             // check for mort/morx table, if haven't already
             if (!checkedForMorphTable) {
-                status = ATSFontGetTable(fontRef, 'morx', 0, 0, 0, &size);
+                status = ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','x'), 0, 0, 0, &size);
                 if (status == noErr) {
                     checkedForMorphTable = PR_TRUE;
                     hasMorphTable = PR_TRUE;
                 } else {
                     // check for a mort table
-                    status = ATSFontGetTable(fontRef, 'mort', 0, 0, 0, &size);
+                    status = ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','t'), 0, 0, 0, &size);
                     checkedForMorphTable = PR_TRUE;
                     if (status == noErr) {
                         hasMorphTable = PR_TRUE;
@@ -693,11 +716,17 @@ gfxQuartzFontCache::gfxQuartzFontCache()
                                    (void*)this, nsnull);
 
     // pref changes notification setup
-    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
-    pref->RegisterCallback("font.", PrefChangedCallback, this);
-    pref->RegisterCallback("font.name-list.", PrefChangedCallback, this);
-    pref->RegisterCallback("intl.accept_languages", PrefChangedCallback, this);  // hmmmm...
-
+    gfxQuartzFontCachePrefObserver *observer = new gfxQuartzFontCachePrefObserver();
+    if (observer) {
+        nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (pref) {
+            pref->AddObserver("font.", observer, PR_FALSE);
+            pref->AddObserver("font.name-list.", observer, PR_FALSE);
+            pref->AddObserver("intl.accept_languages", observer, PR_FALSE);  // hmmmm...
+        } else {
+            delete observer;
+        }
+    }
 }
 
 const PRUint32 kNonNormalTraits = NSItalicFontMask | NSBoldFontMask | NSNarrowFontMask | NSExpandedFontMask | NSCondensedFontMask | NSCompressedFontMask;
@@ -1084,16 +1113,6 @@ gfxQuartzFontCache::ATSNotification(ATSFontNotificationInfoRef aInfo,
     // xxx - should be carefully pruning the list of fonts, not rebuilding it from scratch
     gfxQuartzFontCache *qfc = (gfxQuartzFontCache*)aUserArg;
     qfc->UpdateFontList();
-}
-
-int PR_CALLBACK
-gfxQuartzFontCache::PrefChangedCallback(const char *aPrefName, void *closure)
-{
-    // XXX this could be made to only clear out the cache for the prefs that were changed
-    // but it probably isn't that big a deal.
-    gfxQuartzFontCache *qfc = static_cast<gfxQuartzFontCache *>(closure);
-    qfc->mPrefFonts.Clear();
-    return 0;
 }
 
 MacOSFontEntry*

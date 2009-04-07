@@ -110,7 +110,7 @@ function runTest()
 
   var len = text1a.getComputedTextLength();
 
-  isRounded(text1aBounds.left, 85 - 1, "text1a.getBoundingClientRect().width");
+  isRounded(text1aBounds.left, 85 - 1, "text1a.getBoundingClientRect().left");
   isRounded(text1aBounds.width, len + 1, "text1a.getBoundingClientRect().width");
   
   isRounded(text2aBounds.left, text1aBounds.left + 100 - 4, "text2a.getBoundingClientRect().left");

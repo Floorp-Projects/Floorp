@@ -6423,6 +6423,8 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
       rowY += rowSize.height; 
     }
   }
+  // XXX comment refers to the obsolete NS_FRAME_OUTSIDE_CHILDREN flag
+  // XXX but I don't understand it, so not changing it for now
   // outer table borders overflow the table, so the table might be
   // target to other areas as the NS_FRAME_OUTSIDE_CHILDREN is set
   // on the table

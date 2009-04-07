@@ -50,7 +50,11 @@ CPU_ARCH	:= $(shell uname -p)
 endif
 
 ifeq (,$(filter-out i%86,$(CPU_ARCH)))
+ifdef USE_64
+CC              += -arch x86_64
+else
 OS_REL_CFLAGS	= -Di386
+endif
 else
 OS_REL_CFLAGS	= -Dppc
 endif

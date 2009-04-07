@@ -60,7 +60,7 @@
 
 #include "pkcs11.h"
 
-#include "pk11util.h"
+#include "pk11table.h"
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -381,7 +381,7 @@ handleArray(char *vname, int *error)
 	if (*error == 1) {
 	    return INVALID_INDEX;
 	} else if (index == INVALID_INDEX) {
-	    fprintf(stderr, "%s: 0x%x is an invalid index\n",vname,index);
+	    fprintf(stderr, "%s: 0x%lx is an invalid index\n",vname,index);
 	    *error = 1;
 	}
     }
@@ -395,7 +395,7 @@ makeArrayTarget(const char *vname, const Value *value, CK_ULONG index)
     CK_ULONG elementSize;
 
     if (index >= (CK_ULONG)value->arraySize) {
-	fprintf(stderr, "%s[%d]: index larger than array size (%d)\n",
+	fprintf(stderr, "%s[%lu]: index larger than array size (%d)\n",
 		vname, index, value->arraySize);
 	return NULL;
     }
@@ -1046,19 +1046,23 @@ printArg(Value *ptr,int arg_number)
 	printf(" Cryptoki Version: %d.%02d\n",
 		VERSION(info->cryptokiVersion));
 	printf(" Manufacturer ID: ");
-	printChars(info->manufacturerID,sizeof(info->manufacturerID));
+	printChars((char *)info->manufacturerID,
+        sizeof(info->manufacturerID));
 	printFlags(" Flags: ", info->flags, ConstInfoFlags);
 	printf(" Library Description: ");
-	printChars(info->libraryDescription,sizeof(info->libraryDescription));
+	printChars((char *)info->libraryDescription,
+        sizeof(info->libraryDescription));
 	printf(" Library Version: %d.%02d\n",
 		VERSION(info->libraryVersion));
 	break;
     case ArgSlotInfo:
 	slotInfo = (CK_SLOT_INFO *)ptr->data;
 	printf(" Slot Description: ");
-	printChars(slotInfo->slotDescription,sizeof(slotInfo->slotDescription));
+	printChars((char *)slotInfo->slotDescription,
+        sizeof(slotInfo->slotDescription));
 	printf(" Manufacturer ID: ");
-	printChars(slotInfo->manufacturerID,sizeof(slotInfo->manufacturerID));
+	printChars((char *)slotInfo->manufacturerID,
+        sizeof(slotInfo->manufacturerID));
 	printFlags(" Flags: ", slotInfo->flags, ConstSlotFlags);
 	printf(" Hardware Version: %d.%02d\n",
 		VERSION(slotInfo->hardwareVersion));
@@ -1068,13 +1072,15 @@ printArg(Value *ptr,int arg_number)
     case ArgTokenInfo:
 	tokenInfo = (CK_TOKEN_INFO *)ptr->data;
 	printf(" Label: ");
-	printChars(tokenInfo->label,sizeof(tokenInfo->label));
+	printChars((char *) tokenInfo->label,sizeof(tokenInfo->label));
 	printf(" Manufacturer ID: ");
-	printChars(tokenInfo->manufacturerID,sizeof(tokenInfo->manufacturerID));
+	printChars((char *)tokenInfo->manufacturerID,
+        sizeof(tokenInfo->manufacturerID));
 	printf(" Model: ");
-	printChars(tokenInfo->model,sizeof(tokenInfo->model));
+	printChars((char *)tokenInfo->model,sizeof(tokenInfo->model));
 	printf(" Serial Number: ");
-	printChars(tokenInfo->serialNumber,sizeof(tokenInfo->serialNumber));
+	printChars((char *)tokenInfo->serialNumber,
+        sizeof(tokenInfo->serialNumber));
 	printFlags(" Flags: ", tokenInfo->flags, ConstTokenFlags);
 	printf(" Max Session Count: ");
 	printConst(tokenInfo->ulMaxSessionCount, ConstAvailableSizes, 1);
@@ -1099,7 +1105,7 @@ printArg(Value *ptr,int arg_number)
 	printf(" Firmware Version: %d.%02d\n",
 		VERSION(tokenInfo->firmwareVersion));
 	printf(" UTC Time: ");
-	printChars(tokenInfo->utcTime,sizeof(tokenInfo->utcTime));
+	printChars((char *)tokenInfo->utcTime,sizeof(tokenInfo->utcTime));
 	break;
     case ArgSessionInfo:
 	sessionInfo = (CK_SESSION_INFO *)ptr->data;
@@ -1148,7 +1154,7 @@ printArg(Value *ptr,int arg_number)
 	initArgs = (CK_C_INITIALIZE_ARGS *)ptr->data;
 	printFlags(" Flags: ", initArgs->flags, ConstInitializeFlags);
         if (initArgs->LibraryParameters) {
-	    printf("Params: %s\n",initArgs->LibraryParameters);
+	    printf("Params: %s\n",(char *)initArgs->LibraryParameters);
 	}
     case ArgFunctionList:
 	functionList = (CK_FUNCTION_LIST *)ptr->data;
@@ -1609,7 +1615,7 @@ do_func(int index, Value **a)
 	if (!func) return CKR_CRYPTOKI_NOT_INITIALIZED;
 	return func->C_GetSlotList((CK_BBOOL)*(CK_ULONG *)a[0]->data,
 					(CK_SLOT_ID *)a[1]->data,
-					(CK_LONG *)a[2]->data);
+					(CK_ULONG *)a[2]->data);
     case F_C_GetSlotInfo:
 	if (!func) return CKR_CRYPTOKI_NOT_INITIALIZED;
 	return func->C_GetSlotInfo(*(CK_ULONG *)a[0]->data,
