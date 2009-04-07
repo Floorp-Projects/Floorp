@@ -541,7 +541,7 @@ nsHtml5TreeBuilder::endTokenization()
     stack[currentPtr]->release();
     currentPtr--;
   }
-  delete[] stack;
+  stack.release();
   stack = nsnull;
   while (listPtr > -1) {
     if (!!listOfActiveFormattingElements[listPtr]) {
@@ -549,9 +549,9 @@ nsHtml5TreeBuilder::endTokenization()
     }
     listPtr--;
   }
-  delete[] listOfActiveFormattingElements;
+  listOfActiveFormattingElements.release();
   listOfActiveFormattingElements = nsnull;
-  delete[] charBuffer;
+  charBuffer.release();
   charBuffer = nsnull;
   end();
 }
@@ -1031,7 +1031,11 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   goto starttagloop_end;
                 }
                 case NS_HTML5TREE_BUILDER_TABLE: {
+                  PRInt32 rememberPos = currentPtr;
                   implicitlyCloseP();
+                  if (rememberPos != currentPtr) {
+
+                  }
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   mode = NS_HTML5TREE_BUILDER_IN_TABLE;
                   goto starttagloop_end;

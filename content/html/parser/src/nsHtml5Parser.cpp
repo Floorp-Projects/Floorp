@@ -615,8 +615,20 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
   NS_ASSERTION((mRequest == aRequest), "Got Stop on wrong stream.");
   nsresult rv = NS_OK;
   
-  if (mLifeCycle < STREAM_ENDING) {
-    mLifeCycle = STREAM_ENDING;
+  switch (mLifeCycle) {
+    case TERMINATED:
+      break;
+    case NOT_STARTED:
+      mTokenizer->start();
+      mLifeCycle = STREAM_ENDING;
+      mParser = this;
+      break;
+    case STREAM_ENDING:
+      NS_ERROR("OnStopRequest when the stream lifecycle was already ending.");
+      break;
+    default:
+      mLifeCycle = STREAM_ENDING;
+      break;
   }
 
 //  if (eOnStart == mStreamListenerState) {

@@ -96,7 +96,7 @@ class nsHtml5Parser : public nsIParser,
   
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     
     nsHtml5Parser();
 
