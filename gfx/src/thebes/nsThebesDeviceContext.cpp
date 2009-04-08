@@ -130,8 +130,6 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     mHeight = 0;
     mPrintingScale = 1.0f;
 
-    mWidgetSurfaceCache.Init();
-
 #if defined(XP_WIN) && !defined(WINCE)
     SCRIPT_DIGITSUBSTITUTE sds;
     ScriptRecordDigitSubstitution(LOCALE_USER_DEFAULT, &sds);
@@ -288,6 +286,7 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 
     SetDPI();
 
+    CommonInit();
 
 #if defined(MOZ_ENABLE_GTK2) && defined(MOZ_X11)
     if (getenv ("MOZ_X_SYNC")) {
