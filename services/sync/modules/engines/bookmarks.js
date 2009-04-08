@@ -83,10 +83,17 @@ BookmarksEngine.prototype = {
 
 function BookmarksStore() {
   this._init();
+
+  // Initialize the special top level folders
+  [["menu", "bookmarksMenuFolder"],
+   ["toolbar", "toolbarFolder"],
+   ["unfiled", "unfiledBookmarksFolder"],
+  ].forEach(function(top) this.specialIds[top[0]] = this._bms[top[1]], this);
 }
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
   _logName: "BStore",
+  specialIds: {},
 
   __bms: null,
   get _bms() {
@@ -143,36 +150,25 @@ BookmarksStore.prototype = {
   },
 
   _getItemIdForGUID: function BStore__getItemIdForGUID(GUID) {
-    switch (GUID) {
-    case "menu":
-      return this._bms.bookmarksMenuFolder;
-    case "toolbar":
-      return this._bms.toolbarFolder;
-    case "unfiled":
-      return this._bms.unfiledBookmarksFolder;
-    default:
-      return this._bms.getItemIdForGUID(GUID);
-    }
-    return null;
+    if (GUID in this.specialIds)
+      return this.specialIds[GUID];
+
+    return this._bms.getItemIdForGUID(GUID);
   },
 
   _getWeaveIdForItem: function BStore__getWeaveIdForItem(placeId) {
-    if (placeId == this._bms.bookmarksMenuFolder)
-      return "menu";
-    if (placeId == this._bms.toolbarFolder)
-      return "toolbar";
-    if (placeId == this._bms.unfiledBookmarksFolder)
-      return "unfiled";
+    for (let [weaveId, id] in Iterator(this.specialIds))
+      if (placeId == id)
+        return weaveId;
+
     return this._bms.getItemGUID(placeId);
   },
 
   _isToplevel: function BStore__isToplevel(placeId) {
-    if (placeId == this._bms.bookmarksMenuFolder)
-      return true;
-    if (placeId == this._bms.toolbarFolder)
-      return true;
-    if (placeId == this._bms.unfiledBookmarksFolder)
-      return true;
+    for (let [weaveId, id] in Iterator(this.specialIds))
+      if (placeId == id)
+        return true;
+
     if (this._bms.getFolderIdForItem(placeId) <= 0)
       return true;
     return false;
@@ -296,9 +292,7 @@ BookmarksStore.prototype = {
   },
 
   remove: function BStore_remove(record) {
-    if (record.id == "menu" ||
-        record.id == "toolbar" ||
-        record.id == "unfiled") {
+    if (record.id in this.specialIds) {
       this._log.warn("Attempted to remove root node (" + record.id +
                      ").  Skipping record removal.");
       return;
@@ -333,9 +327,7 @@ BookmarksStore.prototype = {
   update: function BStore_update(record) {
     let itemId = this._getItemIdForGUID(record.id);
 
-    if (record.id == "menu" ||
-        record.id == "toolbar" ||
-        record.id == "unfiled") {
+    if (record.id in this.specialIds) {
       this._log.debug("Skipping update for root node.");
       return;
     }
@@ -610,9 +602,8 @@ BookmarksStore.prototype = {
 
   getAllIDs: function BStore_getAllIDs() {
     let items = {};
-    this._getChildren("menu", true, items);
-    this._getChildren("toolbar", true, items);
-    this._getChildren("unfiled", true, items);
+    for (let [weaveId, id] in Iterator(this.specialIds))
+      this._getChildren(weaveId, true, items);
     return items;
   },
 
@@ -623,9 +614,8 @@ BookmarksStore.prototype = {
   },
 
   wipe: function BStore_wipe() {
-    this._bms.removeFolderChildren(this._bms.bookmarksMenuFolder);
-    this._bms.removeFolderChildren(this._bms.toolbarFolder);
-    this._bms.removeFolderChildren(this._bms.unfiledBookmarksFolder);
+    for (let [weaveId, id] in Iterator(this.specialIds))
+      this._bms.removeFolderChildren(id);
   }
 };
 
@@ -670,15 +660,12 @@ BookmarksTracker.prototype = {
       this._all[this._bms.getItemIdForGUID(guid)] = guid;
     }
 
-    // ignore changes to the three roots
-    // we use special names for them, so ignore their "real" places guid
-    // as well as ours, just in case
-    this.ignoreID("menu");
-    this.ignoreID("toolbar");
-    this.ignoreID("unfiled");
-    this.ignoreID(this._all[this._bms.bookmarksMenuFolder]);
-    this.ignoreID(this._all[this._bms.toolbarFolder]);
-    this.ignoreID(this._all[this._bms.unfiledBookmarksFolder]);
+    // Ignore changes to the special roots. We use special names for them, so
+    // ignore their "real" places guid as well as ours, just in case
+    for (let [weaveId, id] in Iterator(store.specialIds)) {
+      this.ignoreID(weaveId);
+      this.ignoreID(this._all[id]);
+    }
 
     this._bms.addObserver(this, false);
   },
