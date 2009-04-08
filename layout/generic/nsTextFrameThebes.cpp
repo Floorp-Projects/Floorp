@@ -3422,6 +3422,8 @@ nsTextFrame::Init(nsIContent*      aContent,
 void
 nsTextFrame::Destroy()
 {
+  // We might want to clear FRAMETREE_DEPENDS_ON_CHARS on mContent here, since
+  // our parent frame type might be changing.  Not clear whether it's worth it.
   ClearTextRun();
   if (mNextContinuation) {
     mNextContinuation->SetPrevInFlow(nsnull);

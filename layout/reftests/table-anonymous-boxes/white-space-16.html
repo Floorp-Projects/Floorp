@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #t:after { content: "d" }
+    </style>
+  </head>  
+  <body>
+    <span id="t">
+      a
+      <span style="display: table-cell">b</span><script>document.body.offsetWidth</script><span style="display: table-cell">c</span>
+    </span>
+  </body>
+</html>
