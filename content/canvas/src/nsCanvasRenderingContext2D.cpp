@@ -318,6 +318,8 @@ public:
     virtual ~nsCanvasRenderingContext2D();
 
     nsresult Redraw();
+    // this rect is in CSS pixels
+    nsresult Redraw(const gfxRect& r);
 
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
@@ -884,6 +886,20 @@ nsCanvasRenderingContext2D::Redraw()
     if (!mIsFrameInvalid) {
         mIsFrameInvalid = PR_TRUE;
         return mCanvasElement->InvalidateFrame();
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
+{
+    if (!mCanvasElement)
+        return NS_OK;
+
+    if (!mIsFrameInvalid) {
+        mIsFrameInvalid = PR_TRUE;
+        return mCanvasElement->InvalidateFrameSubrect(r);
     }
 
     return NS_OK;
@@ -3433,7 +3449,13 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     mThebes->SetColor(gfxRGBA(1,1,1,1));
     DirtyAllStyles();
 
-    Redraw();
+    // note that aX and aY are coordinates in the document that
+    // we're drawing; aX and aY are drawn to 0,0 in current user
+    // space.
+    gfxRect damageRect = mThebes->UserToDevice(gfxRect(0, 0, aW, aH));
+    damageRect.RoundOut();
+
+    Redraw(damageRect);
 
     return rv;
 }
