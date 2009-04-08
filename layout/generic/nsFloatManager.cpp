@@ -135,12 +135,11 @@ void nsFloatManager::Shutdown()
   sCachedFloatManagerCount = -1;
 }
 
-nsRect
+nsFlowAreaRect
 nsFloatManager::GetBand(nscoord aYOffset,
                         nscoord aMaxHeight,
                         nscoord aContentAreaWidth,
-                        SavedState* aState,
-                        PRBool* aHasFloats) const
+                        SavedState* aState) const
 {
   NS_ASSERTION(aMaxHeight >= 0, "unexpected max height");
   NS_ASSERTION(aContentAreaWidth >= 0, "unexpected content area width");
@@ -167,8 +166,7 @@ nsFloatManager::GetBand(nscoord aYOffset,
   if (floatCount == 0 ||
       (mFloats[floatCount-1].mLeftYMost <= top &&
        mFloats[floatCount-1].mRightYMost <= top)) {
-    *aHasFloats = PR_FALSE;
-    return nsRect(0, aYOffset, aContentAreaWidth, aMaxHeight);
+    return nsFlowAreaRect(0, aYOffset, aContentAreaWidth, aMaxHeight, PR_FALSE);
   }
 
   nscoord bottom;
@@ -241,9 +239,8 @@ nsFloatManager::GetBand(nscoord aYOffset,
     }
   }
 
-  *aHasFloats = haveFloats;
   nscoord height = (bottom == nscoord_MAX) ? nscoord_MAX : (bottom - top);
-  return nsRect(left - mX, top - mY, right - left, height);
+  return nsFlowAreaRect(left - mX, top - mY, right - left, height, haveFloats);
 }
 
 nsresult

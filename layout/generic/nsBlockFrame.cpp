@@ -1658,20 +1658,18 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
       // Note that this check will become incorrect once bug 25888 is fixed
       // because we are only checking the top of the line
       PRBool wasImpactedByFloat = aLine->IsImpactedByFloat();
-      nsRect floatAvailableSpace;
-      PRBool isImpactedByFloat =
-        aState.GetFloatAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE,
-                                      floatAvailableSpace);
+      nsFlowAreaRect floatAvailableSpace =
+        aState.GetFloatAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE);
 
 #ifdef REALLY_NOISY_REFLOW
     printf("nsBlockFrame::PropagateFloatDamage %p was = %d, is=%d\n", 
-       this, wasImpactedByFloat, isImpactedByFloat);
+           this, wasImpactedByFloat, floatAvailableSpace.mHasFloats);
 #endif
 
       // Mark the line dirty if it was or is affected by a float
       // We actually only really need to reflow if the amount of impact
       // changes, but that's not straightforward to check
-      if (wasImpactedByFloat || isImpactedByFloat) {
+      if (wasImpactedByFloat || floatAvailableSpace.mHasFloats) {
         aLine->MarkDirty();
       }
     }
@@ -2953,16 +2951,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     
     // Here aState.mY is the top border-edge of the block.
     // Compute the available space for the block
-    nsRect floatAvailableSpace;
-    PRBool isImpacted = aState.GetFloatAvailableSpace(floatAvailableSpace);
+    nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
 #ifdef REALLY_NOISY_REFLOW
     printf("setting line %p isImpacted to %s\n",
-           aLine.get(), isImpacted?"true":"false");
+           aLine.get(), floatAvailableSpace.mHasFloats?"true":"false");
 #endif
-    aLine->SetLineIsImpactedByFloat(isImpacted);
+    aLine->SetLineIsImpactedByFloat(floatAvailableSpace.mHasFloats);
     nsRect availSpace;
-    aState.ComputeBlockAvailSpace(frame, display,
-                                  isImpacted, floatAvailableSpace,
+    aState.ComputeBlockAvailSpace(frame, display, floatAvailableSpace,
                                   replacedBlock != nsnull, availSpace);
     
     // Now put the Y coordinate back to the top of the top-margin +
@@ -3043,7 +3039,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // then pushing it to the next page would give it more room. Note that
       // isImpacted doesn't include impact from the block's own floats.
       PRBool forceFit = aState.IsAdjacentWithTop() && clearance <= 0 &&
-        !isImpacted;
+        !floatAvailableSpace.mHasFloats;
       nsCollapsingMargin collapsedBottomMargin;
       nsRect combinedArea(0,0,0,0);
       *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, forceFit, aLine.get(),
@@ -3351,24 +3347,23 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (ShouldApplyTopMargin(aState, aLine)) {
     aState.mY += aState.mPrevBottomMargin.get();
   }
-  nsRect floatAvailableSpace;
-  PRBool impactedByFloats = aState.GetFloatAvailableSpace(floatAvailableSpace);
-  aLine->SetLineIsImpactedByFloat(impactedByFloats);
+  nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
+  aLine->SetLineIsImpactedByFloat(floatAvailableSpace.mHasFloats);
 #ifdef REALLY_NOISY_REFLOW
   printf("nsBlockFrame::DoReflowInlineFrames %p impacted = %d\n",
-         this, impactedByFloats);
+         this, floatAvailableSpace.mHasFloats);
 #endif
 
   const nsMargin& borderPadding = aState.BorderPadding();
-  nscoord x = floatAvailableSpace.x + borderPadding.left;
-  nscoord availWidth = floatAvailableSpace.width;
+  nscoord x = floatAvailableSpace.mRect.x + borderPadding.left;
+  nscoord availWidth = floatAvailableSpace.mRect.width;
   nscoord availHeight;
   if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
     availHeight = NS_UNCONSTRAINEDSIZE;
   }
   else {
     /* XXX get the height right! */
-    availHeight = floatAvailableSpace.height;
+    availHeight = floatAvailableSpace.mRect.height;
   }
 
   // Make sure to enable resize optimization before we call BeginLineReflow
@@ -3377,7 +3372,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
-                              impactedByFloats,
+                              floatAvailableSpace.mHasFloats,
                               PR_FALSE /*XXX isTopOfPage*/);
 
   aState.SetFlag(BRS_LINE_LAYOUT_EMPTY, PR_FALSE);
@@ -3400,7 +3395,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // continuations
   PRBool isContinuingPlaceholders = PR_FALSE;
 
-  if (impactedByFloats) {
+  if (floatAvailableSpace.mHasFloats) {
     // There is a soft break opportunity at the start of the line, because
     // we can always move this line down below float(s).
     if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0, PR_TRUE, eNormalBreak)) {
@@ -3505,14 +3500,14 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     //
     // What we do is to advance past the first float we find and
     // then reflow the line all over again.
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != floatAvailableSpace.height,
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != floatAvailableSpace.mRect.height,
                  "unconstrained height on totally empty line");
 
     // See the analogous code for blocks in nsBlockReflowState::ClearFloats.
-    if (floatAvailableSpace.height > 0) {
-      NS_ASSERTION(impactedByFloats,
+    if (floatAvailableSpace.mRect.height > 0) {
+      NS_ASSERTION(floatAvailableSpace.mHasFloats,
                    "redo line on totally empty line with non-empty band...");
-      aState.mY += floatAvailableSpace.height;
+      aState.mY += floatAvailableSpace.mRect.height;
     } else {
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableHeight,
                    "We shouldn't be running out of height here");
@@ -6664,10 +6659,10 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // the block.
   // FIXME: aLineTop isn't actually set correctly by some callers, since
   // they reposition the line.
-  nsRect floatAvailSpace;
-  aState.GetFloatAvailableSpaceWithState(aLineTop, PR_FALSE,
-                                         &aState.mFloatManagerStateBefore,
-                                         floatAvailSpace);
+  nsRect floatAvailSpace =
+    aState.GetFloatAvailableSpaceWithState(aLineTop, PR_FALSE,
+                                           &aState.mFloatManagerStateBefore)
+          .mRect;
   // FIXME (bug 25888): need to check the entire region that the first
   // line overlaps, not just the top pixel.
 
