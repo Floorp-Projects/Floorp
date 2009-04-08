@@ -95,6 +95,14 @@
           var queryNode = asQuery(this.getResultNode());
           var options = queryNode.queryOptions.clone();
 
+          // Make sure we're getting uri results.
+          // We do not yet support searching into grouped queries or into
+          // tag containers, so we must fall to the default case.
+          if (PlacesUtils.nodeIsHistoryContainer(queryNode) ||
+              options.resultType == options.RESULTS_AS_TAG_QUERY ||
+              options.resultType == options.RESULTS_AS_TAG_CONTENTS)
+            options.resultType = options.RESULT_TYPE_URI;
+
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
 
