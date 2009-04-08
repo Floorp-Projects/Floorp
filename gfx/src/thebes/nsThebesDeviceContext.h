@@ -141,8 +141,6 @@ private:
     nscoord mWidth;
     nscoord mHeight;
 
-    nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
-
     nsRefPtr<gfxASurface> mPrintingSurface;
     float mPrintingScale;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
