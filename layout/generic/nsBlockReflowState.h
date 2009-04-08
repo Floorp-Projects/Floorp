@@ -101,12 +101,6 @@ public:
                                          PRBool aRelaxHeightConstraint,
                                          nsFloatManager::SavedState *aState,
                                          nsRect& aResult) const;
-  /* FIXME: To be removed */
-  void GetAvailableSpace() { GetAvailableSpace(mY, PR_FALSE); }
-  void GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint) {
-    mBandHasFloats =
-      GetFloatAvailableSpace(aY, aRelaxHeightConstraint, mAvailSpaceRect);
-  }
 
   /*
    * The following functions all return PR_TRUE if they were able to
@@ -197,8 +191,6 @@ public:
     }
   }
 
-  PRBool IsImpactedByFloat() const;
-
   nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
 
   void FreeLineBox(nsLineBox* aLine);
@@ -272,10 +264,6 @@ public:
   // The current Y coordinate in the block
   nscoord mY;
 
-  // The available space within the current band.
-  // (relative to the *content*-rect of the block)
-  nsRect mAvailSpaceRect;
-
   // The combined area of all floats placed so far
   nsRect mFloatCombinedArea;
 
@@ -317,11 +305,6 @@ public:
   PRInt16 mFlags;
  
   PRUint8 mFloatBreakType;
-
-  // The number of floats on the sides of mAvailSpaceRect, including
-  // floats that do not reduce mAvailSpaceRect because they are in the
-  // margins.
-  PRPackedBool mBandHasFloats;
 
   void SetFlag(PRUint32 aFlag, PRBool aValue)
   {
