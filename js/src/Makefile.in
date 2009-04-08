@@ -659,10 +659,10 @@ imacro_asm.js: imacro_asm.js.in jsopcode.tbl
 GARBAGE += imacros.c.tmp imacro_asm.js
 
 ifneq (,$(wildcard $(RUN_TEST_PROGRAM))$(if $(NSPR_LIBS),,1))
-libs:: imacros.c.tmp imacro_asm.js $(srcdir)/imacros.jsasm
-	$(wildcard $(RUN_TEST_PROGRAM)) $(DIST)/bin/js$(BIN_SUFFIX) imacro_asm.js $(srcdir)/imacros.jsasm > $<
-	@cmp -s $< $(srcdir)/imacros.c.out || \
-	  (echo "imacros.c.out is out of date. Run 'make update-imacros' to copy it to your source tree."; diff -U 4 $(srcdir)/imacros.c.out $<; exit 1)
+libs:: imacro_asm.js $(srcdir)/imacros.jsasm
+	$(wildcard $(RUN_TEST_PROGRAM)) $(DIST)/bin/js$(BIN_SUFFIX) $< $(srcdir)/imacros.jsasm > imacros.c.tmp
+	@cmp -s imacros.c.tmp $(srcdir)/imacros.c.out || \
+	  (echo "imacros.c.out is out of date. Run 'make update-imacros' to copy it to your source tree."; diff -U 4 $(srcdir)/imacros.c.out imacros.c.out; exit 1)
 	@echo "imacros.c.out is up to date"
 
 update-imacros: imacros.c.tmp
