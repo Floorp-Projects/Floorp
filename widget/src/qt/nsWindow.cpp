@@ -191,9 +191,6 @@ nsWindow::nsWindow()
     mIsShown          = PR_FALSE;
     mEnabled          = PR_TRUE;
 
-    mPreferredWidth   = 0;
-    mPreferredHeight  = 0;
-
     mDrawingArea         = nsnull;
     mIsVisible           = PR_FALSE;
     mActivatePending     = PR_FALSE;
@@ -721,35 +718,6 @@ nsWindow::Invalidate(const nsIntRect &aRect,
 }
 
 NS_IMETHODIMP
-nsWindow::InvalidateRegion(const nsIRegion* aRegion,
-                           PRBool           aIsSynchronous)
-{
-
-    QRegion *region = nsnull;
-    aRegion->GetNativeRegion((void *&)region);
-
-    if (region && mDrawingArea) {
-        QRect rect = region->boundingRect();
-
-//        LOGDRAW(("Invalidate (region) [%p]: %d %d %d %d (sync: %d)\n",
-//                 (void *)this,
-//                 rect.x, rect.y, rect.width, rect.height, aIsSynchronous));
-
-        if (aIsSynchronous && !mDrawingArea->paintingActive())
-            mDrawingArea->repaint(*region);
-        else
-            mDrawingArea->update(*region);
-    }
-    else {
-        qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-        LOGDRAW(("Invalidate (region) [%p] with empty region\n",
-                 (void *)this));
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::Update()
 {
     if (!mDrawingArea)
@@ -757,12 +725,6 @@ nsWindow::Update()
 
     // mDrawingArea->update(); // FIXME  This call cause update for whole window on each scroll event
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::SetColorMap(nsColorMap *aColorMap)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -785,26 +747,6 @@ nsWindow::Scroll(PRInt32  aDx,
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::ScrollWidgets(PRInt32 aDx,
-                        PRInt32 aDy)
-{
-    if (!mDrawingArea)
-        return NS_OK;
-
-    mDrawingArea->scroll(aDx, aDy);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::ScrollRect(nsIntRect  &aSrcRect,
-                     PRInt32  aDx,
-                     PRInt32  aDy)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void*
@@ -901,12 +843,6 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     return SetWindowIconList(iconList);
 }
 
-NS_IMETHODIMP
-nsWindow::ShowMenuBar(PRBool aShow)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsIntPoint
 nsWindow::WidgetToScreenOffset()
 {
@@ -935,12 +871,6 @@ nsWindow::EnableDragDrop(PRBool aEnable)
 {
     mDrawingArea->setAcceptDrops(aEnable);
     return NS_OK;
-}
-
-void
-nsWindow::ConvertToDeviceCoordinates(nscoord &aX,
-                                     nscoord &aY)
-{
 }
 
 NS_IMETHODIMP
@@ -2518,25 +2448,6 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     if (aRepaint)
         mDrawingArea->update();
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::GetPreferredSize(PRInt32 &aWidth,
-                                 PRInt32 &aHeight)
-{
-    aWidth  = mPreferredWidth;
-    aHeight = mPreferredHeight;
-    return (mPreferredWidth != 0 && mPreferredHeight != 0) ? 
-        NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsWindow::SetPreferredSize(PRInt32 aWidth,
-                                 PRInt32 aHeight)
-{
-    mPreferredWidth  = aWidth;
-    mPreferredHeight = aHeight;
     return NS_OK;
 }
 

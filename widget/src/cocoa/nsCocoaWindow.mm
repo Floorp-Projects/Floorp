@@ -1222,18 +1222,16 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::SetMenuBar(void *aMenuBar)
+void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
 {
   if (mMenuBar)
     mMenuBar->SetParent(nsnull);
-  mMenuBar = static_cast<nsMenuBarX*>(aMenuBar);
+  mMenuBar = aMenuBar;
   
   // We paint the hidden window menu bar if no other menu bar has been painted
   // yet so that some reasonable menu bar is displayed when the app starts up.
   if (!gSomeMenuBarPainted && mMenuBar && (nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar))
     mMenuBar->Paint();
-  
-  return NS_OK;
 }
 
 
@@ -1243,12 +1241,6 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
     mPopupContentView->SetFocus(aState);
 
   return NS_OK;
-}
-
-
-NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
-{
-  return NS_ERROR_FAILURE;
 }
 
 

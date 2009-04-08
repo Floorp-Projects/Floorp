@@ -2076,10 +2076,6 @@ NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
     // scrollbar stuff needs a content area to toggle the scrollbars on anyway.
     // So just don't do these until mChromeLoaded is true.
     
-    // menubar has its own special treatment
-    mWindow->ShowMenuBar(mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR ? 
-                         PR_TRUE : PR_FALSE);
-
     // Scrollbars have their own special treatment.
     SetContentScrollbarVisibility(mChromeFlags &
                                   nsIWebBrowserChrome::CHROME_SCROLLBARS ?

@@ -1036,15 +1036,6 @@ nsChildView::GetParent(void)
 }
 
 
-NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
-                                            PRBool *aForWindow)
-{
-  if (aForWindow)
-    *aForWindow = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 NS_IMETHODIMP nsChildView::Enable(PRBool aState)
 {
   return NS_OK;
@@ -1116,25 +1107,6 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-
-// Set the colormap of the window
-NS_IMETHODIMP nsChildView::SetColorMap(nsColorMap *aColorMap)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsChildView::SetMenuBar(void* aMenuBar)
-{
-  return NS_ERROR_FAILURE; // subviews don't have menu bars
-}
-
-
-NS_IMETHODIMP nsChildView::ShowMenuBar(PRBool aShow)
-{
-  return NS_ERROR_FAILURE; // subviews don't have menu bars
 }
 
 
@@ -1281,18 +1253,6 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-
-NS_METHOD nsChildView::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-{
-  return NS_ERROR_FAILURE; // nobody call this anywhere in the code
-}
-
-
-NS_METHOD nsChildView::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-{
-  return NS_ERROR_FAILURE; // nobody call this anywhere in the code
 }
 
 
@@ -1787,32 +1747,6 @@ NS_IMETHODIMP nsChildView::Validate()
 }
 
 
-// Invalidate this component's visible area
-NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  if (!mView || !mVisible)
-    return NS_OK;
-
-  // FIXME rewrite to use a Cocoa region when nsIRegion isn't a QD Region
-  NSRect r;
-  nsIntRect bounds;
-  nsIRegion* region = const_cast<nsIRegion*>(aRegion);     // ugh. this method should be const
-  region->GetBoundingBox(&bounds.x, &bounds.y, &bounds.width, &bounds.height);
-  GeckoRectToNSRect(bounds, r);
-  
-  if (aIsSynchronous)
-    [mView displayRect:r];
-  else
-    [mView setNeedsDisplayInRect:r];
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-
 inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 {
   // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
@@ -2061,49 +1995,6 @@ PRBool nsChildView::ReportSizeEvent()
 #pragma mark -
 
 
-/*  Calculate the x and y offsets for this particular widget
- *  @update  ps 09/22/98
- *  @param   aX -- x offset amount
- *  @param   aY -- y offset amount 
- *  @return  NOTHING
- */
-NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  aX = aY = 0;
-  NSRect bounds = {{0, 0}, {0, 0}};
-  bounds = [mView convertRect:bounds toView:nil];
-  aX += static_cast<PRInt32>(bounds.origin.x);
-  aY += static_cast<PRInt32>(bounds.origin.y);
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-
-// Find if a point in local coordinates is inside this object
-PRBool nsChildView::PointInWidget(Point aThePoint)
-{
-  // get the origin in local coordinates
-  nsIntPoint widgetOrigin(0, 0);
-  LocalToWindowCoordinate(widgetOrigin);
-
-  // get rectangle relatively to the parent
-  nsIntRect widgetRect;
-  GetBounds(widgetRect);
-
-  // convert the topLeft corner to local coordinates
-  widgetRect.MoveBy(widgetOrigin.x, widgetOrigin.y);
-
-  // finally tell whether it's a hit
-  return widgetRect.Contains(aThePoint.h, aThePoint.v);
-}
-
-#pragma mark -
-
-
 //    Return the offset between this child view and the screen.
 //    @return       -- widget origin in screen coordinates
 nsIntPoint nsChildView::WidgetToScreenOffset()
@@ -2128,17 +2019,6 @@ nsIntPoint nsChildView::WidgetToScreenOffset()
   return nsIntPoint(NSToIntRound(temp.x), NSToIntRound(temp.y));
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
-}
-
-
-// Convert the coordinates to some device coordinates so GFX can draw.
-void nsChildView::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
-{
-  PRInt32 offX = 0, offY = 0;
-  this->CalcOffset(offX,offY);
-
-  aX += offX;
-  aY += offY;
 }
 
 
