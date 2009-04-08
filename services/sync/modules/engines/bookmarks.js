@@ -675,9 +675,24 @@ BookmarksTracker.prototype = {
     this._score += 10;
   },
 
+  /**
+   * Determine if a change should be ignored: we're ignoring everything or the
+   * folder is for livemarks
+   *
+   * @param folder
+   *        Folder of the item being changed
+   */
+  _ignore: function BMT__ignore(folder) {
+    // Ignore unconditionally if the engine tells us to
+    if (this.ignoreAll)
+      return true;
+
+    // Ignore livemark children
+    return this._ls.isLivemark(folder);
+  },
+
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
-    if (this.ignoreAll ||
-	this._ls.isLivemark(folder))
+    if (this._ignore(folder))
       return;
 
     this._log.trace("onItemAdded: " + itemId);
@@ -688,8 +703,7 @@ BookmarksTracker.prototype = {
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
-    if (this.ignoreAll ||
-	this._ls.isLivemark(folder))
+    if (this._ignore(folder))
       return;
 
     this._log.trace("onItemRemoved: " + itemId);
@@ -700,7 +714,8 @@ BookmarksTracker.prototype = {
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
-    if (this.ignoreAll)
+    let folder = this._bms.getFolderIdForItem(itemId);
+    if (this._ignore(folder))
       return;
 
     // ignore annotations except for the ones that we sync
@@ -708,10 +723,6 @@ BookmarksTracker.prototype = {
 		   property != "livemark/siteURI" ||
 		   property != "microsummary/generatorURI"))
 	return;
-
-    // ignore if parent is a livemark
-    if (this._ls.isLivemark(this._bms.getFolderIdForItem(itemId)))
-      return;
 
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
@@ -726,7 +737,8 @@ BookmarksTracker.prototype = {
   },
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
-    if (this.ignoreAll)
+    let folder = this._bms.getFolderIdForItem(itemId);
+    if (this._ignore(folder))
       return;
 
     this._log.trace("onItemMoved: " + itemId);
