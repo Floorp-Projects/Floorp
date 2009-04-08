@@ -5,9 +5,9 @@
       function doTest() {
         try {
           document.normalize();
-        } catch(e) {}
+        } catch (e) {}
         var n = document.getElementById("t").nextSibling;
-        n.parentNode.removeChild(n);
+        n.data = " ";
         document.documentElement.className = "";
       }
     </script>
