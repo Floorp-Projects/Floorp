@@ -2186,6 +2186,23 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSTreeContext *tc,
                 dn->pn_op = JSOP_CALLEE;
                 dn->pn_cookie = MAKE_UPVAR_COOKIE(funtc->staticLevel, 0);
                 dn->pn_dflags |= PND_BOUND;
+
+                /*
+                 * If this named function expression uses its own name other
+                 * than to call itself, flag this function as using arguments,
+                 * as if it had used arguments.callee instead of its own name.
+                 *
+                 * This abuses the plain sense of TCF_FUN_USES_ARGUMENTS, but
+                 * we are out of tcflags bits at the moment. If it deoptimizes
+                 * code unfairly (see JSCompiler::setFunctionKinds, where this
+                 * flag is interpreted in its broader sense, not only to mean
+                 * "this function might leak arguments.callee"), we can perhaps
+                 * try to work harder to add a TCF_FUN_CALLS_ITSELF flag and
+                 * use that more precisely, both here and for unnamed function
+                 * expressions.
+                 */
+                if (dn->isFunArg())
+                    fn->pn_funbox->tcflags |= TCF_FUN_USES_ARGUMENTS;
                 continue;
             }
 
