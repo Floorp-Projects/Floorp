@@ -57,6 +57,11 @@
 #include "nsSVGIntegrationUtils.h"
 #endif
 
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIImage.h"
+
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
@@ -493,14 +498,40 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
     return PR_FALSE;
 
   const nsStyleBackground* bg;
-  PRBool hasBG =
-    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
 
-  return (hasBG && NS_GET_A(bg->mBackgroundColor) == 255 &&
-          // bottom layer's clip is used for the color
-          bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER &&
-          !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->
-                                         mBorderRadius));
+  if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg))
+    return PR_FALSE;
+
+  const nsStyleBackground::Layer& bottomLayer = bg->BottomLayer();
+
+  // bottom layer's clip is used for the color
+  if (bottomLayer.mClip != NS_STYLE_BG_CLIP_BORDER ||
+      nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius))
+    return PR_FALSE;
+
+  if (NS_GET_A(bg->mBackgroundColor) == 255)
+    return PR_TRUE;
+
+  if (bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY) {
+    if (bottomLayer.mImage.mRequest) {
+      nsCOMPtr<imgIContainer> container;
+      bottomLayer.mImage.mRequest->GetImage(getter_AddRefs(container));
+      
+      PRUint32 nframes;
+      container->GetNumFrames(&nframes);
+      if (nframes == 1) {
+        nsCOMPtr<gfxIImageFrame> imgFrame;
+        container->GetCurrentFrame(getter_AddRefs(imgFrame));
+        nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
+
+        PRBool hasMask = img->GetHasAlphaMask();
+
+        return !hasMask;
+      }
+    }
+  }
+
+  return PR_FALSE;
 }
 
 PRBool
