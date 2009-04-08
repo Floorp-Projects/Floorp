@@ -83,12 +83,24 @@ public:
   void SetupOverflowPlaceholdersProperty();
 
   /**
-   * Get the available reflow space for the current y coordinate. The
-   * available space is relative to our coordinate system (0,0) is our
-   * upper left corner.
+   * Get the available reflow space (the area not occupied by floats)
+   * for the current y coordinate. The available space is relative to
+   * our coordinate system, which is the content box, with (0, 0) in the
+   * upper left.
+   *
+   * Returns whether there are floats present at the given vertical
+   * coordinate and within the width of the content rect.
    */
+  PRBool GetFloatAvailableSpace(nsRect& aResult) const
+    { return GetFloatAvailableSpace(mY, PR_FALSE, aResult); }
+  PRBool GetFloatAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
+                                nsRect& aResult) const;
+  /* FIXME: To be removed */
   void GetAvailableSpace() { GetAvailableSpace(mY, PR_FALSE); }
-  void GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint);
+  void GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint) {
+    mBandHasFloats =
+      GetFloatAvailableSpace(aY, aRelaxHeightConstraint, mAvailSpaceRect);
+  }
 
   /*
    * The following functions all return PR_TRUE if they were able to

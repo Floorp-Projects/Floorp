@@ -334,8 +334,10 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 #endif
 }
 
-void
-nsBlockReflowState::GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint)
+PRBool
+nsBlockReflowState::GetFloatAvailableSpace(nscoord aY,
+                                           PRBool aRelaxHeightConstraint,
+                                           nsRect& aResult) const
 {
 #ifdef DEBUG
   // Verify that the caller setup the coordinate system properly
@@ -346,26 +348,24 @@ nsBlockReflowState::GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint)
 #endif
 
   PRBool hasFloats;
-  mAvailSpaceRect = 
+  aResult = 
     mFloatManager->GetBand(aY - BorderPadding().top, 
                            aRelaxHeightConstraint ? nscoord_MAX
                                                   : mContentArea.height,
                            mContentArea.width,
                            &hasFloats);
-  mBandHasFloats = hasFloats;
   // Keep the width >= 0 for compatibility with nsSpaceManager.
-  if (mAvailSpaceRect.width < 0)
-    mAvailSpaceRect.width = 0;
+  if (aResult.width < 0)
+    aResult.width = 0;
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("GetAvailableSpace: band=%d,%d,%d,%d hasfloats=%d\n",
-           mAvailSpaceRect.x, mAvailSpaceRect.y,
-           mAvailSpaceRect.width, mAvailSpaceRect.height,
-           mBandHasFloats);
+           aResult.x, aResult.y, aResult.width, aResult.height, hasFloats);
   }
 #endif
+  return hasFloats;
 }
 
 /*
