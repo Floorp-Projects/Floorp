@@ -566,6 +566,17 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
   nsFloatCache* fc = mFloatCacheFreeList.Alloc();
   fc->mPlaceholder = aPlaceholder;
 
+  // Because we are in the middle of reflowing a placeholder frame
+  // within a line (and possibly nested in an inline frame or two
+  // that's a child of our block) we need to restore the space
+  // manager's translation to the space that the block resides in
+  // before placing the float.
+  nscoord ox, oy;
+  mFloatManager->GetTranslation(ox, oy);
+  nscoord dx = ox - mFloatManagerX;
+  nscoord dy = oy - mFloatManagerY;
+  mFloatManager->Translate(-dx, -dy);
+
   PRBool placed;
 
   // Now place the float immediately if possible. Otherwise stash it
@@ -573,20 +584,12 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
   // If one or more floats has already been pushed to the next line,
   // don't let this one go on the current line, since that would violate
   // float ordering.
+  nsRect floatAvailableSpace;
+  GetFloatAvailableSpace(floatAvailableSpace);
   if (mBelowCurrentLineFloats.IsEmpty() &&
       (aLineLayout.LineIsEmpty() ||
-       mBlock->ComputeFloatWidth(*this, aPlaceholder) <= aAvailableWidth)) {
-    // Because we are in the middle of reflowing a placeholder frame
-    // within a line (and possibly nested in an inline frame or two
-    // that's a child of our block) we need to restore the space
-    // manager's translation to the space that the block resides in
-    // before placing the float.
-    nscoord ox, oy;
-    mFloatManager->GetTranslation(ox, oy);
-    nscoord dx = ox - mFloatManagerX;
-    nscoord dy = oy - mFloatManagerY;
-    mFloatManager->Translate(-dx, -dy);
-
+       mBlock->ComputeFloatWidth(*this, floatAvailableSpace, aPlaceholder) <=
+         aAvailableWidth)) {
     // And then place it
     PRBool isLeftFloat;
     // force it to fit if we're at the top of the block and we can't
@@ -624,9 +627,6 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
       }
       delete fc;
     }
-
-    // Restore coordinate system
-    mFloatManager->Translate(dx, dy);
   }
   else {
     // Always claim to be placed; we don't know whether we fit yet, so we
@@ -648,19 +648,24 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
       }
     }
   }
+
+  // Restore coordinate system
+  mFloatManager->Translate(dx, dy);
+
   return placed;
 }
 
 PRBool
-nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
-                                  PRUint8 aFloats, PRBool aForceFit)
+nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
+                                  const nsRect& aFloatAvailableSpace,
+                                  PRBool aBandHasFloats, PRBool aForceFit)
 {
   // If the current Y coordinate is not impacted by any floats
   // then by definition the float fits.
   PRBool result = PR_TRUE;
-  if (mBandHasFloats) {
+  if (aBandHasFloats) {
     // XXX We should allow overflow by up to half a pixel here (bug 21193).
-    if (mAvailSpaceRect.width < aFloatSize.width) {
+    if (aFloatAvailableSpace.width < aFloatSize.width) {
       // The available width is too narrow (and its been impacted by a
       // prior float)
       result = PR_FALSE;
@@ -673,7 +678,7 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
   // At this point we know that there is enough horizontal space for
   // the float (somewhere). Lets see if there is enough vertical
   // space.
-  if (NSCoordGreaterThan(aFloatSize.height, mAvailSpaceRect.height)) {
+  if (NSCoordGreaterThan(aFloatSize.height, aFloatAvailableSpace.height)) {
     // The available height is too short. However, its possible that
     // there is enough open space below which is not impacted by a
     // float.
@@ -684,16 +689,16 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
     // here.
     nscoord xa;
     if (NS_STYLE_FLOAT_LEFT == aFloats) {
-      xa = mAvailSpaceRect.x;
+      xa = aFloatAvailableSpace.x;
     }
     else {
-      xa = mAvailSpaceRect.XMost() - aFloatSize.width;
+      xa = aFloatAvailableSpace.XMost() - aFloatSize.width;
 
       // In case the float is too big, don't go past the left edge
       // XXXldb This seems wrong, but we might want to fix bug 6976
       // first.
-      if (xa < mAvailSpaceRect.x) {
-        xa = mAvailSpaceRect.x;
+      if (xa < aFloatAvailableSpace.x) {
+        xa = aFloatAvailableSpace.x;
       }
     }
     nscoord xb = xa + aFloatSize.width;
@@ -713,19 +718,22 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
     nscoord yb = ya + aFloatSize.height;
 
     nscoord saveY = mY;
+    nsRect floatAvailableSpace(aFloatAvailableSpace);
     for (;;) {
       // Get the available space at the new Y coordinate
-      if (mAvailSpaceRect.height <= 0) {
+      if (floatAvailableSpace.height <= 0) {
         // there is no more available space. We lose.
         result = PR_FALSE;
         break;
       }
 
-      mY += mAvailSpaceRect.height;
-      GetAvailableSpace(mY, aForceFit);
+      mY += floatAvailableSpace.height;
+      PRBool bandHasFloats =
+        GetFloatAvailableSpace(mY, aForceFit, floatAvailableSpace);
 
-      if (mBandHasFloats) {
-        if ((xa < mAvailSpaceRect.x) || (xb > mAvailSpaceRect.XMost())) {
+      if (bandHasFloats) {
+        if (xa < floatAvailableSpace.x ||
+            xb > floatAvailableSpace.XMost()) {
           // The float can't go here.
           result = PR_FALSE;
           break;
@@ -733,17 +741,15 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
       }
 
       // See if there is now enough height for the float.
-      if (yb <= mY + mAvailSpaceRect.height) {
+      if (yb <= mY + floatAvailableSpace.height) {
         // Winner. The bottom Y coordinate of the float is in
         // this band.
         break;
       }
     }
 
-    // Restore Y coordinate and available space information
-    // regardless of the outcome.
+    // Restore Y coordinate
     mY = saveY;
-    GetAvailableSpace(mY, aForceFit);
   }
 
   return result;
@@ -784,14 +790,17 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
     mY = ClearFloats(mY, floatDisplay->mBreakType);
   }
     // Get the band of available space
-  GetAvailableSpace(mY, aForceFit);
+  nsRect floatAvailableSpace;
+  PRBool bandHasFloats =
+    GetFloatAvailableSpace(mY, aForceFit, floatAvailableSpace);
 
   NS_ASSERTION(floatFrame->GetParent() == mBlock,
                "Float frame has wrong parent");
 
   // Reflow the float
   nsMargin floatMargin;
-  mBlock->ReflowFloat(*this, placeholder, floatMargin, aReflowStatus);
+  mBlock->ReflowFloat(*this, floatAvailableSpace, placeholder,
+                      floatMargin, aReflowStatus);
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -817,8 +826,9 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // Can the float fit here?
   PRBool keepFloatOnSameLine = PR_FALSE;
 
-  while (!CanPlaceFloat(floatSize, floatDisplay->mFloats, aForceFit)) {
-    if (mAvailSpaceRect.height <= 0) {
+  while (!CanPlaceFloat(floatSize, floatDisplay->mFloats, floatAvailableSpace,
+                        bandHasFloats, aForceFit)) {
+    if (floatAvailableSpace.height <= 0) {
       // No space, nowhere to put anything.
       mY = saveY;
       return PR_FALSE;
@@ -828,8 +838,9 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
     if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
           eCompatibility_NavQuirks != mPresContext->CompatibilityMode() ) {
 
-      mY += mAvailSpaceRect.height;
-      GetAvailableSpace(mY, aForceFit);
+      mY += floatAvailableSpace.height;
+      bandHasFloats =
+        GetFloatAvailableSpace(mY, aForceFit, floatAvailableSpace);
     } else {
       // This quirk matches the one in nsBlockFrame::ReflowFloat
       // IE handles float tables in a very special way
@@ -867,13 +878,15 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
       }
 
       // the table does not fit anymore in this line so advance to next band 
-      mY += mAvailSpaceRect.height;
-      GetAvailableSpace(mY, aForceFit);
+      mY += floatAvailableSpace.height;
+      bandHasFloats =
+        GetFloatAvailableSpace(mY, aForceFit, floatAvailableSpace);
       // reflow the float again now since we have more space
       // XXXldb We really don't need to Reflow in a loop, we just need
       // to ComputeSize in a loop (once ComputeSize depends on
       // availableWidth, which should make this work again).
-      mBlock->ReflowFloat(*this, placeholder, floatMargin, aReflowStatus);
+      mBlock->ReflowFloat(*this, floatAvailableSpace, placeholder,
+                          floatMargin, aReflowStatus);
       // Get the floats bounding box and margin information
       floatSize = floatFrame->GetSize() +
                      nsSize(floatMargin.LeftRight(), floatMargin.TopBottom());
@@ -892,18 +905,18 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   nscoord floatX, floatY;
   if (NS_STYLE_FLOAT_LEFT == floatDisplay->mFloats) {
     isLeftFloat = PR_TRUE;
-    floatX = mAvailSpaceRect.x;
+    floatX = floatAvailableSpace.x;
   }
   else {
     isLeftFloat = PR_FALSE;
     if (!keepFloatOnSameLine) {
-      floatX = mAvailSpaceRect.XMost() - floatSize.width;
+      floatX = floatAvailableSpace.XMost() - floatSize.width;
     } 
     else {
       // this is the IE quirk (see few lines above)
       // the table is kept in the same line: don't let it overlap the
       // previous float 
-      floatX = mAvailSpaceRect.x;
+      floatX = floatAvailableSpace.x;
     }
   }
   *aIsLeftFloat = isLeftFloat;

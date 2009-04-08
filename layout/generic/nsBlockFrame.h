@@ -529,14 +529,17 @@ protected:
                              LineReflowStatus* aLineReflowStatus);
 
   // Compute the available width for a float. 
-  nsRect ComputeFloatAvailableSpace(nsBlockReflowState& aState,
-                                    nsIFrame*           aFloatFrame);
+  nsRect AdjustFloatAvailableSpace(nsBlockReflowState& aState,
+                                   const nsRect&       aFloatAvailableSpace,
+                                   nsIFrame*           aFloatFrame);
   // Computes the border-box width of the float
   nscoord ComputeFloatWidth(nsBlockReflowState& aState,
+                            const nsRect&       aFloatAvailableSpace,
                             nsPlaceholderFrame* aPlaceholder);
   // An incomplete aReflowStatus indicates the float should be split
   // but only if the available height is constrained.
   nsresult ReflowFloat(nsBlockReflowState& aState,
+                       const nsRect&       aFloatAvailableSpace,
                        nsPlaceholderFrame* aPlaceholder,
                        nsMargin&           aFloatMargin,
                        nsReflowStatus&     aReflowStatus);

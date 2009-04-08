@@ -5646,8 +5646,9 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 // Float support
 
 nsRect
-nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
-                                         nsIFrame* aFloatFrame)
+nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
+                                        const nsRect& aFloatAvailableSpace,
+                                        nsIFrame* aFloatFrame)
 {
   // Compute the available width. By default, assume the width of the
   // containing block.
@@ -5663,7 +5664,7 @@ nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
     // give tables only the available space
     // if they can shrink we may not be constrained to place
     // them in the next line
-    availWidth = aState.mAvailSpaceRect.width;
+    availWidth = aFloatAvailableSpace.width;
     // round down to twips per pixel so that we fit
     // needed when prev. float has procentage width
     // (maybe is a table flaw that makes table chose to round up
@@ -5696,12 +5697,14 @@ nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
 
 nscoord
 nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
+                                const nsRect&       aFloatAvailableSpace,
                                 nsPlaceholderFrame* aPlaceholder)
 {
   // Reflow the float.
   nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
 
-  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+  nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
+                                                floatFrame);
 
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
                             floatFrame, 
@@ -5712,6 +5715,7 @@ nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
 
 nsresult
 nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
+                          const nsRect&       aFloatAvailableSpace,
                           nsPlaceholderFrame* aPlaceholder,
                           nsMargin&           aFloatMargin,
                           nsReflowStatus&     aReflowStatus)
@@ -5723,12 +5727,13 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 #ifdef NOISY_FLOAT
   printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
           aPlaceholder->GetOutOfFlowFrame(), this, 
-          aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
-          aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
+          aFloatAvailableSpace.x, aFloatAvailableSpace.y, 
+          aFloatAvailableSpace.width, aFloatAvailableSpace.height
   );
 #endif
 
-  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+  nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
+                                                floatFrame);
 
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
                             floatFrame, 
