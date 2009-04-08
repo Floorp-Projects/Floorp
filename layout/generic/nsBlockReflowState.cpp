@@ -606,9 +606,10 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
                  "If we asked for force-fit, it should have been placed");
     if (forceFit || (placed && !NS_FRAME_IS_TRUNCATED(aReflowStatus))) {
       // Pass on updated available space to the current inline reflow engine
-      GetAvailableSpace(mY, forceFit);
-      nsRect availSpace(nsPoint(mAvailSpaceRect.x + BorderPadding().left, mY),
-                        mAvailSpaceRect.Size());
+      nsRect floatAvailSpace;
+      GetFloatAvailableSpace(mY, forceFit, floatAvailSpace);
+      nsRect availSpace(nsPoint(floatAvailSpace.x + BorderPadding().left, mY),
+                        floatAvailSpace.Size());
       aLineLayout.UpdateBand(availSpace, isLeftFloat,
                              aPlaceholder->GetOutOfFlowFrame());
       
