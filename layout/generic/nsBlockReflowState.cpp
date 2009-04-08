@@ -523,17 +523,6 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
 }
 
 PRBool
-nsBlockReflowState::IsImpactedByFloat() const
-{
-#ifdef REALLY_NOISY_REFLOW
-  printf("nsBlockReflowState::IsImpactedByFloat %p returned %d\n", 
-         this, mBandHasFloats);
-#endif
-  return mBandHasFloats;
-}
-
-
-PRBool
 nsBlockReflowState::InitFloat(nsLineLayout&       aLineLayout,
                               nsPlaceholderFrame* aPlaceholder,
                               nscoord             aAvailableWidth,
