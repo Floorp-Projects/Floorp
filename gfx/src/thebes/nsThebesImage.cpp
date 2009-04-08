@@ -803,5 +803,6 @@ nsThebesImage::SetHasNoAlpha()
     if (mFormat == gfxASurface::ImageFormatARGB32) {
         mFormat = gfxASurface::ImageFormatRGB24;
         mFormatChanged = PR_TRUE;
+        mAlphaDepth = 0;
     }
 }
