@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Ondrej Brablc <ondrej@allpeers.com>
+ *  Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,9 +51,11 @@ var ps = Cc["@mozilla.org/preferences-service;1"].
  *
  * @param aURI
  *        The URI to add a visit for.
- * @param aReferrer
- *        The referring URI for the given URI.  This can be null.
- * @returns the place id for aURI.
+ * @param aTime
+ *        Reference "now" time.
+ * @param aDayOffset
+ *        number of days to add, pass a negative value to subtract them.
+ * @returns visit id for aURI.
  */
 function add_normalized_visit(aURI, aTime, aDayOffset) {
   var dateObj = new Date(aTime);
@@ -303,8 +306,8 @@ function test_RESULTS_AS_DATE_QUERY() {
 function test_RESULTS_AS_SITE_QUERY() {
   print("\n\n*** TEST RESULTS_AS_SITE_QUERY\n");
   // add a bookmark with a domain not in the set of visits in the db
-  bs.insertBookmark(bs.toolbarFolder, uri("http://foobar"),
-                    bs.DEFAULT_INDEX, "");
+  var itemId = bs.insertBookmark(bs.toolbarFolder, uri("http://foobar"),
+                                 bs.DEFAULT_INDEX, "");
 
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_SITE_QUERY;
@@ -357,6 +360,68 @@ function test_RESULTS_AS_SITE_QUERY() {
 
   siteNode.containerOpen = false;
   root.containerOpen = false;
+
+  // Cleanup.
+  bs.removeItem(itemId);
+}
+
+/**
+ * Checks that queries grouped by date do liveupdate correctly.
+ */
+function test_date_liveupdate(aResultType) {
+  var midnight = nowObj;
+  midnight.setHours(0);
+  midnight.setMinutes(0);
+  midnight.setSeconds(0);
+  midnight.setMilliseconds(0);
+
+  // TEST 1. Test that the query correctly updates when it is root.
+  var options = hs.getNewQueryOptions();
+  options.resultType = aResultType;
+  var query = hs.getNewQuery();
+  var result = hs.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+
+  do_check_eq(root.childCount, visibleContainers.length);
+  // Remove "Today".
+  hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
+  do_check_eq(root.childCount, visibleContainers.length - 1);
+  // Add a visit for "Today".
+  add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
+  do_check_eq(root.childCount, visibleContainers.length);
+
+  root.containerOpen = false;
+
+  // TEST 2. Test that the query correctly updates even if it is not root.
+  var itemId = bs.insertBookmark(bs.toolbarFolder,
+                                 uri("place:type=" + aResultType),
+                                 bs.DEFAULT_INDEX, "");
+
+  // Query toolbar and open our query container, then check again liveupdate.
+  options = hs.getNewQueryOptions();
+  query = hs.getNewQuery();
+  query.setFolders([bs.toolbarFolder], 1);
+  result = hs.executeQuery(query, options);
+  root = result.root;
+  root.containerOpen = true;
+  do_check_eq(root.childCount, 1);
+  var dateContainer = root.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  dateContainer.containerOpen = true;
+
+  do_check_eq(dateContainer.childCount, visibleContainers.length);
+  // Remove "Today".
+  hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
+  do_check_eq(dateContainer.childCount, visibleContainers.length - 1);
+  // Add a visit for "Today".
+  add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
+  do_check_eq(dateContainer.childCount, visibleContainers.length);
+
+  dateContainer.containerOpen = false;
+  root.containerOpen = false;
+
+  // Cleanup.
+  bs.removeItem(itemId);
 }
 
 // main
@@ -366,11 +431,18 @@ function run_test() {
 
   // Cleanup.
   bh.removeAllPages();
+  remove_all_bookmarks();
 
   fill_history();
   test_RESULTS_AS_DATE_SITE_QUERY();
   test_RESULTS_AS_DATE_QUERY();
   test_RESULTS_AS_SITE_QUERY();
+
+  test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
+  test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY);
+
+  // Cleanup.
+  bh.removeAllPages();
 
   // The remaining views are
   //   RESULTS_AS_URI + SORT_BY_VISITCOUNT_DESCENDING 

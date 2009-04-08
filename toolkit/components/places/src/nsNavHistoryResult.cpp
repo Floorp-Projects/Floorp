@@ -4318,6 +4318,17 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
         resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
         resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY)
       mRootNode->GetAsQuery()->Refresh();
+    else {
+      // We are result of a folder node, then we should run through history
+      // observers that are containers queries and refresh them.
+      // We use a copy of the observers array since requerying could potentially
+      // cause changes to the array.
+      nsTArray<nsNavHistoryQueryResultNode*> observerCopy(mHistoryObservers);
+      for (PRUint32 i = 0; i < observerCopy.Length(); i++) {
+        if (observerCopy[i] && observerCopy[i]->IsContainersQuery())
+          observerCopy[i]->Refresh();
+      }
+    }
   }
 
   return NS_OK;
