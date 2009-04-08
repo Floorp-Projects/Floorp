@@ -219,9 +219,6 @@ public:
     NS_IMETHOD              SetModal(PRBool aState);
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
-    NS_IMETHOD              SetMenuBar(void* aMenuBar);
-    virtual nsMenuBarX*     GetMenuBar();
-    NS_IMETHOD              ShowMenuBar(PRBool aShow);
     virtual nsIntPoint WidgetToScreenOffset();
     
     virtual void* GetNativeData(PRUint32 aDataType) ;
@@ -245,11 +242,8 @@ public:
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *alCipRect) { return NS_OK; }
-    NS_IMETHOD SetColorMap(nsColorMap *aColorMap) { return NS_OK; }
     NS_IMETHOD BeginResizingChildren(void) { return NS_OK; }
     NS_IMETHOD EndResizingChildren(void) { return NS_OK; }
-    NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight) { return NS_OK; }
-    NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight) { return NS_OK; }
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
@@ -273,6 +267,9 @@ public:
 
     PRBool HasModalDescendents() { return mNumModalDescendents > 0; }
     NSWindow *GetCocoaWindow() { return mWindow; }
+
+    void SetMenuBar(nsMenuBarX* aMenuBar);
+    nsMenuBarX *GetMenuBar();
 
     // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();

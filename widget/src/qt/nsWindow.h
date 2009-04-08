@@ -174,19 +174,10 @@ public:
     NS_IMETHOD         Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD         Invalidate(const nsIntRect &aRect,
                                   PRBool        aIsSynchronous);
-    NS_IMETHOD         InvalidateRegion(const nsIRegion *aRegion,
-                                        PRBool           aIsSynchronous);
     NS_IMETHOD         Update();
-    NS_IMETHOD         SetColorMap(nsColorMap *aColorMap);
     NS_IMETHOD         Scroll(PRInt32  aDx,
                               PRInt32  aDy,
                               nsIntRect  *aClipRect);
-    NS_IMETHOD         ScrollWidgets(PRInt32 aDx,
-                                     PRInt32 aDy);
-    NS_IMETHOD         ScrollRect(nsIntRect  &aSrcRect,
-                                  PRInt32  aDx,
-                                  PRInt32  aDy);
-
 
     NS_IMETHOD         PreCreateWidget(nsWidgetInitData *aWidgetInitData);
 
@@ -194,20 +185,12 @@ public:
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
-    NS_IMETHOD         SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
-    NS_IMETHOD         ShowMenuBar(PRBool aShow);
     virtual nsIntPoint WidgetToScreenOffset();
     NS_IMETHOD         BeginResizingChildren(void);
     NS_IMETHOD         EndResizingChildren(void);
-    NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
-                                         PRInt32 &aHeight);
-    NS_IMETHOD         SetPreferredSize (PRInt32 aWidth,
-                                         PRInt32 aHeight);
     NS_IMETHOD         DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
 
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);
-    virtual void       ConvertToDeviceCoordinates(nscoord &aX,
-                                                  nscoord &aY);
     NS_IMETHOD         CaptureMouse(PRBool aCapture);
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            PRBool aDoCapture,
