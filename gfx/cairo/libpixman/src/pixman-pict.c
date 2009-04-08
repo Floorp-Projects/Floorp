@@ -2217,8 +2217,8 @@ pixman_bool_t pixman_have_vmx (void) {
 
 #if defined(_MSC_VER)
 
+#if defined(USE_ARM_SIMD)
 extern int pixman_msvc_try_arm_simd_op();
-extern int pixman_msvc_try_arm_neon_op();
 
 pixman_bool_t
 pixman_have_arm_simd (void)
@@ -2238,6 +2238,10 @@ pixman_have_arm_simd (void)
 
     return have_arm_simd;
 }
+#endif /* USE_ARM_SIMD */
+
+#if defined(USE_ARM_NEON)
+extern int pixman_msvc_try_arm_neon_op();
 
 pixman_bool_t
 pixman_have_arm_neon (void)
@@ -2257,6 +2261,7 @@ pixman_have_arm_neon (void)
 
     return have_arm_neon;
 }
+#endif /* USE_ARM_NEON */
 
 #else /* linux ELF */
 
@@ -2317,6 +2322,7 @@ pixman_arm_read_auxv() {
     arm_tests_initialized = TRUE;
 }
 
+#if defined(USE_ARM_SIMD)
 pixman_bool_t
 pixman_have_arm_simd (void)
 {
@@ -2325,7 +2331,9 @@ pixman_have_arm_simd (void)
 
     return arm_has_v6;
 }
+#endif /* USE_ARM_SIMD */
 
+#if defined(USE_ARM_NEON)
 pixman_bool_t
 pixman_have_arm_neon (void)
 {
@@ -2334,6 +2342,7 @@ pixman_have_arm_neon (void)
 
     return arm_has_neon;
 }
+#endif /* USE_ARM_NEON */
 
 #endif /* linux */
 
