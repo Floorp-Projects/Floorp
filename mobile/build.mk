@@ -51,9 +51,8 @@ tier_testharness_dirs += \
   $(NULL)
 endif
 
-installer:
-	@echo "Mobile doesn't have an installer yet."
-	@exit 1
+installer: 
+	@$(MAKE) -C mobile/installer installer
 
 package:
 	@$(MAKE) -C mobile/installer
@@ -63,6 +62,5 @@ install::
 	@exit 1
 
 ifeq ($(OS_TARGET),Linux)
-deb: package
-	@$(MAKE) -C mobile/installer deb
+deb: installer
 endif
