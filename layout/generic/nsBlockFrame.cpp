@@ -3347,8 +3347,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (ShouldApplyTopMargin(aState, aLine)) {
     aState.mY += aState.mPrevBottomMargin.get();
   }
-  aState.GetAvailableSpace();
-  PRBool impactedByFloats = aState.IsImpactedByFloat() ? PR_TRUE : PR_FALSE;
+  nsRect floatAvailableSpace;
+  PRBool impactedByFloats = aState.GetFloatAvailableSpace(floatAvailableSpace);
   aLine->SetLineIsImpactedByFloat(impactedByFloats);
 #ifdef REALLY_NOISY_REFLOW
   printf("nsBlockFrame::DoReflowInlineFrames %p impacted = %d\n",
@@ -3356,15 +3356,15 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 #endif
 
   const nsMargin& borderPadding = aState.BorderPadding();
-  nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
-  nscoord availWidth = aState.mAvailSpaceRect.width;
+  nscoord x = floatAvailableSpace.x + borderPadding.left;
+  nscoord availWidth = floatAvailableSpace.width;
   nscoord availHeight;
   if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
     availHeight = NS_UNCONSTRAINEDSIZE;
   }
   else {
     /* XXX get the height right! */
-    availHeight = aState.mAvailSpaceRect.height;
+    availHeight = floatAvailableSpace.height;
   }
 
   // Make sure to enable resize optimization before we call BeginLineReflow
@@ -3501,14 +3501,14 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     //
     // What we do is to advance past the first float we find and
     // then reflow the line all over again.
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mAvailSpaceRect.height,
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != floatAvailableSpace.height,
                  "unconstrained height on totally empty line");
 
     // See the analogous code for blocks in nsBlockReflowState::ClearFloats.
-    if (aState.mAvailSpaceRect.height > 0) {
-      NS_ASSERTION(aState.IsImpactedByFloat(),
+    if (floatAvailableSpace.height > 0) {
+      NS_ASSERTION(impactedByFloats,
                    "redo line on totally empty line with non-empty band...");
-      aState.mY += aState.mAvailSpaceRect.height;
+      aState.mY += floatAvailableSpace.height;
     } else {
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableHeight,
                    "We shouldn't be running out of height here");
