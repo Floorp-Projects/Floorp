@@ -516,17 +516,20 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
     if (bottomLayer.mImage.mRequest) {
       nsCOMPtr<imgIContainer> container;
       bottomLayer.mImage.mRequest->GetImage(getter_AddRefs(container));
-      
-      PRUint32 nframes;
-      container->GetNumFrames(&nframes);
-      if (nframes == 1) {
-        nsCOMPtr<gfxIImageFrame> imgFrame;
-        container->GetCurrentFrame(getter_AddRefs(imgFrame));
-        nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
+      if (container) {
+        PRUint32 nframes;
+        container->GetNumFrames(&nframes);
+        if (nframes == 1) {
+          nsCOMPtr<gfxIImageFrame> imgFrame;
+          container->GetCurrentFrame(getter_AddRefs(imgFrame));
+          if (imgFrame) {
+            nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
 
-        PRBool hasMask = img->GetHasAlphaMask();
+            PRBool hasMask = img->GetHasAlphaMask();
 
-        return !hasMask;
+            return !hasMask;
+          }
+        }
       }
     }
   }
