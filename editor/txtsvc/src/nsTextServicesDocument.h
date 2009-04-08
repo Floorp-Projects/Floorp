@@ -138,18 +138,13 @@ public:
   NS_DECL_ISUPPORTS
 
   /* nsITextServicesDocument method implementations. */
-  NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell);
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor);
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
   NS_IMETHOD SetExtent(nsIDOMRange* aDOMRange);
-  NS_IMETHOD GetExtent(nsIDOMRange** aDOMRange);
   NS_IMETHOD ExpandRangeToWordBoundaries(nsIDOMRange *aRange);
   NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter);
-  NS_IMETHOD CanEdit(PRBool *aCanEdit);
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr);
   NS_IMETHOD FirstBlock();
-  NS_IMETHOD LastBlock();
-  NS_IMETHOD FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
   NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
   NS_IMETHOD PrevBlock();
   NS_IMETHOD NextBlock();
@@ -158,8 +153,6 @@ public:
   NS_IMETHOD ScrollSelectionIntoView();
   NS_IMETHOD DeleteSelection();
   NS_IMETHOD InsertText(const nsString *aText);
-  NS_IMETHOD SetDisplayStyle(TSDDisplayStyle aStyle);
-  NS_IMETHOD GetDOMRangeFor(PRInt32 aOffset, PRInt32 aLength, nsIDOMRange** aRange);
 
   /* nsIEditActionListener method implementations. */
   nsresult InsertNode(nsIDOMNode * aNode,
