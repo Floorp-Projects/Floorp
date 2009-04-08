@@ -64,6 +64,18 @@ public:
 
   static void Shutdown();
 
+  // Structure that stores the current state of a frame manager for
+  // Save/Restore purposes.
+  struct SavedState;
+  friend struct SavedState;
+  struct SavedState {
+  private:
+    PRUint32 mFloatInfoCount;
+    nscoord mX, mY;
+    
+    friend class nsFloatManager;
+  };
+
   /**
    * Translate the current origin by the specified (dx, dy). This
    * creates a new local coordinate space relative to the current
@@ -92,6 +104,9 @@ public:
    * @param aMaxHeight [in] maximum height of available space desired
    * @param aContentAreaWidth [in] the width of the content area (whose left
    *                          edge must be zero in the current translation)
+   * @param aState [in] If null, use the current state, otherwise, do
+   *                    computation based only on floats present in the given
+   *                    saved state.
    * @param aHasFloats [out] whether there are floats at the sides of
    *                    the return value including those that do not
    *                    reduce the line box width at all (because they
@@ -103,7 +118,7 @@ public:
    * aY and aAvailSpace are positioned relative to the current translation
    */
   nsRect GetBand(nscoord aY, nscoord aMaxHeight, nscoord aContentAreaWidth,
-                 PRBool* aHasFloats) const;
+                 SavedState* aState, PRBool* aHasFloats) const;
 
   /**
    * Add a float that comes after all floats previously added.  Its top
@@ -127,18 +142,6 @@ public:
 private:
   struct FloatInfo;
 public:
-
-  // Structure that stores the current state of a frame manager for
-  // Save/Restore purposes.
-  struct SavedState;
-  friend struct SavedState;
-  struct SavedState {
-  private:
-    PRUint32 mFloatInfoCount;
-    nscoord mX, mY;
-    
-    friend class nsFloatManager;
-  };
 
   PRBool HasAnyFloats() const { return !mFloats.IsEmpty(); }
 
@@ -172,7 +175,9 @@ public:
    * These states must be managed using stack discipline. PopState can only
    * be used after PushState has been used to save the state, and it can only
    * be used once --- although it can be omitted; saved states can be ignored.
-   * States must be popped in the reverse order they were pushed. 
+   * States must be popped in the reverse order they were pushed.  A
+   * call to PopState invalidates any saved states Pushed after the
+   * state passed to PopState was pushed.
    */
   void PopState(SavedState* aState);
 

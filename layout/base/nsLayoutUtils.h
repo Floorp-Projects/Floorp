@@ -776,6 +776,28 @@ public:
   static PRBool GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
 
   /**
+   * Just like GetFirstLineBaseline, except also returns the top and
+   * bottom of the line with the baseline.
+   *
+   * Returns true if a line was found (and fills in aResult).
+   * Otherwise returns false.
+   */
+  struct LinePosition {
+    nscoord mTop, mBaseline, mBottom;
+
+    LinePosition operator+(nscoord aOffset) const {
+      LinePosition result;
+      result.mTop = mTop + aOffset;
+      result.mBaseline = mBaseline + aOffset;
+      result.mBottom = mBottom + aOffset;
+      return result;
+    }
+  };
+  static PRBool GetFirstLinePosition(const nsIFrame* aFrame,
+                                     LinePosition* aResult);
+
+
+  /**
    * Derive a baseline of |aFrame| (measured from its top border edge)
    * from its last in-flow line box (not descending into anything with
    * 'overflow' not 'visible', potentially including aFrame itself).
