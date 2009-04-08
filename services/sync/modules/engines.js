@@ -118,8 +118,11 @@ EngineManagerSvc.prototype = {
       return engineObject.map(this.register, this);
 
     try {
-      let engine = new engineObject();
-      this._engines[engine.name] = engine;
+      let name = engineObject.prototype.name;
+      if (name in this._engines)
+        this._log.error("Engine '" + name + "' is already registered!");
+      else
+        this._engines[name] = new engineObject();
     }
     catch(ex) {
       let mesg = ex.message ? ex.message : ex;
