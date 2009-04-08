@@ -304,7 +304,9 @@ public:
       { return marginLeft + borderBoxWidth + marginRight; }
   };
   static ReplacedElementWidthToClear
-    WidthToClearPastFloats(nsBlockReflowState& aState, nsIFrame* aFrame);
+    WidthToClearPastFloats(nsBlockReflowState& aState,
+                           const nsRect& aFloatAvailableSpace,
+                           nsIFrame* aFrame);
 
   /**
    * Walks up the frame tree, starting with aCandidate, and returns the first

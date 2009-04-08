@@ -169,6 +169,7 @@ public:
   // (which need not be the current mY).  Callers need only pass
   // aReplacedWidth for outer table frames.
   void ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
+                                            const nsRect& aFloatAvailableSpace,
                                             nscoord& aLeftResult,
                                             nscoord& aRightResult,
                                        nsBlockFrame::ReplacedElementWidthToClear
@@ -177,6 +178,8 @@ public:
   // Caller must have called GetAvailableSpace for the current mY
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
+                              PRBool aBandHasFloats,
+                              const nsRect& aFloatAvailableSpace,
                               PRBool aBlockAvoidsFloats,
                               nsRect& aResult);
 
