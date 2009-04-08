@@ -3,9 +3,7 @@
   <head>
     <script>
       function doTest() {
-        try {
-          document.normalize();
-        } catch(e) {}
+        document.normalize();
         var n = document.getElementById("t").nextSibling;
         n.parentNode.removeChild(n);
         document.documentElement.className = "";
