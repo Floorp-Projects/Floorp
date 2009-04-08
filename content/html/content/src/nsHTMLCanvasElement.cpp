@@ -92,7 +92,7 @@ public:
   virtual PRBool IsWriteOnly();
   virtual void SetWriteOnly();
   NS_IMETHOD InvalidateFrame ();
-  NS_IMETHOD InvalidateFrameSubrect (const nsRect& damageRect);
+  NS_IMETHOD InvalidateFrameSubrect (const gfxRect& damageRect);
   virtual PRInt32 CountContexts();
   virtual nsICanvasRenderingContextInternal *GetContextAtIndex (PRInt32 index);
   virtual PRBool GetIsOpaque();
@@ -555,11 +555,29 @@ nsHTMLCanvasElement::InvalidateFrame()
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::InvalidateFrameSubrect(const nsRect& damageRect)
+nsHTMLCanvasElement::InvalidateFrameSubrect(const gfxRect& damageRect)
 {
   nsIFrame *frame = GetPrimaryFrame(Flush_Frames);
   if (frame) {
-    frame->Invalidate(damageRect);
+    nsRect contentArea(frame->GetContentRect());
+    nsIntSize size = GetWidthHeight();
+
+    // damageRect and size are in CSS pixels; contentArea is in appunits
+    // We want a rect in appunits; so avoid doing pixels-to-appunits and
+    // vice versa conversion here.
+    gfxRect realRect(damageRect);
+    realRect.Scale(contentArea.width / gfxFloat(size.width),
+                   contentArea.height / gfxFloat(size.height));
+    realRect.RoundOut();
+
+    // then make it a nsRect
+    nsRect invalRect(realRect.X(), realRect.Y(),
+                     realRect.Width(), realRect.Height());
+
+    // account for border/padding
+    invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
+
+    frame->Invalidate(invalRect);
   }
 
   return NS_OK;
