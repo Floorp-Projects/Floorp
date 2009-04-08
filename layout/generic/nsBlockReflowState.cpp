@@ -102,6 +102,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     // coordinate system origin for later.
     mFloatManager->Translate(borderPadding.left, borderPadding.top);
     mFloatManager->GetTranslation(mFloatManagerX, mFloatManagerY);
+    mFloatManager->PushState(&mFloatManagerStateBefore); // never popped
   }
 
   mReflowStatus = NS_FRAME_COMPLETE;
@@ -139,16 +140,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mCurrentLine = aFrame->end_lines();
 
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(aReflowState.frame);
-
-  // Calculate mOutsideBulletX
-  GetAvailableSpace();
-  // FIXME (bug 25888): need to check the entire region that the first
-  // line overlaps, not just the top pixel.
-  mOutsideBulletX =
-    mReflowState.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR ?
-      mAvailSpaceRect.x :
-      PR_MIN(mReflowState.ComputedWidth(), mAvailSpaceRect.XMost()) +
-        mReflowState.mComputedBorderPadding.LeftRight();
 }
 
 void
@@ -335,9 +326,10 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 }
 
 PRBool
-nsBlockReflowState::GetFloatAvailableSpace(nscoord aY,
-                                           PRBool aRelaxHeightConstraint,
-                                           nsRect& aResult) const
+nsBlockReflowState::GetFloatAvailableSpaceWithState(
+                      nscoord aY, PRBool aRelaxHeightConstraint,
+                      nsFloatManager::SavedState *aState,
+                      nsRect& aResult) const
 {
 #ifdef DEBUG
   // Verify that the caller setup the coordinate system properly
@@ -352,8 +344,7 @@ nsBlockReflowState::GetFloatAvailableSpace(nscoord aY,
     mFloatManager->GetBand(aY - BorderPadding().top, 
                            aRelaxHeightConstraint ? nscoord_MAX
                                                   : mContentArea.height,
-                           mContentArea.width,
-                           &hasFloats);
+                           mContentArea.width, aState, &hasFloats);
   // Keep the width >= 0 for compatibility with nsSpaceManager.
   if (aResult.width < 0)
     aResult.width = 0;

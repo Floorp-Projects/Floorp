@@ -2506,13 +2506,28 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 /* static */ PRBool
 nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 {
+  LinePosition position;
+  if (!GetFirstLinePosition(aFrame, &position))
+    return PR_FALSE;
+  *aResult = position.mBaseline;
+  return PR_TRUE;
+}
+
+/* static */ PRBool
+nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
+                                    LinePosition* aResult)
+{
   const nsBlockFrame* block = nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
   if (!block) {
     // For the first-line baseline we also have to check for a table, and if
     // so, use the baseline of its first row.
     nsIAtom* fType = aFrame->GetType();
     if (fType == nsGkAtoms::tableOuterFrame) {
-      *aResult = aFrame->GetBaseline();
+      aResult->mTop = 0;
+      aResult->mBaseline = aFrame->GetBaseline();
+      // This is what we want for the list bullet caller; not sure if
+      // other future callers will want the same.
+      aResult->mBottom = aFrame->GetSize().height;
       return PR_TRUE;
     }
 
@@ -2522,12 +2537,12 @@ nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
       if (!sFrame) {
         NS_NOTREACHED("not scroll frame");
       }
-      nscoord kidBaseline;
-      if (GetFirstLineBaseline(sFrame->GetScrolledFrame(), &kidBaseline)) {
+      LinePosition kidPosition;
+      if (GetFirstLinePosition(sFrame->GetScrolledFrame(), &kidPosition)) {
         // Consider only the border and padding that contributes to the
         // kid's position, not the scrolling, so we get the initial
         // position.
-        *aResult = kidBaseline + aFrame->GetUsedBorderAndPadding().top;
+        *aResult = kidPosition + aFrame->GetUsedBorderAndPadding().top;
         return PR_TRUE;
       }
       return PR_FALSE;
@@ -2542,16 +2557,19 @@ nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
        line != line_end; ++line) {
     if (line->IsBlock()) {
       nsIFrame *kid = line->mFirstChild;
-      nscoord kidBaseline;
-      if (GetFirstLineBaseline(kid, &kidBaseline)) {
-        *aResult = kidBaseline + kid->GetPosition().y;
+      LinePosition kidPosition;
+      if (GetFirstLinePosition(kid, &kidPosition)) {
+        *aResult = kidPosition + kid->GetPosition().y;
         return PR_TRUE;
       }
     } else {
       // XXX Is this the right test?  We have some bogus empty lines
       // floating around, but IsEmpty is perhaps too weak.
       if (line->GetHeight() != 0 || !line->IsEmpty()) {
-        *aResult = line->mBounds.y + line->GetAscent();
+        nscoord top = line->mBounds.y;
+        aResult->mTop = top;
+        aResult->mBaseline = top + line->GetAscent();
+        aResult->mBottom = top + line->GetHeight();
         return PR_TRUE;
       }
     }

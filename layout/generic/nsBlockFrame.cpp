@@ -1075,14 +1075,14 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         mLines.begin().next()->IsBlock()))) {
     // Reflow the bullet
     nsHTMLReflowMetrics metrics;
-    // FIXME: aReflowState.mComputedBorderPadding.top isn't even the
-    // right place -- we really want the top of the line whose baseline
-    // we're using (or, actually, the entire line, once we fix bug
-    // 25888)
-    ReflowBullet(state, metrics, aReflowState.mComputedBorderPadding.top);
+    // XXX Use the entire line when we fix bug 25888.
+    nsLayoutUtils::LinePosition position;
+    PRBool havePosition = nsLayoutUtils::GetFirstLinePosition(this, &position);
+    nscoord lineTop = havePosition ? position.mTop
+                                   : aReflowState.mComputedBorderPadding.top;
+    ReflowBullet(state, metrics, lineTop);
 
-    nscoord baseline;
-    if (nsLayoutUtils::GetFirstLineBaseline(this, &baseline)) {
+    if (havePosition) {
       // We have some lines to align the bullet with.  
 
       // Doing the alignment using the baseline will also cater for
@@ -1090,7 +1090,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     
       // Tall bullets won't look particularly nice here...
       nsRect bbox = mBullet->GetRect();
-      bbox.y = baseline - metrics.ascent;
+      bbox.y = position.mBaseline - metrics.ascent;
       mBullet->SetRect(bbox);
     }
     // Otherwise just leave the bullet where it is, up against our top padding.
@@ -6650,22 +6650,43 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   mBullet->WillReflow(aState.mPresContext);
   mBullet->Reflow(aState.mPresContext, aMetrics, reflowState, status);
 
-  // Place the bullet now, separate it from mOutsideBulletX by its margin.
-  // If the mAvailSpaceRect position is outside the mOutsideBulletX
-  // position it means the line didn't care about the float edge and we
-  // use that position instead (there cannot be any floats at the start
-  // of the line this case since that would violate CSS 2.1 float rules).
-  // XXX we need to take floats inside the principal block that clears
-  // outside floats into account also (bug 428810).
-  nscoord x = rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR ?
-    PR_MIN(aState.mOutsideBulletX, aState.mAvailSpaceRect.x)
-      - reflowState.mComputedMargin.right - aMetrics.width :
-    PR_MAX(aState.mOutsideBulletX, aState.mAvailSpaceRect.XMost())
-      + reflowState.mComputedMargin.left;
+  // Get the float available space using our saved state from before we
+  // started reflowing the block, so that we ignore any floats inside
+  // the block.
+  // FIXME: aLineTop isn't actually set correctly by some callers, since
+  // they reposition the line.
+  nsRect floatAvailSpace;
+  aState.GetFloatAvailableSpaceWithState(aLineTop, PR_FALSE,
+                                         &aState.mFloatManagerStateBefore,
+                                         floatAvailSpace);
+  // FIXME (bug 25888): need to check the entire region that the first
+  // line overlaps, not just the top pixel.
 
-  // FIXME: come up with rules for when mAvailSpaceRect is valid so we
-  // don't need to do this.
-  aState.GetAvailableSpace();
+  // Place the bullet now.  We want to place the bullet relative to the
+  // border-box of the associated block (using the right/left margin of
+  // the bullet frame as separation).  However, if a line box would be
+  // displaced by floats that are *outside* the associated block, we
+  // want to displace it by the same amount.  That is, we act as though
+  // the edge of the floats is the content-edge of the block, and place
+  // the bullet at a position offset from there by the block's padding,
+  // the block's border, and the bullet frame's margin.
+  nscoord x;
+  if (rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
+    // Note: floatAvailSpace.x is relative to the content box and never
+    // less than zero.  Converting to frame coordinates and subtracting
+    // the padding and border cancel each other out, and the PR_MAX()
+    // with 0 (or with the left border+padding) is even implied in the
+    // right place.
+    x = floatAvailSpace.x - reflowState.mComputedMargin.right - aMetrics.width;
+  } else {
+    // The XMost() of the available space and the computed width both
+    // give us offsets from the left content edge.  Then we add the left
+    // border/padding to get into frame coordinates, and the right
+    // border/padding and the bullet's margin to offset the position.
+    x = PR_MIN(rs.ComputedWidth(), floatAvailSpace.XMost())
+        + rs.mComputedBorderPadding.LeftRight()
+        + reflowState.mComputedMargin.left;
+  }
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
