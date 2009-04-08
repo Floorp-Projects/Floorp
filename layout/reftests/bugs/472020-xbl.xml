@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="outer">
+    <content>
+      <xul:inner>
+	<xul:label value="Before"/>
+        <children/>
+        <xul:label value="After"/>
+      </xul:inner>
+    </content>
+  </binding>
+
+  <binding id="inner">
+    <content>
+      <children/>
+    </content>
+  </binding>
+
+</bindings>
