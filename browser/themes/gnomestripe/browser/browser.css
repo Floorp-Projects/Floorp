@@ -1293,6 +1293,7 @@ tabpanels {
 .tabs-closebutton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
   border: none;
+  margin-bottom: 1px;
 }
 
 .tabs-closebutton > .toolbarbutton-icon {
