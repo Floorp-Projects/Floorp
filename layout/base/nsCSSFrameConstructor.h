@@ -747,6 +747,11 @@ private:
       PRBool operator!=(const Iterator& aOther) const {
         return !(*this == aOther);
       }
+      Iterator& operator=(const Iterator& aOther) {
+        NS_ASSERTION(mEnd == aOther.mEnd, "Iterators for different lists?");
+        mCurrent = aOther.mCurrent;
+        return *this;
+      }
 
       operator FrameConstructionItem& () {
         return item();
@@ -761,6 +766,17 @@ private:
         NS_ASSERTION(!IsDone(), "Should have checked IsDone()!");
         mCurrent = PR_NEXT_LINK(mCurrent);
       }
+      void SetToEnd() { mCurrent = mEnd; }
+
+      // Skip over all items that want a parent type different from the given
+      // one.  Return whether the iterator is done after doing that.  The
+      // iterator must not be done when this is called.
+      inline PRBool SkipItemsWantingParentType(ParentType aParentType);
+
+      // Skip over whitespace.  Return whether the iterator is done after doing
+      // that.  The iterator must not be done, and must be pointing to a
+      // whitespace item when this is called.
+      inline PRBool SkipWhitespace();
 
       // Remove the item pointed to by this iterator from its current list and
       // Append it to aTargetList.  This iterator is advanced to point to the
@@ -784,9 +800,12 @@ private:
       // case this call just appends the given item to the list.
       void InsertItem(FrameConstructionItem* aItem);
 
-      // Delete the item pointed to by this iterator, and point ourselves to
-      // the next item in the list.
-      void DeleteItem();
+      // Delete the items between this iterator and aEnd, including the item
+      // this iterator currently points to but not including the item pointed
+      // to by aEnd.  When this returns, this iterator will point to the same
+      // item as aEnd.  This iterator must not equal aEnd when this method is
+      // called.
+      void DeleteItemsTo(const Iterator& aEnd);
 
     private:
       PRCList* mCurrent;
@@ -840,9 +859,11 @@ private:
     ParentType DesiredParentType() {
       return FCDATA_DESIRED_PARENT_TYPE(mFCData->mBits);
     }
-    PRBool IsWhitespace() const {
-      return mIsText && mContent->TextIsOnlyWhitespace();
-    }
+
+    // Don't call this unless the frametree really depends on the answer!
+    // Especially so for generated content, where we don't want to reframe
+    // things.
+    PRBool IsWhitespace() const;
 
     // The FrameConstructionData to use.
     const FrameConstructionData* mFCData;
@@ -1347,14 +1368,17 @@ private:
   // ignored.  Otherwise it may be used to determine whether to reframe when
   // inserting into the block of an {ib} split.  Passing a null aPrevSibling in
   // the non-append case is ok in terms of correctness.  It might reframe when
-  // we don't really need to, but that's it.
+  // we don't really need to, but that's it.  Passing in a correct
+  // aIsInsertAtStart is desirable for performance reasons, but if it's hard to
+  // determine passing false is safe in terms of correctness.
   // @return PR_TRUE if we reconstructed the containing block, PR_FALSE
   // otherwise
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
                              nsIFrame*                aContainingBlock,
                              nsIFrame*                aFrame,
-                             const FrameConstructionItemList& aItems,
+                             FrameConstructionItemList& aItems,
                              PRBool                   aIsAppend,
+                             PRBool                   aIsInsertAtStart,
                              nsIFrame*                aPrevSibling);
 
   nsresult ReframeContainingBlock(nsIFrame* aFrame);

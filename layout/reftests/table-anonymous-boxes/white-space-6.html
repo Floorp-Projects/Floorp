@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      function doTest() {
+        var n = document.getElementById("t").nextSibling;
+        n.data = "Row 22, Col 3";
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+  <body style="font-family: monospace" onload="doTest()">
+    <span style="display: table-row-group">
+      <span style="display: table-row">
+        <span style="display: table-cell">Row 1, Col 1</span>
+        <span style="display: table-cell">Row 1, Col 2</span>
+        <span style="display: table-cell">Row 1, Col 3</span>
+      </span>
+      <span style="display: table-cell">Row 22, Col 1</span>
+      <span style="display: table-cell" id="t">Row 22, Col 2</span>
+      <span style="display: table-row">
+        <span style="display: table-cell">Row 333, Col 1</span>
+        <span style="display: table-cell">Row 333, Col 2</span>
+        <span style="display: table-cell">Row 333, Col 3</span>
+      </span>
+    </span>
+  </body>
+</html>

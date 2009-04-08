@@ -122,6 +122,7 @@
 #include "nsIFocusEventSuppressor.h"
 #include "nsBox.h"
 #include "nsTArray.h"
+#include "nsGenericDOMDataNode.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -1923,13 +1924,6 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                     kNameSpaceID_None, pseudoStyleContext,
                                     ITEM_IS_GENERATED_CONTENT, aItems);
 }
-
-static PRBool
-TextIsOnlyWhitespace(nsIContent* aContent)
-{
-  return aContent->IsNodeOfType(nsINode::eTEXT) &&
-         aContent->TextIsOnlyWhitespace();
-}
     
 /****************************************************
  **  BEGIN TABLE SECTION
@@ -2374,9 +2368,21 @@ NeedFrameFor(nsIFrame*   aParentFrame,
   // want to be reconstructing frames. It's not even clear that these
   // should be considered ignorable just because they evaluate to
   // whitespace.
-  return !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace)
-    || !TextIsOnlyWhitespace(aChildContent)
-    || aParentFrame->IsGeneratedContentFrame();
+
+  // We could handle all this in CreateNeededTablePseudos or some other place
+  // after we build our frame construction items, but that would involve
+  // creating frame construction items for whitespace kids of
+  // eExcludesIgnorableWhitespace frames, where we know we'll be dropping them
+  // all anyway, and involve an extra walk down the frame construction item
+  // list.
+  if (!aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
+      aParentFrame->IsGeneratedContentFrame() ||
+      !aChildContent->IsNodeOfType(nsINode::eTEXT)) {
+    return PR_TRUE;
+  }
+
+  aChildContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  return !aChildContent->TextIsOnlyWhitespace();
 }
 
 /***********************************************
@@ -6170,6 +6176,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                "Unexpected parent");
 
   // Deal with possible :after generated content on the parent
+  nsIFrame* origParentFrame = parentFrame;
   nsIFrame* parentAfterFrame;
   parentFrame =
     ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
@@ -6205,13 +6212,27 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                               items);
   }
 
+  // Determine whether this is an insert at the beginning
+  PRBool isInsertAtStart = PR_TRUE;
+  nsIFrame* curParent = parentFrame;
+  nsIFrame* curAfterChild = parentAfterFrame;
+  do {
+    if (curParent->GetPrevContinuation() ||
+        curParent->GetFirstChild(nsnull) != curAfterChild) {
+      isInsertAtStart = PR_FALSE;
+      break;
+    }
+    curAfterChild = curParent;
+    curParent = curParent->GetParent();
+  } while (curAfterChild != origParentFrame);
+
   // Perform special check for diddling around with the frames in
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
   LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          !parentAfterFrame, nsnull)) {
+                          !parentAfterFrame, isInsertAtStart, nsnull)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
@@ -6627,7 +6648,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // appending, so let WipeContainingBlock know that.
   LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          isAppend && !appendAfterFrame, prevSibling)) {
+                          isAppend && !appendAfterFrame,
+                          prevSibling == nsnull,
+                          prevSibling)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
@@ -6657,7 +6680,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // the WipeContainingBlock above, since this should only happen when neither
   // parent is a special frame (and in fact, only when one is an outer table
   // and one is an inner table or when the parent is a fieldset or fieldset
-  // content frame).
+  // content frame).  So it won't affect the {ib} or XUL box cases in
+  // WipeContainingBlock(), and the table pseudo handling will only be affected
+  // by us maybe thinking we're not inserting at the beginning, whereas we
+  // really are.  That would have made us reframe unnecessarily, but that's ok.
   // XXXbz we should push our frame construction item code up higher, so we
   // know what our items are by the time we start figuring out previous
   // siblings
@@ -7454,6 +7480,15 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsresult      rv = NS_OK;
+
+  if (aContent->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+#ifdef DEBUG
+    nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+    NS_ASSERTION(!frame || !frame->IsGeneratedContentFrame(),
+                 "Bit should never be set on generated content");
+#endif
+    return RecreateFramesForContent(aContent);
+  }
 
   // Find the child frame
   nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
@@ -8711,6 +8746,28 @@ nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIContent* aContent)
   return result;
 }
 
+static nsIFrame*
+FindFirstNonWhitespaceChild(nsIFrame* aParentFrame)
+{
+  nsIFrame* f = aParentFrame->GetFirstChild(nsnull);
+  while (f && f->GetType() == nsGkAtoms::textFrame &&
+         f->GetContent()->TextIsOnlyWhitespace()) {
+    f = f->GetNextSibling();
+  }
+  return f;
+}
+
+static nsIFrame*
+FindNextNonWhitespaceSibling(nsIFrame* aFrame)
+{
+  nsIFrame* f = aFrame;
+  do {
+    f = f->GetNextSibling();
+  } while (f && f->GetType() == nsGkAtoms::textFrame &&
+           f->GetContent()->TextIsOnlyWhitespace());
+  return f;
+}
+
 PRBool
 nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                                              nsresult* aResult)
@@ -8744,8 +8801,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   NS_ASSERTION(inFlowFrame, "How did that happen?");
   nsIFrame* parent = inFlowFrame->GetParent();
   if (IsTablePseudo(parent)) {
-    if (parent->GetFirstChild(nsnull) == inFlowFrame ||
-        !inFlowFrame->GetLastContinuation()->GetNextSibling() ||
+    if (FindFirstNonWhitespaceChild(parent) == inFlowFrame ||
+        !FindNextNonWhitespaceSibling(inFlowFrame->GetLastContinuation()) ||
         // If we're a table-column-group, then the GetFirstChild check above is
         // not going to catch cases when we're the first child.
         (inFlowFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
@@ -9057,107 +9114,104 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(FrameConstructionItemList& aItem
 
   FCItemIterator iter(aItems);
   do {
-    NS_ASSERTION(!iter.IsDone(), "How did that happen?");
-
-    // Advance to the next item that wants a different parent type.
-    while (iter.item().DesiredParentType() == ourParentType) {
-      iter.Next();
-      if (iter.IsDone()) {
-        // Nothing else to do here; we're finished
-        return NS_OK;
-      }
+    if (iter.SkipItemsWantingParentType(ourParentType)) {
+      // Nothing else to do here; we're finished
+      return NS_OK;
     }
 
-    NS_ASSERTION(!iter.IsDone() &&
-                 iter.item().DesiredParentType() != ourParentType,
-                 "Why did we stop?");
-
     // Now we're pointing to the first child that wants a different parent
-    // type.  Except for generated content, we should have already enforced the
-    // fact that no such items are whitespace (either in this method when
-    // constructing wrapping items, or when constructing the original
-    // FrameConstructionItemList).
-    NS_ASSERTION(aParentFrame->IsGeneratedContentFrame() ||
-                 !iter.item().mIsText ||
-                 !iter.item().mContent->TextIsOnlyWhitespace(),
-                 "Why do we have whitespace under a known-table parent?");
+    // type.
 
     // Now try to figure out what kids we can group together.  We can generally
     // group everything that has a different desired parent type from us.  Two
     // exceptions to this:
     // 1) If our parent type is table, we can't group columns with anything
     //    else other than whitespace.
-    // 2) Whitespace that lies between two things we can group should
-    //    be dropped, even if we can't group them with each other.
-    // XXXbz it's not clear to me that rule 2 is a good one, it's not called
-    // for by the (admittedly vague) spec, and in fact it leads to some pretty
-    // crappy behavior if you have some inlines and whitespace as kids of a
-    // table-row, say, but it's more or less what we used to do.  More
-    // precisely, we shipped all whitespace out to the nearest block parent of
-    // the whole mess, sort of.  In any case this aspect of things, and in fact
-    // this whole function might need changes as the spec here gets
-    // clarified...  I happen to think we should not drop whitespace that comes
-    // between things that want a block parent.
+    // 2) Whitespace that lies between two things we can group which both want
+    //    a non-block parent should be dropped, even if we can't group them
+    //    with each other and even if the whitespace wants a parent of
+    //    ourParentType.  Ends of the list count as things that don't want a
+    //    block parent (so that for example we'll drop a whitespace-only list).
 
     FCItemIterator endIter(iter); /* iterator to find the end of the group */
     ParentType groupingParentType = endIter.item().DesiredParentType();
-    // If we decide to, we could optimize this by checking whether
-    // aItems.AllWantParentType(groupingParentType) and if so just setting
-    // endIter to the end of the list, which is an O(1) operation.  That
-    // requires not dropping whitespace between items that want a block parent,
-    // though, per the XXX comment above, since a whole bunch of spans and
-    // whitespace would test true to all wanting a block parent.
-    do {
-      endIter.Next();
-      if (endIter.IsDone()) {
-        break;
-      }
+    if (aItems.AllWantParentType(groupingParentType) &&
+        groupingParentType != eTypeBlock) {
+      // Just group them all and be done with it.  We need the check for
+      // eTypeBlock here to catch the "all the items are whitespace" case
+      // described above.
+      endIter.SetToEnd();
+    } else {
+      // Locate the end of the group.
 
-      if (!aParentFrame->IsGeneratedContentFrame() &&
-          endIter.item().IsWhitespace()) {
-        // Whitespace coming after some groupable items
-        FCItemIterator textSkipIter(endIter);
-        do {
-          textSkipIter.Next();
-        } while (!textSkipIter.IsDone() && textSkipIter.item().IsWhitespace());
+      // Keep track of the type the previous item wanted, in case we have to
+      // deal with whitespace.  Start it off with ourParentType, since that's
+      // the last thing |iter| would have skipped over.
+      ParentType prevParentType = ourParentType;
+      do {
+        /* Walk an iterator past any whitespace that we might be able to drop from the list */
+        FCItemIterator spaceEndIter(endIter);
+        if (prevParentType != eTypeBlock &&
+            !aParentFrame->IsGeneratedContentFrame() &&
+            spaceEndIter.item().IsWhitespace()) {
+          PRBool trailingSpaces = spaceEndIter.SkipWhitespace();
 
-        PRBool trailingSpace = textSkipIter.IsDone();
-        if (// Trailing whitespace we can't handle
-            (trailingSpace && ourParentType != eTypeBlock) ||
-            // Whitespace before kids needing wrapping
-            (!trailingSpace &&
-             textSkipIter.item().DesiredParentType() != ourParentType)) {
-          // Drop all the whitespace here so that |endIter| now points to the
-          // same thing as |textSkipIter|.  This doesn't affect where |iter|
-          // points, since that's guaranted to point to before endIter.
-          do {
-            endIter.DeleteItem();
-          } while (endIter != textSkipIter);
+          // See whether we can drop the whitespace
+          if (trailingSpaces ||
+              spaceEndIter.item().DesiredParentType() != eTypeBlock) {
+            PRBool updateStart = (iter == endIter);
+            endIter.DeleteItemsTo(spaceEndIter);
+            NS_ASSERTION(trailingSpaces == endIter.IsDone(), "These should match");
 
-          NS_ASSERTION(endIter.IsDone() == trailingSpace,
-                       "endIter == skipIter now!");
-          if (trailingSpace) {
-            break; // The loop advancing endIter
+            if (updateStart) {
+              iter = endIter;
+            }
+
+            if (trailingSpaces) {
+              break; /* Found group end */
+            }
+
+            if (updateStart) {
+              // Update groupingParentType, since it might have been eTypeBlock
+              // just because of the whitespace.
+              groupingParentType = iter.item().DesiredParentType();
+            }
           }
         }
-      }
 
-      ParentType itemParentType = endIter.item().DesiredParentType();
+        // Now endIter points to a non-whitespace item or a non-droppable
+        // whitespace item. In the latter case, if this is the end of the group
+        // we'll traverse this whitespace again.  But it'll all just be quick
+        // DesiredParentType() checks which will match ourParentType (that's
+        // what it means that this is the group end), so it's OK.
+        prevParentType = endIter.item().DesiredParentType();
+        if (prevParentType == ourParentType) {
+          // End the group at endIter.
+          break;
+        }
 
-      if (itemParentType == ourParentType) {
-        break;
-      }
+        if (ourParentType == eTypeTable &&
+            (prevParentType == eTypeColGroup) !=
+            (groupingParentType == eTypeColGroup)) {
+          // Either we started with columns and now found something else, or vice
+          // versa.  In any case, end the grouping.
+          break;
+        }
 
-      if (ourParentType == eTypeTable &&
-          (itemParentType == eTypeColGroup) !=
-          (groupingParentType == eTypeColGroup)) {
-        // Either we started with columns and now found something else, or vice
-        // versa.  In any case, end the grouping.
-        break;
-      }
-    } while (1);
+        // Include the whitespace we didn't drop (if any) in the group, since
+        // this is not the end of the group.  Note that this doesn't change
+        // prevParentType, since if we didn't drop the whitespace then we ended
+        // at something that wants a block parent.
+        endIter = spaceEndIter;
 
-    NS_ASSERTION(iter != endIter, "How did that happen?");
+        endIter.Next();
+      } while (!endIter.IsDone());
+    }
+
+    if (iter == endIter) {
+      // Nothing to wrap here; just skipped some whitespace
+      continue;
+    }
 
     // Now group together all the items between iter and endIter.  The right
     // parent type to use depends on ourParentType.
@@ -10773,8 +10827,9 @@ PRBool
 nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
                                            nsIFrame* aContainingBlock,
                                            nsIFrame* aFrame,
-                                           const FrameConstructionItemList& aItems,
+                                           FrameConstructionItemList& aItems,
                                            PRBool aIsAppend,
+                                           PRBool aIsInsertAtStart,
                                            nsIFrame* aPrevSibling)
 {
   if (aItems.IsEmpty()) {
@@ -10802,6 +10857,82 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // table pseudo-frame, then all the kids in this list would have wanted a
   // frame of that type wrapping them anyway, so putting them inside it is ok.
   if (!aItems.AllWantParentType(parentType)) {
+    // Don't give up yet.  If parentType is not eTypeBlock and the parent is
+    // not a generated content frame, then try filtering whitespace out of the
+    // list.
+    if (parentType != eTypeBlock && !aFrame->IsGeneratedContentFrame()) {
+      // For leading whitespace followed by a kid that wants our parent type,
+      // there are three cases:
+      // 1) We have a previous sibling.  That means that previous sibling
+      //    wanted a (non-block) parent of the type we're looking at.  Then the
+      //    whitespace comes between two table-internal elements, so should be
+      //    collapsed out.
+      // 2) We have no previous sibling but aIsInsertAtStart is true.  That
+      //    means that we'll be at the beginning of our non-block-type parent,
+      //    and the whitespace is OK to collapse out.  If something is ever
+      //    inserted before us, it'll find our own parent as its parent and if
+      //    it's something that would care about the whitespace it'll want a
+      //    block parent, so it'll trigger a reframe at that point.
+      // 3) We have no previous sibling and aIsInsertAtStart is false.  In this
+      //    case it might be that we're actually in ContentAppended and have a
+      //    previous sibling that will want the whitespace.  We can't filter it
+      //    out in this case.
+      //
+      // XXXbz really, we should figure out the correct prevSibling in
+      // ContentAppended and pass it in here, I would think.  We end up having
+      // to sort it out anyway, eventually...  Then we could just check the
+      // prevSibling to decide on what to do with the whitespace.
+      //
+      // It's always OK to drop whitespace between any two items that want a
+      // parent of type parentType.
+      //
+      // For trailing whitespace, the situation is more complicated.  We might
+      // in fact have a next sibling that would care about the whitespace.  We
+      // just don't know anything about that here.  So leave trailing
+      // whitespace be, unless aIsAppend is true.  If it's true, we have no
+      // next sibling, and if one ever gets added that would care about the
+      // whitespace it'll get us as a previous sibling and trigger a reframe.
+
+      FCItemIterator iter(aItems);
+      FCItemIterator start(iter);
+      do {
+        if (iter.SkipItemsWantingParentType(parentType)) {
+          break;
+        }
+
+        // iter points to an item that wants a different parent.  If it's not
+        // whitespace, we're done; no more point scanning the list.
+        if (!iter.item().IsWhitespace()) {
+          break;
+        }
+
+        if (iter == start && !aPrevSibling && !aIsInsertAtStart) {
+          // Leading whitespace, not inserting at the start, and don't know
+          // whether our previous sibling might want this whitespace.  See the
+          // long comment above.  Need to reframe.
+          break;
+        }
+
+        FCItemIterator spaceEndIter(iter);
+        // Advance spaceEndIter past any whitespace
+        PRBool trailingSpaces = spaceEndIter.SkipWhitespace();
+
+        if ((!trailingSpaces &&
+             spaceEndIter.item().DesiredParentType() == parentType) ||
+            (trailingSpaces && aIsAppend)) {
+          // Drop the whitespace
+          iter.DeleteItemsTo(spaceEndIter);
+        } else {
+          // We're done: we don't want to drop the whitespace, and it has the
+          // wrong parent type.
+          break;
+        }
+
+        // Now loop, since |iter| points to item right after the whitespace we
+        // removed.
+      } while (!iter.IsDone());
+    }
+
     // We might be able to figure out some sort of optimizations here, but they
     // would have to depend on having a correct aPrevSibling and a correct next
     // sibling.  For example, we can probably avoid reframing if none of
@@ -10810,10 +10941,18 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // in fact do not have a reliable aPrevSibling, nor any next sibling, in
     // this method.
 
-    // Reframing aFrame->GetContent() is good enough, since the content of
-    // table pseudo-frames is the ancestor content.
-    RecreateFramesForContent(aFrame->GetContent());
-    return PR_TRUE;
+    // aItems might have changed, so recheck the parent type thing.  In fact,
+    // it might be empty, so recheck that too.
+    if (aItems.IsEmpty()) {
+      return PR_FALSE;
+    }
+
+    if (!aItems.AllWantParentType(parentType)) {
+      // Reframing aFrame->GetContent() is good enough, since the content of
+      // table pseudo-frames is the ancestor content.
+      RecreateFramesForContent(aFrame->GetContent());
+      return PR_TRUE;
+    }
   }
 
   // Situation #3 is an inline frame that will now contain block
@@ -11536,6 +11675,19 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
   return NS_OK;
 }
 
+//////////////////////////////////////////////////////////
+// nsCSSFrameConstructor::FrameConstructionItem methods //
+//////////////////////////////////////////////////////////
+PRBool
+nsCSSFrameConstructor::FrameConstructionItem::IsWhitespace() const
+{
+  if (!mIsText) {
+    return PR_FALSE;
+  }
+  mContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  return mContent->TextIsOnlyWhitespace();
+}
+
 //////////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItemList methods //
 //////////////////////////////////////////////////////////////
@@ -11557,6 +11709,36 @@ AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta)
 ////////////////////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItemList::Iterator methods //
 ////////////////////////////////////////////////////////////////////////
+inline PRBool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipItemsWantingParentType(ParentType aParentType)
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  while (item().DesiredParentType() == aParentType) {
+    Next();
+    if (IsDone()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+inline PRBool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipWhitespace()
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  NS_PRECONDITION(item().IsWhitespace(), "Not pointing to whitespace?");
+  do {
+    Next();
+    if (IsDone()) {
+      return PR_TRUE;
+    }
+  } while (item().IsWhitespace());
+
+  return PR_FALSE;
+}
+
 void
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::AppendItemToList(FrameConstructionItemList& aTargetList)
@@ -11619,11 +11801,18 @@ Iterator::InsertItem(FrameConstructionItem* aItem)
 }
 
 void
-nsCSSFrameConstructor::FrameConstructionItemList::Iterator::DeleteItem()
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::DeleteItemsTo(const Iterator& aEnd)
 {
-  FrameConstructionItem* item = ToItem(mCurrent);
-  Next();
-  PR_REMOVE_LINK(item);
-  mList.AdjustCountsForItem(item, -1);
-  delete item;
+  NS_PRECONDITION(mEnd == aEnd.mEnd, "end iterator for some other list?");
+  NS_PRECONDITION(*this != aEnd, "Shouldn't be at aEnd yet");
+
+  do {
+    NS_ASSERTION(!IsDone(), "Ran off end of list?");
+    FrameConstructionItem* item = ToItem(mCurrent);
+    Next();
+    PR_REMOVE_LINK(item);
+    mList.AdjustCountsForItem(item, -1);
+    delete item;
+  } while (*this != aEnd);
 }
