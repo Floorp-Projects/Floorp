@@ -80,7 +80,6 @@ _TEST_FILES = \
         test_dynUnsecureIframeRedirect.html \
         test_dynUnsecurePicture.html \
         test_dynUnsecurePicturePreload.html \
-        test_dynUnsecureRedirect.html \
         test_innerHtmlDelayedUnsecurePicture.html \
         test_innerHtmlUnsecurePicture.html \
         test_secureAll.html \
@@ -100,6 +99,7 @@ _TEST_FILES = \
         $(NULL)
 
 #        test_bug329869.html \  leaks, bug 452401
+#        test_dynUnsecureRedirect.html \  intermitently fails on mac (seems regularlly and specifically)
 
 
 libs:: $(_TEST_FILES)
