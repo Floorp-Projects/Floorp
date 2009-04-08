@@ -47,6 +47,7 @@
 
 #include "sqlite3.h"
 
+using namespace mozilla::storage;
 
 /*************************************************************************
  ****
@@ -143,7 +144,7 @@ mozStorageStatementWrapper::GetRow(mozIStorageStatementRow **aRow)
         return NS_ERROR_FAILURE;
 
     if (!mStatementRow) {
-        mozStorageStatementRow *row = new mozStorageStatementRow(mStatement);
+        StatementRow *row = new StatementRow(mStatement);
         if (!row)
             return NS_ERROR_OUT_OF_MEMORY;
         mStatementRow = row;
@@ -159,7 +160,7 @@ mozStorageStatementWrapper::GetParams(mozIStorageStatementParams **aParams)
     NS_ENSURE_ARG_POINTER(aParams);
 
     if (!mStatementParams) {
-        mozStorageStatementParams *params = new mozStorageStatementParams(mStatement);
+        StatementParams *params = new StatementParams(mStatement);
         if (!params)
             return NS_ERROR_OUT_OF_MEMORY;
         mStatementParams = params;
