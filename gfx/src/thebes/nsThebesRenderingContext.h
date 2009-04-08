@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsIRenderingContext.h"
-#include "nsRenderingContextImpl.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIWidget.h"
@@ -57,13 +56,81 @@
 
 class nsIImage;
 
-class nsThebesRenderingContext : public nsRenderingContextImpl
+class nsThebesRenderingContext : public nsIRenderingContext
 {
 public:
     nsThebesRenderingContext();
     virtual ~nsThebesRenderingContext();
 
     NS_DECL_ISUPPORTS
+
+
+    /**
+     * Return the maximum length of a string that can be handled by the platform
+     * using the current font metrics.
+     */
+    virtual PRInt32 GetMaxStringLength();
+
+    // Safe string method variants: by default, these defer to the more
+    // elaborate methods below
+    NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth,
+                        PRInt32 *aFontID = nsnull);
+    NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth);
+    NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                          PRInt32 aFontID = -1,
+                          const nscoord* aSpacing = nsnull);
+
+    // Safe string methods
+    NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength,
+                        nscoord& aWidth);
+    NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength,
+                        nscoord &aWidth, PRInt32 *aFontID = nsnull);
+    NS_IMETHOD GetWidth(char aC, nscoord &aWidth);
+    NS_IMETHOD GetWidth(PRUnichar aC, nscoord &aWidth,
+                        PRInt32 *aFontID);
+
+    NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
+                                 nsTextDimensions& aDimensions);
+    NS_IMETHOD GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
+                                 nsTextDimensions& aDimensions, PRInt32* aFontID = nsnull);
+
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
+    NS_IMETHOD GetTextDimensions(const char*       aString,
+                                 PRInt32           aLength,
+                                 PRInt32           aAvailWidth,
+                                 PRInt32*          aBreaks,
+                                 PRInt32           aNumBreaks,
+                                 nsTextDimensions& aDimensions,
+                                 PRInt32&          aNumCharsFit,
+                                 nsTextDimensions& aLastWordDimensions,
+                                 PRInt32*          aFontID = nsnull);
+
+    NS_IMETHOD GetTextDimensions(const PRUnichar*  aString,
+                                 PRInt32           aLength,
+                                 PRInt32           aAvailWidth,
+                                 PRInt32*          aBreaks,
+                                 PRInt32           aNumBreaks,
+                                 nsTextDimensions& aDimensions,
+                                 PRInt32&          aNumCharsFit,
+                                 nsTextDimensions& aLastWordDimensions,
+                                 PRInt32*          aFontID = nsnull);
+#endif
+#ifdef MOZ_MATHML
+    NS_IMETHOD GetBoundingMetrics(const char*        aString,
+                                  PRUint32           aLength,
+                                  nsBoundingMetrics& aBoundingMetrics);
+    NS_IMETHOD GetBoundingMetrics(const PRUnichar*   aString,
+                                  PRUint32           aLength,
+                                  nsBoundingMetrics& aBoundingMetrics,
+                                  PRInt32*           aFontID = nsnull);
+#endif
+    NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
+                          nscoord aX, nscoord aY,
+                          const nscoord* aSpacing = nsnull);
+    NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
+                          nscoord aX, nscoord aY,
+                          PRInt32 aFontID = -1,
+                          const nscoord* aSpacing = nsnull);
 
     NS_IMETHOD Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
     NS_IMETHOD Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
@@ -99,81 +166,6 @@ public:
     NS_IMETHOD FillEllipse(const nsRect& aRect);
     NS_IMETHOD FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-    NS_IMETHOD GetWidth(const nsString& aString, nscoord &aWidth,
-                        PRInt32 *aFontID = nsnull)
-    { return nsRenderingContextImpl::GetWidth(aString, aWidth, aFontID); }
-    NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth)
-    { return nsRenderingContextImpl::GetWidth(aString, aWidth); }
-    NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength,
-                        nscoord& aWidth)
-    { return nsRenderingContextImpl::GetWidth(aString, aLength, aWidth); }
-    NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength,
-                        nscoord &aWidth, PRInt32 *aFontID = nsnull)
-    { return nsRenderingContextImpl::GetWidth(aString, aLength, aWidth, aFontID); }
-    NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                          PRInt32 aFontID = -1,
-                          const nscoord* aSpacing = nsnull)
-    { return nsRenderingContextImpl::DrawString(aString, aX, aY, aFontID, aSpacing); }
-  
-    NS_IMETHOD GetWidth(char aC, nscoord &aWidth);
-    NS_IMETHOD GetWidth(PRUnichar aC, nscoord &aWidth,
-                        PRInt32 *aFontID);
-    
-    NS_IMETHOD GetWidthInternal(const char *aString, PRUint32 aLength, nscoord &aWidth);
-    NS_IMETHOD GetWidthInternal(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
-                                PRInt32 *aFontID);
-  
-    NS_IMETHOD DrawStringInternal(const char *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  const nscoord* aSpacing);
-    NS_IMETHOD DrawStringInternal(const PRUnichar *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing);
-  
-    NS_IMETHOD GetTextDimensionsInternal(const char* aString, PRUint32 aLength,
-                                         nsTextDimensions& aDimensions);
-    NS_IMETHOD GetTextDimensionsInternal(const PRUnichar *aString, PRUint32 aLength,
-                                         nsTextDimensions& aDimensions,PRInt32 *aFontID);
-    NS_IMETHOD GetTextDimensionsInternal(const char*       aString,
-                                         PRInt32           aLength,
-                                         PRInt32           aAvailWidth,
-                                         PRInt32*          aBreaks,
-                                         PRInt32           aNumBreaks,
-                                         nsTextDimensions& aDimensions,
-                                         PRInt32&          aNumCharsFit,
-                                         nsTextDimensions& aLastWordDimensions,
-                                         PRInt32*          aFontID);
-    NS_IMETHOD GetTextDimensionsInternal(const PRUnichar*  aString,
-                                         PRInt32           aLength,
-                                         PRInt32           aAvailWidth,
-                                         PRInt32*          aBreaks,
-                                         PRInt32           aNumBreaks,
-                                         nsTextDimensions& aDimensions,
-                                         PRInt32&          aNumCharsFit,
-                                         nsTextDimensions& aLastWordDimensions,
-                                         PRInt32*          aFontID);
-
-#ifdef MOZ_MATHML
-    /**
-     * Returns metrics (in app units) of an 8-bit character string
-     */
-    NS_IMETHOD GetBoundingMetricsInternal(const char*        aString,
-                                          PRUint32           aLength,
-                                          nsBoundingMetrics& aBoundingMetrics);
-    
-    /**
-     * Returns metrics (in app units) of a Unicode character string
-     */
-    NS_IMETHOD GetBoundingMetricsInternal(const PRUnichar*   aString,
-                                          PRUint32           aLength,
-                                          nsBoundingMetrics& aBoundingMetrics,
-                                          PRInt32*           aFontID = nsnull);
-
-#endif /* MOZ_MATHML */
-
-    virtual PRInt32 GetMaxStringLength();
-
     NS_IMETHOD PushFilter(const nsRect& aRect, PRBool aAreaIsOpaque, float aOpacity);
     NS_IMETHOD PopFilter();
 
@@ -183,6 +175,10 @@ public:
     NS_IMETHOD PopTranslation(PushedTranslation* aState);
     NS_IMETHOD SetTranslation(nscoord aX, nscoord aY);
 
+    /**
+     * Let the device context know whether we want text reordered with
+     * right-to-left base direction
+     */
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
     NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
     virtual void SetTextRunRTL(PRBool aIsRTL);
@@ -212,8 +208,64 @@ public:
     void TransformCoord (nscoord *aX, nscoord *aY);
 
 protected:
+    nsresult GetWidthInternal(const char *aString, PRUint32 aLength, nscoord &aWidth);
+    nsresult GetWidthInternal(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
+                              PRInt32 *aFontID = nsnull);
+
+    nsresult DrawStringInternal(const char *aString, PRUint32 aLength,
+                                nscoord aX, nscoord aY,
+                                const nscoord* aSpacing = nsnull);
+    nsresult DrawStringInternal(const PRUnichar *aString, PRUint32 aLength,
+                                nscoord aX, nscoord aY,
+                                PRInt32 aFontID = -1,
+                                const nscoord* aSpacing = nsnull);
+
+    nsresult GetTextDimensionsInternal(const char*       aString,
+                                       PRUint32          aLength,
+                                       nsTextDimensions& aDimensions);
+    nsresult GetTextDimensionsInternal(const PRUnichar*  aString,
+                                       PRUint32          aLength,
+                                       nsTextDimensions& aDimensions,
+                                       PRInt32*          aFontID = nsnull);
+    nsresult GetTextDimensionsInternal(const char*       aString,
+                                       PRInt32           aLength,
+                                       PRInt32           aAvailWidth,
+                                       PRInt32*          aBreaks,
+                                       PRInt32           aNumBreaks,
+                                       nsTextDimensions& aDimensions,
+                                       PRInt32&          aNumCharsFit,
+                                       nsTextDimensions& aLastWordDimensions,
+                                       PRInt32*          aFontID = nsnull);
+    nsresult GetTextDimensionsInternal(const PRUnichar*  aString,
+                                       PRInt32           aLength,
+                                       PRInt32           aAvailWidth,
+                                       PRInt32*          aBreaks,
+                                       PRInt32           aNumBreaks,
+                                       nsTextDimensions& aDimensions,
+                                       PRInt32&          aNumCharsFit,
+                                       nsTextDimensions& aLastWordDimensions,
+                                       PRInt32*          aFontID = nsnull);
+
+#ifdef MOZ_MATHML
+    /**
+     * Returns metrics (in app units) of an 8-bit character string
+     */
+    nsresult GetBoundingMetricsInternal(const char*        aString,
+                                        PRUint32           aLength,
+                                        nsBoundingMetrics& aBoundingMetrics);
+
+    /**
+     * Returns metrics (in app units) of a Unicode character string
+     */
+    nsresult GetBoundingMetricsInternal(const PRUnichar*   aString,
+                                        PRUint32           aLength,
+                                        nsBoundingMetrics& aBoundingMetrics,
+                                        PRInt32*           aFontID = nsnull);
+
+#endif /* MOZ_MATHML */
+
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
-    // cached pixels2twips, twips2pixels values
+    // cached app units per device pixel value
     double mP2A;
 
     nsCOMPtr<nsIWidget> mWidget;
