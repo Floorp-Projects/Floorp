@@ -122,7 +122,9 @@ public:
                   PRBool              aInitialReflow,
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
-  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats, PRBool aForceFit);
+  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
+                       const nsRect& aFloatAvailableSpace,
+                       PRBool aBandHasFloats, PRBool aForceFit);
   PRBool FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
                            PRBool*         aIsLeftFloat,
                            nsReflowStatus& aReflowStatus,
