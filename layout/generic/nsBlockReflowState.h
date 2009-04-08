@@ -91,16 +91,15 @@ public:
    * Returns whether there are floats present at the given vertical
    * coordinate and within the width of the content rect.
    */
-  PRBool GetFloatAvailableSpace(nsRect& aResult) const
-    { return GetFloatAvailableSpace(mY, PR_FALSE, aResult); }
-  PRBool GetFloatAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
-                                nsRect& aResult) const
+  nsFlowAreaRect GetFloatAvailableSpace() const
+    { return GetFloatAvailableSpace(mY, PR_FALSE); }
+  nsFlowAreaRect GetFloatAvailableSpace(nscoord aY,
+                                        PRBool aRelaxHeightConstraint) const
     { return GetFloatAvailableSpaceWithState(aY, aRelaxHeightConstraint,
-                                             nsnull, aResult); }
-  PRBool GetFloatAvailableSpaceWithState(nscoord aY,
-                                         PRBool aRelaxHeightConstraint,
-                                         nsFloatManager::SavedState *aState,
-                                         nsRect& aResult) const;
+                                             nsnull); }
+  nsFlowAreaRect
+    GetFloatAvailableSpaceWithState(nscoord aY, PRBool aRelaxHeightConstraint,
+                                    nsFloatManager::SavedState *aState) const;
 
   /*
    * The following functions all return PR_TRUE if they were able to
@@ -117,8 +116,8 @@ public:
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
   PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
-                       const nsRect& aFloatAvailableSpace,
-                       PRBool aBandHasFloats, PRBool aForceFit);
+                       const nsFlowAreaRect& aFloatAvailableSpace,
+                       PRBool aForceFit);
   PRBool FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
                            PRBool*         aIsLeftFloat,
                            nsReflowStatus& aReflowStatus,
@@ -172,8 +171,7 @@ public:
   // Caller must have called GetAvailableSpace for the current mY
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
-                              PRBool aBandHasFloats,
-                              const nsRect& aFloatAvailableSpace,
+                              const nsFlowAreaRect& aFloatAvailableSpace,
                               PRBool aBlockAvoidsFloats,
                               nsRect& aResult);
 
