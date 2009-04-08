@@ -623,8 +623,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mDeferredPositioner = NULL;
   mLastPoint.x        = 0;
   mLastPoint.y        = 0;
-  mPreferredWidth     = 0;
-  mPreferredHeight    = 0;
   mIsVisible          = PR_FALSE;
   mHas3DBorder        = PR_FALSE;
 #ifdef MOZ_XUL
@@ -1756,65 +1754,6 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
 }
 
 //-------------------------------------------------------------------------
-// Return PR_TRUE in aForWindow if the given event should be processed
-// assuming this is a modal window.
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
-                                     PRBool *aForWindow)
-{
-  if (!aRealEvent) {
-    *aForWindow = PR_FALSE;
-    return NS_OK;
-  }
-#if 0
-  // this version actually works, but turns out to be unnecessary
-  // if we use the OS properly.
-  MSG *msg = (MSG *) aEvent;
-
-  switch (msg->message) {
-    case WM_MOUSEMOVE:
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-    case WM_LBUTTONDBLCLK:
-    case WM_MBUTTONDOWN:
-    case WM_MBUTTONUP:
-    case WM_MBUTTONDBLCLK:
-    case WM_RBUTTONDOWN:
-    case WM_RBUTTONUP:
-    case WM_RBUTTONDBLCLK:
-    {
-      PRBool acceptEvent;
-
-      // is the event within our window?
-      HWND rollupWindow = NULL;
-      HWND msgWindow = GetTopLevelHWND(msg->hwnd);
-      if (gRollupWidget)
-        rollupWindow = (HWND)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-      acceptEvent = msgWindow && (msgWindow == mWnd || msgWindow == rollupWindow) ?
-                    PR_TRUE : PR_FALSE;
-
-      // if not, accept events for any window that hasn't been disabled.
-      if (!acceptEvent) {
-        LONG_PTR proc = ::GetWindowLongPtrW(msgWindow, GWLP_WNDPROC);
-        if (proc == (LONG_PTR)&nsWindow::WindowProc) {
-          nsWindow *msgWin = GetNSWindowPtr(msgWindow);
-          msgWin->IsEnabled(&acceptEvent);
-        }
-      }
-    }
-    break;
-
-    default:
-      *aForWindow = PR_TRUE;
-  }
-#else
-  *aForWindow = PR_TRUE;
-#endif
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
 //
 // Constrain a potential move to fit onscreen
 //
@@ -2741,28 +2680,6 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
-{
-  nsresult rv = NS_OK;
-  if (mWnd) {
-    HRGN nativeRegion;
-    rv = aRegion->GetNativeRegion((void *&)nativeRegion);
-    if (nativeRegion) {
-      if (NS_SUCCEEDED(rv)) {
-        VERIFY(::InvalidateRgn(mWnd, nativeRegion, FALSE));
-
-        if (aIsSynchronous) {
-          VERIFY(::UpdateWindow(mWnd));
-        }
-      }
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
-  }
-  return rv;
-}
-
 //-------------------------------------------------------------------------
 //
 // Force a synchronous repaint of the window
@@ -2811,7 +2728,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
       return nsTextStore::GetDisplayAttrMgr();
 #endif //NS_ENABLE_TSF
 
-    case NS_NATIVE_COLORMAP:
     default:
       break;
   }
@@ -2835,50 +2751,10 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_PLUGIN_PORT:
-    case NS_NATIVE_COLORMAP:
       break;
     default:
       break;
   }
-}
-
-//-------------------------------------------------------------------------
-//
-// Set the colormap of the window
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
-{
-#if 0
-  if (mPalette != NULL) {
-    ::DeleteObject(mPalette);
-  }
-
-  PRUint8 *map = aColorMap->Index;
-  LPLOGPALETTE pLogPal = (LPLOGPALETTE) new char[2 * sizeof(WORD) +
-                                                 aColorMap->NumColors * sizeof(PALETTEENTRY)];
-  pLogPal->palVersion = 0x300;
-  pLogPal->palNumEntries = aColorMap->NumColors;
-  for(int i = 0; i < aColorMap->NumColors; i++)
-  {
-    pLogPal->palPalEntry[i].peRed = *map++;
-    pLogPal->palPalEntry[i].peGreen = *map++;
-    pLogPal->palPalEntry[i].peBlue = *map++;
-    pLogPal->palPalEntry[i].peFlags = 0;
-  }
-  mPalette = ::CreatePalette(pLogPal);
-  delete pLogPal;
-
-  NS_ASSERTION(mPalette != NULL, "Null palette");
-  if (mPalette != NULL) {
-    HDC hDC = ::GetDC(mWnd);
-    HPALETTE hOldPalette = ::SelectPalette(hDC, mPalette, TRUE);
-    ::RealizePalette(hDC);
-    ::SelectPalette(hDC, hOldPalette, TRUE);
-    ::ReleaseDC(mWnd, hDC);
-  }
-#endif
-  return NS_OK;
 }
 
 
@@ -2900,7 +2776,6 @@ BOOL CALLBACK nsWindow::InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg)
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-//XXX Scroll is obsolete and should go away soon
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
 {
   RECT  trect;
@@ -2922,33 +2797,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
   ::UpdateWindow(mWnd);
   return NS_OK;
 }
-
-NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
-{
-  // Scroll the entire contents of the window + change the offset of any child windows
-  ::ScrollWindowEx(mWnd, aDx, aDy, NULL, NULL, NULL,
-                   NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
-  ::UpdateWindow(mWnd); // Force synchronous generation of NS_PAINT
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy)
-{
-  RECT  trect;
-
-  trect.left = aRect.x;
-  trect.top = aRect.y;
-  trect.right = aRect.XMost();
-  trect.bottom = aRect.YMost();
-
-  // Scroll the bits in the window defined by trect.
-  // Child windows are not scrolled.
-  ::ScrollWindowEx(mWnd, aDx, aDy, &trect, NULL, NULL,
-                   NULL, SW_INVALIDATE);
-  ::UpdateWindow(mWnd); // Force synchronous generation of NS_PAINT
-  return NS_OK;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -6744,20 +6592,6 @@ NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec)
 PRBool nsWindow::AutoErase()
 {
   return PR_FALSE;
-}
-
-NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-{
-  aWidth  = mPreferredWidth;
-  aHeight = mPreferredHeight;
-  return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-{
-  mPreferredWidth  = aWidth;
-  mPreferredHeight = aHeight;
-  return NS_OK;
 }
 
 static PRBool ShouldDrawCompositionStringOurselves()
