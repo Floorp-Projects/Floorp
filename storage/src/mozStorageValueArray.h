@@ -39,30 +39,9 @@
 #ifndef _MOZSTORAGEVALUEARRAY_H_
 #define _MOZSTORAGEVALUEARRAY_H_
 
-#include "nsCOMPtr.h"
-
 #include "mozIStorageValueArray.h"
 
-#include "nsIArray.h"
-
 #include <sqlite3.h>
-
-class nsIArray;
-
-class mozStorageStatementRowValueArray : public mozIStorageValueArray
-{
-public:
-    mozStorageStatementRowValueArray (sqlite3_stmt *aSqliteStmt);
-    ~mozStorageStatementRowValueArray();
-
-    // interfaces
-    NS_DECL_ISUPPORTS
-    NS_DECL_MOZISTORAGEVALUEARRAY
-
-private:
-    sqlite3_stmt *mSqliteStatement;
-    PRUint32 mNumEntries;
-};
 
 class mozStorageArgvValueArray : public mozIStorageValueArray
 {
