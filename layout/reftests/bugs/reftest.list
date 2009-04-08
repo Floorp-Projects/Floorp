@@ -1063,6 +1063,9 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 468473-1.xul 468473-1-ref.xul
 == 471356-1.html 471356-1-ref.html
 == 471594-1.xhtml 471594-1-ref.html
+== 472020-1a.xul 472020-1-ref.xul
+fails == 472020-1b.xul 472020-1-ref.xul
+fails == 472020-2.xul 472020-2-ref.xul
 == 472500-1.xul 472500-1-ref.xul
 == 472769-1a.html 472769-1-ref.html
 == 472769-1b.html 472769-1-ref.html

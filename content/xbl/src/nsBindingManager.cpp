@@ -1422,51 +1422,105 @@ nsBindingManager::GetNestedSingleInsertionPoint(nsIContent* aParent,
   return insertionElement;
 }
 
+nsXBLInsertionPoint*
+nsBindingManager::FindInsertionPointAndIndex(nsIContent* aContainer,
+                                             nsIContent* aInsertionParent,
+                                             PRUint32 aIndexInContainer,
+                                             PRInt32 aAppend,
+                                             PRInt32* aInsertionIndex)
+{
+  PRBool isAnonymousContentList;
+  nsINodeList* nodeList =
+    GetXBLChildNodesInternal(aInsertionParent, &isAnonymousContentList);
+  if (!nodeList || !isAnonymousContentList) {
+    return nsnull;
+  }
+
+  // Find a non-pseudo-insertion point and just jam ourselves in.  This is
+  // not 100% correct, since there might be multiple insertion points under
+  // this insertion parent, and we should really be using the one that
+  // matches our content...  Hack city, baby.
+  nsAnonymousContentList* contentList =
+    static_cast<nsAnonymousContentList*>(nodeList);
+
+  PRInt32 count = contentList->GetInsertionPointCount();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
+    if (point->GetInsertionIndex() != -1) {
+      // We're real. Jam the kid in.
+
+      // Find the right insertion spot.  Can't just insert in the insertion
+      // point at aIndexInContainer since the point may contain anonymous
+      // content, not all of aContainer's kids, etc.  So find the last
+      // child of aContainer that comes before aIndexInContainer and is in
+      // the insertion point and insert right after it.
+      PRInt32 pointSize = point->ChildCount();
+      for (PRInt32 parentIndex = aIndexInContainer - 1; parentIndex >= 0;
+           --parentIndex) {
+        nsIContent* currentSibling = aContainer->GetChildAt(parentIndex);
+        for (PRInt32 pointIndex = pointSize - 1; pointIndex >= 0;
+             --pointIndex) {
+          if (point->ChildAt(pointIndex) == currentSibling) {
+            *aInsertionIndex = pointIndex + 1;
+            return point;
+          }
+        }
+      }
+
+      // None of our previous siblings are in here... just stick
+      // ourselves in at the end of the insertion point if we're
+      // appending, and at the beginning otherwise.            
+      // XXXbz if we ever start doing the filter thing right, this may be no
+      // good, since we may _still_ have anonymous kids in there and may need
+      // to get the ordering with those right.  In fact, this is even wrong
+      // without the filter thing for nested insertion points, since they might
+      // contain anonymous content that needs to come after all explicit
+      // kids... but we have no way to know that here easily.
+      if (aAppend) {
+        *aInsertionIndex = pointSize;
+      } else {
+        *aInsertionIndex = 0;
+      }
+      return point;
+    }
+  }
+
+  return nsnull;  
+}
+
 void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   PRInt32     aNewIndexInContainer)
 {
-  // XXX This is hacked and not quite correct. See below.
   if (aNewIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {
     // It's not anonymous.
+    NS_ASSERTION(aNewIndexInContainer >= 0, "Bogus index");
+
     PRBool multiple;
     nsIContent* ins = GetNestedSingleInsertionPoint(aContainer, &multiple);
 
     if (multiple) {
       // Do each kid individually
       PRInt32 childCount = aContainer->GetChildCount();
-      NS_ASSERTION(aNewIndexInContainer >= 0, "Bogus index");
       for (PRInt32 idx = aNewIndexInContainer; idx < childCount; ++idx) {
         HandleChildInsertion(aContainer, aContainer->GetChildAt(idx),
                              idx, PR_TRUE);
       }
     }
     else if (ins) {
-      PRBool isAnonymousContentList;
-      nsCOMPtr<nsIDOMNodeList> nodeList =
-        GetXBLChildNodesInternal(ins, &isAnonymousContentList);
-
-      if (nodeList && isAnonymousContentList) {
-        // Find the one non-pseudo-insertion point and just add ourselves.
-        nsAnonymousContentList* contentList =
-          static_cast<nsAnonymousContentList*>(nodeList.get());
-
-        PRInt32 count = contentList->GetInsertionPointCount();
-        for (PRInt32 i = 0; i < count; i++) {
-          nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
-          PRInt32 index = point->GetInsertionIndex();
-          if (index != -1) {
-            // We're real. Jam all the kids in.
-            PRInt32 childCount = aContainer->GetChildCount();
-            for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
-              nsIContent* child = aContainer->GetChildAt(j);
-              point->AddChild(child);
-              SetInsertionParent(child, ins);
-            }
-            break;
-          }
+      PRInt32 insertionIndex;
+      nsXBLInsertionPoint* point =
+        FindInsertionPointAndIndex(aContainer, ins, aNewIndexInContainer,
+                                   PR_TRUE, &insertionIndex);
+      if (point) {
+        PRInt32 childCount = aContainer->GetChildCount();
+        for (PRInt32 j = aNewIndexInContainer; j < childCount;
+             j++, insertionIndex++) {
+          nsIContent* child = aContainer->GetChildAt(j);
+          point->InsertChildAt(insertionIndex, child);
+          SetInsertionParent(child, ins);
         }
       }
     }
@@ -1479,7 +1533,6 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
                                   nsIContent* aChild,
                                   PRInt32 aIndexInContainer)
 {
-  // XXX This is hacked just to make menus work again.
   if (aIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {
     // It's not anonymous.
@@ -1640,61 +1693,13 @@ nsBindingManager::HandleChildInsertion(nsIContent* aContainer,
   nsIContent* ins = GetNestedInsertionPoint(aContainer, aChild);
 
   if (ins) {
-    PRBool isAnonymousContentList;
-    nsCOMPtr<nsIDOMNodeList> nodeList =
-      GetXBLChildNodesInternal(ins, &isAnonymousContentList);
-
-    if (nodeList && isAnonymousContentList) {
-      // Find a non-pseudo-insertion point and just jam ourselves in.  This is
-      // not 100% correct, since there might be multiple insertion points under
-      // this insertion parent, and we should really be using the one that
-      // matches our content...  Hack city, baby.
-      nsAnonymousContentList* contentList =
-        static_cast<nsAnonymousContentList*>(nodeList.get());
-
-      PRInt32 count = contentList->GetInsertionPointCount();
-      for (PRInt32 i = 0; i < count; i++) {
-        nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
-        if (point->GetInsertionIndex() != -1) {
-          // We're real. Jam the kid in.
-
-          // Find the right insertion spot.  Can't just insert in the insertion
-          // point at aIndexInContainer since the point may contain anonymous
-          // content, not all of aContainer's kids, etc.  So find the last
-          // child of aContainer that comes before aIndexInContainer and is in
-          // the insertion point and insert right after it.
-          PRInt32 pointSize = point->ChildCount();
-          PRBool inserted = PR_FALSE;
-          for (PRInt32 parentIndex = aIndexInContainer - 1;
-               parentIndex >= 0 && !inserted; --parentIndex) {
-            nsIContent* currentSibling = aContainer->GetChildAt(parentIndex);
-            for (PRInt32 pointIndex = pointSize - 1; pointIndex >= 0;
-                 --pointIndex) {
-              nsCOMPtr<nsIContent> currContent = point->ChildAt(pointIndex);
-              if (currContent == currentSibling) {
-                point->InsertChildAt(pointIndex + 1, aChild);
-                inserted = PR_TRUE;
-                break;
-              }
-            }
-          }
-          if (!inserted) {
-            // None of our previous siblings are in here... just stick
-            // ourselves in at the end of the insertion point if we're
-            // appending, and at the beginning otherwise.            
-            // XXXbz if we ever start doing the filter thing right, this may be
-            // no good, since we may _still_ have anonymous kids in there and
-            // may need to get the ordering with those right.
-            if (aAppend) {
-              point->AddChild(aChild);
-            } else {
-              point->InsertChildAt(0, aChild);
-            }
-          }
-          SetInsertionParent(aChild, ins);
-          break;
-        }
-      }
+    PRInt32 insertionIndex;
+    nsXBLInsertionPoint* point =
+      FindInsertionPointAndIndex(aContainer, ins, aIndexInContainer, aAppend,
+                                 &insertionIndex);
+    if (point) {
+      point->InsertChildAt(insertionIndex, aChild);
+      SetInsertionParent(aChild, ins);
     }
   }
 }
