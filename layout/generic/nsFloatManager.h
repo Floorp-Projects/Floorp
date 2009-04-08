@@ -52,6 +52,22 @@ class nsIFrame;
 struct nsHTMLReflowState;
 class nsPresContext;
 
+/**
+ * The available space for content not occupied by floats is divided
+ * into a (vertical) sequence of rectangles.  However, we need to know
+ * not only the rectangle, but also whether it was reduced (from the
+ * content rectangle) by floats that actually intruded into the content
+ * rectangle.
+ */
+struct nsFlowAreaRect {
+  nsRect mRect;
+  PRPackedBool mHasFloats;
+
+  nsFlowAreaRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                 PRBool aHasFloats)
+    : mRect(aX, aY, aWidth, aHeight), mHasFloats(aHasFloats) {}
+};
+
 #define NS_FLOAT_MANAGER_CACHE_SIZE 4
 
 class nsFloatManager {
@@ -107,18 +123,18 @@ public:
    * @param aState [in] If null, use the current state, otherwise, do
    *                    computation based only on floats present in the given
    *                    saved state.
-   * @param aHasFloats [out] whether there are floats at the sides of
-   *                    the return value including those that do not
-   *                    reduce the line box width at all (because they
-   *                    are entirely in the margins)
-   * @return the resulting rectangle for line boxes.  It will not go
-   *         left of 0, nor right of aContentAreaWidth, but will be
-   *         narrower when floats are present.
+   * @return An nsFlowAreaRect whose:
+   *           mRect is the resulting rectangle for line boxes.  It will not go
+   *             left of 0, nor right of aContentAreaWidth, but will be
+   *             narrower when floats are present.
+   *          mBandHasFloats is whether there are floats at the sides of the
+   *            return value including those that do not reduce the line box
+   *            width at all (because they are entirely in the margins)
    *
    * aY and aAvailSpace are positioned relative to the current translation
    */
-  nsRect GetBand(nscoord aY, nscoord aMaxHeight, nscoord aContentAreaWidth,
-                 SavedState* aState, PRBool* aHasFloats) const;
+  nsFlowAreaRect GetBand(nscoord aY, nscoord aMaxHeight,
+                         nscoord aContentAreaWidth, SavedState* aState) const;
 
   /**
    * Add a float that comes after all floats previously added.  Its top
