@@ -1912,6 +1912,14 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSStackFrame *caller = cg->compiler->callerFrame;
         if (caller) {
             JS_ASSERT(cg->flags & TCF_COMPILE_N_GO);
+
+            /*
+             * Don't generate upvars on the left side of a for loop. See
+             * bug 470758.
+             */
+            if (cg->flags & TCF_IN_FOR_INIT)
+                return JS_TRUE;
+
             JS_ASSERT(caller->script);
             if (!caller->fun || caller->varobj != cg->scopeChain)
                 return JS_TRUE;
@@ -1922,18 +1930,16 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * Optimize access to function's arguments and variable and the
              * arguments object.
              */
-            if (op != JSOP_NAME || cg->staticLevel >= JS_DISPLAY_SIZE)
+            if (op != JSOP_NAME)
                 return JS_TRUE;
 
             JSLocalKind localKind = js_LookupLocal(cx, caller->fun, atom, &index);
             if (localKind == JSLOCAL_NONE)
                 return JS_TRUE;
 
-            /*
-             * Don't generate upvars on the left side of a for loop. See
-             * bug 470758.
-             */
-            if (cg->flags & TCF_IN_FOR_INIT)
+            uintN upvarLevel = caller->fun->u.i.script->staticLevel;
+            JS_ASSERT(cg->staticLevel > upvarLevel);
+            if (upvarLevel >= JS_DISPLAY_SIZE)
                 return JS_TRUE;
 
             ale = cg->upvarList.lookup(atom);
@@ -1962,8 +1968,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     index += caller->fun->nargs;
                 JS_ASSERT(index < JS_BIT(16));
 
-                JS_ASSERT(cg->staticLevel > caller->fun->u.i.script->staticLevel);
-                uintN skip = cg->staticLevel - caller->fun->u.i.script->staticLevel;
+                uintN skip = cg->staticLevel - upvarLevel;
                 cg->upvarMap.vector[ALE_INDEX(ale)] = MAKE_UPVAR_COOKIE(skip, index);
             }
 
@@ -2034,15 +2039,18 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
         /*
-         * If op is a mutating opcode or the function is heavyweight, we fall
-         * back on JSOP_*NAME*.
+         * If op is a mutating opcode, this upvar's static level is too big to
+         * index into the display, or the function is heavyweight, we fall back
+         * on JSOP_*NAME*.
          */
-        if (op != JSOP_NAME || (cg->flags & TCF_FUN_HEAVYWEIGHT))
+        if (op != JSOP_NAME)
+            return JS_TRUE;
+        if (level >= JS_DISPLAY_SIZE)
+            return JS_TRUE;
+        if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             return JS_TRUE;
 
         if (FUN_FLAT_CLOSURE(cg->fun)) {
-            /* Flat closure is formed one frame up from its static level. */
-            --skip;
             op = JSOP_GETDSLOT;
         } else {
             /*

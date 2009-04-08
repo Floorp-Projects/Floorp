@@ -1659,6 +1659,19 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
         JSParseNode *fn = funbox->node;
         int fnlevel = level;
 
+        /*
+         * An eval can leak funbox, functions along its ancestor line, and its
+         * immediate kids. Since FindFunArgs uses DFS and the parser propagates
+         * TCF_FUN_HEAVYWEIGHT bottom up, funbox's ancestor function nodes have
+         * already been marked as funargs by this point. Therefore we have to
+         * flag only funbox->node and funbox->kids' nodes here.
+         */
+        if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
+            fn->pn_dflags |= PND_FUNARG;
+            for (JSFunctionBox *kid = funbox->kids; kid; kid = kid->siblings)
+                kid->node->pn_dflags |= PND_FUNARG;
+        }
+
         if (fn->isFunArg()) {
             queue->push(funbox);
             fnlevel = int(funbox->level);
@@ -2280,7 +2293,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSTreeContext *tc,
         if (!fn->pn_body)
             return false;
         fn->pn_body->pn_type = TOK_UPVARS;
-        fn->pn_pos = body->pn_pos;
+        fn->pn_body->pn_pos = body->pn_pos;
         fn->pn_body->pn_names = funtc->upvars;
         fn->pn_body->pn_tree = body;
         funtc->upvars.clear();
