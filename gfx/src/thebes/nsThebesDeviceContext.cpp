@@ -750,7 +750,7 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
     SetDPI();
 
 #ifdef NS_DEBUG
-    NS_ASSERTION(!mInitialized, "device context is initialized twice!");
+    //NS_ASSERTION(!mInitialized, "device context is initialized twice!");
     mInitialized = PR_TRUE;
 #endif
 
