@@ -62,15 +62,30 @@ NO_PKG_FILES = \
 	nsinstall \
 	$(NULL)
 
+ifndef SYSTEM_LIBXUL
+NO_PKG_FILES += xulrunner
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _BINPATH = /$(_APPNAME)/Contents/Resources
 endif
 
+PACKAGE_XULRUNNER = package-xulrunner
+
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 DEBDESTDIR=debian/$(MOZ_APP_NAME)
+
+package-xulrunner:
+ifndef SYSTEM_LIBXUL
+	@echo "Packaging xulrunner..."
+	@$(MAKE) -C $(LIBXUL_DIST)/.. package || echo "Perhaps you're trying to package a prebuilt SDK. See 'https://wiki.mozilla.org/Mobile/Build/Fennec#Build' for more information."
+	@cd $(DIST)/$(MOZ_PKG_DIR); cat $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)
+else
+	@echo "Using system xulrunner..."
+endif
 
 ifeq ($(OS_TARGET),Linux)
 debian/control: $(srcdir)/debian/control.in $(LIBXUL_DIST)/bin/platform.ini
@@ -101,7 +116,8 @@ ifeq ($(OS_TARGET),WINCE)
 
 VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
 
-installer: stage-package
+UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
+cab: stage-package package-xulrunner
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_NAME)" "$(PKG_PATH)$(PKG_BASENAME).CAB"
 	@echo Installer $(PKG_PATH)$(PKG_BASENAME).CAB created!
