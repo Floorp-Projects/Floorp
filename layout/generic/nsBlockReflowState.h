@@ -94,7 +94,13 @@ public:
   PRBool GetFloatAvailableSpace(nsRect& aResult) const
     { return GetFloatAvailableSpace(mY, PR_FALSE, aResult); }
   PRBool GetFloatAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint,
-                                nsRect& aResult) const;
+                                nsRect& aResult) const
+    { return GetFloatAvailableSpaceWithState(aY, aRelaxHeightConstraint,
+                                             nsnull, aResult); }
+  PRBool GetFloatAvailableSpaceWithState(nscoord aY,
+                                         PRBool aRelaxHeightConstraint,
+                                         nsFloatManager::SavedState *aState,
+                                         nsRect& aResult) const;
   /* FIXME: To be removed */
   void GetAvailableSpace() { GetAvailableSpace(mY, PR_FALSE); }
   void GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint) {
@@ -216,12 +222,11 @@ public:
   // XXX get rid of this
   nsReflowStatus mReflowStatus;
 
-  // The x-position we should place an outside bullet relative to.
-  // This is the border-box edge of the principal box.  However, if a line box
-  // would be displaced by floats, we want to displace it by the same amount.
-  // That is, we act as though the edge of the floats is the content-edge of
-  // the block, displaced by the block's padding and border.
-  nscoord mOutsideBulletX;
+  // The float manager state as it was before the contents of this
+  // block.  This is needed for positioning bullets, since we only want
+  // to move the bullet to flow around floats that were before this
+  // block, not floats inside of it.
+  nsFloatManager::SavedState mFloatManagerStateBefore;
 
   nscoord mBottomEdge;
 
