@@ -86,6 +86,8 @@ function BookmarksStore() {
 
   // Initialize the special top level folders
   [["menu", "bookmarksMenuFolder"],
+   ["places", "placesRoot"],
+   ["tags", "tagsFolder"],
    ["toolbar", "toolbarFolder"],
    ["unfiled", "unfiledBookmarksFolder"],
   ].forEach(function(top) this.specialIds[top[0]] = this._bms[top[1]], this);
@@ -308,6 +310,7 @@ BookmarksStore.prototype = {
     switch (type) {
     case this._bms.TYPE_BOOKMARK:
       this._log.debug("  -> removing bookmark " + record.id);
+      this._ts.untagURI(this._bms.getBookmarkURI(itemId), null);
       this._bms.removeItem(itemId);
       break;
     case this._bms.TYPE_FOLDER:
@@ -603,7 +606,8 @@ BookmarksStore.prototype = {
   getAllIDs: function BStore_getAllIDs() {
     let items = {};
     for (let [weaveId, id] in Iterator(this.specialIds))
-      this._getChildren(weaveId, true, items);
+      if (weaveId != "places" && weaveId != "tags")
+        this._getChildren(weaveId, true, items);
     return items;
   },
 
@@ -615,7 +619,8 @@ BookmarksStore.prototype = {
 
   wipe: function BStore_wipe() {
     for (let [weaveId, id] in Iterator(this.specialIds))
-      this._bms.removeFolderChildren(id);
+      if (weaveId != "places")
+        this._bms.removeFolderChildren(id);
   }
 };
 
@@ -685,6 +690,15 @@ BookmarksTracker.prototype = {
   _ignore: function BMT__ignore(folder) {
     // Ignore unconditionally if the engine tells us to
     if (this.ignoreAll)
+      return true;
+
+    let tags = this._bms.tagsFolder;
+    // Ignore changes to tags (folders under the tags folder)
+    if (folder == tags)
+      return true;
+
+    // Ignore tag items (the actual instance of a tag for a bookmark)
+    if (this._bms.getFolderIdForItem(folder) == tags)
       return true;
 
     // Ignore livemark children
