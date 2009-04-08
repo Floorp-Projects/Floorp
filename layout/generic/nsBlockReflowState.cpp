@@ -189,6 +189,7 @@ nsBlockReflowState::FreeLineBox(nsLineBox* aLine)
 
 void
 nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
+                                                         const nsRect& aFloatAvailableSpace,
                                                          nscoord& aLeftResult,
                                                          nscoord& aRightResult,
                                                          nsBlockFrame::
@@ -199,13 +200,13 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
   // only give it free space. An example is a table frame - the
   // tables do not flow around floats.
   // However, we can let its margins intersect floats.
-  NS_ASSERTION(mAvailSpaceRect.x >= 0, "bad avail space rect x");
-  NS_ASSERTION(mAvailSpaceRect.width == 0 ||
-               mAvailSpaceRect.XMost() <= mContentArea.width,
+  NS_ASSERTION(aFloatAvailableSpace.x >= 0, "bad avail space rect x");
+  NS_ASSERTION(aFloatAvailableSpace.width == 0 ||
+               aFloatAvailableSpace.XMost() <= mContentArea.width,
                "bad avail space rect width");
 
   nscoord leftOffset, rightOffset;
-  if (mAvailSpaceRect.width == mContentArea.width) {
+  if (aFloatAvailableSpace.width == mContentArea.width) {
     // We don't need to compute margins when there are no floats around.
     leftOffset = 0;
     rightOffset = 0;
@@ -222,12 +223,13 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
                   aReplacedWidth->marginRight == os.mComputedMargin.right),
                  "unexpected aReplacedWidth");
 
-    nscoord leftFloatXOffset = mAvailSpaceRect.x;
+    nscoord leftFloatXOffset = aFloatAvailableSpace.x;
     leftOffset = PR_MAX(leftFloatXOffset, os.mComputedMargin.left) -
                  (aReplacedWidth ? aReplacedWidth->marginLeft
                                  : os.mComputedMargin.left);
     leftOffset = PR_MAX(leftOffset, 0); // in case of negative margin
-    nscoord rightFloatXOffset = mContentArea.width - mAvailSpaceRect.XMost();
+    nscoord rightFloatXOffset =
+      mContentArea.width - aFloatAvailableSpace.XMost();
     rightOffset = PR_MAX(rightFloatXOffset, os.mComputedMargin.right) -
                   (aReplacedWidth ? aReplacedWidth->marginRight
                                   : os.mComputedMargin.right);
@@ -243,11 +245,13 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
 void
 nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                                            const nsStyleDisplay* aDisplay,
+                                           PRBool aBandHasFloats,
+                                           const nsRect& aFloatAvailableSpace,
                                            PRBool aBlockAvoidsFloats,
                                            nsRect& aResult)
 {
 #ifdef REALLY_NOISY_REFLOW
-  printf("CBAS frame=%p has floats %d\n", aFrame, mBandHasFloats);
+  printf("CBAS frame=%p has floats %d\n", aFrame, aBandHasFloats);
 #endif
   aResult.y = mY;
   aResult.height = GetFlag(BRS_UNCONSTRAINEDHEIGHT)
@@ -275,7 +279,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                  !aBlockAvoidsFloats,
                "unexpected replaced width");
   if (!aBlockAvoidsFloats) {
-    if (mBandHasFloats) {
+    if (aBandHasFloats) {
       // Use the float-edge property to determine how the child block
       // will interact with the float.
       const nsStyleBorder* borderStyle = aFrame->GetStyleBorder();
@@ -291,8 +295,8 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
           {
             // The child block's margins should be placed adjacent to,
             // but not overlap the float.
-            aResult.x = mAvailSpaceRect.x + borderPadding.left;
-            aResult.width = mAvailSpaceRect.width;
+            aResult.x = aFloatAvailableSpace.x + borderPadding.left;
+            aResult.width = aFloatAvailableSpace.width;
           }
           break;
       }
@@ -310,11 +314,14 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     nsBlockFrame::ReplacedElementWidthToClear *replacedWidth = nsnull;
     if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
       replacedWidth = &replacedWidthStruct;
-      replacedWidthStruct = nsBlockFrame::WidthToClearPastFloats(*this, aFrame);
+      replacedWidthStruct =
+        nsBlockFrame::WidthToClearPastFloats(*this, aFloatAvailableSpace,
+                                             aFrame);
     }
 
     nscoord leftOffset, rightOffset;
-    ComputeReplacedBlockOffsetsForFloats(aFrame, leftOffset, rightOffset,
+    ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace,
+                                         leftOffset, rightOffset,
                                          replacedWidth);
     aResult.x = borderPadding.left + leftOffset;
     aResult.width = mContentArea.width - leftOffset - rightOffset;
@@ -1110,22 +1117,25 @@ nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType,
 
   if (aReplacedBlock) {
     for (;;) {
-      GetAvailableSpace(newY, PR_FALSE);
+      nsRect floatAvailableSpace;
+      PRBool bandHasFloats =
+        GetFloatAvailableSpace(newY, PR_FALSE, floatAvailableSpace);
       nsBlockFrame::ReplacedElementWidthToClear replacedWidth =
-        nsBlockFrame::WidthToClearPastFloats(*this, aReplacedBlock);
-      if (!mBandHasFloats ||
-          PR_MAX(mAvailSpaceRect.x, replacedWidth.marginLeft) +
+        nsBlockFrame::WidthToClearPastFloats(*this, floatAvailableSpace,
+                                             aReplacedBlock);
+      if (!bandHasFloats ||
+          PR_MAX(floatAvailableSpace.x, replacedWidth.marginLeft) +
             replacedWidth.borderBoxWidth +
             PR_MAX(mContentArea.width -
-                     PR_MIN(mContentArea.width, mAvailSpaceRect.XMost()),
+                     PR_MIN(mContentArea.width, floatAvailableSpace.XMost()),
                    replacedWidth.marginRight) <=
           mContentArea.width) {
         break;
       }
       // See the analogous code for inlines in nsBlockFrame::DoReflowInlineFrames
-      if (mAvailSpaceRect.height > 0) {
+      if (floatAvailableSpace.height > 0) {
         // See if there's room in the next band.
-        newY += mAvailSpaceRect.height;
+        newY += floatAvailableSpace.height;
       } else {
         if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
           // Stop trying to clear here; we'll just get pushed to the
@@ -1136,11 +1146,6 @@ nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType,
         newY += 1;
       }
     }
-    // Restore mBandHasFloats and mAvailSpaceRect to the way they were.
-    // This may well not be needed, and we should probably come up with
-    // well-defined rules about when these members are valid so that
-    // it's clearly not needed.
-    GetAvailableSpace();
   }
 
 #ifdef DEBUG
