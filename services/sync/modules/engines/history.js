@@ -494,6 +494,7 @@ HistoryTracker.prototype = {
   _init: function HT__init() {
     this.__proto__.__proto__._init.call(this);
 
+let before = new Date();
     // FIXME: very roundabout way of getting url -> guid mapping!
     // FIXME2: not updated after startup
     let all = this._store.getAllIDs();
@@ -501,6 +502,8 @@ HistoryTracker.prototype = {
     for (let guid in all) {
       this._all[all[guid]] = guid;
     }
+let after = new Date();
+dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in all)].length + " history items\n");
 
     this._hsvc.addObserver(this, false);
   },

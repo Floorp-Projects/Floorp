@@ -657,6 +657,7 @@ BookmarksTracker.prototype = {
     // has a bug where it will generate a new one instead of throwing).
     // Our solution: cache item IDs -> GUIDs
 
+let before = new Date();
     // FIXME: very roundabout way of getting id -> guid mapping!
     let store = new BookmarksStore();
     let all = store.getAllIDs();
@@ -664,6 +665,8 @@ BookmarksTracker.prototype = {
     for (let guid in all) {
       this._all[this._bms.getItemIdForGUID(guid)] = guid;
     }
+let after = new Date();
+dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in all)].length + " bookmark items\n");
 
     // Ignore changes to the special roots. We use special names for them, so
     // ignore their "real" places guid as well as ours, just in case
