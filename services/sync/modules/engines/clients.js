@@ -116,7 +116,7 @@ ClientEngine.prototype = {
     Svc.Prefs.reset("client.syncID");
   },
 
-  get clientName() { return Svc.Prefs.get("client.name", "Firefox"); },
+  get clientName() { return Svc.Prefs.get("client.name", Svc.AppInfo.name); },
   set clientName(value) { Svc.Prefs.set("client.name", value); },
 
   get clientType() { return Svc.Prefs.get("client.type", "desktop"); },

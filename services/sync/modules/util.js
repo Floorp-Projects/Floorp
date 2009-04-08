@@ -632,7 +632,8 @@ Utils.EventListener.prototype = {
 
 let Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
-[["Crypto", "@labs.mozilla.com/Weave/Crypto;1", "IWeaveCrypto"],
+[["AppInfo", "@mozilla.org/xre/app-info;1", "nsIXULAppInfo"],
+ ["Crypto", "@labs.mozilla.com/Weave/Crypto;1", "IWeaveCrypto"],
  ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
  ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
  ["Login", "@mozilla.org/login-manager;1", "nsILoginManager"],
