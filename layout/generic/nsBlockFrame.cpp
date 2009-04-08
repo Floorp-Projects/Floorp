@@ -1657,9 +1657,11 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
     } else {
       // Note that this check will become incorrect once bug 25888 is fixed
       // because we are only checking the top of the line
-      aState.GetAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE);
       PRBool wasImpactedByFloat = aLine->IsImpactedByFloat();
-      PRBool isImpactedByFloat = aState.IsImpactedByFloat();
+      nsRect floatAvailableSpace;
+      PRBool isImpactedByFloat =
+        aState.GetFloatAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE,
+                                      floatAvailableSpace);
 
 #ifdef REALLY_NOISY_REFLOW
     printf("nsBlockFrame::PropagateFloatDamage %p was = %d, is=%d\n", 
