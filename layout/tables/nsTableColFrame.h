@@ -90,12 +90,6 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists) { return NS_OK; }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
-  {
-    return nsSplittableFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eExcludesIgnorableWhitespace));
-  }
-
   /**
    * Get the "type" of the frame
    *
