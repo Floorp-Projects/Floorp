@@ -2972,6 +2972,19 @@ PopStatement(JSTreeContext *tc)
     js_PopStatement(tc);
 }
 
+static inline bool
+OuterLet(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *atom)
+{
+    while (stmt->downScope) {
+        stmt = js_LexicalLookup(tc, atom, NULL, stmt->downScope);
+        if (!stmt)
+            return false;
+        if (stmt->type == STMT_BLOCK)
+            return true;
+    }
+    return false;
+}
+
 static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
@@ -3010,8 +3023,10 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         } else {
             if (JS_HAS_STRICT_OPTION(cx)
                 ? op != JSOP_DEFVAR || dn_kind != JSDefinition::VAR
-                : op == JSOP_DEFCONST || dn_kind == JSDefinition::CONST ||
-                  dn_kind == JSDefinition::LET) {
+                : op == JSOP_DEFCONST ||
+                  dn_kind == JSDefinition::CONST ||
+                  (dn_kind == JSDefinition::LET &&
+                   (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom)))) {
                 name = js_AtomToPrintableString(cx, atom);
                 if (!name ||
                     !js_ReportCompileErrorNumber(cx, TS(tc->compiler), pn,
