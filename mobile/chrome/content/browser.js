@@ -1014,6 +1014,54 @@ function getNotificationBox(aWindow) {
   return Browser.getNotificationBox();
 }
 
+var AlertsHelper = {
+  _timeoutID: -1,
+  _listener: null,
+  _cookie: "",
+  _clickable: false,
+
+  showAlertNotification: function ah_show(aImageURL, aTitle, aText, aTextClickable, aCookie, aListener) {
+    this._clickable = aTextClickable || false;
+    this._listener = aListener || null;
+    this._cookie = aCookie || "";
+
+    document.getElementById("alerts-image").setAttribute("src", aImageURL);
+    document.getElementById("alerts-title").value = aTitle;
+    document.getElementById("alerts-text").textContent = aText;
+
+    let container = document.getElementById("alerts-container");
+    container.hidden = false;
+
+    let rect = container.getBoundingClientRect();
+    container.top = window.innerHeight - (rect.height + 20);
+    container.left = window.innerWidth - (rect.width + 20);
+
+    let timeout = gPrefService.getIntPref("alerts.totalOpenTime");
+    let self = this;
+    this._timeoutID = setTimeout(function() { self._timeoutAlert(); }, timeout);
+  },
+
+  _timeoutAlert: function ah__timeoutAlert() {
+    this._timeoutID = -1;
+    let container = document.getElementById("alerts-container");
+    container.hidden = true;
+
+    if (this._listener)
+      this._listener.observe(null, "alertfinished", this._cookie);
+
+    // TODO: add slide to UI
+  },
+
+  click: function ah_click(aEvent) {
+    if (this._clickable && this._listener)
+      this._listener.observe(null, "alertclickcallback", this._cookie);
+
+    if (this._timeoutID != -1) {
+      clearTimeout(this._timeoutID);
+      this._timeoutAlert();
+    }
+  }
+}
 
 function ProgressController(tab) {
   this._tab = tab;

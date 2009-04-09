@@ -52,13 +52,14 @@ XPIDL_MODULE = browsercompsbase
 EXTRA_COMPONENTS = \
 	aboutFirstrun.js \
 	geolocationPrompt.js \
+	alertsService.js \
 	$(NULL)
 
 DIRS = protocols \
 	$(NULL)
-	
+
 ifdef WINCE
 DIRS += phone
-endif       	
+endif
 
 include $(topsrcdir)/config/rules.mk
