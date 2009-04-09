@@ -7663,6 +7663,8 @@ TraceRecorder::record_JSOP_SETELEM()
     jsid id;
 
     if (!JSVAL_IS_INT(idx)) {
+        if (!JSVAL_IS_PRIMITIVE(idx))
+            ABORT_TRACE("non-primitive index");
         // If index is not a string, turn it into a string.
         if (!js_InternNonIntElementId(cx, obj, idx, &id))
             ABORT_TRACE("failed to intern non-int element id");

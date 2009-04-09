@@ -1352,6 +1352,7 @@ MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *t
         pnu->pn_lexdef = (JSDefinition *) pn;
         pn->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
     }
+    pn->pn_dflags |= dn->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
     pn->dn_uses = dn;
 
     dn->pn_defn = false;
@@ -1659,6 +1660,19 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
         JSParseNode *fn = funbox->node;
         int fnlevel = level;
 
+        /*
+         * An eval can leak funbox, functions along its ancestor line, and its
+         * immediate kids. Since FindFunArgs uses DFS and the parser propagates
+         * TCF_FUN_HEAVYWEIGHT bottom up, funbox's ancestor function nodes have
+         * already been marked as funargs by this point. Therefore we have to
+         * flag only funbox->node and funbox->kids' nodes here.
+         */
+        if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
+            fn->setFunArg();
+            for (JSFunctionBox *kid = funbox->kids; kid; kid = kid->siblings)
+                kid->node->setFunArg();
+        }
+
         if (fn->isFunArg()) {
             queue->push(funbox);
             fnlevel = int(funbox->level);
@@ -1676,7 +1690,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
                     JSDefinition *lexdep = ALE_DEFN(ale)->resolve();
 
                     if (!lexdep->isFreeVar() && int(lexdep->frameLevel()) <= fnlevel) {
-                        fn->pn_dflags |= PND_FUNARG;
+                        fn->setFunArg();
                         queue->push(funbox);
                         break;
                     }
@@ -1724,7 +1738,7 @@ JSCompiler::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
                      * which suppresses revisiting this function (namely the
                      * !lexdep->isFunArg() test just above).
                      */
-                    lexdep->pn_dflags |= PND_FUNARG;
+                    lexdep->setFunArg();
 
                     JSFunctionBox *afunbox = lexdep->pn_funbox;
                     queue.push(afunbox);
@@ -2280,7 +2294,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSTreeContext *tc,
         if (!fn->pn_body)
             return false;
         fn->pn_body->pn_type = TOK_UPVARS;
-        fn->pn_pos = body->pn_pos;
+        fn->pn_body->pn_pos = body->pn_pos;
         fn->pn_body->pn_names = funtc->upvars;
         fn->pn_body->pn_tree = body;
         funtc->upvars.clear();
@@ -2958,6 +2972,19 @@ PopStatement(JSTreeContext *tc)
     js_PopStatement(tc);
 }
 
+static inline bool
+OuterLet(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *atom)
+{
+    while (stmt->downScope) {
+        stmt = js_LexicalLookup(tc, atom, NULL, stmt->downScope);
+        if (!stmt)
+            return false;
+        if (stmt->type == STMT_BLOCK)
+            return true;
+    }
+    return false;
+}
+
 static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
@@ -2996,8 +3023,10 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         } else {
             if (JS_HAS_STRICT_OPTION(cx)
                 ? op != JSOP_DEFVAR || dn_kind != JSDefinition::VAR
-                : op == JSOP_DEFCONST || dn_kind == JSDefinition::CONST ||
-                  dn_kind == JSDefinition::LET) {
+                : op == JSOP_DEFCONST ||
+                  dn_kind == JSDefinition::CONST ||
+                  (dn_kind == JSDefinition::LET &&
+                   (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom)))) {
                 name = js_AtomToPrintableString(cx, atom);
                 if (!name ||
                     !js_ReportCompileErrorNumber(cx, TS(tc->compiler), pn,

@@ -4400,7 +4400,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         uint32 i = 0, n = uva->length;
         for (; i < n; i++) {
             JSObject *obj = parent;
-            for (uintN skip = UPVAR_FRAME_SKIP(uva->vector[i]); skip != 0; --skip) {
+            int skip = UPVAR_FRAME_SKIP(uva->vector[i]);
+            while (--skip > 0) {
                 if (!obj) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
