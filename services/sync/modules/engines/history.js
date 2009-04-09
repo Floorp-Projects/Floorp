@@ -493,18 +493,6 @@ HistoryTracker.prototype = {
 
   _init: function HT__init() {
     this.__proto__.__proto__._init.call(this);
-
-let before = new Date();
-    // FIXME: very roundabout way of getting url -> guid mapping!
-    // FIXME2: not updated after startup
-    let all = this._store.getAllIDs();
-    this._all = {};
-    for (let guid in all) {
-      this._all[all[guid]] = guid;
-    }
-let after = new Date();
-dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in all)].length + " history items\n");
-
     this._hsvc.addObserver(this, false);
   },
 
@@ -533,9 +521,6 @@ dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in al
       this._upScore();
   },
   onDeleteURI: function HT_onDeleteURI(uri) {
-    this._log.trace("onDeleteURI: " + uri.spec);
-    if (this.addChangedID(this._all[uri]))
-      this._upScore();
   },
   onClearHistory: function HT_onClearHistory() {
     this._log.trace("onClearHistory");
