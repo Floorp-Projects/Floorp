@@ -481,7 +481,8 @@ SyncEngine.prototype = {
       for (let id in this._tracker.changedIDs) {
         let out = this._createRecord(id);
         this._log.trace("Outgoing:\n" + out);
-        if (!out.deleted)
+        // skip getting siblings of already processed and deleted records
+        if (!out.deleted && !(out.id in meta))
           this._store.createMetaRecords(out.id, meta);
         yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
         up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
