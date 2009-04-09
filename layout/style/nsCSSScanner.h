@@ -211,14 +211,19 @@ protected:
   PRInt32 Read();
   PRInt32 Peek();
   PRBool LookAhead(PRUnichar aChar);
-  void EatWhiteSpace();
-  
+  PRBool EatWhiteSpace();
+  PRBool EatNewline();
+
   void ParseAndAppendEscape(nsString& aOutput);
   PRBool ParseIdent(PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseAtKeyword(PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseNumber(PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseRef(PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseString(PRInt32 aChar, nsCSSToken& aResult);
+#if 0
+  PRBool ParseCComment(nsCSSToken& aResult);
+  PRBool ParseEOLComment(nsCSSToken& aResult);
+#endif
   PRBool SkipCComment();
 
   PRBool GatherIdent(PRInt32 aChar, nsString& aIdent);
