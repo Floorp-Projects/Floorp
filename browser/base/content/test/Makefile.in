@@ -105,6 +105,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug479408.js \
                  browser_bug479408_sample.html \
                  browser_scope.js \
+                 browser_bug419612.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
