@@ -65,7 +65,6 @@ _TEST_FILES =\
 		role.js \
 		test_accessnode_invalidation.html \
 		test_actions_aria.html \
-		test_actions_doc.html \
 	$(warning test_actions_inputs.html temporarily disabled) \
 		test_actions.xul \
 		test_aria_activedescendant.html \
