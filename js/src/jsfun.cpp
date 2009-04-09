@@ -2205,14 +2205,14 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
     JS_ASSERT(uva->length <= size_t(closure->dslots[-1]));
 
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
-
     for (uint32 i = 0, n = uva->length; i < n; i++) {
-        JSStackFrame *fp2 = fp;
-        for (uintN skip = UPVAR_FRAME_SKIP(uva->vector[i]); skip != 0; --skip)
-            fp2 = fp2->down;
+        uint32 cookie = uva->vector[i];
 
-        uintN slot = UPVAR_FRAME_SLOT(uva->vector[i]);
+        uintN upvarLevel = fun->u.i.script->staticLevel - UPVAR_FRAME_SKIP(cookie);
+        JS_ASSERT(upvarLevel <= JS_DISPLAY_SIZE);
+        JSStackFrame *fp2 = cx->display[upvarLevel];
+
+        uintN slot = UPVAR_FRAME_SLOT(cookie);
         jsval *vp;
         if (fp2->fun && slot < fp2->fun->nargs) {
             vp = fp2->argv;
