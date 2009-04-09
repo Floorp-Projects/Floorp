@@ -2298,7 +2298,7 @@ TraceRecorder::guard(bool expected, LIns* cond, LIns* exit)
     if (guard) {
         GuardRecord* lr = guard->record();
         VMSideExit* e = (VMSideExit*)lr->exit;
-        debug_only_v(printf("    lr=%p exitType=%d\n", (SideExit*)e, e->exitType);)
+        debug_only_v(printf("    lr=%p exitType=%d\n", (void*)e, e->exitType);)
     } else {
         debug_only_v(printf("    redundant guard, eliminated\n");)
     }
@@ -3621,7 +3621,7 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
     debug_only_v(printf("trying to attach another branch to the tree (hits = %d)\n", c->hits());)
 
     int32_t& hits = c->hits();
-    if (outer || hits++ >= HOTEXIT && hits <= HOTEXIT+MAXEXIT) {
+    if (outer || (hits++ >= HOTEXIT && hits <= HOTEXIT+MAXEXIT)) {
         /* start tracing secondary trace from this point */
         c->lirbuf = f->lirbuf;
         unsigned stackSlots;
