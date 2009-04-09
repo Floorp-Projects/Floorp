@@ -119,24 +119,58 @@
         ]]></getter>
       </property>
 
+      <property name="scrollClientRect" readonly="true">
+        <getter><![CDATA[
+          return this._scrollbox.getBoundingClientRect();
+        ]]></getter>
+      </property>
+
+      <property name="scrollClientSize" readonly="true">
+        <getter><![CDATA[
+          return this.orient == "vertical" ?
+                 this._scrollbox.clientHeight :
+                 this._scrollbox.clientWidth;
+        ]]></getter>
+      </property>
+
+      <property name="scrollSize" readonly="true">
+        <getter><![CDATA[
+          return this.orient == "vertical" ?
+                 this._scrollbox.scrollHeight :
+                 this._scrollbox.scrollWidth;
+        ]]></getter>
+      </property>
+
+      <property name="scrollPosition">
+        <getter><![CDATA[
+          return this.orient == "vertical" ?
+                 this._scrollbox.scrollTop :
+                 this._scrollbox.scrollLeft;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.orient == "vertical")
+            this._scrollbox.scrollTop = val;
+          else
+            this._scrollbox.scrollLeft = val;
+          return val;
+        ]]></setter>
+      </property>
+
       <field name="_isLTRScrollbox">
         document.defaultView.getComputedStyle(this._scrollbox, "").direction == "ltr";
       </field>
 
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
+        <parameter name="aSmoothScroll"/>
         <body><![CDATA[
-          if (!this.smoothScroll || this.getAttribute("orient") == "vertical") {
-            this.scrollBoxObject.ensureElementIsVisible(element);
-            return;
-          }
-
-          var rect = this._scrollbox.getBoundingClientRect();
-          var containerStart = rect.left;
-          var containerEnd = rect.right;
+          var vertical = this.orient == "vertical";
+          var rect = this.scrollClientRect;
+          var containerStart = vertical ? rect.top : rect.left;
+          var containerEnd = vertical ? rect.bottom : rect.right;
           rect = element.getBoundingClientRect();
-          var elementStart = rect.left;
-          var elementEnd = rect.right;
+          var elementStart = vertical ? rect.top : rect.left;
+          var elementEnd = vertical ? rect.bottom : rect.right;
           var amountToScroll;
 
           if (elementStart < containerStart) {
@@ -156,13 +190,21 @@
             return;
           }
 
-          this._smoothScrollByPixels(amountToScroll);
+          this._stopSmoothScroll();
+
+          if (aSmoothScroll != false && this.smoothScroll)
+            this._smoothScrollByPixels(amountToScroll);
+          else
+            this.scrollByPixels(amountToScroll);
         ]]></body>
       </method>
 
       <method name="_smoothScrollByPixels">
         <parameter name="amountToScroll"/>
         <body><![CDATA[
+          if (amountToScroll == 0)
+            return;
+
           this._stopSmoothScroll();
 
           // Positive amountToScroll makes us scroll right (elements fly left), negative scrolls left.
@@ -186,7 +228,7 @@
                 distance += scrollAmounts.shift() || 0;
             }
 
-            self.scrollBoxObject.scrollBy(distance, 0);
+            self.scrollByPixels(distance);
             if (!scrollAmounts.length)
               self._stopSmoothScroll();
           }
@@ -214,24 +256,22 @@
         <body><![CDATA[
           if (index == 0)
             return;
-          if (this.getAttribute("orient") == "vertical") {
-            this.scrollBoxObject.scrollByIndex(index);
-            return;
-          }
 
           var x;
-          if (index > 0)
-            x = this._scrollbox.getBoundingClientRect().right + 1;
-          else
-            x = this._scrollbox.getBoundingClientRect().left - 1;
+          var rect = this.scrollClientRect;
+          if (this.orient == "vertical") {
+            x = index > 0 ? rect.bottom + 1 : rect.top - 1;
+          } else {
+            x = index > 0 ? rect.right + 1 : rect.left - 1;
+            if (!this._isLTRScrollbox)
+              index *= -1;
+          }
+
           var nextElement = this._elementFromPoint(x);
           if (!nextElement)
             return;
 
           var targetElement;
-          if (!this._isLTRScrollbox)
-            index *= -1;
-
           while (index < 0 && nextElement) {
             targetElement = nextElement;
             nextElement = nextElement.previousSibling;
@@ -258,9 +298,17 @@
         <parameter name="aX"/>
         <body><![CDATA[
           var elements = this._getScrollableElements();
-          if (!this._isLTRScrollbox) {
-            elements = Array.slice(elements);
-            elements.reverse();
+          var start, end;
+          if (this.orient == "vertical") {
+            start = "top";
+            end = "bottom";
+          } else {
+            if (!this._isLTRScrollbox) {
+              elements = Array.slice(elements);
+              elements.reverse();
+            }
+            start = "left";
+            end = "right";
           }
           var low = 0;
           var high = elements.length - 1;
@@ -269,9 +317,9 @@
             var mid = Math.floor((low + high) / 2);
             var element = elements[mid];
             var rect = element.getBoundingClientRect();
-            if (rect.left > aX)
+            if (rect[start] > aX)
               high = mid - 1; 
-            else if (rect.right < aX)
+            else if (rect[end] < aX)
               low = mid + 1;
             else
               return element;
@@ -285,7 +333,7 @@
         <parameter name="event"/>
         <body><![CDATA[
           var dir = event.originalTarget == this._scrollButtonUp ? -1 : 1;
-          if (this.getAttribute("orient") == "horizontal" && !this._isLTRScrollbox)
+          if (this.orient != "vertical" && !this._isLTRScrollbox)
             dir *= -1;
 
           this.scrollByPixels(this.scrollIncrement * dir);
@@ -297,10 +345,7 @@
       <method name="scrollByPixels">
         <parameter name="px"/>
         <body><![CDATA[
-          if (this.getAttribute("orient") == "horizontal")
-            this.scrollBoxObject.scrollBy(px, 0);
-          else
-            this.scrollBoxObject.scrollBy(0, px);
+          this.scrollPosition += px;
         ]]></body>
       </method>
 
@@ -324,36 +369,20 @@
           var disableUpButton = false;
           var disableDownButton = false;
 
-          if (this.getAttribute("orient") == "horizontal") {
-            var width = {};
-            this.scrollBoxObject.getScrolledSize(width, {});
-            var xPos = {};
-            this.scrollBoxObject.getPosition(xPos, {});
-            if (xPos.value == 0) {
-              // In the RTL case, this means the _last_ element in the
-              // scrollbox is visible
-              if (this._isLTRScrollbox) 
-                disableUpButton = true;
-              else
-                disableDownButton = true;
-            }
-            else if (this._scrollbox.boxObject.width + xPos.value == width.value) {
-              // In the RTL case, this means the _first_ element in the
-              // scrollbox is visible
-              if (this._isLTRScrollbox)
-                disableDownButton = true;
-              else
-                disableUpButton = true;
-            }
-          }
-          else {  // vertical scrollbox
-            var height = {};
-            this.scrollBoxObject.getScrolledSize({}, height);
-            var yPos = {};
-            this.scrollBoxObject.getPosition({}, yPos);
-            if (yPos.value == 0)
+          if (this.scrollPosition == 0) {
+            // In the RTL case, this means the _last_ element in the
+            // scrollbox is visible
+            if (this.orient != "vertical" && !this._isLTRScrollbox) 
+              disableDownButton = true;
+            else
               disableUpButton = true;
-            else if (this._scrollbox.boxObject.height + yPos.value == height.value)
+          }
+          else if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
+            // In the RTL case, this means the _first_ element in the
+            // scrollbox is visible
+            if (this.orient != "vertical" && !this._isLTRScrollbox)
+              disableUpButton = true;
+            else
               disableDownButton = true;
           }
 
@@ -374,7 +403,7 @@
       <handler event="DOMMouseScroll"><![CDATA[
         // prevent horizontal scrolling from scrolling a vertical scrollbox
         if (event.axis == event.HORIZONTAL_AXIS &&
-            this.getAttribute("orient") != "horizontal")
+            this.orient == "vertical")
           return;
         // We allow vertical scrolling to scroll a horizontal scrollbox
         // because many users have a vertical scroll wheel but no
@@ -394,15 +423,13 @@
         //   0: vertical
         //   1: horizontal
         //   2: both
-        if (this.getAttribute("orient") == "horizontal") {
-          if (event.detail == 0) {
+        if (this.orient == "vertical") {
+          if (event.detail == 1)
             return;
-          }
         }
-        else {    // vertical scrollbox
-          if (event.detail == 1) {
+        else {    // horizontal scrollbox
+          if (event.detail == 0)
             return;
-          }
         }
 
         this._scrollButtonUp.collapsed = true;
@@ -410,9 +437,9 @@
         try {
           // See bug 341047 and comments in overflow handler as to why 
           // try..catch is needed here
-          var childNodes = document.getAnonymousNodes(this._scrollbox);
+          let childNodes = this._getScrollableElements();
           if (childNodes && childNodes.length)
-            this.scrollBoxObject.ensureElementIsVisible(childNodes[0]);
+            this.ensureElementIsVisible(childNodes[0], false);
         }
         catch(e) {
           this._scrollButtonUp.collapsed = false;
@@ -430,15 +457,13 @@
         //   0: vertical
         //   1: horizontal
         //   2: both
-        if (this.getAttribute("orient") == "horizontal") {
-          if (event.detail == 0) {
+        if (this.orient == "vertical") {
+          if (event.detail == 1)
             return;
-          }
         }
-        else {    // vertical scrollbox
-          if (event.detail == 1) {
+        else {    // horizontal scrollbox
+          if (event.detail == 0)
             return;
-          }
         }
 
         this._scrollButtonUp.collapsed = false;
@@ -523,7 +548,7 @@
           if (this.smoothScroll)
             this.scrollByPixels(25 * this._scrollIndex);
           else
-            this.scrollBoxObject.scrollByIndex(this._scrollIndex);
+            this.scrollByIndex(this._scrollIndex);
         ]]>
         </body>
       </method>
@@ -531,7 +556,7 @@
       <method name="_startScroll">
         <parameter name="index"/>
         <body><![CDATA[
-          if (this.getAttribute("orient") == "horizontal" && !this._isLTRScrollbox)
+          if (this.orient != "vertical" && !this._isLTRScrollbox)
             index *= -1;
           this._scrollIndex = index;
           var scrollDelay = this.smoothScroll ? 60 : this._scrollDelay;
@@ -597,7 +622,7 @@
       <method name="_distanceScroll">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (this.getAttribute("orient") == "vertical" ||
+          if (this.orient == "vertical" ||
               aEvent.detail < 2 || aEvent.detail > 3)
             return;
 
@@ -609,12 +634,12 @@
           if (aEvent.detail == 2) {
             // scroll by the width of the scrollbox; make sure that the next
             // partly-hidden element will become fully visible.
-            var rect = this._scrollbox.getBoundingClientRect();
-            var x;
+            let rect = this.scrollClientRect;
+            let x;
             if (scrollLeft)
-              x = rect.left - (rect.right - rect.left);
+              x = rect.left - rect.width;
             else
-              x = rect.right + (rect.right - rect.left);
+              x = rect.right + rect.width;
             targetElement = this._elementFromPoint(x);
 
             if (targetElement)
