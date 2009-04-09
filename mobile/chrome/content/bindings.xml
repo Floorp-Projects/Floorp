@@ -239,9 +239,18 @@
       </constructor>
 
       <field name="_itemId">null</field>
-      <field name="_uri"/>
+      <field name="_uri">null</field>
       <field name="_control">null</field>
       <field name="_isEditing">false</field>
+
+      <field name="_ioService" readonly="true">
+        Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService(Components.interfaces.nsIIOService);
+      </field>
+      <field name="_faviconService" readonly="true">
+        Components.classes["@mozilla.org/browser/favicon-service;1"]
+                  .getService(Components.interfaces.nsIFaviconService);
+      </field>
 
       <field name="_nameField">
         document.getAnonymousElementByAttribute(this, "anonid", "name");
@@ -309,17 +318,10 @@
             if (!this._itemId)
               return;
 
-            this.name = PlacesUtils.bookmarks.getItemTitle(this._itemId);
-
-            try {
-              this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
-            } catch (e) {}
-
-            if (this._uri) {
-              this.spec = this._uri.spec;
-              let fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
+            if (this.hasAttribute("uri")) {
+              this._uri = this._ioService.newURI(this.getAttribute("uri"), null, null);
               let icon = document.getAnonymousElementByAttribute(this, "anonid", "favicon");
-              icon.src = fis.getFaviconImageForPage(this._uri).spec;
+              icon.src = this._faviconService.getFaviconImageForPage(this._uri).spec;
             }
           ]]>
         </body>
@@ -328,7 +330,7 @@
         <parameter name="autoSelect"/>
         <body>
           <![CDATA[
-            if (this._itemId == -1)
+            if (!this._itemId)
               return;
 
             this._isEditing = true;
@@ -336,11 +338,6 @@
               this.control.activeItem = this;
 
             this.updateFields();
-
-            if (this._uri) {
-              var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
-              this.tags = currentTags.join(", ");
-            }
 
             this._nameField.focus();
             if (autoSelect)
@@ -374,7 +371,7 @@
             PlacesUtils.bookmarks.setItemTitle(this._itemId, this.name);
 
             // Update the tags
-            if (this._uri) {
+            if (this._uri && this.type != "folder") {
               var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
               var tags = this.tagsAsArray;
               if (tags.length > 0 || currentTags.length > 0) {
@@ -398,8 +395,7 @@
 
               // If the URI was updated change it in the bookmark
               if (this._uri.spec != this.spec) {
-                var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-                uri = ios.newURI(this.spec, null, null);
+                uri = this._ioService.newURI(this.spec, null, null);
 
                 PlacesUtils.bookmarks.changeBookmarkURI(this._itemId, this._uri);
               }
@@ -415,7 +411,7 @@
             // If this was the last bookmark (excluding tag-items and livemark
             // children, see getMostRecentBookmarkForURI) for the bookmark's url,
             // remove the url from tag containers as well.
-            if (this._uri) {
+            if (this._uri && this.type != "folder") {
               if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
                 var tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
                 PlacesUtils.tagging.untagURI(this._uri, tags);
@@ -468,7 +464,7 @@
         </xul:columns>
         <xul:rows>
           <xul:row align="center">
-            <xul:textbox anonid="name" readonly="true" xbl:inherits="value=name"/>
+            <xul:textbox anonid="name" readonly="true" xbl:inherits="value=title"/>
             <xul:hbox align="center" anonid="edit-controls" class="bookmark-manage-controls">
               <xul:image anonid="close-button" class="close-button"
                          onmousedown="document.getBindingParent(this).remove()"/>
@@ -515,7 +511,7 @@
         </xul:columns>
         <xul:rows>
           <xul:row align="center">
-            <xul:textbox anonid="name" readonly="true" xbl:inherits="value=name"/>
+            <xul:textbox anonid="name" readonly="true" xbl:inherits="value=title"/>
             <xul:hbox align="center" anonid="edit-controls" class="bookmark-manage-controls">
               <xul:image anonid="close-button" class="close-button"
                          onmousedown="document.getBindingParent(this).remove()"/>
@@ -547,7 +543,7 @@
     <content align="center">
       <xul:spacer xbl:inherits="width=indent"/>
       <xul:image anonid="favicon" class="bookmark-folder-image"/>
-      <xul:label anonid="name" crop="end" flex="1"/>
+      <xul:label anonid="name" crop="end" flex="1" xbl:inherits="value=title"/>
     </content>
   </binding>
 
@@ -562,12 +558,14 @@
         <![CDATA[
           this._type = this.getAttribute("type");
           this._mode = this.getAttribute("mode");
-
-          let bs = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-          this._bundle = bs.createBundle("chrome://browser/locale/browser.properties");
         ]]>
       </constructor>
-      <field name="_bundle">null</field>
+      <field name="_bundle" readonly="true">
+        Components.classes["@mozilla.org/intl/stringbundle;1"]
+                  .getService(Components.interfaces.nsIStringBundleService)
+                  .createBundle("chrome://browser/locale/browser.properties");
+      </field>
+
       <field name="_type"/>
       <field name="_mode"/>
       <field name="_activeItem">null</field>
@@ -677,10 +675,13 @@
 
             let folderId = aRootFolder;
             do {
+              let title = PlacesUtils.bookmarks.getItemTitle(folderId);
+
               let parent = document.createElementNS(XULNS, "placelabel");
               parent.setAttribute("class", "bookmark-folder");
               parent.setAttribute("itemid", folderId);
               parent.setAttribute("indent", 0);
+              parent.setAttribute("title", title);
               parents.insertBefore(parent, parents.firstChild);
 
               // XXX Fix me - use <handler>?
@@ -698,7 +699,7 @@
             let childItems = this._getChildren(aRootFolder);
             for (let i=0; i<childItems.length; i++) {
               let node = childItems[i];
-              this.appendItem(node.itemId, node.type);
+              children.appendChild(this.createItem(node));
             }
 
             // Add the "<new folder>" item
@@ -720,28 +721,30 @@
             let parent = parents.lastChild;
             if ("itemId" in parent) {
               let children = this._children;
-              let newId = PlacesUtils.bookmarks.createFolder(parent.itemId, this._bundle.GetStringFromName("editBookmarkNewFolder"), PlacesUtils.bookmarks.DEFAULT_INDEX);
-              let child = this.appendItem(newId, Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, children.lastChild);
+              let title = this._bundle.GetStringFromName("editBookmarkNewFolder");
+              let newId = PlacesUtils.bookmarks.createFolder(parent.itemId, title, PlacesUtils.bookmarks.DEFAULT_INDEX);
+              let child = this.createItem({ itemId: newId, title: title, type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER });
+              children.insertBefore(child, children.lastChild);
               child.startEditing(true);
             }
           ]]>
         </body>
       </method>
 
-      <method name="appendItem">
-        <parameter name="aItemId"/>
-        <parameter name="aType"/>
-        <parameter name="aBefore"/>
+      <method name="createItem">
+        <parameter name="aItem"/>
         <body>
           <![CDATA[
             const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
             let child = document.createElementNS(XULNS, "placeitem");
-            child.setAttribute("itemid", aItemId);
+            child.setAttribute("itemid", aItem.itemId);
             child.setAttribute("class", "bookmark-item");
-            if (aType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
+            child.setAttribute("title", aItem.title);
+            child.setAttribute("uri", aItem.uri);
+            child.setAttribute("tags", aItem.tags);
+            if (aItem.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
               child.setAttribute("type", "folder");
-            this._children.insertBefore(child, aBefore);
 
             // XXX make a <handler> for the mousedown
             var self = this;
@@ -862,23 +865,24 @@
               while (items.firstChild)
                 items.removeChild(items.firstChild);
 
-              this.appendItem(aRootFolder, Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, aLevel);
+              let node = { itemId: aRootFolder, title: PlacesUtils.bookmarks.getItemTitle(aRootFolder), type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER };
+              items.appendChild(this.createItem(node, aLevel));
               aLevel += 24;
             }
 
             let childItems = this._getChildren(aRootFolder);
             for (let i=0; i<childItems.length; i++) {
               let node = childItems[i];
-              let child = this.appendItem(node.itemId, node.type, aLevel);
+              items.appendChild(this.createItem(node, aLevel););
+
               this.openFolder(node.itemId, aLevel + 24);
             }
           ]]>
         </body>
       </method>
 
-      <method name="appendItem">
-        <parameter name="aItemId"/>
-        <parameter name="aType"/>
+      <method name="createItem">
+        <parameter name="aItem"/>
         <parameter name="aLevel"/>
         <body>
           <![CDATA[
@@ -886,9 +890,9 @@
 
             let child = document.createElementNS(XULNS, "placelabel");
             child.setAttribute("type", "folder");
-            child.setAttribute("itemid", aItemId);
+            child.setAttribute("itemid", aItem.itemId);
+            child.setAttribute("title", aItem.title);
             child.setAttribute("indent", aLevel);
-            this._items.appendChild(child);
 
             // XXX make a <handler> for the mouseup
             var self = this;

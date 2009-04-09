@@ -399,9 +399,8 @@ toolbarbutton.panel-button {
 .bookmark-folder textbox[readonly="true"], .bookmark-item textbox[readonly="true"] {
   -moz-appearance: none !important;
   background-color: transparent;
-  padding: 0px 9px !important;
-  margin: 0px !important;
   border: none !important;
+  -moz-user-select: none !important;
 }
 
 placelabel.bookmark-folder {
@@ -425,12 +424,27 @@ placelabel.bookmark-folder {
 
 /* control the manage controls */
 .bookmark-manage-controls, .bookmark-folder-new {
-  visibility: hidden;
+  visibility: collapse;
 }
 
 placelist[ui="manage"] .bookmark-manage-controls,
-placelist[ui="manage"] .bookmark-folder-new {
+placelist[ui="manage"] .bookmark-folder-new,
+placeitem[ui="manage"] .bookmark-manage-controls {
   visibility: visible;
+}
+
+placeitem[ui="manage"] .bookmark-item-image {
+  visibility: collapse;
+}
+
+/* be consistent with the size of placeitem */
+placelabel {
+  height: 34px;
+}
+
+/* use a smaller font size for the manage buttons */
+placeitem .button-text {
+  font-size: 12pt !important;
 }
 
 .close-button {
