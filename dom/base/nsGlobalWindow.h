@@ -84,6 +84,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMCrypto.h"
+#include "nsIDOMPkcs11.h"
 #include "nsIPrincipal.h"
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
@@ -707,6 +708,7 @@ protected:
   nsGlobalWindowObserver*       mObserver;
 
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
+  nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 
   nsCOMPtr<nsIDOMStorage2>      mLocalStorage;
 
