@@ -2280,6 +2280,8 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
         mWhiteNodes->Clear();
         ClearGraph();
 
+        mParams.mDoNothing = PR_FALSE;
+
         if (!collected)
             break;
         
