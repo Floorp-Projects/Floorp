@@ -138,16 +138,6 @@ PrivateBrowsingService.prototype = {
     if (!this._autoStart) {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].
                getService(Ci.nsISessionStore);
-      let blankState = JSON.stringify({
-        "windows": [{
-          "tabs": [{
-            "entries": [{
-              "url": "about:blank"
-            }]
-          }],
-          "_closedTabs": []
-        }]
-      });
 
       if (this._inPrivateBrowsing) {
         // whether we should save and close the current session
@@ -160,12 +150,8 @@ PrivateBrowsingService.prototype = {
         } catch (ex) {}
 
         // save the whole browser state in order to restore all windows/tabs later
-        if (this._saveSession && !this._savedBrowserState) {
-          if (this._getBrowserWindow())
-            this._savedBrowserState = ss.getBrowserState();
-          else // no open browser windows, just restore a blank state on exit
-            this._savedBrowserState = blankState;
-        }
+        if (this._saveSession && !this._savedBrowserState)
+          this._savedBrowserState = ss.getBrowserState();
       }
       if (!this._quitting && this._saveSession) {
         let browserWindow = this._getBrowserWindow();
@@ -173,8 +159,19 @@ PrivateBrowsingService.prototype = {
         // if there are open browser windows, load a dummy session to get a distinct 
         // separation between private and non-private sessions
         if (browserWindow) {
-          // set an empty session to transition from/to pb mode, see bug 476463
-          ss.setBrowserState(blankState);
+          // dummy session used to transition from/to pb mode, see bug 476463
+          let transitionState = {
+            "windows": [{
+              "tabs": [{
+                "entries": [{
+                  "url": "about:blank"
+                }]
+              }],
+              "_closedTabs": []
+            }]
+          };
+
+          ss.setBrowserState(JSON.stringify(transitionState));
 
           // just in case the only remaining window after setBrowserState is different.
           // it probably shouldn't be with the current sessionstore impl, but we shouldn't
