@@ -1508,14 +1508,15 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 }
 
 JSStmtInfo *
-js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp)
+js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt)
 {
-    JSStmtInfo *stmt;
     JSObject *obj;
     JSScope *scope;
     JSScopeProperty *sprop;
 
-    for (stmt = tc->topScopeStmt; stmt; stmt = stmt->downScope) {
+    if (!stmt)
+        stmt = tc->topScopeStmt;
+    for (; stmt; stmt = stmt->downScope) {
         if (stmt->type == STMT_WITH)
             break;
 
