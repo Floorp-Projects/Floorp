@@ -2612,7 +2612,16 @@ SessionStoreService.prototype = {
   _toJSONString: function sss_toJSONString(aJSObject) {
     // XXXzeniko drop the following keys used only for internal bookkeeping:
     //           _tabStillLoading, _hosts, _formDataSaved
-    return JSON.stringify(aJSObject);
+    let jsonString = JSON.stringify(aJSObject);
+    
+    if (/[\u2028\u2029]/.test(jsonString)) {
+      // work-around for bug 485563 until we can use JSON.parse
+      // instead of evalInSandbox everywhere
+      jsonString = jsonString.replace(/[\u2028\u2029]/g,
+                                      function($0) "\\u" + $0.charCodeAt(0).toString(16));
+    }
+    
+    return jsonString;
   },
 
   _notifyIfAllWindowsRestored: function sss_notifyIfAllWindowsRestored() {
