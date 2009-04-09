@@ -800,7 +800,12 @@ WeaveSvc.prototype = {
     else if (!this._syncTimer) {
       this._syncTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       let listener = new Utils.EventListener(Utils.bind2(this,
-        function WeaveSvc__checkSyncCallback(timer) this.sync(null, false)));
+        function WeaveSvc__checkSyncCallback(timer) {
+          if (this.locked)
+            this._log.debug("Skipping scheduled sync: already locked for sync");
+          else
+            this.sync(null, false);
+        }));
       this._syncTimer.initWithCallback(listener, SCHEDULED_SYNC_INTERVAL,
                                        Ci.nsITimer.TYPE_REPEATING_SLACK);
       this._log.config("Weave scheduler enabled");
