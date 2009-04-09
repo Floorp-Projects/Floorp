@@ -63,6 +63,12 @@ using namespace nanojit;
 
 extern jsdouble js_NaN;
 
+JS_FRIEND_API(void)
+js_SetTraceableNativeFailed(JSContext *cx)
+{
+    js_SetBuiltinError(cx);
+}
+
 /*
  * NB: bool FASTCALL is not compatible with Nanojit's calling convention usage.
  * Do not use bool FASTCALL, use JSBool only!

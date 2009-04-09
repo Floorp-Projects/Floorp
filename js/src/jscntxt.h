@@ -300,14 +300,6 @@ typedef enum JSRuntimeState {
     JSRTS_LANDING
 } JSRuntimeState;
 
-#ifdef JS_TRACER
-typedef enum JSBuiltinStatus {
-    JSBUILTIN_OK = 0,
-    JSBUILTIN_BAILED = 1,
-    JSBUILTIN_ERROR = 2
-} JSBuiltinStatus;
-#endif
-
 typedef enum JSBuiltinFunctionId {
     JSBUILTIN_ObjectToIterator,
     JSBUILTIN_CallIteratorNext,
@@ -1008,13 +1000,6 @@ struct JSContext {
      */
     InterpState         *interpState;
     VMSideExit          *bailExit;
-
-    /*
-     * Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
-     * JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
-     * if an error or exception occurred. Cleared on side exit.
-     */
-    uint32              builtinStatus;
 #endif
 };
 
