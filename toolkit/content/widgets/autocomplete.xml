@@ -1038,11 +1038,11 @@
           // Default the height to 0 if we have no rows to show
           let height = 0;
           if (numRows) {
-            let firstRowRect = rows[0].getBoundingClientRect();
-            let lastRowRect = rows[numRows - 1].getBoundingClientRect();
+            let lastRowShown = rows[numRows - 1];
 
             // Calculate the height to have the first row to last row shown
-            height = lastRowRect.bottom - firstRowRect.top;
+            height = lastRowShown.boxObject.y + lastRowShown.boxObject.height -
+              rows[0].boxObject.y;
           }
 
           // Only update the height if we have a non-zero height and if it
