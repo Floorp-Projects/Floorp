@@ -462,6 +462,7 @@ struct JSParseNode {
     /* Defined below, see after struct JSDefinition. */
     bool isAssigned() const;
     bool isFunArg() const;
+    void setFunArg();
 
     void become(JSParseNode *pn2);
     void clear();
@@ -723,6 +724,17 @@ JSParseNode::isFunArg() const
         return ((JSDefinition *)this)->isFunArg();
 #endif
     return test(PND_FUNARG);
+}
+
+inline void
+JSParseNode::setFunArg()
+{
+    if (pn_defn) {
+        ((JSDefinition *)this)->pn_dflags |= PND_FUNARG;
+    } else if (pn_used) {
+        pn_lexdef->pn_dflags |= PND_FUNARG;
+        pn_dflags |= PND_FUNARG;
+    }
 }
 
 struct JSObjectBox {
