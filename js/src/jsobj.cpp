@@ -4487,6 +4487,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     }
 
     if (!sprop) {
+        /* We should never add properties to lexical blocks.  */
+        JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_BlockClass);
+
         /*
          * Purge the property cache of now-shadowed id in obj's scope chain.
          * Do this early, before locking obj to avoid nesting locks.
