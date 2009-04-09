@@ -1352,6 +1352,7 @@ MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *t
         pnu->pn_lexdef = (JSDefinition *) pn;
         pn->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
     }
+    pn->pn_dflags |= dn->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
     pn->dn_uses = dn;
 
     dn->pn_defn = false;
@@ -1667,9 +1668,9 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
          * flag only funbox->node and funbox->kids' nodes here.
          */
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
-            fn->pn_dflags |= PND_FUNARG;
+            fn->setFunArg();
             for (JSFunctionBox *kid = funbox->kids; kid; kid = kid->siblings)
-                kid->node->pn_dflags |= PND_FUNARG;
+                kid->node->setFunArg();
         }
 
         if (fn->isFunArg()) {
@@ -1689,7 +1690,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
                     JSDefinition *lexdep = ALE_DEFN(ale)->resolve();
 
                     if (!lexdep->isFreeVar() && int(lexdep->frameLevel()) <= fnlevel) {
-                        fn->pn_dflags |= PND_FUNARG;
+                        fn->setFunArg();
                         queue->push(funbox);
                         break;
                     }
@@ -1737,7 +1738,7 @@ JSCompiler::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
                      * which suppresses revisiting this function (namely the
                      * !lexdep->isFunArg() test just above).
                      */
-                    lexdep->pn_dflags |= PND_FUNARG;
+                    lexdep->setFunArg();
 
                     JSFunctionBox *afunbox = lexdep->pn_funbox;
                     queue.push(afunbox);
