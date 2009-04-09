@@ -1697,7 +1697,7 @@ Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
         !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v)) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
+        js_SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
@@ -1742,7 +1742,7 @@ Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
     jsval v;
 
     if (!js_PropertyIsEnumerable(cx, obj, id, &v)) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
+        js_SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 

@@ -341,6 +341,11 @@ public:
 # define EXECUTE_TREE_TIMER
 #endif
 
+typedef enum JSBuiltinStatus {
+    JSBUILTIN_BAILED = 1,
+    JSBUILTIN_ERROR = 2
+} JSBuiltinStatus;
+
 struct InterpState
 {
     double        *sp;                  // native stack pointer, stack[0] is spbase[0]
@@ -356,7 +361,7 @@ struct InterpState
     double*        stackBase;           // native stack base
     FrameInfo**    callstackBase;       // call stack base
     uintN*         inlineCallCountp;    // inline call count counter
-    VMSideExit** innermostNestedGuardp;
+    VMSideExit**   innermostNestedGuardp;
     void*          stackMark;
     VMSideExit*    innermost;
 #ifdef EXECUTE_TREE_TIMER
@@ -365,7 +370,20 @@ struct InterpState
 #ifdef DEBUG
     bool           jsframe_pop_blocks_set_on_entry;
 #endif
+
+    /*
+     * Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
+     * JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
+     * if an error or exception occurred.
+     */
+    uint32         builtinStatus;
 };
+
+static JS_INLINE void
+js_SetBuiltinError(JSContext *cx)
+{
+    cx->interpState->builtinStatus |= JSBUILTIN_ERROR;
+}
 
 enum JSMonitorRecordingStatus {
     JSMRS_CONTINUE,
