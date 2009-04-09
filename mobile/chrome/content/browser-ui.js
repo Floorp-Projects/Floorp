@@ -611,12 +611,16 @@ var BookmarkHelper = {
     if (itemId == -1)
       return;
 
+    let title = PlacesUtils.bookmarks.getItemTitle(itemId);
+
     let container = document.getElementById("browser-container");
     this._panel = document.getElementById("bookmark-container");
     this._panel.hidden = false;
     this._panel.width = container.boxObject.width;
 
     this._editor = document.getElementById("bookmark-edit");
+    this._editor.setAttribute("title", title);
+    this._editor.setAttribute("uri", aURI.spec);
     this._editor.init(itemId);
     this._editor.startEditing();
 
@@ -630,6 +634,9 @@ var BookmarkHelper = {
     if (this._editor.isEditing)
       this._editor.stopEditing();
     this._panel.hidden = true;
+
+    this._editor.removeAttribute("title");
+    this._editor.removeAttribute("uri");
   },
 
   handleEvent: function(aEvent) {
@@ -645,9 +652,9 @@ var BookmarkList = {
   show: function() {
     let container = document.getElementById("browser-container");
     this._panel = document.getElementById("bookmarklist-container");
-    this._panel.hidden = false;
     this._panel.width = container.boxObject.width;
     this._panel.height = container.boxObject.height;
+    this._panel.hidden = false;
 
     this._bookmarks = document.getElementById("bookmark-items");
     this._bookmarks.manageUI = false;
