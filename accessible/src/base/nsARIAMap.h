@@ -57,11 +57,9 @@ enum EActionRule
   eActivateAction,
   eClickAction,
   eCheckUncheckAction,
-  eExpandAction,
   eJumpAction,
   eOpenCloseAction,
   eSelectAction,
-  eSortAction,
   eSwitchAction
 };
 
