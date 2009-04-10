@@ -2104,9 +2104,10 @@ js_TraceOpcode(JSContext *cx)
      * Operations in prologues don't produce interesting values, and
      * js_DecompileValueGenerator isn't set up to handle them anyway.
      */
-    if (cx->tracePrevOp != JSOP_LIMIT && regs->pc >= fp->script->main) {
-        ndefs = js_GetStackDefs(cx, &js_CodeSpec[cx->tracePrevOp],
-                                cx->tracePrevOp, fp->script, regs->pc);
+    if (cx->tracePrevPc && regs->pc >= fp->script->main) {
+        JSOp tracePrevOp = JSOp(*cx->tracePrevPc);
+        ndefs = js_GetStackDefs(cx, &js_CodeSpec[tracePrevOp], tracePrevOp,
+                                fp->script, cx->tracePrevPc);
 
         /*
          * If there aren't that many elements on the stack, then 
@@ -2159,7 +2160,7 @@ js_TraceOpcode(JSContext *cx)
         }
         fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
     }
-    cx->tracePrevOp = op;
+    cx->tracePrevPc = regs->pc;
 
     /* It's nice to have complete traces when debugging a crash.  */
     fflush(tracefp);
@@ -7287,6 +7288,10 @@ js_Interpret(JSContext *cx)
      */
     ok &= js_UnwindScope(cx, fp, 0, ok || cx->throwing);
     JS_ASSERT(regs.sp == StackBase(fp));
+
+#ifdef DEBUG
+    cx->tracePrevPc = NULL;
+#endif
 
     if (inlineCallCount)
         goto inline_return;
