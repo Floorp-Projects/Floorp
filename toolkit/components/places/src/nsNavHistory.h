@@ -219,6 +219,14 @@ public:
 
   nsresult UpdateFrecency(PRInt64 aPageID, PRBool isBookmark);
 
+  /**
+   * Calculate frecencies for places that don't have a valid value yet
+   */
+  nsresult FixInvalidFrecencies();
+
+  /**
+   * Set the frecencies of excluded places so they don't show up in queries
+   */
   nsresult FixInvalidFrecenciesForExcludedPlaces();
 
   /**
@@ -453,28 +461,12 @@ protected:
   // nsICharsetResolver
   NS_DECL_NSICHARSETRESOLVER
 
-  /**
-   * Recalculates aCount frecencies.  If aRecalcOld, it will also calculate
-   * the frecency of aCount history visits that have not occurred recently.
-   *
-   * @param aCount
-   *        The number of entries to update.
-   * @param aRecalcOld
-   *        Indicates that we should update old visits as well.
-   */
-  nsresult RecalculateFrecencies(PRInt32 aCount, PRBool aRecalcOld);
-  nsresult RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt32 aCount);
-
   nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
   nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
   nsCOMPtr<mozIStorageStatement> mDBVisitsForFrecency;
   nsCOMPtr<mozIStorageStatement> mDBUpdateFrecencyAndHidden;
   nsCOMPtr<mozIStorageStatement> mDBGetPlaceVisitStats;
   nsCOMPtr<mozIStorageStatement> mDBFullVisitCount;
-  mozIStorageStatement *GetDBInvalidFrecencies();
-  nsCOMPtr<mozIStorageStatement> mDBInvalidFrecencies;
-  mozIStorageStatement *GetDBOldFrecencies();
-  nsCOMPtr<mozIStorageStatement> mDBOldFrecencies;
 
   /**
    * Initializes the database file.  If the database does not exist, was
@@ -789,9 +781,6 @@ protected:
 
   // frecency prefs
   PRInt32 mNumVisitsForFrecency;
-  PRInt32 mNumCalculateFrecencyOnIdle;
-  PRInt32 mNumCalculateFrecencyOnMigrate;
-  PRInt32 mFrecencyUpdateIdleTime;
   PRInt32 mFirstBucketCutoffInDays;
   PRInt32 mSecondBucketCutoffInDays;
   PRInt32 mThirdBucketCutoffInDays;
