@@ -1016,6 +1016,9 @@ nsresult nsOggDecodeStateMachine::Run()
           mBufferingEndOffset = mDecoder->mDecoderPosition +
               BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
           mState = DECODER_STATE_BUFFERING;
+          if (mPlaying) {
+            StopPlayback();
+          }
           LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
         } else {
           PlayFrame();
