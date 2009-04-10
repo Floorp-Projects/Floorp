@@ -74,10 +74,6 @@
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
 #include "nsGeolocation.h"
-#ifdef OJI
-#include "nsIJVMManager.h"
-#include "nsILiveConnectManager.h"
-#endif
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
@@ -346,9 +342,6 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
   PR_END_MACRO
 
 // CIDs
-#ifdef OJI
-static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
-#endif
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
@@ -5810,37 +5803,6 @@ nsGlobalWindow::InitJavaProperties()
   // No NPRuntime enabled Java plugin found, null out the owner we
   // would have used in that case as it's no longer needed.
   mDummyJavaPluginOwner = nsnull;
-
-#ifdef OJI
-  JSContext *cx = (JSContext *)scx->GetNativeContext();
-
-  nsCOMPtr<nsILiveConnectManager> manager =
-    do_GetService(nsIJVMManager::GetCID());
-
-  if (!manager) {
-    return;
-  }
-
-  PRBool started = PR_FALSE;
-  manager->StartupLiveConnect(::JS_GetRuntime(cx), started);
-
-  nsCOMPtr<nsIJVMManager> jvmManager(do_QueryInterface(manager));
-
-  if (!jvmManager) {
-    return;
-  }
-
-  PRBool javaEnabled = PR_FALSE;
-  if (NS_FAILED(jvmManager->GetJavaEnabled(&javaEnabled)) || !javaEnabled) {
-    return;
-  }
-
-  {
-    JSAutoRequest ar(cx);
-
-    manager->InitLiveConnectClasses(cx, mJSObject);
-  }
-#endif
 }
 
 void*
@@ -9290,17 +9252,6 @@ NS_IMETHODIMP
 nsNavigator::JavaEnabled(PRBool *aReturn)
 {
   *aReturn = nsContentUtils::GetBoolPref("security.enable_java");
-
-#ifdef OJI
-  // Ask the nsIJVMManager if Java is enabled
-  nsCOMPtr<nsIJVMManager> jvmService = do_GetService(kJVMServiceCID);
-  if (jvmService) {
-    jvmService->GetJavaEnabled(aReturn);
-  }
-  else {
-    *aReturn = PR_FALSE;
-  }
-#endif
 
   return NS_OK;
 }

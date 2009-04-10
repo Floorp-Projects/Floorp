@@ -3230,7 +3230,6 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
     // if no realm, then use the auth type as the realm.  ToUpperCase so the
     // ficticious realm stands out a bit more.
     // XXX this will cause some single signon misses!
-    // XXX this will cause problems when we expose the auth cache to OJI!
     // XXX this was meant to be used with NTLM, which supplies no realm.
     /*
     if (realm.IsEmpty()) {

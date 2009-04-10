@@ -330,13 +330,6 @@ MAKEFILES_libsydneyaudio="
   media/libsydneyaudio/src/Makefile
 "
 
-MAKEFILES_oji="
-  modules/oji/Makefile
-  modules/oji/public/Makefile
-  modules/oji/src/Makefile
-  plugin/oji/JEP/Makefile
-"
-
 MAKEFILES_plugin="
   modules/plugin/Makefile
   modules/plugin/base/src/Makefile
@@ -440,13 +433,6 @@ MAKEFILES_rdf="
   rdf/tests/Makefile
   rdf/tests/rdfcat/Makefile
   rdf/tests/rdfpoll/Makefile
-"
-
-MAKEFILES_sun_java="
-  sun-java/Makefile
-  sun-java/stubs/Makefile
-  sun-java/stubs/include/Makefile
-  sun-java/stubs/jri/Makefile
 "
 
 MAKEFILES_caps="
@@ -777,7 +763,6 @@ add_makefiles "
   $MAKEFILES_libreg
   $MAKEFILES_libpref
   $MAKEFILES_libutil
-  $MAKEFILES_oji
   $MAKEFILES_plugin
   $MAKEFILES_netwerk
   $MAKEFILES_uriloader

@@ -2674,17 +2674,6 @@ case "$target" in
 esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
-dnl
-dnl Indicate that platform requires special thread safe 
-dnl locking when starting up the OJI JVM 
-dnl (see mozilla/modules/oji/src/nsJVMManager.cpp)
-dnl ========================================================
-case "$target" in
-    *-hpux*)      
-        AC_DEFINE(MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP)
-        ;;
-esac
-
 dnl ========================================================
 dnl = Flags to strip unused symbols from .so components
 dnl ========================================================
@@ -4488,7 +4477,6 @@ MOZ_OGG=1
 MOZ_SYDNEYAUDIO=
 MOZ_WAVE=1
 MOZ_MEDIA=
-MOZ_OJI=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
 MOZ_PLAINTEXT_EDITOR_ONLY=
@@ -4603,7 +4591,6 @@ basic)
   MOZ_NO_INSPECTOR_APIS=1
   MOZ_NO_XPCOM_OBSOLETE=1
   MOZ_NO_FAST_LOAD=1
-  MOZ_OJI=
   MOZ_PLAINTEXT_EDITOR_ONLY=1
 #  MOZ_PLUGINS=
   MOZ_PREF_EXTENSIONS=
@@ -4646,7 +4633,6 @@ minimal)
   MOZ_NO_INSPECTOR_APIS=1
   MOZ_NO_XPCOM_OBSOLETE=1
   MOZ_NO_FAST_LOAD=1
-  MOZ_OJI=
   MOZ_PLAINTEXT_EDITOR_ONLY=1
   MOZ_PLUGINS=
   MOZ_PREF_EXTENSIONS=
@@ -5305,17 +5291,6 @@ MOZ_ARG_DISABLE_BOOL(dbm,
 [  --disable-dbm       Disable building dbm],
     NSS_DISABLE_DBM=1,
     NSS_DISABLE_DBM=)
-
-dnl ========================================================
-dnl = Open JVM Interface (OJI) support
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(oji,
-[  --disable-oji           Disable Open JVM Integration support],
-    MOZ_OJI=,
-    MOZ_OJI=1)
-if test -n "$MOZ_OJI"; then
-    AC_DEFINE(OJI)
-fi
 
 dnl bi-directional support always on
 IBMBIDI=1
@@ -8019,7 +7994,6 @@ AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_IMG_DECODERS)
 AC_SUBST(MOZ_IMG_ENCODERS)
 AC_SUBST(MOZ_JSDEBUGGER)
-AC_SUBST(MOZ_OJI)
 AC_SUBST(MOZ_NO_XPCOM_OBSOLETE)
 AC_SUBST(MOZ_PLUGINS)
 AC_SUBST(ENABLE_EAZEL_PROFILER)

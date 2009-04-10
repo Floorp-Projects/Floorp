@@ -220,11 +220,10 @@ CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   return 0;
 }
 
-#ifdef OJI
-// Indicate whether we should try to use the new NPRuntime-based Java
-// Plug-In if it's available
+// We prefer the newer Java plugin by default, but if "UseNewJavaPlugin" is
+// explicitly set to 0 then we'll use the older one.
 static PRBool
-TryToUseNPRuntimeJavaPlugIn(const char* javaVersion)
+PreferNPRuntimeJavaPlugIn(const char* javaVersion)
 {
   HKEY javaKey = NULL;
   char keyName[_MAX_PATH];
@@ -233,10 +232,10 @@ TryToUseNPRuntimeJavaPlugIn(const char* javaVersion)
   PL_strcat(keyName, javaVersion);
   DWORD val;
   DWORD valSize = sizeof(DWORD);
-    
+
   if (ERROR_SUCCESS != ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                                       keyName, 0, KEY_READ, &javaKey)) {
-    return FALSE;
+    return TRUE;
   }
 
   // Look for "UseNewJavaPlugin"
@@ -244,13 +243,12 @@ TryToUseNPRuntimeJavaPlugIn(const char* javaVersion)
                                          NULL, NULL,
                                          (LPBYTE) &val,
                                          &valSize)) {
-    val = 0;
+    val = 1;
   }
 
   ::RegCloseKey(javaKey);
   return (val == 0) ? PR_FALSE : PR_TRUE;
 }
-#endif
 
 //*****************************************************************************
 // nsPluginDirServiceProvider::Constructor/Destructor
@@ -370,12 +368,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     TCHAR newestPath[JAVA_PATH_SIZE];
     const TCHAR mozPath[_MAX_PATH] = TEXT("Software\\mozilla.org\\Mozilla");
     TCHAR browserJavaVersion[_MAX_PATH];
-    PRBool tryNPRuntimeJavaPlugIn =
-#ifdef OJI
-      PR_FALSE;
-#else
-      PR_TRUE;
-#endif
+    PRBool preferNPRuntimeJavaPlugIn = PR_TRUE;
 
     newestPath[0] = 0;
     LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ,
@@ -421,9 +414,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
             if (CompareVersion(curVer, minVer) >= 0) {
               if (!_tcsncmp(browserJavaVersion, curKey, _MAX_PATH)) {
                 _tcscpy(newestPath, path);
-#ifdef OJI
-                tryNPRuntimeJavaPlugIn = TryToUseNPRuntimeJavaPlugIn(curKey);
-#endif
+                preferNPRuntimeJavaPlugIn = PreferNPRuntimeJavaPlugIn(curKey);
                 ::RegCloseKey(keyloc);
                 break;
               }
@@ -431,9 +422,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
               if (CompareVersion(curVer, maxVer) >= 0) {
                 _tcscpy(newestPath, path);
                 CopyVersion(&maxVer, &curVer);
-#ifdef OJI
-                tryNPRuntimeJavaPlugIn = TryToUseNPRuntimeJavaPlugIn(curKey);
-#endif
+                preferNPRuntimeJavaPlugIn = PreferNPRuntimeJavaPlugIn(curKey);
               }
             }
           }
@@ -462,13 +451,13 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
 
       _tcscat(newestPath, TEXT("\\bin"));
 
-      // See whether we should use the new NPRuntime-based Java Plug-In:
-      //  - If tryNPRuntimeJavaPlugIn is true, and
-      //  - If the appropriate subdirectory actually exists
+      // Use the new NPRuntime-based Java Plug-In if preferNPRuntimeJavaPlugIn
+      // is true (which it is by default), and if the appropriate subdirectory
+      // actually exists.
       // Note that this is a temporary code path until the old
       // OJI-based Java Plug-In isn't being shipped alongside the new
       // one any more.
-      if (tryNPRuntimeJavaPlugIn) {
+      if (preferNPRuntimeJavaPlugIn) {
         // See whether the "new_plugin" directory exists
         TCHAR tmpPath[JAVA_PATH_SIZE];
         nsCOMPtr<nsILocalFile> tmpFile;

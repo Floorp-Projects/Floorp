@@ -42,9 +42,6 @@
 #include "nsIWindowlessPlugInstPeer.h"
 #include "nsIPluginTagInfo2.h"
 #include "nsIPluginInstanceOwner.h"
-#ifdef OJI
-#include "nsIJVMPluginTagInfo.h"
-#endif
 #include "nsPIPluginInstancePeer.h"
 
 #include "nsCOMPtr.h"
@@ -52,9 +49,6 @@
 class nsPluginInstancePeerImpl : public nsIPluginInstancePeer2,
                                  public nsIWindowlessPluginInstancePeer,
                                  public nsIPluginTagInfo2,
-#ifdef OJI
-                                 public nsIJVMPluginTagInfo,
-#endif
                                  public nsPIPluginInstancePeer
 								
 {
