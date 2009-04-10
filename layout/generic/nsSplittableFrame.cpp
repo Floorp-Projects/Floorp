@@ -229,29 +229,6 @@ nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame)
   aFrame->SetNextInFlow(nsnull);
 }
 
-// Detach from previous frame in flow
-void
-nsSplittableFrame::BreakFromPrevFlow(nsIFrame* aFrame)
-{
-  nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
-  // If this frame has a non-fluid continuation, transfer it to its prevInFlow
-  nsIFrame* nextNonFluid = nsnull;
-  nsIFrame* nextContinuation = aFrame->GetNextContinuation();
-  if (nextContinuation && !(nextContinuation->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION)) {
-    nextNonFluid = nextContinuation;
-    aFrame->SetNextContinuation(nsnull);
-  }
-  if (prevInFlow) {
-    if (nextNonFluid) {
-      prevInFlow->SetNextContinuation(nextNonFluid);
-      nextNonFluid->SetPrevContinuation(prevInFlow);
-    } else {
-      prevInFlow->SetNextInFlow(nsnull);
-    }
-    aFrame->SetPrevInFlow(nsnull);
-  }
-}
-
 #ifdef DEBUG
 void
 nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
