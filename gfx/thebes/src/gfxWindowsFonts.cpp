@@ -1407,6 +1407,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     // XXX comment out the assertion for now since it fires too much
     //    NS_ASSERTION(!(mFlags & TEXT_NEED_BOUNDING_BOX),
     //                 "Glyph extents not yet supported");
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
 
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
@@ -1435,6 +1436,7 @@ gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                  const Parameters *aParams, PRUint32 aFlags)
 {
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
  
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
