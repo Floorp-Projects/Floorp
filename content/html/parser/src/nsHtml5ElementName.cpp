@@ -338,7 +338,7 @@ nsHtml5ElementName::initializeStatics()
   FOOTER = new nsHtml5ElementName(nsHtml5Atoms::footer, nsHtml5Atoms::footer, NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_DIALOG_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION, PR_TRUE, PR_FALSE, PR_FALSE);
   HEADER = new nsHtml5ElementName(nsHtml5Atoms::header, nsHtml5Atoms::header, NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_DIALOG_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION, PR_TRUE, PR_FALSE, PR_FALSE);
   IFRAME = new nsHtml5ElementName(nsHtml5Atoms::iframe, nsHtml5Atoms::iframe, NS_HTML5TREE_BUILDER_IFRAME, PR_TRUE, PR_FALSE, PR_FALSE);
-  KEYGEN = new nsHtml5ElementName(nsHtml5Atoms::keygen, nsHtml5Atoms::keygen, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
+  KEYGEN = new nsHtml5ElementName(nsHtml5Atoms::keygen, nsHtml5Atoms::keygen, NS_HTML5TREE_BUILDER_KEYGEN, PR_TRUE, PR_FALSE, PR_FALSE);
   LAMBDA = new nsHtml5ElementName(nsHtml5Atoms::lambda, nsHtml5Atoms::lambda, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   LEGEND = new nsHtml5ElementName(nsHtml5Atoms::legend, nsHtml5Atoms::legend, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   MSPACE = new nsHtml5ElementName(nsHtml5Atoms::mspace, nsHtml5Atoms::mspace, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
