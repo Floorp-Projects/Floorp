@@ -2054,6 +2054,34 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
     return JS_TRUE;
 }
 
+jsval
+js_GetUpvar(JSContext *cx, uintN level, uintN cookie)
+{
+    level -= UPVAR_FRAME_SKIP(cookie);
+    JS_ASSERT(level < JS_DISPLAY_SIZE);
+
+    JSStackFrame *fp = cx->display[level];
+    JS_ASSERT(fp->script);
+
+    uintN slot = UPVAR_FRAME_SLOT(cookie);
+    jsval *vp;
+
+    if (!fp->fun) {
+        vp = fp->slots + fp->script->nfixed;
+    } else if (slot < fp->fun->nargs) {
+        vp = fp->argv;
+    } else if (slot == CALLEE_UPVAR_SLOT) {
+        vp = &fp->argv[-2];
+        slot = 0;
+    } else { 
+        slot -= fp->fun->nargs;
+        JS_ASSERT(slot < fp->script->nslots);
+        vp = fp->slots;
+    }
+
+    return vp[slot];
+}
+
 #ifdef DEBUG
 
 JS_STATIC_INTERPRET JS_REQUIRES_STACK void
@@ -5682,29 +5710,14 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_GETUPVAR)
           BEGIN_CASE(JSOP_CALLUPVAR)
           {
-            JSUpvarArray *uva;
-            uint32 skip;
-            JSStackFrame *fp2;
+            JSUpvarArray *uva = JS_SCRIPT_UPVARS(script);
 
             index = GET_UINT16(regs.pc);
-            uva = JS_SCRIPT_UPVARS(script);
             JS_ASSERT(index < uva->length);
-            skip = UPVAR_FRAME_SKIP(uva->vector[index]);
-            fp2 = cx->display[script->staticLevel - skip];
-            JS_ASSERT(fp2->script);
 
-            slot = UPVAR_FRAME_SLOT(uva->vector[index]);
-            if (!fp2->fun) {
-                vp = fp2->slots + fp2->script->nfixed;
-            } else if (slot < fp2->fun->nargs) {
-                vp = fp2->argv;
-            } else {
-                slot -= fp2->fun->nargs;
-                JS_ASSERT(slot < fp2->script->nslots);
-                vp = fp2->slots;
-            }
+            rval = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+            PUSH_OPND(rval);
 
-            PUSH_OPND(vp[slot]);
             if (op == JSOP_CALLUPVAR)
                 PUSH_OPND(JSVAL_NULL);
           }
