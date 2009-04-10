@@ -539,6 +539,7 @@ static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString
 gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
                                          const Parameters* aParams, PRUint32 aFlags)
 {
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
@@ -573,6 +574,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
     printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUint8 %s, %d, %#x, %d)\n",
            (unsigned)this, NS_LossyConvertUTF16toASCII(us).get(), aLength, (unsigned)aParams, aFlags);
 #endif
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
