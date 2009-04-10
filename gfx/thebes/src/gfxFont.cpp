@@ -1157,6 +1157,10 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges, const PRUnicha
 
     aRanges.Clear();
 
+    if (len == 0) {
+        return;
+    }
+
     PRUint32 prevCh = 0;
     for (PRUint32 i = 0; i < len; i++) {
 
