@@ -38,12 +38,12 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(9fd42950-25e7-11d4-8a7d-006008c844c3)]
-interface nsIDOMPkcs11 : nsISupports
+[scriptable, uuid(bd6dbe50-b902-435e-90a4-4a10b1122440)]
+interface nsIPKCS11 : nsISupports
 {
-  long                      deletemodule(in DOMString moduleName);
-  long                      addmodule(in DOMString moduleName,
-                                      in DOMString libraryFullPath,
-                                      in long cryptoMechanismFlags,
-                                      in long cipherFlags);
+  void deleteModule(in DOMString moduleName);
+  void addModule(in DOMString moduleName,
+                 in DOMString libraryFullPath,
+                 in long cryptoMechanismFlags,
+                 in long cipherFlags);
 };
