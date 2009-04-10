@@ -143,6 +143,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     # run once with -silent to let the extension manager do its thing
     # and then exit the app
     automation.log.info("REFTEST INFO | runreftest.py | Performing extension manager registration: start.\n")
+    # Don't care about this |status|: |runApp()| reporting it should be enough.
     status = automation.runApp(None, browserEnv, options.app, profileDir,
                                extraArgs = ["-silent"],
                                symbolsPath=options.symbolsPath)

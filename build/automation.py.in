@@ -69,6 +69,7 @@ __all__ = [
            "CERTS_SRC_DIR",
            "environment",
            "dumpLeakLog",
+           "processLeakLog",
           ]
 
 # These are generated in mozilla/build/Makefile.in
