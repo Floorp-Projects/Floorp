@@ -676,8 +676,12 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
     gfxTextRunFactory::Parameters params =
         { aParams->mContext, nsnull, nsnull, nsnull, 0, aParams->mAppUnitsPerDevUnit };
     nsAutoPtr<gfxTextRun> newRun;
-    newRun = aFontGroup->MakeTextRun(tempString.Elements(), tempString.Length(),
-                                     &params, aFlags | gfxTextRunFactory::TEXT_IS_PERSISTENT);
+    if (tempString.Length() == 0) {
+        newRun = aFontGroup->MakeEmptyTextRun(&params, aFlags);
+    } else {
+        newRun = aFontGroup->MakeTextRun(tempString.Elements(), tempString.Length(),
+                                         &params, aFlags | gfxTextRunFactory::TEXT_IS_PERSISTENT);
+    }
     FinishTextRun(textRun, newRun, aParams, deferredWords, newRun != nsnull);
     return textRun.forget();
 }
@@ -796,9 +800,12 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
     gfxTextRunFactory::Parameters params =
         { aParams->mContext, nsnull, nsnull, nsnull, 0, aParams->mAppUnitsPerDevUnit };
     nsAutoPtr<gfxTextRun> newRun;
-    newRun = aFontGroup->MakeTextRun(tempString.Elements(), tempString.Length(),
-                                     &params, aFlags | gfxTextRunFactory::TEXT_IS_PERSISTENT);
-
+    if (tempString.Length() == 0) {
+        newRun = aFontGroup->MakeEmptyTextRun(&params, aFlags);
+    } else {
+        newRun = aFontGroup->MakeTextRun(tempString.Elements(), tempString.Length(),
+                                         &params, aFlags | gfxTextRunFactory::TEXT_IS_PERSISTENT);
+    }
     FinishTextRun(textRun, newRun, aParams, deferredWords, newRun != nsnull);
     return textRun.forget();
 }
