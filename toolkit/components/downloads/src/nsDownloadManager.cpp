@@ -1821,6 +1821,12 @@ nsDownloadManager::OnTitleChanged(nsIURI *aURI, const nsAString &aPageTitle)
 }
 
 NS_IMETHODIMP
+nsDownloadManager::OnBeforeDeleteURI(nsIURI *aURI)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDownloadManager::OnDeleteURI(nsIURI *aURI)
 {
   return RemoveDownloadsForURI(aURI);

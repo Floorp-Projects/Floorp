@@ -4576,10 +4576,15 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
+  // Before we remove, we have to notify our observers!
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                      OnBeforeDeleteURI(aURI))
+
   nsIURI** URIs = &aURI;
   nsresult rv = RemovePages(URIs, 1, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-  // call observers here for the removed url
+
+  // Notify our observers that the URI has been removed.
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnDeleteURI(aURI))
   return NS_OK;
 }

@@ -3038,6 +3038,12 @@ nsNavBookmarks::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
 }
 
 NS_IMETHODIMP
+nsNavBookmarks::OnBeforeDeleteURI(nsIURI *aURI)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNavBookmarks::OnDeleteURI(nsIURI *aURI)
 {
   // If the page is bookmarked, we need to notify observers
