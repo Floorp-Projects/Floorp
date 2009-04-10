@@ -117,7 +117,8 @@ ifeq ($(OS_TARGET),WINCE)
 VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
 
 UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
-cab: stage-package package-xulrunner
+
+installer: stage-package package-xulrunner
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_NAME)" "$(PKG_PATH)$(PKG_BASENAME).CAB"
 	@echo Installer $(PKG_PATH)$(PKG_BASENAME).CAB created!
