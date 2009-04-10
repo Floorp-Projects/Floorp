@@ -1192,6 +1192,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 482659-1c.html 482659-1-ref.html
 == 482659-1d.html 482659-1-ref.html
 == 483565.xul 483565-ref.xul
+== 485012-1.html 485012-1-ref.html
 == 485275-1.html 485275-1-ref.html
 == 485275-1.svg 485275-1-ref.html
 == 486052-1.html 486052-1-ref.html

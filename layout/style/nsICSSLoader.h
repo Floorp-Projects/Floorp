@@ -209,6 +209,11 @@ public:
    * @param aOriginPrincipal the principal to use for security checks.  This
    *                         can be null to indicate that these checks should
    *                         be skipped.
+   * @param aCharset the encoding to use for converting the sheet data
+   *        from bytes to Unicode.  May be empty to indicate that the
+   *        charset of the CSSLoader's document should be used.  This
+   *        is only used if neither the network transport nor the
+   *        sheet itself indicate an encoding.
    * @param aObserver the observer to notify when the load completes.
    *                  Must not be null.
    * @param [out] aSheet the sheet to load. Note that the sheet may well
@@ -216,6 +221,7 @@ public:
    */
   NS_IMETHOD LoadSheet(nsIURI* aURL,
                        nsIPrincipal* aOriginPrincipal,
+                       const nsCString& aCharset,
                        nsICSSLoaderObserver* aObserver,
                        nsICSSStyleSheet** aSheet) = 0;
 
@@ -225,6 +231,7 @@ public:
    */
   NS_IMETHOD LoadSheet(nsIURI* aURL,
                        nsIPrincipal* aOriginPrincipal,
+                       const nsCString& aCharset,
                        nsICSSLoaderObserver* aObserver) = 0;
 
   /**

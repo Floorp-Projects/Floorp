@@ -384,7 +384,9 @@ nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::Prefetc
         break; 
       case nsSpeculativeScriptThread::STYLESHEET:
         nsCOMPtr<nsICSSLoaderObserver> obs = new nsDummyCSSLoaderObserver();
-        doc->CSSLoader()->LoadSheet(uri, doc->NodePrincipal(), obs);
+        doc->CSSLoader()->LoadSheet(uri, doc->NodePrincipal(),
+                                    NS_LossyConvertUTF16toASCII(pe.charset),
+                                    obs);
         break;
     }
   }
