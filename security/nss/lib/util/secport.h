@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.19 2009/02/27 00:15:03 nelson%bolyard.com Exp $
+ * $Id: secport.h,v 1.21 2009/04/08 01:07:00 julien.pierre.boogz%sun.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -56,10 +56,6 @@
 #if defined(_WIN32) || defined(WIN32)
 # ifndef XP_WIN32
 # define XP_WIN32
-# endif
-#else
-# ifndef XP_WIN16
-# define XP_WIN16
 # endif
 #endif
 #endif
