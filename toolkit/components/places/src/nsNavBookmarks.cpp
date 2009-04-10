@@ -236,30 +236,27 @@ nsNavBookmarks::InitStatements()
   // This is a LEFT OUTER JOIN with moz_places since folders does not have
   // a reference into that table.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "/* do not warn (bug 482353) */ "
-      "SELECT * FROM ( "
-        "SELECT h.id, h.url, COALESCE(b.title, h.title), "
+      "SELECT h.id, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, "
-          SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-          ", f.url, null, b.id, b.dateAdded, b.lastModified, "
-          "b.position, b.type, b.fk, b.folder_type "
-        "FROM moz_bookmarks b "
-        "JOIN moz_places_temp h ON b.fk = h.id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE b.parent = ?1 "
-        "UNION ALL "
-        "SELECT h.id, h.url, COALESCE(b.title, h.title), "
+        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
+        ", f.url, null, b.id, b.dateAdded, b.lastModified, "
+        "b.position, b.type, b.fk, b.folder_type "
+      "FROM moz_bookmarks b "
+      "JOIN moz_places_temp h ON b.fk = h.id "
+      "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE b.parent = ?1 "
+      "UNION ALL "
+      "SELECT h.id, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, "
-          SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-          ", f.url, null, b.id, b.dateAdded, b.lastModified, "
-          "b.position, b.type, b.fk, b.folder_type "
-        "FROM moz_bookmarks b "
-        "LEFT JOIN moz_places h ON b.fk = h.id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE b.parent = ?1 "
+        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
+        ", f.url, null, b.id, b.dateAdded, b.lastModified, "
+        "b.position, b.type, b.fk, b.folder_type "
+      "FROM moz_bookmarks b "
+      "LEFT JOIN moz_places h ON b.fk = h.id "
+      "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE b.parent = ?1 "
         "AND (b.fk ISNULL OR b.fk NOT IN (select id FROM moz_places_temp)) "
-      ") "
-      "ORDER BY 12 ASC"), /* position */
+      "ORDER BY position ASC"),
     getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
