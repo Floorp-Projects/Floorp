@@ -372,6 +372,9 @@ class nsOggDecoder : public nsMediaDecoder
   // main thread only.
   virtual void Resume();
 
+  // Tells our nsMediaStream to put all loads in the background.
+  virtual void MoveLoadsToBackground();
+
 protected:
 
   // Returns the monitor for other threads to synchronise access to

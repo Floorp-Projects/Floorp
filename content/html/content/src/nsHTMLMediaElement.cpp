@@ -498,10 +498,11 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   NS_ENSURE_SUCCESS(rv,rv);
   if (NS_CP_REJECTED(shouldLoad)) return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      aURI,
                      nsnull,
-                     nsnull,
+                     loadGroup,
                      nsnull,
                      nsIRequest::LOAD_NORMAL);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1118,6 +1119,10 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   if (NS_FAILED(rv))
     return rv;
 
+  // Decoder successfully created, its nsMediaStream now has responsibility
+  // for the channel, and the owning reference.
+  mChannel = nsnull;
+
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
 
   if (!mPaused) {
@@ -1577,8 +1582,17 @@ void nsHTMLMediaElement::ChangeDelayLoadStatus(PRBool aDelay) {
     mLoadBlockedDoc = GetOwnerDoc();
     mLoadBlockedDoc->BlockOnload();
   } else {
+    if (mDecoder) {
+      mDecoder->MoveLoadsToBackground();
+    }
     NS_ASSERTION(mLoadBlockedDoc, "Need a doc to block on");
     mLoadBlockedDoc->UnblockOnload(PR_FALSE);
     mLoadBlockedDoc = nsnull;
   }
+}
+
+already_AddRefed<nsILoadGroup> nsHTMLMediaElement::GetDocumentLoadGroup()
+{
+  nsIDocument* doc = GetOwnerDoc();
+  return doc ? doc->GetDocumentLoadGroup() : nsnull;
 }
