@@ -457,15 +457,27 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
 
+  nsLoadFlags loadFlags =
+    nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
+    (mLoadInBackground ? nsIRequest::LOAD_BACKGROUND : 0);
+
   CloseChannel();
-  if (!mDecoder->GetMediaElement()) {
+
+  nsHTMLMediaElement* element = mDecoder->GetMediaElement();
+  if (!element) {
     // The decoder is being shut down, so don't bother opening a new channel
     return NS_OK;
   }
+  nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
+  NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
   nsresult rv =
-    NS_NewChannel(getter_AddRefs(mChannel), mURI, nsnull, nsnull, nsnull,
-                  nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
+    NS_NewChannel(getter_AddRefs(mChannel),
+                  mURI,
+                  nsnull,
+                  loadGroup,
+                  nsnull,
+                  loadFlags);
   if (NS_FAILED(rv))
     return rv;
   return OpenChannel(nsnull, aOffset);
@@ -789,10 +801,13 @@ nsMediaStream::Open(nsMediaDecoder* aDecoder, nsIURI* aURI,
   if (aChannel) {
     channel = aChannel;
   } else {
+    nsHTMLMediaElement* element = aDecoder->GetMediaElement();
+    NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+    nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
     nsresult rv = NS_NewChannel(getter_AddRefs(channel), 
                                 aURI, 
                                 nsnull,
-                                nsnull,
+                                loadGroup,
                                 nsnull,
                                 nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -825,4 +840,45 @@ already_AddRefed<nsIPrincipal> nsMediaStream::GetCurrentPrincipal()
     return nsnull;
   secMan->GetChannelPrincipal(mChannel, getter_AddRefs(principal));
   return principal.forget();
+}
+
+void nsMediaStream::MoveLoadsToBackground() {
+  NS_ASSERTION(!mLoadInBackground, "Why are you calling this more than once?");
+  mLoadInBackground = PR_TRUE;
+  if (!mChannel) {
+    // No channel, resource is probably already loaded.
+    return;
+  }
+
+  nsresult rv;
+  nsHTMLMediaElement* element = mDecoder->GetMediaElement();
+  if (!element) {
+    NS_WARNING("Null element in nsMediaStream::MoveLoadsToBackground()");
+    return;
+  }
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadGroup() failed!");
+  nsresult status;
+  mChannel->GetStatus(&status);
+  // Note: if (NS_FAILED(status)), the channel won't be in the load group.
+  PRBool isPending = PR_FALSE;
+  if (loadGroup &&
+      NS_SUCCEEDED(status) &&
+      NS_SUCCEEDED(mChannel->IsPending(&isPending)) &&
+      isPending) {
+    rv = loadGroup->RemoveRequest(mChannel, nsnull, status);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveRequest() failed!");
+
+    nsLoadFlags loadFlags;
+    rv = mChannel->GetLoadFlags(&loadFlags);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadFlags() failed!");
+
+    loadFlags |= nsIRequest::LOAD_BACKGROUND;
+    rv = mChannel->SetLoadFlags(loadFlags);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetLoadFlags() failed!");
+
+    rv = loadGroup->AddRequest(mChannel, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "AddRequest() failed!");
+  }
 }

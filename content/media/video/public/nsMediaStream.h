@@ -198,6 +198,10 @@ public:
   virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset) = 0;
   // Report the current offset in bytes from the start of the stream.
   virtual PRInt64 Tell() = 0;
+  // Moves any existing channel loads into the background, so that they don't
+  // block the load event. Any new loads initiated (for example to seek)
+  // will also be in the background.
+  void MoveLoadsToBackground();
 
   // These can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
@@ -243,7 +247,8 @@ protected:
   nsMediaStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
     mChannel(aChannel),
-    mURI(aURI)
+    mURI(aURI),
+    mLoadInBackground(PR_FALSE)
   {
     MOZ_COUNT_CTOR(nsMediaStream);
   }
@@ -268,6 +273,10 @@ protected:
   // URI in case the stream needs to be re-opened. Access from
   // main thread only.
   nsCOMPtr<nsIURI> mURI;
+
+  // PR_TRUE if MoveLoadsToBackground() has been called, i.e. the load event
+  // has been fired, and all channel loads will be in the background.
+  PRPackedBool mLoadInBackground;
 };
 
 /**

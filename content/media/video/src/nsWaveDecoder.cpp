@@ -1622,3 +1622,11 @@ nsWaveDecoder::Resume()
     mStream->Resume();
   }
 }
+
+void 
+nsWaveDecoder::MoveLoadsToBackground()
+{
+  if (mStream) {
+    mStream->MoveLoadsToBackground();
+  }
+}

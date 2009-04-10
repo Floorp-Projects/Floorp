@@ -223,6 +223,13 @@ class nsMediaDecoder : public nsIObserver
   // if it's available.
   nsHTMLMediaElement* GetMediaElement();
 
+  // Moves any existing channel loads into the background, so that they don't
+  // block the load event. This is called when we stop delaying the load
+  // event. Any new loads initiated (for example to seek) will also be in the
+  // background. Implementations of this must call MoveLoadsToBackground() on
+  // their nsMediaStream.
+  virtual void MoveLoadsToBackground()=0;
+
 protected:
 
   // Start timer to update download progress information.
