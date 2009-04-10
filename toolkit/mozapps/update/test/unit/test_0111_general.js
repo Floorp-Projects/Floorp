@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/* General Complete MAR File Patch Apply Tests */
+/* General Partial MAR File Patch Apply Tests */
 
 function run_test() {
   // The directory the updates will be applied to is the current working
@@ -57,11 +57,18 @@ function run_test() {
   do_check_false(testDir.exists());
   testDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
-  // Create an empty test file to test the complete mar's ability to replace an
-  // existing file.
+  // Create the files to test the partial mar's ability to modify and delete
+  // files.
   var testFile = testDir.clone();
   testFile.append("text1");
-  testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+  writeFile(testFile, "ToBeModified\n");
+
+  testFile = testDir.clone();
+  testFile.append("text2");
+  writeFile(testFile, "ToBeDeleted\n");
+
+  testFile = do_get_file("data/aus-0110_general_ref_image1.png");
+  testFile.copyTo(testDir, "image1.png");
 
   var binDir = gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
 
@@ -91,21 +98,23 @@ function run_test() {
     updatesSubDir.remove(true);
   do_check_false(updatesSubDir.exists());
 
-  var mar = do_get_file("data/aus-0110_general-1.mar");
+  var mar = do_get_file("data/aus-0110_general-2.mar");
   mar.copyTo(updatesSubDir, "update.mar");
 
-  // apply the complete mar and check the innards of the files
-  var exitValue = runUpdate(updatesSubDir, updater);
+  // apply the partial mar and check the innards of the files
+  exitValue = runUpdate(updatesSubDir, updater);
   dump("Testing: updater binary process exitValue for success when applying " +
-       "a complete mar\n");
+       "a partial mar\n");
   do_check_eq(exitValue, 0);
 
-  dump("Testing: contents of files added by a complete mar\n");
-  do_check_eq(getFileBytes(getTestFile(testDir, "text1")), "ToBeModified\n");
-  do_check_eq(getFileBytes(getTestFile(testDir, "text2")), "ToBeDeleted\n");
+  dump("Testing: removal of a file and contents of added / modified files by " +
+       "a partial mar\n");
+  do_check_eq(getFileBytes(getTestFile(testDir, "text1")), "Modified\n");
+  do_check_false(getTestFile(testDir, "text2").exists()); // file removed
+  do_check_eq(getFileBytes(getTestFile(testDir, "text3")), "Added\n");
 
-  var refImage = do_get_file("data/aus-0110_general_ref_image1.png");
-  var srcImage = getTestFile(testDir, "image1.png");
+  refImage = do_get_file("data/aus-0110_general_ref_image2.png");
+  srcImage = getTestFile(testDir, "image1.png");
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
 
   try {
