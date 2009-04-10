@@ -31,12 +31,6 @@ function run_test() {
   var pbi = Cc["@mozilla.org/preferences-service;1"]
     .getService(Ci.nsIPrefBranch2);
   var whitelistPref = "network.IDN.whitelist.com";
-  var savedPrefValue = false;
-  var prefExists = false;
-  try {
-    savedPrefValue = pbi.getBoolPref(whitelistPref);
-    prefExists = true;
-  } catch(e) { }
 
   pbi.setBoolPref(whitelistPref, true);
  
@@ -62,8 +56,5 @@ function run_test() {
   expected_fail("foo\u0370bar.com");
 
   // reset the pref
-  if (prefExists)
-    pbi.setBoolPref(whitelistPref, savedPrefValue);
-  else
-    pbi.clearUserPref(whitelistPref);
+  pbi.clearUserPref(whitelistPref);
 }
