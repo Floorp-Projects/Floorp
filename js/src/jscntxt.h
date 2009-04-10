@@ -932,7 +932,7 @@ struct JSContext {
     char                *lastMessage;
 #ifdef DEBUG
     void                *tracefp;
-    JSOp                tracePrevOp;
+    jsbytecode          *tracePrevPc;
 #endif
 
     /* Per-context optional error reporter. */
