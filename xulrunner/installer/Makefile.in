@@ -110,15 +110,8 @@ ifndef MOZ_NATIVE_NSS
 pkg_config_files += mozilla-nss.pc
 endif
 
-ifdef MOZ_OJI
-OJIDEF=-DOJI
-else
-OJIDEF=
-endif
-
 %.pc: $(srcdir)/%.pc.in $(GLOBAL_DEPS)
 	cat $< | sed \
-	-e "s|%ojidef%|$(OJIDEF)|" \
 	-e "s|%prefix%|$(prefix)|" \
 	-e "s|%includedir%|$(includedir)|" \
 	-e "s|%idldir%|$(idldir)|" \

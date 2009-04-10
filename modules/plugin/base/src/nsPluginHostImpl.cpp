@@ -51,11 +51,6 @@
 #include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstanceInternal.h"
-#ifdef OJI
-#include "nsIJVMPlugin.h"
-#include "nsIJVMPluginInstance.h"
-#include "nsIJVMManager.h"
-#endif
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -3713,63 +3708,6 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
   PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
-  if (isJavaPlugin && !pluginTag->mIsNPRuntimeEnabledJavaPlugin) {
-#if !defined(OJI) && defined(XP_MACOSX)
-    // The MRJ plugin hangs if you try to load it with OJI disabled,
-    // don't even try to go there.
-    return NS_ERROR_FAILURE;
-#endif
-
-    // We must make sure LiveConnect is started, if needed.
-    nsCOMPtr<nsIDocument> document;
-    aOwner->GetDocument(getter_AddRefs(document));
-    if (document) {
-      nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(document->GetScriptGlobalObject());
-
-      if (window) {
-        window->InitJavaProperties();
-      }
-    }
-
-#if defined(OJI) && ((defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2))
-    // This is a work-around on Unix for a LiveConnect problem (bug
-    // 83698).
-    // The problem:
-    // The proxy JNI needs to be created by the browser. If it is
-    // created by someone else (e.g., a plugin) on a different thread,
-    // the proxy JNI will not work, and break LiveConnect.  Currently,
-    // on Unix, when instantiating a Java plugin instance (by calling
-    // InstantiateEmbeddedPlugin() next), Java plugin will create the
-    // proxy JNI if it is not created yet. If that happens,
-    // LiveConnect will be broken.  Before lazy start JVM was
-    // implemented, since at this point the browser already created
-    // the proxy JNI during startup, the problem did not happen.
-    // But after the lazy start was implemented, at this point the
-    // proxy JNI was not created yet, so the Java plugin created the
-    // proxy JNI, and broke liveConnect.
-    // On Windows and Mac, Java plugin does not create the proxy JNI,
-    // but lets the browser to create it. Hence this is a Unix-only
-    // problem.
-    //
-    // The work-around:
-    // The root cause of the problem is in Java plugin's Unix
-    // implementation, which should not create the proxy JNI.  As a
-    // work-around, here we make sure the proxy JNI has been created
-    // by the browser, before plugin gets a chance.
-    //
-
-    // If Java is installed, get proxy JNI.
-    nsCOMPtr<nsIJVMManager> jvmManager = do_GetService(nsIJVMManager::GetCID(),
-                                                       &result);
-    if (NS_SUCCEEDED(result)) {
-      JNIEnv* proxyEnv;
-      // Get proxy JNI, if not created yet, create it.
-      jvmManager->GetProxyJNI(&proxyEnv);
-    }
-#endif
-  }
-
   nsCAutoString contractID(
           NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
           nsDependentCString(mimetype));
@@ -4477,15 +4415,11 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       nsGetFactory = (nsFactoryProc) PR_FindFunctionSymbol(pluginTag->mLibrary, "NSGetFactory");
 #endif
       if (nsGetFactory && IsCompatibleExecutable(pluginTag->mFullPath.get())) {
-// XPCOM-style plugins (or at least the OJI one) cause crashes on
-// on windows GCC builds, so we're just turning them off for now.
-#if !defined(XP_WIN) || !defined(__GNUC__)
         rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ContractID
                           (nsIFactory**)&pluginTag->mEntryPoint);
         plugin = pluginTag->mEntryPoint;
         if (plugin)
           plugin->Initialize();
-#endif
       }
 #ifdef XP_OS2
       // on OS2, first check if this might be legacy XPCOM module.
