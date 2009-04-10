@@ -1360,6 +1360,7 @@ nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
     return GetNextWSNode(aStartNode, aBlockParent, aNextNode);
   
   nsCOMPtr<nsIContent> startContent( do_QueryInterface(aStartNode) );
+  NS_ENSURE_STATE(startContent);
   nsIContent *nextContent = startContent->GetChildAt(aOffset);
   if (!nextContent)
   {
