@@ -1227,6 +1227,7 @@ nsNavHistory::InitStatements()
 
   // mDBGetTags
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "/* do not warn (bug 487594) */ "
       "SELECT GROUP_CONCAT(tag_title, ?1) FROM ("
         "SELECT t.title AS tag_title "
         "FROM moz_bookmarks b "
