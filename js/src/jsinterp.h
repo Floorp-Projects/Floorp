@@ -607,6 +607,13 @@ extern JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2);
 
 /*
+ * Given an active context, a static scope level, and an upvar cookie, return
+ * the value of the upvar.
+ */
+extern jsval
+js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
+
+/*
  * Opcode tracing helper. When len is not 0, cx->fp->regs->pc[-len] gives the
  * previous opcode.
  */
