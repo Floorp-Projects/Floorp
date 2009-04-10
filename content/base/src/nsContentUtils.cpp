@@ -220,8 +220,6 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
-PRUint32 nsMutationGuard::sMutationCount = 0;
-
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
 static PLDHashTable sEventListenerManagersHash;
