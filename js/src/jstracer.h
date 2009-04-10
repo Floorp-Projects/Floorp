@@ -367,9 +367,6 @@ struct InterpState
 #ifdef EXECUTE_TREE_TIMER
     uint64         startTime;
 #endif
-#ifdef DEBUG
-    bool           jsframe_pop_blocks_set_on_entry;
-#endif
 
     /*
      * Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
