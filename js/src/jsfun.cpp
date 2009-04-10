@@ -2205,26 +2205,9 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
     JS_ASSERT(uva->length <= size_t(closure->dslots[-1]));
 
-    for (uint32 i = 0, n = uva->length; i < n; i++) {
-        uint32 cookie = uva->vector[i];
-
-        uintN upvarLevel = fun->u.i.script->staticLevel - UPVAR_FRAME_SKIP(cookie);
-        JS_ASSERT(upvarLevel <= JS_DISPLAY_SIZE);
-        JSStackFrame *fp2 = cx->display[upvarLevel];
-
-        uintN slot = UPVAR_FRAME_SLOT(cookie);
-        jsval *vp;
-        if (fp2->fun && slot < fp2->fun->nargs) {
-            vp = fp2->argv;
-        } else {
-            if (fp2->fun)
-                slot -= fp2->fun->nargs;
-            JS_ASSERT(slot < fp2->script->nslots);
-            vp = fp2->slots;
-        }
-
-        closure->dslots[i] = vp[slot];
-    }
+    uintN level = fun->u.i.script->staticLevel;
+    for (uint32 i = 0, n = uva->length; i < n; i++)
+        closure->dslots[i] = js_GetUpvar(cx, level, uva->vector[i]);
 
     return closure;
 }
