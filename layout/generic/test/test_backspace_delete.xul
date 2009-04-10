@@ -46,9 +46,7 @@ function execTests() {
   }
 
   function restoreEatSpace() {
-    try {
-      getPrefs().clearUserPref("eat_space_to_next_word");
-    } catch(ex) {}
+    getPrefs().clearUserPref("eat_space_to_next_word");
   }
 
   function doCommand(cmd) {

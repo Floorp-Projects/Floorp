@@ -88,11 +88,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
 
         kidWin.close();
         netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-        try {
-          prefs.clearUserPref("browser.enable_automatic_image_resizing");
-        } catch (ex) {
-          // throws if it wasn't already set because app default was true
-        }
+        prefs.clearUserPref("browser.enable_automatic_image_resizing");
         SimpleTest.finish();
     }
 
