@@ -49,6 +49,7 @@
 
 #include "nsTransform2D.h"
 
+#include "gfxContext.h"
 
 class nsDisplayItemCanvas : public nsDisplayItem {
 public:
@@ -224,6 +225,7 @@ void
 nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
                                const nsRect& aDirtyRect, nsPoint aPt) 
 {
+  nsPresContext *presContext = PresContext();
   nsRect inner = GetInnerArea() + aPt;
 
   nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
@@ -234,34 +236,24 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
   if (inner.width == 0 || inner.height == 0)
     return;
 
-  nsIntSize canvasSize = GetCanvasSize();
-  nsSize sizeAppUnits(PresContext()->DevPixelsToAppUnits(canvasSize.width),
-                      PresContext()->DevPixelsToAppUnits(canvasSize.height));
+  nsIntSize sizeCSSPixels = GetCanvasSize();
+  nsSize sizeAppUnits(nsPresContext::CSSPixelsToAppUnits(sizeCSSPixels.width),
+                      nsPresContext::CSSPixelsToAppUnits(sizeCSSPixels.height));
 
-  // XXXvlad clip to aDirtyRect!
+  gfxContext *ctx = aRenderingContext.ThebesContext();
 
-  if (inner.Size() != sizeAppUnits)
-  {
-    float sx = inner.width / (float) sizeAppUnits.width;
-    float sy = inner.height / (float) sizeAppUnits.height;
+  gfxFloat sx = inner.width / (gfxFloat) sizeAppUnits.width;
+  gfxFloat sy = inner.height / (gfxFloat) sizeAppUnits.height;
 
-    aRenderingContext.PushState();
-    aRenderingContext.Translate(inner.x, inner.y);
-    aRenderingContext.Scale(sx, sy);
+  ctx->Save();
 
-    canvas->RenderContexts(aRenderingContext.ThebesContext());
+  ctx->Translate(gfxPoint(presContext->AppUnitsToGfxUnits(inner.x),
+                          presContext->AppUnitsToGfxUnits(inner.y)));
+  ctx->Scale(sx, sy);
 
-    aRenderingContext.PopState();
-  } else {
-    //nsIRenderingContext::AutoPushTranslation(&aRenderingContext, px, py);
+  canvas->RenderContexts(ctx);
 
-    aRenderingContext.PushState();
-    aRenderingContext.Translate(inner.x, inner.y);
-
-    canvas->RenderContexts(aRenderingContext.ThebesContext());
-
-    aRenderingContext.PopState();
-  }
+  ctx->Restore();
 }
 
 NS_IMETHODIMP

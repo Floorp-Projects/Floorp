@@ -74,22 +74,18 @@
     function doTest() {
       var t1 = $("t1");
       var t2 = $("t2");
-      t1.focus();
-      synthesizeKey("1", {});
+      t1.value = "1";
       var t1Enabled = {};
       var t1CanUndo = {};
-      is(t1.value, "1", "t1 value correct following input");
       t1.editor.canUndo(t1Enabled, t1CanUndo);
       is(t1CanUndo.value, true,
          "undo correctly enabled when emptyText was not changed through property");
 
       t2.emptyText = "reallyempty";
       is(t2.inputField.value, "reallyempty", "updated emptyText displayed");
-      t2.click();
-      synthesizeKey("2", {});
+      t2.value = "2";
       var t2Enabled = {};
       var t2CanUndo = {};
-      is(t2.value, "2", "t2 value correct following input");
       t2.editor.canUndo(t2Enabled, t2CanUndo);
       is(t2CanUndo.value, true,
          "undo correctly enabled when emptyText explicitly changed through property");

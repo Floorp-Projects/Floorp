@@ -96,6 +96,12 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: none;
 }
 
+
+/* Bug 483950 - Hide domain name in status bar pending removal */
+#security-button > label {
+  display: none;
+}
+
 /* ::::: Fullscreen pseudo-toolbar ::::: */
 #fullscr-toggler {
   display: none;
