@@ -747,18 +747,6 @@ pref("accessibility.blockautorefresh", false);
 // when calculating frecency
 pref("places.frecency.numVisits", 10);
 
-// Number of records to update frecency for when idle.
-pref("places.frecency.numCalcOnIdle", 50);
-
-// Number of records to update frecency for when migrating from
-// a pre-frecency build.
-pref("places.frecency.numCalcOnMigrate", 50);
-
-// Perform frecency recalculation after this amount of idle, repeating.
-// A value of zero disables updating of frecency on idle.
-// Default is 1 minute (60000ms).
-pref("places.frecency.updateIdleTime", 60000);
-
 // buckets (in days) for frecency calculation
 pref("places.frecency.firstBucketCutoff", 4);
 pref("places.frecency.secondBucketCutoff", 14);
