@@ -75,8 +75,6 @@ BROWSER_CHROME_URL = "chrome://browser/content/browser.xul"
 # (particularly after a build) takes forever.
 SERVER_STARTUP_TIMEOUT = 45
 
-INFINITY = 1.0e3000
-
 oldcwd = os.getcwd()
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 os.chdir(SCRIPT_DIRECTORY)
@@ -495,8 +493,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   os.remove(manifest)
 
   # hanging due to non-halting threads is no fun; assume we hit the errors we
-  # were going to hit already and exit with a success code
-  sys.exit(0)
+  # were going to hit already and exit.
+  sys.exit(status)
 
 
 
