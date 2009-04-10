@@ -7,7 +7,7 @@ function handleRequest(request, response)
 {
   var query = {};
   request.queryString.split('&').forEach(function (val) {
-    [name, value] = val.split('=');
+    var [name, value] = val.split('=');
     query[name] = unescape(value);
   });
 
@@ -71,12 +71,12 @@ function handleRequest(request, response)
   if ("cookie" in query) {
     cookies = {};
     request.getHeader("Cookie").split(/ *; */).forEach(function (val) {
-      [name, value] = val.split('=');
+      var [name, value] = val.split('=');
       cookies[name] = unescape(value);
     });
     
     query.cookie.split(",").forEach(function (val) {
-      [name, value] = val.split('=');
+      var [name, value] = val.split('=');
       if (cookies[name] != value) {
         sendHttp500(response,
           "Cookie " + name  + " had wrong value. Expected " + value +
