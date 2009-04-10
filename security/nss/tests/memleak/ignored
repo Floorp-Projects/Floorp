@@ -41,6 +41,6 @@
 #463631
 vfychain/main/PL_CreateOptState/**
 
-#486928
-selfserv/main/PORT_Strdup_Util/PORT_Alloc_Util/**
+#486298
+selfserv/main/PORT_Strdup_Util**
 

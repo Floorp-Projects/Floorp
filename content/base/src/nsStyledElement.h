@@ -89,8 +89,6 @@ public:
                                   nsAttrValue& aResult,
                                   PRBool aForceInDataDoc);
 
-  static void Shutdown();
-  
 protected:
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,

@@ -75,7 +75,7 @@
 *   locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
 *   locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
 *   locale/browser/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
-% override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
+% override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
 % override chrome://mozapps/locale/downloads/settingsChange.dtd chrome://browser/locale/downloads/settingsChange.dtd
 #ifdef MOZ_USE_GENERIC_BRANDING

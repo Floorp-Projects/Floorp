@@ -97,8 +97,8 @@ protected:
   static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
 
 protected:
-  CFURLRef mBaseRef;   // The FS object we represent
-  CFURLRef mTargetRef; // If mBaseRef is an alias, its target
+  CFURLRef mBaseURL;   // The FS object we represent
+  CFURLRef mTargetURL; // If mBaseURL is an alias/symlink, its target
 
   PRPackedBool mFollowLinks;
   PRPackedBool mFollowLinksDirty;

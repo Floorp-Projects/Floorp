@@ -5103,8 +5103,6 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
-    nsAutoDisableGetUsedXAssertions disableAssert;
-    
     nsDisplayListBuilder builder(rootFrame, PR_FALSE,
         (aFlags & RENDER_CARET) != 0);
     nsDisplayList list;

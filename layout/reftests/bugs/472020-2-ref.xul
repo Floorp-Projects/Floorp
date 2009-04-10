@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+  outer {
+    -moz-binding: url(472020-xbl.xml#outer);
+    border: 2px solid yellow;
+  }
+  inner {
+    -moz-binding: url(472020-xbl.xml#inner);
+  }
+  box {
+    width: 50px;
+    border: 2px solid green;
+  }
+]]></style>
+
+  <outer>
+    <box/>
+  </outer>
+</window>

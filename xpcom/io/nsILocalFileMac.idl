@@ -74,7 +74,7 @@ interface nsILocalFileMac : nsILocalFile
     *
     * NOTE: Supported only for XP_MACOSX or TARGET_CARBON
     *
-    * @param   aFSRef         the native file spec
+    * @param   aFSRef         the native FSRef
     *
     */
   [noscript] void initWithFSRef([const] in FSRefPtr aFSRef);
@@ -239,5 +239,6 @@ interface nsILocalFileMac : nsILocalFile
 extern "C"
 {
 NS_EXPORT nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef, PRBool aFollowSymlinks, nsILocalFileMac** result);
+NS_EXPORT nsresult NS_NewLocalFileWithCFURL(const CFURLRef aURL, PRBool aFollowSymlinks, nsILocalFileMac** result);
 }
 %}

@@ -822,7 +822,7 @@ NS_IMETHODIMP_(nsrefcnt) Class::AddRef(void)                                  \
   nsrefcnt r = Super::AddRef();                                               \
   NS_LOG_ADDREF(this, r, #Class, sizeof(*this));                              \
   return r;                                                                   \
-}                                                                             \
+}
 
 #define NS_IMPL_RELEASE_INHERITED(Class, Super)                               \
 NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
@@ -830,7 +830,23 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
   nsrefcnt r = Super::Release();                                              \
   NS_LOG_RELEASE(this, r, #Class);                                            \
   return r;                                                                   \
-}                                                                             \
+}
+
+/**
+ * As above but not logging the addref/release; needed if the base
+ * class might be aggregated.
+ */
+#define NS_IMPL_NONLOGGING_ADDREF_INHERITED(Class, Super)                     \
+NS_IMETHODIMP_(nsrefcnt) Class::AddRef(void)                                  \
+{                                                                             \
+  return Super::AddRef();                                                     \
+}
+
+#define NS_IMPL_NONLOGGING_RELEASE_INHERITED(Class, Super)                    \
+NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
+{                                                                             \
+  return Super::Release();                                                    \
+}
 
 #define NS_INTERFACE_TABLE_INHERITED0(Class) /* Nothing to do here */
 

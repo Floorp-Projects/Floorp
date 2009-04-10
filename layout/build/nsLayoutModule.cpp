@@ -43,7 +43,6 @@
 #include "nsDataDocumentContentPolicy.h"
 #include "nsNoDataProtocolContentPolicy.h"
 #include "nsDOMCID.h"
-#include "nsCSSOMFactory.h"
 #include "nsInspectorCSSUtils.h"
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
@@ -522,7 +521,6 @@ MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTF
 MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXMLContentBuilder)
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
@@ -994,11 +992,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_SUBTREEITERATOR_CID,
     "@mozilla.org/content/subtree-content-iterator;1",
     CreateSubtreeIterator },
-
-  { "CSS Object Model Factory",
-    NS_CSSOMFACTORY_CID,
-    nsnull,
-    nsCSSOMFactoryConstructor },
 
   { "Inspector CSS Utils",
     NS_INSPECTORCSSUTILS_CID,
