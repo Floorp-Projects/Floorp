@@ -93,7 +93,8 @@ ifdef HAVE_ARM_SIMD
 USE_ARM_SIMD_GCC=1
 endif
 ifdef HAVE_ARM_NEON
-USE_ARM_NEON_GCC=1
+# temporarily disabled to see if it fixes odd mobile build breakage
+#USE_ARM_NEON_GCC=1
 endif
 endif
 

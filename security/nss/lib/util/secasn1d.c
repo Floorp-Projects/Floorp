@@ -38,7 +38,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.38 2007/10/12 01:44:51 julien.pierre.boogz%sun.com Exp $
+ * $Id: secasn1d.c,v 1.39 2009/04/07 23:52:10 julien.pierre.boogz%sun.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -2086,11 +2086,7 @@ sec_asn1d_concat_substrings (sec_asn1d_state *state)
 	}
 
 	if (is_bit_string) {
-#ifdef XP_WIN16		/* win16 compiler gets an internal error otherwise */
-	    alloc_len = (((long)item_len + 7) / 8);
-#else
 	    alloc_len = ((item_len + 7) >> 3);
-#endif
 	} else {
 	    /*
 	     * Add 2 for the end-of-contents octets of an indefinite-length

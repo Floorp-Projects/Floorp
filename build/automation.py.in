@@ -247,6 +247,7 @@ user_pref("security.default_personal_cert", "Select Automatically"); // Need to 
 user_pref("network.http.prompt-temp-redirect", false);
 user_pref("svg.smil.enabled", true); // Needed for SMIL mochitests until bug 482402 lands
 user_pref("media.cache_size", 100);
+user_pref("security.warn_viewing_mixed", false);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """

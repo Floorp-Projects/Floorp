@@ -83,12 +83,23 @@ public:
   void SetupOverflowPlaceholdersProperty();
 
   /**
-   * Get the available reflow space for the current y coordinate. The
-   * available space is relative to our coordinate system (0,0) is our
-   * upper left corner.
+   * Get the available reflow space (the area not occupied by floats)
+   * for the current y coordinate. The available space is relative to
+   * our coordinate system, which is the content box, with (0, 0) in the
+   * upper left.
+   *
+   * Returns whether there are floats present at the given vertical
+   * coordinate and within the width of the content rect.
    */
-  void GetAvailableSpace() { GetAvailableSpace(mY, PR_FALSE); }
-  void GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint);
+  nsFlowAreaRect GetFloatAvailableSpace() const
+    { return GetFloatAvailableSpace(mY, PR_FALSE); }
+  nsFlowAreaRect GetFloatAvailableSpace(nscoord aY,
+                                        PRBool aRelaxHeightConstraint) const
+    { return GetFloatAvailableSpaceWithState(aY, aRelaxHeightConstraint,
+                                             nsnull); }
+  nsFlowAreaRect
+    GetFloatAvailableSpaceWithState(nscoord aY, PRBool aRelaxHeightConstraint,
+                                    nsFloatManager::SavedState *aState) const;
 
   /*
    * The following functions all return PR_TRUE if they were able to
@@ -104,7 +115,9 @@ public:
                   PRBool              aInitialReflow,
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
-  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats, PRBool aForceFit);
+  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
+                       const nsFlowAreaRect& aFloatAvailableSpace,
+                       PRBool aForceFit);
   PRBool FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
                            PRBool*         aIsLeftFloat,
                            nsReflowStatus& aReflowStatus,
@@ -149,6 +162,7 @@ public:
   // (which need not be the current mY).  Callers need only pass
   // aReplacedWidth for outer table frames.
   void ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
+                                            const nsRect& aFloatAvailableSpace,
                                             nscoord& aLeftResult,
                                             nscoord& aRightResult,
                                        nsBlockFrame::ReplacedElementWidthToClear
@@ -157,6 +171,7 @@ public:
   // Caller must have called GetAvailableSpace for the current mY
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
+                              const nsFlowAreaRect& aFloatAvailableSpace,
                               PRBool aBlockAvoidsFloats,
                               nsRect& aResult);
 
@@ -173,8 +188,6 @@ public:
       mLineNumber++;
     }
   }
-
-  PRBool IsImpactedByFloat() const;
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
 
@@ -204,12 +217,11 @@ public:
   // XXX get rid of this
   nsReflowStatus mReflowStatus;
 
-  // The x-position we should place an outside bullet relative to.
-  // This is the border-box edge of the principal box.  However, if a line box
-  // would be displaced by floats, we want to displace it by the same amount.
-  // That is, we act as though the edge of the floats is the content-edge of
-  // the block, displaced by the block's padding and border.
-  nscoord mOutsideBulletX;
+  // The float manager state as it was before the contents of this
+  // block.  This is needed for positioning bullets, since we only want
+  // to move the bullet to flow around floats that were before this
+  // block, not floats inside of it.
+  nsFloatManager::SavedState mFloatManagerStateBefore;
 
   nscoord mBottomEdge;
 
@@ -249,10 +261,6 @@ public:
 
   // The current Y coordinate in the block
   nscoord mY;
-
-  // The available space within the current band.
-  // (relative to the *content*-rect of the block)
-  nsRect mAvailSpaceRect;
 
   // The combined area of all floats placed so far
   nsRect mFloatCombinedArea;
@@ -295,11 +303,6 @@ public:
   PRInt16 mFlags;
  
   PRUint8 mFloatBreakType;
-
-  // The number of floats on the sides of mAvailSpaceRect, including
-  // floats that do not reduce mAvailSpaceRect because they are in the
-  // margins.
-  PRPackedBool mBandHasFloats;
 
   void SetFlag(PRUint32 aFlag, PRBool aValue)
   {

@@ -242,6 +242,19 @@ protected:
   void HandleChildInsertion(nsIContent* aContainer, nsIContent* aChild,
                             PRUint32 aIndexInContainer, PRBool aAppend);
 
+  // For the given container under which a child is being added, given
+  // insertion parent and given index of the child being inserted, find the
+  // right nsXBLInsertionPoint and the right index in that insertion point to
+  // insert it at.  If null is returned, aInsertionIndex might be garbage.
+  // aAppend controls what should be returned as the aInsertionIndex if the
+  // right index can't be found.  If true, the length of the insertion point
+  // will be returned; otherwise 0 will be returned.
+  nsXBLInsertionPoint* FindInsertionPointAndIndex(nsIContent* aContainer,
+                                                  nsIContent* aInsertionParent,
+                                                  PRUint32 aIndexInContainer,
+                                                  PRInt32 aAppend,
+                                                  PRInt32* aInsertionIndex);
+
   // Same as ProcessAttachedQueue, but also nulls out
   // mProcessAttachedQueueEvent
   void DoProcessAttachedQueue();

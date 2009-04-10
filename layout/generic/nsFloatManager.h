@@ -52,6 +52,22 @@ class nsIFrame;
 struct nsHTMLReflowState;
 class nsPresContext;
 
+/**
+ * The available space for content not occupied by floats is divided
+ * into a (vertical) sequence of rectangles.  However, we need to know
+ * not only the rectangle, but also whether it was reduced (from the
+ * content rectangle) by floats that actually intruded into the content
+ * rectangle.
+ */
+struct nsFlowAreaRect {
+  nsRect mRect;
+  PRPackedBool mHasFloats;
+
+  nsFlowAreaRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                 PRBool aHasFloats)
+    : mRect(aX, aY, aWidth, aHeight), mHasFloats(aHasFloats) {}
+};
+
 #define NS_FLOAT_MANAGER_CACHE_SIZE 4
 
 class nsFloatManager {
@@ -63,6 +79,18 @@ public:
   void operator delete(void* aPtr, size_t aSize);
 
   static void Shutdown();
+
+  // Structure that stores the current state of a frame manager for
+  // Save/Restore purposes.
+  struct SavedState;
+  friend struct SavedState;
+  struct SavedState {
+  private:
+    PRUint32 mFloatInfoCount;
+    nscoord mX, mY;
+    
+    friend class nsFloatManager;
+  };
 
   /**
    * Translate the current origin by the specified (dx, dy). This
@@ -92,18 +120,21 @@ public:
    * @param aMaxHeight [in] maximum height of available space desired
    * @param aContentAreaWidth [in] the width of the content area (whose left
    *                          edge must be zero in the current translation)
-   * @param aHasFloats [out] whether there are floats at the sides of
-   *                    the return value including those that do not
-   *                    reduce the line box width at all (because they
-   *                    are entirely in the margins)
-   * @return the resulting rectangle for line boxes.  It will not go
-   *         left of 0, nor right of aContentAreaWidth, but will be
-   *         narrower when floats are present.
+   * @param aState [in] If null, use the current state, otherwise, do
+   *                    computation based only on floats present in the given
+   *                    saved state.
+   * @return An nsFlowAreaRect whose:
+   *           mRect is the resulting rectangle for line boxes.  It will not go
+   *             left of 0, nor right of aContentAreaWidth, but will be
+   *             narrower when floats are present.
+   *          mBandHasFloats is whether there are floats at the sides of the
+   *            return value including those that do not reduce the line box
+   *            width at all (because they are entirely in the margins)
    *
    * aY and aAvailSpace are positioned relative to the current translation
    */
-  nsRect GetBand(nscoord aY, nscoord aMaxHeight, nscoord aContentAreaWidth,
-                 PRBool* aHasFloats) const;
+  nsFlowAreaRect GetBand(nscoord aY, nscoord aMaxHeight,
+                         nscoord aContentAreaWidth, SavedState* aState) const;
 
   /**
    * Add a float that comes after all floats previously added.  Its top
@@ -127,18 +158,6 @@ public:
 private:
   struct FloatInfo;
 public:
-
-  // Structure that stores the current state of a frame manager for
-  // Save/Restore purposes.
-  struct SavedState;
-  friend struct SavedState;
-  struct SavedState {
-  private:
-    PRUint32 mFloatInfoCount;
-    nscoord mX, mY;
-    
-    friend class nsFloatManager;
-  };
 
   PRBool HasAnyFloats() const { return !mFloats.IsEmpty(); }
 
@@ -172,7 +191,9 @@ public:
    * These states must be managed using stack discipline. PopState can only
    * be used after PushState has been used to save the state, and it can only
    * be used once --- although it can be omitted; saved states can be ignored.
-   * States must be popped in the reverse order they were pushed. 
+   * States must be popped in the reverse order they were pushed.  A
+   * call to PopState invalidates any saved states Pushed after the
+   * state passed to PopState was pushed.
    */
   void PopState(SavedState* aState);
 

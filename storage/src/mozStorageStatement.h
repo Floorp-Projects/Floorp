@@ -50,7 +50,12 @@
 
 class mozStorageConnection;
 class nsIXPConnectJSObjectHolder;
-class mozStorageStatementJSHelper;
+
+namespace mozilla {
+namespace storage {
+class StatementJSHelper;
+}
+}
 
 class mozStorageStatement : public mozIStorageStatement
 {
@@ -98,7 +103,7 @@ protected:
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementRowHolder;
 
-    friend class mozStorageStatementJSHelper;
+    friend class mozilla::storage::StatementJSHelper;
 };
 
 #endif /* _MOZSTORAGESTATEMENT_H_ */

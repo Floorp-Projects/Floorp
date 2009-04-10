@@ -36,14 +36,24 @@
  * ***** END LICENSE BLOCK *****
  */
 
-const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
-
 // const Cc, Ci, and Cr are defined in netwerk/test/httpserver/httpd.js so we
 // need to define unique ones.
 const AUS_Cc = Components.classes;
 const AUS_Ci = Components.interfaces;
 const AUS_Cr = Components.results;
+
+const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
+const NS_GRE_DIR                 = "GreD";
+
+const MODE_RDONLY   = 0x01;
+const MODE_WRONLY   = 0x02;
+const MODE_CREATE   = 0x08;
+const MODE_APPEND   = 0x10;
+const MODE_TRUNCATE = 0x20;
+
+const PERMS_FILE      = 0644;
+const PERMS_DIRECTORY = 0755;
 
 var gAUS           = null;
 var gUpdateChecker = null;
@@ -78,6 +88,44 @@ function startAUS() {
              .getService(AUS_Ci.nsIObserverService);
   os.notifyObservers(null, "profile-after-change", null);
 */
+}
+
+/**
+ * Writes text to a file. This will replace existing text if the file exists
+ * and create the file if it doesn't exist.
+ * @param   aFile
+ *          The file to write to. Will be created if it doesn't exist.
+ * @param   aText
+ *          The text to write to the file. If there is existing text it will be
+ *          replaced.
+ */
+function writeFile(aFile, aText) {
+  var fos = AUS_Cc["@mozilla.org/network/safe-file-output-stream;1"]
+              .createInstance(AUS_Ci.nsIFileOutputStream);
+  if (!aFile.exists())
+    aFile.create(AUS_Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  var modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+  fos.init(aFile, modeFlags, PERMS_FILE, 0);
+  fos.write(aText, aText.length);
+  closeSafeOutputStream(fos);
+}
+
+/**
+ * Closes a Safe Output Stream
+ * @param   fos
+ *          The Safe Output Stream to close
+ */
+function closeSafeOutputStream(aFOS) {
+  if (aFOS instanceof AUS_Ci.nsISafeOutputStream) {
+    try {
+      aFOS.finish();
+    }
+    catch (e) {
+      aFOS.close();
+    }
+  }
+  else
+    aFOS.close();
 }
 
 /**
@@ -184,19 +232,29 @@ xhr.prototype = {
  * the tests are interrupted.
  */
 function remove_dirs_and_files () {
-  var fileLocator = AUS_Cc["@mozilla.org/file/directory_service;1"]
-                      .getService(AUS_Ci.nsIProperties);
-  var dir = fileLocator.get("GreD", AUS_Ci.nsIFile);
+  var dir = gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
 
   var file = dir.clone();
   file.append("active-update.xml");
-  if (file.exists())
-    file.remove(false);
+  try {
+    if (file.exists())
+      file.remove(false);
+  }
+  catch (e) {
+    dump("Unable to remove file\npath: " + file.path +
+         "\nException: " + e + "\n");
+  }
 
   file = dir.clone();
   file.append("updates.xml");
-  if (file.exists())
-    file.remove(false);
+  try {
+    if (file.exists())
+      file.remove(false);
+  }
+  catch (e) {
+    dump("Unable to remove file\npath: " + file.path +
+         "\nException: " + e + "\n");
+  }
 
   file = dir.clone();
   file.append("updates");
@@ -206,28 +264,54 @@ function remove_dirs_and_files () {
       file.remove(false);
   }
   catch (e) {
+    dump("Unable to remove file\npath: " + file.path +
+         "\nException: " + e + "\n");
   }
 
-  file = dir.clone();
-  file.append("updates");
-  file.append("0");
-  file.append("update.mar");
-  try {
-    if (file.exists())
-      file.remove(false);
-  }
-  catch (e) {
-  }
+  var updatesSubDir = dir.clone();
+  updatesSubDir.append("updates");
+  updatesSubDir.append("0");
+  if (updatesSubDir.exists()) {
+    file = updatesSubDir.clone();
+    file.append("update.mar");
+    try {
+      if (file.exists())
+        file.remove(false);
+    }
+    catch (e) {
+      dump("Unable to remove file\npath: " + file.path +
+           "\nException: " + e + "\n");
+    }
 
-  file = dir.clone();
-  file.append("updates");
-  file.append("0");
-  file.append("update.status");
-  try {
-    if (file.exists())
-      file.remove(false);
-  }
-  catch (e) {
+    file = updatesSubDir.clone();
+    file.append("update.status");
+    try {
+      if (file.exists())
+        file.remove(false);
+    }
+    catch (e) {
+      dump("Unable to remove file\npath: " + file.path +
+           "\nException: " + e + "\n");
+    }
+
+    file = updatesSubDir.clone();
+    file.append("update.version");
+    try {
+      if (file.exists())
+        file.remove(false);
+    }
+    catch (e) {
+      dump("Unable to remove file\npath: " + file.path +
+           "\nException: " + e + "\n");
+    }
+
+    try {
+      updatesSubDir.remove(true);
+    }
+    catch (e) {
+      dump("Unable to remove directory\npath: " + updatesSubDir.path +
+           "\nException: " + e + "\n");
+    }
   }
 
   // This fails sporadically on Mac OS X so wrap it in a try catch
@@ -237,6 +321,8 @@ function remove_dirs_and_files () {
       dir.remove(true);
   }
   catch (e) {
+    dump("Unable to remove directory\npath: " + dir.path +
+         "\nException: " + e + "\n");
   }
 }
 
