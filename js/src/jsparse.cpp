@@ -748,13 +748,15 @@ static inline bool
 SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
 {
     /*
-     * Reserve staticLevel 0xffff in order to reserve FREE_UPVAR_COOKIE. This
-     * is simpler than error-checking every MAKE_UPVAR_COOKIE, and practically
-     * speaking it leaves more than enough room for upvars. In fact we might
-     * want to split cookies with fewer bits for skip and more for slot, but
-     * only based on evidence.
+     * Reserve FREE_STATIC_LEVEL (0xffff) in order to reserve FREE_UPVAR_COOKIE
+     * (0xffffffff) and other cookies with that level.
+     *
+     * This is a lot simpler than error-checking every MAKE_UPVAR_COOKIE, and
+     * practically speaking it leaves more than enough room for upvars. In fact
+     * we might want to split cookie fields giving fewer bits for skip and more
+     * for slot, but only based on evidence.
      */
-    if (staticLevel >= JS_BITMASK(16)) {
+    if (staticLevel >= FREE_STATIC_LEVEL) {
         JS_ReportErrorNumber(tc->compiler->context, js_GetErrorMessage, NULL,
                              JSMSG_TOO_DEEP, js_function_str);
         return false;
@@ -2198,7 +2200,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSTreeContext *tc,
 
             if (atom == funAtom && lambda != 0) {
                 dn->pn_op = JSOP_CALLEE;
-                dn->pn_cookie = MAKE_UPVAR_COOKIE(funtc->staticLevel, 0);
+                dn->pn_cookie = MAKE_UPVAR_COOKIE(funtc->staticLevel, CALLEE_UPVAR_SLOT);
                 dn->pn_dflags |= PND_BOUND;
 
                 /*
@@ -2211,7 +2213,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSTreeContext *tc,
                  * code unfairly (see JSCompiler::setFunctionKinds, where this
                  * flag is interpreted in its broader sense, not only to mean
                  * "this function might leak arguments.callee"), we can perhaps
-                 * try to work harder to add a TCF_FUN_CALLS_ITSELF flag and
+                 * try to work harder to add a TCF_FUN_LEAKS_ITSELF flag and
                  * use that more precisely, both here and for unnamed function
                  * expressions.
                  */
@@ -7875,7 +7877,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         } else if (!afterDot && !(ts->flags & TSF_DESTRUCTURING)) {
             JSAtomListElement *ale = NULL;
             JSTreeContext *tcx = tc;
-            bool hit_named_lambda = false;
             JSDefinition *dn;
 
             do {
@@ -7898,10 +7899,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 }
 
                 /* If this id names the current lambda's name, we are done. */
-                if ((tc->flags & TCF_IN_FUNCTION) &&
-                    (tc->fun->flags & JSFUN_LAMBDA) &&
-                    tc->fun->atom == pn->pn_atom) {
-                    hit_named_lambda = true;
+                if ((tcx->flags & TCF_IN_FUNCTION) &&
+                    (tcx->fun->flags & JSFUN_LAMBDA) &&
+                    tcx->fun->atom == pn->pn_atom) {
                     break;
                 }
             } while ((tcx = tcx->parent) != NULL);
@@ -7950,14 +7950,17 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              * a backward definition appears later; see NewBindingNode/Define).
              *
              * (b) If pn names the named function expression whose body we are
-             * parsing, there's no way an upvar could be referenced here.
+             * parsing, there's no way an upvar above tcx's static level could
+             * be referenced here. However, we add to upvars anyway, to treat
+             * the function's name as an upvar in case it is used in a nested
+             * function.
              *
              * (a) is is an optimization to handle forward upvar refs. Without
              * it, if we add only a lexdep, then inner functions making forward
              * refs to upvars will lose track of those upvars as their lexdeps
              * entries are propagated upward to their parent functions.
              */
-            if (tcx != tc && !hit_named_lambda) {
+            if (tcx != tc) {
                 ale = tc->upvars.add(tc->compiler, pn->pn_atom);
                 if (!ale)
                     return NULL;

@@ -2054,6 +2054,34 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
     return JS_TRUE;
 }
 
+jsval
+js_GetUpvar(JSContext *cx, uintN level, uintN cookie)
+{
+    level -= UPVAR_FRAME_SKIP(cookie);
+    JS_ASSERT(level < JS_DISPLAY_SIZE);
+
+    JSStackFrame *fp = cx->display[level];
+    JS_ASSERT(fp->script);
+
+    uintN slot = UPVAR_FRAME_SLOT(cookie);
+    jsval *vp;
+
+    if (!fp->fun) {
+        vp = fp->slots + fp->script->nfixed;
+    } else if (slot < fp->fun->nargs) {
+        vp = fp->argv;
+    } else if (slot == CALLEE_UPVAR_SLOT) {
+        vp = &fp->argv[-2];
+        slot = 0;
+    } else { 
+        slot -= fp->fun->nargs;
+        JS_ASSERT(slot < fp->script->nslots);
+        vp = fp->slots;
+    }
+
+    return vp[slot];
+}
+
 #ifdef DEBUG
 
 JS_STATIC_INTERPRET JS_REQUIRES_STACK void
@@ -2488,6 +2516,80 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 # else
 #  define JS_THREADED_INTERP 0
 # endif
+#endif
+
+/*
+ * Deadlocks or else bad races are likely if JS_THREADSAFE, so we must rely on
+ * single-thread DEBUG js shell testing to verify property cache hits.
+ */
+#if defined DEBUG && !defined JS_THREADSAFE
+
+# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry)                \
+    JS_BEGIN_MACRO                                                            \
+        if (!AssertValidPropertyCacheHit(cx, script, regs, pcoff, obj, pobj,  \
+                                         entry)) {                            \
+            goto error;                                                       \
+        }                                                                     \
+    JS_END_MACRO
+
+static bool
+AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
+                            ptrdiff_t pcoff, JSObject *start, JSObject *found,
+                            JSPropCacheEntry *entry)
+{
+    uint32 sample = cx->runtime->gcNumber;
+
+    JSAtom *atom;
+    if (pcoff >= 0)
+        GET_ATOM_FROM_BYTECODE(script, regs.pc, pcoff, atom);
+    else
+        atom = cx->runtime->atomState.lengthAtom;
+
+    JSObject *obj, *pobj;
+    JSProperty *prop;
+    bool ok;
+
+    if (JOF_OPMODE(*regs.pc) == JOF_NAME) {
+        ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &pobj, &prop);
+    } else {
+        obj = start;
+        ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
+    }
+    if (!ok)
+        return false;
+    if (!prop)
+        return true;
+    if (cx->runtime->gcNumber != sample ||
+        PCVCAP_SHAPE(entry->vcap) != OBJ_SHAPE(pobj)) {
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        return true;
+    }
+    JS_ASSERT(prop);
+    JS_ASSERT(pobj == found);
+
+    JSScopeProperty *sprop = (JSScopeProperty *) prop;
+    if (PCVAL_IS_SLOT(entry->vword)) {
+        JS_ASSERT(PCVAL_TO_SLOT(entry->vword) == sprop->slot);
+    } else if (PCVAL_IS_SPROP(entry->vword)) {
+        JS_ASSERT(PCVAL_TO_SPROP(entry->vword) == sprop);
+    } else {
+        jsval v;
+        JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));
+        JS_ASSERT(entry->vword != PCVAL_NULL);
+        JS_ASSERT(SCOPE_IS_BRANDED(OBJ_SCOPE(pobj)));
+        JS_ASSERT(SPROP_HAS_STUB_GETTER(sprop));
+        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
+        v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+        JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
+        JS_ASSERT(PCVAL_TO_OBJECT(entry->vword) == JSVAL_TO_OBJECT(v));
+    }
+
+    OBJ_DROP_PROPERTY(cx, pobj, prop);
+    return true;
+}
+
+#else
+# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry) ((void) 0)
 #endif
 
 /*
@@ -3472,58 +3574,6 @@ js_Interpret(JSContext *cx)
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
-
-/*
- * Deadlocks or else bad races are likely if JS_THREADSAFE, so we must rely on
- * single-thread DEBUG js shell testing to verify property cache hits.
- */
-#if defined DEBUG && !defined JS_THREADSAFE
-# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry)                \
-    do {                                                                      \
-        JSAtom *atom_;                                                        \
-        JSObject *obj_, *pobj_;                                               \
-        JSProperty *prop_;                                                    \
-        JSScopeProperty *sprop_;                                              \
-        uint32 sample_ = rt->gcNumber;                                        \
-        if (pcoff >= 0)                                                       \
-            GET_ATOM_FROM_BYTECODE(script, regs.pc, pcoff, atom_);            \
-        else                                                                  \
-            atom_ = rt->atomState.lengthAtom;                                 \
-        if (JOF_OPMODE(op) == JOF_NAME) {                                     \
-            ok = js_FindProperty(cx, ATOM_TO_JSID(atom_), &obj_, &pobj_,      \
-                                 &prop_);                                     \
-        } else {                                                              \
-            obj_ = obj;                                                       \
-            ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(atom_), &pobj_,      \
-                                   &prop_);                                   \
-        }                                                                     \
-        if (!ok)                                                              \
-            goto error;                                                       \
-        if (rt->gcNumber != sample_)                                          \
-            break;                                                            \
-        JS_ASSERT(prop_);                                                     \
-        JS_ASSERT(pobj_ == pobj);                                             \
-        sprop_ = (JSScopeProperty *) prop_;                                   \
-        if (PCVAL_IS_SLOT(entry->vword)) {                                    \
-            JS_ASSERT(PCVAL_TO_SLOT(entry->vword) == sprop_->slot);           \
-        } else if (PCVAL_IS_SPROP(entry->vword)) {                            \
-            JS_ASSERT(PCVAL_TO_SPROP(entry->vword) == sprop_);                \
-        } else {                                                              \
-            jsval v_;                                                         \
-            JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));                         \
-            JS_ASSERT(entry->vword != PCVAL_NULL);                            \
-            JS_ASSERT(SCOPE_IS_BRANDED(OBJ_SCOPE(pobj)));                     \
-            JS_ASSERT(SPROP_HAS_STUB_GETTER(sprop_));                         \
-            JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop_, OBJ_SCOPE(pobj_)));        \
-            v_ = LOCKED_OBJ_GET_SLOT(pobj_, sprop_->slot);                    \
-            JS_ASSERT(VALUE_IS_FUNCTION(cx, v_));                             \
-            JS_ASSERT(PCVAL_TO_OBJECT(entry->vword) == JSVAL_TO_OBJECT(v_));  \
-        }                                                                     \
-        OBJ_DROP_PROPERTY(cx, pobj_, prop_);                                  \
-    } while (0)
-#else
-# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry) ((void) 0)
-#endif
 
 /*
  * Skip the JSOP_POP typically found after a JSOP_SET* opcode, where oplen is
@@ -5660,29 +5710,14 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_GETUPVAR)
           BEGIN_CASE(JSOP_CALLUPVAR)
           {
-            JSUpvarArray *uva;
-            uint32 skip;
-            JSStackFrame *fp2;
+            JSUpvarArray *uva = JS_SCRIPT_UPVARS(script);
 
             index = GET_UINT16(regs.pc);
-            uva = JS_SCRIPT_UPVARS(script);
             JS_ASSERT(index < uva->length);
-            skip = UPVAR_FRAME_SKIP(uva->vector[index]);
-            fp2 = cx->display[script->staticLevel - skip];
-            JS_ASSERT(fp2->script);
 
-            slot = UPVAR_FRAME_SLOT(uva->vector[index]);
-            if (!fp2->fun) {
-                vp = fp2->slots + fp2->script->nfixed;
-            } else if (slot < fp2->fun->nargs) {
-                vp = fp2->argv;
-            } else {
-                slot -= fp2->fun->nargs;
-                JS_ASSERT(slot < fp2->script->nslots);
-                vp = fp2->slots;
-            }
+            rval = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+            PUSH_OPND(rval);
 
-            PUSH_OPND(vp[slot]);
             if (op == JSOP_CALLUPVAR)
                 PUSH_OPND(JSVAL_NULL);
           }

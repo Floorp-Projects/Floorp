@@ -871,7 +871,7 @@ def getTraceInfoDefaultReturn(type):
 def getFailureString(retval, indent):
     assert indent > 0
     ret = " " * (4 * indent)
-    ret += "cx->builtinStatus |= JSBUILTIN_ERROR;\n"
+    ret += "js_SetTraceableNativeFailed(cx);\n"
     ret += " " * (4 * indent)
     ret += "return %s;\n" % retval
     ret += " " * (4 * (indent - 1))
