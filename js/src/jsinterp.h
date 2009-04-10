@@ -527,6 +527,13 @@ extern JSBool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
 
 /*
+ * Given an active context, a static scope level, and an upvar cookie, return
+ * the value of the upvar.
+ */
+extern jsval
+js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
+
+/*
  * JS_LONE_INTERPRET indicates that the compiler should see just the code for
  * the js_Interpret function when compiling jsinterp.cpp. The rest of the code
  * from the file should be visible only when compiling jsinvoke.cpp. It allows

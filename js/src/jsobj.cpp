@@ -1697,7 +1697,7 @@ Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
         !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v)) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
+        js_SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
@@ -1742,7 +1742,7 @@ Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
     jsval v;
 
     if (!js_PropertyIsEnumerable(cx, obj, id, &v)) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
+        js_SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
@@ -4487,6 +4487,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     }
 
     if (!sprop) {
+        /* We should never add properties to lexical blocks.  */
+        JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_BlockClass);
+
         /*
          * Purge the property cache of now-shadowed id in obj's scope chain.
          * Do this early, before locking obj to avoid nesting locks.
