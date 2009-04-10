@@ -113,7 +113,6 @@ URL             Uniform Resource Locator
 UTF-8           Unicode Transformation Format
 Unisys
 Verisign
-WIN16           Windows
 WIN32           Windows
 WINNT           Windows NT
 Windows
