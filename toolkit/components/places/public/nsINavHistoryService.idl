@@ -625,7 +625,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(eacb76eb-3eeb-419b-a963-9b3a9d65f356)]
+[scriptable, uuid(14065711-8a91-4d96-ba32-59512f5401b6)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -678,6 +678,15 @@ interface nsINavHistoryObserver : nsISupports
    *
    */
   void onTitleChanged(in nsIURI aURI, in AString aPageTitle);
+
+  /**
+   * This page and all of its visits are about to be deleted.  Note: the page
+   * may not necessarily have actually existed for this function to be called.
+   *
+   * @param aURI
+   *        The URI being deleted.
+   */
+  void onBeforeDeleteURI(in nsIURI aURI);
 
   /**
    * This page and all of its visits are being deleted. Note: the page may not

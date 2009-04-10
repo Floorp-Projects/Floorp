@@ -2770,6 +2770,12 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
 }
 
 
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnBeforeDeleteURI(nsIURI *aURI)
+{
+  return NS_OK;
+}
+
 // nsNavHistoryQueryResultNode::OnDeleteURI
 //
 //    Here, we can always live update by just deleting all occurrences of
@@ -4341,6 +4347,14 @@ NS_IMETHODIMP
 nsNavHistoryResult::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle)
 {
   ENUMERATE_HISTORY_OBSERVERS(OnTitleChanged(aURI, aPageTitle));
+  return NS_OK;
+}
+
+
+// nsNavHistoryResult::OnBeforeDeleteURI (nsINavHistoryObserver)
+NS_IMETHODIMP
+nsNavHistoryResult::OnBeforeDeleteURI(nsIURI *aURI)
+{
   return NS_OK;
 }
 
