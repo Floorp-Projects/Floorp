@@ -58,10 +58,10 @@ class nsICSSImportRule;
 class nsIPrincipal;
 
 // IID for the nsICSSLoader interface
-// 51735c82-f3d9-4237-9a81-f5bdaf4865c5
+// 33c469dd-af03-4098-9984-b13cee34d86a
 #define NS_ICSS_LOADER_IID     \
-{ 0x51735c82, 0xf3d9, 0x4237, \
- { 0x9a, 0x81, 0xf5, 0xbd, 0xaf, 0x48, 0x65, 0xc5 } }
+{ 0x33c469dd, 0xaf03, 0x4098, \
+ { 0x99, 0x84, 0xb1, 0x3c, 0xee, 0x34, 0xd8, 0x6a } }
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
