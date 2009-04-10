@@ -110,9 +110,6 @@ public:
 
 protected:
 
-  virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
-  virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
-
   NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
 #ifdef DEBUG_LAYOUT

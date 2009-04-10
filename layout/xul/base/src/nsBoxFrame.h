@@ -59,7 +59,7 @@ class nsBoxLayoutState;
 #define NS_STATE_CURRENTLY_IN_DEBUG      0x02000000
 //#define NS_STATE_SET_TO_DEBUG            0x04000000  moved to nsBox.h
 //#define NS_STATE_DEBUG_WAS_SET           0x08000000  moved to nsBox.h
-#define NS_STATE_IS_COLLAPSED            0x10000000
+//                                         0x10000000  not used anymore
 #define NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK 0x20000000
 #define NS_STATE_EQUAL_SIZE              0x40000000
 //#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000  moved to nsIFrame.h
@@ -232,9 +232,6 @@ protected:
     void PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
                               nsPoint aPt);
 #endif
-
-    virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
-    virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
 
     virtual PRBool GetInitialEqualSize(PRBool& aEqualSize); 
     virtual void GetInitialOrientation(PRBool& aIsHorizontal);
