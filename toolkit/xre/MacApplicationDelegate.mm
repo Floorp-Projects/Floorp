@@ -157,18 +157,10 @@ SetupMacApplicationDelegate()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  FSRef ref;
-  // The cast is kind of freaky, but apparently it's what all the beautiful people do.
-  OSStatus status = FSPathMakeRef((UInt8 *)[filename fileSystemRepresentation], &ref, NULL);
-  if (status != noErr) {
-    NS_WARNING("FSPathMakeRef in openFile failed, skipping file open");
-    return NO;
-  }
-
   // Take advantage of the existing "command line" code for Macs.
   nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
   // We don't actually care about Mac filetypes in this context, just pass a placeholder.
-  cmdLine.HandleOpenOneDoc(&ref, 'abcd');
+  cmdLine.HandleOpenOneDoc((CFURLRef)[NSURL URLWithString:filename], 'abcd');
 
   return YES;
 
@@ -183,18 +175,10 @@ SetupMacApplicationDelegate()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  FSRef ref;
-  // The cast is kind of freaky, but apparently it's what all the beautiful people do.
-  OSStatus status = FSPathMakeRef((UInt8 *)[filename fileSystemRepresentation], &ref, NULL);
-  if (status != noErr) {
-    NS_WARNING("FSPathMakeRef in printFile failed, skipping printing");
-    return NO;
-  }
-
   // Take advantage of the existing "command line" code for Macs.
   nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
   // We don't actually care about Mac filetypes in this context, just pass a placeholder.
-  cmdLine.HandlePrintOneDoc(&ref, 'abcd');
+  cmdLine.HandlePrintOneDoc((CFURLRef)[NSURL URLWithString:filename], 'abcd');
 
   return YES;
 

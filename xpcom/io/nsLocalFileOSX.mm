@@ -2394,6 +2394,24 @@ nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef, PRBool aFollowLinks, nsIL
     return NS_OK;
 }
 
+nsresult NS_NewLocalFileWithCFURL(const CFURLRef aURL, PRBool aFollowLinks, nsILocalFileMac** result)
+{
+  nsLocalFile* file = new nsLocalFile();
+  if (file == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(file);
+
+  file->SetFollowLinks(aFollowLinks);
+
+  nsresult rv = file->InitWithCFURL(aURL);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(file);
+    return rv;
+  }
+  *result = file;
+  return NS_OK;
+}
+
 #pragma mark -
 #pragma mark [Static Functions]
 
