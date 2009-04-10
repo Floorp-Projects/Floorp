@@ -1991,3 +1991,11 @@ void nsOggDecoder::StartProgressUpdates()
     mDecoderPosition = mPlaybackPosition = mReader->Stream()->Tell();
   }
 }
+
+void nsOggDecoder::MoveLoadsToBackground()
+{
+  if (mReader && mReader->Stream()) {
+    mReader->Stream()->MoveLoadsToBackground();
+  }
+}
+
