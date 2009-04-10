@@ -1496,9 +1496,15 @@ static gint
 moz_gtk_caret_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect, GtkTextDirection direction)
 {
+    GdkRectangle location = *rect;
+    if (direction == GTK_TEXT_DIR_RTL) {
+        /* gtk_draw_insertion_cursor ignores location.width */
+        location.x = rect->x + rect->width;
+    }
+
     ensure_entry_widget();
     gtk_draw_insertion_cursor(gEntryWidget, drawable, cliprect,
-                              rect, TRUE, direction, FALSE);
+                              &location, TRUE, direction, FALSE);
 
     return MOZ_GTK_SUCCESS;
 }
