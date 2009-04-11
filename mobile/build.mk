@@ -55,7 +55,11 @@ installer:
 	@$(MAKE) -C mobile/installer installer
 
 package:
+ifeq ($(OS_TARGET),WINCE)
+	@$(MAKE) -C mobile/installer installer
+else
 	@$(MAKE) -C mobile/installer
+endif
 
 install::
 	@echo "Mobile can't be installed directly."
