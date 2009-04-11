@@ -681,7 +681,8 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp);
 
 extern JS_REQUIRES_STACK JSObject *
-js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry);
+js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id,
+                      JSPropCacheEntry *entry);
 
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
@@ -711,8 +712,8 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
              JSPropCacheEntry **entryp);
 
 extern JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
-                     JSPropCacheEntry **entryp);
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
+                     JSBool unqualified, jsval *vp, JSPropCacheEntry **entryp);
 
 extern JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
