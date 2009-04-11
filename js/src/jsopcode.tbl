@@ -554,9 +554,9 @@ OPDEF(JSOP_LENGTH,        221, "length",       NULL,  1,  1,  1, 18,  JOF_BYTE|J
  * stack, consuming those values and replacing them with the newly-constructed
  * array.  The topmost value is the last value in the new array, and the
  * bottommost value is the first value in the array; the array length is a
- * 24-bit immediate operand to the instruction.
+ * 16-bit immediate operand to the instruction.
  */
-OPDEF(JSOP_NEWARRAY,      222, "newarray",     NULL,  4, -1,  1, 19,  JOF_UINT24)
+OPDEF(JSOP_NEWARRAY,      222, "newarray",     NULL,  3, -1,  1, 19,  JOF_UINT16)
 
 /*
  * Push a JSVAL_HOLE value onto the stack, representing an omitted property in

@@ -7180,7 +7180,9 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEW()
 {
-    return functionCall(true, GET_ARGC(cx->fp->regs->pc));
+    uintN argc = GET_ARGC(cx->fp->regs->pc);
+    cx->fp->assertValidStackDepth(argc + 2);
+    return functionCall(true, argc);
 }
 
 JS_REQUIRES_STACK bool
@@ -7893,7 +7895,9 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_CALL()
 {
-    return functionCall(false, GET_ARGC(cx->fp->regs->pc));
+    uintN argc = GET_ARGC(cx->fp->regs->pc);
+    cx->fp->assertValidStackDepth(argc + 2);
+    return functionCall(false, argc);
 }
 
 static jsbytecode* apply_imacro_table[] = {
@@ -7926,8 +7930,9 @@ TraceRecorder::record_JSOP_APPLY()
     JSStackFrame* fp = cx->fp;
     jsbytecode *pc = fp->regs->pc;
     uintN argc = GET_ARGC(pc);
+    cx->fp->assertValidStackDepth(argc + 2);
+
     jsval* vp = fp->regs->sp - (argc + 2);
-    JS_ASSERT(vp >= StackBase(fp));
     jsuint length = 0;
     JSObject* aobj = NULL;
     LIns* aobj_ins = NULL;
@@ -9919,7 +9924,9 @@ TraceRecorder::record_JSOP_NEWARRAY()
     if (!getClassPrototype(JSProto_Array, proto_ins))
         return false;
 
-    uint32 len = GET_UINT24(cx->fp->regs->pc);
+    uint32 len = GET_UINT16(cx->fp->regs->pc);
+    cx->fp->assertValidStackDepth(len);
+
     LIns* args[] = { lir->insImm(len), proto_ins, cx_ins };
     LIns* v_ins = lir->insCall(&js_NewUninitializedArray_ci, args);
     guard(false, lir->ins_eq0(v_ins), OOM_EXIT);

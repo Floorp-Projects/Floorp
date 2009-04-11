@@ -214,7 +214,7 @@ js_GetVariableStackUses(JSOp op, jsbytecode *pc)
       case JSOP_LEAVEBLOCKEXPR:
         return GET_UINT16(pc) + 1;
       case JSOP_NEWARRAY:
-        return GET_UINT24(pc);
+        return GET_UINT16(pc);
       default:
         /* stack: fun, this, [argc arguments] */
         JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL ||
@@ -4357,7 +4357,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_NEWARRAY:
-                argc = GET_UINT24(pc);
+                argc = GET_UINT16(pc);
                 LOCAL_ASSERT(ss->top >= (uintN) argc);
                 if (argc == 0) {
                     todo = SprintCString(&ss->sprinter, "[]");

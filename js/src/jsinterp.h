@@ -132,6 +132,14 @@ struct JSStackFrame {
 #ifdef DEBUG
     jsrefcount      pcDisabledSave; /* for balanced property cache control */
 #endif
+
+#ifdef __cplusplus /* Aargh, LiveConnect, bug 442399. */
+    void assertValidStackDepth(uintN depth) {
+        extern jsval *StackBase(JSStackFrame *fp);
+        JS_ASSERT(0 <= regs->sp - StackBase(this));
+        JS_ASSERT(depth <= uintptr_t(regs->sp - StackBase(this)));
+    }
+#endif
 };
 
 #ifdef __cplusplus
