@@ -492,7 +492,7 @@ HistoryTracker.prototype = {
   },
 
   _init: function HT__init() {
-    Tracker._init.call(this);
+    Tracker.prototype._init.call(this);
     this._hsvc.addObserver(this, false);
   },
 
