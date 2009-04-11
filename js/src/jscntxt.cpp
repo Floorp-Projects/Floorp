@@ -1607,7 +1607,7 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
 #if defined DEBUG && defined XP_UNIX
 /* For gdb usage. */
-void js_traceon(JSContext *cx)  { cx->tracefp = stderr; cx->tracePrevOp = JSOP_LIMIT; }
+void js_traceon(JSContext *cx)  { cx->tracefp = stderr; cx->tracePrevPc = NULL; }
 void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
 #endif
 

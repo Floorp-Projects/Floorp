@@ -261,7 +261,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
 
 /*
- * Flags to propagate from FunctionBody.
+ * Sticky deoptimization flags to propagate from FunctionBody.
  */
 #define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
                                  TCF_FUN_USES_ARGUMENTS  |                    \
