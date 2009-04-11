@@ -29,7 +29,6 @@
 <!ENTITY helpReleaseNotes.label         "Release Notes">
 <!ENTITY helpReleaseNotes.accesskey     "N">
 <!ENTITY updateCmd.label                "Check for Updates…">
-<!ENTITY updateCmd.accesskey            "o">
 
 <!ENTITY preferencesCmdMac.label        "Preferences…">
 <!ENTITY preferencesCmdMac.commandkey   ",">
