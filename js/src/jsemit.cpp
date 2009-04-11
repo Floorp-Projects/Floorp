@@ -6274,32 +6274,40 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_ARRAYCOMP:
 #endif
         /*
-         * Emit code for [a, b, c] of the form:
+         * Emit code for [a, b, c] that is equivalent to constructing a new
+         * array and in source order evaluating each element value and adding
+         * it to the array, without invoking latent setters.  We use the
+         * JSOP_NEWINIT and JSOP_INITELEM bytecodes to ignore setters and to
+         * avoid dup'ing and popping the array as each element is added, as
+         * JSOP_SETELEM/JSOP_SETPROP would do.
          *
-         *   t = new Array; t[0] = a; t[1] = b; t[2] = c; t;
-         *
-         * but use a stack slot for t and avoid dup'ing and popping it using
-         * the JSOP_NEWINIT and JSOP_INITELEM bytecodes.
-         *
-         * If no sharp variable is defined and the initialiser is not for an
-         * array comprehension, use JSOP_NEWARRAY.
+         * If no sharp variable is defined, the initializer is not for an array
+         * comprehension, the initializer is not overlarge, and the initializer
+         * is not in global code (whose stack growth cannot be precisely modeled
+         * due to the need to reserve space for global variables and regular
+         * expressions), use JSOP_NEWARRAY to minimize opcodes and to create the
+         * array using a fast, all-at-once process rather than a slow, element-
+         * by-element process.
          */
 #if JS_HAS_SHARP_VARS
         sharpnum = -1;
       do_emit_array:
 #endif
 
-#if JS_HAS_GENERATORS || JS_HAS_SHARP_VARS
-        op = JSOP_NEWARRAY;
-# if JS_HAS_GENERATORS
+        op = (JS_LIKELY(pn->pn_count < JS_BIT(16)) && (cg->flags & TCF_IN_FUNCTION))
+             ? JSOP_NEWARRAY
+             : JSOP_NEWINIT;
+
+#if JS_HAS_GENERATORS
         if (pn->pn_type == TOK_ARRAYCOMP)
             op = JSOP_NEWINIT;
-# endif
-# if JS_HAS_SHARP_VARS
+#endif
+#if JS_HAS_SHARP_VARS
         JS_ASSERT_IF(sharpnum >= 0, cg->flags & TCF_HAS_SHARPS);
         if (cg->flags & TCF_HAS_SHARPS)
             op = JSOP_NEWINIT;
-# endif
+#endif
+
         if (op == JSOP_NEWINIT) {
             if (js_Emit2(cx, cg, op, (jsbytecode) JSProto_Array) < 0)
                 return JS_FALSE;
@@ -6308,7 +6316,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) sharpnum);
 # endif
         }
-#endif
 
 #if JS_HAS_GENERATORS
         if (pn->pn_type == TOK_ARRAYCOMP) {
@@ -6335,10 +6342,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         pn2 = pn->pn_head;
         for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
-#if JS_HAS_SHARP_VARS
             if (op == JSOP_NEWINIT && !EmitNumberOp(cx, atomIndex, cg))
                 return JS_FALSE;
-#endif
             if (pn2->pn_type == TOK_COMMA) {
                 if (js_Emit1(cx, cg, JSOP_HOLE) < 0)
                     return JS_FALSE;
@@ -6346,10 +6351,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
             }
-#if JS_HAS_SHARP_VARS
             if (op == JSOP_NEWINIT && js_Emit1(cx, cg, JSOP_INITELEM) < 0)
                 return JS_FALSE;
-#endif
         }
         JS_ASSERT(atomIndex == pn->pn_count);
 
@@ -6359,20 +6362,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
         }
 
-#if JS_HAS_SHARP_VARS
         if (op == JSOP_NEWINIT) {
-            /* Emit an op for sharp array cleanup and decompilation. */
+            /*
+             * Emit an op to finish the array and, secondarily, to aid in sharp
+             * array cleanup (if JS_HAS_SHARP_VARS) and decompilation.
+             */
             if (js_Emit1(cx, cg, JSOP_ENDINIT) < 0)
                 return JS_FALSE;
             break;
         }
-#endif
-        off = js_EmitN(cx, cg, JSOP_NEWARRAY, 3);
-        if (off < 0)
-            return JS_FALSE;
-        pc = CG_CODE(cg, off);
-        SET_UINT24(pc, atomIndex);
-        UpdateDepth(cx, cg, off);
+
+        JS_ASSERT(atomIndex < JS_BIT(16));
+        EMIT_UINT16_IMM_OP(JSOP_NEWARRAY, atomIndex);
         break;
 
       case TOK_RC:
@@ -6388,12 +6389,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
         /*
-         * Emit code for {p:a, '%q':b, 2:c} of the form:
-         *
-         *   t = new Object; t.p = a; t['%q'] = b; t[2] = c; t;
-         *
-         * but use a stack slot for t and avoid dup'ing and popping it via
-         * the JSOP_NEWINIT and JSOP_INITELEM/JSOP_INITPROP bytecodes.
+         * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
+         * a new object and in source order evaluating each property value and
+         * adding the property to the object, without invoking latent setters.
+         * We use the JSOP_NEWINIT and JSOP_INITELEM/JSOP_INITPROP bytecodes to
+         * ignore setters and to avoid dup'ing and popping the object as each
+         * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
          */
         if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) JSProto_Object) < 0)
             return JS_FALSE;
