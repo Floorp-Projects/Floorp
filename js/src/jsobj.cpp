@@ -4070,45 +4070,68 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 }
 
 JS_REQUIRES_STACK JSObject *
-js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry)
+js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id,
+                      JSPropCacheEntry *entry)
 {
-    JSObject *obj, *pobj;
-    JSProperty *prop;
+    /*
+     * This function should not be called for a global object or from the
+     * trace and should have a valid cache entry for native scopeChain.
+     */
+    JSObject *parent = OBJ_GET_PARENT(cx, scopeChain);
+    JS_ASSERT(parent);
+    JS_ASSERT(!JS_ON_TRACE(cx));
+    JS_ASSERT_IF(OBJ_IS_NATIVE(scopeChain), entry);
 
     /*
-     * Look for id's property along the "with" statement chain and the
-     * statically-linked scope chain.
+     * Optimize and cache only for classes that do not have resolve hooks and
+     * where the prototype is used only to implement a shared scope, bug 462734
+     * and bug 487039.
      */
-    if (js_FindPropertyHelper(cx, id, &obj, &pobj, &prop, &entry) < 0)
-        return NULL;
-    if (prop) {
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
-        return obj;
-    }
+    JSObject *obj = scopeChain;
+    for (int scopeIndex = 0; ; scopeIndex++) {
+        JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+        if (clasp != &js_CallClass && clasp != &js_BlockClass)
+            break;
 
-    /*
-     * Use the top-level scope from the scope chain, which won't end in the
-     * same scope as cx->globalObject for cross-context function calls.
-     */
-    JS_ASSERT(obj);
-
-    /*
-     * Property not found.  Give a strict warning if binding an undeclared
-     * top-level variable.
-     */
-    if (JS_HAS_STRICT_OPTION(cx)) {
-        JSString *str = JSVAL_TO_STRING(ID_TO_VALUE(id));
-        const char *bytes = js_GetStringBytes(cx, str);
-
-        if (!bytes ||
-            !JS_ReportErrorFlagsAndNumber(cx,
-                                          JSREPORT_WARNING | JSREPORT_STRICT,
-                                          js_GetErrorMessage, NULL,
-                                          JSMSG_UNDECLARED_VAR, bytes)) {
+        JSObject *pobj;
+        JSProperty *prop;
+        int protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0,
+                                                    &pobj, &prop);
+        if (protoIndex < 0)
             return NULL;
+        if (prop) {
+            JS_ASSERT(OBJ_IS_NATIVE(pobj));
+            JS_ASSERT(OBJ_GET_CLASS(cx, pobj) == clasp);
+            js_FillPropertyCache(cx, scopeChain, OBJ_SHAPE(scopeChain),
+                                 scopeIndex, protoIndex, pobj,
+                                 (JSScopeProperty *) prop, &entry);
+            JS_UNLOCK_OBJ(cx, pobj);
+            return obj;
+        }
+
+        obj = parent;
+        parent = OBJ_GET_PARENT(cx, parent);
+        if (!parent) {
+            /*
+             * Here obj is the global one and we can skip any checks for it,
+             * see comments in the JSOP_BINDNAME case of js_Interpret.
+             */
+            return obj;
         }
     }
 
+    do {
+        JSObject *pobj;
+        JSProperty *prop;
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
+            return NULL;
+        if (prop) {
+            OBJ_DROP_PROPERTY(cx, pobj, prop);
+            break;
+        }
+        obj = parent;
+        parent = OBJ_GET_PARENT(cx, parent);
+    } while (parent);
     return obj;
 }
 
@@ -4337,8 +4360,8 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 }
 
 JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
-                     JSPropCacheEntry **entryp)
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
+                     JSBool unqualified, jsval *vp, JSPropCacheEntry **entryp)
 {
     uint32 shape;
     int protoIndex;
@@ -4368,10 +4391,28 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                                             &pobj, &prop);
     if (protoIndex < 0)
         return JS_FALSE;
+    if (prop) {
+        if (!OBJ_IS_NATIVE(pobj)) {
+            OBJ_DROP_PROPERTY(cx, pobj, prop);
+            prop = NULL;
+        }
+    } else {
+        /* We should never add properties to lexical blocks.  */
+        JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_BlockClass);
 
-    if (prop && !OBJ_IS_NATIVE(pobj)) {
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
-        prop = NULL;
+        if (unqualified && !OBJ_GET_PARENT(cx, obj) &&
+            JS_HAS_STRICT_OPTION(cx)) {
+            JSString *str = JSVAL_TO_STRING(ID_TO_VALUE(id));
+            const char *bytes = js_GetStringBytes(cx, str);
+            if (!bytes ||
+                !JS_ReportErrorFlagsAndNumber(cx,
+                                              JSREPORT_WARNING |
+                                              JSREPORT_STRICT,
+                                              js_GetErrorMessage, NULL,
+                                              JSMSG_UNDECLARED_VAR, bytes)) {
+                return NULL;
+            }
+        }
     }
     sprop = (JSScopeProperty *) prop;
 
@@ -4487,9 +4528,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     }
 
     if (!sprop) {
-        /* We should never add properties to lexical blocks.  */
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_BlockClass);
-
         /*
          * Purge the property cache of now-shadowed id in obj's scope chain.
          * Do this early, before locking obj to avoid nesting locks.
@@ -4549,7 +4587,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    return js_SetPropertyHelper(cx, obj, id, vp, NULL);
+    return js_SetPropertyHelper(cx, obj, id, false, vp, NULL);
 }
 
 JSBool
