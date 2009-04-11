@@ -2104,9 +2104,10 @@ js_TraceOpcode(JSContext *cx)
      * Operations in prologues don't produce interesting values, and
      * js_DecompileValueGenerator isn't set up to handle them anyway.
      */
-    if (cx->tracePrevOp != JSOP_LIMIT && regs->pc >= fp->script->main) {
-        ndefs = js_GetStackDefs(cx, &js_CodeSpec[cx->tracePrevOp],
-                                cx->tracePrevOp, fp->script, regs->pc);
+    if (cx->tracePrevPc && regs->pc >= fp->script->main) {
+        JSOp tracePrevOp = JSOp(*cx->tracePrevPc);
+        ndefs = js_GetStackDefs(cx, &js_CodeSpec[tracePrevOp], tracePrevOp,
+                                fp->script, cx->tracePrevPc);
 
         /*
          * If there aren't that many elements on the stack, then 
@@ -2159,7 +2160,7 @@ js_TraceOpcode(JSContext *cx)
         }
         fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
     }
-    cx->tracePrevOp = op;
+    cx->tracePrevPc = regs->pc;
 
     /* It's nice to have complete traces when debugging a crash.  */
     fflush(tracefp);
@@ -3638,7 +3639,25 @@ js_Interpret(JSContext *cx)
             do {
                 JSPropCacheEntry *entry;
 
+                /*
+                 * We can skip the property lookup for the global object. If
+                 * the property does not exist anywhere on the scope chain,
+                 * JSOP_SETNAME adds the property to the global.
+                 *
+                 * As a consequence of this optimization for the global object
+                 * we run its JSRESOLVE_ASSIGNING-tolerant resolve hooks only
+                 * in JSOP_SETNAME, after the interpreter evaluates the right-
+                 * hand-side of the assignment, and not here.
+                 *
+                 * This should be transparent to the hooks because the script,
+                 * instead of name = rhs, could have used global.name = rhs
+                 * given a global object reference, which also calls the hooks
+                 * only after evaluating the rhs. We desire such resolve hook
+                 * equivalence between the two forms.
+                 */
                 obj = fp->scopeChain;
+                if (!OBJ_GET_PARENT(cx, obj))
+                    break;
                 if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
                     PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
                     if (!atom) {
@@ -3651,7 +3670,7 @@ js_Interpret(JSContext *cx)
                     LOAD_ATOM(0);
                 }
                 id = ATOM_TO_JSID(atom);
-                obj = js_FindIdentifierBase(cx, id, entry);
+                obj = js_FindIdentifierBase(cx, fp->scopeChain, id, entry);
                 if (!obj)
                     goto error;
             } while (0);
@@ -4757,8 +4776,10 @@ js_Interpret(JSContext *cx)
                     LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
                 if (entry) {
-                    if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
+                    if (!js_SetPropertyHelper(cx, obj, id, op == JSOP_SETNAME,
+                                              &rval, &entry)) {
                         goto error;
+                    }
 #ifdef JS_TRACER
                     if (entry)
                         TRACE_1(SetPropMiss, entry);
@@ -6252,8 +6273,8 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_HOLE)
 
           BEGIN_CASE(JSOP_NEWARRAY)
-            len = GET_UINT24(regs.pc);
-            JS_ASSERT(len <= regs.sp - StackBase(fp));
+            len = GET_UINT16(regs.pc);
+            cx->fp->assertValidStackDepth(len);
             obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
             if (!obj)
                 goto error;
@@ -6412,7 +6433,7 @@ js_Interpret(JSContext *cx)
                     goto error;
                 }
                 if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-                    ? !js_SetPropertyHelper(cx, obj, id, &rval, &entry)
+                    ? !js_SetPropertyHelper(cx, obj, id, false, &rval, &entry)
                     : !js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                                JSPROP_ENUMERATE, 0, 0, NULL,
                                                &entry)) {
@@ -7287,6 +7308,10 @@ js_Interpret(JSContext *cx)
      */
     ok &= js_UnwindScope(cx, fp, 0, ok || cx->throwing);
     JS_ASSERT(regs.sp == StackBase(fp));
+
+#ifdef DEBUG
+    cx->tracePrevPc = NULL;
+#endif
 
     if (inlineCallCount)
         goto inline_return;
