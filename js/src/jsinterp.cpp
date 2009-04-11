@@ -6253,8 +6253,8 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_HOLE)
 
           BEGIN_CASE(JSOP_NEWARRAY)
-            len = GET_UINT24(regs.pc);
-            JS_ASSERT(len <= regs.sp - StackBase(fp));
+            len = GET_UINT16(regs.pc);
+            cx->fp->assertValidStackDepth(len);
             obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
             if (!obj)
                 goto error;
