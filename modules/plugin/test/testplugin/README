@@ -19,6 +19,12 @@ above. The default solid color is completely transparent black (i.e., nothing).
 This specifies the color to use for drawmode="solid". The value should be 8 hex
 digits, 2 per channel in AARRGGBB format.
 
+== Generic API Tests ==
+
+* setUndefinedValueTest
+Attempts to set the value of an undefined variable (0x0) via NPN_SetValue,
+returns true if it succeeds and false if it doesn't. It should never succeed.
+
 == NPRuntime testing ==
 
 The test plugin object supports the following scriptable method:

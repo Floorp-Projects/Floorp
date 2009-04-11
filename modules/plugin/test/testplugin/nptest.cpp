@@ -60,6 +60,7 @@ static NPClass sNPClass;
 typedef bool (* ScriptableFunction)
   (NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
+static bool setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool lastReportedPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -69,6 +70,7 @@ static bool getClipRegionRectCount(NPObject* npobj, const NPVariant* args, uint3
 static bool getClipRegionRectEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
+  "setUndefinedValueTest",
   "identifierToStringTest",
   "queryPrivateModeState",
   "lastReportedPrivateModeState",
@@ -79,6 +81,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
+  setUndefinedValueTest,
   identifierToStringTest,
   queryPrivateModeState,
   lastReportedPrivateModeState,
@@ -600,6 +603,15 @@ scriptableConstruct(NPObject* npobj, const NPVariant* args, uint32_t argCount, N
 //
 // test functions
 //
+
+static bool
+setUndefinedValueTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  NPError err = NPN_SetValue(npp, (NPPVariable)0x0, 0x0);
+  BOOLEAN_TO_NPVARIANT((err == NPERR_NO_ERROR), *result);
+  return true;
+}
 
 static bool
 identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
