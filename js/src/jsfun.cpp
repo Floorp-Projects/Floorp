@@ -2767,7 +2767,7 @@ DestroyLocalNames(JSContext *cx, JSFunction *fun)
 {
     uintN n;
 
-    n = fun->nargs + fun->u.i.nvars;
+    n = JS_GET_LOCAL_NAME_COUNT(fun);
     if (n <= 1)
         return;
     if (n <= MAX_ARRAY_LOCALS)
