@@ -59,7 +59,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsDirectoryServiceDefs.h"
 
-#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #ifdef _WIN32_WINNT
 #undef _WIN32_WINNT
 #endif
@@ -89,7 +89,7 @@ struct ICONENTRY {
   PRUint32 ieFileOffset;
 };
 
-#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 typedef HRESULT (WINAPI*SHGetStockIconInfoPtr) (SHSTOCKICONID siid, UINT uFlags, SHSTOCKICONINFO *psii);
 
 // Match stock icons with names
@@ -393,7 +393,7 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
 #endif
 }
 
-#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 nsresult nsIconChannel::GetStockHIcon(nsIMozIconURI *aIconURI, HICON *hIcon)
 {
   nsresult rv = NS_OK;
@@ -447,7 +447,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
 #ifndef WINCE
   HICON hIcon = NULL;
 
-#ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   nsCOMPtr<nsIMozIconURI> iconURI(do_QueryInterface(mUrl, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 

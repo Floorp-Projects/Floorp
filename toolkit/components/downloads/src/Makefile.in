@@ -75,13 +75,10 @@ CPPSRCS   = \
     nsDownloadManager.cpp \
     $(NULL)
 
-ifndef MOZ_DISABLE_VISTA_SDK_REQUIREMENTS
 ifndef GNU_CXX
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsDownloadScanner.cpp
 REQUIRES += xulapp
-DEFINES += -DDOWNLOAD_SCANNER
-endif
 endif
 endif
 

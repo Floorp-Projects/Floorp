@@ -68,11 +68,11 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
 
 nsOSHelperAppService::nsOSHelperAppService() : 
   nsExternalHelperAppService()
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   , mAppAssoc(nsnull)
 #endif
 {
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   CoInitialize(NULL);
   CoCreateInstance(CLSID_ApplicationAssociationRegistration, NULL, CLSCTX_INPROC,
                    IID_IApplicationAssociationRegistration, (void**)&mAppAssoc);
@@ -81,7 +81,7 @@ nsOSHelperAppService::nsOSHelperAppService() :
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (mAppAssoc)
     mAppAssoc->Release();
   mAppAssoc = nsnull;
@@ -159,7 +159,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
   *aHandlerExists = PR_FALSE;
   if (aProtocolScheme && *aProtocolScheme)
   {
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     // Vista: use new application association interface
     if (mAppAssoc) {
       PRUnichar * pResult = nsnull;
@@ -203,7 +203,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
 
   NS_ConvertASCIItoUTF16 buf(aScheme);
 
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Vista: use new application association interface
   if (mAppAssoc) {
     PRUnichar * pResult = nsnull;
@@ -555,7 +555,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   nsAutoString appInfo;
   PRBool found;
 
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Retrieve the default application for this extension
   if (mAppAssoc) {
     // Vista: use the new application association COM interfaces
