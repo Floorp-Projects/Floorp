@@ -123,6 +123,47 @@ let Utils = {
   },
 
   /**
+   * Add a simple getter/setter to an object that defers access of a property
+   * to an inner property.
+   *
+   * @param obj
+   *        Object to add properties to defer in its prototype
+   * @param defer
+   *        Hash property of obj to defer to (dot split each level)
+   * @param prop
+   *        Property name to defer (or an array of property names)
+   */
+  deferGetSet: function Utils_deferGetSet(obj, defer, prop) {
+    if (Utils.isArray(prop))
+      return prop.map(function(prop) Utils.deferGetSet(obj, defer, prop));
+
+    // Split the defer into each dot part for each level to dereference
+    let parts = defer.split(".");
+    let deref = function(base) Utils.deref(base, parts);
+
+    let prot = obj.prototype;
+
+    // Create a getter if it doesn't exist yet
+    if (!prot.__lookupGetter__(prop))
+      prot.__defineGetter__(prop, function() deref(this)[prop]);
+
+    // Create a setter if it doesn't exist yet
+    if (!prot.__lookupSetter__(prop))
+      prot.__defineSetter__(prop, function(val) deref(this)[prop] = val);
+  },
+
+  /**
+   * Dereference an array of properties starting from a base object
+   *
+   * @param base
+   *        Base object to start dereferencing
+   * @param props
+   *        Array of properties to dereference (one for each level)
+   */
+  deref: function Utils_deref(base, props) props.reduce(function(curr, prop)
+    curr[prop], base),
+
+  /**
    * Determine if some value is an array
    *
    * @param val

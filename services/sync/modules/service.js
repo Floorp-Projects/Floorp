@@ -703,16 +703,26 @@ WeaveSvc.prototype = {
 
     let needKeys = true;
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
-    if (pubkey) {
+    if (!pubkey)
+      this._log.debug("Could not get public key");
+    else if (pubkey.keyData == null)
+      this._log.debug("Public key has no key data");
+    else {
       // make sure we have a matching privkey
       let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
-      if (privkey) {
+      if (!privkey)
+        this._log.debug("Could not get private key");
+      else if (privkey.keyData == null)
+        this._log.debug("Private key has no key data");
+      else {
         needKeys = false;
         ret = true;
       }
     }
+
     if (needKeys) {
-      if (PubKeys.lastResource.lastChannel.responseStatus != 404 &&
+      if (PubKeys.lastResource != null && PrivKeys.lastResource != null &&
+          PubKeys.lastResource.lastChannel.responseStatus != 404 &&
           PrivKeys.lastResource.lastChannel.responseStatus != 404) {
         this._log.warn("Couldn't download keys from server, aborting sync");
         this._log.debug("PubKey HTTP response status: " +

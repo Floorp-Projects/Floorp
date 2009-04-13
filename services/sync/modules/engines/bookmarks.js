@@ -195,9 +195,9 @@ BookmarksStore.prototype = {
     case "bookmark":
     case "microsummary": {
       this._log.debug(" -> creating bookmark \"" + record.cleartext.title + "\"");
-      let uri = Utils.makeURI(record.cleartext.uri);
+      let uri = Utils.makeURI(record.bmkUri);
       this._log.debug(" -> -> ParentID is " + parentId);
-      this._log.debug(" -> -> uri is " + record.cleartext.uri);
+      this._log.debug(" -> -> uri is " + record.bmkUri);
       this._log.debug(" -> -> sortindex is " + record.sortindex);
       this._log.debug(" -> -> title is " + record.cleartext.title);
       newId = this._bms.insertBookmark(parentId, uri, record.sortindex,
@@ -355,7 +355,7 @@ BookmarksStore.prototype = {
       case "title":
         this._bms.setItemTitle(itemId, val);
         break;
-      case "uri":
+      case "bmkUri":
         this._bms.changeBookmarkURI(itemId, Utils.makeURI(val));
         break;
       case "tags": {

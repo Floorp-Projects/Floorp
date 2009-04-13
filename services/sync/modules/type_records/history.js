@@ -63,21 +63,12 @@ HistoryRec.prototype = {
     };
   },
 
-  get histUri() this.cleartext.uri,
   set histUri(value) {
     if (typeof(value) == "string")
-      this.cleartext.uri = value;
+      this.cleartext.histUri = value;
     else
-      this.cleartext.uri = value.spec;
+      this.cleartext.histUri = value.spec;
   },
-
-  get title() this.cleartext.title,
-  set title(value) {
-    this.cleartext.title = value;
-  },
-
-  get visits() this.cleartext.visits,
-  set visits(value) {
-    this.cleartext.visits = value;
-  }
 };
+
+Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);

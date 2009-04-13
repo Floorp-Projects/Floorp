@@ -411,12 +411,12 @@ HistoryStore.prototype = {
   },
 
   update: function HistStore_update(record) {
-    this._log.trace("  -> processing history entry: " + record.cleartext.uri);
+    this._log.trace("  -> processing history entry: " + record.histUri);
 
-    let uri = Utils.makeURI(record.cleartext.uri);
+    let uri = Utils.makeURI(record.histUri);
     let curvisits = [];
     if (this.urlExists(uri))
-      curvisits = this._getVisits(record.cleartext.uri);
+      curvisits = this._getVisits(record.histUri);
 
     let visit;
     while ((visit = record.cleartext.visits.pop())) {
@@ -429,7 +429,7 @@ HistoryStore.prototype = {
     this._hsvc.setPageTitle(uri, record.cleartext.title);
 
     // Equalize IDs
-    let localId = this._getGUID(record.cleartext.uri);
+    let localId = this._getGUID(record.histUri);
     if (localId != record.id)
       this.changeItemID(localId, record.id);
 

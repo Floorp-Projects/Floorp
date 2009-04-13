@@ -90,13 +90,9 @@ PlacesItem.prototype = {
     this.cleartext = {
     };
   },
-
-  get type() this.cleartext.type,
-  set type(value) {
-    // XXX check type is valid?
-    this.cleartext.type = value;
-  }
 };
+
+Utils.deferGetSet(PlacesItem, "cleartext", "type");
 
 function Bookmark(uri) {
   this._Bookmark_init(uri);
@@ -110,34 +106,16 @@ Bookmark.prototype = {
     this.cleartext.type = "bookmark";
   },
 
-  get title() this.cleartext.title,
-  set title(value) {
-    this.cleartext.title = value;
-  },
-
-  get bmkUri() this.cleartext.uri,
   set bmkUri(value) {
     if (typeof(value) == "string")
-      this.cleartext.uri = value;
+      this.cleartext.bmkUri = value;
     else
-      this.cleartext.uri = value.spec;
+      this.cleartext.bmkUri = value.spec;
   },
-
-  get description() this.cleartext.description,
-  set description(value) {
-    this.cleartext.description = value;
-  },
-
-  get tags() this.cleartext.tags,
-  set tags(value) {
-    this.cleartext.tags = value;
-  },
-
-  get keyword() this.cleartext.keyword,
-  set keyword(value) {
-    this.cleartext.keyword = value;
-  }
 };
+
+Utils.deferGetSet(Bookmark, "cleartext", ["title", "bmkUri", "description",
+  "tags", "keyword"]);
 
 function BookmarkMicsum(uri) {
   this._BookmarkMicsum_init(uri);
@@ -150,20 +128,9 @@ BookmarkMicsum.prototype = {
     this._Bookmark_init(uri);
     this.cleartext.type = "microsummary";
   },
-
-  get generatorURI() this.cleartext.generatorURI,
-  set generatorURI(value) {
-    if (typeof(value) == "string")
-      this.cleartext.generatorURI = value;
-    else
-      this.cleartext.generatorURI = value? value.spec : "";
-  },
-
-  get staticTitle() this.cleartext.staticTitle,
-  set staticTitle(value) {
-    this.cleartext.staticTitle = value;
-  }
 };
+
+Utils.deferGetSet(BookmarkMicsum, "cleartext", ["generatorURI", "staticTitle"]);
 
 function BookmarkFolder(uri) {
   this._BookmarkFolder_init(uri);
@@ -176,12 +143,9 @@ BookmarkFolder.prototype = {
     this._PlacesItem_init(uri);
     this.cleartext.type = "folder";
   },
-
-  get title() this.cleartext.title,
-  set title(value) {
-    this.cleartext.title = value;
-  }
 };
+
+Utils.deferGetSet(BookmarkFolder, "cleartext", "title");
 
 function Livemark(uri) {
   this._Livemark_init(uri);
@@ -195,7 +159,6 @@ Livemark.prototype = {
     this.cleartext.type = "livemark";
   },
 
-  get siteURI() this.cleartext.siteURI,
   set siteURI(value) {
     if (typeof(value) == "string")
       this.cleartext.siteURI = value;
@@ -203,7 +166,6 @@ Livemark.prototype = {
       this.cleartext.siteURI = value? value.spec : "";
   },
 
-  get feedURI() this.cleartext.feedURI,
   set feedURI(value) {
     if (typeof(value) == "string")
       this.cleartext.feedURI = value;
@@ -211,6 +173,8 @@ Livemark.prototype = {
       this.cleartext.feedURI = value? value.spec : "";
   }
 };
+
+Utils.deferGetSet(Livemark, "cleartext", ["siteURI", "feedURI"]);
 
 function BookmarkSeparator(uri) {
   this._BookmarkSeparator_init(uri);
