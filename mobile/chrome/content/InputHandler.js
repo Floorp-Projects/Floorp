@@ -209,7 +209,7 @@ DragData.prototype = {
 
   lockAxis: function lockAxis(sX, sY) {
     if (this.alreadyLocked)
-      return lockMouseMove(sX, sY);
+      return this.lockMouseMove(sX, sY);
 
     // look at difference from stored coord to lock movement, but only
     // do it if initial movement is sufficient to detect intent
