@@ -215,7 +215,7 @@ BookmarksStore.prototype = {
         this._log.debug("   \-> is a microsummary");
         this._ans.setItemAnnotation(newId, "bookmarks/staticTitle",
                                     record.cleartext.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
-        let genURI = Utils.makeURI(record.cleartext.generatorURI);
+        let genURI = Utils.makeURI(record.generatorUri);
 	if (this._ms) {
           try {
             let micsum = this._ms.createMicrosummary(uri, genURI);
@@ -251,8 +251,8 @@ BookmarksStore.prototype = {
       this._log.debug(" -> creating livemark \"" + record.cleartext.title + "\"");
       newId = this._ls.createLivemark(parentId,
                                       record.cleartext.title,
-                                      Utils.makeURI(record.cleartext.siteURI),
-                                      Utils.makeURI(record.cleartext.feedURI),
+                                      Utils.makeURI(record.siteUri),
+                                      Utils.makeURI(record.feedUri),
                                       record.sortindex);
       break;
     case "incoming-share":
@@ -373,9 +373,9 @@ BookmarksStore.prototype = {
                                     val, 0,
                                     this._ans.EXPIRE_NEVER);
         break;
-      case "generatorURI": {
+      case "generatorUri": {
         try {
-          let micsumURI = Utils.makeURI(this._bms.getBookmarkURI(itemId));
+          let micsumURI = this._bms.getBookmarkURI(itemId);
           let genURI = Utils.makeURI(val);
 	  if (this._ms == SERVICE_NOT_SUPPORTED) {
 	    this._log.warn("Can't create microsummary -- not supported.");
@@ -387,10 +387,10 @@ BookmarksStore.prototype = {
           this._log.debug("Could not set microsummary generator URI: " + e);
         }
       } break;
-      case "siteURI":
+      case "siteUri":
         this._ls.setSiteURI(itemId, Utils.makeURI(val));
         break;
-      case "feedURI":
+      case "feedUri":
         this._ls.setFeedURI(itemId, Utils.makeURI(val));
         break;
       case "outgoingSharedAnno":
@@ -493,7 +493,7 @@ BookmarksStore.prototype = {
       if (this._ms && this._ms.hasMicrosummary(placeId)) {
         record = new BookmarkMicsum();
         let micsum = this._ms.getMicrosummary(placeId);
-        record.generatorURI = micsum.generator.uri; // breaks local generators
+        record.generatorUri = micsum.generator.uri.spec; // breaks local generators
         record.staticTitle = this._getStaticTitle(placeId);
 
       } else {
@@ -501,7 +501,7 @@ BookmarksStore.prototype = {
         record.title = this._bms.getItemTitle(placeId);
       }
 
-      record.bmkUri = this._bms.getBookmarkURI(placeId);
+      record.bmkUri = this._bms.getBookmarkURI(placeId).spec;
       record.tags = this._getTags(record.bmkUri);
       record.keyword = this._bms.getKeywordForBookmark(placeId);
       record.description = this._getDescription(placeId);
@@ -510,8 +510,8 @@ BookmarksStore.prototype = {
     case this._bms.TYPE_FOLDER:
       if (this._ls.isLivemark(placeId)) {
         record = new Livemark();
-        record.siteURI = this._ls.getSiteURI(placeId);
-        record.feedURI = this._ls.getFeedURI(placeId);
+        record.siteUri = this._ls.getSiteURI(placeId).spec;
+        record.feedUri = this._ls.getFeedURI(placeId).spec;
 
       } else {
         record = new BookmarkFolder();
