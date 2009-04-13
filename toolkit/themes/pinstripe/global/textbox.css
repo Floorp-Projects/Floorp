@@ -149,8 +149,10 @@ textbox[type="search"].compact > .textbox-input-box > .textbox-search-icons > .t
   -moz-image-region: rect(0, 22px, 11px, 11px);
 }
 
-.textbox-search-icon[searchbutton]:not([disabled]) ,
 .textbox-search-clear:not([disabled]) {
   cursor: default;
 }
-
+ 
+.textbox-search-icons:not([selectedIndex="1"]) {
+  visibility: hidden;
+}
