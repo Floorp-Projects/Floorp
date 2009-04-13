@@ -877,8 +877,8 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
   
   rv = InternalLoad(aURI,               // New URI
                     referer,            // Referer URI
-                    nsnull,             // No onwer
-                    INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
+                    aContent->NodePrincipal(), // Owner is our node's principal
+                    INTERNAL_LOAD_FLAGS_NONE,
                     target.get(),       // Window target
                     NS_LossyConvertUTF16toASCII(typeHint).get(),
                     aPostDataStream,    // Post data stream
