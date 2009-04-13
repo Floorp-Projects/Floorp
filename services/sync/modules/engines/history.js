@@ -419,14 +419,14 @@ HistoryStore.prototype = {
       curvisits = this._getVisits(record.histUri);
 
     let visit;
-    while ((visit = record.cleartext.visits.pop())) {
+    while ((visit = record.visits.pop())) {
       if (curvisits.filter(function(i) i.date == visit.date).length)
         continue;
       this._log.debug("     visit " + visit.date);
       this._hsvc.addVisit(uri, visit.date, null, visit.type,
                           (visit.type == 5 || visit.type == 6), 0);
     }
-    this._hsvc.setPageTitle(uri, record.cleartext.title);
+    this._hsvc.setPageTitle(uri, record.title);
 
     // Equalize IDs
     let localId = this._getGUID(record.histUri);

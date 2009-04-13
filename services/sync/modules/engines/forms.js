@@ -78,12 +78,10 @@ FormEngine.prototype = {
   },
   
   _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.cleartext == null || b.cleartext == null)
+    if (a.deleted || b.deleted)
       return false;
-    if (a.cleartext.name == b.cleartext.name &&
-        a.cleartext.value == b.cleartext.value) {
+    if (a.name == b.name && a.value == b.value)
       return true;
-    }
     return false;
   }
 };

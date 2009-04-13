@@ -190,31 +190,30 @@ BookmarksStore.prototype = {
       parentId = this._bms.bookmarksMenuFolder;
     }
 
-    switch (record.cleartext.type) {
-    case "query":
+    switch (record.type) {
     case "bookmark":
     case "microsummary": {
-      this._log.debug(" -> creating bookmark \"" + record.cleartext.title + "\"");
+      this._log.debug(" -> creating bookmark \"" + record.title + "\"");
       let uri = Utils.makeURI(record.bmkUri);
       this._log.debug(" -> -> ParentID is " + parentId);
       this._log.debug(" -> -> uri is " + record.bmkUri);
       this._log.debug(" -> -> sortindex is " + record.sortindex);
-      this._log.debug(" -> -> title is " + record.cleartext.title);
+      this._log.debug(" -> -> title is " + record.title);
       newId = this._bms.insertBookmark(parentId, uri, record.sortindex,
-                                       record.cleartext.title);
+                                       record.title);
       this._ts.untagURI(uri, null);
-      this._ts.tagURI(uri, record.cleartext.tags);
-      this._bms.setKeywordForBookmark(newId, record.cleartext.keyword);
-      if (record.cleartext.description) {
+      this._ts.tagURI(uri, record.tags);
+      this._bms.setKeywordForBookmark(newId, record.keyword);
+      if (record.description) {
         this._ans.setItemAnnotation(newId, "bookmarkProperties/description",
-                                    record.cleartext.description, 0,
+                                    record.description, 0,
                                    this._ans.EXPIRE_NEVER);
       }
 
-      if (record.cleartext.type == "microsummary") {
+      if (record.type == "microsummary") {
         this._log.debug("   \-> is a microsummary");
         this._ans.setItemAnnotation(newId, "bookmarks/staticTitle",
-                                    record.cleartext.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
+                                    record.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
         let genURI = Utils.makeURI(record.generatorUri);
 	if (this._ms) {
           try {
@@ -228,29 +227,29 @@ BookmarksStore.prototype = {
       }
     } break;
     case "folder":
-      this._log.debug(" -> creating folder \"" + record.cleartext.title + "\"");
+      this._log.debug(" -> creating folder \"" + record.title + "\"");
       newId = this._bms.createFolder(parentId,
-                                     record.cleartext.title,
+                                     record.title,
                                      record.sortindex);
       // If folder is an outgoing share, put the annotations on it:
-      if ( record.cleartext.outgoingSharedAnno != undefined ) {
+      if ( record.outgoingSharedAnno != undefined ) {
 	this._ans.setItemAnnotation(newId,
 				    OUTGOING_SHARED_ANNO,
-                                    record.cleartext.outgoingSharedAnno,
+                                    record.outgoingSharedAnno,
 				    0,
 				    this._ans.EXPIRE_NEVER);
 	this._ans.setItemAnnotation(newId,
 				    SERVER_PATH_ANNO,
-                                    record.cleartext.serverPathAnno,
+                                    record.serverPathAnno,
 				    0,
 				    this._ans.EXPIRE_NEVER);
 
       }
       break;
     case "livemark":
-      this._log.debug(" -> creating livemark \"" + record.cleartext.title + "\"");
+      this._log.debug(" -> creating livemark \"" + record.title + "\"");
       newId = this._ls.createLivemark(parentId,
-                                      record.cleartext.title,
+                                      record.title,
                                       Utils.makeURI(record.siteUri),
                                       Utils.makeURI(record.feedUri),
                                       record.sortindex);
@@ -259,18 +258,18 @@ BookmarksStore.prototype = {
       /* even though incoming shares are folders according to the
        * bookmarkService, _wrap() wraps them as type=incoming-share, so we
        * handle them separately, like so: */
-      this._log.debug(" -> creating incoming-share \"" + record.cleartext.title + "\"");
+      this._log.debug(" -> creating incoming-share \"" + record.title + "\"");
       newId = this._bms.createFolder(parentId,
-                                     record.cleartext.title,
+                                     record.title,
                                      record.sortindex);
       this._ans.setItemAnnotation(newId,
 				  INCOMING_SHARED_ANNO,
-                                  record.cleartext.incomingSharedAnno,
+                                  record.incomingSharedAnno,
 				  0,
 				  this._ans.EXPIRE_NEVER);
       this._ans.setItemAnnotation(newId,
 				  SERVER_PATH_ANNO,
-                                  record.cleartext.serverPathAnno,
+                                  record.serverPathAnno,
 				  0,
 				  this._ans.EXPIRE_NEVER);
       break;
@@ -279,7 +278,7 @@ BookmarksStore.prototype = {
       newId = this._bms.insertSeparator(parentId, record.sortindex);
       break;
     default:
-      this._log.error("_create: Unknown item type: " + record.cleartext.type);
+      this._log.error("_create: Unknown item type: " + record.type);
       break;
     }
     if (newId) {
