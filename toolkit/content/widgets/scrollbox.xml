@@ -156,9 +156,17 @@
         ]]></setter>
       </property>
 
-      <field name="_isLTRScrollbox">
-        document.defaultView.getComputedStyle(this._scrollbox, "").direction == "ltr";
-      </field>
+      <property name="_startEndProps" readonly="true">
+        <getter><![CDATA[
+          return this.orient == "vertical" ?
+                 ["top", "bottom"] : ["left", "right"];
+        ]]></getter>
+      </property>
+
+      <field name="_isRTLScrollbox"><![CDATA[
+        this.orient != "vertical" &&
+        document.defaultView.getComputedStyle(this._scrollbox, "").direction == "rtl";
+      ]]></field>
 
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
@@ -257,21 +265,16 @@
           if (index == 0)
             return;
 
-          var x;
           var rect = this.scrollClientRect;
-          if (this.orient == "vertical") {
-            x = index > 0 ? rect.bottom + 1 : rect.top - 1;
-          } else {
-            x = index > 0 ? rect.right + 1 : rect.left - 1;
-            if (!this._isLTRScrollbox)
-              index *= -1;
-          }
-
-          var nextElement = this._elementFromPoint(x);
+          var [start, end] = this._startEndProps;
+          var x = index > 0 ? rect[end] + 1 : rect[start] - 1;
+          var nextElement = this._elementFromPoint(x, index);
           if (!nextElement)
             return;
 
           var targetElement;
+          if (this._isRTLScrollbox)
+            index *= -1;
           while (index < 0 && nextElement) {
             targetElement = nextElement;
             nextElement = nextElement.previousSibling;
@@ -296,36 +299,50 @@
 
       <method name="_elementFromPoint">
         <parameter name="aX"/>
+        <parameter name="aPhysicalScrollDir"/>
         <body><![CDATA[
           var elements = this._getScrollableElements();
-          var start, end;
-          if (this.orient == "vertical") {
-            start = "top";
-            end = "bottom";
-          } else {
-            if (!this._isLTRScrollbox) {
-              elements = Array.slice(elements);
-              elements.reverse();
-            }
-            start = "left";
-            end = "right";
+          if (!elements.length)
+            return;
+
+          if (this._isRTLScrollbox) {
+            elements = Array.slice(elements);
+            elements.reverse();
           }
+
+          var [start, end] = this._startEndProps;
           var low = 0;
           var high = elements.length - 1;
 
+          if (aX < elements[low].getBoundingClientRect()[start] ||
+              aX > elements[high].getBoundingClientRect()[end])
+            return null;
+
+          var mid, rect;
           while (low <= high) {
-            var mid = Math.floor((low + high) / 2);
-            var element = elements[mid];
-            var rect = element.getBoundingClientRect();
+            mid = Math.floor((low + high) / 2);
+            rect = elements[mid].getBoundingClientRect();
             if (rect[start] > aX)
               high = mid - 1; 
             else if (rect[end] < aX)
               low = mid + 1;
             else
-              return element;
+              return elements[mid];
           }
 
-          return null;
+          // There's no element at the requested coordinate, but the algorithm
+          // from above yields an element next to it, in a random direction.
+          // The desired scrolling direction leads to the correct element.
+
+          if (!aPhysicalScrollDir)
+            return null;
+
+          if (aPhysicalScrollDir < 0 && rect[start] > aX)
+            mid = Math.max(mid - 1, 0);
+          else if (aPhysicalScrollDir > 0 && rect[end] < aX)
+            mid = Math.min(mid + 1, elements.length - 1);
+
+          return elements[mid];
         ]]></body>
       </method>
 
@@ -333,7 +350,7 @@
         <parameter name="event"/>
         <body><![CDATA[
           var dir = event.originalTarget == this._scrollButtonUp ? -1 : 1;
-          if (this.orient != "vertical" && !this._isLTRScrollbox)
+          if (this._isRTLScrollbox)
             dir *= -1;
 
           this.scrollByPixels(this.scrollIncrement * dir);
@@ -372,7 +389,7 @@
           if (this.scrollPosition == 0) {
             // In the RTL case, this means the _last_ element in the
             // scrollbox is visible
-            if (this.orient != "vertical" && !this._isLTRScrollbox) 
+            if (this._isRTLScrollbox) 
               disableDownButton = true;
             else
               disableUpButton = true;
@@ -380,7 +397,7 @@
           else if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
             // In the RTL case, this means the _first_ element in the
             // scrollbox is visible
-            if (this.orient != "vertical" && !this._isLTRScrollbox)
+            if (this._isRTLScrollbox)
               disableUpButton = true;
             else
               disableDownButton = true;
@@ -556,7 +573,7 @@
       <method name="_startScroll">
         <parameter name="index"/>
         <body><![CDATA[
-          if (this.orient != "vertical" && !this._isLTRScrollbox)
+          if (this._isRTLScrollbox)
             index *= -1;
           this._scrollIndex = index;
           var scrollDelay = this.smoothScroll ? 60 : this._scrollDelay;
@@ -622,38 +639,37 @@
       <method name="_distanceScroll">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (this.orient == "vertical" ||
-              aEvent.detail < 2 || aEvent.detail > 3)
+          if (aEvent.detail < 2 || aEvent.detail > 3)
             return;
 
-          var scrollLeft = (aEvent.originalTarget == this._scrollButtonUp);
-          if (!this._isLTRScrollbox)
-            scrollLeft = !scrollLeft;
+          var scrollBack = (aEvent.originalTarget == this._scrollButtonUp);
+          var scrollLeftOrUp = this._isRTLScrollbox ? !scrollBack : scrollBack;
           var targetElement;
 
           if (aEvent.detail == 2) {
-            // scroll by the width of the scrollbox; make sure that the next
-            // partly-hidden element will become fully visible.
-            let rect = this.scrollClientRect;
+            // scroll by the size of the scrollbox
+            let [start, end] = this._startEndProps;
             let x;
-            if (scrollLeft)
-              x = rect.left - rect.width;
+            if (scrollLeftOrUp)
+              x = this.scrollClientRect[start] - this.scrollClientSize;
             else
-              x = rect.right + rect.width;
-            targetElement = this._elementFromPoint(x);
+              x = this.scrollClientRect[end] + this.scrollClientSize;
+            targetElement = this._elementFromPoint(x, scrollLeftOrUp ? -1 : 1);
 
+            // the next partly-hidden element will become fully visible,
+            // so don't scroll too far
             if (targetElement)
-              targetElement = scrollLeft ?
+              targetElement = scrollBack ?
                               targetElement.nextSibling :
                               targetElement.previousSibling;
           }
 
           if (!targetElement) {
             // scroll to the first resp. last element
-            var elements = this._getScrollableElements();
-            targetElement = (this._isLTRScrollbox ? scrollLeft : !scrollLeft) ?
-                            elements.item(0) :
-                            elements.item(elements.length-1);
+            let elements = this._getScrollableElements();
+            targetElement = scrollBack ?
+                            elements[0] :
+                            elements[elements.length - 1];
           }
 
           this.ensureElementIsVisible(targetElement);
