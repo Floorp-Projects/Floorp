@@ -103,7 +103,7 @@ Bookmark.prototype = {
 
   _Bookmark_init: function BmkRec_init(uri) {
     this._PlacesItem_init(uri);
-    this.cleartext.type = "bookmark";
+    this.type = "bookmark";
   },
 };
 
@@ -119,7 +119,7 @@ BookmarkMicsum.prototype = {
 
   _BookmarkMicsum_init: function BmkMicsumRec_init(uri) {
     this._Bookmark_init(uri);
-    this.cleartext.type = "microsummary";
+    this.type = "microsummary";
   },
 };
 
@@ -134,7 +134,7 @@ BookmarkFolder.prototype = {
 
   _BookmarkFolder_init: function FolderRec_init(uri) {
     this._PlacesItem_init(uri);
-    this.cleartext.type = "folder";
+    this.type = "folder";
   },
 };
 
@@ -149,7 +149,7 @@ Livemark.prototype = {
 
   _Livemark_init: function LvmkRec_init(uri) {
     this._BookmarkFolder_init(uri);
-    this.cleartext.type = "livemark";
+    this.type = "livemark";
   },
 };
 
@@ -164,6 +164,6 @@ BookmarkSeparator.prototype = {
 
   _BookmarkSeparator_init: function SepRec_init(uri) {
     this._PlacesItem_init(uri);
-    this.cleartext.type = "separator";
+    this.type = "separator";
   }
 };

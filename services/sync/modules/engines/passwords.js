@@ -78,17 +78,13 @@ PasswordEngine.prototype = {
   },
 
   _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.cleartext == null || b.cleartext == null)
+    if (a.deleted || b.deleted)
       return false;
-    if (a.cleartext.hostname == b.cleartext.hostname) {
-    }
-    if (a.cleartext.hostname != b.cleartext.hostname ||
-        a.cleartext.httpRealm != b.cleartext.httpRealm ||
-        a.cleartext.username != b.cleartext.username)
+    if (["hostname", "httpRealm", "username"].some(function(k) a[k] != b[k]))
       return false;
-    if (!a.cleartext.formSubmitURL || !b.cleartext.formSubmitURL)
+    if (!a.formSubmitURL || !b.formSubmitURL)
       return true;
-    return a.cleartext.formSubmitURL == b.cleartext.formSubmitURL;
+    return a.formSubmitURL == b.formSubmitURL;
   }
 };
 
