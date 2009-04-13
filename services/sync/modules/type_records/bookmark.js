@@ -55,6 +55,33 @@ function PlacesItem(uri) {
   this._PlacesItem_init(uri);
 }
 PlacesItem.prototype = {
+  decrypt: function PlacesItem_decrypt(onComplete, passphrase) {
+    CryptoWrapper.prototype.decrypt.call(this, Utils.bind2(this, function(ret) {
+      // Convert the abstract places item to the actual object type
+      if (!this.deleted)
+        this.__proto__ = this.getTypeObject(this.type).prototype;
+
+      // Give the original callback the result
+      onComplete(ret);
+    }), passphrase);
+  },
+
+  getTypeObject: function PlacesItem_getTypeObject(type) {
+    switch (type) {
+      case "bookmark":
+        return Bookmark;
+      case "microsummary":
+        return BookmarkMicsum;
+      case "folder":
+        return BookmarkFolder;
+      case "livemark":
+        return Livemark;
+      case "separator":
+        return BookmarkSeparator;
+    }
+    throw "Unknown places item object type";
+  },
+
   __proto__: CryptoWrapper.prototype,
   _logName: "Record.PlacesItem",
 
