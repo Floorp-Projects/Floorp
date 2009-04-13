@@ -58,7 +58,7 @@
 #include "nscore.h"
 
 class nsIAtom;
-typedef unsigned long PtrBits;
+typedef PRUptrdiff PtrBits;
 
 typedef void
 (*NSPropertyFunc)(void           *aObject,
