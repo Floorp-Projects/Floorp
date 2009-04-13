@@ -28,19 +28,25 @@ var gTests = ["open normal", "open flipped position", "open with scrolling",
               "context menu too big either side",
               "context menu larger than screen"];
 
-function setDocumentScreenY()
+function getScreenXY(element)
 {
-  var mouseFn = function(event) { gScreenY = event.screenY; }
+  var screenX, screenY;
+  var mouseFn = function(event) {
+    screenX = event.screenX - 1;
+    screenY = event.screenY - 1;
+  }
 
-  // a hacky way to get the screen position of the document
+  // a hacky way to get the screen position of an element without using the box object
   window.addEventListener("mousedown", mouseFn, false);
-  synthesizeMouse(document.documentElement, 0, 0, { });
+  synthesizeMouse(element, 1, 1, { });
   window.removeEventListener("mousedown", mouseFn, false);
+
+  return [screenX, screenY];
 }
 
 function runTests()
 {
-  setDocumentScreenY();
+  [, gScreenY] = getScreenXY(document.documentElement);
   nextTest();
 }
 
@@ -165,8 +171,7 @@ function contextMenuPopupShown()
   var rect = popup.getBoundingClientRect();
   var labelrect = document.getElementById("label").getBoundingClientRect();
 
-  // XXXndeakin disable test on Linux for now
-    is(rect.left, labelrect.left + 6, gTests[gTestIndex] + " left");
+  is(rect.left, labelrect.left + 6, gTests[gTestIndex] + " left");
   switch (gTests[gTestIndex]) {
     case "context menu enough space below":
       is(rect.top, labelrect.top + 6, gTests[gTestIndex] + " top");
@@ -175,7 +180,7 @@ function contextMenuPopupShown()
       is(rect.top, labelrect.top - rect.height + 2, gTests[gTestIndex] + " top");
       break;
     case "context menu too big either side":
-      setDocumentScreenY();
+      [, gScreenY] = getScreenXY(document.documentElement);
       // compare against the available size as well as the total size, as some
       // platforms allow the menu to overlap os chrome and others do not
       // the - 3 here is to account for 3 pixels that are subtracted from the
@@ -229,42 +234,54 @@ function testPopupMovement()
   var button = document.getElementById("label");
   var popup = document.getElementById((gTests[gTestIndex] == "panel movement") ? "panel" : "popup");
 
+  var screenX, screenY, buttonScreenX, buttonScreenY;
   var rect = popup.getBoundingClientRect();
 
   var overlapOSChrome = (navigator.platform.indexOf("Mac") == -1);
   popup.moveTo(1, 1);
-//  is(popup.boxObject.screenX, overlapOSChrome ? 1 : screen.availLeft, gTests[gTestIndex] + " (1, 1) x");
-//  is(popup.boxObject.screenY, overlapOSChrome ? 1 : screen.availTop, gTests[gTestIndex] + " (1, 1) y");
+  [screenX, screenY] = getScreenXY(popup);
+
+  var expectedx = overlapOSChrome ? 1 : (screen.availLeft < 1 ? 1 : screen.availLeft);
+  var expectedy = overlapOSChrome ? 1 : (screen.availTop < 1 ? 1 : screen.availTop);
+  is(screenX, expectedx, gTests[gTestIndex] + " (1, 1) x");
+  is(screenY, expectedy, gTests[gTestIndex] + " (1, 1) y");
 
   popup.moveTo(100, 8000);
   var expectedy = (overlapOSChrome ? screen.height + screen.top : screen.availHeight + screen.availTop) -
                   Math.round(rect.height) - 3;
-  is(popup.boxObject.screenX, 100, gTests[gTestIndex] + " (100, 8000) x");
-  is(popup.boxObject.screenY, expectedy, gTests[gTestIndex] + " (100, 8000) y");
+  [screenX, screenY] = getScreenXY(popup);
+  is(screenX, 100, gTests[gTestIndex] + " (100, 8000) x");
+  is(screenY, expectedy, gTests[gTestIndex] + " (100, 8000) y");
 
   popup.moveTo(6000, 100);
-  var expectedx = (overlapOSChrome ? screen.width + screen.left : screen.availWidth + screen.availLeft) -
-                  Math.round(rect.width) - 3;
-//  is(popup.boxObject.screenX, expectedx, gTests[gTestIndex] + " (6000, 100) x");
-  is(popup.boxObject.screenY, 100, gTests[gTestIndex] + " (6000, 100) y");
+  expectedx = (overlapOSChrome ? screen.width + screen.left : screen.availWidth + screen.availLeft) -
+              Math.round(rect.width) - 3;
+
+  [screenX, screenY] = getScreenXY(popup);
+  is(screenX, expectedx, gTests[gTestIndex] + " (6000, 100) x");
+  is(screenY, 100, gTests[gTestIndex] + " (6000, 100) y");
 
   is(popup.left, "", gTests[gTestIndex] + " left is empty after moving");
   is(popup.top, "", gTests[gTestIndex] + " top is empty after moving");
   popup.setAttribute("left", "80");
   popup.setAttribute("top", "82");
-  is(popup.boxObject.screenX, 80, gTests[gTestIndex] + " set left and top x");
-  is(popup.boxObject.screenY, 82, gTests[gTestIndex] + " set left and top y");
+  [screenX, screenY] = getScreenXY(popup);
+  is(screenX, 80, gTests[gTestIndex] + " set left and top x");
+  is(screenY, 82, gTests[gTestIndex] + " set left and top y");
   popup.moveTo(95, 98);
-  is(popup.boxObject.screenX, 95, gTests[gTestIndex] + " move after set left and top x");
-  is(popup.boxObject.screenY, 98, gTests[gTestIndex] + " move after set left and top y");
+  [screenX, screenY] = getScreenXY(popup);
+  is(screenX, 95, gTests[gTestIndex] + " move after set left and top x");
+  is(screenY, 98, gTests[gTestIndex] + " move after set left and top y");
   is(popup.left, "95", gTests[gTestIndex] + " left is set after moving");
   is(popup.top, "98", gTests[gTestIndex] + " top is set after moving");
   popup.removeAttribute("left");
   popup.removeAttribute("top");
 
   popup.moveTo(-1, -1);
-  is(popup.boxObject.screenX, button.boxObject.screenX, gTests[gTestIndex] + " original x");
-  is(popup.boxObject.screenY, button.boxObject.screenY + button.getBoundingClientRect().height, gTests[gTestIndex] + " original y");
+  [screenX, screenY] = getScreenXY(popup);
+  [buttonScreenX, buttonScreenY] = getScreenXY(button);
+  is(screenX, buttonScreenX, gTests[gTestIndex] + " original x");
+  is(screenY, buttonScreenY + button.getBoundingClientRect().height, gTests[gTestIndex] + " original y");
 
   popup.hidePopup();
 }
@@ -292,7 +309,7 @@ function testPopupMovement()
   <menuitem label="15"/>
 </menupopup>
 
-<panel id="panel" onpopupshown="testPopupMovement();" onpopuphidden="popupHidden();">
+<panel id="panel" onpopupshown="testPopupMovement();" onpopuphidden="popupHidden();" style="margin: 0">
   <button label="OK"/>
 </panel>
 
