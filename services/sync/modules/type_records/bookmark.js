@@ -105,13 +105,6 @@ Bookmark.prototype = {
     this._PlacesItem_init(uri);
     this.cleartext.type = "bookmark";
   },
-
-  set bmkUri(value) {
-    if (typeof(value) == "string")
-      this.cleartext.bmkUri = value;
-    else
-      this.cleartext.bmkUri = value.spec;
-  },
 };
 
 Utils.deferGetSet(Bookmark, "cleartext", ["title", "bmkUri", "description",
@@ -130,7 +123,7 @@ BookmarkMicsum.prototype = {
   },
 };
 
-Utils.deferGetSet(BookmarkMicsum, "cleartext", ["generatorURI", "staticTitle"]);
+Utils.deferGetSet(BookmarkMicsum, "cleartext", ["generatorUri", "staticTitle"]);
 
 function BookmarkFolder(uri) {
   this._BookmarkFolder_init(uri);
@@ -158,23 +151,9 @@ Livemark.prototype = {
     this._BookmarkFolder_init(uri);
     this.cleartext.type = "livemark";
   },
-
-  set siteURI(value) {
-    if (typeof(value) == "string")
-      this.cleartext.siteURI = value;
-    else
-      this.cleartext.siteURI = value? value.spec : "";
-  },
-
-  set feedURI(value) {
-    if (typeof(value) == "string")
-      this.cleartext.feedURI = value;
-    else
-      this.cleartext.feedURI = value? value.spec : "";
-  }
 };
 
-Utils.deferGetSet(Livemark, "cleartext", ["siteURI", "feedURI"]);
+Utils.deferGetSet(Livemark, "cleartext", ["siteUri", "feedUri"]);
 
 function BookmarkSeparator(uri) {
   this._BookmarkSeparator_init(uri);
