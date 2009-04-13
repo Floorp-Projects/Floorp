@@ -495,9 +495,10 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
       NS_FAILED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                              homeURLKey, nsIWindowsRegKey::ACCESS_READ)))
     return NS_OK;
-  // read registry data
+  // Read in the main home page
   NS_NAMED_LITERAL_STRING(homeURLValName, "Start Page");
-  nsAutoString  homeURLVal;
+  nsAutoString homeURLVal;
+
   if (NS_SUCCEEDED(regKey->ReadStringValue(homeURLValName, homeURLVal))) {
     // Do we need this round-about way to get |homePageURL|? 
     // Perhaps, we do to have the form of URL under our control 
@@ -506,11 +507,40 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
     nsCAutoString  homePageURL;
     nsCOMPtr<nsIURI> homePageURI;
 
-    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(homePageURI), homeURLVal)))
-        if (NS_SUCCEEDED(homePageURI->GetSpec(homePageURL)) 
-            && !homePageURL.IsEmpty())
-            aResult.Assign(homePageURL);
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(homePageURI), homeURLVal))) {
+      if (NS_SUCCEEDED(homePageURI->GetSpec(homePageURL)) && !homePageURL.IsEmpty()) {
+          aResult.Assign(homePageURL);
+      }
+    }
   }
+
+  // With IE7, The "Start Page" key still exists. Secondary home pages
+  // are located in a string stored in "Secondary Start Pages" which
+  // contains multiple Unicode URI seperated by nulls. (REG_MULTI_SZ)
+  NS_NAMED_LITERAL_STRING(ssRegKeyName, "Secondary Start Pages");
+  nsAutoString secondaryList;
+
+  if (NS_SUCCEEDED(regKey->ReadStringValue(ssRegKeyName, secondaryList)) &&
+      !secondaryList.IsEmpty()) {
+    nsTArray<nsCString> parsedList;
+    if (!ParseString(NS_ConvertUTF16toUTF8(secondaryList), '\0', parsedList))
+      return NS_OK;
+
+    // Split the result up into individual uri
+    for (PRUint32 index = 0; index < parsedList.Length(); ++index) {
+      nsCOMPtr<nsIURI> uri;
+      nsCAutoString homePage;
+      // Append "|uri" to result. This is how we currently handle
+      // storing multiple home pages.
+      if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), parsedList[index]))) {
+        if (NS_SUCCEEDED(uri->GetSpec(homePage)) && !homePage.IsEmpty()) {
+            aResult.AppendLiteral("|");
+            aResult.Append(homePage);
+        }
+      }
+    }
+  }
+
   return NS_OK;
 }
 
