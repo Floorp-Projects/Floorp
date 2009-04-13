@@ -144,7 +144,7 @@
             <vbox>
                 <spacer flex="1"/>
                 <hbox class="controlBar" hidden="true">
-                    <button class="playButton"/>
+                    <button class="playButton" oncommand="document.getBindingParent(this).Utils.togglePause();"/>
                     <stack class="scrubberStack" flex="1">
                         <box class="backgroundBar"/>
                         <progressmeter class="bufferBar"/>
@@ -154,7 +154,7 @@
                     <vbox class="durationBox">
                         <label class="durationLabel"/>
                     </vbox>
-                    <button class="muteButton"/>
+                    <button class="muteButton" oncommand="document.getBindingParent(this).Utils.toggleMute();"/>
                     <stack class="volumeStack" hidden="true">
                         <box class="volumeBackgroundBar"/>
                         <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
@@ -756,12 +756,11 @@
             this.Utils.volumeFader.maxSlide = parseInt(window.getComputedStyle(this.Utils.volumeStack, null)
                                                              .getPropertyValue("margin-top"));
             var self = this;
-            this.Utils.muteButton.addEventListener("command", function() { self.Utils.toggleMute(); }, false);
-            this.Utils.playButton.addEventListener("command", function() { self.Utils.togglePause(); }, false);
-            this.Utils.muteButton.addEventListener("mouseover",  function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
-            this.Utils.muteButton.addEventListener("mouseout",   function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
-            this.Utils.volumeStack.addEventListener("mouseover", function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
-            this.Utils.volumeStack.addEventListener("mouseout",  function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
+            function volumeBouncer(event) { self.Utils.onVolumeMouseInOut(event); }
+            this.Utils.muteButton.addEventListener("mouseover", volumeBouncer, false);
+            this.Utils.muteButton.addEventListener("mouseout", volumeBouncer, false);
+            this.Utils.volumeStack.addEventListener("mouseover", volumeBouncer, false);
+            this.Utils.volumeStack.addEventListener("mouseout", volumeBouncer, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>
