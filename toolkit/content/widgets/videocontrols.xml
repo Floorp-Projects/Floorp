@@ -76,9 +76,13 @@
       <implementation>
 
       <field name="thumb">null</field>
+      <field name="type">null</field>
+      <field name="Utils">null</field>
       <constructor>
           <![CDATA[
           this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
+          this.type = this.getAttribute("class");
+          this.Utils = document.getBindingParent(this.parentNode).Utils;
           ]]>
       </constructor>
 
@@ -94,7 +98,8 @@
             switch (which) {
               case "curpos":
                 // Update the time shown in the thumb.
-                this.thumb.setTime(newValue);
+                if (this.type == "scrubber")
+                    this.thumb.setTime(newValue);
 
                 // The value of userChanged is true when changing the position with the mouse,
                 // but not when pressing an arrow key. However, the base binding sets
@@ -102,7 +107,11 @@
                 if (!userChanged && !this._userChanged)
                   return;
                 this.setAttribute("value", newValue);
-                document.getBindingParent(this.parentNode).Utils.seekToPosition();
+
+                if (this.type == "scrubber")
+                    this.Utils.seekToPosition(newValue);
+                else if (this.type == "volumeControl")
+                    this.Utils.setVolume(newValue / 100);
                 break;
   
               case "minpos":
@@ -146,6 +155,10 @@
                         <label class="durationLabel"/>
                     </vbox>
                     <button class="muteButton" oncommand="document.getBindingParent(this).Utils.toggleMute();"/>
+                    <stack class="volumeStack" hidden="true">
+                        <box class="volumeBackgroundBar"/>
+                        <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
+                    </stack>
                 </hbox>
             </vbox>
         </stack>
@@ -210,6 +223,8 @@
                 videocontrols : null,
                 playButton : null,
                 muteButton : null,
+                volumeStack    : null,
+                volumeControl  : null,
                 durationLabel  : null,
                 scrubberThumb  : null,
                 scrubber       : null,
@@ -250,6 +265,21 @@
                                     RUNTIME_STEP : 20
                                 },
 
+                // volumeFader holds the fade state for the volume <scale>.
+                volumeFader : {
+                                    name : "volume",
+                                    element : null,
+                                    maxSlide : null, // height when extended, set in init()
+                                    runtime : 0,
+                                    fadingIn : false,
+                                    isVisible : false,
+                                    timer : null,
+                                    delayTimer : null,
+                                    START_DELAY : 0,
+                                    RUNTIME_MAX : 200,
+                                    RUNTIME_STEP : 15
+                                },
+
                 firstFrameShown : false,
                 lastTimeUpdate : 0,
                 maxCurrentTimeSeen : 0,
@@ -267,6 +297,9 @@
 
                     this.playButton.setAttribute("paused", this.video.paused);
                     this.muteButton.setAttribute("muted", this.video.muted);
+
+                    var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
+                    this.volumeControl.value = volume;
 
                     var duration = Math.round(this.video.duration * 1000); // in ms
                     var currentTime = Math.round(this.video.currentTime * 1000); // in ms
@@ -342,7 +375,9 @@
                             this.playButton.setAttribute("paused", true);
                             break;
                         case "volumechange":
+                            var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
                             this.muteButton.setAttribute("muted", this.video.muted);
+                            this.volumeControl.value = volume;
                             break;
                         case "loadedmetadata":
                             // If a <video> doesn't have any video data, treat it as <audio>
@@ -465,11 +500,16 @@
                     this.scrubber.pageIncrement = Math.round(duration / 10);
                 },
 
-                seekToPosition : function() {
-                    var newPosition = this.scrubber.getAttribute("value");
+                seekToPosition : function(newPosition) {
                     newPosition /= 1000; // convert from ms
                     this.log("+++ seeking to " + newPosition);
                     this.video.currentTime = newPosition;
+                },
+
+                setVolume : function(newVolume) {
+                    this.log("*** setting volume to " + newVolume);
+                    this.video.volume = newVolume;
+                    this.video.muted = false;
                 },
 
                 showPosition : function(currentTime, duration) {
@@ -492,6 +532,15 @@
                     this.progressBar.value = Math.round(percent * 10000);
                 },
 
+                onVolumeMouseInOut : function (event) {
+                    // Ignore events caused by transitions between mute button and volumeStack,
+                    // or between nodes inside these two elements.
+                    if (this.isEventWithin(event, this.muteButton, this.volumeStack))
+                        return;
+                    var isMouseOver = (event.type == "mouseover");
+                    this.startFade(this.volumeFader, isMouseOver);
+                },
+
                 onMouseInOut : function (event) {
                     // If the controls are static, don't change anything.
                     if (!this.dynamicControls)
@@ -502,8 +551,7 @@
                     // size as the *content area* of the video element,
                     // but this is not the same as the video element's
                     // border area if the video has border or padding.
-                    if (this.isControlsOrDescendant(event.target) &&
-                        this.isControlsOrDescendant(event.relatedTarget))
+                    if (this.isEventWithin(event, this.videocontrols))
                         return;
 
                     var isMouseOver = (event.type == "mouseover");
@@ -596,11 +644,20 @@
                     else
                         opacity = Math.pow(1 - pos, 0.5);
                     fader.isVisible = (opacity ? true : false);
-                    //self.log("Fading " + fader.name + " to opacity " + opacity);
-
                     fader.element.style.opacity = opacity;
                     // Hide the element to ignore mouse clicks and reduce throbber CPU usage.
                     fader.element.setAttribute("hidden", !fader.isVisible);
+
+                    // If this fader also has a slide effect, change the CSS margin-top too.
+                    if (fader.maxSlide) {
+                        var marginTop;
+                        if (fader.fadingIn)
+                            marginTop = Math.round(fader.maxSlide * Math.pow(pos, 0.5));
+                        else
+                            marginTop = Math.round(fader.maxSlide * Math.pow(1 - pos, 0.5));
+
+                        fader.element.style.marginTop = marginTop;
+                    }
 
                     // Is the animation done?
                     if (pos == 1) {
@@ -629,13 +686,16 @@
                     // controlling volume.
                 },
 
-                isControlsOrDescendant : function (node) {
-                    while (node) {
-                        if (node == this.videocontrols)
-                            return true;
-                        node = node.parentNode;
+                isEventWithin : function (event, parent1, parent2) {
+                    function isDescendant (node) {
+                        while (node) {
+                            if (node == parent1 || node == parent2)
+                                return true;
+                            node = node.parentNode;
+                        }
+                        return false;
                     }
-                    return false;
+                    return isDescendant(event.target) && isDescendant(event.relatedTarget);
                 },
 
                 log : function (msg) {
@@ -653,11 +713,15 @@
             this.Utils.videocontrols = this;
             this.Utils.isAudioOnly = (video instanceof HTMLAudioElement);
 
-            this.Utils.controlFader.element  = document.getAnonymousElementByAttribute(this, "class", "controlBar");
-            this.Utils.statusFader.element = document.getAnonymousElementByAttribute(this, "class", "statusOverlay");
+            this.Utils.controlFader.element = document.getAnonymousElementByAttribute(this, "class", "controlBar");
+            this.Utils.statusFader.element  = document.getAnonymousElementByAttribute(this, "class", "statusOverlay");
+            this.Utils.volumeFader.element  = document.getAnonymousElementByAttribute(this, "class", "volumeStack");
+
             this.Utils.statusIcon     = document.getAnonymousElementByAttribute(this, "class", "statusIcon");
             this.Utils.playButton     = document.getAnonymousElementByAttribute(this, "class", "playButton");
             this.Utils.muteButton     = document.getAnonymousElementByAttribute(this, "class", "muteButton");
+            this.Utils.volumeControl  = document.getAnonymousElementByAttribute(this, "class", "volumeControl");
+            this.Utils.volumeStack    = document.getAnonymousElementByAttribute(this, "class", "volumeStack");
             this.Utils.progressBar    = document.getAnonymousElementByAttribute(this, "class", "progressBar");
             this.Utils.bufferBar      = document.getAnonymousElementByAttribute(this, "class", "bufferBar");
             this.Utils.scrubber       = document.getAnonymousElementByAttribute(this, "class", "scrubber");
@@ -686,6 +750,17 @@
             // Use the Utils.handleEvent() callback for all media events.
             for each (var event in this.Utils.videoEvents)
                 video.addEventListener(event, this.Utils, false);
+
+            // Determine the height of the volumeFader when extended (which is controlled by CSS).
+            // Its .clientHeight seems to be 0 here, so use the theme's initial value. (eg "-70px")
+            this.Utils.volumeFader.maxSlide = parseInt(window.getComputedStyle(this.Utils.volumeStack, null)
+                                                             .getPropertyValue("margin-top"));
+            var self = this;
+            function volumeBouncer(event) { self.Utils.onVolumeMouseInOut(event); }
+            this.Utils.muteButton.addEventListener("mouseover", volumeBouncer, false);
+            this.Utils.muteButton.addEventListener("mouseout", volumeBouncer, false);
+            this.Utils.volumeStack.addEventListener("mouseover", volumeBouncer, false);
+            this.Utils.volumeStack.addEventListener("mouseout", volumeBouncer, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>
