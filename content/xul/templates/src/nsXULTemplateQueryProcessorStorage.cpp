@@ -470,10 +470,10 @@ nsXULTemplateQueryProcessorStorage::CompareResults(nsIXULTemplateResult* aLeft,
             vRightValue->GetDataType(&vtypeR);
 
             if (vtypeL == vtypeR) {
-                if (vtypeL == nsIDataType::VTYPE_INT32) {
-                    PRInt32 leftValue, rightValue;
-                    rv1 = vLeftValue->GetAsInt32(&leftValue);
-                    rv2 = vRightValue->GetAsInt32(&rightValue);
+                if (vtypeL == nsIDataType::VTYPE_INT64) {
+                    PRInt64 leftValue, rightValue;
+                    rv1 = vLeftValue->GetAsInt64(&leftValue);
+                    rv2 = vRightValue->GetAsInt64(&rightValue);
                     if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
                         if (leftValue > rightValue)
                             *aResult = 1;
