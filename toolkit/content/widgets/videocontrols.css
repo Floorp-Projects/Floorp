@@ -1,6 +1,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.scrubber {
+.scrubber, .volumeControl {
     -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#suppressChangeEvent");
 }
 

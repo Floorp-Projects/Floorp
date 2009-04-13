@@ -182,6 +182,7 @@ classic.jar:
 +  skin/classic/global/media/scrubberThumbWide.png                    (media/scrubberThumbWide.png)
 +  skin/classic/global/media/error.png                                (media/error.png)
 +  skin/classic/global/media/throbber.png                             (media/throbber.png)
++  skin/classic/global/media/volumeThumb.png                          (media/volumeThumb.png)
 +  skin/classic/global/menu/menu-arrow-dis.gif                        (menu/menu-arrow-dis.gif)
 +  skin/classic/global/menu/menu-arrow-hov.gif                        (menu/menu-arrow-hov.gif)
 +  skin/classic/global/menu/menu-arrow.gif                            (menu/menu-arrow.gif)
