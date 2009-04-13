@@ -49,7 +49,7 @@
 #include "nsIAtom.h"
 #include "nsDOMString.h"
 
-typedef unsigned long PtrBits;
+typedef PRUptrdiff PtrBits;
 
 #define NS_ATTRNAME_NODEINFO_BIT 1
 class nsAttrName
