@@ -243,10 +243,10 @@
     <hbox>
       <label value="Search History:" accesskey="S" 
              control="search-box"/>
-	  <textbox id="search-box" flex="1" type="search" cocoa-size="small"
+	  <textbox id="search-box" flex="1" type="search"
 	           results="historyTree"/>
     </hbox>
     <textbox id="searchfield" emptytext="Search all add-ons"
-             type="search" searchbutton="true" cocoa-size="small"/>
+             type="search" searchbutton="true"/>
   </vbox>
 </window>
