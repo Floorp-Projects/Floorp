@@ -63,9 +63,6 @@ WBORecord.prototype = {
       this.uri = uri;
   },
 
-  get id() { return this.data.id; },
-  set id(value) { this.data.id = value; },
-
   // NOTE: baseUri must have a trailing slash, or baseUri.resolve() will omit
   //       the collection name
   get uri() {
@@ -79,18 +76,10 @@ WBORecord.prototype = {
     this.baseUri = Utils.makeURI(foo.join('/') + '/');
   },
 
-  get parentid() { return this.data.parentid; },
-  set parentid(value) {
-    this.data.parentid = value;
-  },
-
   get modified() {
     if (typeof(this.data.modified) == "string")
       this.data.modified = parseInt(this.data.modified);
     return this.data.modified;
-  },
-  set modified(value) {
-    this.data.modified = value;
   },
 
   get depth() {
@@ -98,22 +87,11 @@ WBORecord.prototype = {
       return this.data.depth;
     return 0;
   },
-  set depth(value) {
-    this.data.depth = value;
-  },
 
   get sortindex() {
     if (this.data.sortindex)
       return this.data.sortindex;
     return 0;
-  },
-  set sortindex(value) {
-    this.data.sortindex = value;
-  },
-
-  get payload() { return this.data.payload; },
-  set payload(value) {
-    this.data.payload = value;
   },
 
   serialize: function WBORec_serialize() {
@@ -147,6 +125,9 @@ WBORecord.prototype = {
       "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.payload))
     ].join("\n  ") + " }",
 };
+
+Utils.deferGetSet(WBORecord, "data", ["id", "parentid", "modified", "depth",
+  "sortindex", "payload"]);
 
 Utils.lazy(this, 'Records', RecordManager);
 

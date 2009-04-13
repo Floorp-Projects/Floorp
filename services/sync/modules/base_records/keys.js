@@ -62,34 +62,26 @@ PubKey.prototype = {
     this._WBORec_init(uri);
     this.payload = {
       type: "pubkey",
-      key_data: null,
-      private_key: null
+      keyData: null,
+      privateKeyUri: null
     };
   },
 
-  get keyData() this.payload.key_data,
-  set keyData(value) {
-    this.payload.key_data = value;
-  },
-  get _privateKeyUri() this.payload.private_key,
   get privateKeyUri() {
     if (!this.data)
       return null;
-    // resolve
-    let uri = this.uri.resolve(this._privateKeyUri);
-    if (uri)
-      return Utils.makeURI(uri);
-    // does not resolve, return raw (this uri type might not be able to resolve)
-    return Utils.makeURI(this._privateKeyUri);
-  },
-  set privateKeyUri(value) {
-    this.payload.private_key = value;
+
+    // Use the uri if it resolves, otherwise return raw (uri type unresolvable)
+    let key = this.payload.privateKeyUri;
+    return Utils.makeURI(this.uri.resolve(key) || key);
   },
 
   get publicKeyUri() {
     throw "attempted to get public key url from a public key!";
   }
 };
+
+Utils.deferGetSet(PubKey, "payload", ["keyData", "privateKeyUri"]);
 
 function PrivKey(uri) {
   this._PrivKey_init(uri);
@@ -104,42 +96,26 @@ PrivKey.prototype = {
       type: "privkey",
       salt: null,
       iv: null,
-      key_data: null,
-      public_key: null
+      keyData: null,
+      publicKeyUri: null
     };
-  },
-
-  get salt() this.payload.salt,
-  set salt(value) {
-    this.payload.salt = value;
-  },
-  get iv() this.payload.iv,
-  set iv(value) {
-    this.payload.iv = value;
-  },
-  get keyData() { return this.payload.key_data; },
-  set keyData(value) {
-    this.payload.key_data = value;
   },
 
   get publicKeyUri() {
     if (!this.data)
       return null;
-    // resolve
-    let uri = this.uri.resolve(this.payload.public_key);
-    if (uri)
-      return Utils.makeURI(uri);
-    // does not resolve, return raw (this uri type might not be able to resolve)
-    return Utils.makeURI(this.payload.public_key);
-  },
-  set publicKeyUri(value) {
-    this.payload.public_key = value;
+
+    // Use the uri if it resolves, otherwise return raw (uri type unresolvable)
+    let key = this.payload.publicKeyUri;
+    return Utils.makeURI(this.uri.resolve(key) || key);
   },
 
   get privateKeyUri() {
     throw "attempted to get private key url from a private key!";
   }
 };
+
+Utils.deferGetSet(PrivKey, "payload", ["salt", "iv", "keyData", "publicKeyUri"]);
 
 // XXX unused/unfinished
 function SymKey(keyData, wrapped) {

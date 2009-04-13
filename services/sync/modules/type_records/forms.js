@@ -62,14 +62,6 @@ FormRec.prototype = {
     this.cleartext = {
     };
   },
-
-  get name() this.cleartext.name,
-  set name(p) {
-      this.cleartext.name = p;
-  },
-
-  get value() this.cleartext.value,
-  set value(p) {
-    this.cleartext.value = p;
-  }
 };
+
+Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);

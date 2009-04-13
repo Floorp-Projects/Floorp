@@ -71,16 +71,6 @@ CryptoWrapper.prototype = {
   //        with the encrypted payload
   cleartext: null,
 
-  get encryption() this.payload.encryption,
-  set encryption(value) {
-    this.payload.encryption = value;
-  },
-
-  get ciphertext() this.payload.ciphertext,
-  set ciphertext(value) {
-    this.payload.ciphertext = value;
-  },
-
   _encrypt: function CryptoWrap__encrypt(passphrase) {
     let self = yield;
 
@@ -141,6 +131,8 @@ CryptoWrapper.prototype = {
     ].join("\n  ") + " }",
 };
 
+Utils.deferGetSet(CryptoWrapper, "payload", ["encryption", "ciphertext"]);
+
 function CryptoMeta(uri) {
   this._CryptoMeta_init(uri);
 }
@@ -159,9 +151,6 @@ CryptoMeta.prototype = {
   generateIV: function CryptoMeta_generateIV() {
     this.bulkIV = Svc.Crypto.generateRandomIV();
   },
-
-  get bulkIV() this.data.payload.bulkIV,
-  set bulkIV(value) { this.data.payload.bulkIV = value; },
 
   _getKey: function CryptoMeta__getKey(privkey, passphrase) {
     let self = yield;
@@ -223,6 +212,8 @@ CryptoMeta.prototype = {
     this._addUnwrappedKey.async(this, onComplete, new_pubkey, symkey);
   }
 };
+
+Utils.deferGetSet(CryptoMeta, "data.payload", "bulkIV");
 
 Utils.lazy(this, 'CryptoMetas', CryptoRecordManager);
 

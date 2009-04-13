@@ -62,39 +62,7 @@ LoginRec.prototype = {
     this.cleartext = {
     };
   },
-
-  get hostname() this.cleartext.hostname,
-  set hostname(value) {
-      this.cleartext.hostname = value;
-  },
-
-  get formSubmitURL() this.cleartext.formSubmitURL,
-  set formSubmitURL(value) {
-    this.cleartext.formSubmitURL = value;
-  },
-
-  get httpRealm() this.cleartext.httpRealm,
-  set httpRealm(value) {
-    this.cleartext.httpRealm = value;
-  },
-  
-  get username() this.cleartext.username,
-  set username(value) {
-    this.cleartext.username = value;
-  },
-  
-  get password() this.cleartext.password,
-  set password(value) {
-    this.cleartext.password = value;
-  },
-  
-  get usernameField() this.cleartext.usernameField,
-  set usernameField(value) {
-    this.cleartext.usernameField = value;
-  },
-  
-  get passwordField() this.cleartext.passwordField,
-  set passwordField(value) {
-    this.cleartext.passwordField = value;
-  }
 };
+
+Utils.deferGetSet(LoginRec, "cleartext", ["hostname", "formSubmitURL",
+  "httpRealm", "username", "password", "usernameField", "passwordField"]);
