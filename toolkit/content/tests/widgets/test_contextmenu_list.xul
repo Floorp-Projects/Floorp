@@ -14,8 +14,8 @@
 
 <hbox style="padding-left: 10px;">
   <spacer width="5"/>
-  <richlistbox id="list" context="themenu" oncontextmenu="checkContextMenu(event)">
-    <richlistitem id="item1" style="padding-top: 3px;"><button label="One"/></richlistitem>
+  <richlistbox id="list" context="themenu" style="padding: 0;" oncontextmenu="checkContextMenu(event)">
+    <richlistitem id="item1" style="padding-top: 3px; margin: 0;"><button label="One"/></richlistitem>
     <richlistitem id="item2" height="22"><checkbox label="Checkbox"/></richlistitem>
     <richlistitem id="item3"><button label="Three"/></richlistitem>
     <richlistitem id="item4"><checkbox label="Four"/></richlistitem>
@@ -86,15 +86,15 @@ function startTest()
   // first, check if the richlistbox selection changes on a contextmenu mouse event
   var element = $("list");
   synthesizeMouse(element.getItemAtIndex(3), 7, 1, { type : "mousedown", button: 2, ctrlKey: true });
-  synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
+  synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
 
   gSelectionStep++;
   synthesizeMouse(element.getItemAtIndex(1), 7, 1, { type : "mousedown", button: 2, ctrlKey: true, shiftKey: true });
-  synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
+  synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
 
   gSelectionStep++;
   synthesizeMouse(element.getItemAtIndex(1), 7, 1, { type : "mousedown", button: 2 });
-  synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
+  synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
 
   $("menu").open = true;
 }
@@ -140,7 +140,7 @@ function nextTest()
     synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
   }
   else if (gTestId == 1) {
-    synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
+    synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
   }
   else {
     element.currentIndex = -1;
@@ -157,7 +157,7 @@ function checkContextMenu(event)
   if (!frombase)
     rect = event.originalTarget.getBoundingClientRect();
   left = frombase ? rect.left + 7 : rect.left;
-  top = frombase ? rect.top + 2 : rect.bottom;
+  top = frombase ? rect.top + 4 : rect.bottom;
 
   is(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
   is(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);
@@ -177,9 +177,7 @@ function checkContextMenu(event)
         is(event.originalTarget, $("treechildren"), "tree selection target");
       break;
     case 1:
-      // XXXndeakin disable test on Windows for now
-      if (navigator.platform.indexOf("Win") == -1)
-        is(event.originalTarget.id, $("item1").id, "list mouse selection target");
+      is(event.originalTarget.id, $("item1").id, "list mouse selection target");
       break;
     case 2:
       is(event.originalTarget, $("list"), "list no selection target");
@@ -229,7 +227,7 @@ function checkPopup()
     var elementrect = $(gTestElement).getBoundingClientRect();
     is(Math.round(menurect.left), Math.round(elementrect.left) + 9,
        gTestElement + " mouse left");
-    is(Math.round(menurect.top), Math.round(elementrect.top) + 4,
+    is(Math.round(menurect.top), Math.round(elementrect.top) + 6,
        gTestElement + " mouse top");
   }
   else {
