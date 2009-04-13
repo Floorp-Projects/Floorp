@@ -350,33 +350,33 @@ BookmarksStore.prototype = {
       this._bms.moveItem(itemId, parentid, record.sortindex);
     }
 
-    for (let key in record.cleartext) {
+    for (let [key, val] in Iterator(record.cleartext)) {
       switch (key) {
       case "title":
-        this._bms.setItemTitle(itemId, record.cleartext.title);
+        this._bms.setItemTitle(itemId, val);
         break;
       case "uri":
-        this._bms.changeBookmarkURI(itemId, Utils.makeURI(record.cleartext.uri));
+        this._bms.changeBookmarkURI(itemId, Utils.makeURI(val));
         break;
       case "tags": {
         // filter out null/undefined/empty tags
-        let tags = record.cleartext.tags.filter(function(t) t);
+        let tags = val.filter(function(t) t);
         let tagsURI = this._bms.getBookmarkURI(itemId);
         this._ts.untagURI(tagsURI, null);
         this._ts.tagURI(tagsURI, tags);
       } break;
       case "keyword":
-        this._bms.setKeywordForBookmark(itemId, record.cleartext.keyword);
+        this._bms.setKeywordForBookmark(itemId, val);
         break;
       case "description":
         this._ans.setItemAnnotation(itemId, "bookmarkProperties/description",
-                                    record.cleartext.description, 0,
+                                    val, 0,
                                     this._ans.EXPIRE_NEVER);
         break;
       case "generatorURI": {
         try {
           let micsumURI = Utils.makeURI(this._bms.getBookmarkURI(itemId));
-          let genURI = Utils.makeURI(record.cleartext.generatorURI);
+          let genURI = Utils.makeURI(val);
 	  if (this._ms == SERVICE_NOT_SUPPORTED) {
 	    this._log.warn("Can't create microsummary -- not supported.");
 	  } else {
@@ -388,24 +388,24 @@ BookmarksStore.prototype = {
         }
       } break;
       case "siteURI":
-        this._ls.setSiteURI(itemId, Utils.makeURI(record.cleartext.siteURI));
+        this._ls.setSiteURI(itemId, Utils.makeURI(val));
         break;
       case "feedURI":
-        this._ls.setFeedURI(itemId, Utils.makeURI(record.cleartext.feedURI));
+        this._ls.setFeedURI(itemId, Utils.makeURI(val));
         break;
       case "outgoingSharedAnno":
 	this._ans.setItemAnnotation(itemId, OUTGOING_SHARED_ANNO,
-				    record.cleartext.outgoingSharedAnno, 0,
+				    val, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
       case "incomingSharedAnno":
 	this._ans.setItemAnnotation(itemId, INCOMING_SHARED_ANNO,
-				    record.cleartext.incomingSharedAnno, 0,
+				    val, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
       case "serverPathAnno":
 	this._ans.setItemAnnotation(itemId, SERVER_PATH_ANNO,
-				    record.cleartext.serverPathAnno, 0,
+				    val, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
       }
