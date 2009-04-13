@@ -77,6 +77,7 @@ BookmarksEngine.prototype = {
   name: "bookmarks",
   displayName: "Bookmarks",
   logName: "Bookmarks",
+  _recordObj: PlacesItem,
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker
 };

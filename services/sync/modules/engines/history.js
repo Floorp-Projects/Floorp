@@ -61,6 +61,7 @@ HistoryEngine.prototype = {
   name: "history",
   displayName: "History",
   logName: "History",
+  _recordObj: HistoryRec,
   _storeObj: HistoryStore,
   _trackerObj: HistoryTracker,
 
