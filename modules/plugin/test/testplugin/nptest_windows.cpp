@@ -124,8 +124,8 @@ pluginDraw(InstanceData* instanceData)
   // is always positioned correctly and we just draw into it at 0,0.
   int x = instanceData->hasWidget ? 0 : instanceData->window.x;
   int y = instanceData->hasWidget ? 0 : instanceData->window.y;
-  int width = instanceData->window.width - 1;
-  int height = instanceData->window.height - 1;
+  int width = instanceData->window.width;
+  int height = instanceData->window.height;
 
   // Calculate the rectangle coordinates from the instanceData information
   Rect rect(x, y, width, height);
