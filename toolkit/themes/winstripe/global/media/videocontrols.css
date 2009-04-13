@@ -14,8 +14,6 @@
     min-height: 28px;
     min-width: 28px;
     border: none;
-    margin-right: -22px; /* 1/2 of scrubber thumb width, for overhang. */
-    position: relative; /* Trick to work around negative margin interfering with clicking on the button. */
 }
 .playButton[paused="true"] {
     background: url(chrome://global/skin/media/playButton.png) no-repeat center;
@@ -35,30 +33,17 @@
     background: url(chrome://global/skin/media/unmuteButton.png) no-repeat center;
 }
 
-.durationBox {
-    -moz-box-pack: center;
-}
-
-.durationLabel {
-    margin-left: -22px; /* 1/2 of scrubber thumb width, for overhang. */
-    padding-left: 8px; /* don't bump into the scrubber bar */
-    padding-top: 0px; /* center vertically with scrubber bar */
-    color: rgba(255,255,255,0.75);
-    font: 11px sans-serif;
-}
-
 .backgroundBar {
-    /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
-    /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
-    margin: 10px 22px 10px 22px;
+    /* make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+    margin-top: 10px;
+    margin-bottom: 10px;
     background-color: rgba(255,255,255,0.5);
     -moz-border-radius: 4px 4px;
 }
 
 .bufferBar, .progressBar {
-    /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
-    /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
-    margin: 10px 22px 10px 22px;
+    /* make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+    margin: 10px 0px 10px 0px;
     -moz-appearance: none;
     border: none;
     background-color: transparent;
@@ -80,7 +65,7 @@
 
 .progressBar .progress-bar {
     background-color: white;
-    -moz-border-radius: 4px 0px 0px 4px;
+    -moz-border-radius: 4px 4px;
     -moz-appearance: none;
 }
 
@@ -96,26 +81,10 @@
 .scale-thumb {
     /* Override the default thumb appearance with a custom image. */
     -moz-appearance: none;
-    background: transparent;
-    border: none;
-}
-
-.timeThumb {
     background: url(chrome://global/skin/media/scrubberThumb.png) no-repeat center;
-    min-width: 44px;
-    min-height: 22px;
-    margin-top: -14px;
-    -moz-box-pack: center;
-}
-
-.timeThumb[showhours="true"] {
-    background: url(chrome://global/skin/media/scrubberThumbWide.png) no-repeat center;
-}
-
-.timeLabel {
-    color: rgba(255,255,255,0.75);
-    font: 10px sans-serif;
-    padding-top: 3px;
+    border: none;
+    min-width: 11px;
+    min-height: 20px;
 }
 
 .statusOverlay {

@@ -6,82 +6,9 @@
    xmlns:xbl="http://www.mozilla.org/xbl"
    xmlns:svg="http://www.w3.org/2000/svg">
 
-  <binding id="timeThumb"
-           extends="chrome://global/content/bindings/scale.xml#scalethumb">
-      <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-          <xbl:children/>
-          <hbox class="timeThumb" xbl:inherits="showhours">
-              <label class="timeLabel"/>
-          </hbox>
-      </xbl:content>
-      <implementation>
-
-      <field name="timeLabel">null</field>
-      <constructor>
-          <![CDATA[
-          this.timeLabel = document.getAnonymousElementByAttribute(this, "class", "timeLabel");
-          this.timeLabel.setAttribute("value", "0:00");
-          ]]>
-      </constructor>
-
-      <property name="showHours">
-        <getter>
-          <![CDATA[
-          return this.getAttribute("showhours") == "true";
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-          this.setAttribute("showhours", val);
-          // If the duration becomes known while we're still showing the value
-          // for time=0, immediately update the value to show or hide the hours.
-          // It's less intrusive to do it now than when the user clicks play and
-          // is looking right next to the thumb.
-          var displayedTime = this.timeLabel.getAttribute("value");
-          if (val && displayedTime == "0:00")
-              this.timeLabel.setAttribute("value", "0:00:00");
-          else if (!val && displayedTime == "0:00:00")
-              this.timeLabel.setAttribute("value", "0:00");
-          ]]>
-        </setter>
-      </property>
-
-      <method name="setTime">
-          <parameter name="time"/>
-          <body>
-          <![CDATA[
-              var timeString;
-              var hours = Math.floor(time / 3600000);
-              var mins  = Math.floor(time % 3600000 / 60000);
-              var secs  = Math.floor(time % 60000 / 1000);
-              if (secs < 10)
-                  secs = "0" + secs;
-              if (hours || this.showHours) {
-                  if (mins < 10)
-                      mins = "0" + mins;
-                  timeString = hours + ":" + mins + ":" + secs;
-              } else {
-                  timeString = mins + ":" + secs;
-              }
-
-              this.timeLabel.setAttribute("value", timeString);
-          ]]>
-          </body>
-      </method>
-      </implementation>
-  </binding>
-
   <binding id="suppressChangeEvent"
             extends="chrome://global/content/bindings/scale.xml#scale">
       <implementation>
-
-      <field name="thumb">null</field>
-      <constructor>
-          <![CDATA[
-          this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
-          ]]>
-      </constructor>
-
       <method name="valueChanged">
           <parameter name="which"/>
           <parameter name="newValue"/>
@@ -93,9 +20,6 @@
             // just calls the videocontrol's seekToPosition() method directly.
             switch (which) {
               case "curpos":
-                // Update the time shown in the thumb.
-                this.thumb.setTime(newValue);
-
                 // The value of userChanged is true when changing the position with the mouse,
                 // but not when pressing an arrow key. However, the base binding sets
                 // ._userChanged in its keypress handlers, so we just need to check both.
@@ -142,9 +66,6 @@
                         <progressmeter class="progressBar" max="10000"/>
                         <scale class="scrubber" movetoclick="true"/>
                     </stack>
-                    <vbox class="durationBox">
-                        <label class="durationLabel"/>
-                    </vbox>
                     <button class="muteButton" oncommand="document.getBindingParent(this).Utils.toggleMute();"/>
                 </hbox>
             </vbox>
@@ -210,11 +131,11 @@
                 videocontrols : null,
                 playButton : null,
                 muteButton : null,
-                durationLabel  : null,
-                scrubberThumb  : null,
+
                 scrubber       : null,
                 progressBar    : null,
                 bufferBar      : null,
+                thumbWidth : 0,
 
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
@@ -438,25 +359,6 @@
                         duration = this.maxCurrentTimeSeen;
                     this.log("Duration is " + duration + "ms");
 
-                    // Format the duration as "h:mm:ss" or "m:ss"
-                    var hours = Math.floor(duration / 3600000);
-                    var mins  = Math.floor(duration % 3600000 / 60000);
-                    var secs  = Math.floor(duration % 60000 / 1000);
-                    var timeString;
-                    if (secs < 10)
-                        secs = "0" + secs;
-                    if (hours) {
-                        if (mins < 10)
-                            mins = "0" + mins;
-                        timeString = hours + ":" + mins + ":" + secs;
-                    } else {
-                        timeString = mins + ":" + secs;
-                    }
-                    this.durationLabel.setAttribute("value", timeString);
-
-                    // If the duration is over an hour, thumb should show h:mm:ss instead of mm:ss
-                    this.scrubberThumb.showHours = (duration >= 3600000);
-
                     this.scrubber.max = duration;
                     // XXX Can't set increment here, due to bug 473103. Also, doing so causes
                     // snapping when dragging with the mouse, so we can't just set a value for
@@ -486,10 +388,18 @@
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
                     this.scrubber.value = currentTime;
 
-                    // Extend the progressBar to the middle of the scrubber thumb.
+                    // Extend the progressBar so it goes to the right-edge of the
+                    // scrubber thumb. This is a bit tricky, due to how the thumb is
+                    // positioned... It's flush-left at the minimum position, but
+                    // flush-right at the maximum position (so that the full thumb is
+                    // always visible in the <scale>'s box).
                     var percent = currentTime / duration;
+                    var leftEdge = Math.floor(percent * (this.scrubber.clientWidth - this.thumbWidth));
+                    var rightEdge = leftEdge + this.thumbWidth;
+                    var adjPercent = rightEdge / this.scrubber.clientWidth;
+
                     // The progressBar has max=10000
-                    this.progressBar.value = Math.round(percent * 10000);
+                    this.progressBar.value = Math.round(adjPercent * 10000);
                 },
 
                 onMouseInOut : function (event) {
@@ -655,14 +565,18 @@
 
             this.Utils.controlFader.element  = document.getAnonymousElementByAttribute(this, "class", "controlBar");
             this.Utils.statusFader.element = document.getAnonymousElementByAttribute(this, "class", "statusOverlay");
-            this.Utils.statusIcon     = document.getAnonymousElementByAttribute(this, "class", "statusIcon");
-            this.Utils.playButton     = document.getAnonymousElementByAttribute(this, "class", "playButton");
-            this.Utils.muteButton     = document.getAnonymousElementByAttribute(this, "class", "muteButton");
+            this.Utils.statusIcon = document.getAnonymousElementByAttribute(this, "class", "statusIcon");
+
+            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");
+            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "class", "muteButton");
             this.Utils.progressBar    = document.getAnonymousElementByAttribute(this, "class", "progressBar");
             this.Utils.bufferBar      = document.getAnonymousElementByAttribute(this, "class", "bufferBar");
             this.Utils.scrubber       = document.getAnonymousElementByAttribute(this, "class", "scrubber");
-            this.Utils.scrubberThumb  = document.getAnonymousElementByAttribute(this.Utils.scrubber, "class", "scale-thumb");
-            this.Utils.durationLabel  = document.getAnonymousElementByAttribute(this, "class", "durationLabel");
+
+            // Get the width of the scrubber thumb.
+            var thumb = document.getAnonymousElementByAttribute(this.Utils.scrubber, "class", "scale-thumb");
+            if (thumb)
+                this.Utils.thumbWidth = thumb.clientWidth;
              
             this.Utils.setupInitialState();
 
