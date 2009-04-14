@@ -290,11 +290,13 @@ static JSBool
 HasProperty(JSContext* cx, JSObject* obj, jsid id)
 {
     // Check that we know how the lookup op will behave.
-    if (obj->map->ops->lookupProperty != js_LookupProperty)
-        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
-    JSClass* clasp = OBJ_GET_CLASS(cx, obj);
-    if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
-        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+    for (JSObject* pobj = obj; pobj; pobj = OBJ_GET_PROTO(cx, pobj)) {
+        if (pobj->map->ops->lookupProperty != js_LookupProperty)
+            return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+        JSClass* clasp = OBJ_GET_CLASS(cx, pobj);
+        if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
+            return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+    }
 
     JSObject* obj2;
     JSProperty* prop;
