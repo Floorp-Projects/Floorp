@@ -674,7 +674,9 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
 
     // Build mutex name from app name.
     ::_snwprintf(mMutexName, sizeof mMutexName / sizeof(PRUnichar), L"%s%s%s", 
-                 MOZ_MUTEX_NAMESPACE, gAppData->name, MOZ_STARTUP_MUTEX_NAME );
+                 MOZ_MUTEX_NAMESPACE,
+                 NS_ConvertUTF8toUTF16(gAppData->name).get(),
+                 MOZ_STARTUP_MUTEX_NAME );
     Mutex startupLock = Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
