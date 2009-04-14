@@ -208,6 +208,25 @@ static gfxIntSize gSharedSurfaceSize;
 static PRBool gSoftKeyMenuBar = PR_FALSE;
 static PRBool gSoftKeyboardState = PR_FALSE;
 
+static void NotifySoftKbObservers() {
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    SIPINFO sipInfo;
+    wchar_t rectBuf[256];
+    memset(&sipInfo, 0, sizeof(SIPINFO));
+    sipInfo.cbSize = sizeof(SIPINFO);
+    if (SipGetInfo(&sipInfo)) {
+      _snwprintf(rectBuf, 256, L"{\"left\": %d, \"top\": %d,"
+                 L" \"right\": %d, \"bottom\": %d}", 
+                 sipInfo.rcVisibleDesktop.left, 
+                 sipInfo.rcVisibleDesktop.top, 
+                 sipInfo.rcVisibleDesktop.right, 
+                 sipInfo.rcVisibleDesktop.bottom);
+      observerService->NotifyObservers(nsnull, "softkb-change", rectBuf);
+    }
+  }
+}
+
 static void ToggleSoftKB(PRBool show)
 {
   HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
@@ -218,7 +237,8 @@ static void ToggleSoftKB(PRBool show)
   if (hWndSIP)
     ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
 
-  SHSipPreference(NULL, show ? SIP_UP: SIP_DOWN);
+  SipShowIM(show ? SIPF_ON : SIPF_OFF);
+  NotifySoftKbObservers();
 }
 
 static void CreateSoftKeyMenuBar(HWND wnd)
@@ -4829,6 +4849,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_SETTINGCHANGE:
         getWheelInfo = PR_TRUE;
+#ifdef WINCE_WINDOWS_MOBILE
+        if (wParam == SPI_SETSIPINFO)
+          NotifySoftKbObservers();
+#endif
       break;
 
     case WM_PALETTECHANGED:
