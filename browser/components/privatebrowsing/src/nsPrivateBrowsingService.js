@@ -93,15 +93,6 @@ PrivateBrowsingService.prototype = {
     return this.__obs;
   },
 
-  // Preferences Service
-  __prefs: null,
-  get _prefs() {
-    if (!this.__prefs)
-      this.__prefs = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefBranch);
-    return this.__prefs;
-  },
-
   // Whether the private browsing mode is currently active or not.
   _inPrivateBrowsing: false,
 
@@ -158,14 +149,16 @@ PrivateBrowsingService.prototype = {
         }]
       });
 
-      // whether we should save and close the current session
-      this._saveSession = true;
-      try {
-        if (this._prefs.getBoolPref("browser.privatebrowsing.keep_current_session"))
-          this._saveSession = false;
-      } catch (ex) {}
-
       if (this._inPrivateBrowsing) {
+        // whether we should save and close the current session
+        this._saveSession = true;
+        var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                         getService(Ci.nsIPrefBranch);
+        try {
+          if (prefBranch.getBoolPref("browser.privatebrowsing.keep_current_session"))
+            this._saveSession = false;
+        } catch (ex) {}
+
         // save the whole browser state in order to restore all windows/tabs later
         if (this._saveSession && !this._savedBrowserState) {
           if (this._getBrowserWindow())
@@ -261,7 +254,9 @@ PrivateBrowsingService.prototype = {
         // private browsing mode upon startup.
         // This won't interfere with the session store component, because
         // that component will be initialized on final-ui-startup.
-        this._autoStart = this._prefs.getBoolPref("browser.privatebrowsing.autostart");
+        let prefsService = Cc["@mozilla.org/preferences-service;1"].
+                           getService(Ci.nsIPrefBranch);
+        this._autoStart = prefsService.getBoolPref("browser.privatebrowsing.autostart");
         if (this._autoStart) {
           this._autoStarted = true;
           this.privateBrowsingEnabled = true;
@@ -340,8 +335,8 @@ PrivateBrowsingService.prototype = {
             return;
         }
 
-        this._autoStarted = val ?
-          this._prefs.getBoolPref("browser.privatebrowsing.autostart") : false;
+        if (!val)
+          this._autoStarted = false;
         this._inPrivateBrowsing = val != false;
 
         let data = val ? "enter" : "exit";
