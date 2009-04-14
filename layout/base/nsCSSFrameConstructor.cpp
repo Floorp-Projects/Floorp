@@ -6156,7 +6156,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
     // Since we're appending, we'll walk to the last anonymous frame
     // that was created for the broken inline frame.  But don't walk
-    // to the trailing inline if its empty; stop at the block.
+    // to the trailing inline if it's empty; stop at the block.
     parentFrame = GetLastSpecialSibling(parentFrame, PR_TRUE);
   }
 
@@ -6507,6 +6507,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     else {
       // No previous or next sibling, so treat this like an appended frame.
       isAppend = PR_TRUE;
+      if (IsFrameSpecial(parentFrame)) {
+        // Since we're appending, we'll walk to the last anonymous frame
+        // that was created for the broken inline frame.  But don't walk
+        // to the trailing inline if it's empty; stop at the block.
+        parentFrame = GetLastSpecialSibling(parentFrame, PR_TRUE);
+      }
       // Get continuation that parents the last child
       parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
       // Deal with fieldsets
@@ -6613,7 +6619,16 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       // We perhaps could leave this true and take the AppendFrames path
       // below, but we'd have to update appendAfterFrame and it seems safer
       // to force all insert-after-:before cases to take these to take the
-      // InsertFrames path
+      // InsertFrames path.
+      // It's safe to skip AppendFrames here, even in append cases, because
+      // that only does two things: handles insertion before the :after, and
+      // handles moving trailing inline frames over to the last trailing
+      // inline.  For the former, we already have a prevSibling, so we'll put
+      // the new frames right after that prevSibling, so before the :after.
+      // For the latter, WipeContainingBlock will force a reframe of our
+      // container in the cases when the reparenting in AppendFrames would have
+      // been needed (in this case, when the :before frame is the block child
+      // at the end of the anonymous block of an {ib} split).
       isAppend = PR_FALSE;
     }
   }

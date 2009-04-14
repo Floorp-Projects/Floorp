@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #i { border: 2px solid; }
+      #i::before { display: block; content: "One"; }
+    </style>
+    <script>
+      function doTest() {
+        var i = document.getElementById("i");
+        dump('a');
+        i.insertBefore(document.createTextNode("Two"), i.firstChild);
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <span id="i"><span style="display: none"></span></span>
+  </body>
+</html>
