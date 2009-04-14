@@ -39,7 +39,7 @@ MOZ_APP_NAME=fennec
 MOZ_APP_DISPLAYNAME=Fennec
 case "$target" in
 *-wince)
-    MOZ_APP_VERSION=0.11
+    MOZ_APP_VERSION=1.0a1pre
     ;;
 *)
     MOZ_APP_VERSION=1.0b2pre
