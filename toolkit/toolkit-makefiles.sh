@@ -105,6 +105,7 @@ MAKEFILES_gfx="
   gfx/src/psshared/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
+  gfx/qcms/Makefile
 "
 
 MAKEFILES_htmlparser="
@@ -783,7 +784,6 @@ add_makefiles "
   $MAKEFILES_zlib
   $MAKEFILES_libmar
   $MAKEFILES_lcms
-  $MAKEFILES_qcms
 "
 
 #
