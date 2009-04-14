@@ -64,7 +64,7 @@ static NPPluginFuncs* g_pluginFuncs;
 //
 //	fills in the func table used by Navigator to call entry points in
 //  plugin DLL.  Note that these entry points ensure that DS is loaded
-//  by using the NP_LOADDS macro, when compiling for Win16
+//  by using the NP_LOADDS macro, when compiling for OS/2.
 //
 NPError WINAPI NP_EXPORT
 NP_GetEntryPoints(NPPluginFuncs* pFuncs)
