@@ -85,6 +85,7 @@ CPPSRCS		= \
 	nsUXThemeData.cpp \
 	nsNativeThemeWin.cpp \
 	nsWinGesture.cpp \
+	nsIdleServiceWin.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING
@@ -108,7 +109,6 @@ CPPSRCS += \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
 	nsSound.cpp          \
-	nsIdleServiceWin.cpp    \
 	nsTextStore.cpp \
 	$(NULL)
 endif
