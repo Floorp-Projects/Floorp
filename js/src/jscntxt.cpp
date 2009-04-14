@@ -671,6 +671,9 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
         if (last) {
+            /* Clear builtin functions, which are recreated on demand. */
+            memset(rt->builtinFunctions, 0, sizeof rt->builtinFunctions);
+
             js_GC(cx, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
             DUMP_FUNCTION_METER(cx);
