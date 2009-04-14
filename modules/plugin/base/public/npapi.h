@@ -564,7 +564,6 @@ enum NPEventType {
 #define NPVERS_HAS_STREAMOUTPUT             8
 #define NPVERS_HAS_NOTIFICATION             9
 #define NPVERS_HAS_LIVECONNECT              9
-#define NPVERS_WIN16_HAS_LIVECONNECT        9
 #define NPVERS_68K_HAS_LIVECONNECT          11
 #define NPVERS_HAS_WINDOWLESS               11
 #define NPVERS_HAS_XPCONNECT_SCRIPTING      13
