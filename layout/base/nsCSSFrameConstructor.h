@@ -395,14 +395,15 @@ private:
                                   nsIAtom*                 aPseudoElement,
                                   FrameConstructionItemList& aItems);
 
-  // This method can change aFrameList: it can chop off the end and
-  // put it in a special sibling of aParentFrame.  It can also change
-  // aState by moving some floats out of it.
+  // This method can change aFrameList: it can chop off the end and put it in a
+  // special sibling of aParentFrame.  It can also change aState by moving some
+  // floats out of it.  aPrevSibling must be the frame after which aFrameList
+  // is to be placed on aParentFrame's principal child list.  It may be null if
+  // aFrameList is being added at the beginning of the child list.
   nsresult AppendFrames(nsFrameConstructorState&       aState,
-                        nsIContent*                    aContainer,
                         nsIFrame*                      aParentFrame,
                         nsFrameItems&                  aFrameList,
-                        nsIFrame*                      aAfterFrame);
+                        nsIFrame*                      aPrevSibling);
 
   // BEGIN TABLE SECTION
   /**
@@ -1343,11 +1344,12 @@ private:
 
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
-  // (and therefore need an {ib} split).  If aIsAppend is true, aPrevSibling is
-  // ignored.  Otherwise it may be used to determine whether to reframe when
-  // inserting into the block of an {ib} split.  Passing a null aPrevSibling in
-  // the non-append case is ok in terms of correctness.  It might reframe when
-  // we don't really need to, but that's it.
+  // (and therefore need an {ib} split).  aPrevSibling must be correct, even in
+  // aIsAppend cases.  Passing aIsAppend false even when an append is happening
+  // is ok in terms of correctness, but can lead to unnecessary reframing.  If
+  // aIsAppend is true, then the caller MUST call
+  // nsCSSFrameConstructor::AppendFrames (as opposed to
+  // nsFrameManager::InsertFrames directly) to add the new frames.
   // @return PR_TRUE if we reconstructed the containing block, PR_FALSE
   // otherwise
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
