@@ -10866,13 +10866,13 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     if (aPrevSibling && !aPrevSibling->GetNextSibling()) {
       // This is an append that won't go through AppendFrames.  We can bail out
       // if the last frame we're appending is not inline.
-      if (!aItems.IsStartInline()) {
+      if (!aItems.IsEndInline()) {
         return PR_FALSE;
       }
     } else {
       // We can bail out if we're not inserting at the beginning or if
       // the first frame we're inserting is not inline.
-      if (aPrevSibling || !aItems.IsEndInline()) {
+      if (aPrevSibling || !aItems.IsStartInline()) {
         return PR_FALSE;
       }
     }
