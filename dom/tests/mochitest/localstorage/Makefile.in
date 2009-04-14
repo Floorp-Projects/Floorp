@@ -58,6 +58,9 @@ _TEST_FILES	= \
     interOriginFrame.js \
     interOriginTest.js \
     interOriginTest2.js \
+    test_brokenUTF-16.html \
+    test_cookieBlock.html \
+    test_embededNulls.html \
     test_localStorageBase.html \
     test_localStorageOriginsEquals.html \
     test_localStorageOriginsDiff.html \
