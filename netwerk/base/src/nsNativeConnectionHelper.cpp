@@ -54,7 +54,7 @@ nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
     if (gIOService->IsLinkUp())
         return PR_FALSE;
 
-    nsRASAutodial autodial;
+    nsAutodial autodial;
 
     if (autodial.ShouldDialOnNetworkError()) 
         return NS_SUCCEEDED(autodial.DialDefault(hostName));
@@ -65,7 +65,6 @@ nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
 PRBool
 nsNativeConnectionHelper::IsAutodialEnabled()
 {
-    nsRASAutodial autodial;
-
+    nsAutodial autodial;
     return autodial.Init() == NS_OK && autodial.ShouldDialOnNetworkError();
 }
