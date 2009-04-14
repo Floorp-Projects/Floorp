@@ -590,6 +590,14 @@ JSClass js_ArgumentsClass = {
 #define JSSLOT_CALL_ARGUMENTS            (JSSLOT_PRIVATE + 2)
 #define CALL_CLASS_FIXED_RESERVED_SLOTS  2
 
+JSClass js_DeclEnvClass = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 JSObject *
 js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 {
@@ -609,16 +617,34 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 #endif
 
     /*
-     * Create the call object, using the frame's enclosing scope as
-     * its parent, and link the call to its stack frame.
+     * Create the call object, using the frame's enclosing scope as its
+     * parent, and link the call to its stack frame. For a named function
+     * expression Call's parent points to an environment object holding
+     * function's name.
      */
-    callobj = js_NewObject(cx, &js_CallClass, NULL, fp->scopeChain, 0);
+    JSObject *parent = fp->scopeChain;
+    JSAtom *lambdaName = (fp->fun->flags & JSFUN_LAMBDA) ? fp->fun->atom : NULL;
+    if (lambdaName) {
+        parent = js_NewObjectWithGivenProto(cx, &js_DeclEnvClass, NULL,
+                                            parent, 0);
+        if (!parent)
+            return JS_FALSE;
+    }
+    callobj = js_NewObject(cx, &js_CallClass, NULL, parent, 0);
     if (!callobj)
         return NULL;
 
     JS_SetPrivate(cx, callobj, fp);
     JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->callee));
     STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(fp->callee));
+    if (lambdaName &&
+        !js_DefineNativeProperty(cx, parent, ATOM_TO_JSID(lambdaName),
+                                 OBJECT_TO_JSVAL(fp->callee), NULL, NULL,
+                                 JSPROP_PERMANENT | JSPROP_READONLY,
+                                 0, 0, NULL)) {
+        return JS_FALSE;
+    }
+
     fp->callobj = callobj;
 
     /*
@@ -868,14 +894,6 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return CallPropertyOp(cx, obj, id, vp, JSCPK_VAR, JS_TRUE);
 }
 
-JSClass js_DeclEnvClass = {
-    js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
-
 static JSBool
 call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
              JSObject **objp)
@@ -941,30 +959,6 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
             return JS_FALSE;
         }
         *objp = obj;
-        return JS_TRUE;
-    }
-
-    /*
-     * If fun is a named function expression and id matches its name, resolve
-     * this call object's saved callee function object under that name in obj's
-     * parent declarative environment object.
-     */
-    if ((fun->flags & JSFUN_LAMBDA) && JSID_TO_ATOM(id) == fun->atom) {
-        JSObject *parent = STOBJ_GET_PARENT(obj);
-
-        if (STOBJ_GET_CLASS(parent) != &js_DeclEnvClass) {
-            parent = js_NewObjectWithGivenProto(cx, &js_DeclEnvClass, NULL, parent, 0);
-            if (!parent)
-                return JS_FALSE;
-            STOBJ_SET_PARENT(obj, parent);
-
-            attrs = JSPROP_PERMANENT | JSPROP_READONLY;
-            if (!js_DefineNativeProperty(cx, parent, id, callee, NULL, NULL, attrs, 0, 0, NULL))
-                return JS_FALSE;
-        }
-
-        /* Do not resolve, let normal scope chain search find the name. */
-        JS_ASSERT(!*objp);
         return JS_TRUE;
     }
 
