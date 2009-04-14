@@ -46,7 +46,7 @@
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIProxyObjectManager.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 
 #include "nsConsoleService.h"
@@ -111,10 +111,11 @@ nsConsoleService::Init()
 
 static PRBool snapshot_enum_func(nsHashKey *key, void *data, void* closure)
 {
-    nsISupportsArray *array = (nsISupportsArray *)closure;
+    nsCOMArray<nsIConsoleListener> *array =
+      reinterpret_cast<nsCOMArray<nsIConsoleListener> *>(closure);
 
-    // Copy each element into the temporary nsSupportsArray...
-    array->AppendElement((nsISupports*)data);
+    // Copy each element into the temporary nsCOMArray...
+    array->AppendObject((nsIConsoleListener*)data);
     return PR_TRUE;
 }
 
@@ -125,7 +126,7 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
     if (message == nsnull)
         return NS_ERROR_INVALID_ARG;
 
-    nsSupportsArray listenersSnapshot;
+    nsCOMArray<nsIConsoleListener> listenersSnapshot;
     nsIConsoleMessage *retiredMessage;
 
     NS_ADDREF(message); // early, in case it's same as replaced below.
@@ -167,12 +168,7 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
      * when we only care about the recursive case.
      */
     nsCOMPtr<nsIConsoleListener> listener;
-    nsresult rv;
-    nsresult returned_rv;
-    PRUint32 snapshotCount;
-    rv = listenersSnapshot.Count(&snapshotCount);
-    if (NS_FAILED(rv))
-        return rv;
+    PRInt32 snapshotCount = listenersSnapshot.Count();
 
     {
         nsAutoLock lock(mLock);
@@ -181,14 +177,8 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
         mListening = PR_TRUE;
     }
 
-    returned_rv = NS_OK;
-    for (PRUint32 i = 0; i < snapshotCount; i++) {
-        rv = listenersSnapshot.GetElementAt(i, getter_AddRefs(listener));
-        if (NS_FAILED(rv)) {
-            returned_rv = rv;
-            break; // fall thru to mListening restore code below.
-        }
-        listener->Observe(message);
+    for (PRInt32 i = 0; i < snapshotCount; i++) {
+        listenersSnapshot[i]->Observe(message);
     }
     
     {
@@ -196,7 +186,7 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
         mListening = PR_FALSE;
     }
 
-    return returned_rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
