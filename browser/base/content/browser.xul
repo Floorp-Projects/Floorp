@@ -350,7 +350,10 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location">
         <textbox id="urlbar" flex="1"
-                 delayedemptytext="&urlbar.emptyText;"
+                 bookmarkhistoryemptytext="&urlbar.bookmarkhistory.emptyText;"
+                 bookmarkemptytext="&urlbar.bookmark.emptyText;"
+                 historyemptytext="&urlbar.history.emptyText;"
+                 noneemptytext="&urlbar.none.emptyText;"
                  chromedir="&locale.dir;"
                  type="autocomplete"
                  autocompletesearch="history"
