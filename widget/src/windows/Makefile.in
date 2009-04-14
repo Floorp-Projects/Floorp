@@ -86,6 +86,7 @@ CPPSRCS		= \
 	nsNativeThemeWin.cpp \
 	nsWinGesture.cpp \
 	nsIdleServiceWin.cpp \
+	nsSound.cpp          \
 	$(NULL)
 
 ifdef NS_PRINTING
@@ -96,7 +97,11 @@ CPPSRCS		+= \
 	$(NULL)
 endif
 
-ifneq ($(OS_ARCH), WINCE)
+ifeq ($(OS_ARCH), WINCE)
+CPPSRCS += \
+	nsClipboardCE.cpp \
+	$(NULL)
+else
 CPPSRCS += \
 	nsKeyboardLayout.cpp \
 	IEnumFE.cpp  \
@@ -108,7 +113,6 @@ CPPSRCS += \
 	nsClipboard.cpp      \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
-	nsSound.cpp          \
 	nsTextStore.cpp \
 	$(NULL)
 endif
