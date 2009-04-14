@@ -5,6 +5,20 @@
 
 #include "prtypes.h"
 
+#if !defined(BIG_ENDIAN) && !defined(LITTLE_ENDIAN)
+#ifdef IS_LITTLE_ENDIAN
+#define LITTLE_ENDIAN
+#endif
+
+#ifdef IS_BIG_ENDIAN
+#define BIG_ENDIAN
+#endif
+#endif
+
+#if defined (__SVR4) && defined (__sun)
+/* int_types.h gets included somehow, so avoid redefining the types differently */
+#include <sys/int_types.h>
+#else
 typedef PRInt8 int8_t;
 typedef PRUint8 uint8_t;
 typedef PRInt16 int16_t;
@@ -22,8 +36,19 @@ typedef PRUint64 uint64_t;
 #else
 typedef PRUptrdiff uintptr_t;
 #endif
+#endif
 
-#else
+#else // MOZ_QCMS
+
+/* all of the platforms that we use _MSC_VER on are little endian
+ * so this is sufficient for now */
+#ifdef _MSC_VER
+#define LITTLE_ENDIAN
+#endif
+
+#ifdef __OS2__
+#define LITTLE_ENDIAN
+#endif
 
 #if defined (_SVR4) || defined (SVR4) || defined (__OpenBSD__) || defined (_sgi) || defined (__sun) || defined (sun) || defined (__digital__)
 #  include <inttypes.h>
