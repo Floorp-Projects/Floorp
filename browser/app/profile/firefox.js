@@ -820,3 +820,6 @@ pref("browser.privatebrowsing.dont_prompt_on_enter", false);
 // Don't try to alter this pref, it'll be reset the next time you use the
 // bookmarking dialog
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
+
+// base url for the wifi geolocation network provider
+pref("geo.wifi.uri", "https://www.google.com/loc/json");
