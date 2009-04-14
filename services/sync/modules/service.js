@@ -394,6 +394,10 @@ WeaveSvc.prototype = {
         engines = ["Bookmarks", "Form", "History", "Password", "Tab"];
         break;
 
+      case "SeaMonkey":
+        engines = ["Form", "History", "Password"];
+        break;
+
       case "Thunderbird":
         engines = ["Cookie", "Password"];
         break;
