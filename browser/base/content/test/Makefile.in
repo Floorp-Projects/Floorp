@@ -67,6 +67,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
+                 browser_bug419612.js \
                  browser_bug420160.js \
                  browser_bug424101.js \
                  browser_bug427559.js \
@@ -105,7 +106,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug479408.js \
                  browser_bug479408_sample.html \
                  browser_scope.js \
-                 browser_bug419612.js \
+                 browser_overflowScroll.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
