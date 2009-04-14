@@ -490,36 +490,36 @@ NS_IMETHODIMP xpcProperty::GetValue(nsIVariant * *aValue)
 NS_IMPL_ISUPPORTS1(xpcPropertyBagEnumerator, nsISimpleEnumerator)
 
 xpcPropertyBagEnumerator::xpcPropertyBagEnumerator(PRUint32 count)
-    : mIndex(0), mCount(0)
+    : mIndex(0)
 {
-    mArray.SizeTo(count);
+    mArray.SetCapacity(count);
 }
 
 JSBool xpcPropertyBagEnumerator::AppendElement(nsISupports* element)
 {
-    if(!mArray.AppendElement(element))
+    if(!mArray.AppendObject(element))
         return JS_FALSE;
-    mCount++;
     return JS_TRUE;
 }
 
 /* boolean hasMoreElements (); */
 NS_IMETHODIMP xpcPropertyBagEnumerator::HasMoreElements(PRBool *_retval)
 {
-    *_retval = mIndex < mCount;
+    *_retval = mIndex < mArray.Count();
     return NS_OK;
 }
 
 /* nsISupports getNext (); */
 NS_IMETHODIMP xpcPropertyBagEnumerator::GetNext(nsISupports **_retval)
 {
-    if(!(mIndex < mCount))
+    if(!(mIndex < mArray.Count()))
     {
         NS_ERROR("Bad nsISimpleEnumerator caller!");
         return NS_ERROR_FAILURE;    
     }
     
-    *_retval = mArray.ElementAt(mIndex++);
+    *_retval = mArray.ObjectAt(mIndex++);
+    NS_IF_ADDREF(*_retval);
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
 
