@@ -335,21 +335,29 @@ nsHTMLEditor::RefreshResizers()
 NS_IMETHODIMP 
 nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
 {
+  nsresult res = ShowResizersInner(aResizedElement);
+  if (NS_FAILED(res))
+    HideResizers();
+  return res;
+}
+
+nsresult 
+nsHTMLEditor::ShowResizersInner(nsIDOMElement *aResizedElement)
+{
   NS_ENSURE_ARG_POINTER(aResizedElement);
+  nsresult res;
+
+  nsCOMPtr<nsIDOMNode> parentNode;
+  res = aResizedElement->GetParentNode(getter_AddRefs(parentNode));
+  NS_ENSURE_SUCCESS(res, res);
 
   if (mResizedObject) {
     NS_ERROR("call HideResizers first");
     return NS_ERROR_UNEXPECTED;
   }
-
   mResizedObject = aResizedElement;
 
   // The resizers and the shadow will be anonymous siblings of the element.
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> parentNode;
-  res = aResizedElement->GetParentNode(getter_AddRefs(parentNode));
-  NS_ENSURE_SUCCESS(res, res);
-
   res = CreateResizer(getter_AddRefs(mTopLeftHandle),
                       nsIHTMLObjectResizer::eTopLeft,     parentNode);
   if (NS_FAILED(res)) return res;
@@ -405,7 +413,6 @@ nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
   res = CreateResizingInfo(getter_AddRefs(mResizingInfo), parentNode);
   if (NS_FAILED(res)) return res;
 
-
   // and listen to the "resize" event on the window first, get the
   // window from the document...
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -436,9 +443,13 @@ nsHTMLEditor::HideResizers(void)
 
   nsresult res;
   nsCOMPtr<nsIDOMNode> parentNode;
-  res = mTopLeftHandle->GetParentNode(getter_AddRefs(parentNode));
-  NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parentNode);
+  nsCOMPtr<nsIContent> parentContent;
+
+  if (mTopLeftHandle) {
+    res = mTopLeftHandle->GetParentNode(getter_AddRefs(parentNode));
+    NS_ENSURE_SUCCESS(res, res);
+    parentContent = do_QueryInterface(parentNode);
+  }
 
   NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
 
