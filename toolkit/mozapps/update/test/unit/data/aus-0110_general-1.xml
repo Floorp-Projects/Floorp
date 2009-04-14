@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<updates>
-  <update type="major" version="4.0" extensionVersion="4.0" buildID="20080811053724" licenseURL="http://dummylicense" detailsURL="http://dummydetails/">
-    <patch type="complete" URL="http://localhost:4444/data/aus-0110_general-1.mar" hashFunction="SHA1" hashValue="246522844a98564e831d89b8c9243efca90f687e" size="1444"/>
-  </update>
-</updates>
