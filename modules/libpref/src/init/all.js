@@ -519,6 +519,7 @@ pref("dom.popup_allowed_events", "change click dblclick mouseup reset submit");
 pref("dom.disable_open_click_delay", 1000);
 
 pref("dom.storage.enabled", true);
+pref("dom.storage.default_quota",      5120);
 
 // Disable popups from plugins by default
 //   0 = openAllowed
