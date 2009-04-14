@@ -3618,6 +3618,13 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
         c->root = f;
     }
 
+    /*
+     * If we are recycling a fragment, it might have a different ip so reset it here. This
+     * can happen when attaching a branch to a NESTED_EXIT, which might extend along separate paths
+     * (i.e. after the loop edge, and after a return statement).
+     */
+    c->ip = cx->fp->regs->pc;
+
     debug_only_v(printf("trying to attach another branch to the tree (hits = %d)\n", c->hits());)
 
     int32_t& hits = c->hits();
