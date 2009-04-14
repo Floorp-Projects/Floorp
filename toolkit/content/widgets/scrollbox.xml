@@ -168,6 +168,8 @@
         document.defaultView.getComputedStyle(this._scrollbox, "").direction == "rtl";
       ]]></field>
 
+      <field name="_scrollTarget">null</field>
+
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
         <parameter name="aSmoothScroll"/>
@@ -200,10 +202,12 @@
 
           this._stopSmoothScroll();
 
-          if (aSmoothScroll != false && this.smoothScroll)
+          if (aSmoothScroll != false && this.smoothScroll) {
+            this._scrollTarget = element;
             this._smoothScrollByPixels(amountToScroll);
-          else
+          } else {
             this.scrollByPixels(amountToScroll);
+          }
         ]]></body>
       </method>
 
@@ -303,7 +307,7 @@
         <body><![CDATA[
           var elements = this._getScrollableElements();
           if (!elements.length)
-            return;
+            return null;
 
           if (this._isRTLScrollbox) {
             elements = Array.slice(elements);
@@ -377,6 +381,7 @@
           if (this._isScrolling) {
             clearInterval(this._smoothScrollTimer);
             this._isScrolling = 0;
+            this._scrollTarget = null;
           }
         ]]></body>
       </method>
@@ -425,6 +430,16 @@
         // We allow vertical scrolling to scroll a horizontal scrollbox
         // because many users have a vertical scroll wheel but no
         // horizontal support.
+
+        // Each mouse scroll is expected to scroll event.detail items. If a
+        // previous scroll is still in progress because of smooth scrolling,
+        // we need to complete it before starting a new one.
+        if (this._scrollTarget) {
+          let elements = this._getScrollableElements();
+          if (this._scrollTarget != elements[0] &&
+              this._scrollTarget != elements[elements.length - 1])
+            this.ensureElementIsVisible(this._scrollTarget, false);
+        }
 
         this.scrollByIndex(event.detail);
         event.stopPropagation();
