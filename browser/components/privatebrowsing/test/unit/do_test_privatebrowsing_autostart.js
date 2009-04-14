@@ -65,10 +65,4 @@ function do_test() {
 
   // private browsing not auto-started
   do_check_false(pb.autoStarted);
-
-  // enter private browsing mode again
-  pb.privateBrowsingEnabled = true;
-
-  // private browsing is auto-started
-  do_check_true(pb.autoStarted);
 }
