@@ -308,6 +308,8 @@ gfxWindowsPlatform::FindFonts()
                 AppendFacesFromFontFile(static_cast<const PRUnichar*>(filePath.get()));
                 moreFiles = FindNextFile(handle, &results);
             }
+            if (handle != INVALID_HANDLE_VALUE)
+                FindClose(handle);
         }
     }
 }
