@@ -5729,49 +5729,69 @@ AdjustAppendParentForAfterContent(nsPresContext* aPresContext,
 }
 
 /**
- * This function is called by ContentAppended() and ContentInserted()
- * when appending flowed frames to a parent's principal child list. It
- * handles the case where the parent frame has :after pseudo-element
- * generated content.
+ * This function will get the previous sibling to use for an append operation.
+ * it takes a parent frame (must not be null) and its :after frame (may be
+ * null).
+ */
+static nsIFrame*
+FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aAfterFrame)
+{
+  nsFrameList childList(aParentFrame->GetFirstChild(nsnull));
+  if (aAfterFrame) {
+    NS_ASSERTION(aAfterFrame->GetParent() == aParentFrame, "Wrong parent");
+    return childList.GetPrevSiblingFor(aAfterFrame);
+  }
+
+  return childList.LastChild();
+}
+
+/**
+ * This function will get the next sibling for a frame insert operation given
+ * the parent and previous sibling.  aPrevSibling may be null.
+ */
+static nsIFrame*
+GetInsertNextSibling(nsIFrame* aParentFrame, nsIFrame* aPrevSibling)
+{
+  if (aPrevSibling) {
+    return aPrevSibling->GetNextSibling();
+  }
+
+  return aParentFrame->GetFirstChild(nsnull);
+}
+
+/**
+ * This function is called by ContentAppended() and ContentInserted() when
+ * appending flowed frames to a parent's principal child list. It handles the
+ * case where the parent frame has :after pseudo-element generated content and
+ * the case where the parent is the block of an {ib} split.
  */
 nsresult
 nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
-                                    nsIContent*                    aContainer,
                                     nsIFrame*                      aParentFrame,
                                     nsFrameItems&                  aFrameList,
-                                    nsIFrame*                      aAfterFrame)
+                                    nsIFrame*                      aPrevSibling)
 {
-#ifdef DEBUG
-  nsIFrame* debugAfterFrame;
-  nsIFrame* debugNewParent =
-    ::AdjustAppendParentForAfterContent(aState.mPresContext, aContainer,
-                                        aParentFrame, &debugAfterFrame);
-  NS_ASSERTION(debugNewParent == aParentFrame, "Incorrect parent");
-  NS_ASSERTION(debugAfterFrame == aAfterFrame, "Incorrect after frame");
-#endif
+  NS_PRECONDITION(!IsFrameSpecial(aParentFrame) ||
+                  !GetSpecialSibling(aParentFrame) ||
+                  !GetSpecialSibling(aParentFrame)->GetFirstChild(nsnull),
+                  "aParentFrame has a special sibling with kids?");
+  NS_PRECONDITION(!aPrevSibling || aPrevSibling->GetParent() == aParentFrame,
+                  "Parent and prevsibling don't match");
 
-  nsFrameManager* frameManager = aState.mFrameManager;
-  if (aAfterFrame) {
-    NS_ASSERTION(!IsFrameSpecial(aParentFrame) ||
-                 IsInlineFrame(aParentFrame) ||
-                 !IsInlineOutside(aAfterFrame),
-                 "Shouldn't have inline :after content on the block in an "
-                 "{ib} split");
-    nsFrameList frames(aParentFrame->GetFirstChild(nsnull));
+  nsIFrame* nextSibling = ::GetInsertNextSibling(aParentFrame, aPrevSibling);
 
-    // Insert the frames before the :after pseudo-element.
-    return frameManager->InsertFrames(aParentFrame, nsnull,
-                                      frames.GetPrevSiblingFor(aAfterFrame),
-                                      aFrameList.childList);
-  }
+  NS_ASSERTION(nextSibling ||
+               !aParentFrame->GetNextContinuation() ||
+               !aParentFrame->GetNextContinuation()->GetFirstChild(nsnull),
+               "aParentFrame has later continuations with kids?");
 
-  if (IsFrameSpecial(aParentFrame) &&
+  // If we we're inserting a list of frames that ends in inlines at the end of
+  // the block part of an {ib} split, we need to move them out to the beginning
+  // of a trailing inline part.
+  if (!nextSibling &&
+      IsFrameSpecial(aParentFrame) &&
       !IsInlineFrame(aParentFrame) &&
       IsInlineOutside(aFrameList.lastChild)) {
-    NS_ASSERTION(!aParentFrame->GetNextContinuation() ||
-                 !aParentFrame->GetNextContinuation()->GetFirstChild(nsnull),
-                 "Shouldn't happen");
-    
     // We want to put some of the frames into the following inline frame.
     nsIFrame* lastBlock = FindLastBlock(aFrameList.childList);
     nsIFrame* firstTrailingInline;
@@ -5804,8 +5824,9 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
     return NS_OK;
   }
   
-  return frameManager->AppendFrames(aParentFrame, nsnull,
-                                    aFrameList.childList);
+  // Insert the frames after out aPrevSibling
+  return aState.mFrameManager->InsertFrames(aParentFrame, nsnull, aPrevSibling,
+                                            aFrameList.childList);
 }
 
 #define UNSET_DISPLAY 255
@@ -6160,7 +6181,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     parentFrame = GetLastSpecialSibling(parentFrame, PR_TRUE);
   }
 
-  // Get continuation that parents the last child
+  // Get continuation that parents the last child.  This MUST be done
+  // before the AdjustAppendParentForAfterContent call.
   parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
 
   nsIAtom* frameType = parentFrame->GetType();
@@ -6205,13 +6227,15 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                               items);
   }
 
+  nsIFrame* prevSibling = ::FindAppendPrevSibling(parentFrame, parentAfterFrame);
+
   // Perform special check for diddling around with the frames in
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
   LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          !parentAfterFrame, nsnull)) {
+                          PR_TRUE, prevSibling)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
@@ -6254,26 +6278,21 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsresult result = NS_OK;
 
   // Notify the parent frame passing it the list of new frames
-  if (NS_SUCCEEDED(result) &&
-      (frameItems.childList || captionItems.childList)) {
-    // Append the flowed frames to the principal child list, tables need special treatment
-    if (nsGkAtoms::tableFrame == frameType) {
-      if (captionItems.childList) { // append the caption to the outer table
-        nsIFrame* outerTable = parentFrame->GetParent();
-        if (outerTable) { 
-          state.mFrameManager->AppendFrames(outerTable,
-                                            nsGkAtoms::captionList,
-                                            captionItems.childList);
-        }
-      }
-      if (frameItems.childList) { // append children of the inner table
-        AppendFrames(state, aContainer, parentFrame, frameItems,
-                     parentAfterFrame);
+  if (NS_SUCCEEDED(result)) {
+    // Append the flowed frames to the principal child list; captions
+    // need special treatment
+    if (captionItems.childList) { // append the caption to the outer table
+      NS_ASSERTION(nsGkAtoms::tableFrame == frameType, "how did that happen?");
+      nsIFrame* outerTable = parentFrame->GetParent();
+      if (outerTable) {
+        state.mFrameManager->AppendFrames(outerTable,
+                                          nsGkAtoms::captionList,
+                                          captionItems.childList);
       }
     }
-    else {
-      AppendFrames(state, aContainer, parentFrame, frameItems,
-                   parentAfterFrame);
+
+    if (frameItems.childList) { // append the in-flow kids
+      AppendFrames(state, parentFrame, frameItems, prevSibling);
     }
   }
 
@@ -6489,7 +6508,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   nsIFrame* prevSibling = FindPreviousSibling(first, iter);
 
   PRBool    isAppend = PR_FALSE;
-  nsIFrame* appendAfterFrame;  // This is only looked at when isAppend is true
 
   // Now, find the geometric parent so that we can handle
   // continuations properly. Use the prev sibling if we have it;
@@ -6513,16 +6531,19 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         // to the trailing inline if it's empty; stop at the block.
         parentFrame = GetLastSpecialSibling(parentFrame, PR_TRUE);
       }
-      // Get continuation that parents the last child
+      // Get continuation that parents the last child.  This MUST be done
+      // before the AdjustAppendParentForAfterContent call.
       parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
       // Deal with fieldsets
       parentFrame = ::GetAdjustedParentFrame(parentFrame,
                                              parentFrame->GetType(),
                                              aChild);
+      nsIFrame* appendAfterFrame;
       parentFrame =
         ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
                                             container, parentFrame,
                                             &appendAfterFrame);
+      prevSibling = ::FindAppendPrevSibling(parentFrame, appendAfterFrame);
     }
   }
 
@@ -6616,20 +6637,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       // Insert the new frames after the last continuation of the :before
       prevSibling = firstChild->GetTailContinuation();
       parentFrame = prevSibling->GetParent();
-      // We perhaps could leave this true and take the AppendFrames path
-      // below, but we'd have to update appendAfterFrame and it seems safer
-      // to force all insert-after-:before cases to take these to take the
-      // InsertFrames path.
-      // It's safe to skip AppendFrames here, even in append cases, because
-      // that only does two things: handles insertion before the :after, and
-      // handles moving trailing inline frames over to the last trailing
-      // inline.  For the former, we already have a prevSibling, so we'll put
-      // the new frames right after that prevSibling, so before the :after.
-      // For the latter, WipeContainingBlock will force a reframe of our
-      // container in the cases when the reparenting in AppendFrames would have
-      // been needed (in this case, when the :before frame is the block child
-      // at the end of the anonymous block of an {ib} split).
-      isAppend = PR_FALSE;
+      // Don't change isAppend here; we'll can call AppendFrames as needed, and
+      // the change to our prevSibling doesn't affect that.
     }
   }
 
@@ -6642,7 +6651,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // appending, so let WipeContainingBlock know that.
   LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          isAppend && !appendAfterFrame, prevSibling)) {
+                          isAppend, prevSibling)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
@@ -6668,11 +6677,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // actually use as the parent, then the calculated insertion point is now
   // invalid and as it is unknown where to insert correctly we append instead
   // (bug 341858).
-  // This can affect our appendAfterFrame, but should not have any effect on
-  // the WipeContainingBlock above, since this should only happen when neither
-  // parent is a special frame (and in fact, only when one is an outer table
-  // and one is an inner table or when the parent is a fieldset or fieldset
-  // content frame).
+  // This can affect our prevSibling and isAppend, but should not have any
+  // effect on the WipeContainingBlock above, since this should only happen
+  // when neither parent is a special frame and should not affect whitespace
+  // handling inside table-related frames (and in fact, can only happen when
+  // one of the parents is an outer table and one is an inner table or when the
+  // parent is a fieldset or fieldset content frame).
   // XXXbz we should push our frame construction item code up higher, so we
   // know what our items are by the time we start figuring out previous
   // siblings
@@ -6692,13 +6702,14 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                   frame1->GetParent()->GetType() == nsGkAtoms::fieldSetFrame),
                  "Unexpected frame types");
 #endif
-    prevSibling = nsnull;
     isAppend = PR_TRUE;
+    nsIFrame* appendAfterFrame;
     parentFrame =
       ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
                                           container,
                                           frameItems.childList->GetParent(),
                                           &appendAfterFrame);
+    prevSibling = ::FindAppendPrevSibling(parentFrame, appendAfterFrame);
   }
 
   if (haveFirstLineStyle && parentFrame == containingBlock) {
@@ -6724,8 +6735,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     NS_ASSERTION(!captionItems.childList, "leaking caption frames");
     // Notify the parent frame
     if (isAppend) {
-      AppendFrames(state, container, parentFrame, frameItems,
-                   appendAfterFrame);
+      AppendFrames(state, parentFrame, frameItems, prevSibling);
     } else {
       state.mFrameManager->InsertFrames(parentFrame,
                                         nsnull, prevSibling, newFrame);
@@ -10853,41 +10863,43 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   } else {
     // aFrame is the block in an {ib} split.  Check that we're not
     // messing up either end of it.
-    if (aIsAppend) {
-      // Will be handled in AppendFrames(), except the case when we might have
-      // floats that we won't be able to move out because there is no float
-      // containing block to move them into.
-
-      // Walk up until we get a float containing block that's not part of an
-      // {ib} split, since otherwise we might have to ship floats out of it
-      // too.
-      // XXXbz we could keep track of whether we have any descendants with
-      // float style in the FrameConstructionItem if we really want, but it's
-      // not clear to me that we need to.  In any case, the right solution here
-      // is to construct with the right parents to start with.
-      nsIFrame* floatContainer = aFrame;
-      do {
-        floatContainer = GetFloatContainingBlock(
-          GetIBSplitSpecialPrevSiblingForAnonymousBlock(floatContainer));
-        if (!floatContainer) {
-          break;
-        }
-        if (!IsFrameSpecial(floatContainer)) {
-          return PR_FALSE;
-        }
-      } while (1);
-    }
-    
-    if (aPrevSibling && !aPrevSibling->GetNextSibling()) {
-      // This is an append that won't go through AppendFrames.  We can bail out
-      // if the last frame we're appending is not inline.
-      if (!aItems.IsEndInline()) {
+    if (aPrevSibling || !aItems.IsStartInline()) {
+      // Not messing up the beginning.  Now let's look at the end.
+      nsIFrame* nextSibling = ::GetInsertNextSibling(aFrame, aPrevSibling);
+      if (nextSibling) {
+        // Can't possibly screw up the end; bail out
         return PR_FALSE;
       }
-    } else {
-      // We can bail out if we're not inserting at the beginning or if
-      // the first frame we're inserting is not inline.
-      if (aPrevSibling || !aItems.IsStartInline()) {
+
+      if (aIsAppend) {
+        // Will be handled in AppendFrames(), except the case when we might have
+        // floats that we won't be able to move out because there is no float
+        // containing block to move them into.
+
+        // Walk up until we get a float containing block that's not part of an
+        // {ib} split, since otherwise we might have to ship floats out of it
+        // too.
+        // XXXbz we could keep track of whether we have any descendants with
+        // float style in the FrameConstructionItem if we really want, but it's
+        // not clear to me that we need to.  In any case, the right solution
+        // here is to construct with the right parents to start with.
+        nsIFrame* floatContainer = aFrame;
+        do {
+          floatContainer = GetFloatContainingBlock(
+            GetIBSplitSpecialPrevSiblingForAnonymousBlock(floatContainer));
+          if (!floatContainer) {
+            break;
+          }
+          if (!IsFrameSpecial(floatContainer)) {
+            return PR_FALSE;
+          }
+        } while (1);
+      }
+
+      // This is an append that won't go through AppendFrames, or won't be able
+      // to ship floats out in AppendFrames.  We can bail out if the last frame
+      // we're appending is not inline.
+      if (!aItems.IsEndInline()) {
         return PR_FALSE;
       }
     }
