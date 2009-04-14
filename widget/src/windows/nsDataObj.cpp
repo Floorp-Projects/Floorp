@@ -929,7 +929,6 @@ nsDataObj :: GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnic
     NS_WARNING ( "Not yet implemented\n" );
   
 	return res;
-	
 } // GetFileDescriptor
 
 
@@ -1074,7 +1073,6 @@ GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
 HRESULT
 nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
-
   // get the title of the shortcut
   nsAutoString title;
   if ( NS_FAILED(ExtractShortcutTitle(title)) )
