@@ -2224,9 +2224,15 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case JSDefinition::VAR:
         if (PN_OP(dn) == JSOP_CALLEE) {
-            JS_ASSERT(cg->fun->flags & JSFUN_LAMBDA && atom == cg->fun->atom);
+            JS_ASSERT(op != JSOP_CALLEE);
+            JS_ASSERT((cg->fun->flags & JSFUN_LAMBDA) && atom == cg->fun->atom);
+
             switch (op) {
-              case JSOP_NAME:
+              case JSOP_DELNAME:
+                if (!(cg->flags & TCF_FUN_HEAVYWEIGHT))
+                    op = JSOP_FALSE;
+                break;
+              default:
                 /*
                  * Leave pn->pn_op == JSOP_NAME if cg->fun is heavyweight, as
                  * we cannot be sure cg->fun is not something of the form:
@@ -2238,18 +2244,14 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * lexically bound in an outer declarative environment from the
                  * function's activation. See jsfun.cpp:call_resolve.
                  */
-                if (!(cg->flags & TCF_FUN_HEAVYWEIGHT))
+                if (!(cg->flags & TCF_FUN_HEAVYWEIGHT)) {
                     op = JSOP_CALLEE;
-                break;
-              case JSOP_DELNAME:
-                op = JSOP_FALSE;
-                break;
-              default:
-                op = JSOP_CALLEE;
+                    pn->pn_dflags |= PND_CONST;
+                }
                 break;
             }
             pn->pn_op = op;
-            pn->pn_dflags |= PND_BOUND | PND_CONST;
+            pn->pn_dflags |= PND_BOUND;
             return JS_TRUE;
         }
         /* FALL THROUGH */
