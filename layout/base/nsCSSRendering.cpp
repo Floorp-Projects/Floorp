@@ -216,7 +216,7 @@ protected:
   nsIFrame* GetPrevContinuation(nsIFrame* aFrame)
   {
     nsIFrame* prevCont = aFrame->GetPrevContinuation();
-    if (!prevCont && (aFrame->GetStateBits() && NS_FRAME_IS_SPECIAL)) {
+    if (!prevCont && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
       nsIFrame* block =
         static_cast<nsIFrame*>
                    (aFrame->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
@@ -235,7 +235,7 @@ protected:
   nsIFrame* GetNextContinuation(nsIFrame* aFrame)
   {
     nsIFrame* nextCont = aFrame->GetNextContinuation();
-    if (!nextCont && (aFrame->GetStateBits() && NS_FRAME_IS_SPECIAL)) {
+    if (!nextCont && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
       // The {ib} properties are only stored on first continuations
       aFrame = aFrame->GetFirstContinuation();
       nsIFrame* block =
