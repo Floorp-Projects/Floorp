@@ -346,7 +346,6 @@ static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
-static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
 static PRBool
 IsAboutBlank(nsIURI* aURI)
@@ -2928,13 +2927,6 @@ nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
 
   NS_IF_ADDREF(*aCrypto = mCrypto);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetPkcs11(nsIDOMPkcs11** aPkcs11)
-{
-  *aPkcs11 = nsnull;
   return NS_OK;
 }
 
