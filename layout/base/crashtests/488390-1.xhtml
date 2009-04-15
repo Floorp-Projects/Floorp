@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("select").removeAttribute("multiple");
+  // Trigger a reflow
+  document.body.style.width = 0;
+  // And flush layout
+  document.body.offsetWidth;
+}
+
+</script>
+</head>
+
+<body onload="boom();"><span>&#x202E;text text text text text&#x202C;<span><dir/></span><span><tr><select id="select" multiple="multiple"/></tr></span></span></body>
+</html>
