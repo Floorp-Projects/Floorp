@@ -274,7 +274,8 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 
     sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
                                  sprop->getter, sprop->setter, SPROP_INVALID_SLOT,
-                                 sprop->attrs, sprop->flags, sprop->shortid);
+                                 sprop->attrs, sprop->flags, sprop->shortid,
+                                 NULL);
     if (sprop2 == sprop) {
         JS_UNLOCK_SCOPE(cx, scope);
         return JS_TRUE;
