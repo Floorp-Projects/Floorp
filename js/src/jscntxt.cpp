@@ -148,6 +148,7 @@ DestroyThread(JSThread *thread)
 {
     /* The thread must have zero contexts. */
     JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+    JS_ASSERT(!thread->titleToShare);
     FinishThreadData(&thread->data);
     free(thread);
 }
@@ -800,6 +801,79 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
     return js_ContextIterator(rt, JS_FALSE, &iter);
 #endif           
 }
+
+#ifdef JS_THREADSAFE
+
+uint32
+js_CountThreadRequests(JSContext *cx)
+{
+    JSCList *head, *link;
+    uint32 nrequests;
+
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    head = &cx->thread->contextList;
+    nrequests = 0;
+    for (link = head->next; link != head; link = link->next) {
+        JSContext *acx = CX_FROM_THREAD_LINKS(link);
+        JS_ASSERT(acx->thread == cx->thread);
+        if (acx->requestDepth)
+            nrequests++;
+    }
+    return nrequests;
+}
+
+/*
+ * If the GC is running and we're called on another thread, wait for this GC
+ * activation to finish. We can safely wait here without fear of deadlock (in
+ * the case where we are called within a request on another thread's context)
+ * because the GC doesn't set rt->gcRunning until after it has waited for all
+ * active requests to end.
+ *
+ * We call here js_CurrentThreadId() after checking for rt->gcRunning to avoid
+ * expensive calls when the GC is not running.
+ */
+void
+js_WaitForGC(JSRuntime *rt)
+{
+    JS_ASSERT_IF(rt->gcRunning, rt->gcLevel > 0);
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcRunning);
+    }
+}
+
+uint32
+js_DiscountRequestsForGC(JSContext *cx)
+{
+    uint32 requestDebit;
+
+    JS_ASSERT(cx->thread);
+    JS_ASSERT(cx->runtime->gcThread != cx->thread);
+
+    requestDebit = js_CountThreadRequests(cx);
+    if (requestDebit != 0) {
+        JSRuntime *rt = cx->runtime;
+        JS_ASSERT(requestDebit <= rt->requestCount);
+        rt->requestCount -= requestDebit;
+        if (rt->requestCount == 0)
+            JS_NOTIFY_REQUEST_DONE(rt);
+    }
+    return requestDebit;
+}
+
+void
+js_RecountRequestsAfterGC(JSRuntime *rt, uint32 requestDebit)
+{
+    while (rt->gcLevel > 0) {
+        JS_ASSERT(rt->gcThread);
+        JS_AWAIT_GC_DONE(rt);
+    }
+    if (requestDebit != 0)
+        rt->requestCount += requestDebit;
+}
+
+#endif
 
 static JSDHashNumber
 resolving_HashKey(JSDHashTable *table, const void *ptr)

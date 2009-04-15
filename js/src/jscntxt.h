@@ -262,6 +262,9 @@ struct JSThread {
      */
     uint32              gcMallocBytes;
 
+    /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
+    JSTitle             *titleToShare;
+
     JSThreadData        data;
 };
 
@@ -957,7 +960,6 @@ struct JSContext {
     jsrefcount          requestDepth;
     /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
     jsrefcount          outstandingRequests;
-    JSTitle             *titleToShare;      /* weak reference, see jslock.c */
     JSTitle             *lockedSealedTitle; /* weak ref, for low-cost sealed
                                                title locking */
     JSCList             threadLinks;        /* JSThread contextList linkage */
@@ -1208,6 +1210,47 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
  */
 extern JS_FRIEND_API(JSContext *)
 js_NextActiveContext(JSRuntime *, JSContext *);
+
+#ifdef JS_THREADSAFE
+
+/*
+ * Count the number of contexts entered requests on the current thread.
+ */
+uint32
+js_CountThreadRequests(JSContext *cx);
+
+/*
+ * This is a helper for code at can potentially run outside JS request to
+ * ensure that the GC is not running when the function returns.
+ *
+ * This function must be called with the GC lock held.
+ */
+extern void
+js_WaitForGC(JSRuntime *rt);
+
+/*
+ * If we're in one or more requests (possibly on more than one context)
+ * running on the current thread, indicate, temporarily, that all these
+ * requests are inactive so a possible GC can proceed on another thread.
+ * This function returns the number of discounted requests. The number must
+ * be passed later to js_ActivateRequestAfterGC to reactivate the requests.
+ *
+ * This function must be called with the GC lock held.
+ */
+uint32
+js_DiscountRequestsForGC(JSContext *cx);
+
+/*
+ * This function must be called with the GC lock held.
+ */
+void
+js_RecountRequestsAfterGC(JSRuntime *rt, uint32 requestDebit);
+
+#else /* !JS_THREADSAFE */
+
+# define js_WaitForGC(rt)    ((void) 0)
+
+#endif
 
 /*
  * JSClass.resolve and watchpoint recursion damping machinery.
