@@ -395,7 +395,7 @@ pref("privacy.item.history",     true);
 pref("privacy.item.formdata",    true);
 pref("privacy.item.passwords",   false);
 pref("privacy.item.downloads",   true);
-pref("privacy.item.cookies",     false);
+pref("privacy.item.cookies",     true);
 pref("privacy.item.cache",       true);
 pref("privacy.item.sessions",    true);
 pref("privacy.item.offlineApps", false);
