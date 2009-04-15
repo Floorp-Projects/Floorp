@@ -76,7 +76,6 @@ CPPSRCS		= \
     nsHtml5StackNode.cpp \
     nsHtml5UTF16Buffer.cpp \
     nsHtml5NamedCharacters.cpp \
-    nsHtml5StringLiterals.cpp \
     nsHtml5Tokenizer.cpp \
     nsHtml5TreeBuilder.cpp \
     nsHtml5Portability.cpp \

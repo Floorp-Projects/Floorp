@@ -67,6 +67,14 @@ nsHtml5Portability::newEmptyString()
   return new nsString();
 }
 
+nsString*
+nsHtml5Portability::newStringFromLiteral(const char* literal)
+{
+  nsString* rv = new nsString();
+  rv->AssignASCII(literal);
+  return rv;
+}
+
 jArray<PRUnichar,PRInt32>
 nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
 {
@@ -125,19 +133,16 @@ nsHtml5Portability::localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 of
 }
 
 PRBool
-nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(nsString* lowerCaseLiteral, nsString* string)
+nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string)
 {
   if (!string) {
     return PR_FALSE;
   }
-  if (lowerCaseLiteral->Length() > string->Length()) {
-    return PR_FALSE;
-  }
-  const PRUnichar* litPtr = lowerCaseLiteral->BeginReading();
-  const PRUnichar* end = lowerCaseLiteral->EndReading();
+  const char* litPtr = lowerCaseLiteral;
   const PRUnichar* strPtr = string->BeginReading();
-  while (litPtr < end) {
-    PRUnichar litChar = *litPtr;
+  const PRUnichar* end = string->EndReading();
+  PRUnichar litChar;
+  while ((litChar = (PRUnichar)*litPtr) && (strPtr < end)) {
     PRUnichar strChar = *strPtr;
     if (strChar >= 'A' && strChar <= 'Z') {
       strChar += 0x20;
@@ -152,36 +157,21 @@ nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(nsString* lo
 }
 
 PRBool
-nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsString* lowerCaseLiteral, nsString* string)
+nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string)
 {
   if (!string) {
     return PR_FALSE;
   }
-  if (lowerCaseLiteral->Length() != string->Length()) {
-    return PR_FALSE;
-  }
-  const PRUnichar* litPtr = lowerCaseLiteral->BeginReading();
-  const PRUnichar* end = lowerCaseLiteral->EndReading();
-  const PRUnichar* strPtr = string->BeginReading();
-  while (litPtr < end) {
-    PRUnichar litChar = *litPtr;
-    PRUnichar strChar = *strPtr;
-    if (strChar >= 'A' && strChar <= 'Z') {
-      strChar += 0x20;
-    }
-    if (litChar != strChar) {
-      return PR_FALSE;
-    }
-    ++litPtr;
-    ++strPtr;
-  }
-  return PR_TRUE;
+  return string->LowerCaseEqualsASCII(lowerCaseLiteral);
 }
 
 PRBool
-nsHtml5Portability::literalEqualsString(nsString* literal, nsString* string)
+nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
 {
-  return literal->Equals(*string);
+  if (!string) {
+    return PR_FALSE;
+  }
+  return string->EqualsASCII(literal);
 }
 
 jArray<PRUnichar,PRInt32>
