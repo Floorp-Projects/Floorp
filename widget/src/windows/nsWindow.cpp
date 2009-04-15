@@ -6100,7 +6100,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
           // However, since we're dealing with little-endian ints, this is actually:
           // xRGB xrgb xRGB xrgb -> bRGB GBrg rgbR
           int width_left = surfaceSize.width;
-          while (width_left > 4) {
+          while (width_left >= 4) {
             unsigned int a = *src++;
             unsigned int b = *src++;
             unsigned int c = *src++;
