@@ -772,12 +772,14 @@ call_enumerate(JSContext *cx, JSObject *obj)
             goto out;
 
         /*
-         * At this point the call object always has a property corresponding
-         * to the local name because call_resolve creates the property using
-         * JSPROP_PERMANENT.
+         * If this local name was not an upvar name, the call object will
+         * always have a property corresponding to the local name because
+         * call_resolve creates the property using JSPROP_PERMANENT.
          */
-        JS_ASSERT(prop && pobj == obj);
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        if (prop) {
+            JS_ASSERT(pobj == obj);
+            OBJ_DROP_PROPERTY(cx, pobj, prop);
+        }
     }
     ok = JS_TRUE;
 

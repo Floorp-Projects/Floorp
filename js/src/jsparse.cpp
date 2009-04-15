@@ -4109,10 +4109,12 @@ RebindLets(JSParseNode *pn, JSTreeContext *tc)
                 ForgetUse(pn);
 
                 JSAtomListElement *ale = tc->decls.lookup(pn->pn_atom);
-                while ((ale = ALE_NEXT(ale)) != NULL) {
-                    if (ALE_ATOM(ale) == pn->pn_atom) {
-                        LinkUseToDef(pn, ALE_DEFN(ale), tc);
-                        return true;
+                if (ale) {
+                    while ((ale = ALE_NEXT(ale)) != NULL) {
+                        if (ALE_ATOM(ale) == pn->pn_atom) {
+                            LinkUseToDef(pn, ALE_DEFN(ale), tc);
+                            return true;
+                        }
                     }
                 }
 
