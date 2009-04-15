@@ -817,7 +817,6 @@ nsParser::Initialize(PRBool aConstructor)
   mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED |
            NS_PARSER_FLAG_PARSER_ENABLED |
            NS_PARSER_FLAG_CAN_TOKENIZE;
-  mScriptsExecuting = 0;
 
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   MOZ_TIMER_RESET(mParseTime);
@@ -1720,7 +1719,7 @@ nsParser::ContinueInterruptedParsing()
   // If there are scripts executing, then the content sink is jumping the gun
   // (probably due to a synchronous XMLHttpRequest) and will re-enable us
   // later, see bug 460706.
-  if (mScriptsExecuting) {
+  if (IsScriptExecuting()) {
     return NS_OK;
   }
 
@@ -1814,21 +1813,8 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
   mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   mContinueEvent = nsnull;
 
-  NS_ASSERTION(mScriptsExecuting == 0, "Interrupted in the middle of a script?");
+  NS_ASSERTION(!IsScriptExecuting(), "Interrupted in the middle of a script?");
   ContinueInterruptedParsing();
-}
-
-void
-nsParser::ScriptExecuting()
-{
-  ++mScriptsExecuting;
-}
-
-void
-nsParser::ScriptDidExecute()
-{
-  NS_ASSERTION(mScriptsExecuting > 0, "Too many calls to ScriptDidExecute");
-  --mScriptsExecuting;
 }
 
 nsresult
@@ -2896,7 +2882,7 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
 
     // Don't bother to start parsing until we've seen some
     // non-whitespace data
-    if (mScriptsExecuting == 0 &&
+    if (!IsScriptExecuting() &&
         theContext->mScanner->FirstNonWhitespacePosition() >= 0) {
       if (mSink) {
         mSink->WillParse();
@@ -2940,7 +2926,7 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   if (mParserFilter)
     mParserFilter->Finish();
 
-  if (mScriptsExecuting == 0 && NS_SUCCEEDED(rv)) {
+  if (!IsScriptExecuting() && NS_SUCCEEDED(rv)) {
     if (mSink) {
       mSink->WillParse();
     }
