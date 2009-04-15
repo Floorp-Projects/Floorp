@@ -78,6 +78,7 @@ function run_test() {
   var entityID;
 
   function get_entity_id(request, data, ctx) {
+    dump("*** get_entity_id()\n");
     do_check_true(request instanceof Ci.nsIResumableChannel,
                   "must be a resumable channel");
     entityID = request.entityID;
@@ -90,6 +91,7 @@ function run_test() {
   }
 
   function try_resume(request, data, ctx) {
+    dump("*** try_resume()\n");
     do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a successful resume
@@ -99,6 +101,7 @@ function run_test() {
   }
 
   function try_resume_zero(request, data, ctx) {
+    dump("*** try_resume_zero()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody.substring(1));
 
@@ -110,6 +113,7 @@ function run_test() {
   }
 
   function try_no_range(request, data, ctx) {
+    dump("*** try_no_range()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
 
@@ -121,6 +125,7 @@ function run_test() {
   }
 
   function try_bytes_range(request, data, ctx) {
+    dump("*** try_bytes_range()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody);
 
@@ -132,6 +137,7 @@ function run_test() {
   }
 
   function try_foo_bar_range(request, data, ctx) {
+    dump("*** try_foo_bar_range()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
 
@@ -143,6 +149,7 @@ function run_test() {
   }
 
   function try_foobar_range(request, data, ctx) {
+    dump("*** try_foobar_range()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
 
@@ -154,6 +161,7 @@ function run_test() {
   }
 
   function try_bytes_foobar_range(request, data, ctx) {
+    dump("*** try_bytes_foobar_range()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody);
 
@@ -165,6 +173,7 @@ function run_test() {
   }
 
   function try_bytesfoo_bar_range(request, data, ctx) {
+    dump("*** try_bytesfoo_bar_range()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
 
@@ -175,6 +184,7 @@ function run_test() {
   }
 
   function try_no_accept_ranges(request, data, ctx) {
+    dump("*** try_no_accept_ranges()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody);
 
@@ -185,6 +195,7 @@ function run_test() {
   }
 
   function success(request, data, ctx) {
+    dump("*** success()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody);
 
@@ -197,6 +208,7 @@ function run_test() {
   }
 
   function test_auth_nopw(request, data, ctx) {
+    dump("*** test_auth_nopw()\n");
     do_check_false(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
 
@@ -207,6 +219,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(test_auth, null, CL_EXPECT_FAILURE), null);
   }
   function test_auth(request, data, ctx) {
+    dump("*** test_auth()\n");
     do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
     do_check_true(request.nsIHttpChannel.responseStatus < 300);
 
@@ -219,6 +232,7 @@ function run_test() {
   }
 
   function test_auth_resume(request, data, ctx) {
+    dump("*** test_auth_resume()\n");
     do_check_eq(data, rangeBody.substring(1));
     do_check_true(request.nsIHttpChannel.requestSucceeded);
 
@@ -230,6 +244,7 @@ function run_test() {
   }
 
   function test_404(request, data, ctx) {
+    dump("*** test_404()\n");
     do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
     do_check_eq(request.nsIHttpChannel.responseStatus, 404);
 
@@ -240,6 +255,7 @@ function run_test() {
   }
 
   function test_416(request, data, ctx) {
+    dump("*** test_416()\n");
     do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
     do_check_eq(request.nsIHttpChannel.responseStatus, 416);
 
@@ -251,6 +267,7 @@ function run_test() {
   }
 
   function test_redir_resume(request, data, ctx) {
+    dump("*** test_redir_resume()\n");
     do_check_true(request.nsIHttpChannel.requestSucceeded);
     do_check_eq(data, rangeBody.substring(1));
     do_check_eq(request.nsIHttpChannel.responseStatus, 206);
@@ -263,10 +280,10 @@ function run_test() {
   }
 
   function test_redir_noresume(request, data, ctx) {
+    dump("*** test_redir_noresume()\n");
     do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
 
-    httpserver.stop();
-    do_test_finished();
+    httpserver.stop(do_test_finished);
   }
 
   httpserver.start(4444);
