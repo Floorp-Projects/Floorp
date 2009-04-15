@@ -1,0 +1,560 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *   Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Privacy PrefPane Test.
+ *
+ * The Initial Developer of the Original Code is
+ * Ehsan Akhgari.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ * 
+ * ***** END LICENSE BLOCK ***** */
+
+function runTestOnPrivacyPrefPane(testFunc) {
+  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
+  let observer = {
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic == "domwindowopened") {
+        ww.unregisterNotification(this);
+
+        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+        win.addEventListener("load", function() {
+          win.removeEventListener("load", arguments.callee, false);
+          testFunc(dialog.document.defaultView);
+
+          ww.registerNotification(observer);
+          dialog.close();
+        }, false);
+      } else if (aTopic == "domwindowclosed") {
+        ww.unregisterNotification(this);
+        testRunner.runNext();
+      }
+    }
+  };
+  ww.registerNotification(observer);
+
+  let dialog = openDialog("chrome://browser/content/preferences/preferences.xul", "Preferences",
+                          "chrome,titlebar,toolbar,centerscreen,dialog=no", "panePrivacy");
+}
+
+function controlChanged(doc, element) {
+  let event = doc.createEvent("Events");
+  event.initEvent("command", true, true);
+  element.dispatchEvent(event);
+}
+
+function test_locbar_emptyText(win) {
+  let texts = ["none", "bookmarkhistory", "history", "bookmark"];
+
+  let locbarlist = win.document.getElementById("locationBarSuggestion");
+  ok(locbarlist, "location bar suggestion menulist should exist");
+
+  for (let level = -1; level <= 2; ++level) {
+    locbarlist.value = level;
+    controlChanged(win.document, locbarlist);
+    is(gURLBar.emptyText, gURLBar.getAttribute(texts[level + 1] + "emptytext"),
+      "location bar empty text for for level " + level + " is correctly set");
+  }
+}
+
+function test_pane_visibility(win) {
+  let modes = {
+    "remember": "historyRememberPane",
+    "dontremember": "historyDontRememberPane",
+    "custom": "historyCustomPane"
+  };
+
+  let historymode = win.document.getElementById("historyMode");
+  ok(historymode, "history mode menulist should exist");
+  let historypane = win.document.getElementById("historyPane");
+  ok(historypane, "history mode pane should exist");
+
+  for (let mode in modes) {
+    historymode.value = mode;
+    controlChanged(win.document, historymode);
+    is(historypane.selectedPanel, win.document.getElementById(modes[mode]),
+      "The correct pane should be selected for the " + mode + " mode");
+  }
+}
+
+function test_dependent_elements(win) {
+  let historymode = win.document.getElementById("historyMode");
+  ok(historymode, "history mode menulist should exist");
+  let pbautostart = win.document.getElementById("privateBrowsingAutoStart");
+  ok(pbautostart, "the private browsing auto-start checkbox should exist");
+  let controls = [
+    win.document.getElementById("rememberHistoryDays"),
+    win.document.getElementById("historyDays"),
+    win.document.getElementById("rememberAfter"),
+    win.document.getElementById("rememberDownloads"),
+    win.document.getElementById("rememberForms"),
+    win.document.getElementById("keepUntil"),
+    win.document.getElementById("keepCookiesUntil"),
+    win.document.getElementById("alwaysClear"),
+  ];
+  controls.forEach(function(control) {
+    ok(control, "the dependent controls should exist");
+  });
+  let independents = [
+    win.document.getElementById("acceptCookies"),
+    win.document.getElementById("acceptThirdParty"),
+  ];
+  independents.forEach(function(control) {
+    ok(control, "the independent controls should exist");
+  });
+  let cookieexceptions = win.document.getElementById("cookieExceptions");
+  ok(cookieexceptions, "the cookie exceptions button should exist");
+  let keepuntil = win.document.getElementById("keepCookiesUntil");
+  ok(keepuntil, "the keep cookies until menulist should exist");
+  let alwaysclear = win.document.getElementById("alwaysClear");
+  ok(alwaysclear, "the clear data on close checkbox should exist");
+  let rememberhistory = win.document.getElementById("rememberHistoryDays");
+  ok(rememberhistory, "the remember history checkbox should exist");
+  let rememberdownloads = win.document.getElementById("rememberDownloads");
+  ok(rememberdownloads, "the remember downloads checkbox should exist");
+  let rememberforms = win.document.getElementById("rememberForms");
+  ok(rememberforms, "the remember forms checkbox should exist");
+  let alwaysclearsettings = win.document.getElementById("clearDataSettings");
+  ok(alwaysclearsettings, "the clear data settings button should exist");
+
+  function expect_disabled(disabled) {
+    controls.forEach(function(control) {
+      is(control.disabled, disabled,
+        control.getAttribute("id") + " should " + (disabled ? "" : "not ") + "be disabled");
+    });
+    is(keepuntil.value, disabled ? 2 : 0,
+      "the keep cookies until menulist value should be as expected");
+    if (disabled) {
+     ok(!alwaysclear.checked,
+        "the clear data on close checkbox value should be as expected");
+     ok(!rememberhistory.checked,
+        "the remember history checkbox value should be as expected");
+     ok(!rememberdownloads.checked,
+        "the remember downloads checkbox value should be as expected");
+     ok(!rememberforms.checked,
+        "the remember forms checkbox value should be as expected");
+    }
+  }
+  function check_independents(expected) {
+    independents.forEach(function(control) {
+      is(control.disabled, expected,
+        control.getAttribute("id") + " should " + (expected ? "" : "not ") + "be disabled");
+    });
+    ok(!cookieexceptions.disabled,
+      "the cookie exceptions button should never be disabled");
+    ok(alwaysclearsettings.disabled,
+      "the clear data settings button should always be disabled");
+  }
+
+  // controls should only change in custom mode
+  historymode.value = "remember";
+  controlChanged(win.document, historymode);
+  expect_disabled(false);
+  check_independents(false);
+
+  // setting the mode to custom shouldn't change anything
+  historymode.value = "custom";
+  controlChanged(win.document, historymode);
+  expect_disabled(false);
+  check_independents(false);
+
+  // controls should only change in custom mode
+  historymode.value = "dontremember";
+  controlChanged(win.document, historymode);
+  expect_disabled(false);
+  check_independents(false);
+
+  // controls should only change in custom mode
+  historymode.value = "custom";
+  controlChanged(win.document, historymode);
+  expect_disabled(true);
+  check_independents(false);
+
+  // dependent controls should follow pbautostart
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(false);
+  check_independents(false);
+
+  // dependent controls should follow pbautostart
+  pbautostart.checked = true;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(true);
+  check_independents(false);
+}
+
+function test_dependent_cookie_elements(win) {
+  let historymode = win.document.getElementById("historyMode");
+  ok(historymode, "history mode menulist should exist");
+  let pbautostart = win.document.getElementById("privateBrowsingAutoStart");
+  ok(pbautostart, "the private browsing auto-start checkbox should exist");
+  let controls = [
+    win.document.getElementById("acceptThirdParty"),
+    win.document.getElementById("keepUntil"),
+    win.document.getElementById("keepCookiesUntil"),
+  ];
+  controls.forEach(function(control) {
+    ok(control, "the dependent cookie controls should exist");
+  });
+  let acceptcookies = win.document.getElementById("acceptCookies");
+  ok(acceptcookies, "the accept cookies checkbox should exist");
+
+  function expect_disabled(disabled) {
+    controls.forEach(function(control) {
+      is(control.disabled, disabled,
+        control.getAttribute("id") + " should " + (disabled ? "" : "not ") + "be disabled");
+    });
+  }
+
+  historymode.value = "custom";
+  controlChanged(win.document, historymode);
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(false);
+
+  acceptcookies.checked = false;
+  controlChanged(win.document, acceptcookies);
+  expect_disabled(true);
+
+  // pbautostart shouldn't change anything now
+  pbautostart.checked = true;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(true);
+
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(true);
+
+  acceptcookies.checked = true;
+  controlChanged(win.document, acceptcookies);
+  expect_disabled(false);
+
+  let accessthirdparty = controls.shift();
+  pbautostart.checked = true;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(true);
+  ok(!accessthirdparty.disabled, "access third party button should be enabled");
+
+  acceptcookies.checked = false;
+  controlChanged(win.document, acceptcookies);
+  expect_disabled(true);
+  ok(accessthirdparty.disabled, "access third party button should be disabled");
+
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(true);
+  ok(accessthirdparty.disabled, "access third party button should be disabled");
+
+  acceptcookies.checked = true;
+  controlChanged(win.document, acceptcookies);
+  expect_disabled(false);
+  ok(!accessthirdparty.disabled, "access third party button should be enabled");
+}
+
+function test_dependent_clearonclose_elements(win) {
+  let historymode = win.document.getElementById("historyMode");
+  ok(historymode, "history mode menulist should exist");
+  let pbautostart = win.document.getElementById("privateBrowsingAutoStart");
+  ok(pbautostart, "the private browsing auto-start checkbox should exist");
+  let alwaysclear = win.document.getElementById("alwaysClear");
+  ok(alwaysclear, "the clear data on close checkbox should exist");
+  let alwaysclearsettings = win.document.getElementById("clearDataSettings");
+  ok(alwaysclearsettings, "the clear data settings button should exist");
+
+  function expect_disabled(disabled) {
+    is(alwaysclearsettings.disabled, disabled,
+      "the clear data settings should " + (disabled ? "" : "not ") + "be disabled");
+  }
+
+  historymode.value = "custom";
+  controlChanged(win.document, historymode);
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  alwaysclear.checked = false;
+  controlChanged(win.document, alwaysclear);
+  expect_disabled(true);
+
+  alwaysclear.checked = true;
+  controlChanged(win.document, alwaysclear);
+  expect_disabled(false);
+
+  pbautostart.checked = true;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(true);
+
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  expect_disabled(false);
+
+  alwaysclear.checked = false;
+  controlChanged(win.document, alwaysclear);
+  expect_disabled(true);
+}
+
+function test_dependent_prefs(win) {
+  let historymode = win.document.getElementById("historyMode");
+  ok(historymode, "history mode menulist should exist");
+  let controls = [
+    win.document.getElementById("rememberHistoryDays"),
+    win.document.getElementById("rememberDownloads"),
+    win.document.getElementById("rememberForms"),
+    win.document.getElementById("acceptCookies"),
+    win.document.getElementById("acceptThirdParty"),
+  ];
+  controls.forEach(function(control) {
+    ok(control, "the micro-management controls should exist");
+  });
+
+  function expect_checked(checked) {
+    controls.forEach(function(control) {
+      is(control.checked, checked,
+        control.getAttribute("id") + " should " + (checked ? "not " : "") + "be checked");
+    });
+  }
+
+  // controls should be checked in remember mode
+  historymode.value = "remember";
+  controlChanged(win.document, historymode);
+  expect_checked(true);
+
+  // even if they're unchecked in custom mode
+  historymode.value = "custom";
+  controlChanged(win.document, historymode);
+  controls.forEach(function(control) {
+    control.checked = false;
+    controlChanged(win.document, control);
+  });
+  expect_checked(false);
+  historymode.value = "remember";
+  controlChanged(win.document, historymode);
+  expect_checked(true);
+}
+
+function test_historymode_retention(mode, expect) {
+  return function(win) {
+    let historymode = win.document.getElementById("historyMode");
+    ok(historymode, "history mode menulist should exist");
+
+    if (expect !== undefined) {
+      is(historymode.value, expect,
+        "history mode is expected to remain " + expect);
+    }
+
+    historymode.value = mode;
+    controlChanged(win.document, historymode);
+  };
+}
+
+function test_custom_retention(controlToChange, expect, valueIncrement) {
+  return function(win) {
+    let historymode = win.document.getElementById("historyMode");
+    ok(historymode, "history mode menulist should exist");
+
+    if (expect !== undefined) {
+      is(historymode.value, expect,
+        "history mode is expected to remain " + expect);
+    }
+
+    historymode.value = "custom";
+    controlChanged(win.document, historymode);
+
+    controlToChange = win.document.getElementById(controlToChange);
+    ok(controlToChange, "the control to change should exist");
+    switch (controlToChange.localName) {
+    case "checkbox":
+      controlToChange.checked = !controlToChange.checked;
+      break;
+    case "textbox":
+      controlToChange.value = parseInt(controlToChange.value) + valueIncrement;
+      break;
+    case "menulist":
+      controlToChange.value = valueIncrement;
+      break;
+    }
+    controlChanged(win.document, controlToChange);
+  };
+}
+
+function test_locbar_suggestion_retention(mode, expect) {
+  return function(win) {
+    let locbarsuggest = win.document.getElementById("locationBarSuggestion");
+    ok(locbarsuggest, "location bar suggestion menulist should exist");
+
+    if (expect !== undefined) {
+      is(locbarsuggest.value, expect,
+        "location bar suggestion is expected to remain " + expect);
+    }
+
+    locbarsuggest.value = mode;
+    controlChanged(win.document, locbarsuggest);
+  };
+}
+
+function test_privatebrowsing_toggle(win) {
+  let historymode = win.document.getElementById("historyMode");
+  ok(historymode, "history mode menulist should exist");
+  let pbautostart = win.document.getElementById("privateBrowsingAutoStart");
+  ok(pbautostart, "the private browsing auto-start checkbox should exist");
+
+  let pbService = Cc["@mozilla.org/privatebrowsing;1"].
+                  getService(Ci.nsIPrivateBrowsingService);
+
+  // initial state
+  historymode.value = "remember";
+  controlChanged(win.document, historymode);
+
+  // switch to dontremember mode
+  historymode.value = "dontremember";
+  controlChanged(win.document, historymode);
+  ok(pbService.privateBrowsingEnabled, "private browsing should be activated");
+
+  // switch to remember mode
+  historymode.value = "remember";
+  controlChanged(win.document, historymode);
+  ok(!pbService.privateBrowsingEnabled, "private browsing should be deactivated");
+
+  // switch to custom mode
+  historymode.value = "custom";
+  controlChanged(win.document, historymode);
+  ok(!pbService.privateBrowsingEnabled, "private browsing should remain deactivated");
+
+  // check the autostart checkbox
+  pbautostart.checked = true;
+  controlChanged(win.document, pbautostart);
+  ok(pbService.privateBrowsingEnabled, "private browsing should be activated");
+
+  // uncheck the autostart checkbox
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  ok(!pbService.privateBrowsingEnabled, "private browsing should be deactivated");
+}
+
+function test_privatebrowsing_ui(win) {
+  let historymode = win.document.getElementById("historyMode");
+  ok(historymode, "history mode menulist should exist");
+  let pbautostart = win.document.getElementById("privateBrowsingAutoStart");
+  ok(pbautostart, "the private browsing auto-start checkbox should exist");
+
+  let pbmenuitem = document.getElementById("privateBrowsingItem");
+  ok(pbmenuitem, "the private browsing menu item should exist");
+  let pbcommand = document.getElementById("Tools:PrivateBrowsing");
+  ok(pbcommand, "the private browsing command should exist");
+
+  // initial state
+  historymode.value = "remember";
+  controlChanged(win.document, historymode);
+  ok(!pbmenuitem.hasAttribute("disabled"),
+    "private browsing menu item should not be initially disabled");
+  ok(!pbcommand.hasAttribute("disabled"),
+    "private browsing command should not be initially disabled");
+
+  // switch to dontremember mode
+  historymode.value = "dontremember";
+  controlChanged(win.document, historymode);
+  ok(pbmenuitem.hasAttribute("disabled"),
+    "private browsing menu item should be disabled");
+  ok(pbcommand.hasAttribute("disabled"),
+    "private browsing command should be disabled");
+
+  // switch to remember mode
+  historymode.value = "remember";
+  controlChanged(win.document, historymode);
+  ok(!pbmenuitem.hasAttribute("disabled"),
+    "private browsing menu item should be enabled");
+  ok(!pbcommand.hasAttribute("disabled"),
+    "private browsing command should be enabled");
+
+  // switch to custom mode
+  historymode.value = "custom";
+  controlChanged(win.document, historymode);
+  ok(!pbmenuitem.hasAttribute("disabled"),
+    "private browsing menu item should remain enabled");
+  ok(!pbcommand.hasAttribute("disabled"),
+    "private browsing command should remain enabled");
+
+  // check the autostart checkbox
+  pbautostart.checked = true;
+  controlChanged(win.document, pbautostart);
+  ok(pbmenuitem.hasAttribute("disabled"),
+    "private browsing menu item should be disabled");
+  ok(pbcommand.hasAttribute("disabled"),
+    "private browsing command should be disabled");
+
+  // uncheck the autostart checkbox
+  pbautostart.checked = false;
+  controlChanged(win.document, pbautostart);
+  ok(!pbmenuitem.hasAttribute("disabled"),
+    "private browsing menu item should be enabled");
+  ok(!pbcommand.hasAttribute("disabled"),
+    "private browsing command should be enabled");
+}
+
+function enter_private_browsing(win) {
+  let pbService = Cc["@mozilla.org/privatebrowsing;1"].
+                  getService(Ci.nsIPrivateBrowsingService);
+  win.document.getElementById("browser.privatebrowsing.keep_current_session")
+              .value = true;
+  pbService.privateBrowsingEnabled = true;
+}
+
+function reset_preferences(win) {
+  let prefs = win.document.getElementsByTagName("preference");
+  for (let i = 0; i < prefs.length; ++i)
+    if (prefs[i].hasUserValue)
+      prefs[i].reset();
+}
+
+let testRunner;
+function run_test_subset(subset) {
+  let psvc = Cc["@mozilla.org/preferences-service;1"].
+             getService(Ci.nsIPrefBranch);
+  let instantApplyOrig = psvc.getBoolPref("browser.preferences.instantApply");
+  psvc.setBoolPref("browser.preferences.instantApply", true);
+
+  waitForExplicitFinish();
+
+  testRunner = {
+    tests: subset,
+    counter: 0,
+    runNext: function() {
+      if (this.counter == this.tests.length) {
+        // cleanup
+        psvc.setBoolPref("browser.preferences.instantApply", instantApplyOrig);
+        finish();
+      } else {
+        let self = this;
+        setTimeout(function() {
+          runTestOnPrivacyPrefPane(self.tests[self.counter++]);
+        }, 0);
+      }
+    }
+  };
+
+  testRunner.runNext();
+}
