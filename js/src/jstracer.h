@@ -662,9 +662,6 @@ extern bool
 js_OverfullFragmento(nanojit::Fragmento *frago, size_t maxsz);
 
 extern void
-js_FlushJITCache(JSContext* cx);
-
-extern void
 js_PurgeJITOracle();
 
 extern JSObject *
