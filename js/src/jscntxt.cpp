@@ -109,6 +109,9 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
     tm->needFlush = JS_TRUE;
 
+    if (tm->recorder)
+        tm->recorder->deepAbort();
+
     /*
      * We want to keep tm->reservedObjects after the GC. So, unless we are
      * shutting down, we don't purge them here and rather mark them during
