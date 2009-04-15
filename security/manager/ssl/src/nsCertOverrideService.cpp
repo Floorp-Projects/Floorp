@@ -428,7 +428,9 @@ GetCertFingerprintByOidTag(CERTCertificate* nsscert,
   fpItem.data = (unsigned char*)fingerprint->Data();
   fpItem.len = hash_len;
 
-  fp.Adopt(CERT_Hexify(&fpItem, 1));
+  char *tmpstr = CERT_Hexify(&fpItem, 1);
+  fp.Assign(tmpstr);
+  PORT_Free(tmpstr);
   fingerprint->Release();
   return NS_OK;
 }
