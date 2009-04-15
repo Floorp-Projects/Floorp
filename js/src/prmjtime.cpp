@@ -107,6 +107,14 @@ PRMJ_LocalGMTDifference()
 {
     struct tm ltime;
 
+#ifdef XP_WIN
+    /* Windows does not follow POSIX. Updates to the
+     * TZ environment variable are not reflected 
+     * immediately on that platform as they are
+     * on UNIX systems without this call.
+     */
+    _tzset();
+#endif
     /* get the difference between this time zone and GMT */
     memset((char *)&ltime,0,sizeof(ltime));
     ltime.tm_mday = 2;
@@ -549,6 +557,16 @@ PRMJ_DSTOffset(JSInt64 local_time)
         /*go ahead a day to make localtime work (does not work with 0) */
         JSLL_UI2L(local_time,PRMJ_DAY_SECONDS);
     }
+
+#ifdef XP_WIN
+    /* Windows does not follow POSIX. Updates to the
+     * TZ environment variable are not reflected 
+     * immediately on that platform as they are
+     * on UNIX systems without this call.
+     */
+    _tzset();
+#endif
+
     JSLL_L2UI(local,local_time);
     PRMJ_basetime(local_time,&prtm);
 #ifndef HAVE_LOCALTIME_R
