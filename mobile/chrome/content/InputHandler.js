@@ -524,30 +524,23 @@ KineticData.prototype = {
     if (mblen < 2)
       return false;
 
-    let speedBufX = [];
-    let speedBufY = [];
+    let tempX = 0;
+    let tempY = 0;
 
     // build arrays of each movement's speed in pixels/ms
     let prev = mb[0];
     for (let i = 1; i < mblen; i++) {
       let me = mb[i];
 
-      let speedX = (me.sx - prev.sx) / (me.t - prev.t);
-      speedBufX.push(speedX);
-
-      let speedY = (me.sy - prev.sy) / (me.t - prev.t);
-      speedBufY.push(speedY);
+      tempX += (me.sx - prev.sx) / (me.t - prev.t);
+      tempY += (me.sy - prev.sy) / (me.t - prev.t);
 
       prev = me;
     }
 
-    function average(buf) {
-      return buf.reduce(function(a,b) a+b) / buf.length;
-    }
-
-    // average the speeds out (This could probably be a bit smarter)
-    this._speedX = average(speedBufX);
-    this._speedY = average(speedBufY);
+    // average the speeds out (this could probably be a bit smarter)
+    this.speedX = tempX / mblen;
+    this.speedY = tempY / mblen;
 
     // fire off our kinetic timer which will do all the work
     this._startKineticTimer();
