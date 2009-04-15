@@ -6236,7 +6236,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
     }
 }
 
-static JSObject*
+static JSObject* FASTCALL
 ComputeThis_tn(JSContext* cx)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
