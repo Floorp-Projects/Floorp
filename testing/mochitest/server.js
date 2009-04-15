@@ -114,6 +114,14 @@ function makeTags() {
   }
 }
 
+var _quitting = false;
+
+/** Quit when all activity has completed. */
+function serverStopped()
+{
+  _quitting = true;
+}
+
 // only run the "main" section if httpd.js was loaded ahead of us
 if (this["nsHttpServer"]) {
   //
@@ -121,10 +129,16 @@ if (this["nsHttpServer"]) {
   //
   runServer();
 
-  // We can only have gotten here if the /server/shutdown path was requested,
-  // and we can shut down the xpcshell now that all testing requests have been
-  // served.
-  quit(0);
+  // We can only have gotten here if the /server/shutdown path was requested.
+  if (_quitting)
+  {
+    dumpn("HTTP server stopped, all pending requests complete");
+    quit(0);
+  }
+
+  // Impossible as the stop callback should have been called, but to be safe...
+  dumpn("TEST-UNEXPECTED-FAIL | failure to correctly shut down HTTP server");
+  quit(1);
 }
 
 var serverBasePath;
@@ -276,8 +290,8 @@ function serverShutdown(metadata, response)
   var body = "Server shut down.";
   response.bodyOutputStream.write(body, body.length);
 
-  // Note: this doesn't disrupt the current request.
-  server.stop();
+  dumpn("Server shutting down now...");
+  server.stop(serverStopped);
 }
 
 //
