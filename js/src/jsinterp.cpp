@@ -4776,10 +4776,8 @@ js_Interpret(JSContext *cx)
                     LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
                 if (entry) {
-                    if (!js_SetPropertyHelper(cx, obj, id, op == JSOP_SETNAME,
-                                              &rval, &entry)) {
+                    if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
                         goto error;
-                    }
 #ifdef JS_TRACER
                     if (entry)
                         TRACE_1(SetPropMiss, entry);
@@ -6433,7 +6431,7 @@ js_Interpret(JSContext *cx)
                     goto error;
                 }
                 if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-                    ? !js_SetPropertyHelper(cx, obj, id, false, &rval, &entry)
+                    ? !js_SetPropertyHelper(cx, obj, id, &rval, &entry)
                     : !js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                                JSPROP_ENUMERATE, 0, 0, NULL,
                                                &entry)) {

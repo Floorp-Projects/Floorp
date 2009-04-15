@@ -711,9 +711,16 @@ extern JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
              JSPropCacheEntry **entryp);
 
+/*
+ * Check whether it is OK to assign an undeclared property of the global
+ * object at the current script PC.
+ */
+extern JS_FRIEND_API(JSBool)
+js_CheckUndeclaredVarAssignment(JSContext *cx);
+
 extern JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
-                     JSBool unqualified, jsval *vp, JSPropCacheEntry **entryp);
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
+                     JSPropCacheEntry **entryp);
 
 extern JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);

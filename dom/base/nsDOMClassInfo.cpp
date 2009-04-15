@@ -6527,10 +6527,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // binding a name) a new undefined property that's not already
   // defined on our prototype chain. This way we can access this
   // expando w/o ever getting back into XPConnect.
-  JSStackFrame *fp = NULL;
   if ((flags & JSRESOLVE_ASSIGNING) &&
       !(flags & JSRESOLVE_WITH) &&
-      !(JS_FrameIterator(cx, &fp) && fp->regs && (JSOp)*fp->regs->pc == JSOP_BINDNAME) &&
       win->IsInnerWindow()) {
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
@@ -6564,9 +6562,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // We don't need to worry about property attributes here as we
       // know here we're dealing with an undefined property set, so
       // we're not declaring readonly or permanent properties.
+      //
+      // Since we always create the undeclared property here without given a
+      // chance for the interpreter to report applicable strict mode warnings,
+      // we must take care to check those warnings here.
 
       JSString *str = JSVAL_TO_STRING(id);
-      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+      if (!::js_CheckUndeclaredVarAssignment(cx) ||
+          !::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                  ::JS_GetStringLength(str), JSVAL_VOID,
                                  JS_PropertyStub, JS_PropertyStub,
                                  JSPROP_ENUMERATE)) {
