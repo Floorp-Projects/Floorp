@@ -42,7 +42,6 @@
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Parser.h"
-#include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsHtml5TreeOperation.h"
@@ -756,7 +755,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   goto starttagloop_end;
                 }
                 case NS_HTML5TREE_BUILDER_INPUT: {
-                  if (!nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::hidden, attributes->getValue(nsHtml5AttributeName::TYPE))) {
+                  if (!nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("hidden", attributes->getValue(nsHtml5AttributeName::TYPE))) {
                     goto intableloop_end;
                   }
                   appendVoidElementToCurrent(kNameSpaceID_XHTML, name, attributes, formPointer);
@@ -1092,7 +1091,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                     appendCharacters(stack[currentPtr]->node, nsHtml5TreeBuilder::ISINDEX_PROMPT, 0, nsHtml5TreeBuilder::ISINDEX_PROMPT.length);
                   }
                   nsHtml5HtmlAttributes* inputAttributes = new nsHtml5HtmlAttributes(0);
-                  inputAttributes->addAttribute(nsHtml5AttributeName::NAME, nsHtml5StringLiterals::isindex);
+                  inputAttributes->addAttribute(nsHtml5AttributeName::NAME, nsHtml5Portability::newStringFromLiteral("isindex"));
                   for (PRInt32 i = 0; i < attributes->getLength(); i++) {
                     nsHtml5AttributeName* attributeQName = attributes->getAttributeName(i);
                     if (!(nsHtml5AttributeName::NAME == attributeQName || nsHtml5AttributeName::ACTION == attributeQName || nsHtml5AttributeName::PROMPT == attributeQName)) {
@@ -2690,17 +2689,17 @@ nsHtml5TreeBuilder::documentModeInternal(nsHtml5DocumentMode m, nsString* public
 PRBool 
 nsHtml5TreeBuilder::isAlmostStandards(nsString* publicIdentifier, nsString* systemIdentifier)
 {
-  if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::___w3c__dtd_xhtml_1_0_transitional__en, publicIdentifier)) {
+  if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-//w3c//dtd xhtml 1.0 transitional//en", publicIdentifier)) {
     return PR_TRUE;
   }
-  if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::___w3c__dtd_xhtml_1_0_frameset__en, publicIdentifier)) {
+  if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-//w3c//dtd xhtml 1.0 frameset//en", publicIdentifier)) {
     return PR_TRUE;
   }
   if (!!systemIdentifier) {
-    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::___w3c__dtd_html_4_01_transitional__en, publicIdentifier)) {
+    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-//w3c//dtd html 4.01 transitional//en", publicIdentifier)) {
       return PR_TRUE;
     }
-    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::___w3c__dtd_html_4_01_frameset__en, publicIdentifier)) {
+    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-//w3c//dtd html 4.01 frameset//en", publicIdentifier)) {
       return PR_TRUE;
     }
   }
@@ -2722,17 +2721,17 @@ nsHtml5TreeBuilder::isQuirky(nsIAtom* name, nsString* publicIdentifier, nsString
         return PR_TRUE;
       }
     }
-    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::___w3o__dtd_w3_html_strict_3_0__en__, publicIdentifier) || nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::__w3c_dtd_html_4_0_transitional_en, publicIdentifier) || nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::html, publicIdentifier)) {
+    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-//w3o//dtd w3 html strict 3.0//en//", publicIdentifier) || nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-/w3c/dtd html 4.0 transitional/en", publicIdentifier) || nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("html", publicIdentifier)) {
       return PR_TRUE;
     }
   }
   if (!systemIdentifier) {
-    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::___w3c__dtd_html_4_01_transitional__en, publicIdentifier)) {
+    if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-//w3c//dtd html 4.01 transitional//en", publicIdentifier)) {
       return PR_TRUE;
-    } else if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::___w3c__dtd_html_4_01_frameset__en, publicIdentifier)) {
+    } else if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("-//w3c//dtd html 4.01 frameset//en", publicIdentifier)) {
       return PR_TRUE;
     }
-  } else if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsHtml5StringLiterals::http___www_ibm_com_data_dtd_v11_ibmxhtml1_transitional_dtd, systemIdentifier)) {
+  } else if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd", systemIdentifier)) {
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -3643,62 +3642,62 @@ void
 nsHtml5TreeBuilder::initializeStatics()
 {
   ISINDEX_PROMPT = nsHtml5Portability::isIndexPrompt();
-  QUIRKY_PUBLIC_IDS = jArray<nsString*,PRInt32>(55);
-  QUIRKY_PUBLIC_IDS[0] = nsHtml5StringLiterals::___silmaril__dtd_html_pro_v0r11_19970101__;
-  QUIRKY_PUBLIC_IDS[1] = nsHtml5StringLiterals::___advasoft_ltd__dtd_html_3_0_aswedit___extensions__;
-  QUIRKY_PUBLIC_IDS[2] = nsHtml5StringLiterals::___as__dtd_html_3_0_aswedit___extensions__;
-  QUIRKY_PUBLIC_IDS[3] = nsHtml5StringLiterals::___ietf__dtd_html_2_0_level_1__;
-  QUIRKY_PUBLIC_IDS[4] = nsHtml5StringLiterals::___ietf__dtd_html_2_0_level_2__;
-  QUIRKY_PUBLIC_IDS[5] = nsHtml5StringLiterals::___ietf__dtd_html_2_0_strict_level_1__;
-  QUIRKY_PUBLIC_IDS[6] = nsHtml5StringLiterals::___ietf__dtd_html_2_0_strict_level_2__;
-  QUIRKY_PUBLIC_IDS[7] = nsHtml5StringLiterals::___ietf__dtd_html_2_0_strict__;
-  QUIRKY_PUBLIC_IDS[8] = nsHtml5StringLiterals::___ietf__dtd_html_2_0__;
-  QUIRKY_PUBLIC_IDS[9] = nsHtml5StringLiterals::___ietf__dtd_html_2_1e__;
-  QUIRKY_PUBLIC_IDS[10] = nsHtml5StringLiterals::___ietf__dtd_html_3_0__;
-  QUIRKY_PUBLIC_IDS[11] = nsHtml5StringLiterals::___ietf__dtd_html_3_2_final__;
-  QUIRKY_PUBLIC_IDS[12] = nsHtml5StringLiterals::___ietf__dtd_html_3_2__;
-  QUIRKY_PUBLIC_IDS[13] = nsHtml5StringLiterals::___ietf__dtd_html_3__;
-  QUIRKY_PUBLIC_IDS[14] = nsHtml5StringLiterals::___ietf__dtd_html_level_0__;
-  QUIRKY_PUBLIC_IDS[15] = nsHtml5StringLiterals::___ietf__dtd_html_level_1__;
-  QUIRKY_PUBLIC_IDS[16] = nsHtml5StringLiterals::___ietf__dtd_html_level_2__;
-  QUIRKY_PUBLIC_IDS[17] = nsHtml5StringLiterals::___ietf__dtd_html_level_3__;
-  QUIRKY_PUBLIC_IDS[18] = nsHtml5StringLiterals::___ietf__dtd_html_strict_level_0__;
-  QUIRKY_PUBLIC_IDS[19] = nsHtml5StringLiterals::___ietf__dtd_html_strict_level_1__;
-  QUIRKY_PUBLIC_IDS[20] = nsHtml5StringLiterals::___ietf__dtd_html_strict_level_2__;
-  QUIRKY_PUBLIC_IDS[21] = nsHtml5StringLiterals::___ietf__dtd_html_strict_level_3__;
-  QUIRKY_PUBLIC_IDS[22] = nsHtml5StringLiterals::___ietf__dtd_html_strict__;
-  QUIRKY_PUBLIC_IDS[23] = nsHtml5StringLiterals::___ietf__dtd_html__;
-  QUIRKY_PUBLIC_IDS[24] = nsHtml5StringLiterals::___metrius__dtd_metrius_presentational__;
-  QUIRKY_PUBLIC_IDS[25] = nsHtml5StringLiterals::___microsoft__dtd_internet_explorer_2_0_html_strict__;
-  QUIRKY_PUBLIC_IDS[26] = nsHtml5StringLiterals::___microsoft__dtd_internet_explorer_2_0_html__;
-  QUIRKY_PUBLIC_IDS[27] = nsHtml5StringLiterals::___microsoft__dtd_internet_explorer_2_0_tables__;
-  QUIRKY_PUBLIC_IDS[28] = nsHtml5StringLiterals::___microsoft__dtd_internet_explorer_3_0_html_strict__;
-  QUIRKY_PUBLIC_IDS[29] = nsHtml5StringLiterals::___microsoft__dtd_internet_explorer_3_0_html__;
-  QUIRKY_PUBLIC_IDS[30] = nsHtml5StringLiterals::___microsoft__dtd_internet_explorer_3_0_tables__;
-  QUIRKY_PUBLIC_IDS[31] = nsHtml5StringLiterals::___netscape_comm__corp___dtd_html__;
-  QUIRKY_PUBLIC_IDS[32] = nsHtml5StringLiterals::___netscape_comm__corp___dtd_strict_html__;
-  QUIRKY_PUBLIC_IDS[33] = nsHtml5StringLiterals::___o_reilly_and_associates__dtd_html_2_0__;
-  QUIRKY_PUBLIC_IDS[34] = nsHtml5StringLiterals::___o_reilly_and_associates__dtd_html_extended_1_0__;
-  QUIRKY_PUBLIC_IDS[35] = nsHtml5StringLiterals::___o_reilly_and_associates__dtd_html_extended_relaxed_1_0__;
-  QUIRKY_PUBLIC_IDS[36] = nsHtml5StringLiterals::___softquad_software__dtd_hotmetal_pro_6_0__19990601__extensions_to_html_4_0__;
-  QUIRKY_PUBLIC_IDS[37] = nsHtml5StringLiterals::___softquad__dtd_hotmetal_pro_4_0__19971010__extensions_to_html_4_0__;
-  QUIRKY_PUBLIC_IDS[38] = nsHtml5StringLiterals::___spyglass__dtd_html_2_0_extended__;
-  QUIRKY_PUBLIC_IDS[39] = nsHtml5StringLiterals::___sq__dtd_html_2_0_hotmetal___extensions__;
-  QUIRKY_PUBLIC_IDS[40] = nsHtml5StringLiterals::___sun_microsystems_corp___dtd_hotjava_html__;
-  QUIRKY_PUBLIC_IDS[41] = nsHtml5StringLiterals::___sun_microsystems_corp___dtd_hotjava_strict_html__;
-  QUIRKY_PUBLIC_IDS[42] = nsHtml5StringLiterals::___w3c__dtd_html_3_1995_03_24__;
-  QUIRKY_PUBLIC_IDS[43] = nsHtml5StringLiterals::___w3c__dtd_html_3_2_draft__;
-  QUIRKY_PUBLIC_IDS[44] = nsHtml5StringLiterals::___w3c__dtd_html_3_2_final__;
-  QUIRKY_PUBLIC_IDS[45] = nsHtml5StringLiterals::___w3c__dtd_html_3_2__;
-  QUIRKY_PUBLIC_IDS[46] = nsHtml5StringLiterals::___w3c__dtd_html_3_2s_draft__;
-  QUIRKY_PUBLIC_IDS[47] = nsHtml5StringLiterals::___w3c__dtd_html_4_0_frameset__;
-  QUIRKY_PUBLIC_IDS[48] = nsHtml5StringLiterals::___w3c__dtd_html_4_0_transitional__;
-  QUIRKY_PUBLIC_IDS[49] = nsHtml5StringLiterals::___w3c__dtd_html_experimental_19960712__;
-  QUIRKY_PUBLIC_IDS[50] = nsHtml5StringLiterals::___w3c__dtd_html_experimental_970421__;
-  QUIRKY_PUBLIC_IDS[51] = nsHtml5StringLiterals::___w3c__dtd_w3_html__;
-  QUIRKY_PUBLIC_IDS[52] = nsHtml5StringLiterals::___w3o__dtd_w3_html_3_0__;
-  QUIRKY_PUBLIC_IDS[53] = nsHtml5StringLiterals::___webtechs__dtd_mozilla_html_2_0__;
-  QUIRKY_PUBLIC_IDS[54] = nsHtml5StringLiterals::___webtechs__dtd_mozilla_html__;
+  QUIRKY_PUBLIC_IDS = jArray<const char*,PRInt32>(55);
+  QUIRKY_PUBLIC_IDS[0] = "+//silmaril//dtd html pro v0r11 19970101//";
+  QUIRKY_PUBLIC_IDS[1] = "-//advasoft ltd//dtd html 3.0 aswedit + extensions//";
+  QUIRKY_PUBLIC_IDS[2] = "-//as//dtd html 3.0 aswedit + extensions//";
+  QUIRKY_PUBLIC_IDS[3] = "-//ietf//dtd html 2.0 level 1//";
+  QUIRKY_PUBLIC_IDS[4] = "-//ietf//dtd html 2.0 level 2//";
+  QUIRKY_PUBLIC_IDS[5] = "-//ietf//dtd html 2.0 strict level 1//";
+  QUIRKY_PUBLIC_IDS[6] = "-//ietf//dtd html 2.0 strict level 2//";
+  QUIRKY_PUBLIC_IDS[7] = "-//ietf//dtd html 2.0 strict//";
+  QUIRKY_PUBLIC_IDS[8] = "-//ietf//dtd html 2.0//";
+  QUIRKY_PUBLIC_IDS[9] = "-//ietf//dtd html 2.1e//";
+  QUIRKY_PUBLIC_IDS[10] = "-//ietf//dtd html 3.0//";
+  QUIRKY_PUBLIC_IDS[11] = "-//ietf//dtd html 3.2 final//";
+  QUIRKY_PUBLIC_IDS[12] = "-//ietf//dtd html 3.2//";
+  QUIRKY_PUBLIC_IDS[13] = "-//ietf//dtd html 3//";
+  QUIRKY_PUBLIC_IDS[14] = "-//ietf//dtd html level 0//";
+  QUIRKY_PUBLIC_IDS[15] = "-//ietf//dtd html level 1//";
+  QUIRKY_PUBLIC_IDS[16] = "-//ietf//dtd html level 2//";
+  QUIRKY_PUBLIC_IDS[17] = "-//ietf//dtd html level 3//";
+  QUIRKY_PUBLIC_IDS[18] = "-//ietf//dtd html strict level 0//";
+  QUIRKY_PUBLIC_IDS[19] = "-//ietf//dtd html strict level 1//";
+  QUIRKY_PUBLIC_IDS[20] = "-//ietf//dtd html strict level 2//";
+  QUIRKY_PUBLIC_IDS[21] = "-//ietf//dtd html strict level 3//";
+  QUIRKY_PUBLIC_IDS[22] = "-//ietf//dtd html strict//";
+  QUIRKY_PUBLIC_IDS[23] = "-//ietf//dtd html//";
+  QUIRKY_PUBLIC_IDS[24] = "-//metrius//dtd metrius presentational//";
+  QUIRKY_PUBLIC_IDS[25] = "-//microsoft//dtd internet explorer 2.0 html strict//";
+  QUIRKY_PUBLIC_IDS[26] = "-//microsoft//dtd internet explorer 2.0 html//";
+  QUIRKY_PUBLIC_IDS[27] = "-//microsoft//dtd internet explorer 2.0 tables//";
+  QUIRKY_PUBLIC_IDS[28] = "-//microsoft//dtd internet explorer 3.0 html strict//";
+  QUIRKY_PUBLIC_IDS[29] = "-//microsoft//dtd internet explorer 3.0 html//";
+  QUIRKY_PUBLIC_IDS[30] = "-//microsoft//dtd internet explorer 3.0 tables//";
+  QUIRKY_PUBLIC_IDS[31] = "-//netscape comm. corp.//dtd html//";
+  QUIRKY_PUBLIC_IDS[32] = "-//netscape comm. corp.//dtd strict html//";
+  QUIRKY_PUBLIC_IDS[33] = "-//o'reilly and associates//dtd html 2.0//";
+  QUIRKY_PUBLIC_IDS[34] = "-//o'reilly and associates//dtd html extended 1.0//";
+  QUIRKY_PUBLIC_IDS[35] = "-//o'reilly and associates//dtd html extended relaxed 1.0//";
+  QUIRKY_PUBLIC_IDS[36] = "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//";
+  QUIRKY_PUBLIC_IDS[37] = "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//";
+  QUIRKY_PUBLIC_IDS[38] = "-//spyglass//dtd html 2.0 extended//";
+  QUIRKY_PUBLIC_IDS[39] = "-//sq//dtd html 2.0 hotmetal + extensions//";
+  QUIRKY_PUBLIC_IDS[40] = "-//sun microsystems corp.//dtd hotjava html//";
+  QUIRKY_PUBLIC_IDS[41] = "-//sun microsystems corp.//dtd hotjava strict html//";
+  QUIRKY_PUBLIC_IDS[42] = "-//w3c//dtd html 3 1995-03-24//";
+  QUIRKY_PUBLIC_IDS[43] = "-//w3c//dtd html 3.2 draft//";
+  QUIRKY_PUBLIC_IDS[44] = "-//w3c//dtd html 3.2 final//";
+  QUIRKY_PUBLIC_IDS[45] = "-//w3c//dtd html 3.2//";
+  QUIRKY_PUBLIC_IDS[46] = "-//w3c//dtd html 3.2s draft//";
+  QUIRKY_PUBLIC_IDS[47] = "-//w3c//dtd html 4.0 frameset//";
+  QUIRKY_PUBLIC_IDS[48] = "-//w3c//dtd html 4.0 transitional//";
+  QUIRKY_PUBLIC_IDS[49] = "-//w3c//dtd html experimental 19960712//";
+  QUIRKY_PUBLIC_IDS[50] = "-//w3c//dtd html experimental 970421//";
+  QUIRKY_PUBLIC_IDS[51] = "-//w3c//dtd w3 html//";
+  QUIRKY_PUBLIC_IDS[52] = "-//w3o//dtd w3 html 3.0//";
+  QUIRKY_PUBLIC_IDS[53] = "-//webtechs//dtd mozilla html 2.0//";
+  QUIRKY_PUBLIC_IDS[54] = "-//webtechs//dtd mozilla html//";
 }
 
 void

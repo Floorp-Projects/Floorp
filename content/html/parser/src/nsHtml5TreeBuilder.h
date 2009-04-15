@@ -43,7 +43,6 @@
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Parser.h"
-#include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsHtml5TreeOperation.h"
@@ -68,7 +67,7 @@ class nsHtml5TreeBuilder
 {
   private:
     static jArray<PRUnichar,PRInt32> ISINDEX_PROMPT;
-    static jArray<nsString*,PRInt32> QUIRKY_PUBLIC_IDS;
+    static jArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
     PRInt32 mode;
     PRInt32 originalMode;
     PRInt32 foreignFlag;
@@ -207,7 +206,7 @@ class nsHtml5TreeBuilder
 };
 
 #ifdef nsHtml5TreeBuilder_cpp__
-jArray<nsString*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
+jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #endif
 
 #define NS_HTML5TREE_BUILDER_OTHER 0
