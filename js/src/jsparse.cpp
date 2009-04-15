@@ -6143,6 +6143,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         JSParseNode *pnu;
                         while ((pnu = *pnup) != NULL && pnu->pn_pos >= root->pn_pos) {
                             pnu->pn_lexdef = dn2;
+                            dn2->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
                             pnup = &pnu->pn_link;
                         }
                         dn2->dn_uses = dn->dn_uses;
