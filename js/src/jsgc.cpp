@@ -3360,57 +3360,25 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     rt->gcPoke = JS_FALSE;
 
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread->id == js_CurrentThreadId());
-    
-    /* Bump gcLevel and return rather than nest on this thread. */
-    if (rt->gcThread == cx->thread) {
-        JS_ASSERT(rt->gcLevel > 0);
-        rt->gcLevel++;
-        METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
-        if (!(gckind & GC_LOCK_HELD))
-            JS_UNLOCK_GC(rt);
-        return;
-    }
-
     /*
-     * If we're in one or more requests (possibly on more than one context)
-     * running on the current thread, indicate, temporarily, that all these
-     * requests are inactive.
+     * Check if the GC is already running on this or another thread and
+     * delegate the job to it.
      */
-    requestDebit = 0;
-    {
-        JSCList *head, *link;
-
-        /*
-         * Check all contexts on cx->thread->contextList for active requests,
-         * counting each such context against requestDebit.
-         */
-        head = &cx->thread->contextList;
-        for (link = head->next; link != head; link = link->next) {
-            acx = CX_FROM_THREAD_LINKS(link);
-            JS_ASSERT(acx->thread == cx->thread);
-            if (acx->requestDepth)
-                requestDebit++;
-        }
-    }
-    if (requestDebit) {
-        JS_ASSERT(requestDebit <= rt->requestCount);
-        rt->requestCount -= requestDebit;
-        if (rt->requestCount == 0)
-            JS_NOTIFY_REQUEST_DONE(rt);
-    }
-
-    /* If another thread is already in GC, don't attempt GC; wait instead. */
     if (rt->gcLevel > 0) {
+        JS_ASSERT(rt->gcThread);
+
         /* Bump gcLevel to restart the current GC, so it finds new garbage. */
         rt->gcLevel++;
         METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
 
-        /* Wait for the other thread to finish, then resume our request. */
-        while (rt->gcLevel > 0)
-            JS_AWAIT_GC_DONE(rt);
-        if (requestDebit)
-            rt->requestCount += requestDebit;
+        /*
+         * If the GC runs on another thread, temporarily suspend the current
+         * request and wait until the GC is done.
+         */
+        if (rt->gcThread != cx->thread) {
+            requestDebit = js_DiscountRequestsForGC(cx);
+            js_RecountRequestsAfterGC(rt, requestDebit);
+        }
         if (!(gckind & GC_LOCK_HELD))
             JS_UNLOCK_GC(rt);
         return;
@@ -3428,9 +3396,18 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     js_NudgeOtherContexts(cx);
 
-    /* Wait for all other requests to finish. */
+    /*
+     * Discount all the requests on the current thread from contributing
+     * to rt->requestCount before we wait for all other requests to finish.
+     * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
+     * rt->requestCount transitions to 0.
+     */
+    requestDebit = js_CountThreadRequests(cx);
+    JS_ASSERT_IF(cx->requestDepth != 0, requestDebit >= 1);
+    rt->requestCount -= requestDebit;
     while (rt->requestCount > 0)
         JS_AWAIT_REQUEST_DONE(rt);
+    rt->requestCount += requestDebit;
 
 #else  /* !JS_THREADSAFE */
 
@@ -3478,7 +3455,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         rt->gcRunning = JS_FALSE;
 #ifdef JS_THREADSAFE
         rt->gcThread = NULL;
-        rt->requestCount += requestDebit;
 #endif
         gckind = GC_LOCK_HELD;
         goto restart_at_beginning;
@@ -3810,9 +3786,6 @@ out:
     rt->gcRunning = JS_FALSE;
 
 #ifdef JS_THREADSAFE
-    /* If we were invoked during a request, pay back the temporary debit. */
-    if (requestDebit)
-        rt->requestCount += requestDebit;
     rt->gcThread = NULL;
     JS_NOTIFY_GC_DONE(rt);
 
@@ -3859,31 +3832,6 @@ out:
         }
     }
 }
-
-#ifdef JS_THREADSAFE
-
-/*
- * If the GC is running and we're called on another thread, wait for this GC
- * activation to finish. We can safely wait here without fear of deadlock (in
- * the case where we are called within a request on another thread's context)
- * because the GC doesn't set rt->gcRunning until after it has waited for all
- * active requests to end.
- *
- * We call here js_CurrentThreadId() after checking for rt->gcRunning to avoid
- * expensive calls when the GC is not running.
- */
-void
-js_WaitForGC(JSRuntime *rt)
-{
-    JS_ASSERT_IF(rt->gcRunning, rt->gcLevel > 0);
-    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
-        do {
-            JS_AWAIT_GC_DONE(rt);
-        } while (rt->gcRunning);
-    }
-}
-
-#endif
 
 void
 js_UpdateMallocCounter(JSContext *cx, size_t nbytes)

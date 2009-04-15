@@ -362,27 +362,45 @@ js_unlog_title(JSTitle *title)
 #endif /* DEBUG_SCOPE_COUNT */
 
 /*
- * Return true if scope's ownercx, or the ownercx of a single-threaded scope
- * for which ownercx is waiting to become multi-threaded and shared, is cx.
- * That condition implies deadlock in ClaimScope if cx's thread were to wait
- * to share scope.
+ * Return true if we would deadlock waiting in ClaimTitle on
+ * rt->titleSharingDone until ownercx finishes its request and shares a title.
  *
  * (i) rt->gcLock held
  */
-static JSBool
-WillDeadlock(JSTitle *title, JSContext *cx)
+static bool
+WillDeadlock(JSContext *ownercx, JSThread *thread)
 {
-    JSContext *ownercx;
+    JS_ASSERT(CURRENT_THREAD_IS_ME(thread));
+    JS_ASSERT(ownercx->thread != thread);
 
-    do {
-        ownercx = title->ownercx;
-        if (ownercx == cx) {
-            JS_RUNTIME_METER(cx->runtime, deadlocksAvoided);
-            return JS_TRUE;
+     for (;;) {
+        JS_ASSERT(ownercx->thread);
+        JS_ASSERT(ownercx->requestDepth > 0);
+        JSTitle *title = ownercx->thread->titleToShare;
+        if (!title || !title->ownercx) {
+            /*
+             * ownercx->thread doesn't wait or has just been notified that the
+             * title became shared.
+             */
+            return false;
         }
-    } while (ownercx && (title = ownercx->titleToShare) != NULL);
-    return JS_FALSE;
+
+        /*
+         * ownercx->thread is waiting in ClaimTitle for a context from some
+         * thread to finish its request. If that thread is the current thread,
+         * we would deadlock. Otherwise we must recursively check if that
+         * thread waits for the current thread.
+         */
+        if (title->ownercx->thread == thread) {
+            JS_RUNTIME_METER(ownercx->runtime, deadlocksAvoided);
+            return true;
+        }
+        ownercx = title->ownercx;
+     }
 }
+
+static void
+FinishSharingTitle(JSContext *cx, JSTitle *title);
 
 /*
  * Make title multi-threaded, i.e. share its ownership among contexts in rt
@@ -409,26 +427,23 @@ ShareTitle(JSContext *cx, JSTitle *title)
         title->u.link = NULL;       /* null u.link for sanity ASAP */
         JS_NOTIFY_ALL_CONDVAR(rt->titleSharingDone);
     }
-    js_InitLock(&title->lock);
-    title->u.count = 0;
-    js_FinishSharingTitle(cx, title);
+    FinishSharingTitle(cx, title);
 }
 
 /*
- * js_FinishSharingTitle is the tail part of ShareTitle, split out to become a
- * subroutine of JS_EndRequest too.  The bulk of the work here involves making
- * mutable strings in the title's object's slots be immutable.  We have to do
- * this because such strings will soon be available to multiple threads, so
- * their buffers can't be realloc'd any longer in js_ConcatStrings, and their
- * members can't be modified by js_ConcatStrings, js_MinimizeDependentStrings,
- * or js_UndependString.
+ * FinishSharingTitle is the tail part of ShareTitle, split out to become a
+ * subroutine of js_ShareWaitingTitles too. The bulk of the work here involves
+ * making mutable strings in the title's object's slots be immutable. We have
+ * to do this because such strings will soon be available to multiple threads,
+ * so their buffers can't be realloc'd any longer in js_ConcatStrings, and
+ * their members can't be modified by js_ConcatStrings, js_UndependString or
+ * js_MinimizeDependentStrings.
  *
- * The last bit of work done by js_FinishSharingTitle nulls title->ownercx and
- * updates rt->sharedTitles.
+ * The last bit of work done by this function nulls title->ownercx and updates
+ * rt->sharedTitles.
  */
-
-void
-js_FinishSharingTitle(JSContext *cx, JSTitle *title)
+static void
+FinishSharingTitle(JSContext *cx, JSTitle *title)
 {
     JSObjectMap *map;
     JSScope *scope;
@@ -436,6 +451,8 @@ js_FinishSharingTitle(JSContext *cx, JSTitle *title)
     uint32 nslots, i;
     jsval v;
 
+    js_InitLock(&title->lock);
+    title->u.count = 0;     /* NULL may not pun as 0 */
     map = TITLE_TO_MAP(title);
     if (!MAP_IS_NATIVE(map))
         return;
@@ -483,14 +500,17 @@ js_NudgeOtherContexts(JSContext *cx)
  * Notify all contexts that are currently in a request and execute on this
  * specific thread.
  */
-void
-js_NudgeThread(JSContext *cx, JSThread *thread)
+static void
+NudgeThread(JSThread *thread)
 {
-    JSRuntime *rt = cx->runtime;
-    JSContext *acx = NULL;
-    
-    while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
-        if (cx != acx && acx->thread == thread)
+    JSCList *link;
+    JSContext *acx;
+
+    link = &thread->contextList;
+    while ((link = link->next) != &thread->contextList) {
+        acx = CX_FROM_THREAD_LINKS(link);
+        JS_ASSERT(acx->thread == thread);
+        if (acx->requestDepth)
             JS_TriggerOperationCallback(acx);
     }
 }
@@ -508,8 +528,7 @@ ClaimTitle(JSTitle *title, JSContext *cx)
 {
     JSRuntime *rt;
     JSContext *ownercx;
-    jsrefcount saveDepth;
-    PRStatus stat;
+    uint32 requestDebit;
 
     rt = cx->runtime;
     JS_RUNTIME_METER(rt, claimAttempts);
@@ -527,15 +546,30 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * If title->u.link is non-null, title has already been inserted on
          * the rt->titleSharingTodo list, because another thread's context
          * already wanted to lock title while ownercx was running a request.
-         * We can't claim any title whose u.link is non-null at this point,
-         * even if ownercx->requestDepth is 0 (see below where we suspend our
-         * request before waiting on rt->titleSharingDone).
+         * That context must still be in request and cannot be dead. We can
+         * claim it if its thread matches ours but only if cx itself is in a
+         * request.
+         *
+         * The latter check covers the case when the embedding triggers a call
+         * to js_GC on a cx outside a request while having ownercx running a
+         * request on the same thread, and then js_GC calls a mark hook or a
+         * finalizer accessing the title. In this case we cannot claim the
+         * title but must share it now as no title-sharing JS_EndRequest will
+         * follow.
          */
-        if (!title->u.link &&
-            (!js_ValidContextPointer(rt, ownercx) ||
-             !ownercx->requestDepth ||
-             ownercx->thread == cx->thread)) {
-            JS_ASSERT(title->u.count == 0);
+        bool canClaim;
+        if (title->u.link) {
+            JS_ASSERT(js_ValidContextPointer(rt, ownercx));
+            JS_ASSERT(ownercx->requestDepth > 0);
+            JS_ASSERT_IF(cx->requestDepth == 0, cx->thread == rt->gcThread);
+            canClaim = (ownercx->thread == cx->thread &&
+                        cx->requestDepth > 0);
+        } else {
+            canClaim = (!js_ValidContextPointer(rt, ownercx) ||
+                        !ownercx->requestDepth ||
+                        ownercx->thread == cx->thread);
+        }
+        if (canClaim) {
             title->ownercx = cx;
             JS_UNLOCK_GC(rt);
             JS_RUNTIME_METER(rt, claimedTitles);
@@ -543,25 +577,25 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         }
 
         /*
-         * Avoid deadlock if title's owner context is waiting on a title that
-         * we own, by revoking title's ownership.  This approach to deadlock
-         * avoidance works because the engine never nests title locks.
+         * Avoid deadlock if title's owner thread is waiting on a title that
+         * the current thread owns, by revoking title's ownership. This
+         * approach to deadlock avoidance works because the engine never nests
+         * title locks.
          *
-         * If cx could hold locks on ownercx->titleToShare, or if ownercx could
-         * hold locks on title, we would need to keep reentrancy counts for all
-         * such "flyweight" (ownercx != NULL) locks, so that control would
-         * unwind properly once these locks became "thin" or "fat".  The engine
-         * promotes a title from exclusive to shared access only when locking,
-         * never when holding or unlocking.
+         * If cx->thread could hold locks on ownercx->thread->titleToShare, or
+         * if ownercx->thread could hold locks on title, we would need to keep
+         * reentrancy counts for all such "flyweight" (ownercx != NULL) locks,
+         * so that control would unwind properly once these locks became
+         * "thin" or "fat". The engine promotes a title from exclusive to
+         * shared access only when locking, never when holding or unlocking.
          *
          * Avoid deadlock before any of this title/context cycle detection if
          * cx is on the active GC's thread, because in that case, no requests
          * will run until the GC completes.  Any title wanted by the GC (from
-         * a finalizer) that can't be claimed must become shared.
+         * a finalizer or a mark hook) that can't be claimed must become
+         * shared.
          */
-        if (rt->gcThread == cx->thread ||
-            (ownercx->titleToShare &&
-             WillDeadlock(ownercx->titleToShare, cx))) {
+        if (rt->gcThread == cx->thread || WillDeadlock(ownercx, cx->thread)) {
             ShareTitle(cx, title);
             break;
         }
@@ -578,56 +612,36 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         }
 
         /*
-         * Inline JS_SuspendRequest before we wait on rt->titleSharingDone,
-         * saving and clearing cx->requestDepth so we don't deadlock if the
-         * GC needs to run on ownercx.
-         *
-         * Unlike JS_SuspendRequest and JS_EndRequest, we must take care not
-         * to decrement rt->requestCount if cx is active on the GC's thread,
-         * because the GC has already reduced rt->requestCount to exclude all
-         * such such contexts.
+         * Discount all the requests running on the current thread so a
+         * possible GC can proceed on another thread while we wait on
+         * rt->titleSharingDone.
          */
-        saveDepth = cx->requestDepth;
-        if (saveDepth) {
-            cx->requestDepth = 0;
-            if (rt->gcThread != cx->thread) {
-                JS_ASSERT(rt->requestCount > 0);
-                rt->requestCount--;
-                if (rt->requestCount == 0)
-                    JS_NOTIFY_REQUEST_DONE(rt);
-            }
-        }
-
-        js_NudgeThread(cx, ownercx->thread);
+        requestDebit = js_DiscountRequestsForGC(cx);
 
         /*
          * We know that some other thread's context owns title, which is now
          * linked onto rt->titleSharingTodo, awaiting the end of that other
-         * thread's request.  So it is safe to wait on rt->titleSharingDone.
+         * thread's request. So it is safe to wait on rt->titleSharingDone.
+         * But before waiting, we force the operation callback for that other
+         * thread so it can quickly suspend.
          */
-        cx->titleToShare = title;
-        stat = PR_WaitCondVar(rt->titleSharingDone, PR_INTERVAL_NO_TIMEOUT);
+        NudgeThread(ownercx->thread);
+
+        JS_ASSERT(!cx->thread->titleToShare);
+        cx->thread->titleToShare = title;
+#ifdef DEBUG
+        PRStatus stat =
+#endif
+            PR_WaitCondVar(rt->titleSharingDone, PR_INTERVAL_NO_TIMEOUT);
         JS_ASSERT(stat != PR_FAILURE);
 
-        /*
-         * Inline JS_ResumeRequest after waiting on rt->titleSharingDone,
-         * restoring cx->requestDepth.  Same note as above for the inlined,
-         * specialized JS_SuspendRequest code: beware rt->gcThread.
-         */
-        if (saveDepth) {
-            if (rt->gcThread != cx->thread) {
-                while (rt->gcLevel > 0)
-                    JS_AWAIT_GC_DONE(rt);
-                rt->requestCount++;
-            }
-            cx->requestDepth = saveDepth;
-        }
+        js_RecountRequestsAfterGC(rt, requestDebit);
 
         /*
-         * Don't clear cx->titleToShare until after we're through waiting on
+         * Don't clear titleToShare until after we're through waiting on
          * all condition variables protected by rt->gcLock -- that includes
-         * rt->titleSharingDone *and* rt->gcDone (hidden in JS_AWAIT_GC_DONE,
-         * in the inlined JS_ResumeRequest code immediately above).
+         * rt->titleSharingDone *and* rt->gcDone (hidden in the call to
+         * js_ActivateRequestAfterGC immediately above).
          *
          * Otherwise, the GC could easily deadlock with another thread that
          * owns a title wanted by a finalizer.  By keeping cx->titleToShare
@@ -635,11 +649,44 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * results in the finalized object's title being shared (it must, of
          * course, have other, live objects sharing it).
          */
-        cx->titleToShare = NULL;
+        cx->thread->titleToShare = NULL;
     }
 
     JS_UNLOCK_GC(rt);
     return JS_FALSE;
+}
+
+void
+js_ShareWaitingTitles(JSContext *cx)
+{
+    JSTitle *title, **todop;
+    bool shared;
+
+    /* See whether cx has any single-threaded titles to start sharing. */
+    todop = &cx->runtime->titleSharingTodo;
+    shared = false;
+    while ((title = *todop) != NO_TITLE_SHARING_TODO) {
+        if (title->ownercx != cx) {
+            todop = &title->u.link;
+            continue;
+        }
+        *todop = title->u.link;
+        title->u.link = NULL;       /* null u.link for sanity ASAP */
+
+        /*
+         * If js_DropObjectMap returns null, we held the last ref to scope.
+         * The waiting thread(s) must have been killed, after which the GC
+         * collected the object that held this scope.  Unlikely, because it
+         * requires that the GC ran (e.g., from an operation callback)
+         * during this request, but possible.
+         */
+        if (js_DropObjectMap(cx, TITLE_TO_MAP(title), NULL)) {
+            FinishSharingTitle(cx, title); /* set ownercx = NULL */
+            shared = true;
+        }
+    }
+    if (shared)
+        JS_NOTIFY_ALL_CONDVAR(cx->runtime->titleSharingDone);
 }
 
 /* Exported to js.c, which calls it via OBJ_GET_* and JSVAL_IS_* macros. */
