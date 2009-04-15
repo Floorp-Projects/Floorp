@@ -589,7 +589,6 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          */
         saveDepth = cx->requestDepth;
         if (saveDepth) {
-            js_LeaveTrace(cx);
             cx->requestDepth = 0;
             if (rt->gcThread != cx->thread) {
                 JS_ASSERT(rt->requestCount > 0);
