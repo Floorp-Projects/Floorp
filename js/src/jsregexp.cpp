@@ -4379,6 +4379,22 @@ js_InitRegExpStatics(JSContext *cx)
     JS_ClearRegExpStatics(cx);
 }
 
+JS_FRIEND_API(void)
+js_SaveRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
+                     JSTempValueRooter *tvr)
+{
+  *statics = cx->regExpStatics;
+  JS_PUSH_TEMP_ROOT_STRING(cx, statics->input, tvr);
+}
+
+JS_FRIEND_API(void)
+js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
+                        JSTempValueRooter *tvr)
+{
+  cx->regExpStatics = *statics;
+  JS_POP_TEMP_ROOT(cx, tvr);
+}
+
 void
 js_TraceRegExpStatics(JSTracer *trc, JSContext *acx)
 {
