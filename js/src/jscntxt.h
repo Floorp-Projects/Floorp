@@ -131,13 +131,19 @@ struct JSTraceMonitor {
      * !onTrace && !recorder: not on trace.
      * onTrace && recorder: recording a trace.
      * onTrace && !recorder: executing a trace.
-     * !onTrace && recorder && !prohibitFlush:
+     * !onTrace && recorder && !prohibitRecording:
      *      not on trace; deep-aborted while recording.
-     * !onTrace && recorder && prohibitFlush:
+     * !onTrace && recorder && prohibitRecording:
      *      not on trace; deep-bailed in SpiderMonkey code called from a
      *      trace. JITted code is on the stack.
      */
     JSPackedBool            onTrace;
+
+    /*
+     * Do not start recording after a deep bail.  That would free JITted code
+     * pages that we will later return to.
+     */
+    JSPackedBool            prohibitRecording;
 
     /* See reservedObjects below. */
     JSPackedBool            useReservedObjects;
@@ -150,15 +156,7 @@ struct JSTraceMonitor {
 
     struct GlobalState globalStates[MONITOR_N_GLOBAL_STATES];
     struct VMFragment* vmfragments[FRAGMENT_TABLE_SIZE];
-
-
-    /*
-     * If nonzero, do not flush the JIT cache after a deep bail.  That would
-     * free JITted code pages that we will later return to.  Instead, set
-     * the needFlush flag so that it can be flushed later.
-     */
-    uintN                   prohibitFlush;
-    JSBool                  needFlush;
+    JSBool needFlush;
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.

@@ -1843,6 +1843,9 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 static bool
 MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 {
+    if (cg->funbox && (cg->funbox->node->pn_dflags & PND_FUNARG))
+        return true;
+
     JSContext *cx = cg->compiler->context;
     JSFunction *fun = cg->compiler->callerFrame->fun;
     JSAtom *atom = pn->pn_atom;
@@ -2100,7 +2103,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     uintN skip = cg->staticLevel - level;
     if (skip != 0) {
         JS_ASSERT(cg->flags & TCF_IN_FUNCTION);
-        JS_ASSERT(cg->upvars.lookup(atom));
+        JS_ASSERT(cg->lexdeps.lookup(atom));
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
         /*
@@ -2154,7 +2157,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             uint32 *vector = cg->upvarMap.vector;
             if (!vector) {
-                uint32 length = cg->upvars.count;
+                uint32 length = cg->lexdeps.count;
 
                 vector = (uint32 *) calloc(length, sizeof *vector);
                 if (!vector) {
@@ -4337,9 +4340,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_UPVARS:
-        JS_ASSERT(cg->upvars.count == 0);
+        JS_ASSERT(cg->lexdeps.count == 0);
         JS_ASSERT(pn->pn_names.count != 0);
-        cg->upvars = pn->pn_names;
+        cg->lexdeps = pn->pn_names;
         ok = js_EmitTree(cx, cg, pn->pn_tree);
         break;
 
