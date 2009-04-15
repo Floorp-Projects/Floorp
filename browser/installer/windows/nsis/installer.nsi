@@ -468,7 +468,7 @@ Section "-InstallEndCleanup"
       ${Unless} ${Errors}
         Delete /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-delete"
       ${EndUnless}
-    ${EndUnless}
+    ${EndIf}
 
     ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
       CopyFiles /SILENT "$INSTDIR\uninstall\helper.exe" "$INSTDIR"
