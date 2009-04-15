@@ -120,7 +120,7 @@ WifiGeoPositionProvider.prototype = {
         LOG("startup called");
 
         var prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-        this.provider_url = prefService.getComplexValue("geo.wifi.uri", Ci.nsIPrefLocalizedString).data;
+        this.provider_url = prefService.getCharPref("geo.wifi.uri");
         LOG("provider url = " + this.provider_url);
 
         // if we don't see anything in 5 seconds, kick of one IP geo lookup.
