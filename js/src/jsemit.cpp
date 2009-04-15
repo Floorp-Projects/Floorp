@@ -1843,6 +1843,9 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 static bool
 MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 {
+    if (cg->funbox && (cg->funbox->node->pn_dflags & PND_FUNARG))
+        return true;
+
     JSContext *cx = cg->compiler->context;
     JSFunction *fun = cg->compiler->callerFrame->fun;
     JSAtom *atom = pn->pn_atom;
