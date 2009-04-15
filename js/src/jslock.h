@@ -197,10 +197,15 @@ js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
 extern void js_SetSlotThreadSafe(JSContext *, JSObject *, uint32, jsval);
 extern void js_InitLock(JSThinLock *);
 extern void js_FinishLock(JSThinLock *);
-extern void js_FinishSharingTitle(JSContext *cx, JSTitle *title);
 
-extern void js_NudgeOtherContexts(JSContext *cx);
-extern void js_NudgeThread(JSContext *cx, JSThread *thread);
+/*
+ * This function must be called with the GC lock held.
+ */
+extern void
+js_ShareWaitingTitles(JSContext *cx);
+
+extern void
+js_NudgeOtherContexts(JSContext *cx);
 
 #ifdef DEBUG
 

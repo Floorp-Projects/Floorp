@@ -284,20 +284,6 @@ typedef enum JSGCInvocationKind {
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
-
-/*
- * This function must be called with the GC lock held. It is a helper for code
- * that can potentially run outside JS request to ensure that the GC is not
- * running when the function returns.
- */
-#ifdef JS_THREADSAFE
-extern void
-js_WaitForGC(JSRuntime *rt);
-#else
-# define js_WaitForGC(rt)    ((void) 0)
-#endif
-
-
 /* Call this after succesful malloc of memory for GC-related things. */
 extern void
 js_UpdateMallocCounter(JSContext *cx, size_t nbytes);
