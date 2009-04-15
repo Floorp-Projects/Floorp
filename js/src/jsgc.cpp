@@ -3389,10 +3389,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         for (link = head->next; link != head; link = link->next) {
             acx = CX_FROM_THREAD_LINKS(link);
             JS_ASSERT(acx->thread == cx->thread);
-            if (acx->requestDepth) {
-                js_LeaveTrace(acx);
+            if (acx->requestDepth)
                 requestDebit++;
-            }
         }
     }
     if (requestDebit) {
