@@ -41,7 +41,6 @@
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Portability.h"
 #include "nsHtml5StackNode.h"
-#include "nsHtml5StringLiterals.h"
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5UTF16Buffer.h"
@@ -59,7 +58,6 @@ nsHtml5Module::InitializeStatics()
   nsHtml5NamedCharacters::initializeStatics();
   nsHtml5Portability::initializeStatics();
   nsHtml5StackNode::initializeStatics();
-  nsHtml5StringLiterals::initializeStatics();
   nsHtml5Tokenizer::initializeStatics();
   nsHtml5TreeBuilder::initializeStatics();
   nsHtml5UTF16Buffer::initializeStatics();
@@ -81,7 +79,6 @@ nsHtml5Module::ReleaseStatics()
   nsHtml5NamedCharacters::releaseStatics();
   nsHtml5Portability::releaseStatics();
   nsHtml5StackNode::releaseStatics();
-  nsHtml5StringLiterals::releaseStatics();
   nsHtml5Tokenizer::releaseStatics();
   nsHtml5TreeBuilder::releaseStatics();
   nsHtml5UTF16Buffer::releaseStatics();

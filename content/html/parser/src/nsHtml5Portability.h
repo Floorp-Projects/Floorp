@@ -40,7 +40,6 @@
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Parser.h"
-#include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 
@@ -63,6 +62,7 @@ class nsHtml5Portability
     static nsIAtom* newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length);
     static nsString* newStringFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length);
     static nsString* newEmptyString();
+    static nsString* newStringFromLiteral(const char* literal);
     static jArray<PRUnichar,PRInt32> newCharArrayFromLocal(nsIAtom* local);
     static jArray<PRUnichar,PRInt32> newCharArrayFromString(nsString* string);
     static void releaseString(nsString* str);
@@ -71,9 +71,9 @@ class nsHtml5Portability
     static void retainElement(nsIContent* elt);
     static void releaseElement(nsIContent* elt);
     static PRBool localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length);
-    static PRBool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(nsString* lowerCaseLiteral, nsString* string);
-    static PRBool lowerCaseLiteralEqualsIgnoreAsciiCaseString(nsString* lowerCaseLiteral, nsString* string);
-    static PRBool literalEqualsString(nsString* literal, nsString* string);
+    static PRBool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
+    static PRBool lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
+    static PRBool literalEqualsString(const char* literal, nsString* string);
     static jArray<PRUnichar,PRInt32> isIndexPrompt();
     static void initializeStatics();
     static void releaseStatics();

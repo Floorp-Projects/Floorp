@@ -42,7 +42,6 @@
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Parser.h"
-#include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 
