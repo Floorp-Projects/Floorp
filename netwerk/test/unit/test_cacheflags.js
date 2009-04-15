@@ -207,8 +207,7 @@ var gTests = [
 function run_next_test()
 {
   if (gTests.length == 0) {
-    httpserver.stop();
-    do_test_finished();
+    httpserver.stop(do_test_finished);
     return;
   }
 

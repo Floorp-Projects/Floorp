@@ -44,6 +44,7 @@ interface nsIOutputStream;
 interface nsISimpleEnumerator;
 
 interface nsIHttpServer;
+interface nsIHttpServerStoppedCallback;
 interface nsIHttpRequestHandler;
 interface nsIHttpRequestMetadata;
 interface nsIHttpResponse;
@@ -52,33 +53,41 @@ interface nsIHttpServerIdentity;
 /**
  * An interface which represents an HTTP server.
  */
-[scriptable, uuid(DEEDE3E3-B813-4F3F-9C70-948E5700C410)]
+[scriptable, uuid(71ecfba5-15cf-457f-9642-4b33f6e9baf4)]
 interface nsIHttpServer : nsISupports
 {
   /**
-   * Starts up this server, listening upon the given port.  This method may
-   * throw if the process does not have sufficient privileges to open a socket
-   * for the given port, and it also throws when called upon a server which has
-   * already been started.
+   * Starts up this server, listening upon the given port.
    *
    * @param port
    *   the port upon which listening should happen, or -1 if no specific port is
    *   desired
+   * @throws NS_ERROR_ALREADY_INITIALIZED
+   *   if this server is already started
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if the server is not started and cannot be started on the desired port
+   *   (perhaps because the port is already in use or because the process does
+   *   not have privileges to do so)
+   * @note
+   *   Behavior is undefined if this method is called after stop() has been
+   *   called on this but before the provided callback function has been
+   *   called.
    */
   void start(in long port);
 
   /**
-   * Shuts down this server if it is running; if it is not, this method is a
-   * no-op.
+   * Shuts down this server if it is running (including the period of time after
+   * stop() has been called but before the provided callback has been called).
    *
-   * This method will do its best to return after the socket in this
-   * server has been closed and all pending requests have completed being
-   * served, but this may or may not actually happen, since in some
-   * implementations this may not actually be possible.  Implementations which
-   * can make this promise should make it explicit in implementation
-   * documentation.
+   * @param callback
+   *   an asynchronous callback used to notify the user when this server is
+   *   stopped and all pending requests have been fully served
+   * @throws NS_ERROR_NULL_POINTER
+   *   if callback is null
+   * @throws NS_ERROR_UNEXPECTED
+   *   if this server is not running
    */
-  void stop();
+  void stop(in nsIHttpServerStoppedCallback callback);
 
   /**
    * Associates the local file represented by the string file with all requests
@@ -213,6 +222,30 @@ interface nsIHttpServer : nsISupports
    * saved state.
    */
   void setSharedState(in AString key, in AString value);
+
+  /**
+   * Retrieves the object associated with the given key in this in
+   * object-valued saved state.  All keys are initially associated with null.
+   */
+  nsISupports getObjectState(in AString key);
+
+  /**
+   * Sets the object associated with the given key in this in object-valued
+   * saved state.  The value may be null.
+   */
+  void setObjectState(in AString key, in nsISupports value);
+};
+
+/**
+ * An interface through which a notification of the complete stopping (socket
+ * closure, in-flight requests all fully served and responded to) of an HTTP
+ * server may be received.
+ */
+[scriptable, function, uuid(925a6d33-9937-4c63-abe1-a1c56a986455)]
+interface nsIHttpServerStoppedCallback : nsISupports
+{
+  /** Called when the corresponding server has been fully stopped. */
+  void onStopped();
 };
 
 /**
@@ -450,7 +483,7 @@ interface nsIHttpRequestMetadata : nsIPropertyBag
 /**
  * Represents an HTTP response, as described in RFC 2616, section 6.
  */
-[scriptable, uuid(a2aaaff7-03bd-43b6-b460-94671e288093)]
+[scriptable, uuid(4b023876-274e-41e8-83fb-e51f7aba43a6)]
 interface nsIHttpResponse : nsISupports
 {
   /**
@@ -469,6 +502,9 @@ interface nsIHttpResponse : nsISupports
    * @throws NS_ERROR_INVALID_ARG
    *   if httpVersion is not a valid HTTP version string, statusCode is greater
    *   than 999, or description contains invalid characters
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if this response is being processed asynchronously and data has been
+   *   written to this response's body
    */
   void setStatusLine(in string httpVersion,
                      in unsigned short statusCode,
@@ -485,25 +521,73 @@ interface nsIHttpResponse : nsISupports
    * @param merge
    *   when true, if the given header already exists in this, the values passed
    *   to this function will be merged into the existing header, per RFC 2616
-   *   header semantics; when false, if the given header already exists in this,
-   *   it is overwritten with the passed-in values; if the header doesn't exist
-   *   in this, it is set regardless of the value of this parameter
+   *   header semantics (except for the Set-Cookie, WWW-Authenticate, and
+   *   Proxy-Authenticate headers, which will treat each such merged header as
+   *   an additional instance of the header, for real-world compatibility
+   *   reasons); when false, replaces any existing header of the given name (if
+   *   any exists) with a new header with the specified value
    * @throws NS_ERROR_INVALID_ARG
    *   if name or value is not a valid header component
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if this response is being processed asynchronously and data has been
+   *   written to this response's body
    */
   void setHeader(in string name, in string value, in boolean merge);
 
   /**
    * A stream to which data appearing in the body of this response should be
-   * written.
+   * written.  After this response has been designated as being processed
+   * asynchronously, subsequent writes will be synchronously written to the
+   * underlying transport.  However, immediate write-through visible to the HTTP
+   * client cannot be guaranteed, as intermediate buffers both in the server
+   * socket and in the client may delay written data; be prepared for potential
+   * delays.
+   *
+   * @note
+   *   As writes to the underlying transport are synchronous, care must be taken
+   *   not to block on these writes; it is even possible for deadlock to occur
+   *   in the case that the server and the client reside in the same process.
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if accessed after this response is fully constructed
    */
   readonly attribute nsIOutputStream bodyOutputStream;
 
   /**
-   * Write a string to the response's output stream.
+   * Writes a string to the response's output stream.  This method is merely a
+   * convenient shorthand for writing the same data to bodyOutputStream
+   * directly.
    *
    * @note
    *   This method is only guaranteed to work with ASCII data.
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if called after this response has been fully constructed
    */
   void write(in string data);
+
+  /**
+   * Signals that this response is being constructed asynchronously.  Requests
+   * are typically completely constructed during nsIHttpRequestHandler.handle;
+   * however, responses which require significant resources (time, memory,
+   * processing) to construct can be created and sent incrementally by calling
+   * this method during the call to nsIHttpRequestHandler.handle.  This method
+   * only has this effect when called during nsIHttpRequestHandler.handle;
+   * behavior is undefined if it is called at a later time.  It may be called
+   * multiple times with no ill effect, so long as each call occurs before
+   * finish() is called.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   if not initially called within a nsIHttpRequestHandler.handle call or if
+   *   called after this response has been finished
+   */
+  void processAsync();
+
+  /**
+   * Signals that construction of this response is complete and that it may be
+   * sent over the network to the client.  This method may only be called after
+   * processAsync() has been called.  This method is idempotent.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   if processAsync() has not already been properly called
+   */
+  void finish();
 };

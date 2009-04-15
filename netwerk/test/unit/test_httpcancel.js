@@ -33,8 +33,7 @@ var listener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    httpserv.stop();
-    do_test_finished();
+    httpserv.stop(do_test_finished);
   }
 };
 
