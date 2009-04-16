@@ -2935,7 +2935,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
             }
         }
     }
-    if (valid)
+    if (valid && JSSTRING_IS_DEFLATED(str))
         js_PurgeDeflatedStringCache(rt, str);
 }
 
@@ -3454,6 +3454,7 @@ js_SetStringBytes(JSContext *cx, JSString *str, char *bytes, size_t length)
     if (ok)
         rt->deflatedStringCacheBytes += length;
 #endif
+    JSSTRING_SET_DEFLATED(str);
 
     JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
     return ok;
@@ -3508,6 +3509,7 @@ js_GetStringBytes(JSContext *cx, JSString *str)
 #ifdef DEBUG
                 rt->deflatedStringCacheBytes += JSSTRING_LENGTH(str);
 #endif
+                JSSTRING_SET_DEFLATED(str);
             } else {
                 if (cx)
                     JS_free(cx, bytes);
