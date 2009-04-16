@@ -77,8 +77,7 @@
 //-------------------------------------------------------------------//
 // nsIProcess implementation
 //-------------------------------------------------------------------//
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsProcess, nsIProcess,
-                                         nsIProcess2,
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsProcess, nsIProcess,
                                          nsIObserver)
 
 //Constructor
@@ -470,17 +469,6 @@ NS_IMETHODIMP nsProcess::GetIsRunning(PRBool *aIsRunning)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsProcess::InitWithPid(PRUint32 pid)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsProcess::GetLocation(nsIFile** aLocation)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 nsProcess::GetPid(PRUint32 *aPid)
 {
@@ -490,18 +478,6 @@ nsProcess::GetPid(PRUint32 *aPid)
         return NS_ERROR_NOT_IMPLEMENTED;
     *aPid = mPid;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProcess::GetProcessName(char** aProcessName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsProcess::GetProcessSignature(PRUint32 *aProcessSignature)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
