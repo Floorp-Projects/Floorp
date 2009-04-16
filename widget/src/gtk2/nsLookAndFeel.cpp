@@ -70,6 +70,7 @@ float     nsLookAndFeel::sCaretRatio = 0;
 //-------------------------------------------------------------------------
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
+    mStyle = nsnull;
     InitWidget();
 
     static PRBool sInitialized = PR_FALSE;
@@ -82,7 +83,7 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-    g_object_unref(mWidget);
+    g_object_unref(mStyle);
 }
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
@@ -815,8 +816,8 @@ nsLookAndFeel::LookAndFeelChanged()
 {
     nsXPLookAndFeel::LookAndFeelChanged();
 
-    if (mWidget)
-        g_object_unref(mWidget);
+    g_object_unref(mStyle);
+    mStyle = nsnull;
  
     InitWidget();
     InitLookAndFeel();
