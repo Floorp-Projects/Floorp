@@ -133,7 +133,7 @@ function test_notify_blocking()
   var file = get_test_program("TestQuickReturn");
 
   var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess2);
+                          .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
 
   process.runAsync([], 0, {
@@ -152,7 +152,7 @@ function test_notify_nonblocking()
   var file = get_test_program("TestArguments");
 
   var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess2);
+                          .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
 
   process.runAsync(["mozilla"], 1, {
@@ -171,7 +171,7 @@ function test_notify_killed()
   var file = get_test_program("TestBlockingProcess");
 
   var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess2);
+                          .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
 
   process.runAsync([], 0, {
