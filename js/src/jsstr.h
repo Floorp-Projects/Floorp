@@ -73,6 +73,11 @@ JS_BEGIN_EXTERN_C
  * A flat string with JSSTRFLAG_ATOMIZED set means that the string is hashed as
  * an atom. This flag is used to avoid re-hashing the already-atomized string.
  *
+ * Any string with JSSTRFLAG_DEFLATED set means that the string has an entry
+ * in the deflated string cache. The GC uses this flag to optimize string 
+ * finalization and avoid an expensive cache lookup for strings that were 
+ * never deflated.
+ *
  * When JSSTRFLAG_DEPENDENT is set, the string depends on characters of another
  * string strongly referenced by the u.base field. The base member may point to
  * another dependent string if JSSTRING_CHARS has not been called yet.
