@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(416d8820-7bc4-4d9c-aeca-d59e793e3273)]
+[scriptable, uuid(5003e14a-6617-4af9-a0f6-a09f86d65dd2)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**

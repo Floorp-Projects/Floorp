@@ -59,14 +59,14 @@
             <vbox>
                 <spacer flex="1"/>
                 <hbox class="controlBar" hidden="true">
-                    <button class="playButton" oncommand="document.getBindingParent(this).Utils.togglePause();"/>
+                    <button class="playButton"/>
                     <stack class="scrubberStack" flex="1">
                         <box class="backgroundBar"/>
                         <progressmeter class="bufferBar"/>
                         <progressmeter class="progressBar" max="10000"/>
                         <scale class="scrubber" movetoclick="true"/>
                     </stack>
-                    <button class="muteButton" oncommand="document.getBindingParent(this).Utils.toggleMute();"/>
+                    <button class="muteButton"/>
                 </hbox>
             </vbox>
         </stack>
@@ -600,6 +600,10 @@
             // Use the Utils.handleEvent() callback for all media events.
             for each (var event in this.Utils.videoEvents)
                 video.addEventListener(event, this.Utils, false);
+
+            var self = this;
+            this.Utils.muteButton.addEventListener("command", function() { self.Utils.toggleMute(); }, false);
+            this.Utils.playButton.addEventListener("command", function() { self.Utils.togglePause(); }, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>

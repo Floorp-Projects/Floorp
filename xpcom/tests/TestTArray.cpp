@@ -498,6 +498,21 @@ static PRBool test_autoarray() {
 
 //----
 
+// IndexOf used to potentially scan beyond the end of the array.  Test for
+// this incorrect behavior by adding a value (5), removing it, then seeing
+// if IndexOf finds it.
+static PRBool test_indexof() {
+  nsTArray<int> array;
+  array.AppendElement(0);
+  // add and remove the 5
+  array.AppendElement(5);
+  array.RemoveElementAt(1);
+  // we should not find the 5!
+  return array.IndexOf(5, 1) == -1;
+}
+
+//----
+
 typedef PRBool (*TestFunc)();
 #define DECL_TEST(name) { #name, name }
 
@@ -517,6 +532,7 @@ static const struct Test {
 #ifdef DEBUG
   DECL_TEST(test_autoarray),
 #endif
+  DECL_TEST(test_indexof),
   { nsnull, nsnull }
 };
 

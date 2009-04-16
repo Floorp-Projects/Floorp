@@ -13,7 +13,8 @@ var listener = {
   },
 
   onDownloadComplete: function(downloader, request, ctxt, status, file) {
-    server.stop();
+    do_test_pending();
+    server.stop(do_test_finished);
 
     if (!file)
       do_throw("Download failed");

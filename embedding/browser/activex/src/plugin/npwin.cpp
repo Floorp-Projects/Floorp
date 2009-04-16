@@ -36,8 +36,7 @@ static NPPluginFuncs* g_pluginFuncs;
 // NP_GetEntryPoints
 //
 //	fills in the func table used by Navigator to call entry points in
-//  plugin DLL.  Note that these entry points ensure that DS is loaded
-//  by using the NP_LOADDS macro, when compiling for Win16
+//  plugin DLL.
 //
 NPError WINAPI NP_EXPORT
 NP_GetEntryPoints(NPPluginFuncs* pFuncs)
@@ -126,8 +125,7 @@ NP_Shutdown()
 /* These entry points expect to be called from within the plugin.  The
    noteworthy assumption is that DS has already been set to point to the
    plugin's DLL data segment.  Don't call these functions from outside
-   the plugin without ensuring DS is set to the DLLs data segment first,
-   typically using the NP_LOADDS macro
+   the plugin without ensuring DS is set to the DLLs data segment first.
 */
 
 /* returns the major/minor version numbers of the Plugin API for the plugin

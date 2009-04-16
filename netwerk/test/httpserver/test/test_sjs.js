@@ -50,12 +50,6 @@ var tests = [];
  * UTILITY FUNCTIONS *
  *********************/
 
-function isException(e, code)
-{
-  if (e !== code && e.result !== code)
-    do_throw("unexpected error: " + e);
-}
-
 function bytesToString(bytes)
 {
   return bytes.map(function(v) { return String.fromCharCode(v); }).join("");
@@ -241,5 +235,5 @@ function run_test()
   //     test that doesn't care about throwing or not.
 
   srv.start(4444);
-  runHttpTests(tests, function() { srv.stop(); });
+  runHttpTests(tests, testComplete(srv));
 }

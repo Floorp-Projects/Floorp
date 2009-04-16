@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="x"><content><SPAN>2!<children xmlns="http://www.mozilla.org/xbl"/></SPAN></content></binding>
+  <binding id="y"><content></content></binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("a").style.MozBinding = 'url("#y")';
+}
+
+</script>
+</head>
+
+<body dir="rtl" onload="boom();"><div style="-moz-binding: url(#x);"><span style="unicode-bidi: bidi-override;" id="a"></span></div></body>
+</html>

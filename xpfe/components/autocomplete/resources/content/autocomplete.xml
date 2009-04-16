@@ -851,7 +851,7 @@
           var val = this.resultsPopup.overrideValue;
             if (val)
               this.setTextValue(val);
-          else if (this.resultsPopup.selectedIndex != -1 && !this.noMatch) {
+          else if (this.resultsPopup.selectedIndex != -1) {
             if (this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
                 Components.interfaces.nsIAutoCompleteStatus.failureItems) {
               this.setTextValue(this.currentSearchString);

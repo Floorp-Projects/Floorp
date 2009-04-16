@@ -1329,6 +1329,9 @@ nsOfflineCacheUpdate::LoadCompleted()
 {
     nsresult rv;
 
+    // Keep the object alive through a Finish() call.
+    nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
+
     LOG(("nsOfflineCacheUpdate::LoadCompleted [%p]", this));
 
     if (mState == STATE_CANCELLED) {
@@ -1442,6 +1445,9 @@ void
 nsOfflineCacheUpdate::ManifestCheckCompleted(nsresult aStatus,
                                              const nsCString &aManifestHash)
 {
+    // Keep the object alive through a Finish() call.
+    nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
+
     if (NS_SUCCEEDED(aStatus)) {
         nsCAutoString firstManifestHash;
         mManifestItem->GetManifestHash(firstManifestHash);
@@ -1476,6 +1482,9 @@ nsresult
 nsOfflineCacheUpdate::Begin()
 {
     LOG(("nsOfflineCacheUpdate::Begin [%p]", this));
+
+    // Keep the object alive through a ProcessNextURI()/Finish() call.
+    nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
 
     mCurrentItem = 0;
 
@@ -1576,6 +1585,9 @@ nsOfflineCacheUpdate::AddExistingItems(PRUint32 aType,
 nsresult
 nsOfflineCacheUpdate::ProcessNextURI()
 {
+    // Keep the object alive through a Finish() call.
+    nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
+
     LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p, current=%d, numItems=%d]",
          this, mCurrentItem, mItems.Length()));
 
@@ -1793,6 +1805,9 @@ nsOfflineCacheUpdate::SetOwner(nsOfflineCacheUpdateOwner *aOwner)
 nsresult
 nsOfflineCacheUpdate::UpdateFinished(nsOfflineCacheUpdate *aUpdate)
 {
+    // Keep the object alive through a Finish() call.
+    nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
+
     mImplicitUpdate = nsnull;
 
     NotifyNoUpdate();
@@ -1908,13 +1923,6 @@ nsresult
 nsOfflineCacheUpdate::Finish()
 {
     LOG(("nsOfflineCacheUpdate::Finish [%p]", this));
-
-    // Because the call to UpdateFinished(this) at the end of this method
-    // may relese the last reference to this object but we still want to work
-    // with it after Finish() call ended, make sure to release this instance in
-    // the next thread loop round.
-    NS_ADDREF_THIS();
-    NS_ProxyRelease(NS_GetCurrentThread(), this, PR_TRUE);
 
     mState = STATE_FINISHED;
 

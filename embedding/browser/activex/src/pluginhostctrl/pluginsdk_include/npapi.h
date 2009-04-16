@@ -368,7 +368,6 @@ typedef struct NP_Port
 #define NPVERS_HAS_STREAMOUTPUT   8
 #define NPVERS_HAS_NOTIFICATION   9
 #define NPVERS_HAS_LIVECONNECT    9
-#define NPVERS_WIN16_HAS_LIVECONNECT  9
 #define NPVERS_68K_HAS_LIVECONNECT  11
 #define NPVERS_HAS_WINDOWLESS       11
 
@@ -376,12 +375,6 @@ typedef struct NP_Port
 /*----------------------------------------------------------------------*/
 /*         Function Prototypes        */
 /*----------------------------------------------------------------------*/
-
-#if defined(_WINDOWS) && !defined(WIN32)
-#define NP_LOADDS  _loadds
-#else
-#define NP_LOADDS
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -397,26 +390,26 @@ char*         NPP_GetMIMEDescription(void);
 
 NPError    NPP_Initialize(void);
 void       NPP_Shutdown(void);
-NPError     NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance,
+NPError     NPP_New(NPMIMEType pluginType, NPP instance,
                 uint16 mode, int16 argc, char* argn[],
                 char* argv[], NPSavedData* saved);
-NPError     NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save);
-NPError     NP_LOADDS NPP_SetWindow(NPP instance, NPWindow* window);
-NPError     NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type,
+NPError     NPP_Destroy(NPP instance, NPSavedData** save);
+NPError     NPP_SetWindow(NPP instance, NPWindow* window);
+NPError     NPP_NewStream(NPP instance, NPMIMEType type,
                     NPStream* stream, NPBool seekable,
                     uint16* stype);
-NPError     NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream,
+NPError     NPP_DestroyStream(NPP instance, NPStream* stream,
                       NPReason reason);
-int32     NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream);
-int32     NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32 offset,
+int32     NPP_WriteReady(NPP instance, NPStream* stream);
+int32     NPP_Write(NPP instance, NPStream* stream, int32 offset,
                   int32 len, void* buffer);
-void      NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream,
+void      NPP_StreamAsFile(NPP instance, NPStream* stream,
                      const char* fname);
-void      NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint);
+void      NPP_Print(NPP instance, NPPrint* platformPrint);
 int16     NPP_HandleEvent(NPP instance, void* event);
-void      NP_LOADDS NPP_URLNotify(NPP instance, const char* url,
+void      NPP_URLNotify(NPP instance, const char* url,
                     NPReason reason, void* notifyData);
-jref      NP_LOADDS     NPP_GetJavaClass(void);
+jref      NPP_GetJavaClass(void);
 NPError         NPP_GetValue(void *instance, NPPVariable variable,
                    void *value);
 NPError         NPP_SetValue(void *instance, NPNVariable variable,
