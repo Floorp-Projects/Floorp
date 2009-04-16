@@ -406,10 +406,16 @@ js_SearchScope(JSScope *scope, jsid id, JSBool adding);
 #define SCOPE_HAS_PROPERTY(scope, sprop)                                      \
     (SCOPE_GET_PROPERTY(scope, (sprop)->id) == (sprop))
 
+/*
+ * If cacheByPrevShape is not null, *cacheByPrevShape must be false on
+ * entrance. On exit it will point to true if this call added the property
+ * predictably and js_FillPropertyCache can optimize for that.
+ */
 extern JSScopeProperty *
 js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
-                    uintN attrs, uintN flags, intN shortid);
+                    uintN attrs, uintN flags, intN shortid,
+                    JSBool *cacheByPrevShape);
 
 extern JSScopeProperty *
 js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
