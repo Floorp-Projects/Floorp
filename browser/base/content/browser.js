@@ -4938,24 +4938,6 @@ var contentAreaDNDObserver = {
 
       var dragType = aXferData.flavour.contentType;
       var dragData = aXferData.data;
-      if (dragType == TAB_DROP_TYPE) {
-        // If the tab was dragged from some other tab bar, its own dragend
-        // handler will take care of detaching the tab
-        if (dragData instanceof XULElement && dragData.localName == "tab" &&
-            dragData.ownerDocument.defaultView == window) {
-          // Detach only if the mouse pointer was released a little
-          // bit down in the content area (to be precise, by half the height
-          // of a tab)
-          if (aEvent.screenY > gBrowser.mPanelContainer.boxObject.screenY +
-                               dragData.boxObject.height / 2) {
-            gBrowser.replaceTabWithWindow(dragData);
-            aEvent.dataTransfer.dropEffect = "move";
-            return;
-          }
-        }
-        aEvent.dataTransfer.dropEffect = "none";
-        return;
-      }
 
       var url = transferUtils.retrieveURLFromData(dragData, dragType);
 
