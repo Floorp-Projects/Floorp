@@ -107,12 +107,10 @@ protected:
   ~nsXULTooltipListener();
 
   // pref callback for when the "show tooltips" pref changes
-  static int sTooltipPrefChanged (const char* aPref, void* aData);
   static PRBool sShowTooltips;
   static PRUint32 sTooltipListenerCount;
 
   void KillTooltipTimer();
-  void CreateAutoHideTimer();
 
 #ifdef MOZ_XUL
   void CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent);
@@ -146,16 +144,17 @@ protected:
 
   // last cached mouse event
   nsCOMPtr<nsIDOMEvent> mCachedMouseEvent;
-
-  // a timer for auto-hiding the tooltip after a certain delay
-  nsCOMPtr<nsITimer> mAutoHideTimer;
-  static void sAutoHideCallback (nsITimer* aTimer, void* aListener);
   
-  // various delays for tooltips
+  // various constants for tooltips
   enum {
-    kTooltipAutoHideTime = 5000,       // 5000ms = 5 seconds
+    kTooltipMouseMoveTolerance = 7,    // 7 pixel tolerance for mousemove event
     kTooltipShowTime = 500             // 500ms = 0.5 seconds
   };
+
+  // flag specifying if the tooltip has already been displayed by a MouseMove
+  // event. The flag is reset on MouseOut so that the tooltip will display
+  // the next time the mouse enters the node (bug #395668).
+  PRBool mTooltipShownOnce;
 
 #ifdef MOZ_XUL
   // special members for handling trees

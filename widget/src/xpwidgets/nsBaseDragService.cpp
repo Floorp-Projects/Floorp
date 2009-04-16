@@ -224,6 +224,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // stash the document of the dom node
   aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
   mSourceNode = aDOMNode;
+  mEndDragPoint = nsPoint(0, 0);
 
   // When the mouse goes down, the selection code starts a mouse
   // capture. However, this gets in the way of determining drag
@@ -374,7 +375,11 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsDragEvent event(PR_TRUE, aMsg, nsnull);
-        event.userCancelled = (aMsg == NS_DRAGDROP_END && mUserCancelled);
+        if (aMsg == NS_DRAGDROP_END) {
+          event.refPoint.x = mEndDragPoint.x;
+          event.refPoint.y = mEndDragPoint.y;
+          event.userCancelled = mUserCancelled;
+        }
 
         nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
         return presShell->HandleDOMEventWithTarget(content, &event, &status);

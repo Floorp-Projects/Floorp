@@ -108,7 +108,7 @@
 #include "nsVariant.h"
 #include "nsIPropertyBag.h"
 #include "nsIProperty.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
@@ -2738,9 +2738,8 @@ public:
     JSBool AppendElement(nsISupports* element);
 
 private:
-    nsSupportsArray mArray;
-    PRUint32        mIndex;
-    PRUint32        mCount;
+    nsCOMArray<nsISupports> mArray;
+    PRInt32                 mIndex;
 };
 
 /***************************************************************************/

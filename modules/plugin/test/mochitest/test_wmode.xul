@@ -26,7 +26,7 @@ function runTests() {
   if (navigator.platform.indexOf("Mac") >= 0) {
     is(p2.hasWidget(), false, "Mac does not support windowed plugins");
   } else if (navigator.platform.indexOf("Win") >= 0) {
-    is(p2.hasWidget(), false, "Windows does not support windowed plugins (yet)");
+    is(p2.hasWidget(), true, "Windows supports windowed plugins");
   } else if (navigator.platform.indexOf("Linux") >= 0) {
     is(p2.hasWidget(), true, "Linux supports windowed plugins");
   }

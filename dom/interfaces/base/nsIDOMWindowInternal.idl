@@ -44,7 +44,7 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(3414EBC7-731F-4697-9F43-ACA6F5050875)]
+[scriptable, uuid(5c5ece60-d5f1-47fa-9afa-ee3b9c76b0e5)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -81,7 +81,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   readonly attribute nsIDOMBarProp               directories;
   readonly attribute boolean                     closed;
   readonly attribute nsIDOMCrypto                crypto;
-  readonly attribute nsIDOMPkcs11                pkcs11;
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   /* [replaceable] controllers */

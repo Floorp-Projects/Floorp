@@ -6907,8 +6907,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // One more twist: Don't inherit the owner for external loads.
         if (aLoadType != LOAD_NORMAL_EXTERNAL && !owner &&
             (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
-            ((NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
-              inherits) || URIIsLocalFile(aURI))) {
+            NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
+            inherits) {
 
             // Don't allow loads that would inherit our security context
             // if this document came from an unsafe channel.
