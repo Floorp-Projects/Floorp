@@ -48,6 +48,7 @@
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5PendingNotification.h"
 #include "nsHtml5StateSnapshot.h"
+#include "nsHtml5StackNode.h"
 
 class nsHtml5Parser;
 
@@ -56,7 +57,6 @@ class nsHtml5MetaScanner;
 class nsHtml5AttributeName;
 class nsHtml5ElementName;
 class nsHtml5HtmlAttributes;
-class nsHtml5StackNode;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -126,9 +126,17 @@ class nsHtml5TreeBuilder
     PRBool clearLastListSlot();
     void push(nsHtml5StackNode* node);
     void append(nsHtml5StackNode* node);
-    void insertMarker();
+    inline void insertMarker()
+    {
+      append(nsnull);
+    }
+
     void clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-    PRBool isCurrent(nsIAtom* name);
+    inline PRBool isCurrent(nsIAtom* name)
+    {
+      return name == stack[currentPtr]->name;
+    }
+
     void removeFromStack(PRInt32 pos);
     void removeFromStack(nsHtml5StackNode* node);
     void removeFromListOfActiveFormattingElements(PRInt32 pos);
