@@ -47,6 +47,7 @@
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5PendingNotification.h"
 #include "nsHtml5StateSnapshot.h"
+#include "nsHtml5StackNode.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5MetaScanner.h"
@@ -2900,12 +2901,6 @@ nsHtml5TreeBuilder::append(nsHtml5StackNode* node)
 }
 
 void 
-nsHtml5TreeBuilder::insertMarker()
-{
-  append(nsnull);
-}
-
-void 
 nsHtml5TreeBuilder::clearTheListOfActiveFormattingElementsUpToTheLastMarker()
 {
   while (listPtr > -1) {
@@ -2916,12 +2911,6 @@ nsHtml5TreeBuilder::clearTheListOfActiveFormattingElementsUpToTheLastMarker()
     listOfActiveFormattingElements[listPtr]->release();
     --listPtr;
   }
-}
-
-PRBool 
-nsHtml5TreeBuilder::isCurrent(nsIAtom* name)
-{
-  return name == stack[currentPtr]->name;
 }
 
 void 
