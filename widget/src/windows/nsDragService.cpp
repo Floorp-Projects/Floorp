@@ -358,7 +358,7 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   // We're done dragging, get the cursor position and end the drag
   POINT pos;
   GetCursorPos(&pos);
-  SetDragEndPoint(nsPoint(pos.x, pos.y));
+  SetDragEndPoint(nsIntPoint(pos.x, pos.y));
   EndDragSession(PR_TRUE);
 
   // For some drag/drop interactions, IDataObject::SetData doesn't get
