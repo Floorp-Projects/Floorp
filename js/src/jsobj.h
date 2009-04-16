@@ -688,15 +688,19 @@ extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
 /*
- * NB: js_NativeGet and js_NativeSet are called with the scope containing sprop
- * (pobj's scope for Get, obj's for Set) locked, and on successful return, that
- * scope is again locked.  But on failure, both functions return false with the
- * scope containing sprop unlocked.
+ * This function must be called with pobj's scope locked. On return that scope
+ * is always unlocked. After this function returns, the caller must not access
+ * pobj or sprop unless it knows that sprop's getter is a stub.
  */
 extern JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
              JSScopeProperty *sprop, jsval *vp);
 
+/*
+ * This function must be called with obj's scope locked. On return that scope
+ * is always unlocked. After this function returns, the caller must not access
+ * sprop unless it knows that sprop's setter is a stub.
+ */
 extern JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp);
 
