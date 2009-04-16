@@ -6232,7 +6232,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
     nsDragService* dragService = static_cast<nsDragService *>(mDragService);
     NSPoint pnt = [NSEvent mouseLocation];
     FlipCocoaScreenCoordinate(pnt);
-    dragService->SetDragEndPoint(nsPoint(NSToIntRound(pnt.x), NSToIntRound(pnt.y)));
+    dragService->SetDragEndPoint(nsIntPoint(NSToIntRound(pnt.x), NSToIntRound(pnt.y)));
 
     mDragService->EndDragSession(PR_TRUE);
     NS_RELEASE(mDragService);
