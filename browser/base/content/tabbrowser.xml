@@ -2261,51 +2261,24 @@
         <body>
           <![CDATA[
             // Note: while this case is correctly handled here, this event
-            // isn't dispatched when the tab is moved within the tabstript,
+            // isn't dispatched when the tab is moved within the tabstrip,
             // see bug 460801.
 
             // * mozUserCancelled = the user pressed ESC to cancel the drag
-            // * Within our browser window, the detach-target is the content
-            //   area. That case is handled by contentAreaDNDObserver.
-            // * The dragLeftWindow solution is suboptimal, a better solution
-            //   is on bug 466379.
             var dt = aEvent.dataTransfer;
-            if (dt.mozUserCancelled || !this._dragLeftWindow)
+            if (dt.mozUserCancelled || dt.dropEffect != "none")
               return;
 
-            // The dropEffect == "none" scenarios:
-            // 1. No-op (no postion change) - "catched" by !dragLeftWindow
-            // 2. On the browser chrome (on element which don't handle
-            //    text/plain or the tab type) - ditto.
-            // 2. Drop outside the browser window - the case that is handled
-            //    here.
-            if (dt.dropEffect == "none") {
+            // Deatch happens only if the tab was dropped below the tabbar.
+            // That is applied even if it was dropped outside the browser
+            // window.
+            var bo = this.mTabContainer.mTabstrip.boxObject;
+            var tabbarEndScreenY = bo.screenY + bo.height;
+            if (aEvent.screenY > tabbarEndScreenY) {
               var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
               this.replaceTabWithWindow(draggedTab);
             }
             aEvent.stopPropagation();
-          ]]>
-        </body>
-      </method>
-
-      <method name="browserWindowOnDragEnter">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            this._dragLeftWindow = false;
-          ]]>
-        </body>
-      </method>
-
-      <method name="browserWindowOnDragLeave">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            // If the clientX or clientY values are positive, the mouse is
-            // still dragged within our window. How would that happen? Either
-            // by the dragleave event that is dispatched right before the drop,
-            // or by a bubbled dragleave event
-            this._dragLeftWindow = aEvent.clientX < 0 || aEvent.clientY < 0;
           ]]>
         </body>
       </method>
