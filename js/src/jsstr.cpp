@@ -2724,6 +2724,16 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     JSString *str;
 
     if (length > JSSTRING_LENGTH_MASK) {
+        if (JS_ON_TRACE(cx)) {
+            /*
+             * If we can't leave the trace, signal OOM condition, otherwise
+             * exit from trace and proceed with GC.
+             */
+            if (!js_CanLeaveTrace(cx))
+                return NULL;
+
+            js_LeaveTrace(cx);
+        }
         js_ReportAllocationOverflow(cx);
         return NULL;
     }
