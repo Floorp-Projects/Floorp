@@ -1734,6 +1734,7 @@
         <parameter name="aOtherTab"/>
         <body>
           <![CDATA[
+            // That's gBrowser for the other window, not the tab's browser!
             var remoteBrowser =
               aOtherTab.ownerDocument.defaultView.getBrowser();
 
@@ -1751,8 +1752,19 @@
             filter.removeProgressListener(tabListener);
             var tabListenerBlank = tabListener.mBlank;
 
+            // Workarounds for bug 458697
+            // Icon might have been set on DOMLinkAdded, don't override that.
+            if (!ourBrowser.mIconURL && aOtherTab.linkedBrowser.mIconURL)
+              this.setIcon(aOurTab, aOtherTab.linkedBrowser.mIconURL);
+            var isBusy = aOtherTab.hasAttribute("busy");
+            if (isBusy) {
+              aOurTab.setAttribute("busy", "true");
+              if (aOurTab == this.selectedTab)
+                this.mIsBusy = true;
+            }
+
             // Swap the docshells
-            ourBrowser.swapDocShells(remoteBrowser.getBrowserForTab(aOtherTab));
+            ourBrowser.swapDocShells(aOtherTab.linkedBrowser);
 
             // Finish tearing down the tab that's going away.
             remoteBrowser._endRemoveTab(endRemoveArgs);
@@ -1767,7 +1779,10 @@
             ourBrowser.webProgress.addProgressListener(filter,
               Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
-            this.setTabTitle(aOurTab);
+            if (isBusy)
+              this.setTabTitleLoading(aOurTab);
+            else
+              this.setTabTitle(aOurTab);
             this.updateIcon(aOurTab);
 
             // If the tab was already selected (this happpens in the scenario
@@ -2295,11 +2310,11 @@
             // tell a new window to take the "dropped" tab
             var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                       getService(Ci.nsIWindowWatcher);
-            ww.openWindow(window,
-                          getBrowserURL(),
-                          null,
-                          "chrome,dialog=no,all",
-                          aTab);
+            return ww.openWindow(window,
+                                 getBrowserURL(),
+                                 null,
+                                 "chrome,dialog=no,all",
+                                 aTab);
           ]]>
         </body>
       </method>
