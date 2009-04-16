@@ -224,7 +224,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // stash the document of the dom node
   aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
   mSourceNode = aDOMNode;
-  mEndDragPoint = nsPoint(0, 0);
+  mEndDragPoint = nsIntPoint(0, 0);
 
   // When the mouse goes down, the selection code starts a mouse
   // capture. However, this gets in the way of determining drag

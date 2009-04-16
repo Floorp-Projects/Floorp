@@ -77,7 +77,7 @@ public:
   NS_DECL_NSIDRAGSERVICE
   NS_DECL_NSIDRAGSESSION
 
-  void SetDragEndPoint(nsPoint aEndDragPoint) { mEndDragPoint = aEndDragPoint; }
+  void SetDragEndPoint(nsIntPoint aEndDragPoint) { mEndDragPoint = aEndDragPoint; }
 
 protected:
 
@@ -157,7 +157,7 @@ protected:
   PRInt32 mScreenY;
 
   // the screen position where the drag ended
-  nsPoint mEndDragPoint;
+  nsIntPoint mEndDragPoint;
 
   PRUint32 mSuppressLevel;
 };
