@@ -3849,7 +3849,18 @@ nsDocShell::Destroy()
         mScriptGlobal = nsnull;
     }
 
-    mSessionHistory = nsnull;
+    if (mSessionHistory) {
+        // We want to destroy these content viewers now rather than
+        // letting their destruction wait for the session history
+        // entries to get garbage collected.  (Bug 488394)
+        nsCOMPtr<nsISHistoryInternal> shPrivate =
+            do_QueryInterface(mSessionHistory);
+        if (shPrivate) {
+            shPrivate->EvictAllContentViewers();
+        }
+        mSessionHistory = nsnull;
+    }
+
     SetTreeOwner(nsnull);
 
     // required to break ref cycle
