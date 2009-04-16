@@ -56,10 +56,14 @@
 #include "nsWindow.h"
 
 // Drag & Drop, Clipboard
-#ifndef WINCE
-#include "nsBidiKeyboard.h"
-#include "nsClipboard.h"
+
 #include "nsClipboardHelper.h"
+
+#ifdef WINCE
+#include "nsClipboardCE.h"
+#else
+#include "nsClipboard.h"
+#include "nsBidiKeyboard.h"
 #include "nsDragService.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsTransferable.h"
@@ -77,16 +81,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
-
-#ifndef WINCE
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+
+#ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceWin)
 #endif
 
 #ifdef NS_PRINTING
@@ -131,8 +135,10 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/chrome/chrome-native-theme;1", 
     NS_NewNativeTheme
   },
-
-#ifndef WINCE
+  { "User Idle Service",
+    NS_IDLE_SERVICE_CID,
+    "@mozilla.org/widget/idleservice;1",
+    nsIdleServiceWinConstructor },
   { "Clipboard",
     NS_CLIPBOARD_CID,
     "@mozilla.org/widget/clipboard;1",
@@ -145,6 +151,8 @@ static const nsModuleComponentInfo components[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
+
+#ifndef WINCE
   { "Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
@@ -153,10 +161,6 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-  { "User Idle Service",
-    NS_IDLE_SERVICE_CID,
-    "@mozilla.org/widget/idleservice;1",
-    nsIdleServiceWinConstructor },
   { "Transferable",
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",

@@ -49,12 +49,7 @@ function run_test()
   srv.registerPathHandler("/path-handler", pathHandler);
   srv.start(PORT);
 
-  function done()
-  {
-    srv.stop();
-  }
-
-  runHttpTests(tests, done);
+  runHttpTests(tests, testComplete(srv));
 }
 
 

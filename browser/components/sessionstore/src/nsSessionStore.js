@@ -2692,7 +2692,7 @@ let XPathHelper = {
       return "";
     
     let prefix = this.namespacePrefixes[aNode.namespaceURI] || null;
-    let tag = (prefix ? prefix + ":" : "") + aNode.localName;
+    let tag = (prefix ? prefix + ":" : "") + this.escapeName(aNode.localName);
     
     // stop once we've found a tag with an ID
     if (aNode.id)
@@ -2726,6 +2726,16 @@ let XPathHelper = {
    */
   resolveNS: function sss_xph_resolveNS(aPrefix) {
     return XPathHelper.namespaceURIs[aPrefix] || null;
+  },
+
+  /**
+   * @returns valid XPath for the given node (usually just the local name itself)
+   */
+  escapeName: function sss_xph_escapeName(aName) {
+    // we can't just use the node's local name, if it contains
+    // special characters (cf. bug 485482)
+    return /^\w+$/.test(aName) ? aName :
+           "*[local-name()=" + this.quoteArgument(aName) + "]";
   },
 
   /**

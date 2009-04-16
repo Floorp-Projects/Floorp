@@ -77,7 +77,7 @@ function run_test()
 
   srv.start(4444);
 
-  runHttpTests(tests, function() { srv.stop(); });
+  runHttpTests(tests, testComplete(srv));
 }
 
 function start_normal(ch, cx)

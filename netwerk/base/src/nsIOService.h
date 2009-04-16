@@ -50,7 +50,6 @@
 #include "nsURLHelper.h"
 #include "nsWeakPtr.h"
 #include "nsIURLParser.h"
-#include "nsSupportsArray.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsINetUtil.h"

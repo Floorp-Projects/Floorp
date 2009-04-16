@@ -124,6 +124,9 @@ extern "C" {
 #   if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
 #    define MAP_ANONYMOUS MAP_ANON
 #   endif
+#   if !defined(MAP_ANONYMOUS)
+#    define MAP_ANONYMOUS 0
+#   endif
 #  else
 #   if JS_GC_USE_MMAP
 #    error "JS_GC_USE_MMAP is set when mmap is not available"

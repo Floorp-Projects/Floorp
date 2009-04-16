@@ -433,3 +433,14 @@ x { content:"</style" } "
 |     <source>
 |     "text"
 |     <link>
+
+#data
+<html><head></head><body><div><param><div></div></div></body></html>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       <param>
+|       <div>

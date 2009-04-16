@@ -46,6 +46,7 @@ function testAccepted() {
 
 /** Test for Bug  **/
 
+ensure_geolocationProvider();
 SimpleTest.waitForExplicitFinish();
 
 watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);

@@ -86,7 +86,7 @@ nsSSLStatus::GetCipherName(char** _result)
   if (!mHaveKeyLengthAndCipher)
     return NS_ERROR_NOT_AVAILABLE;
 
-  *_result = PL_strdup(mCipherName.get());
+  *_result = ToNewCString(mCipherName);
 
   return NS_OK;
 }

@@ -84,6 +84,9 @@
 
 #define PAINT_USE_IMAGE_SURFACE
 
+// do 32->24 conversion before calling StretchDIBits
+#define PAINT_USE_IMAGE_SURFACE_24BPP
+
 #ifdef WINCE_WINDOWS_MOBILE
 #define WINCE_HAVE_SOFTKB
 #include "tpcshell.h"
@@ -453,7 +456,10 @@ static BYTE  gLastMouseButton = 0;
 // The last user input event time in microseconds. If there are any pending
 // native toolkit input events it returns the current time. The value is
 // compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
-static PRUint32 gLastInputEventTime = 0;
+#ifndef WINCE
+static
+#endif
+PRUint32 gLastInputEventTime = 0;
 
 static int gTrimOnMinimize = 2; // uninitialized, but still true
 
@@ -676,6 +682,9 @@ nsWindow::nsWindow() : nsBaseWidget()
   }
   NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
 #endif
+
+  // Set gLastInputEventTime to some valid number
+  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
   sInstanceCount++;
 }
@@ -6068,6 +6077,69 @@ PRBool nsWindow::OnPaint(HDC aDC)
         bi.biPlanes = 1;
         bi.biBitCount = 32;
         bi.biCompression = BI_RGB;
+
+#ifdef PAINT_USE_IMAGE_SURFACE_24BPP
+        // On Windows CE/Windows Mobile, 24bpp packed-pixel sources
+        // seem to be far faster to blit than 32bpp (see bug 484864).
+        // So, convert the bits to 24bpp by stripping out the unused
+        // alpha byte.  24bpp DIBs also have scanlines that are 4-byte
+        // aligned though, so that must be taken into account.
+        int srcstride = surfaceSize.width*4;
+        int dststride = surfaceSize.width*3;
+        dststride = (dststride + 3) & ~3;
+
+        // Convert in place
+        for (int j = 0; j < surfaceSize.height; ++j) {
+          unsigned int *src = (unsigned int*) (targetSurface->Data() + j*srcstride);
+          unsigned int *dst = (unsigned int*) (targetSurface->Data() + j*dststride);
+
+          // go 4 pixels at a time, since each 4 pixels
+          // turns into 3 DWORDs when converted into BGR:
+          // BGRx BGRx BGRx BGRx -> BGRB GRBG RBGR
+          //
+          // However, since we're dealing with little-endian ints, this is actually:
+          // xRGB xrgb xRGB xrgb -> bRGB GBrg rgbR
+          int width_left = surfaceSize.width;
+          while (width_left >= 4) {
+            unsigned int a = *src++;
+            unsigned int b = *src++;
+            unsigned int c = *src++;
+            unsigned int d = *src++;
+
+            *dst++ =  (a & 0x00ffffff)        | (b << 24);
+            *dst++ = ((b & 0x00ffff00) >> 8)  | (c << 16);
+            *dst++ = ((c & 0x00ff0000) >> 16) | (d << 8);
+
+            width_left -= 4;
+          }
+
+          // then finish up whatever number of pixels are left,
+          // using bytes.
+          unsigned char *bsrc = (unsigned char*) src;
+          unsigned char *bdst = (unsigned char*) dst;
+          switch (width_left) {
+          case 3:
+            *bdst++ = *bsrc++;
+            *bdst++ = *bsrc++;
+            *bdst++ = *bsrc++;
+            bsrc++;
+          case 2:
+            *bdst++ = *bsrc++;
+            *bdst++ = *bsrc++;
+            *bdst++ = *bsrc++;
+            bsrc++;
+          case 1:
+            *bdst++ = *bsrc++;
+            *bdst++ = *bsrc++;
+            *bdst++ = *bsrc++;
+            bsrc++;
+          case 0:
+            break;
+          }
+        }
+
+        bi.biBitCount = 24;
+#endif
 
         StretchDIBits(hDC,
                       ps.rcPaint.left, ps.rcPaint.top,

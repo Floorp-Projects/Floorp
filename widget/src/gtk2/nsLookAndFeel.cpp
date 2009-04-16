@@ -789,6 +789,7 @@ nsLookAndFeel::InitLookAndFeel()
 
     // invisible character styles
     GtkWidget *entry = gtk_entry_new();
+    g_object_ref_sink(entry);
     guint value;
     g_object_get (entry, "invisible-char", &value, NULL);
     sInvisibleCharacter = PRUnichar(value);
@@ -799,6 +800,7 @@ nsLookAndFeel::InitLookAndFeel()
                          NULL);
 
     gtk_widget_destroy(entry);
+    g_object_unref(entry);
 }
 
 // virtual

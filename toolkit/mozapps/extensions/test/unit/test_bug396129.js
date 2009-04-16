@@ -340,7 +340,6 @@ function downloaded_c() {
 }
 
 function test_complete() {
-  testserver.stop();
-  do_test_finished();
+  testserver.stop(do_test_finished);
 }
 

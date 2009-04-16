@@ -3282,8 +3282,8 @@
               return;
             }
 
-            this.mTabstrip._smoothScrollByPixels(this.mTabstrip._isLTRScrollbox ?
-                                                 selStart - tsboStart : selEnd - tsboEnd);
+            this.mTabstrip._smoothScrollByPixels(this.mTabstrip._isRTLScrollbox ?
+                                                 selEnd - tsboEnd : selStart - tsboStart);
           }
 
           // start the flash timer

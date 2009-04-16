@@ -63,13 +63,11 @@ var RecommendedCallback = {
       if (addons[i].rating != RESULTS[i])
         do_throw("Rating for " + addons[i].id + " was " + addons[i].rating + ", should have been " + RESULTS[i]);
     }
-    do_test_finished();
-    server.stop();
+    server.stop(do_test_finished);
   },
 
   searchFailed: function() {
-    do_test_finished();
-    server.stop();
+    server.stop(do_test_finished);
     do_throw("Recommended results failed");
   }
 };

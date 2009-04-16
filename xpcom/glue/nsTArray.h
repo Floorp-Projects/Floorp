@@ -388,7 +388,7 @@ class nsTArray : public nsTArray_base {
     template<class Item, class Comparator>
     index_type IndexOf(const Item& item, index_type start,
                        const Comparator& comp) const {
-      const elem_type* iter = Elements() + start, *end = iter + Length();
+      const elem_type* iter = Elements() + start, *end = Elements() + Length();
       for (; iter != end; ++iter) {
         if (comp.Equals(*iter, item))
           return iter - Elements();
