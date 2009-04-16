@@ -897,16 +897,11 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     // see if there are attributes for the content
     mHasAttributes = aContent->GetAttrCount() > 0;
 
+    // get the namespace
+    mNameSpaceID = aContent->GetNameSpaceID();
+    
     // check for HTMLContent and Link status
-    if (aContent->IsNodeOfType(nsINode::eHTML)) {
-      mIsHTMLContent = PR_TRUE;
-      // Note that we want to treat non-XML HTML content as XHTML for namespace
-      // purposes, since html.css has that namespace declared.
-      mNameSpaceID = kNameSpaceID_XHTML;
-    } else {
-      // get the namespace
-      mNameSpaceID = aContent->GetNameSpaceID();
-    }
+    mIsHTMLContent = (mNameSpaceID == kNameSpaceID_XHTML);
 
     // if HTML content and it has some attributes, check for an HTML link
     // NOTE: optimization: cannot be a link if no attributes (since it needs an href)
@@ -998,9 +993,7 @@ const nsString* RuleProcessorData::GetLang()
 static inline PRInt32
 CSSNameSpaceID(nsIContent *aContent)
 {
-  return aContent->IsNodeOfType(nsINode::eHTML)
-           ? kNameSpaceID_XHTML
-           : aContent->GetNameSpaceID();
+  return aContent->GetNameSpaceID();
 }
 
 PRInt32
@@ -1571,7 +1564,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     }
     else if (nsCSSPseudoClasses::mozIsHTML == pseudoClass->mAtom) {
       result = data.mIsHTMLContent &&
-        data.mContent->GetNameSpaceID() == kNameSpaceID_None;
+        data.mContent->GetOwnerDoc() && // XXX clean up after bug 335998 lands
+        !(data.mContent->GetOwnerDoc()->IsCaseSensitive());
     }
 #ifdef MOZ_MATHML
     else if (nsCSSPseudoClasses::mozMathIncrementScriptLevel == pseudoClass->mAtom) {
