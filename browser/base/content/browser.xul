@@ -65,8 +65,6 @@
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
-        ondragleave="gBrowser.browserWindowOnDragLeave(event);"
-        ondragenter="gBrowser.browserWindowOnDragEnter(event);"
         title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
         title_normal="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
 #ifdef XP_MACOSX
