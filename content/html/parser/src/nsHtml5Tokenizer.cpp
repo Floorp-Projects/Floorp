@@ -186,12 +186,6 @@ nsHtml5Tokenizer::getColumnNumber()
   }
 }
 
-void 
-nsHtml5Tokenizer::notifyAboutMetaBoundary()
-{
-  metaBoundaryPassed = PR_TRUE;
-}
-
 nsHtml5HtmlAttributes* 
 nsHtml5Tokenizer::emptyAttributes()
 {
@@ -463,15 +457,11 @@ nsHtml5Tokenizer::start()
   strBufLen = 0;
   longStrBuf = jArray<PRUnichar,PRInt32>(1024);
   longStrBufLen = 0;
-  alreadyComplainedAboutNonAscii = PR_FALSE;
   stateSave = NS_HTML5TOKENIZER_DATA;
   line = linePrev = 0;
   col = colPrev = 1;
   nextCharOnNewLine = PR_TRUE;
   prev = '\0';
-  html4 = PR_FALSE;
-  alreadyWarnedAboutPrivateUseCharacters = PR_FALSE;
-  metaBoundaryPassed = PR_FALSE;
   tokenHandler->startTokenization(this);
   index = 0;
   forceQuirks = PR_FALSE;
@@ -885,9 +875,6 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
             goto stateloop_end;
           }
           case '>': {
-            if (html4) {
-
-            }
             state = emitCurrentTagToken(PR_TRUE);
             if (shouldSuspend) {
               goto stateloop_end;
@@ -949,9 +936,6 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
               }
             }
             default: {
-              if (html4 && !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_' || c == ':')) {
-
-              }
               appendLongStrBuf(c);
               continue;
             }
@@ -2390,11 +2374,6 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt3
                 goto stateloop;
               }
               default: {
-                if (html4) {
-
-                } else {
-
-                }
                 tokenHandler->characters(nsHtml5Tokenizer::LT_SOLIDUS, 0, 2);
                 emitStrBuf();
                 cstart = pos;
@@ -2933,12 +2912,6 @@ void
 nsHtml5Tokenizer::requestSuspension()
 {
   shouldSuspend = PR_TRUE;
-}
-
-PRBool 
-nsHtml5Tokenizer::isAlreadyComplainedAboutNonAscii()
-{
-  return alreadyComplainedAboutNonAscii;
 }
 
 void 

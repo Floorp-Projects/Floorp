@@ -53,7 +53,6 @@ class nsHtml5MetaScanner;
 class nsHtml5AttributeName;
 class nsHtml5ElementName;
 class nsHtml5HtmlAttributes;
-class nsHtml5StackNode;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -151,9 +150,6 @@ class nsHtml5Tokenizer
     PRBool endTag;
     nsHtml5ElementName* tagName;
     nsHtml5AttributeName* attributeName;
-    PRBool html4;
-    PRBool alreadyComplainedAboutNonAscii;
-    PRBool metaBoundaryPassed;
     nsIAtom* doctypeName;
     nsString* publicIdentifier;
     nsString* systemIdentifier;
@@ -173,7 +169,6 @@ class nsHtml5Tokenizer
     nsString* getSystemId();
     PRInt32 getLineNumber();
     PRInt32 getColumnNumber();
-    void notifyAboutMetaBoundary();
     nsHtml5HtmlAttributes* emptyAttributes();
   private:
     void detachStrBuf();
@@ -231,7 +226,6 @@ class nsHtml5Tokenizer
   public:
     void end();
     void requestSuspension();
-    PRBool isAlreadyComplainedAboutNonAscii();
     void becomeConfident();
     PRBool isNextCharOnNewLine();
     PRBool isPrevCR();
