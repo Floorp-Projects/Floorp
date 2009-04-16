@@ -817,7 +817,9 @@ nsFrameLoader::EnsureDocShell()
   nsAutoString frameName;
 
   PRInt32 namespaceID = mOwnerContent->GetNameSpaceID();
-  if (namespaceID == kNameSpaceID_XHTML) {
+  if (namespaceID == kNameSpaceID_XHTML
+      && mOwnerContent->GetOwnerDoc() // clean up after bug 335998
+      && mOwnerContent->GetOwnerDoc()->IsCaseSensitive()) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, frameName);
   } else {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, frameName);
