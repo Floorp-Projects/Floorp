@@ -48,6 +48,13 @@ var srv, srv2;
 
 function run_test()
 {
+  if ("@mozilla.org/windows-registry-key;1" in Components.classes)
+  {
+    dumpn("*** not running test_start_stop.js on Windows for now, because " +
+          "Windows is dumb");
+    return;
+  }
+
   dumpn("*** run_test");
 
   srv = createServer();
