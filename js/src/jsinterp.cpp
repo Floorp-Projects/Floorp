@@ -4393,8 +4393,15 @@ js_Interpret(JSContext *cx)
 
 #define COMPUTE_THIS(cx, fp, obj)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (!(obj = js_ComputeThisForFrame(cx, fp)))                          \
-            goto error;                                                       \
+        if (fp->flags & JSFRAME_COMPUTED_THIS) {                              \
+            obj = fp->thisp;                                                  \
+        } else {                                                              \
+            obj = js_ComputeThis(cx, JS_TRUE, fp->argv);                      \
+            if (!obj)                                                         \
+                goto error;                                                   \
+            fp->thisp = obj;                                                  \
+            fp->flags |= JSFRAME_COMPUTED_THIS;                               \
+        }                                                                     \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_THIS)
