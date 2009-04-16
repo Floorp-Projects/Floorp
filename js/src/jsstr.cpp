@@ -3450,11 +3450,12 @@ js_SetStringBytes(JSContext *cx, JSString *str, char *bytes, size_t length)
     hep = JS_HashTableRawLookup(cache, hash, str);
     JS_ASSERT(*hep == NULL);
     ok = JS_HashTableRawAdd(cache, hep, hash, str, bytes) != NULL;
+    if (ok) {
+        JSSTRING_SET_DEFLATED(str);
 #ifdef DEBUG
-    if (ok)
         rt->deflatedStringCacheBytes += length;
 #endif
-    JSSTRING_SET_DEFLATED(str);
+    }
 
     JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
     return ok;
