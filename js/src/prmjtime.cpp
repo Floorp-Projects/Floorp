@@ -107,7 +107,7 @@ PRMJ_LocalGMTDifference()
 {
     struct tm ltime;
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
     /* Windows does not follow POSIX. Updates to the
      * TZ environment variable are not reflected 
      * immediately on that platform as they are
@@ -558,7 +558,7 @@ PRMJ_DSTOffset(JSInt64 local_time)
         JSLL_UI2L(local_time,PRMJ_DAY_SECONDS);
     }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
     /* Windows does not follow POSIX. Updates to the
      * TZ environment variable are not reflected 
      * immediately on that platform as they are
