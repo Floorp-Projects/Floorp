@@ -55,7 +55,7 @@ const CC = Components.Constructor;
 const PR_UINT32_MAX = Math.pow(2, 32) - 1;
 
 /** True if debugging output is enabled, false otherwise. */
-var DEBUG = true; // non-const *only* so tweakable in server tests
+var DEBUG = false; // non-const *only* so tweakable in server tests
 
 var gGlobalObject = this;
 
