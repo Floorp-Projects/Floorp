@@ -10,7 +10,8 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  BrowserOpenAddonsMgr();
+  window.openDialog("chrome://mozapps/content/extensions/extensions.xul", "",
+                    "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable");
 
   var pm = Components.classes["@mozilla.org/permissionmanager;1"]
                      .getService(Components.interfaces.nsIPermissionManager);
