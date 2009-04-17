@@ -991,8 +991,7 @@ ReportReadOnlyScope(JSContext *cx, JSScope *scope)
 JSScopeProperty *
 js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
-                    uintN attrs, uintN flags, intN shortid,
-                    JSBool *cacheByPrevShape)
+                    uintN attrs, uintN flags, intN shortid)
 {
     JSScopeProperty **spp, *sprop, *overwriting, **spvec, **spp2, child;
     uint32 size, splen, i;
@@ -1000,7 +999,6 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     JSTempValueRooter tvr;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
-    JS_ASSERT_IF(cacheByPrevShape, !*cacheByPrevShape);
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
     /*
@@ -1274,17 +1272,8 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * The scope's shape defaults to its last property's shape, but may
          * be regenerated later as the scope diverges (from the property cache
          * point of view) from the structural type associated with sprop.
-         *
-         * The following is an open-coded version of SCOPE_EXTEND_SHAPE to
-         * set *cacheByPrevShape.
          */
-        if (!scope->lastProp || scope->shape == scope->lastProp->shape) {
-            scope->shape = sprop->shape;
-            if (cacheByPrevShape)
-                *cacheByPrevShape = true;
-        } else {
-            scope->shape = js_GenerateShape(cx, false, sprop);
-        }
+        SCOPE_EXTEND_SHAPE(cx, scope, sprop);
 
         /* Store the tree node pointer in the table entry for id. */
         if (scope->table)
@@ -1420,8 +1409,7 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
          */
         newsprop = js_AddScopeProperty(cx, scope, child.id,
                                        child.getter, child.setter, child.slot,
-                                       child.attrs, child.flags, child.shortid,
-                                       NULL);
+                                       child.attrs, child.flags, child.shortid);
     }
 
     if (newsprop) {
