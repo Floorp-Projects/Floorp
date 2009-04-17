@@ -42,6 +42,7 @@
 #include "xptiprivate.h"
 #include "nsDependentString.h"
 #include "nsString.h"
+#include "nsArrayEnumerator.h"
 
 #define NS_ZIPLOADER_CONTRACTID NS_XPTLOADER_CONTRACTID_PREFIX "zip"
 
@@ -1965,61 +1966,6 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
 
 /***************************************************************************/
 
-class xptiAdditionalManagersEnumerator : public nsISimpleEnumerator 
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISIMPLEENUMERATOR
-
-    xptiAdditionalManagersEnumerator();
-
-    PRBool SizeTo(PRUint32 likelyCount) {return mArray.SetCapacity(likelyCount);}
-    PRBool AppendElement(nsIInterfaceInfoManager* element);
-
-private:
-    ~xptiAdditionalManagersEnumerator() {}
-
-    nsCOMArray<nsISupports> mArray;
-    PRInt32                 mIndex;
-};
-
-NS_IMPL_ISUPPORTS1(xptiAdditionalManagersEnumerator, nsISimpleEnumerator)
-
-xptiAdditionalManagersEnumerator::xptiAdditionalManagersEnumerator()
-    : mIndex(0)
-{
-}
-
-PRBool xptiAdditionalManagersEnumerator::AppendElement(nsIInterfaceInfoManager* element)
-{
-    if(!mArray.AppendObject(element))
-        return PR_FALSE;
-    return PR_TRUE;
-}
-
-/* boolean hasMoreElements (); */
-NS_IMETHODIMP xptiAdditionalManagersEnumerator::HasMoreElements(PRBool *_retval)
-{
-    *_retval = mIndex < mArray.Count();
-    return NS_OK;
-}
-
-/* nsISupports getNext (); */
-NS_IMETHODIMP xptiAdditionalManagersEnumerator::GetNext(nsISupports **_retval)
-{
-    if(!(mIndex < mArray.Count()))
-    {
-        NS_ERROR("Bad nsISimpleEnumerator caller!");
-        return NS_ERROR_FAILURE;    
-    }
-
-    *_retval = mArray.ObjectAt(mIndex++);
-    NS_IF_ADDREF(*_retval);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/***************************************************************************/
-
 /* void addAdditionalManager (in nsIInterfaceInfoManager manager); */
 NS_IMETHODIMP xptiInterfaceInfoManager::AddAdditionalManager(nsIInterfaceInfoManager *manager)
 {
@@ -2064,18 +2010,11 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateAdditionalManagers(nsISimpleEnu
 {
     nsAutoLock lock(mAdditionalManagersLock);
 
-    PRInt32 count = mAdditionalManagers.Count();
-
-    nsCOMPtr<xptiAdditionalManagersEnumerator> enumerator = 
-        new xptiAdditionalManagersEnumerator();
-    if(!enumerator)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    enumerator->SizeTo(count);
-
-    for(PRInt32 i = 0; i < count; /* i incremented in the loop body */)
+    nsCOMArray<nsISupports> managerArray(mAdditionalManagers);
+    /* Resolve all the weak references in the array. */
+    for(PRInt32 i = managerArray.Count(); i--; )
     {
-        nsCOMPtr<nsISupports> raw = mAdditionalManagers.ObjectAt(i++);
+        nsISupports *raw = managerArray.ObjectAt(i);
         if(!raw)
             return NS_ERROR_FAILURE;
         nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(raw);
@@ -2085,27 +2024,17 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateAdditionalManagers(nsISimpleEnu
                 do_QueryReferent(weakRef);
             if(manager)
             {
-                if(!enumerator->AppendElement(manager))
+                if(!managerArray.ReplaceObjectAt(manager, i))
                     return NS_ERROR_FAILURE;
             }
             else
             {
                 // The manager is no more. Remove the element.
-                mAdditionalManagers.RemoveObjectAt(--i);
-                count--;
+                mAdditionalManagers.RemoveObjectAt(i);
+                managerArray.RemoveObjectAt(i);
             }
-        }
-        else
-        {
-            // We *know* we put a pointer to either a nsIWeakReference or
-            // an nsIInterfaceInfoManager into the array, so we can avoid an
-            // extra QI here and just do a cast.
-            if(!enumerator->AppendElement(
-                    reinterpret_cast<nsIInterfaceInfoManager*>(raw.get())))
-                return NS_ERROR_FAILURE;
         }
     }
     
-    NS_ADDREF(*_retval = enumerator);
-    return NS_OK;
+    return NS_NewArrayEnumerator(_retval, managerArray);
 }
