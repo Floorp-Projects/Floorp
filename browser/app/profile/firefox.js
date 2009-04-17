@@ -665,11 +665,6 @@ pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebr
 pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
 pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
 
-// privacy policy -- Both url and fallbackurl must exist, although they may
-// point to the same file.  fallbackurl must be a chrome url
-pref("browser.safebrowsing.provider.0.privacy.url", "http://www.google.com/tools/firefox/firefox_privacy.html?hl=%LOCALE%");
-pref("browser.safebrowsing.provider.0.privacy.fallbackurl", "chrome://browser/content/preferences/phishEULA.xhtml");
-
 // HTML report pages
 pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
 pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
