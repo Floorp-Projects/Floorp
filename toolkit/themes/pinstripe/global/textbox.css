@@ -121,7 +121,7 @@ textbox.plain {
 
 textbox[type="search"] {
   -moz-appearance: searchfield;
-  padding: 2px 1px 1px 16px;
+  padding: 1px;
   font-size: 12px;
 }
 
@@ -136,7 +136,7 @@ textbox[type="search"] {
 }
 
 textbox[type="search"].compact {
-  padding: 1px 1px 0 15px;
+  padding: 0;
   font-size: 11px;
 }
 
