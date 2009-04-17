@@ -306,7 +306,8 @@ nsGenericHTMLElement::SetAttribute(const nsAString& aName,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAtom> nameAtom;
-    if (!(GetOwnerDoc()->IsCaseSensitive())) {
+    if (GetOwnerDoc() // XXX clean up after bug 335998 lands
+        && !(GetOwnerDoc()->IsCaseSensitive())) {
       nsAutoString lower;
       ToLowerCase(aName, lower);
       nameAtom = do_GetAtom(lower);
@@ -328,16 +329,10 @@ nsGenericHTMLElement::GetNodeName(nsAString& aNodeName)
 {
   mNodeInfo->GetQualifiedName(aNodeName);
 
-  if (!(GetOwnerDoc()->IsCaseSensitive()))
+  if (GetOwnerDoc() // XXX clean up after bug 335998 lands
+      && !(GetOwnerDoc()->IsCaseSensitive()))
     ToUpperCase(aNodeName);
 
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLElement::GetLocalName(nsAString& aLocalName)
-{
-  mNodeInfo->GetLocalName(aLocalName);
   return NS_OK;
 }
 
@@ -348,20 +343,11 @@ nsGenericHTMLElement::GetElementsByTagName(const nsAString& aTagname,
   nsAutoString tagName(aTagname);
 
   // Only lowercase the name if this is an HTML document.
-  if (!(GetOwnerDoc()->IsCaseSensitive()))
+  if (GetOwnerDoc() // XXX clean up after bug 335998 lands
+      && !(GetOwnerDoc()->IsCaseSensitive()))
     ToLowerCase(tagName);
 
   return nsGenericHTMLElementBase::GetElementsByTagName(tagName, aReturn);
-}
-
-nsresult
-nsGenericHTMLElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                             const nsAString& aLocalName,
-                                             nsIDOMNodeList** aReturn)
-{
-  return nsGenericHTMLElementBase::GetElementsByTagNameNS(aNamespaceURI,
-                                                          aLocalName,
-                                                          aReturn);
 }
 
 // Implementation for nsIDOMHTMLElement
@@ -1179,7 +1165,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 already_AddRefed<nsIURI>
 nsGenericHTMLElement::GetBaseURI() const
 {
-  nsIDocument* doc = GetOwnerDoc();
+  nsIDocument* doc = GetOwnerDoc(); // XXX clean up after bug 335998 lands
 
   void* prop;
   if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
@@ -1191,16 +1177,11 @@ nsGenericHTMLElement::GetBaseURI() const
 
   // If we are a plain old HTML element (not XHTML), don't bother asking the
   // base class -- our base URI is determined solely by the document base.
-  // XXX is this correct? -- hsivonen
-  if (!(GetOwnerDoc()->IsCaseSensitive())) {
-    if (doc) {
-      nsIURI *uri = doc->GetBaseURI();
-      NS_IF_ADDREF(uri);
+  if (doc && !(doc->IsCaseSensitive())) {
+    nsIURI *uri = doc->GetBaseURI();
+    NS_IF_ADDREF(uri);
 
-      return uri;
-    }
-
-    return nsnull;
+    return uri;
   }
 
   return nsGenericHTMLElementBase::GetBaseURI();
@@ -3426,7 +3407,8 @@ nsGenericHTMLElement::GetHashFromHrefURI(nsAString& aHash)
 const nsAttrName*
 nsGenericHTMLElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
 {
-  if (!(GetOwnerDoc()->IsCaseSensitive())) {
+  if (GetOwnerDoc() // XXX clean up after bug 335998 lands
+      && !(GetOwnerDoc()->IsCaseSensitive())) {
     nsAutoString lower;
     ToLowerCase(aStr, lower);
     return mAttrsAndChildren.GetExistingAttrNameFromQName(
