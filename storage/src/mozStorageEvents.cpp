@@ -55,6 +55,8 @@
 #include "mozStoragePrivateHelpers.h"
 #include "mozStorageEvents.h"
 
+using namespace mozilla::storage;
+
 /**
  * The following constants help batch rows into result sets.
  * MAX_MILLISECONDS_BETWEEN_RESULTS was chosen because any user-based task that
@@ -625,7 +627,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
 
 nsresult
 NS_executeAsync(nsTArray<sqlite3_stmt *> &aStatements,
-                mozStorageConnection *aConnection,
+                Connection *aConnection,
                 mozIStorageStatementCallback *aCallback,
                 mozIStoragePendingStatement **_stmt)
 {
