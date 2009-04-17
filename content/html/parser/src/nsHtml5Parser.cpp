@@ -1133,17 +1133,32 @@ nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
     PRInt32 byteCount = aCount - totalByteCount;
     PRInt32 utf16Count = NS_HTML5_PARSER_READ_BUFFER_SIZE - end;
 
+    NS_ASSERTION(utf16Count, "Trying to convert into a buffer with no free space!");
+
     nsresult convResult = mUnicodeDecoder->Convert((const char*)aFromSegment, &byteCount, mLastBuffer->getBuffer() + end, &utf16Count);  
-  
+
     mLastBuffer->setEnd(end + utf16Count);
     totalByteCount += byteCount;
     aFromSegment += byteCount;
-    
+
     NS_ASSERTION((mLastBuffer->getEnd() <= NS_HTML5_PARSER_READ_BUFFER_SIZE), "The Unicode decoder wrote too much data.");
-  
-    if (convResult == NS_PARTIAL_MORE_OUTPUT) {
+
+    if (NS_FAILED(convResult)) {
+      ++totalByteCount;
+      ++aFromSegment;
+      mLastBuffer->getBuffer()[end] = 0xFFFD;
+      mLastBuffer->setEnd(end + 1);
+      if (mLastBuffer->getEnd() == NS_HTML5_PARSER_READ_BUFFER_SIZE) {
+          mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
+      }
+      mUnicodeDecoder->Reset();
+      if (totalByteCount == aCount) {
+        *aWriteCount = totalByteCount;
+        return NS_OK;            
+      }
+    } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
       mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
-      NS_ASSERTION(((PRUint32)totalByteCount < aCount), "The Unicode has consumed too many bytes.");
+      NS_ASSERTION(((PRUint32)totalByteCount < aCount), "The Unicode decoder has consumed too many bytes.");
     } else {
       NS_ASSERTION(((PRUint32)totalByteCount == aCount), "The Unicode decoder consumed the wrong number of bytes.");
       *aWriteCount = totalByteCount;
