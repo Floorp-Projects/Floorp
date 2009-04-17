@@ -793,8 +793,9 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                 sprop = (JSScopeProperty *) prop;
                 if (!js_NativeGet(cx, obj, obj2, sprop, vp))
                     return JS_FALSE;
+            } else {
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
             }
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
         }
         return JS_TRUE;
     }
@@ -1291,7 +1292,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
 
         sprop = js_AddScopeProperty(cx, (JSScope *)map, id, NULL, NULL,
                                     i + JS_INITIAL_NSLOTS, JSPROP_ENUMERATE,
-                                    0, 0);
+                                    0, 0, NULL);
         if (!sprop)
             goto out_bad;
     }
