@@ -3177,7 +3177,7 @@ js_DeleteRecorder(JSContext* cx)
 /**
  * Checks whether the shape of the global object has changed.
  */
-static inline bool
+static inline JS_REQUIRES_STACK bool
 js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
                           uint32 *shape=NULL, SlotList** slots=NULL)
 {
