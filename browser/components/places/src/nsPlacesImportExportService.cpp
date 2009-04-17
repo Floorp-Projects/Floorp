@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com>
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -104,6 +105,8 @@
 #include "prprf.h"
 #include "nsVoidArray.h"
 #include "nsIBrowserGlue.h"
+#include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -131,6 +134,14 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define STATIC_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/staticTitle")
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
+
+// The RESTORE_*_NSIOBSERVER_TOPIC #defines should match the constants of the
+// same names in toolkit/components/places/src/utils.js
+#define RESTORE_BEGIN_NSIOBSERVER_TOPIC "bookmarks-restore-begin"
+#define RESTORE_SUCCESS_NSIOBSERVER_TOPIC "bookmarks-restore-success"
+#define RESTORE_FAILED_NSIOBSERVER_TOPIC "bookmarks-restore-failed"
+#define RESTORE_NSIOBSERVER_DATA NS_LITERAL_STRING("html")
+#define RESTORE_INITIAL_NSIOBSERVER_DATA NS_LITERAL_STRING("html-initial")
 
 // define to get debugging messages on console about import/export
 //#define DEBUG_IMPORT
@@ -2165,14 +2176,68 @@ nsPlacesImportExportService::WriteContainerContents(nsINavHistoryResultNode* aFo
   return NS_OK;
 }
 
+// NotifyImportObservers
+//
+//    Notifies bookmarks-restore observers using nsIObserverService.  This
+//    function is void and we simply return on failure because we don't want
+//    the import itself to fail if notifying observers does.
+
+static void
+NotifyImportObservers(const char* aTopic,
+                      PRInt64 aFolderId,
+                      PRBool aIsInitialImport)
+{
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> obs =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsISupports> folderIdSupp = nsnull;
+  if (aFolderId > 0) {
+    nsCOMPtr<nsISupportsPRInt64> folderIdInt =
+      do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return;
+
+    rv = folderIdInt->SetData(aFolderId);
+    if (NS_FAILED(rv))
+      return;
+
+    folderIdSupp = do_QueryInterface(folderIdInt);
+  }
+
+  obs->NotifyObservers(folderIdSupp,
+                       aTopic,
+                       (aIsInitialImport ? RESTORE_INITIAL_NSIOBSERVER_DATA :
+                                           RESTORE_NSIOBSERVER_DATA).get());
+}
 
 // nsIPlacesImportExportService::ImportHTMLFromFile
 //
 NS_IMETHODIMP
 nsPlacesImportExportService::ImportHTMLFromFile(nsILocalFile* aFile, PRBool aIsInitialImport)
 {
+  NotifyImportObservers(RESTORE_BEGIN_NSIOBSERVER_TOPIC, -1, aIsInitialImport);
+
   // this version is exposed on the interface and disallows changing of roots
-  return ImportHTMLFromFileInternal(aFile, PR_FALSE, 0, aIsInitialImport);
+  nsresult rv = ImportHTMLFromFileInternal(aFile,
+                                           PR_FALSE,
+                                           0,
+                                           aIsInitialImport);
+
+  if (NS_FAILED(rv)) {
+    NotifyImportObservers(RESTORE_FAILED_NSIOBSERVER_TOPIC,
+                          -1,
+                          aIsInitialImport);
+  }
+  else {
+    NotifyImportObservers(RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
+                          -1,
+                          aIsInitialImport);
+  }
+
+  return rv;
 }
 
 // nsIPlacesImportExportService::ImportHTMLFromFileToFolder
@@ -2180,8 +2245,28 @@ nsPlacesImportExportService::ImportHTMLFromFile(nsILocalFile* aFile, PRBool aIsI
 NS_IMETHODIMP
 nsPlacesImportExportService::ImportHTMLFromFileToFolder(nsILocalFile* aFile, PRInt64 aFolderId, PRBool aIsInitialImport)
 {
+  NotifyImportObservers(RESTORE_BEGIN_NSIOBSERVER_TOPIC,
+                        aFolderId,
+                        aIsInitialImport);
+
   // this version is exposed on the interface and disallows changing of roots
-  return ImportHTMLFromFileInternal(aFile, PR_FALSE, aFolderId, aIsInitialImport);
+  nsresult rv = ImportHTMLFromFileInternal(aFile,
+                                           PR_FALSE,
+                                           aFolderId,
+                                           aIsInitialImport);
+
+  if (NS_FAILED(rv)) {
+    NotifyImportObservers(RESTORE_FAILED_NSIOBSERVER_TOPIC,
+                          aFolderId,
+                          aIsInitialImport);
+  }
+  else {
+    NotifyImportObservers(RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
+                          aFolderId,
+                          aIsInitialImport);
+  }
+
+  return rv;
 }
 
 nsresult
