@@ -92,11 +92,8 @@ function InputHandler() {
   browserCanvas.addEventListener("keydown", this, true);
   browserCanvas.addEventListener("keyup", this, true);
 
-  let prefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
-  let allowKinetic = prefsvc.getBoolPref("browser.ui.panning.kinetic");
-
   this._modules.push(new ChromeInputModule(this, browserCanvas));
-  this._modules.push(new ContentPanningModule(this, browserCanvas, allowKinetic));
+  this._modules.push(new ContentPanningModule(this, browserCanvas));
   this._modules.push(new ContentClickingModule(this));
   this._modules.push(new ScrollwheelModule(this));
 }
@@ -585,10 +582,8 @@ KineticData.prototype = {
   }
 };
 
-function ContentPanningModule(owner, browserCanvas, useKinetic) {
+function ContentPanningModule(owner, browserCanvas) {
   this._owner = owner;
-  if (useKinetic !== undefined)
-    this._useKinetic = useKinetic;
   this._browserCanvas = browserCanvas;
   this._dragData = new DragData(this, 10, 200);
   this._kineticData = new KineticData(this);
@@ -598,7 +593,6 @@ ContentPanningModule.prototype = {
   _owner: null,
   _dragData: null,
 
-  _useKinetic: true,
   _kineticData: null,
 
   handleEvent: function handleEvent(aEvent) {
@@ -676,17 +670,10 @@ ContentPanningModule.prototype = {
 
     [sX, sY] = dragData.lockMouseMove(sX, sY);
 
-    if (this._useKinetic) {
-      // start kinetic scrolling here for canvas only
-      if (!this._kineticData.startKinetic(sX, sY))
-        this._kineticData.endKinetic(sX, sY);
-      dragData.reset();
-    }
-    else {
-      ws.dragStop();
-      // flush any paints that might be left so that our next pan will be fast
-      Browser.canvasBrowser.endPanning();
-    }
+    // start kinetic scrolling here for canvas only
+    if (!this._kineticData.startKinetic(sX, sY))
+      this._kineticData.endKinetic(sX, sY);
+    dragData.reset();
   },
 
   _dragBy: function _dragMove(dx, dy) {
@@ -740,8 +727,7 @@ ContentPanningModule.prototype = {
 
     // even if we haven't started dragging yet, we should queue up the
     // mousemoves in case we do start
-    if (this._useKinetic)
-      this._kineticData.addData(sX, sY);
+    this._kineticData.addData(sX, sY);
 
     this.detectEarlyDrag();
 
