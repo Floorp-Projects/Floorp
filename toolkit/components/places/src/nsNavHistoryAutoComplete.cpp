@@ -481,6 +481,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   // So, most likely, h.id will always be populated when we have any bookmark.
   // We still need to join on moz_places_temp for other data (eg. title).
   nsCString sql = NS_LITERAL_CSTRING(
+    "/* do not warn (bug 487789) */ "
     "SELECT IFNULL(h_t.url, h.url), IFNULL(h_t.title, h.title), f.url ") +
       BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
       "IFNULL(h_t.visit_count, h.visit_count), IFNULL(h_t.typed, h.typed), rank "
