@@ -2541,7 +2541,7 @@ private:
     nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
 
-    JSObject*  NewOutObject(JSContext* cx);
+    JSObject*  NewOutObject(JSContext* cx, JSObject* scope);
 
     JSBool IsReflectable(uint16 i) const
         {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
