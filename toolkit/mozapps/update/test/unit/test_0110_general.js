@@ -63,7 +63,7 @@ function run_test() {
   testFile.append("text1");
   testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
 
-  var binDir = gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
+  var binDir = gRealGreD.clone();
 
   // The updater binary file
   var updater = binDir.clone();

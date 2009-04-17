@@ -70,7 +70,7 @@ function run_test() {
   testFile = do_get_file("data/aus-0110_general_ref_image1.png");
   testFile.copyTo(testDir, "image1.png");
 
-  var binDir = gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
+  var binDir = gRealGreD.clone();
 
   // The updater binary file
   var updater = binDir.clone();
