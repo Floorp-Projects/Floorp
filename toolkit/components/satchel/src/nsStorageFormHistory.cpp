@@ -66,7 +66,7 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 
-#define DB_SCHEMA_VERSION   2
+#define DB_SCHEMA_VERSION   1
 #define DB_FILENAME         NS_LITERAL_STRING("formhistory.sqlite")
 #define DB_CORRUPT_FILENAME NS_LITERAL_STRING("formhistory.sqlite.corrupt")
 
@@ -205,11 +205,8 @@ nsFormHistory::Init()
 #endif
 
   nsCOMPtr<nsIObserverService> service = do_GetService("@mozilla.org/observer-service;1");
-  if (service) {
+  if (service)
     service->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
-    service->AddObserver(this, "idle-daily", PR_TRUE);
-    service->AddObserver(this, "formhistory-expire-now", PR_TRUE);
-  }
 
   return NS_OK;
 }
@@ -450,9 +447,6 @@ nsFormHistory::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE, &gFormHistoryEnabled);
-  } else if (!strcmp(aTopic, "idle-daily") ||
-             !strcmp(aTopic, "formhistory-expire-now")) {
-      ExpireOldEntries();
   }
 
   return NS_OK;
@@ -525,68 +519,6 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
 }
 
 nsresult
-nsFormHistory::ExpireOldEntries()
-{
-  // Determine how many days of history we're supposed to keep.
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 expireDays;
-  rv = prefBranch->GetIntPref("browser.formfill.expire_days", &expireDays);
-  if (NS_FAILED(rv))
-    rv = prefBranch->GetIntPref("browser.history_expire_days", &expireDays);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRInt64 expireTime = PR_Now() - expireDays * 24 * PR_HOURS;
-
-
-  PRInt32 beginningCount = CountAllEntries();
-
-  // Purge the form history...
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "DELETE FROM moz_formhistory WHERE lastUsed<=?1"),
-          getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = stmt->BindInt64Parameter(0, expireTime);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 endingCount = CountAllEntries();
-
-  // If we expired a large batch of entries, shrink the DB to reclaim wasted
-  // space. This is expected to happen when entries predating timestamps
-  // (added in the v.1 schema) expire in mass, 180 days after the DB was
-  // upgraded -- entries not used since then expire all at once.
-  if (beginningCount - endingCount > 500) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-PRInt32
-nsFormHistory::CountAllEntries()
-{
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-                  "SELECT COUNT(*) FROM moz_formhistory"),
-                  getter_AddRefs(stmt));
-
-  PRBool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, 0);
-
-  PRInt32 count = 0;
-  if (hasResult)
-    count = stmt->AsInt32(0);
-
-  return count;
-}
-
-nsresult
 nsFormHistory::CreateTable()
 {
   nsresult rv;
@@ -598,8 +530,6 @@ nsFormHistory::CreateTable()
            "firstUsed INTEGER, lastUsed INTEGER)"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_index ON moz_formhistory (fieldname)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_lastused_index ON moz_formhistory (lastUsed)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
@@ -707,10 +637,7 @@ nsFormHistory::dbMigrate()
       rv = MigrateToVersion1();
       NS_ENSURE_SUCCESS(rv, rv);
       // (fallthrough to the next upgrade)
-    case 1:
-      rv = MigrateToVersion2();
-      NS_ENSURE_SUCCESS(rv, rv);
-      // (fallthrough to the next upgrade)
+
     case DB_SCHEMA_VERSION:
       // (current version, nothing more to do)
       break;
@@ -783,30 +710,6 @@ nsFormHistory::MigrateToVersion1()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->SetSchemaVersion(1);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-/*
- * MigrateToVersion2
- *
- * Updates the DB schema to v2 (bug 243136).
- * Adds lastUsed index, removes moz_dummy_table
- */
-nsresult
-nsFormHistory::MigrateToVersion2()
-{
-  nsresult rv;
-
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_dummy_table"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS moz_formhistory_lastused_index ON moz_formhistory (lastUsed)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->SetSchemaVersion(2);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
