@@ -104,7 +104,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj);
 
 #define JSSLOT_ARRAY_LENGTH            JSSLOT_PRIVATE
 #define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)
-#define JSSLOT_ARRAY_LOOKUP_HOLDER     (JSSLOT_ARRAY_COUNT + 1)
+#define JSSLOT_ARRAY_UNUSED            (JSSLOT_ARRAY_COUNT + 1)
 
 static JS_INLINE uint32
 js_DenseArrayCapacity(JSObject *obj)
@@ -229,8 +229,9 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
 /*
  * Utility to access the value from the id returned by array_lookupProperty.
  */
-jsval
-js_GetDenseArrayElementValue(JSObject *obj, JSProperty *prop);
+JSBool
+js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, JSProperty *prop,
+                             jsval *vp);
 
 JS_END_EXTERN_C
 
