@@ -42,7 +42,6 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "about:firstrun");
 pref("browser.ui.cursor", false);
-pref("browser.ui.panning.kinetic", true);
 
 pref("javascript.options.showInConsole", false);
 
