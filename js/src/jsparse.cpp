@@ -5296,6 +5296,15 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return MatchOrInsertSemicolon(cx, ts) ? pn : NULL;
 }
 
+static void
+NoteArgumentsUse(JSTreeContext *tc)
+{
+    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    tc->flags |= TCF_FUN_USES_ARGUMENTS;
+    if (tc->funbox)
+        tc->funbox->node->pn_dflags |= PND_FUNARG;
+}
+
 static JSParseNode *
 Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
 {
@@ -5461,8 +5470,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
             /* The declarator's position must include the initializer. */
             pn2->pn_pos.end = init->pn_pos.end;
 
-            if (atom == cx->runtime->atomState.argumentsAtom) {
-                tc->flags |= TCF_FUN_USES_ARGUMENTS;
+            if ((tc->flags & TCF_IN_FUNCTION) &&
+                atom == cx->runtime->atomState.argumentsAtom) {
+                NoteArgumentsUse(tc);
                 if (!let)
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
             }
@@ -7882,7 +7892,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              * a reference of the form foo.arguments, which ancient code may
              * still use instead of arguments (more hate).
              */
-            tc->flags |= TCF_FUN_USES_ARGUMENTS;
+            NoteArgumentsUse(tc);
 
             /*
              * Bind early to JSOP_ARGUMENTS to relieve later code from having
