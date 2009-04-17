@@ -38,15 +38,11 @@
 
 Components.utils.import("resource://gre/modules/utils.js");
 
-const TOOLBARSTATE_LOADING        = 1;
-const TOOLBARSTATE_LOADED         = 2;
+const TOOLBARSTATE_LOADING     = 1;
+const TOOLBARSTATE_LOADED      = 2;
 
-const UIMODE_NONE              = 0;
-const UIMODE_URLVIEW           = 1;
-const UIMODE_URLEDIT           = 2;
-const UIMODE_TABS              = 3;
-const UIMODE_CONTROLS          = 4;
-const UIMODE_PANEL             = 5;
+const UIMODE_URLVIEW           = 1; // titlebar visible only if page panned to top
+const UIMODE_URLEDIT           = 2; // titlebar pegged to top of screen
 
 const kMaxEngines = 4;
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
@@ -73,7 +69,7 @@ const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
     delete window[name];
     window[name] = Cc[contract].getService(ifaces.splice(0, 1)[0]);
     if (ifaces.length)
-      ifaces.forEach(function (i) window[name].QueryInterface(i));
+      ifaces.forEach(function (i) { return window[name].QueryInterface(i); });
     return window[name];
   });
 });
@@ -152,7 +148,7 @@ var BrowserUI = {
     this._favicon.src = faviconURI.spec;
   },
 
-  _showToolbar : function(aShow) {
+  _showToolbar : function _showToolbar(aShow) {
     if (aShow) {
       ws.freeze("toolbar-main");
       ws.moveFrozenTo("toolbar-main", 0, 0);
@@ -162,7 +158,7 @@ var BrowserUI = {
     }
   },
 
-  _editToolbar : function(aEdit) {
+  _editToolbar : function _editToolbar(aEdit) {
     var icons = document.getElementById("urlbar-icons");
     if (aEdit) {
       icons.setAttribute("mode", "edit");
@@ -182,15 +178,6 @@ var BrowserUI = {
       this._edit.inputField.blur();
       this._edit.reallyClosePopup();
     }
-  },
-
-  _initPanel : function() {
-    let addons = document.getElementById("addons-container");
-    if (!addons.hasAttribute("src"))
-      addons.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
-    let dloads = document.getElementById("downloads-container");
-    if (!dloads.hasAttribute("src"))
-      dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
   },
 
   switchPane : function(id) {
@@ -388,41 +375,22 @@ var BrowserUI = {
     }
   },
 
-  mode : UIMODE_NONE,
-  show : function(aMode) {
+  mode : UIMODE_URLVIEW,
+  show : function show(aMode) {
     if (this.mode == aMode)
       return;
 
     this.mode = aMode;
 
-    let container = document.getElementById("browser-container");
-    let panelUI = document.getElementById("panel-container");
-
     if (aMode == UIMODE_URLVIEW) {
       this._showToolbar(false);
       this._editToolbar(false);
-
-      panelUI.hidden = true;
+      this.hidePanel();
     }
     else if (aMode == UIMODE_URLEDIT) {
       this._showToolbar(true);
       this._editToolbar(true);
-
-      panelUI.hidden = true;
-    }
-    else if (aMode == UIMODE_PANEL) {
-      panelUI.hidden = false;
-      panelUI.width = container.boxObject.width;
-      panelUI.height = container.boxObject.height;
-      this._initPanel();
-    }
-    else if (aMode == UIMODE_TABS || aMode == UIMODE_CONTROLS) {
-      panelUI.hidden = true;
-    }
-    else if (aMode == UIMODE_NONE) {
-      this._showToolbar(false);
-      this._edit.reallyClosePopup();
-      panelUI.hidden = true;
+      this.hidePanel();
     }
   },
 
@@ -434,12 +402,12 @@ var BrowserUI = {
       star.removeAttribute("starred");
   },
 
-  goToBookmark : function(aEvent) {
+  goToBookmark : function goToBookmark(aEvent) {
     if (aEvent.originalTarget.localName == "button")
       return;
 
-    var list = document.getElementById("urllist-items")
-    BrowserUI.goToURI(list.selectedItem.value)
+    var list = document.getElementById("urllist-items");
+    BrowserUI.goToURI(list.selectedItem.value);
   },
 
   showHistory : function() {
@@ -450,23 +418,56 @@ var BrowserUI = {
     BookmarkList.show();
   },
 
-  newTab : function() {
-    ws.panTo(0, -60, true);
+  newTab : function newTab() {
     Browser.addTab("about:blank", true);
+    ws.panTo(0, -60);
     this.show(UIMODE_URLEDIT);
   },
 
-  closeTab : function(aTab) {
+  closeTab : function closeTab(aTab) {
     Browser.closeTab(aTab);
   },
 
-  selectTab : function(aTab) {
+  selectTab : function selectTab(aTab) {
     Browser.selectedTab = aTab;
   },
 
-  hideTabs : function() {
-    ws.panTo(0, 0);
-    this.show(UIMODE_NONE);
+  hideTabs: function hideTabs() {
+    if (ws.isWidgetVisible("tabs-container")) {
+      let widthOfTabs = document.getElementById("tabs-container").boxObject.width;
+      ws.panBy(widthOfTabs, 0, true);
+    }
+  },
+
+  hideControls: function hideControls() {
+    if (ws.isWidgetVisible("browser-controls")) {
+      let widthOfControls = document.getElementById("browser-controls").boxObject.width;
+      ws.panBy(-widthOfControls, 0, true);
+    }
+  },
+
+  showPanel: function showPanel(aPage) {
+    let panelUI = document.getElementById("panel-container");
+    let container = document.getElementById("browser-container");
+
+    panelUI.hidden = false;
+    panelUI.width = container.boxObject.width;
+    panelUI.height = container.boxObject.height;
+
+    let addons = document.getElementById("addons-container");
+    if (!addons.hasAttribute("src"))
+      addons.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
+    let dloads = document.getElementById("downloads-container");
+    if (!dloads.hasAttribute("src"))
+      dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
+
+    if (aPage != undefined)
+      this.switchPane(aPage);
+  },
+
+  hidePanel: function hidePanel() {
+    let panelUI = document.getElementById("panel-container");
+    panelUI.hidden = true;
   },
 
   handleEvent: function (aEvent) {
@@ -572,12 +573,13 @@ var BrowserUI = {
           var faviconURI = ios.newURI(favicon.src, null, null);
 
           PlacesUtils.favicons.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
-
-          this.show(UIMODE_NONE);
         }
         else {
           BookmarkHelper.edit(bookmarkURI);
         }
+
+        this.hideControls();
+        this.show(UIMODE_URLVIEW);
         break;
       }
       case "cmd_bookmarks":
@@ -602,8 +604,11 @@ var BrowserUI = {
         break;
       case "cmd_panel":
       {
-        var mode = (this.mode != UIMODE_PANEL ? UIMODE_PANEL : UIMODE_CONTROLS);
-        this.show(mode);
+        let panelUI = document.getElementById("panel-container");
+        if (panelUI.hidden)
+          this.showPanel();
+        else
+          this.hidePanel();
         break;
       }
       case "cmd_zoomin":
@@ -696,7 +701,7 @@ var BookmarkList = {
     let item = this._bookmarks.activeItem;
     if (item.spec) {
       this._panel.hidden = true;
-      BrowserUI.goToURI(item.spec)
+      BrowserUI.goToURI(item.spec);
     }
   },
 

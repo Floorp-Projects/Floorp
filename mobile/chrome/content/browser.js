@@ -86,10 +86,10 @@ var Browser = {
       if (dx) {
         let visibleNow = ws.isWidgetVisible("tabs-container") || ws.isWidgetVisible("browser-controls");
         if (visibleNow && !gSidebarVisible) {
-          BrowserUI._showToolbar(true);
+          BrowserUI.show(UIMODE_URLEDIT);
         }
         else if (!visibleNow && gSidebarVisible) {
-          BrowserUI._showToolbar(false);
+          BrowserUI.show(UIMODE_URLVIEW);
         }
         gSidebarVisible = visibleNow;
       }
@@ -988,8 +988,7 @@ const gXPInstallObserver = {
               // Force the add-ons manager panel to appear. We do this so the
               // xpinstall and download observers in the add-ons manager can
               // complete the installation
-              BrowserUI.show(UIMODE_PANEL);
-              BrowserUI.switchPane("addons-container");
+              BrowserUI.showPanel("addons-container");
 
               // Kick off the xpinstall
               var mgr = Cc["@mozilla.org/xpinstall/install-manager;1"].createInstance(Ci.nsIXPInstallManager);

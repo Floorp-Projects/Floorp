@@ -431,9 +431,14 @@ WidgetStack.prototype = {
     return panned;
   },
 
-  // panTo: pan the entire set of widgets so that the given x,y coordinates
-  // are in the upper left of the stack.
+  // panTo: pan the entire set of widgets so that the given x,y
+  // coordinates are in the upper left of the stack.  If either is
+  // null or undefined, only move the other axis
   panTo: function panTo(x, y) {
+    if (x == undefined || x == null)
+      x = this._viewingRect.x;
+    if (y == undefined || y == null)
+      y = this._viewingRect.y;
     this.panBy(x - this._viewingRect.x, y - this._viewingRect.y, true);
   },
 
