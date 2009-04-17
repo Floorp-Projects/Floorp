@@ -147,7 +147,9 @@
     }
     
     inline void StartLayout() {
-      if (GetDocument()) {
+      nsIDocument* doc = GetDocument();
+      if (doc) {
+        FlushPendingAppendNotifications();
         mParser->StartLayout(PR_FALSE);
       }
     }
