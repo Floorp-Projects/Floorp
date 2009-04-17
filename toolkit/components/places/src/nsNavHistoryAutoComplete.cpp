@@ -499,6 +499,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   NS_ENSURE_SUCCESS(rv, rv);
 
   sql = NS_LITERAL_CSTRING(
+    "/* do not warn (bug 487787) */ "
     "SELECT IFNULL( "
         "(SELECT REPLACE(url, '%s', ?2) FROM moz_places_temp WHERE id = b.fk), "
         "(SELECT REPLACE(url, '%s', ?2) FROM moz_places WHERE id = b.fk) "
