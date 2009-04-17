@@ -42,6 +42,11 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "about:firstrun");
 pref("browser.ui.cursor", false);
+#ifdef MOZ_PLATFORM_HILDON
+pref("browser.ui.panning.fixup.mousemove", true);
+#else
+pref("browser.ui.panning.fixup.mousemove", false);
+#endif
 
 pref("javascript.options.showInConsole", false);
 

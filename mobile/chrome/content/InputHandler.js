@@ -92,8 +92,10 @@ function InputHandler() {
   browserCanvas.addEventListener("keydown", this, true);
   browserCanvas.addEventListener("keyup", this, true);
 
+  let useEarlyMouseMoves = gPrefService.getBoolPref("browser.ui.panning.fixup.mousemove");
+
   this._modules.push(new ChromeInputModule(this, browserCanvas));
-  this._modules.push(new ContentPanningModule(this, browserCanvas));
+  this._modules.push(new ContentPanningModule(this, browserCanvas, useEarlyMouseMoves));
   this._modules.push(new ContentClickingModule(this));
   this._modules.push(new ScrollwheelModule(this));
 }
@@ -582,11 +584,12 @@ KineticData.prototype = {
   }
 };
 
-function ContentPanningModule(owner, browserCanvas) {
+function ContentPanningModule(owner, browserCanvas, useEarlyMouseMoves) {
   this._owner = owner;
   this._browserCanvas = browserCanvas;
   this._dragData = new DragData(this, 10, 200);
   this._kineticData = new KineticData(this);
+  this._useEarlyMouseMoves = useEarlyMouseMoves;
 }
 
 ContentPanningModule.prototype = {
@@ -727,7 +730,10 @@ ContentPanningModule.prototype = {
 
     // even if we haven't started dragging yet, we should queue up the
     // mousemoves in case we do start
-    this._kineticData.addData(sX, sY);
+    if (this._useEarlyMouseMoves ||
+        dragData.dragging ||
+        dragData.dragStartTimeout != -1)
+      this._kineticData.addData(sX, sY);
 
     this.detectEarlyDrag();
 
