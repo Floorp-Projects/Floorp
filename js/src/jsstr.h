@@ -142,8 +142,8 @@ JS_STATIC_ASSERT(sizeof(size_t) == sizeof(jsword));
 
 #define JSSTRING_IS_DEFLATED(str)   ((str)->length & JSSTRFLAG_DEFLATED)
 
-#define JSSTRING_SET_DEFLATED(str)  js_AtomicSetMask((jsword*)&(str)->length, \
-                                                     JSSTRFLAG_DEFLATED);
+#define JSSTRING_SET_DEFLATED(str)                                            \
+    JS_ATOMIC_SET_MASK((jsword*)&(str)->length, JSSTRFLAG_DEFLATED)
 
 #define JSSTRING_CHARS_AND_LENGTH(str, chars_, length_)                       \
     ((void)(JSSTRING_IS_DEPENDENT(str)                                        \
@@ -197,7 +197,7 @@ JS_STATIC_ASSERT(sizeof(size_t) == sizeof(jsword));
 #define JSFLATSTR_SET_ATOMIZED(str)                                           \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(JSSTRING_IS_FLAT(str) && !JSSTRING_IS_MUTABLE(str));        \
-        js_AtomicSetMask((jsword*) &(str)->length, JSSTRFLAG_ATOMIZED);       \
+        JS_ATOMIC_SET_MASK((jsword*) &(str)->length, JSSTRFLAG_ATOMIZED);     \
     JS_END_MACRO
 
 #define JSFLATSTR_SET_MUTABLE(str)                                            \
