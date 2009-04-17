@@ -137,11 +137,12 @@ WifiGeoPositionProvider.prototype = {
     watch: function(c) {
         LOG("watch called");
 
-        if (!this.wifi_service)
+        if (!this.wifi_service) {
             this.wifi_service = Cc["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
         
-        this.wifi_service.startWatching(this);
-        this.update = c;
+            this.wifi_service.startWatching(this);
+            this.update = c;
+        }
     },
 
     shutdown: function() { 
