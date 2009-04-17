@@ -320,7 +320,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
     return (*w == ov) ? *w = nv, JS_TRUE : JS_FALSE;
 }
 
-#define JS_ATOMIC_SET_MASK(w, mask) *(w) |= mask
+#define JS_ATOMIC_SET_MASK(w, mask) (*(w) |= (mask))
 
 #endif /* JS_THREADSAFE */
 
