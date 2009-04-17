@@ -374,6 +374,18 @@ LoginManagerStorage_legacy.prototype = {
 
 
     /*
+     * searchLogins
+     *
+     * Not implemented. This interface was added to perform arbitrary searches.
+     * Since the legacy storage module is no longer used, there is no need to
+     * implement it here.
+     */
+    searchLogins : function (count, matchData) {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+
+    /*
      * removeAllLogins
      *
      * Removes all logins from storage.
