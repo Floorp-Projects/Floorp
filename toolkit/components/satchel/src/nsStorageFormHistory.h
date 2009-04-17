@@ -120,7 +120,6 @@ public:
   nsresult dbMigrate();
   nsresult dbCleanup();
   nsresult MigrateToVersion1();
-  nsresult MigrateToVersion2();
   PRBool   dbAreExpectedColumnsPresent();
 
   nsresult CreateTable();
@@ -131,8 +130,6 @@ public:
   static PRBool gFormHistoryEnabled;
   static PRBool gPrefsInitialized;
 
-  nsresult ExpireOldEntries();
-  PRInt32 CountAllEntries();
   PRInt64 GetExistingEntryID(const nsAString &aName, const nsAString &aValue);
 
   nsCOMPtr<nsIPrefBranch> mPrefBranch;

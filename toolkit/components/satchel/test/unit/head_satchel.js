@@ -38,7 +38,7 @@
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
-const CURRENT_SCHEMA = 2;
+const CURRENT_SCHEMA = 1;
 const PR_HOURS = 60 * 60 * 1000000;
 
 
