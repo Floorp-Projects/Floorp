@@ -66,16 +66,6 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 
-// The size of the database cache. This is the number of database PAGES that
-// can be cached in memory. Normally, pages are 1K unless the size has been
-// explicitly changed.
-//
-// 4MB should be much larger than normal form histories. Normal form histories
-// will be several hundered KB at most. If the form history is smaller, the
-// extra memory will never be allocated, so there is no penalty for larger
-// numbers. See StartCache
-#define DATABASE_CACHE_PAGES 4000
-
 #define DB_SCHEMA_VERSION   1
 #define DB_FILENAME         NS_LITERAL_STRING("formhistory.sqlite")
 #define DB_CORRUPT_FILENAME NS_LITERAL_STRING("formhistory.sqlite.corrupt")
@@ -603,12 +593,7 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
   rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We execute many statements before the database cache is started to create
-  // the tables (which can not be done which the cache is locked in memory by
-  // the dummy statement--see StartCache). This transaction will keep the cache
-  // between these statements, which should improve startup performance because
-  // we won't have to keep requesting pages from the OS.
-  // We also want the transaction to rollback any failed schema upgrade.
+  // Use a transaction around initialization and migration for better performance.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRBool exists;
@@ -627,9 +612,6 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
   
   // should commit before starting cache
   transaction.Commit();
-
-  // ignore errors since the cache is not critical for operation
-  StartCache();
 
   rv = CreateStatements();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -783,99 +765,6 @@ nsFormHistory::dbAreExpectedColumnsPresent()
                   "SELECT fieldname, value, timesUsed, firstUsed, lastUsed "
                   "FROM moz_formhistory"), getter_AddRefs(stmt));
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
-}
-
-
-// nsFormHistory::StartCache
-//
-//    This function starts the dummy statement that locks the cache in memory.
-//    As long as there is an open connection sharing the same cache, the cache
-//    won't be expired. Therefore, we create a dummy table with some data in
-//    it, and open a statement over the data. As long as this statement is
-//    open, we can go fast.
-//
-//    This dummy statement prevents the schema from being modified. If you
-//    want to add or change a table or index schema, you must stop the dummy
-//    statement first. See nsNavHistory::StartDummyStatement for a slightly
-//    more detailed discussion.
-//
-//    Note that we should not use a transaction in this function since that
-//    will commit the dummy statement and everything will break.
-//
-//    This function also initializes the cache.
-
-nsresult
-nsFormHistory::StartCache()
-{
-  // do nothing if the dummy statement is already running
-  if (mDummyStatement)
-    return NS_OK;
-
-  // dummy database connection
-  nsCOMPtr<nsIFile> formHistoryFile;
-  nsresult rv = GetDatabaseFile(getter_AddRefs(formHistoryFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mStorageService->OpenDatabase(formHistoryFile,
-                                     getter_AddRefs(mDummyConnection));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Make sure the dummy table exists
-  PRBool tableExists;
-  rv = mDummyConnection->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (! tableExists) {
-    rv = mDummyConnection->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE TABLE moz_dummy_table (id INTEGER PRIMARY KEY)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // This table is guaranteed to have something in it and will keep the dummy
-  // statement open. If the table is empty, it won't hold the statement open.
-  // the PRIMARY KEY value on ID means that it is unique. The OR IGNORE means
-  // that if there is already a value of 1 there, this insert will be ignored,
-  // which is what we want so as to avoid growing the table infinitely.
-  rv = mDummyConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_dummy_table VALUES (1)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDummyConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_dummy_table LIMIT 1"),
-    getter_AddRefs(mDummyStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // we have to step the dummy statement so that it will hold a lock on the DB
-  PRBool dummyHasResults;
-  rv = mDummyStatement->ExecuteStep(&dummyHasResults);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set the cache size
-  nsCAutoString cacheSizePragma("PRAGMA cache_size=");
-  cacheSizePragma.AppendInt(DATABASE_CACHE_PAGES);
-  rv = mDummyConnection->ExecuteSimpleSQL(cacheSizePragma);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-// nsFormHistory::StopCache
-//
-//    Call this before doing any schema modifying operations. You should
-//    start the dummy statement again to give good performance.
-//    See StartCache.
-
-nsresult
-nsFormHistory::StopCache()
-{
-  // do nothing if the dummy statement isn't running
-  if (! mDummyStatement)
-    return NS_OK;
-
-  nsresult rv = mDummyStatement->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDummyStatement = nsnull;
-  return NS_OK;
 }
 
 
