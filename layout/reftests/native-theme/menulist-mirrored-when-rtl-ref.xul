@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="mirrored menulist"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox>
+    <menulist width="200" style="-moz-transform: scaleX(-1);"/>
+    <menulist editable="true" width="200" style="-moz-transform: scaleX(-1);"/>
+    <spacer flex="1"/>
+  </hbox>
+</window>

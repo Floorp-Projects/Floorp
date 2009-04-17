@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="RTL searchfield"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox>
+    <textbox type="search" width="200" id="searchbox" style="direction: rtl;"/>
+    <spacer flex="1"/>
+  </hbox>
+</window>
