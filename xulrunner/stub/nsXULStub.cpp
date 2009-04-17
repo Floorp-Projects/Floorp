@@ -54,6 +54,8 @@
 #define PATH_SEPARATOR_CHAR '\\'
 #define R_OK 04
 #elif defined(XP_MACOSX)
+#include <unistd.h>
+#include <sys/stat.h>
 #include <CoreFoundation/CoreFoundation.h>
 #define PATH_SEPARATOR_CHAR '/'
 #elif defined (XP_OS2)
