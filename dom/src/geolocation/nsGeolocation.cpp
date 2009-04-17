@@ -577,6 +577,8 @@ nsGeolocation::nsGeolocation(nsIDOMWindow* aContentDom)
 
 nsGeolocation::~nsGeolocation()
 {
+  if (mService)
+    Shutdown();
 }
 
 void
