@@ -120,6 +120,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs:: updater.png
+	$(NSINSTALL) -D $(DIST)/bin/icons
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
 endif
 
