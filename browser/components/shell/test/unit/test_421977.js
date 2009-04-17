@@ -102,11 +102,11 @@ function run_test() {
     checkGConfToShellColor("#ffffffffffff", "#FFFFFF");
 
     checkShellToGConfColor("#000000", "#000000000000");
-    checkShellToGConfColor("#0000FF", "#00000000ff00");
-    checkShellToGConfColor("#FFFFFF", "#ff00ff00ff00");
-    checkShellToGConfColor("#0A0B0C", "#0a000b000c00");
-    checkShellToGConfColor("#A0B0C0", "#a000b000c000");
-    checkShellToGConfColor("#AABBCC", "#aa00bb00cc00");
+    checkShellToGConfColor("#0000FF", "#00000000ffff");
+    checkShellToGConfColor("#FFFFFF", "#ffffffffffff");
+    checkShellToGConfColor("#0A0B0C", "#0a0a0b0b0c0c");
+    checkShellToGConfColor("#A0B0C0", "#a0a0b0b0c0c0");
+    checkShellToGConfColor("#AABBCC", "#aaaabbbbcccc");
 
   } finally {
     gGConf.setString(GCONF_BG_COLOR_KEY, origGConfColor);
