@@ -1957,12 +1957,14 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     return NS_OK;
   }
 
-  nsresult rv;
+  jsval targetVal = JSVAL_VOID;
+  JSAutoTempValueRooter tvr(mContext, 1, &targetVal);
+
   JSObject* target = nsnull;
-  nsAutoGCRoot root(&target, &rv);
+  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = JSObjectFromInterface(aTarget, aScope, &target);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  targetVal = OBJECT_TO_JSVAL(target);
 
   jsval rval = JSVAL_VOID;
 
