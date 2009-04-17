@@ -320,6 +320,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       mTokenizer->start();
       mLifeCycle = PARSING;
       mParser = this;
+      mCharsetSource = kCharsetFromOtherComponent;
       break;
     default:
       break;
