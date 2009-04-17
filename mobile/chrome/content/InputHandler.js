@@ -434,9 +434,8 @@ ChromeInputModule.prototype = {
       return;
     }
 
-    var cwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-
     // Redispatch the mouse event, ignoring the root scroll frame
+    let cwu = Browser.windowUtils;
     cwu.sendMouseEvent(aEvent.type, aEvent.clientX, aEvent.clientY,
                        aEvent.button, aEvent.detail, 0, true);
   }
