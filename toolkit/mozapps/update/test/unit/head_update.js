@@ -775,21 +775,25 @@ gProfD.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 var gRealGreD = gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
 
 // Use a custom GRE dir to keep the dist/bin dir clean
-var gCustomGreD = do_get_cwd();
-gCustomGreD.append("app_dir");
-try {
+// XXXrstrong - Custom GreD is disabled for now since it isn't working on
+// Thunderbird Linux and possibly others.
+var gCustomGreD = gRealGreD.clone();
+
+//var gCustomGreD = do_get_cwd();
+//gCustomGreD.append("app_dir");
+//try {
   // This will likely fail sporadically on Mac OS X as the removal of the
   // updates directory has in the past so wrap it in a try catch
-  if (gCustomGreD.exists())
-    gCustomGreD.remove(true);
-}
-catch (e) {
-  dump("Unable to remove directory\npath: " + gCustomGreD.path +
-       "\nException: " + e + "\n");
-}
+//  if (gCustomGreD.exists())
+//    gCustomGreD.remove(true);
+//}
+//catch (e) {
+//  dump("Unable to remove directory\npath: " + gCustomGreD.path +
+//       "\nException: " + e + "\n");
+//}
 
-if (!gCustomGreD.exists())
-  gCustomGreD.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+//if (!gCustomGreD.exists())
+//  gCustomGreD.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
 var dirProvider = {
   getFile: function(prop, persistent) {
@@ -798,10 +802,10 @@ var dirProvider = {
       case NS_APP_PROFILE_DIR_STARTUP:
         persistent.value = true;
         return gProfD.clone();
-      case NS_GRE_DIR:
-      case XRE_UPDATE_ROOT_DIR:
-        persistent.value = true;
-        return gCustomGreD.clone();
+//      case NS_GRE_DIR:
+//      case XRE_UPDATE_ROOT_DIR:
+//        persistent.value = true;
+//        return gCustomGreD.clone();
     }
     return null;
   },
