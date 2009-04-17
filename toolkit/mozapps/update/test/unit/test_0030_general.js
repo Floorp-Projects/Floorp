@@ -38,21 +38,19 @@
 
 /* General MAR File Download Tests */
 
-const DIR_DATA = "data"
-const URL_PREFIX = "http://localhost:4444/" + DIR_DATA + "/";
-
-const PREF_APP_UPDATE_URL_OVERRIDE = "app.update.url.override";
-
-var gUpdates;
-var gUpdateCount;
-var gStatus;
-var gCheckFunc;
 var gNextRunFunc;
-var gExpectedResult;
+var gStatusResult;
+var gExpectedStatusResult;
 
 function run_test() {
   do_test_pending();
+  removeUpdateDirsAndFiles();
+  // The mock XMLHttpRequest is MUCH faster
+  gPrefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, URL_HOST + "update.xml");
+  overrideXHR(callHandleEvent);
   startAUS();
+  startUpdateChecker();
+  // The HTTP server is only used for the mar file downloads which is slow
   start_httpserver(DIR_DATA);
   do_timeout(0, "run_test_pt1()");
 }
@@ -61,18 +59,32 @@ function end_test() {
   stop_httpserver(do_test_finished);
 }
 
+// Callback function used by the custom XMLHttpRequest implemetation to
+// call the nsIDOMEventListener's handleEvent method for onload.
+function callHandleEvent() {
+  gXHR.status = 400;
+  gXHR.responseText = gResponseBody;
+  try {
+    var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"]
+                   .createInstance(AUS_Ci.nsIDOMParser);
+    gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
+  }
+  catch(e) {
+  }
+  var e = { target: gXHR };
+  gXHR.onload.handleEvent(e);
+}
+
 // Helper function for testing mar downloads that have the correct size
 // specified in the update xml.
-function run_test_helper_pt1(aUpdateXML, aMsg, aResult, aNextRunFunc) {
+function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
   gUpdates = null;
   gUpdateCount = null;
-  gStatus = null;
+  gStatusResult = null;
   gCheckFunc = check_test_helper_pt1_1;
   gNextRunFunc = aNextRunFunc;
-  gExpectedResult = aResult;
-  var url = URL_PREFIX + aUpdateXML;
-  dump("Testing: " + aMsg + " - " + url + "\n");
-  gPrefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  gExpectedStatusResult = aExpectedStatusResult;
+  dump("Testing: " + aMsg + "\n");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -81,120 +93,115 @@ function check_test_helper_pt1_1() {
   gCheckFunc = check_test_helper_pt1_2;
   var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
   var state = gAUS.downloadUpdate(bestUpdate, false);
-  if (state == "null" || state == "failed")
+  if (state == STATE_NONE || state == STATE_FAILED)
     do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
   gAUS.addDownloadListener(downloadListener);
 }
 
 function check_test_helper_pt1_2() {
-  do_check_eq(gStatus, gExpectedResult);
+  do_check_eq(gStatusResult, gExpectedStatusResult);
   gAUS.removeDownloadListener(downloadListener);
   gNextRunFunc();
 }
 
+function setResponseBody(aHashFunction, aHashValue) {
+  var patches = getRemotePatchString(null, null, aHashFunction, aHashValue);
+  var updates = getRemoteUpdateString(patches);
+  gResponseBody = getRemoteUpdatesXMLString(updates);
+}
+
 // mar download with a valid MD5 hash
 function run_test_pt1() {
-  run_test_helper_pt1("aus-0030_general-1.xml",
-                      "mar download with a valid MD5 hash",
+  setResponseBody("MD5", "6232cd43a1c77e30191c53a329a3f99d");
+  run_test_helper_pt1("run_test_pt1 - mar download with a valid MD5 hash",
                       AUS_Cr.NS_OK, run_test_pt2);
 }
 
 // mar download with an invalid MD5 hash
 function run_test_pt2() {
-  run_test_helper_pt1("aus-0030_general-2.xml",
-                      "mar download with an invalid MD5 hash",
+  setResponseBody("MD5", "6232cd43a1c77e30191c53a329a3f99e");
+  run_test_helper_pt1("run_test_pt2 - mar download with an invalid MD5 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt3);
 }
 
 // mar download with a valid SHA1 hash
 function run_test_pt3() {
-  run_test_helper_pt1("aus-0030_general-3.xml",
-                      "mar download with a valid SHA1 hash",
+  setResponseBody("SHA1", "63A739284A1A73ECB515176B1A9D85B987E789CE");
+  run_test_helper_pt1("run_test_pt3 - mar download with a valid SHA1 hash",
                       AUS_Cr.NS_OK, run_test_pt4);
 }
 
 // mar download with an invalid SHA1 hash
 function run_test_pt4() {
-  run_test_helper_pt1("aus-0030_general-4.xml",
-                      "mar download with an invalid SHA1 hash",
+  setResponseBody("SHA1", "63A739284A1A73ECB515176B1A9D85B987E789CD");
+  run_test_helper_pt1("run_test_pt4 - mar download with an invalid SHA1 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt5);
 }
 
 // mar download with a valid SHA256 hash
 function run_test_pt5() {
-  run_test_helper_pt1("aus-0030_general-5.xml",
-                      "mar download with a valid SHA256 hash",
+  var hashValue = "a8d9189f3978afd90dc7cd72e887ef22474c178e8314f23df2f779c881" +
+                  "b872e2";
+  setResponseBody("SHA256", hashValue);
+  run_test_helper_pt1("run_test_pt5 - mar download with a valid SHA256 hash",
                       AUS_Cr.NS_OK, run_test_pt6);
 }
 
 // mar download with an invalid SHA256 hash
 function run_test_pt6() {
-  run_test_helper_pt1("aus-0030_general-6.xml",
-                      "mar download with an invalid SHA256 hash",
+  var hashValue = "a8d9189f3978afd90dc7cd72e887ef22474c178e8314f23df2f779c881" +
+                  "b872e1";
+  setResponseBody("SHA256", hashValue);
+  run_test_helper_pt1("run_test_pt6 - mar download with an invalid SHA256 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt7);
 }
 
 // mar download with a valid SHA384 hash
 function run_test_pt7() {
-  run_test_helper_pt1("aus-0030_general-7.xml",
-                      "mar download with a valid SHA384 hash",
+  var hashValue = "802c64f6caa6c356f7a5f8d9a008c08c54fe915c3ec7cf9e215c3bccc9" +
+                  "e195c78b2669840d7b1d46ff3c1dfa751d72e1";
+  setResponseBody("SHA384", hashValue);
+  run_test_helper_pt1("run_test_pt7 - mar download with a valid SHA384 hash",
                       AUS_Cr.NS_OK, run_test_pt8);
 }
 
 // mar download with an invalid SHA384 hash
 function run_test_pt8() {
-  run_test_helper_pt1("aus-0030_general-8.xml",
-                      "mar download with an invalid SHA384 hash",
+  var hashValue = "802c64f6caa6c356f7a5f8d9a008c08c54fe915c3ec7cf9e215c3bccc9" +
+                  "e195c78b2669840d7b1d46ff3c1dfa751d72e2";
+  setResponseBody("SHA384", hashValue);
+  run_test_helper_pt1("run_test_pt8 - mar download with an invalid SHA384 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt9);
 }
 
 // mar download with a valid SHA512 hash
 function run_test_pt9() {
-  run_test_helper_pt1("aus-0030_general-9.xml",
-                      "mar download with a valid SHA512 hash",
+  var hashValue = "1d2307e309587ddd04299423b34762639ce6af3ee17cfdaa8fdd4e66b5" +
+                  "a61bfb6555b6e40a82604908d6d68d3e42f318f82e22b6f5e1118b4222" +
+                  "e3417a2fa2d0";
+  setResponseBody("SHA512", hashValue);
+  run_test_helper_pt1("run_test_pt9 - mar download with a valid SHA512 hash",
                       AUS_Cr.NS_OK, run_test_pt10);
 }
 
 // mar download with an invalid SHA384 hash
 function run_test_pt10() {
-  run_test_helper_pt1("aus-0030_general-10.xml",
-                      "mar download with an invalid SHA512 hash",
+  var hashValue = "1d2307e309587ddd04299423b34762639ce6af3ee17cfdaa8fdd4e66b5" +
+                  "a61bfb6555b6e40a82604908d6d68d3e42f318f82e22b6f5e1118b4222" +
+                  "e3417a2fa2d1";
+  setResponseBody("SHA512", hashValue);
+  run_test_helper_pt1("run_test_pt10 - mar download with an invalid SHA512 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt11);
 }
 
 // mar download with the mar not found
 function run_test_pt11() {
-  run_test_helper_pt1("aus-0030_general-11.xml",
-                      "mar download with the mar not found",
+  var patches = getRemotePatchString(null, URL_HOST + DIR_DATA + "/bogus.mar");
+  var updates = getRemoteUpdateString(patches);
+  gResponseBody = getRemoteUpdatesXMLString(updates);
+  run_test_helper_pt1("run_test_pt11 - mar download with the mar not found",
                       AUS_Cr.NS_ERROR_UNEXPECTED, end_test);
 }
-
-// Update check listener
-const updateCheckListener = {
-  onProgress: function(request, position, totalSize) {
-  },
-
-  onCheckComplete: function(request, updates, updateCount) {
-    gUpdateCount = updateCount;
-    gUpdates = updates;
-    dump("onCheckComplete url = " + request.channel.originalURI.spec + "\n\n");
-    // Use a timeout to allow the XHR to complete
-    do_timeout(0, "gCheckFunc()");
-  },
-
-  onError: function(request, update) {
-    dump("onError url = " + request.channel.originalURI.spec + "\n\n");
-    // Use a timeout to allow the XHR to complete
-    do_timeout(0, "gCheckFunc()");
-  },
-
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(AUS_Ci.nsIUpdateCheckListener) &&
-        !aIID.equals(AUS_Ci.nsISupports))
-      throw AUS_Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
 
 /* Update download listener - nsIRequestObserver */
 const downloadListener = {
@@ -208,7 +215,7 @@ const downloadListener = {
   },
 
   onStopRequest: function(request, context, status) {
-    gStatus = status;
+    gStatusResult = status;
     // Use a timeout to allow the request to complete
     do_timeout(0, "gCheckFunc()");
   },

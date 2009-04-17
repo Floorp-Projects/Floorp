@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<updates>
-  <update type="major" version="4.0" extensionVersion="4.0" buildID="20080811053724" licenseURL="http://dummylicense" detailsURL="http://dummydetails/">
-    <patch type="partial" URL="http://localhost:4444/data/empty.mar" hashFunction="MD5" hashValue="6232cd43a1c77e30191c53a329a3f99d" size="775"/> 
-  </update>
-</updates>
