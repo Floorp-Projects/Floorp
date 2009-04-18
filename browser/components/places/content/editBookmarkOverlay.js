@@ -842,7 +842,8 @@ var gEditItemOverlay = {
     var menupopup = this._folderMenuList.menupopup;
 
     for (var i=0;  i < menupopup.childNodes.length; i++) {
-      if (menupopup.childNodes[i].folderId == aFolderId)
+      if (menupopup.childNodes[i].folderId &&
+          menupopup.childNodes[i].folderId == aFolderId)
         return menupopup.childNodes[i];
     }
 

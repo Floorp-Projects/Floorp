@@ -23,6 +23,7 @@
  *   Brett Wilson <brettw@gmail.com> (original author)
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Asaf Romano <mano@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,39 +39,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include <stdio.h>
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
-
-#include "nsIArray.h"
-#include "nsCOMPtr.h"
-#include "nsDebug.h"
 #include "nsFaviconService.h"
-#include "nsHashPropertyBag.h"
-#include "nsIComponentManager.h"
-#include "nsIDateTimeFormat.h"
-#include "nsIDOMElement.h"
-#include "nsILocalFile.h"
-#include "nsIDynamicContainer.h"
-#include "nsIServiceManager.h"
-#include "nsISupportsPrimitives.h"
-#ifdef MOZ_XUL
-#include "nsITreeColumns.h"
-#endif
-#include "nsIURI.h"
-#include "nsIURL.h"
-#include "nsIWritablePropertyBag.h"
 #include "nsITaggingService.h"
+#include "nsAnnotationService.h"
+
+#include "nsDebug.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
-#include "nsPromiseFlatString.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "prtime.h"
 #include "prprf.h"
+
+#include "nsIDynamicContainer.h"
+#include "nsHashPropertyBag.h"
+#include "nsIWritablePropertyBag.h"
 #include "mozStorageHelper.h"
-#include "nsAnnotationService.h"
 #include "nsCycleCollectionParticipant.h"
 
 // What we want is: NS_INTERFACE_MAP_ENTRY(self) for static IID accessors,
@@ -389,6 +376,13 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
   mOptions(aOptions),
   mDynamicContainerType(aDynamicContainerType)
 {
+}
+
+nsNavHistoryContainerResultNode::~nsNavHistoryContainerResultNode()
+{
+  // Explicitly clean up array of children of this container.  We must ensure
+  // all references are gone and all of their destructors are called.
+  mChildren.Clear();
 }
 
 // nsNavHistoryContainerResultNode::OnRemoving
@@ -1377,8 +1371,8 @@ nsNavHistoryContainerResultNode::InsertSortedChild(
 
 PRBool
 nsNavHistoryContainerResultNode::EnsureItemPosition(PRUint32 aIndex) {
-  NS_ASSERTION(aIndex >= 0 && aIndex < mChildren.Count(), "Invalid index");
-  if (aIndex < 0 || aIndex >= mChildren.Count())
+  NS_ASSERTION(aIndex >= 0 && aIndex < (PRUint32)mChildren.Count(), "Invalid index");
+  if (aIndex < 0 || aIndex >= (PRUint32)mChildren.Count())
     return PR_FALSE;
 
   SortComparator comparator = GetSortingComparator(GetSortType());
@@ -2065,6 +2059,16 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
                                                &mHasSearchTerms);
 }
 
+nsNavHistoryQueryResultNode::~nsNavHistoryQueryResultNode() {
+  // Remove this node from result's observers.  We don't need to be notified
+  // anymore.
+  if (mResult && mResult->mAllBookmarksObservers.IndexOf(this) !=
+                   mResult->mAllBookmarksObservers.NoIndex)
+    mResult->RemoveAllBookmarksObserver(this);
+  if (mResult && mResult->mHistoryObservers.IndexOf(this) !=
+                   mResult->mHistoryObservers.NoIndex)
+    mResult->RemoveHistoryObserver(this);
+}
 
 // nsNavHistoryQueryResultNode::CanExpand
 //
@@ -2390,7 +2394,7 @@ nsNavHistoryQueryResultNode::FillChildren()
   // mChildren array after sorting. This is done for root node only.
   // note, if count < max results, we won't do anything.
   if (!mParent && mOptions->MaxResults()) {
-    while (mChildren.Count() > mOptions->MaxResults())
+    while ((PRUint32)mChildren.Count() > mOptions->MaxResults())
       mChildren.RemoveObjectAt(mChildren.Count() - 1);
   }
 
@@ -2823,7 +2827,7 @@ nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI *aURI)
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnClearHistory()
 {
-  Refresh();
+  (void)Refresh();
   return NS_OK;
 }
 
@@ -3236,7 +3240,7 @@ nsNavHistoryFolderResultNode::FillChildren()
   // mChildren array after sorting. This is done for root node only.
   // note, if count < max results, we won't do anything.
   if (!mParent && mOptions->MaxResults()) {
-    while (mChildren.Count() > mOptions->MaxResults())
+    while ((PRUint32)mChildren.Count() > mOptions->MaxResults())
       mChildren.RemoveObjectAt(mChildren.Count() - 1);
   }
 
@@ -3288,8 +3292,9 @@ nsNavHistoryFolderResultNode::Refresh()
   }
 
   // ignore errors from FillChildren, since we will still want to refresh
-  // the tree (there just might not be anything in it on error). Need to
-  // unregister as an observer because FillChildren will try to re-register us.
+  // the tree (there just might not be anything in it on error). ClearChildren
+  // has unregistered us as an observer since FillChildren will try to
+  // re-register us.
   (void)FillChildren();
 
   nsNavHistoryResult* result = GetResult();
@@ -3335,7 +3340,7 @@ nsNavHistoryFolderResultNode::StartIncrementalUpdate()
   }
 
   // otherwise, we don't do incremental updates, invalidate and unregister
-  Refresh();
+  (void)Refresh();
   return PR_FALSE;
 }
 
@@ -3458,6 +3463,9 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->BookmarkIdToResultNode(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
+    // Correctly set batch status for new query nodes.
+    if (mResult && node->IsQuery())
+      node->GetAsQuery()->mBatchInProgress = mResult->mBatchInProgress;
   }
   else if (itemType == nsINavBookmarksService::TYPE_FOLDER ||
            itemType == nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER) {
@@ -3746,7 +3754,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mView)
   tmp->mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mAllBookmarksObservers)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mHistoryObservers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 static PLDHashOperator
 TraverseBookmarkFolderObservers(nsTrimInt64HashKey::KeyType aKey,
@@ -3769,6 +3779,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRootNode, nsINavHistoryContainerResultNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mView)
   tmp->mBookmarkFolderObservers.Enumerate(&TraverseBookmarkFolderObservers, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mAllBookmarksObservers, nsNavHistoryQueryResultNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mHistoryObservers, nsNavHistoryQueryResultNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNavHistoryResult)
@@ -3862,6 +3874,11 @@ nsNavHistoryResult::NewHistoryResult(nsINavHistoryQuery** aQueries,
     *result = nsnull;
     return rv;
   }
+
+  // Correctly set mBatchInProgress for the result based on the root node value.
+  if (aRoot->IsQuery())
+    (*result)->mBatchInProgress = aRoot->GetAsQuery()->mBatchInProgress;
+
   return NS_OK;
 }
 
@@ -3911,7 +3928,7 @@ nsNavHistoryResult::AddHistoryObserver(nsNavHistoryQueryResultNode* aNode)
       mIsHistoryObserver = PR_TRUE;
   }
   if (mHistoryObservers.IndexOf(aNode) != mHistoryObservers.NoIndex) {
-    NS_WARNING("Attempting to register an observer twice!");
+    NS_WARNING("Attempting to register as a history observer twice!");
     return;
   }
   mHistoryObservers.AppendElement(aNode);
@@ -3922,7 +3939,7 @@ nsNavHistoryResult::AddHistoryObserver(nsNavHistoryQueryResultNode* aNode)
 void
 nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
 {
-  if (! mIsAllBookmarksObserver) {
+  if (!mIsAllBookmarksObserver && !mIsBookmarkFolderObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     if (! bookmarks) {
       NS_NOTREACHED("Can't create bookmark service");
@@ -3932,7 +3949,7 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
     mIsAllBookmarksObserver = PR_TRUE;
   }
   if (mAllBookmarksObservers.IndexOf(aNode) != mAllBookmarksObservers.NoIndex) {
-    NS_WARNING("Attempting to register an observer twice!");
+    NS_WARNING("Attempting to register an all bookmarks observer twice!");
     return;
   }
   mAllBookmarksObservers.AppendElement(aNode);
@@ -3945,11 +3962,11 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
 
 void
 nsNavHistoryResult::AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
-                                        PRInt64 aFolder)
+                                              PRInt64 aFolder)
 {
-  if (! mIsBookmarkFolderObserver) {
+  if (!mIsBookmarkFolderObserver && !mIsAllBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    if (! bookmarks) {
+    if (!bookmarks) {
       NS_NOTREACHED("Can't create bookmark service");
       return;
     }
@@ -3959,7 +3976,7 @@ nsNavHistoryResult::AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNod
 
   FolderObserverList* list = BookmarkFolderObserversForId(aFolder, PR_TRUE);
   if (list->IndexOf(aNode) != list->NoIndex) {
-    NS_NOTREACHED("Attempting to register an observer twice!");
+    NS_NOTREACHED("Attempting to register as a folder observer twice!");
     return;
   }
   list->AppendElement(aNode);
@@ -4105,7 +4122,7 @@ nsNavHistoryResult::GetRoot(nsINavHistoryContainerResultNode** aRoot)
 // observers will requery themselves, which may cause the observer array to
 // be modified or added to.
 #define ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(_folderId, _functionCall) \
-  { \
+  PR_BEGIN_MACRO \
     FolderObserverList* _fol = BookmarkFolderObserversForId(_folderId, PR_FALSE); \
     if (_fol) { \
       FolderObserverList _listCopy(*_fol); \
@@ -4114,23 +4131,19 @@ nsNavHistoryResult::GetRoot(nsINavHistoryContainerResultNode** aRoot)
           _listCopy[_fol_i]->_functionCall; \
       } \
     } \
-  }
+  PR_END_MACRO
+#define ENUMERATE_QUERY_OBSERVERS(_functionCall, _observersList, _conditionCall) \
+  PR_BEGIN_MACRO \
+    QueryObserverList _listCopy(_observersList); \
+    for (PRUint32 _obs_i = 0; _obs_i < _listCopy.Length(); _obs_i ++) { \
+      if (_listCopy[_obs_i] && _listCopy[_obs_i]->_conditionCall) \
+        _listCopy[_obs_i]->_functionCall; \
+    } \
+  PR_END_MACRO
 #define ENUMERATE_ALL_BOOKMARKS_OBSERVERS(_functionCall) \
-  { \
-    nsTArray<nsNavHistoryQueryResultNode*> observerCopy(mAllBookmarksObservers); \
-    for (PRUint32 _obs_i = 0; _obs_i < observerCopy.Length(); _obs_i ++) { \
-      if (observerCopy[_obs_i]) \
-      observerCopy[_obs_i]->_functionCall; \
-    } \
-  }
+  ENUMERATE_QUERY_OBSERVERS(_functionCall, mAllBookmarksObservers, IsQuery())
 #define ENUMERATE_HISTORY_OBSERVERS(_functionCall) \
-  { \
-    nsTArray<nsNavHistoryQueryResultNode*> observerCopy(mHistoryObservers); \
-    for (PRUint32 _obs_i = 0; _obs_i < observerCopy.Length(); _obs_i ++) { \
-      if (observerCopy[_obs_i]) \
-      observerCopy[_obs_i]->_functionCall; \
-    } \
-  }
+  ENUMERATE_QUERY_OBSERVERS(_functionCall, mHistoryObservers, IsQuery())
 
 // nsNavHistoryResult::OnBeginUpdateBatch (nsINavBookmark/HistoryObserver)
 
@@ -4323,17 +4336,13 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
     if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
         resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
         resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY)
-      mRootNode->GetAsQuery()->Refresh();
+      (void)mRootNode->GetAsQuery()->Refresh();
     else {
       // We are result of a folder node, then we should run through history
       // observers that are containers queries and refresh them.
       // We use a copy of the observers array since requerying could potentially
       // cause changes to the array.
-      nsTArray<nsNavHistoryQueryResultNode*> observerCopy(mHistoryObservers);
-      for (PRUint32 i = 0; i < observerCopy.Length(); i++) {
-        if (observerCopy[i] && observerCopy[i]->IsContainersQuery())
-          observerCopy[i]->Refresh();
-      }
+      ENUMERATE_QUERY_OBSERVERS(Refresh(), mHistoryObservers, IsContainersQuery());
     }
   }
 

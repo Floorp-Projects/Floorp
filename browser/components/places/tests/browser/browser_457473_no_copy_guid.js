@@ -115,6 +115,10 @@ function test() {
   // in any new changes.
   //ok(checkGUIDs(folderBNode, folderBGUIDs, true, true), "folder B GUIDs after under/redo should match pre-undo/redo folder B GUIDs");
 
+  // Close containers, cleaning up their observers.
+  testRootNode.containerOpen = false;
+  toolbarNode.containerOpen = false;
+
   // clean up
   PlacesUIUtils.ptm.undoTransaction();
   PlacesUtils.bookmarks.removeItem(testRootId);

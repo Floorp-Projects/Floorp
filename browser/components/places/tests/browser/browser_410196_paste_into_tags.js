@@ -91,7 +91,7 @@ function test() {
           // need to add a history object
           var testURI1 = PU._uri(MOZURISPEC);
           isnot(testURI1, null, "testURI is not null");
-          visitId = add_visit(testURI1);
+          var visitId = add_visit(testURI1);
           ok(visitId > 0, "A visit was added to the history");
           ok(gh.isVisited(testURI1), MOZURISPEC + " is a visited url.");
         },

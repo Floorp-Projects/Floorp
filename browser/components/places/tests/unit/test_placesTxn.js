@@ -170,7 +170,7 @@ function run_test() {
   // Test creating an item
   // Create to Root
   var txn2 = ptSvc.createItem(uri("http://www.example.com"), root, bmStartIndex, "Testing1");
-  ptSvc.doTransaction(txn2); //Also testing doTransaction
+  ptSvc.doTransaction(txn2); // Also testing doTransaction
   var b = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
   do_check_eq(observer._itemAddedId, b);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
@@ -707,6 +707,50 @@ function run_test() {
   do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
   do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
   do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), "folder");
+
+  // Test creating an item with child transactions.
+  var newDateAdded = Date.now() - 20000;
+  var childTxn = ptSvc.editItemDateAdded(null, newDateAdded);
+  var itemWChildTxn = ptSvc.createItem(uri("http://www.example.com"), root, bmStartIndex, "Testing1", null, null, [childTxn]);
+  try {
+    ptSvc.doTransaction(itemWChildTxn); // Also testing doTransaction
+    var itemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
+    do_check_eq(observer._itemAddedId, itemId);
+    do_check_eq(newDateAdded, bmsvc.getItemDateAdded(itemId));
+    itemWChildTxn.undoTransaction();
+    do_check_eq(observer._itemRemovedId, itemId);
+    itemWChildTxn.redoTransaction();
+    do_check_true(bmsvc.isBookmarked(uri("http://www.example.com")));
+    var newId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
+    do_check_eq(newDateAdded, bmsvc.getItemDateAdded(newId));
+    do_check_eq(observer._itemAddedId, newId);
+    itemWChildTxn.undoTransaction();
+    do_check_eq(observer._itemRemovedId, newId);
+  } catch (ex) {
+    do_throw("Setting a child transaction in a createItem transaction did throw: " + ex);
+  }
+
+  // Create a folder with child item transactions.
+  var childItemTxn = ptSvc.createItem(uri("http://www.childItem.com"), root, bmStartIndex, "childItem");
+  var folderWChildItemTxn = ptSvc.createFolder("Folder", root, bmStartIndex, null, [childItemTxn]);
+  try {
+    ptSvc.doTransaction(folderWChildItemTxn);
+    var childItemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.childItem.com"), {}))[0];
+    do_check_eq(observer._itemAddedId, childItemId);
+    do_check_eq(observer._itemAddedIndex, 0);
+    do_check_true(bmsvc.isBookmarked(uri("http://www.childItem.com")));
+    folderWChildItemTxn.undoTransaction();
+    do_check_false(bmsvc.isBookmarked(uri("http://www.childItem.com")));
+    folderWChildItemTxn.redoTransaction();
+    newchildItemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.childItem.com"), {}))[0];
+    do_check_eq(observer._itemAddedIndex, 0);
+    do_check_eq(observer._itemAddedId, newchildItemId);
+    do_check_true(bmsvc.isBookmarked(uri("http://www.childItem.com")));
+    folderWChildItemTxn.undoTransaction();
+    do_check_false(bmsvc.isBookmarked(uri("http://www.childItem.com")));
+  } catch (ex) {
+    do_throw("Setting a child item transaction in a createFolder transaction did throw: " + ex);
+  }
 
   bmsvc.removeObserver(observer, false);
 }
