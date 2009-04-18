@@ -1130,6 +1130,8 @@ public:
 
   NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable);
 
+  virtual void UpdateCanvasBackground();
+
 protected:
   virtual ~PresShell();
 
@@ -5519,6 +5521,19 @@ PresShell::RenderSelection(nsISelection* aSelection,
                              aScreenRect);
 }
 
+void PresShell::UpdateCanvasBackground()
+{
+  // If we have a frame tree and it has style information that
+  // specifies the background color of the canvas, update our local
+  // cache of that color.
+  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
+  if (rootFrame) {
+    const nsStyleBackground* bgStyle =
+      nsCSSRendering::FindRootFrameBackground(rootFrame);
+    mCanvasBackgroundColor = bgStyle->mBackgroundColor;
+  }
+}
+
 NS_IMETHODIMP
 PresShell::Paint(nsIView*             aView,
                  nsIRenderingContext* aRenderingContext,
@@ -5529,15 +5544,7 @@ PresShell::Paint(nsIView*             aView,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aView, "null view");
 
-  // If we have a frame tree and it has style information that
-  // specifies the background color of the canvas, update our local
-  // cache of that color.
-  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
-  if (rootFrame) {
-    const nsStyleBackground* bgStyle =
-      nsCSSRendering::FindRootFrameBackground(rootFrame);
-    mCanvasBackgroundColor = bgStyle->mBackgroundColor;
-  }
+  UpdateCanvasBackground();
 
   // Compute the backstop color for the view.
   nscolor bgcolor;
