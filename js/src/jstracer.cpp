@@ -6248,19 +6248,42 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
 JS_REQUIRES_STACK bool
 TraceRecorder::getThis(LIns*& this_ins)
 {
-    JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
-    if (!thisObj)
-        ABORT_TRACE("js_ComputeThis failed");
-    if (!cx->fp->callee || JSVAL_IS_NULL(cx->fp->argv[-1])) {
+    /*
+     * In global code, bake in the global object as 'this' object.
+     */
+    if (!cx->fp->callee) {
         JS_ASSERT(callDepth == 0);
-        /*
-         * In global code, or if 'this' is NULL (which mean calculate the global object and use
-         * it as 'this' object), bake the global object as 'this' object directly into the trace.
-         */
+        JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
+        if (!thisObj)
+            ABORT_TRACE("js_ComputeThis failed");
+        JS_ASSERT(JSVAL_IS_OBJECT(cx->fp->argv[-1]));
         this_ins = INS_CONSTPTR(thisObj);
+
+        /*
+         * We don't have argv[-1] in global code, so we don't update the tracker here.
+         */
+        return true;
+    }
+
+    /*
+     * Traces type-specialize between null and objects, so if we currently see a null
+     * value in argv[-1], this trace will only match if we see null at runtime as well.
+     * Bake in the global object as 'this' object, updating the tracker as well. We
+     * can only detect this condition prior to calling js_ComputeThisForFrame, since it
+     * updates the interpreter's copy of argv[-1].
+     */
+    if (JSVAL_IS_NULL(cx->fp->argv[-1])) {
+        JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
+        if (!thisObj) // FIXME: fix bug 488018 and propagate such errors better
+            ABORT_TRACE("js_ComputeThis failed");
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(cx->fp->argv[-1]));
+        JS_ASSERT(thisObj == globalObj);
+        this_ins = INS_CONSTPTR(thisObj);
+        set(&cx->fp->argv[-1], this_ins);
         return true;
     }
     this_ins = get(&cx->fp->argv[-1]);
+
     /*
      * When we inline through scripted functions, we have already previously touched the 'this'
      * object and hence it is already guaranteed to be wrapped. Otherwise we have to explicitly
