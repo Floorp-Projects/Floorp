@@ -466,6 +466,19 @@ extern const uint16 js_PrimitiveTestFlags[];
      JSFUN_THISP_TEST(JSFUN_THISP_FLAGS((fun)->flags),                        \
                       js_PrimitiveTestFlags[JSVAL_TAG(thisv) - 1]))
 
+static inline JSObject *
+js_ComputeThisForFrame(JSContext *cx, JSStackFrame *fp)
+{
+    if (fp->flags & JSFRAME_COMPUTED_THIS)
+        return fp->thisp;
+    JSObject* obj = js_ComputeThis(cx, JS_TRUE, fp->argv);
+    if (!obj)
+        return NULL;
+    fp->thisp = obj;
+    fp->flags |= JSFRAME_COMPUTED_THIS;
+    return obj;
+}
+
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
  * is non-null), and that vp points to the callee, |this| parameter, and

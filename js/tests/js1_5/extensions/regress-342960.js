@@ -65,7 +65,7 @@ function test()
       var i;
       print("don't interrupt the script. let it go.");
       for(i=0;i<1024*1024;i++) meg += "v";
-      for(i=0;i<1024/4;i++) r += meg;
+      for(i=0;i<1024/8;i++) r += meg;
       var o={f1: r, f2: r, f3: r,f4: r,f5: r, f6: r, f7: r, f8: r,f9: r};
       print('done obj');
       var rr=r.toSource();
