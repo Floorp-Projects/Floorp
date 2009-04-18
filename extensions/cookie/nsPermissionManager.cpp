@@ -125,7 +125,7 @@ nsPermissionManager::Init()
   // ignore failure here, since it's non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile).
   // XXX should we tell the user about this?
-  InitDB();
+  InitDB(PR_FALSE);
 
   mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -137,7 +137,7 @@ nsPermissionManager::Init()
 }
 
 nsresult
-nsPermissionManager::InitDB()
+nsPermissionManager::InitDB(PRBool aRemoveFile)
 {
   nsCOMPtr<nsIFile> permissionsFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
@@ -146,6 +146,16 @@ nsPermissionManager::InitDB()
 
   nsresult rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aRemoveFile) {
+    PRBool exists = PR_FALSE;
+    rv = permissionsFile->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (exists) {
+      rv = permissionsFile->Remove(PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   nsCOMPtr<mozIStorageService> storage = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
   if (!storage)
@@ -454,7 +464,11 @@ nsPermissionManager::RemoveAllInternal()
   if (mDBConn) {
     nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_hosts"));
     if (NS_FAILED(rv)) {
-      NS_WARNING("db delete failed");
+      mStmtInsert = nsnull;
+      mStmtDelete = nsnull;
+      mStmtUpdate = nsnull;
+      mDBConn = nsnull;
+      rv = InitDB(PR_TRUE);
       return rv;
     }
   }
@@ -591,7 +605,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
   }  
   else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
-    InitDB();
+    InitDB(PR_FALSE);
   }
 
   return NS_OK;
