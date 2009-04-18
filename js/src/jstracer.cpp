@@ -90,8 +90,11 @@
 /* Another fake jsval tag, used to distinguish null from object values. */
 #define JSVAL_TNULL 5
 
+/* A last fake jsval tag distinguishing functions from non-function objects. */
+#define JSVAL_TFUN 7
+
 /* Map to translate a type tag into a printable representation. */
-static const char typeChar[] = "OIDVSNB?";
+static const char typeChar[] = "OIDXSNBF";
 static const char tagChar[]  = "OIDISIBI";
 
 /* Blacklist parameters. */
@@ -373,13 +376,31 @@ static inline jsint asInt32(jsval v)
 /* Return JSVAL_DOUBLE for all numbers (int and double) and the tag otherwise. */
 static inline uint8 getPromotedType(jsval v)
 {
-    return JSVAL_IS_INT(v) ? JSVAL_DOUBLE : JSVAL_IS_NULL(v) ? JSVAL_TNULL : uint8(JSVAL_TAG(v));
+    if (JSVAL_IS_INT(v))
+        return JSVAL_DOUBLE;
+    if (JSVAL_IS_OBJECT(v)) {
+        if (JSVAL_IS_NULL(v))
+            return JSVAL_TNULL;
+        if (HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)))
+            return JSVAL_TFUN;
+        return JSVAL_OBJECT;
+    }
+    return uint8(JSVAL_TAG(v));
 }
 
 /* Return JSVAL_INT for all whole numbers that fit into signed 32-bit and the tag otherwise. */
 static inline uint8 getCoercedType(jsval v)
 {
-    return isInt32(v) ? JSVAL_INT : JSVAL_IS_NULL(v) ? JSVAL_TNULL : uint8(JSVAL_TAG(v));
+    if (isInt32(v))
+        return JSVAL_INT;
+    if (JSVAL_IS_OBJECT(v)) {
+        if (JSVAL_IS_NULL(v))
+            return JSVAL_TNULL;
+        if (HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)))
+            return JSVAL_TFUN;
+        return JSVAL_OBJECT;
+    }
+    return uint8(JSVAL_TAG(v));
 }
 
 /*
@@ -1499,6 +1520,9 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
         *(jsdouble*)slot = d;
         debug_only_v(printf("double<%g> ", d);)
         return;
+      case JSVAL_BOXED:
+        JS_NOT_REACHED("found boxed type in an entry type map");
+        return;
       case JSVAL_BOOLEAN:
         /* Watch out for pseudo-booleans. */
         JS_ASSERT(tag == JSVAL_BOOLEAN);
@@ -1510,14 +1534,28 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
         *(JSString**)slot = JSVAL_TO_STRING(v);
         debug_only_v(printf("string<%p> ", (void*)(*(JSString**)slot));)
         return;
+      case JSVAL_TFUN: {
+        JS_ASSERT(tag == JSVAL_OBJECT);
+        JSObject* obj = JSVAL_TO_OBJECT(v);
+        *(JSObject**)slot = obj;
+#ifdef DEBUG
+        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
+        debug_only_v(printf("function<%p:%s> ", (void*) obj,
+                            fun->atom
+                            ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
+                            : "unnamed");)
+#endif
+        return;
+      }
       case JSVAL_TNULL:
         JS_ASSERT(tag == JSVAL_OBJECT);
         *(JSObject**)slot = NULL;
+        debug_only_v(printf("null ");)
         return;
       default:
-        /* Note: we should never see JSVAL_BOXED in an entry type map. */
         JS_ASSERT(type == JSVAL_OBJECT);
         JS_ASSERT(tag == JSVAL_OBJECT);
+        JS_ASSERT(!JSVAL_IS_NULL(v) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)));
         *(JSObject**)slot = JSVAL_TO_OBJECT(v);
         debug_only_v(printf("object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                             JSVAL_IS_NULL(v)
@@ -1644,6 +1682,18 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
         v = JSVAL_NULL;
         debug_only_v(printf("null<%p> ", (void*)(*(JSObject**)slot)));
         break;
+      case JSVAL_TFUN: {
+        JS_ASSERT(HAS_FUNCTION_CLASS(*(JSObject**)slot));
+        v = OBJECT_TO_JSVAL(*(JSObject**)slot);
+#ifdef DEBUG
+        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
+        debug_only_v(printf("function<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
+                            fun->atom
+                            ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
+                            : "unnamed");)
+#endif
+        break;
+      }
       default:
         JS_ASSERT(type == JSVAL_OBJECT);
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
@@ -1813,7 +1863,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8 t,
     addName(ins, name);
 
     static const char* typestr[] = {
-        "object", "int", "double", "3", "string", "5", "boolean", "any"
+        "object", "int", "double", "boxed", "string", "null", "boolean", "function"
     };
     debug_only_v(printf("import vp=%p name=%s type=%s flags=%d\n",
                         (void*)p, name, typestr[t & 7], t >> 3);)
@@ -2094,11 +2144,18 @@ TraceRecorder::determineSlotType(jsval* vp)
 {
     uint8 m;
     LIns* i = get(vp);
-    m = isNumber(*vp)
-        ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
-        : JSVAL_IS_NULL(*vp)
-        ? JSVAL_TNULL
-        : JSVAL_TAG(*vp);
+    if (isNumber(*vp)) {
+        m = isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE;
+    } else if (JSVAL_IS_OBJECT(*vp)) {
+        if (JSVAL_IS_NULL(*vp))
+            m = JSVAL_TNULL;
+        else if (HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp)))
+            m = JSVAL_TFUN;
+        else
+            m = JSVAL_OBJECT;
+    } else {
+        m = JSVAL_TAG(*vp);
+    }
     JS_ASSERT((m != JSVAL_INT) || isInt32(*vp));
     return m;
 }
@@ -2353,8 +2410,13 @@ TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins,
         }
         return true;
     }
-    if (t == JSVAL_TNULL && JSVAL_IS_NULL(v))
-        return true;
+    if (t == JSVAL_TNULL)
+        return JSVAL_IS_NULL(v);
+    if (t == JSVAL_TFUN)
+        return !JSVAL_IS_PRIMITIVE(v) && HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v));
+    if (t == JSVAL_OBJECT)
+        return !JSVAL_IS_PRIMITIVE(v) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v));
+
     /* for non-number types we expect a precise match of the type */
     uint8 vt = getCoercedType(v);
 #ifdef DEBUG
@@ -2527,7 +2589,11 @@ checktype_fail_2:
                 JS_ASSERT(isNumber(*vp));
                 oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
             } else {
-                JS_ASSERT((*m == JSVAL_TNULL) ? JSVAL_IS_NULL(*vp) : *m == JSVAL_TAG(*vp));
+                JS_ASSERT((*m == JSVAL_TNULL)
+                          ? JSVAL_IS_NULL(*vp)
+                          : *m == JSVAL_TFUN
+                          ? !JSVAL_IS_PRIMITIVE(*vp) && HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))
+                          : *m == JSVAL_TAG(*vp));
             }
             m++;
         );
@@ -3849,6 +3915,9 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
             return true;
         debug_only_v(printf("double != tag%u ", tag);)
         return false;
+      case JSVAL_BOXED:
+        JS_NOT_REACHED("shouldn't see boxed type in entry");
+        return false;
       case JSVAL_BOOLEAN:
         if (tag == JSVAL_BOOLEAN)
             return true;
@@ -3860,11 +3929,23 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
         debug_only_v(printf("string != tag%u", tag);)
         return false;
       case JSVAL_TNULL:
-        return JSVAL_IS_NULL(*vp);
+        if (JSVAL_IS_NULL(*vp))
+            return true;
+        debug_only_v(printf("null != tag%u", tag);)
+        return false;
+      case JSVAL_TFUN:
+        if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp) &&
+            HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
+            return true;
+        }
+        debug_only_v(printf("fun != tag%u", tag);)
+        return false;
       default:
         JS_ASSERT(*m == JSVAL_OBJECT);
-        if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp))
+        if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp) &&
+            !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
             return true;
+        }
         debug_only_v(printf("object != tag%u", tag);)
         return false;
     }
@@ -6204,13 +6285,19 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
             // JSVAL_NULL maps to type JSVAL_TNULL, so insist that v_ins == 0 here.
             guard(true, lir->ins_eq0(v_ins), exit);
         } else {
-            // We must guard that v_ins has JSVAL_OBJECT tag but is not JSVAL_NULL.
+            guard(false, lir->ins_eq0(v_ins), exit);
             guard(true,
                   lir->ins2i(LIR_eq,
-                             lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
+                             lir->ins2(LIR_piand, v_ins, INS_CONSTPTR((void*)JSVAL_TAGMASK)),
                              JSVAL_OBJECT),
                   exit);
-            guard(false, lir->ins_eq0(v_ins), exit);
+            guard(HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)),
+                  lir->ins2(LIR_eq,
+                            lir->ins2(LIR_piand,
+                                      lir->insLoad(LIR_ldp, v_ins, offsetof(JSObject, classword)),
+                                      INS_CONSTPTR((void*)~JSSLOT_CLASS_MASK_BITS)),
+                            INS_CONSTPTR(&js_FunctionClass)),
+                  exit);
         }
         return;
       default:
@@ -7881,14 +7968,6 @@ TraceRecorder::guardCallee(jsval& callee)
     JSObject* callee_obj = JSVAL_TO_OBJECT(callee);
     LIns* callee_ins = get(&callee);
 
-    guard(true,
-          lir->ins2(LIR_eq,
-                    lir->ins2(LIR_piand,
-                              lir->insLoad(LIR_ldp, callee_ins,
-                                           offsetof(JSObject, classword)),
-                              INS_CONSTPTR((void*)(~JSSLOT_CLASS_MASK_BITS))),
-                    INS_CONSTPTR(&js_FunctionClass)),
-          snapshot(MISMATCH_EXIT));
     guard(true,
           lir->ins2(LIR_eq,
                     lir->ins2(LIR_piand,
