@@ -449,6 +449,8 @@ XPCWrapper::ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
   // cloneable function).
   jsval v;
   uintN attrs = JSPROP_ENUMERATE;
+  JSPropertyOp getter = nsnull;
+  JSPropertyOp setter = nsnull;
 
   if (member->IsConstant()) {
     if (!member->GetConstantValue(ccx, iface, &v)) {
@@ -485,6 +487,13 @@ XPCWrapper::ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
       return JS_FALSE;
     }
 
+    // Functions shouldn't have a getter or a setter. Without the wrappers,
+    // they would live on the prototype (and call its getter), since we don't
+    // have a prototype, and we need to avoid calling the scriptable helper's
+    // GetProperty method for this property, stub out the getters and setters
+    // explicitly.
+    getter = setter = JS_PropertyStub;
+
     // Since the XPC_*_NewResolve functions ensure that the method's property
     // name is accessible, we set the eAllAccessSlot bit, which indicates to
     // XPC_NW_FunctionWrapper that the method is safe to unwrap and call, even
@@ -504,7 +513,7 @@ XPCWrapper::ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
   }
 
   if (!::JS_DefineUCProperty(cx, wrapperObj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), v, nsnull, nsnull,
+                            ::JS_GetStringLength(str), v, getter, setter,
                             attrs)) {
     return JS_FALSE;
   }

@@ -944,9 +944,10 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     status->mHaveKeyLengthAndCipher = PR_TRUE;
     status->mKeyLength = keyLength;
     status->mSecretKeyLength = encryptBits;
-    status->mCipherName.Adopt(cipherName);
+    status->mCipherName.Assign(cipherName);
   }
 
+  PORT_Free(cipherName);
   PR_FREEIF(certOrgName);
   PR_Free(signer);
 }

@@ -42,6 +42,7 @@
 #include "nsThreadUtils.h"
 #include "nsIDOMRange.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsILoadGroup.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -228,6 +229,11 @@ public:
    */
   PRUint32 GetCurrentLoadID() { return mCurrentLoadID; }
 
+  /**
+   * Returns the load group for this media element's owner document.
+   * XXX XBL2 issue.
+   */
+  already_AddRefed<nsILoadGroup> GetDocumentLoadGroup();
 
 protected:
   class MediaLoadListener;
@@ -307,6 +313,10 @@ protected:
 
   nsRefPtr<nsMediaDecoder> mDecoder;
 
+  // Holds a reference to the first channel we open to the media resource.
+  // Once the decoder is created, control over the channel passes to the
+  // decoder, and we null out this reference. We must store this in case
+  // we need to cancel the channel before control of it passes to the decoder.
   nsCOMPtr<nsIChannel> mChannel;
 
   // Error attribute

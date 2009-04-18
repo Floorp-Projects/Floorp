@@ -126,5 +126,4 @@ interface nsIDOMRange;
 // Crypto
 interface nsIDOMCRMFObject;
 interface nsIDOMCrypto;
-interface nsIDOMPkcs11;
 

@@ -220,6 +220,9 @@ class nsWaveDecoder : public nsMediaDecoder
   // Change the element's ready state as necessary. Main thread only.
   void UpdateReadyStateForData();
 
+  // Tells mStream to put all loads in the background.
+  virtual void MoveLoadsToBackground();
+
 private:
   // Notifies the element that seeking has started.
   void SeekingStarted();

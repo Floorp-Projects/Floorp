@@ -92,7 +92,7 @@ function test() {
       is(this.currentURI.spec, testURL, "correct tab was reopened");
       
       // clean up
-      gPrefService.setIntPref("browser.sessionstore.max_tabs_undo", max_tabs_undo);
+      gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
       tabbrowser.removeTab(tab);
       finish();
     }, true);

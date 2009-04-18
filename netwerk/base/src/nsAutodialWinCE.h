@@ -44,15 +44,15 @@
 #include <windows.h>
 
 
-class nsRASAutodial
+class nsAutodial
 {
 public:
   
     // ctor
-    nsRASAutodial();
+    nsAutodial();
 
     // dtor
-    virtual ~nsRASAutodial();
+    virtual ~nsAutodial();
 
     // Get the autodial info from the OS and init this obj with it. Call it any
     // time to refresh the object's settings from the OS.

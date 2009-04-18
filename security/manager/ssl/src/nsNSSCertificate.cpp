@@ -984,9 +984,10 @@ nsNSSCertificate::GetSerialNumber(nsAString &_serialNumber)
     return NS_ERROR_NOT_AVAILABLE;
 
   _serialNumber.Truncate();
-  nsXPIDLCString tmpstr; tmpstr.Adopt(CERT_Hexify(&mCert->serialNumber, 1));
-  if (tmpstr.get()) {
+  char *tmpstr = CERT_Hexify(&mCert->serialNumber, 1);
+  if (tmpstr) {
     _serialNumber = NS_ConvertASCIItoUTF16(tmpstr);
+    PORT_Free(tmpstr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1007,9 +1008,10 @@ nsNSSCertificate::GetSha1Fingerprint(nsAString &_sha1Fingerprint)
                mCert->derCert.data, mCert->derCert.len);
   fpItem.data = fingerprint;
   fpItem.len = SHA1_LENGTH;
-  nsXPIDLCString fpStr; fpStr.Adopt(CERT_Hexify(&fpItem, 1));
-  if (fpStr.get()) {
+  char *fpStr = CERT_Hexify(&fpItem, 1);
+  if (fpStr) {
     _sha1Fingerprint = NS_ConvertASCIItoUTF16(fpStr);
+    PORT_Free(fpStr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1030,9 +1032,10 @@ nsNSSCertificate::GetMd5Fingerprint(nsAString &_md5Fingerprint)
                mCert->derCert.data, mCert->derCert.len);
   fpItem.data = fingerprint;
   fpItem.len = MD5_LENGTH;
-  nsXPIDLCString fpStr; fpStr.Adopt(CERT_Hexify(&fpItem, 1));
-  if (fpStr.get()) {
+  char *fpStr = CERT_Hexify(&fpItem, 1);
+  if (fpStr) {
     _md5Fingerprint = NS_ConvertASCIItoUTF16(fpStr);
+    PORT_Free(fpStr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

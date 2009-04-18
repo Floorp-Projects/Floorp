@@ -41,10 +41,15 @@ using namespace Gdiplus;
 
 #pragma comment(lib, "gdiplus.lib")
 
+void SetSubclass(HWND hWnd, InstanceData* instanceData);
+void ClearSubclass(HWND hWnd);
+Color GetColorsFromRGBA(PRUint32 rgba);
+LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 bool
 pluginSupportsWindowMode()
 {
-  return false;
+  return true;
 }
 
 bool
@@ -73,18 +78,12 @@ pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
 void
 pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
 {
-  // Should never be called since we don't support window mode (yet)
-}
-
-static Color
-GetColorsFromRGBA(PRUint32 rgba)
-{
-  BYTE r, g, b, a;
-  b = (rgba & 0xFF);
-  g = ((rgba & 0xFF00) >> 8);
-  r = ((rgba & 0xFF0000) >> 16);
-  a = ((rgba & 0xFF000000) >> 24);
-  return Color(a, r, g, b);
+  HWND hWnd = (HWND)instanceData->window.window;
+  if (oldWindow) {
+    HWND hWndOld = (HWND)oldWindow;
+    ClearSubclass(hWndOld);
+  }
+  SetSubclass(hWnd, instanceData);
 }
 
 void
@@ -98,13 +97,19 @@ pluginDraw(InstanceData* instanceData)
   if (!uaString)
     return;
 
-  HDC hdc = (HDC)instanceData->window.window;
+  HDC hdc = NULL;
+  PAINTSTRUCT ps;
+
+  if (instanceData->hasWidget)
+    hdc = ::BeginPaint((HWND)instanceData->window.window, &ps);
+  else
+    hdc = (HDC)instanceData->window.window;
 
   if (hdc == NULL)
     return;
 
-  // Push the browser's hdc on the resource stack. This test plugin is windowless,
-  // so we share the drawing surface with the rest of the browser.
+  // Push the browser's hdc on the resource stack. If this test plugin is windowless,
+  // we share the drawing surface with the rest of the browser.
   int savedDCID = SaveDC(hdc);
 
   // Reset the clipping region
@@ -115,13 +120,18 @@ pluginDraw(InstanceData* instanceData)
   ULONG_PTR gdiplusToken;
   GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+  // When we have a widget, window.x/y are meaningless since our widget
+  // is always positioned correctly and we just draw into it at 0,0.
+  int x = instanceData->hasWidget ? 0 : instanceData->window.x;
+  int y = instanceData->hasWidget ? 0 : instanceData->window.y;
+  int width = instanceData->window.width;
+  int height = instanceData->window.height;
+
   // Calculate the rectangle coordinates from the instanceData information
-  Rect rect(instanceData->window.x, instanceData->window.y, 
-    instanceData->window.width, instanceData->window.height);
+  Rect rect(x, y, width, height);
 
   // Create a layout rect for the text
-  RectF boundRect((float)instanceData->window.x, (float)instanceData->window.y, 
-    (float)instanceData->window.width, (float)instanceData->window.height);
+  RectF boundRect((float)x, (float)y, (float)width, (float)height);
   boundRect.Inflate(-10.0, -10.0);
 
   switch(instanceData->scriptableObject->drawMode) {
@@ -130,7 +140,7 @@ pluginDraw(InstanceData* instanceData)
       Graphics graphics(hdc);
 
       // Fill in the background and border
-      Pen blackPen(Color(255, 0, 0, 0), 5);
+      Pen blackPen(Color(255, 0, 0, 0), 1);
       SolidBrush grayBrush(Color(255, 192, 192, 192));
 
       graphics.FillRectangle(&grayBrush, rect);
@@ -173,7 +183,56 @@ pluginDraw(InstanceData* instanceData)
 
   // Pop our hdc changes off the resource stack
   RestoreDC(hdc, savedDCID);
+
+  if (instanceData->hasWidget)
+    ::EndPaint((HWND)instanceData->window.window, &ps);
 }
+
+/* script interface */
+
+int32_t
+pluginGetEdge(InstanceData* instanceData, RectEdge edge)
+{
+  if (!instanceData || !instanceData->hasWidget)
+    return NPTEST_INT32_ERROR;
+
+  HWND hWnd = GetAncestor((HWND)instanceData->window.window, GA_ROOT);
+
+  if (!hWnd)
+    return NPTEST_INT32_ERROR;
+
+  RECT rect = {0};
+  GetClientRect((HWND)instanceData->window.window, &rect);
+  MapWindowPoints((HWND)instanceData->window.window, hWnd, (LPPOINT)&rect, 2);
+
+  switch (edge) {
+  case EDGE_LEFT:
+    return rect.left;
+  case EDGE_TOP:
+    return rect.top;
+  case EDGE_RIGHT:
+    return rect.right;
+  case EDGE_BOTTOM:
+    return rect.bottom;
+  }
+
+  return NPTEST_INT32_ERROR;
+}
+
+int32_t
+pluginGetClipRegionRectCount(InstanceData* instanceData)
+{
+  return 1;
+}
+
+int32_t
+pluginGetClipRegionRectEdge(InstanceData* instanceData, 
+    int32_t rectIndex, RectEdge edge)
+{
+  return pluginGetEdge(instanceData, edge);
+}
+
+/* windowless plugin events */
 
 int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
@@ -185,7 +244,7 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
     return 0;   
 
   switch((UINT)pe->event) {
-    case WM_PAINT:   
+    case WM_PAINT:
       pluginDraw(instanceData);   
       return 1;
   }
@@ -193,21 +252,57 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
   return 0;
 }
 
-int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
+/* windowed plugin events */
+
+LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  // XXX nothing here yet since we don't support windowed plugins
-  return NPTEST_INT32_ERROR;
+	WNDPROC wndProc = (WNDPROC)GetProp(hWnd, "MozillaWndProc");
+  if (!wndProc)
+    return 0;
+  InstanceData* pInstance = (InstanceData*)GetProp(hWnd, "InstanceData");
+  if (!pInstance)
+    return 0;
+
+  if (uMsg == WM_PAINT) {
+    pluginDraw(pInstance);
+    return 0;
+  }
+
+  if (uMsg == WM_CLOSE) {
+    ClearSubclass((HWND)pInstance->window.window);
+  }
+
+  return CallWindowProc(wndProc, hWnd, uMsg, wParam, lParam);
 }
 
-int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
+void
+ClearSubclass(HWND hWnd)
 {
-  // XXX nothing here yet since we don't support windowed plugins
-  return NPTEST_INT32_ERROR;
+  if (GetProp(hWnd, "MozillaWndProc")) {
+    ::SetWindowLong(hWnd, GWL_WNDPROC, (long)GetProp(hWnd, "MozillaWndProc"));
+    RemoveProp(hWnd, "MozillaWndProc");
+    RemoveProp(hWnd, "InstanceData");
+  }
 }
 
-int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
-    int32_t rectIndex, RectEdge edge)
+void
+SetSubclass(HWND hWnd, InstanceData* instanceData)
 {
-  // XXX nothing here yet since we don't support windowed plugins
-  return NPTEST_INT32_ERROR;
+  // Subclass the plugin window so we can handle our own windows events.
+  SetProp(hWnd, "InstanceData", (HANDLE)instanceData);
+  WNDPROC origProc = (WNDPROC)::SetWindowLong(hWnd, GWL_WNDPROC, (long)PluginWndProc);
+  SetProp(hWnd, "MozillaWndProc", (HANDLE)origProc);
+}
+
+/* utils */
+
+Color
+GetColorsFromRGBA(PRUint32 rgba)
+{
+  BYTE r, g, b, a;
+  b = (rgba & 0xFF);
+  g = ((rgba & 0xFF00) >> 8);
+  r = ((rgba & 0xFF0000) >> 16);
+  a = ((rgba & 0xFF000000) >> 24);
+  return Color(a, r, g, b);
 }

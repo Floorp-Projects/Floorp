@@ -53,6 +53,9 @@
 #include "nsNetUtil.h"
 #include "nsOggDecoder.h"
 
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
+
 /* 
    The maximum height and width of the video. Used for
    sanitizing the memory allocation of the RGB buffer
@@ -395,18 +398,18 @@ private:
   // for synchronising frames.  It is reset after a seek as the mTime member
   // of FrameData is reset to start at 0 from the first frame after a seek.
   // Accessed only via the decoder thread.
-  PRIntervalTime mPlayStartTime;
+  TimeStamp mPlayStartTime;
 
   // The time that playback was most recently paused, either via
   // buffering or pause. This is used to compute mPauseDuration for
   // a/v sync adjustments.  Accessed only via the decoder thread.
-  PRIntervalTime mPauseStartTime;
+  TimeStamp mPauseStartTime;
 
   // The total time that has been spent in completed pauses (via
   // 'pause' or buffering). This is used to adjust for these
   // pauses when computing a/v synchronisation. Accessed only via the
   // decoder thread.
-  PRIntervalTime mPauseDuration;
+  TimeDuration mPauseDuration;
 
   // PR_TRUE if the media is playing and the decoder has started
   // the sound and adjusted the sync time for pauses. PR_FALSE
@@ -432,7 +435,7 @@ private:
 
   // Time that buffering started. Used for buffering timeout and only
   // accessed in the decoder thread.
-  PRIntervalTime mBufferingStart;
+  TimeStamp mBufferingStart;
 
   // Download position where we should stop buffering. Only
   // accessed in the decoder thread.
@@ -497,8 +500,8 @@ private:
 nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mDecoder(aDecoder),
   mPlayer(0),
-  mPlayStartTime(0),
-  mPauseStartTime(0),
+  mPlayStartTime(),
+  mPauseStartTime(),
   mPauseDuration(0),
   mPlaying(PR_FALSE),
   mCallbackPeriod(1.0),
@@ -507,7 +510,7 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mAudioRate(0),
   mAudioChannels(0),
   mAudioTrack(-1),
-  mBufferingStart(0),
+  mBufferingStart(),
   mBufferingEndOffset(0),
   mLastFrameTime(0),
   mLastFramePosition(-1),
@@ -554,9 +557,17 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
   if (mLastFramePosition >= 0) {
     NS_ASSERTION(frame->mEndStreamPosition >= mLastFramePosition,
                  "Playback positions must not decrease without an intervening reset");
-    mDecoder->mPlaybackStatistics.Start(frame->mTime*PR_TicksPerSecond());
+    TimeStamp base = mPlayStartTime;
+    if (base.IsNull()) {
+      // It doesn't really matter what 'base' is, so just use 'now' if
+      // we haven't started playback.
+      base = TimeStamp::Now();
+    }
+    mDecoder->mPlaybackStatistics.Start(
+        base + TimeDuration::FromMilliseconds(NS_round(frame->mTime*1000)));
     mDecoder->mPlaybackStatistics.AddBytes(frame->mEndStreamPosition - mLastFramePosition);
-    mDecoder->mPlaybackStatistics.Stop(mLastFrameTime*PR_TicksPerSecond());
+    mDecoder->mPlaybackStatistics.Stop(
+        base + TimeDuration::FromMilliseconds(NS_round(mLastFrameTime*1000)));
     mDecoder->UpdatePlaybackRate();
   }
   mLastFramePosition = frame->mEndStreamPosition;
@@ -653,16 +664,17 @@ void nsOggDecodeStateMachine::PlayFrame() {
 
     if (!mDecodedFrames.IsEmpty()) {
       FrameData* frame = mDecodedFrames.Peek();
+      TimeStamp now = TimeStamp::Now();
       if (frame->mState == OGGPLAY_STREAM_JUST_SEEKED) {
         // After returning from a seek all mTime members of
         // FrameData start again from a time position of 0.
         // Reset the play start time.
-        mPlayStartTime = PR_IntervalNow();
-        mPauseDuration = 0;
+        mPlayStartTime = now;
+        mPauseDuration = TimeDuration(0);
         frame->mState = OGGPLAY_STREAM_INITIALISED;
       }
 
-      double time = (PR_IntervalToMilliseconds(PR_IntervalNow()-mPlayStartTime-mPauseDuration)/1000.0);
+      double time = (now - mPlayStartTime - mPauseDuration).ToSeconds();
       if (time >= frame->mTime) {
         // Audio for the current frame is played, but video for the next frame
         // is displayed, to account for lag from the time the audio is written
@@ -786,13 +798,15 @@ void nsOggDecodeStateMachine::StartPlayback()
   mPlaying = PR_TRUE;
 
   // If this is the very first play, then set the initial start time
-  if (mPlayStartTime == 0) {
-    mPlayStartTime = PR_IntervalNow();
+  if (mPlayStartTime.IsNull()) {
+    mPlayStartTime = TimeStamp::Now();
   }
 
   // If we have been paused previously, then compute duration spent paused
-  if (mPauseStartTime != 0) {
-    mPauseDuration += PR_IntervalNow() - mPauseStartTime;
+  if (!mPauseStartTime.IsNull()) {
+    mPauseDuration += TimeStamp::Now() - mPauseStartTime;
+    // Null out mPauseStartTime
+    mPauseStartTime = TimeStamp();
   }
 }
 
@@ -801,7 +815,7 @@ void nsOggDecodeStateMachine::StopPlayback()
   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "StopPlayback() called without acquiring decoder monitor");
   StopAudio();
   mPlaying = PR_FALSE;
-  mPauseStartTime = PR_IntervalNow();
+  mPauseStartTime = TimeStamp::Now();
 }
 
 void nsOggDecodeStateMachine::UpdatePlaybackPosition(float aTime)
@@ -1010,12 +1024,15 @@ nsresult nsOggDecodeStateMachine::Run()
             NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
-          mBufferingStart = PR_IntervalNow();
+          mBufferingStart = TimeStamp::Now();
           PRPackedBool reliable;
           double playbackRate = mDecoder->ComputePlaybackRate(&reliable);
           mBufferingEndOffset = mDecoder->mDecoderPosition +
               BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
           mState = DECODER_STATE_BUFFERING;
+          if (mPlaying) {
+            StopPlayback();
+          }
           LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
         } else {
           PlayFrame();
@@ -1097,15 +1114,15 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_BUFFERING:
       {
-        PRIntervalTime now = PR_IntervalNow();
-        if ((PR_IntervalToMilliseconds(now - mBufferingStart) < BUFFERING_WAIT*1000) &&
+        TimeStamp now = TimeStamp::Now();
+        if (now - mBufferingStart < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
             mDecoder->mReader->Stream()->GetCachedDataEnd(mDecoder->mDecoderPosition) < mBufferingEndOffset &&
             !mDecoder->mReader->Stream()->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
             !mDecoder->mReader->Stream()->IsSuspendedByCache()) {
           LOG(PR_LOG_DEBUG, 
-              ("In buffering: buffering data until %d bytes available or %d milliseconds", 
+              ("In buffering: buffering data until %d bytes available or %f seconds", 
                PRUint32(mBufferingEndOffset - mDecoder->mReader->Stream()->GetCachedDataEnd(mDecoder->mDecoderPosition)),
-               BUFFERING_WAIT*1000 - (PR_IntervalToMilliseconds(now - mBufferingStart))));
+               BUFFERING_WAIT - (now - mBufferingStart).ToSeconds()));
           mon.Wait(PR_MillisecondsToInterval(1000));
           if (mState == DECODER_STATE_SHUTDOWN)
             continue;
@@ -1991,3 +2008,11 @@ void nsOggDecoder::StartProgressUpdates()
     mDecoderPosition = mPlaybackPosition = mReader->Stream()->Tell();
   }
 }
+
+void nsOggDecoder::MoveLoadsToBackground()
+{
+  if (mReader && mReader->Stream()) {
+    mReader->Stream()->MoveLoadsToBackground();
+  }
+}
+

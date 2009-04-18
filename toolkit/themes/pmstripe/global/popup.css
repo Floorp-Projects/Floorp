@@ -66,8 +66,8 @@ menupopup {
 menupopup > menu > menupopup,
 popup > menu > menupopup {
  /* align submenus */
-  -moz-margin-start: -3px;
-  margin-top: -3px;
+  -moz-margin-start: 2px;
+  margin-top: 2px;
 }
 
 /* ::::: tooltip ::::: */

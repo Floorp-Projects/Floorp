@@ -63,10 +63,16 @@ _TEST_FILES =	test_feed_discovery.html \
 #   browser_bug321000.js is bug 474081
 #   browser_bug423833.js is bug 428712
 #   browser_sanitize-download-history.js is bug 432425
+#
+# browser_sanitizeDialog_treeView.js is disabled until the tree view is added
+# back to the clear recent history dialog (santize.xul), if it ever is (bug
+# 480169)
+
 _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
+                 browser_bug419612.js \
                  browser_bug420160.js \
                  browser_bug424101.js \
                  browser_bug427559.js \
@@ -75,6 +81,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug455852.js \
                  browser_bug462673.js \
                  browser_bug481560.js \
+                 browser_bug477014.js \
                  browser_discovery.js \
                  discovery.html \
                  moz.png \
@@ -105,7 +112,8 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug479408.js \
                  browser_bug479408_sample.html \
                  browser_scope.js \
-                 browser_bug419612.js \
+                 browser_overflowScroll.js \
+                 browser_sanitizeDialog.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

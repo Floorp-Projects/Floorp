@@ -70,6 +70,7 @@ float     nsLookAndFeel::sCaretRatio = 0;
 //-------------------------------------------------------------------------
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
+    mStyle = nsnull;
     InitWidget();
 
     static PRBool sInitialized = PR_FALSE;
@@ -82,7 +83,7 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-    g_object_unref(mWidget);
+    g_object_unref(mStyle);
 }
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
@@ -789,6 +790,7 @@ nsLookAndFeel::InitLookAndFeel()
 
     // invisible character styles
     GtkWidget *entry = gtk_entry_new();
+    g_object_ref_sink(entry);
     guint value;
     g_object_get (entry, "invisible-char", &value, NULL);
     sInvisibleCharacter = PRUnichar(value);
@@ -799,6 +801,7 @@ nsLookAndFeel::InitLookAndFeel()
                          NULL);
 
     gtk_widget_destroy(entry);
+    g_object_unref(entry);
 }
 
 // virtual
@@ -813,8 +816,8 @@ nsLookAndFeel::LookAndFeelChanged()
 {
     nsXPLookAndFeel::LookAndFeelChanged();
 
-    if (mWidget)
-        g_object_unref(mWidget);
+    g_object_unref(mStyle);
+    mStyle = nsnull;
  
     InitWidget();
     InitLookAndFeel();

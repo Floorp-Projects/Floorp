@@ -45,6 +45,8 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/distribution.js");
 
@@ -1037,6 +1039,22 @@ GeolocationPrompt.prototype = {
  
   prompt: function(request) {
 
+    var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
+
+    if (prefService.hasPref(request.requestingURI, "geo.request.remember")) {
+        if (prefService.getPref(request.requestingURI, "geo.request.remember"))
+            request.allow();
+        else
+            request.cancel();
+        return;
+    }
+
+    function setPagePermission(uri, allow) {
+        var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
+        prefService.setPref(uri, "geo.request.remember", allow);
+    }
+
+
     function getChromeWindow(aWindow) {
       var chromeWin = aWindow 
         .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1050,7 +1068,8 @@ GeolocationPrompt.prototype = {
     }
 
     var requestingWindow = request.requestingWindow.top;
-    var tabbrowser = getChromeWindow(requestingWindow).wrappedJSObject.gBrowser;
+    var chromeWindowObject = getChromeWindow(requestingWindow).wrappedJSObject;
+    var tabbrowser = chromeWindowObject.gBrowser;
     var browser = tabbrowser.getBrowserForDocument(requestingWindow.document);
     var notificationBox = tabbrowser.getNotificationBox(browser);
 
@@ -1060,23 +1079,57 @@ GeolocationPrompt.prototype = {
       var browserBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
 
       var buttons = [{
-        label: browserBundle.GetStringFromName("geolocation.tellThem"),
-        accessKey: browserBundle.GetStringFromName("geolocation.tellThemKey"),
-        callback: function() request.allow() ,
-        },
-        {
-        label: browserBundle.GetStringFromName("geolocation.dontTellThem"),
-        accessKey: browserBundle.GetStringFromName("geolocation.dontTellThemKey"),
-        callback: function() request.cancel() ,
-        }];
+              label: browserBundle.GetStringFromName("geolocation.tellThem"),
+              accessKey: browserBundle.GetStringFromName("geolocation.tellThemKey"),
+              callback: function(notification) {                  
+                  if (notification.getElementsByClassName("rememberChoice")[0].checked)
+                      setPagePermission(request.requestingURI, true);
+                  request.allow(); 
+              },
+          },
+          {
+              label: browserBundle.GetStringFromName("geolocation.dontTellThem"),
+              accessKey: browserBundle.GetStringFromName("geolocation.dontTellThemKey"),
+              callback: function(notification) {
+                  if (notification.getElementsByClassName("rememberChoice")[0].checked)
+                      setPagePermission(request.requestingURI, false);
+                  request.cancel();
+              },
+          }];
       
       var message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
-                                                       [request.requestingURI.spec], 1);      
-      notificationBox.appendNotification(message,
-                                         "geolocation",
-                                         "chrome://browser/skin/Info.png",
-                                         notificationBox.PRIORITY_INFO_HIGH,
-                                         buttons);
+                                                       [request.requestingURI.host], 1);      
+
+      var newBar = notificationBox.appendNotification(message,
+                                                      "geolocation",
+                                                      "chrome://browser/skin/Geo.png",
+                                                      notificationBox.PRIORITY_INFO_HIGH,
+                                                      buttons);
+
+      // For whatever reason, if we do this immediately
+      // (eg, without the setTimeout), the "link"
+      // element does not show up in the notification
+      // bar.
+      function geolocation_hacks_to_notification () {
+
+        var checkbox = newBar.ownerDocument.createElementNS(XULNS, "checkbox");
+        checkbox.className = "rememberChoice";
+        checkbox.setAttribute("label", "Remember for this site"); /* xxx hardcoded english us */
+        newBar.appendChild(checkbox);
+
+        var link = newBar.ownerDocument.createElementNS(XULNS, "label");
+        link.className = "text-link";
+        link.setAttribute("value", "Learn More..."); /* xxx hardcoded english us */
+
+        var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+        link.href = formatter.formatURLPref("browser.geolocation.warning.infoURL");
+
+        var description = newBar.ownerDocument.getAnonymousElementByAttribute(newBar, "anonid", "messageText");
+        description.appendChild(link);
+      };
+
+      chromeWindowObject.setTimeout(geolocation_hacks_to_notification, 0);
+
     }
   },
 };

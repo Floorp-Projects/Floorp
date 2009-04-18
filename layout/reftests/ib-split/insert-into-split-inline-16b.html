@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #i { border: 2px solid; }
+      #i::after { display: block; content: "Two"; }
+    </style>
+    <script>
+      function doTest() {
+        var i = document.getElementById("i");
+        i.appendChild(document.createTextNode("One"));
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <span id="i"></span>
+  </body>
+</html>

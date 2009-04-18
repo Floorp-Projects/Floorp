@@ -45,7 +45,7 @@
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsITimer.h"
-#include "prinrval.h"
+#include "nsTimeStamp.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gVideoDecoderLog;
@@ -61,7 +61,10 @@ class nsHTMLMediaElement;
 // called from any thread.
 class nsMediaDecoder : public nsIObserver
 {
- public:
+public:
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
+
   nsMediaDecoder();
   virtual ~nsMediaDecoder();
 
@@ -223,6 +226,13 @@ class nsMediaDecoder : public nsIObserver
   // if it's available.
   nsHTMLMediaElement* GetMediaElement();
 
+  // Moves any existing channel loads into the background, so that they don't
+  // block the load event. This is called when we stop delaying the load
+  // event. Any new loads initiated (for example to seek) will also be in the
+  // background. Implementations of this must call MoveLoadsToBackground() on
+  // their nsMediaStream.
+  virtual void MoveLoadsToBackground()=0;
+
 protected:
 
   // Start timer to update download progress information.
@@ -258,14 +268,14 @@ protected:
 
   // Time that the last progress event was fired. Read/Write from the
   // main thread only.
-  PRIntervalTime mProgressTime;
+  TimeStamp mProgressTime;
 
   // Time that data was last read from the media resource. Used for
   // computing if the download has stalled and to rate limit progress events
-  // when data is arriving slower than PROGRESS_MS. A value of 0 indicates
+  // when data is arriving slower than PROGRESS_MS. A value of null indicates
   // that a stall event has already fired and not to fire another one until
   // more data is received. Read/Write from the main thread only.
-  PRIntervalTime mDataTime;
+  TimeStamp mDataTime;
 
   // Lock around the video RGB, width and size data. This
   // is used in the decoder backend threads and the main thread

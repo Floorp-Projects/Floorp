@@ -67,8 +67,7 @@ Canceler.prototype = {
 };
 
 function finish_test() {
-  httpserver.stop();
-  do_test_finished();
+  httpserver.stop(do_test_finished);
 }
 
 function start_cache_read() {

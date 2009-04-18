@@ -2570,9 +2570,13 @@ SessionStoreService.prototype = {
   _needsRestorePage: function sss_needsRestorePage(aState, aRecentCrashes) {
     const SIX_HOURS_IN_MS = 6 * 60 * 60 * 1000;
     
-    // don't wrap a single about:sessionrestore page
+    // don't display the page when there's nothing to restore
     let winData = aState.windows || null;
-    if (winData && winData.length == 1 && winData[0].tabs &&
+    if (!winData || winData.length == 0)
+      return false;
+    
+    // don't wrap a single about:sessionrestore page
+    if (winData.length == 1 && winData[0].tabs &&
         winData[0].tabs.length == 1 && winData[0].tabs[0].entries &&
         winData[0].tabs[0].entries.length == 1 &&
         winData[0].tabs[0].entries[0].url == "about:sessionrestore")
@@ -2692,7 +2696,7 @@ let XPathHelper = {
       return "";
     
     let prefix = this.namespacePrefixes[aNode.namespaceURI] || null;
-    let tag = (prefix ? prefix + ":" : "") + aNode.localName;
+    let tag = (prefix ? prefix + ":" : "") + this.escapeName(aNode.localName);
     
     // stop once we've found a tag with an ID
     if (aNode.id)
@@ -2726,6 +2730,16 @@ let XPathHelper = {
    */
   resolveNS: function sss_xph_resolveNS(aPrefix) {
     return XPathHelper.namespaceURIs[aPrefix] || null;
+  },
+
+  /**
+   * @returns valid XPath for the given node (usually just the local name itself)
+   */
+  escapeName: function sss_xph_escapeName(aName) {
+    // we can't just use the node's local name, if it contains
+    // special characters (cf. bug 485482)
+    return /^\w+$/.test(aName) ? aName :
+           "*[local-name()=" + this.quoteArgument(aName) + "]";
   },
 
   /**

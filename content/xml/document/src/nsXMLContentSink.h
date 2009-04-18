@@ -100,6 +100,7 @@ public:
   virtual void FlushPendingNotifications(mozFlushType aType);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
+  virtual PRBool IsScriptExecuting();
 
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument);
