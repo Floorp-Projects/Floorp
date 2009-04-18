@@ -521,6 +521,7 @@ function buildHelpMenu()
     }
   }
   checkForUpdates.label = getStringWithUpdateName("updatesItem_" + key);
+  checkForUpdates.accessKey = strings.getString("updatesItem_" + key + ".accesskey");
   if (um.activeUpdate && updates.isDownloading)
     checkForUpdates.setAttribute("loading", "true");
   else

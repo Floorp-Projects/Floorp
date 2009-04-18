@@ -297,10 +297,10 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
  *  with the first dimension being the OS version (Tiger or Leopard),
  *  the second being the control size (mini, small, regular), and the third
  *  being the 4 margin values (left, top, right, bottom).
- * flip - Whether to draw the control mirrored
  * view - The NSView that we're drawing into. As far as I can tell, it doesn't
  *  matter if this is really the right view; it just has to return YES when
  *  asked for isFlipped. Otherwise we'll get drawing bugs on 10.4.
+ * mirrorHorizontal - whether to mirror the cell horizontally
  */
 static void DrawCellWithScaling(NSCell *cell,
                                 CGContextRef cgContext,
@@ -309,7 +309,8 @@ static void DrawCellWithScaling(NSCell *cell,
                                 NSSize naturalSize,
                                 NSSize minimumSize,
                                 const float marginSet[][3][4],
-                                NSView* view)
+                                NSView* view,
+                                BOOL mirrorHorizontal)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -369,6 +370,10 @@ static void DrawCellWithScaling(NSCell *cell,
     // This is the first flip transform, applied to cgContext.
     CGContextScaleCTM(cgContext, 1.0f, -1.0f);
     CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * destRect.origin.y + destRect.size.height));
+    if (mirrorHorizontal) {
+      CGContextScaleCTM(cgContext, -1.0f, 1.0f);
+      CGContextTranslateCTM(cgContext, -(2.0 * destRect.origin.x + destRect.size.width), 0.0f);
+    }
 
     NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
@@ -442,6 +447,7 @@ static void DrawCellWithSnapping(NSCell *cell,
                                  const CellRenderSettings settings,
                                  float verticalAlignFactor,
                                  NSView* view,
+                                 BOOL mirrorHorizontal,
                                  float snapTolerance = 2.0f)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -501,7 +507,7 @@ static void DrawCellWithSnapping(NSCell *cell,
 
   NSSize minimumSize = settings.minimumSizes ? settings.minimumSizes[sizeIndex] : NSZeroSize;
   DrawCellWithScaling(cell, cgContext, drawRect, controlSize, sizes[sizeIndex],
-                      minimumSize, settings.margins, view);
+                      minimumSize, settings.margins, view, mirrorHorizontal);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -616,7 +622,8 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbo
   DrawCellWithSnapping(cell, cgContext, drawRect,
                        inCheckbox ? checkboxSettings : radioSettings,
                        VerticalAlignFactor(aFrame),
-                       NativeViewForFrame(aFrame));
+                       NativeViewForFrame(aFrame),
+                       NO);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -657,7 +664,8 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   [cell setShowsFirstResponder:IsFocused(aFrame)];
 
   DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings,
-                       VerticalAlignFactor(aFrame), NativeViewForFrame(aFrame));
+                       VerticalAlignFactor(aFrame), NativeViewForFrame(aFrame),
+                       IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -713,12 +721,13 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   if (inBoxRect.size.height > DO_SQUARE_BUTTON_HEIGHT) {
     [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
     DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSRegularControlSize,
-                        NSZeroSize, NSMakeSize(14, 0), NULL, NativeViewForFrame(aFrame));
+                        NSZeroSize, NSMakeSize(14, 0), NULL,
+                        NativeViewForFrame(aFrame), IsFrameRTL(aFrame));
   } else {
     [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
 
     DrawCellWithSnapping(mPushButtonCell, cgContext, inBoxRect, pushButtonSettings,
-                         0.5f, NativeViewForFrame(aFrame), 1.0f);
+                         0.5f, NativeViewForFrame(aFrame), IsFrameRTL(aFrame), 1.0f);
   }
 
 #if DRAW_IN_FRAME_DEBUG
@@ -876,7 +885,7 @@ nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect
 
   const CellRenderSettings& settings = aIsEditable ? editableMenulistSettings : dropdownSettings;
   DrawCellWithSnapping(cell, cgContext, inBoxRect, settings,
-                       0.5f, NativeViewForFrame(aFrame));
+                       0.5f, NativeViewForFrame(aFrame), IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1874,12 +1883,19 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 }
 
 
-static const int kAquaDropdownLeftBorder = 5;
-static const int kAquaDropdownRightBorder = 22;
-static const int kAquaComboboxLeftBorder = 4;
-static const int kAquaComboboxTopBorder = 3;
-static const int kAquaComboboxRightBorder = 20;
-static const int kAquaComboboxBottomBorder = 3;
+nsIntMargin
+nsNativeThemeCocoa::RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame)
+{
+  if (IsFrameRTL(aFrame))
+    return nsIntMargin(aMargin.right, aMargin.top, aMargin.left, aMargin.bottom);
+
+  return aMargin;
+}
+
+
+static const nsIntMargin kAquaDropdownBorder(5, 1, 22, 2);
+static const nsIntMargin kAquaComboboxBorder(4, 3, 20, 3);
+static const nsIntMargin kAquaSearchfieldBorder(19, 3, 5, 2);
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext, 
@@ -1909,12 +1925,11 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
-      aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 2);
+      *aResult = RTLAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
     case NS_THEME_DROPDOWN_TEXTFIELD:
-      aResult->SizeTo(kAquaComboboxLeftBorder, kAquaComboboxTopBorder,
-                      kAquaComboboxRightBorder, kAquaComboboxBottomBorder);
+      *aResult = RTLAwareMargin(kAquaComboboxBorder, aFrame);
       break;
 
     case NS_THEME_TEXTFIELD:
@@ -1936,7 +1951,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
       break;
 
     case NS_THEME_SEARCHFIELD:
-      aResult->SizeTo(4, 2, 4, 2);
+      *aResult = RTLAwareMargin(kAquaSearchfieldBorder, aFrame);
       break;
 
     case NS_THEME_LISTBOX:

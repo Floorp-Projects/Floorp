@@ -193,7 +193,7 @@ mozStorageStatement::mozStorageStatement()
 }
 
 nsresult
-mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
+mozStorageStatement::Initialize(Connection *aDBConnection,
                                 const nsACString & aSQLStatement)
 {
     NS_ASSERTION(aDBConnection, "No database connection given!");

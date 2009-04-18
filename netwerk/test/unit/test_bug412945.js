@@ -9,8 +9,7 @@ TestListener.prototype.onStartRequest = function(request, context) {
 }
 
 TestListener.prototype.onStopRequest = function(request, context, status) {
-  httpserv.stop();
-  do_test_finished();
+  httpserv.stop(do_test_finished);
 }
 
 function run_test() {

@@ -86,7 +86,7 @@
   <hbox align="center">
     <label value="&find.label;" accesskey="&find.accesskey;" 
            control="search-box"/>
-    <textbox id="search-box" flex="1" type="search" cocoa-size="small"
+    <textbox id="search-box" flex="1" type="search" class="compact"
              aria-controls="historyTree"
              oncommand="searchHistory(this.value);"/>
     <button id="viewButton" style="min-width:0px !important;" type="menu"

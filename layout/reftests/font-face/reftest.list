@@ -32,7 +32,7 @@ random-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-list-format-7.html src-li
 HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
 
 # localized full fontnames should *not* match, only English ones (need locale-invariant key)
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html
+skip HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html # 486787, 486497
 
 # Postscript name lookup only supported on MacOS currently
 random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html

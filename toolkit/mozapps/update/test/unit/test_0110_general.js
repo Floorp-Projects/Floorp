@@ -63,7 +63,7 @@ function run_test() {
   testFile.append("text1");
   testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
 
-  var binDir = gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
+  var binDir = gRealGreD.clone();
 
   // The updater binary file
   var updater = binDir.clone();
@@ -82,14 +82,18 @@ function run_test() {
 
   // Use a directory outside of dist/bin to lessen the garbage in dist/bin
   var updatesSubDir = do_get_cwd();
-  updatesSubDir.append("app_dir");
-  updatesSubDir.append("updates");
-  updatesSubDir.append("0");
+  updatesSubDir.append("0110_complete_mar");
 
-  dump("Testing: cleanup of the updates directory used to test\n");
-  if (updatesSubDir.exists())
-    updatesSubDir.remove(true);
-  do_check_false(updatesSubDir.exists());
+  try {
+    // Mac OS X intermittently fails when removing the dir where the updater
+    // binary was launched.
+    if (updatesSubDir.exists())
+      updatesSubDir.remove(true);
+  }
+  catch (e) {
+    dump("Unable to remove directory\npath: " + updatesSubDir.path +
+         "\nException: " + e + "\n");
+  }
 
   var mar = do_get_file("data/aus-0110_general-1.mar");
   mar.copyTo(updatesSubDir, "update.mar");
@@ -109,6 +113,8 @@ function run_test() {
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
 
   try {
+    // Mac OS X intermittently fails when removing the dir where the updater
+    // binary was launched.
     if (updatesSubDir.exists())
       updatesSubDir.remove(true);
   }
@@ -116,9 +122,6 @@ function run_test() {
     dump("Unable to remove directory\npath: " + updatesSubDir.path +
          "\nException: " + e + "\n");
   }
-  dump("Testing: successful removal of the updates subdirectory where the " +
-       "updater binary was launched\n");
-  do_check_false(updatesSubDir.exists());
 }
 
 // Launches the updater binary to apply a mar file

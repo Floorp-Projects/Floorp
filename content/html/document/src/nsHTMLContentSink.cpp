@@ -191,6 +191,7 @@ public:
   virtual void FlushPendingNotifications(mozFlushType aType);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
+  virtual PRBool IsScriptExecuting();
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
@@ -3270,6 +3271,12 @@ nsISupports *
 HTMLContentSink::GetTarget()
 {
   return mDocument;
+}
+
+PRBool
+HTMLContentSink::IsScriptExecuting()
+{
+  return IsScriptExecutingImpl();
 }
 
 #ifdef DEBUG

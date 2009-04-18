@@ -42,11 +42,15 @@
  */
 
 const PORT = 4444;
+const FAKE_PORT_ONE = 8888;
+const FAKE_PORT_TWO = 8889;
 
-var srv;
+var srv, id;
 
 function run_test()
 {
+  dumpn("*** run_test");
+
   srv = createServer();
 
   srv.registerPathHandler("/http/1.0-request", http10Request);
@@ -55,12 +59,9 @@ function run_test()
                           http11goodHostWackyPort);
   srv.registerPathHandler("/http/1.1-ip-host", http11ipHost);
 
-  const FAKE_PORT_ONE = 8888;
-  const FAKE_PORT_TWO = 8889;
-
   srv.start(FAKE_PORT_ONE);
 
-  var id = srv.identity;
+  id = srv.identity;
 
   // The default location is http://localhost:PORT, where PORT is whatever you
   // provided when you started the server.  http://127.0.0.1:PORT is also part
@@ -108,7 +109,26 @@ function run_test()
   // Okay, now that we've exercised that behavior, shut down the server and
   // restart it on the correct port, to exercise port-changing behaviors at
   // server start and stop.
-  srv.stop();
+  do_test_pending();
+  srv.stop(function()
+  {
+    try
+    {
+      do_test_pending();
+      run_test_2();
+    }
+    finally
+    {
+      do_test_finished();
+    }
+  });
+}
+
+function run_test_2()
+{
+  dumpn("*** run_test_2");
+
+  do_test_finished();
 
   // Our primary location is gone because it was dependent on the port on which
   // the server was running.
@@ -152,7 +172,26 @@ function run_test()
   do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
   do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
-  srv.stop();
+  do_test_pending();
+  srv.stop(function()
+  {
+    try
+    {
+      do_test_pending();
+      run_test_3();
+    }
+    finally
+    {
+      do_test_finished();
+    }
+  });
+}
+
+function run_test_3()
+{
+  dumpn("*** run_test_3");
+
+  do_test_finished();
 
   // Only the default added location disappears; any others stay around,
   // possibly as the primary location.  We may have removed the default primary
@@ -201,7 +240,7 @@ function run_test()
 
   // Okay, finally done with identity testing.  Our primary location is the one
   // we want it to be, so we're off!
-  runRawTests(tests, function() { srv.stop(); });
+  runRawTests(tests, testComplete(srv));
 }
 
 

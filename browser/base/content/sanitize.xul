@@ -25,6 +25,7 @@
 #   Ben Goodger <ben@mozilla.org>
 #   Giorgio Maone <g.maone@informaction.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
+#   Drew Willcoxon <adw@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,13 @@
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/skin/sanitizeDialog.css"?>
+
+#ifdef CRH_DIALOG_TREE_VIEW
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+#endif
+
+<?xml-stylesheet href="chrome://browser/content/sanitizeDialog.css"?>
 
 <!DOCTYPE prefwindow [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -54,129 +62,28 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
             title="&sanitizeDialog2.title;"
+            noneverythingtitle="&sanitizeDialog2.title;"
             style="width: &dialog.width;;"
             ondialogaccept="gSanitizePromptDialog.sanitize();">
 
   <prefpane id="SanitizeDialogPane" onpaneload="gSanitizePromptDialog.init();">
-    <stringbundle id="bundleBrowser" src="chrome://browser/locale/browser.properties"/>
-    
-    <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
-    <script type="application/x-javascript">
-    <![CDATA[
-      var gSanitizePromptDialog = {
-        init: function ()
-        {
-          this.checkPrefs();
-          var s = new Sanitizer();
-          s.prefDomain = "privacy.cpd.";
-          var sanitizePreferences = document.getElementById("sanitizePreferences");
-          for (var i = 0; i < sanitizePreferences.childNodes.length; ++i) {
-            var preference = sanitizePreferences.childNodes[i];
-            var name = s.getNameFromPreference(preference.name);
-            if (!s.canClearItem(name)) 
-              preference.disabled = true;
-          }
-          
-          var bundleBrowser = document.getElementById("bundleBrowser");
-          document.documentElement.getButton("accept").label = bundleBrowser.getString("sanitizeButtonOK");
-        },
-      
-        checkPrefs : function ()
-        {
-          var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefService);
-          var cpdBranch = prefService.getBranch("privacy.cpd.");
-          
-          // If we don't have defaults for the privacy.cpd branch,
-          // clone the privacy.item (clear at shutdown) defaults
-          if (cpdBranch.prefHasUserValue("history"))
-            return;
-          
-          var itemBranch = prefService.getBranch("privacy.item.");
-          var itemCount = { value: 0 };
-          var itemArray = itemBranch.getChildList("", itemCount);
-          itemArray.forEach(function (name) {
-            cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
-          });
-        },
-        
-        sanitize: function ()
-        {
-          // Update pref values before handing off to the sanitizer (bug 453440)
-          this.updatePrefs();
-          var s = new Sanitizer();
-          s.ignoreTimespan = false;
-          s.prefDomain = "privacy.cpd.";
-          try {
-            s.sanitize();
-          } catch (er) {
-            Components.utils.reportError("Exception during sanitize: " + er);
-          }
-          return true;
-        },
-        
-        onReadGeneric: function ()
-        {
-          var preferences = document.getElementById("sanitizePreferences");
-          var found = false;
-          for (var i = 0; i < preferences.childNodes.length; ++i) {
-            var preference = preferences.childNodes[i];
-            if (preference.value && !preference.disabled) {
-              found = true;
-              break;
-            }
-          }
-          try {
-            document.documentElement.getButton("accept").disabled = !found;
-          }
-          catch (e) { }
-          return undefined;
-        },
+    <stringbundle id="bundleBrowser"
+                  src="chrome://browser/locale/browser.properties"/>
 
-        onReadDownloads: function (aEvent)
-        {
-          // Call the common function that will update the accept button if needed
-          this.onReadGeneric();
+    <script type="application/javascript"
+            src="chrome://browser/content/sanitize.js"/>
 
-          let historyPref = document.getElementById("privacy.cpd.history")
-          let downloadPref = document.getElementById("privacy.cpd.downloads");
+#ifdef CRH_DIALOG_TREE_VIEW
+    <script type="application/javascript"
+            src="chrome://global/content/globalOverlay.js"/>
+    <script type="application/javascript"
+            src="chrome://browser/content/places/utils.js"/>
+    <script type="application/javascript"
+            src="chrome://browser/content/places/treeView.js"/>
+#endif
 
-          // Disable the checkbox if history is selected
-          let downloads = document.getElementById("downloads-checkbox");
-          downloads.disabled = historyPref.value;
-
-          // The "Download History" checkbox is selected if either of the history or
-          // downloads preferences are true.
-          return historyPref.value || downloadPref.value;
-        },
-
-        updateDownloadHistory: function ()
-        {
-          // When toggling history, we automatically clear download history too,
-          // so we disable that control and set its value to true.
-          let downloads = document.getElementById("downloads-checkbox");
-          let history = document.getElementById("history-checkbox");
-          let s = new Sanitizer();
-          downloads.disabled = history.checked ||
-                               !s.canClearItem("downloads");
-          if (history.checked)
-            downloads.checked = true;
-        },
-        
-        updatePrefs : function ()
-        {
-          var tsPref = document.getElementById("privacy.sanitize.timeSpan");
-          Sanitizer.prefs.setIntPref("timeSpan", tsPref.value);
-          var sanitizePreferences = document.getElementById("sanitizePreferences");
-          var prefs = sanitizePreferences.rootBranch;
-          for (var i = 0; i < sanitizePreferences.childNodes.length; ++i) {
-            var p = sanitizePreferences.childNodes[i];
-            prefs.setBoolPref(p.name, p.value);
-          }
-        }
-      };
-    ]]>
-    </script>
+    <script type="application/javascript"
+            src="chrome://browser/content/sanitizeDialog.js"/>
 
     <preferences id="sanitizePreferences">
       <preference id="privacy.cpd.history"               name="privacy.cpd.history"               type="bool"/>
@@ -196,77 +103,121 @@
                   type="int"/>
     </preferences>
 
-    <groupbox orient="vertical">
-      <caption label="&historySection.label;"/>
-      <hbox id="SanitizeDurationBox" align="center">
-        <label value="&clearTimeDuration.label;" control="sanitizeDurationChoice"
-               accesskey="&clearTimeDuration.accesskey;" id="sanitizeDurationLabel"/>
-        <menulist id="sanitizeDurationChoice"
-                  preference="privacy.sanitize.timeSpan">
-          <menupopup>
-            <menuitem label="&clearTimeDuration.lastHour;" value="1"/>
-            <menuitem label="&clearTimeDuration.last2Hours;" value="2"/>
-            <menuitem label="&clearTimeDuration.last4Hours;" value="3"/>
-            <menuitem label="&clearTimeDuration.today;" value="4"/>
-            <menuseparator/>
-            <menuitem label="&clearTimeDuration.everything;" value="0"/>
-          </menupopup>
-        </menulist>
-        <label value="&clearTimeDuration.suffix;" flex="1"/>
-      </hbox>
-      <hbox>
-        <vbox style="width: &column.width;">
-          <checkbox id="history-checkbox"
-                    label="&itemBrowsingHistory.label;"
-                    accesskey="&itemBrowsingHistory.accesskey;"
-                    preference="privacy.cpd.history"
-                    oncommand="gSanitizePromptDialog.updateDownloadHistory();"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox id="downloads-checkbox"
-                    label="&itemDownloadHistory.label;"
-                    accesskey="&itemDownloadHistory.accesskey;"
-                    preference="privacy.cpd.downloads"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadDownloads();"/>
-          <checkbox label="&itemFormSearchHistory.label;"
-                    accesskey="&itemFormSearchHistory.accesskey;"
-                    preference="privacy.cpd.formdata"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        </vbox>
-        <vbox style="width: &column.width;">
-          <checkbox label="&itemCookies.label;"
-                    accesskey="&itemCookies.accesskey;"
-                    preference="privacy.cpd.cookies"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox label="&itemActiveLogins.label;"
-                    accesskey="&itemActiveLogins.accesskey;"
-                    preference="privacy.cpd.sessions"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox label="&itemCache.label;"
-                    accesskey="&itemCache.accesskey;"
-                    preference="privacy.cpd.cache"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        </vbox>
-      </hbox>
-    </groupbox>
-    <groupbox orient="horizontal">
-      <caption label="&dataSection.label;"/>
-      <vbox style="width: &column.width;">
-        <checkbox label="&itemPasswords.label;"
-                  accesskey="&itemPasswords.accesskey;"
-                  preference="privacy.cpd.passwords"
-                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        <checkbox label="&itemSitePreferences.label;"
-                  accesskey="&itemSitePreferences.accesskey;"
-                  preference="privacy.cpd.siteSettings"
-                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    <hbox id="SanitizeDurationBox" align="center">
+      <label value="&clearTimeDuration.label;"
+             accesskey="&clearTimeDuration.accesskey;"
+             control="sanitizeDurationChoice"
+             id="sanitizeDurationLabel"/>
+      <menulist id="sanitizeDurationChoice"
+                preference="privacy.sanitize.timeSpan"
+                onselect="gSanitizePromptDialog.selectByTimespan();"
+                flex="1">
+        <menupopup id="sanitizeDurationPopup">
+#ifdef CRH_DIALOG_TREE_VIEW
+          <menuitem label="" value="-1" id="sanitizeDurationCustom"/>
+#endif
+          <menuitem label="&clearTimeDuration.lastHour;" value="1"/>
+          <menuitem label="&clearTimeDuration.last2Hours;" value="2"/>
+          <menuitem label="&clearTimeDuration.last4Hours;" value="3"/>
+          <menuitem label="&clearTimeDuration.today;" value="4"/>
+          <menuseparator/>
+          <menuitem label="&clearTimeDuration.everything;" value="0"/>
+        </menupopup>
+      </menulist>
+      <label id="sanitizeDurationSuffixLabel"
+             value="&clearTimeDuration.suffix;"/>
+    </hbox>
+
+#ifdef CRH_DIALOG_TREE_VIEW
+    <deck id="durationDeck">
+      <tree id="placesTree" flex="1" hidecolumnpicker="true" rows="10"
+            disabled="true" disableKeyNavigation="true">
+        <treecols>
+          <treecol id="date" label="&clearTimeDuration.dateColumn;" flex="1"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="title" label="&clearTimeDuration.nameColumn;" flex="5"/>
+        </treecols>
+        <treechildren id="placesTreechildren"
+                      ondragstart="gSanitizePromptDialog.grippyMoved('ondragstart', event);"
+                      ondragover="gSanitizePromptDialog.grippyMoved('ondragover', event);"
+                      onkeypress="gSanitizePromptDialog.grippyMoved('onkeypress', event);"
+                      onmousedown="gSanitizePromptDialog.grippyMoved('onmousedown', event);"/>
+      </tree>
+#endif
+
+      <vbox id="sanitizeEverythingWarningBox">
+        <spacer flex="1"/>
+        <hbox align="center">
+          <image id="sanitizeEverythingWarningIcon"/>
+          <vbox id="sanitizeEverythingWarningDescBox">
+            <description id="sanitizeEverythingWarning"/>
+            <description id="sanitizeEverythingUndoWarning">&sanitizeEverythingUndoWarning;</description>
+          </vbox>
+        </hbox>
+        <spacer flex="1"/>
       </vbox>
-      <vbox style="width: &column.width;">
-        <checkbox label="&itemOfflineApps.label;"
-                  accesskey="&itemOfflineApps.accesskey;"
-                  preference="privacy.cpd.offlineApps"
-                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      </vbox>
-    </groupbox>
+
+#ifdef CRH_DIALOG_TREE_VIEW
+    </deck>
+#endif
+
+    <separator class="thin"/>
+
+    <hbox id="detailsExpanderWrapper" align="center">
+      <button type="image"
+              id="detailsExpander"
+              class="expander-down"
+              oncommand="gSanitizePromptDialog.toggleItemList();"/>
+      <label id="detailsExpanderLabel"
+             value="&detailsProgressiveDisclosure.label;"
+             accesskey="&detailsProgressiveDisclosure.accesskey;"
+             control="detailsExpander"/>
+    </hbox>
+    <listbox id="itemList" rows="4" collapsed="true">
+      <listitem id="history-downloads-checkbox"
+                label="&itemHistoryAndDownloads.label;"
+                type="checkbox"
+                accesskey="&itemHistoryAndDownloads.accesskey;"
+                oncommand="gSanitizePromptDialog.onReadGeneric();"/>
+      <listitem label="&itemFormSearchHistory.label;"
+                type="checkbox"
+                accesskey="&itemFormSearchHistory.accesskey;"
+                preference="privacy.cpd.formdata"
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      <listitem label="&itemCookies.label;"
+                type="checkbox"
+                accesskey="&itemCookies.accesskey;"
+                preference="privacy.cpd.cookies"
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      <listitem label="&itemCache.label;"
+                type="checkbox"
+                accesskey="&itemCache.accesskey;"
+                preference="privacy.cpd.cache"
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      <listitem label="&itemActiveLogins.label;"
+                type="checkbox"
+                accesskey="&itemActiveLogins.accesskey;"
+                preference="privacy.cpd.sessions"
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      <listitem label="&itemSitePreferences.label;"
+                type="checkbox"
+                accesskey="&itemSitePreferences.accesskey;"
+                preference="privacy.cpd.siteSettings"
+                noduration="true"
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+    </listbox>
+
+    <!-- The separate history and downloads prefs are subsumed by the combined
+         history-downloads checkbox, but by hiding them here we can take
+         advantage of the onsyncfrompreference events. -->
+    <checkbox id="history-checkbox"
+              preference="privacy.cpd.history"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadHistoryOrDownloads();"
+              hidden="true"/>
+    <checkbox id="downloads-checkbox"
+              preference="privacy.cpd.downloads"
+              onsyncfrompreference="return gSanitizePromptDialog.onReadHistoryOrDownloads();"
+              hidden="true"/>
 
   </prefpane>
 </prefwindow>

@@ -1,6 +1,7 @@
 classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 % override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
+  skin/classic/browser/sanitizeDialog.css             (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css        (aboutSessionRestore.css)
   skin/classic/browser/aboutCertError.css             (aboutCertError.css)
@@ -10,6 +11,7 @@ classic.jar:
   skin/classic/browser/Go-arrow-rtl.png
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
+  skin/classic/browser/Geo.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
 * skin/classic/browser/pageInfo.css

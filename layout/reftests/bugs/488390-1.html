@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+      function boom()
+      {
+        var s = document.getElementById("s");
+        s.parentNode.removeChild(s);
+      }
+    </script>
+  </head>
+  <body onload="boom();">
+    <!-- Need the bidi control chars to trigger non-fluid continuations, and
+         need the span right around the div so that the prevSibling of the node
+         whose frame we try to get doesn't have a frame map entry (so that we
+         don't have a useful hint). -->
+    <span>&#x202E;a&#x202C;b
+      <span><div></div></span>
+      <span id="s">This text should be gone</span>
+    </span>
+  </body>
+</html>

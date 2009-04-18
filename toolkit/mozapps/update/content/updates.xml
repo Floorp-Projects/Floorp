@@ -187,9 +187,8 @@
     <content>
       <xul:hbox>
         <xul:label class="update-name" xbl:inherits="value=name" flex="1" crop="right"/>
-        <xul:link xbl:inherits="href=detailsURL" class="update-details-link">
-          <xul:label>&update.details.label;</xul:label>
-        </xul:link>
+        <xul:label xbl:inherits="href=detailsURL" class="text-link"
+                   value="&update.details.label;"/>
       </xul:hbox>
       <xul:label class="update-type" xbl:inherits="value=type"/>
       <xul:grid>

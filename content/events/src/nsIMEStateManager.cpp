@@ -364,6 +364,12 @@ nsTextStateManager::Init(nsIWidget* aWidget,
 
   mRootContent = selRange->GetStartParent()->
                      GetSelectionRootContent(presShell);
+  if (!mRootContent && aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+    // The document node is editable, but there are no contents, this document
+    // is not editable.
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  NS_ENSURE_TRUE(mRootContent, NS_ERROR_UNEXPECTED);
 
   // add text change observer
   mRootContent->AddMutationObserver(this);
@@ -556,7 +562,9 @@ nsIMEStateManager::OnTextStateFocus(nsPresContext* aPresContext,
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_AVAILABLE);
 
   rv = widget->OnIMEFocusChange(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (rv == NS_ERROR_NOT_IMPLEMENTED)
+    return NS_OK;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // OnIMEFocusChange may cause focus and sTextStateObserver to change
   // In that case return and keep the current sTextStateObserver

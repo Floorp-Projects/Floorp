@@ -49,7 +49,7 @@ function test() {
   ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
   let history = PlacesUtils.history;
   TEST_URIs.forEach(function(TEST_URI) {
-    let visidId = history.addVisit(PlacesUtils._uri(TEST_URI), Date.now() * 1000,
+    let visitId = history.addVisit(PlacesUtils._uri(TEST_URI), Date.now() * 1000,
                                    null, PlacesUtils.history.TRANSITION_TYPED, false, 0);
     ok(visitId > 0, TEST_URI + " successfully marked visited");
   });

@@ -66,17 +66,7 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 
-// The size of the database cache. This is the number of database PAGES that
-// can be cached in memory. Normally, pages are 1K unless the size has been
-// explicitly changed.
-//
-// 4MB should be much larger than normal form histories. Normal form histories
-// will be several hundered KB at most. If the form history is smaller, the
-// extra memory will never be allocated, so there is no penalty for larger
-// numbers. See StartCache
-#define DATABASE_CACHE_PAGES 4000
-
-#define DB_SCHEMA_VERSION   1
+#define DB_SCHEMA_VERSION   2
 #define DB_FILENAME         NS_LITERAL_STRING("formhistory.sqlite")
 #define DB_CORRUPT_FILENAME NS_LITERAL_STRING("formhistory.sqlite.corrupt")
 
@@ -215,8 +205,11 @@ nsFormHistory::Init()
 #endif
 
   nsCOMPtr<nsIObserverService> service = do_GetService("@mozilla.org/observer-service;1");
-  if (service)
+  if (service) {
     service->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
+    service->AddObserver(this, "idle-daily", PR_TRUE);
+    service->AddObserver(this, "formhistory-expire-now", PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -457,6 +450,9 @@ nsFormHistory::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE, &gFormHistoryEnabled);
+  } else if (!strcmp(aTopic, "idle-daily") ||
+             !strcmp(aTopic, "formhistory-expire-now")) {
+      ExpireOldEntries();
   }
 
   return NS_OK;
@@ -529,6 +525,68 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
 }
 
 nsresult
+nsFormHistory::ExpireOldEntries()
+{
+  // Determine how many days of history we're supposed to keep.
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 expireDays;
+  rv = prefBranch->GetIntPref("browser.formfill.expire_days", &expireDays);
+  if (NS_FAILED(rv))
+    rv = prefBranch->GetIntPref("browser.history_expire_days", &expireDays);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt64 expireTime = PR_Now() - expireDays * 24 * PR_HOURS;
+
+
+  PRInt32 beginningCount = CountAllEntries();
+
+  // Purge the form history...
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "DELETE FROM moz_formhistory WHERE lastUsed<=?1"),
+          getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = stmt->BindInt64Parameter(0, expireTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 endingCount = CountAllEntries();
+
+  // If we expired a large batch of entries, shrink the DB to reclaim wasted
+  // space. This is expected to happen when entries predating timestamps
+  // (added in the v.1 schema) expire in mass, 180 days after the DB was
+  // upgraded -- entries not used since then expire all at once.
+  if (beginningCount - endingCount > 500) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+PRInt32
+nsFormHistory::CountAllEntries()
+{
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+                  "SELECT COUNT(*) FROM moz_formhistory"),
+                  getter_AddRefs(stmt));
+
+  PRBool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  PRInt32 count = 0;
+  if (hasResult)
+    count = stmt->AsInt32(0);
+
+  return count;
+}
+
+nsresult
 nsFormHistory::CreateTable()
 {
   nsresult rv;
@@ -540,6 +598,8 @@ nsFormHistory::CreateTable()
            "firstUsed INTEGER, lastUsed INTEGER)"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_index ON moz_formhistory (fieldname)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_lastused_index ON moz_formhistory (lastUsed)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
@@ -603,12 +663,7 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
   rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We execute many statements before the database cache is started to create
-  // the tables (which can not be done which the cache is locked in memory by
-  // the dummy statement--see StartCache). This transaction will keep the cache
-  // between these statements, which should improve startup performance because
-  // we won't have to keep requesting pages from the OS.
-  // We also want the transaction to rollback any failed schema upgrade.
+  // Use a transaction around initialization and migration for better performance.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRBool exists;
@@ -627,9 +682,6 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
   
   // should commit before starting cache
   transaction.Commit();
-
-  // ignore errors since the cache is not critical for operation
-  StartCache();
 
   rv = CreateStatements();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -655,7 +707,10 @@ nsFormHistory::dbMigrate()
       rv = MigrateToVersion1();
       NS_ENSURE_SUCCESS(rv, rv);
       // (fallthrough to the next upgrade)
-
+    case 1:
+      rv = MigrateToVersion2();
+      NS_ENSURE_SUCCESS(rv, rv);
+      // (fallthrough to the next upgrade)
     case DB_SCHEMA_VERSION:
       // (current version, nothing more to do)
       break;
@@ -734,6 +789,30 @@ nsFormHistory::MigrateToVersion1()
 }
 
 
+/*
+ * MigrateToVersion2
+ *
+ * Updates the DB schema to v2 (bug 243136).
+ * Adds lastUsed index, removes moz_dummy_table
+ */
+nsresult
+nsFormHistory::MigrateToVersion2()
+{
+  nsresult rv;
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_dummy_table"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS moz_formhistory_lastused_index ON moz_formhistory (lastUsed)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->SetSchemaVersion(2);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
 nsresult
 nsFormHistory::GetDatabaseFile(nsIFile** aFile)
 {
@@ -783,99 +862,6 @@ nsFormHistory::dbAreExpectedColumnsPresent()
                   "SELECT fieldname, value, timesUsed, firstUsed, lastUsed "
                   "FROM moz_formhistory"), getter_AddRefs(stmt));
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
-}
-
-
-// nsFormHistory::StartCache
-//
-//    This function starts the dummy statement that locks the cache in memory.
-//    As long as there is an open connection sharing the same cache, the cache
-//    won't be expired. Therefore, we create a dummy table with some data in
-//    it, and open a statement over the data. As long as this statement is
-//    open, we can go fast.
-//
-//    This dummy statement prevents the schema from being modified. If you
-//    want to add or change a table or index schema, you must stop the dummy
-//    statement first. See nsNavHistory::StartDummyStatement for a slightly
-//    more detailed discussion.
-//
-//    Note that we should not use a transaction in this function since that
-//    will commit the dummy statement and everything will break.
-//
-//    This function also initializes the cache.
-
-nsresult
-nsFormHistory::StartCache()
-{
-  // do nothing if the dummy statement is already running
-  if (mDummyStatement)
-    return NS_OK;
-
-  // dummy database connection
-  nsCOMPtr<nsIFile> formHistoryFile;
-  nsresult rv = GetDatabaseFile(getter_AddRefs(formHistoryFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mStorageService->OpenDatabase(formHistoryFile,
-                                     getter_AddRefs(mDummyConnection));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Make sure the dummy table exists
-  PRBool tableExists;
-  rv = mDummyConnection->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (! tableExists) {
-    rv = mDummyConnection->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE TABLE moz_dummy_table (id INTEGER PRIMARY KEY)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // This table is guaranteed to have something in it and will keep the dummy
-  // statement open. If the table is empty, it won't hold the statement open.
-  // the PRIMARY KEY value on ID means that it is unique. The OR IGNORE means
-  // that if there is already a value of 1 there, this insert will be ignored,
-  // which is what we want so as to avoid growing the table infinitely.
-  rv = mDummyConnection->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_dummy_table VALUES (1)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDummyConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_dummy_table LIMIT 1"),
-    getter_AddRefs(mDummyStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // we have to step the dummy statement so that it will hold a lock on the DB
-  PRBool dummyHasResults;
-  rv = mDummyStatement->ExecuteStep(&dummyHasResults);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set the cache size
-  nsCAutoString cacheSizePragma("PRAGMA cache_size=");
-  cacheSizePragma.AppendInt(DATABASE_CACHE_PAGES);
-  rv = mDummyConnection->ExecuteSimpleSQL(cacheSizePragma);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-// nsFormHistory::StopCache
-//
-//    Call this before doing any schema modifying operations. You should
-//    start the dummy statement again to give good performance.
-//    See StartCache.
-
-nsresult
-nsFormHistory::StopCache()
-{
-  // do nothing if the dummy statement isn't running
-  if (! mDummyStatement)
-    return NS_OK;
-
-  nsresult rv = mDummyStatement->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDummyStatement = nsnull;
-  return NS_OK;
 }
 
 

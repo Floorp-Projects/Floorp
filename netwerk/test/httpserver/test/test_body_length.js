@@ -53,7 +53,7 @@ function run_test()
   srv.registerPathHandler("/content-length", contentLength);
   srv.start(PORT);
 
-  runHttpTests(tests, function() { srv.stop(); });
+  runHttpTests(tests, testComplete(srv));
 }
 
 const REQUEST_DATA = "12345678901234567";

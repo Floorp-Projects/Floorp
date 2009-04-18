@@ -136,17 +136,13 @@ function run_test()
         // extra real-resume check for the server
         do_check_true(didResumeServer);
 
-        httpserv.stop();
         aDl.targetFile.remove(false);
-        // we're done with the test!
-        do_test_finished();
+        httpserv.stop(do_test_finished);
       }
       else if (aDl.state == nsIDM.DOWNLOAD_FAILED) {
         // this is only ok if we are not supposed to fail
         do_check_true(doNotError);
-        httpserv.stop();
-        // we're done with the test!
-        do_test_finished();
+        httpserv.stop(do_test_finished);
       }
     },
     onStateChange: function(a, b, aState, d, aDl) {

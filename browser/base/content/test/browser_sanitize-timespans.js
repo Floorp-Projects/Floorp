@@ -12,6 +12,7 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.moz
 function test() {
   
   var hoursSinceMidnight = new Date().getHours();
+  var minutesSinceMidnight = new Date().getMinutes();
 
   setupHistory();
   setupFormHistory();
@@ -35,46 +36,131 @@ function test() {
   itemPrefs.setBoolPref("passwords", false);
   itemPrefs.setBoolPref("sessions", false);
   itemPrefs.setBoolPref("siteSettings", false);
+
+  // Clear 10 minutes ago
+  s.range = [now_uSec - 10*60*1000000, now_uSec];
+  s.sanitize();
+  s.range = null;
   
+  ok(!bhist.isVisited(uri("http://10minutes.com")), "10minutes.com should now be deleted");
+  ok(bhist.isVisited(uri("http://1hour.com")), "Pretend visit to 1hour.com should still exist");
+  ok(bhist.isVisited(uri("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should still exist");
+  ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
+  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
+  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  
+  if(minutesSinceMidnight > 10)
+    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+  
+  ok(!formhist.nameExists("10minutes"), "10minutes form entry should be deleted");
+  ok(formhist.nameExists("1hour"), "1hour form entry should still exist");
+  ok(formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should still exist");
+  ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
+  if(minutesSinceMidnight > 10)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
+  ok(!downloadExists(5555555), "10 minute download should now be deleted");
+  ok(downloadExists(5555551), "<1 hour download should still be present");
+  ok(downloadExists(5555556), "1 hour 10 minute download should still be present");
+  ok(downloadExists(5555550), "Year old download should still be present");
+  ok(downloadExists(5555552), "<2 hour old download should still be present");
+  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
+  ok(downloadExists(5555553), "<4 hour old download should still be present");
+  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
+
+  if(minutesSinceMidnight > 10)
+    ok(downloadExists(5555554), "'Today' download should still be present");
+
   // Clear 1 hour
   Sanitizer.prefs.setIntPref("timeSpan", 1);
   s.sanitize();
   
   ok(!bhist.isVisited(uri("http://1hour.com")), "1hour.com should now be deleted");
+  ok(bhist.isVisited(uri("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should still exist");
   ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
+  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
   ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   
   if(hoursSinceMidnight > 1)
     ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("1hour"), "1hour form entry should be deleted");
+  ok(formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should still exist");
   ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if(hoursSinceMidnight > 1)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555551), "<1 hour download should now be deleted");
+  ok(downloadExists(5555556), "1 hour 10 minute download should still be present");
   ok(downloadExists(5555550), "Year old download should still be present");
   ok(downloadExists(5555552), "<2 hour old download should still be present");
+  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
   ok(downloadExists(5555553), "<4 hour old download should still be present");
+  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
 
   if(hoursSinceMidnight > 1)
     ok(downloadExists(5555554), "'Today' download should still be present");
   
+  // Clear 1 hour 10 minutes
+  s.range = [now_uSec - 70*60*1000000, now_uSec];
+  s.sanitize();
+  s.range = null;
+  
+  ok(!bhist.isVisited(uri("http://1hour10minutes.com")), "Pretend visit to 1hour10minutes.com should now be deleted");
+  ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
+  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
+  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  if(minutesSinceMidnight > 70)
+    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+  
+  ok(!formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should be deleted");
+  ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
+  if(minutesSinceMidnight > 70)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
+  ok(!downloadExists(5555556), "1 hour 10 minute old download should now be deleted");
+  ok(downloadExists(5555550), "Year old download should still be present");
+  ok(downloadExists(5555552), "<2 hour old download should still be present");
+  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
+  ok(downloadExists(5555553), "<4 hour old download should still be present");
+  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
+  if(minutesSinceMidnight > 70)
+    ok(downloadExists(5555554), "'Today' download should still be present");
+
   // Clear 2 hours
   Sanitizer.prefs.setIntPref("timeSpan", 2);
   s.sanitize();
   
   ok(!bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should now be deleted");
+  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
   ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   if(hoursSinceMidnight > 2)
     ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("2hour"), "2hour form entry should be deleted");
+  ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if(hoursSinceMidnight > 2)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
@@ -82,27 +168,78 @@ function test() {
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
   ok(!downloadExists(5555552), "<2 hour old download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
+  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
   ok(downloadExists(5555553), "<4 hour old download should still be present");
+  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
   if(hoursSinceMidnight > 2)
     ok(downloadExists(5555554), "'Today' download should still be present");
   
+  // Clear 2 hours 10 minutes
+  s.range = [now_uSec - 130*60*1000000, now_uSec];
+  s.sanitize();
+  s.range = null;
+  
+  ok(!bhist.isVisited(uri("http://2hour10minutes.com")), "Pretend visit to 2hour10minutes.com should now be deleted");
+  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  if(minutesSinceMidnight > 130)
+    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+  
+  ok(!formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should be deleted");
+  ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
+  if(minutesSinceMidnight > 130)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
+  ok(!downloadExists(5555557), "2 hour 10 minute old download should now be deleted");
+  ok(downloadExists(5555553), "<4 hour old download should still be present");
+  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
+  ok(downloadExists(5555550), "Year old download should still be present");
+  if(minutesSinceMidnight > 130)
+    ok(downloadExists(5555554), "'Today' download should still be present");
+
   // Clear 4 hours
   Sanitizer.prefs.setIntPref("timeSpan", 3);
   s.sanitize();
   
   ok(!bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should now be deleted");
+  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   if(hoursSinceMidnight > 4)
     ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("4hour"), "4hour form entry should be deleted");
+  ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
   if(hoursSinceMidnight > 4)
     ok(formhist.nameExists("today"), "today form entry should still exist");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
 
   ok(!downloadExists(5555553), "<4 hour old download should now be deleted");
+  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
   ok(downloadExists(5555550), "Year old download should still be present");
   if(hoursSinceMidnight > 4)
+    ok(downloadExists(5555554), "'Today' download should still be present");
+
+  // Clear 4 hours 10 minutes
+  s.range = [now_uSec - 250*60*1000000, now_uSec];
+  s.sanitize();
+  s.range = null;
+  
+  ok(!bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should now be deleted");
+  if(minutesSinceMidnight > 250)
+    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+  
+  ok(!formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should be deleted");
+  if(minutesSinceMidnight > 250)
+    ok(formhist.nameExists("today"), "today form entry should still exist");
+  ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
+
+  ok(!downloadExists(5555558), "4 hour 10 minute download should now be deleted");
+  ok(downloadExists(5555550), "Year old download should still be present");
+  if(minutesSinceMidnight > 250)
     ok(downloadExists(5555554), "'Today' download should still be present");
 
   // Clear Today
@@ -131,9 +268,13 @@ function test() {
 }
 
 function setupHistory() {
+  bhist.addPageWithDetails(uri("http://10minutes.com/"), "10 minutes ago", now_uSec - 10*60*1000000);
   bhist.addPageWithDetails(uri("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45*60*1000000);
+  bhist.addPageWithDetails(uri("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70*60*1000000);
   bhist.addPageWithDetails(uri("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90*60*1000000);
+  bhist.addPageWithDetails(uri("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130*60*1000000);
   bhist.addPageWithDetails(uri("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180*60*1000000);
+  bhist.addPageWithDetails(uri("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250*60*1000000);
   
   let today = new Date();
   today.setHours(0);
@@ -146,9 +287,13 @@ function setupHistory() {
   bhist.addPageWithDetails(uri("http://before-today.com/"), "Before Today", lastYear.valueOf() * 1000);
   
   // Confirm everything worked
+  ok(bhist.isVisited(uri("http://10minutes.com/")), "Pretend visit to 10minutes.com should exist");
   ok(bhist.isVisited(uri("http://1hour.com")), "Pretend visit to 1hour.com should exist");
+  ok(bhist.isVisited(uri("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should exist");
   ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should exist");
+  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should exist");
   ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should exist");
+  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should exist");
   ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should exist");
   ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should exist");
 }
@@ -158,23 +303,39 @@ function setupFormHistory() {
   formhist.removeAllEntries();
 
   // Add the entries we'll be testing.
+  formhist.addEntry("10minutes", "10m");
   formhist.addEntry("1hour", "1h");
+  formhist.addEntry("1hour10minutes", "1h10m");
   formhist.addEntry("2hour", "2h");
+  formhist.addEntry("2hour10minutes", "2h10m");
   formhist.addEntry("4hour", "4h");
+  formhist.addEntry("4hour10minutes", "4h10m");
   formhist.addEntry("today", "1d");
   formhist.addEntry("b4today", "1y");
 
   // Artifically age the entries to the proper vintage.
   let db = formhist.DBConnection;
-  let timestamp = now_uSec - 45*60*1000000;
+  let timestamp = now_uSec - 10*60*1000000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '10minutes'");
+  timestamp = now_uSec - 45*60*1000000;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '1hour'");
+  timestamp = now_uSec - 70*60*1000000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '1hour10minutes'");
   timestamp = now_uSec - 90*60*1000000;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '2hour'");
+  timestamp = now_uSec - 130*60*1000000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '2hour10minutes'");
   timestamp = now_uSec - 180*60*1000000;
   db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
                       timestamp +  " WHERE fieldname = '4hour'");
+  timestamp = now_uSec - 250*60*1000000;
+  db.executeSimpleSQL("UPDATE moz_formhistory SET firstUsed = " +
+                      timestamp +  " WHERE fieldname = '4hour10minutes'");
 
   let today = new Date();
   today.setHours(0);
@@ -191,23 +352,27 @@ function setupFormHistory() {
                       timestamp +  " WHERE fieldname = 'b4today'");
 
   // Sanity check.
+  ok(formhist.nameExists("10minutes"), "Checking for 10minutes form history entry creation");
   ok(formhist.nameExists("1hour"), "Checking for 1hour form history entry creation");
+  ok(formhist.nameExists("1hour10minutes"), "Checking for 1hour10minutes form history entry creation");
   ok(formhist.nameExists("2hour"), "Checking for 2hour form history entry creation");
+  ok(formhist.nameExists("2hour10minutes"), "Checking for 2hour10minutes form history entry creation");
   ok(formhist.nameExists("4hour"), "Checking for 4hour form history entry creation");
+  ok(formhist.nameExists("4hour10minutes"), "Checking for 4hour10minutes form history entry creation");
   ok(formhist.nameExists("today"), "Checking for today form history entry creation");
   ok(formhist.nameExists("b4today"), "Checking for b4today form history entry creation");
 }
 
 function setupDownloads() {
 
-  // Add within-1-hour download to DB
+  // Add 10-minutes download to DB
   let data = {
-    id:   "5555551",
-    name: "fakefile-1-hour",
-    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-1-hour",
-    startTime: now_uSec - 45*60*1000000,  // 45 minutes ago, in uSec
-    endTime: now_uSec - 44*60*1000000, // 1 minute later
+    id:   "5555555",
+    name: "fakefile-10-minutes",
+    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
+    target: "fakefile-10-minutes",
+    startTime: now_uSec - 10*60*1000000,  // 10 minutes ago, in uSec
+    endTime: now_uSec - 11*60*1000000, // 1 minute later
     state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
   };
@@ -227,6 +392,48 @@ function setupDownloads() {
     stmt.reset();
   }
   
+  // Add within-1-hour download to DB
+  data = {
+    id:   "5555551",
+    name: "fakefile-1-hour",
+    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
+    target: "fakefile-1-hour",
+    startTime: now_uSec - 45*60*1000000,  // 45 minutes ago, in uSec
+    endTime: now_uSec - 44*60*1000000, // 1 minute later
+    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+  };
+
+  try {
+    for (let prop in data)
+      stmt.params[prop] = data[prop];
+    stmt.execute();
+  }
+  finally {
+    stmt.reset();
+  }
+  
+  // Add 1-hour-10-minutes download to DB
+  data = {
+    id:   "5555556",
+    name: "fakefile-1-hour-10-minutes",
+    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
+    target: "fakefile-1-hour-10-minutes",
+    startTime: now_uSec - 70*60*1000000,  // 70 minutes ago, in uSec
+    endTime: now_uSec - 71*60*1000000, // 1 minute later
+    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+  };
+
+  try {
+    for (let prop in data)
+      stmt.params[prop] = data[prop];
+    stmt.execute();
+  }
+  finally {
+    stmt.reset();
+  }
+
   // Add within-2-hour download  
   data = {
     id:   "5555552",
@@ -248,6 +455,27 @@ function setupDownloads() {
     stmt.reset();
   }
   
+  // Add 2-hour-10-minutes download  
+  data = {
+    id:   "5555557",
+    name: "fakefile-2-hour-10-minutes",
+    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
+    target: "fakefile-2-hour-10-minutes",
+    startTime: now_uSec - 130*60*1000000,  // 130 minutes ago, in uSec
+    endTime: now_uSec - 131*60*1000000, // 1 minute later
+    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+  };
+
+  try {
+    for (let prop in data)
+      stmt.params[prop] = data[prop];
+    stmt.execute();
+  }
+  finally {
+    stmt.reset();
+  }
+
   // Add within-4-hour download
   data = {
     id:   "5555553",
@@ -269,6 +497,27 @@ function setupDownloads() {
     stmt.reset();
   }
   
+  // Add 4-hour-10-minutes download
+  data = {
+    id:   "5555558",
+    name: "fakefile-4-hour-10-minutes",
+    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
+    target: "fakefile-4-hour-10-minutes",
+    startTime: now_uSec - 250*60*1000000,  // 250 minutes ago, in uSec
+    endTime: now_uSec - 251*60*1000000, // 1 minute later
+    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
+    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
+  };
+  
+  try {
+    for (let prop in data)
+      stmt.params[prop] = data[prop];
+    stmt.execute();
+  }
+  finally {
+    stmt.reset();
+  }
+
   // Add "today" download
   let today = new Date();
   today.setHours(0);
@@ -320,9 +569,13 @@ function setupDownloads() {
   
   // Confirm everything worked
   ok(downloadExists(5555550), "Pretend download for everything case should exist");
+  ok(downloadExists(5555555), "Pretend download for 10-minutes case should exist");
   ok(downloadExists(5555551), "Pretend download for 1-hour case should exist");
+  ok(downloadExists(5555556), "Pretend download for 1-hour-10-minutes case should exist");
   ok(downloadExists(5555552), "Pretend download for 2-hour case should exist");
+  ok(downloadExists(5555557), "Pretend download for 2-hour-10-minutes case should exist");
   ok(downloadExists(5555553), "Pretend download for 4-hour case should exist");
+  ok(downloadExists(5555558), "Pretend download for 4-hour-10-minutes case should exist");
   ok(downloadExists(5555554), "Pretend download for Today case should exist");
 }
 

@@ -159,25 +159,39 @@ function OnRefTestLoad()
                   createInstance(CI.nsIHttpServer);
 
     try {
-        if (gServer) {
-            gServer.registerContentType("sjs", "sjs");
-            // We want to try different ports in case the port we want
-            // is being used.
-            var tries = HTTP_SERVER_PORTS_TO_TRY;
-            var succeeded = false;
-            do {
-                try {
-                    gServer.start(HTTP_SERVER_PORT);
-                    succeeded = true;
-                } catch (ex) {
-                    gServer.stop();
-                    ++HTTP_SERVER_PORT;
-                    if (--tries == 0) {
-                        throw ex;
-                    }
-                }
-            } while (!succeeded);
+        if (gServer)
+            StartHTTPServer();
+    } catch (ex) {
+        //gBrowser.loadURI('data:text/plain,' + ex);
+        ++gTestResults.Exception;
+        dump("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + ex + "\n");
+        DoneTests();
+    }
+
+    StartTests();
+}
+
+function StartHTTPServer()
+{
+    gServer.registerContentType("sjs", "sjs");
+    // We want to try different ports in case the port we want
+    // is being used.
+    var tries = HTTP_SERVER_PORTS_TO_TRY;
+    do {
+        try {
+            gServer.start(HTTP_SERVER_PORT);
+            return;
+        } catch (ex) {
+            ++HTTP_SERVER_PORT;
+            if (--tries == 0)
+                throw ex;
         }
+    } while (true);
+}
+
+function StartTests()
+{
+    try {
         // Need to read the manifest once we have the final HTTP_SERVER_PORT.
         ReadTopManifest(window.arguments[0]);
         BuildUseCounts();
@@ -525,9 +539,14 @@ function DoneTests()
 
     dump("REFTEST INFO | Total canvas count = " + gRecycledCanvases.length + "\n");
 
+    function onStopped() {
+        dump("REFTEST INFO | Quitting...\n");
+        goQuitApplication();
+    }
     if (gServer)
-        gServer.stop();
-    goQuitApplication();
+        gServer.stop(onStopped);
+    else
+        onStopped();
 }
 
 function setupZoom(contentRootElement) {

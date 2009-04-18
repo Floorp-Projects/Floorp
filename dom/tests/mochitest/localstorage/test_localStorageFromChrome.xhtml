@@ -22,12 +22,12 @@ function startTest()
   var principal = ssm.getCodebasePrincipal(uri);
   var storage = dsm.getLocalStorageForPrincipal(principal);
   
-  storage.wrappedJSObject.setItem("chromekey", "chromevalue");
+  storage.setItem("chromekey", "chromevalue");
   
   var aframe = document.getElementById("aframe");
   aframe.onload = function()
   {
-    is(storage.wrappedJSObject.getItem("chromekey"), "chromevalue");
+    is(storage.getItem("chromekey"), "chromevalue");
     is(aframe.contentDocument.getElementById("data").innerHTML, "chromevalue");
     SimpleTest.finish();
   }

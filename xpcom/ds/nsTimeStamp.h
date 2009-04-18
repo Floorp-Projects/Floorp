@@ -59,17 +59,38 @@ class TimeDuration {
 public:
   // The default duration is 0.
   TimeDuration() : mValue(0) {}
+  // Allow construction using '0' as the initial value, for readability,
+  // but no other numbers (so we don't have any implicit unit conversions).
+  struct _SomethingVeryRandomHere;
+  TimeDuration(_SomethingVeryRandomHere* aZero) : mValue(0) {
+    NS_ASSERTION(!aZero, "Who's playing funny games here?");
+  }
   // Default copy-constructor and assignment are OK
 
   double ToSeconds() const { return double(mValue)/PR_TicksPerSecond(); }
 
   static TimeDuration FromSeconds(PRInt32 aSeconds) {
     // No overflow is possible here
-    return TimeDuration(PRInt64(aSeconds)*PR_TicksPerSecond());
+    return TimeDuration::FromTicks(PRInt64(aSeconds)*PR_TicksPerSecond());
   }
   static TimeDuration FromMilliseconds(PRInt32 aMilliseconds) {
     // No overflow is possible here
-    return TimeDuration(PRInt64(aMilliseconds)*PR_TicksPerSecond()/1000);
+    return TimeDuration::FromTicks(PRInt64(aMilliseconds)*PR_TicksPerSecond()/1000);
+  }
+
+  TimeDuration operator+(const TimeDuration& aOther) const {
+    return TimeDuration::FromTicks(mValue + aOther.mValue);
+  }
+  TimeDuration operator-(const TimeDuration& aOther) const {
+    return TimeDuration::FromTicks(mValue - aOther.mValue);
+  }
+  TimeDuration& operator+=(const TimeDuration& aOther) {
+    mValue += aOther.mValue;
+    return *this;
+  }
+  TimeDuration& operator-=(const TimeDuration& aOther) {
+    mValue -= aOther.mValue;
+    return *this;
   }
 
   PRBool operator<(const TimeDuration& aOther) const {
@@ -87,7 +108,6 @@ public:
 
   // We could define additional operators here:
   // -- convert to/from other time units
-  // -- add/subtract durations
   // -- scale duration by a float
   // but let's do that on demand.
   // Comparing durations for equality should be discouraged.
@@ -95,7 +115,11 @@ public:
 private:
   friend class TimeStamp;
 
-  TimeDuration(PRInt64 aTicks) : mValue(aTicks) {}
+  static TimeDuration FromTicks(PRInt64 aTicks) {
+    TimeDuration t;
+    t.mValue = aTicks;
+    return t;
+  }
 
   // Duration in PRIntervalTime units
   PRInt64 mValue;
@@ -145,7 +169,26 @@ public:
   TimeDuration operator-(const TimeStamp& aOther) const {
     NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
     NS_ASSERTION(!aOther.IsNull(), "Cannot compute with aOther null value");
-    return TimeDuration(mValue - aOther.mValue);
+    return TimeDuration::FromTicks(mValue - aOther.mValue);
+  }
+
+  TimeStamp operator+(const TimeDuration& aOther) const {
+    NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
+    return TimeStamp(mValue + aOther.mValue);
+  }
+  TimeStamp operator-(const TimeDuration& aOther) const {
+    NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
+    return TimeStamp(mValue - aOther.mValue);
+  }
+  TimeStamp& operator+=(const TimeDuration& aOther) {
+    NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
+    mValue += aOther.mValue;
+    return *this;
+  }
+  TimeStamp& operator-=(const TimeDuration& aOther) {
+    NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
+    mValue -= aOther.mValue;
+    return *this;
   }
 
   PRBool operator<(const TimeStamp& aOther) const {
@@ -169,9 +212,6 @@ public:
     return mValue > aOther.mValue;
   }
 
-  // We could define additional operators here:
-  // -- add a TimeDuration to a TimeStamp to get a TimeStamp
-  // but let's do that on-demand.
   // Comparing TimeStamps for equality should be discouraged. Adding
   // two TimeStamps, or scaling TimeStamps, is nonsense and must never
   // be allowed.

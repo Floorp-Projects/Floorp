@@ -421,21 +421,6 @@ nsBox::DoesNeedRecalc(nscoord aCoord)
   return (aCoord == -1);
 }
 
-PRBool
-nsBox::GetWasCollapsed(nsBoxLayoutState& aState)
-{
-  return (GetStateBits() & NS_STATE_IS_COLLAPSED) != 0;
-}
-
-void
-nsBox::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aCollapsed)
-{
-  if (aCollapsed)
-     AddStateBits(NS_STATE_IS_COLLAPSED);
-  else
-     RemoveStateBits(NS_STATE_IS_COLLAPSED);
-}
-
 NS_IMETHODIMP
 nsBox::SetLayoutManager(nsIBoxLayout* aLayout)
 {

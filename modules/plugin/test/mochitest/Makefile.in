@@ -44,8 +44,8 @@ relativesrcdir  = modules/plugin/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	test_npruntime.xul
 _TEST_FILES = \
+		test_bug479979.xul \
 		test_npruntime.xul   \
 		test_privatemode.xul \
 		test_wmode.xul \

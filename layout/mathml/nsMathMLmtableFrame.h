@@ -84,8 +84,7 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableOuterFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
+    return nsTableOuterFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
 protected:
@@ -143,8 +142,7 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
+    return nsTableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
   // helper to restyle and reflow the table when a row is changed -- since MathML
@@ -201,8 +199,7 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableRowFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
+    return nsTableRowFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
   // helper to restyle and reflow the table -- @see nsMathMLmtableFrame.
@@ -238,8 +235,7 @@ public:
   virtual PRInt32 GetColSpan();
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableCellFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
+    return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
 protected:

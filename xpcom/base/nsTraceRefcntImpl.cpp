@@ -127,10 +127,10 @@ struct serialNumberRecord {
 };
 
 struct nsTraceRefcntStats {
-  nsrefcnt mAddRefs;
-  nsrefcnt mReleases;
-  nsrefcnt mCreates;
-  nsrefcnt mDestroys;
+  PRUint64 mAddRefs;
+  PRUint64 mReleases;
+  PRUint64 mCreates;
+  PRUint64 mDestroys;
   double mRefsOutstandingTotal;
   double mRefsOutstandingSquared;
   double mObjsOutstandingTotal;
@@ -263,13 +263,13 @@ public:
   }
 
   void AccountRefs() {
-    PRInt32 cnt = (mNewStats.mAddRefs - mNewStats.mReleases);
+    PRUint64 cnt = (mNewStats.mAddRefs - mNewStats.mReleases);
     mNewStats.mRefsOutstandingTotal += cnt;
     mNewStats.mRefsOutstandingSquared += cnt * cnt;
   }
 
   void AccountObjs() {
-    PRInt32 cnt = (mNewStats.mCreates - mNewStats.mDestroys);
+    PRUint64 cnt = (mNewStats.mCreates - mNewStats.mDestroys);
     mNewStats.mObjsOutstandingTotal += cnt;
     mNewStats.mObjsOutstandingSquared += cnt * cnt;
   }
@@ -300,9 +300,9 @@ public:
     total->mAllStats.mRefsOutstandingSquared += mNewStats.mRefsOutstandingSquared + mAllStats.mRefsOutstandingSquared;
     total->mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal + mAllStats.mObjsOutstandingTotal;
     total->mAllStats.mObjsOutstandingSquared += mNewStats.mObjsOutstandingSquared + mAllStats.mObjsOutstandingSquared;
-    PRInt32 count = (mNewStats.mCreates + mAllStats.mCreates);
+    PRUint64 count = (mNewStats.mCreates + mAllStats.mCreates);
     total->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
-    total->mTotalLeaked += (PRInt32)(mClassSize *
+    total->mTotalLeaked += (PRUint64)(mClassSize *
                                      ((mNewStats.mCreates + mAllStats.mCreates)
                                       -(mNewStats.mDestroys + mAllStats.mDestroys)));
   }
@@ -361,11 +361,11 @@ public:
         stats->mCreates != 0 ||
         meanObjs != 0 ||
         stddevObjs != 0) {
-      fprintf(out, "%4d %-40.40s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
+      fprintf(out, "%4d %-40.40s %8d %8llu %8llu %8llu (%8.2f +/- %8.2f) %8llu %8llu (%8.2f +/- %8.2f)\n",
               i+1, mClassName,
               (PRInt32)mClassSize,
               (nsCRT::strcmp(mClassName, "TOTAL"))
-                  ?(PRInt32)((stats->mCreates - stats->mDestroys) * mClassSize)
+                  ?(PRUint64)((stats->mCreates - stats->mDestroys) * mClassSize)
                   :mTotalLeaked,
               stats->mCreates,
               (stats->mCreates - stats->mDestroys),
@@ -381,7 +381,7 @@ public:
 protected:
   char*         mClassName;
   double        mClassSize;     // this is stored as a double because of the way we compute the avg class size for total bloat
-  PRInt32       mTotalLeaked; // used only for TOTAL entry
+  PRUint64      mTotalLeaked; // used only for TOTAL entry
   nsTraceRefcntStats mNewStats;
   nsTraceRefcntStats mAllStats;
 };

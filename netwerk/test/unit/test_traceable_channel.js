@@ -57,8 +57,7 @@ TracingListener.prototype = {
 
   onStopRequest: function(request, context, statusCode) {
     this.listener.onStopRequest(request, context, statusCode);
-    httpserver.stop();
-    do_test_finished();
+    httpserver.stop(do_test_finished);
   },
 
   QueryInterface: function(iid) {
