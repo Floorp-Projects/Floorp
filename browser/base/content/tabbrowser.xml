@@ -1885,9 +1885,8 @@
               }
             }
 
-            // If we have hooked it up to a filter, don't forget to remove it
-            // (but don't fail if it wasn't)
-            if (!this.mTabbedMode && this.mTabFilters[0])
+            if (!this.mTabbedMode)
+              // Don't forget to remove it from the filter we hooked it up to
               this.mTabFilters[0].removeProgressListener(aListener);
          ]]>
         </body>
