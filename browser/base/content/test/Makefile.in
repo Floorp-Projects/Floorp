@@ -69,7 +69,6 @@ _TEST_FILES =	test_feed_discovery.html \
 # 480169)
 
 _BROWSER_FILES = browser_sanitize-timespans.js \
-                 browser_bug279022.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
