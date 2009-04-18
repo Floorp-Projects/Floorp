@@ -76,7 +76,7 @@ var testCases = [
 
   // History
   function () {
-    defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries["History"]);
+    var defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries["History"]);
     search(PlacesUIUtils.leftPaneQueries["History"], "dummy", defScope);
     is(selectScope("scopeBarFolder"), false,
        "Folder scope should be disabled for History");
@@ -85,7 +85,7 @@ var testCases = [
 
   // Toolbar folder
   function () {
-    defScope = getDefaultScope(bmsvc.toolbarFolder);
+    var defScope = getDefaultScope(bmsvc.toolbarFolder);
     search(bmsvc.toolbarFolder, "dummy", defScope);
     is(selectScope("scopeBarFolder"), true,
        "Folder scope should be enabled for toolbar folder");
@@ -100,7 +100,7 @@ var testCases = [
     var folderId = bmsvc.createFolder(bmsvc.toolbarFolder,
                                       "dummy folder",
                                       bmsvc.DEFAULT_INDEX);
-    defScope = getDefaultScope(folderId);
+    var defScope = getDefaultScope(folderId);
     search(folderId, "dummy", defScope);
     is(selectScope("scopeBarFolder"), true,
        "Folder scope should be enabled for regular subfolder");

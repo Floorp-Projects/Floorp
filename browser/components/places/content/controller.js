@@ -1099,7 +1099,8 @@ PlacesController.prototype = {
                       createInstance(Ci.nsITransferable);
       var foundFolder = false, foundLink = false;
       var copiedFolders = [];
-      var placeString = mozURLString = htmlString = unicodeString = "";
+      var placeString, mozURLString, htmlString, unicodeString;
+      placeString = mozURLString = htmlString = unicodeString = "";
 
       for (var i = 0; i < nodes.length; ++i) {
         var node = nodes[i];
