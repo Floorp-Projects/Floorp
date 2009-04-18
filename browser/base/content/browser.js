@@ -4058,12 +4058,6 @@ var XULBrowserWindow = {
       gFindBar.close();
     }
 
-    // XXXmano new-findbar, do something useful once it lands.
-    // Of course, this is especially wrong with bfcache on...
-
-    // fix bug 253793 - turn off highlight when page changes
-    gFindBar.getElement("highlight").checked = false;
-
     // See bug 358202, when tabs are switched during a drag operation,
     // timers don't fire on windows (bug 203573)
     if (aRequest)
