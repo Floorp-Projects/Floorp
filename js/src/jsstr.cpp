@@ -99,7 +99,7 @@ js_MinimizeDependentStrings(JSString *str, int level, JSString **basep)
             JSPREFIX_SET_BASE(str, base);
         } else if (start <= JSSTRDEP_START_MASK) {
             length = JSSTRDEP_LENGTH(str);
-            JSSTRDEP_INIT(str, base, start, length);
+            JSSTRDEP_REINIT(str, base, start, length);
         }
     }
     *basep = base;
@@ -182,7 +182,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 
         /* Morph left into a dependent prefix if we realloc'd its buffer. */
         if (ldep) {
-            JSPREFIX_INIT(ldep, str, ln);
+            JSPREFIX_REINIT(ldep, str, ln);
 #ifdef DEBUG
           {
             JSRuntime *rt = cx->runtime;
@@ -214,7 +214,7 @@ js_UndependString(JSContext *cx, JSString *str)
 
         js_strncpy(s, JSSTRDEP_CHARS(str), n);
         s[n] = 0;
-        JSFLATSTR_INIT(str, s, n);
+        JSFLATSTR_REINIT(str, s, n);
 
 #ifdef DEBUG
         {
