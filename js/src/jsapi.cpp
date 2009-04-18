@@ -3195,30 +3195,32 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     return ok;
 }
 
-static jsval
-LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop)
+static JSBool
+LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
+             jsval *vp)
 {
-    JSScopeProperty *sprop;
-    jsval rval;
-
     if (!prop) {
         /* XXX bad API: no way to tell "not defined" from "void value" */
-        return JSVAL_VOID;
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
     }
+
+    JSBool ok = JS_TRUE;
     if (OBJ_IS_NATIVE(obj2)) {
+        JSScopeProperty *sprop = (JSScopeProperty *) prop;
+
         /* Peek at the native property's slot value, without doing a Get. */
-        sprop = (JSScopeProperty *)prop;
-        rval = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
+        *vp = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
                ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
                : JSVAL_TRUE;
     } else if (OBJ_IS_DENSE_ARRAY(cx, obj2)) {
-        rval = js_GetDenseArrayElementValue(obj2, prop);
+        ok = js_GetDenseArrayElementValue(cx, obj2, prop, vp);
     } else {
         /* XXX bad API: no way to return "defined but value unknown" */
-        rval = JSVAL_TRUE;
+        *vp = JSVAL_TRUE;
     }
     OBJ_DROP_PROPERTY(cx, obj2, prop);
-    return rval;
+    return ok;
 }
 
 static JSBool
@@ -3461,29 +3463,23 @@ JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
 JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
-    JSBool ok;
     JSObject *obj2;
     JSProperty *prop;
 
     CHECK_REQUEST(cx);
-    ok = LookupProperty(cx, obj, name, JSRESOLVE_QUALIFIED, &obj2, &prop);
-    if (ok)
-        *vp = LookupResult(cx, obj, obj2, prop);
-    return ok;
+    return LookupProperty(cx, obj, name, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
+           LookupResult(cx, obj, obj2, prop, vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSBool ok;
     JSObject *obj2;
     JSProperty *prop;
 
     CHECK_REQUEST(cx);
-    ok = LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop);
-    if (ok)
-        *vp = LookupResult(cx, obj, obj2, prop);
-    return ok;
+    return LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
+           LookupResult(cx, obj, obj2, prop, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3511,7 +3507,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
          ? js_LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop) >= 0
          : OBJ_LOOKUP_PROPERTY(cx, obj, id, objp, &prop);
     if (ok)
-        *vp = LookupResult(cx, obj, *objp, prop);
+        ok = LookupResult(cx, obj, *objp, prop, vp);
     return ok;
 }
 
@@ -3731,16 +3727,13 @@ JS_LookupUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen,
                     jsval *vp)
 {
-    JSBool ok;
     JSObject *obj2;
     JSProperty *prop;
 
     CHECK_REQUEST(cx);
-    ok = LookupUCProperty(cx, obj, name, namelen, JSRESOLVE_QUALIFIED,
-                          &obj2, &prop);
-    if (ok)
-        *vp = LookupResult(cx, obj, obj2, prop);
-    return ok;
+    return LookupUCProperty(cx, obj, name, namelen, JSRESOLVE_QUALIFIED,
+                            &obj2, &prop) &&
+           LookupResult(cx, obj, obj2, prop, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3899,16 +3892,13 @@ JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp)
 JS_PUBLIC_API(JSBool)
 JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
-    JSBool ok;
     JSObject *obj2;
     JSProperty *prop;
 
     CHECK_REQUEST(cx);
-    ok = LookupPropertyById(cx, obj, INT_TO_JSID(index), JSRESOLVE_QUALIFIED,
-                            &obj2, &prop);
-    if (ok)
-        *vp = LookupResult(cx, obj, obj2, prop);
-    return ok;
+    return LookupPropertyById(cx, obj, INT_TO_JSID(index), JSRESOLVE_QUALIFIED,
+                              &obj2, &prop) &&
+           LookupResult(cx, obj, obj2, prop, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5459,7 +5449,7 @@ JS_GetStringChars(JSString *str)
         if (s) {
             memcpy(s, JSSTRDEP_CHARS(str), n * sizeof *s);
             s[n] = 0;
-            JSFLATSTR_INIT(str, s, n);
+            JSFLATSTR_REINIT(str, s, n);
         } else {
             s = JSSTRDEP_CHARS(str);
         }

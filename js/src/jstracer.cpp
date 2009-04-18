@@ -1743,9 +1743,11 @@ skip:
         }
         for (; n != 0; fp = fp->down) {
             --n;
-            if (fp->callee) { // might not have it if the entry frame is global
+            if (fp->callee) {
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
                 fp->thisp = JSVAL_TO_OBJECT(fp->argv[-1]);
+                if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
+                    fp->flags |= JSFRAME_COMPUTED_THIS;
             }
         }
     }
@@ -2551,11 +2553,60 @@ checktype_fail_2:
     return false;
 }
 
+static JS_REQUIRES_STACK void
+FlushJITCache(JSContext* cx)
+{
+    if (!TRACING_ENABLED(cx))
+        return;
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    debug_only_v(printf("Flushing cache.\n");)
+    if (tm->recorder)
+        js_AbortRecording(cx, "flush cache");
+    TraceRecorder* tr;
+    while ((tr = tm->abortStack) != NULL) {
+        tr->removeFragmentoReferences();
+        tr->deepAbort();
+        tr->popAbortStack();
+    }
+    Fragmento* fragmento = tm->fragmento;
+    if (fragmento) {
+        if (tm->prohibitFlush) {
+            debug_only_v(printf("Deferring fragmento flush due to deep bail.\n");)
+            tm->needFlush = JS_TRUE;
+            return;
+        }
+
+        fragmento->clearFrags();
+#ifdef DEBUG
+        JS_ASSERT(fragmento->labels);
+        fragmento->labels->clear();
+#endif
+        tm->lirbuf->rewind();
+        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+            VMFragment* f = tm->vmfragments[i];
+            while (f) {
+                VMFragment* next = f->next;
+                fragmento->clearFragment(f);
+                f = next;
+            }
+            tm->vmfragments[i] = NULL;
+        }
+        for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
+            tm->globalStates[i].globalShape = -1;
+            tm->globalStates[i].globalSlots->clear();
+        }
+    }
+    tm->needFlush = JS_FALSE;
+}
+
 /* Compile the current fragment. */
 JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
 {
-    JS_ASSERT(!tm->needFlush);
+    if (tm->needFlush) {
+        FlushJITCache(cx);
+        return;
+    }
     Fragmento* fragmento = tm->fragmento;
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only_v(printf("Blacklist: excessive stack use.\n"));
@@ -2631,8 +2682,6 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
      * meantime JSOP_NOP.
      */
     JS_ASSERT((*cx->fp->regs->pc == JSOP_LOOP || *cx->fp->regs->pc == JSOP_NOP) && !cx->fp->imacpc);
-
-    JS_ASSERT(!tm->needFlush);
 
     bool stable;
     LIns* exitIns;
@@ -3104,52 +3153,6 @@ nanojit::Fragment::onDestroy()
     delete (TreeInfo *)vmprivate;
 }
 
-static JS_REQUIRES_STACK void
-FlushJITCache(JSContext* cx)
-{
-    if (!TRACING_ENABLED(cx))
-        return;
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    debug_only_v(printf("Flushing cache.\n");)
-    if (tm->recorder)
-        js_AbortRecording(cx, "flush cache");
-    TraceRecorder* tr;
-    while ((tr = tm->abortStack) != NULL) {
-        tr->removeFragmentoReferences();
-        tr->deepAbort();
-        tr->popAbortStack();
-    }
-    Fragmento* fragmento = tm->fragmento;
-    if (fragmento) {
-        if (tm->prohibitFlush) {
-            debug_only_v(printf("Deferring fragmento flush due to deep bail.\n");)
-            tm->needFlush = JS_TRUE;
-            return;
-        }
-
-        fragmento->clearFrags();
-#ifdef DEBUG
-        JS_ASSERT(fragmento->labels);
-        fragmento->labels->clear();
-#endif
-        tm->lirbuf->rewind();
-        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-            VMFragment* f = tm->vmfragments[i];
-            while (f) {
-                VMFragment* next = f->next;
-                fragmento->clearFragment(f);
-                f = next;
-            }
-            tm->vmfragments[i] = NULL;
-        }
-        for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
-            tm->globalStates[i].globalShape = -1;
-            tm->globalStates[i].globalSlots->clear();
-        }
-    }
-    tm->needFlush = JS_FALSE;
-}
-
 static JS_REQUIRES_STACK bool
 js_DeleteRecorder(JSContext* cx)
 {
@@ -3174,12 +3177,14 @@ js_DeleteRecorder(JSContext* cx)
 /**
  * Checks whether the shape of the global object has changed.
  */
-static inline bool
-js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
-                          uint32 *shape=NULL, SlotList** slots=NULL)
+static JS_REQUIRES_STACK bool
+CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
+                       uint32 *shape=NULL, SlotList** slots=NULL)
 {
-    if (tm->needFlush)
+    if (tm->needFlush) {
+        FlushJITCache(cx);
         return false;
+    }
 
     uint32 globalShape = OBJ_SHAPE(globalObj);
 
@@ -3192,6 +3197,7 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
             debug_only_v(printf("Global object/shape mismatch (%p/%u vs. %p/%u), flushing cache.\n",
                                 (void*)globalObj, globalShape, (void*)root->globalObj,
                                 root->globalShape);)
+            FlushJITCache(cx);
             return false;
         }
         if (shape)
@@ -3225,6 +3231,7 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
     AUDIT(globalShapeMismatchAtEntry);
     debug_only_v(printf("No global slotlist for global shape %u, flushing cache.\n",
                         globalShape));
+    FlushJITCache(cx);
     return false;
 }
 
@@ -3236,8 +3243,10 @@ js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(f->root != f || !cx->fp->imacpc);
 
-    if (JS_TRACE_MONITOR(cx).needFlush)
+    if (JS_TRACE_MONITOR(cx).needFlush) {
+        FlushJITCache(cx);
         return false;
+    }
 
     /* start recording if no exception during construction */
     tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
@@ -3390,7 +3399,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.xmlNamespace = NULL;
     newifp->frame.blockChain = NULL;
     newifp->mark = newmark;
-    newifp->frame.thisp = NULL; // will be set by js_ExecuteTree -> FlushNativeStackFrame
+    newifp->frame.thisp = NULL; // will be updated in FlushNativeStackFrame
 
     newifp->frame.regs = fp->regs;
     newifp->frame.regs->pc = script->code;
@@ -3462,10 +3471,8 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     JS_ASSERT(f->root == f);
 
     /* Make sure the global type map didn't change on us. */
-    if (!js_CheckGlobalObjectShape(cx, tm, globalObj)) {
-        FlushJITCache(cx);
+    if (!CheckGlobalObjectShape(cx, tm, globalObj))
         return false;
-    }
 
     AUDIT(recorderStarted);
 
@@ -3652,8 +3659,7 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer)
 static JS_REQUIRES_STACK bool
 js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer)
 {
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(!tm->needFlush);
+    JS_ASSERT(!JS_TRACE_MONITOR(cx).needFlush);
     Fragment* f = anchor->from->root;
     JS_ASSERT(f->vmprivate);
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
@@ -3730,7 +3736,11 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
-    /* Process deep abort requests. */
+    /* Process needFlush and deep abort requests. */
+    if (tm->needFlush) {
+        FlushJITCache(cx);
+        return false;
+    }
     if (r->wasDeepAborted()) {
         js_AbortRecording(cx, "deep abort requested");
         return false;
@@ -3771,10 +3781,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
-    if (!js_CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
-        js_AbortRecording(cx, "Couldn't call inner tree (prep failed)");
+    if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots))
         return false;
-    }
 
     debug_only_v(printf("Looking for type-compatible peer (%s:%d@%d)\n",
                         cx->fp->script->filename,
@@ -4348,8 +4356,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     // Verify that our state restoration worked.
     for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
         JS_ASSERT_IF(fp->callee, JSVAL_IS_OBJECT(fp->argv[-1]));
-        JS_ASSERT_IF(fp->callee && fp->thisp != JSVAL_TO_OBJECT(fp->argv[-1]),
-                     !(fp->flags & JSFRAME_COMPUTED_THIS) && !fp->thisp);
     }
 #endif
 #ifdef JS_JIT_SPEW
@@ -4400,8 +4406,8 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
 
-    if (!js_CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots))
-        FlushJITCache(cx);
+    if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots))
+        return false;
 
     /* Do not enter the JIT code with a pending operation callback. */
     if (cx->operationCallbackFlag)
@@ -4474,12 +4480,15 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 JS_REQUIRES_STACK JSMonitorRecordingStatus
 TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 {
-    /* Process deepAbort() requests now. */
+    /* Process needFlush and deepAbort() requests now. */
+    if (JS_TRACE_MONITOR(cx).needFlush) {
+        FlushJITCache(cx);
+        return JSMRS_STOP;
+    }
     if (tr->wasDeepAborted()) {
         js_AbortRecording(cx, "deep abort requested");
         return JSMRS_STOP;
     }
-    JS_ASSERT(!JS_TRACE_MONITOR(cx).needFlush);
     JS_ASSERT(!tr->fragment->lastIns);
 
     /*
@@ -6239,13 +6248,53 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
 JS_REQUIRES_STACK bool
 TraceRecorder::getThis(LIns*& this_ins)
 {
-    if (cx->fp->callee) { /* in a function */
-        if (JSVAL_IS_NULL(cx->fp->argv[-1]))
-            return false;
-        this_ins = get(&cx->fp->argv[-1]);
-        guard(false, lir->ins_eq0(this_ins), MISMATCH_EXIT);
-    } else { /* in global code */
-        this_ins = scopeChain();
+    /*
+     * In global code, bake in the global object as 'this' object.
+     */
+    if (!cx->fp->callee) {
+        JS_ASSERT(callDepth == 0);
+        JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
+        if (!thisObj)
+            ABORT_TRACE("js_ComputeThis failed");
+        JS_ASSERT(JSVAL_IS_OBJECT(cx->fp->argv[-1]));
+        this_ins = INS_CONSTPTR(thisObj);
+
+        /*
+         * We don't have argv[-1] in global code, so we don't update the tracker here.
+         */
+        return true;
+    }
+
+    /*
+     * Traces type-specialize between null and objects, so if we currently see a null
+     * value in argv[-1], this trace will only match if we see null at runtime as well.
+     * Bake in the global object as 'this' object, updating the tracker as well. We
+     * can only detect this condition prior to calling js_ComputeThisForFrame, since it
+     * updates the interpreter's copy of argv[-1].
+     */
+    if (JSVAL_IS_NULL(cx->fp->argv[-1])) {
+        JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
+        if (!thisObj) // FIXME: fix bug 488018 and propagate such errors better
+            ABORT_TRACE("js_ComputeThis failed");
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(cx->fp->argv[-1]));
+        JS_ASSERT(thisObj == globalObj);
+        this_ins = INS_CONSTPTR(thisObj);
+        set(&cx->fp->argv[-1], this_ins);
+        return true;
+    }
+    this_ins = get(&cx->fp->argv[-1]);
+
+    /*
+     * When we inline through scripted functions, we have already previously touched the 'this'
+     * object and hence it is already guaranteed to be wrapped. Otherwise we have to explicitly
+     * check that the object has been wrapped. If not, we side exit and let the interpreter
+     * wrap it.
+     */
+    if (callDepth == 0) {
+        LIns* map_ins = lir->insLoad(LIR_ldp, this_ins, (int)offsetof(JSObject, map));
+        LIns* ops_ins = lir->insLoad(LIR_ldp, map_ins, (int)offsetof(JSObjectMap, ops));
+        LIns* op_ins = lir->insLoad(LIR_ldp, ops_ins, (int)offsetof(JSObjectOps, thisObject));
+        guard(true, lir->ins_eq0(op_ins), MISMATCH_EXIT);
     }
     return true;
 }
