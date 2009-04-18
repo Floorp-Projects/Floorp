@@ -4054,6 +4054,9 @@ nsTableFrame::ColumnHasCellSpacingBefore(PRInt32 aColIndex) const
   // as they load, we assume that all columns are significant.
   if (LayoutStrategy()->GetType() == nsITableLayoutStrategy::Fixed)
     return PR_TRUE;
+  // the first column is always significant
+  if (aColIndex == 0)
+    return PR_TRUE;
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) 
     return PR_FALSE;
