@@ -171,8 +171,6 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   state->mCaretFrame = nsnull;
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
 
-  state->mPresShell->UpdateCanvasBackground();
-
   if (!mBuildCaret)
     return;
 
@@ -194,7 +192,8 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
 
 void
 nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
-                                     const nsRect& aDirtyRect) {
+                                     const nsRect& aDirtyRect)
+{
   if (CurrentPresShellState()->mPresShell != aReferenceFrame->PresContext()->PresShell()) {
     // Must have not allocated a state for this presshell, presumably due
     // to OOM.
@@ -255,7 +254,7 @@ nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
     if (isMoving) {
       // The display list should include items for both the before and after
       // states (see nsLayoutUtils::ComputeRepaintRegionForCopy. So the
-      // only area we want to cover is the area that was opaque in the
+      // only area we want to cover is the the area that was opaque in the
       // before state and in the after state.
       opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
     }
@@ -490,30 +489,6 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
                          SortLEQ aCmp, void* aClosure) {
   ExplodeAnonymousChildLists(aBuilder);
   ::Sort(this, Count(), aCmp, aClosure);
-}
-
-void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  nsRect dirty;
-  dirty.IntersectRect(GetBounds(aBuilder), aDirtyRect);
-  aCtx->SetColor(mColor);
-  aCtx->FillRect(dirty);
-}
-
-// Even though we aren't supposed to, we need to override this because
-// we have no frame.
-PRBool
-nsDisplaySolidColor::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                        nsRegion* aVisibleRegion) {
-  // Do what nsDisplayItem::OptimizeVisibility would do but without a frame.
-  if (!aVisibleRegion->Intersects(mBounds))
-    return PR_FALSE;
-
-  if (IsOpaque(aBuilder)) {
-    aVisibleRegion->SimpleSubtract(mBounds);
-  }
-
-  return PR_TRUE;
 }
 
 PRBool

@@ -982,7 +982,9 @@ nsCSSRendering::FindRootFrame(nsIFrame* aForFrame)
  *
  * |FindBackground| returns true if a background should be painted, and
  * the resulting style context to use for the background information
- * will be filled in to |aBackground|.
+ * will be filled in to |aBackground|.  It fills in a boolean indicating
+ * whether the frame is the canvas frame, because PaintBackground must
+ * propagate that frame's background color to the view manager.
  */
 const nsStyleBackground*
 nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame)
