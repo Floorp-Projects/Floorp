@@ -1500,6 +1500,15 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
 {
     unsigned tag = JSVAL_TAG(v);
     switch (type) {
+      case JSVAL_OBJECT:
+        JS_ASSERT(tag == JSVAL_OBJECT);
+        JS_ASSERT(!JSVAL_IS_NULL(v) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)));
+        *(JSObject**)slot = JSVAL_TO_OBJECT(v);
+        debug_only_v(printf("object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
+                            JSVAL_IS_NULL(v)
+                            ? "null"
+                            : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
+        return;
       case JSVAL_INT:
         jsint i;
         if (JSVAL_IS_INT(v))
@@ -1523,16 +1532,21 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
       case JSVAL_BOXED:
         JS_NOT_REACHED("found boxed type in an entry type map");
         return;
+      case JSVAL_STRING:
+        JS_ASSERT(tag == JSVAL_STRING);
+        *(JSString**)slot = JSVAL_TO_STRING(v);
+        debug_only_v(printf("string<%p> ", (void*)(*(JSString**)slot));)
+        return;
+      case JSVAL_TNULL:
+        JS_ASSERT(tag == JSVAL_OBJECT);
+        *(JSObject**)slot = NULL;
+        debug_only_v(printf("null ");)
+        return;
       case JSVAL_BOOLEAN:
         /* Watch out for pseudo-booleans. */
         JS_ASSERT(tag == JSVAL_BOOLEAN);
         *(JSBool*)slot = JSVAL_TO_PSEUDO_BOOLEAN(v);
         debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
-        return;
-      case JSVAL_STRING:
-        JS_ASSERT(tag == JSVAL_STRING);
-        *(JSString**)slot = JSVAL_TO_STRING(v);
-        debug_only_v(printf("string<%p> ", (void*)(*(JSString**)slot));)
         return;
       case JSVAL_TFUN: {
         JS_ASSERT(tag == JSVAL_OBJECT);
@@ -1547,22 +1561,9 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
 #endif
         return;
       }
-      case JSVAL_TNULL:
-        JS_ASSERT(tag == JSVAL_OBJECT);
-        *(JSObject**)slot = NULL;
-        debug_only_v(printf("null ");)
-        return;
-      default:
-        JS_ASSERT(type == JSVAL_OBJECT);
-        JS_ASSERT(tag == JSVAL_OBJECT);
-        JS_ASSERT(!JSVAL_IS_NULL(v) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v)));
-        *(JSObject**)slot = JSVAL_TO_OBJECT(v);
-        debug_only_v(printf("object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
-                            JSVAL_IS_NULL(v)
-                            ? "null"
-                            : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
-        return;
     }
+
+    JS_NOT_REACHED("unexpected type");
 }
 
 /* We maintain an emergency pool of doubles so we can recover safely if a trace runs
@@ -1631,10 +1632,14 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
     jsint i;
     jsdouble d;
     switch (type) {
-      case JSVAL_BOOLEAN:
-        /* Watch out for pseudo-booleans. */
-        v = PSEUDO_BOOLEAN_TO_JSVAL(*(JSBool*)slot);
-        debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
+      case JSVAL_OBJECT:
+        v = OBJECT_TO_JSVAL(*(JSObject**)slot);
+        JS_ASSERT(JSVAL_TAG(v) == JSVAL_OBJECT); /* if this fails the pointer was not aligned */
+        JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
+        debug_only_v(printf("object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
+                            JSVAL_IS_NULL(v)
+                            ? "null"
+                            : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
         break;
       case JSVAL_INT:
         i = *(jsint*)slot;
@@ -1667,20 +1672,25 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
         *JSVAL_TO_DOUBLE(v) = d;
         return;
       }
-      case JSVAL_STRING:
-        v = STRING_TO_JSVAL(*(JSString**)slot);
-        JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING); /* if this fails the pointer was not aligned */
-        debug_only_v(printf("string<%p> ", (void*)(*(JSString**)slot));)
-        break;
       case JSVAL_BOXED:
         v = *(jsval*)slot;
         JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
         debug_only_v(printf("box<%p> ", (void*)v));
         break;
+      case JSVAL_STRING:
+        v = STRING_TO_JSVAL(*(JSString**)slot);
+        JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING); /* if this fails the pointer was not aligned */
+        debug_only_v(printf("string<%p> ", (void*)(*(JSString**)slot));)
+        break;
       case JSVAL_TNULL:
         JS_ASSERT(*(JSObject**)slot == NULL);
         v = JSVAL_NULL;
         debug_only_v(printf("null<%p> ", (void*)(*(JSObject**)slot)));
+        break;
+      case JSVAL_BOOLEAN:
+        /* Watch out for pseudo-booleans. */
+        v = PSEUDO_BOOLEAN_TO_JSVAL(*(JSBool*)slot);
+        debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
         break;
       case JSVAL_TFUN: {
         JS_ASSERT(HAS_FUNCTION_CLASS(*(JSObject**)slot));
@@ -1694,16 +1704,6 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 #endif
         break;
       }
-      default:
-        JS_ASSERT(type == JSVAL_OBJECT);
-        v = OBJECT_TO_JSVAL(*(JSObject**)slot);
-        JS_ASSERT(JSVAL_TAG(v) == JSVAL_OBJECT); /* if this fails the pointer was not aligned */
-        JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
-        debug_only_v(printf("object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
-                            JSVAL_IS_NULL(v)
-                            ? "null"
-                            : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
-        break;
     }
 }
 
@@ -3902,6 +3902,13 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
     debug_only_v(printf("%c/%c ", tagChar[tag], typeChar[*m]);)
 
     switch (*m) {
+      case JSVAL_OBJECT:
+        if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp) &&
+            !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
+            return true;
+        }
+        debug_only_v(printf("object != tag%u", tag);)
+        return false;
       case JSVAL_INT:
         jsint i;
         if (JSVAL_IS_INT(*vp))
@@ -3918,11 +3925,6 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
       case JSVAL_BOXED:
         JS_NOT_REACHED("shouldn't see boxed type in entry");
         return false;
-      case JSVAL_BOOLEAN:
-        if (tag == JSVAL_BOOLEAN)
-            return true;
-        debug_only_v(printf("bool != tag%u", tag);)
-        return false;
       case JSVAL_STRING:
         if (tag == JSVAL_STRING)
             return true;
@@ -3933,20 +3935,18 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
             return true;
         debug_only_v(printf("null != tag%u", tag);)
         return false;
-      case JSVAL_TFUN:
+      case JSVAL_BOOLEAN:
+        if (tag == JSVAL_BOOLEAN)
+            return true;
+        debug_only_v(printf("bool != tag%u", tag);)
+        return false;
+      default:
+        JS_ASSERT(*m == JSVAL_TFUN);
         if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp) &&
             HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
             return true;
         }
         debug_only_v(printf("fun != tag%u", tag);)
-        return false;
-      default:
-        JS_ASSERT(*m == JSVAL_OBJECT);
-        if (tag == JSVAL_OBJECT && !JSVAL_IS_NULL(*vp) &&
-            !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
-            return true;
-        }
-        debug_only_v(printf("object != tag%u", tag);)
         return false;
     }
 }
