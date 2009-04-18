@@ -672,6 +672,7 @@ namespace nanojit
         Fragment *frag = lr->exit->target;
 		NanoAssert(frag->fragEntry != 0);
 		NIns* was = nPatchBranch((NIns*)lr->jmp, frag->fragEntry);
+		NanoAssert(frag->fragEntry != was);
 		verbose_only(verbose_outputf("patching jump at %p to target %p (was %p)\n",
 			lr->jmp, frag->fragEntry, was);)
 		(void)was;

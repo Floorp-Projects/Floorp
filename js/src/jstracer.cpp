@@ -2103,7 +2103,7 @@ TraceRecorder::determineSlotType(jsval* vp)
     return m;
 }
 
-JS_REQUIRES_STACK LIns*
+JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::snapshot(ExitType exitType)
 {
     JSStackFrame* fp = cx->fp;
@@ -2169,11 +2169,9 @@ TraceRecorder::snapshot(ExitType exitType)
             pc += GET_JUMPX_OFFSET(pc);
     }
 
-    JS_STATIC_ASSERT (sizeof(GuardRecord) + sizeof(VMSideExit) < MAX_SKIP_BYTES);
-
     /*
-     * Check if we already have a matching side exit. If so use that side exit structure
-     * by cloning it, otherwise we have to create our own.
+     * Check if we already have a matching side exit; if so we can return that
+     * side exit instead of creating a new one.
      */
     VMSideExit** exits = treeInfo->sideExits.data();
     unsigned nexits = treeInfo->sideExits.length();
@@ -2183,14 +2181,12 @@ TraceRecorder::snapshot(ExitType exitType)
             if (e->pc == pc && e->imacpc == fp->imacpc &&
                 !memcmp(getFullTypeMap(exits[n]), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
-                return clone(exits[n]);
+                return e;
             }
         }
     }
 
-    if (sizeof(GuardRecord) +
-        sizeof(VMSideExit) +
-        (stackSlots + ngslots) * sizeof(uint8) >= MAX_SKIP_BYTES) {
+    if (sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8) >= MAX_SKIP_BYTES) {
         /*
          * ::snapshot() is infallible in the sense that callers don't
          * expect errors; but this is a trace-aborting error condition. So
@@ -2204,16 +2200,9 @@ TraceRecorder::snapshot(ExitType exitType)
         trashSelf = true;
     }
 
-    /* We couldn't find a matching side exit, so create our own side exit structure. */
-    LIns* data = lir->skip(sizeof(GuardRecord) +
-                           sizeof(VMSideExit) +
-                           (stackSlots + ngslots) * sizeof(uint8));
-    GuardRecord* rec = (GuardRecord*)data->payload();
-    VMSideExit* exit = (VMSideExit*)(rec + 1);
-
-    /* Setup guard record structure. */
-    memset(rec, 0, sizeof(GuardRecord));
-    rec->exit = exit;
+    /* We couldn't find a matching side exit, so create a new one. */
+    LIns* data = lir->skip(sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8));
+    VMSideExit* exit = (VMSideExit*) data->payload();
 
     /* Setup side exit structure. */
     memset(exit, 0, sizeof(VMSideExit));
@@ -2225,86 +2214,83 @@ TraceRecorder::snapshot(ExitType exitType)
         ? nativeStackOffset(&cx->fp->argv[-2])/sizeof(double)
         : 0;
     exit->exitType = exitType;
-    exit->addGuard(rec);
     exit->block = fp->blockChain;
     exit->pc = pc;
     exit->imacpc = fp->imacpc;
     exit->sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     memcpy(getFullTypeMap(exit), typemap, typemap_size);
-
-    /* BIG FAT WARNING: If compilation fails, we currently don't reset the lirbuf so its safe
-       to keep references to the side exits here. If we ever start rewinding those lirbufs,
-       we have to make sure we purge the side exits that then no longer will be in valid
-       memory. */
-    if (exitType == LOOP_EXIT)
-        treeInfo->sideExits.add(exit);
-    return data;
+    return exit;
 }
 
 JS_REQUIRES_STACK LIns*
-TraceRecorder::clone(VMSideExit* exit)
+TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
-    LIns* data = lir->skip(sizeof(GuardRecord));
-    GuardRecord* rec = (GuardRecord*)data->payload();
-    /* setup guard record structure with shared side exit */
-    memset(rec, 0, sizeof(GuardRecord));
-    rec->exit = exit;
-    exit->addGuard(rec);
-    return data;
+    LIns* guardRec = lir->skip(sizeof(GuardRecord));
+    GuardRecord* gr = (GuardRecord*) guardRec->payload();
+
+    memset(gr, 0, sizeof(GuardRecord));
+    gr->exit = exit;
+    exit->addGuard(gr);
+
+    return guardRec;
 }
 
-JS_REQUIRES_STACK LIns*
-TraceRecorder::copy(VMSideExit* copy)
+/*
+ * Emit a guard for condition (cond), expecting to evaluate to boolean result
+ * (expected) and using the supplied side exit if the conditon doesn't hold.
+ */
+JS_REQUIRES_STACK void
+TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
 {
-    unsigned typemap_size = copy->numGlobalSlots + copy->numStackSlots;
-    LIns* data = lir->skip(sizeof(GuardRecord) +
-                           sizeof(VMSideExit) +
-                           typemap_size * sizeof(uint8));
-    GuardRecord* rec = (GuardRecord*)data->payload();
-    VMSideExit* exit = (VMSideExit*)(rec + 1);
+    LIns* guardRec = createGuardRecord(exit);
 
-    /* Setup guard record structure. */
-    memset(rec, 0, sizeof(GuardRecord));
-    rec->exit = exit;
-
-    /* Copy side exit structure. */
-    memcpy(exit, copy, sizeof(VMSideExit) + typemap_size * sizeof(uint8));
-    exit->guards = rec;
-    exit->from = fragment;
-    exit->target = NULL;
-
-    /* BIG FAT WARNING: If compilation fails, we currently don't reset the lirbuf so its safe
-       to keep references to the side exits here. If we ever start rewinding those lirbufs,
-       we have to make sure we purge the side exits that then no longer will be in valid
-       memory. */
+    /*
+     * BIG FAT WARNING: If compilation fails we don't reset the lirbuf, so it's
+     * safe to keep references to the side exits here. If we ever start
+     * rewinding those lirbufs, we have to make sure we purge the side exits
+     * that then no longer will be in valid memory.
+     */
     if (exit->exitType == LOOP_EXIT)
         treeInfo->sideExits.add(exit);
-    return data;
-}
 
-/* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
-   and using the supplied side exit if the conditon doesn't hold. */
-JS_REQUIRES_STACK void
-TraceRecorder::guard(bool expected, LIns* cond, LIns* exit)
-{
     if (!cond->isCond()) {
         expected = !expected;
         cond = lir->ins_eq0(cond);
     }
-#ifdef DEBUG
-    LIns* guard =
-#endif
-    lir->insGuard(expected ? LIR_xf : LIR_xt, cond, exit);
-#ifdef DEBUG
-    if (guard) {
-        GuardRecord* lr = guard->record();
-        VMSideExit* e = (VMSideExit*)lr->exit;
-        debug_only_v(printf("    lr=%p exitType=%d\n", (void*)e, e->exitType);)
+
+    LIns* guardIns =
+        lir->insGuard(expected ? LIR_xf : LIR_xt, cond, guardRec);
+    if (guardIns) {
+        debug_only_v(printf("    SideExit=%p exitType=%d\n", (void*)exit, exit->exitType);)
     } else {
         debug_only_v(printf("    redundant guard, eliminated\n");)
     }
-#endif
+}
+
+JS_REQUIRES_STACK VMSideExit*
+TraceRecorder::copy(VMSideExit* copy)
+{
+    size_t typemap_size = copy->numGlobalSlots + copy->numStackSlots;
+    LIns* data = lir->skip(sizeof(VMSideExit) +
+                           typemap_size * sizeof(uint8));
+    VMSideExit* exit = (VMSideExit*) data->payload();
+
+    /* Copy side exit structure. */
+    memcpy(exit, copy, sizeof(VMSideExit) + typemap_size * sizeof(uint8));
+    exit->guards = NULL;
+    exit->from = fragment;
+    exit->target = NULL;
+
+    /*
+     * BIG FAT WARNING: If compilation fails we don't reset the lirbuf, so it's
+     * safe to keep references to the side exits here. If we ever start
+     * rewinding those lirbufs, we have to make sure we purge the side exits
+     * that then no longer will be in valid memory.
+     */
+    if (exit->exitType == LOOP_EXIT)
+        treeInfo->sideExits.add(exit);
+    return exit;
 }
 
 /* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
@@ -2684,14 +2670,9 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
     JS_ASSERT((*cx->fp->regs->pc == JSOP_LOOP || *cx->fp->regs->pc == JSOP_NOP) && !cx->fp->imacpc);
 
     bool stable;
-    LIns* exitIns;
     Fragment* peer;
-    VMSideExit* exit;
     VMFragment* peer_root;
     Fragmento* fragmento = tm->fragmento;
-
-    exitIns = snapshot(UNSTABLE_LOOP_EXIT);
-    exit = (VMSideExit*)((GuardRecord*)exitIns->payload())->exit;
 
     if (callDepth != 0) {
         debug_only_v(printf("Blacklisted: stack depth mismatch, possible recursion.\n");)
@@ -2700,6 +2681,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
         return;
     }
 
+    VMSideExit* exit = snapshot(UNSTABLE_LOOP_EXIT);
     JS_ASSERT(exit->numStackSlots == treeInfo->nStackTypes);
 
     VMFragment* root = (VMFragment*)fragment->root;
@@ -2724,7 +2706,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
     }
 
     if (!stable) {
-        fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exitIns);
+        fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
 
         /*
          * If we didn't find a type stable peer, we compile the loop anyway and
@@ -2753,7 +2735,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
         }
     } else {
         exit->target = fragment->root;
-        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exitIns);
+        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), createGuardRecord(exit));
     }
     compile(tm);
 
@@ -2863,8 +2845,6 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
 JS_REQUIRES_STACK void
 TraceRecorder::endLoop(JSTraceMonitor* tm)
 {
-    LIns* exitIns = snapshot(LOOP_EXIT);
-
     if (callDepth != 0) {
         debug_only_v(printf("Blacklisted: stack depth mismatch, possible recursion.\n");)
         js_Blacklist(fragment->root);
@@ -2872,7 +2852,8 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
         return;
     }
 
-    fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exitIns);
+    fragment->lastIns =
+        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(snapshot(LOOP_EXIT)));
     compile(tm);
 
     if (tm->fragmento->assm()->error() != nanojit::None)
@@ -5154,8 +5135,10 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
              */
             v = (LOpcode)((int)v & ~LIR64);
             LIns* result = lir->ins2(v, d0, d1);
-            if (!result->isconst() && (!overflowSafe(d0) || !overflowSafe(d1)))
-                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, result), snapshot(OVERFLOW_EXIT));
+            if (!result->isconst() && (!overflowSafe(d0) || !overflowSafe(d1))) {
+                VMSideExit* exit = snapshot(OVERFLOW_EXIT);
+                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, result), createGuardRecord(exit));
+            }
             return lir->ins1(LIR_i2f, result);
         }
         /*
@@ -5328,11 +5311,11 @@ TraceRecorder::tableswitch()
     si->index = (uint32) -1;
     LIns* diff = lir->ins2(LIR_sub, v_ins, lir->insImm(low));
     LIns* cmp = lir->ins2(LIR_ult, diff, lir->insImm(si->count));
-    lir->insGuard(LIR_xf, cmp, snapshot(DEFAULT_EXIT));
+    lir->insGuard(LIR_xf, cmp, createGuardRecord(snapshot(DEFAULT_EXIT)));
     lir->insStore(diff, lir->insImmPtr(&si->index), lir->insImm(0));
-    LIns* exit = snapshot(CASE_EXIT);
-    ((GuardRecord*) exit->payload())->exit->switchInfo = si;
-    return lir->insGuard(LIR_xtbl, diff, exit);
+    VMSideExit* exit = snapshot(CASE_EXIT);
+    exit->switchInfo = si;
+    return lir->insGuard(LIR_xtbl, diff, createGuardRecord(exit));
 }
 #endif
 
@@ -6191,7 +6174,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 }
 
 JS_REQUIRES_STACK void
-TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
+TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
 {
     if (isNumber(v)) {
         // JSVAL_IS_NUMBER(v)
@@ -6297,12 +6280,12 @@ TraceRecorder::getThis(LIns*& this_ins)
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, LIns* exit)
+TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit)
 {
     bool cond = STOBJ_GET_CLASS(obj) == clasp;
 
     LIns* class_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, classword));
-    class_ins = lir->ins2(LIR_piand, class_ins, lir->insImm(~3));
+    class_ins = lir->ins2(LIR_piand, class_ins, lir->insImm(~JSSLOT_CLASS_MASK_BITS));
 
     char namebuf[32];
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
@@ -6324,7 +6307,7 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
 
     bool cond = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < capacity);
     if (cond) {
-        LIns* exit = snapshot(exitType);
+        VMSideExit* exit = snapshot(exitType);
         /* Guard array length */
         guard(true,
               lir->ins2(LIR_ult, idx_ins, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
@@ -6358,7 +6341,7 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
                                                           dslots_ins,
                                                           -(int)sizeof(jsval))),
                                    NULL);
-        lir->insGuard(LIR_x, lir->insImm(1), snapshot(exitType));
+        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(snapshot(exitType)));
         LIns* label = lir->ins0(LIR_label);
         br1->target(label);
         br2->target(label);
@@ -6802,9 +6785,11 @@ TraceRecorder::record_JSOP_NEG()
             -asNumber(v) == (int)-asNumber(v)) {
             a = lir->ins1(LIR_neg, ::demote(lir, a));
             if (!a->isconst()) {
-                LIns* exit = snapshot(OVERFLOW_EXIT);
-                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, a), exit);
-                lir->insGuard(LIR_xt, lir->ins2(LIR_eq, a, lir->insImm(0)), exit);
+                VMSideExit* exit = snapshot(OVERFLOW_EXIT);
+                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, a),
+                              createGuardRecord(exit));
+                lir->insGuard(LIR_xt, lir->ins2(LIR_eq, a, lir->insImm(0)),
+                              createGuardRecord(exit));
             }
             a = lir->ins1(LIR_i2f, a);
         } else {
@@ -6982,13 +6967,12 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
         JS_ASSERT(!pendingTraceableNative);
 
         // Take snapshot for deep LeaveTree and store it in cx->bailExit.
-        LIns* rec_ins = snapshot(DEEP_BAIL_EXIT);
-        GuardRecord* rec = (GuardRecord *) rec_ins->payload();
-        JS_ASSERT(rec->exit);
-        lir->insStorei(INS_CONSTPTR(rec->exit), cx_ins, offsetof(JSContext, bailExit));
+        VMSideExit* exit = snapshot(DEEP_BAIL_EXIT);
+        lir->insStorei(INS_CONSTPTR(exit), cx_ins, offsetof(JSContext, bailExit));
 
         // Tell nanojit not to discard or defer stack writes before this call.
-        lir->insGuard(LIR_xbarrier, rec_ins, rec_ins);
+        LIns* guardRec = createGuardRecord(exit);
+        lir->insGuard(LIR_xbarrier, guardRec, guardRec);
     }
 
     LIns* res_ins = lir->insCall(known->builtin, args);
@@ -7893,27 +7877,30 @@ TraceRecorder::guardCallee(jsval& callee)
 {
     JS_ASSERT(VALUE_IS_FUNCTION(cx, callee));
 
-    LIns* exit = snapshot(BRANCH_EXIT);
+    VMSideExit* branchExit = snapshot(BRANCH_EXIT);
     JSObject* callee_obj = JSVAL_TO_OBJECT(callee);
     LIns* callee_ins = get(&callee);
 
-    /*
-     * NB: The following guard guards at runtime that the callee is a
-     * function. Even if the given value is an object that doesn't have
-     * a private slot, the value we're matching against is not forgeable.
-     */
+    guard(true,
+          lir->ins2(LIR_eq,
+                    lir->ins2(LIR_piand,
+                              lir->insLoad(LIR_ldp, callee_ins,
+                                           offsetof(JSObject, classword)),
+                              INS_CONSTPTR((void*)(~JSSLOT_CLASS_MASK_BITS))),
+                    INS_CONSTPTR(&js_FunctionClass)),
+          snapshot(MISMATCH_EXIT));
     guard(true,
           lir->ins2(LIR_eq,
                     lir->ins2(LIR_piand,
                               stobj_get_fslot(callee_ins, JSSLOT_PRIVATE),
                               INS_CONSTPTR((void*)(~JSVAL_INT))),
                     INS_CONSTPTR(OBJ_GET_PRIVATE(cx, callee_obj))),
-          exit);
+          branchExit);
     guard(true,
           lir->ins2(LIR_eq,
                     stobj_get_fslot(callee_ins, JSSLOT_PARENT),
                     INS_CONSTPTR(OBJ_GET_PARENT(cx, callee_obj))),
-          exit);
+          branchExit);
     return true;
 }
 
@@ -8243,7 +8230,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
          * This trace will be valid as long as neither the object nor any object
          * on its prototype chain change shape.
          */
-        LIns* exit = snapshot(BRANCH_EXIT);
+        VMSideExit* exit = snapshot(BRANCH_EXIT);
         for (;;) {
             LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
             LIns* ops_ins;
@@ -8357,7 +8344,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
         if (js_PrototypeHasIndexedProperties(cx, obj))
             return false;
 
-        LIns* exit = snapshot(BRANCH_EXIT);
+        VMSideExit* exit = snapshot(BRANCH_EXIT);
         while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
             obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
             LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
