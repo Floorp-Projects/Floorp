@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Sungjoon Steve Won <stevewon@gmail.com> (Original Author)
  *   Asaf Romano <mano@mozilla.com>
+ *   Marco Bonarco <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -392,10 +393,12 @@ placesCreateFolderTransactions.prototype = {
   },
 
   undoTransaction: function PCFT_undoTransaction() {
-    for (var i = 0; i < this._childItemsTransactions.length; ++i) {
+    // Undo transactions should always be done in reverse order.
+    for (var i = this._childItemsTransactions.length - 1; i >= 0 ; i--) {
       var txn = this._childItemsTransactions[i];
       txn.undoTransaction();
     }
+    // Remove item only after all child transactions have been reverted.
     PlacesUtils.bookmarks.removeFolder(this._id);
   }
 };
@@ -436,11 +439,13 @@ placesCreateItemTransactions.prototype = {
   },
 
   undoTransaction: function PCIT_undoTransaction() {
-    PlacesUtils.bookmarks.removeItem(this._id);
-    for (var i = 0; i < this._childTransactions.length; ++i) {
+    // Undo transactions should always be done in reverse order.
+    for (var i = this._childTransactions.length - 1; i >= 0; i--) {
       var txn = this._childTransactions[i];
       txn.undoTransaction();
     }
+    // Remove item only after all child transactions have been reverted.
+    PlacesUtils.bookmarks.removeItem(this._id);
   }
 };
 

@@ -146,9 +146,14 @@ function test() {
         var node = PlacesUtils.getFolderContents(PlacesUtils.placesRootId, false, true).root;
         for (var i = 0; i < node.childCount; i++) {
           var child = node.getChild(i);
-          if (child.itemId == aId)
+          if (child.itemId == aId) {
+            node.containerOpen = false;
             return child;
+          }
         }
+        node.containerOpen = false;
+        throw("Unable to find child node");
+        return null;
       }
 
       for (var i = 0; i < this.folders.length; i++) {
@@ -157,8 +162,8 @@ function test() {
         is(PlacesControllerDragHelper.canMoveContainer(id),
            false, "shouldn't be able to move special folder id");
 
-        //var node = PlacesUtils.getFolderContents(id, false, true).root;
         var node = getRootChildNode(id);
+        isnot(node, null, "Node found");
         is(PlacesControllerDragHelper.canMoveNode(node),
            false, "shouldn't be able to move special folder node");
 
@@ -199,6 +204,8 @@ function test() {
       
       is(PlacesControllerDragHelper.canMoveNode(tagNode),
          false, "should not be able to move tag container node");
+
+      tagsNode.containerOpen = false;
     }
   });
 
