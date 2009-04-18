@@ -5449,7 +5449,7 @@ JS_GetStringChars(JSString *str)
         if (s) {
             memcpy(s, JSSTRDEP_CHARS(str), n * sizeof *s);
             s[n] = 0;
-            JSFLATSTR_INIT(str, s, n);
+            JSFLATSTR_REINIT(str, s, n);
         } else {
             s = JSSTRDEP_CHARS(str);
         }
