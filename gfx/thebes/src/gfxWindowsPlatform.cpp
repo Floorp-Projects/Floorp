@@ -280,8 +280,9 @@ void
 gfxWindowsPlatform::FindFonts()
 {
     nsTArray<nsString> searchPaths(2);
-    nsTArray<nsString> fontPatterns(2);
+    nsTArray<nsString> fontPatterns(3);
     fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.ttf"));
+    fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.ttc"));
     fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.otf"));
     wchar_t pathBuf[256];
     SHGetSpecialFolderPathW(0, pathBuf, CSIDL_WINDOWS, 0);
