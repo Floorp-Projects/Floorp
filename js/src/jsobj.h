@@ -667,7 +667,7 @@ extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
 
-extern int
+extern JSBool
 js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
                       JSObject **pobjp, JSProperty **propp,
                       JSPropCacheEntry **entryp);

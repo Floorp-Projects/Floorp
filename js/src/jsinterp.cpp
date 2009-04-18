@@ -1933,7 +1933,6 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
         return JS_FALSE;
 
     fp->scopeChain = withobj;
-    js_DisablePropertyCache(cx);
     return JS_TRUE;
 }
 
@@ -1948,7 +1947,6 @@ js_LeaveWith(JSContext *cx)
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     cx->fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
     JS_SetPrivate(cx, withobj, NULL);
-    js_EnablePropertyCache(cx);
 }
 
 JS_REQUIRES_STACK JSClass *
@@ -1963,23 +1961,6 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
         return clasp;
     }
     return NULL;
-}
-
-JS_STATIC_INTERPRET JS_REQUIRES_STACK jsint
-js_CountWithBlocks(JSContext *cx, JSStackFrame *fp)
-{
-    jsint n;
-    JSObject *obj;
-    JSClass *clasp;
-
-    n = 0;
-    for (obj = fp->scopeChain;
-         (clasp = js_IsActiveWithOrBlock(cx, obj, 0)) != NULL;
-         obj = OBJ_GET_PARENT(cx, obj)) {
-        if (clasp == &js_WithClass)
-            ++n;
-    }
-    return n;
 }
 
 /*
@@ -2926,9 +2907,6 @@ js_Interpret(JSContext *cx)
         fp->displaySave = *disp;
         *disp = fp;
     }
-#ifdef DEBUG
-    fp->pcDisabledSave = JS_PROPERTY_CACHE(cx).disabled;
-#endif
 
 # define CHECK_INTERRUPT_HANDLER()                                            \
     JS_BEGIN_MACRO                                                            \
@@ -2965,8 +2943,6 @@ js_Interpret(JSContext *cx)
         fp->regs = &regs;
         JS_ASSERT((size_t) (regs.pc - script->code) <= script->length);
         JS_ASSERT((size_t) (regs.sp - StackBase(fp)) <= StackDepth(script));
-        JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
-        JS_PROPERTY_CACHE(cx).disabled += js_CountWithBlocks(cx, fp);
 
         /*
          * To support generator_throw and to catch ignored exceptions,
@@ -3194,7 +3170,6 @@ js_Interpret(JSContext *cx)
                 JSInlineFrame *ifp = (JSInlineFrame *) fp;
                 void *hookData = ifp->hookData;
 
-                JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
                 JS_ASSERT(!fp->blockChain);
                 JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
 
@@ -4194,7 +4169,7 @@ js_Interpret(JSContext *cx)
                 LOAD_ATOM(0);
             }
             id = ATOM_TO_JSID(atom);
-            if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
+            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
                 goto error;
             if (!prop)
                 goto atom_not_defined;
@@ -5050,10 +5025,6 @@ js_Interpret(JSContext *cx)
                         newifp->frame.displaySave = *disp;
                         *disp = &newifp->frame;
                     }
-#ifdef DEBUG
-                    newifp->frame.pcDisabledSave =
-                        JS_PROPERTY_CACHE(cx).disabled;
-#endif
                     newifp->mark = newmark;
 
                     /* Compute the 'this' parameter now that argv is set. */
@@ -5286,7 +5257,7 @@ js_Interpret(JSContext *cx)
             }
 
             id = ATOM_TO_JSID(atom);
-            if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
+            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
                 goto error;
             if (!prop) {
                 /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -7340,8 +7311,6 @@ js_Interpret(JSContext *cx)
         gen = FRAME_TO_GENERATOR(fp);
         gen->savedRegs = regs;
         gen->frame.regs = &gen->savedRegs;
-        JS_PROPERTY_CACHE(cx).disabled -= js_CountWithBlocks(cx, fp);
-        JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
     } else
 #endif /* JS_HAS_GENERATORS */
     {
@@ -7353,7 +7322,6 @@ js_Interpret(JSContext *cx)
     /* Undo the remaining effects committed on entry to js_Interpret. */
     if (script->staticLevel < JS_DISPLAY_SIZE)
         cx->display[script->staticLevel] = fp->displaySave;
-    JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
     --cx->interpLevel;
