@@ -2620,6 +2620,16 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_DECNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEINC_LENGTH);
 JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 
+#ifdef JS_TRACER
+# define ABORT_RECORDING(cx, reason)                                          \
+    JS_BEGIN_MACRO                                                            \
+        if (TRACE_RECORDER(cx))                                               \
+            js_AbortRecording(cx, reason);                                    \
+    JS_END_MACRO
+#else
+# define ABORT_RECORDING(cx, reason)    ((void) 0)
+#endif
+
 JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx)
 {
@@ -4364,15 +4374,8 @@ js_Interpret(JSContext *cx)
 
 #define COMPUTE_THIS(cx, fp, obj)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (fp->flags & JSFRAME_COMPUTED_THIS) {                              \
-            obj = fp->thisp;                                                  \
-        } else {                                                              \
-            obj = js_ComputeThis(cx, JS_TRUE, fp->argv);                      \
-            if (!obj)                                                         \
-                goto error;                                                   \
-            fp->thisp = obj;                                                  \
-            fp->flags |= JSFRAME_COMPUTED_THIS;                               \
-        }                                                                     \
+        if (!(obj = js_ComputeThisForFrame(cx, fp)))                          \
+            goto error;                                                       \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_THIS)
@@ -4786,10 +4789,8 @@ js_Interpret(JSContext *cx)
                     if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                         goto error;
                 }
-#ifdef JS_TRACER
-                if (!entry && TRACE_RECORDER(cx))
-                    js_AbortRecording(cx, "SetPropUncached");
-#endif
+                if (!entry)
+                    ABORT_RECORDING(cx, "SetPropUncached");
             } while (0);
           END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
 
