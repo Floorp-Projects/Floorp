@@ -65,6 +65,7 @@ CPPSRCS = \
 	$(NULL)
 
 ifdef MOZ_ENABLE_LIBNOTIFY
+REQUIRES += thebes
 CPPSRCS += \
 	nsAlertsService.cpp \
 	nsAlertsIconListener.cpp \
