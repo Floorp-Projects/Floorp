@@ -5009,6 +5009,30 @@ test(testGlobalShapeChangeAfterDeepBail);
 for (let i = 0; i < 5; i++)
     delete this["bug" + i];
 
+function testFunctionIdentityChange()
+{
+  function a() {}
+  function b() {}
+
+  var o = { a: a, b: b };
+
+  for (var prop in o)
+  {
+    for (var i = 0; i < 1000; i++)
+      o[prop]();
+  }
+
+  return true;
+}
+testFunctionIdentityChange.expected = true;
+testFunctionIdentityChange.jitstats = {
+  recorderStarted: 2,
+  traceCompleted: 2,
+  sideExitIntoInterpreter: 3
+};
+test(testFunctionIdentityChange);
+
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
