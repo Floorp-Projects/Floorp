@@ -280,7 +280,7 @@
     </xul:hbox>
     </content>
 
-    <implementation implements="nsIDOMEventListener, nsIEditActionListener">
+    <implementation implements="nsIDOMEventListener, nsIEditActionListener, nsIWebProgressListener">
       <field name="FIND_NORMAL">0</field>
       <field name="FIND_TYPEAHEAD">1</field>
       <field name="FIND_LINKS">2</field>
@@ -327,6 +327,7 @@
           if (this._browser) {
             this._browser.removeEventListener("keypress", this, false);
             this._browser.removeEventListener("mouseup", this, false);
+            this._browser.removeProgressListener(this);
             this._foundLink = null;
             this._foundEditable = null;
             this._currentWindow = null;
@@ -336,6 +337,8 @@
           if (this._browser) {
             this._browser.addEventListener("keypress", this, false);
             this._browser.addEventListener("mouseup", this, false);
+            this._browser.addProgressListener(this,
+              Components.interfaces.nsIWebProgress.NOTIFY_LOCATION);
             this._findField.value = this._browser.fastFind.searchString;
           }
           return val;
@@ -889,6 +892,124 @@
           });
         ]]></body>
       </method>
+
+      <!--
+        - nsIWebProgressListener logic follows
+        - 
+        - We implement this interface to allow us to update our status UI 
+        - when navigating to a new tab, or loading a page from the cache.
+        - This then allows the user to adjust the highlighting on the newly
+        - displayed page.
+        -->
+
+      <!--
+        - Detects whether highlighting is present in a given window,
+        - by checking the window's content document, and recursively checking
+        - any frames contained within this window.
+        - @param aWindow
+        -        the window to check
+        - @returns the highlighted string, if there is highlighting present,
+        -          null otherwise
+        -->
+      <method name="_getHighlightedString">
+        <parameter name="aWindow"/>
+        <body><![CDATA[
+          var win = aWindow || this.browser.contentWindow;
+
+          // Obtain the selection controller for this window
+          var controller = this._getSelectionController(win);
+
+          if (!controller)
+            return null;
+
+          var selection = controller.getSelection(controller.SELECTION_FIND);
+          if (selection && selection.rangeCount > 0)
+            return selection.getRangeAt(0).toString();
+
+          var doc = win.document;
+          // Bail now if document cannot contain highlighting
+          if (!doc || !(doc instanceof HTMLDocument))
+            return null;
+
+          // Check for highlighting in elements with independent
+          // selection controllers
+          if (this._editors) {
+            for (var x = 0; x < this._editors.length; x++) {
+              if (this._editors[x].document == doc) {
+                var sel = this._editors[x].selectionController
+                                          .getSelection(this._findSelection);
+                return sel.getRangeAt(0).toString();
+              }
+            }
+          }
+
+          // If we still haven't found highlighting, recursively check any
+          // frames in the current window
+          var hasHighlight = null;
+          var i = 0;
+          while (!hasHighlight && win.frames && i < win.frames.length) {
+            hasHighlight = this._getHighlightedString(win.frames[i]);
+            i++;
+          }
+          return hasHighlight;
+        ]]></body>
+      </method>
+
+      <!-- Start of nsIWebProgressListener implementations -->
+
+      <!--
+        - Updates the findbar UI on a page change, to allow removal of highlighting
+        - where appropriate
+        -->
+      <method name="onLocationChange">
+        <parameter name="aWebProgress"/>
+        <parameter name="aRequest"/>
+        <parameter name="aURI"/>
+        <body><![CDATA[
+          var highlightButton = this.getElement("highlight");
+
+          // Establish whether any highlighting exists on the new page
+          var lastHighlightString = this._getHighlightedString();
+          if (!lastHighlightString) {
+            highlightButton.checked = false;
+            if (!this._findField.value)
+              highlightButton.disabled = true;
+            return;
+          }
+
+          // Update the highlight button and display the
+          // currently highlighted string
+          highlightButton.checked = true;
+          highlightButton.disabled = false;
+          this._findField.value = lastHighlightString;
+        ]]></body>
+      </method>
+
+      <method name="onProgressChange">
+        <body><![CDATA[
+          // Unimplemented
+        ]]></body>
+      </method>
+
+      <method name="onSecurityChange">
+        <body><![CDATA[
+          // Unimplemented
+        ]]></body>
+      </method>
+
+      <method name="onStateChange">
+        <body><![CDATA[
+          // Unimplemented
+        ]]></body>
+      </method>
+
+      <method name="onStatusChange">
+        <body><![CDATA[
+          // Unimplemented
+        ]]></body>
+      </method>
+
+      <!-- End of nsIWebProgressListener implementations -->
 
       <!--
         - Turns highlight on or off.
