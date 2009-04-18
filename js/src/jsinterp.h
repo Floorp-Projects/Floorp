@@ -129,9 +129,6 @@ struct JSStackFrame {
     JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
     JSStackFrame    *displaySave;   /* previous value of display entry for
                                        script->staticLevel */
-#ifdef DEBUG
-    jsrefcount      pcDisabledSave; /* for balanced property cache control */
-#endif
 
 #ifdef __cplusplus /* Aargh, LiveConnect, bug 442399. */
     inline void assertValidStackDepth(uintN depth);
@@ -615,9 +612,6 @@ js_LeaveWith(JSContext *cx);
 
 extern JS_REQUIRES_STACK JSClass *
 js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
-
-extern jsint
-js_CountWithBlocks(JSContext *cx, JSStackFrame *fp);
 
 /*
  * Unwind block and scope chains to match the given depth. The function sets

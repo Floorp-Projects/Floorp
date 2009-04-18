@@ -3411,9 +3411,6 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
         newifp->frame.displaySave = *disp;
         *disp = &newifp->frame;
     }
-#ifdef DEBUG
-    newifp->frame.pcDisabledSave = 0;
-#endif
 
     /*
      * Note that fp->script is still the caller's script; set the callee
@@ -5960,7 +5957,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         JSProperty* prop;
         if (JOF_OPMODE(*pc) == JOF_NAME) {
             JS_ASSERT(aobj == obj);
-            if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
+            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
                 ABORT_TRACE("failed to find name");
         } else {
             int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
