@@ -40,7 +40,6 @@ function test() {
   waitForExplicitFinish();
   
   // make sure we do save form data
-  let privacy_level = gPrefService.getIntPref("browser.sessionstore.privacy_level");
   gPrefService.setIntPref("browser.sessionstore.privacy_level", 0);
   
   let testURL = "chrome://mochikit/content/browser/" +
@@ -66,7 +65,7 @@ function test() {
     is(countBad,  0, "Didn't save text for ignored field types");
     
     // clean up
-    gPrefService.setIntPref("browser.sessionstore.privacy_level", privacy_level);
+    gPrefService.clearUserPref("browser.sessionstore.privacy_level");
     finish();
   }, true);
 }

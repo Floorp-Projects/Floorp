@@ -35,3 +35,9 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") != 403458-winmenu-ltr.xul 403458-winmenu-
 == 470711-1.xul 470711-1-ref.xul
 
 == box-shadow-styling.html box-shadow-styling-ref.html
+
+# RTL mirroring tests
+== checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html

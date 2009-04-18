@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<updates>
-  <update name="XPCShell Test" type="minor" version="1.1a1pre" platformVersion="2.1a1pre" extensionVersion="3.1a1pre" buildID="20080811053724" licenseURL="http://dummylicense/" detailsURL="http://dummydetails/">
-    <patch type="complete" URL="http://complete/" hashFunction="SHA1" hashValue="98db9dad8e1d80eda7e1170d0187d6f53e477059" size="9856459"/>
-    <patch type="partial" URL="http://partial/" hashFunction="SHA1" hashValue="e6678ca40ae7582316acdeddf3c133c9c8577de4" size="1316138"/>
-  </update>
-</updates>

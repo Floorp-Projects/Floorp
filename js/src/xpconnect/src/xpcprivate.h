@@ -108,7 +108,7 @@
 #include "nsVariant.h"
 #include "nsIPropertyBag.h"
 #include "nsIProperty.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
@@ -2541,7 +2541,7 @@ private:
     nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
 
-    JSObject*  NewOutObject(JSContext* cx);
+    JSObject*  NewOutObject(JSContext* cx, JSObject* scope);
 
     JSBool IsReflectable(uint16 i) const
         {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
@@ -2738,9 +2738,8 @@ public:
     JSBool AppendElement(nsISupports* element);
 
 private:
-    nsSupportsArray mArray;
-    PRUint32        mIndex;
-    PRUint32        mCount;
+    nsCOMArray<nsISupports> mArray;
+    PRInt32                 mIndex;
 };
 
 /***************************************************************************/

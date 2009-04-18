@@ -48,26 +48,25 @@
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 
-
 // pulled from the header so that we do not get multiple define errors during link
-static const GUID ras_DestNetInternet =
+static const GUID autodial_DestNetInternet =
         { 0x436ef144, 0xb4fb, 0x4863, { 0xa0, 0x41, 0x8f, 0x90, 0x5a, 0x62, 0xc5, 0x72 } };
 
-nsRASAutodial::nsRASAutodial()
+nsAutodial::nsAutodial()
 {
 }
 
-nsRASAutodial::~nsRASAutodial()
+nsAutodial::~nsAutodial()
 {
 }
 
 nsresult
-nsRASAutodial::Init()
+nsAutodial::Init()
 {
   return NS_OK;
 }
 
-nsresult nsRASAutodial::DialDefault(const PRUnichar* /* hostName */)
+nsresult nsAutodial::DialDefault(const PRUnichar* /* hostName */)
 {
 #ifdef WINCE_WINDOWS_MOBILE
   HANDLE connectionHandle;
@@ -79,29 +78,17 @@ nsresult nsRASAutodial::DialDefault(const PRUnichar* /* hostName */)
   conn_info.cbSize      = sizeof(conn_info);
   conn_info.dwParams    = CONNMGR_PARAM_GUIDDESTNET;
   conn_info.dwPriority  = CONNMGR_PRIORITY_USERINTERACTIVE;
-  conn_info.guidDestNet = ras_DestNetInternet;
+  conn_info.guidDestNet = autodial_DestNetInternet;
   conn_info.bExclusive  = FALSE;
   conn_info.bDisabled   = FALSE;
   
   DWORD status;
   HRESULT result = ConnMgrEstablishConnectionSync(&conn_info, 
-						  &connectionHandle, 
-						  60000,
-						  &status);
-  if (result != S_OK)
-    return NS_ERROR_FAILURE;
+                                                  &connectionHandle, 
+                                                  60000,
+                                                  &status);
 
-  PRInt32 defaultCacheTime = 1;    // 1 second according to msdn
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRInt32 t;
-    if (NS_SUCCEEDED(prefs->GetIntPref("network.autodial.cacheTime", &t)))
-	defaultCacheTime = t;
-  }
-
-  ConnMgrReleaseConnection(connectionHandle, defaultCacheTime);
-  
-  if (status != CONNMGR_STATUS_CONNECTED)
+  if (result != S_OK || status != CONNMGR_STATUS_CONNECTED)
     return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -111,7 +98,7 @@ nsresult nsRASAutodial::DialDefault(const PRUnichar* /* hostName */)
 }
 
 PRBool
-nsRASAutodial::ShouldDialOnNetworkError()
+nsAutodial::ShouldDialOnNetworkError()
 {
 #ifdef WINCE_WINDOWS_MOBILE
   return PR_TRUE;

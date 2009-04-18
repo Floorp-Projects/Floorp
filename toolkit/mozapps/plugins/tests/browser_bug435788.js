@@ -20,6 +20,48 @@ function finishTest(e) {
   finish();
 }
 
+// Gets the number of plugin items in the detected list
+function getListCount() {
+  var list = gPFS.document.getElementById("pluginList");
+  return list.childNodes.length;
+}
+
+// Gets wether the list contains a particular plugin name
+function hasListItem(name, version) {
+  var label = name + " " + (version ? version : "");
+  var list = gPFS.document.getElementById("pluginList");
+  for (var i = 0; i < list.childNodes.length; i++) {
+    if (list.childNodes[i].label == label)
+      return true;
+  }
+  return false;
+}
+
+// Gets the number of plugin results
+function getResultCount() {
+  var list = gPFS.document.getElementById("pluginResultList");
+  return list.childNodes.length;
+}
+
+// Gets the plugin result for a particular plugin name
+function getResultItem(name, version) {
+  var label = name + " " + (version ? version : "");
+  var list = gPFS.document.getElementById("pluginResultList");
+  for (var i = 0; i < list.childNodes.length; i++) {
+    if (list.childNodes[i].childNodes[1].value == label) {
+      var item = {
+        name: name,
+        version: version,
+        status: null
+      };
+      if (list.childNodes[i].childNodes[2].tagName == "label")
+        item.status = list.childNodes[i].childNodes[2].value;
+      return item;
+    }
+  }
+  return null;
+}
+
 // Test a working installer
 function prepare_test_1() {
   ok(true, "Test 1");
@@ -47,9 +89,8 @@ function test_1_start() {
 }
 
 function test_1_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 1, "Should have found 1 plugin to install");
-  is(list.childNodes[0].label, "Test plugin 1 ", "Should have seen the right plugin name");
+  is(getListCount(), 1, "Should have found 1 plugin to install");
+  ok(hasListItem("Test plugin 1", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_1_complete);
@@ -58,11 +99,10 @@ function test_1_available() {
 }
 
 function test_1_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 1, "Should have attempted to install 1 plugin");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Installed", "Should have been a successful install");
+  is(getResultCount(), 1, "Should have attempted to install 1 plugin");
+  var item = getResultItem("Test plugin 1", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Installed", "Should have been a successful install");
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -92,9 +132,8 @@ function test_2_start() {
 }
 
 function test_2_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 1, "Should have found 1 plugin to install");
-  is(list.childNodes[0].label, "Test plugin 2 ", "Should have seen the right plugin name");
+  is(getListCount(), 1, "Should have found 1 plugin to install");
+  ok(hasListItem("Test plugin 2", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_2_complete);
@@ -103,11 +142,10 @@ function test_2_available() {
 }
 
 function test_2_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 1, "Should have attempted to install 1 plugin");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Failed", "Should have been a failed install");
+  is(getResultCount(), 1, "Should have attempted to install 1 plugin");
+  var item = getResultItem("Test plugin 2", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Failed", "Should have been a failed install");
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -141,10 +179,9 @@ function test_3_start() {
 }
 
 function test_3_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 2, "Should have found 2 plugins to install");
-  is(list.childNodes[0].label, "Test plugin 1 ", "Should have seen the right plugin name");
-  is(list.childNodes[1].label, "Test plugin 2 ", "Should have seen the right plugin name");
+  is(getListCount(), 2, "Should have found 2 plugins to install");
+  ok(hasListItem("Test plugin 1", null), "Should have seen the right plugin name");
+  ok(hasListItem("Test plugin 2", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_3_complete);
@@ -153,14 +190,13 @@ function test_3_available() {
 }
 
 function test_3_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 2, "Should have attempted to install 2 plugins");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Installed", "Should have been a failed install");
-  status = list.childNodes[1].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Failed", "Should have been a failed install");
+  is(getResultCount(), 2, "Should have attempted to install 2 plugins");
+  var item = getResultItem("Test plugin 1", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Installed", "Should have been a successful install");
+  item = getResultItem("Test plugin 2", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Failed", "Should have been a failed install");
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -190,9 +226,8 @@ function test_4_start() {
 }
 
 function test_4_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 1, "Should have found 1 plugin to install");
-  is(list.childNodes[0].label, "Test plugin 3 ", "Should have seen the right plugin name");
+  is(getListCount(), 1, "Should have found 1 plugin to install");
+  ok(hasListItem("Test plugin 3", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_4_complete);
@@ -201,11 +236,10 @@ function test_4_available() {
 }
 
 function test_4_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 1, "Should have attempted to install 1 plugin");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Failed", "Should have not been a successful install");
+  is(getResultCount(), 1, "Should have attempted to install 1 plugin");
+  var item = getResultItem("Test plugin 3", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Failed", "Should have not been a successful install");
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -236,9 +270,8 @@ function test_5_start() {
 }
 
 function test_5_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 1, "Should have found 1 plugin to install");
-  is(list.childNodes[0].label, "Test extension 1 ", "Should have seen the right plugin name");
+  is(getListCount(), 1, "Should have found 1 plugin to install");
+  ok(hasListItem("Test extension 1", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_5_complete);
@@ -247,11 +280,10 @@ function test_5_available() {
 }
 
 function test_5_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 1, "Should have attempted to install 1 plugin");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Installed", "Should have been a successful install");
+  is(getResultCount(), 1, "Should have attempted to install 1 plugin");
+  var item = getResultItem("Test extension 1", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Installed", "Should have been a successful install");
 
   var em = Cc["@mozilla.org/extensions/manager;1"].
            getService(Ci.nsIExtensionManager);
@@ -286,9 +318,8 @@ function test_6_start() {
 }
 
 function test_6_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 1, "Should have found 1 plugin to install");
-  is(list.childNodes[0].label, "Test extension 2 ", "Should have seen the right plugin name");
+  is(getListCount(), 1, "Should have found 1 plugin to install");
+  ok(hasListItem("Test extension 2", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_6_complete);
@@ -297,11 +328,10 @@ function test_6_available() {
 }
 
 function test_6_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 1, "Should have attempted to install 1 plugin");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Failed", "Should have been a failed install");
+  is(getResultCount(), 1, "Should have attempted to install 1 plugin");
+  var item = getResultItem("Test extension 2", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Failed", "Should have been a failed install");
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -335,10 +365,9 @@ function test_7_start() {
 }
 
 function test_7_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 2, "Should have found 2 plugins to install");
-  is(list.childNodes[0].label, "Test extension 1 ", "Should have seen the right plugin name");
-  is(list.childNodes[1].label, "Test extension 2 ", "Should have seen the right plugin name");
+  is(getListCount(), 2, "Should have found 2 plugins to install");
+  ok(hasListItem("Test extension 1", null), "Should have seen the right plugin name");
+  ok(hasListItem("Test extension 2", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_7_complete);
@@ -347,14 +376,13 @@ function test_7_available() {
 }
 
 function test_7_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 2, "Should have attempted to install 2 plugins");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Installed", "Should have been a failed install");
-  status = list.childNodes[1].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Failed", "Should have been a failed install");
+  is(getResultCount(), 2, "Should have attempted to install 2 plugins");
+  var item = getResultItem("Test extension 1", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Installed", "Should have been a failed install");
+  item = getResultItem("Test extension 2", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Failed", "Should have been a failed install");
 
   var em = Cc["@mozilla.org/extensions/manager;1"].
            getService(Ci.nsIExtensionManager);
@@ -389,9 +417,8 @@ function test_8_start() {
 }
 
 function test_8_available() {
-  var list = gPFS.document.getElementById("pluginList");
-  is(list.childNodes.length, 1, "Should have found 1 plugin to install");
-  is(list.childNodes[0].label, "Test extension 3 ", "Should have seen the right plugin name");
+  is(getListCount(), 1, "Should have found 1 plugin to install");
+  ok(hasListItem("Test extension 3", null), "Should have seen the right plugin name");
 
   gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
     executeSoon(test_8_complete);
@@ -400,11 +427,10 @@ function test_8_available() {
 }
 
 function test_8_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 1, "Should have attempted to install 1 plugin");
-  var status = list.childNodes[0].childNodes[2];
-  is(status.tagName, "label", "Should have a status");
-  is(status.value, "Failed", "Should have not been a successful install");
+  is(getResultCount(), 1, "Should have attempted to install 1 plugin");
+  var item = getResultItem("Test extension 3", null);
+  ok(item, "Should have seen the installed item");
+  is(item.status, "Failed", "Should have not been a successful install");
 
   var em = Cc["@mozilla.org/extensions/manager;1"].
            getService(Ci.nsIExtensionManager);
@@ -438,8 +464,7 @@ function test_9_start() {
 }
 
 function test_9_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 0, "Should have found no plugins");
+  is(getResultCount(), 0, "Should have found no plugins");
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -471,8 +496,7 @@ function test_10_start() {
 }
 
 function test_10_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 0, "Should have found no plugins");
+  is(getResultCount(), 0, "Should have found no plugins");
 
   gPFS.document.documentElement.getButton("finish").click();
 }
@@ -504,8 +528,7 @@ function test_11_start() {
 }
 
 function test_11_complete() {
-  var list = gPFS.document.getElementById("pluginResultList");
-  is(list.childNodes.length, 0, "Should have found no plugins");
+  is(getResultCount(), 0, "Should have found no plugins");
 
   gPFS.document.documentElement.getButton("finish").click();
 }

@@ -79,9 +79,6 @@ public:
 
     void
     Remove(nsIContent* aContent) {
-        NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP)),
-                     "aContent not in map");
-
         PL_DHashTableOperate(&mTable, aContent, PL_DHASH_REMOVE);
 
         PRUint32 count = aContent->GetChildCount();

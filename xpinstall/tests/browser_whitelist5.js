@@ -16,7 +16,9 @@ function test() {
   gBrowser.loadURI(TESTROOT + "startsoftwareupdate.html? " + encodeURIComponent(TESTROOT + "unsigned.xpi"));
 }
 
-function allow_blocked() {
+function allow_blocked(installInfo) {
+  is(installInfo.originatingWindow, gBrowser.contentWindow, "Install should have been triggered by the right window");
+  is(installInfo.originatingURI.spec, gBrowser.currentURI.spec, "Install should have been triggered by the right uri");
   return false;
 }
 

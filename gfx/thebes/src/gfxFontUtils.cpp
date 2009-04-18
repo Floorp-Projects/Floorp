@@ -654,6 +654,32 @@ struct OS2Table {
     AutoSwap_PRUint16    usMaxContext;
 };
 
+// old 'kern' table, supported on Windows
+// see http://www.microsoft.com/typography/otspec/kern.htm
+struct KernTableVersion0 {
+    AutoSwap_PRUint16    version; // 0x0000
+    AutoSwap_PRUint16    nTables;
+};
+
+struct KernTableSubtableHeaderVersion0 {
+    AutoSwap_PRUint16    version;
+    AutoSwap_PRUint16    length;
+    AutoSwap_PRUint16    coverage;
+};
+
+// newer Mac-only 'kern' table, ignored by Windows
+// see http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6kern.html
+struct KernTableVersion1 {
+    AutoSwap_PRUint32    version; // 0x00010000
+    AutoSwap_PRUint32    nTables;
+};
+
+struct KernTableSubtableHeaderVersion1 {
+    AutoSwap_PRUint32    length;
+    AutoSwap_PRUint16    coverage;
+    AutoSwap_PRUint16    tupleIndex;
+};
+
 static PRBool
 IsValidSFNTVersion(PRUint32 version)
 {
@@ -673,6 +699,44 @@ CopySwapUTF16(const PRUint16 *aInBuf, PRUint16 *aOutBuf, PRUint32 aLen)
         aOutBuf++;
         aInBuf++;
     }
+}
+
+static PRBool
+ValidateKernTable(const PRUint8 *aKernTable, PRUint32 aKernLength)
+{
+    // -- kern table can cause crashes if invalid, so do some basic sanity-checking
+    const KernTableVersion0 *kernTable0 = reinterpret_cast<const KernTableVersion0*>(aKernTable);
+    if (aKernLength < sizeof(KernTableVersion0)) {
+        return PR_FALSE;
+    }
+    if (PRUint16(kernTable0->version) == 0) {
+        if (aKernLength < sizeof(KernTableVersion0) +
+                            PRUint16(kernTable0->nTables) * sizeof(KernTableSubtableHeaderVersion0)) {
+            return PR_FALSE;
+        }
+        // at least the table is big enough to contain the subtable headers;
+        // we could go further and check the actual subtable sizes....
+        // for now, assume this is OK
+        return PR_TRUE;
+    }
+
+    const KernTableVersion1 *kernTable1 = reinterpret_cast<const KernTableVersion1*>(aKernTable);
+    if (aKernLength < sizeof(KernTableVersion1)) {
+        return PR_FALSE;
+    }
+    if (kernTable1->version == 0x00010000) {
+        if (aKernLength < sizeof(KernTableVersion1) +
+                            kernTable1->nTables * sizeof(KernTableSubtableHeaderVersion1)) {
+            return PR_FALSE;
+        }
+        // at least the table is big enough to contain the subtable headers;
+        // we could go further and check the actual subtable sizes....
+        // for now, assume this is OK
+        return PR_TRUE;
+    }
+
+    // neither the old Windows version nor the newer Apple one; refuse to use it
+    return PR_FALSE;
 }
 
 PRBool
@@ -702,8 +766,8 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
 
     // iterate through the table headers to find the head, name and OS/2 tables
     PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE;
-    PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE;
-    PRUint32 headOffset, headLen, nameOffset, nameLen;
+    PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE, foundKern = PR_FALSE;
+    PRUint32 headOffset, headLen, nameOffset, nameLen, kernOffset, kernLen;
     PRUint32 i, numTables;
 
     numTables = sfntHeader->numTables;
@@ -747,6 +811,12 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
                 NS_WARNING("invalid font (head table length)");
                 return PR_FALSE;
             }
+            break;
+
+        case TRUETYPE_TAG('k','e','r','n'):
+            foundKern = PR_TRUE;
+            kernOffset = dirEntry->offset;
+            kernLen = dirEntry->length;
             break;
 
         case TRUETYPE_TAG('n','a','m','e'):
@@ -836,6 +906,14 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
 
         if (nameStringsBase + PRUint64(nameoff) + PRUint64(namelen) > dataLength) {
             NS_WARNING("invalid font (name table strings)");
+            return PR_FALSE;
+        }
+    }
+
+    // -- sanity-check the kern table, if present (see bug 487549)
+    if (foundKern) {
+        if (!ValidateKernTable(aFontData + kernOffset, kernLen)) {
+            NS_WARNING("invalid font (kern table)");
             return PR_FALSE;
         }
     }

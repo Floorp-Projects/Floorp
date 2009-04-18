@@ -822,43 +822,12 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     }
   }
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
-  NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
-
-  PRBool inherit;
-  nsresult rv = URIInheritsSecurityContext(aURI, &inherit);
-  if (NS_FAILED(rv) || inherit) {
-    nsCOMPtr<nsIDocument> sourceDoc = aContent->GetDocument();
-
-    if (!sourceDoc) {
-      // The source is in a 'zombie' document, or not part of a
-      // document any more. Don't let it perform loads in this docshell.
-      // XXXbz why only for the inherit case?
-
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIPresShell> presShell;
-    GetPresShell(getter_AddRefs(presShell));
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-    if (presShell->GetDocument() != sourceDoc) {
-      // The source is not in the current document, don't let it load anything
-      // that would inherit the principals of the current document.
-
-      return NS_OK;
-    }
-  }
-
   // Get the owner document of the link that was clicked, this will be
   // the document that the link is in, or the last document that the
   // link was in. From that document, we'll get the URI to use as the
   // referer, since the current URI in this webshell/docshell may be a
   // new document that we're in the process of loading.
-  nsCOMPtr<nsIDOMDocument> refererOwnerDoc;
-  node->GetOwnerDocument(getter_AddRefs(refererOwnerDoc));
-
-  nsCOMPtr<nsIDocument> refererDoc(do_QueryInterface(refererOwnerDoc));
+  nsCOMPtr<nsIDocument> refererDoc = aContent->GetOwnerDoc();
   NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIURI> referer = refererDoc->GetDocumentURI();
@@ -875,19 +844,20 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     anchor->GetType(typeHint);
   }
   
-  rv = InternalLoad(aURI,               // New URI
-                    referer,            // Referer URI
-                    nsnull,             // No onwer
-                    INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
-                    target.get(),       // Window target
-                    NS_LossyConvertUTF16toASCII(typeHint).get(),
-                    aPostDataStream,    // Post data stream
-                    aHeadersDataStream, // Headers stream
-                    LOAD_LINK,          // Load type
-                    nsnull,             // No SHEntry
-                    PR_TRUE,            // first party site
-                    aDocShell,          // DocShell out-param
-                    aRequest);          // Request out-param
+  nsresult rv = InternalLoad(aURI,                      // New URI
+                             referer,                   // Referer URI
+                             aContent->NodePrincipal(), // Owner is our node's
+                                                        // principal
+                             INTERNAL_LOAD_FLAGS_NONE,
+                             target.get(),              // Window target
+                             NS_LossyConvertUTF16toASCII(typeHint).get(),
+                             aPostDataStream,           // Post data stream
+                             aHeadersDataStream,        // Headers stream
+                             LOAD_LINK,                 // Load type
+                             nsnull,                    // No SHEntry
+                             PR_TRUE,                   // first party site
+                             aDocShell,                 // DocShell out-param
+                             aRequest);                 // Request out-param
   if (NS_SUCCEEDED(rv)) {
     DispatchPings(aContent, referer);
   }
