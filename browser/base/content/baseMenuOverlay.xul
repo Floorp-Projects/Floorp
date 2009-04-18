@@ -80,7 +80,7 @@
                   oncommand="openHelpLink('firefox-help')"
 #ifdef XP_MACOSX
                   label="&helpContentsMac.label;"
-                  key="key_openHelpMacFrontend"/>
+                  key="key_openHelpMac"/>
 #else
                   label="&helpContents.label;"
                   accesskey="&helpContents.accesskey;"
@@ -114,20 +114,20 @@
 
     <keyset id="baseMenuKeyset">
 #ifdef XP_MACOSX
-        <key id="key_openHelpMacFrontend"
+        <key id="key_openHelpMac"
              oncommand="openHelpLink('firefox-help');"
-             key="&openHelpMac.frontendCommandkey;"
-             modifiers="&openHelpMac.frontendModifiers;"/>
+             key="&helpMac.commandkey;"
+             modifiers="accel"/>
 <!-- These are used to build the Application menu under Cocoa widgets -->
         <key id="key_preferencesCmdMac"
              key="&preferencesCmdMac.commandkey;"
-             modifiers="&preferencesCmdMac.modifiers;"/>
+             modifiers="accel"/>
         <key id="key_hideThisAppCmdMac"
              key="&hideThisAppCmdMac.commandkey;"
-             modifiers="&hideThisAppCmdMac.modifiers;"/>
+             modifiers="accel"/>
         <key id="key_hideOtherAppsCmdMac"
              key="&hideOtherAppsCmdMac.commandkey;"
-             modifiers="&hideOtherAppsCmdMac.modifiers;"/>
+             modifiers="accel,alt"/>
 #else
         <key id="key_openHelp"
             oncommand="openHelpLink('firefox-help');"
