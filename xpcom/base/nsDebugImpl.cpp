@@ -378,6 +378,14 @@ Abort(const char *aMsg)
   // Don't know how to abort on this platform! call Break() instead
   Break(aMsg);
 #endif
+
+  // Still haven't aborted?  Try dereferencing null.
+  // (Written this way to lessen the likelihood of it being optimized away.)
+  gAssertionCount += *((PRInt32 *) 0); // TODO annotation saying we know 
+                                       // this is crazy
+
+  // Still haven't aborted?  Try _exit().
+  PR_ProcessExit(127);
 }
 
 // Abort() calls this function, don't call it!
