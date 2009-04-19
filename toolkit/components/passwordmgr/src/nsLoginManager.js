@@ -655,15 +655,17 @@ LoginManager.prototype = {
         // Locate the password fields in the form.
         var pwFields = [];
         for (var i = 0; i < form.elements.length; i++) {
-            if (form.elements[i].type != "password")
+            var element = form.elements[i];
+            if (!(element instanceof Ci.nsIDOMHTMLInputElement) ||
+                element.type != "password")
                 continue;
 
-            if (skipEmptyFields && !form.elements[i].value)
+            if (skipEmptyFields && !element.value)
                 continue;
 
             pwFields[pwFields.length] = {
                                             index   : i,
-                                            element : form.elements[i]
+                                            element : element
                                         };
         }
 
@@ -1078,7 +1080,7 @@ LoginManager.prototype = {
         if (passwordField.maxLength >= 0)
             maxPasswordLen = passwordField.maxLength;
 
-        logins = foundLogins.filter(function (l) {
+        var logins = foundLogins.filter(function (l) {
                 var fit = (l.username.length <= maxUsernameLen &&
                            l.password.length <= maxPasswordLen);
                 if (!fit)
