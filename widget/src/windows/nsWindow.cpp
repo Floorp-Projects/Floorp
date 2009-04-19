@@ -625,7 +625,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsControlDown      = PR_FALSE;
   mIsAltDown          = PR_FALSE;
   mIsDestroying       = PR_FALSE;
-  mOnDestroyCalled    = PR_FALSE;
   mDeferredPositioner = NULL;
   mLastPoint.x        = 0;
   mLastPoint.y        = 0;
@@ -1491,10 +1490,10 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
-  return GetParentWindow();
+  return GetParentWindow(PR_FALSE);
 }
 
-nsWindow* nsWindow::GetParentWindow()
+nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
 {
   if (mIsTopWidgetWindow) {
     // Must use a flag instead of mWindowType to tell if the window is the
@@ -1509,9 +1508,17 @@ nsWindow* nsWindow::GetParentWindow()
   if (mIsDestroying || mOnDestroyCalled)
     return nsnull;
 
+
+  // aIncludeOwner set to true implies walking the parent chain to retrieve the
+  // root owner. aIncludeOwner set to false implies the search will stop at the
+  // true parent (default).
   nsWindow* widget = nsnull;
   if (mWnd) {
-    HWND parent = ::GetParent(mWnd);
+    HWND parent = nsnull;
+    if (aIncludeOwner)
+      parent = ::GetParent(mWnd);
+    else
+      parent = ::GetAncestor(mWnd, GA_PARENT);
     if (parent) {
       widget = GetNSWindowPtr(parent);
       if (widget) {
@@ -8414,7 +8421,8 @@ nsWindow* nsWindow::GetTopLevelWindow(PRBool aStopOnDialogOrPopup)
       }
     }
 
-    nsWindow* parentWindow = curWindow->GetParentWindow();
+    // Retrieve the top level parent or owner window
+    nsWindow* parentWindow = curWindow->GetParentWindow(PR_TRUE);
 
     if (!parentWindow)
       return curWindow;
