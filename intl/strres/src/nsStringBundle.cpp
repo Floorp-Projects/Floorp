@@ -88,6 +88,7 @@ nsStringBundle::nsStringBundle(const char* aURLSpec,
                                nsIStringBundleOverride* aOverrideStrings) :
   mPropertiesURL(aURLSpec),
   mOverrideStrings(aOverrideStrings),
+  mMonitor(0),
   mAttemptedLoad(PR_FALSE),
   mLoaded(PR_FALSE)
 {
@@ -110,6 +111,10 @@ nsStringBundle::LoadProperties()
   mAttemptedLoad = PR_TRUE;
 
   nsresult rv;
+
+  mMonitor = nsAutoMonitor::NewMonitor("StringBundle monitor");
+  if (!mMonitor)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // do it synchronously
   nsCOMPtr<nsIURI> uri;
@@ -148,7 +153,7 @@ nsStringBundle::LoadProperties()
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
 {  
-  nsAutoCMonitor(this);
+  nsAutoMonitor automon(mMonitor);
   nsCAutoString name;
   name.AppendInt(aID, 10);
 
@@ -269,7 +274,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoCMonitor(this);
+  nsAutoMonitor automon(mMonitor);
   *aResult = nsnull;
   nsAutoString tmpstr;
   rv = GetStringFromName(nsDependentString(aName), tmpstr);

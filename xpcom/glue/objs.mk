@@ -73,7 +73,10 @@ XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_
 # and it has a bad dependency on the NSPR AtomicIncrement function, so we
 # only build it for the dependent XPCOM glue and builtin to xpcom-core.
 
+# TODO nsAutoLock.cpp should die soon
+
 XPCOM_GLUENS_SRC_LCPPSRCS =      \
+  BlockingResourceBase.cpp       \
   nsAutoLock.cpp                 \
   nsGenericFactory.cpp           \
   nsProxyRelease.cpp             \
