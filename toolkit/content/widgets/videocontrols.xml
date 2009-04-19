@@ -199,7 +199,7 @@
                     this.showPosition(currentTime, duration);
 
                     // If we have metadata, check if this is a <video> without video data.
-                    if (this.video.readyState >= this.video.HAVE_META_DATA) {
+                    if (this.video.readyState >= this.video.HAVE_METADATA) {
                         if (this.video instanceof HTMLVideoElement &&
                             (this.video.videoWidth == 0 || this.videoHeight == 0))
                             this.isAudioOnly = true;
