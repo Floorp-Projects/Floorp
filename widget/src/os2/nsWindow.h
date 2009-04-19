@@ -251,6 +251,7 @@ protected:
    QMSG      mQmsg;
    PRBool    mIsTopWidgetWindow;
    BOOL      mIsScrollBar;
+   BOOL      mIsDestroying;
    BOOL      mInSetFocus;
    BOOL      mChromeHidden;
    nsContentType mContentType;
