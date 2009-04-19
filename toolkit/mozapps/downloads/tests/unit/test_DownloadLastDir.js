@@ -11,11 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Download Manager Utility Code.
+ * The Original Code is DownloadUtils Test Code.
  *
  * The Initial Developer of the Original Code is
  * Ehsan Akhgari <ehsan.akhgari@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,37 +34,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = [ "gDownloadLastDir" ];
+function run_test()
+{
+  let Cc = Components.classes;
+  let Ci = Components.interfaces;
+  let Cu = Components.utils;
+  Cu.import("resource://gre/modules/DownloadLastDir.jsm");
 
-let observer = {
-  QueryInterface: function (aIID) {
-    if (aIID.equals(Components.interfaces.nsIObserver) ||
-        aIID.equals(Components.interfaces.nsISupports) ||
-        aIID.equals(Components.interfaces.nsISupportsWeakReference))
-      return this;
-    throw Components.results.NS_NOINTERFACE;
-  },
-  observe: function (aSubject, aTopic, aData) {
-    gDownloadLastDirFile = null;
-  }
-};
+  do_check_eq(typeof gDownloadLastDir, "object");
+  do_check_eq(gDownloadLastDir.file, null);
 
-Components.classes["@mozilla.org/observer-service;1"]
-          .getService(Components.interfaces.nsIObserverService)
-          .addObserver(observer, "private-browsing", true);
+  let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+               getService(Ci.nsIProperties);
+  let tmpDir = dirSvc.get("TmpD", Ci.nsILocalFile);
 
-let gDownloadLastDirFile = null;
-let gDownloadLastDir = {
-  get file() {
-    if (gDownloadLastDirFile && !gDownloadLastDirFile.exists())
-      gDownloadLastDirFile = null;
+  gDownloadLastDir.file = tmpDir;
+  do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
+  do_check_neq(gDownloadLastDir.file, tmpDir);
 
-    return gDownloadLastDirFile;
-  },
-  set file(val) {
-    if (val instanceof Components.interfaces.nsIFile)
-      gDownloadLastDirFile = val.clone();
-    else
-      gDownloadLastDirFile = null;
-  }
-};
+  gDownloadLastDir.file = 1; // not an nsIFile
+  do_check_eq(gDownloadLastDir.file, null);
+  gDownloadLastDir.file = tmpDir;
+
+  let pb = Cc["@mozilla.org/privatebrowsing;1"].
+           getService(Ci.nsIPrivateBrowsingService);
+  pb.privateBrowsingEnabled = true;
+  do_check_eq(gDownloadLastDir.file, null);
+
+  pb.privateBrowsingEnabled = false;
+  do_check_eq(gDownloadLastDir.file, null);
+  pb.privateBrowsingEnabled = true;
+
+  gDownloadLastDir.file = tmpDir;
+  do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
+  do_check_neq(gDownloadLastDir.file, tmpDir);
+
+  pb.privateBrowsingEnabled = false;
+  do_check_eq(gDownloadLastDir.file, null);
+}
