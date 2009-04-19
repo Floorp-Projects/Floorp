@@ -372,7 +372,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
   nsIFrame*                frame = nsnull;
   nsIFrame*                nextBidi;
   nsIContent*              content = nsnull;
-  const nsTextFragment*    fragment;
+  PRInt32                  contentTextLength;
   nsIAtom*                 frameType = nsnull;
 
   nsPropertyTable *propTable = presContext->PropertyTable();
@@ -390,8 +390,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
       if (++frameIndex >= frameCount) {
         break;
       }
-      contentOffset = 0;
-      
       frame = mLogicalFrames[frameIndex];
       frameType = frame->GetType();
       lineNeedsUpdate = PR_TRUE;
@@ -401,12 +399,15 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
           mSuccess = NS_OK;
           break;
         }
-        fragment = content->GetText();
-        if (!fragment) {
-          mSuccess = NS_ERROR_FAILURE;
-          break;
+        contentTextLength = content->TextLength();
+        if (contentTextLength == 0) {
+          frame->AdjustOffsetsForBidi(0, 0);
+          continue;
         }
-        fragmentLength = fragment->GetLength();
+        PRInt32 start, end;
+        frame->GetOffsets(start, end);
+        fragmentLength = end - start;
+        contentOffset = start;
         isTextFrame = PR_TRUE;
       } // if text frame
       else {
@@ -454,29 +455,31 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
             lineNeedsUpdate = PR_FALSE;
           }
           lineIter.GetLine()->MarkDirty();
-          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex,
-                                      contentOffset,
-                                      contentOffset + runLength, 
-                                      lineNeedsUpdate)) {
+          EnsureBidiContinuation(frame, &nextBidi, frameIndex,
+                                 contentOffset,
+                                 contentOffset + runLength);
+          if (NS_FAILED(mSuccess)) {
             break;
           }
           frame = nextBidi;
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
         else {
-          PRInt32 newIndex = 0;
-          mContentToFrameIndex.Get(content, &newIndex);
-          if (newIndex > frameIndex) {
-            RemoveBidiContinuation(frame, frameIndex, newIndex, temp);
-            if (lineNeedsUpdate) {
-              AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
-              lineNeedsUpdate = PR_FALSE;
+          if (contentOffset + fragmentLength == contentTextLength) {
+            PRInt32 newIndex = 0;
+            mContentToFrameIndex.Get(content, &newIndex);
+            if (newIndex > frameIndex) {
+              RemoveBidiContinuation(frame, frameIndex, newIndex, temp);
+              if (lineNeedsUpdate) {
+                AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
+                lineNeedsUpdate = PR_FALSE;
+              }
+              lineIter.GetLine()->MarkDirty();
+              runLength -= temp;
+              fragmentLength -= temp;
+              lineOffset += temp;
+              frameIndex = newIndex;
             }
-            lineIter.GetLine()->MarkDirty();
-            runLength -= temp;
-            fragmentLength -= temp;
-            lineOffset += temp;
-            frameIndex = newIndex;
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
         }
@@ -1064,56 +1067,18 @@ nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
   return nsnull;
 }
 
-PRBool
+inline void
 nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
                                         PRInt32&        aFrameIndex,
                                         PRInt32         aStart,
-                                        PRInt32         aEnd,
-                                        PRInt32&        aLineNeedsUpdate)
+                                        PRInt32         aEnd)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   NS_PRECONDITION(aFrame, "aFrame is null");
-  NS_ASSERTION(!aFrame->GetPrevInFlow(),
-               "Calling EnsureBidiContinuation on non-first-in-flow");
 
-  *aNewFrame = nsnull;
-  nsBidiLevel embeddingLevel = NS_GET_EMBEDDING_LEVEL(aFrame);
-  nsBidiLevel baseLevel = NS_GET_BASE_LEVEL(aFrame);
-  nsCharType charType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsGkAtoms::charType));
-  
-  // Skip fluid continuations
-  while (aFrameIndex + 1 < PRInt32(mLogicalFrames.Length())) {
-    nsIFrame* frame = mLogicalFrames[aFrameIndex + 1];
-    if (frame->GetPrevInFlow() != aFrame) {
-      // If we found a non-fluid continuation, use it
-      if (frame->GetPrevContinuation() == aFrame) {
-        *aNewFrame = frame;
-        aFrameIndex++;
-        // The frame we found might be on another line. If so, the line iterator
-        // should be updated.
-        aLineNeedsUpdate = PR_TRUE;
-      }
-      break;
-    }
-    frame->SetProperty(nsGkAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
-    frame->SetProperty(nsGkAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
-    frame->SetProperty(nsGkAtoms::charType, NS_INT32_TO_PTR(charType));
-    frame->AddStateBits(NS_FRAME_IS_BIDI);
-    aFrameIndex++;
-    aFrame->AdjustOffsetsForBidi(aStart, aStart);
-    aFrame = frame;
-  }
-  
   aFrame->AdjustOffsetsForBidi(aStart, aEnd);
-  if (!*aNewFrame) {
-    mSuccess = CreateBidiContinuation(aFrame, aNewFrame);
-    if (NS_FAILED(mSuccess) ) {
-      return PR_FALSE;
-    }
-  }
-
-  return PR_TRUE;
+  mSuccess = CreateBidiContinuation(aFrame, aNewFrame);
 }
 
 void
@@ -1588,8 +1553,8 @@ public:
   }
 
 private:
-  nsPoint mPt;
   nsIRenderingContext* mCtx;
+  nsPoint mPt;
   const PRUnichar* mText;
   PRInt32 mLength;
   nsBidiDirection mDirection;
