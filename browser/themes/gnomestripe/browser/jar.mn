@@ -7,11 +7,11 @@ classic.jar:
   skin/classic/browser/aboutCertError.css             (aboutCertError.css)
 * skin/classic/browser/browser.css                    (browser.css)
 * skin/classic/browser/engineManager.css              (engineManager.css)
+  skin/classic/browser/Geo.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/Go-arrow-rtl.png
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
-  skin/classic/browser/Geo.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
 * skin/classic/browser/pageInfo.css
