@@ -62,9 +62,6 @@ let gDownloadLastDir = {
     return gDownloadLastDirFile;
   },
   set file(val) {
-    if (val instanceof Components.interfaces.nsIFile)
-      gDownloadLastDirFile = val.clone();
-    else
-      gDownloadLastDirFile = null;
+    gDownloadLastDirFile = val;
   }
 };
