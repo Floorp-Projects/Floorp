@@ -1514,11 +1514,15 @@ nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
   // true parent (default).
   nsWindow* widget = nsnull;
   if (mWnd) {
+#ifdef WINCE
+    HWND parent = ::GetParent(mWnd);
+#else
     HWND parent = nsnull;
     if (aIncludeOwner)
       parent = ::GetParent(mWnd);
     else
       parent = ::GetAncestor(mWnd, GA_PARENT);
+#endif
     if (parent) {
       widget = GetNSWindowPtr(parent);
       if (widget) {
