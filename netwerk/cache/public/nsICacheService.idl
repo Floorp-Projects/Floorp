@@ -48,7 +48,7 @@ interface nsICacheListener;
 interface nsICacheSession;
 interface nsICacheVisitor;
 
-[scriptable, uuid(98dd0187-aad4-4cab-82c5-1adddef3629d)]
+[scriptable, uuid(de114eb4-29fc-4959-b2f7-2d03eb9bc771)]
 interface nsICacheService : nsISupports
 {
     /**
@@ -84,11 +84,6 @@ interface nsICacheService : nsISupports
      * Evicts all entries in all devices implied by the storage policy.
      */
     void evictEntries(in nsCacheStoragePolicy  storagePolicy);
-
-    /**
-     * This method is deprecated and will throw NS_ERROR_NOT_IMPLEMENTED.
-     */
-    ACString createTemporaryClientID(in nsCacheStoragePolicy storagePolicy);
 };
 
 %{C++
