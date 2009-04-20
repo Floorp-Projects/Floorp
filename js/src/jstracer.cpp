@@ -6323,7 +6323,6 @@ TraceRecorder::getThis(LIns*& this_ins)
         JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
         if (!thisObj)
             ABORT_TRACE("js_ComputeThis failed");
-        JS_ASSERT(JSVAL_IS_OBJECT(cx->fp->argv[-1]));
         this_ins = INS_CONSTPTR(thisObj);
 
         /*
