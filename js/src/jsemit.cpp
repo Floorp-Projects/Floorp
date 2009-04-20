@@ -1857,7 +1857,7 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 
     uintN upvarLevel = fun->u.i.script->staticLevel;
     JS_ASSERT(cg->staticLevel > upvarLevel);
-    if (upvarLevel >= JS_DISPLAY_SIZE)
+    if (cg->staticLevel >= JS_DISPLAY_SIZE || upvarLevel >= JS_DISPLAY_SIZE)
         return true;
 
     JSAtomListElement *ale = cg->upvarList.lookup(atom);
