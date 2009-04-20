@@ -440,7 +440,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
 
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
-    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit);
+    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
@@ -536,9 +536,9 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool getThis(nanojit::LIns*& this_ins);
 
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
-    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, nanojit::LIns* exit);
+    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                      nanojit::LIns* exit);
+                                      VMSideExit* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
     JS_REQUIRES_STACK bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
@@ -579,9 +579,27 @@ public:
     static JS_REQUIRES_STACK JSMonitorRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op);
 
     JS_REQUIRES_STACK uint8 determineSlotType(jsval* vp);
-    JS_REQUIRES_STACK nanojit::LIns* snapshot(ExitType exitType);
-    nanojit::LIns* clone(VMSideExit* exit);
-    nanojit::LIns* copy(VMSideExit* exit);
+
+    /*
+     * Examines current interpreter state to record information suitable for
+     * returning to the interpreter through a side exit of the given type.
+     */
+    JS_REQUIRES_STACK VMSideExit* snapshot(ExitType exitType);
+
+    /*
+     * Creates a separate but identical copy of the given side exit, allowing
+     * the guards associated with each to be entirely separate even after
+     * subsequent patching.
+     */
+    JS_REQUIRES_STACK VMSideExit* copy(VMSideExit* exit);
+
+    /*
+     * Creates an instruction whose payload is a GuardRecord for the given exit.
+     * The instruction is suitable for use as the final argument of a single
+     * call to LirBuffer::insGuard; do not reuse the returned value.
+     */
+    JS_REQUIRES_STACK nanojit::LIns* createGuardRecord(VMSideExit* exit);
+
     nanojit::Fragment* getFragment() const { return fragment; }
     TreeInfo* getTreeInfo() const { return treeInfo; }
     JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);

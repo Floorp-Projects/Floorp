@@ -354,6 +354,7 @@ struct JSRuntime {
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
     uint32              gcTriggerFactor;
+    volatile JSBool     gcIsNeeded;
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new
@@ -551,15 +552,16 @@ struct JSRuntime {
      * Object shape (property cache structural type) identifier generator.
      *
      * Type 0 stands for the empty scope, and must not be regenerated due to
-     * uint32 wrap-around. Since we use atomic pre-increment, the initial
-     * value for the first typed non-empty scope will be 1.
+     * uint32 wrap-around. Since js_GenerateShape (in jsinterp.cpp) uses
+     * atomic pre-increment, the initial value for the first typed non-empty
+     * scope will be 1.
      *
-     * The GC compresses live types, minimizing rt->shapeGen in the process.
      * If this counter overflows into SHAPE_OVERFLOW_BIT (in jsinterp.h), the
-     * GC will disable property caches for all threads, to avoid aliasing two
-     * different types. Updated by js_GenerateShape (in jsinterp.c).
+     * cache is disabled, to avoid aliasing two different types. It stays
+     * disabled until a triggered GC at some later moment compresses live
+     * types, minimizing rt->shapeGen in the process.
      */
-    uint32              shapeGen;
+    volatile uint32     shapeGen;
 
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
@@ -1417,6 +1419,14 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 extern JSBool
 js_InvokeOperationCallback(JSContext *cx);
 
+#ifndef JS_THREADSAFE
+# define js_TriggerAllOperationCallbacks(rt, gcLocked) \
+    js_TriggerAllOperationCallbacks (rt)
+#endif
+
+void
+js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
+
 extern JSStackFrame *
 js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
 
@@ -1466,6 +1476,28 @@ js_GetTopStackFrame(JSContext *cx)
 {
     js_LeaveTrace(cx);
     return cx->fp;
+}
+
+static JS_INLINE JSBool
+js_IsPropertyCacheDisabled(JSContext *cx)
+{
+    return cx->runtime->shapeGen >= SHAPE_OVERFLOW_BIT;
+}
+
+static JS_INLINE uint32
+js_RegenerateShapeForGC(JSContext *cx)
+{
+    JS_ASSERT(cx->runtime->gcRunning);
+
+    /*
+     * Under the GC, compared with js_GenerateShape, we don't need to use
+     * atomic increments but we still must make sure that after an overflow
+     * the shape stays such.
+     */
+    uint32 shape = cx->runtime->shapeGen;
+    shape = (shape + 1) | (shape & SHAPE_OVERFLOW_BIT);
+    cx->runtime->shapeGen = shape;
+    return shape;
 }
 
 JS_END_EXTERN_C

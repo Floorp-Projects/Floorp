@@ -129,9 +129,6 @@ struct JSStackFrame {
     JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
     JSStackFrame    *displaySave;   /* previous value of display entry for
                                        script->staticLevel */
-#ifdef DEBUG
-    jsrefcount      pcDisabledSave; /* for balanced property cache control */
-#endif
 
 #ifdef __cplusplus /* Aargh, LiveConnect, bug 442399. */
     inline void assertValidStackDepth(uintN depth);
@@ -246,12 +243,12 @@ typedef struct JSInlineFrame {
 
 #define SHAPE_OVERFLOW_BIT      JS_BIT(32 - PCVCAP_TAGBITS)
 
-/*
- * When sprop is not null and the shape generation triggers the GC due to a
- * shape overflow, the functions roots sprop.
- */
+#ifndef JS_THREADSAFE
+# define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
+#endif
+
 extern uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked, JSScopeProperty *sprop);
+js_GenerateShape(JSContext *cx, JSBool gcLocked);
 
 struct JSPropCacheEntry {
     jsbytecode          *kpc;           /* pc if vcap tag is <= 1, else atom */
@@ -267,7 +264,6 @@ struct JSPropCacheEntry {
 typedef struct JSPropertyCache {
     JSPropCacheEntry    table[PROPERTY_CACHE_SIZE];
     JSBool              empty;
-    jsrefcount          disabled;       /* signed for anti-underflow asserts */
 #ifdef JS_PROPERTY_CACHE_METERING
     uint32              fills;          /* number of cache entry fills */
     uint32              nofills;        /* couldn't fill (e.g. default get) */
@@ -411,12 +407,6 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache);
 
 extern void
 js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script);
-
-extern void
-js_DisablePropertyCache(JSContext *cx);
-
-extern void
-js_EnablePropertyCache(JSContext *cx);
 
 /*
  * Interpreter stack arena-pool alloc and free functions.
@@ -615,9 +605,6 @@ js_LeaveWith(JSContext *cx);
 
 extern JS_REQUIRES_STACK JSClass *
 js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
-
-extern jsint
-js_CountWithBlocks(JSContext *cx, JSStackFrame *fp);
 
 /*
  * Unwind block and scope chains to match the given depth. The function sets

@@ -231,57 +231,58 @@ js_CallTree(InterpState* state, Fragment* f)
 JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
-    JSScopeProperty* sprop2 = NULL; // initialize early to make MSVC happy
-
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
 
     JS_LOCK_OBJ(cx, obj);
+
     JSScope* scope = OBJ_SCOPE(obj);
+    uint32 slot;
     if (scope->object == obj) {
         JS_ASSERT(!SCOPE_HAS_PROPERTY(scope, sprop));
     } else {
         scope = js_GetMutableScope(cx, obj);
-        if (!scope) {
-            JS_UNLOCK_OBJ(cx, obj);
-            return JS_FALSE;
-        }
+        if (!scope)
+            goto exit_trace;
     }
 
-    uint32 slot = sprop->slot;
+    slot = sprop->slot;
     if (!scope->table && sprop->parent == scope->lastProp && slot == scope->map.freeslot) {
         if (slot < STOBJ_NSLOTS(obj) && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
             JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->map.freeslot)));
             ++scope->map.freeslot;
         } else {
-            if (!js_AllocSlot(cx, obj, &slot)) {
-                JS_UNLOCK_SCOPE(cx, scope);
-                return JS_FALSE;
-            }
+            if (!js_AllocSlot(cx, obj, &slot))
+                goto exit_trace;
 
             if (slot != sprop->slot) {
                 js_FreeSlot(cx, obj, slot);
-                goto slot_changed;
+                goto exit_trace;
             }
         }
 
         SCOPE_EXTEND_SHAPE(cx, scope, sprop);
         ++scope->entryCount;
         scope->lastProp = sprop;
-        JS_UNLOCK_SCOPE(cx, scope);
-        return JS_TRUE;
+    } else {
+        JSScopeProperty *sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
+                                                      sprop->getter,
+                                                      sprop->setter,
+                                                      SPROP_INVALID_SLOT,
+                                                      sprop->attrs,
+                                                      sprop->flags,
+                                                      sprop->shortid);
+        if (sprop2 != sprop)
+            goto exit_trace;
     }
 
-    sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
-                                 sprop->getter, sprop->setter, SPROP_INVALID_SLOT,
-                                 sprop->attrs, sprop->flags, sprop->shortid);
-    if (sprop2 == sprop) {
-        JS_UNLOCK_SCOPE(cx, scope);
-        return JS_TRUE;
-    }
-    slot = sprop2->slot;
+    if (js_IsPropertyCacheDisabled(cx))
+        goto exit_trace;
 
-  slot_changed:
+    JS_UNLOCK_SCOPE(cx, scope);
+    return JS_TRUE;
+
+  exit_trace:
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_FALSE;
 }

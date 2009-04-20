@@ -86,26 +86,23 @@
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
 uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked, JSScopeProperty *sprop)
+js_GenerateShape(JSContext *cx, JSBool gcLocked)
 {
     JSRuntime *rt;
     uint32 shape;
-    JSTempValueRooter tvr;
 
     rt = cx->runtime;
     shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
     JS_ASSERT(shape != 0);
-    if (shape & SHAPE_OVERFLOW_BIT) {
-        rt->gcPoke = JS_TRUE;
-        if (sprop)
-            JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
-        js_GC(cx, gcLocked ? GC_LOCK_HELD : GC_NORMAL);
-        if (sprop)
-            JS_POP_TEMP_ROOT(cx, &tvr);
-        shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
-        JS_ASSERT(shape != 0);
-        JS_ASSERT_IF(shape & SHAPE_OVERFLOW_BIT,
-                     JS_PROPERTY_CACHE(cx).disabled);
+    if (shape >= SHAPE_OVERFLOW_BIT) {
+        /*
+         * FIXME bug 440834: The shape id space has overflowed. Currently we
+         * cope badly with this and schedule the GC on the every call. But
+         * first we make sure that increments from other threads would not
+         * have a chance to wrap around shapeGen to zero.
+         */
+        rt->shapeGen = SHAPE_OVERFLOW_BIT;
+        js_TriggerGC(cx, gcLocked);
     }
     return shape;
 }
@@ -129,8 +126,9 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
 
     JS_ASSERT(!cx->runtime->gcRunning);
     cache = &JS_PROPERTY_CACHE(cx);
-    pc = cx->fp->regs->pc;
-    if (cache->disabled || (cx->fp->flags & JSFRAME_EVAL)) {
+
+    /* FIXME bug 489098: consider enabling the property cache for eval. */
+    if (js_IsPropertyCacheDisabled(cx) || (cx->fp->flags & JSFRAME_EVAL)) {
         PCMETER(cache->disfills++);
         *entryp = NULL;
         return;
@@ -196,6 +194,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
      * Optimize the cached vword based on our parameters and the current pc's
      * opcode format flags.
      */
+    pc = cx->fp->regs->pc;
     op = js_GetOpcode(cx, cx->fp->script, pc);
     cs = &js_CodeSpec[op];
 
@@ -237,6 +236,14 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                             kshape);
 #endif
                         SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+                        if (js_IsPropertyCacheDisabled(cx)) {
+                            /*
+                             * js_GenerateShape could not recover from
+                             * rt->shapeGen's overflow.
+                             */
+                            *entryp = NULL;
+                            return;
+                        }
                         SCOPE_SET_BRANDED(scope);
                         if (OBJ_SCOPE(obj) == scope)
                             kshape = scope->shape;
@@ -529,20 +536,6 @@ js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script)
 #endif
         }
     }
-}
-
-void
-js_DisablePropertyCache(JSContext *cx)
-{
-    JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
-    ++JS_PROPERTY_CACHE(cx).disabled;
-}
-
-void
-js_EnablePropertyCache(JSContext *cx)
-{
-    --JS_PROPERTY_CACHE(cx).disabled;
-    JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
 }
 
 /*
@@ -1933,7 +1926,6 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
         return JS_FALSE;
 
     fp->scopeChain = withobj;
-    js_DisablePropertyCache(cx);
     return JS_TRUE;
 }
 
@@ -1948,7 +1940,6 @@ js_LeaveWith(JSContext *cx)
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     cx->fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
     JS_SetPrivate(cx, withobj, NULL);
-    js_EnablePropertyCache(cx);
 }
 
 JS_REQUIRES_STACK JSClass *
@@ -1963,23 +1954,6 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
         return clasp;
     }
     return NULL;
-}
-
-JS_STATIC_INTERPRET JS_REQUIRES_STACK jsint
-js_CountWithBlocks(JSContext *cx, JSStackFrame *fp)
-{
-    jsint n;
-    JSObject *obj;
-    JSClass *clasp;
-
-    n = 0;
-    for (obj = fp->scopeChain;
-         (clasp = js_IsActiveWithOrBlock(cx, obj, 0)) != NULL;
-         obj = OBJ_GET_PARENT(cx, obj)) {
-        if (clasp == &js_WithClass)
-            ++n;
-    }
-    return n;
 }
 
 /*
@@ -2926,9 +2900,6 @@ js_Interpret(JSContext *cx)
         fp->displaySave = *disp;
         *disp = fp;
     }
-#ifdef DEBUG
-    fp->pcDisabledSave = JS_PROPERTY_CACHE(cx).disabled;
-#endif
 
 # define CHECK_INTERRUPT_HANDLER()                                            \
     JS_BEGIN_MACRO                                                            \
@@ -2965,8 +2936,6 @@ js_Interpret(JSContext *cx)
         fp->regs = &regs;
         JS_ASSERT((size_t) (regs.pc - script->code) <= script->length);
         JS_ASSERT((size_t) (regs.sp - StackBase(fp)) <= StackDepth(script));
-        JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
-        JS_PROPERTY_CACHE(cx).disabled += js_CountWithBlocks(cx, fp);
 
         /*
          * To support generator_throw and to catch ignored exceptions,
@@ -3194,7 +3163,6 @@ js_Interpret(JSContext *cx)
                 JSInlineFrame *ifp = (JSInlineFrame *) fp;
                 void *hookData = ifp->hookData;
 
-                JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
                 JS_ASSERT(!fp->blockChain);
                 JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
 
@@ -4194,7 +4162,7 @@ js_Interpret(JSContext *cx)
                 LOAD_ATOM(0);
             }
             id = ATOM_TO_JSID(atom);
-            if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
+            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
                 goto error;
             if (!prop)
                 goto atom_not_defined;
@@ -5050,10 +5018,6 @@ js_Interpret(JSContext *cx)
                         newifp->frame.displaySave = *disp;
                         *disp = &newifp->frame;
                     }
-#ifdef DEBUG
-                    newifp->frame.pcDisabledSave =
-                        JS_PROPERTY_CACHE(cx).disabled;
-#endif
                     newifp->mark = newmark;
 
                     /* Compute the 'this' parameter now that argv is set. */
@@ -5286,7 +5250,7 @@ js_Interpret(JSContext *cx)
             }
 
             id = ATOM_TO_JSID(atom);
-            if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
+            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
                 goto error;
             if (!prop) {
                 /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -7340,8 +7304,6 @@ js_Interpret(JSContext *cx)
         gen = FRAME_TO_GENERATOR(fp);
         gen->savedRegs = regs;
         gen->frame.regs = &gen->savedRegs;
-        JS_PROPERTY_CACHE(cx).disabled -= js_CountWithBlocks(cx, fp);
-        JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
     } else
 #endif /* JS_HAS_GENERATORS */
     {
@@ -7353,7 +7315,6 @@ js_Interpret(JSContext *cx)
     /* Undo the remaining effects committed on entry to js_Interpret. */
     if (script->staticLevel < JS_DISPLAY_SIZE)
         cx->display[script->staticLevel] = fp->displaySave;
-    JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
     --cx->interpLevel;
