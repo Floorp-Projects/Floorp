@@ -196,11 +196,18 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (clasp == &js_CallClass || clasp == &js_BlockClass) {
             /* Censor activations and lexical scopes per ECMA-262. */
             *vp = JSVAL_NULL;
-        } else if (pobj->map->ops->thisObject) {
-            pobj = pobj->map->ops->thisObject(cx, pobj);
-            if (!pobj)
-                return JS_FALSE;
-            *vp = OBJECT_TO_JSVAL(pobj);
+        } else {
+            /*
+             * DeclEnv only exists as a parent for a Call object which we
+             * censor. So it cannot escape to scripts.
+             */
+            JS_ASSERT(clasp != &js_DeclEnvClass);
+            if (pobj->map->ops->thisObject) {
+                pobj = pobj->map->ops->thisObject(cx, pobj);
+                if (!pobj)
+                    return JS_FALSE;
+                *vp = OBJECT_TO_JSVAL(pobj);
+            }
         }
     }
     return JS_TRUE;
@@ -4006,74 +4013,10 @@ out:
     return protoIndex;
 }
 
-int
-js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
-                      JSObject **pobjp, JSProperty **propp,
-                      JSPropCacheEntry **entryp)
-{
-    JSObject *obj, *pobj, *lastobj;
-    uint32 shape;
-    int scopeIndex, protoIndex;
-    JSProperty *prop;
-    JSScopeProperty *sprop;
-
-    JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
-    obj = js_GetTopStackFrame(cx)->scopeChain;
-    shape = OBJ_SHAPE(obj);
-    for (scopeIndex = 0; ; scopeIndex++) {
-        if (obj->map->ops->lookupProperty == js_LookupProperty) {
-            protoIndex =
-                js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
-                                           &pobj, &prop);
-            if (protoIndex < 0)
-                return -1;
-        } else {
-            if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
-                return -1;
-            protoIndex = -1;
-        }
-
-        if (prop) {
-            if (entryp) {
-                if (protoIndex >= 0 && OBJ_IS_NATIVE(pobj)) {
-                    sprop = (JSScopeProperty *) prop;
-                    js_FillPropertyCache(cx, cx->fp->scopeChain, shape,
-                                         scopeIndex, protoIndex, pobj, sprop,
-                                         entryp);
-                } else {
-                    PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
-                    *entryp = NULL;
-                }
-            }
-            SCOPE_DEPTH_ACCUM(&rt->scopeSearchDepthStats, scopeIndex);
-            *objp = obj;
-            *pobjp = pobj;
-            *propp = prop;
-            return scopeIndex;
-        }
-
-        lastobj = obj;
-        obj = OBJ_GET_PARENT(cx, obj);
-        if (!obj)
-            break;
-    }
-
-    *objp = lastobj;
-    *pobjp = NULL;
-    *propp = NULL;
-    return scopeIndex;
-}
-
-JS_FRIEND_API(JSBool)
-js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-                JSProperty **propp)
-{
-    return js_FindPropertyHelper(cx, id, objp, pobjp, propp, NULL) >= 0;
-}
-
 /*
- * We cache property lookup results for JSOP_BIND only for the global object or
- * for native non-global objects without resolve hooks, see bug 462734.
+ * We cache name lookup results only for the global object or for native
+ * non-global objects without prototype or with prototype that never mutates,
+ * see bug 462734 and bug 487039.
  */
 static inline bool
 IsCacheableNonGlobalScope(JSObject *obj)
@@ -4087,6 +4030,111 @@ IsCacheableNonGlobalScope(JSObject *obj)
 
     JS_ASSERT_IF(cacheable, obj->map->ops->lookupProperty == js_LookupProperty);
     return cacheable;
+}
+
+int
+js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
+                      JSObject **pobjp, JSProperty **propp,
+                      JSPropCacheEntry **entryp)
+{
+    JSObject *scopeChain, *obj, *parent, *pobj;
+    uint32 shape;
+    int scopeIndex, protoIndex;
+    JSProperty *prop;
+    JSScopeProperty *sprop;
+
+    JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
+    scopeChain = js_GetTopStackFrame(cx)->scopeChain;
+    shape = OBJ_SHAPE(scopeChain);
+
+    /* Scan entries on the scope chain that we can cache across. */
+    obj = scopeChain;
+    parent = OBJ_GET_PARENT(cx, obj);
+    for (scopeIndex = 0;
+         parent
+         ? IsCacheableNonGlobalScope(obj)
+         : obj->map->ops->lookupProperty == js_LookupProperty;
+         ++scopeIndex) {
+        protoIndex =
+            js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
+                                       &pobj, &prop);
+        if (protoIndex < 0)
+            return false;
+
+        if (prop) {
+#ifdef DEBUG
+            if (parent) {
+                JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+                JS_ASSERT(OBJ_IS_NATIVE(pobj));
+                JS_ASSERT(OBJ_GET_CLASS(cx, pobj) == clasp);
+                if (clasp == &js_BlockClass) {
+                    /*
+                     * Block instances on the scope chain are immutable and
+                     * always share their scope with compile-time prototypes.
+                     */
+                    JS_ASSERT(pobj == OBJ_GET_PROTO(cx, obj));
+                    JS_ASSERT(OBJ_SCOPE(obj)->object == pobj);
+                    JS_ASSERT(protoIndex == 1);
+                } else {
+                    /* Call and DeclEnvClass objects have no prototypes. */
+                    JS_ASSERT(!OBJ_GET_PROTO(cx, obj));
+                    JS_ASSERT(protoIndex == 0);
+                }
+            }
+#endif
+            if (entryp) {
+                sprop = (JSScopeProperty *) prop;
+                js_FillPropertyCache(cx, scopeChain, shape,
+                                     scopeIndex, protoIndex, pobj, sprop,
+                                     entryp);
+            }
+            SCOPE_DEPTH_ACCUM(&rt->scopeSearchDepthStats, scopeIndex);
+            goto out;
+        }
+
+        if (!parent) {
+            pobj = NULL;
+            goto out;
+        }
+        obj = parent;
+        parent = OBJ_GET_PARENT(cx, obj);
+    }
+
+    for (;;) {
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
+            return false;
+        if (prop) {
+            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+            if (entryp)
+                *entryp = NULL;
+            goto out;
+        }
+
+        /*
+         * We conservatively assume that a resolve hook could mutate the scope
+         * chain during OBJ_LOOKUP_PROPERTY. So we read parent here again.
+         */
+        parent = OBJ_GET_PARENT(cx, obj);
+        if (!parent) {
+            pobj = NULL;
+            break;
+        }
+        obj = parent;
+    }
+
+  out:
+    JS_ASSERT(!!pobj == !!prop);
+    *objp = obj;
+    *pobjp = pobj;
+    *propp = prop;
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
+                JSProperty **propp)
+{
+    return js_FindPropertyHelper(cx, id, objp, pobjp, propp, NULL) >= 0;
 }
 
 JSObject *
@@ -4166,7 +4214,7 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
     JSScope *scope;
     uint32 slot;
     int32 sample;
-    JSTempValueRooter tvr;
+    JSTempValueRooter tvr, tvr2;
     JSBool ok;
 
     JS_ASSERT(OBJ_IS_NATIVE(pobj));
@@ -4184,7 +4232,9 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
     sample = cx->runtime->propertyRemovals;
     JS_UNLOCK_SCOPE(cx, scope);
     JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, pobj, &tvr2);
     ok = js_GetSprop(cx, sprop, obj, vp);
+    JS_POP_TEMP_ROOT(cx, &tvr2);
     JS_POP_TEMP_ROOT(cx, &tvr);
     if (!ok)
         return JS_FALSE;
@@ -5767,17 +5817,13 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
             if (IS_GC_MARKING_TRACER(trc)) {
                 uint32 shape, oldshape;
 
-                shape = ++cx->runtime->shapeGen;
-                JS_ASSERT(shape != 0);
-
+                shape = js_RegenerateShapeForGC(cx);
                 if (!(sprop->flags & SPROP_MARK)) {
                     oldshape = sprop->shape;
                     sprop->shape = shape;
                     sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
-                    if (scope->shape != oldshape) {
-                        shape = ++cx->runtime->shapeGen;
-                        JS_ASSERT(shape != 0);
-                    }
+                    if (scope->shape != oldshape)
+                        shape = js_RegenerateShapeForGC(cx);
                 }
 
                 scope->shape = shape;
