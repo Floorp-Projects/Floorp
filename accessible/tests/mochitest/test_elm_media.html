@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=483573
+-->
+<head>
+  <title>HTML5 audio/video tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var accTree = {
+        role: ROLE_GROUPING,
+        children: [
+          { // start/stop button
+            role: ROLE_PUSHBUTTON
+          },
+          { // buffer bar
+            role: ROLE_PROGRESSBAR
+          },
+          { // progress bar
+            role: ROLE_PROGRESSBAR
+          },
+          { // slider of progress bar
+            role: ROLE_SLIDER
+          },
+          { // volume button
+            role: ROLE_PUSHBUTTON
+          }
+        ]
+      };
+      testAccessibleTree("audio", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Expose HTML5 video and audio elements' embedded controls through accessibility APIs"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=483573">Mozilla Bug 483573</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <audio id="audio" src="chrome://mochikit/content/a11y/accessible/bug461281.ogg"
+         autoplay="true" controls="true">
+</body>
+</html>

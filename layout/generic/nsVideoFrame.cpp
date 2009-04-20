@@ -56,6 +56,12 @@
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
 
+#ifdef ACCESSIBILITY
+#include "nsIServiceManager.h"
+#include "nsIAccessible.h"
+#include "nsIAccessibilityService.h"
+#endif
+
 nsIFrame*
 NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -249,7 +255,12 @@ nsVideoFrame::GetType() const
 NS_IMETHODIMP
 nsVideoFrame::GetAccessible(nsIAccessible** aAccessible)
 {
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAccessibilityService> accService =
+    do_GetService("@mozilla.org/accessibilityService;1");
+  NS_ENSURE_STATE(accService);
+
+  return accService->CreateHTMLMediaAccessible(static_cast<nsIFrame*>(this),
+                                               aAccessible);
 }
 #endif
 

@@ -48,6 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		letters.gif \
 		moz.png \
+		$(topsrcdir)/content/media/video/test/bug461281.ogg \
 		longdesc_src.html \
 		attributes.js \
 		common.js \
@@ -74,6 +75,8 @@ _TEST_FILES =\
 		test_bug420863.html \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_cssattrs.html \
+		test_elm_filectrl.html \
+		test_elm_media.html \
 		test_events_caretmove.html \
 		test_events_mutation.html \
 		test_events_tree.xul \
