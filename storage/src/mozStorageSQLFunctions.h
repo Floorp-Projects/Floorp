@@ -16,7 +16,7 @@
  * The Original Code is unicode functions code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation. 
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
@@ -37,51 +37,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _mozStorageUnicodeFunctions_h_
+#ifndef _mozStorageSQLFunctions_h_
 #define _mozStorageUnicodeFunctions_h_
 
 #include "sqlite3.h"
 #include "nscore.h"
 
-namespace StorageUnicodeFunctions {
+namespace mozilla {
+namespace storage {
 
-  /**
-   * Registers the functions with sqlite.
-   *
-   * @param aDB
-   *        The database we'll be registering the functions with.
-   * @return the sqlite status code.
-   */
-  NS_HIDDEN_(int) RegisterFunctions(sqlite3 *aDB);
+/**
+ * Registers the functions declared here with the specified database.
+ *
+ * @param aDB
+ *        The database we'll be registering the functions with.
+ * @return the SQLite status code indicating success or failure.
+ */
+NS_HIDDEN_(int) registerFunctions(sqlite3 *aDB);
 
-  /**
-   * Does the upper and lowercase conversions for the SQL functions upper() and
-   * lower().
-   *
-   * @param p
-   *        The sqlite_context that this function is being called on.
-   * @param aArgc
-   *        The number of arguments the function is being called with.
-   * @param aArgv
-   *        An array of the arguments the functions is being called with.
-   */
-  NS_HIDDEN_(void) caseFunction(sqlite3_context *p,
-                                int aArgc,
-                                sqlite3_value **aArgv);
+////////////////////////////////////////////////////////////////////////////////
+//// Predefined Functions
 
-  /**
-   * Performs the LIKE comparison in sqlite.
-   *
-   * @param p
-   *        The sqlite_context that this function is being called on.
-   * @param aArgc
-   *        The number of arguments the function is being called with.
-   * @param aArgv
-   *        An array of the arguments the functions is being called with.
-   */
-  NS_HIDDEN_(void) likeFunction(sqlite3_context *p,
-                                int aArgc,
-                                sqlite3_value **aArgv);
-}
+/**
+ * Overridden function to perform the SQL functions UPPER and LOWER.  These
+ * support unicode, which the default implementations do not do.
+ *
+ * @param aCtx
+ *        The sqlite_context that this function is being called on.
+ * @param aArgc
+ *        The number of arguments the function is being called with.
+ * @param aArgv
+ *        An array of the arguments the functions is being called with.
+ */
+NS_HIDDEN_(void) caseFunction(sqlite3_context *aCtx,
+                              int aArgc,
+                              sqlite3_value **aArgv);
 
-#endif // _mozStorageUnicodeFunctions_h_
+/**
+ * Overridden function to perform the SQL function LIKE.  This supports unicode,
+ * which the default implementation does not do.
+ *
+ * @param aCtx
+ *        The sqlite_context that this function is being called on.
+ * @param aArgc
+ *        The number of arguments the function is being called with.
+ * @param aArgv
+ *        An array of the arguments the functions is being called with.
+ */
+NS_HIDDEN_(void) likeFunction(sqlite3_context *aCtx,
+                              int aArgc,
+                              sqlite3_value **aArgv);
+
+} // namespace storage
+} // namespace mozilla
+
+#endif // _mozStorageSQLFunctions_h_

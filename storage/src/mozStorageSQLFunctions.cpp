@@ -16,7 +16,7 @@
  * The Original Code is unicode functions code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation. 
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
@@ -40,65 +40,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozStorageUnicodeFunctions.h"
+#include "mozStorageSQLFunctions.h"
 #include "nsUnicharUtils.h"
 
+namespace mozilla {
+namespace storage {
+
+////////////////////////////////////////////////////////////////////////////////
+//// Local Helper Functions
+
+namespace {
+
+/**
+ * Performs the LIKE comparison of a string against a pattern.  For more detail
+ * see http://www.sqlite.org/lang_expr.html#like.
+ *
+ * @param aPatternItr
+ *        An iterator at the start of the pattern to check for.
+ * @param aPatternEnd
+ *        An iterator at the end of the pattern to check for.
+ * @param aStringItr
+ *        An iterator at the start of the string to check for the pattern.
+ * @param aStringEnd
+ *        An iterator at the end of the string to check for the pattern.
+ * @param aEscapeChar
+ *        The character to use for escaping symbols in the pattern.
+ * @returns 1 if the pattern is found, 0 otherwise.
+ */
 int
-StorageUnicodeFunctions::RegisterFunctions(sqlite3 *aDB)
-{
-  struct Functions {
-    const char *zName;
-    int nArg;
-    int enc;
-    void *pContext;
-    void (*xFunc)(sqlite3_context*, int, sqlite3_value**);
-  } functions[] = {
-    {"lower", 1, SQLITE_UTF16, 0,        caseFunction},
-    {"lower", 1, SQLITE_UTF8,  0,        caseFunction},
-    {"upper", 1, SQLITE_UTF16, (void*)1, caseFunction},
-    {"upper", 1, SQLITE_UTF8,  (void*)1, caseFunction},
-
-    {"like",  2, SQLITE_UTF16, 0,        likeFunction},
-    {"like",  2, SQLITE_UTF8,  0,        likeFunction},
-    {"like",  3, SQLITE_UTF16, 0,        likeFunction},
-    {"like",  3, SQLITE_UTF8,  0,        likeFunction},
-  };
-
-  int rv = SQLITE_OK;
-  for (unsigned i = 0; SQLITE_OK == rv && i < NS_ARRAY_LENGTH(functions); ++i) {
-    struct Functions *p = &functions[i];
-    rv = sqlite3_create_function(aDB, p->zName, p->nArg, p->enc, p->pContext,
-                                 p->xFunc, NULL, NULL);
-  }
-
-  return rv;
-}
-
-void
-StorageUnicodeFunctions::caseFunction(sqlite3_context *p,
-                                      int aArgc,
-                                      sqlite3_value **aArgv)
-{
-  NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
-
-  nsAutoString data(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[0])));
-  PRBool toUpper = sqlite3_user_data(p) ? PR_TRUE : PR_FALSE;
-
-  if (toUpper)
-    ToUpperCase(data);
-  else 
-    ToLowerCase(data);
-
-  // Give sqlite our result
-  sqlite3_result_text16(p, data.get(), -1, SQLITE_TRANSIENT);
-}
-
-static int
 likeCompare(nsAString::const_iterator aPatternItr,
             nsAString::const_iterator aPatternEnd,
             nsAString::const_iterator aStringItr,
             nsAString::const_iterator aStringEnd,
-            PRUnichar aEscape)
+            PRUnichar aEscapeChar)
 {
   const PRUnichar MATCH_ALL('%');
   const PRUnichar MATCH_ONE('_');
@@ -135,7 +109,8 @@ likeCompare(nsAString::const_iterator aPatternItr,
         return 1;
 
       while (aStringItr != aStringEnd) {
-        if (likeCompare(aPatternItr, aPatternEnd, aStringItr, aStringEnd, aEscape)) {
+        if (likeCompare(aPatternItr, aPatternEnd, aStringItr, aStringEnd,
+                        aEscapeChar)) {
           // we've hit a match, so indicate this
           return 1;
         }
@@ -144,7 +119,8 @@ likeCompare(nsAString::const_iterator aPatternItr,
 
       // No match
       return 0;
-    } else if (!lastWasEscape && *aPatternItr == MATCH_ONE) {
+    }
+    else if (!lastWasEscape && *aPatternItr == MATCH_ONE) {
       // CASE 2
       if (aStringItr == aStringEnd) {
         // If we've hit the end of the string we are testing, no match
@@ -152,23 +128,83 @@ likeCompare(nsAString::const_iterator aPatternItr,
       }
       aStringItr++;
       lastWasEscape = PR_FALSE;
-    } else if (!lastWasEscape && *aPatternItr == aEscape) {
+    }
+    else if (!lastWasEscape && *aPatternItr == aEscapeChar) {
       // CASE 3
       lastWasEscape = PR_TRUE;
-    } else {
+    }
+    else {
       // CASE 4
-      if (ToUpperCase(*aStringItr) != ToUpperCase(*aPatternItr)) {
+      if (::ToUpperCase(*aStringItr) != ::ToUpperCase(*aPatternItr)) {
         // If we've hit a point where the strings don't match, there is no match
         return 0;
       }
       aStringItr++;
       lastWasEscape = PR_FALSE;
     }
-    
+
     aPatternItr++;
   }
 
   return aStringItr == aStringEnd;
+}
+
+} // anonymous namespace
+
+////////////////////////////////////////////////////////////////////////////////
+//// Exposed Functions
+
+int
+registerFunctions(sqlite3 *aDB)
+{
+  struct Functions {
+    const char *zName;
+    int nArg;
+    int enc;
+    void *pContext;
+    void (*xFunc)(::sqlite3_context*, int, sqlite3_value**);
+  } functions[] = {
+    {"lower", 1, SQLITE_UTF16, 0,        caseFunction},
+    {"lower", 1, SQLITE_UTF8,  0,        caseFunction},
+    {"upper", 1, SQLITE_UTF16, (void*)1, caseFunction},
+    {"upper", 1, SQLITE_UTF8,  (void*)1, caseFunction},
+
+    {"like",  2, SQLITE_UTF16, 0,        likeFunction},
+    {"like",  2, SQLITE_UTF8,  0,        likeFunction},
+    {"like",  3, SQLITE_UTF16, 0,        likeFunction},
+    {"like",  3, SQLITE_UTF8,  0,        likeFunction},
+  };
+
+  int rv = SQLITE_OK;
+  for (unsigned i = 0; SQLITE_OK == rv && i < NS_ARRAY_LENGTH(functions); ++i) {
+    struct Functions *p = &functions[i];
+    rv = ::sqlite3_create_function(aDB, p->zName, p->nArg, p->enc, p->pContext,
+                                   p->xFunc, NULL, NULL);
+  }
+
+  return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// SQL Functions
+
+void
+caseFunction(sqlite3_context *aCtx,
+             int aArgc,
+             sqlite3_value **aArgv)
+{
+  NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
+
+  nsAutoString data(static_cast<const PRUnichar *>(::sqlite3_value_text16(aArgv[0])));
+  PRBool toUpper = ::sqlite3_user_data(aCtx) ? PR_TRUE : PR_FALSE;
+
+  if (toUpper)
+    ::ToUpperCase(data);
+  else
+    ::ToLowerCase(data);
+
+  // Set the result.
+  ::sqlite3_result_text16(aCtx, data.get(), -1, SQLITE_TRANSIENT);
 }
 
 /**
@@ -177,27 +213,28 @@ likeCompare(nsAString::const_iterator aPatternItr,
  * an escape character, say E, it is implemented as 'like(B, A, E)'.
  */
 void
-StorageUnicodeFunctions::likeFunction(sqlite3_context *p,
-                                      int aArgc,
-                                      sqlite3_value **aArgv)
+likeFunction(sqlite3_context *aCtx,
+             int aArgc,
+             sqlite3_value **aArgv)
 {
   NS_ASSERTION(2 == aArgc || 3 == aArgc, "Invalid number of arguments!");
 
-  if (sqlite3_value_bytes(aArgv[0]) > SQLITE_MAX_LIKE_PATTERN_LENGTH) {
-    sqlite3_result_error(p, "LIKE or GLOB pattern too complex", SQLITE_TOOBIG);
+  if (::sqlite3_value_bytes(aArgv[0]) > SQLITE_MAX_LIKE_PATTERN_LENGTH) {
+    ::sqlite3_result_error(aCtx, "LIKE or GLOB pattern too complex",
+                           SQLITE_TOOBIG);
     return;
   }
 
-  if (!sqlite3_value_text16(aArgv[0]) || !sqlite3_value_text16(aArgv[1]))
+  if (!::sqlite3_value_text16(aArgv[0]) || !::sqlite3_value_text16(aArgv[1]))
     return;
 
-  nsDependentString A(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[1])));
-  nsDependentString B(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[0])));
+  nsDependentString A(static_cast<const PRUnichar *>(::sqlite3_value_text16(aArgv[1])));
+  nsDependentString B(static_cast<const PRUnichar *>(::sqlite3_value_text16(aArgv[0])));
   NS_ASSERTION(!B.IsEmpty(), "LIKE string must not be null!");
 
   PRUnichar E = 0;
   if (3 == aArgc)
-    E = static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[2]))[0];
+    E = static_cast<const PRUnichar *>(::sqlite3_value_text16(aArgv[2]))[0];
 
   nsAString::const_iterator itrString, endString;
   A.BeginReading(itrString);
@@ -205,7 +242,9 @@ StorageUnicodeFunctions::likeFunction(sqlite3_context *p,
   nsAString::const_iterator itrPattern, endPattern;
   B.BeginReading(itrPattern);
   B.EndReading(endPattern);
-  sqlite3_result_int(p, likeCompare(itrPattern, endPattern,
-                                    itrString, endString, E));
+  ::sqlite3_result_int(aCtx, likeCompare(itrPattern, endPattern, itrString,
+                                         endString, E));
 }
 
+} // namespace storage
+} // namespace mozilla
