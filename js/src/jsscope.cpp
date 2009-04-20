@@ -788,8 +788,8 @@ HashChunks(PropTreeKidsChunk *chunk, uintN n)
  * only when inserting a new child.  Thus there may be races to find or add a
  * node that result in duplicates.  We expect such races to be rare!
  *
- * We use rt->gcLock, not rt->rtLock, to allow the GC potentially to nest here
- * under js_GenerateShape.
+ * We use rt->gcLock, not rt->rtLock, to avoid nesting the former inside the
+ * latter in js_GenerateShape below.
  */
 static JSScopeProperty *
 GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
@@ -801,7 +801,6 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
     JSScopeProperty *sprop;
     PropTreeKidsChunk *chunk;
     uintN i, n;
-    uint32 shape;
 
     rt = cx->runtime;
     if (!parent) {
@@ -888,12 +887,6 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
     }
 
 locked_not_found:
-    /*
-     * Call js_GenerateShape before the allocation to prevent collecting the
-     * new property when the shape generation triggers the GC.
-     */
-    shape = js_GenerateShape(cx, JS_TRUE, NULL);
-
     sprop = NewScopeProperty(rt);
     if (!sprop)
         goto out_of_memory;
@@ -906,7 +899,7 @@ locked_not_found:
     sprop->flags = child->flags;
     sprop->shortid = child->shortid;
     sprop->parent = sprop->kids = NULL;
-    sprop->shape = shape;
+    sprop->shape = js_GenerateShape(cx, JS_TRUE);
 
     if (!parent) {
         entry->child = sprop;
@@ -1732,12 +1725,10 @@ js_SweepScopeProperties(JSContext *cx)
              */
             if (sprop->flags & SPROP_MARK) {
                 sprop->flags &= ~SPROP_MARK;
-                if (sprop->flags & SPROP_FLAG_SHAPE_REGEN) {
+                if (sprop->flags & SPROP_FLAG_SHAPE_REGEN)
                     sprop->flags &= ~SPROP_FLAG_SHAPE_REGEN;
-                } else {
-                    sprop->shape = ++cx->runtime->shapeGen;
-                    JS_ASSERT(sprop->shape != 0);
-                }
+                else
+                    sprop->shape = js_RegenerateShapeForGC(cx);
                 liveCount++;
                 continue;
             }
