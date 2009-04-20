@@ -42,7 +42,6 @@ Runs the Mochitest test harness.
 """
 
 from datetime import datetime
-import logging
 import optparse
 import os
 import os.path
@@ -82,8 +81,6 @@ os.chdir(SCRIPT_DIRECTORY)
 PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
 
 LEAK_REPORT_FILE = PROFILE_DIRECTORY + "/" + "leaks-report.log"
-
-log = logging.getLogger()
 
 # Map of debugging programs to information about them, like default arguments
 # and whether or not they are interactive.
@@ -273,7 +270,7 @@ class MochitestServer:
       env["LD_LIBRARY_PATH"] = self._xrePath
       env["MOZILLA_FIVE_HOME"] = self._xrePath
       env["XPCOM_DEBUG_BREAK"] = "warn"
-    if automation.IS_MAC:
+    elif automation.IS_MAC:
       env["DYLD_LIBRARY_PATH"] = self._xrePath
     elif automation.IS_WIN32:
       env["PATH"] = env["PATH"] + ";" + self._xrePath
@@ -290,7 +287,7 @@ class MochitestServer:
     if pid < 0:
       print "Error starting server."
       sys.exit(2)
-    log.info("Server pid: %d", pid)
+    automation.log.info("INFO | runtests.py | Server pid: %d", pid)
     
 
   def ensureReady(self, timeout):
@@ -448,6 +445,11 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     testURL = A11YTESTS_URL
     if options.testPath:
       urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
+    # Force leak threshold. (bug 472773)
+    if automation.IS_MAC and options.leakThreshold == 0:
+      options.leakThreshold = 68
+      automation.log.info("INFO | runtests.py | setting leak threshold to %d",
+                          options.leakThreshold)
   elif options.browserChrome:
     testURL = "about:blank"
 
