@@ -521,17 +521,23 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     mCurrentARIAMenubar = nsnull;
   }
 
+  nsCOMPtr<nsIContent> focusContent = do_QueryInterface(finalFocusNode);
+  nsIFrame *focusFrame = nsnull;
+  if (focusContent) {
+    nsCOMPtr<nsIPresShell> shell =
+      nsCoreUtils::GetPresShellFor(finalFocusNode);
+
+    NS_ASSERTION(shell, "No pres shell for final focus node!");
+    if (!shell)
+      return PR_FALSE;
+
+    focusFrame = shell->GetRealPrimaryFrameFor(focusContent);
+  }
+
   NS_IF_RELEASE(gLastFocusedNode);
   gLastFocusedNode = finalFocusNode;
   NS_IF_ADDREF(gLastFocusedNode);
 
-  nsCOMPtr<nsIContent> focusContent = do_QueryInterface(gLastFocusedNode);
-  nsIFrame *focusFrame = nsnull;
-  if (focusContent) {
-    nsCOMPtr<nsIPresShell> shell =
-      nsCoreUtils::GetPresShellFor(gLastFocusedNode);
-    focusFrame = shell->GetRealPrimaryFrameFor(focusContent);
-  }
   gLastFocusedFrameType = (focusFrame && focusFrame->GetStyleVisibility()->IsVisible()) ? focusFrame->GetType() : 0;
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible = do_QueryInterface(finalFocusAccessible);
@@ -542,8 +548,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       // Suppress document focus, because real DOM focus will be fired next,
       // and that's what we care about
       // Make sure we never fire focus for the nsRootAccessible (mDOMNode)
-      
-return PR_FALSE;
+      return PR_FALSE;
     }
   }
 
