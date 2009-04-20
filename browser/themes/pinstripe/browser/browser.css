@@ -1334,65 +1334,43 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 
 /**** name picker ****/
 
-#editBMPanel_namePicker[droppable="false"] {
-  color: #ffffff;
-}
-
-#editBMPanel_namePicker[droppable="false"] > .menulist-dropmarker {
-  display: none;
-}
-
-#editBMPanel_tagsField[focused="true"] {
-  background-color: #eeeeee;
-  color: #000000;
-}
-
+#editBMPanel_tagsField,
 #editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
   -moz-appearance: none !important;
-  cursor: text;
-  margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: #1c1c1c #545454 ;
-  -moz-border-right-colors: #1c1c1c #636363;
-  -moz-border-bottom-colors: #1c1c1c #797979;
-  -moz-border-left-colors: #1c1c1c #636363;
-  -moz-border-radius: 1px;
-  padding: 0;
-  background-color: #666666;
-  color: #ffffff;
+  margin: 2px 4px !important;
+  border: 2px solid !important;
+  -moz-border-top-colors: #1c1c1c #545454 !important;
+  -moz-border-right-colors: #1c1c1c #636363 !important;
+  -moz-border-bottom-colors: #1c1c1c #797979 !important;
+  -moz-border-left-colors: #1c1c1c #636363 !important;
+  -moz-border-radius: 1px !important;
+  background-color: #666 !important;
+  color: #fff !important;
+}
+
+#editBMPanel_namePicker[droppable="false"] > .menulist-editable-box > html|*.menulist-editable-input {
+  color: inherit;
 }
 
 #editBMPanel_tagsField[empty="true"] {
-  color: #bbbbbb;
+  color: #bbb !important;
 }
 
+#editBMPanel_tagsField[focused="true"],
 #editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {
   outline: 2px solid -moz-mac-focusring;
   outline-offset: -1px;
   -moz-outline-radius: 1px;
-  background-color: #eeeeee;
-  color: #000000;
+  background-color: #eee !important;
+  color: #000 !important;
 }
 
 #editBMPanel_namePicker[droppable="false"][disabled="true"] > .menulist-editable-box {
-  color: #ffffff;
-}
-
-#editBMPanel_namePicker[droppable="false"] > .menulist-editable-box > html|*.menulist-editable-input {
-  margin: 0px !important;
-  border: none !important;
-  padding: 0px !important;
-  background-color: inherit;
-  color: #ffffff;
-  font: inherit;
-}
-
-#editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box > html|*.menulist-editable-input {
-  color: #000000;
+  color: #fff !important;
 }
 
 #editBookmarkPanelGrid > rows > row > label {
-  text-align: right;
+  text-align: end;
 }
 
 /* ----- SIDEBAR ELEMENTS ----- */
