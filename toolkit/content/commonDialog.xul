@@ -10,6 +10,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         aria-describedby="info.body"
         onload="commonDialogOnLoad();"
+        onunload="commonDialogOnUnload();"
         ondialogaccept="return commonDialogOnAccept();"
         ondialogextra1="return commonDialogOnExtra1();"
         ondialogextra2="return commonDialogOnExtra2();"
