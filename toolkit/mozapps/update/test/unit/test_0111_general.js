@@ -70,7 +70,7 @@ function run_test() {
   testFile = do_get_file("data/aus-0110_general_ref_image1.png");
   testFile.copyTo(testDir, "image1.png");
 
-  var binDir = gRealGreD.clone();
+  var binDir = getGREDir();
 
   // The updater binary file
   var updater = binDir.clone();
@@ -131,6 +131,8 @@ function run_test() {
     dump("Unable to remove directory\npath: " + updatesSubDir.path +
          "\nException: " + e + "\n");
   }
+
+  removeUpdateDirsAndFiles();
 }
 
 // Launches the updater binary to apply a mar file
