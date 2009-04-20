@@ -5817,13 +5817,17 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
             if (IS_GC_MARKING_TRACER(trc)) {
                 uint32 shape, oldshape;
 
-                shape = js_RegenerateShapeForGC(cx);
+                shape = ++cx->runtime->shapeGen;
+                JS_ASSERT(shape != 0);
+
                 if (!(sprop->flags & SPROP_MARK)) {
                     oldshape = sprop->shape;
                     sprop->shape = shape;
                     sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
-                    if (scope->shape != oldshape)
-                        shape = js_RegenerateShapeForGC(cx);
+                    if (scope->shape != oldshape) {
+                        shape = ++cx->runtime->shapeGen;
+                        JS_ASSERT(shape != 0);
+                    }
                 }
 
                 scope->shape = shape;

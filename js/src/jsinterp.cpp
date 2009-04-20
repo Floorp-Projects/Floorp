@@ -86,23 +86,26 @@
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
 uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked)
+js_GenerateShape(JSContext *cx, JSBool gcLocked, JSScopeProperty *sprop)
 {
     JSRuntime *rt;
     uint32 shape;
+    JSTempValueRooter tvr;
 
     rt = cx->runtime;
     shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
     JS_ASSERT(shape != 0);
-    if (shape >= SHAPE_OVERFLOW_BIT) {
-        /*
-         * FIXME bug 440834: The shape id space has overflowed. Currently we
-         * cope badly with this and schedule the GC on the every call. But
-         * first we make sure that increments from other threads would not
-         * have a chance to wrap around shapeGen to zero.
-         */
-        rt->shapeGen = SHAPE_OVERFLOW_BIT;
-        js_TriggerGC(cx, gcLocked);
+    if (shape & SHAPE_OVERFLOW_BIT) {
+        rt->gcPoke = JS_TRUE;
+        if (sprop)
+            JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
+        js_GC(cx, gcLocked ? GC_LOCK_HELD : GC_NORMAL);
+        if (sprop)
+            JS_POP_TEMP_ROOT(cx, &tvr);
+        shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
+        JS_ASSERT(shape != 0);
+        JS_ASSERT_IF(shape & SHAPE_OVERFLOW_BIT,
+                     JS_PROPERTY_CACHE(cx).disabled);
     }
     return shape;
 }
@@ -126,9 +129,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
 
     JS_ASSERT(!cx->runtime->gcRunning);
     cache = &JS_PROPERTY_CACHE(cx);
-
-    /* FIXME bug 489098: consider enabling the property cache for eval. */
-    if (js_IsPropertyCacheDisabled(cx) || (cx->fp->flags & JSFRAME_EVAL)) {
+    pc = cx->fp->regs->pc;
+    if (cache->disabled || (cx->fp->flags & JSFRAME_EVAL)) {
         PCMETER(cache->disfills++);
         *entryp = NULL;
         return;
@@ -194,7 +196,6 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
      * Optimize the cached vword based on our parameters and the current pc's
      * opcode format flags.
      */
-    pc = cx->fp->regs->pc;
     op = js_GetOpcode(cx, cx->fp->script, pc);
     cs = &js_CodeSpec[op];
 
@@ -236,14 +237,6 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                             kshape);
 #endif
                         SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
-                        if (js_IsPropertyCacheDisabled(cx)) {
-                            /*
-                             * js_GenerateShape could not recover from
-                             * rt->shapeGen's overflow.
-                             */
-                            *entryp = NULL;
-                            return;
-                        }
                         SCOPE_SET_BRANDED(scope);
                         if (OBJ_SCOPE(obj) == scope)
                             kshape = scope->shape;
@@ -536,6 +529,20 @@ js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script)
 #endif
         }
     }
+}
+
+void
+js_DisablePropertyCache(JSContext *cx)
+{
+    JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
+    ++JS_PROPERTY_CACHE(cx).disabled;
+}
+
+void
+js_EnablePropertyCache(JSContext *cx)
+{
+    --JS_PROPERTY_CACHE(cx).disabled;
+    JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
 }
 
 /*
