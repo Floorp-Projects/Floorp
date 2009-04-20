@@ -6343,7 +6343,8 @@ TraceRecorder::getThis(LIns*& this_ins)
         if (!thisObj) // FIXME: fix bug 488018 and propagate such errors better
             ABORT_TRACE("js_ComputeThis failed");
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(cx->fp->argv[-1]));
-        JS_ASSERT(thisObj == globalObj);
+        if (thisObj != globalObj)
+            ABORT_TRACE("global object was wrapped while recording");
         this_ins = INS_CONSTPTR(thisObj);
         set(&cx->fp->argv[-1], this_ins);
         return true;
