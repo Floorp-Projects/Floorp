@@ -72,7 +72,11 @@ public:
      *          If success, a valid Monitor*, which must be destroyed
      *          by Monitor::DestroyMonitor()
      **/
-    Monitor(const char* name) {
+    Monitor(const char* name)
+#ifdef DEBUG
+        : mEntryCount(0)
+#endif
+    {
         mMonitor = PR_NewMonitor();
         if (!mMonitor)
             NS_RUNTIMEABORT("Can't allocate mozilla::Monitor");
