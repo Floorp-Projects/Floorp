@@ -2833,6 +2833,105 @@ nsCanvasRenderingContext2D::IsPointInPath(float x, float y, PRBool *retVal)
     return NS_OK;
 }
 
+#ifdef WINCE
+/* A simple bitblt for self copies that ensures that we don't overwrite any
+ * area before we've read from it. */
+static void
+bitblt(gfxImageSurface *s, int src_x, int src_y, int width, int height,
+                int dest_x, int dest_y) {
+    unsigned char *data = s->Data();
+    int stride = s->Stride()/4;
+    int x, y;
+    unsigned int *dest = (unsigned int *)data;
+    unsigned int *src  = (unsigned int *)data;
+
+    int surface_width  = s->Width();
+    int surface_height = s->Height();
+
+    /* clip to the surface size */
+    if (src_x < 0) {
+        dest_x += -src_x;
+        width  -= -src_x;
+        src_x = 0;
+    }
+    if (src_y < 0) {
+        dest_y += -src_y;
+        height -= -src_y;
+        src_y = 0;
+    }
+    if (dest_x < 0) {
+        src_x += -dest_x;
+        width -= -dest_x;
+        dest_x = 0;
+    }
+    if (dest_y < 0) {
+        src_y  += -dest_y;
+        height -= -dest_y;
+        dest_y  = 0;
+    }
+
+    /*XXX: we might want to check for overflow? */
+    if (src_x + width > surface_width)
+        width = surface_width - src_x;
+    if (dest_x + width > surface_width)
+        width = surface_width - dest_x;
+    if (src_y + height > surface_height)
+        height = surface_height - src_y;
+    if (dest_y + height > surface_height)
+        height = surface_height - dest_y;
+
+    if (dest_x < src_x) {
+        if (dest_y < src_y) {
+            dest = dest + dest_y*stride + dest_x;
+            src  = src  +  src_y*stride + src_x;
+            /* copy right to left, top to bottom */
+            for (y=0; y<height; y++) {
+                for (x=0; x<width; x++) {
+                    *dest++ = *src++;
+                }
+                dest += stride - width;
+                src  += stride - width;
+            }
+        } else {
+            dest = dest + (dest_y+height-1)*stride + dest_x;
+            src  = src  + (src_y +height-1)*stride + src_x;
+            /* copy right to left, bottom to top */
+            for (y=0; y<height; y++) {
+                for (x=0; x<width; x++) {
+                    *dest++ = *src++;
+                }
+                dest += -stride - width;
+                src  += -stride - width;
+            }
+        }
+    } else {
+        if (dest_y < src_y) {
+            dest = dest + dest_y*stride + (dest_x+width-1);
+            src  = src  +  src_y*stride + (src_x +width-1);
+            /* copy left to right, top to bottom */
+            for (y=0; y<height; y++) {
+                for (x=0; x<width; x++) {
+                    *dest-- = *src--;
+                }
+                dest += stride + width;
+                src  += stride + width;
+            }
+        } else {
+            dest = dest + (dest_y+height-1)*stride + (dest_x+width-1);
+            src  = src  + (src_y +height-1)*stride + (src_x +width-1);
+            /* copy left to right, bottom to top */
+            for (y=0; y<height; y++) {
+                for (x=0; x<width; x++) {
+                    *dest-- = *src--;
+                }
+                dest += -stride + width;
+                src  += -stride + width;
+            }
+        }
+    }
+}
+#endif
+
 //
 // image
 //
@@ -2895,6 +2994,9 @@ nsCanvasRenderingContext2D::DrawImage()
     nsRefPtr<gfxPattern> pattern;
     nsRefPtr<gfxPath> path;
     nsRefPtr<gfxASurface> imgsurf;
+#ifdef WINCE
+    nsRefPtr<gfxASurface> currentSurface;
+#endif
     rv = ThebesSurfaceFromElement(imgElt, PR_FALSE,
                                   getter_AddRefs(imgsurf), &imgWidth, &imgHeight,
                                   getter_AddRefs(principal), &forceWriteOnly);
@@ -2964,6 +3066,34 @@ nsCanvasRenderingContext2D::DrawImage()
     
     matrix.Translate(gfxPoint(sx, sy));
     matrix.Scale(sw/dw, sh/dh);
+#ifdef WINCE
+    currentSurface = getter_AddRefs(mThebes->CurrentSurface());
+
+    /* cairo doesn't have consistent semantics for drawing a surface onto
+     * itself. Specifically, pixman will not preserve the contents when doing
+     * the copy. So to get the desired semantics a temporary copy would be needed.
+     * Instead we optimize opaque self copies here */
+    if (currentSurface == imgsurf) {
+        if (imgsurf->GetType() == gfxASurface::SurfaceTypeImage) {
+            gfxImageSurface *surf = static_cast<gfxImageSurface*>(imgsurf.get());
+            gfxContext::GraphicsOperator op = mThebes->CurrentOperator();
+            PRBool opaque, unscaled;
+
+            opaque  = surf->Format() == gfxASurface::ImageFormatARGB32 &&
+                (op == gfxContext::OPERATOR_SOURCE);
+            opaque |= surf->Format() == gfxASurface::ImageFormatRGB24  &&
+                (op == gfxContext::OPERATOR_SOURCE || op == gfxContext::OPERATOR_OVER);
+
+            unscaled = sw == dw && sh == dh;
+
+            if (opaque && unscaled) {
+                bitblt(surf, sx, sy, sw, sh, dx, dy);
+                rv = NS_OK;
+                goto FINISH;
+            }
+        }
+    }
+#endif
 
     pattern = new gfxPattern(imgsurf);
     pattern->SetMatrix(matrix);
@@ -3189,9 +3319,14 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
         if (!forceCopy && canvas->CountContexts() == 1) {
             nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
             rv = srcCanvas->GetThebesSurface(getter_AddRefs(sourceSurface));
+#ifndef WINCE
             // force a copy if we couldn't get the surface, or if it's
             // the same as what we have
             if (sourceSurface == mSurface || NS_FAILED(rv))
+#else
+            // force a copy if we couldn't get the surface
+            if (NS_FAILED(rv))
+#endif
                 sourceSurface = nsnull;
         }
 
