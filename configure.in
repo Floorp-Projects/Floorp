@@ -1162,13 +1162,13 @@ solaris*)
     SOLARIS_SUNPRO_CC=
     SOLARIS_SUNPRO_CXX=
     if test -z "$GNU_CC"; then
-        if test "`$_SUBDIR_CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
+        if test "`$CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
             SOLARIS_SUNPRO_CC=1
        fi
     fi
 
     if test -z "$GNU_CXX"; then
-       if test "`$_SUBDIR_CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
+       if test "`$CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
            SOLARIS_SUNPRO_CXX=1
        fi
     fi
