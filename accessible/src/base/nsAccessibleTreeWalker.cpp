@@ -37,8 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibleTreeWalker.h"
+
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessNode.h"
+
+#include "nsIAnonymousContentCreator.h"
 #include "nsIServiceManager.h"
 #include "nsIContent.h"
 #include "nsIDOMXULElement.h"
@@ -229,9 +232,17 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
   if (!mState.frame) {
     return;
   }
+
   if (aTryFirstChild) {
-    nsIContent *containerContent = mState.frame->GetContent();
+    // If the frame implements nsIAnonymousContentCreator interface then go down
+    // through the frames and obtain anonymous nodes for them.
+    nsIAnonymousContentCreator* creator = do_QueryFrame(mState.frame);
     mState.frame = mState.frame->GetFirstChild(nsnull);
+
+    if (creator && mState.frame && mState.siblingIndex < 0) {
+      mState.domNode = do_QueryInterface(mState.frame->GetContent());
+      mState.siblingIndex = eSiblingsWalkFrames;
+    }
 // temporary workaround for Bug 359210. We never want to walk frames.
 // Aaron Leventhal will refix :before and :after content later without walking frames.
 #if 0
@@ -254,17 +265,6 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
       mState.siblingIndex = eSiblingsWalkFrames;
     }
 #endif
-    // Special case: <input type="file">
-    // We should still need to walk frames inside the file control frame
-    // This special case may turn into a more general rule after Firefox 3,
-    // if HTML 5 controls use nsIAnonymousContentCreator
-    if (containerContent->Tag() == nsAccessibilityAtoms::input &&
-        containerContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                                      NS_LITERAL_STRING("file"), eIgnoreCase) &&
-        mState.frame && mState.siblingIndex < 0)  {
-      mState.domNode = do_QueryInterface(mState.frame->GetContent());
-      mState.siblingIndex = eSiblingsWalkFrames;
-    }
   }
   else {
     mState.frame = mState.frame->GetNextSibling();
