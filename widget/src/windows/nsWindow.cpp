@@ -4648,14 +4648,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
 #if defined(WINCE_HAVE_SOFTKB)
       {
-      // On Windows CE, we have a window that overlaps
-      // the ISP button.  In this case, we should always
-      // try to hide it when we are activated
+        // On Windows CE, we have a window that overlaps
+        // the ISP button.  In this case, we should always
+        // try to hide it when we are activated
       
-      // Get current input context
-      HIMC hC = ImmGetContext(mWnd);
-      // Open the IME 
-      ImmSetOpenStatus(hC, TRUE);
+        // Get current input context
+        HIMC hC = ImmGetContext(mWnd);
+        // Open the IME 
+        ImmSetOpenStatus(hC, TRUE);
+        ImmReleaseContext(mWnd, hC);
       }
 #endif
       break;
@@ -4665,6 +4666,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       {
         HIMC hC = ImmGetContext(mWnd);
         ImmSetOpenStatus(hC, FALSE);
+        ImmReleaseContext(mWnd, hC);
       }
 #endif
       WCHAR className[kMaxClassNameLength];
