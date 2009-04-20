@@ -1719,14 +1719,17 @@ js_InvokeOperationCallback(JSContext *cx)
     cx->operationCallbackFlag = 0;
 
     /*
-     * We automatically yield the current context every time the operation
-     * callback is hit since we might be called as a result of an impending
-     * GC, which would deadlock if we do not yield. Operation callbacks
-     * are supposed to happen rarely (seconds, not milliseconds) so it is
-     * acceptable to yield at every callback.
+     * Unless we are going to run the GC, we automatically yield the current
+     * context every time the operation callback is hit since we might be
+     * called as a result of an impending GC, which would deadlock if we do
+     * not yield. Operation callbacks are supposed to happen rarely (seconds,
+     * not milliseconds) so it is acceptable to yield at every callback.
      */
+    if (cx->runtime->gcIsNeeded)
+        js_GC(cx, GC_NORMAL);
 #ifdef JS_THREADSAFE    
-    JS_YieldRequest(cx);
+    else
+        JS_YieldRequest(cx);
 #endif
 
     JSOperationCallback cb = cx->operationCallback;
@@ -1738,6 +1741,23 @@ js_InvokeOperationCallback(JSContext *cx)
      */
 
     return !cb || cb(cx);
+}
+
+void
+js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked)
+{
+    JSContext *acx, *iter;
+#ifdef JS_THREADSAFE
+    if (!gcLocked)
+        JS_LOCK_GC(rt);
+#endif
+    iter = NULL;
+    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)))
+        JS_TriggerOperationCallback(acx);
+#ifdef JS_THREADSAFE
+    if (!gcLocked)
+        JS_UNLOCK_GC(rt);
+#endif
 }
 
 JSStackFrame *

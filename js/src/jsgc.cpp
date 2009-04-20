@@ -3177,6 +3177,26 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
 #endif
 }
 
+void
+js_TriggerGC(JSContext *cx, JSBool gcLocked)
+{
+    JSRuntime *rt = cx->runtime;
+
+#ifdef JS_THREADSAFE
+    JS_ASSERT(cx->requestDepth > 0);
+#endif
+    JS_ASSERT(!rt->gcRunning);
+    if (rt->gcIsNeeded)
+        return;
+
+    /*
+     * Trigger the GC when it is safe to call an operation callback on any
+     * thread.
+     */
+    rt->gcIsNeeded = JS_TRUE;
+    js_TriggerAllOperationCallbacks(rt, gcLocked);
+}
+
 static void
 ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
 {
@@ -3287,7 +3307,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JSBool allClear;
 #ifdef JS_THREADSAFE
     uint32 requestDebit;
-    JSContext *acx, *iter;
 #endif
 #ifdef JS_GCMETER
     uint32 nlivearenas, nkilledarenas, nthings;
@@ -3450,7 +3469,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
          * collect garbage only if a racing thread attempted GC and is waiting
          * for us to finish (gcLevel > 1) or if someone already poked us.
          */
-        if (rt->gcLevel == 1 && !rt->gcPoke)
+        if (rt->gcLevel == 1 && !rt->gcPoke && !rt->gcIsNeeded)
             goto done_running;
 
         rt->gcLevel = 0;
@@ -3470,6 +3489,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         goto out;
 #endif
     VOUCH_HAVE_STACK();
+
+    /* Clear gcIsNeeded now, when we are about to start a normal GC cycle. */
+    rt->gcIsNeeded = JS_FALSE;
 
     /* Reset malloc counter. */
     rt->gcMallocBytes = 0;
@@ -3764,23 +3786,6 @@ out:
         rt->gcPoke = JS_FALSE;
         JS_UNLOCK_GC(rt);
         goto restart;
-    }
-
-    if (rt->shapeGen >= SHAPE_OVERFLOW_BIT - 1) {
-        /*
-         * FIXME bug 440834: The shape id space has overflowed. Currently we
-         * cope badly with this. Every call to js_GenerateShape does GC, and
-         * we never re-enable the property cache.
-         */
-        js_DisablePropertyCache(cx);
-#ifdef JS_THREADSAFE
-        iter = NULL;
-        while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-            if (!acx->thread || acx->thread == cx->thread)
-                continue;
-            js_DisablePropertyCache(acx);
-        }
-#endif
     }
 
     rt->gcLastBytes = rt->gcBytes;
