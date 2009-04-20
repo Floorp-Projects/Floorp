@@ -448,11 +448,8 @@ XPC_NW_RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
 
     XPCWrappedNative* wrappedNative =
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, nativeObj);
-    if (!wrappedNative) {
-      // Not something we can protect... just make it JSVAL_NULL
-      *rval = JSVAL_NULL;
-      return JS_TRUE;
-    }
+    if (!wrappedNative)
+      return XPC_SJOW_Construct(cx, nsnull, 1, &v, rval);
 
     if (HAS_FLAGS(flags, FLAG_EXPLICIT)) {
 #ifdef DEBUG_XPCNativeWrapper
