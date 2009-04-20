@@ -70,7 +70,7 @@ ifeq ($(OS_ARCH),OS2)
 PLATFORM = os2
 endif
 
-ifeq ($(OS_ARCH),Darwin)
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 PLATFORM = mac
 endif
 
