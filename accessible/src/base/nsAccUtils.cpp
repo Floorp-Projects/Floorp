@@ -827,7 +827,6 @@ nsAccUtils::GetMultiSelectFor(nsIDOMNode *aNode)
   if (0 == (state & nsIAccessibleStates::STATE_SELECTABLE))
     return nsnull;
 
-  PRUint32 containerRole;
   while (0 == (state & nsIAccessibleStates::STATE_MULTISELECTABLE)) {
     nsIAccessible *current = accessible;
     current->GetParent(getter_AddRefs(accessible));
