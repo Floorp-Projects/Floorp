@@ -63,6 +63,12 @@
 #include <gdk/gdkx.h>
 #include "gfxXlibSurface.h"
 #include "cairo-xlib.h"
+
+/* Undefine the Status from Xlib since it will conflict with system headers on OSX */
+#if defined(__APPLE__) && defined(Status)
+#undef Status
+#endif
+
 #endif /* MOZ_X11 */
 
 #ifdef MOZ_DFB
