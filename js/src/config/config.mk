@@ -254,6 +254,14 @@ OS_CXXFLAGS += -FR
 endif
 else # ! MOZ_DEBUG
 
+# We don't build a static CRT when building a custom CRT,
+# it appears to be broken. So don't link to jemalloc if
+# the Makefile wants static CRT linking.
+ifeq ($(MOZ_MEMORY)_$(USE_STATIC_LIBS),1_)
+# Disable default CRT libs and add the right lib path for the linker
+OS_LDFLAGS += $(MOZ_MEMORY_LDFLAGS)
+endif
+
 # MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
 # Used for generating an optimized build with debugging symbols.
 # Used in the Windows nightlies to generate symbols for crash reporting.
