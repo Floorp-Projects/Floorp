@@ -60,7 +60,7 @@
 #include "mozStorageConnection.h"
 #include "mozStorageService.h"
 #include "mozStorageStatement.h"
-#include "mozStorageValueArray.h"
+#include "mozStorageArgValueArray.h"
 #include "mozStoragePrivateHelpers.h"
 
 #include "prlog.h"
@@ -206,8 +206,7 @@ basicFunctionHelper(sqlite3_context *aCtx,
 
   mozIStorageFunction *func = static_cast<mozIStorageFunction *>(userData);
 
-  nsRefPtr<mozStorageArgvValueArray> arguments =
-    new mozStorageArgvValueArray(aArgc, aArgv);
+  nsRefPtr<ArgValueArray> arguments(new ArgValueArray(aArgc, aArgv));
   if (!arguments)
       return;
 
@@ -236,8 +235,7 @@ aggregateFunctionStepHelper(sqlite3_context *aCtx,
   mozIStorageAggregateFunction *func =
     static_cast<mozIStorageAggregateFunction *>(userData);
 
-  nsRefPtr<mozStorageArgvValueArray> arguments =
-    new mozStorageArgvValueArray(aArgc, aArgv);
+  nsRefPtr<ArgValueArray> arguments(new ArgValueArray(aArgc, aArgv));
   if (!arguments)
     return;
 
