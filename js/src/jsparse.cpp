@@ -6138,7 +6138,9 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                     if (!ale)
                         return NULL;
 
-                    if (!dn->isPlaceholder()) {
+                    if (dn->pn_pos >= root->pn_pos) {
+                        tc->parent->lexdeps.remove(tc->compiler, atom);
+                    } else {
                         JSDefinition *dn2 = (JSDefinition *)
                             NewNameNode(tc->compiler->context, TS(tc->compiler), dn->pn_atom, tc);
                         if (!dn2)
@@ -6164,9 +6166,6 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                     }
 
                     ALE_SET_DEFN(ale, dn);
-
-                    if (dn->pn_pos >= root->pn_pos)
-                        tc->parent->lexdeps.remove(tc->compiler, atom);
                 }
             }
         }
