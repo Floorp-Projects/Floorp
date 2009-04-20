@@ -603,20 +603,20 @@ SCRIPTS = js-config
 SDK_BINARY = js-config
 
 install:: $(INSTALLED_HEADERS)
-	$(SYSINSTALL) $^ $(includedir)/$(MODULE)
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)
 
 install:: $(SCRIPTS)
-	$(SYSINSTALL) $^ $(bindir)
+	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
 
 install:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifneq (,$(LIBRARY))
-	$(SYSINSTALL) $(LIBRARY) $(libdir)
+	$(SYSINSTALL) $(LIBRARY) $(DESTDIR)$(libdir)
 endif
 ifneq (,$(SHARED_LIBRARY))
-	$(SYSINSTALL) $(SHARED_LIBRARY) $(libdir)
+	$(SYSINSTALL) $(SHARED_LIBRARY) $(DESTDIR)$(libdir)
 endif
 ifneq (,$(IMPORT_LIBRARY))
-	$(SYSINSTALL) $(IMPORT_LIBRARY) $(libdir)
+	$(SYSINSTALL) $(IMPORT_LIBRARY) $(DESTDIR)$(libdir)
 endif
 
 # Extra dependancies and rules for auto-generated headers
