@@ -48,7 +48,10 @@ AC_DEFUN(MOZ_PATH_PROG,
   if test "$msyshost"; then
     case "[$]$1" in
     /*)
-      $1="$(cd "$(dirname "[$]$1")" && pwd -W)/$(basename "[$]$1")"
+      tmp_DIRNAME=`dirname "[$]$1"`
+      tmp_BASENAME=`basename "[$]$1"`
+      tmp_PWD=`cd "$tmp_DIRNAME" && pwd -W`
+      $1="$tmp_PWD/$tmp_BASENAME"
       if test -e "[$]$1.exe"; then
         $1="[$]$1.exe"
       fi
@@ -61,7 +64,10 @@ AC_DEFUN(MOZ_PATH_PROGS,
   if test "$msyshost"; then
     case "[$]$1" in
     /*)
-      $1="$(cd "$(dirname "[$]$1")" && pwd -W)/$(basename "[$]$1")"
+      tmp_DIRNAME=`dirname "[$]$1"`
+      tmp_BASENAME=`basename "[$]$1"`
+      tmp_PWD=`cd "$tmp_DIRNAME" && pwd -W`
+      $1="$tmp_PWD/$tmp_BASENAME"
       if test -e "[$]$1.exe"; then
         $1="[$]$1.exe"
       fi
