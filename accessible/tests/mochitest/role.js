@@ -2,7 +2,6 @@
 // Role constants
 
 const ROLE_ALERT = nsIAccessibleRole.ROLE_ALERT;
-const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
 const ROLE_CELL = nsIAccessibleRole.ROLE_CELL;
 const ROLE_CHROME_WINDOW = nsIAccessibleRole.ROLE_CHROME_WINDOW;
 const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
@@ -26,7 +25,10 @@ const ROLE_NOTHING = nsIAccessibleRole.ROLE_NOTHING;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
 const ROLE_PARAGRAPH = nsIAccessibleRole.ROLE_PARAGRAPH;
 const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
+const ROLE_PROGRESSBAR = nsIAccessibleRole.ROLE_PROGRESSBAR;
+const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
 const ROLE_SECTION = nsIAccessibleRole.ROLE_SECTION;
+const ROLE_SLIDER = nsIAccessibleRole.ROLE_SLIDER;
 const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;

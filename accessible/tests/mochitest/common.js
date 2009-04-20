@@ -266,6 +266,38 @@ function ensureAccessibleTree(aAccOrElmOrID)
 }
 
 /**
+ * Compare expected and actual accessibles trees.
+ */
+function testAccessibleTree(aAccOrElmOrID, aAccTree)
+{
+  var acc = getAccessible(aAccOrElmOrID);
+  if (!acc)
+    return;
+
+  for (var prop in aAccTree) {
+    var msg = "Wrong value of property '" + prop + "'.";
+    if (prop == "role")
+      is(roleToString(acc[prop]), roleToString(aAccTree[prop]), msg);
+    else if (prop != "children")
+      is(acc[prop], aAccTree[prop], msg);
+  }
+
+  if ("children" in aAccTree) {
+    var children = acc.children;
+    is(aAccTree.children.length, children.length,
+       "Different amount of expected children.");
+
+    if (aAccTree.children.length == children.length) { 
+      for (var i = 0; i < children.length; i++) {
+        var child = children.queryElementAt(i, nsIAccessible);
+        testAccessibleTree(child, aAccTree.children[i]);
+      }
+    }
+  }
+}
+
+
+/**
  * Convert role to human readable string.
  */
 function roleToString(aRole)
