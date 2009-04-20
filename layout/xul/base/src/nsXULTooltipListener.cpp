@@ -259,12 +259,18 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
         }
       }
     }
-  } else {
-    HideTooltip();
-    // set a flag so that the tooltip is only displayed once until the mouse
-    // leaves the node
-    mTooltipShownOnce = PR_TRUE;
+    return NS_OK;
   }
+
+#ifdef MOZ_XUL
+  if (mIsSourceTree)
+    return NS_OK;
+#endif
+
+  HideTooltip();
+  // set a flag so that the tooltip is only displayed once until the mouse
+  // leaves the node
+  mTooltipShownOnce = PR_TRUE;
 
   return NS_OK;
 }
