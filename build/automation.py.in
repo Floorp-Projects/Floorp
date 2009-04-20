@@ -61,6 +61,7 @@ __all__ = [
            "UNIXISH",
            "IS_WIN32",
            "IS_MAC",
+           "log",
            "runApp",
            "Process",
            "initializeProfile",
