@@ -102,7 +102,12 @@
 /* Small arrays are dense, no matter what. */
 #define MIN_SPARSE_INDEX 256
 
-#define INDEX_TOO_BIG(index) ((index) > JS_BIT(29) - 1)
+static inline bool
+INDEX_TOO_BIG(jsuint index)
+{
+    return index > JS_BIT(29) - 1;
+}
+
 #define INDEX_TOO_SPARSE(array, index)                                         \
     (INDEX_TOO_BIG(index) ||                                                   \
      ((index) > js_DenseArrayCapacity(array) && (index) >= MIN_SPARSE_INDEX && \

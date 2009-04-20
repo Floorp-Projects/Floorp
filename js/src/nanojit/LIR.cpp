@@ -180,6 +180,8 @@ namespace nanojit
 		NanoAssert(samepage(l,l+LIR_FAR_SLOTS)); // must have called ensureRoom()
         if (can24bReach(l,to))
 		{
+		    NanoStaticAssert(LIR_nearskip == LIR_skip - 1);
+		    NanoStaticAssert(LIR_neartramp == LIR_tramp - 1);
             l->initOpcode(LOpcode(op-1)); // nearskip or neartramp
             l->setimm24(to-l);
             _buf->commit(1);
