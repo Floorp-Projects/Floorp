@@ -2335,6 +2335,17 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
    case eSwitchAction:
      aName.AssignLiteral("switch");
      return NS_OK;
+     
+   case eSortAction:
+     aName.AssignLiteral("sort");
+     return NS_OK;
+   
+   case eExpandAction:
+     if (states & nsIAccessibleStates::STATE_COLLAPSED)
+       aName.AssignLiteral("expand");
+     else
+       aName.AssignLiteral("collapse");
+     return NS_OK;
   }
 
   return NS_ERROR_INVALID_ARG;
@@ -3229,8 +3240,11 @@ nsAccessible::GetActionRule(PRUint32 aStates)
   if (aStates & nsIAccessibleStates::STATE_UNAVAILABLE)
     return eNoAction;
 
+  nsIContent* content = nsCoreUtils::GetRoleContent(mDOMNode);
+  if (!content)
+    return eNoAction;
+  
   // Check if it's simple xlink.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (nsCoreUtils::IsXLink(content))
     return eJumpAction;
 
@@ -3240,10 +3254,16 @@ nsAccessible::GetActionRule(PRUint32 aStates)
 
   if (isOnclick)
     return eClickAction;
-
+  
   // Get an action based on ARIA role.
-  if (mRoleMapEntry)
+  if (mRoleMapEntry &&
+      mRoleMapEntry->actionRule != eNoAction)
     return mRoleMapEntry->actionRule;
+
+  // Get an action based on ARIA attribute.
+  if (nsAccUtils::HasDefinedARIAToken(content,
+                                   nsAccessibilityAtoms::aria_expanded))
+    return eExpandAction;
 
   return eNoAction;
 }

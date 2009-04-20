@@ -321,6 +321,8 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
 PRBool
 nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
 {
+  NS_ASSERTION(aContent, "aContent is null in call to HasDefinedARIAToken!");
+
   if (!aContent->HasAttr(kNameSpaceID_None, aAtom) ||
       aContent->AttrValueIs(kNameSpaceID_None, aAtom,
                             nsAccessibilityAtoms::_empty, eCaseMatters) ||
