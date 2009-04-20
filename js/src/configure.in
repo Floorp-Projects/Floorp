@@ -4199,42 +4199,7 @@ if test "$MOZ_MEMORY"; then
     ;;
   msvc*|mks*|cygwin*|mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    dnl XXX: should test for vc8sp1 here, otherwise patching the crt src
-    dnl will fail miserably
-    if test "$_CC_SUITE" -lt "8"; then
-        AC_MSG_ERROR([Building jemalloc requires Visual C++ 2005 or better])
-    fi
-    if test -z "$WIN32_CRT_SRC_DIR" -a -z "$WIN32_CUSTOM_CRT_DIR"; then
-      if test -z "$VCINSTALLDIR" -o ! -d "$VCINSTALLDIR"; then
-        AC_MSG_ERROR([When building jemalloc, either set WIN32_CRT_SRC_DIR to the path to the Visual C++ CRT source (usually VCINSTALLDIR\crt\src), or set WIN32_CUSTOM_CRT_DIR to the path to a folder containing a pre-built CRT DLL.])
-      else
-        WIN32_CRT_SRC_DIR="$VCINSTALLDIR\crt\src"
-      fi
-    fi
-    if test -z "$WIN32_CRT_SRC_DIR"; then
-      # pre-built dll
-      WIN32_CUSTOM_CRT_DIR=`cd "$WIN32_CUSTOM_CRT_DIR" && pwd`
-      _WIN_UNIX_CRT_PATH="$WIN32_CUSTOM_CRT_DIR"
-    else
-      # CRT source directory
-      WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd`
-      _CRT_BASE_DIR=`basename "$WIN32_CRT_SRC_DIR"`
-      _WIN_UNIX_CRT_PATH="$_objdir/memory/jemalloc/$_CRT_BASE_DIR/build/intel"
-    fi
-    dnl need win32 paths in LIB, hence this python abuse.  extra brackets
-    dnl are to avoid m4
-    _WIN_CRT_PATH=[`$PYTHON -c 'import sys, os.path; print os.path.normpath(sys.argv[1])' "$_WIN_UNIX_CRT_PATH"`]
-    MOZ_LIB="$_WIN_CRT_PATH;$LIB"
-    dnl Needs to be in PATH too, since our tools will wind up linked against it.
-    dnl This needs to be unix style.
-    MOZ_PATH="$PATH:$_WIN_UNIX_CRT_PATH"
-    dnl Statically link the C++ stdlib.  We only use this for Breakpad anyway.
-    AC_DEFINE(_STATIC_CPPLIB)
-    dnl Don't generate a manifest, since we're linking to a custom CRT.
-    LDFLAGS="$LDFLAGS -MANIFEST:NO"
-    dnl Also pass this to NSPR/NSS
-    DLLFLAGS="$DLLFLAGS -MANIFEST:NO"
-    export DLLFLAGS
+    # the interesting bits will get passed down in MOZ_MEMORY_LDFLAGS
     ;;
   *wince)
     AC_DEFINE(MOZ_MEMORY_WINCE)
@@ -4246,12 +4211,7 @@ if test "$MOZ_MEMORY"; then
   esac
 fi
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(WIN32_CRT_SRC_DIR)
-AC_SUBST(WIN32_CUSTOM_CRT_DIR)
-AC_SUBST(MOZ_LIB)
-AC_SUBST(MOZ_PATH)
-dnl Need to set this for make because NSS doesn't have configure
-AC_SUBST(DLLFLAGS)
+AC_SUBST(MOZ_MEMORY_LDFLAGS)
 
 dnl ========================================================
 dnl = Use malloc wrapper lib

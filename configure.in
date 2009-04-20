@@ -6587,41 +6587,29 @@ if test "$MOZ_MEMORY"; then
     ;;
   msvc*|mks*|cygwin*|mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    dnl XXX: should test for vc8sp1 here, otherwise patching the crt src
-    dnl will fail miserably
-    if test "$_CC_SUITE" -lt "8"; then
-        AC_MSG_ERROR([Building jemalloc requires Visual C++ 2005 or better])
+    dnl This is sort of awful. Will revisit if we add support for more versions
+    if test "$CC_VERSION" -ne "14.00.50727.762"; then
+        AC_MSG_ERROR([Building jemalloc requires exactly Visual C++ 2005 SP1 currently.])
     fi
-    if test -z "$WIN32_CRT_SRC_DIR" -a -z "$WIN32_CUSTOM_CRT_DIR"; then
+    if test -z "$WIN32_CRT_SRC_DIR"; then
       if test -z "$VCINSTALLDIR" -o ! -d "$VCINSTALLDIR"; then
-        AC_MSG_ERROR([When building jemalloc, either set WIN32_CRT_SRC_DIR to the path to the Visual C++ CRT source (usually VCINSTALLDIR\crt\src), or set WIN32_CUSTOM_CRT_DIR to the path to a folder containing a pre-built CRT DLL.])
+        AC_MSG_ERROR([When building jemalloc, set WIN32_CRT_SRC_DIR to the path to the Visual C++ CRT source (usually VCINSTALLDIR\crt\src, but VCINSTALLDIR is not set, so I can't autodetect it for you).])
       else
         WIN32_CRT_SRC_DIR="$VCINSTALLDIR\crt\src"
       fi
     fi
-    if test -z "$WIN32_CRT_SRC_DIR"; then
-      # pre-built dll
-      WIN32_CUSTOM_CRT_DIR=`cd "$WIN32_CUSTOM_CRT_DIR" && pwd`
-      _WIN_UNIX_CRT_PATH="$WIN32_CUSTOM_CRT_DIR"
-    else
-      # CRT source directory
-      WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd`
-      _CRT_BASE_DIR=`basename "$WIN32_CRT_SRC_DIR"`
-      _WIN_UNIX_CRT_PATH="$_objdir/memory/jemalloc/$_CRT_BASE_DIR/build/intel"
+
+    if test ! -d "$WIN32_CRT_SRC_DIR"; then
+      AC_MSG_ERROR([Invalid Win32 CRT source directory: ${WIN32_CRT_SRC_DIR}])
     fi
-    dnl need win32 paths in LIB, hence this python abuse.  extra brackets
-    dnl are to avoid m4
-    _WIN_CRT_PATH=[`$PYTHON -c 'import sys, os.path; print os.path.normpath(sys.argv[1])' "$_WIN_UNIX_CRT_PATH"`]
-    MOZ_LIB="$_WIN_CRT_PATH;$LIB"
-    dnl Needs to be in PATH too, since our tools will wind up linked against it.
-    dnl This needs to be unix style.
-    MOZ_PATH="$PATH:$_WIN_UNIX_CRT_PATH"
+    WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
+    _objdir_win=`pwd -W`
+    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/intel"
     dnl Statically link the C++ stdlib.  We only use this for Breakpad anyway.
     AC_DEFINE(_STATIC_CPPLIB)
-    dnl Don't generate a manifest, since we're linking to a custom CRT.
-    LDFLAGS="$LDFLAGS -MANIFEST:NO"
+    MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -DEFAULTLIB:mozcrt19"
     dnl Also pass this to NSPR/NSS
-    DLLFLAGS="$DLLFLAGS -MANIFEST:NO"
+    DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
     ;;
   *wince)
@@ -6634,10 +6622,8 @@ if test "$MOZ_MEMORY"; then
   esac
 fi
 AC_SUBST(MOZ_MEMORY)
+AC_SUBST(MOZ_MEMORY_LDFLAGS)
 AC_SUBST(WIN32_CRT_SRC_DIR)
-AC_SUBST(WIN32_CUSTOM_CRT_DIR)
-AC_SUBST(MOZ_LIB)
-AC_SUBST(MOZ_PATH)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
 
@@ -8529,7 +8515,10 @@ ac_configure_args="$ac_configure_args --bindir=$dist/bin"
 ac_configure_args="$ac_configure_args --libdir=$dist/lib"
 ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
-   ac_configure_args="$ac_configure_args --enable-jemalloc"  
+   ac_configure_args="$ac_configure_args --enable-jemalloc"
+   if test -n "$MOZ_MEMORY_LDFLAGS"; then
+     export MOZ_MEMORY_LDFLAGS
+   fi
 fi
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
