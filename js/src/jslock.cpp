@@ -628,6 +628,14 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * rt->titleSharingDone.
          */
         requestDebit = js_DiscountRequestsForGC(cx);
+        if (title->ownercx != ownercx) {
+            /*
+             * js_DiscountRequestsForGC released and reacquired the GC lock,
+             * and the title was taken or shared. Start over.
+             */
+            js_RecountRequestsAfterGC(rt, requestDebit);
+            continue;
+        }
 
         /*
          * We know that some other thread's context owns title, which is now
@@ -652,7 +660,7 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * Don't clear titleToShare until after we're through waiting on
          * all condition variables protected by rt->gcLock -- that includes
          * rt->titleSharingDone *and* rt->gcDone (hidden in the call to
-         * js_ActivateRequestAfterGC immediately above).
+         * js_RecountRequestsAfterGC immediately above).
          *
          * Otherwise, the GC could easily deadlock with another thread that
          * owns a title wanted by a finalizer.  By keeping cx->titleToShare

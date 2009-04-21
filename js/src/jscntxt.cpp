@@ -851,6 +851,14 @@ js_DiscountRequestsForGC(JSContext *cx)
     JS_ASSERT(cx->thread);
     JS_ASSERT(cx->runtime->gcThread != cx->thread);
 
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx)) {
+        JS_UNLOCK_GC(cx->runtime);
+        js_LeaveTrace(cx);
+        JS_LOCK_GC(cx->runtime);
+    }
+#endif
+
     requestDebit = js_CountThreadRequests(cx);
     if (requestDebit != 0) {
         JSRuntime *rt = cx->runtime;
