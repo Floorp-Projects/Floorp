@@ -1122,12 +1122,20 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // in that situation --- what we think is our "new size"
   // will not be our real new size. This also happens to be more efficient.
   if (mAbsoluteContainer.HasAbsoluteFrames()) {
-    if (aReflowState.WillReflowAgainForClearance()) {
+    PRBool haveInterrupt = aPresContext->HasPendingInterrupt();
+    if (aReflowState.WillReflowAgainForClearance() ||
+        haveInterrupt) {
       // Make sure that when we reflow again we'll actually reflow all the abs
-      // pos frames that might conceivably depend on our size.  Sadly, we can't
-      // do much better than that, because we don't really know what our size
-      // will be, and it might in fact not change on the followup reflow!
-      mAbsoluteContainer.MarkSizeDependentFramesDirty();
+      // pos frames that might conceivably depend on our size (or all of them,
+      // if we're dirty right now and interrupted; in that case we also need
+      // to mark them all with NS_FRAME_IS_DIRTY).  Sadly, we can't do much
+      // better than that, because we don't really know what our size will be,
+      // and it might in fact not change on the followup reflow!
+      if (haveInterrupt && (GetStateBits() & NS_FRAME_IS_DIRTY)) {
+        mAbsoluteContainer.MarkAllFramesDirty();
+      } else {
+        mAbsoluteContainer.MarkSizeDependentFramesDirty();
+      }
     } else {
       nsRect childBounds;
       nsSize containingBlockSize =
@@ -2016,6 +2024,18 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     }
 
     DumpLine(aState, line, deltaY, -1);
+
+    if (aState.mPresContext->CheckForInterrupt(this)) {
+      willReflowAgain = PR_TRUE;
+      // Another option here might be to leave |line| clean if
+      // !HasPendingInterrupt() before the CheckForInterrupt() call, since in
+      // that case the line really did reflow as it should have.  Not sure
+      // whether that would be safe, so doing this for now instead.  Also not
+      // sure whether we really want to mark all lines dirty after an
+      // interrupt, but until we get better at propagating float damage we
+      // really do need to do it this way; see comments inside MarkLineDirty.
+      MarkLineDirtyForInterrupt(line);
+    }
   }
 
   // Handle BR-clearance from the last line of the block
@@ -2037,8 +2057,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   if (repositionViews)
     ::PlaceFrameView(this);
 
-  // We can skip trying to pull up the next line if there is no next
-  // in flow or we were told not to or we know it will be futile, i.e.,
+  // We can skip trying to pull up the next line if our height is constrained
+  // (so we can report being incomplete) and there is no next in flow or we
+  // were told not to or we know it will be futile, i.e.,
   // -- the next in flow is not changing
   // -- and we cannot have added more space for its first line to be
   // pulled up into,
@@ -2047,8 +2068,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // didn't change)
   // -- my chain of next-in-flows either has no first line, or its first
   // line isn't dirty.
-  PRBool skipPull = willReflowAgain;
-  if (aState.mNextInFlow &&
+  PRBool heightConstrained =
+    aState.mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE;
+  PRBool skipPull = willReflowAgain && heightConstrained;
+  if (!skipPull && heightConstrained && aState.mNextInFlow &&
       (aState.mReflowState.mFlags.mNextInFlowUntouched &&
        !lastLineMovedUp && 
        !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
@@ -2067,13 +2090,17 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // (First, see if there is such a line, and second, see if it's clean)
       if (!bifLineIter.Next() ||                
           !bifLineIter.GetLine()->IsDirty()) {
-        if (IS_TRUE_OVERFLOW_CONTAINER(aState.mNextInFlow))
-          NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
-        else
-          NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
         skipPull=PR_TRUE;
       }
     }
+  }
+
+  if (skipPull && aState.mNextInFlow) {
+    NS_ASSERTION(heightConstrained, "Height should be constrained here\n");
+    if (IS_TRUE_OVERFLOW_CONTAINER(aState.mNextInFlow))
+      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+    else
+      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
   }
   
   if (!skipPull && aState.mNextInFlow) {
@@ -2157,28 +2184,38 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       AutoNoisyIndenter indent2(gNoisyReflow);
 #endif
 
-      // Now reflow it and any lines that it makes during it's reflow
-      // (we have to loop here because reflowing the line may case a new
-      // line to be created; see SplitLine's callers for examples of
-      // when this happens).
-      while (line != end_lines()) {
-        rv = ReflowLine(aState, line, &keepGoing);
-        NS_ENSURE_SUCCESS(rv, rv);
-        DumpLine(aState, line, deltaY, -1);
-        if (!keepGoing) {
-          if (0 == line->GetChildCount()) {
-            DeleteLine(aState, line, line_end);
+      if (aState.mPresContext->HasPendingInterrupt()) {
+        MarkLineDirtyForInterrupt(line);
+      } else {
+        // Now reflow it and any lines that it makes during it's reflow
+        // (we have to loop here because reflowing the line may case a new
+        // line to be created; see SplitLine's callers for examples of
+        // when this happens).
+        while (line != end_lines()) {
+          rv = ReflowLine(aState, line, &keepGoing);
+          NS_ENSURE_SUCCESS(rv, rv);
+          DumpLine(aState, line, deltaY, -1);
+          if (!keepGoing) {
+            if (0 == line->GetChildCount()) {
+              DeleteLine(aState, line, line_end);
+            }
+            break;
           }
-          break;
-        }
 
-        if (LineHasClear(line.get())) {
-          foundAnyClears = PR_TRUE;
-        }
+          if (LineHasClear(line.get())) {
+            foundAnyClears = PR_TRUE;
+          }
 
-        // If this is an inline frame then its time to stop
-        ++line;
-        aState.AdvanceToNextLine();
+          if (aState.mPresContext->CheckForInterrupt(this)) {
+            willReflowAgain = PR_TRUE;
+            MarkLineDirtyForInterrupt(line);
+            break;
+          }
+
+          // If this is an inline frame then its time to stop
+          ++line;
+          aState.AdvanceToNextLine();
+        }
       }
     }
 
@@ -2214,6 +2251,54 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #endif
 
   return rv;
+}
+
+static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock)
+{
+  nsLineList::iterator line = aBlock->begin_lines();
+  nsLineList::iterator endLine = aBlock->end_lines();
+  while (line != endLine) {
+    if (line->IsBlock()) {
+      nsIFrame* f = line->mFirstChild;
+      nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(f);
+      if (bf) {
+        MarkAllDescendantLinesDirty(bf);
+      }
+    }
+    line->MarkDirty();
+    ++line;
+  }
+}
+
+void
+nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine)
+{
+  aLine->MarkDirty();
+
+  // Just checking NS_FRAME_IS_DIRTY is ok, because we've already
+  // marked the lines that need to be marked dirty based on our
+  // vertical resize stuff.  So we'll definitely reflow all those kids;
+  // the only question is how they should behave.
+  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
+    // Mark all our child frames dirty so we make sure to reflow them
+    // later.
+    PRInt32 n = aLine->GetChildCount();
+    for (nsIFrame* f = aLine->mFirstChild; n > 0;
+         f = f->GetNextSibling(), --n) {
+      f->AddStateBits(NS_FRAME_IS_DIRTY);
+    }
+  } else {
+    // Dirty all the descendant lines of block kids to handle float damage,
+    // since our nsFloatManager will go away by the next time we're reflowing.
+    // XXXbz Can we do something more like what PropagateFloatDamage does?
+    // Would need to sort out the exact business with mBlockDelta for that....
+    // This marks way too much dirty.  If we ever make this better, revisit
+    // which lines we mark dirty in the interrupt case in ReflowDirtyLines.
+    nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(aLine->mFirstChild);
+    if (bf) {
+      MarkAllDescendantLinesDirty(bf);
+    }
+  }
 }
 
 void
@@ -4956,23 +5041,6 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
   // OK; it's not part of any child list, so we can just go ahead and delete it.
   aFloat->Destroy();
   return line_end;
-}
-
-static void MarkAllDescendantLinesDirty(nsBlockFrame* aBlock)
-{
-  nsLineList::iterator line = aBlock->begin_lines();
-  nsLineList::iterator endLine = aBlock->end_lines();
-  while (line != endLine) {
-    if (line->IsBlock()) {
-      nsIFrame* f = line->mFirstChild;
-      nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(f);
-      if (bf) {
-        MarkAllDescendantLinesDirty(bf);
-      }
-    }
-    line->MarkDirty();
-    ++line;
-  }
 }
 
 static void MarkSameFloatManagerLinesDirty(nsBlockFrame* aBlock)

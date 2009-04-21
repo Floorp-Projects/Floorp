@@ -2056,6 +2056,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #ifdef NOISY_VERTICAL_ALIGN
         printf(" new values: %d,%d\n", minY, maxY);
 #endif
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("            Used mMinLineHeight: %d, fontHeight: %d, fontAscent: %d\n", mMinLineHeight, fontHeight, fontAscent);
+#endif
       }
       else {
         // XXX issues:

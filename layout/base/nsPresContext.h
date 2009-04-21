@@ -806,6 +806,58 @@ public:
     mCrossDocDirtyRegion.SetEmpty();
   }
 
+  /**
+   * Notify the prescontext that the presshell is about to reflow a reflow root.
+   * The single argument indicates whether this reflow should be interruptible.
+   * If aInterruptible is false then CheckForInterrupt and HasPendingInterrupt
+   * will always return false. If aInterruptible is true then CheckForInterrupt
+   * will return true when a pending event is detected.  This is for use by the
+   * presshell only.  Reflow code wanting to prevent interrupts should use
+   * InterruptPreventer.
+   */
+  void ReflowStarted(PRBool aInterruptible);
+
+  /**
+   * A class that can be used to temporarily disable reflow interruption.
+   */
+  class InterruptPreventer;
+  friend class InterruptPreventer;
+  class NS_STACK_CLASS InterruptPreventer {
+  public:
+    InterruptPreventer(nsPresContext* aCtx) :
+      mCtx(aCtx),
+      mInterruptsEnabled(aCtx->mInterruptsEnabled),
+      mHasPendingInterrupt(aCtx->mHasPendingInterrupt)
+    {
+      mCtx->mInterruptsEnabled = PR_FALSE;
+      mCtx->mHasPendingInterrupt = PR_FALSE;
+    }
+    ~InterruptPreventer() {
+      mCtx->mInterruptsEnabled = mInterruptsEnabled;
+      mCtx->mHasPendingInterrupt = mHasPendingInterrupt;
+    }
+
+  private:
+    nsPresContext* mCtx;
+    PRBool mInterruptsEnabled;
+    PRBool mHasPendingInterrupt;
+  };
+    
+  /**
+   * Check for interrupts. This may return true if a pending event is
+   * detected. Once it has returned true, it will keep returning true until
+   * SetInterruptState is called again.  In all cases where returns true, the
+   * passed-in frame (which should be the frame whose reflow will be
+   * interrupted if true is returend) will be passed to
+   * nsIPresShell::FrameNeedsToContinueReflow.
+   */
+  PRBool CheckForInterrupt(nsIFrame* aFrame);
+  /**
+   * Returns true if CheckForInterrupt has returned true since the last
+   * SetInterruptState. Cannot itself trigger an interrupt check.
+   */
+  PRBool HasPendingInterrupt() { return mHasPendingInterrupt; }
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -833,6 +885,8 @@ protected:
     mPostedFlushUserFontSet = PR_FALSE;
     FlushUserFontSet();
   }
+
+  PRBool HavePendingInputEvent();
 
   // Can't be inline because we can't include nsStyleSet.h.
   PRBool HasCachedStyleData();
@@ -921,6 +975,10 @@ protected:
 
   nscoord               mBorderWidthTable[3];
 
+  PRUint32              mInterruptChecksToSkip;
+
+  unsigned              mHasPendingInterrupt : 1;
+  unsigned              mInterruptsEnabled : 1;
   unsigned              mUseDocumentFonts : 1;
   unsigned              mUseDocumentColors : 1;
   unsigned              mUnderlineLinks : 1;

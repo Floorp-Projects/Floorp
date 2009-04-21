@@ -1911,6 +1911,39 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     return NS_OK;
 }
 
+PRBool
+nsWindow::HasPendingInputEvent()
+{
+    // This sucks, but gtk/gdk has no way to answer the question we want while
+    // excluding paint events, and there's no X API that will let us peek
+    // without blocking or removing.  To prevent event reordering, peek
+    // anything except expose events.  Reordering expose and others should be
+    // ok, hopefully.
+    PRBool haveEvent;
+#ifdef MOZ_X11
+    XEvent ev;
+    haveEvent =
+        XCheckMaskEvent(GDK_DISPLAY(),
+                        KeyPressMask | KeyReleaseMask | ButtonPressMask |
+                        ButtonReleaseMask | EnterWindowMask | LeaveWindowMask |
+                        PointerMotionMask | PointerMotionHintMask |
+                        Button1MotionMask | Button2MotionMask |
+                        Button3MotionMask | Button4MotionMask |
+                        Button5MotionMask | ButtonMotionMask | KeymapStateMask |
+                        VisibilityChangeMask | StructureNotifyMask |
+                        ResizeRedirectMask | SubstructureNotifyMask |
+                        SubstructureRedirectMask | FocusChangeMask |
+                        PropertyChangeMask | ColormapChangeMask |
+                        OwnerGrabButtonMask, &ev);
+    if (haveEvent) {
+        XPutBackEvent(GDK_DISPLAY(), &ev);
+    }
+#else
+    haveEvent = PR_FALSE;
+#endif
+    return haveEvent;
+}
+
 void
 nsWindow::LoseFocus(void)
 {
