@@ -242,6 +242,10 @@ WifiGeoPositionProvider.prototype = {
         xhr.send(jsonString);
     },
 
+    onError: function (code) {
+        LOG("wifi error: " + code);
+    },
+
     notify: function (timer) {
         if (this.hasSeenWiFi == false)
             this.onChange(null);
