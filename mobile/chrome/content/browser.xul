@@ -338,10 +338,6 @@
     <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <hbox id="bookmark-form" align="start">
         <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
-        <placeitem id="bookmark-edit" type="bookmark" flex="1" ui="manage"
-                   onmove="FolderPicker.show(this);"
-                   onclose="BookmarkHelper.close()"
-                   onchange="this.save()"/>
       </hbox>
     </vbox>
 
