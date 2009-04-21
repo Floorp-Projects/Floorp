@@ -98,6 +98,11 @@ public:
             mTarget->Dispatch(this, NS_DISPATCH_NORMAL);
         if (NS_FAILED(rv)) {
             NS_WARNING("Dispatch failed");
+#ifdef DEBUG
+            (void)fprintf(stdout,
+                          "### mTarget (%p) may not be accepting events!\n",
+                          mTarget);
+#endif
             return NS_ERROR_FAILURE;
         }
 
@@ -177,6 +182,11 @@ public:
             mTarget->Dispatch(this, NS_DISPATCH_NORMAL);
         if (NS_FAILED(rv)) {
             NS_WARNING("PostEvent failed");
+#ifdef DEBUG
+            (void)fprintf(stdout,
+                          "### mTarget (%p) may not be accepting events!\n",
+                          mTarget);
+#endif
             return NS_ERROR_FAILURE;
         }
 
