@@ -755,6 +755,16 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       }
     }
 
+    if (PresContext()->HasPendingInterrupt()) {
+      // Stop the loop now while |child| still points to the frame that bailed
+      // out.  We could keep going here and condition a bunch of the code in
+      // this loop on whether there's an interrupt, or even just keep going and
+      // trying to reflow the blocks (even though we know they'll interrupt
+      // right after their first line), but stopping now is conceptually the
+      // simplest (and probably fastest) thing.
+      break;
+    }
+
     // Advance to the next column
     child = child->GetNextSibling();
 
@@ -768,6 +778,14 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 #ifdef DEBUG_roc
       printf("*** NEXT CHILD ORIGIN.x = %d\n", childOrigin.x);
 #endif
+    }
+  }
+
+  if (PresContext()->HasPendingInterrupt() &&
+      (GetStateBits() & NS_FRAME_IS_DIRTY)) {
+    // Mark all our kids starting with |child| dirty
+    for (; child; child = child->GetNextSibling()) {
+      child->AddStateBits(NS_FRAME_IS_DIRTY);
     }
   }
   
@@ -897,7 +915,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   PRBool feasible = ReflowChildren(aDesiredSize, aReflowState,
     aStatus, config, unboundedLastColumn, &carriedOutBottomMargin, colData);
 
-  if (isBalancing) {
+  if (isBalancing && !aPresContext->HasPendingInterrupt()) {
     nscoord availableContentHeight = GetAvailableContentHeight(aReflowState);
   
     // Termination of the algorithm below is guaranteed because
@@ -910,7 +928,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
     // search)
     PRBool maybeContinuousBreakingDetected = PR_FALSE;
 
-    while (1) {
+    while (!aPresContext->HasPendingInterrupt()) {
       nscoord lastKnownFeasibleHeight = knownFeasibleHeight;
 
       // Record what we learned from the last reflow
@@ -1002,7 +1020,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                                 &carriedOutBottomMargin, colData);
     }
 
-    if (!feasible) {
+    if (!feasible && !aPresContext->HasPendingInterrupt()) {
       // We may need to reflow one more time at the feasible height to
       // get a valid layout.
       PRBool skip = PR_FALSE;
@@ -1020,6 +1038,13 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                        PR_FALSE, &carriedOutBottomMargin, colData);
       }
     }
+  }
+
+  if (aPresContext->HasPendingInterrupt() &&
+      aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
+    // In this situation, we might be lying about our reflow status, because
+    // our last kid (the one that got interrupted) was incomplete.  Fix that.
+    aStatus = NS_FRAME_COMPLETE;
   }
   
   CheckInvalidateSizeChange(aDesiredSize);
