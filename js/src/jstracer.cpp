@@ -5030,15 +5030,38 @@ js_DeepBail(JSContext *cx)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
 
-    /* It's a bug if a non-FAIL_STATUS builtin gets here. */
-    JS_ASSERT(cx->bailExit);
+    /*
+     * Exactly one context on the current thread is on trace. Find out which
+     * one. (Most callers cannot guarantee that it's cx.)
+     */
+    JSContext *tracecx = NULL;
+#ifdef JS_THREADSAFE
+    JSCList *head = &cx->thread->contextList;
+    for (JSCList *link = head->next; link != head; link = link->next) {
+        JSContext *acx = CX_FROM_THREAD_LINKS(link);
+        JS_ASSERT(!(acx->requestDepth == 0 && acx->bailExit));
+#else
+    JSContext *acx, *iter = NULL;
+    while ((acx = js_ContextIterator(cx->runtime, JS_TRUE, &iter)) != NULL) {
+#endif
+        if (acx->bailExit) {
+            JS_ASSERT(!tracecx);
+            tracecx = acx;
+#ifndef DEBUG
+            break;
+#endif
+        }
+    }
 
-    JS_TRACE_MONITOR(cx).onTrace = false;
-    JS_TRACE_MONITOR(cx).prohibitFlush++;
+    /* It's a bug if a non-FAIL_STATUS builtin gets here. */
+    JS_ASSERT(tracecx->bailExit);
+
+    JS_TRACE_MONITOR(tracecx).onTrace = false;
+    JS_TRACE_MONITOR(tracecx).prohibitFlush++;
     debug_only_v(printf("Deep bail.\n");)
-    LeaveTree(*cx->interpState, cx->bailExit);
-    cx->bailExit = NULL;
-    cx->interpState->builtinStatus |= JSBUILTIN_BAILED;
+    LeaveTree(*tracecx->interpState, tracecx->bailExit);
+    tracecx->bailExit = NULL;
+    tracecx->interpState->builtinStatus |= JSBUILTIN_BAILED;
 }
 
 JS_REQUIRES_STACK jsval&
@@ -6021,12 +6044,17 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         JSProperty* prop;
         if (JOF_OPMODE(*pc) == JOF_NAME) {
             JS_ASSERT(aobj == obj);
-            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
+            entry = js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop);
+
+            /* FIXME bug 488018 - this treats OOM as no-cache-fill. */
+            if (!entry || entry == JS_NO_PROP_CACHE_FILL)
                 ABORT_TRACE("failed to find name");
         } else {
             int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
                                                         cx->resolveFlags,
                                                         &obj2, &prop);
+
+            /* FIXME bug 488018 - this treats OOM as no-cache-fill. */
             if (protoIndex < 0)
                 ABORT_TRACE("failed to lookup property");
 
@@ -6035,9 +6063,12 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                     OBJ_DROP_PROPERTY(cx, obj2, prop);
                     ABORT_TRACE("property found on non-native object");
                 }
-
-                js_FillPropertyCache(cx, aobj, OBJ_SHAPE(aobj), 0, protoIndex, obj2,
-                                     (JSScopeProperty*) prop, &entry);
+                entry = js_FillPropertyCache(cx, aobj, OBJ_SHAPE(aobj), 0,
+                                             protoIndex, obj2,
+                                             (JSScopeProperty*) prop);
+                JS_ASSERT(entry);
+                if (entry == JS_NO_PROP_CACHE_FILL)
+                    entry = NULL;
             }
         }
 
@@ -7357,6 +7388,8 @@ TraceRecorder::record_JSOP_TYPEOF()
         type = INS_CONSTPTR(ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_STRING]));
     } else if (isNumber(r)) {
         type = INS_CONSTPTR(ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]));
+    } else if (VALUE_IS_FUNCTION(cx, r)) {
+        type = INS_CONSTPTR(ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_FUNCTION]));
     } else {
         LIns* args[] = { get(&r), cx_ins };
         if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
@@ -7507,24 +7540,15 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
 
         LIns* r_ins = get(&r);
 
-        if (JSVAL_IS_OBJECT(r)) {
-            /*
-             * Writing a function into the global object might rebrand it. We don't trace
-             * that case.
-             */
-            if (VALUE_IS_FUNCTION(cx, r))
-                ABORT_TRACE("potential rebranding of the global object");
-
-            /*
-             * If a regular object was written, we have to guard that it's not a function
-             * at execution time either. FIXME: We should split function and object into
-             * separate types when on trace (bug 481273).
-             */
-            guardClass(obj, obj_ins, &js_FunctionClass, snapshot(MISMATCH_EXIT));
-            set(&STOBJ_GET_SLOT(obj, slot), r_ins);
-        } else {
-            set(&STOBJ_GET_SLOT(obj, slot), r_ins);
-        }
+        /*
+         * Writing a function into the global object might rebrand it; we don't
+         * trace that case.  There's no need to guard on that, though, because
+         * separating functions into the trace-time type JSVAL_TFUN will save
+         * the day!
+         */
+        if (VALUE_IS_FUNCTION(cx, r))
+            ABORT_TRACE("potential rebranding of the global object");
+        set(&STOBJ_GET_SLOT(obj, slot), r_ins);
 
         JS_ASSERT(*pc != JSOP_INITPROP);
         if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
@@ -7563,7 +7587,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
 JS_REQUIRES_STACK bool
 TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
 {
-    if (entry->kpc != cx->fp->regs->pc || !PCVAL_IS_SPROP(entry->vword))
+    if (entry == JS_NO_PROP_CACHE_FILL || entry->kpc != cx->fp->regs->pc || !PCVAL_IS_SPROP(entry->vword))
         ABORT_TRACE("can't trace uncacheable property set");
 
     JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);

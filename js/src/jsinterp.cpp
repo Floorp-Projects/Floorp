@@ -107,11 +107,10 @@ js_GenerateShape(JSContext *cx, JSBool gcLocked)
     return shape;
 }
 
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK JSPropCacheEntry *
 js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                      uintN scopeIndex, uintN protoIndex,
-                     JSObject *pobj, JSScopeProperty *sprop,
-                     JSPropCacheEntry **entryp)
+                     JSObject *pobj, JSScopeProperty *sprop)
 {
     JSPropertyCache *cache;
     jsbytecode *pc;
@@ -130,8 +129,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     /* FIXME bug 489098: consider enabling the property cache for eval. */
     if (js_IsPropertyCacheDisabled(cx) || (cx->fp->flags & JSFRAME_EVAL)) {
         PCMETER(cache->disfills++);
-        *entryp = NULL;
-        return;
+        return JS_NO_PROP_CACHE_FILL;
     }
 
     /*
@@ -142,8 +140,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     JS_ASSERT(scope->object == pobj);
     if (!SCOPE_HAS_PROPERTY(scope, sprop)) {
         PCMETER(cache->oddfills++);
-        *entryp = NULL;
-        return;
+        return JS_NO_PROP_CACHE_FILL;
     }
 
     /*
@@ -176,8 +173,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
              */
             if (!tmp || !OBJ_IS_NATIVE(tmp)) {
                 PCMETER(cache->noprotos++);
-                *entryp = NULL;
-                return;
+                return JS_NO_PROP_CACHE_FILL;
             }
             if (tmp == pobj)
                 break;
@@ -186,8 +182,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     }
     if (scopeIndex > PCVCAP_SCOPEMASK || protoIndex > PCVCAP_PROTOMASK) {
         PCMETER(cache->longchains++);
-        *entryp = NULL;
-        return;
+        return JS_NO_PROP_CACHE_FILL;
     }
 
     /*
@@ -241,8 +236,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                              * js_GenerateShape could not recover from
                              * rt->shapeGen's overflow.
                              */
-                            *entryp = NULL;
-                            return;
+                            return JS_NO_PROP_CACHE_FILL;
                         }
                         SCOPE_SET_BRANDED(scope);
                         if (OBJ_SCOPE(obj) == scope)
@@ -316,16 +310,15 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     }
 
     entry = &cache->table[khash];
-    PCMETER(if (entry != *entryp) cache->modfills++);
     PCMETER(if (!PCVAL_IS_NULL(entry->vword)) cache->recycles++);
     entry->kpc = pc;
     entry->kshape = kshape;
     entry->vcap = PCVCAP_MAKE(scope->shape, scopeIndex, protoIndex);
     entry->vword = vword;
-    *entryp = entry;
 
     cache->empty = JS_FALSE;
     PCMETER(cache->fills++);
+    return entry;
 }
 
 JS_REQUIRES_STACK JSAtom *
@@ -478,7 +471,6 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
         P(rofills);
         P(disfills);
         P(oddfills);
-        P(modfills);
         P(brandfills);
         P(noprotos);
         P(longchains);
@@ -991,7 +983,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
 
     MUST_FLOW_THROUGH("out");
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-    ok = js_GetMethod(cx, obj, id, &tvr.u.value, NULL);
+    ok = js_GetMethod(cx, obj, id, false, &tvr.u.value);
     if (!ok)
         goto out;
     if (JSVAL_IS_PRIMITIVE(tvr.u.value)) {
@@ -3648,7 +3640,7 @@ js_Interpret(JSContext *cx)
                     LOAD_ATOM(0);
                 }
                 id = ATOM_TO_JSID(atom);
-                obj = js_FindIdentifierBase(cx, fp->scopeChain, id, entry);
+                obj = js_FindIdentifierBase(cx, fp->scopeChain, id);
                 if (!obj)
                     goto error;
             } while (0);
@@ -4158,11 +4150,10 @@ js_Interpret(JSContext *cx)
                     LOAD_ATOM(0);
                 }
             } else {
-                entry = NULL;
                 LOAD_ATOM(0);
             }
             id = ATOM_TO_JSID(atom);
-            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
+            if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
                 goto error;
             if (!prop)
                 goto atom_not_defined;
@@ -4416,7 +4407,7 @@ js_Interpret(JSContext *cx)
                 }
                 id = ATOM_TO_JSID(atom);
                 if (entry
-                    ? !js_GetPropertyHelper(cx, obj, id, &rval, &entry)
+                    ? !js_GetPropertyHelper(cx, obj, id, true, &rval)
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
                 }
@@ -4512,13 +4503,13 @@ js_Interpret(JSContext *cx)
             id = ATOM_TO_JSID(atom);
             PUSH(JSVAL_NULL);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
-                if (!js_GetMethod(cx, obj, id, &rval, entry ? &entry : NULL))
+                if (!js_GetMethod(cx, obj, id, !!entry, &rval))
                     goto error;
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 STORE_OPND(-2, rval);
             } else {
                 JS_ASSERT(obj->map->ops->getProperty == js_GetProperty);
-                if (!js_GetPropertyHelper(cx, obj, id, &rval, &entry))
+                if (!js_GetPropertyHelper(cx, obj, id, true, &rval))
                     goto error;
                 STORE_OPND(-1, lval);
                 STORE_OPND(-2, rval);
@@ -4747,18 +4738,15 @@ js_Interpret(JSContext *cx)
                     LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
                 if (entry) {
-                    if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
+                    entry = js_SetPropertyHelper(cx, obj, id, true, &rval);
+                    if (!entry)
                         goto error;
-#ifdef JS_TRACER
-                    if (entry)
-                        TRACE_1(SetPropMiss, entry);
-#endif
+                    TRACE_1(SetPropMiss, entry);
                 } else {
                     if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                         goto error;
+                    ABORT_RECORDING(cx, "Non-native set");
                 }
-                if (!entry)
-                    ABORT_RECORDING(cx, "SetPropUncached");
             } while (0);
           END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
 
@@ -4809,7 +4797,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_CALLELEM)
-            ELEMENT_OP(-1, js_GetMethod(cx, obj, id, &rval, NULL));
+            ELEMENT_OP(-1, js_GetMethod(cx, obj, id, false, &rval));
 #if JS_HAS_NO_SUCH_METHOD
             if (JS_UNLIKELY(JSVAL_IS_VOID(rval))) {
                 regs.sp[-2] = regs.sp[-1];
@@ -5245,12 +5233,11 @@ js_Interpret(JSContext *cx)
                     goto do_native_get;
                 }
             } else {
-                entry = NULL;
                 LOAD_ATOM(0);
             }
 
             id = ATOM_TO_JSID(atom);
-            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
+            if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
                 goto error;
             if (!prop) {
                 /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -5269,7 +5256,6 @@ js_Interpret(JSContext *cx)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
                 if (!OBJ_GET_PROPERTY(cx, obj, id, &rval))
                     goto error;
-                entry = NULL;
             } else {
                 sprop = (JSScopeProperty *)prop;
           do_native_get:
@@ -6395,17 +6381,15 @@ js_Interpret(JSContext *cx)
                                            NULL, NULL)) {
                     goto error;
                 }
-                if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-                    ? !js_SetPropertyHelper(cx, obj, id, &rval, &entry)
-                    : !js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
-                                               JSPROP_ENUMERATE, 0, 0, NULL,
-                                               &entry)) {
+
+                entry = JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
+                        ? js_SetPropertyHelper(cx, obj, id, true, &rval)
+                        : js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
+                                                  JSPROP_ENUMERATE, 0, 0, NULL,
+                                                  true);
+                if (!entry)
                     goto error;
-                }
-#ifdef JS_TRACER
-                if (entry)
-                    TRACE_1(SetPropMiss, entry);
-#endif
+                TRACE_1(SetPropMiss, entry);
             } while (0);
 
             /* Common tail for property cache hit and miss cases. */
