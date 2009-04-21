@@ -3218,13 +3218,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         }
 #endif
 
+        nsCOMPtr<nsIFile> workingDir;
+        rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
+        NS_ENSURE_SUCCESS(rv, 1);
+
         if (!shuttingDown) {
           cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
           NS_ENSURE_TRUE(cmdLine, 1);
-
-          nsCOMPtr<nsIFile> workingDir;
-          rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
-          NS_ENSURE_SUCCESS(rv, 1);
 
           rv = cmdLine->Init(gArgc, gArgv,
                              workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
@@ -3338,7 +3338,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             appStartup->GetShuttingDown(&shuttingDown);
           }
 
+#ifdef MOZ_ENABLE_XREMOTE
           nsCOMPtr<nsIRemoteService> remoteService;
+#endif /* MOZ_ENABLE_XREMOTE */
           if (!shuttingDown) {
 #ifdef MOZ_ENABLE_XREMOTE
             // if we have X remote support, start listening for requests on the
