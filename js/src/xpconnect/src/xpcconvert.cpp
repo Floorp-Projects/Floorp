@@ -1428,9 +1428,9 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
     if(NS_SUCCEEDED(res) && cx && jsExceptionPtr && *exceptn)
     {
-        nsCOMPtr<nsXPCException> xpcEx = do_QueryInterface(*exceptn);
+        nsCOMPtr<nsIXPCException> xpcEx = do_QueryInterface(*exceptn);
         if(xpcEx)
-            xpcEx->StowThrownJSVal(cx, *jsExceptionPtr);
+            xpcEx->StowJSVal(cx, *jsExceptionPtr);
     }
 
     if(sz)
