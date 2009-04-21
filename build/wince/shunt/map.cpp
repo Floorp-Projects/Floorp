@@ -169,14 +169,6 @@ static void
 init_initial_env() {
   env_ready = true;
 
-#ifdef DEBUG_NSPR_ALL
-  putenv_internal("NSPR_LOG_MODULES", "all:5", ENV_IS_STATIC);
-  putenv_internal("NSPR_LOG_FILE", "nspr.log", ENV_IS_STATIC);
-#endif  
-#ifdef TIMELINE
-  putenv_internal("NS_TIMELINE_LOG_FILE", "\\bin\\timeline.log", ENV_IS_STATIC);
-  putenv_internal("NS_TIMELINE_ENABLE", "1", ENV_IS_STATIC);
-#endif
   putenv_internal("NSS_DEFAULT_DB_TYPE", "sql", ENV_IS_STATIC);
   putenv_internal("NSPR_FD_CACHE_SIZE_LOW", "10", ENV_IS_STATIC);
   putenv_internal("NSPR_FD_CACHE_SIZE_HIGH", "30", ENV_IS_STATIC);
