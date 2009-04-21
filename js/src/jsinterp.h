@@ -257,6 +257,12 @@ struct JSPropCacheEntry {
     jsuword             vword;          /* value word, see PCVAL_* below */
 };
 
+/*
+ * Special value for functions returning JSPropCacheEntry * to distinguish
+ * between failure and no no-cache-fill cases.
+ */
+#define JS_NO_PROP_CACHE_FILL ((JSPropCacheEntry *) NULL + 1)
+
 #if defined DEBUG_brendan || defined DEBUG_brendaneich
 #define JS_PROPERTY_CACHE_METERING 1
 #endif
@@ -270,7 +276,6 @@ typedef struct JSPropertyCache {
     uint32              rofills;        /* set on read-only prop can't fill */
     uint32              disfills;       /* fill attempts on disabled cache */
     uint32              oddfills;       /* fill attempt after setter deleted */
-    uint32              modfills;       /* fill that rehashed to a new entry */
     uint32              brandfills;     /* scope brandings to type structural
                                            method fills */
     uint32              noprotos;       /* resolve-returned non-proto pobj */
@@ -338,12 +343,14 @@ typedef struct JSPropertyCache {
  * Fill property cache entry for key cx->fp->pc, optimized value word computed
  * from obj and sprop, and entry capability forged from 24-bit OBJ_SHAPE(obj),
  * 4-bit scopeIndex, and 4-bit protoIndex.
+ *
+ * Return the filled cache entry or JS_NO_PROP_CACHE_FILL if caching was not
+ * possible.
  */
-extern JS_REQUIRES_STACK void
+extern JS_REQUIRES_STACK JSPropCacheEntry *
 js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                      uintN scopeIndex, uintN protoIndex,
-                     JSObject *pobj, JSScopeProperty *sprop,
-                     JSPropCacheEntry **entryp);
+                     JSObject *pobj, JSScopeProperty *sprop);
 
 /*
  * Property cache lookup macros. PROPERTY_CACHE_TEST is designed to inline the

@@ -178,6 +178,11 @@ struct JSTraceMonitor {
 
 typedef struct InterpStruct InterpStruct;
 
+/*
+ * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
+ * thread, regardless of whether cx is the context in which that trace is
+ * executing.  cx must be a context on the current thread.
+ */
 #ifdef JS_TRACER
 # define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).onTrace)
 #else
@@ -230,6 +235,11 @@ struct JSThreadData {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
+/*
+ * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
+ * thread, regardless of whether cx is the context in which that trace is
+ * executing.  cx must be a context on the current thread.
+ */
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;

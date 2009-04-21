@@ -3633,14 +3633,14 @@ CheckDestructuring(JSContext *cx, BindData *data,
     if (data &&
         data->binder == BindLet &&
         OBJ_BLOCK_COUNT(cx, tc->blockChain) == 0) {
-        ok = js_DefineNativeProperty(cx, tc->blockChain,
-                                     ATOM_TO_JSID(cx->runtime->
-                                                  atomState.emptyAtom),
-                                     JSVAL_VOID, NULL, NULL,
-                                     JSPROP_ENUMERATE |
-                                     JSPROP_PERMANENT |
-                                     JSPROP_SHARED,
-                                     SPROP_HAS_SHORTID, 0, NULL);
+        ok = !!js_DefineNativeProperty(cx, tc->blockChain,
+                                       ATOM_TO_JSID(cx->runtime->
+                                                    atomState.emptyAtom),
+                                       JSVAL_VOID, NULL, NULL,
+                                       JSPROP_ENUMERATE |
+                                       JSPROP_PERMANENT |
+                                       JSPROP_SHARED,
+                                       SPROP_HAS_SHORTID, 0, NULL);
         if (!ok)
             goto out;
     }
@@ -6138,14 +6138,16 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                     if (!ale)
                         return NULL;
 
-                    if (!dn->isPlaceholder()) {
+                    if (dn->pn_pos >= root->pn_pos) {
+                        tc->parent->lexdeps.remove(tc->compiler, atom);
+                    } else {
                         JSDefinition *dn2 = (JSDefinition *)
                             NewNameNode(tc->compiler->context, TS(tc->compiler), dn->pn_atom, tc);
                         if (!dn2)
                             return NULL;
 
                         dn2->pn_type = dn->pn_type;
-                        dn2->pn_pos = dn->pn_pos;
+                        dn2->pn_pos = root->pn_pos;
                         dn2->pn_defn = true;
                         dn2->pn_dflags |= PND_FORWARD | PND_PLACEHOLDER;
 
@@ -6164,9 +6166,6 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                     }
 
                     ALE_SET_DEFN(ale, dn);
-
-                    if (dn->pn_pos >= root->pn_pos)
-                        tc->parent->lexdeps.remove(tc->compiler, atom);
                 }
             }
         }
