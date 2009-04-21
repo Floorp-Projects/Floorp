@@ -6588,7 +6588,7 @@ if test "$MOZ_MEMORY"; then
   msvc*|mks*|cygwin*|mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     dnl This is sort of awful. Will revisit if we add support for more versions
-    if test "$CC_VERSION" -ne "14.00.50727.762"; then
+    if test "$CC_VERSION" != "14.00.50727.762"; then
         AC_MSG_ERROR([Building jemalloc requires exactly Visual C++ 2005 SP1 currently.])
     fi
     if test -z "$WIN32_CRT_SRC_DIR"; then
