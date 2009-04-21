@@ -568,6 +568,7 @@ PKIX_Error *
 pkix_pl_LdapCertStore_GetCert(
         PKIX_CertStore *store,
         PKIX_CertSelector *selector,
+        PKIX_VerifyNode *verifyNode,
         void **pNBIOContext,
         PKIX_List **pCertList,
         void *plContext)
@@ -737,6 +738,7 @@ PKIX_Error *
 pkix_pl_LdapCertStore_GetCertContinue(
         PKIX_CertStore *store,
         PKIX_CertSelector *selector,
+        PKIX_VerifyNode *verifyNode,
         void **pNBIOContext,
         PKIX_List **pCertList,
         void *plContext)

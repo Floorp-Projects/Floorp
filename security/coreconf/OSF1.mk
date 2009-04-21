@@ -72,3 +72,9 @@ PROCESS_MAP_FILE = grep -v ';+' $< | grep -v ';-' | \
  sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,-exported_symbol ,' > $@
 
 DSO_LDOPTS += -shared
+
+# required for freebl
+USE_64=1
+# this platform name does not use a bit tag due to only having a 64-bit ABI
+64BIT_TAG=
+

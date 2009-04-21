@@ -75,7 +75,7 @@ typedef void (*LGSetCryptFunc)(LGEncryptFunc, LGDecryptFunc);
  */
 CK_RV sftkdbCall_open(const char *dir, const char *certPrefix, 
 		const char *keyPrefix, 
-		int certVersion, int keyVersion, int flags, 
+		int certVersion, int keyVersion, int flags, PRBool isFIPS,
 		SDB **certDB, SDB **keyDB);
 char ** sftkdbCall_ReadSecmodDB(const char *appName, const char *filename, 
 			const char *dbname, char *params, PRBool rw);

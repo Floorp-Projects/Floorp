@@ -53,14 +53,14 @@ extern PRLogModuleInfo *pkixLog;
  * checked. Those OIDs need to be removed from the unresolved critical
  * extension OIDs list manually (instead of by checker automatically).
  */
-static char *buildCheckedCritExtOIDs[] = {
+static SECOidTag buildCheckedCritExtOIDs[] = {
         PKIX_CERTKEYUSAGE_OID,
         PKIX_CERTSUBJALTNAME_OID,
         PKIX_BASICCONSTRAINTS_OID,
         PKIX_NAMECONSTRAINTS_OID,
         PKIX_EXTENDEDKEYUSAGE_OID,
         PKIX_NSCERTTYPE_OID,
-        NULL
+        PKIX_UNKNOWN_OID
 };
 
 /* --Private-ForwardBuilderState-Functions---------------------------------- */
@@ -1139,7 +1139,7 @@ pkix_Build_ValidationCheckers(
         PKIX_CHECK(PKIX_List_Create(&buildCheckedCritExtOIDsList, plContext),
                 PKIX_LISTCREATEFAILED);
 
-        for (i = 0; buildCheckedCritExtOIDs[i] != NULL; i++) {
+        for (i = 0; buildCheckedCritExtOIDs[i] != PKIX_UNKNOWN_OID; i++) {
                 PKIX_CHECK(PKIX_PL_OID_Create
                         (buildCheckedCritExtOIDs[i], &oid, plContext),
                         PKIX_OIDCREATEFAILED);
@@ -1557,7 +1557,6 @@ pkix_Build_SelectCertsFromTrustAnchors(
     PKIX_List *matchList = NULL;
     PKIX_CertSelector *certSel = NULL;
     PKIX_CertSelector_MatchCallback selectorMatchCB = NULL;
-    PKIX_Boolean certMatch = PKIX_TRUE;
 
     PKIX_ENTER(BUILD, "pkix_Build_SelectCertsFromTrustAnchors");
     
@@ -1582,9 +1581,8 @@ pkix_Build_SelectCertsFromTrustAnchors(
                    (anchor, &trustedCert, plContext),
                    PKIX_TRUSTANCHORGETTRUSTEDCERTFAILED);
         pkixErrorResult =
-            (*selectorMatchCB)(certSel, trustedCert,
-                               &certMatch, plContext);
-        if (!pkixErrorResult && certMatch) {
+            (*selectorMatchCB)(certSel, trustedCert, plContext);
+        if (!pkixErrorResult) {
             if (!matchList) {
                 PKIX_CHECK(PKIX_List_Create(&matchList,
                                             plContext),
@@ -1796,6 +1794,7 @@ pkix_Build_GatherCerts(
                                 PKIX_CHECK(getCerts
                                         (certStore,
                                         state->certSel,
+                                        state->verifyNode,
                                         &nbioContext,
                                         &certsFound,
                                         plContext),
@@ -1804,6 +1803,7 @@ pkix_Build_GatherCerts(
                                 PKIX_CHECK(PKIX_CertStore_CertContinue
                                         (certStore,
                                         state->certSel,
+                                        state->verifyNode,
                                         &nbioContext,
                                         &certsFound,
                                         plContext),
@@ -3211,6 +3211,7 @@ pkix_Build_InitiateBuildChain(
         PKIX_TrustAnchor *matchingAnchor = NULL;
         PKIX_ForwardBuilderState *state = NULL;
         PKIX_CertStore_CheckTrustCallback trustCallback = NULL;
+        PKIX_CertSelector_MatchCallback selectorCallback = NULL;
         PKIX_PL_AIAMgr *aiaMgr = NULL;
 
         PKIX_ENTER(BUILD, "pkix_Build_InitiateBuildChain");
@@ -3235,10 +3236,9 @@ pkix_Build_InitiateBuildChain(
                     PKIX_LISTGETLENGTHFAILED);
     
             /* retrieve stuff from targetCertConstraints */
-    
             PKIX_CHECK(PKIX_ProcessingParams_GetTargetCertConstraints
-                    (procParams, &targetConstraints, plContext),
-                    PKIX_PROCESSINGPARAMSGETTARGETCERTCONSTRAINTSFAILED);
+                       (procParams, &targetConstraints, plContext),
+                       PKIX_PROCESSINGPARAMSGETTARGETCERTCONSTRAINTSFAILED);
     
             PKIX_CHECK(PKIX_CertSelector_GetCommonCertSelectorParams
                     (targetConstraints, &targetParams, plContext),
@@ -3329,10 +3329,28 @@ pkix_Build_InitiateBuildChain(
                     (tentativeChain, (PKIX_PL_Object *)targetCert, plContext),
                     PKIX_LISTAPPENDITEMFAILED);
     
-            /* Failure here is reportable */
-            pkixErrorResult = PKIX_PL_Cert_CheckValidity
-                    (targetCert, testDate, plContext);
-            if (pkixErrorResult) {
+            if (procParams->qualifyTargetCert) {
+                /* EE cert validation */
+                /* Sync up the time on the target selector parameter struct. */
+                PKIX_CHECK(
+                    PKIX_ComCertSelParams_SetCertificateValid(targetParams,
+                                                              testDate,
+                                                              plContext),
+                    PKIX_COMCERTSELPARAMSSETCERTIFICATEVALIDFAILED);
+                
+                PKIX_CHECK(
+                    PKIX_ComCertSelParams_SetLeafCertFlag(targetParams,
+                                                PKIX_TRUE, plContext),
+                    PKIX_COMCERTSELPARAMSSETLEAFCERTFLAGFAILED);
+
+                    PKIX_CHECK(PKIX_CertSelector_GetMatchCallback
+                           (targetConstraints, &selectorCallback, plContext),
+                           PKIX_CERTSELECTORGETMATCHCALLBACKFAILED);
+                
+                pkixErrorResult =
+                    (*selectorCallback)(targetConstraints, targetCert,
+                                        plContext);
+                if (pkixErrorResult) {
                     pkixErrorClass = pkixErrorResult->errClass;
                     if (pkixErrorClass == PKIX_FATAL_ERROR) {
                         goto cleanup;
@@ -3353,6 +3371,7 @@ pkix_Build_InitiateBuildChain(
                     }
                     pkixErrorCode = PKIX_CERTCHECKVALIDITYFAILED;
                     goto cleanup;
+                }
             }
     
             PKIX_CHECK(PKIX_ProcessingParams_GetCertStores

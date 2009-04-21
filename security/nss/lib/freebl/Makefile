@@ -77,11 +77,15 @@ endif
 ifdef FREEBL_NO_DEPEND
 	DEFINES += -DFREEBL_NO_DEPEND
 endif
-# some code wants _X86_ defined for intel CPUs.
-# coreconf does this for windows, but not for Linux, FreeBSD, etc.
-ifeq (,$(filter-out x86 x86_64,$(CPU_ARCH)))
-ifneq (,$(filter-out WIN%,$(OS_TARGET)))
-	DEFINES += -D_X86_
+# NSS_X86 means the target is a 32-bits x86 CPU architecture
+# NSS_X64 means the target is a 64-bits x64 CPU architecture
+# NSS_X86_OR_X64 means the target is either x86 or x64
+ifeq (,$(filter-out x386 x86 x86_64,$(CPU_ARCH)))
+        DEFINES += -DNSS_X86_OR_X64
+ifdef USE_64
+        DEFINES += -DNSS_X64
+else
+        DEFINES += -DNSS_X86
 endif
 endif
 
@@ -145,7 +149,7 @@ endif
 ifeq ($(OS_TARGET),Linux)
 ifeq ($(CPU_ARCH),x86_64)
     ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
-    ASFLAGS += -march=opteron -m64 -fPIC
+    ASFLAGS += -march=opteron -m64 -fPIC -Wa,--noexecstack
     DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
     DEFINES += -DNSS_USE_COMBA
     DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
@@ -406,7 +410,6 @@ else
 	MPI_SRCS += mpi_amd64.c
     else
 	# Solaris x86
-	DEFINES += -D_X86_
 	DEFINES += -DMP_USE_UINT_DIGIT
 	DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
 	DEFINES += -DMP_ASSEMBLY_DIV_2DX1D

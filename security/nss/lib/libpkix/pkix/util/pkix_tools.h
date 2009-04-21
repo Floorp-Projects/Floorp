@@ -659,12 +659,16 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
  * This needs to be replaced with Loggers.
  */
 
+#ifdef DEBUG
 #define PKIX_DEBUG(expr) \
     do { \
 	_PKIX_DEBUG_TRACE(pkixLoggersErrors, expr, PKIX_LOGGER_LEVEL_DEBUG); \
-	(void) printf("(%s: ", myFuncName); \
-	(void) printf(expr); \
+	(void) fprintf(stderr, "(%s: ", myFuncName); \
+        (void) fprintf(stderr, expr);                \
     } while (0)
+#else
+#define PKIX_DEBUG(expr)
+#endif
 
 /* Logging doesn't support DEBUG with ARG: cannot convert control and arg */
 #define PKIX_DEBUG_ARG(expr, arg) \
