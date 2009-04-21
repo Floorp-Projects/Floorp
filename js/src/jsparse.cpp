@@ -3633,14 +3633,14 @@ CheckDestructuring(JSContext *cx, BindData *data,
     if (data &&
         data->binder == BindLet &&
         OBJ_BLOCK_COUNT(cx, tc->blockChain) == 0) {
-        ok = js_DefineNativeProperty(cx, tc->blockChain,
-                                     ATOM_TO_JSID(cx->runtime->
-                                                  atomState.emptyAtom),
-                                     JSVAL_VOID, NULL, NULL,
-                                     JSPROP_ENUMERATE |
-                                     JSPROP_PERMANENT |
-                                     JSPROP_SHARED,
-                                     SPROP_HAS_SHORTID, 0, NULL);
+        ok = !!js_DefineNativeProperty(cx, tc->blockChain,
+                                       ATOM_TO_JSID(cx->runtime->
+                                                    atomState.emptyAtom),
+                                       JSVAL_VOID, NULL, NULL,
+                                       JSPROP_ENUMERATE |
+                                       JSPROP_PERMANENT |
+                                       JSPROP_SHARED,
+                                       SPROP_HAS_SHORTID, 0, NULL);
         if (!ok)
             goto out;
     }
