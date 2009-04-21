@@ -151,22 +151,28 @@ nsXPCException::~nsXPCException()
     Reset();
 }
 
-PRBool
-nsXPCException::StealThrownJSVal(jsval *vp)
+/* [noscript] xpcexJSVal stealJSVal (); */
+NS_IMETHODIMP
+nsXPCException::StealJSVal(jsval *vp NS_OUTPARAM)
 {
     if(mThrownJSVal.IsHeld())
     {
         *vp = mThrownJSVal.Release();
-        return PR_TRUE;
+        return NS_OK;
     }
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 }
 
-void
-nsXPCException::StowThrownJSVal(JSContext *cx, jsval v)
+/* [noscript] void stowJSVal (in xpcexJSContextPtr cx, in xpcexJSVal val); */
+NS_IMETHODIMP
+nsXPCException::StowJSVal(JSContext* cx, jsval v)
 {
-    if (mThrownJSVal.Hold(cx))
+    if(mThrownJSVal.Hold(cx))
+    {
         mThrownJSVal = v;
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }
 
 void
