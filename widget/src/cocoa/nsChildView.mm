@@ -82,6 +82,8 @@
 
 #include <dlfcn.h>
 
+#include <ApplicationServices/ApplicationServices.h>
+
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
@@ -148,6 +150,8 @@ nsIWidget         * gRollupWidget   = nsnull;
 PRUint32 gLastModifierState = 0;
 
 PRBool gUserCancelledDrag = PR_FALSE;
+
+PRUint32 nsChildView::sLastInputEventCount = 0;
 
 @interface ChildView(Private)
 
@@ -2048,6 +2052,54 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+/* static */
+PRBool nsChildView::DoHasPendingInputEvent()
+{
+  return sLastInputEventCount != GetCurrentInputEventCount(); 
+}
+
+/* static */
+PRUint32 nsChildView::GetCurrentInputEventCount()
+{
+  // Can't use kCGAnyInputEventType because that updates too rarely for us (and
+  // always in increments of 30+!) and because apparently it's sort of broken
+  // on Tiger.  So just go ahead and query the counters we care about.
+  static const CGEventType eventTypes[] = {
+    kCGEventLeftMouseDown,
+    kCGEventLeftMouseUp,
+    kCGEventRightMouseDown,
+    kCGEventRightMouseUp,
+    kCGEventMouseMoved,
+    kCGEventLeftMouseDragged,
+    kCGEventRightMouseDragged,
+    kCGEventKeyDown,
+    kCGEventKeyUp,
+    kCGEventScrollWheel,
+    kCGEventTabletPointer,
+    kCGEventOtherMouseDown,
+    kCGEventOtherMouseUp,
+    kCGEventOtherMouseDragged
+  };
+
+  PRUint32 eventCount = 0;
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(eventTypes); ++i) {
+    eventCount +=
+      CGEventSourceCounterForEventType(kCGEventSourceStateCombinedSessionState,
+                                       eventTypes[i]);
+  }
+  return eventCount;
+}
+
+/* static */
+void nsChildView::UpdateCurrentInputEventCount()
+{
+  sLastInputEventCount = GetCurrentInputEventCount();
+}
+
+PRBool nsChildView::HasPendingInputEvent()
+{
+  return DoHasPendingInputEvent();
+}
 
 #pragma mark -
 

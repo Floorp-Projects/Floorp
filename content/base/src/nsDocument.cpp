@@ -6257,8 +6257,8 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   // correct size to determine the correct style.
   if (mParentDocument && IsSafeToFlush()) {
     mozFlushType parentType = aType;
-    if (aType == Flush_Style)
-      parentType = Flush_Layout;
+    if (aType >= Flush_Style)
+      parentType = PR_MAX(Flush_Layout, aType);
     mParentDocument->FlushPendingNotifications(parentType);
   }
 
