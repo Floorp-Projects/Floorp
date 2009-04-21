@@ -53,6 +53,7 @@ include $(topsrcdir)/config/config.mk
 
 CPP_UNIT_TESTS	= \
                   TestCOM.cpp \
+                  TestWinFileAttribs.cpp \
                   $(NULL)
 
 # TestNTFSPermissions is causing oranges because it's creating directories
