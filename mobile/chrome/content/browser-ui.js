@@ -631,17 +631,30 @@ var BookmarkHelper = {
       return;
 
     let title = PlacesUtils.bookmarks.getItemTitle(itemId);
+    let tags = PlacesUtils.tagging.getTagsForURI(aURI, {});
+
+    this._editor = document.createElement("placeitem");
+    this._editor.setAttribute("id", "bookmark-item");
+    this._editor.setAttribute("flex", "1");
+    this._editor.setAttribute("type", "bookmark");
+    this._editor.setAttribute("ui", "manage");
+    this._editor.setAttribute("title", title);
+    this._editor.setAttribute("uri", aURI.spec);
+    this._editor.setAttribute("tags", tags.join(" "));
+    this._editor.setAttribute("onmove", "FolderPicker.show(this);");
+    this._editor.setAttribute("onclose", "BookmarkHelper.close()");
+    document.getElementById("bookmark-form").appendChild(this._editor);
 
     let container = document.getElementById("browser-container");
     this._panel = document.getElementById("bookmark-container");
-    this._panel.hidden = false;
     this._panel.width = container.boxObject.width;
+    this._panel.hidden = false;
 
-    this._editor = document.getElementById("bookmark-edit");
-    this._editor.setAttribute("title", title);
-    this._editor.setAttribute("uri", aURI.spec);
-    this._editor.init(itemId);
-    this._editor.startEditing();
+    let self = this;
+    setTimeout(function() {
+        self._editor.init(itemId);
+        self._editor.startEditing();
+      }, 0);
 
     window.addEventListener("keypress", this, true);
   },
@@ -654,8 +667,7 @@ var BookmarkHelper = {
       this._editor.stopEditing();
     this._panel.hidden = true;
 
-    this._editor.removeAttribute("title");
-    this._editor.removeAttribute("uri");
+    this._editor.parentNode.removeChild(this._editor);
   },
 
   handleEvent: function(aEvent) {

@@ -367,22 +367,18 @@
       <method name="save">
         <body>
           <![CDATA[
-            // Update the name
-            PlacesUtils.bookmarks.setItemTitle(this._itemId, this.name);
-
             // Update the tags
             if (this._uri && this.type != "folder") {
-              var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
-              var tags = this.tagsAsArray;
+              let currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
+              let tags = this.tagsAsArray;
               if (tags.length > 0 || currentTags.length > 0) {
-                var tagsToRemove = [];
-                var tagsToAdd = [];
-                var i;
-                for (i = 0; i < currentTags.length; i++) {
+                let tagsToRemove = [];
+                let tagsToAdd = [];
+                for (let i = 0; i < currentTags.length; i++) {
                   if (tags.indexOf(currentTags[i]) == -1)
                     tagsToRemove.push(currentTags[i]);
                 }
-                for (i = 0; i < tags.length; i++) {
+                for (let i = 0; i < tags.length; i++) {
                   if (currentTags.indexOf(tags[i]) == -1)
                     tagsToAdd.push(tags[i]);
                 }
@@ -393,13 +389,23 @@
                   PlacesUtils.tagging.untagURI(this._uri, tagsToRemove);
               }
 
-              // If the URI was updated change it in the bookmark
-              if (this._uri.spec != this.spec) {
-                uri = this._ioService.newURI(this.spec, null, null);
-
-                PlacesUtils.bookmarks.changeBookmarkURI(this._itemId, this._uri);
+              // If the URI was updated change it in the bookmark, but don't
+              // allow a blank URI. Revert to previous URI if blank.
+              let spec = this.spec;
+              if (spec && this._uri.spec != spec) {
+                try {
+                  this._uri = this._ioService.newURI(spec, null, null);
+                  PlacesUtils.bookmarks.changeBookmarkURI(this._itemId, this._uri);
+                }
+                catch (e) { }
               }
+              if (spec != this._uri.spec)
+                spec = this.spec = this._uri.spec;
             }
+
+            // Update the name and use the URI if name is blank
+            this.name = this.name || spec
+            PlacesUtils.bookmarks.setItemTitle(this._itemId, this.name);
           ]]>
         </body>
       </method>
@@ -873,7 +879,7 @@
             let childItems = this._getChildren(aRootFolder);
             for (let i=0; i<childItems.length; i++) {
               let node = childItems[i];
-              items.appendChild(this.createItem(node, aLevel););
+              items.appendChild(this.createItem(node, aLevel));
 
               this.openFolder(node.itemId, aLevel + 24);
             }
