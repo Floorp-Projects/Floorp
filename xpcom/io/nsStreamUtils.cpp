@@ -101,7 +101,7 @@ public:
 #ifdef DEBUG
             (void)fprintf(stdout,
                           "### mTarget (%p) may not be accepting events!\n",
-                          mTarget);
+                          mTarget.get());
 #endif
             return NS_ERROR_FAILURE;
         }
@@ -185,7 +185,7 @@ public:
 #ifdef DEBUG
             (void)fprintf(stdout,
                           "### mTarget (%p) may not be accepting events!\n",
-                          mTarget);
+                          mTarget.get());
 #endif
             return NS_ERROR_FAILURE;
         }
