@@ -599,6 +599,7 @@ nsHtml5Parser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     NS_ENSURE_SUCCESS(rv, rv);
     rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
     NS_ENSURE_SUCCESS(rv, rv);
+    mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
   }
 
   return rv;
@@ -925,6 +926,7 @@ nsHtml5Parser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint
     rv = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));  
   }
   NS_ENSURE_SUCCESS(rv, rv);
+  mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
   return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
 }
 
@@ -1056,6 +1058,7 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
     nsHtml5ByteReadable readable(aFromSegment, aFromSegment + countToSniffingLimit);
     mMetaScanner->sniff(&readable, getter_AddRefs(mUnicodeDecoder), mCharset);
     if (mUnicodeDecoder) {
+      mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
       // meta scan successful
       mCharsetSource = kCharsetFromMetaPrescan;
       delete mMetaScanner;
@@ -1137,18 +1140,22 @@ nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
 
     nsresult convResult = mUnicodeDecoder->Convert((const char*)aFromSegment, &byteCount, mLastBuffer->getBuffer() + end, &utf16Count);  
 
-    mLastBuffer->setEnd(end + utf16Count);
+    end += utf16Count;
+    mLastBuffer->setEnd(end);
     totalByteCount += byteCount;
     aFromSegment += byteCount;
 
     NS_ASSERTION((mLastBuffer->getEnd() <= NS_HTML5_PARSER_READ_BUFFER_SIZE), "The Unicode decoder wrote too much data.");
 
     if (NS_FAILED(convResult)) {
-      ++totalByteCount;
-      ++aFromSegment;
+      if (totalByteCount < aCount) { // mimicking nsScanner even though this seems wrong
+        ++totalByteCount;
+        ++aFromSegment;
+      }
       mLastBuffer->getBuffer()[end] = 0xFFFD;
-      mLastBuffer->setEnd(end + 1);
-      if (mLastBuffer->getEnd() == NS_HTML5_PARSER_READ_BUFFER_SIZE) {
+      ++end;
+      mLastBuffer->setEnd(end);
+      if (end == NS_HTML5_PARSER_READ_BUFFER_SIZE) {
           mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
       }
       mUnicodeDecoder->Reset();
