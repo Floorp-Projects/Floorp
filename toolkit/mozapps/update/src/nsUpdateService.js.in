@@ -2680,10 +2680,6 @@ Downloader.prototype = {
         LOG("Downloader", "onStopRequest - download verification failed");
         state = STATE_DOWNLOAD_FAILED;
 
-        var brandStrings = sbs.createBundle(URI_BRAND_PROPERTIES);
-        var brandShortName = brandStrings.GetStringFromName("brandShortName");
-        this._update.statusText = updateStrings.formatStringFromName("verificationError",
-                                                                     [brandShortName], 1);
         // TODO: use more informative error code here
         status = Cr.NS_ERROR_UNEXPECTED;
 
