@@ -721,7 +721,7 @@ var gEditItemOverlay = {
     ptm.doTransaction(aggregate);
   },
 
-  onDescriptionFieldBlur: function EIO_onDescriptionFieldInput() {
+  onDescriptionFieldBlur: function EIO_onDescriptionFieldBlur() {
     var description = this._element("descriptionField").value;
     if (description != PlacesUIUtils.getItemDescription(this._itemId)) {
       var txn = PlacesUIUtils.ptm
