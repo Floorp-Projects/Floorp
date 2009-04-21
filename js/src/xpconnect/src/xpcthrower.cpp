@@ -301,7 +301,7 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
     JSBool success = JS_FALSE;
     if(e)
     {
-        nsCOMPtr<nsXPCException> xpcEx;
+        nsCOMPtr<nsIXPCException> xpcEx;
         jsval thrown;
         nsXPConnect* xpc;
 
@@ -310,7 +310,7 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
         // context (i.e., not chrome), rethrow the original value.
         if(!IsCallerChrome(cx) &&
            (xpcEx = do_QueryInterface(e)) &&
-           xpcEx->StealThrownJSVal(&thrown))
+           NS_SUCCEEDED(xpcEx->StealJSVal(&thrown)))
         {
             JS_SetPendingException(cx, thrown);
             success = JS_TRUE;
