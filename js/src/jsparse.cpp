@@ -6147,7 +6147,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                             return NULL;
 
                         dn2->pn_type = dn->pn_type;
-                        dn2->pn_pos = dn->pn_pos;
+                        dn2->pn_pos = root->pn_pos;
                         dn2->pn_defn = true;
                         dn2->pn_dflags |= PND_FORWARD | PND_PLACEHOLDER;
 
