@@ -1653,7 +1653,7 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
     else {
       FlushText(PR_FALSE);
     }
-    if (aType >= Flush_Layout) {
+    if (aType >= Flush_InterruptibleLayout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       MaybeStartLayout(PR_TRUE);

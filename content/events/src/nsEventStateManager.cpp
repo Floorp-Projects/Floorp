@@ -5749,7 +5749,7 @@ nsEventStateManager::FlushPendingEvents(nsPresContext* aPresContext)
   NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
-    shell->FlushPendingNotifications(Flush_Display);
+    shell->FlushPendingNotifications(Flush_InterruptibleLayout);
   }
 }
 
