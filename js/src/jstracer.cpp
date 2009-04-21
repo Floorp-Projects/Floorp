@@ -6021,12 +6021,17 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         JSProperty* prop;
         if (JOF_OPMODE(*pc) == JOF_NAME) {
             JS_ASSERT(aobj == obj);
-            if (!js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry))
+            entry = js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop);
+
+            /* FIXME bug 488018 - this treats OOM as no-cache-fill. */
+            if (!entry || entry == JS_NO_PROP_CACHE_FILL)
                 ABORT_TRACE("failed to find name");
         } else {
             int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
                                                         cx->resolveFlags,
                                                         &obj2, &prop);
+
+            /* FIXME bug 488018 - this treats OOM as no-cache-fill. */
             if (protoIndex < 0)
                 ABORT_TRACE("failed to lookup property");
 
@@ -6035,9 +6040,12 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                     OBJ_DROP_PROPERTY(cx, obj2, prop);
                     ABORT_TRACE("property found on non-native object");
                 }
-
-                js_FillPropertyCache(cx, aobj, OBJ_SHAPE(aobj), 0, protoIndex, obj2,
-                                     (JSScopeProperty*) prop, &entry);
+                entry = js_FillPropertyCache(cx, aobj, OBJ_SHAPE(aobj), 0,
+                                             protoIndex, obj2,
+                                             (JSScopeProperty*) prop);
+                JS_ASSERT(entry);
+                if (entry == JS_NO_PROP_CACHE_FILL)
+                    entry = NULL;
             }
         }
 
@@ -7556,7 +7564,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
 JS_REQUIRES_STACK bool
 TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
 {
-    if (entry->kpc != cx->fp->regs->pc || !PCVAL_IS_SPROP(entry->vword))
+    if (entry == JS_NO_PROP_CACHE_FILL || entry->kpc != cx->fp->regs->pc || !PCVAL_IS_SPROP(entry->vword))
         ABORT_TRACE("can't trace uncacheable property set");
 
     JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);

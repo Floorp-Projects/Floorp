@@ -647,11 +647,15 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                   JSProperty **propp);
 
 #ifdef __cplusplus /* FIXME: bug 442399 removes this LiveConnect requirement. */
-extern JSBool
+
+/*
+ * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
+ */
+extern JSPropCacheEntry *
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
-                        JSPropCacheEntry** entryp = NULL);
+                        JSBool cacheResult = JS_FALSE);
 #endif
 
 /*
@@ -674,10 +678,12 @@ extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
 
-extern JSBool
-js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
-                      JSObject **pobjp, JSProperty **propp,
-                      JSPropCacheEntry **entryp);
+/*
+ * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
+ */
+extern JSPropCacheEntry *
+js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
+                      JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 /*
  * Return the index along the scope chain in which id was found, or the last
@@ -688,8 +694,7 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp);
 
 extern JS_REQUIRES_STACK JSObject *
-js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id,
-                      JSPropCacheEntry *entry);
+js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id);
 
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
@@ -708,15 +713,15 @@ extern JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp);
 
 extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
-                     JSPropCacheEntry **entryp);
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
+                     jsval *vp);
 
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
-js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
-             JSPropCacheEntry **entryp);
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
+             jsval *vp);
 
 /*
  * Check whether it is OK to assign an undeclared property of the global
@@ -725,9 +730,12 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 extern JS_FRIEND_API(JSBool)
 js_CheckUndeclaredVarAssignment(JSContext *cx);
 
-extern JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
-                     JSPropCacheEntry **entryp);
+/*
+ * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
+ */
+extern JSPropCacheEntry *
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
+                     jsval *vp);
 
 extern JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
