@@ -381,24 +381,6 @@ case "$target" in
     ;;
 esac
 
-MOZ_ARG_WITH_STRING(windows-version,
-[  --with-windows-version=WINVER
-                          Minimum Windows version (WINVER) to support
-                              400: Windows 95
-                              500: Windows 2000
-                              501: Windows XP],
-  WINVER=$withval)
-
-case "$WINVER" in
-400|500|501)
-    ;;
-
-*)
-    AC_MSG_ERROR([Invalid value --with-windows-version, must be 400, 500 or 501]);
-    ;;
-
-esac
-
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
     if test "$GCC" != "yes"; then

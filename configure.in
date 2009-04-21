@@ -218,6 +218,12 @@ if test ! -z "$L10NBASEDIR"; then
 fi
 AC_SUBST(L10NBASEDIR)
 
+dnl Check for Perl first -- needed for win32 SDK checks
+MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
+if test -z "$PERL" || test "$PERL" = ":"; then
+    AC_MSG_ERROR([perl not found in \$PATH])
+fi
+
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -457,23 +463,49 @@ case "$target" in
     ;;
 esac
 
-MOZ_ARG_WITH_STRING(windows-version,
-[  --with-windows-version=WINVER
-                          Minimum Windows version (WINVER) to support
-                              400: Windows 95
-                              500: Windows 2000
-                              501: Windows XP],
-  WINVER=$withval)
+dnl Target the Windows Vista SDK by default
+WINSDK_TARGETVER=600
 
-case "$WINVER" in
-400|500|501)
+MOZ_ARG_WITH_STRING(windows-version,
+[  --with-windows-version=WINSDK_TARGETVER
+                          Highest Windows version to target using this SDK
+                              502: Windows Server 2003
+                              600: Windows Vista
+                              601: Windows 7],
+  WINSDK_TARGETVER=$withval)
+
+case "$WINSDK_TARGETVER" in
+502|600|601)
+    MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value --with-windows-version, must be 400, 500 or 501]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 502, 600 or 601]);
     ;;
 
 esac
+
+dnl Vista SDK specific api (deprecated)
+MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
+[  --disable-vista-sdk-requirements
+                           Do not build Vista SDK specific code],
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
+if test -n "$COMPILE_ENVIRONMENT"; then
+if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
+    AC_MSG_WARN([--disable-vista-sdk-requirements is deprecated, use --with-windows-version=502 instead])
+    MOZ_WINSDK_TARGETVER=05020000
+fi
+
+if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+    MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
+    AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+    # We can't build parental controls either
+    MOZ_DISABLE_PARENTAL_CONTROLS=1
+fi
+fi
+
+AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
@@ -690,6 +722,18 @@ EOF
     AC_DEFINE_UNQUOTED(_WIN32_IE,0x0500)
     # we need Python 2.5 on Windows
     PYTHON_VERSION=2.5
+
+    # If the maximum version supported by this SDK is lower than the target
+    # version, error out
+    AC_MSG_CHECKING([for Windows SDK being recent enough])
+    if $PERL -e "exit(0x$MOZ_WINSDK_TARGETVER > $MOZ_WINSDK_MAXVER)"; then
+        AC_MSG_RESULT("yes")
+    else
+        AC_MSG_RESULT("no")
+        AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
+    fi
+
+    AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
     ;;
 esac
 
@@ -743,10 +787,6 @@ dnl Checks for programs.
 dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
-MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
-if test -z "$PERL" || test "$PERL" = ":"; then
-    AC_MSG_ERROR([perl not found in \$PATH])
-fi
 
 if test -z "$TINDERBOX_SKIP_PERL_VERSION_CHECK"; then
 AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
@@ -6075,34 +6115,7 @@ if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
     AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
 fi
 
-dnl ========================================================
-dnl Vista SDK specific api
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
-[  --disable-vista-sdk-requirements
-                           Do not build Vista SDK specific code],
-   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
-   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
-if test -n "$COMPILE_ENVIRONMENT"; then
-if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
-    AC_MSG_WARN([Resulting builds will not be compatible with Windows Vista. (bug 428970)])
-    AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
-    if test -z "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
-        AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
-    fi
-    MOZ_DISABLE_PARENTAL_CONTROLS=1
-else
-case "$target" in
-*-mingw*|*-cygwin*|*-msvc*|*-mks*)
-    if test "$ac_cv_header_wpcapi_h" = "no"; then
-        AC_MSG_ERROR([System header wpcapi.h is not available. See updated http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
-    fi
-    ;;
-esac
-fi
-fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
-AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 dnl ========================================================
 dnl =
