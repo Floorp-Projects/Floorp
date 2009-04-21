@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -35,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
+#include <string.h>     /* memset */
 #include "jsapi.h"
 #include "jsarena.h"
 #include "jsarray.h"
@@ -517,7 +520,7 @@ Revive(JSContext *cx, jsval reviver, jsval *vp)
     return Walk(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), obj, reviver, vp);
 }
 
-
+#define JSON_INITIAL_BUFSIZE    256
 
 JSONParser *
 js_BeginJSONParse(JSContext *cx, jsval *rootVal)
@@ -532,32 +535,27 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
     JSONParser *jp = (JSONParser*) JS_malloc(cx, sizeof(JSONParser));
     if (!jp)
         return NULL;
-    jp->buffer = NULL;
+    memset(jp, 0, sizeof *jp);
 
     jp->objectStack = arr;
     if (!js_AddRoot(cx, &jp->objectStack, "JSON parse stack"))
         goto bad;
 
-    jp->hexChar = 0;
-    jp->numHex = 0;
     jp->statep = jp->stateStack;
     *jp->statep = JSON_PARSE_STATE_INIT;
     jp->rootVal = rootVal;
 
-    jp->objectKey = (JSStringBuffer*) JS_malloc(cx, sizeof(JSStringBuffer));
-    if (!jp->objectKey)
-        goto bad;
-    js_InitStringBuffer(jp->objectKey);
-    
-    jp->buffer = (JSStringBuffer*) JS_malloc(cx, sizeof(JSStringBuffer));
-    if (!jp->buffer)
-        goto bad;
-    js_InitStringBuffer(jp->buffer);
+    js_InitStringBuffer(&jp->objectKey);
+    js_InitStringBuffer(&jp->buffer);
 
+    if (!jp->buffer.grow(&jp->buffer, JSON_INITIAL_BUFSIZE)) {
+        JS_ReportOutOfMemory(cx);
+        goto bad;
+    }
     return jp;
+
 bad:
-    JS_free(cx, jp->buffer);
-    JS_free(cx, jp);
+    js_FinishJSONParse(cx, jp, JSVAL_NULL);
     return NULL;
 }
 
@@ -567,34 +565,34 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
     if (!jp)
         return JS_TRUE;
 
+    JSBool oom = JS_FALSE;
+
     // Check for unprocessed primitives at the root. This doesn't happen for
     // strings because a closing quote triggers value processing.
     if ((jp->statep - jp->stateStack) == 1) {
         if (*jp->statep == JSON_PARSE_STATE_KEYWORD) {
-            if (HandleData(cx, jp, JSON_DATA_KEYWORD)) {
+            oom = HandleData(cx, jp, JSON_DATA_KEYWORD);
+            if (!oom)
                 PopState(cx, jp);
-            }
         } else if (*jp->statep == JSON_PARSE_STATE_NUMBER) {
-            if (HandleData(cx, jp, JSON_DATA_NUMBER)) {
+            oom = HandleData(cx, jp, JSON_DATA_NUMBER);
+            if (!oom)
                 PopState(cx, jp);
-            }
         }
     }
 
-    if (jp->objectKey)
-        js_FinishStringBuffer(jp->objectKey);
-    JS_free(cx, jp->objectKey);
+    js_FinishStringBuffer(&jp->objectKey);
+    js_FinishStringBuffer(&jp->buffer);
 
-    if (jp->buffer)
-        js_FinishStringBuffer(jp->buffer);
-    JS_free(cx, jp->buffer);
-
-    if (!js_RemoveRoot(cx->runtime, &jp->objectStack))
-        return JS_FALSE;
+    /* This internal API is infallible, in spite of its JSBool return type. */
+    js_RemoveRoot(cx->runtime, &jp->objectStack);
 
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
     jsval *vp = jp->rootVal;
     JS_free(cx, jp);
+
+    if (oom)
+        return JS_FALSE;
 
     if (!ok) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
@@ -659,11 +657,10 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, jsval value)
                                      NULL, NULL, JSPROP_ENUMERATE, NULL);
         }
     } else {
-        ok = JS_DefineUCProperty(cx, parent, jp->objectKey->base,
-                                 STRING_BUFFER_OFFSET(jp->objectKey), value,
+        ok = JS_DefineUCProperty(cx, parent, jp->objectKey.base,
+                                 STRING_BUFFER_OFFSET(&jp->objectKey), value,
                                  NULL, NULL, JSPROP_ENUMERATE);
-        js_FinishStringBuffer(jp->objectKey);
-        js_InitStringBuffer(jp->objectKey);
+        js_RewindStringBuffer(&jp->objectKey);
     }
 
     return ok;
@@ -832,40 +829,38 @@ HandleKeyword(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 static JSBool
 HandleData(JSContext *cx, JSONParser *jp, JSONDataType type)
 {
-  JSBool ok = JS_FALSE;
+    JSBool ok;
 
-  if (!STRING_BUFFER_OK(jp->buffer)) {
-      // what to call this error?
-      JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-      return JS_FALSE;
-  }
+    switch (type) {
+      case JSON_DATA_STRING:
+        ok = HandleString(cx, jp, jp->buffer.base, STRING_BUFFER_OFFSET(&jp->buffer));
+        break;
 
-  switch (type) {
-    case JSON_DATA_STRING:
-      ok = HandleString(cx, jp, jp->buffer->base, STRING_BUFFER_OFFSET(jp->buffer));
-      break;
+      case JSON_DATA_KEYSTRING:
+        js_AppendUCString(&jp->objectKey, jp->buffer.base, STRING_BUFFER_OFFSET(&jp->buffer));
+        ok = STRING_BUFFER_OK(&jp->objectKey);
+        if (!ok)
+            JS_ReportOutOfMemory(cx);
+        break;
 
-    case JSON_DATA_KEYSTRING:
-      js_AppendUCString(jp->objectKey, jp->buffer->base, STRING_BUFFER_OFFSET(jp->buffer));
-      ok = STRING_BUFFER_OK(jp->objectKey);
-      break;
+      case JSON_DATA_NUMBER:
+        ok = HandleNumber(cx, jp, jp->buffer.base, STRING_BUFFER_OFFSET(&jp->buffer));
+        break;
 
-    case JSON_DATA_NUMBER:
-      ok = HandleNumber(cx, jp, jp->buffer->base, STRING_BUFFER_OFFSET(jp->buffer));
-      break;
+      default:
+        JS_ASSERT(type == JSON_DATA_KEYWORD);
+        ok = HandleKeyword(cx, jp, jp->buffer.base, STRING_BUFFER_OFFSET(&jp->buffer));
+        break;
+    }
 
-    case JSON_DATA_KEYWORD:
-      ok = HandleKeyword(cx, jp, jp->buffer->base, STRING_BUFFER_OFFSET(jp->buffer));
-      break;
-
-    default:
-      JS_NOT_REACHED("Should have a JSON data type");
-  }
-
-  js_FinishStringBuffer(jp->buffer);
-  js_InitStringBuffer(jp->buffer);
-
-  return ok;
+    if (ok) {
+        ok = STRING_BUFFER_OK(&jp->buffer);
+        if (ok)
+            js_RewindStringBuffer(&jp->buffer);
+        else
+            JS_ReportOutOfMemory(cx);
+    }
+    return ok;
 }
 
 JSBool
@@ -910,13 +905,13 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 
             if (IsNumChar(c)) {
                 *jp->statep = JSON_PARSE_STATE_NUMBER;
-                js_AppendChar(jp->buffer, c);
+                js_FastAppendChar(&jp->buffer, c);
                 break;
             }
 
             if (JS7_ISLET(c)) {
                 *jp->statep = JSON_PARSE_STATE_KEYWORD;
-                js_AppendChar(jp->buffer, c);
+                js_FastAppendChar(&jp->buffer, c);
                 break;
             }
 
@@ -1002,7 +997,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
             } else if (c == '\\') {
                 *jp->statep = JSON_PARSE_STATE_STRING_ESCAPE;
             } else {
-                js_AppendChar(jp->buffer, c);
+                js_FastAppendChar(&jp->buffer, c);
             }
             break;
 
@@ -1029,7 +1024,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 }
             }
 
-            js_AppendChar(jp->buffer, c);
+            js_FastAppendChar(&jp->buffer, c);
             *jp->statep = JSON_PARSE_STATE_STRING;
             break;
 
@@ -1046,7 +1041,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
             }
             
             if (++(jp->numHex) == 4) {
-                js_AppendChar(jp->buffer, jp->hexChar);
+                js_FastAppendChar(&jp->buffer, jp->hexChar);
                 jp->hexChar = 0;
                 jp->numHex = 0;
                 *jp->statep = JSON_PARSE_STATE_STRING;
@@ -1055,7 +1050,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 
           case JSON_PARSE_STATE_KEYWORD:
             if (JS7_ISLET(c)) {
-                js_AppendChar(jp->buffer, c);
+                js_FastAppendChar(&jp->buffer, c);
             } else {
                 // this character isn't part of the keyword, process it again
                 i--;
@@ -1069,7 +1064,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 
           case JSON_PARSE_STATE_NUMBER:
             if (IsNumChar(c)) {
-                js_AppendChar(jp->buffer, c);
+                js_FastAppendChar(&jp->buffer, c);
             } else {
                 // this character isn't part of the number, process it again
                 i--;
@@ -1090,9 +1085,15 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 
           default:
             JS_NOT_REACHED("Invalid JSON parser state");
-      }
+        }
+
+        if (!STRING_BUFFER_OK(&jp->buffer)) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
     }
 
+    *jp->buffer.ptr = 0;
     return JS_TRUE;
 }
 
