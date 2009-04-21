@@ -55,7 +55,7 @@
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
 
-#include "mozStorageEvents.h"
+#include "mozStorageAsyncStatementExecution.h"
 #include "mozStorageSQLFunctions.h"
 #include "mozStorageConnection.h"
 #include "mozStorageService.h"
@@ -697,7 +697,7 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
   // Dispatch to the background
   nsresult rv = NS_OK;
   if (rc == SQLITE_OK)
-    rv = NS_executeAsync(stmts, this, aCallback, _handle);
+    rv = AsyncExecuteStatements::execute(stmts, this, aCallback, _handle);
 
   // We had a failure, so we need to clean up...
   if (rc != SQLITE_OK || NS_FAILED(rv)) {
