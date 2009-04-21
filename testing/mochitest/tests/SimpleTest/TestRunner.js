@@ -198,12 +198,11 @@ TestRunner.updateUI = function() {
   // Set the table values
   var trID = "tr-" + $('current-test-path').innerHTML;
   var row = $(trID);
-  replaceChildNodes(row,
-    TD({'style':
-        {'backgroundColor': results.notOK > 0 ? "#f00":"#0d0"}}, results.OK),
-    TD({'style':
-        {'backgroundColor': results.notOK > 0 ? "#f00":"#0d0"}}, results.notOK),
-    TD({'style': {'backgroundColor':
-                   results.todo > 0 ? "orange":"#0d0"}}, results.todo)
-  );
+  var tds = row.getElementsByTagName("td");
+  tds[0].style.backgroundColor = results.notOK > 0 ? "#f00" : "#0d0";
+  tds[0].textContent = results.OK;
+  tds[1].style.backgroundColor = results.notOK > 0 ? "#f00" : "#0d0";
+  tds[1].textContent = results.notOK;
+  tds[2].style.backgroundColor = results.todo > 0 ? "orange" : "#0d0";
+  tds[2].textContent = results.todo;
 }
