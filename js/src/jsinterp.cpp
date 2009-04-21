@@ -310,7 +310,6 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     }
 
     entry = &cache->table[khash];
-    PCMETER(if (entry != *entryp) cache->modfills++);
     PCMETER(if (!PCVAL_IS_NULL(entry->vword)) cache->recycles++);
     entry->kpc = pc;
     entry->kshape = kshape;
@@ -472,7 +471,6 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
         P(rofills);
         P(disfills);
         P(oddfills);
-        P(modfills);
         P(brandfills);
         P(noprotos);
         P(longchains);
