@@ -7886,6 +7886,8 @@ if test "$NECKO_WIFI"; then
     NECKO_WIFI=1
   elif test "$OS_ARCH" = "WINNT"; then
     NECKO_WIFI=1
+  elif test "$OS_ARCH" = "WINCE"; then
+    NECKO_WIFI=1    
   else
     AC_MSG_WARN([Necko WiFi scanning not supported on your platform.])
   fi
