@@ -400,7 +400,7 @@ static const HALF PC2[8][64] = {
     temp  = (word ^ (word >> 9)) & 0x00550055; \
     word ^=  temp | (temp << 9);
 
-#if defined(__GNUC__) && defined(_X86_)
+#if defined(__GNUC__) && defined(NSS_X86_OR_X64)
 #define BYTESWAP(word, temp) \
     __asm("bswap	%0" : "+r" (word));
 #else
@@ -435,7 +435,7 @@ DES_MakeSchedule( HALF * ks, const BYTE * key,   DESDirection direction)
     int           delta;
     unsigned int  ls;
 
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
     left  = HALFPTR(key)[0]; 
     right = HALFPTR(key)[1]; 
     BYTESWAP(left, temp);
@@ -586,7 +586,7 @@ DES_Do1Block(HALF * ks, const BYTE * inbuf, BYTE * outbuf)
     register HALF left, right;
     register HALF temp;
 
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
     left  = HALFPTR(inbuf)[0]; 
     right = HALFPTR(inbuf)[1]; 
     BYTESWAP(left, temp);
@@ -657,7 +657,7 @@ DES_Do1Block(HALF * ks, const BYTE * inbuf, BYTE * outbuf)
 
     FP(left, right, temp);
 
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
     BYTESWAP(left, temp);
     BYTESWAP(right, temp);
     HALFPTR(outbuf)[0]  = left; 

@@ -378,14 +378,8 @@ pkix_TargetCertChecker_Check(
                         PKIX_CHECK(certSelectorMatch
                             (state->certSelector,
                             cert,
-                            &checkPassed,
                             plContext),
                             PKIX_CERTSELECTORMATCHFAILED);
-
-                        if (checkPassed != PKIX_TRUE){
-                                PKIX_ERROR(PKIX_CERTSELECTORCHECKFAILED);
-                        }
-
                         /*
                          * There are two Extended Key Usage Checkings
                          * available :

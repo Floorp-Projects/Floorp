@@ -68,6 +68,7 @@ struct PKIX_ProcessingParamsStruct {
         PKIX_RevocationChecker *revChecker;
         PKIX_ResourceLimits *resourceLimits;
         PKIX_Boolean useAIAForCertFetching;
+        PKIX_Boolean qualifyTargetCert;
 };
 
 /* see source file for function documentation */

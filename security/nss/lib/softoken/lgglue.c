@@ -149,6 +149,7 @@ sftkdb_LoadFromPath(const char *path, const char *libname)
     return lib;
 }
 
+
 static PRLibrary *
 sftkdb_LoadLibrary(const char *libname)
 {
@@ -188,6 +189,7 @@ done:
 	libSpec.value.pathname = libname;
 	lib = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
     }
+
     return lib;
 }
 
@@ -270,18 +272,39 @@ sftkdb_decrypt_stub(SDB *sdb, SECItem *cipherText, SECItem **plainText)
     return rv;
 }
 
+static const char *LEGACY_LIB_NAME = 
+	SHLIB_PREFIX"nssdbm"SHLIB_VERSION"."SHLIB_SUFFIX;
+/*
+ * 2 bools to tell us if we've check the legacy library successfully or
+ * not. Initialize on startup to false by the C BSS segment;
+ */
+static PRBool legacy_glue_libCheckFailed;    /* set if we failed the check */
+static PRBool legacy_glue_libCheckSucceeded; /* set if we passed the check */
 static PRLibrary *legacy_glue_lib = NULL;
 static SECStatus 
-sftkdbLoad_Legacy()
+sftkdbLoad_Legacy(PRBool isFIPS)
 {
     PRLibrary *lib = NULL;
     LGSetCryptFunc setCryptFunction = NULL;
 
     if (legacy_glue_lib) {
+	/* this check is necessary because it's possible we loaded the
+	 * legacydb to read secmod.db, which told us whether we were in
+	 * FIPS mode or not. */
+	if (isFIPS && !legacy_glue_libCheckSucceeded) {
+	    if (legacy_glue_libCheckFailed || 
+		!BLAPI_SHVerify(LEGACY_LIB_NAME,(PRFuncPtr)legacy_glue_open)) {
+    	    	legacy_glue_libCheckFailed = PR_TRUE;
+		/* don't clobber legacy glue to avoid race. just let it
+		 * get cleared in shutdown */
+		return SECFailure;
+	    }
+    	    legacy_glue_libCheckSucceeded = PR_TRUE;
+	} 
 	return SECSuccess;
     }
 
-    lib = sftkdb_LoadLibrary(SHLIB_PREFIX"nssdbm"SHLIB_VERSION"."SHLIB_SUFFIX);
+    lib = sftkdb_LoadLibrary(LEGACY_LIB_NAME);
     if (lib == NULL) {
 	return SECFailure;
     }
@@ -306,6 +329,16 @@ sftkdbLoad_Legacy()
 	PR_UnloadLibrary(lib);
 	return SECFailure;
     }
+
+    /* verify the loaded library if we are in FIPS mode */
+    if (isFIPS) {
+	if (!BLAPI_SHVerify(LEGACY_LIB_NAME,(PRFuncPtr)legacy_glue_open)) {
+	    PR_UnloadLibrary(lib);
+	    return SECFailure;
+	}
+    	legacy_glue_libCheckSucceeded = PR_TRUE;
+    } 
+
     setCryptFunction(sftkdb_encrypt_stub,sftkdb_decrypt_stub);
     legacy_glue_lib = lib;
     return SECSuccess;
@@ -313,12 +346,12 @@ sftkdbLoad_Legacy()
 
 CK_RV
 sftkdbCall_open(const char *dir, const char *certPrefix, const char *keyPrefix, 
-		int certVersion, int keyVersion, int flags, 
+		int certVersion, int keyVersion, int flags, PRBool isFIPS,
 		SDB **certDB, SDB **keyDB)
 {
     SECStatus rv;
 
-    rv = sftkdbLoad_Legacy();
+    rv = sftkdbLoad_Legacy(isFIPS);
     if (rv != SECSuccess) {
 	return CKR_GENERAL_ERROR;
     }
@@ -337,7 +370,7 @@ sftkdbCall_ReadSecmodDB(const char *appName, const char *filename,
 {
     SECStatus rv;
 
-    rv = sftkdbLoad_Legacy();
+    rv = sftkdbLoad_Legacy(PR_FALSE);
     if (rv != SECSuccess) {
 	return NULL;
     }
@@ -355,7 +388,7 @@ sftkdbCall_ReleaseSecmodDBData(const char *appName,
 {
     SECStatus rv;
 
-    rv = sftkdbLoad_Legacy();
+    rv = sftkdbLoad_Legacy(PR_FALSE);
     if (rv != SECSuccess) {
 	return rv;
     }
@@ -374,7 +407,7 @@ sftkdbCall_DeleteSecmodDB(const char *appName,
 {
     SECStatus rv;
 
-    rv = sftkdbLoad_Legacy();
+    rv = sftkdbLoad_Legacy(PR_FALSE);
     if (rv != SECSuccess) {
 	return rv;
     }
@@ -392,7 +425,7 @@ sftkdbCall_AddSecmodDB(const char *appName,
 {
     SECStatus rv;
 
-    rv = sftkdbLoad_Legacy();
+    rv = sftkdbLoad_Legacy(PR_FALSE);
     if (rv != SECSuccess) {
 	return rv;
     }
@@ -427,6 +460,8 @@ sftkdbCall_Shutdown(void)
     legacy_glue_releaseSecmod = NULL;
     legacy_glue_deleteSecmod = NULL;
     legacy_glue_addSecmod = NULL;
+    legacy_glue_libCheckFailed    = PR_FALSE;
+    legacy_glue_libCheckSucceeded = PR_FALSE;
     return crv;
 }
     

@@ -43,16 +43,6 @@
 
 #include "pkix_pl_infoaccess.h"
 
-/* XXX Following SEC_OID_PKIX defines should be merged in NSS */
-#define SEC_OID_PKIX_CA_REPOSITORY     1003
-#define SEC_OID_PKIX_TIMESTAMPING      1005
-/* XXX Following OID defines hould be moved to NSS */
-static const unsigned char siaTimeStampingOID[] = {0x2b, 0x06, 0x01, 0x05,
-                                0x05, 0x07, 0x030, 0x03};
-static const unsigned char siaCaRepositoryOID[] = {0x2b, 0x06, 0x01, 0x05,
-                                0x05, 0x07, 0x030, 0x05};
-
-
 /* --Private-InfoAccess-Functions----------------------------------*/
 
 /*
@@ -415,37 +405,6 @@ pkix_pl_InfoAccess_CreateList(
 
                 PKIX_CERT_DEBUG("\t\tCalling SECOID_FindOIDTag).\n");
                 method = SECOID_FindOIDTag(&nssInfoAccess[i]->method);
-
-                if (method == 0) {
-
-                /* XXX
-                 * This part of code is definitely hacking, need NSS decode
-                 * support. We can reuse the CERT_DecodeAuthInfoAccessExtension
-                 * since SIA and AIA are all the same type. However NSS need
-                 * to add SIA, CaRepository, TimeStamping OID definitions and
-                 * the numerical method, timeStamping and caRepository values.
-                 *
-                 * We assume now, since method is 0, implies the method for SIA
-                 * was not decoded by CERT_DecodeAuthInfoAccessExtension()
-                 * so we compare and put value in. This part should be taken
-                 * out eventually if CERT_DecodeInfoAccessExtension (*renamed*)
-                 * is doing the job.
-                 */
-
-                        PKIX_CERT_DEBUG("\t\tCalling PORT_Strncmp).\n");
-                        if (PORT_Strncmp
-                                ((char *)nssInfoAccess[i]->method.data,
-                                (char *)siaTimeStampingOID,
-                                nssInfoAccess[i]->method.len) == 0) {
-                                method = SEC_OID_PKIX_TIMESTAMPING;
-                        } else if (PORT_Strncmp
-                                ((char *)nssInfoAccess[i]->method.data,
-                                (char *)siaCaRepositoryOID,
-                                nssInfoAccess[i]->method.len) == 0) {
-                                method = SEC_OID_PKIX_CA_REPOSITORY;
-                        }
-                }
-
                 /* Map NSS access method value into PKIX constant */
                 switch(method) {
                         case SEC_OID_PKIX_CA_ISSUERS:
@@ -461,7 +420,7 @@ pkix_pl_InfoAccess_CreateList(
                                 method = PKIX_INFOACCESS_CA_REPOSITORY;
                                 break;
                         default:
-                                break;
+                                PKIX_ERROR(PKIX_UNKNOWNINFOACCESSMETHOD);
                 }
 
                 PKIX_CHECK(pkix_pl_InfoAccess_Create
@@ -650,7 +609,7 @@ pkix_pl_InfoAccess_ParseTokens(
          */
         if (numFilters > 2) numFilters = 2;
 
-        filterP = PORT_ArenaZNewArray(arena, void*, numFilters+1);
+        filterP = PORT_ArenaZNewArray(arena, char*, numFilters+1);
         if (filterP == NULL) {
             PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
         }

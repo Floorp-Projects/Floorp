@@ -588,6 +588,7 @@ PKIX_ProcessingParams_Create(
         params->isCrlRevocationCheckingEnabledWithNISTPolicy = PKIX_TRUE;
 
         params->useAIAForCertFetching = PKIX_FALSE;
+        params->qualifyTargetCert = PKIX_TRUE;
 
         *pParams = params;
         params = NULL;
@@ -632,6 +633,44 @@ PKIX_ProcessingParams_SetUseAIAForCertFetching(
         PKIX_NULLCHECK_ONE(params);
 
         params->useAIAForCertFetching = useAIA;
+
+        PKIX_RETURN(PROCESSINGPARAMS);
+}
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_GetQualifyTargetCert
+ * (see comments in pkix_params.h)
+ */
+PKIX_Error *
+PKIX_ProcessingParams_GetValidateTargetCert(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean *pQualifyTargetCert,
+        void *plContext)
+{
+        PKIX_ENTER(PROCESSINGPARAMS,
+                   "PKIX_ProcessingParams_GetValidateTargetCert");
+        PKIX_NULLCHECK_TWO(params, pQualifyTargetCert);
+
+        *pQualifyTargetCert = params->qualifyTargetCert;
+
+        PKIX_RETURN(PROCESSINGPARAMS);
+}
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_SetQualifyTargetCert
+ * (see comments in pkix_params.h)
+ */
+PKIX_Error *
+PKIX_ProcessingParams_SetQualifyTargetCert(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean qualifyTargetCert,
+        void *plContext)
+{
+        PKIX_ENTER(PROCESSINGPARAMS,
+                   "PKIX_ProcessingParams_SetQualifyTargetCert");
+        PKIX_NULLCHECK_ONE(params);
+
+        params->qualifyTargetCert = qualifyTargetCert;
 
         PKIX_RETURN(PROCESSINGPARAMS);
 }

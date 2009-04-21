@@ -192,6 +192,8 @@ pkix_ComCertSelParams_Duplicate(
                 plContext,
                 PKIX_OBJECTDUPLICATEFAILED);
 
+        paramsDuplicate->leafCertFlag = params->leafCertFlag;
+
         *pNewObject = (PKIX_PL_Object *)paramsDuplicate;
 
 cleanup:
@@ -219,21 +221,14 @@ PKIX_Error *
 pkix_ComCertSelParams_RegisterSelf(void *plContext)
 {
         extern pkix_ClassTable_Entry systemClasses[PKIX_NUMTYPES];
-        pkix_ClassTable_Entry entry;
+        pkix_ClassTable_Entry* entry = &systemClasses[PKIX_COMCERTSELPARAMS_TYPE];
 
         PKIX_ENTER(COMCERTSELPARAMS, "pkix_ComCertSelParams_RegisterSelf");
 
-        entry.description = "ComCertSelParams";
-        entry.objCounter = 0;
-        entry.typeObjectSize = sizeof(PKIX_ComCertSelParams);
-        entry.destructor = pkix_ComCertSelParams_Destroy;
-        entry.equalsFunction = NULL;
-        entry.hashcodeFunction = NULL;
-        entry.toStringFunction = NULL;
-        entry.comparator = NULL;
-        entry.duplicateFunction = pkix_ComCertSelParams_Duplicate;
-
-        systemClasses[PKIX_COMCERTSELPARAMS_TYPE] = entry;
+        entry->description = "ComCertSelParams";
+        entry->typeObjectSize = sizeof(PKIX_ComCertSelParams);
+        entry->destructor = pkix_ComCertSelParams_Destroy;
+        entry->duplicateFunction = pkix_ComCertSelParams_Duplicate;
 
         PKIX_RETURN(COMCERTSELPARAMS);
 }
@@ -283,6 +278,7 @@ PKIX_ComCertSelParams_Create(
         params->subjKeyId = NULL;
         params->subjPubKey = NULL;
         params->subjPKAlgId = NULL;
+        params->leafCertFlag = PKIX_TRUE;
 
         *pParams = params;
 
@@ -1172,6 +1168,48 @@ PKIX_ComCertSelParams_SetSubjPKAlgId(
         PKIX_INCREF(algId);
 
         params->subjPKAlgId = algId;
+
+        PKIX_CHECK(PKIX_PL_Object_InvalidateCache
+                    ((PKIX_PL_Object *)params, plContext),
+                    PKIX_OBJECTINVALIDATECACHEFAILED);
+
+cleanup:
+
+        PKIX_RETURN(COMCERTSELPARAMS);
+}
+
+/*
+ * FUNCTION: PKIX_ComCertSelParams_GetLeafCertFlag
+ * (see comments in pkix_certsel.h)
+ */
+PKIX_Error*
+PKIX_ComCertSelParams_GetLeafCertFlag(
+        PKIX_ComCertSelParams *params,
+        PKIX_Boolean *pLeafFlag,
+        void *plContext)
+{
+        PKIX_ENTER(COMCERTSELPARAMS, "PKIX_ComCertSelParams_GetLeafCertFlag");
+        PKIX_NULLCHECK_TWO(params, pLeafFlag);
+
+        *pLeafFlag = params->leafCertFlag;
+
+        PKIX_RETURN(COMCERTSELPARAMS);
+}
+
+/*
+ * FUNCTION: PKIX_ComCertSelParams_SetLeafCertFlag
+ * (see comments in pkix_certsel.h)
+ */
+PKIX_Error *
+PKIX_ComCertSelParams_SetLeafCertFlag(
+        PKIX_ComCertSelParams *params,
+        PKIX_Boolean leafFlag,
+        void *plContext)
+{
+        PKIX_ENTER(COMCERTSELPARAMS, "PKIX_ComCertSelParams_SetLeafCertFlag");
+        PKIX_NULLCHECK_ONE(params);
+
+        params->leafCertFlag = leafFlag;
 
         PKIX_CHECK(PKIX_PL_Object_InvalidateCache
                     ((PKIX_PL_Object *)params, plContext),

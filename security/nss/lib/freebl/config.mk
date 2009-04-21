@@ -91,6 +91,7 @@ endif
 ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lnspr4 \
@@ -107,6 +108,7 @@ else
 ifndef FREEBL_NO_DEPEND
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lnspr4 \
