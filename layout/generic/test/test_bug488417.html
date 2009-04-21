@@ -46,6 +46,8 @@ addLoadEvent(function() {
     clickIt($("b"));
     clickIt($("a"));
     ok(1, "Got here");
+    // Clean up
+    window.getSelection().removeAllRanges();
     SimpleTest.finish();
   });
 });
