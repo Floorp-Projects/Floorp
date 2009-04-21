@@ -146,14 +146,10 @@ pkix_pl_Cert_DecodePolicyInfo(
         /* Allocated in the arena; freed in CERT_Destroy... */
         CERTCertificatePolicies *certPol = NULL;
         CERTPolicyInfo **policyInfos = NULL;
-        CERTPolicyInfo *policyInfo = NULL;
-        CERTPolicyQualifier **policyQualifiers = NULL;
-        CERTPolicyQualifier *policyQualifier = NULL;
 
         /* Holder for the return value */
         PKIX_List *infos = NULL;
 
-        char *oidAscii = NULL;
         PKIX_PL_OID *pkixOID = NULL;
         PKIX_List *qualifiers = NULL;
         PKIX_PL_CertPolicyInfo *certPolicyInfo = NULL;
@@ -204,26 +200,22 @@ pkix_pl_Cert_DecodePolicyInfo(
          * building each PKIX_PL_CertPolicyInfo object in turn
          */
         while (*policyInfos != NULL) {
-                policyInfo = *policyInfos;
-                policyQualifiers = policyInfo->policyQualifiers;
+                CERTPolicyInfo *policyInfo = *policyInfos;
+                CERTPolicyQualifier **policyQualifiers =
+                                          policyInfo->policyQualifiers;
                 if (policyQualifiers) {
                         /* create a PKIX_List of PKIX_PL_CertPolicyQualifiers */
                         PKIX_CHECK(PKIX_List_Create(&qualifiers, plContext),
                                 PKIX_LISTCREATEFAILED);
 
                         while (*policyQualifiers != NULL) {
-                            policyQualifier = *policyQualifiers;
+                            CERTPolicyQualifier *policyQualifier =
+                                                         *policyQualifiers;
 
                             /* create the qualifier's OID object */
-
-                            PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                                (&(policyQualifier->qualifierID),
-                                &oidAscii,
-                                plContext),
-                                PKIX_OIDBYTES2ASCIIFAILED);
-
-                            PKIX_CHECK(PKIX_PL_OID_Create
-                                (oidAscii, &pkixOID, plContext),
+                            PKIX_CHECK(PKIX_PL_OID_CreateBySECItem
+                                (&policyQualifier->qualifierID,
+                                 &pkixOID, plContext),
                                 PKIX_OIDCREATEFAILED);
 
                             /* create qualifier's ByteArray object */
@@ -250,7 +242,6 @@ pkix_pl_Cert_DecodePolicyInfo(
                                 plContext),
                                 PKIX_LISTAPPENDITEMFAILED);
 
-                            PKIX_FREE(oidAscii);
                             PKIX_DECREF(pkixOID);
                             PKIX_DECREF(qualifierArray);
                             PKIX_DECREF(certPolicyQualifier);
@@ -269,13 +260,8 @@ pkix_pl_Cert_DecodePolicyInfo(
                  * (The CERTPolicyInfo structure has an oid field, but it
                  * is of type SECOidTag. This function wants a SECItem.)
                  */
-
-                PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                        (&(policyInfo->policyID), &oidAscii, plContext),
-                        PKIX_OIDBYTES2ASCIIFAILED);
-
-                PKIX_CHECK(PKIX_PL_OID_Create
-                        (oidAscii, &pkixOID, plContext),
+                PKIX_CHECK(PKIX_PL_OID_CreateBySECItem
+                        (&policyInfo->policyID, &pkixOID, plContext),
                         PKIX_OIDCREATEFAILED);
 
                 /* Create a CertPolicyInfo object */
@@ -288,7 +274,6 @@ pkix_pl_Cert_DecodePolicyInfo(
                         (infos, (PKIX_PL_Object *)certPolicyInfo, plContext),
                         PKIX_LISTAPPENDITEMFAILED);
 
-                PKIX_FREE(oidAscii);
                 PKIX_DECREF(pkixOID);
                 PKIX_DECREF(qualifiers);
                 PKIX_DECREF(certPolicyInfo);
@@ -313,7 +298,6 @@ cleanup:
             CERT_DestroyCertificatePoliciesExtension(certPol);
         }
 
-        PKIX_FREE(oidAscii);
         PKIX_DECREF(infos);
         PKIX_DECREF(pkixOID);
         PKIX_DECREF(qualifiers);
@@ -362,13 +346,10 @@ pkix_pl_Cert_DecodePolicyMapping(
         /* Allocated in the arena; freed in CERT_Destroy... */
         CERTCertificatePolicyMappings *certPolMaps = NULL;
         CERTPolicyMap **policyMaps = NULL;
-        CERTPolicyMap *policyMap = NULL;
 
         /* Holder for the return value */
         PKIX_List *maps = NULL;
 
-        char *issuerPolicyOIDAscii = NULL;
-        char *subjectPolicyOIDAscii = NULL;
         PKIX_PL_OID *issuerDomainOID = NULL;
         PKIX_PL_OID *subjectDomainOID = NULL;
         PKIX_PL_CertPolicyMap *certPolicyMap = NULL;
@@ -408,30 +389,18 @@ pkix_pl_Cert_DecodePolicyMapping(
          * building each CertPolicyMap object in turn
          */
         do {
-                policyMap = *policyMaps;
+                CERTPolicyMap *policyMap = *policyMaps;
 
                 /* create the OID for the issuer Domain Policy */
-
-                PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                        (&(policyMap->issuerDomainPolicy),
-                        &issuerPolicyOIDAscii,
-                        plContext),
-                        PKIX_OIDBYTES2ASCIIFAILED);
-
-                PKIX_CHECK(PKIX_PL_OID_Create
-                        (issuerPolicyOIDAscii, &issuerDomainOID, plContext),
+                PKIX_CHECK(PKIX_PL_OID_CreateBySECItem
+                        (&policyMap->issuerDomainPolicy,
+                         &issuerDomainOID, plContext),
                         PKIX_OIDCREATEFAILED);
 
                 /* create the OID for the subject Domain Policy */
-
-                PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                        (&(policyMap->subjectDomainPolicy),
-                        &subjectPolicyOIDAscii,
-                        plContext),
-                        PKIX_OIDBYTES2ASCIIFAILED);
-
-                PKIX_CHECK(PKIX_PL_OID_Create
-                        (subjectPolicyOIDAscii, &subjectDomainOID, plContext),
+                PKIX_CHECK(PKIX_PL_OID_CreateBySECItem
+                        (&policyMap->subjectDomainPolicy,
+                         &subjectDomainOID, plContext),
                         PKIX_OIDCREATEFAILED);
 
                 /* create the CertPolicyMap */
@@ -447,8 +416,6 @@ pkix_pl_Cert_DecodePolicyMapping(
                         (maps, (PKIX_PL_Object *)certPolicyMap, plContext),
                         PKIX_LISTAPPENDITEMFAILED);
 
-                PKIX_FREE(issuerPolicyOIDAscii);
-                PKIX_FREE(subjectPolicyOIDAscii);
                 PKIX_DECREF(issuerDomainOID);
                 PKIX_DECREF(subjectDomainOID);
                 PKIX_DECREF(certPolicyMap);
@@ -469,8 +436,6 @@ cleanup:
             CERT_DestroyPolicyMappingsExtension(certPolMaps);
         }
 
-        PKIX_FREE(issuerPolicyOIDAscii);
-        PKIX_FREE(subjectPolicyOIDAscii);
         PKIX_DECREF(maps);
         PKIX_DECREF(issuerDomainOID);
         PKIX_DECREF(subjectDomainOID);
@@ -2052,43 +2017,32 @@ PKIX_PL_Cert_GetSubjectPublicKeyAlgId(
         PKIX_PL_OID **pSubjKeyAlgId,
         void *plContext)
 {
-        CERTCertificate *nssCert = NULL;
         PKIX_PL_OID *pubKeyAlgId = NULL;
-        SECAlgorithmID algorithm;
-        SECItem algBytes;
-        char *asciiOID = NULL;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_GetSubjectPublicKeyAlgId");
         PKIX_NULLCHECK_THREE(cert, cert->nssCert, pSubjKeyAlgId);
 
         /* if we don't have a cached copy from before, we create one */
         if (cert->publicKeyAlgId == NULL){
-
                 PKIX_OBJECT_LOCK(cert);
-
                 if (cert->publicKeyAlgId == NULL){
+                        CERTCertificate *nssCert = cert->nssCert;
+                        SECAlgorithmID *algorithm;
+                        SECItem *algBytes;
 
-                        nssCert = cert->nssCert;
-                        algorithm = nssCert->subjectPublicKeyInfo.algorithm;
-                        algBytes = algorithm.algorithm;
-
-                        PKIX_NULLCHECK_ONE(algBytes.data);
-                        if (algBytes.len == 0) {
-                                PKIX_ERROR_FATAL(PKIX_ALGORITHMBYTESLENGTH0);
+                        algorithm = &nssCert->subjectPublicKeyInfo.algorithm;
+                        algBytes = &algorithm->algorithm;
+                        if (!algBytes->data || !algBytes->len) {
+                            PKIX_ERROR_FATAL(PKIX_ALGORITHMBYTESLENGTH0);
                         }
-
-                        PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                                    (&algBytes, &asciiOID, plContext),
-                                    PKIX_OIDBYTES2ASCIIFAILED);
-
-                        PKIX_CHECK(PKIX_PL_OID_Create
-                                    (asciiOID, &pubKeyAlgId, plContext),
+                        PKIX_CHECK(PKIX_PL_OID_CreateBySECItem
+                                    (algBytes, &pubKeyAlgId, plContext),
                                     PKIX_OIDCREATEFAILED);
 
                         /* save a cached copy in case it is asked for again */
                         cert->publicKeyAlgId = pubKeyAlgId;
+                        pubKeyAlgId = NULL;
                 }
-
                 PKIX_OBJECT_UNLOCK(cert);
         }
 
@@ -2096,7 +2050,7 @@ PKIX_PL_Cert_GetSubjectPublicKeyAlgId(
         *pSubjKeyAlgId = cert->publicKeyAlgId;
 
 cleanup:
-        PKIX_FREE(asciiOID);
+        PKIX_DECREF(pubKeyAlgId);
         PKIX_RETURN(CERT);
 }
 
@@ -2413,9 +2367,7 @@ PKIX_PL_Cert_GetExtendedKeyUsage(
         CERTCertificate *nssCert = NULL;
         PKIX_PL_OID *pkixOID = NULL;
         PKIX_List *oidsList = NULL;
-        char *oidAscii = NULL;
         SECItem **oids = NULL;
-        SECItem *oid = NULL;
         SECItem encodedExtKeyUsage;
         SECStatus rv;
 
@@ -2462,14 +2414,10 @@ PKIX_PL_Cert_GetExtendedKeyUsage(
                                     PKIX_LISTCREATEFAILED);
 
                         while (*oids){
-                                oid = *oids++;
+                                SECItem *oid = *oids++;
 
-                                PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                                            (oid, &oidAscii, plContext),
-                                            PKIX_OIDBYTES2ASCIIFAILED);
-
-                                PKIX_CHECK(PKIX_PL_OID_Create
-                                            (oidAscii, &pkixOID, plContext),
+                                PKIX_CHECK(PKIX_PL_OID_CreateBySECItem
+                                            (oid, &pkixOID, plContext),
                                             PKIX_OIDCREATEFAILED);
 
                                 PKIX_CHECK(PKIX_List_AppendItem
@@ -2477,9 +2425,6 @@ PKIX_PL_Cert_GetExtendedKeyUsage(
                                             (PKIX_PL_Object *)pkixOID,
                                             plContext),
                                             PKIX_LISTAPPENDITEMFAILED);
-
-                                PKIX_FREE(oidAscii);
-
                                 PKIX_DECREF(pkixOID);
                         }
 
@@ -2501,7 +2446,6 @@ PKIX_PL_Cert_GetExtendedKeyUsage(
 cleanup:
 	PKIX_OBJECT_UNLOCK(lockedObject);
 
-        PKIX_FREE(oidAscii);
         PKIX_DECREF(pkixOID);
         PKIX_DECREF(oidsList);
         CERT_DestroyOidSequence(extKeyUsage);

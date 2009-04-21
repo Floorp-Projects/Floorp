@@ -527,6 +527,7 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
 	nssCryptokiObject_Destroy(object);
     } else {
 	rvH = CK_INVALID_HANDLE;
+        PORT_SetError(SEC_ERROR_CRL_IMPORT_FAILED);
     }
     return rvH;
 }

@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.9 2009/04/09 02:00:33 nelson%bolyard.com Exp $
+ * $Id: pcertdb.c,v 1.11 2009/04/13 17:23:15 nelson%bolyard.com Exp $
  */
 #include "lowkeyti.h"
 #include "pcert.h"
@@ -637,16 +637,16 @@ EncodeDBCertEntry(certDBEntryCert *entry, PRArenaPool *arena, SECItem *dbitem)
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = ( entry->trust.sslFlags >> 8 ) & 0xff;
-    buf[1] = entry->trust.sslFlags & 0xff;
-    buf[2] = ( entry->trust.emailFlags >> 8 ) & 0xff;
-    buf[3] = entry->trust.emailFlags & 0xff;
-    buf[4] = ( entry->trust.objectSigningFlags >> 8 ) & 0xff;
-    buf[5] = entry->trust.objectSigningFlags & 0xff;
-    buf[6] = ( entry->derCert.len >> 8 ) & 0xff;
-    buf[7] = entry->derCert.len & 0xff;
-    buf[8] = ( nnlen >> 8 ) & 0xff;
-    buf[9] = nnlen & 0xff;
+    buf[0] = (PRUint8)( entry->trust.sslFlags >> 8 );
+    buf[1] = (PRUint8)( entry->trust.sslFlags      );
+    buf[2] = (PRUint8)( entry->trust.emailFlags >> 8 );
+    buf[3] = (PRUint8)( entry->trust.emailFlags      );
+    buf[4] = (PRUint8)( entry->trust.objectSigningFlags >> 8 );
+    buf[5] = (PRUint8)( entry->trust.objectSigningFlags      );
+    buf[6] = (PRUint8)( entry->derCert.len >> 8 );
+    buf[7] = (PRUint8)( entry->derCert.len      );
+    buf[8] = (PRUint8)( nnlen >> 8 );
+    buf[9] = (PRUint8)( nnlen      );
     
     PORT_Memcpy(&buf[DB_CERT_ENTRY_HEADER_LEN], entry->derCert.data,
 	      entry->derCert.len);
@@ -667,6 +667,8 @@ static SECStatus
 EncodeDBCertKey(const SECItem *certKey, PRArenaPool *arena, SECItem *dbkey)
 {
     unsigned int len = certKey->len + SEC_DB_KEY_HEADER_LEN;
+    if (len > NSS_MAX_LEGACY_DB_KEY_SIZE)
+	goto loser;
     if (arena) {
 	dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, len);
     } else {
@@ -706,12 +708,14 @@ EncodeDBGenericKey(const SECItem *certKey, PRArenaPool *arena, SECItem *dbkey,
     
 
     dbkey->len = certKey->len + SEC_DB_KEY_HEADER_LEN;
+    if (dbkey->len > NSS_MAX_LEGACY_DB_KEY_SIZE)
+	goto loser;
     dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, dbkey->len);
     if ( dbkey->data == NULL ) {
 	goto loser;
     }
     PORT_Memcpy(&dbkey->data[SEC_DB_KEY_HEADER_LEN],
-	      certKey->data, certKey->len);
+	       certKey->data, certKey->len);
     dbkey->data[0] = (unsigned char) entryType;
 
     return(SECSuccess);
@@ -1156,10 +1160,10 @@ EncodeDBCrlEntry(certDBEntryRevocation *entry, PRArenaPool *arena, SECItem *dbit
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = ( entry->derCrl.len >> 8 ) & 0xff;
-    buf[1] = entry->derCrl.len & 0xff;
-    buf[2] = ( nnlen >> 8 ) & 0xff;
-    buf[3] = nnlen & 0xff;
+    buf[0] = (PRUint8)( entry->derCrl.len >> 8 );
+    buf[1] = (PRUint8)( entry->derCrl.len      );
+    buf[2] = (PRUint8)( nnlen >> 8 );
+    buf[3] = (PRUint8)( nnlen      );
     
     PORT_Memcpy(&buf[DB_CRL_ENTRY_HEADER_LEN], entry->derCrl.data,
 	      entry->derCrl.len);
@@ -1452,7 +1456,6 @@ EncodeDBNicknameEntry(certDBEntryNickname *entry, PRArenaPool *arena,
      */
     dbitem->len = entry->subjectName.len + DB_NICKNAME_ENTRY_HEADER_LEN +
 	SEC_DB_ENTRY_HEADER_LEN;
-    
     dbitem->data = (unsigned char *)PORT_ArenaAlloc(arena, dbitem->len);
     if ( dbitem->data == NULL) {
 	goto loser;
@@ -1460,10 +1463,8 @@ EncodeDBNicknameEntry(certDBEntryNickname *entry, PRArenaPool *arena,
     
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
-    
-    buf[0] = ( entry->subjectName.len >> 8 ) & 0xff;
-    buf[1] = entry->subjectName.len & 0xff;
-    
+    buf[0] = (PRUint8)( entry->subjectName.len >> 8 );
+    buf[1] = (PRUint8)( entry->subjectName.len      );
     PORT_Memcpy(&buf[DB_NICKNAME_ENTRY_HEADER_LEN], entry->subjectName.data,
 	      entry->subjectName.len);
 
@@ -1486,6 +1487,8 @@ EncodeDBNicknameKey(char *nickname, PRArenaPool *arena,
 
     /* now get the database key and format it */
     dbkey->len = nnlen + SEC_DB_KEY_HEADER_LEN;
+    if (dbkey->len > NSS_MAX_LEGACY_DB_KEY_SIZE)
+	goto loser;
     dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, dbkey->len);
     if ( dbkey->data == NULL ) {
 	goto loser;
@@ -1777,12 +1780,12 @@ EncodeDBSMimeEntry(certDBEntrySMime *entry, PRArenaPool *arena,
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = ( entry->subjectName.len >> 8 ) & 0xff;
-    buf[1] = entry->subjectName.len & 0xff;
-    buf[2] = ( entry->smimeOptions.len >> 8 ) & 0xff;
-    buf[3] = entry->smimeOptions.len & 0xff;
-    buf[4] = ( entry->optionsDate.len >> 8 ) & 0xff;
-    buf[5] = entry->optionsDate.len & 0xff;
+    buf[0] = (PRUint8)( entry->subjectName.len >> 8 );
+    buf[1] = (PRUint8)( entry->subjectName.len      );
+    buf[2] = (PRUint8)( entry->smimeOptions.len >> 8 );
+    buf[3] = (PRUint8)( entry->smimeOptions.len      );
+    buf[4] = (PRUint8)( entry->optionsDate.len >> 8 );
+    buf[5] = (PRUint8)( entry->optionsDate.len      );
 
     /* if no smime options, then there should not be an options date either */
     PORT_Assert( ! ( ( entry->smimeOptions.len == 0 ) &&
@@ -1819,6 +1822,8 @@ EncodeDBSMimeKey(char *emailAddr, PRArenaPool *arena,
 
     /* now get the database key and format it */
     dbkey->len = addrlen + SEC_DB_KEY_HEADER_LEN;
+    if (dbkey->len > NSS_MAX_LEGACY_DB_KEY_SIZE)
+	goto loser;
     dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, dbkey->len);
     if ( dbkey->data == NULL ) {
 	goto loser;
@@ -2167,8 +2172,8 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     unsigned int nnlen = 0;
     unsigned int eaddrslen = 0;
     int keyidoff;
-    SECItem *certKeys;
-    SECItem *keyIDs;
+    SECItem *certKeys = entry->certKeys;
+    SECItem *keyIDs   = entry->keyIDs;;
     
     if ( entry->nickname ) {
 	nnlen = PORT_Strlen(entry->nickname) + 1;
@@ -2184,10 +2189,15 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     
     /* compute the length of the entry */
     keyidoff = DB_SUBJECT_ENTRY_HEADER_LEN + nnlen ;
-    len = keyidoff + 4 * ncerts + eaddrslen;
+    len = keyidoff + (4 * ncerts) + eaddrslen;
     for ( i = 0; i < ncerts; i++ ) {
-	len += entry->certKeys[i].len;
-	len += entry->keyIDs[i].len;
+	if (keyIDs[i].len   > 0xffff ||
+	   (certKeys[i].len > 0xffff)) {
+    	    PORT_SetError(SEC_ERROR_INPUT_LEN);
+	    goto loser;
+	}
+	len += certKeys[i].len;
+	len += keyIDs[i].len;
     }
     
     /* allocate space for encoded database record, including space
@@ -2204,50 +2214,44 @@ EncodeDBSubjectEntry(certDBEntrySubject *entry, PRArenaPool *arena,
     /* fill in database record */
     buf = &dbitem->data[SEC_DB_ENTRY_HEADER_LEN];
     
-    buf[0] = ( ncerts >> 8 ) & 0xff;
-    buf[1] = ncerts & 0xff;
-    buf[2] = ( nnlen >> 8 ) & 0xff;
-    buf[3] = nnlen & 0xff;
+    buf[0] = (PRUint8)( ncerts >> 8 );
+    buf[1] = (PRUint8)( ncerts      );
+    buf[2] = (PRUint8)( nnlen >> 8 );
+    buf[3] = (PRUint8)( nnlen      );
     /* v7 email field is NULL in v8 */
     buf[4] = 0;
     buf[5] = 0;
 
     PORT_Memcpy(&buf[DB_SUBJECT_ENTRY_HEADER_LEN], entry->nickname, nnlen);
-    
+    tmpbuf = &buf[keyidoff];   
     for ( i = 0; i < ncerts; i++ ) {
-
-	certKeys = entry->certKeys;
-	keyIDs = entry->keyIDs;
-
-	buf[keyidoff+i*2] = ( certKeys[i].len >> 8 ) & 0xff;
-	buf[keyidoff+1+i*2] = certKeys[i].len & 0xff;
-	buf[keyidoff+ncerts*2+i*2] = ( keyIDs[i].len >> 8 ) & 0xff;
-	buf[keyidoff+1+ncerts*2+i*2] = keyIDs[i].len & 0xff;
+	tmpbuf[0] = (PRUint8)( certKeys[i].len >> 8 );
+	tmpbuf[1] = (PRUint8)( certKeys[i].len      );
+	tmpbuf += 2;
+    }
+    for ( i = 0; i < ncerts; i++ ) {
+	tmpbuf[0] = (PRUint8)( keyIDs[i].len >> 8 );
+	tmpbuf[1] = (PRUint8)( keyIDs[i].len      );
+	tmpbuf += 2;
     }
     
-    /* temp pointer used to stuff certkeys and keyids into the buffer */
-    tmpbuf = &buf[keyidoff+ncerts*4];
-
     for ( i = 0; i < ncerts; i++ ) {
-	certKeys = entry->certKeys;
 	PORT_Memcpy(tmpbuf, certKeys[i].data, certKeys[i].len);
-	tmpbuf = tmpbuf + certKeys[i].len;
+	tmpbuf += certKeys[i].len;
     }
-    
     for ( i = 0; i < ncerts; i++ ) {
-	keyIDs = entry->keyIDs;
 	PORT_Memcpy(tmpbuf, keyIDs[i].data, keyIDs[i].len);
-	tmpbuf = tmpbuf + keyIDs[i].len;
+	tmpbuf += keyIDs[i].len;
     }
 
     if (entry->emailAddrs) {
-	tmpbuf[0] =  (entry->nemailAddrs >> 8) & 0xff;
-	tmpbuf[1] =  entry->nemailAddrs  & 0xff;
+	tmpbuf[0] = (PRUint8)( entry->nemailAddrs >> 8 );
+	tmpbuf[1] = (PRUint8)( entry->nemailAddrs      );
 	tmpbuf += 2;
 	for (i=0; i < entry->nemailAddrs; i++) {
 	    int nameLen = PORT_Strlen(entry->emailAddrs[i]) + 1;
-	    tmpbuf[0] =  (nameLen >> 8) & 0xff;
-	    tmpbuf[1] =  nameLen & 0xff;
+	    tmpbuf[0] = (PRUint8)( nameLen >> 8 );
+	    tmpbuf[1] = (PRUint8)( nameLen      );
 	    tmpbuf += 2;
 	    PORT_Memcpy(tmpbuf,entry->emailAddrs[i],nameLen);
 	    tmpbuf +=nameLen;
@@ -2270,6 +2274,8 @@ EncodeDBSubjectKey(SECItem *derSubject, PRArenaPool *arena,
 		   SECItem *dbkey)
 {
     dbkey->len = derSubject->len + SEC_DB_KEY_HEADER_LEN;
+    if (dbkey->len > NSS_MAX_LEGACY_DB_KEY_SIZE)
+	goto loser;
     dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, dbkey->len);
     if ( dbkey->data == NULL ) {
 	goto loser;
@@ -2288,18 +2294,17 @@ static SECStatus
 DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
 		     const SECItem *derSubject)
 {
-    unsigned int ncerts;
-    PRArenaPool *arena;
-    unsigned int len, itemlen;
+    PRArenaPool *arena     = entry->common.arena;
     unsigned char *tmpbuf;
     unsigned char *end;
+    void        *mark      = PORT_ArenaMark(arena);
+    unsigned int eaddrlen;
     unsigned int i;
-    SECStatus rv;
     unsigned int keyidoff;
-    unsigned int nnlen, eaddrlen;
-    unsigned int stdlen;
-    
-    arena = entry->common.arena;
+    unsigned int len;
+    unsigned int ncerts    = 0;
+    unsigned int nnlen;
+    SECStatus rv;
 
     rv = SECITEM_CopyItem(arena, &entry->derSubject, derSubject);
     if ( rv != SECSuccess ) {
@@ -2312,20 +2317,18 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
 	goto loser;
     }
     
-    entry->ncerts = ncerts = ( ( dbentry->data[0] << 8 ) | dbentry->data[1] );
-    nnlen = ( ( dbentry->data[2] << 8 ) | dbentry->data[3] );
-    eaddrlen = ( ( dbentry->data[4] << 8 ) | dbentry->data[5] );
-    stdlen = ncerts * 4 + DB_SUBJECT_ENTRY_HEADER_LEN + nnlen + eaddrlen;
-    if ( dbentry->len < stdlen) {
+    entry->ncerts = ncerts = (( dbentry->data[0] << 8 ) | dbentry->data[1] );
+    nnlen =                  (( dbentry->data[2] << 8 ) | dbentry->data[3] );
+    eaddrlen =               (( dbentry->data[4] << 8 ) | dbentry->data[5] );
+    keyidoff = DB_SUBJECT_ENTRY_HEADER_LEN + nnlen + eaddrlen;
+    len = keyidoff + (4 * ncerts);
+    if ( dbentry->len < len) {
 	PORT_SetError(SEC_ERROR_BAD_DATABASE);
 	goto loser;
     }
     
-    entry->certKeys = (SECItem *)PORT_ArenaAlloc(arena,
-						 sizeof(SECItem) * ncerts);
-    entry->keyIDs = (SECItem *)PORT_ArenaAlloc(arena,
-					       sizeof(SECItem) * ncerts);
-
+    entry->certKeys = PORT_ArenaNewArray(arena, SECItem, ncerts);
+    entry->keyIDs   = PORT_ArenaNewArray(arena, SECItem, ncerts);
     if ( ( entry->certKeys == NULL ) || ( entry->keyIDs == NULL ) ) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	goto loser;
@@ -2347,7 +2350,7 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     /* if we have an old style email entry, there is only one */    
     entry->nemailAddrs = 0;
     if ( eaddrlen > 1 ) { /* null terminator is stored */
-	entry->emailAddrs = (char **)PORT_ArenaAlloc(arena, sizeof(char *));
+	entry->emailAddrs = PORT_ArenaNewArray(arena, char *, 2);
 	if ( entry->emailAddrs == NULL ) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
@@ -2368,87 +2371,85 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     /* collect the lengths of the certKeys and keyIDs, and total the
      * overall length.
      */
-    keyidoff = DB_SUBJECT_ENTRY_HEADER_LEN + nnlen + eaddrlen;
-    len = keyidoff + 4 * ncerts;
-
-    tmpbuf = &dbentry->data[0];
-    
+    tmpbuf = &dbentry->data[keyidoff];
     for ( i = 0; i < ncerts; i++ ) {
-
-	itemlen = ( tmpbuf[keyidoff + 2*i] << 8 ) | tmpbuf[keyidoff + 1 + 2*i] ;
-	len += itemlen;
-	entry->certKeys[i].len = itemlen;
-
-	itemlen = ( tmpbuf[keyidoff + 2*ncerts + 2*i] << 8 ) |
-	    tmpbuf[keyidoff + 1 + 2*ncerts + 2*i] ;
-	len += itemlen;
-	entry->keyIDs[i].len = itemlen;
+        unsigned int itemlen = ( tmpbuf[0] << 8 ) | tmpbuf[1];
+        entry->certKeys[i].len = itemlen;
+        len += itemlen;
+        tmpbuf += 2;
     }
-    
-    /* is database entry correct length? */
+    for ( i = 0; i < ncerts; i++ ) {
+        unsigned int itemlen = ( tmpbuf[0] << 8 ) | tmpbuf[1] ;
+        entry->keyIDs[i].len = itemlen;
+        len += itemlen;
+        tmpbuf += 2;
+    }
+
+    /* is encoded entry large enough ? */
     if ( len > dbentry->len ){
 	PORT_SetError(SEC_ERROR_BAD_DATABASE);
 	goto loser;
     }
-    
-    tmpbuf = &tmpbuf[keyidoff + 4*ncerts];
+
     for ( i = 0; i < ncerts; i++ ) {
-	entry->certKeys[i].data =
-	    (unsigned char *)PORT_ArenaAlloc(arena, entry->certKeys[i].len);
+	unsigned int kLen = entry->certKeys[i].len;
+	entry->certKeys[i].data = (unsigned char *)PORT_ArenaAlloc(arena, kLen);
 	if ( entry->certKeys[i].data == NULL ) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
 	}
-	PORT_Memcpy(entry->certKeys[i].data, tmpbuf, entry->certKeys[i].len);
-	tmpbuf = &tmpbuf[entry->certKeys[i].len];
+	PORT_Memcpy(entry->certKeys[i].data, tmpbuf, kLen);
+	tmpbuf += kLen;
     }
-
     for ( i = 0; i < ncerts; i++ ) {
-	entry->keyIDs[i].data =
-	    (unsigned char *)PORT_ArenaAlloc(arena, entry->keyIDs[i].len);
+	unsigned int iLen = entry->keyIDs[i].len;
+	entry->keyIDs[i].data = (unsigned char *)PORT_ArenaAlloc(arena, iLen);
 	if ( entry->keyIDs[i].data == NULL ) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
 	}
-	PORT_Memcpy(entry->keyIDs[i].data, tmpbuf, entry->keyIDs[i].len);
-	tmpbuf = &tmpbuf[entry->keyIDs[i].len];
+	PORT_Memcpy(entry->keyIDs[i].data, tmpbuf, iLen);
+	tmpbuf += iLen;
     }
 
-    end = &dbentry->data[dbentry->len];
-    if ((eaddrlen == 0) && (tmpbuf+1 < end)) {
+    end = dbentry->data + dbentry->len;
+    if ((eaddrlen == 0) && (end - tmpbuf > 1)) {
 	/* read in the additional email addresses */
-	entry->nemailAddrs = tmpbuf[0] << 8 | tmpbuf[1];
+	entry->nemailAddrs = (((unsigned int)tmpbuf[0]) << 8) | tmpbuf[1];
 	tmpbuf += 2;
-	entry->emailAddrs = (char **)
-		PORT_ArenaAlloc(arena, entry->nemailAddrs * sizeof(char *));
+	if (end - tmpbuf < 2 * (int)entry->nemailAddrs)
+	    goto loser;
+	entry->emailAddrs = PORT_ArenaNewArray(arena, char *, entry->nemailAddrs);
 	if (entry->emailAddrs == NULL) {
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
 	}
 	for (i=0; i < entry->nemailAddrs; i++) {
 	    int nameLen;
-	    if (tmpbuf + 2 > end) {
+	    if (end - tmpbuf < 2) {
 		goto loser;
 	    }
-
-	    nameLen = tmpbuf[0] << 8 | tmpbuf[1];
+	    nameLen = (((int)tmpbuf[0]) << 8) | tmpbuf[1];
+	    tmpbuf += 2;
+	    if (end - tmpbuf < nameLen) {
+		goto loser;
+	    }
 	    entry->emailAddrs[i] = PORT_ArenaAlloc(arena,nameLen);
 	    if (entry->emailAddrs == NULL) {
 	        PORT_SetError(SEC_ERROR_NO_MEMORY);
 	        goto loser;
 	    }
-	    if (tmpbuf + (nameLen+2) > end) {
-		goto loser;
-	    }
-	    PORT_Memcpy(entry->emailAddrs[i],&tmpbuf[2],nameLen);
-	    tmpbuf += 2 + nameLen;
+	    PORT_Memcpy(entry->emailAddrs[i], tmpbuf, nameLen);
+	    tmpbuf += nameLen;
 	}
+	if (tmpbuf != end) 
+	    goto loser;
     }
-    
-    
+    PORT_ArenaUnmark(arena, mark);
     return(SECSuccess);
 
 loser:
+    PORT_ArenaRelease(arena, mark); /* discard above allocations */
     return(SECFailure);
 }
 

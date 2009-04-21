@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsslowhash.c,v 1.2 2008/11/27 15:20:44 wtc%google.com Exp $ */
+/* $Id: nsslowhash.c,v 1.3 2009/04/15 21:31:55 rrelyea%redhat.com Exp $ */
 
 #include "stubs.h"
 #include "prtypes.h"
@@ -267,6 +267,27 @@ struct NSSLOWHASHContextStr {
    
 };
 
+static int nsslow_GetFIPSEnabled(void) {
+#ifdef LINUX
+    FILE *f;
+    char d;
+    size_t size;
+
+    f = fopen("/proc/sys/crypto/fips_enabled", "r");
+    if (!f)
+        return 1;
+
+    size = fread(&d, 1, 1, f);
+    fclose(f);
+    if (size != 1)
+        return 0;
+    if (d != '1')
+        return 0;
+#endif
+    return 1;
+}
+
+
 static int post = 0;
 
 static NSSLOWInitContext dummyContext = { 0 };
@@ -283,7 +304,7 @@ NSSLOW_Init(void)
     nsprAvailable = (rv ==  SECSuccess ) ? PR_TRUE : PR_FALSE;
 	
 
-    if (!post) {
+    if (!post && nsslow_GetFIPSEnabled()) {
 	crv = freebl_fipsPowerUpSelfTest();
 	if (crv != CKR_OK) {
 	    return NULL;

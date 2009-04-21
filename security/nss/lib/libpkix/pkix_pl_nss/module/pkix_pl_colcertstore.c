@@ -910,7 +910,6 @@ pkix_pl_CollectionCertStoreContext_GetSelectedCert(
         PKIX_List *selectCertList = NULL;
         PKIX_PL_Cert *certItem = NULL;
         PKIX_CertSelector_MatchCallback certSelectorMatch = NULL;
-        PKIX_Boolean pass = PKIX_TRUE;
         PKIX_UInt32 numCerts = 0;
         PKIX_UInt32 i = 0;
 
@@ -942,10 +941,10 @@ pkix_pl_CollectionCertStoreContext_GetSelectedCert(
                         if (!PKIX_ERROR_RECEIVED){
                                 PKIX_CHECK_ONLY_FATAL
                                         (certSelectorMatch
-                                        (selector, certItem, &pass, plContext),
+                                        (selector, certItem, plContext),
                                         PKIX_CERTSELECTORMATCHFAILED);
 
-                                if (!PKIX_ERROR_RECEIVED && pass){
+                                if (!PKIX_ERROR_RECEIVED){
                                         PKIX_CHECK_ONLY_FATAL
                                                 (PKIX_List_AppendItem
                                                 (selectCertList,
@@ -1098,6 +1097,7 @@ PKIX_Error *
 pkix_pl_CollectionCertStore_GetCert(
         PKIX_CertStore *certStore,
         PKIX_CertSelector *selector,
+        PKIX_VerifyNode *verifyNode,
         void **pNBIOContext,
         PKIX_List **pCerts,
         void *plContext)

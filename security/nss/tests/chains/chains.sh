@@ -71,7 +71,7 @@ chains_init()
 
     CHAINS_SCENARIOS="${QADIR}/chains/scenarios/scenarios"
 
-    CERT_SN_CNT=$(date '+%m%d%H%M%S')
+    CERT_SN_CNT=$(date '+%m%d%H%M%S' | sed "s/^0*//")
     CERT_SN_FIX=$(expr ${CERT_SN_CNT} - 1000)
 
     PK7_NONCE=$CERT_SN_CNT;

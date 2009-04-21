@@ -299,6 +299,7 @@ PKIX_Error *
 PKIX_CertStore_CertContinue(
         PKIX_CertStore *store,
         PKIX_CertSelector *selector,
+        PKIX_VerifyNode *verifyNode,
         void **pNBIOContext,
         PKIX_List **pCertList,
         void *plContext)
@@ -307,7 +308,8 @@ PKIX_CertStore_CertContinue(
         PKIX_NULLCHECK_FOUR(store, selector, pNBIOContext, pCertList);
 
         PKIX_CHECK(store->certContinue
-                (store, selector, pNBIOContext, pCertList, plContext),
+                   (store, selector, verifyNode,
+                    pNBIOContext, pCertList, plContext),
                 PKIX_CERTSTORECERTCONTINUEFUNCTIONFAILED);
 
 cleanup:

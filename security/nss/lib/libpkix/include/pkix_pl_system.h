@@ -1462,20 +1462,11 @@ PKIX_PL_ByteArray_GetLength(
  * FUNCTION: PKIX_PL_OID_Create
  * DESCRIPTION:
  *
- *  Creates a new OID using the string pointed to by "stringRep" and stores it
- *  at "pOID". The string representation is a null-terminated char * consisting
- *  of decimal components separated by dots. All other characters are illegal.
- *  The first field must be be 0, 1 or 2. If the first field is 0 or 1, the
- *  second field must be between 0 and 39. All fields must be ASCII decimal
- *  digits less than or equal to 2^32. Once created, an OID is immutable.
- *
- *  The regexp format is as follows:
- *   OID := [0,1,2](.NUM)+
- *   NUM := [0-9]+
+ *  Creates a new OID using NSS oid tag.
  *
  * PARAMETERS:
- *  "stringRep"
- *      Address of character data representing an OID. Must be non-NULL.
+ *  "idtag"
+ *      nss oid id tag.
  *  "pOID"
  *      Address where object pointer will be stored. Must be non-NULL.
  *  "plContext"
@@ -1489,7 +1480,33 @@ PKIX_PL_ByteArray_GetLength(
  */
 PKIX_Error *
 PKIX_PL_OID_Create(
-        char *stringRep,
+        SECOidTag idtag,
+        PKIX_PL_OID **pOID,
+        void *plContext);
+
+/*
+ * FUNCTION: PKIX_PL_OID_CreateBySECItem
+ * DESCRIPTION:
+ *
+ *  Creates a new OID using a DER encoded OID stored as SECItem.
+ *
+ * PARAMETERS:
+ *  "derOid"
+ *      Address of SECItem that holds DER encoded OID.
+ *  "pOID"
+ *      Address where object pointer will be stored. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns an OID Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_PL_OID_CreateBySECItem(
+        SECItem *derOid,
         PKIX_PL_OID **pOID,
         void *plContext);
 
