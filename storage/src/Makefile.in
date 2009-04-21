@@ -73,7 +73,7 @@ CPPSRCS = \
   mozStorageRow.cpp \
   mozStorageResultSet.cpp \
   mozStorageError.cpp \
-  mozStorageEvents.cpp \
+  mozStorageAsyncStatementExecution.cpp \
   mozStorageStatementJSHelper.cpp \
   mozStoragePrivateHelpers.cpp \
   mozStorageVariant.cpp \
