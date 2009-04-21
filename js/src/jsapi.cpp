@@ -953,6 +953,8 @@ JS_EndRequest(JSContext *cx)
     JS_ASSERT(cx->requestDepth > 0);
     JS_ASSERT(cx->outstandingRequests > 0);
     if (cx->requestDepth == 1) {
+        js_LeaveTrace(cx);  /* for GC safety */
+
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
         rt = cx->runtime;
         JS_LOCK_GC(rt);
@@ -2985,8 +2987,8 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
 {
     if (flags != 0 && OBJ_IS_NATIVE(obj)) {
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
-        return js_DefineNativeProperty(cx, obj, id, value, getter, setter,
-                                       attrs, flags, tinyid, NULL);
+        return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
+                                         attrs, flags, tinyid, NULL);
     }
     return OBJ_DEFINE_PROPERTY(cx, obj, id, value, getter, setter, attrs,
                                NULL);   
@@ -3029,9 +3031,9 @@ DefineUCProperty(JSContext *cx, JSObject *obj,
         return JS_FALSE;
     if (flags != 0 && OBJ_IS_NATIVE(obj)) {
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
-        return js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), value,
-                                       getter, setter, attrs, flags, tinyid,
-                                       NULL);
+        return !!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), value,
+                                         getter, setter, attrs, flags, tinyid,
+                                         NULL);
     }
     return OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), value,
                                getter, setter, attrs, NULL);
@@ -3127,6 +3129,7 @@ LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp, JSProperty **propp)
 {
     JSAutoResolveFlags rf(cx, flags);
+    CHECK_FOR_STRING_INDEX(id);
     return OBJ_LOOKUP_PROPERTY(cx, obj, id, objp, propp);
 }
 
@@ -3547,7 +3550,7 @@ JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
     CHECK_REQUEST(cx);
-    if (!js_GetMethod(cx, obj, id, vp, NULL))
+    if (!js_GetMethod(cx, obj, id, false, vp))
         return JS_FALSE;
     if (objp)
         *objp = obj;
