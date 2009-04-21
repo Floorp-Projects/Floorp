@@ -75,6 +75,7 @@ _TEST_FILES = \
 		test_bug468167.html \
 		test_bug469613.xul \
 		test_bug470212.html \
+		test_bug488417.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \
 		test_plugin_clipping.xhtml \
