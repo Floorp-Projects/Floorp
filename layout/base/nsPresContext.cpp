@@ -90,6 +90,8 @@
 #include "nsFontFaceLoader.h"
 #include "nsIEventListenerManager.h"
 #include "nsStyleStructInlines.h"
+#include "nsIAppShell.h"
+#include "prenv.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -2026,4 +2028,126 @@ PRBool
 nsPresContext::HasCachedStyleData()
 {
   return mShell && mShell->StyleSet()->HasCachedStyleData();
+}
+
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+static PRBool sGotInterruptEnv = PR_FALSE;
+static PRUint32 sInterruptSeed = 1;
+static PRUint32 sInterruptChecksToSkip = 200;
+enum InterruptMode {
+  ModeRandom,
+  ModeCounter,
+  ModeEvent
+};
+static InterruptMode sInterruptMode = ModeEvent;
+static PRUint32 sInterruptCounter;
+static PRUint32 sInterruptMaxCounter = 10;
+
+static void GetInterruptEnv()
+{
+  char *ev = PR_GetEnv("GECKO_REFLOW_INTERRUPT_MODE");
+  if (ev) {
+#ifndef XP_WIN
+    if (PL_strcasecmp(ev, "random") == 0) {
+      ev = PR_GetEnv("GECKO_REFLOW_INTERRUPT_SEED");
+      if (ev) {
+        sInterruptSeed = atoi(ev);
+      }
+      srandom(sInterruptSeed);
+      sInterruptMode = ModeRandom;
+    } else
+#endif
+      if (PL_strcasecmp(ev, "counter") == 0) {
+      ev = PR_GetEnv("GECKO_REFLOW_INTERRUPT_FREQUENCY");
+      if (ev) {
+        sInterruptMaxCounter = atoi(ev);
+      }
+      sInterruptCounter = 0;
+      sInterruptMode = ModeCounter;
+    }
+  }
+  ev = PR_GetEnv("GECKO_REFLOW_INTERRUPT_CHECKS_TO_SKIP");
+  if (ev) {
+    sInterruptChecksToSkip = atoi(ev);
+  }
+}
+
+PRBool
+nsPresContext::HavePendingInputEvent()
+{
+  switch (sInterruptMode) {
+#ifndef XP_WIN
+    case ModeRandom:
+      return (random() & 1);
+#endif
+    case ModeCounter:
+      if (sInterruptCounter < sInterruptMaxCounter) {
+        ++sInterruptCounter;
+        return PR_FALSE;
+      }
+      sInterruptCounter = 0;
+      return PR_TRUE;
+    default:
+    case ModeEvent: {
+      nsIFrame* f = PresShell()->GetRootFrame();
+      if (f) {
+        nsIWidget* w = f->GetWindow();
+        if (w) {
+          return w->HasPendingInputEvent();
+        }
+      }
+      return PR_FALSE;
+    }
+  }
+}
+
+void
+nsPresContext::ReflowStarted(PRBool aInterruptible)
+{
+  // We don't support interrupting in paginated contexts, since page
+  // sequences only handle initial reflow
+  mInterruptsEnabled = aInterruptible && !IsPaginated();
+
+  // Don't set mHasPendingInterrupt based on HavePendingInputEvent() here.  If
+  // we ever change that, then we need to update the code in
+  // PresShell::DoReflow to only add the just-reflown root to dirty roots if
+  // it's actually dirty.  Otherwise we can end up adding a root that has no
+  // interruptible descendants, just because we detected an interrupt at reflow
+  // start.
+  mHasPendingInterrupt = PR_FALSE;
+
+  mInterruptChecksToSkip = sInterruptChecksToSkip;
+}
+
+PRBool
+nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
+{
+  if (mHasPendingInterrupt) {
+    mShell->FrameNeedsToContinueReflow(aFrame);
+    return PR_TRUE;
+  }
+
+  if (!sGotInterruptEnv) {
+    sGotInterruptEnv = PR_TRUE;
+    GetInterruptEnv();
+  }
+
+  if (!mInterruptsEnabled) {
+    return PR_FALSE;
+  }
+
+  if (mInterruptChecksToSkip > 0) {
+    --mInterruptChecksToSkip;
+    return PR_FALSE;
+  }
+  mInterruptChecksToSkip = sInterruptChecksToSkip;
+
+  mHasPendingInterrupt = HavePendingInputEvent();
+  if (mHasPendingInterrupt) {
+#ifdef NOISY_INTERRUPTIBLE_REFLOW
+    printf("*** DETECTED pending interrupt (time=%lld)\n", PR_Now());
+#endif /* NOISY_INTERRUPTIBLE_REFLOW */
+    mShell->FrameNeedsToContinueReflow(aFrame);
+  }
+  return mHasPendingInterrupt;
 }

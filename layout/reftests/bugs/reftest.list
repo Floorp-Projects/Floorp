@@ -66,6 +66,8 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 50630-4.html 50630-4-ref.html
 == 50630-4.html 50630-4-ref2.html
 == 50630-5.html 50630-5-ref.html
+== 67752-1.html 67752-1-ref.html
+== 67752-2.html 67752-2-ref.html
 == 68061-1.xml 68061-1-ref.xml
 == 68061-2.xml 68061-2-ref.xml
 == 76331-1.html 76331-1-ref.html
