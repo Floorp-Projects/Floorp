@@ -128,8 +128,9 @@ nsAppStartup::Init()
 // nsAppStartup->nsISupports
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsAppStartup,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsAppStartup,
                               nsIAppStartup,
+                              nsIAppStartup2,
                               nsIWindowCreator,
                               nsIWindowCreator2,
                               nsIObserver,
@@ -420,6 +421,17 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
     Quit(eConsiderQuit);
 #endif
 
+  return NS_OK;
+}
+
+//
+// nsAppStartup->nsIAppStartup2
+//
+
+NS_IMETHODIMP
+nsAppStartup::GetShuttingDown(PRBool *aResult)
+{
+  *aResult = mShuttingDown;
   return NS_OK;
 }
 
