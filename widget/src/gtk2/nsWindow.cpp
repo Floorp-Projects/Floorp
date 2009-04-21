@@ -54,7 +54,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsWidgetsCID.h"
-#include "nsIDragService.h"
+#include "nsDragService.h"
 #include "nsIDragSessionGTK.h"
 
 #include "nsGtkKeyUtils.h"
@@ -3492,6 +3492,13 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
+    gint x, y;
+    GdkDisplay* display = gdk_display_get_default();
+    if (display) {
+      // get the current cursor position
+      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
+      ((nsDragService *)dragService.get())->SetDragEndPoint(nsIntPoint(x, y));
+    }
     dragService->EndDragSession(PR_TRUE);
 
     return TRUE;
