@@ -1209,6 +1209,5 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 486052-2g.html 486052-2-ref.html
 == 486848-1.xul 486848-1-ref.xul
 == 487539-1.html about:blank
-
 == 488390-1.html 488390-1-ref.html
 == 488685-1.html 488685-1-ref.html
