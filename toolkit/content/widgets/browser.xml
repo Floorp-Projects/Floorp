@@ -702,6 +702,9 @@
           
           this._fastFind = null;
           this._webBrowserFind = null;
+          
+          // The feeds cache can keep the document inside this browser alive.
+          this.feeds = null;
 
           this.removeEventListener("pageshow", this.onPageShow, true);
           this.removeEventListener("pagehide", this.onPageHide, true);
