@@ -8926,7 +8926,7 @@ JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BINDNAME()
 {
     JSStackFrame *fp = cx->fp;
-    JSObject *scope;
+    JSObject *obj;
 
     if (fp->fun) {
         // We can't trace BINDNAME in functions that contain direct
@@ -8937,25 +8937,25 @@ TraceRecorder::record_JSOP_BINDNAME()
 
         // In non-heavyweight functions, we can safely skip the call
         // object, if any.
-        scope = OBJ_GET_PARENT(cx, FUN_OBJECT(fp->fun));
+        obj = OBJ_GET_PARENT(cx, fp->callee);
     } else {
-        scope = fp->scopeChain;
+        obj = fp->scopeChain;
 
         // In global code, fp->scopeChain can only contain blocks
         // whose values are still on the stack.  We never use BINDNAME
         // to refer to these.
-        while (OBJ_GET_CLASS(cx, scope) == &js_BlockClass) {
+        while (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
             // The block's values are still on the stack.
-            JS_ASSERT(OBJ_GET_PRIVATE(cx, scope) == fp);
+            JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == fp);
 
-            scope = OBJ_GET_PARENT(cx, scope);
+            obj = OBJ_GET_PARENT(cx, obj);
 
             // Blocks always have parents.
-            JS_ASSERT(scope);
+            JS_ASSERT(obj);
         }
     }
 
-    if (scope != globalObj)
+    if (obj != globalObj)
         ABORT_TRACE("JSOP_BINDNAME must return global object on trace");
 
     // The trace is specialized to this global object.  Furthermore,
