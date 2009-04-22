@@ -29,4 +29,4 @@ include apng/reftest.list
 include generic/reftest.list
 
 # Color management test
-include color-management/reftest.list
+# include color-management/reftest.list
