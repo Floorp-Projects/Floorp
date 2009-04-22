@@ -81,8 +81,12 @@ var HandlerServiceTest = {
   init: function HandlerServiceTest_init() {
     // Register ourselves as a directory provider for the datasource file
     // if there isn't one registered already.
-    try        { this._dirSvc.get("UMimTyp", Ci.nsIFile) }
-    catch (ex) { this._dirSvc.registerProvider(this) }
+    try {
+      this._dirSvc.get("UMimTyp", Ci.nsIFile);
+    } catch (ex) {
+      this._dirSvc.registerProvider(this);
+      this._providerRegistered = true;
+    }
 
     // Delete the existing datasource file, if any, so we start from scratch.
     // We also do this after finishing the tests, so there shouldn't be an old
@@ -99,6 +103,9 @@ var HandlerServiceTest = {
     // Delete the existing datasource file, if any, so we don't leave test files
     // lying around and we start from scratch the next time.
     this._deleteDatasourceFile();
+    // Unregister the directory service provider
+    if (this._providerRegistered)
+      this._dirSvc.unregisterProvider(this);
   },
 
 
