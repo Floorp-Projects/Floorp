@@ -668,10 +668,6 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 
-  if (!moreEvents) {
-    nsChildView::UpdateCurrentInputEventCount();
-  }
-
   return moreEvents;
 }
 

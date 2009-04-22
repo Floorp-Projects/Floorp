@@ -1926,7 +1926,7 @@ nsGfxScrollFrameInner::AsyncScrollPortEvent::Run()
 {
   if (mInner) {
     mInner->mOuter->PresContext()->GetPresShell()->
-      FlushPendingNotifications(Flush_InterruptibleLayout);
+      FlushPendingNotifications(Flush_Layout);
   }
   return mInner ? mInner->FireScrollPortEvent() : NS_OK;
 }
