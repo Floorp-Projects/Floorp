@@ -219,7 +219,8 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              nsISupports* aTargetNode,
                              nsIAtom* aContextLocalName,
-                             PRInt32 aContextNamespace);
+                             PRInt32 aContextNamespace,
+                             PRBool aQuirks);
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

@@ -90,6 +90,8 @@ class nsHtml5TreeBuilder
   protected:
     jArray<PRUnichar,PRInt32> charBuffer;
     PRInt32 charBufferLen;
+  private:
+    PRBool quirks;
   public:
     void startTokenization(nsHtml5Tokenizer* self);
     void doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, PRBool forceQuirks);
@@ -148,6 +150,7 @@ class nsHtml5TreeBuilder
     PRInt32 findLastOrRoot(nsIAtom* name);
     PRInt32 findLastOrRoot(PRInt32 group);
     void addAttributesToBody(nsHtml5HtmlAttributes* attributes);
+    void addAttributesToHtml(nsHtml5HtmlAttributes* attributes);
     void pushHeadPointerOntoStack();
     void reconstructTheActiveFormattingElements();
     void insertIntoFosterParent(nsIContent* child);
@@ -193,7 +196,7 @@ class nsHtml5TreeBuilder
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent* node);
     void elementPopped(PRInt32 ns, nsIAtom* name, nsIContent* node);
   public:
-    void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent* node);
+    void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent* node, PRBool quirks);
   protected:
     nsIContent* currentNode();
   public:
