@@ -565,18 +565,18 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
     if (!jp)
         return JS_TRUE;
 
-    JSBool oom = JS_FALSE;
+    JSBool early_ok = JS_TRUE;
 
     // Check for unprocessed primitives at the root. This doesn't happen for
     // strings because a closing quote triggers value processing.
     if ((jp->statep - jp->stateStack) == 1) {
         if (*jp->statep == JSON_PARSE_STATE_KEYWORD) {
-            oom = HandleData(cx, jp, JSON_DATA_KEYWORD);
-            if (!oom)
+            early_ok = HandleData(cx, jp, JSON_DATA_KEYWORD);
+            if (!early_ok)
                 PopState(cx, jp);
         } else if (*jp->statep == JSON_PARSE_STATE_NUMBER) {
-            oom = HandleData(cx, jp, JSON_DATA_NUMBER);
-            if (!oom)
+            early_ok = HandleData(cx, jp, JSON_DATA_NUMBER);
+            if (!early_ok)
                 PopState(cx, jp);
         }
     }
@@ -591,7 +591,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
     jsval *vp = jp->rootVal;
     JS_free(cx, jp);
 
-    if (oom)
+    if (!early_ok)
         return JS_FALSE;
 
     if (!ok) {
