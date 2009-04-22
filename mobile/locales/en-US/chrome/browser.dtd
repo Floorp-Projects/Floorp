@@ -49,6 +49,20 @@
 <!ENTITY findAgainCmd.commandkey "g">
 <!ENTITY findAgainCmd.commandkey2 "VK_F3">
 
+<!ENTITY addonsHeader.label        "Add-ons">
+<!ENTITY addonsLocal.label         "Your Add-ons">
+<!ENTITY addonsRepo.label          "Get Add-ons">
+<!ENTITY addonsRecommended.label   "See Recommended">
+<!ENTITY addonsSearch.label        "Search Catalog">
+<!ENTITY addonsSearch.emptytext    "Search for an add-ons">
+
+<!ENTITY addonOptions.label        "Options">
+<!ENTITY addonEnable.label         "Enable">
+<!ENTITY addonDisable.label        "Disable">
+<!ENTITY addonInstall.label        "Install">
+<!ENTITY addonUninstall.label      "Uninstall">
+<!ENTITY addonCancel.label         "Cancel">
+
 <!ENTITY identity.unverifiedsite2 "This web site does not supply identity information.">
 <!ENTITY identity.connectedTo "You are connected to">
 <!-- Localization note (identity.runBy) : This string appears between a

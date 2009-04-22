@@ -53,6 +53,7 @@ EXTRA_COMPONENTS = \
 	aboutFirstrun.js \
 	geolocationPrompt.js \
 	alertsService.js \
+	xpiDialogService.js \
 	$(NULL)
 
 DIRS = protocols \

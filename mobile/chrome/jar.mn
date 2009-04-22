@@ -10,15 +10,16 @@ browser.jar:
   content/tabs.xml                     (content/tabs.xml)
   content/checkbox.xml                 (content/checkbox.xml)
   content/notification.xml             (content/notification.xml)
+  content/bindings/extensions.xml      (content/bindings/extensions.xml)
   content/browser.css                  (content/browser.css)
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
   content/checkerboard.png             (content/checkerboard.png)
 % content branding %content/branding/
-% style chrome://mozapps/content/extensions/extensions.xul chrome://browser/skin/extensions.css
   content/preferences/richpref.xml     (content/preferences/richpref.xml)
 * content/sanitize.xul                 (content/sanitize.xul)
 * content/sanitize.js                  (content/sanitize.js)
   content/WidgetStack.js               (content/WidgetStack.js)
   content/CanvasBrowser.js             (content/CanvasBrowser.js)
   content/InputHandler.js              (content/InputHandler.js)
+  content/extensions.js                (content/extensions.js)

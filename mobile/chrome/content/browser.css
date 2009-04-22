@@ -66,3 +66,87 @@ placelabel {
 checkbox {
   -moz-binding: url("chrome://browser/content/checkbox.xml#checkbox-radio");
 }
+
+richlistitem[typeName="local"] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-local");
+}
+
+richlistitem[typeName="search"] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search");
+}
+
+richlistitem[typeName="message"] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-message");
+}
+
+/* richlist defaults ------------------------------------------------------- */
+richlistitem {
+  padding: 5px;
+  border-bottom: 1px solid rgb(207,207,207);
+}
+
+richlistitem label.title,
+richlistitem description.title {
+  font-size: 80% !important;
+}
+
+richlistitem label.normal,
+richlistitem description.normal {
+  color: gray;
+  font-size: 60% !important;
+  white-space: pre-wrap;
+}
+
+richlistitem[selected="true"] {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+richlistitem .show-on-select {
+  visibility: collapse;
+}
+
+richlistitem[selected="true"] .show-on-select {
+  visibility: visible;
+}
+
+richlistitem .hide-on-select {
+  visibility: visible;
+}
+
+richlistitem[selected="true"] .hide-on-select {
+  visibility: collapse;
+}
+
+richlistitem.section-header,
+richlistitem[selected="true"].section-header {
+  font-weight: bold;
+  color: #000;
+  background-color: lightgray;
+}
+
+/* addons states ----------------------------------------------------------- */
+.hide-on-enable,
+.show-on-uninstall,
+.show-on-install,
+.show-on-restart,
+richlistitem[isDisabled="true"] .hide-on-disable {
+  display: none;
+}
+
+richlistitem[opType="needs-restart"] .show-on-restart,
+richlistitem[opType="needs-uninstall"] .show-on-uninstall,
+richlistitem[opType="needs-install"] .show-on-install,
+richlistitem[opType="needs-enable"] .show-on-enable,
+richlistitem[opType="needs-disable"] .show-on-disable,
+richlistitem[isDisabled="true"] .show-on-disable {
+  display: -moz-box;
+}
+
+richlistitem[opType="needs-restart"] .hide-on-restart,
+richlistitem[opType="needs-uninstall"] .hide-on-uninstall,
+richlistitem[opType="needs-install"] .hide-on-install,
+richlistitem[opType="needs-enable"] .hide-on-enable,
+richlistitem[opType="needs-disable"] .hide-on-disable {
+  display: none;
+}

@@ -10,7 +10,6 @@ classic.jar:
 % skin browser classic/1.0 %
   platform.css                         (platform.css)
   browser.css                          (browser.css)
-  extensions.css                       (extensions.css)
   notification.css                     (notification.css)
   images/tab_close.png                 (images/tab_close.png)
   images/default-favicon.png           (images/default-favicon.png)

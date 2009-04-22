@@ -454,9 +454,7 @@ var BrowserUI = {
     panelUI.width = container.boxObject.width;
     panelUI.height = container.boxObject.height;
 
-    let addons = document.getElementById("addons-container");
-    if (!addons.hasAttribute("src"))
-      addons.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
+    ExtensionsView.init();
     let dloads = document.getElementById("downloads-container");
     if (!dloads.hasAttribute("src"))
       dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
