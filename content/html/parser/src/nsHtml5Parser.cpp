@@ -453,11 +453,12 @@ NS_IMETHODIMP
 nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
                              nsISupports* aTargetNode,
                              nsIAtom* aContextLocalName,
-                             PRInt32 aContextNamespace)
+                             PRInt32 aContextNamespace,
+                             PRBool aQuirks)
 {
   nsCOMPtr<nsIContent> target = do_QueryInterface(aTargetNode);
   NS_ASSERTION(target, "Target did not QI to nsIContent");
-  mTreeBuilder->setFragmentContext(aContextLocalName, aContextNamespace, target);
+  mTreeBuilder->setFragmentContext(aContextLocalName, aContextNamespace, target, aQuirks);
   mFragmentMode = PR_TRUE;
   mCanInterruptParser = PR_FALSE;
   NS_ASSERTION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");

@@ -262,7 +262,8 @@ class nsIParser : public nsISupports {
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              nsISupports* aTargetNode,
                              nsIAtom* aContextLocalName,
-                             PRInt32 aContextNamespace) = 0;
+                             PRInt32 aContextNamespace,
+                             PRBool aQuirks) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

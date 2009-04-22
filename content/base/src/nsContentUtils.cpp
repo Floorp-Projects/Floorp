@@ -3585,7 +3585,11 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
     nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
     NS_ASSERTION(contextAsContent, "Context node did not QI to nsIContent");
     
-    parser->ParseFragment(aFragment, frag, contextAsContent->Tag(), contextAsContent->GetNameSpaceID());
+    parser->ParseFragment(aFragment, 
+                          frag, 
+                          contextAsContent->Tag(), 
+                          contextAsContent->GetNameSpaceID(), 
+                          (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
   
     NS_ADDREF(*aReturn = frag);
     return NS_OK;

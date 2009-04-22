@@ -873,7 +873,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               switch(group) {
                 case NS_HTML5TREE_BUILDER_HTML: {
 
-                  addAttributesToElement(stack[0]->node, attributes);
+                  addAttributesToHtml(attributes);
                   goto starttagloop_end;
                 }
                 case NS_HTML5TREE_BUILDER_BASE:
@@ -1031,10 +1031,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   goto starttagloop_end;
                 }
                 case NS_HTML5TREE_BUILDER_TABLE: {
-                  PRInt32 rememberPos = currentPtr;
-                  implicitlyCloseP();
-                  if (rememberPos != currentPtr) {
-
+                  if (!quirks) {
+                    implicitlyCloseP();
                   }
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   mode = NS_HTML5TREE_BUILDER_IN_TABLE;
@@ -1252,7 +1250,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               switch(group) {
                 case NS_HTML5TREE_BUILDER_HTML: {
 
-                  addAttributesToElement(stack[0]->node, attributes);
+                  addAttributesToHtml(attributes);
                   goto starttagloop_end;
                 }
                 case NS_HTML5TREE_BUILDER_BASE:
@@ -1310,7 +1308,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               case NS_HTML5TREE_BUILDER_LINK: {
@@ -1352,7 +1350,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               case NS_HTML5TREE_BUILDER_COL: {
@@ -1391,7 +1389,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               case NS_HTML5TREE_BUILDER_OPTION: {
@@ -1449,7 +1447,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               default: {
@@ -1478,7 +1476,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               case NS_HTML5TREE_BUILDER_NOFRAMES: {
@@ -1521,7 +1519,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               case NS_HTML5TREE_BUILDER_HEAD: {
@@ -1540,7 +1538,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               case NS_HTML5TREE_BUILDER_BODY: {
@@ -1625,7 +1623,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             switch(group) {
               case NS_HTML5TREE_BUILDER_HTML: {
 
-                addAttributesToElement(stack[0]->node, attributes);
+                addAttributesToHtml(attributes);
                 goto starttagloop_end;
               }
               default: {
@@ -2682,6 +2680,7 @@ nsHtml5TreeBuilder::isSecondOnStackBody()
 void 
 nsHtml5TreeBuilder::documentModeInternal(nsHtml5DocumentMode m, nsString* publicIdentifier, nsString* systemIdentifier, PRBool html4SpecificAdditionalErrorChecks)
 {
+  quirks = (m == QUIRKS_MODE);
   if (!!documentModeHandler) {
     documentModeHandler->documentMode(m);
   }
@@ -3167,6 +3166,12 @@ nsHtml5TreeBuilder::addAttributesToBody(nsHtml5HtmlAttributes* attributes)
 }
 
 void 
+nsHtml5TreeBuilder::addAttributesToHtml(nsHtml5HtmlAttributes* attributes)
+{
+  addAttributesToElement(stack[0]->node, attributes);
+}
+
+void 
 nsHtml5TreeBuilder::pushHeadPointerOntoStack()
 {
   flushCharacters();
@@ -3504,7 +3509,7 @@ nsHtml5TreeBuilder::requestSuspension()
 }
 
 void 
-nsHtml5TreeBuilder::setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent* node)
+nsHtml5TreeBuilder::setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent* node, PRBool quirks)
 {
   this->contextName = context;
   nsHtml5Portability::retainLocal(context);
@@ -3512,6 +3517,7 @@ nsHtml5TreeBuilder::setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent*
   this->contextNode = node;
   nsHtml5Portability::retainElement(node);
   this->fragment = (!!contextName);
+  this->quirks = quirks;
 }
 
 nsIContent* 
