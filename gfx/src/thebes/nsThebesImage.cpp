@@ -244,6 +244,12 @@ nsThebesImage::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsIntRec
         return NS_ERROR_OUT_OF_MEMORY;
 
     mDecoded.UnionRect(mDecoded, *aUpdateRect);
+
+    // clamp to bounds, in case someone sends a bogus
+    // updateRect (I'm looking at you, gif decoder)
+    nsIntRect boundsRect(0, 0, mWidth, mHeight);
+    mDecoded.IntersectRect(mDecoded, boundsRect);
+
 #ifdef XP_MACOSX
     if (mQuartzSurface)
         mQuartzSurface->Flush();
