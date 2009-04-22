@@ -176,6 +176,39 @@ js_InitStringBuffer(JSStringBuffer *sb);
 extern void
 js_FinishStringBuffer(JSStringBuffer *sb);
 
+static inline void
+js_RewindStringBuffer(JSStringBuffer *sb)
+{
+    JS_ASSERT(STRING_BUFFER_OK(sb));
+    sb->ptr = sb->base;
+}
+
+#define ENSURE_STRING_BUFFER(sb,n) \
+    ((sb)->ptr + (n) <= (sb)->limit || sb->grow(sb, n))
+
+/*
+ * NB: callers are obligated to test STRING_BUFFER_OK(sb) after this returns,
+ * before calling it again -- but not necessarily before calling other sb ops
+ * declared in this header file.
+ *
+ * Thus multiple calls, to ops other than this one that check STRING_BUFFER_OK
+ * and suppress updating sb if true, can consolidate the final STRING_BUFFER_OK
+ * test that conditions a JS_ReportOutOfMemory (if necessary -- the grow hook
+ * can report OOM early, obviating the need for the callers to report).
+ *
+ * This style of error checking is not obviously better, and it could be worse
+ * in efficiency, than the propagated failure return code style used elsewhere
+ * in the engine. I view it as a failed experiment. /be
+ */
+static inline void
+js_FastAppendChar(JSStringBuffer *sb, jschar c)
+{
+    JS_ASSERT(STRING_BUFFER_OK(sb));
+    if (!ENSURE_STRING_BUFFER(sb, 1))
+        return;
+    *sb->ptr++ = c;
+}
+
 extern void
 js_AppendChar(JSStringBuffer *sb, jschar c);
 

@@ -295,18 +295,23 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
     // Define the property on the object
     NS_ASSERTION(member->IsProperty(), "way broken!");
     propFlags |= JSPROP_GETTER | JSPROP_SHARED;
+    JSPropertyOp getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, funobj);
+    JSPropertyOp setter;
     if(member->IsSetter())
     {
         propFlags |= JSPROP_SETTER;
         propFlags &= ~JSPROP_READONLY;
+        setter = getter;
+    }
+    else
+    {
+        setter = js_GetterOnlyPropertyStub;
     }
     AutoResolveName arn(ccx, idval);
     if(resolved)
         *resolved = JS_TRUE;
     return JS_ValueToId(ccx, idval, &id) &&
-           JS_DefinePropertyById(ccx, obj, id, JSVAL_VOID,
-                                 JS_DATA_TO_FUNC_PTR(JSPropertyOp, funobj),
-                                 JS_DATA_TO_FUNC_PTR(JSPropertyOp, funobj),
+           JS_DefinePropertyById(ccx, obj, id, JSVAL_VOID, getter, setter,
                                  propFlags);
 
 }
