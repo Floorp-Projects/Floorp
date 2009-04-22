@@ -25,6 +25,7 @@
  *   Brad Lassey <blassey@mozilla.com>
  *   Mark Finkle <mfinkle@mozilla.com>
  *   Gavin Sharp <gavin.sharp@gmail.com>
+ *   Ben Combee <combee@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,48 +42,55 @@
  * ***** END LICENSE BLOCK ***** */
 
 function CanvasBrowser(canvas) {
+  // canvas element is where we draw content from browser
   this._canvas = canvas;
+
+  // 0,0 to contentW, contentH..is a list of dirty rectangles
   this._rgnPage = Cc["@mozilla.org/gfx/region;1"].createInstance(Ci.nsIScriptableRegion);
+
+  // bounds of the current page loaded into the browser in page coordinates
   this._pageBounds = new wsRect(0,0,0,0);
+
+  // section of the current page that's visible to the user in page coordinates
   this._visibleBounds = new wsRect(0,0,0,0);
+
+  // ratio of canvas width to content width
+  this._zoomLevel = 1.0;
+
+  // current browser, null when none is attached
+  this._browser = null;
+
+  // store last x,y of bounds to avoid repaints
+  this._screenX = 0;
+  this._screenY = 0;
+
+   // during pageload: controls whether we poll document for size changing
+  this._lazyWidthChanged = false;
+  this._lazyHeightChanged = false;
+
+   // if true, the page is currently loading
+  this._pageLoading = true;
+
+   // used to force paints to not be delayed during panning, otherwise things
+   // some things seem to get drawn at the wrong offset, not sure why
+  this._isPanning = false;
+
+   // if we have an outstanding paint timeout, its value is stored here
+   // for cancelling when we end page loads
+  this._drawTimeout = 0;
+
+   // the max right coordinate we've seen from paint events
+   // while we were loading a page.  If we see something that's bigger than
+   // our width, we'll trigger a page zoom.
+  this._maxRight = 0;
+  this._maxBottom = 0;
+
+  // Tells us to pan to top before first draw
+  this._needToPanToTop = false;
 }
 
 CanvasBrowser.prototype = {
-  _canvas: null,
-  _zoomLevel: 1,
-  _browser: null,
-  _pageBounds: null,
-  _screenX: 0,
-  _screenY: 0,
-  _visibleBounds: null,
-
-  // during pageload: controls whether we poll document for size changing
-  _lazyWidthChanged: false,
-  _lazyHeightChanged: false,
-
-  // if true, the page is currently loading
-  _pageLoading: true,
-
-  // 0,0 to contentW, contentH..is a list of dirty rectangles
-  _rgnPage: null,
-
-  // used to force paints to not be delayed during panning, otherwise things
-  // some things seem to get drawn at the wrong offset, not sure why
-  _isPanning: false,
-
-  // if we have an outstanding paint timeout, its value is stored here
-  // for cancelling when we end page loads
-  _drawTimeout: 0,
-
-  // the max right coordinate we've seen from paint events
-  // while we were loading a page.  If we see something that's bigger than
-  // our width, we'll trigger a page zoom.
-  _maxRight: 0,
-  _maxBottom: 0,
-
-  // Tells us to pan to top before first draw
-  _needToPanToTop: false,
-
+  /* size of the triple-height canvas area, typically 800x1440 on a Nokia N810 */
   get canvasDimensions() {
     if (!this._canvasRect) {
       let canvasRect = this._canvas.getBoundingClientRect();
@@ -107,7 +115,7 @@ CanvasBrowser.prototype = {
     return this._contentDOMWindowUtils;
   },
 
-  setCurrentBrowser: function(browser, skipZoom) {
+  setCurrentBrowser: function setCurrentBrowser(browser, skipZoom) {
     let currentBrowser = this._browser;
     if (currentBrowser) {
       // stop monitor paint events for this browser
@@ -248,7 +256,7 @@ CanvasBrowser.prototype = {
     this._needToPanToTop = true;
   },
 
-  endLoading: function() {
+  endLoading: function endLoading() {
     this._pageLoading = false;
     this._lazyWidthChanged = false;
     this._lazyHeightChanged = false;
@@ -359,7 +367,7 @@ CanvasBrowser.prototype = {
     this._redrawRects(rectsToDraw);
   },
 
-  _handleMozAfterPaint: function(aEvent) {
+  _handleMozAfterPaint: function _handleMozAfterPaint(aEvent) {
     let [scrollX, scrollY] = this.contentScrollValues;
     let clientRects = aEvent.clientRects;
 
@@ -376,7 +384,7 @@ CanvasBrowser.prototype = {
     this._redrawRects(rects);
   },
 
-  _redrawRects: function(rects) {
+  _redrawRects: function _redrawRects(rects) {
     // skip the region logic for basic paints
     if (!this._pageLoading && rects.length == 1
         && this._visibleBounds.contains(rects[0])) {
@@ -476,7 +484,7 @@ CanvasBrowser.prototype = {
     }
   },
 
-  _clampZoomLevel: function(aZoomLevel) {
+  _clampZoomLevel: function _clampZoomLevel(aZoomLevel) {
     const min = 0.2;
     const max = 2.0;
 
@@ -492,7 +500,7 @@ CanvasBrowser.prototype = {
     return this._zoomLevel;
   },
 
-  zoom: function(aDirection) {
+  zoom: function zoom(aDirection) {
     if (aDirection == 0)
       return;
 
@@ -503,7 +511,7 @@ CanvasBrowser.prototype = {
     this.zoomLevel = this._zoomLevel + zoomDelta;
   },
 
-  zoomToPage: function() {
+  zoomToPage: function zoomToPage() {
     let needToPanToTop = this._needToPanToTop;
     // Ensure pages are panned at the top before zooming/painting
     // combine the initial pan + zoom into a transaction
@@ -524,7 +532,7 @@ CanvasBrowser.prototype = {
       ws.endUpdateBatch();
   },
 
-  zoomToElement: function(aElement) {
+  zoomToElement: function zoomToElement(aElement) {
     const margin = 15;
 
     let elRect = this._getPagePosition(aElement);
@@ -554,7 +562,7 @@ CanvasBrowser.prototype = {
     ws.endUpdateBatch();
   },
 
-  zoomFromElement: function(aElement) {
+  zoomFromElement: function zoomFromElement(aElement) {
     let elRect = this._getPagePosition(aElement);
 
     ws.beginUpdateBatch();
@@ -573,7 +581,7 @@ CanvasBrowser.prototype = {
    * Retrieve the content element for a given point in client coordinates
    * (relative to the top left corner of the chrome window).
    */
-  elementFromPoint: function(aX, aY) {
+  elementFromPoint: function elementFromPoint(aX, aY) {
     let [x, y] = this._clientToContentCoords(aX, aY);
     let cwu = this.contentDOMWindowUtils;
     return cwu.elementFromPoint(x, y,
@@ -585,7 +593,7 @@ CanvasBrowser.prototype = {
    * Retrieve the page position for a given element
    * (relative to the document origin).
    */
-  _getPagePosition: function(aElement) {
+  _getPagePosition: function _getPagePosition(aElement) {
     let [scrollX, scrollY] = this.contentScrollValues;
     let r = aElement.getBoundingClientRect();
 
@@ -600,7 +608,7 @@ CanvasBrowser.prototype = {
   /* Given a set of client coordinates (relative to the app window),
    * returns the content coordinates relative to the viewport.
    */
-  _clientToContentCoords: function(aClientX, aClientY) {
+  _clientToContentCoords: function _clientToContentCoords(aClientX, aClientY) {
     // Determine position relative to the document origin
     // Need to adjust for the deckbrowser not being at 0,0
     // (e.g. due to other browser UI)
@@ -627,6 +635,7 @@ CanvasBrowser.prototype = {
     return this._contentAreaDimensions.map(this._pageToScreen, this);
   },
 
+  /* typically 1024x800, the actual size of the browser page that the DOM sees */
   get _contentAreaDimensions() {
     var cdoc = this._browser.contentDocument;
 
@@ -648,16 +657,16 @@ CanvasBrowser.prototype = {
     return [w, h];
   },
 
-  _screenToPage: function(aValue) {
+  _screenToPage: function _screenToPage(aValue) {
     return aValue / this._zoomLevel;
   },
 
-  _pageToScreen: function(aValue) {
+  _pageToScreen: function _pageToScreen(aValue) {
     return aValue * this._zoomLevel;
   },
 
   /* ensures that a given content element is visible */
-  ensureElementIsVisible: function(aElement) {
+  ensureElementIsVisible: function ensureElementIsVisible(aElement) {
     let elRect = this._getPagePosition(aElement);
     let curRect = this._visibleBounds;
     let newx = curRect.x;
@@ -679,13 +688,13 @@ CanvasBrowser.prototype = {
   },
 
   /* Pans directly to a given content element */
-  panToElement: function(aElement) {
+  panToElement: function panToElement(aElement) {
     var elRect = this._getPagePosition(aElement);
 
     this.panTo(elRect.x, elRect.y);
   },
 
-  panTo: function(x, y) {
+  panTo: function panTo(x, y) {
     ws.panTo(x, y);
   }
 };
