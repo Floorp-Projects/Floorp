@@ -234,6 +234,9 @@ var BrowserUI = {
     browsers.addEventListener("DOMLinkAdded", this, true);
 
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
+
+    ExtensionsView.init();
+    DownloadsView.init();
   },
 
   update : function(aState) {
@@ -453,11 +456,6 @@ var BrowserUI = {
     panelUI.hidden = false;
     panelUI.width = container.boxObject.width;
     panelUI.height = container.boxObject.height;
-
-    ExtensionsView.init();
-    let dloads = document.getElementById("downloads-container");
-    if (!dloads.hasAttribute("src"))
-      dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
 
     if (aPage != undefined)
       this.switchPane(aPage);

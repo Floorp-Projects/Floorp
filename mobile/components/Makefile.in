@@ -54,6 +54,7 @@ EXTRA_COMPONENTS = \
 	geolocationPrompt.js \
 	alertsService.js \
 	xpiDialogService.js \
+	downloadManagerUI.js \
 	$(NULL)
 
 DIRS = protocols \
