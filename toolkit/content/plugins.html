@@ -118,6 +118,8 @@
 
       document.writeln("<dl><dd><span class=\"label\">" + pluginsbundle.GetStringFromName("filename_label") + "<\/span> ");
       document.write(plugin.filename);
+      document.writeln("<\/dd><dd><span class=\"label\">" + pluginsbundle.GetStringFromName("version_label") + "<\/span> ");
+      document.write(plugin.version);
       document.writeln("<\/dd><dd>");
       document.write(plugin.description);
       document.writeln("<\/dd><\/dl>");
