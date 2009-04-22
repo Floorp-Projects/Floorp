@@ -526,6 +526,8 @@ class TraceRecorder : public avmplus::GCObject {
     bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop,
                     nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
 
+    nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
+
     JS_REQUIRES_STACK bool name(jsval*& vp);
     JS_REQUIRES_STACK bool prop(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot,
                                 nanojit::LIns*& v_ins);
