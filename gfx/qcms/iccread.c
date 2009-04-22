@@ -520,7 +520,10 @@ qcms_profile* qcms_profile_create_rgb_with_gamma(
 		return NO_MEM_PROFILE;
 
 	//XXX: should store the whitepoint
-	set_rgb_colorants(profile, white_point, primaries);
+	if (!set_rgb_colorants(profile, white_point, primaries)) {
+		qcms_profile_fini(profile);
+		return INVALID_PROFILE;
+	}
 
 	profile->redTRC = curve_from_gamma(gamma);
 	profile->blueTRC = curve_from_gamma(gamma);
@@ -546,7 +549,10 @@ qcms_profile* qcms_profile_create_rgb_with_table(
 		return NO_MEM_PROFILE;
 
 	//XXX: should store the whitepoint
-	set_rgb_colorants(profile, white_point, primaries);
+	if (!set_rgb_colorants(profile, white_point, primaries)) {
+		qcms_profile_fini(profile);
+		return INVALID_PROFILE;
+	}
 
 	profile->redTRC = curve_from_table(table, num_entries);
 	profile->blueTRC = curve_from_table(table, num_entries);
