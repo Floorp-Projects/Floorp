@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=427744
+-->
+<head>
+  <title>Test for Bug 427744</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=427744">Mozilla Bug 427744</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 427744 **/
+
+var found = false;
+for (var i = 0; i < navigator.plugins.length; i++) {
+  if (navigator.plugins[i].name == "Test Plug-in") {
+    found = true;
+    is(navigator.plugins[i].version, "1.0.0.0", "Should have seen the right version");
+  }
+}
+ok(found, "Should have seen the test plugin");
+
+</script>
+</pre>
+</body>
+</html>
