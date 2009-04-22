@@ -854,6 +854,12 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
 extern JSBool
 js_IsCallable(JSObject *obj, JSContext *cx);
 
+void
+js_ReportGetterOnlyAssignment(JSContext *cx);
+
+extern JS_FRIEND_API(JSBool)
+js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);
 JS_FRIEND_API(void) js_DumpString(JSString *str);
