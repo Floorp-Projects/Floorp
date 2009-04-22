@@ -148,14 +148,15 @@ NS_IMPL_ISUPPORTS1(nsLayoutDebuggingTools, nsILayoutDebuggingTools)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
 {
+    mPrefs = do_GetService(NS_PREF_CONTRACTID);
+
     {
         nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWin);
         if (!window)
             return NS_ERROR_UNEXPECTED;
         mDocShell = window->GetDocShell();
     }
-
-    mPrefs = do_GetService(NS_PREF_CONTRACTID);
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_UNEXPECTED);
 
     GetBoolPref("nglayout.debug.paint_flashing", &mPaintFlashing);
     GetBoolPref("nglayout.debug.paint_dumping", &mPaintDumping);
@@ -179,6 +180,7 @@ nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::NewURILoaded()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     // Reset all the state that should be reset between pages.
 
     // XXX Some of these should instead be transferred between pages!
@@ -324,6 +326,7 @@ nsLayoutDebuggingTools::GetReflowCounts(PRBool* aShow)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::SetReflowCounts(PRBool aShow)
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
     if (shell) {
 #ifdef MOZ_REFLOW_PERF
@@ -373,6 +376,7 @@ static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, PRInt32 aI
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpWebShells()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     nsCOMPtr<nsIDocShellTreeItem> shellAsItem(do_QueryInterface(mDocShell));
     DumpAWebShell(shellAsItem, stdout, 0);
     return NS_OK;
@@ -414,6 +418,7 @@ DumpContentRecur(nsIDocShell* aDocShell, FILE* out)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpContent()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     DumpContentRecur(mDocShell, stdout);
     return NS_OK;
 }
@@ -421,33 +426,31 @@ nsLayoutDebuggingTools::DumpContent()
 static void
 DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
 {
-    if (nsnull != aDocShell) {
-        fprintf(out, "webshell=%p \n", static_cast<void*>(aDocShell));
-        nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
-        if (shell) {
-            nsIFrame* root = shell->GetRootFrame();
-            if (root) {
-                nsIFrameDebug* fdbg = do_QueryFrame(root);
-                if (fdbg) {
-                    fdbg->List(out, 0);
-                }
+    fprintf(out, "webshell=%p \n", static_cast<void*>(aDocShell));
+    nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
+    if (shell) {
+        nsIFrame* root = shell->GetRootFrame();
+        if (root) {
+            nsIFrameDebug* fdbg = do_QueryFrame(root);
+            if (fdbg) {
+                fdbg->List(out, 0);
             }
         }
-        else {
-            fputs("null pres shell\n", out);
-        }
+    }
+    else {
+        fputs("null pres shell\n", out);
+    }
 
-        // dump the frames of the sub documents
-        PRInt32 i, n;
-        nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
-        docShellAsNode->GetChildCount(&n);
-        for (i = 0; i < n; ++i) {
-            nsCOMPtr<nsIDocShellTreeItem> child;
-            docShellAsNode->GetChildAt(i, getter_AddRefs(child));
-            nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-            if (childAsShell) {
-                DumpFramesRecur(childAsShell, out);
-            }
+    // dump the frames of the sub documents
+    PRInt32 i, n;
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
+    for (i = 0; i < n; ++i) {
+        nsCOMPtr<nsIDocShellTreeItem> child;
+        docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+        nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+        if (childAsShell) {
+            DumpFramesRecur(childAsShell, out);
         }
     }
 }
@@ -455,6 +458,7 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpFrames()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     DumpFramesRecur(mDocShell, stdout);
     return NS_OK;
 }
@@ -464,31 +468,29 @@ void
 DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
 {
 #ifdef DEBUG
-    if (aDocShell) {
-        fprintf(out, "docshell=%p \n", static_cast<void*>(aDocShell));
-        nsCOMPtr<nsIViewManager> vm(view_manager(aDocShell));
-        if (vm) {
-            nsIView* root;
-            vm->GetRootView(root);
-            if (nsnull != root) {
-                root->List(out);
-            }
+    fprintf(out, "docshell=%p \n", static_cast<void*>(aDocShell));
+    nsCOMPtr<nsIViewManager> vm(view_manager(aDocShell));
+    if (vm) {
+        nsIView* root;
+        vm->GetRootView(root);
+        if (nsnull != root) {
+            root->List(out);
         }
-        else {
-            fputs("null view manager\n", out);
-        }
+    }
+    else {
+        fputs("null view manager\n", out);
+    }
 
-        // dump the views of the sub documents
-        PRInt32 i, n;
-        nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
-        docShellAsNode->GetChildCount(&n);
-        for (i = 0; i < n; i++) {
-            nsCOMPtr<nsIDocShellTreeItem> child;
-            docShellAsNode->GetChildAt(i, getter_AddRefs(child));
-            nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-            if (childAsShell) {
-                DumpViewsRecur(childAsShell, out);
-            }
+    // dump the views of the sub documents
+    PRInt32 i, n;
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
+    for (i = 0; i < n; i++) {
+        nsCOMPtr<nsIDocShellTreeItem> child;
+        docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+        nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+        if (childAsShell) {
+            DumpViewsRecur(childAsShell, out);
         }
     }
 #endif // DEBUG
@@ -497,6 +499,7 @@ DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpViews()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     DumpViewsRecur(mDocShell, stdout);
     return NS_OK;
 }
@@ -504,6 +507,7 @@ nsLayoutDebuggingTools::DumpViews()
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpStyleSheets()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
     FILE *out = stdout;
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
@@ -518,6 +522,7 @@ nsLayoutDebuggingTools::DumpStyleSheets()
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpStyleContexts()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
     FILE *out = stdout;
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
@@ -538,6 +543,7 @@ nsLayoutDebuggingTools::DumpStyleContexts()
 NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpReflowStats()
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
     if (shell) {
@@ -569,6 +575,7 @@ nsresult
 nsLayoutDebuggingTools::SetBoolPrefAndRefresh(const char * aPrefName,
                                               PRBool aNewVal)
 {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(mPrefs && aPrefName, NS_OK);
 
     mPrefs->SetBoolPref(aPrefName, aNewVal);
