@@ -3475,7 +3475,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
          * involves it calling the debugger hook.
          *
          * Allocating the Call object must not fail, so use an object
-         * previously reserved by js_ExecuteTrace if needed.
+         * previously reserved by js_ExecuteTree if needed.
          */
         newifp->hookData = NULL;
         JS_ASSERT(!JS_TRACE_MONITOR(cx).useReservedObjects);
@@ -4116,6 +4116,10 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     if (!js_ReserveObjects(cx, MAX_CALL_STACK_ENTRIES))
         return NULL;
 
+#ifdef DEBUG
+    uintN savedProhibitFlush = JS_TRACE_MONITOR(cx).prohibitFlush;
+#endif
+
     /* Setup the interpreter state block, which is followed by the native global frame. */
     InterpState* state = (InterpState*)alloca(sizeof(InterpState) + (globalFrameSize+1)*sizeof(double));
     state->cx = cx;
@@ -4174,12 +4178,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     state->startTime = rdtsc();
 #endif
 
-    /* Set a flag that indicates to the runtime system that we are running in native code
-       now and we don't want automatic GC to happen. Instead we will get a silent failure,
-       which will cause a trace exit at which point the interpreter re-tries the operation
-       and eventually triggers the GC. */
-    JS_ASSERT(!tm->onTrace);
-    tm->onTrace = true;
+    JS_ASSERT(!tm->tracecx);
+    tm->tracecx = cx;
     cx->interpState = state;
 
     debug_only(fflush(NULL);)
@@ -4198,8 +4198,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #endif
 
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
-    tm->onTrace = false;
+    tm->tracecx = NULL;
     LeaveTree(*state, lr);
+    JS_ASSERT(JS_TRACE_MONITOR(cx).prohibitFlush == savedProhibitFlush);
     return state->innermost;
 }
 
@@ -5034,30 +5035,14 @@ js_DeepBail(JSContext *cx)
      * Exactly one context on the current thread is on trace. Find out which
      * one. (Most callers cannot guarantee that it's cx.)
      */
-    JSContext *tracecx = NULL;
-#ifdef JS_THREADSAFE
-    JSCList *head = &cx->thread->contextList;
-    for (JSCList *link = head->next; link != head; link = link->next) {
-        JSContext *acx = CX_FROM_THREAD_LINKS(link);
-        JS_ASSERT(!(acx->requestDepth == 0 && acx->bailExit));
-#else
-    JSContext *acx, *iter = NULL;
-    while ((acx = js_ContextIterator(cx->runtime, JS_TRUE, &iter)) != NULL) {
-#endif
-        if (acx->bailExit) {
-            JS_ASSERT(!tracecx);
-            tracecx = acx;
-#ifndef DEBUG
-            break;
-#endif
-        }
-    }
+    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    JSContext *tracecx = tm->tracecx;
 
     /* It's a bug if a non-FAIL_STATUS builtin gets here. */
     JS_ASSERT(tracecx->bailExit);
 
-    JS_TRACE_MONITOR(tracecx).onTrace = false;
-    JS_TRACE_MONITOR(tracecx).prohibitFlush++;
+    tm->tracecx = NULL;
+    tm->prohibitFlush++;
     debug_only_v(printf("Deep bail.\n");)
     LeaveTree(*tracecx->interpState, tracecx->bailExit);
     tracecx->bailExit = NULL;
