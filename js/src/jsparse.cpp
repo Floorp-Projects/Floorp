@@ -7901,7 +7901,11 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 pn->pn_op = JSOP_ARGUMENTS;
                 pn->pn_dflags |= PND_BOUND;
             }
-        } else if (!afterDot && !(ts->flags & TSF_DESTRUCTURING)) {
+        } else if ((!afterDot
+#if JS_HAS_XML_SUPPORT
+                    || js_PeekToken(cx, ts) == TOK_DBLCOLON
+#endif
+                   ) && !(ts->flags & TSF_DESTRUCTURING)) {
             JSStmtInfo *stmt = js_LexicalLookup(tc, pn->pn_atom, NULL);
             if (!stmt || stmt->type != STMT_WITH) {
                 JSDefinition *dn;
