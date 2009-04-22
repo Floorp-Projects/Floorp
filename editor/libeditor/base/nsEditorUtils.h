@@ -45,7 +45,6 @@
 #include "nsISelection.h"
 #include "nsIEditor.h"
 #include "nsIAtom.h"
-#include "nsVoidArray.h"
 #include "nsEditor.h"
 #include "nsIContentIterator.h"
 #include "nsCOMArray.h"

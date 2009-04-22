@@ -86,7 +86,6 @@
 #include "nsIRangeUtils.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
-#include "nsVoidArray.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -4339,9 +4338,10 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 {
   if (!aInRange) return NS_ERROR_NULL_POINTER;
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
-  nsVoidArray textNodes;  // we can't actually do anything during iteration, so store the text nodes in an array
-                          // don't bother ref counting them because we know we can hold them for the 
-                          // lifetime of this method
+  nsTArray<nsIDOMNode*> textNodes;
+  // we can't actually do anything during iteration, so store the text nodes in an array
+  // don't bother ref counting them because we know we can hold them for the 
+  // lifetime of this method
 
 
   // build a list of editable text nodes
@@ -4365,11 +4365,11 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
   // now that I have a list of text nodes, collapse adjacent text nodes
   // NOTE: assumption that JoinNodes keeps the righthand node
-  while (textNodes.Count() > 1)
+  while (textNodes.Length() > 1)
   {
     // we assume a textNodes entry can't be nsnull
-    nsIDOMNode *leftTextNode = (nsIDOMNode *)(textNodes.ElementAt(0));
-    nsIDOMNode *rightTextNode = (nsIDOMNode *)(textNodes.ElementAt(1));
+    nsIDOMNode *leftTextNode = textNodes[0];
+    nsIDOMNode *rightTextNode = textNodes[1];
     NS_ASSERTION(leftTextNode && rightTextNode,"left or rightTextNode null in CollapseAdjacentTextNodes");
 
     // get the prev sibling of the right node, and see if it's leftTextNode
