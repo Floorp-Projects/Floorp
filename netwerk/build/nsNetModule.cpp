@@ -65,7 +65,9 @@
 #include "nsNetCID.h"
 
 #if defined(XP_MACOSX)
+#if !defined(__LP64__)
 #define BUILD_APPLEFILE_DECODER 1
+#endif
 #else
 #define BUILD_BINHEX_DECODER 1
 #endif
