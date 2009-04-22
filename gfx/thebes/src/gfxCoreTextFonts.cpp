@@ -120,7 +120,9 @@ gfxCoreTextFont::gfxCoreTextFont(MacOSFontEntry *aFontEntry,
                            &kCFTypeDictionaryValueCallBacks);
 
     // Remaining initialization is largely based on CommonInit() in the gfxAtsuiFont code
-    mFontFace = cairo_quartz_font_face_create_for_atsu_font_id(FMGetFontFromATSFontRef(mATSFont));
+    CGFontRef cgFont = ::CGFontCreateWithPlatformFont(&mATSFont);
+    mFontFace = cairo_quartz_font_face_create_for_cgfont(cgFont);
+    ::CGFontRelease(cgFont);
 
     cairo_matrix_t sizeMatrix, ctm;
     cairo_matrix_init_identity(&ctm);
