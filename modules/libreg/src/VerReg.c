@@ -76,10 +76,6 @@
 #include "NSReg.h"
 #include "VerReg.h"
 
-#if defined(XP_MACOSX)
-#include <Carbon/Carbon.h>
-#endif
-
 /* -------- local defines --------------- 
 */
 #define MAXREGVERLEN 32     /* Version=12345.12345.12345.12345 */
@@ -157,11 +153,6 @@ static REGERR vr_FindKey(char *name, HREG *hreg, RKEY *key);
 static REGERR vr_GetUninstallItemPath(char *regPackageName, char *regbuf, uint32 regbuflen);
 static REGERR vr_convertPackageName(char *regPackageName, char *convertedPackageName, uint32 convertedDataLength);
 static REGERR vr_unmanglePackageName(char *mangledPackageName, char *regPackageName, uint32 regPackageLength);
-
-#if defined(XP_MACOSX)
-static void vr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
-static char * vr_PathFromMacAlias(const void * alias, uint32 aliasLength);
-#endif
 
 /* --------------------------------------------------------------------- */
 
@@ -440,69 +431,7 @@ static REGERR vr_SetPathname(HREG reg, RKEY key, char *entry, char *dir)
 
 static REGERR vr_GetPathname(HREG reg, RKEY key, char *entry, char *buf, uint32 sizebuf)
 {
-    REGERR  err;
-    REGINFO info;
-    
-    info.size = sizeof(REGINFO);
-        
-#if !defined(XP_MACOSX)
-        err = NR_RegGetEntry( reg, key, entry, (void*)buf, &sizebuf );
-        return err;
-#else
-    
-    err = NR_RegGetEntryInfo( reg, key, entry, &info );
-    
-    if (err != REGERR_OK)
-        return err;
-    
-    if (info.entryType == REGTYPE_ENTRY_FILE ||
-        info.entryType == REGTYPE_ENTRY_STRING_UTF )
-    {
-        err = NR_RegGetEntry( reg, key, entry, (void*)buf, &sizebuf );  
-    }
-    else if (info.entryType == REGTYPE_ENTRY_BYTES)
-    {
-
-        extern char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
-
-        #define MAC_ALIAS_BUFFER_SIZE 4000
-        char stackBuf[MAC_ALIAS_BUFFER_SIZE];
-        uint32 stackBufSize = MAC_ALIAS_BUFFER_SIZE;
-        char * tempBuf;
-
-        err = NR_RegGetEntry( reg, key, entry, (void*)stackBuf, &stackBufSize );
-
-        if (err != REGERR_OK)
-            return err;
-
-        tempBuf = nr_PathFromMacAlias(stackBuf, stackBufSize);
-
-        if (tempBuf == NULL) 
-        {
-            /* don't change error w/out changing vr_SetCurrentNav to match */
-            buf[0] = '\0';
-            err = REGERR_NOFILE;
-         }
-        else 
-        {
-            if (XP_STRLEN(tempBuf) > sizebuf)
-                err = REGERR_BUFTOOSMALL;
-            else
-                XP_STRCPY(buf, tempBuf);
-
-            XP_FREE(tempBuf);
-        }
-    }
-    else
-    {
-        /* what did we put here?? */
-        err = REGERR_BADTYPE;
-    }
-    
-    return err;
-
-#endif 
-    
+    return NR_RegGetEntry( reg, key, entry, (void*)buf, &sizebuf );
 }
 
 
