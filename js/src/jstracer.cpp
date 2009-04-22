@@ -8925,23 +8925,46 @@ TraceRecorder::record_JSOP_POPN()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_BINDNAME()
 {
-    JSObject* obj = cx->fp->scopeChain;
-    if (obj != globalObj)
-        ABORT_TRACE("JSOP_BINDNAME crosses global scopes");
+    JSStackFrame *fp = cx->fp;
+    JSObject *scope;
 
-    LIns* obj_ins = scopeChain();
-    JSObject* obj2;
-    jsuword pcval;
-    if (!test_property_cache(obj, obj_ins, obj2, pcval))
-        return false;
+    if (fp->fun) {
+        // We can't trace BINDNAME in functions that contain direct
+        // calls to eval, as they might add bindings which
+        // previously-traced references would have to see.
+        if (JSFUN_HEAVYWEIGHT_TEST(fp->fun->flags))
+            ABORT_TRACE("Can't trace JSOP_BINDNAME in heavyweight functions.");
 
-    if (PCVAL_IS_NULL(pcval))
-        ABORT_TRACE("JSOP_BINDNAME is trying to add a new property");
+        // In non-heavyweight functions, we can safely skip the call
+        // object, if any.
+        scope = OBJ_GET_PARENT(cx, FUN_OBJECT(fp->fun));
+    } else {
+        scope = fp->scopeChain;
 
-    if (obj2 != obj)
-        ABORT_TRACE("JSOP_BINDNAME found a non-direct property on the global object");
+        // In global code, fp->scopeChain can only contain blocks
+        // whose values are still on the stack.  We never use BINDNAME
+        // to refer to these.
+        while (OBJ_GET_CLASS(cx, scope) == &js_BlockClass) {
+            // The block's values are still on the stack.
+            JS_ASSERT(OBJ_GET_PRIVATE(cx, scope) == fp);
 
-    stack(0, obj_ins);
+            scope = OBJ_GET_PARENT(cx, scope);
+
+            // Blocks always have parents.
+            JS_ASSERT(scope);
+        }
+    }
+
+    if (scope != globalObj)
+        ABORT_TRACE("JSOP_BINDNAME must return global object on trace");
+
+    // The trace is specialized to this global object.  Furthermore,
+    // we know it is the sole 'global' object on the scope chain: we
+    // set globalObj to the scope chain element with no parent, and we
+    // reached it starting from the function closure or the current
+    // scopeChain, so there is nothing inner to it.  So this must be
+    // the right base object.
+    stack(0, INS_CONSTPTR(globalObj));
     return true;
 }
 
