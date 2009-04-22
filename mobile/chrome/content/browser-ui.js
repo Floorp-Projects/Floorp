@@ -38,11 +38,11 @@
 
 Components.utils.import("resource://gre/modules/utils.js");
 
-const TOOLBARSTATE_LOADING     = 1;
-const TOOLBARSTATE_LOADED      = 2;
+const TOOLBARSTATE_LOADING  = 1;
+const TOOLBARSTATE_LOADED   = 2;
 
-const UIMODE_URLVIEW           = 1; // titlebar visible only if page panned to top
-const UIMODE_URLEDIT           = 2; // titlebar pegged to top of screen
+const URLBAR_FORCE  = 1;
+const URLBAR_EDIT   = 2;
 
 const kMaxEngines = 4;
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
@@ -148,19 +148,25 @@ var BrowserUI = {
     this._favicon.src = faviconURI.spec;
   },
 
-  _showToolbar : function _showToolbar(aShow) {
-    if (aShow) {
+  showToolbar : function showToolbar(aFlags) {
+    this.hidePanel();
+
+    aFlags = aFlags || 0;
+
+    if (aFlags & URLBAR_FORCE) {
       ws.freeze("toolbar-main");
       ws.moveFrozenTo("toolbar-main", 0, 0);
     }
     else {
       ws.unfreeze("toolbar-main");
     }
+
+    this._editToolbar(aFlags & URLBAR_EDIT);
   },
 
   _editToolbar : function _editToolbar(aEdit) {
     var icons = document.getElementById("urlbar-icons");
-    if (aEdit) {
+    if (aEdit && this._edit.readOnly) {
       icons.setAttribute("mode", "edit");
       this._edit.readOnly = false;
 
@@ -172,7 +178,7 @@ var BrowserUI = {
       this._edit.inputField.focus();
       this._edit.select();
     }
-    else {
+    else if (!aEdit && !this._edit.readOnly) {
       icons.setAttribute("mode", "view");
       this._edit.readOnly = true;
       this._edit.inputField.blur();
@@ -255,7 +261,8 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        this.show(UIMODE_URLVIEW);
+        ws.panTo(0, -60);
+        this.showToolbar();
         icons.setAttribute("mode", "loading");
         this._favicon.src = "";
         this._faviconLink = null;
@@ -308,10 +315,8 @@ var BrowserUI = {
     this.updateStar();
 
     var urlString = this.getDisplayURI(browser);
-    if (urlString == "about:blank") {
+    if (urlString == "about:blank")
       urlString = "";
-      this.show(UIMODE_URLEDIT);
-    }
 
     this._edit.value = urlString;
   },
@@ -326,15 +331,11 @@ var BrowserUI = {
     getBrowser().loadURIWithFlags(aURI, flags, null, null);
 
     gHistSvc.markPageAsTyped(gURIFixup.createFixupURI(aURI, 0));
-
-    this.show(UIMODE_URLVIEW);
   },
 
   search : function() {
     var queryURI = "http://www.google.com/search?q=" + this._edit.value + "&hl=en&lr=&btnG=Search";
     getBrowser().loadURI(queryURI, null, null, false);
-
-    this.show(UIMODE_URLVIEW);
   },
 
   showAutoComplete : function(showDefault) {
@@ -378,25 +379,6 @@ var BrowserUI = {
     }
   },
 
-  mode : UIMODE_URLVIEW,
-  show : function show(aMode) {
-    if (this.mode == aMode)
-      return;
-
-    this.mode = aMode;
-
-    if (aMode == UIMODE_URLVIEW) {
-      this._showToolbar(false);
-      this._editToolbar(false);
-      this.hidePanel();
-    }
-    else if (aMode == UIMODE_URLEDIT) {
-      this._showToolbar(true);
-      this._editToolbar(true);
-      this.hidePanel();
-    }
-  },
-
   updateStar : function() {
     var star = document.getElementById("tool-star");
     if (PlacesUtils.getMostRecentBookmarkForURI(Browser.selectedBrowser.currentURI) != -1)
@@ -424,7 +406,7 @@ var BrowserUI = {
   newTab : function newTab() {
     Browser.addTab("about:blank", true);
     ws.panTo(0, -60);
-    this.show(UIMODE_URLEDIT);
+    this.showToolbar(URLBAR_EDIT);
   },
 
   closeTab : function closeTab(aTab) {
@@ -485,7 +467,7 @@ var BrowserUI = {
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           this._edit.reallyClosePopup();
-          this.show(UIMODE_URLVIEW);
+          this.showToolbar();
         }
         break;
       // Favicon events
@@ -552,7 +534,7 @@ var BrowserUI = {
         this.goToURI();
         break;
       case "cmd_openLocation":
-        this.show(UIMODE_URLEDIT);
+        this.showToolbar(URLBAR_EDIT | URLBAR_FORCE);
         setTimeout(function () { BrowserUI.showAutoComplete(); }, 0);
         break;
       case "cmd_star":
@@ -575,7 +557,6 @@ var BrowserUI = {
         }
 
         this.hideControls();
-        this.show(UIMODE_URLVIEW);
         break;
       }
       case "cmd_bookmarks":
