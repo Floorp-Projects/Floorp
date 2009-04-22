@@ -246,10 +246,6 @@ function populateDB(aArray) {
                                         qdata.annoExpiration);
       }
 
-      if (qdata.isTag) {
-        tagssvc.tagURI(uri(qdata.uri), qdata.tagArray);
-      }
-
       if (qdata.isFavicon) {
         // Not planning on doing deep testing of favIcon service so these two
         // calls should be sufficient to get favicons into the database
@@ -281,6 +277,10 @@ function populateDB(aArray) {
           bmsvc.setItemLastModified(itemId, qdata.lastModified);
 
         LOG("added bookmark");
+      }
+
+      if (qdata.isTag) {
+        tagssvc.tagURI(uri(qdata.uri), qdata.tagArray);
       }
 
       if (qdata.isDynContainer) {
