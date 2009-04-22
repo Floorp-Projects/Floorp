@@ -572,11 +572,11 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
     if ((jp->statep - jp->stateStack) == 1) {
         if (*jp->statep == JSON_PARSE_STATE_KEYWORD) {
             early_ok = HandleData(cx, jp, JSON_DATA_KEYWORD);
-            if (!early_ok)
+            if (early_ok)
                 PopState(cx, jp);
         } else if (*jp->statep == JSON_PARSE_STATE_NUMBER) {
             early_ok = HandleData(cx, jp, JSON_DATA_NUMBER);
-            if (!early_ok)
+            if (early_ok)
                 PopState(cx, jp);
         }
     }
