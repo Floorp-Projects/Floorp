@@ -74,6 +74,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/extensions.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/WidgetStack.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/CanvasBrowser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/InputHandler.js"/>
@@ -282,13 +283,38 @@
     <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
-        <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
+        <toolbarbutton id="tool-addons" type="radio" group="1" checked="1" class="panel-button" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button" linkedpanel="downloads-container"/>
         <toolbarbutton id="tool-preferences" type="radio" group="1" class="panel-button" linkedpanel="prefs-container"/>
         <toolbarbutton id="tool-panel-close" class="page-button" command="cmd_panel"/>
       </vbox>
       <deck id="panel-items" flex="1">
-        <iframe id="addons-container" flex="1"/>
+        <vbox id="addons-container" flex="1">
+          <hbox id="addons-header">
+            <label value="&addonsHeader.label;"/>
+          </hbox>
+          <notificationbox id="addons-messages" flex="1">
+            <richlistbox id="addons-list" flex="1">
+              <richlistitem id="addons-local" class="section-header" align="center">
+                <label value="&addonsLocal.label;" flex="1"/>
+              </richlistitem>
+              <richlistitem id="addons-repo" class="section-header" orient="vertical" pack="center">
+                <hbox>
+                  <label value="&addonsRepo.label;" flex="1"/>
+                  <radiogroup id="addons-repo-mode" oncommand="ExtensionsView.toggleMode();">
+                    <radio label="&addonsRecommended.label;" value="recommended" selected="true"/>
+                    <radio label="&addonsSearch.label;" value="search"/>
+                  </radiogroup>
+                </hbox>
+                <hbox id="addons-search-box" pack="end" collapsed="true">
+                  <textbox id="addons-search-text" emptytext="&addonsSearch.emptytext;" type="search" searchbutton="false"
+                           oncommand="ExtensionsView.getAddonsFromRepo(this.value);"/>
+                </hbox>
+              </richlistitem>
+            </richlistbox>
+          </notificationbox>
+        </vbox>
+
         <iframe id="downloads-container" flex="1"/>
 
         <vbox id="prefs-container" flex="1">

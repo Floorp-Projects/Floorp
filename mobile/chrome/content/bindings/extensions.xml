@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+]>
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="extension-local" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content orient="vertical">
+      <xul:hbox align="start">
+        <xul:image xbl:inherits="src=iconURL"/>
+        <xul:vbox flex="1">
+          <xul:hbox align="center">
+            <xul:label class="title" xbl:inherits="value=name"/>
+            <xul:label class="normal" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
+          <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
+        </xul:vbox>
+      </xul:hbox>
+      <xul:hbox class="show-on-select">
+        <xul:button anonid="options-button" class="addon-options" label="&addonOptions.label;"
+                    oncommand="document.getBindingParent(this).toggleOptions();"/>
+        <xul:spacer flex="1"/>
+        <xul:button anonid="enable-button" class="show-on-disable hide-on-enable hide-on-uninstall addon-enable" label="&addonEnable.label;"
+                    oncommand="ExtensionsView.enable(document.getBindingParent(this));"/>
+        <xul:button class="show-on-enable hide-on-disable hide-on-uninstall addon-disable" label="&addonDisable.label;"
+                    oncommand="ExtensionsView.disable(document.getBindingParent(this));"/>
+        <xul:button class="hide-on-uninstall addon-uninstall" label="&addonUninstall.label;"
+                    oncommand="ExtensionsView.uninstall(document.getBindingParent(this));"/>
+        <xul:button class="show-on-uninstall addon-cancel" label="&addonCancel.label;"
+                    oncommand="ExtensionsView.cancelUninstall(document.getBindingParent(this));"/>
+      </xul:hbox>
+      <xul:vbox anonid="options-box" collapsed="true" flex="1">
+        <xul:iframe anonid="options-frame" src="" flex="1"/>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+          let isDisabled = this.getAttribute("isDisabled");
+          let optionsURL = this.getAttribute("optionsURL");
+          if (optionsURL == "" || isDisabled == "true")
+            document.getAnonymousElementByAttribute(this, "anonid", "options-button").setAttribute("disabled", "true");
+
+          let appDisabled = this.getAttribute("appDisabled");
+          if (appDisabled == "true")
+            document.getAnonymousElementByAttribute(this, "anonid", "enable-button").setAttribute("disabled", "true");
+
+          this._optionsHandler.element = this;
+          this._optionsHandler.box = document.getAnonymousElementByAttribute(this, "anonid", "options-box");
+          this._optionsHandler.frame = document.getAnonymousElementByAttribute(this, "anonid", "options-frame");
+        ]]>
+      </constructor>
+
+      <field name="_optionsHandler">
+        <![CDATA[ ({
+          element: null,
+          box: null,
+          frame: null,
+
+          handleEvent: function op_handleEvent(aEvent) {
+            if (aEvent.type == "load") {
+              // Try to determine the natural height of the iframe content
+              // so we can resize the iframe and all the content is visible
+              let height = 0;
+              let root = this.frame.contentDocument.documentElement;
+              for (let i = 0; i < root.children.length; ++i) {
+                height += root.children[i].clientHeight;
+              }
+
+              this.box.height = height;
+            }
+          }
+        }) ]]>
+      </field>
+      <method name="toggleOptions">
+        <body>
+          <![CDATA[
+            let optionsURL = this.getAttribute("optionsURL");
+            if (optionsURL == "")
+              return;
+
+            this._optionsHandler.box.collapsed = !box.collapsed;
+
+            if (this._optionsHandler.frame.getAttribute("src") == "") {
+              this._optionsHandler.frame.addEventListener("load", this._optionsHandler, true);
+              this._optionsHandler.frame.setAttribute("src", optionsURL);
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="extension-search" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content orient="horizontal" align="start">
+      <xul:image xbl:inherits="src=iconURL"/>
+      <xul:vbox flex="1">
+        <xul:hbox align="center">
+          <xul:label class="title" xbl:inherits="value=name"/>
+          <xul:label class="normal" xbl:inherits="value=version"/>
+        </xul:hbox>
+        <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
+        <xul:hbox class="show-on-select" align="start">
+          <xul:image xbl:inherits="src=thumbnailURL"/>
+          <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
+        </xul:hbox>
+        <xul:hbox class="show-on-select">
+          <xul:spacer flex="1"/>
+          <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonInstall.label;"
+                      oncommand="ExtensionsView.installFromRepo(document.getBindingParent(this));"/>
+        </xul:hbox>
+        <xul:progressmeter class="show-on-install" mode="normal" value="0" xbl:inherits="value=progress"/>
+      </xul:vbox>
+    </content>
+  </binding>
+
+  <binding id="extension-message" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content orient="vertical" align="center">
+      <xul:hbox>
+        <xul:image src="chrome://browser/skin/images/throbber.png" xbl:inherits="hidden=hidethrobber"/>
+        <xul:label class="normal" xbl:inherits="value=message"/>
+      </xul:hbox>
+      <xul:button xbl:inherits="label=button" oncommand="ExtensionsView.resetSearch();"/>
+    </content>
+  </binding>
+
+</bindings>
