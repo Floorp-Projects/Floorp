@@ -289,6 +289,12 @@ namespace nanojit
 #define Format_4_5(rd, op3, cond, opf_cc, opf_low, rs2) \
     Format_3(2, rd, op3, (cond & 0xF) << 14 | (opf_cc & 0x7) << 11 | (opf_low & 0x3F) << 5 | rs2)
 
+#define ADDCC(rs1, rs2, rd) \
+    do { \
+    asm_output("addcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
+    Format_3_1(2, rd, 0x10, rs1, 0, rs2); \
+    } while (0)
+
 #define ADD(rs1, rs2, rd) \
     do { \
     asm_output("add %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
