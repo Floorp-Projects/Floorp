@@ -87,11 +87,13 @@
             if (optionsURL == "")
               return;
 
-            this._optionsHandler.box.collapsed = !box.collapsed;
+            let box = this._optionsHandler.box;
+            box.collapsed = !box.collapsed;
 
-            if (this._optionsHandler.frame.getAttribute("src") == "") {
-              this._optionsHandler.frame.addEventListener("load", this._optionsHandler, true);
-              this._optionsHandler.frame.setAttribute("src", optionsURL);
+            let frame = this._optionsHandler.frame;
+            if (frame.getAttribute("src") == "") {
+              frame.addEventListener("load", this._optionsHandler, true);
+              frame.setAttribute("src", optionsURL);
             }
           ]]>
         </body>
