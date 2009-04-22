@@ -79,8 +79,8 @@ CanvasBrowser.prototype = {
   // our width, we'll trigger a page zoom.
   _maxRight: 0,
   _maxBottom: 0,
-  
-  // Tells us to pan to top before first draw 
+
+  // Tells us to pan to top before first draw
   _needToPanToTop: false,
 
   get canvasDimensions() {
@@ -508,9 +508,9 @@ CanvasBrowser.prototype = {
     // Ensure pages are panned at the top before zooming/painting
     // combine the initial pan + zoom into a transaction
     if (needToPanToTop) {
-      ws.beginUpdateBatch();      
+      ws.beginUpdateBatch();
       this._needToPanToTop = false;
-      ws.panTo(0, 0);
+      ws.panTo(0, -60);
     }
     // Adjust the zoomLevel to fit the page contents in our window
     // width
@@ -519,7 +519,7 @@ CanvasBrowser.prototype = {
 
     if (contentW > canvasW)
       this.zoomLevel = canvasW / contentW;
-    
+
     if (needToPanToTop)
       ws.endUpdateBatch();
   },
@@ -614,7 +614,7 @@ CanvasBrowser.prototype = {
     return [clickOffsetX - scrollX,
             clickOffsetY - scrollY];
   },
-  
+
   get contentScrollValues() {
     let cwu = this.contentDOMWindowUtils;
     let scrollX = {}, scrollY = {};

@@ -86,16 +86,16 @@ var Browser = {
       if (dx) {
         let visibleNow = ws.isWidgetVisible("tabs-container") || ws.isWidgetVisible("browser-controls");
         if (visibleNow && !gSidebarVisible) {
-          BrowserUI.show(UIMODE_URLEDIT);
+          BrowserUI.showToolbar(URLBAR_FORCE);
         }
         else if (!visibleNow && gSidebarVisible) {
-          BrowserUI.show(UIMODE_URLVIEW);
+          BrowserUI.showToolbar();
         }
         gSidebarVisible = visibleNow;
       }
 
       // move checkerboard
-      browserContainer.style.backgroundPosition =  -vr.left + "px " + -vr.top + "px";
+      browserContainer.style.backgroundPosition = -vr.left + "px " + -vr.top + "px";
 
       // this is really only necessary for maemo, where we don't
       // always repaint fast enough.
@@ -342,9 +342,9 @@ var Browser = {
     this._canvasBrowser.setCurrentBrowser(this.selectedBrowser, firstTab);
     document.getElementById("tabs").selectedItem = tab.content;
 
-    if (!firstTab) {
-      ws.panTo(0, 0, true);
+    ws.panTo(0, -60, true);
 
+    if (!firstTab) {
       let webProgress = this.selectedBrowser.webProgress;
       let securityUI = this.selectedBrowser.securityUI;
 
