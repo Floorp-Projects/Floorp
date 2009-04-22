@@ -679,13 +679,16 @@ extern void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
 extern bool
-js_OverfullFragmento(nanojit::Fragmento *frago, size_t maxsz);
+js_OverfullFragmento(JSTraceMonitor* tm, nanojit::Fragmento *frago);
 
 extern void
 js_PurgeJITOracle();
 
 extern JSObject *
 js_GetBuiltinFunction(JSContext *cx, uintN index);
+
+extern void
+js_SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
 #else  /* !JS_TRACER */
 

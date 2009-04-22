@@ -71,9 +71,6 @@
 #include "jstracer.h"
 using namespace avmplus;
 using namespace nanojit;
-
-/* Amount of memory in the RE fragmento before flushing. */
-#define MAX_MEM_IN_RE_FRAGMENTO (1 << 20)
 #endif
 
 typedef enum REOp {
@@ -2442,7 +2439,7 @@ class RegExpNativeCompiler {
         return JS_TRUE;
     fail:
         if (lirbuf->outOMem() || oom || 
-            js_OverfullFragmento(fragmento, MAX_MEM_IN_RE_FRAGMENTO)) {
+            js_OverfullFragmento(&JS_TRACE_MONITOR(cx), fragmento)) {
             fragmento->clearFrags();
             lirbuf->rewind();
         } else {

@@ -2600,6 +2600,20 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
     }
 }
 
+JS_PUBLIC_API(void)
+JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32 value)
+{
+    JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
+    js_SetMaxCodeCacheBytes(cx, value);
+}
+
+JS_PUBLIC_API(uint32)
+JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
+{
+    JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
+    return JS_THREAD_DATA(cx)->traceMonitor.maxCodeCacheBytes;
+}
+
 JS_PUBLIC_API(intN)
 JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
