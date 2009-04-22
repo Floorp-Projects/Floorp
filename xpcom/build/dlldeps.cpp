@@ -98,10 +98,15 @@
 #include "nsCycleCollector.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
+#include "Mutex.h"
+#include "Monitor.h"
+#include "CondVar.h"
 
 #if !defined(XP_OS2)
 #include "nsWindowsRegKey.h"
 #endif
+
+using namespace mozilla;
 
 class nsCStringContainer : private nsStringContainer_base { };
 class nsStringContainer : private nsStringContainer_base { };
@@ -294,4 +299,7 @@ void XXXNeverCalled()
     NS_ProcessPendingEvents(nsnull, 0);
     NS_HasPendingEvents(nsnull);
     NS_ProcessNextEvent(nsnull, PR_FALSE);
+    Mutex theMutex("dummy");
+    Monitor theMonitor("dummy2");
+    CondVar theCondVar(theMutex, "dummy3");
 }
