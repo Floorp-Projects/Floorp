@@ -182,6 +182,14 @@ struct matrix matrix_identity(void)
 	return i;
 }
 
+static struct matrix matrix_invalid(void)
+{
+	struct matrix inv = matrix_identity();
+	inv.invalid = true;
+	return inv;
+}
+
+
 /* from pixman */
 /* MAT3per... */
 struct matrix matrix_multiply(struct matrix a, struct matrix b)
@@ -373,6 +381,9 @@ static struct matrix build_RGB_to_XYZ_transfer_matrix(qcms_CIE_xyY white, qcms_C
 	xn = white.x;
 	yn = white.y;
 
+	if (yn == 0.0)
+		return matrix_invalid();
+
 	xr = primrs.red.x;
 	yr = primrs.red.y;
 	xg = primrs.green.x;
@@ -501,6 +512,10 @@ static struct matrix adapt_matrix_to_D50(struct matrix r, qcms_CIE_xyY source_wh
 {
 	struct CIE_XYZ Dn;
 	struct matrix Bradford;
+
+	if (source_white_pt.y == 0.0)
+		return matrix_invalid();
+
 	Dn = xyY2XYZ(source_white_pt);
 
 	Bradford = adaption_matrix(Dn, D50_XYZ);
