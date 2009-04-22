@@ -441,7 +441,7 @@ RecycleFuncNameKids(JSParseNode *pn, JSTreeContext *tc)
         break;
 
       default:
-        JS_NOT_REACHED("RecycleFuncNameKids");
+        JS_ASSERT(PN_TYPE(pn) == TOK_FUNCTION);
     }
 }
 
