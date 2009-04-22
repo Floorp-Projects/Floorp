@@ -85,7 +85,7 @@
 #include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsEnumeratorUtils.h"
-#include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
+#include "nsTArray.h"
 #include "nsCRT.h"
 #include "nsRDFCID.h"
 #include "nsRDFBaseDataSources.h"
@@ -650,7 +650,7 @@ private:
     InMemoryDataSource* mDataSource;
     nsIRDFResource*     mSource;
     nsIRDFNode*         mTarget;
-    nsAutoVoidArray     mAlreadyReturned;
+    nsAutoTArray<nsCOMPtr<nsIRDFResource>, 8> mAlreadyReturned;
     nsIRDFResource*     mCurrent;
     Assertion*          mAssertion;
     nsCOMPtr<nsISupportsArray> mHashArcs;
@@ -750,11 +750,6 @@ InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
     NS_IF_RELEASE(mSource);
     NS_IF_RELEASE(mTarget);
     NS_IF_RELEASE(mCurrent);
-
-    for (PRInt32 i = mAlreadyReturned.Count() - 1; i >= 0; --i) {
-        nsIRDFResource* resource = (nsIRDFResource*) mAlreadyReturned[i];
-        NS_RELEASE(resource);
-    }
 }
 
 NS_IMPL_ADDREF(InMemoryArcsEnumeratorImpl)
@@ -810,7 +805,7 @@ InMemoryArcsEnumeratorImpl::HasMoreElements(PRBool* aResult)
             while (mAssertion && (next == mAssertion->u.as.mProperty));
 
             PRBool alreadyReturned = PR_FALSE;
-            for (PRInt32 i = mAlreadyReturned.Count() - 1; i >= 0; --i) {
+            for (PRInt32 i = mAlreadyReturned.Length() - 1; i >= 0; --i) {
                 if (mAlreadyReturned[i] == next) {
                     alreadyReturned = PR_TRUE;
                     break;
@@ -844,7 +839,6 @@ InMemoryArcsEnumeratorImpl::GetNext(nsISupports** aResult)
 
     // Add this to the set of things we've already returned so that we
     // can ensure uniqueness
-    NS_ADDREF(mCurrent);
     mAlreadyReturned.AppendElement(mCurrent);
 
     // Don't AddRef: we "transfer" ownership to the caller
