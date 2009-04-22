@@ -5032,6 +5032,14 @@ testFunctionIdentityChange.jitstats = {
 };
 test(testFunctionIdentityChange);
 
+function testStringObjectLength() {
+    var x = new String("foo"), y = 0;
+    for (var i = 0; i < 10; ++i)
+        y = x.length;
+    return y;
+}
+testStringObjectLength.expected = 3;
+test(testStringObjectLength);
 
 /*****************************************************************************
  *                                                                           *

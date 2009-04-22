@@ -6397,6 +6397,30 @@ TraceRecorder::getThis(LIns*& this_ins)
     return true;
 }
 
+
+LIns*
+TraceRecorder::getStringLength(LIns* str_ins)
+{
+    LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, length));
+
+    LIns* masked_len_ins = lir->ins2(LIR_piand,
+                                     len_ins,
+                                     INS_CONSTPTR((void *)JSSTRING_LENGTH_MASK));
+
+    return
+        lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
+                                               len_ins,
+                                               INS_CONSTPTR((void*)JSSTRFLAG_DEPENDENT))),
+                        masked_len_ins,
+                        lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
+                                                               len_ins,
+                                                               INS_CONSTPTR((void*)JSSTRFLAG_PREFIX))),
+                                        lir->ins2(LIR_piand,
+                                                  len_ins,
+                                                  INS_CONSTPTR((void*)JSSTRDEP_LENGTH_MASK)),
+                                        masked_len_ins));
+}
+
 JS_REQUIRES_STACK bool
 TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit)
 {
@@ -8375,7 +8399,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 sprop->getter == js_RegExpClass.getProperty &&
                 sprop->shortid < 0) {
                 if (sprop->shortid == REGEXP_LAST_INDEX)
-                    ABORT_TRACE("can't trace regexp.lastIndex yet");
+                    ABORT_TRACE("can't trace RegExp.lastIndex yet");
                 LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
                 v_ins = lir->insCall(&js_CallGetter_ci, args);
                 guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
@@ -8386,6 +8410,16 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
                             v_ins,
                             snapshot(MISMATCH_EXIT));
+                return true;
+            }
+            if (setflags == 0 &&
+                sprop->getter == js_StringClass.getProperty &&
+                sprop->id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
+                if (!guardClass(obj, obj_ins, &js_StringClass, snapshot(MISMATCH_EXIT)))
+                    ABORT_TRACE("can't trace String.length on non-String objects");
+                LIns* str_ins = stobj_get_fslot(obj_ins, JSSLOT_PRIVATE);
+                str_ins = lir->ins2(LIR_piand, str_ins, INS_CONSTPTR((void*)(~JSVAL_TAGMASK)));
+                v_ins = lir->ins1(LIR_i2f, getStringLength(str_ins));
                 return true;
             }
             ABORT_TRACE("non-stub getter");
@@ -10034,27 +10068,7 @@ TraceRecorder::record_JSOP_LENGTH()
     if (JSVAL_IS_PRIMITIVE(l)) {
         if (!JSVAL_IS_STRING(l))
             ABORT_TRACE("non-string primitive JSOP_LENGTH unsupported");
-        LIns* str_ins = get(&l);
-        LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, length));
-
-        LIns* masked_len_ins = lir->ins2(LIR_piand,
-                                         len_ins,
-                                         INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)));
-
-        LIns* choose_len_ins =
-            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
-                                                   len_ins,
-                                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRFLAG_DEPENDENT)))),
-                            masked_len_ins,
-                            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
-                                                                   len_ins,
-                                                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRFLAG_PREFIX)))),
-                                            lir->ins2(LIR_piand,
-                                                      len_ins,
-                                                      INS_CONSTPTR(reinterpret_cast<void *>(JSSTRDEP_LENGTH_MASK))),
-                                            masked_len_ins));
-
-        set(&l, lir->ins1(LIR_i2f, choose_len_ins));
+        set(&l, lir->ins1(LIR_i2f, getStringLength(get(&l))));
         return true;
     }
 
