@@ -699,13 +699,13 @@ nsHttpHandler::InitUserAgentComponents()
 #elif defined (XP_MACOSX)
 #if defined(__ppc__)
     mOscpu.AssignLiteral("PPC Mac OS X");
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__x86_64__)
     mOscpu.AssignLiteral("Intel Mac OS X");
 #endif
-    long majorVersion, minorVersion;
+    SInt32 majorVersion, minorVersion;
     if ((::Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
         (::Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {
-        mOscpu += nsPrintfCString(" %ld.%ld", majorVersion, minorVersion);
+        mOscpu += nsPrintfCString(" %d.%d", majorVersion, minorVersion);
     }
 #elif defined (XP_UNIX) || defined (XP_BEOS)
     struct utsname name;
