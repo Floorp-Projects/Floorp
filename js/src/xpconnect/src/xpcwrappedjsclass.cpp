@@ -43,6 +43,7 @@
 
 #include "xpcprivate.h"
 #include "nsArrayEnumerator.h"
+#include "nsWrapperCache.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
@@ -596,6 +597,12 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
+    // We can't have a cached wrapper.
+    if(aIID.Equals(NS_GET_IID(nsWrapperCache)))
+    {
+        *aInstancePtr = nsnull;
+        return NS_NOINTERFACE;
+    }
 
     JSContext *context = GetContextFromObject(self->GetJSObject());
     XPCCallContext ccx(NATIVE_CALLER, context);
