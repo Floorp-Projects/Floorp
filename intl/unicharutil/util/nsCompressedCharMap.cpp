@@ -517,7 +517,6 @@ printCCMap(PRUint16* aCCMap)
 {
   PRUint32 page = CCMAP_BEGIN_AT_START_OF_MAP;
   while (NextNonEmptyCCMapPage(aCCMap, &page)) {
-    //FONT_SCAN_PRINTF(("page starting at 0x%04x has chars", page));
     int i;
     PRUint32 pagechar = page;
   
