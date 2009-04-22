@@ -147,9 +147,9 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
   nsIFrame* kidFrame;
   nsOverflowContinuationTracker tracker(aPresContext, aDelegatingFrame, PR_TRUE);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-    PRBool kidNeedsReflow = reflowAll || NS_SUBTREE_DIRTY(kidFrame) ||
-      FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged);
-    if (kidNeedsReflow && !aPresContext->HasPendingInterrupt()) {
+    if (reflowAll ||
+        NS_SUBTREE_DIRTY(kidFrame) ||
+        FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
       // Reflow the frame
       nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
@@ -188,16 +188,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                                                kidFrame->GetPosition());
       }
     }
-
-    if (kidNeedsReflow && aPresContext->HasPendingInterrupt()) {
-      if (aDelegatingFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
-        kidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-      } else {
-        kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-      }
-    }
   }
-
   // Abspos frames can't cause their parent to be incomplete,
   // only overflow incomplete.
   if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus))
@@ -344,24 +335,10 @@ nsAbsoluteContainingBlock::DestroyFrames(nsIFrame* aDelegatingFrame)
 void
 nsAbsoluteContainingBlock::MarkSizeDependentFramesDirty()
 {
-  DoMarkFramesDirty(PR_FALSE);
-}
-
-void
-nsAbsoluteContainingBlock::MarkAllFramesDirty()
-{
-  DoMarkFramesDirty(PR_TRUE);
-}
-
-void
-nsAbsoluteContainingBlock::DoMarkFramesDirty(PRBool aMarkAllDirty)
-{
   for (nsIFrame* kidFrame = mAbsoluteFrames.FirstChild();
        kidFrame;
        kidFrame = kidFrame->GetNextSibling()) {
-    if (aMarkAllDirty) {
-      kidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-    } else if (FrameDependsOnContainer(kidFrame, PR_TRUE, PR_TRUE)) {
+    if (FrameDependsOnContainer(kidFrame, PR_TRUE, PR_TRUE)) {
       // Add the weakest flags that will make sure we reflow this frame later
       kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     }

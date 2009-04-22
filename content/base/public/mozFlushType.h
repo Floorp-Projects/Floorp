@@ -48,12 +48,8 @@ enum mozFlushType {
                                  notifications. */
   Flush_Style            = 3, /* As above, plus flush style reresolution */
   Flush_Frames           = Flush_Style,
-  Flush_InterruptibleLayout = 4, /* As above, plus flush reflow,
-                                    but allow it to be interrupted (so
-                                    an incomplete layout may result) */
-  Flush_Layout           = 5, /* As above, but layout must run to
-                                 completion */
-  Flush_Display          = 6  /* As above, plus flush painting */
+  Flush_Layout           = 4, /* As above, plus flush reflow */
+  Flush_Display          = 5  /* As above, plus flush painting */
 };
 
 #endif /* mozFlushType_h___ */

@@ -62,7 +62,6 @@
 #include "nsMenuUtilsX.h"
 #include "nsStyleConsts.h"
 #include "nsNativeThemeColors.h"
-#include "nsChildView.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -1313,11 +1312,6 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-PRBool
-nsCocoaWindow::HasPendingInputEvent()
-{
-  return nsChildView::DoHasPendingInputEvent();
-}
 
 NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
 {
