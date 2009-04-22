@@ -79,7 +79,6 @@ void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
     mState.frame = nsnull;  // Don't walk frames in non-HTML content, just walk the DOM.
   }
 
-  PushState();
   UpdateFrame(PR_TRUE);
 
   // Walk frames? UpdateFrame() sets this when it sees anonymous frames
@@ -213,6 +212,8 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
   }
 
   nsCOMPtr<nsIDOMNode> parent(mState.domNode);
+
+  PushState();
   GetKids(parent); // Side effects change our state (mState)
 
   // Recursive loop: depth first search for first accessible child
