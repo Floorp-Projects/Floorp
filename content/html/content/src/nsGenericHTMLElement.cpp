@@ -1308,8 +1308,9 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
                                              PRBool aFlushContent)
 {
   if (aFlushContent) {
-    // Cause a flush of the frames, so we get up-to-date frame information
-    aDocument->FlushPendingNotifications(Flush_Frames);
+    // Cause a flush of content, so we get up-to-date frame
+    // information
+    aDocument->FlushPendingNotifications(Flush_Layout);
   }
   nsIFrame* frame = GetPrimaryFrameFor(aContent, aDocument);
   if (frame) {
@@ -2695,10 +2696,7 @@ nsGenericHTMLFormElement::SetFocusAndScrollIntoView(nsPresContext* aPresContext)
 {
   nsIEventStateManager *esm = aPresContext->EventStateManager();
   if (esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
-    // XXXldb once bug 43114 is fixed, we don't need to flush here.
-    aPresContext->Document()->
-      FlushPendingNotifications(Flush_InterruptibleLayout);
-    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
     if (formControlFrame) {
       formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
       nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();

@@ -204,9 +204,6 @@ public:
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
     NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
-
-    virtual PRBool     HasPendingInputEvent();
-
     NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
 

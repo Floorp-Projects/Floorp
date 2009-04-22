@@ -464,9 +464,6 @@ protected:
   /** reflow all lines that have been marked dirty */
   nsresult ReflowDirtyLines(nsBlockReflowState& aState);
 
-  /** Mark a given line dirty due to reflow being interrupted on or before it */
-  void MarkLineDirtyForInterrupt(nsLineBox* aLine);
-
   //----------------------------------------
   // Methods for line reflow
   /**
