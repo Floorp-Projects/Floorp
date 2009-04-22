@@ -2726,22 +2726,6 @@ private:
     nsCOMPtr<nsIVariant> mValue;
 };
 
-class xpcPropertyBagEnumerator : public nsISimpleEnumerator
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISIMPLEENUMERATOR
-
-    xpcPropertyBagEnumerator(PRUint32 count);
-    virtual ~xpcPropertyBagEnumerator() {}
-
-    JSBool AppendElement(nsISupports* element);
-
-private:
-    nsCOMArray<nsISupports> mArray;
-    PRInt32                 mIndex;
-};
-
 /***************************************************************************/
 // data conversion
 
