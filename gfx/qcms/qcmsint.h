@@ -139,4 +139,4 @@ static inline s15Fixed16Number double_to_s15Fixed16Number(double v)
 }
 
 void precache_release(struct precache_output *p);
-void set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
+qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
