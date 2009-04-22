@@ -98,9 +98,9 @@
 #include "nsCycleCollector.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
-#include "Mutex.h"
-#include "Monitor.h"
-#include "CondVar.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/CondVar.h"
 
 #if !defined(XP_OS2)
 #include "nsWindowsRegKey.h"
