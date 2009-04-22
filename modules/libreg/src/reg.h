@@ -55,7 +55,7 @@
  * --------------------------------------------------------------------
  */
 #define MAGIC_NUMBER    0x76644441L
-#define MAJOR_VERSION   1          /* major version for incompatible changes */
+#define MAJOR_VERSION   2          /* major version for incompatible changes */
 #define MINOR_VERSION   2          /* minor ver for new (compatible) features */
 #define PATHDEL         '/'
 #define HDRRESERVE      128        /* number of bytes reserved for hdr */
