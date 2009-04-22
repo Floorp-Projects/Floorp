@@ -798,12 +798,6 @@ nsBaseWidget::GetLastInputEventTime(PRUint32& aTime) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PRBool
-nsBaseWidget::HasPendingInputEvent()
-{
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsBaseWidget::SetIcon(const nsAString&)
 {
