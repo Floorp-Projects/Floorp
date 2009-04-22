@@ -75,7 +75,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsCOMArray.h"
-#include "nsVoidArray.h"
 #include "nsIFile.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"

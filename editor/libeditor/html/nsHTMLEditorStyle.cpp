@@ -70,14 +70,14 @@ NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty,
   nsString attr(aAttribute);
   if (TypeInState::FindPropInList(aProperty, attr, &outValue, mDefaultStyles, index))
   {
-    PropItem *item = (PropItem*)mDefaultStyles[index];
+    PropItem *item = mDefaultStyles[index];
     item->value = aValue;
   }
   else
   {
     nsString value(aValue);
     PropItem *propItem = new PropItem(aProperty, attr, value);
-    mDefaultStyles.AppendElement((void*)propItem);
+    mDefaultStyles.AppendElement(propItem);
   }
   return NS_OK;
 }
@@ -91,8 +91,7 @@ NS_IMETHODIMP nsHTMLEditor::RemoveDefaultProperty(nsIAtom *aProperty,
   nsString attr(aAttribute);
   if (TypeInState::FindPropInList(aProperty, attr, &outValue, mDefaultStyles, index))
   {
-    PropItem *item = (PropItem*)mDefaultStyles[index];
-    if (item) delete item;
+    delete mDefaultStyles[index];
     mDefaultStyles.RemoveElementAt(index);
   }
   return NS_OK;
@@ -100,11 +99,10 @@ NS_IMETHODIMP nsHTMLEditor::RemoveDefaultProperty(nsIAtom *aProperty,
 
 NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
 {
-  PRInt32 j, defcon = mDefaultStyles.Count();
+  PRUint32 j, defcon = mDefaultStyles.Length();
   for (j=0; j<defcon; j++)
   {
-    PropItem *item = (PropItem*)mDefaultStyles[j];
-    if (item) delete item;
+    delete mDefaultStyles[j];
   }
   mDefaultStyles.Clear();
   return NS_OK;
@@ -637,10 +635,10 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
 nsresult nsHTMLEditor::ApplyDefaultProperties()
 {
   nsresult res = NS_OK;
-  PRInt32 j, defcon = mDefaultStyles.Count();
+  PRUint32 j, defcon = mDefaultStyles.Length();
   for (j=0; j<defcon; j++)
   {
-    PropItem *propItem = (PropItem*)mDefaultStyles[j];
+    PropItem *propItem = mDefaultStyles[j];
     if (!propItem) 
       return NS_ERROR_NULL_POINTER;
     res = SetInlineProperty(propItem->tag, propItem->attr, propItem->value);
@@ -1082,7 +1080,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           {
             *aFirst = *aAny = *aAll = PR_TRUE;
             if (outValue)
-              outValue->Assign(((PropItem*)mDefaultStyles[index])->value);
+              outValue->Assign(mDefaultStyles[index]->value);
           }
         }
         return NS_OK;

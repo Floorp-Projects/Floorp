@@ -134,25 +134,14 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
 
 void TypeInState::Reset()
 {
-  PRInt32 count;
-  PropItem *propItemPtr;
-  
-  while ((count = mClearedArray.Count()))
-  {
-    // go backwards to keep nsVoidArray from memmoving everything each time
-    count--; // nsVoidArray is zero based
-    propItemPtr = (PropItem*)mClearedArray.ElementAt(count);
-    mClearedArray.RemoveElementAt(count);
-    if (propItemPtr) delete propItemPtr;
+  for(PRUint32 i = 0, n = mClearedArray.Length(); i < n; i++) {
+    delete mClearedArray[i];
   }
-  while ((count = mSetArray.Count()))
-  {
-    // go backwards to keep nsVoidArray from memmoving everything each time
-    count--; // nsVoidArray is zero based
-    propItemPtr = (PropItem*)mSetArray.ElementAt(count);
-    mSetArray.RemoveElementAt(count);
-    if (propItemPtr) delete propItemPtr;
+  mClearedArray.Clear();
+  for(PRUint32 i = 0, n = mSetArray.Length(); i < n; i++) {
+    delete mSetArray[i];
   }
+  mSetArray.Clear();
 }
 
 
@@ -186,7 +175,7 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsStr
   if (IsPropSet(aProp,aAttr,nsnull,index))
   {
     // if it's already set, update the value
-    item = (PropItem*)mSetArray[index];
+    item = mSetArray[index];
     item->value = aValue;
   }
   else 
@@ -196,7 +185,7 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsStr
     if (!item) return NS_ERROR_OUT_OF_MEMORY;
     
     // add it to the list of set properties
-    mSetArray.AppendElement((void*)item);
+    mSetArray.AppendElement(item);
     
     // remove it from the list of cleared properties, if we have a match
     RemovePropFromClearedList(aProp,aAttr);  
@@ -230,7 +219,7 @@ nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
   RemovePropFromSetList(aProp,aAttr);
   
   // add it to the list of cleared properties
-  mClearedArray.AppendElement((void*)item);
+  mClearedArray.AppendElement(item);
   
   return NS_OK;
 }
@@ -244,11 +233,11 @@ nsresult TypeInState::TakeClearProperty(PropItem **outPropItem)
 {
   if (!outPropItem) return NS_ERROR_NULL_POINTER;
   *outPropItem = nsnull;
-  PRInt32 count = mClearedArray.Count();
-  if (count) // go backwards to keep nsVoidArray from memmoving everything each time
+  PRUint32 count = mClearedArray.Length();
+  if (count)
   {
-    count--; // nsVoidArray is zero based
-    *outPropItem = (PropItem*)mClearedArray[count];
+    count--; // indizes are zero based
+    *outPropItem = mClearedArray[count];
     mClearedArray.RemoveElementAt(count);
   }
   return NS_OK;
@@ -262,11 +251,11 @@ nsresult TypeInState::TakeSetProperty(PropItem **outPropItem)
 {
   if (!outPropItem) return NS_ERROR_NULL_POINTER;
   *outPropItem = nsnull;
-  PRInt32 count = mSetArray.Count();
-  if (count) // go backwards to keep nsVoidArray from memmoving everything each time
+  PRUint32 count = mSetArray.Length();
+  if (count)
   {
-    count--; // nsVoidArray is zero based
-    *outPropItem = (PropItem*)mSetArray[count];
+    count--; // indizes are zero based
+    *outPropItem = mSetArray[count];
     mSetArray.RemoveElementAt(count);
   }
   return NS_OK;
@@ -334,21 +323,16 @@ nsresult TypeInState::RemovePropFromSetList(nsIAtom *aProp,
   if (!aProp)
   {
     // clear _all_ props
-    mRelativeFontSize=0;
-    while ((index = mSetArray.Count()))
-    {
-      // go backwards to keep nsVoidArray from memmoving everything each time
-      index--; // nsVoidArray is zero based
-      item = (PropItem*)mSetArray.ElementAt(index);
-      mSetArray.RemoveElementAt(index);
-      if (item) delete item;
+    for(PRUint32 i = 0, n = mSetArray.Length(); i < n; i++) {
+      delete mSetArray[i];
     }
+    mSetArray.Clear();
+    mRelativeFontSize=0;
   }
   else if (FindPropInList(aProp, aAttr, nsnull, mSetArray, index))
   {
-    item = (PropItem*)mSetArray.ElementAt(index);
+    delete mSetArray[index];
     mSetArray.RemoveElementAt(index);
-    if (item) delete item;
   }
   return NS_OK;
 }
@@ -360,9 +344,8 @@ nsresult TypeInState::RemovePropFromClearedList(nsIAtom *aProp,
   PRInt32 index;
   if (FindPropInList(aProp, aAttr, nsnull, mClearedArray, index))
   {
-    PropItem *item = (PropItem*)mClearedArray.ElementAt(index);
+    delete mClearedArray[index];
     mClearedArray.RemoveElementAt(index);
-    if (item) delete item;
   }
   return NS_OK;
 }
@@ -383,10 +366,10 @@ PRBool TypeInState::IsPropSet(nsIAtom *aProp,
                               PRInt32 &outIndex)
 {
   // linear search.  list should be short.
-  PRInt32 i, count = mSetArray.Count();
+  PRUint32 i, count = mSetArray.Length();
   for (i=0; i<count; i++)
   {
-    PropItem *item = (PropItem*)mSetArray[i];
+    PropItem *item = mSetArray[i];
     if ( (item->tag == aProp) &&
          (item->attr == aAttr) )
     {
@@ -425,14 +408,14 @@ PRBool TypeInState::IsPropCleared(nsIAtom *aProp,
 PRBool TypeInState::FindPropInList(nsIAtom *aProp, 
                                    const nsAString &aAttr,
                                    nsAString *outValue,
-                                   nsVoidArray &aList,
+                                   nsTArray<PropItem*> &aList,
                                    PRInt32 &outIndex)
 {
   // linear search.  list should be short.
-  PRInt32 i, count = aList.Count();
+  PRUint32 i, count = aList.Length();
   for (i=0; i<count; i++)
   {
-    PropItem *item = (PropItem*)aList[i];
+    PropItem *item = aList[i];
     if ( (item->tag == aProp) &&
          (item->attr == aAttr) ) 
     {
