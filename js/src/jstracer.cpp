@@ -135,9 +135,6 @@ static const char tagChar[]  = "OIDISIBI";
     (MAX_NATIVE_STACK_SLOTS * sizeof(jsval) +                                 \
      MAX_CALL_STACK_ENTRIES * sizeof(JSInlineFrame))
 
-/* Amount of memory in the main fragmento before flushing. */
-#define MAX_MEM_IN_MAIN_FRAGMENTO (1 << 24)
-
 /* Max number of branches per tree. */
 #define MAX_BRANCHES 32
 
@@ -3212,8 +3209,8 @@ js_DeleteRecorder(JSContext* cx)
     /*
      * If we ran out of memory, flush the code cache.
      */
-    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error() == OutOMem
-        || js_OverfullFragmento(tm->fragmento, MAX_MEM_IN_MAIN_FRAGMENTO)) {
+    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error() == OutOMem ||
+        js_OverfullFragmento(tm, tm->fragmento)) {
         FlushJITCache(cx);
         return false;
     }
@@ -3534,8 +3531,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     f->root = f;
     f->lirbuf = tm->lirbuf;
 
-    if (f->lirbuf->outOMem() ||
-        js_OverfullFragmento(tm->fragmento, MAX_MEM_IN_MAIN_FRAGMENTO)) {
+    if (f->lirbuf->outOMem() || js_OverfullFragmento(tm, tm->fragmento)) {
         FlushJITCache(cx);
         debug_only_v(printf("Out of memory recording new tree, flushing cache.\n");)
         return false;
@@ -4594,9 +4590,8 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         return JSMRS_STOP;
     }
 
-    if (tr->lirbuf->outOMem() || 
-        js_OverfullFragmento(JS_TRACE_MONITOR(cx).fragmento, 
-                             MAX_MEM_IN_MAIN_FRAGMENTO)) {
+    if (tr->lirbuf->outOMem() ||
+        js_OverfullFragmento(&JS_TRACE_MONITOR(cx), JS_TRACE_MONITOR(cx).fragmento)) {
         js_AbortRecording(cx, "no more LIR memory");
         FlushJITCache(cx);
         return JSMRS_STOP;
@@ -4837,6 +4832,22 @@ js_arm_check_vfp() { return false; }
 
 #endif /* NANOJIT_ARM */
 
+#define K *1024
+#define M K K
+#define G K M
+
+void
+js_SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
+{
+    JSTraceMonitor* tm = &JS_THREAD_DATA(cx)->traceMonitor;
+    JS_ASSERT(tm->fragmento && tm->reFragmento);
+    if (bytes > 1 G)
+        bytes = 1 G;
+    if (bytes < 128 K)
+        bytes = 128 K;
+    tm->maxCodeCacheBytes = bytes;
+}
+
 void
 js_InitJIT(JSTraceMonitor *tm)
 {
@@ -4852,6 +4863,11 @@ js_InitJIT(JSTraceMonitor *tm)
 #endif
         did_we_check_processor_features = true;
     }
+
+    /*
+     * Set the default size for the code cache to 16MB.
+     */
+    tm->maxCodeCacheBytes = 16 M;
 
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
@@ -4987,7 +5003,7 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
 }
 
 bool
-js_OverfullFragmento(Fragmento *frago, size_t maxsz)
+js_OverfullFragmento(JSTraceMonitor* tm, Fragmento *fragmento)
 {
     /* 
      * You might imagine the outOMem flag on the lirbuf is sufficient
@@ -5023,7 +5039,20 @@ js_OverfullFragmento(Fragmento *frago, size_t maxsz)
      * handled by the (few) callers of this function.
      *
      */
-    return (frago->_stats.pages > (maxsz >> NJ_LOG2_PAGE_SIZE));
+    jsuint maxsz = tm->maxCodeCacheBytes;
+    if (fragmento == tm->fragmento) {
+        if (tm->prohibitFlush)
+            return false;
+    } else {
+        /*
+         * At the time of making the code cache size configurable, we were using
+         * 16 MB for the main code cache and 1 MB for the regular expression code
+         * cache. We will stick to this 16:1 ratio here until we unify the two
+         * code caches.
+         */
+        maxsz /= 16;
+    }
+    return (fragmento->_stats.pages > (maxsz >> NJ_LOG2_PAGE_SIZE));
 }
 
 JS_FORCES_STACK JS_FRIEND_API(void)
