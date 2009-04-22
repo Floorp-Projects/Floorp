@@ -1976,7 +1976,7 @@ SessionStoreService.prototype = {
       // start might already be in use)
       var id = aIdMap[aEntry.ID] || 0;
       if (!id) {
-        for (id = Date.now(); aIdMap.used[id]; id++);
+        for (id = Date.now(); id in aIdMap.used; id++);
         aIdMap[aEntry.ID] = id;
         aIdMap.used[id] = true;
       }
