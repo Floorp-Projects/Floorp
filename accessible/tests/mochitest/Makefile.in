@@ -77,6 +77,7 @@ _TEST_FILES =\
 		test_cssattrs.html \
 		test_elm_filectrl.html \
 		test_elm_media.html \
+		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_mutation.html \
 		test_events_tree.xul \
