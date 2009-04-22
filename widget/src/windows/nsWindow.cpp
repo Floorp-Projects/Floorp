@@ -7967,26 +7967,21 @@ void nsWindow::StopFlashing()
 NS_IMETHODIMP
 nsWindow::GetLastInputEventTime(PRUint32& aTime)
 {
-  if (HasPendingInputEvent()) {
+  WORD qstatus = HIWORD(GetQueueStatus(QS_INPUT));
+
+  // If there is pending input or the user is currently
+  // moving the window then return the current time.
+  // Note: When the user is moving the window WIN32 spins
+  // a separate event loop and input events are not
+  // reported to the application.
+  nsToolkit* toolkit = (nsToolkit *)mToolkit;
+  if (qstatus || (toolkit && toolkit->UserIsMovingWindow())) {
     gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
 
   aTime = gLastInputEventTime;
 
   return NS_OK;
-}
-
-PRBool
-nsWindow::HasPendingInputEvent()
-{
-  // If there is pending input or the user is currently
-  // moving the window then return true.
-  // Note: When the user is moving the window WIN32 spins
-  // a separate event loop and input events are not
-  // reported to the application.
-  WORD qstatus = HIWORD(GetQueueStatus(QS_INPUT));
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  return qstatus || (toolkit && toolkit->UserIsMovingWindow());
 }
 
 //-------------------------------------------------------------------------
