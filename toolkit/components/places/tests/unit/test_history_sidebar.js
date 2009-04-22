@@ -311,6 +311,7 @@ function test_RESULTS_AS_SITE_QUERY() {
 
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_SITE_QUERY;
+  options.sortingMode = options.SORT_BY_TITLE_ASCENDING;
   var query = hs.getNewQuery();
   var result = hs.executeQuery(query, options);
   var root = result.root;
