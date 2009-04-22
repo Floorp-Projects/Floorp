@@ -375,8 +375,7 @@ js_SetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
     }
 
     if (sprop->attrs & JSPROP_GETTER) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_GETTER_ONLY, NULL);
+        js_ReportGetterOnlyAssignment(cx);
         return JS_FALSE;
     }
 
