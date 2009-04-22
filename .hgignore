@@ -7,10 +7,8 @@
 (^|/)\.DS_Store$
 
 # User files that may appear at the root
-^\.mozconfig$
-^mozconfig$
-^\.mozconfig\.mk$
-^\.mozconfig\.out$
+^\.mozconfig
+^mozconfig
 ^configure$
 ^config\.cache$
 ^config\.log$
