@@ -123,24 +123,18 @@ struct GlobalState {
  */
 struct JSTraceMonitor {
     /*
-     * Flag set when running (or recording) JIT-compiled code. This prevents
-     * both interpreter activation and last-ditch garbage collection when up
-     * against our runtime's memory limits. This flag also suppresses calls to
-     * JS_ReportOutOfMemory when failing due to runtime limits.
+     * The context currently executing JIT-compiled code on this thread, or
+     * NULL if none. Among other things, this can in certain cases prevent
+     * last-ditch GC and suppress calls to JS_ReportOutOfMemory.
      *
-     * !onTrace && !recorder: not on trace.
-     * onTrace && recorder: recording a trace.
-     * onTrace && !recorder: executing a trace.
-     * !onTrace && recorder && !prohibitFlush:
-     *      not on trace; deep-aborted while recording.
-     * !onTrace && recorder && prohibitFlush:
-     *      not on trace; deep-bailed in SpiderMonkey code called from a
-     *      trace. JITted code is on the stack.
+     * !tracecx && !recorder: not on trace
+     * !tracecx && !recorder && prohibitFlush: deep-bailed
+     * !tracecx && recorder && !recorder->deepAborted: recording
+     * !tracecx && recorder && recorder->deepAborted: deep aborted
+     * tracecx && !recorder: executing a trace
+     * tracecx && recorder: executing inner loop, recording outer loop
      */
-    JSPackedBool            onTrace;
-
-    /* See reservedObjects below. */
-    JSPackedBool            useReservedObjects;
+    JSContext               *tracecx;
 
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::Fragmento) fragmento;
@@ -151,19 +145,19 @@ struct JSTraceMonitor {
     struct GlobalState globalStates[MONITOR_N_GLOBAL_STATES];
     struct VMFragment* vmfragments[FRAGMENT_TABLE_SIZE];
 
-
     /*
      * If nonzero, do not flush the JIT cache after a deep bail.  That would
      * free JITted code pages that we will later return to.  Instead, set
      * the needFlush flag so that it can be flushed later.
      */
     uintN                   prohibitFlush;
-    JSBool                  needFlush;
+    JSPackedBool            needFlush;
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
      * The JIT uses this to ensure that leaving a trace tree can't fail.
      */
+    JSPackedBool            useReservedObjects;
     JSObject                *reservedObjects;
 
     /* Fragmento for the regular expression compiler. This is logically
@@ -184,7 +178,7 @@ typedef struct InterpStruct InterpStruct;
  * executing.  cx must be a context on the current thread.
  */
 #ifdef JS_TRACER
-# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).onTrace)
+# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).tracecx != NULL)
 #else
 # define JS_ON_TRACE(cx)            JS_FALSE
 #endif
@@ -1445,9 +1439,9 @@ js_GetCurrentBytecodePC(JSContext* cx);
 
 #ifdef JS_TRACER
 /*
- * Reconstruct the JS stack and clear cx->onTrace. We must be currently
- * executing a _FAIL builtin from trace on cx. The machine code for the trace
- * remains on the C stack when js_DeepBail returns.
+ * Reconstruct the JS stack and clear cx->tracecx. We must be currently in a
+ * _FAIL builtin from trace on cx or another context on the same thread. The
+ * machine code for the trace remains on the C stack when js_DeepBail returns.
  *
  * Implemented in jstracer.cpp.
  */
