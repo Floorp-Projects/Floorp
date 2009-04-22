@@ -1013,6 +1013,12 @@ function getNotificationBox(aWindow) {
   return Browser.getNotificationBox();
 }
 
+function showDownloadsManager(aWindowContext, aID, aReason) {
+  BrowserUI.show(UIMODE_PANEL);
+  BrowserUI.switchPane("downloads-container");
+  // TODO: select the download with aID
+}
+
 var AlertsHelper = {
   _timeoutID: -1,
   _listener: null,

@@ -75,6 +75,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/extensions.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/downloads.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/WidgetStack.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/CanvasBrowser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/InputHandler.js"/>
@@ -315,7 +316,24 @@
           </notificationbox>
         </vbox>
 
-        <iframe id="downloads-container" flex="1"/>
+        <vbox id="downloads-container" flex="1">
+          <vbox id="downloads-header">
+            <hbox align="center">
+              <label value="&downloadsHeader.label;" flex="1"/>
+              <radiogroup id="downloads-sort-mode" oncommand="DownloadsView.toggleMode();">
+                <radio label="&downloadsSortDate.label;" value="date" selected="true"/>
+                <radio label="&downloadsSortSite.label;" value="site"/>
+                <radio label="&downloadsSortName.label;" value="name"/>
+                <radio label="&downloadsSearch.label;" value="search"/>
+              </radiogroup>
+            </hbox>
+            <hbox id="downloads-search-box" pack="end" collapsed="true">
+              <textbox id="downloads-search-text" emptytext="&downloadsSearch.emptytext;" type="search" searchbutton="false"
+                       oncommand="DownloadsView.getDownloads();"/>
+            </hbox>
+          </vbox>
+          <richlistbox id="downloads-list" flex="1"/>
+        </vbox>
 
         <vbox id="prefs-container" flex="1">
           <hbox pack="center" id="buttons"/>

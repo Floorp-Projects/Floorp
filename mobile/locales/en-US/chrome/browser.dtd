@@ -63,6 +63,21 @@
 <!ENTITY addonUninstall.label      "Uninstall">
 <!ENTITY addonCancel.label         "Cancel">
 
+<!ENTITY downloadsHeader.label     "Downloads">
+<!ENTITY downloadsSortDate.label   "By Date">
+<!ENTITY downloadsSortSite.label   "By Site">
+<!ENTITY downloadsSortName.label   "By Name">
+<!ENTITY downloadsSearch.label     "Search">
+<!ENTITY downloadsSearch.emptytext "Search for downloaded file">
+
+<!ENTITY downloadShowPage.label    "Go to Page">
+<!ENTITY downloadShow.label        "Find File">
+<!ENTITY downloadOpen.label        "Open File">
+<!ENTITY downloadCancel.label      "Cancel">
+<!ENTITY downloadPause.label       "Pause">
+<!ENTITY downloadResume.label      "Resume">
+<!ENTITY downloadRetry.label       "Retry">
+
 <!ENTITY identity.unverifiedsite2 "This web site does not supply identity information.">
 <!ENTITY identity.connectedTo "You are connected to">
 <!-- Localization note (identity.runBy) : This string appears between a
