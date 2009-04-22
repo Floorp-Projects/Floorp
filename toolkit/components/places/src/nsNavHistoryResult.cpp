@@ -2386,7 +2386,24 @@ nsNavHistoryQueryResultNode::FillChildren()
     if (comparator) {
       nsCAutoString sortingAnnotation;
       GetSortingAnnotation(sortingAnnotation);
-      RecursiveSort(sortingAnnotation.get(), comparator);
+      // Usually containers queries results comes already sorted from the
+      // database, but some locales could have special rules to sort by title.
+      // RecursiveSort won't apply these rules to containers in containers
+      // queries because when setting sortingMode on the result we want to sort
+      // contained items (bug 473157).
+      // Base container RecursiveSort will sort both our children and all
+      // descendants, and is used in this case because we have to do manual
+      // title sorting.
+      // Query RecursiveSort will instead only sort descendants if we are a
+      // constinaersQuery, e.g. a grouped query that will return other queries.
+      // For other type of queries it will act as the base one.
+      if (IsContainersQuery() &&
+          sortType == mOptions->SortingMode() &&
+          (sortType == nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING ||
+           sortType == nsINavHistoryQueryOptions::SORT_BY_TITLE_DESCENDING))
+        nsNavHistoryContainerResultNode::RecursiveSort(sortingAnnotation.get(), comparator);
+      else
+        RecursiveSort(sortingAnnotation.get(), comparator);
     }
   }
 
@@ -2570,9 +2587,11 @@ nsNavHistoryQueryResultNode::RecursiveSort(
 
   if (!IsContainersQuery())
     mChildren.Sort(aComparator, data);
-  else
-    for (PRInt32 i = 0; i < mChildren.Count(); i ++)
+
+  for (PRInt32 i = 0; i < mChildren.Count(); i++) {
+    if (mChildren[i]->IsContainer())
       mChildren[i]->GetAsContainer()->RecursiveSort(aData, aComparator);
+  }
 }
 
 
