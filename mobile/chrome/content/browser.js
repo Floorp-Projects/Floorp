@@ -159,6 +159,7 @@ var Browser = {
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
     os.addObserver(gXPInstallObserver, "xpinstall-download-started", false);
+    os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
 
     // XXX hook up memory-pressure notification to clear out tab browsers
     //os.addObserver(function(subject, topic, data) self.destroyEarliestBrowser(), "memory-pressure", false);
@@ -229,6 +230,13 @@ var Browser = {
       gPrefService.clearUserPref("temporary.disablePlugins");
       this.setPluginState(true);
     }
+  },
+
+  shutdown: function() {
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
+    os.removeObserver(gXPInstallObserver, "xpinstall-download-started");
+    os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
   },
 
   updateViewportSize: function() {
@@ -1005,6 +1013,24 @@ const gXPInstallObserver = {
           nBox.appendNotification(messageString, notificationName, iconURL, priority, buttons);
         }
         break;
+    }
+  }
+};
+
+const gSessionHistoryObserver = {
+  observe: function sho_observe(subject, topic, data) {
+    if (topic != "browser:purge-session-history")
+      return;
+
+    let back = document.getElementById("cmd_back");
+    back.setAttribute("disabled", "true");
+    let forward = document.getElementById("cmd_forward");
+    forward.setAttribute("disabled", "true");
+
+    let urlbar = document.getElementById("urlbar-edit");
+    if (urlbar) {
+      // Clear undo history of the URL bar
+      urlbar.editor.transactionManager.clear()
     }
   }
 };
