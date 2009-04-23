@@ -111,7 +111,7 @@ var ExtensionsView = {
     return item;
   },
 
-  _clearSection: function ev_clearSection(aSection) {
+  clearSection: function ev_clearSection(aSection) {
     let start = end = null;
 
     if (aSection == "local") {
@@ -245,9 +245,14 @@ var ExtensionsView = {
   },
 
   getAddonsFromLocal: function ev_getAddonsFromLocal() {
-    this._clearSection("local");
+    this.clearSection("local");
 
     let items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_ANY, {});
+    if (items.length == 0) {
+      let strings = document.getElementById("bundle_browser");
+      this.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
+    }
+
     for (let i = 0; i < items.length; i++) {
       let addon = items[i];
 
@@ -383,24 +388,32 @@ var ExtensionsView = {
     }
   },
 
-  displaySearchMessage: function ev_displaySearchMessage(aMessage, aButtonLabel, aHideThrobber) {
+  displaySectionMessage: function ev_displaySectionMessage(aSection, aMessage, aButtonLabel, aHideThrobber) {
     let item = document.createElement("richlistitem");
     item.setAttribute("typeName", "message");
     item.setAttribute("message", aMessage);
-    item.setAttribute("button", aButtonLabel);
+    if (aButtonLabel)
+      item.setAttribute("button", aButtonLabel);
+    else
+      item.setAttribute("hidebutton", "true");
     item.setAttribute("hidethrobber", aHideThrobber);
-    this._list.appendChild(item);
+
+    let section = this._localItem;
+    if (aSection == "repo")
+      section = this._repoItem;
+
+    this._list.insertBefore(item, section.nextSibling);
   },
 
   getAddonsFromRepo: function ev_getAddonsFromRepo(aTerms) {
-    this._clearSection("repo");
+    this.clearSection("repo");
 
     if (this._repo.isSearching)
       this._repo.cancelSearch();
 
     let strings = document.getElementById("bundle_browser");
     if (aTerms) {
-      this.displaySearchMessage(strings.getString("addonsSearchStart.label"),
+      this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
                                 strings.getString("addonsSearchStart.button"), false);
       this._repo.searchAddons(aTerms, this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
     }
@@ -409,7 +422,7 @@ var ExtensionsView = {
         this.displaySearchResults(RecommendedSearchResults.cache, -1, true);
       }
       else {
-        this.displaySearchMessage(strings.getString("addonsSearchStart.label"),
+        this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
                                   strings.getString("addonsSearchStart.button"), false);
         this._repo.retrieveRecommendedAddons(this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
       }
@@ -417,11 +430,11 @@ var ExtensionsView = {
   },
 
   displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aIsRecommended) {
-    this._clearSection("repo");
+    this.clearSection("repo");
 
     if (aAddons.length == 0) {
       let strings = document.getElementById("bundle_browser");
-      this.displaySearchMessage(strings.getString("addonsSearchNone.label"),
+      this.displaySectionMessage("repo", strings.getString("addonsSearchNone.label"),
                                 strings.getString("addonsSearchNone.button"), true);
       return;
     }
@@ -469,9 +482,11 @@ var RecommendedSearchResults = {
   },
 
   searchFailed: function() {
+    ExtensionsView.clearSection("repo");
+
     let strings = document.getElementById("bundle_browser");
     let brand = document.getElementById("bundle_brand");
-    ExtensionsView.displaySearchMessage(strings.getFormattedString("addonsSearchFail.label", [brand.getString("brandShortName")]),
+    ExtensionsView.displaySectionMessage("repo", strings.getFormattedString("addonsSearchFail.label", [brand.getString("brandShortName")]),
                                         strings.getString("addonsSearchFail.button"), true);
   }
 }
@@ -484,9 +499,11 @@ var AddonSearchResults = {
   },
 
   searchFailed: function() {
+    ExtensionsView.clearSection("repo");
+
     let strings = document.getElementById("bundle_browser");
     let brand = document.getElementById("bundle_brand");
-    ExtensionsView.displaySearchMessage(strings.getFormattedString("addonsSearchFail.label", [brand.getString("brandShortName")]),
+    ExtensionsView.displaySectionMessage("repo", strings.getFormattedString("addonsSearchFail.label", [brand.getString("brandShortName")]),
                                         strings.getString("addonsSearchFail.button"), true);
   }
 }
