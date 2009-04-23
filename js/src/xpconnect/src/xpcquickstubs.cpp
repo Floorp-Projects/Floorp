@@ -829,7 +829,7 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
             wrapper = (XPCWrappedNative*) xpc_GetJSPrivate(STOBJ_GET_PARENT(cur));
             NS_ASSERTION(wrapper, "XPCWN wrapping nothing");
         }
-        else if(clazz == &sXPC_XOW_JSClass.base)
+        else
         {
             JSObject *unsafeObj = XPCWrapper::Unwrap(cx, cur);
             if(unsafeObj)
@@ -840,21 +840,6 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
 
             // This goto is a bug, dutifully copied from
             // XPCWrappedNative::GetWrappedNativeOfJSObject.
-            goto next;
-        }
-        else if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
-        {
-            if(!XPCNativeWrapper::GetWrappedNative(cx, cur, &wrapper) ||
-               !wrapper)
-                goto next;
-        }
-        else if(IsXPCSafeJSObjectWrapperClass(clazz))
-        {
-            cur = STOBJ_GET_PARENT(cur);
-            NS_ASSERTION(cur, "SJOW wrapping nothing");
-            continue;
-        }
-        else {
             goto next;
         }
 

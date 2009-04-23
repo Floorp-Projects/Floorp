@@ -44,6 +44,7 @@
 #include "xpcprivate.h"
 #include "nsArrayEnumerator.h"
 #include "nsWrapperCache.h"
+#include "XPCWrapper.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
@@ -736,7 +737,12 @@ nsXPCWrappedJSClass::GetRootJSObject(XPCCallContext& ccx, JSObject* aJSObj)
 {
     JSObject* result = CallQueryInterfaceOnJSObject(ccx, aJSObj,
                                                     NS_GET_IID(nsISupports));
-    return result ? result : aJSObj;
+    if(!result)
+        return aJSObj;
+    JSObject* inner = XPCWrapper::Unwrap(ccx, result);
+    if (inner)
+        return inner;
+    return result;
 }
 
 void
