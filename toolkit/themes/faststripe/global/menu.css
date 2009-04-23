@@ -1,0 +1,283 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== menu.css =======================================================
+  == Styles used by XUL menu-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: menu/menuitem ::::: */
+
+menu,
+menuitem {
+  -moz-appearance: menuitem;
+  -moz-box-align: center;
+  color: MenuText;
+  font: menu;
+  list-style-image: none;
+  -moz-image-region: auto;
+}
+
+menuitem[default="true"] {
+  font-weight: bold;
+}
+
+menu[disabled="true"], menuitem[disabled="true"],
+menu[_moz-menuactive="true"][disabled="true"],
+menuitem[_moz-menuactive="true"][disabled="true"] {
+  color: GrayText;
+}
+
+menuitem.spell-suggestion {
+  font-weight:bold;
+}
+
+/* ..... internal content .... */
+
+.menu-accel,
+.menu-iconic-accel,
+.menu-text,
+.menu-iconic-text {
+  margin: 0px !important;
+  padding: 1px 0px;
+  color: inherit;
+}
+
+.menu-text {
+  -moz-padding-start: 1.45em !important;
+  -moz-appearance: menuitemtext;
+}
+
+.menu-text,
+.menu-iconic-text {
+  font-weight: inherit;
+  -moz-margin-start: 2px !important;
+  -moz-padding-end: 2px;
+}
+
+.menu-description {
+  font-style: italic;
+  color: GrayText;
+  -moz-margin-start: 1ex !important;
+}
+
+.menu-accel,
+.menu-iconic-accel {
+  color: inherit;
+  -moz-margin-start: 0.74em !important;
+  -moz-margin-end: 1.35em !important;
+}
+
+.menu-iconic-left {
+  min-width: 1.45em;
+}
+
+.menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
+menu.menu-iconic > .menu-iconic-left,
+menuitem.menuitem-iconic > .menu-iconic-left {
+  -moz-appearance: menuimage;
+  padding-top: 2px;
+}
+
+/* ..... menu arrow box ..... */
+
+.menu-right {
+  -moz-appearance: menuarrow;
+  -moz-margin-end: -2px;
+  list-style-image: none;
+  min-width: 1.28em;
+  padding-top: 1px;
+}
+
+/* ::::: menu/menuitems in menubar ::::: */
+
+menubar > menu {
+  border: 2px solid transparent;
+}
+menubar > menu[_moz-menuactive="true"][open="true"] {
+  border-width: 3px 1px 1px 3px;
+}
+menubar > menu[_moz-menuactive="true"],
+menubar > menu[_moz-menuactive="true"][open="true"] {
+  color: -moz-menubarhovertext;
+  background-color: highlight;
+}
+
+/* ..... internal content .... */
+
+.menubar-left {
+  color: inherit;
+}
+
+.menubar-text {
+  margin: 1px 6px 2px 6px !important;
+  color: inherit;
+}
+
+/* ::::: menu/menuitems in popups ::::: */
+
+menupopup > menu,
+popup > menu,
+menupopup > menuitem,
+popup > menuitem {
+  max-width: 42em;
+}
+
+menupopup > menu[_moz-menuactive="true"],
+menupopup > menuitem[_moz-menuactive="true"],
+popup > menu[_moz-menuactive="true"],
+popup > menuitem[_moz-menuactive="true"] {
+  background-color: -moz-menuhover;
+  color: -moz-menuhovertext;
+}
+
+/* ::::: menu/menuitems in menulist popups ::::: */
+
+.menulist-menupopup > menuitem,
+menulist > menupopup > menuitem,
+.menulist-menupopup > menu,
+menulist > menupopup > menu {
+  -moz-appearance: none;
+  border: 1px solid transparent;
+  padding-top: 1px;
+  -moz-padding-end: 30px;
+  padding-bottom: 1px;
+  -moz-padding-start: 5px;
+  max-width: none;
+  font: message-box;
+  color: -moz-FieldText;
+}
+
+.menulist-menupopup > menuitem > .menu-iconic-left,
+menulist > menupopup > menuitem > .menu-iconic-left,
+.menulist-menupopup > menu > .menu-iconic-left,
+menulist > menupopup > menu > .menu-iconic-left {
+  display: none;
+  padding-top: 0px;
+}
+
+.menulist-menupopup > menuitem > label,
+menulist > menupopup > menuitem > label,
+.menulist-menupopup > menu > label,
+menulist > menupopup > menu > label {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+menulist > menupopup > menuitem[_moz-menuactive="true"] {
+  border: 1px dotted #F5DB95;
+  background-color: highlight;
+  color: highlighttext;
+}
+
+menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
+  color: GrayText;
+}
+
+menulist > menupopup > menuitem[disabled="true"]:not([_moz-menuactive="true"]):-moz-system-metric(windows-classic) {
+  color: GrayText;
+  text-shadow: none;
+}
+
+menulist > menupopup > menuitem > .menu-iconic-text {
+  margin: 0 !important;
+}
+
+/* ::::: checkbox and radio menuitems ::::: */
+
+menuitem[type="checkbox"],
+menuitem[checked="true"] {
+  -moz-appearance: checkmenuitem;
+}
+menuitem[type="checkbox"] > .menu-iconic-left,
+menuitem[checked="true"] > .menu-iconic-left {
+  -moz-appearance: menucheckbox;
+  padding-top: 0px;
+}
+
+menuitem[type="radio"] {
+  -moz-appearance: radiomenuitem;
+}
+menuitem[type="radio"] > .menu-iconic-left {
+  -moz-appearance: menuradio;
+  padding-top: 0px;
+}
+
+menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
+  /* prevent .menu-iconic-icon from enforcing a minimal height of 16px (see bug 411064)
+     XXXzeniko apply that .menu-iconic-icon rule only for children of .menu-iconic */
+  display: none;
+}
+
+/* ::::: menuseparator ::::: */
+
+menuseparator {
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+  border-bottom: 1px solid gray;
+}
+
+menulist > menupopup > menuseparator,
+.menulist-menupopup > menuseparator {
+  padding: 6px 0 5px 0;
+  border-top: 1px solid black;
+}
+
+/* ::::: autocomplete ::::: */
+
+.autocomplete-history-popup > menuitem {
+  max-width: none !important;
+  font: message-box;
+}
+
+/* ::::: tree column picker ::::: */
+
+.treecell-popupcell-menu {
+  -moz-margin-start: -2px;
+  list-style-image: url("chrome://global/skin/columnselect.gif");
+  -moz-image-region: auto;
+}

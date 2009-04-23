@@ -6316,6 +6316,15 @@ AC_SUBST(MOZ_LOCATION_CFLAGS)
 AC_SUBST(MOZ_LOCATION_LIBS)
 
 dnl ========================================================
+dnl = faststripe theme
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(faststripe,
+[  --enable-faststripe  Use faststripe theme],
+    MOZ_THEME_FASTSTRIPE=1,
+    MOZ_THEME_FASTSTRIPE= )
+AC_SUBST(MOZ_THEME_FASTSTRIPE)
+
+dnl ========================================================
 dnl =
 dnl = Feature options that require extra sources to be pulled
 dnl =
