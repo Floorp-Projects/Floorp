@@ -130,7 +130,7 @@
         <xul:image src="chrome://browser/skin/images/throbber.png" xbl:inherits="hidden=hidethrobber"/>
         <xul:label class="normal" xbl:inherits="value=message"/>
       </xul:hbox>
-      <xul:button xbl:inherits="label=button" oncommand="ExtensionsView.resetSearch();"/>
+      <xul:button xbl:inherits="label=button,hidden=hidebutton" oncommand="ExtensionsView.resetSearch();"/>
     </content>
   </binding>
 
