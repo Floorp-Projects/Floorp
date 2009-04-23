@@ -9832,31 +9832,6 @@ JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GENERATOR()
 {
     return false;
-#if 0
-    JSStackFrame* fp = cx->fp;
-    if (fp->callobj || fp->argsobj || fp->varobj)
-        ABORT_TRACE("can't trace hard-case generator");
-
-    // Generate a type map for the outgoing frame and stash it in the LIR
-    unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
-    if (stackSlots > MAX_SKIP_BYTES)
-        ABORT_TRACE("generator requires saving too much stack");
-    LIns* data = lir->skip(stackSlots * sizeof(uint8));
-    uint8* typemap = (uint8 *)data->payload();
-    uint8* m = typemap;
-    /* Determine the type of a store by looking at the current type of the actual value the
-       interpreter is using. For numbers we have to check what kind of store we used last
-       (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
-        *m++ = determineSlotType(vp);
-    );
-    FlushNativeStackFrame(cx, 0, typemap, state.???, NULL);
-
-    LIns* args[] = { INS_CONST(fp->argc), INS_CONSTPTR(fp->callee), cx_ins };
-    LIns* g_ins = lir->insCall(&js_FastNewGenerator_ci, args);
-    guard(false, lir->ins_eq0(g_ins), OOM_EXIT);
-    return true;
-#endif
 }
 
 JS_REQUIRES_STACK bool
