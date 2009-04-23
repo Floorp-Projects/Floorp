@@ -73,7 +73,7 @@ TOOL_DIRS += default/mac
 endif
 
 ifdef ENABLE_TESTS
-ifneq (,$(filter WINNT Darwin Linux OS2,$(OS_ARCH)))
+ifneq (,$(filter WINNT Darwin Linux OS2 SunOS,$(OS_ARCH)))
 DIRS += test
 TOOL_DIRS += sdk
 endif
