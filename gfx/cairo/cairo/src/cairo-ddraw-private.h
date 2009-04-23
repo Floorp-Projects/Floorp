@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,69 +27,38 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *	Owen Taylor <otaylor@redhat.com>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#ifndef CAIRO_DDRAW_PRIVATE_H
+#define CAIRO_DDRAW_PRIVATE_H
 
-#include "cairo-platform.h"
+#include "cairo-ddraw.h"
+#include "cairoint.h"
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+#define FILL_THRESHOLD (1024u)
 
-#ifndef cairo_public
-# define cairo_public
-#endif
+typedef struct _cairo_ddraw_surface {
+  cairo_surface_t base;
+  cairo_format_t format;
+  LPDIRECTDRAWSURFACE lpdds;
+  cairo_surface_t *image;
+  cairo_surface_t *alias;
+  cairo_point_int_t origin;
+  uint32_t data_offset;
+  LPDIRECTDRAWCLIPPER lpddc;
+  LPDIRECTDRAWCLIPPER installed_clipper;
+  cairo_rectangle_int_t extents;
+  cairo_region_t clip_region;
+  cairo_bool_t locked : 1;
+  cairo_bool_t has_clip_region : 1;
+  cairo_bool_t has_image_clip : 1;
+  cairo_bool_t has_clip_list : 1;
+  cairo_bool_t image_clip_invalid : 1;
+  cairo_bool_t clip_list_invalid : 1;
+} cairo_ddraw_surface_t;
 
-#define CAIRO_VERSION_MAJOR 1
-#define CAIRO_VERSION_MINOR 7
-#define CAIRO_VERSION_MICRO 4
-
-@PS_SURFACE_FEATURE@
-
-@PDF_SURFACE_FEATURE@
-
-@SVG_SURFACE_FEATURE@
-
-@XLIB_SURFACE_FEATURE@
-
-@XLIB_XRENDER_SURFACE_FEATURE@
-
-@QUARTZ_SURFACE_FEATURE@
-
-@QUARTZ_IMAGE_SURFACE_FEATURE@
-
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@OS2_SURFACE_FEATURE@
-
-@BEOS_SURFACE_FEATURE@
-
-@DIRECTFB_SURFACE_FEATURE@
-
-@QPAINTER_SURFACE_FEATURE@
-
-@DDRAW_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@QUARTZ_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-@FC_FONT_FEATURE@
-#endif
+#endif /* CAIRO_DDRAW_PRIVATE_H */

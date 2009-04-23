@@ -82,6 +82,7 @@
 #include "aygshell.h"
 #include "imm.h"
 
+//#define PAINT_USE_DDRAW_SURFACE
 #define PAINT_USE_IMAGE_SURFACE
 
 // do 32->24 conversion before calling StretchDIBits
@@ -168,6 +169,25 @@
 #ifdef NS_ENABLE_TSF
 #include "nsTextStore.h"
 #endif //NS_ENABLE_TSF
+
+#ifdef PAINT_USE_DDRAW_SURFACE
+#include "gfxDDrawSurface.h"
+#include <ddraw.h>
+#include "cairo-ddraw.h"
+
+/*XXX handle clean-up */
+static LPDIRECTDRAW glpDD = NULL;
+static LPDIRECTDRAWSURFACE glpDDPrimary = NULL;
+static LPDIRECTDRAWCLIPPER glpDDClipper = NULL;
+static nsAutoPtr<gfxDDrawSurface> gpDDSurf;
+
+static void DDError(const char *msg, HRESULT hr)
+{
+  /*XXX make nicer */
+  fprintf(stderr, "direct draw error %s: 0x%08x\n", msg, hr);
+}
+
+#endif
 
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
@@ -5977,7 +5997,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
                            (PRInt32) mWnd);
 #endif // NS_DEBUG
 
-#if defined(MOZ_XUL) && !defined(PAINT_USE_IMAGE_SURFACE)
+#if defined(MOZ_XUL) && !defined(PAINT_USE_IMAGE_SURFACE) && !defined(PAINT_USE_DDRAW_SURFACE)
       nsRefPtr<gfxASurface> targetSurface;
       if (eTransparencyTransparent == mTransparencyMode) {
         if (mTransparentSurface == nsnull)
@@ -5986,7 +6006,46 @@ PRBool nsWindow::OnPaint(HDC aDC)
       } else {
         targetSurface = new gfxWindowsSurface(hDC);
       }
+#elif defined(PAINT_USE_DDRAW_SURFACE)
+
+      HRESULT hr;
+
+      if (!glpDD) {
+        // create all the direct-draw goodies
+        if (FAILED(hr = DirectDrawCreate(NULL, &glpDD, NULL)))
+          DDError("DirectDrawCreate", hr);
+        if (FAILED(hr = glpDD->SetCooperativeLevel(NULL, DDSCL_NORMAL)))
+          DDError("SetCooperativeLevel", hr);
+        DDSURFACEDESC ddsd;
+        memset(&ddsd, 0, sizeof(ddsd));
+        ddsd.dwSize = sizeof(ddsd);
+        ddsd.dwFlags = DDSD_CAPS;
+        ddsd.ddpfPixelFormat.dwSize = sizeof(ddsd.ddpfPixelFormat);
+        ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+        if (FAILED(hr = glpDD->CreateSurface(&ddsd, &glpDDPrimary, NULL)))
+          DDError("CreateSurface", hr);
+        if (FAILED(hr = glpDD->CreateClipper(0, &glpDDClipper, NULL)))
+          DDError("CreateClipper", hr);
+        if (FAILED(hr = glpDDPrimary->SetClipper(glpDDClipper)))
+          DDError("SetClipper", hr);
+        gfxIntSize screen_size(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        gpDDSurf = new gfxDDrawSurface(glpDD, screen_size, gfxASurface::ImageFormatRGB24);
+        if (!gpDDSurf) {
+          /*XXX*/
+          fprintf(stderr, "couldn't create ddsurf\n");
+        }
+      }
+
+      // create a rect that maps the window in screen space
+      RECT winrect;
+      GetClientRect(mWnd, &winrect);
+      MapWindowPoints(mWnd, NULL, (LPPOINT)&winrect, 2);
+
+      // create a new sub-surface that aliases this one
+      nsRefPtr<gfxDDrawSurface> targetSurface = new gfxDDrawSurface(gpDDSurf.get(), winrect);
+
 #elif defined(PAINT_USE_IMAGE_SURFACE)
+
       if (!gSharedSurfaceData) {
         gSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
         gSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
@@ -6030,7 +6089,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
       // don't need to double buffer with PAINT_USE_IMAGE_SURFACE;
       // it's implicitly double buffered
-#if !defined(PAINT_USE_IMAGE_SURFACE)
+#if !defined(PAINT_USE_IMAGE_SURFACE) && !defined(PAINT_USE_DDRAW_SURFACE)
 # if defined(MOZ_XUL)
       if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
         thebesContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
@@ -6076,13 +6135,35 @@ PRBool nsWindow::OnPaint(HDC aDC)
       } else
 #endif
       if (result) {
-#ifndef PAINT_USE_IMAGE_SURFACE
+#if !defined(PAINT_USE_IMAGE_SURFACE) && !defined(PAINT_USE_DDRAW_SURFACE)
         // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
         // this, and we'll just end up painting with black.
         thebesContext->PopGroupToSource();
         thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
         thebesContext->Paint();
-#else
+
+#elif defined(PAINT_USE_DDRAW_SURFACE)
+
+        // blit with direct draw
+
+        if (FAILED(hr = glpDDClipper->SetHWnd(0, mWnd)))
+          DDError("SetHWnd", hr);
+
+        // blt from the affected area from the window back-buffer to the
+        // screen-relative coordinates of the window paint area
+        RECT dst_rect = ps.rcPaint;
+        MapWindowPoints(mWnd, NULL, (LPPOINT)&dst_rect, 2);
+
+        if (FAILED(hr = glpDDPrimary->Blt(&dst_rect,
+                                          targetSurface->GetDDSurface(),
+                                          &dst_rect,
+                                          DDBLT_WAITNOTBUSY,
+                                          NULL)))
+          DDError("Blt", hr);
+        
+
+#else // PAINT_USE_IMAGE_SURFACE
+
         // Just blit this directly
         BITMAPINFOHEADER bi;
         memset(&bi, 0, sizeof(BITMAPINFOHEADER));
