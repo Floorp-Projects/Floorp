@@ -157,6 +157,9 @@ CSRCS	+=	cairo-win32-surface.c
 
 ifndef WINCE
 CSRCS	+=	cairo-win32-font.c
+else
+CSRCS	+=	cairo-ddraw-surface.c
+EXPORTS +=	cairo-ddraw.h
 endif
 
 ifdef NS_PRINTING
