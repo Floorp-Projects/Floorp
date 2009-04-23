@@ -2058,7 +2058,8 @@ NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
                         nsISupports* aTargetNode,
                         nsIAtom* aContextLocalName,
-                        PRInt32 aContextNamespace)
+                        PRInt32 aContextNamespace,
+                        PRBool aQuirks)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
