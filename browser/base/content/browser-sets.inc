@@ -128,6 +128,7 @@
      oncommand="Cc[GLUE_CID].getService(Ci.nsIBrowserGlue).sanitize(window || null);"/>
     <command id="Tools:PrivateBrowsing" oncommand="gPrivateBrowsingUI.toggleMode();"/>
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
+    <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
   </commandset>
 
   <commandset id="placesCommands">
@@ -329,6 +330,7 @@
 #endif
 
     <key id="key_undoCloseTab" command="History:UndoCloseTab" key="&tabCmd.commandkey;" modifiers="accel,shift"/>
+    <key id="key_undoCloseWindow" command="History:UndoCloseWindow" key="&newNavigatorCmd.key;" modifiers="accel,shift"/>
 
 #ifdef XP_GNOME
 #define NUM_SELECT_TAB_MODIFIER alt

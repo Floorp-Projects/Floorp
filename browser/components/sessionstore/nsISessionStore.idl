@@ -59,7 +59,7 @@ interface nsIDOMNode;
  * |getBrowser().tabContainer| such as e.g. |getBrowser().selectedTab|.
  */
 
-[scriptable, uuid(534d81e3-d3fb-4f1e-aed6-3de601406270)]
+[scriptable, uuid(4945acd7-aa25-43ee-b8e3-bf3cce289132)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -144,6 +144,24 @@ interface nsISessionStore : nsISupports
    * @param aIndex  is the index of the closed tab to be removed (FIFO ordered).
    */
   nsIDOMNode forgetClosedTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+
+  /**
+   * Get the number of restore-able windows
+   */
+  unsigned long getClosedWindowCount();
+
+  /**
+   * Get closed windows data
+   *
+   * @returns a JSON string representing the list of closed windows.
+   */
+  AString getClosedWindowData();
+
+  /**
+   * @param aIndex is the index of the windows to be restored (FIFO ordered).
+   * @returns the nsIDOMWindow object of the reopened window
+   */
+  nsIDOMWindow undoCloseWindow(in unsigned long aIndex);
 
   /**
    * @param aWindow is the window to get the value for.
