@@ -45,6 +45,7 @@
 #   Dão Gottwald <dao@mozilla.com>
 #   Thomas K. Dyas <tdyas@zecador.org>
 #   Edward Lee <edward.lee@engineering.uiuc.edu>
+#   Paul O’Shannessy <paul@oshannessy.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -124,6 +125,13 @@ __defineGetter__("gPrefService", function() {
   delete this.gPrefService;
   return this.gPrefService = Cc["@mozilla.org/preferences-service;1"].
                              getService(Ci.nsIPrefBranch2);
+});
+
+__defineGetter__("PluralForm", function() {
+  delete this.PluralForm
+  var tmpScope = {};
+  Cu.import("resource://gre/modules/PluralForm.jsm", tmpScope);
+  return this.PluralForm = tmpScope.PluralForm;
 });
 
 let gInitialPages = [
@@ -6187,11 +6195,8 @@ HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {
   // enable/disable the Recently Closed Tabs sub menu
   var undoPopup = document.getElementById("historyUndoPopup");
 
-  // get closed-tabs from nsSessionStore
-  var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
   // no restorable tabs, so disable menu
-  if (ss.getClosedTabCount(window) == 0)
+  if (this._ss.getClosedTabCount(window) == 0)
     undoPopup.parentNode.setAttribute("disabled", true);
   else
     undoPopup.parentNode.removeAttribute("disabled");
@@ -6207,11 +6212,8 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
   while (undoPopup.hasChildNodes())
     undoPopup.removeChild(undoPopup.firstChild);
 
-  // get closed-tabs from nsSessionStore
-  var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
   // no restorable tabs, so make sure menu is disabled, and return
-  if (ss.getClosedTabCount(window) == 0) {
+  if (this._ss.getClosedTabCount(window) == 0) {
     undoPopup.parentNode.setAttribute("disabled", true);
     return;
   }
@@ -6220,7 +6222,7 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
   undoPopup.parentNode.removeAttribute("disabled");
 
   // populate menu
-  var undoItems = eval("(" + ss.getClosedTabData(window) + ")");
+  var undoItems = eval("(" + this._ss.getClosedTabData(window) + ")");
   for (var i = 0; i < undoItems.length; i++) {
     var m = document.createElement("menuitem");
     m.setAttribute("label", undoItems[i].title);
@@ -6250,6 +6252,74 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
     for (var i = 0; i < undoItems.length; i++)
       undoCloseTab();
   }, false);
+}
+
+HistoryMenu.toggleRecentlyClosedWindows = function PHM_toggleRecentlyClosedWindows() {
+  // enable/disable the Recently Closed Windows sub menu
+  let undoPopup = document.getElementById("historyUndoWindowPopup");
+
+  // no restorable windows, so disable menu
+  if (this._ss.getClosedWindowCount() == 0)
+    undoPopup.parentNode.setAttribute("disabled", true);
+  else
+    undoPopup.parentNode.removeAttribute("disabled");
+}
+
+/**
+ * Populate when the history menu is opened
+ */
+HistoryMenu.populateUndoWindowSubmenu = function PHM_populateUndoWindowSubmenu() {
+  let undoPopup = document.getElementById("historyUndoWindowPopup");
+  let menuLabelString = gNavigatorBundle.getString("menuUndoCloseWindowLabel");
+  let menuLabelStringSingleTab =
+    gNavigatorBundle.getString("menuUndoCloseWindowSingleTabLabel");
+
+  // remove existing menu items
+  while (undoPopup.hasChildNodes())
+    undoPopup.removeChild(undoPopup.firstChild);
+
+  // no restorable windows, so make sure menu is disabled, and return
+  if (this._ss.getClosedWindowCount() == 0) {
+    undoPopup.parentNode.setAttribute("disabled", true);
+    return;
+  }
+
+  // enable menu
+  undoPopup.parentNode.removeAttribute("disabled");
+
+  // populate menu
+  let undoItems = JSON.parse(this._ss.getClosedWindowData());
+  for (let i = 0; i < undoItems.length; i++) {
+    let undoItem = undoItems[i];
+    let otherTabsCount = undoItem.tabs.length - 1;
+    let label = (otherTabsCount == 0) ? menuLabelStringSingleTab
+                                      : PluralForm.get(otherTabsCount, menuLabelString);
+    let menuLabel = label.replace("#1", undoItem.title)
+                         .replace("#2", otherTabsCount);
+    let m = document.createElement("menuitem");
+    m.setAttribute("label", menuLabel);
+    let selectedTab = undoItem.tabs[undoItem.selected - 1];
+    if (selectedTab.attributes.image) {
+      let iconURL = selectedTab.attributes.image;
+      // don't initiate a connection just to fetch a favicon (see bug 467828)
+      if (/^https?:/.test(iconURL))
+        iconURL = "moz-anno:favicon:" + iconURL;
+      m.setAttribute("image", iconURL);
+    }
+    m.setAttribute("class", "menuitem-iconic bookmark-item");
+    m.setAttribute("oncommand", "undoCloseWindow(" + i + ");");
+    if (i == 0)
+      m.setAttribute("key", "key_undoCloseWindow");
+    undoPopup.appendChild(m);
+  }
+
+  // "Open All in Windows"
+  undoPopup.appendChild(document.createElement("menuseparator"));
+  let m = undoPopup.appendChild(document.createElement("menuitem"));
+  m.setAttribute("label", gNavigatorBundle.getString("menuRestoreAllWindows.label"));
+  m.setAttribute("accesskey", gNavigatorBundle.getString("menuRestoreAllWindows.accesskey"));
+  m.setAttribute("oncommand",
+    "for (var i = 0; i < " + undoItems.length + "; i++) undoCloseWindow();");
 }
 
 /**
@@ -6294,6 +6364,22 @@ function undoCloseTab(aIndex) {
   }
   
   return tab;
+}
+
+/**
+ * Re-open a closed window.
+ * @param aIndex
+ *        The index of the window (via nsSessionStore.getClosedWindowData)
+ * @returns a reference to the reopened window.
+ */
+function undoCloseWindow(aIndex) {
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+  let window = null;
+  if (ss.getClosedWindowCount() > (aIndex || 0))
+    window = ss.undoCloseWindow(aIndex || 0);
+
+  return window;
 }
 
 /**
@@ -6736,7 +6822,6 @@ let DownloadMonitorPanel = {
   init: function DMP_init() {
     // Load the modules to help display strings
     Cu.import("resource://gre/modules/DownloadUtils.jsm");
-    Cu.import("resource://gre/modules/PluralForm.jsm");
 
     // Initialize "private" member variables
     this._panel = document.getElementById("download-monitor");
