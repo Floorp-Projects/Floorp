@@ -124,10 +124,10 @@ function test() {
         pbWin.addEventListener("load", function(aEvent) {
           pbWin.gBrowser.addEventListener("load", function(aEvent) {
             executeSoon(function() {
-              gBrowser.removeEventListener("load", arguments.callee, true);
+              pbWin.gBrowser.removeEventListener("load", arguments.callee, true);
 
               // Add another tab, though it's not strictly needed
-              gBrowser.addTab();
+              pbWin.gBrowser.addTab();
 
               // mark the window with some unique data to be restored later on
               ss.setWindowValue(pbWin, uniqueKey_B, uniqueValue_B);
