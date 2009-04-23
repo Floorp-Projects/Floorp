@@ -59,8 +59,9 @@ function test() {
     let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", testURL);
     newWin.addEventListener("load", function(aEvent) {
       newWin.gBrowser.addEventListener("load", function(aEvent) {
+        newWin.gBrowser.removeEventListener("load", arguments.callee, true);
+
         executeSoon(function() {
-          newWin.gBrowser.removeEventListener("load", arguments.callee, true);
           newWin.gBrowser.addTab();
 
           // mark the window with some unique data to be restored later on
@@ -140,8 +141,8 @@ function test() {
       let window = openDialog(location, "_blank", settings, url);
       window.addEventListener("load", function(aEvent) {
         window.gBrowser.addEventListener("load", function(aEvent) {
+          window.gBrowser.removeEventListener("load", arguments.callee, true);
           executeSoon(function() {
-            window.gBrowser.removeEventListener("load", arguments.callee, true);
             window.close();
             executeSoon(function() {
               openWindowRec(windowsToOpen, expectedResults);
