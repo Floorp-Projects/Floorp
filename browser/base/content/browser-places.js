@@ -208,7 +208,6 @@ var StarUI = {
     // multiple times.
     var bookmarks = PlacesUtils.getBookmarksForURI(gBrowser.currentURI);
     var forms = bundle.getString("editBookmark.removeBookmarks.label");
-    Cu.import("resource://gre/modules/PluralForm.jsm");
     var label = PluralForm.get(bookmarks.length, forms).replace("#1", bookmarks.length);
     this._element("editBookmarkPanelRemoveButton").label = label;
 
