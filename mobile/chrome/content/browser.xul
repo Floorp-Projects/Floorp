@@ -53,6 +53,7 @@
 
 <window id="main-window"
         onload="Browser.startup();"
+        onunload="Browser.shutdown();"
         windowtype="navigator:browser"
         title="&brandShortName;"
         titlemodifier="&brandShortName;"
