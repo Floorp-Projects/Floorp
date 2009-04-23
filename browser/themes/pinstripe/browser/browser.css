@@ -1352,7 +1352,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   color: inherit;
 }
 
-#editBMPanel_tagsField[isempty="true"] {
+#editBMPanel_tagsField[empty="true"] {
   color: #bbb !important;
 }
 
