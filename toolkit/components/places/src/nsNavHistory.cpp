@@ -7228,16 +7228,27 @@ nsNavHistory::UpdateFrecency(PRInt64 aPlaceId, PRBool aIsBookmarked)
   rv = mDBGetPlaceVisitStats->GetInt32(2, &oldFrecency);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = UpdateFrecencyInternal(aPlaceId, typed, hidden, oldFrecency,
+                              aIsBookmarked);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::UpdateFrecencyInternal(PRInt64 aPlaceId, PRInt32 aTyped,
+  PRInt32 aHidden, PRInt32 aOldFrecency, PRBool aIsBookmarked)
+{
   PRInt32 visitCountForFrecency = 0;
 
   // because visit_count excludes visit with visit_type NOT IN(0,4,7)
   // we can't use it for calculating frecency, so we must
   // calculate it.
-  rv = CalculateFullVisitCount(aPlaceId, &visitCountForFrecency);
+  nsresult rv = CalculateFullVisitCount(aPlaceId, &visitCountForFrecency);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 newFrecency = 0;
-  rv = CalculateFrecencyInternal(aPlaceId, typed, visitCountForFrecency,
+  rv = CalculateFrecencyInternal(aPlaceId, aTyped, visitCountForFrecency,
                                  aIsBookmarked, &newFrecency);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -7248,7 +7259,7 @@ nsNavHistory::UpdateFrecency(PRInt64 aPlaceId, PRBool aIsBookmarked)
   // the frecency (for a given moz_places) will not have changed
   // (if we've never visited that place).
   // Additionally, don't bother overwriting a valid frecency with an invalid one
-  if (newFrecency == oldFrecency || oldFrecency && newFrecency < 0)
+  if (newFrecency == aOldFrecency || aOldFrecency && newFrecency < 0)
     return NS_OK;
 
   mozStorageStatementScoper updateScoper(mDBUpdateFrecencyAndHidden);
@@ -7263,7 +7274,7 @@ nsNavHistory::UpdateFrecency(PRInt64 aPlaceId, PRBool aIsBookmarked)
   // will now appear in autocomplete
   // if we calculated a zero frecency, we re-use the old hidden value.
   rv = mDBUpdateFrecencyAndHidden->BindInt32Parameter(2, 
-         newFrecency ? 0 /* not hidden */ : hidden);
+         newFrecency ? 0 /* not hidden */ : aHidden);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBUpdateFrecencyAndHidden->Execute();
@@ -7487,38 +7498,11 @@ nsNavHistory::FixInvalidFrecencies()
     nsCAutoString url;
     invalidFrecencies->GetUTF8String(4, url);
 
-    PRInt32 newFrecency = 0;
-    PRInt32 visitCountForFrecency = 0;
+    PRBool isBook = PR_FALSE;
+    if (!IsQueryURI(url))
+      isBook = nsNavBookmarks::GetBookmarksService()-> IsRealBookmark(placeId);
 
-    // because visit_count excludes visit with visit_type NOT IN(0,4,7)
-    // we can't use it for calculating frecency so we must calculate it.
-    rv = CalculateFullVisitCount(placeId, &visitCountForFrecency);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CalculateFrecency(placeId, typed, visitCountForFrecency, 
-                           url, &newFrecency);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // save ourselves the UPDATE if the frecency hasn't changed
-    if (newFrecency == oldFrecency)
-      continue;
-
-    mozStorageStatementScoper updateScoper(mDBUpdateFrecencyAndHidden);
-    rv = mDBUpdateFrecencyAndHidden->BindInt64Parameter(0, placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDBUpdateFrecencyAndHidden->BindInt32Parameter(1, newFrecency);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // if we calculated a non-zero frecency we should unhide this place
-    // so that previously hidden (non-livebookmark items) bookmarks 
-    // will now appear in autocomplete.  if we calculated a zero frecency, 
-    // we re-use the old hidden value.
-    rv = mDBUpdateFrecencyAndHidden->BindInt32Parameter(2, 
-           newFrecency ? 0 /* not hidden */ : hidden);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDBUpdateFrecencyAndHidden->Execute();
+    rv = UpdateFrecencyInternal(placeId, typed, hidden, oldFrecency, isBook);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
