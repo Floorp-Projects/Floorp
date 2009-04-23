@@ -5593,6 +5593,8 @@ DWORD nsWindow::WindowStyle()
    * space for a menu bar in the window, which we don't want; it shouldn't
    * be used. */
 #if defined(WINCE)
+  /* on CE, WS_OVERLAPPED == WS_BORDER | WS_CAPTION, so don't use OVERLAPPED, just set the
+   * separate bits directly for clarity */
   switch (mWindowType) {
     case eWindowType_child:
       style = WS_CHILD;
@@ -5603,7 +5605,7 @@ DWORD nsWindow::WindowStyle()
 #if !defined(WINCE_WINDOWS_MOBILE)
       style |= WS_SYSMENU;
       if (mBorderStyle != eBorderStyle_default)
-        style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        style |= WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 #endif
       break;
 
@@ -5619,7 +5621,7 @@ DWORD nsWindow::WindowStyle()
     case eWindowType_invisible:
       style = WS_BORDER;
 #if !defined(WINCE_WINDOWS_MOBILE)
-      style |= WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+      style |= WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 #endif
       break;
   }
