@@ -78,6 +78,8 @@ fails == inline-in-xul-basic-01.xul pass.svg
 # Bug 456323
 # == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
+== objectBoundingBox-and-clipPath.svg pass.svg
+== objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
