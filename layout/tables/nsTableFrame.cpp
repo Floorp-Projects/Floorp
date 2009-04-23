@@ -2334,6 +2334,12 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
 
+  if ((aPrevFrame && !aPrevFrame->GetNextSibling()) ||
+      (!aPrevFrame && !GetFirstChild(aListName))) {
+    // Treat this like an append; still a workaround for bug 343048.
+    return AppendFrames(aListName, aFrameList);
+  }
+
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList->GetStyleDisplay();
 #ifdef DEBUG
