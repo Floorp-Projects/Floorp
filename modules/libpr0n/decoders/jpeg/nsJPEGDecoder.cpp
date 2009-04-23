@@ -393,9 +393,10 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
           return NS_ERROR_UNEXPECTED;
         }
 #if 0
-	We don't currently support CMYK profiles. The following
-	code dealt with lcms types. Add something like this
-	back when we gain support for CMYK.
+        /* We don't currently support CMYK profiles. The following
+         * code dealt with lcms types. Add something like this
+         * back when we gain support for CMYK.
+         */
         /* Adobe Photoshop writes YCCK/CMYK files with inverted data */
         if (mInfo.out_color_space == JCS_CMYK)
           type |= FLAVOR_SH(mInfo.saw_Adobe_marker ? 1 : 0);
