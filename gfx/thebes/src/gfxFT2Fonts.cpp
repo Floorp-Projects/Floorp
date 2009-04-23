@@ -888,14 +888,14 @@ gfxFT2Font::SetupCairoFont(gfxContext *aContext)
 already_AddRefed<gfxFT2Font>
 gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
 {
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
-    if (!font) {
-        FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
-        if (!fe) {
-            printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
-            return nsnull;
-        }
+    FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
+    if (!fe) {
+        printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
+        return nsnull;
+    }
 
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(fe->Name(), aStyle);
+    if (!font) {
         font = new gfxFT2Font(fe, aStyle);
         if (!font)
             return nsnull;
