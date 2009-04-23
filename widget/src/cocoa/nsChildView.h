@@ -409,6 +409,8 @@ public:
 
   void              HidePlugin();
 
+  void              ResetParent();
+
 protected:
 
   PRBool            ReportDestroyEvent();
