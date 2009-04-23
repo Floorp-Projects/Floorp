@@ -39,11 +39,18 @@
 
 #include "cairoint.h"
 
+#if CAIRO_HAS_DDRAW_SURFACE
+
 #include "cairo-clip-private.h"
 #include "cairo-ddraw-private.h"
 
 #include <windows.h>
 #include <ddraw.h>
+
+#ifndef DDLOCK_WAITNOTBUSY
+#error Your DirectDraw header is too old.  Copy in ddraw.h from the WM6 SDK over your SDK's ddraw.h.
+#error Otherwise, you can fix this code to use IDirectDraw4 and IDirectDrawSurface5.
+#endif
 
 /* DirectDraw helper macros */
 
@@ -825,3 +832,4 @@ static const cairo_surface_backend_t cairo_ddraw_surface_backend = {
     _cairo_ddraw_surface_reset,
 };
 
+#endif /* CAIRO_HAS_DDRAW_SURFACE */
