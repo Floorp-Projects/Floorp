@@ -843,6 +843,96 @@ public:
 /**
  * IME Related Events
  */
+ 
+struct nsTextRangeStyle
+{
+  enum {
+    LINESTYLE_NONE   = 0,
+    LINESTYLE_SOLID  = 1,
+    LINESTYLE_DOTTED = 2,
+    LINESTYLE_DASHED = 3,
+    LINESTYLE_DOUBLE = 4,
+    LINESTYLE_WAVY   = 5
+  };
+
+  enum {
+    DEFINED_NONE             = 0x00,
+    DEFINED_LINESTYLE        = 0x01,
+    DEFINED_FOREGROUND_COLOR = 0x02,
+    DEFINED_BACKGROUND_COLOR = 0x04,
+    DEFINED_UNDERLINE_COLOR  = 0x08
+  };
+
+  // Initialize all members, because nsTextRange instances may be compared by
+  // memcomp.
+  nsTextRangeStyle() :
+    mDefinedStyles(DEFINED_NONE), mLineStyle(LINESTYLE_NONE),
+    mIsBoldLine(PR_FALSE), mForegroundColor(NS_RGBA(0, 0, 0, 0)),
+    mBackgroundColor(NS_RGBA(0, 0, 0, 0)), mUnderlineColor(NS_RGBA(0, 0, 0, 0))
+  {
+  }
+
+  PRBool IsDefined() const { return mDefinedStyles != DEFINED_NONE; }
+
+  PRBool IsLineStyleDefined() const
+  {
+    return (mDefinedStyles & DEFINED_LINESTYLE) != 0;
+  }
+
+  PRBool IsForegroundColorDefined() const
+  {
+    return (mDefinedStyles & DEFINED_FOREGROUND_COLOR) != 0;
+  }
+
+  PRBool IsBackgroundColorDefined() const
+  {
+    return (mDefinedStyles & DEFINED_BACKGROUND_COLOR) != 0;
+  }
+
+  PRBool IsUnderlineColorDefined() const
+  {
+    return (mDefinedStyles & DEFINED_UNDERLINE_COLOR) != 0;
+  }
+
+  PRBool Equals(const nsTextRangeStyle& aOther)
+  {
+    if (mDefinedStyles != aOther.mDefinedStyles)
+      return PR_FALSE;
+    if (IsLineStyleDefined() && (mLineStyle != aOther.mLineStyle ||
+                                 !mIsBoldLine != !aOther.mIsBoldLine))
+      return PR_FALSE;
+    if (IsForegroundColorDefined() &&
+        (mForegroundColor != aOther.mForegroundColor))
+      return PR_FALSE;
+    if (IsBackgroundColorDefined() &&
+        (mBackgroundColor != aOther.mBackgroundColor))
+      return PR_FALSE;
+    if (IsUnderlineColorDefined() &&
+        (mUnderlineColor != aOther.mUnderlineColor))
+      return PR_FALSE;
+    return PR_TRUE;
+  }
+
+  PRBool operator !=(const nsTextRangeStyle &aOther)
+  {
+    return !Equals(aOther);
+  }
+
+  PRBool operator ==(const nsTextRangeStyle &aOther)
+  {
+    return Equals(aOther);
+  }
+
+  PRUint8 mDefinedStyles;
+  PRUint8 mLineStyle;        // DEFINED_LINESTYLE
+
+  PRPackedBool mIsBoldLine;  // DEFINED_LINESTYLE
+
+  nscolor mForegroundColor;  // DEFINED_FOREGROUND_COLOR
+  nscolor mBackgroundColor;  // DEFINED_BACKGROUND_COLOR
+  nscolor mUnderlineColor;   // DEFINED_UNDERLINE_COLOR
+};
+
 struct nsTextRange
 {
   nsTextRange()
@@ -853,6 +943,8 @@ struct nsTextRange
   PRUint32 mStartOffset;
   PRUint32 mEndOffset;
   PRUint32 mRangeType;
+
+  nsTextRangeStyle mRangeStyle;
 };
 
 typedef nsTextRange* nsTextRangeArray;

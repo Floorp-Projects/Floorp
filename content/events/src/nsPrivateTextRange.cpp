@@ -38,10 +38,11 @@
 #include "nsPrivateTextRange.h"
 
 
-nsPrivateTextRange::nsPrivateTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint16 aRangeType)
-:	mRangeStart(aRangeStart),
-	mRangeEnd(aRangeEnd),
-	mRangeType(aRangeType)
+nsPrivateTextRange::nsPrivateTextRange(const nsTextRange &aTextRange)
+  : mRangeStart(PRUint16(aTextRange.mStartOffset)),
+    mRangeEnd(PRUint16(aTextRange.mEndOffset)),
+    mRangeType(PRUint16(aTextRange.mRangeType)),
+    mRangeStyle(aTextRange.mRangeStyle)
 {
 }
 
@@ -84,6 +85,13 @@ NS_METHOD nsPrivateTextRange::GetRangeType(PRUint16* aRangeType)
 NS_METHOD nsPrivateTextRange::SetRangeType(PRUint16 aRangeType)
 {
 	mRangeType = aRangeType;
+	return NS_OK;
+}
+
+NS_METHOD nsPrivateTextRange::GetRangeStyle(nsTextRangeStyle* aTextRangeStyle)
+{
+	NS_ENSURE_ARG_POINTER(aTextRangeStyle);
+	*aTextRangeStyle = mRangeStyle;
 	return NS_OK;
 }
 

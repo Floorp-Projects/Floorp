@@ -164,6 +164,7 @@ struct RangeData
 
   nsCOMPtr<nsIRange> mRange;
   PRInt32 mEndIndex; // index into mRangeEndings of this item
+  nsTextRangeStyle mTextRangeStyle;
 };
 
 static RangeData sEmptyData(nsnull, 0);
@@ -357,6 +358,7 @@ private:
                                         nsINode* aEndNode, PRInt32 aEndOffset,
                                         PRBool aAllowAdjacent,
                                         nsCOMArray<nsIRange>* aRanges);
+  RangeData* FindRangeData(nsIDOMRange* aRange);
 
   nsTArray<RangeData> mRanges;
   nsTArray<PRInt32> mRangeEndings;    // references info mRanges
@@ -4542,6 +4544,10 @@ nsTypedSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset,
     details->mStart = start;
     details->mEnd = end;
     details->mType = aType;
+    RangeData *rd = FindRangeData(range);
+    if (rd) {
+      details->mTextRangeStyle = rd->mTextRangeStyle;
+    }
     *aReturnDetails = details;
   }
   return NS_OK;
@@ -4644,6 +4650,29 @@ nsTypedSelection::SetAncestorLimiter(nsIContent *aContent)
 {
   if (mFrameSelection)
     mFrameSelection->SetAncestorLimiter(aContent);
+  return NS_OK;
+}
+
+RangeData*
+nsTypedSelection::FindRangeData(nsIDOMRange* aRange)
+{
+  NS_ENSURE_TRUE(aRange, nsnull);
+  for (PRUint32 i = 0; i < mRanges.Length(); i++) {
+    if (mRanges[i].mRange == aRange)
+      return &mRanges[i];
+  }
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsTypedSelection::SetTextRangeStyle(nsIDOMRange *aRange,
+                                    const nsTextRangeStyle &aTextRangeStyle)
+{
+  NS_ENSURE_ARG_POINTER(aRange);
+  RangeData *rd = FindRangeData(aRange);
+  if (rd) {
+    rd->mTextRangeStyle = aTextRangeStyle;
+  }
   return NS_OK;
 }
 

@@ -41,10 +41,12 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsGUIEvent.h"
 
+// {B13C4BD8-CB9F-4763-A020-E99ABC9C2803}
 #define NS_IPRIVATETEXTRANGE_IID \
-{0xb471ab41, 0x2a79, 0x11d3, \
-{ 0x9e, 0xa4, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b } } 
+{ 0xb13c4bd8, 0xcb9f, 0x4763, \
+{ 0xa0, 0x20, 0xe9, 0x9a, 0xbc, 0x9c, 0x28, 0x3 } }
 
 class nsIPrivateTextRange : public nsISupports {
 public:
@@ -68,6 +70,8 @@ public:
 
   NS_IMETHOD    GetRangeType(PRUint16* aRangeType)=0;
   NS_IMETHOD    SetRangeType(PRUint16 aRangeType)=0;
+
+  NS_IMETHOD    GetRangeStyle(nsTextRangeStyle* aTextRangeStyle)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateTextRange, NS_IPRIVATETEXTRANGE_IID)
