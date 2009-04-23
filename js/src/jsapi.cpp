@@ -2604,14 +2604,20 @@ JS_PUBLIC_API(void)
 JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32 value)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
+#ifdef JS_TRACER
     js_SetMaxCodeCacheBytes(cx, value);
+#endif
 }
 
 JS_PUBLIC_API(uint32)
 JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
+#ifdef JS_TRACER
     return JS_THREAD_DATA(cx)->traceMonitor.maxCodeCacheBytes;
+#else
+    return 0;
+#endif
 }
 
 JS_PUBLIC_API(intN)
