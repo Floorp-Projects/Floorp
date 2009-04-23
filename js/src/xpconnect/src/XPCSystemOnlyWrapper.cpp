@@ -174,10 +174,21 @@ AllowedToAct(JSContext *cx, jsval idval)
     return ThrowException(NS_ERROR_UNEXPECTED, cx);
   }
 
-  void *annotation = JS_GetFrameAnnotation(cx, fp);
+  if (!fp) {
+    if (!JS_FrameIterator(cx, &fp)) {
+      // No code at all is running. So we must be arriving here as the result
+      // of C++ code asking us to do something. Allow access.
+      return JS_TRUE;
+    }
+
+    // Some code is running, we can't make the assumption, as above, but we
+    // can't use a native frame, so clear fp.
+    fp = nsnull;
+  }
+
+  void *annotation = fp ? JS_GetFrameAnnotation(cx, fp) : nsnull;
   PRBool privileged;
-  if (fp &&
-      NS_SUCCEEDED(principal->IsCapabilityEnabled("UniversalXPConnect",
+  if (NS_SUCCEEDED(principal->IsCapabilityEnabled("UniversalXPConnect",
                                                   annotation,
                                                   &privileged)) &&
       privileged) {
@@ -188,8 +199,10 @@ AllowedToAct(JSContext *cx, jsval idval)
   // XXX HACK EWW! Allow chrome://global/ access to these things, even
   // if they've been cloned into less privileged contexts.
   static const char prefix[] = "chrome://global/";
-  const char *filename = fp->script->filename;
-  if (filename && !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
+  const char *filename;
+  if (fp &&
+      (filename = fp->script->filename) &&
+      !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
     return JS_TRUE;
   }
 
