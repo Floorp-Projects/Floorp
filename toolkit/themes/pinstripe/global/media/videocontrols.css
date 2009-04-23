@@ -117,6 +117,11 @@
     margin: 0;
 }
 
+.scrubber .scale-slider {
+    /* abs(margin-top) + margin-bottom + bar height == timeThumb height */
+    margin-top: -9px;
+    margin-bottom: 10px;
+}
 /* .scale-thumb is an element inside the <scale> implementation. */
 .scrubber .scale-thumb {
     /* Override the default thumb appearance with a custom image. */
@@ -127,9 +132,8 @@
 
 .timeThumb {
     background: url(chrome://global/skin/media/scrubberThumb.png) no-repeat center;
-    min-width: 44px;
-    min-height: 22px;
-    margin-top: -14px;
+    min-width: 45px;
+    min-height: 27px;
     -moz-box-pack: center;
 }
 
@@ -140,7 +144,12 @@
 .timeLabel {
     color: rgba(255,255,255,0.75);
     font: 10px sans-serif;
-    padding-top: 6px;
+    text-shadow: rgba(0,0,0, 0.3) 0 1px;
+    padding-top: 4px;
+}
+
+.timeThumb[showhours="true"] > .timeLabel {
+    padding-top: 3px;
 }
 
 .statusOverlay {
