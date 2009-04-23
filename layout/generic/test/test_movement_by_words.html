@@ -20,7 +20,7 @@
 SimpleTest.waitForExplicitFinish();
 
 // This seems to be necessary because the selection is not set up properly otherwise
-setTimeout(test, 0);
+addLoadEvent(function() { SimpleTest.executeSoon(test); });
 
 var eatSpace;
 
