@@ -69,21 +69,20 @@ function get_cache_service() {
                  getService(Ci.nsICacheService);
 }
 
-var profileDir;
 function setup_profile_dir() {
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   var leafRandomName = "Cache" + Math.floor(Math.random() * 10000);
-  profileDir = dirSvc.get("TmpD", Ci.nsILocalFile);
-  profileDir.append(leafRandomName);
-  profileDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0700);
+  var dir = dirSvc.get("TmpD", Ci.nsILocalFile);
+  dir.append(leafRandomName);
+  dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0700);
   var provider = {
     getFile: function(prop, persistent) {
       persistent.value = true;
       if (prop == "ProfLD" ||
           prop == "ProfD" ||
           prop == "cachePDir")
-        return profileDir;
+        return dir;
       throw Cr.NS_ERROR_FAILURE;
     },
     QueryInterface: function(iid) {
@@ -95,20 +94,6 @@ function setup_profile_dir() {
     }
   };
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
-
-function remove_profile_dir() {
-  // simulate shutdown
-  var obs = Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService);
-  obs.notifyObservers(null, "quit-application", "shutdown");
-  obs.notifyObservers(null, "profile-change-net-teardown", "shutdown");
-  obs.notifyObservers(null, "profile-change-teardown", "shutdown");
-  obs.notifyObservers(null, "profile-before-change", "shutdown-cleanse");
-  obs.notifyObservers(null, "xpcom-shutdown", "");
-
-  // remove the created profile directory
-  profileDir.remove(true);
 }
 
 function check_devices_available(devices) {
@@ -288,6 +273,5 @@ function run_test() {
     do_check_eq(retrieve_from_cache(kCacheC, kOfflineDevice), kTestContent);
 
     prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
-    remove_profile_dir();
   }
 }
