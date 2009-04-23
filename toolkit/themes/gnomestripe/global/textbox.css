@@ -60,7 +60,7 @@ textbox {
   color: -moz-FieldText;
 }
 
-textbox[isempty="true"] {
+textbox[empty="true"] {
   color: GrayText;
 }
 

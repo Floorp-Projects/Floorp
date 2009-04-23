@@ -138,6 +138,10 @@
   background-image: url("chrome://browser/skin/urlbar/endcap-focused-graphite-rtl.png");
 }
 
+#searchbar[empty="true"] .search-go-button {
+  visibility: hidden;
+}
+
 .search-go-button {
   padding: 1px;
   list-style-image: url("chrome://browser/skin/Search.png");

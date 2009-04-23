@@ -29,7 +29,7 @@ function doTests() {
   var t1 = $("t1");
 
   t1.emptyText = 1;
-  ok(t1.hasAttribute("isempty"), "emptyText but no value => 'isempty' attribute is present");
+  ok(t1.hasAttribute("empty"),  "emptyText but no value => 'empty' attribute is present");
   ok("1" === t1.label,          "emptyText exposed as label");
   ok(""  === t1.value,          "emptyText not exposed as value");
 
@@ -38,7 +38,7 @@ function doTests() {
   ok("1" === t1.emptyText,      "emptyText persists after setting label");
 
   t1.value = 3;
-  ok(!t1.hasAttribute("isempty"), "value present => 'isempty' attribute not present");
+  ok(!t1.hasAttribute("empty"), "value present => 'empty' attribute not present");
   ok("3" === t1.value,          "value setter/getter works while emptyText is present");
   ok("1" === t1.emptyText,      "emptyText persists after setting value");
 
