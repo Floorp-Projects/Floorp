@@ -1629,7 +1629,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, jsva
         return JS_TRUE;
 
     /* Finish out any remaining elements past the max array index. */
-    if (!ENSURE_SLOW_ARRAY(cx, obj))
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !ENSURE_SLOW_ARRAY(cx, obj))
         return JS_FALSE;
 
     JS_ASSERT(start == MAXINDEX);
@@ -1643,7 +1643,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, jsva
     do {
         tmp[1] = *vector++;
         if (!js_ValueToStringId(cx, tmp[0], idr.addr()) ||
-            !js_SetProperty(cx, obj, idr.id(), &tmp[1])) {
+            !OBJ_SET_PROPERTY(cx, obj, idr.id(), &tmp[1])) {
             return JS_FALSE;
         }
         *dp += 1;
