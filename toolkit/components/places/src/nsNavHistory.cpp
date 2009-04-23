@@ -1232,6 +1232,7 @@ nsNavHistory::InitStatements()
         "JOIN moz_bookmarks t ON t.id = b.parent "
         "WHERE b.fk = IFNULL((SELECT id FROM moz_places_temp WHERE url = ?3), "
                             "(SELECT id FROM moz_places WHERE url = ?3)) "
+          "AND LENGTH(t.title) > 0 "
           "AND b.type = ") +
             nsPrintfCString("%d", nsINavBookmarksService::TYPE_BOOKMARK) +
         NS_LITERAL_CSTRING(" AND t.parent = ?2 ORDER BY t.title)"),
