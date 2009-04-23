@@ -581,6 +581,14 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // stop and restart the image loading/notification
     PresContext()->SetupBorderImageLoaders(this, GetStyleBorder());
   }
+
+  // If the page contains markup that overrides text direction, and
+  // does not contain any characters that would activate the Unicode
+  // bidi algorithm, we need to call |SetBidiEnabled| on the pres
+  // context before reflow starts.  See bug 115921.
+  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    PresContext()->SetBidiEnabled();
+  }
 }
 
 /* virtual */ nsMargin
