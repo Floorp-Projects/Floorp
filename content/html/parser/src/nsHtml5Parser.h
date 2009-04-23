@@ -315,6 +315,10 @@ class nsHtml5Parser : public nsIParser,
     using nsContentSink::Notify;
     
     // Non-inherited methods
+    nsresult FinalizeSniffing(const PRUint8* aFromSegment,
+                              PRUint32 aCount,
+                              PRUint32* aWriteCount,
+                              PRUint32 aCountToSniffingLimit);
     nsresult SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
                                                                   PRUint32 aCount,
                                                                   PRUint32* aWriteCount);
