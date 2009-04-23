@@ -627,7 +627,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         JSObject *env = js_NewObjectWithGivenProto(cx, &js_DeclEnvClass, NULL,
                                                    fp->scopeChain, 0);
         if (!env)
-            return JS_FALSE;
+            return NULL;
 
         /* Root env. */
         fp->scopeChain = env;
@@ -646,7 +646,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
                                  OBJECT_TO_JSVAL(fp->callee), NULL, NULL,
                                  JSPROP_PERMANENT | JSPROP_READONLY,
                                  0, 0, NULL)) {
-        return JS_FALSE;
+        return NULL;
     }
 
     fp->callobj = callobj;
