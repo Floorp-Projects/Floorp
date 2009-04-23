@@ -1,6 +1,7 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2009 NVIDIA Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,69 +28,43 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is NVIDIA Corporation.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#ifndef _CAIRO_DDRAW_H_
+#define _CAIRO_DDRAW_H_
 
-#include "cairo-platform.h"
+#include "cairo.h"
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+#if CAIRO_HAS_DDRAW_SURFACE
 
-#ifndef cairo_public
-# define cairo_public
-#endif
+#include <windows.h>
+#include <ddraw.h>
 
-#define CAIRO_VERSION_MAJOR 1
-#define CAIRO_VERSION_MINOR 7
-#define CAIRO_VERSION_MICRO 4
+CAIRO_BEGIN_DECLS
 
-@PS_SURFACE_FEATURE@
+cairo_public cairo_surface_t *
+cairo_ddraw_surface_create (LPDIRECTDRAW lpdd,
+			    cairo_format_t format,
+			    int width,
+			    int height);
 
-@PDF_SURFACE_FEATURE@
+cairo_public cairo_surface_t *
+cairo_ddraw_surface_create_alias (cairo_surface_t *surface,
+				  int x,
+				  int y,
+				  int width,
+				  int height);
 
-@SVG_SURFACE_FEATURE@
+cairo_public LPDIRECTDRAWSURFACE
+cairo_ddraw_surface_get_ddraw_surface (cairo_surface_t *surface);
 
-@XLIB_SURFACE_FEATURE@
+CAIRO_END_DECLS
 
-@XLIB_XRENDER_SURFACE_FEATURE@
+#else  /* CAIRO_HAS_DDRAW_SURFACE */
+# error Cairo was not compiled with support for the direct draw backend
+#endif /* CAIRO_HAS_DDRAW_SURFACE */
 
-@QUARTZ_SURFACE_FEATURE@
-
-@QUARTZ_IMAGE_SURFACE_FEATURE@
-
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@OS2_SURFACE_FEATURE@
-
-@BEOS_SURFACE_FEATURE@
-
-@DIRECTFB_SURFACE_FEATURE@
-
-@QPAINTER_SURFACE_FEATURE@
-
-@DDRAW_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@QUARTZ_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-@FC_FONT_FEATURE@
-#endif
+#endif /* _CAIRO_DDRAW_H_ */
