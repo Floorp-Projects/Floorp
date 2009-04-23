@@ -640,22 +640,12 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   if (!aContent)
     return NS_ERROR_FAILURE;
 
-  // Get the calling geometry's bounding box.  This
-  // will be in *device coordinates*
-  nsISVGChildFrame *callerSVGFrame;
-  if (callerType == nsGkAtoms::svgGlyphFrame)
-    callerSVGFrame = do_QueryFrame(aSource->GetParent());
-  else
-    callerSVGFrame = do_QueryFrame(aSource);
-
-  callerSVGFrame->SetMatrixPropagation(PR_FALSE);
-  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                                   nsISVGChildFrame::TRANSFORM_CHANGED );
-  callerSVGFrame->GetBBox(aBBox);
-  callerSVGFrame->SetMatrixPropagation(PR_TRUE);
-  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                                   nsISVGChildFrame::TRANSFORM_CHANGED);
-
+  if (callerType == nsGkAtoms::svgGlyphFrame) {
+    *aBBox = nsSVGUtils::GetBBox(aSource->GetParent()).get();
+  } else {
+    *aBBox = nsSVGUtils::GetBBox(aSource).get();
+  }
+  
   // Sanity check
   PRUint16 type = GetPatternUnits();
   if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {

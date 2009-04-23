@@ -1402,23 +1402,13 @@ nsSVGUtils::AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
 
     PRBool gotRect = PR_FALSE;
     if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-      nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
-      nsCOMPtr<nsIDOMSVGRect> rect;
-      svgFrame->GetBBox(getter_AddRefs(rect));
+      nsCOMPtr<nsIDOMSVGRect> rect = GetBBox(aFrame);
       if (rect) {
         gotRect = PR_TRUE;
         rect->GetX(&minx);
         rect->GetY(&miny);
         rect->GetWidth(&width);
         rect->GetHeight(&height);
-        // Correct for scaling in outersvg CTM
-        nsPresContext *presCtx = aFrame->PresContext();
-        float scaleInv =
-          presCtx->AppUnitsToGfxUnits(presCtx->AppUnitsPerCSSPixel());
-        minx /= scaleInv;
-        miny /= scaleInv;
-        width /= scaleInv;
-        height /= scaleInv;
       }
     } else {
       gotRect = PR_TRUE;
