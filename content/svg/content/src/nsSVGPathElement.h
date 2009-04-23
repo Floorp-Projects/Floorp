@@ -99,7 +99,7 @@ public:
                                      nsISVGValue::modificationType aModType);
 
   // nsSVGPathGeometryElement methods:
-  virtual PRBool IsDependentAttribute(nsIAtom *aName);
+  virtual PRBool AttributeDefinesGeometry(const nsIAtom *aName);
   virtual PRBool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx);
