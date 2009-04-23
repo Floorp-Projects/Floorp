@@ -75,6 +75,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
 == marker-attribute-01.svg pass.svg
+== mask-containing-masked-content-01.svg pass.svg
 # Bug 456323
 # == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
