@@ -86,8 +86,9 @@ struct lutType {
 	uint16_t *output_table;
 };
 #if 0
-this is from an intial idea of having the struct correspond to the data in
-the file. I decided that it wasn't a good idea.
+/* this is from an intial idea of having the struct correspond to the data in
+ * the file. I decided that it wasn't a good idea.
+ */
 struct tag_value {
 	uint32_t type;
 	union {
