@@ -18,7 +18,7 @@
 SimpleTest.waitForExplicitFinish();
 
 // This seems to be necessary because the selection is not set up properly otherwise
-addLoadEvent(function() { SimpleTest.executeSoon(test); });
+setTimeout(test, 0);
 
 function test() {
   var sel = window.getSelection();
