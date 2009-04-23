@@ -540,7 +540,7 @@ nsChildView::~nsChildView()
   // notify the children that we're gone
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     nsChildView* childView = static_cast<nsChildView*>(kid);
-    childView->mParentWidget = nsnull;
+    childView->ResetParent();
   }
 
   NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
@@ -996,7 +996,7 @@ NS_IMETHODIMP nsChildView::Show(PRBool aState)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-// Reset the parent of this widget
+// Change the parent of this widget
 NS_IMETHODIMP
 nsChildView::SetParent(nsIWidget* aNewParent)
 {
@@ -1027,6 +1027,17 @@ nsChildView::SetParent(nsIWidget* aNewParent)
   return NS_OK;
   
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+void nsChildView::ResetParent()
+{
+  if (!mOnDestroyCalled) {
+    if (mParentWidget)
+      mParentWidget->RemoveChild(this);
+    if (mView)
+      [mView removeFromSuperview];
+  }
+  mParentWidget = nsnull;
 }
 
 nsIWidget*
