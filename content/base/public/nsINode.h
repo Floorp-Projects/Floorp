@@ -771,6 +771,22 @@ public:
   }
 
   /**
+   * Returns PR_TRUE if |this| or any of its ancestors is native anonymous.
+   */
+  PRBool IsInNativeAnonymousSubtree() const
+  {
+#ifdef DEBUG
+    if (HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE)) {
+      return PR_TRUE;
+    }
+    CheckNotNativeAnonymous();
+    return PR_FALSE;
+#else
+    return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
+#endif
+  }
+
+  /**
    * Get the root content of an editor. So, this node must be a descendant of
    * an editor. Note that this should be only used for getting input or textarea
    * editor's root content. This method doesn't support HTML editors.
@@ -891,6 +907,12 @@ protected:
   {
     return IsEditableInternal();
   }
+
+#ifdef DEBUG
+  // Note: virtual so that IsInNativeAnonymousSubtree can be called accross
+  // module boundaries.
+  virtual void CheckNotNativeAnonymous() const;
+#endif
 
   nsresult GetParentNode(nsIDOMNode** aParentNode);
   nsresult GetChildNodes(nsIDOMNodeList** aChildNodes);

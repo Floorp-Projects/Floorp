@@ -419,6 +419,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     jsval newParentVal = JSVAL_NULL;
     XPCMarkableJSVal newParentVal_markable(&newParentVal);
     AutoMarkingJSVal newParentVal_automarker(ccx, &newParentVal_markable);
+    JSBool chromeOnly = JS_FALSE;
 
     if(sciWrapper.GetFlags().WantPreCreate())
     {
@@ -427,6 +428,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                                                           parent, &parent);
         if(NS_FAILED(rv))
             return rv;
+
+        chromeOnly = (rv == NS_SUCCESS_CHROME_ACCESS_ONLY);
+        rv = NS_OK;
 
         NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
                      "Parent should never be an XPCNativeWrapper here");
@@ -519,7 +523,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
                  "XPCNativeWrapper being used to parent XPCWrappedNative?");
-    
+
     if(!wrapper->Init(ccx, parent, isGlobal, &sciWrapper))
     {
         NS_RELEASE(wrapper);
@@ -533,6 +537,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
         return rv;
     }
+
+    if(chromeOnly)
+        wrapper->SetNeedsChromeWrapper();
+
 
 #if DEBUG_xpc_leaks
     {
@@ -1491,23 +1499,9 @@ return_tearoff:
             return wrapper;
         }
 
-        // Unwrap any XPCCrossOriginWrappers and SafeJSObjectWrappers.
+        // Unwrap any wrapper wrappers.
         JSObject *unsafeObj;
-        if(clazz == &sXPC_XOW_JSClass.base &&
-           (unsafeObj = XPCWrapper::Unwrap(cx, cur)))
-            return GetWrappedNativeOfJSObject(cx, unsafeObj, funobj, pobj2,
-                                              pTearOff);
-
-        if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
-        {
-            XPCWrappedNative* wrapper;
-            if(XPCNativeWrapper::GetWrappedNative(cx, cur, &wrapper) && wrapper)
-                return GetWrappedNativeOfJSObject(cx, wrapper->GetFlatJSObject(),
-                                                  funobj, pobj2, pTearOff);
-        }
-
-        if(IsXPCSafeJSObjectWrapperClass(clazz) &&
-           (unsafeObj = STOBJ_GET_PARENT(cur)))
+        if((unsafeObj = XPCWrapper::Unwrap(cx, cur)))
             return GetWrappedNativeOfJSObject(cx, unsafeObj, funobj, pobj2,
                                               pTearOff);
     }
@@ -1526,7 +1520,7 @@ return_tearoff:
         JSObject *unsafeObj;
         clazz = STOBJ_GET_CLASS(outer);
         if(clazz == &sXPC_XOW_JSClass.base &&
-           (unsafeObj = XPCWrapper::Unwrap(cx, outer)))
+           (unsafeObj = XPCWrapper::UnwrapXOW(cx, outer)))
         {
             outer = unsafeObj;
         }

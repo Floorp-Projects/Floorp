@@ -488,7 +488,7 @@ XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   jsval isResolving;
   JSBool ok = ::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_IS_RESOLVING,
                                    &isResolving);
-  if (!ok || JSVAL_TO_BOOLEAN(isResolving)) {
+  if (!ok || HAS_FLAGS(isResolving, FLAG_RESOLVING)) {
     return ok;
   }
 
@@ -503,7 +503,7 @@ XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
-  return XPCWrapper::AddProperty(cx, obj, unsafeObj, id, vp);
+  return XPCWrapper::AddProperty(cx, obj, JS_FALSE, unsafeObj, id, vp);
 }
 
 static JSBool
@@ -678,7 +678,7 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                              XPC_SJOW_toString, 0, 0) != nsnull;
   }
 
-  return XPCWrapper::NewResolve(cx, obj, unsafeObj, id, flags, objp);
+  return XPCWrapper::NewResolve(cx, obj, JS_FALSE, unsafeObj, id, flags, objp);
 }
 
 static JSBool
@@ -956,7 +956,7 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   if (!::JS_SetReservedSlot(cx, wrapperObj, XPC_SJOW_SLOT_IS_RESOLVING,
-                            BOOLEAN_TO_JSVAL(JS_FALSE))) {
+                            JSVAL_ZERO)) {
     return JS_FALSE;
   }
 
@@ -1043,7 +1043,7 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
   }
 
   if (!::JS_SetReservedSlot(cx, wrapperIter, XPC_SJOW_SLOT_IS_RESOLVING,
-                            BOOLEAN_TO_JSVAL(JS_FALSE))) {
+                            JSVAL_ZERO)) {
     return nsnull;
   }
 
