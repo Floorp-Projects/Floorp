@@ -618,6 +618,12 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
   NS_ASSERTION((mRequest == aRequest), "Got Stop on wrong stream.");
   nsresult rv = NS_OK;
   
+  if (!mUnicodeDecoder) {
+    PRUint32 writeCount;
+    rv = FinalizeSniffing(nsnull, 0, &writeCount, 0);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   switch (mLifeCycle) {
     case TERMINATED:
       break;
@@ -913,7 +919,7 @@ nsHtml5Parser::Notify(const char* aCharset, nsDetectionConfident aConf)
 }
 
 nsresult
-nsHtml5Parser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
+nsHtml5Parser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment, // can be null
                                                                     PRUint32 aCount,
                                                                     PRUint32* aWriteCount)
 {
@@ -932,7 +938,7 @@ nsHtml5Parser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint
 }
 
 nsresult
-nsHtml5Parser::WriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
+nsHtml5Parser::WriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment, // can be null
                                                     PRUint32 aCount,
                                                     PRUint32* aWriteCount)
 {
@@ -948,7 +954,9 @@ nsHtml5Parser::WriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
     delete mMetaScanner;
     mMetaScanner = nsnull;
   }
-  rv = WriteStreamBytes(aFromSegment, aCount, aWriteCount);
+  if (aFromSegment) {
+    rv = WriteStreamBytes(aFromSegment, aCount, aWriteCount);
+  }
   return rv;
 }
 
@@ -973,6 +981,47 @@ nsHtml5Parser::SetupDecodingFromBom(const char* aCharsetName, const char* aDecod
   }
   mBomState = BOM_SNIFFING_OVER;
   return rv;
+}
+
+nsresult
+nsHtml5Parser::FinalizeSniffing(const PRUint8* aFromSegment, // can be null
+                                PRUint32 aCount,
+                                PRUint32* aWriteCount,
+                                PRUint32 aCountToSniffingLimit)
+{
+  // meta scan failed.
+  if (mCharsetSource >= kCharsetFromHintPrevDoc) {
+    return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
+  }
+  // maybe try chardet now; instantiation copied from nsDOMFile
+  const nsAdoptingString& detectorName = nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
+  if (!detectorName.IsEmpty()) {
+    nsCAutoString detectorContractID;
+    detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
+    AppendUTF16toUTF8(detectorName, detectorContractID);
+    nsCOMPtr<nsICharsetDetector> detector = do_CreateInstance(detectorContractID.get());
+    if (detector) {
+      detector->Init(this);
+      PRBool dontFeed = PR_FALSE;
+      if (mSniffingBuffer) {
+        detector->DoIt((const char*)mSniffingBuffer, mSniffingLength, &dontFeed);
+      }
+      if (!dontFeed && aFromSegment) {
+        detector->DoIt((const char*)aFromSegment, aCountToSniffingLimit, &dontFeed);
+      }
+      detector->Done();
+      // fall thru; callback may have changed charset
+    } else {
+      NS_ERROR("Could not instantiate charset detector.");
+    }
+  }
+  
+  if (mCharsetSource == kCharsetUninitialized) {
+    // Hopefully this case is never needed, but dealing with it anyway
+    mCharset.Assign("windows-1252");
+    mCharsetSource = kCharsetFromWeakDocTypeDefault;
+  }
+  return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
 }
 
 nsresult
@@ -1066,39 +1115,7 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
       mMetaScanner = nsnull;
       return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
     }
-    // meta scan failed.
-    if (mCharsetSource >= kCharsetFromHintPrevDoc) {
-      return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
-    }
-    // maybe try chardet now; instantiation copied from nsDOMFile
-    const nsAdoptingString& detectorName = nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
-    if (!detectorName.IsEmpty()) {
-      nsCAutoString detectorContractID;
-      detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-      AppendUTF16toUTF8(detectorName, detectorContractID);
-      nsCOMPtr<nsICharsetDetector> detector = do_CreateInstance(detectorContractID.get());
-      if (detector) {
-        detector->Init(this);
-        PRBool dontFeed = PR_FALSE;
-        if (mSniffingBuffer) {
-          detector->DoIt((const char*)mSniffingBuffer, mSniffingLength, &dontFeed);
-        }
-        if (!dontFeed) {
-          detector->DoIt((const char*)aFromSegment, countToSniffingLimit, &dontFeed);
-        }
-        detector->Done();
-        // fall thru; callback may have changed charset
-      } else {
-        NS_ERROR("Could not instantiate charset detector.");
-      }
-    }
-    
-    if (mCharsetSource == kCharsetUninitialized) {
-      // Hopefully this case is never needed, but dealing with it anyway
-      mCharset.Assign("windows-1252");
-      mCharsetSource = kCharsetFromWeakDocTypeDefault;
-    }
-    return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
+    return FinalizeSniffing(aFromSegment, aCount, aWriteCount, countToSniffingLimit);
   }
 
   // not the last buffer
