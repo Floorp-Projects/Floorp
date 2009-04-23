@@ -6922,7 +6922,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
 
     *parentObj = globalObj;
 
-    return NS_OK;
+    return node->IsInNativeAnonymousSubtree() ?
+      NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
   }
 
   // If we have a document, make sure one of these is true
@@ -6983,7 +6984,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
 
       *parentObj = globalObj;
 
-      return NS_OK;
+      return node->IsInNativeAnonymousSubtree() ?
+        NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
     }
   }
 
@@ -6997,7 +6999,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
       (wrapper = static_cast<nsIXPConnectJSObjectHolder*>(doc->GetWrapper()))) {
     wrapper->GetJSObject(parentObj);
     if(*parentObj) {
-      return NS_OK;
+      return node->IsInNativeAnonymousSubtree() ?
+        NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
     }
   }
 
@@ -7005,10 +7008,12 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   nsresult rv = WrapNative(cx, globalObj, native_parent, &v,
                            getter_AddRefs(holder));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *parentObj = JSVAL_TO_OBJECT(v);
 
-  return rv;
+  return node->IsInNativeAnonymousSubtree() ?
+    NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
 }
 
 NS_IMETHODIMP

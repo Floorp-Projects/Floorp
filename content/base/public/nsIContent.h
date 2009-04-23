@@ -174,29 +174,6 @@ public:
   virtual nsIContent* FindFirstNonNativeAnonymous() const;
 
   /**
-   * Returns PR_TRUE if |this| or any of its ancestors is native anonymous.
-   */
-  PRBool IsInNativeAnonymousSubtree() const
-  {
-#ifdef DEBUG
-    if (HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE)) {
-      return PR_TRUE;
-    }
-    nsIContent* content = GetBindingParent();
-    while (content) {
-      if (content->IsRootOfNativeAnonymousSubtree()) {
-        NS_ERROR("Element not marked to be in native anonymous subtree!");
-        break;
-      }
-      content = content->GetBindingParent();
-    }
-    return PR_FALSE;
-#else
-    return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
-#endif
-  }
-
-  /**
    * Returns true if and only if this node has a parent, but is not in
    * its parent's child list.
    */
