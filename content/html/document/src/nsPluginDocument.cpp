@@ -126,7 +126,7 @@ nsPluginStreamListener::SetupPlugin()
   nsCOMPtr<nsIContent> embed = mPluginDoc->GetPluginContent();
 
   // Now we have a frame for our <embed>, start the load
-  nsIPresShell* shell = mDocument->GetPrimaryShell();
+  nsCOMPtr<nsIPresShell> shell = mDocument->GetPrimaryShell();
   if (!shell) {
     // Can't instantiate w/o a shell
     mPluginDoc->AllowNormalInstantiation();
