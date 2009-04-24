@@ -1,0 +1,31 @@
+<html>
+<head>
+<script>
+
+function X() { dump("X\n"); }
+function Y() { dump("Y\n"); }
+
+function boom()
+{
+  dump("Start9\n");
+
+  var div = document.getElementById("v");
+
+  var textNode = document.createTextNode(String.fromCharCode(0xDAAF)); // high surrogate
+  div.appendChild(textNode);
+
+  document.addEventListener("DOMCharacterDataModified", X, true);
+  textNode.data += 'B';
+  document.removeEventListener("DOMCharacterDataModified", X, true);
+
+  document.addEventListener("DOMAttrModified", Y, true);
+  textNode.data += String.fromCharCode(0xDF53); // low surrogate
+  document.removeEventListener("DOMAttrModified", Y, true);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="v"></div></body>
+
+</html>
