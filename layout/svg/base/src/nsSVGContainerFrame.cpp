@@ -39,6 +39,7 @@
 #include "nsSVGOuterSVGFrame.h"
 
 NS_QUERYFRAME_HEAD(nsSVGDisplayContainerFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGDisplayContainerFrame)
   NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGContainerFrame)
 
