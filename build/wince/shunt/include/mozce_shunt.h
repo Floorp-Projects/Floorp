@@ -41,11 +41,6 @@
 
 #ifdef MOZCE_SHUNT_EXPORTS
 #define _CRTIMP __declspec(dllexport)
-#define MOZCE_SHUNT_API __declspec(dllexport)
-#define MOZCE_SHUNT_IMPORT_API __declspec(dllexport)
-#else
-#define MOZCE_SHUNT_API
-#define MOZCE_SHUNT_IMPORT_API __declspec(dllimport)
 #endif
 
 #ifdef MOZ_MEMORY
@@ -67,14 +62,14 @@ extern void* moz_calloc(size_t, size_t);
 extern void* moz_realloc(void*, unsigned int);
 extern void moz_free(void*);
   
-MOZCE_SHUNT_API void* __cdecl  malloc(size_t);
-MOZCE_SHUNT_API void* __cdecl  valloc(size_t);
-MOZCE_SHUNT_API void* __cdecl  calloc(size_t, size_t);
-MOZCE_SHUNT_API void* __cdecl  realloc(void*, unsigned int);
-MOZCE_SHUNT_API void __cdecl  free(void*);
+void* __cdecl  malloc(size_t);
+void* __cdecl  valloc(size_t);
+void* __cdecl  calloc(size_t, size_t);
+void* __cdecl  realloc(void*, unsigned int);
+void __cdecl  free(void*);
 
  
-MOZCE_SHUNT_API char*
+char*
 mozce_strdup(const char*);
 
 MOZCE_SHUNT_API unsigned short* 
