@@ -1,0 +1,14 @@
+<html><head style="display: table-row;">
+<title>Testcase bug 330015 - Crash with display: table-column-group, table-row, table-column, etc</title>
+<link style="display: table-row;">
+<link style="display: block;">
+<link style="display: table-column;">
+<link style="display: table-column-group;">
+</head>
+<body>
+Mozilla should not crash on this page.
+<script>
+document.getElementsByTagName('head')[0].style.display = '';
+document.getElementsByTagName('link')[1].style.display = '';
+</script>
+</body></html>
