@@ -1,0 +1,21 @@
+<html><head>
+<style>
+blockquote::first-letter {float: right;}
+</style>
+<title>
+Testcase bug - Crash [@ nsFrameList::DestroyFrames] on reload with -moz-column-count, -moz-inline-block and blockquote::first-letter
+</title>
+</head>
+<body>
+This page should not crash on reload
+<div style=" -moz-column-count: 2;">
+<span style="display: table;"></span>
+<blockquote style="display: -moz-inline-block;">anonymous text</blockquote>
+</div>
+
+<script>
+document.location.reload();
+</script>
+
+</body>
+</html>
