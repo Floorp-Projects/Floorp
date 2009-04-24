@@ -2689,7 +2689,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     // Note that we test the redirect flag and not for the redirect transition
     // type. The transition type refers to how we got here, and whether a page
     // is shown does not depend on whether you got to it through a redirect.
-    // Rather, we want to hide pages that do not themselves redirect somewhere
+    // Rather, we want to hide pages that redirect themselves somewhere
     // else, which is what the redirect flag means.
     //
     // note, we want to unhide any hidden pages that the user explicitly types
