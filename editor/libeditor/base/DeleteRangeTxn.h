@@ -44,11 +44,6 @@
 #include "nsIEditor.h"
 #include "nsCOMPtr.h"
 
-#define DELETE_RANGE_TXN_CID \
-{/* 5ec6b260-ac49-11d2-86d8-000064657374 */ \
-0x5ec6b260, 0xac49, 0x11d2, \
-{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
-
 class nsIDOMRange;
 class nsIEditor;
 class nsRangeUpdater;
@@ -59,9 +54,6 @@ class nsRangeUpdater;
 class DeleteRangeTxn : public EditAggregateTxn
 {
 public:
-
-  static const nsIID& GetCID() { static const nsIID iid = DELETE_RANGE_TXN_CID; return iid; }
-
   /** initialize the transaction.
     * @param aEditor the object providing basic editing operations
     * @param aRange  the range to delete
@@ -70,10 +62,8 @@ public:
                   nsIDOMRange *aRange,
                   nsRangeUpdater *aRangeUpdater);
 
-private:
   DeleteRangeTxn();
 
-public:
   NS_DECL_EDITTXN
 
   NS_IMETHOD RedoTransaction();
@@ -115,9 +105,6 @@ protected:
 
   /** range updater object */
   nsRangeUpdater *mRangeUpdater;
-  
-  friend class TransactionFactory;
-
 };
 
 #endif
