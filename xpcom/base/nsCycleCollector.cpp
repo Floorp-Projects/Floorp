@@ -2556,19 +2556,20 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     {
         GCGraphBuilder builder(mGraph, mRuntimes);
 
+        // Instead of adding roots from the purple buffer, we add them
+        // from the list of nodes we were expected to collect.
+        // Put the expected garbage in *before* calling
+        // BeginCycleCollection so that we can separate the expected
+        // garbage from the NoteRoot calls in such a way that something
+        // that's in both is considered expected garbage.
+        mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, &builder);
+
+        PRUint32 expectedGarbageCount = builder.Count();
+
         for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
             if (mRuntimes[i])
                 mRuntimes[i]->BeginCycleCollection(builder);
         }
-
-        // This might fail to explain expected garbage that's also in
-        // the set of roots added by the runtimes (what used to be
-        // called suspectCurrent), but that seems pretty unlikely.
-        PRUint32 suspectCurrentCount = builder.Count();
-
-        // Instead of adding roots from the purple buffer, we add them
-        // from the list of nodes we were expected to collect.
-        mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, &builder);
 
         MarkRoots(builder);
         ScanRoots();
@@ -2586,7 +2587,12 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     findCycleRoots = PR_TRUE;
                 }
 
-                if (pi->mInternalRefs != pi->mRefCount && i >= suspectCurrentCount) {
+                if (pi->mInternalRefs != pi->mRefCount &&
+                    (i < expectedGarbageCount || i >= mGraph.mRootCount)) {
+                    // This check isn't particularly useful anymore
+                    // given that we need to enter this part for i >=
+                    // mGraph.mRootCount and there are plenty of
+                    // NoteRoot roots.
                     describeExtraRefcounts = PR_TRUE;
                 }
                 ++i;
@@ -2614,7 +2620,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             NodePool::Enumerator etor_roots(mGraph.mNodes);
             for (PRUint32 i = 0; i < mGraph.mRootCount; ++i) {
                 PtrInfo *root_pi = etor_roots.GetNext();
-                if (i >= suspectCurrentCount) {
+                if (i < expectedGarbageCount) {
                     root_pi->mSCCIndex = INDEX_REACHED;
                     root_pi->mShortestPathToExpectedGarbage = root_pi;
                     queue.Push(root_pi);
