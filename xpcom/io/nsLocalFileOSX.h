@@ -46,6 +46,15 @@
 
 class nsDirEnumerator;
 
+// Mac OS X 10.4 does not have stat64/lstat64
+#if defined(HAVE_STAT64) && defined(HAVE_LSTAT64) && (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_4)
+#define STAT stat64
+#define LSTAT lstat64
+#else
+#define STAT stat
+#define LSTAT lstat
+#endif
+
 // The native charset of this implementation is UTF-8. The Unicode used by the
 // Mac OS file system is decomposed, so "Native" versions of these routines will
 // always use decomposed Unicode (NFD). Their "non-Native" counterparts are 
@@ -92,8 +101,6 @@ protected:
                         const nsAString& newName,
                         PRBool followLinks);
 
-  static PRInt64  HFSPlustoNSPRTime(const UTCDateTime& utcTime);
-  static void     NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
   static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
 
 protected:
