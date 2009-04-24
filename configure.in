@@ -268,7 +268,7 @@ case "$target" in
 
     _pwdw=`pwd -W`
     _pwd=`pwd`
-    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$srcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
+    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_pwd/$srcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
 
     CC="$_pwd/dist/sdk/bin/arm-wince-gcc"
     CXX="$_pwd/dist/sdk/bin/arm-wince-gcc"
@@ -6637,6 +6637,9 @@ if test "$MOZ_MEMORY"; then
   *wince)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    if test "$WINCE_WINDOWS_MOBILE"; then
+      AC_DEFINE(MOZ_MEMORY_WINCE6)
+    fi
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
