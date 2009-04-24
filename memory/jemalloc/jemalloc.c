@@ -207,6 +207,7 @@
 #include <internal.h>
 #include <io.h>
 #else
+#include <cmnintrin.h>
 #include <crtdefs.h>
 #define SIZE_MAX UINT_MAX
 #endif
@@ -262,38 +263,17 @@ getenv(const char *name)
 
 	return (NULL);
 }
-#else
 
-static void abort() { 
-	DebugBreak();  
-        exit(-3); 
-}
+#else /* WIN CE */
 
-static int errno = 0;
 #define ENOMEM          12
 #define EINVAL          22
 
-static char *
-getenv(const char *name)
-{
-	return (NULL);
-}
-
-static int
+static __forceinline int
 ffs(int x)
 {
-        int ret;
 
-        if (x == 0)
-                return 0;
-        ret = 2;
-        if ((x & 0x0000ffff) == 0) { ret += 16; x >>= 16;}
-        if ((x & 0x000000ff) == 0) { ret += 8;  x >>= 8;}
-        if ((x & 0x0000000f) == 0) { ret += 4;  x >>= 4;}
-        if ((x & 0x00000003) == 0) { ret += 2;  x >>= 2;}
-        ret -= (x & 1);
-
-        return (ret);
+	return 32 - _CountLeadingZeros((-x) & x);
 }
 #endif
 
@@ -388,6 +368,9 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 180599 2008-07-18 19:35:44Z ja
 
 #include "jemalloc.h"
 
+#undef bool
+#define bool jemalloc_bool
+
 #ifdef MOZ_MEMORY_DARWIN
 static const bool __isthreaded = true;
 #endif
@@ -396,8 +379,8 @@ static const bool __isthreaded = true;
 #define JEMALLOC_USES_MAP_ALIGN	 /* Required on Solaris 10. Might improve performance elsewhere. */
 #endif
 
-#if defined(MOZ_MEMORY_WINCE)
-#define JEMALLOC_USES_MAP_ALIGN	 /* Required for Windows CE */
+#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
+#define JEMALLOC_USES_MAP_ALIGN	 /* Required for Windows CE < 6 */
 #endif
 
 #define __DECONST(type, var) ((type)(uintptr_t)(const void *)(var))
@@ -499,7 +482,7 @@ static const bool __isthreaded = true;
  * Size and alignment of memory chunks that are allocated by the OS's virtual
  * memory system.
  */
-#ifdef MOZ_MEMORY_WINCE
+#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
 #define	CHUNK_2POW_DEFAULT	21
 #else
 #define	CHUNK_2POW_DEFAULT	20
@@ -2210,14 +2193,14 @@ static void *
 pages_map(void *addr, size_t size, int pfd)
 {
 	void *ret = NULL;
-#if defined(MOZ_MEMORY_WINCE)
+#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
 	void *va_ret;
 	assert(addr == NULL);
 	va_ret = VirtualAlloc(addr, size, MEM_RESERVE, PAGE_NOACCESS);
 	if (va_ret)
 		ret = VirtualAlloc(va_ret, size, MEM_COMMIT, PAGE_READWRITE);
 	assert(va_ret == ret);
-#elif defined(MOZ_MEMORY_WINDOWS)
+#else
 	ret = VirtualAlloc(addr, size, MEM_COMMIT | MEM_RESERVE,
 	    PAGE_READWRITE);
 #endif
@@ -2228,7 +2211,7 @@ static void
 pages_unmap(void *addr, size_t size)
 {
 	if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
-#ifdef MOZ_MEMORY_WINCE
+#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
 		if (GetLastError() == ERROR_INVALID_PARAMETER) {
 			MEMORY_BASIC_INFORMATION info;
 			VirtualQuery(addr, &info, sizeof(info));
@@ -6142,7 +6125,7 @@ malloc_shutdown()
 
 /* Mangle standard interfaces on Darwin and Windows CE, 
    in order to avoid linking problems. */
-#if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_WINCE)
+#if defined(MOZ_MEMORY_DARWIN)
 #define	malloc(a)	moz_malloc(a)
 #define	valloc(a)	moz_valloc(a)
 #define	calloc(a, b)	moz_calloc(a, b)
