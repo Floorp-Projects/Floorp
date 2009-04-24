@@ -76,7 +76,12 @@ endif
 
 EXTRA_LIBS += $(JEMALLOC_LIBS)
 
-CPPSRCS = map.cpp
+CPPSRCS = \
+	shunt.cpp \
+	environment.cpp \
+	time.cpp \
+	memory.cpp \
+	$(NULL)
 
 DEFINES += -DMOZCE_SHUNT_EXPORTS
 
