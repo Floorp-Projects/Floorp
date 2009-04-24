@@ -320,13 +320,17 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldsize, uint32 size)
         return JS_TRUE;
     }
 
-    if (size > ~(uint32)0 / sizeof(jsval)) {
+    /*
+     * MAX_DSLOTS_LENGTH is the maximum net capacity supported. Since we allocate
+     * one additional slot to hold the array length, we have to use >= here.
+     */
+    if (size >= MAX_DSLOTS_LENGTH) {
         js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
 
     slots = obj->dslots ? obj->dslots - 1 : NULL;
-    newslots = (jsval *) JS_realloc(cx, slots, sizeof (jsval) * (size + 1));
+    newslots = (jsval *) JS_realloc(cx, slots, (size + 1) * sizeof(jsval));
     if (!newslots)
         return JS_FALSE;
 
@@ -896,8 +900,15 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
     /*
      * Let the interpreter worry about negative array indexes.
      */
-    if (i < 0)
-        return JS_FALSE;
+    JS_ASSERT((MAX_DSLOTS_LENGTH > JSVAL_INT_MAX) == (sizeof(jsval) != sizeof(uint32)));
+    if (MAX_DSLOTS_SIZE > JSVAL_INT_MAX) {
+        /*
+         * Have to check for negative values bleeding through on 64-bit machines only,
+         * since we can't allocate large enough arrays for this on 32-bit machines.
+         */
+        if (i < 0)
+            return JS_FALSE;
+    }
 
     /*
      * If needed, grow the array as long it remains dense, otherwise fall off trace.

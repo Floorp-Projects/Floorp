@@ -6463,54 +6463,31 @@ TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, ExitType exitType)
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
-                                    LIns* dslots_ins, LIns* idx_ins, ExitType exitType)
+TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins, ExitType exitType)
 {
-    jsuint capacity = js_DenseArrayCapacity(obj);
+    /*
+     * Guard that no object along the prototype chain has any indexed properties which
+     * might become visible through holes in the array.
+     */
+    VMSideExit* exit = snapshot(exitType);
 
-    bool cond = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < capacity);
-    if (cond) {
-        VMSideExit* exit = snapshot(exitType);
-        /* Guard array length */
+    if (js_PrototypeHasIndexedProperties(cx, obj))
+        return false;
+
+    while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
+        obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+        LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
+        LIns* ops_ins;
+        if (!map_is_native(obj->map, map_ins, ops_ins))
+            ABORT_TRACE("non-native object involved along prototype chain");
+
+        LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
+                                  "shape");
         guard(true,
-              lir->ins2(LIR_ult, idx_ins, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+              addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
               exit);
-        /* dslots must not be NULL */
-        guard(false,
-              lir->ins_eq0(dslots_ins),
-              exit);
-        /* Guard array capacity */
-        guard(true,
-              lir->ins2(LIR_ult,
-                        idx_ins,
-                        lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
-              exit);
-    } else {
-        /* If not idx < length, stay on trace (and read value as undefined). */
-        LIns* br1 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_ult,
-                                             idx_ins,
-                                             stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
-                                   NULL);
-
-        /* If dslots is NULL, stay on trace (and read value as undefined). */
-        LIns* br2 = lir->insBranch(LIR_jt, lir->ins_eq0(dslots_ins), NULL);
-
-        /* If not idx < capacity, stay on trace (and read value as undefined). */
-        LIns* br3 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_ult,
-                                             idx_ins,
-                                             lir->insLoad(LIR_ldp,
-                                                          dslots_ins,
-                                                          -(int)sizeof(jsval))),
-                                   NULL);
-        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(snapshot(exitType)));
-        LIns* label = lir->ins0(LIR_label);
-        br1->target(label);
-        br2->target(label);
-        br3->target(label);
     }
-    return cond;
+    return true;
 }
 
 bool
@@ -8476,46 +8453,65 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& addr_ins)
+TraceRecorder::elem(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins, LIns*& addr_ins)
 {
     /* no guards for type checks, trace specialized this already */
-    if (JSVAL_IS_PRIMITIVE(oval) || !JSVAL_IS_INT(idx))
+    if (JSVAL_IS_PRIMITIVE(oval) || !JSVAL_IS_INT(ival))
         return false;
 
     JSObject* obj = JSVAL_TO_OBJECT(oval);
     LIns* obj_ins = get(&oval);
+    jsint idx = JSVAL_TO_INT(ival);
+    LIns* idx_ins = makeNumberInt32(get(&ival));
 
     /* make sure the object is actually a dense array */
     if (!guardDenseArray(obj, obj_ins))
         return false;
 
+    VMSideExit* exit = snapshot(BRANCH_EXIT);
+
     /* check that the index is within bounds */
-    jsint i = JSVAL_TO_INT(idx);
-    LIns* idx_ins = makeNumberInt32(get(&idx));
-
     LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
-    if (!guardDenseArrayIndex(obj, i, obj_ins, dslots_ins, idx_ins, BRANCH_EXIT)) {
-        /*
-         * If we read a hole, make sure at recording time and at runtime that nothing along
-         * the prototype has numeric properties.
-         */
-        if (js_PrototypeHasIndexedProperties(cx, obj))
-            return false;
-
-        VMSideExit* exit = snapshot(BRANCH_EXIT);
-        while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
-            obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
-            LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
-            LIns* ops_ins;
-            if (!map_is_native(obj->map, map_ins, ops_ins))
-                ABORT_TRACE("non-native object involved along prototype chain");
-
-            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                      "shape");
-            guard(true,
-                  addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
-                  exit);
+    jsuint capacity = js_DenseArrayCapacity(obj);
+    bool within = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < capacity);
+    if (!within) {
+        /* If idx < 0, stay on trace (and read value as undefined, since this is a dense array). */
+        LIns* br1 = NULL;
+        if (MAX_DSLOTS_SIZE > JS_BITMASK(30) && !idx_ins->isconst()) {
+            JS_ASSERT(sizeof(jsval) == 8); // Only 64-bit machines support large enough arrays for this.
+            br1 = lir->insBranch(LIR_jt,
+                                 lir->ins2i(LIR_lt, idx_ins, 0),
+                                 NULL);
         }
+
+        /* If not idx < length, stay on trace (and read value as undefined). */
+        LIns* br2 = lir->insBranch(LIR_jf,
+                                   lir->ins2(LIR_ult,
+                                             idx_ins,
+                                             stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+                                   NULL);
+
+        /* If dslots is NULL, stay on trace (and read value as undefined). */
+        LIns* br3 = lir->insBranch(LIR_jt, lir->ins_eq0(dslots_ins), NULL);
+
+        /* If not idx < capacity, stay on trace (and read value as undefined). */
+        LIns* br4 = lir->insBranch(LIR_jf,
+                                   lir->ins2(LIR_ult,
+                                             idx_ins,
+                                             lir->insLoad(LIR_ldp,
+                                                          dslots_ins,
+                                                          -(int)sizeof(jsval))),
+                                   NULL);
+        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
+        LIns* label = lir->ins0(LIR_label);
+        if (br1)
+            br1->target(label);
+        br2->target(label);
+        br3->target(label);
+        br4->target(label);
+
+        if (!guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT))
+            return false;
 
         // Return undefined and indicate that we didn't actually read this (addr_ins).
         v_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
@@ -8523,24 +8519,54 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
         return true;
     }
 
-    // We can't "see through" a hole to a possible Array.prototype property, so
-    // we abort here and guard below (after unboxing).
-    vp = &obj->dslots[i];
-    if (*vp == JSVAL_HOLE)
-        ABORT_TRACE("can't see through hole in dense array");
+    /* Guard against negative index */
+    if (MAX_DSLOTS_SIZE > JS_BITMASK(30) && !idx_ins->isconst()) {
+        JS_ASSERT(sizeof(jsval) == 8); // Only 64-bit machines support large enough arrays for this.
+        guard(false,
+              lir->ins2i(LIR_lt, idx_ins, 0),
+              exit);
+    }
 
-    addr_ins = lir->ins2(LIR_piadd, dslots_ins,
-                         lir->ins2i(LIR_pilsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
+    /* Guard array length */
+    guard(true,
+          lir->ins2(LIR_ult, idx_ins, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+          exit);
+
+    /* dslots must not be NULL */
+    guard(false,
+          lir->ins_eq0(dslots_ins),
+          exit);
+
+    /* Guard array capacity */
+    guard(true,
+          lir->ins2(LIR_ult,
+                    idx_ins,
+                    lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
+          exit);
 
     /* Load the value and guard on its type to unbox it. */
+    vp = &obj->dslots[jsuint(idx)];
+    addr_ins = lir->ins2(LIR_piadd, dslots_ins,
+                         lir->ins2i(LIR_pilsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
     v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
-    unbox_jsval(*vp, v_ins, snapshot(BRANCH_EXIT));
+    unbox_jsval(*vp, v_ins, exit);
 
     if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
-        // Optimize to guard for a hole only after untagging, so we know that
-        // we have a boolean, to avoid an extra guard for non-boolean values.
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE))),
-              MISMATCH_EXIT);
+        /*
+         * If we read a hole from the array, convert it to undefined and guard that there
+         * are no indexed properties along the prototype chain.
+         */
+        LIns* br = lir->insBranch(LIR_jf,
+                                  lir->ins2i(LIR_eq, v_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE)),
+                                  NULL);
+        if (!guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT))
+            return false;
+        br->target(lir->ins0(LIR_label));
+
+        /*
+         * Don't let the hole value escape. Turn it into an undefined.
+         */
+        v_ins = lir->ins2i(LIR_and, v_ins, ~(JSVAL_HOLE_FLAG >> JSVAL_TAGBITS));
     }
     return true;
 }
