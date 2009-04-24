@@ -1,0 +1,56 @@
+LIBRARY mozce_shunt.dll
+EXPORTS
+ExpandEnvironmentStringsW
+GetEnvironmentVariableW
+SetEnvironmentVariableW
+_unlink
+_wfullpath
+_wgetcwd
+abort
+clock
+errno
+gmtime
+gmtime_r
+localeconv
+localtime
+localtime_r
+mktime
+mozce_GetEnvironmentCL
+putenv
+getenv
+strerror
+strftime
+time
+
+#ifdef MOZ_MEMORY
+;; operator new
+??2@YAPAXI@Z
+;; operator delete
+??3@YAXPAX@Z
+;; operator new[]
+??_U@YAPAXI@Z
+;; operator delete[]
+??_V@YAXPAX@Z
+malloc
+valloc
+calloc
+realloc
+free
+posix_memalign
+memalign
+malloc_usable_size
+jemalloc_stats
+xmalloc
+xcalloc
+xrealloc
+xmemalign
+reserve_cb_register
+reserve_cb_unregister
+reserve_cur_get
+reserve_min_get
+reserve_min_set
+_strdup
+_wcsdup
+_strndup
+_wcsndup
+#endif
