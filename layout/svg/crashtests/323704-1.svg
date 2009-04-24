@@ -1,0 +1,12 @@
+<svg xmlns='http://www.w3.org/2000/svg'
+xmlns:xlink='http://www.w3.org/1999/xlink'>
+
+   <clipPath id='clipPath_0'>
+      <rect x='10' y='10' width='25' height='25' rx='5' ry='5' fill='none'
+clip-path='url(#clipPath_0)'/>
+   </clipPath>
+
+   <rect x='5' y='5' width='35' height='35' fill='red'
+clip-path='url(#clipPath_0)'/>
+
+</svg>
