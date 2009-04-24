@@ -80,7 +80,7 @@ size_t strftime(char *, size_t, const char *, const struct tm *)
   return 0;
 }
 
-static struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outRetval)
+struct tm* gmtime_r(const time_t* inTimeT, struct tm* outRetval)
 {
   struct tm* retval = NULL;
   
@@ -115,7 +115,7 @@ static struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outRetval)
   return retval;
 }
 
-static struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* outRetval)
+struct tm* localtime_r(const time_t* inTimeT,struct tm* outRetval)
 {
   struct tm* retval = NULL;
   
@@ -153,12 +153,12 @@ static struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* outRetval)
 
 struct tm* localtime(const time_t* inTimeT)
 {
-  return mozce_localtime_r(inTimeT, &tmStorage);
+  return localtime_r(inTimeT, &tmStorage);
 }
 
 struct tm* gmtime(const time_t* inTimeT)
 {
-  return mozce_gmtime_r(inTimeT, &tmStorage);
+  return gmtime_r(inTimeT, &tmStorage);
 }
 
 
@@ -191,7 +191,7 @@ time_t mktime(struct tm* inTM)
     /*
      * Now overwrite the struct passed in with what we believe it should be.
      */
-    gmTime = mozce_gmtime_r(&retval, inTM);
+    gmTime = gmtime_r(&retval, inTM);
   }
   return retval;
 }
