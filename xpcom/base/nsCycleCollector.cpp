@@ -733,6 +733,10 @@ struct nsPurpleBuffer
     void BumpGeneration();
     void SelectAgedPointers(GCGraphBuilder &builder);
 
+#ifdef DEBUG_CC
+    void NoteAll(GCGraphBuilder &builder);
+#endif
+
     PRBool Exists(void *p)
     {
         PRUint32 idx = POINTER_INDEX(p);
@@ -1499,6 +1503,23 @@ AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
 
     return PR_TRUE;
 }
+
+#ifdef DEBUG_CC
+static PLDHashOperator
+noteAllCallback(const void* ptr, PRUint32& generation, void* userArg)
+{
+    GCGraphBuilder *builder = static_cast<GCGraphBuilder*>(userArg);
+    builder->NoteXPCOMRoot(static_cast<nsISupports *>(const_cast<void*>(ptr)));
+    return PL_DHASH_NEXT;
+}
+
+void
+nsPurpleBuffer::NoteAll(GCGraphBuilder &builder)
+{
+    SpillAll();
+    mBackingStore.Enumerate(noteAllCallback, &builder);
+}
+#endif
 
 void 
 nsCycleCollector::SelectPurple(GCGraphBuilder &builder)
@@ -2570,6 +2591,11 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             if (mRuntimes[i])
                 mRuntimes[i]->BeginCycleCollection(builder);
         }
+
+        // But just for extra information, add entries from the purple
+        // buffer too, since it may give us extra information about
+        // traversal deficiencies.
+        mPurpleBuf.NoteAll(builder);
 
         MarkRoots(builder);
         ScanRoots();
