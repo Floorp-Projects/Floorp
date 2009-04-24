@@ -335,11 +335,6 @@ static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                               nscolor aBackgroundColor,
                               nscolor aBorderColor);
 
-/* Returns FALSE iff all returned aTwipsRadii == 0, TRUE otherwise */
-static PRBool GetBorderRadiusTwips(const nsStyleCorners& aBorderRadius,
-                                   const nscoord& aFrameWidth,
-                                   nscoord aTwipsRadii[8]);
-
 static InlineBackgroundData* gInlineBGData = nsnull;
 
 // Initialize any static variables used by nsCSSRendering.
@@ -1070,9 +1065,10 @@ nsCSSRendering::DidPaint()
   gInlineBGData->Reset();
 }
 
-static PRBool
-GetBorderRadiusTwips(const nsStyleCorners& aBorderRadius,
-                     const nscoord& aFrameWidth, nscoord aTwipsRadii[8])
+PRBool
+nsCSSRendering::GetBorderRadiusTwips(const nsStyleCorners& aBorderRadius,
+                                     const nscoord& aFrameWidth,
+                                     nscoord aRadii[8])
 {
   PRBool result = PR_FALSE;
   
@@ -1082,20 +1078,20 @@ GetBorderRadiusTwips(const nsStyleCorners& aBorderRadius,
 
     switch (c.GetUnit()) {
       case eStyleUnit_Percent:
-        aTwipsRadii[i] = (nscoord)(c.GetPercentValue() * aFrameWidth);
+        aRadii[i] = (nscoord)(c.GetPercentValue() * aFrameWidth);
         break;
 
       case eStyleUnit_Coord:
-        aTwipsRadii[i] = c.GetCoordValue();
+        aRadii[i] = c.GetCoordValue();
         break;
 
       default:
         NS_NOTREACHED("GetBorderRadiusTwips: bad unit");
-        aTwipsRadii[i] = 0;
+        aRadii[i] = 0;
         break;
     }
 
-    if (aTwipsRadii[i])
+    if (aRadii[i])
       result = PR_TRUE;
   }
   return result;
