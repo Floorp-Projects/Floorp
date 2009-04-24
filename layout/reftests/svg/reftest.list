@@ -59,6 +59,7 @@ include moz-only/reftest.list
 == filter-basic-02.svg pass.svg
 == filter-basic-03.svg pass.svg
 == filter-foreignObject-01.svg pass.svg
+== filter-invalidation-01.svg pass.svg
 == filter-translated-01.svg filter-translated-01-ref.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-02.svg foreignObject-02-ref.svg
