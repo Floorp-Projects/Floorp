@@ -481,6 +481,7 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(PlacesUIUtils.getString("bookmarksRestoreFilterName"),
                     PlacesUIUtils.getString("bookmarksRestoreFilterExtension"));
+    fp.appendFilters(Ci.nsIFilePicker.filterAll);
 
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                  getService(Ci.nsIProperties);
