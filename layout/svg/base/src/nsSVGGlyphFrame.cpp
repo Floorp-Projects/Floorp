@@ -326,6 +326,15 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
   PRUint16 renderMode = aContext->GetRenderMode();
 
+  switch (GetStyleSVG()->mTextRendering) {
+  case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
+    gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
+    break;
+  default:
+    gfx->SetAntialiasMode(gfxContext::MODE_COVERAGE);
+    break;
+  }
+
   if (renderMode != nsSVGRenderState::NORMAL) {
 
     gfxMatrix matrix = gfx->CurrentMatrix();
@@ -340,7 +349,6 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
       gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
     if (renderMode == nsSVGRenderState::CLIP_MASK) {
-      gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
       FillCharacters(&iter, gfx);
     } else {
