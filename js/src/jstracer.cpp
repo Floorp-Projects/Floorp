@@ -127,6 +127,9 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max call stack size. */
 #define MAX_CALL_STACK_ENTRIES 64
 
+/* Max global object size. */
+#define MAX_GLOBAL_SLOTS 4096
+
 /* Max memory you can allocate in a LIR buffer via a single skip() call. */
 #define MAX_SKIP_BYTES (NJ_PAGE_SIZE - LIR_FAR_SLOTS)
 
@@ -1962,7 +1965,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
      * If the global object grows too large, alloca in js_ExecuteTree might fail, so
      * abort tracing on global objects with unreasonably many slots.
      */
-    if (globalObj->dslots[-1] > 4096)
+    if (STOBJ_NSLOTS(globalObj) > MAX_GLOBAL_SLOTS)
         return false;
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
     if (known(vp))
@@ -3230,6 +3233,9 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
         return false;
     }
 
+    if (STOBJ_NSLOTS(globalObj) > MAX_GLOBAL_SLOTS)
+        return false;
+
     uint32 globalShape = OBJ_SHAPE(globalObj);
 
     if (tm->recorder) {
@@ -4151,6 +4157,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #ifdef DEBUG
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
+    JS_ASSERT(globalFrameSize <= MAX_GLOBAL_SLOTS);
 #endif
 
     debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
