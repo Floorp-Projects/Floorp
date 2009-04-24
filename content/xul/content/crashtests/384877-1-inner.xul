@@ -1,0 +1,15 @@
+<menupopup xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="d" popup="d">
+<script>
+function doe() {
+var d = document.getElementById('d');
+if (d.openPopup) {
+  d.openPopup(document.documentElement, 'before_start', 0, 0, false, false);
+//  alert(d.state);
+}
+  
+if (d.showPopup)
+  d.showPopup();
+}
+setTimeout(doe, 200);
+</script>
+</menupopup>
