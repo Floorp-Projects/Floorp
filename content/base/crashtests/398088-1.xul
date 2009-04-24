@@ -1,0 +1,23 @@
+<window onload="boom();" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script>
+
+function boom()
+{
+  var p = document.getElementById("p");
+  
+  document.addEventListener("DOMAttrModified", removeP, true); 
+  
+  p.removeAttribute("mode");
+  
+  function removeP()
+  {
+    document.documentElement.removeChild(p);
+  }
+}
+
+</script>
+
+<progressmeter id="p" mode="determined" />
+
+</window>
