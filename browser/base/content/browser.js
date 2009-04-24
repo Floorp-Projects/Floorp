@@ -128,10 +128,8 @@ __defineGetter__("gPrefService", function() {
 });
 
 __defineGetter__("PluralForm", function() {
-  delete this.PluralForm;
-  var tmpScope = {};
-  Cu.import("resource://gre/modules/PluralForm.jsm", tmpScope);
-  return this.PluralForm = tmpScope.PluralForm;
+  Cu.import("resource://gre/modules/PluralForm.jsm");
+  return this.PluralForm;
 });
 __defineSetter__("PluralForm", function (val) {
   delete this.PluralForm;
