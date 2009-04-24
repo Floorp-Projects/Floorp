@@ -45,7 +45,6 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
 	browser_0_library_left_pane_migration.js \
-	browser_library_left_pane_fixnames.js \
 	browser_425884.js \
 	browser_423515.js \
 	browser_410196_paste_into_tags.js \
@@ -58,7 +57,6 @@ _BROWSER_TEST_FILES = \
 	browser_bookmarksProperties.js \
 	browser_forgetthissite_single.js \
 	browser_library_left_pane_commands.js \
-	browser_library_multiple_left_panes.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
