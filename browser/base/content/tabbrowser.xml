@@ -809,6 +809,9 @@
             if (this.mCurrentBrowser == newBrowser && !aForceUpdate)
               return;
 
+            if (this.mCurrentTab != this.selectedTab)
+              this.mCurrentTab.owner = null;
+
             if (this.mCurrentBrowser) {
               // Only save the focused element if it is in our content window
               // or in an ancestor window.
@@ -1302,20 +1305,8 @@
             this._browsers = null; 
 
             // If this new tab is owned by another, assert that relationship
-            if (aOwner !== undefined && aOwner !== null) {
+            if (aOwner)
               t.owner = aOwner;
-
-              var self = this;
-              function attrChanged(event) {
-                if (event.attrName == "selectedIndex" &&
-                    event.prevValue != event.newValue)
-                  self.resetOwner(parseInt(event.prevValue));
-              }
-              if (!this.mTabChangedListenerAdded) {
-                this.mTabBox.addEventListener("DOMAttrModified", attrChanged, false);
-                this.mTabChangedListenerAdded = true;
-              }
-            }
 
             var b = document.createElementNS(
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -1484,20 +1475,6 @@
         <body>
           <![CDATA[
             this.removeTab(this.mCurrentTab);
-          ]]>
-        </body>
-      </method>
-
-      <method name="resetOwner">
-        <parameter name="oldIndex"/>
-        <body>
-          <![CDATA[
-            // Reset the owner property, since we're leaving the modally opened
-            // tab for another.
-            if (oldIndex < this.mTabContainer.childNodes.length) {
-              var tab = this.mTabContainer.childNodes[oldIndex];
-              tab.owner = null;
-            }
           ]]>
         </body>
       </method>
