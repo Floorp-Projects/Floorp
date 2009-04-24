@@ -1,0 +1,15 @@
+<html>
+<head>
+<title>Testcase bug 329900 - Crash with evil testcase, using table-column-group, table-column, table-cell</title>
+</head>
+<body>
+Mozilla should not crash with this page
+<div style="display: table-cell;">
+  <span style="display: table-cell;"></span>
+	 <span style="display: table-column;"></span>
+		<span style="display: table-column-group;"></span>
+  <span style="display: table-cell;"></span>
+  <table></table>
+</div>
+
+</body></html>
