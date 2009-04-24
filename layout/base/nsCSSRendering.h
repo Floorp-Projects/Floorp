@@ -74,6 +74,15 @@ struct nsCSSRendering {
                                   const nsRect& aDirtyRect);
 
   /**
+   * Get the size, in app units, of the border radii. It returns FALSE iff all
+   * returned radii == 0 (so no border radii), TRUE otherwise.
+   * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
+   */
+  static PRBool GetBorderRadiusTwips(const nsStyleCorners& aBorderRadius,
+                                     const nscoord& aFrameWidth,
+                                     nscoord aRadii[8]);
+
+  /**
    * Render the border for an element using css rendering rules
    * for borders. aSkipSides is a bitmask of the sides to skip
    * when rendering. If 0 then no sides are skipped.
