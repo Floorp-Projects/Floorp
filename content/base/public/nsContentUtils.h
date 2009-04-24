@@ -1362,8 +1362,8 @@ public:
   static nsresult ProcessViewportInfo(nsIDocument *aDocument,
                                       const nsAString &viewportInfo);
 
-  static nsresult GetContextForEventHandlers(nsINode* aNode,
-                                             nsIScriptContext** aContext);
+  static nsIScriptContext* GetContextForEventHandlers(nsINode* aNode,
+                                                      nsresult* aRv);
 
   static JSContext *GetCurrentJSContext();
 

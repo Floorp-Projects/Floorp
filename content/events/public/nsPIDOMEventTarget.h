@@ -52,8 +52,8 @@ class nsIScriptContext;
 
 // 25982813-af2e-4ab6-b512-e6c6ada6d0ec
 #define NS_PIDOMEVENTTARGET_IID \
-  { 0x25982813, 0xaf2e, 0x4ab6, \
-    { 0xb5, 0x12, 0xe6, 0xc6, 0xad, 0xa6, 0xd0, 0xec } }
+  { 0x358f2990, 0x5107, 0x49ba, \
+    { 0x88, 0x94, 0x14, 0x34, 0x86, 0xd5, 0x99, 0x85 } }
 
 class nsPIDOMEventTarget : public nsISupports
 {
@@ -163,8 +163,9 @@ public:
   /**
    * Get the script context in which the event handlers should be run.
    * May return null.
+   * @note Caller *must* check the value of aRv.
    */
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext) = 0;
+  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMEventTarget, NS_PIDOMEVENTTARGET_IID)
