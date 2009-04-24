@@ -1,0 +1,39 @@
+<html>
+<head>
+
+<script>
+function boom()
+{
+  document.body.style.position = "fixed"
+  
+  setTimeout(boom2, 1);
+}
+
+function boom2()
+{
+  lappy = document.getElementById("lappy");
+  lappy.style.display = "none"
+
+  setTimeout(boom3, 200);
+}
+
+function boom3()
+{
+  dump("Reloading\n");
+  location.reload();
+}
+
+</script>
+
+
+</head>
+
+
+<body bgcolor="black" onload="boom()">
+
+  <span style="overflow: scroll; display: -moz-box;"></span>
+
+  <embed id="lappy" src="" width=550 height=400 TYPE="application/x-shockwave-flash" ></embed>
+ 
+</body>
+</html>
