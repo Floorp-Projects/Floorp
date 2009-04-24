@@ -48,24 +48,11 @@
 #undef wcsndup
 #undef _wcsndup
 
-#define free orig_free
-#define malloc orig_malloc
-#define calloc orig_calloc
-#define realloc orig_realloc
-#define _wcsdup orig_wcsdup
-#define _strdup orig_strup
-
 #endif
 
 #include "@WINCE_SDK_DIR@/Include/Armv4i/stdlib.h"
 
 #ifdef MOZ_MEMORY
-
-#undef free
-#undef malloc
-#undef calloc
-#undef realloc
-
 #undef strdup
 #undef _strdup
 #undef wcsdup
@@ -75,13 +62,14 @@
 #undef wcsndup
 #undef _wcsndup
 
+#define _strdup mozce_strdup
 #define strdup _strdup
+#define _strndup mozce_strndup
 #define strndup _strndup
+#define _wcsdup mozce_wcsdup
 #define wcsdup _wcsdup
+#define _wcsndup mozce_wcsndup
 #define wcsndup _wcsndup
-
-/* now include jemalloc.h to get the real malloc, free, etc. */
-#include "jemalloc.h"
 
 #endif
 

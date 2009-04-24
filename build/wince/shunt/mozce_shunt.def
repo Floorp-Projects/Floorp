@@ -1,0 +1,21 @@
+LIBRARY mozce_shunt.dll
+EXPORTS
+ExpandEnvironmentStringsW
+GetEnvironmentVariableW
+SetEnvironmentVariableW
+_unlink
+_wfullpath
+_wgetcwd
+abort
+clock
+errno
+gmtime
+localeconv
+localtime
+mktime
+mozce_GetEnvironmentCL
+putenv
+getenv
+strerror
+strftime
+time
