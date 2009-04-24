@@ -1,0 +1,3 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="randomxbl" inheritstyle="false">
+<content><children><style xmlns="http://www.w3.org/1999/xhtml">*::before { content:"before text"; }\</style></children></content></binding></bindings>
