@@ -1,0 +1,34 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
+ title="Testcase bug 326644 - Crash when changing enumerated properties of objects in xul">
+
+<html:script><![CDATA[
+var timers=0;
+function doe(aObj, aNested, aCurrentTimer){
+var temp =0;
+for (var i in aObj) {
+try {
+if (typeof aObj[i] == 'object') {
+  if (aNested >= 19 || aObj[i] == window.location)
+    continue;
+  setTimeout(doe,500, aObj[i], ++aNested, timers);
+  timers++;
+}
+}
+catch(e){}
+try {
+ //if (temp == 68 && aNested == 21 && aCurrentTimer >= 116) {
+ // alert(i + '-'+ aObj[i]);
+ // return;
+ // }
+ aObj[i]= i;
+ temp+=1;
+}
+catch (e) {
+
+}
+}
+}
+var s=document.getElementsByTagName('window')[0];
+setTimeout(doe,100, s, 0);
+]]></html:script>
+</window>
