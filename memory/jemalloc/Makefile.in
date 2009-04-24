@@ -49,10 +49,6 @@ MODULE		= jemalloc
 # symbols.
 VISIBILITY_FLAGS=
 
-ifeq (WINCE,$(OS_TARGET))
-DEFINES+= -DMOZCE_SHUNT_H
-endif
-
 ifeq (WINNT,$(OS_TARGET))
 # Building the CRT from source
 CRT_OBJ_DIR = $(CURDIR)/crtsrc
@@ -119,9 +115,8 @@ DIST_INSTALL = 1
 FORCE_STATIC_LIB= 1
 endif
 
-CSRCS		= \
-		jemalloc.c \
-		$(NULL)
+EXPORTS = jemalloc.h
+CSRCS   = jemalloc.c
 
 #XXX: PGO on Linux causes problems here
 # See bug 419470
