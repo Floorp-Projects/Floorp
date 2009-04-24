@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsSVGInnerSVGFrame.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsSVGOuterSVGFrame.h"
@@ -44,68 +45,6 @@
 #include "nsSVGSVGElement.h"
 #include "nsSVGContainerFrame.h"
 #include "gfxContext.h"
-
-typedef nsSVGDisplayContainerFrame nsSVGInnerSVGFrameBase;
-
-class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
-                           public nsISVGSVGFrame
-{
-  friend nsIFrame*
-  NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-protected:
-  nsSVGInnerSVGFrame(nsStyleContext* aContext) :
-    nsSVGInnerSVGFrameBase(aContext) {}
-  
-public:
-  NS_DECL_QUERYFRAME
-
-  // We don't define an AttributeChanged method since changes to the
-  // 'x', 'y', 'width' and 'height' attributes of our content object
-  // are handled in nsSVGSVGElement::DidModifySVGObservable
-
-#ifdef DEBUG
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-#endif
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgInnerSVGFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGInnerSVG"), aResult);
-  }
-#endif
-
-  // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, const nsIntRect *aDirtyRect);
-  virtual void NotifySVGChanged(PRUint32 aFlags);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
-
-  // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
-
-  // nsISVGSVGFrame interface:
-  NS_IMETHOD SuspendRedraw();
-  NS_IMETHOD UnsuspendRedraw();
-  NS_IMETHOD NotifyViewportChange();
-
-protected:
-
-  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
-};
-
-//----------------------------------------------------------------------
-// Implementation
 
 nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -117,6 +56,7 @@ NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 // nsIFrame methods
 
 NS_QUERYFRAME_HEAD(nsSVGInnerSVGFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGInnerSVGFrame)
   NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGInnerSVGFrameBase)
 
