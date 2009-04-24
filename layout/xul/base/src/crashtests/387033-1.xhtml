@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xbl="http://www.mozilla.org/xbl"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <head>
+    <xbl:bindings>
+      <xbl:binding id="test" extends="chrome://global/content/bindings/text.xml#text-label">
+        <xbl:implementation>
+          <xbl:property name="accessKey">
+            <xbl:getter>
+              <![CDATA[
+                this.parentNode.parentNode.removeChild(this.parentNode);
+                return "";
+              ]]>
+            </xbl:getter>
+            <xbl:setter>
+              <![CDATA[
+                return val;
+              ]]>
+            </xbl:setter>
+          </xbl:property>
+        </xbl:implementation>
+      </xbl:binding>
+    </xbl:bindings>
+  </head>
+  <body>
+    <xul:hbox>
+      <xul:label value="foobar" style="-moz-binding: url(#test)"/>
+    </xul:hbox>
+  </body>
+</html>
