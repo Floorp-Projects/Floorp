@@ -1,53 +1,10 @@
-/* -*- Mode: C; tab-width: 8; c-basic-offset: 8 -*- */
-/* vim:set softtabstop=8 shiftwidth=8: */
-/*-
- * Copyright (C) 2006-2008 Jason Evans <jasone@FreeBSD.org>.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice(s), this list of conditions and the following disclaimer as
- *    the first lines of this file unmodified other than the possible
- *    addition of one or more copyright notices.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice(s), this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER(S) BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-#ifndef _JEMALLOC_H_
-#define _JEMALLOC_H_
-
-/* grab size_t */
-#ifdef _MSC_VER
-#include <crtdefs.h>
+#ifndef MOZ_MEMORY_WINDOWS
+#  include <stdbool.h>
 #else
-#include <stddef.h>
-#endif
-
-#ifndef __cplusplus
-/* define bool for non-C++ in MSVC; it's an 8-bit type */
-#ifdef _MSC_VER
-#define bool unsigned char
-#else
-#include <stdbool.h>
-#endif
-#else
-extern "C" {
+#  include <windows.h>
+#  ifndef bool
+#    define bool BOOL
+#  endif
 #endif
 
 extern const char	*_malloc_options;
@@ -218,13 +175,3 @@ size_t	reserve_min_get(void);
  *      condition.
  */
 bool	reserve_min_set(size_t min);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#ifndef __cplusplus
-#undef bool
-#endif
-
-#endif /* _JEMALLOC_H_ */
