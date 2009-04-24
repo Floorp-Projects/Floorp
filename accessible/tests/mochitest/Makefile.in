@@ -75,6 +75,7 @@ _TEST_FILES =\
 		test_bug420863.html \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_cssattrs.html \
+		test_descr.html \
 		test_elm_filectrl.html \
 		test_elm_media.html \
 		test_elm_txtcntnr.html \
