@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<title>Testcase bug 288790 - Crash [@ GetNearestContainingBlock] with this xbl testcase</title>
+<head>
+<style>
+#z {position: relative;}
+#z span{position: absolute;}
+</style>
+
+<bindings xmlns="http://www.mozilla.org/xbl" xmlns:html="http://www.w3.org/1999/xhtml">
+  <binding id="m"></binding>
+  <binding id="ma" extends="#m">
+    <content>
+        <html:div><children/></html:div>
+    </content>
+  </binding>
+</bindings>
+
+</head>
+<body>
+<div id="z"><span></span></div>
+
+
+<script>
+function doe(){
+document.getElementById('z').setAttribute('style','-moz-binding:url(#ma)');
+setTimeout(doe2,0);
+}
+
+function doe2(){
+document.getElementsByTagName('span')[0].setAttribute('style','-moz-binding:url(#m)');
+}
+</script>
+<button id="button" onclick="doe()">Click me</button><br/>
+Clicking on the above button two times, should not crash Mozilla.
+<script>
+function clickbutton()
+{
+  var ev = document.createEvent('MouseEvents');
+  ev.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  var button = document.getElementById('button');
+  button.dispatchEvent(ev);
+  button.dispatchEvent(ev);
+}
+clickbutton();
+</script>
+</body></html>
