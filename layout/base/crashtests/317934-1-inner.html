@@ -1,0 +1,31 @@
+<html>
+<head>
+<script>
+function clickit()
+{
+document.getElementById('button').click();
+}
+window.addEventListener('load', clickit, false);
+</script>
+</head>
+<body>
+<div style="width:400px;">
+<q style="position:relative;"><q style="position:relative;">
+Some random text, some random text, some random text
+<span style="position: relative;">
+Some random text, some random text, some random text
+</span>
+</q></q>
+</div>
+<script>
+function doe(){
+var q1=document.getElementsByTagName('q')[0];
+var q2=document.getElementsByTagName('q')[1];
+q1.style.position='static';
+q2.style.position='static';
+}
+//setTimeout(doe,200);
+</script>
+<button id="button" onclick="doe()">Clicking this button should not crash Mozilla</button>
+</body>
+</html>
