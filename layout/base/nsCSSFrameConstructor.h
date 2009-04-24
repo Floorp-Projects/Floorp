@@ -1509,6 +1509,17 @@ private:
   nsIFrame* FindNextSibling(ChildIterator aIter,
                             const ChildIterator& aLast);
 
+  // Find the right previous sibling for an insertion.  This also updates the
+  // parent frame to point to the correct continuation of the parent frame to
+  // use, and returns whether this insertion is to be treated as an append.
+  // aChild is the child being inserted and aIndexInContainer its index in
+  // aContainer (which is aChild's DOM parent).
+  nsIFrame* GetInsertionPrevSibling(nsIFrame*& aParentFrame, /* inout */
+                                    nsIContent* aContainer,
+                                    nsIContent* aChild,
+                                    PRInt32 aIndexInContainer,
+                                    PRBool* aIsAppend);
+
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
   // XXXbz this code is generally wrong, since the frame for aContent
