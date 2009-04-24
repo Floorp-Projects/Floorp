@@ -70,7 +70,6 @@ _TEST_FILES = \
 		test_bug405178.html \
 		test_bug416168.html \
 		test_bug421436.html \
-		test_bug421839-1.html \
 		test_bug421839-2.html \
 		bug421839-2-page.html \
 		test_bug448860.html \
