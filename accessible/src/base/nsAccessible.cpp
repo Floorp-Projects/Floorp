@@ -319,21 +319,27 @@ nsAccessible::GetName(nsAString& aName)
 
 NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
 {
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   // There are 4 conditions that make an accessible have no accDescription:
   // 1. it's a text node; or
   // 2. It has no DHTML describedby property
   // 3. it doesn't have an accName; or
   // 4. its title attribute already equals to its accName nsAutoString name; 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node shut down
-  }
+  NS_ASSERTION(content, "No content of valid accessible!");
+  if (!content)
+    return NS_ERROR_FAILURE;
+
   if (!content->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString description;
     nsresult rv = nsTextEquivUtils::
       GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
                              description);
-    if (NS_FAILED(rv)) {
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (description.IsEmpty()) {
       PRBool isXUL = content->IsNodeOfType(nsINode::eXUL);
       if (isXUL) {
         // Try XUL <description control="[id]">description text</description>
