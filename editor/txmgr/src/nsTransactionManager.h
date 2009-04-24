@@ -41,13 +41,14 @@
 #include "prmon.h"
 #include "nsWeakReference.h"
 #include "nsITransactionManager.h"
+#include "nsCOMArray.h"
+#include "nsITransactionListener.h"
 
 class nsITransaction;
 class nsITransactionListener;
 class nsTransactionItem;
 class nsTransactionStack;
 class nsTransactionRedoStack;
-class nsVoidArray;
 
 /** implementation of a transaction manager object.
  *
@@ -61,7 +62,7 @@ private:
   nsTransactionStack     mDoStack;
   nsTransactionStack     mUndoStack;
   nsTransactionRedoStack mRedoStack;
-  nsVoidArray            *mListeners;
+  nsCOMArray<nsITransactionListener> mListeners;
 
   PRMonitor              *mMonitor;
 
