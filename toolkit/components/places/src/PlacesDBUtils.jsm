@@ -230,14 +230,42 @@ nsPlacesDBUtils.prototype = {
       ")");
     cleanupStatements.push(deleteOrphanAnnos);
 
-/* XXX needs test
     // MOZ_BOOKMARKS_ROOTS
-    // C.1 fix roots titles
+    // C.1 fix missing Places root
+    //     Bug 477739 shows a case where the root could be wrongly removed
+    //     due to an endianness issue.  We try to fix broken roots here.
+    let selectPlacesRoot = this._dbConn.createStatement(
+      "SELECT id FROM moz_bookmarks WHERE id = :places_root");
+    selectPlacesRoot.params["places_root"] = this._bms.placesRoot;
+    if (!selectPlacesRoot.executeStep()) {
+      // We are missing the root, try to recreate it.
+      let createPlacesRoot = this._dbConn.createStatement(
+        "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title) " +
+        "VALUES (:places_root, 2, NULL, 0, 0, :title)");
+      createPlacesRoot.params["places_root"] = this._bms.placesRoot;
+      createPlacesRoot.params["title"] = "";
+      cleanupStatements.push(createPlacesRoot);
+
+      // Now ensure that other roots are children of Places root.
+      let fixPlacesRootChildren = this._dbConn.createStatement(
+        "UPDATE moz_bookmarks SET parent = :places_root WHERE id IN " +
+          "(SELECT folder_id FROM moz_bookmarks_roots " +
+            "WHERE folder_id <> :places_root)");
+      fixPlacesRootChildren.params["places_root"] = this._bms.placesRoot;
+      cleanupStatements.push(fixPlacesRootChildren);
+    }
+    selectPlacesRoot.finalize();
+
+    // C.2 fix roots titles
     //     some alpha version has wrong roots title, and this also fixes them if
     //     locale has changed.
-    //     note: we should update the library left pane folders in the frontend.
     let updateRootTitleSql = "UPDATE moz_bookmarks SET title = :title " +
                              "WHERE id = :root_id AND title <> :title";
+    // root
+    let fixPlacesRootTitle = this._dbConn.createStatement(updateRootTitleSql);
+    fixPlacesRootTitle.params["root_id"] = this._bms.placesRoot;
+    fixPlacesRootTitle.params["title"] = "";
+    cleanupStatements.push(fixPlacesRootTitle);
     // bookmarks menu
     let fixBookmarksMenuTitle = this._dbConn.createStatement(updateRootTitleSql);
     fixBookmarksMenuTitle.params["root_id"] = this._bms.bookmarksMenuFolder;
@@ -262,31 +290,6 @@ nsPlacesDBUtils.prototype = {
     fixTagsRootTitle.params["title"] =
       this._bundle.GetStringFromName("TagsFolderTitle");
     cleanupStatements.push(fixTagsRootTitle);
-*/
-
-    // C.2 fix missing Places root
-    //     Bug 477739 shows a case where the root could be wrongly removed
-    //     due to an endianness issue.  We try to fix broken roots here.
-    let selectPlacesRoot = this._dbConn.createStatement(
-      "SELECT id FROM moz_bookmarks WHERE id = :places_root");
-    selectPlacesRoot.params["places_root"] = this._bms.placesRoot;
-    if (!selectPlacesRoot.executeStep()) {
-      // We are missing the root, try to recreate it.
-      let createPlacesRoot = this._dbConn.createStatement(
-        "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title) " +
-        "VALUES (:places_root, 2, NULL, 0, 0, NULL)");
-      createPlacesRoot.params["places_root"] = this._bms.placesRoot;
-      cleanupStatements.push(createPlacesRoot);
-
-      // Now ensure that other roots are children of Places root.
-      let fixPlacesRootChildren = this._dbConn.createStatement(
-        "UPDATE moz_bookmarks SET parent = :places_root WHERE id IN " +
-          "(SELECT folder_id FROM moz_bookmarks_roots " +
-            "WHERE folder_id <> :places_root)");
-      fixPlacesRootChildren.params["places_root"] = this._bms.placesRoot;
-      cleanupStatements.push(fixPlacesRootChildren);
-    }
-    selectPlacesRoot.finalize();
 
     // MOZ_BOOKMARKS
     // D.1 remove items without a valid place

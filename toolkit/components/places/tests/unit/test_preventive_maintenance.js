@@ -47,6 +47,8 @@ Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
 const FINISHED_MAINTANANCE_NOTIFICATION_TOPIC = "places-maintenance-finished";
 
+const PLACES_STRING_BUNDLE_URI = "chrome://places/locale/places.properties";
+
 // Get services and database connection
 let os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
@@ -61,6 +63,9 @@ let as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 let fs = Cc["@mozilla.org/browser/favicon-service;1"].
          getService(Ci.nsIFaviconService);
+let bundle = Cc["@mozilla.org/intl/stringbundle;1"].
+             getService(Ci.nsIStringBundleService).
+             createBundle(PLACES_STRING_BUNDLE_URI);
 
 let mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 
@@ -262,23 +267,8 @@ tests.push({
 });
 
 //------------------------------------------------------------------------------
-//XXX TODO
 tests.push({
   name: "C.1",
-  desc: "Fix roots titles",
-
-  setup: function() {
-
-  },
-
-  check: function() {
-
-  }
-});
-
-//------------------------------------------------------------------------------
-tests.push({
-  name: "C.2",
   desc: "fix missing Places root",
 
   setup: function() {
@@ -306,6 +296,35 @@ tests.push({
     do_check_eq(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
     do_check_eq(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
     do_check_eq(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
+  }
+});
+
+//------------------------------------------------------------------------------
+tests.push({
+  name: "C.2",
+  desc: "Fix roots titles",
+
+  setup: function() {
+    // Sanity check: ensure that roots titles are correct. We can use our check.
+    this.check();
+    // Change some roots' titles.
+    bs.setItemTitle(bs.placesRoot, "bad title");
+    do_check_eq(bs.getItemTitle(bs.placesRoot), "bad title");
+    bs.setItemTitle(bs.unfiledBookmarksFolder, "bad title");
+    do_check_eq(bs.getItemTitle(bs.unfiledBookmarksFolder), "bad title");
+  },
+
+  check: function() {
+    // Ensure all roots titles are correct.
+    do_check_eq(bs.getItemTitle(bs.placesRoot), "");
+    do_check_eq(bs.getItemTitle(bs.bookmarksMenuFolder),
+                bundle.GetStringFromName("BookmarksMenuFolderTitle"));
+    do_check_eq(bs.getItemTitle(bs.tagsFolder),
+                bundle.GetStringFromName("TagsFolderTitle"));
+    do_check_eq(bs.getItemTitle(bs.unfiledBookmarksFolder),
+                bundle.GetStringFromName("UnsortedBookmarksFolderTitle"));
+    do_check_eq(bs.getItemTitle(bs.toolbarFolder),
+                bundle.GetStringFromName("BookmarksToolbarFolderTitle"));
   }
 });
 
