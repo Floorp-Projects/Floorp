@@ -1,0 +1,22 @@
+<treerow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="zebra">
+<script xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+function doe(){
+  document.getElementById('b').parentNode.removeChild(document.getElementById('b'));
+  document.getElementById('c').parentNode.removeChild(document.getElementById('c'));
+}
+
+setTimeout(doe, 200);
+]]></script>
+
+<box id="a"/>
+<mtr xmlns="http://www.w3.org/1998/Math/MathML">
+<box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="zebra" id="c"/>
+</mtr>
+<box style="display: inline;" id="b"/>
+
+<style xmlns="http://www.w3.org/1999/xhtml">
+#a { counter-reset: chicken 11 egg; }
+#b { counter-increment: chicken -1 egg; }
+*[class=zebra] { counter-increment: chicken 5; }
+</style>
+</treerow>
