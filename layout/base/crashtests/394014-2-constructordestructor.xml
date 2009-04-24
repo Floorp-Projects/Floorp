@@ -1,0 +1,12 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="a">
+<implementation>
+<destructor>
+  window.frameElement.parentNode.removeChild(window.frameElement);
+</destructor>
+</implementation>
+<content>
+<children/>
+</content>
+</binding>
+</bindings>

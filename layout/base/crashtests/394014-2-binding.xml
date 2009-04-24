@@ -1,0 +1,6 @@
+<bindings xmlns="http://www.mozilla.org/xbl" xmlns:xlink="http://www.w3.org/1999/xlink">
+<binding id="c" inheritstyle="false">
+<content><children/></content>
+<implementation><constructor>
+</constructor></implementation>
+</binding></bindings>
