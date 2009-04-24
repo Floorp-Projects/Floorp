@@ -2766,14 +2766,23 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     while (!queue.IsDone()) {
                         PtrInfo *pi = queue.GetNext();
                         if (pi->mColor == white) {
-                            printf("nsCycleCollector: %s %p in component %d\n"
-                                   "  was not collected due to missing call to "
-                                   "suspect, failure to unlink,\n"
-                                   "  or deficiency in traverse that causes "
-                                   "cycles referenced only from other\n"
-                                   "  cycles to require multiple rounds of cycle "
-                                   "collection\n",
-                                   pi->mName, pi->mPointer, pi->mSCCIndex);
+                            if (mPurpleBuf.Exists(pi->mPointer)) {
+                                printf(
+"nsCycleCollector: %s %p in component %d\n"
+"  which was reference counted during the root/unlink/unroot phase of the\n"
+"  last collection was not collected due to failure to unlink (see other\n"
+"  warnings) or deficiency in traverse that causes cycles referenced only\n"
+"  from other cycles to require multiple rounds of cycle collection in which\n"
+"  this object was likely the reachable object\n",
+                                       pi->mName, pi->mPointer, pi->mSCCIndex);
+                            } else {
+                                printf(
+"nsCycleCollector: %s %p in component %d\n"
+"  was not collected due to missing call to suspect, failure to unlink (see\n"
+"  other warnings), or deficiency in traverse that causes cycles referenced\n"
+"  only from other cycles to require multiple rounds of cycle collection\n",
+                                       pi->mName, pi->mPointer, pi->mSCCIndex);
+                            }
                             if (pi->mShortestPathToExpectedGarbage)
                                 PrintPathToExpectedGarbage(pi);
                         }
