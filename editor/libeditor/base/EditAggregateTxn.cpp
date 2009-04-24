@@ -184,11 +184,6 @@ NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePt
 {
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
  
-  if (aIID.Equals(EditAggregateTxn::GetCID())) {
-    *aInstancePtr = static_cast<EditAggregateTxn*>(this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   return EditTxn::QueryInterface(aIID, aInstancePtr);
 }
 

@@ -43,20 +43,12 @@
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 
-#define INSERT_ELEMENT_TXN_CID \
-{/* b5762440-cbb0-11d2-86db-000064657374 */ \
-0xb5762440, 0xcbb0, 0x11d2, \
-{0x86, 0xdb, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
-
 /**
  * A transaction that inserts a single element
  */
 class InsertElementTxn : public EditTxn
 {
 public:
-
-  static const nsIID& GetCID() { static const nsIID iid = INSERT_ELEMENT_TXN_CID; return iid; }
-
   /** initialize the transaction.
     * @param aNode   the node to insert
     * @param aParent the node to insert into
@@ -67,10 +59,8 @@ public:
                   PRInt32     aOffset,
                   nsIEditor  *aEditor);
 
-private:
   InsertElementTxn();
 
-public:
   NS_DECL_EDITTXN
 
 protected:
@@ -86,9 +76,6 @@ protected:
 
   /** the index in mParent for the new node */
   PRInt32 mOffset;
-
-  friend class TransactionFactory;
-
 };
 
 #endif

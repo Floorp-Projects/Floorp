@@ -45,7 +45,6 @@
 #include "nsEditProperty.h"
 #include "ChangeCSSInlineStyleTxn.h"
 #include "nsIDOMElement.h"
-#include "TransactionFactory.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
@@ -520,15 +519,14 @@ nsHTMLCSSUtils::CreateCSSPropertyTxn(nsIDOMElement *aElement,
                                      ChangeCSSInlineStyleTxn ** aTxn,
                                      PRBool aRemoveProperty)
 {
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (aElement)
-  {
-    result = TransactionFactory::GetNewTransaction(ChangeCSSInlineStyleTxn::GetCID(), (EditTxn **)aTxn);
-    if (NS_SUCCEEDED(result))  {
-      result = (*aTxn)->Init(mHTMLEditor, aElement, aAttribute, aValue, aRemoveProperty);
-    }
-  }
-  return result;
+  if (!aElement)
+    return NS_ERROR_NULL_POINTER;
+
+  *aTxn = new ChangeCSSInlineStyleTxn();
+  if (!*aTxn)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aTxn);
+  return (*aTxn)->Init(mHTMLEditor, aElement, aAttribute, aValue, aRemoveProperty);
 }
 
 nsresult
