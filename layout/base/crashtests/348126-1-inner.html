@@ -1,0 +1,28 @@
+<html><head><title>Testcase bug 348126 - Crash [@ nsImageFrame::SourceRectToDest] on reload and removing table-caption styles</title>
+
+<script>
+function removestyles(i){
+
+document.getElementsByTagName('table')[0].removeAttribute('style');
+
+document.getElementsByTagName('object')[0].removeAttribute('style');
+
+document.getElementsByTagName('table')[1].removeAttribute('style');
+document.location.reload();
+}
+
+setTimeout(removestyles,500,0);
+</script>
+</head><body>
+Mozilla should not crash on reload on this page<br>
+<object><table style="display: table-caption;">
+<tbody><tr><td></td></tr></tbody>
+</table><object style="display: table-caption;">
+</object><table style="display: table-row-group;">
+<tbody><tr><td>
+<img src="348126-1.gif">
+</td></tr></tbody></table>
+<img src="348126-1.gif">
+</object>
+
+</body></html>
