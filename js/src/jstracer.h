@@ -543,9 +543,8 @@ class TraceRecorder : public avmplus::GCObject {
                                       VMSideExit* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
-    JS_REQUIRES_STACK bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
-                                                nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins,
-                                                ExitType exitType);
+    JS_REQUIRES_STACK bool guardPrototypeHasNoIndexedProperties(JSObject* obj, nanojit::LIns* obj_ins,
+                                                                ExitType exitType);
     JS_REQUIRES_STACK bool guardNotGlobalObject(JSObject* obj, nanojit::LIns* obj_ins);
     void clearFrameSlotsFromCache();
     JS_REQUIRES_STACK bool guardCallee(jsval& callee);
