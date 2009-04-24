@@ -114,23 +114,21 @@
     <menuitem id="menu_copy"      label="&copy.label;"      command="cmd_copy"      accesskey="&copy.accesskey;"/>
   </menupopup>
 
-  <windowdragbox orient="vertical">
-    <stack id="topStackBar">
-      <radiogroup id="viewGroup" class="viewSelector chromeclass-toolbar" orient="horizontal"
-                  chromedir="&locale.dir;">
-        <radio id="generalTab"  label="&generalTab;"  accesskey="&generalTab.accesskey;"
-             oncommand="showTab('general');"/>
-        <radio id="mediaTab"    label="&mediaTab;"    accesskey="&mediaTab.accesskey;"
-             oncommand="showTab('media'); ensureSelection(gImageView)" hidden="true"/>
-        <radio id="feedTab"     label="&feedTab;"     accesskey="&feedTab.accesskey;"
-             oncommand="showTab('feed');" hidden="true"/>
-        <radio id="permTab"     label="&permTab;"     accesskey="&permTab.accesskey;"
-             oncommand="showTab('perm');"/>
-        <radio id="securityTab" label="&securityTab;" accesskey="&securityTab.accesskey;"
-             oncommand="showTab('security');"/>
-        <!-- Others added by overlay -->
-      </radiogroup>
-    </stack>
+  <windowdragbox id="topBar" class="viewGroupWrapper">
+    <radiogroup id="viewGroup" class="chromeclass-toolbar" orient="horizontal"
+                chromedir="&locale.dir;">
+      <radio id="generalTab"  label="&generalTab;"  accesskey="&generalTab.accesskey;"
+           oncommand="showTab('general');"/>
+      <radio id="mediaTab"    label="&mediaTab;"    accesskey="&mediaTab.accesskey;"
+           oncommand="showTab('media'); ensureSelection(gImageView)" hidden="true"/>
+      <radio id="feedTab"     label="&feedTab;"     accesskey="&feedTab.accesskey;"
+           oncommand="showTab('feed');" hidden="true"/>
+      <radio id="permTab"     label="&permTab;"     accesskey="&permTab.accesskey;"
+           oncommand="showTab('perm');"/>
+      <radio id="securityTab" label="&securityTab;" accesskey="&securityTab.accesskey;"
+           oncommand="showTab('security');"/>
+      <!-- Others added by overlay -->
+    </radiogroup>
   </windowdragbox>
 
   <deck id="mainDeck" flex="1">

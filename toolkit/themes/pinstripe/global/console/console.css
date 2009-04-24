@@ -188,7 +188,6 @@ toolbarseparator {
 /* Toolbar icons */
 
 #ToolbarMode {
-  padding: 4px 0 8px;
   -moz-box-pack: center;
 }
 
@@ -196,29 +195,27 @@ toolbarseparator {
   display: none;
 }
 
-#viewGroup {
-  -moz-appearance: none;
-  padding: 0;
-}
-
 #Console\:clear {
   -moz-box-orient: vertical;
   -moz-box-align: center;
   font: menu;
   text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
-  margin: 0;
-  padding: 3px 0 0;
-  height: 24px;
-  border: solid transparent;
-  border-width: 0 6px;
-  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton.png") 0 6 repeat stretch !important;
+  margin: 4px 0 9px;
+  padding: 1px 4px 0;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  -moz-border-radius: 3px;
+  -moz-box-shadow: rgba(255, 255, 255, 0.4) 0 1px;
+  background: url("chrome://global/skin/toolbar/white-transparent-gradient.png") repeat-x #B4B4B4;
 }
 
 #Console\:clear:active:hover {
-  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-down.png") 0 6 repeat stretch !important;
+  background: #B5B5B5;
+  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
+  -moz-box-shadow: inset rgba(0, 0, 0, 0.4) 0 -6px 14px, inset rgba(0, 0, 0, 1) 0 1px 4px, rgba(255, 255, 255, 0.4) 0 1px;
 }
 
 :root:not([active]) #Console\:clear {
   color: #7C7C7C !important; /* remove this when we support click-through */
-  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-inactive.png") 0 6 repeat stretch !important;
+  border-color: rgba(0, 0, 0, 0.25);
+  background-color: #CCC;
 }
