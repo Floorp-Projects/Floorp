@@ -63,6 +63,10 @@ GRE_MODULE	    = 1
 
 LIBS		= $(NSPR_LIBS) 
 
+ifdef WINCE
+EXTRA_LIBS += $(JEMALLOC_LIBS)
+endif
+
 ifdef GNU_CXX
 ifdef INTEL_CXX
 # icc gets special optimize flags
