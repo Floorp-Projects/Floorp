@@ -57,3 +57,4 @@ include ../../security/manager/ssl/crashtests/crashtests.list
 include ../../view/crashtests/crashtests.list
 
 include ../../widget/src/cocoa/crashtests/crashtests.list
+include ../../widget/src/crashtests/crashtests.list
