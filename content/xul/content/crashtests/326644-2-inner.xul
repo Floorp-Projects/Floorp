@@ -1,0 +1,10 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
+ title="Testcase bug 326644 - Crash when changing enumerated properties of objects in xul">
+<html:script><![CDATA[
+function doe() {
+document.documentElement.boxObject.firstChild.hidden = true;
+document.documentElement.boxObject.firstChild.tooltip = 'test';
+}
+setTimeout(doe,100);
+]]></html:script>
+</window>
