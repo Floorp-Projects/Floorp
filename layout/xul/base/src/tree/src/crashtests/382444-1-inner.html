@@ -1,0 +1,15 @@
+<html>
+<head>
+<title>Testcase bug - Crash [@ nsINodeInfo::Equals] with underflow event, tree stuff and removing window</title>
+</head>
+<body>
+<iframe src="data:application/vnd.mozilla.xul+xml;charset=utf-8,%3Cwindow%20xmlns%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%3E%0A%3Ctree%20style%3D%22overflow%3A%20auto%3B%20display%3A%20-moz-inline-box%3B%22%3E%0A%3Ctreeitem%20style%3D%22overflow%3A%20scroll%3B%20display%3A%20table-cell%3B%22%3E%0A%3Ctreechildren%20style%3D%22%20display%3A%20table-row%3B%22%3E%0A%3Ctreeitem%20id%3D%22a%22%20style%3D%22display%3A%20table-cell%3B%22%3E%0A%3C/treeitem%3E%0A%3C/treechildren%3E%0A%3C/treeitem%3E%0A%0A%3C/tree%3E%0A%0A%3Cscript%20xmlns%3D%22http%3A//www.w3.org/1999/xhtml%22%3E%0Afunction%20doe%28%29%20%7B%0Adocument.getElementById%28%27a%27%29.parentNode.removeChild%28document.getElementById%28%27a%27%29%29%3B%0A%7D%0AsetTimeout%28doe%2C%20100%29%3B%0Adocument.addEventListener%28%27underflow%27%2C%20function%28e%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%20%7D%2C%20true%29%3B%0Awindow.addEventListener%28%27underflow%27%2C%20function%28e%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%20%7D%2C%20true%29%3B%0A%3C/script%3E%0A%3C/window%3E" id="content"></iframe>
+
+<script>
+function doe() {
+window.location.reload();
+}
+setTimeout(doe, 500);
+</script>
+</body>
+</html>
