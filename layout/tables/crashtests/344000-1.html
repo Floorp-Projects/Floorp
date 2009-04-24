@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>dom cellmap crash</title>
+
+
+
+<script>
+function doit()
+{
+  var doc = window.document;
+  var t1= doc.getElementById('table1');
+  var tbA =  doc.createElement('tbody');
+  t1.appendChild(tbA);
+  var trA = doc.createElement('tr');
+  var td = doc.createElement('td');
+  td.setAttribute('rowspan', 2);
+  trA.appendChild(td);
+  tbA.appendChild(trA);
+  var trB = doc.createElement('tr');
+  var tdB = doc.createElement('td');
+  tdB.setAttribute('rowspan', 2);
+  trB.appendChild(tdB);
+  tbA.appendChild(trB);
+  tdB.parentNode.removeChild(tdB);
+  trA.parentNode.removeChild(trA);
+  trB.parentNode.removeChild(trB);
+  var tb =  doc.createElement('tbody');
+  trB.appendChild(tdB);
+  tb.appendChild(trB);
+  t1.appendChild(tb);
+}
+</script>
+
+</head>
+
+<body onload="doit()">
+
+<table id="table1"><tbody id="tbody1"><tr id="tr1"><td id="td1">x</td></tr></tbody></table>
+
+
+
+
+</body>
+
+</html>
