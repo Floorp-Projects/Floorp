@@ -58,3 +58,5 @@ include ../../view/crashtests/crashtests.list
 
 include ../../widget/src/cocoa/crashtests/crashtests.list
 include ../../widget/src/crashtests/crashtests.list
+
+include ../../modules/libimg/png/crashtests/crashtests.list
