@@ -139,6 +139,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug395915.html \
 		test_bug397234.html \
 		test_bug398243.html \
+		$(warning test_bug419132.html disabled because it takes 60 seconds) \
+		$(warning bug419132.html disabled because it takes 60 seconds) \
 		formReset.html \
 		bug382113_object.html \
 		test_bug326337.html \
