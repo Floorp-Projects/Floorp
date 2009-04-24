@@ -139,8 +139,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug395915.html \
 		test_bug397234.html \
 		test_bug398243.html \
-		test_bug419132.html \
-		bug419132.html \
 		formReset.html \
 		bug382113_object.html \
 		test_bug326337.html \
