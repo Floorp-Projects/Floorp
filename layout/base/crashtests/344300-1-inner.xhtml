@@ -1,0 +1,36 @@
+<hx xmlns="http://www.w3.org/1999/xhtml" style="display: table;">
+<script>
+/*template*/
+var doc = document;
+if (document.getElementById('content'))
+  doc = document.getElementById('content').contentDocument;
+
+function addstyles(){
+var x=doc.createElementNS('http://www.w3.org/1999/xhtml','style');
+x.innerHTML='\
+*::first-line { text-transform: uppercase; background-color:green; font-size:110%;}\
+*::after { content:"anonymous text"; float:right;border:3px solid black;text-transform: uppercase;}\
+*::before { content:"before text"; float:right;border:3px solid black;font-size: 10px;}\
+*::-moz-selection { outline: 2px solid blue;}\
+';
+doc.documentElement.appendChild(x);
+}
+
+function removestyles(i){
+
+
+var x=doc.getElementsByTagName('*');
+
+if (x[i])
+  {
+x[i].removeAttribute('style');
+}
+else { i = 0; }
+  i++;
+setTimeout(removestyles,50,i);
+}
+setTimeout(addstyles,200);
+setTimeout(removestyles,500,0);
+/*template*/
+</script>
+<var style="display: table-column-group;" onmouseover="this.removeAttribute('style')">ý <q style="display: table-footer-group;" onmouseover="this.removeAttribute('style')">ý </q><ins style="display: table-cell;" onmouseover="this.removeAttribute('style')">ý <p style="display: list-item;" onmouseover="this.removeAttribute('style')">ý </p><object style="display: -moz-inline-box;" onmouseover="this.removeAttribute('style')">ý </object></ins></var><table style="display: -moz-inline-box;" onmouseover="this.removeAttribute('style')">ý <ins style="display: -moz-inline-block;" onmouseover="this.removeAttribute('style')">ý </ins></table><body style="display: table-column-group;" onmouseover="this.removeAttribute('style')">ý </body><q style="display: table;" onmouseover="this.removeAttribute('style')">ý </q></hx>
