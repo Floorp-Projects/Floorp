@@ -212,6 +212,7 @@ static PopupControlState    gPopupControlState         = openAbused;
 static PRInt32              gRunningTimeoutDepth       = 0;
 static PRBool               gMouseDown                 = PR_FALSE;
 static PRBool               gDragServiceDisabled       = PR_FALSE;
+static FILE                *gDumpFile                  = nsnull;
 
 #ifdef DEBUG
 static PRUint32             gSerialCounter             = 0;
@@ -673,6 +674,18 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   }
 #endif
 
+  if (gDumpFile == nsnull) {
+    const nsAdoptingCString& fname = 
+      nsContentUtils::GetCharPref("browser.dom.window.dump.file");
+    if (!fname.IsEmpty()) {
+      // if this fails to open, Dump() knows to just go to stdout
+      // on null.
+      gDumpFile = fopen(fname, "wb+");
+    } else {
+      gDumpFile = stdout;
+    }
+  }
+
   if (!gEntropyCollector) {
     CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
   }
@@ -785,6 +798,11 @@ nsGlobalWindow::ShutDown()
 {
   NS_IF_RELEASE(sComputedDOMStyleFactory);
   NS_IF_RELEASE(sGlobalStorageList);
+
+  if (gDumpFile && gDumpFile != stdout) {
+    fclose(gDumpFile);
+  }
+  gDumpFile = nsnull;
 }
 
 // static
@@ -3910,7 +3928,9 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 #endif
 
   if (cstr) {
-    printf("%s", cstr);
+    FILE *fp = gDumpFile ? gDumpFile : stdout;
+    fputs(cstr, fp);
+    fflush(fp);
     nsMemory::Free(cstr);
   }
 
