@@ -1,0 +1,18 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<tree>
+  <splitter style="overflow: scroll;">
+    <treecols style="overflow: scroll; display: block;">
+      <treeitem id="mw_b" style=" display: list-item;"/>
+    </treecols>
+  </splitter>
+</tree>
+
+<script xmlns="http://www.w3.org/1999/xhtml">
+function doe() {
+window.addEventListener('DOMAttrModified', function(e) {document.removeChild(document.documentElement); }, true);
+ var y=document.getElementById('mw_b');
+  y.parentNode.removeChild(y);
+}
+setTimeout(doe, 200);
+</script>
+</window>
