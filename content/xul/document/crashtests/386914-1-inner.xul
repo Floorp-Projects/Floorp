@@ -1,0 +1,10 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="a">
+
+<box id="b" observes="a"/>
+
+<html:script xmlns:html="http://www.w3.org/1999/xhtml">
+document.getElementById('b').addEventListener('DOMAttrModified', function(e) {document.removeChild(document.documentElement);}, true);
+setTimeout(function() {document.getElementById('a').setAttribute('tabindex', '1') ;}, 100);
+</html:script>
+
+</window>
