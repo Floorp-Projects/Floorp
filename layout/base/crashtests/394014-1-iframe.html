@@ -1,0 +1,21 @@
+<html><head></head>
+<body>
+<span id="a" style="display: none;">
+<span id="b">
+<span style="-moz-binding: url(data:text/xml;charset=utf-8,%3Cbindings%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%3E%0A%3Cbinding%20id%3D%22a%22%3E%0A%3Cimplementation%3E%0A%3Cconstructor%3E%0A%20%20this.style.outline%3D%27%27%3B%0A%3C/constructor%3E%0A%3C/implementation%3E%0A%3C/binding%3E%0A%3C/bindings%3E);"></span>
+</span>
+</span>
+<script>
+for (var i=0;i<document.getElementsByTagName('*').length;i++){
+document.getElementsByTagName('*')[i];
+}
+function doe2() { 
+//alert('t');
+document.getElementById('b').addEventListener('DOMSubtreeModified', function(e) {window.frameElement.parentNode.removeChild(window.frameElement) }, true);
+document.body.style.display = 'none';
+document.getElementById('a').style.display = '';
+}
+setTimeout(doe2, 20);
+</script>
+</body>
+</html>
