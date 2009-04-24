@@ -6568,10 +6568,14 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_PRIMTOP)
             JS_ASSERT(regs.sp > StackBase(fp));
             lval = FETCH_OPND(-1);
+            i = GET_INT8(regs.pc);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
+                lval = FETCH_OPND(-2);
                 js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO,
-                                    JSDVG_SEARCH_STACK, lval, NULL,
-                                    "primitive type");
+                                     -2, lval, NULL,
+                                     (i == JSTYPE_VOID)
+                                     ? "primitive type"
+                                     : JS_TYPE_STR(i));
                 goto error;
             }
           END_CASE(JSOP_PRIMTOP)

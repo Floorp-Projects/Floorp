@@ -493,7 +493,7 @@ OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3, -1,  0,  0,  JOF_UINT16
 OPDEF(JSOP_IFPRIMTOP,     201,"ifprimtop",   NULL,    3,  1,  1,  0,  JOF_JUMP|JOF_DETECTING)
 
 /* Throws a TypeError if the value at the top of the stack is not primitive. */
-OPDEF(JSOP_PRIMTOP,       202,"primtop",     NULL,    1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_PRIMTOP,       202,"primtop",     NULL,    2,  1,  1,  0,  JOF_INT8)
 
 /*
  * Generator and array comprehension support.
@@ -536,7 +536,7 @@ OPDEF(JSOP_INDEXBASE3,    214,"atombase3",     NULL,  1,  0,  0,  0,  JOF_BYTE |
 OPDEF(JSOP_CALLGVAR,      215, "callgvar",     NULL,  3,  0,  2, 19,  JOF_ATOM|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLLOCAL,     216, "calllocal",    NULL,  3,  0,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLARG,       217, "callarg",      NULL,  3,  0,  2, 19,  JOF_QARG |JOF_NAME|JOF_CALLOP)
-OPDEF(JSOP_CALLBUILTIN,   218, "callbuiltin",  NULL,  3,  0,  2,  0,  JOF_UINT16)
+OPDEF(JSOP_CALLBUILTIN,   218, "callbuiltin",  NULL,  3,  1,  2,  0,  JOF_UINT16)
 
 /*
  * Opcodes to hold 8-bit and 32-bit immediate integer operands.
