@@ -1,0 +1,8 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<tree id="a" style="content: 't';" rows="-2">
+  <menuitem id="b" onoverflow="event.currentTarget.parentNode.removeAttribute('style')">
+    <treechildren style="display: block;" onoverflow="event.target.parentNode.removeChild(event.target)" />
+    <treechildren style="display: block;" ordinal="0.5"/>
+  </menuitem>
+</tree>
+</window>
