@@ -48,6 +48,7 @@ typedef struct _cairo_ddraw_surface {
   cairo_surface_t *image;
   cairo_surface_t *alias;
   cairo_point_int_t origin;
+  cairo_rectangle_int_t acquirable_rect;
   uint32_t data_offset;
   LPDIRECTDRAWCLIPPER lpddc;
   LPDIRECTDRAWCLIPPER installed_clipper;
