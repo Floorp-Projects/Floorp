@@ -8477,7 +8477,7 @@ TraceRecorder::elem(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins, LIns*& a
     if (!within) {
         /* If idx < 0, stay on trace (and read value as undefined, since this is a dense array). */
         LIns* br1 = NULL;
-        if (MAX_DSLOTS_SIZE > JS_BITMASK(30) && !idx_ins->isconst()) {
+        if (MAX_DSLOTS_LENGTH > JS_BITMASK(30) && !idx_ins->isconst()) {
             JS_ASSERT(sizeof(jsval) == 8); // Only 64-bit machines support large enough arrays for this.
             br1 = lir->insBranch(LIR_jt,
                                  lir->ins2i(LIR_lt, idx_ins, 0),
@@ -8520,7 +8520,7 @@ TraceRecorder::elem(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins, LIns*& a
     }
 
     /* Guard against negative index */
-    if (MAX_DSLOTS_SIZE > JS_BITMASK(30) && !idx_ins->isconst()) {
+    if (MAX_DSLOTS_LENGTH > JS_BITMASK(30) && !idx_ins->isconst()) {
         JS_ASSERT(sizeof(jsval) == 8); // Only 64-bit machines support large enough arrays for this.
         guard(false,
               lir->ins2i(LIR_lt, idx_ins, 0),
