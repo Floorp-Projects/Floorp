@@ -1,0 +1,4 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="a">
+<content><children/></content>
+</binding></bindings>
