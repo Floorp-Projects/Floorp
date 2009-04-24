@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  var doomed = document.getElementById("doomed"); 
+  doomed.parentNode.removeChild(doomed);
+}
+  
+</script>
+</head>
+
+<body onload="boom();">
+
+<table>
+  <tr style="visibility: collapse;">
+    <td>td</td>
+  </tr>
+  <tr>
+    <td id="doomed">td</td>
+    <td rowspan="0" colspan="0">td</td>
+  </tr>
+  <tr>
+    <td>td</td>
+  </tr>
+</table>
+
+</body>
+</html>
