@@ -269,6 +269,28 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug380418.html \
 		test_bug465767.html \
 		test_bug380418.html^headers^ \
+		test_bug422403-1.html \
+		file_xhtmlserializer_1.xhtml \
+		file_xhtmlserializer_1_bodyonly.xhtml \
+		file_xhtmlserializer_1_format.xhtml \
+		file_xhtmlserializer_1_linebreak.xhtml \
+		file_xhtmlserializer_1_links.xhtml \
+		file_xhtmlserializer_1_noflag.xhtml \
+		file_xhtmlserializer_1_noformatpre.xhtml \
+		file_xhtmlserializer_1_raw.xhtml \
+		file_xhtmlserializer_1_nested_body.xhtml \
+		file_xhtmlserializer_1_sibling_body.xhtml \
+		file_xhtmlserializer_1_sibling_body_only_body.xhtml \
+		file_xhtmlserializer_1_no_body.xhtml \
+		test_bug422403-2.xhtml \
+		file_xhtmlserializer_2.xhtml \
+		file_xhtmlserializer_2_basic.xhtml \
+		file_xhtmlserializer_2_enthtml.xhtml \
+		file_xhtmlserializer_2_entw3c.xhtml \
+		file_xhtmlserializer_2_latin1.xhtml \
+		test_htmlcopyencoder.html \
+		test_htmlcopyencoder.xhtml \
+		test_bug270145.xhtml \
 		test_elementTraversal.html \
 		test_w3element_traversal.html \
 		test_w3element_traversal.xhtml \

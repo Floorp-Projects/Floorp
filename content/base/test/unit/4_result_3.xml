@@ -1,0 +1,4 @@
+<box xmlns="http://mozilla.org/ns3">
+        <other:what xmlns:other="http://mozilla.org/ns/other">lorem ipsum</other:what>
+        <description other:yes="no" xmlns:other="http://mozilla.org/ns/other">xul fake</description>
+      </box>
