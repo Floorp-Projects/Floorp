@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
+ *   Justin Gregory <jmgregory@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -221,7 +222,13 @@ void nsMenuItemX::DoCommand()
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
-
+ 
+  UInt32 modFlags = ::GetCurrentEventKeyModifiers();
+  if (modFlags & ::cmdKey) event.isMeta = PR_TRUE;
+  if (modFlags & ::shiftKey) event.isShift = PR_TRUE;
+  if (modFlags & ::optionKey) event.isAlt = PR_TRUE;
+  if (modFlags & ::controlKey) event.isControl = PR_TRUE;
+  
   mContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
 }
     
