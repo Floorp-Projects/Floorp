@@ -1008,6 +1008,45 @@ public:
 };
 
 /**
+ * A simple display item that just renders a solid color across a frame or
+ * specified bounds. Used in cases where we can't draw the frame tree but
+ * we want to draw something to avoid an ugly flash of white when
+ * navigating between pages. Also used as a bottom item to ensure that
+ * something is painted everywhere.
+ */
+class nsDisplaySolidColor : public nsDisplayItem {
+public:
+  nsDisplaySolidColor(const nsRect& aBounds, nscolor aColor)
+    : nsDisplayItem(nsnull), mBounds(aBounds), mColor(aColor) {
+    MOZ_COUNT_CTOR(nsDisplaySolidColor);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySolidColor() {
+    MOZ_COUNT_DTOR(nsDisplaySolidColor);
+  }
+#endif
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) { return mBounds; }
+
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
+    return (NS_GET_A(mColor) == 255);
+  }
+
+  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder) { return PR_TRUE; }
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+
+  virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion);
+
+  NS_DISPLAY_DECL_NAME("SolidColor")
+private:
+  nsRect  mBounds;
+  nscolor mColor;
+};
+
+/**
  * The standard display item to paint the CSS background of a frame.
  */
 class nsDisplayBackground : public nsDisplayItem {
