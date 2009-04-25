@@ -5822,7 +5822,6 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
                         shape = js_RegenerateShapeForGC(cx);
                 }
 
-                js_LeaveTraceIfGlobalObject(cx, scope->object);
                 scope->shape = shape;
             }
 
