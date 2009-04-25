@@ -2106,8 +2106,11 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
 
     JSAtom* atom = cx->runtime->atomState.classPrototypeAtom;
 
-    JS_LOCK_OBJ(cx, ctor);
     JSScope *scope = OBJ_SCOPE(ctor);
+#ifdef JS_THREADSAFE
+    if (scope->title.ownercx != cx)
+        return NULL;
+#endif
     if (scope->object != ctor) {
         scope = js_GetMutableScope(cx, ctor);
         if (!scope)
@@ -2115,8 +2118,7 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
     }
 
     JSScopeProperty* sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
-    jsval pval = sprop ? LOCKED_OBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
-    JS_UNLOCK_SCOPE(cx, scope);
+    jsval pval = sprop ? STOBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
 
     JSObject* proto;
     if (!JSVAL_IS_PRIMITIVE(pval)) {
