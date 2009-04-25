@@ -98,6 +98,13 @@ pluginDrawSolid(InstanceData* instanceData, GdkDrawable* gdkWindow,
 {
   cairo_t* cairoWindow = gdk_cairo_create(gdkWindow);
 
+  if (!instanceData->hasWidget) {
+    NPRect* clip = &instanceData->window.clipRect;
+    cairo_rectangle(cairoWindow, clip->left, clip->top,
+                    clip->right - clip->left, clip->bottom - clip->top);
+    cairo_clip(cairoWindow);
+  }
+
   GdkRectangle windowRect = { x, y, width, height };
   gdk_cairo_rectangle(cairoWindow, &windowRect);
   SetCairoRGBA(cairoWindow, instanceData->scriptableObject->drawColor);
@@ -134,6 +141,13 @@ pluginDrawWindow(InstanceData* instanceData, GdkDrawable* gdkWindow)
   GdkGC* gdkContext = gdk_gc_new(gdkWindow);
   if (!gdkContext)
     return;
+
+  if (!instanceData->hasWidget) {
+    NPRect* clip = &window.clipRect;
+    GdkRectangle gdkClip = { clip->left, clip->top, clip->right - clip->left,
+                             clip->bottom - clip->top };
+    gdk_gc_set_clip_rectangle(gdkContext, &gdkClip);
+  }
 
   // draw a grey background for the plugin frame
   GdkColor grey;
