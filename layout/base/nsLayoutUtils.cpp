@@ -941,36 +941,6 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
 }
 
 /**
- * A simple display item that just renders a solid color across the entire
- * visible area.
- */
-class nsDisplaySolidColor : public nsDisplayItem {
-public:
-  nsDisplaySolidColor(nsIFrame* aFrame, nscolor aColor)
-    : nsDisplayItem(aFrame), mColor(aColor) {
-    MOZ_COUNT_CTOR(nsDisplaySolidColor);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySolidColor() {
-    MOZ_COUNT_DTOR(nsDisplaySolidColor);
-  }
-#endif
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
-  NS_DISPLAY_DECL_NAME("SolidColor")
-private:
-  nscolor   mColor;
-};
-
-void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
-{
-  aCtx->SetColor(mColor);
-  aCtx->FillRect(aDirtyRect);
-}
-
-/**
  * Remove all leaf display items that are not for descendants of
  * aBuilder->GetReferenceFrame() from aList, and move all nsDisplayClip
  * wrappers to their correct locations.
@@ -1107,7 +1077,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     // document (at least!) so this will be removed by the optimizer. In some
     // cases we might not have a root frame, so this will prevent garbage
     // from being drawn.
-    rv = list.AppendNewToBottom(new (&builder) nsDisplaySolidColor(aFrame, aBackground));
+    rv = list.AppendNewToBottom(new (&builder) nsDisplaySolidColor(
+           nsRect(builder.ToReferenceFrame(aFrame), aFrame->GetSize()),
+           aBackground));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
