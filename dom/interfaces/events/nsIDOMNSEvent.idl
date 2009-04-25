@@ -44,7 +44,7 @@
 #endif
 %}
 
-[scriptable, uuid(e565d518-4510-407f-a3d9-3b4107549c6d)]
+[scriptable, uuid(9be8096b-f795-4045-9664-0c275f36fe5b)]
 interface nsIDOMNSEvent : nsISupports
 {
   const long MOUSEDOWN    = 0x00000001;
@@ -113,6 +113,8 @@ interface nsIDOMNSEvent : nsISupports
    * @deprecated Use nsIDOMEvent::stopPropagation.
    */
   void                      preventCapture();
+
+  boolean                   getPreventDefault();
 
   readonly attribute boolean isTrusted;
 };

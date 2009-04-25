@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_bug330705-2.xul \
 		test_bug233643.xul \
+		test_bug486990.xul \
 		$(NULL)
 	
 _CHROME_FILES = \

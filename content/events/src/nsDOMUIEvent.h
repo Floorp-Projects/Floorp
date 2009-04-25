@@ -71,6 +71,7 @@ public:
   // Forward to nsDOMEvent
   NS_FORWARD_TO_NSDOMEVENT
 
+  NS_FORWARD_NSIDOMNSEVENT(nsDOMEvent::)
 protected:
 
   // Internal helper functions
