@@ -76,7 +76,6 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIPresShell.h"
-#include "nsFrameNavigator.h"
 #include "nsCSSRendering.h"
 #include "nsIServiceManager.h"
 #include "nsIBoxLayout.h"
