@@ -59,4 +59,4 @@
 == block-root-1b.html block-root-1b-ref.html
 == block-html-body-1.html block-html-body-1-ref.html
 # missing tests of min-height, max-height, etc.
-== block-used-value-1.html block-used-value-1-ref.html
+== block-percent-1.html block-percent-1-ref.html
