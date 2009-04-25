@@ -18,6 +18,11 @@ toolbar[printpreview="true"] {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
+#wrapper-urlbar-container #urlbar {
+  -moz-user-input: disabled;
+  cursor: -moz-grab;
+}
+
 #PopupAutoComplete {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#browser-autocomplete-result-popup");
 }
