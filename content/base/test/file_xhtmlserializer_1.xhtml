@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <title>Test for html serializer</title>
+
+</head>
+<body>
+<p>Hello world</p> <p>
+
+       Lorem ipsum dolor sit amet, <strong>consectetuer</strong> adipiscing elit. Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class aptent taciti <span>sociosqu ad 
+     litora</span> torquent <a href="file_htmlserializer_1_result1.html">per conubia</a> 
+nostra, per inceptos hymenaeos. </p>
+
+
+<ul><li>Nam tellus massa,éàèçù</li><li>
+ fringilla 
+aliquam,</li><li> fermentum sit amet,</li><li>posuere ac,</li><li> est.</li></ul>
+<div> Duis tristique egestas ligula. Mauris quis felis. </div>
+<script id="script" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+// a script which does nothing
+
+function nothing() {
+  var hey="hello";
+  var aLongLine="consectetuer molestie. Curabitur consectetuer urna a sem. Nunc non urna. Cras in massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere";
+}
+var a=3, b=4, c=7;
+// here we test the non-serialization of xml character into javascript content
+var d = a < b && a > c;
+//]]>
+</script>
+
+<ol><li>Fusce
+ a ipsum</li><li> non lacus posuere aliquet.</li><li> Sed fermentum posuere nulla</li><li> Donec tempor.</li></ol>
+Donec sollicitudin tortor 
+<!-- test on 
+comments -->
+<pre>lacinia <em>libero</em> ullamcorper laoreet.<br/>
+ Cras quis<br/>
+ nisi at odio<br/>
+ consectetuer molestie. Curabitur consectetuer urna a sem. Nunc non urna. Cras in massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Sed sollicitudin, nulla at pharetra rutrum, <br/>
+lacus risus pulvinar ante.
+</pre>
+ut gravida eros <br />leo ut libero
+<!-- empty element: end tag should be generated for backward compatibility with HTML -->
+<p></p>
+<noscript>
+<p>Curabitur consectetuer urna a sem. Nunc non urna. Cras in massa. Vestibulum ante ipsum primis in faucibus orci luctus</p></noscript>
+<p>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class aptent taciti</p>
+<pre xmlns="http://mozilla.org/ns/foo">lacinia <em>libero</em> ullamcorper laoreet.<br/>
+ Cras quis<br/>
+ nisi at odio<br/>
+ consectetuer molestie. Curabitur consectetuer urna a sem. Nunc non urna. Cras in massa. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Sed sollicitudin, nulla at pharetra rutrum, <br/>
+lacus risus pulvinar ante.
+</pre>
+</body>
+</html>
