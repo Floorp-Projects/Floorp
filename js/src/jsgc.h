@@ -125,7 +125,7 @@ js_GetGCStringRuntime(JSString *str);
         if (SCOPE_IS_BRANDED(scope) &&                                        \
             (oldval) != (newval) &&                                           \
             (VALUE_IS_FUNCTION(cx,oldval) || VALUE_IS_FUNCTION(cx,newval))) { \
-            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);                               \
+            js_MakeScopeShapeUnique(cx, scope);                               \
         }                                                                     \
         GC_POKE(cx, oldval);                                                  \
     JS_END_MACRO

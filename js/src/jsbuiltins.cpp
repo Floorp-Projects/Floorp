@@ -261,7 +261,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
             }
         }
 
-        SCOPE_EXTEND_SHAPE(cx, scope, sprop);
+        js_ExtendScopeShape(cx, scope, sprop);
         ++scope->entryCount;
         scope->lastProp = sprop;
     } else {

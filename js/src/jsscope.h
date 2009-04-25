@@ -216,19 +216,6 @@ struct JSScope {
 #define OBJ_SCOPE(obj)                  ((JSScope *)(obj)->map)
 #define OBJ_SHAPE(obj)                  (OBJ_SCOPE(obj)->shape)
 
-#define SCOPE_MAKE_UNIQUE_SHAPE(cx,scope)                                     \
-    ((scope)->shape = js_GenerateShape((cx), JS_FALSE))
-
-#define SCOPE_EXTEND_SHAPE(cx,scope,sprop)                                    \
-    JS_BEGIN_MACRO                                                            \
-        if (!(scope)->lastProp ||                                             \
-            (scope)->shape == (scope)->lastProp->shape) {                     \
-            (scope)->shape = (sprop)->shape;                                  \
-        } else {                                                              \
-            (scope)->shape = js_GenerateShape(cx, JS_FALSE);                  \
-        }                                                                     \
-    JS_END_MACRO
-
 /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
 #define SCOPE_CAPACITY(scope)           JS_BIT(JS_DHASH_BITS-(scope)->hashShift)
 
@@ -347,6 +334,23 @@ struct JSScopeProperty {
 
 #define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
+
+static inline void
+js_MakeScopeShapeUnique(JSContext* cx, JSScope* scope) {
+    js_LeaveTraceIfGlobalObject(cx, scope->object);
+    scope->shape = js_GenerateShape(cx, JS_FALSE);
+}
+
+static inline void
+js_ExtendScopeShape(JSContext *cx, JSScope *scope, JSScopeProperty *sprop) {
+    js_LeaveTraceIfGlobalObject(cx, scope->object);
+    if (!scope->lastProp ||
+        scope->shape == scope->lastProp->shape) {
+        scope->shape = sprop->shape;
+    } else {
+        scope->shape = js_GenerateShape(cx, JS_FALSE);
+    }
+}
 
 static JS_INLINE JSBool
 js_GetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
