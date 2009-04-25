@@ -148,13 +148,6 @@ static JSPropertySpec object_props[] = {
 /* NB: JSSLOT_PROTO and JSSLOT_PARENT are already indexes into object_props. */
 #define JSSLOT_COUNT 2
 
-static inline void
-js_LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
-{
-    if (!obj->fslots[JSSLOT_PARENT])
-        js_LeaveTrace(cx);
-}
-
 static JSBool
 ReportStrictSlot(JSContext *cx, uint32 slot)
 {
@@ -3601,7 +3594,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         sprop = SCOPE_GET_PROPERTY(scope, id);
         if (sprop) {
             PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
-            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+            js_MakeScopeShapeUnique(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
 
             if (!STOBJ_GET_PARENT(scope->object)) {
@@ -5829,6 +5822,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
                         shape = js_RegenerateShapeForGC(cx);
                 }
 
+                js_LeaveTraceIfGlobalObject(cx, scope->object);
                 scope->shape = shape;
             }
 

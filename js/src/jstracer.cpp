@@ -3146,7 +3146,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
             if (VALUE_IS_FUNCTION(cx, v)) {
                 found = true;
                 if (!SCOPE_IS_BRANDED(scope)) {
-                    SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+                    js_MakeScopeShapeUnique(cx, scope);
                     SCOPE_SET_BRANDED(scope);
                 }
             }
