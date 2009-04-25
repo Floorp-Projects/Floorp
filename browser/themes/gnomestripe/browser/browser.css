@@ -835,11 +835,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-margin-start: 0;
 }
 
-#wrapper-urlbar-container #urlbar {
-  -moz-user-input: disabled;
-  cursor: -moz-grab;
-}
-
 #wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
   display: none;
 }
