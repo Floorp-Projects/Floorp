@@ -850,8 +850,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 #wrapper-urlbar-container #urlbar,
 #urlbar[readonly="true"] {
   -moz-padding-end: 12px;
-  -moz-user-input: disabled;
-  cursor: -moz-grab;
 }
 
 #wrapper-urlbar-container[place="palette"] {
