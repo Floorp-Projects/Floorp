@@ -1519,7 +1519,7 @@
 
             var closeWindow = false;
             var l = this.mTabs.length - this._removingTabs.length;
-            var newTab;
+            var newTab = false;
             if (l == 1) {
               closeWindow = aCloseWindowWithLastTab != null ?
                             aCloseWindowWithLastTab :
@@ -1534,8 +1534,7 @@
                   (this._windowIsClosing = window.closeWindow(true)))
                 return null;
 
-              newTab = this.addTab("about:blank");
-              newTab.collapsed = true;
+              newTab = true;
               l++;
             }
             if (l == 2) {
@@ -1588,6 +1587,8 @@
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
+            if (aNewTab)
+              this.addTab("about:blank");
             this.tabContainer._fillTrailingGap();
             this._blurTab(aTab);
 
@@ -1605,11 +1606,8 @@
               };
               setTimeout(_delayedUpdate, 0, this.tabContainer);
 
-              if (aNewTab) {
-                aNewTab.collapsed = false;
-                if (gURLBar)
-                  gURLBar.focus();
-              }
+              if (aNewTab && gURLBar)
+                gURLBar.focus();
             }
 
             // We're going to remove the tab and the browser now.
