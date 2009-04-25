@@ -91,8 +91,10 @@ function popupShown()
   var expectedScrollPos = 0;
 
   if (gTestIndex == 0) {
-    // the popup should be in the center of the screen 
-    is(Math.round(rect.top) + gScreenY, screen.height / 2,
+    // the popup should be in the center of the screen
+    // note that if the height is odd, the y-offset will have been rounded
+    // down when we pass the fractional value to openPopupAtScreen above.
+    is(Math.round(rect.top) + gScreenY, Math.floor(screen.height / 2),
                               gTests[gTestIndex] + " top");
     ok(Math.round(rect.bottom) + gScreenY < screen.height,
                                 gTests[gTestIndex] + " bottom");
@@ -120,7 +122,9 @@ function popupShown()
     expectedScrollPos = 40;
   }
   else if (gTestIndex == 4) {
-    is(Math.round(rect.top) + gScreenY, screen.height / 2,
+    // note that if the height is odd, the y-offset will have been rounded
+    // down when we pass the fractional value to openPopupAtScreen above.
+    is(Math.round(rect.top) + gScreenY, Math.floor(screen.height / 2),
                               gTests[gTestIndex] + " top");
     ok(Math.round(rect.bottom) + gScreenY < screen.height,
                                 gTests[gTestIndex] + " bottom");
