@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- The interaction of "static position" with margin collapsing is not well
+     defined. In CSS 2.1, there is no hint regarding the expected rendering,
+     so this test may turn out invalid. -->
+<style type="text/css">
+#a {
+ height: 20px;
+ background-color: red;
+ margin-bottom: 20px;
+}
+#b {
+ height: 20px;
+ background-color: green;
+}
+#c {
+ width: 20px; height: 20px;
+ background-color: blue;
+ position: relative;
+ top: -10px;
+}
+</style>
+</head>
+<body>
+<div id="a"></div>
+<div id="b"></div>
+<div id="c"></div>
+</body>
+</html>
