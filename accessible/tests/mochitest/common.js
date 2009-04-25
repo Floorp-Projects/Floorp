@@ -324,7 +324,7 @@ function statesToString(aStates, aExtraStates)
  */
 function eventTypeToString(aEventType)
 {
-  gAccRetrieval.getStringEventType(aEventType);
+  return gAccRetrieval.getStringEventType(aEventType);
 }
 
 /**
