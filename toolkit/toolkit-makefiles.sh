@@ -646,6 +646,7 @@ MAKEFILES_xulapp="
   toolkit/system/gnome/Makefile
   toolkit/system/unixproxy/Makefile
   toolkit/system/osxproxy/Makefile
+  toolkit/system/windowsproxy/Makefile
   toolkit/components/help/Makefile
   toolkit/components/passwordmgr/Makefile
   toolkit/components/passwordmgr/public/Makefile

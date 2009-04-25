@@ -11,16 +11,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org build system.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Mitchell Field.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Mitchell Field <mitch_1_2@live.com.au>
 #  Brian Ryner <bryner@brianryner.com>
-#  Pierre Chanial <chanial@noos.fr>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,48 +36,32 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ..
+DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-		content \
-		locales \
-		obsolete \
-		profile \
-		themes \
-		spatial-navigation \
-		$(NULL)
+MODULE          = windowsproxy
+LIBRARY_NAME    = windowsproxy
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/unixproxy
-endif
+EXPORT_LIBRARY  = 1
+IS_COMPONENT    = 1
+MODULE_NAME     = nsWindowsProxyModule
+GRE_MODULE      = 1
+LIBXUL_LIBRARY  = 1
 
-ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/osxproxy
-endif
+REQUIRES = \
+        necko \
+        string \
+        xpcom \
+        $(NULL)
 
-ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/unixproxy
-endif
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
-ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/windowsproxy
-endif
-
-ifdef MOZ_CRASHREPORTER
-DIRS += crashreporter
-endif
-
-DIRS += \
-	xre \
-	mozapps \
-	$(NULL)
+CPPSRCS = \
+        nsWindowsSystemProxySettings.cpp \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-export::
-	@$(MAKE) -C xre export
