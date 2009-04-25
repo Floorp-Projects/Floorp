@@ -102,8 +102,9 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 #define SCOPE_TABLE_NBYTES(n)   ((n) * sizeof(JSScopeProperty *))
 
 static void
-InitMinimalScope(JSScope *scope)
+InitMinimalScope(JSContext *cx, JSScope *scope)
 {
+    js_LeaveTraceIfGlobalObject(cx, scope->object);
     scope->shape = 0;
     scope->hashShift = JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2;
     scope->entryCount = scope->removedCount = 0;
@@ -165,7 +166,7 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
     js_InitObjectMap(&scope->map, nrefs, ops, clasp);
     scope->object = obj;
     scope->flags = 0;
-    InitMinimalScope(scope);
+    InitMinimalScope(cx, scope);
 
 #ifdef JS_THREADSAFE
     js_InitTitle(cx, &scope->title);
@@ -1094,7 +1095,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
             }
             SCOPE_SET_MIDDLE_DELETE(scope);
         }
-        SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+        js_MakeScopeShapeUnique(cx, scope);
 
         /*
          * If we fail later on trying to find or create a new sprop, we will
@@ -1266,7 +1267,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * be regenerated later as the scope diverges (from the property cache
          * point of view) from the structural type associated with sprop.
          */
-        SCOPE_EXTEND_SHAPE(cx, scope, sprop);
+        js_ExtendScopeShape(cx, scope, sprop);
 
         /* Store the tree node pointer in the table entry for id. */
         if (scope->table)
@@ -1406,10 +1407,11 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
     }
 
     if (newsprop) {
+        js_LeaveTraceIfGlobalObject(cx, scope->object);
         if (scope->shape == sprop->shape)
             scope->shape = newsprop->shape;
         else
-            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+            js_MakeScopeShapeUnique(cx, scope);
     }
 #ifdef JS_DUMP_PROPTREE_STATS
     else
@@ -1481,7 +1483,7 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
     } else if (!SCOPE_HAD_MIDDLE_DELETE(scope)) {
         SCOPE_SET_MIDDLE_DELETE(scope);
     }
-    SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+    js_MakeScopeShapeUnique(cx, scope);
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
     /* Last, consider shrinking scope's table if its load factor is <= .25. */
@@ -1503,7 +1505,7 @@ js_ClearScope(JSContext *cx, JSScope *scope)
     if (scope->table)
         free(scope->table);
     SCOPE_CLR_MIDDLE_DELETE(scope);
-    InitMinimalScope(scope);
+    InitMinimalScope(cx, scope);
     JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
 }
 

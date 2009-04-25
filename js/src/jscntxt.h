@@ -1464,6 +1464,13 @@ js_LeaveTrace(JSContext *cx)
 #endif
 }
 
+static JS_INLINE void
+js_LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
+{
+    if (!obj->fslots[JSSLOT_PARENT])
+        js_LeaveTrace(cx);
+}
+
 static JS_INLINE JSBool
 js_CanLeaveTrace(JSContext *cx)
 {
