@@ -1189,6 +1189,9 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 480880-2a.html about:blank
 == 480880-2b.html about:blank
 == 480880-2c.html about:blank
+!= 481948-1.html 481948-1-ref.html
+!= 481948-2.html 481948-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 481948-3.html 481948-3-ref.html # different behavior on Linux, see bug 488364
 == 482398-1.html 482398-1-ref.html
 == 482592-1a.xhtml 482592-1-ref.html
 == 482592-1b.xhtml 482592-1-ref.html
