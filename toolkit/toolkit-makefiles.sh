@@ -614,14 +614,21 @@ MAKEFILES_xulapp="
   toolkit/crashreporter/Makefile
   toolkit/crashreporter/client/Makefile
   toolkit/crashreporter/google-breakpad/src/client/Makefile
+  toolkit/crashreporter/google-breakpad/src/client/linux/handler/Makefile
   toolkit/crashreporter/google-breakpad/src/client/mac/handler/Makefile
-  toolkit/crashreporter/google-breakpad/src/client/windows/Makefile
+  toolkit/crashreporter/google-breakpad/src/client/solaris/handler/Makefile
+  toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/Makefile
   toolkit/crashreporter/google-breakpad/src/client/windows/handler/Makefile
   toolkit/crashreporter/google-breakpad/src/client/windows/sender/Makefile
   toolkit/crashreporter/google-breakpad/src/common/Makefile
+  toolkit/crashreporter/google-breakpad/src/common/linux/Makefile
   toolkit/crashreporter/google-breakpad/src/common/mac/Makefile
+  toolkit/crashreporter/google-breakpad/src/common/mac/dwarf/Makefile
+  toolkit/crashreporter/google-breakpad/src/common/solaris/Makefile
   toolkit/crashreporter/google-breakpad/src/common/windows/Makefile
+  toolkit/crashreporter/google-breakpad/src/tools/linux/dump_syms/Makefile
   toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms/Makefile
+  toolkit/crashreporter/google-breakpad/src/tools/solaris/dump_syms/Makefile
   toolkit/content/Makefile
   toolkit/obsolete/Makefile
   toolkit/components/alerts/Makefile
