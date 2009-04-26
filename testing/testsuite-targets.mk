@@ -87,6 +87,7 @@ crashtest:
 
 
 # Execute all xpcshell tests in the directories listed in the manifest.
+# See also config/rules.mk 'xpcshell-tests' target for local execution.
 xpcshell-tests:
 	$(PYTHON) -u \
 	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
