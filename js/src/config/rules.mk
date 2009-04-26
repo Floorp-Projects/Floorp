@@ -154,7 +154,8 @@ libs::
 testxpcsrcdir = $(topsrcdir)/testing/xpcshell
 
 # Execute all tests in the $(XPCSHELL_TESTS) directories.
-check::
+# See also testsuite-targets.mk 'xpcshell-tests' target for global execution.
+xpcshell-tests:
 	$(PYTHON) -u \
           $(testxpcsrcdir)/runxpcshelltests.py \
           $(DIST)/bin/xpcshell \
@@ -163,8 +164,8 @@ check::
 # Execute a single test, specified in $(SOLO_FILE), but don't automatically
 # start the test. Instead, present the xpcshell prompt so the user can
 # attach a debugger and then start the test.
-check-interactive::
-	$(PYTHON) \
+check-interactive:
+	$(PYTHON) -u \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --test=$(SOLO_FILE) \
           --interactive \
@@ -172,8 +173,8 @@ check-interactive::
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
 # Execute a single test, specified in $(SOLO_FILE)
-check-one::
-	$(PYTHON) \
+check-one:
+	$(PYTHON) -u \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --test=$(SOLO_FILE) \
           $(DIST)/bin/xpcshell \
@@ -2251,7 +2252,9 @@ documentation:
 	@cd $(DEPTH)
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
 
+ifdef ENABLE_TESTS
 check:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
+endif
