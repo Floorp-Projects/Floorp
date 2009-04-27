@@ -8835,7 +8835,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   // get merged with the frame's prevSibling.
   // XXXbz it would be really nice if we had the prevSibling here too, to check
   // whether this is in fact the case...
-  nsIFrame* nextSibling = inFlowFrame->GetNextSibling();
+  nsIFrame* nextSibling =
+    FindNextNonWhitespaceSibling(inFlowFrame->GetLastContinuation());
   NS_ASSERTION(!IsTablePseudo(inFlowFrame), "Shouldn't happen here");
   if (nextSibling && IsTablePseudo(nextSibling)) {
 #ifdef DEBUG
