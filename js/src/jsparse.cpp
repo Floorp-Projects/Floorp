@@ -2089,25 +2089,23 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                         JSFunctionBox *afunbox = funbox->parent;
                         uintN lexdepLevel = lexdep->frameLevel();
 
-                        if (!afunbox) {
-                            if (tcflags & TCF_IN_FUNCTION)
-                                tcflags |= TCF_FUN_HEAVYWEIGHT;
-                        } else {
-                            do {
-                                /*
-                                 * NB: afunbox->level is the static level of
-                                 * the definition or expression of the function
-                                 * parsed into afunbox, not the static level of
-                                 * its body. Therefore we must add 1 to match
-                                 * lexdep's level to find the afunbox whose
-                                 * body contains the lexdep definition.
-                                 */
-                                if (afunbox->level + 1U == lexdepLevel) {
-                                    afunbox->tcflags |= TCF_FUN_HEAVYWEIGHT;
-                                    break;
-                                }
-                            } while ((afunbox = afunbox->parent) != NULL);
+                        while (afunbox) {
+                            /*
+                             * NB: afunbox->level is the static level of
+                             * the definition or expression of the function
+                             * parsed into afunbox, not the static level of
+                             * its body. Therefore we must add 1 to match
+                             * lexdep's level to find the afunbox whose
+                             * body contains the lexdep definition.
+                             */
+                            if (afunbox->level + 1U == lexdepLevel) {
+                                afunbox->tcflags |= TCF_FUN_HEAVYWEIGHT;
+                                break;
+                            }
+                            afunbox = afunbox->parent;
                         }
+                        if (!afunbox && (tcflags & TCF_IN_FUNCTION))
+                            tcflags |= TCF_FUN_HEAVYWEIGHT;
                     }
                 }
             }
