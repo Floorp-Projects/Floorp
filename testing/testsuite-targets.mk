@@ -37,10 +37,23 @@
 # ***** END LICENSE BLOCK *****
 
 
-# Usage: |make [EXTRA_TEST_ARGS=...] mochitest*|.
+# Shortcut for mochitest* and xpcshell-tests targets,
+# replaces 'EXTRA_TEST_ARGS=--test-path=...'.
+ifdef TEST_PATH
+TEST_PATH_ARG := --test-path=$(TEST_PATH)
+else
+TEST_PATH_ARG :=
+endif
+
+
+# Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
 mochitest:: mochitest-plain mochitest-chrome mochitest-a11y
 
-RUN_MOCHITEST = rm -f ./$@.log && $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done --console-level=INFO --log-file=./$@.log --file-level=INFO $(MOCHITEST_PATH) $(EXTRA_TEST_ARGS)
+RUN_MOCHITEST = \
+	rm -f ./$@.log && \
+	$(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done \
+	  --console-level=INFO --log-file=./$@.log --file-level=INFO \
+	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
@@ -53,12 +66,6 @@ define CHECK_TEST_ERROR
 	  echo "$@ passed"; \
   fi
 endef
-endif
-
-ifdef TEST_PATH
-MOCHITEST_PATH = --test-path=$(TEST_PATH)
-else
-MOCHITEST_PATH =
 endif
 
 mochitest-plain:
@@ -88,10 +95,12 @@ crashtest:
 
 # Execute all xpcshell tests in the directories listed in the manifest.
 # See also config/rules.mk 'xpcshell-tests' target for local execution.
+# Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] xpcshell-tests|.
 xpcshell-tests:
 	$(PYTHON) -u \
 	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
 	  --manifest=$(DEPTH)/_tests/xpcshell/all-test-dirs.list \
+	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
 	  $(DIST)/bin/xpcshell
 
 
