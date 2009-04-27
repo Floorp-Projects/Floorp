@@ -22,9 +22,9 @@ function log(msg) {
   //document.getElementById('log').innerHTML += "<p>" + msg + "</p>";
 }
 
-// We don't track: progress, canplay, and canplaythrough events, as these can be
-// delivered out of order, and/or multiple times.
-var gEventTypes = [ 'loadstart', 'suspend', 'load', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
+// We don't track: progress, canplay, canplaythrough and stalled events,
+// as these can be delivered out of order, and/or multiple times.
+var gEventTypes = [ 'loadstart', 'suspend', 'load', 'abort', 'error', 'emptied', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
 
 var gEventNum = 0;
 var gTestNum = 0;
