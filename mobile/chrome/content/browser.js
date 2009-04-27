@@ -64,6 +64,7 @@ var ih = null;
 var Browser = {
   _canvasBrowser : null,
   _tabs : [],
+  _browsers : [],
   _selectedTab : null,
   windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils),
@@ -263,9 +264,12 @@ var Browser = {
     return this._canvasBrowser;
   },
 
+  get browsers() {
+    return this._browsers;
+  },
+
   /**
-   * Return the currently active <browser> object, since a <deckbrowser> may
-   * have more than one
+   * Return the currently active <browser> object
    */
   get selectedBrowser() {
     return this._selectedTab.browser;
@@ -289,6 +293,7 @@ var Browser = {
     let newTab = new Tab();
     newTab.create(uri);
     this._tabs.push(newTab);
+    this._browsers.push(newTab.browser);
 
     let event = document.createEvent("Events");
     event.initEvent("TabOpen", true, false);
@@ -324,6 +329,7 @@ var Browser = {
 
     tab.destroy();
     this._tabs.splice(tabIndex, 1);
+    this._browsers.splice(tabIndex, 1);
 
     // redraw the tabs
     for (let t = tabIndex; t < this._tabs.length; t++)
@@ -510,8 +516,7 @@ function nsBrowserAccess()
 {
 }
 
-nsBrowserAccess.prototype =
-{
+nsBrowserAccess.prototype = {
   QueryInterface: function(aIID) {
     if (aIID.equals(Ci.nsIBrowserDOMWindow) || aIID.equals(Ci.nsISupports))
       return this;
@@ -520,7 +525,6 @@ nsBrowserAccess.prototype =
 
   openURI: function(aURI, aOpener, aWhere, aContext) {
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
-
     if (isExternal && aURI && aURI.schemeIs("chrome")) {
       dump("use -chrome command-line option to load external chrome urls\n");
       return null;
@@ -572,7 +576,7 @@ nsBrowserAccess.prototype =
   },
 
   isTabContentWindow: function(aWindow) {
-    return Browser._canvasBrowser.browsers.some(function (browser) browser.contentWindow == aWindow);
+    return Browser.browsers.some(function (browser) browser.contentWindow == aWindow);
   }
 }
 
