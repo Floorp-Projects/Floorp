@@ -285,12 +285,12 @@
     <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
-        <toolbarbutton id="tool-addons" type="radio" group="1" checked="1" class="panel-button" linkedpanel="addons-container"/>
+        <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button" linkedpanel="downloads-container"/>
-        <toolbarbutton id="tool-preferences" type="radio" group="1" class="panel-button" linkedpanel="prefs-container"/>
+        <toolbarbutton id="tool-preferences" type="radio" group="1" checked="1" class="panel-button" linkedpanel="prefs-container"/>
         <toolbarbutton id="tool-panel-close" class="page-button" command="cmd_panel"/>
       </vbox>
-      <deck id="panel-items" flex="1">
+      <deck id="panel-items" selectedIndex="2" flex="1">
         <vbox id="addons-container" flex="1">
           <hbox id="addons-header">
             <label value="&addonsHeader.label;"/>
