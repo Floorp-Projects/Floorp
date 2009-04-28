@@ -54,8 +54,6 @@ CPP_UNIT_TESTS = \
                  TestPlainTextSerializer.cpp \
                  $(NULL)
 
-LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
-
 REQUIRES += \
   caps \
   content \
