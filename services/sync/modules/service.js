@@ -76,7 +76,6 @@ Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/crypto.js");
 Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/oauth.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines/clientData.js");
@@ -96,7 +95,6 @@ Cu.import("resource://weave/notifications.js", Weave);
 Cu.import("resource://weave/identity.js", Weave);
 Cu.import("resource://weave/stores.js", Weave);
 Cu.import("resource://weave/engines.js", Weave);
-Cu.import("resource://weave/oauth.js", Weave);
 
 Cu.import("resource://weave/engines/bookmarks.js", Weave);
 Cu.import("resource://weave/engines/clientData.js", Weave);
