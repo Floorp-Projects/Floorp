@@ -73,13 +73,13 @@ REQUIRES = jemalloc
 CFLAGS += -DMOZ_MEMORY
 CXXFLAGS += -DMOZ_MEMORY
 EXPORTS += $(topsrcdir)/memory/jemalloc/jemalloc.h
-endif
-
-DEFFILE = mozce_shunt.def
 
 # We have to include the obj file directly, because we want to export
 # some of its symbols through our def file
 EXTRA_LIBS += $(OBJDIR)/memory/jemalloc/jemalloc.obj
+endif
+
+DEFFILE = mozce_shunt.def
 
 CPPSRCS = \
 	shunt.cpp \
