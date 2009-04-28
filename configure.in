@@ -268,7 +268,7 @@ case "$target" in
 
     _pwdw=`pwd -W`
     _pwd=`pwd`
-    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_pwd/$srcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
+    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
 
     CC="$_pwd/dist/sdk/bin/arm-wince-gcc"
     CXX="$_pwd/dist/sdk/bin/arm-wince-gcc"
