@@ -368,6 +368,15 @@ nsDOMUIEvent::GetIsChar(PRBool* aIsChar)
   }
 }
 
+NS_IMETHODIMP
+nsDOMUIEvent::GetPreventDefault(PRBool* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
+
+  return NS_OK;
+}
+
 NS_METHOD nsDOMUIEvent::GetCompositionReply(nsTextEventReply** aReply)
 {
   if((mEvent->message == NS_COMPOSITION_START) ||
