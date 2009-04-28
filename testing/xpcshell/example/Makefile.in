@@ -63,6 +63,3 @@ XPCSHELL_TESTS = \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-# Note: Invoke any additional (non-xpcshell) test programs here.
-check::

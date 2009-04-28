@@ -110,8 +110,5 @@ XPCSHELL_TESTS  = unit
 
 include $(topsrcdir)/config/rules.mk
 
-# Note: Invoke any additional (non-xpcshell) test programs here.
-check::
-
 libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
