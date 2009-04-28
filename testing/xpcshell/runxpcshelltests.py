@@ -197,10 +197,10 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
         return True
 
       if proc.returncode != 0 or stdout.find("*** PASS") == -1:
-        print """TEST-UNEXPECTED-FAIL | %s | test failed, see following log:
+        print """TEST-UNEXPECTED-FAIL | %s | test failed (with xpcshell return code: %d), see following log:
   >>>>>>>
   %s
-  <<<<<<<""" % (test, stdout)
+  <<<<<<<""" % (test, proc.returncode, stdout)
         success = False
       else:
         print "TEST-PASS | %s | all tests passed" % test
