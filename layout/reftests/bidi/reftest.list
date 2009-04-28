@@ -36,3 +36,4 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 386339.html 386339-ref.html
 == 425338-1a.html 425338-1-ref.html
 == 425338-1b.html 425338-1-ref.html
 == 489517-1.html 489517-1-ref.html
+== 489887-1.html 489887-1-ref.html
