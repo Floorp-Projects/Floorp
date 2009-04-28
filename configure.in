@@ -6638,7 +6638,7 @@ if test "$MOZ_MEMORY"; then
   *wince)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    if test "$WINCE_WINDOWS_MOBILE"; then
+    if test -z "$WINCE_WINDOWS_MOBILE"; then
       AC_DEFINE(MOZ_MEMORY_WINCE6)
     fi
     ;;
