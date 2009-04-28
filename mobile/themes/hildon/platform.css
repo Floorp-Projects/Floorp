@@ -39,29 +39,23 @@
 @import url(chrome://global/skin/);
 
 /* hildon stuff ------------------------------------------------------------ */
-popup,
-panel,
-menupopup {
-  padding: 16px !important;
-}
-
 menu,
 menuitem {
   padding: 0px !important;
   margin: 0px !important;
-  font-family: "Nokia Sans", sans-serif !important;
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-size: 16.75pt !important;
 }
 
 label,
 description,
 textbox {
-  font-family: "Nokia Sans", sans-serif !important;
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-size: 16.75pt !important;
 }
 
 richlistitem {
-  font-family: "Nokia Sans", sans-serif !important;
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-size: 16.75pt !important;
 }
 
