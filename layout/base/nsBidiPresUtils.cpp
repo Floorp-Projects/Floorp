@@ -402,6 +402,13 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         contentTextLength = content->TextLength();
         if (contentTextLength == 0) {
           frame->AdjustOffsetsForBidi(0, 0);
+          // Set the base level and embedding level of the current run even
+          // on an empty frame. Otherwise frame reordering will not be correct.
+          propTable->SetProperty(frame, nsGkAtoms::embeddingLevel,
+                                 NS_INT32_TO_PTR(embeddingLevel),
+                                 nsnull, nsnull);
+          propTable->SetProperty(frame, nsGkAtoms::baseLevel,
+                                 NS_INT32_TO_PTR(paraLevel), nsnull, nsnull);
           continue;
         }
         PRInt32 start, end;
