@@ -166,16 +166,13 @@ protected:
   PRUint32 mRedrawSuspendCount;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
 
-  // zoom and pan
-  nsCOMPtr<nsIDOMSVGPoint>  mCurrentTranslate;
-  nsCOMPtr<nsIDOMSVGNumber> mCurrentScale;
-
   float mFullZoom;
 
   PRPackedBool mViewportInitialized;
 #ifdef XP_MACOSX
   PRPackedBool mEnableBitmapFallback;
 #endif
+  PRPackedBool mIsRootContent;
 };
 
 #endif
