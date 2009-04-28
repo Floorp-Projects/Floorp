@@ -118,6 +118,11 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         return *mMetrics;
     }
 
+    // whatever happens below, we can always create the metrics
+    mMetrics = new gfxFont::Metrics;
+    mMetrics->emHeight = GetStyle()->size;
+    mSpaceGlyph = 0;
+
     FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
     if (!face) {
         // Abort here already, otherwise we crash in the following
@@ -132,9 +137,6 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         cairo_ft_scaled_font_unlock_face(CairoScaledFont());
         return *mMetrics;
     }
-
-    mMetrics = new gfxFont::Metrics;
-    mMetrics->emHeight = GetStyle()->size;
 
     double emUnit = 1.0 * face->units_per_EM;
     double xScale = face->size->metrics.x_ppem / emUnit;
