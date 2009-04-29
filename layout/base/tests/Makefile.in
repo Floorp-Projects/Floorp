@@ -84,34 +84,84 @@ _TEST_FILES += \
 		bidi_numeral_test.js \
 		test_bug332655-1.html \
 		test_bug332655-2.html \
-		test_bug441782-1.html \
+		test_bug441782-1a.html \
+		test_bug441782-1b.html \
+		test_bug441782-1c.html \
+		test_bug441782-1d.html \
+		test_bug441782-1e.html \
 		bug441782-1.html \
 		bug441782-1-ref.html \
-		test_bug441782-2.html \
+		test_bug441782-2a.html \
+		test_bug441782-2b.html \
+		test_bug441782-2c.html \
+		test_bug441782-2d.html \
+		test_bug441782-2e.html \
 		bug441782-2.html \
 		bug441782-2-ref.html \
-		test_bug441782-3.html \
+		test_bug441782-3a.html \
+		test_bug441782-3b.html \
+		test_bug441782-3c.html \
+		test_bug441782-3d.html \
+		test_bug441782-3e.html \
 		bug441782-3.html \
 		bug441782-3-ref.html \
-		test_bug441782-4.html \
+		test_bug441782-4a.html \
+		test_bug441782-4b.html \
+		test_bug441782-4c.html \
+		test_bug441782-4d.html \
+		test_bug441782-4e.html \
 		bug441782-4.html \
 		bug441782-4-ref.html \
-		test_bug441782-5.html \
+		test_bug441782-5a.html \
+		test_bug441782-5b.html \
+		test_bug441782-5c.html \
+		test_bug441782-5d.html \
+		test_bug441782-5e.html \
 		bug441782-5.html \
 		bug441782-5-ref.html \
-		test_bug467672-1.html \
+		test_bug467672-1a.html \
+		test_bug467672-1b.html \
+		test_bug467672-1c.html \
+		test_bug467672-1d.html \
+		test_bug467672-1e.html \
+		test_bug467672-1f.html \
+		test_bug467672-1g.html \
 		bug467672-1.html \
 		bug467672-1-ref.html \
-		test_bug467672-2.html \
+		test_bug467672-2a.html \
+		test_bug467672-2b.html \
+		test_bug467672-2c.html \
+		test_bug467672-2d.html \
+		test_bug467672-2e.html \
+		test_bug467672-2f.html \
+		test_bug467672-2g.html \
 		bug467672-2.html \
 		bug467672-2-ref.html \
-		test_bug467672-3.html \
+		test_bug467672-3a.html \
+		test_bug467672-3b.html \
+		test_bug467672-3c.html \
+		test_bug467672-3d.html \
+		test_bug467672-3e.html \
+		test_bug467672-3f.html \
+		test_bug467672-3g.html \
 		bug467672-3.html \
 		bug467672-3-ref.html \
-		test_bug467672-4.html \
+		test_bug467672-4a.html \
+		test_bug467672-4b.html \
+		test_bug467672-4c.html \
+		test_bug467672-4d.html \
+		test_bug467672-4e.html \
+		test_bug467672-4f.html \
+		test_bug467672-4g.html \
 		bug467672-4.html \
 		bug467672-4-ref.html \
-		test_bug467672-5.html \
+		test_bug467672-5a.html \
+		test_bug467672-5b.html \
+		test_bug467672-5c.html \
+		test_bug467672-5d.html \
+		test_bug467672-5e.html \
+		test_bug467672-5f.html \
+		test_bug467672-5g.html \
 		bug467672-5.html \
 		bug467672-5-ref.html \
 		$(NULL)
