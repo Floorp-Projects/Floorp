@@ -837,6 +837,9 @@ HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
 == 408782-1b.html 408782-1-ref.html
 == 408782-2a.html 408782-2-ref.html
 == 408782-2b.html 408782-2-ref.html
+== 409089-1.html 409089-1-ref.html
+== 409089-2.html 409089-2-ref.html
+== 409089-3.html 409089-3-ref.html
 == 409084-1a.html 409084-1-ref.html
 == 409084-1b.html 409084-1-ref.html
 == 409659-1a.html 409659-1-ref.html
@@ -846,6 +849,9 @@ HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
 == 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
+== 411367-1.html 411367-1-ref.html
+== 411367-2.html 411367-2-ref.html
+== 411367-3.html 411367-3-ref.html
 == 411585-1.html 411585-1-ref.html
 == 411585-2.html 411585-2-ref.html
 fails == 411585-3.html 411585-3-ref.html # bug 426909
