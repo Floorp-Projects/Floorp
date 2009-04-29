@@ -5077,17 +5077,16 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                 }
             } while (*--sp != v);
 
-            if (sp >= stackBase + pcdepth) {
-                /*
-                 * The value comes from a temporary slot that the interpreter
-                 * uses for GC roots or when JSOP_APPLY extended the stack to
-                 * fit the argument array elements. Assume that it is the
-                 * current PC that caused the exception.
-                 */
-                pc = fp->imacpc ? fp->imacpc : regs->pc;
-            } else {
+            /*
+             * The value may have come from beyond stackBase + pcdepth,
+             * meaning that it came from a temporary slot that the
+             * interpreter uses for GC roots or when JSOP_APPLY extended
+             * the stack to fit the argument array elements. Only update pc
+             * if beneath stackBase + pcdepth; otherwise blame existing
+             * (current) PC.
+             */
+            if (sp < stackBase + pcdepth)
                 pc = pcstack[sp - stackBase];
-            }
         }
 
       release_pcstack:
@@ -5103,7 +5102,16 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             regs->pc = imacpc;
             fp->imacpc = NULL;
         }
-        name = DecompileExpression(cx, script, fp->fun, pc);
+
+        /*
+         * FIXME: bug 489843. Stack reconstruction may have returned a pc
+         * value *inside* an imacro; this would confuse the decompiler.
+         */
+        if (imacpc && size_t(pc - script->code) >= script->length)
+            name = FAILED_EXPRESSION_DECOMPILER;
+        else
+            name = DecompileExpression(cx, script, fp->fun, pc);
+
         if (imacpc) {
             regs->pc = savepc;
             fp->imacpc = imacpc;
@@ -5261,12 +5269,148 @@ js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc)
     return ReconstructPCStack(cx, script, pc, NULL);
 }
 
+#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
+
+static intN
+SimulateOp(JSContext *cx, JSScript *script, JSOp op, const JSCodeSpec *cs,
+           jsbytecode *pc, jsbytecode **pcstack, uintN &pcdepth)
+{
+    uintN nuses = js_GetStackUses(cs, op, pc);
+    uintN ndefs = js_GetStackDefs(cx, cs, op, script, pc);
+    LOCAL_ASSERT(pcdepth >= nuses);
+    pcdepth -= nuses;
+    LOCAL_ASSERT(pcdepth + ndefs <= StackDepth(script));
+
+    /*
+     * Fill the slots that the opcode defines withs its pc unless it just
+     * reshuffles the stack. In the latter case we want to preserve the
+     * opcode that generated the original value.
+     */
+    switch (op) {
+      default:
+        if (pcstack) {
+            for (uintN i = 0; i != ndefs; ++i)
+                pcstack[pcdepth + i] = pc;
+        }
+        break;
+
+      case JSOP_CASE:
+      case JSOP_CASEX:
+        /* Keep the switch value. */
+        JS_ASSERT(ndefs == 1);
+        break;
+
+      case JSOP_DUP:
+        JS_ASSERT(ndefs == 2);
+        if (pcstack)
+            pcstack[pcdepth + 1] = pcstack[pcdepth];
+        break;
+
+      case JSOP_DUP2:
+        JS_ASSERT(ndefs == 4);
+        if (pcstack) {
+            pcstack[pcdepth + 2] = pcstack[pcdepth];
+            pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
+        }
+        break;
+
+      case JSOP_SWAP:
+        JS_ASSERT(ndefs == 2);
+        if (pcstack) {
+            jsbytecode *tmp = pcstack[pcdepth + 1];
+            pcstack[pcdepth + 1] = pcstack[pcdepth];
+            pcstack[pcdepth] = tmp;
+        }
+        break;
+    }
+    pcdepth += ndefs;
+    return pcdepth;
+}
+
+#ifdef JS_TRACER
+static intN
+SimulateImacroCFG(JSContext *cx, JSScript *script,
+                  uintN pcdepth, jsbytecode *pc, jsbytecode *target,
+                  jsbytecode **pcstack)
+{
+    size_t nbytes = StackDepth(script) * sizeof *pcstack;
+    jsbytecode** tmp_pcstack = (jsbytecode **) JS_malloc(cx, nbytes);
+    if (!tmp_pcstack)
+        return -1;
+    memcpy(tmp_pcstack, pcstack, nbytes);
+
+    ptrdiff_t oplen;
+    for (; pc < target; pc += oplen) {
+        JSOp op = js_GetOpcode(cx, script, pc);
+        const JSCodeSpec *cs = &js_CodeSpec[op];
+        oplen = cs->length;
+        if (oplen < 0)
+            oplen = js_GetVariableBytecodeLength(pc);
+
+        if (SimulateOp(cx, script, op, cs, pc, tmp_pcstack, pcdepth) < 0)
+            goto failure;
+
+        uint32 type = cs->format & JOF_TYPEMASK;
+        if (type == JOF_JUMP || type == JOF_JUMPX) {
+            ptrdiff_t jmpoff = (type == JOF_JUMP) ? GET_JUMP_OFFSET(pc)
+                                                  : GET_JUMPX_OFFSET(pc);
+            LOCAL_ASSERT(jmpoff >= 0);
+            uintN tmp_pcdepth = SimulateImacroCFG(cx, script, pcdepth, pc + jmpoff,
+                                                  target, tmp_pcstack);
+            if (tmp_pcdepth >= 0) {
+                pcdepth = tmp_pcdepth;
+                goto success;
+            }
+
+            if (op == JSOP_GOTO || op == JSOP_GOTOX)
+                goto failure;
+        }
+    }
+
+    if (pc > target)
+        goto failure;
+
+    LOCAL_ASSERT(pc == target);
+
+  success:
+    LOCAL_ASSERT(pcdepth >= 0);
+    memcpy(pcstack, tmp_pcstack, nbytes);
+    JS_free(cx, tmp_pcstack);
+    return pcdepth;
+
+  failure:
+    JS_free(cx, tmp_pcstack);
+    return -1;
+}
+
+static intN
+ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
+                   jsbytecode **pcstack);
+
+static intN
+ReconstructImacroPCStack(JSContext *cx, JSScript *script,
+                         jsbytecode *imacstart, jsbytecode *target,
+                         jsbytecode **pcstack)
+{
+    /*
+     * Begin with a recursive call back to ReconstructPCStack to pick up
+     * the state-of-the-world at the *start* of the imacro.
+     */
+    JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
+    JS_ASSERT(fp->imacpc);
+    uintN pcdepth = ReconstructPCStack(cx, script, fp->imacpc, pcstack);
+    if (pcdepth < 0)
+        return pcdepth;
+    return SimulateImacroCFG(cx, script, pcdepth, imacstart, target, pcstack);
+}
+
+extern jsbytecode* js_GetImacroStart(jsbytecode* pc);
+#endif
+
 static intN
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
                    jsbytecode **pcstack)
 {
-#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
-
     /*
      * Walk forward from script->main and compute the stack depth and stack of
      * operand-generating opcode PCs in pcstack.
@@ -5274,9 +5418,16 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
      * FIXME: Code to compute oplen copied from js_Disassemble1 and reduced.
      * FIXME: Optimize to use last empty-stack sequence point.
      */
+#ifdef JS_TRACER
+    jsbytecode *imacstart = js_GetImacroStart(target);
+
+    if (imacstart)
+        return ReconstructImacroPCStack(cx, script, imacstart, target, pcstack);
+#endif
+
     LOCAL_ASSERT(script->main <= target && target < script->code + script->length);
-    uintN pcdepth = 0;
     jsbytecode *pc = script->main;
+    uintN pcdepth = 0;
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {
         JSOp op = js_GetOpcode(cx, script, pc);
@@ -5320,46 +5471,9 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
         if (sn && SN_TYPE(sn) == SRC_HIDDEN)
             continue;
 
-        uintN nuses = js_GetStackUses(cs, op, pc);
-        uintN ndefs = js_GetStackDefs(cx, cs, op, script, pc);
-        LOCAL_ASSERT(pcdepth >= nuses);
-        pcdepth -= nuses;
-        LOCAL_ASSERT(pcdepth + ndefs <= StackDepth(script));
+        if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
+            return -1;
 
-        /*
-         * Fill the slots that the opcode defines withs its pc unless it just
-         * reshuffle the stack. In the latter case we want to preserve the
-         * opcode that generated the original value.
-         */
-        switch (op) {
-          default:
-            if (pcstack) {
-                for (uintN i = 0; i != ndefs; ++i)
-                    pcstack[pcdepth + i] = pc;
-            }
-            break;
-
-          case JSOP_CASE:
-          case JSOP_CASEX:
-            /* Keep the switch value. */
-            JS_ASSERT(ndefs == 1);
-            break;
-
-          case JSOP_DUP:
-            JS_ASSERT(ndefs == 2);
-            if (pcstack)
-                pcstack[pcdepth + 1] = pcstack[pcdepth];
-            break;
-
-          case JSOP_DUP2:
-            JS_ASSERT(ndefs == 4);
-            if (pcstack) {
-                pcstack[pcdepth + 2] = pcstack[pcdepth];
-                pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
-            }
-            break;
-        }
-        pcdepth += ndefs;
     }
     LOCAL_ASSERT(pc == target);
     return pcdepth;

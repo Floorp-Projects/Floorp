@@ -148,13 +148,6 @@ static JSPropertySpec object_props[] = {
 /* NB: JSSLOT_PROTO and JSSLOT_PARENT are already indexes into object_props. */
 #define JSSLOT_COUNT 2
 
-static inline void
-js_LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
-{
-    if (!obj->fslots[JSSLOT_PARENT])
-        js_LeaveTrace(cx);
-}
-
 static JSBool
 ReportStrictSlot(JSContext *cx, uint32 slot)
 {
@@ -2106,8 +2099,11 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
 
     JSAtom* atom = cx->runtime->atomState.classPrototypeAtom;
 
-    JS_LOCK_OBJ(cx, ctor);
     JSScope *scope = OBJ_SCOPE(ctor);
+#ifdef JS_THREADSAFE
+    if (scope->title.ownercx != cx)
+        return NULL;
+#endif
     if (scope->object != ctor) {
         scope = js_GetMutableScope(cx, ctor);
         if (!scope)
@@ -2115,8 +2111,7 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
     }
 
     JSScopeProperty* sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
-    jsval pval = sprop ? LOCKED_OBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
-    JS_UNLOCK_SCOPE(cx, scope);
+    jsval pval = sprop ? STOBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
 
     JSObject* proto;
     if (!JSVAL_IS_PRIMITIVE(pval)) {
@@ -3599,7 +3594,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         sprop = SCOPE_GET_PROPERTY(scope, id);
         if (sprop) {
             PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
-            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+            js_MakeScopeShapeUnique(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
 
             if (!STOBJ_GET_PARENT(scope->object)) {

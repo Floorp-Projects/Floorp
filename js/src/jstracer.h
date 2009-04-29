@@ -509,8 +509,6 @@ class TraceRecorder : public avmplus::GCObject {
                                          nanojit::LIns*& ops_ins, size_t op_offset = 0);
     JS_REQUIRES_STACK bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
                                                JSObject*& obj2, jsuword& pcval);
-    JS_REQUIRES_STACK bool test_property_cache_direct_slot(JSObject* obj, nanojit::LIns* obj_ins,
-                                                           uint32& slot);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
                         nanojit::LIns* v_ins);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
@@ -543,9 +541,8 @@ class TraceRecorder : public avmplus::GCObject {
                                       VMSideExit* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
-    JS_REQUIRES_STACK bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
-                                                nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins,
-                                                ExitType exitType);
+    JS_REQUIRES_STACK bool guardPrototypeHasNoIndexedProperties(JSObject* obj, nanojit::LIns* obj_ins,
+                                                                ExitType exitType);
     JS_REQUIRES_STACK bool guardNotGlobalObject(JSObject* obj, nanojit::LIns* obj_ins);
     void clearFrameSlotsFromCache();
     JS_REQUIRES_STACK bool guardCallee(jsval& callee);
@@ -679,13 +676,16 @@ extern void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
 extern bool
-js_OverfullFragmento(nanojit::Fragmento *frago, size_t maxsz);
+js_OverfullFragmento(JSTraceMonitor* tm, nanojit::Fragmento *frago);
 
 extern void
 js_PurgeJITOracle();
 
 extern JSObject *
 js_GetBuiltinFunction(JSContext *cx, uintN index);
+
+extern void
+js_SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
 #else  /* !JS_TRACER */
 

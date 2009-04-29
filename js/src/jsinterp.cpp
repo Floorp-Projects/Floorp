@@ -230,7 +230,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                                                  JSVAL_TO_OBJECT(v))),
                             kshape);
 #endif
-                        SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+                        js_MakeScopeShapeUnique(cx, scope);
                         if (js_IsPropertyCacheDisabled(cx)) {
                             /*
                              * js_GenerateShape could not recover from
@@ -4681,7 +4681,7 @@ js_Interpret(JSContext *cx)
                                     }
                                     sprop = sprop2;
                                 } else {
-                                    SCOPE_EXTEND_SHAPE(cx, scope, sprop);
+                                    js_ExtendScopeShape(cx, scope, sprop);
                                     ++scope->entryCount;
                                     scope->lastProp = sprop;
                                 }
@@ -6353,6 +6353,7 @@ js_Interpret(JSContext *cx)
                         }
                         JS_ASSERT(sprop2 == sprop);
                     } else {
+                        js_LeaveTraceIfGlobalObject(cx, scope->object);
                         scope->shape = sprop->shape;
                         ++scope->entryCount;
                         scope->lastProp = sprop;
@@ -6568,10 +6569,14 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_PRIMTOP)
             JS_ASSERT(regs.sp > StackBase(fp));
             lval = FETCH_OPND(-1);
+            i = GET_INT8(regs.pc);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
+                lval = FETCH_OPND(-2);
                 js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO,
-                                    JSDVG_SEARCH_STACK, lval, NULL,
-                                    "primitive type");
+                                     -2, lval, NULL,
+                                     (i == JSTYPE_VOID)
+                                     ? "primitive type"
+                                     : JS_TYPE_STR(i));
                 goto error;
             }
           END_CASE(JSOP_PRIMTOP)
