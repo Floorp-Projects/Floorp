@@ -249,19 +249,24 @@ nsSVGGraphicElement::IsEventName(nsIAtom* aName)
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
-nsSVGGraphicElement::GetLocalTransformMatrix()
+gfxMatrix
+nsSVGGraphicElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
 {
   if (!mTransforms)
-    return nsnull;
+    return aMatrix;
 
   nsresult rv;
-
   nsCOMPtr<nsIDOMSVGTransformList> transforms;
   rv = mTransforms->GetAnimVal(getter_AddRefs(transforms));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, aMatrix);
+  PRUint32 count;
+  transforms->GetNumberOfItems(&count);
+  if (count == 0)
+    return aMatrix;
 
-  return nsSVGTransformList::GetConsolidationMatrix(transforms);
+  nsCOMPtr<nsIDOMSVGMatrix> matrix =
+    nsSVGTransformList::GetConsolidationMatrix(transforms);
+  return gfxMatrix(aMatrix).PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(matrix));
 }
 
 nsresult

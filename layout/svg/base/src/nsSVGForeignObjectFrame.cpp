@@ -265,7 +265,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
     static_cast<nsSVGElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
-    nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+    nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
     nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
   }
 
@@ -352,7 +352,7 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
   if (!ctm)
     return NS_ERROR_FAILURE;
 
@@ -473,63 +473,45 @@ nsSVGForeignObjectFrame::GetMatrixPropagation()
   return (GetStateBits() & NS_STATE_SVG_PROPAGATE_TRANSFORM) != 0;
 }
 
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
+gfxRect
+nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
-  *_retval = nsnull;
+  NS_ASSERTION(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "Should not be calling this on a non-display child");
 
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
-  if (!ctm)
-    return NS_ERROR_FAILURE;
+  nsSVGForeignObjectElement *content =
+    static_cast<nsSVGForeignObjectElement*>(mContent);
 
   float x, y, w, h;
-  static_cast<nsSVGForeignObjectElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
+  content->GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
 
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;
 
-  gfxRect bounds =
-    nsSVGUtils::ConvertSVGMatrixToThebes(ctm).TransformBounds(gfxRect(x, y, w, h));
-  return NS_NewSVGRect(_retval, bounds);
+  if (aToBBoxUserspace.IsSingular()) {
+    // XXX ReportToConsole
+    return gfxRect(0.0, 0.0, 0.0, 0.0);
+  }
+  return aToBBoxUserspace.TransformBounds(gfxRect(x, y, w, h));
 }
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGForeignObjectFrame::GetCanvasTM()
 {
-  if (!GetMatrixPropagation()) {
-    nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
-    return retval;
-  }
-
   if (!mCanvasTM) {
-    // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
-    nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                     (mParent);
-    nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
-    NS_ASSERTION(parentTM, "null TM");
 
-    // got the parent tm, now check for local tm:
-    nsSVGGraphicElement *element =
-      static_cast<nsSVGGraphicElement*>(mContent);
-    nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
-    
-    if (localTM)
-      parentTM->Multiply(localTM, getter_AddRefs(mCanvasTM));
-    else
-      mCanvasTM = parentTM;
+    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+    nsSVGForeignObjectElement *content =
+      static_cast<nsSVGForeignObjectElement*>(mContent);
+
+    gfxMatrix tm = content->PrependLocalTransformTo(parent->GetCanvasTM());
+
+    mCanvasTM = NS_NewSVGMatrix(tm);
   }
-
-  nsIDOMSVGMatrix* retval = mCanvasTM.get();
-  NS_IF_ADDREF(retval);
-  return retval;
+  return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
 }
 
 //----------------------------------------------------------------------
@@ -538,7 +520,7 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGForeignObjectFrame::GetUnZoomedTMIncludingOffset()
 {
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
   if (!ctm)
     return nsnull;
 
@@ -683,7 +665,7 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
     return;
 
   nsPresContext* presContext = PresContext();
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
 
   nsSVGForeignObjectElement *fO =
     static_cast<nsSVGForeignObjectElement*>(mContent);

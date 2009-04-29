@@ -75,13 +75,10 @@ nsSVGGenericContainerFrame::GetType() const
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGGenericContainerFrame::GetCanvasTM()
 {
   NS_ASSERTION(mParent, "null parent");
   
-  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                   (mParent);
-
-  return containerFrame->GetCanvasTM();  
+  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();  
 }
