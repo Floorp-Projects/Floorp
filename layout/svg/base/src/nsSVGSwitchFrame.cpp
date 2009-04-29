@@ -39,6 +39,8 @@
 #include "nsSVGGFrame.h"
 #include "nsSVGSwitchElement.h"
 #include "nsIDOMSVGRect.h"
+#include "gfxRect.h"
+#include "gfxMatrix.h"
 
 typedef nsSVGGFrame nsSVGSwitchFrameBase;
 
@@ -78,7 +80,7 @@ public:
   NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyRedrawUnsuspended();
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **aRect);
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
 
 private:
   nsIFrame *GetActiveChildFrame();
@@ -182,24 +184,17 @@ nsSVGSwitchFrame::NotifyRedrawUnsuspended()
   return nsSVGSwitchFrameBase::NotifyRedrawUnsuspended();
 }
 
-NS_IMETHODIMP
-nsSVGSwitchFrame::GetBBox(nsIDOMSVGRect **aRect)
+gfxRect
+nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
-  *aRect = nsnull;
-
-  nsIFrame *kid = GetActiveChildFrame();
-  if (kid) {
-    nsISVGChildFrame* svgFrame = do_QueryFrame(kid);
-    if (svgFrame) {
-      nsCOMPtr<nsIDOMSVGRect> box;
-      svgFrame->GetBBox(getter_AddRefs(box));
-      if (box) {
-        box.swap(*aRect);
-        return NS_OK;
-      }
-    }
+  nsIFrame* kid = GetActiveChildFrame();
+  nsISVGChildFrame* svgKid = do_QueryFrame(kid);
+  if (svgKid) {
+    gfxMatrix transform = static_cast<nsSVGElement*>(kid->GetContent())->
+                            PrependLocalTransformTo(aToBBoxUserspace);
+    return svgKid->GetBBoxContribution(transform);
   }
-  return NS_ERROR_FAILURE;
+  return gfxRect(0.0, 0.0, 0.0, 0.0);
 }
 
 nsIFrame *

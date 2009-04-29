@@ -253,48 +253,32 @@ nsSVGTextFrame::InitialUpdate()
   return rv;
 }  
 
-NS_IMETHODIMP
-nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
+gfxRect
+nsSVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
   UpdateGlyphPositioning(PR_TRUE);
 
-  return nsSVGTextFrameBase::GetBBox(_retval);
+  return nsSVGTextFrameBase::GetBBoxContribution(aToBBoxUserspace);
 }
 
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGTextFrame::GetCanvasTM()
 {
-  if (!GetMatrixPropagation()) {
-    nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
-    return retval;
-  }
-
   if (!mCanvasTM) {
-    // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
-    nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                     (mParent);
-    nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
-    NS_ASSERTION(parentTM, "null TM");
 
-    // got the parent tm, now check for local tm:
-    nsSVGGraphicElement *element =
-      static_cast<nsSVGGraphicElement*>(mContent);
-    nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
-    
-    if (localTM)
-      parentTM->Multiply(localTM, getter_AddRefs(mCanvasTM));
-    else
-      mCanvasTM = parentTM;
+    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+    nsSVGGraphicElement *content = static_cast<nsSVGGraphicElement*>(mContent);
+
+    gfxMatrix tm = content->PrependLocalTransformTo(parent->GetCanvasTM());
+
+    mCanvasTM = NS_NewSVGMatrix(tm);
   }
 
-  nsIDOMSVGMatrix* retval = mCanvasTM.get();
-  NS_IF_ADDREF(retval);
-  return retval;
+  return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
 }
 
 //----------------------------------------------------------------------

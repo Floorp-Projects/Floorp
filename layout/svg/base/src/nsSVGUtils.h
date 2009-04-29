@@ -46,6 +46,8 @@
 #include "nsRect.h"
 #include "gfxContext.h"
 #include "nsIRenderingContext.h"
+#include "gfxRect.h"
+#include "gfxMatrix.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -270,11 +272,6 @@ public:
   static nsresult GetFarthestViewportElement(nsIContent *aContent,
                                              nsIDOMSVGElement * *aFarthestViewportElement);
 
-  /*
-   * Creates a bounding box by walking the children and doing union.
-   */
-  static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
-
   /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
@@ -377,7 +374,7 @@ public:
    * child SVG frame, container SVG frame, or a regular frame.
    * For regular frames, we just return an identity matrix.
    */
-  static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
+  static gfxMatrix GetCanvasTM(nsIFrame* aFrame);
 
   /*
    * Tells child frames that something that might affect them has changed

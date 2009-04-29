@@ -41,6 +41,7 @@
 
 #include "nsSVGTextContainerFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
+#include "gfxMatrix.h"
 
 typedef nsSVGTextContainerFrame nsSVGTSpanFrameBase;
 
@@ -81,7 +82,7 @@ public:
   }
 #endif
   // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM();
   
   // nsISVGGlyphFragmentNode interface:
   NS_IMETHOD_(PRUint32) GetNumberOfChars();

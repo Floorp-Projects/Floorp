@@ -83,6 +83,13 @@ gfxMatrix::Multiply(const gfxMatrix& m)
     return *this;
 }
 
+const gfxMatrix&
+gfxMatrix::PreMultiply(const gfxMatrix& m)
+{
+    cairo_matrix_multiply(CAIRO_MATRIX(this), CONST_CAIRO_MATRIX(&m), CAIRO_MATRIX(this));
+    return *this;
+}
+
 gfxPoint
 gfxMatrix::Transform(const gfxPoint& point) const
 {

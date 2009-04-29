@@ -151,6 +151,13 @@ public:
     const gfxMatrix& Multiply(const gfxMatrix& m);
 
     /**
+     * Multiplies the current matrix with m.
+     * This is a pre-multiplication, i.e. the transformations of m are
+     * applied _before_ the existing transformations.
+     */
+    const gfxMatrix& PreMultiply(const gfxMatrix& m);
+
+    /**
      * Transforms a point according to this matrix.
      */
     gfxPoint Transform(const gfxPoint& point) const;

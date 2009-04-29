@@ -139,26 +139,21 @@ nsSVGPatternFrame::GetType() const
 // need to return *our current* transformation
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGPatternFrame::GetCanvasTM()
 {
-  nsIDOMSVGMatrix *rCTM;
-
   if (mCTM) {
-    rCTM = mCTM;
-    NS_IF_ADDREF(rCTM);
-  } else {
-    // Do we know our rendering parent?
-    if (mSource) {
-      // Yes, use it!
-      mSource->GetCanvasTM(&rCTM);
-    } else {
-      // No, return an identity
-      // We get here when geometry in the <pattern> container is updated
-      NS_NewSVGMatrix(&rCTM);
-    }
+    return nsSVGUtils::ConvertSVGMatrixToThebes(mCTM);
   }
-  return rCTM;
+
+  // Do we know our rendering parent?
+  if (mSource) {
+    // Yes, use it!
+    return mSource->GetCanvasTM();
+  }
+
+  // We get here when geometry in the <pattern> container is updated
+  return gfxMatrix();
 }
 
 nsresult
@@ -658,7 +653,7 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   }
 
   // Get the transformation matrix from our calling geometry
-  aSource->GetCanvasTM(aCTM);
+  *aCTM = NS_NewSVGMatrix(aSource->GetCanvasTM()).get();
 
   // OK, now fix up the bounding box to reflect user coordinates
   // We handle device unit scaling in pattern matrix

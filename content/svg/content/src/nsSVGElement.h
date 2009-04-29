@@ -139,6 +139,12 @@ public:
   // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
   nsSVGSVGElement* GetCtx();
 
+  /**
+   * Returns aMatrix post-multiplied by the transform from the userspace
+   * established by this element to the userspace established by its parent.
+   */
+  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
+
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
