@@ -182,15 +182,18 @@ nsSVGMaskFrame::GetType() const
   return nsGkAtoms::svgMaskFrame;
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGMaskFrame::GetCanvasTM()
 {
   NS_ASSERTION(mMaskParentMatrix, "null parent matrix");
 
   nsSVGMaskElement *mask = static_cast<nsSVGMaskElement*>(mContent);
 
-  return nsSVGUtils::AdjustMatrixForUnits(mMaskParentMatrix,
+  nsCOMPtr<nsIDOMSVGMatrix> matrix =
+         nsSVGUtils::AdjustMatrixForUnits(mMaskParentMatrix,
                                           &mask->mEnumAttributes[nsSVGMaskElement::MASKCONTENTUNITS],
                                           mMaskParent);
+  
+  return nsSVGUtils::ConvertSVGMatrixToThebes(matrix);
 }
 

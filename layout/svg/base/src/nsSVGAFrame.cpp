@@ -40,8 +40,9 @@
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsSVGGraphicElement.h"
 #include "nsSVGMatrix.h"
-#include "nsIDOMSVGAElement.h"
+#include "nsSVGAElement.h"
 #include "nsSVGUtils.h"
+#include "gfxMatrix.h"
 
 // <a> elements can contain text. nsSVGGlyphFrames expect to have
 // a class derived from nsSVGTextContainerFrame as a parent. We
@@ -87,7 +88,7 @@ public:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   
   // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM();
   
 private:
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
@@ -162,35 +163,19 @@ nsSVGAFrame::NotifySVGChanged(PRUint32 aFlags)
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGAFrame::GetCanvasTM()
 {
-  if (!GetMatrixPropagation()) {
-    nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
-    return retval;
-  }
-
   if (!mCanvasTM) {
-    // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
-    nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                     (mParent);
-    nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
-    NS_ASSERTION(parentTM, "null TM");
 
-    // got the parent tm, now check for local tm:
-    nsSVGGraphicElement *element =
-      static_cast<nsSVGGraphicElement*>(mContent);
-    nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
+    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+    nsSVGAElement *content = static_cast<nsSVGAElement*>(mContent);
 
-    if (localTM)
-      parentTM->Multiply(localTM, getter_AddRefs(mCanvasTM));
-    else
-      mCanvasTM = parentTM;
+    gfxMatrix tm = content->PrependLocalTransformTo(parent->GetCanvasTM());
+
+    mCanvasTM = NS_NewSVGMatrix(tm);
   }
 
-  nsIDOMSVGMatrix* retval = mCanvasTM.get();
-  NS_IF_ADDREF(retval);
-  return retval;
+  return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
 }

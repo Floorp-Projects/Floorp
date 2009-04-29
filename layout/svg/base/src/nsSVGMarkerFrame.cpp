@@ -97,60 +97,34 @@ nsSVGMarkerFrame::GetType() const
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGMarkerFrame::GetCanvasTM()
 {
-  if (mInUse2) {
-    // really we should return null, but the rest of the SVG code
-    // isn't set up for that.  We're going to be bailing drawing the
-    // marker anyway, so return an identity.
-    nsCOMPtr<nsIDOMSVGMatrix> ident;
-    NS_NewSVGMatrix(getter_AddRefs(ident));
-
-    nsIDOMSVGMatrix *retval = ident.get();
-    NS_IF_ADDREF(retval);
-    return retval;
-  }
-
-  mInUse2 = PR_TRUE;
-
-  // get the tm from the path geometry frame and append local transform
-
   NS_ASSERTION(mMarkedFrame, "null nsSVGPathGeometry frame");
-  nsCOMPtr<nsIDOMSVGMatrix> markedTM;
-  mMarkedFrame->GetCanvasTM(getter_AddRefs(markedTM));
-  NS_ASSERTION(markedTM, "null marked TM");
 
-  // get element
-  nsSVGMarkerElement *element = static_cast<nsSVGMarkerElement*>(mContent);
-
-  // scale/move marker
-  nsCOMPtr<nsIDOMSVGMatrix> markerTM;
-  element->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle, getter_AddRefs(markerTM));
-
-  // viewport marker
-  nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
-  nsresult res =
-    element->GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
-
-  nsCOMPtr<nsIDOMSVGMatrix> tmpTM;
-  nsCOMPtr<nsIDOMSVGMatrix> resultTM;
-
-  markedTM->Multiply(markerTM, getter_AddRefs(tmpTM));
-
-  if (NS_SUCCEEDED(res) && viewBoxTM) {
-    tmpTM->Multiply(viewBoxTM, getter_AddRefs(resultTM));
-  } else {
-    NS_WARNING("We should propagate the fact that the viewBox is invalid.");
-    resultTM = tmpTM;
+  if (mInUse2) {
+    // We're going to be bailing drawing the marker, so return an identity.
+    return gfxMatrix();
   }
 
-  nsIDOMSVGMatrix *retval = resultTM.get();
-  NS_IF_ADDREF(retval);
-
+  nsSVGMarkerElement *content = static_cast<nsSVGMarkerElement*>(mContent);
+  
+  mInUse2 = PR_TRUE;
+  gfxMatrix markedTM = mMarkedFrame->GetCanvasTM();
   mInUse2 = PR_FALSE;
 
-  return retval;
+  nsCOMPtr<nsIDOMSVGMatrix> markerTM;
+  content->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle, getter_AddRefs(markerTM));
+
+  nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
+  nsresult res = content->GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
+  if (NS_FAILED(res)) {
+    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+  }
+
+  markedTM.PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(markerTM));
+  markedTM.PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(viewBoxTM));
+  return markedTM;
 }
 
 
@@ -196,7 +170,7 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
+    nsCOMPtr<nsIDOMSVGMatrix> matrix = NS_NewSVGMatrix(GetCanvasTM());
     NS_ENSURE_TRUE(matrix, NS_ERROR_OUT_OF_MEMORY);
 
     gfx->Save();

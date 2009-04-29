@@ -43,6 +43,7 @@
 #include "nsPresContext.h"
 #include "nsSVGContainerFrame.h"
 #include "nsGkAtoms.h"
+#include "gfxMatrix.h"
 
 typedef nsSVGDisplayContainerFrame nsSVGGenericContainerFrameBase;
 
@@ -73,7 +74,7 @@ public:
 #endif
 
   // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM();
 };
 
 #endif // __NS_SVGGENERICCONTAINERFRAME_H__

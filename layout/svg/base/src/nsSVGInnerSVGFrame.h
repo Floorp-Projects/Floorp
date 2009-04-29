@@ -38,6 +38,7 @@
 
 #include "nsSVGContainerFrame.h"
 #include "nsISVGSVGFrame.h"
+#include "gfxMatrix.h"
 
 typedef nsSVGDisplayContainerFrame nsSVGInnerSVGFrameBase;
 
@@ -85,7 +86,7 @@ public:
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
 
   // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM();
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference

@@ -1399,6 +1399,24 @@ nsSVGSVGElement::GetMMPerPx(PRUint8 aCtxType)
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
+/* virtual */ gfxMatrix
+nsSVGSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+{
+  NS_ASSERTION(GetCtx(), "Should not be called on outer-<svg>");
+
+  float x, y;
+  GetAnimatedLengthValues(&x, &y, nsnull);
+  gfxMatrix matrix = aMatrix;
+  matrix.PreMultiply(gfxMatrix().Translate(gfxPoint(x, y)));
+
+  nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
+  nsresult res = GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
+  if (NS_FAILED(res)) {
+    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+  }
+  return matrix.PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(viewBoxTM));
+}
+
 void
 nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 {
