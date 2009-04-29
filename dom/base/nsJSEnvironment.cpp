@@ -1525,7 +1525,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (!mScriptsEnabled) {
-    *aIsUndefined = PR_TRUE;
+    if (aIsUndefined) {
+      *aIsUndefined = PR_TRUE;
+    }
 
     if (aRetValue) {
       aRetValue->Truncate();
@@ -1594,13 +1596,13 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     nsJSVersionSetter setVersion(mContext, aVersion);
 
     ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
-                                              (JSObject *)aScopeObject,
-                                              jsprin,
-                                              (jschar*)PromiseFlatString(aScript).get(),
-                                              aScript.Length(),
-                                              aURL,
-                                              aLineNo,
-                                              vp);
+                                            (JSObject *)aScopeObject,
+                                            jsprin,
+                                            (jschar*)PromiseFlatString(aScript).get(),
+                                            aScript.Length(),
+                                            aURL,
+                                            aLineNo,
+                                            vp);
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed

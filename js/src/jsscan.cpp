@@ -1559,10 +1559,19 @@ retry:
          * https://bugzilla.mozilla.org/show_bug.cgi?id=309712
          * https://bugzilla.mozilla.org/show_bug.cgi?id=310993
          *
-         * So without JSOPTION_XML, we never scan an XML comment or CDATA
-         * literal.  We always scan <! as the start of an HTML comment hack
-         * to end of line, used since Netscape 2 to hide script tag content
-         * from script-unaware browsers.
+         * So without JSOPTION_XML, we changed around Firefox 1.5 never to scan
+         * an XML comment or CDATA literal.  Instead, we always scan <! as the
+         * start of an HTML comment hack to end of line, used since Netscape 2
+         * to hide script tag content from script-unaware browsers.
+         *
+         * But this still leaves XML resources with certain internal structure
+         * vulnerable to being loaded as script cross-origin, and some internal
+         * data stolen, so for Firefox 3.5 and beyond, we reject programs whose
+         * source consists only of XML literals. See:
+         *
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
+         *
+         * The check for this is in jsparse.cpp, JSCompiler::compileScript.
          */
         if ((ts->flags & TSF_OPERAND) &&
             (JS_HAS_XML_OPTION(cx) || PeekChar(ts) != '!')) {
