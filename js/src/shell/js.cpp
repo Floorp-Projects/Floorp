@@ -4633,6 +4633,8 @@ main(int argc, char **argv, char **envp)
     if (!cx)
         return 1;
 
+    JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
+
     JS_BeginRequest(cx);
 
     glob = JS_NewObject(cx, &global_class, NULL, NULL);

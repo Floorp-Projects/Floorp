@@ -49,14 +49,12 @@
         ifprimtop 3                     # any obj rval
         goto 2
 1:      pop                             # any obj obj
-2:      pop                             # any obj
-        callprop toString               # any toString obj
-        call 0                          # any rval
-        primtop                         # any rval
-        goto 4                          # any rval
+2:      callprop toString               # any obj toString obj
+        call 0                          # any obj rval
+        primtop (JSTYPE_NUMBER)         # any obj rval
 3:      swap                            # any rval obj
         pop                             # any rval
-4:      imacop                          # eqval
+        imacop                          # eqval
         stop
     .end
 
@@ -72,14 +70,12 @@
         ifprimtop 3                     # any obj lval
         goto 2
 1:      pop                             # any obj obj
-2:      pop                             # any obj
-        callprop toString               # any toString obj
-        call 0                          # any lval
-        primtop                         # any rval
-        goto 4                          # any lval
+2:      callprop toString               # any obj toString obj
+        call 0                          # any obj lval
+        primtop (JSTYPE_NUMBER)         # any obj rval
 3:      swap                            # any lval obj
         pop                             # any lval
-4:      swap                            # lval any
+        swap                            # lval any
         imacop                          # eqval
         stop
     .end
@@ -99,14 +95,12 @@
         ifprimtop 3                     # any obj rval
         goto 2
 1:      pop                             # any obj obj
-2:      pop                             # any obj
-        callprop toString               # any toString obj
-        call 0                          # any rval
-        primtop                         # any rval
-        goto 4                          # any rval
+2:      callprop toString               # any obj toString obj
+        call 0                          # any obj rval
+        primtop (JSTYPE_NUMBER)         # any obj rval
 3:      swap                            # any rval obj
         pop                             # any rval
-4:      imacop                          # bval
+        imacop                          # bval
         stop
     .end
 
@@ -120,16 +114,16 @@
         string number                   # any obj valueOf obj "number"
         call 1                          # any obj lval
         ifprimtop 3                     # any obj lval
+        pop                             # any obj
+        dup                             # any obj obj
         goto 2
 1:      pop                             # any obj obj
-2:      pop                             # any obj
-        callprop toString               # any toString obj
-        call 0                          # any lval
-        primtop                         # any rval
-        goto 4                          # any lval
+2:      callprop toString               # any obj toString obj
+        call 0                          # any obj lval
+        primtop (JSTYPE_NUMBER)         # any obj lval
 3:      swap                            # any lval obj
         pop                             # any lval
-4:      swap                            # lval any
+        swap                            # lval any
         imacop                          # bval
         stop
     .end
@@ -146,32 +140,28 @@
         ifprimtop 3                     # obj2 obj1 lval
         goto 2
 1:      pop                             # obj2 obj1 obj1
-2:      pop                             # obj2 obj1
-        callprop toString               # obj2 toString obj1
-        call 0                          # obj2 lval
-        primtop                         # obj2 lval
-        goto 4                          # obj2 lval
+2:      callprop toString               # obj2 obj1 toString obj1
+        call 0                          # obj2 obj1 lval
+        primtop (JSTYPE_NUMBER)         # obj2 obj1 lval
 3:      swap                            # obj2 lval obj1
         pop                             # obj2 lval
-4:      swap                            # lval obj2
+        swap                            # lval obj2
         dup                             # lval obj1 obj1
         dup                             # lval obj obj obj
         getprop valueOf                 # lval obj obj valueOf
-        ifprimtop 5                     # lval obj obj valueOf
+        ifprimtop 4                     # lval obj obj valueOf
         swap                            # lval obj valueOf obj
         string number                   # lval obj valueOf obj "number"
         call 1                          # lval obj rval
-        ifprimtop 7                     # lval obj rval
-        goto 6
-5:      pop                             # lval obj obj
-6:      pop                             # lval obj
-        callprop toString               # lval toString obj
-        call 0                          # lval rval
-        primtop                         # lval rval
-        goto 8                          # lval rval
-7:      swap                            # lval rval obj
+        ifprimtop 6                     # lval obj rval
+        goto 5
+4:      pop                             # lval obj obj
+5:      callprop toString               # lval obj toString obj
+        call 0                          # lval obj rval
+        primtop (JSTYPE_NUMBER)         # lval obj rval
+6:      swap                            # lval rval obj
         pop                             # lval rval
-8:      imacop                          # bval
+        imacop                          # bval
         stop
     .end
 
@@ -190,14 +180,12 @@
         ifprimtop 3                     # any obj rval
         goto 2
 1:      pop                             # any obj obj
-2:      pop                             # any obj
-        callprop toString               # any toString obj
-        call 0                          # any rval
-        primtop                         # any rval
-        goto 4                          # any rval
+2:      callprop toString               # any obj toString obj
+        call 0                          # any obj rval
+        primtop (JSTYPE_VOID)           # any obj rval
 3:      swap                            # any rval obj
         pop                             # any rval
-4:      add                             # aval
+        add                             # aval
         stop
     .end
 
@@ -213,14 +201,12 @@
         ifprimtop 3                     # any obj lval
         goto 2
 1:      pop                             # any obj obj
-2:      pop                             # any obj
-        callprop toString               # any toString obj
-        call 0                          # any lval
-        primtop                         # any lval
-        goto 4                          # any lval
+2:      callprop toString               # any obj toString obj
+        call 0                          # any obj lval
+        primtop (JSTYPE_VOID)           # any obj lval
 3:      swap                            # any lval obj
         pop                             # any lval
-4:      swap                            # lval any
+        swap                            # lval any
         add                             # aval
         stop
     .end
@@ -237,32 +223,28 @@
         ifprimtop 3                     # obj2 obj1 lval
         goto 2
 1:      pop                             # obj2 obj1 obj1
-2:      pop                             # obj2 obj1
-        callprop toString               # obj2 toString obj1
-        call 0                          # obj2 lval
-        primtop                         # obj2 lval
-        goto 4                          # obj2 lval
+2:      callprop toString               # obj2 obj toString obj1
+        call 0                          # obj2 obj lval
+        primtop (JSTYPE_VOID)           # obj2 obj lval
 3:      swap                            # obj2 lval obj1
         pop                             # obj2 lval
-4:      swap                            # lval obj2
+        swap                            # lval obj2
         dup                             # lval obj1 obj1
         dup                             # lval obj obj obj
         getprop valueOf                 # lval obj obj valueOf
-        ifprimtop 5                     # lval obj obj valueOf
+        ifprimtop 4                     # lval obj obj valueOf
         swap                            # lval obj valueOf obj
         string void                     # lval obj valueOf obj "void"
         call 1                          # lval obj rval
-        ifprimtop 7                     # lval obj rval
-        goto 6
-5:      pop                             # lval obj obj
-6:      pop                             # lval obj
-        callprop toString               # lval toString obj
-        call 0                          # lval rval
-        primtop                         # lval rval
-        goto 8                          # lval rval
-7:      swap                            # lval rval obj
+        ifprimtop 6                     # lval obj rval
+        goto 5
+4:      pop                             # lval obj obj
+5:      callprop toString               # lval obj toString obj
+        call 0                          # lval obj rval
+        primtop (JSTYPE_VOID)           # lval obj rval
+6:      swap                            # lval rval obj
         pop                             # lval rval
-8:      add                             # aval
+        add                             # aval
         stop
     .end
 
@@ -279,15 +261,16 @@
         string number                   # obj valueOf obj "number"
         call 1                          # obj lval
         ifprimtop 1                     # obj lval
-        goto 3                          # obj lval
+        goto 3
 1:      swap                            # lval obj
         pop                             # lval
-        goto 4                          # lval
+        goto 4
 2:      pop                             # obj obj
-3:      pop                             # obj
-        callprop toString               # toString obj
-        call 0                          # lval
-        primtop                         # lval
+3:      callprop toString               # obj toString obj
+        call 0                          # obj lval
+        primtop (JSTYPE_NUMBER)         # obj lval
+        swap                            # lval obj
+        pop                             # lval
 4:      imacop                          # aval
         stop
     .end
@@ -306,15 +289,13 @@
         ifprimtop 3                         # String this obj rval
         goto 2
 1:      pop                                 # String this obj obj
-2:      pop                                 # String this obj
-        callprop valueOf                    # String this valueOf obj
-        string string                       # String this valueOf obj "string"
-        call 1                              # String this rval
-        primtop                             # String this rval
-        goto 4                              # String this rval
+2:      callprop valueOf                    # String this obj valueOf obj
+        string string                       # String this obj valueOf obj "string"
+        call 1                              # String this obj rval
+        primtop (JSTYPE_STRING)             # String this obj rval
 3:      swap                                # String this rval obj
         pop                                 # String this rval
-4:      call 1                              # str
+        call 1                              # str
         stop                                # str
     .end
 
@@ -332,15 +313,13 @@
         ifprimtop 3                         # String this obj rval
         goto 2
 1:      pop                                 # String this obj obj
-2:      pop                                 # String this obj
-        callprop valueOf                    # String this valueOf obj
-        string string                       # String this valueOf obj "string"
-        call 1                              # String this rval
-        primtop                             # String this rval
-        goto 4                              # String this rval
+2:      callprop valueOf                    # String this obj valueOf obj
+        string string                       # String this obj valueOf obj "string"
+        call 1                              # String this obj rval
+        primtop (JSTYPE_STRING)             # String this obj rval
 3:      swap                                # String this rval obj
         pop                                 # String this rval
-4:      new 1                               # strobj
+        new 1                               # strobj
         stop                                # strobj
     .end
 

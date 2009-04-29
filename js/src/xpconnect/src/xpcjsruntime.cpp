@@ -1142,6 +1142,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     JSBool ok = JS_TRUE;
     if(!mStrIDs[0])
     {
+        JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
         JSAutoRequest ar(cx);
         for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
         {
