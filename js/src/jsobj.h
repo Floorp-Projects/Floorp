@@ -199,6 +199,12 @@ struct JSObject {
                              + JSCLASS_RESERVED_SLOTS(clasp))
 
 /*
+ * Maximum net gross capacity of the obj->dslots vector, excluding the additional
+ * hidden slot used to store the length of the vector.
+ */
+#define MAX_DSLOTS_LENGTH   (JS_MAX(~(uint32)0, ~(size_t)0) / sizeof(jsval))
+
+/*
  * STOBJ prefix means Single Threaded Object. Use the following fast macros to
  * directly manipulate slots in obj when only one thread can access obj and
  * when obj->map->freeslot can be inconsistent with slots.

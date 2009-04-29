@@ -762,8 +762,8 @@ JS_NewRuntime(uint32 maxbytes)
         JS_ASSERT(JSVAL_TRUE == BOOLEAN_TO_JSVAL(JS_TRUE));
 
         JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID) == 2);
-        JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE) == 3);
-        JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_ARETURN) == 4);
+        JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE) == (2 | (JSVAL_HOLE_FLAG >> JSVAL_TAGBITS)));
+        JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_ARETURN) == 8);
 
         js_NewRuntimeWasCalled = JS_TRUE;
     }
@@ -2600,6 +2600,26 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
     }
 }
 
+JS_PUBLIC_API(void)
+JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32 value)
+{
+    JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
+#ifdef JS_TRACER
+    js_SetMaxCodeCacheBytes(cx, value);
+#endif
+}
+
+JS_PUBLIC_API(uint32)
+JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
+{
+    JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
+#ifdef JS_TRACER
+    return JS_THREAD_DATA(cx)->traceMonitor.maxCodeCacheBytes;
+#else
+    return 0;
+#endif
+}
+
 JS_PUBLIC_API(intN)
 JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
@@ -2938,7 +2958,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     scope = js_GetMutableScope(cx, obj);
     if (scope) {
         SCOPE_SET_SEALED(scope);
-        SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
+        js_MakeScopeShapeUnique(cx, scope);
     }
     JS_UNLOCK_OBJ(cx, obj);
     if (!scope)

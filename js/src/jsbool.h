@@ -54,12 +54,16 @@ JS_BEGIN_EXTERN_C
  * used in the interpreter to represent "no exception pending".  In general it
  * can be used to represent "no value".
  *
+ * A JSVAL_HOLE can be cheaply converted to undefined without affecting any
+ * other boolean (or pseudo boolean) by masking out JSVAL_HOLE_MASK.
+ *
  * JSVAL_ARETURN is used to throw asynchronous return for generator.close().
  *
  * NB: PSEUDO_BOOLEAN_TO_JSVAL(2) is JSVAL_VOID (see jsapi.h).
  */
-#define JSVAL_HOLE      PSEUDO_BOOLEAN_TO_JSVAL(3)
-#define JSVAL_ARETURN   PSEUDO_BOOLEAN_TO_JSVAL(4)
+#define JSVAL_HOLE_FLAG jsval(4 << JSVAL_TAGBITS)
+#define JSVAL_HOLE      (JSVAL_VOID | JSVAL_HOLE_FLAG)
+#define JSVAL_ARETURN   PSEUDO_BOOLEAN_TO_JSVAL(8)
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_TO_PUBLIC_PSEUDO_BOOLEAN(jsval v)
