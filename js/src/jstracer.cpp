@@ -6084,9 +6084,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                     OBJ_DROP_PROPERTY(cx, obj2, prop);
                     ABORT_TRACE("property found on non-native object");
                 }
-                entry = js_FillPropertyCache(cx, aobj, OBJ_SHAPE(aobj), 0,
-                                             protoIndex, obj2,
-                                             (JSScopeProperty*) prop);
+                entry = js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2,
+                                             (JSScopeProperty*) prop, false);
                 JS_ASSERT(entry);
                 if (entry == JS_NO_PROP_CACHE_FILL)
                     entry = NULL;

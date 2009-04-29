@@ -3714,14 +3714,13 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSClass *clasp;
     JSScope *scope;
     JSScopeProperty *sprop;
+    bool added;
     JSPropCacheEntry *entry;
 
     js_LeaveTraceIfGlobalObject(cx, obj);
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-
-    uint32 shape = OBJ_SHAPE(obj);
 
 #if JS_HAS_GETTER_SETTER
     /*
@@ -3790,6 +3789,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (!scope)
         goto bad;
 
+    added = false;
     if (!sprop) {
         /* Add a new property, or replace an existing one of the same id. */
         if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
@@ -3799,6 +3799,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                                     shortid);
         if (!sprop)
             goto bad;
+        added = true;
     }
 
     /* Store value before calling addProperty, in case the latter GC's. */
@@ -3814,7 +3815,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (cacheResult) {
         JS_ASSERT_NOT_ON_TRACE(cx);
         if (!(attrs & JSPROP_SHARED))
-            entry = js_FillPropertyCache(cx, obj, shape, 0, 0, obj, sprop);
+            entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
         else
             PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
     }
@@ -4034,14 +4035,12 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                       JSObject **objp, JSObject **pobjp, JSProperty **propp)
 {
     JSObject *scopeChain, *obj, *parent, *pobj;
-    uint32 shape;
     JSPropCacheEntry *entry;
     int scopeIndex, protoIndex;
     JSProperty *prop;
 
     JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
     scopeChain = js_GetTopStackFrame(cx)->scopeChain;
-    shape = OBJ_SHAPE(scopeChain);
 
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
@@ -4080,9 +4079,9 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
             }
 #endif
             if (cacheResult) {
-                entry = js_FillPropertyCache(cx, scopeChain, shape,
+                entry = js_FillPropertyCache(cx, scopeChain,
                                              scopeIndex, protoIndex, pobj,
-                                             (JSScopeProperty *) prop);
+                                             (JSScopeProperty *) prop, false);
             }
             SCOPE_DEPTH_ACCUM(&rt->scopeSearchDepthStats, scopeIndex);
             goto out;
@@ -4163,9 +4162,9 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
 #ifdef DEBUG
             JSPropCacheEntry *entry =
 #endif
-            js_FillPropertyCache(cx, scopeChain, OBJ_SHAPE(scopeChain),
+            js_FillPropertyCache(cx, scopeChain,
                                  scopeIndex, protoIndex, pobj,
-                                 (JSScopeProperty *) prop);
+                                 (JSScopeProperty *) prop, false);
             JS_ASSERT(entry);
             JS_UNLOCK_OBJ(cx, pobj);
             return obj;
@@ -4310,7 +4309,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                      jsval *vp)
 {
     JSObject *aobj, *obj2;
-    uint32 shape;
     int protoIndex;
     JSProperty *prop;
     JSScopeProperty *sprop;
@@ -4320,7 +4318,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     CHECK_FOR_STRING_INDEX(id);
 
     aobj = js_GetProtoIfDenseArray(cx, obj);
-    shape = OBJ_SHAPE(aobj);
     protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags,
                                             &obj2, &prop);
     if (protoIndex < 0)
@@ -4396,7 +4393,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
 
     if (cacheResult) {
         JS_ASSERT_NOT_ON_TRACE(cx);
-        js_FillPropertyCache(cx, aobj, shape, 0, protoIndex, obj2, sprop);
+        js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2, sprop, false);
     }
     JS_UNLOCK_OBJ(cx, obj2);
     return JS_TRUE;
@@ -4449,7 +4446,6 @@ JSPropCacheEntry *
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                      jsval *vp)
 {
-    uint32 shape;
     int protoIndex;
     JSObject *pobj;
     JSProperty *prop;
@@ -4459,6 +4455,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     intN shortid;
     JSClass *clasp;
     JSPropertyOp getter, setter;
+    bool added;
     JSPropCacheEntry *entry;
 
     /* Convert string indices to integers if appropriate. */
@@ -4473,7 +4470,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
         goto read_only_error;
     }
 
-    shape = OBJ_SHAPE(obj);
     protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
                                             &pobj, &prop);
     if (protoIndex < 0)
@@ -4601,6 +4597,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
 #endif
     }
 
+    added = false;
     if (!sprop) {
         /*
          * Purge the property cache of now-shadowed id in obj's scope chain.
@@ -4637,6 +4634,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                             js_RemoveScopeProperty(cx, scope, id);
                             JS_UNLOCK_SCOPE(cx, scope);
                             return NULL);
+        added = true;
     }
 
     if (!js_NativeSet(cx, obj, sprop, vp))
@@ -4646,10 +4644,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     if (cacheResult) {
         JS_ASSERT_NOT_ON_TRACE(cx);
         if (!(attrs & JSPROP_SHARED))
-            entry = js_FillPropertyCache(cx, obj, shape, 0, 0, obj, sprop);
+            entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
         else
             PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
-
     }
     JS_UNLOCK_SCOPE(cx, scope);
     return entry;
