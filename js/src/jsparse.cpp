@@ -854,6 +854,11 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
 
     /* Null script early in case of error, to reduce our code footprint. */
     script = NULL;
+#if JS_HAS_XML_SUPPORT
+    pn = NULL;
+    bool onlyXML = true;
+#endif
+
     for (;;) {
         jsc.tokenStream.flags |= TSF_OPERAND;
         tt = js_PeekToken(cx, &jsc.tokenStream);
@@ -881,8 +886,29 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
 
         if (!js_EmitTree(cx, &cg, pn))
             goto out;
+#if JS_HAS_XML_SUPPORT
+        if (PN_TYPE(pn) != TOK_SEMI ||
+            !pn->pn_kid ||
+            !TREE_TYPE_IS_XML(PN_TYPE(pn->pn_kid))) {
+            onlyXML = false;
+        }
+#endif
         RecycleTree(pn, &cg);
     }
+
+#if JS_HAS_XML_SUPPORT
+    /*
+     * Prevent XML data theft via <script src="http://victim.com/foo.xml">.
+     * For background, see:
+     *
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
+     */
+    if (pn && onlyXML && (tcflags & TCF_NO_SCRIPT_RVAL)) {
+        js_ReportCompileErrorNumber(cx, &jsc.tokenStream, NULL, JSREPORT_ERROR,
+                                    JSMSG_XML_WHOLE_PROGRAM);
+        goto out;
+    }
+#endif
 
     /*
      * Global variables and regexps share the index space with locals. Due to

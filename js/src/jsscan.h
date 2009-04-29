@@ -149,7 +149,11 @@ typedef enum JSTokenType {
     ((uintN)((tt) - TOK_NAME) <= (uintN)(TOK_PRIMARY - TOK_NAME))
 
 #define TOKEN_TYPE_IS_XML(tt) \
-    (tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME)
+    ((tt) == TOK_AT || (tt) == TOK_DBLCOLON || (tt) == TOK_ANYNAME)
+
+#define TREE_TYPE_IS_XML(tt)                                                  \
+    ((tt) == TOK_XMLCOMMENT || (tt) == TOK_XMLCDATA || (tt) == TOK_XMLPI ||   \
+     (tt) == TOK_XMLELEM || (tt) == TOK_XMLLIST)
 
 #if JS_HAS_BLOCK_SCOPE
 # define TOKEN_TYPE_IS_DECL(tt) ((tt) == TOK_VAR || (tt) == TOK_LET)
