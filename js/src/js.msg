@@ -158,7 +158,7 @@ MSG_DEF(JSMSG_PAREN_AFTER_COND,        75, 0, JSEXN_SYNTAXERR, "missing ) after 
 MSG_DEF(JSMSG_DESTRUCT_DUP_ARG,        76, 0, JSEXN_SYNTAXERR, "duplicate argument is mixed with destructuring pattern")
 MSG_DEF(JSMSG_NAME_AFTER_DOT,          77, 0, JSEXN_SYNTAXERR, "missing name after . operator")
 MSG_DEF(JSMSG_BRACKET_IN_INDEX,        78, 0, JSEXN_SYNTAXERR, "missing ] in index expression")
-MSG_DEF(JSMSG_UNUSED79,                79, 0, JSEXN_NONE, "unused79")
+MSG_DEF(JSMSG_XML_WHOLE_PROGRAM,       79, 0, JSEXN_SYNTAXERR, "XML cannot be the whole program")
 MSG_DEF(JSMSG_PAREN_BEFORE_SWITCH,     80, 0, JSEXN_SYNTAXERR, "missing ( before switch expression")
 MSG_DEF(JSMSG_PAREN_AFTER_SWITCH,      81, 0, JSEXN_SYNTAXERR, "missing ) after switch expression")
 MSG_DEF(JSMSG_CURLY_BEFORE_SWITCH,     82, 0, JSEXN_SYNTAXERR, "missing { before switch body")
