@@ -26,6 +26,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03-j.html mixedChartype-0
 == 258928-1.html 258928-1-ref.html
 == 299065-1.html 299065-1-ref.html
 == 305643-1.html 305643-1-ref.html
+== 332655-1.html 332655-1-ref.html
+== 332655-2.html 332655-2-ref.html
 == 381279-1.html 381279-1-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 386339.html 386339-ref.html
 == 409375.html 409375-ref.html
