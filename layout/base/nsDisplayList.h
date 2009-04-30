@@ -1008,16 +1008,19 @@ public:
 };
 
 /**
- * A simple display item that just renders a solid color across a frame or
+ * A simple display item that just renders a solid color across the
  * specified bounds. Used in cases where we can't draw the frame tree but
  * we want to draw something to avoid an ugly flash of white when
  * navigating between pages. Also used as a bottom item to ensure that
- * something is painted everywhere.
+ * something is painted everywhere. The bounds can differ from the frame's
+ * bounds -- this is needed when a frame/iframe is loading and there is not
+ * yet a frame tree to go in the frame/iframe so we use the subdoc frame
+ * of the parent document as a standin.
  */
 class nsDisplaySolidColor : public nsDisplayItem {
 public:
-  nsDisplaySolidColor(const nsRect& aBounds, nscolor aColor)
-    : nsDisplayItem(nsnull), mBounds(aBounds), mColor(aColor) {
+  nsDisplaySolidColor(nsIFrame* aFrame, const nsRect& aBounds, nscolor aColor)
+    : nsDisplayItem(aFrame), mBounds(aBounds), mColor(aColor) {
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1036,9 +1039,6 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
-
-  virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                    nsRegion* aVisibleRegion);
 
   NS_DISPLAY_DECL_NAME("SolidColor")
 private:

@@ -351,6 +351,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                          GetOffsetTo(aBuilder->ReferenceFrame());
     rv = aLists.Content()->AppendNewToBottom(
              new (aBuilder) nsDisplaySolidColor(
+                  f ? f : this,
                   shellBounds,
                   presShell->GetCanvasBackground()));
   }
