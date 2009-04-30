@@ -153,6 +153,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       rv = aBuilder->ProcessBase(mNode);
       return rv;
     }
+    case eTreeOpProcessMeta: {
+      rv = aBuilder->ProcessMeta(mNode);
+      return rv;    
+    }
     case eTreeOpStartLayout: {
       aBuilder->StartLayout(); // this causes a flush anyway
       return rv;
