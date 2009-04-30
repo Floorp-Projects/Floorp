@@ -2253,7 +2253,11 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsACString &aTitle)
       "UPDATE moz_bookmarks SET title = ?1, lastModified = ?2 WHERE id = ?3"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindUTF8StringParameter(0, aTitle);
+  // Support setting a null title, we support this in insertBookmark.
+  if (aTitle.IsVoid())
+    rv = mDBInsertBookmark->BindNullParameter(0);
+  else
+    rv = statement->BindUTF8StringParameter(0, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindInt64Parameter(1, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
