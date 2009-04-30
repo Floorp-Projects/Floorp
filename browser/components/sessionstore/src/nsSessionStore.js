@@ -1865,31 +1865,33 @@ SessionStoreService.prototype = {
       browser.parentNode.__SS_data = aTabData[t];
     }
     
-    // Determine if we can optimize & load visible tabs first
-    let tabScrollBoxObject = tabbrowser.tabContainer.mTabstrip.scrollBoxObject;
-    let tabBoxObject = aTabs[0].boxObject;
-    let maxVisibleTabs = Math.ceil(tabScrollBoxObject.width / tabBoxObject.width);
+    if (aTabs.length > 0) {
+      // Determine if we can optimize & load visible tabs first
+      let tabScrollBoxObject = tabbrowser.tabContainer.mTabstrip.scrollBoxObject;
+      let tabBoxObject = aTabs[0].boxObject;
+      let maxVisibleTabs = Math.ceil(tabScrollBoxObject.width / tabBoxObject.width);
 
-    // make sure we restore visible tabs first, if there are enough
-    if (maxVisibleTabs < aTabs.length && aSelectTab > 1) {
-      let firstVisibleTab = 0;
-      if (aTabs.length - maxVisibleTabs > aSelectTab) {
-        // aSelectTab is leftmost since we scroll to it when possible
-        firstVisibleTab = aSelectTab - 1;
-      } else {
-        // aSelectTab is rightmost or no more room to scroll right
-        firstVisibleTab = aTabs.length - maxVisibleTabs;
+      // make sure we restore visible tabs first, if there are enough
+      if (maxVisibleTabs < aTabs.length && aSelectTab > 1) {
+        let firstVisibleTab = 0;
+        if (aTabs.length - maxVisibleTabs > aSelectTab) {
+          // aSelectTab is leftmost since we scroll to it when possible
+          firstVisibleTab = aSelectTab - 1;
+        } else {
+          // aSelectTab is rightmost or no more room to scroll right
+          firstVisibleTab = aTabs.length - maxVisibleTabs;
+        }
+        aTabs = aTabs.splice(firstVisibleTab, maxVisibleTabs).concat(aTabs);
+        aTabData = aTabData.splice(firstVisibleTab, maxVisibleTabs).concat(aTabData);
+        aSelectTab -= firstVisibleTab;
       }
-      aTabs = aTabs.splice(firstVisibleTab, maxVisibleTabs).concat(aTabs);
-      aTabData = aTabData.splice(firstVisibleTab, maxVisibleTabs).concat(aTabData);
-      aSelectTab -= firstVisibleTab;
-    }
 
-    // make sure to restore the selected tab first (if any)
-    if (aSelectTab-- && aTabs[aSelectTab]) {
+      // make sure to restore the selected tab first (if any)
+      if (aSelectTab-- && aTabs[aSelectTab]) {
         aTabs.unshift(aTabs.splice(aSelectTab, 1)[0]);
         aTabData.unshift(aTabData.splice(aSelectTab, 1)[0]);
         tabbrowser.selectedTab = aTabs[0];
+      }
     }
 
     if (!this._isWindowLoaded(aWindow)) {
