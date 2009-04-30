@@ -303,7 +303,9 @@ TaggingService.prototype = {
     }
 
     // sort the tag list
-    tags.sort();
+    tags.sort(function(a, b) {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+      });
     aCount.value = tags.length;
     return tags;
   },
@@ -335,7 +337,9 @@ TaggingService.prototype = {
     for (var i in this._tagFolders)
       allTags.push(this._tagFolders[i]);
     // sort the tag list
-    allTags.sort();
+    allTags.sort(function(a, b) {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+      });
     return allTags;
   },
 
@@ -595,7 +599,8 @@ TagAutoCompleteSearch.prototype = {
         if (self._stopped)
           yield false;
         // for each match, prepend what the user has typed so far
-        if (searchResults[i].indexOf(searchString) == 0 &&
+        if (searchResults[i].toLowerCase()
+                            .indexOf(searchString.toLowerCase()) == 0 &&
             comments.indexOf(searchResults[i]) == -1) {
           results.push(before + searchResults[i]);
           comments.push(searchResults[i]);
