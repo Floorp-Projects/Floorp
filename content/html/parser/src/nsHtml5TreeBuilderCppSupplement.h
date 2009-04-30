@@ -319,7 +319,13 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
       // XXX if null, OOM!
       treeOp->Init(eTreeOpStartLayout, nsnull);
+    } else if (aName == nsHtml5Atoms::html) {
+      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+      // XXX if null, OOM!
+      treeOp->Init(eTreeOpProcessOfflineManifest, aElement);
+      return;
     }
+
   }
   #if 0
     else {

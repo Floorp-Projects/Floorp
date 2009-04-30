@@ -242,12 +242,14 @@ protected:
                                        nsIURI **aManifestURI,
                                        CacheSelectionAction *aAction);
 
+public:
   // Searches for the offline cache manifest attribute and calls one
   // of the above defined methods to select the document's application
   // cache, let it be associated with the document and eventually
   // schedule the cache update process.
   void ProcessOfflineManifest(nsIContent *aElement);
 
+protected:
   // Tries to scroll to the URI's named anchor. Once we've successfully
   // done that, further calls to this method will be ignored.
   void ScrollToRef();
