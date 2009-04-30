@@ -130,7 +130,7 @@ function ensure_tag_results(results, searchTerm)
     for (var i=0; i<controller.matchCount; i++) {
       do_check_eq(controller.getValueAt(i), results[i]);
     }
-   
+
     if (current_test < (tests.length - 1)) {
       current_test++;
       tests[current_test]();
@@ -147,13 +147,15 @@ function ensure_tag_results(results, searchTerm)
 var uri1 = uri("http://site.tld/1");
   
 var tests = [
-  function test1() { ensure_tag_results(["bar", "baz", "boo"], "b"); },
-  function test2() { ensure_tag_results(["bar", "baz"], "ba"); },
-  function test3() { ensure_tag_results(["bar"], "bar"); }, 
-  function test4() { ensure_tag_results([], "barb"); }, 
-  function test5() { ensure_tag_results([], "foo"); },
-  function test6() { ensure_tag_results(["first tag, bar", "first tag, baz"], "first tag, ba"); },
-  function test7() { ensure_tag_results(["first tag;  bar", "first tag;  baz"], "first tag;  ba"); }
+  function test1() { ensure_tag_results(["bar", "Baz", "boo"], "b"); },
+  function test2() { ensure_tag_results(["bar", "Baz"], "ba"); },
+  function test3() { ensure_tag_results(["bar", "Baz"], "Ba"); },
+  function test4() { ensure_tag_results(["bar"], "bar"); },
+  function test5() { ensure_tag_results(["Baz"], "Baz"); }, 
+  function test6() { ensure_tag_results([], "barb"); }, 
+  function test7() { ensure_tag_results([], "foo"); },
+  function test8() { ensure_tag_results(["first tag, bar", "first tag, Baz"], "first tag, ba"); },
+  function test9() { ensure_tag_results(["first tag;  bar", "first tag;  Baz"], "first tag;  ba"); }
 ];
 
 /** 
@@ -163,7 +165,7 @@ function run_test() {
   // Search is asynchronous, so don't let the test finish immediately
   do_test_pending();
 
-  tagssvc.tagURI(uri1, ["bar", "baz", "boo", "*nix"]);
+  tagssvc.tagURI(uri1, ["bar", "Baz", "boo", "*nix"]);
 
   tests[0]();
 }
