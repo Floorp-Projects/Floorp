@@ -404,6 +404,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
 
   // Some HTML nodes need DoneAddingChildren() called to initialize
   // properly (eg form state restoration).
+  // XXX expose ElementName group here and do switch
   if (aName == nsHtml5Atoms::select ||
         aName == nsHtml5Atoms::textarea ||
 #ifdef MOZ_MEDIA
@@ -415,6 +416,14 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     // XXX if null, OOM!
     treeOp->Init(eTreeOpDoneAddingChildren, aElement);
+    return;
+  }
+
+  if (aName == nsHtml5Atoms::input ||
+      aName == nsHtml5Atoms::button) {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpDoneCreatingElement, aElement);
     return;
   }
   
