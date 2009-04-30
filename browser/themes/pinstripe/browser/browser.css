@@ -267,24 +267,7 @@ toolbarbutton.bookmark-item-microsummarized {
 }
 
 .bookmarks-toolbar-customize {
-  display: none;
   max-width: 15em !important;
-}
-
-toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-customize {
-  display: -moz-box;
-}
-
-toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-overflow-items {
-  visibility: hidden;
-}
-
-toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
-  visibility: hidden;
-}
-
-toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
-  display: none;
 }
 
 /* ----- BOOKMARK MENUS ----- */	
