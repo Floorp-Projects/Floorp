@@ -64,6 +64,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <stdlib.h>
 #include <utime.h>
 
@@ -1513,30 +1514,18 @@ NS_IMETHODIMP nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Check we are correctly initialized.
-  CHECK_mBaseURL();
-
   NS_ENSURE_ARG_POINTER(aDiskSpaceAvailable);
-  
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
+
+  nsCAutoString path;
+  nsresult rv = GetPathInternal(path);
   if (NS_FAILED(rv))
     return rv;
-    
-  OSErr err;
-  FSCatalogInfo catalogInfo;
-  err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoVolume, &catalogInfo,
-                           nsnull, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-  
-  FSVolumeInfo volumeInfo;  
-  err = ::FSGetVolumeInfo(catalogInfo.volume, 0, nsnull, kFSVolInfoSizes,
-                          &volumeInfo, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-    
-  *aDiskSpaceAvailable = volumeInfo.freeBytes;
+
+  struct STATVFS fs_buf;
+  if (STATVFS(path.get(), &fs_buf) < 0)
+    return NS_ERROR_FAILURE;
+  // minus one block for fuzz
+  *aDiskSpaceAvailable = (PRInt64)fs_buf.f_frsize * (fs_buf.f_bavail - 1);
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
