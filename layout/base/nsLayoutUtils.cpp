@@ -1078,6 +1078,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     // cases we might not have a root frame, so this will prevent garbage
     // from being drawn.
     rv = list.AppendNewToBottom(new (&builder) nsDisplaySolidColor(
+           aFrame,
            nsRect(builder.ToReferenceFrame(aFrame), aFrame->GetSize()),
            aBackground));
     NS_ENSURE_SUCCESS(rv, rv);

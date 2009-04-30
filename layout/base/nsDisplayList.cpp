@@ -500,22 +500,6 @@ void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
   aCtx->FillRect(dirty);
 }
 
-// Even though we aren't supposed to, we need to override this because
-// we have no frame.
-PRBool
-nsDisplaySolidColor::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                        nsRegion* aVisibleRegion) {
-  // Do what nsDisplayItem::OptimizeVisibility would do but without a frame.
-  if (!aVisibleRegion->Intersects(mBounds))
-    return PR_FALSE;
-
-  if (IsOpaque(aBuilder)) {
-    aVisibleRegion->SimpleSubtract(mBounds);
-  }
-
-  return PR_TRUE;
-}
-
 // Returns TRUE if aContainedRect is guaranteed to be contained in
 // the rounded rect defined by aRoundedRect and aRadii. Complex cases are
 // handled conservatively by returning FALSE in some situations where
