@@ -621,7 +621,6 @@ public:
     JS_REQUIRES_STACK bool record_EnterFrame();
     JS_REQUIRES_STACK bool record_LeaveFrame();
     JS_REQUIRES_STACK bool record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop);
-    JS_REQUIRES_STACK bool record_SetPropMiss(JSPropCacheEntry* entry);
     JS_REQUIRES_STACK bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK bool record_FastNativeCallComplete();
 

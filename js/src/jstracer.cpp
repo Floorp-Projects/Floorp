@@ -7503,19 +7503,33 @@ TraceRecorder::record_JSOP_SETPROP()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop)
 {
+    if (entry == JS_NO_PROP_CACHE_FILL)
+        ABORT_TRACE("can't trace uncacheable property set");
+    if (PCVCAP_TAG(entry->vcap) >= 1)
+        ABORT_TRACE("can't trace inherited property set");
+
     jsbytecode* pc = cx->fp->regs->pc;
+    JS_ASSERT(entry->kpc == pc);
+
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
+    JSScope* scope = OBJ_SCOPE(obj);
 
-    if (!isValidSlot(OBJ_SCOPE(obj), sprop))
+#ifdef DEBUG
+    JS_ASSERT(scope->object == obj);
+    JS_ASSERT(scope->shape == PCVCAP_SHAPE(entry->vcap));
+    JS_ASSERT(SCOPE_HAS_PROPERTY(scope, sprop));
+#endif
+
+    if (!isValidSlot(scope, sprop))
         return false;
 
     if (obj == globalObj) {
-        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)));
+        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
         uint32 slot = sprop->slot;
         if (!lazilyImportGlobalSlot(slot))
             ABORT_TRACE("lazy import of global slot failed");
@@ -7564,26 +7578,6 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     if (*pc != JSOP_INITPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
         set(&l, v_ins);
     return true;
-}
-
-JS_REQUIRES_STACK bool
-TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
-{
-    if (entry == JS_NO_PROP_CACHE_FILL || entry->kpc != cx->fp->regs->pc || !PCVAL_IS_SPROP(entry->vword))
-        ABORT_TRACE("can't trace uncacheable property set");
-
-    JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
-
-#ifdef DEBUG
-    jsval& l = stackval(-2);
-    JSObject* obj = JSVAL_TO_OBJECT(l);
-    JSScope* scope = OBJ_SCOPE(obj);
-    JS_ASSERT(scope->object == obj);
-    JS_ASSERT(scope->shape == PCVCAP_SHAPE(entry->vcap));
-    JS_ASSERT(SCOPE_HAS_PROPERTY(scope, sprop));
-#endif
-
-    return record_SetPropHit(entry, sprop);
 }
 
 /* Functions used by JSOP_GETELEM. */
