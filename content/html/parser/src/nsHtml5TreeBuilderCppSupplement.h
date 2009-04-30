@@ -435,11 +435,12 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   }
   
   if (aName == nsHtml5Atoms::meta) {
-    /* Call the nsContentSink method. */
-//    mParser->ProcessMETATag(aElement);
-    // XXX nsresult
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpProcessMeta, aElement);
     return;
   }
+
   return;
 }
 
