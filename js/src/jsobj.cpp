@@ -3678,8 +3678,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                   JSProperty **propp)
 {
-    return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter, attrs,
-                                     0, 0, propp);
+    return js_DefineNativeProperty(cx, obj, id, value, getter, setter, attrs,
+                                   0, 0, propp);
 }
 
 /*
@@ -3705,7 +3705,7 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         }                                                                     \
     JS_END_MACRO
 
-JSPropCacheEntry *
+JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
@@ -3715,7 +3715,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSScope *scope;
     JSScopeProperty *sprop;
     bool added;
-    JSPropCacheEntry *entry;
 
     js_LeaveTraceIfGlobalObject(cx, obj);
 
@@ -3742,7 +3741,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
          * the property cache line for (obj, id) to map sprop.
          */
         if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
-            return NULL;
+            return JS_FALSE;
         sprop = (JSScopeProperty *) prop;
         if (sprop &&
             pobj == obj &&
@@ -3811,23 +3810,21 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         js_RemoveScopeProperty(cx, scope, id);
                         goto bad);
 
-    entry = JS_NO_PROP_CACHE_FILL;
     if (cacheResult) {
         JS_ASSERT_NOT_ON_TRACE(cx);
-        if (!(attrs & JSPROP_SHARED))
-            entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
-        else
-            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+        JSPropCacheEntry *entry;
+        entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
+        TRACE_2(SetPropHit, entry, sprop);
     }
     if (propp)
         *propp = (JSProperty *) sprop;
     else
         JS_UNLOCK_OBJ(cx, obj);
-    return entry;
+    return JS_TRUE;
 
 bad:
     JS_UNLOCK_OBJ(cx, obj);
-    return NULL;
+    return JS_FALSE;
 }
 
 JS_FRIEND_API(JSBool)
@@ -4388,13 +4385,15 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     }
 
     sprop = (JSScopeProperty *) prop;
-    if (!js_NativeGet(cx, obj, obj2, sprop, vp))
-        return JS_FALSE;
 
     if (cacheResult) {
         JS_ASSERT_NOT_ON_TRACE(cx);
         js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2, sprop, false);
     }
+
+    if (!js_NativeGet(cx, obj, obj2, sprop, vp))
+        return JS_FALSE;
+
     JS_UNLOCK_OBJ(cx, obj2);
     return JS_TRUE;
 }
@@ -4442,7 +4441,11 @@ js_CheckUndeclaredVarAssignment(JSContext *cx)
                                         JSMSG_UNDECLARED_VAR, bytes);
 }
 
-JSPropCacheEntry *
+/*
+ * Note: all non-error exits in this function must notify the tracer using
+ * SetPropHit when called from the interpreter loop (cacheResult is true).
+ */
+JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                      jsval *vp)
 {
@@ -4456,7 +4459,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     JSClass *clasp;
     JSPropertyOp getter, setter;
     bool added;
-    JSPropCacheEntry *entry;
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
@@ -4473,7 +4475,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
                                             &pobj, &prop);
     if (protoIndex < 0)
-        return NULL;
+        return JS_FALSE;
     if (prop) {
         if (!OBJ_IS_NATIVE(pobj)) {
             OBJ_DROP_PROPERTY(cx, pobj, prop);
@@ -4484,7 +4486,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
         JS_ASSERT(OBJ_GET_CLASS(cx, obj) != &js_BlockClass);
 
         if (!OBJ_GET_PARENT(cx, obj) && !js_CheckUndeclaredVarAssignment(cx))
-            return NULL;
+            return JS_FALSE;
     }
     sprop = (JSScopeProperty *) prop;
 
@@ -4529,7 +4531,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                 if (!JS_HAS_STRICT_OPTION(cx)) {
                     /* Just return true per ECMA if not in strict mode. */
                     PCMETER(cacheResult && JS_PROPERTY_CACHE(cx).rofills++);
-                    return JS_NO_PROP_CACHE_FILL;
+                    if (cacheResult)
+                        TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
+                    return JS_TRUE;
                 }
 
                 /* Strict mode: report a read-only strict warning. */
@@ -4548,24 +4552,21 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
              */
             JS_UNLOCK_SCOPE(cx, scope);
 
-            /*
-             * Don't clone a shared prototype property. Don't fill it in the
-             * property cache either, since the JSOP_SETPROP/JSOP_SETNAME code
-             * in js_Interpret does not handle shared or prototype properties.
-             * Shared prototype properties require more hit qualification than
-             * the fast-path code for those ops, which is targeted on direct,
-             * slot-based properties.
-             */
+            /* Don't clone a shared prototype property. */
             if (attrs & JSPROP_SHARED) {
-                PCMETER(cacheResult && JS_PROPERTY_CACHE(cx).nofills++);
-                if (SPROP_HAS_STUB_SETTER(sprop) &&
-                    !(sprop->attrs & JSPROP_GETTER)) {
-                    return JS_NO_PROP_CACHE_FILL;
+                if (cacheResult) {
+                    JS_ASSERT_NOT_ON_TRACE(cx);
+                    JSPropCacheEntry *entry;
+                    entry = js_FillPropertyCache(cx, obj, 0, protoIndex, pobj, sprop, false);
+                    TRACE_2(SetPropHit, entry, sprop);
                 }
 
-                return js_SetSprop(cx, sprop, obj, vp)
-                       ? JS_NO_PROP_CACHE_FILL
-                       : NULL;
+                if (SPROP_HAS_STUB_SETTER(sprop) &&
+                    !(sprop->attrs & JSPROP_GETTER)) {
+                    return JS_TRUE;
+                }
+
+                return js_SetSprop(cx, sprop, obj, vp);
             }
 
             /* Restore attrs to the ECMA default for new properties. */
@@ -4610,7 +4611,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
         scope = js_GetMutableScope(cx, obj);
         if (!scope) {
             JS_UNLOCK_OBJ(cx, obj);
-            return NULL;
+            return JS_FALSE;
         }
         if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
             attrs |= JSPROP_SHARED;
@@ -4618,7 +4619,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                                     SPROP_INVALID_SLOT, attrs, flags, shortid);
         if (!sprop) {
             JS_UNLOCK_SCOPE(cx, scope);
-            return NULL;
+            return JS_FALSE;
         }
 
         /*
@@ -4633,36 +4634,33 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
         ADD_PROPERTY_HELPER(cx, clasp, obj, scope, sprop, vp,
                             js_RemoveScopeProperty(cx, scope, id);
                             JS_UNLOCK_SCOPE(cx, scope);
-                            return NULL);
+                            return JS_FALSE);
         added = true;
+    }
+
+    if (cacheResult) {
+        JS_ASSERT_NOT_ON_TRACE(cx);
+        JSPropCacheEntry *entry;
+        entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
+        TRACE_2(SetPropHit, entry, sprop);
     }
 
     if (!js_NativeSet(cx, obj, sprop, vp))
         return NULL;
 
-    entry = JS_NO_PROP_CACHE_FILL;
-    if (cacheResult) {
-        JS_ASSERT_NOT_ON_TRACE(cx);
-        if (!(attrs & JSPROP_SHARED))
-            entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
-        else
-            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
-    }
     JS_UNLOCK_SCOPE(cx, scope);
-    return entry;
+    return JS_TRUE;
 
   read_only_error:
     return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
                                     JSDVG_IGNORE_STACK, ID_TO_VALUE(id), NULL,
-                                    NULL, NULL)
-           ? JS_NO_PROP_CACHE_FILL
-           : NULL;
+                                    NULL, NULL);
 }
 
 JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    return !!js_SetPropertyHelper(cx, obj, id, false, vp);
+    return js_SetPropertyHelper(cx, obj, id, false, vp);
 }
 
 JSBool
