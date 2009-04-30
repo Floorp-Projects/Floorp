@@ -138,17 +138,18 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       return rv;
     }
     case eTreeOpDoneAddingChildren: {
-      // aBuilder->FlushPendingAppendNotifications();
       mNode->DoneAddingChildren(PR_FALSE);
       return rv;
     }
+    case eTreeOpDoneCreatingElement: {
+      mNode->DoneCreatingElement();
+      return rv;    
+    }
     case eTreeOpUpdateStyleSheet: {
-      // aBuilder->FlushPendingAppendNotifications();
       aBuilder->UpdateStyleSheet(mNode);
       return rv;
     }
     case eTreeOpProcessBase: {
-      // aBuilder->FlushPendingAppendNotifications();
       rv = aBuilder->ProcessBase(mNode);
       return rv;
     }
