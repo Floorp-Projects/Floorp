@@ -56,6 +56,7 @@ enum eHtml5TreeOperation {
   eTreeOpDoneCreatingElement,
   eTreeOpUpdateStyleSheet,
   eTreeOpProcessBase,
+  eTreeOpProcessMeta,
   eTreeOpStartLayout
 };
 

@@ -145,6 +145,10 @@
       }
       return NS_OK;
     }
+
+    inline nsresult ProcessMeta(nsIContent* aBase) {
+      return mParser->ProcessMETATag(aBase);
+    }
     
     inline void StartLayout() {
       nsIDocument* doc = GetDocument();
