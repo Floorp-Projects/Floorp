@@ -146,8 +146,13 @@
       return NS_OK;
     }
 
-    inline nsresult ProcessMeta(nsIContent* aBase) {
-      return mParser->ProcessMETATag(aBase);
+    inline nsresult ProcessMeta(nsIContent* aMeta) {
+      return mParser->ProcessMETATag(aMeta);
+    }
+
+    inline nsresult ProcessOfflineManifest(nsIContent* aHtml) {
+      mParser->ProcessOfflineManifest(aHtml);
+      return NS_OK;
     }
     
     inline void StartLayout() {
