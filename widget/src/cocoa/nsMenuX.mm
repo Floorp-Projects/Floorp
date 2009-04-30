@@ -162,9 +162,8 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuBarX* aMenuBar, nsIConten
   if (mContent->GetChildCount() == 0)
     mVisible = PR_FALSE;
 
-  NSString *newCocoaLabelString = nsMenuUtilsX::CreateTruncatedCocoaLabel(mLabel);
+  NSString *newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(mLabel);
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
-  [newCocoaLabelString release];
   [mNativeMenuItem setSubmenu:mNativeMenu];
 
   SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
@@ -780,9 +779,8 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
     if (parentType == eMenuBarObjectType) {
       // reuse the existing menu, to avoid rebuilding the root menu bar.
       NS_ASSERTION(mNativeMenu, "nsMenuX::AttributeChanged: invalid menu handle.");
-      NSString *newCocoaLabelString = nsMenuUtilsX::CreateTruncatedCocoaLabel(mLabel);
+      NSString *newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(mLabel);
       [mNativeMenu setTitle:newCocoaLabelString];
-      [newCocoaLabelString release];
     }
     else {
       static_cast<nsMenuX*>(mParent)->SetRebuild(PR_TRUE);
