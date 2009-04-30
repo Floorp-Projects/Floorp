@@ -908,18 +908,12 @@ PlacesController.prototype = {
       if (this._shouldSkipNode(node, removedFolders))
         continue;
 
-      if (PlacesUtils.nodeIsFolder(node)) {
-        // This is a bookmarks folder.  We add it to our array of folders, used
-        // to skip nodes that are children of an already removed folder.
-        removedFolders.push(node);
-      }
-      else if (PlacesUtils.nodeIsTagQuery(node.parent)) {
+      if (PlacesUtils.nodeIsTagQuery(node.parent)) {
         // This is a uri node inside a tag container.  It needs a special
         // untag transaction.
         var tagItemId = PlacesUtils.getConcreteItemId(node.parent);
         var uri = PlacesUtils._uri(node.uri);
         transactions.push(PlacesUIUtils.ptm.untagURI(uri, [tagItemId]));
-        continue;
       }
       else if (PlacesUtils.nodeIsTagQuery(node) && node.parent &&
                PlacesUtils.nodeIsQuery(node.parent) &&
@@ -933,7 +927,6 @@ PlacesController.prototype = {
         var URIs = PlacesUtils.tagging.getURIsForTag(tag);
         for (var j = 0; j < URIs.length; j++)
           transactions.push(PlacesUIUtils.ptm.untagURI(URIs[j], [tag]));
-        continue;
       }
       else if (PlacesUtils.nodeIsURI(node) &&
                PlacesUtils.nodeIsQuery(node.parent) &&
@@ -943,19 +936,26 @@ PlacesController.prototype = {
         var bhist = PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
         bhist.removePage(PlacesUtils._uri(node.uri));
         // History deletes are not undoable, so we don't have a transaction.
-        continue;
       }
-      else if (PlacesUtils.nodeIsQuery(node) &&
+      else if (node.itemId == -1 &&
+               PlacesUtils.nodeIsQuery(node) &&
                asQuery(node).queryOptions.queryType ==
                  Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
-        // This is a special history query, could be a query grouped by site,
-        // time or both.
+        // This is a dynamically generated history query, like queries
+        // grouped by site, time or both.  Dynamically generated queries don't
+        // have an itemId even if they are descendants of a bookmark.
         this._removeHistoryContainer(node);
         // History deletes are not undoable, so we don't have a transaction.
-        continue;
       }
-
-      transactions.push(PlacesUIUtils.ptm.removeItem(node.itemId));
+      else {
+        // This is a common bookmark item.
+        if (PlacesUtils.nodeIsFolder(node)) {
+          // If this is a folder we add it to our array of folders, used
+          // to skip nodes that are children of an already removed folder.
+          removedFolders.push(node);
+        }
+        transactions.push(PlacesUIUtils.ptm.removeItem(node.itemId));
+      }
     }
   },
 
