@@ -137,9 +137,8 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
     mNativeMenuItem = [[NSMenuItem separatorItem] retain];
   }
   else {
-    NSString *newCocoaLabelString = nsMenuUtilsX::CreateTruncatedCocoaLabel(aLabel);
+    NSString *newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(aLabel);
     mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
-    [newCocoaLabelString release];
 
     [mNativeMenuItem setEnabled:(BOOL)isEnabled];
 
