@@ -55,6 +55,13 @@ class nsDirEnumerator;
 #define LSTAT lstat
 #endif
 
+// Mac OS X 10.4 does not have statvfs64
+#if defined(HAVE_STATVFS64) && (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_4)
+#define STATVFS statvfs64
+#else
+#define STATVFS statvfs
+#endif
+
 // The native charset of this implementation is UTF-8. The Unicode used by the
 // Mac OS file system is decomposed, so "Native" versions of these routines will
 // always use decomposed Unicode (NFD). Their "non-Native" counterparts are 

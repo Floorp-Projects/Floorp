@@ -126,7 +126,8 @@ interface nsILocalFile : nsIFile
      * responsible for calling PR_UnloadLibrary on the result.
      */
     [noscript] PRLibraryStar  load();
-    
+
+    // number of bytes available on disk to non-superuser
     readonly attribute PRInt64 diskSpaceAvailable;
 
     /**
