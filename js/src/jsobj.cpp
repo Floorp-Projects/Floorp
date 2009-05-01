@@ -240,7 +240,7 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_FALSE;
     }
 
-    return js_SetProtoOrParent(cx, obj, slot, pobj);
+    return js_SetProtoOrParent(cx, obj, slot, pobj, JS_TRUE);
 }
 
 static JSBool
@@ -279,45 +279,66 @@ out:
 #endif /* !JS_HAS_OBJ_PROTO_PROP */
 
 JSBool
-js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
+js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
+                    JSBool checkForCycles)
 {
-    JSSetSlotRequest ssr;
-    JSRuntime *rt;
+    JS_ASSERT(slot == JSSLOT_PARENT || slot == JSSLOT_PROTO);
+    JS_ASSERT(obj != pobj);
 
-    /* Optimize the null case to avoid the unnecessary overhead of js_GC. */
-    if (!pobj) {
-        JS_LOCK_OBJ(cx, obj);
-        if (slot == JSSLOT_PROTO && !js_GetMutableScope(cx, obj)) {
-            JS_UNLOCK_OBJ(cx, obj);
-            return JS_FALSE;
-        }
-        LOCKED_OBJ_SET_SLOT(obj, slot, JSVAL_NULL);
+    if (slot == JSSLOT_PROTO) {
         JS_UNLOCK_OBJ(cx, obj);
-        return JS_TRUE;
+        bool ok = !!js_GetMutableScope(cx, obj);
+        JS_UNLOCK_OBJ(cx, obj);
+        if (!ok)
+            return JS_FALSE;
+
+        /*
+         * Regenerate property cache shape ids for all of the scopes along the
+         * old prototype chain to invalidate their property cache entries, in
+         * case any entries were filled by looking up starting from obj.
+         */
+        JSObject *oldproto = STOBJ_GET_PROTO(obj);
+        while (oldproto && OBJ_IS_NATIVE(oldproto)) {
+            JS_LOCK_OBJ(cx, oldproto);
+            JSScope *scope = OBJ_SCOPE(oldproto);
+            js_MakeScopeShapeUnique(cx, scope);
+            JSObject *tmp = STOBJ_GET_PROTO(scope->object);
+            JS_UNLOCK_OBJ(cx, oldproto);
+            oldproto = tmp;
+        }
     }
 
-    ssr.obj = obj;
-    ssr.pobj = pobj;
-    ssr.slot = (uint16) slot;
-    ssr.errnum = (uint16) JSMSG_NOT_AN_ERROR;
+    if (!pobj || !checkForCycles) {
+        if (slot == JSSLOT_PROTO)
+            STOBJ_SET_PROTO(obj, pobj);
+        else
+            STOBJ_SET_PARENT(obj, pobj);
+    } else {
+        /*
+         * Use the GC machinery to serialize access to all objects on the
+         * prototype or parent chain.
+         */
+        JSSetSlotRequest ssr;
+        ssr.obj = obj;
+        ssr.pobj = pobj;
+        ssr.slot = (uint16) slot;
+        ssr.cycle = false;
 
-    rt = cx->runtime;
-    JS_LOCK_GC(rt);
-    ssr.next = rt->setSlotRequests;
-    rt->setSlotRequests = &ssr;
-    for (;;) {
-        js_GC(cx, GC_SET_SLOT_REQUEST);
-        JS_UNLOCK_GC(rt);
-        if (!rt->setSlotRequests)
-            break;
+        JSRuntime *rt = cx->runtime;
         JS_LOCK_GC(rt);
-    }
+        ssr.next = rt->setSlotRequests;
+        rt->setSlotRequests = &ssr;
+        for (;;) {
+            js_GC(cx, GC_SET_SLOT_REQUEST);
+            JS_UNLOCK_GC(rt);
+            if (!rt->setSlotRequests)
+                break;
+            JS_LOCK_GC(rt);
+        }
 
-    if (ssr.errnum != JSMSG_NOT_AN_ERROR) {
-        if (ssr.errnum == JSMSG_OUT_OF_MEMORY) {
-            JS_ReportOutOfMemory(cx);
-        } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, ssr.errnum,
+        if (ssr.cycle) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_CYCLIC_VALUE,
 #if JS_HAS_OBJ_PROTO_PROP
                                  object_props[slot].name
 #else
@@ -325,8 +346,8 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
                                                         : js_parent_str
 #endif
                                  );
+            return JS_FALSE;
         }
-        return JS_FALSE;
     }
     return JS_TRUE;
 }

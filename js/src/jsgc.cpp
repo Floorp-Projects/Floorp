@@ -3200,76 +3200,26 @@ js_TriggerGC(JSContext *cx, JSBool gcLocked)
 static void
 ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
 {
-    JSObject *obj, *pobj;
-    uint32 slot;
-
-    obj = ssr->obj;
-    pobj = ssr->pobj;
-    slot = ssr->slot;
+    JSObject *obj = ssr->obj;
+    JSObject *pobj = ssr->pobj;
+    uint32 slot = ssr->slot;
 
     while (pobj) {
         pobj = js_GetWrappedObject(cx, pobj);
         if (pobj == obj) {
-            ssr->errnum = JSMSG_CYCLIC_VALUE;
+            ssr->cycle = true;
             return;
         }
         pobj = JSVAL_TO_OBJECT(STOBJ_GET_SLOT(pobj, slot));
     }
 
     pobj = ssr->pobj;
-
-    if (slot == JSSLOT_PROTO && OBJ_IS_NATIVE(obj)) {
-        JSScope *scope, *newscope;
-        JSObject *oldproto;
-
-        /* Check to see whether obj shares its prototype's scope. */
-        scope = OBJ_SCOPE(obj);
-        oldproto = STOBJ_GET_PROTO(obj);
-        if (oldproto && OBJ_SCOPE(oldproto) == scope) {
-            /* Either obj needs a new empty scope, or it should share pobj's. */
-            if (!pobj ||
-                !OBJ_IS_NATIVE(pobj) ||
-                OBJ_GET_CLASS(cx, pobj) != STOBJ_GET_CLASS(oldproto)) {
-                /*
-                 * With no proto and no scope of its own, obj is truly empty.
-                 *
-                 * If pobj is not native, obj needs its own empty scope -- it
-                 * should not continue to share oldproto's scope once oldproto
-                 * is not on obj's prototype chain.  That would put properties
-                 * from oldproto's scope ahead of properties defined by pobj,
-                 * in lookup order.
-                 *
-                 * If pobj's class differs from oldproto's, we may need a new
-                 * scope to handle differences in private and reserved slots,
-                 * so we suboptimally but safely make one.
-                 */
-                if (!js_GetMutableScope(cx, obj)) {
-                    ssr->errnum = JSMSG_OUT_OF_MEMORY;
-                    return;
-                }
-            } else if (OBJ_SCOPE(pobj) != scope) {
-                newscope = (JSScope *) js_HoldObjectMap(cx, pobj->map);
-                obj->map = &newscope->map;
-                js_DropObjectMap(cx, &scope->map, obj);
-                JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
-            }
-        }
-
-        /*
-         * Regenerate property cache shape ids for all of the scopes along the
-         * old prototype chain, in case any property cache entries were filled
-         * by looking up starting from obj.
-         */
-        while (oldproto && OBJ_IS_NATIVE(oldproto)) {
-            scope = OBJ_SCOPE(oldproto);
-            js_MakeScopeShapeUnique(cx, scope);
-            oldproto = STOBJ_GET_PROTO(scope->object);
-        }
+    if (slot == JSSLOT_PROTO) {
+        STOBJ_SET_PROTO(obj, pobj);
+    } else {
+        JS_ASSERT(slot == JSSLOT_PARENT);
+        STOBJ_SET_PARENT(obj, pobj);
     }
-
-    /* Finally, do the deed. */
-    STOBJ_SET_SLOT(obj, slot, OBJECT_TO_JSVAL(pobj));
-    STOBJ_SET_DELEGATE(pobj);
 }
 
 void
