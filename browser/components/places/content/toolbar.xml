@@ -64,7 +64,7 @@
           <xul:hbox class="toolbar-drop-indicator"/>
         </xul:hbox>
         <xul:hbox flex="1">
-          <xul:hbox class="bookmarks-toolbar-items places-toolbar-items" flex="1">
+          <xul:hbox class="bookmarks-toolbar-items" flex="1">
             <children/>
           </xul:hbox>
           <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
