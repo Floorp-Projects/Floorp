@@ -94,18 +94,18 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
     """Process the leak log."""
     # For the time being, don't warn (nor "info") if the log file is not there. (Bug 469523)
     if not os.path.exists(leakLogFile):
-      return
+      return None
 
     leaks = open(leakLogFile, "r")
     leakReport = leaks.read()
     leaks.close()
 
     # Only check whether an actual leak was reported.
-    if not "0 TOTAL " in leakReport:
-      return
+    if "0 TOTAL " in leakReport:
+      # For the time being, simply copy the log. (Bug 469523)
+      print leakReport.rstrip("\n")
 
-    # For the time being, simply copy the log. (Bug 469523)
-    print leakReport.rstrip("\n")
+    return leakReport
 
   if xrePath is None:
     xrePath = os.path.dirname(xpcshell)
@@ -204,7 +204,18 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
         success = False
       else:
         print "TEST-PASS | %s | all tests passed" % test
-      processLeakLog(leakLogFile)
+
+      leakReport = processLeakLog(leakLogFile)
+
+      try:
+        f = open(test + '.log', 'w')
+        f.write(stdout)
+        if leakReport:
+          f.write(leakReport)
+      finally:
+        if f:
+          f.close()
+
       # Remove the leak detection file (here) so it can't "leak" to the next test.
       # The file is not there if leak logging was not enabled in the xpcshell build.
       if os.path.exists(leakLogFile):
