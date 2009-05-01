@@ -596,6 +596,25 @@ static PRStatus CopyHostent(
 	return PR_SUCCESS;
 }
 
+#ifdef SYMBIAN
+/* Set p_aliases by hand because Symbian's getprotobyname() returns NULL. */
+static void AssignAliases(struct protoent *Protoent, char** aliases)
+{
+    if (NULL == Protoent->p_aliases) {
+        if (0 == strcmp(Protoent->p_name, "ip"))
+            aliases[0] = "IP";
+        else if (0 == strcmp(Protoent->p_name, "tcp"))
+            aliases[0] = "TCP";
+        else if (0 == strcmp(Protoent->p_name, "udp"))
+            aliases[0] = "UDP";
+        else
+            aliases[0] = "UNKNOWN";
+        aliases[1] = NULL;
+        Protoent->p_aliases = aliases;
+    }
+}
+#endif
+
 #if !defined(_PR_HAVE_GETPROTO_R)
 /*
 ** Copy a protoent, and all of the memory that it refers to into
@@ -1253,6 +1272,10 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByName(
         }
 		else
 		{
+#if defined(SYMBIAN)
+			char* aliases[2];
+			AssignAliases(staticBuf, aliases);
+#endif
 			rv = CopyProtoent(staticBuf, buffer, buflen, result);
 			if (PR_FAILURE == rv)
 			    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
@@ -1333,6 +1356,10 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByNumber(
         }
 		else
 		{
+#if defined(SYMBIAN)
+			char* aliases[2];
+			AssignAliases(staticBuf, aliases);
+#endif
 			rv = CopyProtoent(staticBuf, buffer, buflen, result);
 			if (PR_FAILURE == rv)
 			    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
