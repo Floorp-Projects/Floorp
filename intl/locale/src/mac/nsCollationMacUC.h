@@ -36,13 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsCollationMacUC_h__
-#define nsCollationMacUC_h__
+#ifndef nsCollationMacUC_h_
+#define nsCollationMacUC_h_
 
 #include "nsICollation.h"
-#include "nsCollation.h"  // static library
-#include <MacLocales.h>
-#include <UnicodeUtilities.h>
+#include "nsCollation.h"
+#include <Carbon/Carbon.h>
 
 // Maximum number of characters for a buffer to remember 
 // the generated collation key.
@@ -79,4 +78,4 @@ private:
   PRUint32 mBufferLen; // byte length of buffer
 };
 
-#endif  /* nsCollationMacUC_h__ */
+#endif  /* nsCollationMacUC_h_ */

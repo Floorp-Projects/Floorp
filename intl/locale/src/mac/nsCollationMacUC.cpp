@@ -36,30 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if TARGET_CARBON
 #include "nsCollationMacUC.h"
 #include "nsILocaleService.h"
 #include "nsIServiceManager.h"
 #include "prmem.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-
 NS_IMPL_ISUPPORTS1(nsCollationMacUC, nsICollation)
-
 
 nsCollationMacUC::nsCollationMacUC() 
   : mInit(PR_FALSE)
   , mHasCollator(PR_FALSE)
-  , mBuffer(nsnull)
+  , mLocale(NULL)
+  , mLastStrength(-1)
+  , mCollator(NULL)
+  , mBuffer(NULL)
   , mBufferLen(1)
 {
 }
 
 nsCollationMacUC::~nsCollationMacUC() 
 {
-  if (mHasCollator) 
-  {
+  if (mHasCollator) {
     OSStatus err = ::UCDisposeCollator(&mCollator);
     mHasCollator = PR_FALSE;
     NS_ASSERTION((err == noErr), "UCDisposeCollator failed");
@@ -67,9 +64,8 @@ nsCollationMacUC::~nsCollationMacUC()
   PR_FREEIF(mBuffer);
 }
 
-nsresult nsCollationMacUC::StrengthToOptions(
-  const PRInt32 aStrength,
-  UCCollateOptions* aOptions)
+nsresult nsCollationMacUC::StrengthToOptions(const PRInt32 aStrength,
+                                             UCCollateOptions* aOptions)
 {
   NS_ENSURE_ARG_POINTER(aOptions);
   NS_ENSURE_TRUE((aStrength < 4), NS_ERROR_FAILURE);
@@ -83,8 +79,7 @@ nsresult nsCollationMacUC::StrengthToOptions(
   return NS_OK;
 }
 
-nsresult nsCollationMacUC::ConvertLocale(
-  nsILocale* aNSLocale, LocaleRef* aMacLocale) 
+nsresult nsCollationMacUC::ConvertLocale(nsILocale* aNSLocale, LocaleRef* aMacLocale) 
 {
   NS_ENSURE_ARG_POINTER(aNSLocale);
   NS_ENSURE_ARG_POINTER(aMacLocale);
@@ -95,23 +90,21 @@ nsresult nsCollationMacUC::ConvertLocale(
   NS_LossyConvertUTF16toASCII tmp(localeString);
   tmp.ReplaceChar('-', '_');
   OSStatus err;
-  err = ::LocaleRefFromLocaleString( tmp.get(), aMacLocale);
+  err = ::LocaleRefFromLocaleString(tmp.get(), aMacLocale);
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
-nsresult nsCollationMacUC::EnsureCollator(
-  const PRInt32 newStrength) 
+nsresult nsCollationMacUC::EnsureCollator(const PRInt32 newStrength) 
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   if (mHasCollator && (mLastStrength == newStrength))
     return NS_OK;
 
   OSStatus err;
-  if (mHasCollator) 
-  {
-    err = ::UCDisposeCollator( &mCollator );
+  if (mHasCollator) {
+    err = ::UCDisposeCollator(&mCollator);
     mHasCollator = PR_FALSE;
     NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
   }
@@ -129,35 +122,29 @@ nsresult nsCollationMacUC::EnsureCollator(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCollationMacUC::Initialize(
-  nsILocale* locale) 
+NS_IMETHODIMP nsCollationMacUC::Initialize(nsILocale* locale) 
 {
   NS_ENSURE_TRUE((!mInit), NS_ERROR_ALREADY_INITIALIZED);
   nsCOMPtr<nsILocale> appLocale;
 
-  nsresult res;
-  if (locale == nsnull) 
-  {
-    nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
-    NS_ENSURE_SUCCESS(res, res);
-    res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
-    NS_ENSURE_SUCCESS(res, res);
+  nsresult rv;
+  if (!locale) {
+    nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
+    NS_ENSURE_SUCCESS(rv, rv);
     locale = appLocale;
   }
 
-  res = ConvertLocale(locale, &mLocale);
-  NS_ENSURE_SUCCESS(res, res);
+  rv = ConvertLocale(locale, &mLocale);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mInit = PR_TRUE;
   return NS_OK;
-};
- 
+}
 
-NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(
-  PRInt32 strength,
-  const nsAString& stringIn,
-  PRUint8** key,
-  PRUint32* outLen)
+NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(PRInt32 strength, const nsAString& stringIn,
+                                                   PRUint8** key, PRUint32* outLen)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(key);
@@ -170,8 +157,9 @@ NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(
   PRUint32 maxKeyLen = (1 + stringInLen) * kCollationValueSizeFactor * sizeof(UCCollationValue);
   if (maxKeyLen > mBufferLen) {
     PRUint32 newBufferLen = mBufferLen;
-    do newBufferLen *= 2;
-    while (maxKeyLen > newBufferLen);
+    do {
+      newBufferLen *= 2;
+    } while (newBufferLen < maxKeyLen);
     void *newBuffer = PR_Malloc(newBufferLen);
     if (!newBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -185,7 +173,7 @@ NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(
   OSStatus err = ::UCGetCollationKey(mCollator, (const UniChar*) PromiseFlatString(stringIn).get(),
                                      (UniCharCount) stringInLen,
                                      (ItemCount) (mBufferLen / sizeof(UCCollationValue)),
-                                     &actual, (UCCollationValue *)key);
+                                     &actual, (UCCollationValue *)mBuffer);
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
 
   PRUint32 keyLength = actual * sizeof(UCCollationValue);
@@ -200,12 +188,8 @@ NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(
   return NS_OK;
 }
 
-    
-NS_IMETHODIMP nsCollationMacUC::CompareString(
-  PRInt32 strength, 
-  const nsAString& string1, 
-  const nsAString& string2, 
-  PRInt32* result) 
+NS_IMETHODIMP nsCollationMacUC::CompareString(PRInt32 strength, const nsAString& string1,
+                                              const nsAString& string2, PRInt32* result) 
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(result);
@@ -225,26 +209,22 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsCollationMacUC::CompareRawSortKey(
-  const PRUint8* key1, PRUint32 len1, 
-  const PRUint8* key2, PRUint32 len2, 
-  PRInt32* result)
+NS_IMETHODIMP nsCollationMacUC::CompareRawSortKey(const PRUint8* key1, PRUint32 len1,
+                                                  const PRUint8* key2, PRUint32 len2,
+                                                  PRInt32* result)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(key1);
   NS_ENSURE_ARG_POINTER(key2);
   NS_ENSURE_ARG_POINTER(result);
   *result = 0;
-  
+
   OSStatus err;
   err = ::UCCompareCollationKeys((const UCCollationValue*) key1, (ItemCount) len1,
                                  (const UCCollationValue*) key2, (ItemCount) len2,
                                  NULL, (SInt32*) result);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
+
   return NS_OK;
 }
-
-
-#endif
