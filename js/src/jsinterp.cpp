@@ -309,7 +309,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         if (op == JSOP_LENGTH) {
             atom = cx->runtime->atomState.lengthAtom;
         } else {
-            pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? 2 : 0;
+            pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
             GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, atom);
         }
         JS_ASSERT_IF(scopeIndex == 0,
@@ -375,7 +375,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     if (op == JSOP_LENGTH) {
         atom = cx->runtime->atomState.lengthAtom;
     } else {
-        pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? 2 : 0;
+        pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
         GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, atom);
     }
 
