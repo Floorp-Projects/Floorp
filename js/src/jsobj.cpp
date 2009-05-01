@@ -3757,7 +3757,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
             /* NB: obj == pobj, so we can share unlock code at the bottom. */
             if (!sprop)
-                goto bad;
+                goto error;
         } else if (prop) {
             /* NB: call OBJ_DROP_PROPERTY, as pobj might not be native. */
             OBJ_DROP_PROPERTY(cx, pobj, prop);
@@ -3786,7 +3786,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     /* Get obj's own scope if it has one, or create a new one for obj. */
     scope = js_GetMutableScope(cx, obj);
     if (!scope)
-        goto bad;
+        goto error;
 
     added = false;
     if (!sprop) {
@@ -3797,7 +3797,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                                     SPROP_INVALID_SLOT, attrs, flags,
                                     shortid);
         if (!sprop)
-            goto bad;
+            goto error;
         added = true;
     }
 
@@ -3808,7 +3808,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     /* XXXbe called with lock held */
     ADD_PROPERTY_HELPER(cx, clasp, obj, scope, sprop, &value,
                         js_RemoveScopeProperty(cx, scope, id);
-                        goto bad);
+                        goto error);
 
     if (cacheResult) {
         JS_ASSERT_NOT_ON_TRACE(cx);
@@ -3822,7 +3822,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         JS_UNLOCK_OBJ(cx, obj);
     return JS_TRUE;
 
-bad:
+error: // TRACE_2 jumps here on error, as well.
     JS_UNLOCK_OBJ(cx, obj);
     return JS_FALSE;
 }
@@ -4534,6 +4534,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                     if (cacheResult)
                         TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
                     return JS_TRUE;
+                error: // TRACE_2 jumps here in case of error.
+                    return JS_FALSE;
                 }
 
                 /* Strict mode: report a read-only strict warning. */
