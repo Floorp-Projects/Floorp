@@ -78,6 +78,18 @@ static nsresult MacErrorMapper(OSErr inErr);
 static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult);
 
 #pragma mark -
+#pragma mark [FSRef operator==]
+
+bool operator==(const FSRef& lhs, const FSRef& rhs)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  return (::FSCompareFSRefs(&lhs, &rhs) == noErr);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+}
+
+#pragma mark -
 #pragma mark [StFollowLinksState]
 
 class StFollowLinksState
@@ -1200,7 +1212,7 @@ NS_IMETHODIMP nsLocalFile::Clone(nsIFile **_retval)
 
 NS_IMETHODIMP nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 {
-  return EqualsInternal(inFile, _retval);
+    return EqualsInternal(inFile, _retval);
 }
 
 nsresult
@@ -1208,18 +1220,34 @@ nsLocalFile::EqualsInternal(nsISupports* inFile, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
+  
+  nsCOMPtr<nsILocalFileMac> inMacFile(do_QueryInterface(inFile));
+  if (!inFile)
+    return NS_OK;
+    
+  nsLocalFile* inLF =
+      static_cast<nsLocalFile*>((nsILocalFileMac*) inMacFile);
 
-  nsCOMPtr<nsILocalFile> inLocalFile(do_QueryInterface(inFile));
-  if (!inLocalFile)
-    return NS_ERROR_FAILURE;
-
+  // If both exist, compare FSRefs
+  FSRef thisFSRef, inFSRef;
+  nsresult rv1 = GetFSRefInternal(thisFSRef);
+  nsresult rv2 = inLF->GetFSRefInternal(inFSRef);
+  if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
+    *_retval = (thisFSRef == inFSRef);
+    return NS_OK;
+  }
+  // If one exists and the other doesn't, not equal  
+  if (rv1 != rv2)
+    return NS_OK;
+    
+  // Arg, we have to get their paths and compare
   nsCAutoString thisPath, inPath;
   if (NS_FAILED(GetNativePath(thisPath)))
     return NS_ERROR_FAILURE;
-  if (NS_FAILED(inLocalFile->GetNativePath(inPath)))
+  if (NS_FAILED(inMacFile->GetNativePath(inPath)))
     return NS_ERROR_FAILURE;
   *_retval = thisPath.Equals(inPath);
-
+  
   return NS_OK;
 }
 
@@ -2247,7 +2275,7 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
 {
-  return EqualsInternal(aOther, aResult);
+    return EqualsInternal(aOther, aResult);
 }
 
 NS_IMETHODIMP
