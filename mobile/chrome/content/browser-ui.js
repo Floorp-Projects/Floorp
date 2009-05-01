@@ -629,9 +629,9 @@ var BookmarkHelper = {
 
     let self = this;
     setTimeout(function() {
-        self._editor.init(itemId);
-        self._editor.startEditing();
-      }, 0);
+      self._editor.init(itemId);
+      self._editor.startEditing();
+    }, 0);
 
     window.addEventListener("keypress", this, true);
   },
