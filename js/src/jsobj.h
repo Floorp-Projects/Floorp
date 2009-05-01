@@ -776,7 +776,8 @@ extern JSBool
 js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 extern JSBool
-js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj);
+js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
+                    JSBool checkForCycles);
 
 extern JSBool
 js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
