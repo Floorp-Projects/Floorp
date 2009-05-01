@@ -6128,11 +6128,15 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
     } else {
 #ifdef DEBUG
-        JSOp op = JSOp(*pc);
-        ptrdiff_t pcoff = (op == JSOP_GETARGPROP) ? ARGNO_LEN :
-                          (op == JSOP_GETLOCALPROP) ? SLOTNO_LEN : 0;
-        jsatomid index = js_GetIndexFromBytecode(cx, cx->fp->script, pc, pcoff);
-        JS_ASSERT(entry->kpc == (jsbytecode*) atoms[index]);
+        JSOp op = js_GetOpcode(cx, cx->fp->script, pc);
+        JSAtom *pcatom;
+        if (op == JSOP_LENGTH) {
+            pcatom = cx->runtime->atomState.lengthAtom;
+        } else {
+            ptrdiff_t pcoff = (JOF_TYPE(js_CodeSpec[op].format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
+            GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, pcatom);
+        }
+        JS_ASSERT(entry->kpc == (jsbytecode *) pcatom);
         JS_ASSERT(entry->kshape == jsuword(aobj));
 #endif
         if (aobj != globalObj && !obj_ins->isconstp()) {
