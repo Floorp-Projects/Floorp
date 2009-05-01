@@ -66,7 +66,8 @@ NSPR_API(PRUint64) LL_MaxUint(void);
 
 #if defined(HAVE_LONG_LONG)
 
-#if PR_BYTES_PER_LONG == 8
+/* Keep this in sync with prtypes.h. */
+#if PR_BYTES_PER_LONG == 8 && !defined(__APPLE__)
 #define LL_MAXINT   9223372036854775807L
 #define LL_MININT   (-LL_MAXINT - 1L)
 #define LL_ZERO     0L
