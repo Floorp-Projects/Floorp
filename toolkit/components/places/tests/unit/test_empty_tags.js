@@ -49,6 +49,12 @@ let ts = Cc["@mozilla.org/browser/tagging-service;1"].
 let _ = function(some, debug, message) print(Array.slice(arguments).join(" "));
 
 function run_test() {
+  // always search in history + bookmarks, no matter what the default is
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+  prefs.setIntPref("browser.urlbar.search.sources", 3);
+  prefs.setIntPref("browser.urlbar.default.behavior", 0);
+
   let uri = io.newURI("http://uri/", null, null);
   bm.insertBookmark(bm.toolbarFolder, uri, bm.DEFAULT_INDEX, "title");
 
