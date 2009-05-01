@@ -34,7 +34,10 @@
   <binding id="popup_autocomplete">
     <content hidden="true">
       <xul:vbox class="autocomplete-box" flex="1">
-        <xul:vbox class="autocomplete-items" anonid="autocomplete-items" flex="1000">
+        <xul:scrollbox orient="vertical"
+                       class="autocomplete-items"
+                       anonid="autocomplete-items"
+                       flex="1000">
           <xul:label/>
           <xul:label/>
           <xul:label/>
@@ -42,16 +45,20 @@
           <xul:label/>
           <xul:label/>
           <xul:label/>
-        </xul:vbox>
+        </xul:scrollbox>
         <children/>
       </xul:vbox>
     </content>
 
     <implementation implements="nsIAutoCompletePopup, nsIDOMEventListener">
       <constructor><![CDATA[
-        window.addEventListener("click", this, true);
         window.addEventListener("blur", this, true);
       ]]></constructor>
+
+      <!-- Used by the chrome input handler -->
+      <property name="boxObject"
+                readonly="true"
+                onget="return this._items.boxObject;"/>
 
       <!-- nsIAutocompleteInput -->
       <property name="overrideValue"
@@ -121,6 +128,8 @@
         ]]></body>
       </method>
 
+      <field name="_XULNS">("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")</field>
+
       <method name="invalidate">
         <body><![CDATA[
           // Don't bother doing work if we're not even open
@@ -132,8 +141,18 @@
 
           let matchCount = this._matchCount;
           let children = this._items.childNodes.length;
-          for (let i = 0; i < children; ++i) {
-            let label = this._items.childNodes[i];
+          // Need to iterate over all our existing entries at a minimum, to make
+          // sure they're either updated or cleared out. We might also have to
+          // add extra items.
+          let iterCount = Math.max(children, matchCount);
+          for (let i = 0; i < iterCount; ++i) {
+            let label = this._items.childNodes.item(i);
+            if (!label) {
+              // create a new entry
+              label = document.createElementNS(this._XULNS, "label");
+              this._items.appendChild(label);
+            }
+
             label._index = i;
 
             // Check whether there's an entry to fill
@@ -185,18 +204,23 @@
                         "anonid", "autocomplete-items");
       </field>
 
+      <field name="_maxEntries">20</field>
       <property name="_matchCount"
                 readonly="true">
         <getter><![CDATA[
-          return Math.min(this.input.controller.matchCount, this._items.childNodes.length);
+          return Math.min(this.input.controller.matchCount, this._maxEntries);
         ]]></getter>
       </property>
 
-      <!-- Handles click/blur events on the window while the popup is open. -->
+      <!-- Handles blur events on the window while the popup is open. -->
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          this.closePopup();
+          if (aEvent.type == "blur")
+            this.closePopup();
+          else
+            Components.utils.reportError("autocomplete popup received " +
+                                         "unexpected event: " + aEvent.type);
         ]]></body>
       </method>
 
@@ -404,7 +428,7 @@
             }
 
             // Update the name and use the URI if name is blank
-            this.name = this.name || spec
+            this.name = this.name || spec;
             PlacesUtils.bookmarks.setItemTitle(this._itemId, this.name);
           ]]>
         </body>
