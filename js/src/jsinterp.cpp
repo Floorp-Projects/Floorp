@@ -3046,15 +3046,23 @@ js_Interpret(JSContext *cx)
 #ifdef JS_TRACER
             TraceRecorder* tr = TRACE_RECORDER(cx);
             if (tr) {
-                JSMonitorRecordingStatus status = TraceRecorder::monitorRecording(cx, tr, op);
-                if (status == JSMRS_CONTINUE) {
+                JSRecordingStatus status = TraceRecorder::monitorRecording(cx, tr, op);
+                switch (status) {
+                case JSRS_CONTINUE:
                     moreInterrupts = true;
-                } else if (status == JSMRS_IMACRO) {
+                    break;
+                case JSRS_IMACRO:
                     atoms = COMMON_ATOMS_START(&rt->atomState);
                     op = JSOp(*regs.pc);
                     DO_OP();    /* keep interrupting for op. */
-                } else {
-                    JS_ASSERT(status == JSMRS_STOP);
+                    break;
+                case JSRS_ERROR:
+                    // The code at 'error:' aborts the recording.
+                    goto error;
+                case JSRS_STOP:
+                    break;
+                default:
+                    JS_NOT_REACHED("Bad recording status");
                 }
             }
 #endif /* !JS_TRACER */
