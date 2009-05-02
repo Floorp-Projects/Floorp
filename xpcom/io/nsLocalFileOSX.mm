@@ -1129,25 +1129,21 @@ NS_IMETHODIMP nsLocalFile::IsDirectory(PRBool *_retval)
 
 NS_IMETHODIMP nsLocalFile::IsFile(PRBool *_retval)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
-  
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
+
+  nsCAutoString path;
+  nsresult rv = GetPathInternal(path);
   if (NS_FAILED(rv))
     return rv;
-    
-  FSCatalogInfo catalogInfo;
-  OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNodeFlags, &catalogInfo,
-                                nsnull, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-  *_retval = ((catalogInfo.nodeFlags & kFSNodeIsDirectoryMask) == 0);
-  return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  struct STAT buf;
+  if (STAT(path.get(), &buf) != 0)
+    return NSRESULT_FOR_ERRNO();
+
+  *_retval = S_ISREG(buf.st_mode);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsLocalFile::IsSymlink(PRBool *_retval)
