@@ -884,29 +884,22 @@ NS_IMETHODIMP nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOf
 
 NS_IMETHODIMP nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
   NS_ENSURE_ARG_POINTER(aFileSize);
   *aFileSize = 0;
-  
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
+
+  nsCAutoString path;
+  nsresult rv = GetPathInternal(path);
   if (NS_FAILED(rv))
     return rv;
-      
-  FSCatalogInfo catalogInfo;
-  OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNodeFlags + kFSCatInfoDataSizes, &catalogInfo,
-                                  nsnull, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-  
-  // FSGetCatalogInfo can return a bogus size for directories sometimes, so only
-  // rely on the answer for files
-  if ((catalogInfo.nodeFlags & kFSNodeIsDirectoryMask) == 0)
-      *aFileSize = catalogInfo.dataLogicalSize;
-  return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  struct STAT buf;
+  if (STAT(path.get(), &buf) != 0)
+    return NSRESULT_FOR_ERRNO();
+
+  if (!S_ISDIR(buf.st_mode))
+    *aFileSize = (PRInt64)buf.st_size;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsLocalFile::SetFileSize(PRInt64 aFileSize)
