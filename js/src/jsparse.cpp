@@ -1715,6 +1715,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
                     if (!lexdep->isFreeVar() && int(lexdep->frameLevel()) <= fnlevel) {
                         fn->setFunArg();
                         queue->push(funbox);
+                        fnlevel = int(funbox->level);
                         break;
                     }
                 }
