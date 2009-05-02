@@ -51,9 +51,15 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const MAX_INT = Math.pow(2, 31) - 1;
 const MIN_INT = -MAX_INT;
 
-function Preferences(prefBranch) {
-  if (prefBranch)
-    this._prefBranch = prefBranch;
+function Preferences(args) {
+    if (isObject(args)) {
+      if (args.branch)
+        this._prefBranch = args.branch;
+      if (args.site)
+        this._site = args.site;
+    }
+    else if (args)
+      this._prefBranch = args;
 }
 
 Preferences.prototype = {
@@ -72,6 +78,13 @@ Preferences.prototype = {
     if (isArray(prefName))
       return prefName.map(function(v) this.get(v, defaultValue), this);
 
+    if (this._site)
+      return this._siteGet(prefName, defaultValue);
+    else
+      return this._get(prefName, defaultValue);
+  },
+
+  _get: function(prefName, defaultValue) {
     switch (this._prefSvc.getPrefType(prefName)) {
       case Ci.nsIPrefBranch.PREF_STRING:
         return this._prefSvc.getComplexValue(prefName, Ci.nsISupportsString).data;
@@ -91,6 +104,11 @@ Preferences.prototype = {
               this._prefSvc.getPrefType(prefName) + ", which I don't know " +
               "how to handle.";
     }
+  },
+
+  _siteGet: function(prefName, defaultValue) {
+    let value = this._contentPrefSvc.getPref(this._site, this._prefBranch + prefName);
+    return typeof value != "undefined" ? value : defaultValue;
   },
 
   /**
@@ -122,6 +140,13 @@ Preferences.prototype = {
       return;
     }
 
+    if (this._site)
+      this._siteSet(prefName, prefValue);
+    else
+      this._set(prefName, prefValue);
+  },
+
+  _set: function(prefName, prefValue) {
     let prefType;
     if (typeof prefValue != "undefined" && prefValue != null)
       prefType = prefValue.constructor.name;
@@ -165,6 +190,10 @@ Preferences.prototype = {
     }
   },
 
+  _siteSet: function(prefName, prefValue) {
+    this._contentPrefSvc.setPref(this._site, this._prefBranch + prefName, prefValue);
+  },
+
   /**
    * Whether or not the given pref has a value.  This is different from isSet
    * because it returns true whether the value of the pref is a default value
@@ -183,7 +212,18 @@ Preferences.prototype = {
     if (isArray(prefName))
       return prefName.map(this.has, this);
 
+    if (this._site)
+      return this._siteHas(prefName);
+    else
+      return this._has(prefName);
+  },
+
+  _has: function(prefName) {
     return (this._prefSvc.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_INVALID);
+  },
+
+  _siteHas: function(prefName) {
+    return this._contentPrefSvc.hasPref(this._site, this._prefBranch + prefName);
   },
 
   /**
@@ -220,6 +260,13 @@ Preferences.prototype = {
       return;
     }
 
+    if (this._site)
+      this._siteReset(prefName);
+    else
+      this._reset(prefName);
+  },
+  
+  _reset: function(prefName) {
     try {
       this._prefSvc.clearUserPref(prefName);
     }
@@ -234,6 +281,10 @@ Preferences.prototype = {
       if (ex.result != Cr.NS_ERROR_UNEXPECTED)
         throw ex;
     }
+  },
+
+  _siteReset: function(prefName) {
+    return this._contentPrefSvc.removePref(this._site, this._prefBranch + prefName);
   },
 
   /**
@@ -367,6 +418,12 @@ Preferences.prototype = {
    */
   _prefBranch: "",
 
+  site: function(site) {
+    if (!(site instanceof Ci.nsIURI))
+      site = this._ioSvc.newURI("http://" + site, null, null);
+    return new Preferences({ branch: this._prefBranch, site: site });
+  },
+
   /**
    * Preferences Service
    * @private
@@ -378,6 +435,28 @@ Preferences.prototype = {
                   QueryInterface(Ci.nsIPrefBranch2);
     this.__defineGetter__("_prefSvc", function() prefSvc);
     return this._prefSvc;
+  },
+
+  /**
+   * IO Service
+   * @private
+   */
+  get _ioSvc() {
+    let ioSvc = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+    this.__defineGetter__("_ioSvc", function() ioSvc);
+    return this._ioSvc;
+  },
+
+  /**
+   * Site Preferences Service
+   * @private
+   */
+  get _contentPrefSvc() {
+    let contentPrefSvc = Cc["@mozilla.org/content-pref/service;1"].
+                         getService(Ci.nsIContentPrefService);
+    this.__defineGetter__("_contentPrefSvc", function() contentPrefSvc);
+    return this._contentPrefSvc;
   }
 
 };
