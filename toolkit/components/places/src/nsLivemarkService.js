@@ -637,8 +637,9 @@ LivemarkLoadListener.prototype = {
    */
   onDataAvailable: function LLL_onDataAvailable(aRequest, aContext, aInputStream,
                                                 aSourceOffset, aCount) {
-    this._processor.onDataAvailable(aRequest, aContext, aInputStream,
-                                    aSourceOffset, aCount);
+    if (this._processor)
+      this._processor.onDataAvailable(aRequest, aContext, aInputStream,
+                                      aSourceOffset, aCount);
   },
 
   /**
@@ -672,7 +673,8 @@ LivemarkLoadListener.prototype = {
     }
     // Set an expiration on the livemark, for reloading the data
     try {
-      this._processor.onStopRequest(aRequest, aContext, aStatus);
+      if (this._processor)
+        this._processor.onStopRequest(aRequest, aContext, aStatus);
 
       // Calculate a new ttl
       var channel = aRequest.QueryInterface(Ci.nsICachingChannel);
