@@ -1005,17 +1005,16 @@ NS_IMETHODIMP nsLocalFile::GetNativePath(nsACString& aNativePath)
 
 NS_IMETHODIMP nsLocalFile::Exists(PRBool *_retval)
 {
-  // Check we are correctly initialized.
-  CHECK_mBaseURL();
-
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
-  
-  FSRef fsRef;
-  if (NS_SUCCEEDED(GetFSRefInternal(fsRef))) {
-    *_retval = PR_TRUE;
-  }
-  
+
+  nsCAutoString path;
+  nsresult rv = GetPathInternal(path);
+  if (NS_FAILED(rv))
+    return rv;
+
+  struct STAT buf;
+  *_retval = (STAT(path.get(), &buf) == 0);
+
   return NS_OK;
 }
 
