@@ -283,7 +283,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
                     JSBool checkForCycles)
 {
     JS_ASSERT(slot == JSSLOT_PARENT || slot == JSSLOT_PROTO);
-    JS_ASSERT(obj != pobj);
+    JS_ASSERT_IF(!checkForCycles, obj != pobj);
 
     if (slot == JSSLOT_PROTO) {
         JS_UNLOCK_OBJ(cx, obj);
