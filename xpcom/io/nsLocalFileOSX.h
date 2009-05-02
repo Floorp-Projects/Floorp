@@ -42,7 +42,6 @@
 #include "nsILocalFileMac.h"
 #include "nsString.h"
 #include "nsIHashable.h"
-#include "nsIClassInfoImpl.h"
 
 class nsDirEnumerator;
 

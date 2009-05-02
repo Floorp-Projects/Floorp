@@ -1858,20 +1858,6 @@ NS_IMETHODIMP nsLocalFile::SetFileCreator(OSType aFileCreator)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreatorFromMIMEType(const char *aMIMEType)
-{
-  // XXX - This should be cut from the API. Would create an evil dependency.
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreatorFromExtension(const char *aExtension)
-{
-  // XXX - This should be cut from the API. Would create an evil dependency.
-  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsLocalFile::LaunchWithDoc(nsILocalFile *aDocToLoad, PRBool aLaunchInBackground)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
