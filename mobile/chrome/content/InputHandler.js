@@ -106,18 +106,24 @@ InputHandler.prototype = {
   _ignoreEvents: false,
 
   grab: function grab(obj) {
-    this._grabbed = obj;
+    // do nothing if we have a grab and it's the one requested
+    // grab(null) is allowed because of mouseout handling
+    if ((obj == null) || (this._grabbed != obj)) {
 
-    for each(mod in this._modules) {
-      if (mod != obj)
-        mod.cancelPending();
+      // only send events to this object
+      this._grabbed = obj;
+
+      // call cancel on all modules
+      for each(mod in this._modules) {
+        if (mod != obj)
+          mod.cancelPending();
+      }
     }
-    // only send events to this object
-    // call cancel on all modules
   },
 
   ungrab: function ungrab(obj) {
-    this._grabbed = null;
+    if (this._grabbed == obj)
+      this._grabbed = null;
   },
 
   startListening: function startListening() {
@@ -162,8 +168,6 @@ InputHandler.prototype = {
 function DragData(owner, dragRadius, dragStartTimeoutLength) {
   this._owner = owner;
   this._dragRadius = dragRadius;
-  this._dragStartTimeoutLength = dragStartTimeoutLength;
-  this.dragStartTimeout = -1;
   this.reset();
 }
 
@@ -175,8 +179,8 @@ DragData.prototype = {
     this.alreadyLocked = false;
     this.lockedX = null;
     this.lockedY = null;
-
-    this.clearDragStartTimeout();
+    this._originX = null;
+    this._originY = null;
   },
 
   setDragPosition: function setDragPosition(screenX, screenY) {
@@ -186,16 +190,9 @@ DragData.prototype = {
 
   setDragStart: function setDragStart(screenX, screenY) {
     this.setDragPosition(screenX, screenY);
-    this.dragStartTimeout = window.setTimeout(
-      function(dragData, sX, sY) { dragData.clearDragStartTimeout(); dragData._owner._dragStart(sX, sY); },
-      this._dragStartTimeoutLength,
-      this, screenX, screenY);
-  },
-
-  clearDragStartTimeout: function clearDragStartTimeout() {
-    if (this.dragStartTimeout != -1)
-      window.clearTimeout(this.dragStartTimeout);
-    this.dragStartTimeout = -1;
+    this._originX = screenX;
+    this._originY = screenY;
+    this.dragging = true;
   },
 
   lockMouseMove: function lockMouseMove(sX, sY) {
@@ -230,20 +227,13 @@ DragData.prototype = {
     return [sX, sY];
   },
 
-  /* returns true if we go ahead and start a drag */
-  detectEarlyDrag: function detectEarlyDrag(sX, sY) {
-    let dx = this.sX - sX;
-    let dy = this.sY - sY;
-
-    if (!this.dragging && this.dragStartTimeout != -1) {
-      if ((dx*dx + dy*dy) > (this._dragRadius * this._dragRadius)) {
-        this.clearDragStartTimeout();
-        this._owner._dragStart(sX, sY);
-      }
-    }
+  isPointOutsideRadius: function isPointOutsideRadius(sX, sY) {
+    if (this._originX == undefined)
+      return false;
+    return (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2)) >
+      (2 * Math.pow(this._dragRadius, 2));
   }
 };
-
 
 /**
  * Panning code for chrome elements
@@ -252,7 +242,7 @@ DragData.prototype = {
 function ChromeInputModule(owner, browserCanvas) {
   this._owner = owner;
   this._browserCanvas = browserCanvas;
-  this._dragData = new DragData(this, 20, 200);
+  this._dragData = new DragData(this, 50, 200);
 }
 
 ChromeInputModule.prototype = {
@@ -291,17 +281,16 @@ ChromeInputModule.prototype = {
     this._targetScrollbox = null;
   },
 
+  // called from DragData.setDragStart only
   _dragStart: function _dragStart(sX, sY) {
     let dragData = this._dragData;
-    dragData.dragging = true;
+
+    dragData.setDragStart(sX, sY);
 
     [sX, sY] = dragData.lockAxis(sX, sY);
 
     // grab all events until we stop the drag
     ws.dragStart(sX, sY);
-
-    // prevent clicks from being sent once we start drag
-    this._clickEvents = [];
   },
 
   _dragStop: function _dragStop(sX, sY) {
@@ -314,6 +303,9 @@ ChromeInputModule.prototype = {
 
   _dragMove: function _dragMove(sX, sY) {
     let dragData = this._dragData;
+    if (dragData.isPointOutsideRadius(sX, sY))
+      this._clickEvents = [];
+
     [sX, sY] = dragData.lockMouseMove(sX, sY);
     if (this._targetScrollbox)
       this._targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
@@ -338,7 +330,7 @@ ChromeInputModule.prototype = {
     aEvent.stopPropagation();
     aEvent.preventDefault();
 
-    dragData.setDragStart(aEvent.screenX, aEvent.screenY);
+    this._dragStart(aEvent.screenX, aEvent.screenY);
     this._onMouseMove(aEvent); // treat this as a mouse move too
 
     // store away the event for possible sending later if a drag doesn't happen
@@ -372,6 +364,7 @@ ChromeInputModule.prototype = {
 
       this._ignoreNextClick = true;
       this._sendSingleClick();
+      this._targetScrollbox = null;
     }
 
     aEvent.stopPropagation();
@@ -402,8 +395,6 @@ ChromeInputModule.prototype = {
       dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
 
     [sX, sY] = dragData.lockMouseMove(aEvent.screenX, aEvent.screenY);
-
-    dragData.detectEarlyDrag(sX, sY);
 
     if (!dragData.dragging)
       return;
@@ -586,7 +577,7 @@ KineticData.prototype = {
 function ContentPanningModule(owner, browserCanvas, useEarlyMouseMoves) {
   this._owner = owner;
   this._browserCanvas = browserCanvas;
-  this._dragData = new DragData(this, 10, 200);
+  this._dragData = new DragData(this, 50, 200);
   this._kineticData = new KineticData(this);
   this._useEarlyMouseMoves = useEarlyMouseMoves;
 }
@@ -616,31 +607,6 @@ ContentPanningModule.prototype = {
   },
 
 
-  detectEarlyDrag: function detectEarlyDrag() {
-    let dragData = this._dragData;
-
-    if (dragData.dragging)
-      return;
-
-    let mb = this._kineticData.momentumBuffer;
-    if (mb.length < 2)
-      return;
-
-    let mbFirst = mb[0];
-    let mbLast = mb[mb.length - 1];
-
-    let dx = mbFirst.sx - mbLast.sx;
-    let dy = mbFirst.sy - mbLast.sy;
-
-    if (dragData.dragStartTimeout != -1) {
-      if ((dx*dx + dy*dy) > (dragData._dragRadius * dragData._dragRadius)) {
-        dragData.clearDragStartTimeout();
-        dragData._owner._dragStart(mbFirst.sx, mbFirst.sy);
-      }
-    }
-  },
-
-
   /* If someone else grabs events ahead of us, cancel any pending
    * timeouts we may have.
    */
@@ -654,12 +620,11 @@ ContentPanningModule.prototype = {
 
   _dragStart: function _dragStart(sX, sY) {
     let dragData = this._dragData;
-    dragData.dragging = true;
+
+    dragData.setDragStart(sX, sY);
 
     [sX, sY] = dragData.lockAxis(sX, sY);
 
-    // grab all events until we stop the drag
-    this._owner.grab(this);
     ws.dragStart(sX, sY);
 
     Browser.canvasBrowser.startPanning();
@@ -678,7 +643,7 @@ ContentPanningModule.prototype = {
     dragData.reset();
   },
 
-  _dragBy: function _dragMove(dx, dy) {
+  _dragBy: function _dragBy(dx, dy) {
     let panned = ws.dragBy(dx, dy);
     return panned;
   },
@@ -692,14 +657,15 @@ ContentPanningModule.prototype = {
   },
 
   _onMouseDown: function _onMouseDown(aEvent) {
+    let dragData = this._dragData;
     // if we're in the process of kineticly scrolling, stop and start over
     if (this._kineticData._kineticTimer != null) {
       this._kineticData.endKinetic(aEvent.screenX, aEvent.screenY);
       this._owner.ungrab(this);
-      this._dragData.reset();
+      dragData.reset();
     }
 
-    this._dragData.setDragStart(aEvent.screenX, aEvent.screenY);
+    this._dragStart(aEvent.screenX, aEvent.screenY);
     this._onMouseMove(aEvent); // treat this as a mouse move too
   },
 
@@ -721,6 +687,10 @@ ContentPanningModule.prototype = {
 
     let dragData = this._dragData;
 
+    // if we move enough, start a grab to prevent click from getting events
+    if (dragData.isPointOutsideRadius(aEvent.screenX, aEvent.screenY))
+      this._owner.grab(this);
+
     // if we never received a mouseDown, we need to go ahead and set this data
     if (!dragData.sX)
       dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
@@ -729,14 +699,8 @@ ContentPanningModule.prototype = {
 
     // even if we haven't started dragging yet, we should queue up the
     // mousemoves in case we do start
-    if (this._useEarlyMouseMoves ||
-        dragData.dragging ||
-        dragData.dragStartTimeout != -1)
+    if (this._useEarlyMouseMoves || dragData.dragging)
       this._kineticData.addData(sX, sY);
-
-    this.detectEarlyDrag();
-
-    //dragData.detectEarlyDrag(sX, sY);
 
     if (dragData.dragging)
       this._dragMove(sX, sY);
