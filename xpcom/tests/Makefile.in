@@ -103,26 +103,19 @@ CPP_UNIT_TESTS += \
                   TestArray.cpp \
                   TestAutoLock.cpp \
                   TestCRT.cpp \
-                  TestDeque.cpp \
                   TestEncoding.cpp \
                   TestExpirationTracker.cpp \
                   TestPipes.cpp \
                   TestProxies.cpp \
-                  TestStorageStream.cpp \
+                  TestThreads.cpp \
+                  TestThreadPool.cpp \
+                  TestXPIDLString.cpp \
+                  TestDeque.cpp \
                   TestStrings.cpp \
+                  TestStorageStream.cpp \
                   TestSynchronization.cpp \
                   TestTArray.cpp \
-                  TestThreadPool.cpp \
-                  TestThreads.cpp \
                   TestTimeStamp.cpp \
-                  TestXPIDLString.cpp \
-                  $(NULL)
-endif
-
-ifdef MOZ_DEBUG
-CPP_UNIT_TESTS += \
-                  TestDeadlockDetector.cpp \
-                  TestDeadlockDetectorScalability.cpp \
                   $(NULL)
 endif
 
