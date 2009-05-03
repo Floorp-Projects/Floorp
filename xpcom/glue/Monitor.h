@@ -67,26 +67,27 @@ class NS_COM_GLUE Monitor : BlockingResourceBase
 public:
     /**
      * Monitor
-     * @param name A name which can reference this monitor
+     * @param aName A name which can reference this monitor
      * @returns If failure, nsnull
      *          If success, a valid Monitor*, which must be destroyed
      *          by Monitor::DestroyMonitor()
      **/
-    Monitor(const char* name)
+    Monitor(const char* aName) :
+        BlockingResourceBase(aName, eMonitor)
 #ifdef DEBUG
-        : mEntryCount(0)
+        , mEntryCount(0)
 #endif
     {
         mMonitor = PR_NewMonitor();
         if (!mMonitor)
             NS_RUNTIMEABORT("Can't allocate mozilla::Monitor");
-        Init(mMonitor, name, eMonitor);
     }
 
     /**
      * ~Monitor
      **/
-    ~Monitor() {
+    ~Monitor()
+    {
         NS_ASSERTION(mMonitor,
                      "improperly constructed Monitor or double free");
         PR_DestroyMonitor(mMonitor);
@@ -98,8 +99,8 @@ public:
      * Enter
      * @see prmon.h 
      **/
-    void Enter() {
-        // NSPR does consistency checks for us
+    void Enter()
+    {
         PR_EnterMonitor(mMonitor);
     }
 
@@ -107,30 +108,34 @@ public:
      * Exit
      * @see prmon.h 
      **/
-    void Exit() {
+    void Exit()
+    {
         PR_ExitMonitor(mMonitor);
+    }
+
+    /**
+     * Wait
+     * @see prmon.h
+     **/      
+    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
+    {
+        return PR_Wait(mMonitor, interval) == PR_SUCCESS ?
+            NS_OK : NS_ERROR_FAILURE;
     }
 
 #else
     void Enter();
     void Exit();
+    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT);
 
 #endif  // ifndef DEBUG
-
-    /** 
-     * Wait
-     * @see prmon.h 
-     **/      
-    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
-        return PR_Wait(mMonitor, interval) == PR_SUCCESS
-            ? NS_OK : NS_ERROR_FAILURE;
-    }
 
     /** 
      * Notify
      * @see prmon.h 
      **/      
-    nsresult Notify() {
+    nsresult Notify()
+    {
         return PR_Notify(mMonitor) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
     }
@@ -139,7 +144,8 @@ public:
      * NotifyAll
      * @see prmon.h 
      **/      
-    nsresult NotifyAll() {
+    nsresult NotifyAll()
+    {
         return PR_NotifyAll(mMonitor) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
     }
@@ -149,7 +155,8 @@ public:
      * AssertCurrentThreadIn
      * @see prmon.h
      **/
-    void AssertCurrentThreadIn () {
+    void AssertCurrentThreadIn()
+    {
         PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
     }
 
@@ -157,13 +164,18 @@ public:
      * AssertNotCurrentThreadIn
      * @see prmon.h
      **/
-    void AssertNotCurrentThreadIn () {
-        // TODO
+    void AssertNotCurrentThreadIn()
+    {
+        // FIXME bug 476536
     }
 
 #else
-    void AssertCurrentThreadIn () { }
-    void AssertNotCurrentThreadIn () { }
+    void AssertCurrentThreadIn()
+    {
+    }
+    void AssertNotCurrentThreadIn()
+    {
+    }
 
 #endif  // ifdef DEBUG
 
@@ -197,25 +209,30 @@ public:
      * @param aMonitor A valid mozilla::Monitor* returned by 
      *                 mozilla::Monitor::NewMonitor. 
      **/
-    MonitorAutoEnter(mozilla::Monitor &aMonitor)
-        : mMonitor(&aMonitor) {
+    MonitorAutoEnter(mozilla::Monitor &aMonitor) :
+        mMonitor(&aMonitor)
+    {
         NS_ASSERTION(mMonitor, "null monitor");
         mMonitor->Enter();
     }
     
-    ~MonitorAutoEnter(void) {
+    ~MonitorAutoEnter(void)
+    {
         mMonitor->Exit();
     }
  
-    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
+    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
+    {
        return mMonitor->Wait(interval);
     }
 
-    nsresult Notify() {
+    nsresult Notify()
+    {
         return mMonitor->Notify();
     }
 
-    nsresult NotifyAll() {
+    nsresult NotifyAll()
+    {
         return mMonitor->Notify();
     }
 

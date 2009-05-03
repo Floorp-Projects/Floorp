@@ -73,17 +73,19 @@ public:
      *          If success, a valid Mutex* which must be destroyed
      *          by Mutex::DestroyMutex()
      **/
-    Mutex(const char* name) {
+    Mutex(const char* name) :
+        BlockingResourceBase(name, eMutex)
+    {
         mLock = PR_NewLock();
         if (!mLock)
             NS_RUNTIMEABORT("Can't allocate mozilla::Mutex");
-        Init(mLock, name, eMutex);
     }
 
     /**
      * ~Mutex
      **/
-    ~Mutex() {
+    ~Mutex()
+    {
         NS_ASSERTION(mLock,
                      "improperly constructed Lock or double free");
         // NSPR does consistency checks for us
@@ -96,7 +98,8 @@ public:
      * Lock
      * @see prlock.h
      **/
-    void Lock() {
+    void Lock()
+    {
         PR_Lock(mLock);
     }
 
@@ -104,7 +107,8 @@ public:
      * Unlock
      * @see prlock.h
      **/
-    void Unlock() {
+    void Unlock()
+    {
         PR_Unlock(mLock);
     }
 
@@ -112,24 +116,30 @@ public:
      * AssertCurrentThreadOwns
      * @see prlock.h
      **/
-    void AssertCurrentThreadOwns () { }
+    void AssertCurrentThreadOwns ()
+    {
+    }
 
     /**
      * AssertNotCurrentThreadOwns
      * @see prlock.h
      **/
-    void AssertNotCurrentThreadOwns () { }
+    void AssertNotCurrentThreadOwns ()
+    {
+    }
 
 #else
     void Lock();
     void Unlock();
 
-    void AssertCurrentThreadOwns () {
+    void AssertCurrentThreadOwns ()
+    {
         PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(mLock);
     }
 
-    void AssertNotCurrentThreadOwns () {
-        // TODO
+    void AssertNotCurrentThreadOwns ()
+    {
+        // FIXME bug 476536
     }
 
 #endif  // ifndef DEBUG
@@ -163,8 +173,9 @@ public:
      * @param aLock A valid mozilla::Mutex* returned by 
      *              mozilla::Mutex::NewMutex. 
      **/
-    MutexAutoLock(mozilla::Mutex& aLock)
-        : mLock(&aLock) {
+    MutexAutoLock(mozilla::Mutex& aLock) :
+        mLock(&aLock)
+    {
         NS_ASSERTION(mLock, "null mutex");
         mLock->Lock();
     }
@@ -194,8 +205,9 @@ private:
 class NS_COM_GLUE NS_STACK_CLASS MutexAutoUnlock 
 {
 public:
-    MutexAutoUnlock(mozilla::Mutex& aLock) 
-        : mLock(&aLock) {
+    MutexAutoUnlock(mozilla::Mutex& aLock) :
+        mLock(&aLock)
+    {
         NS_ASSERTION(mLock, "null lock");
         mLock->Unlock();
     }
