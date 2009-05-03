@@ -60,26 +60,28 @@ public:
      *
      * The CALLER owns |lock|.
      *
-     * @param lock An Mutex to associate with this condition variable.
-     * @param name A name which can reference this monitor
+     * @param aLock An Mutex to associate with this condition variable.
+     * @param aName A name which can reference this monitor
      * @returns If failure, nsnull.
      *          If success, a valid Monitor* which must be destroyed
      *          by Monitor::DestroyMonitor()
      **/
-    CondVar(Mutex& aLock, const char* name)
-        : mLock(&aLock) {
+    CondVar(Mutex& aLock, const char* aName) :
+        BlockingResourceBase(aName, eCondVar),
+        mLock(&aLock)
+    {
         // |lock| must necessarily already be known to the deadlock detector
         mCvar = PR_NewCondVar(mLock->mLock);
         if (!mCvar)
             NS_RUNTIMEABORT("Can't allocate mozilla::CondVar");
-        Init(mCvar, name, eCondVar);
     }
 
     /**
      * ~CondVar
      * Clean up after this CondVar, but NOT its associated Mutex.
      **/
-    ~CondVar() {
+    ~CondVar()
+    {
         NS_ASSERTION(mCvar && mLock,
                      "improperly constructed CondVar or double free");
         PR_DestroyCondVar(mCvar);
@@ -87,21 +89,27 @@ public:
         mLock = 0;
     }
 
+#ifndef DEBUG
     /** 
      * Wait
      * @see prcvar.h 
      **/      
-    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
+    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
+    {
         // NSPR checks for lock ownership
         return PR_WaitCondVar(mCvar, interval) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
     }
+#else
+    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT);
+#endif // ifndef DEBUG
 
     /** 
      * Notify
      * @see prcvar.h 
      **/      
-    nsresult Notify() {
+    nsresult Notify()
+    {
         // NSPR checks for lock ownership
         return PR_NotifyCondVar(mCvar) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
@@ -111,7 +119,8 @@ public:
      * NotifyAll
      * @see prcvar.h 
      **/      
-    nsresult NotifyAll() {
+    nsresult NotifyAll()
+    {
         // NSPR checks for lock ownership
         return PR_NotifyAllCondVar(mCvar) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
@@ -122,7 +131,8 @@ public:
      * AssertCurrentThreadOwnsMutex
      * @see Mutex::AssertCurrentThreadOwns
      **/
-    void AssertCurrentThreadOwnsMutex () {
+    void AssertCurrentThreadOwnsMutex()
+    {
         mLock->AssertCurrentThreadOwns();
     }
 
@@ -130,13 +140,18 @@ public:
      * AssertNotCurrentThreadOwnsMutex
      * @see Mutex::AssertNotCurrentThreadOwns
      **/
-    void AssertNotCurrentThreadOwnsMutex () {
+    void AssertNotCurrentThreadOwnsMutex()
+    {
         mLock->AssertNotCurrentThreadOwns();
     }
 
 #else
-    void AssertCurrentThreadOwnsMutex () { }
-    void AssertNotCurrentThreadOwnsMutex () { }
+    void AssertCurrentThreadOwnsMutex()
+    {
+    }
+    void AssertNotCurrentThreadOwnsMutex()
+    {
+    }
 
 #endif  // ifdef DEBUG
 
