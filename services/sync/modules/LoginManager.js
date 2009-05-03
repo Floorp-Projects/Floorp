@@ -1003,7 +1003,7 @@ let WeaveLoginManager = {
         var previousActionOrigin = null;
         var foundLogins = null;
 
-        let auths = [];
+        let formInfos = [];
         for (var i = 0; i < forms.length; i++) {
             var form = forms[i];
 
@@ -1015,12 +1015,12 @@ let WeaveLoginManager = {
                 previousActionOrigin = actionOrigin;
             }
             this.log("_fillDocument processing form[" + i + "]");
-            let auth = this._fillForm(form, autofillForm, false, foundLogins);
-            foundLogins = auth.foundLogins;
-            if (auth.canFillForm)
-                auths.push(auth);
+            let formInfo = this._fillForm(form, autofillForm, false, foundLogins);
+            foundLogins = formInfo.foundLogins;
+            if (formInfo.canFillForm)
+                formInfos.push(formInfo);
         } // foreach form
-        return auths;
+        return formInfos;
     },
 
 
@@ -1174,7 +1174,6 @@ let WeaveLoginManager = {
         //}
 
         return { canFillForm:   true,
-                 form:          form,
                  usernameField: usernameField,
                  passwordField: passwordField,
                  foundLogins:   foundLogins,
