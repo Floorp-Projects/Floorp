@@ -48,7 +48,7 @@ function run_test() {
 
   // Create our JSON backup copying bookmarks.glue.json to the profile
   // folder.  It will be ignored.
-  create_JSON_backup("bookmarks.glue.json");;
+  create_JSON_backup("bookmarks.glue.json");
 
   // Remove current database file.
   let db = gProfD.clone();

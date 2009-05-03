@@ -74,7 +74,7 @@ function test() {
   var folderAGUIDs = getGUIDs(folderANode);
 
   // test the test function
-  ok(checkGUIDs(folderANode, folderAGUIDs, true), "confirm guid test works");;
+  ok(checkGUIDs(folderANode, folderAGUIDs, true), "confirm guid test works");
 
   // serialize the folder
   var serializedNode = PlacesUtils.wrapNode(folderANode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
