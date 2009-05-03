@@ -53,6 +53,14 @@ _TEST_FILES = \
 		test_bug480972.html \
 		$(NULL)
 
+_CHROME_TEST_FILES = \
+		test_bug490879.xul \
+		green.png \
+		$(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
