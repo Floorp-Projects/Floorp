@@ -1940,7 +1940,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #identity-popup-more-info-button {
   margin-top: 6px;
-  -moz-margin-end: 1px;
+  margin-bottom: 0;
+  -moz-margin-end: 0;
 }
 
 /* Popup Bounding Box */
@@ -1957,7 +1958,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-popup-container {
   background-image: none;
   min-width: 280px;
-  padding: 10px;
+  padding: 9px;
 }
 
 #download-monitor {

@@ -62,12 +62,6 @@
   color: InfoText;
 }
 
-/* Bug 432529 - Don't let the button have an end and bottom margin */
-#identity-popup-more-info-button:-moz-system-metric(windows-default-theme) {
-  margin-bottom: 0;
-  -moz-margin-end: 0;
-}
-
 /* Make the left and right paddings smaller, to compensate for the horizontal
    space added by the tooltip appearance, see bug 432529. */
 #identity-popup-container:-moz-system-metric(windows-default-theme) {
