@@ -793,7 +793,7 @@ var Microformats = {
           for (j=0; j < mfNames.length; j++) {
             /* If this property is in the parent microformat, remove the node  */
             if (Microformats[mfNames[j]].properties[propname]) {
-              propnodes.splice(i,1);;
+              propnodes.splice(i,1);
               break;
             }
           }
@@ -1823,7 +1823,7 @@ var tag_definition = {
         var url_array = node.getAttribute("href").split("/");
         for(let i=url_array.length-1; i > 0; i--) {
           if (url_array[i] !== "") {
-            throw("Invalid tag name (" + url_array[i] + ")");;
+            throw("Invalid tag name (" + url_array[i] + ")");
           }
         }
       } else {
