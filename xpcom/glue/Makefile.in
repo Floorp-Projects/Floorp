@@ -133,7 +133,7 @@ SDK_LIBRARY     =                        \
 
 
 ## TODO temp hack until build system handles this
-export:: BlockingResourceBase.h CondVar.h DeadlockDetector.h Monitor.h Mutex.h
+export:: BlockingResourceBase.h CondVar.h Monitor.h Mutex.h
 	$(INSTALL) $^ $(DIST)/include/mozilla
 
 
