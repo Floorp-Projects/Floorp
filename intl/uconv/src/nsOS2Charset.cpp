@@ -48,7 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
-#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsITimelineService.h"
 #include "nsPlatformCharset.h"
 
@@ -163,7 +163,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   nsresult rv;
   oResult.Truncate();
 
-  os2Locale = do_CreateInstance(NS_OS2LOCALE_CONTRACTID, &rv);
+  os2Locale = do_GetService(NS_OS2LOCALE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) { return rv; }
 
   rv = os2Locale->GetPlatformLocale(localeName, &codepage);
