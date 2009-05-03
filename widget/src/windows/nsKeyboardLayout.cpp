@@ -206,7 +206,7 @@ PRUint32 VirtualKey::GetNativeUniChars (PRUint8 aShiftState, PRUnichar* aUniChar
 }
 
 KeyboardLayout::KeyboardLayout () :
-  mKeyboardLayout(0), mCodePage(0)
+  mKeyboardLayout(0)
 {
   mDeadKeyTableListHead = nsnull;
 
@@ -342,12 +342,6 @@ void KeyboardLayout::LoadLayout (HKL aLayout)
     return;
 
   mKeyboardLayout = aLayout;
-  mIMEProperty = ::ImmGetProperty(aLayout, IGP_PROPERTY);
-
-  WORD langID = LOWORD(aLayout);
-  ::GetLocaleInfoA(MAKELCID(langID, SORT_DEFAULT),
-                   LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-                   (PSTR)&mCodePage, sizeof(mCodePage));
 
   PRUint32 shiftState;
   BYTE kbdState [256];
