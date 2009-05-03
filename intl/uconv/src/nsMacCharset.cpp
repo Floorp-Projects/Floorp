@@ -41,7 +41,7 @@
 #include "nsGREResProperties.h"
 #include "nsUConvDll.h"
 #include "nsCOMPtr.h"
-#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIMacLocale.h"
 #include "nsLocaleCID.h"
 #include "nsReadableUtils.h"
@@ -157,7 +157,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
 {
   nsresult rv;
   nsCOMPtr<nsIMacLocale> pMacLocale;
-  pMacLocale = do_CreateInstance(NS_MACLOCALE_CONTRACTID, &rv);
+  pMacLocale = do_GetService(NS_MACLOCALE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     short script, language, region;
     rv = pMacLocale->GetPlatformLocale(localeName, &script, &language, &region);
