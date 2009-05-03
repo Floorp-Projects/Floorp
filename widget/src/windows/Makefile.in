@@ -87,6 +87,7 @@ CPPSRCS		= \
 	nsWinGesture.cpp \
 	nsIdleServiceWin.cpp \
 	nsSound.cpp          \
+	nsIMM32Handler.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING
