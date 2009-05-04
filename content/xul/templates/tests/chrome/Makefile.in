@@ -46,6 +46,10 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		test_bug476634.xul \
+		$(NULL)
+
+ifeq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+_TEST_FILES = \
 		templates_shared.js \
 		animals.rdf \
 		animals.xml \
@@ -248,8 +252,8 @@ _TEST_FILES = \
 		test_tmpl_xmlquerywithmultiplequeries.xul \
 		test_tmpl_xmlquerywithothertypes.xul \
 		test_tmpl_xmlquerywithinlinedata.xul \
-		test_tmpl_xmlquerywithinlinedatawithmultiplequeries.xul \
-		$(NULL)
+		test_tmpl_xmlquerywithinlinedatawithmultiplequeries.xul
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
