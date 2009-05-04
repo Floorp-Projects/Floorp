@@ -64,6 +64,10 @@ ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
 DIRS += system/unixproxy
 endif
 
+ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+DIRS += system/windowsproxy
+endif
+
 ifdef MOZ_CRASHREPORTER
 DIRS += crashreporter
 endif

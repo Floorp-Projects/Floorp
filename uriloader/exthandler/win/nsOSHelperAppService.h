@@ -93,7 +93,7 @@ protected:
   static PRBool typeFromExtEquals(const PRUnichar* aExt, const char *aType);
 
 private:
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   IApplicationAssociationRegistration* mAppAssoc;
 #endif
 };

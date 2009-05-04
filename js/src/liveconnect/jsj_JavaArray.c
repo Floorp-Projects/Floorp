@@ -48,6 +48,7 @@
 #include <string.h>
 
 #include "jsj_private.h"      /* LiveConnect internals */
+#include "jsobj.h"
 
 /* Shorthands for ASCII (7-bit) decimal and hex conversion. */
 #define JS7_ISDEC(c)    (((c) >= '0') && ((c) <= '9'))
@@ -423,11 +424,8 @@ JSObjectOps JavaArray_ops = {
     NULL,                           /* dropProperty */
     NULL,                           /* call */
     NULL,                           /* construct */
-    NULL,                           /* xdrObject */
     NULL,                           /* hasInstance */
-    NULL,                           /* setProto */
-    NULL,                           /* setParent */
-    NULL,                           /* mark */
+    NULL,                           /* trace */
     NULL,                           /* clear */
     jsj_wrapper_getRequiredSlot,    /* getRequiredSlot */
     jsj_wrapper_setRequiredSlot     /* setRequiredSlot */

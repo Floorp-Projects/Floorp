@@ -41,5 +41,38 @@ class GetPatSubstTest(unittest.TestCase):
                           for word in words))
             self.assertEqual(a, e, 'Pattern(%r).subst(%r, %r)' % (s, r, d))
 
+class LRUTest(unittest.TestCase):
+    # getkey, expected, funccount, debugitems
+    expected = (
+        (0, '', 1, (0,)),
+        (0, '', 2, (0,)),
+        (1, ' ', 3, (1, 0)),
+        (1, ' ', 3, (1, 0)),
+        (0, '', 4, (0, 1)),
+        (2, '  ', 5, (2, 0, 1)),
+        (1, ' ', 5, (1, 2, 0)),
+        (3, '   ', 6, (3, 1, 2)),
+    )
+
+    def spaceFunc(self, l):
+        self.funccount += 1
+        return ''.ljust(l)
+
+    def runTest(self):
+        self.funccount = 0
+        c = pymake.util.LRUCache(3, self.spaceFunc, lambda k, v: k % 2)
+        self.assertEqual(tuple(c.debugitems()), ())
+
+        for i in xrange(0, len(self.expected)):
+            k, e, fc, di = self.expected[i]
+
+            v = c.get(k)
+            self.assertEqual(v, e)
+            self.assertEqual(self.funccount, fc,
+                             "funccount, iteration %i, got %i expected %i" % (i, self.funccount, fc))
+            goti = tuple(c.debugitems())
+            self.assertEqual(goti, di,
+                             "debugitems, iteration %i, got %r expected %r" % (i, goti, di))
+
 if __name__ == '__main__':
     unittest.main()

@@ -45,6 +45,14 @@ typedef struct {
   unsigned char   * v;
 } OggPlayVideoData;
 
+typedef struct {
+  unsigned char   * rgba; /* may be NULL if no alpha */
+  unsigned char   * rgb; /* may be NULL if alpha */
+  size_t          width; /* in pixels */
+  size_t          height; /* in pixels */
+  size_t          stride; /* in bytes */
+} OggPlayOverlayData;
+
 typedef void * OggPlayAudioData;
 
 typedef char OggPlayTextData;
@@ -66,6 +74,9 @@ oggplay_callback_info_get_record_size(OggPlayDataHeader *header);
 
 OggPlayVideoData *
 oggplay_callback_info_get_video_data(OggPlayDataHeader *header);
+
+OggPlayOverlayData *
+oggplay_callback_info_get_overlay_data(OggPlayDataHeader *header);
 
 OggPlayAudioData *
 oggplay_callback_info_get_audio_data(OggPlayDataHeader *header);

@@ -165,7 +165,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       }
       else
       {
-        rv = cssLoader->LoadSheet(url, docPrincipal, this);
+        rv = cssLoader->LoadSheet(url, docPrincipal, EmptyCString(), this);
         if (NS_SUCCEEDED(rv))
           ++mPendingSheets;
       }

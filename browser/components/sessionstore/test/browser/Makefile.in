@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Simon Bünzli <zeniko@gmail.com>
+#   Michael Kraft <morac99-firefox@yahoo.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,6 +60,8 @@ _BROWSER_TEST_FILES = \
 	browser_350525.js \
 	browser_367052.js \
 	browser_393716.js \
+	browser_394759.js \
+	browser_394759_privatebrowsing.js \
 	browser_408470.js \
 	browser_408470_sample.html \
 	browser_447951.js \
@@ -68,6 +71,7 @@ _BROWSER_TEST_FILES = \
 	browser_454908_sample.html \
 	browser_456342.js \
 	browser_456342_sample.xhtml \
+	browser_461634.js \
 	browser_463206.js \
 	browser_463206_sample.html \
 	browser_464199.js \
@@ -78,6 +82,10 @@ _BROWSER_TEST_FILES = \
 	browser_476161.js \
 	browser_476161_sample.html \
 	browser_480893.js \
+	browser_483330.js \
+	browser_485482.js \
+	browser_485482_sample.html \
+	browser_485563.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

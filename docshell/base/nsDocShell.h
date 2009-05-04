@@ -46,7 +46,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch.h"
-#include "nsVoidArray.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIScriptContext.h"
 #include "nsITimer.h"
@@ -108,6 +107,7 @@
 #include "nsIURIClassifier.h"
 #include "nsIChannelClassifier.h"
 #include "nsILoadContext.h"
+#include "nsIWidget.h"
 
 class nsIScrollableView;
 class nsDocShell;
@@ -262,7 +262,8 @@ protected:
     NS_IMETHOD EnsureContentViewer();
     // aPrincipal can be passed in if the caller wants.  If null is
     // passed in, the about:blank principal will end up being used.
-    nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal);
+    nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
+                                           nsIURI* aBaseURI);
     NS_IMETHOD CreateContentViewer(const char * aContentType, 
         nsIRequest * request, nsIStreamListener ** aContentHandler);
     NS_IMETHOD NewContentViewerObj(const char * aContentType, 

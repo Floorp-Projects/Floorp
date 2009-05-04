@@ -39,8 +39,8 @@ import zipfile
 import time
 import binascii, struct
 import zlib
+import os
 from utils import lockFile
-
 
 class ZipFile(zipfile.ZipFile):
   """ Class with methods to open, read, write, close, list zip files.
@@ -55,6 +55,13 @@ class ZipFile(zipfile.ZipFile):
       self.lockfile = lockFile(file + '.lck')
     else:
       self.lockfile = None
+
+    if mode == 'a' and lock:
+      # appending to a file which doesn't exist fails, but we can't check
+      # existence util we hold the lock
+      if (not os.path.isfile(file)) or os.path.getsize(file) == 0:
+        mode = 'w'
+
     zipfile.ZipFile.__init__(self, file, mode, compression)
     self._remove = []
     self.end = self.fp.tell()

@@ -281,12 +281,12 @@ nsSVGGlyphFrame::IsSelectable(PRBool* aIsSelectable,
   return rv;
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsSVGGlyphFrame::Init(nsIContent* aContent,
                       nsIFrame* aParent,
                       nsIFrame* aPrevInFlow)
 {
+#ifdef DEBUG
   NS_ASSERTION(aParent, "null parent");
 
   nsIFrame* ancestorFrame = nsSVGUtils::GetFirstNonAAncestorFrame(aParent);
@@ -298,6 +298,7 @@ nsSVGGlyphFrame::Init(nsIContent* aContent,
 
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "trying to construct an SVGGlyphFrame for wrong content element");
+#endif /* DEBUG */
 
   if (!PresContext()->IsDynamic()) {
     AddStateBits(NS_STATE_SVG_PRINTING);
@@ -305,7 +306,6 @@ nsSVGGlyphFrame::Init(nsIContent* aContent,
 
   return nsSVGGlyphFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
-#endif /* DEBUG */
 
 nsIAtom *
 nsSVGGlyphFrame::GetType() const
@@ -326,6 +326,15 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
   PRUint16 renderMode = aContext->GetRenderMode();
 
+  switch (GetStyleSVG()->mTextRendering) {
+  case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
+    gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
+    break;
+  default:
+    gfx->SetAntialiasMode(gfxContext::MODE_COVERAGE);
+    break;
+  }
+
   if (renderMode != nsSVGRenderState::NORMAL) {
 
     gfxMatrix matrix = gfx->CurrentMatrix();
@@ -340,7 +349,6 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
       gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
     if (renderMode == nsSVGRenderState::CLIP_MASK) {
-      gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
       FillCharacters(&iter, gfx);
     } else {
@@ -446,32 +454,50 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
 {
   mRect.Empty();
 
-  nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  SetMatrixPropagation(PR_FALSE);
-  
-  gfxRect extent = gfxRect(0, 0, 0, 0);
+  gfxMatrix matrix = GetCanvasTM();
+  if (matrix.IsSingular()) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (SetupCairoStrokeGeometry(tmpCtx)) {
-    CharacterIterator iter(this, PR_TRUE);
-    gfxFloat strokeWidth = tmpCtx->CurrentLineWidth();
-    AddCharactersToPath(&iter, tmpCtx);
-    tmpCtx->SetLineWidth(strokeWidth);
-    tmpCtx->IdentityMatrix();
-    extent = tmpCtx->GetUserStrokeExtent();
+  nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
+  tmpCtx->Multiply(matrix);
+
+  PRBool hasStroke = SetupCairoStrokeGeometry(tmpCtx);
+
+  if (!hasStroke && GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
+    return NS_OK;
   }
-  if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
-    CharacterIterator iter(this, PR_TRUE);
-    AddBoundingBoxesToPath(&iter, tmpCtx);
-    tmpCtx->IdentityMatrix();
-    extent = extent.Union(tmpCtx->GetUserPathExtent());
-  }
+
+  SetMatrixPropagation(PR_FALSE);
+  CharacterIterator iter(this, PR_TRUE);
+  iter.SetInitialMatrix(tmpCtx);
+  AddBoundingBoxesToPath(&iter, tmpCtx); // iter is now unsafe to use! (at end)
   SetMatrixPropagation(PR_TRUE);
+  tmpCtx->IdentityMatrix();
+
+  // Be careful when replacing the following logic to get the fill and stroke
+  // extents independently (instead of computing the stroke extents from the
+  // path extents). You may think that you can just use the stroke extents if
+  // there is both a fill and a stroke. In reality it's necessary to calculate
+  // both the fill and stroke extents, and take the union of the two. There are
+  // two reasons for this:
+  //
+  // # Due to stroke dashing, in certain cases the fill extents could actually
+  //   extend outside the stroke extents.
+  // # If the stroke is very thin, cairo won't paint any stroke, and so the
+  //   stroke bounds that it will return will be empty.
+  //
+  // Another thing to be aware of is that under AddBoundingBoxesToPath the
+  // gfxContext has SetLineWidth() called on it, so if we want to ask the
+  // gfxContext for *stroke* extents, we'll neet to wrap the
+  // AddBoundingBoxesToPath() call with CurrentLineWidth()/SetLineWidth()
+  // calls to record and then reset the stroke width.
+  gfxRect extent = tmpCtx->GetUserPathExtent();
+  if (hasStroke) {
+    extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
+  }
 
   if (!extent.IsEmpty()) {
-    gfxMatrix matrix;
-    GetGlobalTransform(&matrix);
-
-    extent = matrix.TransformBounds(extent);
     mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
   }
 
@@ -577,36 +603,34 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
   }
 }
 
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
+gfxRect
+nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
-  *_retval = nsnull;
+  mOverrideCanvasTM = NS_NewSVGMatrix(aToBBoxUserspace);
 
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
   SetupGlobalTransform(tmpCtx);
   CharacterIterator iter(this, PR_TRUE);
   iter.SetInitialMatrix(tmpCtx);
   AddCharactersToPath(&iter, tmpCtx);
-
   tmpCtx->IdentityMatrix();
-  return NS_NewSVGRect(_retval, tmpCtx->GetUserPathExtent());
+
+  mOverrideCanvasTM = nsnull;
+
+  return tmpCtx->GetUserPathExtent();
 }
 
 //----------------------------------------------------------------------
 // nsSVGGeometryFrame methods:
 
-/* readonly attribute nsIDOMSVGMatrix canvasTM; */
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
+gfxMatrix
+nsSVGGlyphFrame::GetCanvasTM()
 {
+  if (mOverrideCanvasTM) {
+    return nsSVGUtils::ConvertSVGMatrixToThebes(mOverrideCanvasTM);
+  }
   NS_ASSERTION(mParent, "null parent");
-  
-  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                   (mParent);
-  nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
-  *aCTM = nsnull;
-  parentTM.swap(*aCTM);
-  return NS_OK;
+  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();
 }
 
 //----------------------------------------------------------------------
@@ -1246,12 +1270,7 @@ nsSVGGlyphFrame::GetGlobalTransform(gfxMatrix *aMatrix)
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  GetCanvasTM(getter_AddRefs(ctm));
-  if (!ctm)
-    return PR_FALSE;
-
-  *aMatrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
+  *aMatrix = GetCanvasTM();
   return !aMatrix->IsSingular();
 }
 
@@ -1260,7 +1279,9 @@ nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext)
 {
   gfxMatrix matrix;
   GetGlobalTransform(&matrix);
-  aContext->Multiply(matrix);
+  if (!matrix.IsSingular()) {
+    aContext->Multiply(matrix);
+  }
 }
 
 void

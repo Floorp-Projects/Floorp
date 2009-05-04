@@ -1249,7 +1249,7 @@ DirectoryInstallLocation.prototype = {
    * See nsIExtensionManager.idl
    */
   getItemFile: function DirInstallLocation_getItemFile(id, filePath) {
-    var itemLocation = this.getItemLocation(id).clone();
+    var itemLocation = this.getItemLocation(id);
     var parts = filePath.split("/");
     for (var i = 0; i < parts.length; ++i)
       itemLocation.append(parts[i]);
@@ -1478,7 +1478,7 @@ WinRegInstallLocation.prototype = {
   },
 
   getItemLocation: function RegInstallLocation_getItemLocation(id) {
-    return this._IDToDirMap[id];
+    return this._IDToDirMap[id].clone();
   },
 
   getIDForLocation: function RegInstallLocation_getIDForLocation(dir) {
@@ -1486,7 +1486,7 @@ WinRegInstallLocation.prototype = {
   },
 
   getItemFile: function RegInstallLocation_getItemFile(id, filePath) {
-    var itemLocation = this.getItemLocation(id).clone();
+    var itemLocation = this.getItemLocation(id);
     var parts = filePath.split("/");
     for (var i = 0; i < parts.length; ++i)
       itemLocation.append(parts[i]);

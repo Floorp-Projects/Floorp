@@ -165,6 +165,77 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
   return static_cast<nsINode*>(aDocument);
 }
 
+/**
+ * Class used to detect unexpected mutations. To use the class create an
+ * nsMutationGuard on the stack before unexpected mutations could occur.
+ * You can then at any time call Mutated to check if any unexpected mutations
+ * have occured.
+ *
+ * When a guard is instantiated sMutationCount is set to 300. It is then
+ * decremented by every mutation (capped at 0). This means that we can only
+ * detect 300 mutations during the lifetime of a single guard, however that
+ * should be more then we ever care about as we usually only care if more then
+ * one mutation has occured.
+ *
+ * When the guard goes out of scope it will adjust sMutationCount so that over
+ * the lifetime of the guard the guard itself has not affected sMutationCount,
+ * while mutations that happened while the guard was alive still will. This
+ * allows a guard to be instantiated even if there is another guard higher up
+ * on the callstack watching for mutations.
+ *
+ * The only thing that has to be avoided is for an outer guard to be used
+ * while an inner guard is alive. This can be avoided by only ever
+ * instantiating a single guard per scope and only using the guard in the
+ * current scope.
+ */
+class nsMutationGuard {
+public:
+  nsMutationGuard()
+  {
+    mDelta = eMaxMutations - sMutationCount;
+    sMutationCount = eMaxMutations;
+  }
+  ~nsMutationGuard()
+  {
+    sMutationCount =
+      mDelta > sMutationCount ? 0 : sMutationCount - mDelta;
+  }
+
+  /**
+   * Returns true if any unexpected mutations have occured. You can pass in
+   * an 8-bit ignore count to ignore a number of expected mutations.
+   */
+  PRBool Mutated(PRUint8 aIgnoreCount)
+  {
+    return sMutationCount < static_cast<PRUint32>(eMaxMutations - aIgnoreCount);
+  }
+
+  // This function should be called whenever a mutation that we want to keep
+  // track of happen. For now this is only done when children are added or
+  // removed, but we might do it for attribute changes too in the future.
+  static void DidMutate()
+  {
+    if (sMutationCount) {
+      --sMutationCount;
+    }
+  }
+
+private:
+  // mDelta is the amount sMutationCount was adjusted when the guard was
+  // initialized. It is needed so that we can undo that adjustment once
+  // the guard dies.
+  PRUint32 mDelta;
+
+  // The value 300 is not important, as long as it is bigger then anything
+  // ever passed to Mutated().
+  enum { eMaxMutations = 300 };
+
+  
+  // sMutationCount is a global mutation counter which is decreased by one at
+  // every mutation. It is capped at 0 to avoid wrapping.
+  // Its value is always between 0 and 300, inclusive.
+  static PRUint32 sMutationCount;
+};
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
@@ -700,6 +771,22 @@ public:
   }
 
   /**
+   * Returns PR_TRUE if |this| or any of its ancestors is native anonymous.
+   */
+  PRBool IsInNativeAnonymousSubtree() const
+  {
+#ifdef DEBUG
+    if (HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE)) {
+      return PR_TRUE;
+    }
+    CheckNotNativeAnonymous();
+    return PR_FALSE;
+#else
+    return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
+#endif
+  }
+
+  /**
    * Get the root content of an editor. So, this node must be a descendant of
    * an editor. Note that this should be only used for getting input or textarea
    * editor's root content. This method doesn't support HTML editors.
@@ -738,6 +825,42 @@ public:
    * nsIDocument* to nsINode*.
    */
   nsIDocument* GetOwnerDocument() const;
+
+  /**
+   * Iterator that can be used to easily iterate over the children.  This has
+   * the same restrictions on its use as GetChildArray does.
+   */
+  class ChildIterator {
+  public:
+    ChildIterator(const nsINode* aNode) { Init(aNode); }
+    ChildIterator(const nsINode* aNode, PRUint32 aOffset) {
+      Init(aNode);
+      Advance(aOffset);
+    }
+    ~ChildIterator() {
+      NS_ASSERTION(!mGuard.Mutated(0), "Unexpected mutations happened");
+    }
+
+    PRBool IsDone() const { return mCur == mEnd; }
+    operator nsIContent* const () { return *mCur; }
+    void Next() { NS_PRECONDITION(mCur != mEnd, "Check IsDone"); ++mCur; }
+    void Advance(PRUint32 aOffset) {
+      NS_ASSERTION(mCur + aOffset <= mEnd, "Unexpected offset");
+      mCur += aOffset;
+    }
+  private:
+    void Init(const nsINode* aNode) {
+      NS_PRECONDITION(aNode, "Must have node here!");
+      PRUint32 childCount;
+      mCur = aNode->GetChildArray(&childCount);
+      mEnd = mCur + childCount;
+    }
+#ifdef DEBUG
+    nsMutationGuard mGuard;
+#endif
+    nsIContent* const * mCur;
+    nsIContent* const * mEnd;
+  };
 
 protected:
 
@@ -784,6 +907,12 @@ protected:
   {
     return IsEditableInternal();
   }
+
+#ifdef DEBUG
+  // Note: virtual so that IsInNativeAnonymousSubtree can be called accross
+  // module boundaries.
+  virtual void CheckNotNativeAnonymous() const;
+#endif
 
   nsresult GetParentNode(nsIDOMNode** aParentNode);
   nsresult GetChildNodes(nsIDOMNodeList** aChildNodes);

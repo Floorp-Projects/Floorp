@@ -58,6 +58,13 @@ const LMANNO_EXPIRATION = "livemark/expiration";
 const LMANNO_LOADFAILED = "livemark/loadfailed";
 const LMANNO_LOADING = "livemark/loading";
 
+// The RESTORE_*_NSIOBSERVER_TOPIC constants should match the #defines of the
+// same names in browser/components/places/src/nsPlacesImportExportService.cpp
+const RESTORE_BEGIN_NSIOBSERVER_TOPIC = "bookmarks-restore-begin";
+const RESTORE_SUCCESS_NSIOBSERVER_TOPIC = "bookmarks-restore-success";
+const RESTORE_FAILED_NSIOBSERVER_TOPIC = "bookmarks-restore-failed";
+const RESTORE_NSIOBSERVER_DATA = "json";
+
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
 // really just want "\n".
@@ -1054,26 +1061,50 @@ var PlacesUtils = {
    */
   restoreBookmarksFromJSONFile:
   function PU_restoreBookmarksFromJSONFile(aFile) {
-    // open file stream
-    var stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                 createInstance(Ci.nsIFileInputStream);
-    stream.init(aFile, 0x01, 0, 0);
-    var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                    createInstance(Ci.nsIConverterInputStream);
-    converted.init(stream, "UTF-8", 8192,
-                   Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+    var failed = false;
+    var obsServ = Cc["@mozilla.org/observer-service;1"].
+                  getService(Ci.nsIObserverService);
+    obsServ.notifyObservers(null,
+                            RESTORE_BEGIN_NSIOBSERVER_TOPIC,
+                            RESTORE_NSIOBSERVER_DATA);
 
-    // read in contents
-    var str = {};
-    var jsonStr = "";
-    while (converted.readString(8192, str) != 0)
-      jsonStr += str.value;
-    converted.close();
+    try {
+      // open file stream
+      var stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                   createInstance(Ci.nsIFileInputStream);
+      stream.init(aFile, 0x01, 0, 0);
+      var converted = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                      createInstance(Ci.nsIConverterInputStream);
+      converted.init(stream, "UTF-8", 8192,
+                     Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 
-    if (jsonStr.length == 0)
-      return; // empty file
+      // read in contents
+      var str = {};
+      var jsonStr = "";
+      while (converted.readString(8192, str) != 0)
+        jsonStr += str.value;
+      converted.close();
 
-    this.restoreBookmarksFromJSONString(jsonStr, true);
+      if (jsonStr.length == 0)
+        return; // empty file
+
+      this.restoreBookmarksFromJSONString(jsonStr, true);
+    }
+    catch (exc) {
+      failed = true;
+      obsServ.notifyObservers(null,
+                              RESTORE_FAILED_NSIOBSERVER_TOPIC,
+                              RESTORE_NSIOBSERVER_DATA);
+      Components.utils.reportError("Bookmarks JSON restore failed: " + exc);
+      throw exc;
+    }
+    finally {
+      if (!failed) {
+        obsServ.notifyObservers(null,
+                                RESTORE_SUCCESS_NSIOBSERVER_TOPIC,
+                                RESTORE_NSIOBSERVER_DATA);
+      }
+    }
   },
 
   /**

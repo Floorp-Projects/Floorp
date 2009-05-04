@@ -21,28 +21,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=455327
 <script class="testbody" type="text/javascript">
 /** Test for Bug  **/
 
+ensure_geolocationProvider();
 SimpleTest.waitForExplicitFinish();
 
 stop_geolocationProvider();
 
 function successCallback(pos){
-  ok(0, "success should have never been called.");
-
+  ok(false, "success should have never been called.");
   resume_geolocationProvider();
   SimpleTest.finish();
 }
 
 function errorCallback(err) {
-    if (err.code == err.POSITION_UNAVAILABLE) {
-        // nothing is hooked up to test against.
-        SimpleTest.finish();
-        return;
-    }
-
-  ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
-
+  if (err.code == err.POSITION_UNAVAILABLE)
+    ok(false, "nothing is hooked up to test against.");
+  else
+    ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
   resume_geolocationProvider();
-
   SimpleTest.finish();
 }
 
@@ -56,7 +51,7 @@ navigator.geolocation.watchPosition(successCallback,
                                     errorCallback,
                                     options);
 
-setTimeout(clickAccept, 0);
+setTimeout(clickNotificationButton, 10, kAcceptButton);
 
 </script>
 </pre>

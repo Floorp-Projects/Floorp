@@ -39,7 +39,7 @@
 # Master "Core Components" file system "release" prefixes             #
 #######################################################################
 
-# Windows platforms override this.  See WIN32.mk or WIN16.mk.
+# Windows platforms override this.  See WIN32.mk.
 ifndef RELEASE_TREE
     ifdef BUILD_SHIP
 	ifdef USE_SHIPS 

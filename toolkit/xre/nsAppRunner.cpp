@@ -789,6 +789,114 @@ nsXULAppInfo::GetUserCanElevate(PRBool *aUserCanElevate)
 
 #ifdef MOZ_CRASHREPORTER
 NS_IMETHODIMP
+nsXULAppInfo::GetEnabled(PRBool *aEnabled)
+{
+  *aEnabled = CrashReporter::GetEnabled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetEnabled(PRBool aEnabled)
+{
+  if (aEnabled) {
+    if (CrashReporter::GetEnabled())
+      // no point in erroring for double-enabling
+      return NS_OK;
+
+    nsCOMPtr<nsILocalFile> xreDirectory;
+    if (gAppData) {
+      xreDirectory = gAppData->xreDirectory;
+    }
+    else {
+      // We didn't get started through XRE_Main, probably
+      nsCOMPtr<nsIFile> greDir;
+      NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greDir));
+      if (!greDir)
+        return NS_ERROR_FAILURE;
+
+      xreDirectory = do_QueryInterface(greDir);
+      if (!xreDirectory)
+        return NS_ERROR_FAILURE;
+    }
+    return CrashReporter::SetExceptionHandler(xreDirectory, true);
+  }
+  else {
+    if (!CrashReporter::GetEnabled())
+      // no point in erroring for double-disabling
+      return NS_OK;
+
+    return CrashReporter::UnsetExceptionHandler();
+  }
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetServerURL(nsIURL** aServerURL)
+{
+  if (!CrashReporter::GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCAutoString data;
+  if (!CrashReporter::GetServerURL(data)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), data);
+  if (!uri)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIURL> url;
+  url = do_QueryInterface(uri);
+  NS_ADDREF(*aServerURL = url);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetServerURL(nsIURL* aServerURL)
+{
+  PRBool schemeOk;
+  // only allow https or http URLs
+  nsresult rv = aServerURL->SchemeIs("https", &schemeOk);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!schemeOk) {
+    rv = aServerURL->SchemeIs("http", &schemeOk);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!schemeOk)
+      return NS_ERROR_INVALID_ARG;
+  }
+  nsCAutoString spec;
+  rv = aServerURL->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return CrashReporter::SetServerURL(spec);
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetMinidumpPath(nsILocalFile** aMinidumpPath)
+{
+  if (!CrashReporter::GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsAutoString path;
+  if (!CrashReporter::GetMinidumpPath(path))
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_NewLocalFile(path, PR_FALSE, aMinidumpPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetMinidumpPath(nsILocalFile* aMinidumpPath)
+{
+  nsAutoString path;
+  nsresult rv = aMinidumpPath->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return CrashReporter::SetMinidumpPath(path);
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   const nsACString& data)
 {
@@ -2386,8 +2494,16 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     PangoContext *pangoContext = gdk_pango_context_get();
 #endif
 
-    if (!theme_is_qt)
-      gdk_display_close(display);
+    PRBool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
+
+    if (!buggyCairoShutdown) {
+      // We should shut down GDK before we shut down libraries it depends on
+      // like Pango and cairo. But if cairo shutdown is buggy, we should
+      // shut down cairo first otherwise it may crash because of dangling
+      // references to Display objects (see bug 469831).
+      if (!theme_is_qt)
+        gdk_display_close(display);
+    }
 
 #if CLEANUP_MEMORY
     // This doesn't take a reference.
@@ -2415,6 +2531,11 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     cairo_debug_reset_static_data();
 #endif // 2.8.0
 #endif // CLEANUP_MEMORY
+
+    if (buggyCairoShutdown) {
+      if (!theme_is_qt)
+        gdk_display_close(display);
+    }
   }
 }
 #endif // MOZ_WIDGET_GTK2
@@ -2628,8 +2749,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   if ((appData.flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
       NS_SUCCEEDED(
-         CrashReporter::SetExceptionHandler(appData.xreDirectory,
-                                            appData.crashReporterURL))) {
+         CrashReporter::SetExceptionHandler(appData.xreDirectory))) {
+    CrashReporter::SetServerURL(nsDependentCString(appData.crashReporterURL));
     // pass some basic info from the app data
     if (appData.vendor)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
@@ -3053,7 +3174,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_TIMELINE_LEAVE("startupNotifier");
         }
 
-        nsCOMPtr<nsIAppStartup> appStartup
+        nsCOMPtr<nsIAppStartup2> appStartup
           (do_GetService(NS_APPSTARTUP_CONTRACTID));
         NS_ENSURE_TRUE(appStartup, 1);
 
@@ -3085,30 +3206,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         }
         dirProvider.DoStartup();
 
-        nsCOMPtr<nsICommandLineRunner> cmdLine
-          (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-        NS_ENSURE_TRUE(cmdLine, 1);
+        PRBool shuttingDown = PR_FALSE;
+        appStartup->GetShuttingDown(&shuttingDown);
 
-        nsCOMPtr<nsIFile> workingDir;
-        rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
-        NS_ENSURE_SUCCESS(rv, 1);
-
-        rv = cmdLine->Init(gArgc, gArgv,
-                           workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
-        NS_ENSURE_SUCCESS(rv, 1);
-
-        /* Special-case services that need early access to the command
-           line. */
-        nsCOMPtr<nsIObserver> chromeObserver
-          (do_GetService("@mozilla.org/chrome/chrome-registry;1"));
-        if (chromeObserver) {
-          chromeObserver->Observe(cmdLine, "command-line-startup", nsnull);
-        }
-
-        NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
-        rv = appStartup->CreateHiddenWindow();
-        NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
-        NS_ENSURE_SUCCESS(rv, 1);
+        nsCOMPtr<nsICommandLineRunner> cmdLine;
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
         nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
@@ -3117,51 +3218,77 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         }
 #endif
 
-        // Extension Compatibility Checking and Startup
-        if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
-          nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
-          NS_ENSURE_TRUE(em, 1);
+        nsCOMPtr<nsIFile> workingDir;
+        rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
+        NS_ENSURE_SUCCESS(rv, 1);
 
-          ar = CheckArg("install-global-extension", PR_TRUE);
-          if (ar == ARG_BAD) {
-            PR_fprintf(PR_STDERR, "Error: argument -install-global-extension is invalid when argument -osint is specified\n");
-            return 1;
-          } else if (ar == ARG_FOUND) {
-            // Do the required processing and then shut down.
-            em->HandleCommandLineArgs(cmdLine);
-            return 0;
+        if (!shuttingDown) {
+          cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
+          NS_ENSURE_TRUE(cmdLine, 1);
+
+          rv = cmdLine->Init(gArgc, gArgv,
+                             workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
+          NS_ENSURE_SUCCESS(rv, 1);
+
+          /* Special-case services that need early access to the command
+             line. */
+          nsCOMPtr<nsIObserver> chromeObserver
+            (do_GetService("@mozilla.org/chrome/chrome-registry;1"));
+          if (chromeObserver) {
+            chromeObserver->Observe(cmdLine, "command-line-startup", nsnull);
           }
 
-          ar = CheckArg("install-global-theme", PR_TRUE);
-          if (ar == ARG_BAD) {
-            PR_fprintf(PR_STDERR, "Error: argument -install-global-theme is invalid when argument -osint is specified\n");
-            return 1;
-          } else if (ar == ARG_FOUND) {
-            // Do the required processing and then shut down.
-            em->HandleCommandLineArgs(cmdLine);
-            return 0;
-          }
+          NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
+          rv = appStartup->CreateHiddenWindow();
+          NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
+          NS_ENSURE_SUCCESS(rv, 1);
 
-          if (upgraded) {
-            rv = em->CheckForMismatches(&needsRestart);
-            if (NS_FAILED(rv)) {
-              needsRestart = PR_FALSE;
-              upgraded = PR_FALSE;
+          // Extension Compatibility Checking and Startup
+          if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
+            nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
+            NS_ENSURE_TRUE(em, 1);
+
+            ar = CheckArg("install-global-extension", PR_TRUE);
+            if (ar == ARG_BAD) {
+              PR_fprintf(PR_STDERR, "Error: argument -install-global-extension is invalid when argument -osint is specified\n");
+              return 1;
+            } else if (ar == ARG_FOUND) {
+              // Do the required processing and then shut down.
+              em->HandleCommandLineArgs(cmdLine);
+              return 0;
             }
+
+            ar = CheckArg("install-global-theme", PR_TRUE);
+            if (ar == ARG_BAD) {
+              PR_fprintf(PR_STDERR, "Error: argument -install-global-theme is invalid when argument -osint is specified\n");
+              return 1;
+            } else if (ar == ARG_FOUND) {
+              // Do the required processing and then shut down.
+              em->HandleCommandLineArgs(cmdLine);
+              return 0;
+            }
+
+            if (upgraded) {
+              rv = em->CheckForMismatches(&needsRestart);
+              if (NS_FAILED(rv)) {
+                needsRestart = PR_FALSE;
+                upgraded = PR_FALSE;
+              }
+            }
+            
+            if (!upgraded || !needsRestart)
+              em->Start(cmdLine, &needsRestart);
           }
 
-          if (!upgraded || !needsRestart)
-            em->Start(cmdLine, &needsRestart);
-        }
-
-        // We want to restart no more than 2 times. The first restart,
-        // NO_EM_RESTART == "0" , and the second time, "1".
-        char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
-        if (noEMRestart && *noEMRestart && *noEMRestart == '1') {
-          if (upgraded || needsRestart) {
-            NS_WARNING("EM tried to force us to restart twice! Forcefully preventing that.");
+          // We want to restart no more than 2 times. The first restart,
+          // NO_EM_RESTART == "0" , and the second time, "1".
+          char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
+          if (noEMRestart && *noEMRestart && *noEMRestart == '1') {
+            if (upgraded || needsRestart) {
+              NS_WARNING("EM tried to force us to restart twice! Forcefully preventing that.");
+            }
+            needsRestart = upgraded = PR_FALSE;
           }
-          needsRestart = upgraded = PR_FALSE;
         }
 
         if (!upgraded && !needsRestart) {
@@ -3178,42 +3305,55 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           PR_SetEnv("XUL_APP_FILE=");
           PR_SetEnv("XRE_BINARY_PATH=");
 
+          if (!shuttingDown) {
 #ifdef XP_MACOSX
-          // we re-initialize the command-line service and do appleevents munging
-          // after we are sure that we're not restarting
-          cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
-          NS_ENSURE_TRUE(cmdLine, 1);
+            // we re-initialize the command-line service and do appleevents munging
+            // after we are sure that we're not restarting
+            cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
+            NS_ENSURE_TRUE(cmdLine, 1);
 
-          SetupMacCommandLine(gArgc, gArgv);
+            SetupMacCommandLine(gArgc, gArgv);
 
-          rv = cmdLine->Init(gArgc, gArgv,
-                             workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
-          NS_ENSURE_SUCCESS(rv, 1);
+            rv = cmdLine->Init(gArgc, gArgv,
+                               workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
+            NS_ENSURE_SUCCESS(rv, 1);
 #endif
 #ifdef MOZ_WIDGET_COCOA
-          // Prepare Cocoa's form of Apple Event handling.
-          SetupMacApplicationDelegate();
+            // Prepare Cocoa's form of Apple Event handling.
+            SetupMacApplicationDelegate();
 #endif
-          nsCOMPtr<nsIObserverService> obsService
-            (do_GetService("@mozilla.org/observer-service;1"));
-          if (obsService)
-            obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);
 
-          rv = cmdLine->Run();
-          NS_ENSURE_SUCCESS_LOG(rv, 1);
+            nsCOMPtr<nsIObserverService> obsService
+              (do_GetService("@mozilla.org/observer-service;1"));
+            if (obsService)
+              obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);
+
+            appStartup->GetShuttingDown(&shuttingDown);
+          }
+
+          if (!shuttingDown) {
+            rv = cmdLine->Run();
+            NS_ENSURE_SUCCESS_LOG(rv, 1);
+
+            appStartup->GetShuttingDown(&shuttingDown);
+          }
 
 #ifdef MOZ_ENABLE_XREMOTE
-          // if we have X remote support, start listening for requests on the
-          // proxy window.
           nsCOMPtr<nsIRemoteService> remoteService;
-          remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
-          if (remoteService)
-            remoteService->Startup(gAppData->name,
-                                   PromiseFlatCString(profileName).get());
+#endif /* MOZ_ENABLE_XREMOTE */
+          if (!shuttingDown) {
+#ifdef MOZ_ENABLE_XREMOTE
+            // if we have X remote support, start listening for requests on the
+            // proxy window.
+            remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
+            if (remoteService)
+              remoteService->Startup(gAppData->name,
+                                     PromiseFlatCString(profileName).get());
 #endif /* MOZ_ENABLE_XREMOTE */
 
-          // enable win32 DDE responses and Mac appleevents responses
-          nativeApp->Enable();
+            // enable win32 DDE responses and Mac appleevents responses
+            nativeApp->Enable();
+          }
 
           NS_TIMELINE_ENTER("appStartup->Run");
           rv = appStartup->Run();
@@ -3230,11 +3370,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             appInitiatedRestart = PR_TRUE;
           }
 
+          if (!shuttingDown) {
 #ifdef MOZ_ENABLE_XREMOTE
-          // shut down the x remote proxy window
-          if (remoteService)
-            remoteService->Shutdown();
+            // shut down the x remote proxy window
+            if (remoteService)
+              remoteService->Shutdown();
 #endif /* MOZ_ENABLE_XREMOTE */
+          }
 
 #ifdef MOZ_TIMELINE
           // Make sure we print this out even if timeline is runtime disabled

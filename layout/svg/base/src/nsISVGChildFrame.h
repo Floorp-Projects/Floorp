@@ -43,6 +43,8 @@
 #include "nsQueryFrame.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
+#include "gfxRect.h"
+#include "gfxMatrix.h"
 
 class gfxContext;
 class nsPresContext;
@@ -97,8 +99,25 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate)=0;
   virtual PRBool GetMatrixPropagation()=0;
 
-  // XXX move this function into interface nsISVGLocatableMetrics
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval)=0; // bbox in local coords
+  /**
+   * Get this frame's contribution to the rect returned by a GetBBox() call
+   * that occured either on this element, or on one of its ancestors.
+   *
+   * SVG defines an element's bbox to be the element's fill bounds in the
+   * userspace established by that element. By allowing callers to pass in the
+   * transform from the userspace established by this element to the userspace
+   * established by an an ancestor, this method allows callers to obtain this
+   * element's fill bounds in the userspace established by that ancestor
+   * instead. In that case, since we return the bounds in a different userspace
+   * (the ancestor's), the bounds we return are not this element's bbox, but
+   * rather this element's contribution to the bbox of the ancestor.
+   *
+   * @param aToBBoxUserspace The transform from the userspace established by
+   *   this element to the userspace established by the ancestor on which
+   *   getBBox was called. This will be the identity matrix if we are the
+   *   element on which getBBox was called.
+   */
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace) = 0;
 
   // Are we a container frame?
   NS_IMETHOD_(PRBool) IsDisplayContainer()=0;

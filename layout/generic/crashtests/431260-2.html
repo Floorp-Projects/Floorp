@@ -1,0 +1,26 @@
+<html class="reftest-wait"><head><style>
+  title::first-letter {}
+  title {
+    display: inline;
+    float: left;
+    font-size: 16px;
+  }
+</style>
+<script>
+  function boom() {
+    document.documentElement.innerHTML = document.documentElement.innerHTML;
+    document.documentElement.removeAttribute("class");
+  }
+</script>
+<title>
+a
+b
+&#1593
+c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c
+c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c
+c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c c
+</title></head>
+<script>
+setTimeout(boom, 0);
+</script>
+</html>

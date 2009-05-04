@@ -451,7 +451,7 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
 }
 
 #define COLOR_16_TO_8_BIT(_c) ((_c) >> 8)
-#define COLOR_8_TO_16_BIT(_c) ((_c) << 8)
+#define COLOR_8_TO_16_BIT(_c) ((_c) << 8 | (_c))
 
 NS_IMETHODIMP
 nsGNOMEShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
@@ -480,37 +480,25 @@ nsGNOMEShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
 static void
 ColorToCString(PRUint32 aColor, nsCString& aResult)
 {
-#if GTK_CHECK_VERSION(2,12,0)
-  GdkColor color;
-  color.red = COLOR_8_TO_16_BIT(aColor >> 16);
-  color.green = COLOR_8_TO_16_BIT((aColor >> 8) & 0xff);
-  color.blue = COLOR_8_TO_16_BIT(aColor & 0xff);
-
-  gchar *colorString = gdk_color_to_string(&color);
-  aResult.Assign(colorString);
-  g_free(colorString);
-
-#else // GTK 2.12.0
-
   // The #rrrrggggbbbb format is used to match gdk_color_to_string()
   char *buf = aResult.BeginWriting(13);
   if (!buf)
     return;
 
-  PRUint8 red = (aColor >> 16);
-  PRUint8 green = (aColor >> 8) & 0xff;
-  PRUint8 blue = aColor & 0xff;
+  PRUint16 red = COLOR_8_TO_16_BIT((aColor >> 16) & 0xff);
+  PRUint16 green = COLOR_8_TO_16_BIT((aColor >> 8) & 0xff);
+  PRUint16 blue = COLOR_8_TO_16_BIT(aColor & 0xff);
 
-  PR_snprintf(buf, 14, "#%02x00%02x00%02x00", red, green, blue);
-#endif // GTK 2.12.0
+  PR_snprintf(buf, 14, "#%04x%04x%04x", red, green, blue);
 }
 
 NS_IMETHODIMP
 nsGNOMEShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 {
+  NS_ASSERTION(aColor <= 0xffffff, "aColor has extra bits");
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
-  nsCString colorString;
+  nsCAutoString colorString;
   ColorToCString(aColor, colorString);
 
   gconf->SetString(NS_LITERAL_CSTRING(kDesktopColorKey), colorString);

@@ -42,7 +42,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsVoidArray.h"
 
 #include "nsIVariant.h"
 #include "nsIWritablePropertyBag.h"

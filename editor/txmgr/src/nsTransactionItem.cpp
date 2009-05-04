@@ -247,7 +247,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
     while (sz-- > 0) {
       result = mUndoStack->Peek(getter_AddRefs(item));
 
-      if (NS_FAILED(result)) {
+      if (NS_FAILED(result) || !item) {
         return result;
       }
 
@@ -339,7 +339,7 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
   while (sz-- > 0) {
     result = mRedoStack->Peek(getter_AddRefs(item));
 
-    if (NS_FAILED(result)) {
+    if (NS_FAILED(result) || !item) {
       return result;
     }
 

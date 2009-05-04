@@ -1,0 +1,43 @@
+<html>
+<head>
+<script>
+function init2() {
+var one = document.getElementById('one');
+var two = document.getElementById('two');
+var three = document.getElementById('three');
+var four = document.getElementById('four');
+
+four.appendChild(two);
+document.getElementsByTagName('tbody')[0].appendChild(three);
+four.appendChild(three);
+one.appendChild(four);
+document.getElementsByTagName('table')[0].appendChild(one);
+setTimeout('clickit()', 0);
+}
+
+function doe(){
+four.parentNode.removeChild(four);
+}
+
+function clickit()
+{
+  var evt = document.createEvent("MouseEvents");
+  evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  document.body.dispatchEvent(evt);
+}
+
+window.addEventListener("load", init2, 0);
+window.addEventListener("click", doe, 0);
+</script>
+</head>
+<body>
+<table style="border-collapse: collapse;"><tbody>
+  <tr> <td rowspan="5">P</td>   <td id="three">6</td> <td>O</td>  </tr>
+  <tr> <td id="four">5</td>	<td>P</td> </tr>
+  <tr id="five"> <td>5</td>	<td>U</td> </tr>
+  <tr id="one"> <td>6</td>	<td>S</td> </tr>
+  <tr id="two"> <td>S</td>	<td>9</td> </tr>
+</tbody></table>
+Mozilla should not crash when clicking in the document
+</body></html>
+

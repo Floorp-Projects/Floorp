@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsNativeTheme.h"
+#include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
@@ -80,6 +81,9 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
 
+  if (!aFrame->GetContent())
+    return 0;
+
   nsIPresShell *shell = GetPresShell(aFrame);
   if (!shell)
     return 0;
@@ -102,6 +106,9 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
     return PR_FALSE;
 
   nsIContent* content = aFrame->GetContent();
+  if (!content)
+    return PR_FALSE;
+
   if (content->IsNodeOfType(nsINode::eHTML))
     return content->HasAttr(kNameSpaceID_None, aAtom);
 
@@ -192,8 +199,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
          aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) &&
          aPresContext->HasAuthorSpecifiedRules(aFrame,
                                                NS_AUTHOR_SPECIFIED_BORDER |
-                                               NS_AUTHOR_SPECIFIED_BACKGROUND |
-                                               NS_AUTHOR_SPECIFIED_BOX_SHADOW);
+                                               NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 
 PRBool

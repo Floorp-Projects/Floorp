@@ -40,7 +40,6 @@
 #define nsIMEStateManager_h__
 
 #include "nscore.h"
-#include "nsGUIEvent.h"
 
 class nsIContent;
 class nsPIDOMWindow;

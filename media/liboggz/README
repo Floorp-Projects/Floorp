@@ -104,36 +104,41 @@ and mux and demux examples can be read online at:
 
     http://www.annodex.net/software/liboggz/html/
 
-Tools
------
+oggz tool
+---------
 
-The Oggz source tarball also contains the following command-line tools,
-which are useful for debugging and testing Ogg bitstreams:
+Usage: oggz <subcommand> [options] filename ...
 
-    * oggz-chop: Extract the part of an Ogg file between given start
-    and/or end times.
+oggz is a commandline tool for manipulating Ogg files. It supports
+multiplexed files conformant with RFC3533. Oggz can parse headers for
+CELT, CMML, FLAC, Kate, PCM, Speex, Theora and Vorbis, and can read and write
+Ogg Skeleton logical bitstreams.
 
-    * oggz-comment: List or edit comments in an Ogg file.
+Commands:
+  help          Display help for a specific subcommand (eg. "oggz help chop")
 
-    * oggz-diff: Hexdump the packets of two Ogg files and output
-    differences.
+Reporting:
+  diff          Hexdump the packets of two Ogg files and output differences.
+  dump          Hexdump packets of an Ogg file, or revert an Ogg file from
+                such a hexdump.
+  info          Display information about one or more Ogg files and their
+                bitstreams.
+  scan          Scan an Ogg file and output characteristic landmarks.
+  validate      Validate the Ogg framing of one or more files.
 
-    * oggz-dump: Hexdump packets of an Ogg file, or revert an Ogg file
-    from such a hexdump.
+Extraction:
+  rip           Extract one or more logical bitstreams from an Ogg file.
 
-    * oggz-info: Display information about one or more Ogg files and
-    their bitstreams.
+Editing:
+  chop          Extract the part of an Ogg file between given start and/or
+                end times.
+  comment       List or edit comments in an Ogg file.
+  merge         Merge Ogg files together, interleaving pages in order of
+                presentation time.
+  sort          Sort the pages of an Ogg file in order of presentation time.
 
-    * oggz-merge: Merge Ogg files together, interleaving pages in order
-    of presentation time.
-
-    * oggz-rip: Extract one or more logical bitstreams from an Ogg file.
-
-    * oggz-scan: Scan an Ogg file and output characteristic landmarks.
-
-    * oggz-sort: Sort the pages of an Ogg file in order of presentation time.
-
-    * oggz-validate: Validate the Ogg framing of one or more files.
+Miscellaneous:
+  known-codecs  List codecs known by this version of oggz
 
 The script bash-completion/oggz enables completion of tool options and codec
 names when using the bash shell. Source it from your .profile, or install it

@@ -45,6 +45,7 @@
 #include "pcert.h"
 #include "blapi.h"
 #include "secerr.h"
+#include "secasn1.h"
 
 /*
  * Cache the object we are working on during Set's and Get's
@@ -610,9 +611,24 @@ lg_FindECPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type,
 					key->u.ec.ecParams.DEREncoding.data,
 					key->u.ec.ecParams.DEREncoding.len);
     case CKA_EC_POINT:
-	return lg_CopyAttributeSigned(attribute, type,
+	if (getenv("NSS_USE_DECODED_CKA_EC_POINT")) {
+	    return lg_CopyAttributeSigned(attribute, type,
 					key->u.ec.publicValue.data,
 					key->u.ec.publicValue.len);
+	} else {
+	    SECItem *pubValue = SEC_ASN1EncodeItem(NULL, NULL, 
+					&(key->u.ec.publicValue), 
+					SEC_ASN1_GET(SEC_OctetStringTemplate));
+	    CK_RV crv;
+	    if (!pubValue) {
+		return CKR_HOST_MEMORY;
+	    }
+	    crv = lg_CopyAttributeSigned(attribute, type,
+					pubValue->data,
+					pubValue->len);
+	    SECITEM_FreeItem(pubValue, PR_TRUE);
+	    return crv;
+	}
     default:
 	break;
     }

@@ -140,16 +140,10 @@ public:
   /**
    * Handle all the relative positioning in the line, compute the
    * combined area (== overflow area) for the line, and handle view
-   * sizing/positioning and the setting of NS_FRAME_OUTSIDE_CHILDREN.
+   * sizing/positioning and the setting of the overflow rect.
    */
   void RelativePositionFrames(nsRect& aCombinedArea);
 
-  static void CombineTextDecorations(nsPresContext* aPresContext,
-                                     PRUint8 aDecorations,
-                                     nsIFrame* aFrame,
-                                     nsRect& aCombinedArea,
-                                     nscoord aAscentOverride = 0,
-                                     float aUnderlineSizeRatio = 1.0f);
   //----------------------------------------
 
   // Supporting methods and data for flags

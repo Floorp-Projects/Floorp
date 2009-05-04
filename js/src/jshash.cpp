@@ -71,7 +71,7 @@ DefaultAllocTable(void *pool, size_t size)
 }
 
 static void
-DefaultFreeTable(void *pool, void *item)
+DefaultFreeTable(void *pool, void *item, size_t size)
 {
     free(item);
 }
@@ -121,7 +121,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
     nb = n * sizeof(JSHashEntry *);
     ht->buckets = (JSHashEntry**) allocOps->allocTable(allocPriv, nb);
     if (!ht->buckets) {
-        allocOps->freeTable(allocPriv, ht);
+        allocOps->freeTable(allocPriv, ht, nb);
         return NULL;
     }
     memset(ht->buckets, 0, nb);
@@ -153,11 +153,11 @@ JS_HashTableDestroy(JSHashTable *ht)
 #ifdef DEBUG
     memset(ht->buckets, 0xDB, n * sizeof ht->buckets[0]);
 #endif
-    allocOps->freeTable(allocPriv, ht->buckets);
+    allocOps->freeTable(allocPriv, ht->buckets, n * sizeof ht->buckets[0]);
 #ifdef DEBUG
     memset(ht, 0xDB, sizeof *ht);
 #endif
-    allocOps->freeTable(allocPriv, ht);
+    allocOps->freeTable(allocPriv, ht, sizeof *ht);
 }
 
 /*
@@ -198,9 +198,7 @@ Resize(JSHashTable *ht, uint32 newshift)
 {
     size_t nb, nentries, i;
     JSHashEntry **oldbuckets, *he, *next, **hep;
-#ifdef DEBUG
     size_t nold = NBUCKETS(ht);
-#endif
 
     JS_ASSERT(newshift < JS_HASH_BITS);
 
@@ -230,17 +228,20 @@ Resize(JSHashTable *ht, uint32 newshift)
             hep = BUCKET_HEAD(ht, he->keyHash);
 
             /*
-             * Since he comes from the old table, it must be unique and we
-             * simply add it to the head of bucket chain without chain lookup.
+             * We do not require unique entries, instead appending he to the
+             * chain starting at hep.
              */
-            he->next = *hep;
+            while (*hep)
+                hep = &(*hep)->next;
+            he->next = NULL;
             *hep = he;
         }
     }
 #ifdef DEBUG
     memset(oldbuckets, 0xDB, nold * sizeof oldbuckets[0]);
 #endif
-    ht->allocOps->freeTable(ht->allocPriv, oldbuckets);
+    ht->allocOps->freeTable(ht->allocPriv, oldbuckets,
+                            nold * sizeof oldbuckets[0]);
     return JS_TRUE;
 }
 

@@ -158,6 +158,8 @@ sftk_MapCryptError(int error)
 	/* EC functions set this error if NSS_ENABLE_ECC is not defined */
 	case SEC_ERROR_UNSUPPORTED_KEYALG:
 	    return CKR_MECHANISM_INVALID;
+	case SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE:
+	    return CKR_DOMAIN_PARAMS_INVALID;
 	/* key pair generation failed after max number of attempts */
 	case SEC_ERROR_NEED_RANDOM:
 	    return CKR_FUNCTION_FAILED;
@@ -4015,8 +4017,21 @@ dhgn_done:
 	    break;
 	}
 
-	crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT, 
+	if (getenv("NSS_USE_DECODED_CKA_EC_POINT")) {
+	    crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT, 
 				sftk_item_expand(&ecPriv->publicValue));
+	} else {
+	    SECItem *pubValue = SEC_ASN1EncodeItem(NULL, NULL, 
+					&ecPriv->publicValue, 
+					SEC_ASN1_GET(SEC_OctetStringTemplate));
+	    if (!pubValue) {
+		crv = CKR_ARGUMENTS_BAD;
+		goto ecgn_done;
+	    }
+	    crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT, 
+				sftk_item_expand(pubValue));
+	    SECITEM_FreeItem(pubValue, PR_TRUE);
+	}
 	if (crv != CKR_OK) goto ecgn_done;
 
 	crv = sftk_AddAttributeType(privateKey, CKA_VALUE, 
@@ -5841,9 +5856,10 @@ key_and_mac_derive_fail:
 	unsigned char secret_hash[20];
 	unsigned char *secret;
 	unsigned char *keyData = NULL;
-	int secretlen;
+	int secretlen, curveLen, pubKeyLen;
 	CK_ECDH1_DERIVE_PARAMS *mechParams;
 	NSSLOWKEYPrivateKey *privKey;
+	PLArenaPool *arena = NULL;
 
 	/* Check mechanism parameters */
 	mechParams = (CK_ECDH1_DERIVE_PARAMS *) pMechanism->pParameter;
@@ -5866,6 +5882,32 @@ key_and_mac_derive_fail:
 	ecPoint.data = mechParams->pPublicData;
 	ecPoint.len  = mechParams->ulPublicDataLen;
 
+	curveLen = (privKey->u.ec.ecParams.fieldID.size +7)/8;
+	pubKeyLen = (2*curveLen) + 1;
+
+	/* if the len is too small, can't be a valid point */
+	if (ecPoint.len < pubKeyLen) {
+	    goto ec_loser;
+	}
+	/* if the len is too large, must be an encoded point (length is
+	 * equal case just falls through */
+	if (ecPoint.len > pubKeyLen) {
+	    SECItem newPoint;
+
+	    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+	    if (arena == NULL) {
+		goto ec_loser;
+	    }
+
+	    rv = SEC_QuickDERDecodeItem(arena, &newPoint, 
+					SEC_ASN1_GET(SEC_OctetStringTemplate), 
+					&ecPoint);
+	    if (rv != SECSuccess) {
+		goto ec_loser;
+	    }
+	    ecPoint = newPoint;
+	}
+
 	if (pMechanism->mechanism == CKM_ECDH1_COFACTOR_DERIVE) {
 	    withCofactor = PR_TRUE;
 	} else {
@@ -5875,19 +5917,22 @@ key_and_mac_derive_fail:
 	     */
 	    if (EC_ValidatePublicKey(&privKey->u.ec.ecParams, &ecPoint) 
 		!= SECSuccess) {
-		crv = CKR_ARGUMENTS_BAD;
-		PORT_Free(ecScalar.data);
-		if (privKey != sourceKey->objectInfo)
-		    nsslowkey_DestroyPrivateKey(privKey);
-		break;
+		goto ec_loser;
 	    }
 	}
 
 	rv = ECDH_Derive(&ecPoint, &privKey->u.ec.ecParams, &ecScalar,
 	                 withCofactor, &tmp); 
 	PORT_Free(ecScalar.data);
-	if (privKey != sourceKey->objectInfo)
+	ecScalar.data = NULL;
+	if (privKey != sourceKey->objectInfo) {
 	   nsslowkey_DestroyPrivateKey(privKey);
+	   privKey=NULL;
+	}
+	if (arena) {
+	    PORT_FreeArena(arena,PR_FALSE);
+	    arena=NULL;
+	}
 
 	if (rv != SECSuccess) {
 	    crv = sftk_MapCryptError(PORT_GetError());
@@ -5949,6 +5994,17 @@ key_and_mac_derive_fail:
 	PORT_Memset(secret_hash, 0, 20);
 	    
 	break;
+
+ec_loser:
+	crv = CKR_ARGUMENTS_BAD;
+	PORT_Free(ecScalar.data);
+	if (privKey != sourceKey->objectInfo)
+	    nsslowkey_DestroyPrivateKey(privKey);
+	if (arena) {
+	    PORT_FreeArena(arena, PR_FALSE);
+	}
+	break;
+
       }
 #endif /* NSS_ENABLE_ECC */
 

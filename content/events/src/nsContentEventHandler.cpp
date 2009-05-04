@@ -48,6 +48,7 @@
 #include "nsRange.h"
 #include "nsGUIEvent.h"
 #include "nsCaret.h"
+#include "nsCopySupport.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
 #include "nsIView.h"
@@ -87,10 +88,21 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
   if (!mPresShell)
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsresult rv = mPresShell->GetSelectionForCopy(getter_AddRefs(mSelection));
+  // If text frame which has overflowing selection underline is dirty,
+  // we need to flush the pending reflow here.
+  nsresult rv = mPresShell->FlushPendingNotifications(Flush_Layout);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPresShell->GetSelectionForCopy(getter_AddRefs(mSelection));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(mSelection,
                "GetSelectionForCopy succeeded, but the result is null");
+
+  PRBool isCollapsed;
+  rv = mSelection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv))
+    return NS_ERROR_NOT_AVAILABLE;
+  aEvent->mReply.mHasSelection = !isCollapsed;
 
   nsCOMPtr<nsIDOMRange> firstRange;
   rv = mSelection->GetRangeAt(0, getter_AddRefs(firstRange));
@@ -111,7 +123,6 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
   rv = mPresShell->GetCaret(getter_AddRefs(caret));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(caret, "GetCaret succeeded, but the result is null");
-  PRBool isCollapsed;
   nsRect r;
   nsIView* view = nsnull;
   rv = caret->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
@@ -503,7 +514,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
   if (NS_FAILED(rv))
     return rv;
 
-  nsRefPtr<nsRange> range = new nsRange();
+  nsCOMPtr<nsIRange> range = new nsRange();
   if (!range) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -680,6 +691,41 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
 
   aEvent->mReply.mRect =
       nsRect::ToOutsidePixels(rect, mPresContext->AppUnitsPerDevPixel());
+  aEvent->mSucceeded = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsContentEventHandler::OnQueryContentState(nsQueryContentEvent * aEvent)
+{
+  nsresult rv = Init(aEvent);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  aEvent->mSucceeded = PR_TRUE;
+
+  return NS_OK;
+}
+
+nsresult
+nsContentEventHandler::OnQuerySelectionAsTransferable(nsQueryContentEvent* aEvent)
+{
+  nsresult rv = Init(aEvent);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!aEvent->mReply.mHasSelection) {
+    aEvent->mSucceeded = PR_TRUE;
+    aEvent->mReply.mTransferable = nsnull;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> doc = mPresShell->GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  rv = nsCopySupport::GetTransferableForSelection(mSelection, doc, getter_AddRefs(aEvent->mReply.mTransferable));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;
 }

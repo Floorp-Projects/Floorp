@@ -618,20 +618,21 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
       }
     }
     
-    PRInt32 i;
-    
+
     if (!appendToList) {
       // The new stuff is somewhere in the middle of our list; check
       // whether we need to invalidate
-      for (i = aNewIndexInContainer; i <= count-1; ++i) {
-        if (MatchSelf(aContainer->GetChildAt(i))) {
+      for (nsINode::ChildIterator iter(aContainer, aNewIndexInContainer);
+           !iter.IsDone();
+           iter.Next()) {
+        if (MatchSelf(iter)) {
           // Uh-oh.  We're gonna have to add elements into the middle
           // of our list. That's not worth the effort.
           SetDirty();
           break;
         }
       }
- 
+
       ASSERT_IN_SYNC;
       return;
     }
@@ -649,9 +650,11 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
      * We're up to date.  That means someone's actively using us; we
      * may as well grab this content....
      */
-    for (i = aNewIndexInContainer; i <= count-1; ++i) {
+    for (nsINode::ChildIterator iter(aContainer, aNewIndexInContainer);
+         !iter.IsDone();
+         iter.Next()) {
       PRUint32 limit = PRUint32(-1);
-      nsIContent* newContent = aContainer->GetChildAt(i);
+      nsIContent* newContent = iter;
       if (newContent->IsNodeOfType(nsINode::eELEMENT)) {
         PopulateWith(newContent, limit);
       }
@@ -747,10 +750,8 @@ nsContentList::MatchSelf(nsIContent *aContent)
   if (!mDeep)
     return PR_FALSE;
 
-  PRUint32 i, count = aContent->GetChildCount();
-
-  for (i = 0; i < count; i++) {
-    if (MatchSelf(aContent->GetChildAt(i))) {
+  for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
+    if (MatchSelf(iter)) {
       return PR_TRUE;
     }
   }
@@ -778,25 +779,15 @@ nsContentList::PopulateWith(nsIContent *aContent, PRUint32& aElementsToAppend)
   // Don't recurse down if we're not doing a deep match.
   if (!mDeep)
     return;
-  
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif  
-  PRUint32 count;
-  nsIContent* const* curChildPtr = aContent->GetChildArray(&count);
-  nsIContent* const* stop = curChildPtr + count;
-  for (; curChildPtr != stop; ++curChildPtr) {
-    nsIContent* curContent = *curChildPtr;
+
+  for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
+    nsIContent* curContent = iter;
     if (curContent->IsNodeOfType(nsINode::eELEMENT)) {
-      PopulateWith(*curChildPtr, aElementsToAppend);
+      PopulateWith(curContent, aElementsToAppend);
       if (aElementsToAppend == 0)
         break;
     }
   }
-#ifdef DEBUG
-  NS_ASSERTION(!debugMutationGuard.Mutated(0),
-               "Unexpected mutations happened.  Check your match function!");
-#endif  
 }
 
 void 
@@ -820,17 +811,11 @@ nsContentList::PopulateWithStartingAfter(nsINode *aStartRoot,
       ++i;  // move to one past
     }
 
-#ifdef DEBUG
-    nsMutationGuard debugMutationGuard;
-#endif  
-    PRUint32 childCount;
-    nsIContent* const* curChildPtr = aStartRoot->GetChildArray(&childCount);
-    nsIContent* const* stop = curChildPtr + childCount;
-    // Now advance curChildPtr to the child we want to be starting with
-    NS_ASSERTION(i <= childCount, "Unexpected index");
-    curChildPtr += i;
-    for ( ; curChildPtr != stop; ++curChildPtr) {
-      nsIContent* content = *curChildPtr;
+    // Now start an iterator with the child we want to be starting with
+    for (nsINode::ChildIterator iter(aStartRoot, i);
+         !iter.IsDone();
+         iter.Next()) {
+      nsIContent* content = iter;
       if (content->IsNodeOfType(nsINode::eELEMENT)) {
         PopulateWith(content, aElementsToAppend);
 
@@ -840,10 +825,6 @@ nsContentList::PopulateWithStartingAfter(nsINode *aStartRoot,
           break;
       }
     }
-#ifdef DEBUG
-    NS_ASSERTION(!debugMutationGuard.Mutated(0),
-                 "Unexpected mutations happened.  Check your match function!");
-#endif
   }
 
   if (aElementsToAppend == 0) {

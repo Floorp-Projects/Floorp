@@ -93,7 +93,7 @@ Tester.prototype = {
         self.currentTest.tests.push(new testResult(false, "Timed out", "", false));
         self.currentTest.scope.waitTimer = null;
         self.execTest();
-      }, TIMEOUT_SECONDS * 1000);;
+      }, TIMEOUT_SECONDS * 1000);
     }
   }
 };

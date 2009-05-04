@@ -79,7 +79,6 @@
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
-#include "nsIWidget.h"
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -322,7 +321,41 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsIView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
     return NS_OK;
+
+  // Get the PresShell so we can check if painting is suppressed
+  // on the subdocument. We use this roundabout way in case we
+  // don't have a frame tree.
+  if (!mFrameLoader)
+    return NS_OK;
+  nsCOMPtr<nsIDocShell> docShell;
+  mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell)
+    return NS_OK;
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return NS_OK;
+
+  PRBool suppressed = PR_TRUE;
+  presShell->IsPaintingSuppressed(&suppressed);
+
   nsIFrame* f = static_cast<nsIFrame*>(subdocView->GetClientData());
+
+  if ((!f || suppressed) && !aBuilder->IsForEventDelivery()) {
+    // If we don't have a frame or painting of the PresShell is suppressed,
+    // try to draw the default background color. (Bug 485275)
+
+    // Get the bounds of subdocView relative to the reference frame.
+    nsRect shellBounds = subdocView->GetBounds() +
+                         mInnerView->GetPosition() +
+                         GetOffsetTo(aBuilder->ReferenceFrame());
+    rv = aLists.Content()->AppendNewToBottom(
+             new (aBuilder) nsDisplaySolidColor(
+                  f ? f : this,
+                  shellBounds,
+                  presShell->GetCanvasBackground()));
+  }
+
   if (!f)
     return NS_OK;
   

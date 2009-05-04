@@ -853,6 +853,71 @@ nsHttpChannel::CallOnStartRequest()
 }
 
 nsresult
+nsHttpChannel::ProcessFailedSSLConnect(PRUint32 httpStatus)
+{
+    // Failure to set up SSL proxy tunnel means one of the following:
+    // 1) Proxy wants authorization, or forbids.
+    // 2) DNS at proxy couldn't resolve target URL.
+    // 3) Proxy connection to target failed or timed out.
+    // 4) Eve noticed our proxy CONNECT, and is replying with malicious HTML.
+    // 
+    // Our current architecture will parse response content with the
+    // permission of the target URL!  Given #4, we must avoid rendering the
+    // body of the reply, and instead give the user a (hopefully helpful) 
+    // boilerplate error page, based on just the HTTP status of the reply.
+
+    NS_ABORT_IF_FALSE(mConnectionInfo->UsingSSL(),
+                      "SSL connect failed but not using SSL?");
+    nsresult rv;
+    switch (httpStatus) 
+    {
+    case 403: // HTTP/1.1: "Forbidden"
+    case 407: // ProcessAuthentication() failed
+    case 501: // HTTP/1.1: "Not Implemented"
+        // user sees boilerplate Mozilla "Proxy Refused Connection" page.
+        rv = NS_ERROR_PROXY_CONNECTION_REFUSED; 
+        break;
+    // Squid sends 404 if DNS fails (regular 404 from target is tunneled)
+    case 404: // HTTP/1.1: "Not Found"
+    // RFC 2616: "some deployed proxies are known to return 400 or 500 when
+    // DNS lookups time out."  (Squid uses 500 if it runs out of sockets: so
+    // we have a conflict here).
+    case 400: // HTTP/1.1 "Bad Request"
+    case 500: // HTTP/1.1: "Internal Server Error"
+        /* User sees: "Address Not Found: Firefox can't find the server at
+         * www.foo.com."
+         */
+        rv = NS_ERROR_UNKNOWN_HOST; 
+        break;
+    case 502: // HTTP/1.1: "Bad Gateway" (invalid resp from target server)
+    // Squid returns 503 if target request fails for anything but DNS.
+    case 503: // HTTP/1.1: "Service Unavailable"
+        /* User sees: "Failed to Connect:
+         *  Firefox can't establish a connection to the server at
+         *  www.foo.com.  Though the site seems valid, the browser
+         *  was unable to establish a connection."
+         */
+        rv = NS_ERROR_CONNECTION_REFUSED;
+        break;
+    // RFC 2616 uses 504 for both DNS and target timeout, so not clear what to
+    // do here: picking target timeout, as DNS covered by 400/404/500
+    case 504: // HTTP/1.1: "Gateway Timeout" 
+        // user sees: "Network Timeout: The server at www.foo.com
+        //              is taking too long to respond."
+        rv = NS_ERROR_NET_TIMEOUT;
+        break;
+    // Confused proxy server or malicious response
+    default:
+        rv = NS_ERROR_PROXY_CONNECTION_REFUSED; 
+        break;
+    }
+    LOG(("Cancelling failed SSL proxy connection [this=%x httpStatus=%u]\n",
+         this, httpStatus)); 
+    Cancel(rv);
+    return rv;
+}
+
+nsresult
 nsHttpChannel::ProcessResponse()
 {
     nsresult rv;
@@ -860,6 +925,9 @@ nsHttpChannel::ProcessResponse()
 
     LOG(("nsHttpChannel::ProcessResponse [this=%x httpStatus=%u]\n",
         this, httpStatus));
+
+    if (mTransaction->SSLConnectFailed() && httpStatus != 407)
+        return ProcessFailedSSLConnect(httpStatus);
 
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
@@ -947,6 +1015,8 @@ nsHttpChannel::ProcessResponse()
         rv = ProcessAuthentication(httpStatus);
         if (NS_FAILED(rv)) {
             LOG(("ProcessAuthentication failed [rv=%x]\n", rv));
+            if (mTransaction->SSLConnectFailed())
+                return ProcessFailedSSLConnect(httpStatus);
             CheckForSuperfluousAuth();
             rv = ProcessNormal();
         }
@@ -3230,7 +3300,6 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
     // if no realm, then use the auth type as the realm.  ToUpperCase so the
     // ficticious realm stands out a bit more.
     // XXX this will cause some single signon misses!
-    // XXX this will cause problems when we expose the auth cache to OJI!
     // XXX this was meant to be used with NTLM, which supplies no realm.
     /*
     if (realm.IsEmpty()) {

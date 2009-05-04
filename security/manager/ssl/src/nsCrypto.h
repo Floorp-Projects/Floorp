@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMCRMFObject.h"
 #include "nsIDOMCrypto.h"
-#include "nsIDOMPkcs11.h"
+#include "nsIPKCS11.h"
 #include "nsIRunnable.h"
 #include "nsString.h"
 #include "jsapi.h"
@@ -95,14 +95,14 @@ private:
   PRBool mEnableSmartCardEvents;
 };
 
-class nsPkcs11 : public nsIDOMPkcs11
+class nsPkcs11 : public nsIPKCS11
 {
 public:
   nsPkcs11();
   virtual ~nsPkcs11();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMPKCS11
+  NS_DECL_NSIPKCS11
 
 };
 

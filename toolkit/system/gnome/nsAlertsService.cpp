@@ -68,5 +68,6 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   if (!alertListener)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return alertListener->InitAlertAsync(aImageUrl, aAlertTitle, aAlertText);
+  return alertListener->InitAlertAsync(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
+                                       aAlertCookie, aAlertListener);
 }

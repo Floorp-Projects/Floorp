@@ -351,7 +351,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   aDesiredSize.height = mRect.height;
   aDesiredSize.ascent = GetBoxAscent(state);
 
-  // NS_FRAME_OUTSIDE_CHILDREN is set in SetBounds() above
+  // the overflow rect is set in SetBounds() above
   aDesiredSize.mOverflowArea = GetOverflowRect();
 
 #ifdef DO_NOISY_REFLOW
@@ -382,18 +382,6 @@ nsIAtom*
 nsLeafBoxFrame::GetType() const
 {
   return nsGkAtoms::leafBoxFrame;
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsLeafBoxFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsLeafBoxFrame::Release(void)
-{
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -446,16 +434,4 @@ NS_IMETHODIMP
 nsLeafBoxFrame::DoLayout(nsBoxLayoutState& aState)
 {
     return nsBox::DoLayout(aState);
-}
-
-PRBool
-nsLeafBoxFrame::GetWasCollapsed(nsBoxLayoutState& aState)
-{
-    return nsBox::GetWasCollapsed(aState);
-}
-
-void
-nsLeafBoxFrame::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas)
-{
-    nsBox::SetWasCollapsed(aState, aWas);
 }

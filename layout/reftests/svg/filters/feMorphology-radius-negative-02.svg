@@ -1,0 +1,26 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test 'feMorphology' with a negative value for its 'radius'</title>
+  <!--
+    From https://bugzilla.mozilla.org/show_bug.cgi?id=485786
+
+    The negative value should disable the primitive output, but should
+    not disable the entire filter effect.
+  -->
+  <filter id="f1">
+    <feMorphology operator="dilate" radius="-1" result="transparentBlack"/>
+    <feMerge>
+      <feMergeNode in="SourceGraphic"/>
+      <feMergeNode in="transparentBlack"/>
+    </feMerge>
+  </filter>
+  <filter id="f2">
+    <feMorphology operator="dilate" radius="-1"/>
+  </filter>
+  <rect width="100%" height="100%" fill="red"/>
+  <rect width="100%" height="100%" fill="lime" filter="url(#f1)"/>
+  <rect width="100%" height="100%" fill="red" filter="url(#f2)"/>
+</svg>

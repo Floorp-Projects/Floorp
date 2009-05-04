@@ -1108,6 +1108,17 @@ sftkdb_write(SFTKDBHandle *handle, SFTKObject *object,
     }
     db = SFTK_GET_SDB(handle);
 
+    /*
+     * we have opened a new database, but we have not yet updated it. We are
+     * still running pointing to the old database (so the application can 
+     * still read). We don't want to write to the old database at this point,
+     * however, since it leads to user confusion. So at this point we simply
+     * require a user login. Let NSS know this so it can prompt the user.
+     */
+    if (db == handle->update) {
+	return CKR_USER_NOT_LOGGED_IN;
+    }
+
     arena = PORT_NewArena(256);
     if (arena ==  NULL) {
 	return CKR_HOST_MEMORY;
@@ -1166,7 +1177,7 @@ sftkdb_write(SFTKDBHandle *handle, SFTKObject *object,
 
 loser:
     if (inTransaction) {
-	(*handle->db->sdb_Abort)(handle->db);
+	(*db->sdb_Abort)(db);
 	/* It is trivial to show the following code cannot
 	 * happen unless something is horribly wrong with our compilier or
 	 * hardware */
@@ -1332,6 +1343,16 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
     /* nothing to do */
     if (count == 0) {
 	return CKR_OK;
+    }
+    /*
+     * we have opened a new database, but we have not yet updated it. We are
+     * still running  pointing to the old database (so the application can 
+     * still read). We don't want to write to the old database at this point,
+     * however, since it leads to user confusion. So at this point we simply
+     * require a user login. Let NSS know this so it can prompt the user.
+     */
+    if (db == handle->update) {
+	return CKR_USER_NOT_LOGGED_IN;
     }
 
     ntemplate = sftkdb_fixupTemplateIn(template, count, &data);
@@ -2526,7 +2547,7 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
                 const char *keyPrefix, const char *updatedir,
 		const char *updCertPrefix, const char *updKeyPrefix, 
 		const char *updateID, PRBool readOnly, PRBool noCertDB,
-                PRBool noKeyDB, PRBool forceOpen,
+                PRBool noKeyDB, PRBool forceOpen, PRBool isFIPS,
                 SFTKDBHandle **certDB, SFTKDBHandle **keyDB)
 {
     const char *confdir;
@@ -2556,11 +2577,11 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
     switch (dbType) {
     case SDB_LEGACY:
 	crv = sftkdbCall_open(confdir, certPrefix, keyPrefix, 8, 3, flags,
-		noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
+		 isFIPS, noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
 	break;
     case SDB_MULTIACCESS:
 	crv = sftkdbCall_open(configdir, certPrefix, keyPrefix, 8, 3, flags,
-		noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
+		isFIPS, noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
 	break;
     case SDB_SQL:
     case SDB_EXTERN: /* SHOULD open a loadable db */
@@ -2577,8 +2598,8 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
 	    /* we have legacy databases, if we failed to open the new format 
 	     * DB's read only, just use the legacy ones */
 		crv = sftkdbCall_open(confdir, certPrefix, 
-			keyPrefix, 8, 3, flags, noCertDB? NULL : &certSDB,
-			noKeyDB ? NULL : &keySDB);
+			keyPrefix, 8, 3, flags, isFIPS, 
+			noCertDB? NULL : &certSDB, noKeyDB ? NULL : &keySDB);
 	    }
 	/* Handle the database merge case.
          *
@@ -2648,7 +2669,8 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
 	CK_RV crv2;
 
 	crv2 = sftkdbCall_open(confdir, certPrefix, keyPrefix, 8, 3, flags,
-		noCertDB ? NULL : &updateCert, noKeyDB ? NULL : &updateKey);
+		isFIPS, noCertDB ? NULL : &updateCert, 
+		noKeyDB ? NULL : &updateKey);
 	if (crv2 == CKR_OK) {
 	    if (*certDB) {
 		(*certDB)->update = updateCert;

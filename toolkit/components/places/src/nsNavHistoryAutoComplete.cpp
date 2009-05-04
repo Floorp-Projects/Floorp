@@ -92,24 +92,25 @@
   mAutoCompleteCurrentBehavior |= kAutoCompleteBehavior##aBitName
 
 // Helper to get a particular column with a desired name from the bookmark and
-// tags table based on if we want to include tags or not
-#define SQL_STR_FRAGMENT_GET_BOOK_TAG(name, column, comparison, getMostRecent) \
-  NS_LITERAL_CSTRING(", (" \
-  "SELECT " column " " \
+// tags table based on if we want to include tags or not. Make sure to provide
+// enough buffer space for printf.
+#define BOOK_TAG_FRAG(name, column, forTag) nsPrintfCString(200, ", (" \
+  "SELECT %s " \
   "FROM moz_bookmarks b " \
-  "JOIN moz_bookmarks t ON t.id = b.parent AND t.parent " comparison " ?1 " \
-  "WHERE b.type = ") + nsPrintfCString("%d", \
-    nsINavBookmarksService::TYPE_BOOKMARK) + \
-    NS_LITERAL_CSTRING(" AND b.fk = h.id") + \
-  (getMostRecent ? NS_LITERAL_CSTRING(" " \
-    "ORDER BY b.lastModified DESC LIMIT 1") : EmptyCString()) + \
-  NS_LITERAL_CSTRING(") AS " name)
+  "JOIN moz_bookmarks t ON t.id = b.parent AND t.parent %s= ?1 " \
+  "WHERE b.fk = h.id AND b.type = %d " \
+  "%s) AS %s", \
+  column, \
+  forTag ? "" : "!", \
+  nsINavBookmarksService::TYPE_BOOKMARK, \
+  forTag ? "AND LENGTH(t.title) > 0" : "ORDER BY b.lastModified DESC LIMIT 1", \
+  name)
 
 // Get three named columns from the bookmarks and tags table
 #define BOOK_TAG_SQL (\
-  SQL_STR_FRAGMENT_GET_BOOK_TAG("parent", "b.parent", "!=", PR_TRUE) + \
-  SQL_STR_FRAGMENT_GET_BOOK_TAG("bookmark", "b.title", "!=", PR_TRUE) + \
-  SQL_STR_FRAGMENT_GET_BOOK_TAG("tags", "GROUP_CONCAT(t.title, ',')", "=", PR_FALSE))
+  BOOK_TAG_FRAG("parent", "b.parent", 0) + \
+  BOOK_TAG_FRAG("bookmark", "b.title", 0) + \
+  BOOK_TAG_FRAG("tags", "GROUP_CONCAT(t.title, ',')", 1))
 
 // This separator is used as an RTL-friendly way to split the title and tags.
 // It can also be used by an nsIAutoCompleteResult consumer to re-split the
@@ -481,6 +482,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   // So, most likely, h.id will always be populated when we have any bookmark.
   // We still need to join on moz_places_temp for other data (eg. title).
   nsCString sql = NS_LITERAL_CSTRING(
+    "/* do not warn (bug 487789) */ "
     "SELECT IFNULL(h_t.url, h.url), IFNULL(h_t.title, h.title), f.url ") +
       BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
       "IFNULL(h_t.visit_count, h.visit_count), IFNULL(h_t.typed, h.typed), rank "
@@ -499,6 +501,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   NS_ENSURE_SUCCESS(rv, rv);
 
   sql = NS_LITERAL_CSTRING(
+    "/* do not warn (bug 487787) */ "
     "SELECT IFNULL( "
         "(SELECT REPLACE(url, '%s', ?2) FROM moz_places_temp WHERE id = b.fk), "
         "(SELECT REPLACE(url, '%s', ?2) FROM moz_places WHERE id = b.fk) "

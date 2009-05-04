@@ -50,17 +50,24 @@ include $(DEPTH)/config/autoconf.mk
 #                         GNOMEStripe overrides (toolkit/themes/gnomestripe)
 # OS/2                    Winstripe (toolkit/themes/winstripe) + 
 #                         PMStripe overrides (toolkit/themes/pmstripe)
+# faststripe              Winstripe + faststripe (no native theme components)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS	= pinstripe
 else
+
 DIRS	= winstripe
+
 ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 DIRS    += gnomestripe
 endif
 ifneq (,$(filter os2,$(MOZ_WIDGET_TOOLKIT)))
 DIRS    += pmstripe
 endif
+ifdef MOZ_THEME_FASTSTRIPE
+DIRS	+= faststripe
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk

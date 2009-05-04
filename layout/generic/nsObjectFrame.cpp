@@ -76,9 +76,6 @@
 #include "nsIPluginInstancePeer2.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
-#ifdef OJI
-#include "nsIJVMPluginTagInfo.h"
-#endif
 #include "nsIEventListener.h"
 #include "nsIScrollableView.h"
 #include "nsIScrollPositionListener.h"
@@ -236,9 +233,6 @@ public:
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
-#ifdef OJI
-                              public nsIJVMPluginTagInfo,
-#endif
                               public nsIEventListener,
                               public nsITimerCallback,
                               public nsIDOMMouseListener,
@@ -318,21 +312,6 @@ public:
   NS_IMETHOD GetUniqueID(PRUint32 *result);
 
   NS_IMETHOD GetDOMElement(nsIDOMElement* *result);
-
-#ifdef OJI
-  //nsIJVMPluginTagInfo interface
-
-  NS_IMETHOD GetCode(const char* *result);
-
-  NS_IMETHOD GetCodeBase(const char* *result);
-
-  NS_IMETHOD GetArchive(const char* *result);
-
-  NS_IMETHOD GetName(const char* *result);
-
-  NS_IMETHOD GetMayScript(PRBool *result);
-
-#endif /* OJI */
 
   // nsIDOMMouseListener interfaces 
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
@@ -2254,12 +2233,12 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   for (cnt = 0; cnt < (mNumCachedAttrs + 1 + mNumCachedParams); cnt++) {
     if (mCachedAttrParamNames && mCachedAttrParamNames[cnt]) {
-      PR_Free(mCachedAttrParamNames[cnt]);
+      NS_Free(mCachedAttrParamNames[cnt]);
       mCachedAttrParamNames[cnt] = nsnull;
     }
 
     if (mCachedAttrParamValues && mCachedAttrParamValues[cnt]) {
-      PR_Free(mCachedAttrParamValues[cnt]);
+      NS_Free(mCachedAttrParamValues[cnt]);
       mCachedAttrParamValues[cnt] = nsnull;
     }
   }
@@ -2311,9 +2290,6 @@ NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo2)
-#ifdef OJI
-  NS_INTERFACE_MAP_ENTRY(nsIJVMPluginTagInfo)
-#endif
   NS_INTERFACE_MAP_ENTRY(nsIEventListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
@@ -2938,69 +2914,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
   *result = NS_PTR_TO_INT32(mOwner);
   return NS_OK;
 }
-
-#ifdef OJI
-NS_IMETHODIMP nsPluginInstanceOwner::GetCode(const char* *result)
-{
-  nsresult rv;
-  nsPluginTagType tagType;  
-  NS_ENSURE_SUCCESS(rv = GetTagType(&tagType), rv);
-
-  rv = NS_ERROR_FAILURE;
-  if (nsPluginTagType_Object != tagType)
-    rv = GetAttribute("CODE", result);
-  if (NS_FAILED(rv))
-    rv = GetParameter("CODE", result);
-
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetCodeBase(const char* *result)
-{
-  nsresult rv;
-  if (NS_FAILED(rv = GetAttribute("CODEBASE", result)))
-    rv = GetParameter("CODEBASE", result);
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetArchive(const char* *result)
-{
-  nsresult rv;
-  if (NS_FAILED(rv = GetAttribute("ARCHIVE", result)))
-    rv = GetParameter("ARCHIVE", result);
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetName(const char* *result)
-{
-  nsresult rv;
-  nsPluginTagType tagType;  
-  NS_ENSURE_SUCCESS(rv = GetTagType(&tagType), rv);
-
-  rv = NS_ERROR_FAILURE;
-  if (nsPluginTagType_Object != tagType)
-    rv = GetAttribute("NAME", result);
-  if (NS_FAILED(rv))
-    rv = GetParameter("NAME", result);
-
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-  nsPluginTagType tagType;  
-  NS_ENSURE_SUCCESS(GetTagType(&tagType), NS_ERROR_FAILURE);
-
-  const char* unused;
-  if (nsPluginTagType_Object == tagType)
-    *result = NS_SUCCEEDED(GetParameter("MAYSCRIPT", &unused)); 
-  else
-    *result = NS_SUCCEEDED(GetAttribute("MAYSCRIPT", &unused));
-
-  return NS_OK;
-}
-#endif /* OJI */
 
 // Cache the attributes and/or parameters of our tag into a single set
 // of arrays to be compatible with 4.x. The attributes go first,

@@ -91,7 +91,6 @@ XPIDLSRCS 	= \
 		nsPIPluginInstancePeer.idl \
 		nsIPluginHost.idl \
 		nsIPluginDocument.idl \
-		nsIJVMAuthTools.idl \
 		$(NULL)
 
 ifeq ($(OS_ARCH),OS2)

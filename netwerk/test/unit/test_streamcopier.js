@@ -20,7 +20,7 @@ function run_test() {
 
   var streamCopier = Cc["@mozilla.org/network/async-stream-copier;1"]
                        .createInstance(Ci.nsIAsyncStreamCopier);
-  streamCopier.init(inStr, pipe.outputStream, null, true, true, 1024);
+  streamCopier.init(inStr, pipe.outputStream, null, true, true, 1024, true, true);
 
   var ctx = {
   };

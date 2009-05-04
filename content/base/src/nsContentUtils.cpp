@@ -221,8 +221,6 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
-PRUint32 nsMutationGuard::sMutationCount = 0;
-
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
 static PLDHashTable sEventListenerManagersHash;
@@ -491,7 +489,9 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onMozMagnifyGesture,           { NS_SIMPLE_GESTURE_MAGNIFY, EventNameType_None } },
     { &nsGkAtoms::onMozRotateGestureStart,       { NS_SIMPLE_GESTURE_ROTATE_START, EventNameType_None } },
     { &nsGkAtoms::onMozRotateGestureUpdate,      { NS_SIMPLE_GESTURE_ROTATE_UPDATE, EventNameType_None } },
-    { &nsGkAtoms::onMozRotateGesture,            { NS_SIMPLE_GESTURE_ROTATE, EventNameType_None } }
+    { &nsGkAtoms::onMozRotateGesture,            { NS_SIMPLE_GESTURE_ROTATE, EventNameType_None } },
+    { &nsGkAtoms::onMozTapGesture,               { NS_SIMPLE_GESTURE_TAP, EventNameType_None } },
+    { &nsGkAtoms::onMozPressTapGesture,          { NS_SIMPLE_GESTURE_PRESSTAP, EventNameType_None } }
   };
 
   sEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
@@ -2711,8 +2711,9 @@ nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
   }
 
   NS_ENSURE_TRUE(aCurrentTarget, PR_FALSE);
-  nsCOMPtr<nsIScriptContext> scx;
-  nsresult rv = aCurrentTarget->GetContextForEventHandlers(getter_AddRefs(scx));
+  nsresult rv;
+  nsIScriptContext* scx =
+    aCurrentTarget->GetContextForEventHandlers(&rv);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   if (!scx) {
@@ -4537,26 +4538,38 @@ nsContentUtils::URIIsLocalFile(nsIURI *aURI)
 }
 
 /* static */
-nsresult
+nsIScriptContext*
 nsContentUtils::GetContextForEventHandlers(nsINode* aNode,
-                                           nsIScriptContext** aContext)
+                                           nsresult* aRv)
 {
-  *aContext = nsnull;
+  *aRv = NS_OK;
   nsIDocument* ownerDoc = aNode->GetOwnerDoc();
-  NS_ENSURE_STATE(ownerDoc);
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  PRBool hasHadScriptObject = PR_TRUE;
-  sgo = ownerDoc->GetScriptHandlingObject(hasHadScriptObject);
-  // It is bad if the document doesn't have event handling context,
-  // but it used to have one.
-  NS_ENSURE_STATE(sgo || !hasHadScriptObject);
-  if (sgo) {
-    NS_IF_ADDREF(*aContext = sgo->GetContext());
-    // Bad, no context from script global object!
-    NS_ENSURE_STATE(*aContext);
+  if (!ownerDoc) {
+    *aRv = NS_ERROR_UNEXPECTED;
+    return nsnull;
   }
 
-  return NS_OK;
+  PRBool hasHadScriptObject = PR_TRUE;
+  nsIScriptGlobalObject* sgo =
+    ownerDoc->GetScriptHandlingObject(hasHadScriptObject);
+  // It is bad if the document doesn't have event handling context,
+  // but it used to have one.
+  if (!sgo && hasHadScriptObject) {
+    *aRv = NS_ERROR_UNEXPECTED;
+    return nsnull;
+  }
+
+  if (sgo) {
+    nsIScriptContext* scx = sgo->GetContext();
+    // Bad, no context from script global object!
+    if (!scx) {
+      *aRv = NS_ERROR_UNEXPECTED;
+      return nsnull;
+    }
+    return scx;
+  }
+
+  return nsnull;
 }
 
 /* static */

@@ -40,6 +40,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsHTMLMediaElement.h"
+#include "nsIDocShellTreeItem.h"
 
 class nsVideoDocument : public nsMediaDocument
 {
@@ -119,6 +120,21 @@ nsVideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
   element->SetControls(PR_TRUE);
   element->LoadWithChannel(aChannel, aListener);
   UpdateTitle(aChannel);
+
+  nsCOMPtr<nsISupports> container = GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+  if (docShellAsItem) {
+    docShellAsItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+  }
+  if (sameTypeParent) {
+    // Video documents that aren't toplevel should fill their frames and
+    // not have margins
+    element->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+        NS_LITERAL_STRING("position:absolute; top:0; left:0; width:100%; height:100%"),
+        PR_TRUE);
+  }
+
   return body->AppendChildTo(element, PR_FALSE);
 }
 

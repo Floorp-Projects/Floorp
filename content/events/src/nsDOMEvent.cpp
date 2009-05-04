@@ -89,7 +89,9 @@ static const char* const sEventNames[] = {
   "MozMagnifyGesture",
   "MozRotateGestureStart",
   "MozRotateGestureUpdate",
-  "MozRotateGesture"
+  "MozRotateGesture",
+  "MozTapGesture",
+  "MozPressTapGesture"
 };
 
 static char *sPopupAllowedEvents;
@@ -682,6 +684,10 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
     else if (atom == nsGkAtoms::onMozRotateGesture)
       mEvent->message = NS_SIMPLE_GESTURE_ROTATE;
+    else if (atom == nsGkAtoms::onMozPressTapGesture)
+      mEvent->message = NS_SIMPLE_GESTURE_PRESSTAP;
+    else if (atom == nsGkAtoms::onMozTapGesture)
+      mEvent->message = NS_SIMPLE_GESTURE_TAP;
   }
 
   if (mEvent->message == NS_USER_DEFINED_EVENT)
@@ -1531,6 +1537,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_MozRotateGestureUpdate];
   case NS_SIMPLE_GESTURE_ROTATE:
     return sEventNames[eDOMEvents_MozRotateGesture];
+  case NS_SIMPLE_GESTURE_TAP:
+    return sEventNames[eDOMEvents_MozTapGesture];
+  case NS_SIMPLE_GESTURE_PRESSTAP:
+    return sEventNames[eDOMEvents_MozPressTapGesture];
   default:
     break;
   }

@@ -135,11 +135,11 @@ void nsFloatManager::Shutdown()
   sCachedFloatManagerCount = -1;
 }
 
-nsRect
+nsFlowAreaRect
 nsFloatManager::GetBand(nscoord aYOffset,
                         nscoord aMaxHeight,
                         nscoord aContentAreaWidth,
-                        PRBool* aHasFloats) const
+                        SavedState* aState) const
 {
   NS_ASSERTION(aMaxHeight >= 0, "unexpected max height");
   NS_ASSERTION(aContentAreaWidth >= 0, "unexpected content area width");
@@ -150,14 +150,23 @@ nsFloatManager::GetBand(nscoord aYOffset,
     top = nscoord_MIN;
   }
 
+  // Determine the last float that we should consider.
+  PRUint32 floatCount;
+  if (aState) {
+    // Use the provided state.
+    floatCount = aState->mFloatInfoCount;
+    NS_ABORT_IF_FALSE(floatCount <= mFloats.Length(), "bad state");
+  } else {
+    // Use our current state.
+    floatCount = mFloats.Length();
+  }
+
   // If there are no floats at all, or we're below the last one, return
   // quickly.
-  PRUint32 floatCount = mFloats.Length();
   if (floatCount == 0 ||
       (mFloats[floatCount-1].mLeftYMost <= top &&
        mFloats[floatCount-1].mRightYMost <= top)) {
-    *aHasFloats = PR_FALSE;
-    return nsRect(0, aYOffset, aContentAreaWidth, aMaxHeight);
+    return nsFlowAreaRect(0, aYOffset, aContentAreaWidth, aMaxHeight, PR_FALSE);
   }
 
   nscoord bottom;
@@ -180,7 +189,7 @@ nsFloatManager::GetBand(nscoord aYOffset,
   // Walk backwards through the floats until we either hit the front of
   // the list or we're above |top|.
   PRBool haveFloats = PR_FALSE;
-  for (PRUint32 i = mFloats.Length(); i > 0; --i) {
+  for (PRUint32 i = floatCount; i > 0; --i) {
     const FloatInfo &fi = mFloats[i-1];
     if (fi.mLeftYMost <= top && fi.mRightYMost <= top) {
       // There aren't any more floats that could intersect this band.
@@ -230,9 +239,8 @@ nsFloatManager::GetBand(nscoord aYOffset,
     }
   }
 
-  *aHasFloats = haveFloats;
   nscoord height = (bottom == nscoord_MAX) ? nscoord_MAX : (bottom - top);
-  return nsRect(left - mX, top - mY, right - left, height);
+  return nsFlowAreaRect(left - mX, top - mY, right - left, height, haveFloats);
 }
 
 nsresult

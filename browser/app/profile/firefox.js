@@ -395,7 +395,7 @@ pref("privacy.item.history",     true);
 pref("privacy.item.formdata",    true);
 pref("privacy.item.passwords",   false);
 pref("privacy.item.downloads",   true);
-pref("privacy.item.cookies",     false);
+pref("privacy.item.cookies",     true);
 pref("privacy.item.cache",       true);
 pref("privacy.item.sessions",    true);
 pref("privacy.item.offlineApps", false);
@@ -434,8 +434,13 @@ pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
 pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
 pref("browser.gesture.swipe.up", "cmd_scrollTop");
 pref("browser.gesture.swipe.down", "cmd_scrollBottom");
+#ifdef XP_MACOSX
 pref("browser.gesture.pinch.latched", true);
 pref("browser.gesture.pinch.threshold", 150);
+#else
+pref("browser.gesture.pinch.latched", false);
+pref("browser.gesture.pinch.threshold", 25);
+#endif
 pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
 pref("browser.gesture.pinch.in", "cmd_fullZoomReduce");
 pref("browser.gesture.pinch.out.shift", "cmd_fullZoomReset");
@@ -444,6 +449,7 @@ pref("browser.gesture.twist.latched", false);
 pref("browser.gesture.twist.threshold", 25);
 pref("browser.gesture.twist.right", "Browser:NextTab");
 pref("browser.gesture.twist.left", "Browser:PrevTab");
+pref("browser.gesture.tap", "cmd_fullZoomReset");
 
 // 0=lines, 1=pages, 2=history , 3=text size
 #ifdef XP_MACOSX
@@ -659,11 +665,6 @@ pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebr
 pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
 pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
 
-// privacy policy -- Both url and fallbackurl must exist, although they may
-// point to the same file.  fallbackurl must be a chrome url
-pref("browser.safebrowsing.provider.0.privacy.url", "http://www.google.com/tools/firefox/firefox_privacy.html?hl=%LOCALE%");
-pref("browser.safebrowsing.provider.0.privacy.fallbackurl", "chrome://browser/content/preferences/phishEULA.xhtml");
-
 // HTML report pages
 pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
 pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
@@ -671,8 +672,9 @@ pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phis
 pref("browser.safebrowsing.provider.0.reportMalwareURL", "http://{moz:locale}.malware-report.mozilla.com/?hl={moz:locale}");
 pref("browser.safebrowsing.provider.0.reportMalwareErrorURL", "http://{moz:locale}.malware-error.mozilla.com/?hl={moz:locale}");
 
-// FAQ URL
+// FAQ URLs
 pref("browser.safebrowsing.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
+pref("browser.geolocation.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.  (bug 399233)
@@ -730,6 +732,9 @@ pref("browser.sessionstore.postdata", 0);
 pref("browser.sessionstore.privacy_level", 1);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
+// how many windows can be reopened (per session) - on non-OS X platforms this
+// pref may be ignored when dealing with pop-up windows to ensure proper startup
+pref("browser.sessionstore.max_windows_undo", 3);
 // number of crashes that can occur before the about:sessionrestore page is displayed
 // (this pref has no effect if more than 6 hours have passed since the last crash)
 pref("browser.sessionstore.max_resumed_crashes", 1);
@@ -740,18 +745,6 @@ pref("accessibility.blockautorefresh", false);
 // the (maximum) number of the recent visits to sample
 // when calculating frecency
 pref("places.frecency.numVisits", 10);
-
-// Number of records to update frecency for when idle.
-pref("places.frecency.numCalcOnIdle", 50);
-
-// Number of records to update frecency for when migrating from
-// a pre-frecency build.
-pref("places.frecency.numCalcOnMigrate", 50);
-
-// Perform frecency recalculation after this amount of idle, repeating.
-// A value of zero disables updating of frecency on idle.
-// Default is 1 minute (60000ms).
-pref("places.frecency.updateIdleTime", 60000);
 
 // buckets (in days) for frecency calculation
 pref("places.frecency.firstBucketCutoff", 4);
@@ -826,3 +819,6 @@ pref("browser.privatebrowsing.dont_prompt_on_enter", false);
 // Don't try to alter this pref, it'll be reset the next time you use the
 // bookmarking dialog
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
+
+// base url for the wifi geolocation network provider
+pref("geo.wifi.uri", "https://www.google.com/loc/json");

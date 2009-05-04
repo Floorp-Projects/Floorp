@@ -48,5 +48,3 @@ XPCSHELL_TESTS = unit \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-check::

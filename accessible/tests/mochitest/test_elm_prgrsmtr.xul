@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL progressmeter tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    /**
+     * Helper function to test nsIAccessibleValue interface.
+     */
+    function testValue(aAccOrElmOrId, aValue, aCurrValue,
+                       aMinValue, aMaxValue, aMinIncr)
+    {
+      var acc = getAccessible(aAccOrElmOrId, [nsIAccessibleValue]);
+      if (!acc)
+        return;
+
+      is(acc.value, aValue, "Wrong value of " + prettyName(aAccOrElmOrId));
+
+      is(acc.currentValue, aCurrValue,
+         "Wrong current value of " + prettyName(aAccOrElmOrId));
+      is(acc.minimumValue, aMinValue,
+         "Wrong minimum value of " + prettyName(aAccOrElmOrId));
+      is(acc.maximumValue, aMaxValue,
+         "Wrong maximum value of " + prettyName(aAccOrElmOrId));
+      is(acc.minimumIncrement, aMinIncr,
+         "Wrong minimum increment value of " + prettyName(aAccOrElmOrId));
+    }
+
+    function doTest()
+    {
+      testValue("pm1", "50%", .5, 0, 1, 0);
+      testValue("pm2", "50%", 500, 0, 1000, 0);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=489551"
+         title="Values of sliders and progress bars in HTML 5 audio and video element's control sets are not percentages">
+        Mozilla Bug 489551
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <progressmeter id="pm1" value="50"/>
+    <progressmeter id="pm2" value="500" max="1000"/>
+  </hbox>
+
+</window>
+

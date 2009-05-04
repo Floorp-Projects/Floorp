@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.2 2007/06/13 00:24:57 rrelyea%redhat.com Exp $
+ * $Id: pcertt.h,v 1.3 2009/04/12 01:31:46 nelson%bolyard.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -167,6 +167,8 @@ struct NSSLOWCERTCertificateStr {
 
 #define SEC_CRL_VERSION_1		0	/* default */
 #define SEC_CRL_VERSION_2		1	/* v2 extensions */
+
+#define NSS_MAX_LEGACY_DB_KEY_SIZE (60 * 1024)
 
 struct NSSLOWCERTIssuerAndSNStr {
     SECItem derIssuer;

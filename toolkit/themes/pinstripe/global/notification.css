@@ -84,3 +84,11 @@ notification[type="critical"] .messageImage {
   -moz-border-radius: 100%;
   -moz-box-shadow: 0 0 3px 3px -moz-mac-focusring;
 }
+
+/* geolocation adds a text-link for a "Learn more..." link.
+   normal blue color of text-link is hard to read.
+*/
+notification[type="info"] .text-link {
+  color: rgba(255,255,255,0.95)  !important;
+}
+

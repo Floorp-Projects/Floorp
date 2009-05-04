@@ -375,11 +375,6 @@ auto_dirac (OGGZ * oggz, long serialno, unsigned char * data, long length, void 
 
   dirac_parse_info(info, data, length);
 
-#ifdef DEBUG
-  printf ("Got dirac fps %d/%d granule_shift %d\n",
-    fps_numerator, fps_denominator, granule_shift);
-#endif
-
   /* the granulerate is twice the frame rate (in order to handle interlace) */
   oggz_set_granulerate (oggz, serialno,
 	2 * (ogg_int64_t)info->fps_numerator,
@@ -558,8 +553,7 @@ auto_calc_celt (ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
  * are marked by a set 2MSB in the first byte.  Intra packets (keyframes)
  * are any that are left over ;-)
  *
- * (see http://www.theora.org/doc/Theora_I_spec.pdf for the theora
- * specification)
+ * (see http://theora.org/doc/Theora.pdf for the theora specification)
  */
 
 typedef struct {
@@ -695,6 +689,7 @@ static ogg_int64_t
 auto_calc_vorbis(ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
 
   auto_calc_vorbis_info_t *info;
+  int ii;
 
   if (stream->calculate_data == NULL) {
     /*
@@ -830,19 +825,32 @@ auto_calc_vorbis(ogg_int64_t now, oggz_stream_t *stream, ogg_packet *op) {
 
       }
 
-      if (offset > 4) {
-        size_check = (current_pos[0] >> (offset - 5)) & 0x3F;
-      } else {
-        /* mask part of byte from current_pos */
-        size_check = (current_pos[0] & ((1 << (offset + 1)) - 1));
-        /* shift to appropriate position */
-        size_check <<= (5 - offset);
-        /* or in part of byte from current_pos - 1 */
-        size_check |= (current_pos[-1] & ~((1 << (offset + 3)) - 1)) >>
-                (offset + 3);
+      /* Give ourselves a chance to recover if we went back too far by using
+       * the size check. */
+      for (ii=0; ii < 2; ii++) {
+       if (offset > 4) {
+         size_check = (current_pos[0] >> (offset - 5)) & 0x3F;
+       } else {
+         /* mask part of byte from current_pos */
+         size_check = (current_pos[0] & ((1 << (offset + 1)) - 1));
+         /* shift to appropriate position */
+         size_check <<= (5 - offset);
+         /* or in part of byte from current_pos - 1 */
+         size_check |= (current_pos[-1] & ~((1 << (offset + 3)) - 1)) >>
+           (offset + 3);
+       }
+
+       size_check += 1;
+       if (size_check == size) {
+         break;
+       }
+        offset = (offset + 1) % 8;
+        if (offset == 0)
+          current_pos += 1;
+       current_pos += 5;
+       size -= 1;
       }
 
-      size_check += 1;
 #ifdef DEBUG
       if (size_check != size)
       {

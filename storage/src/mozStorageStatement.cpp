@@ -49,19 +49,19 @@
 #include "nsIProgrammingLanguage.h"
 
 #include "mozStorageConnection.h"
-#include "mozStorageStatement.h"
 #include "mozStorageStatementJSHelper.h"
-#include "mozStorageValueArray.h"
 #include "mozStoragePrivateHelpers.h"
-#include "mozStorageEvents.h"
 #include "mozStorageStatementParams.h"
 #include "mozStorageStatementRow.h"
+#include "mozStorageStatement.h"
 
 #include "prlog.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gStorageLog;
 #endif
+
+using namespace mozilla::storage;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIClassInfo
@@ -87,7 +87,7 @@ public:
     GetHelperForLanguage(PRUint32 aLanguage, nsISupports **_helper)
     {
         if (aLanguage == nsIProgrammingLanguage::JAVASCRIPT) {
-            static mozStorageStatementJSHelper sJSHelper;
+            static StatementJSHelper sJSHelper;
             *_helper = &sJSHelper;
             return NS_OK;
         }
@@ -191,7 +191,7 @@ mozStorageStatement::mozStorageStatement()
 }
 
 nsresult
-mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
+mozStorageStatement::Initialize(Connection *aDBConnection,
                                 const nsACString & aSQLStatement)
 {
     NS_ASSERTION(aDBConnection, "No database connection given!");
@@ -310,8 +310,7 @@ mozStorageStatement::Finalize()
             do_QueryInterface(mStatementParamsHolder);
         nsCOMPtr<mozIStorageStatementParams> iParams =
             do_QueryWrappedNative(wrapper);
-        mozStorageStatementParams *params =
-            static_cast<mozStorageStatementParams *>(iParams.get());
+        StatementParams *params = static_cast<StatementParams *>(iParams.get());
         params->mStatement = nsnull;
         mStatementParamsHolder = nsnull;
     }
@@ -321,8 +320,7 @@ mozStorageStatement::Finalize()
             do_QueryInterface(mStatementRowHolder);
         nsCOMPtr<mozIStorageStatementRow> iRow =
             do_QueryWrappedNative(wrapper);
-        mozStorageStatementRow *row =
-            static_cast<mozStorageStatementRow *>(iRow.get());
+        StatementRow *row = static_cast<StatementRow *>(iRow.get());
         row->mStatement = nsnull;
         mStatementRowHolder = nsnull;
     }

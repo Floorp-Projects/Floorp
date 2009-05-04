@@ -135,6 +135,7 @@ LoginManagerStorage_mozStorage.prototype = {
                                 "guid               TEXT,"                +
                                 "encType            INTEGER",
             // Changes must be reflected in this._dbAreExpectedColumnsPresent
+            //                          and this._searchLogins
             moz_disabledHosts:  "id                 INTEGER PRIMARY KEY," +
                                 "hostname           TEXT UNIQUE ON CONFLICT REPLACE",
         },
@@ -480,11 +481,11 @@ LoginManagerStorage_mozStorage.prototype = {
     /*
      * getAllLogins
      *
-     * Returns an array of nsAccountInfo.
+     * Returns an array of nsILoginInfo.
      */
     getAllLogins : function (count) {
         let userCanceled;
-        let [logins, ids] = this._queryLogins("", "", "");
+        let [logins, ids] = this._searchLogins({});
 
         // decrypt entries for caller.
         [logins, userCanceled] = this._decryptLogins(logins);
@@ -508,6 +509,120 @@ LoginManagerStorage_mozStorage.prototype = {
      */
     getAllEncryptedLogins : function (count) {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+
+    /*
+     * searchLogins
+     *
+     * Public wrapper around _searchLogins to convert the nsIPropertyBag to a
+     * JavaScript object and decrypt the results.
+     *
+     * Returns an array of decrypted nsILoginInfo.
+     */
+    searchLogins : function(count, matchData) {
+        let realMatchData = {};
+        // Convert nsIPropertyBag to normal JS object
+        let propEnum = matchData.enumerator;
+        while (propEnum.hasMoreElements()) {
+            let prop = propEnum.getNext().QueryInterface(Ci.nsIProperty);
+            realMatchData[prop.name] = prop.value;
+        }
+
+        let [logins, ids] = this._searchLogins(realMatchData);
+
+        let userCanceled;
+        // Decrypt entries found for the caller.
+        [logins, userCanceled] = this._decryptLogins(logins);
+
+        if (userCanceled)
+        throw "User canceled Master Password entry";
+
+        count.value = logins.length; // needed for XPCOM
+        return logins;
+    },
+
+
+    /*
+     * _searchLogins
+     *
+     * Private method to perform arbitrary searches on any field. Decryption is
+     * left to the caller.
+     *
+     * Returns [logins, ids] for logins that match the arguments, where logins
+     * is an array of encrypted nsLoginInfo and ids is an array of associated
+     * ids in the database.
+     */
+    _searchLogins : function (matchData) {
+        let conditions = [], params = {};
+
+        for (field in matchData) {
+            let value = matchData[field];
+            switch (field) {
+                // Historical compatibility requires this special case
+                case "formSubmitURL":
+                    if (value != null) {
+                        conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
+                        params["formSubmitURL"] = value;
+                        break;
+                    }
+                // Normal cases.
+                case "hostname":
+                case "httpRealm":
+                case "id":
+                case "usernameField":
+                case "passwordField":
+                case "encryptedUsername":
+                case "encryptedPassword":
+                case "guid":
+                case "encType":
+                    if (value == null) {
+                        conditions.push(field + " isnull");
+                    } else {
+                        conditions.push(field + " = :" + field);
+                        params[field] = value;
+                    }
+                    break;
+                // Fail if caller requests an unknown property.
+                default:
+                    throw "Unexpected field: " + field;
+            }
+        }
+
+        // Build query
+        let query = "SELECT * FROM moz_logins";
+        if (conditions.length) {
+            conditions = conditions.map(function(c) "(" + c + ")");
+            query += " WHERE " + conditions.join(" AND ");
+        }
+
+        let stmt;
+        let logins = [], ids = [];
+        try {
+            stmt = this._dbCreateStatement(query, params);
+            // We can't execute as usual here, since we're iterating over rows
+            while (stmt.step()) {
+                // Create the new nsLoginInfo object, push to array
+                let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                            createInstance(Ci.nsILoginInfo);
+                login.init(stmt.row.hostname, stmt.row.formSubmitURL,
+                           stmt.row.httpRealm, stmt.row.encryptedUsername,
+                           stmt.row.encryptedPassword, stmt.row.usernameField,
+                           stmt.row.passwordField);
+                // set nsILoginMetaInfo values
+                login.QueryInterface(Ci.nsILoginMetaInfo);
+                login.guid = stmt.row.guid;
+                logins.push(login);
+                ids.push(stmt.row.id);
+            }
+        } catch (e) {
+            this.log("_searchLogins failed: " + e.name + " : " + e.message);
+        } finally {
+            stmt.reset();
+        }
+
+        this.log("_searchLogins: returning " + logins.length + " logins");
+        return [logins, ids];
     },
 
 
@@ -600,8 +715,16 @@ LoginManagerStorage_mozStorage.prototype = {
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
         let userCanceled;
-        let [logins, ids] =
-            this._queryLogins(hostname, formSubmitURL, httpRealm);
+        let loginData = {
+            hostname: hostname,
+            formSubmitURL: formSubmitURL,
+            httpRealm: httpRealm
+        };
+        let matchData = { };
+        for each (field in ["hostname", "formSubmitURL", "httpRealm"])
+          if (loginData[field] != '')
+              matchData[field] = loginData[field];
+        let [logins, ids] = this._searchLogins(matchData);
 
         // Decrypt entries found for the caller.
         [logins, userCanceled] = this._decryptLogins(logins);
@@ -679,8 +802,12 @@ LoginManagerStorage_mozStorage.prototype = {
      * stored login (useful for looking at the actual nsILoginMetaInfo values).
      */
     _getIdForLogin : function (login) {
-        let [logins, ids] =
-            this._queryLogins(login.hostname, login.formSubmitURL, login.httpRealm);
+        let matchData = { };
+        for each (field in ["hostname", "formSubmitURL", "httpRealm"])
+            if (login[field] != '')
+                matchData[field] = login[field];
+        let [logins, ids] = this._searchLogins(matchData);
+
         let id = null;
         let foundLogin = null;
 
@@ -705,58 +832,6 @@ LoginManagerStorage_mozStorage.prototype = {
         }
 
         return [id, foundLogin];
-    },
-
-
-    /*
-     * _queryLogins
-     *
-     * Returns [logins, ids] for logins that match the arguments, where logins
-     * is an array of encrypted nsLoginInfo and ids is an array of associated
-     * ids in the database.
-     */
-    _queryLogins : function (hostname, formSubmitURL, httpRealm, encType) {
-        let logins = [], ids = [];
-
-        let query = "SELECT * FROM moz_logins";
-        let [conditions, params] =
-            this._buildConditionsAndParams(hostname, formSubmitURL, httpRealm);
-
-        if (typeof encType != "undefined") {
-          conditions.push("encType = :encType");
-          params.encType = encType;
-        }
-
-        if (conditions.length) {
-            conditions = conditions.map(function(c) "(" + c + ")");
-            query += " WHERE " + conditions.join(" AND ");
-        }
-
-        let stmt;
-        try {
-            stmt = this._dbCreateStatement(query, params);
-            // We can't execute as usual here, since we're iterating over rows
-            while (stmt.step()) {
-                // Create the new nsLoginInfo object, push to array
-                let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                            createInstance(Ci.nsILoginInfo);
-                login.init(stmt.row.hostname, stmt.row.formSubmitURL,
-                           stmt.row.httpRealm, stmt.row.encryptedUsername,
-                           stmt.row.encryptedPassword, stmt.row.usernameField,
-                           stmt.row.passwordField);
-                // set nsILoginMetaInfo values
-                login.QueryInterface(Ci.nsILoginMetaInfo);
-                login.guid = stmt.row.guid;
-                logins.push(login);
-                ids.push(stmt.row.id);
-            }
-        } catch (e) {
-            this.log("_queryLogins failed: " + e.name + " : " + e.message);
-        } finally {
-            stmt.reset();
-        }
-
-        return [logins, ids];
     },
 
 
@@ -1067,8 +1142,7 @@ LoginManagerStorage_mozStorage.prototype = {
         // Ignore failures, will try again next session...
 
         try {
-            let [logins, ids] =
-               this._queryLogins("", "", "", 0);
+            let [logins, ids] = this._searchLogins({ encType: 0 });
 
             if (!logins.length)
                 return;

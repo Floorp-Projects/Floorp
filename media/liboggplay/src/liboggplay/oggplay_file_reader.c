@@ -153,6 +153,7 @@ oggplay_file_reader_new(char *file_name) {
   me->functions.io_read = &oggplay_file_reader_io_read;
   me->functions.io_seek = &oggplay_file_reader_io_seek;
   me->functions.io_tell = &oggplay_file_reader_io_tell;
+  me->functions.duration = NULL;
 
   return (OggPlayReader *)me;
 

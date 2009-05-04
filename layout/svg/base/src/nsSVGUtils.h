@@ -37,7 +37,7 @@
 #ifndef NS_SVGUTILS_H
 #define NS_SVGUTILS_H
 
-// include math.h to pick up definition of M_PI if the platform defines it
+// include math.h to pick up definition of M_SQRT1_2 if the platform defines it
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -46,6 +46,8 @@
 #include "nsRect.h"
 #include "gfxContext.h"
 #include "nsIRenderingContext.h"
+#include "gfxRect.h"
+#include "gfxMatrix.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -78,6 +80,8 @@ struct gfxIntSize;
 struct nsStyleFont;
 class nsSVGEnum;
 class nsISVGChildFrame;
+class nsSVGGeometryFrame;
+class nsSVGDisplayContainerFrame;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -255,16 +259,18 @@ public:
   static nsresult GetNearestViewportElement(nsIContent *aContent,
                                             nsIDOMSVGElement * *aNearestViewportElement);
 
+  /**
+   * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
+   * must be an SVG frame. If aFrame is of type nsGkAtoms::svgOuterSVGFrame,
+   * returns nsnull.
+   */
+  static nsSVGDisplayContainerFrame* GetNearestSVGViewport(nsIFrame *aFrame);
+
   /*
    * Get the farthest viewport element
    */
   static nsresult GetFarthestViewportElement(nsIContent *aContent,
                                              nsIDOMSVGElement * *aFarthestViewportElement);
-
-  /*
-   * Creates a bounding box by walking the children and doing union.
-   */
-  static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
 
   /**
    * Figures out the worst case invalidation area for a frame, taking
@@ -368,7 +374,7 @@ public:
    * child SVG frame, container SVG frame, or a regular frame.
    * For regular frames, we just return an identity matrix.
    */
-  static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
+  static gfxMatrix GetCanvasTM(nsIFrame* aFrame);
 
   /*
    * Tells child frames that something that might affect them has changed
@@ -495,6 +501,22 @@ public:
   static void
   WritePPM(const char *fname, gfxImageSurface *aSurface);
 #endif
+
+  /**
+   * Compute the maximum possible device space stroke extents of a path given
+   * the path's device space path extents, its stroke style and its ctm.
+   *
+   * This is a workaround for the lack of suitable cairo API for getting the
+   * tight device space stroke extents of a path. This basically gives us the
+   * tightest extents that we can guarantee fully enclose the inked stroke
+   * without doing the calculations for the actual tight extents. We exploit
+   * the fact that cairo does have an API for getting the tight device space
+   * fill/path extents.
+   *
+   * This should die once bug 478152 is fixed.
+   */
+  static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
+                                               nsSVGGeometryFrame* aFrame);
 
 private:
   /* Computational (nil) surfaces */

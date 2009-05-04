@@ -321,6 +321,8 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
 PRBool
 nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
 {
+  NS_ASSERTION(aContent, "aContent is null in call to HasDefinedARIAToken!");
+
   if (!aContent->HasAttr(kNameSpaceID_None, aAtom) ||
       aContent->AttrValueIs(kNameSpaceID_None, aAtom,
                             nsAccessibilityAtoms::_empty, eCaseMatters) ||
@@ -825,7 +827,6 @@ nsAccUtils::GetMultiSelectFor(nsIDOMNode *aNode)
   if (0 == (state & nsIAccessibleStates::STATE_SELECTABLE))
     return nsnull;
 
-  PRUint32 containerRole;
   while (0 == (state & nsIAccessibleStates::STATE_MULTISELECTABLE)) {
     nsIAccessible *current = accessible;
     current->GetParent(getter_AddRefs(accessible));

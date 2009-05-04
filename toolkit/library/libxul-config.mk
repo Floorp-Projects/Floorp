@@ -176,6 +176,12 @@ COMPONENT_LIBS += \
 endif
 endif
 
+ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += \
+	windowsproxy \
+	$(NULL)
+endif
+
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS  += mozutil_s
 endif
@@ -329,11 +335,6 @@ endif
 
 ifdef MOZ_ENABLE_PHOTON
 COMPONENT_LIBS += widget_photon
-endif
-
-ifdef MOZ_OJI
-STATIC_LIBS += jsj
-COMPONENT_LIBS += oji
 endif
 
 ifdef ACCESSIBILITY

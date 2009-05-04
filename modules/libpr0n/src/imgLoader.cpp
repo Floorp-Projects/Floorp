@@ -516,9 +516,6 @@ NS_IMPL_ISUPPORTS4(imgLoader, imgILoader, nsIContentSniffer, imgICache, nsISuppo
 imgLoader::imgLoader()
 {
   /* member initializers and constructor code */
-#ifdef DEBUG_pavlov
-  PrintImageDecoders();
-#endif
 }
 
 imgLoader::~imgLoader()
@@ -1462,15 +1459,21 @@ NS_IMETHODIMP imgLoader::GetMIMETypeFromContent(nsIRequest* aRequest,
 nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, nsACString& aContentType)
 {
   /* Is it a GIF? */
-  if (aLength >= 4 && !nsCRT::strncmp(aContents, "GIF8", 4))  {
+  if (aLength >= 6 && (!nsCRT::strncmp(aContents, "GIF87a", 6) ||
+                       !nsCRT::strncmp(aContents, "GIF89a", 6)))
+  {
     aContentType.AssignLiteral("image/gif");
   }
 
   /* or a PNG? */
-  else if (aLength >= 4 && ((unsigned char)aContents[0]==0x89 &&
+  else if (aLength >= 8 && ((unsigned char)aContents[0]==0x89 &&
                    (unsigned char)aContents[1]==0x50 &&
                    (unsigned char)aContents[2]==0x4E &&
-                   (unsigned char)aContents[3]==0x47))
+                   (unsigned char)aContents[3]==0x47 &&
+                   (unsigned char)aContents[4]==0x0D &&
+                   (unsigned char)aContents[5]==0x0A &&
+                   (unsigned char)aContents[6]==0x1A &&
+                   (unsigned char)aContents[7]==0x0A))
   { 
     aContentType.AssignLiteral("image/png");
   }

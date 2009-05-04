@@ -49,6 +49,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "secport.h"
+#include "prlong.h"
 
 /* private PKIX system headers */
 #include "pkix_basicconstraintschecker.h"
@@ -658,12 +659,16 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
  * This needs to be replaced with Loggers.
  */
 
+#ifdef DEBUG
 #define PKIX_DEBUG(expr) \
     do { \
 	_PKIX_DEBUG_TRACE(pkixLoggersErrors, expr, PKIX_LOGGER_LEVEL_DEBUG); \
-	(void) printf("(%s: ", myFuncName); \
-	(void) printf(expr); \
+	(void) fprintf(stderr, "(%s: ", myFuncName); \
+        (void) fprintf(stderr, expr);                \
     } while (0)
+#else
+#define PKIX_DEBUG(expr)
+#endif
 
 /* Logging doesn't support DEBUG with ARG: cannot convert control and arg */
 #define PKIX_DEBUG_ARG(expr, arg) \
@@ -1466,8 +1471,8 @@ extern const char *PKIX_ERRORCLASSNAMES[PKIX_NUMERRORCLASSES];
 
 extern PRLogModuleInfo *pkixLog;
 
-#define PKIX_MAGIC_HEADER           (PKIX_UInt32) 0xBEEFC0DE
-#define PKIX_MAGIC_HEADER_DESTROYED (PKIX_UInt32) 0xDEADC0DE
+#define PKIX_MAGIC_HEADER           LL_INIT(0xFEEDC0FF, 0xEEFACADE)
+#define PKIX_MAGIC_HEADER_DESTROYED LL_INIT(0xBAADF00D, 0xDEADBEEF)
 
 /* see source file for function documentation */
 

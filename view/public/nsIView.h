@@ -38,16 +38,19 @@
 #ifndef nsIView_h___
 #define nsIView_h___
 
+#include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsPoint.h"
-#include "nsIWidget.h"
+#include "nsNativeWidget.h"
+#include "nsWidgetInitData.h"
 
 class nsIViewManager;
 class nsIScrollableView;
 class nsViewManager;
 class nsView;
 class nsWeakView;
+class nsIWidget;
 
 // Enumerated type to indicate the visibility of a layer.
 // hide - the layer is not shown.

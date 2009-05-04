@@ -43,7 +43,7 @@
 interface nsIBoxObject;
 interface nsIDOMLocation;
 
-[scriptable, uuid(02c8cebd-44d1-4921-97c6-ce46b23ba31f)]
+[scriptable, uuid(09a439ad-4079-46d5-a050-4d7015d1a108)]
 interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString      characterSet;
@@ -57,8 +57,6 @@ interface nsIDOMNSDocument : nsISupports
   readonly attribute DOMString      readyState;
   readonly attribute DOMString      lastModified;
   readonly attribute DOMString      referrer;
-
-  nsIBoxObject getBoxObjectFor(in nsIDOMElement elt);
 
   boolean      hasFocus();
 

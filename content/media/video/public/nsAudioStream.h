@@ -63,6 +63,7 @@ class nsAudioStream
   static void ShutdownLibrary();
 
   nsAudioStream();
+  ~nsAudioStream();
 
   // Initialize the audio stream. aNumChannels is the number of audio channels 
   // (1 for mono, 2 for stereo, etc) and aRate is the frequency of the sound 

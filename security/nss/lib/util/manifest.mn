@@ -46,6 +46,13 @@ EXPORTS = \
 	nssilckt.h \
 	nssrwlk.h \
 	nssrwlkt.h \
+	nssutil.h \
+	pkcs11.h \
+	pkcs11f.h \
+	pkcs11p.h \
+	pkcs11t.h \
+	pkcs11n.h \
+	pkcs11u.h \
 	portreg.h \
 	secasn1.h \
 	secasn1t.h \
@@ -60,7 +67,6 @@ EXPORTS = \
 	secport.h \
 	secerr.h \
 	utilrename.h \
-	watcomfx.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

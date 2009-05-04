@@ -43,7 +43,7 @@
 
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsBaseFilePicker.h"
@@ -93,7 +93,7 @@ protected:
   nsString               mDefaultExtension;
   nsString               mFilterList;
   PRInt16                mSelectedType;
-  nsCOMPtr <nsISupportsArray> mFiles;
+  nsCOMArray<nsILocalFile> mFiles;
   static char            mLastUsedDirectory[];
   nsString               mUnicodeFile;
   static PRUnichar      *mLastUsedUnicodeDirectory;

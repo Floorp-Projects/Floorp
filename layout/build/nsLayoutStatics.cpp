@@ -59,7 +59,6 @@
 #include "nsEventListenerManager.h"
 #include "nsFrame.h"
 #include "nsGenericElement.h"  // for nsDOMEventRTTearoff
-#include "nsStyledElement.h"
 #include "nsGlobalWindow.h"
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
@@ -324,7 +323,6 @@ nsLayoutStatics::Shutdown()
   nsCSSScanner::ReleaseGlobals();
 
   NS_IF_RELEASE(nsRuleNode::gLangService);
-  nsStyledElement::Shutdown();
 
   nsTextFragment::Shutdown();
 

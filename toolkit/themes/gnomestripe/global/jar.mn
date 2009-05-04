@@ -44,7 +44,6 @@ classic.jar:
 +  skin/classic/global/icons/notfound.png                      (icons/notfound.png)
 +  skin/classic/global/icons/questionGhosted-64.png            (icons/questionGhosted-64.png)
 +  skin/classic/global/icons/Search-glass.png                  (icons/Search-glass.png)
-+  skin/classic/global/icons/Search-glass-rtl.png              (icons/Search-glass-rtl.png)
 +  skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
 +  skin/classic/global/icons/warningGhosted-64.png             (icons/warningGhosted-64.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)

@@ -64,7 +64,7 @@
 #include "nsNativeThemeColors.h"
 
 #include "gfxPlatform.h"
-#include "lcms.h"
+#include "qcms.h"
 
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
@@ -146,10 +146,19 @@ nsCocoaWindow::~nsCocoaWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // notify the children that we're gone
+  // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
+  // have nsChildView children.  'kid' is an nsChildView object if and only if
+  // its 'type' is 'eWindowType_child'.
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
-    childWindow->mParent = nsnull;
+    nsWindowType kidType;
+    kid->GetWindowType(kidType);
+    if (kidType == eWindowType_child) {
+      nsChildView* childView = static_cast<nsChildView*>(kid);
+      childView->ResetParent();
+    } else {
+      nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
+      childWindow->mParent = nsnull;
+    }
   }
 
   if (mWindow) {
@@ -1222,18 +1231,16 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::SetMenuBar(void *aMenuBar)
+void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
 {
   if (mMenuBar)
     mMenuBar->SetParent(nsnull);
-  mMenuBar = static_cast<nsMenuBarX*>(aMenuBar);
+  mMenuBar = aMenuBar;
   
   // We paint the hidden window menu bar if no other menu bar has been painted
   // yet so that some reasonable menu bar is displayed when the app starts up.
   if (!gSomeMenuBarPainted && mMenuBar && (nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar))
     mMenuBar->Paint();
-  
-  return NS_OK;
 }
 
 
@@ -1243,12 +1250,6 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
     mPopupContentView->SetFocus(aState);
 
   return NS_OK;
-}
-
-
-NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
-{
-  return NS_ERROR_FAILURE;
 }
 
 
@@ -1354,13 +1355,13 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
     // to match the system appearance lame, so probably we just shouldn't color 
     // correct chrome.
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
-      cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBATransform();
+      qcms_transform *transform = gfxPlatform::GetCMSRGBATransform();
       if (transform) {
         PRUint8 color[3];
         color[0] = NS_GET_R(aColor);
         color[1] = NS_GET_G(aColor);
         color[2] = NS_GET_B(aColor);
-        cmsDoTransform(transform, color, color, 1);
+        qcms_transform_data(transform, color, color, 1);
         aColor = NS_RGB(color[0], color[1], color[2]);
       }
     }

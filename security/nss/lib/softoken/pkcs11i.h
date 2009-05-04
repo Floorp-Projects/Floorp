@@ -596,7 +596,7 @@ extern CK_RV SFTK_SlotReInit(SFTKSlot *slot, char *configdir,
 			sftk_token_parameters *params, int moduleIndex);
 extern CK_RV SFTK_DestroySlotData(SFTKSlot *slot);
 extern CK_RV SFTK_ShutdownSlot(SFTKSlot *slot);
-extern CK_RV sftk_CloseAllSessions(SFTKSlot *slot);
+extern CK_RV sftk_CloseAllSessions(SFTKSlot *slot, PRBool logout);
 
 
 /* internal utility functions used by pkcs11.c */

@@ -392,20 +392,6 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return mOuter->SetPropertyValue(eCSSProperty_##id_, aValue);             \
   }
 
-#define CSS_PROP_NOTIMPLEMENTED(name_, id_, method_, flags_)                         \
-  NS_IMETHODIMP                                                              \
-  CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                     \
-  {                                                                          \
-    aValue.Truncate();                                                       \
-    return NS_OK;                                                            \
-  }                                                                          \
-                                                                             \
-  NS_IMETHODIMP                                                              \
-  CSS2PropertiesTearoff::Set##method_(const nsAString& aValue)               \
-  {                                                                          \
-    return NS_OK;                                                            \
-  }
-
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) \
   CSS_PROP(name_, id_, method_, flags_, X, X, X, X)
@@ -420,6 +406,5 @@ CSS_PROP(X, outline_width, MozOutlineWidth, 0, X, X, X, X)
 CSS_PROP(X, outline_offset, MozOutlineOffset, 0, X, X, X, X)
 
 #undef CSS_PROP_SHORTHAND
-#undef CSS_PROP_NOTIMPLEMENTED
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 #undef CSS_PROP

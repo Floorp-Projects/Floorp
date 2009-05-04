@@ -73,9 +73,7 @@ HOST_LDFLAGS += -ladvapi32.lib
 endif
 endif
 
-ifdef STATIC_LIBIDL
 USE_STATIC_LIBS = 1
-endif
 
 ifeq ($(OS_ARCH),Darwin)
 # The only reason to not always strip the SDK out is that the libraries

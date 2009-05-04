@@ -244,6 +244,12 @@ nsThebesImage::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsIntRec
         return NS_ERROR_OUT_OF_MEMORY;
 
     mDecoded.UnionRect(mDecoded, *aUpdateRect);
+
+    // clamp to bounds, in case someone sends a bogus
+    // updateRect (I'm looking at you, gif decoder)
+    nsIntRect boundsRect(0, 0, mWidth, mHeight);
+    mDecoded.IntersectRect(mDecoded, boundsRect);
+
 #ifdef XP_MACOSX
     if (mQuartzSurface)
         mQuartzSurface->Flush();
@@ -449,6 +455,7 @@ IsSafeImageTransformComponent(gfxFloat aValue)
 
 void
 nsThebesImage::Draw(gfxContext*        aContext,
+                    gfxPattern::GraphicsFilter aFilter,
                     const gfxMatrix&   aUserSpaceToImageSpace,
                     const gfxRect&     aFill,
                     const nsIntMargin& aPadding,
@@ -490,12 +497,11 @@ nsThebesImage::Draw(gfxContext*        aContext,
     NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
                  "We must be allowed to sample *some* source pixels!");
 
-    PRBool doTile = !imageRect.Contains(sourceRect);
     if (doPadding || doPartialDecode) {
         gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height) +
             gfxPoint(aPadding.left, aPadding.top);
   
-        if (!doTile && !mSinglePixel) {
+        if (imageRect.Contains(sourceRect) && !mSinglePixel) {
             // Not tiling, and we have a surface, so we can account for
             // padding and/or a partial decode just by twiddling parameters.
             // First, update our user-space fill rect.
@@ -595,21 +601,44 @@ nsThebesImage::Draw(gfxContext*        aContext,
     nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
     pattern->SetMatrix(userSpaceToImageSpace);
 
+    // Figure out if we're tiling in either direction
+    PRBool doTileX = (subimage.X() < imageRect.X()) ||
+        (subimage.XMost() > imageRect.XMost());
+    PRBool doTileY = (subimage.Y() < imageRect.Y()) ||
+        (subimage.YMost() > imageRect.YMost());
+
     // OK now, the hard part left is to account for the subimage sampling
     // restriction. If all the transforms involved are just integer
     // translations, then we assume no resampling will occur so there's
     // nothing to do.
     // XXX if only we had source-clipping in cairo!
-    if (!currentMatrix.HasNonIntegerTranslation() &&
-        !userSpaceToImageSpace.HasNonIntegerTranslation()) {
-        if (doTile) {
+
+    // If we're tiling a 1px wide/tall image in the 1px direction, then
+    // we don't care about handling the sampling correctly -- it will always
+    // sample the same pixel.  Note that we can't have a 1x1 image here,
+    // because that's handled by mSinglePixel.
+    if ((mWidth == 1 && doTileX && !doTileY) ||
+        (mHeight == 1 && doTileY && !doTileX) ||
+        (!currentMatrix.HasNonIntegerTranslation() &&
+         !userSpaceToImageSpace.HasNonIntegerTranslation()))
+    {
+        if (doTileX || doTileY) {
             pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
         }
     } else {
-        if (doTile || !subimage.Contains(imageRect)) {
+        if (doTileX || doTileY || !subimage.Contains(imageRect)) {
             // EXTEND_PAD won't help us here; we have to create a temporary
             // surface to hold the subimage of pixels we're allowed to
             // sample
+
+            // XXX this is going to create a very large temporary
+            // surface if we're tiling; it will be the size of the
+            // full destination area to be tiled, regardless of the
+            // current dirty region.  Instead, we should create a new
+            // tile so that the destiation region can be tiled without
+            // scaling (so we don't have to worry about the edge
+            // filtering problem).
+
             gfxRect needed = subimage.Intersect(sourceRect);
             needed.RoundOut();
             gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
@@ -669,7 +698,8 @@ nsThebesImage::Draw(gfxContext*        aContext,
   
         case gfxASurface::SurfaceTypeQuartz:
         case gfxASurface::SurfaceTypeQuartzImage:
-            // Do nothing, Mac seems to be OK. Really?
+            // Don't set EXTEND_PAD, Mac seems to be OK. Really?
+            pattern->SetFilter(aFilter);
             break;
 
         default:
@@ -677,6 +707,7 @@ nsThebesImage::Draw(gfxContext*        aContext,
             // This is what we really want for all surface types, if the
             // implementation was universally good.
             pattern->SetExtend(gfxPattern::EXTEND_PAD);
+            pattern->SetFilter(aFilter);
             break;
         }
     }
@@ -800,5 +831,6 @@ nsThebesImage::SetHasNoAlpha()
     if (mFormat == gfxASurface::ImageFormatARGB32) {
         mFormat = gfxASurface::ImageFormatRGB24;
         mFormatChanged = PR_TRUE;
+        mAlphaDepth = 0;
     }
 }

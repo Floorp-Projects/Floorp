@@ -1,0 +1,19 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<menuitem>
+<tooltip/>
+<box/>
+</menuitem>
+
+<script xmlns="http://www.w3.org/1999/xhtml">
+function doe2() {
+document.getElementsByTagName('menuitem')[0].setAttribute('description', 'tetx');
+}
+
+function doe3() {
+document.getElementsByTagName('menuitem')[0].removeAttribute('description');
+document.getElementsByTagName('tooltip')[0].setAttribute('ordinal', '0');
+}
+setTimeout(doe2,150);
+setTimeout(doe3,200);
+</script>
+</window>

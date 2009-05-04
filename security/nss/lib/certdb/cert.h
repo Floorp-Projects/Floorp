@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.75 2008/11/21 21:02:38 wtc%google.com Exp $
+ * $Id: cert.h,v 1.76 2009/03/20 18:03:57 nelson%bolyard.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -173,6 +173,17 @@ extern char *CERT_FormatName (CERTName *name);
 ** Perhaps this should be a SEC function but it's only used for certs.
 */
 extern char *CERT_Hexify (SECItem *i, int do_colon);
+
+/*
+** Converts DER string (with explicit length) into zString, if destination 
+** buffer is big enough to receive it.  Does quoting and/or escaping as 
+** specified in RFC 1485.  Input string must be single or multi-byte DER
+** character set, (ASCII, UTF8, or ISO 8851-x) not a wide character set.
+** Returns SECSuccess or SECFailure with error code set. If output buffer
+** is too small, sets error code SEC_ERROR_OUTPUT_LEN.
+*/
+extern SECStatus
+CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen);
 
 /******************************************************************************
  *

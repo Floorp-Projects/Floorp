@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.27 2008/10/31 23:02:36 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.28 2009/03/17 07:30:11 nelson%bolyard.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -248,6 +248,10 @@ extern int cert_AVAOidTagToMaxLen(SECOidTag tag);
 /* Make an AVA, allocated from pool, from OID and DER encoded value */
 extern CERTAVA * CERT_CreateAVAFromRaw(PRArenaPool *pool, 
                                const SECItem * OID, const SECItem * value);
+
+/* Make an AVA from binary input specified by SECItem */
+extern CERTAVA * CERT_CreateAVAFromSECItem(PRArenaPool *arena, SECOidTag kind, 
+                                           int valueType, SECItem *value);
 
 /*
  * get a DPCache object for the given issuer subject and dp

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2 expandtab
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,6 +43,8 @@
 #include "mozStorageVariant.h"
 #include "mozStorageRow.h"
 
+using namespace mozilla::storage;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// mozStorageRow
 
@@ -72,27 +74,27 @@ mozStorageRow::initialize(sqlite3_stmt *aStatement)
     int type = sqlite3_column_type(aStatement, i);
     switch (type) {
       case SQLITE_INTEGER:
-        variant = new mozStorageInteger(sqlite3_column_int64(aStatement, i));
+        variant = new IntegerVariant(sqlite3_column_int64(aStatement, i));
         break;
       case SQLITE_FLOAT:
-        variant = new mozStorageFloat(sqlite3_column_double(aStatement, i));
+        variant = new FloatVariant(sqlite3_column_double(aStatement, i));
         break;
       case SQLITE_TEXT:
       {
         nsDependentString str(
           static_cast<const PRUnichar *>(sqlite3_column_text16(aStatement, i))
         );
-        variant = new mozStorageText(str);
+        variant = new TextVariant(str);
         break;
       }
       case SQLITE_NULL:
-        variant = new mozStorageNull();
+        variant = new NullVariant();
         break;
       case SQLITE_BLOB:
       {
         int size = sqlite3_column_bytes(aStatement, i);
         const void *data = sqlite3_column_blob(aStatement, i);
-        variant = new mozStorageBlob(std::pair<const void *, int>(data, size));
+        variant = new BlobVariant(std::pair<const void *, int>(data, size));
         break;
       }
       default:

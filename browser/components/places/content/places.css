@@ -7,6 +7,15 @@ hbox[type="places"] {
   overflow: hidden;
 }
 
+.bookmarks-toolbar-customize,
+toolbarpaletteitem .bookmarks-toolbar-items {
+  display: none;
+}
+
+toolbarpaletteitem .bookmarks-toolbar-customize {
+  display: -moz-box;
+}
+
 menupopup[type="places"] {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-menupopup");
 }

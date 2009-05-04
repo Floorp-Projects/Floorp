@@ -6,7 +6,7 @@ structure, environment, and working directory. Typically they will all share a p
 except when a submake specifies -j1 when the parent make is building in parallel.
 """
 
-import os, subprocess, sys, logging, time, traceback
+import os, subprocess, sys, logging, time, traceback, re
 from optparse import OptionParser
 import data, parserdata, process, util
 
@@ -15,6 +15,7 @@ import data, parserdata, process, util
 
 makepypath = os.path.normpath(os.path.join(os.path.dirname(__file__), '../make.py'))
 
+_simpleopts = re.compile(r'^[a-zA-Z]+(\s|$)')
 def parsemakeflags(env):
     """
     Parse MAKEFLAGS from the environment into a sequence of command-line arguments.
@@ -26,7 +27,7 @@ def parsemakeflags(env):
     if makeflags == '':
         return []
 
-    if makeflags[0] not in ('-', ' '):
+    if _simpleopts.match(makeflags):
         makeflags = '-' + makeflags
 
     opts = []
@@ -71,6 +72,82 @@ DEALINGS IN THE SOFTWARE."""
 
 _log = logging.getLogger('pymake.execution')
 
+class _MakeContext(object):
+    def __init__(self, makeflags, makelevel, workdir, context, env, targets, options, ostmts, overrides, cb):
+        self.makeflags = makeflags
+        self.makelevel = makelevel
+
+        self.workdir = workdir
+        self.context = context
+        self.env = env
+        self.targets = targets
+        self.options = options
+        self.ostmts = ostmts
+        self.overrides = overrides
+        self.cb = cb
+
+        self.restarts = 0
+
+        self.remakecb(True)
+
+    def remakecb(self, remade):
+        if remade:
+            if self.restarts > 0:
+                _log.info("make.py[%i]: Restarting makefile parsing", self.makelevel)
+
+            self.makefile = data.Makefile(restarts=self.restarts,
+                                          make='%s %s' % (sys.executable.replace('\\', '/'), makepypath.replace('\\', '/')),
+                                          makeflags=self.makeflags,
+                                          makeoverrides=self.overrides,
+                                          workdir=self.workdir,
+                                          context=self.context, env=self.env, makelevel=self.makelevel,
+                                          targets=self.targets, keepgoing=self.options.keepgoing)
+
+            self.restarts += 1
+
+            try:
+                self.ostmts.execute(self.makefile)
+                for f in self.options.makefiles:
+                    self.makefile.include(f)
+                self.makefile.finishparsing()
+                self.makefile.remakemakefiles(self.remakecb)
+            except util.MakeError, e:
+                print e
+                self.context.defer(self.cb, 2)
+
+            return
+
+        if len(self.targets) == 0:
+            if self.makefile.defaulttarget is None:
+                print "No target specified and no default target found."
+                self.context.defer(self.cb, 2)
+                return
+
+            _log.info("Making default target %s", self.makefile.defaulttarget)
+            self.realtargets = [self.makefile.defaulttarget]
+            self.tstack = ['<default-target>']
+        else:
+            self.realtargets = self.targets
+            self.tstack = ['<command-line>']
+
+        self.makefile.gettarget(self.realtargets.pop(0)).make(self.makefile, self.tstack, cb=self.makecb)
+
+    def makecb(self, error, didanything):
+        assert error in (True, False)
+
+        if error:
+            self.context.defer(self.cb, 2)
+            return
+
+        if not len(self.realtargets):
+            if self.options.printdir:
+                print "make.py[%i]: Leaving directory '%s'" % (self.makelevel, self.workdir)
+            sys.stdout.flush()
+
+            self.context.defer(self.cb, 0)
+        else:
+            self.makefile.gettarget(self.realtargets.pop(0)).make(self.makefile, self.tstack, self.makecb)
+
 def main(args, env, cwd, cb):
     """
     Start a single makefile execution, given a command line, working directory, and environment.
@@ -89,6 +166,9 @@ def main(args, env, cwd, cb):
         op.add_option('-d',
                       action="store_true",
                       dest="verbose", default=False)
+        op.add_option('-k', '--keep-going',
+                      action="store_true",
+                      dest="keepgoing", default=False)
         op.add_option('--debug-log',
                       dest="debuglog", default=None)
         op.add_option('-C', '--directory',
@@ -97,11 +177,15 @@ def main(args, env, cwd, cb):
                       dest="printversion", default=False)
         op.add_option('-j', '--jobs', type="int",
                       dest="jobcount", default=1)
+        op.add_option('-w', '--print-directory', action="store_true",
+                      dest="printdir")
         op.add_option('--no-print-directory', action="store_false",
                       dest="printdir", default=True)
 
         options, arguments1 = op.parse_args(parsemakeflags(env))
         options, arguments2 = op.parse_args(args, values=options)
+
+        op.destroy()
 
         arguments = arguments1 + arguments2
 
@@ -112,6 +196,12 @@ def main(args, env, cwd, cb):
 
         shortflags = []
         longflags = []
+
+        if options.keepgoing:
+            shortflags.append('k')
+
+        if options.printdir:
+            shortflags.append('w')
 
         loglevel = logging.WARNING
         if options.verbose:
@@ -128,9 +218,12 @@ def main(args, env, cwd, cb):
         else:
             workdir = os.path.join(cwd, options.directory)
 
-        shortflags.append('j%i' % (options.jobcount,))
+        if options.jobcount != 1:
+            longflags.append('-j%i' % (options.jobcount,))
 
-        makeflags = ''.join(shortflags) + ' ' + ' '.join(longflags)
+        makeflags = ''.join(shortflags)
+        if len(longflags):
+            makeflags += ' ' + ' '.join(longflags)
 
         logging.basicConfig(level=loglevel, **logkwargs)
 
@@ -148,69 +241,9 @@ def main(args, env, cwd, cb):
                 cb(2)
                 return
 
-        overrides, targets = parserdata.parsecommandlineargs(arguments)
+        ostmts, targets, overrides = parserdata.parsecommandlineargs(arguments)
 
-        def makecb(error, didanything, makefile, realtargets, tstack, i, firsterror):
-            if error is not None:
-                print error
-                if firsterror is None:
-                    firsterror = error
-
-            if i == len(realtargets):
-                if options.printdir:
-                    print "make.py[%i]: Leaving directory '%s'" % (makelevel, workdir)
-                sys.stdout.flush()
-
-                context.defer(cb, firsterror and 2 or 0)
-            else:
-                deferredmake = process.makedeferrable(makecb, makefile=makefile,
-                                                      realtargets=realtargets, tstack=tstack, i=i+1, firsterror=firsterror)
-
-                makefile.gettarget(realtargets[i]).make(makefile, tstack, [], cb=deferredmake)
-                                                                                  
-
-        def remakecb(remade, restarts, makefile):
-            if remade:
-                if restarts > 0:
-                    _log.info("make.py[%i]: Restarting makefile parsing", makelevel)
-                makefile = data.Makefile(restarts=restarts, make='%s %s' % (sys.executable.replace('\\', '/'), makepypath.replace('\\', '/')),
-                                         makeflags=makeflags, makelevel=makelevel, workdir=workdir,
-                                         context=context, env=env,
-                                         targets=targets)
-
-                try:
-                    overrides.execute(makefile)
-                    for f in options.makefiles:
-                        makefile.include(f)
-                    makefile.finishparsing()
-                    makefile.remakemakefiles(process.makedeferrable(remakecb, restarts=restarts + 1, makefile=makefile))
-
-                except util.MakeError, e:
-                    print e
-                    context.defer(cb, 2)
-                    return
-
-                return
-
-            if len(targets) == 0:
-                if makefile.defaulttarget is None:
-                    print "No target specified and no default target found."
-                    context.defer(cb, 2)
-                    return
-
-                _log.info("Making default target %s", makefile.defaulttarget)
-                realtargets = [makefile.defaulttarget]
-                tstack = ['<default-target>']
-            else:
-                realtargets = targets
-                tstack = ['<command-line>']
-
-            deferredmake = process.makedeferrable(makecb, makefile=makefile,
-                                                  realtargets=realtargets, tstack=tstack, i=1, firsterror=None)
-            makefile.gettarget(realtargets[0]).make(makefile, tstack, [], cb=deferredmake)
-
-        context.defer(remakecb, True, 0, None)
-
+        _MakeContext(makeflags, makelevel, workdir, context, env, targets, options, ostmts, overrides, cb)
     except (util.MakeError), e:
         print e
         if options.printdir:

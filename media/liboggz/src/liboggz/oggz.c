@@ -638,7 +638,7 @@ oggz_map_return_value_to_error (int cb_ret)
   case OGGZ_STOP_ERR:
     return OGGZ_ERR_STOP_ERR;
   default:
-    return OGGZ_ERR_STOP_ERR;
+    return cb_ret;
   }
 }
 

@@ -51,6 +51,9 @@
 
 #include "plbase64.h"
 
+#ifdef XP_MACOSX
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 #define NO_RANGE_FOUND 126 // bit 126 in the font unicode ranges is required to be 0
 
@@ -331,19 +334,19 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
 // For fonts with two format-4 tables, the first one (Unicode platform) is preferred on the Mac.
 
 #if defined(XP_MACOSX)
-    #define acceptablePlatform(p)       ((p) == PlatformIDUnicode || (p) == PlatformIDMicrosoft)
-    #define acceptableFormat4(p,e,k)      ( ((p) == PlatformIDMicrosoft && (e) == EncodingIDMicrosoft && (k) != 4) || \
-                                            ((p) == PlatformIDUnicode) )
-    #define isSymbol(p,e)               ((p) == PlatformIDMicrosoft && (e) == EncodingIDSymbol)
+    #define acceptablePlatform(p)       ((p) == PLATFORM_UNICODE || (p) == PLATFORM_MICROSOFT)
+    #define acceptableFormat4(p,e,k)      ( ((p) == PLATFORM_MICROSOFT && (e) == EncodingIDMicrosoft && (k) != 4) || \
+                                            ((p) == PLATFORM_UNICODE) )
+    #define isSymbol(p,e)               ((p) == PLATFORM_MICROSOFT && (e) == EncodingIDSymbol)
 #else
-    #define acceptablePlatform(p)       ((p) == PlatformIDMicrosoft)
+    #define acceptablePlatform(p)       ((p) == PLATFORM_MICROSOFT)
     #define acceptableFormat4(p,e,k)      ((e) == EncodingIDMicrosoft)
     #define isSymbol(p,e)               ((e) == EncodingIDSymbol)
 #endif
 
 #define acceptableUCS4Encoding(p, e) \
-    ((platformID == PlatformIDMicrosoft && encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
-     (platformID == PlatformIDUnicode   && encodingID == EncodingIDUCS4ForUnicodePlatform))
+    ((platformID == PLATFORM_MICROSOFT && encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
+     (platformID == PLATFORM_UNICODE   && encodingID == EncodingIDUCS4ForUnicodePlatform))
 
 nsresult
 gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap, 
@@ -360,10 +363,6 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
         SizeOfTable = 8,
 
         SubtableOffsetFormat = 0
-    };
-    enum {
-        PlatformIDUnicode = 0,
-        PlatformIDMicrosoft = 3
     };
     enum {
         EncodingIDSymbol = 0,
@@ -600,16 +599,9 @@ struct NameRecord {
     AutoSwap_PRUint16    offset;                 // String offset from start of storage area (in bytes).
 
     enum {
-        NAME_ID_FAMILY = 1,
-        NAME_ID_STYLE = 2,
-        NAME_ID_UNIQUE = 3,
-        NAME_ID_FULL = 4,
-        NAME_ID_VERSION = 5,
-        NAME_ID_POSTSCRIPT = 6,
-        PLATFORM_ID_UNICODE = 0,                 // Mac OS uses this typically
-        PLATFORM_ID_MICROSOFT = 3,
         ENCODING_ID_MICROSOFT_UNICODEBMP = 1,    // with Microsoft platformID, BMP-only Unicode encoding
-        LANG_ID_MICROSOFT_EN_US = 0x0409         // with Microsoft platformID, EN US lang code
+        LANG_ID_MICROSOFT_EN_US = 0x0409,        // with Microsoft platformID, EN US lang code
+        LANG_ID_MACINTOSH_EN = 0
     };
 };
 
@@ -662,12 +654,38 @@ struct OS2Table {
     AutoSwap_PRUint16    usMaxContext;
 };
 
+// old 'kern' table, supported on Windows
+// see http://www.microsoft.com/typography/otspec/kern.htm
+struct KernTableVersion0 {
+    AutoSwap_PRUint16    version; // 0x0000
+    AutoSwap_PRUint16    nTables;
+};
+
+struct KernTableSubtableHeaderVersion0 {
+    AutoSwap_PRUint16    version;
+    AutoSwap_PRUint16    length;
+    AutoSwap_PRUint16    coverage;
+};
+
+// newer Mac-only 'kern' table, ignored by Windows
+// see http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6kern.html
+struct KernTableVersion1 {
+    AutoSwap_PRUint32    version; // 0x00010000
+    AutoSwap_PRUint32    nTables;
+};
+
+struct KernTableSubtableHeaderVersion1 {
+    AutoSwap_PRUint32    length;
+    AutoSwap_PRUint16    coverage;
+    AutoSwap_PRUint16    tupleIndex;
+};
+
 static PRBool
 IsValidSFNTVersion(PRUint32 version)
 {
     // normally 0x00010000, CFF-style OT fonts == 'OTTO' and Apple TT fonts = 'true'
     // 'typ1' is also possible for old Type 1 fonts in a SFNT container but not supported
-    return version == 0x10000 || version == 'OTTO' || version == 'true';
+    return version == 0x10000 || version == TRUETYPE_TAG('O','T','T','O') || version == TRUETYPE_TAG('t','r','u','e');
 }
 
 // copy and swap UTF-16 values, assume no surrogate pairs, can be in place
@@ -681,6 +699,44 @@ CopySwapUTF16(const PRUint16 *aInBuf, PRUint16 *aOutBuf, PRUint32 aLen)
         aOutBuf++;
         aInBuf++;
     }
+}
+
+static PRBool
+ValidateKernTable(const PRUint8 *aKernTable, PRUint32 aKernLength)
+{
+    // -- kern table can cause crashes if invalid, so do some basic sanity-checking
+    const KernTableVersion0 *kernTable0 = reinterpret_cast<const KernTableVersion0*>(aKernTable);
+    if (aKernLength < sizeof(KernTableVersion0)) {
+        return PR_FALSE;
+    }
+    if (PRUint16(kernTable0->version) == 0) {
+        if (aKernLength < sizeof(KernTableVersion0) +
+                            PRUint16(kernTable0->nTables) * sizeof(KernTableSubtableHeaderVersion0)) {
+            return PR_FALSE;
+        }
+        // at least the table is big enough to contain the subtable headers;
+        // we could go further and check the actual subtable sizes....
+        // for now, assume this is OK
+        return PR_TRUE;
+    }
+
+    const KernTableVersion1 *kernTable1 = reinterpret_cast<const KernTableVersion1*>(aKernTable);
+    if (aKernLength < sizeof(KernTableVersion1)) {
+        return PR_FALSE;
+    }
+    if (kernTable1->version == 0x00010000) {
+        if (aKernLength < sizeof(KernTableVersion1) +
+                            kernTable1->nTables * sizeof(KernTableSubtableHeaderVersion1)) {
+            return PR_FALSE;
+        }
+        // at least the table is big enough to contain the subtable headers;
+        // we could go further and check the actual subtable sizes....
+        // for now, assume this is OK
+        return PR_TRUE;
+    }
+
+    // neither the old Windows version nor the newer Apple one; refuse to use it
+    return PR_FALSE;
 }
 
 PRBool
@@ -706,12 +762,12 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
     }
     
     if (aIsCFF)
-        *aIsCFF = (sfntVersion == 'OTTO');
+        *aIsCFF = (sfntVersion == TRUETYPE_TAG('O','T','T','O'));
 
     // iterate through the table headers to find the head, name and OS/2 tables
     PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE;
-    PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE;
-    PRUint32 headOffset, headLen, nameOffset, nameLen;
+    PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE, foundKern = PR_FALSE;
+    PRUint32 headOffset, headLen, nameOffset, nameLen, kernOffset, kernLen;
     PRUint32 i, numTables;
 
     numTables = sfntHeader->numTables;
@@ -747,7 +803,7 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
         
         switch (dirEntry->tag) {
 
-        case 'head':
+        case TRUETYPE_TAG('h','e','a','d'):
             foundHead = PR_TRUE;
             headOffset = dirEntry->offset;
             headLen = dirEntry->length;
@@ -757,21 +813,27 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
             }
             break;
 
-        case 'name':
+        case TRUETYPE_TAG('k','e','r','n'):
+            foundKern = PR_TRUE;
+            kernOffset = dirEntry->offset;
+            kernLen = dirEntry->length;
+            break;
+
+        case TRUETYPE_TAG('n','a','m','e'):
             foundName = PR_TRUE;
             nameOffset = dirEntry->offset;
             nameLen = dirEntry->length;
             break;
 
-        case 'OS/2':
+        case TRUETYPE_TAG('O','S','/','2'):
             foundOS2 = PR_TRUE;
             break;
 
-        case 'glyf':  // TrueType-style quadratic glyph table
+        case TRUETYPE_TAG('g','l','y','f'):  // TrueType-style quadratic glyph table
             foundGlyphs = PR_TRUE;
             break;
 
-        case 'CFF ':  // PS-style cubic glyph table
+        case TRUETYPE_TAG('C','F','F',' '):  // PS-style cubic glyph table
             foundCFF = PR_TRUE;
             break;
 
@@ -811,7 +873,7 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
     }
     
     // need glyf or CFF table based on sfnt version
-    if (sfntVersion == 'OTTO') {
+    if (sfntVersion == TRUETYPE_TAG('O','T','T','O')) {
         if (!foundCFF) {
             NS_WARNING("invalid font (missing CFF table)");
             return PR_FALSE;
@@ -848,6 +910,14 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
         }
     }
 
+    // -- sanity-check the kern table, if present (see bug 487549)
+    if (foundKern) {
+        if (!ValidateKernTable(aFontData + kernOffset, kernLen)) {
+            NS_WARNING("invalid font (kern table)");
+            return PR_FALSE;
+        }
+    }
+
     // everything seems consistent
     return PR_TRUE;
 }
@@ -861,11 +931,11 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     PRUint64 dataLength(aFontDataLength);
 
     // new name table
-    static const PRUint32 neededNameIDs[] = {NameRecord::NAME_ID_FAMILY, 
-                                             NameRecord::NAME_ID_STYLE,
-                                             NameRecord::NAME_ID_UNIQUE,
-                                             NameRecord::NAME_ID_FULL,
-                                             NameRecord::NAME_ID_POSTSCRIPT};
+    static const PRUint32 neededNameIDs[] = {gfxFontUtils::NAME_ID_FAMILY, 
+                                             gfxFontUtils::NAME_ID_STYLE,
+                                             gfxFontUtils::NAME_ID_UNIQUE,
+                                             gfxFontUtils::NAME_ID_FULL,
+                                             gfxFontUtils::NAME_ID_POSTSCRIPT};
 
     // calculate new name table size
     PRUint16 nameCount = NS_ARRAY_LENGTH(neededNameIDs);
@@ -909,7 +979,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     NameRecord *nameRecord = reinterpret_cast<NameRecord*>(nameHeader + 1);
     
     for (i = 0; i < nameCount; i++, nameRecord++) {
-        nameRecord->platformID = NameRecord::PLATFORM_ID_MICROSOFT;
+        nameRecord->platformID = gfxFontUtils::PLATFORM_MICROSOFT;
         nameRecord->encodingID = NameRecord::ENCODING_ID_MICROSOFT_UNICODEBMP;
         nameRecord->languageID = NameRecord::LANG_ID_MICROSOFT_EN_US;
         nameRecord->nameID = neededNameIDs[i];
@@ -939,7 +1009,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     PRBool foundName = PR_FALSE;
     
     for (i = 0; i < numTables; i++, dirEntry++) {
-        if (dirEntry->tag == 'name') {
+        if (dirEntry->tag == TRUETYPE_TAG('n','a','m','e')) {
             foundName = PR_TRUE;
             break;
         }
@@ -980,7 +1050,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     dirEntry = reinterpret_cast<TableDirEntry*>(newFontData + sizeof(SFNTHeader));
 
     for (i = 0; i < numTables; i++, dirEntry++) {
-        if (dirEntry->tag == 'head') {
+        if (dirEntry->tag == TRUETYPE_TAG('h','e','a','d')) {
             headOffset = dirEntry->offset;
         }
         checksum += dirEntry->checkSum;
@@ -991,6 +1061,216 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     HeadTable *headData = reinterpret_cast<HeadTable*>(newFontData + headOffset);
 
     headData->checkSumAdjustment = HeadTable::HEAD_CHECKSUM_CALC_CONST - checksum;
+
+    return NS_OK;
+}
+
+enum {
+#if defined(XP_MACOSX)
+    CANONICAL_LANG_ID = NameRecord::LANG_ID_MACINTOSH_EN,
+    PLATFORM_ID = gfxFontUtils::PLATFORM_MACINTOSH
+#else
+    CANONICAL_LANG_ID = NameRecord::LANG_ID_MICROSOFT_EN_US,
+    PLATFORM_ID = gfxFontUtils::PLATFORM_MICROSOFT
+#endif
+};    
+
+nsresult
+gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+                        PRInt32 aPlatformID, nsTArray<nsString>& aNames)
+{
+    return ReadNames(aNameTable, aNameID, NAME_LANG_ALL, aPlatformID, aNames);
+}
+
+nsresult
+gfxFontUtils::ReadCanonicalName(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+                                nsString& aName)
+{
+    nsresult rv;
+    
+    nsTArray<nsString> names;
+    
+    // first, look for the English name (this will succeed 99% of the time)
+    rv = ReadNames(aNameTable, aNameID, CANONICAL_LANG_ID, PLATFORM_ID, names);
+    NS_ENSURE_SUCCESS(rv, rv);
+        
+    // otherwise, grab names for all languages
+    if (names.Length() == 0) {
+        rv = ReadNames(aNameTable, aNameID, NAME_LANG_ALL, PLATFORM_ID, names);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    
+#if defined(XP_MACOSX)
+    // may be dealing with font that only has Microsoft name entries
+    if (names.Length() == 0) {
+        rv = ReadNames(aNameTable, aNameID, NameRecord::LANG_ID_MICROSOFT_EN_US, 
+                       gfxFontUtils::PLATFORM_MICROSOFT, names);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        // getting really desperate now, take anything!
+        if (names.Length() == 0) {
+            rv = ReadNames(aNameTable, aNameID, NAME_LANG_ALL, 
+                           gfxFontUtils::PLATFORM_MICROSOFT, names);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+#endif
+
+    // return the first name (99.9% of the time names will
+    // contain a single English name)
+    if (names.Length()) {
+        aName.Assign(names[0]);
+        return NS_OK;
+    }
+        
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+DecodeName(PRUint8 *aNameData, PRUint32 aByteLen, PRInt32 aPlatform, 
+           PRUint32 aEncoding, nsAString& aName)
+{
+    NS_ASSERTION(aPlatform != gfxFontUtils::PLATFORM_ALL, "need a defined platform to decode string");
+    
+#if defined(XP_MACOSX)
+
+    CFStringRef name = NULL;
+
+    if (aPlatform == gfxFontUtils::PLATFORM_MACINTOSH) {
+        name = CFStringCreateWithBytes(kCFAllocatorDefault, aNameData, aByteLen,
+                                       (CFStringEncoding) aEncoding, false);
+    } else if (aPlatform == gfxFontUtils::PLATFORM_UNICODE 
+               || aPlatform == gfxFontUtils::PLATFORM_MICROSOFT) 
+    {
+        name = CFStringCreateWithBytes(kCFAllocatorDefault, aNameData, aByteLen, 
+                                       kCFStringEncodingUTF16BE, false);
+    }
+
+    if (!name)
+        return NS_ERROR_FAILURE;
+        
+     CFIndex len = CFStringGetLength(name);
+     aName.SetLength(len);
+     CFStringGetCharacters(name, CFRangeMake(0, len), aName.BeginWriting());
+     CFRelease(name);
+     
+#else
+
+    // skip non-MS platforms and non-Unicode encodings
+    if (aPlatform != gfxFontUtils::PLATFORM_MICROSOFT 
+        || aEncoding != NameRecord::ENCODING_ID_MICROSOFT_UNICODEBMP)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 strLen = aByteLen/2;
+    PRUnichar *str;
+    
+#ifdef IS_LITTLE_ENDIAN
+    nsAutoTArray<PRUnichar,256> swapBuf;
+    if (!swapBuf.AppendElements(strLen))
+        NS_ERROR_FAILURE;
+    
+    str = (PRUnichar*) (swapBuf.Elements());
+    PRUnichar *ch, *end = (PRUnichar*)(aNameData + aByteLen);
+    for (ch = (PRUnichar*) aNameData; ch < end; ch++) {
+        *str++ = NS_SWAP16(*ch);
+    }
+    str = (PRUnichar*) (swapBuf.Elements());
+#else
+    str = (PRUnichar*) aNameData;
+#endif    
+    
+    aName.Assign(str, strLen);
+
+#endif
+
+    return NS_OK;
+}
+
+nsresult
+gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+                        PRInt32 aLangID, PRInt32 aPlatformID,
+                        nsTArray<nsString>& aNames)
+{
+    PRUint32 nameTableLen = aNameTable.Length();
+    NS_ASSERTION(nameTableLen != 0, "null name table");
+
+    if (nameTableLen == 0)
+        return NS_ERROR_FAILURE;
+
+    PRUint8 *nameTable = aNameTable.Elements();
+
+    // -- name table data
+    const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(nameTable);
+
+    PRUint32 nameCount = nameHeader->count;
+
+    // -- sanity check the number of name records
+    if (PRUint64(nameCount) * sizeof(NameRecord) > nameTableLen) {
+        NS_WARNING("invalid font (name table data)");
+        return NS_ERROR_FAILURE;
+    }
+    
+    // -- iterate through name records
+    const NameRecord *nameRecord 
+        = reinterpret_cast<const NameRecord*>(nameTable + sizeof(NameHeader));
+    PRUint64 nameStringsBase = PRUint64(nameHeader->stringOffset);
+
+    PRUint32 i;
+    for (i = 0; i < nameCount; i++, nameRecord++) {
+        PRUint32 platformID;
+        
+        // skip over unwanted nameID's
+        if (PRUint32(nameRecord->nameID) != aNameID)
+            continue;
+
+        // skip over unwanted platform data
+        platformID = nameRecord->platformID;
+        if (aPlatformID != PLATFORM_ALL 
+            && PRUint32(nameRecord->platformID) != PLATFORM_ID)
+            continue;
+            
+        // skip over unwanted languages
+        if (aLangID != NAME_LANG_ALL 
+              && PRUint32(nameRecord->languageID) != PRUint32(aLangID))
+            continue;
+        
+        // add name to names array
+        
+        // -- calculate string location
+        PRUint32 namelen = nameRecord->length;
+        PRUint32 nameoff = nameRecord->offset;  // offset from base of string storage
+
+        if (nameStringsBase + PRUint64(nameoff) + PRUint64(namelen) 
+                > nameTableLen) {
+            NS_WARNING("invalid font (name table strings)");
+            return NS_ERROR_FAILURE;
+        }
+        
+        // -- decode if necessary and make nsString
+        nsAutoString name;
+        nsresult rv;
+        
+        rv = DecodeName(nameTable + nameStringsBase + nameoff, namelen, 
+                        platformID, PRUint32(nameRecord->encodingID), name);
+        
+        if (NS_FAILED(rv))
+            continue;
+            
+        PRUint32 k, numNames;
+        PRBool foundName = PR_FALSE;
+        
+        numNames = aNames.Length();
+        for (k = 0; k < numNames; k++) {
+            if (name.Equals(aNames[k])) {
+                foundName = PR_TRUE;
+                break;
+            }    
+        }
+        
+        if (!foundName)
+            aNames.AppendElement(name);                          
+
+    }
 
     return NS_OK;
 }
@@ -1142,7 +1422,7 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
 
         switch (dirEntry->tag) {
 
-        case 'head':
+        case TRUETYPE_TAG('h','e','a','d'):
             foundHead = PR_TRUE;
             headOffset = dirEntry->offset;
             headLen = dirEntry->length;
@@ -1150,23 +1430,23 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
                 return NS_ERROR_FAILURE;
             break;
 
-        case 'name':
+        case TRUETYPE_TAG('n','a','m','e'):
             foundName = PR_TRUE;
             nameOffset = dirEntry->offset;
             nameLen = dirEntry->length;
             break;
 
-        case 'OS/2':
+        case TRUETYPE_TAG('O','S','/','2'):
             foundOS2 = PR_TRUE;
             os2Offset = dirEntry->offset;
             os2Len = dirEntry->length;
             break;
 
-        case 'glyf':  // TrueType-style quadratic glyph table
+        case TRUETYPE_TAG('g','l','y','f'):  // TrueType-style quadratic glyph table
             foundGlyphs = PR_TRUE;
             break;
 
-        case 'CFF ':  // PS-style cubic glyph table
+        case TRUETYPE_TAG('C','F','F',' '):  // PS-style cubic glyph table
             foundGlyphs = PR_TRUE;
             break;
 
@@ -1217,32 +1497,32 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     for (i = 0; i < nameCount; i++, nameRecord++) {
 
         // looking for Microsoft English US name strings, skip others
-        if (PRUint32(nameRecord->platformID) != NameRecord::PLATFORM_ID_MICROSOFT || 
+        if (PRUint32(nameRecord->platformID) != gfxFontUtils::PLATFORM_MICROSOFT || 
                 PRUint32(nameRecord->encodingID) != NameRecord::ENCODING_ID_MICROSOFT_UNICODEBMP || 
                 PRUint32(nameRecord->languageID) != NameRecord::LANG_ID_MICROSOFT_EN_US)
             continue;
 
         switch ((PRUint32)nameRecord->nameID) {
 
-        case NameRecord::NAME_ID_FAMILY:
+        case gfxFontUtils::NAME_ID_FAMILY:
             names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length = nameRecord->length;
             needNames &= ~(1 << EOTFixedHeader::EOT_FAMILY_NAME_INDEX);
             break;
 
-        case NameRecord::NAME_ID_STYLE:
+        case gfxFontUtils::NAME_ID_STYLE:
             names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length = nameRecord->length;
             needNames &= ~(1 << EOTFixedHeader::EOT_STYLE_NAME_INDEX);
             break;
 
-        case NameRecord::NAME_ID_FULL:
+        case gfxFontUtils::NAME_ID_FULL:
             names[EOTFixedHeader::EOT_FULL_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length = nameRecord->length;
             needNames &= ~(1 << EOTFixedHeader::EOT_FULL_NAME_INDEX);
             break;
 
-        case NameRecord::NAME_ID_VERSION:
+        case gfxFontUtils::NAME_ID_VERSION:
             names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length = nameRecord->length;
             needNames &= ~(1 << EOTFixedHeader::EOT_VERSION_NAME_INDEX);

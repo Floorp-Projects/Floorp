@@ -54,6 +54,7 @@
 #include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsTraceRefcnt.h"
+#include "nsITransferable.h"
 
 class nsIRenderingContext;
 class nsIRegion;
@@ -362,6 +363,11 @@ class nsHashKey;
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
 #define NS_QUERY_EDITOR_RECT             (NS_QUERY_CONTENT_EVENT_START + 5)
+// Query for the current state of the content. The particular members of
+// mReply that are set for each query content event will be valid on success.
+#define NS_QUERY_CONTENT_STATE           (NS_QUERY_CONTENT_EVENT_START + 6)
+// Query for the selection in the form of a nsITransferable.
+#define NS_QUERY_SELECTION_AS_TRANSFERABLE (NS_QUERY_CONTENT_EVENT_START + 7)
 
 // Video events
 #ifdef MOZ_MEDIA
@@ -403,6 +409,8 @@ class nsHashKey;
 #define NS_SIMPLE_GESTURE_ROTATE_START   (NS_SIMPLE_GESTURE_EVENT_START+4)
 #define NS_SIMPLE_GESTURE_ROTATE_UPDATE  (NS_SIMPLE_GESTURE_EVENT_START+5)
 #define NS_SIMPLE_GESTURE_ROTATE         (NS_SIMPLE_GESTURE_EVENT_START+6)
+#define NS_SIMPLE_GESTURE_TAP            (NS_SIMPLE_GESTURE_EVENT_START+7)
+#define NS_SIMPLE_GESTURE_PRESSTAP       (NS_SIMPLE_GESTURE_EVENT_START+8)
 
 // Plug-in event. This is used when a plug-in has focus and when the native
 // event needs to be passed to the focused plug-in directly.
@@ -418,15 +426,6 @@ class nsHashKey;
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
  */
-
-/**
- * sizemode is an adjunct to widget size
- */
-enum nsSizeMode {
-  nsSizeMode_Normal = 0,
-  nsSizeMode_Minimized,
-  nsSizeMode_Maximized
-};
 
 /**
  * different types of (top-level) window z-level positioning
@@ -844,6 +843,96 @@ public:
 /**
  * IME Related Events
  */
+ 
+struct nsTextRangeStyle
+{
+  enum {
+    LINESTYLE_NONE   = 0,
+    LINESTYLE_SOLID  = 1,
+    LINESTYLE_DOTTED = 2,
+    LINESTYLE_DASHED = 3,
+    LINESTYLE_DOUBLE = 4,
+    LINESTYLE_WAVY   = 5
+  };
+
+  enum {
+    DEFINED_NONE             = 0x00,
+    DEFINED_LINESTYLE        = 0x01,
+    DEFINED_FOREGROUND_COLOR = 0x02,
+    DEFINED_BACKGROUND_COLOR = 0x04,
+    DEFINED_UNDERLINE_COLOR  = 0x08
+  };
+
+  // Initialize all members, because nsTextRange instances may be compared by
+  // memcomp.
+  nsTextRangeStyle() :
+    mDefinedStyles(DEFINED_NONE), mLineStyle(LINESTYLE_NONE),
+    mIsBoldLine(PR_FALSE), mForegroundColor(NS_RGBA(0, 0, 0, 0)),
+    mBackgroundColor(NS_RGBA(0, 0, 0, 0)), mUnderlineColor(NS_RGBA(0, 0, 0, 0))
+  {
+  }
+
+  PRBool IsDefined() const { return mDefinedStyles != DEFINED_NONE; }
+
+  PRBool IsLineStyleDefined() const
+  {
+    return (mDefinedStyles & DEFINED_LINESTYLE) != 0;
+  }
+
+  PRBool IsForegroundColorDefined() const
+  {
+    return (mDefinedStyles & DEFINED_FOREGROUND_COLOR) != 0;
+  }
+
+  PRBool IsBackgroundColorDefined() const
+  {
+    return (mDefinedStyles & DEFINED_BACKGROUND_COLOR) != 0;
+  }
+
+  PRBool IsUnderlineColorDefined() const
+  {
+    return (mDefinedStyles & DEFINED_UNDERLINE_COLOR) != 0;
+  }
+
+  PRBool Equals(const nsTextRangeStyle& aOther)
+  {
+    if (mDefinedStyles != aOther.mDefinedStyles)
+      return PR_FALSE;
+    if (IsLineStyleDefined() && (mLineStyle != aOther.mLineStyle ||
+                                 !mIsBoldLine != !aOther.mIsBoldLine))
+      return PR_FALSE;
+    if (IsForegroundColorDefined() &&
+        (mForegroundColor != aOther.mForegroundColor))
+      return PR_FALSE;
+    if (IsBackgroundColorDefined() &&
+        (mBackgroundColor != aOther.mBackgroundColor))
+      return PR_FALSE;
+    if (IsUnderlineColorDefined() &&
+        (mUnderlineColor != aOther.mUnderlineColor))
+      return PR_FALSE;
+    return PR_TRUE;
+  }
+
+  PRBool operator !=(const nsTextRangeStyle &aOther)
+  {
+    return !Equals(aOther);
+  }
+
+  PRBool operator ==(const nsTextRangeStyle &aOther)
+  {
+    return Equals(aOther);
+  }
+
+  PRUint8 mDefinedStyles;
+  PRUint8 mLineStyle;        // DEFINED_LINESTYLE
+
+  PRPackedBool mIsBoldLine;  // DEFINED_LINESTYLE
+
+  nscolor mForegroundColor;  // DEFINED_FOREGROUND_COLOR
+  nscolor mBackgroundColor;  // DEFINED_BACKGROUND_COLOR
+  nscolor mUnderlineColor;   // DEFINED_UNDERLINE_COLOR
+};
+
 struct nsTextRange
 {
   nsTextRange()
@@ -854,6 +943,8 @@ struct nsTextRange
   PRUint32 mStartOffset;
   PRUint32 mEndOffset;
   PRUint32 mRangeType;
+
+  nsTextRangeStyle mRangeStyle;
 };
 
 typedef nsTextRange* nsTextRangeArray;
@@ -946,7 +1037,7 @@ public:
     kIsFullPage =   1 << 0,
     kIsVertical =   1 << 1,
     kIsHorizontal = 1 << 2,
-    kHasPixels =    1 << 3  // Marks line scroll events that are provided as
+    kHasPixels =    1 << 3, // Marks line scroll events that are provided as
                             // a fallback for pixel scroll events.
                             // These scroll events are used by things that can't
                             // be scrolled pixel-wise, like trees. You should
@@ -955,6 +1046,11 @@ public:
                             // When kHasPixels is set, the event is guaranteed to
                             // be followed up by an event that contains pixel
                             // scrolling information.
+    kNoLines =      1 << 4  // Marks pixel scroll events that will not be
+                            // followed by a line scroll events. EventStateManager
+                            // will compute the appropriate height/width based on
+                            // view lineHeight and generate line scroll events
+                            // as needed.
   };
 
   nsMouseScrollEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
@@ -1012,6 +1108,9 @@ public:
     // The return widget has the caret. This is set at all query events.
     nsIWidget* mFocusedWidget;
     PRPackedBool mReversed; // true if selection is reversed (end < start)
+    PRPackedBool mHasSelection; // true if the selection exists
+    // used by NS_QUERY_SELECTION_AS_TRANSFERABLE
+    nsCOMPtr<nsITransferable> mTransferable;
   } mReply;
 };
 

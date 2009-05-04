@@ -354,11 +354,6 @@ vbox[typeName="status"][type="header-recommended"] {
   border-bottom: 1px solid #878787;
 }
 
-#progressBox {
-  padding: 5px 5px 5px 5px;
-  -moz-appearance: -moz-mac-unified-toolbar;
-}
-
 #progressBox > hbox {
   -moz-box-align: center;
 }

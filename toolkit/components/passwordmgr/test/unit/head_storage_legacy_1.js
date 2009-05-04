@@ -150,37 +150,40 @@ const LoginTest = {
    * Compare info from component to what we expected.
    */
   checkStorageData : function (storage, ref_disabledHosts, ref_logins) {
+    this.checkLogins(ref_logins, storage.getAllLogins({}));
+    this.checkDisabledHosts(ref_disabledHosts, storage.getAllDisabledHosts({}));
+  },
 
-    var stor_disabledHosts = storage.getAllDisabledHosts({});
-    do_check_eq(ref_disabledHosts.length, stor_disabledHosts.length);
-    
-    var stor_logins = storage.getAllLogins({});
-    do_check_eq(ref_logins.length, stor_logins.length);
-
-    /*
-     * Check values of the disabled list.
-     */
-    var i, j, found;
-    for (i = 0; i < ref_disabledHosts.length; i++) {
-        found = false;
-        for (j = 0; !found && j < stor_disabledHosts.length; j++) {
-            found = (ref_disabledHosts[i] == stor_disabledHosts[j]);
+  /*
+   * checkLogins
+   *
+   * Check values of the logins list.
+   */
+  checkLogins : function (expectedLogins, actualLogins) {
+    do_check_eq(expectedLogins.length, actualLogins.length);
+    for (let i = 0; i < expectedLogins.length; i++) {
+        let found = false;
+        for (let j = 0; !found && j < actualLogins.length; j++) {
+            found = expectedLogins[i].equals(actualLogins[j]);
         }
         do_check_true(found);
     }
+  },
 
-    /*
-     * Check values of the logins list.
-     */
-    var ref, stor;
-    for (i = 0; i < ref_logins.length; i++) {
-        found = false;
-        for (j = 0; !found && j < stor_logins.length; j++) {
-            found = ref_logins[i].equals(stor_logins[j]);
+  /*
+   * checkDisabledHosts
+   *
+   * Check values of the disabled list.
+   */
+  checkDisabledHosts : function (expectedHosts, actualHosts) {
+    do_check_eq(expectedHosts.length, actualHosts.length);
+    for (let i = 0; i < expectedHosts.length; i++) {
+        let found = false;
+        for (let j = 0; !found && j < actualHosts.length; j++) {
+            found = (expectedHosts[i] == actualHosts[j]);
         }
         do_check_true(found);
     }
-
   },
 
   /*

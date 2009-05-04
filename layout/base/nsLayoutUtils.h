@@ -60,6 +60,7 @@ class nsIFontMetrics;
 #include "nsIFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIPresShell.h"
+#include "gfxPattern.h"
 
 class nsBlockFrame;
 class nsTextFragment;
@@ -775,6 +776,28 @@ public:
   static PRBool GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
 
   /**
+   * Just like GetFirstLineBaseline, except also returns the top and
+   * bottom of the line with the baseline.
+   *
+   * Returns true if a line was found (and fills in aResult).
+   * Otherwise returns false.
+   */
+  struct LinePosition {
+    nscoord mTop, mBaseline, mBottom;
+
+    LinePosition operator+(nscoord aOffset) const {
+      LinePosition result;
+      result.mTop = mTop + aOffset;
+      result.mBaseline = mBaseline + aOffset;
+      result.mBottom = mBottom + aOffset;
+      return result;
+    }
+  };
+  static PRBool GetFirstLinePosition(const nsIFrame* aFrame,
+                                     LinePosition* aResult);
+
+
+  /**
    * Derive a baseline of |aFrame| (measured from its top border edge)
    * from its last in-flow line box (not descending into anything with
    * 'overflow' not 'visible', potentially including aFrame itself).
@@ -804,6 +827,11 @@ public:
    */
   static nsIFrame* GetClosestLayer(nsIFrame* aFrame);
 
+  /**
+   * Gets the graphics filter for the frame
+   */
+  static gfxPattern::GraphicsFilter GetGraphicsFilterForFrame(nsIFrame* aFrame);
+
   /* N.B. The only difference between variants of the Draw*Image
    * functions below is the type of the aImage argument.
    */
@@ -824,6 +852,7 @@ public:
    */
   static nsresult DrawImage(nsIRenderingContext* aRenderingContext,
                             imgIContainer*       aImage,
+                            gfxPattern::GraphicsFilter aGraphicsFilter,
                             const nsRect&        aDest,
                             const nsRect&        aFill,
                             const nsPoint&       aAnchor,
@@ -831,6 +860,7 @@ public:
 
   static nsresult DrawImage(nsIRenderingContext* aRenderingContext,
                             nsIImage*            aImage,
+                            gfxPattern::GraphicsFilter aGraphicsFilter,
                             const nsRect&        aDest,
                             const nsRect&        aFill,
                             const nsPoint&       aAnchor,
@@ -872,12 +902,14 @@ public:
    */
   static nsresult DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                   imgIContainer*       aImage,
+                                  gfxPattern::GraphicsFilter aGraphicsFilter,
                                   const nsRect&        aDest,
                                   const nsRect&        aDirty,
                                   const nsRect*        aSourceArea = nsnull);
 
   static nsresult DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                   nsIImage*            aImage,
+                                  gfxPattern::GraphicsFilter aGraphicsFilter,
                                   const nsRect&        aDest,
                                   const nsRect&        aDirty,
                                   const nsRect*        aSourceArea = nsnull);

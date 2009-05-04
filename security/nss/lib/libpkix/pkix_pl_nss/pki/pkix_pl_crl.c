@@ -207,54 +207,36 @@ pkix_pl_CRL_GetSignatureAlgId(
         PKIX_PL_OID **pSignatureAlgId,
         void *plContext)
 {
-        CERTCrl *nssCrl = NULL;
         PKIX_PL_OID *signatureAlgId = NULL;
-        SECAlgorithmID algorithm;
-        SECItem algBytes;
-        char *asciiOID = NULL;
 
         PKIX_ENTER(CRL, "pkix_pl_CRL_GetSignatureAlgId");
         PKIX_NULLCHECK_THREE(crl, crl->nssSignedCrl, pSignatureAlgId);
 
         /* if we don't have a cached copy from before, we create one */
         if (crl->signatureAlgId == NULL){
-
                 PKIX_OBJECT_LOCK(crl);
-
                 if (crl->signatureAlgId == NULL){
+                    CERTCrl *nssCrl = &(crl->nssSignedCrl->crl);
+                    SECAlgorithmID *algorithm = &nssCrl->signatureAlg;
+                    SECItem *algBytes = &algorithm->algorithm;
 
-                        nssCrl = &(crl->nssSignedCrl->crl);
-                        algorithm = nssCrl->signatureAlg;
-                        algBytes = algorithm.algorithm;
-
-                        PKIX_NULLCHECK_ONE(algBytes.data);
-                        if (algBytes.len == 0) {
-                                PKIX_ERROR_FATAL(PKIX_OIDBYTESLENGTH0);
-                        }
-
-                        PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                                    (&algBytes, &asciiOID, plContext),
-                                    PKIX_OIDBYTES2ASCIIFAILED);
-
-                        PKIX_CHECK(PKIX_PL_OID_Create
-                                    (asciiOID, &signatureAlgId, plContext),
-                                    PKIX_OIDCREATEFAILED);
-
-                        /* save a cached copy in case it is asked for again */
-                        crl->signatureAlgId = signatureAlgId;
+                    if (!algBytes->data || !algBytes->len) {
+                        PKIX_ERROR(PKIX_OIDBYTESLENGTH0);
+                    }
+                    PKIX_CHECK(PKIX_PL_OID_CreateBySECItem
+                               (algBytes, &signatureAlgId, plContext),
+                               PKIX_OIDCREATEFAILED);
+                    
+                    /* save a cached copy in case it is asked for again */
+                    crl->signatureAlgId = signatureAlgId;
+                    signatureAlgId = NULL;
                 }
-
                 PKIX_OBJECT_UNLOCK(crl);
-
         }
-
         PKIX_INCREF(crl->signatureAlgId);
         *pSignatureAlgId = crl->signatureAlgId;
-
 cleanup:
-
-        PKIX_FREE(asciiOID);
-
+        PKIX_DECREF(signatureAlgId);
         PKIX_RETURN(CRL);
 }
 
@@ -720,12 +702,7 @@ PKIX_PL_CRL_VerifyUpdateTime(
         PKIX_NULLCHECK_FOUR(crl, crl->nssSignedCrl, date, pResult);
 
         nssCrl = &(crl->nssSignedCrl->crl);
-
-        PKIX_CRL_DEBUG("\t\tCalling DER_DecodeTimeChoice on date\n");
-        status = DER_DecodeTimeChoice(&timeToCheck, &(date->nssTime));
-        if (status != SECSuccess) {
-                PKIX_ERROR(PKIX_DERDECODETIMECHOICEFAILED);
-        }
+        timeToCheck = date->nssTime;
 
         /* nextUpdate can be NULL. Checking before using it */
         nextUpdateDer = &nssCrl->nextUpdate;

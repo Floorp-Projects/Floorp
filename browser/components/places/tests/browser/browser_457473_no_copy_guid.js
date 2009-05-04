@@ -74,7 +74,7 @@ function test() {
   var folderAGUIDs = getGUIDs(folderANode);
 
   // test the test function
-  ok(checkGUIDs(folderANode, folderAGUIDs, true), "confirm guid test works");;
+  ok(checkGUIDs(folderANode, folderAGUIDs, true), "confirm guid test works");
 
   // serialize the folder
   var serializedNode = PlacesUtils.wrapNode(folderANode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
@@ -114,6 +114,10 @@ function test() {
   // and undo just undoes the original transaction - doesn't pull
   // in any new changes.
   //ok(checkGUIDs(folderBNode, folderBGUIDs, true, true), "folder B GUIDs after under/redo should match pre-undo/redo folder B GUIDs");
+
+  // Close containers, cleaning up their observers.
+  testRootNode.containerOpen = false;
+  toolbarNode.containerOpen = false;
 
   // clean up
   PlacesUIUtils.ptm.undoTransaction();

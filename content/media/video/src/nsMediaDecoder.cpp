@@ -68,11 +68,11 @@ nsMediaDecoder::nsMediaDecoder() :
   mElement(0),
   mRGBWidth(-1),
   mRGBHeight(-1),
-  mProgressTime(0),
-  mDataTime(0),
-  mSizeChanged(PR_FALSE),
+  mProgressTime(),
+  mDataTime(),
   mVideoUpdateLock(nsnull),
   mFramerate(0.0),
+  mSizeChanged(PR_FALSE),
   mShuttingDown(PR_FALSE),
   mStopping(PR_FALSE)
 {
@@ -153,25 +153,27 @@ void nsMediaDecoder::Progress(PRBool aTimer)
   if (!mElement)
     return;
 
-  PRIntervalTime now = PR_IntervalNow();
+  TimeStamp now = TimeStamp::Now();
 
   if (!aTimer) {
     mDataTime = now;
   }
 
-  PRUint32 progressDelta = PR_IntervalToMilliseconds(now - mProgressTime);
-  PRUint32 networkDelta = PR_IntervalToMilliseconds(now - mDataTime);
-
   // If PROGRESS_MS has passed since the last progress event fired and more
   // data has arrived since then, fire another progress event.
-  if (progressDelta >= PROGRESS_MS && networkDelta <= PROGRESS_MS) {
+  if ((mProgressTime.IsNull() ||
+       now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS)) &&
+      !mDataTime.IsNull() &&
+      now - mDataTime <= TimeDuration::FromMilliseconds(PROGRESS_MS)) {
     mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
     mProgressTime = now;
   }
 
-  if (mDataTime != 0 && networkDelta >= STALL_MS) {
+  if (!mDataTime.IsNull() &&
+      now - mDataTime >= TimeDuration::FromMilliseconds(STALL_MS)) {
     mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("stalled"));
-    mDataTime = 0;
+    // Null it out
+    mDataTime = TimeStamp();
   }
 }
 
@@ -211,7 +213,9 @@ void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerat
   mRGB = aRGBBuffer;
 }
 
-void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
+void nsMediaDecoder::Paint(gfxContext* aContext,
+                           gfxPattern::GraphicsFilter aFilter,
+                           const gfxRect& aRect)
 {
   nsAutoLock lock(mVideoUpdateLock);
 
@@ -234,6 +238,8 @@ void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
 
   // Make the source image fill the rectangle completely
   pat->SetMatrix(gfxMatrix().Scale(mRGBWidth/aRect.Width(), mRGBHeight/aRect.Height()));
+
+  pat->SetFilter(aFilter);
 
   // Set PAD mode so that when the video is being scaled, we do not sample
   // outside the bounds of the video image.

@@ -89,17 +89,57 @@ struct JSFunction {
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 };
 
-#define JSFUN_TRACEABLE      0x2000 /* can trace across calls to this native
+/*
+ * The high two bits of fun->flags encode whether the function is native or
+ * interpreted, and if interpreted, what kind of optimized closure form (if
+ * any) it might be.
+ *
+ *   00   not interpreted
+ *   01   interpreted, neither flat nor null closure
+ *   10   interpreted, flat closure
+ *   11   interpreted, null closure
+ *
+ * FUN_FLAT_CLOSURE implies FUN_INTERPRETED and u.i.script->upvarsOffset != 0.
+ * FUN_NULL_CLOSURE implies FUN_INTERPRETED and u.i.script->upvarsOffset == 0.
+ *
+ * FUN_INTERPRETED but not FUN_FLAT_CLOSURE and u.i.script->upvarsOffset != 0
+ * is an Algol-like function expression or nested function, i.e., a function
+ * that never escapes upward or downward (heapward), and is only ever called.
+ *
+ * Finally, FUN_INTERPRETED and u.i.script->upvarsOffset == 0 could be either
+ * a non-closure (a global function definition, or any function that uses no
+ * outer names), or a closure of an escaping function that uses outer names
+ * whose values can't be snapshot (because the outer names could be reassigned
+ * after the closure is formed, or because assignments could not be analyzed
+ * due to with or eval).
+ *
+ * Such a hard-case function must use JSOP_NAME, etc., and reify outer function
+ * activations' call objects, etc. if it's not a global function.
+ *
+ * NB: JSFUN_EXPR_CLOSURE reuses JSFUN_STUB_GSOPS, which is an API request flag
+ * bit only, never stored in fun->flags.
+ *
+ * If we need more bits in the future, all flags for FUN_INTERPRETED functions
+ * can move to u.i.script->flags. For now we use function flag bits to minimize
+ * pointer-chasing.
+ */
+#define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
+#define JSFUN_TRACEABLE     0x2000  /* can trace across calls to this native
                                        function; use FUN_TRCINFO if set,
                                        FUN_CLASP if unset */
-#define JSFUN_EXPR_CLOSURE   0x4000 /* expression closure: function(x)x*x */
-#define JSFUN_INTERPRETED    0x8000 /* use u.i if set, u.n if unset */
-
-#define JSFUN_SCRIPT_OR_FAST_NATIVE (JSFUN_INTERPRETED | JSFUN_FAST_NATIVE)
+#define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
+#define JSFUN_FLAT_CLOSURE  0x8000  /* flag (aka "display") closure */
+#define JSFUN_NULL_CLOSURE  0xc000  /* null closure entrains no scope chain */
+#define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
+                                       optimization level -- see above */
 
 #define FUN_OBJECT(fun)      (&(fun)->object)
-#define FUN_INTERPRETED(fun) ((fun)->flags & JSFUN_INTERPRETED)
-#define FUN_SLOW_NATIVE(fun) (!((fun)->flags & JSFUN_SCRIPT_OR_FAST_NATIVE))
+#define FUN_KIND(fun)        ((fun)->flags & JSFUN_KINDMASK)
+#define FUN_SET_KIND(fun,k)  ((fun)->flags = ((fun)->flags & ~JSFUN_KINDMASK) | (k))
+#define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
+#define FUN_FLAT_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_FLAT_CLOSURE)
+#define FUN_NULL_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_NULL_CLOSURE)
+#define FUN_SLOW_NATIVE(fun) (!FUN_INTERPRETED(fun) && !((fun)->flags & JSFUN_FAST_NATIVE))
 #define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
 #define FUN_NATIVE(fun)      (FUN_SLOW_NATIVE(fun) ? (fun)->u.n.native : NULL)
 #define FUN_FAST_NATIVE(fun) (((fun)->flags & JSFUN_FAST_NATIVE)              \
@@ -130,6 +170,7 @@ struct JSFunction {
 
 extern JSClass js_ArgumentsClass;
 extern JS_FRIEND_DATA(JSClass) js_CallClass;
+extern JSClass js_DeclEnvClass;
 
 /* JS_FRIEND_DATA so that VALUE_IS_FUNCTION is callable from the shell. */
 extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
@@ -156,9 +197,6 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_InitArgumentsClass(JSContext *cx, JSObject *obj);
 
-extern JSObject *
-js_InitCallClass(JSContext *cx, JSObject *obj);
-
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom);
@@ -172,8 +210,8 @@ js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 extern JSObject *
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent);
 
-extern JSBool
-js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *object);
+extern JS_REQUIRES_STACK JSObject *
+js_NewFlatClosure(JSContext *cx, JSFunction *fun);
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,

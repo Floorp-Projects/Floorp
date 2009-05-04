@@ -76,6 +76,7 @@ public:
     virtual nsColorMap *GetColorMap();
 
     virtual void Draw(gfxContext*        aContext,
+                      gfxPattern::GraphicsFilter aFilter,
                       const gfxMatrix&   aUserSpaceToImageSpace,
                       const gfxRect&     aFill,
                       const nsIntMargin& aPadding,

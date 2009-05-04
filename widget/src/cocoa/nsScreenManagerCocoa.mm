@@ -135,9 +135,7 @@ nsScreenManagerCocoa::ScreenForNativeWidget (void *nativeWidget, nsIScreen **out
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-    NSView *view = (NSView*) nativeWidget;
-
-    NSWindow *window = [view window];
+    NSWindow *window = static_cast<NSWindow*>(nativeWidget);
     if (window) {
         nsIScreen *screen = ScreenForCocoaScreen([window screen]);
         *outScreen = screen;

@@ -39,7 +39,17 @@
 /* General Update Service Tests */
 
 function run_test() {
+  // Verify write access to the custom app dir
+  dump("Testing: write access is required to the application directory\n");
+  var testFile = getCurrentProcessDir();
+  testFile.append("update_write_access_test");
+  testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+  do_check_true(testFile.exists());
+  testFile.remove(false);
+  do_check_false(testFile.exists());
+
   startAUS();
+
   // Check if the update dir can be written to
   dump("Testing: nsIApplicationUpdateService:canUpdate\n");
   do_check_true(gAUS.canUpdate);

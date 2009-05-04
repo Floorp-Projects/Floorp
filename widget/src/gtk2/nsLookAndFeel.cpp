@@ -70,6 +70,7 @@ float     nsLookAndFeel::sCaretRatio = 0;
 //-------------------------------------------------------------------------
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
+    mStyle = nsnull;
     InitWidget();
 
     static PRBool sInitialized = PR_FALSE;
@@ -82,7 +83,7 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-    g_object_unref(mWidget);
+    g_object_unref(mStyle);
 }
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
@@ -153,6 +154,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     case eColor_IMESelectedConvertedTextUnderline:
         aColor = NS_TRANSPARENT;
         break;
+    case eColor_SpellCheckerUnderline:
+      aColor = NS_RGB(0xff, 0, 0);
+      break;
 
         // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
     case eColor_activeborder:
@@ -578,6 +582,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_IMESelectedConvertedTextUnderline:
         aMetric = NS_UNDERLINE_STYLE_NONE;
         break;
+    case eMetric_SpellCheckerUnderlineStyle:
+        aMetric = NS_UNDERLINE_STYLE_WAVY;
+        break;
     case eMetric_ImagesInMenus:
         aMetric = moz_gtk_images_in_menus();
         break;
@@ -624,6 +631,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
         aMetric = 0.25f;
         break;
     case eMetricFloat_IMEUnderlineRelativeSize:
+        aMetric = 1.0f;
+        break;
+    case eMetricFloat_SpellCheckerUnderlineRelativeSize:
         aMetric = 1.0f;
         break;
     case eMetricFloat_CaretAspectRatio:
@@ -780,6 +790,7 @@ nsLookAndFeel::InitLookAndFeel()
 
     // invisible character styles
     GtkWidget *entry = gtk_entry_new();
+    g_object_ref_sink(entry);
     guint value;
     g_object_get (entry, "invisible-char", &value, NULL);
     sInvisibleCharacter = PRUnichar(value);
@@ -790,6 +801,7 @@ nsLookAndFeel::InitLookAndFeel()
                          NULL);
 
     gtk_widget_destroy(entry);
+    g_object_unref(entry);
 }
 
 // virtual
@@ -804,8 +816,8 @@ nsLookAndFeel::LookAndFeelChanged()
 {
     nsXPLookAndFeel::LookAndFeelChanged();
 
-    if (mWidget)
-        g_object_unref(mWidget);
+    g_object_unref(mStyle);
+    mStyle = nsnull;
  
     InitWidget();
     InitLookAndFeel();

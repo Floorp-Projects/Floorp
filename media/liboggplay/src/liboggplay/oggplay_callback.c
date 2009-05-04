@@ -57,6 +57,7 @@ oggplay_init_theora(void *user_data) {
   decoder->granulepos_seen = 0;
   decoder->frame_delta = 0;
   decoder->y_width = 0;
+  decoder->convert_to_rgb = 0;
   decoder->decoder.decoded_type = OGGPLAY_YUV_VIDEO;
 }
 
@@ -254,12 +255,12 @@ oggplay_callback_skel (OGGZ * oggz, ogg_packet * op, long serialno,
     bt_den = extract_int64(op->packet + 36);
 
     if (pt_den != 0) {
-      decoder->presentation_time = (pt_num << 32) * 1000 / pt_den;
+      decoder->presentation_time = OGGPLAY_TIME_INT_TO_FP(pt_num) / pt_den;
     } else {
       decoder->presentation_time = 0;
     }
     if (bt_den != 0) {
-      decoder->base_time = (bt_num << 32) / bt_den;
+      decoder->base_time = OGGPLAY_TIME_INT_TO_FP(bt_num) / bt_den;
     } else {
       decoder->base_time = 0;
     }
@@ -383,10 +384,33 @@ void
 oggplay_init_kate(void *user_data) {
 
 #ifdef HAVE_KATE
+  int ret;
   OggPlayKateDecode   * decoder     = (OggPlayKateDecode *)user_data;
 
-  kate_high_decode_init(&(decoder->k));
+  decoder->init = 0;
+  ret = kate_high_decode_init(&(decoder->k));
+  if (ret < 0) {
+    /* what to do ? */
+  }
+  else {
+    decoder->init = 1;
+  }
   decoder->decoder.decoded_type = OGGPLAY_KATE;
+
+#ifdef HAVE_TIGER
+  decoder->use_tiger = 1;
+  decoder->overlay_dest = -1;
+
+  ret = tiger_renderer_create(&(decoder->tr));
+  if (ret < 0) {
+    /* what to do ? */
+    decoder->tr = NULL;
+  }
+  if (decoder->use_tiger) {
+    decoder->decoder.decoded_type = OGGPLAY_RGBA_VIDEO;
+  }
+#endif
+
 #endif
 }
 
@@ -396,7 +420,15 @@ oggplay_shutdown_kate(void *user_data) {
 #ifdef HAVE_KATE
   OggPlayKateDecode   * decoder = (OggPlayKateDecode *)user_data;
 
-  kate_high_decode_clear(&(decoder->k));
+#ifdef HAVE_TIGER
+  if (decoder->tr) {
+    tiger_renderer_destroy(decoder->tr);
+  }
+#endif
+
+  if (decoder->init) {
+    kate_high_decode_clear(&(decoder->k));
+  }
 #endif
 }
 
@@ -414,8 +446,15 @@ oggplay_callback_kate (OGGZ * oggz, ogg_packet * op, long serialno,
   const kate_event *ev = NULL;
   int ret;
 
+  if (!decoder->init) {
+    return E_OGGPLAY_UNINITIALISED;
+  }
+
   kate_packet_wrap(&kp, op->bytes, op->packet);
   ret = kate_high_decode_packetin(&(decoder->k), &kp, &ev);
+  if (ret < 0) {
+    return E_OGGPLAY_BAD_INPUT;
+  }
 
   if (granulepos != -1) {
     granuleshift = oggz_get_granuleshift(oggz, serialno);
@@ -520,7 +559,7 @@ oggplay_initialise_decoder(OggPlay *me, int content_type, int serialno) {
    * convert num and denom to a 32.32 fixed point value
    */
   if (num != 0) {
-    decoder->granuleperiod = (denom << 32) / num;
+    decoder->granuleperiod = OGGPLAY_TIME_INT_TO_FP(denom) / num;
   } else {
     decoder->granuleperiod = 0;
   }

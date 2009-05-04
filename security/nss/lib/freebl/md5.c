@@ -475,7 +475,7 @@ MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
 	/* Iterate over 64-byte chunks of the message. */
 	while (inputLen >= MD5_BUFFER_SIZE) {
 #ifdef IS_LITTLE_ENDIAN
-#ifdef _X86_
+#ifdef NSS_X86_OR_X64
 		/* x86 can handle arithmetic on non-word-aligned buffers */
 		wBuf = (PRUint32 *)input;
 #else

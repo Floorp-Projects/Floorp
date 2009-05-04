@@ -6,9 +6,86 @@
    xmlns:xbl="http://www.mozilla.org/xbl"
    xmlns:svg="http://www.w3.org/2000/svg">
 
+  <binding id="timeThumb"
+           extends="chrome://global/content/bindings/scale.xml#scalethumb">
+      <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          <xbl:children/>
+          <hbox class="timeThumb" xbl:inherits="showhours">
+              <label class="timeLabel"/>
+          </hbox>
+      </xbl:content>
+      <implementation>
+
+      <field name="timeLabel">null</field>
+      <constructor>
+          <![CDATA[
+          this.timeLabel = document.getAnonymousElementByAttribute(this, "class", "timeLabel");
+          this.timeLabel.setAttribute("value", "0:00");
+          ]]>
+      </constructor>
+
+      <property name="showHours">
+        <getter>
+          <![CDATA[
+          return this.getAttribute("showhours") == "true";
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.setAttribute("showhours", val);
+          // If the duration becomes known while we're still showing the value
+          // for time=0, immediately update the value to show or hide the hours.
+          // It's less intrusive to do it now than when the user clicks play and
+          // is looking right next to the thumb.
+          var displayedTime = this.timeLabel.getAttribute("value");
+          if (val && displayedTime == "0:00")
+              this.timeLabel.setAttribute("value", "0:00:00");
+          else if (!val && displayedTime == "0:00:00")
+              this.timeLabel.setAttribute("value", "0:00");
+          ]]>
+        </setter>
+      </property>
+
+      <method name="setTime">
+          <parameter name="time"/>
+          <body>
+          <![CDATA[
+              var timeString;
+              var hours = Math.floor(time / 3600000);
+              var mins  = Math.floor(time % 3600000 / 60000);
+              var secs  = Math.floor(time % 60000 / 1000);
+              if (secs < 10)
+                  secs = "0" + secs;
+              if (hours || this.showHours) {
+                  if (mins < 10)
+                      mins = "0" + mins;
+                  timeString = hours + ":" + mins + ":" + secs;
+              } else {
+                  timeString = mins + ":" + secs;
+              }
+
+              this.timeLabel.setAttribute("value", timeString);
+          ]]>
+          </body>
+      </method>
+      </implementation>
+  </binding>
+
   <binding id="suppressChangeEvent"
             extends="chrome://global/content/bindings/scale.xml#scale">
       <implementation>
+
+      <field name="thumb">null</field>
+      <field name="type">null</field>
+      <field name="Utils">null</field>
+      <constructor>
+          <![CDATA[
+          this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
+          this.type = this.getAttribute("class");
+          this.Utils = document.getBindingParent(this.parentNode).Utils;
+          ]]>
+      </constructor>
+
       <method name="valueChanged">
           <parameter name="which"/>
           <parameter name="newValue"/>
@@ -20,13 +97,21 @@
             // just calls the videocontrol's seekToPosition() method directly.
             switch (which) {
               case "curpos":
+                // Update the time shown in the thumb.
+                if (this.type == "scrubber")
+                    this.thumb.setTime(newValue);
+
                 // The value of userChanged is true when changing the position with the mouse,
                 // but not when pressing an arrow key. However, the base binding sets
                 // ._userChanged in its keypress handlers, so we just need to check both.
                 if (!userChanged && !this._userChanged)
                   return;
                 this.setAttribute("value", newValue);
-                document.getBindingParent(this.parentNode).Utils.seekToPosition();
+
+                if (this.type == "scrubber")
+                    this.Utils.seekToPosition(newValue);
+                else if (this.type == "volumeControl")
+                    this.Utils.setVolume(newValue / 100);
                 break;
   
               case "minpos":
@@ -59,14 +144,21 @@
             <vbox>
                 <spacer flex="1"/>
                 <hbox class="controlBar" hidden="true">
-                    <button class="playButton" oncommand="document.getBindingParent(this).Utils.togglePause();"/>
+                    <button class="playButton"/>
                     <stack class="scrubberStack" flex="1">
                         <box class="backgroundBar"/>
                         <progressmeter class="bufferBar"/>
                         <progressmeter class="progressBar" max="10000"/>
-                        <scale class="scrubber"/>
+                        <scale class="scrubber" movetoclick="true"/>
                     </stack>
-                    <button class="muteButton" oncommand="document.getBindingParent(this).Utils.toggleMute();"/>
+                    <vbox class="durationBox">
+                        <label class="durationLabel"/>
+                    </vbox>
+                    <button class="muteButton"/>
+                    <stack class="volumeStack" hidden="true">
+                        <box class="volumeBackgroundBar"/>
+                        <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
+                    </stack>
                 </hbox>
             </vbox>
         </stack>
@@ -131,11 +223,13 @@
                 videocontrols : null,
                 playButton : null,
                 muteButton : null,
-
+                volumeStack    : null,
+                volumeControl  : null,
+                durationLabel  : null,
+                scrubberThumb  : null,
                 scrubber       : null,
                 progressBar    : null,
                 bufferBar      : null,
-                thumbWidth : 0,
 
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
@@ -171,6 +265,21 @@
                                     RUNTIME_STEP : 20
                                 },
 
+                // volumeFader holds the fade state for the volume <scale>.
+                volumeFader : {
+                                    name : "volume",
+                                    element : null,
+                                    maxSlide : null, // height when extended, set in init()
+                                    runtime : 0,
+                                    fadingIn : false,
+                                    isVisible : false,
+                                    timer : null,
+                                    delayTimer : null,
+                                    START_DELAY : 0,
+                                    RUNTIME_MAX : 200,
+                                    RUNTIME_STEP : 15
+                                },
+
                 firstFrameShown : false,
                 lastTimeUpdate : 0,
                 maxCurrentTimeSeen : 0,
@@ -189,6 +298,9 @@
                     this.playButton.setAttribute("paused", this.video.paused);
                     this.muteButton.setAttribute("muted", this.video.muted);
 
+                    var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
+                    this.volumeControl.value = volume;
+
                     var duration = Math.round(this.video.duration * 1000); // in ms
                     var currentTime = Math.round(this.video.currentTime * 1000); // in ms
                     this.log("Initial playback position is at " + currentTime + " of " + duration);
@@ -199,7 +311,7 @@
                     this.showPosition(currentTime, duration);
 
                     // If we have metadata, check if this is a <video> without video data.
-                    if (this.video.readyState >= this.video.HAVE_META_DATA) {
+                    if (this.video.readyState >= this.video.HAVE_METADATA) {
                         if (this.video instanceof HTMLVideoElement &&
                             (this.video.videoWidth == 0 || this.videoHeight == 0))
                             this.isAudioOnly = true;
@@ -263,7 +375,9 @@
                             this.playButton.setAttribute("paused", true);
                             break;
                         case "volumechange":
+                            var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
                             this.muteButton.setAttribute("muted", this.video.muted);
+                            this.volumeControl.value = volume;
                             break;
                         case "loadedmetadata":
                             // If a <video> doesn't have any video data, treat it as <audio>
@@ -359,6 +473,25 @@
                         duration = this.maxCurrentTimeSeen;
                     this.log("Duration is " + duration + "ms");
 
+                    // Format the duration as "h:mm:ss" or "m:ss"
+                    var hours = Math.floor(duration / 3600000);
+                    var mins  = Math.floor(duration % 3600000 / 60000);
+                    var secs  = Math.floor(duration % 60000 / 1000);
+                    var timeString;
+                    if (secs < 10)
+                        secs = "0" + secs;
+                    if (hours) {
+                        if (mins < 10)
+                            mins = "0" + mins;
+                        timeString = hours + ":" + mins + ":" + secs;
+                    } else {
+                        timeString = mins + ":" + secs;
+                    }
+                    this.durationLabel.setAttribute("value", timeString);
+
+                    // If the duration is over an hour, thumb should show h:mm:ss instead of mm:ss
+                    this.scrubberThumb.showHours = (duration >= 3600000);
+
                     this.scrubber.max = duration;
                     // XXX Can't set increment here, due to bug 473103. Also, doing so causes
                     // snapping when dragging with the mouse, so we can't just set a value for
@@ -367,11 +500,16 @@
                     this.scrubber.pageIncrement = Math.round(duration / 10);
                 },
 
-                seekToPosition : function() {
-                    var newPosition = this.scrubber.getAttribute("value");
+                seekToPosition : function(newPosition) {
                     newPosition /= 1000; // convert from ms
                     this.log("+++ seeking to " + newPosition);
                     this.video.currentTime = newPosition;
+                },
+
+                setVolume : function(newVolume) {
+                    this.log("*** setting volume to " + newVolume);
+                    this.video.volume = newVolume;
+                    this.video.muted = false;
                 },
 
                 showPosition : function(currentTime, duration) {
@@ -388,18 +526,19 @@
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
                     this.scrubber.value = currentTime;
 
-                    // Extend the progressBar so it goes to the right-edge of the
-                    // scrubber thumb. This is a bit tricky, due to how the thumb is
-                    // positioned... It's flush-left at the minimum position, but
-                    // flush-right at the maximum position (so that the full thumb is
-                    // always visible in the <scale>'s box).
+                    // Extend the progressBar to the middle of the scrubber thumb.
                     var percent = currentTime / duration;
-                    var leftEdge = Math.floor(percent * (this.scrubber.clientWidth - this.thumbWidth));
-                    var rightEdge = leftEdge + this.thumbWidth;
-                    var adjPercent = rightEdge / this.scrubber.clientWidth;
-
                     // The progressBar has max=10000
-                    this.progressBar.value = Math.round(adjPercent * 10000);
+                    this.progressBar.value = Math.round(percent * 10000);
+                },
+
+                onVolumeMouseInOut : function (event) {
+                    // Ignore events caused by transitions between mute button and volumeStack,
+                    // or between nodes inside these two elements.
+                    if (this.isEventWithin(event, this.muteButton, this.volumeStack))
+                        return;
+                    var isMouseOver = (event.type == "mouseover");
+                    this.startFade(this.volumeFader, isMouseOver);
                 },
 
                 onMouseInOut : function (event) {
@@ -412,8 +551,7 @@
                     // size as the *content area* of the video element,
                     // but this is not the same as the video element's
                     // border area if the video has border or padding.
-                    if (this.isControlsOrDescendant(event.target) &&
-                        this.isControlsOrDescendant(event.relatedTarget))
+                    if (this.isEventWithin(event, this.videocontrols))
                         return;
 
                     var isMouseOver = (event.type == "mouseover");
@@ -506,11 +644,20 @@
                     else
                         opacity = Math.pow(1 - pos, 0.5);
                     fader.isVisible = (opacity ? true : false);
-                    //self.log("Fading " + fader.name + " to opacity " + opacity);
-
                     fader.element.style.opacity = opacity;
                     // Hide the element to ignore mouse clicks and reduce throbber CPU usage.
                     fader.element.setAttribute("hidden", !fader.isVisible);
+
+                    // If this fader also has a slide effect, change the CSS margin-top too.
+                    if (fader.maxSlide) {
+                        var marginTop;
+                        if (fader.fadingIn)
+                            marginTop = Math.round(fader.maxSlide * Math.pow(pos, 0.5));
+                        else
+                            marginTop = Math.round(fader.maxSlide * Math.pow(1 - pos, 0.5));
+
+                        fader.element.style.marginTop = marginTop;
+                    }
 
                     // Is the animation done?
                     if (pos == 1) {
@@ -539,13 +686,16 @@
                     // controlling volume.
                 },
 
-                isControlsOrDescendant : function (node) {
-                    while (node) {
-                        if (node == this.videocontrols)
-                            return true;
-                        node = node.parentNode;
+                isEventWithin : function (event, parent1, parent2) {
+                    function isDescendant (node) {
+                        while (node) {
+                            if (node == parent1 || node == parent2)
+                                return true;
+                            node = node.parentNode;
+                        }
+                        return false;
                     }
-                    return false;
+                    return isDescendant(event.target) && isDescendant(event.relatedTarget);
                 },
 
                 log : function (msg) {
@@ -563,20 +713,20 @@
             this.Utils.videocontrols = this;
             this.Utils.isAudioOnly = (video instanceof HTMLAudioElement);
 
-            this.Utils.controlFader.element  = document.getAnonymousElementByAttribute(this, "class", "controlBar");
-            this.Utils.statusFader.element = document.getAnonymousElementByAttribute(this, "class", "statusOverlay");
-            this.Utils.statusIcon = document.getAnonymousElementByAttribute(this, "class", "statusIcon");
+            this.Utils.controlFader.element = document.getAnonymousElementByAttribute(this, "class", "controlBar");
+            this.Utils.statusFader.element  = document.getAnonymousElementByAttribute(this, "class", "statusOverlay");
+            this.Utils.volumeFader.element  = document.getAnonymousElementByAttribute(this, "class", "volumeStack");
 
-            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");
-            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "class", "muteButton");
+            this.Utils.statusIcon     = document.getAnonymousElementByAttribute(this, "class", "statusIcon");
+            this.Utils.playButton     = document.getAnonymousElementByAttribute(this, "class", "playButton");
+            this.Utils.muteButton     = document.getAnonymousElementByAttribute(this, "class", "muteButton");
+            this.Utils.volumeControl  = document.getAnonymousElementByAttribute(this, "class", "volumeControl");
+            this.Utils.volumeStack    = document.getAnonymousElementByAttribute(this, "class", "volumeStack");
             this.Utils.progressBar    = document.getAnonymousElementByAttribute(this, "class", "progressBar");
             this.Utils.bufferBar      = document.getAnonymousElementByAttribute(this, "class", "bufferBar");
             this.Utils.scrubber       = document.getAnonymousElementByAttribute(this, "class", "scrubber");
-
-            // Get the width of the scrubber thumb.
-            var thumb = document.getAnonymousElementByAttribute(this.Utils.scrubber, "class", "scale-thumb");
-            if (thumb)
-                this.Utils.thumbWidth = thumb.clientWidth;
+            this.Utils.scrubberThumb  = document.getAnonymousElementByAttribute(this.Utils.scrubber, "class", "scale-thumb");
+            this.Utils.durationLabel  = document.getAnonymousElementByAttribute(this, "class", "durationLabel");
              
             this.Utils.setupInitialState();
 
@@ -600,6 +750,18 @@
             // Use the Utils.handleEvent() callback for all media events.
             for each (var event in this.Utils.videoEvents)
                 video.addEventListener(event, this.Utils, false);
+
+            // Determine the height of the volumeFader when extended (which is controlled by CSS).
+            // Its .clientHeight seems to be 0 here, so use the theme's initial value. (eg "-70px")
+            this.Utils.volumeFader.maxSlide = parseInt(window.getComputedStyle(this.Utils.volumeStack, null)
+                                                             .getPropertyValue("margin-top"));
+            var self = this;
+            this.Utils.muteButton.addEventListener("command", function() { self.Utils.toggleMute(); }, false);
+            this.Utils.playButton.addEventListener("command", function() { self.Utils.togglePause(); }, false);
+            this.Utils.muteButton.addEventListener("mouseover",  function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
+            this.Utils.muteButton.addEventListener("mouseout",   function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
+            this.Utils.volumeStack.addEventListener("mouseover", function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
+            this.Utils.volumeStack.addEventListener("mouseout",  function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>

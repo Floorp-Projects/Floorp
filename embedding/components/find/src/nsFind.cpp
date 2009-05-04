@@ -132,6 +132,11 @@ public:
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  virtual nsresult Init(nsIRange* aRange)
+  {
+    NS_NOTREACHED("internal error");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   // Not a range because one of the endpoints may be anonymous.
   nsresult Init(nsIDOMNode* aStartNode, PRInt32 aStartOffset,
                 nsIDOMNode* aEndNode, PRInt32 aEndOffset);

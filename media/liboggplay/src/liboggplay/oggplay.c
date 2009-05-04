@@ -218,10 +218,24 @@ oggplay_set_callback_num_frames(OggPlay *me, int track, int frames) {
   me->callback_period = me->decode_data[track]->granuleperiod * frames;
   me->target = me->presentation_time + me->callback_period - 1;
 
-//  printf("targ: %lld, callback_per: %lld, prestime: %lld\n", me->target, me->callback_period,me->presentation_time );  
+  return E_OGGPLAY_OK;
+}
+
+OggPlayErrorCode
+oggplay_set_callback_period(OggPlay *me, int track, int milliseconds) {
+
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_OGGPLAY;
+  }
+
+  if (track < 0 || track >= me->num_tracks) {
+    return E_OGGPLAY_BAD_TRACK;
+  }
+
+  me->callback_period = OGGPLAY_TIME_INT_TO_FP(((ogg_int64_t)milliseconds))/1000;
+  me->target = me->presentation_time + me->callback_period - 1;
 
   return E_OGGPLAY_OK;
-
 }
 
 OggPlayErrorCode
@@ -231,11 +245,11 @@ oggplay_set_offset(OggPlay *me, int track, ogg_int64_t offset) {
     return E_OGGPLAY_BAD_OGGPLAY;
   }
 
-  if (track <= 0 || track > me->num_tracks) {
+  if (track < 0 || track >= me->num_tracks) {
     return E_OGGPLAY_BAD_TRACK;
   }
 
-  me->decode_data[track]->offset = (offset << 32) / 1000;
+  me->decode_data[track]->offset = OGGPLAY_TIME_INT_TO_FP(offset) / 1000;
 
   return E_OGGPLAY_OK;
 
@@ -266,6 +280,36 @@ oggplay_get_video_fps(OggPlay *me, int track, int* fps_denom, int* fps_num) {
 
   (*fps_denom) = decode->video_info.fps_denominator;
   (*fps_num) = decode->video_info.fps_numerator;
+
+  return E_OGGPLAY_OK;
+}
+
+OggPlayErrorCode
+oggplay_convert_video_to_rgb(OggPlay *me, int track, int convert) {
+  OggPlayTheoraDecode *decode;
+
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_OGGPLAY;
+  }
+
+  if (track < 0 || track >= me->num_tracks) {
+    return E_OGGPLAY_BAD_TRACK;
+  }
+
+  if (me->decode_data[track]->content_type != OGGZ_CONTENT_THEORA) {
+    return E_OGGPLAY_WRONG_TRACK_TYPE;
+  }
+
+  decode = (OggPlayTheoraDecode *)(me->decode_data[track]);
+
+  if (decode->convert_to_rgb != convert) {
+    decode->convert_to_rgb = convert;
+    me->decode_data[track]->decoded_type = convert ? OGGPLAY_RGBA_VIDEO : OGGPLAY_YUV_VIDEO;
+
+    /* flush any records created with previous type */
+    oggplay_data_free_list(me->decode_data[track]->data_list);
+    me->decode_data[track]->data_list = NULL;
+  }
 
   return E_OGGPLAY_OK;
 }
@@ -331,7 +375,7 @@ oggplay_get_video_uv_size(OggPlay *me, int track, int *uv_width, int *uv_height)
 
 }
 
-int
+OggPlayErrorCode
 oggplay_get_audio_channels(OggPlay *me, int track, int* channels) {
 
   OggPlayAudioDecode *decode;
@@ -358,7 +402,7 @@ oggplay_get_audio_channels(OggPlay *me, int track, int* channels) {
 
 }
 
-int
+OggPlayErrorCode
 oggplay_get_audio_samplerate(OggPlay *me, int track, int* rate) {
 
   OggPlayAudioDecode * decode;
@@ -385,7 +429,7 @@ oggplay_get_audio_samplerate(OggPlay *me, int track, int* rate) {
 
 }
 
-int
+OggPlayErrorCode
 oggplay_get_kate_category(OggPlay *me, int track, const char** category) {
 
   OggPlayKateDecode * decode;
@@ -398,21 +442,24 @@ oggplay_get_kate_category(OggPlay *me, int track, const char** category) {
     return E_OGGPLAY_BAD_TRACK;
   }
 
-  if (me->decode_data[track]->decoded_type != OGGPLAY_KATE) {
+  if (me->decode_data[track]->content_type != OGGZ_CONTENT_KATE) {
     return E_OGGPLAY_WRONG_TRACK_TYPE;
   }
 
   decode = (OggPlayKateDecode *)(me->decode_data[track]);
 
 #ifdef HAVE_KATE
-  (*category) = decode->k.ki->category;
-  return E_OGGPLAY_OK;
+  if (decode->init) {
+    (*category) = decode->k.ki->category;
+    return E_OGGPLAY_OK;
+  }
+  else return E_OGGPLAY_UNINITIALISED;
 #else
   return E_OGGPLAY_NO_KATE_SUPPORT;
 #endif
 }
 
-int
+OggPlayErrorCode
 oggplay_get_kate_language(OggPlay *me, int track, const char** language) {
 
   OggPlayKateDecode * decode;
@@ -425,15 +472,99 @@ oggplay_get_kate_language(OggPlay *me, int track, const char** language) {
     return E_OGGPLAY_BAD_TRACK;
   }
 
-  if (me->decode_data[track]->decoded_type != OGGPLAY_KATE) {
+  if (me->decode_data[track]->content_type != OGGZ_CONTENT_KATE) {
     return E_OGGPLAY_WRONG_TRACK_TYPE;
   }
 
   decode = (OggPlayKateDecode *)(me->decode_data[track]);
 
 #ifdef HAVE_KATE
-  (*language) = decode->k.ki->language;
+  if (decode->init) {
+    (*language) = decode->k.ki->language;
+    return E_OGGPLAY_OK;
+  }
+  else return E_OGGPLAY_UNINITIALISED;
+#else
+  return E_OGGPLAY_NO_KATE_SUPPORT;
+#endif
+}
+
+OggPlayErrorCode
+oggplay_set_kate_tiger_rendering(OggPlay *me, int track, int use_tiger) {
+
+  OggPlayKateDecode * decode;
+
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_OGGPLAY;
+  }
+
+  if (track < 0 || track >= me->num_tracks) {
+    return E_OGGPLAY_BAD_TRACK;
+  }
+
+  if (me->decode_data[track]->content_type != OGGZ_CONTENT_KATE) {
+    return E_OGGPLAY_WRONG_TRACK_TYPE;
+  }
+
+  decode = (OggPlayKateDecode *)(me->decode_data[track]);
+
+#ifdef HAVE_KATE
+#ifdef HAVE_TIGER
+  if (decode->init && decode->tr) {
+    decode->use_tiger = use_tiger;
+    decode->decoder.decoded_type = use_tiger ? OGGPLAY_RGBA_VIDEO : OGGPLAY_KATE;
+    return E_OGGPLAY_OK;
+  }
+  else return E_OGGPLAY_UNINITIALISED;
+#else
+  return E_OGGPLAY_NO_TIGER_SUPPORT;
+#endif
+#else
+  return E_OGGPLAY_NO_KATE_SUPPORT;
+#endif
+}
+
+OggPlayErrorCode
+oggplay_overlay_kate_track_on_video(OggPlay *me, int kate_track, int video_track) {
+
+  OggPlayKateDecode * decode;
+
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_OGGPLAY;
+  }
+
+  if (kate_track < 0 || kate_track >= me->num_tracks) {
+    return E_OGGPLAY_BAD_TRACK;
+  }
+  if (video_track < 0 || video_track >= me->num_tracks) {
+    return E_OGGPLAY_BAD_TRACK;
+  }
+
+  if (me->decode_data[kate_track]->content_type != OGGZ_CONTENT_KATE) {
+    return E_OGGPLAY_WRONG_TRACK_TYPE;
+  }
+
+  if (me->decode_data[kate_track]->decoded_type != OGGPLAY_RGBA_VIDEO) {
+    return E_OGGPLAY_WRONG_TRACK_TYPE;
+  }
+
+  if (me->decode_data[video_track]->content_type != OGGZ_CONTENT_THEORA) {
+    return E_OGGPLAY_WRONG_TRACK_TYPE;
+  }
+
+  if (me->decode_data[video_track]->decoded_type != OGGPLAY_RGBA_VIDEO) {
+    return E_OGGPLAY_WRONG_TRACK_TYPE;
+  }
+
+  decode = (OggPlayKateDecode *)(me->decode_data[kate_track]);
+
+#ifdef HAVE_KATE
+#ifdef HAVE_TIGER
+  decode->overlay_dest = video_track;
   return E_OGGPLAY_OK;
+#else
+  return E_OGGPLAY_NO_TIGER_SUPPORT;
+#endif
 #else
   return E_OGGPLAY_NO_KATE_SUPPORT;
 #endif
@@ -634,6 +765,8 @@ oggplay_close(OggPlay *me) {
     oggplay_buffer_shutdown(me, me->buffer);
   }
 
+  oggplay_free(me->callback_info);
+  oggplay_free(me->decode_data);
   oggplay_free(me);
 
   return E_OGGPLAY_OK;

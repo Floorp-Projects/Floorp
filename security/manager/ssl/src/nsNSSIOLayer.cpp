@@ -108,7 +108,8 @@
                        //file.
 
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
-NSSCleanupAutoPtrClass(char, PR_FREEIF)
+NSSCleanupAutoPtrClass(char, PL_strfree)
+NSSCleanupAutoPtrClass(void, PR_FREEIF)
 NSSCleanupAutoPtrClass_WithParam(PRArenaPool, PORT_FreeArena, FalseParam, PR_FALSE)
 
 /* SSM_UserCertChoice: enum for cert choice info */
@@ -265,14 +266,14 @@ nsNSSSocketInfo::SetHandshakePending(PRBool aHandshakePending)
 nsresult
 nsNSSSocketInfo::SetHostName(const char* host)
 {
-  mHostName.Adopt(host ? nsCRT::strdup(host) : 0);
+  mHostName.Adopt(host ? NS_strdup(host) : 0);
   return NS_OK;
 }
 
 nsresult
 nsNSSSocketInfo::GetHostName(char **host)
 {
-  *host = (mHostName) ? nsCRT::strdup(mHostName) : nsnull;
+  *host = (mHostName) ? NS_strdup(mHostName) : nsnull;
   return NS_OK;
 }
 
@@ -2712,7 +2713,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     /* Get CN and O of the subject and O of the issuer */
     char *ccn = CERT_GetCommonName(&serverCert->subject);
-    charCleaner ccnCleaner(ccn);
+    void *v = ccn;
+    voidCleaner ccnCleaner(v);
     NS_ConvertUTF8toUTF16 cn(ccn);
 
     PRInt32 port;

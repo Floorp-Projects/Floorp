@@ -61,6 +61,7 @@ __all__ = [
            "UNIXISH",
            "IS_WIN32",
            "IS_MAC",
+           "log",
            "runApp",
            "Process",
            "initializeProfile",
@@ -68,6 +69,8 @@ __all__ = [
            "DEFAULT_APP",
            "CERTS_SRC_DIR",
            "environment",
+           "dumpLeakLog",
+           "processLeakLog",
           ]
 
 # These are generated in mozilla/build/Makefile.in
@@ -245,6 +248,8 @@ user_pref("network.manage-offline-status", false);
 user_pref("security.default_personal_cert", "Select Automatically"); // Need to client auth test be w/o any dialogs
 user_pref("network.http.prompt-temp-redirect", false);
 user_pref("svg.smil.enabled", true); // Needed for SMIL mochitests until bug 482402 lands
+user_pref("media.cache_size", 100);
+user_pref("security.warn_viewing_mixed", false);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
@@ -429,8 +434,35 @@ def checkForCrashes(profileDir, symbolsPath):
 # RUN THE APP #
 ###############
 
-def processLeakLog(leakLogFile, leakThreshold):
-  "Process the leak log."
+def dumpLeakLog(leakLogFile, filter = False):
+  """Process the leak log, without parsing it.
+
+  Use this function if you want the raw log only.
+  Use it preferably with the |XPCOM_MEM_LEAK_LOG| environment variable.
+  """
+
+  # Don't warn (nor "info") if the log file is not there.
+  if not os.path.exists(leakLogFile):
+    return
+
+  leaks = open(leakLogFile, "r")
+  leakReport = leaks.read()
+  leaks.close()
+
+  # Only |XPCOM_MEM_LEAK_LOG| reports can be actually filtered out.
+  # Only check whether an actual leak was reported.
+  if filter and not "0 TOTAL " in leakReport:
+    return
+
+  # Simply copy the log.
+  log.info(leakReport.rstrip("\n"))
+
+def processLeakLog(leakLogFile, leakThreshold = 0):
+  """Process the leak log, parsing it.
+
+  Use this function if you want an additional PASS/FAIL summary.
+  It must be used with the |XPCOM_MEM_BLOAT_LOG| environment variable.
+  """
 
   if not os.path.exists(leakLogFile):
     log.info("WARNING refcount logging is off, so leaks can't be detected!")

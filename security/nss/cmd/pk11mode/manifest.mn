@@ -45,4 +45,4 @@ CSRCS = pk11mode.c
 
 PROGRAM = pk11mode
 
-REQUIRES =
+REQUIRES = seccmd

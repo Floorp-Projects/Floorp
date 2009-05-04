@@ -58,7 +58,6 @@
 #include "nsIFileUtilities.h"
 #include "nsICookieStorage.h"
 #include "nsPluginsDir.h"
-#include "nsVoidArray.h"
 #include "nsPluginDirServiceProvider.h"
 #include "nsAutoPtr.h"
 #include "nsWeakPtr.h"
@@ -443,7 +442,7 @@ private:
   PRPackedBool mJavaEnabled;
 
   nsPluginInstanceTagList mPluginInstanceTagList;
-  nsVoidArray mUnusedLibraries;
+  nsTArray<PRLibrary*> mUnusedLibraries;
 
   nsCOMPtr<nsIFile> mPluginRegFile;
   nsCOMPtr<nsIPrefBranch> mPrefService;

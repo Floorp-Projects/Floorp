@@ -44,6 +44,9 @@
 #include "nsISVGChildFrame.h"
 #include "gfxContext.h"
 #include "gfxFont.h"
+#include "gfxRect.h"
+#include "gfxMatrix.h"
+#include "nsSVGMatrix.h"
 
 class nsSVGTextFrame;
 class nsSVGGlyphFrame;
@@ -87,11 +90,9 @@ public:
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const;
 
-#ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
-#endif
 
   /**
    * Get the "type" of the frame
@@ -121,7 +122,7 @@ public:
                       const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHOD UpdateCoveredRegion();
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
 
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -134,7 +135,7 @@ public:
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
 
   // nsSVGGeometryFrame methods
-  NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
+  gfxMatrix GetCanvasTM();
 
   // nsISVGGlyphFragmentLeaf interface:
   // These do not use the global transform if NS_STATE_NONDISPLAY_CHILD
@@ -220,6 +221,10 @@ protected:
     return !(GetStateBits() & NS_STATE_SVG_PRINTING) ?
       mContent->GetText() : nsLayoutUtils::GetTextFragmentForPrinting(this);
   }
+
+  // Used to support GetBBoxContribution by making GetConvasTM use this as the
+  // parent transform instead of the real CanvasTM.
+  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCanvasTM;
 
   // Owning pointer, must call gfxTextRunWordCache::RemoveTextRun before deleting
   gfxTextRun *mTextRun;

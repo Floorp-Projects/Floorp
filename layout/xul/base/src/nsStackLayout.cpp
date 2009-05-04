@@ -167,7 +167,7 @@ nsStackLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState)
     nscoord ascent = child->GetBoxAscent(aState);
     nsMargin margin;
     child->GetMargin(margin);
-    ascent += margin.top + margin.bottom;
+    ascent += margin.top;
     if (ascent > vAscent)
       vAscent = ascent;
 

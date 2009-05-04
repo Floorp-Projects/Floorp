@@ -34,6 +34,7 @@
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
 #include "pixman-sse2.h"
+#include "pixman-arm-neon.h"
 #include "pixman-arm-simd.h"
 #include "pixman-combine32.h"
 
@@ -1610,6 +1611,31 @@ static const FastPathInfo vmx_fast_paths[] =
 };
 #endif
 
+#ifdef USE_ARM_NEON
+static const FastPathInfo arm_neon_fast_paths[] =
+{
+    { PIXMAN_OP_ADD,  PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8,       fbCompositeSrcAdd_8888x8x8neon,        0 },
+    { PIXMAN_OP_ADD,  PIXMAN_a8,       PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000neon,       0 },
+    { PIXMAN_OP_SRC,  PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrc_x888x0565neon,          0 },
+    { PIXMAN_OP_SRC,  PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrc_x888x0565neon,          0 },
+    { PIXMAN_OP_SRC,  PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_x888x0565neon,          0 },
+    { PIXMAN_OP_SRC,  PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_x888x0565neon,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888neon,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888neon,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888neon,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888neon,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8x8888neon,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8x8888neon,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565neon,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565neon,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8x8888neon,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8x8888neon,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8x8888neon,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8x8888neon,     0 },
+    { PIXMAN_OP_NONE },
+};
+#endif
+
 #ifdef USE_ARM_SIMD
 static const FastPathInfo arm_simd_fast_paths[] =
 {
@@ -2005,6 +2031,11 @@ pixman_image_composite (pixman_op_t      op,
 	    info = get_fast_path (vmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 #endif
 
+#ifdef USE_ARM_NEON
+        if (!info && pixman_have_arm_neon())
+            info = get_fast_path (arm_neon_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+#endif
+
 #ifdef USE_ARM_SIMD
 	if (!info && pixman_have_arm_simd())
 	    info = get_fast_path (arm_simd_fast_paths, op, pSrc, pMask, pDst, pixbuf);
@@ -2182,17 +2213,22 @@ pixman_bool_t pixman_have_vmx (void) {
 #endif /* __APPLE__ */
 #endif /* USE_VMX */
 
-#ifdef USE_ARM_SIMD
+#if defined(USE_ARM_SIMD) || defined(USE_ARM_NEON)
+
+#if defined(_MSC_VER)
+
+#if defined(USE_ARM_SIMD)
+extern int pixman_msvc_try_arm_simd_op();
+
 pixman_bool_t
 pixman_have_arm_simd (void)
 {
-#ifdef _MSC_VER
     static pixman_bool_t initialized = FALSE;
     static pixman_bool_t have_arm_simd = FALSE;
 
     if (!initialized) {
         __try {
-            pixman_msvc_try_armv6_op();
+            pixman_msvc_try_arm_simd_op();
             have_arm_simd = TRUE;
         } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
             have_arm_simd = FALSE;
@@ -2201,11 +2237,116 @@ pixman_have_arm_simd (void)
     }
 
     return have_arm_simd;
-#else
-    return TRUE;
-#endif
 }
-#endif
+#endif /* USE_ARM_SIMD */
+
+#if defined(USE_ARM_NEON)
+extern int pixman_msvc_try_arm_neon_op();
+
+pixman_bool_t
+pixman_have_arm_neon (void)
+{
+    static pixman_bool_t initialized = FALSE;
+    static pixman_bool_t have_arm_neon = FALSE;
+
+    if (!initialized) {
+        __try {
+            pixman_msvc_try_arm_neon_op();
+            have_arm_neon = TRUE;
+        } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+            have_arm_neon = FALSE;
+        }
+	initialized = TRUE;
+    }
+
+    return have_arm_neon;
+}
+#endif /* USE_ARM_NEON */
+
+#else /* linux ELF */
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <string.h>
+#include <elf.h>
+
+static pixman_bool_t arm_has_v7 = FALSE;
+static pixman_bool_t arm_has_v6 = FALSE;
+static pixman_bool_t arm_has_vfp = FALSE;
+static pixman_bool_t arm_has_neon = FALSE;
+static pixman_bool_t arm_has_iwmmxt = FALSE;
+static pixman_bool_t arm_tests_initialized = FALSE;
+
+static void
+pixman_arm_read_auxv() {
+    int fd;
+    Elf32_auxv_t aux;
+
+    fd = open("/proc/self/auxv", O_RDONLY);
+    if (fd > 0) {
+        while (read(fd, &aux, sizeof(Elf32_auxv_t)) == sizeof(Elf32_auxv_t)) {
+            if (aux.a_type == AT_HWCAP) {
+		uint32_t hwcap = aux.a_un.a_val;
+		if (getenv("ARM_FORCE_HWCAP"))
+		    hwcap = strtoul(getenv("ARM_FORCE_HWCAP"), NULL, 0);
+		// hardcode these values to avoid depending on specific versions
+		// of the hwcap header, e.g. HWCAP_NEON
+		arm_has_vfp = (hwcap & 64) != 0;
+		arm_has_iwmmxt = (hwcap & 512) != 0;
+		// this flag is only present on kernel 2.6.29
+		arm_has_neon = (hwcap & 4096) != 0;
+            } else if (aux.a_type == AT_PLATFORM) {
+		const char *plat = (const char*) aux.a_un.a_val;
+		if (getenv("ARM_FORCE_PLATFORM"))
+		    plat = getenv("ARM_FORCE_PLATFORM");
+		if (strncmp(plat, "v7l", 3) == 0) {
+		    arm_has_v7 = TRUE;
+		    arm_has_v6 = TRUE;
+		} else if (strncmp(plat, "v6l", 3) == 0) {
+		    arm_has_v6 = TRUE;
+		}
+            }
+        }
+        close (fd);
+
+	// if we don't have 2.6.29, we have to do this hack; set
+	// the env var to trust HWCAP.
+	if (!getenv("ARM_TRUST_HWCAP") && arm_has_v7)
+	    arm_has_neon = TRUE;
+    }
+
+    arm_tests_initialized = TRUE;
+}
+
+#if defined(USE_ARM_SIMD)
+pixman_bool_t
+pixman_have_arm_simd (void)
+{
+    if (!arm_tests_initialized)
+	pixman_arm_read_auxv();
+
+    return arm_has_v6;
+}
+#endif /* USE_ARM_SIMD */
+
+#if defined(USE_ARM_NEON)
+pixman_bool_t
+pixman_have_arm_neon (void)
+{
+    if (!arm_tests_initialized)
+	pixman_arm_read_auxv();
+
+    return arm_has_neon;
+}
+#endif /* USE_ARM_NEON */
+
+#endif /* linux */
+
+#endif /* USE_ARM_SIMD || USE_ARM_NEON */
 
 #ifdef USE_MMX
 /* The CPU detection code needs to be in a file not compiled with

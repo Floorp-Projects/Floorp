@@ -154,12 +154,6 @@ class nsWindow : public nsBaseWidget,
 
    NS_IMETHOD CaptureMouse(PRBool aCapture);
 
-   NS_IMETHOD ModalEventFilter( PRBool aRealEvent, void *aEvent,
-                                PRBool *aForWindow );
-
-   NS_IMETHOD GetPreferredSize( PRInt32 &aWidth, PRInt32 &aHeight);
-   NS_IMETHOD SetPreferredSize( PRInt32 aWidth, PRInt32 aHeight);
-
    NS_IMETHOD BeginResizingChildren();
    NS_IMETHOD EndResizingChildren();
    virtual nsIntPoint WidgetToScreenOffset();
@@ -169,22 +163,16 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
 
    // Widget appearance
-   NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
    NS_IMETHOD              SetCursor( nsCursor aCursor);
    NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                      PRUint32 aHotspotX, PRUint32 aHotspotY);
    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsAString& aTitle); 
    NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
-   NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; } 
-   NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsIntRect & aRect, PRBool aIsSynchronous);
-   NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
    NS_IMETHOD              Scroll( PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect);
-   NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
-   NS_IMETHOD              ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy);
 
    // Get a HWND or a HPS.
    virtual void  *GetNativeData( PRUint32 aDataType);
@@ -263,6 +251,7 @@ protected:
    QMSG      mQmsg;
    PRBool    mIsTopWidgetWindow;
    BOOL      mIsScrollBar;
+   BOOL      mIsDestroying;
    BOOL      mInSetFocus;
    BOOL      mChromeHidden;
    nsContentType mContentType;

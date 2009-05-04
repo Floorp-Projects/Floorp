@@ -46,6 +46,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
+#include "nsIWidget.h"
 
 #include <qfile.h>
 #include <qstringlist.h>

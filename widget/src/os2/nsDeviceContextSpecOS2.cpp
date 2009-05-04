@@ -42,7 +42,6 @@
 #include "nsDeviceContextSpecOS2.h"
 
 #include "nsReadableUtils.h"
-#include "nsISupportsArray.h"
 #include "nsTArray.h"
 
 #include "nsIPrefService.h"

@@ -40,7 +40,8 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-SimpleTest.waitForExplicitFinish();
+const IS_MAC = navigator.platform.indexOf("Mac") == 0;
+const IS_WIN = navigator.platform.indexOf("Win") == 0;
 
 function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
                              aSystemUnmodifiedChars, aWindow)
@@ -75,7 +76,7 @@ function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
 }
 
 var keyboardLayouts;
-if (navigator.platform.indexOf("Mac") == 0) {
+if (IS_MAC) {
   // These constants can be found by inspecting files under
   // /System/Library/Keyboard\ Layouts/Unicode.bundle/Contents/Resources/
   // XXX if you need a new keyboard layout and that uses KCHR resource,
@@ -86,7 +87,7 @@ if (navigator.platform.indexOf("Mac") == 0) {
     "German":3,
     "Swedish":224
   };
-} else if (navigator.platform.indexOf("Win") == 0) {
+} else if (IS_WIN) {
   // These constants can be found by inspecting registry keys under
   // HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Keyboard Layouts
   keyboardLayouts = {
@@ -214,7 +215,7 @@ function runKeyEventTests()
     // The modifier key events which are fired for state changing are har to
     // test. We should ignore them for now.
     keyDownFlags = keyUpFlags = 0;
-    if (navigator.platform.indexOf("Mac") != 0) {
+    if (!IS_MAC) {
       // On Mac, nsChildView doesn't generate modifier keydown/keyup events for
       // state changing for synthesizeNativeKeyEvent.
       if (aEvent.shift || aEvent.shiftRight)
@@ -231,6 +232,7 @@ function runKeyEventTests()
         keyDownFlags |= kCapsLockFlag;
       keyUpFlags = keyDownFlags;
     }
+
     testingEvent = aEvent;
 
     synthesizeKey(aEvent, "button");
@@ -275,7 +277,7 @@ function runKeyEventTests()
   document.addEventListener("keypress", onKeyEvent, false);
   document.addEventListener("keyup",    onKeyEvent, false);
 
-  if (navigator.platform.indexOf("Mac") == 0) {
+  if (IS_MAC) {
     // On Mac, you can produce event records for any desired keyboard input
     // by running with NSPR_LOG_MODULES=nsCocoaWidgets:5 and typing into the browser.
     // We will dump the key event fields to the console. Use the International system
@@ -405,8 +407,7 @@ function runKeyEventTests()
     testKey({layout:"US", keyCode:54, commandRight:0, chars:"", unmodifiedChars:""},
             "", SHOULD_DELIVER_KEYUP);
   }
-
-  if (navigator.platform.indexOf("Win") == 0) {
+  else if (IS_WIN) {
     // On Windows, you can use Spy++ or Winspector (free) to watch window messages.
     // The keyCode is given by the wParam of the last WM_KEYDOWN message. The
     // chars string is given by the wParam of the WM_CHAR message. unmodifiedChars
@@ -488,7 +489,7 @@ function runAccessKeyTests()
   button.addEventListener("click", onClick, false);
   
   // These tests have to be per-plaform.
-  if (navigator.platform.indexOf("Mac") == 0) {
+  if (IS_MAC) {
     // Basic sanity checks
     testKey({layout:"US", keyCode:0, chars:"a", unmodifiedChars:"a"},
             "a", false);
@@ -533,8 +534,7 @@ function runAccessKeyTests()
     testKey({layout:"German", keyCode:33, ctrl:1, chars:"\u00fc", unmodifiedChars:"\u00fc"},
             "\u00dc", true);
   }
-  
-  if (navigator.platform.indexOf("Win") == 0) {
+  else if (IS_WIN) {
     // Basic sanity checks
     testKey({layout:"US", keyCode:65, chars:"a"},
             "a", false);
@@ -583,7 +583,7 @@ function runXULKeyTests()
        name + " activating " + aElem);
   }
 
-  if (navigator.platform.indexOf("Mac") == 0) {
+  if (IS_MAC) {
     testKey({layout:"US", keyCode:41, command:1, chars:";", unmodifiedChars:";"},
             "unshiftedKey", true);
     testKey({layout:"US", keyCode:41, command:1, chars:";", unmodifiedChars:";"},
@@ -593,7 +593,7 @@ function runXULKeyTests()
     testKey({layout:"US", keyCode:41, command:1, shift:1, chars:";", unmodifiedChars:":"},
             "unshiftedKey", false);
   }
-  if (navigator.platform.indexOf("Win") == 0) {
+  else if (IS_WIN) {
     testKey({layout:"US", keyCode:186, ctrl:1, chars:";"},
             "unshiftedKey", true);
     testKey({layout:"US", keyCode:186, ctrl:1, chars:";"},
@@ -607,22 +607,22 @@ function runXULKeyTests()
   keyElems = ["commandOptionF"];
 
   // 429160
-  if (navigator.platform.indexOf("Mac") == 0) {
+  if (IS_MAC) {
     testKey({layout:"US", keyCode:3, command:1, alt:1, chars:"\u0192", unmodifiedChars:"f"},
             "commandOptionF", true);
   }
-  if (navigator.platform.indexOf("Win") == 0) {
+  else if (IS_WIN) {
     testKey({layout:"US", keyCode:70, ctrl:1, alt:1, chars:"\u0006"},
             "commandOptionF", true);
   }
   
   // 432112
-  if (navigator.platform.indexOf("Mac") == 0) {
+  if (IS_MAC) {
 // test currently does not work, getting the Swedish layout fails
 //  testKey({layout:"Swedish", keyCode:27, command:1, shift:1, chars:"+", unmodifiedChars:"?"},
 //          "question", true);
   }
-  if (navigator.platform.indexOf("Win") == 0) {
+  else if (IS_WIN) {
     testKey({layout:"Swedish", keyCode:187, ctrl:1, shift:1, chars:""},
             "question", true);
     testKey({layout:"Swedish", keyCode:187, ctrl:1, chars:""},
@@ -630,7 +630,7 @@ function runXULKeyTests()
   }
 
   // bug 433192
-  if (navigator.platform.indexOf("Win") == 0) {
+  if (IS_WIN) {
     testKey({layout:"US", keyCode:88, ctrl:1, chars:"\u0018"},
             "unshiftedX", true);
     testKey({layout:"US", keyCode:88, ctrl:1, chars:"\u0018"},
@@ -677,7 +677,7 @@ function runTextInputTests()
     is(textbox.value, aExpectText, name + " does not input correct text.");
   }
 
-  if (navigator.platform.indexOf("Win") == 0) {
+  if (IS_WIN) {
     // Basic sanity checks
     testKey({layout:"US", keyCode:65, chars:"a"},
             "a");
@@ -701,6 +701,8 @@ function runTextInputTests()
     testKey({layout:"Lithuanian", keyCode:48, ctrl:1, alt:1, chars:"0"},
             "0");
   }
+  else
+    todo(false, "runTextInputTests() checks Windows only");
 
   // XXX We need to move focus for canceling to search the autocomplete
   // result. If we don't do here, Fx will crash at end of this tests.
@@ -709,10 +711,18 @@ function runTextInputTests()
 
 function runTest()
 {
+  if (!IS_MAC && !IS_WIN) {
+    todo(false, "This test is supported on MacOSX and Windows only. (Bug 431503)");
+    return;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
   runKeyEventTests();
   runAccessKeyTests();
   runXULKeyTests();
   runTextInputTests();
+
   SimpleTest.finish();
 }
 

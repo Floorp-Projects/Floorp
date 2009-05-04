@@ -42,7 +42,6 @@ Runs the Mochitest test harness.
 """
 
 from datetime import datetime
-import logging
 import optparse
 import os
 import os.path
@@ -75,8 +74,6 @@ BROWSER_CHROME_URL = "chrome://browser/content/browser.xul"
 # (particularly after a build) takes forever.
 SERVER_STARTUP_TIMEOUT = 45
 
-INFINITY = 1.0e3000
-
 oldcwd = os.getcwd()
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 os.chdir(SCRIPT_DIRECTORY)
@@ -84,8 +81,6 @@ os.chdir(SCRIPT_DIRECTORY)
 PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
 
 LEAK_REPORT_FILE = PROFILE_DIRECTORY + "/" + "leaks-report.log"
-
-log = logging.getLogger()
 
 # Map of debugging programs to information about them, like default arguments
 # and whether or not they are interactive.
@@ -275,7 +270,7 @@ class MochitestServer:
       env["LD_LIBRARY_PATH"] = self._xrePath
       env["MOZILLA_FIVE_HOME"] = self._xrePath
       env["XPCOM_DEBUG_BREAK"] = "warn"
-    if automation.IS_MAC:
+    elif automation.IS_MAC:
       env["DYLD_LIBRARY_PATH"] = self._xrePath
     elif automation.IS_WIN32:
       env["PATH"] = env["PATH"] + ";" + self._xrePath
@@ -292,7 +287,7 @@ class MochitestServer:
     if pid < 0:
       print "Error starting server."
       sys.exit(2)
-    log.info("Server pid: %d", pid)
+    automation.log.info("INFO | runtests.py | Server pid: %d", pid)
     
 
   def ensureReady(self, timeout):
@@ -347,6 +342,18 @@ def main():
   parser = MochitestOptions()
   options, args = parser.parse_args()
 
+  if options.xrePath is None:
+    # default xrePath to the app path if not provided
+    # but only if an app path was explicitly provided
+    if options.app != parser.defaults['app']:
+      options.xrePath = os.path.dirname(options.app)
+    else:
+      # otherwise default to dist/bin
+      options.xrePath = automation.DIST_BIN
+
+  # allow relative paths
+  options.xrePath = getFullPath(options.xrePath)
+
   options.app = getFullPath(options.app)
   if not os.path.exists(options.app):
     msg = """\
@@ -354,13 +361,6 @@ Error: Path %(app)s doesn't exist.
 Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     print msg % {"app": options.app}
     sys.exit(1)
-
-  # default xrePath to the app path if not provided
-  if options.xrePath is None:
-    options.xrePath = os.path.dirname(options.app)
-  else:
-    # allow relative paths
-    options.xrePath = getFullPath(options.xrePath)
 
   options.utilityPath = getFullPath(options.utilityPath)
   options.certPath = getFullPath(options.certPath)
@@ -445,6 +445,11 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     testURL = A11YTESTS_URL
     if options.testPath:
       urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
+    # Force leak threshold. (bug 472773)
+    if automation.IS_MAC and options.leakThreshold == 0:
+      options.leakThreshold = 68
+      automation.log.info("INFO | runtests.py | setting leak threshold to %d",
+                          options.leakThreshold)
   elif options.browserChrome:
     testURL = "about:blank"
 
@@ -490,8 +495,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   os.remove(manifest)
 
   # hanging due to non-halting threads is no fun; assume we hit the errors we
-  # were going to hit already and exit with a success code
-  sys.exit(0)
+  # were going to hit already and exit.
+  sys.exit(status)
 
 
 

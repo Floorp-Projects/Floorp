@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <script>
+    var x=document.createElementNS('http://www.w3.org/1999/xhtml','style');
+    document.documentElement.appendChild(x);
+    function doe(){
+      var y=document.getElementsByTagName('style')[0];
+    }
+    setTimeout(doe,500);
+  </script>
+
+  <style>
+  style {-moz-binding:url(#randomxbl);}
+  </style>
+
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="randomxbl">
+      <implementation>
+        <constructor>
+          var x= parent.document.getElementsByTagName('iframe')[0];
+x.parentNode.removeChild(x);
+        </constructor>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+</body>
+</html>

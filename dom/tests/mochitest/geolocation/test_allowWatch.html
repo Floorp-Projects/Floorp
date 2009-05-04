@@ -34,11 +34,12 @@ function successCallback(position) {
 
 function accept() {
   hasAccepted = true;
-  clickAccept();
+  clickNotificationButton(kAcceptButton);
 }
 
 /** Test for Bug  **/
 
+ensure_geolocationProvider();
 SimpleTest.waitForExplicitFinish();
 
 watchID = navigator.geolocation.watchPosition(successCallback, null, null);

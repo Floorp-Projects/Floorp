@@ -46,7 +46,6 @@
 #endif
 
 #include "cairo.h"
-#include "lcms.h"
 
 #include "gfxContext.h"
 

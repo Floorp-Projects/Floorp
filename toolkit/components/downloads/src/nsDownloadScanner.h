@@ -1,5 +1,7 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: se cin sw=2 ts=2 et : */
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+
 #ifndef nsDownloadScanner_h_
 #define nsDownloadScanner_h_
 
@@ -124,3 +126,5 @@ private:
   friend class nsDownloadScannerWatchdog;
 };
 #endif
+
+#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN

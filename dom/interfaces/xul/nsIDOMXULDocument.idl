@@ -41,8 +41,9 @@
 
 interface nsIDOMXULCommandDispatcher;
 interface nsIObserver;
+interface nsIBoxObject;
 
-[scriptable, uuid(9816241b-2a20-44ff-903b-575f40c0ecc5)]
+[scriptable, uuid(d55c39B4-b54a-4df5-9e68-09919e4538f9)]
 interface nsIDOMXULDocument : nsISupports
 {
   attribute nsIDOMNode                          popupNode;
@@ -79,6 +80,8 @@ interface nsIDOMXULDocument : nsISupports
                                                        in DOMString attr);
 
   void                      persist(in DOMString id, in DOMString attr);
+
+  nsIBoxObject getBoxObjectFor(in nsIDOMElement elt);
 
   /**
    * Loads a XUL overlay and merges it with the current document, notifying an

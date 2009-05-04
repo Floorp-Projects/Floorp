@@ -110,13 +110,18 @@ private:
 class FontEntry : public gfxFontEntry
 {
 public:
-    FontEntry(const nsAString& aFaceName) : 
-        gfxFontEntry(aFaceName), mFontType(GFX_FONT_TYPE_UNKNOWN),
+    FontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
+              PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData) : 
+        gfxFontEntry(aFaceName), mFontType(aFontType),
         mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
-        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
+        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE), mUserFont(PR_FALSE),
         mCharset(0), mUnicodeRanges(0)
     {
-
+        mUserFontData = aUserFontData;
+        mItalic = aItalic;
+        mWeight = aWeight;
+        if (IsType1())
+            mForceGDI = PR_TRUE;
     }
 
     FontEntry(const FontEntry& aFontEntry) :
@@ -128,6 +133,7 @@ public:
         mUnknownCMAP(aFontEntry.mUnknownCMAP),
         mUnicodeFont(aFontEntry.mUnicodeFont),
         mSymbolFont(aFontEntry.mSymbolFont),
+        mUserFont(aFontEntry.mUserFont),
         mCharset(aFontEntry.mCharset),
         mUnicodeRanges(aFontEntry.mUnicodeRanges)
     {
@@ -135,16 +141,29 @@ public:
     }
     static void InitializeFontEmbeddingProcs();
 
-    static FontEntry* CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                                      nsISupports *aLoader,
-                                      const PRUint8 *aFontData,
-                                      PRUint32 aLength);
-    
-    static FontEntry* CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType, PRBool aItalic, PRUint16 aWeight, gfxUserFontData* aUserFontData, HDC hdc = 0, LOGFONTW *aLogFont = nsnull);
+    // create a font entry from downloaded font data
+    static FontEntry* LoadFont(const gfxProxyFontEntry &aProxyEntry,
+                               nsISupports *aLoader,
+                               const PRUint8 *aFontData,
+                               PRUint32 aLength);
 
-    static void FillLogFont(LOGFONTW *aLogFont, FontEntry *aFontEntry, gfxFloat aSize, PRBool aItalic);
+    // create a font entry for a font with a given name
+    static FontEntry* CreateFontEntry(const nsAString& aName, 
+                                      gfxWindowsFontType aFontType, 
+                                      PRBool aItalic, PRUint16 aWeight, 
+                                      gfxUserFontData* aUserFontData, 
+                                      HDC hdc = 0, LOGFONTW *aLogFont = nsnull);
 
-    static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, DWORD fontType)
+    // create a font entry for a font referenced by its fullname
+    static FontEntry* LoadLocalFont(const gfxProxyFontEntry &aProxyEntry,
+                                    const nsAString& aFullname);
+
+    static void FillLogFont(LOGFONTW *aLogFont, const nsAString& aName, 
+                            gfxWindowsFontType aFontType, PRBool aItalic, 
+                            PRUint16 aWeight, gfxFloat aSize);
+
+    static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
+                                                DWORD fontType)
     {
         gfxWindowsFontType feType;
         if (metrics.ntmFlags & NTM_TYPE1)
@@ -274,6 +293,7 @@ public:
     PRPackedBool mUnknownCMAP : 1;
     PRPackedBool mUnicodeFont : 1;
     PRPackedBool mSymbolFont  : 1;
+    PRPackedBool mUserFont    : 1;
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;

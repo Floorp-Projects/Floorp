@@ -826,6 +826,7 @@ nsSVGElement::sViewportsMap[] = {
 // PresentationAttributes-Makers
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sMarkersMap[] = {
+  { &nsGkAtoms::marker },
   { &nsGkAtoms::marker_end },
   { &nsGkAtoms::marker_mid },
   { &nsGkAtoms::marker_start },
@@ -1150,6 +1151,12 @@ nsSVGElement::GetCtx()
   nsCOMPtr<nsIDOMSVGSVGElement> svg;
   GetOwnerSVGElement(getter_AddRefs(svg));
   return static_cast<nsSVGSVGElement*>(svg.get());
+}
+
+/* virtual */ gfxMatrix
+nsSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+{
+  return aMatrix;
 }
 
 nsSVGElement::LengthAttributesInfo

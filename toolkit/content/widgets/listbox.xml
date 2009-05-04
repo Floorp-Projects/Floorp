@@ -398,7 +398,7 @@
             for (var i = this.selectedItems.length - 1; i >= 0; --i)
               this.selectedItems[i].selected = false;
 
-            this.selectedItems.splice(0, this.selectedItems.length);
+            this.selectedItems.length = 0;
           }
 
           this._selectionStart = null;

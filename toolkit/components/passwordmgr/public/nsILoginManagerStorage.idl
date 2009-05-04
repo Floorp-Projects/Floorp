@@ -39,8 +39,9 @@
 
 interface nsIFile;
 interface nsILoginInfo;
+interface nsIPropertyBag;
 
-[scriptable, uuid(199ebbff-4656-4a18-8da9-9401c64619f9)]
+[scriptable, uuid(e66c97cd-3bcf-4eee-9937-38f650372d77)]
 
 /*
  * NOTE: This interface is intended to be implemented by modules
@@ -162,6 +163,29 @@ interface nsILoginManagerStorage : nsISupports {
     */
     void getAllEncryptedLogins(out unsigned long count,
                                [retval, array, size_is(count)] out nsILoginInfo logins);
+
+
+    /**
+     * Search for logins in the login manager. An array is always returned;
+     * if there are no logins the array is empty.
+     *
+     * @param count
+     *        The number of elements in the array. JS callers can simply use
+     *        the array's .length property, and supply an dummy object for
+     *        this out param. For example: |searchLogins({}, matchData)|
+     * @param matchData
+     *        The data used to search. This does not follow the same
+     *        requirements as findLogins for those fields. Wildcard matches are
+     *        simply not specified.
+     * @param logins
+     *        An array of nsILoginInfo objects.
+     *
+     * NOTE: This can be called from JS as:
+     *       var logins = pwmgr.searchLogins({}, matchData);
+     *       (|logins| is an array).
+     */
+    void searchLogins(out unsigned long count, in nsIPropertyBag matchData,
+                      [retval, array, size_is(count)] out nsILoginInfo logins);
 
 
     /**

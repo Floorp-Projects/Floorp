@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -41,29 +42,30 @@
 
 #include "mozIStorageStatementWrapper.h"
 #include "nsIXPCScriptable.h"
-#include "mozStorageStatement.h"
-#include "nsString.h"
-#include "nsVoidArray.h"
 
-class mozStorageStatementRow : public mozIStorageStatementRow,
-                               public nsIXPCScriptable
+class mozStorageStatement;
+
+
+namespace mozilla {
+namespace storage {
+
+class StatementRow : public mozIStorageStatementRow
+                   , public nsIXPCScriptable
 {
 public:
-    mozStorageStatementRow(mozStorageStatement *aStatement);
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTROW
+  NS_DECL_NSIXPCSCRIPTABLE
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // mozIStorageStatementRow interface (empty)
-    NS_DECL_MOZISTORAGESTATEMENTROW
-
-    // nsIXPCScriptable interface
-    NS_DECL_NSIXPCSCRIPTABLE
+  StatementRow(mozStorageStatement *aStatement);
 protected:
 
-    mozStorageStatement *mStatement;
+  mozStorageStatement *mStatement;
 
-    friend class mozStorageStatement;
+  friend class ::mozStorageStatement;
 };
+
+} // namespace storage
+} // namespace mozilla
 
 #endif /* _MOZSTORAGESTATEMENTROW_H_ */

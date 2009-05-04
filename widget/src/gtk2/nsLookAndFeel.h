@@ -56,7 +56,6 @@ public:
 
 protected:
     GtkStyle *mStyle;
-    GtkWidget *mWidget;
 
     // Cached colors, we have to create a dummy widget to actually
     // get the style
@@ -80,10 +79,26 @@ protected:
 
     static void InitLookAndFeel();
     void InitWidget() {
-        mWidget = gtk_invisible_new();
-        g_object_ref_sink(GTK_OBJECT(mWidget));
-        gtk_widget_ensure_style(mWidget);
-        mStyle = gtk_widget_get_style(mWidget);
+        NS_ASSERTION(!mStyle, "already initialized");
+        // GtkInvisibles come with a refcount that is not floating
+        // (since their initialization code calls g_object_ref_sink) and
+        // their destroy code releases that reference (which means they
+        // have to be explicitly destroyed, since calling unref enough
+        // to cause destruction would lead to *another* unref).
+        // However, this combination means that it's actually still ok
+        // to use the normal pattern, which is to g_object_ref_sink
+        // after construction, and then destroy *and* unref when we're
+        // done.  (Though we could skip the g_object_ref_sink and the
+        // corresponding g_object_unref, but that's particular to
+        // GtkInvisibles and GtkWindows.)
+        GtkWidget *widget = gtk_invisible_new();
+        g_object_ref_sink(widget); // effectively g_object_ref (see above)
+
+        gtk_widget_ensure_style(widget);
+        mStyle = gtk_style_copy(gtk_widget_get_style(widget));
+
+        gtk_widget_destroy(widget);
+        g_object_unref(widget);
     }
 };
 

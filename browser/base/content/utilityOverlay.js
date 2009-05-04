@@ -436,18 +436,14 @@ function openAdvancedPreferences(tabID)
 
 /**
  * Opens the release notes page for this version of the application.
- * @param   event
- *          The DOM Event that caused this function to be called, used to
- *          determine where the release notes page should be displayed based
- *          on modifiers (e.g. Ctrl = new tab)
  */
-function openReleaseNotes(event)
+function openReleaseNotes()
 {
   var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                             .getService(Components.interfaces.nsIURLFormatter);
   var relnotesURL = formatter.formatURLPref("app.releaseNotesURL");
   
-  openUILink(relnotesURL, event, false, true);
+  openUILinkIn(relnotesURL, "tab");
 }
 
 #ifdef MOZ_UPDATER
@@ -525,6 +521,7 @@ function buildHelpMenu()
     }
   }
   checkForUpdates.label = getStringWithUpdateName("updatesItem_" + key);
+  checkForUpdates.accessKey = strings.getString("updatesItem_" + key + ".accesskey");
   if (um.activeUpdate && updates.isDownloading)
     checkForUpdates.setAttribute("loading", "true");
   else

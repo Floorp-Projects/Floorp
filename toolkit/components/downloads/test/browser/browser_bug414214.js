@@ -81,11 +81,8 @@ function test()
     ok(dmui.visible, "Download Manager window is open, as expected.");
 
     // Reset the pref to its default value
-    try {
-      Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).    
-      clearUserPref(PREF_BDM_CLOSEWHENDONE);
-    }
-    catch (err) { }
+    Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).    
+    clearUserPref(PREF_BDM_CLOSEWHENDONE);
 
     finish();
   }

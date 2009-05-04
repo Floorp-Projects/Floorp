@@ -107,6 +107,7 @@ _TEST_FILES = 	test_bug360220.xul \
  		test_mousescroll.xul \
 		test_scrollbar.xul \
 		test_sorttemplate.xul \
+		test_contextmenu_list.xul \
 		test_videocontrols.html \
 		video.ogg \
 		$(NULL)
@@ -114,10 +115,6 @@ _TEST_FILES = 	test_bug360220.xul \
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += test_menubar.xul \
                window_menubar.xul
-endif
-
-ifeq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-_TEST_FILES += test_contextmenu_list.xul 
 endif
 
 libs:: $(_TEST_FILES)

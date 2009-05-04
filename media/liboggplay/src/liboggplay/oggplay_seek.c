@@ -137,6 +137,20 @@ oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
   }
 
   /*
+  * we need to notify the tiger renderer that we seeked, so that
+  * now obsolete events are discarded
+  */
+#ifdef HAVE_TIGER
+  for (i = 0; i < me->num_tracks; i++) {
+    OggPlayDecode *track = me->decode_data[i];
+    if (track && track->content_type == OGGZ_CONTENT_KATE) {
+      OggPlayKateDecode *decode = (OggPlayKateDecode *)(me->decode_data[i]);
+      if (decode->use_tiger) tiger_renderer_seek(decode->tr, milliseconds/1000.0);
+    }
+  }
+#endif
+
+  /*
    * set the presentation time
    */
   me->presentation_time = milliseconds;

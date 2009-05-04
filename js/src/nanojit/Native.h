@@ -80,10 +80,12 @@ namespace nanojit {
         Fragment* target;
 		SwitchInfo* switchInfo;
         
-        void addGuard(GuardRecord* lr) 
+        void addGuard(GuardRecord* gr)
         {
-            lr->next = guards;
-            guards = lr;
+            NanoAssert(gr->next == NULL);
+            NanoAssert(guards != gr);
+            gr->next = guards;
+            guards = gr;
         }
     };
 }

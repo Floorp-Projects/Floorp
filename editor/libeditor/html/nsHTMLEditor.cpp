@@ -72,8 +72,6 @@
 #include "nsIDOMEventGroup.h"
 #include "nsILinkHandler.h"
 
-#include "TransactionFactory.h"
-
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMStyleSheet.h"
@@ -97,8 +95,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIImage.h"
-#include "nsAOLCiter.h"
-#include "nsInternetCiter.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "SetDocTitleTxn.h"
@@ -128,7 +124,6 @@
 
 #include "nsIFrame.h"
 #include "nsIView.h"
-#include "nsIWidget.h"
 #include "nsIParserService.h"
 #include "nsIEventStateManager.h"
 
@@ -704,21 +699,17 @@ nsHTMLEditor::IsBlockNode(nsIDOMNode *aNode)
 NS_IMETHODIMP 
 nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 {
-  nsRefPtr<EditTxn> txn;
-  nsresult result = TransactionFactory::GetNewTransaction(SetDocTitleTxn::GetCID(), getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  
-  {
-    result = static_cast<SetDocTitleTxn*>(txn.get())->Init(this, &aTitle);
+  nsRefPtr<SetDocTitleTxn> txn = new SetDocTitleTxn();
+  if (!txn)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_SUCCEEDED(result)) 
-    {
-      //Don't let Rules System change the selection
-      nsAutoTxnsConserveSelection dontChangeSelection(this);
+  nsresult result = txn->Init(this, &aTitle);
+  if (NS_FAILED(result))
+    return result;
 
-      result = nsEditor::DoTransaction(txn);  
-    }
-  }
-  return result;
+  //Don't let Rules System change the selection
+  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  return nsEditor::DoTransaction(txn);  
 }
 
 /* ------------ Block methods moved from nsEditor -------------- */
@@ -752,29 +743,6 @@ nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
   }
   return p;
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-// HasSameBlockNodeParent: true if nodes have same block level ancestor
-//               
-PRBool
-nsHTMLEditor::HasSameBlockNodeParent(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
-{
-  if (!aNode1 || !aNode2)
-  {
-    NS_NOTREACHED("null node passed to HasSameBlockNodeParent()");
-    return PR_FALSE;
-  }
-  
-  if (aNode1 == aNode2)
-    return PR_TRUE;
-    
-  nsCOMPtr<nsIDOMNode> p1 = GetBlockNodeParent(aNode1);
-  nsCOMPtr<nsIDOMNode> p2 = GetBlockNodeParent(aNode2);
-
-  return (p1 == p2);
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 // GetBlockSection: return leftmost/rightmost nodes in aChild's block
@@ -2176,117 +2144,6 @@ nsHTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat)
     return InsertBasicBlock(tag);
 }
 
-// XXX: ERROR_HANDLING -- this method needs a little work to ensure all error codes are 
-//                        checked properly, all null pointers are checked, and no memory leaks occur
-NS_IMETHODIMP 
-nsHTMLEditor::GetParentBlockTags(nsTArray<nsString> *aTagList, PRBool aGetLists)
-{
-  nsresult res;
-  nsCOMPtr<nsISelection>selection;
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-
-  // Find out if the selection is collapsed:
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res)) return res;
-  if (isCollapsed)
-  {
-    nsCOMPtr<nsIDOMNode> node, blockParent;
-    PRInt32 offset;
-  
-    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
-    if (!node) res = NS_ERROR_FAILURE;
-    if (NS_FAILED(res)) return res;
-  
-    nsCOMPtr<nsIDOMElement> blockParentElem;
-    if (aGetLists)
-    {
-      // Get the "ol", "ul", or "dl" parent element
-      res = GetElementOrParentByTagName(NS_LITERAL_STRING("list"), node, getter_AddRefs(blockParentElem));
-      if (NS_FAILED(res)) return res;
-    } 
-    else 
-    {
-      PRBool isBlock (PR_FALSE);
-      NodeIsBlock(node, &isBlock);
-      if (isBlock) blockParent = node;
-      else blockParent = GetBlockNodeParent(node);
-      blockParentElem = do_QueryInterface(blockParent);
-    }
-    if (blockParentElem)
-    {
-      nsAutoString blockParentTag;
-      blockParentElem->GetTagName(blockParentTag);
-      aTagList->AppendElement(blockParentTag);
-    }
-    
-    return res;
-  }
-
-  // else non-collapsed selection
-  nsCOMPtr<nsIEnumerator> enumerator;
-  res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(res)) return res;
-  if (!enumerator) return NS_ERROR_NULL_POINTER;
-
-  enumerator->First(); 
-  nsCOMPtr<nsISupports> currentItem;
-  res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-  if (NS_FAILED(res)) return res;
-  //XXX: should be while loop?
-  if (currentItem)
-  {
-    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-    // scan the range for all the independent block content blockSections
-    // and get the block parent of each
-    nsCOMArray<nsIDOMRange> blockSections;
-    res = GetBlockSectionsForRange(range, blockSections);
-    if (NS_SUCCEEDED(res))
-    {
-      nsCOMPtr<nsIDOMRange> subRange = blockSections[0];
-      while (subRange)
-      {
-        nsCOMPtr<nsIDOMNode>startParent;
-        res = subRange->GetStartContainer(getter_AddRefs(startParent));
-        if (NS_SUCCEEDED(res) && startParent) 
-        {
-          nsCOMPtr<nsIDOMElement> blockParent;
-          if (aGetLists)
-          {
-            // Get the "ol", "ul", or "dl" parent element
-            res = GetElementOrParentByTagName(NS_LITERAL_STRING("list"), startParent, getter_AddRefs(blockParent));
-          } 
-          else 
-          {
-            blockParent = do_QueryInterface(GetBlockNodeParent(startParent));
-          }
-          if (NS_SUCCEEDED(res) && blockParent)
-          {
-            nsAutoString blockParentTag;
-            blockParent->GetTagName(blockParentTag);
-            PRBool isRoot;
-            IsRootTag(blockParentTag, isRoot);
-            if ((!isRoot) && !aTagList->Contains(blockParentTag)) {
-              aTagList->AppendElement(blockParentTag);
-            }
-          }
-        }
-        if (NS_FAILED(res))
-          return res;
-        blockSections.RemoveObject(0);
-        if (blockSections.Count() == 0)
-          break;
-        subRange = blockSections[0];
-      }
-    }
-  }
-  return res;
-}
-
-
 NS_IMETHODIMP 
 nsHTMLEditor::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
 {
@@ -2332,20 +2189,6 @@ nsHTMLEditor::GetHighlightColorState(PRBool *aMixed, nsAString &aOutColor)
   }
   return res;
 }
-
-NS_IMETHODIMP 
-nsHTMLEditor::GetHighlightColor(PRBool *aMixed, PRUnichar **_retval)
-{
-  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
-  nsAutoString outColorString(NS_LITERAL_STRING("transparent"));
-  *aMixed = PR_FALSE;
-
-  nsresult  err = NS_NOINTERFACE;
-  err = GetHighlightColorState(aMixed, outColorString);
-  *_retval = ToNewUnicode(outColorString);
-  return err;
-}
-
 
 nsresult
 nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, PRBool aBlockLevel)
@@ -3550,7 +3393,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = cssLoader->LoadSheet(uaURI, nsnull, this);
+  rv = cssLoader->LoadSheet(uaURI, nsnull, EmptyCString(), this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -4426,44 +4269,6 @@ nsHTMLEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLEditor::IsSubordinateBlock(nsString &aTag, PRBool &aIsTag)
-{
-  static char p[] = "p";
-  static char h1[] = "h1";
-  static char h2[] = "h2";
-  static char h3[] = "h3";
-  static char h4[] = "h4";
-  static char h5[] = "h5";
-  static char h6[] = "h6";
-  static char address[] = "address";
-  static char pre[] = "pre";
-  static char li[] = "li";
-  static char dt[] = "dt";
-  static char dd[] = "dd";
-  if (aTag.EqualsIgnoreCase(p)  ||
-      aTag.EqualsIgnoreCase(h1) ||
-      aTag.EqualsIgnoreCase(h2) ||
-      aTag.EqualsIgnoreCase(h3) ||
-      aTag.EqualsIgnoreCase(h4) ||
-      aTag.EqualsIgnoreCase(h5) ||
-      aTag.EqualsIgnoreCase(h6) ||
-      aTag.EqualsIgnoreCase(address) ||
-      aTag.EqualsIgnoreCase(pre) ||
-      aTag.EqualsIgnoreCase(li) ||
-      aTag.EqualsIgnoreCase(dt) ||
-      aTag.EqualsIgnoreCase(dd) )
-  {
-    aIsTag = PR_TRUE;
-  }
-  else {
-    aIsTag = PR_FALSE;
-  }
-  return NS_OK;
-}
-
-
-
 ///////////////////////////////////////////////////////////////////////////
 // GetEnclosingTable: find ancestor who is a table, if any
 //                  
@@ -4586,50 +4391,6 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
   }
 
   return result;
-}
-
-NS_IMETHODIMP
-nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
-                                      const nsAString   *aTagName,
-                                      nsIDOMElement   **aReturn)
-{
-  nsresult res = NS_OK;
-  if (!aCurrentElement || !aTagName || !aReturn)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIAtom> tagAtom = do_GetAtom(*aTagName);
-  if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
-  if (tagAtom==nsEditProperty::th)
-    tagAtom=nsEditProperty::td;
-
-  nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(aCurrentElement);
-  if (!currentNode)
-    return NS_ERROR_FAILURE;
-
-  *aReturn = nsnull;
-
-  nsCOMPtr<nsIDOMNode> nextNode;
-  PRBool done = PR_FALSE;
-
-  do {
-    res = GetNextNode(currentNode, PR_TRUE, address_of(nextNode));
-    if (NS_FAILED(res)) return res;
-    if (!nextNode) break;
-
-    if (GetTag(currentNode) == tagAtom)
-    {
-      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(currentNode);
-      if (!element) return NS_ERROR_NULL_POINTER;
-
-      *aReturn = element;
-      NS_ADDREF(*aReturn);
-      done = PR_TRUE;
-      return NS_OK;
-    }
-    currentNode = nextNode;
-  } while (!done);
-
-  return res;
 }
 
 NS_IMETHODIMP 
@@ -5863,7 +5624,8 @@ nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
         res = selection->GetRangeAt(i, getter_AddRefs(range));
         if (NS_FAILED(res)) return res;
         nsCOMPtr<nsIDOMNode> startContainer;
-        range->GetStartContainer(getter_AddRefs(startContainer));
+        res = range->GetStartContainer(getter_AddRefs(startContainer));
+        if (NS_FAILED(res)) continue;
         if (!focusNode)
           focusNode = startContainer;
         else if (focusNode != startContainer) {

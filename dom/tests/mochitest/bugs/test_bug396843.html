@@ -141,7 +141,7 @@ HTML_TAG("wbr", "Shared")
 HTML_TAG("xmp", "Span")
 
 function SVG_TAG(name) {
-  allNodes.push(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  allNodes.push(document.createElementNS("http://www.w3.org/2000/svg", name));
 }
 
 // List sorta stolen from SVG element factory.

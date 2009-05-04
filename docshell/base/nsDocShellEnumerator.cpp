@@ -44,16 +44,15 @@
 
 nsDocShellEnumerator::nsDocShellEnumerator(PRInt32 inEnumerationDirection)
 : mRootItem(nsnull)
-, mItemArray(nsnull)
 , mCurIndex(0)
 , mDocShellType(nsIDocShellTreeItem::typeAll)
+, mArrayValid(PR_FALSE)
 , mEnumerationDirection(inEnumerationDirection)
 {
 }
 
 nsDocShellEnumerator::~nsDocShellEnumerator()
 {
-  delete mItemArray;
 }
 
 NS_IMPL_ISUPPORTS1(nsDocShellEnumerator, nsISimpleEnumerator)
@@ -68,18 +67,12 @@ NS_IMETHODIMP nsDocShellEnumerator::GetNext(nsISupports **outCurItem)
   nsresult rv = EnsureDocShellArray();
   if (NS_FAILED(rv)) return rv;
   
-  if (mCurIndex >= 0 && mCurIndex < mItemArray->Count())
-  {
-    nsIDocShellTreeItem* thisItem = reinterpret_cast<nsIDocShellTreeItem*>(mItemArray->ElementAt(mCurIndex));
-    rv = thisItem->QueryInterface(NS_GET_IID(nsISupports), (void **)outCurItem);
-    if (NS_FAILED(rv)) return rv;
-  }
-  else
+  if (mCurIndex >= mItemArray.Length()) {
     return NS_ERROR_FAILURE;
+  }
   
-  mCurIndex ++;
-  
-  return NS_OK;
+  // post-increment is important here
+  return CallQueryInterface(mItemArray[mCurIndex++], outCurItem);
 }
 
 /* boolean hasMoreElements (); */
@@ -91,7 +84,7 @@ NS_IMETHODIMP nsDocShellEnumerator::HasMoreElements(PRBool *outHasMore)
   nsresult rv = EnsureDocShellArray();
   if (NS_FAILED(rv)) return rv;
 
-  *outHasMore = (mCurIndex < mItemArray->Count());
+  *outHasMore = (mCurIndex < mItemArray.Length());
   return NS_OK;
 }
 
@@ -132,12 +125,10 @@ nsresult nsDocShellEnumerator::First()
 
 nsresult nsDocShellEnumerator::EnsureDocShellArray()
 {
-  if (!mItemArray)
+  if (!mArrayValid)
   {
-    mItemArray = new nsVoidArray;
-    if (!mItemArray) return NS_ERROR_OUT_OF_MEMORY;
-  
-    return BuildDocShellArray(*mItemArray);
+    mArrayValid = PR_TRUE;
+    return BuildDocShellArray(mItemArray);
   }
   
   return NS_OK;
@@ -145,21 +136,20 @@ nsresult nsDocShellEnumerator::EnsureDocShellArray()
 
 nsresult nsDocShellEnumerator::ClearState()
 {
-  delete mItemArray;
-  mItemArray = nsnull;
-  
+  mItemArray.Clear();
+  mArrayValid = PR_FALSE;
   mCurIndex = 0;
   return NS_OK;
 }
 
-nsresult nsDocShellEnumerator::BuildDocShellArray(nsVoidArray& inItemArray)
+nsresult nsDocShellEnumerator::BuildDocShellArray(nsTArray<nsIDocShellTreeItem*>& inItemArray)
 {
   NS_ENSURE_TRUE(mRootItem, NS_ERROR_NOT_INITIALIZED);
   inItemArray.Clear();
   return BuildArrayRecursive(mRootItem, inItemArray);
 }
 
-nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsVoidArray& inItemArray)
+nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsIDocShellTreeItem*>& inItemArray)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShellTreeNode> itemAsNode = do_QueryInterface(inItem, &rv);
@@ -170,8 +160,8 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* 
   if ((mDocShellType == nsIDocShellTreeItem::typeAll) ||
       (NS_SUCCEEDED(inItem->GetItemType(&itemType)) && (itemType == mDocShellType)))
   {
-    rv = inItemArray.AppendElement((void *)inItem);
-    if (NS_FAILED(rv)) return rv;
+    if (!inItemArray.AppendElement(inItem))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   PRInt32   numChildren;
@@ -192,7 +182,7 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* 
 }
 
 
-nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsVoidArray& inItemArray)
+nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsIDocShellTreeItem*>& inItemArray)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShellTreeNode> itemAsNode = do_QueryInterface(inItem, &rv);
@@ -217,8 +207,8 @@ nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem*
   if ((mDocShellType == nsIDocShellTreeItem::typeAll) ||
       (NS_SUCCEEDED(inItem->GetItemType(&itemType)) && (itemType == mDocShellType)))
   {
-    rv = inItemArray.AppendElement((void *)inItem);
-    if (NS_FAILED(rv)) return rv;
+    if (!inItemArray.AppendElement(inItem))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
 

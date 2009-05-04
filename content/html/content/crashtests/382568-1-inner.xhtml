@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html  xmlns="http://www.w3.org/1999/xhtml"> <head>
+<title>Test</title>
+<script type="text/javascript"><![CDATA[
+
+function onAttrModified(evt) {
+//  window.alert("Mutation event fired within the frame code.");
+//  evt.target.focus();
+//  evt.target.blur();
+  evt.target.style.background = 'green';
+  bounce(evt.target);
+//  evt.target.normalize();
+//  bounce(evt.target.parentNode);
+}
+function die(n) {
+  p = n.parentNode;
+  p.removeChild(n);
+}
+
+function bounce(n) {
+  p = n.parentNode;
+  p.removeChild(n);
+  p.appendChild(n);
+}
+
+
+function test_AttrModified() {
+  var x = document.getElementById("x");
+  x.addEventListener("DOMAttrModified", onAttrModified, false);
+  bounce(x);
+}
+
+function test() {
+  setTimeout(test_AttrModified, 3000);
+}
+]]></script>
+</head>
+
+<body onload="test()">
+<h1>TestCase for unsafe mutable events from textarea</h1>
+<p>Please wait for 3 seconds after document was loaded,
+if your browser is vulnerable, it may stop responding
+to keyboard and mouse event
+and most likely it will eventually crash (may take a
+while for debug builds).</p>
+<p>
+<textarea id="x"></textarea>
+</p>
+</body> </html>

@@ -39,7 +39,6 @@
 #define nsView_h___
 
 #include "nsIView.h"
-#include "nsIWidget.h"
 #include "nsRegion.h"
 #include "nsRect.h"
 #include "nsCRT.h"

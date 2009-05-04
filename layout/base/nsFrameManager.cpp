@@ -65,7 +65,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #ifdef NS_DEBUG
-#include "nsISupportsArray.h"
 #include "nsIStyleRule.h"
 #endif
 #include "nsILayoutHistoryState.h"
@@ -387,7 +386,10 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent,
           entry = static_cast<PrimaryFrameMapEntry*>
                              (PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling,
                                                PL_DHASH_LOOKUP));
-          if (PL_DHASH_ENTRY_IS_BUSY(entry))
+          // XXXbz the GetContent() == prevSibling check is needed due to bug
+          // 135040.  Remove it once that's fixed.
+          if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame &&
+              entry->frame->GetContent() == prevSibling)
             hint.mPrimaryFrameForPrevSibling = entry->frame;
         }
       }
@@ -760,27 +762,7 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
       fputs(NS_LossyConvertUTF16toASCII(buffer).get(), stdout);
       fputs(" ", stdout);
     }
-
-/* XXXdwh fix debugging here.  Need to add a List method to nsRuleNode
-   and have the context call list on its rule node.
-    PRInt32 count = aContext->GetStyleRuleCount();
-    if (0 < count) {
-      fputs("{\n", stdout);
-      nsISupportsArray* rules = aContext->GetStyleRules();
-      PRInt32 ix;
-      for (ix = 0; ix < count; ix++) {
-        nsIStyleRule* rule = (nsIStyleRule*)rules->ElementAt(ix);
-        rule->List(stdout, 1);
-        NS_RELEASE(rule);
-      }
-      NS_RELEASE(rules);
-      fputs("}\n", stdout);
-    }
-    else 
-    */
-    {
-      fputs("{}\n", stdout);
-    }
+    fputs("{}\n", stdout);
   }
 }
 

@@ -121,9 +121,9 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 
 #endif
 
-extern JSClass          js_GeneratorClass;
-extern JSClass          js_IteratorClass;
-extern JSClass          js_StopIterationClass;
+extern JS_FRIEND_API(JSClass) js_GeneratorClass;
+extern JSClass                js_IteratorClass;
+extern JSClass                js_StopIterationClass;
 
 static inline bool
 js_ValueIsStopIteration(jsval v)

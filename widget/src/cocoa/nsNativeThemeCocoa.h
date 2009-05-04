@@ -94,6 +94,7 @@ protected:
 
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
+  nsIntMargin RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame);
 
   // HITheme drawing routines
   void DrawFrame(CGContextRef context, HIThemeFrameKind inKind,

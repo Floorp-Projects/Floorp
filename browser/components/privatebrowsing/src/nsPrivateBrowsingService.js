@@ -93,6 +93,15 @@ PrivateBrowsingService.prototype = {
     return this.__obs;
   },
 
+  // Preferences Service
+  __prefs: null,
+  get _prefs() {
+    if (!this.__prefs)
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    return this.__prefs;
+  },
+
   // Whether the private browsing mode is currently active or not.
   _inPrivateBrowsing: false,
 
@@ -138,20 +147,32 @@ PrivateBrowsingService.prototype = {
     if (!this._autoStart) {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].
                getService(Ci.nsISessionStore);
+      let blankState = JSON.stringify({
+        "windows": [{
+          "tabs": [{
+            "entries": [{
+              "url": "about:blank"
+            }]
+          }],
+          "_closedTabs": []
+        }]
+      });
+
+      // whether we should save and close the current session
+      this._saveSession = true;
+      try {
+        if (this._prefs.getBoolPref("browser.privatebrowsing.keep_current_session"))
+          this._saveSession = false;
+      } catch (ex) {}
 
       if (this._inPrivateBrowsing) {
-        // whether we should save and close the current session
-        this._saveSession = true;
-        var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                         getService(Ci.nsIPrefBranch);
-        try {
-          if (prefBranch.getBoolPref("browser.privatebrowsing.keep_current_session"))
-            this._saveSession = false;
-        } catch (ex) {}
-
         // save the whole browser state in order to restore all windows/tabs later
-        if (this._saveSession && !this._savedBrowserState)
-          this._savedBrowserState = ss.getBrowserState();
+        if (this._saveSession && !this._savedBrowserState) {
+          if (this._getBrowserWindow())
+            this._savedBrowserState = ss.getBrowserState();
+          else // no open browser windows, just restore a blank state on exit
+            this._savedBrowserState = blankState;
+        }
       }
       if (!this._quitting && this._saveSession) {
         let browserWindow = this._getBrowserWindow();
@@ -159,19 +180,8 @@ PrivateBrowsingService.prototype = {
         // if there are open browser windows, load a dummy session to get a distinct 
         // separation between private and non-private sessions
         if (browserWindow) {
-          // dummy session used to transition from/to pb mode, see bug 476463
-          let transitionState = {
-            "windows": [{
-              "tabs": [{
-                "entries": [{
-                  "url": "about:blank"
-                }]
-              }],
-              "_closedTabs": []
-            }]
-          };
-
-          ss.setBrowserState(JSON.stringify(transitionState));
+          // set an empty session to transition from/to pb mode, see bug 476463
+          ss.setBrowserState(blankState);
 
           // just in case the only remaining window after setBrowserState is different.
           // it probably shouldn't be with the current sessionstore impl, but we shouldn't
@@ -251,9 +261,7 @@ PrivateBrowsingService.prototype = {
         // private browsing mode upon startup.
         // This won't interfere with the session store component, because
         // that component will be initialized on final-ui-startup.
-        let prefsService = Cc["@mozilla.org/preferences-service;1"].
-                           getService(Ci.nsIPrefBranch);
-        this._autoStart = prefsService.getBoolPref("browser.privatebrowsing.autostart");
+        this._autoStart = this._prefs.getBoolPref("browser.privatebrowsing.autostart");
         if (this._autoStart) {
           this._autoStarted = true;
           this.privateBrowsingEnabled = true;
@@ -274,6 +282,18 @@ PrivateBrowsingService.prototype = {
         let authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
                       getService(Ci.nsIHttpAuthManager);
         authMgr.clearAll();
+
+        // Prevent any SSL sockets from remaining open.  Without this, SSL
+        // websites may fail to load after switching the private browsing mode
+        // because the SSL sockets may still be open while the corresponding
+        // NSS resources have been destroyed by the logoutAndTeardown call
+        // above.  See bug 463256 for more information.
+        let ios = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService);
+        if (!ios.offline) {
+          ios.offline = true;
+          ios.offline = false;
+        }
 
         if (!this._inPrivateBrowsing) {
           // Clear the error console
@@ -320,8 +340,8 @@ PrivateBrowsingService.prototype = {
             return;
         }
 
-        if (!val)
-          this._autoStarted = false;
+        this._autoStarted = val ?
+          this._prefs.getBoolPref("browser.privatebrowsing.autostart") : false;
         this._inPrivateBrowsing = val != false;
 
         let data = val ? "enter" : "exit";
