@@ -1332,7 +1332,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Initialize the rest of the standard objects and functions. */
     return js_InitArrayClass(cx, obj) &&
-           js_InitBlockClass(cx, obj) &&
            js_InitBooleanClass(cx, obj) &&
            js_InitExceptionClasses(cx, obj) &&
            js_InitMathClass(cx, obj) &&
@@ -1398,7 +1397,6 @@ static JSStdName standard_class_atoms[] = {
     {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Function)},
     {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Object)},
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
-    {js_InitBlockClass,                 EAGER_ATOM_AND_CLASP(Block)},
     {js_InitBooleanClass,               EAGER_ATOM_AND_CLASP(Boolean)},
     {js_InitDateClass,                  EAGER_ATOM_AND_CLASP(Date)},
     {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
