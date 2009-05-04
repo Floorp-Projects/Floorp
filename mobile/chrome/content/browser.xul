@@ -382,10 +382,13 @@
     </hbox>
 
     <vbox id="popup_autocomplete" style="-moz-stack-sizing: ignore;" top="60" left="0" constraint="ignore-x,vp-relative">
-      <hbox id="autocomplete_navbuttons" align="center" flex="1"
-            oncommand="BrowserUI.doButtonSearch(event.target);">
+      <arrowscrollbox id="autocomplete_navbuttons"
+                      align="center"
+                      flex="1"
+                      orient="horizontal"
+                      oncommand="BrowserUI.doButtonSearch(event.target);">
         <image class="tool-search"/>
-      </hbox>
+      </arrowscrollbox>
     </vbox>
 
     <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
