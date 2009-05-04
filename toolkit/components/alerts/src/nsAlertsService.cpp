@@ -76,13 +76,16 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
 {
   // Check if there is an optional service that handles system-level notifications
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-  if (sysAlerts)
-    return sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
-                                            aAlertCookie, aAlertListener, aAlertName);
+  nsresult rv;
+  if (sysAlerts) {
+    rv = sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
+                                          aAlertCookie, aAlertListener, aAlertName);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIDOMWindow> newWindow;
-  nsresult rv;
 
   nsCOMPtr<nsISupportsArray> argsArray;
   rv = NS_NewISupportsArray(getter_AddRefs(argsArray));

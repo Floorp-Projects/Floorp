@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,15 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla GNOME integration code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,62 +35,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../..
+DEPTH   = ../../../..
 topsrcdir = @top_srcdir@
-srcdir	  = @srcdir@
-VPATH	  = @srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
+relativesrcdir  = toolkit/components/alerts/test
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= mozgnome
-LIBRARY_NAME	= mozgnome
-FORCE_SHARED_LIB = 1
-IS_COMPONENT	= 1
-
-REQUIRES = \
-	xpcom \
-	string \
-	necko \
-	alerts \
-	gfx \
-	imglib2 \
-	intl \
-	widget \
-	thebes \
-	cairo \
-	$(NULL)
-
-CPPSRCS = \
-	nsGConfService.cpp \
-	nsGnomeVFSService.cpp \
-	nsGnomeModule.cpp \
-	$(NULL)
-
-ifdef MOZ_ENABLE_LIBNOTIFY
-REQUIRES += thebes
-CPPSRCS += \
-	nsAlertsService.cpp \
-	nsAlertsIconListener.cpp \
-	$(NULL)
-endif
-
-EXTRA_DSO_LDOPTS += \
-		$(XPCOM_GLUE_LDOPTS) \
-		$(XPCOM_FROZEN_LDOPTS) \
-		$(NSPR_LIBS) \
-		$(MOZ_GCONF_LIBS) \
-		$(MOZ_GNOMEVFS_LIBS) \
-		$(GLIB_LIBS) \
-		$(MOZ_LIBNOTIFY_LIBS) \
+# Mochitest tests
+MOCHI_TESTS = \
+		test_alerts.html \
 		$(NULL)
 
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += \
-	$(MOZ_GCONF_CFLAGS) \
-	$(MOZ_GNOMEVFS_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(MOZ_LIBNOTIFY_CFLAGS) \
-	$(NULL)
+libs:: $(MOCHI_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
