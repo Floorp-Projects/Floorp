@@ -71,6 +71,12 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     if (scope->object == obj)
         return scope;
+
+    /*
+     * Compile-time block objects each have their own scope, created at
+     * birth, and runtime clone of a block objects are never mutated.
+     */
+    JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_BlockClass);
     newscope = js_NewScope(cx, 0, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj),
                            obj);
     if (!newscope)

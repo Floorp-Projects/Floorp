@@ -4559,8 +4559,8 @@ regexp_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #include "jsxdrapi.h"
 
-static JSBool
-regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
+JSBool
+js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
 {
     JSRegExp *re;
     JSString *source;
@@ -4599,7 +4599,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 
 #else  /* !JS_HAS_XDR */
 
-#define regexp_xdrObject NULL
+#define js_XDRRegExpObject NULL
 
 #endif /* !JS_HAS_XDR */
 
@@ -4623,7 +4623,7 @@ JSClass js_RegExpClass = {
     JS_ConvertStub,     regexp_finalize,
     NULL,               NULL,
     regexp_call,        NULL,
-    regexp_xdrObject,   NULL,
+    js_XDRRegExpObject, NULL,
     JS_CLASS_TRACE(regexp_trace), 0
 };
 
