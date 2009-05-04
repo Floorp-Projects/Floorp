@@ -144,7 +144,7 @@
 #include "nsIRegion.h"
 #include "nsRegion.h"
 
-#ifdef MOZ_REFLOW_PERF_DSP
+#ifdef MOZ_REFLOW_PERF
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #endif
