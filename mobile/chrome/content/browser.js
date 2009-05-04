@@ -409,24 +409,26 @@ var Browser = {
   findState: FINDSTATE_FIND,
   openFind: function(aState) {
     this.findState = aState;
-
     var findbar = document.getElementById("findbar");
     if (!findbar.browser)
       findbar.browser = this.selectedBrowser;
 
-    var panel = document.getElementById("findpanel");
-    if (panel.state == "open")
-      this.doFind(null);
-    else
-      panel.openPopup(document.getElementById("findpanel-placeholder"), "before_start");
+    var panel = document.getElementById("findbar-container");
+    if (panel.hidden) {
+      panel.hidden = false;
+    }
+    this.doFind();
   },
 
-  doFind: function (aEvent) {
+  doFind: function() {
     var findbar = document.getElementById("findbar");
     if (Browser.findState == FINDSTATE_FIND)
       findbar.onFindCommand();
     else
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
+
+    var panel = document.getElementById("findbar-container");
+    panel.top = window.innerHeight - findbar.getBoundingClientRect().height;
   },
 
   translatePhoneNumbers: function() {

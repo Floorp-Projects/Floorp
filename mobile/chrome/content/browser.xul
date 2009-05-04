@@ -285,6 +285,10 @@
 
     <notificationbox id="notifications" style="-moz-stack-sizing: ignore;" top="0" left="0"/>
 
+    <hbox id="findbar-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+      <findbar id="findbar" flex="1"/>
+    </hbox>
+
     <!-- barrier to the left of the right bar -->
     <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
@@ -421,14 +425,7 @@
       </vbox>
     </hbox>
   </stack>
-
   </box>
-
-  <vbox id="findpanel-placeholder" sizetopopup="always">
-    <panel id="findpanel" onpopupshown="Browser.doFind()">
-      <findbar id="findbar"/>
-   </panel>
-  </vbox>
 
   <!-- where all the (hidden) <browser> elements go; I wish this could be display: none -->
   <box id="browsers"/>
