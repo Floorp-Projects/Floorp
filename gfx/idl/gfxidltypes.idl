@@ -39,7 +39,7 @@
 
 /**
  * gfx idl declarations to be used by all gfx interfaces.
- * @file gfxtypes.idl
+ * @file gfxidltypes.idl
  */
 
 #include "nsrootidl.idl"
