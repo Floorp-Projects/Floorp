@@ -1198,7 +1198,6 @@ var PlacesUIUtils = {
       // While looping through queries we will also check for titles validity.
       for (var i = 0; i < items.length; i++) {
         var queryName = as.getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);
-        Components.utils.reportError(items[i] + " " + queryName);
         this.leftPaneQueries[queryName] = items[i];
         // Titles could have been corrupted or the user could have changed his
         // locale.  Check title is correctly set and eventually fix it.
