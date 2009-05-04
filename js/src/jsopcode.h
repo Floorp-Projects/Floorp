@@ -65,13 +65,13 @@ typedef enum JSOp {
  */
 #define JOF_BYTE          0       /* single bytecode, no immediates */
 #define JOF_JUMP          1       /* signed 16-bit jump offset immediate */
-#define JOF_ATOM          2       /* unsigned 16-bit constant pool index */
+#define JOF_ATOM          2       /* unsigned 16-bit constant index */
 #define JOF_UINT16        3       /* unsigned 16-bit immediate operand */
 #define JOF_TABLESWITCH   4       /* table switch */
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_LOCAL         7       /* var or block-local variable */
-#define JOF_SLOTATOM      8       /* uint16 slot index + constant pool index */
+#define JOF_SLOTATOM      8       /* uint16 slot + constant index */
 #define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
@@ -79,10 +79,11 @@ typedef enum JSOp {
 #define JOF_UINT8         13      /* uint8 immediate, e.g. top 8 bits of 24-bit
                                      atom index */
 #define JOF_INT32         14      /* int32 immediate operand */
-#define JOF_OBJECT        15      /* unsigned 16-bit object pool index */
-#define JOF_SLOTOBJECT    16      /* uint16 slot index + object pool index */
-#define JOF_REGEXP        17      /* unsigned 16-bit regexp pool index */
+#define JOF_OBJECT        15      /* unsigned 16-bit object index */
+#define JOF_SLOTOBJECT    16      /* uint16 slot index + object index */
+#define JOF_REGEXP        17      /* unsigned 16-bit regexp index */
 #define JOF_INT8          18      /* int8 immediate operand */
+#define JOF_ATOMOBJECT    19      /* uint16 constant index + object index */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */
@@ -343,7 +344,36 @@ js_GetVariableBytecodeLength(jsbytecode *pc);
  * or JSOP_NEWARRAY (for such ops, JSCodeSpec.nuses is -1).
  */
 extern uintN
-js_GetVariableStackUseLength(JSOp op, jsbytecode *pc);
+js_GetVariableStackUses(JSOp op, jsbytecode *pc);
+
+/*
+ * Find the number of stack slots defined by JSOP_ENTERBLOCK (for this op,
+ * JSCodeSpec.ndefs is -1).
+ */
+extern uintN
+js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc);
+
+static JS_INLINE uintN
+js_GetStackUses(const JSCodeSpec *cs, JSOp op, jsbytecode *pc)
+{
+    JS_ASSERT(cs == &js_CodeSpec[op]);
+    if (cs->nuses >= 0)
+        return cs->nuses;
+    return js_GetVariableStackUses(op, pc);
+}
+
+static JS_INLINE uintN
+js_GetStackDefs(JSContext *cx, const JSCodeSpec *cs, JSOp op, JSScript *script,
+                jsbytecode *pc)
+{
+    JS_ASSERT(cs == &js_CodeSpec[op]);
+    if (cs->ndefs >= 0)
+        return cs->ndefs;
+
+    /* Only JSOP_ENTERBLOCK has a variable number of stack defs. */
+    JS_ASSERT(op == JSOP_ENTERBLOCK);
+    return js_GetEnterBlockStackDefs(cx, script, pc);
+}
 
 #ifdef DEBUG
 /*

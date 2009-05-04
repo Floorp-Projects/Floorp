@@ -163,7 +163,6 @@
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
-
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0
 
@@ -191,6 +190,14 @@ PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
 static PRUint32 gMouseOrKeyboardEventCounter = 0;
 static nsITimer* gUserInteractionTimer = nsnull;
 static nsITimerCallback* gUserInteractionTimerCallback = nsnull;
+
+// Pixel scroll accumulation for synthetic line scrolls
+static nscoord gPixelScrollDeltaX = 0;
+static nscoord gPixelScrollDeltaY = 0;
+static PRUint32 gPixelScrollDeltaTimeout = 0;
+
+static nscoord
+GetScrollableViewLineHeight(nsPresContext* aPresContext, nsIFrame* aTargetFrame);
 
 #ifdef DEBUG_DOCSHELL_FOCUS
 static void
@@ -447,12 +454,12 @@ public:
   static void EndTransaction();
   static void OnEvent(nsEvent* aEvent);
   static void Shutdown();
+  static PRUint32 GetTimeoutTime();
 protected:
   static nsIntPoint GetScreenPoint(nsGUIEvent* aEvent);
   static void OnFailToScrollTarget();
   static void OnTimeout(nsITimer *aTimer, void *aClosure);
   static void SetTimeout();
-  static PRUint32 GetTimeoutTime();
   static PRUint32 GetIgnoreMoveDelayTime();
 
   static nsWeakFrame sTargetFrame;
@@ -1650,8 +1657,53 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mCurrentTargetContent = mCurrentFocus;
       }
 
-      // When the last line scroll has been canceled, eat the pixel scroll event
       nsMouseScrollEvent *msEvent = static_cast<nsMouseScrollEvent*>(aEvent);
+
+      // Clear old deltas after a period of non action
+      if (OutOfTime(gPixelScrollDeltaTimeout, nsMouseWheelTransaction::GetTimeoutTime())) {
+        gPixelScrollDeltaX = gPixelScrollDeltaY = 0;
+      }
+      gPixelScrollDeltaTimeout = PR_IntervalToMilliseconds(PR_IntervalNow());
+
+      // If needed send a line scroll event for pixel scrolls with kNoLines
+      if (msEvent->scrollFlags & nsMouseScrollEvent::kNoLines) {
+        nscoord pixelHeight = aPresContext->AppUnitsToIntCSSPixels(
+          GetScrollableViewLineHeight(aPresContext, aTargetFrame));
+
+        if (msEvent->scrollFlags & nsMouseScrollEvent::kIsVertical) {
+          gPixelScrollDeltaX += msEvent->delta;
+          if (!gPixelScrollDeltaX || !pixelHeight)
+            break;
+
+          if (PR_ABS(gPixelScrollDeltaX) >= pixelHeight) {
+            PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaX/(float)pixelHeight);
+
+            gPixelScrollDeltaX -= numLines*pixelHeight;
+
+            nsWeakFrame weakFrame(aTargetFrame);
+            SendLineScrollEvent(aTargetFrame, msEvent, aPresContext,
+              aStatus, numLines);
+            NS_ENSURE_STATE(weakFrame.IsAlive());
+          }
+        } else if (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) {
+          gPixelScrollDeltaY += msEvent->delta;
+          if (!gPixelScrollDeltaY || !pixelHeight)
+            break;
+
+          if (PR_ABS(gPixelScrollDeltaY) >= pixelHeight) {
+            PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaY/(float)pixelHeight);
+
+            gPixelScrollDeltaY -= numLines*pixelHeight;
+
+            nsWeakFrame weakFrame(aTargetFrame);
+            SendLineScrollEvent(aTargetFrame, msEvent, aPresContext,
+              aStatus, numLines);
+            NS_ENSURE_STATE(weakFrame.IsAlive());
+          }
+        }
+      }
+
+      // When the last line scroll has been canceled, eat the pixel scroll event
       if ((msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) ?
            mLastLineScrollConsumedX : mLastLineScrollConsumedY) {
         *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -1686,6 +1738,18 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     {
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryEditorRect((nsQueryContentEvent*)aEvent);
+    }
+    break;
+  case NS_QUERY_CONTENT_STATE:
+    {
+      nsContentEventHandler handler(mPresContext);
+      handler.OnQueryContentState(static_cast<nsQueryContentEvent*>(aEvent));
+    }
+    break;
+  case NS_QUERY_SELECTION_AS_TRANSFERABLE:
+    {
+      nsContentEventHandler handler(mPresContext);
+      handler.OnQuerySelectionAsTransferable(static_cast<nsQueryContentEvent*>(aEvent));
     }
     break;
   case NS_SELECTION_SET:
@@ -2716,6 +2780,57 @@ GetScrollableViewForFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
   return nsnull;
 }
 
+static nscoord
+GetScrollableViewLineHeight(nsPresContext* aPresContext, nsIFrame* aTargetFrame)
+{
+  nsIScrollableView* scrollView = GetScrollableViewForFrame(aPresContext, aTargetFrame);
+  nscoord lineHeight = 0;
+  if (scrollView) {
+    scrollView->GetLineHeight(&lineHeight);
+  } else {
+    // Fall back to the font height of the target frame.
+    const nsStyleFont* font = aTargetFrame->GetStyleFont();
+    const nsFont& f = font->mFont;
+    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(f);
+    NS_ASSERTION(fm, "FontMetrics is null!");
+    if (fm)
+      fm->GetHeight(lineHeight);
+  }
+  return lineHeight;
+}
+
+void
+nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
+                                         nsMouseScrollEvent* aEvent,
+                                         nsPresContext* aPresContext,
+                                         nsEventStatus* aStatus,
+                                         PRInt32 aNumLines)
+{
+  nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
+  if (!targetContent)
+    GetFocusedContent(getter_AddRefs(targetContent));
+  if (!targetContent)
+    return;
+
+  while (targetContent->IsNodeOfType(nsINode::eTEXT)) {
+    targetContent = targetContent->GetParent();
+  }
+
+  PRBool isTrusted = (aEvent->flags & NS_EVENT_FLAG_TRUSTED) != 0;
+  nsMouseScrollEvent event(isTrusted, NS_MOUSE_SCROLL, nsnull);
+  event.refPoint = aEvent->refPoint;
+  event.widget = aEvent->widget;
+  event.time = aEvent->time;
+  event.isShift = aEvent->isShift;
+  event.isControl = aEvent->isControl;
+  event.isAlt = aEvent->isAlt;
+  event.isMeta = aEvent->isMeta;
+  event.scrollFlags = aEvent->scrollFlags;
+  event.delta = aNumLines;
+
+  nsEventDispatcher::Dispatch(targetContent, aPresContext, &event, nsnull, aStatus);
+}
+
 void
 nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
                                           nsMouseScrollEvent* aEvent,
@@ -2732,19 +2847,7 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
     targetContent = targetContent->GetParent();
   }
 
-  nsIScrollableView* scrollView = GetScrollableViewForFrame(aPresContext, aTargetFrame);
-  nscoord lineHeight = 0;
-  if (scrollView) {
-    scrollView->GetLineHeight(&lineHeight);
-  } else {
-    // Fall back to the font height of the target frame.
-    const nsStyleFont* font = aTargetFrame->GetStyleFont();
-    const nsFont& f = font->mFont;
-    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(f);
-    NS_ASSERTION(fm, "FontMetrics is null!");
-    if (fm)
-      fm->GetHeight(lineHeight);
-  }
+  nscoord lineHeight = GetScrollableViewLineHeight(aPresContext, aTargetFrame);
 
   PRBool isTrusted = (aEvent->flags & NS_EVENT_FLAG_TRUSTED) != 0;
   nsMouseScrollEvent event(isTrusted, NS_MOUSE_PIXEL_SCROLL, nsnull);

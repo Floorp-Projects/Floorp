@@ -69,7 +69,3 @@ CSRCS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-LOCAL_INCLUDES += -I$(MACOS_SDK_DIR)/Developer/Headers/FlatCarbon
-endif

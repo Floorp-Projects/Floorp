@@ -52,12 +52,6 @@ INCLUDES += -I$(DIST)/include/sqlite3
 endif
 
 EXPORTS = \
-	pkcs11.h \
-	pkcs11f.h \
-	pkcs11p.h \
-	pkcs11t.h \
-	pkcs11n.h \
-	pkcs11u.h \
 	secmodt.h \
 	$(NULL)
 

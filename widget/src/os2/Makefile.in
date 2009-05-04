@@ -107,7 +107,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lthebes \
-		$(LCMS_LIBS) \
+		$(QCMS_LIBS) \
 		$(NULL)
 
 ifdef ENABLE_TESTS

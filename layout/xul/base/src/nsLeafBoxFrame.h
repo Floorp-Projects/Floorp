@@ -48,10 +48,6 @@ public:
 
   friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  // Override addref/release to not assert
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-
   virtual nsSize GetPrefSize(nsBoxLayoutState& aState);
   virtual nsSize GetMinSize(nsBoxLayoutState& aState);
   virtual nsSize GetMaxSize(nsBoxLayoutState& aState);
@@ -109,9 +105,6 @@ public:
   virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
 protected:
-
-  virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
-  virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 

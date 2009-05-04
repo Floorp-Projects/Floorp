@@ -44,7 +44,8 @@ relativesrcdir  = layout/xul/base/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug393970.xul \
+_TEST_FILES = 	test_bug381167.xhtml \
+		test_bug393970.xul \
 		test_resizer.xul \
 		window_resizer.xul \
 		test_bug477754.xul \

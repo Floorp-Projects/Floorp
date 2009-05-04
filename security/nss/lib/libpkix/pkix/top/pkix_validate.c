@@ -764,10 +764,6 @@ pkix_CheckChain(
                     continue;
                 }
 
-#ifdef DEBUG_kaie
-                pkix_trace_dump_cert("pkix_CheckChain", cert, plContext);
-#endif
-
                 if (revChecking == PKIX_FALSE) {
 
                         PKIX_CHECK(pkix_CheckCert

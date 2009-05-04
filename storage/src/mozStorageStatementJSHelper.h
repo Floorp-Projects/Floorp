@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2 expandtab
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -44,7 +44,10 @@
 
 class mozStorageStatement;
 
-class mozStorageStatementJSHelper : public nsIXPCScriptable
+namespace mozilla {
+namespace storage {
+
+class StatementJSHelper : public nsIXPCScriptable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -54,5 +57,8 @@ private:
   nsresult getRow(mozStorageStatement *, JSContext *, JSObject *, jsval *);
   nsresult getParams(mozStorageStatement *, JSContext *, JSObject *, jsval *);
 };
+
+} // namespace storage
+} // namespace mozilla
 
 #endif // __MOZSTORAGESTATEMENTJSHELPER_H__

@@ -4,11 +4,13 @@ load 157320-1.html
 load 199379-1.html
 load 206561-1.html
 load 248518-1.html
+load 333861-1.html
 load 345576-1.html   
 load 345629-1.html
 load 369688-1.html
 load 369947-1.html
 load 372094-1.xhtml
+load 376627-1.html
 load 377231-1.html
 load 377232-1.xhtml
 load 377461-1.xhtml
@@ -19,6 +21,7 @@ load 385417-2.html
 load 385423-1.html
 load 385423-2.html
 load 385719-1.html
+load 389326-1.html
 load 393746-1.xhtml
 load 393749-1.html
 load 393822-1.html
@@ -50,3 +53,4 @@ load 463307-1.html
 load 467873-1.html
 load 470418-1.html
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") load 441360.html # filed bug 455463 for gtk2
+load 487549-1.html

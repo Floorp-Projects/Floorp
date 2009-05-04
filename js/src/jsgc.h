@@ -125,7 +125,7 @@ js_GetGCStringRuntime(JSString *str);
         if (SCOPE_IS_BRANDED(scope) &&                                        \
             (oldval) != (newval) &&                                           \
             (VALUE_IS_FUNCTION(cx,oldval) || VALUE_IS_FUNCTION(cx,newval))) { \
-            SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);                               \
+            js_MakeScopeShapeUnique(cx, scope);                               \
         }                                                                     \
         GC_POKE(cx, oldval);                                                  \
     JS_END_MACRO
@@ -248,6 +248,16 @@ extern JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx);
 
 /*
+ * Schedule the GC call at a later safe point.
+ */
+#ifndef JS_THREADSAFE
+# define js_TriggerGC(cx, gcLocked)    js_TriggerGC (cx)
+#endif
+
+extern void
+js_TriggerGC(JSContext *cx, JSBool gcLocked);
+
+/*
  * Kinds of js_GC invocation.
  */
 typedef enum JSGCInvocationKind {
@@ -283,20 +293,6 @@ typedef enum JSGCInvocationKind {
 
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
-
-
-/*
- * This function must be called with the GC lock held. It is a helper for code
- * that can potentially run outside JS request to ensure that the GC is not
- * running when the function returns.
- */
-#ifdef JS_THREADSAFE
-extern void
-js_WaitForGC(JSRuntime *rt);
-#else
-# define js_WaitForGC(rt)    ((void) 0)
-#endif
-
 
 /* Call this after succesful malloc of memory for GC-related things. */
 extern void

@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4 expandtab
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,8 +41,6 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
-#include "nsCRT.h"
-#include "plstr.h"
 #include "prinit.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
@@ -55,120 +53,128 @@
 
 #include "nsIPromptService.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(mozStorageService, mozIStorageService, nsIObserver)
+namespace mozilla {
+namespace storage {
 
-mozStorageService *mozStorageService::gStorageService = nsnull;
+////////////////////////////////////////////////////////////////////////////////
+//// Service
 
-mozStorageService *
-mozStorageService::GetSingleton()
+NS_IMPL_THREADSAFE_ISUPPORTS2(
+  Service,
+  mozIStorageService,
+  nsIObserver
+)
+
+Service *Service::gService = nsnull;
+
+Service *
+Service::getSingleton()
 {
-    if (gStorageService) {
-        NS_ADDREF(gStorageService);
-        return gStorageService;
-    }
+  if (gService) {
+    NS_ADDREF(gService);
+    return gService;
+  }
 
-    // Ensure that we are using the same version of SQLite that we compiled with
-    // or newer.  Our configure check ensures we are using a new enough version
-    // at compile time.
-    if (SQLITE_VERSION_NUMBER > sqlite3_libversion_number()) {
-        nsCOMPtr<nsIPromptService> ps =
-            do_GetService(NS_PROMPTSERVICE_CONTRACTID);
-        if (ps) {
-            nsAutoString title, message;
-            title.AppendASCII("SQLite Version Error");
-            message.AppendASCII("The application has been updated, but your "
-                                "version of SQLite is too old and the "
-                                "application cannot run.");
-            (void)ps->Alert(nsnull, title.get(), message.get());
-        }
-        PR_Abort();
+  // Ensure that we are using the same version of SQLite that we compiled with
+  // or newer.  Our configure check ensures we are using a new enough version
+  // at compile time.
+  if (SQLITE_VERSION_NUMBER > ::sqlite3_libversion_number()) {
+    nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+    if (ps) {
+      nsAutoString title, message;
+      title.AppendASCII("SQLite Version Error");
+      message.AppendASCII("The application has been updated, but your version "
+                          "of SQLite is too old and the application cannot "
+                          "run.");
+      (void)ps->Alert(nsnull, title.get(), message.get());
     }
+    ::PR_Abort();
+  }
 
-    gStorageService = new mozStorageService();
-    if (gStorageService) {
-        NS_ADDREF(gStorageService);
-        if (NS_FAILED(gStorageService->Init()))
-            NS_RELEASE(gStorageService);
-    }
+  gService = new Service();
+  if (gService) {
+    NS_ADDREF(gService);
+    if (NS_FAILED(gService->initialize()))
+      NS_RELEASE(gService);
+  }
 
-    return gStorageService;
+  return gService;
 }
+
+nsIXPConnect *Service::sXPConnect = nsnull;
 
 already_AddRefed<nsIXPConnect>
-mozStorageService::XPConnect()
+Service::getXPConnect()
 {
-    NS_ASSERTION(gStorageService,
-                 "Can not get XPConnect without an instance of our service!");
+  NS_ASSERTION(gService,
+               "Can not get XPConnect without an instance of our service!");
 
-    // If we've been shutdown, sXPConnect will be null.  To prevent leaks, we do
-    // not cache the service after this point.
-    nsCOMPtr<nsIXPConnect> xpc(sXPConnect);
-    if (!xpc)
-        xpc = do_GetService(nsIXPConnect::GetCID());
-    NS_ASSERTION(xpc, "Could not get XPConnect!");
-    return xpc.forget();
+  // If we've been shutdown, sXPConnect will be null.  To prevent leaks, we do
+  // not cache the service after this point.
+  nsCOMPtr<nsIXPConnect> xpc(sXPConnect);
+  if (!xpc)
+    xpc = do_GetService(nsIXPConnect::GetCID());
+  NS_ASSERTION(xpc, "Could not get XPConnect!");
+  return xpc.forget();
 }
 
-mozStorageService::~mozStorageService()
+Service::~Service()
 {
-    // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
-    // there is nothing actionable we can do in that case.
-    int rc = sqlite3_shutdown();
-    if (rc != SQLITE_OK)
-        NS_WARNING("sqlite3 did not shutdown cleanly.");
+  // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
+  // there is nothing actionable we can do in that case.
+  int rc = ::sqlite3_shutdown();
+  if (rc != SQLITE_OK)
+    NS_WARNING("sqlite3 did not shutdown cleanly.");
 
-    gStorageService = nsnull;
-    PR_DestroyLock(mLock);
+  gService = nsnull;
+  ::PR_DestroyLock(mLock);
 }
 
 void
-mozStorageService::Shutdown()
+Service::shutdown()
 {
-    NS_IF_RELEASE(sXPConnect);
+  NS_IF_RELEASE(sXPConnect);
 }
 
-nsIXPConnect *mozStorageService::sXPConnect = nsnull;
-
 nsresult
-mozStorageService::Init()
+Service::initialize()
 {
-    mLock = PR_NewLock();
-    if (!mLock)
-        return NS_ERROR_OUT_OF_MEMORY;
+  mLock = ::PR_NewLock();
+  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
-    // Disable memory allocation statistic collection, improving performance.
-    // This must be done prior to a call to sqlite3_initialize to have any
-    // effect.
-    int rc = sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
-    if (rc != SQLITE_OK)
-        return ConvertResultCode(rc);
+  // Disable memory allocation statistic collection, improving performance.
+  // This must be done prior to a call to sqlite3_initialize to have any
+  // effect.
+  int rc = ::sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
+  if (rc != SQLITE_OK)
+    return ConvertResultCode(rc);
 
-    // Explicitly initialize sqlite3.  Although this is implicitly called by
-    // various sqlite3 functions (and the sqlite3_open calls in our case),
-    // the documentation suggests calling this directly.  So we do.
-    rc = sqlite3_initialize();
-    if (rc != SQLITE_OK)
-        return ConvertResultCode(rc);
+  // Explicitly initialize sqlite3.  Although this is implicitly called by
+  // various sqlite3 functions (and the sqlite3_open calls in our case),
+  // the documentation suggests calling this directly.  So we do.
+  rc = ::sqlite3_initialize();
+  if (rc != SQLITE_OK)
+    return ConvertResultCode(rc);
 
-    // This makes multiple connections to the same database share the same pager
-    // cache.  We do not need to lock here with mLock because this function is
-    // only ever called from mozStorageService::GetSingleton, which will only
-    // call this function once, and will not return until this function returns.
-    // (It does not matter where this is called relative to sqlite3_initialize.)
-    rc = sqlite3_enable_shared_cache(1);
-    if (rc != SQLITE_OK)
-        return ConvertResultCode(rc);
+  // This makes multiple connections to the same database share the same pager
+  // cache.  We do not need to lock here with mLock because this function is
+  // only ever called from Service::GetSingleton, which will only
+  // call this function once, and will not return until this function returns.
+  // (It does not matter where this is called relative to sqlite3_initialize.)
+  rc = ::sqlite3_enable_shared_cache(1);
+  if (rc != SQLITE_OK)
+    return ConvertResultCode(rc);
 
-    nsCOMPtr<nsIObserverService> os =
-        do_GetService("@mozilla.org/observer-service;1");
-    NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService("@mozilla.org/observer-service;1");
+  NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
 
-    nsresult rv = os->AddObserver(this, "xpcom-shutdown", PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = os->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // We cache XPConnect for our language helpers.
-    (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
-    return NS_OK;
+  // We cache XPConnect for our language helpers.
+  (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,142 +184,138 @@ mozStorageService::Init()
 #define NS_APP_STORAGE_50_FILE "UStor"
 #endif
 
-/* mozIStorageConnection openSpecialDatabase(in string aStorageKey); */
 NS_IMETHODIMP
-mozStorageService::OpenSpecialDatabase(const char *aStorageKey, mozIStorageConnection **_retval)
+Service::OpenSpecialDatabase(const char *aStorageKey,
+                             mozIStorageConnection **_connection)
 {
-    nsresult rv;
+  nsresult rv;
 
-    nsCOMPtr<nsIFile> storageFile;
-    if (PL_strcmp(aStorageKey, "memory") == 0) {
-        // just fall through with NULL storageFile, this will cause the storage
-        // connection to use a memory DB.
-    } else if (PL_strcmp(aStorageKey, "profile") == 0) {
+  nsCOMPtr<nsIFile> storageFile;
+  if (::strcmp(aStorageKey, "memory") == 0) {
+    // just fall through with NULL storageFile, this will cause the storage
+    // connection to use a memory DB.
+  }
+  else if (::strcmp(aStorageKey, "profile") == 0) {
 
-        rv = NS_GetSpecialDirectory(NS_APP_STORAGE_50_FILE, getter_AddRefs(storageFile));
-        if (NS_FAILED(rv)) {
-            // teh wtf?
-            return rv;
-        }
-
-        nsString filename;
-        storageFile->GetPath(filename);
-        nsCString filename8 = NS_ConvertUTF16toUTF8(filename.get());
-        // fall through to DB initialization
-    } else {
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    mozStorageConnection *msc = new mozStorageConnection(this);
-    if (!msc)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = msc->Initialize (storageFile);
+    rv = NS_GetSpecialDirectory(NS_APP_STORAGE_50_FILE,
+                                getter_AddRefs(storageFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ADDREF(*_retval = msc);
-    return NS_OK;
+    nsString filename;
+    storageFile->GetPath(filename);
+    nsCString filename8 = NS_ConvertUTF16toUTF8(filename.get());
+    // fall through to DB initialization
+  }
+  else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  Connection *msc = new Connection(this);
+  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = msc->initialize(storageFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*_connection = msc);
+  return NS_OK;
 }
 
-/* mozIStorageConnection openDatabase(in nsIFile aDatabaseFile); */
 NS_IMETHODIMP
-mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **_retval)
+Service::OpenDatabase(nsIFile *aDatabaseFile,
+                      mozIStorageConnection **_connection)
 {
-    nsRefPtr<mozStorageConnection> msc = new mozStorageConnection(this);
-    if (!msc)
-        return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<Connection> msc = new Connection(this);
+  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
-    {
-        nsAutoLock lock(mLock);
-        nsresult rv = msc->Initialize(aDatabaseFile);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+  {
+    nsAutoLock lock(mLock);
+    nsresult rv = msc->initialize(aDatabaseFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-    NS_ADDREF(*_retval = msc);
-    return NS_OK;
+  NS_ADDREF(*_connection = msc);
+  return NS_OK;
 }
 
-/* mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile); */
 NS_IMETHODIMP
-mozStorageService::OpenUnsharedDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **_retval)
+Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
+                              mozIStorageConnection **_connection)
 {
-    nsRefPtr<mozStorageConnection> msc = new mozStorageConnection(this);
-    if (!msc)
-        return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<Connection> msc = new Connection(this);
+  NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
-    // Initialize the connection, temporarily turning off shared caches so the
-    // new connection gets its own cache.  Database connections are assigned
-    // caches when they are opened, and they retain those caches for their
-    // lifetimes, unaffected by changes to the shared caches setting, so we can
-    // disable shared caches temporarily while we initialize the new connection
-    // without affecting the caches currently in use by other connections.
-    nsresult rv;
-    {
-        nsAutoLock lock(mLock);
-        int rc = sqlite3_enable_shared_cache(0);
-        if (rc != SQLITE_OK)
-            return ConvertResultCode(rc);
+  // Initialize the connection, temporarily turning off shared caches so the
+  // new connection gets its own cache.  Database connections are assigned
+  // caches when they are opened, and they retain those caches for their
+  // lifetimes, unaffected by changes to the shared caches setting, so we can
+  // disable shared caches temporarily while we initialize the new connection
+  // without affecting the caches currently in use by other connections.
+  nsresult rv;
+  {
+    nsAutoLock lock(mLock);
+    int rc = ::sqlite3_enable_shared_cache(0);
+    if (rc != SQLITE_OK)
+      return ConvertResultCode(rc);
 
-        rv = msc->Initialize(aDatabaseFile);
+    rv = msc->initialize(aDatabaseFile);
 
-        rc = sqlite3_enable_shared_cache(1);
-        if (rc != SQLITE_OK)
-            return ConvertResultCode(rc);
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
+    rc = ::sqlite3_enable_shared_cache(1);
+    if (rc != SQLITE_OK)
+      return ConvertResultCode(rc);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ADDREF(*_retval = msc);
-    return NS_OK;
+  NS_ADDREF(*_connection = msc);
+  return NS_OK;
 }
 
-/**
- ** Utilities
- **/
-
 NS_IMETHODIMP
-mozStorageService::BackupDatabaseFile(nsIFile *aDBFile,
-                                      const nsAString &aBackupFileName,
-                                      nsIFile *aBackupParentDirectory,
-                                      nsIFile **backup)
+Service::BackupDatabaseFile(nsIFile *aDBFile,
+                            const nsAString &aBackupFileName,
+                            nsIFile *aBackupParentDirectory,
+                            nsIFile **backup)
 {
-    nsresult rv;
-    nsCOMPtr<nsIFile> parentDir = aBackupParentDirectory;
-    if (!parentDir) {
-        // This argument is optional, and defaults to the same parent directory
-        // as the current file.
-        rv = aDBFile->GetParent(getter_AddRefs(parentDir));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIFile> backupDB;
-    rv = parentDir->Clone(getter_AddRefs(backupDB));
+  nsresult rv;
+  nsCOMPtr<nsIFile> parentDir = aBackupParentDirectory;
+  if (!parentDir) {
+    // This argument is optional, and defaults to the same parent directory
+    // as the current file.
+    rv = aDBFile->GetParent(getter_AddRefs(parentDir));
     NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-    rv = backupDB->Append(aBackupFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIFile> backupDB;
+  rv = parentDir->Clone(getter_AddRefs(backupDB));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = backupDB->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = backupDB->Append(aBackupFileName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString fileName;
-    rv = backupDB->GetLeafName(fileName);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = backupDB->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = backupDB->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString fileName;
+  rv = backupDB->GetLeafName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    backupDB.forget(backup);
+  rv = backupDB->Remove(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    return aDBFile->CopyTo(parentDir, fileName);
+  backupDB.forget(backup);
+
+  return aDBFile->CopyTo(parentDir, fileName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIObserver
 
 NS_IMETHODIMP
-mozStorageService::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
+Service::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
 {
-    if (strcmp(aTopic, "xpcom-shutdown") == 0)
-        Shutdown();
-    return NS_OK;
+  if (strcmp(aTopic, "xpcom-shutdown") == 0)
+    shutdown();
+  return NS_OK;
 }
+
+} // namespace storage
+} // namespace mozilla

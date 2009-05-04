@@ -105,12 +105,6 @@
 #define RDF_MODULE
 #endif
 
-#ifdef OJI
-#define OJI_MODULES MODULE(nsCJVMManagerModule)
-#else
-#define OJI_MODULES
-#endif
-
 #ifdef MOZ_PLAINTEXT_EDITOR_ONLY
 #define COMPOSER_MODULE
 #else
@@ -260,6 +254,12 @@
 #define OSXPROXY_MODULE
 #endif
 
+#if defined(XP_WIN)
+#define WINDOWSPROXY_MODULE MODULE(nsWindowsProxyModule)
+#else
+#define WINDOWSPROXY_MODULE
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpconnect)                        \
     MATHML_MODULES                           \
@@ -287,7 +287,6 @@
     MODULE(docshell_provider)                \
     MODULE(embedcomponents)                  \
     MODULE(Browser_Embedding_Module)         \
-    OJI_MODULES                              \
     ACCESS_MODULES                           \
     MODULE(appshell)                         \
     MODULE(nsTransactionManagerModule)       \
@@ -312,6 +311,7 @@
     LAYOUT_DEBUG_MODULE                      \
     UNIXPROXY_MODULE                         \
     OSXPROXY_MODULE                          \
+    WINDOWSPROXY_MODULE                      \
     /* end of list */
 
 #define MODULE(_name) \

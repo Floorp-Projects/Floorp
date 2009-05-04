@@ -98,6 +98,10 @@ unsigned char *_mbsstr( const unsigned char *str,
 }
 #endif
 
+#ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
+#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
+#endif
+
 #ifndef WINCE
 class nsDriveEnumerator : public nsISimpleEnumerator
 {
@@ -1458,16 +1462,20 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         rv = ConvertWinError(GetLastError());
 
 #ifndef WINCE
-    if(move) //Set security permissions to inherit from parent.
+    else if (move) // Set security permissions to inherit from parent.
     {
-        ACL empty_acl;
-        if (InitializeAcl(&empty_acl, (DWORD) sizeof(ACL), ACL_REVISION))
-        {
-        ::SetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT, 
-                                DACL_SECURITY_INFORMATION |
-                                UNPROTECTED_DACL_SECURITY_INFORMATION, 
-                                NULL, NULL, &empty_acl, NULL);
-        }
+        PACL pOldDACL = NULL;
+        PSECURITY_DESCRIPTOR pSD = NULL;
+        ::GetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT,
+                                DACL_SECURITY_INFORMATION,
+                                NULL, NULL, &pOldDACL, NULL, &pSD);
+        if (pOldDACL)
+            ::SetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT,
+                                    DACL_SECURITY_INFORMATION |
+                                    UNPROTECTED_DACL_SECURITY_INFORMATION,
+                                    NULL, NULL, pOldDACL, NULL);
+        if (pSD)
+            LocalFree((HLOCAL)pSD);
     }
 #endif
     return rv;
@@ -2658,6 +2666,58 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
     else
         return InitWithNativePath(aPersistentDescriptor);
 }   
+
+/* attrib unsigned long fileAttributesWin; */
+static PRBool IsXPOrGreater()
+{
+#ifdef WINCE
+    return PR_FALSE;
+#endif
+    OSVERSIONINFO osvi;
+
+    ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+    GetVersionEx(&osvi);
+
+    return ((osvi.dwMajorVersion > 5) ||
+       ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion >= 1)));
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetFileAttributesWin(PRUint32 *aAttribs)
+{
+    *aAttribs = 0;
+    DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
+    if (dwAttrs == INVALID_FILE_ATTRIBUTES)
+      return NS_ERROR_FILE_INVALID_PATH;
+
+    if (!(dwAttrs & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED))
+        *aAttribs |= WFA_SEARCH_INDEXED;
+
+    return NS_OK;
+}   
+    
+NS_IMETHODIMP
+nsLocalFile::SetFileAttributesWin(PRUint32 aAttribs)
+{
+    DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
+    if (dwAttrs == INVALID_FILE_ATTRIBUTES)
+      return NS_ERROR_FILE_INVALID_PATH;
+
+    if (IsXPOrGreater()) {
+      if (aAttribs & WFA_SEARCH_INDEXED) {
+          dwAttrs &= ~FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+      } else {
+          dwAttrs |= FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+      }
+    }
+
+    if (SetFileAttributesW(mWorkingPath.get(), dwAttrs) == 0)
+      return NS_ERROR_FAILURE;
+    return NS_OK;
+}   
+
 
 NS_IMETHODIMP
 nsLocalFile::Reveal()

@@ -109,6 +109,9 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
     tm->needFlush = JS_TRUE;
 
+    if (tm->recorder)
+        tm->recorder->deepAbort();
+
     /*
      * We want to keep tm->reservedObjects after the GC. So, unless we are
      * shutting down, we don't purge them here and rather mark them during
@@ -145,6 +148,7 @@ DestroyThread(JSThread *thread)
 {
     /* The thread must have zero contexts. */
     JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+    JS_ASSERT(!thread->titleToShare);
     FinishThreadData(&thread->data);
     free(thread);
 }
@@ -471,26 +475,27 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if defined DEBUG && defined XP_UNIX
 # include <stdio.h>
 
-class AutoFile {
+class JSAutoFile {
 public:
-    AutoFile() : mFp(NULL) {}
+    JSAutoFile() : mFile(NULL) {}
 
-    ~AutoFile() {
-        if (mFp)
-            fclose(mFp);
+    ~JSAutoFile() {
+        if (mFile)
+            fclose(mFile);
     }
 
     FILE *open(const char *fname, const char *mode) {
-        return mFp = fopen(fname, mode);
+        return mFile = fopen(fname, mode);
     }
     operator FILE *() {
-        return mFp;
+        return mFile;
     }
 
 private:
-    FILE *mFp;
+    FILE *mFile;
 };
 
+#ifdef JS_EVAL_CACHE_METERING
 static void
 DumpEvalCacheMeter(JSContext *cx)
 {
@@ -504,7 +509,7 @@ DumpEvalCacheMeter(JSContext *cx)
     };
     JSEvalCacheMeter *ecm = &JS_THREAD_DATA(cx)->evalCacheMeter;
 
-    static AutoFile fp;
+    static JSAutoFile fp;
     if (!fp) {
         fp.open("/tmp/evalcache.stats", "w");
         if (!fp)
@@ -527,8 +532,47 @@ DumpEvalCacheMeter(JSContext *cx)
     fflush(fp);
 }
 # define DUMP_EVAL_CACHE_METER(cx) DumpEvalCacheMeter(cx)
-#else
+#endif
+
+#ifdef JS_FUNCTION_METERING
+static void
+DumpFunctionMeter(JSContext *cx)
+{
+    struct {
+        const char *name;
+        ptrdiff_t  offset;
+    } table[] = {
+#define frob(x) { #x, offsetof(JSFunctionMeter, x) }
+        FUNCTION_KIND_METER_LIST(frob)
+#undef frob
+    };
+    JSFunctionMeter *fm = &cx->runtime->functionMeter;
+
+    static JSAutoFile fp;
+    if (!fp) {
+        fp.open("/tmp/function.stats", "a");
+        if (!fp)
+            return;
+    }
+
+    fprintf(fp, "function meter (%s):\n", cx->runtime->lastScriptFilename);
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
+        fprintf(fp, "%-11.11s %d\n",
+                table[i].name, *(int32 *)((uint8 *)fm + table[i].offset));
+    }
+    fflush(fp);
+}
+# define DUMP_FUNCTION_METER(cx)   DumpFunctionMeter(cx)
+#endif
+
+#endif /* DEBUG && XP_UNIX */
+
+#ifndef DUMP_EVAL_CACHE_METER
 # define DUMP_EVAL_CACHE_METER(cx) ((void) 0)
+#endif
+
+#ifndef DUMP_FUNCTION_METER
+# define DUMP_FUNCTION_METER(cx)   ((void) 0)
 #endif
 
 void
@@ -631,8 +675,12 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
         if (last) {
+            /* Clear builtin functions, which are recreated on demand. */
+            memset(rt->builtinFunctions, 0, sizeof rt->builtinFunctions);
+
             js_GC(cx, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
+            DUMP_FUNCTION_METER(cx);
 
             /*
              * Free the script filename table if it exists and is empty. Do this
@@ -753,6 +801,87 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
     return js_ContextIterator(rt, JS_FALSE, &iter);
 #endif           
 }
+
+#ifdef JS_THREADSAFE
+
+uint32
+js_CountThreadRequests(JSContext *cx)
+{
+    JSCList *head, *link;
+    uint32 nrequests;
+
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    head = &cx->thread->contextList;
+    nrequests = 0;
+    for (link = head->next; link != head; link = link->next) {
+        JSContext *acx = CX_FROM_THREAD_LINKS(link);
+        JS_ASSERT(acx->thread == cx->thread);
+        if (acx->requestDepth)
+            nrequests++;
+    }
+    return nrequests;
+}
+
+/*
+ * If the GC is running and we're called on another thread, wait for this GC
+ * activation to finish. We can safely wait here without fear of deadlock (in
+ * the case where we are called within a request on another thread's context)
+ * because the GC doesn't set rt->gcRunning until after it has waited for all
+ * active requests to end.
+ *
+ * We call here js_CurrentThreadId() after checking for rt->gcRunning to avoid
+ * expensive calls when the GC is not running.
+ */
+void
+js_WaitForGC(JSRuntime *rt)
+{
+    JS_ASSERT_IF(rt->gcRunning, rt->gcLevel > 0);
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcRunning);
+    }
+}
+
+uint32
+js_DiscountRequestsForGC(JSContext *cx)
+{
+    uint32 requestDebit;
+
+    JS_ASSERT(cx->thread);
+    JS_ASSERT(cx->runtime->gcThread != cx->thread);
+
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx)) {
+        JS_UNLOCK_GC(cx->runtime);
+        js_LeaveTrace(cx);
+        JS_LOCK_GC(cx->runtime);
+    }
+#endif
+
+    requestDebit = js_CountThreadRequests(cx);
+    if (requestDebit != 0) {
+        JSRuntime *rt = cx->runtime;
+        JS_ASSERT(requestDebit <= rt->requestCount);
+        rt->requestCount -= requestDebit;
+        if (rt->requestCount == 0)
+            JS_NOTIFY_REQUEST_DONE(rt);
+    }
+    return requestDebit;
+}
+
+void
+js_RecountRequestsAfterGC(JSRuntime *rt, uint32 requestDebit)
+{
+    while (rt->gcLevel > 0) {
+        JS_ASSERT(rt->gcThread);
+        JS_AWAIT_GC_DONE(rt);
+    }
+    if (requestDebit != 0)
+        rt->requestCount += requestDebit;
+}
+
+#endif
 
 static JSDHashNumber
 resolving_HashKey(JSDHashTable *table, const void *ptr)
@@ -1140,6 +1269,15 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 void
 js_ReportOutOfMemory(JSContext *cx)
 {
+#ifdef JS_TRACER
+    /*
+     * If we are in a builtin called directly from trace, don't report an
+     * error. We will retry in the interpreter instead.
+     */
+    if (JS_ON_TRACE(cx) && !cx->bailExit)
+        return;
+#endif
+
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
 
@@ -1557,7 +1695,7 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
 #if defined DEBUG && defined XP_UNIX
 /* For gdb usage. */
-void js_traceon(JSContext *cx)  { cx->tracefp = stderr; }
+void js_traceon(JSContext *cx)  { cx->tracefp = stderr; cx->tracePrevPc = NULL; }
 void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
 #endif
 
@@ -1589,14 +1727,17 @@ js_InvokeOperationCallback(JSContext *cx)
     cx->operationCallbackFlag = 0;
 
     /*
-     * We automatically yield the current context every time the operation
-     * callback is hit since we might be called as a result of an impending
-     * GC, which would deadlock if we do not yield. Operation callbacks
-     * are supposed to happen rarely (seconds, not milliseconds) so it is
-     * acceptable to yield at every callback.
+     * Unless we are going to run the GC, we automatically yield the current
+     * context every time the operation callback is hit since we might be
+     * called as a result of an impending GC, which would deadlock if we do
+     * not yield. Operation callbacks are supposed to happen rarely (seconds,
+     * not milliseconds) so it is acceptable to yield at every callback.
      */
+    if (cx->runtime->gcIsNeeded)
+        js_GC(cx, GC_NORMAL);
 #ifdef JS_THREADSAFE    
-    JS_YieldRequest(cx);
+    else
+        JS_YieldRequest(cx);
 #endif
 
     JSOperationCallback cb = cx->operationCallback;
@@ -1608,6 +1749,23 @@ js_InvokeOperationCallback(JSContext *cx)
      */
 
     return !cb || cb(cx);
+}
+
+void
+js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked)
+{
+    JSContext *acx, *iter;
+#ifdef JS_THREADSAFE
+    if (!gcLocked)
+        JS_LOCK_GC(rt);
+#endif
+    iter = NULL;
+    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)))
+        JS_TriggerOperationCallback(acx);
+#ifdef JS_THREADSAFE
+    if (!gcLocked)
+        JS_UNLOCK_GC(rt);
+#endif
 }
 
 JSStackFrame *

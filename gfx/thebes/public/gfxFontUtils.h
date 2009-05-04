@@ -290,6 +290,8 @@ public:
     nsTArray< nsAutoPtr<Block> > mBlocks;
 };
 
+#define TRUETYPE_TAG(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
+
 class THEBES_API gfxFontUtils {
 
 public:
@@ -328,7 +330,7 @@ public:
     static nsresult
     ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap,
              PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont);
-      
+
 #ifdef XP_WIN
     // given a TrueType/OpenType data file, produce a EOT-format header
     // for use with Windows T2Embed API AddFontResource type API's
@@ -352,6 +354,36 @@ public:
     RenameFont(const nsAString& aName, const PRUint8 *aFontData, 
                PRUint32 aFontDataLength, nsTArray<PRUint8> *aNewFont);
     
+    // constansts used with name table read methods
+    enum {
+        PLATFORM_ALL = -1,
+        PLATFORM_UNICODE = 0,
+        PLATFORM_MACINTOSH = 1,
+        PLATFORM_MICROSOFT = 3,
+        
+        NAME_LANG_ALL = -1,
+        
+        // name record id's
+        NAME_ID_FAMILY = 1,
+        NAME_ID_STYLE = 2,
+        NAME_ID_UNIQUE = 3,
+        NAME_ID_FULL = 4,  // used as key to GDI CreateFontIndirect
+        NAME_ID_VERSION = 5,
+        NAME_ID_POSTSCRIPT = 6,
+        NAME_ID_PREFERRED_FAMILY = 16       
+    };
+
+    // read all names matching aNameID, returning in aNames array
+    static nsresult
+    ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+              PRInt32 aPlatformID, nsTArray<nsString>& aNames);
+      
+    // reads English or first name matching aNameID, returning in aName
+    // platform based on OS
+    static nsresult
+    ReadCanonicalName(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+                      nsString& aName);
+      
     static inline bool IsJoiner(PRUint32 ch) {
         return (ch == 0x200C ||
                 ch == 0x200D ||
@@ -370,6 +402,11 @@ public:
 
     // generate a unique font name
     static nsresult MakeUniqueUserFontName(nsAString& aName);
+
+protected:
+    static nsresult
+    ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+              PRInt32 aLangID, PRInt32 aPlatformID, nsTArray<nsString>& aNames);
 
 };
 

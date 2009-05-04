@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+  <head>
+    <script>
+      function doTest() {
+        var t = document.getElementById("t1");
+        t.parentNode.removeChild(t);
+        t = document.getElementById("t2");
+        t.parentNode.removeChild(t);
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <span>
+      <span>a</span><span style="display: table-cell" id="t2">e</span>
+      <span style="display: table-cell" id="t1">f</span><span>bc d</span>
+    </span>
+  </body>
+</html>

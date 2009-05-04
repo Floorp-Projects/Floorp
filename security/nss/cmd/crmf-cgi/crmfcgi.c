@@ -479,7 +479,7 @@ formatCMMFResponse(char *nickname, char *base64Response)
   }
   printf("true);\n"
 	 "if(retVal == '') {\n"
-	 "\tdocument.write(\"<h1>New Certificate Succesfully Imported.</h1>\");\n"
+	 "\tdocument.write(\"<h1>New Certificate Successfully Imported.</h1>\");\n"
 	 "} else {\n"
 	 "\tdocument.write(\"<h2>Unable to import New Certificate</h2>\");\n"
 	 "\tdocument.write(\"crypto.importUserCertificates returned <b>\");\n"

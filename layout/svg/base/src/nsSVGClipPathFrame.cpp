@@ -43,6 +43,7 @@
 #include "nsSVGClipPathElement.h"
 #include "gfxContext.h"
 #include "nsIDOMSVGRect.h"
+#include "nsSVGMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -166,24 +167,21 @@ nsSVGClipPathFrame::GetType() const
   return nsGkAtoms::svgClipPathFrame;
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGClipPathFrame::GetCanvasTM()
 {
   NS_ASSERTION(mClipParentMatrix, "null parent matrix");
 
-  nsSVGClipPathElement *clipPath = static_cast<nsSVGClipPathElement*>
-                                              (mContent);
+  nsSVGClipPathElement *content = static_cast<nsSVGClipPathElement*>(mContent);
 
-  nsCOMPtr<nsIDOMSVGMatrix> localTM = clipPath->GetLocalTransformMatrix();
+  gfxMatrix tm = content->PrependLocalTransformTo(
+    nsSVGUtils::ConvertSVGMatrixToThebes(mClipParentMatrix));
 
-  nsCOMPtr<nsIDOMSVGMatrix> canvasTM;
-
-  if (localTM)
-    mClipParentMatrix->Multiply(localTM, getter_AddRefs(canvasTM));
-  else
-    canvasTM = mClipParentMatrix;
-
-  return nsSVGUtils::AdjustMatrixForUnits(canvasTM,
-                                          &clipPath->mEnumAttributes[nsSVGClipPathElement::CLIPPATHUNITS],
+  nsCOMPtr<nsIDOMSVGMatrix> canvasTM = NS_NewSVGMatrix(tm);
+  nsCOMPtr<nsIDOMSVGMatrix> fini =
+         nsSVGUtils::AdjustMatrixForUnits(canvasTM,
+                                          &content->mEnumAttributes[nsSVGClipPathElement::CLIPPATHUNITS],
                                           mClipParent);
+
+  return nsSVGUtils::ConvertSVGMatrixToThebes(fini);
 }

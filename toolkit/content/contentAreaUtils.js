@@ -231,14 +231,29 @@ const kSaveAsType_Complete = 0; // Save document with attached objects.
 const kSaveAsType_Text     = 2; // Save document, converting to plain text.
 
 /**
- * internalSave: Used when saving a document or URL. This method:
- *  - Determines a local target filename to use (unless parameter
- *    aChosenData is non-null)
- *  - Determines content-type if possible
+ * internalSave: Used when saving a document or URL.
+ *
+ * If aChosenData is null, this method:
+ *  - Determines a local target filename to use
  *  - Prompts the user to confirm the destination filename and save mode
- *    (content-type affects this)
+ *    (aContentType affects this)
+ *  - [Note] This process involves the parameters aURL, aReferrer (to determine
+ *    how aURL was encoded), aDocument, aDefaultFileName, aFilePickerTitleKey,
+ *    and aSkipPrompt.
+ *
+ * If aChosenData is non-null, this method:
+ *  - Uses the provided source URI and save file name
+ *  - Saves the document as complete DOM if possible (aDocument present and
+ *    right aContentType)
+ *  - [Note] The parameters aURL, aDefaultFileName, aFilePickerTitleKey, and
+ *    aSkipPrompt are ignored.
+ *
+ * In any case, this method:
  *  - Creates a 'Persist' object (which will perform the saving in the
  *    background) and then starts it.
+ *  - [Note] This part of the process only involves the parameters aDocument,
+ *    aShouldBypassCache and aReferrer. The source, the save name and the save
+ *    mode are the ones determined previously.
  *
  * @param aURL
  *        The String representation of the URL of the document being saved
@@ -280,33 +295,33 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     aCacheKey = null;
 
   // Note: aDocument == null when this code is used by save-link-as...
-  var saveMode = GetSaveModeForContentType(aContentType);
-  var isDocument = aDocument != null && saveMode != SAVEMODE_FILEONLY;
-  var saveAsType = kSaveAsType_Complete;
+  var saveMode = GetSaveModeForContentType(aContentType, aDocument);
 
-  var file, fileURL;
+  var file, sourceURI, saveAsType;
   // Find the URI object for aURL and the FileName/Extension to use when saving.
   // FileName/Extension will be ignored if aChosenData supplied.
-  var fileInfo = new FileInfo(aDefaultFileName);
-  if (aChosenData)
+  if (aChosenData) {
     file = aChosenData.file;
-  else {
+    sourceURI = aChosenData.uri;
+    saveAsType = kSaveAsType_Complete;
+  } else {
     var charset = null;
     if (aDocument)
       charset = aDocument.characterSet;
     else if (aReferrer)
       charset = aReferrer.originCharset;
+    var fileInfo = new FileInfo(aDefaultFileName);
     initFileInfo(fileInfo, aURL, charset, aDocument,
                  aContentType, aContentDisposition);
+    sourceURI = fileInfo.uri;
+
     var fpParams = {
       fpTitleKey: aFilePickerTitleKey,
-      isDocument: isDocument,
       fileInfo: fileInfo,
       contentType: aContentType,
       saveMode: saveMode,
-      saveAsType: saveAsType,
-      file: file,
-      fileURL: fileURL
+      saveAsType: kSaveAsType_Complete,
+      file: file
     };
 
     if (!getTargetFile(fpParams, aSkipPrompt))
@@ -315,40 +330,69 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
       return;
 
     saveAsType = fpParams.saveAsType;
-    saveMode = fpParams.saveMode;
     file = fpParams.file;
-    fileURL = fpParams.fileURL;
   }
-
-  if (!fileURL)
-    fileURL = makeFileURI(file);
 
   // XXX We depend on the following holding true in appendFiltersForContentType():
   // If we should save as a complete page, the saveAsType is kSaveAsType_Complete.
   // If we should save as text, the saveAsType is kSaveAsType_Text.
-  var useSaveDocument = isDocument &&
+  var useSaveDocument = aDocument &&
                         (((saveMode & SAVEMODE_COMPLETE_DOM) && (saveAsType == kSaveAsType_Complete)) ||
                          ((saveMode & SAVEMODE_COMPLETE_TEXT) && (saveAsType == kSaveAsType_Text)));
   // If we're saving a document, and are saving either in complete mode or
   // as converted text, pass the document to the web browser persist component.
   // If we're just saving the HTML (second option in the list), send only the URI.
-  var source = useSaveDocument ? aDocument : fileInfo.uri;
   var persistArgs = {
-    source      : source,
-    contentType : (!aChosenData && useSaveDocument &&
-                   saveAsType == kSaveAsType_Text) ?
-                  "text/plain" : null,
-    target      : fileURL,
-    postData    : isDocument ? getPostData(aDocument) : null,
-    bypassCache : aShouldBypassCache
+    sourceURI         : sourceURI,
+    sourceReferrer    : aReferrer,
+    sourceDocument    : useSaveDocument ? aDocument : null,
+    targetContentType : (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
+    targetFile        : file,
+    sourceCacheKey    : aCacheKey,
+    sourcePostData    : aDocument ? getPostData(aDocument) : null,
+    bypassCache       : aShouldBypassCache
   };
 
+  // Start the actual save process
+  internalPersist(persistArgs);
+}
+
+/**
+ * internalPersist: Creates a 'Persist' object (which will perform the saving
+ *  in the background) and then starts it.
+ *
+ * @param persistArgs.sourceURI
+ *        The nsIURI of the document being saved
+ * @param persistArgs.sourceCacheKey [optional]
+ *        If set will be passed to saveURI
+ * @param persistArgs.sourceDocument [optional]
+ *        The document to be saved, or null if not saving a complete document
+ * @param persistArgs.sourceReferrer
+ *        Required and used only when persistArgs.sourceDocument is NOT present,
+ *        the nsIURI of the referrer to use, or null if no referrer should be
+ *        sent.
+ * @param persistArgs.sourcePostData
+ *        Required and used only when persistArgs.sourceDocument is NOT present,
+ *        represents the POST data to be sent along with the HTTP request, and
+ *        must be null if no POST data should be sent.
+ * @param persistArgs.targetFile
+ *        The nsIFile of the file to create
+ * @param persistArgs.targetContentType
+ *        Required and used only when persistArgs.sourceDocument is present,
+ *        determines the final content type of the saved file, or null to use
+ *        the same content type as the source document. Currently only
+ *        "text/plain" is meaningful.
+ * @param persistArgs.bypassCache
+ *        If true, the document will always be refetched from the server
+ */
+function internalPersist(persistArgs)
+{
   var persist = makeWebBrowserPersist();
 
   // Calculate persist flags.
   const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
   const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-  if (aShouldBypassCache)
+  if (persistArgs.bypassCache)
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_BYPASS_CACHE;
   else
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_FROM_CACHE;
@@ -356,15 +400,21 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
   // Leave it to WebBrowserPersist to discover the encoding type (or lack thereof):
   persist.persistFlags |= nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
+  // Find the URI associated with the target file
+  var targetFileURL = makeFileURI(persistArgs.targetFile);
+
   // Create download and initiate it (below)
   var tr = Components.classes["@mozilla.org/transfer;1"].createInstance(Components.interfaces.nsITransfer);
+  tr.init(persistArgs.sourceURI,
+          targetFileURL, "", null, null, null, persist);
+  persist.progressListener = new DownloadListener(window, tr);
 
-  if (useSaveDocument) {
+  if (persistArgs.sourceDocument) {
     // Saving a Document, not a URI:
     var filesFolder = null;
-    if (persistArgs.contentType != "text/plain") {
+    if (persistArgs.targetContentType != "text/plain") {
       // Create the local directory into which to save associated files.
-      filesFolder = file.clone();
+      filesFolder = persistArgs.targetFile.clone();
 
       var nameWithoutExtension = getFileBaseName(filesFolder.leafName);
       var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
@@ -375,7 +425,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     }
 
     var encodingFlags = 0;
-    if (persistArgs.contentType == "text/plain") {
+    if (persistArgs.targetContentType == "text/plain") {
       encodingFlags |= nsIWBP.ENCODE_FLAGS_FORMATTED;
       encodingFlags |= nsIWBP.ENCODE_FLAGS_ABSOLUTE_LINKS;
       encodingFlags |= nsIWBP.ENCODE_FLAGS_NOFRAMES_CONTENT;
@@ -385,18 +435,12 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     }
 
     const kWrapColumn = 80;
-    tr.init((aChosenData ? aChosenData.uri : fileInfo.uri),
-            persistArgs.target, "", null, null, null, persist);
-    persist.progressListener = new DownloadListener(window, tr);
-    persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder,
-                         persistArgs.contentType, encodingFlags, kWrapColumn);
+    persist.saveDocument(persistArgs.sourceDocument, targetFileURL, filesFolder,
+                         persistArgs.targetContentType, encodingFlags, kWrapColumn);
   } else {
-    tr.init((aChosenData ? aChosenData.uri : source),
-            persistArgs.target, "", null, null, null, persist);
-    persist.progressListener = new DownloadListener(window, tr);
-    persist.saveURI((aChosenData ? aChosenData.uri : source),
-                    aCacheKey, aReferrer, persistArgs.postData, null,
-                    persistArgs.target);
+    persist.saveURI(persistArgs.sourceURI,
+                    persistArgs.sourceCacheKey, persistArgs.sourceReferrer, persistArgs.sourcePostData, null,
+                    targetFileURL);
   }
 }
 
@@ -544,7 +588,7 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt)
     if (dir)
       fp.displayDirectory = dir;
     
-    if (aFpP.isDocument) {
+    if (aFpP.saveMode != SAVEMODE_FILEONLY) {
       try {
         fp.filterIndex = prefs.getIntPref("save_converter_index");
       }
@@ -565,9 +609,8 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt)
     fp.file.leafName = validateFileName(fp.file.leafName);
     aFpP.saveAsType = fp.filterIndex;
     aFpP.file = fp.file;
-    aFpP.fileURL = fp.fileURL;
 
-    if (aFpP.isDocument)
+    if (aFpP.saveMode != SAVEMODE_FILEONLY)
       prefs.setIntPref("save_converter_index", aFpP.saveAsType);
   }
   else {
@@ -937,8 +980,13 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   }
 }
 
-function GetSaveModeForContentType(aContentType)
+function GetSaveModeForContentType(aContentType, aDocument)
 {
+  // We can only save a complete page if we have a loaded document
+  if (!aDocument)
+    return SAVEMODE_FILEONLY;
+
+  // Find the possible save modes using the provided content type
   var saveMode = SAVEMODE_FILEONLY;
   switch (aContentType) {
   case "text/html":

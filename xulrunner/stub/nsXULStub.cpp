@@ -50,9 +50,12 @@
 #include <io.h>
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
+#define strcasecmp _stricmp
 #define PATH_SEPARATOR_CHAR '\\'
 #define R_OK 04
 #elif defined(XP_MACOSX)
+#include <unistd.h>
+#include <sys/stat.h>
 #include <CoreFoundation/CoreFoundation.h>
 #define PATH_SEPARATOR_CHAR '/'
 #elif defined (XP_OS2)
@@ -112,6 +115,60 @@ static void Output(PRBool isError, const char *fmt, ... )
 #endif
 
   va_end(ap);
+}
+
+/**
+ * Return true if |arg| matches the given argument name.
+ */
+static PRBool IsArg(const char* arg, const char* s)
+{
+  if (*arg == '-')
+  {
+    if (*++arg == '-')
+      ++arg;
+    return !strcasecmp(arg, s);
+  }
+
+#if defined(XP_WIN) || defined(XP_OS2)
+  if (*arg == '/')
+    return !strcasecmp(++arg, s);
+#endif
+
+  return PR_FALSE;
+}
+
+/**
+ * Return true if |aDir| is a valid file/directory.
+ */
+static PRBool FolderExists(const char* aDir)
+{
+#ifdef XP_WIN
+  wchar_t wideDir[MAX_PATH];
+  MultiByteToWideChar(CP_UTF8, 0, aDir, -1, wideDir, MAX_PATH);
+  DWORD fileAttrs = GetFileAttributesW(wideDir);
+  return fileAttrs != INVALID_FILE_ATTRIBUTES;
+#else
+  return access(aDir, R_OK) == 0;
+#endif
+}
+
+static nsresult GetRealPath(const char* appDataFile, char* *aResult)
+{
+#ifdef XP_WIN
+  wchar_t wAppDataFile[MAX_PATH];
+  wchar_t wIniPath[MAX_PATH];
+  MultiByteToWideChar(CP_UTF8, 0, appDataFile, -1, wAppDataFile, MAX_PATH);
+  _wfullpath(wIniPath, wAppDataFile, MAX_PATH);
+  WideCharToMultiByte(CP_UTF8, 0, wIniPath, -1, *aResult, MAX_PATH, 0, 0);
+#else
+  struct stat fileStat;
+  if (!realpath(appDataFile, *aResult) || stat(*aResult, &fileStat))
+    return NS_ERROR_FAILURE;
+#endif
+  if (!*aResult || !**aResult)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 class AutoAppData
@@ -189,9 +246,8 @@ main(int argc, char **argv)
   if (!::GetModuleFileNameW(NULL, wide_path, MAX_PATH))
     return 1;
 
-  WideCharToMultiByte(CP_ACP, 0, wide_path,-1,
+  WideCharToMultiByte(CP_UTF8, 0, wide_path,-1,
 		      iniPath, MAX_PATH, NULL, NULL);
-  
 
 #elif defined(XP_OS2)
    PPIB ppib;
@@ -260,18 +316,60 @@ main(int argc, char **argv)
            "%sxulrunner" XPCOM_FILE_PATH_SEPARATOR XPCOM_DLL,
            iniPath);
 
-#ifdef WINCE
-  wchar_t wideGreDir[MAX_PATH];
-  MultiByteToWideChar(CP_ACP, 0, greDir, -1, wideGreDir, MAX_PATH);
-  DWORD fileAttrs = GetFileAttributesW(wideGreDir);
-  greFound = fileAttrs != INVALID_FILE_ATTRIBUTES;
-#else
-  greFound = (access(greDir, R_OK) == 0);
-#endif
+  greFound = FolderExists(greDir);
+
   strncpy(lastSlash, "application.ini", sizeof(iniPath) - (lastSlash - iniPath));
 
 #endif
 
+  // If -app parameter was passed in, it is now time to take it under 
+  // consideration.
+  const char *appDataFile;
+  appDataFile = getenv("XUL_APP_FILE");
+  if (!appDataFile || !*appDataFile) 
+    if (argc > 1 && IsArg(argv[1], "app")) {
+      if (argc == 2) {
+        Output(PR_FALSE, "specify APP-FILE (optional)\n");
+        return 1;
+      }
+      argv[1] = argv[0];
+      ++argv;
+      --argc;
+
+      appDataFile = argv[1];
+      argv[1] = argv[0];
+      ++argv;
+      --argc;
+
+      char kAppEnv[MAXPATHLEN];
+      snprintf(kAppEnv, MAXPATHLEN, "XUL_APP_FILE=%s", appDataFile);
+      if (putenv(kAppEnv)) 
+        Output(PR_FALSE, "Couldn't set %s.\n", kAppEnv);
+
+      char *result = (char*) calloc(sizeof(char), MAXPATHLEN);
+      if (NS_FAILED(GetRealPath(appDataFile, &result))) {
+        Output(PR_TRUE, "Invalid application.ini path.\n");
+        return 1;
+      }
+      
+      // We have a valid application.ini path passed in to the -app parameter 
+      // but not yet a valid greDir, so lets look for it also on the same folder
+      // as the stub.
+      if (!greFound) {
+        lastSlash = strrchr(iniPath, PATH_SEPARATOR_CHAR);
+        if (!lastSlash)
+          return 1;
+
+        *(++lastSlash) = '\0';
+
+        snprintf(greDir, sizeof(greDir), "%s" XPCOM_DLL, iniPath);
+        greFound = FolderExists(greDir);
+      }
+      
+      // copy it back.
+      strcpy(iniPath, result);
+    }
+  
   nsINIParser parser;
   rv = parser.Init(iniPath);
   if (NS_FAILED(rv)) {
@@ -331,7 +429,6 @@ main(int argc, char **argv)
   DosSetExtLIBPATH(tmpPath, BEGIN_LIBPATH);
 #endif
 
-#ifndef WINCE
   rv = XPCOMGlueStartup(greDir);
   if (NS_FAILED(rv)) {
     Output(PR_TRUE, "Couldn't load XPCOM.\n");
@@ -388,35 +485,6 @@ main(int argc, char **argv)
   NS_LogTerm();
 
   XPCOMGlueShutdown();
-#else
-  // LoadLibraryExW doesn't take the LOAD_WITH_ALTERED_SEARCH_PATH flag, caling
-  // xulrunner.exe from the gre dir sets the library search path correctly.
-  STARTUPINFO si;
-  PROCESS_INFORMATION pi;
-  ZeroMemory(&si, sizeof(si));
-  ZeroMemory(&pi, sizeof(si));
-  si.cb = sizeof(si);
-  wchar_t xrPath[MAX_PATH];
-  MultiByteToWideChar(CP_ACP, 0, greDir, -1, xrPath, MAX_PATH);
-  wchar_t* wLastSlash = wcsrchr(xrPath, PATH_SEPARATOR_CHAR);
-  if (wLastSlash) {
-    *wLastSlash = L'\0';
-  }
-  wcscat(xrPath, L"\\xulrunner.exe");
-  
-  wchar_t wideIniPath[MAX_PATH+2];
-  swprintf(wideIniPath, L"\"%S\"", iniPath);
-  
-  CreateProcessW(xrPath, wideIniPath, NULL, NULL, FALSE, 0, NULL, NULL, 
-                 &si, &pi); 
-  WaitForSingleObject(pi.hProcess, INFINITE);
-  DWORD retval = 0;
-  if (!GetExitCodeProcess(pi.hProcess, &retval))
-    printf("failed to get exit code, error = %d\n", retval = GetLastError());
-  
-  // Close process and thread handles.
-  CloseHandle(pi.hProcess);
-  CloseHandle(pi.hThread);
-#endif
+
   return retval;
 }

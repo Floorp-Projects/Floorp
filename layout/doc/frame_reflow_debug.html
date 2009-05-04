@@ -148,8 +148,8 @@ The table cell requires its children to compute the MES. It is reported back fro
 The block has been required to compute the max. element size only once and it reports now:
 <p> <code class="log">block 02D7BCF8 d=1410,300</code></p>
 <p>The block shows the same address as the previous one. 
-<p>Frames with children that overflow  the parent have the <code>NS_FRAME_OUTSIDE_CHILDREN</code> flag set. For these frames 
-the overflowarea  is displayed as  <code class="log">block 025ED8F0 d=8940,1020 o=(0,0) 9180 x 1020</code>. The overflow area is specified as (x,y) origin and width x height.
+<p>Frames with children that overflow  the parent will return <code>PR_TRUE</code> from <code>HasOverflowRect()</code>. For these frames 
+the overflow area  is displayed as  <code class="log">block 025ED8F0 d=8940,1020 o=(0,0) 9180 x 1020</code>. The overflow area is specified as (x,y) origin and width x height.
 <p> The reflow finishes at the same level where it started.
 
 <h2>Advanced reflow debugging</h2>

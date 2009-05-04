@@ -212,19 +212,3 @@ jpeg_file_dest (j_compress_ptr cinfo, char * outfile)
   dest->pub.term_destination = term_destination_file_close;
   dest->outfile = fopen(outfile,"wb");
 }
-
-
-
-/*
-API to close file in case of error. needed for win16. DLL that opens file must also close it.
-*/
-
-GLOBAL(void)
-jpeg_close_file(j_compress_ptr cinfo)
-{
-  my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
-  fclose(dest->outfile);
-}
-
-
-

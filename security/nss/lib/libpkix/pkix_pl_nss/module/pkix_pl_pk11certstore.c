@@ -680,6 +680,7 @@ PKIX_Error *
 pkix_pl_Pk11CertStore_GetCert(
         PKIX_CertStore *store,
         PKIX_CertSelector *selector,
+        PKIX_VerifyNode *parentVerifyNode,
         void **pNBIOContext,
         PKIX_List **pCertList,
         void *plContext)
@@ -689,11 +690,12 @@ pkix_pl_Pk11CertStore_GetCert(
         PKIX_PL_Cert *candidate = NULL;
         PKIX_List *selected = NULL;
         PKIX_List *filtered = NULL;
-        PKIX_CertSelector_MatchCallback callback = NULL;
+        PKIX_CertSelector_MatchCallback selectorCallback = NULL;
         PKIX_CertStore_CheckTrustCallback trustCallback = NULL;
         PKIX_ComCertSelParams *params = NULL;
-        PKIX_Boolean pass = PKIX_TRUE;
         PKIX_Boolean cacheFlag = PKIX_FALSE;
+        PKIX_VerifyNode *verifyNode = NULL;
+        PKIX_Error *selectorError = NULL;
 
         PKIX_ENTER(CERTSTORE, "pkix_pl_Pk11CertStore_GetCert");
         PKIX_NULLCHECK_FOUR(store, selector, pNBIOContext, pCertList);
@@ -701,7 +703,7 @@ pkix_pl_Pk11CertStore_GetCert(
         *pNBIOContext = NULL;   /* We don't use non-blocking I/O */
 
         PKIX_CHECK(PKIX_CertSelector_GetMatchCallback
-                (selector, &callback, plContext),
+                (selector, &selectorCallback, plContext),
                 PKIX_CERTSELECTORGETMATCHCALLBACKFAILED);
 
         PKIX_CHECK(PKIX_CertSelector_GetCommonCertSelectorParams
@@ -740,12 +742,9 @@ pkix_pl_Pk11CertStore_GetCert(
                         continue; /* just skip bad certs */
                 }
 
-                PKIX_CHECK_ONLY_FATAL(callback
-                        (selector, candidate, &pass, plContext),
-                        PKIX_CERTSELECTORFAILED);
-
-                if (!(PKIX_ERROR_RECEIVED) && pass) {
-
+                selectorError =
+                    selectorCallback(selector, candidate, plContext);
+                if (!selectorError) {
                         PKIX_CHECK(PKIX_PL_Cert_SetCacheFlag
                                 (candidate, cacheFlag, plContext),
                                 PKIX_CERTSETCACHEFLAGFAILED);
@@ -761,8 +760,19 @@ pkix_pl_Pk11CertStore_GetCert(
                                 (PKIX_PL_Object *)candidate,
                                 plContext),
                                 PKIX_LISTAPPENDITEMFAILED);
+                } else if (parentVerifyNode) {
+                    PKIX_CHECK_FATAL(
+                        pkix_VerifyNode_Create(candidate, 0, selectorError,
+                                               &verifyNode, plContext),
+                        PKIX_VERIFYNODECREATEFAILED);
+                    PKIX_CHECK_FATAL(
+                        pkix_VerifyNode_AddToTree(parentVerifyNode,
+                                                  verifyNode,
+                                                  plContext),
+                        PKIX_VERIFYNODEADDTOTREEFAILED);
+                    PKIX_DECREF(verifyNode);
                 }
-
+                PKIX_DECREF(selectorError);
                 PKIX_DECREF(candidate);
         }
 
@@ -773,11 +783,13 @@ pkix_pl_Pk11CertStore_GetCert(
         filtered = NULL;
 
 cleanup:
-
+fatal:
         PKIX_DECREF(filtered);
         PKIX_DECREF(candidate);
         PKIX_DECREF(selected);
         PKIX_DECREF(params);
+        PKIX_DECREF(verifyNode);
+        PKIX_DECREF(selectorError);
 
         PKIX_RETURN(CERTSTORE);
 }

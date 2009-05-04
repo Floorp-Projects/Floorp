@@ -42,8 +42,9 @@ interface nsILoginInfo;
 interface nsIAutoCompleteResult;
 interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
+interface nsIPropertyBag;
 
-[scriptable, uuid(9c78bfc1-422b-4f4f-ba09-f7eb3c4e72b2)]
+[scriptable, uuid(30534ff7-fb95-45c5-8336-5448638f2aa1)]
 
 interface nsILoginManager : nsISupports {
 
@@ -239,6 +240,28 @@ interface nsILoginManager : nsISupports {
      * @return Success of attempt fill form
      */
     boolean fillForm(in nsIDOMHTMLFormElement aForm);
+
+    /**
+     * Search for logins in the login manager. An array is always returned;
+     * if there are no logins the array is empty.
+     *
+     * @param count
+     *        The number of elements in the array. JS callers can simply use
+     *        the array's .length property, and supply an dummy object for
+     *        this out param. For example: |searchLogins({}, matchData)|
+     * @param matchData
+     *        The data used to search. This does not follow the same
+     *        requirements as findLogins for those fields. Wildcard matches are
+     *        simply not specified.
+     * @param logins
+     *        An array of nsILoginInfo objects.
+     *
+     * NOTE: This can be called from JS as:
+     *       var logins = pwmgr.searchLogins({}, matchData);
+     *       (|logins| is an array).
+     */
+    void searchLogins(out unsigned long count, in nsIPropertyBag matchData,
+                      [retval, array, size_is(count)] out nsILoginInfo logins);
 };
 
 %{C++

@@ -722,7 +722,7 @@ oggz_seek_set (OGGZ * oggz, ogg_int64_t unit_target)
       printf ("oggz_seek_set: [c] u%lld\n",
 	      oggz_get_unit (oggz, serialno, granule_at));
 #endif
-    } else {
+    } else if (offset_next >= 0) {
       serialno = ogg_page_serialno (og);
       granule_at = ogg_page_granulepos (og);
     }

@@ -405,35 +405,33 @@ input[type="file"] > input[type="button"] {
 /* radio buttons */
 input[type="radio"] {
   -moz-appearance: radio;
-  width: 13px;
-  height: 13px;
   margin: 3px 3px 0px 5px;
-  padding: 0 !important;
-  cursor: default;
-  -moz-binding: none;
-
   -moz-border-radius: 100% !important;
 }
 
 /* check boxes */
 input[type="checkbox"] {
   -moz-appearance: checkbox;
-  width: 13px;
-  height: 13px;
   margin: 3px 3px 3px 4px;
-  padding: 0 !important;
-  cursor: default;
-  -moz-binding: none;
-
   -moz-border-radius: 0 !important;
 }
 
 /* common features of radio buttons and check boxes */
 
+/* NOTE: The width, height, border-width, and padding here must all
+   add up the way nsFormControlFrame::GetIntrinsic(Width|Height)
+   expects them to, or they will not come out with total width equal
+   to total height on sites that set their 'width' or 'height' to 'auto'.
+   (Should we maybe set !important on width and height, then?)  */
 input[type="radio"],
 input[type="checkbox"] {
-  /* same colors as |input| rule, but |!important| this time. */
   -moz-box-sizing: border-box;
+  width: 13px;
+  height: 13px;
+  cursor: default;
+  padding: 0 !important;
+  -moz-binding: none;
+  /* same colors as |input| rule, but |!important| this time. */
   background-color: -moz-Field ! important;
   color: -moz-FieldText ! important;
   border: 2px inset ThreeDFace ! important;
@@ -464,13 +462,6 @@ input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
   background-color: ThreeDFace ! important;
   border-style: inset !important;
-}
-
-*|*::-moz-radio {
-  width: 4px;
-  height: 4px;
-  background-color: -moz-FieldText ! important;
-  -moz-border-radius: 3px;
 }
 
 /* buttons */

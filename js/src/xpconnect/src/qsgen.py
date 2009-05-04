@@ -871,7 +871,7 @@ def getTraceInfoDefaultReturn(type):
 def getFailureString(retval, indent):
     assert indent > 0
     ret = " " * (4 * indent)
-    ret += "cx->builtinStatus |= JSBUILTIN_ERROR;\n"
+    ret += "js_SetTraceableNativeFailed(cx);\n"
     ret += " " * (4 * indent)
     ret += "return %s;\n" % retval
     ret += " " * (4 * (indent - 1))
@@ -915,7 +915,7 @@ traceableArgumentConversionTemplates = {
 
 def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
                                      rvdeclared):
-    argVal = "arg%d" % i
+    argVal = "_arg%d" % i
     argPtr = "&" + argVal
 
     params = {
@@ -1041,7 +1041,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
         traceInfo["params"].append("CALLEE")
     for i, param in enumerate(member.params):
         type = getBuiltinOrNativeTypeName(param.realtype)
-        f.write(", %sarg%d" % (getTraceType(type), i))
+        f.write(", %s_arg%d" % (getTraceType(type), i))
         traceInfo["params"].append(getTraceInfoType(type))
     f.write(")\n{\n");
     f.write("    XPC_QS_ASSERT_CONTEXT_OK(cx);\n")
@@ -1072,7 +1072,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     for i, param in enumerate(member.params):
         validateParam(member, param)
         type = unaliasType(param.realtype)
-        argName = "_arg%d" % i
+        argName = "arg%d" % i
         rvdeclared = writeTraceableArgumentConversion(f, member, i, argName,
                                                       param.realtype,
                                                       haveCcx, rvdeclared)

@@ -42,7 +42,7 @@ interface nsIOutputStream;
 interface nsIRequestObserver;
 interface nsIEventTarget;
 
-[scriptable, uuid(72e515de-a91e-4154-bb78-e5244cbaae74)]
+[scriptable, uuid(5a19ca27-e041-4aca-8287-eb248d4c50c0)]
 interface nsIAsyncStreamCopier : nsIRequest
 {
     /**
@@ -64,6 +64,10 @@ interface nsIAsyncStreamCopier : nsIRequest
      *        specifies how many bytes to read/write at a time.  this controls
      *        the granularity of the copying.  it should match the segment size
      *        of the "buffered" streams involved.
+     * @param aCloseSource
+     *        true if aSource should be closed after copying.
+     * @param aCloseSink
+     *        true if aSink should be closed after copying.
      *
      * NOTE: at least one of the streams must be buffered.
      */
@@ -72,7 +76,9 @@ interface nsIAsyncStreamCopier : nsIRequest
               in nsIEventTarget    aTarget,
               in boolean           aSourceBuffered,
               in boolean           aSinkBuffered,
-              in unsigned long     aChunkSize);
+              in unsigned long     aChunkSize,
+              in boolean           aCloseSource,
+              in boolean           aCloseSink);
 
     /**
      * asyncCopy triggers the start of the copy.  The observer will be notified

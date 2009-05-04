@@ -48,6 +48,7 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsSVGUtils.h"
 #include "nsDOMError.h"
+#include "nsIDOMSVGRect.h"
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -96,14 +97,8 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
   nsISVGChildFrame* svgframe = do_QueryFrame(frame);
   NS_ASSERTION(svgframe, "wrong frame type");
   if (svgframe) {
-    svgframe->SetMatrixPropagation(PR_FALSE);
-    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                               nsISVGChildFrame::TRANSFORM_CHANGED);
-    nsresult rv = svgframe->GetBBox(_retval);
-    svgframe->SetMatrixPropagation(PR_TRUE);
-    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                               nsISVGChildFrame::TRANSFORM_CHANGED);
-    return rv;
+    *_retval = nsSVGUtils::GetBBox(frame).get();
+    return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
@@ -254,19 +249,24 @@ nsSVGGraphicElement::IsEventName(nsIAtom* aName)
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
-nsSVGGraphicElement::GetLocalTransformMatrix()
+gfxMatrix
+nsSVGGraphicElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
 {
   if (!mTransforms)
-    return nsnull;
+    return aMatrix;
 
   nsresult rv;
-
   nsCOMPtr<nsIDOMSVGTransformList> transforms;
   rv = mTransforms->GetAnimVal(getter_AddRefs(transforms));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, aMatrix);
+  PRUint32 count;
+  transforms->GetNumberOfItems(&count);
+  if (count == 0)
+    return aMatrix;
 
-  return nsSVGTransformList::GetConsolidationMatrix(transforms);
+  nsCOMPtr<nsIDOMSVGMatrix> matrix =
+    nsSVGTransformList::GetConsolidationMatrix(transforms);
+  return gfxMatrix(aMatrix).PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(matrix));
 }
 
 nsresult

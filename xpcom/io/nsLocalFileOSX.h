@@ -42,9 +42,24 @@
 #include "nsILocalFileMac.h"
 #include "nsString.h"
 #include "nsIHashable.h"
-#include "nsIClassInfoImpl.h"
 
 class nsDirEnumerator;
+
+// Mac OS X 10.4 does not have stat64/lstat64
+#if defined(HAVE_STAT64) && defined(HAVE_LSTAT64) && (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_4)
+#define STAT stat64
+#define LSTAT lstat64
+#else
+#define STAT stat
+#define LSTAT lstat
+#endif
+
+// Mac OS X 10.4 does not have statvfs64
+#if defined(HAVE_STATVFS64) && (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_4)
+#define STATVFS statvfs64
+#else
+#define STATVFS statvfs
+#endif
 
 // The native charset of this implementation is UTF-8. The Unicode used by the
 // Mac OS file system is decomposed, so "Native" versions of these routines will
@@ -84,7 +99,7 @@ protected:
   nsresult SetBaseRef(CFURLRef aCFURLRef); // Does CFRetain on aCFURLRef
   nsresult UpdateTargetRef();
 
-  nsresult GetFSRefInternal(FSRef& aFSSpec);
+  nsresult GetFSRefInternal(FSRef& aFSRef);
   nsresult GetPathInternal(nsACString& path); // Returns path WRT mFollowLinks
   nsresult EqualsInternal(nsISupports* inFile, PRBool *_retval);
 
@@ -92,13 +107,11 @@ protected:
                         const nsAString& newName,
                         PRBool followLinks);
 
-  static PRInt64  HFSPlustoNSPRTime(const UTCDateTime& utcTime);
-  static void     NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
   static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
 
 protected:
-  CFURLRef mBaseRef;   // The FS object we represent
-  CFURLRef mTargetRef; // If mBaseRef is an alias, its target
+  CFURLRef mBaseURL;   // The FS object we represent
+  CFURLRef mTargetURL; // If mBaseURL is an alias/symlink, its target
 
   PRPackedBool mFollowLinks;
   PRPackedBool mFollowLinksDirty;

@@ -136,6 +136,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_HIDDEN_(void) DidBuildModelImpl(void);
   NS_HIDDEN_(PRBool) ReadyToCallDidBuildModelImpl(PRBool aTerminated);
   NS_HIDDEN_(void) DropParserAndPerfHint(void);
+  PRBool IsScriptExecutingImpl();
 
   void NotifyAppend(nsIContent* aContent, PRUint32 aStartIndex);
 

@@ -47,7 +47,6 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
@@ -90,7 +89,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsIDeviceContext.h"
 #include "nsTextFragment.h"
-#include "nsISupportsArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
 #include "nsLegendFrame.h"
@@ -124,6 +122,7 @@
 #include "nsIFocusEventSuppressor.h"
 #include "nsBox.h"
 #include "nsTArray.h"
+#include "nsGenericDOMDataNode.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -1925,13 +1924,6 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                     kNameSpaceID_None, pseudoStyleContext,
                                     ITEM_IS_GENERATED_CONTENT, aItems);
 }
-
-static PRBool
-TextIsOnlyWhitespace(nsIContent* aContent)
-{
-  return aContent->IsNodeOfType(nsINode::eTEXT) &&
-         aContent->TextIsOnlyWhitespace();
-}
     
 /****************************************************
  **  BEGIN TABLE SECTION
@@ -2376,9 +2368,21 @@ NeedFrameFor(nsIFrame*   aParentFrame,
   // want to be reconstructing frames. It's not even clear that these
   // should be considered ignorable just because they evaluate to
   // whitespace.
-  return !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace)
-    || !TextIsOnlyWhitespace(aChildContent)
-    || aParentFrame->IsGeneratedContentFrame();
+
+  // We could handle all this in CreateNeededTablePseudos or some other place
+  // after we build our frame construction items, but that would involve
+  // creating frame construction items for whitespace kids of
+  // eExcludesIgnorableWhitespace frames, where we know we'll be dropping them
+  // all anyway, and involve an extra walk down the frame construction item
+  // list.
+  if (!aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
+      aParentFrame->IsGeneratedContentFrame() ||
+      !aChildContent->IsNodeOfType(nsINode::eTEXT)) {
+    return PR_TRUE;
+  }
+
+  aChildContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  return !aChildContent->TextIsOnlyWhitespace();
 }
 
 /***********************************************
@@ -4562,26 +4566,30 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     { NS_STYLE_DISPLAY_TABLE_CAPTION,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_ALLOW_BLOCK_STYLES | FCDATA_DISALLOW_OUT_OF_FLOW |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableCaptionFrame) },
     { NS_STYLE_DISPLAY_TABLE_ROW_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableRowGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_HEADER_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableRowGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableRowGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
-                  FCDATA_DISALLOW_OUT_OF_FLOW |
+                  FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                   NS_NewTableColGroupFrame) },
     { NS_STYLE_DISPLAY_TABLE_COLUMN,
@@ -5424,16 +5432,6 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
                               aFrameItems);
   }
 
-  // If the page contains markup that overrides text direction, and
-  // does not contain any characters that would activate the Unicode
-  // bidi algorithm, we need to call |SetBidiEnabled| on the pres
-  // context before reflow starts.  This requires us to resolve some
-  // style information now.  See bug 115921.
-  {
-    if (styleContext->GetStyleVisibility()->mDirection ==
-        NS_STYLE_DIRECTION_RTL)
-      aState.mPresContext->SetBidiEnabled();
-  }
   // Start background loads during frame construction. This is just
   // a hint; the paint code will do the right thing in any case.
   {
@@ -5554,7 +5552,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
           // RemoveMappingsForFrameSubtree() which would otherwise lead to a
           // crash since we cleared the placeholder map above (bug 398982).
           PRBool wasDestroyingFrameTree = mIsDestroyingFrameTree;
-          WillDestroyFrameTree(PR_FALSE);
+          WillDestroyFrameTree();
 
           rv = state.mFrameManager->RemoveFrame(docElementFrame->GetParent(),
                     GetChildListNameFor(docElementFrame), docElementFrame);
@@ -5727,49 +5725,69 @@ AdjustAppendParentForAfterContent(nsPresContext* aPresContext,
 }
 
 /**
- * This function is called by ContentAppended() and ContentInserted()
- * when appending flowed frames to a parent's principal child list. It
- * handles the case where the parent frame has :after pseudo-element
- * generated content.
+ * This function will get the previous sibling to use for an append operation.
+ * it takes a parent frame (must not be null) and its :after frame (may be
+ * null).
+ */
+static nsIFrame*
+FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aAfterFrame)
+{
+  nsFrameList childList(aParentFrame->GetFirstChild(nsnull));
+  if (aAfterFrame) {
+    NS_ASSERTION(aAfterFrame->GetParent() == aParentFrame, "Wrong parent");
+    return childList.GetPrevSiblingFor(aAfterFrame);
+  }
+
+  return childList.LastChild();
+}
+
+/**
+ * This function will get the next sibling for a frame insert operation given
+ * the parent and previous sibling.  aPrevSibling may be null.
+ */
+static nsIFrame*
+GetInsertNextSibling(nsIFrame* aParentFrame, nsIFrame* aPrevSibling)
+{
+  if (aPrevSibling) {
+    return aPrevSibling->GetNextSibling();
+  }
+
+  return aParentFrame->GetFirstChild(nsnull);
+}
+
+/**
+ * This function is called by ContentAppended() and ContentInserted() when
+ * appending flowed frames to a parent's principal child list. It handles the
+ * case where the parent frame has :after pseudo-element generated content and
+ * the case where the parent is the block of an {ib} split.
  */
 nsresult
 nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
-                                    nsIContent*                    aContainer,
                                     nsIFrame*                      aParentFrame,
                                     nsFrameItems&                  aFrameList,
-                                    nsIFrame*                      aAfterFrame)
+                                    nsIFrame*                      aPrevSibling)
 {
-#ifdef DEBUG
-  nsIFrame* debugAfterFrame;
-  nsIFrame* debugNewParent =
-    ::AdjustAppendParentForAfterContent(aState.mPresContext, aContainer,
-                                        aParentFrame, &debugAfterFrame);
-  NS_ASSERTION(debugNewParent == aParentFrame, "Incorrect parent");
-  NS_ASSERTION(debugAfterFrame == aAfterFrame, "Incorrect after frame");
-#endif
+  NS_PRECONDITION(!IsFrameSpecial(aParentFrame) ||
+                  !GetSpecialSibling(aParentFrame) ||
+                  !GetSpecialSibling(aParentFrame)->GetFirstChild(nsnull),
+                  "aParentFrame has a special sibling with kids?");
+  NS_PRECONDITION(!aPrevSibling || aPrevSibling->GetParent() == aParentFrame,
+                  "Parent and prevsibling don't match");
 
-  nsFrameManager* frameManager = aState.mFrameManager;
-  if (aAfterFrame) {
-    NS_ASSERTION(!IsFrameSpecial(aParentFrame) ||
-                 IsInlineFrame(aParentFrame) ||
-                 !IsInlineOutside(aAfterFrame),
-                 "Shouldn't have inline :after content on the block in an "
-                 "{ib} split");
-    nsFrameList frames(aParentFrame->GetFirstChild(nsnull));
+  nsIFrame* nextSibling = ::GetInsertNextSibling(aParentFrame, aPrevSibling);
 
-    // Insert the frames before the :after pseudo-element.
-    return frameManager->InsertFrames(aParentFrame, nsnull,
-                                      frames.GetPrevSiblingFor(aAfterFrame),
-                                      aFrameList.childList);
-  }
+  NS_ASSERTION(nextSibling ||
+               !aParentFrame->GetNextContinuation() ||
+               !aParentFrame->GetNextContinuation()->GetFirstChild(nsnull),
+               "aParentFrame has later continuations with kids?");
 
-  if (IsFrameSpecial(aParentFrame) &&
+  // If we we're inserting a list of frames that ends in inlines at the end of
+  // the block part of an {ib} split, we need to move them out to the beginning
+  // of a trailing inline part.
+  if (!nextSibling &&
+      IsFrameSpecial(aParentFrame) &&
       !IsInlineFrame(aParentFrame) &&
       IsInlineOutside(aFrameList.lastChild)) {
-    NS_ASSERTION(!aParentFrame->GetNextContinuation() ||
-                 !aParentFrame->GetNextContinuation()->GetFirstChild(nsnull),
-                 "Shouldn't happen");
-    
     // We want to put some of the frames into the following inline frame.
     nsIFrame* lastBlock = FindLastBlock(aFrameList.childList);
     nsIFrame* firstTrailingInline;
@@ -5802,8 +5820,9 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
     return NS_OK;
   }
   
-  return frameManager->AppendFrames(aParentFrame, nsnull,
-                                    aFrameList.childList);
+  // Insert the frames after out aPrevSibling
+  return aState.mFrameManager->InsertFrames(aParentFrame, nsnull, aPrevSibling,
+                                            aFrameList.childList);
 }
 
 #define UNSET_DISPLAY 255
@@ -6002,6 +6021,89 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
   return (newParent) ? newParent : aParentFrame;
 }
 
+nsIFrame*
+nsCSSFrameConstructor::GetInsertionPrevSibling(nsIFrame*& aParentFrame,
+                                               nsIContent* aContainer,
+                                               nsIContent* aChild,
+                                               PRInt32 aIndexInContainer,
+                                               PRBool* aIsAppend)
+{
+  *aIsAppend = PR_FALSE;
+
+  // Find the frame that precedes the insertion point. Walk backwards
+  // from the parent frame to get the parent content, because if an
+  // XBL insertion point is involved, we'll need to use _that_ to find
+  // the preceding frame.
+
+  NS_PRECONDITION(aParentFrame, "Must have parent frame to start with");
+  nsIContent* container = aParentFrame->GetContent();
+
+  ChildIterator first, last;
+  ChildIterator::Init(container, &first, &last);
+  ChildIterator iter(first);
+  if (iter.XBLInvolved() || container != aContainer) {
+    iter.seek(aChild);
+    // Don't touch our aIndexInContainer, though it's almost certainly bogus in
+    // this case.  If someone wants to use an index below, they should make
+    // sure to use the right index (aIndexInContainer vs iter.position()) with
+    // the right parent node.
+  } else if (aIndexInContainer != -1) {
+    // Do things the fast way if we can.  The check for -1 is because editor is
+    // severely broken and calls us directly for native anonymous nodes that it
+    // creates.
+    iter.seek(aIndexInContainer);
+    NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
+  }
+#ifdef DEBUG
+  else {
+    NS_WARNING("Someone passed native anonymous content directly into frame "
+               "construction.  Stop doing that!");
+  }
+#endif
+
+  nsIFrame* prevSibling = FindPreviousSibling(first, iter);
+
+  // Now, find the geometric parent so that we can handle
+  // continuations properly. Use the prev sibling if we have it;
+  // otherwise use the next sibling.
+  if (prevSibling) {
+    aParentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
+  }
+  else {
+    // If there is no previous sibling, then find the frame that follows
+    nsIFrame* nextSibling = FindNextSibling(iter, last);
+
+    if (nextSibling) {
+      aParentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
+    }
+    else {
+      // No previous or next sibling, so treat this like an appended frame.
+      *aIsAppend = PR_TRUE;
+      if (IsFrameSpecial(aParentFrame)) {
+        // Since we're appending, we'll walk to the last anonymous frame
+        // that was created for the broken inline frame.  But don't walk
+        // to the trailing inline if it's empty; stop at the block.
+        aParentFrame = GetLastSpecialSibling(aParentFrame, PR_TRUE);
+      }
+      // Get continuation that parents the last child.  This MUST be done
+      // before the AdjustAppendParentForAfterContent call.
+      aParentFrame = nsLayoutUtils::GetLastContinuationWithChild(aParentFrame);
+      // Deal with fieldsets
+      aParentFrame = ::GetAdjustedParentFrame(aParentFrame,
+                                              aParentFrame->GetType(),
+                                              aChild);
+      nsIFrame* appendAfterFrame;
+      aParentFrame =
+        ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
+                                            container, aParentFrame,
+                                            &appendAfterFrame);
+      prevSibling = ::FindAppendPrevSibling(aParentFrame, appendAfterFrame);
+    }
+  }
+
+  return prevSibling;
+}
+
 static PRBool
 IsSpecialFramesetChild(nsIContent* aContent)
 {
@@ -6100,10 +6202,16 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       // ContentInserted will ignore the passed-in index.
       PRUint32 containerCount = aContainer->GetChildCount();
       for (PRUint32 i = aNewIndexInContainer; i < containerCount; i++) {
+        nsIContent* content = aContainer->GetChildAt(i);
+        if (mPresShell->GetPrimaryFrameFor(content)) {
+          // Already have a frame for this content; a previous ContentInserted
+          // in this loop must have reconstructed its insertion parent.  Skip
+          // it.
+          continue;
+        }
         LAYOUT_PHASE_TEMP_EXIT();
         // Call ContentInserted with this index.
-        ContentInserted(aContainer, aContainer->GetChildAt(i), i,
-                        mTempFrameTreeState);
+        ContentInserted(aContainer, content, i, mTempFrameTreeState);
         LAYOUT_PHASE_TEMP_REENTER();
       }
 
@@ -6148,11 +6256,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
     // Since we're appending, we'll walk to the last anonymous frame
     // that was created for the broken inline frame.  But don't walk
-    // to the trailing inline if its empty; stop at the block.
+    // to the trailing inline if it's empty; stop at the block.
     parentFrame = GetLastSpecialSibling(parentFrame, PR_TRUE);
   }
 
-  // Get continuation that parents the last child
+  // Get continuation that parents the last child.  This MUST be done
+  // before the AdjustAppendParentForAfterContent call.
   parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
 
   nsIAtom* frameType = parentFrame->GetType();
@@ -6197,14 +6306,19 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                               items);
   }
 
+  nsIFrame* prevSibling = ::FindAppendPrevSibling(parentFrame, parentAfterFrame);
+
   // Perform special check for diddling around with the frames in
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
+  LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          !parentAfterFrame, nsnull)) {
+                          PR_TRUE, prevSibling)) {
+    LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   nsFrameItems frameItems;
   ConstructFramesFromItemList(state, items, parentFrame, frameItems);
@@ -6243,26 +6357,21 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsresult result = NS_OK;
 
   // Notify the parent frame passing it the list of new frames
-  if (NS_SUCCEEDED(result) &&
-      (frameItems.childList || captionItems.childList)) {
-    // Append the flowed frames to the principal child list, tables need special treatment
-    if (nsGkAtoms::tableFrame == frameType) {
-      if (captionItems.childList) { // append the caption to the outer table
-        nsIFrame* outerTable = parentFrame->GetParent();
-        if (outerTable) { 
-          state.mFrameManager->AppendFrames(outerTable,
-                                            nsGkAtoms::captionList,
-                                            captionItems.childList);
-        }
-      }
-      if (frameItems.childList) { // append children of the inner table
-        AppendFrames(state, aContainer, parentFrame, frameItems,
-                     parentAfterFrame);
+  if (NS_SUCCEEDED(result)) {
+    // Append the flowed frames to the principal child list; captions
+    // need special treatment
+    if (captionItems.childList) { // append the caption to the outer table
+      NS_ASSERTION(nsGkAtoms::tableFrame == frameType, "how did that happen?");
+      nsIFrame* outerTable = parentFrame->GetParent();
+      if (outerTable) {
+        state.mFrameManager->AppendFrames(outerTable,
+                                          nsGkAtoms::captionList,
+                                          captionItems.childList);
       }
     }
-    else {
-      AppendFrames(state, aContainer, parentFrame, frameItems,
-                   parentAfterFrame);
+
+    if (frameItems.childList) { // append the in-flow kids
+      AppendFrames(state, parentFrame, frameItems, prevSibling);
     }
   }
 
@@ -6446,68 +6555,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   parentFrame = insertionPoint;
 
-  // Find the frame that precedes the insertion point. Walk backwards
-  // from the parent frame to get the parent content, because if an
-  // XBL insertion point is involved, we'll need to use _that_ to find
-  // the preceding frame.
+  PRBool isAppend;
+  nsIFrame* prevSibling =
+    GetInsertionPrevSibling(parentFrame, aContainer, aChild, aIndexInContainer,
+                            &isAppend);
+
   nsIContent* container = parentFrame->GetContent();
-
-  ChildIterator first, last;
-  ChildIterator::Init(container, &first, &last);
-  ChildIterator iter(first);
-  if (iter.XBLInvolved() || container != aContainer) {
-    iter.seek(aChild);
-    // Don't touch our aIndexInContainer, though it's almost certainly bogus in
-    // this case.  If someone wants to use an index below, they should make
-    // sure to use the right index (aIndexInContainer vs iter.position()) with
-    // the right parent node.
-  } else if (aIndexInContainer != -1) {
-    // Do things the fast way if we can.  The check for -1 is because editor is
-    // severely broken and calls us directly for native anonymous nodes that it
-    // creates.
-    iter.seek(aIndexInContainer);
-    NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
-  }
-#ifdef DEBUG
-  else {
-    NS_WARNING("Someone passed native anonymous content directly into frame "
-               "construction.  Stop doing that!");
-  }
-#endif
-  
-  nsIFrame* prevSibling = FindPreviousSibling(first, iter);
-
-  PRBool    isAppend = PR_FALSE;
-  nsIFrame* appendAfterFrame;  // This is only looked at when isAppend is true
-
-  // Now, find the geometric parent so that we can handle
-  // continuations properly. Use the prev sibling if we have it;
-  // otherwise use the next sibling.
-  if (prevSibling) {
-    parentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
-  }
-  else {
-    // If there is no previous sibling, then find the frame that follows
-    nsIFrame* nextSibling = FindNextSibling(iter, last);
-
-    if (nextSibling) {
-      parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
-    }
-    else {
-      // No previous or next sibling, so treat this like an appended frame.
-      isAppend = PR_TRUE;
-      // Get continuation that parents the last child
-      parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
-      // Deal with fieldsets
-      parentFrame = ::GetAdjustedParentFrame(parentFrame,
-                                             parentFrame->GetType(),
-                                             aChild);
-      parentFrame =
-        ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
-                                            container, parentFrame,
-                                            &appendAfterFrame);
-    }
-  }
 
   if (parentFrame->GetType() == nsGkAtoms::frameSetFrame &&
       IsSpecialFramesetChild(aChild)) {
@@ -6562,11 +6615,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     }
 
     if (haveFirstLetterStyle) {
-      // Get the correct parentFrame and prevSibling - if a
-      // letter-frame is present, use its parent.
+      // If our current parentFrame is a Letter frame, use its parent as our
+      // new parent hint
       if (parentFrame->GetType() == nsGkAtoms::letterFrame) {
         parentFrame = parentFrame->GetParent();
-        container = parentFrame->GetContent();
       }
 
       // Remove the old letter frames before doing the insertion
@@ -6575,16 +6627,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                          state.mFloatedItems.containingBlock);
 
       // Removing the letterframes messes around with the frame tree, removing
-      // and creating frames.  We need to reget our prevsibling.
-      ChildIterator::Init(container, &first, &last);
-      if (last.XBLInvolved() || container != aContainer) {
-        last.seek(aChild);
-      } else if (aIndexInContainer != -1) {
-        last.seek(aIndexInContainer);
-        NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
-      }
-
-      prevSibling = FindPreviousSibling(first, last);
+      // and creating frames.  We need to reget our prevsibling, parent frame,
+      // etc.
+      prevSibling =
+        GetInsertionPrevSibling(parentFrame, aContainer, aChild,
+                                aIndexInContainer, &isAppend);
+      container = parentFrame->GetContent();
     }
   }
 
@@ -6598,12 +6646,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                              nsCSSPseudoElements::before)) {
       // Insert the new frames after the last continuation of the :before
       prevSibling = firstChild->GetTailContinuation();
-      parentFrame = prevSibling->GetParent();
-      // We perhaps could leave this true and take the AppendFrames path
-      // below, but we'd have to update appendAfterFrame and it seems safer
-      // to force all insert-after-:before cases to take these to take the
-      // InsertFrames path
-      isAppend = PR_FALSE;
+      parentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
+      // Don't change isAppend here; we'll can call AppendFrames as needed, and
+      // the change to our prevSibling doesn't affect that.
     }
   }
 
@@ -6614,10 +6659,13 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
+  LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          isAppend && !appendAfterFrame, prevSibling))
+                          isAppend, prevSibling)) {
+    LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
-
+  }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
@@ -6639,11 +6687,16 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // actually use as the parent, then the calculated insertion point is now
   // invalid and as it is unknown where to insert correctly we append instead
   // (bug 341858).
-  // This can affect our appendAfterFrame, but should not have any effect on
-  // the WipeContainingBlock above, since this should only happen when neither
-  // parent is a special frame (and in fact, only when one is an outer table
-  // and one is an inner table or when the parent is a fieldset or fieldset
-  // content frame).
+  // This can affect our prevSibling and isAppend, but should not have any
+  // effect on the WipeContainingBlock above, since this should only happen
+  // when neither parent is a special frame and should not affect whitespace
+  // handling inside table-related frames (and in fact, can only happen when
+  // one of the parents is an outer table and one is an inner table or when the
+  // parent is a fieldset or fieldset content frame).  So it won't affect the
+  // {ib} or XUL box cases in WipeContainingBlock(), and the table pseudo
+  // handling will only be affected by us maybe thinking we're not inserting
+  // at the beginning, whereas we really are.  That would have made us reframe
+  // unnecessarily, but that's ok.
   // XXXbz we should push our frame construction item code up higher, so we
   // know what our items are by the time we start figuring out previous
   // siblings
@@ -6663,13 +6716,14 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                   frame1->GetParent()->GetType() == nsGkAtoms::fieldSetFrame),
                  "Unexpected frame types");
 #endif
-    prevSibling = nsnull;
     isAppend = PR_TRUE;
+    nsIFrame* appendAfterFrame;
     parentFrame =
       ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
                                           container,
                                           frameItems.childList->GetParent(),
                                           &appendAfterFrame);
+    prevSibling = ::FindAppendPrevSibling(parentFrame, appendAfterFrame);
   }
 
   if (haveFirstLineStyle && parentFrame == containingBlock) {
@@ -6695,8 +6749,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     NS_ASSERTION(!captionItems.childList, "leaking caption frames");
     // Notify the parent frame
     if (isAppend) {
-      AppendFrames(state, container, parentFrame, frameItems,
-                   appendAfterFrame);
+      AppendFrames(state, parentFrame, frameItems, prevSibling);
     } else {
       state.mFrameManager->InsertFrames(parentFrame,
                                         nsnull, prevSibling, newFrame);
@@ -7441,6 +7494,15 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsresult      rv = NS_OK;
 
+  if (aContent->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+#ifdef DEBUG
+    nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+    NS_ASSERTION(!frame || !frame->IsGeneratedContentFrame(),
+                 "Bit should never be set on generated content");
+#endif
+    return RecreateFramesForContent(aContent);
+  }
+
   // Find the child frame
   nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
 
@@ -7863,7 +7925,7 @@ NS_IMETHODIMP nsFocusUnsuppressEvent::Run()
 }
 
 void
-nsCSSFrameConstructor::WillDestroyFrameTree(PRBool aDestroyingPresShell)
+nsCSSFrameConstructor::WillDestroyFrameTree()
 {
 #if defined(DEBUG_dbaron_off)
   mCounterManager.Dump();
@@ -7878,7 +7940,7 @@ nsCSSFrameConstructor::WillDestroyFrameTree(PRBool aDestroyingPresShell)
   // Cancel all pending re-resolves
   mRestyleEvent.Revoke();
 
-  if (mFocusSuppressCount && aDestroyingPresShell) {
+  if (mFocusSuppressCount && mPresShell->IsDestroying()) {
     nsRefPtr<nsFocusUnsuppressEvent> ev =
       new nsFocusUnsuppressEvent(mFocusSuppressCount);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
@@ -8697,6 +8759,28 @@ nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIContent* aContent)
   return result;
 }
 
+static nsIFrame*
+FindFirstNonWhitespaceChild(nsIFrame* aParentFrame)
+{
+  nsIFrame* f = aParentFrame->GetFirstChild(nsnull);
+  while (f && f->GetType() == nsGkAtoms::textFrame &&
+         f->GetContent()->TextIsOnlyWhitespace()) {
+    f = f->GetNextSibling();
+  }
+  return f;
+}
+
+static nsIFrame*
+FindNextNonWhitespaceSibling(nsIFrame* aFrame)
+{
+  nsIFrame* f = aFrame;
+  do {
+    f = f->GetNextSibling();
+  } while (f && f->GetType() == nsGkAtoms::textFrame &&
+           f->GetContent()->TextIsOnlyWhitespace());
+  return f;
+}
+
 PRBool
 nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                                              nsresult* aResult)
@@ -8730,8 +8814,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   NS_ASSERTION(inFlowFrame, "How did that happen?");
   nsIFrame* parent = inFlowFrame->GetParent();
   if (IsTablePseudo(parent)) {
-    if (parent->GetFirstChild(nsnull) == inFlowFrame ||
-        !inFlowFrame->GetLastContinuation()->GetNextSibling() ||
+    if (FindFirstNonWhitespaceChild(parent) == inFlowFrame ||
+        !FindNextNonWhitespaceSibling(inFlowFrame->GetLastContinuation()) ||
         // If we're a table-column-group, then the GetFirstChild check above is
         // not going to catch cases when we're the first child.
         (inFlowFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
@@ -8751,7 +8835,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   // get merged with the frame's prevSibling.
   // XXXbz it would be really nice if we had the prevSibling here too, to check
   // whether this is in fact the case...
-  nsIFrame* nextSibling = inFlowFrame->GetNextSibling();
+  nsIFrame* nextSibling =
+    FindNextNonWhitespaceSibling(inFlowFrame->GetLastContinuation());
   NS_ASSERTION(!IsTablePseudo(inFlowFrame), "Shouldn't happen here");
   if (nextSibling && IsTablePseudo(nextSibling)) {
 #ifdef DEBUG
@@ -9000,6 +9085,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Row group
     FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                 FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
+                FCDATA_SKIP_ABSPOS_PUSH |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                 NS_NewTableRowGroupFrame),
     &nsCSSAnonBoxes::tableRowGroup
@@ -9007,6 +9093,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   { // Column group
     FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
                 FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
+                FCDATA_SKIP_ABSPOS_PUSH |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                 NS_NewTableColGroupFrame),
     &nsCSSAnonBoxes::tableColGroup
@@ -9041,107 +9128,104 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(FrameConstructionItemList& aItem
 
   FCItemIterator iter(aItems);
   do {
-    NS_ASSERTION(!iter.IsDone(), "How did that happen?");
-
-    // Advance to the next item that wants a different parent type.
-    while (iter.item().DesiredParentType() == ourParentType) {
-      iter.Next();
-      if (iter.IsDone()) {
-        // Nothing else to do here; we're finished
-        return NS_OK;
-      }
+    if (iter.SkipItemsWantingParentType(ourParentType)) {
+      // Nothing else to do here; we're finished
+      return NS_OK;
     }
 
-    NS_ASSERTION(!iter.IsDone() &&
-                 iter.item().DesiredParentType() != ourParentType,
-                 "Why did we stop?");
-
     // Now we're pointing to the first child that wants a different parent
-    // type.  Except for generated content, we should have already enforced the
-    // fact that no such items are whitespace (either in this method when
-    // constructing wrapping items, or when constructing the original
-    // FrameConstructionItemList).
-    NS_ASSERTION(aParentFrame->IsGeneratedContentFrame() ||
-                 !iter.item().mIsText ||
-                 !iter.item().mContent->TextIsOnlyWhitespace(),
-                 "Why do we have whitespace under a known-table parent?");
+    // type.
 
     // Now try to figure out what kids we can group together.  We can generally
     // group everything that has a different desired parent type from us.  Two
     // exceptions to this:
     // 1) If our parent type is table, we can't group columns with anything
     //    else other than whitespace.
-    // 2) Whitespace that lies between two things we can group should
-    //    be dropped, even if we can't group them with each other.
-    // XXXbz it's not clear to me that rule 2 is a good one, it's not called
-    // for by the (admittedly vague) spec, and in fact it leads to some pretty
-    // crappy behavior if you have some inlines and whitespace as kids of a
-    // table-row, say, but it's more or less what we used to do.  More
-    // precisely, we shipped all whitespace out to the nearest block parent of
-    // the whole mess, sort of.  In any case this aspect of things, and in fact
-    // this whole function might need changes as the spec here gets
-    // clarified...  I happen to think we should not drop whitespace that comes
-    // between things that want a block parent.
+    // 2) Whitespace that lies between two things we can group which both want
+    //    a non-block parent should be dropped, even if we can't group them
+    //    with each other and even if the whitespace wants a parent of
+    //    ourParentType.  Ends of the list count as things that don't want a
+    //    block parent (so that for example we'll drop a whitespace-only list).
 
     FCItemIterator endIter(iter); /* iterator to find the end of the group */
     ParentType groupingParentType = endIter.item().DesiredParentType();
-    // If we decide to, we could optimize this by checking whether
-    // aItems.AllWantParentType(groupingParentType) and if so just setting
-    // endIter to the end of the list, which is an O(1) operation.  That
-    // requires not dropping whitespace between items that want a block parent,
-    // though, per the XXX comment above, since a whole bunch of spans and
-    // whitespace would test true to all wanting a block parent.
-    do {
-      endIter.Next();
-      if (endIter.IsDone()) {
-        break;
-      }
+    if (aItems.AllWantParentType(groupingParentType) &&
+        groupingParentType != eTypeBlock) {
+      // Just group them all and be done with it.  We need the check for
+      // eTypeBlock here to catch the "all the items are whitespace" case
+      // described above.
+      endIter.SetToEnd();
+    } else {
+      // Locate the end of the group.
 
-      if (!aParentFrame->IsGeneratedContentFrame() &&
-          endIter.item().IsWhitespace()) {
-        // Whitespace coming after some groupable items
-        FCItemIterator textSkipIter(endIter);
-        do {
-          textSkipIter.Next();
-        } while (!textSkipIter.IsDone() && textSkipIter.item().IsWhitespace());
+      // Keep track of the type the previous item wanted, in case we have to
+      // deal with whitespace.  Start it off with ourParentType, since that's
+      // the last thing |iter| would have skipped over.
+      ParentType prevParentType = ourParentType;
+      do {
+        /* Walk an iterator past any whitespace that we might be able to drop from the list */
+        FCItemIterator spaceEndIter(endIter);
+        if (prevParentType != eTypeBlock &&
+            !aParentFrame->IsGeneratedContentFrame() &&
+            spaceEndIter.item().IsWhitespace()) {
+          PRBool trailingSpaces = spaceEndIter.SkipWhitespace();
 
-        PRBool trailingSpace = textSkipIter.IsDone();
-        if (// Trailing whitespace we can't handle
-            (trailingSpace && ourParentType != eTypeBlock) ||
-            // Whitespace before kids needing wrapping
-            (!trailingSpace &&
-             textSkipIter.item().DesiredParentType() != ourParentType)) {
-          // Drop all the whitespace here so that |endIter| now points to the
-          // same thing as |textSkipIter|.  This doesn't affect where |iter|
-          // points, since that's guaranted to point to before endIter.
-          do {
-            endIter.DeleteItem();
-          } while (endIter != textSkipIter);
+          // See whether we can drop the whitespace
+          if (trailingSpaces ||
+              spaceEndIter.item().DesiredParentType() != eTypeBlock) {
+            PRBool updateStart = (iter == endIter);
+            endIter.DeleteItemsTo(spaceEndIter);
+            NS_ASSERTION(trailingSpaces == endIter.IsDone(), "These should match");
 
-          NS_ASSERTION(endIter.IsDone() == trailingSpace,
-                       "endIter == skipIter now!");
-          if (trailingSpace) {
-            break; // The loop advancing endIter
+            if (updateStart) {
+              iter = endIter;
+            }
+
+            if (trailingSpaces) {
+              break; /* Found group end */
+            }
+
+            if (updateStart) {
+              // Update groupingParentType, since it might have been eTypeBlock
+              // just because of the whitespace.
+              groupingParentType = iter.item().DesiredParentType();
+            }
           }
         }
-      }
 
-      ParentType itemParentType = endIter.item().DesiredParentType();
+        // Now endIter points to a non-whitespace item or a non-droppable
+        // whitespace item. In the latter case, if this is the end of the group
+        // we'll traverse this whitespace again.  But it'll all just be quick
+        // DesiredParentType() checks which will match ourParentType (that's
+        // what it means that this is the group end), so it's OK.
+        prevParentType = endIter.item().DesiredParentType();
+        if (prevParentType == ourParentType) {
+          // End the group at endIter.
+          break;
+        }
 
-      if (itemParentType == ourParentType) {
-        break;
-      }
+        if (ourParentType == eTypeTable &&
+            (prevParentType == eTypeColGroup) !=
+            (groupingParentType == eTypeColGroup)) {
+          // Either we started with columns and now found something else, or vice
+          // versa.  In any case, end the grouping.
+          break;
+        }
 
-      if (ourParentType == eTypeTable &&
-          (itemParentType == eTypeColGroup) !=
-          (groupingParentType == eTypeColGroup)) {
-        // Either we started with columns and now found something else, or vice
-        // versa.  In any case, end the grouping.
-        break;
-      }
-    } while (1);
+        // Include the whitespace we didn't drop (if any) in the group, since
+        // this is not the end of the group.  Note that this doesn't change
+        // prevParentType, since if we didn't drop the whitespace then we ended
+        // at something that wants a block parent.
+        endIter = spaceEndIter;
 
-    NS_ASSERTION(iter != endIter, "How did that happen?");
+        endIter.Next();
+      } while (!endIter.IsDone());
+    }
+
+    if (iter == endIter) {
+      // Nothing to wrap here; just skipped some whitespace
+      continue;
+    }
 
     // Now group together all the items between iter and endIter.  The right
     // parent type to use depends on ourParentType.
@@ -10153,15 +10237,15 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   // Destroy the old text frame's continuations (the old text frame
   // will be destroyed when its letter frame is destroyed).
-  nsIFrame* nextTextFrame = textFrame->GetNextContinuation();
-  while (nextTextFrame) {
-    nsIFrame* nextTextParent = nextTextFrame->GetParent();
-    if (nextTextParent) {
-      nsSplittableFrame::RemoveFromFlow(nextTextFrame);
-      ::DeletingFrameSubtree(aFrameManager, nextTextFrame);
-      aFrameManager->RemoveFrame(nextTextParent, nsnull, nextTextFrame);
+  nsIFrame* frameToDelete = textFrame->GetLastContinuation();
+  while (frameToDelete != textFrame) {
+    nsIFrame* frameToDeleteParent = frameToDelete->GetParent();
+    nsIFrame* nextFrameToDelete = frameToDelete->GetPrevContinuation();
+    if (frameToDeleteParent) {
+      ::DeletingFrameSubtree(aFrameManager, frameToDelete);
+      aFrameManager->RemoveFrame(frameToDeleteParent, nsnull, frameToDelete);
     }
-    nextTextFrame = textFrame->GetNextContinuation();
+    frameToDelete = nextFrameToDelete;
   }
 
   // First find out where (in the content) the placeholder frames
@@ -10757,7 +10841,7 @@ PRBool
 nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
                                            nsIFrame* aContainingBlock,
                                            nsIFrame* aFrame,
-                                           const FrameConstructionItemList& aItems,
+                                           FrameConstructionItemList& aItems,
                                            PRBool aIsAppend,
                                            nsIFrame* aPrevSibling)
 {
@@ -10777,6 +10861,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     return PR_TRUE;
   }
 
+  nsIFrame* nextSibling = ::GetInsertNextSibling(aFrame, aPrevSibling);
+
   // Situation #2 is a case when table pseudo-frames don't work out right
   ParentType parentType = GetParentType(aFrame);
   // If all the kids want a parent of the type that aFrame is, then we're all
@@ -10786,6 +10872,90 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // table pseudo-frame, then all the kids in this list would have wanted a
   // frame of that type wrapping them anyway, so putting them inside it is ok.
   if (!aItems.AllWantParentType(parentType)) {
+    // Don't give up yet.  If parentType is not eTypeBlock and the parent is
+    // not a generated content frame, then try filtering whitespace out of the
+    // list.
+    if (parentType != eTypeBlock && !aFrame->IsGeneratedContentFrame()) {
+      // For leading whitespace followed by a kid that wants our parent type,
+      // there are four cases:
+      // 1) We have a previous sibling which is not a table pseudo.  That means
+      //    that previous sibling wanted a (non-block) parent of the type we're
+      //    looking at.  Then the whitespace comes between two table-internal
+      //    elements, so should be collapsed out.
+      // 2) We have a previous sibling which is a table pseudo.  It might have
+      //    kids who want this whitespace, so we need to reframe.
+      // 3) We have no previous sibling and our parent either has a previous
+      //    continuation or is a table pseudo.  This might not be a real insert
+      //    at the beginning, then.  We need to reframe.
+      // 4) We have no previous sibling and our parent frame is its own first
+      //    continuation and is not a table pseudo.  That means that we'll be
+      //    at the beginning of our actual non-block-type parent, and the
+      //    whitespace is OK to collapse out.  If something is ever inserted
+      //    before us, it'll find our own parent as its parent and if it's
+      //    something that would care about the whitespace it'll want a block
+      //    parent, so it'll trigger a reframe at that point.
+      //
+      // It's always OK to drop whitespace between any two items that want a
+      // parent of type parentType.
+      //
+      // For trailing whitespace, the situation is more complicated.  We might
+      // in fact have a next sibling that would care about the whitespace.  We
+      // just don't know anything about that here.  So leave trailing
+      // whitespace be, unless aIsAppend is true and we have no nextSibling.
+      // In that case, we have no next sibling, and if one ever gets added that
+      // would care about the whitespace it'll get us as a previous sibling and
+      // trigger a reframe.  Note that we do need to look at aIsAppend, unless
+      // we want to look at aFrame's next continuation and whether aFrame is a
+      // table pseudo or some such.  But that would be more annoying if we want
+      // to handle XHTML <tr> inside <table> with no table-row-groups around
+      // efficiently.
+      FCItemIterator iter(aItems);
+      FCItemIterator start(iter);
+      do {
+        if (iter.SkipItemsWantingParentType(parentType)) {
+          break;
+        }
+
+        // iter points to an item that wants a different parent.  If it's not
+        // whitespace, we're done; no more point scanning the list.
+        if (!iter.item().IsWhitespace()) {
+          break;
+        }
+
+        if (iter == start) {
+          // Leading whitespace.  How to handle this depends on aPrevSibling
+          // and aFrame.  See the long comment above.
+          if (aPrevSibling) {
+            if (IsTablePseudo(aPrevSibling)) {
+              // need to reframe
+              break;
+            }
+          } else if (aFrame->GetPrevContinuation() || IsTablePseudo(aFrame)) {
+            // need to reframe
+            break;
+          }
+        }
+
+        FCItemIterator spaceEndIter(iter);
+        // Advance spaceEndIter past any whitespace
+        PRBool trailingSpaces = spaceEndIter.SkipWhitespace();
+
+        if ((!trailingSpaces &&
+             spaceEndIter.item().DesiredParentType() == parentType) ||
+            (trailingSpaces && aIsAppend && !nextSibling)) {
+          // Drop the whitespace
+          iter.DeleteItemsTo(spaceEndIter);
+        } else {
+          // We're done: we don't want to drop the whitespace, and it has the
+          // wrong parent type.
+          break;
+        }
+
+        // Now loop, since |iter| points to item right after the whitespace we
+        // removed.
+      } while (!iter.IsDone());
+    }
+
     // We might be able to figure out some sort of optimizations here, but they
     // would have to depend on having a correct aPrevSibling and a correct next
     // sibling.  For example, we can probably avoid reframing if none of
@@ -10794,10 +10964,18 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // in fact do not have a reliable aPrevSibling, nor any next sibling, in
     // this method.
 
-    // Reframing aFrame->GetContent() is good enough, since the content of
-    // table pseudo-frames is the ancestor content.
-    RecreateFramesForContent(aFrame->GetContent());
-    return PR_TRUE;
+    // aItems might have changed, so recheck the parent type thing.  In fact,
+    // it might be empty, so recheck that too.
+    if (aItems.IsEmpty()) {
+      return PR_FALSE;
+    }
+
+    if (!aItems.AllWantParentType(parentType)) {
+      // Reframing aFrame->GetContent() is good enough, since the content of
+      // table pseudo-frames is the ancestor content.
+      RecreateFramesForContent(aFrame->GetContent());
+      return PR_TRUE;
+    }
   }
 
   // Situation #3 is an inline frame that will now contain block
@@ -10822,41 +11000,42 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   } else {
     // aFrame is the block in an {ib} split.  Check that we're not
     // messing up either end of it.
-    if (aIsAppend) {
-      // Will be handled in AppendFrames(), except the case when we might have
-      // floats that we won't be able to move out because there is no float
-      // containing block to move them into.
-
-      // Walk up until we get a float containing block that's not part of an
-      // {ib} split, since otherwise we might have to ship floats out of it
-      // too.
-      // XXXbz we could keep track of whether we have any descendants with
-      // float style in the FrameConstructionItem if we really want, but it's
-      // not clear to me that we need to.  In any case, the right solution here
-      // is to construct with the right parents to start with.
-      nsIFrame* floatContainer = aFrame;
-      do {
-        floatContainer = GetFloatContainingBlock(
-          GetIBSplitSpecialPrevSiblingForAnonymousBlock(floatContainer));
-        if (!floatContainer) {
-          break;
-        }
-        if (!IsFrameSpecial(floatContainer)) {
-          return PR_FALSE;
-        }
-      } while (1);
-    }
-    
-    if (aPrevSibling && !aPrevSibling->GetNextSibling()) {
-      // This is an append that won't go through AppendFrames.  We can bail out
-      // if the last frame we're appending is not inline.
-      if (!aItems.IsStartInline()) {
+    if (aPrevSibling || !aItems.IsStartInline()) {
+      // Not messing up the beginning.  Now let's look at the end.
+      if (nextSibling) {
+        // Can't possibly screw up the end; bail out
         return PR_FALSE;
       }
-    } else {
-      // We can bail out if we're not inserting at the beginning or if
-      // the first frame we're inserting is not inline.
-      if (aPrevSibling || !aItems.IsEndInline()) {
+
+      if (aIsAppend) {
+        // Will be handled in AppendFrames(), except the case when we might have
+        // floats that we won't be able to move out because there is no float
+        // containing block to move them into.
+
+        // Walk up until we get a float containing block that's not part of an
+        // {ib} split, since otherwise we might have to ship floats out of it
+        // too.
+        // XXXbz we could keep track of whether we have any descendants with
+        // float style in the FrameConstructionItem if we really want, but it's
+        // not clear to me that we need to.  In any case, the right solution
+        // here is to construct with the right parents to start with.
+        nsIFrame* floatContainer = aFrame;
+        do {
+          floatContainer = GetFloatContainingBlock(
+            GetIBSplitSpecialPrevSiblingForAnonymousBlock(floatContainer));
+          if (!floatContainer) {
+            break;
+          }
+          if (!IsFrameSpecial(floatContainer)) {
+            return PR_FALSE;
+          }
+        } while (1);
+      }
+
+      // This is an append that won't go through AppendFrames, or won't be able
+      // to ship floats out in AppendFrames.  We can bail out if the last frame
+      // we're appending is not inline.
+      if (!aItems.IsEndInline()) {
         return PR_FALSE;
       }
     }
@@ -11402,8 +11581,7 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
                                         nsReStyleHint aRestyleHint,
                                         nsChangeHint aMinChangeHint)
 {
-  if (NS_UNLIKELY(mIsDestroyingFrameTree)) {
-    NS_NOTREACHED("PostRestyleEvent after the shell is destroyed (bug 279505)");
+  if (NS_UNLIKELY(mPresShell->IsDestroying())) {
     return;
   }
 
@@ -11521,6 +11699,19 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
   return NS_OK;
 }
 
+//////////////////////////////////////////////////////////
+// nsCSSFrameConstructor::FrameConstructionItem methods //
+//////////////////////////////////////////////////////////
+PRBool
+nsCSSFrameConstructor::FrameConstructionItem::IsWhitespace() const
+{
+  if (!mIsText) {
+    return PR_FALSE;
+  }
+  mContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  return mContent->TextIsOnlyWhitespace();
+}
+
 //////////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItemList methods //
 //////////////////////////////////////////////////////////////
@@ -11542,6 +11733,36 @@ AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta)
 ////////////////////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItemList::Iterator methods //
 ////////////////////////////////////////////////////////////////////////
+inline PRBool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipItemsWantingParentType(ParentType aParentType)
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  while (item().DesiredParentType() == aParentType) {
+    Next();
+    if (IsDone()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+inline PRBool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipWhitespace()
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  NS_PRECONDITION(item().IsWhitespace(), "Not pointing to whitespace?");
+  do {
+    Next();
+    if (IsDone()) {
+      return PR_TRUE;
+    }
+  } while (item().IsWhitespace());
+
+  return PR_FALSE;
+}
+
 void
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::AppendItemToList(FrameConstructionItemList& aTargetList)
@@ -11604,11 +11825,18 @@ Iterator::InsertItem(FrameConstructionItem* aItem)
 }
 
 void
-nsCSSFrameConstructor::FrameConstructionItemList::Iterator::DeleteItem()
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::DeleteItemsTo(const Iterator& aEnd)
 {
-  FrameConstructionItem* item = ToItem(mCurrent);
-  Next();
-  PR_REMOVE_LINK(item);
-  mList.AdjustCountsForItem(item, -1);
-  delete item;
+  NS_PRECONDITION(mEnd == aEnd.mEnd, "end iterator for some other list?");
+  NS_PRECONDITION(*this != aEnd, "Shouldn't be at aEnd yet");
+
+  do {
+    NS_ASSERTION(!IsDone(), "Ran off end of list?");
+    FrameConstructionItem* item = ToItem(mCurrent);
+    Next();
+    PR_REMOVE_LINK(item);
+    mList.AdjustCountsForItem(item, -1);
+    delete item;
+  } while (*this != aEnd);
 }

@@ -136,6 +136,7 @@ public:
                 PRBool aSyncLoad,
                 PRBool aAllowUnsafeRules,
                 PRBool aUseSystemPrincipal,
+                const nsCString& aCharset,
                 nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aLoaderPrincipal);
 
@@ -223,6 +224,10 @@ public:
 
   // The principal that identifies who started loading us.
   nsCOMPtr<nsIPrincipal> mLoaderPrincipal;
+
+  // The charset to use if the transport and sheet don't indicate one.
+  // May be empty.  Must be empty if mOwningElement is non-null.
+  nsCString mCharsetHint;
 };
 
 class nsURIAndPrincipalHashKey : public nsURIHashKey
@@ -350,11 +355,13 @@ public:
 
   NS_IMETHOD LoadSheet(nsIURI* aURL,
                        nsIPrincipal* aOriginPrincipal,
+                       const nsCString& aCharset,
                        nsICSSLoaderObserver* aObserver,
                        nsICSSStyleSheet** aSheet);
 
   NS_IMETHOD LoadSheet(nsIURI* aURL,
                        nsIPrincipal* aOriginPrincipal,
+                       const nsCString& aCharset,
                        nsICSSLoaderObserver* aObserver);
 
   // stop loading all sheets
@@ -424,6 +431,7 @@ private:
                                         PRBool aAllowUnsafeRules,
                                         PRBool aUseSystemPrincipal,
                                         nsIPrincipal* aOriginPrincipal,
+                                        const nsCString& aCharset,
                                         nsICSSStyleSheet** aSheet,
                                         nsICSSLoaderObserver* aObserver);
 

@@ -98,6 +98,12 @@ typedef void (* nsAsyncCopyCallbackFun)(void *closure, nsresult status);
  * stream operation returns NS_BASE_STREAM_WOULD_BLOCK, then the stream will
  * be QI'd to nsIAsync{In,Out}putStream and its AsyncWait method will be used
  * to determine when to resume copying.
+ *
+ * Source and sink are closed by default when copying finishes or when error
+ * occurs. Caller can prevent closing source or sink by setting aCloseSource
+ * or aCloseSink to PR_FALSE.
+ *
+ * Caller can obtain aCopierCtx to be able to cancel copying.
  */
 extern NS_COM nsresult
 NS_AsyncCopy(nsIInputStream         *aSource,
@@ -106,7 +112,22 @@ NS_AsyncCopy(nsIInputStream         *aSource,
              nsAsyncCopyMode         aMode = NS_ASYNCCOPY_VIA_READSEGMENTS,
              PRUint32                aChunkSize = 4096,
              nsAsyncCopyCallbackFun  aCallbackFun = nsnull,
-             void                   *aCallbackClosure = nsnull);
+             void                   *aCallbackClosure = nsnull,
+             PRBool                  aCloseSource = PR_TRUE,
+             PRBool                  aCloseSink = PR_TRUE,
+             nsISupports           **aCopierCtx = nsnull);
+
+/**
+ * This function cancels copying started by function NS_AsyncCopy.
+ *
+ * @param aCopierCtx
+ *        Copier context returned by NS_AsyncCopy.
+ * @param aReason
+ *        A failure code indicating why the operation is being canceled.
+ *        It is an error to pass a success code.
+ */
+extern NS_COM nsresult
+NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason);
 
 /**
  * This function copies all of the available data from the stream (up to at

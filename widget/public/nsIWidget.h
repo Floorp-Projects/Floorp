@@ -47,6 +47,8 @@
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsITheme.h"
+#include "nsNativeWidget.h"
+#include "nsWidgetInitData.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -54,24 +56,24 @@ class   nsIToolkit;
 class   nsIFontMetrics;
 class   nsIRenderingContext;
 class   nsIDeviceContext;
-class   nsIRegion;
 struct  nsFont;
 class   nsIEventListener;
 class   nsIRollupListener;
 class   nsGUIEvent;
-struct  nsColorMap;
 class   imgIContainer;
 class   gfxASurface;
 class   nsIContent;
 
 /**
  * Callback function that processes events.
+ *
  * The argument is actually a subtype (subclass) of nsEvent which carries
- * platform specific information about the event. Platform specific code knows
- * how to deal with it.
- * The return value determines whether or not the default action should take place.
+ * platform specific information about the event. Platform specific code
+ * knows how to deal with it.
+ *
+ * The return value determines whether or not the default action should take
+ * place.
  */
-
 typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 
 /**
@@ -80,7 +82,6 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
  */
 #define NS_NATIVE_WINDOW      0
 #define NS_NATIVE_GRAPHIC     1
-#define NS_NATIVE_COLORMAP    2
 #define NS_NATIVE_WIDGET      3
 #define NS_NATIVE_DISPLAY     4
 #define NS_NATIVE_REGION      5
@@ -99,15 +100,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// 0dda48db-4f61-44a7-9f92-041cd92b8a9c
+// af70b716-2e34-463f-8f1c-273dbddd845b
 #define NS_IWIDGET_IID \
-{ 0x0dda48db, 0x4f61, 0x44a7, \
-  { 0x9f, 0x92, 0x04, 0x1c, 0xd9, 0x2b, 0x8a, 0x9c } }
-
-// Hide the native window systems real window type so as to avoid
-// including native window system types and APIs. This is necessary
-// to ensure cross-platform code.
-typedef void* nsNativeWidget;
+{ 0xaf70b716, 0x2e34, 0x463f, \
+  { 0x8f, 0x1c, 0x27, 0x3d, 0xbd, 0xdd, 0x84, 0x5b } }
 
 /*
  * Window shadow styles
@@ -116,70 +112,6 @@ typedef void* nsNativeWidget;
 
 #define NS_STYLE_WINDOW_SHADOW_NONE             0
 #define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
-
-/**
- * Border styles
- */
-
-enum nsWindowType {     // Don't alter previously encoded enum values - 3rd party apps may look at these
-  // default top level window
-  eWindowType_toplevel,
-  // top level window but usually handled differently by the OS
-  eWindowType_dialog,
-  // used for combo boxes, etc
-  eWindowType_popup,
-  // child windows (contained inside a window on the desktop (has no border))
-  eWindowType_child,
-  // windows that are invisible or offscreen
-  eWindowType_invisible,
-  // plugin window
-  eWindowType_plugin,
-  // java plugin window
-  eWindowType_java,
-  // MacOSX sheet (special dialog class)
-  eWindowType_sheet
-};
-
-enum nsPopupType {
-  ePopupTypePanel,
-  ePopupTypeMenu,
-  ePopupTypeTooltip,
-  ePopupTypeAny = 0xF000 // used only to pass to nsXULPopupManager::GetTopPopup
-};
-
-enum nsBorderStyle
-{
-  // no border, titlebar, etc.. opposite of all
-  eBorderStyle_none     = 0,
-
-  // all window decorations
-  eBorderStyle_all      = 1 << 0,
-
-  // enables the border on the window.  these are only for decoration and are not resize hadles
-  eBorderStyle_border   = 1 << 1,
-
-  // enables the resize handles for the window.  if this is set, border is implied to also be set
-  eBorderStyle_resizeh  = 1 << 2,
-
-  // enables the titlebar for the window
-  eBorderStyle_title    = 1 << 3,
-
-  // enables the window menu button on the title bar.  this being on should force the title bar to display
-  eBorderStyle_menu     = 1 << 4,
-
-  // enables the minimize button so the user can minimize the window.
-  //   turned off for tranient windows since they can not be minimized separate from their parent
-  eBorderStyle_minimize = 1 << 5,
-
-  // enables the maxmize button so the user can maximize the window
-  eBorderStyle_maximize = 1 << 6,
-
-  // show the close button
-  eBorderStyle_close    = 1 << 7,
-
-  // whatever the OS wants... i.e. don't do anything
-  eBorderStyle_default  = -1
-};
 
 /**
  * Cursor types.
@@ -230,47 +162,12 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursorCount
                 }; 
 
-enum nsContentType {
-  eContentTypeInherit = -1,
-  eContentTypeUI = 0,
-  eContentTypeContent = 1,
-  eContentTypeContentFrame = 2
-};
-
 enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBottom = 0,  // bottom of the window stack
   eZPlacementBelow,       // just below another widget
   eZPlacementTop          // top of the window stack
 };
 
-/**
- * Basic struct for widget initialization data.
- * @see Create member function of nsIWidget
- */
-
-struct nsWidgetInitData {
-  nsWidgetInitData()
-    : clipChildren(PR_FALSE), 
-      clipSiblings(PR_FALSE), 
-      mDropShadow(PR_FALSE),
-      mListenForResizes(PR_FALSE),
-      mWindowType(eWindowType_child),
-      mBorderStyle(eBorderStyle_default),
-      mContentType(eContentTypeInherit),
-      mUnicode(PR_TRUE),
-      mPopupHint(ePopupTypePanel)
-  {
-  }
-
-  // when painting exclude area occupied by child windows and sibling windows
-  PRPackedBool  clipChildren, clipSiblings, mDropShadow;
-  PRPackedBool  mListenForResizes;
-  nsWindowType mWindowType;
-  nsBorderStyle mBorderStyle;
-  nsContentType mContentType;  // Exposed so screen readers know what's UI
-  PRPackedBool mUnicode;
-  nsPopupType mPopupHint;
-};
 
 /**
  * The base class for all the widgets. It provides the interface for
@@ -617,14 +514,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetClientBounds(nsIntRect &aRect) = 0;
 
     /**
-     * Gets the width and height of the borders
-     * @param aWidth the width of the border
-     * @param aHeight the height of the border
-     *
-     */
-    NS_IMETHOD GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight) = 0;
-
-    /**
      * Get the foreground color for this widget
      *
      * @return this widget's foreground color
@@ -761,15 +650,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous) = 0;
 
     /**
-     * Invalidate a specified region for a widget and repaints it.
-     *
-     * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
-     * @see #Update()
-     */
-
-    NS_IMETHOD InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous) = 0;
-
-    /**
      * Force a synchronous repaint of the window if there are dirty rects.
      *
      * @see Invalidate()
@@ -797,16 +677,6 @@ class nsIWidget : public nsISupports {
     virtual nsIToolkit* GetToolkit() = 0;    
 
     /**
-     * Set the color map for this widget
-     *
-     * @param aColorMap color map for displaying this widget
-     *
-     */
-
-    NS_IMETHOD SetColorMap(nsColorMap *aColorMap) = 0;
-
-    /**
-     * XXX (This is obsolete and will be removed soon, Use ScrollWidgets instead)
      * Scroll this widget. 
      *
      * @param aDx amount to scroll along the x-axis
@@ -816,30 +686,6 @@ class nsIWidget : public nsISupports {
      */
 
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect) = 0;
-
-    /**
-     * Scroll the contents of the widget. 
-     * All child widgets are also scrolled by offsetting their coordinates.
-     * A NS_PAINT message is synchronously dispatched for the newly exposed rectangle.
-     *
-     * @param aDx amount to scroll along the x-axis in pixels
-     * @param aDy amount to scroll along the y-axis in pixels
-     *
-     */
-
-    NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy) = 0;
-
-    /**
-     * Scroll an area of this widget. Child widgets are not scrolled.
-     * A NS_PAINT message is synchronously dispatched for the newly exposed rectangle.
-     *
-     * @param aRect source rectangle to scroll in the widget in pixels
-     * @param aDx x offset from the source in pixels
-     * @param aDy y offset from the source in pixels
-     *
-     */
-
-    NS_IMETHOD ScrollRect(nsIntRect &aSrcRect, PRInt32 aDx, PRInt32 aDy) = 0;
 
     /** 
      * Internal methods
@@ -886,23 +732,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetIcon(const nsAString& anIconSpec) = 0;
 
     /**
-     * Set the widget's MenuBar.
-     * Must be called after Create.
-     *
-     * @param aMenuBar the menubar
-     */
-
-    NS_IMETHOD SetMenuBar(void* aMenuBar) = 0;
-
-    /**
-     * Set the widget's MenuBar's visibility
-     *
-     * @param aShow PR_TRUE to show, PR_FALSE to hide
-     */
-
-    NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
-
-    /**
      * Return this widget's origin in screen coordinates.
      *
      * @return screen coordinates stored in the x,y members
@@ -929,18 +758,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD EndResizingChildren(void) = 0;
 
     /**
-     * Returns the preferred width and height for the widget
-     *
-     */
-    NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight) = 0;
-
-    /**
-     * Set the preferred width and height for the widget
-     *
-     */
-    NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight) = 0;
-
-    /**
      * Dispatches an event to the widget
      *
      */
@@ -952,8 +769,6 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD EnableDragDrop(PRBool aEnable) = 0;
    
-    virtual void  ConvertToDeviceCoordinates(nscoord &aX,nscoord &aY) = 0;
-
     /**
      * Enables/Disables system mouse capture.
      * @param aCapture PR_TRUE enables mouse capture, PR_FALSE disables mouse capture 
@@ -975,19 +790,6 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) = 0;
-
-    /**
-     *   Determine whether a given event should be processed assuming we are
-     * the currently active modal window.
-     *   Note that the exact semantics of this method are platform-dependent.
-     * The Macintosh, for instance, cares deeply that this method do exactly
-     * as advertised. Gtk, for instance, handles modality in a completely
-     * different fashion and does little if anything with this method.
-     * @param aRealEvent event is real or a null placeholder (Macintosh)
-     * @param aEvent void pointer to native event structure
-     * @param aForWindow return value. PR_TRUE iff event should be processed.
-     */
-    NS_IMETHOD ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow) = 0;
 
     /**
      * Bring this window to the user's attention.  This is intended to be a more

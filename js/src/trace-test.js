@@ -1664,11 +1664,6 @@ function testNestedExitStackOuter() {
   return counter;
 }
 testNestedExitStackOuter.expected = 81;
-testNestedExitStackOuter.jitstats = {
-    recorderStarted: 5,
-    recorderAborted: 1,
-    traceTriggered: 10
-};
 test(testNestedExitStackOuter);
 
 function testHOTLOOPSize() {
@@ -2528,7 +2523,7 @@ testThinLoopDemote.jitstats = {
     recorderStarted: 2,
     recorderAborted: 0,
     traceCompleted: 2,
-    traceTriggered: 3,
+    traceTriggered: 2,
     unstableLoopVariable: 1
 };
 test(testThinLoopDemote);
@@ -4490,36 +4485,36 @@ test(testString);
 
 function testToStringBeforeValueOf()
 {
-  var o = {toString: function() { return "s"; }, valueOf: function() { return "v"; } };
-  var a = [];
-  for (var i = 0; i < 10; i++)
-    a.push(String(o));
-  return a.join(",");
+    var o = {toString: function() { return "s"; }, valueOf: function() { return "v"; } };
+    var a = [];
+    for (var i = 0; i < 10; i++)
+        a.push(String(o));
+    return a.join(",");
 }
 testToStringBeforeValueOf.expected = "s,s,s,s,s,s,s,s,s,s";
 testToStringBeforeValueOf.jitstats = {
-  recorderStarted: 1,
-  sideExitIntoInterpreter: 1
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1
 };
 test(testToStringBeforeValueOf);
 
 function testNullToString()
 {
-  var a = [];
-  for (var i = 0; i < 10; i++)
-    a.push(String(null));
-  for (i = 0; i < 10; i++) {
-    var t = typeof a[i];
-    if (t != "string")
-      a.push(t);
-  }
-  return a.join(",");
+    var a = [];
+    for (var i = 0; i < 10; i++)
+        a.push(String(null));
+    for (i = 0; i < 10; i++) {
+        var t = typeof a[i];
+        if (t != "string")
+           a.push(t);
+    }
+    return a.join(",");
 }
 testNullToString.expected = "null,null,null,null,null,null,null,null,null,null";
 testNullToString.jitstats = {
-  recorderStarted: 2,
-  sideExitIntoInterpreter: 2,
-  recorderAborted: 0
+    recorderStarted: 2,
+    sideExitIntoInterpreter: 2,
+    recorderAborted: 0
 };
 test(testNullToString);
 
@@ -4532,11 +4527,177 @@ function testAddNull()
 }
 testAddNull.expected = "null,";
 testAddNull.jitstats = {
-  recorderStarted: 1,
-  sideExitIntoInterpreter: 1,
-  recorderAborted: 0
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1,
+    recorderAborted: 0
 };
 test(testAddNull);
+
+function testClosures()
+{
+    function MyObject(id) {
+        var thisObject = this;
+        this.id = id;
+        this.toString = str;
+
+        function str() {
+            return "" + this.id + thisObject.id;
+        }
+    }
+
+    var a = [];
+    for (var i = 0; i < 5; i++)
+        a.push(new MyObject(i));
+    return a.toString();
+}
+testClosures.expected = "00,11,22,33,44";
+test(testClosures);
+
+function testMoreClosures() {
+    var f = {}, max = 3;
+
+    var hello = function(n) {
+        function howdy() { return n * n }
+        f.test = howdy;
+    };
+
+    for (var i = 0; i <= max; i++)
+        hello(i);
+
+    return f.test();
+}
+testMoreClosures.expected = 9;
+test(testMoreClosures);
+
+function testLambdaInitedVar() {
+    var jQuery = function (a, b) {
+        return jQuery && jQuery.length;
+    }
+    return jQuery();
+}
+
+testLambdaInitedVar.expected = 2;
+test(testLambdaInitedVar);
+
+function testNestedEscapingLambdas()
+{
+    try {
+        return (function() {
+            var a = [], r = [];
+            function setTimeout(f, t) {
+                a.push(f);
+            }
+
+            function runTimeouts() {
+                for (var i = 0; i < a.length; i++)
+                    a[i]();
+            }
+
+            var $foo = "#nothiddendiv";
+            setTimeout(function(){
+                r.push($foo);
+                setTimeout(function(){
+                    r.push($foo);
+                }, 100);
+            }, 100);
+
+            runTimeouts();
+
+            return r.join("");
+        })();
+    } catch (e) {
+        return e;
+    }
+}
+testNestedEscapingLambdas.expected = "#nothiddendiv#nothiddendiv";
+test(testNestedEscapingLambdas);
+
+function testPropagatedFunArgs()
+{
+  var win = this;
+  var res = [], q = [];
+  function addEventListener(name, func, flag) {
+    q.push(func);
+  }
+
+  var pageInfo, obs;
+  addEventListener("load", handleLoad, true);
+
+  var observer = {
+    observe: function(win, topic, data) {
+      // obs.removeObserver(observer, "page-info-dialog-loaded");
+      handlePageInfo();
+    }
+  };
+
+  function handleLoad() {
+    pageInfo = { toString: function() { return "pageInfo"; } };
+    obs = { addObserver: function (obs, topic, data) { obs.observe(win, topic, data); } };
+    obs.addObserver(observer, "page-info-dialog-loaded", false);
+  }
+
+  function handlePageInfo() {
+    res.push(pageInfo);
+    function $(aId) { res.push(pageInfo); };
+    var feedTab = $("feedTab");
+  }
+
+  q[0]();
+  return res.join(',');
+}
+testPropagatedFunArgs.expected = "pageInfo,pageInfo";
+test(testPropagatedFunArgs);
+
+// Second testPropagatedFunArgs test -- this is a crash-test.
+(function () {
+  var escapee;
+
+  function testPropagatedFunArgs()
+  {
+    const magic = 42;
+
+    var win = this;
+    var res = [], q = [];
+    function addEventListener(name, func, flag) {
+      q.push(func);
+    }
+
+    var pageInfo = "pageInfo", obs;
+    addEventListener("load", handleLoad, true);
+
+    var observer = {
+      observe: function(win, topic, data) {
+        // obs.removeObserver(observer, "page-info-dialog-loaded");
+        handlePageInfo();
+      }
+    };
+
+    function handleLoad() {
+      //pageInfo = { toString: function() { return "pageInfo"; } };
+      obs = { addObserver: function (obs, topic, data) { obs.observe(win, topic, data); } };
+      obs.addObserver(observer, "page-info-dialog-loaded", false);
+    }
+
+    function handlePageInfo() {
+      res.push(pageInfo);
+      function $(aId) {
+        function notSafe() {
+          return magic;
+        }
+        notSafe();
+        res.push(pageInfo);
+      };
+      var feedTab = $("feedTab");
+    }
+
+    escapee = q[0];
+    return res.join(',');
+  }
+
+  testPropagatedFunArgs();
+
+  escapee();
+})();
 
 function testStringLengthNoTinyId()
 {
@@ -4740,6 +4901,145 @@ testNewString.jitstats = {
 };
 test(testNewString);
 
+function testWhileObjectOrNull()
+{
+  try
+  {
+    for (var i = 0; i < 3; i++)
+    {
+      var o = { p: { p: null } };
+      while (o.p)
+        o = o.p;
+    }
+    return "pass";
+  }
+  catch (e)
+  {
+    return "threw exception: " + e;
+  }
+}
+testWhileObjectOrNull.expected = "pass";
+test(testWhileObjectOrNull);
+
+function testDenseArrayProp()
+{
+    [].__proto__.x = 1;
+    ({}).__proto__.x = 2;
+    var a = [[],[],[],({}).__proto__];
+    for (var i = 0; i < a.length; ++i)
+        uneval(a[i].x);
+    delete [].__proto__.x;
+    delete ({}).__proto__.x;
+    return "ok";
+}
+testDenseArrayProp.expected = "ok";
+test(testDenseArrayProp);
+
+function testNewWithNonNativeProto()
+{
+  function f() { }
+  var a = f.prototype = [];
+  for (var i = 0; i < 5; i++)
+    var o = new f();
+  return Object.getPrototypeOf(o) === a && o.splice === Array.prototype.splice;
+}
+testNewWithNonNativeProto.expected = true;
+testNewWithNonNativeProto.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExitIntoInterpreter: 1
+};
+test(testNewWithNonNativeProto);
+
+function testLengthOnNonNativeProto()
+{
+  var o = {};
+  o.__proto__ = [3];
+  for (var j = 0; j < 5; j++)
+    o[0];
+
+  var o2 = {};
+  o2.__proto__ = [];
+  for (var j = 0; j < 5; j++)
+    o2.length;
+
+  function foo() { }
+  foo.__proto__ = [];
+  for (var j = 0; j < 5; j++)
+    foo.length;
+
+  return "no assertion";
+}
+testLengthOnNonNativeProto.expected = "no assertion";
+test(testLengthOnNonNativeProto);
+
+function testDeepPropertyShadowing()
+{
+    function h(node) {
+        var x = 0;
+        while (node) {
+            x++;
+            node = node.parent;
+        }
+        return x;
+    }
+    var tree = {__proto__: {__proto__: {parent: null}}};
+    h(tree);
+    h(tree);
+    tree.parent = {};
+    assertEq(h(tree), 2);
+}
+test(testDeepPropertyShadowing);
+
+// Complicated whitebox test for bug 487845.
+function testGlobalShapeChangeAfterDeepBail() {
+    function f(name) {
+        this[name] = 1;  // may change global shape
+        for (var i = 0; i < 4; i++)
+            ; // MonitorLoopEdge eventually triggers assertion
+    }
+
+    // When i==3, deep-bail, then change global shape enough times to exhaust
+    // the array of GlobalStates.
+    var arr = [[], [], [], ["bug0", "bug1", "bug2", "bug3", "bug4"]];
+    for (var i = 0; i < arr.length; i++)
+        arr[i].forEach(f);
+}
+test(testGlobalShapeChangeAfterDeepBail);
+for (let i = 0; i < 5; i++)
+    delete this["bug" + i];
+
+function testFunctionIdentityChange()
+{
+  function a() {}
+  function b() {}
+
+  var o = { a: a, b: b };
+
+  for (var prop in o)
+  {
+    for (var i = 0; i < 1000; i++)
+      o[prop]();
+  }
+
+  return true;
+}
+testFunctionIdentityChange.expected = true;
+testFunctionIdentityChange.jitstats = {
+  recorderStarted: 2,
+  traceCompleted: 2,
+  sideExitIntoInterpreter: 3
+};
+test(testFunctionIdentityChange);
+
+function testStringObjectLength() {
+    var x = new String("foo"), y = 0;
+    for (var i = 0; i < 10; ++i)
+        y = x.length;
+    return y;
+}
+testStringObjectLength.expected = 3;
+test(testStringObjectLength);
 
 /*****************************************************************************
  *                                                                           *
@@ -5053,4 +5353,4 @@ test(testGlobalProtoAccess);
 if (gReportSummary) {
     print("\npassed:", passes.length && passes.join(","));
     print("\nFAILED:", fails.length && fails.join(","));
- }
+}

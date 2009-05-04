@@ -38,6 +38,7 @@
 #define __NS_SVGMARKERFRAME_H__
 
 #include "nsSVGContainerFrame.h"
+#include "gfxMatrix.h"
 
 class gfxContext;
 class nsSVGPathGeometryFrame;
@@ -98,7 +99,7 @@ private:
   float mStrokeWidth, mX, mY, mAngle;
 
   // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM();
 
   // VC6 does not allow the inner class to access protected members
   // of the outer class

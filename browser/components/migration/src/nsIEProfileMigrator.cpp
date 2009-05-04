@@ -495,9 +495,10 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
       NS_FAILED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                              homeURLKey, nsIWindowsRegKey::ACCESS_READ)))
     return NS_OK;
-  // read registry data
+  // Read in the main home page
   NS_NAMED_LITERAL_STRING(homeURLValName, "Start Page");
-  nsAutoString  homeURLVal;
+  nsAutoString homeURLVal;
+
   if (NS_SUCCEEDED(regKey->ReadStringValue(homeURLValName, homeURLVal))) {
     // Do we need this round-about way to get |homePageURL|? 
     // Perhaps, we do to have the form of URL under our control 
@@ -506,11 +507,40 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
     nsCAutoString  homePageURL;
     nsCOMPtr<nsIURI> homePageURI;
 
-    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(homePageURI), homeURLVal)))
-        if (NS_SUCCEEDED(homePageURI->GetSpec(homePageURL)) 
-            && !homePageURL.IsEmpty())
-            aResult.Assign(homePageURL);
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(homePageURI), homeURLVal))) {
+      if (NS_SUCCEEDED(homePageURI->GetSpec(homePageURL)) && !homePageURL.IsEmpty()) {
+          aResult.Assign(homePageURL);
+      }
+    }
   }
+
+  // With IE7, The "Start Page" key still exists. Secondary home pages
+  // are located in a string stored in "Secondary Start Pages" which
+  // contains multiple Unicode URI seperated by nulls. (REG_MULTI_SZ)
+  NS_NAMED_LITERAL_STRING(ssRegKeyName, "Secondary Start Pages");
+  nsAutoString secondaryList;
+
+  if (NS_SUCCEEDED(regKey->ReadStringValue(ssRegKeyName, secondaryList)) &&
+      !secondaryList.IsEmpty()) {
+    nsTArray<nsCString> parsedList;
+    if (!ParseString(NS_ConvertUTF16toUTF8(secondaryList), '\0', parsedList))
+      return NS_OK;
+
+    // Split the result up into individual uri
+    for (PRUint32 index = 0; index < parsedList.Length(); ++index) {
+      nsCOMPtr<nsIURI> uri;
+      nsCAutoString homePage;
+      // Append "|uri" to result. This is how we currently handle
+      // storing multiple home pages.
+      if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), parsedList[index]))) {
+        if (NS_SUCCEEDED(uri->GetSpec(homePage)) && !homePage.IsEmpty()) {
+            aResult.AppendLiteral("|");
+            aResult.Append(homePage);
+        }
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -796,12 +826,6 @@ nsIEProfileMigrator::RunBatched(nsISupports* aUserData)
 
 typedef HRESULT (WINAPI *PStoreCreateInstancePtr)(IPStore**, DWORD, DWORD, DWORD);
 
-struct SignonData {
-  PRUnichar* user;
-  PRUnichar* pass;
-  char*      realm;
-};
-
 // IE PStore Type GUIDs
 // {e161255a-37c3-11d2-bcaa-00c04fd929db} Autocomplete Password & Form Data
 //                                        Subtype has same GUID
@@ -865,7 +889,7 @@ nsIEProfileMigrator::CopyPasswords(PRBool aReplace)
 {
   HRESULT hr;
   nsresult rv;
-  nsVoidArray signonsFound;
+  nsTArray<SignonData> signonsFound;
 
   HMODULE pstoreDLL = ::LoadLibraryW(L"pstorec.dll");
   if (!pstoreDLL) {
@@ -972,7 +996,7 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
 }
 
 nsresult
-nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSignonsFound)
+nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsTArray<SignonData>* aSignonsFound)
 {
   HRESULT hr;
 
@@ -1008,13 +1032,12 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
               // method, and we own that buffer. We don't free it here, since we're going to be using 
               // it after the password harvesting stage to locate the username field. Only after the second
               // phase is complete do we free the buffer. 
-              SignonData* d = new SignonData;
+              SignonData* d = aSignonsFound->AppendElement();
               if (!d)
                 return NS_ERROR_OUT_OF_MEMORY;
               d->user = (PRUnichar*)username;
               d->pass = (PRUnichar*)pass;
               d->realm = realm; // freed in ResolveAndMigrateSignons
-              aSignonsFound->AppendElement(d);
             }
           }
         }
@@ -1055,7 +1078,7 @@ nsIEProfileMigrator::KeyIsURI(const nsAString& aKey, char** aRealm)
 }
 
 nsresult
-nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSignonsFound)
+nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsTArray<SignonData>* aSignonsFound)
 {
   HRESULT hr;
 
@@ -1090,19 +1113,19 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
     // Now that we've done resolving signons, we need to walk the signons list, freeing the data buffers 
     // for each SignonData entry, since these buffers were allocated by the system back in |GetSignonListFromPStore|
     // but never freed. 
-    PRInt32 signonCount = aSignonsFound->Count();
-    for (PRInt32 i = 0; i < signonCount; ++i) {
-      SignonData* sd = (SignonData*)aSignonsFound->ElementAt(i);
-      ::CoTaskMemFree(sd->user);  // |sd->user| is a pointer to the start of a buffer that also contains sd->pass
-      NS_Free(sd->realm);
-      delete sd;
+    PRUint32 signonCount = aSignonsFound->Length();
+    for (PRUint32 i = 0; i < signonCount; ++i) {
+      SignonData &sd = aSignonsFound->ElementAt(i);
+      ::CoTaskMemFree(sd.user);  // |sd->user| is a pointer to the start of a buffer that also contains sd->pass
+      NS_Free(sd.realm);
     }
+    aSignonsFound->Clear();
   }
   return NS_OK;
 }
 
 void
-nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData, unsigned long aCount, nsVoidArray* aSignonsFound)
+nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData, unsigned long aCount, nsTArray<SignonData>* aSignonsFound)
 {
   nsCOMPtr<nsILoginManagerIEMigrationHelper> pwmgr(
     do_GetService("@mozilla.org/login-manager/storage/legacy;1"));
@@ -1110,19 +1133,19 @@ nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData,
     return;
 
   PRUnichar* cursor = aData;
-  PRInt32 offset = 0;
-  PRInt32 signonCount = aSignonsFound->Count();
+  PRUint32 offset = 0;
+  PRUint32 signonCount = aSignonsFound->Length();
 
   while (offset < aCount) {
     nsAutoString curr; curr = cursor;
 
     // Compare the value at the current cursor position with the collected list of signons
-    for (PRInt32 i = 0; i < signonCount; ++i) {
-      SignonData* sd = (SignonData*)aSignonsFound->ElementAt(i);
-      if (curr.Equals(sd->user)) {
+    for (PRUint32 i = 0; i < signonCount; ++i) {
+      SignonData &sd = aSignonsFound->ElementAt(i);
+      if (curr.Equals(sd.user)) {
         // Bingo! Found a username in the saved data for this item. Now, add a Signon.
-        nsDependentString usernameStr(sd->user), passStr(sd->pass);
-        nsAutoString realm(NS_ConvertUTF8toUTF16(sd->realm));
+        nsDependentString usernameStr(sd.user), passStr(sd.pass);
+        nsAutoString realm(NS_ConvertUTF8toUTF16(sd.realm));
 
         nsresult rv;
 

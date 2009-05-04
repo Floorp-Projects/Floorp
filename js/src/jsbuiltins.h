@@ -131,7 +131,7 @@ struct JSTraceableNative {
  *     interpreter at the next opcode.
  *
  *     _FAIL builtins indicate failure or bailing off trace by setting bits in
- *     cx->builtinStatus.
+ *     cx->interpState->builtinStatus.
  *
  *   - If a traceable native's return type contains _RETRY, it can either
  *     succeed, fail with a JS exception, or tell the caller to bail off trace
@@ -154,7 +154,7 @@ struct JSTraceableNative {
  *         JSVAL_RETRY: JSVAL_ERROR_COOKIE
  *
  *     _RETRY function calls are faster than _FAIL calls.  Each _RETRY call
- *     saves a write to cx->bailExit and a read from cx->builtinStatus.
+ *     saves two writes to cx->bailExit and a read from state->builtinStatus.
  *
  *   - All other traceable natives are infallible (e.g. Date.now, Math.log).
  *
@@ -182,6 +182,7 @@ struct JSTraceableNative {
 #define _JS_CTYPE_CALLEE            _JS_CTYPE(JSObject *,             _JS_PTR,"f","",  INFALLIBLE)
 #define _JS_CTYPE_CALLEE_PROTOTYPE  _JS_CTYPE(JSObject *,             _JS_PTR,"p","",  INFALLIBLE)
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
+#define _JS_CTYPE_JSVALPTR          _JS_CTYPE(jsval *,                _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
 #define _JS_CTYPE_JSVAL_RETRY       _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_COOKIE)
 #define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)
@@ -395,6 +396,10 @@ js_Int32ToId(JSContext* cx, int32 index, jsid* id)
         return JS_FALSE;
     return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
 }
+
+/* Extern version of js_SetBuiltinError. */
+extern JS_FRIEND_API(void)
+js_SetTraceableNativeFailed(JSContext *cx);
 
 #else
 

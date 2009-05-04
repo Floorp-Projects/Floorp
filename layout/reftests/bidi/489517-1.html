@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+.flipped { direction: rtl; unicode-bidi: bidi-override;  }
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("outer").className = "flipped";
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="outer">AB</div>
+</body>
+</html>

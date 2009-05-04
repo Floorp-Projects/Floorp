@@ -498,10 +498,11 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   NS_ENSURE_SUCCESS(rv,rv);
   if (NS_CP_REJECTED(shouldLoad)) return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      aURI,
                      nsnull,
-                     nsnull,
+                     loadGroup,
                      nsnull,
                      nsIRequest::LOAD_NORMAL);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1118,6 +1119,10 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   if (NS_FAILED(rv))
     return rv;
 
+  // Decoder successfully created, its nsMediaStream now has responsibility
+  // for the channel, and the owning reference.
+  mChannel = nsnull;
+
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
 
   if (!mPaused) {
@@ -1223,13 +1228,18 @@ static const PRInt32 gDownloadSizeSafetyMargin = 1000000;
 void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
 {
   if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    NS_ASSERTION(aNextFrame != NEXT_FRAME_AVAILABLE,
-                 "How can we have a frame but no metadata?");
-    // The arrival of more data can't change us out of this state.
+    // aNextFrame might have a next frame because the decoder can advance
+    // on its own thread before ResourceLoaded or MetadataLoaded gets
+    // a chance to run.
+    // The arrival of more data can't change us out of this readyState.
     return;
   }
 
-  if (aNextFrame != NEXT_FRAME_AVAILABLE && !mDecoder->IsEnded()) {
+  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+
+  if (aNextFrame != NEXT_FRAME_AVAILABLE &&
+      !mDecoder->IsEnded() &&
+      stats.mDownloadPosition < stats.mTotalBytes) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
     if (!mWaitingFired && aNextFrame == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
@@ -1239,7 +1249,6 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
   }
 
   // Now see if we should set HAVE_ENOUGH_DATA
-  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
   if (stats.mTotalBytes < 0 || stats.mTotalBytes == stats.mDownloadPosition) {
     // If it's something we don't know the size of, then we can't
     // make an estimate, so let's just go straight to HAVE_ENOUGH_DATA,
@@ -1308,16 +1317,8 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
   }
 
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
-      mAutoplaying &&
-      mPaused &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
-      mAutoplayEnabled) {
-    mPaused = PR_FALSE;
-    if (mDecoder) {
-      mDecoder->Play();
-    }
-    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
+    NotifyAutoplayDataReady();
   }
   
   if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA && 
@@ -1332,10 +1333,26 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   }
 }
 
-void nsHTMLMediaElement::Paint(gfxContext* aContext, const gfxRect& aRect) 
+void nsHTMLMediaElement::NotifyAutoplayDataReady()
+{
+  if (mAutoplaying &&
+      mPaused &&
+      HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
+      mAutoplayEnabled) {
+    mPaused = PR_FALSE;
+    if (mDecoder) {
+      mDecoder->Play();
+    }
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
+  }
+}
+
+void nsHTMLMediaElement::Paint(gfxContext* aContext,
+                               gfxPattern::GraphicsFilter aFilter,
+                               const gfxRect& aRect) 
 {
   if (mDecoder)
-    mDecoder->Paint(aContext, aRect);
+    mDecoder->Paint(aContext, aFilter, aRect);
 }
 
 nsresult nsHTMLMediaElement::DispatchSimpleEvent(const nsAString& aName)
@@ -1428,7 +1445,7 @@ PRBool nsHTMLMediaElement::IsPlaybackEnded() const
     mDecoder ? mDecoder->IsEnded() : PR_FALSE;
 }
 
-nsIPrincipal* nsHTMLMediaElement::GetCurrentPrincipal()
+already_AddRefed<nsIPrincipal> nsHTMLMediaElement::GetCurrentPrincipal()
 {
   if (!mDecoder)
     return nsnull;
@@ -1565,8 +1582,17 @@ void nsHTMLMediaElement::ChangeDelayLoadStatus(PRBool aDelay) {
     mLoadBlockedDoc = GetOwnerDoc();
     mLoadBlockedDoc->BlockOnload();
   } else {
+    if (mDecoder) {
+      mDecoder->MoveLoadsToBackground();
+    }
     NS_ASSERTION(mLoadBlockedDoc, "Need a doc to block on");
     mLoadBlockedDoc->UnblockOnload(PR_FALSE);
     mLoadBlockedDoc = nsnull;
   }
+}
+
+already_AddRefed<nsILoadGroup> nsHTMLMediaElement::GetDocumentLoadGroup()
+{
+  nsIDocument* doc = GetOwnerDoc();
+  return doc ? doc->GetDocumentLoadGroup() : nsnull;
 }

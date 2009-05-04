@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=488417
+-->
+<head>
+  <title>Test for Bug 488417</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=488417">Mozilla Bug 488417</a>
+<div id="display">
+ <table border="1">
+   <tr>
+     <td id="a">A1</td>
+     <td id="b">B1</td>
+   </tr>
+   <tr>
+     <td>A2</td>
+     <td>B2</td>
+   </tr>
+ </table>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+function clickIt(node) {
+  synthesizeMouse(node, node.getBoundingClientRect().width/2,
+                  node.getBoundingClientRect().height/2,
+                  { accelKey: 1 });
+}
+  
+/** Test for Bug 488417 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  // Do the test async so we can unsuppress painting
+  SimpleTest.executeSoon(function() {
+    clickIt($("a"));
+    clickIt($("b"));
+    clickIt($("a"));
+    ok(1, "Got here");
+    // Clean up
+    window.getSelection().removeAllRanges();
+    SimpleTest.finish();
+  });
+});
+
+
+</script>
+</pre>
+</body>
+</html>

@@ -173,10 +173,9 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLSelectElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLSelectElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLSelectElement,
                                    nsIDOMHTMLSelectElement,
                                    nsIDOMNSHTMLSelectElement,
-                                   nsIDOMNSXBLFormControl,
                                    nsISelectElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSelectElement,
                                                nsGenericHTMLFormElement)
@@ -1523,19 +1522,6 @@ nsHTMLSelectElement::RestoreState(nsPresState* aState)
   }
 
   return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsHTMLSelectElement::GetBoxObject(nsIBoxObject** aResult)
-{
-  *aResult = nsnull;
-
-  nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(GetCurrentDoc());
-  if (!nsDoc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return nsDoc->GetBoxObjectFor(static_cast<nsIDOMElement*>(this), aResult);
 }
 
 void

@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.29 2009/02/03 05:34:40 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: blapi.h,v 1.33 2009/03/29 03:45:32 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1081,22 +1081,8 @@ extern void RNG_SystemInfoForRNG(void);
  */
 
 /*
- * Given the seed-key and the seed, generate the random output.
- *
- * Parameters:
- *   XKEY [input/output]: the state of the RNG (seed-key)
- *   XSEEDj [input]: optional user input (seed)
- *   x_j [output]: output of the RNG
- *
- * Return value:
- * This function usually returns SECSuccess.  The only reason
- * this function returns SECFailure is that XSEEDj equals
- * XKEY, including the intermediate XKEY value between the two
- * iterations.  (This test is actually a FIPS 140-2 requirement
- * and not required for FIPS algorithm testing, but it is too
- * hard to separate from this function.)  If this function fails,
- * XKEY is not updated, but some data may have been written to
- * x_j, which should be ignored.
+ * FIPS186Change_GenerateX is now deprecated. It will return SECFailure with
+ * the error set to PR_NOT_IMPLEMENTED_ERROR.
  */
 extern SECStatus
 FIPS186Change_GenerateX(unsigned char *XKEY,
@@ -1115,6 +1101,27 @@ extern SECStatus
 FIPS186Change_ReduceModQForDSA(const unsigned char *w,
                                const unsigned char *q,
                                unsigned char *xj);
+
+/*
+ * The following functions are for FIPS poweron self test and FIPS algorithm
+ * testing.
+ */
+extern SECStatus
+PRNGTEST_Instantiate(const PRUint8 *entropy, unsigned int entropy_len, 
+		const PRUint8 *nonce, unsigned int nonce_len,
+		const PRUint8 *personal_string, unsigned int ps_len);
+
+extern SECStatus
+PRNGTEST_Reseed(const PRUint8 *entropy, unsigned int entropy_len, 
+		  const PRUint8 *additional, unsigned int additional_len);
+
+extern SECStatus
+PRNGTEST_Generate(PRUint8 *bytes, unsigned int bytes_len, 
+		  const PRUint8 *additional, unsigned int additional_len);
+
+extern SECStatus
+PRNGTEST_Uninstantiate(void);
+
 
 /* Generate PQGParams and PQGVerify structs.
  * Length of seed and length of h both equal length of P. 
@@ -1142,7 +1149,7 @@ PQG_ParamGenSeedLen(
  *  If vfy is non-NULL, test PQGParams to make sure they were generated
  *       using the specified seed, counter, and h values.
  *
- *  Return value indicates whether Verification operation ran succesfully
+ *  Return value indicates whether Verification operation ran successfully
  *  to completion, but does not indicate if PQGParams are valid or not.
  *  If return value is SECSuccess, then *pResult has these meanings:
  *       SECSuccess: PQGParams are valid.

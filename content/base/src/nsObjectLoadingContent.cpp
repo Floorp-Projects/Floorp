@@ -134,7 +134,14 @@ nsAsyncInstantiateEvent::Run()
   // Also make sure that we still refer to the same data.
   nsIObjectFrame* frame = mContent->
     GetExistingFrame(nsObjectLoadingContent::eFlushContent);
-  if (mFrame.IsAlive() &&
+
+  nsIFrame* objectFrame = nsnull;
+  if (frame) {
+    objectFrame = do_QueryFrame(frame);
+  }
+
+  if (objectFrame &&
+      mFrame.GetFrame() == objectFrame &&
       mContent->mURI == mURI &&
       mContent->mContentType.Equals(mContentType)) {
     if (LOG_ENABLED()) {

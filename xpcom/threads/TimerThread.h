@@ -47,7 +47,7 @@
 
 #include "nsTimerImpl.h"
 
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 #include "prcvar.h"
 #include "prinrval.h"
@@ -101,7 +101,7 @@ private:
   PRPackedBool mWaiting;
   PRPackedBool mSleeping;
   
-  nsVoidArray mTimers;
+  nsTArray<nsTimerImpl*> mTimers;
 
 #define DELAY_LINE_LENGTH_LOG2  5
 #define DELAY_LINE_LENGTH_MASK  PR_BITMASK(DELAY_LINE_LENGTH_LOG2)

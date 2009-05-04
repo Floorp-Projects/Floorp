@@ -36,9 +36,8 @@ function firstTimeThrough(request, buffer)
 
 function finish_test(request, buffer)
 {
-  httpserver.stop();
   do_check_eq(buffer, responseBody);
-  do_test_finished();
+  httpserver.stop(do_test_finished);
 }
 
 function run_test()

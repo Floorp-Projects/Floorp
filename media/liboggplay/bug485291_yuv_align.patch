@@ -1,0 +1,241 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
+--- a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
++++ b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
+@@ -55,32 +55,18 @@
+ #include "oggplay_yuv2rgb_x86.c"
+ #elif defined(__ppc__) || defined(__ppc64__)
+ //altivec intristics only working with -maltivec gcc flag, 
+ //but we want runtime altivec detection, hence this has to be
+ //fixed!
+ //#include "oggplay_yuv2rgb_altivec.c"
+ #endif
+ 
+-/**
+- * yuv_convert_fptr type is a function pointer type for
+- * the various yuv-rgb converters
+- */
+-typedef void (*yuv_convert_fptr) (const OggPlayYUVChannels *yuv, 
+-					OggPlayRGBChannels *rgb);
+-
+-/* it is useless to determine each YUV conversion run
+- * the cpu type/featurs, thus we save the conversion function
+- * pointers
+- */
+-static struct OggPlayYUVConverters {
+-	yuv_convert_fptr yuv2rgba; /**< YUV420 to RGBA */
+-	yuv_convert_fptr yuv2bgra; /**< YUV420 to BGRA */
+-	yuv_convert_fptr yuv2argb; /**< YUV420 to ARGB */
+-} yuv_conv = {NULL, NULL, NULL};
++static int yuv_initialized;
++static ogg_uint32_t cpu_features;
+ 
+ /**
+  * vanilla implementation of YUV-to-RGB conversion.
+  *
+  *  - using table-lookups instead of multiplication
+  *  - avoid CLAMPing by incorporating 
+  *
+  */
+@@ -89,38 +75,42 @@ static struct OggPlayYUVConverters {
+ 
+ #define prec 15 
+ static const int CoY	= (int)(1.164 * (1 << prec) + 0.5);
+ static const int CoRV	= (int)(1.596 * (1 << prec) + 0.5);
+ static const int CoGU	= (int)(0.391 * (1 << prec) + 0.5);
+ static const int CoGV	= (int)(0.813 * (1 << prec) + 0.5);
+ static const int CoBU	= (int)(2.018 * (1 << prec) + 0.5);
+ 
+-static int CoefsGU[256] = {0};
++static int CoefsGU[256];
+ static int CoefsGV[256]; 
+ static int CoefsBU[256]; 
+ static int CoefsRV[256];
+ static int CoefsY[256];
+ 
+ /**
+- * Initialize the lookup-table for vanilla yuv to rgb conversion.
++ * Initialize the lookup-table for vanilla yuv to rgb conversion
++ * and the cpu_features global.
+  */
+ static void
+-init_tables()
++init_yuv_converters()
+ {
+ 	int i;
+ 
+ 	for(i = 0; i < 256; ++i)
+ 	{
+ 		CoefsGU[i] = -CoGU * (i - 128);
+ 		CoefsGV[i] = -CoGV * (i - 128);
+ 		CoefsBU[i] = CoBU * (i - 128);
+ 		CoefsRV[i] = CoRV * (i - 128);
+ 		CoefsY[i]  = CoY * (i - 16) + (prec/2);
+ 	}
++
++	cpu_features = oc_cpu_flags_get();
++	yuv_initialized = 1;
+ }
+ 
+ #define VANILLA_YUV2RGB_PIXEL(y, ruv, guv, buv)	\
+ r = (CoefsY[y] + ruv) >> prec;	\
+ g = (CoefsY[y] + guv) >> prec;	\
+ b = (CoefsY[y] + buv) >> prec;	\
+ 
+ #define VANILLA_RGBA_OUT(out, r, g, b) \
+@@ -164,102 +154,83 @@ out[3] = CLAMP(r);
+ YUV_CONVERT(yuv420_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), 2, 8, 2, 1)
+ YUV_CONVERT(yuv420_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), 2, 8, 2, 1)
+ YUV_CONVERT(yuv420_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), 2, 8, 2, 1)
+ YUV_CONVERT(yuv420_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), 2, 8, 2, 1)
+ 
+ #undef CONVERT
+ #undef CLEANUP
+ 
+-/**
+- * Initialize the function pointers in yuv_conv.
+- *
+- * Initialize the function pointers in yuv_conv, based on the
+- * the available CPU extensions.
+- */
+-static void
+-init_yuv_converters(void)
+-{
+-	ogg_uint32_t features = 0;
+-
+-	if ( yuv_conv.yuv2rgba == NULL )
+-	{
+-		features = oc_cpu_flags_get(); 
+-#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+-#if defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16 
+-		if (features & (OC_CPU_X86_SSE2|OC_CPU_X86_MMX|OC_CPU_X86_SSE))
+-		{
+-			yuv_conv.yuv2rgba = yuv420_to_rgba_sse2;
+-			yuv_conv.yuv2bgra = yuv420_to_bgra_sse2;
+-			yuv_conv.yuv2argb = yuv420_to_argb_sse2;
+-			return;
+-		}
+-		else
+-#endif /* ATTRIBUTE_ALIGNED_MAX */
+-		if (features & (OC_CPU_X86_MMX|OC_CPU_X86_SSE))
+-		{
+-			yuv_conv.yuv2rgba = yuv420_to_rgba_mmx;
+-			yuv_conv.yuv2bgra = yuv420_to_bgra_mmx;
+-			yuv_conv.yuv2argb = yuv420_to_argb_mmx;
+-			return;
+-		}
+-		else if (features & OC_CPU_X86_MMX)
+-		{
+-			yuv_conv.yuv2rgba = yuv420_to_rgba_mmx;
+-			yuv_conv.yuv2bgra = yuv420_to_bgra_mmx;
+-			yuv_conv.yuv2argb = yuv420_to_argb_mmx;
+-			return;
+-		}
+-#elif defined(__ppc__) || defined(__ppc64__)
+-		if (features & OC_CPU_PPC_ALTIVEC)
+-		{
+-			init_tables();
+-			yuv_conv.yuv2rgba = yuv420_to_abgr_vanilla;
+-			yuv_conv.yuv2bgra = yuv420_to_argb_vanilla;
+-			yuv_conv.yuv2argb = yuv420_to_bgra_vanilla;
+-			return;
+-		}
+-#endif		
+-		/*
+-     * no CPU extension was found... using vanilla converter, with respect
+-     * to the endianness of the host
+-     */
+-		init_tables();
+-#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
+-		yuv_conv.yuv2rgba = yuv420_to_abgr_vanilla;
+-		yuv_conv.yuv2bgra = yuv420_to_argb_vanilla;
+-		yuv_conv.yuv2argb = yuv420_to_bgra_vanilla;
+-#else
+-		yuv_conv.yuv2rgba = yuv420_to_rgba_vanilla;
+-		yuv_conv.yuv2bgra = yuv420_to_bgra_vanilla;
+-		yuv_conv.yuv2argb = yuv420_to_argb_vanilla;
+-#endif
+-	}
+-}
+-
+-
+ void
+ oggplay_yuv2rgba(const OggPlayYUVChannels* yuv, OggPlayRGBChannels* rgb)
+ {
+-	if (yuv_conv.yuv2rgba == NULL)
++	if (!yuv_initialized)
+ 		init_yuv_converters();
+ 
+-	yuv_conv.yuv2rgba(yuv, rgb);
++#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
++#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
++	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
++		return yuv420_to_rgba_sse2(yuv, rgb);
++#endif
++	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
++		return yuv420_to_rgba_mmx(yuv, rgb);
++#elif defined(__ppc__) || defined(__ppc64__)
++	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
++		return yuv420_to_abgr_vanilla(yuv, rgb);
++#endif
++
++#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
++	return yuv420_to_abgr_vanilla(yuv, rgb);
++#else
++	return yuv420_to_rgba_vanilla(yuv, rgb);
++#endif
+ }
+ 
+ void 
+ oggplay_yuv2bgra(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
+ {
+-	if (yuv_conv.yuv2bgra == NULL)
++	if (!yuv_initialized)
+ 		init_yuv_converters();
+ 
+-	yuv_conv.yuv2bgra(yuv, rgb);
++#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
++#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
++	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
++		return yuv420_to_bgra_sse2(yuv, rgb);
++#endif
++	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
++		return yuv420_to_bgra_mmx(yuv, rgb);
++#elif defined(__ppc__) || defined(__ppc64__)
++	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
++		return yuv420_to_argb_vanilla(yuv, rgb);
++#endif
++
++#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
++	return yuv420_to_argb_vanilla(yuv, rgb);
++#else
++	return yuv420_to_bgra_vanilla(yuv, rgb);
++#endif
+ }
+ 
+ void 
+ oggplay_yuv2argb(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
+ {
+-	if (yuv_conv.yuv2argb == NULL)
++	if (!yuv_initialized)
+ 		init_yuv_converters();
+ 
+-	yuv_conv.yuv2argb(yuv, rgb);
++#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
++#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
++	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
++		return yuv420_to_argb_sse2(yuv, rgb);
++#endif
++	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
++		return yuv420_to_argb_mmx(yuv, rgb);
++#elif defined(__ppc__) || defined(__ppc64__)
++	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
++		return yuv420_to_bgra_vanilla(yuv, rgb);
++#endif
++
++#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
++	return yuv420_to_bgra_vanilla(yuv, rgb);
++#else
++	return yuv420_to_argb_vanilla(yuv, rgb);
++#endif
+ }
+ 

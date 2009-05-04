@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="NPAPI Private Mode Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <title>NPAPI Private Mode Tests</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="300" height="300"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var pluginElement1 = document.getElementById("plugin1");
+
+  var rv = true; // we want !true from the test plugin
+  var exceptionThrown = false;
+  try {
+    rv = pluginElement1.setUndefinedValueTest();
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  is(exceptionThrown, false, "Exception thrown setting undefined variable.");
+  is(rv, false, "Setting undefined variable succeeded.");
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+</window>

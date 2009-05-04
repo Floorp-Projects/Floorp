@@ -43,6 +43,9 @@
 #ifndef nsGenericDOMDataNode_h___
 #define nsGenericDOMDataNode_h___
 
+// This bit is set if the frame tree depends on whether this node is whitespace
+#define FRAMETREE_DEPENDS_ON_CHARS (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
+
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3Text.h"
@@ -176,9 +179,9 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext)
+  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
   {
-    return nsContentUtils::GetContextForEventHandlers(this, aContext);
+    return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
 
   // Implementation for nsIContent

@@ -146,7 +146,8 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
 #endif
     {
       PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
   return NS_OK;
@@ -178,7 +179,8 @@ nsContainerFrame::InsertFrames(nsIAtom*  aListName,
 #endif
     {
       PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
   return NS_OK;
@@ -244,7 +246,8 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
 
     if (generateReflowCommand) {
       PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
 
@@ -564,8 +567,8 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
     vm->ResizeView(aView, *aCombinedArea, PR_TRUE);
 
     // Even if the size hasn't changed, we need to sync up the
-    // geometry dependent properties, because (kidState &
-    // NS_FRAME_OUTSIDE_CHILDREN) might have changed, and we can't
+    // geometry dependent properties, because overflow areas of
+    // children might have changed, and we can't
     // detect whether it has or not. Likewise, whether the view size
     // has changed or not, we may need to change the transparency
     // state even if there is no clip.
@@ -1608,7 +1611,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   nsContainerFrame* f = const_cast<nsContainerFrame*>(this);
-  if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+  if (f->HasOverflowRect()) {
     nsRect overflowArea = f->GetOverflowRect();
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);

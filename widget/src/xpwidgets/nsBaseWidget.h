@@ -74,7 +74,6 @@ public:
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(PRBool aCapture);
   NS_IMETHOD              Validate();
-  NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
   NS_IMETHOD              GetClientData(void*& aClientData);
   NS_IMETHOD              SetClientData(void* aClientData);
   NS_IMETHOD              Destroy();
@@ -113,8 +112,6 @@ public:
   virtual nsIToolkit*     GetToolkit();  
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(PRBool aModal); 
-  NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
-                            PRBool *aForWindow);
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
   NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
   NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
@@ -122,9 +119,6 @@ public:
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
-  NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD              ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy);
-  NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
@@ -133,7 +127,6 @@ public:
   NS_IMETHOD              EndSecureKeyboardInput();
   NS_IMETHOD              SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
   virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
-  virtual void            ConvertToDeviceCoordinates(nscoord  &aX,nscoord &aY) {}
   virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}
   NS_IMETHOD              BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
   virtual nsresult        ActivateNativeMenuItemAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -186,10 +179,6 @@ protected:
   nsCursor          mCursor;
   nsWindowType      mWindowType;
   nsBorderStyle     mBorderStyle;
-  PRPackedBool      mIsShiftDown;
-  PRPackedBool      mIsControlDown;
-  PRPackedBool      mIsAltDown;
-  PRPackedBool      mIsDestroying;
   PRPackedBool      mOnDestroyCalled;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;

@@ -42,7 +42,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi-priv.h,v 1.20 2005/11/22 07:16:43 relyea%netscape.com Exp $ */
+/* $Id: mpi-priv.h,v 1.21 2009/03/19 02:26:48 julien.pierre.boogz%sun.com Exp $ */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
 
@@ -261,11 +261,12 @@ mp_digit MPI_ASM_DECL s_mpv_mul_add_vec64(mp_digit*, const mp_digit*, mp_size, m
 
 /* c = a * b */
 #define s_mpv_mul_d(a, a_len, b, c) \
-	((unsigned long*)c)[a_len] = s_mpv_mul_set_vec64(c, a, a_len, b)
+	((mp_digit *)c)[a_len] = s_mpv_mul_set_vec64(c, a, a_len, b)
 
 /* c += a * b */
 #define s_mpv_mul_d_add(a, a_len, b, c) \
-	((unsigned long*)c)[a_len] = s_mpv_mul_add_vec64(c, a, a_len, b)
+	((mp_digit *)c)[a_len] = s_mpv_mul_add_vec64(c, a, a_len, b)
+
 
 #else
 

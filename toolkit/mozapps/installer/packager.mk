@@ -65,9 +65,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOZ_PKG_FORMAT  = BZ2
 else
 ifeq (,$(filter-out WINCE, $(OS_ARCH)))
-MOZ_PKG_CAB_SCRIPT ?= $(error MOZ_PKG_CAB_SCRIPT not specified)
-MOZ_PKG_CAB_INF ?= $(error MOZ_PKG_CAB_INF not specified)
-MOZ_PKG_FORMAT  = CAB
+MOZ_PKG_FORMAT  = ZIP
 else
 MOZ_PKG_FORMAT  = TGZ
 endif
@@ -112,12 +110,6 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
-UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
-MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
-endif
-ifeq ($(MOZ_PKG_FORMAT),CAB)
-PKG_SUFFIX	= .cab
-MAKE_PACKAGE = $(MOZ_PKG_CAB_SCRIPT) "$(VSINSTALLDIR)" "$(topsrcdir)" "$(MOZ_PKG_DIR)" "$(MOZ_PKG_CAB_INF)" "$(MOZ_APP_NAME)" "$(PACKAGE)"
 UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
 endif
@@ -379,6 +371,10 @@ endif
 else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
 endif # DMG
+	@echo "Linking XPT files..."
+	@rm -rf $(DIST)/xpt
+	@$(NSINSTALL) -D $(DIST)/xpt
+	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/.  Continuing...
 endif # MOZ_PKG_MANIFEST
 ifndef PKG_SKIP_STRIP
 	@echo "Stripping package directory..."
@@ -415,7 +411,7 @@ ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
 
-make-package: stage-package
+make-package: stage-package $(PACKAGE_XULRUNNER)
 	@echo "Compressing..."
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(MAKE_PACKAGE)
@@ -430,7 +426,10 @@ make-package: stage-package
 # dist/sdk/lib -> prefix/lib/appname-devel-version/lib
 # prefix/lib/appname-devel-version/* symlinks to the above directories
 install:: stage-package
-ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
+	$(error "make install" is not supported on this platform. Use "make package" instead.)
+endif
+ifeq (bundle,$(MOZ_FS_LAYOUT))
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 	$(NSINSTALL) -D $(DESTDIR)$(installdir)
@@ -512,6 +511,7 @@ upload:
 		$(call QUOTED_WILDCARD,$(DIST)/$(COMPLETE_MAR)) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
 		$(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 ifndef MOZ_PKG_SRCDIR

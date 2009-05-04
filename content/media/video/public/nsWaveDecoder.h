@@ -147,7 +147,7 @@ class nsWaveDecoder : public nsMediaDecoder
   ~nsWaveDecoder();
 
   virtual void GetCurrentURI(nsIURI** aURI);
-  virtual nsIPrincipal* GetCurrentPrincipal();
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   // Return the current playback position in the media in seconds.
   virtual float GetCurrentTime();
@@ -188,14 +188,11 @@ class nsWaveDecoder : public nsMediaDecoder
   // Element is notifying us that the requested playback rate has changed.
   virtual nsresult PlaybackRateChanged();
 
-  virtual void NotifyBytesDownloaded(PRInt64 aBytes);
-  virtual void NotifyDownloadSeeked(PRInt64 aOffset);
+  virtual void NotifySuspendedStatusChanged();
+  virtual void NotifyBytesDownloaded();
   virtual void NotifyDownloadEnded(nsresult aStatus);
-  virtual void NotifyBytesConsumed(PRInt64 aBytes);
 
   virtual Statistics GetStatistics();
-
-  virtual void SetTotalBytes(PRInt64 aBytes);
 
   void PlaybackPositionChanged();
 
@@ -222,6 +219,9 @@ class nsWaveDecoder : public nsMediaDecoder
 
   // Change the element's ready state as necessary. Main thread only.
   void UpdateReadyStateForData();
+
+  // Tells mStream to put all loads in the background.
+  virtual void MoveLoadsToBackground();
 
 private:
   // Notifies the element that seeking has started.
@@ -260,23 +260,15 @@ private:
   // underlying channel type.
   nsAutoPtr<nsMediaStream> mStream;
 
-  // The media time of the last requested seek.  This has not been validated
-  // against the current media, so may be out of bounds.  Set when
-  // Seek(float) is called, and passed to the state machine when the
-  // SeekStarted event fires to tell it to update its time offset.  The
-  // state machine will validate the offset against the current media.
-  float mTimeOffset;
-
   // The current playback position of the media resource in units of
   // seconds. This is updated every time a block of audio is passed to the
   // backend (unless an prior update is still pending).  It is read and
   // written from the main thread only.
   float mCurrentTime;
 
-  // Copy of the current time, duration, and ended state when the state
-  // machine was disposed.  Used to respond to time and duration queries
-  // with sensible values after the state machine is destroyed.
-  float mEndedCurrentTime;
+  // Copy of the duration and ended state when the state machine was
+  // disposed.  Used to respond to duration and ended queries with sensible
+  // values after the state machine has been destroyed.
   float mEndedDuration;
   PRPackedBool mEnded;
 

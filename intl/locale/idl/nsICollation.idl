@@ -40,14 +40,26 @@
 interface nsICollation;
 
 [scriptable, uuid(04971e14-d6b3-4ada-8cbb-c3a13842b349)]
-interface nsICollationFactory : nsISupports {
-  nsICollation CreateCollation(in nsILocale locale);
+interface nsICollationFactory : nsISupports
+{
+    /**
+     * Create the collation for a given locale.
+     *
+     * Use NULL as the locale parameter to use the user's locale preference
+     * from the operating system.
+     *
+     * @param locale
+     *        The locale for which to create the collation or null to use
+     *        user preference.
+     * @return A collation for the given locale.
+     */
+    nsICollation CreateCollation(in nsILocale locale);
 };
 
 [scriptable, uuid(b0132cc0-3786-4557-9874-910d7def5f93)]
 interface nsICollation : nsISupports {
 
-  // use the primary comparison for the given local - no flags
+  // use the primary comparison for the given locale - no flags
   const long kCollationStrengthDefault = 0;
 
   // do not consider case differences when doing the comparison i.e. A=a) 

@@ -153,10 +153,14 @@ function test_TestEventListeners()
   e("MozMagnifyGesture", 0, 30.0, 0);
 
   // rotate gesture events
-  e("MozRotateGestureStart", SimpleGestureEvent.DIRECTION_RIGHT, 33.0, 0);
-  e("MozRotateGestureUpdate", SimpleGestureEvent.DIRECTION_LEFT, -13.0, 0);
-  e("MozRotateGestureUpdate", SimpleGestureEvent.DIRECTION_RIGHT, 13.0, 0);
-  e("MozRotateGesture", SimpleGestureEvent.DIRECTION_RIGHT, 33.0, 0);
+  e("MozRotateGestureStart", SimpleGestureEvent.ROTATION_CLOCKWISE, 33.0, 0);
+  e("MozRotateGestureUpdate", SimpleGestureEvent.ROTATION_COUNTERCLOCKWISE, -13.0, 0);
+  e("MozRotateGestureUpdate", SimpleGestureEvent.ROTATION_CLOCKWISE, 13.0, 0);
+  e("MozRotateGesture", SimpleGestureEvent.ROTATION_CLOCKWISE, 33.0, 0);
+  
+  // Tap and presstap gesture events
+  e("MozTapGesture", 0, 0.0, 0);
+  e("MozPressTapGesture", 0, 0.0, 0);
 
   // event.shiftKey
   let modifier = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
@@ -249,12 +253,16 @@ function test_EnsureConstantsAreDisjoint()
   let left = SimpleGestureEvent.DIRECTION_LEFT;
   let right = SimpleGestureEvent.DIRECTION_RIGHT;
 
+  let clockwise = SimpleGestureEvent.ROTATION_CLOCKWISE;
+  let cclockwise = SimpleGestureEvent.ROTATION_COUNTERCLOCKWISE;
+
   ok(up ^ down, "DIRECTION_UP and DIRECTION_DOWN are not bitwise disjoint");
   ok(up ^ left, "DIRECTION_UP and DIRECTION_LEFT are not bitwise disjoint");
   ok(up ^ right, "DIRECTION_UP and DIRECTION_RIGHT are not bitwise disjoint");
   ok(down ^ left, "DIRECTION_DOWN and DIRECTION_LEFT are not bitwise disjoint");
   ok(down ^ right, "DIRECTION_DOWN and DIRECTION_RIGHT are not bitwise disjoint");
   ok(left ^ right, "DIRECTION_LEFT and DIRECTION_RIGHT are not bitwise disjoint");
+  ok(clockwise ^ cclockwise, "ROTATION_CLOCKWISE and ROTATION_COUNTERCLOCKWISE are not bitwise disjoint");
 }
 
 // Helper for test of latched event processing. Emits the actual

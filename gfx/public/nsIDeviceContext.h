@@ -42,10 +42,10 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsRect.h"
-#include "nsIWidget.h"
 #include "nsIRenderingContext.h"
 // XXX we need only gfxTypes.h, but we cannot include it directly.
 #include "gfxPoint.h"
+#include "nsNativeWidget.h"
 
 class nsIView;
 class nsIFontMetrics;

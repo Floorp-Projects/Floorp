@@ -48,14 +48,11 @@ struct PropertyInfo {
 
 const PropertyInfo gLonghandProperties[] = {
 
-#define CSS_PROP_NOTIMPLEMENTED(name_, id_, method_, flags_) \
-    { #name_, #method_ },
 #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
     { #name_, #method_ },
 
 #include "nsCSSPropList.h"
 
-#undef CSS_PROP_NOTIMPLEMENTED
 #undef CSS_PROP
 
 };
@@ -68,14 +65,11 @@ const PropertyInfo gLonghandProperties[] = {
 const char* gLonghandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP_NOTIMPLEMENTED(name_, id_, method_, flags_) \
-    #name_,
 #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) \
     #name_,
 
 #include "nsCSSPropList.h"
 
-#undef CSS_PROP_NOTIMPLEMENTED
 #undef CSS_PROP
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 

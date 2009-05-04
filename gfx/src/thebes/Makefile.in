@@ -57,12 +57,18 @@ REQUIRES =  xpcom \
             string \
             thebes \
             widget \
+            locale \
             view \
             pref \
             unicharutil \
             imglib2 \
             $(ZLIB_REQUIRES) \
+            qcms \
             $(NULL)
+
+ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+REQUIRES += uconv
+endif
 
 CPPSRCS		= \
 		nsThebesDeviceContext.cpp \
@@ -92,6 +98,7 @@ CPPSRCS		+= nsSystemFontsWin.cpp \
 
 REQUIRES	+= \
 		cairo \
+		qcms \
 		$(NULL)
 
 _OS_LIBS	= usp10

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="WMode Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <title>WMode Tests</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin2" type="application/x-test" width="400" height="400" wmode="window"></embed>
+<embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var p1 = document.getElementById("plugin1");
+  is(p1.hasWidget(), false, "Plugin should be windowless by default");
+  
+  var p2 = document.getElementById("plugin2");
+  if (navigator.platform.indexOf("Mac") >= 0) {
+    is(p2.hasWidget(), false, "Mac does not support windowed plugins");
+  } else if (navigator.platform.indexOf("Win") >= 0) {
+    is(p2.hasWidget(), true, "Windows supports windowed plugins");
+  } else if (navigator.platform.indexOf("Linux") >= 0) {
+    is(p2.hasWidget(), true, "Linux supports windowed plugins");
+  }
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+</window>

@@ -73,7 +73,7 @@
 #include "nsIPrefService.h"
 
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
@@ -224,6 +224,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // stash the document of the dom node
   aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
   mSourceNode = aDOMNode;
+  mEndDragPoint = nsIntPoint(0, 0);
 
   // When the mouse goes down, the selection code starts a mouse
   // capture. However, this gets in the way of determining drag
@@ -374,7 +375,11 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsDragEvent event(PR_TRUE, aMsg, nsnull);
-        event.userCancelled = (aMsg == NS_DRAGDROP_END && mUserCancelled);
+        if (aMsg == NS_DRAGDROP_END) {
+          event.refPoint.x = mEndDragPoint.x;
+          event.refPoint.y = mEndDragPoint.y;
+          event.userCancelled = mUserCancelled;
+        }
 
         nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
         return presShell->HandleDOMEventWithTarget(content, &event, &status);
@@ -591,9 +596,9 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     aScreenDragRect->height = destSize.height;
   }
 
-  nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(gfxIntSize(destSize.width, destSize.height),
-                        gfxImageSurface::ImageFormatARGB32);
+  nsRefPtr<gfxASurface> surface =
+    gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(destSize.width, destSize.height),
+                                                       gfxASurface::ImageFormatARGB32);
   if (!surface)
     return NS_ERROR_FAILURE;
 
@@ -608,7 +613,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     gfxRect outRect(0, 0, destSize.width, destSize.height);
     gfxMatrix scale =
       gfxMatrix().Scale(srcSize.width/outRect.Width(), srcSize.height/outRect.Height());
-    img->Draw(ctx, scale, outRect, nsIntMargin(0,0,0,0),
+    img->Draw(ctx, gfxPattern::FILTER_GOOD, scale, outRect, nsIntMargin(0,0,0,0),
               nsIntRect(0, 0, srcSize.width, srcSize.height));
     return NS_OK;
   } else {

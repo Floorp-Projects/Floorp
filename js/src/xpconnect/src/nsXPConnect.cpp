@@ -2406,6 +2406,9 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         return NS_ERROR_FAILURE;
 
     *_retval = OBJECT_TO_JSVAL(wrappedObj);
+    if(wrapper->NeedsChromeWrapper() &&
+       !XPC_SOW_WrapObject(aJSContext, aScope, *_retval, _retval))
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 

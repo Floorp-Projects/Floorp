@@ -125,7 +125,7 @@ function testtag_scale_UI(element, testid, horiz, reverse)
 
   testtag_scale_UI_Mouse(element, testid, horiz, reverse, 4);
 
-  element.min = 6;
+  element.min = 4;
   element.pageIncrement = 3;
   testtag_scale_UI_Mouse(element, testid + " with min", horiz, reverse, 3);
 
@@ -135,26 +135,83 @@ function testtag_scale_UI(element, testid, horiz, reverse)
 
 function testtag_scale_UI_Mouse(element, testid, horiz, reverse, pinc)
 {
-  var newval = 12 + (reverse ? pinc : -pinc);
-  var endval = 12;
+  var initial = reverse ? 8 : 12;
+  var newval = initial + (reverse ? pinc : -pinc);
+  var endval = initial;
   // in the pinc == 30 case, the page increment is large enough that it would
   // just cause the thumb to reach the end of the scale. Make sure that the
   // mouse click does not go past the end.
   if (pinc == 30) {
-    newval = reverse ? 20 : 6;
-    endval = reverse ? 6 : 20;
+    newval = reverse ? 20 : 4;
+    endval = reverse ? 4 : 20;
   }
-  element.value = 12;
+  element.value = initial;
 
+  var hmove = horiz ? 25 : 10;
+  var vmove = horiz ? 10 : 25;
+
+  var leftFn = function () { return reverse ? element.value < newval + 3 : element.value > newval - 3; }
+  var rightFn = function () { return reverse ? element.value < endval - 3 : element.value < endval + 3; }
+  
   // check that clicking the mouse on the trough moves the thumb properly
-  synthesizeMouseExpectEvent(element, 10, 10, { }, element, "change", testid + "mouse on left");
-  is(element.value, newval, testid + " mouse on left");
+  synthesizeMouseExpectEvent(element, hmove, vmove, { }, element, "change", testid + "mouse on left movetoclick=default");
+
+  if (navigator.platform.indexOf("Mac") >= 0) {
+    if (pinc == 30)
+      ok(element.value > 4, testid + " mouse on left movetoclick=default");
+    else
+      ok(leftFn, testid + " mouse on left movetoclick=default");
+  }
+  else {
+    is(element.value, newval, testid + " mouse on left movetoclick=default");
+  }
 
   var rect = element.getBoundingClientRect();
-  synthesizeMouseExpectEvent(element, rect.right - rect.left - 10,
-                             rect.bottom - rect.top - 10, { },
-                             element, "change", testid + " mouse on right");
-  is(element.value, endval, testid + " mouse on right");
+  synthesizeMouseExpectEvent(element, rect.right - rect.left - hmove,
+                             rect.bottom - rect.top - vmove, { },
+                             element, "change", testid + " mouse on right movetoclick=default");
+
+  if (navigator.platform.indexOf("Mac") >= 0) {
+    if (pinc == 30)
+      ok(element.value < 20, testid + " mouse on right movetoclick=default");
+    else
+      ok(rightFn, testid + " mouse on right movetoclick=default");
+  }
+  else {
+    is(element.value, endval, testid + " mouse on right movetoclick=default");
+  }
+
+  element.setAttribute("movetoclick", "true");
+  element.value = initial;
+
+  synthesizeMouseExpectEvent(element, hmove, vmove, { }, element, "change", testid + "mouse on left movetoclick=true");
+  if (pinc == 30)
+    ok(element.value > 4, testid + " mouse on left movetoclick=true");
+  else
+    ok(leftFn, testid + " mouse on left movetoclick=true");
+
+  var rect = element.getBoundingClientRect();
+  synthesizeMouseExpectEvent(element, rect.right - rect.left - hmove,
+                             rect.bottom - rect.top - vmove, { },
+                             element, "change", testid + " mouse on right movetoclick=true");
+  if (pinc == 30)
+    ok(element.value < 20, testid + " mouse on right movetoclick=true");
+  else
+    ok(rightFn, testid + " mouse on right movetoclick=true");
+
+  element.setAttribute("movetoclick", "false");
+  element.value = initial;
+
+  synthesizeMouseExpectEvent(element, hmove, vmove, { }, element, "change", testid + "mouse on left movetoclick=false");
+  is(element.value, newval, testid + " mouse on left movetoclick=false");
+
+  var rect = element.getBoundingClientRect();
+  synthesizeMouseExpectEvent(element, rect.right - rect.left - hmove,
+                             rect.bottom - rect.top - vmove, { },
+                             element, "change", testid + " mouse on right movetoclick=false");
+  is(element.value, endval, testid + " mouse on right movetoclick=false");
+
+  element.removeAttribute("movetoclick");
 }
 
 function testtag_scale_States(element, evalue, evalueattr, emin, emax, testid)

@@ -250,11 +250,6 @@ public:
         return !!(GetFlags() & nsIClassInfo::DOM_OBJECT);
     }
 
-    PRBool IsContentNode()
-    {
-        return !!(GetFlags() & nsIClassInfo::CONTENT_NODE);
-    }
-
     const char* GetName()
     {
         if (!mName) {
@@ -742,15 +737,6 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             rv = NS_ERROR_DOM_SECURITY_ERR;
         else
             rv = NS_OK;
-    }
-
-    if (NS_SUCCEEDED(rv) && classInfoData.IsContentNode())
-    {
-        // No access to anonymous content from the web!  (bug 164086)
-        nsIContent *content = static_cast<nsIContent*>(aObj);
-        if (content->IsInNativeAnonymousSubtree()) {
-            rv = NS_ERROR_DOM_SECURITY_ERR;
-        }
     }
 
     if (NS_SUCCEEDED(rv))

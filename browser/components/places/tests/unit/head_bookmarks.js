@@ -187,6 +187,8 @@ const SMART_BOOKMARKS_ON_MENU = 2;
  * @return nsIFile object for the file.
  */
 function create_bookmarks_html(aFilename) {
+  if (!aFilename)
+    do_throw("you must pass a filename to create_bookmarks_html function");
   remove_bookmarks_html();
   let bookmarksHTMLFile = gTestDir.clone();
   bookmarksHTMLFile.append(aFilename);
@@ -232,6 +234,8 @@ function check_bookmarks_html() {
  * @return nsIFile object for the file.
  */
 function create_JSON_backup(aFilename) {
+  if (!aFilename)
+    do_throw("you must pass a filename to create_JSON_backup function");
   remove_all_JSON_backups();
   let bookmarksBackupDir = gProfD.clone();
   bookmarksBackupDir.append("bookmarkbackups");
@@ -272,4 +276,57 @@ function check_JSON_backup() {
   profileBookmarksJSONFile.append(FILENAME_BOOKMARKS_JSON);
   do_check_true(profileBookmarksJSONFile.exists());
   return profileBookmarksJSONFile;
+}
+
+/**
+ * Dumps the rows of a table out to the console.
+ *
+ * @param aName
+ *        The name of the table or view to output.
+ */
+function dump_table(aName)
+{
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
+  let stmt = db.createStatement("SELECT * FROM " + aName);
+
+  dump("\n*** Printing data from " + aName + ":\n");
+  let count = 0;
+  while (stmt.executeStep()) {
+    let columns = stmt.numEntries;
+
+    if (count == 0) {
+      // print the column names
+      for (let i = 0; i < columns; i++)
+        dump(stmt.getColumnName(i) + "\t");
+      dump("\n");
+    }
+
+    // print the row
+    for (let i = 0; i < columns; i++) {
+      switch (stmt.getTypeOfIndex(i)) {
+        case Ci.mozIStorageValueArray.VALUE_TYPE_NULL:
+          dump("NULL\t");
+          break;
+        case Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER:
+          dump(stmt.getInt64(i) + "\t");
+          break;
+        case Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT:
+          dump(stmt.getDouble(i) + "\t");
+          break;
+        case Ci.mozIStorageValueArray.VALUE_TYPE_TEXT:
+          dump(stmt.getString(i) + "\t");
+          break;
+      }
+    }
+    dump("\n");
+
+    count++;
+  }
+  dump("*** There were a total of " + count + " rows of data.\n\n");
+
+  stmt.reset();
+  stmt.finalize();
+  stmt = null;
 }

@@ -41,8 +41,6 @@
 #include "nsIdleServiceWin.h"
 #include <windows.h>
 
-NS_IMPL_ISUPPORTS1(nsIdleServiceWin, nsIIdleService)
-
 
 #ifdef WINCE
 // The last user input event time in microseconds. If there are any pending
@@ -53,23 +51,25 @@ extern PRUint32 gLastInputEventTime;
 #endif
 
 
+NS_IMPL_ISUPPORTS1(nsIdleServiceWin, nsIIdleService)
+
 NS_IMETHODIMP
 nsIdleServiceWin::GetIdleTime(PRUint32 *aTimeDiff)
 {
 #ifndef WINCE
-  LASTINPUTINFO inputInfo;
-  inputInfo.cbSize = sizeof(inputInfo);
-  if (!::GetLastInputInfo(&inputInfo))
-    return NS_ERROR_FAILURE;
+    LASTINPUTINFO inputInfo;
+    inputInfo.cbSize = sizeof(inputInfo);
+    if (!::GetLastInputInfo(&inputInfo))
+        return NS_ERROR_FAILURE;
 
-  *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(GetTickCount(), inputInfo.dwTime);
+    *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(GetTickCount(), inputInfo.dwTime);
 #else
-  // NOTE: nowTime is not necessarily equivalent to GetTickCount() return value
-  //       we need to compare apples to apples - hence the nowTime variable
-  PRUint32 nowTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+    // NOTE: nowTime is not necessarily equivalent to GetTickCount() return value
+    //       we need to compare apples to apples - hence the nowTime variable
+    PRUint32 nowTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
-  *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(nowTime, gLastInputEventTime);
+    *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(nowTime, gLastInputEventTime) / 1000;
 #endif
 
-  return NS_OK;
+    return NS_OK;
 }

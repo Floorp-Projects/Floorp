@@ -52,7 +52,6 @@
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
 #include "prtime.h"
-#include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsDragService.h"
 #include "nsILocalFile.h"
@@ -213,8 +212,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     mIsDestroying       = PR_FALSE;
     mOnDestroyCalled    = PR_FALSE;
 
-    mPreferredWidth     = 0;
-    mPreferredHeight    = 0;
     mWindowState        = nsWindowState_ePrecreate;
     mWindowType         = eWindowType_child;
     mBorderStyle        = eBorderStyle_default;
@@ -1280,61 +1277,6 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
 }
 
 //-------------------------------------------------------------------------
-// Return PR_TRUE in aForWindow if the given event should be processed
-// assuming this is a modal window.
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
-                                     PRBool *aForWindow)
-{
-  if( PR_FALSE == aRealEvent) {
-    *aForWindow = PR_FALSE;
-    return NS_OK;
-  }
-#if 0
-  // Set aForWindow if either:
-  //   * the message is for a descendent of the given window
-  //   * the message is for another window, but is a message which
-  //     should be allowed for a disabled window.
- 
-  PRBool isMouseEvent = PR_FALSE;
-  PRBool isInWindow = PR_FALSE;
- 
-  // Examine the target window & find the frame
-  // XXX should GetNativeData() use GetMainWindow() ?
-  HWND hwnd = (HWND)GetNativeData(NS_NATIVE_WINDOW);
-  hwnd = WinQueryWindow(hwnd, QW_PARENT);
- 
-  if( hwnd == mQmsg.hwnd || WinIsChild( mQmsg.hwnd, hwnd))
-     isInWindow = PR_TRUE;
-  else if (!isInWindow && gRollupWidget &&
-           EventIsInsideWindow((nsWindow*)gRollupWidget))
-     // include for consideration any popup menu which may be active at the moment
-     isInWindow = PR_TRUE;
- 
-  // XXX really ought to do something about focus here
- 
-  if( !isInWindow)
-  {
-     // Block mouse messages for non-modal windows
-     if( mQmsg.msg >= WM_MOUSEFIRST && mQmsg.msg <= WM_MOUSELAST)
-        isMouseEvent = PR_TRUE;
-     else if( mQmsg.msg >= WM_MOUSETRANSLATEFIRST &&
-              mQmsg.msg <= WM_MOUSETRANSLATELAST)
-        isMouseEvent = PR_TRUE;
-     else if( mQmsg.msg == WM_MOUSEENTER || mQmsg.msg == WM_MOUSELEAVE)
-        isMouseEvent = PR_TRUE;
-  }
- 
-  // set dispatch indicator
-  *aForWindow = isInWindow || !isMouseEvent;
-#else
-  *aForWindow = PR_TRUE;
-#endif
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
 //
 // Constrain a potential move to fit onscreen
 //
@@ -2077,29 +2019,6 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
-
-{
-  nsresult rv = NS_OK;
-  if (mWnd) {
-    PRInt32 aX, aY, aWidth, aHeight;
-    ((nsIRegion*)aRegion)->GetBoundingBox (&aX, &aY, &aWidth, &aHeight);
-
-    RECTL rcl = { aX, aY, aX + aWidth, aY + aHeight };
-    NS2PM (rcl);
-    WinInvalidateRect (mWnd, &rcl, FALSE);
-
-#if 0
-        if( PR_TRUE == aIsSynchronous) {
-          Update();
-        }
-#endif
-
-  }
-  return rv;  
-}
-
 //-------------------------------------------------------------------------
 //
 // Force a synchronous repaint of the window
@@ -2142,7 +2061,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
             return (void*)hps;
         }
 
-        case NS_NATIVE_COLORMAP:
         default: 
             break;
     }
@@ -2163,25 +2081,10 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_PLUGIN_PORT:
-    case NS_NATIVE_COLORMAP:
       break;
     default: 
       break;
   }
-}
-
-//-------------------------------------------------------------------------
-//
-// Set the colormap of the window
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
-{
-   // SetColorMap - not implemented.
-   // Any palette lives in the device context & should be altered there.
-   // And shouldn't be altered at all, once libimg has decided what should
-   // be in it.  So my opinion is this method shouldn't be called.
-   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -2230,7 +2133,6 @@ void nsWindow::ScrollChildWindows(PRInt32 aX, PRInt32 aY)
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-//XXX Scroll is obsolete and should go away soon
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
 {
   RECTL rcl;
@@ -2262,53 +2164,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
 
   return NS_OK;
 }
-
-NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
-{
-    // this prevents screen corruption while scrolling during a
-    // Moz-originated drag - during a native drag, the screen
-    // isn't updated until the drag ends. so there's no corruption
-  HPS hps = 0;
-  CheckDragStatus(ACTION_SCROLL, &hps);
-
-    // Scroll the entire contents of the window + change the offset of any child windows
-  WinScrollWindow( mWnd, aDx, -aDy, 0, 0, 0, 0,
-                   SW_INVALIDATERGN | SW_SCROLLCHILDREN);
-  Update(); // Force synchronous generation of NS_PAINT
-
-  if (hps)
-    ReleaseIfDragHPS(hps);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::ScrollRect(nsIntRect &aRect, PRInt32 aDx, PRInt32 aDy)
-{
-  RECTL rcl;
-
-  rcl.xLeft = aRect.x;
-  rcl.yBottom = aRect.y + aRect.height;
-  rcl.xRight = rcl.xLeft + aRect.width;
-  rcl.yTop = rcl.yBottom + aRect.height;
-  NS2PM( rcl);
-
-    // this prevents screen corruption while scrolling during a
-    // Moz-originated drag - during a native drag, the screen
-    // isn't updated until the drag ends. so there's no corruption
-  HPS hps = 0;
-  CheckDragStatus(ACTION_SCROLL, &hps);
-
-    // Scroll the bits in the window defined by trect. 
-    // Child windows are not scrolled.
-  WinScrollWindow(mWnd, aDx, -aDy, &rcl, 0, 0, 0, SW_INVALIDATERGN);
-  Update(); // Force synchronous generation of NS_PAINT
-
-  if (hps)
-    ReleaseIfDragHPS(hps);
-
-  return NS_OK;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -3532,20 +3387,6 @@ NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec)
   }
 
   WinSendMsg(mFrameWnd, WM_SETICON, (MPARAM)hWorkingIcon, (MPARAM)0);
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-{
-  aWidth = mPreferredWidth;
-  aHeight = mPreferredHeight;
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-{
-  mPreferredWidth = aWidth;
-  mPreferredHeight = aHeight;
   return NS_OK;
 }
 

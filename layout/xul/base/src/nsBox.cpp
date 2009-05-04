@@ -51,7 +51,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
-#include "nsIWidget.h"
 #include "nsIRenderingContext.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
@@ -281,11 +280,9 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
 
     // Nuke the overflow area. The caller is responsible for restoring
     // it if necessary.
-    if (aRemoveOverflowArea && (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)) {
+    if (aRemoveOverflowArea && HasOverflowRect()) {
       // remove the previously stored overflow area
-      PresContext()->PropertyTable()->
-        DeleteProperty(this, nsGkAtoms::overflowAreaProperty);
-      RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
+      ClearOverflowRect();
     }
 
     if (!(flags & NS_FRAME_NO_MOVE_VIEW))
@@ -422,21 +419,6 @@ PRBool
 nsBox::DoesNeedRecalc(nscoord aCoord)
 {
   return (aCoord == -1);
-}
-
-PRBool
-nsBox::GetWasCollapsed(nsBoxLayoutState& aState)
-{
-  return (GetStateBits() & NS_STATE_IS_COLLAPSED) != 0;
-}
-
-void
-nsBox::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aCollapsed)
-{
-  if (aCollapsed)
-     AddStateBits(NS_STATE_IS_COLLAPSED);
-  else
-     RemoveStateBits(NS_STATE_IS_COLLAPSED);
 }
 
 NS_IMETHODIMP

@@ -184,7 +184,7 @@ class nsUint32ToContentHashEntry : public PLDHashEntryHdr
     PRBool IsEmpty() { return mValOrHash == nsnull; }
 
   private:
-    typedef unsigned long PtrBits;
+    typedef PRUptrdiff PtrBits;
     typedef nsTHashtable<nsISupportsHashKey> HashSet;
     /** Get the hash pointer (or null if we're not a hash) */
     HashSet* GetHashSet()
@@ -821,9 +821,9 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext)
+  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
   {
-    return nsContentUtils::GetContextForEventHandlers(this, aContext);
+    return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
@@ -947,6 +947,7 @@ public:
   virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
 
   NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
+  NS_IMETHOD GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult);
 
   virtual NS_HIDDEN_(nsresult) GetXBLChildNodesFor(nsIContent* aContent,
                                                    nsIDOMNodeList** aResult);

@@ -267,8 +267,14 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
     // real column below, spanned anonymous columns should be removed,
     // since the HTML spec says to ignore the span of a colgroup if it
     // has content columns in it.
-    NS_ASSERTION(col != aPrevFrame, "Bad aPrevFrame");
     nextCol = col->GetNextCol();
+    if (col == aPrevFrame) {
+      // This can happen when we're being appended to
+      NS_ASSERTION(!nextCol || nextCol->GetColType() != eColAnonymousColGroup,
+                   "Inserting in the middle of our anonymous cols?");
+      // We'll want to insert at the beginning
+      aPrevFrame = nsnull;
+    }
     RemoveFrame(nsnull, col);
     col = nextCol;
   }

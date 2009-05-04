@@ -73,6 +73,11 @@ JS_BEGIN_EXTERN_C
  * A flat string with JSSTRFLAG_ATOMIZED set means that the string is hashed as
  * an atom. This flag is used to avoid re-hashing the already-atomized string.
  *
+ * Any string with JSSTRFLAG_DEFLATED set means that the string has an entry
+ * in the deflated string cache. The GC uses this flag to optimize string 
+ * finalization and avoid an expensive cache lookup for strings that were 
+ * never deflated.
+ *
  * When JSSTRFLAG_DEPENDENT is set, the string depends on characters of another
  * string strongly referenced by the u.base field. The base member may point to
  * another dependent string if JSSTRING_CHARS has not been called yet.
@@ -108,8 +113,9 @@ struct JSString {
 #define JSSTRFLAG_PREFIX            JSSTRING_BIT(JS_BITS_PER_WORD - 2)
 #define JSSTRFLAG_MUTABLE           JSSTRFLAG_PREFIX
 #define JSSTRFLAG_ATOMIZED          JSSTRING_BIT(JS_BITS_PER_WORD - 3)
+#define JSSTRFLAG_DEFLATED          JSSTRING_BIT(JS_BITS_PER_WORD - 4)
 
-#define JSSTRING_LENGTH_BITS        (JS_BITS_PER_WORD - 3)
+#define JSSTRING_LENGTH_BITS        (JS_BITS_PER_WORD - 4)
 #define JSSTRING_LENGTH_MASK        JSSTRING_BITMASK(JSSTRING_LENGTH_BITS)
 
 /* Universal JSString type inquiry and accessor macros. */
@@ -131,6 +137,13 @@ struct JSString {
 #define JSSTRING_LENGTH(str)        (JSSTRING_IS_DEPENDENT(str)               \
                                      ? JSSTRDEP_LENGTH(str)                   \
                                      : JSFLATSTR_LENGTH(str))
+
+JS_STATIC_ASSERT(sizeof(size_t) == sizeof(jsword));
+
+#define JSSTRING_IS_DEFLATED(str)   ((str)->length & JSSTRFLAG_DEFLATED)
+
+#define JSSTRING_SET_DEFLATED(str)                                            \
+    JS_ATOMIC_SET_MASK((jsword*)&(str)->length, JSSTRFLAG_DEFLATED)
 
 #define JSSTRING_CHARS_AND_LENGTH(str, chars_, length_)                       \
     ((void)(JSSTRING_IS_DEPENDENT(str)                                        \
@@ -154,6 +167,17 @@ struct JSString {
 
 #define JSFLATSTR_CHARS(str)                                                  \
     (JS_ASSERT(JSSTRING_IS_FLAT(str)), (str)->u.chars)
+
+/* 
+ * Special flat string initializer that preserves the JSSTR_DEFLATED flag.
+ * Use this macro when reinitializing an existing string (which may be
+ * hashed to its deflated bytes. Newborn strings must use JSFLATSTR_INIT.
+ */
+#define JSFLATSTR_REINIT(str, chars_, length_)                                \
+    ((void)(JS_ASSERT(((length_) & ~JSSTRING_LENGTH_MASK) == 0),              \
+            (str)->length = ((str)->length & JSSTRFLAG_DEFLATED) |            \
+                             (length_ & ~JSSTRFLAG_DEFLATED),                 \
+            (str)->u.chars = (chars_)))
 
 /*
  * Macros to manipulate atomized and mutable flags of flat strings. It is safe
@@ -182,8 +206,10 @@ struct JSString {
  * with the atomized bit set.
  */
 #define JSFLATSTR_SET_ATOMIZED(str)                                           \
-    ((void)(JS_ASSERT(JSSTRING_IS_FLAT(str) && !JSSTRING_IS_MUTABLE(str)),    \
-            (str)->length |= JSSTRFLAG_ATOMIZED))
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(JSSTRING_IS_FLAT(str) && !JSSTRING_IS_MUTABLE(str));        \
+        JS_ATOMIC_SET_MASK((jsword*) &(str)->length, JSSTRFLAG_ATOMIZED);     \
+    JS_END_MACRO
 
 #define JSFLATSTR_SET_MUTABLE(str)                                            \
     ((void)(JS_ASSERT(JSSTRING_IS_FLAT(str) && !JSSTRING_IS_ATOMIZED(str)),   \
@@ -218,8 +244,22 @@ struct JSString {
                    | (len),                                                   \
      (str)->u.base = (bstr))
 
+/* See JSFLATSTR_INIT. */
+#define JSSTRDEP_REINIT(str,bstr,off,len)                                     \
+    ((str)->length = JSSTRFLAG_DEPENDENT                                      \
+                   | ((str->length) & JSSTRFLAG_DEFLATED)                     \
+                   | ((off) << JSSTRDEP_START_SHIFT)                          \
+                   | (len),                                                   \
+     (str)->u.base = (bstr))
+
 #define JSPREFIX_INIT(str,bstr,len)                                           \
     ((str)->length = JSSTRFLAG_DEPENDENT | JSSTRFLAG_PREFIX | (len),          \
+     (str)->u.base = (bstr))
+
+/* See JSFLATSTR_INIT. */
+#define JSPREFIX_REINIT(str,bstr,len)                                         \
+    ((str)->length = JSSTRFLAG_DEPENDENT | JSSTRFLAG_PREFIX |                 \
+                     ((str->length) & JSSTRFLAG_DEFLATED) | (len),            \
      (str)->u.base = (bstr))
 
 #define JSSTRDEP_BASE(str)          ((str)->u.base)

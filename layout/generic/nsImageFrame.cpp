@@ -48,7 +48,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIImage.h"
-#include "nsIWidget.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
@@ -202,18 +201,6 @@ NS_IMETHODIMP nsImageFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_FAILURE;
 }
 #endif
-
-NS_IMETHODIMP_(nsrefcnt) nsImageFrame::AddRef(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsImageFrame::Release(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
 
 void
 nsImageFrame::Destroy()
@@ -1074,7 +1061,8 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
         nsRect dest((vis->mDirection == NS_STYLE_DIRECTION_RTL) ?
                     inner.XMost() - size : inner.x,
                     inner.y, size, size);
-        nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon, dest, aDirtyRect);
+        nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon,
+          nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect);
         iconUsed = PR_TRUE;
       }
     }
@@ -1182,7 +1170,8 @@ nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   nsRect dest(inner.TopLeft(), mComputedSize);
   dest.y -= GetContinuationOffset();
 
-  nsLayoutUtils::DrawSingleImage(&aRenderingContext, aImage, dest, aDirtyRect);
+  nsLayoutUtils::DrawSingleImage(&aRenderingContext, aImage,
+    nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect);
 
   nsPresContext* presContext = PresContext();
   nsImageMap* map = GetImageMap(presContext);

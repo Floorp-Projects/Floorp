@@ -350,7 +350,7 @@ nsTreeBodyFrame::EnsureBoxObject()
   if (!mTreeBoxObject) {
     nsIContent* parent = GetBaseElement();
     if (parent) {
-      nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(parent->GetDocument());
+      nsIDocument* nsDoc = parent->GetDocument();
       if (!nsDoc) // there may be no document, if we're called from Destroy()
         return;
       nsCOMPtr<nsIBoxObject> box;
@@ -3526,6 +3526,7 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
           nsRect(destRect.TopLeft(), imageDestSize));
 
     nsLayoutUtils::DrawImage(&aRenderingContext, image,
+        nsLayoutUtils::GetGraphicsFilterForFrame(this),
         wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect);
   }
 
@@ -3766,6 +3767,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
       nsSize size(width*nsIDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsIDeviceContext::AppUnitsPerCSSPixel());
       nsLayoutUtils::DrawImage(&aRenderingContext, image,
+          nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(), aDirtyRect);
     } else {
       aRenderingContext.FillRect(meterRect);
@@ -3785,6 +3787,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
       nsSize size(width*nsIDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsIDeviceContext::AppUnitsPerCSSPixel());
       nsLayoutUtils::DrawImage(&aRenderingContext, image,
+          nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(), aDirtyRect);
     }
   }

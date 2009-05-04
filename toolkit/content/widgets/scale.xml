@@ -34,7 +34,7 @@
 
     <content align="center" pack="center">
       <xul:slider anonid="slider" class="scale-slider" snap="true" flex="1"
-                  xbl:inherits="disabled,orient,dir,curpos=value,minpos=min,maxpos=max,increment,pageincrement">
+                  xbl:inherits="disabled,orient,dir,curpos=value,minpos=min,maxpos=max,increment,pageincrement,movetoclick">
         <xul:thumb class="scale-thumb" xbl:inherits="disabled,orient"/>
       </xul:slider>
     </content>

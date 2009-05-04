@@ -43,6 +43,10 @@ relativesrcdir  = toolkit/components/passwordmgr/test
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = \
+	browser \
+	$(NULL)
+
 # Module name for xpcshell tests.
 MODULE		= test_passwordmgr
 
@@ -105,9 +109,6 @@ XPCSHELL_TESTS  = unit
 # test_bug_221634.html
 
 include $(topsrcdir)/config/rules.mk
-
-# Note: Invoke any additional (non-xpcshell) test programs here.
-check::
 
 libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

@@ -254,7 +254,7 @@
       <!-- =================== PUBLIC MEMBERS =================== -->
 
       <property name="value"
-                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+                onget="return this.hasAttribute('isempty') ? '' : this.inputField.value;">
         <setter><![CDATA[
           this.mIgnoreInput = true;
           if (val) {
@@ -877,11 +877,6 @@
         var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
         controller.stopSearch();
 
-        // when the popup hides, we need to clear the selection
-        // otherwise we will use the value of the selected index when the
-        // user hits enter.
-        // see bug #400671 for details
-        this.selectedIndex = -1;
         this.mPopupOpen = false;
 
         // Reset the maxRows property to the cached "normal" value, and reset
@@ -953,10 +948,11 @@
           <![CDATA[
           if (!this.mPopupOpen) {
             this.mInput = aInput;
+            // clear any previous selection, see bugs 400671 and 488357
+            this.selectedIndex = -1;
             document.popupNode = null;
 
-            var rect = aElement.getBoundingClientRect();
-            var width = rect.right - rect.left;
+            var width = aElement.getBoundingClientRect().width;
             this.setAttribute("width", width > 100 ? width : 100);
             // invalidate() depends on the width attribute
             this._invalidate();
@@ -1038,11 +1034,11 @@
           // Default the height to 0 if we have no rows to show
           let height = 0;
           if (numRows) {
-            let lastRowShown = rows[numRows - 1];
+            let firstRowRect = rows[0].getBoundingClientRect();
+            let lastRowRect = rows[numRows - 1].getBoundingClientRect();
 
             // Calculate the height to have the first row to last row shown
-            height = lastRowShown.boxObject.y + lastRowShown.boxObject.height -
-              rows[0].boxObject.y;
+            height = lastRowRect.bottom - firstRowRect.top;
           }
 
           // Only update the height if we have a non-zero height and if it

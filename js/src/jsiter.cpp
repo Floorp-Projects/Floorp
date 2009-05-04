@@ -375,7 +375,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         *vp = OBJECT_TO_JSVAL(iterobj);
     } else {
         atom = cx->runtime->atomState.iteratorAtom;
-        if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), vp, NULL))
+        if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), false, vp))
             goto bad;
         if (JSVAL_IS_VOID(*vp)) {
           default_iter:
@@ -676,7 +676,7 @@ generator_trace(JSTracer *trc, JSObject *obj)
     js_TraceStackFrame(trc, &gen->frame);
 }
 
-JSClass js_GeneratorClass = {
+JS_FRIEND_DATA(JSClass) js_GeneratorClass = {
     js_Generator_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Generator),

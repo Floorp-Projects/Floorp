@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  js \
 		  locale \
+		  view \
 		  pref \
 		  necko \
 		  xpconnect \

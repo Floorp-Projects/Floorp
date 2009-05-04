@@ -44,11 +44,6 @@
 #include "nsITransaction.h"
 #include "nsCOMPtr.h"
 
-#define SET_DOC_TITLE_TXN_CID \
-{ /*7FC508B5-ED8F-11d4-AF02-0050040AE132 */ \
-0x7fc508b5, 0xed8f, 0x11d4, \
-{ 0xaf, 0x2, 0x0, 0x50, 0x4, 0xa, 0xe1, 0x32 } }
-
 /**
  * A transaction that changes the document's title,
  *  which is a text node under the <title> tag in a page's <head> section
@@ -57,17 +52,14 @@
 class SetDocTitleTxn : public EditTxn
 {
 public:
-
-  static const nsIID& GetCID() { static const nsIID iid = SET_DOC_TITLE_TXN_CID; return iid; }
-
   /** Initialize the transaction.
     * @param aEditor the object providing core editing operations
     * @param aValue  the new value for document title
     */
   NS_IMETHOD Init(nsIHTMLEditor  *aEditor,
                   const nsAString *aValue);
-private:
   SetDocTitleTxn();
+private:
   nsresult SetDomTitle(const nsAString& aTitle);
 
 public:
@@ -89,8 +81,6 @@ protected:
 
   /** Set true if we dont' really change the title during Do() */
   PRPackedBool mIsTransient;
-
-  friend class TransactionFactory;
 };
 
 #endif

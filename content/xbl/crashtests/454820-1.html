@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 454820</title>
+</head>
+<body>
+
+<p>PASS if Firefox does not crash.</p>
+<script type="text/javascript">
+var evObj = document.createEvent('UIEvents');
+evObj.initUIEvent( 'keypress', true, true, window, 1 );
+document.getElementsByTagName('p')[0].dispatchEvent(evObj);
+</script>
+
+
+</body>
+</html>

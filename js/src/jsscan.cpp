@@ -54,6 +54,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsarena.h" /* Added by JSIFY */
+#include "jsbit.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsdtoa.h"
 #include "jsprf.h"
@@ -683,6 +684,13 @@ GrowStringBuffer(JSStringBuffer *sb, size_t newlength)
     offset = sb->ptr - sb->base;
     JS_ASSERT(offset >= 0);
     newlength += offset + 1;
+
+    /* Grow by powers of two until 16MB, then grow by that chunk size. */
+    const size_t CHUNK_SIZE = JS_BIT(24);
+    if (newlength < CHUNK_SIZE)
+        newlength = JS_BIT(JS_CeilingLog2(newlength));
+    else
+        newlength = JS_ROUNDUP(newlength, CHUNK_SIZE);
     if ((size_t)offset < newlength && newlength < ~(size_t)0 / sizeof(jschar))
         bp = (jschar *) realloc(sb->base, newlength * sizeof(jschar));
     else
@@ -719,19 +727,6 @@ void
 js_FinishStringBuffer(JSStringBuffer *sb)
 {
     sb->free(sb);
-}
-
-#define ENSURE_STRING_BUFFER(sb,n) \
-    ((sb)->ptr + (n) <= (sb)->limit || sb->grow(sb, n))
-
-static void
-FastAppendChar(JSStringBuffer *sb, jschar c)
-{
-    if (!STRING_BUFFER_OK(sb))
-        return;
-    if (!ENSURE_STRING_BUFFER(sb, 1))
-        return;
-    *sb->ptr++ = c;
 }
 
 void
@@ -817,7 +812,7 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
 
     /* Put the entity, including the '&' already scanned, in ts->tokenbuf. */
     offset = ts->tokenbuf.ptr - ts->tokenbuf.base;
-    FastAppendChar(&ts->tokenbuf, '&');
+    js_FastAppendChar(&ts->tokenbuf, '&');
     if (!STRING_BUFFER_OK(&ts->tokenbuf))
         return JS_FALSE;
     while ((c = GetChar(ts)) != ';') {
@@ -826,7 +821,7 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
                                         JSMSG_END_OF_XML_ENTITY);
             return JS_FALSE;
         }
-        FastAppendChar(&ts->tokenbuf, (jschar) c);
+        js_FastAppendChar(&ts->tokenbuf, (jschar) c);
         if (!STRING_BUFFER_OK(&ts->tokenbuf))
             return JS_FALSE;
     }
@@ -1028,7 +1023,11 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
                                                TOKENBUF_LENGTH(),             \
                                                0)                             \
                              : NULL)
-#define ADD_TO_TOKENBUF(c)  FastAppendChar(&ts->tokenbuf, (jschar) (c))
+#define ADD_TO_TOKENBUF(c)  JS_BEGIN_MACRO                                    \
+                                js_FastAppendChar(&ts->tokenbuf, jschar(c));  \
+                                if (!TOKENBUF_OK())                           \
+                                    goto error;                               \
+                            JS_END_MACRO
 
 /* The following 4 macros should only be used when TOKENBUF_OK() is true. */
 #define TOKENBUF_BASE()     (ts->tokenbuf.base)
@@ -1560,10 +1559,19 @@ retry:
          * https://bugzilla.mozilla.org/show_bug.cgi?id=309712
          * https://bugzilla.mozilla.org/show_bug.cgi?id=310993
          *
-         * So without JSOPTION_XML, we never scan an XML comment or CDATA
-         * literal.  We always scan <! as the start of an HTML comment hack
-         * to end of line, used since Netscape 2 to hide script tag content
-         * from script-unaware browsers.
+         * So without JSOPTION_XML, we changed around Firefox 1.5 never to scan
+         * an XML comment or CDATA literal.  Instead, we always scan <! as the
+         * start of an HTML comment hack to end of line, used since Netscape 2
+         * to hide script tag content from script-unaware browsers.
+         *
+         * But this still leaves XML resources with certain internal structure
+         * vulnerable to being loaded as script cross-origin, and some internal
+         * data stolen, so for Firefox 3.5 and beyond, we reject programs whose
+         * source consists only of XML literals. See:
+         *
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
+         *
+         * The check for this is in jsparse.cpp, JSCompiler::compileScript.
          */
         if ((ts->flags & TSF_OPERAND) &&
             (JS_HAS_XML_OPTION(cx) || PeekChar(ts) != '!')) {

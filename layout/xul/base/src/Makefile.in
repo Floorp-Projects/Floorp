@@ -109,7 +109,6 @@ CPPSRCS		+= \
 		nsLeafBoxFrame.cpp \
 		nsTextBoxFrame.cpp \
 		nsGroupBoxFrame.cpp \
-		nsFrameNavigator.cpp \
 		nsSplitterFrame.cpp \
 		nsDeckFrame.cpp \
 		nsProgressMeterFrame.cpp \

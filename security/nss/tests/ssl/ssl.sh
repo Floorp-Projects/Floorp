@@ -166,16 +166,16 @@ wait_for_selfserv()
 {
   echo "trying to connect to selfserv at `date`"
   echo "tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \\"
-  echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
+  echo "        -d ${P_R_CLIENTDIR} -v < ${REQUEST_FILE}"
   ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \
-          -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
+          -d ${P_R_CLIENTDIR} -v < ${REQUEST_FILE}
   if [ $? -ne 0 ]; then
       sleep 5
       echo "retrying to connect to selfserv at `date`"
       echo "tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \\"
-      echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
+      echo "        -d ${P_R_CLIENTDIR} -v < ${REQUEST_FILE}"
       ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \
-              -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
+              -d ${P_R_CLIENTDIR} -v < ${REQUEST_FILE}
       if [ $? -ne 0 ]; then
           html_failed "Waiting for Server"
       fi
@@ -351,11 +351,11 @@ ssl_cov()
           fi
 
           echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${CLIENT_OPTIONS} \\"
-          echo "        -f -d ${P_R_CLIENTDIR} -w nss < ${REQUEST_FILE}"
+          echo "        -f -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE}"
 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${CLIENT_OPTIONS} -f \
-                  -d ${P_R_CLIENTDIR} -w nss < ${REQUEST_FILE} \
+                  -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
           cat ${TMP}/$HOST.tmp.$$ 
@@ -390,11 +390,11 @@ ssl_auth()
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
           start_selfserv
 
-          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} \\"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} -v ${CLIENT_OPTIONS} \\"
           echo "        ${cparam}  < ${REQUEST_FILE}"
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} ${CLIENT_OPTIONS} \
-                  -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \
+                  -d ${P_R_CLIENTDIR} -v < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
           cat ${TMP}/$HOST.tmp.$$ 
@@ -529,11 +529,11 @@ ssl_crl_ssl()
 	  cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
 	  start_selfserv
 	  
-	  echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} \\"
+	  echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} -v \\"
 	  echo "        ${cparam}  < ${REQUEST_FILE}"
 	  rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
 	  ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
-	      -d ${R_CLIENTDIR} < ${REQUEST_FILE} \
+	      -d ${R_CLIENTDIR} -v < ${REQUEST_FILE} \
 	      >${TMP}/$HOST.tmp.$$  2>&1
 	  ret=$?
 	  cat ${TMP}/$HOST.tmp.$$ 
@@ -624,14 +624,14 @@ load_group_crl() {
         fi
         echo "================= Reloading ${eccomment}CRL for group $grpBegin - $grpEnd ============="
 
-        echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} \\"
+        echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} -v \\"
         echo "          -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix}"
         echo "Request:"
         echo "GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}"
         echo ""
         echo "RELOAD time $i"
         ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f  \
-            -d ${R_CLIENTDIR} -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
+            -d ${R_CLIENTDIR} -v -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
 	    >${OUTFILE_TMP}  2>&1 <<_EOF_REQUEST_
 GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}
 
@@ -718,11 +718,11 @@ ssl_crl_cache()
             cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
 
             echo "Server Args: $SERV_ARG"
-            echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} \\"
+            echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} -v \\"
             echo "        ${cparam}  < ${REQUEST_FILE}"
             rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
             ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
-	        -d ${R_CLIENTDIR} < ${REQUEST_FILE} \
+	        -d ${R_CLIENTDIR} -v < ${REQUEST_FILE} \
                 >${TMP}/$HOST.tmp.$$  2>&1
             ret=$?
             cat ${TMP}/$HOST.tmp.$$ 

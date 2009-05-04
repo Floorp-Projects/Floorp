@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="yesno" title="Testcase for bug 483565" orient="horizontal"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <hbox align="baseline">
+    <stack align="baseline">
+      <label value="hij" style="margin-top: 20px"/>
+    </stack>
+    <stack align="baseline">
+      <label value="hij" style="margin-bottom: 20px; margin-top: 20px"/>
+    </stack>
+  </hbox>
+</window>

@@ -286,8 +286,8 @@ extern int SECU_PrintPKCS7ContentInfo(FILE *out, SECItem *der, char *m,
 extern SECStatus SECU_PKCS11Init(PRBool readOnly);
 
 /* Dump contents of signed data */
-extern int SECU_PrintSignedData(FILE *out, SECItem *der, char *m, int level,
-				SECU_PPFunc inner);
+extern int SECU_PrintSignedData(FILE *out, SECItem *der, const char *m, 
+                                int level, SECU_PPFunc inner);
 
 /* Print cert data and its trust flags */
 extern SECStatus SEC_PrintCertificateAndTrust(CERTCertificate *cert,

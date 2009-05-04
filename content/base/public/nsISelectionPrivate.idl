@@ -47,15 +47,17 @@ interface nsIContent;
 class nsFrameSelection;
 class nsIFrame;
 class nsIPresShell;
+struct nsTextRangeStyle;
 struct nsPoint;
 %}
 
 [ptr] native nsFrameSelection(nsFrameSelection);
 [ptr] native nsIFrame(nsIFrame);
 [ptr] native nsIPresShell(nsIPresShell);
+[ref] native constTextRangeStyleRef(const nsTextRangeStyle);
 [ref] native nsPointRef(nsPoint);
 
-[scriptable, uuid(b416c692-eeb8-4186-addd-c444e81b68e5)]
+[scriptable, uuid(98552206-ad7a-4d2d-8ce3-b6fa2389298b)]
 interface nsISelectionPrivate : nsISupports
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -118,5 +120,13 @@ interface nsISelectionPrivate : nsISupports
     [noscript] nsFrameSelection getFrameSelection();
 
     [noscript] void setAncestorLimiter(in nsIContent aContent);
+
+    /**
+     * Set the painting style for the range. The range must be a range in
+     * the selection. The textRangeStyle will be used by text frame
+     * when it is painting the selection.
+     */
+    [noscript] void setTextRangeStyle(in nsIDOMRange range,
+                      in constTextRangeStyleRef textRangeStyle);
 };
 

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  var table = document.getElementById("table");
+
+  table.insertBefore(document.createElement("thead"), document.getElementById("A"));
+
+  var tb2 = document.createElement("tfoot");
+  var tr1 = document.createElement("tr");
+  tb2.appendChild(tr1);
+  table.appendChild(tb2);
+
+  var tr = document.createElement("tr");
+  var td = document.createElement("td");
+  td.appendChild(document.createTextNode("td"));
+  td.setAttribute("rowspan", 0);
+  tr.appendChild(td);
+  document.getElementById("B").appendChild(tr);
+}
+  
+</script>
+</head>
+<body onload="boom();">
+
+<table id="table">
+  <tfoot id="A"><tr><td>td</td></tr></tfoot>
+  <tfoot id="B"><tr><td>td</td></tr></tfoot>
+  <thead></thead>
+</table>
+
+</body>
+</html>

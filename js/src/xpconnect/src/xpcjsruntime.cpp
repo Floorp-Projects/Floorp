@@ -477,11 +477,26 @@ void XPCJSRuntime::RootContextGlobals()
 }
 #endif
 
+template<class T> static void
+DoDeferredRelease(nsTArray<T> &array)
+{
+    while(1)
+    {
+        PRUint32 count = array.Length();
+        if(!count)
+        {
+            array.Compact();
+            break;
+        }
+        T wrapper = array[count-1];
+        array.RemoveElementAt(count-1);
+        NS_RELEASE(wrapper);
+    }
+}
+
 // static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {
-    nsTArray<nsXPCWrappedJS*>* dyingWrappedJSArray;
-
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if(self)
     {
@@ -506,7 +521,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     self->mThreadRunningGC = PR_GetCurrentThread();
                 }
 
-                dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
+                nsTArray<nsXPCWrappedJS*>* dyingWrappedJSArray =
+                    &self->mWrappedJSToReleaseArray;
 
                 {
                     JSDyingJSObjectData data = {cx, dyingWrappedJSArray};
@@ -543,20 +559,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 
                 // Release all the members whose JSObjects are now known
                 // to be dead.
-
-                dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
-                while(1)
-                {
-                    PRUint32 count = dyingWrappedJSArray->Length();
-                    if(!count)
-                    {
-                        dyingWrappedJSArray->Compact();
-                        break;
-                    }
-                    NS_RELEASE(dyingWrappedJSArray->ElementAt(count-1));
-                    dyingWrappedJSArray->RemoveElementAt(count-1);
-                }
-
+                DoDeferredRelease(self->mWrappedJSToReleaseArray);
 
 #ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
                 printf("--------------------------------------------------------------\n");
@@ -756,22 +759,11 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // events above.
 
                 // Do any deferred released of native objects.
-                nsTArray<nsISupports*> &array = self->mNativesToReleaseArray;
 #ifdef XPC_TRACK_DEFERRED_RELEASES
                 printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
-                       array.Length());
+                       self->mNativesToReleaseArray.Length());
 #endif
-                while(1)
-                {
-                    PRUint32 count = array.Length();
-                    if(!count)
-                    {
-                        array.Compact();
-                        break;
-                    }
-                    NS_RELEASE(array[count-1]);
-                    array.RemoveElementAt(count-1);
-                }
+                DoDeferredRelease(self->mNativesToReleaseArray);
 #ifdef XPC_TRACK_DEFERRED_RELEASES
                 printf("XPC - End deferred Releases\n");
 #endif
@@ -1150,6 +1142,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     JSBool ok = JS_TRUE;
     if(!mStrIDs[0])
     {
+        JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
         JSAutoRequest ar(cx);
         for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
         {

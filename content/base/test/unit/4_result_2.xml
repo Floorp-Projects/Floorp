@@ -1,0 +1,7 @@
+<falsexul:xul xmlns:falsexul="http://mozilla.org/ns3" xmlns:other="http://mozilla.org/ns/other">
+      <box xmlns="http://mozilla.org/ns">
+        <other:what>lorem ipsum</other:what>
+        <description>xul fake</description>
+        <what xmlns="http://mozilla.org/ns/other">lorem ipsum <falsexul:label value="hello"/> the return</what>
+      </box>
+    </falsexul:xul>

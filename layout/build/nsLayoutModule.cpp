@@ -43,7 +43,6 @@
 #include "nsDataDocumentContentPolicy.h"
 #include "nsNoDataProtocolContentPolicy.h"
 #include "nsDOMCID.h"
-#include "nsCSSOMFactory.h"
 #include "nsInspectorCSSUtils.h"
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
@@ -89,6 +88,7 @@
 #include "nsPlainTextSerializer.h"
 #include "mozSanitizingSerializer.h"
 #include "nsXMLContentSerializer.h"
+#include "nsXHTMLContentSerializer.h"
 #include "nsRuleNode.h"
 #include "nsWyciwygProtocolHandler.h"
 #include "nsContentAreaDragDrop.h"
@@ -496,6 +496,7 @@ MAKE_CTOR(CreateTextEncoder,              nsIDocumentEncoder,          NS_NewTex
 MAKE_CTOR(CreateHTMLCopyTextEncoder,      nsIDocumentEncoder,          NS_NewHTMLCopyTextEncoder)
 MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
 MAKE_CTOR(CreateHTMLContentSerializer,    nsIContentSerializer,        NS_NewHTMLContentSerializer)
+MAKE_CTOR(CreateXHTMLContentSerializer,   nsIContentSerializer,        NS_NewXHTMLContentSerializer)
 MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPlainTextSerializer)
 MAKE_CTOR(CreateHTMLFragmentSink,         nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink)
 MAKE_CTOR(CreateHTMLFragmentSink2,        nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink2)
@@ -522,7 +523,6 @@ MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTF
 MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXMLContentBuilder)
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
@@ -995,11 +995,6 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/content/subtree-content-iterator;1",
     CreateSubtreeIterator },
 
-  { "CSS Object Model Factory",
-    NS_CSSOMFACTORY_CID,
-    nsnull,
-    nsCSSOMFactoryConstructor },
-
   { "Inspector CSS Utils",
     NS_INSPECTORCSSUTILS_CID,
     nsnull,
@@ -1037,7 +1032,7 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_DOC_ENCODER_CONTRACTID_BASE "application/xml",
     CreateTextEncoder },
 
-  { "XML document encoder",
+  { "XHTML document encoder",
     NS_TEXT_ENCODER_CID,
     NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml",
     CreateTextEncoder },
@@ -1074,10 +1069,10 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/xml",
     CreateXMLContentSerializer },
 
-  { "XML content serializer",
-    NS_XMLCONTENTSERIALIZER_CID,
+  { "XHTML content serializer",
+    NS_XHTMLCONTENTSERIALIZER_CID,
     NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/xhtml+xml",
-    CreateXMLContentSerializer },
+    CreateXHTMLContentSerializer },
 
 #ifdef MOZ_SVG
   { "SVG content serializer",

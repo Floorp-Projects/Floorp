@@ -1,0 +1,19 @@
+/* Places tree */
+
+#placesTreechildren {
+  -moz-user-focus: normal;
+}
+
+#placesTreechildren::-moz-tree-cell(grippyRow),
+#placesTreechildren::-moz-tree-cell-text(grippyRow),
+#placesTreechildren::-moz-tree-image(grippyRow) {
+  cursor: -moz-grab;
+}
+
+
+/* Sanitize everything warnings */
+
+#sanitizeEverythingWarning,
+#sanitizeEverythingUndoWarning {
+  white-space: pre-wrap;
+}

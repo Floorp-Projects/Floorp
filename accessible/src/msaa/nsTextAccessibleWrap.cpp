@@ -45,7 +45,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIRenderingContext.h"
-#include "nsIWidget.h"
 #include "nsIComponentManager.h"
 
 // --------------------------------------------------------
@@ -212,9 +211,6 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsIWidget *widget = frame->GetWindow();
-  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-  
   nsPoint startPoint, endPoint;
   nsIFrame *startFrame = GetPointFromOffset(frame, aStartOffset, PR_TRUE, startPoint);
   nsIFrame *endFrame = GetPointFromOffset(frame, aEndOffset, PR_FALSE, endPoint);

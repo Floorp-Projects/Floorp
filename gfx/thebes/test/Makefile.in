@@ -51,10 +51,10 @@ REQUIRES = \
 	thebes \
 	cairo \
 	pref \
-	lcms \
 	necko \
 	unicharutil \
 	nspr \
+	qcms \
 	$(NULL)
 
 # All platforms
@@ -63,8 +63,8 @@ CPPSRCS = \
 	gfxFontSelectionTest.cpp \
 	gfxTextRunPerfTest.cpp \
 	gfxWordCacheTest.cpp \
-	gfxColorManagementTest.cpp \
 	$(NULL)
+#	gfxColorManagementTest.cpp \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS = gfxTestCocoaHelper.mm
@@ -86,7 +86,6 @@ LIBS =  $(HELPER_OBJS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(ZLIB_LIBS) \
-	$(LCMS_LIBS) \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

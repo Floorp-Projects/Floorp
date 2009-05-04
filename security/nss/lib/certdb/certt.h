@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.48 2008/10/31 23:02:36 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.49 2009/03/21 01:40:34 nelson%bolyard.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -1252,6 +1252,12 @@ typedef enum CertStrictnessLevels {
  */
 #define CERT_ENABLE_LDAP_FETCH          1
 #define CERT_ENABLE_HTTP_FETCH          2
+
+/* This functin pointer type may be used for any function that takes
+ * a CERTCertificate * and returns an allocated string, which must be
+ * freed by a call to PORT_Free.
+ */
+typedef char * (*CERT_StringFromCertFcn)(CERTCertificate *cert);
 
 /* XXX Lisa thinks the template declarations belong in cert.h, not here? */
 

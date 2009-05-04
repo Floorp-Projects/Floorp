@@ -266,7 +266,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     nsRect rect, crect;
     nsCOMPtr<nsIDOMDocument> doc;
     child->GetOwnerDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDocument> nsDoc(do_QueryInterface(doc));
     if(!nsDoc)
       return NS_ERROR_UNEXPECTED;
 
@@ -353,7 +353,7 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     nsCOMPtr<nsIDOMDocument> doc;
     // XXXbz sXBL/XBL2 issue -- which document?
     child->GetOwnerDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDocument> nsDoc(do_QueryInterface(doc));
     if(!nsDoc)
         return NS_ERROR_UNEXPECTED;
 

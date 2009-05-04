@@ -368,7 +368,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [state=%08x]", mState);
   }
   nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
-  if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+  if (f->HasOverflowRect()) {
     nsRect overflowArea = f->GetOverflowRect();
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
@@ -1075,14 +1075,14 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         mLines.begin().next()->IsBlock()))) {
     // Reflow the bullet
     nsHTMLReflowMetrics metrics;
-    // FIXME: aReflowState.mComputedBorderPadding.top isn't even the
-    // right place -- we really want the top of the line whose baseline
-    // we're using (or, actually, the entire line, once we fix bug
-    // 25888)
-    ReflowBullet(state, metrics, aReflowState.mComputedBorderPadding.top);
+    // XXX Use the entire line when we fix bug 25888.
+    nsLayoutUtils::LinePosition position;
+    PRBool havePosition = nsLayoutUtils::GetFirstLinePosition(this, &position);
+    nscoord lineTop = havePosition ? position.mTop
+                                   : aReflowState.mComputedBorderPadding.top;
+    ReflowBullet(state, metrics, lineTop);
 
-    nscoord baseline;
-    if (nsLayoutUtils::GetFirstLineBaseline(this, &baseline)) {
+    if (havePosition) {
       // We have some lines to align the bullet with.  
 
       // Doing the alignment using the baseline will also cater for
@@ -1090,7 +1090,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     
       // Tall bullets won't look particularly nice here...
       nsRect bbox = mBullet->GetRect();
-      bbox.y = baseline - metrics.ascent;
+      bbox.y = position.mBaseline - metrics.ascent;
       mBullet->SetRect(bbox);
     }
     // Otherwise just leave the bullet where it is, up against our top padding.
@@ -1186,7 +1186,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
            aStatus, NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not ",
            aMetrics.width, aMetrics.height,
            aMetrics.mCarriedOutBottomMargin.get());
-    if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
+    if (HasOverflowRect()) {
       printf(" combinedArea={%d,%d,%d,%d}",
              aMetrics.mOverflowArea.x,
              aMetrics.mOverflowArea.y,
@@ -1657,19 +1657,19 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
     } else {
       // Note that this check will become incorrect once bug 25888 is fixed
       // because we are only checking the top of the line
-      aState.GetAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE);
       PRBool wasImpactedByFloat = aLine->IsImpactedByFloat();
-      PRBool isImpactedByFloat = aState.IsImpactedByFloat();
+      nsFlowAreaRect floatAvailableSpace =
+        aState.GetFloatAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE);
 
 #ifdef REALLY_NOISY_REFLOW
     printf("nsBlockFrame::PropagateFloatDamage %p was = %d, is=%d\n", 
-       this, wasImpactedByFloat, isImpactedByFloat);
+           this, wasImpactedByFloat, floatAvailableSpace.mHasFloats);
 #endif
 
       // Mark the line dirty if it was or is affected by a float
       // We actually only really need to reflow if the amount of impact
       // changes, but that's not straightforward to check
-      if (wasImpactedByFloat || isImpactedByFloat) {
+      if (wasImpactedByFloat || floatAvailableSpace.mHasFloats) {
         aLine->MarkDirty();
       }
     }
@@ -2951,15 +2951,15 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     
     // Here aState.mY is the top border-edge of the block.
     // Compute the available space for the block
-    aState.GetAvailableSpace();
+    nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
 #ifdef REALLY_NOISY_REFLOW
-    printf("setting line %p isImpacted to %s\n", aLine.get(), aState.IsImpactedByFloat()?"true":"false");
+    printf("setting line %p isImpacted to %s\n",
+           aLine.get(), floatAvailableSpace.mHasFloats?"true":"false");
 #endif
-    PRBool isImpacted = aState.IsImpactedByFloat() ? PR_TRUE : PR_FALSE;
-    aLine->SetLineIsImpactedByFloat(isImpacted);
+    aLine->SetLineIsImpactedByFloat(floatAvailableSpace.mHasFloats);
     nsRect availSpace;
-    aState.ComputeBlockAvailSpace(frame, display, replacedBlock != nsnull,
-                                  availSpace);
+    aState.ComputeBlockAvailSpace(frame, display, floatAvailableSpace,
+                                  replacedBlock != nsnull, availSpace);
     
     // Now put the Y coordinate back to the top of the top-margin +
     // clearance, and flow the block.
@@ -3039,7 +3039,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // then pushing it to the next page would give it more room. Note that
       // isImpacted doesn't include impact from the block's own floats.
       PRBool forceFit = aState.IsAdjacentWithTop() && clearance <= 0 &&
-        !isImpacted;
+        !floatAvailableSpace.mHasFloats;
       nsCollapsingMargin collapsedBottomMargin;
       nsRect combinedArea(0,0,0,0);
       *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, forceFit, aLine.get(),
@@ -3347,24 +3347,23 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (ShouldApplyTopMargin(aState, aLine)) {
     aState.mY += aState.mPrevBottomMargin.get();
   }
-  aState.GetAvailableSpace();
-  PRBool impactedByFloats = aState.IsImpactedByFloat() ? PR_TRUE : PR_FALSE;
-  aLine->SetLineIsImpactedByFloat(impactedByFloats);
+  nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
+  aLine->SetLineIsImpactedByFloat(floatAvailableSpace.mHasFloats);
 #ifdef REALLY_NOISY_REFLOW
   printf("nsBlockFrame::DoReflowInlineFrames %p impacted = %d\n",
-         this, impactedByFloats);
+         this, floatAvailableSpace.mHasFloats);
 #endif
 
   const nsMargin& borderPadding = aState.BorderPadding();
-  nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
-  nscoord availWidth = aState.mAvailSpaceRect.width;
+  nscoord x = floatAvailableSpace.mRect.x + borderPadding.left;
+  nscoord availWidth = floatAvailableSpace.mRect.width;
   nscoord availHeight;
   if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
     availHeight = NS_UNCONSTRAINEDSIZE;
   }
   else {
     /* XXX get the height right! */
-    availHeight = aState.mAvailSpaceRect.height;
+    availHeight = floatAvailableSpace.mRect.height;
   }
 
   // Make sure to enable resize optimization before we call BeginLineReflow
@@ -3373,7 +3372,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
-                              impactedByFloats,
+                              floatAvailableSpace.mHasFloats,
                               PR_FALSE /*XXX isTopOfPage*/);
 
   aState.SetFlag(BRS_LINE_LAYOUT_EMPTY, PR_FALSE);
@@ -3396,7 +3395,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // continuations
   PRBool isContinuingPlaceholders = PR_FALSE;
 
-  if (impactedByFloats) {
+  if (floatAvailableSpace.mHasFloats) {
     // There is a soft break opportunity at the start of the line, because
     // we can always move this line down below float(s).
     if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0, PR_TRUE, eNormalBreak)) {
@@ -3501,14 +3500,14 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     //
     // What we do is to advance past the first float we find and
     // then reflow the line all over again.
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mAvailSpaceRect.height,
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != floatAvailableSpace.mRect.height,
                  "unconstrained height on totally empty line");
 
     // See the analogous code for blocks in nsBlockReflowState::ClearFloats.
-    if (aState.mAvailSpaceRect.height > 0) {
-      NS_ASSERTION(aState.IsImpactedByFloat(),
+    if (floatAvailableSpace.mRect.height > 0) {
+      NS_ASSERTION(floatAvailableSpace.mHasFloats,
                    "redo line on totally empty line with non-empty band...");
-      aState.mY += aState.mAvailSpaceRect.height;
+      aState.mY += floatAvailableSpace.mRect.height;
     } else {
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableHeight,
                    "We shouldn't be running out of height here");
@@ -5646,8 +5645,9 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 // Float support
 
 nsRect
-nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
-                                         nsIFrame* aFloatFrame)
+nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
+                                        const nsRect& aFloatAvailableSpace,
+                                        nsIFrame* aFloatFrame)
 {
   // Compute the available width. By default, assume the width of the
   // containing block.
@@ -5663,7 +5663,7 @@ nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
     // give tables only the available space
     // if they can shrink we may not be constrained to place
     // them in the next line
-    availWidth = aState.mAvailSpaceRect.width;
+    availWidth = aFloatAvailableSpace.width;
     // round down to twips per pixel so that we fit
     // needed when prev. float has procentage width
     // (maybe is a table flaw that makes table chose to round up
@@ -5696,12 +5696,14 @@ nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
 
 nscoord
 nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
+                                const nsRect&       aFloatAvailableSpace,
                                 nsPlaceholderFrame* aPlaceholder)
 {
   // Reflow the float.
   nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
 
-  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+  nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
+                                                floatFrame);
 
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
                             floatFrame, 
@@ -5712,6 +5714,7 @@ nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
 
 nsresult
 nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
+                          const nsRect&       aFloatAvailableSpace,
                           nsPlaceholderFrame* aPlaceholder,
                           nsMargin&           aFloatMargin,
                           nsReflowStatus&     aReflowStatus)
@@ -5723,12 +5726,13 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 #ifdef NOISY_FLOAT
   printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
           aPlaceholder->GetOutOfFlowFrame(), this, 
-          aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
-          aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
+          aFloatAvailableSpace.x, aFloatAvailableSpace.y, 
+          aFloatAvailableSpace.width, aFloatAvailableSpace.height
   );
 #endif
 
-  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+  nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
+                                                floatFrame);
 
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
                             floatFrame, 
@@ -5987,7 +5991,7 @@ nsBlockFrame::PaintTextDecorationLine(gfxContext* aCtx,
     nsCSSRendering::PaintDecorationLine(
       aCtx, aColor, pt, size,
       PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
-      aOffset, aDecoration, NS_STYLE_BORDER_STYLE_SOLID);
+      aOffset, aDecoration, nsCSSRendering::DECORATION_STYLE_SOLID);
   }
 }
 
@@ -6650,22 +6654,43 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   mBullet->WillReflow(aState.mPresContext);
   mBullet->Reflow(aState.mPresContext, aMetrics, reflowState, status);
 
-  // Place the bullet now, separate it from mOutsideBulletX by its margin.
-  // If the mAvailSpaceRect position is outside the mOutsideBulletX
-  // position it means the line didn't care about the float edge and we
-  // use that position instead (there cannot be any floats at the start
-  // of the line this case since that would violate CSS 2.1 float rules).
-  // XXX we need to take floats inside the principal block that clears
-  // outside floats into account also (bug 428810).
-  nscoord x = rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR ?
-    PR_MIN(aState.mOutsideBulletX, aState.mAvailSpaceRect.x)
-      - reflowState.mComputedMargin.right - aMetrics.width :
-    PR_MAX(aState.mOutsideBulletX, aState.mAvailSpaceRect.XMost())
-      + reflowState.mComputedMargin.left;
+  // Get the float available space using our saved state from before we
+  // started reflowing the block, so that we ignore any floats inside
+  // the block.
+  // FIXME: aLineTop isn't actually set correctly by some callers, since
+  // they reposition the line.
+  nsRect floatAvailSpace =
+    aState.GetFloatAvailableSpaceWithState(aLineTop, PR_FALSE,
+                                           &aState.mFloatManagerStateBefore)
+          .mRect;
+  // FIXME (bug 25888): need to check the entire region that the first
+  // line overlaps, not just the top pixel.
 
-  // FIXME: come up with rules for when mAvailSpaceRect is valid so we
-  // don't need to do this.
-  aState.GetAvailableSpace();
+  // Place the bullet now.  We want to place the bullet relative to the
+  // border-box of the associated block (using the right/left margin of
+  // the bullet frame as separation).  However, if a line box would be
+  // displaced by floats that are *outside* the associated block, we
+  // want to displace it by the same amount.  That is, we act as though
+  // the edge of the floats is the content-edge of the block, and place
+  // the bullet at a position offset from there by the block's padding,
+  // the block's border, and the bullet frame's margin.
+  nscoord x;
+  if (rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
+    // Note: floatAvailSpace.x is relative to the content box and never
+    // less than zero.  Converting to frame coordinates and subtracting
+    // the padding and border cancel each other out, and the PR_MAX()
+    // with 0 (or with the left border+padding) is even implied in the
+    // right place.
+    x = floatAvailSpace.x - reflowState.mComputedMargin.right - aMetrics.width;
+  } else {
+    // The XMost() of the available space and the computed width both
+    // give us offsets from the left content edge.  Then we add the left
+    // border/padding to get into frame coordinates, and the right
+    // border/padding and the bullet's margin to offset the position.
+    x = PR_MIN(rs.ComputedWidth(), floatAvailSpace.XMost())
+        + rs.mComputedBorderPadding.LeftRight()
+        + reflowState.mComputedMargin.left;
+  }
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
@@ -6824,6 +6849,7 @@ nsBlockFrame::BlockCanIntersectFloats(nsIFrame* aFrame)
 /* static */
 nsBlockFrame::ReplacedElementWidthToClear
 nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
+                                     const nsRect& aFloatAvailableSpace,
                                      nsIFrame* aFrame)
 {
   nscoord leftOffset, rightOffset;
@@ -6877,7 +6903,8 @@ nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
       }
     }
 
-    aState.ComputeReplacedBlockOffsetsForFloats(aFrame, leftOffset, rightOffset,
+    aState.ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace,
+                                                leftOffset, rightOffset,
                                                 &result);
 
     // result.marginLeft has already been subtracted from leftOffset (etc.)
@@ -6901,7 +6928,8 @@ nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
       offsetState.mComputedBorderPadding.LeftRight() -
       (result.marginLeft + result.marginRight);
   } else {
-    aState.ComputeReplacedBlockOffsetsForFloats(aFrame, leftOffset, rightOffset);
+    aState.ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace,
+                                                leftOffset, rightOffset);
     nscoord availWidth = aState.mContentArea.width - leftOffset - rightOffset;
 
     // We actually don't want the min width here; see bug 427782; we only

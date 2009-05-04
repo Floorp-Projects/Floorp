@@ -90,6 +90,9 @@ sdk:
 distclean::
 	@$(MAKE) -C xulrunner/installer distclean
 
+upload::
+	@$(MAKE) -C xulrunner/installer upload
+
 ifeq ($(OS_TARGET),Linux)
 deb: package
 	@$(MAKE) -C xulrunner/installer deb

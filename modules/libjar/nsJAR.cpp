@@ -84,8 +84,8 @@ public:
   PRInt16             status;
   
   // Internal storage of digests
-  char*               calculatedSectionDigest;
-  char*               storedEntryDigest;
+  nsCString           calculatedSectionDigest;
+  nsCString           storedEntryDigest;
 
   nsJARManifestItem();
   virtual ~nsJARManifestItem();
@@ -96,17 +96,12 @@ public:
 //-------------------------------------------------
 nsJARManifestItem::nsJARManifestItem(): mType(JAR_INTERNAL),
                                         entryVerified(PR_FALSE),
-                                        status(JAR_NOT_SIGNED),
-                                        calculatedSectionDigest(nsnull),
-                                        storedEntryDigest(nsnull)
+                                        status(JAR_NOT_SIGNED)
 {
 }
 
 nsJARManifestItem::~nsJARManifestItem()
 {
-  // Delete digests if necessary
-  PR_FREEIF(calculatedSectionDigest);
-  PR_FREEIF(storedEntryDigest);
 }
 
 //----------------------------------------------
@@ -710,7 +705,7 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
         {
           PRUint32 sectionLength = curPos - sectionStart;
           CalculateDigest(sectionStart, sectionLength,
-                          &(curItemMF->calculatedSectionDigest));
+                          curItemMF->calculatedSectionDigest);
           //-- Save item in the hashtable
           nsCStringKey itemKey(curItemName);
           mManifestData.Put(&itemKey, (void*)curItemMF);
@@ -742,10 +737,10 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
                 curItemSF->status = JAR_NOT_SIGNED;
               else
               {
-                if (!storedSectionDigest.Equals((const char*)curItemSF->calculatedSectionDigest))
+                if (!storedSectionDigest.Equals(curItemSF->calculatedSectionDigest))
                   curItemSF->status = JAR_INVALID_MANIFEST;
-                PR_FREEIF(curItemSF->calculatedSectionDigest)
-                storedSectionDigest = "";
+                curItemSF->calculatedSectionDigest.Truncate();
+                storedSectionDigest.Truncate();
               }
             } // (aPrincipal != nsnull)
           } // if(curItemSF)
@@ -781,25 +776,18 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
 
     //-- Lines to look for:
     // (1) Digest:
-    if (lineName.Equals(NS_LITERAL_CSTRING("SHA1-Digest"),
-                        nsCaseInsensitiveCStringComparator()))
+    if (lineName.LowerCaseEqualsLiteral("sha1-digest"))
     //-- This is a digest line, save the data in the appropriate place 
     {
       if(aFileType == JAR_MF)
-      {
-        curItemMF->storedEntryDigest = (char*)PR_MALLOC(lineData.Length()+1);
-        if (!(curItemMF->storedEntryDigest))
-          return NS_ERROR_OUT_OF_MEMORY;
-        PL_strcpy(curItemMF->storedEntryDigest, lineData.get());
-      }
+        curItemMF->storedEntryDigest = lineData;
       else
         storedSectionDigest = lineData;
       continue;
     }
     
     // (2) Name: associates this manifest section with a file in the jar.
-    if (!foundName && lineName.Equals(NS_LITERAL_CSTRING("Name"),
-                                      nsCaseInsensitiveCStringComparator())) 
+    if (!foundName && lineName.LowerCaseEqualsLiteral("name"))
     {
       curItemName = lineData;
       foundName = PR_TRUE;
@@ -808,12 +796,9 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
 
     // (3) Magic: this may be an inline Javascript. 
     //     We can't do any other kind of magic.
-    if ( aFileType == JAR_MF &&
-         lineName.Equals(NS_LITERAL_CSTRING("Magic"),
-                         nsCaseInsensitiveCStringComparator()))
+    if (aFileType == JAR_MF && lineName.LowerCaseEqualsLiteral("magic"))
     {
-      if(lineData.Equals(NS_LITERAL_CSTRING("javascript"),
-                         nsCaseInsensitiveCStringComparator()))
+      if (lineData.LowerCaseEqualsLiteral("javascript"))
         curItemMF->mType = JAR_EXTERNAL;
       else
         curItemMF->mType = JAR_INVALID;
@@ -830,18 +815,17 @@ nsJAR::VerifyEntry(nsJARManifestItem* aManItem, const char* aEntryData,
 {
   if (aManItem->status == JAR_VALID_MANIFEST)
   {
-    if(!aManItem->storedEntryDigest)
+    if (aManItem->storedEntryDigest.IsEmpty())
       // No entry digests in manifest file. Entry is unsigned.
       aManItem->status = JAR_NOT_SIGNED;
     else
     { //-- Calculate and compare digests
-      char* calculatedEntryDigest;
-      nsresult rv = CalculateDigest(aEntryData, aLen, &calculatedEntryDigest);
+      nsCString calculatedEntryDigest;
+      nsresult rv = CalculateDigest(aEntryData, aLen, calculatedEntryDigest);
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      if (PL_strcmp(aManItem->storedEntryDigest, calculatedEntryDigest) != 0)
+      if (!aManItem->storedEntryDigest.Equals(calculatedEntryDigest))
         aManItem->status = JAR_INVALID_ENTRY;
-      PR_FREEIF(calculatedEntryDigest)
-      PR_FREEIF(aManItem->storedEntryDigest)
+      aManItem->storedEntryDigest.Truncate();
     }
   }
   aManItem->entryVerified = PR_TRUE;
@@ -898,11 +882,9 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
 
 
 nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aLen,
-                                char** digest)
+                                nsCString& digest)
 {
-  *digest = nsnull;
   nsresult rv;
-  
 
   nsCOMPtr<nsICryptoHash> hasher = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
   if (NS_FAILED(rv)) return rv;
@@ -913,13 +895,7 @@ nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aLen,
   rv = hasher->Update((const PRUint8*) aInBuf, aLen);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString hashString;
-  rv = hasher->Finish(PR_TRUE, hashString);
-  if (NS_FAILED(rv)) return rv;
-
-  *digest = ToNewCString(hashString);
-
-  return *digest ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return hasher->Finish(PR_TRUE, digest);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsJAREnumerator, nsIUTF8StringEnumerator)

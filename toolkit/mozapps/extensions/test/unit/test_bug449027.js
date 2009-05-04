@@ -597,6 +597,5 @@ function run_test_pt3() {
 function check_test_pt3() {
   dump("Checking pt 3\n");
   check_state("appBlocks", "toolkitBlocks");
-  gTestserver.stop();
-  do_test_finished();
+  gTestserver.stop(do_test_finished);
 }

@@ -39,11 +39,12 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(f6134681-f28b-11d2-8360-c90899049c3c)]
+[scriptable, uuid(ff69a292-c74d-4ef5-9d0f-86112fff2d5b)]
 interface nsIDOMPlugin : nsISupports
 {
   readonly attribute DOMString        description;
   readonly attribute DOMString        filename;
+  readonly attribute DOMString        version;
   readonly attribute DOMString        name;
 
   readonly attribute unsigned long    length;

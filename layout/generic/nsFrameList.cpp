@@ -284,6 +284,18 @@ nsFrameList::FrameAt(PRInt32 aIndex) const
   return frame;
 }
 
+PRInt32
+nsFrameList::IndexOf(nsIFrame* aFrame) const
+{
+  PRInt32 count = 0;
+  for (nsIFrame* f = mFirstChild; f; f = f->GetNextSibling()) {
+    if (f == aFrame)
+      return count;
+    ++count;
+  }
+  return -1;
+}
+
 PRBool
 nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
 {

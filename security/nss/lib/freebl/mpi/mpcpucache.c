@@ -677,11 +677,6 @@ s_mpi_is_sse2()
 	}
     }
 
-    /* only use sse2 on intel */
-    if (manufacturer != INTEL) {
-	return 0;
-    }
-
     freebl_cpuid(1,&eax,&ebx,&ecx,&edx);
     return (edx & SSE2_FLAG) == SSE2_FLAG;
 }

@@ -1252,15 +1252,15 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
-     * calls and properly compute a static depth. In order to get around this,
-     * we use a static depth that will cause us not to attempt to optimize
+     * calls and properly compute a static level. In order to get around this,
+     * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    script = js_CompileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
-                              TCF_COMPILE_N_GO |
-                              TCF_PUT_STATIC_DEPTH(JS_DISPLAY_SIZE),
-                              chars, length, NULL,
-                              filename, lineno);
+    script = JSCompiler::compileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
+                                       TCF_COMPILE_N_GO |
+                                       TCF_PUT_STATIC_LEVEL(JS_DISPLAY_SIZE),
+                                       chars, length, NULL,
+                                       filename, lineno);
     if (!script)
         return JS_FALSE;
 
@@ -1411,9 +1411,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
         return JS_TRUE;
     }
 
-    n = STOBJ_NSLOTS(obj);
-    if (n > scope->entryCount)
-        n = scope->entryCount;
+    n = scope->entryCount;
     pd = (JSPropertyDesc *) JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
     if (!pd)
         return JS_FALSE;

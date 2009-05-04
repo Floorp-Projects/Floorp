@@ -529,6 +529,7 @@ public:
     }
 
     cairo_scaled_font_t *CairoScaledFont() { return mCairoFont; }
+    PRUint32 GetGlyph(PRUint32 aCharCode);
     void GetGlyphExtents(PRUint32 aGlyph, cairo_text_extents_t* aExtents);
 
 protected:
@@ -568,15 +569,22 @@ public:
     }
 
     /**
+     * Get the glyph id for a Unicode character representable by a single
+     * glyph, or return zero if there is no such glyph.  This does no caching,
+     * so you probably want gfxFcFont::GetGlyph.
+     */
+    PRUint32 GetGlyph(PRUint32 aCharCode);
+
+    void GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph);
+
+private:
+    /**
      * Get extents for a simple character representable by a single glyph.
      * The return value is the glyph id of that glyph or zero if no such glyph
      * exists.  aExtents is only set when this returns a non-zero glyph id.
      */
     PRUint32 GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
 
-    void GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph);
-
-private:
     nsRefPtr<gfxFcFont> mGfxFont;
     FT_Face mFace;
 };
@@ -881,6 +889,14 @@ gfx_pango_fc_font_unlock_face(PangoFcFont *font)
     cairo_ft_scaled_font_unlock_face(gfxPangoFcFont::CairoFont(self));
 }
 
+static guint
+gfx_pango_fc_font_get_glyph(PangoFcFont *font, gunichar wc)
+{
+    gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
+    gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(self);
+    return gfxFont->GetGlyph(wc);
+}
+
 static void
 gfx_pango_fc_font_class_init (gfxPangoFcFontClass *klass)
 {
@@ -900,9 +916,10 @@ gfx_pango_fc_font_class_init (gfxPangoFcFontClass *klass)
     font_class->describe_absolute = gfx_pango_fc_font_describe_absolute;
     // font_class->find_shaper,get_font_map are inherited from PangoFcFontClass
 
-    // fc_font_class->has_char,get_glyph are inherited
+    // fc_font_class->has_char is inherited
     fc_font_class->lock_face = gfx_pango_fc_font_lock_face;
     fc_font_class->unlock_face = gfx_pango_fc_font_unlock_face;
+    fc_font_class->get_glyph = gfx_pango_fc_font_get_glyph;
 }
 
 /**
@@ -1797,23 +1814,17 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
 }
 
 static void
-gfx_pango_font_map_context_substitute(PangoFcFontMap *fontmap,
-                                      PangoContext *context,
+gfx_pango_font_map_default_substitute(PangoFcFontMap *fontmap,
                                       FcPattern *pattern)
 {
-    // owned by the context
-    PangoFontDescription *desc = pango_context_get_font_description(context);
-    double size = pango_font_description_get_size(desc) / FLOAT_PANGO_SCALE;
-    gfxPangoFontGroup *fontGroup = GetFontGroup(context);
-    PRBool usePrinterFont = fontGroup && fontGroup->GetStyle()->printerFont;
-    PrepareSortPattern(pattern, size, 1.0, usePrinterFont);
+    // The context is not available here but most of our rendering is for the
+    // screen so aIsPrinterFont is set to FALSE.
+    PrepareSortPattern(pattern, 18.0, 1.0, FALSE);
 }
 
 static PangoFcFont *
-gfx_pango_font_map_create_font(PangoFcFontMap *fontmap,
-                               PangoContext *context,
-                               const PangoFontDescription *desc,
-                               FcPattern *pattern)
+gfx_pango_font_map_new_font(PangoFcFontMap *fontmap,
+                            FcPattern *pattern)
 {
     return PANGO_FC_FONT(g_object_new(GFX_TYPE_PANGO_FC_FONT,
                                       "pattern", pattern, NULL));
@@ -1836,10 +1847,14 @@ gfx_pango_font_map_class_init(gfxPangoFontMapClass *klass)
     // context_key_* virtual functions are only necessary if we want to
     // dynamically respond to changes in the screen cairo_font_options_t.
 
-    // context_substitute and get_font are not likely to be used but
-    //   implemented because the class makes them available.
-    fcfontmap_class->context_substitute = gfx_pango_font_map_context_substitute;
-    fcfontmap_class->create_font = gfx_pango_font_map_create_font;
+    // The APIs for context_substitute/fontset_key_substitute and create_font
+    //   changed between Pango 1.22 and 1.24 so default_substitute and
+    //   new_font are provided instead.
+    // default_substitute and new_font are not likely to be used but
+    //   implemented because the class makes them available and an
+    //   implementation should provide either create_font or new_font.
+    fcfontmap_class->default_substitute = gfx_pango_font_map_default_substitute;
+    fcfontmap_class->new_font = gfx_pango_font_map_new_font;
 }
 
 /**
@@ -2359,6 +2374,68 @@ gfxPangoFontGroup::GetBaseFontSet()
     return fontSet;
 }
 
+PRUint32
+gfxFcFont::GetGlyph(PRUint32 aCharCode)
+{
+    // FcFreeTypeCharIndex needs to lock the FT_Face and can end up searching
+    // through all the postscript glyph names in the font.  Therefore use a
+    // lightweight cache, which is stored on the cairo_font_face_t.
+
+    cairo_font_face_t *face =
+        cairo_scaled_font_get_font_face(CairoScaledFont());
+
+    if (cairo_font_face_status(face) != CAIRO_STATUS_SUCCESS)
+        return 0;
+
+    // This cache algorithm and size is based on what is done in
+    // cairo_scaled_font_text_to_glyphs and pango_fc_font_real_get_glyph.  I
+    // think the concept is that adjacent characters probably come mostly from
+    // one Unicode block.  This assumption is probably not so valid with
+    // scripts with large character sets as used for East Asian languages.
+
+    struct CmapCacheSlot {
+        PRUint32 mCharCode;
+        PRUint32 mGlyphIndex;
+    };
+    const PRUint32 kNumSlots = 256;
+    static cairo_user_data_key_t sCmapCacheKey;
+
+    CmapCacheSlot *slots = static_cast<CmapCacheSlot*>
+        (cairo_font_face_get_user_data(face, &sCmapCacheKey));
+
+    if (!slots) {
+        // cairo's caches can keep some cairo_font_faces alive past our last
+        // destroy, so the destroy function (free) for the cache must be
+        // callable from cairo without any assumptions about what other
+        // modules have not been shutdown.
+        slots = static_cast<CmapCacheSlot*>
+            (calloc(kNumSlots, sizeof(CmapCacheSlot)));
+        if (!slots)
+            return 0;
+
+        cairo_status_t status =
+            cairo_font_face_set_user_data(face, &sCmapCacheKey, slots, free);
+        if (status != CAIRO_STATUS_SUCCESS) { // OOM
+            free(slots);
+            return 0;
+        }
+
+        // Invalidate slot 0 by setting its char code to something that would
+        // never end up in slot 0.  All other slots are already invalid
+        // because they have mCharCode = 0 and a glyph for char code 0 will
+        // always be in the slot 0.
+        slots[0].mCharCode = 1;
+    }
+
+    CmapCacheSlot *slot = &slots[aCharCode % kNumSlots];
+    if (slot->mCharCode != aCharCode) {
+        slot->mCharCode = aCharCode;
+        slot->mGlyphIndex = LockedFTFace(this).GetGlyph(aCharCode);
+    }
+
+    return slot->mGlyphIndex;
+}
+
 void
 gfxFcFont::GetGlyphExtents(PRUint32 aGlyph, cairo_text_extents_t* aExtents)
 {
@@ -2377,6 +2454,26 @@ gfxFcFont::GetGlyphExtents(PRUint32 aGlyph, cairo_text_extents_t* aExtents)
 }
 
 PRUint32
+LockedFTFace::GetGlyph(PRUint32 aCharCode)
+{
+    if (NS_UNLIKELY(!mFace))
+        return 0;
+
+    // FcFreeTypeCharIndex will search starting from the most recently
+    // selected charmap.  This can cause non-determistic behavior when more
+    // than one charmap supports a character but with different glyphs, as
+    // with older versions of MS Gothic, for example.  Always prefer a Unicode
+    // charmap, if there is one.  (FcFreeTypeCharIndex usually does the
+    // appropriate Unicode conversion, but some fonts have non-Roman glyphs
+    // for FT_ENCODING_APPLE_ROMAN characters.)
+    if (!mFace->charmap || mFace->charmap->encoding != FT_ENCODING_UNICODE) {
+        FT_Select_Charmap(mFace, FT_ENCODING_UNICODE);
+    }
+
+    return FcFreeTypeCharIndex(mFace, aCharCode);
+}
+
+PRUint32
 LockedFTFace::GetCharExtents(char aChar,
                              cairo_text_extents_t* aExtents)
 {
@@ -2385,16 +2482,7 @@ LockedFTFace::GetCharExtents(char aChar,
     if (!mFace)
         return 0;
 
-    // pango_fc_font_real_get_glyph uses FcFreeTypeCharIndex which may change
-    // the charmap currently selected on the FT_Face, so, while
-    // pango_fc_font_real_get_glyph might be used, we should use the same
-    // function so as to search the charmaps.
-    //
-    // Unfortunately this considers the mac/roman cmap even when there is a
-    // unicode cmap, which will be bad for symbol fonts, so we should do this
-    // ourselves, perhaps with a lightweight cache like
-    // pango_fc_font_real_get_glyph uses.
-    FT_UInt gid = FcFreeTypeCharIndex(mFace, aChar); // glyph id
+    FT_UInt gid = mGfxFont->GetGlyph(aChar);
     if (gid) {
         mGfxFont->GetGlyphExtents(gid, aExtents);
     }
@@ -2707,6 +2795,7 @@ gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
     gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!run)
@@ -2747,6 +2836,7 @@ gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
@@ -3329,7 +3419,6 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
 {
     const gchar *p = aUTF8;
     PangoFont *pangofont = GetBasePangoFont();
-    PangoFcFont *fcfont = PANGO_FC_FONT (pangofont);
     gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(GFX_PANGO_FC_FONT(pangofont));
     PRUint32 utf16Offset = 0;
     gfxTextRun::CompressedGlyph g;
@@ -3351,7 +3440,7 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
             aTextRun->SetMissingGlyph(utf16Offset, 0);
         } else {
             NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
-            FT_UInt glyph = pango_fc_font_get_glyph (fcfont, ch);
+            FT_UInt glyph = gfxFont->GetGlyph(ch);
             if (!glyph)                  // character not in font,
                 return NS_ERROR_FAILURE; // fallback to CreateGlyphRunsItemizing
 

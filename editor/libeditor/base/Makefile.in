@@ -100,7 +100,6 @@ CPPSRCS		+=                          \
 		SetDocTitleTxn.cpp          \
 		SplitElementTxn.cpp         \
 		nsStyleSheetTxns.cpp        \
-		TransactionFactory.cpp      \
 		$(NULL)
 
 # don't want the shared lib; force the creation of a static lib.

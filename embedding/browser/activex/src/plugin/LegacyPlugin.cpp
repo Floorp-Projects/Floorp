@@ -37,17 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 #include "stdafx.h"
 
-#include "jni.h"
 #include "npapi.h"
 
 #include "nsISupports.h"
 
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 #include "XPConnect.h"
-#endif
-
-#ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-#include "LiveConnect.h"
 #endif
 
 #include "LegacyPlugin.h"
@@ -244,25 +239,9 @@ NPError NPP_Initialize(void)
 void NPP_Shutdown(void)
 {
     ATLTRACE(_T("NPP_Shutdown()\n"));
-#ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-    liveconnect_Shutdown();
-#endif
     _Module.Unlock();
 }
 
-
-// NPP_GetJavaClass
-//
-//    Return the Java class representing this plugin
-//
-jref NPP_GetJavaClass(void)
-{
-    ATLTRACE(_T("NPP_GetJavaClass()\n"));
-#ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-    return liveconnect_GetJavaClass();
-#endif
-    return NULL;
-}
 
 #define MIME_OLEOBJECT1   "application/x-oleobject"
 #define MIME_OLEOBJECT2   "application/oleobject"
@@ -921,7 +900,7 @@ NewControl(const char *pluginType,
 //    create a new plugin instance 
 //    handle any instance specific code initialization here
 //
-NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
+NPError NPP_New(NPMIMEType pluginType,
                 NPP instance,
                 uint16_t mode,
                 int16_t argc,
@@ -985,7 +964,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 //
 //    Deletes a plug-in instance and releases all of its resources.
 //
-NPError NP_LOADDS
+NPError
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
     ATLTRACE(_T("NPP_Destroy()\n"));
@@ -1056,7 +1035,7 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 //  must be maintained by the plug-in to correctly handle the degenerate
 //  case.
 //
-NPError NP_LOADDS
+NPError
 NPP_SetWindow(NPP instance, NPWindow* window)
 {
     ATLTRACE(_T("NPP_SetWindow()\n"));
@@ -1123,7 +1102,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 //  NPNormal  (e.g. *streamtype = NPNormal)...the NPE_StreamAsFile function will
 //  never be called in this case
 //
-NPError NP_LOADDS
+NPError
 NPP_NewStream(NPP instance,
               NPMIMEType type,
               NPStream *stream, 
@@ -1149,7 +1128,7 @@ NPP_NewStream(NPP instance,
 //    The stream is done transferring and here is a pointer to the file in the cache
 //    This function is only called if the streamtype was set to NPAsFile.
 //
-void NP_LOADDS
+void
 NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 {
     ATLTRACE(_T("NPP_StreamAsFile()\n"));
@@ -1182,7 +1161,7 @@ int32_t STREAMBUFSIZE = 0X0FFFFFFF;   // we are reading from a file in NPAsFile 
 //    The number of bytes that a plug-in is willing to accept in a subsequent
 //    NPO_Write call.
 //
-int32_t NP_LOADDS
+int32_t
 NPP_WriteReady(NPP instance, NPStream *stream)
 {
     return STREAMBUFSIZE;  
@@ -1193,7 +1172,7 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 //
 //    Provides len bytes of data.
 //
-int32_t NP_LOADDS
+int32_t
 NPP_Write(NPP instance, NPStream *stream, int32_t offset, int32_t len, void *buffer)
 {   
     return len;
@@ -1207,7 +1186,7 @@ NPP_Write(NPP instance, NPStream *stream, int32_t offset, int32_t len, void *buf
 //    that it was complete, because there was some error, or because 
 //    the user aborted it.
 //
-NPError NP_LOADDS
+NPError
 NPP_DestroyStream(NPP instance, NPStream *stream, NPError reason)
 {
     // because I am handling the stream as a file, I don't do anything here...
@@ -1221,7 +1200,7 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPError reason)
 //
 //    Printing the plugin (to be continued...)
 //
-void NP_LOADDS
+void
 NPP_Print(NPP instance, NPPrint* printInfo)
 {
     if(printInfo == NULL)   // trap invalid parm
@@ -1266,7 +1245,7 @@ NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
     }
 }
 
-NPError	NP_LOADDS
+NPError
 NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
     NPError rv = NPERR_GENERIC_ERROR;
@@ -1276,7 +1255,7 @@ NPP_GetValue(NPP instance, NPPVariable variable, void *value)
     return rv;
 }
 
-NPError	NP_LOADDS
+NPError
 NPP_SetValue(NPP instance, NPNVariable variable, void *value)
 {
     return NPERR_GENERIC_ERROR;

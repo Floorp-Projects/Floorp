@@ -53,7 +53,6 @@ GRE_MODULE	= 1
 
 REQUIRES = \
     xpcom \
-    java \
     plugin \
     string \
     dom \
@@ -85,35 +84,6 @@ NO_INSTALL = 1
 
 # Path to the Mozilla ActiveX common dir (some files are copied from there)
 AXCOMMONSRC=$(srcdir)/../common
-
-############
-# LiveConnect settings
-
-# MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
-
-# Settings that specify where the PluginSDK, Java compiler (javac or oldjavac),
-# Java header file generator (javah) and classes live.
-#
-# You need the Netscape PluginSDK:
-#
-#   http://home.netscape.com/comprod/development_partners/plugin_api/index.html
-#
-# You also need a JDK with the old java compiler. Anything from 1.3
-# downwards should do. See here for various JDK releases:
-#
-#   http://java.sun.com/products/archive/index.html
-#
-# You should use the javah found in the plugin SDK because this generates
-# the JRI stubs.
-
-ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-PLUGINSDK = c:/m/PluginSDK
-SDK_JAVADIR = c:/jdk1.02
-SDK_JAVAH = $(PLUGINSDK)/bin/win32/javah
-SDK_JAVAC = $(SDK_JAVADIR)/bin/javac
-SDK_CLASSES = $(PLUGINSDK)/classes/java_30.zip
-SDK_CLASSPATH = "$(subst /,\,$(SDK_CLASSES));."
-endif
 
 ############
 # XPConnect settings
@@ -158,7 +128,7 @@ _AXCOMMON_CPPSRCS = \
     ItemContainer.cpp \
     PropertyBag.cpp \
     $(NULL)
-CPPSRCS += LiveConnect.cpp $(_AXCOMMON_CPPSRCS)
+CPPSRCS += $(_AXCOMMON_CPPSRCS)
 CSRCS += javastubs.c
 endif
 
@@ -206,16 +176,6 @@ LIBS = \
     $(NSPR_LIBS) \
     $(NULL)
 
-# LiveConnect links to XPCOM glue
-ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-EXTRA_DSO_LDOPTS += \
-    $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)
-LIBS += \
-    $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)
-endif
-
 # XPConnect links to XPCOM and the shared activex lib
 ifdef XPC_IDISPATCH_SUPPORT
 EXTRA_DSO_LDOPTS += \
@@ -224,8 +184,6 @@ EXTRA_DSO_LDOPTS += \
     $(XPCOM_LIBS) \
     $(NULL)
 endif
-
-
 
 SRCS_IN_OBJDIR	= 1
 
@@ -304,118 +262,3 @@ $(DEFFILE):
 	@echo "NP_GetEntryPoints   @1" >> $@
 	@echo "NP_Initialize       @2" >> $@
 	@echo "NP_Shutdown         @3" >> $@
-
-ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-./MozAxPlugin.class: ./MozAxPlugin.java
-	$(SDK_JAVAC) -classpath $(SDK_CLASSPATH) MozAxPlugin.java
-
-./_java/MozAxPlugin.h \
-./_java/MozAxPlugin.c: ./MozAxPlugin.class
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java MozAxPlugin
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java MozAxPlugin
-
-./_java/java_lang_Object.h \
-./_java/java_lang_Object.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Object
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Object
-
-./_java/java_lang_Error.h \
-./_java/java_lang_Error.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Error
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Error
-
-./_java/java_lang_Throwable.h \
-./_java/java_lang_Throwable.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Throwable
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Throwable
-
-./_java/java_lang_String.h \
-./_java/java_lang_String.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.String
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.String
-
-./_java/java_lang_Boolean.h \
-./_java/java_lang_Boolean.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Boolean
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Boolean
-
-./_java/java_lang_Number.h \
-./_java/java_lang_Number.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Number
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Number
-
-./_java/java_lang_Integer.h \
-./_java/java_lang_Integer.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Integer
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Integer
-
-./_java/java_lang_Short.h \
-./_java/java_lang_Short.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Short
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Short
-
-./_java/java_lang_Long.h \
-./_java/java_lang_Long.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Long
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Long
-
-./_java/java_lang_Double.h \
-./_java/java_lang_Double.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Double
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Double
-
-./_java/java_lang_Float.h \
-./_java/java_lang_Float.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Float
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Float
-
-./_java/java_lang_Byte.h \
-./_java/java_lang_Byte.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Byte
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Byte
-
-./_java/java_lang_Character.h \
-./_java/java_lang_Character.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java java.lang.Character
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java java.lang.Character
-
-./_java/netscape_plugin_Plugin.h \
-./_java/netscape_plugin_Plugin.c : $(SDK_CLASSES)
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -d _java netscape.plugin.Plugin
-	$(SDK_JAVAH) -classpath $(SDK_CLASSPATH) -jri -stubs -d _java netscape.plugin.Plugin
-
-javastubs.c : \
-    ./MozAxPlugin.class             \
-    ./_java/MozAxPlugin.c \
-    ./_java/netscape_plugin_Plugin.c \
-    ./_java/java_lang_Object.c     \
-    ./_java/java_lang_Throwable.c  \
-    ./_java/java_lang_Error.c      \
-    ./_java/java_lang_String.c     \
-    ./_java/java_lang_Boolean.c    \
-    ./_java/java_lang_Number.c     \
-    ./_java/java_lang_Integer.c    \
-    ./_java/java_lang_Long.c       \
-    ./_java/java_lang_Double.c     \
-    ./_java/java_lang_Float.c      \
-    ./_java/java_lang_Character.c  \
-    $(NULL)
-
-LiveConnect.cpp: StdAfx.h \
-    ./MozAxPlugin.class             \
-    ./_java/MozAxPlugin.h \
-    ./_java/netscape_plugin_Plugin.h \
-    ./_java/java_lang_Object.h       \
-    ./_java/java_lang_Throwable.h    \
-    ./_java/java_lang_Error.h        \
-    ./_java/java_lang_String.h       \
-    ./_java/java_lang_Boolean.h      \
-    ./_java/java_lang_Number.h       \
-    ./_java/java_lang_Integer.h      \
-    ./_java/java_lang_Long.h         \
-    ./_java/java_lang_Double.h       \
-    ./_java/java_lang_Float.h        \
-    ./_java/java_lang_Character.h    \
-    $(NULL)
-endif
-

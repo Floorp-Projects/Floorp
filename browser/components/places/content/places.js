@@ -481,6 +481,7 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(PlacesUIUtils.getString("bookmarksRestoreFilterName"),
                     PlacesUIUtils.getString("bookmarksRestoreFilterExtension"));
+    fp.appendFilters(Ci.nsIFilePicker.filterAll);
 
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                  getService(Ci.nsIProperties);
@@ -688,6 +689,16 @@ var PlacesOrganizer = {
       gEditItemOverlay.initPanel(itemId, { hiddenRows: ["folderPicker"],
                                            forceReadOnly: readOnly });
 
+      // Dynamically generated queries, like history date containers, have
+      // itemId !=0 and do not exist in history.  For them the panel is
+      // read-only, but empty, since it can't get a valid title for the object.
+      // In such a case we force the title using the selectedNode one, for UI
+      // polishness.
+      if (aSelectedNode.itemId == -1 &&
+          (PlacesUtils.nodeIsDay(aSelectedNode) ||
+           PlacesUtils.nodeIsHost(aSelectedNode)))
+        gEditItemOverlay._element("namePicker").value = aSelectedNode.title;
+
       this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
     }
     else if (!aSelectedNode && aNodeList[0]) {
@@ -891,10 +902,6 @@ var PlacesSearchBox = {
       //scopeBtn.label = PlacesOrganizer._places.selectedNode.title;
       break;
     case "bookmarks":
-      // Make sure we're getting uri results.
-      // We do not yet support searching into grouped queries or into
-      // tag containers, so we must fall to the default case.
-      currentOptions.resultType = currentOptions.RESULT_TYPE_URI;
       content.applyFilter(filterString, this.folders);
       break;
     case "history":
@@ -902,6 +909,8 @@ var PlacesSearchBox = {
         var query = PlacesUtils.history.getNewQuery();
         query.searchTerms = filterString;
         var options = currentOptions.clone();
+        // Make sure we're getting uri results.
+        options.resultType = currentOptions.RESULT_TYPE_URI;
         options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
         content.load([query], options);
       }

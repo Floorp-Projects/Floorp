@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<!-- All of these images should render the same 
+	     they all have icc profiles with different
+	     but equivalent tone reproduction curves.
+	
+	The profiles were generated with the following code and added to the images using pngcrush.
+
+	cmsHPROFILE profile = cmsCreate_sRGBProfile();
+
+        cmsAddTag(profile, icSigDeviceMfgDescTag,      (LPVOID) "(lcms moz internal)");
+        cmsAddTag(profile, icSigDeviceModelDescTag,    (LPVOID) "linear");
+        cmsAddTag(profile, icSigProfileDescriptionTag, (LPVOID) "linear");
+
+        GAMMATABLE linear_trc;
+        linear_trc.nEntries = 0;
+
+        cmsAddTag(profile, icSigRedTRCTag, &linear_trc);
+        cmsAddTag(profile, icSigGreenTRCTag, &linear_trc);
+        cmsAddTag(profile, icSigBlueTRCTag, &linear_trc);
+
+        _cmsSaveProfile(profile, "linear_gen.icc");
+
+        GAMMATABLE linear_curve_trc;
+        linear_curve_trc.nEntries = 1;
+        linear_curve_trc.GammaTable[0] = 0x0100;
+
+        cmsAddTag(profile, icSigRedTRCTag, &linear_curve_trc);
+        cmsAddTag(profile, icSigGreenTRCTag, &linear_curve_trc);
+        cmsAddTag(profile, icSigBlueTRCTag, &linear_curve_trc);
+
+        _cmsSaveProfile(profile, "linear_curve_gen.icc");
+
+        GAMMATABLE *linear_table_trc = malloc(sizeof(GAMMATABLE) + sizeof(short)*2);
+        linear_table_trc->nEntries = 2;
+        linear_table_trc->GammaTable[0] = 0x0;
+        linear_table_trc->GammaTable[1] = 0xffff;
+
+        cmsAddTag(profile, icSigRedTRCTag, linear_table_trc);
+        cmsAddTag(profile, icSigGreenTRCTag, linear_table_trc);
+        cmsAddTag(profile, icSigBlueTRCTag, linear_table_trc);
+
+        _cmsSaveProfile(profile, "linear_table_gen.icc");
+
+        free(linear_table_trc);
+ 
+	-->
+	<img src="color-curv.png">
+	<img src="color-table.png">
+	<img src="color-lin.png">
+</body>
+</html>

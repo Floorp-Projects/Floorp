@@ -1,0 +1,13 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>CSS and Quotes: Counting Right (Slightly Simpler Version)</title>
+  <style type="text/css">
+  <![CDATA[
+     .test { margin-left: 2em; }
+  ]]>
+  </style>
+ </head>
+ <body>
+  <div class="test">Isn't it wonderful to see CSS quotes work!!!</div>
+ </body>
+</html>

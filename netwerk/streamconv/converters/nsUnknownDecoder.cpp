@@ -60,7 +60,7 @@
 #include "nsNetCID.h"
 
 
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_SIZE 512
 
 nsUnknownDecoder::nsUnknownDecoder()
   : mBuffer(nsnull)
@@ -313,7 +313,6 @@ nsUnknownDecoder::nsSnifferEntry nsUnknownDecoder::sSnifferEntries[] = {
   SNIFFER_ENTRY("%PDF-", APPLICATION_PDF),
 
   SNIFFER_ENTRY("%!PS-Adobe-", APPLICATION_POSTSCRIPT),
-  SNIFFER_ENTRY("%! PS-Adobe-", APPLICATION_POSTSCRIPT),
 
   // Files that start with mailbox delimiters let's provisionally call
   // text/plain

@@ -40,7 +40,6 @@
 
 interface nsAString;
 interface inISearchObserver;
-interface nsISupportsArray;
 
 [scriptable, uuid(D5FA765B-2448-4686-B7C1-5FF13ACB0FC9)]
 interface inISearchProcess : nsISupports

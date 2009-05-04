@@ -228,7 +228,6 @@ var gEditItemOverlay = {
 
       // tags selector
       this._rebuildTagsSelectorList();
-      this._initialized = true;
     }
 
     // name picker
@@ -243,6 +242,8 @@ var gEditItemOverlay = {
       window.addEventListener("unload", this, false);
       this._observersAdded = true;
     }
+
+    this._initialized = true;
   },
 
   _getCommonTags: function(aArrIndex) {
@@ -583,10 +584,10 @@ var gEditItemOverlay = {
           tagsToAdd.push(tags[i]);
       }
 
-      if (tagsToAdd.length > 0)
-        txns.push(PlacesUIUtils.ptm.tagURI(this._uri, tagsToAdd));
       if (tagsToRemove.length > 0)
         txns.push(PlacesUIUtils.ptm.untagURI(this._uri, tagsToRemove));
+      if (tagsToAdd.length > 0)
+        txns.push(PlacesUIUtils.ptm.tagURI(this._uri, tagsToAdd));
 
       if (txns.length > 0) {
         var aggregate = PlacesUIUtils.ptm.aggregateTransactions("Update tags",
@@ -720,7 +721,7 @@ var gEditItemOverlay = {
     ptm.doTransaction(aggregate);
   },
 
-  onDescriptionFieldBlur: function EIO_onDescriptionFieldInput() {
+  onDescriptionFieldBlur: function EIO_onDescriptionFieldBlur() {
     var description = this._element("descriptionField").value;
     if (description != PlacesUIUtils.getItemDescription(this._itemId)) {
       var txn = PlacesUIUtils.ptm
@@ -809,7 +810,7 @@ var gEditItemOverlay = {
       // breaks the view.
       const FOLDER_TREE_PLACE_URI =
         "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
-        window.top.PlacesUIUtils.allBookmarksFolderId;
+        PlacesUIUtils.allBookmarksFolderId;
       this._folderTree.place = FOLDER_TREE_PLACE_URI;
 
       this._element("chooseFolderSeparator").hidden =
@@ -841,7 +842,8 @@ var gEditItemOverlay = {
     var menupopup = this._folderMenuList.menupopup;
 
     for (var i=0;  i < menupopup.childNodes.length; i++) {
-      if (menupopup.childNodes[i].folderId == aFolderId)
+      if (menupopup.childNodes[i].folderId &&
+          menupopup.childNodes[i].folderId == aFolderId)
         return menupopup.childNodes[i];
     }
 

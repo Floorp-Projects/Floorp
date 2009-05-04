@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=482461
+-->
+
+<head>
+  <title>Media test: Bug 482461 - Play oggz-chop streams</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=482461">Mozilla Bug 482461</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v;
+var endPassed = false;
+var completed = false;
+
+function startTest() {
+  if (completed)
+    return false;
+  v = document.getElementById('v');
+  v.play();
+  return false;
+}
+
+function playbackEnded() {
+  if (completed)
+    return false
+
+  completed = true;
+  ok(v.currentTime > 608 && v.currentTime < 610,
+     "Checking currentTime at end: " + v.currentTime);
+  ok(v.ended, "Checking playback has ended");
+  SimpleTest.finish();
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v'
+       src='bug482461.ogv'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'></video>
+</body>
+</html>

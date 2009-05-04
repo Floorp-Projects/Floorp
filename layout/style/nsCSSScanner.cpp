@@ -669,39 +669,19 @@ nsCSSScanner::LookAhead(PRUnichar aChar)
   return PR_FALSE;
 }
 
-PRBool
+void
 nsCSSScanner::EatWhiteSpace()
 {
-  PRBool eaten = PR_FALSE;
   for (;;) {
     PRInt32 ch = Read();
     if (ch < 0) {
       break;
     }
-    if ((ch == ' ') || (ch == '\n') || (ch == '\t')) {
-      eaten = PR_TRUE;
-      continue;
+    if ((ch != ' ') && (ch != '\n') && (ch != '\t')) {
+      Pushback(ch);
+      break;
     }
-    Pushback(ch);
-    break;
   }
-  return eaten;
-}
-
-PRBool
-nsCSSScanner::EatNewline()
-{
-  PRInt32 ch = Read();
-  if (ch < 0) {
-    return PR_FALSE;
-  }
-  PRBool eaten = PR_FALSE;
-  if (ch == '\n') {
-    eaten = PR_TRUE;
-  } else {
-    Pushback(ch);
-  }
-  return eaten;
 }
 
 PRBool
@@ -760,7 +740,7 @@ nsCSSScanner::Next(nsCSSToken& aToken)
     if (IsWhitespace(ch)) {
       aToken.mType = eCSSToken_WhiteSpace;
       aToken.mIdent.Assign(PRUnichar(ch));
-      (void) EatWhiteSpace();
+      EatWhiteSpace();
       return PR_TRUE;
     }
     if (ch == '/') {
@@ -855,7 +835,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   if (IsWhitespace(ch)) {
     aToken.mType = eCSSToken_WhiteSpace;
     aToken.mIdent.Assign(PRUnichar(ch));
-    (void) EatWhiteSpace();
+    EatWhiteSpace();
     return PR_TRUE;
   }
 
@@ -890,7 +870,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
         ok = PR_FALSE;
       } else if (IsWhitespace(ch)) {
         // Whitespace is allowed at the end of the URL
-        (void) EatWhiteSpace();
+        EatWhiteSpace();
         if (LookAhead(')')) {
           Pushback(')');  // leave the closing symbol
           // done!
@@ -979,17 +959,13 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput)
         Pushback(ch);
     }
     return;
-  } else {
-    // "Any character except a hexidecimal digit can be escaped to
-    // remove its special meaning by putting a backslash in front"
-    // -- CSS1 spec section 7.1
-    if (!EatNewline()) { // skip escaped newline
-      (void) Read();
-      if (ch > 0) {
-        aOutput.Append(ch);
-      }
-    }
-    return;
+  } 
+  // "Any character except a hexidecimal digit can be escaped to
+  // remove its special meaning by putting a backslash in front"
+  // -- CSS1 spec section 7.1
+  ch = Read();  // Consume the escaped character
+  if ((ch > 0) && (ch != '\n')) {
+    aOutput.Append(ch);
   }
 }
 
@@ -1192,53 +1168,6 @@ nsCSSScanner::SkipCComment()
   REPORT_UNEXPECTED_EOF(PECommentEOF);
   return PR_FALSE;
 }
-
-#if 0
-PRBool
-nsCSSScanner::ParseCComment(nsCSSToken& aToken)
-{
-  nsString& ident = aToken.mIdent;
-  for (;;) {
-    PRInt32 ch = Read();
-    if (ch < 0) break;
-    if (ch == '*') {
-      if (LookAhead('/')) {
-        ident.Append(PRUnichar(ch));
-        ident.Append(PRUnichar('/'));
-        break;
-      }
-    }
-#ifdef COLLECT_WHITESPACE
-    ident.Append(PRUnichar(ch));
-#endif
-  }
-  aToken.mType = eCSSToken_WhiteSpace;
-  return PR_TRUE;
-}
-#endif
-
-#if 0
-PRBool
-nsCSSScanner::ParseEOLComment(nsCSSToken& aToken)
-{
-  nsString& ident = aToken.mIdent;
-  ident.SetLength(0);
-  for (;;) {
-    if (EatNewline()) {
-      break;
-    }
-    PRInt32 ch = Read();
-    if (ch < 0) {
-      break;
-    }
-#ifdef COLLECT_WHITESPACE
-    ident.Append(PRUnichar(ch));
-#endif
-  }
-  aToken.mType = eCSSToken_WhiteSpace;
-  return PR_TRUE;
-}
-#endif // 0
 
 PRBool
 nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)

@@ -40,7 +40,7 @@
 #define nsEventStateManager_h__
 
 #include "nsIEventStateManager.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -65,7 +65,7 @@ class nsDOMDataTransfer;
 // mac uses click-hold context menus, a holdover from 4.x
 // touch screens (like hildon) could use this also, 
 // perhaps we should move to NS_TOUCHSCREEN
-#if defined(XP_MACOSX) || defined(NS_HILDON)
+#if defined(XP_MACOSX) || defined(MOZ_PLATFORM_HILDON)
 #define CLICK_HOLD_CONTEXT_MENUS 1
 #endif
 
@@ -291,12 +291,16 @@ protected:
   void GetPrevDocShell(nsIDocShellTreeNode* aNode,
                        nsIDocShellTreeItem** aResult);
 
-  // These functions are for mousewheel scrolling
+  // These functions are for mousewheel and pixel scrolling
   nsresult GetParentScrollingView(nsInputEvent* aEvent,
                                   nsPresContext* aPresContext,
                                   nsIFrame* &targetOuterFrame,
                                   nsPresContext* &presCtxOuter);
-
+  void SendLineScrollEvent(nsIFrame* aTargetFrame,
+                           nsMouseScrollEvent* aEvent,
+                           nsPresContext* aPresContext,
+                           nsEventStatus* aStatus,
+                           PRInt32 aNumLines);
   void SendPixelScrollEvent(nsIFrame* aTargetFrame,
                             nsMouseScrollEvent* aEvent,
                             nsPresContext* aPresContext,

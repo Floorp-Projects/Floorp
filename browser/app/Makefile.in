@@ -410,7 +410,7 @@ endif
 else
 ifdef LIBXUL_SDK
 libs::
-	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/firefox$(BIN_SUFFIX)
+	cp $(LIBXUL_DIST)/bin/$(XULRUNNER_STUB_NAME)$(BIN_SUFFIX) $(DIST)/bin/firefox$(BIN_SUFFIX)
 endif
 endif
 

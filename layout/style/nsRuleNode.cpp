@@ -52,6 +52,7 @@
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsIDeviceContext.h"
+#include "nsIWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
 #include "nsIThebesFontMetrics.h"
@@ -5657,15 +5658,13 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   nsRuleDataColor colorData;
   nsRuleDataMargin marginData;
   nsCSSValue firstBackgroundImage;
-  nsCSSValue firstBoxShadow;
   PRUint32 nValues = 0;
 
   PRUint32 inheritBits = 0;
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND)
     inheritBits |= NS_STYLE_INHERIT_BIT(Background);
 
-  if (ruleTypeMask & (NS_AUTHOR_SPECIFIED_BORDER |
-                      NS_AUTHOR_SPECIFIED_BOX_SHADOW))
+  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER)
     inheritBits |= NS_STYLE_INHERIT_BIT(Border);
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING)
@@ -5710,7 +5709,6 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 
   nsCSSValue* values[NS_ARRAY_LENGTH(backgroundValues) +
                      NS_ARRAY_LENGTH(borderValues) +
-                     1 + // box-shadow
                      NS_ARRAY_LENGTH(paddingValues)];
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
@@ -5721,11 +5719,6 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
     memcpy(&values[nValues], borderValues, NS_ARRAY_LENGTH(borderValues) * sizeof(nsCSSValue*));
     nValues += NS_ARRAY_LENGTH(borderValues);
-  }
-
-  if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BOX_SHADOW) {
-    values[nValues] = &firstBoxShadow;
-    ++nValues;
   }
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
@@ -5759,13 +5752,6 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
           // Handle background-image being a value list
           firstBackgroundImage = colorData.mBackImage->mValue;
         }
-        if ((ruleTypeMask & NS_AUTHOR_SPECIFIED_BOX_SHADOW) &&
-            marginData.mBoxShadow &&
-            firstBoxShadow.GetUnit() == eCSSUnit_Null) {
-          // Handle box-shadow being a value list
-          firstBoxShadow = marginData.mBoxShadow->mValue;
-        }
-
         // Do the same nulling out as in GetBorderData, GetBackgroundData
         // or GetPaddingData.
         // We are sharing with some style rule.  It really owns the data.

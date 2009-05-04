@@ -481,38 +481,25 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
   // Select a limited number of visits older than a time
   nsCOMPtr<mozIStorageStatement> selectStatement;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT * FROM ( "
-        "SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, "
-          "(SELECT fk FROM moz_bookmarks WHERE fk = h.id) "
-        "FROM moz_places h "
-        "JOIN moz_historyvisits AS v ON h.id = v.place_id "
-        "WHERE visit_date < ?1 "      
-        "ORDER BY v.visit_date ASC LIMIT ?2 "
-      ") UNION ALL "
-        "SELECT * FROM ( "
-        "SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, "
-          "(SELECT fk FROM moz_bookmarks WHERE fk = h.id)"
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits AS v ON h.id = v.place_id "
-        "WHERE visit_date < ?1 "
-        "ORDER BY v.visit_date ASC LIMIT ?2 "
-      ") UNION ALL "
-      "SELECT * FROM ( "
-        "SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, "
-          "(SELECT fk FROM moz_bookmarks WHERE fk = h.id) "
-        "FROM moz_places h "
-        "JOIN moz_historyvisits_temp AS v ON h.id = v.place_id "
-        "WHERE visit_date < ?1 "
-        "ORDER BY v.visit_date ASC LIMIT ?2 "
-      ") UNION ALL "
-      "SELECT * FROM ( "
-        "SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, "
-          "(SELECT fk FROM moz_bookmarks WHERE fk = h.id) "
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits_temp AS v ON h.id = v.place_id "
-        "WHERE visit_date < ?1 "
-        "ORDER BY v.visit_date ASC LIMIT ?2 "
-      ") GROUP BY 1 ORDER BY 3 ASC LIMIT ?2"),
+      "SELECT v.id, v.place_id, v.visit_date, IFNULL(h_t.url, h.url), "
+             "IFNULL(h_t.favicon_id, h.favicon_id), "
+             "IFNULL(h_t.hidden, h.hidden), b.fk "
+      "FROM moz_historyvisits_temp v "
+      "LEFT JOIN moz_places_temp AS h_t ON h_t.id = v.place_id "
+      "LEFT JOIN moz_places AS h ON h.id = v.place_id "
+      "LEFT JOIN moz_bookmarks b ON b.fk = v.place_id "
+      "WHERE visit_date < ?1 "
+      "UNION ALL "
+      "SELECT v.id, v.place_id, v.visit_date, IFNULL(h_t.url, h.url), "
+             "IFNULL(h_t.favicon_id, h.favicon_id), "
+             "IFNULL(h_t.hidden, h.hidden), b.fk "
+      "FROM moz_historyvisits v "
+      "LEFT JOIN moz_places_temp AS h_t ON h_t.id = v.place_id "
+      "LEFT JOIN moz_places AS h ON h.id = v.place_id "
+      "LEFT JOIN moz_bookmarks b ON b.fk = v.place_id "
+      "WHERE visit_date < ?1 "
+      "ORDER BY v.visit_date ASC "
+      "LIMIT ?2 "),
     getter_AddRefs(selectStatement));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -708,7 +695,7 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
             "(SELECT id FROM moz_historyvisits_temp WHERE place_id = h.id LIMIT 1) "
           "AND NOT EXISTS "
             "(SELECT id FROM moz_bookmarks WHERE fk = h.id LIMIT 1) "
-          "AND SUBSTR(h.url,0,6) <> 'place:' "
+          "AND SUBSTR(h.url, 1, 6) <> 'place:' "
         "UNION ALL "
         "SELECT h.id "
         "FROM moz_places_temp h "
@@ -719,7 +706,7 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
             "(SELECT id FROM moz_historyvisits_temp WHERE place_id = h.id LIMIT 1) "
           "AND NOT EXISTS "
             "(SELECT id FROM moz_bookmarks WHERE fk = h.id LIMIT 1) "
-          "AND SUBSTR(h.url,0,6) <> 'place:' "
+          "AND SUBSTR(h.url, 1, 6) <> 'place:' "
       ")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -926,7 +913,7 @@ nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection,
       "WHERE v.id IS NULL "
         "AND v_t.id IS NULL "
         "AND b.id IS NULL "
-        "AND SUBSTR(h.url,0,6) <> 'place:' "
+        "AND SUBSTR(h.url, 1, 6) <> 'place:' "
       "UNION ALL "
       "SELECT h.id FROM moz_places_temp h "
       "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
@@ -935,7 +922,7 @@ nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection,
       "WHERE v.id IS NULL "
         "AND v_t.id IS NULL "
         "AND b.id IS NULL "
-        "AND SUBSTR(h.url,0,6) <> 'place:'");
+        "AND SUBSTR(h.url, 1, 6) <> 'place:'");
   if (aMaxRecords != -1) {
     query.AppendLiteral(" LIMIT ");
     query.AppendInt(aMaxRecords);

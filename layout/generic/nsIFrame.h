@@ -162,9 +162,14 @@ enum {
   // continuation, e.g. a bidi continuation.
   NS_FRAME_IS_FLUID_CONTINUATION =              0x00000004,
 
-  // This bit is set when the frame's overflow rect is
-  // different from its border rect (i.e. GetOverflowRect() != GetRect())
-  NS_FRAME_OUTSIDE_CHILDREN =                   0x00000008,
+/*
+ * This bit is obsolete, replaced by HasOverflowRect().
+ * The definition is left here as a placeholder for now, to remind us
+ * that this bit is now free to allocate for other purposes.
+ * // This bit is set when the frame's overflow rect is
+ * // different from its border rect (i.e. GetOverflowRect() != GetRect())
+ * NS_FRAME_OUTSIDE_CHILDREN =                   0x00000008,
+ */
 
   // If this bit is set, then a reference to the frame is being held
   // elsewhere.  The frame may want to send a notification when it is
@@ -441,6 +446,24 @@ typedef PRBool nsDidReflowStatus;
 #define NS_FRAME_REFLOW_NOT_FINISHED PR_FALSE
 #define NS_FRAME_REFLOW_FINISHED     PR_TRUE
 
+/**
+ * The overflow rect may be stored as four 1-byte deltas each strictly
+ * LESS THAN 0xff, for the four edges of the rectangle, or the four bytes
+ * may be read as a single 32-bit "overflow-rect type" value including
+ * at least one 0xff byte as an indicator that the value does NOT
+ * represent four deltas.
+ * If all four deltas are zero, this means that no overflow rect has
+ * actually been set (this is the initial state of newly-created frames).
+ */
+#define NS_FRAME_OVERFLOW_DELTA_MAX     0xfe // max delta we can store
+
+#define NS_FRAME_OVERFLOW_NONE    0x00000000 // there is no overflow rect;
+                                             // code relies on this being
+                                             // the all-zero value
+
+#define NS_FRAME_OVERFLOW_LARGE   0x000000ff // overflow is stored as a
+                                             // separate rect property
+
 //----------------------------------------------------------------------
 
 /**
@@ -689,6 +712,10 @@ public:
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext) = 0;
 
+  // returns GetStyleBorder()->mBoxShadow unless this frame is using
+  // -moz-appearance and is not chrome
+  nsCSSShadowArray* GetEffectiveBoxShadows();
+
   /**
    * Accessor functions for geometric parent
    */
@@ -706,9 +733,32 @@ public:
   nsRect GetRect() const { return mRect; }
   nsPoint GetPosition() const { return nsPoint(mRect.x, mRect.y); }
   nsSize GetSize() const { return nsSize(mRect.width, mRect.height); }
-  void SetRect(const nsRect& aRect) { mRect = aRect; }
+
+  /**
+   * When we change the size of the frame's border-box rect, we may need to
+   * reset the overflow rect if it was previously stored as deltas.
+   * (If it is currently a "large" overflow and could be re-packed as deltas,
+   * we don't bother as the cost of the allocation has already been paid.)
+   */
+  void SetRect(const nsRect& aRect) {
+    if (HasOverflowRect() && mOverflow.mType != NS_FRAME_OVERFLOW_LARGE) {
+      nsRect r = GetOverflowRect();
+      mRect = aRect;
+      SetOverflowRect(r);
+    } else {
+      mRect = aRect;
+    }
+  }
+  void SetSize(const nsSize& aSize) {
+    if (HasOverflowRect() && mOverflow.mType != NS_FRAME_OVERFLOW_LARGE) {
+      nsRect r = GetOverflowRect();
+      mRect.SizeTo(aSize);
+      SetOverflowRect(r);
+    } else {
+      mRect.SizeTo(aSize);
+    }
+  }
   void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
-  void SetSize(const nsSize& aSize) { mRect.SizeTo(aSize); }
 
   /**
    * Return frame's computed offset due to relative positioning
@@ -1752,8 +1802,8 @@ public:
    * frame's outline, and descentant frames' outline, but does not include
    * areas clipped out by the CSS "overflow" and "clip" properties.
    *
-   * The NS_FRAME_OUTSIDE_CHILDREN state bit is set when this overflow rect
-   * is different from nsRect(0, 0, GetRect().width, GetRect().height).
+   * HasOverflowRect() (below) will return PR_TRUE when this overflow rect
+   * has been explicitly set, even if it matches mRect.
    * XXX Note: because of a space optimization using the formula above,
    * during reflow this function does not give accurate data if
    * FinishAndStoreOverflow has been called but mRect hasn't yet been
@@ -1772,7 +1822,7 @@ public:
    * frame's outline, and descentant frames' outline, but does not include
    * areas clipped out by the CSS "overflow" and "clip" properties.
    *
-   * The NS_FRAME_OUTSIDE_CHILDREN state bit is set when this overflow rect
+   * HasOverflowRect() (below) will return PR_TRUE when this overflow rect
    * is different from nsRect(0, 0, GetRect().width, GetRect().height).
    * XXX Note: because of a space optimization using the formula above,
    * during reflow this function does not give accurate data if
@@ -1796,7 +1846,7 @@ public:
   nsRect GetOverflowRectRelativeToSelf() const;
 
   /**
-   * Set/unset the NS_FRAME_OUTSIDE_CHILDREN flag and store the overflow area
+   * Store the overflow area in the frame's mOverflow.mDeltas fields or
    * as a frame property in the frame manager so that it can be retrieved
    * later without reflowing the frame.
    */
@@ -1804,6 +1854,22 @@ public:
 
   void FinishAndStoreOverflow(nsHTMLReflowMetrics* aMetrics) {
     FinishAndStoreOverflow(&aMetrics->mOverflowArea, nsSize(aMetrics->width, aMetrics->height));
+  }
+
+  /**
+   * Returns whether the frame has an overflow rect that is different from
+   * its border-box.
+   */
+  PRBool HasOverflowRect() const {
+    return mOverflow.mType != NS_FRAME_OVERFLOW_NONE;
+  }
+
+  /**
+   * Removes any stored overflow rect from the frame.
+   */
+  void ClearOverflowRect() {
+    DeleteProperty(nsGkAtoms::overflowAreaProperty);
+    mOverflow.mType = NS_FRAME_OVERFLOW_NONE;
   }
 
   /**
@@ -2251,6 +2317,25 @@ protected:
   nsIFrame*        mParent;
   nsIFrame*        mNextSibling;  // singly-linked list of frames
   nsFrameState     mState;
+
+  // When there is an overflow area only slightly larger than mRect,
+  // we store a set of four 1-byte deltas from the edges of mRect
+  // rather than allocating a whole separate rectangle property.
+  // Note that these are unsigned values, all measured "outwards"
+  // from the edges of mRect, so /mLeft/ and /mTop/ are reversed from
+  // our normal coordinate system.
+  // If mOverflow.mType == NS_FRAME_OVERFLOW_LARGE, then the
+  // delta values are not meaningful and the overflow area is stored
+  // as a separate rect property.
+  union {
+    PRUint32  mType;
+    struct {
+      PRUint8 mLeft;
+      PRUint8 mTop;
+      PRUint8 mRight;
+      PRUint8 mBottom;
+    } mDeltas;
+  } mOverflow;
   
   // Helpers
   /**
@@ -2353,6 +2438,7 @@ protected:
 
 private:
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
+  void SetOverflowRect(const nsRect& aRect);
 };
 
 //----------------------------------------------------------------------

@@ -60,7 +60,12 @@ var gUpdateHistory = {
         var update = um.getUpdateAt(i);
         if (!update || !update.name)
           continue;
-        
+
+        // Don't display updates that are downloading since they don't have
+        // valid statusText for the UI (bug 485493).
+        if (update.statusText == "" || update.statusText == "undefined")
+          continue;
+
         var element = document.createElementNS(NS_XUL, "update");
         this._view.appendChild(element);
         element.name = bundle.getFormattedString("updateFullName", 

@@ -42,10 +42,12 @@
 
 class nsINode;
 class nsIDOMRange;
+class nsIRange;
+class nsRange;
 
 #define NS_ICONTENTITERATOR_IID \
-{ 0x716a396c, 0xdc4e, 0x4d10, \
-  { 0xbd, 0x07, 0x27, 0xee, 0xae, 0x85, 0xe3, 0x86 } }
+{ 0x2550078e, 0xae87, 0x4914, \
+ { 0xb3, 0x04, 0xe4, 0xd1, 0x46, 0x19, 0x3d, 0x5f } }
 
 class nsIContentIterator : public nsISupports
 {
@@ -57,8 +59,10 @@ public:
   virtual nsresult Init(nsINode* aRoot) = 0;
 
   /* Initializes an iterator for the subtree defined by the range aRange
+     Subclasses should make sure they implement both of these!
    */
   virtual nsresult Init(nsIDOMRange* aRange) = 0;
+  virtual nsresult Init(nsIRange* aRange) = 0;
 
   /** First will reset the list.
    */

@@ -2327,18 +2327,9 @@ nsDocument::UnregisterNamedItems(nsIContent *aContent)
   RemoveFromNameTable(aContent);
   RemoveFromIdTable(aContent);
 
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif
-
-  PRUint32 count;
-  nsIContent * const * kidSlot = aContent->GetChildArray(&count);
-  nsIContent * const * end = kidSlot + count;
-  for (; kidSlot != end; ++kidSlot) {
-    UnregisterNamedItems(*kidSlot);
+  for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
+    UnregisterNamedItems(iter);
   }
-
-  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
 }
 
 void
@@ -2352,18 +2343,9 @@ nsDocument::RegisterNamedItems(nsIContent *aContent)
   UpdateNameTableEntry(aContent);
   UpdateIdTableEntry(aContent);
 
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif
-
-  PRUint32 count;
-  nsIContent * const * kidSlot = aContent->GetChildArray(&count);
-  nsIContent * const * end = kidSlot + count;
-  for (; kidSlot != end; ++kidSlot) {
-    RegisterNamedItems(*kidSlot);
+  for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
+    RegisterNamedItems(iter);
   }
-
-  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
 }
 
 void
@@ -2373,18 +2355,11 @@ nsDocument::ContentAppended(nsIDocument* aDocument,
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif
-
-  PRUint32 count;
-  nsIContent * const * kidSlot = aContainer->GetChildArray(&count);
-  nsIContent * const * end = kidSlot + count;
-  for (kidSlot += aNewIndexInContainer; kidSlot != end; ++kidSlot) {
-    RegisterNamedItems(*kidSlot);
+  for (nsINode::ChildIterator iter(aContainer, aNewIndexInContainer);
+       !iter.IsDone();
+       iter.Next()) {
+    RegisterNamedItems(iter);
   }
-
-  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
 }
 
 void
