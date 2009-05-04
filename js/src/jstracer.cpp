@@ -4587,7 +4587,9 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
     bool wasInImacro = (cx->fp->imacpc != NULL);
 #endif
     switch (op) {
-      default: goto stop_recording;
+      default:
+          status = JSRS_ERROR;
+          goto stop_recording;
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
       case x:                                                                 \
         status = tr->record_##x();                                            \
