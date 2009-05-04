@@ -961,11 +961,33 @@ js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 
 JSClass js_NoSuchMethodClass = {
     "NoSuchMethod",
-    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_NoSuchMethod),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    JS_FinalizeStub,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
+
+JS_BEGIN_EXTERN_C
+
+JSObject*
+js_InitNoSuchMethodClass(JSContext *cx, JSObject* obj);
+
+JS_END_EXTERN_C
+
+JSObject*
+js_InitNoSuchMethodClass(JSContext *cx, JSObject* obj)
+{
+    JSObject *proto;
+
+    proto = JS_InitClass(cx, obj, NULL, &js_NoSuchMethodClass, NULL, 0, NULL,
+                         NULL, NULL, NULL);
+    if (!proto)
+        return NULL;
+
+    OBJ_CLEAR_PROTO(cx, proto);
+    return proto;
+}
 
 /*
  * When JSOP_CALLPROP or JSOP_CALLELEM does not find the method property of
@@ -1012,8 +1034,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
                 vp[0] = ID_TO_VALUE(id);
         }
 #endif
-        obj = js_NewObjectWithGivenProto(cx, &js_NoSuchMethodClass,
-                                         NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_NoSuchMethodClass, NULL, NULL, 0);
         if (!obj) {
             ok = JS_FALSE;
             goto out;
@@ -4610,16 +4631,12 @@ js_Interpret(JSContext *cx)
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
                             JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj)));
 
-                            /*
-                             * Fastest path: check whether the cached sprop is
-                             * already in scope and call NATIVE_GET and break
-                             * to get out of the do-while(0). But we can call
-                             * NATIVE_GET only if obj owns scope or sprop is
-                             * shared.
-                             */
-                            bool checkForAdd;
-                            if (scope->object == obj ||
-                                (sprop->attrs & JSPROP_SHARED)) {
+                            if (scope->object == obj) {
+                                /*
+                                 * Fastest path: the cached sprop is already
+                                 * in scope. Just NATIVE_SET and break to get
+                                 * out of the do-while(0).
+                                 */
                                 if (sprop == scope->lastProp ||
                                     SCOPE_HAS_PROPERTY(scope, sprop)) {
                                     PCMETER(cache->pchits++);
@@ -4628,21 +4645,16 @@ js_Interpret(JSContext *cx)
                                     JS_UNLOCK_SCOPE(cx, scope);
                                     break;
                                 }
-                                checkForAdd =
-                                    !(sprop->attrs & JSPROP_SHARED) &&
-                                    sprop->parent == scope->lastProp &&
-                                    !SCOPE_HAD_MIDDLE_DELETE(scope);
-
                             } else {
                                 scope = js_GetMutableScope(cx, obj);
                                 if (!scope) {
                                     JS_UNLOCK_OBJ(cx, obj);
                                     goto error;
                                 }
-                                checkForAdd = !sprop->parent;
                             }
 
-                            if (checkForAdd &&
+                            if (sprop->parent == scope->lastProp &&
+                                !SCOPE_HAD_MIDDLE_DELETE(scope) &&
                                 SPROP_HAS_STUB_SETTER(sprop) &&
                                 (slot = sprop->slot) == scope->map.freeslot) {
                                 /*
