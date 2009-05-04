@@ -6856,10 +6856,9 @@ MOZ_ARG_ENABLE_BOOL(reflow-perf,
 [  --enable-reflow-perf    Enable reflow performance tracing],
     MOZ_REFLOW_PERF=1,
     MOZ_REFLOW_PERF= )
-if test -n "$MOZ_REFLOW_PREF"; then
-    AC_DEFINE(MOZ_REFLOW_PREF)
+if test -n "$MOZ_REFLOW_PERF"; then
+    AC_DEFINE(MOZ_REFLOW_PERF)
 fi
-AC_SUBST(MOZ_REFLOW_PERF)
 
 dnl ========================================================
 dnl Enable performance metrics.
