@@ -593,35 +593,19 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     /*
      * Here looping from 0-to-length to xdr objects is essential. It ensures
      * that block objects from the script->objects array will be written and
-     * restored in the outer-to-inner order. js_XDRBlockObject relies on this
-     * to restore the parent chain.
+     * restored in the outer-to-inner order. block_xdrObject relies on this to
+     * restore the parent chain.
      */
     for (i = 0; i != nobjects; ++i) {
-        JSObject **objp = &JS_SCRIPT_OBJECTS(script)->vector[i];
-        uint32 isBlock;
-        if (xdr->mode == JSXDR_ENCODE) {
-            JSClass *clasp = STOBJ_GET_CLASS(*objp);
-            JS_ASSERT(clasp == &js_FunctionClass ||
-                      clasp == &js_BlockClass);
-            isBlock = (clasp == &js_BlockClass);
-         }
-        if (!JS_XDRUint32(xdr, &isBlock))
+        if (!js_XDRObject(xdr, &JS_SCRIPT_OBJECTS(script)->vector[i]))
             goto error;
-        if (isBlock == 0) {
-            if (!js_XDRFunctionObject(xdr, objp))
-                goto error;
-        } else {
-            JS_ASSERT(isBlock == 1);
-            if (!js_XDRBlockObject(xdr, objp))
-                goto error;
-        }
     }
     for (i = 0; i != nupvars; ++i) {
         if (!JS_XDRUint32(xdr, &JS_SCRIPT_UPVARS(script)->vector[i]))
             goto error;
     }
     for (i = 0; i != nregexps; ++i) {
-        if (!js_XDRRegExpObject(xdr, &JS_SCRIPT_REGEXPS(script)->vector[i]))
+        if (!js_XDRObject(xdr, &JS_SCRIPT_REGEXPS(script)->vector[i]))
             goto error;
     }
 
