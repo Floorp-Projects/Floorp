@@ -59,6 +59,7 @@
 #include FT_FREETYPE_H
 #include "gfxFT2Fonts.h"
 #include "cairo-ft.h"
+#include "nsAppDirectoryServiceDefs.h"
 #else
 #include "gfxWindowsFonts.h"
 #endif
@@ -318,7 +319,7 @@ void gfxWindowsPlatform::AppendFacesFromFontFile(const PRUnichar *aFileName) {
 void
 gfxWindowsPlatform::FindFonts()
 {
-    nsTArray<nsString> searchPaths(2);
+    nsTArray<nsString> searchPaths(3);
     nsTArray<nsString> fontPatterns(3);
     fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.ttf"));
     fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.ttc"));
@@ -328,6 +329,14 @@ gfxWindowsPlatform::FindFonts()
     searchPaths.AppendElement(pathBuf);
     SHGetSpecialFolderPathW(0, pathBuf, CSIDL_FONTS, 0);
     searchPaths.AppendElement(pathBuf);
+    nsCOMPtr<nsIFile> resDir;
+    NS_GetSpecialDirectory(NS_APP_RES_DIR, getter_AddRefs(resDir));
+    if (resDir) {
+        resDir->Append(NS_LITERAL_STRING("fonts"));
+        nsDependentString resPath;
+        resDir->GetPath(resPath);
+        searchPaths.AppendElement(resPath);
+    }
     WIN32_FIND_DATAW results;
     for (PRUint32 i = 0;  i < searchPaths.Length(); i++) {
         const nsString& path(searchPaths[i]);
