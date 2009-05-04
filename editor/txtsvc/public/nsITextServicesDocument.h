@@ -77,16 +77,6 @@ public:
   } TSDBlockSelectionStatus;
 
   /**
-   * Initializes the text services document to use a particular
-   * DOM document.
-   * @param aDOMDocument is the document to use. It is AddRef'd
-   * by this method.
-   * @param aPresShell is the presentation shell to use when
-   * setting the selection. It is AddRef'd by this method.
-   */
-  NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell) = 0;
-
-  /**
    * Get the DOM document for the document in use.
    * @return aDocument the dom document [OUT]
    */
@@ -103,25 +93,14 @@ public:
 
   /**
    * Sets the range/extent over which the text services document
-   * will iterate. Note that InitWithDocument() or InitWithEditor()
-   * should have been called prior to calling this method. If this
-   * method is never called, the text services defaults to iterating
-   * over the entire document.
+   * will iterate. Note that InitWithEditor() should have been called prior to
+   * calling this method. If this method is never called, the text services
+   * defaults to iterating over the entire document.
    *
    * @param aDOMRange is the range to use. aDOMRange must point to a
    * valid range object.
    */
   NS_IMETHOD SetExtent(nsIDOMRange* aDOMRange) = 0;
-
-  /**
-   * Gets the range that the text services document
-   * is currently iterating over. If SetExtent() was never
-   * called, this method will return a range that spans the
-   * entire body of the document.
-   *
-   * @param aDOMRange will contain an AddRef'd pointer to the range.
-   */
-  NS_IMETHOD GetExtent(nsIDOMRange** aDOMRange) = 0;
 
   /**
    * Expands the end points of the range so that it spans complete words.
@@ -138,14 +117,6 @@ public:
   NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter) = 0;
 
   /**
-   * Returns true if the document can be modified with calls
-   * to DeleteSelection() and InsertText().
-   * @param aCanEdit is true if the document can be modified,
-   * false if it can't.
-   */
-  NS_IMETHOD CanEdit(PRBool *aCanEdit) = 0;
-
-  /**
    * Returns the text in the current text block.
    * @param aStr will contain the text.
    */
@@ -159,27 +130,6 @@ public:
    */
 
   NS_IMETHOD FirstBlock() = 0;
-
-  /**
-   * Tells the document to point to the last text block in the
-   * document. This method does not adjust the current cursor
-   * position or selection.
-   */
-
-  NS_IMETHOD LastBlock() = 0;
-
-  /**
-   * Tells the document to point to the first text block that
-   * contains the current selection or caret.
-   * @param aSelectionStatus will contain the text block selection status
-   * @param aSelectionOffset will contain the offset into the
-   * string returned by GetCurrentTextBlock() where the selection
-   * begins.
-   * @param aLength will contain the number of characters that are
-   * selected in the string.
-   */
-
-  NS_IMETHOD FirstSelectedBlock(TSDBlockSelectionStatus *aSelectionStatus, PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
 
   /**
    * Tells the document to point to the last text block that
@@ -259,21 +209,6 @@ public:
    */
 
   NS_IMETHOD InsertText(const nsString *aText) = 0;
-
-  /**
-   * Sets the display style for the text selected by SetSelection().
-   * @param aStyle is the style to apply to the selected text.
-   */
-
-  NS_IMETHOD SetDisplayStyle(TSDDisplayStyle aStyle) = 0;
-
-  /**
-   * Returns the DOM range for a given offset and length
-   * @param aOffset offset into string returned by GetCurrentTextBlock().
-   * @param aLength number characters selected.
-   * @return aDOMRange the DOM range that represents the offset and length
-   */
-  NS_IMETHOD GetDOMRangeFor(PRInt32 aOffset, PRInt32 aLength, nsIDOMRange** aRange) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextServicesDocument,

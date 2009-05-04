@@ -45,14 +45,9 @@ MODULE		= content
 
 EXPORTS		= \
 		nsMediaDecoder.h \
-		$(NULL)
-
-ifdef MOZ_MEDIA
-EXPORTS		+= \
-		nsChannelToPipeListener.h \
 		nsMediaStream.h \
+		nsMediaCache.h \
 		$(NULL)
-endif
 
 ifdef MOZ_SYDNEYAUDIO
 EXPORTS		+= \

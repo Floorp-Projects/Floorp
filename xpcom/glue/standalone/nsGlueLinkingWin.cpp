@@ -45,6 +45,12 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#ifdef WINCE
+#define MOZ_LOADLIBRARY_FLAGS 0
+#else
+#define MOZ_LOADLIBRARY_FLAGS LOAD_WITH_ALTERED_SEARCH_PATH
+#endif
+
 struct DependentLib
 {
     HINSTANCE     libHandle;
@@ -70,12 +76,16 @@ AppendDependentLib(HINSTANCE libHandle)
 static void
 ReadDependentCB(const char *aDependentLib)
 {
-    
-    HINSTANCE h =
-        LoadLibraryExW(NS_ConvertUTF8toUTF16(aDependentLib).get(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-    if (!h)
-        return;
+    wchar_t wideDependentLib[MAX_PATH];
+    MultiByteToWideChar(CP_ACP, 0, aDependentLib, -1, wideDependentLib, MAX_PATH);
 
+    HINSTANCE h =
+        LoadLibraryExW(wideDependentLib, NULL, MOZ_LOADLIBRARY_FLAGS);
+
+    if (!h) {
+        wprintf(L"Error loading %s\n", wideDependentLib);
+        return;
+    }
     AppendDependentLib(h);
 }
 
@@ -160,7 +170,7 @@ XPCOMGlueLoad(const char *aXpcomFile)
             
             _snwprintf(lastSlash, MAXPATHLEN - wcslen(xpcomDir), L"\\" LXUL_DLL);
             sXULLibrary =
-                LoadLibraryExW(xpcomDir, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+                LoadLibraryExW(xpcomDir, NULL, MOZ_LOADLIBRARY_FLAGS);
 
 #ifdef DEBUG
             if (!sXULLibrary) 
@@ -177,14 +187,13 @@ XPCOMGlueLoad(const char *aXpcomFile)
                               0,
                               NULL
                               );
-                wprintf(L"Error loading xul.dll: %s\n", lpMsgBuf);
+                wprintf(L"Error loading %s: %s\n", xpcomDir, lpMsgBuf);
             }
 #endif //DEBUG                
         }
     }
     HINSTANCE h =
-        LoadLibraryExW(xpcomFile, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-
+        LoadLibraryExW(xpcomFile, NULL, MOZ_LOADLIBRARY_FLAGS);
 
     if (!h) 
     {
@@ -201,7 +210,7 @@ XPCOMGlueLoad(const char *aXpcomFile)
                       0,
                       NULL
                       );
-        wprintf(L"Error loading xpcom.dll: %s\n", lpMsgBuf);
+        wprintf(L"Error loading %s: %s\n", xpcomFile, lpMsgBuf);
 #endif        
         return nsnull;
     }

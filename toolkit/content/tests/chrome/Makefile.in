@@ -66,6 +66,8 @@ _TEST_FILES = 	findbar_window.xul \
 		test_bug437844.xul \
 		bug451286_window.xul \
 		test_bug451286.xul \
+		bug451540_window.xul \
+		test_bug451540.xul \
 		test_bug471776.xul \
 		test_popup_preventdefault_chrome.xul \
 		window_popup_preventdefault_chrome.xul \
@@ -84,6 +86,8 @@ _TEST_FILES = 	findbar_window.xul \
 		window_keys.xul \
 		$(NULL)
 
+# test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
+# textboxes and lists only, so skip this test on Mac
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += test_panel_focus.xul \
                window_panel_focus.xul

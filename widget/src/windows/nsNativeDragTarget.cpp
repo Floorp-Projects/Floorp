@@ -440,6 +440,9 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   winDragService->SetDroppedLocal();
 
   // tell the drag service we're done with the session
+  POINT pos;
+  GetCursorPos(&pos);
+  winDragService->SetDragEndPoint(nsIntPoint(pos.x, pos.y));
   serv->EndDragSession(PR_TRUE);
 
   // release the ref that was taken in DragEnter

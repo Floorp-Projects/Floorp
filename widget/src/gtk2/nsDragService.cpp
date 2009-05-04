@@ -1358,6 +1358,14 @@ invisibleSourceDragEnd(GtkWidget        *aWidget,
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleDragEnd"));
     nsDragService *dragService = (nsDragService *)aData;
+
+    gint x, y;
+    GdkDisplay* display = gdk_display_get_default();
+    if (display) {
+      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
+      dragService->SetDragEndPoint(nsIntPoint(x, y));
+    }
+
     // The drag has ended.  Release the hostages!
     dragService->SourceEndDrag();
 }

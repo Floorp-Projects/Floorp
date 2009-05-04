@@ -107,6 +107,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
     CK_ATTRIBUTE *signedattr = NULL;
     CK_ATTRIBUTE *attrs = theTemplate;
     SECItem *ckaId = NULL;
+    SECItem *pubValue = NULL;
     int signedcount = 0;
     int templateCount = 0;
     SECStatus rv;
@@ -203,8 +204,23 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
 	    PK11_SETATTRS(attrs, CKA_EC_PARAMS, 
 		          pubKey->u.ec.DEREncodedParams.data,
 		          pubKey->u.ec.DEREncodedParams.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_EC_POINT, pubKey->u.ec.publicValue.data,
+	    if (PR_GetEnv("NSS_USE_DECODED_CKA_EC_POINT")) {
+	    	PK11_SETATTRS(attrs, CKA_EC_POINT, 
+			  pubKey->u.ec.publicValue.data,
 			  pubKey->u.ec.publicValue.len); attrs++;
+	    } else {
+		pubValue = SEC_ASN1EncodeItem(NULL, NULL,
+			&pubKey->u.ec.publicValue,
+			SEC_ASN1_GET(SEC_OctetStringTemplate));
+		if (pubValue == NULL) {
+		    if (ckaId) {
+			SECITEM_FreeItem(ckaId,PR_TRUE);
+		    }
+		    return CK_INVALID_HANDLE;
+		}
+	    	PK11_SETATTRS(attrs, CKA_EC_POINT, 
+			  pubValue->data, pubValue->len); attrs++;
+	    }
 	    break;
 	default:
 	    PORT_SetError( SEC_ERROR_BAD_KEY );
@@ -222,6 +238,9 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
 	if (ckaId) {
 	    SECITEM_FreeItem(ckaId,PR_TRUE);
 	}
+	if (pubValue) {
+	    SECITEM_FreeItem(pubValue,PR_TRUE);
+	}
 	if ( rv != SECSuccess) {
 	    return CK_INVALID_HANDLE;
 	}
@@ -237,7 +256,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
  * take an attribute and copy it into a secitem
  */
 static CK_RV
-pk11_Attr2SecItem(PRArenaPool *arena, CK_ATTRIBUTE *attr, SECItem *item) 
+pk11_Attr2SecItem(PRArenaPool *arena, const CK_ATTRIBUTE *attr, SECItem *item) 
 {
     item->data = NULL;
 
@@ -247,6 +266,309 @@ pk11_Attr2SecItem(PRArenaPool *arena, CK_ATTRIBUTE *attr, SECItem *item)
     } 
     PORT_Memcpy(item->data, attr->pValue, item->len);
     return CKR_OK;
+}
+
+
+/*
+ * get a curve length from a set of ecParams.
+ * 
+ * We need this so we can reliably determine if a the ecPoint passed to us
+ * was encoded or not. With out this, for many curves, we would incorrectly
+ * identify an unencoded curve as an encoded curve 1 in 65536 times, and for
+ * a few we would make that same mistake 1 in 32768 times. These are bad 
+ * numbers since they are rare enough to pass tests, but common enough to
+ * be tripped over in the field. 
+ *
+ * This function will only work for curves we recognized as of March 2009.
+ * The assumption is curves in use after March of 2009 would be supplied by
+ * PKCS #11 modules that already pass the correct encoding to us.
+ *
+ * Point length = (Roundup(curveLenInBits/8)*2+1)
+ */
+static int
+pk11_get_EC_PointLenInBytes(PRArenaPool *arena, const SECItem *ecParams)
+{
+   SECItem oid;
+   SECOidTag tag;
+   SECStatus rv;
+
+   /* decode the OID tag */
+   rv = SEC_QuickDERDecodeItem(arena, &oid,
+		SEC_ASN1_GET(SEC_ObjectIDTemplate), ecParams);
+   if (rv != SECSuccess) {
+	/* could be explict curves, allow them to work if the 
+	 * PKCS #11 module support them. If we try to parse the
+	 * explicit curve value in the future, we may return -1 here
+	 * to indicate an invalid parameter if the explicit curve
+	 * decode fails. */
+	return 0;
+   }
+
+   tag = SECOID_FindOIDTag(&oid);
+   switch (tag) {
+    case SEC_OID_SECG_EC_SECP112R1:
+    case SEC_OID_SECG_EC_SECP112R2:
+	return 29; /* curve len in bytes = 14 bytes */
+    case SEC_OID_SECG_EC_SECT113R1:
+    case SEC_OID_SECG_EC_SECT113R2:
+	return 31; /* curve len in bytes = 15 bytes */
+    case SEC_OID_SECG_EC_SECP128R1:
+    case SEC_OID_SECG_EC_SECP128R2:
+	return 33; /* curve len in bytes = 16 bytes */
+    case SEC_OID_SECG_EC_SECT131R1:
+    case SEC_OID_SECG_EC_SECT131R2:
+	return 35; /* curve len in bytes = 17 bytes */
+    case SEC_OID_SECG_EC_SECP160K1:
+    case SEC_OID_SECG_EC_SECP160R1:
+    case SEC_OID_SECG_EC_SECP160R2:
+	return 41; /* curve len in bytes = 20 bytes */
+    case SEC_OID_SECG_EC_SECT163K1:
+    case SEC_OID_SECG_EC_SECT163R1:
+    case SEC_OID_SECG_EC_SECT163R2:
+    case SEC_OID_ANSIX962_EC_C2PNB163V1:
+    case SEC_OID_ANSIX962_EC_C2PNB163V2:
+    case SEC_OID_ANSIX962_EC_C2PNB163V3:
+	return 43; /* curve len in bytes = 21 bytes */
+    case SEC_OID_ANSIX962_EC_C2PNB176V1:
+	return 45; /* curve len in bytes = 22 bytes */
+    case SEC_OID_ANSIX962_EC_C2TNB191V1:
+    case SEC_OID_ANSIX962_EC_C2TNB191V2:
+    case SEC_OID_ANSIX962_EC_C2TNB191V3:
+    case SEC_OID_SECG_EC_SECP192K1:
+    case SEC_OID_ANSIX962_EC_PRIME192V1:
+    case SEC_OID_ANSIX962_EC_PRIME192V2:
+    case SEC_OID_ANSIX962_EC_PRIME192V3:
+	return 49; /*curve len in bytes = 24 bytes */
+    case SEC_OID_SECG_EC_SECT193R1:
+    case SEC_OID_SECG_EC_SECT193R2:
+	return 51; /*curve len in bytes = 25 bytes */
+    case SEC_OID_ANSIX962_EC_C2PNB208W1:
+	return 53; /*curve len in bytes = 26 bytes */
+    case SEC_OID_SECG_EC_SECP224K1:
+    case SEC_OID_SECG_EC_SECP224R1:
+	return 57; /*curve len in bytes = 28 bytes */
+    case SEC_OID_SECG_EC_SECT233K1:
+    case SEC_OID_SECG_EC_SECT233R1:
+    case SEC_OID_SECG_EC_SECT239K1:
+    case SEC_OID_ANSIX962_EC_PRIME239V1:
+    case SEC_OID_ANSIX962_EC_PRIME239V2:
+    case SEC_OID_ANSIX962_EC_PRIME239V3:
+    case SEC_OID_ANSIX962_EC_C2TNB239V1:
+    case SEC_OID_ANSIX962_EC_C2TNB239V2:
+    case SEC_OID_ANSIX962_EC_C2TNB239V3:
+	return 61; /*curve len in bytes = 30 bytes */
+    case SEC_OID_ANSIX962_EC_PRIME256V1:
+    case SEC_OID_SECG_EC_SECP256K1:
+	return 65; /*curve len in bytes = 32 bytes */
+    case SEC_OID_ANSIX962_EC_C2PNB272W1:
+	return 69; /*curve len in bytes = 34 bytes */
+    case SEC_OID_SECG_EC_SECT283K1:
+    case SEC_OID_SECG_EC_SECT283R1:
+	return 73; /*curve len in bytes = 36 bytes */
+    case SEC_OID_ANSIX962_EC_C2PNB304W1:
+	return 77; /*curve len in bytes = 38 bytes */
+    case SEC_OID_ANSIX962_EC_C2TNB359V1:
+	return 91; /*curve len in bytes = 45 bytes */
+    case SEC_OID_ANSIX962_EC_C2PNB368W1:
+	return 93; /*curve len in bytes = 46 bytes */
+    case SEC_OID_SECG_EC_SECP384R1:
+	return 97; /*curve len in bytes = 48 bytes */
+    case SEC_OID_SECG_EC_SECT409K1:
+    case SEC_OID_SECG_EC_SECT409R1:
+	return 105; /*curve len in bytes = 52 bytes */
+    case SEC_OID_ANSIX962_EC_C2TNB431R1:
+	return 109; /*curve len in bytes = 54 bytes */
+    case SEC_OID_SECG_EC_SECP521R1:
+	return 133; /*curve len in bytes = 66 bytes */
+    case SEC_OID_SECG_EC_SECT571K1:
+    case SEC_OID_SECG_EC_SECT571R1:
+	return 145; /*curve len in bytes = 72 bytes */
+    /* unknown or unrecognized OIDs. return unknown length */
+    default:
+	break;
+   }
+   return 0;
+}
+
+/*
+ * returns the decoded point. In some cases the point may already be decoded.
+ * this function tries to detect those cases and return the point in 
+ * publicKeyValue. In other cases it's DER encoded. In those cases the point
+ * is first decoded and returned. Space for the point is allocated out of 
+ * the passed in arena.
+ */
+static CK_RV
+pk11_get_Decoded_ECPoint(PRArenaPool *arena, const SECItem *ecParams, 
+	const CK_ATTRIBUTE *ecPoint, SECItem *publicKeyValue)
+{
+    SECItem encodedPublicValue;
+    SECStatus rv;
+    int keyLen;
+
+    if (ecPoint->ulValueLen == 0) {
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+
+    /*
+     * The PKCS #11 spec requires ecPoints to be encoded as a DER OCTET String.
+     * NSS has mistakenly passed unencoded values, and some PKCS #11 vendors
+     * followed that mistake. Now we need to detect which encoding we were
+     * passed in. The task is made more complicated by the fact the the
+     * DER encoding byte (SEC_ASN_OCTET_STRING) is the same as the 
+     * EC_POINT_FORM_UNCOMPRESSED byte (0x04), so we can't use that to
+     * determine which curve we are using.
+     */
+
+    /* get the expected key length for the passed in curve.
+     * pk11_get_EC_PointLenInBytes only returns valid values for curves
+     * NSS has traditionally recognized. If the curve is not recognized,
+     * it will return '0', and we have to figure out if the key was
+     * encoded or not heuristically. If the ecParams are invalid, it
+     * will return -1 for the keyLen.
+     */
+    keyLen = pk11_get_EC_PointLenInBytes(arena, ecParams);
+    if (keyLen < 0) {
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+
+
+    /* If the point is uncompressed and the lengths match, it
+     * must be an unencoded point */
+    if ((*((char *)ecPoint->pValue) == EC_POINT_FORM_UNCOMPRESSED) 
+	&& (ecPoint->ulValueLen == keyLen)) {
+	    return pk11_Attr2SecItem(arena, ecPoint, publicKeyValue);
+    }
+
+    /* now assume the key passed to us was encoded and decode it */
+    if (*((char *)ecPoint->pValue) == SEC_ASN1_OCTET_STRING) {
+	/* OK, now let's try to decode it and see if it's valid */
+	encodedPublicValue.data = ecPoint->pValue;
+	encodedPublicValue.len = ecPoint->ulValueLen;
+	rv = SEC_QuickDERDecodeItem(arena, publicKeyValue,
+		SEC_ASN1_GET(SEC_OctetStringTemplate), &encodedPublicValue);
+
+	/* it coded correctly & we know the key length (and they match)
+	 * then we are done, return the results. */
+        if (keyLen && rv == SECSuccess && publicKeyValue->len == keyLen) {
+	    return CKR_OK;
+	}
+
+	/* if we know the key length, one of the above tests should have
+	 * succeded. If it doesn't the module gave us bad data */
+	if (keyLen) {
+	    return CKR_ATTRIBUTE_VALUE_INVALID;
+	}
+		
+
+	/* We don't know the key length, so we don't know deterministically
+	 * which encoding was used. We now will try to pick the most likely 
+	 * form that's correct, with a preference for the encoded form if we
+	 * can't determine for sure. We do this by checking the key we got
+	 * back from SEC_QuickDERDecodeItem for defects. If no defects are
+	 * found, we assume the encoded paramter was was passed to us.
+	 * our defect tests include:
+	 *   1) it didn't decode.
+	 *   2) The decode key had an invalid length (must be odd).
+	 *   3) The decoded key wasn't an UNCOMPRESSED key.
+	 *   4) The decoded key didn't include the entire encoded block
+	 *   except the DER encoding values. (fixing DER length to one
+	 *   particular value).
+	 */
+	if ((rv != SECSuccess)
+	    || ((publicKeyValue->len & 1) != 1)
+	    || (publicKeyValue->data[0] != EC_POINT_FORM_UNCOMPRESSED)
+	    || (PORT_Memcmp(&encodedPublicValue.data[encodedPublicValue.len -
+		 	    publicKeyValue->len], publicKeyValue->data, 
+			    publicKeyValue->len) != 0)) {
+	    /* The decoded public key was flawed, the original key must have
+	     * already been in decoded form. Do a quick sanity check then 
+	     * return the original key value.
+	     */
+	    if ((encodedPublicValue.len & 1) == 0) {
+		return CKR_ATTRIBUTE_VALUE_INVALID;
+	    }
+	    return pk11_Attr2SecItem(arena, ecPoint, publicKeyValue);
+	}
+
+	/* as best we can figure, the passed in key was encoded, and we've
+	 * now decoded it. Note: there is a chance this could be wrong if the 
+	 * following conditions hold:
+	 *  1) The first byte or bytes of the X point looks like a valid length
+	 * of precisely the right size (2*curveSize -1). this means for curves
+	 * less than 512 bits (64 bytes), this will happen 1 in 256 times*.
+	 * for curves between 512 and 1024, this will happen 1 in 65,536 times*
+	 * for curves between 1024 and 256K this will happen 1 in 16 million*
+	 *  2) The length of the 'DER length field' is odd 
+	 * (making both the encoded and decode
+	 * values an odd length. this is true of all curves less than 512,
+	 * as well as curves between 1024 and 256K).
+	 *  3) The X[length of the 'DER length field'] == 0x04, 1 in 256.
+	 *
+	 *  (* assuming all values are equally likely in the first byte, 
+	 * This isn't true if the curve length is not a multiple of 8. In these
+	 * cases, if the DER length is possible, it's more likely, 
+	 * if it's not possible, then we have no false decodes).
+	 * 
+	 * For reference here are the odds for the various curves we currently
+	 * have support for (and the only curves SSL will negotiate at this
+	 * time). NOTE: None of the supported curves will show up here 
+	 * because we return a valid length for all of these curves. 
+	 * The only way to get here is to have some application (not SSL) 
+	 * which supports some unknown curve and have some vendor supplied 
+	 * PKCS #11 module support that curve. NOTE: in this case, one 
+	 * presumes that that pkcs #11 module is likely to be using the 
+	 * correct encodings.
+	 *
+	 * Prime Curves (GFp):
+	 *   Bit	False	    Odds of 
+	 *  Size	DER Len	 False Decode Positive
+	 *  112 	27	   1 in 65536 
+	 *  128 	31	   1 in 65536 
+	 *  160 	39	   1 in 65536 
+	 *  192 	47	   1 in 65536 
+	 *  224 	55	   1 in 65536 
+	 *  239 	59	   1 in 32768 (top byte can only be 0-127)
+	 *  256 	63	   1 in 65536 
+	 *  521 	129,131	     0        (decoded value would be even)
+	 *
+	 * Binary curves (GF2m).
+	 *   Bit	False	    Odds of 
+	 *  Size	DER Len	 False Decode Positive
+	 *  131 	33	     0        (top byte can only be 0-7)
+	 *  163 	41	     0        (top byte can only be 0-7)
+	 *  176 	43	   1 in 65536 
+	 *  191 	47	   1 in 32768 (top byte can only be 0-127)
+	 *  193 	49	     0        (top byte can only be 0-1)
+	 *  208 	51	   1 in 65536 
+	 *  233 	59	     0        (top byte can only be 0-1)
+	 *  239 	59	   1 in 32768 (top byte can only be 0-127)
+	 *  272 	67	   1 in 65536 
+	 *  283 	71	     0        (top byte can only be 0-7)
+	 *  304 	75	   1 in 65536 
+	 *  359 	89	   1 in 32768 (top byte can only be 0-127)
+	 *  368 	91	   1 in 65536 
+	 *  409 	103	     0        (top byte can only be 0-1)
+	 *  431 	107	   1 in 32768 (top byte can only be 0-127)
+	 *  571 	129,143	     0        (decoded value would be even)
+	 *
+	 */
+
+	return CKR_OK;
+    }
+
+    /* In theory, we should handle the case where the curve == 0 and
+     * the first byte is EC_POINT_FORM_UNCOMPRESSED, (which would be
+     * handled by doing a santity check on the key length and returning
+     * pk11_Attr2SecItem() to copy the ecPoint to the publicKeyValue).
+     *
+     * This test is unnecessary, however, due to the fact that 
+     * EC_POINT_FORM_UNCOMPRESSED == SEC_ASIN1_OCTET_STRING, that case is
+     * handled in the above if. That means if we get here, the initial
+     * byte of our ecPoint value was invalid, so we can safely return.
+     * invalid attribute.
+     */
+	
+    return CKR_ATTRIBUTE_VALUE_INVALID;
 }
 
 /*
@@ -399,7 +721,7 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 	PK11_SETATTRS(attrs, CKA_EC_POINT, NULL, 0); attrs++; 
 	templateCount = attrs - template;
 	PR_ASSERT(templateCount <= sizeof(template)/sizeof(CK_ATTRIBUTE));
-	crv = PK11_GetAttributes(tmp_arena,slot,id,template,templateCount);
+	crv = PK11_GetAttributes(arena,slot,id,template,templateCount);
 	if (crv != CKR_OK) break;
 
 	if ((keyClass != CKO_PUBLIC_KEY) || (pk11KeyType != CKK_EC)) {
@@ -410,8 +732,9 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 	crv = pk11_Attr2SecItem(arena,ecparams,
 	                        &pubKey->u.ec.DEREncodedParams);
 	if (crv != CKR_OK) break;
-	crv = pk11_Attr2SecItem(arena,value,&pubKey->u.ec.publicValue);
-	if (crv != CKR_OK) break;
+	crv = pk11_get_Decoded_ECPoint(arena,
+		 &pubKey->u.ec.DEREncodedParams, value, 
+		 &pubKey->u.ec.publicValue);
 	break;
     case fortezzaKey:
     case nullKey:

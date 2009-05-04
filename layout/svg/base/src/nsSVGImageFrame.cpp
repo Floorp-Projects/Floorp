@@ -41,6 +41,7 @@
 #include "nsStubImageDecoderObserver.h"
 #include "nsImageLoadingContent.h"
 #include "nsIDOMSVGImageElement.h"
+#include "nsLayoutUtils.h"
 #include "nsSVGImageElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMatrix.h"
@@ -191,8 +192,7 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGImageFrame::GetImageTransform()
 {
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  GetCanvasTM(getter_AddRefs(ctm));
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
 
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
@@ -256,28 +256,14 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
 
   if (thebesPattern) {
 
-    switch (GetStyleSVG()->mImageRendering) {
-    case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
-      thebesPattern->SetFilter(gfxPattern::FILTER_FAST);
-      break;
-    case NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY:
-      thebesPattern->SetFilter(gfxPattern::FILTER_BEST);
-      break;
-    case NS_STYLE_IMAGE_RENDERING_DISABLE_RESAMPLING:
-      thebesPattern->SetFilter(gfxPattern::FILTER_NEAREST);
-      break;
-    default:
-      thebesPattern->SetFilter(gfxPattern::FILTER_GOOD);
-      break;
-    }
+    thebesPattern->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
 
     gfxContext *gfx = aContext->GetGfxContext();
 
     if (GetStyleDisplay()->IsScrollableOverflow()) {
       gfx->Save();
 
-      nsCOMPtr<nsIDOMSVGMatrix> ctm;
-      GetCanvasTM(getter_AddRefs(ctm));
+      nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
 
       if (ctm) {
         nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);

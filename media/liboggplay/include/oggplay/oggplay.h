@@ -94,6 +94,9 @@ OggPlayErrorCode
 oggplay_set_callback_num_frames(OggPlay *me, int stream, int frames);
 
 OggPlayErrorCode
+oggplay_set_callback_period(OggPlay *me, int stream, int milliseconds);
+
+OggPlayErrorCode
 oggplay_set_offset(OggPlay *me, int track, ogg_int64_t offset);
 
 OggPlayErrorCode
@@ -112,10 +115,19 @@ OggPlayErrorCode
 oggplay_get_video_fps(OggPlay *me, int track, int* fps_denom, int* fps_num);
 
 OggPlayErrorCode
+oggplay_convert_video_to_rgb(OggPlay *me, int track, int convert);
+
+OggPlayErrorCode
 oggplay_get_kate_category(OggPlay *me, int track, const char** category);
 
 OggPlayErrorCode
 oggplay_get_kate_language(OggPlay *me, int track, const char** language);
+
+OggPlayErrorCode
+oggplay_set_kate_tiger_rendering(OggPlay *me, int track, int use_tiger);
+
+OggPlayErrorCode
+oggplay_overlay_kate_track_on_video(OggPlay *me, int kate_track, int video_track);
 
 OggPlayErrorCode
 oggplay_start_decoding(OggPlay *me);

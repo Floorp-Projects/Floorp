@@ -1,0 +1,17 @@
+<window title="Testcase bug 326834 - Crash with evil xul testcase, using listbox/listitem and display: table-cell"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<listbox>
+  <listitem label="This page should not crash Mozilla"/>
+</listbox>
+<html:script>
+function doe() {
+var el=document.getElementsByTagName('*');
+document.getElementsByTagName('listbox')[0].style.display = 'table-cell';
+document.getElementsByTagName('listitem')[0].style.display = 'table-cell';
+window.getComputedStyle(document.getElementsByTagName('listitem')[0], '').getPropertyValue("height");
+document.getElementsByTagName('listitem')[0].style.display = '';
+}
+setTimeout(doe,500);
+</html:script>
+</window>

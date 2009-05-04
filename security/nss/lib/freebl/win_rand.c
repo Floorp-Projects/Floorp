@@ -57,7 +57,7 @@
 static PRInt32  filesToRead;
 static DWORD    totalFileBytes;
 static DWORD    maxFileBytes	= 250000;	/* 250 thousand */
-static DWORD    dwNumFiles, dwReadEvery;
+static DWORD    dwNumFiles, dwReadEvery, dwFileToRead;
 
 static BOOL
 CurrentClockTickTime(LPDWORD lpdwHigh, LPDWORD lpdwLow)
@@ -214,6 +214,31 @@ CountFiles(const char *file)
     return 0;
 }
 
+static void 
+ReadSingleFile(const char *filename)
+{
+    PRFileDesc *    file;
+    int             nBytes;
+    unsigned char   buffer[1024];
+
+    file = PR_Open(filename, PR_RDONLY, 0);
+    if (file != NULL) {
+	while (PR_Read(file, buffer, sizeof buffer) > 0)
+	    ;
+        PR_Close(file);
+    }
+}
+
+static PRInt32
+ReadOneFile(const char *file)
+{
+    if (dwNumFiles == dwFileToRead) {
+	ReadSingleFile(file);
+    }
+    dwNumFiles++;
+    return dwNumFiles > dwFileToRead;
+}
+
 static PRInt32
 ReadFiles(const char *file)
 {
@@ -331,6 +356,17 @@ void RNG_SystemInfoForRNG(void)
     RNG_RandomUpdate(buffer, nBytes);
 }
 
+static void rng_systemJitter(void)
+{   
+    dwNumFiles = 0;
+    EnumSystemFiles(ReadOneFile);
+    dwFileToRead++;
+    if (dwFileToRead >= dwNumFiles) {
+	dwFileToRead = 0;
+    }
+}
+
+
 #if defined(_WIN32_WCE)
 void RNG_FileForRNG(const char *filename)
 {
@@ -378,7 +414,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
 	    bytes = maxLen;
     }
     if (bytes == 0) {
-	PORT_SetError(SEC_ERROR_NEED_RANDOM);  /* system RNG failed */
+	bytes = rng_systemFromNoise(dest,maxLen);
     }
     return bytes;
 }
@@ -425,6 +461,7 @@ void RNG_FileForRNG(const char *filename)
     nBytes = RNG_GetNoise(buffer, 20);  // get up to 20 bytes
     RNG_RandomUpdate(buffer, nBytes);
 }
+
 
 /*
  * CryptoAPI requires Windows NT 4.0 or Windows 95 OSR2 and later.
@@ -481,8 +518,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
 
     hModule = LoadLibrary("advapi32.dll");
     if (hModule == NULL) {
-	PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
-	return 0;
+	return rng_systemFromNoise(dest,maxLen);
     }
     pRtlGenRandom = (RtlGenRandomFn)
 	GetProcAddress(hModule, "SystemFunction036");
@@ -490,7 +526,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
 	if (pRtlGenRandom(dest, maxLen)) {
 	    bytes = maxLen;
 	} else {
-	    PORT_SetError(SEC_ERROR_NEED_RANDOM);  /* system RNG failed */
+	    bytes = rng_systemFromNoise(dest,maxLen);
 	}
 	goto done;
     }
@@ -501,7 +537,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
     pCryptGenRandom = (CryptGenRandomFn)
 	GetProcAddress(hModule, "CryptGenRandom");
     if (!pCryptAcquireContextA || !pCryptReleaseContext || !pCryptGenRandom) {
-	PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+	bytes = rng_systemFromNoise(dest,maxLen);
 	goto done;
     }
     if (pCryptAcquireContextA(&hCryptProv, NULL, NULL,
@@ -512,7 +548,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
 	pCryptReleaseContext(hCryptProv, 0);
     }
     if (bytes == 0) {
-	PORT_SetError(SEC_ERROR_NEED_RANDOM);  /* system RNG failed */
+	bytes = rng_systemFromNoise(dest,maxLen);
     }
 done:
     FreeLibrary(hModule);

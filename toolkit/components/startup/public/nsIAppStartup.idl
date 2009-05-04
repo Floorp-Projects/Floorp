@@ -114,6 +114,12 @@ interface nsIAppStartup : nsISupports
     void quit(in PRUint32 aMode);
 };
 
+[scriptable, uuid(3012668f-44b6-49b1-89fb-761a912a78c1)]
+interface nsIAppStartup2 : nsIAppStartup
+{
+    readonly attribute boolean shuttingDown;
+};
+
 %{C++
 /**
  * This success code may be returned by nsIAppStartup::Run to indicate that the

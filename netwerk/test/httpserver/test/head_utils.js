@@ -41,6 +41,8 @@ do_load_httpd_js();
 // if these tests fail, we'll want the debug output
 DEBUG = true;
 
+const Timer = CC("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
+
 
 /**
  * Constructs a new nsHttpServer instance.  This function is intended to
@@ -193,10 +195,108 @@ function skipHeaders(iter)
     line = iter.next();
 }
 
+/**
+ * Checks that the exception e (which may be an XPConnect-created exception
+ * object or a raw nsresult number) is the given nsresult.
+ *
+ * @param e : Exception or nsresult
+ *   the actual exception
+ * @param code : nsresult
+ *   the expected exception
+ */
+function isException(e, code)
+{
+  if (e !== code && e.result !== code)
+    do_throw("unexpected error: " + e);
+}
+
+/**
+ * Pending timers used by callLater, which must store them to avoid the timer
+ * being canceled and destroyed.  Stupid API...
+ */
+var __pendingTimers = [];
+
+/**
+ * Date.now() is not necessarily monotonically increasing (insert sob story
+ * about times not being the right tool to use for measuring intervals of time,
+ * robarnold can tell all), so be wary of error by erring by at least
+ * __timerFuzz ms.
+ */
+const __timerFuzz = 15;
+
+/**
+ * Calls the given function at least the specified number of milliseconds later.
+ * The callback will not undershoot the given time, but it might overshoot --
+ * don't expect precision!
+ *
+ * @param milliseconds : uint
+ *   the number of milliseconds to delay
+ * @param callback : function() : void
+ *   the function to call
+ */
+function callLater(msecs, callback)
+{
+  do_check_true(msecs >= 0);
+
+  var start = Date.now();
+
+  function checkTime()
+  {
+    var index = __pendingTimers.indexOf(timer);
+    do_check_true(index >= 0); // sanity
+    __pendingTimers.splice(index, 1);
+    do_check_eq(__pendingTimers.indexOf(timer), -1);
+
+    // The current nsITimer implementation can undershoot, but even if it
+    // couldn't, paranoia is probably a virtue here given the potential for
+    // random orange on tinderboxen.
+    var end = Date.now();
+    var elapsed = end - start;
+    if (elapsed >= msecs)
+    {
+      dumpn("*** TIMER FIRE " + elapsed + "ms (" + msecs + "ms requested)");
+      try
+      {
+        callback();
+      }
+      catch (e)
+      {
+        do_throw("exception thrown from callLater callback: " + e);
+      }
+      return;
+    }
+
+    // Timer undershot, retry with a little overshoot to try to avoid more
+    // undershoots.
+    var newDelay = msecs - elapsed;
+    dumpn("*** TIMER UNDERSHOOT " + newDelay + "ms " +
+          "(" + msecs + "ms requested, delaying)");
+
+    callLater(newDelay, callback);
+  }
+
+  var timer =
+    new Timer(checkTime, msecs + __timerFuzz, Ci.nsITimer.TYPE_ONE_SHOT);
+  __pendingTimers.push(timer);
+}
+
 
 /*******************************************************
  * SIMPLE SUPPORT FOR LOADING/TESTING A SERIES OF URLS *
  *******************************************************/
+
+/**
+ * Create a completion callback which will stop the given server and end the
+ * test, assuming nothing else remains to be done at that point.
+ */
+function testComplete(srv)
+{
+  return function complete()
+  {
+    do_test_pending();
+    srv.stop(function quit() { do_test_finished(); });
+  };
+}
 
 /**
  * Represents a path to load from the tested HTTP server, along with actions to
@@ -244,7 +344,14 @@ function runHttpTests(testArray, done)
   {
     if (++testIndex == testArray.length)
     {
-      done();
+      try
+      {
+        done();
+      }
+      catch (e)
+      {
+        do_throw("error running test-completion callback: " + e);
+      }
       return;
     }
 
@@ -252,7 +359,18 @@ function runHttpTests(testArray, done)
 
     var test = testArray[testIndex];
     var ch = makeChannel(test.path);
-    test.initChannel(ch);
+    try
+    {
+      test.initChannel(ch);
+    }
+    catch (e)
+    {
+      try
+      {
+        do_throw("testArray[" + testIndex + "].initChannel(ch) failed: " + e);
+      }
+      catch (e) { /* swallow and let tests continue */ }
+    }
 
     ch.asyncOpen(listener, null);
   }
@@ -397,7 +515,14 @@ function runRawTests(testArray, done)
     if (++testIndex == testArray.length)
     {
       do_test_finished();
-      done();
+      try
+      {
+        done();
+      }
+      catch (e)
+      {
+        do_throw("error running test-completion callback: " + e);
+      }
       return;
     }
 

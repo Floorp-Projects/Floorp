@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsExpirationTracker.h"
@@ -937,8 +937,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     const PRUnichar kDoubleQuote  = PRUnichar('\"');
     const PRUnichar kComma        = PRUnichar(',');
 
-    nsCOMPtr<nsIPref> prefs;
-    prefs = do_GetService(NS_PREF_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     nsPromiseFlatString families(aFamilies);
     const PRUnichar *p, *p_end;
@@ -947,6 +946,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     nsAutoString family;
     nsCAutoString lcFamily;
     nsAutoString genericFamily;
+    nsXPIDLCString value;
     nsCAutoString lang(aLangGroup);
     if (lang.IsEmpty())
         lang.Assign("x-unicode"); // XXX or should use "x-user-def"?
@@ -1003,11 +1003,10 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
 
                 // prefs file always uses (must use) UTF-8 so that we can use
                 // |GetCharPref| and treat the result as a UTF-8 string.
-                nsXPIDLString value;
-                nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
+                nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
                 if (NS_SUCCEEDED(rv)) {
                     CopyASCIItoUTF16(lcFamily, genericFamily);
-                    family = value;
+                    CopyUTF8toUTF16(value, family);
                 }
             } else {
                 generic = PR_FALSE;
@@ -1047,10 +1046,10 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             prefName.Append(lcFamily);
             prefName.AppendLiteral(".");
             prefName.Append(aLangGroup);
-            nsXPIDLString value;
-            nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
+            nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
             if (NS_SUCCEEDED(rv)) {
-                ForEachFontInternal(value, lang, PR_FALSE, aResolveFontName,
+                ForEachFontInternal(NS_ConvertUTF8toUTF16(value),
+                                    lang, PR_FALSE, aResolveFontName,
                                     fc, closure);
             }
         }
@@ -1157,6 +1156,10 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges, const PRUnicha
     PRUint32 len = end - begin;
 
     aRanges.Clear();
+
+    if (len == 0) {
+        return;
+    }
 
     PRUint32 prevCh = 0;
     for (PRUint32 i = 0; i < len; i++) {

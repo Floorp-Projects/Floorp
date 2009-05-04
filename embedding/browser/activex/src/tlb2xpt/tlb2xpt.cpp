@@ -360,7 +360,7 @@ void DumpXPCOMInterfaceIDL(FILE *f, ITypeInfo *tiInterface)
         // Get the names of all the arguments
 		UINT cNames;
 	    BSTR rgbstrNames[100];
-  		hr = tiInterface->GetNames(func->memid, rgbstrNames, 100, (UINT FAR*) &cNames);
+        hr = tiInterface->GetNames(func->memid, rgbstrNames, 100, (UINT*) &cNames);
 
         // Dump out all parameters
         for (int p = 0; p < func->cParams; p++)

@@ -65,10 +65,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef XP_MACOSX
-#include <Carbon/Carbon.h>
-#endif
-
 #ifdef XP_UNIX
 #include <limits.h>
 #endif
@@ -158,146 +154,6 @@ static REGFILE  *RegList = NULL;
 static int32    regStartCount = 0;
 char            *globalRegName = NULL;
 static char     *user_name = NULL;
-
-#ifdef XP_MACOSX
-
-void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
-char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
-
-static void copyCStringToPascal(Str255 dest, const char *src)
-{
-    size_t copyLen = strlen(src);
-    if (copyLen > 255)
-        copyLen = 255;
-    BlockMoveData(src, &dest[1], copyLen);
-    dest[0] = copyLen;
-}
-
-static OSErr isFileInTrash(FSRef *fsRef, PRBool *inTrash)
-{
-    OSErr err;
-    FSCatalogInfo catalogInfo;
-
-    if (fsRef == NULL || inTrash == NULL)
-        return paramErr;
-    *inTrash = PR_FALSE;
-
-    err = FSGetCatalogInfo(fsRef, kFSCatInfoVolume, &catalogInfo, NULL, NULL, NULL);
-    if (err == noErr)
-    {
-        FSRef trashFSRef, currFSRef, parentFSRef;
-        err = FSFindFolder(catalogInfo.volume, kTrashFolderType, false, &trashFSRef);
-        if (err == noErr)
-        {
-            for (currFSRef = *fsRef;
-                 (FSGetCatalogInfo(&currFSRef, kFSCatInfoNodeID, NULL, NULL, NULL, &parentFSRef) == noErr &&
-                  FSGetCatalogInfo(&parentFSRef, kFSCatInfoNone, NULL, NULL, NULL, NULL) == noErr);
-                 currFSRef = parentFSRef)
-            {
-                if (FSCompareFSRefs(&parentFSRef, &trashFSRef) == noErr)
-                {
-                    *inTrash = PR_TRUE;
-                    break;
-                }
-            }
-        }
-    }
-    return err;
-}
-
-/* returns an alias as a malloc'd pointer.
- * On failure, *alias is NULL
- */
-void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length)
-{
-    OSErr err;
-    Str255 pascalName;
-    FSRef fsRef;
-    FSSpec fs;
-    AliasHandle macAlias;
-    *alias = NULL;
-    *length = 0;
-    
-    err = FSPathMakeRef((const UInt8*)fileName, &fsRef, NULL);
-    if ( err != noErr )
-        return;
-    err = FSNewAlias(NULL, &fsRef, &macAlias);
-    
-    if ( (err != noErr) || ( macAlias == NULL ))
-        return;
-    *length = GetHandleSize( (Handle) macAlias );
-    *alias = XP_ALLOC( *length );
-    if ( *alias == NULL )
-    {
-        DisposeHandle((Handle)macAlias);
-        return;
-    }
-    HLock( (Handle) macAlias );
-    XP_MEMCPY(*alias, *macAlias , *length);
-    HUnlock( (Handle) macAlias );
-    DisposeHandle( (Handle) macAlias);
-    return;
-}
-
-/* resolves an alias, and returns a full path to the Mac file
- * If the alias changed, it would be nice to update our alias pointers
- */
-char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength)
-{
-    OSErr           err;
-    AliasHandle     h           = NULL;
-    Handle          fullPath    = NULL;
-    short           fullPathLength;
-    char *          cpath       = NULL;
-    PRBool          inTrash;
-    FSRef           fsRef;
-    FSCatalogInfo   catalogInfo;
-    UInt8           pathBuf[MAX_PATH];
-    FSSpec          fs;
-    Boolean         wasChanged; /* Change flag, it would be nice to change the alias on disk 
-                        if the file location changed */
-    
-    
-    XP_MEMSET( &fs, '\0', sizeof(FSSpec) );
-    
-    
-    /* Copy the alias to a handle and resolve it */
-    h = (AliasHandle) NewHandle(aliasLength);
-    if ( h == NULL)
-        goto fail;
-        
-        
-    HLock( (Handle) h);
-    XP_MEMCPY( *h, alias, aliasLength );
-    HUnlock( (Handle) h);
-    
-    err = FSResolveAlias(NULL, h, &fsRef, &wasChanged);
-    if (err != noErr)
-        goto fail;
-
-    /* if the alias has changed and the file is now in the trash,
-       assume that user has deleted it and that we do not want to look at it */
-    if (wasChanged && (isFileInTrash(&fsRef, &inTrash) == noErr) && inTrash)
-        goto fail;
-    err = FSRefMakePath(&fsRef, pathBuf, sizeof(pathBuf));
-    if (err != noErr)
-        goto fail;
-    fullPathLength = XP_STRLEN(pathBuf);
-    cpath = (char*) XP_ALLOC(fullPathLength + 1);
-    if ( cpath == NULL)
-        goto fail;
-    XP_MEMCPY(cpath, pathBuf, fullPathLength + 1);
-    /* Drop through */
-fail:
-    if (h != NULL)
-        DisposeHandle( (Handle) h);
-    if (fullPath != NULL)
-        DisposeHandle( fullPath);
-    return cpath;
-}
-
-#endif
-
 
 /* --------------------------------------------------------------------
  * Registry List management
@@ -391,19 +247,11 @@ static REGERR nr_OpenFile(const char *path, FILEHANDLE *fh)
     {
         switch (errno)
         {
-#ifdef XP_MACOSX
-        case fnfErr:
-#else
         case ENOENT:    /* file not found */
-#endif
             return REGERR_NOFILE;
 
-#ifdef XP_MACOSX
-        case opWrErr:
-#else
         case EROFS:     /* read-only file system */
         case EACCES:    /* file in use or read-only file*/
-#endif
             /* try read only */
             (*fh) = vr_fileOpen(path, XP_FILE_READ_BIN);
             if ( VALID_FILEHANDLE(*fh) )
@@ -1944,7 +1792,7 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, XP
         while ( err == REGERR_OK ) {
 
             /* get next name on the path */
-            err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
+            err = nr_NextName(p, namebuf, sizeof(namebuf), (const char**)&p);
             if ( err == REGERR_OK ) {
                 /* look for name at next level down */
                 parent = desc.location;
@@ -3079,28 +2927,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
                     break;
 
                 case REGTYPE_ENTRY_FILE:
-
                     err = nr_ReadData( reg, &desc, *size, (char*)buffer );
-#ifdef XP_MACOSX
-                    if (err == 0)
-                    {
-                        tmpbuf = nr_PathFromMacAlias(buffer, *size);
-                        if (tmpbuf == NULL) 
-                        {
-                            buffer = NULL;
-                            err = REGERR_NOFILE; /* must match nr_GetPathname() in VerReg.c */
-                        }
-                        else 
-                        {
-                            needFree = TRUE;
-
-                            if (XP_STRLEN(tmpbuf) < *size) /* leave room for \0 */
-                                XP_STRCPY(buffer, tmpbuf);
-                            else 
-                                err = REGERR_BUFTOOSMALL;
-                        }
-                    }
-#endif
                     break;
                 
                 case REGTYPE_ENTRY_BYTES:
@@ -3242,14 +3069,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
             break;
 
         case REGTYPE_ENTRY_FILE:
-
-#ifdef XP_MACOSX
-            nr_MacAliasFromPath(buffer, (void **)&data, &datalen);
-            if (data)
-                needFree = TRUE;
-#else
             data = (char*)buffer;   
-#endif
             break;
 
 

@@ -36,7 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// basic functionality test, from the client programmer's POV
+/*
+ * Basic functionality test, from the client programmer's POV.
+ */
 
 var tests =
   [
@@ -65,7 +67,7 @@ function run_test()
 
   srv.start(4444);
 
-  runHttpTests(tests, function() { srv.stop(); });
+  runHttpTests(tests, testComplete(srv));
 }
 
 

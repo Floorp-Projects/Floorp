@@ -91,9 +91,11 @@ nsContentDispatchChooser.prototype =
                                            [xai.name], 1)];
 
     var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    let SupportsString = Components.Constructor(
+                           "@mozilla.org/supports-string;1",
+                           "nsISupportsString");
     for each (let text in arr) {
-      let string = Cc["@mozilla.org/supports-string;1"].
-                   createInstance(Ci.nsISupportsString);
+      let string = new SupportsString;
       string.data = text;
       params.appendElement(string, false);
     }

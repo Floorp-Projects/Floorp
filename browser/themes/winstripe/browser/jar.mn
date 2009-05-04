@@ -3,11 +3,13 @@ classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/ os!=WINNT
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
+        skin/classic/browser/sanitizeDialog.css                      (sanitizeDialog.css)
 *       skin/classic/browser/aboutPrivateBrowsing.css                (aboutPrivateBrowsing.css)
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
         skin/classic/browser/aboutCertError.css                      (aboutCertError.css)
 *       skin/classic/browser/browser.css                             (browser.css)
 *       skin/classic/browser/engineManager.css                       (engineManager.css)
+        skin/classic/browser/Geo.png                                 (Geo.png)
         skin/classic/browser/Info.png                                (Info.png)
         skin/classic/browser/identity.png                            (identity.png)
         skin/classic/browser/KUI-background.png
@@ -30,8 +32,6 @@ classic.jar:
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
         skin/classic/browser/Go-arrow-rtl.png                        (Go-arrow-rtl.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
-        skin/classic/browser/Search-glass.png                        (Search-glass.png)
-        skin/classic/browser/Search-glass-rtl.png                    (Search-glass-rtl.png)
         skin/classic/browser/Search-addengines.png
         skin/classic/browser/section_collapsed.png
         skin/classic/browser/section_expanded.png
@@ -97,11 +97,13 @@ classic.jar:
 #ifdef XP_WIN
 classic.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
+        skin/classic/aero/browser/sanitizeDialog.css                       (sanitizeDialog.css)
 *       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
         skin/classic/aero/browser/aboutCertError.css                 (aboutCertError.css)
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
+        skin/classic/aero/browser/Geo.png                            (Geo-aero.png)
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
         skin/classic/aero/browser/identity.png                       (identity-aero.png)
         skin/classic/aero/browser/KUI-background.png
@@ -124,8 +126,6 @@ classic.jar:
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
         skin/classic/aero/browser/Go-arrow-rtl.png                   (Go-arrow-rtl-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
-        skin/classic/aero/browser/Search-glass.png                   (Search-glass-aero.png)
-        skin/classic/aero/browser/Search-glass-rtl.png               (Search-glass-rtl-aero.png)
         skin/classic/aero/browser/Search-addengines.png
         skin/classic/aero/browser/section_collapsed.png
         skin/classic/aero/browser/section_expanded.png

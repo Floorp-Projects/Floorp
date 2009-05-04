@@ -452,7 +452,7 @@ nsScriptablePeer::InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsI
     }
 
     USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(aMethod);
+    OLECHAR* szMember = A2OLE(aMethod);
     hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 
@@ -562,7 +562,7 @@ nsScriptablePeer::GetProperty(const char *propertyName, nsIVariant **_retval)
         return NPERR_GENERIC_ERROR; 
     }
     USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(propertyName);
+    OLECHAR* szMember = A2OLE(propertyName);
     hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 
@@ -604,7 +604,7 @@ nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant *propertyValu
         return NPERR_GENERIC_ERROR; 
     }
     USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(propertyName);
+    OLECHAR* szMember = A2OLE(propertyName);
     hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 

@@ -889,13 +889,12 @@ pkix_List_MergeLists(
         }
 
         *pMergedList = list;
+        list = NULL;
 
 cleanup:
-
-        if (PKIX_ERROR_RECEIVED){
-                PKIX_DECREF(list);
-        }
-
+        PKIX_DECREF(list);
+        PKIX_DECREF(item);
+ 
         PKIX_RETURN(LIST);
 }
 

@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,48 +49,54 @@
 
 #include "mozIStorageService.h"
 
-class mozStorageConnection;
 class nsIXPConnect;
 
-class mozStorageService : public mozIStorageService
-                        , public nsIObserver
+namespace mozilla {
+namespace storage {
+
+class Service : public mozIStorageService
+              , public nsIObserver
 {
-    friend class mozStorageConnection;
-
 public:
-    // two-phase init, must call before using service
-    nsresult Init();
+  /**
+   * Initializes the service.  This must be called before any other function!
+   */
+  nsresult initialize();
 
-    static mozStorageService *GetSingleton();
+  static Service *getSingleton();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_MOZISTORAGESERVICE
-    NS_DECL_NSIOBSERVER
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESERVICE
+  NS_DECL_NSIOBSERVER
 
-    /**
-     * Obtains an already AddRefed pointer to XPConnect.  This is used by
-     * language helpers.
-     */
-    static already_AddRefed<nsIXPConnect> XPConnect();
+  /**
+   * Obtains an already AddRefed pointer to XPConnect.  This is used by
+   * language helpers.
+   */
+  static already_AddRefed<nsIXPConnect> getXPConnect();
+
 private:
-    virtual ~mozStorageService();
+  virtual ~Service();
 
-    /**
-     * Used for locking around calls when initializing connections so that we
-     * can ensure that the state of sqlite3_enable_shared_cache is sane.
-     */
-    PRLock *mLock;
+  /**
+   * Used for locking around calls when initializing connections so that we
+   * can ensure that the state of sqlite3_enable_shared_cache is sane.
+   */
+  PRLock *mLock;
 
-    /**
-     * Shuts down the storage service, freeing all of the acquired resources.
-     */
-    void Shutdown();
-protected:
-    nsCOMPtr<nsIFile> mProfileStorageFile;
+  /**
+   * Shuts down the storage service, freeing all of the acquired resources.
+   */
+  void shutdown();
 
-    static mozStorageService *gStorageService;
+  nsCOMPtr<nsIFile> mProfileStorageFile;
 
-    static nsIXPConnect *sXPConnect;
+  static Service *gService;
+
+  static nsIXPConnect *sXPConnect;
 };
+
+} // namespace storage
+} // namespace mozilla
 
 #endif /* _MOZSTORAGESERVICE_H_ */

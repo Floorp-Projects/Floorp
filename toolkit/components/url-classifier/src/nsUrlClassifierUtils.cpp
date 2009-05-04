@@ -374,11 +374,6 @@ nsUrlClassifierUtils::SpecialEncode(const nsACString & url,
   while (curChar != end) {
     unsigned char c = static_cast<unsigned char>(*curChar);
     if (ShouldURLEscape(c)) {
-      // We don't want to deal with 0, as it can break certain strings, just
-      // encode as one.
-      if (c == 0)
-        c = 1;
-
       _retval.Append('%');
       _retval.Append(int_to_hex_digit(c / 16));
       _retval.Append(int_to_hex_digit(c % 16));

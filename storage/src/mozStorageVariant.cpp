@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2 expandtab
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,11 +39,14 @@
 
 #include "mozStorageVariant.h"
 
+namespace mozilla {
+namespace storage {
+
 ////////////////////////////////////////////////////////////////////////////////
-//// mozStorageVariant_base
+//// Variant_base
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(
-  mozStorageVariant_base,
+  Variant_base,
   nsIVariant
 )
 
@@ -51,158 +54,167 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(
 //// nsIVariant
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetDataType(PRUint16 *_type)
+Variant_base::GetDataType(PRUint16 *_type)
 {
   *_type = nsIDataType::VTYPE_EMPTY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsInt32(PRInt32 *)
+Variant_base::GetAsInt32(PRInt32 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsInt64(PRInt64 *)
+Variant_base::GetAsInt64(PRInt64 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsDouble(double *)
+Variant_base::GetAsDouble(double *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsAUTF8String(nsACString &)
+Variant_base::GetAsAUTF8String(nsACString &)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsAString(nsAString &)
+Variant_base::GetAsAString(nsAString &)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsArray(PRUint16 *, nsIID *, PRUint32 *, void **)
+Variant_base::GetAsArray(PRUint16 *,
+                         nsIID *,
+                         PRUint32 *,
+                         void **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsInt8(PRUint8 *)
+Variant_base::GetAsInt8(PRUint8 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsInt16(PRInt16 *)
+Variant_base::GetAsInt16(PRInt16 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsUint8(PRUint8 *)
+Variant_base::GetAsUint8(PRUint8 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsUint16(PRUint16 *)
+Variant_base::GetAsUint16(PRUint16 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsUint32(PRUint32 *)
+Variant_base::GetAsUint32(PRUint32 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsUint64(PRUint64 *)
+Variant_base::GetAsUint64(PRUint64 *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsFloat(float *)
+Variant_base::GetAsFloat(float *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsBool(PRBool *)
+Variant_base::GetAsBool(PRBool *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsChar(char *)
+Variant_base::GetAsChar(char *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsWChar(PRUnichar *)
+Variant_base::GetAsWChar(PRUnichar *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsID(nsID *)
+Variant_base::GetAsID(nsID *)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsDOMString(nsAString &)
+Variant_base::GetAsDOMString(nsAString &)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsString(char **)
+Variant_base::GetAsString(char **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsWString(PRUnichar **)
+Variant_base::GetAsWString(PRUnichar **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsISupports(nsISupports **)
+Variant_base::GetAsISupports(nsISupports **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsInterface(nsIID **, void **)
+Variant_base::GetAsInterface(nsIID **,
+                             void **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsACString(nsACString &)
+Variant_base::GetAsACString(nsACString &)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsStringWithSize(PRUint32 *, char **)
+Variant_base::GetAsStringWithSize(PRUint32 *,
+                                  char **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-mozStorageVariant_base::GetAsWStringWithSize(PRUint32 *, PRUnichar **)
+Variant_base::GetAsWStringWithSize(PRUint32 *,
+                                   PRUnichar **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
+
+} // namespace storage
+} // namespace mozilla

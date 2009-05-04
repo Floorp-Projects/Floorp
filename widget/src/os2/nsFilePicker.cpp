@@ -288,8 +288,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
       if (mMode == modeOpenMultiple) {
-        nsresult rv = NS_NewISupportsArray(getter_AddRefs(mFiles));
-        NS_ENSURE_SUCCESS(rv,rv);
+        nsresult rv;
 
         if (filedlg.papszFQFilename) {
           for (ULONG i=0;i<filedlg.ulFQFCount;i++) {
@@ -299,7 +298,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
             rv = file->InitWithNativePath(nsDependentCString(*(filedlg.papszFQFilename)[i]));
             NS_ENSURE_SUCCESS(rv,rv);
 
-            rv = mFiles->AppendElement(file);
+            rv = mFiles.AppendObject(file);
             NS_ENSURE_SUCCESS(rv,rv);
           }
           WinFreeFileDlgList(filedlg.papszFQFilename);
@@ -310,7 +309,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
           rv = file->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
           NS_ENSURE_SUCCESS(rv,rv);
 
-          rv = mFiles->AppendElement(file);
+          rv = mFiles.AppendObject(file);
           NS_ENSURE_SUCCESS(rv,rv);
         }
       } else {

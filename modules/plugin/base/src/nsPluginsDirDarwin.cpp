@@ -70,7 +70,7 @@ typedef NS_NPAPIPLUGIN_CALLBACK(OSErr, BP_GETSUPPORTEDMIMETYPES) (BPSupportedMIM
 
 
 /*
-** Returns a CFBundleRef if the FSSpec refers to a Mac OS X bundle directory.
+** Returns a CFBundleRef if the path refers to a Mac OS X bundle directory.
 ** The caller is responsible for calling CFRelease() to deallocate.
 */
 static CFBundleRef getPluginBundle(const char* path)
@@ -86,18 +86,6 @@ static CFBundleRef getPluginBundle(const char* path)
     ::CFRelease(pathRef);
   }
   return bundle;
-}
-
-static OSErr toFSSpec(nsIFile* file, FSSpec& outSpec)
-{
-  nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(file);
-  if (!lfm)
-    return -1;
-  FSSpec foo;
-  lfm->GetFSSpec(&foo);
-  outSpec = foo;
-
-  return NS_OK;
 }
 
 static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
@@ -304,7 +292,7 @@ static char* p2cstrdup(StringPtr pstr)
   int len = pstr[0];
   char* cstr = static_cast<char*>(NS_Alloc(len + 1));
   if (cstr) {
-    ::BlockMoveData(pstr + 1, cstr, len);
+    memmove(cstr, pstr + 1, len);
     cstr[len] = '\0';
   }
   return cstr;
@@ -329,9 +317,12 @@ static char* GetPluginString(short id, short index)
 static short OpenPluginResourceFork(nsIFile *pluginFile)
 {
   FSSpec spec;
-  OSErr err = toFSSpec(pluginFile, spec);
+  nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(pluginFile);
+  if (!lfm || NS_FAILED(lfm->GetFSSpec(&spec)))
+    return -1;
+
   Boolean targetIsFolder, wasAliased;
-  err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
+  ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
   short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
   if (refNum < 0) {
     nsCString path;
@@ -374,6 +365,8 @@ private:
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
+  nsresult rv = NS_OK;
+
   // clear out the info, except for the first field.
   memset(&info, 0, sizeof(info));
 
@@ -383,9 +376,19 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
   nsAutoCloseResourceObject resourceObject(mPlugin);
   bool resourceOpened = resourceObject.ResourceOpened();
   // Try to get a bundle reference.
-  nsCString path;
-  mPlugin->GetNativePath(path);
+  nsCAutoString path;
+  if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
+    return rv;
   CFBundleRef bundle = getPluginBundle(path.get());
+
+  // fill in full path
+  info.fFullPath = PL_strdup(path.get());
+
+  // fill in file name
+  nsCAutoString fileName;
+  if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
+    return rv;
+  info.fFileName = PL_strdup(fileName.get());
 
   // Get fBundle
   if (bundle)
@@ -412,14 +415,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     // 'STR#', 126, 1 => plugin description.
     info.fDescription = GetPluginString(126, 1);
   }
-
-  // Get fFileName
-  FSSpec spec;
-  toFSSpec(mPlugin, spec);
-  info.fFileName = p2cstrdup(spec.name);
-
-  // Get fFullPath
-  info.fFullPath = PL_strdup(path.get());
 
   // Get fVersion
   if (bundle) {

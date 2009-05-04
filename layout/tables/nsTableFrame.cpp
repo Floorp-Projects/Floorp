@@ -2334,6 +2334,12 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
 
+  if ((aPrevFrame && !aPrevFrame->GetNextSibling()) ||
+      (!aPrevFrame && !GetFirstChild(aListName))) {
+    // Treat this like an append; still a workaround for bug 343048.
+    return AppendFrames(aListName, aFrameList);
+  }
+
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList->GetStyleDisplay();
 #ifdef DEBUG
@@ -4053,6 +4059,9 @@ nsTableFrame::ColumnHasCellSpacingBefore(PRInt32 aColIndex) const
   // Since fixed-layout tables should not have their column sizes change
   // as they load, we assume that all columns are significant.
   if (LayoutStrategy()->GetType() == nsITableLayoutStrategy::Fixed)
+    return PR_TRUE;
+  // the first column is always significant
+  if (aColIndex == 0)
     return PR_TRUE;
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) 
@@ -6423,6 +6432,8 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
       rowY += rowSize.height; 
     }
   }
+  // XXX comment refers to the obsolete NS_FRAME_OUTSIDE_CHILDREN flag
+  // XXX but I don't understand it, so not changing it for now
   // outer table borders overflow the table, so the table might be
   // target to other areas as the NS_FRAME_OUTSIDE_CHILDREN is set
   // on the table

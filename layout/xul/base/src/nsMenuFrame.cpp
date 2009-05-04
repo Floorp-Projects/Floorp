@@ -54,12 +54,10 @@
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
 #include "nsIView.h"
-#include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMText.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
@@ -442,13 +440,17 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 #ifdef XP_MACOSX
     // On mac, open menulist on either up/down arrow or space (w/o Cmd pressed)
     if (!IsOpen() && ((keyEvent->charCode == NS_VK_SPACE && !keyEvent->isMeta) ||
-        (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN)))
+        (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN))) {
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       OpenMenu(PR_FALSE);
+    }
 #else
     // On other platforms, toggle menulist on unmodified F4 or Alt arrow
     if ((keyCode == NS_VK_F4 && !keyEvent->isAlt) ||
-        ((keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) && keyEvent->isAlt))
+        ((keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) && keyEvent->isAlt)) {
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       ToggleMenuState();
+    }
 #endif
   }
   else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
@@ -458,11 +460,14 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     // The menu item was selected. Bring up the menu.
     // We have children.
     if (!mMenuParent || mMenuParent->IsMenuBar()) {
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       ToggleMenuState();
     }
     else {
-      if (!IsOpen())
+      if (!IsOpen()) {
+        *aEventStatus = nsEventStatus_eConsumeNoDefault;
         OpenMenu(PR_FALSE);
+      }
     }
   }
   else if (
@@ -495,6 +500,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
            static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton &&
            !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.
+    *aEventStatus = nsEventStatus_eConsumeNoDefault;
     Execute(aEvent);
   }
   else if (aEvent->message == NS_MOUSE_EXIT_SYNTH) {

@@ -221,7 +221,7 @@ DWORD run(char** args)
  STARTUPINFO si;
  PROCESS_INFORMATION pi;
 
- char theArgs[1024*16];
+ char theArgs[1024*32];
 
  int totalLen = 0;
  int i, j;

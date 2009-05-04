@@ -36,8 +36,6 @@
 static char sccsid[] = "@(#)hash_buf.c	8.5 (Berkeley) 7/15/94";
 #endif /* LIBC_SCCS and not lint */
 
-#include "watcomfx.h"
-
 /*
  * PACKAGE: hash
  *

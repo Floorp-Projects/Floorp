@@ -70,7 +70,7 @@ fish_sound_set_format (FishSound * fsound, int format)
   }
 
   if (fsound->codec && fsound->codec->init)
-    fsound->codec->init (fsound);
+    if (fsound->codec->init (fsound) == NULL) return -1;
 
   fsound->info.format = format;
 
@@ -105,6 +105,7 @@ fish_sound_new (int mode, FishSoundInfo * fsinfo)
   }
 
   fsound = fs_malloc (sizeof (FishSound));
+  if (fsound == NULL) return NULL;
 
   fsound->mode = mode;
   fsound->interleave = 0;

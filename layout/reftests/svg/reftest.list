@@ -38,6 +38,8 @@ include moz-only/reftest.list
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
 == dynamic-rect-04.xhtml pass.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
+== dynamic-small-object-scaled-up-01.svg pass.svg
+== dynamic-small-object-scaled-up-02.svg pass.svg
 == dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
@@ -57,6 +59,7 @@ include moz-only/reftest.list
 == filter-basic-02.svg pass.svg
 == filter-basic-03.svg pass.svg
 == filter-foreignObject-01.svg pass.svg
+== filter-invalidation-01.svg pass.svg
 == filter-translated-01.svg filter-translated-01-ref.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-02.svg foreignObject-02-ref.svg
@@ -72,9 +75,13 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == invalid-text-01.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
+== marker-attribute-01.svg pass.svg
+== mask-containing-masked-content-01.svg pass.svg
 # Bug 456323
 # == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
+== objectBoundingBox-and-clipPath.svg pass.svg
+== objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg

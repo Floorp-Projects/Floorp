@@ -73,8 +73,11 @@ extern JSClass js_ArrayClass, js_SlowArrayClass;
  *
  * Therefore the interpreter (js_Interpret in JSOP_GETPROP and JSOP_CALLPROP)
  * and js_GetPropertyHelper use this inline function to skip up one link in the
- * prototype chain when obj is a dense array, in order to find a likely-native
- * object (to wit, Array.prototype) in which to probe for cached methods.
+ * prototype chain when obj is a dense array, in order to find a native object
+ * (to wit, Array.prototype) in which to probe for cached methods.
+ *
+ * Note that setting aobj.__proto__ for a dense array aobj turns aobj into a
+ * slow array, avoiding the neede to skip.
  *
  * Callers of js_GetProtoIfDenseArray must take care to use the original object
  * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
@@ -101,7 +104,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj);
 
 #define JSSLOT_ARRAY_LENGTH            JSSLOT_PRIVATE
 #define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)
-#define JSSLOT_ARRAY_LOOKUP_HOLDER     (JSSLOT_ARRAY_COUNT + 1)
+#define JSSLOT_ARRAY_UNUSED            (JSSLOT_ARRAY_COUNT + 1)
 
 static JS_INLINE uint32
 js_DenseArrayCapacity(JSObject *obj)
@@ -222,6 +225,13 @@ js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint cou
 
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
+
+/*
+ * Utility to access the value from the id returned by array_lookupProperty.
+ */
+JSBool
+js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, JSProperty *prop,
+                             jsval *vp);
 
 JS_END_EXTERN_C
 

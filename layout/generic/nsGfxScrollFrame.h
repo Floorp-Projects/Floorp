@@ -46,7 +46,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollPositionListener.h"
 #include "nsIStatefulFrame.h"
-#include "nsGUIEvent.h"
 #include "nsThreadUtils.h"
 #include "nsIScrollableView.h"
 #include "nsIView.h"

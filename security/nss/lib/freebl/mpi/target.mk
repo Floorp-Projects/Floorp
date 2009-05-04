@@ -231,6 +231,18 @@ mpi_amd64_asm.o: mpi_amd64_sun.s
 endif
 
 ifeq ($(TARGET),WIN32)
+ifeq ($(CPU_ARCH),x86_64)
+AS_OBJS = mpi_amd64.obj mpi_amd64_masm.obj mp_comba_amd64_masm.asm
+CFLAGS  = -Od -Z7 -MDd -W3 -nologo -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USER)
+CFLAGS += -DWIN32 -DWIN64 -D_WINDOWS -D_AMD_64_ -D_M_AMD64 -DWIN95 -DXP_PC -DNSS_ENABLE_ECC 
+CFLAGS += $(MPICMN)
+
+$(AS_OBJS): %.obj : %.asm
+	ml64 -Cp -Sn -Zi -coff -nologo -c $<
+
+$(LIBOBJS): %.obj : %.c 
+	cl $(CFLAGS) -Fo$@ -c $<
+else
 AS_OBJS = mpi_x86.obj
 MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
 MPICMN += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD -DMP_API_COMPATIBLE 
@@ -246,4 +258,5 @@ $(AS_OBJS): %.obj : %.asm
 $(LIBOBJS): %.obj : %.c 
 	cl $(CFLAGS) -Fo$@ -c $<
 
+endif
 endif

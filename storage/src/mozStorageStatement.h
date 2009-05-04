@@ -48,9 +48,14 @@
 
 #include <sqlite3.h>
 
-class mozStorageConnection;
 class nsIXPConnectJSObjectHolder;
-class mozStorageStatementJSHelper;
+
+namespace mozilla {
+namespace storage {
+class StatementJSHelper;
+class Connection;
+} // storage
+} // mozilla
 
 class mozStorageStatement : public mozIStorageStatement
 {
@@ -71,7 +76,7 @@ public:
      * @param aSQLStatement
      *        The SQL statement to prepare that this object will represent.
      */
-    nsresult Initialize(mozStorageConnection *aDBConnection,
+    nsresult Initialize(mozilla::storage::Connection *aDBConnection,
                         const nsACString &aSQLStatement);
 
 
@@ -84,7 +89,7 @@ private:
     ~mozStorageStatement();
 
 protected:
-    nsRefPtr<mozStorageConnection> mDBConnection;
+    nsRefPtr<mozilla::storage::Connection> mDBConnection;
     sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
@@ -98,7 +103,7 @@ protected:
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementRowHolder;
 
-    friend class mozStorageStatementJSHelper;
+    friend class mozilla::storage::StatementJSHelper;
 };
 
 #endif /* _MOZSTORAGESTATEMENT_H_ */

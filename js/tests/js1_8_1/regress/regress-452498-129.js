@@ -57,7 +57,11 @@ function test()
 
 // Does not require -j:
 // =====
-  ({ set x x () { for(x in function(){}){}}  })
+try {
+    eval("({ set x x () { for(x in function(){}){}}  })");
+} catch (e)
+{
+}
 
 // Assertion failure: JOF_OPTYPE(op) == JOF_ATOM, at ../jsemit.cpp:1710
 // =====

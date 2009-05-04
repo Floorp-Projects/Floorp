@@ -38,6 +38,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -47,6 +48,7 @@
 #include "secerr.h"
 #include "prerror.h"
 #include "prthread.h"
+#include "prprf.h"
 
 size_t RNG_FileUpdate(const char *fileName, size_t limit);
 
@@ -282,7 +284,7 @@ GiveSystemInfo(void)
 }
 #endif
 #endif /* Sun */
-
+
 #if defined(__hpux)
 #include <sys/unistd.h>
 
@@ -323,7 +325,7 @@ GiveSystemInfo(void)
     RNG_RandomUpdate(&si, sizeof(si));
 }
 #endif /* HPUX */
-
+
 #if defined(OSF1)
 #include <sys/types.h>
 #include <sys/sysinfo.h>
@@ -366,7 +368,7 @@ GetHighResClock(void *buf, size_t maxbytes)
 }
 
 #endif /* Alpha */
-
+
 #if defined(_IBMR2)
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -380,7 +382,7 @@ GiveSystemInfo(void)
     /* XXX haven't found any yet! */
 }
 #endif /* IBM R2 */
-
+
 #if defined(LINUX)
 #include <sys/sysinfo.h>
 
@@ -435,7 +437,6 @@ GiveSystemInfo(void)
 
 #endif /* NCR */
 
-
 #if defined(sgi)
 #include <fcntl.h>
 #undef PRIVATE
@@ -555,7 +556,7 @@ static size_t GetHighResClock(void *buf, size_t maxbuf)
     return CopyLowBits(buf, maxbuf, &s0, cntr_size);
 }
 #endif
-
+
 #if defined(sony)
 #include <sys/systeminfo.h>
 
@@ -731,7 +732,7 @@ GiveSystemInfo(void)
     }
 }
 #endif /* nec_ews */
-
+
 size_t RNG_GetNoise(void *buf, size_t maxbytes)
 {
     struct timeval tv;
@@ -961,7 +962,13 @@ void RNG_SystemInfoForRNG(void)
     /* If the user points us to a random file, pass it through the rng */
     randfile = getenv("NSRANDFILE");
     if ( ( randfile != NULL ) && ( randfile[0] != '\0') ) {
-	RNG_FileForRNG(randfile);
+	char *randCountString = getenv("NSRANDCOUNT");
+	int randCount = randCountString ? atoi(randCountString) : 0;
+	if (randCount != 0) {
+	    RNG_FileUpdate(randfile, randCount);
+	} else {
+	    RNG_FileForRNG(randfile);
+	}
     }
 
     /* pass other files through */
@@ -1126,6 +1133,125 @@ void RNG_FileForRNG(const char *fileName)
     RNG_FileUpdate(fileName, TOTAL_FILE_LIMIT);
 }
 
+void ReadSingleFile(const char *fileName)
+{
+    FILE *        file;
+    unsigned char buffer[BUFSIZ];
+    
+    file = fopen((char *)fileName, "rb");
+    if (file != NULL) {
+	while (fread(buffer, 1, sizeof(buffer), file) > 0)
+	    ;
+	fclose(file);
+    } 
+}
+
+#define _POSIX_PTHREAD_SEMANTICS
+#include <dirent.h>
+
+PRBool
+ReadFileOK(char *dir, char *file)
+{
+    struct stat   stat_buf;
+    char filename[PATH_MAX];
+    int count = snprintf(filename, sizeof filename, "%s/%s",dir, file);
+
+    if (count <= 0) {
+	return PR_FALSE; /* name too long, can't read it anyway */
+    }
+    
+    if (stat(filename, &stat_buf) < 0)
+	return PR_FALSE; /* can't stat, probably can't read it then as well */
+    return S_ISREG(stat_buf.st_mode) ? PR_TRUE : PR_FALSE;
+}
+
+/*
+ * read one file out of either /etc or the user's home directory.
+ * fileToRead tells which file to read.
+ *
+ * return 1 if it's time to reset the fileToRead (no more files to read).
+ */
+int ReadOneFile(int fileToRead)
+{
+    char *dir = "/etc";
+    DIR *fd = opendir(dir);
+    int resetCount = 0;
+#ifdef SOLARIS
+     /* grumble, Solaris does not define struct dirent to be the full length */
+    typedef union {
+	unsigned char space[sizeof(struct dirent) + MAXNAMELEN];
+	struct dirent dir;
+    } dirent_hack;
+    dirent_hack entry, firstEntry;
+
+#define entry_dir entry.dir
+#else
+    struct dirent entry, firstEntry;
+#define entry_dir entry
+#endif
+
+    int i, error = -1;
+
+    if (fd == NULL) {
+	dir = getenv("HOME");
+	if (dir) {
+	    fd = opendir(dir);
+	}
+    }
+    if (fd == NULL) {
+	return 1;
+    }
+
+    for (i=0; i <= fileToRead; i++) {
+	struct dirent *result = NULL;
+	do {
+	    error = readdir_r(fd, &entry_dir, &result);
+	} while (error == 0 && result != NULL  &&
+					!ReadFileOK(dir,&result->d_name[0]));
+	if (error != 0 || result == NULL)  {
+	    resetCount = 1; /* read to the end, start again at the beginning */
+	    if (i != 0) {
+		/* ran out of entries in the directory, use the first one */
+	 	entry = firstEntry;
+	 	error = 0;
+	 	break;
+	    }
+	    /* if i== 0, there were no readable entries in the directory */
+	    break;
+	}
+	if (i==0) {
+	    /* save the first entry in case we run out of entries */
+	    firstEntry = entry;
+	}
+    }
+
+    if (error == 0) {
+	char filename[PATH_MAX];
+	int count = snprintf(filename, sizeof filename, 
+				"%s/%s",dir, &entry_dir.d_name[0]);
+	if (count >= 1) {
+	    ReadSingleFile(filename);
+	}
+    } 
+
+    closedir(fd);
+    return resetCount;
+}
+
+/*
+ * do something to try to introduce more noise into the 'GetNoise' call
+ */
+static void rng_systemJitter(void)
+{
+   static int fileToRead = 1;
+
+   if (ReadOneFile(fileToRead)) {
+	fileToRead = 1;
+   } else {
+	fileToRead++;
+   }
+}
+
 size_t RNG_SystemRNG(void *dest, size_t maxLen)
 {
     FILE *file;
@@ -1135,8 +1261,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
 
     file = fopen("/dev/urandom", "r");
     if (file == NULL) {
-	PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
-	return fileBytes;
+	return rng_systemFromNoise(dest, maxLen);
     }
     while (maxLen > fileBytes) {
 	bytes = maxLen - fileBytes;

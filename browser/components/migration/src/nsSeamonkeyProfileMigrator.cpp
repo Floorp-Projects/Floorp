@@ -49,7 +49,6 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsSeamonkeyProfileMigrator.h"
-#include "nsVoidArray.h"
 #include "nsIProfileMigrator.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -479,10 +478,8 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   for (transform = gTransforms; transform < end; ++transform)
     transform->prefGetterFunc(transform, branch);
 
-  nsVoidArray* fontPrefs = new nsVoidArray();
-  if (!fontPrefs)
-    return NS_ERROR_OUT_OF_MEMORY;
-  ReadFontsBranch(psvc, fontPrefs);
+  nsTArray<FontPref> fontPrefs;
+  ReadFontsBranch(psvc, &fontPrefs);
 
   // Now that we have all the pref data in memory, load the target pref file,
   // and write it back out
@@ -490,9 +487,7 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   for (transform = gTransforms; transform < end; ++transform)
     transform->prefSetterFunc(transform, branch);
 
-  WriteFontsBranch(psvc, fontPrefs);
-  delete fontPrefs;
-  fontPrefs = nsnull;
+  WriteFontsBranch(psvc, &fontPrefs);
 
   nsCOMPtr<nsIFile> targetPrefsFile;
   mTargetProfile->Clone(getter_AddRefs(targetPrefsFile));
@@ -505,20 +500,9 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   return NS_OK;
 }
 
-struct FontPref {
-  char*         prefName;
-  PRInt32       type;
-  union {
-    char*       stringValue;
-    PRInt32     intValue;
-    PRBool      boolValue;
-    PRUnichar*  wstringValue;
-  };
-};
-
 void
 nsSeamonkeyProfileMigrator::ReadFontsBranch(nsIPrefService* aPrefService, 
-                                            nsVoidArray* aPrefs)
+                                            nsTArray<FontPref>* aPrefs)
 {
   // Enumerate the branch
   nsCOMPtr<nsIPrefBranch> branch;
@@ -534,7 +518,7 @@ nsSeamonkeyProfileMigrator::ReadFontsBranch(nsIPrefService* aPrefService,
     char* currPref = prefs[i];
     PRInt32 type;
     branch->GetPrefType(currPref, &type);
-    FontPref* pref = new FontPref;
+    FontPref* pref = aPrefs->AppendElement();
     pref->prefName = currPref;
     pref->type = type;
     switch (type) {
@@ -559,14 +543,14 @@ nsSeamonkeyProfileMigrator::ReadFontsBranch(nsIPrefService* aPrefService,
       break;
     }
 
-    if (NS_SUCCEEDED(rv))
-      aPrefs->AppendElement((void*)pref);
+    if (NS_FAILED(rv))
+      aPrefs->RemoveElementAt(aPrefs->Length()-1);
   }
 }
 
 void
 nsSeamonkeyProfileMigrator::WriteFontsBranch(nsIPrefService* aPrefService,
-                                             nsVoidArray* aPrefs)
+                                             nsTArray<FontPref>* aPrefs)
 {
   nsresult rv;
 
@@ -574,35 +558,32 @@ nsSeamonkeyProfileMigrator::WriteFontsBranch(nsIPrefService* aPrefService,
   nsCOMPtr<nsIPrefBranch> branch;
   aPrefService->GetBranch("font.", getter_AddRefs(branch));
 
-  PRUint32 count = aPrefs->Count();
+  PRUint32 count = aPrefs->Length();
   for (PRUint32 i = 0; i < count; ++i) {
-    FontPref* pref = (FontPref*)aPrefs->ElementAt(i);
-    switch (pref->type) {
+    FontPref &pref = aPrefs->ElementAt(i);
+    switch (pref.type) {
     case nsIPrefBranch::PREF_STRING:
-      rv = branch->SetCharPref(pref->prefName, pref->stringValue);
-      NS_Free(pref->stringValue);
-      pref->stringValue = nsnull;
+      rv = branch->SetCharPref(pref.prefName, pref.stringValue);
+      NS_Free(pref.stringValue);
+      pref.stringValue = nsnull;
       break;
     case nsIPrefBranch::PREF_BOOL:
-      rv = branch->SetBoolPref(pref->prefName, pref->boolValue);
+      rv = branch->SetBoolPref(pref.prefName, pref.boolValue);
       break;
     case nsIPrefBranch::PREF_INT:
-      rv = branch->SetIntPref(pref->prefName, pref->intValue);
+      rv = branch->SetIntPref(pref.prefName, pref.intValue);
       break;
     case nsIPrefBranch::PREF_INVALID:
       nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
-      pls->SetData(pref->wstringValue);
-      rv = branch->SetComplexValue(pref->prefName, 
+      pls->SetData(pref.wstringValue);
+      rv = branch->SetComplexValue(pref.prefName, 
                                    NS_GET_IID(nsIPrefLocalizedString),
                                    pls);
-      NS_Free(pref->wstringValue);
-      pref->wstringValue = nsnull;
+      NS_Free(pref.wstringValue);
+      pref.wstringValue = nsnull;
       break;
     }
-    NS_Free(pref->prefName);
-    pref->prefName = nsnull;
-    delete pref;
-    pref = nsnull;
+    NS_Free(pref.prefName);
   }
   aPrefs->Clear();
 }

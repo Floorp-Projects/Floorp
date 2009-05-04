@@ -150,7 +150,6 @@ enum nsLayoutPhase {
 #define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
 #define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
 #define NS_AUTHOR_SPECIFIED_PADDING         (1 << 2)
-#define NS_AUTHOR_SPECIFIED_BOX_SHADOW      (1 << 3)
 
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.

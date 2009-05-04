@@ -284,6 +284,7 @@ static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString
 gfxTextRun *gfxFT2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
                                         const Parameters* aParams, PRUint32 aFlags)
 {
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
@@ -302,6 +303,7 @@ gfxTextRun *gfxFT2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
 gfxTextRun *gfxFT2FontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                         const Parameters *aParams, PRUint32 aFlags)
 {
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
@@ -886,14 +888,14 @@ gfxFT2Font::SetupCairoFont(gfxContext *aContext)
 already_AddRefed<gfxFT2Font>
 gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
 {
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
-    if (!font) {
-        FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
-        if (!fe) {
-            printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
-            return nsnull;
-        }
+    FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
+    if (!fe) {
+        printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
+        return nsnull;
+    }
 
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(fe->Name(), aStyle);
+    if (!font) {
         font = new gfxFT2Font(fe, aStyle);
         if (!font)
             return nsnull;

@@ -54,7 +54,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsWidgetsCID.h"
-#include "nsIDragService.h"
+#include "nsDragService.h"
 #include "nsIDragSessionGTK.h"
 
 #include "nsGtkKeyUtils.h"
@@ -368,8 +368,6 @@ nsWindow::nsWindow()
     mCreated          = PR_FALSE;
     mPlaced           = PR_FALSE;
 
-    mPreferredWidth   = 0;
-    mPreferredHeight  = 0;
     mContainer           = nsnull;
     mDrawingarea         = nsnull;
     mShell               = nsnull;
@@ -1040,25 +1038,6 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 }
 
 NS_IMETHODIMP
-nsWindow::GetPreferredSize(PRInt32 &aWidth,
-                                 PRInt32 &aHeight)
-{
-    aWidth  = mPreferredWidth;
-    aHeight = mPreferredHeight;
-    return (mPreferredWidth != 0 && mPreferredHeight != 0) ?
-        NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsWindow::SetPreferredSize(PRInt32 aWidth,
-                                 PRInt32 aHeight)
-{
-    mPreferredWidth  = aWidth;
-    mPreferredHeight = aHeight;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::Enable(PRBool aState)
 {
     mEnabled = aState;
@@ -1656,32 +1635,6 @@ nsWindow::Invalidate(const nsIntRect &aRect,
 }
 
 NS_IMETHODIMP
-nsWindow::InvalidateRegion(const nsIRegion* aRegion,
-                           PRBool           aIsSynchronous)
-{
-    GdkRegion *region = nsnull;
-    aRegion->GetNativeRegion((void *&)region);
-
-    if (region && mDrawingarea) {
-        GdkRectangle rect;
-        gdk_region_get_clipbox(region, &rect);
-
-        LOGDRAW(("Invalidate (region) [%p]: %d %d %d %d (sync: %d)\n",
-                 (void *)this,
-                 rect.x, rect.y, rect.width, rect.height, aIsSynchronous));
-
-        gdk_window_invalidate_region(mDrawingarea->inner_window,
-                                     region, FALSE);
-    }
-    else {
-        LOGDRAW(("Invalidate (region) [%p] with empty region\n",
-                 (void *)this));
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::Update()
 {
     if (!mDrawingarea)
@@ -1689,12 +1642,6 @@ nsWindow::Update()
 
     gdk_window_process_updates(mDrawingarea->inner_window, FALSE);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::SetColorMap(nsColorMap *aColorMap)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1726,25 +1673,6 @@ nsWindow::Scroll(PRInt32     aDx,
     // Process all updates so that everything is drawn.
     gdk_window_process_all_updates();
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::ScrollWidgets(PRInt32 aDx,
-                        PRInt32 aDy)
-{
-    if (!mDrawingarea)
-        return NS_OK;
-
-    moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::ScrollRect(nsIntRect  &aSrcRect,
-                     PRInt32     aDx,
-                     PRInt32     aDy)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void*
@@ -1854,18 +1782,6 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     return SetWindowIconList(iconList);
 }
 
-NS_IMETHODIMP
-nsWindow::SetMenuBar(void * aMenuBar)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWindow::ShowMenuBar(PRBool aShow)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsIntPoint
 nsWindow::WidgetToScreenOffset()
 {
@@ -1900,12 +1816,6 @@ NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {
     return NS_OK;
-}
-
-void
-nsWindow::ConvertToDeviceCoordinates(nscoord &aX,
-                                     nscoord &aY)
-{
 }
 
 NS_IMETHODIMP
@@ -3582,6 +3492,13 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
+    gint x, y;
+    GdkDisplay* display = gdk_display_get_default();
+    if (display) {
+      // get the current cursor position
+      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
+      ((nsDragService *)dragService.get())->SetDragEndPoint(nsIntPoint(x, y));
+    }
     dragService->EndDragSession(PR_TRUE);
 
     return TRUE;
@@ -4190,7 +4107,9 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
         gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
     }
 
-    moz_drawingarea_resize (mDrawingarea, aWidth, aHeight);
+    if (mDrawingarea) {
+        moz_drawingarea_resize (mDrawingarea, aWidth, aHeight);
+    }
 }
 
 void

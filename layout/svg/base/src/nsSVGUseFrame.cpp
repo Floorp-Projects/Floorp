@@ -41,6 +41,7 @@
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGElement.h"
 #include "nsSVGUseElement.h"
+#include "gfxMatrix.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 
@@ -68,9 +69,6 @@ public:
                                PRInt32         aModType);
 
   virtual void Destroy();
-
-  // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   /**
    * Get the "type" of the frame
@@ -161,33 +159,6 @@ PRBool
 nsSVGUseFrame::IsLeaf() const
 {
   return PR_TRUE;
-}
-
-//----------------------------------------------------------------------
-// nsSVGContainerFrame methods:
-
-already_AddRefed<nsIDOMSVGMatrix>
-nsSVGUseFrame::GetCanvasTM()
-{
-  if (!GetMatrixPropagation()) {
-    nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
-    return retval;
-  }
-
-  nsCOMPtr<nsIDOMSVGMatrix> currentTM = nsSVGUseFrameBase::GetCanvasTM();
-
-  // x and y:
-  float x, y;
-  nsSVGElement *element = static_cast<nsSVGElement*>(mContent);
-  element->GetAnimatedLengthValues(&x, &y, nsnull);
-
-  nsCOMPtr<nsIDOMSVGMatrix> fini;
-  currentTM->Translate(x, y, getter_AddRefs(fini));
-
-  nsIDOMSVGMatrix *retval = fini.get();
-  NS_IF_ADDREF(retval);
-  return retval;
 }
 
 

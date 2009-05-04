@@ -51,11 +51,6 @@
 #include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstanceInternal.h"
-#ifdef OJI
-#include "nsIJVMPlugin.h"
-#include "nsIJVMPluginInstance.h"
-#include "nsIJVMManager.h"
-#endif
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -2463,7 +2458,6 @@ nsPluginHostImpl::nsPluginHostImpl()
   mIsDestroyed = PR_FALSE;
   mOverrideInternalTypes = PR_FALSE;
   mAllowAlienStarHandler = PR_FALSE;
-  mUnusedLibraries.Clear();
   mDefaultPluginDisabled = PR_FALSE;
   mJavaEnabled = PR_TRUE;
 
@@ -3143,8 +3137,8 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 void nsPluginHostImpl::UnloadUnusedLibraries()
 {
   // unload any remaining plugin libraries from memory
-  for (PRInt32 i = 0; i < mUnusedLibraries.Count(); i++) {
-    PRLibrary * library = (PRLibrary *)mUnusedLibraries[i];
+  for (PRUint32 i = 0; i < mUnusedLibraries.Length(); i++) {
+    PRLibrary * library = mUnusedLibraries[i];
     if (library)
       PostPluginUnloadEvent(library);
   }
@@ -3714,63 +3708,6 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
   PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
-  if (isJavaPlugin && !pluginTag->mIsNPRuntimeEnabledJavaPlugin) {
-#if !defined(OJI) && defined(XP_MACOSX)
-    // The MRJ plugin hangs if you try to load it with OJI disabled,
-    // don't even try to go there.
-    return NS_ERROR_FAILURE;
-#endif
-
-    // We must make sure LiveConnect is started, if needed.
-    nsCOMPtr<nsIDocument> document;
-    aOwner->GetDocument(getter_AddRefs(document));
-    if (document) {
-      nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(document->GetScriptGlobalObject());
-
-      if (window) {
-        window->InitJavaProperties();
-      }
-    }
-
-#if defined(OJI) && ((defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2))
-    // This is a work-around on Unix for a LiveConnect problem (bug
-    // 83698).
-    // The problem:
-    // The proxy JNI needs to be created by the browser. If it is
-    // created by someone else (e.g., a plugin) on a different thread,
-    // the proxy JNI will not work, and break LiveConnect.  Currently,
-    // on Unix, when instantiating a Java plugin instance (by calling
-    // InstantiateEmbeddedPlugin() next), Java plugin will create the
-    // proxy JNI if it is not created yet. If that happens,
-    // LiveConnect will be broken.  Before lazy start JVM was
-    // implemented, since at this point the browser already created
-    // the proxy JNI during startup, the problem did not happen.
-    // But after the lazy start was implemented, at this point the
-    // proxy JNI was not created yet, so the Java plugin created the
-    // proxy JNI, and broke liveConnect.
-    // On Windows and Mac, Java plugin does not create the proxy JNI,
-    // but lets the browser to create it. Hence this is a Unix-only
-    // problem.
-    //
-    // The work-around:
-    // The root cause of the problem is in Java plugin's Unix
-    // implementation, which should not create the proxy JNI.  As a
-    // work-around, here we make sure the proxy JNI has been created
-    // by the browser, before plugin gets a chance.
-    //
-
-    // If Java is installed, get proxy JNI.
-    nsCOMPtr<nsIJVMManager> jvmManager = do_GetService(nsIJVMManager::GetCID(),
-                                                       &result);
-    if (NS_SUCCEEDED(result)) {
-      JNIEnv* proxyEnv;
-      // Get proxy JNI, if not created yet, create it.
-      jvmManager->GetProxyJNI(&proxyEnv);
-    }
-#endif
-  }
-
   nsCAutoString contractID(
           NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
           nsDependentCString(mimetype));
@@ -4085,6 +4022,12 @@ public:
     NS_NewLocalFile(spec, PR_TRUE, getter_AddRefs(pluginPath));
 
     return pluginPath->GetLeafName(aFilename);
+  }
+
+  NS_METHOD GetVersion(nsAString& aVersion)
+  {
+    CopyUTF8toUTF16(mPluginTag.mVersion, aVersion);
+    return NS_OK;
   }
 
   NS_METHOD GetName(nsAString& aName)
@@ -4443,7 +4386,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
         return NS_ERROR_FAILURE;
 
       // remove from unused lib list, if it is there
-      if (mUnusedLibraries.IndexOf(pluginLibrary) > -1)
+      if (mUnusedLibraries.Contains(pluginLibrary))
         mUnusedLibraries.RemoveElement(pluginLibrary);
 
       pluginTag->mLibrary = pluginLibrary;
@@ -4478,15 +4421,11 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       nsGetFactory = (nsFactoryProc) PR_FindFunctionSymbol(pluginTag->mLibrary, "NSGetFactory");
 #endif
       if (nsGetFactory && IsCompatibleExecutable(pluginTag->mFullPath.get())) {
-// XPCOM-style plugins (or at least the OJI one) cause crashes on
-// on windows GCC builds, so we're just turning them off for now.
-#if !defined(XP_WIN) || !defined(__GNUC__)
         rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ContractID
                           (nsIFactory**)&pluginTag->mEntryPoint);
         plugin = pluginTag->mEntryPoint;
         if (plugin)
           plugin->Initialize();
-#endif
       }
 #ifdef XP_OS2
       // on OS2, first check if this might be legacy XPCOM module.
@@ -4613,21 +4552,31 @@ struct pluginFileinDirectory
 
 // QuickSort callback for comparing the modification time of two files
 // if the times are the same, compare the filenames
-static int ComparePluginFileInDirectory (const void *v1, const void *v2, void *)
+
+NS_SPECIALIZE_TEMPLATE
+class nsDefaultComparator<pluginFileinDirectory, pluginFileinDirectory>
 {
-  const pluginFileinDirectory* pfd1 = static_cast<const pluginFileinDirectory*>(v1);
-  const pluginFileinDirectory* pfd2 = static_cast<const pluginFileinDirectory*>(v2);
-
-  PRInt32 result = 0;
-  if (LL_EQ(pfd1->mModTime, pfd2->mModTime))
-    result = Compare(pfd1->mFilename, pfd2->mFilename, nsCaseInsensitiveStringComparator());
-  else if (LL_CMP(pfd1->mModTime, >, pfd2->mModTime))
-    result = -1;
-  else
-    result = 1;
-
-  return result;
-}
+  public:
+  PRBool Equals(const pluginFileinDirectory& aA,
+                const pluginFileinDirectory& aB) const {
+    if (aA.mModTime == aB.mModTime &&
+        Compare(aA.mFilename, aB.mFilename,
+                nsCaseInsensitiveStringComparator()) == 0)
+      return PR_TRUE;
+    else
+      return PR_FALSE;
+  }
+  PRBool LessThan(const pluginFileinDirectory& aA,
+                  const pluginFileinDirectory& aB) const {
+    if (aA.mModTime < aB.mModTime)
+      return PR_TRUE;
+    else if(aA.mModTime == aB.mModTime)
+      return Compare(aA.mFilename, aB.mFilename,
+                     nsCaseInsensitiveStringComparator()) < 0;
+    else
+      return PR_FALSE;
+  }
+};
 
 typedef NS_NPAPIPLUGIN_CALLBACK(char *, NP_GETMIMEDESCRIPTION)(void);
 
@@ -4669,28 +4618,6 @@ static nsresult FixUpPluginInfo(nsPluginInfo &aInfo, nsPluginFile &aPluginFile)
   return NS_OK;
 }
 
-/* Helper class which automatically deallocates a nsVoidArray of 
- * pluginFileinDirectories when the array goes out of scope.
- */
-class nsAutoPluginFileDeleter
-{
-public:
-  nsAutoPluginFileDeleter (nsAutoVoidArray& aPluginFiles)
-    :mPluginFiles(aPluginFiles)
-  {}
- 
-  ~nsAutoPluginFileDeleter()
-  {
-    for (PRInt32 i = 0; i < mPluginFiles.Count(); ++i) {
-      pluginFileinDirectory* pfd = static_cast<pluginFileinDirectory*>(mPluginFiles[i]);
-      delete pfd;
-    }
-  }
-protected:
-  // A reference to the array for which to perform deallocation.
-  nsAutoVoidArray& mPluginFiles;
-};
-
 nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
                                                 nsIComponentManager * compManager,
                                                 PRBool aCreatePluginList,
@@ -4714,11 +4641,8 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
   if (NS_FAILED(rv))
     return rv;
 
-  // Collect all the files in this directory in a void array we can sort later
-  nsAutoVoidArray pluginFilesArray;  // array for sorting files in this directory
-
-  // Setup the helper which will cleanup the array.
-  nsAutoPluginFileDeleter pluginFileArrayDeleter(pluginFilesArray);
+  // Collect all the files in this directory in an array we can sort later
+  nsAutoTArray<pluginFileinDirectory, 8> pluginFilesArray;
 
   PRBool hasMore;
   while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
@@ -4740,7 +4664,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       continue;
 
     if (nsPluginsDir::IsPluginFile(dirEntry)) {
-      pluginFileinDirectory * item = new pluginFileinDirectory();
+      pluginFileinDirectory * item = pluginFilesArray.AppendElement();
       if (!item)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -4750,25 +4674,24 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
       item->mModTime = fileModTime;
       item->mFilename = filePath;
-      pluginFilesArray.AppendElement(item);
     }
   } // end round of up of plugin files
 
   // now sort the array by file modification time or by filename, if equal
   // put newer plugins first to weed out dups and catch upgrades, see bug 119966
-  pluginFilesArray.Sort(ComparePluginFileInDirectory, nsnull);
+  pluginFilesArray.Sort();
 
   // finally, go through the array, looking at each entry and continue processing it
-  for (PRInt32 i = 0; i < pluginFilesArray.Count(); i++) {
-    pluginFileinDirectory* pfd = static_cast<pluginFileinDirectory*>(pluginFilesArray[i]);
+  for (PRUint32 i = 0; i < pluginFilesArray.Length(); i++) {
+    pluginFileinDirectory &pfd = pluginFilesArray[i];
     nsCOMPtr <nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     nsCOMPtr <nsILocalFile> localfile = do_QueryInterface(file);
-    localfile->InitWithPath(pfd->mFilename);
-    PRInt64 fileModTime = pfd->mModTime;
+    localfile->InitWithPath(pfd.mFilename);
+    PRInt64 fileModTime = pfd.mModTime;
 
     // Look for it in our cache
     nsRefPtr<nsPluginTag> pluginTag;
-    RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd->mFilename).get(),
+    RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd.mFilename).get(),
                             getter_AddRefs(pluginTag));
 
     PRBool enabled = PR_TRUE;
@@ -6263,7 +6186,7 @@ nsPluginHostImpl::ParsePostBufferToFixHeaders(
   const char CRLFCRLF[] = {CR,LF,CR,LF,'\0'}; // C string"\r\n\r\n"
   const char ContentLenHeader[] = "Content-length";
 
-  nsAutoVoidArray singleLF;
+  nsAutoTArray<const char*, 8> singleLF;
   const char *pSCntlh = 0;// pointer to start of ContentLenHeader in inPostData
   const char *pSod = 0;   // pointer to start of data in inPostData
   const char *pEoh = 0;   // pointer to end of headers in inPostData
@@ -6313,11 +6236,11 @@ nsPluginHostImpl::ParsePostBufferToFixHeaders(
         }
       } else if (*s == LF) {
         if (*(s-1) != CR) {
-          singleLF.AppendElement((void*)s);
+          singleLF.AppendElement(s);
         }
         if (pSCntlh && (s+1 < pEod) && (*(s+1) == LF)) {
           s++;
-          singleLF.AppendElement((void*)s);
+          singleLF.AppendElement(s);
           s++;
           pEoh = pSod = s; // data stars here
           break;
@@ -6344,7 +6267,7 @@ nsPluginHostImpl::ParsePostBufferToFixHeaders(
     newBufferLen = dataLen + headersLen;
     // in case there were single LFs in headers
     // reserve an extra space for CR will be added before each single LF
-    int cntSingleLF = singleLF.Count();
+    int cntSingleLF = singleLF.Length();
     newBufferLen += cntSingleLF;
 
     if (!(*outPostData = p = (char*)nsMemory::Alloc(newBufferLen)))
@@ -6354,7 +6277,7 @@ nsPluginHostImpl::ParsePostBufferToFixHeaders(
     const char *s = inPostData;
     if (cntSingleLF) {
       for (int i=0; i<cntSingleLF; i++) {
-        const char *plf = (const char*) singleLF.ElementAt(i); // ptr to single LF in headers
+        const char *plf = singleLF.ElementAt(i); // ptr to single LF in headers
         int n = plf - s; // bytes to copy
         if (n) { // for '\n\n' there is nothing to memcpy
           memcpy(p, s, n);
@@ -6633,7 +6556,7 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
 
 nsresult nsPluginHostImpl::AddUnusedLibrary(PRLibrary * aLibrary)
 {
-  if (mUnusedLibraries.IndexOf(aLibrary) == -1) // don't add duplicates
+  if (!mUnusedLibraries.Contains(aLibrary)) // don't add duplicates
     mUnusedLibraries.AppendElement(aLibrary);
 
   return NS_OK;

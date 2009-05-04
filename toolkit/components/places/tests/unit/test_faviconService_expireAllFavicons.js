@@ -68,12 +68,6 @@ var tests = [
     setup();
     icons.expireAllFavicons();
   },
-  
-  function() {
-    dump("\n\nTest that clearing cache also expires favicons.\n");
-    setup();
-    cs.evictEntries(Ci.nsICache.STORE_ANYWHERE);
-  },
 ];
 
 function setup() {

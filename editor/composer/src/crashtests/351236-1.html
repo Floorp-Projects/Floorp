@@ -1,0 +1,37 @@
+<html><head>
+<title>Testcase bug 351236 - Crash [@ nsGetInterface::operator()] with designMode iframes, removing styles, removing iframes, reloading, etc</title>
+<script>
+function designmodes(i){
+try {
+window.frames[0].document.designMode='on';
+window.frames[0].focus();
+window.frames[0].getSelection().collapse(window.frames[0].document.body.childNodes[0],window.frames[0].document.body.childNodes[0].length-2)
+window.frames[0].document.execCommand('inserthtml', false, 'tesxt ');
+} catch(e) {}
+
+setTimeout(designmodes,50);
+}
+
+function removestyles(){
+document.getElementsByTagName('iframe')[0].removeAttribute('style');
+document.getElementsByTagName('q')[0].removeAttribute('style');
+}
+
+function doe() {
+setTimeout(designmodes,200);
+setTimeout(removestyles,500);
+setTimeout(function() {document.removeChild(document.documentElement);}, 1000);
+setTimeout(function() {window.location.reload();}, 1500);
+}
+window.onload=doe;
+</script>
+
+</head>
+<body>
+This page should not crash Mozilla within 2 seconds<br>
+<q style="display: table-row;">
+<iframe style="display: table-row;"></iframe>
+<iframe></iframe>
+</q>
+</body>
+</html>

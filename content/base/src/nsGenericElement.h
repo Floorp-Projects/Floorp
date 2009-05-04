@@ -84,7 +84,7 @@ class nsIScrollableView;
 class nsContentList;
 struct nsRect;
 
-typedef unsigned long PtrBits;
+typedef PRUptrdiff PtrBits;
 
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
@@ -366,9 +366,9 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext)
+  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
   {
-    return nsContentUtils::GetContextForEventHandlers(this, aContext);
+    return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
 
   // nsIContent interface methods

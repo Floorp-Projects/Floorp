@@ -82,6 +82,20 @@ radio[pane=paneAdvanced] {
   -moz-box-flex: 1;
 }
 
+/* Privacy Pane */
+
+/* styles for the link elements copied from .text-link in global.css */
+.inline-link {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+  outline: 1px solid transparent;
+  cursor: pointer;
+}
+  
+.inline-link:focus, .inline-link:hover:active {
+  color: red;
+}
+
 /* Modeless Window Dialogs */
 .windowDialog,
 .windowDialog prefpane {

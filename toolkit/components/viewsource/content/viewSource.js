@@ -688,11 +688,16 @@ function highlightSyntax()
 // browser.js to call PageLoader.loadPage() instead of BrowserReloadWithFlags()
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var docCharset = getBrowser().docShell.QueryInterface(
-                            Components.interfaces.nsIDocCharset);
+  var docCharset = getBrowser().docShell.QueryInterface(Ci.nsIDocCharset);
   docCharset.charset = aCharset;
-  var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-  PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+  if (isHistoryEnabled()) {
+    var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+    PageLoader.loadPage(PageLoader.currentDescriptor,
+                        pageLoaderIface.DISPLAY_NORMAL);
+  } else {
+    getBrowser().webNavigation
+                .reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  }
 }
 
 // fix for bug #229503
@@ -705,8 +710,15 @@ function BrowserSetForcedDetector(doReload)
   getBrowser().documentCharsetInfo.forcedDetector = true; 
   if (doReload)
   {
-    var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-    PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+    if (isHistoryEnabled()) {
+      var PageLoader = getBrowser().webNavigation
+                                   .QueryInterface(pageLoaderIface);
+      PageLoader.loadPage(PageLoader.currentDescriptor,
+                          pageLoaderIface.DISPLAY_NORMAL);
+    } else {
+      getBrowser().webNavigation
+                  .reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+    }
   }
 }
 

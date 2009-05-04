@@ -42,6 +42,7 @@
 #include "nsThreadUtils.h"
 #include "nsIDOMRange.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsILoadGroup.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -129,7 +130,9 @@ public:
 
   // Draw the latest video data. See nsMediaDecoder for 
   // details.
-  void Paint(gfxContext* aContext, const gfxRect& aRect);
+  void Paint(gfxContext* aContext,
+             gfxPattern::GraphicsFilter aFilter,
+             const gfxRect& aRect);
 
   // Dispatch events
   nsresult DispatchSimpleEvent(const nsAString& aName);
@@ -157,6 +160,11 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
+  // Notify that enough data has arrived to start autoplaying.
+  // If the element is 'autoplay' and is ready to play back (not paused,
+  // autoplay pref enabled, etc), it should start playing back.
+  void NotifyAutoplayDataReady();
+
   // Gets the pref media.enforce_same_site_origin, which determines
   // if we should check Access Controls, or allow cross domain loads.
   PRBool ShouldCheckAllowOrigin();
@@ -170,7 +178,7 @@ public:
   PRBool IsPlaybackEnded() const;
 
   // principal of the currently playing stream
-  nsIPrincipal* GetCurrentPrincipal();
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
@@ -221,6 +229,11 @@ public:
    */
   PRUint32 GetCurrentLoadID() { return mCurrentLoadID; }
 
+  /**
+   * Returns the load group for this media element's owner document.
+   * XXX XBL2 issue.
+   */
+  already_AddRefed<nsILoadGroup> GetDocumentLoadGroup();
 
 protected:
   class MediaLoadListener;
@@ -300,6 +313,10 @@ protected:
 
   nsRefPtr<nsMediaDecoder> mDecoder;
 
+  // Holds a reference to the first channel we open to the media resource.
+  // Once the decoder is created, control over the channel passes to the
+  // decoder, and we null out this reference. We must store this in case
+  // we need to cancel the channel before control of it passes to the decoder.
   nsCOMPtr<nsIChannel> mChannel;
 
   // Error attribute

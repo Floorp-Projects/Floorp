@@ -41,13 +41,14 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsINode.h"
+#include "nsIDOMRange.h"
 
 // IID for the nsIRange interface
 #define NS_IRANGE_IID \
-{ 0x267c8c4e, 0x7c97, 0x4a35, \
-  { 0xaa, 0x08, 0x55, 0xa5, 0xbe, 0x3a, 0xc5, 0x74 } }
+{ 0x09dec26b, 0x1ab7, 0x4ff0, \
+ { 0xa1, 0x67, 0x7f, 0x22, 0x9c, 0xaa, 0xc3, 0x04 } }
 
-class nsIRange : public nsISupports {
+class nsIRange : public nsIDOMRange {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRANGE_IID)
 
@@ -61,42 +62,42 @@ public:
   {
   }
 
-  nsINode* GetRoot()
+  nsINode* GetRoot() const
   {
     return mRoot;
   }
 
-  nsINode* GetStartParent()
+  nsINode* GetStartParent() const
   {
     return mStartParent;
   }
 
-  nsINode* GetEndParent()
+  nsINode* GetEndParent() const
   {
     return mEndParent;
   }
 
-  PRInt32 StartOffset()
+  PRInt32 StartOffset() const
   {
     return mStartOffset;
   }
 
-  PRInt32 EndOffset()
+  PRInt32 EndOffset() const
   {
     return mEndOffset;
   }
   
-  PRBool IsPositioned()
+  PRBool IsPositioned() const
   {
     return mIsPositioned;
   }
 
-  PRBool IsDetached()
+  PRBool IsDetached() const
   {
     return mIsDetached;
   }
   
-  PRBool Collapsed()
+  PRBool Collapsed() const
   {
     return mIsPositioned && mStartParent == mEndParent &&
            mStartOffset == mEndOffset;
@@ -107,9 +108,20 @@ public:
     mMaySpanAnonymousSubtrees = aMaySpanAnonymousSubtrees;
   }
 
-  virtual nsINode* GetCommonAncestor() = 0;
+  virtual nsINode* GetCommonAncestor() const = 0;
 
   virtual void Reset() = 0;
+
+  // XXXbz we could make these non-virtual if a bunch of nsRange stuff
+  // became nsIRange stuff... and if no one outside layout needs them.
+  virtual nsresult SetStart(nsINode* aParent, PRInt32 aOffset) = 0;
+  virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset) = 0;
+  virtual nsresult CloneRange(nsIRange** aNewRange) const = 0;
+
+  // Work around hiding warnings
+  NS_IMETHOD SetStart(nsIDOMNode* aParent, PRInt32 aOffset) = 0;
+  NS_IMETHOD SetEnd(nsIDOMNode* aParent, PRInt32 aOffset) = 0;
+  NS_IMETHOD CloneRange(nsIDOMRange** aNewRange) = 0;
 
 protected:
   nsCOMPtr<nsINode> mRoot;

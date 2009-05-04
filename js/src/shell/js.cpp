@@ -62,6 +62,7 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -985,22 +986,6 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-#ifdef JS_TRACER
-static jsval JS_FASTCALL
-Print_tn(JSContext *cx, JSString *str)
-{
-    char *bytes = JS_EncodeString(cx, str);
-    if (!bytes) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
-        return JSVAL_VOID;
-    }
-    fprintf(gOutFile, "%s\n", bytes);
-    JS_free(cx, bytes);
-    fflush(gOutFile);
-    return JSVAL_VOID;
-}
-#endif
-
 static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -1077,14 +1062,6 @@ AssertEq(JSContext *cx, uintN argc, jsval *vp)
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
-
-#ifdef JS_TRACER
-static jsval JS_FASTCALL
-AssertEq_tn(JSContext *cx, jsval v1, jsval v2)
-{
-    return (js_StrictlyEqual(cx, v1, v2)) ? JSVAL_VOID : JSVAL_ERROR_COOKIE;
-}
-#endif
 
 static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
@@ -1348,22 +1325,31 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
 static JSScript *
 ValueToScript(JSContext *cx, jsval v)
 {
-    JSScript *script;
+    JSScript *script = NULL;
     JSFunction *fun;
 
-    if (!JSVAL_IS_PRIMITIVE(v) &&
-        JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_ScriptClass) {
-        script = (JSScript *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
-    } else {
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        JSObject *obj = JSVAL_TO_OBJECT(v);
+        JSClass *clasp = JS_GET_CLASS(cx, obj);
+
+        if (clasp == &js_ScriptClass) {
+            script = (JSScript *) JS_GetPrivate(cx, obj);
+        } else if (clasp == &js_GeneratorClass) {
+            JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+            fun = gen->frame.fun;
+            script = FUN_SCRIPT(fun);
+        }
+    }
+
+    if (!script) {
         fun = JS_ValueToFunction(cx, v);
         if (!fun)
             return NULL;
         script = FUN_SCRIPT(fun);
-    }
-
-    if (!script) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             JSSMSG_SCRIPTS_ONLY);
+        if (!script) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_SCRIPTS_ONLY);
+        }
     }
 
     return script;
@@ -1706,7 +1692,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         if (VALUE_IS_FUNCTION(cx, argv[i])) {
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
-            if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
+            if (fun && (fun->flags & ~7U)) {
                 uint16 flags = fun->flags;
                 fputs("flags:", stdout);
 
@@ -1721,9 +1707,14 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 SHOW_FLAG(THISP_NUMBER);
                 SHOW_FLAG(THISP_BOOLEAN);
                 SHOW_FLAG(EXPR_CLOSURE);
-                SHOW_FLAG(INTERPRETED);
+                SHOW_FLAG(TRACEABLE);
 
 #undef SHOW_FLAG
+
+                if (FUN_NULL_CLOSURE(fun))
+                    fputs(" NULL_CLOSURE", stdout);
+                else if (FUN_FLAT_CLOSURE(fun))
+                    fputs(" FLAT_CLOSURE", stdout);
                 putchar('\n');
             }
         }
@@ -1859,13 +1850,8 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSBool bval;
-    JSString *str;
+    FILE *file;
 
-#if JS_THREADED_INTERP
-    JS_ReportError(cx, "tracing not supported in JS_THREADED_INTERP builds");
-    return JS_FALSE;
-#else
     if (argc == 0) {
         *rval = BOOLEAN_TO_JSVAL(cx->tracefp != 0);
         return JS_TRUE;
@@ -1873,24 +1859,39 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     switch (JS_TypeOfValue(cx, argv[0])) {
       case JSTYPE_NUMBER:
-        bval = JSVAL_IS_INT(argv[0])
-               ? JSVAL_TO_INT(argv[0])
-               : (jsint) *JSVAL_TO_DOUBLE(argv[0]);
+      case JSTYPE_BOOLEAN: {
+        JSBool bval;
+        if (!JS_ValueToBoolean(cx, argv[0], &bval))
+            goto bad_argument;
+        file = bval ? stderr : NULL;
         break;
-      case JSTYPE_BOOLEAN:
-        bval = JSVAL_TO_BOOLEAN(argv[0]);
-        break;
-      default:
-        str = JS_ValueToString(cx, argv[0]);
-        if (!str)
+      }
+      case JSTYPE_STRING: {
+        char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
+        file = fopen(name, "w");
+        if (!file) {
+            JS_ReportError(cx, "tracing: couldn't open output file %s: %s", 
+                           name, strerror(errno));
             return JS_FALSE;
-        JS_ReportError(cx, "tracing: illegal argument %s",
-                       JS_GetStringBytes(str));
-        return JS_FALSE;
+        }
+        break;
+      }
+      default:
+          goto bad_argument;
     }
-    cx->tracefp = bval ? stderr : NULL;
+    if (cx->tracefp && cx->tracefp != stderr)
+      fclose((FILE *)cx->tracefp);
+    cx->tracefp = file;
+    cx->tracePrevPc = NULL;
     return JS_TRUE;
-#endif
+
+ bad_argument:
+    JSString *str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    JS_ReportError(cx, "tracing: illegal argument %s",
+                   JS_GetStringBytes(str));
+    return JS_FALSE;
 }
 
 static void
@@ -2241,13 +2242,16 @@ Intern(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Clone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSFunction *fun;
     JSObject *funobj, *parent, *clone;
 
-    fun = JS_ValueToFunction(cx, argv[0]);
-    if (!fun)
-        return JS_FALSE;
-    funobj = JS_GetFunctionObject(fun);
+    if (VALUE_IS_FUNCTION(cx, argv[0])) {
+        funobj = JSVAL_TO_OBJECT(argv[0]);
+    } else {
+        JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
+        if (!fun)
+            return JS_FALSE;
+        funobj = JS_GetFunctionObject(fun);
+    }
     if (argc > 1) {
         if (!JS_ValueToObject(cx, argv[1], &parent))
             return JS_FALSE;
@@ -2875,16 +2879,6 @@ out:
     return ok;
 }
 
-static int32 JS_FASTCALL
-ShapeOf_tn(JSObject *obj)
-{
-    if (!obj)
-        return 0;
-    if (!OBJ_IS_NATIVE(obj))
-        return -1;
-    return OBJ_SHAPE(obj);
-}
-
 static JSBool
 ShapeOf(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -2893,7 +2887,16 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportError(cx, "shapeOf: object expected");
         return JS_FALSE;
     }
-    return JS_NewNumberValue(cx, ShapeOf_tn(JSVAL_TO_OBJECT(v)), vp);
+    JSObject *obj = JSVAL_TO_OBJECT(v);
+    if (!obj) {
+        *vp = JSVAL_ZERO;
+        return JS_TRUE;
+    }
+    if (!OBJ_IS_NATIVE(obj)) {
+        *vp = INT_TO_JSVAL(-1);
+        return JS_TRUE;
+    }
+    return JS_NewNumberValue(cx, OBJ_SHAPE(obj), vp);
 }
 
 #ifdef JS_THREADSAFE
@@ -3435,10 +3438,6 @@ Elapsed(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
 }
 
-JS_DEFINE_TRCINFO_1(AssertEq, (3, (static, JSVAL_RETRY, AssertEq_tn, CONTEXT, JSVAL, JSVAL, 0, 0)))
-JS_DEFINE_TRCINFO_1(Print, (2, (static, JSVAL_FAIL, Print_tn, CONTEXT, STRING, 0, 0)))
-JS_DEFINE_TRCINFO_1(ShapeOf, (1, (static, INT32, ShapeOf_tn, OBJECT, 0, 0)))
-
 #ifdef XP_UNIX
 
 #include <fcntl.h>
@@ -3565,10 +3564,10 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("options",        Options,        0,0,0),
     JS_FS("load",           Load,           1,0,0),
     JS_FN("readline",       ReadLine,       0,0),
-    JS_TN("print",          Print,          0,0, Print_trcinfo),
+    JS_FN("print",          Print,          0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
-    JS_TN("assertEq",       AssertEq,       2,0, AssertEq_trcinfo),
+    JS_FN("assertEq",       AssertEq,       2,0),
     JS_FN("gc",             GC,             0,0),
     JS_FN("gcparam",        GCParameter,    2,0),
     JS_FN("countHeap",      CountHeap,      0,0),
@@ -3604,7 +3603,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("getslx",         GetSLX,         1,0),
     JS_FN("toint32",        ToInt32,        1,0),
     JS_FS("evalcx",         EvalInContext,  1,0,0),
-    JS_TN("shapeOf",        ShapeOf,        1,0, ShapeOf_trcinfo),
+    JS_FN("shapeOf",        ShapeOf,        1,0),
 #ifdef MOZ_SHARK
     JS_FS("startShark",     js_StartShark,      0,0,0),
     JS_FS("stopShark",      js_StopShark,       0,0,0),
@@ -3676,7 +3675,8 @@ static const char *const shell_help_messages[] = {
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
 "  Interface to JS_DumpHeap with output sent to file",
 "notes([fun])             Show source notes for functions",
-"tracing([toggle])        Turn tracing on or off",
+"tracing([true|false|filename]) Turn bytecode execution tracing on/off.\n"
+"                         With filename, send to file.\n",
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
 #endif
 #ifdef TEST_CVTARGS
@@ -4632,6 +4632,8 @@ main(int argc, char **argv, char **envp)
     );
     if (!cx)
         return 1;
+
+    JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     JS_BeginRequest(cx);
 

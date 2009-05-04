@@ -114,7 +114,6 @@
 #include "sslerr.h"
 #include "sslproto.h"
 #include "sslt.h"
-#include "watcomfx.h"
 
 int main()
 {

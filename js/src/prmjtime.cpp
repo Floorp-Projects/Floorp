@@ -107,6 +107,14 @@ PRMJ_LocalGMTDifference()
 {
     struct tm ltime;
 
+#if defined(XP_WIN) && !defined(WINCE)
+    /* Windows does not follow POSIX. Updates to the
+     * TZ environment variable are not reflected 
+     * immediately on that platform as they are
+     * on UNIX systems without this call.
+     */
+    _tzset();
+#endif
     /* get the difference between this time zone and GMT */
     memset((char *)&ltime,0,sizeof(ltime));
     ltime.tm_mday = 2;
@@ -157,10 +165,25 @@ static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
 
 #endif
 
-#ifdef HAVE_GETSYSTEMTIMEASFILETIME
+#if defined(HAVE_GETSYSTEMTIMEASFILETIME) || defined(HAVE_SYSTEMTIMETOFILETIME)
 
-typedef struct CalibrationData
+#if defined(HAVE_GETSYSTEMTIMEASFILETIME)
+inline void
+LowResTime(LPFILETIME lpft)
+{ 
+    GetSystemTimeAsFileTime(lpft); 
+}
+#elif defined(HAVE_SYSTEMTIMETOFILETIME)
+inline void
+LowResTime(LPFILETIME lpft)
 {
+    GetCurrentFT(lpft);
+}
+#else
+#error "No implementation of PRMJ_Now was selected."
+#endif
+
+typedef struct CalibrationData {
     long double freq;         /* The performance counter frequency */
     long double offset;       /* The low res 'epoch' */
     long double timer_offset; /* The high res 'epoch' */
@@ -173,6 +196,9 @@ typedef struct CalibrationData
 #ifdef JS_THREADSAFE
     CRITICAL_SECTION data_lock;
     CRITICAL_SECTION calibration_lock;
+#endif
+#ifdef WINCE
+    JSInt64 granularity;
 #endif
 } CalibrationData;
 
@@ -198,12 +224,16 @@ NowCalibrate()
         /* By wrapping a timeBegin/EndPeriod pair of calls around this loop,
            the loop seems to take much less time (1 ms vs 15ms) on Vista. */
         timeBeginPeriod(1);
-        GetSystemTimeAsFileTime(&ftStart);
+        LowResTime(&ftStart);
         do {
-            GetSystemTimeAsFileTime(&ft);
+            LowResTime(&ft);
         } while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
         timeEndPeriod(1);
-
+        
+#ifdef WINCE
+        calibration.granularity = (FILETIME2INT64(ft) - 
+                                   FILETIME2INT64(ftStart))/10;
+#endif
         /*
         calibrationDelta = (FILETIME2INT64(ft) - FILETIME2INT64(ftStart))/10;
         fprintf(stderr, "Calibration delta was %I64d us\n", calibrationDelta);
@@ -235,8 +265,13 @@ NowInit(void)
 {
     memset(&calibration, 0, sizeof(calibration));
     NowCalibrate();
+#ifdef WINCE
+    InitializeCriticalSection(&calibration.calibration_lock);
+    InitializeCriticalSection(&calibration.data_lock);
+#else
     InitializeCriticalSectionAndSpinCount(&calibration.calibration_lock, CALIBRATIONLOCK_SPINCOUNT);
     InitializeCriticalSectionAndSpinCount(&calibration.data_lock, DATALOCK_SPINCOUNT);
+#endif
     return PR_SUCCESS;
 }
 
@@ -250,7 +285,11 @@ PRMJ_NowShutdown()
 #define MUTEX_LOCK(m) EnterCriticalSection(m)
 #define MUTEX_TRYLOCK(m) TryEnterCriticalSection(m)
 #define MUTEX_UNLOCK(m) LeaveCriticalSection(m)
+#ifdef WINCE
+#define MUTEX_SETSPINCOUNT(m, c)
+#else
 #define MUTEX_SETSPINCOUNT(m, c) SetCriticalSectionSpinCount((m),(c))
+#endif
 
 static PRCallOnceType calibrationOnce = { 0 };
 
@@ -304,7 +343,7 @@ PRMJ_Now(void)
     return s;
 }
 
-#elif defined(HAVE_GETSYSTEMTIMEASFILETIME)
+#else
 /*
 
 Win32 python-esque pseudo code
@@ -387,7 +426,7 @@ PRMJ_Now(void)
     int thiscall = JS_ATOMIC_INCREMENT(&nCalls);
     /* 10 seems to be the number of calls to load with a blank homepage */
     if (thiscall <= 10) {
-        GetSystemTimeAsFileTime(&ft);
+        LowResTime(&ft);
         return (FILETIME2INT64(ft)-win2un)/10L;
     }
 
@@ -419,7 +458,7 @@ PRMJ_Now(void)
 
 
         /* Calculate a low resolution time */
-        GetSystemTimeAsFileTime(&ft);
+        LowResTime(&ft);
         lowresTime = 0.1*(long double)(FILETIME2INT64(ft) - win2un);
 
         if (calibration.freq > 0.0) {
@@ -445,6 +484,10 @@ PRMJ_Now(void)
             returnedTime = calibration.last;
             MUTEX_UNLOCK(&calibration.data_lock);
 
+#ifdef WINCE
+            /* Get an estimate of clock ticks per second from our own test */
+            skewThreshold = calibration.granularity;
+#else
             /* Rather than assume the NT kernel ticks every 15.6ms, ask it */
             if (GetSystemTimeAdjustment(&timeAdjustment,
                                         &timeIncrement,
@@ -457,7 +500,7 @@ PRMJ_Now(void)
                     skewThreshold = timeIncrement/10.0;
                 }
             }
-
+#endif
             /* Check for clock skew */
             diff = lowresTime - highresTime;
 
@@ -506,20 +549,6 @@ PRMJ_Now(void)
 
     return returnedTime;
 }
-
-#elif defined (HAVE_SYSTEMTIMETOFILETIME)
-JSInt64
-PRMJ_Now(void)
-{
-    FILETIME ft;
-    SYSTEMTIME st;
-    GetSystemTime(&st);
-    SystemTimeToFileTime(&st,&ft);
-    return (FILETIME2INT64(ft)-win2un)/10L;
-}
-
-#else
-#error "No implementation of PRMJ_Now was selected."
 #endif
 
 /* Get the DST timezone offset for the time passed in */
@@ -549,6 +578,16 @@ PRMJ_DSTOffset(JSInt64 local_time)
         /*go ahead a day to make localtime work (does not work with 0) */
         JSLL_UI2L(local_time,PRMJ_DAY_SECONDS);
     }
+
+#if defined(XP_WIN) && !defined(WINCE)
+    /* Windows does not follow POSIX. Updates to the
+     * TZ environment variable are not reflected 
+     * immediately on that platform as they are
+     * on UNIX systems without this call.
+     */
+    _tzset();
+#endif
+
     JSLL_L2UI(local,local_time);
     PRMJ_basetime(local_time,&prtm);
 #ifndef HAVE_LOCALTIME_R

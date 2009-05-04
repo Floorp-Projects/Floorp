@@ -98,6 +98,7 @@ function test()
     observe: function(aSubject, aTopic, aData) {
       if (aTopic != DLMGR_UI_DONE)
         return;
+      obs.removeObserver(testObs, DLMGR_UI_DONE);
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       let defaultTitle = win.document.documentElement.getAttribute("statictitle");
@@ -120,7 +121,6 @@ function test()
 
       // We're done!
       win.close();
-      obs.removeObserver(testObs, DLMGR_UI_DONE);
       prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
       SimpleTest.finish();
     }

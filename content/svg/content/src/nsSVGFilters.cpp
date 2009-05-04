@@ -51,6 +51,7 @@
 #include "nsSVGAnimatedNumberList.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGFilters.h"
+#include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
 #include "nsStyleContext.h"
 #include "nsIDocument.h"
@@ -3624,6 +3625,14 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
   PRInt32 rx, ry;
   GetRXY(&rx, &ry, *instance);
 
+  if (rx < 0 || ry < 0) {
+    // XXX nsSVGUtils::ReportToConsole()
+    return NS_OK;
+  }
+  if (rx == 0 && ry == 0) {
+    return NS_OK;
+  }
+
   PRUint8* sourceData = aSources[0]->mImage->Data();
   PRUint8* targetData = aTarget->mImage->Data();
   PRUint32 stride = aTarget->mImage->Stride();
@@ -3631,10 +3640,6 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
   PRUint8 extrema[4];         // RGBA magnitude of extrema
   PRUint16 op = mEnumAttributes[OPERATOR].GetAnimValue();
 
-  if (rx == 0 && ry == 0) {
-    CopyRect(aTarget, aSources[0], rect);
-    return NS_OK;
-  }
   /* Scan the kernel for each pixel to determine max/min RGBA values.  Note that
    * as we advance in the x direction, each kernel overlaps the previous kernel.
    * Thus, we can avoid iterating over the entire kernel by comparing the
@@ -5171,6 +5176,8 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEImageElementBase::)
 
   // nsIContent
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
@@ -5267,6 +5274,17 @@ nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
 //----------------------------------------------------------------------
 // nsIContent methods:
 
+NS_IMETHODIMP_(PRBool)
+nsSVGFEImageElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sGraphicsMap
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGFEImageElementBase::IsAttributeMapped(name);
+}
+
 nsresult
 nsSVGFEImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify)
@@ -5339,6 +5357,8 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
   fprintf(stderr, "FILTER IMAGE rect: %d,%d  %dx%d\n",
           rect.x, rect.y, rect.width, rect.height);
 #endif
+  nsIFrame* frame = GetPrimaryFrame();
+  if (!frame) return NS_ERROR_FAILURE;
 
   nsCOMPtr<imgIRequest> currentRequest;
   GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
@@ -5360,6 +5380,8 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
   }
 
   if (thebesPattern) {
+    thebesPattern->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(frame));
+
     PRInt32 x, y, nativeWidth, nativeHeight;
     currentFrame->GetX(&x);
     currentFrame->GetY(&y);

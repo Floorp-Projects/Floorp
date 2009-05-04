@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,336 +43,193 @@
 
 #include "mozStorageStatementParams.h"
 
+namespace mozilla {
+namespace storage {
 
-/*************************************************************************
- ****
- **** mozStorageStatementParams
- ****
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+//// StatementParams
 
-NS_IMPL_ISUPPORTS2(mozStorageStatementParams, mozIStorageStatementParams, nsIXPCScriptable)
-
-mozStorageStatementParams::mozStorageStatementParams(mozIStorageStatement *aStatement)
-    : mStatement(aStatement)
+StatementParams::StatementParams(mozIStorageStatement *aStatement) :
+    mStatement(aStatement)
 {
-    NS_ASSERTION(mStatement != nsnull, "mStatement is null");
-    mStatement->GetParameterCount(&mParamCount);
+  NS_ASSERTION(mStatement != nsnull, "mStatement is null");
+  (void)mStatement->GetParameterCount(&mParamCount);
 }
 
-/*
- * nsIXPCScriptable impl
- */
+NS_IMPL_ISUPPORTS2(
+  StatementParams,
+  mozIStorageStatementParams,
+  nsIXPCScriptable
+)
 
-/* readonly attribute string className; */
+////////////////////////////////////////////////////////////////////////////////
+//// nsIXPCScriptable
+
+#define XPC_MAP_CLASSNAME StatementParams
+#define XPC_MAP_QUOTED_CLASSNAME "StatementParams"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_NEWENUMERATE
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#include "xpc_map_end.h"
+
 NS_IMETHODIMP
-mozStorageStatementParams::GetClassName(char * *aClassName)
+StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
+                             JSContext *aCtx,
+                             JSObject *aScopeObj,
+                             jsval aId,
+                             jsval *_vp,
+                             PRBool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(aClassName);
-    *aClassName = (char *) nsMemory::Clone("mozStorageStatementParams", 26);
-    if (!*aClassName)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+  NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+
+  if (JSVAL_IS_INT(aId)) {
+    int idx = JSVAL_TO_INT(aId);
+
+    PRBool res = JSValStorageStatementBinder(aCtx, mStatement, idx, *_vp);
+    NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
+  }
+  else if (JSVAL_IS_STRING(aId)) {
+    JSString *str = JSVAL_TO_STRING(aId);
+    nsCAutoString name(":");
+    name.Append(NS_ConvertUTF16toUTF8(::JS_GetStringChars(str),
+                                      ::JS_GetStringLength(str)));
+
+    // check to see if there's a parameter with this name
+    PRUint32 index;
+    nsresult rv = mStatement->GetParameterIndex(name, &index);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool res = JSValStorageStatementBinder(aCtx, mStatement, index, *_vp);
+    NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
+  }
+  else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *_retval = PR_TRUE;
+  return NS_OK;
 }
 
-/* readonly attribute PRUint32 scriptableFlags; */
 NS_IMETHODIMP
-mozStorageStatementParams::GetScriptableFlags(PRUint32 *aScriptableFlags)
+StatementParams::NewEnumerate(nsIXPConnectWrappedNative *aWrapper,
+                              JSContext *aCtx,
+                              JSObject *aScopeObj,
+                              PRUint32 aEnumOp,
+                              jsval *_statep,
+                              jsid *_idp,
+                              PRBool *_retval)
 {
-    *aScriptableFlags =
-        nsIXPCScriptable::WANT_SETPROPERTY |
-        nsIXPCScriptable::WANT_NEWENUMERATE |
-        nsIXPCScriptable::WANT_NEWRESOLVE |
-        nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE;
-    return NS_OK;
-}
+  NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
 
-/* PRBool getProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                         JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+  switch (aEnumOp) {
+    case JSENUMERATE_INIT:
+    {
+      // Start our internal index at zero.
+      *_statep = JSVAL_ZERO;
 
+      // And set our length, if needed.
+      if (_idp)
+        *_idp = INT_TO_JSVAL(mParamCount);
 
-/* PRBool setProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                         JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
-    NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
-
-    if (JSVAL_IS_INT(id)) {
-        int idx = JSVAL_TO_INT(id);
-
-        PRBool res = JSValStorageStatementBinder(cx, mStatement, idx, *vp);
-        NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
+      break;
     }
-    else if (JSVAL_IS_STRING(id)) {
-        JSString *str = JSVAL_TO_STRING(id);
-        nsCAutoString name(":");
-        name.Append(NS_ConvertUTF16toUTF8(::JS_GetStringChars(str),
-                                          ::JS_GetStringLength(str)));
+    case JSENUMERATE_NEXT:
+    {
+      NS_ASSERTION(*_statep != JSVAL_NULL, "Internal state is null!");
 
-        // check to see if there's a parameter with this name
-        PRUint32 index;
-        nsresult rv = mStatement->GetParameterIndex(name, &index);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        PRBool res = JSValStorageStatementBinder(cx, mStatement, index, *vp);
-        NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
-    }
-    else {
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    *_retval = PR_TRUE;
-    return NS_OK;
-}
-
-/* void preCreate (in nsISupports nativeObj, in JSContextPtr cx, in JSObjectPtr globalObj, out JSObjectPtr parentObj); */
-NS_IMETHODIMP
-mozStorageStatementParams::PreCreate(nsISupports *nativeObj, JSContext * cx,
-                       JSObject * globalObj, JSObject * *parentObj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void create (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementParams::Create(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void postCreate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementParams::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool addProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                    JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool delProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                    JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool enumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementParams::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                  JSObject * obj, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 enum_op, in JSValPtr statep, out JSID idp); */
-NS_IMETHODIMP
-mozStorageStatementParams::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                     JSObject * obj, PRUint32 enum_op, jsval * statep, jsid *idp, PRBool *_retval)
-{
-    NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
-
-    switch (enum_op) {
-        case JSENUMERATE_INIT:
-        {
-            // Start our internal index at zero.
-            *statep = JSVAL_ZERO;
-
-            // And set our length, if needed.
-            if (idp)
-                *idp = INT_TO_JSVAL(mParamCount);
-
-            break;
-        }
-        case JSENUMERATE_NEXT:
-        {
-            NS_ASSERTION(*statep != JSVAL_NULL, "Internal state is null!");
-
-            // Make sure we are in range first.
-            PRUint32 index = static_cast<PRUint32>(JSVAL_TO_INT(*statep));
-            if (index >= mParamCount) {
-                *statep = JSVAL_NULL;
-                return NS_OK;
-            }
-
-            // Get the name of our parameter.
-            nsCAutoString name;
-            nsresult rv = mStatement->GetParameterName(index, name);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            // But drop the first character, which is going to be a ':'.
-            JSString *jsname = JS_NewStringCopyN(cx, &(name.get()[1]),
-                                                 name.Length() - 1);
-            NS_ENSURE_TRUE(jsname, NS_ERROR_OUT_OF_MEMORY);
-
-            // Set our name.
-            if (!JS_ValueToId(cx, STRING_TO_JSVAL(jsname), idp)) {
-                *_retval = PR_FALSE;
-                return NS_OK;
-            }
-
-            // And increment our index.
-            *statep = INT_TO_JSVAL(++index);
-
-            break;
-        }
-        case JSENUMERATE_DESTROY:
-        {
-            // Clear our state.
-            *statep = JSVAL_NULL;
-
-            break;
-        }
-    }
-
-    return NS_OK;
-}
-
-/* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
-NS_IMETHODIMP
-mozStorageStatementParams::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                   JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp, PRBool *_retval)
-{
-    NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
-    // We do not throw at any point after this unless our index is out of range
-    // because we want to allow the prototype chain to be checked for the
-    // property.
-
-    PRUint32 idx;
-
-    if (JSVAL_IS_INT(id)) {
-        idx = JSVAL_TO_INT(id);
-
-        // Ensure that our index is within range.
-        if (idx >= mParamCount)
-            return NS_ERROR_INVALID_ARG;
-    }
-    else if (JSVAL_IS_STRING(id)) {
-        JSString *str = JSVAL_TO_STRING(id);
-        jschar *nameChars = JS_GetStringChars(str);
-        size_t nameLength = JS_GetStringLength(str);
-
-        nsCAutoString name(":");
-        name.Append(NS_ConvertUTF16toUTF8(nameChars, nameLength));
-
-        // Check to see if there's a parameter with this name, and if not, let
-        // the rest of the prototype chain be checked.
-        nsresult rv = mStatement->GetParameterIndex(name, &idx);
-        if (NS_FAILED(rv))
-            return NS_OK;
-
-        *_retval = JS_DefineUCProperty(cx, obj, nameChars, nameLength,
-                                       JSVAL_VOID, nsnull, nsnull, 0);
-        NS_ENSURE_TRUE(*_retval, NS_OK);
-    }
-    else {
-        // We do not handle other types.
+      // Make sure we are in range first.
+      PRUint32 index = static_cast<PRUint32>(JSVAL_TO_INT(*_statep));
+      if (index >= mParamCount) {
+        *_statep = JSVAL_NULL;
         return NS_OK;
+      }
+
+      // Get the name of our parameter.
+      nsCAutoString name;
+      nsresult rv = mStatement->GetParameterName(index, name);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // But drop the first character, which is going to be a ':'.
+      JSString *jsname = ::JS_NewStringCopyN(aCtx, &(name.get()[1]),
+                                             name.Length() - 1);
+      NS_ENSURE_TRUE(jsname, NS_ERROR_OUT_OF_MEMORY);
+
+      // Set our name.
+      if (!::JS_ValueToId(aCtx, STRING_TO_JSVAL(jsname), _idp)) {
+        *_retval = PR_FALSE;
+        return NS_OK;
+      }
+
+      // And increment our index.
+      *_statep = INT_TO_JSVAL(++index);
+
+      break;
     }
+    case JSENUMERATE_DESTROY:
+    {
+      // Clear our state.
+      *_statep = JSVAL_NULL;
 
-    *_retval = ::JS_DefineElement(cx, obj, idx, JSVAL_VOID, nsnull, nsnull, 0);
-    if (*_retval)
-        *objp = obj;
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
+                            JSContext *aCtx,
+                            JSObject *aScopeObj,
+                            jsval aId,
+                            PRUint32 aFlags,
+                            JSObject **_objp,
+                            PRBool *_retval)
+{
+  NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+  // We do not throw at any point after this unless our index is out of range
+  // because we want to allow the prototype chain to be checked for the
+  // property.
+
+  PRUint32 idx;
+
+  if (JSVAL_IS_INT(aId)) {
+    idx = JSVAL_TO_INT(aId);
+
+    // Ensure that our index is within range.
+    if (idx >= mParamCount)
+      return NS_ERROR_INVALID_ARG;
+  }
+  else if (JSVAL_IS_STRING(aId)) {
+    JSString *str = JSVAL_TO_STRING(aId);
+    jschar *nameChars = ::JS_GetStringChars(str);
+    size_t nameLength = ::JS_GetStringLength(str);
+
+    nsCAutoString name(":");
+    name.Append(NS_ConvertUTF16toUTF8(nameChars, nameLength));
+
+    // Check to see if there's a parameter with this name, and if not, let
+    // the rest of the prototype chain be checked.
+    nsresult rv = mStatement->GetParameterIndex(name, &idx);
+    if (NS_FAILED(rv))
+      return NS_OK;
+
+    *_retval = ::JS_DefineUCProperty(aCtx, aScopeObj, nameChars, nameLength,
+                                     JSVAL_VOID, nsnull, nsnull, 0);
+    NS_ENSURE_TRUE(*_retval, NS_OK);
+  }
+  else {
+    // We do not handle other types.
     return NS_OK;
+  }
+
+  *_retval = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nsnull,
+                                nsnull, 0);
+  if (*_retval)
+    *_objp = aScopeObj;
+  return NS_OK;
 }
 
-/* PRBool convert (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 type, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::Convert(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                JSObject * obj, PRUint32 type, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void finalize (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementParams::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                 JSObject * obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool checkAccess (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 mode, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                    JSObject * obj, jsval id, PRUint32 mode, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool call (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 argc, in JSValPtr argv, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::Call(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                             JSObject * obj, PRUint32 argc, jsval * argv, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool construct (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 argc, in JSValPtr argv, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementParams::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                  JSObject * obj, PRUint32 argc, jsval * argv, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal val, out PRBool bp); */
-NS_IMETHODIMP
-mozStorageStatementParams::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                    JSObject * obj, jsval val, PRBool *bp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void trace (in nsIXPConnectWrappedNative wrapper, in JSTracerPtr trc, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementParams::Trace(nsIXPConnectWrappedNative *wrapper,
-                                JSTracer *trc, JSObject * obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool equality(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal val); */
-NS_IMETHODIMP
-mozStorageStatementParams::Equality(nsIXPConnectWrappedNative *wrapper,
-                                    JSContext *cx, JSObject *obj, jsval val,
-                                    PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* JSObjectPtr outerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementParams::OuterObject(nsIXPConnectWrappedNative *wrapper,
-                                       JSContext *cx, JSObject *obj,
-                                       JSObject **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementParams::InnerObject(nsIXPConnectWrappedNative *wrapper,
-                                       JSContext *cx, JSObject *obj,
-                                       JSObject **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void postCreatePrototype (in JSContextPtr cx, in JSObjectPtr proto); */
-NS_IMETHODIMP
-mozStorageStatementParams::PostCreatePrototype(JSContext * cx, JSObject * proto)
-{
-    return NS_OK;
-}
+} // namespace storage
+} // namespace mozilla

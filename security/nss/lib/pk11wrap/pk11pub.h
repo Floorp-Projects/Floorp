@@ -328,6 +328,8 @@ PK11SymKey * PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
 								void *wincx);
 PK11SymKey *PK11_GetNextSymKey(PK11SymKey *symKey);
 CK_KEY_TYPE PK11_GetSymKeyType(PK11SymKey *key);
+CK_OBJECT_HANDLE PK11_GetSymKeyHandle(PK11SymKey *symKey);
+
 
 /*
  * PK11_SetSymKeyUserData

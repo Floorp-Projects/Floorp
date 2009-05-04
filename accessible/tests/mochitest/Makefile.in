@@ -48,6 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		letters.gif \
 		moz.png \
+		$(topsrcdir)/content/media/video/test/bug461281.ogg \
 		longdesc_src.html \
 		attributes.js \
 		common.js \
@@ -65,7 +66,7 @@ _TEST_FILES =\
 		role.js \
 		test_accessnode_invalidation.html \
 		test_actions_aria.html \
-		test_actions_inputs.html \
+	$(warning test_actions_inputs.html temporarily disabled) \
 		test_actions.xul \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
@@ -74,6 +75,11 @@ _TEST_FILES =\
 		test_bug420863.html \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_cssattrs.html \
+		test_descr.html \
+		test_elm_filectrl.html \
+		test_elm_media.html \
+		test_elm_prgrsmtr.xul \
+		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_mutation.html \
 		test_events_tree.xul \

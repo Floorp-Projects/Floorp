@@ -149,9 +149,6 @@ bin/components/necko_strconv.xpt
 bin/components/necko_viewsource.xpt
 bin/components/necko_wifi.xpt
 bin/components/necko.xpt
-#ifdef OJI
-bin/components/oji.xpt
-#endif
 bin/components/loginmgr.xpt
 bin/components/places.xpt
 bin/components/plugin.xpt
@@ -219,6 +216,7 @@ bin/components/nsFilePicker.js
 bin/components/nsHelperAppDlg.js
 bin/components/nsDownloadManagerUI.js
 bin/components/nsProxyAutoConfig.js
+bin/components/NetworkGeolocationProvider.js
 bin/components/nsSidebar.js
 bin/components/nsExtensionManager.js
 bin/components/nsBlocklistService.js

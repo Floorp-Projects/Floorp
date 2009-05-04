@@ -67,7 +67,6 @@ REQUIRES	= xpcom \
 		  plugin \
 		  docshell \
 		  webbrwsr \
-		  oji \
 		  unicharutil \
 		  lwbrk \
 		  imglib2 \

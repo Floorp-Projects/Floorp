@@ -204,7 +204,7 @@ cert_NssKeyUsagesToPkix(
     PKIX_RETURN(CERTVFYPKIX);
 }
 
-extern char* ekuOidStrings[];
+extern SECOidTag ekuOidStrings[];
 
 enum {
     ekuIndexSSLServer = 0,
@@ -489,6 +489,7 @@ cert_CreatePkixProcessingParams(
     PKIX_RevocationChecker *revChecker = NULL;
     PKIX_UInt32           methodFlags = 0;
     void                  *plContext = NULL;
+    CERTStatusConfig      *statusConfig = NULL;
     
     PKIX_ENTER(CERTVFYPKIX, "cert_CreatePkixProcessingParams");
     PKIX_NULLCHECK_TWO(cert, pprocParams);
@@ -538,6 +539,14 @@ cert_CreatePkixProcessingParams(
         PKIX_ProcessingParams_SetTargetCertConstraints(procParams,
                                                        certSelector, plContext),
         PKIX_PROCESSINGPARAMSSETTARGETCERTCONSTRAINTSFAILED);
+
+    /* Turn off quialification of target cert since leaf cert is
+     * already check for date validity, key usages and extended
+     * key usages. */
+    PKIX_CHECK(
+        PKIX_ProcessingParams_SetQualifyTargetCert(procParams, PKIX_FALSE,
+                                                   plContext),
+        PKIX_PROCESSINGPARAMSSETQUALIFYTARGETCERTFLAGFAILED);
 
     PKIX_CHECK(
         PKIX_PL_Pk11CertStore_Create(&certStore, plContext),
@@ -601,34 +610,42 @@ cert_CreatePkixProcessingParams(
                                          0, NULL, PKIX_FALSE, plContext),
         PKIX_REVOCATIONCHECKERADDMETHODFAILED);
     
-    /* OCSP method flags */
-    methodFlags =
-        PKIX_REV_M_TEST_USING_THIS_METHOD |
-        PKIX_REV_M_ALLOW_NETWORK_FETCHING |         /* 0 */
-        PKIX_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE |  /* 0 */
-        PKIX_REV_M_SKIP_TEST_ON_MISSING_SOURCE |    /* 0 */
-        PKIX_REV_M_IGNORE_MISSING_FRESH_INFO |      /* 0 */
-        PKIX_REV_M_CONTINUE_TESTING_ON_FRESH_INFO;
+    /* For compatibility with the old code, need to check that
+     * statusConfig is set in the db handle and status checker
+     * is defined befor allow ocsp status check on the leaf cert.*/
+    statusConfig = CERT_GetStatusConfig(CERT_GetDefaultCertDB());
+    if (statusConfig != NULL && statusConfig->statusChecker != NULL) {
 
-    /* Disabling ocsp fetching when checking the status
-     * of ocsp response signer. Here and in the next if,
-     * adjust flags for ocsp signer cert validation case. */
-    if (disableOCSPRemoteFetching) {
-        methodFlags |= PKIX_REV_M_FORBID_NETWORK_FETCHING;
-    }
-
-    if (ocsp_FetchingFailureIsVerificationFailure()
-        && !disableOCSPRemoteFetching) {
-        methodFlags |=
-            PKIX_REV_M_FAIL_ON_MISSING_FRESH_INFO;
-    }
-
-    /* add OCSP revocation method to check only the leaf certificate.*/
-    PKIX_CHECK(
-        PKIX_RevocationChecker_CreateAndAddMethod(revChecker, procParams,
+        /* Enable OCSP revocation checking for the leaf cert. */
+        /* OCSP method flags */
+        methodFlags =
+            PKIX_REV_M_TEST_USING_THIS_METHOD |
+            PKIX_REV_M_ALLOW_NETWORK_FETCHING |         /* 0 */
+            PKIX_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE |  /* 0 */
+            PKIX_REV_M_SKIP_TEST_ON_MISSING_SOURCE |    /* 0 */
+            PKIX_REV_M_IGNORE_MISSING_FRESH_INFO |      /* 0 */
+            PKIX_REV_M_CONTINUE_TESTING_ON_FRESH_INFO;
+        
+        /* Disabling ocsp fetching when checking the status
+         * of ocsp response signer. Here and in the next if,
+         * adjust flags for ocsp signer cert validation case. */
+        if (disableOCSPRemoteFetching) {
+            methodFlags |= PKIX_REV_M_FORBID_NETWORK_FETCHING;
+        }
+        
+        if (ocsp_FetchingFailureIsVerificationFailure()
+            && !disableOCSPRemoteFetching) {
+            methodFlags |=
+                PKIX_REV_M_FAIL_ON_MISSING_FRESH_INFO;
+        }
+        
+        /* add OCSP revocation method to check only the leaf certificate.*/
+        PKIX_CHECK(
+            PKIX_RevocationChecker_CreateAndAddMethod(revChecker, procParams,
                                      PKIX_RevocationMethod_OCSP, methodFlags,
                                      1, NULL, PKIX_TRUE, plContext),
-        PKIX_REVOCATIONCHECKERADDMETHODFAILED);
+            PKIX_REVOCATIONCHECKERADDMETHODFAILED);
+    }
 
     PKIX_CHECK(
         PKIX_ProcessingParams_SetAnyPolicyInhibited(procParams, PR_FALSE,
@@ -1206,7 +1223,15 @@ cert_VerifyCertChainPkix(
     int  memLeakLoopCount = 0;
     int  objCountTable[PKIX_NUMTYPES]; 
     int  fnInvLocalCount = 0;
+    PKIX_Boolean savedUsePkixEngFlag = usePKIXValidationEngine;
 
+    if (usePKIXValidationEngine) {
+        /* current memory leak testing implementation does not allow
+         * to run simultaneous tests one the same or a different threads.
+         * Setting the variable to false, to make additional chain
+         * validations be handled by old nss. */
+        usePKIXValidationEngine = PR_FALSE;
+    }
     testStartFnStackPosition = 2;
     fnStackNameArr[0] = "cert_VerifyCertChainPkix";
     fnStackInvCountArr[0] = 0;
@@ -1320,6 +1345,7 @@ cleanup:
 
     runningLeakTest = PKIX_FALSE; 
     PR_AtomicDecrement(&parallelFnInvocationCount);
+    usePKIXValidationEngine = savedUsePkixEngFlag;
 #endif /* PKIX_OBJECT_LEAK_TEST */
 
     return rv;
@@ -1414,39 +1440,6 @@ cleanup:
     return r;
 }
 
-/* XXX
- *  There is no NSS SECItem -> PKIX OID
- *  conversion function. For now, I go via the ascii
- *  representation 
- *  this should be in PKIX_PL_*
- */
-
-PKIX_PL_OID *
-CERT_PKIXOIDFromNSSOid(SECOidTag tag, void*plContext)
-{
-    char *oidstring = NULL;
-    char *oidstring_adj = NULL;
-    PKIX_PL_OID *policyOID = NULL;
-    SECOidData *data;
-
-    data =  SECOID_FindOIDByTag(tag);
-    if (data != NULL) {
-        oidstring = CERT_GetOidString(&data->oid);
-        if (oidstring == NULL) {
-            goto cleanup;
-        }
-        oidstring_adj = oidstring;
-        if (PORT_Strncmp("OID.",oidstring_adj,4) == 0) {
-            oidstring_adj += 4;
-        }
-
-        PKIX_PL_OID_Create(oidstring_adj, &policyOID, plContext);
-    }
-cleanup:
-    if (oidstring != NULL) PR_smprintf_free(oidstring);
-
-    return policyOID;
-}
 
 struct fake_PKIX_PL_CertStruct {
         CERTCertificate *nssCert;
@@ -1479,8 +1472,8 @@ PKIX_List *cert_PKIXMakeOIDList(const SECOidTag *oids, int oidCount, void *plCon
     }
 
     for (i=0; i<oidCount; i++) {
-        policyOID = CERT_PKIXOIDFromNSSOid(oids[i],plContext);
-        if (policyOID == NULL) {
+        error = PKIX_PL_OID_Create(oids[i], &policyOID, plContext);
+        if (error) {
             goto cleanup;
         }
         error = PKIX_List_AppendItem(policyList, 
@@ -2061,6 +2054,15 @@ SECStatus CERT_PKIXVerifyCert(
     int  memLeakLoopCount = 0;
     int  objCountTable[PKIX_NUMTYPES];
     int  fnInvLocalCount = 0;
+    PKIX_Boolean savedUsePkixEngFlag = usePKIXValidationEngine;
+
+    if (usePKIXValidationEngine) {
+        /* current memory leak testing implementation does not allow
+         * to run simultaneous tests one the same or a different threads.
+         * Setting the variable to false, to make additional chain
+         * validations be handled by old nss. */
+        usePKIXValidationEngine = PR_FALSE;
+    }
     testStartFnStackPosition = 1;
     fnStackNameArr[0] = "CERT_PKIXVerifyCert";
     fnStackInvCountArr[0] = 0;
@@ -2280,6 +2282,7 @@ cleanup:
 
     runningLeakTest = PKIX_FALSE; 
     PR_AtomicDecrement(&parallelFnInvocationCount);
+    usePKIXValidationEngine = savedUsePkixEngFlag;
 #endif /* PKIX_OBJECT_LEAK_TEST */
 
     return r;

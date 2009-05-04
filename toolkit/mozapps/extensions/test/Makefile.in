@@ -40,7 +40,7 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 ADDONSRC = $(srcdir)/addons
-TESTROOT = $(shell cd $(DEPTH) && pwd)/_tests/xpcshell/$(MODULE)
+TESTROOT = $(CURDIR)/$(DEPTH)/_tests/xpcshell/$(MODULE)
 TESTXPI = $(TESTROOT)/unit/addons
 relativesrcdir  = toolkit/mozapps/extensions/test
 

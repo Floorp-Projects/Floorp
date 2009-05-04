@@ -275,21 +275,12 @@ nsLocalFile::nsLocalFileConstructor(nsISupports *outer,
 
 PRBool 
 nsLocalFile::FillStatCache() {
-#ifdef HAVE_STAT64
-    if (stat64(mPath.get(), &mCachedStat) == -1) {
+    if (STAT(mPath.get(), &mCachedStat) == -1) {
         // try lstat it may be a symlink
-        if (lstat64(mPath.get(), &mCachedStat) == -1) {
+        if (LSTAT(mPath.get(), &mCachedStat) == -1) {
             return PR_FALSE;
         }
     }
-#else
-    if (stat(mPath.get(), &mCachedStat) == -1) {
-        // try lstat it may be a symlink
-        if (lstat(mPath.get(), &mCachedStat) == -1) {
-            return PR_FALSE;
-        }
-    }
-#endif
     return PR_TRUE;
 }
 
@@ -941,44 +932,36 @@ nsLocalFile::Remove(PRBool recursive)
     if (NS_FAILED(rv))
         return rv;
 
-    if (!recursive && isSymLink)
+    if (isSymLink || !S_ISDIR(mCachedStat.st_mode))
         return NSRESULT_FOR_RETURN(unlink(mPath.get()));
 
-    if (S_ISDIR(mCachedStat.st_mode)) {
-        if (recursive) {
-            nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
-            if (!dir)
-                return NS_ERROR_OUT_OF_MEMORY;
+    if (recursive) {
+        nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
+        if (!dir)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-            nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
+        nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
 
-            rv = dir->Init(this, PR_FALSE);
+        rv = dir->Init(this, PR_FALSE);
+        if (NS_FAILED(rv))
+            return rv;
+
+        PRBool more;
+        while (dir->HasMoreElements(&more), more) {
+            nsCOMPtr<nsISupports> item;
+            rv = dir->GetNext(getter_AddRefs(item));
             if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+
+            nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
+            if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+            if (NS_FAILED(rv = file->Remove(recursive)))
                 return rv;
-
-            PRBool more;
-            while (dir->HasMoreElements(&more), more) {
-                nsCOMPtr<nsISupports> item;
-                rv = dir->GetNext(getter_AddRefs(item));
-                if (NS_FAILED(rv))
-                    return NS_ERROR_FAILURE;
-
-                nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
-                if (NS_FAILED(rv))
-                    return NS_ERROR_FAILURE;
-                if (NS_FAILED(rv = file->Remove(recursive)))
-                    return rv;
-            }
         }
-
-        if (rmdir(mPath.get()) == -1)
-            return NSRESULT_FOR_ERRNO();
-    } else {
-        if (unlink(mPath.get()) == -1)
-            return NSRESULT_FOR_ERRNO();
     }
 
-    return NS_OK;
+    return NSRESULT_FOR_RETURN(rmdir(mPath.get()));
 }
 
 NS_IMETHODIMP
@@ -990,12 +973,12 @@ nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModTime)
     PRFileInfo64 info;
     if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS)
         return NSRESULT_FOR_ERRNO();
+    PRInt64 modTime = PRInt64(info.modifyTime);
+    if (modTime == 0)
+        *aLastModTime = 0;
+    else
+        *aLastModTime = modTime / PRInt64(PR_USEC_PER_MSEC);
 
-    // PRTime is a 64 bit value
-    // microseconds -> milliseconds
-    PRInt64 usecPerMsec;
-    LL_I2L(usecPerMsec, PR_USEC_PER_MSEC);
-    LL_DIV(*aLastModTime, info.modifyTime, usecPerMsec);
     return NS_OK;
 }
 
@@ -1005,15 +988,13 @@ nsLocalFile::SetLastModifiedTime(PRInt64 aLastModTime)
     CHECK_mPath();
 
     int result;
-    if (! LL_IS_ZERO(aLastModTime)) {
+    if (aLastModTime != 0) {
         ENSURE_STAT_CACHE();
         struct utimbuf ut;
         ut.actime = mCachedStat.st_atime;
 
         // convert milliseconds to seconds since the unix epoch
-        double dTime;
-        LL_L2D(dTime, aLastModTime);
-        ut.modtime = (time_t) (dTime / PR_MSEC_PER_SEC);
+        ut.modtime = (time_t)(PRFloat64(aLastModTime) / PR_MSEC_PER_SEC);
         result = utime(mPath.get(), &ut);
     } else {
         result = utime(mPath.get(), nsnull);
@@ -1027,15 +1008,10 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModTimeOfLink)
     CHECK_mPath();
     NS_ENSURE_ARG(aLastModTimeOfLink);
 
-    struct stat sbuf;
-    if (lstat(mPath.get(), &sbuf) == -1)
+    struct STAT sbuf;
+    if (LSTAT(mPath.get(), &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
-    LL_I2L(*aLastModTimeOfLink, (PRInt32)sbuf.st_mtime);
-
-    // lstat returns st_mtime in seconds
-    PRInt64 msecPerSec;
-    LL_I2L(msecPerSec, PR_MSEC_PER_SEC);
-    LL_MUL(*aLastModTimeOfLink, *aLastModTimeOfLink, msecPerSec);
+    *aLastModTimeOfLink = PRInt64(sbuf.st_mtime) * PRInt64(PR_MSEC_PER_SEC);
 
     return NS_OK;
 }
@@ -1071,8 +1047,8 @@ nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissionsOfLink)
     CHECK_mPath();
     NS_ENSURE_ARG(aPermissionsOfLink);
 
-    struct stat sbuf;
-    if (lstat(mPath.get(), &sbuf) == -1)
+    struct STAT sbuf;
+    if (LSTAT(mPath.get(), &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
     *aPermissionsOfLink = NORMALIZE_PERMS(sbuf.st_mode);
     return NS_OK;
@@ -1104,7 +1080,7 @@ NS_IMETHODIMP
 nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
     NS_ENSURE_ARG_POINTER(aFileSize);
-    *aFileSize = LL_ZERO;
+    *aFileSize = 0;
     ENSURE_STAT_CACHE();
 
 #if defined(VMS)
@@ -1116,11 +1092,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 #endif
 
     if (!S_ISDIR(mCachedStat.st_mode)) {
-#ifdef HAVE_STAT64
-        *aFileSize = mCachedStat.st_size;
-#else
-        LL_UI2L(*aFileSize, (PRUint32)mCachedStat.st_size);
-#endif
+        *aFileSize = (PRInt64)mCachedStat.st_size;
     }
     return NS_OK;
 }
@@ -1130,11 +1102,14 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
     CHECK_mPath();
 
-    PRInt32 size;
-    LL_L2I(size, aFileSize);
-    /* XXX truncate64? */
-    if (truncate(mPath.get(), (off_t)size) == -1)
+#ifdef HAVE_TRUNCATE64
+    if (truncate64(mPath.get(), (off64_t)aFileSize) == -1)
         return NSRESULT_FOR_ERRNO();
+#else
+    off_t size = (off_t)aFileSize;
+    if (truncate(mPath.get(), size) == -1)
+        return NSRESULT_FOR_ERRNO();
+#endif
     return NS_OK;
 }
 
@@ -1144,17 +1119,11 @@ nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
     CHECK_mPath();
     NS_ENSURE_ARG(aFileSize);
 
-#ifdef HAVE_LSTAT64
-    struct stat64 sbuf;
-    if (lstat64(mPath.get(), &sbuf) == -1)
+    struct STAT sbuf;
+    if (LSTAT(mPath.get(), &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
-    *aFileSize = sbuf.st_size;
-#else
-    struct stat sbuf;
-    if (lstat(mPath.get(), &sbuf) == -1)
-        return NSRESULT_FOR_ERRNO();
-    LL_UI2L(*aFileSize, (PRUint32)sbuf.st_size);
-#endif
+
+    *aFileSize = (PRInt64)sbuf.st_size;
     return NS_OK;
 }
 
@@ -1165,7 +1134,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 
     // These systems have the operations necessary to check disk space.
 
-#if defined(HAVE_SYS_STATFS_H) || defined(HAVE_SYS_STATVFS_H)
+#ifdef STATFS
 
     // check to make sure that mPath is properly initialized
     CHECK_mPath();
@@ -1196,11 +1165,8 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
      * a non-superuser, minus one as a fudge factor, multiplied by the size
      * of the aforementioned blocks.
      */
-    PRInt64 bsize, bavail;
+    *aDiskSpaceAvailable = (PRInt64)fs_buf.f_bsize * (fs_buf.f_bavail - 1);
 
-    LL_I2L(bsize, fs_buf.f_bsize);
-    LL_I2L(bavail, fs_buf.f_bavail - 1);
-    LL_MUL(*aDiskSpaceAvailable, bsize, bavail);
     return NS_OK;
 
 #else
@@ -1217,7 +1183,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 #endif
     return NS_ERROR_NOT_IMPLEMENTED;
 
-#endif /* HAVE_SYS_STATFS_H or HAVE_SYS_STATVFS_H */
+#endif /* STATFS */
 
 }
 
@@ -1277,9 +1243,9 @@ nsLocalFile::Exists(PRBool *_retval)
 {
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(_retval);
-    struct stat buf;
+    struct STAT buf;
 
-    *_retval = (stat(mPath.get(), &buf) == 0);
+    *_retval = (STAT(mPath.get(), &buf) == 0);
     return NS_OK;
 }
 
@@ -1288,9 +1254,9 @@ nsLocalFile::IsWritable(PRBool *_retval)
 {
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(_retval);
-    struct stat buf;
+    struct STAT buf;
 
-    *_retval = (stat(mPath.get(), &buf) == 0);
+    *_retval = (STAT(mPath.get(), &buf) == 0);
     if (*_retval || errno == EACCES) {
         *_retval = *_retval && (buf.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH ));
         return NS_OK;
@@ -1303,9 +1269,9 @@ nsLocalFile::IsReadable(PRBool *_retval)
 {
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(_retval);
-    struct stat buf;
+    struct STAT buf;
 
-    *_retval = (stat(mPath.get(), &buf) == 0);
+    *_retval = (STAT(mPath.get(), &buf) == 0);
     if (*_retval || errno == EACCES) {
         *_retval = *_retval && (buf.st_mode & (S_IRUSR | S_IRGRP | S_IROTH ));
         return NS_OK;
@@ -1318,9 +1284,9 @@ nsLocalFile::IsExecutable(PRBool *_retval)
 {
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(_retval);
-    struct stat buf;
+    struct STAT buf;
 
-    *_retval = (stat(mPath.get(), &buf) == 0);
+    *_retval = (STAT(mPath.get(), &buf) == 0);
     if (*_retval || errno == EACCES) {
         *_retval = *_retval && (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH ));
         return NS_OK;
@@ -1412,8 +1378,9 @@ nsLocalFile::IsSymlink(PRBool *_retval)
     NS_ENSURE_ARG_POINTER(_retval);
     CHECK_mPath();
 
-    struct stat symStat;
-    lstat(mPath.get(), &symStat);
+    struct STAT symStat;
+    if (LSTAT(mPath.get(), &symStat) == -1)
+        return NSRESULT_FOR_ERRNO();
     *_retval=S_ISLNK(symStat.st_mode);
     return NS_OK;
 }
@@ -1482,17 +1449,14 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
     CHECK_mPath();
     _retval.Truncate();
 
-    struct stat symStat;
-    lstat(mPath.get(), &symStat);
+    struct STAT symStat;
+    if (LSTAT(mPath.get(), &symStat) == -1)
+        return NSRESULT_FOR_ERRNO();
+
     if (!S_ISLNK(symStat.st_mode))
         return NS_ERROR_FILE_INVALID_PATH;
 
-    PRInt64 targetSize64;
-    if (NS_FAILED(GetFileSizeOfLink(&targetSize64)))
-        return NS_ERROR_FAILURE;
-
-    PRInt32 size;
-    LL_L2I(size, targetSize64);
+    PRInt32 size = (PRInt32)symStat.st_size;
     char *target = (char *)nsMemory::Alloc(size + 1);
     if (!target)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1503,14 +1467,19 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
     }
     target[size] = '\0';
 
-    nsresult rv;
-    PRBool isSymlink;
+    nsresult rv = NS_OK;
     nsCOMPtr<nsIFile> self(this);
-    nsCOMPtr<nsIFile> parent;
-    while (NS_SUCCEEDED(rv = self->GetParent(getter_AddRefs(parent)))) {
-        NS_ASSERTION(parent != nsnull, "no parent?!");
+    PRInt32 maxLinks = 40;
+    while (PR_TRUE) {
+        if (maxLinks-- == 0) {
+            rv = NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+            break;
+        }
 
         if (target[0] != '/') {
+            nsCOMPtr<nsIFile> parent;
+            if (NS_FAILED(rv = self->GetParent(getter_AddRefs(parent))))
+                break;
             nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(parent, &rv));
             if (NS_FAILED(rv))
                 break;
@@ -1518,45 +1487,39 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
                 break;
             if (NS_FAILED(rv = localFile->GetNativePath(_retval)))
                 break;
-            if (NS_FAILED(rv = parent->IsSymlink(&isSymlink)))
-                break;
             self = parent;
         } else {
-            nsCOMPtr<nsILocalFile> localFile;
-            rv = NS_NewNativeLocalFile(nsDependentCString(target), PR_TRUE,
-                                       getter_AddRefs(localFile));
-            if (NS_FAILED(rv))
-                break;
-            if (NS_FAILED(rv = localFile->IsSymlink(&isSymlink)))
-                break;
-            _retval = target; // XXX can we avoid this buffer copy?
-            self = do_QueryInterface(localFile);
+            _retval = target;
         }
-        if (NS_FAILED(rv) || !isSymlink)
-            break;
 
         const nsPromiseFlatCString &flatRetval = PromiseFlatCString(_retval);
 
-        // strip off any and all trailing '/'
-        PRInt32 len = strlen(target);
-        while (target[len-1] == '/' && len > 1)
-            target[--len] = '\0';
-        if (lstat(flatRetval.get(), &symStat) < 0) {
-            rv = NSRESULT_FOR_ERRNO();
+        // Any failure in testing the current target we'll just interpret
+        // as having reached our destiny.
+        if (LSTAT(flatRetval.get(), &symStat) == -1)
             break;
-        }
-        if (!S_ISLNK(symStat.st_mode)) {
-            rv = NS_ERROR_FILE_INVALID_PATH;
-            break;
-        }
-        size = symStat.st_size;
-        if (readlink(flatRetval.get(), target, size) < 0) {
-            rv = NSRESULT_FOR_ERRNO();
-            break;
-        }
-        target[size] = '\0';
 
-        _retval.Truncate();
+        // And of course we're done if it isn't a symlink.
+        if (!S_ISLNK(symStat.st_mode))
+            break;
+
+        PRInt32 newSize = (PRInt32)symStat.st_size;
+        if (newSize > size) {
+            char *newTarget = (char *)nsMemory::Realloc(target, newSize + 1);
+            if (!newTarget) {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+                break;
+            }
+            target = newTarget;
+            size = newSize;
+        }
+
+        PRInt32 linkLen = readlink(flatRetval.get(), target, size);
+        if (linkLen == -1) {
+            rv = NSRESULT_FOR_ERRNO();
+            break;
+        }
+        target[linkLen] = '\0';
     }
 
     nsMemory::Free(target);

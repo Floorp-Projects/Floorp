@@ -650,6 +650,7 @@ function initTestList()
           description: "sendMouseMoveEvent" },
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: true, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (v-3)" },
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
@@ -662,6 +663,7 @@ function initTestList()
           description: "sendMouseMoveEvent" },
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: true, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (v-5)" },
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
@@ -675,6 +677,7 @@ function initTestList()
         { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
           offset: kPtInSubView1ForV,
           isForward: true, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (v-7)" },
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
@@ -720,6 +723,7 @@ function initTestList()
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: false, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-4)" },
         // Send a mouse move event after |gIgnoreMoveDelay| milliseconds since
         // last wheel event, then, current transaction should be kept.
@@ -728,6 +732,7 @@ function initTestList()
           description: "sendMouseMoveEvent" },
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: true, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-5)" },
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
@@ -741,6 +746,7 @@ function initTestList()
         { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
           offset: kPtInSubView1ForH,
           isForward: true, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-7)" },
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
@@ -1251,6 +1257,12 @@ function onScrollView(aEvent)
    *          The expected view should be scrolled vertical or horizontal.
    * @param gCurrentTest.isForward
    *          The expected view should be scrolled to forward or backward.
+   * @param gCurrentTest.canFailRandomly
+   *          If this is not undefined, this test can fail by unexpected view
+   *          scrolling which is caused by unexpected timeout.  If this is
+   *          defined, |gCurrentTest.possibleView| must be set.  If the view is
+   *          same as the event target, the failure can be random.  At this
+   *          time, we should retry the current test list.
    */
 
   if (!(gLitesnEvents & kListenEvent_OnScroll))
@@ -1278,6 +1290,16 @@ function onScrollView(aEvent)
 
   // Check whether the scrolled view is expected or not.
   if (aEvent.target != gCurrentTest.expectedView) {
+    // If current test can fail randomly and the possible view is same as the
+    // event target, this failure may be caused by unexpected timeout.
+    // At this time, we should retry the current tests with slower settings.
+    if (gCurrentTest.canFailRandomly &&
+        gCurrentTest.canFailRandomly.possibleView == aEvent.target &&
+        gCurrentTestListStatus.retryWhenTransactionTimeout > 0) {
+      gCurrentTestListStatus.retryWhenTransactionTimeout--;
+      retryCurrentTestList();
+      return;
+    }
     is(aEvent.target.id, gCurrentTest.expectedView.id,
        "wrong view was scrolled: " + gCurrentTest.description);
     runNextTestList();

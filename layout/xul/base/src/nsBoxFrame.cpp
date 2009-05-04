@@ -76,7 +76,6 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIPresShell.h"
-#include "nsFrameNavigator.h"
 #include "nsCSSRendering.h"
 #include "nsIServiceManager.h"
 #include "nsIBoxLayout.h"
@@ -87,7 +86,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIWidget.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -724,6 +722,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     prefSize = GetPrefSize(state);
     nsSize minSize = GetMinSize(state);
     nsSize maxSize = GetMaxSize(state);
+    // XXXbz isn't GetPrefSize supposed to bounds-check for us?
     prefSize = BoundsCheck(minSize, prefSize, maxSize);
   }
 
@@ -732,23 +731,25 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
 
   if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
     computedSize.height = prefSize.height;
+    // prefSize is border-box, so we need to figure out the right
+    // length to apply our min/max constraints to.
+    nscoord outsideBoxSizing = 0;
+    switch (GetStylePosition()->mBoxSizing) {
+      case NS_STYLE_BOX_SIZING_CONTENT:
+        outsideBoxSizing = aReflowState.mComputedBorderPadding.TopBottom();
+        // fall through
+      case NS_STYLE_BOX_SIZING_PADDING:
+        outsideBoxSizing -= aReflowState.mComputedPadding.TopBottom();
+        break;
+    }
+    computedSize.height -= outsideBoxSizing;
+    // Note: might be negative now, but that's OK because min-width is
+    // never negative.
+    aReflowState.ApplyMinMaxConstraints(nsnull, &computedSize.height);
+    computedSize.height += outsideBoxSizing;
   } else {
     computedSize.height += m.top + m.bottom;
   }
-
-  // handle reflow state min and max sizes
-
-  if (computedSize.width > aReflowState.mComputedMaxWidth)
-    computedSize.width = aReflowState.mComputedMaxWidth;
-
-  if (computedSize.height > aReflowState.mComputedMaxHeight)
-    computedSize.height = aReflowState.mComputedMaxHeight;
-
-  if (computedSize.width < aReflowState.mComputedMinWidth)
-    computedSize.width = aReflowState.mComputedMinWidth;
-
-  if (computedSize.height < aReflowState.mComputedMinHeight)
-    computedSize.height = aReflowState.mComputedMinHeight;
 
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
@@ -2142,18 +2143,6 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
   aChild->SetNextSibling(newNextSib);
 
   return NS_OK;
-}
-
-PRBool
-nsBoxFrame::GetWasCollapsed(nsBoxLayoutState& aState)
-{
-  return nsBox::GetWasCollapsed(aState);
-}
-
-void
-nsBoxFrame::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas)
-{
-  nsBox::SetWasCollapsed(aState, aWas);
 }
 
 /**

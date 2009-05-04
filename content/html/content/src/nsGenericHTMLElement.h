@@ -199,6 +199,11 @@ public:
   // Used by A, AREA, LINK, and STYLE.
   nsresult GetHrefURIForAnchors(nsIURI** aURI) const;
 
+  // As above, but makes sure to return a URI object that we can mutate with
+  // impunity without changing our current URI.  That is, if the URI is cached
+  // it clones it and returns the clone.
+  void GetHrefURIToMutate(nsIURI** aURI);
+
   // HTML element methods
   void Compact() { mAttrsAndChildren.Compact(); }
   const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
@@ -685,12 +690,15 @@ protected:
 
   /**
    * Helper for GetURIAttr and GetHrefURIForAnchors which returns an
-   * nsIURI in the out param..
+   * nsIURI in the out param.
+   *
+   * @param aCloneIfCached if true, clone the URI before returning if
+   * it's cached.
    *
    * @return PR_TRUE if we had the attr, PR_FALSE otherwise.
    */
   NS_HIDDEN_(PRBool) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
-                                nsIURI** aURI) const;
+                                PRBool aCloneIfCached, nsIURI** aURI) const;
 
   /**
    * This method works like GetURIAttr, except that it supports multiple
@@ -1141,6 +1149,13 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
     NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
     NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+  NS_OFFSET_AND_INTERFACE_TABLE_END
+
+#define NS_HTML_CONTENT_INTERFACE_TABLE3(_class, _i1, _i2, _i3)          \
+  NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(_class)                               \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i1)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i2)                                     \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i3)                                     \
   NS_OFFSET_AND_INTERFACE_TABLE_END
 
 #define NS_HTML_CONTENT_INTERFACE_TABLE4(_class, _i1, _i2, _i3, _i4)          \

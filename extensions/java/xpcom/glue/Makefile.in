@@ -69,7 +69,11 @@ else
 ifeq ($(OS_ARCH),OS2)
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/OS2
 else
+ifeq ($(OS_ARCH),FreeBSD)
+LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/freebsd
+else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
+endif
 endif
 endif
 

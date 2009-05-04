@@ -329,14 +329,6 @@ protected:
   static jsval sOnpaste_id;
   static jsval sJava_id;
   static jsval sPackages_id;
-#ifdef OJI
-  static jsval sNetscape_id;
-  static jsval sSun_id;
-  static jsval sJavaObject_id;
-  static jsval sJavaClass_id;
-  static jsval sJavaArray_id;
-  static jsval sJavaMember_id;
-#endif
 
   static const JSClass *sXPCNativeWrapperClass;
 };

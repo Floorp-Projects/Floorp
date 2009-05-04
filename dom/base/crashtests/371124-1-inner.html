@@ -1,0 +1,21 @@
+<html>
+<head>
+<script>
+
+function boom()
+{
+  obj = document.getElementsByTagName("object")[0];
+  obj.__proto__ = null;
+  for (p in obj)
+    dump(p + "\n");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 200);">
+
+<object></object>
+
+</body>
+</html>

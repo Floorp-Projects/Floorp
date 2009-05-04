@@ -18,6 +18,7 @@ REQUIRES = \
 	xpcom \
 	unicharutil \
 	$(LCMS_REQUIRES) \
+	qcms \
 	$(NULL)
 
 CPPSRCS	= \
@@ -47,7 +48,7 @@ EXTRA_DSO_LDOPTS += \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(ZLIB_LIBS) \
-	$(LCMS_LIBS) \
+	$(QCMS_LIBS) \
 	$(NULL)
 
 
@@ -60,7 +61,10 @@ CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 
 ifdef WINCE
 DEFINES += -DMOZ_FT2_FONTS
-CPPSRCS	+= gfxFT2Fonts.cpp
+CPPSRCS	+= gfxFT2Fonts.cpp \
+	   gfxDDrawSurface.cpp \
+	   $(NULL)
+EXTRA_DSO_LDOPTS += ddraw.lib
 else
 CPPSRCS	+= gfxWindowsFonts.cpp 
 endif

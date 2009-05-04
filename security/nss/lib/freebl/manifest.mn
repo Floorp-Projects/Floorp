@@ -129,7 +129,6 @@ MPCPU_SRCS = mpcpucache.c
 CSRCS = \
 	freeblver.c \
 	ldvector.c \
-	prng_fips1861.c \
 	sysrand.c \
 	$(SHA_SRCS) \
 	md2.c \
@@ -142,6 +141,7 @@ CSRCS = \
 	arcfive.c \
 	desblapi.c \
 	des.c \
+	drbg.c \
 	rijndael.c \
 	aeskeywrap.c \
 	camellia.c \

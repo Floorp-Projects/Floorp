@@ -38,467 +38,199 @@
  * Shane Stephens <shane.stephens@annodex.net>
  * Michael Martin
  * Marcin Lubonski
+ * Viktor Gal
  */
 
 #include "oggplay_private.h"
+#include "oggplay_yuv2rgb_template.h"
 
-/*
- * YUV -> RGB conversion
- *  R = Y + 1.140V
- *  G = Y - 0.395U - 0.581V
- *  B = Y + 2.032U
- *
- * RGB -> YUV conversion
- *  Y = 0.299 R + 0.587 G + 0.114 B
- *  U = 0.147 R - 0.289 G + 0.436 B
- *  V = 0.615 R - 0.515 G - 0.100 B
+/* cpu extension detection */
+#include "cpu.c"
+
+/* although we use cpu runtime detection, we still need these
+ * macros as there's no way e.g. we could compile a x86 asm code 
+ * on a ppc machine and vica-versa
  */
-
-// Optimized YUV to RGB conversion routine disabled due to generating
-// incorrect colours. See Annodex trac ticket 421:
-// http://trac.annodex.net/ticket/421
-#if 0 //defined(__MMX__) || defined(__SSE__) || defined(__SSE2__) || defined(__SSE3__)
-
-#if defined(WIN32)
-#define restrict
-#include <emmintrin.h>
-#else
-#include <xmmintrin.h>
-#ifndef restrict
-#define restrict __restrict__
-#endif
+#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+#include "oggplay_yuv2rgb_x86.c"
+#elif defined(__ppc__) || defined(__ppc64__)
+//altivec intristics only working with -maltivec gcc flag, 
+//but we want runtime altivec detection, hence this has to be
+//fixed!
+//#include "oggplay_yuv2rgb_altivec.c"
 #endif
 
-/* YUV -> RGB Intel MMX implementation */
-void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
+static int yuv_initialized;
+static ogg_uint32_t cpu_features;
 
-  int               i;
-  unsigned char   * restrict ptry;
-  unsigned char   * restrict ptru;
-  unsigned char   * restrict ptrv;
-  unsigned char   * ptro;
-
-  register __m64    *y, *o;
-  register __m64    zero, ut, vt, imm, imm2;
-  register __m64    r, g, b;
-  register __m64    tmp, tmp2;
-
-  zero = _mm_setzero_si64();
-
-  ptro = rgb->ptro;
-  ptry = yuv->ptry;
-  ptru = yuv->ptru;
-  ptrv = yuv->ptrv;
-
-  for (i = 0; i < yuv->y_height; i++) {
-    int j;
-    o = (__m64*)ptro;
-    ptro += rgb->rgb_width * 4;
-    for (j = 0; j < yuv->y_width; j += 8) {
-
-      y = (__m64*)&ptry[j];
-
-      ut = _m_from_int(*(int *)(ptru + j/2));
-      vt = _m_from_int(*(int *)(ptrv + j/2));
-
-      //ut = _m_from_int(0);
-      //vt = _m_from_int(0);
-
-      ut = _m_punpcklbw(ut, zero);
-      vt = _m_punpcklbw(vt, zero);
-
-      /* subtract 128 from u and v */
-      imm = _mm_set1_pi16(128);
-      ut = _m_psubw(ut, imm);
-      vt = _m_psubw(vt, imm);
-
-      /* transfer and multiply into r, g, b registers */
-      imm = _mm_set1_pi16(-51);
-      g = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(130);
-      b = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(146);
-      r = _m_pmullw(vt, imm);
-      imm = _mm_set1_pi16(-74);
-      imm = _m_pmullw(vt, imm);
-      g = _m_paddsw(g, imm);
-
-      /* add 64 to r, g and b registers */
-      imm = _mm_set1_pi16(64);
-      r = _m_paddsw(r, imm);
-      g = _m_paddsw(g, imm);
-      imm = _mm_set1_pi16(32);
-      b = _m_paddsw(b, imm);
-
-      /* shift r, g and b registers to the right */
-      r = _m_psrawi(r, 7);
-      g = _m_psrawi(g, 7);
-      b = _m_psrawi(b, 6);
-
-      /* subtract 16 from r, g and b registers */
-      imm = _mm_set1_pi16(16);
-      r = _m_psubsw(r, imm);
-      g = _m_psubsw(g, imm);
-      b = _m_psubsw(b, imm);
-
-      y = (__m64*)&ptry[j];
-
-      /* duplicate u and v channels and add y
-       * each of r,g, b in the form [s1(16), s2(16), s3(16), s4(16)]
-       * first interleave, so tmp is [s1(16), s1(16), s2(16), s2(16)]
-       * then add y, then interleave again
-       * then pack with saturation, to get the desired output of
-       *   [s1(8), s1(8), s2(8), s2(8), s3(8), s3(8), s4(8), s4(8)]
-       */
-      tmp = _m_punpckhwd(r, r);
-      imm = _m_punpckhbw(*y, zero);
-      //printf("tmp: %llx imm: %llx\n", tmp, imm);
-      tmp = _m_paddsw(tmp, imm);
-      tmp2 = _m_punpcklwd(r, r);
-      imm2 = _m_punpcklbw(*y, zero);
-      tmp2 = _m_paddsw(tmp2, imm2);
-      r = _m_packuswb(tmp2, tmp);
-
-      tmp = _m_punpckhwd(g, g);
-      tmp2 = _m_punpcklwd(g, g);
-      tmp = _m_paddsw(tmp, imm);
-      tmp2 = _m_paddsw(tmp2, imm2);
-      g = _m_packuswb(tmp2, tmp);
-
-      tmp = _m_punpckhwd(b, b);
-      tmp2 = _m_punpcklwd(b, b);
-      tmp = _m_paddsw(tmp, imm);
-      tmp2 = _m_paddsw(tmp2, imm2);
-      b = _m_packuswb(tmp2, tmp);
-      //printf("duplicated r g and b: %llx %llx %llx\n", r, g, b);
-
-      /* now we have 8 8-bit r, g and b samples.  we want these to be packed
-       * into 32-bit values.
-       */
-      //r = _m_from_int(0);
-      //b = _m_from_int(0);
-      imm = _mm_set1_pi32(0xFFFFFFFF);
-      tmp = _m_punpcklbw(r, b);
-      tmp2 = _m_punpcklbw(g, imm);
-      *o++ = _m_punpcklbw(tmp, tmp2);
-      *o++ = _m_punpckhbw(tmp, tmp2);
-      //printf("tmp, tmp2, write1, write2: %llx %llx %llx %llx\n", tmp, tmp2,
-      //                _m_punpcklbw(tmp, tmp2), _m_punpckhbw(tmp, tmp2));
-      tmp = _m_punpckhbw(r, b);
-      tmp2 = _m_punpckhbw(g, imm);
-      *o++ = _m_punpcklbw(tmp, tmp2);
-      *o++ = _m_punpckhbw(tmp, tmp2);
-
-      //exit(1);
-    }
-    if (i & 0x1) {
-      ptru += yuv->uv_width;
-      ptrv += yuv->uv_width;
-    }
-    ptry += yuv->y_width;
-  }
-  _m_empty();
-
-}
-
-/* YUV -> BGR Intel MMX implementation */
-void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
-
-  int               i;
-  unsigned char   * restrict ptry;
-  unsigned char   * restrict ptru;
-  unsigned char   * restrict ptrv;
-  unsigned char   * ptro;
-
-  register __m64    *y, *o;
-  register __m64    zero, ut, vt, imm, imm2;
-  register __m64    r, g, b;
-  register __m64    tmp, tmp2;
-
-  zero = _mm_setzero_si64();
-
-  ptry = yuv->ptry;
-  ptru = yuv->ptru;
-  ptrv = yuv->ptrv;
-  ptro = rgb->ptro;
-
-  for (i = 0; i < yuv->y_height; i++) {
-    int j;
-    o = (__m64*)ptro;
-    ptro += rgb->rgb_width * 4;
-    for (j = 0; j < yuv->y_width; j += 8) {
-
-      y = (__m64*)&ptry[j];
-
-      ut = _m_from_int(*(int *)(ptru + j/2));
-      vt = _m_from_int(*(int *)(ptrv + j/2));
-
-      //ut = _m_from_int(0);
-      //vt = _m_from_int(0);
-
-      ut = _m_punpcklbw(ut, zero);
-      vt = _m_punpcklbw(vt, zero);
-
-      /* subtract 128 from u and v */
-      imm = _mm_set1_pi16(128);
-      ut = _m_psubw(ut, imm);
-      vt = _m_psubw(vt, imm);
-
-      /* transfer and multiply into r, g, b registers */
-      imm = _mm_set1_pi16(-51);
-      g = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(130);
-      b = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(146);
-      r = _m_pmullw(vt, imm);
-      imm = _mm_set1_pi16(-74);
-      imm = _m_pmullw(vt, imm);
-      g = _m_paddsw(g, imm);
-
-      /* add 64 to r, g and b registers */
-      imm = _mm_set1_pi16(64);
-      r = _m_paddsw(r, imm);
-      g = _m_paddsw(g, imm);
-      imm = _mm_set1_pi16(32);
-      b = _m_paddsw(b, imm);
-
-      /* shift r, g and b registers to the right */
-      r = _m_psrawi(r, 7);
-      g = _m_psrawi(g, 7);
-      b = _m_psrawi(b, 6);
-
-      /* subtract 16 from r, g and b registers */
-      imm = _mm_set1_pi16(16);
-      r = _m_psubsw(r, imm);
-      g = _m_psubsw(g, imm);
-      b = _m_psubsw(b, imm);
-
-      y = (__m64*)&ptry[j];
-
-      /* duplicate u and v channels and add y
-       * each of r,g, b in the form [s1(16), s2(16), s3(16), s4(16)]
-       * first interleave, so tmp is [s1(16), s1(16), s2(16), s2(16)]
-       * then add y, then interleave again
-       * then pack with saturation, to get the desired output of
-       *   [s1(8), s1(8), s2(8), s2(8), s3(8), s3(8), s4(8), s4(8)]
-       */
-      tmp = _m_punpckhwd(r, r);
-      imm = _m_punpckhbw(*y, zero);
-      //printf("tmp: %llx imm: %llx\n", tmp, imm);
-      tmp = _m_paddsw(tmp, imm);
-      tmp2 = _m_punpcklwd(r, r);
-      imm2 = _m_punpcklbw(*y, zero);
-      tmp2 = _m_paddsw(tmp2, imm2);
-      r = _m_packuswb(tmp2, tmp);
-
-      tmp = _m_punpckhwd(g, g);
-      tmp2 = _m_punpcklwd(g, g);
-      tmp = _m_paddsw(tmp, imm);
-      tmp2 = _m_paddsw(tmp2, imm2);
-      g = _m_packuswb(tmp2, tmp);
-
-      tmp = _m_punpckhwd(b, b);
-      tmp2 = _m_punpcklwd(b, b);
-      tmp = _m_paddsw(tmp, imm);
-      tmp2 = _m_paddsw(tmp2, imm2);
-      b = _m_packuswb(tmp2, tmp);
-      //printf("duplicated r g and b: %llx %llx %llx\n", r, g, b);
-
-      /* now we have 8 8-bit r, g and b samples.  we want these to be packed
-       * into 32-bit values.
-       */
-      //r = _m_from_int(0);
-      //b = _m_from_int(0);
-      imm = _mm_set1_pi32(0xFFFFFFFF);
-      tmp = _m_punpcklbw(b, r);
-      tmp2 = _m_punpcklbw(g, imm);
-      *o++ = _m_punpcklbw(tmp, tmp2);
-      *o++ = _m_punpckhbw(tmp, tmp2);
-      //printf("tmp, tmp2, write1, write2: %llx %llx %llx %llx\n", tmp, tmp2,
-      //                _m_punpcklbw(tmp, tmp2), _m_punpckhbw(tmp, tmp2));
-      tmp = _m_punpckhbw(b, r);
-      tmp2 = _m_punpckhbw(g, imm);
-      *o++ = _m_punpcklbw(tmp, tmp2);
-      *o++ = _m_punpckhbw(tmp, tmp2);
-
-      //exit(1);
-    }
-    if (i & 0x1) {
-      ptru += yuv->uv_width;
-      ptrv += yuv->uv_width;
-    }
-    ptry += yuv->y_width;
-  }
-  _m_empty();
-
-}
-
-#elif defined(__xxAPPLExx__)
-/*
- * TODO: implement the SIMD method above using Apple's AltiVec code;
- * for now, we'll use the vanilla implementation for Macs.
+/**
+ * vanilla implementation of YUV-to-RGB conversion.
  *
- * Also, there's probably a better preprocessor macro for detecting
- * the presence of AltiVec than __APPLE__.
+ *  - using table-lookups instead of multiplication
+ *  - avoid CLAMPing by incorporating 
+ *
  */
-
-/* Macintosh AltiVec implementation */
-void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
-}
-
-#else
 
 #define CLAMP(v)    ((v) > 255 ? 255 : (v) < 0 ? 0 : (v))
 
-/* Vanilla implementation if YUV->RGB conversion */
-void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
+#define prec 15 
+static const int CoY	= (int)(1.164 * (1 << prec) + 0.5);
+static const int CoRV	= (int)(1.596 * (1 << prec) + 0.5);
+static const int CoGU	= (int)(0.391 * (1 << prec) + 0.5);
+static const int CoGV	= (int)(0.813 * (1 << prec) + 0.5);
+static const int CoBU	= (int)(2.018 * (1 << prec) + 0.5);
 
-  unsigned char * ptry = yuv->ptry;
-  unsigned char * ptru = yuv->ptru;
-  unsigned char * ptrv = yuv->ptrv;
-  unsigned char * ptro = rgb->ptro;
-  unsigned char * ptro2;
-  int i, j;
+static int CoefsGU[256];
+static int CoefsGV[256]; 
+static int CoefsBU[256]; 
+static int CoefsRV[256];
+static int CoefsY[256];
 
-  for (i = 0; i < yuv->y_height; i++) {
-    ptro2 = ptro;
-    for (j = 0; j < yuv->y_width; j += 2) {
+/**
+ * Initialize the lookup-table for vanilla yuv to rgb conversion
+ * and the cpu_features global.
+ */
+static void
+init_yuv_converters()
+{
+	int i;
 
-      short pr, pg, pb, y;
-      short r, g, b;
+	for(i = 0; i < 256; ++i)
+	{
+		CoefsGU[i] = -CoGU * (i - 128);
+		CoefsGV[i] = -CoGV * (i - 128);
+		CoefsBU[i] = CoBU * (i - 128);
+		CoefsRV[i] = CoRV * (i - 128);
+		CoefsY[i]  = CoY * (i - 16) + (prec/2);
+	}
 
-      pr = (-56992 + ptrv[j/2] * 409) >> 8;
-      pg = (34784 - ptru[j/2] * 100 - ptrv[j/2] * 208) >> 8;
-      pb = (-70688 + ptru[j/2] * 516) >> 8;
-
-      y = 298*ptry[j] >> 8;
-      r = y + pr;
-      g = y + pg;
-      b = y + pb;
-
-      *ptro2++ = CLAMP(r);
-      *ptro2++ = CLAMP(g);
-      *ptro2++ = CLAMP(b);
-      *ptro2++ = 255;
-
-      y = 298*ptry[j + 1] >> 8;
-      r = y + pr;
-      g = y + pg;
-      b = y + pb;
-
-      *ptro2++ = CLAMP(r);
-      *ptro2++ = CLAMP(g);
-      *ptro2++ = CLAMP(b);
-      *ptro2++ = 255;
-    }
-    ptry += yuv->y_width;
-    if (i & 1) {
-      ptru += yuv->uv_width;
-      ptrv += yuv->uv_width;
-    }
-    ptro += rgb->rgb_width * 4;
-  }
+	cpu_features = oc_cpu_flags_get();
+	yuv_initialized = 1;
 }
 
-/* Vanilla implementation if YUV->ARGB conversion */
-void oggplay_yuv2argb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
+#define VANILLA_YUV2RGB_PIXEL(y, ruv, guv, buv)	\
+r = (CoefsY[y] + ruv) >> prec;	\
+g = (CoefsY[y] + guv) >> prec;	\
+b = (CoefsY[y] + buv) >> prec;	\
 
-  unsigned char * ptry = yuv->ptry;
-  unsigned char * ptru = yuv->ptru;
-  unsigned char * ptrv = yuv->ptrv;
-  unsigned char * ptro = rgb->ptro;
-  unsigned char * ptro2;
-  int i, j;
+#define VANILLA_RGBA_OUT(out, r, g, b) \
+out[0] = CLAMP(r); \
+out[1] = CLAMP(g); \
+out[2] = CLAMP(b); \
+out[3] = 255;
 
-  for (i = 0; i < yuv->y_height; i++) {
-    ptro2 = ptro;
-    for (j = 0; j < yuv->y_width; j += 2) {
+#define VANILLA_BGRA_OUT(out, r, g, b) \
+out[0] = CLAMP(b); \
+out[1] = CLAMP(g); \
+out[2] = CLAMP(r); \
+out[3] = 255;
 
-      short pr, pg, pb, y;
-      short r, g, b;
+#define VANILLA_ARGB_OUT(out, r, g, b) \
+out[0] = 255;	   \
+out[1] = CLAMP(r); \
+out[2] = CLAMP(g); \
+out[3] = CLAMP(b);
 
-      pr = (-56992 + ptrv[j/2] * 409) >> 8;
-      pg = (34784 - ptru[j/2] * 100 - ptrv[j/2] * 208) >> 8;
-      pb = (-70688 + ptru[j/2] * 516) >> 8;
+#define VANILLA_ABGR_OUT(out, r, g, b) \
+out[0] = 255;	   \
+out[1] = CLAMP(b); \
+out[2] = CLAMP(g); \
+out[3] = CLAMP(r);
 
-      y = 298*ptry[j] >> 8;
-      r = y + pr;
-      g = y + pg;
-      b = y + pb;
+/* yuv420p -> */
+#define LOOKUP_COEFFS int ruv = CoefsRV[*pv]; 			\
+		      int guv = CoefsGU[*pu] + CoefsGV[*pv]; 	\
+		      int buv = CoefsBU[*pu]; 			\
+                      int r, g, b;
 
-      *ptro2++ = 255;
-      *ptro2++ = CLAMP(r);
-      *ptro2++ = CLAMP(g);
-      *ptro2++ = CLAMP(b);
+#define CONVERT(OUTPUT_FUNC) LOOKUP_COEFFS				 \
+			     VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv);\
+			     OUTPUT_FUNC(dst, r, g, b);			 \
+			     VANILLA_YUV2RGB_PIXEL(py[1], ruv, guv, buv);\
+			     OUTPUT_FUNC((dst+4), r, g, b);
 
-      y = 298*ptry[j + 1] >> 8;
-      r = y + pr;
-      g = y + pg;
-      b = y + pb;
+#define CLEANUP
 
-      *ptro2++ = 255;
-      *ptro2++ = CLAMP(r);
-      *ptro2++ = CLAMP(g);
-      *ptro2++ = CLAMP(b);
-    }
-    ptry += yuv->y_width;
-    if (i & 1) {
-      ptru += yuv->uv_width;
-      ptrv += yuv->uv_width;
-    }
-    ptro += rgb->rgb_width * 4;
-  }
-}
+YUV_CONVERT(yuv420_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), 2, 8, 2, 1)
+YUV_CONVERT(yuv420_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), 2, 8, 2, 1)
+YUV_CONVERT(yuv420_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), 2, 8, 2, 1)
+YUV_CONVERT(yuv420_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), 2, 8, 2, 1)
 
+#undef CONVERT
+#undef CLEANUP
 
-/* Vanilla implementation of YUV->BGR conversion*/
-void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
+void
+oggplay_yuv2rgba(const OggPlayYUVChannels* yuv, OggPlayRGBChannels* rgb)
+{
+	if (!yuv_initialized)
+		init_yuv_converters();
 
-  unsigned char * ptry = yuv->ptry;
-  unsigned char * ptru = yuv->ptru;
-  unsigned char * ptrv = yuv->ptrv;
-  unsigned char * ptro = rgb->ptro;
-  unsigned char * ptro2;
-  int i, j;
-
-  for (i = 0; i < yuv->y_height; i++) {
-    ptro2 = ptro;
-    for (j = 0; j < yuv->y_width; j += 2) {
-
-      short pr, pg, pb, y;
-      short r, g, b;
-
-      pr = (-56992 + ptrv[j/2] * 409) >> 8;
-      pg = (34784 - ptru[j/2] * 100 - ptrv[j/2] * 208) >> 8;
-      pb = (-70688 + ptru[j/2] * 516) >> 8;
-
-      y = 298*ptry[j] >> 8;
-      r = y + pr;
-      g = y + pg;
-      b = y + pb;
-
-      *ptro2++ = CLAMP(b);
-      *ptro2++ = CLAMP(g);
-      *ptro2++ = CLAMP(r);
-      *ptro2++ = 255;
-
-      y = 298*ptry[j + 1] >> 8;
-      r = y + pr;
-      g = y + pg;
-      b = y + pb;
-
-      *ptro2++ = CLAMP(b);
-      *ptro2++ = CLAMP(g);
-      *ptro2++ = CLAMP(r);
-      *ptro2++ = 255;
-    }
-    ptry += yuv->y_width;
-    if (i & 1) {
-      ptru += yuv->uv_width;
-      ptrv += yuv->uv_width;
-    }
-    ptro += rgb->rgb_width * 4;
-  }
-}
-
+#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
+	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
+		return yuv420_to_rgba_sse2(yuv, rgb);
 #endif
+	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
+		return yuv420_to_rgba_mmx(yuv, rgb);
+#elif defined(__ppc__) || defined(__ppc64__)
+	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
+		return yuv420_to_abgr_vanilla(yuv, rgb);
+#endif
+
+#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
+	return yuv420_to_abgr_vanilla(yuv, rgb);
+#else
+	return yuv420_to_rgba_vanilla(yuv, rgb);
+#endif
+}
+
+void 
+oggplay_yuv2bgra(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
+{
+	if (!yuv_initialized)
+		init_yuv_converters();
+
+#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
+	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
+		return yuv420_to_bgra_sse2(yuv, rgb);
+#endif
+	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
+		return yuv420_to_bgra_mmx(yuv, rgb);
+#elif defined(__ppc__) || defined(__ppc64__)
+	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
+		return yuv420_to_argb_vanilla(yuv, rgb);
+#endif
+
+#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
+	return yuv420_to_argb_vanilla(yuv, rgb);
+#else
+	return yuv420_to_bgra_vanilla(yuv, rgb);
+#endif
+}
+
+void 
+oggplay_yuv2argb(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
+{
+	if (!yuv_initialized)
+		init_yuv_converters();
+
+#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
+	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
+		return yuv420_to_argb_sse2(yuv, rgb);
+#endif
+	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
+		return yuv420_to_argb_mmx(yuv, rgb);
+#elif defined(__ppc__) || defined(__ppc64__)
+	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
+		return yuv420_to_bgra_vanilla(yuv, rgb);
+#endif
+
+#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
+	return yuv420_to_bgra_vanilla(yuv, rgb);
+#else
+	return yuv420_to_argb_vanilla(yuv, rgb);
+#endif
+}
+

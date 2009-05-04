@@ -54,6 +54,8 @@
 #endif
 
 #ifdef MOZ_COMPOSITED_PLUGINS
+#include "nsPluginInstancePeer.h"
+
 extern "C" {
 #include <X11/extensions/Xdamage.h>
 #include <X11/extensions/Xcomposite.h>
@@ -61,13 +63,6 @@ extern "C" {
 #endif
 
 #include "gtk2xtbin.h"
-#ifdef OJI
-#include "plstr.h"
-#include "nsIPlugin.h"
-#include "nsIPluginHost.h"
-
-static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-#endif
 
 class nsPluginNativeWindowGtk2 : public nsPluginNativeWindow {
 public: 
@@ -411,6 +406,9 @@ nsresult nsPluginNativeWindowGtk2::CreateXtWindow() {
   if (!mSocketWidget)
     return NS_ERROR_FAILURE;
 
+  g_signal_connect(mSocketWidget, "destroy",
+                   G_CALLBACK(gtk_widget_destroyed), &mSocketWidget);
+
   gtk_widget_set_size_request(mSocketWidget, width, height);
 
 #ifdef NS_DEBUG
@@ -437,58 +435,6 @@ nsresult nsPluginNativeWindowGtk2::CreateXtWindow() {
 
 PRBool nsPluginNativeWindowGtk2::CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstance> &aPluginInstance)
 {
-#ifdef OJI
-  if(aPluginInstance) {
-    nsresult rv;
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-
-    rv = aPluginInstance->GetPeer(getter_AddRefs(peer));
-    if (NS_SUCCEEDED(rv) && peer) {
-      const char *aMimeType = nsnull;
-
-      peer->GetMIMEType((nsMIMEType*)&aMimeType);
-      if (aMimeType &&
-          (PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
-           PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0)) {
-        nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kPluginManagerCID, &rv);
-        if (NS_SUCCEEDED(rv) && pluginHost) {
-          nsIPlugin* pluginFactory = NULL;
-
-          rv = pluginHost->GetPluginFactory("application/x-java-vm", &pluginFactory);
-          if (NS_SUCCEEDED(rv) && pluginFactory) {
-            const char * jpiDescription = NULL;
-
-            pluginFactory->GetValue(nsPluginVariable_DescriptionString, (void*)&jpiDescription);
-            if (!jpiDescription)
-              return PR_FALSE;
-
-            /** 
-             * "Java(TM) Plug-in" is Sun's Java Plugin Trademark,
-             * so we are sure that this is Sun 's Java Plugin if 
-             * the description start with "Java(TM) Plug-in"
-             **/
-            if (PL_strncasecmp(jpiDescription, "Java(TM) Plug-in", 16) == 0) {
-              // Java Plugin support Xembed from JRE 1.5
-              if (PL_strcasecmp(jpiDescription + 17, "1.5") < 0)
-                return PR_FALSE;
-            }
-            if (PL_strncasecmp(jpiDescription, "<a href=\"http://www.blackdown.org/java-linux.html\">", 51) == 0) {
-              // Java Plugin support Xembed from JRE 1.5
-              if (PL_strcasecmp(jpiDescription + 92, "1.5") < 0)
-                return PR_FALSE;
-            }
-            if (PL_strncasecmp(jpiDescription, "IBM Java(TM) Plug-in", 20) == 0) {
-              // Java Plugin support Xembed from JRE 1.5
-              if (PL_strcasecmp(jpiDescription + 27, "1.5") < 0)
-                return PR_FALSE;
-            }
-          }
-        }
-      }
-    }
-  }
-#endif
-
   return PR_TRUE;
 }
 

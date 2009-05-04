@@ -2635,8 +2635,8 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       nsContainerFrame::PositionChildViews(frame);
     }
 
-    // Do this here (rather than along with NS_FRAME_OUTSIDE_CHILDREN
-    // handling below) so we get leaf frames as well.  No need to worry
+    // Do this here (rather than along with setting the overflow rect
+    // below) so we get leaf frames as well.  No need to worry
     // about the root span, since it doesn't have a frame.
     if (frame->HasView())
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, frame,
@@ -2647,71 +2647,11 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   }
 
   // If we just computed a spans combined area, we need to update its
-  // NS_FRAME_OUTSIDE_CHILDREN bit..
+  // overflow rect...
   if (psd->mFrame) {
     PerFrameData* spanPFD = psd->mFrame;
     nsIFrame* frame = spanPFD->mFrame;
     frame->FinishAndStoreOverflow(&combinedAreaResult, frame->GetSize());
   }
   aCombinedArea = combinedAreaResult;
-}
-
-void
-nsLineLayout::CombineTextDecorations(nsPresContext* aPresContext,
-                                     PRUint8 aDecorations,
-                                     nsIFrame* aFrame,
-                                     nsRect& aCombinedArea,
-                                     nscoord aAscentOverride,
-                                     float aUnderlineSizeRatio)
-{
-  if (!(aDecorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
-                        NS_STYLE_TEXT_DECORATION_OVERLINE |
-                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH)))
-    return;
-
-  nsCOMPtr<nsIFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
-  gfxFont* firstFont = fontGroup->GetFontAt(0);
-  if (!firstFont)
-    return; // OOM
-  const gfxFont::Metrics& metrics = firstFont->GetMetrics();
-
-  gfxFloat ascent = aAscentOverride == 0 ? metrics.maxAscent :
-                      aPresContext->AppUnitsToGfxUnits(aAscentOverride);
-  nsRect decorationArea;
-  if (aDecorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
-                      NS_STYLE_TEXT_DECORATION_OVERLINE)) {
-    gfxSize size(aPresContext->AppUnitsToGfxUnits(aCombinedArea.width),
-                 metrics.underlineSize);
-    if (aDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
-      decorationArea =
-        nsCSSRendering::GetTextDecorationRect(aPresContext, size, ascent,
-                          metrics.maxAscent, NS_STYLE_TEXT_DECORATION_OVERLINE,
-                          NS_STYLE_BORDER_STYLE_SOLID);
-      aCombinedArea.UnionRect(aCombinedArea, decorationArea);
-    }
-    if (aDecorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
-      aUnderlineSizeRatio = PR_MAX(aUnderlineSizeRatio, 1.0f);
-      size.height *= aUnderlineSizeRatio;
-      gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
-      decorationArea =
-        nsCSSRendering::GetTextDecorationRect(aPresContext, size, ascent,
-                          underlineOffset,
-                          NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                          NS_STYLE_BORDER_STYLE_SOLID);
-      aCombinedArea.UnionRect(aCombinedArea, decorationArea);
-    }
-  }
-  if (aDecorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
-    gfxSize size(aPresContext->AppUnitsToGfxUnits(aCombinedArea.width),
-                 metrics.strikeoutSize);
-    decorationArea =
-      nsCSSRendering::GetTextDecorationRect(aPresContext, size, ascent,
-                        metrics.strikeoutOffset,
-                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-                        NS_STYLE_BORDER_STYLE_SOLID);
-    aCombinedArea.UnionRect(aCombinedArea, decorationArea);
-  }
 }

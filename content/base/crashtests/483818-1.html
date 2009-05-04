@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+function appendScript(doc) {
+  var s = doc.createElement("script");
+  s.textContent = "document.write('executed'); document.close()";
+  doc.body.appendChild(s);
+}
+    </script>
+  </head>
+  <body onload="appendScript(window.document)">
+  </body>
+</html>

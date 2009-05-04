@@ -221,6 +221,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
                              PRBool aSyncLoad,
                              PRBool aAllowUnsafeRules,
                              PRBool aUseSystemPrincipal,
+                             const nsCString& aCharset,
                              nsICSSLoaderObserver* aObserver,
                              nsIPrincipal* aLoaderPrincipal)
   : mLoader(aLoader),
@@ -240,7 +241,8 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mUseSystemPrincipal(aUseSystemPrincipal),
     mOwningElement(nsnull),
     mObserver(aObserver),
-    mLoaderPrincipal(aLoaderPrincipal)
+    mLoaderPrincipal(aLoaderPrincipal),
+    mCharsetHint(aCharset)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
   NS_ADDREF(mLoader);
@@ -607,6 +609,9 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
                                   PRUint32 aDataLength,
                                   nsACString& aCharset)
 {
+  NS_PRECONDITION(!mOwningElement || mCharsetHint.IsEmpty(),
+                  "Can't have element _and_ charset hint");
+
   LOG_URI("SheetLoadData::OnDetermineCharset for '%s'", mURI);
   nsCOMPtr<nsIChannel> channel;
   nsresult result = aLoader->GetChannel(getter_AddRefs(channel));
@@ -662,6 +667,9 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
              PromiseFlatCString(aCharset).get()));
       }
 #endif
+    } else {
+      // If mCharsetHint is empty, that's ok; aCharset is known empty here
+      aCharset = mCharsetHint;
     }
   }
 
@@ -1585,7 +1593,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
     SheetLoadData* data = datasToNotify[i];
     NS_ASSERTION(data && data->mMustNotify, "How did this data get here?");
     if (data->mObserver) {
-      LOG(("  Notifying observer 0x%x for data 0x%s.  wasAlternate: %d",
+      LOG(("  Notifying observer 0x%x for data 0x%x.  wasAlternate: %d",
            data->mObserver.get(), data, data->mWasAlternate));
       data->mObserver->StyleSheetLoaded(data->mSheet, data->mWasAlternate,
                                         aStatus);
@@ -1995,30 +2003,32 @@ CSSLoaderImpl::LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
   LOG(("CSSLoaderImpl::LoadSheetSync"));
   return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules,
                                       aUseSystemPrincipal, nsnull,
-                                      aSheet, nsnull);
+                                      EmptyCString(), aSheet, nsnull);
 }
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL,
                          nsIPrincipal* aOriginPrincipal,
+                         const nsCString& aCharset,
                          nsICSSLoaderObserver* aObserver,
                          nsICSSStyleSheet** aSheet)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver, aSheet) api call"));
   NS_PRECONDITION(aSheet, "aSheet is null");
   return InternalLoadNonDocumentSheet(aURL, PR_FALSE, PR_FALSE,
-                                      aOriginPrincipal,
+                                      aOriginPrincipal, aCharset,
                                       aSheet, aObserver);
 }
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL,
                          nsIPrincipal* aOriginPrincipal,
+                         const nsCString& aCharset,
                          nsICSSLoaderObserver* aObserver)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver) api call"));
   return InternalLoadNonDocumentSheet(aURL, PR_FALSE, PR_FALSE,
-                                      aOriginPrincipal,
+                                      aOriginPrincipal, aCharset,
                                       nsnull, aObserver);
 }
 
@@ -2027,6 +2037,7 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
                                             PRBool aAllowUnsafeRules,
                                             PRBool aUseSystemPrincipal,
                                             nsIPrincipal* aOriginPrincipal,
+                                            const nsCString& aCharset,
                                             nsICSSStyleSheet** aSheet,
                                             nsICSSLoaderObserver* aObserver)
 {
@@ -2056,7 +2067,7 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
   nsCOMPtr<nsICSSStyleSheet> sheet;
   PRBool syncLoad = (aObserver == nsnull);
   
-  rv = CreateSheet(aURL, nsnull, nsnull, syncLoad, state,
+  rv = CreateSheet(aURL, nsnull, aOriginPrincipal, syncLoad, state,
                    getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2077,7 +2088,8 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
 
   SheetLoadData* data =
     new SheetLoadData(this, aURL, sheet, syncLoad, aAllowUnsafeRules,
-                      aUseSystemPrincipal, aObserver, aOriginPrincipal);
+                      aUseSystemPrincipal, aCharset, aObserver,
+                      aOriginPrincipal);
 
   if (!data) {
     sheet->SetComplete();

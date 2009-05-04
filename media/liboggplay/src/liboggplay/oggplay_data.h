@@ -59,6 +59,13 @@ oggplay_data_handle_kate_data(OggPlayKateDecode *decode,
                               const kate_event *ev);
 #endif
 
+#ifdef HAVE_TIGER
+void
+oggplay_data_update_tiger(OggPlayKateDecode *decode,
+                          int active, ogg_int64_t presentation_time,
+                          OggPlayCallbackInfo *info);
+#endif
+
 void
 oggplay_data_clean_list (OggPlayDecode *decode);
 

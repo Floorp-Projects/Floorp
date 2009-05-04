@@ -10,20 +10,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script>
   
-  var gLoadedDataCount = 0;
-  
+  var gRegisteredElements = [];
+  var gLog = false;
+  var gTestWindow;
+
   function log(msg) {
-    //document.getElementById('log').innerHTML += "<p>"+msg+"</p>";
-    //dump(msg + "\n");
+    if (gLog) {
+      document.getElementById('log').innerHTML += "<p>"+msg+"</p>";
+      dump(msg + "\n");
+    }
   }
   
-  function loadeddata() {
-    gLoadedDataCount++;
+  function register(v) {
+    gRegisteredElements.push(v);
   }
-  
+
   function loaded() {
-    is(gLoadedDataCount, 5, "onload was not delayed until after metadataloaded");
-    log("doc-loaded gLoadedDataCount = " + gLoadedDataCount);
+    log("onload fired!");
+
+    for (var i = 0; i < gRegisteredElements.length; ++i) {
+      var v = gRegisteredElements[i];
+      ok(v.readyState >= v.HAVE_CURRENT_DATA, "Video " + v.id + " is not ready before onload fired");
+    }
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    gTestWindow.close();
+
     SimpleTest.finish();
   }
   
@@ -40,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 </div>
 
 
-<video src="320x240.ogv" onloadeddata="loadeddata();"></video>
+<video src="320x240.ogv" id="v0"></video>
 
 
 <div id="log" style="font-size: small;"></div>
@@ -49,26 +61,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 
 /** Test for Bug 479711 **/
 
-var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'load', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
-
-
-
-function listener(evt) {
-  log('event ' + evt.target.id + " " + evt.type);
-}
+register(document.getElementById('v0'));
 
 function createVideo(id) {
   var v = document.createElement("video");
   v.id = id;
-  for (var i=0; i<gEventTypes.length; i++) {
-    var t = gEventTypes[i];
-    v.addEventListener(t, listener, false);
+  if (gLog) {
+    var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'load', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
+    function listener(evt) {
+      log('event ' + evt.target.id + " " + evt.type);
+    }
+
+    for (var i=0; i<gEventTypes.length; i++) {
+      var t = gEventTypes[i];
+      v.addEventListener(t, listener, false);
+    }
   }
-  v.addEventListener('loadeddata', loadeddata, false);
   v.src = "http://localhost:8888/tests/content/media/video/test/320x240.ogv";
+  register(v);
   return v;
 }
-
 
 // Load, add, then remove.
 var v1 = createVideo("v1");
@@ -90,14 +102,12 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var v4 = createVideo("v4");
 v4.load(); // load started while in this document, this doc's load will block until
             // the video's finished loading (in the other document).
-var gTestWindow = window.open("", "testWindow", "width=400,height=400");
+// Opening a new window to do this is a bit annoying, but if we use an iframe here,
+// delaying of the iframe's load event might interfere with the firing of our load event
+// in some confusing way. So it's simpler just to open another window.
+gTestWindow = window.open("", "testWindow", "width=400,height=400");
 gTestWindow.document.body.appendChild(v4);
-v4.addEventListener('load',
-  function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    gTestWindow.close();
-  }, false);
-  
+
 </script>
 </pre>
 </body>

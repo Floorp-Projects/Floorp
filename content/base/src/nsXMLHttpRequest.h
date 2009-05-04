@@ -186,7 +186,7 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext);
+  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv);
 
   PRBool HasListenersFor(const nsAString& aType)
   {

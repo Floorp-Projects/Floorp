@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.114 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.116 2009/03/04 21:57:18 nelson%bolyard.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -905,7 +905,8 @@ ssl3_VerifySignedHashes(SSL3Hashes *hash, CERTCertificate *cert,
     case dsaKey:
 	hashItem.data = hash->sha;
 	hashItem.len = sizeof(hash->sha);
-	if (isTLS) {
+	/* Allow DER encoded DSA signatures in SSL 3.0 */
+	if (isTLS || buf->len != DSA_SIGNATURE_LEN) {
 	    signature = DSAU_DecodeDerSig(buf);
 	    if (!signature) {
 	    	PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
@@ -1948,7 +1949,7 @@ spec_locked_loser:
 }
 
 /* Process the plain text before sending it.
- * Returns the number of bytes of plaintext that were succesfully sent
+ * Returns the number of bytes of plaintext that were successfully sent
  * 	plus the number of bytes of plaintext that were copied into the
  *	output (write) buffer.
  * Returns SECFailure on a hard IO error, memory error, or crypto error.

@@ -45,7 +45,7 @@
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsITimer.h"
-#include "prinrval.h"
+#include "nsTimeStamp.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gVideoDecoderLog;
@@ -61,7 +61,10 @@ class nsHTMLMediaElement;
 // called from any thread.
 class nsMediaDecoder : public nsIObserver
 {
- public:
+public:
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
+
   nsMediaDecoder();
   virtual ~nsMediaDecoder();
 
@@ -77,7 +80,7 @@ class nsMediaDecoder : public nsIObserver
   virtual void GetCurrentURI(nsIURI** aURI) = 0;
 
   // Return the principal of the current URI being played or downloaded.
-  virtual nsIPrincipal* GetCurrentPrincipal() = 0;
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
   // Return the time position in the video stream being
   // played measured in seconds.
@@ -120,7 +123,9 @@ class nsMediaDecoder : public nsIObserver
   // RGB buffer doesn't have to be exposed publically.
   // The current video frame is drawn to fill aRect.
   // Called in the main thread only.
-  virtual void Paint(gfxContext* aContext, const gfxRect& aRect);
+  virtual void Paint(gfxContext* aContext,
+                     gfxPattern::GraphicsFilter aFilter,
+                     const gfxRect& aRect);
 
   // Called when the video file has completed downloading.
   virtual void ResourceLoaded() = 0;
@@ -139,15 +144,13 @@ class nsMediaDecoder : public nsIObserver
   struct Statistics {
     // Estimate of the current playback rate (bytes/second).
     double mPlaybackRate;
-    // Estimate of the current download rate (bytes/second)
+    // Estimate of the current download rate (bytes/second). This
+    // ignores time that the channel was paused by Gecko.
     double mDownloadRate;
     // Total length of media stream in bytes; -1 if not known
     PRInt64 mTotalBytes;
-    // Current position of the download, in bytes. This position (and
-    // the other positions) should only increase unless the current
-    // playback position is explicitly changed. This may require
-    // some fudging by the decoder if operations like seeking or finding the
-    // duration require seeks in the underlying stream.
+    // Current position of the download, in bytes. This is the offset of
+    // the first uncached byte after the decoder position.
     PRInt64 mDownloadPosition;
     // Current position of decoding, in bytes (how much of the stream
     // has been consumed)
@@ -170,9 +173,6 @@ class nsMediaDecoder : public nsIObserver
   // at any time.
   virtual Statistics GetStatistics() = 0;
 
-  // Set the size of the video file in bytes.
-  virtual void SetTotalBytes(PRInt64 aBytes) = 0;
-
   // Set the duration of the media resource in units of milliseconds.
   // This is called via a channel listener if it can pick up the duration
   // from a content header. Must be called from the main thread only.
@@ -193,32 +193,20 @@ class nsMediaDecoder : public nsIObserver
   // than the result of downloaded data.
   virtual void Progress(PRBool aTimer);
 
-  // Called by nsMediaStream when a seek operation happens (could be
-  // called either before or after the seek completes). Called on the main
-  // thread. This may be called as a result of the stream opening (the
-  // offset should be zero in that case).
-  // Reads from streams after a seek MUST NOT complete before
-  // NotifyDownloadSeeked has been delivered. (We assume the reads
-  // and the seeks happen on the same calling thread.)
-  virtual void NotifyDownloadSeeked(PRInt64 aOffsetBytes) = 0;
-
-  // Called by nsChannelToPipeListener or nsMediaStream when data has
-  // been received.
-  // Call on the main thread only. aBytes of data have just been received.
-  // Reads from streams MUST NOT complete before the NotifyBytesDownloaded
-  // for those bytes has been delivered. (We assume reads and seeks
-  // happen on the same calling thread.)
-  virtual void NotifyBytesDownloaded(PRInt64 aBytes) = 0;
+  // Called by nsMediaStream when the "cache suspended" status changes.
+  // If nsMediaStream::IsSuspendedByCache returns true, then the decoder
+  // should stop buffering or otherwise waiting for download progress and
+  // start consuming data, if possible, because the cache is full.
+  virtual void NotifySuspendedStatusChanged() = 0;
+  
+  // Called by nsMediaStream when some data has been received.
+  // Call on the main thread only.
+  virtual void NotifyBytesDownloaded() = 0;
 
   // Called by nsChannelToPipeListener or nsMediaStream when the
   // download has ended. Called on the main thread only. aStatus is
   // the result from OnStopRequest.
   virtual void NotifyDownloadEnded(nsresult aStatus) = 0;
-
-  // Called by nsMediaStream when data has been read from the stream
-  // for playback.
-  // Call on any thread. aBytes of data have just been consumed.
-  virtual void NotifyBytesConsumed(PRInt64 aBytes) = 0;
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.  
@@ -238,6 +226,13 @@ class nsMediaDecoder : public nsIObserver
   // if it's available.
   nsHTMLMediaElement* GetMediaElement();
 
+  // Moves any existing channel loads into the background, so that they don't
+  // block the load event. This is called when we stop delaying the load
+  // event. Any new loads initiated (for example to seek) will also be in the
+  // background. Implementations of this must call MoveLoadsToBackground() on
+  // their nsMediaStream.
+  virtual void MoveLoadsToBackground()=0;
+
 protected:
 
   // Start timer to update download progress information.
@@ -253,70 +248,6 @@ protected:
                   PRInt32 aHeight,
                   float aFramerate,
                   unsigned char* aRGBBuffer);
-
-  /**
-   * This class is useful for estimating rates of data passing through
-   * some channel. The idea is that activity on the channel "starts"
-   * and "stops" over time. At certain times data passes through the
-   * channel (usually while the channel is active; data passing through
-   * an inactive channel is ignored). The GetRate() function computes
-   * an estimate of the "current rate" of the channel, which is some
-   * kind of average of the data passing through over the time the
-   * channel is active.
-   * 
-   * Timestamps and time durations are measured in PRIntervalTimes, but
-   * all methods take "now" as a parameter so the user of this class can
-   * define what the timeline means.
-   */
-  class ChannelStatistics {
-  public:
-    ChannelStatistics() { Reset(); }
-    void Reset() {
-      mLastStartTime = mAccumulatedTime = 0;
-      mAccumulatedBytes = 0;
-      mIsStarted = PR_FALSE;
-    }
-    void Start(PRIntervalTime aNow) {
-      if (mIsStarted)
-        return;
-      mLastStartTime = aNow;
-      mIsStarted = PR_TRUE;
-    }
-    void Stop(PRIntervalTime aNow) {
-      if (!mIsStarted)
-        return;
-      mAccumulatedTime += aNow - mLastStartTime;
-      mIsStarted = PR_FALSE;
-    }
-    void AddBytes(PRInt64 aBytes) {
-      if (!mIsStarted) {
-        // ignore this data, it may be related to seeking or some other
-        // operation we don't care about
-        return;
-      }
-      mAccumulatedBytes += aBytes;
-    }
-    double GetRateAtLastStop(PRPackedBool* aReliable) {
-      *aReliable = mAccumulatedTime >= PR_TicksPerSecond();
-      return double(mAccumulatedBytes)*PR_TicksPerSecond()/mAccumulatedTime;
-    }
-    double GetRate(PRIntervalTime aNow, PRPackedBool* aReliable) {
-      PRIntervalTime time = mAccumulatedTime;
-      if (mIsStarted) {
-        time += aNow - mLastStartTime;
-      }
-      *aReliable = time >= PR_TicksPerSecond();
-      NS_ASSERTION(time >= 0, "Time wraparound?");
-      if (time <= 0)
-        return 0.0;
-      return double(mAccumulatedBytes)*PR_TicksPerSecond()/time;
-    }
-  private:
-    PRInt64        mAccumulatedBytes;
-    PRIntervalTime mAccumulatedTime;
-    PRIntervalTime mLastStartTime;
-    PRPackedBool   mIsStarted;
-  };
 
 protected:
   // Timer used for updating progress events 
@@ -337,17 +268,14 @@ protected:
 
   // Time that the last progress event was fired. Read/Write from the
   // main thread only.
-  PRIntervalTime mProgressTime;
+  TimeStamp mProgressTime;
 
   // Time that data was last read from the media resource. Used for
   // computing if the download has stalled and to rate limit progress events
-  // when data is arriving slower than PROGRESS_MS. A value of 0 indicates
+  // when data is arriving slower than PROGRESS_MS. A value of null indicates
   // that a stall event has already fired and not to fire another one until
   // more data is received. Read/Write from the main thread only.
-  PRIntervalTime mDataTime;
-
-  // Has our size changed since the last repaint?
-  PRPackedBool mSizeChanged;
+  TimeStamp mDataTime;
 
   // Lock around the video RGB, width and size data. This
   // is used in the decoder backend threads and the main thread
@@ -363,6 +291,9 @@ protected:
   // Framerate of video being displayed in the element
   // expressed in numbers of frames per second.
   float mFramerate;
+
+  // Has our size changed since the last repaint?
+  PRPackedBool mSizeChanged;
 
   // True if the decoder is being shutdown. At this point all events that
   // are currently queued need to return immediately to prevent javascript

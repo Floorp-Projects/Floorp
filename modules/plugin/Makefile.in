@@ -66,9 +66,6 @@ endif
 
 ifeq ($(OS_ARCH),OS2)
 TOOL_DIRS += default/os2
-ifdef MOZ_OJI
-TOOL_DIRS += os2wrapper
-endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -76,7 +73,7 @@ TOOL_DIRS += default/mac
 endif
 
 ifdef ENABLE_TESTS
-ifneq (,$(filter WINNT Darwin Linux OS2,$(OS_ARCH)))
+ifneq (,$(filter WINNT Darwin Linux OS2 SunOS,$(OS_ARCH)))
 DIRS += test
 TOOL_DIRS += sdk
 endif

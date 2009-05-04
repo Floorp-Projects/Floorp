@@ -59,17 +59,17 @@ def readManifest(manifest):
     pass # just eat exceptions
   return testdirs
 
-def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
-             manifest=None, interactive=False, keepGoing=False):
+def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
+             manifest=None, interactive=False):
   """Run the tests in |testdirs| using the |xpcshell| executable.
+
   |xrePath|, if provided, is the path to the XRE to use.
-  |testFile|, if provided, indicates a single test to run.
-  |manifeest|, if provided, is a file containing a list of
+  |testPath|, if provided, indicates a single path and/or test to run.
+  |manifest|, if provided, is a file containing a list of
     test directories to run.
   |interactive|, if set to True, indicates to provide an xpcshell prompt
     instead of automatically executing  the test.
-  |keepGoing|, if set to True, indicates that if a test fails
-    execution should continue."""
+  """
 
   if not testdirs and not manifest:
     # nothing to test!
@@ -94,18 +94,18 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
     """Process the leak log."""
     # For the time being, don't warn (nor "info") if the log file is not there. (Bug 469523)
     if not os.path.exists(leakLogFile):
-      return
+      return None
 
     leaks = open(leakLogFile, "r")
     leakReport = leaks.read()
     leaks.close()
 
     # Only check whether an actual leak was reported.
-    if not "0 TOTAL " in leakReport:
-      return
+    if "0 TOTAL " in leakReport:
+      # For the time being, simply copy the log. (Bug 469523)
+      print leakReport.rstrip("\n")
 
-    # For the time being, simply copy the log. (Bug 469523)
-    print leakReport.rstrip("\n")
+    return leakReport
 
   if xrePath is None:
     xrePath = os.path.dirname(xpcshell)
@@ -125,15 +125,26 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
   if not interactive:
     tailfiles += ['-e', '_execute_test();']
 
-  # when --test is specified, it can either be just a filename or
-  # testdir/filename. This is for convenience when there's only one
-  # test dir.
-  singleDir = None
-  if testFile and testFile.find('/') != -1:
-    # directory was specified
-    bits = testFile.split('/', 1)
-    singleDir = bits[0]
-    testFile = bits[1]
+  # |testPath| will be the optional path only, or |None|.
+  # |singleFile| will be the optional test only, or |None|.
+  singleFile = None
+  if testPath:
+    if testPath.endswith('.js'):
+      # Split into path and file.
+      if testPath.find('/') == -1:
+        # Test only.
+        singleFile = testPath
+        testPath = None
+      else:
+        # Both path and test.
+        # Reuse |testPath| temporarily.
+        testPath = testPath.rsplit('/', 1)
+        singleFile = testPath[1]
+        testPath = testPath[0]
+    else:
+      # Path only.
+      # Simply remove optional ending separator.
+      testPath = testPath.rstrip("/")
 
   if manifest is not None:
     testdirs = readManifest(os.path.abspath(manifest))
@@ -141,8 +152,9 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
   # Process each test directory individually.
   success = True
   for testdir in testdirs:
-    if singleDir and singleDir != os.path.basename(testdir):
+    if testPath and not testdir.endswith(testPath):
       continue
+
     testdir = os.path.abspath(testdir)
 
     # get the list of head and tail files from the directory
@@ -157,9 +169,9 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
 
     # if a single test file was specified, we only want to execute that test
     testfiles = sorted(glob(os.path.join(testdir, "test_*.js")))
-    if testFile:
-      if testFile in [os.path.basename(x) for x in testfiles]:
-        testfiles = [os.path.join(testdir, testFile)]
+    if singleFile:
+      if singleFile in [os.path.basename(x) for x in testfiles]:
+        testfiles = [os.path.join(testdir, singleFile)]
       else: # not in this dir? skip it
         continue
 
@@ -185,20 +197,29 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
         return True
 
       if proc.returncode != 0 or stdout.find("*** PASS") == -1:
-        print """TEST-UNEXPECTED-FAIL | %s | test failed, see following log:
+        print """TEST-UNEXPECTED-FAIL | %s | test failed (with xpcshell return code: %d), see following log:
   >>>>>>>
   %s
-  <<<<<<<""" % (test, stdout)
+  <<<<<<<""" % (test, proc.returncode, stdout)
         success = False
       else:
         print "TEST-PASS | %s | all tests passed" % test
-      processLeakLog(leakLogFile)
+
+      leakReport = processLeakLog(leakLogFile)
+
+      try:
+        f = open(test + '.log', 'w')
+        f.write(stdout)
+        if leakReport:
+          f.write(leakReport)
+      finally:
+        if f:
+          f.close()
+
       # Remove the leak detection file (here) so it can't "leak" to the next test.
       # The file is not there if leak logging was not enabled in the xpcshell build.
       if os.path.exists(leakLogFile):
         os.remove(leakLogFile)
-      if not (success or keepGoing):
-        return False
 
   return success
 
@@ -208,15 +229,12 @@ def main():
   parser.add_option("--xre-path",
                     action="store", type="string", dest="xrePath", default=None,
                     help="absolute path to directory containing XRE (probably xulrunner)")
-  parser.add_option("--test",
-                    action="store", type="string", dest="testFile",
-                    default=None, help="single test filename to test")
+  parser.add_option("--test-path",
+                    action="store", type="string", dest="testPath",
+                    default=None, help="single path and/or test filename to test")
   parser.add_option("--interactive",
                     action="store_true", dest="interactive", default=False,
                     help="don't automatically run tests, drop to an xpcshell prompt")
-  parser.add_option("--keep-going",
-                    action="store_true", dest="keepGoing", default=False,
-                    help="continue running tests past the first failure")
   parser.add_option("--manifest",
                     action="store", type="string", dest="manifest",
                     default=None, help="Manifest of test directories to use")
@@ -229,15 +247,14 @@ def main():
                                                            sys.argv[0])
     sys.exit(1)
 
-  if options.interactive and not options.testFile:
+  if options.interactive and not options.testPath:
     print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
     sys.exit(1)
 
   if not runTests(args[0], testdirs=args[1:],
                   xrePath=options.xrePath,
-                  testFile=options.testFile,
+                  testPath=options.testPath,
                   interactive=options.interactive,
-                  keepGoing=options.keepGoing,
                   manifest=options.manifest):
     sys.exit(1)
 

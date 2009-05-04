@@ -50,12 +50,6 @@ var tests = [];
  * UTILITY FUNCTIONS *
  *********************/
 
-function isException(e, code)
-{
-  if (e !== code && e.result !== code)
-    do_throw("unexpected error: " + e);
-}
-
 function bytesToString(bytes)
 {
   return bytes.map(function(v) { return String.fromCharCode(v); }).join("");
@@ -159,8 +153,8 @@ function setupTests(throwing)
   tests.push(test);
 
   // NB: No remaining state in the server right now!  If we have any here,
-  //     either the second run of tests (without ?throw) or the two tests
-  //     added after the two sets will almost certainly fail.
+  //     either the second run of tests (without ?throw) or the tests added
+  //     after the two sets will almost certainly fail.
 }
 
 
@@ -191,6 +185,53 @@ function checkNotSJS(ch, cx, status, data)
 test = new Test(BASE + "/sjs", init, null, checkNotSJS);
 tests.push(test);
 
+// Test that Range requests are passed through to the SJS file without
+// bounds checking.
+
+function rangeInit(expectedRangeHeader)
+{
+  return function setupRangeRequest(ch)
+  {
+    ch.setRequestHeader("Range", expectedRangeHeader, false);
+  };
+}
+
+function checkRangeResult(ch, cx)
+{
+  try
+  {
+    var val = ch.getResponseHeader("Content-Range");
+  }
+  catch (e) { /* IDL doesn't specify a particular exception to require */ }
+  if (val !== undefined)
+  {
+    do_throw("should not have gotten a Content-Range header, but got one " +
+             "with this value: " + val);
+  }
+  do_check_eq(200, ch.responseStatus);
+  do_check_eq("OK", ch.responseStatusText);
+}
+
+test = new Test(BASE + "/range-checker.sjs",
+                rangeInit("not-a-bytes-equals-specifier"),
+                checkRangeResult, null);
+tests.push(test);
+test = new Test(BASE + "/range-checker.sjs",
+                rangeInit("bytes=-"),
+                checkRangeResult, null);
+tests.push(test);
+test = new Test(BASE + "/range-checker.sjs",
+                rangeInit("bytes=1000000-"),
+                checkRangeResult, null);
+tests.push(test);
+test = new Test(BASE + "/range-checker.sjs",
+                rangeInit("bytes=1-4"),
+                checkRangeResult, null);
+tests.push(test);
+test = new Test(BASE + "/range-checker.sjs",
+                rangeInit("bytes=-4"),
+                checkRangeResult, null);
+tests.push(test);
 
 // One last test: for file mappings, the content-type is determined by the
 // extension of the file on the server, not by the extension of the requested
@@ -241,5 +282,5 @@ function run_test()
   //     test that doesn't care about throwing or not.
 
   srv.start(4444);
-  runHttpTests(tests, function() { srv.stop(); });
+  runHttpTests(tests, testComplete(srv));
 }

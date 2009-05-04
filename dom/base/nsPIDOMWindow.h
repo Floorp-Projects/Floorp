@@ -439,7 +439,7 @@ protected:
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
 
   // These members are only used on outer windows.
-  nsIDOMElement *mFrameElement; // weak
+  nsCOMPtr<nsIDOMElement> mFrameElement;
   nsIDocShell           *mDocShell;  // Weak Reference
 
   PRUint32               mModalStateDepth;

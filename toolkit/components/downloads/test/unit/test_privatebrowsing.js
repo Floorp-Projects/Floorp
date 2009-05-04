@@ -116,7 +116,6 @@ function run_test() {
   do_test_pending();
   let httpserv = new nsHttpServer();
   httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
-  httpserv.start(4444);
 
   let tmpDir = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties).
@@ -140,7 +139,7 @@ function run_test() {
           if (aDownload.targetFile.exists())
             aDownload.targetFile.remove(false);
           dm.removeListener(this);
-          do_throw("Download failed (name: " + aDownload.name + ", state: " + aDownload.state + ")");
+          do_throw("Download failed (name: " + aDownload.displayName + ", state: " + aDownload.state + ")");
           do_test_finished();
           break;
 
@@ -242,6 +241,7 @@ function run_test() {
             fileB, downloadBName));
 
           // Create Download-C
+          httpserv.start(4444);
           dlC = addDownload({
             targetFile: fileC,
             sourceURI: downloadCSource,
@@ -280,8 +280,7 @@ function run_test() {
           // cleanup
           prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
           dm.removeListener(this);
-          httpserv.stop();
-          do_test_finished();
+          httpserv.stop(do_test_finished);
         }
         break;
 

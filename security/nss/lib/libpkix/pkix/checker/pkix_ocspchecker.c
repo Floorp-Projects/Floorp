@@ -251,7 +251,7 @@ pkix_OcspChecker_CheckExternal(
         PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
         void *nbioContext = NULL;
 
-        PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_Check");
+        PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_CheckExternal");
 
         PKIX_CHECK(
             pkix_CheckType((PKIX_PL_Object*)checkerObject,

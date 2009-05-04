@@ -39,10 +39,10 @@
 #define nsICanvasElement_h___
 
 #include "nsISupports.h"
-#include "nsRect.h"
 
 class gfxContext;
 class nsIFrame;
+struct gfxRect;
 
 // {C234660C-BD06-493e-8583-939A5A158B37}
 #define NS_ICANVASELEMENT_IID \
@@ -91,9 +91,9 @@ public:
 
   /*
    * Ask the canvas frame to invalidate a portion of the frame; damageRect
-   * is relative to the origin of the canvas frame.
+   * is relative to the origin of the canvas frame in CSS pixels.
    */
-  NS_IMETHOD InvalidateFrameSubrect (const nsRect& damageRect) = 0;
+  NS_IMETHOD InvalidateFrameSubrect (const gfxRect& damageRect) = 0;
 
   /*
    * Get the number of contexts in this canvas, and request a context at

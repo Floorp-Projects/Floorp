@@ -111,7 +111,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     kidReflowState.mStylePadding->GetPadding(padding);
 
     // First check the combined area
-    if (NS_FRAME_OUTSIDE_CHILDREN & frame->GetStateBits()) {
+    if (frame->HasOverflowRect()) {
       // The background covers the content area and padding area, so check
       // for children sticking outside the child frame's padding edge
       if (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) {

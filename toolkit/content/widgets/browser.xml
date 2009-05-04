@@ -702,6 +702,9 @@
           
           this._fastFind = null;
           this._webBrowserFind = null;
+          
+          // The feeds cache can keep the document inside this browser alive.
+          this.feeds = null;
 
           this.removeEventListener("pageshow", this.onPageShow, true);
           this.removeEventListener("pagehide", this.onPageHide, true);
@@ -966,9 +969,13 @@
         <parameter name="aOtherBrowser"/>
         <body>
         <![CDATA[
-          // We need to swap fields that are tied to our docshell or related to the loaded page
-          var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation",
-                               "mIconURL" ];
+          // We need to swap fields that are tied to our docshell or related to
+          // the loaded page
+          // Fields which are built as a result of notifactions (pageshow/hide,
+          // DOMLinkAdded/Removed, onStateChange) should not be swapped here,
+          // because these notifications are dispatched again once the docshells
+          // are swapped.
+          var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation"];
 
           var ourTabBrowser = this.getTabBrowser();
 

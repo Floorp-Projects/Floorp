@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.22 2009/02/03 05:34:43 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: softoken.h,v 1.23 2009/02/26 06:57:15 nelson%bolyard.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -326,7 +326,7 @@ extern PRBool usePthread_atfork;
 extern pid_t myPid;
 extern PRBool forked;
 
-#define PARENT_FORKED() usePthread_atfork ? forked : (myPid && myPid != getpid())
+#define PARENT_FORKED() (usePthread_atfork ? forked : (myPid && myPid != getpid()))
 
 #elif defined(CHECK_FORK_PTHREAD)
 
@@ -339,15 +339,16 @@ extern PRBool forked;
 #include <unistd.h>
 extern pid_t myPid;
 
-#define PARENT_FORKED() myPid && myPid != getpid()
+#define PARENT_FORKED() (myPid && myPid != getpid())
     
 #endif
 
 extern PRBool parentForkedAfterC_Initialize;
+extern PRBool sftkForkCheckDisabled;
 
 #define CHECK_FORK() \
     do { \
-        if (PARENT_FORKED()) { \
+        if (!sftkForkCheckDisabled && PARENT_FORKED()) { \
             FORK_ASSERT(); \
             return CKR_DEVICE_ERROR; \
         } \
@@ -355,12 +356,22 @@ extern PRBool parentForkedAfterC_Initialize;
 
 #define SKIP_AFTER_FORK(x) if (!parentForkedAfterC_Initialize) x
 
+#define ENABLE_FORK_CHECK() \
+    { \
+        char* doForkCheck = getenv("NSS_STRICT_NOFORK"); \
+        if ( doForkCheck && !strcmp(doForkCheck, "DISABLED") ) { \
+            sftkForkCheckDisabled = PR_TRUE; \
+        } \
+    }
+
+
 #else
 
 /* non-Unix platforms, or fork check disabled */
 
 #define CHECK_FORK()
 #define SKIP_AFTER_FORK(x) x
+#define ENABLE_FORK_CHECK()
 
 #ifndef NO_FORK_CHECK
 #define NO_FORK_CHECK

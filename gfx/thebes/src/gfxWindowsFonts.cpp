@@ -64,6 +64,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIStreamBufferAccess.h"
 
 #include "nsCRT.h"
 
@@ -147,7 +148,7 @@ struct DCFromContext {
 static nsresult
 ReadCMAP(HDC hdc, FontEntry *aFontEntry)
 {
-    const PRUint32 kCMAP = (('c') | ('m' << 8) | ('a' << 16) | ('p' << 24));
+    const PRUint32 kCMAP = NS_SWAP32(TRUETYPE_TAG('c','m','a','p'));
 
     DWORD len = GetFontData(hdc, kCMAP, 0, nsnull, 0);
     if (len == GDI_ERROR || len == 0) // not a truetype font --
@@ -494,9 +495,9 @@ public:
 
 /* static */
 FontEntry* 
-FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, 
-                           nsISupports *aLoader,const PRUint8 *aFontData, 
-                           PRUint32 aLength) {
+FontEntry::LoadFont(const gfxProxyFontEntry &aProxyEntry, 
+                    nsISupports *aLoader,const PRUint8 *aFontData, 
+                    PRUint32 aLength) {
     // if calls aren't available, bail
     if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
         return nsnull;
@@ -579,13 +580,45 @@ FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
         PRUint32(aProxyEntry.mItalic ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL), 
         w, winUserFontData);
 
-    if (fe && isCFF)
+    if (!fe)
+        return fe;
+
+    fe->mUserFont = PR_TRUE;
+    if (isCFF)
         fe->mForceGDI = PR_TRUE;
+ 
     return fe;
 }
 
+class AutoReleaseDC {
+public:
+    AutoReleaseDC(HDC hdc) : mDC(hdc) {
+        SetGraphicsMode(hdc, GM_ADVANCED);
+    }
+    ~AutoReleaseDC() { ReleaseDC(nsnull, mDC); }
+    HDC mDC;
+};
+
+class AutoPushPopFont {
+public:
+    AutoPushPopFont(HDC hdc, HFONT aFont) : mDC(hdc), mFont(aFont) {
+        mOldFont = (HFONT)SelectObject(mDC, mFont);
+    }
+    ~AutoPushPopFont() { 
+        SelectObject(mDC, mOldFont);
+        DeleteObject(mFont); 
+    }
+    HDC   mDC;
+    HFONT mFont;
+    HFONT mOldFont;
+};
+
+/* static */
 FontEntry* 
-FontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType, PRBool aItalic, PRUint16 aWeight, gfxUserFontData* aUserFontData, HDC hdc, LOGFONTW *aLogFont)
+FontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType, 
+                           PRBool aItalic, PRUint16 aWeight, 
+                           gfxUserFontData* aUserFontData, 
+                           HDC hdc, LOGFONTW *aLogFont)
 {
     LOGFONTW logFont;
     PRBool needRelease = PR_FALSE;
@@ -594,19 +627,11 @@ FontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType,
 
     FontEntry *fe;
 
-    fe = new FontEntry(aName);
-    fe->mFontType = aFontType;
-    fe->mUserFontData = aUserFontData;
-
-    fe->mItalic = aItalic;
-    fe->mWeight = aWeight;
-
-    if (fe->IsType1())
-        fe->mForceGDI = PR_TRUE;
+    fe = new FontEntry(aName, aFontType, aItalic, aWeight, aUserFontData);
 
     if (!aLogFont) {
         aLogFont = &logFont;
-        FontEntry::FillLogFont(aLogFont, fe, 0, aItalic);
+        FontEntry::FillLogFont(aLogFont, aName, aFontType, aItalic, aWeight, 0);
     }
 
     if (!hdc) {
@@ -614,11 +639,11 @@ FontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType,
         SetGraphicsMode(hdc, GM_ADVANCED);
         needRelease = PR_TRUE;
     }
-
+    
     HFONT font = CreateFontIndirectW(aLogFont);
 
     if (font) {
-        HFONT oldFont = (HFONT)SelectObject(hdc, font);
+        AutoPushPopFont fontCleanup(hdc, font);
 
         // ReadCMAP may change the values of mUnicodeFont and mSymbolFont
         if (NS_FAILED(::ReadCMAP(hdc, fe))) {
@@ -634,9 +659,6 @@ FontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType,
             fe->mUnknownCMAP = PR_TRUE;
 
         } 
-
-        SelectObject(hdc, oldFont);
-        DeleteObject(font);
     }
 
     if (needRelease)
@@ -645,9 +667,82 @@ FontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType,
     return fe;
 }
 
+/* static */
+FontEntry* 
+FontEntry::LoadLocalFont(const gfxProxyFontEntry &aProxyEntry,
+                         const nsAString& aFullname)
+{
+    // lookup name with CreateFontIndirect
+    HDC hdc = GetDC(nsnull);
+    AutoReleaseDC dcCleanup(hdc);
+    SetGraphicsMode(hdc, GM_ADVANCED);
+
+    LOGFONTW logFont;
+    memset(&logFont, 0, sizeof(LOGFONTW));
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    PRUint32 namelen = PR_MIN(aFullname.Length(), LF_FACESIZE - 1);
+    memcpy(logFont.lfFaceName,
+           nsPromiseFlatString(aFullname).get(),
+           namelen * sizeof(PRUnichar));
+    logFont.lfFaceName[namelen] = 0;
+
+    HFONT font = CreateFontIndirectW(&logFont);
+    if (!font)
+        return nsnull;
+    
+    // fetch fullname from name table (Windows takes swapped tag order)
+    const PRUint32 kNameTag = NS_SWAP32(TRUETYPE_TAG('n','a','m','e'));
+    nsAutoString fullName;
+
+    {
+        AutoPushPopFont fontCleanup(hdc, font);
+    
+        DWORD len = GetFontData(hdc, kNameTag, 0, nsnull, 0);
+        if (len == GDI_ERROR || len == 0) // not a truetype font --
+            return nsnull;                // so just ignore
+    
+        nsAutoTArray<PRUint8,1024> nameData;
+        if (!nameData.AppendElements(len))
+            return nsnull;
+        PRUint8 *nameTable = nameData.Elements();
+    
+        DWORD newLen = GetFontData(hdc, kNameTag, 0, nameTable, len);
+        if (newLen != len)
+            return nsnull;
+    
+        nsresult rv;
+        
+        rv = gfxFontUtils::ReadCanonicalName(nameData, 
+                                             gfxFontUtils::NAME_ID_FULL,
+                                             fullName);
+        if (NS_FAILED(rv))
+            return nsnull;
+    }
+
+    // reject if different from canonical fullname
+    if (!aFullname.Equals(fullName))
+        return nsnull;
+
+    // create a new font entry
+    PRUint16 w = (aProxyEntry.mWeight == 0 ? 400 : aProxyEntry.mWeight);
+    PRBool isCFF = PR_FALSE; // jtdfix -- need to determine this
+    
+    FontEntry *fe = FontEntry::CreateFontEntry(aFullname, 
+        gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
+        PRUint32(aProxyEntry.mItalic ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL), 
+        w, nsnull);
+        
+    if (!fe)
+        return fe;
+
+    fe->mUserFont = PR_TRUE;
+    return fe;
+}
 
 void
-FontEntry::FillLogFont(LOGFONTW *aLogFont, FontEntry *aFontEntry, gfxFloat aSize, PRBool aItalic)
+FontEntry::FillLogFont(LOGFONTW *aLogFont, const nsAString& aName,
+                       gfxWindowsFontType aFontType, PRBool aItalic,
+                       PRUint16 aWeight, gfxFloat aSize)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
     
@@ -663,7 +758,7 @@ FontEntry::FillLogFont(LOGFONTW *aLogFont, FontEntry *aFontEntry, gfxFloat aSize
     aLogFont->lfUnderline      = FALSE;
     aLogFont->lfStrikeOut      = FALSE;
     aLogFont->lfCharSet        = DEFAULT_CHARSET;
-    aLogFont->lfOutPrecision   = FontTypeToOutPrecision(aFontEntry->mFontType);
+    aLogFont->lfOutPrecision   = FontTypeToOutPrecision(aFontType);
     aLogFont->lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
     aLogFont->lfQuality        = DEFAULT_QUALITY;
     aLogFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
@@ -672,10 +767,10 @@ FontEntry::FillLogFont(LOGFONTW *aLogFont, FontEntry *aFontEntry, gfxFloat aSize
     // it may give us a regular one based on weight.  Windows should
     // do fake italic for us in that case.
     aLogFont->lfItalic         = aItalic;
-    aLogFont->lfWeight         = aFontEntry->mWeight;
+    aLogFont->lfWeight         = aWeight;
 
-    int len = PR_MIN(aFontEntry->Name().Length(), LF_FACESIZE - 1);
-    memcpy(aLogFont->lfFaceName, nsPromiseFlatString(aFontEntry->Name()).get(), len * 2);
+    int len = PR_MIN(aName.Length(), LF_FACESIZE - 1);
+    memcpy(aLogFont->lfFaceName, nsPromiseFlatString(aName).get(), len * 2);
     aLogFont->lfFaceName[len] = '\0';
 }
 
@@ -961,7 +1056,23 @@ gfxWindowsFont::ComputeMetrics()
 void
 gfxWindowsFont::FillLogFont(gfxFloat aSize)
 {
-    FontEntry::FillLogFont(&mLogFont, GetFontEntry(), aSize, (GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
+    FontEntry *fe = GetFontEntry();
+    PRBool isItalic;
+
+    isItalic = (GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE));
+    PRUint16 weight = fe->Weight();
+
+    // if user font, disable italics/bold if defined to be italics/bold face
+    // this avoids unwanted synthetic italics/bold
+    if (fe->mUserFont) {
+        if (fe->IsItalic())
+            isItalic = PR_FALSE; // avoid synthetic italic
+        if (fe->IsBold())
+            weight = 400; // avoid synthetic bold
+    }
+
+    FontEntry::FillLogFont(&mLogFont, fe->Name(),  fe->mFontType, isItalic, 
+                           weight, aSize);
 }
 
 
@@ -1296,6 +1407,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     // XXX comment out the assertion for now since it fires too much
     //    NS_ASSERTION(!(mFlags & TEXT_NEED_BOUNDING_BOX),
     //                 "Glyph extents not yet supported");
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
 
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
@@ -1324,6 +1436,7 @@ gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                  const Parameters *aParams, PRUint32 aFlags)
 {
+    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
  
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);

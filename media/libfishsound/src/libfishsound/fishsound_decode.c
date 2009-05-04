@@ -58,7 +58,7 @@ int fish_sound_set_decoded_float (FishSound * fsound,
 {
   int ret = 0;
 
-  if (fsound == NULL) return -1;
+  if (fsound == NULL) return FISH_SOUND_ERR_BAD;
 
 #if FS_DECODE
   ret = fs_decode_update (fsound, 0);
@@ -80,7 +80,7 @@ int fish_sound_set_decoded_float_ilv (FishSound * fsound,
 {
   int ret = 0;
 
-  if (fsound == NULL) return -1;
+  if (fsound == NULL) return FISH_SOUND_ERR_BAD;
 
 #if FS_DECODE
   ret = fs_decode_update (fsound, 1);
@@ -101,7 +101,7 @@ fish_sound_decode (FishSound * fsound, unsigned char * buf, long bytes)
 {
   int format;
 
-  if (fsound == NULL) return -1;
+  if (fsound == NULL) return FISH_SOUND_ERR_BAD;
 
 #if FS_DECODE
   if (fsound->info.format == FISH_SOUND_UNKNOWN) {

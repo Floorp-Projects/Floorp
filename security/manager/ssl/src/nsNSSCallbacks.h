@@ -53,6 +53,9 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc *fd, void *client_data);
 SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
                                               PRBool checksig, PRBool isServer);
 
+SECStatus RegisterMyOCSPAIAInfoCallback();
+SECStatus UnregisterMyOCSPAIAInfoCallback();
+
 class nsHTTPListener : public nsIStreamLoaderObserver
 {
 private:

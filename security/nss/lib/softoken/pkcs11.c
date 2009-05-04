@@ -67,10 +67,14 @@
 #include "secoid.h"
 #include "sftkdb.h"
 #include "sftkpars.h"
+#include "ec.h"
+#include "secasn1.h"
 
 PRBool parentForkedAfterC_Initialize;
 
 #ifndef NO_FORK_CHECK
+
+PRBool sftkForkCheckDisabled;
 
 #if defined(CHECK_FORK_PTHREAD) || defined(CHECK_FORK_MIXED)
 PRBool forked = PR_FALSE;
@@ -591,7 +595,7 @@ sftk_hasNullPassword(SFTKSlot *slot, SFTKDBHandle *keydb)
 	PRBool tokenRemoved = PR_FALSE;
     	SECStatus rv = sftkdb_CheckPassword(keydb, "", &tokenRemoved);
 	if (tokenRemoved) {
-	    sftk_CloseAllSessions(slot);
+	    sftk_CloseAllSessions(slot, PR_FALSE);
 	}
 	return (rv  == SECSuccess);
     }
@@ -849,7 +853,6 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
     CK_BBOOL wrap = CK_TRUE;
     CK_BBOOL derive = CK_FALSE;
     CK_BBOOL verify = CK_TRUE;
-    CK_ATTRIBUTE_TYPE pubKeyAttr = CKA_VALUE;
     CK_RV crv;
 
     switch (key_type) {
@@ -863,7 +866,6 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
 	if (crv != CKR_OK) {
 	    return crv;
 	}
-	pubKeyAttr = CKA_MODULUS;
 	break;
     case CKK_DSA:
 	crv = sftk_ConstrainAttribute(object, CKA_SUBPRIME, 
@@ -916,7 +918,6 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
 	if ( !sftk_hasAttribute(object, CKA_EC_POINT)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
-	pubKeyAttr = CKA_EC_POINT;
 	derive = CK_TRUE;    /* for ECDH */
 	verify = CK_TRUE;    /* for ECDSA */
 	encrypt = CK_FALSE;
@@ -1256,7 +1257,6 @@ sftk_handleKeyObject(SFTKSession *session, SFTKObject *object)
 {
     SFTKAttribute *attribute;
     CK_KEY_TYPE key_type;
-    CK_BBOOL cktrue = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
     CK_RV crv;
 
@@ -1634,6 +1634,46 @@ NSSLOWKEYPublicKey *sftk_GetPubKey(SFTKObject *object,CK_KEY_TYPE key_type,
 	    
 	crv = sftk_Attribute2SSecItem(arena,&pubKey->u.ec.publicValue,
 	                              object,CKA_EC_POINT);
+	if (crv == CKR_OK) {
+	    int keyLen,curveLen;
+
+	    curveLen = (pubKey->u.ec.ecParams.fieldID.size +7)/8;
+	    keyLen = (2*curveLen)+1;
+
+	    /* special note: We can't just use the first byte to determine
+	     * between these 2 cases because both EC_POINT_FORM_UNCOMPRESSED 
+	     * and SEC_ASN1_OCTET_STRING are 0x04 */
+
+	    /* handle the non-DER encoded case (UNCOMPRESSED only) */	
+	    if (pubKey->u.ec.publicValue.data[0] == EC_POINT_FORM_UNCOMPRESSED
+		&& pubKey->u.ec.publicValue.len == keyLen) {
+		break; /* key was not DER encoded, no need to unwrap */
+	    }
+
+	    /* if we ever support compressed, handle it here */
+
+	    /* handle the encoded case */
+	    if ((pubKey->u.ec.publicValue.data[0] == SEC_ASN1_OCTET_STRING) 
+		&& pubKey->u.ec.publicValue.len > keyLen) {
+		SECItem publicValue;
+		SECStatus rv;
+
+		rv = SEC_QuickDERDecodeItem(arena, &publicValue, 
+					 SEC_ASN1_GET(SEC_OctetStringTemplate), 
+					 &pubKey->u.ec.publicValue);
+		/* nope, didn't decode correctly */
+		if ((rv != SECSuccess)
+		    || (publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED)
+		    || (publicValue.len != keyLen)) {
+	   	    crv = CKR_ATTRIBUTE_VALUE_INVALID;
+		    break;
+		}
+		/* replace our previous with the decoded key */
+		pubKey->u.ec.publicValue = publicValue;
+		break;
+	    }
+	   crv = CKR_ATTRIBUTE_VALUE_INVALID;
+	}
 	break;
 #endif /* NSS_ENABLE_ECC */
     default:
@@ -2111,7 +2151,9 @@ SFTK_SlotReInit(SFTKSlot *slot, char *configdir, char *updatedir,
 		params->updCertPrefix, params->updKeyPrefix,
 		params->updateID  ? params->updateID : updateID, 
 		params->readOnly, params->noCertDB, params->noKeyDB,
-		params->forceOpen, &certHandle, &keyHandle);
+		params->forceOpen, 
+		moduleIndex == NSC_FIPS_MODULE,
+		&certHandle, &keyHandle);
 	if (crv != CKR_OK) {
 	    goto loser;
 	}
@@ -2234,22 +2276,30 @@ loser:
 }
 
 
-CK_RV sftk_CloseAllSessions(SFTKSlot *slot)
+CK_RV sftk_CloseAllSessions(SFTKSlot *slot, PRBool logout)
 {
     SFTKSession *session;
     unsigned int i;
     SFTKDBHandle *handle;
 
     /* first log out the card */
-    handle = sftk_getKeyDB(slot);
-    SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
-    slot->isLoggedIn = PR_FALSE;
-    if (handle) {
-	sftkdb_ClearPassword(handle);
-    }
-    SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
-    if (handle) {
-        sftk_freeDB(handle);
+    /* special case - if we are in a middle of upgrade, we want to close the
+     * sessions to fake a token removal to tell the upper level code we have
+     * switched from one database to another, but we don't want to 
+     * explicity logout in case we can continue the upgrade with the 
+      * existing password if possible.
+     */
+    if (logout) {
+	handle = sftk_getKeyDB(slot);
+	SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
+	slot->isLoggedIn = PR_FALSE;
+	if (handle) {
+	    sftkdb_ClearPassword(handle);
+	}
+	SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
+	if (handle) {
+            sftk_freeDB(handle);
+	}
     }
 
     /* now close all the current sessions */
@@ -2325,7 +2375,7 @@ SFTK_ShutdownSlot(SFTKSlot *slot)
      * the sessHashSize variable guarentees we have all the session
      * mechanism set up */
     if (slot->head) {
-	sftk_CloseAllSessions(slot);
+	sftk_CloseAllSessions(slot, PR_TRUE);
      }
 
     /* clear all objects.. session objects are cleared as a result of
@@ -2520,6 +2570,8 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     if (isFIPS) {
 	loginWaitTime = PR_SecondsToInterval(1);
     }
+
+    ENABLE_FORK_CHECK();
 
     rv = SECOID_Init();
     if (rv != SECSuccess) {
@@ -3203,7 +3255,7 @@ CK_RV NSC_InitPIN(CK_SESSION_HANDLE hSession,
     /* change the data base */
     rv = sftkdb_ChangePassword(handle, NULL, newPinStr, &tokenRemoved);
     if (tokenRemoved) {
-	sftk_CloseAllSessions(slot);
+	sftk_CloseAllSessions(slot, PR_FALSE);
     }
     sftk_freeDB(handle);
     handle = NULL;
@@ -3286,7 +3338,7 @@ CK_RV NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     PR_Lock(slot->pwCheckLock);
     rv = sftkdb_ChangePassword(handle, oldPinStr, newPinStr, &tokenRemoved);
     if (tokenRemoved) {
-	sftk_CloseAllSessions(slot);
+	sftk_CloseAllSessions(slot, PR_FALSE);
     }
     sftk_freeDB(handle);
     handle = NULL;
@@ -3430,7 +3482,7 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
     slot = sftk_SlotFromID(slotID, PR_FALSE);
     if (slot == NULL) return CKR_SLOT_ID_INVALID;
 
-    return sftk_CloseAllSessions(slot);
+    return sftk_CloseAllSessions(slot, PR_TRUE);
 }
 
 
@@ -3541,7 +3593,7 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     PR_Lock(slot->pwCheckLock);
     rv = sftkdb_CheckPassword(handle,pinStr, &tokenRemoved);
     if (tokenRemoved) {
-	sftk_CloseAllSessions(slot);
+	sftk_CloseAllSessions(slot, PR_FALSE);
     }
     if ((rv != SECSuccess) && (slot->slotID == FIPS_SLOT_ID)) {
 	PR_Sleep(loginWaitTime);

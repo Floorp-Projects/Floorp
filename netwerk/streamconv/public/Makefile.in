@@ -55,10 +55,12 @@ XPIDLSRCS	= \
 		nsIDirIndexListener.idl \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+ifneq (x86_64,$(OS_TEST))
 XPIDLSRCS += \
 		nsIAppleFileDecoder.idl \
 		$(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -55,7 +55,7 @@
       </property>
 
       <property name="value"
-                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+                onget="return this.hasAttribute('isempty') ? '' : this.inputField.value;">
         <setter><![CDATA[
           if (val) {
             // clear the emptyText _before_ setting a new non-empty value
@@ -129,7 +129,7 @@
 
       <property name="controllers"    readonly="true" onget="return this.inputField.controllers"/>
       <property name="textLength"     readonly="true"
-                                      onget="return this.hasAttribute('empty') ?
+                                      onget="return this.hasAttribute('isempty') ?
                                                     0 : this.inputField.textLength;"/>
       <property name="selectionStart" onset="this.inputField.selectionStart = val; return val;"
                                       onget="return this.inputField.selectionStart;"/>
@@ -168,8 +168,8 @@
               !this.value &&
               this.emptyText) {
 
-            if (!this.hasAttribute("empty")) {
-              this.setAttribute("empty", "true");
+            if (!this.hasAttribute("isempty")) {
+              this.setAttribute("isempty", "true");
 
               // Hide the emptytext for a bit, in case the textbox will be focused subsequently
               this.inputField.setAttribute("emptytextdelay", "true");
@@ -189,7 +189,7 @@
 
       <method name="_clearEmptyText">
         <body><![CDATA[
-          if (this.hasAttribute("empty")) {
+          if (this.hasAttribute("isempty")) {
             this.inputField.value = "";
             try {
               var transactionManager = this.editor.transactionManager;
@@ -200,7 +200,7 @@
                   transactionManager.numberOfRedoItems == 0)
                 transactionManager.clear();
             } catch (e) {}
-            this.removeAttribute("empty");
+            this.removeAttribute("isempty");
           }
         ]]></body>
       </method>
@@ -323,7 +323,7 @@
                 onset="this.setAttribute('timeout', val); return val;"
                 onget="return parseInt(this.getAttribute('timeout')) || 0;"/>
       <property name="value"
-                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+                onget="return this.hasAttribute('isempty') ? '' : this.inputField.value;">
         <setter><![CDATA[
           if (val) {
             // clear the emptyText _before_ setting a new non-empty value
@@ -408,7 +408,7 @@
         ]]></setter>
       </property>
       <property name="value"
-                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+                onget="return this.hasAttribute('isempty') ? '' : this.inputField.value;">
         <setter><![CDATA[
           if (val) {
             // clear the emptyText _before_ setting a new non-empty value

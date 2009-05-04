@@ -1362,8 +1362,8 @@ public:
   static nsresult ProcessViewportInfo(nsIDocument *aDocument,
                                       const nsAString &viewportInfo);
 
-  static nsresult GetContextForEventHandlers(nsINode* aNode,
-                                             nsIScriptContext** aContext);
+  static nsIScriptContext* GetContextForEventHandlers(nsINode* aNode,
+                                                      nsresult* aRv);
 
   static JSContext *GetCurrentJSContext();
 
@@ -1587,78 +1587,6 @@ public:
 
 private:
   PRUint32 mNestingLevel;
-};
-
-/**
- * Class used to detect unexpected mutations. To use the class create an
- * nsMutationGuard on the stack before unexpected mutations could occur.
- * You can then at any time call Mutated to check if any unexpected mutations
- * have occured.
- *
- * When a guard is instantiated sMutationCount is set to 300. It is then
- * decremented by every mutation (capped at 0). This means that we can only
- * detect 300 mutations during the lifetime of a single guard, however that
- * should be more then we ever care about as we usually only care if more then
- * one mutation has occured.
- *
- * When the guard goes out of scope it will adjust sMutationCount so that over
- * the lifetime of the guard the guard itself has not affected sMutationCount,
- * while mutations that happened while the guard was alive still will. This
- * allows a guard to be instantiated even if there is another guard higher up
- * on the callstack watching for mutations.
- *
- * The only thing that has to be avoided is for an outer guard to be used
- * while an inner guard is alive. This can be avoided by only ever
- * instantiating a single guard per scope and only using the guard in the
- * current scope.
- */
-class nsMutationGuard {
-public:
-  nsMutationGuard()
-  {
-    mDelta = eMaxMutations - sMutationCount;
-    sMutationCount = eMaxMutations;
-  }
-  ~nsMutationGuard()
-  {
-    sMutationCount =
-      mDelta > sMutationCount ? 0 : sMutationCount - mDelta;
-  }
-
-  /**
-   * Returns true if any unexpected mutations have occured. You can pass in
-   * an 8-bit ignore count to ignore a number of expected mutations.
-   */
-  PRBool Mutated(PRUint8 aIgnoreCount)
-  {
-    return sMutationCount < static_cast<PRUint32>(eMaxMutations - aIgnoreCount);
-  }
-
-  // This function should be called whenever a mutation that we want to keep
-  // track of happen. For now this is only done when children are added or
-  // removed, but we might do it for attribute changes too in the future.
-  static void DidMutate()
-  {
-    if (sMutationCount) {
-      --sMutationCount;
-    }
-  }
-
-private:
-  // mDelta is the amount sMutationCount was adjusted when the guard was
-  // initialized. It is needed so that we can undo that adjustment once
-  // the guard dies.
-  PRUint32 mDelta;
-
-  // The value 300 is not important, as long as it is bigger then anything
-  // ever passed to Mutated().
-  enum { eMaxMutations = 300 };
-
-  
-  // sMutationCount is a global mutation counter which is decreased by one at
-  // every mutation. It is capped at 0 to avoid wrapping.
-  // Its value is always between 0 and 300, inclusive.
-  static PRUint32 sMutationCount;
 };
 
 #define NS_AUTO_GCROOT_PASTE2(tok,line) tok##line

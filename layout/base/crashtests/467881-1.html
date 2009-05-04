@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var HTML_NS = "http://www.w3.org/1999/xhtml";
+  var outer, inner, q;
+
+  function a()
+  {
+    outer = document.createElementNS(HTML_NS, "div");
+    inner = document.createElementNS(HTML_NS, "div");
+
+		inner.appendChild(document.createElementNS(HTML_NS, "iframe"));
+		inner.appendChild(document.createElementNS(HTML_NS, "div"));
+		inner.appendChild(q = document.createElementNS(HTML_NS, "span"));
+
+		outer.appendChild(inner);
+		document.documentElement.appendChild(outer);
+    setTimeout(b, 10);
+  }
+  
+  function b()
+  {
+    outer.appendChild(document.createElementNS(HTML_NS, "span"));
+    setTimeout(c, 10);
+  }
+  
+  function c()
+  {
+    q.appendChild(document.createElementNS(HTML_NS, "div"));
+    document.documentElement.removeAttribute("class");
+  }
+  
+  a();
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</head>
+
+<frameset></frameset>
+
+</html>

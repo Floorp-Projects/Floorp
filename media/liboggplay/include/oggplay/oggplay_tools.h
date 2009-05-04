@@ -72,13 +72,13 @@ typedef struct _OggPlayRGBChannels {
 } OggPlayRGBChannels;
 
 void 
-oggplay_yuv2rgb(OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb);
+oggplay_yuv2rgba(const OggPlayYUVChannels *yuv, OggPlayRGBChannels * rgb);
 
 void 
-oggplay_yuv2argb(OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb);
+oggplay_yuv2bgra(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb);
 
-void
-oggplay_yuv2bgr(OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb);
+void 
+oggplay_yuv2argb(const OggPlayYUVChannels *yuv, OggPlayRGBChannels * rgb);
 
 ogg_int64_t
 oggplay_sys_time_in_ms(void);

@@ -148,9 +148,6 @@ private:
   // The object providing geo location information to us.
   nsCOMPtr<nsIGeolocationProvider> mProvider;
 
-  // A flag that lets us know if the mProvider has been started up.
-  PRBool mProviderStarted;
-
   // mGeolocators are not owned here.  Their constructor
   // addes them to this list, and their destructor removes
   // them from this list.

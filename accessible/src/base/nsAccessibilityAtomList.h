@@ -171,6 +171,7 @@ ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
 ACCESSIBILITY_ATOM(linkedPanel, "linkedpanel") // XUL
 ACCESSIBILITY_ATOM(longDesc, "longdesc")
+ACCESSIBILITY_ATOM(max, "max") // XUL
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
 ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
 ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
@@ -217,7 +218,6 @@ ACCESSIBILITY_ATOM(aria_busy, "aria-busy")
 ACCESSIBILITY_ATOM(aria_checked, "aria-checked")
 ACCESSIBILITY_ATOM(aria_controls, "aria-controls")
 ACCESSIBILITY_ATOM(aria_describedby, "aria-describedby")
-ACCESSIBILITY_ATOM(aria_droppable, "aria-droppable")
 ACCESSIBILITY_ATOM(aria_disabled, "aria-disabled")
 ACCESSIBILITY_ATOM(aria_dropeffect, "aria-dropeffect")
 ACCESSIBILITY_ATOM(aria_expanded, "aria-expanded")

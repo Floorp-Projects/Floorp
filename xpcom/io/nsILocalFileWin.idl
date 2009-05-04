@@ -39,7 +39,7 @@
 
 #include "nsILocalFile.idl"
 
-[scriptable, uuid(def38371-73b0-4dfd-85cd-0a7c91afbec6)]
+[scriptable, uuid(def24611-88a1-2cac-74fd-4b0b12bcaed5)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**
@@ -64,5 +64,24 @@ interface nsILocalFileWin : nsILocalFile
      */
     readonly attribute AString canonicalPath;
     [noscript] readonly attribute ACString nativeCanonicalPath;
+
+    /**
+     * Windows specific file attributes.
+     *
+     * WFA_SEARCH_INDEXED: Generally the default on files in Windows except
+     * those created in temp locations. Valid on XP and up. When set the
+     * file or directory is marked to be indexed by desktop search services.
+     */
+    const unsigned long WFA_SEARCH_INDEXED = 1;
+
+    /**
+     * fileAttributesWin
+     *
+     * Set or get windows specific file attributes.
+     * 
+     * Throws NS_ERROR_FILE_INVALID_PATH for an invalid file.
+     * Throws NS_ERROR_FAILURE if the set or get fails.
+     */
+    attribute unsigned long fileAttributesWin;
 };
 

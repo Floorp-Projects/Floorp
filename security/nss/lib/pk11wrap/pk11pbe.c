@@ -790,13 +790,13 @@ pbe_PK11AlgidToParam(SECAlgorithmID *algid,SECItem *mech)
     /*
      * decode the algid based on the pbe type
      */
+    PORT_Memset(&p5_param, 0, sizeof(p5_param));
     if (sec_pkcs5_is_algorithm_v2_pkcs12_algorithm(algorithm)) {
         iv_len = PK11_GetIVLength(PK11_AlgtagToMechanism(algorithm));
         rv = SEC_ASN1DecodeItem(arena, &p5_param,
 			 SEC_V2PKCS12PBEParameterTemplate, &algid->parameters);
     } else if (algorithm == SEC_OID_PKCS5_PBKDF2) {
 	iv_len = 0;
-        PORT_Memset(&p5_param, 0, sizeof(p5_param));
         rv = SEC_ASN1DecodeItem(arena,&p5_param,
 			 SEC_PKCS5V2PBEParameterTemplate, &algid->parameters);
     } else {

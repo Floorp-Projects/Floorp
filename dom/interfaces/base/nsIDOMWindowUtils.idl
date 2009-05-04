@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(6e3510b9-806d-4a2a-be79-73d2a495b4b8)]
+[scriptable, uuid(5003e14a-6617-4af9-a0f6-a09f86d65dd2)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -246,9 +246,9 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /** Synthesize a simple gesture event for a window. The event types
    *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
-   *  MozMagnifyGestureUpdate, MozMagnifyGesture,
-   *  MozRotateGestureStart, MozRotateGestureUpdate, and
-   *  MozRotateGesture.
+   *  MozMagnifyGestureUpdate, MozMagnifyGesture, MozRotateGestureStart,
+   *  MozRotateGestureUpdate, MozRotateGesture, MozPressTapGesture, and
+   *  MozTapGesture.
    *
    * Cannot be accessed from unprivileged context (not
    * content-accessible) Will throw a DOM security error if called
@@ -320,4 +320,12 @@ interface nsIDOMWindowUtils : nsISupports {
    *               on all windows.  Otherwise, enable them.
    */
   void disableNonTestMouseEvents(in boolean aDisable);
+
+  /**
+   * Returns the scroll position of the window's currently loaded document.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @see nsIDOMWindow::scrollX/Y
+   */
+  void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
 };

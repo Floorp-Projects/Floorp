@@ -74,10 +74,6 @@
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
 #include "nsGeolocation.h"
-#ifdef OJI
-#include "nsIJVMManager.h"
-#include "nsILiveConnectManager.h"
-#endif
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
@@ -110,7 +106,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
-#include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsDOMString.h"
@@ -217,6 +212,7 @@ static PopupControlState    gPopupControlState         = openAbused;
 static PRInt32              gRunningTimeoutDepth       = 0;
 static PRBool               gMouseDown                 = PR_FALSE;
 static PRBool               gDragServiceDisabled       = PR_FALSE;
+static FILE                *gDumpFile                  = nsnull;
 
 #ifdef DEBUG
 static PRUint32             gSerialCounter             = 0;
@@ -346,15 +342,11 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
   PR_END_MACRO
 
 // CIDs
-#ifdef OJI
-static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
-#endif
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
-static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
 static PRBool
 IsAboutBlank(nsIURI* aURI)
@@ -654,7 +646,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
         os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                         PR_FALSE);
 
-        // Watch for dom-storage-chaged so we can fire storage
+        // Watch for dom-storage-changed so we can fire storage
         // events. Use a strong reference.
         os->AddObserver(mObserver, "dom-storage-changed", PR_FALSE);
       }
@@ -681,6 +673,18 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     gDOMWindowDumpEnabled = nsContentUtils::GetBoolPref(prefName);
   }
 #endif
+
+  if (gDumpFile == nsnull) {
+    const nsAdoptingCString& fname = 
+      nsContentUtils::GetCharPref("browser.dom.window.dump.file");
+    if (!fname.IsEmpty()) {
+      // if this fails to open, Dump() knows to just go to stdout
+      // on null.
+      gDumpFile = fopen(fname, "wb+");
+    } else {
+      gDumpFile = stdout;
+    }
+  }
 
   if (!gEntropyCollector) {
     CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
@@ -794,6 +798,11 @@ nsGlobalWindow::ShutDown()
 {
   NS_IF_RELEASE(sComputedDOMStyleFactory);
   NS_IF_RELEASE(sGlobalStorageList);
+
+  if (gDumpFile && gDumpFile != stdout) {
+    fclose(gDumpFile);
+  }
+  gDumpFile = nsnull;
 }
 
 // static
@@ -1038,6 +1047,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameElement)
 
   // Traverse mDummyJavaPluginOwner
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDummyJavaPluginOwner)
@@ -1068,6 +1078,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameElement)
 
   // Unlink mDummyJavaPluginOwner
   if (tmp->mDummyJavaPluginOwner) {
@@ -2938,20 +2949,6 @@ nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetPkcs11(nsIDOMPkcs11** aPkcs11)
-{
-  FORWARD_TO_OUTER(GetPkcs11, (aPkcs11), NS_ERROR_NOT_INITIALIZED);
-
-  if (!mPkcs11) {
-    mPkcs11 = do_CreateInstance(kPkcs11ContractID);
-  }
-
-  NS_IF_ADDREF(*aPkcs11 = mPkcs11);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsGlobalWindow::GetControllers(nsIControllers** aResult)
 {
   FORWARD_TO_OUTER(GetControllers, (aResult), NS_ERROR_NOT_INITIALIZED);
@@ -3931,7 +3928,9 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 #endif
 
   if (cstr) {
-    printf("%s", cstr);
+    FILE *fp = gDumpFile ? gDumpFile : stdout;
+    fputs(cstr, fp);
+    fflush(fp);
     nsMemory::Free(cstr);
   }
 
@@ -5810,37 +5809,6 @@ nsGlobalWindow::InitJavaProperties()
   // No NPRuntime enabled Java plugin found, null out the owner we
   // would have used in that case as it's no longer needed.
   mDummyJavaPluginOwner = nsnull;
-
-#ifdef OJI
-  JSContext *cx = (JSContext *)scx->GetNativeContext();
-
-  nsCOMPtr<nsILiveConnectManager> manager =
-    do_GetService(nsIJVMManager::GetCID());
-
-  if (!manager) {
-    return;
-  }
-
-  PRBool started = PR_FALSE;
-  manager->StartupLiveConnect(::JS_GetRuntime(cx), started);
-
-  nsCOMPtr<nsIJVMManager> jvmManager(do_QueryInterface(manager));
-
-  if (!jvmManager) {
-    return;
-  }
-
-  PRBool javaEnabled = PR_FALSE;
-  if (NS_FAILED(jvmManager->GetJavaEnabled(&javaEnabled)) || !javaEnabled) {
-    return;
-  }
-
-  {
-    JSAutoRequest ar(cx);
-
-    manager->InitLiveConnectClasses(cx, mJSObject);
-  }
-#endif
 }
 
 void*
@@ -6508,13 +6476,12 @@ nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsGlobalWindow::GetContextForEventHandlers(nsIScriptContext** aContext)
+nsIScriptContext*
+nsGlobalWindow::GetContextForEventHandlers(nsresult* aRv)
 {
-  NS_IF_ADDREF(*aContext = GetContext());
-  // Bad, no context from script global object!
-  NS_ENSURE_STATE(*aContext);
-  return NS_OK;
+  nsIScriptContext* scx = GetContext();
+  *aRv = scx ? NS_OK : NS_ERROR_UNEXPECTED;
+  return scx;
 }
 
 //*****************************************************************************
@@ -6839,6 +6806,10 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage2 ** aLocalStorage)
   FORWARD_TO_INNER(GetLocalStorage, (aLocalStorage), NS_ERROR_UNEXPECTED);
 
   NS_ENSURE_ARG(aLocalStorage);
+
+  if (nsDOMStorageManager::gStorageManager &&
+      nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
+    return NS_ERROR_DOM_SECURITY_ERR;
 
   if (!mLocalStorage) {
     *aLocalStorage = nsnull;
@@ -7685,7 +7656,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   mTimeoutInsertionPoint = &dummy_timeout;
 
   for (timeout = FirstTimeout();
-       timeout != &dummy_timeout && !IsFrozen() && !mTimeoutsSuspendDepth;
+       timeout != &dummy_timeout && !IsFrozen();
        timeout = nextTimeout) {
     nextTimeout = timeout->Next();
 
@@ -7693,6 +7664,13 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       // We skip the timeout since it's on the list to run at another
       // depth.
 
+      continue;
+    }
+
+    if (mTimeoutsSuspendDepth) {
+      // Some timer did suspend us. Make sure the
+      // rest of the timers get executed later.
+      timeout->mFiringDepth = 0;
       continue;
     }
 
@@ -9290,17 +9268,6 @@ NS_IMETHODIMP
 nsNavigator::JavaEnabled(PRBool *aReturn)
 {
   *aReturn = nsContentUtils::GetBoolPref("security.enable_java");
-
-#ifdef OJI
-  // Ask the nsIJVMManager if Java is enabled
-  nsCOMPtr<nsIJVMManager> jvmService = do_GetService(kJVMServiceCID);
-  if (jvmService) {
-    jvmService->GetJavaEnabled(aReturn);
-  }
-  else {
-    *aReturn = PR_FALSE;
-  }
-#endif
 
   return NS_OK;
 }

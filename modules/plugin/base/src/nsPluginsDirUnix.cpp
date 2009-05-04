@@ -79,6 +79,11 @@
 #define DEFAULT_X11_PATH "/usr/openwin/lib/"
 #elif defined(LINUX)
 #define DEFAULT_X11_PATH "/usr/X11R6/lib/"
+#elif defined(__APPLE__)
+#define DEFAULT_X11_PATH "/usr/X11R6/lib"
+#undef LOCAL_PLUGIN_DLL_SUFFIX
+#define LOCAL_PLUGIN_DLL_SUFFIX ".dylib"
+#define LOCAL_PLUGIN_DLL_ALT_SUFFIX ".so"
 #else
 #define DEFAULT_X11_PATH ""
 #endif

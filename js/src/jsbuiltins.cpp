@@ -63,6 +63,12 @@ using namespace nanojit;
 
 extern jsdouble js_NaN;
 
+JS_FRIEND_API(void)
+js_SetTraceableNativeFailed(JSContext *cx)
+{
+    js_SetBuiltinError(cx);
+}
+
 /*
  * NB: bool FASTCALL is not compatible with Nanojit's calling convention usage.
  * Do not use bool FASTCALL, use JSBool only!
@@ -225,56 +231,58 @@ js_CallTree(InterpState* state, Fragment* f)
 JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
-    JSScopeProperty* sprop2 = NULL; // initialize early to make MSVC happy
-
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
 
     JS_LOCK_OBJ(cx, obj);
+
     JSScope* scope = OBJ_SCOPE(obj);
+    uint32 slot;
     if (scope->object == obj) {
         JS_ASSERT(!SCOPE_HAS_PROPERTY(scope, sprop));
     } else {
         scope = js_GetMutableScope(cx, obj);
-        if (!scope) {
-            JS_UNLOCK_OBJ(cx, obj);
-            return JS_FALSE;
-        }
+        if (!scope)
+            goto exit_trace;
     }
 
-    uint32 slot = sprop->slot;
+    slot = sprop->slot;
     if (!scope->table && sprop->parent == scope->lastProp && slot == scope->map.freeslot) {
         if (slot < STOBJ_NSLOTS(obj) && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
             JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->map.freeslot)));
             ++scope->map.freeslot;
         } else {
-            if (!js_AllocSlot(cx, obj, &slot)) {
-                JS_UNLOCK_SCOPE(cx, scope);
-                return JS_FALSE;
-            }
+            if (!js_AllocSlot(cx, obj, &slot))
+                goto exit_trace;
 
-            if (slot != sprop->slot)
-                goto slot_changed;
+            if (slot != sprop->slot) {
+                js_FreeSlot(cx, obj, slot);
+                goto exit_trace;
+            }
         }
 
-        SCOPE_EXTEND_SHAPE(cx, scope, sprop);
+        js_ExtendScopeShape(cx, scope, sprop);
         ++scope->entryCount;
         scope->lastProp = sprop;
-        JS_UNLOCK_SCOPE(cx, scope);
-        return JS_TRUE;
+    } else {
+        JSScopeProperty *sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
+                                                      sprop->getter,
+                                                      sprop->setter,
+                                                      SPROP_INVALID_SLOT,
+                                                      sprop->attrs,
+                                                      sprop->flags,
+                                                      sprop->shortid);
+        if (sprop2 != sprop)
+            goto exit_trace;
     }
 
-    sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
-                                 sprop->getter, sprop->setter, SPROP_INVALID_SLOT,
-                                 sprop->attrs, sprop->flags, sprop->shortid);
-    if (sprop2 == sprop) {
-        JS_UNLOCK_SCOPE(cx, scope);
-        return JS_TRUE;
-    }
-    slot = sprop2->slot;
+    if (js_IsPropertyCacheDisabled(cx))
+        goto exit_trace;
 
-  slot_changed:
-    js_FreeSlot(cx, obj, slot);
+    JS_UNLOCK_SCOPE(cx, scope);
+    return JS_TRUE;
+
+  exit_trace:
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_FALSE;
 }
@@ -283,11 +291,13 @@ static JSBool
 HasProperty(JSContext* cx, JSObject* obj, jsid id)
 {
     // Check that we know how the lookup op will behave.
-    if (obj->map->ops->lookupProperty != js_LookupProperty)
-        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
-    JSClass* clasp = OBJ_GET_CLASS(cx, obj);
-    if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
-        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+    for (JSObject* pobj = obj; pobj; pobj = OBJ_GET_PROTO(cx, pobj)) {
+        if (pobj->map->ops->lookupProperty != js_LookupProperty)
+            return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+        JSClass* clasp = OBJ_GET_CLASS(cx, pobj);
+        if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
+            return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+    }
 
     JSObject* obj2;
     JSProperty* prop;
@@ -365,6 +375,31 @@ JSObject* FASTCALL
 js_Arguments(JSContext* cx)
 {
     return NULL;
+}
+
+JSObject* FASTCALL
+js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject *parent)
+{
+    JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
+
+    JSFunction *fun = (JSFunction*) funobj;
+    JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
+
+    JS_ASSERT(JS_ON_TRACE(cx));
+    JSObject* closure = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    if (!closure)
+        return NULL;
+
+    closure->classword = jsuword(&js_FunctionClass);
+    closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
+    closure->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
+    closure->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
+    for (unsigned i = JSSLOT_PRIVATE + 1; i != JS_INITIAL_NSLOTS; ++i)
+        closure->fslots[i] = JSVAL_VOID;
+
+    closure->map = js_HoldObjectMap(cx, proto->map);
+    closure->dslots = NULL;
+    return closure;
 }
 
 #define BUILTIN1 JS_DEFINE_CALLINFO_1

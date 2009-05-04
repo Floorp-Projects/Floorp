@@ -64,7 +64,7 @@ textbox {
   color: -moz-FieldText;
 }
 
-textbox[empty="true"] {
+textbox[isempty="true"] {
   color: GrayText;
 }
 
@@ -121,7 +121,7 @@ textbox.plain {
 
 textbox[type="search"] {
   -moz-appearance: searchfield;
-  padding: 2px 1px 1px 16px;
+  padding: 1px;
   font-size: 12px;
 }
 
@@ -135,22 +135,24 @@ textbox[type="search"] {
   -moz-image-region: rect(0, 28px, 14px, 14px);
 }
 
-textbox[type="search"][cocoa-size="small"] {
-  padding: 1px 1px 0 15px;
+textbox[type="search"].compact {
+  padding: 0;
   font-size: 11px;
 }
 
-textbox[type="search"][cocoa-size="small"] > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+textbox[type="search"].compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
   list-style-image: url(chrome://global/skin/icons/searchfield-small-cancel.png);
   -moz-image-region: rect(0, 11px, 11px, 0);
 }
 
-textbox[type="search"][cocoa-size="small"] > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:active:hover {
+textbox[type="search"].compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:active:hover {
   -moz-image-region: rect(0, 22px, 11px, 11px);
 }
 
-.textbox-search-icon[searchbutton]:not([disabled]) ,
 .textbox-search-clear:not([disabled]) {
   cursor: default;
 }
-
+ 
+.textbox-search-icons:not([selectedIndex="1"]) {
+  visibility: hidden;
+}

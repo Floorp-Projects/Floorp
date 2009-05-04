@@ -1,0 +1,12 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:svg="http://www.w3.org/2000/svg">
+<svg:foreignObject x="0" y="0" width="100%" height="100%">
+<xul:tabs onselect="window.frameElement.parentNode.removeChild(window.frameElement)"><xul:tree id="t"/></xul:tabs>
+</svg:foreignObject>
+
+<html:script>
+function doe() {
+document.getElementById('t');
+}
+setTimeout(doe, 200);
+</html:script>
+</html>

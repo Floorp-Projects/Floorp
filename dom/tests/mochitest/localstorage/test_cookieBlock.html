@@ -1,0 +1,70 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>cookie blocking test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function startTest()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var io = Components.classes["@mozilla.org/network/io-service;1"]
+    .getService(Components.interfaces.nsIIOService);
+  var uri = io.newURI(window.location, "", null);
+  var cp = Components.classes["@mozilla.org/cookie/permission;1"]
+    .getService(Components.interfaces.nsICookiePermission);
+  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DENY);
+
+  try {
+    localStorage.setItem("blocked", "blockedvalue");
+    ok(false, "Exception while accessing localStorage");
+  }
+  catch (ex) {
+    ok(true, "Exception while accessing localStorage");
+  }
+
+  try {
+    localStorage.getItem("blocked");
+    ok(false, "Exception while accessing localStorage");
+  }
+  catch (ex) {
+    ok(true, "Exception while accessing localStorage");
+  }
+
+  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+
+  try {
+    localStorage.setItem("blocked", "blockedvalue");
+    ok(false, "Exception while accessing localStorage");
+  }
+  catch (ex) {
+    ok(true, "Exception while accessing localStorage");
+  }
+
+  try {
+    localStorage.getItem("blocked");
+    ok(false, "Exception while accessing localStorage");
+  }
+  catch (ex) {
+    ok(true, "Exception while accessing localStorage");
+  }
+
+  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

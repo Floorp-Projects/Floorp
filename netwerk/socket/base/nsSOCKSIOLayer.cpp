@@ -164,22 +164,62 @@ nsSOCKSSocketInfo::SetInternalProxyAddr(PRNetAddr *aInternalProxyAddr)
 
 static PRInt32
 pr_RecvAll(PRFileDesc *fd, unsigned char *buf, PRInt32 amount, PRIntn flags, 
-           PRIntervalTime timeout)
+           PRIntervalTime *timeout)
 {
     PRInt32 bytesRead = 0;
     PRInt32 offset = 0;
 
     while (offset < amount) {
-    	bytesRead = PR_Recv(fd, buf + offset, amount - offset, flags, timeout);
-	if (bytesRead > 0) {
-	    offset += bytesRead;
-	} else if (bytesRead == 0 || offset != 0) {
-	    return offset;
-	} else {
-	    return bytesRead;
-	}
+        PRIntervalTime start_time = PR_IntervalNow();
+        bytesRead = PR_Recv(fd, buf + offset, amount - offset, flags, *timeout);
+        PRIntervalTime elapsed = PR_IntervalNow() - start_time;
+
+        if (elapsed > *timeout) {
+            *timeout = 0;
+        } else {
+            *timeout -= elapsed;
+        }
+
+        if (bytesRead > 0) {
+            offset += bytesRead;
+        } else if (bytesRead == 0 || offset != 0) {
+            return offset;
+        } else {
+            return bytesRead;
+        }
+
+        if (*timeout == 0) {
+            LOGERROR(("PR_Recv() timed out. amount = %d. offset = %d.",
+                     amount, offset));
+            return offset;
+        }
     }
     return offset;
+}
+
+static PRInt32
+pr_Send(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
+        PRIntervalTime *timeout)
+{
+    PRIntervalTime start_time = PR_IntervalNow();
+    PRInt32 retval = PR_Send(fd, buf, amount, flags, *timeout);
+    PRIntervalTime elapsed = PR_IntervalNow() - start_time;
+
+    if (elapsed > *timeout) {
+        *timeout = 0;
+        LOGERROR(("PR_Send() timed out. amount = %d. retval = %d.",
+                 amount, retval));
+        return retval;
+    } else {
+        *timeout -= elapsed;
+    }
+
+    if (retval <= 0) {
+        LOGERROR(("PR_Send() failed. amount = %d. retval = %d.",
+                 amount, retval));
+    }
+
+    return retval;
 }
 
 // Negotiate a SOCKS 5 connection. Assumes the TCP connection to the socks 
@@ -210,20 +250,17 @@ ConnectSOCKS5(PRFileDesc *fd, const PRNetAddr *addr, PRNetAddr *extAddr, PRInter
     //request[5] = 0x03; // CHAP
 
     request_len = 2 + request[1];
-    int write_len = PR_Send(fd, request, request_len, 0, timeout);
+    int write_len = pr_Send(fd, request, request_len, 0, &timeout);
     if (write_len != request_len) {
-
-        LOGERROR(("PR_Send() failed. Wrote: %d bytes; Expected: %d.", write_len, request_len));
         return NS_ERROR_FAILURE;
     }
 
     // get the server's response. 
     desired_len = 2;
-    response_len = pr_RecvAll(fd, response, desired_len, 0, timeout);
+    response_len = pr_RecvAll(fd, response, desired_len, 0, &timeout);
 
     if (response_len < desired_len) {
-
-        LOGERROR(("PR_Recv() failed. response_len = %d.", response_len));
+        LOGERROR(("pr_RecvAll() failed. response_len = %d.", response_len));
         return NS_ERROR_FAILURE;
     }
 
@@ -301,18 +338,16 @@ ConnectSOCKS5(PRFileDesc *fd, const PRNetAddr *addr, PRNetAddr *extAddr, PRInter
         request_len = 5;
 
         // Send the initial header first...
-        write_len = PR_Send(fd, request, request_len, 0, timeout);
+        write_len = pr_Send(fd, request, request_len, 0, &timeout);
         if (write_len != request_len) {
             // bad write
-            LOGERROR(("PR_Send() failed sending connect command. Wrote: %d bytes; Expected: %d.", write_len, request_len));
             return NS_ERROR_FAILURE;
         }
 
         // Now send the hostname...
-        write_len = PR_Send(fd, destHost.get(), host_len, 0, timeout);
+        write_len = pr_Send(fd, destHost.get(), host_len, 0, &timeout);
         if (write_len != host_len) {
             // bad write
-            LOGERROR(("PR_Send() failed sending connect command. Wrote: %d bytes; Expected: %d.", write_len, host_len));
             return NS_ERROR_FAILURE;
         }
 
@@ -369,18 +404,16 @@ ConnectSOCKS5(PRFileDesc *fd, const PRNetAddr *addr, PRNetAddr *extAddr, PRInter
     request[request_len+1] = (unsigned char)destPort;
     request_len += 2;
 
-    write_len = PR_Send(fd, request, request_len, 0, timeout);
+    write_len = pr_Send(fd, request, request_len, 0, &timeout);
     if (write_len != request_len) {
-
         // bad write
-        LOGERROR(("PR_Send() failed sending connect command. Wrote: %d bytes; Expected: %d.", write_len, request_len));
         return NS_ERROR_FAILURE;
     }
 
     desired_len = 5;
-    response_len = pr_RecvAll(fd, response, desired_len, 0, timeout);
+    response_len = pr_RecvAll(fd, response, desired_len, 0, &timeout);
     if (response_len < desired_len) { // bad read
-        LOGERROR(("PR_Recv() failed getting connect command reply. response_len = %d.", response_len));
+        LOGERROR(("pr_RecvAll() failed getting connect command reply. response_len = %d.", response_len));
         return NS_ERROR_FAILURE;
     }
 
@@ -428,9 +461,9 @@ ConnectSOCKS5(PRFileDesc *fd, const PRNetAddr *addr, PRNetAddr *extAddr, PRInter
             return NS_ERROR_FAILURE;
             break;
     }
-    response_len = pr_RecvAll(fd, response + 5, desired_len, 0, timeout);
+    response_len = pr_RecvAll(fd, response + 5, desired_len, 0, &timeout);
     if (response_len < desired_len) { // bad read
-        LOGERROR(("PR_Recv() failed getting connect command reply. response_len = %d.", response_len));
+        LOGERROR(("pr_RecvAll() failed getting connect command reply. response_len = %d.", response_len));
         return NS_ERROR_FAILURE;
     }
     response_len += 5;
@@ -545,18 +578,16 @@ ConnectSOCKS4(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
         request[6] = 0;
         request[7] = 1;
 
-        write_len = PR_Send(fd, request, request_len, 0, timeout);
+        write_len = pr_Send(fd, request, request_len, 0, &timeout);
         if (write_len != request_len) {
-            LOGERROR(("PR_Send() failed. Wrote: %d bytes; Expected: %d.", write_len, request_len));
             return NS_ERROR_FAILURE;
         }
 
         // Remember the NULL.
         int host_len = destHost.Length() + 1;
 
-        write_len = PR_Send(fd, destHost.get(), host_len, 0, timeout);
+        write_len = pr_Send(fd, destHost.get(), host_len, 0, &timeout);
         if (write_len != host_len) {
-            LOGERROR(("PR_Send() failed. Wrote: %d bytes; Expected: %d.", write_len, host_len));
             return NS_ERROR_FAILURE;
         }
 
@@ -593,18 +624,17 @@ ConnectSOCKS4(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
     }
 
     if (request_len > 0) {
-        write_len = PR_Send(fd, request, request_len, 0, timeout);
+        write_len = pr_Send(fd, request, request_len, 0, &timeout);
         if (write_len != request_len) {
-            LOGERROR(("PR_Send() failed. Wrote: %d bytes; Expected: %d.", write_len, request_len));
             return NS_ERROR_FAILURE;
         }
     }
 
     // get the server's response
     desired_len = 8;	// size of the response
-    response_len = pr_RecvAll(fd, response, desired_len, 0, timeout);
+    response_len = pr_RecvAll(fd, response, desired_len, 0, &timeout);
     if (response_len < desired_len) {
-        LOGERROR(("PR_Recv() failed. response_len = %d.", response_len));
+        LOGERROR(("pr_RecvAll() failed. response_len = %d.", response_len));
         return NS_ERROR_FAILURE;
     }
 

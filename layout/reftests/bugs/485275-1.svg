@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <foreignObject transform="translate(200)" width="100" height="100">
+    <body xmlns="http://www.w3.org/1999/xhtml" style="margin: 0pt;">
+      <iframe src="data:text/html,%3Cbody%20bgcolor%3D'%230000ff'%3E" style="border: medium none ; width: 100px; height: 100px;"/>
+    </body>
+  </foreignObject>
+</svg>

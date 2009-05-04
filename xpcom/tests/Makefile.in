@@ -113,7 +113,9 @@ CPP_UNIT_TESTS += \
                   TestDeque.cpp \
                   TestStrings.cpp \
                   TestStorageStream.cpp \
+                  TestSynchronization.cpp \
                   TestTArray.cpp \
+                  TestTimeStamp.cpp \
                   $(NULL)
 endif
 

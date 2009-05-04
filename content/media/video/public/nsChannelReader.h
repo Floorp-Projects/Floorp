@@ -39,13 +39,13 @@
 
 #include "nsAutoPtr.h"
 #include "nsMediaStream.h"
-#include "nsMediaDecoder.h"
-#include "nsIPrincipal.h"
 
 #include "oggplay/oggplay.h"
 
+class nsIURI;
 class nsIChannel;
 class nsIStreamListener;
+class nsMediaDecoder;
 
 class nsChannelReader : public OggPlayReader
 {
@@ -63,15 +63,7 @@ public:
   nsresult Init(nsMediaDecoder* aDecoder, nsIURI* aURI, nsIChannel* aChannel,
                 nsIStreamListener** aStreamListener);
 
-  // Cancel any blocking request currently in progress and cause that
-  // request to return an error. Call on main thread only.
-  void Cancel();
-
-  // Suspend any downloads that are in progress.
-  void Suspend();
-
-  // Resume any downloads that have been suspended.
-  void Resume();
+  nsMediaStream* Stream() { return mStream; }
 
   // Set the duration of the media resource. Call with decoder lock
   // obtained so that the decoder thread does not request the duration
@@ -85,11 +77,11 @@ public:
   OggPlayErrorCode destroy();
   size_t io_read(char* aBuffer, size_t aCount);
   int io_seek(long aOffset, int aWhence);
-  long io_tell();  
+  long io_tell();
   ogg_int64_t duration();
   
 public:
-  nsMediaStream mStream;
+  nsAutoPtr<nsMediaStream> mStream;
 
   // Duration of the media resource. -1 if not known.
   PRInt64 mDuration;

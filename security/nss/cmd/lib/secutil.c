@@ -2351,7 +2351,7 @@ SECU_PrintRDN(FILE *out, CERTRDN *rdn, char *msg, int level)
 void
 SECU_PrintName(FILE *out, CERTName *name, char *msg, int level)
 {
-    char *nameStr;
+    char *nameStr = NULL;
     char *str;
     SECItem my;
 
@@ -3252,7 +3252,7 @@ SECU_PrintTrustFlags(FILE *out, CERTCertTrust *trust, char *m, int level)
     printFlags(out, trust->objectSigningFlags, level+2);
 }
 
-int SECU_PrintSignedData(FILE *out, SECItem *der, char *m,
+int SECU_PrintSignedData(FILE *out, SECItem *der, const char *m,
 			   int level, SECU_PPFunc inner)
 {
     PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

@@ -161,6 +161,10 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   // ImageData createImageData(in float w, in float h);
   void createImageData();
 
+  // image smoothing mode -- if disabled, images won't be smoothed
+  // if scaled.
+  attribute boolean mozImageSmoothingEnabled;
+
   // Show the caret if appropriate when drawing
   const unsigned long DRAWWINDOW_DRAW_CARET   = 0x01;
   // Don't flush pending layout notifications that could otherwise
