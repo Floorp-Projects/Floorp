@@ -222,6 +222,8 @@ MAKEFILES_content="
   content/xul/document/src/Makefile
   content/xul/templates/public/Makefile
   content/xul/templates/src/Makefile
+  content/xul/templates/tests/Makefile
+  content/xul/templates/tests/chrome/Makefile
   content/xbl/Makefile
   content/xbl/public/Makefile
   content/xbl/src/Makefile
