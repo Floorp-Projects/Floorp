@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:ANIMALS="http://www.some-fictitious-zoo.com/rdf#">
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/arachnids">
+     <ANIMALS:name>Arachnids</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/arachnids/tarantula" ANIMALS:specimens="3">
+         <ANIMALS:name>Tarantula</ANIMALS:name>
+         <ANIMALS:species>Avicularia avicularia</ANIMALS:species>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/birds">
+     <ANIMALS:name>Birds</ANIMALS:name>
+     <ANIMALS:keeper resource="http://www.some-fictitious-zoo.com/humans/sarah"/>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/birds/emu" ANIMALS:specimens="12">
+         <ANIMALS:name>Emu</ANIMALS:name>
+         <ANIMALS:species>Dromaius novaehollandiae</ANIMALS:species>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/birds/barnowl" ANIMALS:specimens="4">
+         <ANIMALS:name>Barn Owl</ANIMALS:name>
+         <ANIMALS:species>Tyto alba</ANIMALS:species>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/birds/raven" ANIMALS:specimens="0">
+         <ANIMALS:name>Raven</ANIMALS:name>
+         <ANIMALS:species>Corvus corax</ANIMALS:species>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/crustaceans">
+     <ANIMALS:name>Crustaceans</ANIMALS:name>
+     <ANIMALS:keeper resource="http://www.some-fictitious-zoo.com/humans/robert"/>
+   </ANIMALS:Class>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/fish">
+     <ANIMALS:name>Fish</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/fish/cod" ANIMALS:specimens="0">
+         <ANIMALS:name>Cod</ANIMALS:name>
+         <ANIMALS:species>Gadus morhua</ANIMALS:species>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/fish/swordfish" ANIMALS:specimens="3">
+         <ANIMALS:name>Swordfish</ANIMALS:name>
+         <ANIMALS:species>Xiphias gladius</ANIMALS:species>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/mammals">
+     <ANIMALS:name>Mammals</ANIMALS:name>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/lion">
+         <ANIMALS:name>Lion</ANIMALS:name>
+         <ANIMALS:species>Panthera leo</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">4</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>4</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/hippopotamus">
+         <ANIMALS:name>HIPPOPOTAMUS</ANIMALS:name>
+         <ANIMALS:species>Hippopotamus amphibius</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">2</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>2</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/africanelephant">
+         <ANIMALS:name>African Elephant</ANIMALS:name>
+         <ANIMALS:species>Loxodonta africana</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">14</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>14</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/llama">
+         <ANIMALS:name>LLAMA</ANIMALS:name>
+         <ANIMALS:species>Lama glama</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">5</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>5</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/polarbear">
+         <ANIMALS:name>Polar Bear</ANIMALS:name>
+         <ANIMALS:species>Thalarctos maritimus</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">20</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>20</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/aardvark">
+         <ANIMALS:name>aardvark</ANIMALS:name>
+         <ANIMALS:species>Orycteropus afer</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">2</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>2</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo">
+         <ANIMALS:name>Nine-banded Armadillo</ANIMALS:name>
+         <ANIMALS:species>Dasypus novemcinctus</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">1</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>1</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/mammals/gorilla">
+         <ANIMALS:name>Gorilla</ANIMALS:name>
+         <ANIMALS:species>Gorilla gorilla</ANIMALS:species>
+         <ANIMALS:specimens NC:parseType="Integer">7</ANIMALS:specimens>
+         <ANIMALS:specimensAsString>7</ANIMALS:specimensAsString>
+       </RDF:Description>
+
+   <ANIMALS:Class RDF:about="http://www.some-fictitious-zoo.com/reptiles">
+     <ANIMALS:name>Reptiles</ANIMALS:name>
+     <ANIMALS:keeper resource="http://www.some-fictitious-zoo.com/humans/robert"/>
+   </ANIMALS:Class>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/reptiles/anaconda" ANIMALS:specimens="1">
+         <ANIMALS:name>Anaconda</ANIMALS:name>
+         <ANIMALS:species>Eunectes murinus</ANIMALS:species>
+       </RDF:Description>
+
+       <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/reptiles/chameleon" ANIMALS:specimens="2">
+         <ANIMALS:name>Chameleon</ANIMALS:name>
+         <ANIMALS:species>Chamaeleo chamaelon</ANIMALS:species>
+       </RDF:Description>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/some-animals" ANIMALS:name="Zoo Animals">
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/arachnids"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds"/>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/all-animals" ANIMALS:name="Zoo Animals">
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/arachnids">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/arachnids/tarantula"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/birds">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/emu"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/barnowl"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/raven"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/crustaceans"/>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/fish">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/fish/cod"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/fish/swordfish"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/mammals">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/lion"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/hippopotamus"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/africanelephant"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/llama"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/polarbear"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/aardvark"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/ninebandedarmadillo"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/gorilla"/>
+      </RDF:Seq>
+    </RDF:li>
+    <RDF:li>
+      <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/reptiles">
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/reptiles/anaconda"/>
+        <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/reptiles/chameleon"/>
+      </RDF:Seq>
+    </RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/humans" ANIMALS:name="Humans">
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/humans/sarah"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/humans/robert"/>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/sarahs-pets" ANIMALS:name="Sarah's Pets">
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/emu"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/arachnids/tarantula"/>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/roberts-pets" ANIMALS:name="Robert's Pets">
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/reptiles/chameleon"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/arachnids/tarantula"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals/llama"/>
+  </RDF:Seq>
+
+  <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/humans/sarah" ANIMALS:name="Sarah">
+    <ANIMALS:pets resource="http://www.some-fictitious-zoo.com/sarahs-pets"/>
+    <ANIMALS:favoriteAnimal resource="http://www.some-fictitious-zoo.com/birds/emu"/>
+    <ANIMALS:favoriteAnimal resource="http://www.some-fictitious-zoo.com/mammals/polarbear"/>
+    <ANIMALS:favoriteAnimal resource="http://www.some-fictitious-zoo.com/arachnids/tarantula"/>
+    <ANIMALS:description>
+      Sarah became caretaker of the Fictitious Zoo's emu exhibit in 2001. With so
+      many emus living there, she has a lot to do!
+    </ANIMALS:description>
+  </RDF:Description>
+
+  <RDF:Description RDF:about="http://www.some-fictitious-zoo.com/humans/robert" ANIMALS:name="Robert">
+    <ANIMALS:pets resource="http://www.some-fictitious-zoo.com/roberts-pets"/>
+    <ANIMALS:favoriteAnimal resource="http://www.some-fictitious-zoo.com/arachnids/tarantula"/>
+    <ANIMALS:favoriteAnimal resource="http://www.some-fictitious-zoo.com/reptiles/anaconda"/>
+    <ANIMALS:favoriteAnimal resource="http://www.some-fictitious-zoo.com/reptiles/chameleon"/>
+    <ANIMALS:favoriteAnimal resource="http://www.some-fictitious-zoo.com/mammals/africanelephant"/>
+    <ANIMALS:description>
+      Robert helps visitors to the Fictitious Zoo's reptile pavilion learn
+      more about some of the more unusual creatures that live there.
+    </ANIMALS:description>
+    <ANIMALS:lastName>Sanderson</ANIMALS:lastName>
+  </RDF:Description>
+
+  <RDF:Seq RDF:about="http://www.some-fictitious-zoo.com/marked" ANIMALS:name="Marked">
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/humans/sarah"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/mammals"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/crustaceans"/>
+    <RDF:li RDF:resource="http://www.some-fictitious-zoo.com/birds/emu"/>
+  </RDF:Seq>
+
+</RDF:RDF>
