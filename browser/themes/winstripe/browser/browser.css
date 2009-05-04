@@ -1666,6 +1666,11 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x 0 -60px !important;
 }
 
+#urlbar > .autocomplete-history-dropmarker:hover:active,
+#urlbar > .autocomplete-history-dropmarker[open="true"] {
+  background-position: 0 -120px !important;
+}
+
 #urlbar > .autocomplete-history-dropmarker > .dropmarker-icon {
   margin: 0 5px;
 }
@@ -1768,86 +1773,73 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-box-align: stretch;
 }
 
-#identity-box {  
-  overflow: -moz-hidden-unscrollable;
-}
-
-#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: -4px;
-  border-right: 1px solid ThreeDShadow;
-}
-
-#identity-box.verifiedDomain[chromedir="ltr"]:-moz-system-metric(windows-default-theme) ,
-#identity-box.verifiedIdentity[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
-  border-right: 1px solid ThreeDDarkShadow;
-}
-
-#identity-box > hbox {
+#identity-box {
   background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x;
   color: -moz-dialogText;
-  border-left: 2px solid;
-  border-right: 2px solid;
-  -moz-border-left-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
-  -moz-border-right-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
-  padding: 0 1px;
+  border: 1px none ThreeDShadow;
+  -moz-border-end-style: solid;
+  -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.3) inset,
+                   0 -1px 0 rgba(255,255,255,.2) inset;
 }
-#identity-box[chromedir="ltr"]:not(:-moz-system-metric(windows-default-theme)) > hbox {
-  border-left: 1px solid;
-  -moz-border-left-colors: rgba(255, 255, 255, 0.2);
+#identity-box[chromedir="rtl"] {
+  -moz-border-start-style: solid;
 }
-#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  margin: -11px -10px -11px 0;
-  padding: 10px 12px 10px 3px;
-  border-top: 1px solid ThreeDDarkShadow;
-  border-bottom: 1px solid ThreeDDarkShadow;
-  border-right-style: none;
-  -moz-border-radius-topleft: 21px;
-  -moz-border-radius-bottomleft: 21px;
-  -moz-border-left-colors: ThreeDDarkShadow rgba(255, 255, 255, 0.4);
-  background-position: 0 10px;
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+  -moz-border-radius: 6px 0 2px 6px / 15px 0 2px 15px;
+  margin: -1px 0;
+  -moz-margin-start: -4px;
+  -moz-padding-start: 2px;
+  border-style: solid;
+  -moz-border-end-color: rgba(0,0,0,.05);
 }
 
-#identity-box:hover > hbox {
-  background-position: 0 -60px;
-  -moz-border-left-colors: ThreeDShadow rgba(255, 255, 255, 0.4);
-  -moz-border-right-colors: ThreeDShadow rgba(255, 255, 255, 0.4);
-}
-#identity-box:hover[chromedir="ltr"] > hbox {
-  -moz-border-left-colors: rgba(255, 255, 255, 0.4);
-}
-#identity-box:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -50px;
-  -moz-border-left-colors: ThreeDDarkShadow rgba(255, 255, 255, 0.6);
-}
-
-#identity-box.verifiedDomain > hbox {
-  background-position: 0 -120px;
+#identity-box.verifiedDomain,
+#identity-box.verifiedIdentity {
+  border-color: rgba(0,0,0,.2) !important;
   color: white;
 }
-#identity-box.verifiedDomain[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -110px;
+
+#identity-box.verifiedDomain[open="true"],
+#identity-box.verifiedDomain:hover:active,
+#identity-box.verifiedIdentity[open="true"],
+#identity-box.verifiedIdentity:hover:active {
+  border-color: rgba(0,0,0,.2) rgba(0,0,0,.4) !important;
 }
 
-#identity-box.verifiedDomain:hover > hbox {
+#identity-box:hover {
+  background-position: 0 -60px;
+}
+
+#identity-box[open="true"],
+#identity-box:hover:active {
+  background-position: 0 -120px;
+  -moz-box-shadow: 0 -1px 0 rgba(255,255,255,.2) inset;
+}
+
+#identity-box.verifiedDomain {
   background-position: 0 -180px;
 }
-#identity-box.verifiedDomain:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -170px;
-}
 
-#identity-box.verifiedIdentity > hbox {
+#identity-box.verifiedDomain:hover {
   background-position: 0 -240px;
-  color: white;
-}
-#identity-box.verifiedIdentity[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -230px;
 }
 
-#identity-box.verifiedIdentity:hover > hbox {
+#identity-box.verifiedDomain[open="true"],
+#identity-box.verifiedDomain:hover:active {
   background-position: 0 -300px;
 }
-#identity-box.verifiedIdentity:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -290px;
+
+#identity-box.verifiedIdentity {
+  background-position: 0 -360px;
+}
+
+#identity-box.verifiedIdentity:hover {
+  background-position: 0 -420px;
+}
+
+#identity-box.verifiedIdentity[open="true"],
+#identity-box.verifiedIdentity:hover:active {
+  background-position: 0 -480px;
 }
 
 #identity-box:focus {
