@@ -120,6 +120,8 @@ nsSliderFrame::Init(nsIContent*      aContent,
     gSnapMultiplier = nsContentUtils::GetIntPref("slider.snapMultiplier");
   }
 
+  mCurPos = GetCurrentPosition(aContent);
+
   CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
   return rv;
 }
