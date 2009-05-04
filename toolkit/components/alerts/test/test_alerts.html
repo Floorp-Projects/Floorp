@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Alerts Service</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+Alerts service mochitest<br/>
+
+Did an alert appear anywhere?<br/>
+If so, the test will finish once the alert disappears. If not, the test will time out.<br/>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+var observer = {
+  observe: function (aSubject, aTopic, aData) {
+    if (aTopic != "alertclickcallback") // Did someone click the alert while running mochitests?...
+      is(aTopic, "alertfinished", "Checking the topic for a finished notification");
+
+    is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
+    SimpleTest.finish();
+  }
+};
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+try {
+  var notifier = Cc["@mozilla.org/alerts-service;1"].
+                 getService(Ci.nsIAlertsService);
+  notifier.showAlertNotification(null, "Notification test", "Surprise! I'm here to test notifications!",
+                                 false, "foobarcookie", observer);
+
+  SimpleTest.waitForExplicitFinish();
+} catch (ex) {
+  // Alerts service doesn't exist
+}
+
+</script>
+</pre>
+</body>
+</html>
+
