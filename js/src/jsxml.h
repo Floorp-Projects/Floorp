@@ -264,6 +264,9 @@ js_GetXMLDescendants(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 extern JSBool
 js_DeleteXMLListElements(JSContext *cx, JSObject *listobj);
 
+extern JSObject *
+js_InitXMLFilterClass(JSContext *cx, JSObject* obj);
+
 extern JSBool
 js_StepXMLListFilter(JSContext *cx, JSBool initialized);
 
