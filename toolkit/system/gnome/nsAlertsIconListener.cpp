@@ -46,26 +46,6 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libnotify/notify.h>
-#include <gdk/gdk.h>
-
-static PRBool gHasActions = PR_FALSE;
-
-static void notify_action_cb(NotifyNotification *notification,
-                             gchar *action, gpointer user_data)
-{
-  nsAlertsIconListener* alert = static_cast<nsAlertsIconListener*> (user_data);
-  alert->SendCallback();
-}
-
-static void notify_closed_cb(NotifyNotification *notification,
-                             gpointer user_data)
-{
-  g_object_unref(notification);
-
-  nsAlertsIconListener* alert = static_cast<nsAlertsIconListener*> (user_data);
-  alert->SendClosed();
-  NS_RELEASE(alert);
-}
 
 NS_IMPL_ISUPPORTS2(nsAlertsIconListener, imgIContainerObserver, imgIDecoderObserver)
 
@@ -213,17 +193,9 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
   if (aPixbuf)
     notify_notification_set_icon_from_pixbuf(notify, aPixbuf);
 
-  NS_ADDREF(this);
-  if (mAlertHasAction) {
-    // What we put as the label doesn't matter here, if the action
-    // string is "default" then that makes the entire bubble clickable
-    // rather than creating a button.
-    notify_notification_add_action(notify, "default", "Activate",
-                                   notify_action_cb, this, NULL);
-  }
-
-  g_signal_connect(notify, "closed", G_CALLBACK(notify_closed_cb), this);
+  notify_notification_set_timeout(notify, NOTIFY_EXPIRES_DEFAULT);
   gboolean result = notify_notification_show(notify, NULL);
+  g_object_unref(notify);
 
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -251,25 +223,10 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
                        getter_AddRefs(mIconRequest));
 }
 
-void
-nsAlertsIconListener::SendCallback()
-{
-  mAlertListener->Observe(NULL, "alertclickcallback", mAlertCookie.get());
-}
-
-void
-nsAlertsIconListener::SendClosed()
-{
-  mAlertListener->Observe(NULL, "alertfinished", mAlertCookie.get());
-}
-
 nsresult
 nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
                                      const nsAString & aAlertTitle, 
-                                     const nsAString & aAlertText,
-                                     PRBool aAlertTextClickable,
-                                     const nsAString & aAlertCookie,
-                                     nsIObserver * aAlertListener)
+                                     const nsAString & aAlertText)
 {
   if (!notify_is_initted()) {
     // Give the name of this application to libnotify
@@ -297,30 +254,10 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
 
     if (!notify_init(appShortName.get()))
       return NS_ERROR_FAILURE;
-
-    GList *server_caps = notify_get_server_caps();
-    if (server_caps) {
-      for (GList* cap = server_caps; cap != NULL; cap = cap->next) {
-        if (!strcmp((char*) cap->data, "actions")) {
-          gHasActions = PR_TRUE;
-          break;
-        }
-      }
-      g_list_foreach(server_caps, (GFunc)g_free, NULL);
-      g_list_free(server_caps);
-    }
   }
-
-  if (!gHasActions && aAlertTextClickable)
-    return NS_ERROR_FAILURE; // No good, fallback to XUL
 
   mAlertTitle = NS_ConvertUTF16toUTF8(aAlertTitle);
   mAlertText = NS_ConvertUTF16toUTF8(aAlertText);
-
-  mAlertHasAction = aAlertTextClickable;
-
-  mAlertListener = aAlertListener;
-  mAlertCookie = aAlertCookie;
 
   return StartRequest(aImageUrl);
 }
