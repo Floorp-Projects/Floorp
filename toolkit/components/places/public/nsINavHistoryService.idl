@@ -45,6 +45,7 @@
 #include "nsISupports.idl"
 #include "nsIArray.idl"
 #include "nsIURI.idl"
+#include "nsIVariant.idl"
 
 interface nsIFile;
 interface nsINavHistoryContainerResultNode;
@@ -738,7 +739,7 @@ interface nsINavHistoryObserver : nsISupports
  * can be non-negligible.
  */
 
-[scriptable, uuid(53B51AFE-9DE8-40AD-9C81-F2CC1701F1FF)]
+[scriptable, uuid(6f5668f0-da8e-4069-a0de-6680e5cd8570)]
 interface nsINavHistoryQuery : nsISupports
 {
   /**
@@ -849,6 +850,25 @@ interface nsINavHistoryQuery : nsISupports
   attribute boolean annotationIsNot;
   attribute AUTF8String annotation;
   readonly attribute boolean hasAnnotation;
+
+  /**
+   * Limit results to items that are tagged with all of the given tags.  This
+   * attribute must be set to an array of strings.  When called as a getter it
+   * will return an array of strings sorted ascending in lexicographical order.
+   * The array may be empty in either case.  Duplicate tags may be specified
+   * when setting the attribute, but the getter returns only unique tags.
+   *
+   * To search for items that are tagged with any given tags rather than all,
+   * multiple queries may be passed to nsINavHistoryService.executeQueries().
+   */
+  attribute nsIVariant tags;
+
+  /**
+   * If 'tagsAreNot' is true, the results are instead limited to items that
+   * are not tagged with any of the given tags.  This attribute is used in
+   * conjunction with the 'tags' attribute.
+   */
+  attribute boolean tagsAreNot;
 
   /**
    * Limit results to items that are in all of the given folders.
