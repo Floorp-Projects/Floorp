@@ -604,6 +604,9 @@ void _PR_CleanupTime(void)
         monitor = NULL;
     }
 #endif
+#ifdef WINCE
+    _MD_CleanupTime();
+#endif
 }
 
 #if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
