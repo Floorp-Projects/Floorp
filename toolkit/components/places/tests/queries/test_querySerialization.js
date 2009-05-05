@@ -292,7 +292,63 @@ const querySwitches = [
         aQuery.setFolders([bmsvc.placesRoot, bmsvc.tagsFolder], 2);
       }
     ]
-  }
+  },
+  // tags
+  {
+    desc:    "nsINavHistoryQuery.getTags",
+    matches: function (aQuery1, aQuery2) {
+      if (aQuery1.tagsAreNot !== aQuery2.tagsAreNot)
+        return false;
+      var q1Tags = aQuery1.tags;
+      var q2Tags = aQuery2.tags;
+      if (q1Tags.length !== q2Tags.length)
+        return false;
+      for (let i = 0; i < q1Tags.length; i++) {
+        if (q2Tags.indexOf(q1Tags[i]) < 0)
+          return false;
+      }
+      for (let i = 0; i < q2Tags.length; i++) {
+        if (q1Tags.indexOf(q2Tags[i]) < 0)
+          return false;
+      }
+      return true;
+    },
+    runs: [
+      function (aQuery, aQueryOptions) {
+        aQuery.tags = [];
+      },
+      function (aQuery, aQueryOptions) {
+        aQuery.tags = [""];
+      },
+      function (aQuery, aQueryOptions) {
+        aQuery.tags = [
+          "foo",
+          "七難",
+          "",
+          "いっぱいおっぱい",
+          "Abracadabra",
+          "１２３",
+          "Here's a pretty long tag name with some = signs and 1 2 3s and spaces oh jeez will it work I hope so!",
+          "アスキーでございません",
+          "あいうえお",
+        ];
+      },
+      function (aQuery, aQueryOptions) {
+        aQuery.tags = [
+          "foo",
+          "七難",
+          "",
+          "いっぱいおっぱい",
+          "Abracadabra",
+          "１２３",
+          "Here's a pretty long tag name with some = signs and 1 2 3s and spaces oh jeez will it work I hope so!",
+          "アスキーでございません",
+          "あいうえお",
+        ];
+        aQuery.tagsAreNot =  true;
+      }
+    ]
+  },
 ];
 
 // nsINavHistoryQueryOptions switches
