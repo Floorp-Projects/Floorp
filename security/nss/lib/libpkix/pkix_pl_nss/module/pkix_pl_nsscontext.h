@@ -57,6 +57,8 @@ struct PKIX_PL_NssContextStruct {
         void *wincx;
         PKIX_UInt32 timeoutSeconds;
         PKIX_UInt32 maxResponseLength;
+        PRTime crlReloadDelay;
+        PRTime badDerCrlReloadDelay;
 };
 
 PKIX_Error *

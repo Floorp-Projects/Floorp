@@ -278,7 +278,7 @@ PKIX_ComCertSelParams_Create(
         params->subjKeyId = NULL;
         params->subjPubKey = NULL;
         params->subjPKAlgId = NULL;
-        params->leafCertFlag = PKIX_TRUE;
+        params->leafCertFlag = PKIX_FALSE;
 
         *pParams = params;
 

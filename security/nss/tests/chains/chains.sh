@@ -668,7 +668,7 @@ verify_cert()
     echo "vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
 
     if [ -z "${MEMLEAK_DBG}" ]; then
-        VFY_OUT=$(${BINDIR}/vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT})
+        VFY_OUT=$(${BINDIR}/vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT} 2>&1)
         RESULT=$?
         echo "${VFY_OUT}"
     else 
@@ -678,7 +678,11 @@ verify_cert()
     fi
 
     echo "${VFY_OUT}" | grep "ERROR -5990: I/O operation timed out" > /dev/null
-    if [ $? -eq 0 ]; then
+    E5990=$?
+    echo "${VFY_OUT}" | grep "ERROR -8030: Server returned bad HTTP response" > /dev/null
+    E8030=$?
+
+    if [ $E5990 -eq 0 -o $E8030 -eq 0 ]; then
         echo "Result of this test is not valid due to network time out."
         html_unknown "${SCENARIO}${TESTNAME}"
         return
@@ -692,6 +696,37 @@ verify_cert()
         html_passed "${SCENARIO}${TESTNAME}"
     else
         html_failed "${SCENARIO}${TESTNAME}"
+    fi
+}
+
+
+check_ocsp()
+{
+    OCSP_CERT=$1
+
+    CERT_NICK=`echo ${OCSP_CERT} | cut -d: -f1`
+    CERT_ISSUER=`echo ${OCSP_CERT} | cut -d: -f2`
+
+    if [ "${CERT_ISSUER}" = "x" ]; then
+        CERT_ISSUER=
+        CERT=${CERT_NICK}.cert
+        CERT_FILE="${QADIR}/libpkix/certs/${CERT}"
+    else
+        CERT=${CERT_NICK}${CERT_ISSUER}.der
+        CERT_FILE=${CERT}
+    fi
+
+    OCSP_HOST=$(${BINDIR}/pp -t certificate -i ${CERT_FILE} | grep URI | sed "s/.*:\/\///" | sed "s/:.*//")
+
+    if [ "${OS_ARCH}" = "WINNT" ]; then
+        ping -n 1 ${OCSP_HOST}
+        return $?
+    elif [ "${OS_ARCH}" = "HP-UX" ]; then
+        ping ${OCSP_HOST} -c 1
+        return $?
+    else
+        ping -c 1 ${OCSP_HOST}
+        return $?
     fi
 }
 
@@ -864,6 +899,13 @@ parse_config()
             ;;
         "break")
             break
+            ;;
+        "check_ocsp")
+            check_ocsp ${VALUE}
+            if [ $? -ne 0 ]; then
+                echo "OCSP server not accessible, skipping OCSP tests"
+                break;
+            fi
             ;;
         "")
             if [ -n "${ENTITY}" ]; then

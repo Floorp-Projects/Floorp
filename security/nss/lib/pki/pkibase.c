@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.30 $ $Date: 2008/01/21 23:20:19 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.31 $ $Date: 2009/04/17 19:28:07 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -199,48 +199,45 @@ nssPKIObject_AddInstance (
   nssCryptokiObject *instance
 )
 {
+    nssCryptokiObject **newInstances = NULL;
+
     nssPKIObject_Lock(object);
     if (object->numInstances == 0) {
-	object->instances = nss_ZNEWARRAY(object->arena,
-	                                  nssCryptokiObject *,
-	                                  object->numInstances + 1);
+	newInstances = nss_ZNEWARRAY(object->arena,
+				     nssCryptokiObject *,
+				     object->numInstances + 1);
     } else {
+	PRBool found = PR_FALSE;
 	PRUint32 i;
 	for (i=0; i<object->numInstances; i++) {
 	    if (nssCryptokiObject_Equal(object->instances[i], instance)) {
-		nssPKIObject_Unlock(object);
-		if (instance->label) {
-		    if (!object->instances[i]->label ||
-		        !nssUTF8_Equal(instance->label,
-		                       object->instances[i]->label, NULL))
-		    {
-			/* Either the old instance did not have a label,
-			 * or the label has changed.
-			 */
-			nss_ZFreeIf(object->instances[i]->label);
-			object->instances[i]->label = instance->label;
-			instance->label = NULL;
-		    }
-		} else if (object->instances[i]->label) {
-		    /* The old label was removed */
-		    nss_ZFreeIf(object->instances[i]->label);
-		    object->instances[i]->label = NULL;
-		}
-		nssCryptokiObject_Destroy(instance);
-		return PR_SUCCESS;
+		found = PR_TRUE;
+		break;
 	    }
 	}
-	object->instances = nss_ZREALLOCARRAY(object->instances,
-	                                      nssCryptokiObject *,
-	                                      object->numInstances + 1);
+	if (found) {
+	    /* The new instance is identical to one in the array, except
+	     * perhaps that the label may be different.  So replace 
+	     * the label in the array instance with the label from the 
+	     * new instance, and discard the new instance.
+	     */
+	    nss_ZFreeIf(object->instances[i]->label);
+	    object->instances[i]->label = instance->label;
+	    nssPKIObject_Unlock(object);
+	    instance->label = NULL;
+	    nssCryptokiObject_Destroy(instance);
+	    return PR_SUCCESS;
+	}
+	newInstances = nss_ZREALLOCARRAY(object->instances,
+					 nssCryptokiObject *,
+					 object->numInstances + 1);
     }
-    if (!object->instances) {
-	nssPKIObject_Unlock(object);
-	return PR_FAILURE;
+    if (newInstances) {
+	object->instances = newInstances;
+	newInstances[object->numInstances++] = instance;
     }
-    object->instances[object->numInstances++] = instance;
     nssPKIObject_Unlock(object);
-    return PR_SUCCESS;
+    return (newInstances ? PR_SUCCESS : PR_FAILURE);
 }
 
 NSS_IMPLEMENT PRBool
