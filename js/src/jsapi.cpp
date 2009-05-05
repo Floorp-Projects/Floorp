@@ -2828,19 +2828,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT(obj != proto);
-    if (OBJ_IS_NATIVE(obj)) {
-        JS_LOCK_OBJ(cx, obj);
-        if (!js_GetMutableScope(cx, obj)) {
-            JS_UNLOCK_OBJ(cx, obj);
-            return JS_FALSE;
-        }
-        LOCKED_OBJ_SET_PROTO(obj, proto);
-        JS_UNLOCK_OBJ(cx, obj);
-        return JS_TRUE;
-    }
-    OBJ_SET_PROTO(cx, obj, proto);
-    return JS_TRUE;
+    return js_SetProtoOrParent(cx, obj, JSSLOT_PROTO, proto, JS_FALSE);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2858,9 +2846,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT(obj != parent);
-    OBJ_SET_PARENT(cx, obj, parent);
-    return JS_TRUE;
+    return js_SetProtoOrParent(cx, obj, JSSLOT_PARENT, parent, JS_FALSE);
 }
 
 JS_PUBLIC_API(JSObject *)
