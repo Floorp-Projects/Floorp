@@ -362,86 +362,94 @@ pkix_TargetCertChecker_Check(
                         PKIX_ERROR(PKIX_SUBJALTNAMECHECKFAILED);
 
                 }
-
         }
 
         if (state->certsRemaining == 0) {
 
-                if (state->certSelector != NULL) {
-
-                        PKIX_CHECK(PKIX_CertSelector_GetMatchCallback
-                            (state->certSelector,
+            if (state->certSelector != NULL) {
+                PKIX_CHECK(PKIX_CertSelector_GetMatchCallback
+                           (state->certSelector,
                             &certSelectorMatch,
                             plContext),
-                            PKIX_CERTSELECTORGETMATCHCALLBACKFAILED);
+                           PKIX_CERTSELECTORGETMATCHCALLBACKFAILED);
 
-                        PKIX_CHECK(certSelectorMatch
-                            (state->certSelector,
+                PKIX_CHECK(certSelectorMatch
+                           (state->certSelector,
                             cert,
                             plContext),
-                            PKIX_CERTSELECTORMATCHFAILED);
-                        /*
-                         * There are two Extended Key Usage Checkings
-                         * available :
-                         * 1) here at the targetcertchecker where we
-                         *    verify the Extended Key Usage OIDs application
-                         *    specifies via ComCertSelParams are included
-                         *    in Cert's Extended Key Usage OID's. Note,
-                         *    this is an OID to OID comparison and only last
-                         *    Cert is checked.
-                         * 2) at user defined ekuchecker where checking
-                         *    is applied to all Certs on the chain and
-                         *    the NSS Extended Key Usage algorithm is
-                         *    used. In order to invoke this checking, not
-                         *    only does the ComCertSelparams needs to be
-                         *    set, the EKU initialize call is required to
-                         *    activate the checking.
-                         *
-                         * XXX We use the same ComCertSelParams Set/Get
-                         * functions to set the parameters for both cases.
-                         * We may want to separate them in the future.
-                         */
-
-                        PKIX_CHECK(PKIX_PL_Cert_GetExtendedKeyUsage
-                            (cert, &certExtKeyUsageList, plContext),
-                            PKIX_CERTGETEXTENDEDKEYUSAGEFAILED);
-
-
-                        if (state->extKeyUsageList != NULL &&
-                            certExtKeyUsageList != NULL) {
-
-                            PKIX_CHECK(PKIX_List_GetLength
-                                (state->extKeyUsageList, &numItems, plContext),
-                                PKIX_LISTGETLENGTHFAILED);
-
-                            for (i = 0; i < numItems; i++) {
-
-                                PKIX_CHECK(PKIX_List_GetItem
-                                        (state->extKeyUsageList,
-                                        i,
-                                        (PKIX_PL_Object **) &name,
-                                        plContext),
-                                        PKIX_LISTGETITEMFAILED);
-
-                                PKIX_CHECK(pkix_List_Contains
-                                        (certExtKeyUsageList,
-                                        (PKIX_PL_Object *) name,
-                                        &checkPassed,
-                                        plContext),
-                                        PKIX_LISTCONTAINSFAILED);
-
-                                PKIX_DECREF(name);
-
-                                if (checkPassed != PKIX_TRUE) {
-                                    PKIX_ERROR
-                                        (PKIX_EXTENDEDKEYUSAGECHECKINGFAILED);
-
-                                }
-                            }
-
-                        }
-
+                           PKIX_CERTSELECTORMATCHFAILED);
+            } else {
+                /* Check at least cert/key usages if target cert selector
+                 * is not set. */
+                PKIX_CHECK(PKIX_PL_Cert_VerifyCertAndKeyType(cert,
+                                         PKIX_FALSE  /* is chain cert*/,
+                                         plContext),
+                           PKIX_CERTVERIFYCERTTYPEFAILED);
+            }
+            /*
+             * There are two Extended Key Usage Checkings
+             * available :
+             * 1) here at the targetcertchecker where we
+             *    verify the Extended Key Usage OIDs application
+             *    specifies via ComCertSelParams are included
+             *    in Cert's Extended Key Usage OID's. Note,
+             *    this is an OID to OID comparison and only last
+             *    Cert is checked.
+             * 2) at user defined ekuchecker where checking
+             *    is applied to all Certs on the chain and
+             *    the NSS Extended Key Usage algorithm is
+             *    used. In order to invoke this checking, not
+             *    only does the ComCertSelparams needs to be
+             *    set, the EKU initialize call is required to
+             *    activate the checking.
+             *
+             * XXX We use the same ComCertSelParams Set/Get
+             * functions to set the parameters for both cases.
+             * We may want to separate them in the future.
+             */
+            
+            PKIX_CHECK(PKIX_PL_Cert_GetExtendedKeyUsage
+                       (cert, &certExtKeyUsageList, plContext),
+                       PKIX_CERTGETEXTENDEDKEYUSAGEFAILED);
+            
+            
+            if (state->extKeyUsageList != NULL &&
+                certExtKeyUsageList != NULL) {
+                
+                PKIX_CHECK(PKIX_List_GetLength
+                           (state->extKeyUsageList, &numItems, plContext),
+                           PKIX_LISTGETLENGTHFAILED);
+                
+                for (i = 0; i < numItems; i++) {
+                    
+                    PKIX_CHECK(PKIX_List_GetItem
+                               (state->extKeyUsageList,
+                                i,
+                                (PKIX_PL_Object **) &name,
+                                plContext),
+                               PKIX_LISTGETITEMFAILED);
+                    
+                    PKIX_CHECK(pkix_List_Contains
+                               (certExtKeyUsageList,
+                                (PKIX_PL_Object *) name,
+                                &checkPassed,
+                                plContext),
+                               PKIX_LISTCONTAINSFAILED);
+                    
+                    PKIX_DECREF(name);
+                    
+                    if (checkPassed != PKIX_TRUE) {
+                        PKIX_ERROR
+                            (PKIX_EXTENDEDKEYUSAGECHECKINGFAILED);
+                        
+                    }
                 }
+            }
+        } else {
+            /* Check key usage and cert type based on certificate usage. */
+            PKIX_CHECK(PKIX_PL_Cert_VerifyCertAndKeyType(cert, PKIX_TRUE,
+                                                         plContext),
+                       PKIX_CERTVERIFYCERTTYPEFAILED);
         }
 
         /* Remove Critical Extension OID from list */
@@ -469,6 +477,7 @@ pkix_TargetCertChecker_Check(
 
 cleanup:
 
+        PKIX_DECREF(name);
         PKIX_DECREF(nameConstraints);
         PKIX_DECREF(certSubjAltNames);
         PKIX_DECREF(certExtKeyUsageList);

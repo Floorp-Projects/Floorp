@@ -292,6 +292,8 @@ typedef PKIX_Error *
  *  "store"
  *      Address of CertStore from which CRLs are to be retrieved.
  *      Must be non-NULL.
+ *  "issuerName"
+ *      Name of the issuer that will be used to track bad der crls.
  *  "crlList"
  *      Address on the importing crl list.
  *  "plContext"
@@ -309,6 +311,7 @@ typedef PKIX_Error *
 typedef PKIX_Error *
 (*PKIX_CertStore_ImportCrlCallback)(
         PKIX_CertStore *store,
+        PKIX_PL_X500Name *issuerName,
         PKIX_List *crlList,
         void *plContext);
 
@@ -330,6 +333,9 @@ typedef PKIX_Error *
  *      Issuer certificate of the "crl".
  *  "date"
  *      Date of the revocation check.
+ *  "crlDownloadDone"
+ *      Indicates, that all needed crl downloads are done by the time of
+ *      the revocation check.
  *  "reasonCode"
  *      If cert is revoked, returned reason code for  which a cert was revoked.
  *  "revStatus"
@@ -353,7 +359,7 @@ typedef PKIX_Error *
         PKIX_PL_Cert *cert,
         PKIX_PL_Cert *issuer,
         PKIX_PL_Date *date,
-        PKIX_Boolean delayCrlSigCheck,
+        PKIX_Boolean  crlDownloadDone,
         PKIX_UInt32 *reasonCode,
         PKIX_RevocationStatus *revStatus,
         void *plContext);

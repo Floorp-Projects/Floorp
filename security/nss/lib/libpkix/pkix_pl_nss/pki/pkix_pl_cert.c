@@ -1186,6 +1186,7 @@ pkix_pl_Cert_Destroy(
         PKIX_DECREF(cert->store);
         PKIX_DECREF(cert->authorityInfoAccess);
         PKIX_DECREF(cert->subjectInfoAccess);
+        PKIX_DECREF(cert->crldpList);
 
         if (cert->arenaNameConstraints){
                 /* This arena was allocated for SubjectAltNames */
@@ -1456,6 +1457,7 @@ pkix_pl_Cert_CreateWithNSSCert(
         cert->authorityInfoAccess = NULL;
         cert->subjectInfoAccess = NULL;
         cert->isUserTrustAnchor = PKIX_FALSE;
+        cert->crldpList = NULL;
 
         *pCert = cert;
 
@@ -2984,6 +2986,62 @@ cleanup:
 }
 
 /*
+ * FUNCTION: PKIX_PL_Cert_VerifyCertAndKeyType (see comments in pkix_pl_pki.h)
+ */
+PKIX_Error *
+PKIX_PL_Cert_VerifyCertAndKeyType(
+        PKIX_PL_Cert *cert,
+        PKIX_Boolean isChainCert,
+        void *plContext)
+{
+    PKIX_PL_CertBasicConstraints *basicConstraints = NULL;
+    SECCertificateUsage certificateUsage;
+    SECCertUsage certUsage = 0;
+    unsigned int requiredKeyUsage;
+    unsigned int requiredCertType;
+    unsigned int certType;
+    SECStatus rv = SECSuccess;
+    
+    PKIX_ENTER(CERT, "PKIX_PL_Cert_VerifyCertType");
+    PKIX_NULLCHECK_TWO(cert, plContext);
+    
+    certificateUsage = ((PKIX_PL_NssContext*)plContext)->certificateUsage;
+    
+    /* ensure we obtained a single usage bit only */
+    PORT_Assert(!(certificateUsage & (certificateUsage - 1)));
+    
+    /* convert SECertificateUsage (bit mask) to SECCertUsage (enum) */
+    while (0 != (certificateUsage = certificateUsage >> 1)) { certUsage++; }
+
+    /* check key usage and netscape cert type */
+    cert_GetCertType(cert->nssCert);
+    certType = cert->nssCert->nsCertType;
+    if (isChainCert ||
+        (certUsage != certUsageVerifyCA && certUsage != certUsageAnyCA)) {
+	rv = CERT_KeyUsageAndTypeForCertUsage(certUsage, isChainCert,
+					      &requiredKeyUsage,
+					      &requiredCertType);
+        if (rv == SECFailure) {
+            PKIX_ERROR(PKIX_UNSUPPORTEDCERTUSAGE);
+        }
+    } else {
+        /* use this key usage and cert type for certUsageAnyCA and
+         * certUsageVerifyCA. */
+	requiredKeyUsage = KU_KEY_CERT_SIGN;
+	requiredCertType = NS_CERT_TYPE_CA;
+    }
+    if (CERT_CheckKeyUsage(cert->nssCert, requiredKeyUsage) != SECSuccess) {
+        PKIX_ERROR(PKIX_CERTCHECKKEYUSAGEFAILED);
+    }
+    if (!(certType & requiredCertType)) {
+        PKIX_ERROR(PKIX_CERTCHECKCERTTYPEFAILED);
+    }
+cleanup:
+    PKIX_DECREF(basicConstraints);
+    PKIX_RETURN(CERT);
+}
+
+/*
  * FUNCTION: PKIX_PL_Cert_VerifyKeyUsage (see comments in pkix_pl_pki.h)
  */
 PKIX_Error *
@@ -3522,6 +3580,61 @@ cleanup:
                 SECITEM_FreeItem(encodedSubjInfoAccess, PR_TRUE);
         }
         PKIX_RETURN(CERT);
+}
+
+/*
+ * FUNCTION: PKIX_PL_Cert_GetCrlDp
+ * (see comments in pkix_pl_pki.h)
+ */
+PKIX_Error *
+PKIX_PL_Cert_GetCrlDp(
+    PKIX_PL_Cert *cert,
+    PKIX_List **pDpList,
+    void *plContext)
+{
+    PKIX_UInt32 dpIndex = 0;
+    pkix_pl_CrlDp *dp = NULL; 
+    CERTCrlDistributionPoints *dpoints = NULL;
+
+    PKIX_ENTER(CERT, "PKIX_PL_Cert_GetCrlDp");
+    PKIX_NULLCHECK_THREE(cert, cert->nssCert, pDpList);
+                
+    /* if we don't have a cached copy from before, we create one */
+    if (cert->crldpList == NULL) {
+        PKIX_OBJECT_LOCK(cert);
+        if (cert->crldpList != NULL) {
+            goto cleanup;
+        }
+        PKIX_CHECK(PKIX_List_Create(&cert->crldpList, plContext),
+                   PKIX_LISTCREATEFAILED);
+        dpoints = CERT_FindCRLDistributionPoints(cert->nssCert);
+        if (!dpoints || !dpoints->distPoints) {
+            goto cleanup;
+        }
+        for (;dpoints->distPoints[dpIndex];dpIndex++) {
+            PKIX_CHECK(
+                pkix_pl_CrlDp_Create(dpoints->distPoints[dpIndex],
+                                     &cert->nssCert->issuer,
+                                     &dp, plContext),
+                PKIX_CRLDPCREATEFAILED);
+            /* Create crldp list in reverse order in attempt to get
+             * to the whole crl first. */
+            PKIX_CHECK(
+                PKIX_List_InsertItem(cert->crldpList, 0,
+                                     (PKIX_PL_Object*)dp,
+                                     plContext),
+                PKIX_LISTAPPENDITEMFAILED);
+            PKIX_DECREF(dp);
+        }
+    }
+cleanup:
+    PKIX_INCREF(cert->crldpList);
+    *pDpList = cert->crldpList;
+
+    PKIX_OBJECT_UNLOCK(lockedObject);
+    PKIX_DECREF(dp);
+
+    PKIX_RETURN(CERT);
 }
 
 /*

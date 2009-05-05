@@ -11,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Netscape security libraries.
+ * The Original Code is the PKIX-C library.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
- * the Initial Developer. All Rights Reserved.
+ * Sun Microsystems, Inc.
+ * Portions created by the Initial Developer are
+ * Copyright 2004-2007 Sun Microsystems, Inc.  All Rights Reserved.
  *
  * Contributor(s):
+ *   Sun Microsystems, Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,43 +34,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
 /*
- *  jarjart.h
+ * pkix_pl_crldp.h
  *
- *  Functions for the Jartool, which is written in Java and
- *  requires wrappers located elsewhere in the client.
- *
- *  Do not call these unless you are the Jartool, no matter
- *  how convenient they may appear.
+ * Crp DP Object Definitions
  *
  */
+#include "pkix_pl_common.h"
 
-#ifndef _JARJART_H_
-#define _JARJART_H_
+#ifndef _PKIX_PL_CRLDP_H
+#define _PKIX_PL_CRLDP_H
 
-/* return a list of certificate nicknames, separated by \n's */
-extern char *JAR_JAR_list_certs (void);
-
-/* validate archive, simple api */
-extern int JAR_JAR_validate_archive (char *filename);
-
-/* begin hash */
-extern void *JAR_JAR_new_hash (int alg);
-
-/* hash a streaming pile */
-extern void *JAR_JAR_hash (int alg, void *cookie, int length, void *data);
-
-/* end hash */
-extern void *JAR_JAR_end_hash (int alg, void *cookie);
-
-/* sign the archive (given an .SF file) with the given cert.
-   The password argument is a relic, PKCS11 now handles that. */
-
-extern int JAR_JAR_sign_archive 
-   (char *nickname, char *password, char *sf, char *outsig);
-
-/* convert status to text */
-extern char *JAR_JAR_get_error (int status);
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/* CRLDP object can not be used without holding a reference
+ * to the pkix certificate they belong to. The memory for dp der
+ * object is allocated on nssCert certificate - a member of
+ * PKIX_PL_Cert struct. */
+typedef struct pkix_pl_CrlDpStruct {
+    /* reference to decoded crldp that allocated on nssCert arena. */
+    const CRLDistributionPoint *nssdp;
+    DistributionPointTypes distPointType;
+    union {
+	CERTGeneralName *fullName;
+        /* if dp is a relative name, the issuerName is a merged value
+         * of crlIssuer and a relative name. Must be destroyed by CrlDp
+         * destructor. */
+        CERTName *issuerName;
+    } name;
+    PKIX_Boolean isPartitionedByReasonCode;
+} pkix_pl_CrlDp;
+
+
+PKIX_Error *
+pkix_pl_CrlDp_RegisterSelf(void *plContext);
+
+/* Parses CRLDistributionPoint structure and creaetes
+ * pkix_pl_CrlDp object. */
+PKIX_Error *
+pkix_pl_CrlDp_Create(const CRLDistributionPoint *dp,
+                     const CERTName *certIssuerName,
+                     pkix_pl_CrlDp **pPkixDP,
+                     void *plContext);
+#endif /* _PKIX_PL_CRLDP_H */
