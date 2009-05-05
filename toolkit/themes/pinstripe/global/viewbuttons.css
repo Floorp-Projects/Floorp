@@ -61,13 +61,13 @@
   padding: 1px 4px 0;
   border: none;
   border-left: 1px solid rgba(0, 0, 0, 0.8);
-  background: url("chrome://global/skin/toolbar/white-transparent-gradient.png") repeat-x #B4B4B4;
+  background: url("chrome://global/skin/toolbar/white-transparent-gradient.png") repeat-x #ADADAD;
 }
 
 #viewGroup > :not([checked=true]):not([selected=true]):active:hover {
   background: #B5B5B5;
   text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
-  -moz-box-shadow: inset rgba(0, 0, 0, 0.4) 0 -6px 14px, inset #000 0 1px 4px, inset rgba(0, 0, 0, 0.3) 0 1px 4px;
+  -moz-box-shadow: inset rgba(0, 0, 0, 0.3) 0 -6px 14px, inset #000 0 1px 4px, inset rgba(0, 0, 0, 0.2) 0 1px 4px;
 }
 
 #viewGroup > radio[selected=true],
@@ -75,12 +75,13 @@
   color: #FFF !important;
   text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
   background: #606060;
-  -moz-box-shadow: inset black 0 2px 7px;
+  -moz-box-shadow: inset #2A2A2A 0 3px 5px;
 }
 
 #viewGroup > radio[selected=true]:active:hover,
 #viewGroup > toolbarbutton[checked=true]:active:hover {
-  background-color: #505050;
+  background-color: #4E4E4E;
+  -moz-box-shadow: inset #1c1c1c 0 3px 5px;
 }
 
 :root:not([active]) #viewGroup {
@@ -95,9 +96,9 @@
 
 :root:not([active]) #viewGroup > radio[selected=true],
 :root:not([active]) #viewGroup > toolbarbutton[checked=true] {
-  color: #C5C5C5 !important; /* remove this when we support click-through */
-  background: #999;
-  -moz-box-shadow: inset rgba(0, 0, 0, 0.65) 0 2px 7px;
+  color: #E6E6E6 !important; /* remove this when we support click-through */
+  background: #8E8E8E;
+  -moz-box-shadow: inset rgba(0, 0, 0, 0.5) 0 3px 5px;
 }
 
 #viewGroup:not([chromedir=rtl]) > :first-child,
