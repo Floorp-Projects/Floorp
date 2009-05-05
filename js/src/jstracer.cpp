@@ -3535,6 +3535,8 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 static void
 SynthesizeSlowNativeFrame(JSContext *cx, VMSideExit *exit)
 {
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
     void *mark;
     JSInlineFrame *ifp;
 
