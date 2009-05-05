@@ -74,6 +74,7 @@ sub daysFromBuildID
 # SRCDIR - Holds module.ver and source
 # BINARY - Holds the name of the binary file
 # DISPNAME - Holds the display name of the built application
+# APPVERSION - Holds the version string of the built application
 # BITS - 16 or 32 bit
 # RCINCLUDE - Holds the name of the RC File to include or ""
 # QUIET - Turns off output
@@ -112,6 +113,7 @@ GetOptions( "QUIET" => \$quiet,
 		"MODNAME=s" => \$module,
 		"BINARY=s" => \$binary,
 		"DISPNAME=s" => \$displayname,
+		"APPVERSION=s" => \$appversion,
 		"SRCDIR=s" => \$srcdir,
 		"TOPSRCDIR=s" => \$topsrcdir,
 		"DEPTH=s" => \$depth,
@@ -124,6 +126,7 @@ if (!defined($milestone)) {$milestone="";}
 if (!defined($module)) {$module="";}
 if (!defined($binary)) {$binary="";}
 if (!defined($displayname)) {$displayname="Mozilla";}
+if (!defined($appversion)) {$appversion=$milestone;}
 if (!defined($depth)) {$depth=".";}
 if (!defined($rcinclude)) {$rcinclude="";}
 if (!defined($objdir)) {$objdir=".";}
@@ -226,6 +229,9 @@ if ($milestone eq "") {
 }
 
 $mfversion = $mpversion = $milestone;
+if ($appversion eq "") {
+  $appversion = $milestone;
+}
 
 if ($debug eq "1")
 {
@@ -252,6 +258,18 @@ else {
 }
 $fileversion = $productversion="$mstone[0],$mstone[1],$mstone[2],$daycount";
 
+my @appver = split(/\./,$appversion);
+for ($j = 1; $j < 4; $j++)
+{
+    if (!$appver[$j]) {
+        $appver[$j] = "0";
+    }
+    else {
+        $appver[$j] =~s/\D.*$//;
+    }
+}
+my $winappversion = "$appver[0],$appver[1],$appver[2],$appver[3]";
+
 my $copyright = "License: MPL 1.1/GPL 2.0/LGPL 2.1";
 my $company = "Mozilla Foundation";
 my $trademarks = "Mozilla";
@@ -260,16 +278,16 @@ my $productname = $displayname;
 
 if (defined($override_comment)){$override_comment =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $comment=$override_comment;}
 if (defined($override_description)){$override_description =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $description=$override_description;}
-if (defined($override_fileversion)){$fileversion=$override_fileversion;}
-if (defined($override_mfversion)){$mfversion=$override_mfversion;}
+if (defined($override_fileversion)){$override_fileversion =~ s/\@MOZ_APP_WINVERSION\@/$winappversion/g; $fileversion=$override_fileversion;}
+if (defined($override_mfversion)){$override_mfversion =~ s/\@MOZ_APP_VERSION\@/$appversion/g; $mfversion=$override_mfversion;}
 if (defined($override_company)){$company=$override_company;}
 if (defined($override_module)){$override_module =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $module=$override_module;}
 if (defined($override_copyright)){$override_copyright =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $copyright=$override_copyright;}
 if (defined($override_trademarks)){$override_trademarks =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $trademarks=$override_trademarks;}
 if (defined($override_filename)){$binary=$override_filename;}
 if (defined($override_productname)){$override_productname =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $productname=$override_productname;}
-if (defined($override_productversion)){$productversion=$override_productversion;}
-if (defined($override_mpversion)){$mpversion=$override_mpversion;}
+if (defined($override_productversion)){$override_productversion =~ s/\@MOZ_APP_WINVERSION\@/$winappversion/g; $productversion=$override_productversion;}
+if (defined($override_mpversion)){$override_mpversion =~ s/\@MOZ_APP_VERSION\@/$appversion/g; $mpversion=$override_mpversion;}
 
 
 #Override section
