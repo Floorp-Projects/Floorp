@@ -13,7 +13,8 @@
         ondialogaccept="return commonDialogOnAccept();"
         ondialogextra1="return commonDialogOnExtra1();"
         ondialogextra2="return commonDialogOnExtra2();"
-        buttonpack="center">
+        buttonpack="center"
+        style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"> 
     
   <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
@@ -38,9 +39,6 @@
     </popup>
   </popupset>
 
-  <hbox id="filler" style="min-width: 0%;">
-    <spacer style="width: 29em;"/>
-  </hbox>
 
   <grid>
     <columns>
