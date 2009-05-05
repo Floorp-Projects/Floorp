@@ -1,0 +1,480 @@
+<html>
+<head>
+  <title>Test for IME state controling</title>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body onload="setTimeout(runTests, 0);">
+<p id="display">
+  <!-- input elements -->
+  <input type="text"     id="text"/><br/>
+  <input type="text"     id="text_readonly" readonly="readonly"/><br/>
+  <input type="password" id="password"/><br/>
+  <input type="password" id="password_readonly" readonly="readonly"/><br/>
+  <input type="checkbox" id="checkbox"/><br/>
+  <input type="radio"    id="radio"/><br/>
+  <input type="submit"   id="submit"/><br/>
+  <input type="reset"    id="reset"/><br/>
+  <input type="file"     id="file"/><br/>
+  <input type="button"   id="ibutton"/><br/>
+  <input type="image"    id="image" alt="image"/><br/>
+
+  <!-- form controls -->
+  <button id="button">button</button><br/>
+  <textarea id="textarea">textarea</textarea><br/>
+  <textarea id="textarea_readonly" readonly="readonly">textarea[readonly]</textarea><br/>
+  <select id="select">
+    <option value="option" selected="selected"/>
+  </select><br/>
+  <select id="select_multiple" multiple="multiple">
+    <option value="option" selected="selected"/>
+  </select><br/>
+  <isindex id="isindex" prompt="isindex"/><br/>
+
+  <!-- a element -->
+  <a id="a_href" href="">a[href]</a><br/>
+
+  <!-- ime-mode test -->
+  <input type="text" id="ime_mode_auto"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled" style="ime-mode: disabled;"/><br/>
+  <input type="password" id="ime_mode_auto_p"     style="ime-mode: auto;"/><br/>
+  <input type="password" id="ime_mode_normal_p"   style="ime-mode: normal;"/><br/>
+  <input type="password" id="ime_mode_active_p"   style="ime-mode: active;"/><br/>
+  <input type="password" id="ime_mode_inactive_p" style="ime-mode: inactive;"/><br/>
+  <input type="password" id="ime_mode_disabled_p" style="ime-mode: disabled;"/><br/>
+  <textarea id="ime_mode_auto_t"     style="ime-mode: auto;">textarea</textarea><br/>
+  <textarea id="ime_mode_normal_t"   style="ime-mode: normal;">textarea</textarea><br/>
+  <textarea id="ime_mode_active_t"   style="ime-mode: active;">textarea</textarea><br/>
+  <textarea id="ime_mode_inactive_t" style="ime-mode: inactive;">textarea</textarea><br/>
+  <textarea id="ime_mode_disabled_t" style="ime-mode: disabled;">textarea</textarea><br/>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+var gUtils = window.
+      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+      getInterface(Components.interfaces.nsIDOMWindowUtils);
+const kIMEEnabledSupported = navigator.platform.indexOf("Mac") == 0 ||
+                             navigator.platform.indexOf("Win") == 0 ||
+                             navigator.platform.indexOf("Linux") == 0;
+
+// We support to control IME open state on Windows and Mac actually.  However,
+// we cannot test it on Mac if the current keyboard layout is not CJK. And also
+// we cannot test it on Win32 if the system didn't be installed IME. So,
+// currently we should not run the open state testing.
+const kIMEOpenSupported = false;
+
+function runBasicTest(aIsEditable, aInDesignMode, aDescription)
+{
+  var defaultEnabledState =
+        aIsEditable ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
+
+  // XXX Between designMode and contentEditable, the result is different.
+  // Is this expected difference?
+  var nonFormControlNodeEnabledState =
+        aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
+
+  function test(aTest)
+  {
+    function moveFocus(aTest)
+    {
+      if (aTest.expectedEnabled == gUtils.IME_STATUS_DISABLED) {
+        document.getElementById("text").focus();
+      } else {
+        gUtils.focus(null);
+      }
+      document.getElementById(aTest.id).focus();
+    }
+
+    function testOpened(aTest, aOpened)
+    {
+      document.getElementById("text").focus();
+      gUtils.IMEIsOpen = aOpened;
+      moveFocus(aTest);
+      var message = aDescription + ": " + aTest.description +
+                                            ", wrong opened state";
+      is(gUtils.IMEIsOpen,
+         aTest.changeOpened ? aTest.expectedOpened : aOpened, message);
+    }
+
+    // IME Enabled state testing
+    var enabled = gUtils.IME_STATUS_ENABLED;
+    if (kIMEEnabledSupported) {
+      moveFocus(aTest);
+      enabled = gUtils.IMEStatus;
+      is(enabled, aTest.expectedEnabled,
+         aDescription + ": " + aTest.description + ", wrong enabled state");
+    }
+
+    if (!kIMEOpenSupported || enabled != gUtils.IME_STATUS_ENABLED ||
+        aTest.expectedEnabled != gUtils.IME_STATUS_ENABLED) {
+      return;
+    }
+
+    // IME Open state testing
+    testOpened(aTest, false);
+    testOpened(aTest, true);
+  }
+
+  if (kIMEEnabledSupported) {
+    gUtils.focus(null);
+    is(gUtils.IMEStatus, nonFormControlNodeEnabledState,
+       aDescription + ": unexpected enabled state when no element has focus");
+  }
+
+  const kTests = [
+    { id: "text",
+      description: "input[type=text]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "text_readonly",
+      description: "input[type=text][readonly]",
+      expectedEnabled: gUtils.IME_STATUS_DISABLED },
+    { id: "password",
+      description: "input[type=password]",
+      expectedEnabled: gUtils.IME_STATUS_PASSWORD },
+    { id: "password_readonly",
+      description: "input[type=password][readonly]",
+      expectedEnabled: gUtils.IME_STATUS_DISABLED },
+    { id: "checkbox",
+      description: "input[type=checkbox]",
+      expectedEnabled: defaultEnabledState },
+    { id: "radio",
+      description: "input[type=radio]",
+      expectedEnabled: defaultEnabledState },
+    { id: "submit",
+      description: "input[type=submit]",
+      expectedEnabled: defaultEnabledState },
+    { id: "reset",
+      description: "input[type=reset]",
+      expectedEnabled: defaultEnabledState },
+    { id: "file",
+      description: "input[type=file]",
+      expectedEnabled: defaultEnabledState },
+    { id: "button",
+      description: "input[type=button]",
+      expectedEnabled: defaultEnabledState },
+    { id: "image",
+      description: "input[type=image]",
+      expectedEnabled: defaultEnabledState },
+
+    // form controls
+    { id: "button",
+      description: "button",
+      expectedEnabled: defaultEnabledState },
+    { id: "textarea",
+      description: "textarea",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "textarea_readonly",
+      description: "textarea[readonly]",
+      expectedEnabled: gUtils.IME_STATUS_DISABLED },
+    { id: "select",
+      description: "select (dropdown list)",
+      expectedEnabled: defaultEnabledState },
+    { id: "select_multiple",
+      description: "select (list box)",
+      expectedEnabled: defaultEnabledState },
+
+    // a element
+    { id: "a_href",
+      description: "a[href]",
+      expectedEnabled: nonFormControlNodeEnabledState },
+
+    // ime-mode
+    { id: "ime_mode_auto",
+      description: "input[type=text][style=\"ime-mode: auto;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal",
+      description: "input[type=text][style=\"ime-mode: normal;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active",
+      description: "input[type=text][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive",
+      description: "input[type=text][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled",
+      description: "input[type=text][style=\"ime-mode: disabled;\"]",
+      expectedEnabled: gUtils.IME_STATUS_PASSWORD },
+    { id: "ime_mode_auto_p",
+      description: "input[type=password][style=\"ime-mode: auto;\"]",
+      expectedEnabled: gUtils.IME_STATUS_PASSWORD },
+    { id: "ime_mode_normal_p",
+      description: "input[type=password][style=\"ime-mode: normal;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_p",
+      description: "input[type=password][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_p",
+      description: "input[type=password][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_p",
+      description: "input[type=password][style=\"ime-mode: disabled;\"]",
+      expectedEnabled: gUtils.IME_STATUS_PASSWORD },
+    { id: "ime_mode_auto",
+      description: "textarea[style=\"ime-mode: auto;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal",
+      description: "textarea[style=\"ime-mode: normal;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active",
+      description: "textarea[style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive",
+      description: "textarea[style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled",
+      description: "textarea[style=\"ime-mode: disabled;\"]",
+      expectedEnabled: gUtils.IME_STATUS_PASSWORD }
+  ];
+
+  for (var i = 0; i < kTests.length; i++) {
+    test(kTests[i]);
+  }
+}
+
+function runTypeChangingTest()
+{
+  if (!kIMEEnabledSupported)
+    return;
+
+  const kInputControls = [
+    { id: "text",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"text\"]" },
+    { id: "text_readonly",
+      type: "text",     expected: gUtils.IME_STATUS_DISABLED, isReadonly: true,
+      description: "[type=\"text\"][readonly]" },
+    { id: "password",
+      type: "password", expected: gUtils.IME_STATUS_PASSWORD,
+      description: "[type=\"password\"]" },
+    { id: "password_readonly",
+      type: "password", expected: gUtils.IME_STATUS_DISABLED, isReadonly: true,
+      description: "[type=\"password\"][readonly]" },
+    { id: "checkbox",
+      type: "checkbox", expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"checkbox\"]" },
+    { id: "radio",
+      type: "radio",    expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"radio\"]" },
+    { id: "submit",
+      type: "submit",   expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"submit\"]" },
+    { id: "reset",
+      type: "reset",    expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"reset\"]" },
+    { id: "file",
+      type: "file",     expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"file\"]" },
+    { id: "ibutton",
+      type: "button",   expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"button\"]" },
+    { id: "image",
+      type: "image",    expected: gUtils.IME_STATUS_DISABLED,
+      description: "[type=\"image\"]" },
+    { id: "ime_mode_auto",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: normal;]" },
+    { id: "ime_mode_active",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"text\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled",
+      type: "text",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"text\"][ime-mode: disabled;]" },
+    { id: "ime_mode_auto_p",
+      type: "password", expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_p",
+      type: "password", expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_p",
+      type: "password", expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_p",
+      type: "password", expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"password\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_p",
+      type: "password", expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"password\"][ime-mode: disabled;]" }
+  ];
+
+  const kInputTypes = [
+    { type: "",         expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "text",     expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "password", expected: gUtils.IME_STATUS_PASSWORD },
+    { type: "checkbox", expected: gUtils.IME_STATUS_DISABLED },
+    { type: "radio",    expected: gUtils.IME_STATUS_DISABLED },
+    { type: "submit",   expected: gUtils.IME_STATUS_DISABLED },
+    { type: "reset",    expected: gUtils.IME_STATUS_DISABLED },
+    { type: "file",     expected: gUtils.IME_STATUS_DISABLED },
+    { type: "button",   expected: gUtils.IME_STATUS_DISABLED },
+    { type: "image",    expected: gUtils.IME_STATUS_DISABLED }
+  ];
+
+  function getExpectedIMEEnabled(aNewType, aInputControl)
+  {
+    if (aNewType.expected == gUtils.IME_STATUS_DISABLED ||
+        aInputControl.isReadOnly)
+      return gUtils.IME_STATUS_DISABLED;
+    return aInputControl.imeMode ? aInputControl.expected : aNewType.expected;
+  }
+
+  const kOpenedState = [ true, false ];
+
+  for (var i = 0; i < kOpenedState.length; i++) {
+    const kOpened = kOpenedState[i];
+    for (var j = 0; j < kInputControls.length; j++) {
+      const kInput = kInputControls[j];
+      var e = document.getElementById(kInput.id);
+      e.focus();
+      for (var k = 0; k < kInputTypes.length; k++) {
+        const kType = kInputTypes[k];
+        var typeChangingDescription =
+          "\"" + e.getAttribute("type") + "\" to \"" + kInput.type + "\"";
+        e.setAttribute("type", kInput.type);
+        is(gUtils.IMEStatus, kInput.expected,
+           "type attr changing test: " + typeChangingDescription +
+             " (" +  kInput.description + ")");
+
+        const kTestOpenState = kIMEOpenSupported &&
+                gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED &&
+                getExpectedIMEEnabled(kType, kInput) == gUtils.IME_STATUS_ENABLED;
+        if (kTestOpenState) {
+          gUtils.IMEIsOpen = kOpened;
+        }
+
+        typeChangingDescription =
+          "\"" + e.getAttribute("type") + "\" to \"" + kType.type + "\"";
+        if (kType.type != "")
+          e.setAttribute("type", kType.type);
+        else
+          e.removeAttribute("type");
+
+        is(gUtils.IMEStatus, getExpectedIMEEnabled(kType, kInput),
+           "type attr changing test: " + typeChangingDescription +
+             " (" +  kInput.description + ")");
+        if (kTestOpenState && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
+          is(gUtils.IMEIsOpen, kOpened,
+             "type attr changing test (open state is changed): " +
+               typeChangingDescription + " (" +  kInput.description + ")");
+        }
+      }
+      // reset the type to default
+      e.setAttribute("type", kInput.type);
+    }
+    if (!kIMEOpenSupported)
+      break;
+  }
+}
+
+function runReadonlyChangingTest()
+{
+  if (!kIMEEnabledSupported)
+    return;
+
+  const kInputControls = [
+    { id: "text",
+      type: "text",     expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "password",
+      type: "password", expected: gUtils.IME_STATUS_PASSWORD },
+    { id: "textarea",
+      type: "textarea", expected: gUtils.IME_STATUS_ENABLED  }
+  ];
+  const kOpenedState = [ true, false ];
+
+  for (var i = 0; i < kOpenedState.length; i++) {
+    const kOpened = kOpenedState[i];
+    for (var j = 0; j < kInputControls.length; j++) {
+      const kInput = kInputControls[j];
+      var e = document.getElementById(kInput.id);
+      e.focus();
+      if (kIMEOpenSupported && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
+        gUtils.IMEIsOpen = kOpened;
+      }
+      e.setAttribute("readonly", "readonly");
+      is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+         "readonly attr setting test: type=" + kInput.type);
+      e.removeAttribute("readonly");
+      is(gUtils.IMEStatus, kInput.expected,
+         "readonly attr removing test: type=" + kInput.type);
+      if (kIMEOpenSupported && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
+        is(gUtils.IMEIsOpen, kOpened,
+           "readonly attr removing test (open state is changed): type=" +
+           kInput.type);
+      }
+    }
+    if (!kIMEOpenSupported)
+      break;
+  }
+}
+
+function runTests()
+{
+  if (!kIMEEnabledSupported && !kIMEOpenSupported)
+    return;
+
+  SimpleTest.waitForExplicitFinish();
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  // test for normal contents.
+  runBasicTest(false, false, "Testing of normal contents");
+
+  var container = document.getElementById("display");
+  // test for contentEditable="true"
+  container.setAttribute("contenteditable", "true");
+  runBasicTest(true, false, "Testing [contentEditable=\"true\"]");
+
+  // test for contentEditable="false"
+  container.setAttribute("contenteditable", "false");
+  runBasicTest(false, false, "Testing [contentEditable=\"false\"]");
+
+  // test for removing contentEditable
+  container.setAttribute("contenteditable", "true");
+  container.removeAttribute("contenteditable");
+  runBasicTest(false, false, "Testing after contentEditable to be removed");
+
+  // test designMode
+  document.designMode = "on";
+  runBasicTest(true, true, "Testing designMode=\"on\"");
+  document.designMode = "off";
+  runBasicTest(false, false, "Testing designMode=\"off\"");
+
+  // changing input[type] values
+  // XXX currently, type attribute changing doesn't work fine. bug 488420.
+  // runTypeChangingTest();
+
+  // changing readonly attribute
+  // XXX currently, readonly attribute changing doesn't work fine. bug 488420.
+  // runReadonlyChangingTest();
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+
+</html>

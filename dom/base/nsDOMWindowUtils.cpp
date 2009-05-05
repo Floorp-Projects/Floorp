@@ -771,3 +771,35 @@ nsDOMWindowUtils::GetScrollXY(PRBool aFlushLayout, PRInt32* aScrollX, PRInt32* a
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetIMEIsOpen(PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  // Open state should not be available when IME is not enabled.
+  PRUint32 enabled;
+  nsresult rv = widget->GetIMEEnabled(&enabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (enabled != nsIWidget::IME_STATUS_ENABLED)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return widget->GetIMEOpenState(aState);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  return widget->GetIMEEnabled(aState);
+}
+
