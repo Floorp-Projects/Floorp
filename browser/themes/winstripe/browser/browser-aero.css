@@ -48,7 +48,6 @@
 #identity-popup-container:-moz-system-metric(windows-default-theme) {
   -moz-padding-start: 6px;
   -moz-padding-end: 6px;
-  padding-bottom: 9px;
 }
 
 #sidebar-splitter:-moz-system-metric(windows-default-theme) {
