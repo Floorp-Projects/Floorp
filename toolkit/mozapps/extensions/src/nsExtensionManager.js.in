@@ -1483,6 +1483,8 @@ WinRegInstallLocation.prototype = {
   },
 
   getItemLocation: function RegInstallLocation_getItemLocation(id) {
+    if (!(id in this._IDToDirMap))
+      return null;
     return this._IDToDirMap[id].clone();
   },
 
