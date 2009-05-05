@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,468 +37,171 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef DEBUG
-
-#include "plhash.h"
-#include "prprf.h"
-#include "prlock.h"
-#include "prthread.h"
-#include "nsDebug.h"
-#include "nsVoidArray.h"
-
 #include "mozilla/BlockingResourceBase.h"
+
+#ifdef DEBUG
+#include "nsAutoPtr.h"
+
 #include "mozilla/CondVar.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
+#endif // ifdef DEBUG
 
-#ifdef NS_TRACE_MALLOC
-# include <stdio.h>
-# include "nsTraceMalloc.h"
-#endif
-
-static PRUintn      ResourceAcqnChainFrontTPI = (PRUintn)-1;
-static PLHashTable* OrderTable = 0;
-static PRLock*      OrderTableLock = 0;
-static PRLock*      ResourceMutex = 0;
-
-// Needs to be kept in sync with BlockingResourceType. */
-static char const *const kResourceTypeNames[] = {
-    "Mutex", "Monitor", "CondVar"
-};
-
-struct nsNamedVector : public nsVoidArray {
-    const char* mName;
-
-#ifdef NS_TRACE_MALLOC
-    // Callsites for the inner locks/monitors stored in our base nsVoidArray.
-    // This array parallels our base nsVoidArray.
-    nsVoidArray mInnerSites;
-#endif
-
-    nsNamedVector(const char* name = 0, PRUint32 initialSize = 0)
-        : nsVoidArray(initialSize),
-          mName(name)
-    {
-    }
-};
-
-static void *
-_hash_alloc_table(void *pool, PRSize size)
-{
-    return operator new(size);
-}
-
-static void 
-_hash_free_table(void *pool, void *item)
-{
-    operator delete(item);
-}
-
-static PLHashEntry *
-_hash_alloc_entry(void *pool, const void *key)
-{
-    return new PLHashEntry;
-}
-
-/*
- * Because monitors and locks may be associated with an mozilla::BlockingResourceBase,
- * without having had their associated nsNamedVector created explicitly in
- * nsAutoMonitor::NewMonitor/DeleteMonitor, we need to provide a freeEntry
- * PLHashTable hook, to avoid leaking nsNamedVectors which are replaced by
- * nsAutoMonitor::NewMonitor.
- *
- * There is still a problem with the OrderTable containing orphaned
- * nsNamedVector entries, for manually created locks wrapped by nsAutoLocks.
- * (there should be no manually created monitors wrapped by nsAutoMonitors:
- * you should use nsAutoMonitor::NewMonitor and nsAutoMonitor::DestroyMonitor
- * instead of PR_NewMonitor and PR_DestroyMonitor).  These lock vectors don't
- * strictly leak, as they are killed on shutdown, but there are unnecessary
- * named vectors in the hash table that outlive their associated locks.
- *
- * XXX so we should have nsLock, nsMonitor, etc. and strongly type their
- * XXX nsAutoXXX counterparts to take only the non-auto types as inputs
- */
-static void 
-_hash_free_entry(void *pool, PLHashEntry *entry, PRUintn flag)
-{
-    nsNamedVector* vec = (nsNamedVector*) entry->value;
-    if (vec) {
-        entry->value = 0;
-        delete vec;
-    }
-    if (flag == HT_FREE_ENTRY)
-        delete entry;
-}
-
-static const PLHashAllocOps _hash_alloc_ops = {
-    _hash_alloc_table, _hash_free_table,
-    _hash_alloc_entry, _hash_free_entry
-};
-
-static PRIntn
-_purge_one(PLHashEntry* he, PRIntn cnt, void* arg)
-{
-    nsNamedVector* vec = (nsNamedVector*) he->value;
-
-    if (he->key == arg)
-        return HT_ENUMERATE_REMOVE;
-    vec->RemoveElement(arg);
-    return HT_ENUMERATE_NEXT;
-}
-
-static void
-OnResourceRecycle(void* aResource)
-{
-    NS_PRECONDITION(OrderTable, "should be inited!");
-
-    PR_Lock(OrderTableLock);
-    PL_HashTableEnumerateEntries(OrderTable, _purge_one, aResource);
-    PR_Unlock(OrderTableLock);
-}
-
-static PLHashNumber
-_hash_pointer(const void* key)
-{
-    return PLHashNumber(NS_PTR_TO_INT32(key)) >> 2;
-}
-
-// TODO just included for function below
-#include "prcmon.h"
-
-// Must be single-threaded here, early in primordial thread.
-static void InitAutoLockStatics()
-{
-    (void) PR_NewThreadPrivateIndex(&ResourceAcqnChainFrontTPI, 0);
-    OrderTable = PL_NewHashTable(64, _hash_pointer,
-                                 PL_CompareValues, PL_CompareValues,
-                                 &_hash_alloc_ops, 0);
-    if (OrderTable && !(OrderTableLock = PR_NewLock())) {
-        PL_HashTableDestroy(OrderTable);
-        OrderTable = 0;
-    }
-
-    if (OrderTable && !(ResourceMutex = PR_NewLock())) {
-        PL_HashTableDestroy(OrderTable);
-        OrderTable = 0;
-    }
-
-    // TODO unnecessary after API changes
-    PR_CSetOnMonitorRecycle(OnResourceRecycle);
-}
-
-/* TODO re-enable this after API change.  with backwards compatibility
- enabled, it conflicts with the impl in nsAutoLock.cpp.  Not freeing
- this stuff will "leak" memory that is cleanup up when the process
- exits. */
-#if 0
-void _FreeAutoLockStatics()
-{
-    PLHashTable* table = OrderTable;
-    if (!table) return;
-
-    // Called at shutdown, so we don't need to lock.
-    // TODO unnecessary after API changes
-    PR_CSetOnMonitorRecycle(0);
-    PR_DestroyLock(OrderTableLock);
-    OrderTableLock = 0;
-    PL_HashTableDestroy(table);
-    OrderTable = 0;
-}
-#endif
-
-
-static nsNamedVector* GetVector(PLHashTable* table, const void* key)
-{
-    PLHashNumber hash = _hash_pointer(key);
-    PLHashEntry** hep = PL_HashTableRawLookup(table, hash, key);
-    PLHashEntry* he = *hep;
-    if (he)
-        return (nsNamedVector*) he->value;
-    nsNamedVector* vec = new nsNamedVector();
-    if (vec)
-        PL_HashTableRawAdd(table, hep, hash, key, vec);
-    return vec;
-}
-
-static void OnResourceCreated(const void* key, const char* name )
-{
-    NS_PRECONDITION(key && OrderTable, "should be inited!");
-
-    nsNamedVector* value = new nsNamedVector(name);
-    if (value) {
-        PR_Lock(OrderTableLock);
-        PL_HashTableAdd(OrderTable, key, value);
-        PR_Unlock(OrderTableLock);
-    }
-}
-
-// We maintain an acyclic graph in OrderTable, so recursion can't diverge.
-static PRBool Reachable(PLHashTable* table, const void* goal, const void* start)
-{
-    PR_ASSERT(goal);
-    PR_ASSERT(start);
-    nsNamedVector* vec = GetVector(table, start);
-    for (PRUint32 i = 0, n = vec->Count(); i < n; i++) {
-        void* aResource = vec->ElementAt(i);
-        if (aResource == goal || Reachable(table, goal, aResource))
-            return PR_TRUE;
-    }
-    return PR_FALSE;
-}
-
-static PRBool WellOrdered(const void* aResource1, const void* aResource2,
-                          const void *aCallsite2, PRUint32* aIndex2p,
-                          nsNamedVector** aVec1p, nsNamedVector** aVec2p)
-{
-    NS_ASSERTION(OrderTable && OrderTableLock, "supposed to be initialized!");
-
-    PRBool rv = PR_TRUE;
-    PLHashTable* table = OrderTable;
-
-    PR_Lock(OrderTableLock);
-
-    // Check whether we've already asserted (addr1 < addr2).
-    nsNamedVector* vec1 = GetVector(table, aResource1);
-    if (vec1) {
-        PRUint32 i, n;
-
-        for (i = 0, n = vec1->Count(); i < n; i++)
-            if (vec1->ElementAt(i) == aResource2)
-                break;
-
-        if (i == n) {
-            // Now check for (addr2 < addr1) and return false if so.
-            nsNamedVector* vec2 = GetVector(table, aResource2);
-            if (vec2) {
-                for (i = 0, n = vec2->Count(); i < n; i++) {
-                    void* aResourcei = vec2->ElementAt(i);
-                    PR_ASSERT(aResourcei);
-                    if (aResourcei == aResource1 
-                        || Reachable(table, aResource1, aResourcei)) {
-                        *aIndex2p = i;
-                        *aVec1p = vec1;
-                        *aVec2p = vec2;
-                        rv = PR_FALSE;
-                        break;
-                    }
-                }
-
-                if (rv) {
-                    // Insert (addr1 < addr2) into the order table.
-                    // XXX fix plvector/nsVector to use const void*
-                    vec1->AppendElement((void*) aResource2);
-#ifdef NS_TRACE_MALLOC
-                    vec1->mInnerSites.AppendElement((void*) aCallsite2);
-#endif
-                }
-            }
-        }
-    }
-
-    // all control flow must pass through this point
-//unlock:
-    PR_Unlock(OrderTableLock);
-    return rv;
-}
-
+namespace mozilla {
 //
 // BlockingResourceBase implementation
 //
-// Note that in static/member functions, user code abiding by the 
-// BlockingResourceBase API's contract gives us the following guarantees:
-//
-//  - mResource is not NULL
-//  - mResource points to a valid underlying resource
-//  - mResource is NOT shared with any other mozilla::BlockingResourceBase
-//
-// If user code violates the API contract, the behavior of the following
-// functions is undefined.  So no error checking is strictly necessary.
-//
-// That said, assertions of the the above facts are sprinkled throughout the
-// following code, to check for errors in user code.
-//
-namespace mozilla {
 
-
-void
-BlockingResourceBase::Init(void* aResource, 
-                           const char* aName, 
-                           BlockingResourceBase::BlockingResourceType aType)
+// static members
+const char* const BlockingResourceBase::kResourceTypeName[] =
 {
-    if (NS_UNLIKELY(ResourceAcqnChainFrontTPI == PRUintn(-1)))
-        InitAutoLockStatics();
+    // needs to be kept in sync with BlockingResourceType
+    "Mutex", "Monitor", "CondVar"
+};
 
-    NS_PRECONDITION(aResource, "null resource");
+#ifdef DEBUG
 
-    OnResourceCreated(aResource, aName);
-    mResource = aResource;
-    mChainPrev = 0;
-    mType = aType;
+PRCallOnceType BlockingResourceBase::sCallOnce;
+PRUintn BlockingResourceBase::sResourceAcqnChainFrontTPI = (PRUintn)-1;
+BlockingResourceBase::DDT BlockingResourceBase::sDeadlockDetector;
+
+bool
+BlockingResourceBase::DeadlockDetectorEntry::Print(
+    const DDT::ResourceAcquisition& aFirstSeen,
+    nsACString& out,
+    bool aPrintFirstSeenCx) const
+{
+    CallStack lastAcquisition = mAcquisitionContext; // RACY, but benign
+    bool maybeCurrentlyAcquired = (CallStack::kNone != lastAcquisition);
+    CallStack printAcquisition =
+        (aPrintFirstSeenCx || !maybeCurrentlyAcquired) ?
+            aFirstSeen.mCallContext : lastAcquisition;
+
+    fprintf(stderr, "--- %s : %s",
+            kResourceTypeName[mType], mName);
+    out += BlockingResourceBase::kResourceTypeName[mType];
+    out += " : ";
+    out += mName;
+
+    if (maybeCurrentlyAcquired) {
+        fputs(" (currently acquired)", stderr);
+        out += " (currently acquired)\n";
+    }
+
+    fputs(" calling context\n", stderr);
+    printAcquisition.Print(stderr);
+
+    return maybeCurrentlyAcquired;
 }
+
+
+BlockingResourceBase::BlockingResourceBase(
+    const char* aName,
+    BlockingResourceBase::BlockingResourceType aType)
+{
+    // PR_CallOnce guaranatees that InitStatics is called in a
+    // thread-safe way
+    if (PR_SUCCESS != PR_CallOnce(&sCallOnce, InitStatics))
+        NS_RUNTIMEABORT("can't initialize blocking resource static members");
+
+    mDDEntry = new BlockingResourceBase::DeadlockDetectorEntry(aName, aType);
+    if (!mDDEntry)
+        NS_RUNTIMEABORT("can't allocated deadlock detector entry");
+
+    mChainPrev = 0;
+    sDeadlockDetector.Add(mDDEntry);
+}
+
 
 BlockingResourceBase::~BlockingResourceBase()
 {
-    NS_PRECONDITION(mResource, "bad subclass impl, or double free");
-
-    // we don't expect to find this resouce in the acquisition chain.
-    // it should have been Release()'n as many times as it has been 
-    // Acquire()ed, before this destructor was called.
-    // additionally, WE are the only ones who can create underlying 
-    // resources, so there should be one underlying instance per 
-    // BlockingResourceBase.  thus we don't need to do any cleanup unless 
-    // client code has done something seriously and obviously wrong.
-    // that, plus the potential performance impact of full cleanup, mean
-    // that it has been removed for now.
-
-    OnResourceRecycle(mResource);
-    mResource = 0;
-    mChainPrev = 0;
+    // we don't check for really obviously bad things like freeing
+    // Mutexes while they're still locked.  it is assumed that the
+    // base class, or its underlying primitive, will check for such
+    // stupid mistakes.
+    mChainPrev = 0;             // racy only for stupidly buggy client code
+    mDDEntry = 0;               // owned by deadlock detector
 }
 
-void BlockingResourceBase::Acquire()
-{
-    NS_PRECONDITION(mResource, "bad base class impl or double free");
-    PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(ResourceMutex);
 
-    if (mType == eCondVar) {
-        NS_NOTYETIMPLEMENTED("TODO: figure out how to Acquire() condvars");
+void
+BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
+{
+    if (eCondVar == mDDEntry->mType) {
+        NS_NOTYETIMPLEMENTED(
+            "FIXME bug 456272: annots. to allow CheckAcquire()ing condvars");
         return;
     }
 
-    BlockingResourceBase* chainFront = 
-        (BlockingResourceBase*) 
-            PR_GetThreadPrivate(ResourceAcqnChainFrontTPI);
+    BlockingResourceBase* chainFront = ResourceChainFront();
+    nsAutoPtr<DDT::ResourceAcquisitionArray> cycle(
+        sDeadlockDetector.CheckAcquisition(
+            chainFront ? chainFront->mDDEntry : 0, mDDEntry,
+            aCallContext));
+    if (!cycle)
+        return;
 
-    if (eMonitor == mType) {
-        // reentering a monitor: the old implementation ensured that this
-        // was only done immediately after a previous entry.  little
-        // tricky here since we can't rely on the monitor already having
-        // been entered, as AutoMonitor used to let us do (sort of)
+    fputs("###!!! ERROR: Potential deadlock detected:\n", stderr);
+    nsCAutoString out("Potential deadlock detected:\n");
+    bool maybeImminent = PrintCycle(cycle, out);
 
-        if (this == chainFront) {
-            // acceptable reentry, and nothing to update.
-            return;
-        } 
-        else if (chainFront) {
-            BlockingResourceBase* br = chainFront->mChainPrev;
-            while (br) {
-                if (br == this) {
-                    NS_ASSERTION(br != this, 
-                                 "reentered monitor after acquiring "
-                                 "other resources");
-                    // have to ignore this allocation and return.  even if
-                    // we cleaned up the old acquisition of the monitor and
-                    // put the new one at the front of the chain, we'd
-                    // almost certainly set off the deadlock detector.
-                    // this error is interesting enough.
-                    return;
-                }
-                br = br->mChainPrev;
-            }
-        }
+    if (maybeImminent) {
+        fputs("\n###!!! Deadlock may happen NOW!\n\n", stderr);
+        out.Append("\n###!!! Deadlock may happen NOW!\n\n");
+    } else {
+        fputs("\nDeadlock may happen for some other execution\n\n",
+              stderr);
+        out.Append("\nDeadlock may happen for some other execution\n\n");
     }
 
-    const void* callContext =
-#ifdef NS_TRACE_MALLOC
-        (const void*)NS_TraceMallocGetStackTrace();
-#else
-        nsnull
-#endif
-        ;
-
-    if (eMutex == mType
-        && chainFront == this
-        && !(chainFront->mChainPrev)) {
-        // corner case: acquire only a single lock, then try to reacquire 
-        // the lock.  there's no entry in the order table for the first
-        // acquisition, so we might not detect this (immediate and real!) 
-        // deadlock.
-        //
-        // XXX need to remove this corner case, and get a stack trace for 
-        // first acquisition, and get the lock's name
-        char buf[128];
-        PR_snprintf(buf, sizeof buf,
-                    "Imminent deadlock between Mutex@%p and itself!",
-                    chainFront->mResource);
-
-#ifdef NS_TRACE_MALLOC
-        fputs("\nDeadlock will occur here:\n", stderr);
-        NS_TraceMallocPrintStackTrace(
-            stderr, (nsTMStackTraceIDStruct*)callContext);
-        putc('\n', stderr);
-#endif
-
-        NS_ERROR(buf);
-
-        return;                 // what else to do? we're screwed
-    }
-
-    nsNamedVector* vec1;
-    nsNamedVector* vec2;
-    PRUint32 i2;
-
-    if (!chainFront 
-        || WellOrdered(chainFront->mResource, mResource, 
-                       callContext, 
-                       &i2, 
-                       &vec1, &vec2)) {
-        mChainPrev = chainFront;
-        PR_SetThreadPrivate(ResourceAcqnChainFrontTPI, this);
-    }
-    else {
-        char buf[128];
-        PR_snprintf(buf, sizeof buf,
-                    "Potential deadlock between %s%s@%p and %s%s@%p",
-                    vec1->mName ? vec1->mName : "",
-                    kResourceTypeNames[chainFront->mType],
-                    chainFront->mResource,
-                    vec2->mName ? vec2->mName : "",
-                    kResourceTypeNames[mType],
-                    mResource);
-
-#ifdef NS_TRACE_MALLOC
-        fprintf(stderr, "\n*** %s\n\nStack of current acquisition:\n", buf);
-        NS_TraceMallocPrintStackTrace(
-            stderr, NS_TraceMallocGetStackTrace());
-
-        fputs("\nStack of conflicting acquisition:\n", stderr);
-        NS_TraceMallocPrintStackTrace(
-            stderr, (nsTMStackTraceIDStruct *)vec2->mInnerSites.ElementAt(i2));
-        putc('\n', stderr);
-#endif
-
-        NS_ERROR(buf);
-
-        // because we know the latest acquisition set off the deadlock,
-        // detector, it's debatable whether we should append it to the 
-        // acquisition chain; it might just trigger later errors that 
-        // have already been reported here.  I choose not too add it.
-    }
+    // XXX can customize behavior on whether we /think/ deadlock is
+    // XXX about to happen.  for example:
+    // XXX   if (maybeImminent)
+    //           NS_RUNTIMEABORT(out.get());
+    NS_ERROR(out.get());
 }
 
-void BlockingResourceBase::Release()
-{
-    NS_PRECONDITION(mResource, "bad base class impl or double free");
-    PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(ResourceMutex);
 
-    if (mType == eCondVar) {
-        NS_NOTYETIMPLEMENTED("TODO: figure out how to Release() condvars");
+void
+BlockingResourceBase::Acquire(const CallStack& aCallContext)
+{
+    if (eCondVar == mDDEntry->mType) {
+        NS_NOTYETIMPLEMENTED(
+            "FIXME bug 456272: annots. to allow Acquire()ing condvars");
         return;
     }
+    NS_ASSERTION(mDDEntry->mAcquisitionContext == CallStack::kNone,
+                 "reacquiring already acquired resource");
 
-    BlockingResourceBase* chainFront = 
-        (BlockingResourceBase*) 
-            PR_GetThreadPrivate(ResourceAcqnChainFrontTPI);
-    NS_ASSERTION(chainFront, 
+    ResourceChainAppend(ResourceChainFront());
+    mDDEntry->mAcquisitionContext = aCallContext;
+}
+
+
+void
+BlockingResourceBase::Release()
+{
+    if (eCondVar == mDDEntry->mType) {
+        NS_NOTYETIMPLEMENTED(
+            "FIXME bug 456272: annots. to allow Release()ing condvars");
+        return;
+    }
+      
+    BlockingResourceBase* chainFront = ResourceChainFront();
+    NS_ASSERTION(chainFront
+                 && CallStack::kNone != mDDEntry->mAcquisitionContext,
                  "Release()ing something that hasn't been Acquire()ed");
 
-    if (NS_LIKELY(chainFront == this)) {
-        PR_SetThreadPrivate(ResourceAcqnChainFrontTPI, mChainPrev);
+    if (chainFront == this) {
+        ResourceChainRemove();
     }
     else {
         // not an error, but makes code hard to reason about.
-        NS_WARNING("you're releasing a resource in non-LIFO order; why?");
-
+        NS_WARNING("Resource acquired at calling context\n");
+        mDDEntry->mAcquisitionContext.Print(stderr);
+        NS_WARNING("\nis being released in non-LIFO order; why?");
+        
+        // remove this resource from wherever it lives in the chain
         // we walk backwards in order of acquisition:
         //  (1)  ...node<-prev<-curr...
         //              /     /
@@ -509,58 +213,173 @@ void BlockingResourceBase::Release()
         if (prev == this)
             curr->mChainPrev = prev->mChainPrev;
     }
+
+    mDDEntry->mAcquisitionContext = CallStack::kNone;
 }
+
+
+bool
+BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
+                                 nsACString& out)
+{
+    NS_ASSERTION(aCycle->Length() > 1, "need > 1 element for cycle!");
+
+    bool maybeImminent = true;
+
+    fputs("=== Cyclical dependency starts at\n", stderr);
+    out += "Cyclical dependency starts at\n";
+
+    const DDT::ResourceAcquisition res = aCycle->ElementAt(0);
+    maybeImminent &= res.mResource->Print(res, out);
+
+    DDT::ResourceAcquisitionArray::index_type i;
+    DDT::ResourceAcquisitionArray::size_type len = aCycle->Length();
+    const DDT::ResourceAcquisition* it = 1 + aCycle->Elements();
+    for (i = 1; i < len - 1; ++i, ++it) {
+        fputs("\n--- Next dependency:\n", stderr);
+        out += "Next dependency:\n";
+
+        maybeImminent &= it->mResource->Print(*it, out);
+    }
+
+    fputs("\n=== Cycle completed at\n", stderr);
+    out += "Cycle completed at\n";
+    it->mResource->Print(*it, out, true);
+
+    return maybeImminent;
+}
+
 
 //
 // Debug implementation of Mutex
 void
 Mutex::Lock()
 {
-    PR_Lock(ResourceMutex);
-    Acquire();
-    PR_Unlock(ResourceMutex);
+    CallStack callContext = CallStack();
 
+    CheckAcquire(callContext);
     PR_Lock(mLock);
+    Acquire(callContext);       // protected by mLock
 }
 
 void
 Mutex::Unlock()
 {
+    Release();                  // protected by mLock
     PRStatus status = PR_Unlock(mLock);
-    NS_ASSERTION(PR_SUCCESS == status, "problem Unlock()ing");
-
-    PR_Lock(ResourceMutex);
-    Release();
-    PR_Unlock(ResourceMutex);
+    NS_ASSERTION(PR_SUCCESS == status, "bad Mutex::Unlock()");
 }
+
 
 //
 // Debug implementation of Monitor
-void 
-Monitor::Enter() 
+void
+Monitor::Enter()
 {
-    PR_Lock(ResourceMutex);
-    ++mEntryCount;
-    Acquire();
-    PR_Unlock(ResourceMutex);
+    BlockingResourceBase* chainFront = ResourceChainFront();
 
+    // the code below implements monitor reentrancy semantics
+
+    if (this == chainFront) {
+        // immediately re-entered the monitor: acceptable
+        PR_EnterMonitor(mMonitor);
+        ++mEntryCount;
+        return;
+    }
+
+    CallStack callContext = CallStack();
+    
+    // this is sort of a hack around not recording the thread that
+    // owns this monitor
+    if (chainFront) {
+        for (BlockingResourceBase* br = ResourceChainPrev(chainFront);
+             br;
+             br = ResourceChainPrev(br)) {
+            if (br == this) {
+                NS_WARNING(
+                    "Re-entering Monitor after acquiring other resources.\n"
+                    "At calling context\n");
+                GetAcquisitionContext().Print(stderr);
+
+                // show the caller why this is potentially bad
+                CheckAcquire(callContext);
+
+                PR_EnterMonitor(mMonitor);
+                ++mEntryCount;
+                return;
+            }
+        }
+    }
+
+    CheckAcquire(callContext);
     PR_EnterMonitor(mMonitor);
+    NS_ASSERTION(0 == mEntryCount, "Monitor isn't free!");
+    Acquire(callContext);       // protected by mMonitor
+    mEntryCount = 1;
 }
 
 void
 Monitor::Exit()
 {
+    if (0 == --mEntryCount)
+        Release();              // protected by mMonitor
     PRStatus status = PR_ExitMonitor(mMonitor);
-    NS_ASSERTION(PR_SUCCESS == status, "bad ExitMonitor()");
+    NS_ASSERTION(PR_SUCCESS == status, "bad Monitor::Exit()");
+}
 
-    PR_Lock(ResourceMutex);
-    if (--mEntryCount == 0)
-        Release();
-    PR_Unlock(ResourceMutex);
+nsresult
+Monitor::Wait(PRIntervalTime interval)
+{
+    AssertCurrentThreadIn();
+
+    // save monitor state and reset it to empty
+    PRInt32 savedEntryCount = mEntryCount;
+    CallStack savedAcquisitionContext = GetAcquisitionContext();
+    BlockingResourceBase* savedChainPrev = mChainPrev;
+    mEntryCount = 0;
+    SetAcquisitionContext(CallStack::kNone);
+    mChainPrev = 0;
+
+    // give up the monitor until we're back from Wait()
+    nsresult rv =
+        PR_Wait(mMonitor, interval) == PR_SUCCESS ?
+            NS_OK : NS_ERROR_FAILURE;
+    
+    // restore saved state
+    mEntryCount = savedEntryCount;
+    SetAcquisitionContext(savedAcquisitionContext);
+    mChainPrev = savedChainPrev;
+
+    return rv;
 }
 
 
-} // namespace mozilla
+//
+// Debug implementation of CondVar
+nsresult
+CondVar::Wait(PRIntervalTime interval)
+{
+    AssertCurrentThreadOwnsMutex();
 
+    // save mutex state and reset to empty
+    CallStack savedAcquisitionContext = mLock->GetAcquisitionContext();
+    BlockingResourceBase* savedChainPrev = mLock->mChainPrev;
+    mLock->SetAcquisitionContext(CallStack::kNone);
+    mLock->mChainPrev = 0;
+
+    // give up mutex until we're back from Wait()
+    nsresult rv =
+        PR_WaitCondVar(mCvar, interval) == PR_SUCCESS ?
+            NS_OK : NS_ERROR_FAILURE;
+
+    // restore saved state
+    mLock->SetAcquisitionContext(savedAcquisitionContext);
+    mLock->mChainPrev = savedChainPrev;
+
+    return rv;
+}
 
 #endif // ifdef DEBUG
+
+
+} // namespace mozilla
