@@ -3244,7 +3244,7 @@ JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH + 1 == JSSLOT_ARRAY_COUNT);
 #ifdef JS_TRACER
 
 JSObject* FASTCALL
-js_FastNewArray(JSContext* cx, JSObject* proto)
+js_NewEmptyArray(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(OBJ_IS_ARRAY(cx, proto));
 
@@ -3273,46 +3273,16 @@ js_FastNewArray(JSContext* cx, JSObject* proto)
 }
 
 JSObject* FASTCALL
-js_FastNewArrayWithLength(JSContext* cx, JSObject* proto, uint32 i)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = js_FastNewArray(cx, proto);
-    if (obj)
-        obj->fslots[JSSLOT_ARRAY_LENGTH] = i;
-    return obj;
-}
-
-JSObject* FASTCALL
 js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
 {
-    JSObject* obj = js_FastNewArrayWithLength(cx, proto, len);
-    if (!obj || !ResizeSlots(cx, obj, 0, JS_MAX(len, ARRAY_CAPACITY_MIN)))
+    JS_ASSERT(JS_ON_TRACE(cx));
+    JSObject* obj = js_NewEmptyArray(cx, proto);
+    if (!obj)
+        return NULL;
+    obj->fslots[JSSLOT_ARRAY_LENGTH] = len;
+    if (!ResizeSlots(cx, obj, 0, JS_MAX(len, ARRAY_CAPACITY_MIN)))
         return NULL;
     return obj;
-}
-
-#define ARRAY_CTOR_GUTS(exact_len, newslots_code)                             \
-    JS_ASSERT(JS_ON_TRACE(cx));                                               \
-    JSObject* obj = js_FastNewArray(cx, proto);                               \
-    if (obj) {                                                                \
-        const uint32 len = ARRAY_CAPACITY_MIN;                                \
-        jsval* newslots = (jsval*) JS_malloc(cx, sizeof (jsval) * (len + 1)); \
-        if (newslots) {                                                       \
-            obj->dslots = newslots + 1;                                       \
-            js_SetDenseArrayCapacity(obj, len);                               \
-            {newslots_code}                                                   \
-            while (++newslots < obj->dslots + len)                            \
-                *newslots = JSVAL_HOLE;                                       \
-            obj->fslots[JSSLOT_ARRAY_LENGTH] = (exact_len);                   \
-            return obj;                                                       \
-        }                                                                     \
-    }                                                                         \
-    return NULL;
-
-JSObject* FASTCALL
-js_Array_1str(JSContext* cx, JSObject* proto, JSString *str)
-{
-    ARRAY_CTOR_GUTS(1, *++newslots = STRING_TO_JSVAL(str);)
 }
 
 #endif /* JS_TRACER */
@@ -3592,8 +3562,6 @@ js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint cou
 }
 
 JS_DEFINE_CALLINFO_4(extern, BOOL,   js_Array_dense_setelem, CONTEXT, OBJECT, INT32, JSVAL,   0, 0)
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_FastNewArray, CONTEXT, OBJECT,                        0, 0)
+JS_DEFINE_CALLINFO_2(extern, OBJECT, js_NewEmptyArray, CONTEXT, OBJECT,                       0, 0)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewUninitializedArray, CONTEXT, OBJECT, UINT32,       0, 0)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_FastNewArrayWithLength, CONTEXT, OBJECT, UINT32,      0, 0)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Array_1str, CONTEXT, OBJECT, STRING,                  0, 0)
 JS_DEFINE_CALLINFO_3(extern, BOOL,   js_ArrayCompPush, CONTEXT, OBJECT, JSVAL,                0, 0)

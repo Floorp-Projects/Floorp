@@ -3109,6 +3109,11 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
 
     js_TraceRegExpStatics(trc, acx);
+
+#ifdef JS_TRACER
+    if (acx->nativeVp)
+        TRACE_JSVALS(trc, acx->nativeVpLen, acx->nativeVp, "nativeVp");
+#endif
 }
 
 #ifdef JS_TRACER
