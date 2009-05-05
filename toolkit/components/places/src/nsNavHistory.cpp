@@ -27,6 +27,7 @@
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *   Michael Ventnor <m.ventnor@gmail.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2245,7 +2246,9 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
   for (i = 0; i < aQueries.Count(); i ++) {
     nsNavHistoryQuery* query = aQueries[i];
 
-    if (query->Folders().Length() > 0 || query->OnlyBookmarked()) {
+    if (query->Folders().Length() > 0 ||
+        query->OnlyBookmarked() ||
+        query->Tags().Length() > 0) {
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
     }
     // Note: we don't currently have any complex non-bookmarked items, but these
@@ -2956,6 +2959,9 @@ PRBool IsOptimizableHistoryQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     return PR_FALSE;
 
   if (aQuery->Folders().Length() > 0)
+    return PR_FALSE;
+
+  if (aQuery->Tags().Length() > 0)
     return PR_FALSE;
 
   return PR_TRUE;
@@ -5870,6 +5876,32 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     // all URLs with that annotation
   }
 
+  // tags
+  const nsTArray<nsString> &tags = aQuery->Tags();
+  if (tags.Length() > 0) {
+    clause.Condition("h.id");
+    if (aQuery->TagsAreNot())
+      clause.Str("NOT");
+    clause.Str(
+      "IN "
+        "(SELECT bms.fk "
+         "FROM moz_bookmarks bms "
+         "JOIN moz_bookmarks tags ON bms.parent = tags.id "
+         "WHERE tags.parent =").
+           Param(":tags_folder").
+           Str("AND tags.title IN (");
+    for (PRUint32 i = 0; i < tags.Length(); ++i) {
+      nsPrintfCString param(":tag%d_", i);
+      clause.Param(param.get());
+      if (i < tags.Length() - 1)
+        clause.Str(",");
+    }
+    clause.Str(")");
+    if (!aQuery->TagsAreNot())
+      clause.Str("GROUP BY bms.fk HAVING count(*) >=").Param(":tag_count");
+    clause.Str(")");
+  }
+
   // parent parameter is used in tag contents queries.
   // Only one folder should be defined for them.
   if (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
@@ -6004,6 +6036,24 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
     rv = statement->BindUTF8StringParameter(index.For(":anno"), 
                                             aQuery->Annotation());
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // tags
+  const nsTArray<nsString> &tags = aQuery->Tags();
+  if (tags.Length() > 0) {
+    for (PRUint32 i = 0; i < tags.Length(); ++i) {
+      nsPrintfCString param(":tag%d_", i);
+      NS_ConvertUTF16toUTF8 tag(tags[i]);
+      rv = statement->BindUTF8StringParameter(index.For(param.get()), tag);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    PRInt64 tagsFolder = GetTagsFolder();
+    rv = statement->BindInt64Parameter(index.For(":tags_folder"), tagsFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!aQuery->TagsAreNot()) {
+      rv = statement->BindInt32Parameter(index.For(":tag_count"), tags.Length());
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // parent parameter
@@ -7084,6 +7134,8 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     return 0;
   (void)query->GetHasSearchTerms(&hasIt);
   if (hasIt)
+    return 0;
+  if (query->Tags().Length() > 0)
     return 0;
   if (aOptions->MaxResults() > 0)
     return 0;
