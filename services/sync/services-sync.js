@@ -41,3 +41,4 @@ pref("extensions.weave.network.numRetries", 2);
 
 pref("extensions.weave.tabs.sortMode", "recency");
 pref("extensions.weave.openId.enabled", false);
+pref("extensions.weave.authenticator.enabled", false);
