@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(5003e14a-6617-4af9-a0f6-a09f86d65dd2)]
+[scriptable, uuid(a5e155c8-ef18-4e70-881b-d2fe8aa13fec)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -328,4 +328,45 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+
+  /**
+   * Get IME open state. TRUE means 'Open', otherwise, 'Close'.
+   * This property works only when IMEEnabled is IME_STATUS_ENABLED.
+   */
+  readonly attribute boolean IMEIsOpen;
+
+  /**
+   * WARNING: These values must be same as nsIWidget's values.
+   */
+
+  /**
+   * DISABLED means users cannot use IME completely.
+   * Note that this state is *not* same as |ime-mode: disabled;|.
+   */
+  const unsigned long IME_STATUS_DISABLED = 0;
+
+  /**
+   * ENABLED means users can use all functions of IME. This state is same as
+   * |ime-mode: normal;|.
+   */
+  const unsigned long IME_STATUS_ENABLED  = 1;
+
+  /**
+   * PASSWORD means users cannot use most functions of IME. But on GTK2,
+   * users can use "Simple IM" which only supports dead key inputting.
+   * The behavior is same as the behavior of the native password field.
+   * This state is same as |ime-mode: disabled;|.
+   */
+  const unsigned long IME_STATUS_PASSWORD = 2;
+
+  /**
+   * PLUGIN means a plug-in has focus. At this time we should not touch to
+   * controlling the IME state.
+   */
+  const unsigned long IME_STATUS_PLUGIN   = 3;
+
+  /**
+   * Get IME status, see above IME_STATUS_* definitions.
+   */
+  readonly attribute unsigned long IMEStatus;
 };

@@ -6917,7 +6917,10 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
 NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(PRBool aFocus)
 {
-  return nsTextStore::OnFocusChange(aFocus, this, mIMEEnabled);
+  nsresult rv = nsTextStore::OnFocusChange(aFocus, this, mIMEEnabled);
+  if (rv == NS_ERROR_NOT_AVAILABLE)
+    rv = NS_OK; // TSF is not enabled, maybe.
+  return rv;
 }
 
 NS_IMETHODIMP

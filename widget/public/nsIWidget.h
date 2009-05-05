@@ -986,6 +986,11 @@ class nsIWidget : public nsISupports {
     /*
      * IME enabled states, the aState value of SetIMEEnabled/GetIMEEnabled
      * should be one value of following values.
+     *
+     * WARNING: If you change these values, you also need to edit:
+     *   nsIDOMWindowUtils.idl
+     *   nsDOMWindowUtils::SetIMEEnabled
+     *   nsContentUtils::GetWidgetStatusFromIMEStatus
      */
     enum IMEStatus {
       /*
@@ -1044,6 +1049,9 @@ class nsIWidget : public nsISupports {
      *  is receiving or giving up focus
      * aFocus is true if node is receiving focus
      * aFocus is false if node is giving up focus (blur)
+     *
+     * If this returns NS_ERROR_*, OnIMETextChange and OnIMESelectionChange
+     * and OnIMEFocusChange(PR_FALSE) will be never called.
      */
     NS_IMETHOD OnIMEFocusChange(PRBool aFocus) = 0;
 
