@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mechanism.c,v $ $Revision: 1.6 $ $Date: 2009/02/09 07:55:52 $";
+static const char CVS_ID[] = "@(#) $RCSfile: mechanism.c,v $ $Revision: 1.7 $ $Date: 2009/04/29 00:25:32 $";
 #endif /* DEBUG */
 
 /*
@@ -956,7 +956,7 @@ nssCKFWMechanism_GenerateKeyPair
   NSSArena       *arena;
   CK_RV         error = CKR_OK;
 
-  if (!fwMechanism->mdMechanism->GenerateKey) {
+  if (!fwMechanism->mdMechanism->GenerateKeyPair) {
     return CKR_FUNCTION_FAILED;
   }
 

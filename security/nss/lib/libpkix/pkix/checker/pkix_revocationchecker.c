@@ -250,9 +250,18 @@ PKIX_RevocationChecker_CreateAndAddMethod(
     pkix_RevocationMethod *method = NULL;
     pkix_LocalRevocationCheckFn *localRevChecker = NULL;
     pkix_ExternalRevocationCheckFn *externRevChecker = NULL;
+    PKIX_UInt32 miFlags;
     
     PKIX_ENTER(REVOCATIONCHECKER, "PKIX_RevocationChecker_CreateAndAddMethod");
     PKIX_NULLCHECK_ONE(revChecker);
+
+    /* If the caller has said "Either one is sufficient, then don't let the 
+     * absence of any one method's info lead to an overall failure.
+     */
+    miFlags = isLeafMethod ? revChecker->leafMethodListFlags 
+	                   : revChecker->chainMethodListFlags;
+    if (miFlags & PKIX_REV_MI_REQUIRE_SOME_FRESH_INFO_AVAILABLE)
+	flags &= ~PKIX_REV_M_FAIL_ON_MISSING_FRESH_INFO;
 
     switch (methodType) {
     case PKIX_RevocationMethod_CRL:

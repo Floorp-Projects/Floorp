@@ -45,11 +45,6 @@
 #include "jarint.h"
 
 /* from proto.h */
-#ifdef MOZILLA_CLIENT_OLD
-extern MWContext *XP_FindSomeContext(void);
-#endif
-
-/* sigh */
 extern MWContext *FE_GetInitContext(void);
 
 /* To return an MWContext for Java */
@@ -62,17 +57,13 @@ static MWContext *(*jar_fn_GetInitContext) (void) = NULL;
  *  J A R _ i n i t
  *
  *  Initialize the JAR functions.
- * 
+ *
  */
 
 void JAR_init (void)
-  {
-#ifdef MOZILLA_CLIENT_OLD
-  JAR_init_callbacks (XP_GetString, XP_FindSomeContext, FE_GetInitContext);
-#else
-  JAR_init_callbacks (XP_GetString, NULL, NULL);
-#endif
-  }
+{
+    JAR_init_callbacks (XP_GetString, NULL, NULL);
+}
 
 /*
  *  J A R _ s e t _ c o n t e x t
@@ -81,30 +72,23 @@ void JAR_init (void)
  *  it may be needed to prompt the user for a password.
  *
  */
-
-int JAR_set_context (JAR *jar, MWContext *mw)
-  {
-  if (mw)
-    {
-    jar->mw = mw;
+int 
+JAR_set_context(JAR *jar, MWContext *mw)
+{
+    if (mw) {
+	jar->mw = mw;
+    } else {
+	/* jar->mw = XP_FindSomeContext(); */
+	jar->mw = NULL;
+	/*
+	 * We can't find a context because we're in startup state and none
+	 * exist yet. go get an FE_InitContext that only works at 
+	 * initialization time.
+	 */
+	/* Turn on the mac when we get the FE_ function */
+	if (jar->mw == NULL) {
+	    jar->mw = jar_fn_GetInitContext();
+	}
     }
-  else
-    {
-    /* jar->mw = XP_FindSomeContext(); */
-    jar->mw = NULL;
-
-    /*
-     * We can't find a context because we're in startup state and none
-     * exist yet. go get an FE_InitContext that only works at initialization
-     * time.
-     */
-
-    /* Turn on the mac when we get the FE_ function */
-    if (jar->mw == NULL)
-      {
-      jar->mw = jar_fn_GetInitContext();
-      }
-   }
-
-  return 0;
-  }
+    return 0;
+}

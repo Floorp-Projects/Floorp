@@ -53,6 +53,7 @@ extern "C" {
 struct PKIX_ComCRLSelParamsStruct {
         PKIX_List *issuerNames; /* list of PKIX_PL_X500Name */
         PKIX_PL_Cert *cert; /* certificate being checked */
+        PKIX_List *crldpList;
         PKIX_PL_Date *date;
         PKIX_Boolean nistPolicyEnabled;
         PKIX_PL_BigInt *maxCRLNumber;

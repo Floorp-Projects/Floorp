@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.76 2009/03/20 18:03:57 nelson%bolyard.com Exp $
+ * $Id: cert.h,v 1.77 2009/04/17 22:46:27 julien.pierre.boogz%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1525,7 +1525,7 @@ CERT_GetSPKIDigest(PLArenaPool *arena, const CERTCertificate *cert,
 
 
 SECStatus CERT_CheckCRL(CERTCertificate* cert, CERTCertificate* issuer,
-                        SECItem* dp, PRTime t, void* wincx);
+                        const SECItem* dp, PRTime t, void* wincx);
 
 
 /*

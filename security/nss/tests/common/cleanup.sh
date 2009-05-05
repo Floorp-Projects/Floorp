@@ -54,6 +54,8 @@ if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
     echo "NSS_AIA_PATH=${NSS_AIA_PATH}"
     echo "NSS_AIA_HTTP=${NSS_AIA_HTTP}"
     echo "NSS_AIA_OCSP=${NSS_AIA_OCSP}"
+    echo "IOPR_HOSTADDR_LIST=${IOPR_HOSTADDR_LIST}"
+    echo "PKITS_DATA=${PKITS_DATA}"
     echo
     echo "Tests summary:"
     echo "--------------"

@@ -837,6 +837,16 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 #define PKIX_CERT_DEBUG_ARG(expr, arg)
 #endif
 
+#if PKIX_CRLDPDEBUG
+#define PKIX_CRLDP_DEBUG(expr) \
+        PKIX_DEBUG(expr)
+#define PKIX_CRLDP_DEBUG_ARG(expr, arg) \
+        PKIX_DEBUG_ARG(expr, arg)
+#else
+#define PKIX_CRLDP_DEBUG(expr)
+#define PKIX_CRLDP_DEBUG_ARG(expr, arg)
+#endif
+
 #if PKIX_HTTPCLIENTDEBUG
 #define PKIX_HTTPCLIENT_DEBUG(expr) \
         PKIX_DEBUG(expr)

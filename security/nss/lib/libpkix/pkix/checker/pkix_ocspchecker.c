@@ -275,9 +275,6 @@ pkix_OcspChecker_CheckExternal(
         if (uriFound == PKIX_FALSE) {
             /* no caching for certs lacking URI */
             resultCode = 0;
-            if (methodFlags & PKIX_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE) {
-                revStatus = PKIX_RevStatus_Revoked;
-            }
             goto cleanup;
         }
 
@@ -335,7 +332,8 @@ pkix_OcspChecker_CheckExternal(
         }
 
 cleanup:
-        if (revStatus == PKIX_RevStatus_NoInfo && uriFound &&
+        if (revStatus == PKIX_RevStatus_NoInfo && (uriFound || 
+	    methodFlags & PKIX_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE) &&
             methodFlags & PKIX_REV_M_FAIL_ON_MISSING_FRESH_INFO) {
             revStatus = PKIX_RevStatus_Revoked;
         }

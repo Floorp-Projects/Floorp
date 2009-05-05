@@ -1179,6 +1179,7 @@ pkix_CertSelector_DefaultMatch(
         PKIX_UInt32 selVersion = 0xFFFFFFFF;
         PKIX_UInt32 certVersion = 0;
         PKIX_Boolean result = PKIX_TRUE;
+        PKIX_Boolean isLeafCert = PKIX_TRUE;
 
 #ifdef PKIX_BUILDDEBUG
         PKIX_PL_String *certString = NULL;
@@ -1191,6 +1192,11 @@ pkix_CertSelector_DefaultMatch(
 
         PKIX_INCREF(selector->params);
         params = selector->params;
+
+        /* Are we looking for CAs? */
+        PKIX_CHECK(PKIX_ComCertSelParams_GetLeafCertFlag
+                    (params, &isLeafCert, plContext),
+                    PKIX_COMCERTSELPARAMSGETLEAFCERTFLAGFAILED);
 
         if (params == NULL){
                 goto cleanup;
@@ -1321,6 +1327,11 @@ pkix_CertSelector_DefaultMatch(
         PKIX_CHECK(pkix_CertSelector_Match_SubjAltNames
                     (params, cert, &result, plContext),
                     PKIX_CERTSELECTORMATCHSUBJALTNAMESFAILED);
+
+        /* Check key usage and cert type based on certificate usage. */
+        PKIX_CHECK(PKIX_PL_Cert_VerifyCertAndKeyType(cert, !isLeafCert,
+                                                     plContext),
+                   PKIX_CERTVERIFYCERTTYPEFAILED);
 
         /* Next two check are for user supplied additional KU and EKU. */
         PKIX_CHECK(pkix_CertSelector_Match_ExtendedKeyUsage
