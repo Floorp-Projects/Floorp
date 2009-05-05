@@ -260,17 +260,6 @@ static DWORD dirAccessTable[] = {
     FILE_GENERIC_EXECUTE
 };
 
-/*
- * The NSPR epoch (00:00:00 1 Jan 1970 UTC) in FILETIME.
- * We store the value in a PRTime variable for convenience.
- * This constant is used by _PR_FileTimeToPRTime().
- */
-#if defined(__MINGW32__)
-static const PRTime _pr_filetime_offset = 116444736000000000LL;
-#else
-static const PRTime _pr_filetime_offset = 116444736000000000i64;
-#endif
-
 /* Windows CE has GetFileAttributesEx. */
 #ifndef WINCE
 typedef BOOL (WINAPI *GetFileAttributesExFn)(LPCTSTR,
