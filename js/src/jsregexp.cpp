@@ -4960,60 +4960,12 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return regexp_compile_sub(cx, obj, argc, argv, rval);
 }
 
-#ifdef JS_TRACER
-
-static JSObject* FASTCALL
-RegExp_tn1(JSContext *cx, JSObject *proto, JSString *str)
-{
-    JSObject* obj = js_NewNativeObject(cx, &js_RegExpClass, proto, JSSLOT_PRIVATE);
-    if (!obj)
-        return NULL;
-
-    jsval argv[] = { JSVAL_NULL, OBJECT_TO_JSVAL(obj), STRING_TO_JSVAL(str) };
-    jsval rval;
-
-    if (!regexp_compile_sub(cx, obj, 1, argv + 2, &rval))
-        return NULL;
-
-    JS_ASSERT(JSVAL_IS_OBJECT(rval));
-    return JSVAL_TO_OBJECT(rval);
-}
-
-static JSObject* FASTCALL
-RegExp_tn2(JSContext *cx, JSObject *proto, JSString *str, JSString *opt)
-{
-    JSObject* obj = js_NewNativeObject(cx, &js_RegExpClass, proto, JSSLOT_PRIVATE);
-    if (!obj)
-        return NULL;
-
-    jsval argv[] = { JSVAL_NULL, OBJECT_TO_JSVAL(obj), STRING_TO_JSVAL(str), STRING_TO_JSVAL(opt) };
-    jsval rval;
-
-    if (!regexp_compile_sub(cx, obj, 2, argv + 2, &rval))
-        return NULL;
-
-    JS_ASSERT(JSVAL_IS_OBJECT(rval));
-    return JSVAL_TO_OBJECT(rval);
-}
-
-JS_DEFINE_TRCINFO_2(RegExp,
-    (3, (extern, CONSTRUCTOR_RETRY, RegExp_tn1, CONTEXT, CALLEE_PROTOTYPE, STRING,         0, 0)),
-    (4, (extern, CONSTRUCTOR_RETRY, RegExp_tn2, CONTEXT, CALLEE_PROTOTYPE, STRING, STRING, 0, 0)))
-
-#else  /* !JS_TRACER */
-
-# define RegExp_trcinfo NULL
-
-#endif /* !JS_TRACER */
-
 JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_RegExpClass, RegExp, 1,
                                    regexp_props, regexp_methods,
-                                   regexp_static_props, NULL,
-                                   RegExp_trcinfo);
-
+                                   regexp_static_props, NULL);
     if (!proto)
         return NULL;
 

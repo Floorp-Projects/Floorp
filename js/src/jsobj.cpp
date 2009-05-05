@@ -2080,14 +2080,14 @@ CreateMapForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
 #ifdef JS_TRACER
 
 static inline JSObject*
-NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
+NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto, JSObject *parent)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         return NULL;
 
-    obj->classword = jsuword(&js_ObjectClass);
+    obj->classword = jsuword(clasp);
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
     for (unsigned i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
@@ -2103,22 +2103,18 @@ NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
 JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
-    return NewNativeObject(cx, proto, JSVAL_TO_OBJECT(proto->fslots[JSSLOT_PARENT]));
+    return NewNativeObject(cx, &js_ObjectClass, proto, JSVAL_TO_OBJECT(proto->fslots[JSSLOT_PARENT]));
 }
 
 JS_DEFINE_TRCINFO_1(js_Object,
     (2, (extern, CONSTRUCTOR_RETRY, js_Object_tn, CONTEXT, CALLEE_PROTOTYPE, 0, 0)))
 
 JSObject* FASTCALL
-js_NewInstance(JSContext* cx, JSObject *ctor)
+js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
-#ifdef DEBUG
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
-    JS_ASSERT(FUN_INTERPRETED(fun));
-#endif
 
-    JSAtom* atom = cx->runtime->atomState.classPrototypeAtom;
+    JSAtom *atom = cx->runtime->atomState.classPrototypeAtom;
 
     JSScope *scope = OBJ_SCOPE(ctor);
 #ifdef JS_THREADSAFE
@@ -2131,16 +2127,16 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
             return NULL;
     }
 
-    JSScopeProperty* sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    JSScopeProperty *sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
     jsval pval = sprop ? STOBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
 
-    JSObject* proto;
+    JSObject *proto;
     if (!JSVAL_IS_PRIMITIVE(pval)) {
         /* An object in ctor.prototype, let's use it as the new instance's proto. */
         proto = JSVAL_TO_OBJECT(pval);
     } else if (pval == JSVAL_HOLE) {
         /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
-        proto = js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, ctor), 0);
+        proto = js_NewObject(cx, clasp, NULL, OBJ_GET_PARENT(cx, ctor), 0);
         if (!proto)
             return NULL;
         if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
@@ -2153,10 +2149,10 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
         }
     }
 
-    return NewNativeObject(cx, proto, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]));
+    return NewNativeObject(cx, clasp, proto, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]));
 }
 
-JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CALLEE_PROTOTYPE, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0, 0)
 
 #else  /* !JS_TRACER */
 
@@ -2736,16 +2732,14 @@ JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     return js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
-                        object_props, object_methods, NULL, object_static_methods,
-                        js_Object_trcinfo);
+                        object_props, object_methods, NULL, object_static_methods);
 }
 
 JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
-             JSTraceableNative *trcinfo)
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
     JSAtom *atom;
     JSProtoKey key;
@@ -2790,8 +2784,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     JS_PUSH_TEMP_ROOT_OBJECT(cx, proto, &tvr);
 
     if (!constructor) {
-        JS_ASSERT(!trcinfo);
-
         /*
          * Lacking a constructor, name the prototype (e.g., Math) unless this
          * class (a) is anonymous, i.e. for internal use only; (b) the class
@@ -2829,15 +2821,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * constructor.
          */
         FUN_CLASP(fun) = clasp;
-
-        /*
-         * If we have a traceable native constructor, update the function to
-         * point at the given trcinfo and flag it.
-         */
-        if (trcinfo) {
-            fun->u.n.trcinfo = trcinfo;
-            fun->flags |= JSFUN_TRACEABLE;
-        }
 
         /*
          * Optionally construct the prototype object, before the class has

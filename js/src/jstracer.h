@@ -251,6 +251,24 @@ struct VMSideExit : public nanojit::SideExit
     uint32 numStackSlots;
     uint32 numStackSlotsBelowCurrentFrame;
     ExitType exitType;
+
+    /*
+     * Ordinarily 0.  If a slow native function is atop the stack, the 1 bit is
+     * set if constructing and the other bits are a pointer to the funobj.
+     */
+    uintN nativeCalleeWord;
+
+    JSObject * nativeCallee() {
+        return (JSObject *) (nativeCalleeWord & ~1);
+    }
+
+    bool constructing() {
+        return bool(nativeCalleeWord & 1);
+    }
+
+    void setNativeCallee(JSObject *callee, bool constructing) {
+        nativeCalleeWord = uintN(callee) | constructing;
+    }
 };
 
 static inline uint8* getStackTypeMap(nanojit::SideExit* exit)
@@ -438,7 +456,8 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns*          eor_ins;
     nanojit::LIns*          rval_ins;
     nanojit::LIns*          inner_sp_ins;
-    nanojit::LIns*          invokevp_ins;
+    nanojit::LIns*          native_rval_ins;
+    nanojit::LIns*          newobj_ins;
     bool                    deepAborted;
     bool                    trashSelf;
     Queue<nanojit::Fragment*> whichTreesToTrash;
@@ -579,16 +598,17 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus getClassPrototype(JSProtoKey key,
                                                           nanojit::LIns*& proto_ins);
     JS_REQUIRES_STACK JSRecordingStatus newArray(JSObject* ctor, uint32 argc, jsval* argv,
-                                                 jsval* vp);
-    JS_REQUIRES_STACK JSRecordingStatus newString(JSObject* ctor, jsval& arg, jsval* rval);
+                                                 jsval* rval);
+    JS_REQUIRES_STACK JSRecordingStatus newString(JSObject* ctor, uint32 argc, jsval* argv,
+                                                  jsval* rval);
     JS_REQUIRES_STACK JSRecordingStatus interpretedFunctionCall(jsval& fval, JSFunction* fun,
                                                                 uintN argc, bool constructing);
     JS_REQUIRES_STACK JSRecordingStatus emitNativeCall(JSTraceableNative* known, uintN argc,
                                                        nanojit::LIns* args[]);
     JS_REQUIRES_STACK JSRecordingStatus callTraceableNative(JSFunction* fun, uintN argc,
                                                             bool constructing);
-    JS_REQUIRES_STACK JSRecordingStatus callNative(JSFunction* fun, uintN argc, bool constructing);
-    JS_REQUIRES_STACK JSRecordingStatus functionCall(bool constructing, uintN argc);
+    JS_REQUIRES_STACK JSRecordingStatus callNative(uintN argc, JSOp mode);
+    JS_REQUIRES_STACK JSRecordingStatus functionCall(uintN argc, JSOp mode);
 
     JS_REQUIRES_STACK void trackCfgMerges(jsbytecode* pc);
     JS_REQUIRES_STACK void emitIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
@@ -656,7 +676,7 @@ public:
     JS_REQUIRES_STACK JSRecordingStatus record_SetPropHit(JSPropCacheEntry* entry,
                                                           JSScopeProperty* sprop);
     JS_REQUIRES_STACK JSRecordingStatus record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
-    JS_REQUIRES_STACK JSRecordingStatus record_FastNativeCallComplete();
+    JS_REQUIRES_STACK JSRecordingStatus record_NativeCallComplete();
 
     bool wasDeepAborted() { return deepAborted; }
     TreeInfo* getTreeInfo() { return treeInfo; }

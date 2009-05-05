@@ -1134,11 +1134,9 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JS_ASSERT((jsval *) cx->stackPool.current->base <= vp);
     JS_ASSERT(vp + 2 + argc <= (jsval *) cx->stackPool.current->avail);
 
-    /*
-     * Mark the top of stack and load frequently-used registers. After this
-     * point the control should flow through label out2: to return.
-     */
+    /* Mark the top of stack and load frequently-used registers. */
     mark = JS_ARENA_MARK(&cx->stackPool);
+    MUST_FLOW_THROUGH("out2");
     v = *vp;
 
     if (JSVAL_IS_PRIMITIVE(v))
@@ -1208,15 +1206,6 @@ have_fun:
             JS_ASSERT(script);
         } else {
             native = fun->u.n.native;
-            if (!native) {
-                /*
-                 * FIXME bug 485905: we should disallow native functions with
-                 * null fun->u.n.native.
-                 */
-                *vp = (flags & JSINVOKE_CONSTRUCT) ? vp[1] : JSVAL_VOID;
-                ok = JS_TRUE;
-                goto out2;
-            }
             script = NULL;
             nslots += fun->u.n.extra;
         }
@@ -4930,6 +4919,7 @@ js_Interpret(JSContext *cx)
                 goto error;
             regs.sp = vp + 1;
             CHECK_INTERRUPT_HANDLER();
+            TRACE_0(NativeCallComplete);
           END_CASE(JSOP_NEW)
 
           BEGIN_CASE(JSOP_CALL)
@@ -5162,7 +5152,7 @@ js_Interpret(JSContext *cx)
                             goto error;
                         }
                     }
-                    TRACE_0(FastNativeCallComplete);
+                    TRACE_0(NativeCallComplete);
                     goto end_call;
                 }
             }
@@ -5182,6 +5172,7 @@ js_Interpret(JSContext *cx)
             if (!ok)
                 goto error;
             JS_RUNTIME_METER(rt, nonInlineCalls);
+            TRACE_0(NativeCallComplete);
 
           end_call:
 #if JS_HAS_LVALUE_RETURN

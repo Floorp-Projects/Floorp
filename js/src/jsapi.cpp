@@ -2738,7 +2738,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 {
     CHECK_REQUEST(cx);
     return js_InitClass(cx, obj, parent_proto, clasp, constructor, nargs,
-                        ps, fs, static_ps, static_fs, NULL);
+                        ps, fs, static_ps, static_fs);
 }
 
 #ifdef JS_THREADSAFE
@@ -5242,9 +5242,14 @@ JS_IsRunning(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
 {
-    JSStackFrame *fp;
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx)) {
+        JS_ASSERT(cx->bailExit);
+        return *cx->bailExit->pc == JSOP_NEW;
+    }
+#endif
 
-    fp = js_GetTopStackFrame(cx);
+    JSStackFrame *fp = js_GetTopStackFrame(cx);
     return fp && (fp->flags & JSFRAME_CONSTRUCTING);
 }
 
