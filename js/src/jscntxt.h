@@ -336,7 +336,7 @@ struct JSSetSlotRequest {
     JSObject            *obj;           /* object containing slot to set */
     JSObject            *pobj;          /* new proto or parent reference */
     uint16              slot;           /* which to set, proto or parent */
-    uint16              errnum;         /* JSMSG_NO_ERROR or error result */
+    JSPackedBool        cycle;          /* true if a cycle was detected */
     JSSetSlotRequest    *next;          /* next request in GC worklist */
 };
 
