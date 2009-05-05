@@ -210,6 +210,7 @@ struct JSTraceableNative {
 #define _JS_CTYPE_SIDEEXIT          _JS_CTYPE(SideExit *,             _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_INTERPSTATE       _JS_CTYPE(InterpState *,          _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_FRAGMENT          _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_CLASS             _JS_CTYPE(JSClass *,              _JS_PTR, --, --, INFALLIBLE)
 
 #define _JS_EXPAND(tokens)  tokens
 
@@ -421,12 +422,10 @@ JS_DECLARE_CALLINFO(js_Object_tn)
 JS_DECLARE_CALLINFO(js_NewInstance)
 
 /* Defined in jsarray.cpp. */
-JS_DECLARE_CALLINFO(js_ArrayCompPush)
-JS_DECLARE_CALLINFO(js_Array_1str)
 JS_DECLARE_CALLINFO(js_Array_dense_setelem)
-JS_DECLARE_CALLINFO(js_FastNewArray)
-JS_DECLARE_CALLINFO(js_FastNewArrayWithLength)
+JS_DECLARE_CALLINFO(js_NewEmptyArray)
 JS_DECLARE_CALLINFO(js_NewUninitializedArray)
+JS_DECLARE_CALLINFO(js_ArrayCompPush)
 
 /* Defined in jsnum.cpp. */
 JS_DECLARE_CALLINFO(js_NumberToString)

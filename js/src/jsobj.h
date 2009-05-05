@@ -487,8 +487,7 @@ extern JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
-             JSTraceableNative *trcinfo);
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
 /*
  * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.

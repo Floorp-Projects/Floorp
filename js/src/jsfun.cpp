@@ -2145,6 +2145,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
             fun->u.n.native = native;
             fun->u.n.trcinfo = NULL;
         }
+        JS_ASSERT(fun->u.n.native);
     }
     fun->atom = atom;
 

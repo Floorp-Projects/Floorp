@@ -5041,6 +5041,44 @@ function testStringObjectLength() {
 testStringObjectLength.expected = 3;
 test(testStringObjectLength);
 
+var _quit;
+function testNestedDeepBail()
+{
+    _quit = false;
+    function loop() {
+        for (var i = 0; i < 4; i++)
+            ;
+    }
+    loop();
+
+    function f() {
+        loop();
+        _quit = true;
+    }
+    var stk = [[1], [], [], [], []];
+    while (!_quit)
+        stk.pop().forEach(f);
+}
+test(testNestedDeepBail);
+delete _quit;
+
+function testSlowNativeCtor() {
+    for (var i = 0; i < 4; i++)
+	new Date().valueOf();
+}
+test(testSlowNativeCtor);
+
+function testSlowNativeBail() {
+    var a = ['0', '1', '2', '3', '+'];
+    try {
+	for (var i = 0; i < a.length; i++)
+	    new RegExp(a[i]);
+    } catch (exc) {
+	assertEq(""+exc.stack.match(/^RegExp/), "RegExp");
+    }
+}
+test(testSlowNativeBail);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
