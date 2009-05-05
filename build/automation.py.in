@@ -233,6 +233,7 @@ user_pref("browser.dom.window.dump.enabled", true);
 user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
+user_pref("dom.max_chrome_script_run_time", 0);
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
@@ -255,13 +256,6 @@ user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
   
   prefs.append(part)
-
-  # Increase the max script run time 10-fold for debug builds
-  if (IS_DEBUG_BUILD):
-    prefs.append("""\
-user_pref("dom.max_script_run_time", 100);
-user_pref("dom.max_chrome_script_run_time", 200);
-""")
 
   locations = readLocations()
 
