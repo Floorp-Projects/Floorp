@@ -1071,8 +1071,8 @@ function DirectoryInstallLocation(name, location, restricted, priority, independ
       location.create(Ci.nsILocalFile.DIRECTORY_TYPE, 0775);
     }
     catch (e) {
-      ERROR("DirectoryInstallLocation: failed to create location " +
-            " directory = " + location.path + ", exception = " + e + "\n");
+      LOG("DirectoryInstallLocation: failed to create location " +
+          " directory = " + location.path + ", exception = " + e + "\n");
     }
   }
 
@@ -1200,6 +1200,11 @@ DirectoryInstallLocation.prototype = {
   get canAccess() {
     if (this._canAccess != null)
       return this._canAccess;
+
+    if (!this.location.exists()) {
+      this._canAccess = false;
+      return false;
+    }
 
     var testFile = this.location;
     testFile.append("Access Privileges Test");
