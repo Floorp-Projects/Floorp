@@ -110,10 +110,10 @@ toolbarbutton.bookmark-item[open="true"] {
   display: none;
 }
 
-#wrapper-personal-bookmarks .toolbarpaletteitem-box {
+#wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
   width: 16px;
   height: 16px;
-  background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat !important;
+  background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat;
 }
 
 .bookmarks-toolbar-customize {
