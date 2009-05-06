@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIBoxObject.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULTreeElement.h"
@@ -1190,61 +1189,37 @@ NS_IMETHODIMP nsXULTreeitemAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+NS_IMETHODIMP
+nsXULTreeitemAccessible::GetBounds(PRInt32 *aX, PRInt32 *aY,
+                                   PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  NS_ENSURE_ARG_POINTER(x);
-  *x = 0;
-  NS_ENSURE_ARG_POINTER(y);
-  *y = 0;
-  NS_ENSURE_ARG_POINTER(width);
-  *width = 0;
-  NS_ENSURE_ARG_POINTER(height);
-  *height = 0;
+  NS_ENSURE_ARG_POINTER(aX);
+  *aX = 0;
+  NS_ENSURE_ARG_POINTER(aY);
+  *aY = 0;
+  NS_ENSURE_ARG_POINTER(aWidth);
+  *aWidth = 0;
+  NS_ENSURE_ARG_POINTER(aHeight);
+  *aHeight = 0;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  // This Bounds are based on Tree's coord
-  mTree->GetCoordsForCellItem(mRow, mColumn, EmptyCString(), x, y, width, height);
+  // Get bounds for tree cell and add x and y of treechildren element to
+  // x and y of the cell.
 
-  // Get treechildren's BoxObject to adjust the Bounds' upper left corner
-  // XXXvarga consider using mTree->GetTreeBody()
-  nsCOMPtr<nsIBoxObject> boxObject(do_QueryInterface(mTree));
-  if (boxObject) {
-    nsCOMPtr<nsIDOMElement> boxElement;
-    boxObject->GetElement(getter_AddRefs(boxElement));
-    nsCOMPtr<nsIDOMNode> boxNode(do_QueryInterface(boxElement));
-    if (boxNode) {
-      nsCOMPtr<nsIDOMNodeList> childNodes;
-      boxNode->GetChildNodes(getter_AddRefs(childNodes));
-      if (childNodes) {
-        nsAutoString name;
-        nsCOMPtr<nsIDOMNode> childNode;
-        PRUint32 childCount, childIndex;
+  nsCOMPtr<nsIBoxObject> boxObj = nsCoreUtils::GetTreeBodyBoxObject(mTree);
+  NS_ENSURE_STATE(boxObj);
 
-        childNodes->GetLength(&childCount);
-        for (childIndex = 0; childIndex < childCount; childIndex++) {
-          childNodes->Item(childIndex, getter_AddRefs(childNode));
-          childNode->GetLocalName(name);
-          if (name.EqualsLiteral("treechildren")) {
-            nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(childNode));
-            if (xulElement) {
-              nsCOMPtr<nsIBoxObject> box;
-              xulElement->GetBoxObject(getter_AddRefs(box));
-              if (box) {
-                PRInt32 myX, myY;
-                box->GetScreenX(&myX);
-                box->GetScreenY(&myY);
-                *x += myX;
-                *y += myY;
-              }
-            }
-            break;
-          }
-        }
-      }
-    }
-  }
+  nsresult rv = mTree->GetCoordsForCellItem(mRow, mColumn, EmptyCString(),
+                                            aX, aY, aWidth, aHeight);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 tcX = 0, tcY = 0;
+  boxObj->GetScreenX(&tcX);
+  boxObj->GetScreenY(&tcY);
+  *aX += tcX;
+  *aY += tcY;
 
   return NS_OK;
 }
