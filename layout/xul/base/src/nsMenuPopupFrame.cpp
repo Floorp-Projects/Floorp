@@ -85,6 +85,8 @@
 #include "nsIBaseWindow.h"
 #include "nsISound.h"
 #include "nsIRootBox.h"
+#include "nsIScreenManager.h"
+#include "nsIServiceManager.h"
 
 PRInt8 nsMenuPopupFrame::sDefaultLevelParent = -1;
 
@@ -1029,11 +1031,28 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // will be reduced by the OS chrome such as menubars. It addition, for
   // content shells, it will be the area of the content rather than the
   // screen.
-  nsRect screenRect;
-  if (mMenuCanOverlapOSBar)
-    devContext->GetRect(screenRect);
-  else
-    devContext->GetClientRect(screenRect);
+  nsIntRect screenRectPixels;
+  nsCOMPtr<nsIScreen> screen;
+  nsCOMPtr<nsIScreenManager> sm(do_GetService("@mozilla.org/gfx/screenmanager;1"));
+  if (sm) {
+    // for context shells, get the screen where the root frame is located.
+    // This is because we need to constrain the content to this content area,
+    // so we should use the same screen. Otherwise, use the screen where the
+    // anchor is located.
+    nsPoint pnt = mInContentShell ? rootScreenRect.TopLeft() : anchorRect.TopLeft();
+    sm->ScreenForRect(presContext->AppUnitsToDevPixels(pnt.x),
+                      presContext->AppUnitsToDevPixels(pnt.y),
+                      1, 1, getter_AddRefs(screen));
+    if (screen) {
+      if (mMenuCanOverlapOSBar)
+        screen->GetRect(&screenRectPixels.x, &screenRectPixels.y,
+                        &screenRectPixels.width, &screenRectPixels.height);
+      else
+        screen->GetAvailRect(&screenRectPixels.x, &screenRectPixels.y,
+                             &screenRectPixels.width, &screenRectPixels.height);
+    }
+  }
+  nsRect screenRect = nsIntRect::ToAppUnits(screenRectPixels, presContext->AppUnitsPerDevPixel());
 
   // keep a 3 pixel margin to the right and bottom of the screen for the WinXP dropshadow
   screenRect.SizeBy(-nsPresContext::CSSPixelsToAppUnits(3),
