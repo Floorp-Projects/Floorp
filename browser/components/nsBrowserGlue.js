@@ -1119,6 +1119,7 @@ GeolocationPrompt.prototype = {
         var checkbox = newBar.ownerDocument.createElementNS(XULNS, "checkbox");
         checkbox.className = "rememberChoice";
         checkbox.setAttribute("label", browserBundle.GetStringFromName("geolocation.remember"));
+        checkbox.setAttribute("accesskey", browserBundle.GetStringFromName("geolocation.remember.accesskey"));
         newBar.appendChild(checkbox);
 
         var link = newBar.ownerDocument.createElementNS(XULNS, "label");
