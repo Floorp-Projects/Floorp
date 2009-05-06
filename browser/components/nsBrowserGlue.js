@@ -1083,8 +1083,8 @@ GeolocationPrompt.prototype = {
       var browserBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
 
       var buttons = [{
-              label: browserBundle.GetStringFromName("geolocation.tellThem"),
-              accessKey: browserBundle.GetStringFromName("geolocation.tellThemKey"),
+              label: browserBundle.GetStringFromName("geolocation.shareLocation"),
+              accessKey: browserBundle.GetStringFromName("geolocation.shareLocation.accesskey"),
               callback: function(notification) {                  
                   if (notification.getElementsByClassName("rememberChoice")[0].checked)
                       setPagePermission(request.requestingURI, true);
@@ -1092,8 +1092,8 @@ GeolocationPrompt.prototype = {
               },
           },
           {
-              label: browserBundle.GetStringFromName("geolocation.dontTellThem"),
-              accessKey: browserBundle.GetStringFromName("geolocation.dontTellThemKey"),
+              label: browserBundle.GetStringFromName("geolocation.dontShareLocation"),
+              accessKey: browserBundle.GetStringFromName("geolocation.dontShareLocation.accesskey"),
               callback: function(notification) {
                   if (notification.getElementsByClassName("rememberChoice")[0].checked)
                       setPagePermission(request.requestingURI, false);
