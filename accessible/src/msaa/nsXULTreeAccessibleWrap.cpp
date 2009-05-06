@@ -38,7 +38,6 @@
 
 #include "nsXULTreeAccessibleWrap.h"
 
-#include "nsIBoxObject.h"
 #include "nsTextFormatter.h"
 #include "nsIFrame.h"
 
@@ -116,13 +115,7 @@ nsXULTreeitemAccessibleWrap::GetBounds(PRInt32 *aX, PRInt32 *aY,
   // Get x coordinate and width from treechildren element, get y coordinate and
   // height from tree cell.
 
-  nsCOMPtr<nsIDOMElement> tcElm;
-  mTree->GetTreeBody(getter_AddRefs(tcElm));
-  nsCOMPtr<nsIDOMXULElement> tcXULElm(do_QueryInterface(tcElm));
-  NS_ENSURE_STATE(tcXULElm);
-
-  nsCOMPtr<nsIBoxObject> boxObj;
-  tcXULElm->GetBoxObject(getter_AddRefs(boxObj));
+  nsCOMPtr<nsIBoxObject> boxObj = nsCoreUtils::GetTreeBodyBoxObject(mTree);
   NS_ENSURE_STATE(boxObj);
 
   PRInt32 cellStartX, cellWidth;
