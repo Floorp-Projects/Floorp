@@ -261,8 +261,12 @@ CheckForDeadlock(const char* test, const char* const* findTokens)
     PRInt32 idx = 0;
     for (const char* const* tp = findTokens; *tp; ++tp) {
         const char* const token = *tp;
+#ifdef MOZILLA_INTERNAL_API
         idx = proc.mStderr.Find(token, PR_FALSE, idx);
-        if (kNotFound == idx) {
+#else
+        idx = proc.mStderr.Find(token, idx);
+#endif
+        if (-1 == idx) {
             printf("(missed token '%s' in output)\n", token);
             puts("----------------------------------\n");
             puts(proc.mStderr.get());
