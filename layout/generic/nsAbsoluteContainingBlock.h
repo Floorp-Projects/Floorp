@@ -127,7 +127,12 @@ public:
 
   PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
 
+  // Mark our size-dependent absolute frames with NS_FRAME_HAS_DIRTY_CHILDREN
+  // so that we'll make sure to reflow them.
   void MarkSizeDependentFramesDirty();
+
+  // Mark all our absolute frames with NS_FRAME_IS_DIRTY
+  void MarkAllFramesDirty();
 
 protected:
   // Returns PR_TRUE if the position of f depends on the position of
@@ -145,6 +150,11 @@ protected:
                                nsIFrame*                aKidFrame,
                                nsReflowStatus&          aStatus,
                                nsRect*                  aChildBounds);
+
+  // Mark our absolute frames dirty.  If aMarkAllDirty is true, all will be
+  // marked with NS_FRAME_IS_DIRTY.  Otherwise, the size-dependant ones will be
+  // marked with NS_FRAME_HAS_DIRTY_CHILDREN.
+  void DoMarkFramesDirty(PRBool aMarkAllDirty);
 
 protected:
   nsFrameList mAbsoluteFrames;  // additional named child list

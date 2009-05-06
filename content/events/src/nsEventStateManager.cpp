@@ -609,12 +609,15 @@ void
 nsMouseWheelTransaction::OnFailToScrollTarget()
 {
   NS_PRECONDITION(sTargetFrame, "We don't have mouse scrolling transaction");
-  // This event is used for automated tests, see bug 442774.
-  nsContentUtils::DispatchTrustedEvent(
-                    sTargetFrame->GetContent()->GetOwnerDoc(),
-                    sTargetFrame->GetContent(),
-                    NS_LITERAL_STRING("MozMouseScrollFailed"),
-                    PR_TRUE, PR_TRUE);
+
+  if (nsContentUtils::GetBoolPref("test.mousescroll", PR_FALSE)) {
+    // This event is used for automated tests, see bug 442774.
+    nsContentUtils::DispatchTrustedEvent(
+                      sTargetFrame->GetContent()->GetOwnerDoc(),
+                      sTargetFrame->GetContent(),
+                      NS_LITERAL_STRING("MozMouseScrollFailed"),
+                      PR_TRUE, PR_TRUE);
+  }
   // The target frame might be destroyed in the event handler, at that time,
   // we need to finish the current transaction
   if (!sTargetFrame)
@@ -634,12 +637,15 @@ nsMouseWheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
   // We need to finish current transaction before DOM event firing. Because
   // the next DOM event might create strange situation for us.
   EndTransaction();
-  // This event is used for automated tests, see bug 442774.
-  nsContentUtils::DispatchTrustedEvent(
-                    frame->GetContent()->GetOwnerDoc(),
-                    frame->GetContent(),
-                    NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"),
-                    PR_TRUE, PR_TRUE);
+
+  if (nsContentUtils::GetBoolPref("test.mousescroll", PR_FALSE)) {
+    // This event is used for automated tests, see bug 442774.
+    nsContentUtils::DispatchTrustedEvent(
+                      frame->GetContent()->GetOwnerDoc(),
+                      frame->GetContent(),
+                      NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"),
+                      PR_TRUE, PR_TRUE);
+  }
 }
 
 void
@@ -5749,7 +5755,7 @@ nsEventStateManager::FlushPendingEvents(nsPresContext* aPresContext)
   NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
-    shell->FlushPendingNotifications(Flush_Display);
+    shell->FlushPendingNotifications(Flush_InterruptibleLayout);
   }
 }
 

@@ -14,7 +14,7 @@
 
 <button id="button1" label="One"/>
 <menulist id="list">
-  <menupopup>
+  <menupopup id="popup" onpopupshowing="return false;">
     <menuitem id="i1" label="One"/>
     <menuitem id="i2" label="Two"/>
     <menuitem id="i2b" disabled="true" label="Two and a Half"/>
@@ -45,6 +45,12 @@ function runTests()
     keyCheck(list, "VK_UP", 4, "cursor up wrap");
     keyCheck(list, "VK_DOWN", 1, "cursor down wrap");
   }
+
+  // check that attempting to open the menulist does not change the selection
+  synthesizeKey("VK_DOWN", { altKey: navigator.platform.indexOf("Mac") == -1 });
+  is(list.selectedItem, $("i1"), "open menulist down selectedItem");
+  synthesizeKey("VK_UP", { altKey: navigator.platform.indexOf("Mac") == -1 });
+  is(list.selectedItem, $("i1"), "open menulist up selectedItem");
 
   synthesizeKey("G", { });
   is(list.selectedItem, $("i1"), "letter pressed not found selectedItem");

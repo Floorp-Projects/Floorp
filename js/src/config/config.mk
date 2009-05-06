@@ -158,7 +158,7 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef MOZ_MEMORY
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 JEMALLOC_LIBS = $(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,jemalloc,$(DIST)/lib) $(MKSHLIB_UNFORCE_ALL)
 endif
 endif
@@ -253,6 +253,14 @@ OS_CFLAGS += -FR
 OS_CXXFLAGS += -FR
 endif
 else # ! MOZ_DEBUG
+
+# We don't build a static CRT when building a custom CRT,
+# it appears to be broken. So don't link to jemalloc if
+# the Makefile wants static CRT linking.
+ifeq ($(MOZ_MEMORY)_$(USE_STATIC_LIBS),1_)
+# Disable default CRT libs and add the right lib path for the linker
+OS_LDFLAGS += $(MOZ_MEMORY_LDFLAGS)
+endif
 
 # MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
 # Used for generating an optimized build with debugging symbols.
@@ -510,6 +518,12 @@ INCLUDES	+= -I$(LIBXUL_DIST)/sdk/include
 endif
 
 include $(topsrcdir)/config/static-checking-config.mk
+
+ifdef MOZ_SHARK
+OS_CFLAGS += -F/System/Library/PrivateFrameworks
+OS_CXXFLAGS += -F/System/Library/PrivateFrameworks
+OS_LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
+endif # ifdef MOZ_SHARK
 
 CFLAGS		= $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CXXFLAGS)

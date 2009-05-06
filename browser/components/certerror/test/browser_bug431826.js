@@ -8,13 +8,12 @@ function test() {
   newBrowser = gBrowser.getBrowserForTab(newTab);
   
   // Navigate to a site with a broken cert
+  window.addEventListener("DOMContentLoaded", testBrokenCert, true);
   newBrowser.contentWindow.location = 'https://nocert.example.com/';
-  // XXX - This timer and the next should be replaced with an event
-  // handler when bug 425001 is fixed.
-  window.setTimeout(testBrokenCert, 2000);
 }
 
 function testBrokenCert() {
+  window.removeEventListener("DOMContentLoaded", testBrokenCert, true);
   
   // Confirm that we are displaying the contributed error page, not the default
   ok(/^about:certerror/.test(gBrowser.contentWindow.document.documentURI), "Broken page should go to about:certerror, not about:neterror");
@@ -28,12 +27,13 @@ function testBrokenCert() {
   Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch)
                                           .setBoolPref("browser.xul.error_pages.expert_bad_cert", true);
   
+  window.addEventListener("DOMContentLoaded", testExpertPref, true);
   newBrowser.reload();
-  window.setTimeout(testExpertPref, 2000);
 }
 
 function testExpertPref() {
   
+  window.removeEventListener("DOMContentLoaded", testExpertPref, true);
   var expertDiv = gBrowser.contentWindow.document.getElementById("expertContent");
   var technicalDiv = gBrowser.contentWindow.document.getElementById("technicalContent");
   ok(!expertDiv.hasAttribute("collapsed"), "Expert content should not be collapsed with the expert mode pref set");

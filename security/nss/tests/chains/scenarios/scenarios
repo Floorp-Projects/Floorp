@@ -4,6 +4,7 @@ extension.cfg
 extension2.cfg
 anypolicy.cfg
 anypolicywithlevel.cfg
+explicitPolicy.cfg
 mapping.cfg
 mapping2.cfg
 aia.cfg

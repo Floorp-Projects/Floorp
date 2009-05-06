@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rijndael.c,v 1.24 2008/12/04 18:16:31 rrelyea%redhat.com Exp $ */
+/* $Id: rijndael.c,v 1.25 2009/04/09 22:11:07 julien.pierre.boogz%sun.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -563,7 +563,7 @@ rijndael_encryptBlock128(AESContext *cx,
     PRUint32 *roundkeyw;
     rijndael_state state;
     PRUint32 C0, C1, C2, C3;
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
 #define pIn input
 #define pOut output
 #else
@@ -639,7 +639,7 @@ rijndael_encryptBlock128(AESContext *cx,
     *((PRUint32 *)(pOut + 4))  = C1;
     *((PRUint32 *)(pOut + 8))  = C2;
     *((PRUint32 *)(pOut + 12)) = C3;
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
 #undef pIn
 #undef pOut
 #else
@@ -659,7 +659,7 @@ rijndael_decryptBlock128(AESContext *cx,
     PRUint32 *roundkeyw;
     rijndael_state state;
     PRUint32 C0, C1, C2, C3;
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
 #define pIn input
 #define pOut output
 #else
@@ -731,7 +731,7 @@ rijndael_decryptBlock128(AESContext *cx,
     *((PRUint32 *)(pOut +  8)) ^= *roundkeyw--;
     *((PRUint32 *)(pOut +  4)) ^= *roundkeyw--;
     *((PRUint32 *) pOut      ) ^= *roundkeyw--;
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
 #undef pIn
 #undef pOut
 #else

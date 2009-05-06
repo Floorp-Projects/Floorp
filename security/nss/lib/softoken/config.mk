@@ -37,11 +37,6 @@
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
-CRYPTODIR=../freebl
-ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)crypto.$(LIB_SUFFIX)
-	CRYPTODIR=../crypto
-endif
 
 EXTRA_LIBS += \
 	$(CRYPTOLIB) \
@@ -60,6 +55,7 @@ RESNAME = $(LIBRARY_NAME).rc
 ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-lsqlite3 \
 	-L$(NSPR_LIB_DIR) \
@@ -85,6 +81,7 @@ else
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-lsqlite3 \
 	-L$(NSPR_LIB_DIR) \

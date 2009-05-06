@@ -621,6 +621,50 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
   return S_OK;
 }
 
+static PRBool
+GetColor(const TF_DA_COLOR &aTSFColor, nscolor &aResult)
+{
+  switch (aTSFColor.type) {
+    case TF_CT_SYSCOLOR: {
+      DWORD sysColor = ::GetSysColor(aTSFColor.nIndex);
+      aResult = NS_RGB(GetRValue(sysColor), GetGValue(sysColor),
+                       GetBValue(sysColor));
+      return PR_TRUE;
+    }
+    case TF_CT_COLORREF:
+      aResult = NS_RGB(GetRValue(aTSFColor.cr), GetGValue(aTSFColor.cr),
+                       GetBValue(aTSFColor.cr));
+      return PR_TRUE;
+    case TF_CT_NONE:
+    default:
+      return PR_FALSE;
+  }
+}
+
+static PRBool
+GetLineStyle(TF_DA_LINESTYLE aTSFLineStyle, PRUint8 &aTextRangeLineStyle)
+{
+  switch (aTSFLineStyle) {
+    case TF_LS_NONE:
+      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_NONE;
+      return PR_TRUE;
+    case TF_LS_SOLID:
+      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_SOLID;
+      return PR_TRUE;
+    case TF_LS_DOT:
+      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_DOTTED;
+      return PR_TRUE;
+    case TF_LS_DASH:
+      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_DASHED;
+      return PR_TRUE;
+    case TF_LS_SQUIGGLE:
+      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_WAVY;
+      return PR_TRUE;
+    default:
+      return PR_FALSE;
+  }
+}
+
 HRESULT
 nsTextStore::SendTextEventForCompositionString()
 {
@@ -677,6 +721,7 @@ nsTextStore::SendTextEventForCompositionString()
     if (FAILED(GetRangeExtent(range, &start, &length)))
       continue;
 
+    nsTextRange newRange;
     newRange.mStartOffset = PRUint32(start - mCompositionStart);
     // The end of the last range in the array is
     // always kept at the end of composition
@@ -684,8 +729,28 @@ nsTextStore::SendTextEventForCompositionString()
 
     TF_DISPLAYATTRIBUTE attr;
     hr = GetDisplayAttribute(attrPropetry, range, &attr);
-    newRange.mRangeType =
-      SUCCEEDED(hr) ? GetGeckoSelectionValue(attr) : NS_TEXTRANGE_RAWINPUT;
+    if (FAILED(hr)) {
+      newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
+    } else {
+      newRange.mRangeType = GetGeckoSelectionValue(attr);
+      if (GetColor(attr.crText, newRange.mRangeStyle.mForegroundColor)) {
+        newRange.mRangeStyle.mDefinedStyles |=
+                               nsTextRangeStyle::DEFINED_FOREGROUND_COLOR;
+      }
+      if (GetColor(attr.crBk, newRange.mRangeStyle.mBackgroundColor)) {
+        newRange.mRangeStyle.mDefinedStyles |=
+                               nsTextRangeStyle::DEFINED_BACKGROUND_COLOR;
+      }
+      if (GetColor(attr.crLine, newRange.mRangeStyle.mUnderlineColor)) {
+        newRange.mRangeStyle.mDefinedStyles |=
+                               nsTextRangeStyle::DEFINED_UNDERLINE_COLOR;
+      }
+      if (GetLineStyle(attr.lsStyle, newRange.mRangeStyle.mLineStyle)) {
+        newRange.mRangeStyle.mDefinedStyles |=
+                               nsTextRangeStyle::DEFINED_LINESTYLE;
+        newRange.mRangeStyle.mIsBoldLine = attr.fBoldLine != 0;
+      }
+    }
 
     nsTextRange& lastRange = textRanges[textRanges.Length() - 1];
     if (lastRange.mStartOffset == newRange.mStartOffset) {

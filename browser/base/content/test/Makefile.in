@@ -114,6 +114,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_scope.js \
                  browser_overflowScroll.js \
                  browser_sanitizeDialog.js \
+                 browser_tabs_owner.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

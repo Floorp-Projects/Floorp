@@ -116,19 +116,11 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGTSpanFrame::GetCanvasTM()
 {
-  if (!GetMatrixPropagation()) {
-    nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
-    return retval;
-  }
-
   NS_ASSERTION(mParent, "null parent");
-  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                   (mParent);
-  return containerFrame->GetCanvasTM();  
+  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();  
 }
 
 //----------------------------------------------------------------------

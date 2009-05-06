@@ -48,8 +48,8 @@
 #include "nsEditorUtils.h"
 #include "TypeInState.h"
 #include "nsReadableUtils.h"
+#include "nsTArray.h"
 
-class nsVoidArray;
 class nsIDOMElement;
 class nsIEditor;
 class nsHTMLEditor;
@@ -262,7 +262,7 @@ protected:
                               nsCOMArray<nsIDOMNode>& outArrayOfNodes);
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
   nsresult MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes, 
-                              nsVoidArray &inTransitionArray);
+                              nsTArray<PRPackedBool> &inTransitionArray);
   nsresult RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes);
   nsresult ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsAString *aBlockTag);
   nsresult MakeBlockquote(nsCOMArray<nsIDOMNode>& arrayOfNodes);

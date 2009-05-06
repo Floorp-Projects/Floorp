@@ -968,10 +968,10 @@ pkix_CacheCert_Lookup(
         PKIX_PL_Date *cacheValidUntilDate = NULL;
         PKIX_CertSelector *certSel = NULL;
         PKIX_Error *cachedCertError = NULL;
+        PKIX_Error *selectorError = NULL;
         PKIX_CertSelector_MatchCallback selectorMatch = NULL;
         PKIX_Int32 cmpValidTimeResult = PKIX_FALSE;
         PKIX_Int32 cmpCacheTimeResult = 0;
-        PKIX_Boolean certMatch = PKIX_FALSE;
         PKIX_UInt32 numItems = 0;
         PKIX_UInt32 i;
 
@@ -1095,22 +1095,16 @@ pkix_CacheCert_Lookup(
                             goto cleanup;
                         }
 
-                        PKIX_CHECK(selectorMatch
-                                    (certSel,
-                                    cert,
-                                    &certMatch,
-                                    plContext),
-                                    PKIX_SELECTORMATCHFAILED);
-
-                        if (certMatch){
+                        selectorError = selectorMatch(certSel, cert, plContext);
+                        if (!selectorError){
                             /* put on the return list */
                             PKIX_CHECK(PKIX_List_AppendItem
                                    (selCertList,
                                    (PKIX_PL_Object *)cert,
                                    plContext),
                                   PKIX_LISTAPPENDITEMFAILED);
-
-                            *pFound = PKIX_TRUE;
+                        } else {
+                            PKIX_DECREF(selectorError);
                         }
 
                         PKIX_DECREF(cert);
@@ -1149,6 +1143,7 @@ cleanup:
         PKIX_DECREF(selCertList);
         PKIX_DECREF(invalidAfterDate);
         PKIX_DECREF(cachedCertError);
+        PKIX_DECREF(selectorError);
 
         PKIX_RETURN(BUILD);
 }

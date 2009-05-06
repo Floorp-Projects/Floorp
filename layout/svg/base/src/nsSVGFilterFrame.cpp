@@ -149,7 +149,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     return;
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
+  nsCOMPtr<nsIDOMSVGMatrix> userToDeviceSpace =
+    NS_NewSVGMatrix(nsSVGUtils::GetCanvasTM(aTarget));
   
   // Calculate filterRes (the width and height of the pixel buffer of the
   // temporary offscreen surface that we'll paint into):

@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Serge Gautherie <sgautherie.bz@free.fr>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,18 +43,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom \
-		  txmgr \
-		  $(NULL)
+REQUIRES = txmgr xpcom
 
-PROGRAM		= TestTXMgr$(BIN_SUFFIX)
-
-CPPSRCS		= TestTXMgr.cpp
-
-LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
+CPP_UNIT_TESTS = TestTXMgr.cpp
 
 include $(topsrcdir)/config/rules.mk
-

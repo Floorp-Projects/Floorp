@@ -354,6 +354,7 @@ typedef long PRInt32;
 **      the LL_ macros (see prlong.h).
 ************************************************************************/
 #ifdef HAVE_LONG_LONG
+/* Keep this in sync with prlong.h. */
 /*
  * On 64-bit Mac OS X, uint64 needs to be defined as unsigned long long to
  * match uint64_t, otherwise our uint64 typedef conflicts with the uint64

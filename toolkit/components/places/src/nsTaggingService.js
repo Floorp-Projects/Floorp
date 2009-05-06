@@ -21,6 +21,9 @@
  *
  * Contributor(s):
  *   Asaf Romano <mano@mozilla.com> (Original Author)
+ *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -300,7 +303,9 @@ TaggingService.prototype = {
     }
 
     // sort the tag list
-    tags.sort();
+    tags.sort(function(a, b) {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+      });
     aCount.value = tags.length;
     return tags;
   },
@@ -332,7 +337,9 @@ TaggingService.prototype = {
     for (var i in this._tagFolders)
       allTags.push(this._tagFolders[i]);
     // sort the tag list
-    allTags.sort();
+    allTags.sort(function(a, b) {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+      });
     return allTags;
   },
 
@@ -344,8 +351,38 @@ TaggingService.prototype = {
     }
   },
 
+  /**
+   * If the only bookmark items associated with aURI are contained in tag
+   * folders, returns the IDs of those tag folders.  This can be the case if
+   * the URI was bookmarked and tagged at some point, but the bookmark was
+   * removed, leaving only the bookmark items in tag folders.  Returns null
+   * if the URI is either properly bookmarked or not tagged.
+   *
+   * @param   aURI
+   *          A URI (string) that may or may not be bookmarked
+   * @returns null or an array of tag IDs
+   */
+  _getTagsIfUnbookmarkedURI: function TS__getTagsIfUnbookmarkedURI(aURI) {
+    var tagIds = [];
+    var isBookmarked = false;
+    var itemIds = this._bms.getBookmarkIdsForURI(aURI, {});
+
+    for (let i = 0; !isBookmarked && i < itemIds.length; i++) {
+      var parentId = this._bms.getFolderIdForItem(itemIds[i]);
+      if (this._tagFolders[parentId])
+        tagIds.push(parentId);
+      else
+        isBookmarked = true;
+    }
+
+    return !isBookmarked && tagIds.length > 0 ? tagIds : null;
+  },
+
   // boolean to indicate if we're in a batch
   _inBatch: false,
+
+  // maps the IDs of bookmarks in the process of being removed to their URIs
+  _itemsInRemoval: {},
 
   // nsINavBookmarkObserver
   onBeginUpdateBatch: function() {
@@ -360,17 +397,39 @@ TaggingService.prototype = {
       this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
   },
   onBeforeItemRemoved: function(aItemId) {
+    // Remember the bookmark's URI, because it will be gone by the time
+    // onItemRemoved() is called.  getBookmarkURI() will throw if the item is
+    // not a bookmark, which is fine.
+    try {
+      this._itemsInRemoval[aItemId] = this._bms.getBookmarkURI(aItemId);
+    }
+    catch (e) {}
   },
-  onItemRemoved: function(aItemId, aFolderId, aIndex){
+  onItemRemoved: function(aItemId, aFolderId, aIndex) {
+    var itemURI = this._itemsInRemoval[aItemId];
+    delete this._itemsInRemoval[aItemId];
+
+    // Item is a tag folder.
     if (aFolderId == this._bms.tagsFolder && this._tagFolders[aItemId])
       delete this._tagFolders[aItemId];
+
+    // Item is a bookmark that was removed from a non-tag folder.
+    else if (itemURI && !this._tagFolders[aFolderId]) {
+
+      // If the only bookmark items now associated with the bookmark's URI are
+      // contained in tag folders, the URI is no longer properly bookmarked, so
+      // untag it.
+      var tagIds = this._getTagsIfUnbookmarkedURI(itemURI);
+      if (tagIds)
+        this.untagURI(itemURI, tagIds);
+    }
   },
-  onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aValue){
+  onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aValue) {
     if (this._tagFolders[aItemId])
       this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
   },
-  onItemVisited: function(aItemId, aVisitID, time){},
-  onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex){
+  onItemVisited: function(aItemId, aVisitID, time) {},
+  onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     if (this._tagFolders[aItemId] && this._bms.tagFolder == aOldParent &&
         this._bms.tagFolder != aNewParent)
       delete this._tagFolders[aItemId];
@@ -540,7 +599,8 @@ TagAutoCompleteSearch.prototype = {
         if (self._stopped)
           yield false;
         // for each match, prepend what the user has typed so far
-        if (searchResults[i].indexOf(searchString) == 0 &&
+        if (searchResults[i].toLowerCase()
+                            .indexOf(searchString.toLowerCase()) == 0 &&
             comments.indexOf(searchResults[i]) == -1) {
           results.push(before + searchResults[i]);
           comments.push(searchResults[i]);

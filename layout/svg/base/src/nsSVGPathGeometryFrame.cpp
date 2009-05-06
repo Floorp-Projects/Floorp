@@ -75,7 +75,7 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       (static_cast<nsSVGPathGeometryElement*>
-                  (mContent)->IsDependentAttribute(aAttribute) ||
+                  (mContent)->AttributeDefinesGeometry(aAttribute) ||
        aAttribute == nsGkAtoms::transform))
     nsSVGUtils::UpdateGraphic(this);
 
@@ -340,46 +340,31 @@ nsSVGPathGeometryFrame::GetMatrixPropagation()
   return (GetStateBits() & NS_STATE_SVG_PROPAGATE_TRANSFORM) != 0;
 }
 
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
+gfxRect
+nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
+  if (aToBBoxUserspace.IsSingular()) {
+    // XXX ReportToConsole
+    return gfxRect(0.0, 0.0, 0.0, 0.0);
+  }
   gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
-
-  GeneratePath(&context);
+  GeneratePath(&context, &aToBBoxUserspace);
   context.IdentityMatrix();
-
-  return NS_NewSVGRect(_retval, context.GetUserPathExtent());
+  return context.GetUserPathExtent();
 }
 
 //----------------------------------------------------------------------
 // nsSVGGeometryFrame methods:
 
-/* readonly attribute nsIDOMSVGMatrix canvasTM; */
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
+gfxMatrix
+nsSVGPathGeometryFrame::GetCanvasTM()
 {
-  *aCTM = nsnull;
+  NS_ASSERTION(mParent, "null parent");
 
-  if (!GetMatrixPropagation()) {
-    return NS_NewSVGMatrix(aCTM);
-  }
+  nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
+  nsSVGGraphicElement *content = static_cast<nsSVGGraphicElement*>(mContent);
 
-  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                   (mParent);
-  nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
-  NS_ASSERTION(parentTM, "null TM");
-
-  // append our local transformations if we have any:
-  nsSVGGraphicElement *element =
-    static_cast<nsSVGGraphicElement*>(mContent);
-  nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
-
-  if (localTM)
-    return parentTM->Multiply(localTM, aCTM);
-
-  *aCTM = parentTM;
-  NS_ADDREF(*aCTM);
-  return NS_OK;
+  return content->PrependLocalTransformTo(parent->GetCanvasTM());
 }
 
 //----------------------------------------------------------------------
@@ -435,28 +420,10 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
 
   PRUint16 renderMode = aContext->GetRenderMode();
 
-  /* save/pop the state so we don't screw up the xform */
+  /* save/restore the state so we don't screw up the xform */
   gfx->Save();
 
   GeneratePath(gfx);
-
-  if (renderMode != nsSVGRenderState::NORMAL) {
-    gfx->Restore();
-
-    if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
-      gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
-    else
-      gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
-
-    if (renderMode == nsSVGRenderState::CLIP_MASK) {
-      gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
-      gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-      gfx->Fill();
-      gfx->NewPath();
-    }
-
-    return;
-  }
 
   switch (GetStyleSVG()->mShapeRendering) {
   case NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED:
@@ -466,6 +433,22 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
   default:
     gfx->SetAntialiasMode(gfxContext::MODE_COVERAGE);
     break;
+  }
+
+  if (renderMode != nsSVGRenderState::NORMAL) {
+    if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
+      gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+    else
+      gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
+
+    if (renderMode == nsSVGRenderState::CLIP_MASK) {
+      gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+      gfx->Fill();
+      gfx->NewPath();
+    }
+    gfx->Restore();
+
+    return;
   }
 
   if (SetupCairoFill(gfx)) {
@@ -482,13 +465,15 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
 }
 
 void
-nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
+nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
+                                     const gfxMatrix *aOverrideTransform)
 {
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  GetCanvasTM(getter_AddRefs(ctm));
-  NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
-
-  gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
+  gfxMatrix matrix;
+  if (aOverrideTransform) {
+    matrix = *aOverrideTransform;
+  } else {
+    matrix = GetCanvasTM();
+  }
 
   if (matrix.IsSingular()) {
     aContext->IdentityMatrix();

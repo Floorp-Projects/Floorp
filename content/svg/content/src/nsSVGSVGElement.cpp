@@ -71,6 +71,64 @@
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 #endif // MOZ_SMIL
 
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal, mElement)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGTranslatePoint::DOMVal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGTranslatePoint::DOMVal)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGTranslatePoint::DOMVal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPoint)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPoint)
+NS_INTERFACE_MAP_END
+
+nsresult
+nsSVGTranslatePoint::ToDOMVal(nsSVGSVGElement *aElement,
+                              nsIDOMSVGPoint **aResult)
+{
+  *aResult = new DOMVal(this, aElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGTranslatePoint::DOMVal::SetX(float aValue)
+{
+  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+  return mElement->SetCurrentTranslate(aValue, mVal->GetY());
+}
+
+NS_IMETHODIMP
+nsSVGTranslatePoint::DOMVal::SetY(float aValue)
+{
+  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+  return mElement->SetCurrentTranslate(mVal->GetX(), aValue);
+}
+
+/* nsIDOMSVGPoint matrixTransform (in nsIDOMSVGMatrix matrix); */
+NS_IMETHODIMP
+nsSVGTranslatePoint::DOMVal::MatrixTransform(nsIDOMSVGMatrix *matrix,
+                                             nsIDOMSVGPoint **_retval)
+{
+  if (!matrix)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
+  float a, b, c, d, e, f;
+  matrix->GetA(&a);
+  matrix->GetB(&b);
+  matrix->GetC(&c);
+  matrix->GetD(&d);
+  matrix->GetE(&e);
+  matrix->GetF(&f);
+
+  float x = mVal->GetX();
+  float y = mVal->GetY();
+  
+  return NS_NewSVGPoint(_retval, a*x + c*y + e, b*x + d*y + f);
+}
 
 nsSVGElement::LengthInfo nsSVGSVGElement::sLengthInfo[4] =
 {
@@ -140,42 +198,15 @@ nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo, PRBool aFromParser)
     mViewportWidth(0),
     mViewportHeight(0),
     mCoordCtxMmPerPx(0),
-    mPreviousTranslate_x(0),
-    mPreviousTranslate_y(0),
-    mPreviousScale(0),
-    mRedrawSuspendCount(0),
-    mDispatchEvent(PR_FALSE)
+    mCurrentTranslate(0.0f, 0.0f),
+    mCurrentScale(1.0f),
+    mPreviousTranslate(0.0f, 0.0f),
+    mPreviousScale(1.0f),
+    mRedrawSuspendCount(0)
 #ifdef MOZ_SMIL
     ,mStartAnimationOnBindToTree(!aFromParser)
 #endif // MOZ_SMIL
 {
-}
-
-nsresult
-nsSVGSVGElement::Init()
-{
-  nsresult rv = nsSVGSVGElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  // DOM property: currentScale
-  {
-    rv = NS_NewSVGNumber(getter_AddRefs(mCurrentScale), 1.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    NS_ADD_SVGVALUE_OBSERVER(mCurrentScale);
-  }
-
-  // DOM property: currentTranslate
-  {
-    rv = NS_NewSVGPoint(getter_AddRefs(mCurrentTranslate));
-    NS_ENSURE_SUCCESS(rv,rv);
-    NS_ADD_SVGVALUE_OBSERVER(mCurrentTranslate);
-  }
-
-  // initialise "Previous" values
-  RecordCurrentScaleTranslate();
-  mDispatchEvent = PR_TRUE;
-
-  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -343,7 +374,8 @@ nsSVGSVGElement::GetCurrentView(nsIDOMSVGViewSpec * *aCurrentView)
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentScale(float *aCurrentScale)
 {
-  return mCurrentScale->GetValue(aCurrentScale);
+  *aCurrentScale = mCurrentScale;
+  return NS_OK;
 }
 
 #define CURRENT_SCALE_MAX 16.0f
@@ -352,27 +384,15 @@ nsSVGSVGElement::GetCurrentScale(float *aCurrentScale)
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScale(float aCurrentScale)
 {
-  NS_ENSURE_FINITE(aCurrentScale, NS_ERROR_ILLEGAL_VALUE);
-
-  // Prevent bizarre behaviour and maxing out of CPU and memory by clamping
-  if (aCurrentScale < CURRENT_SCALE_MIN)
-    aCurrentScale = CURRENT_SCALE_MIN;
-  else if (aCurrentScale > CURRENT_SCALE_MAX)
-    aCurrentScale = CURRENT_SCALE_MAX;
-
-  return mCurrentScale->SetValue(aCurrentScale);
-
-  // We have to dispatch the required SVGZoom event from DidModifySVGObservable
-  // since dispatching it here is too late (i.e. after repaint)
+  return SetCurrentScaleTranslate(aCurrentScale,
+    mCurrentTranslate.GetX(), mCurrentTranslate.GetY());
 }
 
 /* readonly attribute nsIDOMSVGPoint currentTranslate; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentTranslate(nsIDOMSVGPoint * *aCurrentTranslate)
 {
-  *aCurrentTranslate = mCurrentTranslate;
-  NS_ADDREF(*aCurrentTranslate);
-  return NS_OK;
+  return mCurrentTranslate.ToDOMVal(this, aCurrentTranslate);
 }
 
 /* unsigned long suspendRedraw (in unsigned long max_wait_milliseconds); */
@@ -750,14 +770,8 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 
   nsISVGChildFrame* svgframe = do_QueryFrame(frame);
   if (svgframe) {
-    svgframe->SetMatrixPropagation(PR_FALSE);
-    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                               nsISVGChildFrame::TRANSFORM_CHANGED);
-    nsresult rv = svgframe->GetBBox(_retval);
-    svgframe->SetMatrixPropagation(PR_TRUE);
-    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                               nsISVGChildFrame::TRANSFORM_CHANGED);
-    return rv;
+    *_retval = nsSVGUtils::GetBBox(frame).get();
+    return NS_OK;
   } else {
     // XXX: outer svg
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -817,9 +831,9 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
     float s=1, x=0, y=0;
     if (IsRoot()) {
       // we're the root element. get our currentScale and currentTranslate vals
-      mCurrentScale->GetValue(&s);
-      mCurrentTranslate->GetX(&x);
-      mCurrentTranslate->GetY(&y);
+      s = mCurrentScale;
+      x = mCurrentTranslate.GetX();
+      y = mCurrentTranslate.GetY();
     }
     else {
       // we're inline in some non-SVG content. get our offset from the root
@@ -914,9 +928,9 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     float s=1, x=0, y=0;
     if (IsRoot()) {
       // we're the root element. get our currentScale and currentTranslate vals
-      mCurrentScale->GetValue(&s);
-      mCurrentTranslate->GetX(&x);
-      mCurrentTranslate->GetY(&y);
+      s = mCurrentScale;
+      x = mCurrentTranslate.GetX();
+      y = mCurrentTranslate.GetY();
     }
     else {
       // we're inline in some non-SVG content. get our offset from the root
@@ -1017,66 +1031,22 @@ nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
 //----------------------------------------------------------------------
 // helper methods for implementing SVGZoomEvent:
 
-nsresult
-nsSVGSVGElement::GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)
-{
-  *aResult = mCurrentScale;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
 {
-  RecordCurrentScaleTranslate();
-  mDispatchEvent = PR_FALSE;
-  SetCurrentScale(s);  // clamps! don't call mCurrentScale->SetValue() directly
-  mCurrentTranslate->SetX(x);
-  mCurrentTranslate->SetY(y);
-  mDispatchEvent = PR_TRUE;
+  NS_ENSURE_FINITE3(s, x, y, NS_ERROR_ILLEGAL_VALUE);
 
-  // now dispatch an SVGZoom event if we are the root element
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
-    NS_ASSERTION(presShell, "no presShell");
-    if (presShell && IsRoot()) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
-      event.eventStructType = NS_SVGZOOM_EVENT;
-      presShell->HandleDOMEventWithTarget(this, &event, &status);
-    }
+  if (s == mCurrentScale &&
+      x == mCurrentTranslate.GetX() && y == mCurrentTranslate.GetY()) {
+    return NS_OK;
   }
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsSVGSVGElement::SetCurrentTranslate(float x, float y)
-{
-  RecordCurrentScaleTranslate();
-  mDispatchEvent = PR_FALSE;
-  mCurrentTranslate->SetX(x);
-  mCurrentTranslate->SetY(y);
-  mDispatchEvent = PR_TRUE;
-
-  // now dispatch an SVGScroll event if we are the root element
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
-    NS_ASSERTION(presShell, "no presShell");
-    if (presShell && IsRoot()) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(PR_TRUE, NS_SVG_SCROLL);
-      event.eventStructType = NS_SVG_EVENT;
-      presShell->HandleDOMEventWithTarget(this, &event, &status);
-    }
-  }
-  return NS_OK;
-}
-
-void
-nsSVGSVGElement::RecordCurrentScaleTranslate()
-{
+  // Prevent bizarre behaviour and maxing out of CPU and memory by clamping
+  if (s < CURRENT_SCALE_MIN)
+    s = CURRENT_SCALE_MIN;
+  else if (s > CURRENT_SCALE_MAX)
+    s = CURRENT_SCALE_MAX;
+  
   // IMPORTANT: If either mCurrentTranslate *or* mCurrentScale is changed then
   // mPreviousTranslate_x, mPreviousTranslate_y *and* mPreviousScale must all
   // be updated otherwise SVGZoomEvents will end up with invalid data. I.e. an
@@ -1085,9 +1055,33 @@ nsSVGSVGElement::RecordCurrentScaleTranslate()
   // change that caused the event's dispatch, which is *not* necessarily the
   // same thing as the values of currentScale and currentTranslate prior to
   // their own last change.
-  mCurrentScale->GetValue(&mPreviousScale);
-  mCurrentTranslate->GetX(&mPreviousTranslate_x);
-  mCurrentTranslate->GetY(&mPreviousTranslate_y);
+  mPreviousScale = mCurrentScale;
+  mPreviousTranslate = mCurrentTranslate;
+  
+  mCurrentScale = s;
+  mCurrentTranslate = nsSVGTranslatePoint(x, y);
+
+  // now dispatch the appropriate event if we are the root element
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
+    NS_ASSERTION(presShell, "no presShell");
+    if (presShell && IsRoot()) {
+      PRBool scaling = (s != mCurrentScale);
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsGUIEvent event(PR_TRUE, scaling ? NS_SVG_ZOOM : NS_SVG_SCROLL, 0);
+      event.eventStructType = scaling ? NS_SVGZOOM_EVENT : NS_SVG_EVENT;
+      presShell->HandleDOMEventWithTarget(this, &event, &status);
+      InvalidateTransformNotifyFrame();
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGSVGElement::SetCurrentTranslate(float x, float y)
+{
+  return SetCurrentScaleTranslate(mCurrentScale, x, y);
 }
 
 #ifdef MOZ_SMIL
@@ -1154,75 +1148,6 @@ nsSVGSVGElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsSVGSVGElementBase::PreHandleEvent(aVisitor);
 }
 #endif // MOZ_SMIL
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
-NS_IMETHODIMP
-nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable,
-                                         nsISVGValue::modificationType aModType)
-{
-  if (mDispatchEvent) {
-    // Modification isn't due to calling SetCurrent[Scale]Translate, so if
-    // currentScale or currentTranslate is about to change we must record their
-    // current values.
-    nsCOMPtr<nsIDOMSVGNumber> n = do_QueryInterface(observable);
-    if (n && n==mCurrentScale) {
-      RecordCurrentScaleTranslate();
-    }
-    else {
-      nsCOMPtr<nsIDOMSVGPoint> p = do_QueryInterface(observable);
-      if (p && p==mCurrentTranslate) {
-        RecordCurrentScaleTranslate();
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
-                                         nsISVGValue::modificationType aModType)
-{
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
-  NS_ASSERTION(presShell, "no presShell");
-  if (!presShell) return NS_ERROR_FAILURE;
-
-  // If currentScale or currentTranslate has changed, we are the root element,
-  // and the changes wasn't caused by SetCurrent[Scale]Translate then we must
-  // dispatch an SVGZoom or SVGScroll DOM event before repainting
-  nsCOMPtr<nsIDOMSVGNumber> n = do_QueryInterface(observable);
-  if (n && n==mCurrentScale) {
-    if (mDispatchEvent && IsRoot()) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
-      event.eventStructType = NS_SVGZOOM_EVENT;
-      presShell->HandleDOMEventWithTarget(this, &event, &status);
-    }
-    else {
-      return NS_OK;  // we don't care about currentScale changes on non-root
-    }
-  } else {
-    nsCOMPtr<nsIDOMSVGPoint> p = do_QueryInterface(observable);
-    if (p && p==mCurrentTranslate) {
-      if (mDispatchEvent && IsRoot()) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsEvent event(PR_TRUE, NS_SVG_SCROLL);
-        event.eventStructType = NS_SVG_EVENT;
-        presShell->HandleDOMEventWithTarget(this, &event, &status);
-      }
-      else {
-        return NS_OK;  // we don't care about currentScale changes on non-root
-      }
-    }
-  }
-
-  InvalidateTransformNotifyFrame();
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsSVGElement overrides
@@ -1473,6 +1398,24 @@ nsSVGSVGElement::GetMMPerPx(PRUint8 aCtxType)
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
+
+/* virtual */ gfxMatrix
+nsSVGSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+{
+  NS_ASSERTION(GetCtx(), "Should not be called on outer-<svg>");
+
+  float x, y;
+  GetAnimatedLengthValues(&x, &y, nsnull);
+  gfxMatrix matrix = aMatrix;
+  matrix.PreMultiply(gfxMatrix().Translate(gfxPoint(x, y)));
+
+  nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
+  nsresult res = GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
+  if (NS_FAILED(res)) {
+    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+  }
+  return matrix.PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(viewBoxTM));
+}
 
 void
 nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)

@@ -414,7 +414,7 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
 
   iterStatus = nsTextServicesDocument::eValid;
 
-  nsVoidArray offsetTable;
+  nsTArray<OffsetEntry*> offsetTable;
   nsAutoString blockStr;
 
   result = CreateOffsetTable(&offsetTable, docIter, &iterStatus,
@@ -1289,7 +1289,7 @@ nsTextServicesDocument::DeleteSelection()
 
   for (i = mSelStartIndex; i <= mSelEndIndex; i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (i == mSelStartIndex)
     {
@@ -1330,7 +1330,7 @@ nsTextServicesDocument::DeleteSelection()
         ++mSelEndIndex;
         ++i;
 
-        entry = (OffsetEntry *)mOffsetTable[i];
+        entry = mOffsetTable[i];
       }
 
 
@@ -1383,7 +1383,7 @@ nsTextServicesDocument::DeleteSelection()
 
           // Update the entry fields:
 
-          newEntry = (OffsetEntry *)mOffsetTable[i+1];
+          newEntry = mOffsetTable[i+1];
           newEntry->mNodeOffset = entry->mNodeOffset;
         }
 
@@ -1488,7 +1488,7 @@ nsTextServicesDocument::DeleteSelection()
 
   for (i = mSelStartIndex; !entry && i >= 0; i--)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (!entry->mIsValid)
       entry = 0;
@@ -1502,9 +1502,9 @@ nsTextServicesDocument::DeleteSelection()
   // If we still don't have a valid entry, move the caret
   // to the next valid entry after the selection:
 
-  for (i = mSelEndIndex; !entry && i < mOffsetTable.Count(); i++)
+  for (i = mSelEndIndex; !entry && i < PRInt32(mOffsetTable.Length()); i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (!entry->mIsValid)
       entry = 0;
@@ -1605,11 +1605,12 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   // PrintOffsetTable();
   //**** KDEBUG ****
 
-  PRInt32 i, strLength = aText->Length();
+  PRInt32 strLength = aText->Length();
+  PRUint32 i;
 
   nsCOMPtr<nsISelection> selection;
   OffsetEntry *itEntry;
-  OffsetEntry *entry = (OffsetEntry *)mOffsetTable[mSelStartIndex];
+  OffsetEntry *entry = mOffsetTable[mSelStartIndex];
   void *node         = entry->mNode;
 
   NS_ASSERTION((entry->mIsValid), "Invalid insertion point!");
@@ -1640,7 +1641,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       itEntry->mIsInsertedText = PR_TRUE;
       itEntry->mNodeOffset = entry->mNodeOffset;
 
-      if (!mOffsetTable.InsertElementAt(itEntry, mSelStartIndex))
+      if (!mOffsetTable.InsertElementAt(mSelStartIndex, itEntry))
       {
         editor->EndTransaction();
         UNLOCK_DOC(this);
@@ -1658,9 +1659,9 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     i       = mSelStartIndex + 1;
     itEntry = 0;
 
-    if (mOffsetTable.Count() > i)
+    if (mOffsetTable.Length() > i)
     {
-      itEntry = (OffsetEntry *)mOffsetTable[i];
+      itEntry = mOffsetTable[i];
 
       if (!itEntry)
       {
@@ -1693,7 +1694,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       itEntry->mNodeOffset = entry->mNodeOffset + entry->mLength;
       itEntry->mIsInsertedText = PR_TRUE;
 
-      if (!mOffsetTable.InsertElementAt(itEntry, i))
+      if (!mOffsetTable.InsertElementAt(i, itEntry))
       {
         delete itEntry;
         return NS_ERROR_FAILURE;
@@ -1755,7 +1756,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     itEntry->mIsInsertedText = PR_TRUE;
     itEntry->mNodeOffset     = entry->mNodeOffset + entry->mLength;
 
-    if (!mOffsetTable.InsertElementAt(itEntry, mSelStartIndex + 1))
+    if (!mOffsetTable.InsertElementAt(mSelStartIndex + 1, itEntry))
     {
       editor->EndTransaction();
       UNLOCK_DOC(this);
@@ -1769,9 +1770,9 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   // update all entries with the same mNode pointer that follow
   // it in the table!
 
-  for (i = mSelStartIndex + 1; i < mOffsetTable.Count(); i++)
+  for (i = mSelStartIndex + 1; i < mOffsetTable.Length(); i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (entry->mNode == node)
     {
@@ -1871,11 +1872,11 @@ nsTextServicesDocument::DeleteNode(nsIDOMNode *aChild)
     NS_ASSERTION(0, "DeleteNode called for current iterator node."); 
   }
 
-  tcount = mOffsetTable.Count();
+  tcount = mOffsetTable.Length();
 
   while (nodeIndex < tcount)
   {
-    entry = (OffsetEntry *)mOffsetTable[nodeIndex];
+    entry = mOffsetTable[nodeIndex];
 
     if (!entry)
     {
@@ -1986,7 +1987,7 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
 
   LOCK_DOC(this);
 
-  OffsetEntry *entry = (OffsetEntry *)mOffsetTable[rightIndex];
+  OffsetEntry *entry = mOffsetTable[rightIndex];
   NS_ASSERTION(entry->mNodeOffset == 0, "Unexpected offset value for rightIndex.");
 
   // Run through the table and change all entries referring to
@@ -1998,7 +1999,7 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
 
   for (i = leftIndex; i < rightIndex; i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (entry->mNode == aLeftNode)
     {
@@ -2012,9 +2013,9 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
   // Run through the table and adjust the node offsets
   // for all entries referring to the right node.
 
-  for (i = rightIndex; i < mOffsetTable.Count(); i++)
+  for (i = rightIndex; i < PRInt32(mOffsetTable.Length()); i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (entry->mNode == aRightNode)
     {
@@ -2297,7 +2298,7 @@ nsTextServicesDocument::AdjustContentIterator()
     return NS_ERROR_FAILURE;
 
   nsIDOMNode *nodePtr = node.get();
-  PRInt32 tcount      = mOffsetTable.Count();
+  PRInt32 tcount      = mOffsetTable.Length();
 
   nsIDOMNode *prevValidNode = 0;
   nsIDOMNode *nextValidNode = 0;
@@ -2306,7 +2307,7 @@ nsTextServicesDocument::AdjustContentIterator()
 
   for (PRInt32 i = 0; i < tcount && !nextValidNode; i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (!entry)
       return NS_ERROR_FAILURE;
@@ -2521,9 +2522,9 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
 
   // Find start of selection in node offset terms:
 
-  for (i = 0; !sNode && i < mOffsetTable.Count(); i++)
+  for (i = 0; !sNode && i < PRInt32(mOffsetTable.Length()); i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
     if (entry->mIsValid)
     {
       if (entry->mIsInsertedText)
@@ -2552,9 +2553,9 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
           // entry->mNode. If so, we have to place the selection
           // after it!
 
-          if ((i+1) < mOffsetTable.Count())
+          if ((i+1) < PRInt32(mOffsetTable.Length()))
           {
-            OffsetEntry *nextEntry = (OffsetEntry *)mOffsetTable[i+1];
+            OffsetEntry *nextEntry = mOffsetTable[i+1];
 
             if (!nextEntry->mIsValid || nextEntry->mStrOffset != aOffset)
             {
@@ -2619,9 +2620,9 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
 
   PRInt32 endOffset = aOffset + aLength;
 
-  for (i = mOffsetTable.Count() - 1; !eNode && i >= 0; i--)
+  for (i = mOffsetTable.Length() - 1; !eNode && i >= 0; i--)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
     
     if (entry->mIsValid)
     {
@@ -2744,7 +2745,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   *aSelStatus = nsITextServicesDocument::eBlockOutside;
   *aSelOffset = *aSelLength = -1;
 
-  tableCount = mOffsetTable.Count();
+  tableCount = mOffsetTable.Length();
 
   if (tableCount == 0)
     return NS_OK;
@@ -2752,10 +2753,10 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   // Get pointers to the first and last offset entries
   // in the table.
 
-  eStart = (OffsetEntry *)mOffsetTable[0];
+  eStart = mOffsetTable[0];
 
   if (tableCount > 1)
-    eEnd = (OffsetEntry *)mOffsetTable[tableCount - 1];
+    eEnd = mOffsetTable[tableCount - 1];
   else
     eEnd = eStart;
 
@@ -2803,7 +2804,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
 
     for (i = 0; i < tableCount; i++)
     {
-      entry = (OffsetEntry *)mOffsetTable[i];
+      entry = mOffsetTable[i];
 
       if (!entry)
         return NS_ERROR_FAILURE;
@@ -3003,7 +3004,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
 
   for (i = 0; i < tableCount; i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (!entry)
       return NS_ERROR_FAILURE;
@@ -3059,15 +3060,15 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   OffsetEntry *eStart, *eEnd;
   PRInt32 eStartOffset, eEndOffset;
 
-  tableCount = mOffsetTable.Count();
+  tableCount = mOffsetTable.Length();
 
   // Get pointers to the first and last offset entries
   // in the table.
 
-  eStart = (OffsetEntry *)mOffsetTable[0];
+  eStart = mOffsetTable[0];
 
   if (tableCount > 1)
-    eEnd = (OffsetEntry *)mOffsetTable[tableCount - 1];
+    eEnd = mOffsetTable[tableCount - 1];
   else
     eEnd = eStart;
 
@@ -3290,7 +3291,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   for (i = 0; i < tableCount; i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (!entry)
       return NS_ERROR_FAILURE;
@@ -3673,7 +3674,7 @@ nsTextServicesDocument::GetFirstTextNodeInNextBlock(nsIContent **aContent)
 }
 
 nsresult
-nsTextServicesDocument::CreateOffsetTable(nsVoidArray *aOffsetTable,
+nsTextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
                                           nsIContentIterator *aIterator,
                                           TSDIteratorStatus *aIteratorStatus,
                                           nsIDOMRange *aIterRange,
@@ -3750,7 +3751,7 @@ nsTextServicesDocument::CreateOffsetTable(nsVoidArray *aOffsetTable,
           if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
 
-          aOffsetTable->AppendElement((void *)entry);
+          aOffsetTable->AppendElement(entry);
 
           // If one or both of the endpoints of the iteration range
           // are in the text node for this entry, make sure the entry
@@ -3835,14 +3836,13 @@ nsTextServicesDocument::RemoveInvalidOffsetEntries()
   OffsetEntry *entry;
   PRInt32 i = 0;
 
-  while (i < mOffsetTable.Count())
+  while (PRUint32(i) < mOffsetTable.Length())
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
 
     if (!entry->mIsValid)
     {
-      if (!mOffsetTable.RemoveElementAt(i))
-        return NS_ERROR_FAILURE;
+      mOffsetTable.RemoveElementAt(i);
 
       if (mSelStartIndex >= 0 && mSelStartIndex >= i)
       {
@@ -3864,15 +3864,13 @@ nsTextServicesDocument::RemoveInvalidOffsetEntries()
 }
 
 nsresult
-nsTextServicesDocument::ClearOffsetTable(nsVoidArray *aOffsetTable)
+nsTextServicesDocument::ClearOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable)
 {
-  PRInt32 i;
+  PRUint32 i;
 
-  for (i = 0; i < aOffsetTable->Count(); i++)
+  for (i = 0; i < aOffsetTable->Length(); i++)
   {
-    OffsetEntry *entry = (OffsetEntry *)(*aOffsetTable)[i];
-    if (entry)
-      delete entry;
+    delete aOffsetTable->ElementAt(i);
   }
 
   aOffsetTable->Clear();
@@ -3883,7 +3881,7 @@ nsTextServicesDocument::ClearOffsetTable(nsVoidArray *aOffsetTable)
 nsresult
 nsTextServicesDocument::SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aNewEntryLength)
 {
-  OffsetEntry *entry = (OffsetEntry *)mOffsetTable[aTableIndex];
+  OffsetEntry *entry = mOffsetTable[aTableIndex];
 
   NS_ASSERTION((aNewEntryLength > 0), "aNewEntryLength <= 0");
   NS_ASSERTION((aNewEntryLength < entry->mLength), "aNewEntryLength >= mLength");
@@ -3900,7 +3898,7 @@ nsTextServicesDocument::SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aNewEntryL
   if (!newEntry)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!mOffsetTable.InsertElementAt(newEntry, aTableIndex + 1))
+  if (!mOffsetTable.InsertElementAt(aTableIndex + 1, newEntry))
   {
     delete newEntry;
     return NS_ERROR_FAILURE;
@@ -3915,17 +3913,17 @@ nsTextServicesDocument::SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aNewEntryL
 }
 
 nsresult
-nsTextServicesDocument::NodeHasOffsetEntry(nsVoidArray *aOffsetTable, nsIDOMNode *aNode, PRBool *aHasEntry, PRInt32 *aEntryIndex)
+nsTextServicesDocument::NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable, nsIDOMNode *aNode, PRBool *aHasEntry, PRInt32 *aEntryIndex)
 {
   OffsetEntry *entry;
-  PRInt32 i;
+  PRUint32 i;
 
   if (!aNode || !aHasEntry || !aEntryIndex)
     return NS_ERROR_NULL_POINTER;
 
-  for (i = 0; i < aOffsetTable->Count(); i++)
+  for (i = 0; i < aOffsetTable->Length(); i++)
   {
-    entry = (OffsetEntry *)(*aOffsetTable)[i];
+    entry = (*aOffsetTable)[i];
 
     if (!entry)
       return NS_ERROR_FAILURE;
@@ -3953,7 +3951,7 @@ nsTextServicesDocument::NodeHasOffsetEntry(nsVoidArray *aOffsetTable, nsIDOMNode
 #endif
 
 nsresult
-nsTextServicesDocument::FindWordBounds(nsVoidArray *aOffsetTable,
+nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
                                        nsString *aBlockStr,
                                        nsIDOMNode *aNode,
                                        PRInt32 aNodeOffset,
@@ -3986,7 +3984,7 @@ nsTextServicesDocument::FindWordBounds(nsVoidArray *aOffsetTable,
 
   // Next we map aNodeOffset into a string offset.
 
-  OffsetEntry *entry = (OffsetEntry *)(*aOffsetTable)[entryIndex];
+  OffsetEntry *entry = (*aOffsetTable)[entryIndex];
   PRUint32 strOffset = entry->mStrOffset + aNodeOffset - entry->mNodeOffset;
 
   // Now we use the word breaker to find the beginning and end
@@ -4026,11 +4024,11 @@ nsTextServicesDocument::FindWordBounds(nsVoidArray *aOffsetTable,
   // and end of the word, run through the offset table and
   // convert them back into dom points.
 
-  PRInt32 i, lastIndex = aOffsetTable->Count() - 1;
+  PRInt32 i, lastIndex = aOffsetTable->Length() - 1;
 
   for (i=0; i <= lastIndex; i++)
   {
-    entry = (OffsetEntry *)(*aOffsetTable)[i];
+    entry = (*aOffsetTable)[i];
 
     PRInt32 strEndOffset = entry->mStrOffset + entry->mLength;
 
@@ -4095,11 +4093,11 @@ void
 nsTextServicesDocument::PrintOffsetTable()
 {
   OffsetEntry *entry;
-  PRInt32 i;
+  PRUint32 i;
 
-  for (i = 0; i < mOffsetTable.Count(); i++)
+  for (i = 0; i < mOffsetTable.Length(); i++)
   {
-    entry = (OffsetEntry *)mOffsetTable[i];
+    entry = mOffsetTable[i];
     printf("ENTRY %4d: %p  %c  %c  %4d  %4d  %4d\n",
            i, entry->mNode,  entry->mIsValid ? 'V' : 'N',
            entry->mIsInsertedText ? 'I' : 'B',

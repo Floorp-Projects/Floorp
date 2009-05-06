@@ -227,7 +227,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsIDOMEventTarget> eventTarget;
   aMouseEvent->GetCurrentTarget(getter_AddRefs(eventTarget));
-  
+
   nsCOMPtr<nsIContent> sourceContent = do_QueryInterface(eventTarget);
   mSourceNode = do_GetWeakReference(sourceContent);
 #ifdef MOZ_XUL
@@ -240,17 +240,33 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   // so that the delay is from when the mouse stops moving, not when it enters
   // the node.
   KillTooltipTimer();
-    
+
   // If the mouse moves while the tooltip is up, hide it. If nothing is
   // showing and the tooltip hasn't been displayed since the mouse entered
   // the node, then start the timer to show the tooltip.
   if (!currentTooltip && !mTooltipShownOnce) {
+    // don't show tooltips attached to elements outside of a menu popup
+    // when hovering over an element inside it.
+    nsCOMPtr<nsIDOMEventTarget> eventTarget;
+    aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+    nsCOMPtr<nsIContent> targetContent = do_QueryInterface(eventTarget);
+    while (targetContent && targetContent != sourceContent) {
+      nsIAtom* tag = targetContent->Tag();
+      if (targetContent->GetNameSpaceID() == kNameSpaceID_XUL &&
+          (tag == nsGkAtoms::menupopup ||
+           tag == nsGkAtoms::panel ||
+           tag == nsGkAtoms::tooltip)) {
+        mSourceNode = nsnull;
+        return NS_OK;
+      }
+
+      targetContent = targetContent->GetParent();
+    }
+
     mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mTooltipTimer) {
-      aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-      nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(eventTarget);
-      mTargetNode = do_GetWeakReference(targetNode);
-      if (targetNode) {
+      mTargetNode = do_GetWeakReference(eventTarget);
+      if (mTargetNode) {
         nsresult rv = mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this, 
                                                           kTooltipShowTime, nsITimer::TYPE_ONE_SHOT);
         if (NS_FAILED(rv)) {
@@ -259,12 +275,18 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
         }
       }
     }
-  } else {
-    HideTooltip();
-    // set a flag so that the tooltip is only displayed once until the mouse
-    // leaves the node
-    mTooltipShownOnce = PR_TRUE;
+    return NS_OK;
   }
+
+#ifdef MOZ_XUL
+  if (mIsSourceTree)
+    return NS_OK;
+#endif
+
+  HideTooltip();
+  // set a flag so that the tooltip is only displayed once until the mouse
+  // leaves the node
+  mTooltipShownOnce = PR_TRUE;
 
   return NS_OK;
 }

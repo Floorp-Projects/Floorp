@@ -359,7 +359,18 @@ function runHttpTests(testArray, done)
 
     var test = testArray[testIndex];
     var ch = makeChannel(test.path);
-    test.initChannel(ch);
+    try
+    {
+      test.initChannel(ch);
+    }
+    catch (e)
+    {
+      try
+      {
+        do_throw("testArray[" + testIndex + "].initChannel(ch) failed: " + e);
+      }
+      catch (e) { /* swallow and let tests continue */ }
+    }
 
     ch.asyncOpen(listener, null);
   }

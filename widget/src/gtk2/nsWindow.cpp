@@ -54,7 +54,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsWidgetsCID.h"
-#include "nsIDragService.h"
+#include "nsDragService.h"
 #include "nsIDragSessionGTK.h"
 
 #include "nsGtkKeyUtils.h"
@@ -1911,6 +1911,39 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     return NS_OK;
 }
 
+PRBool
+nsWindow::HasPendingInputEvent()
+{
+    // This sucks, but gtk/gdk has no way to answer the question we want while
+    // excluding paint events, and there's no X API that will let us peek
+    // without blocking or removing.  To prevent event reordering, peek
+    // anything except expose events.  Reordering expose and others should be
+    // ok, hopefully.
+    PRBool haveEvent;
+#ifdef MOZ_X11
+    XEvent ev;
+    haveEvent =
+        XCheckMaskEvent(GDK_DISPLAY(),
+                        KeyPressMask | KeyReleaseMask | ButtonPressMask |
+                        ButtonReleaseMask | EnterWindowMask | LeaveWindowMask |
+                        PointerMotionMask | PointerMotionHintMask |
+                        Button1MotionMask | Button2MotionMask |
+                        Button3MotionMask | Button4MotionMask |
+                        Button5MotionMask | ButtonMotionMask | KeymapStateMask |
+                        VisibilityChangeMask | StructureNotifyMask |
+                        ResizeRedirectMask | SubstructureNotifyMask |
+                        SubstructureRedirectMask | FocusChangeMask |
+                        PropertyChangeMask | ColormapChangeMask |
+                        OwnerGrabButtonMask, &ev);
+    if (haveEvent) {
+        XPutBackEvent(GDK_DISPLAY(), &ev);
+    }
+#else
+    haveEvent = PR_FALSE;
+#endif
+    return haveEvent;
+}
+
 void
 nsWindow::LoseFocus(void)
 {
@@ -3492,6 +3525,13 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     // Make sure to end the drag session. If this drag started in a
     // different app, we won't get a drag_end signal to end it from.
+    gint x, y;
+    GdkDisplay* display = gdk_display_get_default();
+    if (display) {
+      // get the current cursor position
+      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
+      ((nsDragService *)dragService.get())->SetDragEndPoint(nsIntPoint(x, y));
+    }
     dragService->EndDragSession(PR_TRUE);
 
     return TRUE;
@@ -6700,7 +6740,8 @@ IM_commit_cb(GtkIMContext *aContext,
     // if gFocusWindow is null, use the last focused gIMEFocusWindow
     nsRefPtr<nsWindow> window = gFocusWindow ? gFocusWindow : gIMEFocusWindow;
 
-    if (!window || IM_get_input_context(window) != aContext)
+    if (!window || IM_get_input_context(window) != aContext &&
+        !(window->mIMEData && window->mIMEData->mEnabled == nsIWidget::IME_STATUS_PASSWORD)) 
         return;
 
     /* If IME doesn't change they keyevent that generated this commit,

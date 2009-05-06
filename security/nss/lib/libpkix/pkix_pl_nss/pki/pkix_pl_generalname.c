@@ -241,9 +241,6 @@ pkix_pl_GeneralName_Create(
         OtherName *otherName = NULL;
         CERTGeneralNameList *nssGenNameList = NULL;
         CERTGeneralNameType nameType;
-        SECItem *secItem = NULL;
-        char *asciiName = NULL;
-        SECStatus rv;
 
         PKIX_ENTER(GENERALNAME, "pkix_pl_GeneralName_Create");
         PKIX_NULLCHECK_TWO(nssAltName, pGenName);
@@ -308,12 +305,8 @@ pkix_pl_GeneralName_Create(
                 genName->directoryName = pkixDN;
                 break;
         case certRegisterID:
-
-                PKIX_CHECK(pkix_pl_oidBytes2Ascii
-                            (&nssAltName->name.other, &asciiName, plContext),
-                            PKIX_OIDBYTES2ASCIIFAILED);
-
-                PKIX_CHECK(PKIX_PL_OID_Create(asciiName, &pkixOID, plContext),
+                PKIX_CHECK(PKIX_PL_OID_CreateBySECItem(&nssAltName->name.other,
+                                                       &pkixOID, plContext),
                             PKIX_OIDCREATEFAILED);
 
                 genName->oid = pkixOID;
@@ -324,39 +317,20 @@ pkix_pl_GeneralName_Create(
         case certRFC822Name:
         case certX400Address:
         case certURI:
-
-                PKIX_GENERALNAME_DEBUG("\t\tCalling SECITEM_AllocItem).\n");
-                secItem = SECITEM_AllocItem(NULL, NULL, 0);
-                if (secItem == NULL){
-                        PKIX_ERROR(PKIX_OUTOFMEMORY);
-                }
-
-                PKIX_GENERALNAME_DEBUG("\t\tCalling SECITEM_CopyItem).\n");
-                rv = SECITEM_CopyItem(NULL, secItem, &nssAltName->name.other);
-                if (rv != SECSuccess) {
-                        PKIX_ERROR(PKIX_OUTOFMEMORY);
-                }
-
-                genName->other = secItem;
+                genName->other = SECITEM_DupItem(&nssAltName->name.other);
+                if (!genName->other) {
+                    PKIX_ERROR(PKIX_OUTOFMEMORY);
+                }     
                 break;
         default:
                 PKIX_ERROR(PKIX_NAMETYPENOTSUPPORTED);
         }
 
         *pGenName = genName;
+        genName = NULL;
+
 cleanup:
-
-        PKIX_FREE(asciiName);
-
-        if (PKIX_ERROR_RECEIVED){
-                PKIX_DECREF(genName);
-                if (secItem){
-                        PKIX_GENERALNAME_DEBUG
-                                ("\t\tCalling SECITEM_FreeItem).\n");
-                        SECITEM_FreeItem(secItem, PR_TRUE);
-                        secItem = NULL;
-                }
-        }
+        PKIX_DECREF(genName);
 
         PKIX_RETURN(GENERALNAME);
 }

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      function f() {
+        document.body.style.fontSize = "20px";
+        // End the test asynchronously so we get a chance to do a reflow before
+        // that happens.
+        setTimeout("document.documentElement.className = ''", 0);
+      }
+    </script>
+    <style>
+      span { display: inline-block; width: 1em; height: 10px; background: green; }
+    </style>
+  </head>
+  <body onload="f()" style="font-size: 10px">
+    Test
+    <div style="position: absolute; left: 0; width: 25px; height: 0; top: 0;">
+      <span></span>
+      <span></span>
+    </div>
+  </body>
+</html>

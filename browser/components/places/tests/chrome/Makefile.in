@@ -47,6 +47,7 @@ _CHROME_TEST_FILES = \
 	test_treeview_date.xul \
 	test_bug485100-change-case-loses-tag.xul \
 	test_bug427633_no_newfolder_if_noip.xul \
+	test_multiple_left_pane.xul \
 	$(NULL)
 
 libs:: $(_CHROME_TEST_FILES)

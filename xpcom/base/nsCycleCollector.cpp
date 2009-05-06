@@ -733,6 +733,10 @@ struct nsPurpleBuffer
     void BumpGeneration();
     void SelectAgedPointers(GCGraphBuilder &builder);
 
+#ifdef DEBUG_CC
+    void NoteAll(GCGraphBuilder &builder);
+#endif
+
     PRBool Exists(void *p)
     {
         PRUint32 idx = POINTER_INDEX(p);
@@ -1499,6 +1503,23 @@ AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
 
     return PR_TRUE;
 }
+
+#ifdef DEBUG_CC
+static PLDHashOperator
+noteAllCallback(const void* ptr, PRUint32& generation, void* userArg)
+{
+    GCGraphBuilder *builder = static_cast<GCGraphBuilder*>(userArg);
+    builder->NoteXPCOMRoot(static_cast<nsISupports *>(const_cast<void*>(ptr)));
+    return PL_DHASH_NEXT;
+}
+
+void
+nsPurpleBuffer::NoteAll(GCGraphBuilder &builder)
+{
+    SpillAll();
+    mBackingStore.Enumerate(noteAllCallback, &builder);
+}
+#endif
 
 void 
 nsCycleCollector::SelectPurple(GCGraphBuilder &builder)
@@ -2556,19 +2577,25 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     {
         GCGraphBuilder builder(mGraph, mRuntimes);
 
+        // Instead of adding roots from the purple buffer, we add them
+        // from the list of nodes we were expected to collect.
+        // Put the expected garbage in *before* calling
+        // BeginCycleCollection so that we can separate the expected
+        // garbage from the NoteRoot calls in such a way that something
+        // that's in both is considered expected garbage.
+        mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, &builder);
+
+        PRUint32 expectedGarbageCount = builder.Count();
+
         for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
             if (mRuntimes[i])
                 mRuntimes[i]->BeginCycleCollection(builder);
         }
 
-        // This might fail to explain expected garbage that's also in
-        // the set of roots added by the runtimes (what used to be
-        // called suspectCurrent), but that seems pretty unlikely.
-        PRUint32 suspectCurrentCount = builder.Count();
-
-        // Instead of adding roots from the purple buffer, we add them
-        // from the list of nodes we were expected to collect.
-        mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, &builder);
+        // But just for extra information, add entries from the purple
+        // buffer too, since it may give us extra information about
+        // traversal deficiencies.
+        mPurpleBuf.NoteAll(builder);
 
         MarkRoots(builder);
         ScanRoots();
@@ -2586,7 +2613,12 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     findCycleRoots = PR_TRUE;
                 }
 
-                if (pi->mInternalRefs != pi->mRefCount && i >= suspectCurrentCount) {
+                if (pi->mInternalRefs != pi->mRefCount &&
+                    (i < expectedGarbageCount || i >= mGraph.mRootCount)) {
+                    // This check isn't particularly useful anymore
+                    // given that we need to enter this part for i >=
+                    // mGraph.mRootCount and there are plenty of
+                    // NoteRoot roots.
                     describeExtraRefcounts = PR_TRUE;
                 }
                 ++i;
@@ -2614,7 +2646,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             NodePool::Enumerator etor_roots(mGraph.mNodes);
             for (PRUint32 i = 0; i < mGraph.mRootCount; ++i) {
                 PtrInfo *root_pi = etor_roots.GetNext();
-                if (i >= suspectCurrentCount) {
+                if (i < expectedGarbageCount) {
                     root_pi->mSCCIndex = INDEX_REACHED;
                     root_pi->mShortestPathToExpectedGarbage = root_pi;
                     queue.Push(root_pi);
@@ -2766,14 +2798,23 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     while (!queue.IsDone()) {
                         PtrInfo *pi = queue.GetNext();
                         if (pi->mColor == white) {
-                            printf("nsCycleCollector: %s %p in component %d\n"
-                                   "  was not collected due to missing call to "
-                                   "suspect, failure to unlink,\n"
-                                   "  or deficiency in traverse that causes "
-                                   "cycles referenced only from other\n"
-                                   "  cycles to require multiple rounds of cycle "
-                                   "collection\n",
-                                   pi->mName, pi->mPointer, pi->mSCCIndex);
+                            if (mPurpleBuf.Exists(pi->mPointer)) {
+                                printf(
+"nsCycleCollector: %s %p in component %d\n"
+"  which was reference counted during the root/unlink/unroot phase of the\n"
+"  last collection was not collected due to failure to unlink (see other\n"
+"  warnings) or deficiency in traverse that causes cycles referenced only\n"
+"  from other cycles to require multiple rounds of cycle collection in which\n"
+"  this object was likely the reachable object\n",
+                                       pi->mName, pi->mPointer, pi->mSCCIndex);
+                            } else {
+                                printf(
+"nsCycleCollector: %s %p in component %d\n"
+"  was not collected due to missing call to suspect, failure to unlink (see\n"
+"  other warnings), or deficiency in traverse that causes cycles referenced\n"
+"  only from other cycles to require multiple rounds of cycle collection\n",
+                                       pi->mName, pi->mPointer, pi->mSCCIndex);
+                            }
                             if (pi->mShortestPathToExpectedGarbage)
                                 PrintPathToExpectedGarbage(pi);
                         }

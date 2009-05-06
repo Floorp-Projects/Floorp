@@ -68,7 +68,7 @@ nsIdleServiceWin::GetIdleTime(PRUint32 *aTimeDiff)
     //       we need to compare apples to apples - hence the nowTime variable
     PRUint32 nowTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
-    *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(nowTime, gLastInputEventTime);
+    *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(nowTime, gLastInputEventTime) / 1000;
 #endif
 
     return NS_OK;

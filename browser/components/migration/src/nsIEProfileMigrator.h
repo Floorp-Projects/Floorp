@@ -45,7 +45,7 @@
 #include <windows.h>
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsINavHistoryService.h"
 
 class nsIFile;
@@ -53,6 +53,12 @@ class nsICookieManager2;
 class nsIRDFResource;
 class nsINavBookmarksService;
 class nsIPrefBranch;
+
+struct SignonData {
+  PRUnichar* user;
+  PRUnichar* pass;
+  char*      realm;
+};
 
 #import PSTOREC_DLL raw_interfaces_only
 using namespace PSTORECLib;
@@ -79,9 +85,9 @@ protected:
 
   nsresult CopyPasswords(PRBool aReplace);
   nsresult MigrateSiteAuthSignons(IPStore* aPStore);
-  nsresult GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSignonsFound);
-  nsresult ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSignonsFound);
-  void     EnumerateUsernames(const nsAString& aKey, PRUnichar* aData, unsigned long aCount, nsVoidArray* aSignonsFound);
+  nsresult GetSignonsListFromPStore(IPStore* aPStore, nsTArray<SignonData>* aSignonsFound);
+  nsresult ResolveAndMigrateSignons(IPStore* aPStore, nsTArray<SignonData>* aSignonsFound);
+  void     EnumerateUsernames(const nsAString& aKey, PRUnichar* aData, unsigned long aCount, nsTArray<SignonData>* aSignonsFound);
   void     GetUserNameAndPass(unsigned char* data, unsigned long len, unsigned char** username, unsigned char** pass);
 
   nsresult CopyFormData(PRBool aReplace);

@@ -107,7 +107,7 @@ CK_RV sftk_DBInit(const char *configdir, const char *certPrefix,
 	 	const char *keyPrefix, const char *updatedir, 
 		const char *updCertPrefix, const char *updKeyPrefix,
 		const char *updateID, PRBool readOnly, PRBool noCertDB, 
-		PRBool noKeyDB, PRBool forceOpen, 
+		PRBool noKeyDB, PRBool forceOpen, PRBool isFIPS,
 		SFTKDBHandle **certDB, SFTKDBHandle **keyDB);
 CK_RV sftkdb_Shutdown(void);
 

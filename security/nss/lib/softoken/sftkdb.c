@@ -2547,7 +2547,7 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
                 const char *keyPrefix, const char *updatedir,
 		const char *updCertPrefix, const char *updKeyPrefix, 
 		const char *updateID, PRBool readOnly, PRBool noCertDB,
-                PRBool noKeyDB, PRBool forceOpen,
+                PRBool noKeyDB, PRBool forceOpen, PRBool isFIPS,
                 SFTKDBHandle **certDB, SFTKDBHandle **keyDB)
 {
     const char *confdir;
@@ -2577,11 +2577,11 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
     switch (dbType) {
     case SDB_LEGACY:
 	crv = sftkdbCall_open(confdir, certPrefix, keyPrefix, 8, 3, flags,
-		noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
+		 isFIPS, noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
 	break;
     case SDB_MULTIACCESS:
 	crv = sftkdbCall_open(configdir, certPrefix, keyPrefix, 8, 3, flags,
-		noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
+		isFIPS, noCertDB? NULL : &certSDB, noKeyDB ? NULL: &keySDB);
 	break;
     case SDB_SQL:
     case SDB_EXTERN: /* SHOULD open a loadable db */
@@ -2598,8 +2598,8 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
 	    /* we have legacy databases, if we failed to open the new format 
 	     * DB's read only, just use the legacy ones */
 		crv = sftkdbCall_open(confdir, certPrefix, 
-			keyPrefix, 8, 3, flags, noCertDB? NULL : &certSDB,
-			noKeyDB ? NULL : &keySDB);
+			keyPrefix, 8, 3, flags, isFIPS, 
+			noCertDB? NULL : &certSDB, noKeyDB ? NULL : &keySDB);
 	    }
 	/* Handle the database merge case.
          *
@@ -2669,7 +2669,8 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
 	CK_RV crv2;
 
 	crv2 = sftkdbCall_open(confdir, certPrefix, keyPrefix, 8, 3, flags,
-		noCertDB ? NULL : &updateCert, noKeyDB ? NULL : &updateKey);
+		isFIPS, noCertDB ? NULL : &updateCert, 
+		noKeyDB ? NULL : &updateKey);
 	if (crv2 == CKR_OK) {
 	    if (*certDB) {
 		(*certDB)->update = updateCert;

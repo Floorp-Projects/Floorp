@@ -46,6 +46,8 @@
 
 splitter {
   -moz-appearance: splitter;
+  -moz-box-align: center;
+  -moz-box-pack: center;
   cursor: ew-resize;
 
 }
@@ -59,5 +61,12 @@ splitter[orient="vertical"] {
 /* ::::: splitter grippy ::::: */
 
 grippy {
-  display: none;
+  cursor: pointer;
+  min-width: 4px;
+  min-height: 115px;
+}
+
+splitter[orient="vertical"] > grippy {
+  min-width: 115px;
+  min-height: 4px;
 }

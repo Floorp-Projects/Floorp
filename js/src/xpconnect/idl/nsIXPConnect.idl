@@ -791,6 +791,8 @@ interface nsIXPConnect : nsISupports
      * XPCCrossOriginWrapper for the given object based on the principal, scope,
      * and filename flags that are passed in.
      *
+     * Note: In C++, the out jsval parameter must already be a strong GC root.
+     *
      * @param aJSContext
      *     A JSContext.
      * @param aObject

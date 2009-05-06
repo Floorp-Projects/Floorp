@@ -45,27 +45,18 @@
 #ifndef nsHTMLContentSerializer_h__
 #define nsHTMLContentSerializer_h__
 
-#include "nsXMLContentSerializer.h"
+#include "nsXHTMLContentSerializer.h"
 #include "nsIEntityConverter.h"
 #include "nsString.h"
-#include "nsTArray.h"
 
 class nsIContent;
 class nsIAtom;
 
-class nsHTMLContentSerializer : public nsXMLContentSerializer {
+class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
  public:
   nsHTMLContentSerializer();
   virtual ~nsHTMLContentSerializer();
 
-  NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  const char* aCharSet, PRBool aIsCopying,
-                  PRBool aIsWholeDocument);
-
-  NS_IMETHOD AppendText(nsIDOMText* aText, 
-                        PRInt32 aStartOffset,
-                        PRInt32 aEndOffset,
-                        nsAString& aStr);
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
                                 nsIDOMElement *aOriginalElement,
                                 nsAString& aStr);
@@ -76,101 +67,13 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
                                  nsAString& aStr);
  protected:
-  PRBool LineBreakBeforeOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
-  PRBool LineBreakAfterOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
-  PRBool LineBreakBeforeClose(nsIAtom* aName, PRBool aHasDirtyAttr);
-  PRBool LineBreakAfterClose(nsIAtom* aName, PRBool aHasDirtyAttr);
-  PRBool IsFirstChildOfOL(nsIDOMElement* aElement);
-  void StartIndentation(nsIAtom* aName, 
-                        PRBool aHasDirtyAttr,
-                        nsAString& aStr);
-  void EndIndentation(nsIAtom* aName, 
-                      PRBool aHasDirtyAttr,
-                      nsAString& aStr);
-  nsresult GetEntityConverter(nsIEntityConverter** aConverter);
-  void SerializeAttributes(nsIContent* aContent,
+
+  virtual void SerializeAttributes(nsIContent* aContent,
+                           nsIDOMElement *aOriginalElement,
+                           nsAString& aTagPrefix,
+                           const nsAString& aTagNamespaceURI,
                            nsIAtom* aTagName,
                            nsAString& aStr);
-  void SerializeLIValueAttribute(nsIDOMElement* aElement,
-                                 nsAString& aStr);
-  virtual void AppendToString(const PRUnichar* aStr,
-                              PRInt32 aLength,
-                              nsAString& aOutputStr);
-  virtual void AppendToString(const PRUnichar aChar,
-                              nsAString& aOutputStr);
-  virtual void AppendToString(const nsAString& aStr,
-                              nsAString& aOutputStr,
-                              PRBool aTranslateEntities = PR_FALSE,
-                              PRBool aIncrColumn = PR_TRUE);
-
-  void AppendWrapped_WhitespaceSequence(
-          nsASingleFragmentString::const_char_iterator &aPos,
-          const nsASingleFragmentString::const_char_iterator aEnd,
-          const nsASingleFragmentString::const_char_iterator aSequenceStart,
-          PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
-          nsAString &aOutputStr);
-  void AppendWrapped_NonWhitespaceSequence(
-          nsASingleFragmentString::const_char_iterator &aPos,
-          const nsASingleFragmentString::const_char_iterator aEnd,
-          const nsASingleFragmentString::const_char_iterator aSequenceStart,
-          PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
-          nsAString &aOutputStr);
-  virtual void AppendToStringWrapped(const nsASingleFragmentString& aStr,
-                                     nsAString& aOutputStr,
-                                     PRBool aTranslateEntities);
-  PRBool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
-  nsresult EscapeURI(const nsAString& aURI, nsAString& aEscapedURI);
-  PRBool IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& aAttrValueString);
-
-  nsCOMPtr<nsIEntityConverter> mEntityConverter;
-
-  PRInt32   mIndent;
-
-  PRUint32  mInBody;
-
-  PRPackedBool  mDoFormat;
-  PRPackedBool  mDoHeader;
-  PRPackedBool  mBodyOnly;
-  PRPackedBool  mIsCopying; // Set to PR_TRUE only while copying
-
-  // Indicates that a space will be added if and only if content is
-  // continued on the same line while serializing source.  Otherwise,
-  // the newline character acts as the whitespace and no space is needed.
-  PRPackedBool  mAddSpace;
-  PRPackedBool  mMayIgnoreLineBreakSequence;
-
-  // This is to ensure that we only do meta tag fixups when dealing with
-  // whole documents.
-  PRPackedBool  mIsWholeDocument;
-
-  // To keep track of First LI child of OL in selected range 
-  PRPackedBool  mIsFirstChildOfOL;
-  PRInt32       mPreLevel;
-
-  /*
-   * mInCDATA is set to PR_TRUE while the serializer is serializing
-   * the content of a element whose content is considerd CDATA by the
-   * serializer (such elements are 'script', 'style', 'noscript' and
-   * possibly others) This doesn't have anything to do with if the
-   * element is defined as CDATA in the DTD, it simply means we'll
-   * output the content of the element without doing any entity encoding
-   * what so ever.
-   */
-  PRPackedBool mInCDATA;
-
-  PRInt32   mMaxColumn;
-
-  // To keep track of startvalue of OL and first list item for nested lists
-  struct olState {
-    olState(PRInt32 aStart, PRBool aIsFirst):startVal(aStart),isFirstListItem(aIsFirst)
-    {
-    }
-    PRInt32 startVal;
-    PRBool isFirstListItem;
-  };
-
-  // Stack to store one olState struct per <OL>.
-  nsAutoTArray<olState, 8> mOLStateStack;
 };
 
 nsresult

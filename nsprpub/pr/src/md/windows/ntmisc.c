@@ -41,6 +41,8 @@
  */
 
 #include "primpl.h"
+#include <math.h>     /* for fabs() */
+#include <windows.h>
 
 char *_PR_MD_GET_ENV(const char *name)
 {
@@ -69,6 +71,116 @@ PRIntn _PR_MD_PUT_ENV(const char *name)
  */
 
 /*
+ * The NSPR epoch (00:00:00 1 Jan 1970 UTC) in FILETIME.
+ * We store the value in a PRTime variable for convenience.
+ */
+#ifdef __GNUC__
+const PRTime _pr_filetime_offset = 116444736000000000LL;
+#else
+const PRTime _pr_filetime_offset = 116444736000000000i64;
+#endif
+
+#ifdef WINCE
+
+#define FILETIME2INT64(ft) \
+  (((PRInt64)ft.dwHighDateTime) << 32 | (PRInt64)ft.dwLowDateTime)
+
+static void
+LowResTime(LPFILETIME lpft)
+{
+    GetCurrentFT(lpft);
+}
+
+typedef struct CalibrationData {
+    long double freq;         /* The performance counter frequency */
+    long double offset;       /* The low res 'epoch' */
+    long double timer_offset; /* The high res 'epoch' */
+
+    /* The last high res time that we returned since recalibrating */
+    PRInt64 last;
+
+    PRBool calibrated;
+
+    CRITICAL_SECTION data_lock;
+    CRITICAL_SECTION calibration_lock;
+    PRInt64 granularity;
+} CalibrationData;
+
+static CalibrationData calibration;
+
+static void
+NowCalibrate(void)
+{
+    FILETIME ft, ftStart;
+    LARGE_INTEGER liFreq, now;
+
+    if (calibration.freq == 0.0) {
+	if(!QueryPerformanceFrequency(&liFreq)) {
+	    /* High-performance timer is unavailable */
+	    calibration.freq = -1.0;
+	} else {
+	    calibration.freq = (long double) liFreq.QuadPart;
+	}
+    }
+    if (calibration.freq > 0.0) {
+	PRInt64 calibrationDelta = 0;
+	/*
+	 * By wrapping a timeBegin/EndPeriod pair of calls around this loop,
+	 * the loop seems to take much less time (1 ms vs 15ms) on Vista. 
+	 */
+	timeBeginPeriod(1);
+	LowResTime(&ftStart);
+	do {
+	    LowResTime(&ft);
+	} while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
+	timeEndPeriod(1);
+
+	calibration.granularity = 
+	    (FILETIME2INT64(ft) - FILETIME2INT64(ftStart))/10;
+
+	QueryPerformanceCounter(&now);
+
+	calibration.offset = (long double) FILETIME2INT64(ft);
+	calibration.timer_offset = (long double) now.QuadPart;
+	/*
+	 * The windows epoch is around 1600. The unix epoch is around 1970. 
+	 * _pr_filetime_offset is the difference (in windows time units which
+	 * are 10 times more highres than the JS time unit) 
+	 */
+	calibration.offset -= _pr_filetime_offset;
+	calibration.offset *= 0.1;
+	calibration.last = 0;
+
+	calibration.calibrated = PR_TRUE;
+    }
+}
+
+#define CALIBRATIONLOCK_SPINCOUNT 0
+#define DATALOCK_SPINCOUNT 4096
+#define LASTLOCK_SPINCOUNT 4096
+
+static PRStatus
+_MD_InitTime(void)
+{
+    memset(&calibration, 0, sizeof(calibration));
+    NowCalibrate();
+    InitializeCriticalSection(&calibration.calibration_lock);
+    InitializeCriticalSection(&calibration.data_lock);
+    return PR_SUCCESS;
+}
+
+void
+_MD_CleanupTime(void)
+{
+    DeleteCriticalSection(&calibration.calibration_lock);
+    DeleteCriticalSection(&calibration.data_lock);
+}
+
+#define MUTEX_SETSPINCOUNT(m, c)
+
+static PRCallOnceType calibrationOnce;
+
+/*
  *-----------------------------------------------------------------------
  *
  * PR_Now --
@@ -85,6 +197,130 @@ PRIntn _PR_MD_PUT_ENV(const char *name)
 PR_IMPLEMENT(PRTime)
 PR_Now(void)
 {
+    long double lowresTime, highresTimerValue;
+    FILETIME ft;
+    LARGE_INTEGER now;
+    PRBool calibrated = PR_FALSE;
+    PRBool needsCalibration = PR_FALSE;
+    PRInt64 returnedTime;
+    long double cachedOffset = 0.0;
+
+    /* For non threadsafe platforms, _MD_InitTime is not necessary */
+    PR_CallOnce(&calibrationOnce, _MD_InitTime);
+    do {
+	if (!calibration.calibrated || needsCalibration) {
+	    EnterCriticalSection(&calibration.calibration_lock);
+	    EnterCriticalSection(&calibration.data_lock);
+
+	    /* Recalibrate only if no one else did before us */
+	    if (calibration.offset == cachedOffset) {
+		/*
+		 * Since calibration can take a while, make any other
+		 * threads immediately wait 
+		 */
+		MUTEX_SETSPINCOUNT(&calibration.data_lock, 0);
+
+		NowCalibrate();
+
+		calibrated = PR_TRUE;
+
+		/* Restore spin count */
+		MUTEX_SETSPINCOUNT(&calibration.data_lock, DATALOCK_SPINCOUNT);
+	    }
+	    LeaveCriticalSection(&calibration.data_lock);
+	    LeaveCriticalSection(&calibration.calibration_lock);
+	}
+
+	/* Calculate a low resolution time */
+	LowResTime(&ft);
+	lowresTime = ((long double)(FILETIME2INT64(ft) - _pr_filetime_offset))
+		     * 0.1;
+
+	if (calibration.freq > 0.0) {
+	    long double highresTime, diff;
+	    DWORD timeAdjustment, timeIncrement;
+	    BOOL timeAdjustmentDisabled;
+
+	    /* Default to 15.625 ms if the syscall fails */
+	    long double skewThreshold = 15625.25;
+
+	    /* Grab high resolution time */
+	    QueryPerformanceCounter(&now);
+	    highresTimerValue = (long double)now.QuadPart;
+
+	    EnterCriticalSection(&calibration.data_lock);
+	    highresTime = calibration.offset + 1000000L *
+		(highresTimerValue-calibration.timer_offset)/calibration.freq;
+	    cachedOffset = calibration.offset;
+
+	    /* 
+	     * On some dual processor/core systems, we might get an earlier 
+	     * time so we cache the last time that we returned.
+	     */
+	    calibration.last = PR_MAX(calibration.last,(PRInt64)highresTime);
+	    returnedTime = calibration.last;
+	    LeaveCriticalSection(&calibration.data_lock);
+
+	    /* Get an estimate of clock ticks per second from our own test */
+	    skewThreshold = calibration.granularity;
+	    /* Check for clock skew */
+	    diff = lowresTime - highresTime;
+
+	    /* 
+	     * For some reason that I have not determined, the skew can be
+	     * up to twice a kernel tick. This does not seem to happen by
+	     * itself, but I have only seen it triggered by another program
+	     * doing some kind of file I/O. The symptoms are a negative diff
+	     * followed by an equally large positive diff. 
+	     */
+	    if (fabs(diff) > 2*skewThreshold) {
+		if (calibrated) {
+		    /*
+		     * If we already calibrated once this instance, and the
+		     * clock is still skewed, then either the processor(s) are
+		     * wildly changing clockspeed or the system is so busy that
+		     * we get switched out for long periods of time. In either
+		     * case, it would be infeasible to make use of high
+		     * resolution results for anything, so let's resort to old
+		     * behavior for this call. It's possible that in the
+		     * future, the user will want the high resolution timer, so
+		     * we don't disable it entirely. 
+		     */
+		    returnedTime = (PRInt64)lowresTime;
+		    needsCalibration = PR_FALSE;
+		} else {
+		    /*
+		     * It is possible that when we recalibrate, we will return 
+		     * a value less than what we have returned before; this is
+		     * unavoidable. We cannot tell the different between a
+		     * faulty QueryPerformanceCounter implementation and user
+		     * changes to the operating system time. Since we must
+		     * respect user changes to the operating system time, we
+		     * cannot maintain the invariant that Date.now() never
+		     * decreases; the old implementation has this behavior as
+		     * well. 
+		     */
+		    needsCalibration = PR_TRUE;
+		}
+	    } else {
+		/* No detectable clock skew */
+		returnedTime = (PRInt64)highresTime;
+		needsCalibration = PR_FALSE;
+	    }
+	} else {
+	    /* No high resolution timer is available, so fall back */
+	    returnedTime = (PRInt64)lowresTime;
+	}
+    } while (needsCalibration);
+
+    return returnedTime;
+}
+
+#else
+
+PR_IMPLEMENT(PRTime)
+PR_Now(void)
+{
     PRTime prt;
     FILETIME ft;
     SYSTEMTIME st;
@@ -94,6 +330,8 @@ PR_Now(void)
     _PR_FileTimeToPRTime(&ft, &prt);
     return prt;       
 }
+
+#endif
 
 /*
  ***********************************************************************

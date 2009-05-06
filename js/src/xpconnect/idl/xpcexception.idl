@@ -42,7 +42,14 @@
 #include "nsISupports.idl"
 #include "nsIException.idl"
 
-[scriptable, uuid(b2a34010-3983-11d3-9888-006008962422)]
+%{ C++
+#include "jspubtd.h"
+%}
+
+[ptr] native xpcexJSContextPtr(JSContext);
+      native xpcexJSVal(jsval);
+
+[scriptable, uuid(cac29630-7bf2-4e22-811b-46855a7d5af0)]
 interface nsIXPCException : nsIException
 {
     // inherits methods from nsIException
@@ -53,6 +60,10 @@ interface nsIXPCException : nsIException
                     in nsIStackFrame    aLocation,
                     in nsISupports      aData,
                     in nsIException     aInner);
+
+    [noscript] xpcexJSVal stealJSVal();
+    [noscript] void stowJSVal(in xpcexJSContextPtr cx,
+                              in xpcexJSVal val);
 };
 
 /* this goes into the C++ header verbatim. */

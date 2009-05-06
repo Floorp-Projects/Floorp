@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+function boom()
+{
+  var f = document.getElementById("f");
+  var s = document.getElementById("s");
+  s.insertBefore(f, s.firstChild);
+
+  setTimeout(rel, 200);
+}
+
+function rel()
+{
+  location.reload();
+}
+
+]]>
+</script>
+
+</head>
+
+<body onload="boom();">
+<font id="f"><b>2</b>"</font>
+<b>"<span id="s">="<b></b></span></b>
+</body>
+</html>

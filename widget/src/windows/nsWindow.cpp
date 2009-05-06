@@ -77,15 +77,19 @@
 #include "gfxImageSurface.h"
 #include "nsIDOMNSUIEvent.h"
 
+#ifdef DEBUG_vladimir
+#include "nsFunctionTimer.h"
+#endif
+
+// this isn't ideal, we should figure out how to export
+// the #defines here; need this to figure out if we have
+// the DirectDraw surface or not.
+#include "cairo-features.h"
+
 #ifdef WINCE
 
 #include "aygshell.h"
 #include "imm.h"
-
-#define PAINT_USE_IMAGE_SURFACE
-
-// do 32->24 conversion before calling StretchDIBits
-#define PAINT_USE_IMAGE_SURFACE_24BPP
 
 #ifdef WINCE_WINDOWS_MOBILE
 #define WINCE_HAVE_SOFTKB
@@ -95,7 +99,7 @@
 #include "winuserm.h"
 #endif
 
-#else
+#else /* not WINCE */
 
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
@@ -110,7 +114,8 @@
 // mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <mmsystem.h>
 #include <zmouse.h>
-#endif
+
+#endif /* WINCE */
 
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
@@ -168,15 +173,31 @@
 #ifdef NS_ENABLE_TSF
 #include "nsTextStore.h"
 #endif //NS_ENABLE_TSF
+#include "nsIMM32Handler.h"
+
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+#include "gfxDDrawSurface.h"
+
+/*XXX handle clean-up */
+static LPDIRECTDRAW glpDD = NULL;
+static LPDIRECTDRAWSURFACE glpDDPrimary = NULL;
+static LPDIRECTDRAWCLIPPER glpDDClipper = NULL;
+static nsAutoPtr<gfxDDrawSurface> gpDDSurf;
+
+static void DDError(const char *msg, HRESULT hr)
+{
+  /*XXX make nicer */
+  fprintf(stderr, "direct draw error %s: 0x%08x\n", msg, hr);
+}
+
+#endif
 
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
 
-#ifdef PAINT_USE_IMAGE_SURFACE
 static nsAutoPtr<PRUint8> gSharedSurfaceData;
 static gfxIntSize gSharedSurfaceSize;
-#endif
 
 /*
  * WinCE helpers
@@ -186,6 +207,25 @@ static gfxIntSize gSharedSurfaceSize;
 #ifdef WINCE_HAVE_SOFTKB
 static PRBool gSoftKeyMenuBar = PR_FALSE;
 static PRBool gSoftKeyboardState = PR_FALSE;
+
+static void NotifySoftKbObservers() {
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    SIPINFO sipInfo;
+    wchar_t rectBuf[256];
+    memset(&sipInfo, 0, sizeof(SIPINFO));
+    sipInfo.cbSize = sizeof(SIPINFO);
+    if (SipGetInfo(&sipInfo)) {
+      _snwprintf(rectBuf, 256, L"{\"left\": %d, \"top\": %d,"
+                 L" \"right\": %d, \"bottom\": %d}", 
+                 sipInfo.rcVisibleDesktop.left, 
+                 sipInfo.rcVisibleDesktop.top, 
+                 sipInfo.rcVisibleDesktop.right, 
+                 sipInfo.rcVisibleDesktop.bottom);
+      observerService->NotifyObservers(nsnull, "softkb-change", rectBuf);
+    }
+  }
+}
 
 static void ToggleSoftKB(PRBool show)
 {
@@ -197,7 +237,8 @@ static void ToggleSoftKB(PRBool show)
   if (hWndSIP)
     ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
 
-  SHSipPreference(NULL, show ? SIP_UP: SIP_DOWN);
+  SipShowIM(show ? SIPF_ON : SIPF_OFF);
+  NotifySoftKbObservers();
 }
 
 static void CreateSoftKeyMenuBar(HWND wnd)
@@ -321,10 +362,6 @@ static const PRUnichar kMozHeapDumpMessageString[] = L"MOZ_HeapDump";
 #define MAPVK_VK_TO_CHAR 2
 #endif
 
-// used for checking the lParam of WM_IME_COMPOSITION
-#define IS_COMPOSING_LPARAM(lParam) \
-          ((lParam) & (GCS_COMPSTR | GCS_COMPATTR | GCS_COMPCLAUSE | GCS_CURSORPOS))
-
 static PRBool IsCursorTranslucencySupported() {
 #ifdef WINCE
   return PR_FALSE;
@@ -373,30 +410,40 @@ static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1"
 ////////////////////////////////////////////////////
 PRUint32   nsWindow::sInstanceCount            = 0;
 
-PRBool     nsWindow::sIMEIsComposing           = PR_FALSE;
-PRBool     nsWindow::sIMEIsStatusChanged       = PR_FALSE;
-
-nsString*  nsWindow::sIMECompUnicode           = NULL;
-PRUint8*   nsWindow::sIMEAttributeArray        = NULL;
-PRInt32    nsWindow::sIMEAttributeArrayLength  = 0;
-PRInt32    nsWindow::sIMEAttributeArraySize    = 0;
-PRUint32*  nsWindow::sIMECompClauseArray       = NULL;
-PRInt32    nsWindow::sIMECompClauseArrayLength = 0;
-PRInt32    nsWindow::sIMECompClauseArraySize   = 0;
-
-// Some IMEs (e.g., the standard IME for Korean) don't have caret position,
-// then, we should not set caret position to text event.
-#define NO_IME_CARET -1
-long       nsWindow::sIMECursorPosition        = NO_IME_CARET;
-
-PRBool     nsWindow::sIMENativeCaretIsCreated  = PR_FALSE;
-
-RECT*      nsWindow::sIMECompCharPos           = nsnull;
-
 PRBool     nsWindow::gSwitchKeyboardLayout     = PR_FALSE;
 
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
+
+typedef enum {
+  /* Use GDI and windows surfaces */
+  RENDER_GDI = 0,
+
+  /* Use 32bpp image surfaces and call StretchDIBits */
+  RENDER_IMAGE_STRETCH32,
+
+  /* Use 32bpp image surfaces, and do 32->24 conversion before calling StretchDIBits */
+  RENDER_IMAGE_STRETCH24,
+
+  /* Use DirectDraw on Windows CE */
+  RENDER_DDRAW,
+
+  /* max */
+  RENDER_MODE_MAX
+} WinRenderMode;
+
+/* Pick the default render mode differently between
+ * desktop, Windows Mobile, and Windows CE.
+ */
+#if defined(WINCE_WINDOWS_MOBILE)
+#define DEFAULT_RENDER_MODE   RENDER_IMAGE_STRETCH24
+#elif defined(WINCE)
+#define DEFAULT_RENDER_MODE   RENDER_DDRAW
+#else
+#define DEFAULT_RENDER_MODE   RENDER_GDI
+#endif
+
+static WinRenderMode gRenderMode = DEFAULT_RENDER_MODE;
 
 #ifndef WINCE
 static KeyboardLayout gKbdLayout;
@@ -407,7 +454,6 @@ TriStateBool nsWindow::sCanQuit = TRI_UNKNOWN;
 BOOL nsWindow::sIsRegistered       = FALSE;
 BOOL nsWindow::sIsPopupClassRegistered = FALSE;
 BOOL nsWindow::sIsOleInitialized = FALSE;
-UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse message for MSIME
 UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
 
 HCURSOR        nsWindow::gHCursor            = NULL;
@@ -476,6 +522,13 @@ static PRBool is_vk_down(int vk)
 #else
 #define IS_VK_DOWN(a) (GetKeyState(a) < 0)
 #endif
+
+nsModifierKeyState::nsModifierKeyState()
+{
+  mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+  mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+  mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+}
 
 //
 // App Command messages for IntelliMouse and Natural Keyboard Pro
@@ -621,11 +674,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mBackground         = ::GetSysColor(COLOR_BTNFACE);
   mBrush              = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
   mForeground         = ::GetSysColor(COLOR_WINDOWTEXT);
-  mIsShiftDown        = PR_FALSE;
-  mIsControlDown      = PR_FALSE;
-  mIsAltDown          = PR_FALSE;
   mIsDestroying       = PR_FALSE;
-  mOnDestroyCalled    = PR_FALSE;
   mDeferredPositioner = NULL;
   mLastPoint.x        = 0;
   mLastPoint.y        = 0;
@@ -660,9 +709,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #ifndef WINCE
     gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
 #endif
-    // mouse message of MSIME98/2000
-    nsWindow::uWM_MSIME_MOUSE     = ::RegisterWindowMessage(RWM_MOUSE);
-
+    nsIMM32Handler::Initialize();
     // Heap dump
     nsWindow::uWM_HEAP_DUMP = ::RegisterWindowMessageW(kMozHeapDumpMessageString);
   }
@@ -733,13 +780,6 @@ nsWindow::~nsWindow()
   // delete any of the IME structures that we allocated
   //
   if (sInstanceCount == 0) {
-    if (sIMECompUnicode) 
-      delete sIMECompUnicode;
-    if (sIMEAttributeArray) 
-      delete [] sIMEAttributeArray;
-    if (sIMECompClauseArray) 
-      delete [] sIMECompClauseArray;
-
     NS_IF_RELEASE(gCursorImgContainer);
 
     if (sIsOleInitialized) {
@@ -747,6 +787,7 @@ nsWindow::~nsWindow()
       ::OleUninitialize();
       sIsOleInitialized = FALSE;
     }
+    nsIMM32Handler::Terminate();
   }
 
   NS_IF_RELEASE(mNativeDragTarget);
@@ -1307,6 +1348,19 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("mozilla.widget.disable-native-theme",
                                                  &temp)))
           gDisableNativeTheme = temp;
+
+        PRInt32 tempint;
+        if (NS_SUCCEEDED(prefBranch->GetIntPref("mozilla.widget.render-mode",
+                                                &tempint)))
+        {
+          if (tempint > 0 && tempint < RENDER_MODE_MAX) {
+#ifndef CAIRO_HAS_DDRAW_SURFACE
+            if (tempint == RENDER_DDRAW)
+              tempint = RENDER_IMAGE_STRETCH24;
+#endif
+            gRenderMode = (WinRenderMode) tempint;
+          }
+        }
       }
     }
   }
@@ -1491,10 +1545,10 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
-  return GetParentWindow();
+  return GetParentWindow(PR_FALSE);
 }
 
-nsWindow* nsWindow::GetParentWindow()
+nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
 {
   if (mIsTopWidgetWindow) {
     // Must use a flag instead of mWindowType to tell if the window is the
@@ -1509,9 +1563,21 @@ nsWindow* nsWindow::GetParentWindow()
   if (mIsDestroying || mOnDestroyCalled)
     return nsnull;
 
+
+  // aIncludeOwner set to true implies walking the parent chain to retrieve the
+  // root owner. aIncludeOwner set to false implies the search will stop at the
+  // true parent (default).
   nsWindow* widget = nsnull;
   if (mWnd) {
+#ifdef WINCE
     HWND parent = ::GetParent(mWnd);
+#else
+    HWND parent = nsnull;
+    if (aIncludeOwner)
+      parent = ::GetParent(mWnd);
+    else
+      parent = ::GetAncestor(mWnd, GA_PARENT);
+#endif
     if (parent) {
       widget = GetNSWindowPtr(parent);
       if (widget) {
@@ -2919,6 +2985,7 @@ UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
                    const nsTArray<nsAlternativeCharCode>* aAlternativeCharCodes,
                    UINT aVirtualCharCode, const MSG *aMsg,
+                   const nsModifierKeyState &aModKeyState,
                    PRUint32 aFlags)
 {
   nsKeyEvent event(PR_TRUE, aEventType, this);
@@ -2951,10 +3018,10 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
          IS_VK_DOWN(VK_RSHIFT) ? 'S' : ' ');
 #endif
 
-  event.isShift   = mIsShiftDown;
-  event.isControl = mIsControlDown;
+  event.isShift   = aModKeyState.mIsShiftDown;
+  event.isControl = aModKeyState.mIsControlDown;
   event.isMeta    = PR_FALSE;
-  event.isAlt     = mIsAltDown;
+  event.isAlt     = aModKeyState.mIsAltDown;
 
   nsPluginEvent pluginEvent;
   if (aMsg && PluginHasFocus()) {
@@ -3006,6 +3073,7 @@ struct nsFakeCharMessage {
 //
 //-------------------------------------------------------------------------
 LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
+                            nsModifierKeyState &aModKeyState,
                             PRBool *aEventDispatched,
                             nsFakeCharMessage* aFakeCharMessage)
 {
@@ -3017,7 +3085,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 
   // Use only DOMKeyCode for XP processing.
   // Use aVirtualKeyCode for gKbdLayout and native processing.
-  UINT DOMKeyCode = sIMEIsComposing ?
+  UINT DOMKeyCode = nsIMM32Handler::IsComposing(this) ?
                       virtualKeyCode : MapFromNativeToDOM(virtualKeyCode);
 
 #ifdef DEBUG
@@ -3025,7 +3093,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 #endif
 
   PRBool noDefault =
-    DispatchKeyEvent(NS_KEY_DOWN, 0, nsnull, DOMKeyCode, &aMsg);
+    DispatchKeyEvent(NS_KEY_DOWN, 0, nsnull, DOMKeyCode, &aMsg, aModKeyState);
   if (aEventDispatched)
     *aEventDispatched = PR_TRUE;
 
@@ -3047,7 +3115,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
   if (DOMKeyCode == NS_VK_RETURN || DOMKeyCode == NS_VK_BACK ||
-      ((mIsControlDown || mIsAltDown)
+      ((aModKeyState.mIsControlDown || aModKeyState.mIsAltDown)
 #ifdef WINCE
        ))
 #else
@@ -3075,36 +3143,11 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       }
     }
 
-    if (!anyCharMessagesRemoved && DOMKeyCode == NS_VK_BACK) {
-      MSG imeStartCompositionMsg, imeCompositionMsg;
-      if (::PeekMessageW(&imeStartCompositionMsg, mWnd, WM_IME_STARTCOMPOSITION, WM_IME_STARTCOMPOSITION, PM_NOREMOVE | PM_NOYIELD)
-       && ::PeekMessageW(&imeCompositionMsg, mWnd, WM_IME_COMPOSITION, WM_IME_COMPOSITION, PM_NOREMOVE | PM_NOYIELD)
-       && ::PeekMessageW(&msg, mWnd, WM_CHAR, WM_CHAR, PM_NOREMOVE | PM_NOYIELD)
-       && imeStartCompositionMsg.wParam == 0x0 && imeStartCompositionMsg.lParam == 0x0
-       && imeCompositionMsg.wParam == 0x0 && imeCompositionMsg.lParam == 0x1BF
-       && msg.wParam == NS_VK_BACK && msg.lParam == 0x1
-       && imeStartCompositionMsg.time <= imeCompositionMsg.time
-       && imeCompositionMsg.time <= msg.time) {
-        // This message pattern is "Kakutei-Undo" on ATOK and WXG.
-        // (ATOK and WXG are popular IMEs in Japan)
-        // In this case, the message queue has following messages:
-        // ------------------------------------------------------------------------------------------
-        // WM_KEYDOWN              * n (wParam = VK_BACK, lParam = 0x1)
-        // WM_KEYUP                * 1 (wParam = VK_BACK, lParam = 0xC0000001) #this is ATOK only
-        // WM_IME_STARTCOMPOSITION * 1 (wParam = 0x0, lParam = 0x0)
-        // WM_IME_COMPOSITION      * 1 (wParam = 0x0, lParam = 0x1BF)
-        // WM_CHAR                 * n (wParam = VK_BACK, lParam = 0x1)
-        // WM_KEYUP                * 1 (wParam = VK_BACK, lParam = 0xC00E0001)
-        // ------------------------------------------------------------------------------------------
-        // This message pattern does not match to the above case;
-        // i.e.,WM_KEYDOWN -> WM_CHAR -> WM_KEYDOWN -> WM_CHAR.
-        // For more information of this problem:
-        // http://bugzilla.mozilla.gr.jp/show_bug.cgi?id=2885 (written in Japanese)
-        // http://bugzilla.mozilla.org/show_bug.cgi?id=194559 (written in English)
-
-        NS_ASSERTION(!aFakeCharMessage, "We shouldn't be touching the real msg queue");
-        RemoveMessageAndDispatchPluginEvent(WM_CHAR, WM_CHAR);
-      }
+    if (!anyCharMessagesRemoved && DOMKeyCode == NS_VK_BACK &&
+        nsIMM32Handler::IsDoingKakuteiUndo(mWnd)) {
+      NS_ASSERTION(!aFakeCharMessage,
+                   "We shouldn't be touching the real msg queue");
+      RemoveMessageAndDispatchPluginEvent(WM_CHAR, WM_CHAR);
     }
   }
   else if (gotMsg &&
@@ -3112,7 +3155,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
             msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
     if (aFakeCharMessage)
       return OnCharRaw(aFakeCharMessage->mCharCode,
-                       aFakeCharMessage->mScanCode, extraFlags);
+                       aFakeCharMessage->mScanCode, aModKeyState, extraFlags);
 
     // If prevent default set for keydown, do same for keypress
     ::GetMessageW(&msg, mWnd, msg.message, msg.message);
@@ -3131,7 +3174,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
             msg.message == WM_SYSCHAR ? "WM_SYSCHAR" : "WM_CHAR",
             msg.wParam, HIWORD(msg.lParam) & 0xFF));
 
-    BOOL result = OnChar(msg, nsnull, extraFlags);
+    BOOL result = OnChar(msg, aModKeyState, nsnull, extraFlags);
     // If a syschar keypress wasn't processed, Windows may want to 
     // handle it to activate a native menu.
     if (!result && msg.message == WM_SYSCHAR)
@@ -3139,7 +3182,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     return result;
   }
 #ifndef WINCE
-  else if (!mIsControlDown && !mIsAltDown &&
+  else if (!aModKeyState.mIsControlDown && !aModKeyState.mIsAltDown &&
              (KeyboardLayout::IsPrintableCharKey(virtualKeyCode) ||
               KeyboardLayout::IsNumpadKey(virtualKeyCode)))
   {
@@ -3189,7 +3232,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                                  NS_ARRAY_LENGTH(uniChars));
       }
 
-      if (mIsControlDown ^ mIsAltDown) {
+      if (aModKeyState.mIsControlDown ^ aModKeyState.mIsAltDown) {
         PRUint8 capsLockState = (::GetKeyState(VK_CAPITAL) & 1) ? eCapsLock : 0;
         numOfUnshiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode, capsLockState,
@@ -3237,17 +3280,19 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         // But don't replace the charCode when the charCode is not same as
         // unmodified characters. In such case, Ctrl is sometimes used for a
         // part of character inputting key combination like Shift.
-        if (mIsControlDown) {
+        if (aModKeyState.mIsControlDown) {
           PRUint8 currentState = eCtrl;
-          if (mIsShiftDown)
+          if (aModKeyState.mIsShiftDown)
             currentState |= eShift;
 
-          PRUint32 ch = mIsShiftDown ? shiftedLatinChar : unshiftedLatinChar;
+          PRUint32 ch =
+            aModKeyState.mIsShiftDown ? shiftedLatinChar : unshiftedLatinChar;
           if (ch &&
               (numOfUniChars == 0 ||
                StringCaseInsensitiveEquals(uniChars, numOfUniChars,
-                 mIsShiftDown ? shiftedChars : unshiftedChars,
-                 mIsShiftDown ? numOfShiftedChars : numOfUnshiftedChars))) {
+                 aModKeyState.mIsShiftDown ? shiftedChars : unshiftedChars,
+                 aModKeyState.mIsShiftDown ? numOfShiftedChars :
+                                             numOfUnshiftedChars))) {
             numOfUniChars = numOfShiftStates = 1;
             uniChars[0] = ch;
             shiftStates[0] = currentState;
@@ -3274,9 +3319,12 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
           // and base character does not produce a valid composite character
           // then both produced dead-key character and following base
           // character may have different modifier flags, too.
-          mIsShiftDown   = (shiftStates[cnt - skipUniChars] & eShift) != 0;
-          mIsControlDown = (shiftStates[cnt - skipUniChars] & eCtrl) != 0;
-          mIsAltDown     = (shiftStates[cnt - skipUniChars] & eAlt) != 0;
+          aModKeyState.mIsShiftDown =
+            (shiftStates[cnt - skipUniChars] & eShift) != 0;
+          aModKeyState.mIsControlDown =
+            (shiftStates[cnt - skipUniChars] & eCtrl) != 0;
+          aModKeyState.mIsAltDown =
+            (shiftStates[cnt - skipUniChars] & eAlt) != 0;
         }
         uniChar = uniChars[cnt - skipUniChars];
       }
@@ -3296,11 +3344,12 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       }
 
       DispatchKeyEvent(NS_KEY_PRESS, uniChar, &altArray,
-                       keyCode, nsnull, extraFlags);
+                       keyCode, nsnull, aModKeyState, extraFlags);
     }
   } else
 #endif
-    DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, DOMKeyCode, nsnull, extraFlags);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, DOMKeyCode, nsnull, aModKeyState,
+                     extraFlags);
 
   return noDefault;
 }
@@ -3309,28 +3358,33 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 //
 //
 //-------------------------------------------------------------------------
-LRESULT nsWindow::OnKeyUp(const MSG &aMsg, PRBool *aEventDispatched)
+LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
+                          nsModifierKeyState &aModKeyState,
+                          PRBool *aEventDispatched)
 {
   UINT virtualKeyCode = aMsg.wParam;
 
   PR_LOG(sWindowsLog, PR_LOG_ALWAYS,
          ("nsWindow::OnKeyUp VK=%d\n", virtualKeyCode));
 
-  virtualKeyCode =
-    sIMEIsComposing ? virtualKeyCode : MapFromNativeToDOM(virtualKeyCode);
+  if (!nsIMM32Handler::IsComposing(this)) {
+    virtualKeyCode = MapFromNativeToDOM(virtualKeyCode);
+  }
+
   if (aEventDispatched)
     *aEventDispatched = PR_TRUE;
-  return DispatchKeyEvent(NS_KEY_UP, 0, nsnull, virtualKeyCode, &aMsg);
+  return DispatchKeyEvent(NS_KEY_UP, 0, nsnull, virtualKeyCode, &aMsg,
+                          aModKeyState);
 }
 
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
-LRESULT nsWindow::OnChar(const MSG &aMsg, PRBool *aEventDispatched,
-                         PRUint32 aFlags)
+LRESULT nsWindow::OnChar(const MSG &aMsg, nsModifierKeyState &aModKeyState,
+                         PRBool *aEventDispatched, PRUint32 aFlags)
 {
-  return OnCharRaw(aMsg.wParam, HIWORD(aMsg.lParam) & 0xFF,
+  return OnCharRaw(aMsg.wParam, HIWORD(aMsg.lParam) & 0xFF, aModKeyState,
                    aFlags, &aMsg, aEventDispatched);
 }
 
@@ -3338,40 +3392,42 @@ LRESULT nsWindow::OnChar(const MSG &aMsg, PRBool *aEventDispatched,
 //
 //
 //-------------------------------------------------------------------------
-LRESULT nsWindow::OnCharRaw(UINT charCode, UINT aScanCode, PRUint32 aFlags,
+LRESULT nsWindow::OnCharRaw(UINT charCode, UINT aScanCode,
+                            nsModifierKeyState &aModKeyState, PRUint32 aFlags,
                             const MSG *aMsg, PRBool *aEventDispatched)
 {
   // ignore [shift+]alt+space so the OS can handle it
-  if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
+  if (aModKeyState.mIsAltDown && !aModKeyState.mIsControlDown &&
+      IS_VK_DOWN(NS_VK_SPACE)) {
     return FALSE;
   }
   
   // Ignore Ctrl+Enter (bug 318235)
-  if (mIsControlDown && charCode == 0xA) {
+  if (aModKeyState.mIsControlDown && charCode == 0xA) {
     return FALSE;
   }
 
   // WM_CHAR with Control and Alt (== AltGr) down really means a normal character
-  PRBool saveIsAltDown = mIsAltDown;
-  PRBool saveIsControlDown = mIsControlDown;
-  if (mIsAltDown && mIsControlDown)
-    mIsAltDown = mIsControlDown = PR_FALSE;
+  PRBool saveIsAltDown = aModKeyState.mIsAltDown;
+  PRBool saveIsControlDown = aModKeyState.mIsControlDown;
+  if (aModKeyState.mIsAltDown && aModKeyState.mIsControlDown)
+    aModKeyState.mIsAltDown = aModKeyState.mIsControlDown = PR_FALSE;
 
   wchar_t uniChar;
 
-  if (sIMEIsComposing) {
-    HandleEndComposition();
+  if (nsIMM32Handler::IsComposing(this)) {
+    ResetInputState();
   }
 
-  if (mIsControlDown && charCode <= 0x1A) { // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
+  if (aModKeyState.mIsControlDown && charCode <= 0x1A) { // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
     // need to account for shift here.  bug 16486
-    if (mIsShiftDown)
+    if (aModKeyState.mIsShiftDown)
       uniChar = charCode - 1 + 'A';
     else
       uniChar = charCode - 1 + 'a';
     charCode = 0;
   }
-  else if (mIsControlDown && charCode <= 0x1F) {
+  else if (aModKeyState.mIsControlDown && charCode <= 0x1F) {
     // Fix for 50255 - <ctrl><[> and <ctrl><]> are not being processed.
     // also fixes ctrl+\ (x1c), ctrl+^ (x1e) and ctrl+_ (x1f)
     // for some reason the keypress handler need to have the uniChar code set
@@ -3379,7 +3435,7 @@ LRESULT nsWindow::OnCharRaw(UINT charCode, UINT aScanCode, PRUint32 aFlags,
     uniChar = charCode - 1 + 'A';
     charCode = 0;
   } else { // 0x20 - SPACE, 0x3D - EQUALS
-    if (charCode < 0x20 || (charCode == 0x3D && mIsControlDown)) {
+    if (charCode < 0x20 || (charCode == 0x3D && aModKeyState.mIsControlDown)) {
       uniChar = 0;
     } else {
       uniChar = charCode;
@@ -3389,13 +3445,14 @@ LRESULT nsWindow::OnCharRaw(UINT charCode, UINT aScanCode, PRUint32 aFlags,
 
   // Keep the characters unshifted for shortcuts and accesskeys and make sure
   // that numbers are always passed as such (among others: bugs 50255 and 351310)
-  if (uniChar && (mIsControlDown || mIsAltDown)) {
+  if (uniChar && (aModKeyState.mIsControlDown || aModKeyState.mIsAltDown)) {
     UINT virtualKeyCode = ::MapVirtualKeyEx(aScanCode, MAPVK_VSC_TO_VK,
                                             gKbdLayout.GetLayout());
     UINT unshiftedCharCode =
       virtualKeyCode >= '0' && virtualKeyCode <= '9' ? virtualKeyCode :
-      mIsShiftDown ? ::MapVirtualKeyEx(virtualKeyCode, MAPVK_VK_TO_CHAR,
-                                       gKbdLayout.GetLayout()) : 0;
+        aModKeyState.mIsShiftDown ? ::MapVirtualKeyEx(virtualKeyCode,
+                                        MAPVK_VK_TO_CHAR,
+                                        gKbdLayout.GetLayout()) : 0;
     // ignore diacritics (top bit set) and key mapping errors (char code 0)
     if ((INT)unshiftedCharCode > 0)
       uniChar = unshiftedCharCode;
@@ -3404,16 +3461,16 @@ LRESULT nsWindow::OnCharRaw(UINT charCode, UINT aScanCode, PRUint32 aFlags,
   // Fix for bug 285161 (and 295095) which was caused by the initial fix for bug 178110.
   // When pressing (alt|ctrl)+char, the char must be lowercase unless shift is 
   // pressed too.
-  if (!mIsShiftDown && (saveIsAltDown || saveIsControlDown)) {
+  if (!aModKeyState.mIsShiftDown && (saveIsAltDown || saveIsControlDown)) {
     uniChar = towlower(uniChar);
   }
 
   PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, nsnull,
-                                   charCode, aMsg, aFlags);
+                                   charCode, aMsg, aModKeyState, aFlags);
   if (aEventDispatched)
     *aEventDispatched = PR_TRUE;
-  mIsAltDown = saveIsAltDown;
-  mIsControlDown = saveIsControlDown;
+  aModKeyState.mIsAltDown = saveIsAltDown;
+  aModKeyState.mIsControlDown = saveIsControlDown;
   return result;
 }
 
@@ -3485,15 +3542,15 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
       kbdState[keySpecific] = 0x81;
     }
     ::SetKeyboardState(kbdState);
-    SetupModKeyState();
+    nsModifierKeyState modKeyState;
     MSG msg = InitMSG(WM_KEYDOWN, key, 0);
     if (i == keySequence.Length() - 1 && aCharacters.Length() > 0) {
       UINT scanCode = ::MapVirtualKeyEx(aNativeKeyCode, MAPVK_VK_TO_VSC,
                                         gKbdLayout.GetLayout());
       nsFakeCharMessage fakeMsg = { aCharacters.CharAt(0), scanCode };
-      OnKeyDown(msg, nsnull, &fakeMsg);
+      OnKeyDown(msg, modKeyState, nsnull, &fakeMsg);
     } else {
-      OnKeyDown(msg, nsnull, nsnull);
+      OnKeyDown(msg, modKeyState, nsnull, nsnull);
     }
   }
   for (PRUint32 i = keySequence.Length(); i > 0; --i) {
@@ -3504,16 +3561,15 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
       kbdState[keySpecific] = 0;
     }
     ::SetKeyboardState(kbdState);
-    SetupModKeyState();
+    nsModifierKeyState modKeyState;
     MSG msg = InitMSG(WM_KEYUP, key, 0);
-    OnKeyUp(msg, nsnull);
-  }  
+    OnKeyUp(msg, modKeyState, nsnull);
+  }
 
   // Restore old key state and layout
   ::SetKeyboardState(originalKbdState);
   gKbdLayout.LoadLayout(oldLayout);
-  SetupModKeyState();
-  
+
   UnloadKeyboardLayout(loadedLayout);
   return NS_OK;
 #else  //XXX: is there another way to do this?
@@ -4036,20 +4092,21 @@ void nsWindow::PostSleepWakeNotification(const char* aNotification)
 }
 #endif
 
-void nsWindow::SetupModKeyState()
+PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
+                                LRESULT *aRetValue)
 {
-  mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-  mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-  mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-}
+  PRBool eatMessage;
+  if (nsIMM32Handler::ProcessMessage(this, msg, wParam, lParam, aRetValue,
+                                     eatMessage)) {
+    return mWnd ? eatMessage : PR_TRUE;
+  }
 
-PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
-{
   if (PluginHasFocus()) {
     PRBool callDefaultWndProc;
     MSG nativeMsg = InitMSG(msg, wParam, lParam);
-    if (ProcessMessageForPlugin(nativeMsg, aRetValue, callDefaultWndProc))
-      return !callDefaultWndProc;
+    if (ProcessMessageForPlugin(nativeMsg, aRetValue, callDefaultWndProc)) {
+      return mWnd ? !callDefaultWndProc : PR_TRUE;
+    }
   }
 
   static UINT vkKeyCached = 0;              // caches VK code fon WM_KEYDOWN
@@ -4392,10 +4449,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       //SetFocus(); // this is bad
       //RelayMouseEvent(msg,wParam, lParam);
     {
-      // check whether IME window do mouse operation
-      if (IMEMouseHandling(IMEMOUSE_LDOWN, lParam))
-        break;
-
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam,
                                   PR_FALSE, nsMouseEvent::eLeftButton);
       DispatchPendingEvents();
@@ -4454,9 +4507,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     case WM_MBUTTONDOWN:
     {
-      // check whether IME window do mouse operation
-      if (IMEMouseHandling(IMEMOUSE_MDOWN, lParam))
-        break;
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eMiddleButton);
       DispatchPendingEvents();
@@ -4476,9 +4526,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     case WM_RBUTTONDOWN:
     {
-      // check whether IME window do mouse operation
-      if (IMEMouseHandling(IMEMOUSE_RDOWN, lParam))
-        break;
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eRightButton);
       DispatchPendingEvents();
@@ -4637,14 +4684,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
 #if defined(WINCE_HAVE_SOFTKB)
       {
-      // On Windows CE, we have a window that overlaps
-      // the ISP button.  In this case, we should always
-      // try to hide it when we are activated
+        // On Windows CE, we have a window that overlaps
+        // the ISP button.  In this case, we should always
+        // try to hide it when we are activated
       
-      // Get current input context
-      HIMC hC = ImmGetContext(mWnd);
-      // Open the IME 
-      ImmSetOpenStatus(hC, TRUE);
+        nsIMEContext IMEContext(mWnd);
+        // Open the IME 
+        ImmSetOpenStatus(IMEContext.get(), TRUE);
       }
 #endif
       break;
@@ -4652,8 +4698,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_KILLFOCUS:
 #if defined(WINCE_HAVE_SOFTKB)
       {
-        HIMC hC = ImmGetContext(mWnd);
-        ImmSetOpenStatus(hC, FALSE);
+        nsIMEContext IMEContext(mWnd);
+        ImmSetOpenStatus(IMEContext.get(), FALSE);
       }
 #endif
       WCHAR className[kMaxClassNameLength];
@@ -4803,6 +4849,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     case WM_SETTINGCHANGE:
         getWheelInfo = PR_TRUE;
+#ifdef WINCE_WINDOWS_MOBILE
+        if (wParam == SPI_SETSIPINFO)
+          NotifySoftKbObservers();
+#endif
       break;
 
     case WM_PALETTECHANGED:
@@ -4843,42 +4893,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     case WM_INPUTLANGCHANGE:
       result = OnInputLangChange((HKL)lParam);
-      break;
-
-    case WM_IME_STARTCOMPOSITION:
-      result = OnIMEStartComposition();
-      break;
-
-    case WM_IME_COMPOSITION:
-      result = OnIMEComposition(lParam);
-      break;
-
-    case WM_IME_ENDCOMPOSITION:
-      result = OnIMEEndComposition();
-      break;
-
-    case WM_IME_CHAR:
-      // We receive double byte char code. No need to worry about the <Shift>
-      mIsShiftDown = PR_FALSE;
-      result = OnIMEChar((wchar_t)wParam, lParam);
-      break;
-
-    case WM_IME_NOTIFY:
-      result = OnIMENotify(wParam, lParam);
-      break;
-
-    // This is a Window 98/2000 only message
-    case WM_IME_REQUEST:
-      result = OnIMERequest(wParam, lParam, aRetValue);
-
-      break;
-
-    case WM_IME_SELECT:
-      result = OnIMESelect(wParam, (WORD)(lParam & 0x0FFFF));
-      break;
-
-    case WM_IME_SETCONTEXT:
-      result = OnIMESetContext(wParam, lParam);
       break;
 
     case WM_DROPFILES:
@@ -5256,9 +5270,8 @@ LRESULT nsWindow::ProcessCharMessage(const MSG &aMsg, PRBool *aEventDispatched)
 
   // These must be checked here too as a lone WM_CHAR could be received
   // if a child window didn't handle it (for example Alt+Space in a content window)
-  SetupModKeyState();
-
-  return OnChar(aMsg, aEventDispatched);
+  nsModifierKeyState modKeyState;
+  return OnChar(aMsg, modKeyState, aEventDispatched);
 }
 
 LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, PRBool *aEventDispatched)
@@ -5269,7 +5282,7 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, PRBool *aEventDispatched)
          ("%s VK=%d\n", aMsg.message == WM_SYSKEYDOWN ?
                           "WM_SYSKEYUP" : "WM_KEYUP", aMsg.wParam));
 
-  SetupModKeyState();
+  nsModifierKeyState modKeyState;
 
   // Note: the original code passed (HIWORD(lParam)) to OnKeyUp as
   // scan code. However, this breaks Alt+Num pad input.
@@ -5282,15 +5295,18 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, PRBool *aEventDispatched)
   //  translating ALT+number key combinations.
 
   // ignore [shift+]alt+space so the OS can handle it
-  if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE))
+  if (modKeyState.mIsAltDown && !modKeyState.mIsControlDown &&
+      IS_VK_DOWN(NS_VK_SPACE)) {
     return FALSE;
+  }
 
-  if (!sIMEIsComposing && (aMsg.message != WM_KEYUP || aMsg.message != VK_MENU)) {
+  if (!nsIMM32Handler::IsComposing(this) &&
+      (aMsg.message != WM_KEYUP || aMsg.message != VK_MENU)) {
     // Ignore VK_MENU if it's not a system key release, so that the menu bar does not trigger
     // This helps avoid triggering the menu bar for ALT key accelerators used in
     // assistive technologies such as Window-Eyes and ZoomText, and when using Alt+Tab
     // to switch back to Mozilla in Windows 95 and Windows 98
-    return OnKeyUp(aMsg, aEventDispatched);
+    return OnKeyUp(aMsg, modKeyState, aEventDispatched);
   }
 
   return 0;
@@ -5305,7 +5321,7 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
   NS_PRECONDITION(aMsg.message == WM_KEYDOWN || aMsg.message == WM_SYSKEYDOWN,
                   "message is not keydown event");
 
-  SetupModKeyState();
+  nsModifierKeyState modKeyState;
 
   // Note: the original code passed (HIWORD(lParam)) to OnKeyDown as
   // scan code. However, this breaks Alt+Num pad input.
@@ -5318,18 +5334,20 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
   //  translating ALT+number key combinations.
 
   // ignore [shift+]alt+space so the OS can handle it
-  if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE))
+  if (modKeyState.mIsAltDown && !modKeyState.mIsControlDown &&
+      IS_VK_DOWN(NS_VK_SPACE))
     return FALSE;
 
   LRESULT result = 0;
-  if (mIsAltDown && sIMEIsStatusChanged) {
-    sIMEIsStatusChanged = PR_FALSE;
-  } else if (!sIMEIsComposing) {
-    result = OnKeyDown(aMsg, aEventDispatched, nsnull);
+  if (modKeyState.mIsAltDown && nsIMM32Handler::IsStatusChanged()) {
+    nsIMM32Handler::NotifyEndStatusChange();
+  } else if (!nsIMM32Handler::IsComposing(this)) {
+    result = OnKeyDown(aMsg, modKeyState, aEventDispatched, nsnull);
   }
 
 #ifndef WINCE
-  if (aMsg.wParam == VK_MENU || (aMsg.wParam == VK_F10 && !mIsShiftDown)) {
+  if (aMsg.wParam == VK_MENU ||
+      (aMsg.wParam == VK_F10 && !modKeyState.mIsShiftDown)) {
     // We need to let Windows handle this keypress,
     // by returning PR_FALSE, if there's a native menu
     // bar somewhere in our containing window hierarchy.
@@ -5383,23 +5401,6 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
       *aResult = ProcessKeyDownMessage(aMsg, &eventDispatched);
       break;
 
-    case WM_IME_COMPOSITION:
-      // We should end composition if there is a committed string.
-      if (aMsg.lParam & GCS_RESULTSTR)
-        sIMEIsComposing = PR_FALSE;
-      // Continue composition if there is still a string being composed.
-      if (IS_COMPOSING_LPARAM(aMsg.lParam))
-        sIMEIsComposing = PR_TRUE;
-      break;
-
-    case WM_IME_STARTCOMPOSITION:
-      sIMEIsComposing = PR_TRUE;
-      break;
-
-    case WM_IME_ENDCOMPOSITION:
-      sIMEIsComposing = PR_FALSE;
-      break;
-
     case WM_DEADCHAR:
     case WM_SYSDEADCHAR:
     case WM_CONTEXTMENU:
@@ -5410,6 +5411,9 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
     case WM_CLEAR:
     case WM_UNDO:
 
+    case WM_IME_STARTCOMPOSITION:
+    case WM_IME_COMPOSITION:
+    case WM_IME_ENDCOMPOSITION:
     case WM_IME_CHAR:
     case WM_IME_COMPOSITIONFULL:
     case WM_IME_CONTROL:
@@ -5580,6 +5584,8 @@ DWORD nsWindow::WindowStyle()
    * space for a menu bar in the window, which we don't want; it shouldn't
    * be used. */
 #if defined(WINCE)
+  /* on CE, WS_OVERLAPPED == WS_BORDER | WS_CAPTION, so don't use OVERLAPPED, just set the
+   * separate bits directly for clarity */
   switch (mWindowType) {
     case eWindowType_child:
       style = WS_CHILD;
@@ -5590,7 +5596,7 @@ DWORD nsWindow::WindowStyle()
 #if !defined(WINCE_WINDOWS_MOBILE)
       style |= WS_SYSMENU;
       if (mBorderStyle != eBorderStyle_default)
-        style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        style |= WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 #endif
       break;
 
@@ -5606,7 +5612,7 @@ DWORD nsWindow::WindowStyle()
     case eWindowType_invisible:
       style = WS_BORDER;
 #if !defined(WINCE_WINDOWS_MOBILE)
-      style |= WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+      style |= WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 #endif
       break;
   }
@@ -5867,6 +5873,49 @@ ConvertHRGNToRegion(HRGN aRgn)
 // Paint
 //
 //-------------------------------------------------------------------------
+
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+
+static PRBool
+InitDDraw()
+{
+  HRESULT hr;
+
+  hr = DirectDrawCreate(NULL, &glpDD, NULL);
+  NS_ENSURE_SUCCESS(hr, PR_FALSE);
+
+  hr = glpDD->SetCooperativeLevel(NULL, DDSCL_NORMAL);
+  NS_ENSURE_SUCCESS(hr, PR_FALSE);
+
+  DDSURFACEDESC ddsd;
+  memset(&ddsd, 0, sizeof(ddsd));
+  ddsd.dwSize = sizeof(ddsd);
+  ddsd.dwFlags = DDSD_CAPS;
+  ddsd.ddpfPixelFormat.dwSize = sizeof(ddsd.ddpfPixelFormat);
+  ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+
+  hr = glpDD->CreateSurface(&ddsd, &glpDDPrimary, NULL);
+  NS_ENSURE_SUCCESS(hr, PR_FALSE);
+
+  hr = glpDD->CreateClipper(0, &glpDDClipper, NULL);
+  NS_ENSURE_SUCCESS(hr, PR_FALSE);
+
+  hr = glpDDPrimary->SetClipper(glpDDClipper);
+  NS_ENSURE_SUCCESS(hr, PR_FALSE);
+
+  gfxIntSize screen_size(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+  gpDDSurf = new gfxDDrawSurface(glpDD, screen_size, gfxASurface::ImageFormatRGB24);
+  if (!gpDDSurf) {
+    /*XXX*/
+    fprintf(stderr, "couldn't create ddsurf\n");
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+#endif
+
 PRBool nsWindow::OnPaint(HDC aDC)
 {
   PRBool result = PR_TRUE;
@@ -5934,44 +5983,91 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif
   }
 
+#ifdef DEBUG_vladimir
+  nsFunctionTimer ft("OnPaint [%d %d %d %d]",
+                     ps.rcPaint.left, ps.rcPaint.top, 
+                     ps.rcPaint.right - ps.rcPaint.left,
+                     ps.rcPaint.bottom - ps.rcPaint.top);
+#endif
+
   nsCOMPtr<nsIRegion> paintRgnWin;
   if (paintRgn) {
     paintRgnWin = ConvertHRGNToRegion(paintRgn);
     ::DeleteObject(paintRgn);
   }
 
-  if (paintRgnWin && !paintRgnWin->IsEmpty()) {
-    // call the event callback
-    if (mEventCallback)
-    {
-      nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+  if (paintRgnWin &&
+      !paintRgnWin->IsEmpty() &&
+      mEventCallback)
+  {
+    // generate the event and call the event callback
+    nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
-      InitEvent(event);
+    InitEvent(event);
 
-      event.region = paintRgnWin;
-      event.rect = nsnull;
+    event.region = paintRgnWin;
+    event.rect = nsnull;
  
-      // Should probably pass in a real region here, using GetRandomRgn
-      // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
+    // Should probably pass in a real region here, using GetRandomRgn
+    // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
 
 #ifdef NS_DEBUG
-      debug_DumpPaintEvent(stdout,
-                           this,
-                           &event,
-                           nsCAutoString("noname"),
-                           (PRInt32) mWnd);
+    debug_DumpPaintEvent(stdout,
+                         this,
+                         &event,
+                         nsCAutoString("noname"),
+                         (PRInt32) mWnd);
 #endif // NS_DEBUG
 
-#if defined(MOZ_XUL) && !defined(PAINT_USE_IMAGE_SURFACE)
-      nsRefPtr<gfxASurface> targetSurface;
-      if (eTransparencyTransparent == mTransparencyMode) {
-        if (mTransparentSurface == nsnull)
-          SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
-        targetSurface = mTransparentSurface;
-      } else {
-        targetSurface = new gfxWindowsSurface(hDC);
+    nsRefPtr<gfxASurface> targetSurface;
+
+#if defined(MOZ_XUL)
+    // don't support transparency for non-GDI rendering, for now
+    if (gRenderMode == RENDER_GDI && eTransparencyTransparent == mTransparencyMode) {
+      if (mTransparentSurface == nsnull)
+        SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
+      targetSurface = mTransparentSurface;
+    }
+#endif
+
+    nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
+    if (!targetSurface &&
+        gRenderMode == RENDER_GDI)
+    {
+      targetSurfaceWin = new gfxWindowsSurface(hDC);
+      targetSurface = targetSurfaceWin;
+    }
+
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+    nsRefPtr<gfxDDrawSurface> targetSurfaceDDraw;
+    if (!targetSurface &&
+        gRenderMode == RENDER_DDRAW)
+    {
+      if (!glpDD) {
+        if (!InitDDraw()) {
+          NS_WARNING("DirectDraw init failed; falling back to RENDER_IMAGE_STRETCH24");
+          gRenderMode = RENDER_IMAGE_STRETCH24;
+          goto DDRAW_FAILED;
+        }
       }
-#elif defined(PAINT_USE_IMAGE_SURFACE)
+
+      // create a rect that maps the window in screen space
+      // create a new sub-surface that aliases this one
+      RECT winrect;
+      GetClientRect(mWnd, &winrect);
+      MapWindowPoints(mWnd, NULL, (LPPOINT)&winrect, 2);
+
+      targetSurfaceDDraw = new gfxDDrawSurface(gpDDSurf.get(), winrect);
+      targetSurface = targetSurfaceDDraw;
+    }
+#endif
+
+DDRAW_FAILED:
+    nsRefPtr<gfxImageSurface> targetSurfaceImage;
+    if (!targetSurface &&
+        (gRenderMode == RENDER_IMAGE_STRETCH32 ||
+         gRenderMode == RENDER_IMAGE_STRETCH24))
+    {
       if (!gSharedSurfaceData) {
         gSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
         gSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
@@ -5981,42 +6077,43 @@ PRBool nsWindow::OnPaint(HDC aDC)
       gfxIntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
                              ps.rcPaint.bottom - ps.rcPaint.top);
 
-      nsRefPtr<gfxImageSurface> targetSurface;
-
       if (!gSharedSurfaceData ||
           surfaceSize.width > gSharedSurfaceSize.width ||
           surfaceSize.height > gSharedSurfaceSize.height)
       {
-#ifdef DEBUG_vladimir
-          RETAILMSG(1, (L"OnPaint: Paint area bigger than screen! Screen %dx%d, surface %dx%d, HWND %p\r\n", gSharedSurfaceSize.width, gSharedSurfaceSize.height, surfaceSize.width, surfaceSize.height, mWnd));
-#endif
-
-          // allocate a new oversize surface; hopefully this will just be a one-time thing,
-          // and we should really fix whatever's doing it!
-          targetSurface = new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatRGB24);
+        // allocate a new oversize surface; hopefully this will just be a one-time thing,
+        // and we should really fix whatever's doing it!
+        targetSurfaceImage = new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatRGB24);
       } else {
-          // don't use the shared surface directly; instead, create a new one
-          // that just reuses its buffer.
-          targetSurface = new gfxImageSurface(gSharedSurfaceData.get(),
-                                              surfaceSize,
-                                              surfaceSize.width * 4,
-                                              gfxASurface::ImageFormatRGB24);
+        // don't use the shared surface directly; instead, create a new one
+        // that just reuses its buffer.
+        targetSurfaceImage = new gfxImageSurface(gSharedSurfaceData.get(),
+                                                 surfaceSize,
+                                                 surfaceSize.width * 4,
+                                                 gfxASurface::ImageFormatRGB24);
       }
 
-      if (targetSurface && !targetSurface->CairoStatus()) {
-        targetSurface->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
+      if (targetSurfaceImage && !targetSurfaceImage->CairoStatus()) {
+        targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
+        targetSurface = targetSurfaceImage;
       }
-#else
-      nsRefPtr<gfxASurface> targetSurface = new gfxWindowsSurface(hDC);
+    }
+
+    if (!targetSurface) {
+      NS_ERROR("Invalid gRenderMode!");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
+    thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+
+#ifdef WINCE
+    thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
 #endif
 
-      nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
-      thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
-
-      // don't need to double buffer with PAINT_USE_IMAGE_SURFACE;
-      // it's implicitly double buffered
-#if !defined(PAINT_USE_IMAGE_SURFACE)
-# if defined(MOZ_XUL)
+    // don't need to double buffer with anything but GDI
+    if (gRenderMode == RENDER_GDI) {
+# if defined(MOZ_XUL) && !defined(WINCE)
       if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
         thebesContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
       } else if (eTransparencyTransparent == mTransparencyMode) {
@@ -6025,49 +6122,79 @@ PRBool nsWindow::OnPaint(HDC aDC)
         thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
         thebesContext->Paint();
         thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
-      } else {
+      } else
+#endif
+      {
         // If we're not doing translucency, then double buffer
         thebesContext->PushGroup(gfxASurface::CONTENT_COLOR);
       }
-# else
-      // If we're not doing translucency, then double buffer
-      thebesContext->PushGroup(gfxASurface::CONTENT_COLOR);
-# endif
+    }
+
+    nsCOMPtr<nsIRenderingContext> rc;
+    nsresult rv = mContext->CreateRenderingContextInstance (*getter_AddRefs(rc));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CreateRenderingContextInstance failed");
+      return PR_FALSE;
+    }
+
+    rv = rc->Init(mContext, thebesContext);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("RC::Init failed");
+      return PR_FALSE;
+    }
+
+#ifdef DEBUG_vladimir
+    ft.Mark("Init");
 #endif
 
-      nsCOMPtr<nsIRenderingContext> rc;
-      nsresult rv = mContext->CreateRenderingContextInstance (*getter_AddRefs(rc));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CreateRenderingContextInstance failed");
-        return PR_FALSE;
-      }
+    event.renderingContext = rc;
+    result = DispatchWindowEvent(&event, eventStatus);
+    event.renderingContext = nsnull;
 
-      rv = rc->Init(mContext, thebesContext);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("RC::Init failed");
-        return PR_FALSE;
-      }
-
-      event.renderingContext = rc;
-      result = DispatchWindowEvent(&event, eventStatus);
-      event.renderingContext = nsnull;
+#ifdef DEBUG_vladimir
+    ft.Mark("Dispatch");
+#endif
 
 #ifdef MOZ_XUL
-      if (eTransparencyTransparent == mTransparencyMode) {
-        // Data from offscreen drawing surface was copied to memory bitmap of transparent
-        // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
-        // that displayed on the screen.
-        UpdateTranslucentWindow();
-      } else
+    if (gRenderMode == RENDER_GDI &&
+        eTransparencyTransparent == mTransparencyMode) {
+      // Data from offscreen drawing surface was copied to memory bitmap of transparent
+      // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
+      // that displayed on the screen.
+      UpdateTranslucentWindow();
+    } else
 #endif
-      if (result) {
-#ifndef PAINT_USE_IMAGE_SURFACE
+    if (result) {
+      if (gRenderMode == RENDER_GDI) {
         // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
         // this, and we'll just end up painting with black.
         thebesContext->PopGroupToSource();
         thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
         thebesContext->Paint();
-#else
+      } else if (gRenderMode == RENDER_DDRAW) {
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+        // blit with direct draw
+        HRESULT hr = glpDDClipper->SetHWnd(0, mWnd);
+        if (FAILED(hr))
+          DDError("SetHWnd", hr);
+
+        // blt from the affected area from the window back-buffer to the
+        // screen-relative coordinates of the window paint area
+        RECT dst_rect = ps.rcPaint;
+        MapWindowPoints(mWnd, NULL, (LPPOINT)&dst_rect, 2);
+        hr = glpDDPrimary->Blt(&dst_rect,
+                               gpDDSurf->GetDDSurface(),
+                               &dst_rect,
+                               DDBLT_WAITNOTBUSY,
+                               NULL);
+        if (FAILED(hr))
+          DDError("Blt", hr);
+#endif
+      } else if (gRenderMode == RENDER_IMAGE_STRETCH24 ||
+                 gRenderMode == RENDER_IMAGE_STRETCH32) 
+      {
+        gfxIntSize surfaceSize = targetSurfaceImage->GetSize();
+
         // Just blit this directly
         BITMAPINFOHEADER bi;
         memset(&bi, 0, sizeof(BITMAPINFOHEADER));
@@ -6078,80 +6205,87 @@ PRBool nsWindow::OnPaint(HDC aDC)
         bi.biBitCount = 32;
         bi.biCompression = BI_RGB;
 
-#ifdef PAINT_USE_IMAGE_SURFACE_24BPP
-        // On Windows CE/Windows Mobile, 24bpp packed-pixel sources
-        // seem to be far faster to blit than 32bpp (see bug 484864).
-        // So, convert the bits to 24bpp by stripping out the unused
-        // alpha byte.  24bpp DIBs also have scanlines that are 4-byte
-        // aligned though, so that must be taken into account.
-        int srcstride = surfaceSize.width*4;
-        int dststride = surfaceSize.width*3;
-        dststride = (dststride + 3) & ~3;
+        if (gRenderMode == RENDER_IMAGE_STRETCH24) {
+          // On Windows CE/Windows Mobile, 24bpp packed-pixel sources
+          // seem to be far faster to blit than 32bpp (see bug 484864).
+          // So, convert the bits to 24bpp by stripping out the unused
+          // alpha byte.  24bpp DIBs also have scanlines that are 4-byte
+          // aligned though, so that must be taken into account.
+          int srcstride = surfaceSize.width*4;
+          int dststride = surfaceSize.width*3;
+          dststride = (dststride + 3) & ~3;
 
-        // Convert in place
-        for (int j = 0; j < surfaceSize.height; ++j) {
-          unsigned int *src = (unsigned int*) (targetSurface->Data() + j*srcstride);
-          unsigned int *dst = (unsigned int*) (targetSurface->Data() + j*dststride);
+          // Convert in place
+          for (int j = 0; j < surfaceSize.height; ++j) {
+            unsigned int *src = (unsigned int*) (targetSurfaceImage->Data() + j*srcstride);
+            unsigned int *dst = (unsigned int*) (targetSurfaceImage->Data() + j*dststride);
 
-          // go 4 pixels at a time, since each 4 pixels
-          // turns into 3 DWORDs when converted into BGR:
-          // BGRx BGRx BGRx BGRx -> BGRB GRBG RBGR
-          //
-          // However, since we're dealing with little-endian ints, this is actually:
-          // xRGB xrgb xRGB xrgb -> bRGB GBrg rgbR
-          int width_left = surfaceSize.width;
-          while (width_left >= 4) {
-            unsigned int a = *src++;
-            unsigned int b = *src++;
-            unsigned int c = *src++;
-            unsigned int d = *src++;
+            // go 4 pixels at a time, since each 4 pixels
+            // turns into 3 DWORDs when converted into BGR:
+            // BGRx BGRx BGRx BGRx -> BGRB GRBG RBGR
+            //
+            // However, since we're dealing with little-endian ints, this is actually:
+            // xRGB xrgb xRGB xrgb -> bRGB GBrg rgbR
+            int width_left = surfaceSize.width;
+            while (width_left >= 4) {
+              unsigned int a = *src++;
+              unsigned int b = *src++;
+              unsigned int c = *src++;
+              unsigned int d = *src++;
 
-            *dst++ =  (a & 0x00ffffff)        | (b << 24);
-            *dst++ = ((b & 0x00ffff00) >> 8)  | (c << 16);
-            *dst++ = ((c & 0x00ff0000) >> 16) | (d << 8);
+              *dst++ =  (a & 0x00ffffff)        | (b << 24);
+              *dst++ = ((b & 0x00ffff00) >> 8)  | (c << 16);
+              *dst++ = ((c & 0x00ff0000) >> 16) | (d << 8);
 
-            width_left -= 4;
+              width_left -= 4;
+            }
+
+            // then finish up whatever number of pixels are left,
+            // using bytes.
+            unsigned char *bsrc = (unsigned char*) src;
+            unsigned char *bdst = (unsigned char*) dst;
+            switch (width_left) {
+              case 3:
+                *bdst++ = *bsrc++;
+                *bdst++ = *bsrc++;
+                *bdst++ = *bsrc++;
+                bsrc++;
+              case 2:
+                *bdst++ = *bsrc++;
+                *bdst++ = *bsrc++;
+                *bdst++ = *bsrc++;
+                bsrc++;
+              case 1:
+                *bdst++ = *bsrc++;
+                *bdst++ = *bsrc++;
+                *bdst++ = *bsrc++;
+                bsrc++;
+              case 0:
+                break;
+            }
           }
 
-          // then finish up whatever number of pixels are left,
-          // using bytes.
-          unsigned char *bsrc = (unsigned char*) src;
-          unsigned char *bdst = (unsigned char*) dst;
-          switch (width_left) {
-          case 3:
-            *bdst++ = *bsrc++;
-            *bdst++ = *bsrc++;
-            *bdst++ = *bsrc++;
-            bsrc++;
-          case 2:
-            *bdst++ = *bsrc++;
-            *bdst++ = *bsrc++;
-            *bdst++ = *bsrc++;
-            bsrc++;
-          case 1:
-            *bdst++ = *bsrc++;
-            *bdst++ = *bsrc++;
-            *bdst++ = *bsrc++;
-            bsrc++;
-          case 0:
-            break;
-          }
+          bi.biBitCount = 24;
         }
-
-        bi.biBitCount = 24;
-#endif
 
         StretchDIBits(hDC,
                       ps.rcPaint.left, ps.rcPaint.top,
                       surfaceSize.width, surfaceSize.height,
                       0, 0,
                       surfaceSize.width, surfaceSize.height,
-                      targetSurface->Data(),
+                      targetSurfaceImage->Data(),
                       (BITMAPINFO*) &bi,
                       DIB_RGB_COLORS,
                       SRCCOPY);
-#endif
       }
+
+#ifdef DEBUG_vladimir
+      ft.Mark("Blit");
+#endif
+    } else {
+#ifdef DEBUG_vladimir
+      ft.Mark("Discard!");
+#endif
     }
   }
 
@@ -6666,405 +6800,12 @@ PRBool nsWindow::AutoErase()
   return PR_FALSE;
 }
 
-static PRBool ShouldDrawCompositionStringOurselves()
-{
-#ifdef WINCE
-  // We are not sure we should use native IME behavior...
-  return PR_TRUE;
-#else
-  return gKbdLayout.ShouldDrawCompositionStringOurselves();
-#endif
-}
-
-PRBool
-nsWindow::GetCharacterRectOfSelectedTextAt(PRInt32 aOffset,
-                                           nsIntRect &aCharRect)
-{
-  nsIntPoint point(0, 0);
-
-  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
-  InitEvent(selection, &point);
-  DispatchWindowEvent(&selection);
-  if (!selection.mSucceeded)
-    return PR_FALSE;
-
-  PRUint32 offset = selection.mReply.mOffset + aOffset;
-  PRBool useCaretRect = selection.mReply.mString.IsEmpty();
-  if (useCaretRect && ShouldDrawCompositionStringOurselves() &&
-      sIMEIsComposing && sIMECompUnicode && !sIMECompUnicode->IsEmpty()) {
-    // There is not a normal selection, but we have composition string.
-    // XXX mnakano - Should we implement NS_QUERY_IME_SELECTED_TEXT?
-    useCaretRect = PR_FALSE;
-    if (sIMECursorPosition != NO_IME_CARET) {
-      PRUint32 cursorPosition =
-        PR_MIN(PRUint32(sIMECursorPosition), sIMECompUnicode->Length());
-      offset -= cursorPosition;
-      NS_ASSERTION(offset >= 0, "offset is negative!");
-    }
-  }
-
-  nsIntRect r;
-  if (!useCaretRect) {
-    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, this);
-    charRect.InitForQueryTextRect(offset, 1);
-    InitEvent(charRect, &point);
-    DispatchWindowEvent(&charRect);
-    if (charRect.mSucceeded)
-      aCharRect = charRect.mReply.mRect;
-    else
-      useCaretRect = PR_TRUE;
-  }
-
-  return useCaretRect ? GetCaretRect(aCharRect) : PR_TRUE;
-}
-
-PRBool
-nsWindow::GetCaretRect(nsIntRect &aCaretRect)
-{
-  nsIntPoint point(0, 0);
-
-  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
-  InitEvent(selection, &point);
-  DispatchWindowEvent(&selection);
-  if (!selection.mSucceeded)
-    return PR_FALSE;
-
-  PRUint32 offset = selection.mReply.mOffset;
-
-  nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, this);
-  caretRect.InitForQueryCaretRect(offset);
-  InitEvent(caretRect, &point);
-  DispatchWindowEvent(&caretRect);
-  if (!caretRect.mSucceeded)
-    return PR_FALSE;
-  aCaretRect = caretRect.mReply.mRect;
-  return PR_TRUE;
-}
-
-PRBool
-nsWindow::SetIMERelatedWindowsPos(HIMC aIMEContext)
-{
-  nsIntRect r;
-  // Get first character rect of current a normal selected text or a composing
-  // string.
-  PRBool ret = GetCharacterRectOfSelectedTextAt(0, r);
-  NS_ENSURE_TRUE(ret, PR_FALSE);
-  nsWindow* toplevelWindow = GetTopLevelWindow(PR_FALSE);
-  nsIntRect firstSelectedCharRect;
-  ResolveIMECaretPos(toplevelWindow, r, this, firstSelectedCharRect);
-
-  // Set native caret size/position to our caret. Some IMEs honor it. E.g.,
-  // "Intelligent ABC" (Simplified Chinese) and "MS PinYin 3.0" (Simplified
-  // Chinese) on XP.
-  nsIntRect caretRect(firstSelectedCharRect);
-  if (GetCaretRect(r)) {
-    ResolveIMECaretPos(toplevelWindow, r, this, caretRect);
-  } else {
-    NS_WARNING("failed to get caret rect");
-    caretRect.width = 1;
-  }
-  if (!sIMENativeCaretIsCreated) {
-    sIMENativeCaretIsCreated =
-      ::CreateCaret(mWnd, nsnull, caretRect.width, caretRect.height);
-  }
-  ::SetCaretPos(caretRect.x, caretRect.y);
-
-  if (ShouldDrawCompositionStringOurselves()) {
-    // Get a rect of first character in current target in composition string.
-    if (sIMEIsComposing && sIMECompUnicode && !sIMECompUnicode->IsEmpty()) {
-      // If there are no targetted selection, we should use it's first character
-      // rect instead.
-      PRInt32 offset = 0;
-      for (int i = 0; i < sIMEAttributeArrayLength; i++) {
-        if (sIMEAttributeArray[i] == ATTR_TARGET_NOTCONVERTED ||
-            sIMEAttributeArray[i] == ATTR_TARGET_CONVERTED) {
-          offset = i;
-          break;
-        }
-      }
-      ret = GetCharacterRectOfSelectedTextAt(offset, r);
-      NS_ENSURE_TRUE(ret, PR_FALSE);
-    } else {
-      // If there are no composition string, we should use a first character rect.
-      ret = GetCharacterRectOfSelectedTextAt(0, r);
-      NS_ENSURE_TRUE(ret, PR_FALSE);
-    }
-    nsIntRect firstTargetCharRect;
-    ResolveIMECaretPos(toplevelWindow, r, this, firstTargetCharRect);
-
-    // Move the candidate window to first character position of the target.
-    CANDIDATEFORM candForm;
-    candForm.dwIndex = 0;
-    candForm.dwStyle = CFS_EXCLUDE;
-    candForm.ptCurrentPos.x = firstTargetCharRect.x;
-    candForm.ptCurrentPos.y = firstTargetCharRect.y;
-    candForm.rcArea.right = candForm.rcArea.left = candForm.ptCurrentPos.x;
-    candForm.rcArea.top = candForm.ptCurrentPos.y;
-    candForm.rcArea.bottom = candForm.ptCurrentPos.y + firstTargetCharRect.height;
-    ::ImmSetCandidateWindow(aIMEContext, &candForm);
-  } else {
-    // Move the composition window to caret position (if selected some
-    // characters, we should use first character rect of them).
-    // And in this mode, IME adjusts the candidate window position
-    // automatically. So, we don't need to set it.
-    COMPOSITIONFORM compForm;
-    compForm.dwStyle = CFS_POINT;
-    compForm.ptCurrentPos.x = firstSelectedCharRect.x;
-    compForm.ptCurrentPos.y = firstSelectedCharRect.y;
-    ::ImmSetCompositionWindow(aIMEContext, &compForm);
-  }
-
-  return PR_TRUE;
-}
-
-void
-nsWindow::HandleTextEvent(HIMC hIMEContext, PRBool aCheckAttr)
-{
-  NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
-  NS_ASSERTION(sIMEIsComposing, "conflict state");
-
-  if (!sIMECompUnicode)
-    return;
-
-  // If we don't need to draw composition string ourselves and this is not
-  // commit event (i.e., under composing), we don't need to fire text event
-  // during composing.
-  if (aCheckAttr && !ShouldDrawCompositionStringOurselves()) {
-    // But we need to adjust composition window pos and native caret pos, here.
-    SetIMERelatedWindowsPos(hIMEContext);
-    return;
-  }
-
-  nsTextEvent event(PR_TRUE, NS_TEXT_TEXT, this);
-  nsIntPoint point(0, 0);
-
-  InitEvent(event, &point);
-
-  if (aCheckAttr) {
-    GetTextRangeList(&(event.rangeCount),&(event.rangeArray));
-  } else {
-    event.rangeCount = 0;
-    event.rangeArray = nsnull;
-  }
-
-  event.theText = sIMECompUnicode->get();
-  event.isShift = mIsShiftDown;
-  event.isControl = mIsControlDown;
-  event.isMeta = PR_FALSE;
-  event.isAlt = mIsAltDown;
-
-  DispatchWindowEvent(&event);
-
-  if (event.rangeArray)
-    delete [] event.rangeArray;
-
-  //
-  // Post process event
-  //
-
-  SetIMERelatedWindowsPos(hIMEContext);
-
-  if (event.theReply.mCursorPosition.width || event.theReply.mCursorPosition.height)
-  {
-    nsIntRect cursorPosition;
-    ResolveIMECaretPos(event.theReply.mReferenceWidget,
-                       event.theReply.mCursorPosition,
-                       this, cursorPosition);
-
-    // Record previous composing char position
-    // The cursor is always on the right char before it, but not necessarily on the
-    // left of next char, as what happens in wrapping.
-    if (sIMECursorPosition > 0 && sIMECompCharPos &&
-        sIMECursorPosition < IME_MAX_CHAR_POS) {
-      sIMECompCharPos[sIMECursorPosition-1].right = cursorPosition.x;
-      sIMECompCharPos[sIMECursorPosition-1].top = cursorPosition.y;
-      sIMECompCharPos[sIMECursorPosition-1].bottom = cursorPosition.YMost();
-      if (sIMECompCharPos[sIMECursorPosition-1].top != cursorPosition.y) {
-        // wrapping, invalidate left position
-        sIMECompCharPos[sIMECursorPosition-1].left = -1;
-      }
-      sIMECompCharPos[sIMECursorPosition].left = cursorPosition.x;
-      sIMECompCharPos[sIMECursorPosition].top = cursorPosition.y;
-      sIMECompCharPos[sIMECursorPosition].bottom = cursorPosition.YMost();
-    }
-  } else {
-    // for some reason we don't know yet, theReply may contain invalid result
-    // need more debugging in nsCaret to find out the reason
-    // the best we can do now is to ignore the invalid result
-  }
-}
-
-void
-nsWindow::HandleStartComposition(HIMC hIMEContext)
-{
-  NS_PRECONDITION(mIMEEnabled != nsIWidget::IME_STATUS_PLUGIN,
-    "HandleStartComposition should not be called when a plug-in has focus");
-
-  // ATOK send the messages following order at starting composition.
-  // 1. WM_IME_COMPOSITION
-  // 2. WM_IME_STARTCOMPOSITION
-  // We call this function at both step #1 and #2.
-  // However, the composition start event should occur only once.
-  if (sIMEIsComposing)
-    return;
-
-  nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
-  nsIntPoint point(0, 0);
-  InitEvent(event, &point);
-  DispatchWindowEvent(&event);
-
-  //
-  // Post process event
-  //
-
-  SetIMERelatedWindowsPos(hIMEContext);
-
-  if (event.theReply.mCursorPosition.width || event.theReply.mCursorPosition.height)
-  {
-    nsIntRect cursorPosition;
-    ResolveIMECaretPos(event.theReply.mReferenceWidget,
-                       event.theReply.mCursorPosition,
-                       this, cursorPosition);
-
-    sIMECompCharPos = (RECT*)PR_MALLOC(IME_MAX_CHAR_POS*sizeof(RECT));
-    if (sIMECompCharPos) {
-      memset(sIMECompCharPos, -1, sizeof(RECT)*IME_MAX_CHAR_POS);
-      sIMECompCharPos[0].left = cursorPosition.x;
-      sIMECompCharPos[0].top = cursorPosition.y;
-      sIMECompCharPos[0].bottom = cursorPosition.YMost();
-    }
-  } else {
-    // for some reason we don't know yet, theReply may contain invalid result
-    // need more debugging in nsCaret to find out the reason
-    // the best we can do now is to ignore the invalid result
-  }
-
-  if (!sIMECompUnicode)
-    sIMECompUnicode = new nsString();
-  sIMEIsComposing = PR_TRUE;
-}
-
-void
-nsWindow::HandleEndComposition(void)
-{
-  if (!sIMEIsComposing)
-    return;
-
-  if (mIMEEnabled == nsIWidget::IME_STATUS_PLUGIN) {
-    sIMEIsComposing = PR_FALSE;
-    return;
-  }
-
-  nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
-  nsIntPoint point(0, 0);
-
-  if (sIMENativeCaretIsCreated) {
-    ::DestroyCaret();
-    sIMENativeCaretIsCreated = PR_FALSE;
-  }
-
-  InitEvent(event,&point);
-  DispatchWindowEvent(&event);
-  PR_FREEIF(sIMECompCharPos);
-  sIMECompCharPos = nsnull;
-  sIMEIsComposing = PR_FALSE;
-}
-
-static PRUint32 PlatformToNSAttr(PRUint8 aAttr)
-{
-  switch (aAttr)
-  {
-    case ATTR_INPUT_ERROR:
-    // case ATTR_FIXEDCONVERTED:
-    case ATTR_INPUT:
-      return NS_TEXTRANGE_RAWINPUT;
-    case ATTR_CONVERTED:
-      return NS_TEXTRANGE_CONVERTEDTEXT;
-    case ATTR_TARGET_NOTCONVERTED:
-      return NS_TEXTRANGE_SELECTEDRAWTEXT;
-    case ATTR_TARGET_CONVERTED:
-      return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
-    default:
-      NS_ASSERTION(PR_FALSE, "unknown attribute");
-      return NS_TEXTRANGE_CARETPOSITION;
-  }
-}
-
-
-void
-nsWindow::GetTextRangeList(PRUint32* aListLength,
-                           nsTextRangeArray* textRangeListResult)
-{
-  NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
-  // Sogou (Simplified Chinese IME) returns contradictory values: The cursor
-  // position is actual cursor position. However, other values (composition
-  // string and attributes) are empty. So, if you remove following assertion,
-  // be careful.
-  NS_ASSERTION(ShouldDrawCompositionStringOurselves(),
-    "GetTextRangeList is called when we don't need to fire text event");
-
-  if (!sIMECompUnicode)
-    return;
-
-  long maxlen = sIMECompUnicode->Length();
-  long cursor = sIMECursorPosition;
-  NS_ASSERTION(cursor <= maxlen, "wrong cursor position");
-  if (cursor > maxlen)
-    cursor = maxlen;
-
-  if (sIMECompClauseArrayLength == 0) {
-    // Some IMEs don't return clause array information, then, we assume that
-    // all characters in the composition string are in one clause.
-    *aListLength = 1;
-    // need one more room for caret
-    *textRangeListResult = new nsTextRange[*aListLength + 1];
-    (*textRangeListResult)[0].mStartOffset = 0;
-    (*textRangeListResult)[0].mEndOffset = maxlen;
-    (*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
-  } else {
-    *aListLength = sIMECompClauseArrayLength - 1;
-
-    // need one more room for caret
-    *textRangeListResult = new nsTextRange[*aListLength + 1];
-
-    // iterate over the attributes
-    int lastOffset = 0;
-    for (unsigned int i = 0; i < *aListLength; i++) {
-      long current = sIMECompClauseArray[i + 1];
-      NS_ASSERTION(current <= maxlen, "wrong offset");
-      if(current > maxlen)
-        current = maxlen;
-
-      (*textRangeListResult)[i].mRangeType = 
-        PlatformToNSAttr(sIMEAttributeArray[lastOffset]);
-      (*textRangeListResult)[i].mStartOffset = lastOffset;
-      (*textRangeListResult)[i].mEndOffset = current;
-
-      lastOffset = current;
-    } // for
-  } // if else
-
-  if (cursor == NO_IME_CARET)
-    return;
-
-  (*textRangeListResult)[*aListLength].mStartOffset = cursor;
-  (*textRangeListResult)[*aListLength].mEndOffset = cursor;
-  (*textRangeListResult)[*aListLength].mRangeType = NS_TEXTRANGE_CARETPOSITION;
-  ++(*aListLength);
-}
-
-
 //==========================================================================
 BOOL nsWindow::OnInputLangChange(HKL aHKL)
 {
 #ifdef KE_DEBUG
   printf("OnInputLanguageChange\n");
 #endif
-  ResetInputState();
-
-  if (sIMEIsComposing) {
-    HandleEndComposition();
-  }
 
 #ifndef WINCE
   gKbdLayout.LoadLayout(aHKL);
@@ -7072,562 +6813,6 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL)
 
   return PR_FALSE;   // always pass to child window
 }
-//==========================================================================
-BOOL nsWindow::OnIMEChar(wchar_t uniChar, LPARAM aKeyState)
-{
-#ifdef DEBUG_IME
-  printf("OnIMEChar\n");
-#endif
-
-  // We don't need to fire any text events from here. This method will be
-  // called when the composition string of the current IME is not drawn by us
-  // and some characters are committed. In that case, the committed string was
-  // processed in nsWindow::OnIMEComposition already.
-
-  // We need to return TRUE here so that Windows doesn't
-  // send two WM_CHAR msgs
-  return PR_TRUE;
-}
-
-//==========================================================================
-// This function is used when aIndex is GCS_COMPSTR, GCS_COMPREADSTR,
-// GCS_RESULTSTR, and GCS_RESULTREADSTR.
-// Otherwise use ::ImmGetCompositionStringW.
-void nsWindow::GetCompositionString(HIMC aHIMC, DWORD aIndex)
-{
-  // Retrieve the size of the required output buffer.
-  long lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex, NULL, 0);
-  if (lRtn < 0 ||
-      !EnsureStringLength(*sIMECompUnicode, (lRtn / sizeof(WCHAR)) + 1))
-    return; // Error or out of memory.
-
-  // Actually retrieve the composition string information.
-  lRtn = ::ImmGetCompositionStringW(aHIMC, aIndex,
-                                    (LPVOID)sIMECompUnicode->BeginWriting(),
-                                    lRtn + sizeof(WCHAR));
-  sIMECompUnicode->SetLength(lRtn / sizeof(WCHAR));
-}
-
-PRBool nsWindow::ConvertToANSIString(const nsAFlatString& aStr, UINT aCodePage,
-                                     nsACString& aANSIStr)
-{
-  int len = ::WideCharToMultiByte(aCodePage, 0,
-                                  (LPCWSTR)aStr.get(), aStr.Length(),
-                                  NULL, 0, NULL, NULL);
-  NS_ENSURE_TRUE(len >= 0, PR_FALSE);
-
-  if (!EnsureStringLength(aANSIStr, len))
-    return PR_FALSE;
-  ::WideCharToMultiByte(aCodePage, 0, (LPCWSTR)aStr.get(), aStr.Length(),
-                        (LPSTR)aANSIStr.BeginWriting(), len, NULL, NULL);
-  return PR_TRUE;
-}
-
-//==========================================================================
-BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
-{
-#ifdef DEBUG_IME
-  printf("OnIMEComposition\n");
-#endif
-  NS_PRECONDITION(mIMEEnabled != nsIWidget::IME_STATUS_PLUGIN,
-    "OnIMEComposition should not be called when a plug-in has focus");
-
-  // for bug #60050
-  // MS-IME 95/97/98/2000 may send WM_IME_COMPOSITION with non-conversion
-  // mode before it send WM_IME_STARTCOMPOSITION.
-  if (!sIMECompUnicode) {
-    sIMECompUnicode = new nsString();
-    if (NS_UNLIKELY(!sIMECompUnicode)) {
-      NS_ASSERTION(sIMECompUnicode, "sIMECompUnicode is null");
-      return PR_TRUE;
-    }
-  }
-
-  HIMC hIMEContext = ::ImmGetContext(mWnd);
-  if (hIMEContext==NULL) 
-    return PR_TRUE;
-
-  // will change this if an IME message we handle
-  BOOL result = PR_FALSE;
-
-  PRBool startCompositionMessageHasBeenSent = sIMEIsComposing;
-
-  //
-  // This catches a fixed result
-  //
-  if (aGCS & GCS_RESULTSTR) {
-#ifdef DEBUG_IME
-    printf("Handling GCS_RESULTSTR\n");
-#endif
-    if (!sIMEIsComposing) 
-      HandleStartComposition(hIMEContext);
-
-    GetCompositionString(hIMEContext, GCS_RESULTSTR);
-#ifdef DEBUG_IME
-    printf("GCS_RESULTSTR compStrLen = %d\n", sIMECompUnicode->Length());
-#endif
-    result = PR_TRUE;
-    HandleTextEvent(hIMEContext, PR_FALSE);
-    HandleEndComposition();
-  }
-
-
-  //
-  // This provides us with a composition string
-  //
-  if (IS_COMPOSING_LPARAM(aGCS))
-  {
-#ifdef DEBUG_IME
-    printf("Handling GCS_COMPSTR\n");
-#endif
-
-    if (!sIMEIsComposing) 
-      HandleStartComposition(hIMEContext);
-
-    //--------------------------------------------------------
-    // 1. Get GCS_COMPSTR
-    //--------------------------------------------------------
-    GetCompositionString(hIMEContext, GCS_COMPSTR);
-
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=296339
-    if (sIMECompUnicode->IsEmpty() &&
-        !startCompositionMessageHasBeenSent) {
-      // In this case, maybe, the sender is MSPinYin. That sends *only*
-      // WM_IME_COMPOSITION with GCS_COMP* and GCS_RESULT* when
-      // user inputted the Chinese full stop. So, that doesn't send
-      // WM_IME_STARTCOMPOSITION and WM_IME_ENDCOMPOSITION.
-      // If WM_IME_STARTCOMPOSITION was not sent and the composition
-      // string is null (it indicates the composition transaction ended),
-      // WM_IME_ENDCOMPOSITION may not be sent. If so, we cannot run
-      // HandleEndComposition() in other place.
-#ifdef DEBUG_IME
-      printf("Aborting GCS_COMPSTR\n");
-#endif
-      HandleEndComposition();
-      return result;
-    }
-
-#ifdef DEBUG_IME
-    printf("GCS_COMPSTR compStrLen = %d\n", sIMECompUnicode->Length());
-#endif
-
-    //--------------------------------------------------------
-    // 2. Get GCS_COMPCLAUSE
-    //--------------------------------------------------------
-    long compClauseArrayByteCount =
-      ::ImmGetCompositionStringW(hIMEContext, GCS_COMPCLAUSE, NULL, 0);
-#ifdef DEBUG_IME
-    printf("GCS_COMPCLAUSE compClauseArrayByteCount = %d\n",
-           compClauseArrayByteCount);
-#endif
-    long compClauseArrayLength = compClauseArrayByteCount / sizeof(PRUint32);
-    if (compClauseArrayLength > 0) {
-      if (compClauseArrayByteCount > sIMECompClauseArraySize) {
-        if (sIMECompClauseArray)
-          delete [] sIMECompClauseArray;
-        // Allocate some extra space to avoid reallocations.
-        PRInt32 arrayLength = compClauseArrayLength + 32;
-        sIMECompClauseArray = new PRUint32[arrayLength];
-        sIMECompClauseArraySize = arrayLength * sizeof(PRUint32);
-      }
-
-#ifndef WINCE
-      // Intelligent ABC IME (Simplified Chinese IME, the code page is 936)
-      // will crash in ImmGetCompositionStringW for GCS_COMPCLAUSE (bug 424663).
-      // See comment 35 of the bug for the detail. Therefore, we should use A
-      // API for it, however, we should not kill Unicode support on all IMEs.
-      PRBool useA_API = !(gKbdLayout.GetIMEProperty() & IME_PROP_UNICODE);
-#else
-      PRBool useA_API =  PR_TRUE;
-#endif
-      long compClauseArrayByteCount2 = 
-#ifndef WINCE
-        useA_API ?
-        ::ImmGetCompositionStringA(hIMEContext, GCS_COMPCLAUSE,
-                                   sIMECompClauseArray,
-                                   sIMECompClauseArraySize) :
-#endif
-        ::ImmGetCompositionStringW(hIMEContext, GCS_COMPCLAUSE,
-                                   sIMECompClauseArray,
-                                   sIMECompClauseArraySize);
-      NS_ASSERTION(compClauseArrayByteCount2 == compClauseArrayByteCount,
-                   "strange result");
-      if (compClauseArrayByteCount > compClauseArrayByteCount2)
-        compClauseArrayLength = compClauseArrayByteCount2 / sizeof(PRUint32);
-
-      if (useA_API) {
-        // Convert each values of sIMECompClauseArray. The values mean offset of
-        // the clauses in ANSI string. But we need the values in Unicode string.
-        nsCAutoString compANSIStr;
-        if (ConvertToANSIString(*sIMECompUnicode,
-#ifndef WINCE
-                                gKbdLayout.GetCodePage(), 
-#else
-                                GetACP(),
-#endif
-                                compANSIStr)) {
-          PRUint32 maxlen = compANSIStr.Length();
-          sIMECompClauseArray[0] = 0; // first value must be 0
-          for (PRInt32 i = 1; i < compClauseArrayLength; i++) {
-            PRUint32 len = PR_MIN(sIMECompClauseArray[i], maxlen);
-            sIMECompClauseArray[i] =
-              ::MultiByteToWideChar(
-#ifndef WINCE
-                                    gKbdLayout.GetCodePage(), 
-#else
-                                    GetACP(),
-#endif
-                                    MB_PRECOMPOSED,
-                                    (LPCSTR)compANSIStr.get(), len, NULL, 0);
-          }
-        }
-      }
-    }
-    // compClauseArrayLength may be negative. I.e., ImmGetCompositionStringW
-    // may return an error code.
-    sIMECompClauseArrayLength = PR_MAX(0, compClauseArrayLength);
-
-    //--------------------------------------------------------
-    // 3. Get GCS_COMPATTR
-    //--------------------------------------------------------
-    // This provides us with the attribute string necessary 
-    // for doing hiliting
-    long attrStrLen;
-    attrStrLen = ::ImmGetCompositionStringW(hIMEContext, GCS_COMPATTR, NULL, 0);
-#ifdef DEBUG_IME
-    printf("GCS_COMPATTR attrStrLen = %d\n", attrStrLen);
-#endif
-    if (attrStrLen > sIMEAttributeArraySize) {
-      if (sIMEAttributeArray) 
-        delete [] sIMEAttributeArray;
-      // Allocate some extra space to avoid reallocations.
-      PRInt32 arrayLength = attrStrLen + 64;
-      sIMEAttributeArray = new PRUint8[arrayLength];
-      sIMEAttributeArraySize = arrayLength * sizeof(PRUint8);
-    }
-    attrStrLen = ::ImmGetCompositionStringW(hIMEContext, GCS_COMPATTR, sIMEAttributeArray, sIMEAttributeArraySize);
-
-    // attrStrLen may be negative. I.e., ImmGetCompositionStringW may return an
-    // error code.
-    sIMEAttributeArrayLength = PR_MAX(0, attrStrLen);
-
-    //--------------------------------------------------------
-    // 4. Get GCS_CURSOPOS
-    //--------------------------------------------------------
-    // Some IMEs (e.g., the standard IME for Korean) don't have caret position.
-    if (aGCS & GCS_CURSORPOS) {
-      sIMECursorPosition =
-        ::ImmGetCompositionStringW(hIMEContext, GCS_CURSORPOS, NULL, 0);
-      if (sIMECursorPosition < 0)
-        sIMECursorPosition = NO_IME_CARET; // The result is error
-    } else {
-      sIMECursorPosition = NO_IME_CARET;
-    }
-
-    NS_ASSERTION(sIMECursorPosition <= (long)sIMECompUnicode->Length(), "illegal pos");
-
-#ifdef DEBUG_IME
-    if (aGCS & GCS_CURSORPOS)
-      printf("sIMECursorPosition(Unicode): %d\n", sIMECursorPosition);
-    else
-      printf("sIMECursorPosition: None\n");
-#endif
-    //--------------------------------------------------------
-    // 5. Send the text event
-    //--------------------------------------------------------
-    HandleTextEvent(hIMEContext);
-    result = PR_TRUE;
-  }
-  if (!result) {
-#ifdef DEBUG_IME
-    fprintf(stderr, "Handle 0 length TextEvent.\n");
-#endif
-    if (!sIMEIsComposing) 
-      HandleStartComposition(hIMEContext);
-
-    sIMECompUnicode->Truncate();
-    HandleTextEvent(hIMEContext, PR_FALSE);
-    result = PR_TRUE;
-  }
-
-  ::ImmReleaseContext(mWnd, hIMEContext);
-  return ShouldDrawCompositionStringOurselves() ? result : PR_FALSE;
-}
-//==========================================================================
-BOOL nsWindow::OnIMECompositionFull()
-{
-#ifdef DEBUG_IME2
-  printf("OnIMECompositionFull\n");
-#endif
-
-  // not implement yet
-  return PR_FALSE;
-}
-//==========================================================================
-BOOL nsWindow::OnIMEEndComposition()
-{
-#ifdef DEBUG_IME
-  printf("OnIMEEndComposition\n");
-#endif
-  if (sIMEIsComposing) {
-    HIMC hIMEContext = ::ImmGetContext(mWnd);
-    if (hIMEContext==NULL) 
-      return PR_TRUE;
-
-    // IME on Korean NT somehow send WM_IME_ENDCOMPOSITION
-    // first when we hit space in composition mode
-    // we need to clear out the current composition string
-    // in that case.
-    sIMECompUnicode->Truncate();
-
-    HandleTextEvent(hIMEContext, PR_FALSE);
-
-    HandleEndComposition();
-    ::ImmReleaseContext(mWnd, hIMEContext);
-  }
-  return ShouldDrawCompositionStringOurselves();
-}
-//==========================================================================
-BOOL nsWindow::OnIMENotify(WPARAM aIMN, LPARAM aData)
-{
-#ifdef DEBUG_IME2
-  printf("OnIMENotify ");
-  switch (aIMN) {
-    case IMN_CHANGECANDIDATE:
-      printf("IMN_CHANGECANDIDATE %x\n", aData);
-      break;
-    case IMN_CLOSECANDIDATE:
-      printf("IMN_CLOSECANDIDATE %x\n", aData);
-      break;
-    case IMN_CLOSESTATUSWINDOW:
-      printf("IMN_CLOSESTATUSWINDOW\n");
-      break;
-    case IMN_GUIDELINE:
-      printf("IMN_GUIDELINE\n");
-      break;
-    case IMN_OPENCANDIDATE:
-      printf("IMN_OPENCANDIDATE %x\n", aData);
-      break;
-    case IMN_OPENSTATUSWINDOW:
-      printf("IMN_OPENSTATUSWINDOW\n");
-      break;
-    case IMN_SETCANDIDATEPOS:
-      printf("IMN_SETCANDIDATEPOS %x\n", aData);
-      break;
-    case IMN_SETCOMPOSITIONFONT:
-      printf("IMN_SETCOMPOSITIONFONT\n");
-      break;
-    case IMN_SETCOMPOSITIONWINDOW:
-      printf("IMN_SETCOMPOSITIONWINDOW\n");
-      break;
-    case IMN_SETCONVERSIONMODE:
-      printf("IMN_SETCONVERSIONMODE\n");
-      break;
-    case IMN_SETOPENSTATUS:
-      printf("IMN_SETOPENSTATUS\n");
-      break;
-    case IMN_SETSENTENCEMODE:
-      printf("IMN_SETSENTENCEMODE\n");
-      break;
-    case IMN_SETSTATUSWINDOWPOS:
-      printf("IMN_SETSTATUSWINDOWPOS\n");
-      break;
-    case IMN_PRIVATE:
-      printf("IMN_PRIVATE\n");
-      break;
-  };
-#endif
-
-  // add hacky code here
-  if (IS_VK_DOWN(NS_VK_ALT)) {
-    mIsShiftDown = PR_FALSE;
-    mIsControlDown = PR_FALSE;
-    mIsAltDown = PR_TRUE;
-
-    DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, 192, nsnull); // XXX hack hack hack
-    if (aIMN == IMN_SETOPENSTATUS)
-      sIMEIsStatusChanged = PR_TRUE;
-  }
-  // not implemented yet
-  return PR_FALSE;
-}
-//==========================================================================
-BOOL nsWindow::OnIMERequest(WPARAM aIMR, LPARAM aData, LRESULT *oResult)
-{
-#ifdef DEBUG_IME
-  printf("OnIMERequest\n");
-#endif
-  PRBool result = PR_FALSE;
-
-  switch (aIMR) {
-    case IMR_RECONVERTSTRING:
-      result = OnIMEReconvert(aData, oResult);
-      break;
-    case IMR_QUERYCHARPOSITION:
-      result = OnIMEQueryCharPosition(aData, oResult);
-      break;
-  }
-
-  return result;
-}
-
-//==========================================================================
-PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult)
-{
-#ifdef DEBUG_IME
-  printf("OnIMEReconvert\n");
-#endif
-
-  *oResult = 0;
-  RECONVERTSTRING* pReconv = (RECONVERTSTRING*) aData;
-
-  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
-  nsIntPoint point(0, 0);
-  InitEvent(selection, &point);
-  DispatchWindowEvent(&selection);
-  if (!selection.mSucceeded)
-    return PR_FALSE;
-
-  if (!pReconv) {
-    // Return need size to reconvert.
-    if (selection.mReply.mString.IsEmpty())
-      return PR_FALSE;
-    PRUint32 len = selection.mReply.mString.Length();
-    *oResult = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
-    return PR_TRUE;
-  }
-
-  // Fill reconvert struct
-  PRUint32 len = selection.mReply.mString.Length();
-  PRUint32 needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
-
-  if (pReconv->dwSize < needSize)
-    return PR_FALSE;
-
-  *oResult = needSize;
-
-  DWORD tmpSize = pReconv->dwSize;
-  ::ZeroMemory(pReconv, tmpSize);
-  pReconv->dwSize            = tmpSize;
-  pReconv->dwVersion         = 0;
-  pReconv->dwStrLen          = len;
-  pReconv->dwStrOffset       = sizeof(RECONVERTSTRING);
-  pReconv->dwCompStrLen      = len;
-  pReconv->dwCompStrOffset   = 0;
-  pReconv->dwTargetStrLen    = len;
-  pReconv->dwTargetStrOffset = 0;
-
-  ::CopyMemory((LPVOID) (aData + sizeof(RECONVERTSTRING)),
-               selection.mReply.mString.get(), len * sizeof(WCHAR));
-  return PR_TRUE;
-}
-
-//==========================================================================
-PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult)
-{
-#ifdef DEBUG_IME
-  printf("OnIMEQueryCharPosition\n");
-#endif
-
-  PRUint32 len = sIMEIsComposing ? sIMECompUnicode->Length() : 0;
-  *oResult = FALSE;
-  IMECHARPOSITION* pCharPosition = (IMECHARPOSITION*)aData;
-  if (!pCharPosition ||
-      pCharPosition->dwSize < sizeof(IMECHARPOSITION) ||
-      ::GetFocus() != mWnd ||
-      pCharPosition->dwCharPos > len)
-    return PR_FALSE;
-
-  nsIntRect r;
-  PRBool ret = GetCharacterRectOfSelectedTextAt(pCharPosition->dwCharPos, r);
-  NS_ENSURE_TRUE(ret, PR_FALSE);
-
-  nsIntRect screenRect;
-  // We always need top level window that is owner window of the popup window
-  // even if the content of the popup window has focus.
-  ResolveIMECaretPos(GetTopLevelWindow(PR_FALSE), r, nsnull, screenRect);
-  pCharPosition->pt.x = screenRect.x;
-  pCharPosition->pt.y = screenRect.y;
-
-  pCharPosition->cLineHeight = r.height;
-
-  // XXX Should we create "query focused content rect event"?
-  ::GetWindowRect(mWnd, &pCharPosition->rcDocument);
-
-  *oResult = TRUE;
-  return PR_TRUE;
-}
-
-//==========================================================================
-void
-nsWindow::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
-                             nsIntRect& aCursorRect,
-                             nsIWidget* aNewOriginWidget,
-                             nsIntRect& aOutRect)
-{
-  aOutRect = aCursorRect;
-
-  if (aReferenceWidget == aNewOriginWidget)
-    return;
-
-  if (aReferenceWidget)
-    aOutRect.MoveBy(aReferenceWidget->WidgetToScreenOffset());
-
-  if (aNewOriginWidget)
-    aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffset());
-}
-
-//==========================================================================
-BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)
-{
-#ifdef DEBUG_IME2
-  printf("OnIMESelect\n");
-#endif
-
-  // not implement yet
-  return PR_FALSE;
-}
-//==========================================================================
-BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM& aISC)
-{
-#ifdef DEBUG_IME2
-  printf("OnIMESetContext %x %s %s %s Candidate[%s%s%s%s]\n", this,
-    (aActive ? "Active" : "Deactiv"),
-    ((aISC & ISC_SHOWUICOMPOSITIONWINDOW) ? "[Comp]" : ""),
-    ((aISC & ISC_SHOWUIGUIDELINE) ? "[GUID]" : ""),
-    ((aISC & ISC_SHOWUICANDIDATEWINDOW) ? "0" : ""),
-    ((aISC & (ISC_SHOWUICANDIDATEWINDOW<<1)) ? "1" : ""),
-    ((aISC & (ISC_SHOWUICANDIDATEWINDOW<<2)) ? "2" : ""),
-    ((aISC & (ISC_SHOWUICANDIDATEWINDOW<<3)) ? "3" : ""));
-#endif
-  if (! aActive)
-    ResetInputState();
-
-  if (ShouldDrawCompositionStringOurselves()) {
-    aISC &= ~ISC_SHOWUICOMPOSITIONWINDOW;
-  }
-
-  // We still return false here even if we should draw a composition string
-  // ourselves. Because we need to pass the aISC w/ ISC_SHOWUICOMPOSITIONWINDOW
-  // directly to the default window proc so it will draw the candidate window
-  // for us...
-  return PR_FALSE;
-}
-//==========================================================================
-BOOL nsWindow::OnIMEStartComposition()
-{
-#ifdef DEBUG_IME
-  printf("OnIMEStartComposition\n");
-#endif
-  HIMC hIMEContext = ::ImmGetContext(mWnd);
-  if (hIMEContext == NULL)
-    return PR_TRUE;
-
-  HandleStartComposition(hIMEContext);
-  ::ImmReleaseContext(mWnd, hIMEContext);
-  return ShouldDrawCompositionStringOurselves();
-}
-
 //==========================================================================
 NS_IMETHODIMP nsWindow::ResetInputState()
 {
@@ -7639,13 +6824,10 @@ NS_IMETHODIMP nsWindow::ResetInputState()
   nsTextStore::CommitComposition(PR_FALSE);
 #endif //NS_ENABLE_TSF
 
-  HIMC hIMC = ::ImmGetContext(mWnd);
-  if (hIMC) {
-    BOOL ret = FALSE;
-    ret = ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, NULL);
-    ret = ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, NULL);
-    //NS_ASSERTION(ret, "ImmNotify failed");
-    ::ImmReleaseContext(mWnd, hIMC);
+  nsIMEContext IMEContext(mWnd);
+  if (IMEContext.IsValid()) {
+    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_COMPLETE, NULL);
+    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, NULL);
   }
   return NS_OK;
 }
@@ -7661,10 +6843,9 @@ NS_IMETHODIMP nsWindow::SetIMEOpenState(PRBool aState)
   nsTextStore::SetIMEOpenState(aState);
 #endif //NS_ENABLE_TSF
 
-  HIMC hIMC = ::ImmGetContext(mWnd);
-  if (hIMC) {
-    ::ImmSetOpenStatus(hIMC, aState ? TRUE : FALSE);
-    ::ImmReleaseContext(mWnd, hIMC);
+  nsIMEContext IMEContext(mWnd);
+  if (IMEContext.IsValid()) {
+    ::ImmSetOpenStatus(IMEContext.get(), aState ? TRUE : FALSE);
   }
   return NS_OK;
 }
@@ -7672,11 +6853,10 @@ NS_IMETHODIMP nsWindow::SetIMEOpenState(PRBool aState)
 //==========================================================================
 NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState)
 {
-  HIMC hIMC = ::ImmGetContext(mWnd);
-  if (hIMC) {
-    BOOL isOpen = ::ImmGetOpenStatus(hIMC);
+  nsIMEContext IMEContext(mWnd);
+  if (IMEContext.IsValid()) {
+    BOOL isOpen = ::ImmGetOpenStatus(IMEContext.get());
     *aState = isOpen ? PR_TRUE : PR_FALSE;
-    ::ImmReleaseContext(mWnd, hIMC);
   } else 
     *aState = PR_FALSE;
 
@@ -7698,7 +6878,7 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
                                  aState == nsIWidget::IME_STATUS_PLUGIN)? 
                                 "Enabled": "Disabled");
 #endif 
-  if (sIMEIsComposing)
+  if (nsIMM32Handler::IsComposing(this))
     ResetInputState();
   mIMEEnabled = aState;
   PRBool enable = (aState == nsIWidget::IME_STATUS_ENABLED ||
@@ -7738,11 +6918,9 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition()
   nsTextStore::CommitComposition(PR_TRUE);
 #endif //NS_ENABLE_TSF
 
-  HIMC hIMC = ::ImmGetContext(mWnd);
-  if (hIMC) {
-    BOOL ret = FALSE;
-    ret = ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, NULL);
-    ::ImmReleaseContext(mWnd, hIMC);
+  nsIMEContext IMEContext(mWnd);
+  if (IMEContext.IsValid()) {
+    ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, NULL);
   }
   return NS_OK;
 }
@@ -7759,132 +6937,14 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
   return NS_OK;
 }
 
-#define PT_IN_RECT(pt, rc)  ((pt).x>(rc).left && (pt).x <(rc).right && (pt).y>(rc).top && (pt).y<(rc).bottom)
-
-// Mouse operation of IME
-PRBool
-nsWindow::IMEMouseHandling(PRInt32 aAction, LPARAM lParam)
-{
-#ifndef WINCE
-  POINT ptPos;
-  ptPos.x = (short)LOWORD(lParam);
-  ptPos.y = (short)HIWORD(lParam);
-
-  if (sIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-    if (IMECompositionHitTest(&ptPos))
-      if (HandleMouseActionOfIME(aAction, &ptPos))
-        return PR_TRUE;
-  } else {
-    HWND parentWnd = ::GetParent(mWnd);
-    if (parentWnd) {
-      nsWindow* parentWidget = GetNSWindowPtr(parentWnd);
-      if (parentWidget && parentWidget->sIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-        if (parentWidget->IMECompositionHitTest(&ptPos))
-          if (parentWidget->HandleMouseActionOfIME(aAction, &ptPos))
-            return PR_TRUE;
-      }
-    }
-  }
-#endif
-  return PR_FALSE;
-}
-
-PRBool
-nsWindow::HandleMouseActionOfIME(int aAction, POINT *ptPos)
-{
-  PRBool IsHandle = PR_FALSE;
-
-  if (mWnd) {
-    HIMC hIMC = ::ImmGetContext(mWnd);
-    if (hIMC) {
-      int positioning = 0;
-      int offset = 0;
-
-      // calcurate positioning and offset
-      // char :            JCH1|JCH2|JCH3
-      // offset:           0011 1122 2233
-      // positioning:      2301 2301 2301
-
-      // Note: hitText has been done, so no check of sIMECompCharPos
-      // and composing char maximum limit is necessary.
-      PRUint32 len = sIMECompUnicode->Length();
-      PRUint32 i = 0;
-      for (i = 0; i < len; ++i) {
-        if (PT_IN_RECT(*ptPos, sIMECompCharPos[i]))
-          break;
-      }
-      offset = i;
-      if (ptPos->x - sIMECompCharPos[i].left > sIMECompCharPos[i].right - ptPos->x)
-        offset++;
-
-      positioning = (ptPos->x - sIMECompCharPos[i].left) * 4 /
-                    (sIMECompCharPos[i].right - sIMECompCharPos[i].left);
-      positioning = (positioning + 2) % 4;
-
-      // send MS_MSIME_MOUSE message to default IME window.
-      HWND imeWnd = ::ImmGetDefaultIMEWnd(mWnd);
-      if (::SendMessageW(imeWnd, nsWindow::uWM_MSIME_MOUSE,
-                         MAKELONG(MAKEWORD(aAction, positioning), offset),
-                         (LPARAM) hIMC) == 1)
-        IsHandle = PR_TRUE;
-    }
-    ::ImmReleaseContext(mWnd, hIMC);
-  }
-
-  return IsHandle;
-}
-
-//The coordinate is relative to the upper-left corner of the client area.
-PRBool nsWindow::IMECompositionHitTest(POINT * ptPos)
-{
-  PRBool IsHit = PR_FALSE;
-
-  if (sIMECompCharPos){
-    // figure out how many char in composing string,
-    // but keep it below the limit we can handle
-    PRInt32 len = sIMECompUnicode->Length();
-    if (len > IME_MAX_CHAR_POS)
-      len = IME_MAX_CHAR_POS;
-
-    PRInt32 i;
-    PRInt32 aveWidth = 0;
-    // found per char width
-    for (i = 0; i < len; i++) {
-      if (sIMECompCharPos[i].left >= 0 && sIMECompCharPos[i].right > 0) {
-        aveWidth = sIMECompCharPos[i].right - sIMECompCharPos[i].left;
-        break;
-      }
-    }
-
-    // validate each rect and test
-    for (i = 0; i < len; i++) {
-      if (sIMECompCharPos[i].left < 0) {
-        if (i != 0 && sIMECompCharPos[i-1].top == sIMECompCharPos[i].top)
-          sIMECompCharPos[i].left = sIMECompCharPos[i-1].right;
-        else
-          sIMECompCharPos[i].left = sIMECompCharPos[i].right - aveWidth;
-      }
-      if (sIMECompCharPos[i].right < 0)
-        sIMECompCharPos[i].right = sIMECompCharPos[i].left + aveWidth;
-      if (sIMECompCharPos[i].top < 0) {
-        sIMECompCharPos[i].top = sIMECompCharPos[i-1].top;
-        sIMECompCharPos[i].bottom = sIMECompCharPos[i-1].bottom;
-      }
-
-      if (PT_IN_RECT(*ptPos, sIMECompCharPos[i])) {
-        IsHit = PR_TRUE;
-        break;
-      }
-    }
-  }
-  return IsHit;
-}
-
 #ifdef NS_ENABLE_TSF
 NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(PRBool aFocus)
 {
-  return nsTextStore::OnFocusChange(aFocus, this, mIMEEnabled);
+  nsresult rv = nsTextStore::OnFocusChange(aFocus, this, mIMEEnabled);
+  if (rv == NS_ERROR_NOT_AVAILABLE)
+    rv = NS_OK; // TSF is not enabled, maybe.
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -7954,21 +7014,26 @@ void nsWindow::StopFlashing()
 NS_IMETHODIMP
 nsWindow::GetLastInputEventTime(PRUint32& aTime)
 {
-  WORD qstatus = HIWORD(GetQueueStatus(QS_INPUT));
-
-  // If there is pending input or the user is currently
-  // moving the window then return the current time.
-  // Note: When the user is moving the window WIN32 spins
-  // a separate event loop and input events are not
-  // reported to the application.
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  if (qstatus || (toolkit && toolkit->UserIsMovingWindow())) {
+  if (HasPendingInputEvent()) {
     gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
 
   aTime = gLastInputEventTime;
 
   return NS_OK;
+}
+
+PRBool
+nsWindow::HasPendingInputEvent()
+{
+  // If there is pending input or the user is currently
+  // moving the window then return true.
+  // Note: When the user is moving the window WIN32 spins
+  // a separate event loop and input events are not
+  // reported to the application.
+  WORD qstatus = HIWORD(GetQueueStatus(QS_INPUT));
+  nsToolkit* toolkit = (nsToolkit *)mToolkit;
+  return qstatus || (toolkit && toolkit->UserIsMovingWindow());
 }
 
 //-------------------------------------------------------------------------
@@ -8414,7 +7479,8 @@ nsWindow* nsWindow::GetTopLevelWindow(PRBool aStopOnDialogOrPopup)
       }
     }
 
-    nsWindow* parentWindow = curWindow->GetParentWindow();
+    // Retrieve the top level parent or owner window
+    nsWindow* parentWindow = curWindow->GetParentWindow(PR_TRUE);
 
     if (!parentWindow)
       return curWindow;

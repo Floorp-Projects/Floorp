@@ -50,7 +50,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegressionTester)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLayoutDebuggingTools)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLayoutDebugCLH)
 
-static NS_IMETHODIMP
+static NS_METHOD
 RegisterCommandLineHandlers(nsIComponentManager* compMgr, nsIFile* path,
                             const char *location, const char *type,
                             const nsModuleComponentInfo *info)
@@ -68,7 +68,7 @@ RegisterCommandLineHandlers(nsIComponentManager* compMgr, nsIFile* path,
   return NS_OK;
 }
 
-static NS_IMETHODIMP
+static NS_METHOD
 UnregisterCommandLineHandlers(nsIComponentManager* compMgr, nsIFile *path,
                               const char *location,
                               const nsModuleComponentInfo *info)

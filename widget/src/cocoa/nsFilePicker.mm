@@ -61,8 +61,57 @@ const float kAccessoryViewPadding = 5;
 const int   kSaveTypeControlTag = 1;
 const char  kLastTypeIndexPref[] = "filepicker.lastTypeIndex";
 
+static PRBool gCallSecretHiddenFileAPI = PR_FALSE;
+const char kShowHiddenFilesPref[] = "filepicker.showHiddenFiles";
+
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
+// We never want to call the secret show hidden files API unless the pref
+// has been set. Once the pref has been set we always need to call it even
+// if it disappears so that we stop showing hidden files if a user deletes
+// the pref. If the secret API was used once and things worked out it should
+// continue working for subsequent calls so the user is at no more risk.
+static void SetShowHiddenFileState(NSSavePanel* panel)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  PRBool show = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    nsresult rv = prefs->GetBoolPref(kShowHiddenFilesPref, &show);
+    if (NS_SUCCEEDED(rv))
+      gCallSecretHiddenFileAPI = PR_TRUE;
+  }
+
+  if (gCallSecretHiddenFileAPI) {
+    // invoke a method to get a Cocoa-internal nav view
+    SEL navViewSelector = @selector(_navView);
+    NSMethodSignature* navViewSignature = [panel methodSignatureForSelector:navViewSelector];
+    if (!navViewSignature)
+      return;
+    NSInvocation* navViewInvocation = [NSInvocation invocationWithMethodSignature:navViewSignature];
+    [navViewInvocation setSelector:navViewSelector];
+    [navViewInvocation setTarget:panel];
+    [navViewInvocation invoke];
+
+    // get the returned nav view
+    id navView = nil;
+    [navViewInvocation getReturnValue:&navView];
+
+    // invoke the secret show hidden file state method on the nav view
+    SEL showHiddenFilesSelector = @selector(setShowsHiddenFiles:);
+    NSMethodSignature* showHiddenFilesSignature = [navView methodSignatureForSelector:showHiddenFilesSelector];
+    if (!showHiddenFilesSignature)
+      return;
+    NSInvocation* showHiddenFilesInvocation = [NSInvocation invocationWithMethodSignature:showHiddenFilesSignature];
+    [showHiddenFilesInvocation setSelector:showHiddenFilesSelector];
+    [showHiddenFilesInvocation setTarget:navView];
+    [showHiddenFilesInvocation setArgument:&show atIndex:2];
+    [showHiddenFilesInvocation invoke];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
 
 nsFilePicker::nsFilePicker()
 : mMode(0)
@@ -235,6 +284,8 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, const nsString& inDefaultNa
   PRInt16 retVal = (PRInt16)returnCancel;
   NSOpenPanel *thePanel = [NSOpenPanel openPanel];
 
+  SetShowHiddenFileState(thePanel);
+
   // Get filters
   // filters may be null, if we should allow all file types.
   NSArray *filters = GenerateFilterList();
@@ -305,6 +356,8 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   PRInt16 retVal = (PRInt16)returnCancel;
   NSOpenPanel *thePanel = [NSOpenPanel openPanel];
 
+  SetShowHiddenFileState(thePanel);
+
   // Set the options for how the get file dialog will appear
   SetDialogTitle(inTitle, thePanel);
   [thePanel setAllowsMultipleSelection:NO];   //this is default -probably doesn't need to be set
@@ -356,6 +409,8 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 
   PRInt16 retVal = returnCancel;
   NSSavePanel *thePanel = [NSSavePanel savePanel];
+
+  SetShowHiddenFileState(thePanel);
 
   SetDialogTitle(inTitle, thePanel);
 

@@ -2351,7 +2351,7 @@ SECU_PrintRDN(FILE *out, CERTRDN *rdn, char *msg, int level)
 void
 SECU_PrintName(FILE *out, CERTName *name, char *msg, int level)
 {
-    char *nameStr;
+    char *nameStr = NULL;
     char *str;
     SECItem my;
 

@@ -58,6 +58,7 @@ PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   : mFirstChild(aFrame),
     mBounds(0, 0, 0, 0),
+    mAscent(0),
     mData(nsnull)
 {
   MOZ_COUNT_CTOR(nsLineBox);

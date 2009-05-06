@@ -1887,6 +1887,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
  * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
  * @CAIRO_SURFACE_TYPE_QPAINTER: The surface is of type qpainter
+ * @CAIRO_SURFACE_TYPE_DDRAW: The surface is of type ddraw
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -1927,7 +1928,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_WIN32_PRINTING,
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
     CAIRO_SURFACE_TYPE_SCRIPT,
-    CAIRO_SURFACE_TYPE_QPAINTER
+    CAIRO_SURFACE_TYPE_QPAINTER,
+    CAIRO_SURFACE_TYPE_DDRAW
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t

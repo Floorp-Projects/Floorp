@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435128
+-->
+<head>
+  <title>Test for Bug 435128</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435128">Mozilla Bug 435128</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<iframe id="content" src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3C/head%3E%3Cbody%3E%0A%3Ciframe%20id%3D%22a%22%3E%3C/iframe%3E%0A%3Cscript%3E%0Afunction%20doe%28%29%20%7B%0Avar%20x%20%3D%20window.frames%5B0%5D.document%3B%0A%0Avar%20y%3Ddocument.getElementById%28%27a%27%29%3B%0Ay.parentNode.removeChild%28y%29%3B%0A%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0Atry%20%7Bx.write%28%27t%27%29%3B%7D%20catch%28e%29%20%7B%7D%0A%7D%0AsetTimeout%28%27doe%28%29%27%2C20%29%3B%0A%3C/script%3E%0A%3C/body%3E%3C/html%3E" style="width: 1000px; height: 200px;"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 435128 **/
+
+SimpleTest.waitForExplicitFinish();
+
+setTimeout(finish, 60000);
+
+function doe2() {
+  document.getElementById('content').src = document.getElementById('content').src;
+}
+setInterval(doe2, 400);
+
+function finish()
+{
+  ok(true, "This is a mochikit version of a crash test. To complete is to pass.");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

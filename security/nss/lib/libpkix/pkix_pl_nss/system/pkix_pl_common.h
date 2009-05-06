@@ -87,6 +87,7 @@
 #include "pkix_pl_certpolicyinfo.h"
 #include "pkix_pl_certpolicymap.h"
 #include "pkix_pl_certpolicyqualifier.h"
+#include "pkix_pl_crldp.h"
 #include "pkix_pl_crl.h"
 #include "pkix_pl_crlentry.h"
 #include "pkix_pl_nameconstraints.h"

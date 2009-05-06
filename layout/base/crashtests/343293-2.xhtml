@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<style>
+html::first-line { }
+</style>
+<script>
+function doe() {
+  document.getElementsByTagName('caption')[0].removeAttribute('style');
+}
+window.onload=doe;
+</script>
+
+<caption style="float: left;"></caption>
+<span style="float: right;"></span>
+</html>

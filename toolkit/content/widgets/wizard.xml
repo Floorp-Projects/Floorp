@@ -486,9 +486,6 @@
           <xul:spacer flex="1"/>
           <xul:button label="&button-back-mac.label;" accesskey="&button-back-mac.accesskey;"
                       class="wizard-button wizard-nav-button" dlgtype="back"/>
-          <xul:hbox class="wizard-label-box" align="center">
-            <xul:label class="wizard-page-label" xbl:inherits="value=pagestep"/>
-          </xul:hbox>
           <xul:button label="&button-next-mac.label;" accesskey="&button-next-mac.accesskey;"
                       class="wizard-button wizard-nav-button" dlgtype="next"
                       default="true" xbl:inherits="hidden=lastpage" />

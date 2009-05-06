@@ -48,11 +48,8 @@
       srvScope.makeTags();
       var url = "chrome://mochikit/content/" + dir + "/";
       var [links, count] = srvScope.list(url, chromeDir, true);
-      var listContent = srvScope.linksToListItems(links);
-      var tableContent = srvScope.linksToTableRows(links);
+      var tableContent = srvScope.linksToTableRows(links, 0);
       function populate() {
-        $("list-holder").setAttribute("rowspan", 1 + count);
-        $("test-list").innerHTML += listContent;
         $("test-table").innerHTML += tableContent;
         $("wrapper").innerHTML += " "; // redraw the table
       }
@@ -102,9 +99,7 @@
               <td>Passed</td>
               <td>Failed</td>
               <td>Todo</td>
-              <td id="list-holder">
-                <ul class="top" id="test-list"><li><b>Test Files</b></li></ul>
-              </td>
+              <td>Test Files</td>
             </tr>
           </table>
         </div>

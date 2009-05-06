@@ -1,0 +1,40 @@
+<!doctype html public "-//w3c//dtd html 3.2//en">
+
+<html>
+
+<head>
+<title>testcase</title>
+<script>
+
+function doit()
+{
+	var doc = window.document;
+	var t1 = doc.getElementById('table1');
+	var tb =  doc.createElement('tfoot');
+	var tr = doc.createElement('tr');
+	tb.appendChild(tr);
+	t1.appendChild(tb);
+	var tb =  doc.createElement('tfoot');
+	var tr = doc.createElement('tr');
+      tb.appendChild(tr);
+	t1.appendChild(tb);
+	var tb =  doc.createElement('tfoot');
+      var td = doc.createElement('td');
+	tr.appendChild(td); 
+      tb.appendChild(tr);
+ 	t1.insertBefore(tb, doc.getElementById("colg1"));
+	tr.parentNode.removeChild(tr);
+}
+</script>
+
+</head>
+
+<body onload="doit()">
+
+<table id="table1"><tbody id="tbody1"><tr id="tr1"><td id="td1">x</td></tr></tbody><colgroup id ="colg1"></table>
+
+
+
+</body>
+
+</html>

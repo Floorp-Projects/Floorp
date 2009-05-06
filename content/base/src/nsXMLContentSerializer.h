@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,11 +45,16 @@
 #ifndef nsXMLContentSerializer_h__
 #define nsXMLContentSerializer_h__
 
+#include "nsIContent.h"
 #include "nsIContentSerializer.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
+#include "nsIParser.h"
+
+#define kIndentStr NS_LITERAL_STRING("  ")
+#define kEndTag NS_LITERAL_STRING("</")
 
 class nsIDOMNode;
 class nsIAtom;
@@ -95,20 +101,96 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                  nsAString& aStr);
 
  protected:
+
+  /**
+   * Appends a PRUnichar string and increments the column position
+   */
   virtual void AppendToString(const PRUnichar* aStr,
                               PRInt32 aLength,
                               nsAString& aOutputStr);
-  virtual void AppendToString(const PRUnichar aChar, nsAString& aOutputStr);
+
+  /**
+   * Appends a PRUnichar character and increments the column position
+   */
+  virtual void AppendToString(const PRUnichar aChar,
+                              nsAString& aOutputStr);
+
+  /**
+   * Appends a nsAString string and increments the column position
+   */
   virtual void AppendToString(const nsAString& aStr,
-                              nsAString& aOutputStr,
-                              PRBool aTranslateEntities = PR_FALSE,
-                              PRBool aIncrColumn = PR_TRUE);
-  nsresult AppendTextData(nsIDOMNode* aNode, 
+                              nsAString& aOutputStr);
+
+  /**
+   * Appends a string by replacing all line-endings
+   * by mLineBreak, except in the case of raw output.
+   * It increments the column position.
+   */
+  virtual void AppendToStringConvertLF(const nsAString& aStr,
+                                       nsAString& aOutputStr);
+
+  /**
+   * Appends a string by wrapping it when necessary.
+   * It updates the column position.
+   */
+  virtual void AppendToStringWrapped(const nsASingleFragmentString& aStr,
+                                     nsAString& aOutputStr);
+
+  /**
+   * Appends a string by formating and wrapping it when necessary
+   * It updates the column position.
+   */
+  virtual void AppendToStringFormatedWrapped(const nsASingleFragmentString& aStr,
+                                             nsAString& aOutputStr);
+
+  // used by AppendToStringWrapped
+  void AppendWrapped_WhitespaceSequence(
+          nsASingleFragmentString::const_char_iterator &aPos,
+          const nsASingleFragmentString::const_char_iterator aEnd,
+          const nsASingleFragmentString::const_char_iterator aSequenceStart,
+          nsAString &aOutputStr);
+
+  // used by AppendToStringFormatedWrapped
+  void AppendFormatedWrapped_WhitespaceSequence(
+          nsASingleFragmentString::const_char_iterator &aPos,
+          const nsASingleFragmentString::const_char_iterator aEnd,
+          const nsASingleFragmentString::const_char_iterator aSequenceStart,
+          PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
+          nsAString &aOutputStr);
+
+  // used by AppendToStringWrapped and AppendToStringFormatedWrapped
+  void AppendWrapped_NonWhitespaceSequence(
+          nsASingleFragmentString::const_char_iterator &aPos,
+          const nsASingleFragmentString::const_char_iterator aEnd,
+          const nsASingleFragmentString::const_char_iterator aSequenceStart,
+          PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
+          PRBool &aSequenceStartAfterAWhiteSpace,
+          nsAString &aOutputStr);
+
+  /**
+   * add mLineBreak to the string
+   * It updates the column position and other flags.
+   */
+  virtual void AppendNewLineToString(nsAString& aOutputStr);
+
+
+  /**
+   * Appends a string by translating entities
+   * It doesn't increment the column position
+   */
+  virtual void AppendAndTranslateEntities(const nsAString& aStr,
+                                          nsAString& aOutputStr);
+
+  /**
+   * retrieve the text content of the node and append it to the given string
+   * It doesn't increment the column position
+   */
+  nsresult AppendTextData(nsIDOMNode* aNode,
                           PRInt32 aStartOffset,
                           PRInt32 aEndOffset,
                           nsAString& aStr,
-                          PRBool aTranslateEntities,
-                          PRBool aIncrColumn);
+                          PRBool aTranslateEntities);
+
   virtual nsresult PushNameSpaceDecl(const nsAString& aPrefix,
                                      const nsAString& aURI,
                                      nsIDOMElement* aOwner);
@@ -140,24 +222,120 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * GenerateNewPrefix generates a new prefix and writes it to aPrefix
    */
   void GenerateNewPrefix(nsAString& aPrefix);
+
+  PRUint32 ScanNamespaceDeclarations(nsIContent* aContent,
+                                     nsIDOMElement *aOriginalElement,
+                                     const nsAString& aTagNamespaceURI);
+
+  virtual void SerializeAttributes(nsIContent* aContent,
+                                   nsIDOMElement *aOriginalElement,
+                                   nsAString& aTagPrefix,
+                                   const nsAString& aTagNamespaceURI,
+                                   nsIAtom* aTagName,
+                                   nsAString& aStr,
+                                   PRUint32 aSkipAttr,
+                                   PRBool aAddNSAttr);
+
   void SerializeAttr(const nsAString& aPrefix,
                      const nsAString& aName,
                      const nsAString& aValue,
                      nsAString& aStr,
                      PRBool aDoEscapeEntities);
-  PRBool IsShorthandAttr(const nsIAtom* aAttrName,
-                         const nsIAtom* aElementName);
 
-  virtual void AppendToStringConvertLF(const nsAString& aStr,
-                                       nsAString& aOutputStr);
+  virtual PRBool IsJavaScript(nsIContent * aContent,
+                              nsIAtom* aAttrNameAtom,
+                              PRInt32 aAttrNamespaceID,
+                              const nsAString& aValueString);
+
+  /**
+   * This method can be redefined to check if the element can be serialized.
+   * It is called when the serialization of the start tag is asked 
+   * (AppendElementStart)
+   * In this method you can also force the formating
+   * by setting aForceFormat to PR_TRUE.
+   * @return boolean  PR_TRUE if the element can be output
+   */
+  virtual PRBool CheckElementStart(nsIContent * aContent,
+                                   PRBool & aForceFormat,
+                                   nsAString& aStr);
+
+  /**
+   * this method is responsible to finish the start tag,
+   * in particulary to append the "greater than" sign
+   */
+  virtual void AppendEndOfElementStart(nsIDOMElement *aOriginalElement,
+                                       nsIAtom * aName,
+                                       PRInt32 aNamespaceID,
+                                       nsAString& aStr);
+
+  /**
+   * This method can be redefine to serialize additional things just after
+   * after the serialization ot the start tag.
+   * (called at the end of AppendElementStart)
+   */
+  virtual void AfterElementStart(nsIContent * aContent,
+                                 nsIDOMElement *aOriginalElement,
+                                 nsAString& aStr) { };
+
+  /**
+   * This method can be redefined to check if the element can be serialized.
+   * It is called when the serialization of the end tag is asked 
+   * (AppendElementEnd)
+   * In this method you can also force the formating
+   * by setting aForceFormat to PR_TRUE.
+   * @return boolean  PR_TRUE if the element can be output
+   */
+  virtual PRBool CheckElementEnd(nsIContent * aContent,
+                                 PRBool & aForceFormat,
+                                 nsAString& aStr);
+
+  /**
+   * This method can be redefine to serialize additional things just after
+   * after the serialization ot the end tag.
+   * (called at the end of AppendElementStart)
+   */
+  virtual void AfterElementEnd(nsIContent * aContent,
+                               nsAString& aStr) { };
+
+  /**
+   * Returns PR_TRUE if a line break should be inserted before an element open tag
+   */
+  virtual PRBool LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName);
+
+  /**
+   * Returns PR_TRUE if a line break should be inserted after an element open tag
+   */
+  virtual PRBool LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName);
+
+  /**
+   * Returns PR_TRUE if a line break should be inserted after an element close tag
+   */
+  virtual PRBool LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName);
+
+  /**
+   * Returns PR_TRUE if a line break should be inserted after an element close tag
+   */
+  virtual PRBool LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName);
+
+  /**
+   * add intendation. Call only in the case of formating and if the current
+   * position is at 0. It updates the column position.
+   */
+  void AppendIndentation(nsAString& aStr);
+  virtual void IncrIndentation(nsIAtom* aName);
+  virtual void DecrIndentation(nsIAtom* aName);
 
   // Functions to check for newlines that needs to be added between nodes in
-  // the root of a document.
-  void MaybeAddNewline(nsAString& aStr);
-  void MaybeFlagNewline(nsIDOMNode* aNode);
+  // the root of a document. See mAddNewlineForRootNode
+  void MaybeAddNewlineForRootNode(nsAString& aStr);
+  void MaybeFlagNewlineForRootNode(nsIDOMNode* aNode);
+
+  // Functions to check if we enter in or leave from a preformated content
+  virtual void MaybeEnterInPreContent(nsIContent* aNode);
+  virtual void MaybeLeaveFromPreContent(nsIContent* aNode);
 
   PRInt32 mPrefixIndex;
-  
+
   struct NameSpaceDecl {
     nsString mPrefix;
     nsString mURI;
@@ -175,11 +353,53 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   // The charset that was passed to Init()
   nsCString mCharset;
   
-  // current column position
+  // current column position on the current line
   PRInt32   mColPos;
 
+  // true = pretty formating should be done (OutputFormated flag)
+  PRPackedBool mDoFormat;
+
+  // true = no formatting,(OutputRaw flag)
+  // no newline convertion and no rewrap long lines even if OutputWrap is set.
+  PRPackedBool mDoRaw;
+
+  // true = wrapping should be done (OutputWrap flag)
+  PRPackedBool mDoWrap;
+
+  // number of maximum column in a line, in the wrap mode
+  PRInt32   mMaxColumn;
+
+  // current indent value
+  nsString   mIndent;
+
+  // this is the indentation level after the indentation reached
+  // the maximum length of indentation
+  PRInt32    mIndentOverflow;
+
+  // says if the indentation has been already added on the current line
+  PRPackedBool mIsIndentationAddedOnCurrentLine;
+
+  // the string which is currently added is in an attribute
   PRPackedBool mInAttribute;
-  PRPackedBool mAddNewline;
+
+  // true = a newline character should be added. It's only
+  // useful when serializing root nodes. see MaybeAddNewlineForRootNode and
+  // MaybeFlagNewlineForRootNode
+  PRPackedBool mAddNewlineForRootNode;
+
+  // Indicates that a space will be added if and only if content is
+  // continued on the same line while serializing source.  Otherwise,
+  // the newline character acts as the whitespace and no space is needed.
+  // used when mDoFormat = true
+  PRPackedBool  mAddSpace;
+
+  // says that if the next string to add contains a newline character at the
+  // begining, then this newline character should be ignored, because a
+  // such character has already been added into the output string
+  PRPackedBool  mMayIgnoreLineBreakSequence;
+
+  // number of nested elements which have preformated content
+  PRInt32       mPreLevel;
 };
 
 nsresult

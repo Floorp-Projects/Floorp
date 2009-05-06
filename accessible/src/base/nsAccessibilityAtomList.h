@@ -171,6 +171,7 @@ ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
 ACCESSIBILITY_ATOM(linkedPanel, "linkedpanel") // XUL
 ACCESSIBILITY_ATOM(longDesc, "longdesc")
+ACCESSIBILITY_ATOM(max, "max") // XUL
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
 ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
 ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
