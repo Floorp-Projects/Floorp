@@ -3223,7 +3223,7 @@ nsAccessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (!mDOMNode)
+  if (IsDefunct())
     return NS_ERROR_FAILURE;  // Node already shut down
 
  if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
@@ -3232,12 +3232,19 @@ nsAccessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ENSURE_STATE(content);
 
-  PRInt32 result = NS_OK;
-  nsAutoString value;
-  if (content->GetAttr(kNameSpaceID_None, aProperty, value))
-    *aValue = value.ToFloat(&result);
+  nsAutoString attrValue;
+  content->GetAttr(kNameSpaceID_None, aProperty, attrValue);
 
-  return result;
+  // Return zero value if there is no attribute or its value is empty.
+  if (attrValue.IsEmpty())
+    return NS_OK;
+
+  PRInt32 error = NS_OK;
+  double value = attrValue.ToFloat(&error);
+  if (NS_SUCCEEDED(error))
+    *aValue = value;
+
+  return NS_OK;
 }
 
 PRUint32
