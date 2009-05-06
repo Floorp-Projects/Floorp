@@ -66,12 +66,6 @@
 # define GENERATOR_INIT                 js_InitNullClass
 #endif
 
-#if JS_HAS_NO_SUCH_METHOD
-# define NO_SUCH_METHOD_INIT            js_InitNoSuchMethodClass
-#else
-# define NO_SUCH_METHOD_INIT            js_InitNullClass
-#endif
-
 #if JS_HAS_FILE_OBJECT
 # define FILE_INIT                      js_InitFileClass
 #else
@@ -111,11 +105,7 @@ JS_PROTO(URIError,              24,     js_InitExceptionClasses)
 JS_PROTO(Generator,             25,     GENERATOR_INIT)
 JS_PROTO(Iterator,              26,     js_InitIteratorClasses)
 JS_PROTO(StopIteration,         27,     js_InitIteratorClasses)
-JS_PROTO(UnusedProto28,         28,     js_InitNullClass)
-JS_PROTO(File,                  29,     FILE_INIT)
-JS_PROTO(Block,                 30,     js_InitBlockClass)
-JS_PROTO(XMLFilter,             31,     XMLFILTER_INIT)
-JS_PROTO(NoSuchMethod,          32,     NO_SUCH_METHOD_INIT)
+JS_PROTO(File,                  28,     FILE_INIT)
 
 #undef SCRIPT_INIT
 #undef XML_INIT
@@ -125,4 +115,3 @@ JS_PROTO(NoSuchMethod,          32,     NO_SUCH_METHOD_INIT)
 #undef ATTRIBUTE_INIT
 #undef GENERATOR_INIT
 #undef FILE_INIT
-#undef NO_SUCH_METHOD_INIT
