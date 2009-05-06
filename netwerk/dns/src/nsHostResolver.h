@@ -225,7 +225,8 @@ public:
         RES_BYPASS_CACHE = 1 << 0,
         RES_CANON_NAME   = 1 << 1,
         RES_PRIORITY_MEDIUM   = 1 << 2,
-        RES_PRIORITY_LOW  = 1 << 3
+        RES_PRIORITY_LOW  = 1 << 3,
+        RES_SPECULATE     = 1 << 4   
     };
 
 private:

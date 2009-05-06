@@ -46,7 +46,7 @@ interface nsIDNSListener;
 /**
  * nsIDNSService
  */
-[scriptable, uuid(ee4d9f1d-4f99-4384-b547-29da735f8b6e)]
+[scriptable, uuid(c1a56a45-8fa3-44e6-9f01-38c91c858cf9)]
 interface nsIDNSService : nsISupports
 {
     /**
@@ -114,4 +114,10 @@ interface nsIDNSService : nsISupports
      */
     const unsigned long RESOLVE_PRIORITY_MEDIUM = (1 << 2);
     const unsigned long RESOLVE_PRIORITY_LOW    = (1 << 3);
+
+    /**
+     * if set, indicates request is speculative. Speculative requests 
+     * return errors if prefetching is disabled by configuration.
+     */
+    const unsigned long RESOLVE_SPECULATE = (1 << 4);
 };
