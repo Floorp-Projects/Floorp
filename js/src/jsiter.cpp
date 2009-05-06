@@ -50,6 +50,7 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsexn.h"
