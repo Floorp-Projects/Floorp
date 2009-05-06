@@ -90,8 +90,6 @@
             <xul:menuitem class="open-engine-manager"
                           anonid="open-engine-manager"
                           label="&cmd_engineManager.label;"
-# The empty tooltiptext attribute is here to avoid bug 336231
-                          tooltiptext=""
                           oncommand="openManager(event);"/>
           </xul:menupopup>
         </xul:button>
