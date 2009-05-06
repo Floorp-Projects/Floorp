@@ -157,21 +157,21 @@ NS_IMETHODIMP nsWifiMonitor::Run()
 
   if (mKeepGoing && NS_FAILED(rv)) {
 
+    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
+
     // send error
     for (PRUint32 i = 0; i < mListeners.Length(); i++) {
-      
       LOG(("About to send error to a listener\n"));
-      
+
       nsCOMPtr<nsIWifiListener> proxy;
-      nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = do_GetService("@mozilla.org/xpcomproxy;1");
       proxyObjMgr->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                                      NS_GET_IID(nsIWifiListener),
                                      mListeners[i].mListener,
                                      NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                                      getter_AddRefs(proxy));
-      
+
       if (proxy) {
-        nsresult rv = proxy->OnError(rv);
+        proxy->OnError(rv);
         LOG( ("... sent %d\n", rv));
       }
     }
