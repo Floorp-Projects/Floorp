@@ -2449,16 +2449,16 @@ js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
 #ifdef JS_THREADSAFE
 #include "prinrval.h"
 
-uint32 
-js_IntervalNow() 
+JS_FRIEND_API(uint32)
+js_IntervalNow()
 {
     return uint32(PR_IntervalToMilliseconds(PR_IntervalNow()));
 }
 
 #else /* !JS_THREADSAFE */
 
-uint32 
-js_IntervalNow() 
+JS_FRIEND_API(uint32)
+js_IntervalNow()
 {
     return uint32(PRMJ_Now() / PRMJ_USEC_PER_MSEC);
 }
