@@ -64,6 +64,7 @@ _TEST_FILES =\
 		nsIAccessibleEditableText.js \
 		relations.js \
 		role.js \
+		value.js \
 		test_accessnode_invalidation.html \
 		test_actions_aria.html \
 	$(warning test_actions_inputs.html temporarily disabled) \
@@ -78,7 +79,6 @@ _TEST_FILES =\
 		test_descr.html \
 		test_elm_filectrl.html \
 		test_elm_media.html \
-		test_elm_prgrsmtr.xul \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_mutation.html \
@@ -121,6 +121,7 @@ _TEST_FILES =\
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \
+		test_value.xul \
 		testTextboxes.js \
 		treeview.js \
 		z_states_frame.html \

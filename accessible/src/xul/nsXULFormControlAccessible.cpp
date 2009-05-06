@@ -579,16 +579,25 @@ nsXULProgressMeterAccessible::GetCurrentValue(double *aCurrentValue)
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
-  nsAutoString currentValue;
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, currentValue);
+  nsAutoString attrValue;
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, attrValue);
 
-  PRInt32 result = NS_OK;
-  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::max))
-    *aCurrentValue = currentValue.ToFloat(&result);
-  else
-    *aCurrentValue = currentValue.ToFloat(&result) / 100;
+  // Return zero value if there is no attribute or its value is empty.
+  if (attrValue.IsEmpty())
+    return NS_OK;
 
-  return result;
+  PRInt32 error = NS_OK;
+  double value = attrValue.ToFloat(&error);
+  if (NS_FAILED(error))
+    return NS_OK; // Zero value because of wrong markup.
+
+  // If no max value then value is between 0 and 1 (refer to GetMaximumValue()
+  // method where max value is assumed to be equal to 1 in this case).
+  if (!content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::max))
+    value /= 100;
+
+  *aCurrentValue = value;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
