@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Mitchell Field (mitch_1_2@live.com.au)
+ *    Mitchell Field <mitch_1_2@live.com.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -181,6 +181,10 @@ nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
         if (tokenEnd == tokenStart) {
             star = PR_TRUE;
             tokenStart++;
+            // If the character following the '*' is a '.' character then skip
+            // it so that "*.foo.com" allows "foo.com".
+            if (override.FindChar('.', tokenStart) == tokenStart)
+                tokenStart++;
         } else {
             if (tokenEnd == -1)
                 tokenEnd = overrideLength;
@@ -229,10 +233,6 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
 
     nsCAutoString host;
     rv = aURI->GetHost(host);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 port;
-    rv = aURI->GetPort(&port);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (MatchOverride(host)) {
