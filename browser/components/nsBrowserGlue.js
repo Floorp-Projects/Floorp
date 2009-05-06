@@ -1038,22 +1038,26 @@ GeolocationPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
  
   prompt: function(request) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 
-    var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
+    var result = pm.testExactPermission(request.requestingURI, "geo");
 
-    if (prefService.hasPref(request.requestingURI, "geo.request.remember")) {
-        if (prefService.getPref(request.requestingURI, "geo.request.remember"))
-            request.allow();
-        else
-            request.cancel();
-        return;
+    if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      request.allow();
+      return;
+    }
+    
+    if (result == Ci.nsIPermissionManager.DENY_ACTION) {
+      request.cancel();
+      return;
     }
 
     function setPagePermission(uri, allow) {
-        var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
-        prefService.setPref(uri, "geo.request.remember", allow);
+      if (allow == true)
+        pm.add(uri, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
+      else
+        pm.add(uri, "geo", Ci.nsIPermissionManager.DENY_ACTION);
     }
-
 
     function getChromeWindow(aWindow) {
       var chromeWin = aWindow 
