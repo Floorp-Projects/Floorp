@@ -6396,39 +6396,6 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
 // Start Debugging
 
 #ifdef NS_DEBUG
-static PRBool
-InLineList(nsLineList& aLines, nsIFrame* aFrame)
-{
-  for (nsLineList::iterator line = aLines.begin(), line_end = aLines.end();
-       line != line_end;
-       ++line) {
-    nsIFrame* frame = line->mFirstChild;
-    PRInt32 n = line->GetChildCount();
-    while (--n >= 0) {
-      if (frame == aFrame) {
-        return PR_TRUE;
-      }
-      frame = frame->GetNextSibling();
-    }
-  }
-  return PR_FALSE;
-}
-
-static PRBool
-InSiblingList(nsLineList& aLines, nsIFrame* aFrame)
-{
-  if (! aLines.empty()) {
-    nsIFrame* frame = aLines.front()->mFirstChild;
-    while (frame) {
-      if (frame == aFrame) {
-        return PR_TRUE;
-      }
-      frame = frame->GetNextSibling();
-    }
-  }
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsBlockFrame::VerifyTree() const
 {
