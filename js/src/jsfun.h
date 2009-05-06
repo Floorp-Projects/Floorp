@@ -263,7 +263,7 @@ extern JS_FRIEND_API(JSBool)
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
-js_XDRFunction(JSXDRState *xdr, JSObject **objp);
+js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
 
 typedef enum JSLocalKind {
     JSLOCAL_NONE,

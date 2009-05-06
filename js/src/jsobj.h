@@ -434,6 +434,9 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
 extern JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind);
 
+JSBool
+js_XDRBlockObject(JSXDRState *xdr, JSObject **objp);
+
 struct JSSharpObjectMap {
     jsrefcount  depth;
     jsatomid    sharpgen;
@@ -473,9 +476,6 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
 
 extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
-
-extern JSObject *
-js_InitBlockClass(JSContext *cx, JSObject* obj);
 
 extern JSObject *
 js_InitEval(JSContext *cx, JSObject *obj);

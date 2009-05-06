@@ -1257,8 +1257,8 @@ fun_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 #if JS_HAS_XDR
 
 /* XXX store parent and proto, if defined */
-static JSBool
-fun_xdrObject(JSXDRState *xdr, JSObject **objp)
+JSBool
+js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
     JSFunction *fun;
@@ -1440,7 +1440,7 @@ bad:
 
 #else  /* !JS_HAS_XDR */
 
-#define fun_xdrObject NULL
+#define js_XDRFunctionObject NULL
 
 #endif /* !JS_HAS_XDR */
 
@@ -1562,7 +1562,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     fun_convert,      fun_finalize,
     NULL,             NULL,
     NULL,             NULL,
-    fun_xdrObject,    fun_hasInstance,
+    js_XDRFunctionObject, fun_hasInstance,
     JS_CLASS_TRACE(fun_trace), fun_reserveSlots
 };
 
