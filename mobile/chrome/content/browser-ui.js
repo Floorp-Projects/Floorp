@@ -374,7 +374,7 @@ var BrowserUI = {
       var engine = engines[e];
       button.id = engine.name;
       button.setAttribute("label", engine.name);
-      button.className = "searchengine";
+      button.className = "searchengine show-text button-dark";
       if (engine.iconURI)
         button.setAttribute("image", engine.iconURI.spec);
       container.appendChild(button);

@@ -220,12 +220,12 @@
     <!-- end: Browser View -->
 
     <!-- begin: left bar -->
-    <vbox id="tabs-container" style="-moz-stack-sizing: ignore; width: 132px; height: 420px;"
+    <vbox id="tabs-container" class="panel-dark" style="-moz-stack-sizing: ignore; width: 132px; height: 420px;"
           left="-132" top="60"
           constraint="ignore-y,vp-relative">
       <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onmouseup="BrowserUI.hideTabs();" onclosetab="BrowserUI.closeTab(this);"/>
       <hbox id="tabs-controls">
-        <toolbarbutton id="newtab-button" command="cmd_newTab"/>
+        <toolbarbutton id="newtab-button" class="button-dark" command="cmd_newTab"/>
       </hbox>
     </vbox>
     <!-- barrier to the right of the left sidebar -->
@@ -236,21 +236,20 @@
     <!-- begin: right bar -->
     <!-- barrier to the left of the right bar -->
     <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
-    <vbox id="browser-controls" style="-moz-stack-sizing: ignore;"
+    <vbox id="browser-controls" class="panel-dark" style="-moz-stack-sizing: ignore;"
           left="800" top="60"
           width="80" height="420"
           constraint="ignore-y,vp-relative">
-      <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
-      <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
-      <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
+      <toolbarbutton id="tool-star" class="browser-control-button button-dark" command="cmd_star"/>
+      <toolbarbutton id="tool-back" class="browser-control-button button-dark" command="cmd_back"/>
+      <toolbarbutton id="tool-forward" class="browser-control-button button-dark" command="cmd_forward"/>
       <toolbarspring/>
-      <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions" hidden="true"/>
-      <toolbarbutton id="tool-panel-open" class="page-button" command="cmd_panel"/>
+      <toolbarbutton id="tool-panel-open" class="page-button button-dark" command="cmd_panel"/>
     </vbox>
     <!-- end: right bar -->
 
     <!-- begin: Main Toolbar -->
-    <toolbar id="toolbar-main" style="-moz-stack-sizing: ignore; width: 800px; height: 60px" top="-60" left="0" constraint="ignore-x,vp-relative">
+    <toolbar id="toolbar-main" class="panel-dark" style="-moz-stack-sizing: ignore; width: 800px; height: 60px" top="-60" left="0" constraint="ignore-x,vp-relative">
       <hbox id="urlbar-container" flex="1">
         <box id="identity-box"
              onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
@@ -273,13 +272,13 @@
                    ontextentered="BrowserUI.goToURI();"
                    clickSelectsAll="true"/>
         </hbox>
-        <hbox id="urlbar-icons">
+        <hbox id="urlbar-icons" mode="view">
           <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
           <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
           <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
         </hbox>
       </hbox>
-      <toolbarbutton id="tool-bookmarks" class="urlbar-button" command="cmd_bookmarks"/>
+      <toolbarbutton id="tool-bookmarks" class="urlbar-button button-dark" command="cmd_bookmarks"/>
     </toolbar>
     <!-- end: Main Toolbar -->
 
@@ -290,13 +289,13 @@
     </hbox>
 
     <!-- barrier to the left of the right bar -->
-    <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <hbox id="panel-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
-        <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
-        <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button" linkedpanel="downloads-container"/>
-        <toolbarbutton id="tool-preferences" type="radio" group="1" checked="1" class="panel-button" linkedpanel="prefs-container"/>
-        <toolbarbutton id="tool-panel-close" class="page-button" command="cmd_panel"/>
+        <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-dark" linkedpanel="addons-container"/>
+        <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button button-dark" linkedpanel="downloads-container"/>
+        <toolbarbutton id="tool-preferences" type="radio" group="1" checked="true" class="panel-button button-dark" linkedpanel="prefs-container"/>
+        <toolbarbutton id="tool-panel-close" type="check" checked="true" class="page-button button-dark" command="cmd_panel"/>
       </vbox>
       <deck id="panel-items" selectedIndex="2" flex="1">
         <vbox id="addons-container" flex="1">
@@ -346,7 +345,7 @@
 
         <vbox id="prefs-container" flex="1">
           <hbox pack="center" id="buttons"/>
-          <scrollbox orient="vertical" id="pref-list" seltype="single" flex="1">
+          <richlistbox id="pref-list" seltype="single" flex="1">
             <vbox class="prefsection">
               <label value="&content.title;" crop="end" flex="1"/>
             </vbox>
@@ -376,12 +375,12 @@
               &clear.private.data.description;
               <button label="&clear.private.data.button;" command="cmd_sanitize"/>
             </richpref>
-          </scrollbox>
+          </richlistbox>
         </vbox>
       </deck>
     </hbox>
 
-    <vbox id="popup_autocomplete" style="-moz-stack-sizing: ignore;" top="60" left="0" constraint="ignore-x,vp-relative">
+    <vbox id="popup_autocomplete" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0" constraint="ignore-x,vp-relative">
       <arrowscrollbox id="autocomplete_navbuttons"
                       align="center"
                       flex="1"
@@ -391,18 +390,18 @@
       </arrowscrollbox>
     </vbox>
 
-    <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
+    <vbox id="bookmark-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <hbox id="bookmark-form" align="start">
         <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
       </hbox>
     </vbox>
 
-    <vbox id="bookmarklist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="bookmarklist-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <hbox id="bookmarklist-header" style="height: 60px">
         <description flex="1">&bookmarksHeader.label;</description>
-        <toolbarbutton id="tool-bookmarks-manage" class="text-button" label="&bookmarksManage.label;"
+        <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="check" autocheck="true" label="&bookmarksManage.label;"
                        oncommand="BookmarkList.toggleManage();"/>
-        <toolbarbutton id="tool-bookmarks-close" class="urlbar-button"
+        <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-dark" type="check" checked="true"
                        oncommand="BookmarkList.close();"/>
       </hbox>
       <placelist id="bookmark-items" type="bookmarks" flex="1"
@@ -410,10 +409,10 @@
                  onopen="BookmarkList.openBookmark();"/>
     </vbox>
 
-    <vbox id="folder-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="folder-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <hbox id="folder-header" style="height: 60px">
         <description flex="1">&foldersHeader.label;</description>
-        <toolbarbutton id="tool-folders-close" class="urlbar-button"
+        <toolbarbutton id="tool-folders-close" class="urlbar-button button-dark" type="check" checked="true"
                        oncommand="FolderPicker.close()"/>
       </hbox>
       <placetree id="folder-items" type="bookmarks" mode="folders" flex="1" onselect="FolderPicker.moveItem();"/>

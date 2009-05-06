@@ -44,7 +44,6 @@
 #toolbar-main {
   -moz-appearance: none;
   -moz-box-align: center;
-  background: url("chrome://browser/skin/images/toolbar_background.png") repeat-x;
   padding: 0px 10px;
   border: none;
 }
@@ -52,14 +51,19 @@
 toolbarbutton {
   -moz-appearance: none !important;
   -moz-box-orient: vertical;
-  min-width: 0px;
+  min-width: 48px;
+  min-height: 48px;
   /* override default toolbarbutton padding/margin */
   margin: 0;
   padding: 5px;
 }
 
-toolbarbutton:not(.searchengine) .toolbarbutton-text {
+toolbarbutton:not(.show-text) .toolbarbutton-text {
   display: none !important;
+}
+
+toolbarbutton:not(.show-text) .toolbarbutton-icon {
+  -moz-margin-end: 0px;
 }
 
 toolbarbutton:hover,
@@ -70,53 +74,32 @@ toolbarbutton[open="true"] {
 
 /* main toolbar buttons */
 toolbarbutton.urlbar-button {
-  list-style-image: url("chrome://browser/skin/images/toolbar.png");
-  /* -1px to align backgrounds with endcap */
-  padding: 0px;
-  margin-top: -1px;
-  /* space out the buttons a little bit horizontally */
-  -moz-padding-start: 10px !important;
+  /* space out the buttons a bit horizontally */
+  margin-left: 8px
 }
 
 #tool-bookmarks {
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#tool-bookmarks:hover:active {
-  -moz-image-region: rect(48px 48px 96px 0px);
+  list-style-image: url("chrome://browser/skin/images/bookmarks-24.png");
 }
 
 /* URL bar cap buttons */
 toolbarbutton.urlbar-cap-button {
-  list-style-image: url("chrome://browser/skin/images/toolbar.png");
-  /* position the button near the right edge of the endcap */
-  padding: 0;
-  padding-top: 5px;
-  -moz-padding-start: 24px;
+  margin: 2px;
+  padding: 0px;
+  min-width: 0px;
+  min-height: 0px;
 }
 
 #tool-go {
-  -moz-image-region: rect(0px 72px 24px 48px);
-}
-
-#urlbar-icons:hover:active > #tool-go {
-  -moz-image-region: rect(24px 72px 48px 48px);
+  list-style-image: url("chrome://browser/skin/images/go-16.png");
 }
 
 #tool-reload {
-  -moz-image-region: rect(0px 96px 24px 72px);
-}
-
-#urlbar-icons:hover:active > #tool-reload {
-  -moz-image-region: rect(24px 96px 48px 72px);
+  list-style-image: url("chrome://browser/skin/images/reload-16.png");
 }
 
 #tool-stop {
-  -moz-image-region: rect(0px 120px 24px 96px);
-}
-
-#urlbar-icons:hover:active > #tool-stop {
-  -moz-image-region: rect(24px 120px 48px 96px);
+  list-style-image: url("chrome://browser/skin/images/stop-16.png");
 }
 
 #urlbar-icons[mode="loading"] > #tool-go,
@@ -141,14 +124,49 @@ toolbarbutton.urlbar-cap-button {
   min-height: 60px;
 }
 
+/* creates the left endcap */
 #identity-box {
-  min-height: 49px;
-  min-width: 65px;
-  background: url("images/addressbar_endcap_l_off.png") top right no-repeat;
+  color: #fff;
+  padding: 6px 4px;
+  -moz-border-radius-topleft: 0.5em;
+  -moz-border-radius-bottomleft: 0.5em;
+  border-top: 4px solid #ccc;
+  border-left: 4px solid #ccc;
+  border-right: 4px solid #ccc;
+  border-bottom: 4px solid #aaa;
+  -moz-border-top-colors:#3b3b3b #6d6d6d #535353 #494949;
+  -moz-border-right-colors:#2d2d2d #484848 #484848 #414141;
+  -moz-border-left-colors:#2d2d2d #484848 #484848 #414141;
+  -moz-border-bottom-colors:#111111 #484848 #484848 #414141;
+  background: #414141;
 }
 
 #identity-box:hover:active {
-  background: url("images/addressbar_endcap_l_on.png") top right no-repeat;
+  -moz-border-top-colors:#323232 #111111 #272727 #2a2a2a;
+  -moz-border-right-colors:#323232 #111111 #272727 #2a2a2a;
+  -moz-border-left-colors:#323232 #111111 #272727 #2a2a2a;
+  -moz-border-bottom-colors:#515151 #111111 #272727 #2a2a2a;
+  background-color: #2d2d2d;
+}
+
+/* add special color and extra width */
+#identity-box.verifiedIdentity {
+  min-width: 50px;
+  -moz-border-top-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
+  -moz-border-right-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
+  -moz-border-left-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
+  -moz-border-bottom-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
+  background-color: #77c494;
+}
+
+/* add special color and extra width */
+#identity-box.verifiedDomain {
+  min-width: 50px;
+  -moz-border-top-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
+  -moz-border-right-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
+  -moz-border-left-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
+  -moz-border-bottom-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
+  background-color: #6ca0c9;
 }
 
 /* favicon images are 16x16 */
@@ -157,7 +175,7 @@ toolbarbutton.urlbar-cap-button {
   max-height: 24px;
   min-width: 24px;
   min-height: 24px;
-  margin: 12px 2px 2px 12px;
+  margin: 2px;
 }
 
 #urlbar-throbber[loading] {
@@ -170,126 +188,100 @@ toolbarbutton.urlbar-cap-button {
 }
 
 #urlbar-editarea {
-  min-height: 49px;
   -moz-box-align: center;
-  background: url("images/addressbar_middle.png") repeat-x;
-}
-
-#urlbar-caption {
-  margin: 2px 8px 2px 8px;
+  padding: 4px 4px;
+  border-top: 4px solid #ccc;
+  border-left: 4px solid #ccc;
+  border-right: 4px solid #ccc;
+  border-bottom: 4px solid #aaa;
+  -moz-border-top-colors:#414141 #aaa #dedede #efefef;
+  -moz-border-right-colors:#2d2d2d #dedede #efefef #fafafa;
+  -moz-border-left-colors:#2d2d2d #dedede #efefef #fafafa;
+  -moz-border-bottom-colors:#2d2d2d #fff #fff #fff;
+  background-color: #fff;
 }
 
 #urlbar-edit {
   -moz-appearance: none !important;
   padding: 0px !important;
   border: none !important;
-  background-color: transparent;
+  background-color: #fff;
 }
 
-/* urlbar toolbuttons images are 36x36 */
+/* make sure this endcap matches the other endcap */
 #urlbar-icons {
-  min-height: 49px;
-  min-width: 65px;
-  -moz-box-align: start;
-  padding-top: 6px;
-  background: url("images/addressbar_endcap_r_off.png") no-repeat;
+  color: #fff;
+  padding: 9px 4px;
+  -moz-border-radius-topright: 0.5em;
+  -moz-border-radius-bottomright: 0.5em;
+  border-top: 4px solid #ccc;
+  border-left: 4px solid #ccc;
+  border-right: 4px solid #ccc;
+  border-bottom: 4px solid #aaa;
+  -moz-border-top-colors:#3b3b3b #6d6d6d #535353 #494949;
+  -moz-border-right-colors:#2d2d2d #484848 #484848 #414141;
+  -moz-border-left-colors:#2d2d2d #484848 #484848 #414141;
+  -moz-border-bottom-colors:#111111 #484848 #484848 #414141;
+  background: #414141;
 }
 
 #urlbar-icons:hover:active {
-  background: url("images/addressbar_endcap_r_on.png") no-repeat;
+  -moz-border-top-colors:#323232 #111111 #272727 #2a2a2a;
+  -moz-border-right-colors:#323232 #111111 #272727 #2a2a2a;
+  -moz-border-left-colors:#323232 #111111 #272727 #2a2a2a;
+  -moz-border-bottom-colors:#515151 #111111 #272727 #2a2a2a;
+  background-color: #2d2d2d;
 }
 
 /* right toolbar (browser controls) ---------------------------------------- */
 #browser-controls {
-  background: url("images/right_sidebar_middle.png") repeat-y;
-  /* first 10 pixels in right_sidebar_middle are a gradient */
-  /* end padding must match #toolbar-main */
-  padding: 0 10px;
-  /* ...and right-align so that the buttons line up with
-     the bookmark button in the main toolbar */
   -moz-box-align: end;
-}
-
-toolbarbutton.browser-control-button {
-  list-style-image: url("chrome://browser/skin/images/right_buttons.png");
+  padding: 0px 10px;
 }
 
 toolbarbutton.browser-control-button,
 toolbarbutton.panel-button,
 toolbarbutton.page-button {
   /* space out the buttons a bit vertically */
-  padding: 0;
-  padding-top: 8px;
+  margin-bottom: 8px;
 }
 
 #tool-star {
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#tool-star:hover:active {
-  -moz-image-region: rect(0px 96px 48px 48px);
+  list-style-image: url("chrome://browser/skin/images/bookmarkpage-24.png");
 }
 
 #tool-star[starred="true"] {
-  -moz-image-region: rect(0px 192px 48px 144px);
+  list-style-image: url("chrome://browser/skin/images/bookmarkpage-on-24.png");
 }
 
 #tool-back {
-  -moz-image-region: rect(48px 64px 112px 0px);
-  /* this button is 16px wider than the others, so offset by 8px */
-  -moz-margin-end: -8px;
-}
-
-#tool-back:hover:active {
-  -moz-image-region: rect(48px 128px 112px 64px);
+  list-style-image: url("chrome://browser/skin/images/back-24.png");
 }
 
 #tool-back[disabled="true"] {
-  -moz-image-region: rect(48px 192px 112px 128px) !important;
+  list-style-image: url("chrome://browser/skin/images/back-disabled-24.png");
 }
 
 #tool-forward {
-  -moz-image-region: rect(112px 48px 160px 0px);
-  /* cuddle up underneath the back button */
-  padding-top: 0px;
-}
-
-#tool-forward:hover:active {
-  -moz-image-region: rect(112px 96px 160px 48px);
+  list-style-image: url("chrome://browser/skin/images/forward-24.png");
 }
 
 #tool-forward[disabled="true"] {
-  -moz-image-region: rect(112px 144px 160px 96px) !important;
+  list-style-image: url("chrome://browser/skin/images/forward-disabled-24.png");
 }
 
-#tool-actions {
-  -moz-image-region: rect(160px 48px 208px 0px);
-}
-
-#tool-actions:hover:active {
-  -moz-image-region: rect(160px 96px 208px 48px);
-}
-
-toolbarbutton.page-button {
-  list-style-image: url("chrome://browser/skin/images/page_buttons.png");
-}
-
+/* button is moved off the right edge */
 #tool-panel-open {
-  -moz-image-region: rect(0px 62px 48px 0px);
+  list-style-image: url("chrome://browser/skin/images/settings-24.png");
   margin-right: -14px;
+  /* XXX not sure why we need the padding here, but not in #tool-panel-close */
+  padding-right: 24px;
 }
 
-#tool-panel-open:active {
-  -moz-image-region: rect(0px 124px 48px 62px);
-}
-
+/* button is moved off the left edge */
 #tool-panel-close {
-  -moz-image-region: rect(48px 124px 96px 62px);
+  list-style-image: url("chrome://browser/skin/images/back-24.png");
   margin-left: -14px;
-}
-
-#tool-panel-close:active {
-  -moz-image-region: rect(48px 62px 96px 0px);
 }
 
 /* "extras" panel UI   ----------------------------------------------------- */
@@ -298,79 +290,31 @@ toolbarbutton.page-button {
   padding: 0px 10px;
 }
 
-#panel-container {
-  background: url("images/panel_background.png") repeat-x;
-}
-
-toolbarbutton.panel-button {
-  list-style-image: url("chrome://browser/skin/images/panel_buttons.png");
-  /* override checked style */
-  background: none !important;
-  border-color: transparent !important;
-}
-
 #tool-addons {
-  -moz-image-region: rect(48px 48px 96px 0px);
-}
-
-#tool-addons:hover:active, #tool-addons[checked] {
-  -moz-image-region: rect(48px 96px 96px 48px);
+  list-style-image: url("chrome://browser/skin/images/addons-24.png");
 }
 
 #tool-downloads {
-  -moz-image-region: rect(96px 48px 144px 0px);
-}
-
-#tool-downloads:hover:active, #tool-downloads[checked] {
-  -moz-image-region: rect(96px 96px 144px 48px);
+  list-style-image: url("chrome://browser/skin/images/downloads-24.png");
 }
 
 #tool-preferences {
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#tool-preferences:hover:active, #tool-preferences[checked] {
-  -moz-image-region: rect(0px 96px 48px 48px);
+  list-style-image: url("chrome://browser/skin/images/preferences-24.png");
 }
 
 /* URL List and autocomplete navigation popup ------------------------------ */
-#tool-bookmarks-close {
-  -moz-image-region: rect(48px 48px 96px 0px);
-}
-
-#tool-bookmarks-close:hover:active {
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#tool-bookmarks-manage {
-  color: rgb(255,255,255);
-  border: 3px groove gray !important;
-  height: 46px;
-  padding-top: 2px;
-  -moz-border-radius: 6px;
-}
-
-#tool-bookmarks-manage .toolbarbutton-text {
-  display: block !important;
-}
-
+#tool-bookmarks-close,
 #tool-folders-close {
-  -moz-image-region: rect(48px 48px 96px 0px);
-}
-
-#tool-folders-close:hover:active {
-  -moz-image-region: rect(0px 48px 48px 0px);
+  list-style-image: url("chrome://browser/skin/images/bookmarks-24.png");
 }
 
 #bookmarklist-container {
-  background-color: rgb(123,125,123);
   padding: 0px;
 }
 
 #bookmarklist-header, #folder-header {
   color: rgb(255,255,255);
   -moz-box-align: center;
-  background: url("chrome://browser/skin/images/toolbar_background.png") repeat-x;
   padding: 0px 10px;
 }
 
@@ -444,7 +388,7 @@ placelabel {
 
 /* use a smaller font size for the manage buttons */
 placeitem .button-text {
-  font-size: 12pt !important;
+  font-size: 9pt !important;
 }
 
 .close-button {
@@ -455,47 +399,31 @@ placeitem .button-text {
   list-style-image: url("chrome://browser/skin/images/folder_close.png");
 }
 
-#popup_autocomplete {
-  background: url(images/navigation_background.png) repeat-x;
-  -moz-appearance: none;
-}
-
-.autocomplete-box {
-  padding: 5px;
-}
-
 .tool-search {
   list-style-image: url("chrome://browser/skin/images/navigation_magnifier.gif");
 }
 
 .searchengine {
   -moz-box-orient: horizontal;
-  color: white;
-}
-.searchengine > .toolbarbutton-text {
-  font-size: 12pt !important;
 }
 
 #autocomplete_navbuttons {
-  -moz-border-image: url(images/navigation_search_caps.png) 0 23 0 23;
-  border-width: 0 23px;
-  margin-top: 10px;
+  margin: 10px;
   min-height: 50px;
 }
 
 .autocomplete-items {
-  overflow: hidden;
-  -moz-border-image: url(images/navigation_url_caps.png) 25 24 25 24 stretch stretch;
-  border-width: 26px 25px;
+  background-color: #fff;
 }
 
 .autocomplete-item,
 .autocomplete-item-selected {
   padding: 5px 2px;
-  color: white;
+  border-bottom: 1px solid rgb(207,207,207);
 }
 
 .autocomplete-item-selected {
+  color: white;
   background-color: grey;
 }
 
@@ -513,7 +441,7 @@ placeitem .button-text {
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
-  background: url("images/left_sidebar_middle.png") rgb(87,87,87) top right repeat-y;
+  padding-left: 10px;
   min-width: 132px;
 }
 
@@ -548,23 +476,7 @@ vbox:first-child richlistitem[type="documenttab"]:only-child .documenttab-close 
 }
 
 #newtab-button {
-  list-style-image: url("images/left_buttons.png");
-  -moz-image-region: rect(0px 48px 48px 0px);
-}
-
-#newtab-button:hover:active {
-  list-style-image: url("images/left_buttons.png");
-  -moz-image-region: rect(0px 96px 48px 48px);
-}
-
-#retrievetab-button {
-  list-style-image: url("images/left_buttons.png");
-  -moz-image-region: rect(48px 48px 96px 0px);
-}
-
-#retrievetab-button:hover:active {
-  list-style-image: url("images/left_buttons.png");
-  -moz-image-region: rect(48px 96px 96px 48px);
+  list-style-image: url("images/newtab-24.png");
 }
 
 /* findbar   --------------------------------------------------------------- */
@@ -572,22 +484,13 @@ findbar {
   background: rgba(128, 128, 128, 0.75);
 }
 
-#findpanel {
-  padding: 0 !important;
-  -moz-appearance: none;
-  background: transparent;
-}
-
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  background-color: rgb(123,125,123);
   padding: 8px;
 }
 
 #bookmark-form {
-  background-color: rgb(207,207,207);
-  border: 2px solid #fff !important;
-  -moz-border-radius: 10px;
+  background-color: #fff;
   padding: 8px;
 }
 
@@ -595,8 +498,8 @@ findbar {
 /* Identity popup   -------------------------------------------------------- */
 /* Popup Icons */
 #identity-popup-icon {
-  height: 64px;
-  width: 64px;
+  height: 32px;
+  width: 32px;
   padding: 0;
   list-style-image: url("chrome://browser/skin/images/identity.png");
   -moz-image-region: rect(0px, 64px, 64px, 0px);
@@ -620,36 +523,32 @@ findbar {
   display: none;
 }
 
-#identity-popup-content-box > description,
-#identity-popup-encryption-label {
+#identity-popup-content-box > description {
+  font-size: 9pt !important;
   white-space: pre-wrap;
   -moz-padding-start: 15px;
   margin: 2px 0 4px;
 }
 
 #identity-popup-content-box > label {
+  font-size: 9pt !important;
   white-space: pre-wrap;
   -moz-padding-start: 15px;
   margin: 0;
-}
-
-#identity-popup-content-host ,
-#identity-popup-content-box.verifiedIdentity > #identity-popup-content-owner {
-  font-size: 1.2em;
 }
 
 #identity-popup-content-host {
   margin-top: 3px;
   margin-bottom: 5px;
   font-weight: bold;
-  max-width: 500px;
+  max-width: 240px;
 }
 
 #identity-popup-content-owner {
   margin-top: 4px;
   margin-bottom: 0 !important;
   font-weight: bold;
-  max-width: 500px;
+  max-width: 240px;
 }
 
 .verifiedDomain > #identity-popup-content-owner {
@@ -690,40 +589,37 @@ findbar {
 }
 
 /* Preferences window   ---------------------------------------------------- */
-#prefs-container {
-  background-color: rgb(123,125,123);
-}
-
+/* XXX should be a richlistitem */
 richpref {
   background-color: white;
   color: black;
 }
 
+/* XXX should be a richlistitem.section-header */
 .prefsection {
-  font-size: 1.5em ! important;
-  color: white;
-  background-color: grey;
-  padding: .2em 0 .2em 0;
+  font-weight: bold;
+  color: #000;
+  background-color: lightgray;
+  padding: 5px;
 }
 
+/* XXX should be a richlistitem */
 .prefbox {
-  padding: .3em .3em .3em .5em;
-  border: thin solid lightgrey;
+  padding: 5px;
+  border-bottom: 1px solid rgb(207,207,207);
+  -moz-box-align: center;
 }
 
+/* XXX should be a richlistitem description.title */
 .preftitle {
-  font-size: 1.25em ! important;
+  font-size: 9pt !important;
 }
 
+/* XXX should be a richlistitem description.normal */
 .prefdesc {
-  font-size: 1em ! important;
+  font-size: 8pt !important;
   color: grey;
   background-color: white;
-}
-
-/* BUG: This rule doesn't actually work; I don't know why. */
-richpref > button {
-  font-size: 1em ! important;
 }
 
 /* Shortcut editor   ------------------------------------------------------- */
