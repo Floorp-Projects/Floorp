@@ -119,6 +119,9 @@ typedef nsresult   (* GetXPTCallStubFunc)(REFNSIID, nsIXPTCProxy*, nsISomeInterf
 typedef void       (* DestroyXPTCallStubFunc)(nsISomeInterface*);
 typedef nsresult   (* InvokeByIndexFunc)(nsISupports*, PRUint32, PRUint32, nsXPTCVariant*);
 typedef PRBool     (* CycleCollectorFunc)(nsISupports*);
+typedef nsPurpleBufferEntry*
+                   (* CycleCollectorSuspect2Func)(nsISupports*);
+typedef PRBool     (* CycleCollectorForget2Func)(nsPurpleBufferEntry*);
 
 // PRIVATE AND DEPRECATED
 typedef NS_CALLBACK(XPCOMExitRoutine)(void);
@@ -193,6 +196,10 @@ typedef struct XPCOMFunctions{
     StringGetIsVoidFunc stringGetIsVoid;
     CStringSetIsVoidFunc cstringSetIsVoid;
     CStringGetIsVoidFunc cstringGetIsVoid;
+
+    // Added for Mozilla 1.9.2
+    CycleCollectorSuspect2Func cycleSuspect2Func;
+    CycleCollectorForget2Func cycleForget2Func;
 
 } XPCOMFunctions;
 

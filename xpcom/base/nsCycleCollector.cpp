@@ -175,8 +175,6 @@ struct nsCycleCollectorParams
     PRUint32 mShutdownCollections;
 #endif
     
-    PRUint32 mScanDelay;
-    
     nsCycleCollectorParams() :
 #ifdef DEBUG_CC
         mDoNothing     (PR_GetEnv("XPCOM_CC_DO_NOTHING") != NULL),
@@ -186,27 +184,13 @@ struct nsCycleCollectorParams
         mFaultIsFatal  (PR_GetEnv("XPCOM_CC_FAULT_IS_FATAL") != NULL),
         mLogPointers   (PR_GetEnv("XPCOM_CC_LOG_POINTERS") != NULL),
 
-        mShutdownCollections(DEFAULT_SHUTDOWN_COLLECTIONS),
+        mShutdownCollections(DEFAULT_SHUTDOWN_COLLECTIONS)
 #else
-        mDoNothing     (PR_FALSE),
+        mDoNothing     (PR_FALSE)
 #endif
-
-        // The default number of collections to "age" candidate
-        // pointers in the purple buffer before we decide that any
-        // garbage cycle they're in has stabilized and we want to
-        // consider scanning it.
-        //
-        // Making this number smaller causes:
-        //   - More time to be spent in the collector (bad)
-        //   - Less delay between forming garbage and collecting it (good)
-
-        mScanDelay(0)
     {
 #ifdef DEBUG_CC
-        char *s = PR_GetEnv("XPCOM_CC_SCAN_DELAY");
-        if (s)
-            PR_sscanf(s, "%d", &mScanDelay);
-        s = PR_GetEnv("XPCOM_CC_SHUTDOWN_COLLECTIONS");
+        char *s = PR_GetEnv("XPCOM_CC_SHUTDOWN_COLLECTIONS");
         if (s)
             PR_sscanf(s, "%d", &mShutdownCollections);
 #endif
@@ -234,11 +218,8 @@ struct nsCycleCollectorStats
 
     PRUint32 mFailedUnlink;
     PRUint32 mCollectedNode;
-    PRUint32 mBumpGeneration;
-    PRUint32 mZeroGeneration;
 
     PRUint32 mSuspectNode;
-    PRUint32 mSpills;    
     PRUint32 mForgetNode;
     PRUint32 mFreedWhilePurple;
   
@@ -268,11 +249,8 @@ struct nsCycleCollectorStats
     
         DUMP(mFailedUnlink);
         DUMP(mCollectedNode);
-        DUMP(mBumpGeneration);
-        DUMP(mZeroGeneration);
     
         DUMP(mSuspectNode);
-        DUMP(mSpills);
         DUMP(mForgetNode);
         DUMP(mFreedWhilePurple);
     
@@ -660,8 +638,6 @@ struct GCGraph
 // XXX Would be nice to have an nsHashSet<KeyType> API that has
 // Add/Remove/Has rather than PutEntry/RemoveEntry/GetEntry.
 typedef nsTHashtable<nsVoidPtrHashKey> PointerSet;
-typedef nsBaseHashtable<nsVoidPtrHashKey, PRUint32, PRUint32>
-    PointerSetWithGeneration;
 
 #ifdef DEBUG_CC
 static void
@@ -670,170 +646,168 @@ WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr);
 
 struct nsPurpleBuffer
 {
+private:
+    struct Block {
+        Block *mNext;
+        nsPurpleBufferEntry mEntries[128];
 
-#define ASSOCIATIVITY 2
-#define INDEX_LOW_BIT 6
-#define N_INDEX_BITS 13
-
-#define N_ENTRIES (1 << N_INDEX_BITS)
-#define N_POINTERS (N_ENTRIES * ASSOCIATIVITY)
-#define TOTAL_BYTES (N_POINTERS * PR_BYTES_PER_WORD)
-#define INDEX_MASK PR_BITMASK(N_INDEX_BITS)
-#define POINTER_INDEX(P) ((((PRUword)P) >> INDEX_LOW_BIT) & (INDEX_MASK))
-
-#if (INDEX_LOW_BIT + N_INDEX_BITS > (8 * PR_BYTES_PER_WORD))
-#error "index bit overflow"
-#endif
-
-    // This class serves as a generational wrapper around a pldhash
-    // table: a subset of generation zero lives in mCache, the
-    // remainder spill into the mBackingStore hashtable. The idea is
-    // to get a higher hit rate and greater locality of reference for
-    // generation zero, in which the vast majority of suspect/forget
-    // calls annihilate one another.
+        Block() : mNext(nsnull) {}
+    };
+public:
+    // This class wraps a linked list of the elements in the purple
+    // buffer.
 
     nsCycleCollectorParams &mParams;
+    PRUint32 mCount;
+    Block mFirstBlock;
+    nsPurpleBufferEntry *mFreeList;
+
+    // For objects compiled against Gecko 1.9 and 1.9.1.
+    PointerSet mCompatObjects;
 #ifdef DEBUG_CC
+    PointerSet mNormalObjects; // duplicates our blocks
     nsCycleCollectorStats &mStats;
 #endif
-    void* mCache[N_POINTERS];
-    PRUint32 mCurrGen;    
-    PointerSetWithGeneration mBackingStore;
     
 #ifdef DEBUG_CC
     nsPurpleBuffer(nsCycleCollectorParams &params,
                    nsCycleCollectorStats &stats) 
         : mParams(params),
-          mStats(stats),
-          mCurrGen(0)
+          mStats(stats)
     {
-        Init();
+        InitBlocks();
+        mNormalObjects.Init();
+        mCompatObjects.Init();
     }
 #else
     nsPurpleBuffer(nsCycleCollectorParams &params) 
-        : mParams(params),
-          mCurrGen(0)
+        : mParams(params)
     {
-        Init();
+        InitBlocks();
+        mCompatObjects.Init();
     }
 #endif
 
     ~nsPurpleBuffer()
     {
-        memset(mCache, 0, sizeof(mCache));
-        mBackingStore.Clear();
+        FreeBlocks();
     }
 
-    void Init()
+    void InitBlocks()
     {
-        memset(mCache, 0, sizeof(mCache));
-        mBackingStore.Init();
+        mCount = 0;
+        mFreeList = nsnull;
+        StartBlock(&mFirstBlock);
     }
 
-    void BumpGeneration();
-    void SelectAgedPointers(GCGraphBuilder &builder);
+    void StartBlock(Block *aBlock)
+    {
+        NS_ABORT_IF_FALSE(!mFreeList, "should not have free list");
+
+        // Put all the entries in the block on the free list.
+        nsPurpleBufferEntry *entries = aBlock->mEntries;
+        mFreeList = entries;
+        for (PRUint32 i = 1; i < NS_ARRAY_LENGTH(aBlock->mEntries); ++i) {
+            entries[i - 1].mNextInFreeList =
+                (nsPurpleBufferEntry*)(PRUword(entries + i) | 1);
+        }
+        entries[NS_ARRAY_LENGTH(aBlock->mEntries) - 1].mNextInFreeList =
+            (nsPurpleBufferEntry*)1;
+    }
+
+    void FreeBlocks()
+    {
+        Block *b = mFirstBlock.mNext; 
+        while (b) {
+            Block *next = b->mNext;
+            delete b;
+            b = next;
+        }
+        mFirstBlock.mNext = nsnull;
+    }
+
+    void SelectPointers(GCGraphBuilder &builder);
 
 #ifdef DEBUG_CC
     void NoteAll(GCGraphBuilder &builder);
+
+    PRBool Exists(void *p) const
+    {
+        return mNormalObjects.GetEntry(p) || mCompatObjects.GetEntry(p);
+    }
 #endif
 
-    PRBool Exists(void *p)
+    nsPurpleBufferEntry* NewEntry()
     {
-        PRUint32 idx = POINTER_INDEX(p);
-        for (PRUint32 i = 0; i < ASSOCIATIVITY; ++i) {
-            if (mCache[idx+i] == p)
-                return PR_TRUE;
+        if (!mFreeList) {
+            Block *b = new Block;
+            if (!b) {
+                return nsnull;
+            }
+            StartBlock(b);
+
+            // Add the new block as the second block in the list.
+            b->mNext = mFirstBlock.mNext;
+            mFirstBlock.mNext = b;
         }
-        PRUint32 gen;
-        return mBackingStore.Get(p, &gen);
+
+        nsPurpleBufferEntry *e = mFreeList;
+        mFreeList = (nsPurpleBufferEntry*)
+            (PRUword(mFreeList->mNextInFreeList) & ~PRUword(1));
+        return e;
     }
 
-    void Put(void *p)
+    nsPurpleBufferEntry* Put(nsISupports *p)
     {
-        PRUint32 idx = POINTER_INDEX(p);
-        for (PRUint32 i = 0; i < ASSOCIATIVITY; ++i) {
-            if (!mCache[idx+i]) {
-                mCache[idx+i] = p;
-                return;
-            }
+        nsPurpleBufferEntry *e = NewEntry();
+        if (!e) {
+            return nsnull;
         }
+
+        ++mCount;
+
+        e->mObject = p;
+
 #ifdef DEBUG_CC
-        mStats.mSpills++;
+        mNormalObjects.PutEntry(p);
 #endif
-        SpillOne(p);
+
+        // Caller is responsible for filling in result's mRefCnt.
+        return e;
     }
 
-    void Remove(void *p)     
+    void Remove(nsPurpleBufferEntry *e)
     {
-        PRUint32 idx = POINTER_INDEX(p);
-        for (PRUint32 i = 0; i < ASSOCIATIVITY; ++i) {
-            if (mCache[idx+i] == p) {
-                mCache[idx+i] = (void*)0;
-                return;
-            }
-        }
-        mBackingStore.Remove(p);
+        NS_ASSERTION(mCount != 0, "must have entries");
+
+#ifdef DEBUG_CC
+        mNormalObjects.RemoveEntry(e->mObject);
+#endif
+
+        e->mNextInFreeList =
+            (nsPurpleBufferEntry*)(PRUword(mFreeList) | PRUword(1));
+        mFreeList = e;
+
+        --mCount;
     }
 
-    void SpillOne(void* &p)
+    PRBool PutCompatObject(nsISupports *p)
     {
-        mBackingStore.Put(p, mCurrGen);
-        p = (void*)0;
+        ++mCount;
+        return !!mCompatObjects.PutEntry(p);
     }
 
-    void SpillAll()
+    void RemoveCompatObject(nsISupports *p)
     {
-        for (PRUint32 i = 0; i < N_POINTERS; ++i) {
-            if (mCache[i]) {
-                SpillOne(mCache[i]);
-            }
-        }
+        --mCount;
+        mCompatObjects.RemoveEntry(p);
     }
 
-    PRUint32 Count()
+    PRUint32 Count() const
     {
-        PRUint32 count = mBackingStore.Count();
-        for (PRUint32 i = 0; i < N_POINTERS; ++i) {
-            if (mCache[i]) {
-                ++count;
-            }
-        }
-        return count;
+        return mCount;
     }
 };
-
-static PLDHashOperator
-zeroGenerationCallback(const void*  ptr,
-                       PRUint32&    generation,
-                       void*        userArg)
-{
-#ifdef DEBUG_CC
-    nsPurpleBuffer *purp = static_cast<nsPurpleBuffer*>(userArg);
-    purp->mStats.mZeroGeneration++;
-#endif
-    generation = 0;
-    return PL_DHASH_NEXT;
-}
-
-void nsPurpleBuffer::BumpGeneration()
-{
-    SpillAll();
-    if (mCurrGen == 0xffffffff) {
-        mBackingStore.Enumerate(zeroGenerationCallback, this);
-        mCurrGen = 0;
-    } else {
-        ++mCurrGen;
-    }
-#ifdef DEBUG_CC
-    mStats.mBumpGeneration++;
-#endif
-}
-
-static inline PRBool
-SufficientlyAged(PRUint32 generation, nsPurpleBuffer *p)
-{
-    return generation + p->mParams.mScanDelay < p->mCurrGen;
-}
 
 struct CallbackClosure
 {
@@ -850,26 +824,62 @@ static PRBool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root);
 
 static PLDHashOperator
-ageSelectionCallback(const void*  ptr,
-                     PRUint32&    generation,
-                     void*        userArg)
+selectionCallback(nsVoidPtrHashKey* key, void* userArg)
 {
     CallbackClosure *closure = static_cast<CallbackClosure*>(userArg);
-    if (SufficientlyAged(generation, closure->mPurpleBuffer) &&
-        AddPurpleRoot(closure->mBuilder,
-                      static_cast<nsISupports *>(const_cast<void*>(ptr))))
+    if (AddPurpleRoot(closure->mBuilder,
+                      static_cast<nsISupports *>(
+                        const_cast<void*>(key->GetKey()))))
         return PL_DHASH_REMOVE;
 
     return PL_DHASH_NEXT;
 }
 
 void
-nsPurpleBuffer::SelectAgedPointers(GCGraphBuilder &aBuilder)
+nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
 {
-    // Rely on our caller having done a BumpGeneration first, which in
-    // turn calls SpillAll.
-    CallbackClosure closure(this, aBuilder);
-    mBackingStore.Enumerate(ageSelectionCallback, &closure);
+#ifdef DEBUG_CC
+    NS_ABORT_IF_FALSE(mCompatObjects.Count() + mNormalObjects.Count() ==
+                          mCount,
+                      "count out of sync");
+#endif
+
+    if (mCompatObjects.Count()) {
+        mCount -= mCompatObjects.Count();
+        CallbackClosure closure(this, aBuilder);
+        mCompatObjects.EnumerateEntries(selectionCallback, &closure);
+        mCount += mCompatObjects.Count(); // in case of allocation failure
+    }
+
+    // Walk through all the blocks.
+    for (Block *b = &mFirstBlock; b; b = b->mNext) {
+        for (nsPurpleBufferEntry *e = b->mEntries,
+                              *eEnd = e + NS_ARRAY_LENGTH(b->mEntries);
+            e != eEnd; ++e) {
+            if (!(PRUword(e->mObject) & PRUword(1))) {
+                // This is a real entry (rather than something on the
+                // free list).
+                if (AddPurpleRoot(aBuilder, e->mObject)) {
+#ifdef DEBUG_CC
+                    mNormalObjects.RemoveEntry(e->mObject);
+#endif
+                    --mCount;
+                    // Put this entry on the free list in case some
+                    // call to AddPurpleRoot fails and we don't rebuild
+                    // the free list below.
+                    e->mNextInFreeList = (nsPurpleBufferEntry*)
+                        (PRUword(mFreeList) | PRUword(1));
+                    mFreeList = e;
+                }
+            }
+        }
+    }
+
+    NS_WARN_IF_FALSE(mCount == 0, "AddPurpleRoot failed");
+    if (mCount == 0) {
+        FreeBlocks();
+        InitBlocks();
+    }
 }
 
 
@@ -931,8 +941,13 @@ struct nsCycleCollector
     nsCycleCollector();
     ~nsCycleCollector();
 
+    // The first pair of Suspect and Forget functions are only used by
+    // old XPCOM binary components.
     PRBool Suspect(nsISupports *n);
     PRBool Forget(nsISupports *n);
+    nsPurpleBufferEntry* Suspect2(nsISupports *n);
+    PRBool Forget2(nsPurpleBufferEntry *e);
+
     PRUint32 Collect(PRUint32 aTryCollections = 1);
     PRBool BeginCollection();
     PRBool FinishCollection();
@@ -1506,26 +1521,35 @@ AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
 
 #ifdef DEBUG_CC
 static PLDHashOperator
-noteAllCallback(const void* ptr, PRUint32& generation, void* userArg)
+noteAllCallback(nsVoidPtrHashKey* key, void* userArg)
 {
     GCGraphBuilder *builder = static_cast<GCGraphBuilder*>(userArg);
-    builder->NoteXPCOMRoot(static_cast<nsISupports *>(const_cast<void*>(ptr)));
+    builder->NoteXPCOMRoot(
+      static_cast<nsISupports *>(const_cast<void*>(key->GetKey())));
     return PL_DHASH_NEXT;
 }
 
 void
 nsPurpleBuffer::NoteAll(GCGraphBuilder &builder)
 {
-    SpillAll();
-    mBackingStore.Enumerate(noteAllCallback, &builder);
+    mCompatObjects.EnumerateEntries(noteAllCallback, &builder);
+
+    for (Block *b = &mFirstBlock; b; b = b->mNext) {
+        for (nsPurpleBufferEntry *e = b->mEntries,
+                              *eEnd = e + NS_ARRAY_LENGTH(b->mEntries);
+            e != eEnd; ++e) {
+            if (!(PRUword(e->mObject) & PRUword(1))) {
+                builder.NoteXPCOMRoot(e->mObject);
+            }
+        }
+    }
 }
 #endif
 
 void 
 nsCycleCollector::SelectPurple(GCGraphBuilder &builder)
 {
-    mPurpleBuf.BumpGeneration();
-    mPurpleBuf.SelectAgedPointers(builder);
+    mPurpleBuf.SelectPointers(builder);
 }
 
 void
@@ -2168,9 +2192,7 @@ nsCycleCollector::Suspect(nsISupports *n)
     }
 #endif
 
-    mPurpleBuf.Put(n);
-
-    return PR_TRUE;
+    return mPurpleBuf.PutCompatObject(n);
 }
 
 
@@ -2204,7 +2226,78 @@ nsCycleCollector::Forget(nsISupports *n)
     }
 #endif
 
-    mPurpleBuf.Remove(n);
+    mPurpleBuf.RemoveCompatObject(n);
+    return PR_TRUE;
+}
+
+nsPurpleBufferEntry*
+nsCycleCollector::Suspect2(nsISupports *n)
+{
+    // Re-entering ::Suspect during collection used to be a fault, but
+    // we are canonicalizing nsISupports pointers using QI, so we will
+    // see some spurious refcount traffic here. 
+
+    if (mScanInProgress)
+        return nsnull;
+
+    NS_ASSERTION(nsCycleCollector_isScanSafe(n),
+                 "suspected a non-scansafe pointer");
+    NS_ASSERTION(NS_IsMainThread(), "trying to suspect from non-main thread");
+
+    if (mParams.mDoNothing)
+        return nsnull;
+
+#ifdef DEBUG_CC
+    mStats.mSuspectNode++;
+
+    if (nsCycleCollector_shouldSuppress(n))
+        return nsnull;
+
+#ifndef __MINGW32__
+    if (mParams.mHookMalloc)
+        InitMemHook();
+#endif
+
+    if (mParams.mLogPointers) {
+        if (!mPtrLog)
+            mPtrLog = fopen("pointer_log", "w");
+        fprintf(mPtrLog, "S %p\n", static_cast<void*>(n));
+    }
+#endif
+
+    // Caller is responsible for filling in result's mRefCnt.
+    return mPurpleBuf.Put(n);
+}
+
+
+PRBool
+nsCycleCollector::Forget2(nsPurpleBufferEntry *e)
+{
+    // Re-entering ::Forget during collection used to be a fault, but
+    // we are canonicalizing nsISupports pointers using QI, so we will
+    // see some spurious refcount traffic here. 
+
+    if (mScanInProgress)
+        return PR_FALSE;
+
+    NS_ASSERTION(NS_IsMainThread(), "trying to forget from non-main thread");
+    
+#ifdef DEBUG_CC
+    mStats.mForgetNode++;
+
+#ifndef __MINGW32__
+    if (mParams.mHookMalloc)
+        InitMemHook();
+#endif
+
+    if (mParams.mLogPointers) {
+        if (!mPtrLog)
+            mPtrLog = fopen("pointer_log", "w");
+        fprintf(mPtrLog, "F %p\n", static_cast<void*>(e->mObject));
+    }
+#endif
+
+    mPurpleBuf.Remove(e);
     return PR_TRUE;
 }
 
@@ -2228,7 +2321,6 @@ nsCycleCollector::Freed(void *n)
         mStats.mForgetNode++;
         mStats.mFreedWhilePurple++;
         Fault("freed while purple", n);
-        mPurpleBuf.Remove(n);
         
         if (mParams.mLogPointers) {
             if (!mPtrLog)
@@ -2492,11 +2584,9 @@ nsCycleCollector::SuspectedCount()
 void
 nsCycleCollector::Shutdown()
 {
-    // Here we want to run a final collection on everything we've seen
-    // buffered, irrespective of age; then permanently disable
-    // the collector because the program is shutting down.
+    // Here we want to run a final collection and then permanently
+    // disable the collector because the program is shutting down.
 
-    mParams.mScanDelay = 0;
     Collect(SHUTDOWN_COLLECTIONS(mParams));
 
 #ifdef DEBUG_CC
@@ -2798,7 +2888,9 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                     while (!queue.IsDone()) {
                         PtrInfo *pi = queue.GetNext();
                         if (pi->mColor == white) {
-                            if (mPurpleBuf.Exists(pi->mPointer)) {
+                            if (pi->mLangID ==
+                                    nsIProgrammingLanguage::CPLUSPLUS &&
+                                mPurpleBuf.Exists(pi->mPointer)) {
                                 printf(
 "nsCycleCollector: %s %p in component %d\n"
 "  which was reference counted during the root/unlink/unroot phase of the\n"
@@ -2933,11 +3025,24 @@ NS_CycleCollectorSuspect(nsISupports *n)
     return PR_FALSE;
 }
 
-
 PRBool
 NS_CycleCollectorForget(nsISupports *n)
 {
     return sCollector ? sCollector->Forget(n) : PR_TRUE;
+}
+
+nsPurpleBufferEntry*
+NS_CycleCollectorSuspect2(nsISupports *n)
+{
+    if (sCollector)
+        return sCollector->Suspect2(n);
+    return nsnull;
+}
+
+PRBool
+NS_CycleCollectorForget2(nsPurpleBufferEntry *e)
+{
+    return sCollector ? sCollector->Forget2(e) : PR_TRUE;
 }
 
 
