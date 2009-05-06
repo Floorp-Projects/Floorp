@@ -214,7 +214,6 @@ ifdef ENABLE_JIT
 VPATH		+= $(srcdir)/nanojit
 
 INSTALLED_HEADERS += \
-		builtins.tbl    \
 		jsbuiltins.h    \
 		Assembler.h     \
 		LIR.h		\
