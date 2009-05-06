@@ -73,7 +73,7 @@
 #include "nsIPrefService.h"
 
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
@@ -596,9 +596,9 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     aScreenDragRect->height = destSize.height;
   }
 
-  nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(gfxIntSize(destSize.width, destSize.height),
-                        gfxImageSurface::ImageFormatARGB32);
+  nsRefPtr<gfxASurface> surface =
+    gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(destSize.width, destSize.height),
+                                                       gfxASurface::ImageFormatARGB32);
   if (!surface)
     return NS_ERROR_FAILURE;
 

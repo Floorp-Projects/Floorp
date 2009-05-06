@@ -326,6 +326,15 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
   PRUint16 renderMode = aContext->GetRenderMode();
 
+  switch (GetStyleSVG()->mTextRendering) {
+  case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
+    gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
+    break;
+  default:
+    gfx->SetAntialiasMode(gfxContext::MODE_COVERAGE);
+    break;
+  }
+
   if (renderMode != nsSVGRenderState::NORMAL) {
 
     gfxMatrix matrix = gfx->CurrentMatrix();
@@ -340,7 +349,6 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
       gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
     if (renderMode == nsSVGRenderState::CLIP_MASK) {
-      gfx->SetAntialiasMode(gfxContext::MODE_ALIASED);
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
       FillCharacters(&iter, gfx);
     } else {
@@ -446,9 +454,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
 {
   mRect.Empty();
 
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  GetCanvasTM(getter_AddRefs(ctm));
-  gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
+  gfxMatrix matrix = GetCanvasTM();
   if (matrix.IsSingular()) {
     return NS_ERROR_FAILURE;
   }
@@ -597,36 +603,34 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
   }
 }
 
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
+gfxRect
+nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
-  *_retval = nsnull;
+  mOverrideCanvasTM = NS_NewSVGMatrix(aToBBoxUserspace);
 
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
   SetupGlobalTransform(tmpCtx);
   CharacterIterator iter(this, PR_TRUE);
   iter.SetInitialMatrix(tmpCtx);
   AddCharactersToPath(&iter, tmpCtx);
-
   tmpCtx->IdentityMatrix();
-  return NS_NewSVGRect(_retval, tmpCtx->GetUserPathExtent());
+
+  mOverrideCanvasTM = nsnull;
+
+  return tmpCtx->GetUserPathExtent();
 }
 
 //----------------------------------------------------------------------
 // nsSVGGeometryFrame methods:
 
-/* readonly attribute nsIDOMSVGMatrix canvasTM; */
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
+gfxMatrix
+nsSVGGlyphFrame::GetCanvasTM()
 {
+  if (mOverrideCanvasTM) {
+    return nsSVGUtils::ConvertSVGMatrixToThebes(mOverrideCanvasTM);
+  }
   NS_ASSERTION(mParent, "null parent");
-  
-  nsSVGContainerFrame *containerFrame = static_cast<nsSVGContainerFrame*>
-                                                   (mParent);
-  nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
-  *aCTM = nsnull;
-  parentTM.swap(*aCTM);
-  return NS_OK;
+  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();
 }
 
 //----------------------------------------------------------------------
@@ -1266,12 +1270,7 @@ nsSVGGlyphFrame::GetGlobalTransform(gfxMatrix *aMatrix)
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  GetCanvasTM(getter_AddRefs(ctm));
-  if (!ctm)
-    return PR_FALSE;
-
-  *aMatrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
+  *aMatrix = GetCanvasTM();
   return !aMatrix->IsSingular();
 }
 
@@ -1280,7 +1279,9 @@ nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext)
 {
   gfxMatrix matrix;
   GetGlobalTransform(&matrix);
-  aContext->Multiply(matrix);
+  if (!matrix.IsSingular()) {
+    aContext->Multiply(matrix);
+  }
 }
 
 void

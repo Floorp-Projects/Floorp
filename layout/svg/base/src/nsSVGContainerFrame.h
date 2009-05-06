@@ -41,6 +41,8 @@
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGSVGElement.h"
+#include "gfxRect.h"
+#include "gfxMatrix.h"
 
 typedef nsContainerFrame nsSVGContainerFrameBase;
 
@@ -53,8 +55,12 @@ protected:
     nsSVGContainerFrameBase(aContext) {}
 
 public:
+  NS_DECLARE_FRAME_ACCESSOR(nsSVGContainerFrame)
+  
+  NS_DECL_QUERYFRAME
+
   // Returns the transform to our gfxContext (to device pixels, not CSS px)
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM() { return nsnull; }
+  virtual gfxMatrix GetCanvasTM() { return gfxMatrix(); }
 
   // nsIFrame:
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
@@ -83,6 +89,8 @@ protected:
     nsSVGContainerFrame(aContext) {}
 
 public:
+  NS_DECLARE_FRAME_ACCESSOR(nsSVGDisplayContainerFrame)
+
   NS_DECL_QUERYFRAME
 
   // nsIFrame:
@@ -107,7 +115,7 @@ public:
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   virtual PRBool GetMatrixPropagation();
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
   NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_TRUE; }
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_FALSE; }
 };

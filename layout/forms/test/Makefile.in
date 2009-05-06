@@ -48,6 +48,7 @@ _TEST_FILES =	test_bug287446.html \
 		bug287446_subframe.html \
 		test_bug345267.html \
 		test_bug348236.html \
+		test_bug378670.html \
 		test_bug402198.html \
 		test_bug411236.html \
 		test_bug446663.html \

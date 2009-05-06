@@ -72,8 +72,6 @@
 #include "nsIDOMEventGroup.h"
 #include "nsILinkHandler.h"
 
-#include "TransactionFactory.h"
-
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMStyleSheet.h"
@@ -88,7 +86,6 @@
 #include "nsIRangeUtils.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
-#include "nsVoidArray.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -97,8 +94,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIImage.h"
-#include "nsAOLCiter.h"
-#include "nsInternetCiter.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "SetDocTitleTxn.h"
@@ -703,21 +698,17 @@ nsHTMLEditor::IsBlockNode(nsIDOMNode *aNode)
 NS_IMETHODIMP 
 nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 {
-  nsRefPtr<EditTxn> txn;
-  nsresult result = TransactionFactory::GetNewTransaction(SetDocTitleTxn::GetCID(), getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  
-  {
-    result = static_cast<SetDocTitleTxn*>(txn.get())->Init(this, &aTitle);
+  nsRefPtr<SetDocTitleTxn> txn = new SetDocTitleTxn();
+  if (!txn)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_SUCCEEDED(result)) 
-    {
-      //Don't let Rules System change the selection
-      nsAutoTxnsConserveSelection dontChangeSelection(this);
+  nsresult result = txn->Init(this, &aTitle);
+  if (NS_FAILED(result))
+    return result;
 
-      result = nsEditor::DoTransaction(txn);  
-    }
-  }
-  return result;
+  //Don't let Rules System change the selection
+  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  return nsEditor::DoTransaction(txn);  
 }
 
 /* ------------ Block methods moved from nsEditor -------------- */
@@ -4347,9 +4338,10 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 {
   if (!aInRange) return NS_ERROR_NULL_POINTER;
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
-  nsVoidArray textNodes;  // we can't actually do anything during iteration, so store the text nodes in an array
-                          // don't bother ref counting them because we know we can hold them for the 
-                          // lifetime of this method
+  nsTArray<nsIDOMNode*> textNodes;
+  // we can't actually do anything during iteration, so store the text nodes in an array
+  // don't bother ref counting them because we know we can hold them for the 
+  // lifetime of this method
 
 
   // build a list of editable text nodes
@@ -4373,11 +4365,11 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
   // now that I have a list of text nodes, collapse adjacent text nodes
   // NOTE: assumption that JoinNodes keeps the righthand node
-  while (textNodes.Count() > 1)
+  while (textNodes.Length() > 1)
   {
     // we assume a textNodes entry can't be nsnull
-    nsIDOMNode *leftTextNode = (nsIDOMNode *)(textNodes.ElementAt(0));
-    nsIDOMNode *rightTextNode = (nsIDOMNode *)(textNodes.ElementAt(1));
+    nsIDOMNode *leftTextNode = textNodes[0];
+    nsIDOMNode *rightTextNode = textNodes[1];
     NS_ASSERTION(leftTextNode && rightTextNode,"left or rightTextNode null in CollapseAdjacentTextNodes");
 
     // get the prev sibling of the right node, and see if it's leftTextNode

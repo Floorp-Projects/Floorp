@@ -2596,6 +2596,8 @@ alloc_value(char *buf, int *len)
     for (i=0; i<*len; buf+=2 , i++) {
 	hex_to_byteval(buf, &value[i]);
     }
+    
+
     return value;
 }
 
@@ -2609,6 +2611,8 @@ isblankline(char *b)
    return PR_FALSE;
 }
 
+static int debug = 0;
+
 /*
  * Perform the Hash_DRBG (CAVS) for the RNG algorithm
  *
@@ -2620,243 +2624,377 @@ void
 drbg(char *reqfn)
 {
     char buf[2000];   /* test case has some very long lines, returned bits
-		       * as high as 800 bytes (6400 bits). That 1600 byte
-		       * plus a tag */
+     * as high as 800 bytes (6400 bits). That 1600 byte
+     * plus a tag */
     char buf2[2000]; 
     FILE *rngreq;       /* input stream from the REQUEST file */
     FILE *rngresp;      /* output stream to the RESPONSE file */
-    unsigned int i;
-    unsigned char *entropy = NULL;
-    int entropy_len = 0;
+    
+    unsigned int i, j;
+    PRBool predictionResistance = PR_FALSE;
     unsigned char *nonce =  NULL;
-    int nonce_len = 0;
-    unsigned char *personalization_string =  NULL;
-    int ps_len = 0;
-    unsigned char *return_bytes =  NULL;
-    unsigned char *predicted_return_bytes = NULL;
-    int return_bytes_len = 0;
-    unsigned char *additional_input =  NULL;
-    int additional_len = 0;
-    enum { NONE, INSTANTIATE, GENERATE, RESEED, UNINSTANTIATE } command =
-		NONE;
+    int nonceLen = 0;
+    unsigned char *personalizationString =  NULL;
+    int personalizationStringLen = 0;
+    unsigned char *additionalInput =  NULL;
+    int additionalInputLen = 0;
+    unsigned char *entropyInput = NULL;
+    int entropyInputLen = 0;
+    unsigned char predictedreturn_bytes[SHA256_LENGTH];
+    unsigned char return_bytes[SHA256_LENGTH];
+    int return_bytes_len = SHA256_LENGTH;
+    enum { NONE, INSTANTIATE, GENERATE, RESEED, RESULT } command =
+    NONE;
+    PRBool genResult = PR_FALSE;
     SECStatus rv;
-
+    
     rngreq = fopen(reqfn, "r");
     rngresp = stdout;
     while (fgets(buf, sizeof buf, rngreq) != NULL) {
-	/* a comment, skip it. */
-	if (buf[0] == '#') { 
-	    fputs(buf, rngresp);
-	    continue;
-	}
-
-        if (isblankline(buf)) {
-	    switch (command) {
-	    case INSTANTIATE:
-		rv = PRNGTEST_Instantiate(entropy, entropy_len,
-				      nonce, nonce_len,
-				      personalization_string, ps_len);
-		if (rv != SECSuccess) {
-		    goto loser;
+       switch (command) {
+            case INSTANTIATE:
+		if (debug) {
+		    fputs("# PRNGTEST_Instantiate(",rngresp);
+		    to_hex_str(buf2,entropyInput, entropyInputLen);
+		    fputs(buf2,rngresp);
+		    fprintf(rngresp,",%d,",entropyInputLen);
+		    to_hex_str(buf2,nonce, nonceLen);
+		    fputs(buf2,rngresp);
+		    fprintf(rngresp,",%d,",nonceLen);
+		    to_hex_str(buf2,personalizationString, 
+					personalizationStringLen);
+		    fputs(buf2,rngresp);
+		    fprintf(rngresp,",%d)\n", personalizationStringLen);
 		}
-		/* clear */
-		if (entropy) {
-		    PORT_ZFree(entropy, entropy_len);
-		    entropy = NULL;
-		    entropy_len = 0;
+                rv = PRNGTEST_Instantiate(entropyInput, entropyInputLen,
+                                          nonce, nonceLen,
+                                          personalizationString, 
+				          personalizationStringLen);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                break;
+                    
+            case GENERATE:
+            case RESULT:
+                memset(return_bytes, 0, return_bytes_len);
+		if (debug) {
+		    fputs("# PRNGTEST_Generate(returnbytes",rngresp);
+		    fprintf(rngresp,",%d,", return_bytes_len);
+		    to_hex_str(buf2,additionalInput, additionalInputLen);
+		    fputs(buf2,rngresp);
+		    fprintf(rngresp,",%d)\n",additionalInputLen);
 		}
-		if (nonce) {
-		    PORT_ZFree(nonce, nonce_len);
-		    nonce = NULL;
-		    nonce_len = 0;
-		}
-		if (personalization_string) {
-		    PORT_ZFree(personalization_string, ps_len);
-		    personalization_string = NULL;
-		    ps_len = 0;
-		}
-		break;
-	    case GENERATE:
-		rv = PRNGTEST_Generate(return_bytes, return_bytes_len,
-				      additional_input, additional_len);
-		if (rv != SECSuccess) {
-		    goto loser;
-		}
-		/* clear */
-		if (predicted_return_bytes) {
-		    fputc('+', rngresp);
-		}
-	   	fputs("Returned bits = ", rngresp);
-		to_hex_str(buf2, return_bytes, return_bytes_len);
-		fputs(buf2, rngresp);
-		fputc('\n', rngresp);
-
-		if (predicted_return_bytes) {
-		    if (memcmp(return_bytes, 
-			   predicted_return_bytes, return_bytes_len) != 0) {
-			fprintf(stderr, "Generate failed:\n");
-			fputs(  "   predicted=", stderr);
-			to_hex_str(buf, predicted_return_bytes, 
-							return_bytes_len);
-			fputs(buf, stderr);
-			fputs("\n   actual  = ", stderr);
-			fputs(buf2, stderr);
-			fputc('\n', stderr);
+                rv = PRNGTEST_Generate((PRUint8 *) return_bytes, 
+					return_bytes_len,
+                                       (PRUint8 *) additionalInput, 
+					additionalInputLen);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                    
+                if (command == RESULT) {
+                    fputs("ReturnedBits = ", rngresp);
+                    to_hex_str(buf2, return_bytes, return_bytes_len);
+                    fputs(buf2, rngresp);
+                    fputc('\n', rngresp);
+		    if (debug) {
+			fputs("# PRNGTEST_Uninstantiate()\n",rngresp);
 		    }
-		    PORT_ZFree(predicted_return_bytes, return_bytes_len);
-		    predicted_return_bytes = NULL;
+                    rv = PRNGTEST_Uninstantiate();
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                } else if (debug) {
+                    fputs("#ReturnedBits = ", rngresp);
+                    to_hex_str(buf2, return_bytes, return_bytes_len);
+                    fputs(buf2, rngresp);
+                    fputc('\n', rngresp);
 		}
-			
-		if (return_bytes) {
-		    PORT_ZFree(return_bytes, return_bytes_len);
-		    return_bytes = NULL;
-		    return_bytes_len = 0;
+                    
+                memset(additionalInput, 0, additionalInputLen);
+                break;
+                    
+            case RESEED:
+                if (entropyInput || additionalInput) {
+		    if (debug) {
+			fputs("# PRNGTEST_Reseed(",rngresp);
+			fprintf(rngresp,",%d,", return_bytes_len);
+			to_hex_str(buf2,entropyInput, entropyInputLen);
+			fputs(buf2,rngresp);
+			fprintf(rngresp,",%d,", entropyInputLen);
+			to_hex_str(buf2,additionalInput, additionalInputLen);
+			fputs(buf2,rngresp);
+			fprintf(rngresp,",%d)\n",additionalInputLen);
+		    }	
+                    rv = PRNGTEST_Reseed(entropyInput, entropyInputLen,
+                                             additionalInput, additionalInputLen);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                }
+                memset(entropyInput, 0, entropyInputLen);
+                memset(additionalInput, 0, additionalInputLen);
+                break;
+            case NONE:
+                break;
+                    
+        } 
+        command = NONE;
+        
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r' ) {
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        /* [Hash - SHA256] */
+        if (strncmp(buf, "[SHA-256]", 9) == 0) {
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        if (strncmp(buf, "[PredictionResistance", 21)  == 0) {
+            i = 21;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }    
+            if (strncmp(buf, "False", 5) == 0) {
+                predictionResistance = PR_FALSE;
+            } else {
+                predictionResistance = PR_TRUE;
+            }
+            
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        if (strncmp(buf, "[EntropyInputLen", 16)  == 0) {
+            if (entropyInput) {
+                PORT_ZFree(entropyInput, entropyInputLen);
+                entropyInput = NULL;
+                entropyInputLen = 0;
+            }
+            if (sscanf(buf, "[EntropyInputLen = %d]", &entropyInputLen) != 1) {
+                goto loser;
+            }
+	    entropyInputLen = entropyInputLen/8;
+            if (entropyInputLen > 0) {
+                entropyInput = PORT_Alloc(entropyInputLen);
+            }
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        if (strncmp(buf, "[NonceLen", 9)  == 0) {
+            if (nonce) {
+                PORT_ZFree(nonce, nonceLen);
+                nonce = NULL;
+                nonceLen = 0;
+            }
+            
+            if (sscanf(buf, "[NonceLen = %d]", &nonceLen) != 1) {
+                goto loser;
+            }
+	    nonceLen = nonceLen/8;
+            if (nonceLen > 0) {
+                nonce = PORT_Alloc(nonceLen);
+            }               
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        if (strncmp(buf, "[PersonalizationStringLen", 16)  == 0) {
+            if (personalizationString) {
+                PORT_ZFree(personalizationString, personalizationStringLen);
+                personalizationString = NULL;
+                personalizationStringLen = 0;
+            }
+            
+            if (sscanf(buf, "[PersonalizationStringLen = %d]", &personalizationStringLen) != 1) {
+                goto loser;
+            }
+	    personalizationStringLen = personalizationStringLen / 8;
+            if (personalizationStringLen > 0) {
+                personalizationString = PORT_Alloc(personalizationStringLen);
+            }
+            fputs(buf, rngresp);
+            
+            continue;
+        }
+        
+        if (strncmp(buf, "[AdditionalInputLen", 16)  == 0) {
+            if (additionalInput) {
+                PORT_ZFree(additionalInput, additionalInputLen);
+                additionalInput = NULL;
+                additionalInputLen = 0;
+            }
+            
+            if (sscanf(buf, "[AdditionalInputLen = %d]", &additionalInputLen) != 1) {
+                goto loser;
+            }
+	    additionalInputLen = additionalInputLen/8;
+            if (additionalInputLen > 0) {
+                additionalInput = PORT_Alloc(additionalInputLen);
+            }
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            /* zeroize the variables for the test with this data set */
+            if (entropyInput) {
+                memset(entropyInput, 0, entropyInputLen);
+            }
+            if (nonce) {
+                memset(nonce, 0, nonceLen);        
+            }
+            if (personalizationString) {
+                memset(personalizationString, 0, personalizationStringLen);
+            }
+            if (additionalInput) {
+                memset(additionalInput, 0, additionalInputLen);
+            }
+            genResult = PR_FALSE;
+            
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        /* EntropyInputReseed = ... */
+        if (strncmp(buf, "EntropyInputReseed", 18) == 0) {
+            if (entropyInput) {
+                memset(entropyInput, 0, entropyInputLen);
+                i = 18;
+                while (isspace(buf[i]) || buf[i] == '=') {
+                    i++;
+                }            
+                
+                for (j=0; isxdigit(buf[i]); i+=2,j++) { /*j<entropyInputLen*/
+                    hex_to_byteval(&buf[i], &entropyInput[j]);
+                }           
+            }
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        /* AttionalInputReseed  = ... */
+        if (strncmp(buf, "AdditionalInputReseed", 21) == 0) {
+            if (additionalInput) {
+                memset(additionalInput, 0, additionalInputLen);
+                i = 21;
+                while (isspace(buf[i]) || buf[i] == '=') {
+                    i++;
+                }
+                for (j=0; isxdigit(buf[i]); i+=2,j++) { /*j<additionalInputLen*/
+                    hex_to_byteval(&buf[i], &additionalInput[j]);
+                }    
+            }
+            command = RESEED;
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        /* Entropy input = ... */
+        if (strncmp(buf, "EntropyInput", 12) == 0) {
+            i = 12;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) { /*j<entropyInputLen*/
+                hex_to_byteval(&buf[i], &entropyInput[j]);
+            }  
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        /* nouce = ... */
+        if (strncmp(buf, "Nonce", 5) == 0) {
+            i = 5;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) { /*j<nonceLen*/
+                hex_to_byteval(&buf[i], &nonce[j]);
+            }  
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        /* Personalization string = ... */
+        if (strncmp(buf, "PersonalizationString", 21) == 0) {
+            if (personalizationString) {
+                i = 21;
+                while (isspace(buf[i]) || buf[i] == '=') {
+                    i++;
+                }
+                for (j=0; isxdigit(buf[i]); i+=2,j++) { /*j<personalizationStringLen*/
+                    hex_to_byteval(&buf[i], &personalizationString[j]);
+                }
+            }
+            fputs(buf, rngresp);
+            command = INSTANTIATE;
+            continue;
+        }
+        
+        /* Additional input = ... */
+        if (strncmp(buf, "AdditionalInput", 15) == 0) {
+            if (additionalInput) {
+                i = 15;
+                while (isspace(buf[i]) || buf[i] == '=') {
+                    i++;
+                }
+                for (j=0; isxdigit(buf[i]); i+=2,j++) { /*j<additionalInputLen*/
+                    hex_to_byteval(&buf[i], &additionalInput[j]);
+                } 
+            }
+            if (genResult) {
+                command = RESULT;
+            } else {
+                command = GENERATE;
+                genResult = PR_TRUE; /* next time generate result */
+            }
+            fputs(buf, rngresp);
+            continue;
+        }
+        
+        /* Returned bits = ... */
+        if (strncmp(buf, "ReturnedBits", 12) == 0) {
+            i = 12;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) { /*j<additionalInputLen*/
+                hex_to_byteval(&buf[i], &predictedreturn_bytes[j]);
+            }          
+
+            if (memcmp(return_bytes, 
+                       predictedreturn_bytes, return_bytes_len) != 0) {
+		if (debug) {
+                fprintf(rngresp, "# Generate failed:\n");
+                fputs(  "#   predicted=", rngresp);
+                to_hex_str(buf, predictedreturn_bytes, 
+                           return_bytes_len);
+                fputs(buf, rngresp);
+                fputs("\n#   actual  = ", rngresp);
+                fputs(buf2, rngresp);
+                fputc('\n', rngresp);
+
+		} else {
+                fprintf(stderr, "Generate failed:\n");
+                fputs(  "   predicted=", stderr);
+                to_hex_str(buf, predictedreturn_bytes, 
+                           return_bytes_len);
+                fputs(buf, stderr);
+                fputs("\n   actual  = ", stderr);
+                fputs(buf2, stderr);
+                fputc('\n', stderr);
 		}
-		if (additional_input) {
-		    PORT_ZFree(additional_input, additional_len);
-		    additional_input = NULL;
-		    additional_len = 0;
-		}
-		
-		break;
-	    case RESEED:
-		rv = PRNGTEST_Reseed(entropy, entropy_len,
-				      additional_input, additional_len);
-		if (rv != SECSuccess) {
-		    goto loser;
-		}
-		/* clear */
-		if (entropy) {
-		    PORT_ZFree(entropy, entropy_len);
-		    entropy = NULL;
-		    entropy_len = 0;
-		}
-		if (additional_input) {
-		    PORT_ZFree(additional_input, additional_len);
-		    additional_input = NULL;
-		    additional_len = 0;
-		}
-		break;
-	    case UNINSTANTIATE:
-		rv = PRNGTEST_Uninstantiate();
-		if (rv != SECSuccess) {
-		    goto loser;
-		}
-		break;
-	    } 
-	    fputs(buf, rngresp);
-	    command = NONE;
-	    continue;
-	}
+            }
+            memset(predictedreturn_bytes, 0 , sizeof predictedreturn_bytes);
 
-	/* [Hash - SHA256] */
-	if (buf[0] == '[') {
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* INSTANTIATE */
-	if (strncmp(buf, "INSTANTIATE", 11) == 0) {
-	    i = 11;
-
-	    command = INSTANTIATE;
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* Generate bytes */
-	if (strncmp(buf, "GENERATE", 8) == 0) {
-	    i = 8;
-	    while (isspace(buf[i])) {
-		i++;
-	    }
-	    return_bytes_len = atoi(&buf[i])/8;
-	    return_bytes = PORT_Alloc(return_bytes_len);
-	    command = GENERATE;
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	if (strncmp(buf, "RESEED", 6) == 0) {
-	    i = 6;
-	    command = RESEED;
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	if (strncmp(buf, "UNINSTANTIATE", 13) == 0) {
-	    i = 13;
-	    command = UNINSTANTIATE;
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* Entropy input = ... */
-	if (strncmp(buf, "Entropy input", 13) == 0) {
-	    i = 13;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-
-	    if ((command == INSTANTIATE) || (command == RESEED)) {
-		entropy = alloc_value(&buf[i], &entropy_len);
-	    }
-	    
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* Nonce = ... */
-	if (strncmp(buf, "Nonce", 5) == 0) {
-	    i = 5;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-
-	    if (command == INSTANTIATE) {
-		nonce = alloc_value(&buf[i], &nonce_len);
-	    }
-	    
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* Personalization string = ... */
-	if (strncmp(buf, "Personalization string", 22) == 0) {
-	    i = 22;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-
-	    if (command == INSTANTIATE) {
-		personalization_string = alloc_value(&buf[i], &ps_len);
-	    }
-	    
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* Returned bits = ... */
-	if (strncmp(buf, "Returned bits", 13) == 0) {
-	    i = 13;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-
-	    if (command == GENERATE) {
-		int len;
-		predicted_return_bytes = alloc_value(&buf[i], &len);
-	    }
-	    
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* Additional input = ... */
-	if (strncmp(buf, "Additional input", 16) == 0) {
-	    i = 16;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-
-	    if ((command == GENERATE) || (command = RESEED)) {
-		additional_input = alloc_value(&buf[i], &additional_len);
-	    }
-	    
-	    fputs(buf, rngresp);
-	    continue;
-	}
+            continue;
+        }
     }
 loser:
     fclose(rngreq);
@@ -4897,6 +5035,9 @@ int main(int argc, char **argv)
 	}
     } else if (strcmp(argv[1], "drbg") == 0) {
 	/* Variable Seed Test */
+	drbg(argv[2]);
+    } else if (strcmp(argv[1], "ddrbg") == 0) {
+	debug = 1;
 	drbg(argv[2]);
     }
     return 0;

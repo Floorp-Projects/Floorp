@@ -1,0 +1,21 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script id="script" xmlns="http://www.w3.org/1999/xhtml">
+function doe(){
+document.getElementById('a').removeAttribute('style');
+}
+setTimeout(doe,100);
+</script>
+<box id="a" style="position: absolute;">
+  <menuitem sizetopopup="always">
+    <menupopup style="position: absolute;"/>
+  </menuitem>
+
+  <box style="position: fixed;">
+    <tree>
+      <treecol>
+        <treecol/>
+      </treecol>
+    </tree>
+  </box>
+</box>
+</window>

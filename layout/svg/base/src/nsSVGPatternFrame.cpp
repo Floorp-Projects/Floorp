@@ -139,26 +139,21 @@ nsSVGPatternFrame::GetType() const
 // need to return *our current* transformation
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGPatternFrame::GetCanvasTM()
 {
-  nsIDOMSVGMatrix *rCTM;
-
   if (mCTM) {
-    rCTM = mCTM;
-    NS_IF_ADDREF(rCTM);
-  } else {
-    // Do we know our rendering parent?
-    if (mSource) {
-      // Yes, use it!
-      mSource->GetCanvasTM(&rCTM);
-    } else {
-      // No, return an identity
-      // We get here when geometry in the <pattern> container is updated
-      NS_NewSVGMatrix(&rCTM);
-    }
+    return nsSVGUtils::ConvertSVGMatrixToThebes(mCTM);
   }
-  return rCTM;
+
+  // Do we know our rendering parent?
+  if (mSource) {
+    // Yes, use it!
+    return mSource->GetCanvasTM();
+  }
+
+  // We get here when geometry in the <pattern> container is updated
+  return gfxMatrix();
 }
 
 nsresult
@@ -640,22 +635,12 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   if (!aContent)
     return NS_ERROR_FAILURE;
 
-  // Get the calling geometry's bounding box.  This
-  // will be in *device coordinates*
-  nsISVGChildFrame *callerSVGFrame;
-  if (callerType == nsGkAtoms::svgGlyphFrame)
-    callerSVGFrame = do_QueryFrame(aSource->GetParent());
-  else
-    callerSVGFrame = do_QueryFrame(aSource);
-
-  callerSVGFrame->SetMatrixPropagation(PR_FALSE);
-  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                                   nsISVGChildFrame::TRANSFORM_CHANGED );
-  callerSVGFrame->GetBBox(aBBox);
-  callerSVGFrame->SetMatrixPropagation(PR_TRUE);
-  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                                   nsISVGChildFrame::TRANSFORM_CHANGED);
-
+  if (callerType == nsGkAtoms::svgGlyphFrame) {
+    *aBBox = nsSVGUtils::GetBBox(aSource->GetParent()).get();
+  } else {
+    *aBBox = nsSVGUtils::GetBBox(aSource).get();
+  }
+  
   // Sanity check
   PRUint16 type = GetPatternUnits();
   if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
@@ -668,7 +653,7 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   }
 
   // Get the transformation matrix from our calling geometry
-  aSource->GetCanvasTM(aCTM);
+  *aCTM = NS_NewSVGMatrix(aSource->GetCanvasTM()).get();
 
   // OK, now fix up the bounding box to reflect user coordinates
   // We handle device unit scaling in pattern matrix

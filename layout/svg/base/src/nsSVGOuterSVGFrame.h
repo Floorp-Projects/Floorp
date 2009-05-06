@@ -43,6 +43,7 @@
 #include "nsISVGSVGFrame.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGNumber.h"
+#include "gfxMatrix.h"
 
 class nsSVGForeignObjectFrame;
 
@@ -140,7 +141,7 @@ public:
   NS_IMETHOD NotifyViewportChange();
 
   // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM();
 
   /* Methods to allow descendant nsSVGForeignObjectFrame frames to register and
    * unregister themselves with their nearest nsSVGOuterSVGFrame ancestor so
@@ -166,16 +167,13 @@ protected:
   PRUint32 mRedrawSuspendCount;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
 
-  // zoom and pan
-  nsCOMPtr<nsIDOMSVGPoint>  mCurrentTranslate;
-  nsCOMPtr<nsIDOMSVGNumber> mCurrentScale;
-
   float mFullZoom;
 
   PRPackedBool mViewportInitialized;
 #ifdef XP_MACOSX
   PRPackedBool mEnableBitmapFallback;
 #endif
+  PRPackedBool mIsRootContent;
 };
 
 #endif

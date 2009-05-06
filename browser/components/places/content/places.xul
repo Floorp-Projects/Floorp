@@ -295,7 +295,7 @@
 <!--
             <menuitem id="viewDetails"
                       type="radio"
-#ifdef MACOSX
+#ifdef XP_MACOSX
                       label="&view.detailsMacOSX.label;"
 #else
                       label="&view.details.label;"

@@ -79,7 +79,7 @@ void compute_curve_gamma_table_type0(float gamma_table[256])
 {
 	unsigned int i;
 	for (i = 0; i < 256; i++) {
-		gamma_table[i] = i;
+		gamma_table[i] = i/255.;
 	}
 }
 
@@ -181,6 +181,14 @@ struct matrix matrix_identity(void)
 	i.invalid = false;
 	return i;
 }
+
+static struct matrix matrix_invalid(void)
+{
+	struct matrix inv = matrix_identity();
+	inv.invalid = true;
+	return inv;
+}
+
 
 /* from pixman */
 /* MAT3per... */
@@ -373,6 +381,9 @@ static struct matrix build_RGB_to_XYZ_transfer_matrix(qcms_CIE_xyY white, qcms_C
 	xn = white.x;
 	yn = white.y;
 
+	if (yn == 0.0)
+		return matrix_invalid();
+
 	xr = primrs.red.x;
 	yr = primrs.red.y;
 	xg = primrs.green.x;
@@ -501,17 +512,24 @@ static struct matrix adapt_matrix_to_D50(struct matrix r, qcms_CIE_xyY source_wh
 {
 	struct CIE_XYZ Dn;
 	struct matrix Bradford;
+
+	if (source_white_pt.y == 0.0)
+		return matrix_invalid();
+
 	Dn = xyY2XYZ(source_white_pt);
 
 	Bradford = adaption_matrix(Dn, D50_XYZ);
 	return matrix_multiply(Bradford, r);
 }
 
-void set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries)
+qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries)
 {
 	struct matrix colorants;
 	colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
 	colorants = adapt_matrix_to_D50(colorants, white_point);
+
+	if (colorants.invalid)
+		return false;
 
 	/* note: there's a transpose type of operation going on here */
 	profile->redColorant.X = double_to_s15Fixed16Number(colorants.m[0][0]);
@@ -525,6 +543,8 @@ void set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE
 	profile->blueColorant.X = double_to_s15Fixed16Number(colorants.m[0][2]);
 	profile->blueColorant.Y = double_to_s15Fixed16Number(colorants.m[1][2]);
 	profile->blueColorant.Z = double_to_s15Fixed16Number(colorants.m[2][2]);
+
+	return true;
 }
 
 static uint16_t *invert_lut(uint16_t *table, int length)

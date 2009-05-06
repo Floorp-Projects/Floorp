@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL progressmeter tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/value.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      // progressmeter
+      testValue("pm1", "50%", .5, 0, 1, 0);
+      testValue("pm2", "50%", 500, 0, 1000, 0);
+      testValue("pm3", "0%", 0, 0, 1, 0);
+
+      // scale
+      testValue("sc1", "500", 500, 0, 1000, 10);
+      testValue("sc2", "", 0, 0, 0, 0);
+
+      // aria progressbar
+      testValue("ariapb1", "500", 500, 0, 1000, 0);
+      testValue("ariapb2", "", 0, 0, 0, 0);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=489551"
+         title="Values of sliders and progress bars in HTML 5 audio and video element's control sets are not percentages">
+        Mozilla Bug 489551
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <!-- progressmeter -->
+    <progressmeter id="pm1" value="50"/>
+    <progressmeter id="pm2" value="500" max="1000"/>
+    <progressmeter id="pm3"/>
+
+    <!-- scale -->
+    <scale id="sc1" value="500" max="1000" increment="10"/>
+    <scale id="sc2"/>
+
+    <!-- aria -->
+    <description id="ariapb1" role="progressbar"
+                 aria-valuenow="500" aria-valuemin="0" aria-valuemax="1000"/>
+    <description id="ariapb2" role="progressbar"/>
+  </hbox>
+
+</window>
+

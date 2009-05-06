@@ -202,18 +202,6 @@ NS_IMETHODIMP nsImageFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-NS_IMETHODIMP_(nsrefcnt) nsImageFrame::AddRef(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsImageFrame::Release(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
-
 void
 nsImageFrame::Destroy()
 {

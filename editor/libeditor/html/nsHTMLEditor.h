@@ -62,9 +62,6 @@
 #include "nsEditProperty.h"
 #include "nsHTMLCSSUtils.h"
 
-#include "nsVoidArray.h"
-#include "nsTArray.h"
-
 #include "nsHTMLObjectResizer.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
@@ -85,6 +82,7 @@ class nsIContentFilter;
 class nsIURL;
 class nsIRangeUtils;
 class nsILinkHandler;
+struct PropItem;
 
 /**
  * The HTML editor implementation.<br>
@@ -760,7 +758,7 @@ protected:
   nsCOMArray<nsICSSStyleSheet> mStyleSheets;
   
   // an array for holding default style settings
-  nsVoidArray mDefaultStyles;
+  nsTArray<PropItem*> mDefaultStyles;
 
    // for real-time spelling
    nsCOMPtr<nsITextServicesDocument> mTextServices;

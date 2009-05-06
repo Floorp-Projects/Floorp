@@ -270,7 +270,7 @@ extern void vr_findGlobalRegName()
             {
                 FSCatalogInfo catalogInfo;
                 FileInfo fileInfo = { 'REGS', 'MOSS', 0, { 0, 0 }, 0 };
-                BlockMoveData(&fileInfo, &(catalogInfo.finderInfo), sizeof(FileInfo));
+                memmove(&(catalogInfo.finderInfo), &fileInfo, sizeof(FileInfo));
                 err = FSCreateFileUnicode(&parentRef, UNICHAR_ARRAY_LEN(kOSXRegName), kOSXRegName,
                                                kFSCatInfoFinderInfo, &catalogInfo, &regRef, NULL);
             }
@@ -279,7 +279,7 @@ extern void vr_findGlobalRegName()
                 UInt8 pathBuf[PATH_MAX];
                 err = FSRefMakePath(&regRef, pathBuf, sizeof(pathBuf));
                 if (err == noErr)
-                    globalRegName = XP_STRDUP(pathBuf);
+                    globalRegName = XP_STRDUP((const char*)pathBuf);
             }
         }
     }
@@ -310,7 +310,7 @@ extern char* vr_findVerRegName()
             {
                 FSCatalogInfo catalogInfo;
                 FileInfo fileInfo = { 'REGS', 'MOSS', 0, { 0, 0 }, 0 };
-                BlockMoveData(&fileInfo, &(catalogInfo.finderInfo), sizeof(FileInfo));
+                memmove(&(catalogInfo.finderInfo), &fileInfo, sizeof(FileInfo));
                 err = FSCreateFileUnicode(&parentRef, UNICHAR_ARRAY_LEN(kOSXVersRegName), kOSXVersRegName,
                                                kFSCatInfoFinderInfo, &catalogInfo, &regRef, NULL);
             }
@@ -319,7 +319,7 @@ extern char* vr_findVerRegName()
                 UInt8 pathBuf[PATH_MAX];
                 err = FSRefMakePath(&regRef, pathBuf, sizeof(pathBuf));
                 if (err == noErr)
-                    verRegName = XP_STRDUP(pathBuf);
+                    verRegName = XP_STRDUP((const char*)pathBuf);
             }
         }
     }

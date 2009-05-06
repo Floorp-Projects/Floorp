@@ -502,7 +502,9 @@ pkix_pl_OcspResponse_Create(
                         ocspResponse->request = request;
                         ocspResponse->httpClient = httpClient;
                         ocspResponse->serverSession = serverSession;
+                        serverSession = NULL;
                         ocspResponse->sessionRequest = sessionRequest;
+                        sessionRequest = NULL;
                         ocspResponse->verifyFcn = verifyFcn;
                         ocspResponse->handle = CERT_GetDefaultCertDB();
                         ocspResponse->encodedResponse = NULL;
@@ -522,10 +524,10 @@ pkix_pl_OcspResponse_Create(
 
                 hcv1 = &(httpClient->fcnTable.ftable1);
 
-                rv = (*hcv1->trySendAndReceiveFcn)(sessionRequest,
+                rv = (*hcv1->trySendAndReceiveFcn)(ocspResponse->sessionRequest,
                         (PRPollDesc **)&nbioContext,
                         &responseCode,
-                        &responseContentType,
+                        (const char **)&responseContentType,
                         NULL,   /* responseHeaders */
                         (const char **)&responseData,
                         &responseDataLen);
@@ -560,26 +562,24 @@ pkix_pl_OcspResponse_Create(
                             responseData, responseDataLen);
         }
         *pResponse = ocspResponse;
+        ocspResponse = NULL;
 
 cleanup:
 
         if (path != NULL) {
             PORT_Free(path);
         }
-
         if (hostname != NULL) {
             PORT_Free(hostname);
         }
-
-        if (PKIX_ERROR_RECEIVED){
-            if (ocspResponse) {
-                PKIX_DECREF(ocspResponse);
-            } else {
-                if (serverSession) 
-                    hcv1->freeSessionFcn(serverSession);
-                if (sessionRequest)
-                    hcv1->freeFcn(sessionRequest);
-            }
+        if (ocspResponse) {
+            PKIX_DECREF(ocspResponse);
+        }
+        if (serverSession) {
+            hcv1->freeSessionFcn(serverSession);
+        }
+        if (sessionRequest) {
+            hcv1->freeFcn(sessionRequest);
         }
 
         PKIX_RETURN(OCSPRESPONSE);

@@ -253,6 +253,7 @@ PKIX_PL_Initialize(
         pkix_pl_HttpDefaultClient_RegisterSelf(plContext);
         pkix_VerifyNode_RegisterSelf(plContext);
         pkix_EkuChecker_RegisterSelf(plContext);
+        pkix_pl_CrlDp_RegisterSelf(plContext);
 
         if (pPlContext) {
             PKIX_CHECK(PKIX_PL_NssContext_Create

@@ -62,7 +62,7 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
   // nsSVGPathGeometryElement methods:
-  virtual PRBool IsDependentAttribute(nsIAtom *aName);
+  virtual PRBool AttributeDefinesGeometry(const nsIAtom *aName);
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx);

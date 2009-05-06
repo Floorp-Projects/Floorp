@@ -144,7 +144,7 @@
 #include "nsIRegion.h"
 #include "nsRegion.h"
 
-#ifdef MOZ_REFLOW_PERF_DSP
+#ifdef MOZ_REFLOW_PERF
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #endif
@@ -766,119 +766,6 @@ struct nsCallbackEventRequest
   nsCallbackEventRequest* next;
 };
 
-
-class nsDocumentObserverForNonDynamicPresContext : public nsStubDocumentObserver
-{
-public:
-  nsDocumentObserverForNonDynamicPresContext(nsIDocumentObserver* aBaseObserver)
-  : mBaseObserver(aBaseObserver)
-  {
-    NS_ASSERTION(aBaseObserver, "Null document observer!");
-  }
-
-  NS_DECL_ISUPPORTS
-
-  virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
-  {
-    mBaseObserver->BeginUpdate(aDocument, aUpdateType);
-  }
-  virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
-  {
-    mBaseObserver->EndUpdate(aDocument, aUpdateType);
-  }
-  virtual void BeginLoad(nsIDocument* aDocument)
-  {
-    mBaseObserver->BeginLoad(aDocument);
-  }
-  virtual void EndLoad(nsIDocument* aDocument)
-  {
-    mBaseObserver->EndLoad(aDocument);
-  }
-  virtual void ContentStatesChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    PRInt32 aStateMask)
-  {
-    if ((!aContent1 || IsInRootScrollbar(aContent1)) &&
-        (!aContent2 || IsInRootScrollbar(aContent2))) {
-      mBaseObserver->ContentStatesChanged(aDocument, aContent1, aContent2,
-                                          aStateMask);
-    }
-  }
-
-  // nsIMutationObserver
-  virtual void CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo)
-  {
-    if (IsInRootScrollbar(aContent)) {
-      mBaseObserver->CharacterDataChanged(aDocument, aContent, aInfo);
-    }
-  }
-  virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aContent,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType,
-                                PRUint32 aStateMask)
-  {
-    if (IsInRootScrollbar(aContent)) {
-      mBaseObserver->AttributeChanged(aDocument, aContent, aNameSpaceID,
-                                      aAttribute, aModType, aStateMask);
-    }
-  }
-  virtual void ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer)
-  {
-    if (IsInRootScrollbar(aContainer)) {
-      mBaseObserver->ContentAppended(aDocument, aContainer,
-                                     aNewIndexInContainer);
-    }
-  }
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer)
-  {
-    if (IsInRootScrollbar(aContainer)) {
-      mBaseObserver->ContentInserted(aDocument, aContainer, aChild,
-                                     aIndexInContainer);
-    }
-  }
-  virtual void ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer)
-  {
-    if (IsInRootScrollbar(aContainer)) {
-      mBaseObserver->ContentRemoved(aDocument, aContainer, aChild, 
-                                    aIndexInContainer);
-    }
-  }
-
-  PRBool IsInRootScrollbar(nsIContent* aContent) {
-    if(aContent && aContent->IsInDoc()) {
-       nsIContent* root = aContent->GetCurrentDoc()->GetRootContent();
-       while (aContent && aContent->IsInNativeAnonymousSubtree()) {
-         nsIContent* parent = aContent->GetParent();
-         if (parent == root && aContent->IsNodeOfType(nsINode::eXUL)) {
-           nsIAtom* tag = aContent->Tag();
-           return tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollcorner;
-         }
-         aContent = parent;
-       }
-    }
-    return PR_FALSE;
-  }
-protected:
-  nsCOMPtr<nsIDocumentObserver> mBaseObserver;
-};
-
-NS_IMPL_ISUPPORTS2(nsDocumentObserverForNonDynamicPresContext,
-                   nsIDocumentObserver,
-                   nsIMutationObserver)
-
 // ----------------------------------------------------------------------------
 class nsPresShellEventCB;
 
@@ -934,6 +821,7 @@ public:
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
                               nsFrameState aBitToAdd);
+  NS_IMETHOD_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame);
   NS_IMETHOD CancelAllPendingReflows();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications(mozFlushType aType);
@@ -957,7 +845,7 @@ public:
 
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
-                                   PRIntn      aHPercent) const;
+                                   PRIntn      aHPercent);
 
   NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore);
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
@@ -1130,25 +1018,35 @@ public:
 
   NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable);
 
+  virtual void UpdateCanvasBackground();
+
 protected:
   virtual ~PresShell();
 
-  void HandlePostedReflowCallbacks();
+  void HandlePostedReflowCallbacks(PRBool aInterruptible);
   void CancelPostedReflowCallbacks();
 
   void UnsuppressAndInvalidate();
 
   void     WillDoReflow();
-  void     DidDoReflow();
-  nsresult ProcessReflowCommands(PRBool aInterruptible);
+  void     DidDoReflow(PRBool aInterruptible);
+  // ProcessReflowCommands returns whether we processed all our dirty roots
+  // without interruptions.
+  PRBool   ProcessReflowCommands(PRBool aInterruptible);
   void     ClearReflowEventStatus();
   void     PostReflowEvent();
-  
-  void DoReflow(nsIFrame* aFrame);
+
+  // DoReflow returns whether the reflow finished without interruption
+  PRBool DoReflow(nsIFrame* aFrame, PRBool aInterruptible);
 #ifdef DEBUG
   void DoVerifyReflow();
   void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
 #endif
+
+  // Helper for ScrollContentIntoView
+  nsresult DoScrollContentIntoView(nsIContent* aContent,
+                                   PRIntn      aVPercent,
+                                   PRIntn      aHPercent);
 
   friend class nsPresShellEventCB;
 
@@ -1233,11 +1131,6 @@ protected:
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();
 
-  // Method to handle actually flushing.  This allows the caller to control
-  // whether the reflow flush (if any) should be interruptible.
-  nsresult DoFlushPendingNotifications(mozFlushType aType,
-                                       PRBool aInterruptibleReflow);
-
   nsCOMPtr<nsICSSStyleSheet> mPrefStyleSheet; // mStyleSet owns it but we
                                               // maintain a ref, may be null
 #ifdef DEBUG
@@ -1268,6 +1161,25 @@ protected:
   
   nsRevocableEventPtr<ReflowEvent> mReflowEvent;
 
+#ifdef DEBUG
+  // The reflow root under which we're currently reflowing.  Null when
+  // not in reflow.
+  nsIFrame* mCurrentReflowRoot;
+#endif
+
+  // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
+  // we finish reflowing mCurrentReflowRoot.
+  nsTHashtable< nsPtrHashKey<nsIFrame> > mFramesToDirty;
+
+  // Information needed to properly handle scrolling content into view if the
+  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
+  // non-null between the initial scroll attempt and the first time we finish
+  // processing all our dirty roots.  mContentScrollVPosition and
+  // mContentScrollHPosition are only used when it's non-null.
+  nsCOMPtr<nsIContent> mContentToScrollTo;
+  PRIntn mContentScrollVPosition;
+  PRIntn mContentScrollHPosition;
+
   struct nsBlurOrFocusTarget
   {
     nsBlurOrFocusTarget(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
@@ -1283,6 +1195,8 @@ protected:
 
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
+
+  PRPackedBool      mSuppressInterruptibleReflows;
 
   PRPackedBool      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
 
@@ -1388,6 +1302,123 @@ public:
 
   nsRefPtr<PresShell> mPresShell;
 };
+
+class nsDocumentObserverForNonDynamicPresContext : public nsStubDocumentObserver
+{
+public:
+  nsDocumentObserverForNonDynamicPresContext(PresShell* aBaseObserver)
+  : mBaseObserver(aBaseObserver)
+  {
+    NS_ASSERTION(aBaseObserver, "Null document observer!");
+  }
+
+  NS_DECL_ISUPPORTS
+
+  virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
+  {
+    mBaseObserver->BeginUpdate(aDocument, aUpdateType);
+  }
+  virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
+  {
+    mBaseObserver->EndUpdate(aDocument, aUpdateType);
+  }
+  virtual void BeginLoad(nsIDocument* aDocument)
+  {
+    mBaseObserver->BeginLoad(aDocument);
+  }
+  virtual void EndLoad(nsIDocument* aDocument)
+  {
+    mBaseObserver->EndLoad(aDocument);
+  }
+  virtual void ContentStatesChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent1,
+                                    nsIContent* aContent2,
+                                    PRInt32 aStateMask)
+  {
+    if ((!aContent1 || AllowMutation(aContent1)) &&
+        (!aContent2 || AllowMutation(aContent2))) {
+      mBaseObserver->ContentStatesChanged(aDocument, aContent1, aContent2,
+                                          aStateMask);
+    }
+  }
+
+  // nsIMutationObserver
+  virtual void CharacterDataChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent,
+                                    CharacterDataChangeInfo* aInfo)
+  {
+    if (AllowMutation(aContent)) {
+      mBaseObserver->CharacterDataChanged(aDocument, aContent, aInfo);
+    }
+  }
+  virtual void AttributeChanged(nsIDocument* aDocument,
+                                nsIContent* aContent,
+                                PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute,
+                                PRInt32 aModType,
+                                PRUint32 aStateMask)
+  {
+    if (AllowMutation(aContent)) {
+      mBaseObserver->AttributeChanged(aDocument, aContent, aNameSpaceID,
+                                      aAttribute, aModType, aStateMask);
+    }
+  }
+  virtual void ContentAppended(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer)
+  {
+    if (AllowMutation(aContainer)) {
+      mBaseObserver->ContentAppended(aDocument, aContainer,
+                                     aNewIndexInContainer);
+    }
+  }
+  virtual void ContentInserted(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer)
+  {
+    if (AllowMutation(aContainer)) {
+      mBaseObserver->ContentInserted(aDocument, aContainer, aChild,
+                                     aIndexInContainer);
+    }
+  }
+  virtual void ContentRemoved(nsIDocument* aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer)
+  {
+    if (AllowMutation(aContainer)) {
+      mBaseObserver->ContentRemoved(aDocument, aContainer, aChild, 
+                                    aIndexInContainer);
+    }
+  }
+
+  PRBool AllowMutation(nsIContent* aContent) {
+    if(aContent && aContent->IsInDoc()) {
+       if (mBaseObserver->ObservesNativeAnonMutationsForPrint() &&
+           aContent->IsInNativeAnonymousSubtree()) {
+         return PR_TRUE;
+       }
+       // Changes to scrollbar are always ok.
+       nsIContent* root = aContent->GetCurrentDoc()->GetRootContent();
+       while (aContent && aContent->IsInNativeAnonymousSubtree()) {
+         nsIContent* parent = aContent->GetParent();
+         if (parent == root && aContent->IsNodeOfType(nsINode::eXUL)) {
+           nsIAtom* tag = aContent->Tag();
+           return tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollcorner;
+         }
+         aContent = parent;
+       }
+    }
+    return PR_FALSE;
+  }
+protected:
+  nsRefPtr<PresShell> mBaseObserver;
+};
+
+NS_IMPL_ISUPPORTS2(nsDocumentObserverForNonDynamicPresContext,
+                   nsIDocumentObserver,
+                   nsIMutationObserver)
 
 PRBool PresShell::sDisableNonTestMouseEvents = PR_FALSE;
 
@@ -1618,6 +1649,10 @@ PresShell::Init(nsIDocument* aDocument,
   result = mStackArena.Init();
   NS_ENSURE_SUCCESS(result, result);
 
+  if (!mFramesToDirty.Init()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   mDocument = aDocument;
   NS_ADDREF(mDocument);
   mViewManager = aViewManager;
@@ -1748,6 +1783,8 @@ PresShell::Destroy()
 
   if (mHaveShutDown)
     return NS_OK;
+
+  mContentToScrollTo = nsnull;
 
   if (mPresContext) {
     // We need to notify the destroying the nsPresContext to ESM for
@@ -2694,14 +2731,12 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
         // Kick off a top-down reflow
         AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-        mIsReflowing = PR_TRUE;
 
         mDirtyRoots.RemoveElement(rootFrame);
-        DoReflow(rootFrame);
-        mIsReflowing = PR_FALSE;
+        DoReflow(rootFrame, PR_TRUE);
       }
 
-      DidDoReflow();
+      DidDoReflow(PR_TRUE);
     }
 
     batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
@@ -3411,6 +3446,20 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+PresShell::FrameNeedsToContinueReflow(nsIFrame *aFrame)
+{
+  NS_ASSERTION(mIsReflowing, "Must be in reflow when marking path dirty.");  
+  NS_PRECONDITION(mCurrentReflowRoot, "Must have a current reflow root here");
+  NS_ASSERTION(aFrame == mCurrentReflowRoot ||
+               nsLayoutUtils::IsProperAncestorFrame(mCurrentReflowRoot, aFrame),
+               "Frame passed in is not the descendant of mCurrentReflowRoot");
+  NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW,
+               "Frame passed in not in reflow?");
+
+  mFramesToDirty.PutEntry(aFrame);
+}
+
 nsIScrollableView*
 PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
 {
@@ -3543,6 +3592,8 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
       mCurrentEventFrameStack[i] = nsnull;
     }
   }
+
+  mFramesToDirty.RemoveEntry(aFrame);
 
   nsWeakFrame* weakFrame = mWeakFrames;
   while (weakFrame) {
@@ -4082,17 +4133,21 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
 NS_IMETHODIMP
 PresShell::ScrollContentIntoView(nsIContent* aContent,
                                  PRIntn      aVPercent,
-                                 PRIntn      aHPercent) const
+                                 PRIntn      aHPercent)
 {
+  mContentToScrollTo = aContent;
+  mContentScrollVPosition = aVPercent;
+  mContentScrollHPosition = aHPercent;
+
   nsCOMPtr<nsIContent> content = aContent; // Keep content alive while flushing.
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
   NS_ENSURE_STATE(currentDoc);
-  currentDoc->FlushPendingNotifications(Flush_Layout);
-  nsIFrame* frame = GetPrimaryFrameFor(content);
-  if (!frame) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  currentDoc->FlushPendingNotifications(Flush_InterruptibleLayout);
+
+  // If mContentToScrollTo is non-null, that means we interrupted the reflow
+  // and won't necessarily get the position correct, but do a best-effort
+  // scroll.
 
   // Before we scroll the frame into view, ask the command dispatcher
   // if we're resetting focus because a window just got an activate
@@ -4109,9 +4164,24 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
       PRBool dontScroll = PR_FALSE;
       focusController->GetSuppressFocusScroll(&dontScroll);
       if (dontScroll) {
+        mContentToScrollTo = nsnull;
         return NS_OK;
       }
     }
+  }
+
+  return DoScrollContentIntoView(content, aVPercent, aHPercent);
+}
+
+nsresult
+PresShell::DoScrollContentIntoView(nsIContent* aContent,
+                                   PRIntn      aVPercent,
+                                   PRIntn      aHPercent)
+{
+  nsIFrame* frame = GetPrimaryFrameFor(aContent);
+  if (!frame) {
+    mContentToScrollTo = nsnull;
+    return NS_ERROR_NULL_POINTER;
   }
 
   // This is a two-step process.
@@ -4576,7 +4646,7 @@ PresShell::CancelPostedReflowCallbacks()
 }
 
 void
-PresShell::HandlePostedReflowCallbacks()
+PresShell::HandlePostedReflowCallbacks(PRBool aInterruptible)
 {
    PRBool shouldFlush = PR_FALSE;
 
@@ -4595,8 +4665,10 @@ PresShell::HandlePostedReflowCallbacks()
      }
    }
 
+   mozFlushType flushType =
+     aInterruptible ? Flush_InterruptibleLayout : Flush_Layout;
    if (shouldFlush)
-     FlushPendingNotifications(Flush_Layout);
+     FlushPendingNotifications(flushType);
 }
 
 NS_IMETHODIMP 
@@ -4621,15 +4693,8 @@ PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 PresShell::FlushPendingNotifications(mozFlushType aType)
-{
-  return DoFlushPendingNotifications(aType, PR_FALSE);
-}
-
-nsresult
-PresShell::DoFlushPendingNotifications(mozFlushType aType,
-                                       PRBool aInterruptibleReflow)
 {
   NS_ASSERTION(aType >= Flush_Frames, "Why did we get called?");
   
@@ -4698,11 +4763,17 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // There might be more pending constructors now, but we're not going to
     // worry about them.  They can't be triggered during reflow, so we should
     // be good.
-    
-    if (aType >= Flush_Layout && !mIsDestroying) {
+
+    if (aType >= (mSuppressInterruptibleReflows ? Flush_Layout : Flush_InterruptibleLayout) &&
+        !mIsDestroying) {
       mFrameConstructor->RecalcQuotesAndCounters();
       mViewManager->FlushDelayedResize();
-      ProcessReflowCommands(aInterruptibleReflow);
+      if (ProcessReflowCommands(aType < Flush_Layout) && mContentToScrollTo) {
+        // We didn't get interrupted.  Go ahead and scroll to our content
+        DoScrollContentIntoView(mContentToScrollTo, mContentScrollVPosition,
+                                mContentScrollHPosition);
+        mContentToScrollTo = nsnull;
+      }
     }
 
     PRUint32 updateFlags = NS_VMREFRESH_NO_SYNC;
@@ -4711,7 +4782,7 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
       // immediately
       updateFlags = NS_VMREFRESH_IMMEDIATE;
     }
-    else if (aType < Flush_Layout) {
+    else if (aType < Flush_InterruptibleLayout) {
       // Not flushing reflows, so do deferred invalidates.  This will keep us
       // from possibly flushing out reflows due to invalidates being processed
       // at the end of this view batch.
@@ -5519,6 +5590,19 @@ PresShell::RenderSelection(nsISelection* aSelection,
                              aScreenRect);
 }
 
+void PresShell::UpdateCanvasBackground()
+{
+  // If we have a frame tree and it has style information that
+  // specifies the background color of the canvas, update our local
+  // cache of that color.
+  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
+  if (rootFrame) {
+    const nsStyleBackground* bgStyle =
+      nsCSSRendering::FindRootFrameBackground(rootFrame);
+    mCanvasBackgroundColor = bgStyle->mBackgroundColor;
+  }
+}
+
 NS_IMETHODIMP
 PresShell::Paint(nsIView*             aView,
                  nsIRenderingContext* aRenderingContext,
@@ -5529,15 +5613,7 @@ PresShell::Paint(nsIView*             aView,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aView, "null view");
 
-  // If we have a frame tree and it has style information that
-  // specifies the background color of the canvas, update our local
-  // cache of that color.
-  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
-  if (rootFrame) {
-    const nsStyleBackground* bgStyle =
-      nsCSSRendering::FindRootFrameBackground(rootFrame);
-    mCanvasBackgroundColor = bgStyle->mBackgroundColor;
-  }
+  UpdateCanvasBackground();
 
   // Compute the backstop color for the view.
   nscolor bgcolor;
@@ -5807,7 +5883,7 @@ PresShell::HandleEvent(nsIView         *aView,
   }
 
   if (dispatchUsingCoordinates) {
-    NS_ASSERTION(frame, "Nothing to handle this event!");
+    NS_WARN_IF_FALSE(frame, "Nothing to handle this event!");
     if (!frame)
       return NS_OK;
 
@@ -6545,7 +6621,7 @@ PresShell::WillPaint()
   // reflow being interspersed.  Note that we _do_ allow this to be
   // interruptible; if we can't do all the reflows it's better to flicker a bit
   // than to freeze up.
-  DoFlushPendingNotifications(Flush_Layout, PR_TRUE);
+  FlushPendingNotifications(Flush_InterruptibleLayout);
 }
 
 nsresult
@@ -6755,7 +6831,17 @@ PresShell::ReflowEvent::Run() {
     // before processing that pres shell's reflow commands.  Fixes bug 54868.
     nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
 
-    ps->DoFlushPendingNotifications(Flush_Layout, PR_TRUE);
+    ps->mSuppressInterruptibleReflows = PR_FALSE;
+
+#ifdef NOISY_INTERRUPTIBLE_REFLOW
+    printf("*** Entering reflow event (time=%lld)\n", PR_Now());
+#endif /* NOISY_INTERRUPTIBLE_REFLOW */
+
+    ps->FlushPendingNotifications(Flush_InterruptibleLayout);
+
+#ifdef NOISY_INTERRUPTIBLE_REFLOW
+    printf("*** Returning from reflow event (time=%lld)\n", PR_Now());
+#endif /* NOISY_INTERRUPTIBLE_REFLOW */
 
     // Now, explicitly release the pres shell before the view manager
     ps = nsnull;
@@ -6802,11 +6888,11 @@ PresShell::WillDoReflow()
 }
 
 void
-PresShell::DidDoReflow()
+PresShell::DidDoReflow(PRBool aInterruptible)
 {
   mFrameConstructor->EndUpdate();
   
-  HandlePostedReflowCallbacks();
+  HandlePostedReflowCallbacks(aInterruptible);
   // Null-check mViewManager in case this happens during Destroy.  See
   // bugs 244435 and 238546.
   if (!mPaintingSuppressed && mViewManager)
@@ -6819,8 +6905,24 @@ PresShell::DidDoReflow()
   }
 }
 
-void
-PresShell::DoReflow(nsIFrame* target)
+static PLDHashOperator
+MarkFramesDirtyToRoot(nsPtrHashKey<nsIFrame>* p, void* closure)
+{
+  nsIFrame* target = static_cast<nsIFrame*>(closure);
+  for (nsIFrame* f = p->GetKey(); f && !NS_SUBTREE_DIRTY(f);
+       f = f->GetParent()) {
+    f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+
+    if (f == target) {
+      break;
+    }
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+PRBool
+PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
 {
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
 
@@ -6829,9 +6931,13 @@ PresShell::DoReflow(nsIFrame* target)
   // reflow; otherwise, it crashes on the mac (I'm not quite sure why)
   nsresult rv = CreateRenderingContext(rootFrame, getter_AddRefs(rcx));
   if (NS_FAILED(rv)) {
-   NS_NOTREACHED("CreateRenderingContext failure");
-   return;
- }
+    NS_NOTREACHED("CreateRenderingContext failure");
+    return PR_FALSE;
+  }
+
+#ifdef DEBUG
+  mCurrentReflowRoot = target;
+#endif
 
   target->WillReflow(mPresContext);
 
@@ -6866,6 +6972,9 @@ PresShell::DoReflow(nsIFrame* target)
                    reflowState.mComputedBorderPadding.LeftRight(),
                "reflow state computed incorrect width");
 
+  mPresContext->ReflowStarted(aInterruptible);
+  mIsReflowing = PR_TRUE;
+
   nsReflowStatus status;
   nsHTMLReflowMetrics desiredSize;
   target->Reflow(mPresContext, desiredSize, reflowState, status);
@@ -6897,6 +7006,38 @@ PresShell::DoReflow(nsIFrame* target)
     mPresContext->SetVisibleArea(nsRect(0, 0, desiredSize.width,
                                         desiredSize.height));
   }
+
+#ifdef DEBUG
+  mCurrentReflowRoot = nsnull;
+#endif
+
+  NS_ASSERTION(mPresContext->HasPendingInterrupt() ||
+               mFramesToDirty.Count() == 0,
+               "Why do we need to dirty anything if not interrupted?");
+
+  mIsReflowing = PR_FALSE;
+  PRBool interrupted = mPresContext->HasPendingInterrupt();
+  if (interrupted) {
+    // Make sure target gets reflowed again.
+    mFramesToDirty.EnumerateEntries(&MarkFramesDirtyToRoot, target);
+    NS_ASSERTION(NS_SUBTREE_DIRTY(target), "Why is the target not dirty?");
+    mDirtyRoots.AppendElement(target);
+
+    // Clear mFramesToDirty after we've done the NS_SUBTREE_DIRTY(target)
+    // assertion so that if it fails it's easier to see what's going on.
+#ifdef NOISY_INTERRUPTIBLE_REFLOW
+    printf("mFramesToDirty.Count() == %u\n", mFramesToDirty.Count());
+#endif /* NOISY_INTERRUPTIBLE_REFLOW */
+    mFramesToDirty.Clear();
+
+    // Any FlushPendingNotifications with interruptible reflows
+    // should be suppressed now. We don't want to do extra reflow work
+    // before our reflow event happens.
+    mSuppressInterruptibleReflows = PR_TRUE;
+    PostReflowEvent();
+  }
+
+  return !interrupted;
 }
 
 #ifdef DEBUG
@@ -6933,12 +7074,13 @@ PresShell::DoVerifyReflow()
 }
 #endif
 
-nsresult
+PRBool
 PresShell::ProcessReflowCommands(PRBool aInterruptible)
 {
   MOZ_TIMER_DEBUGLOG(("Start: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_START(mReflowWatch);  
 
+  PRBool interrupted = PR_FALSE;
   if (0 != mDirtyRoots.Length()) {
 
 #ifdef DEBUG
@@ -6958,7 +7100,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     {
       nsAutoScriptBlocker scriptBlocker;
       AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-      mIsReflowing = PR_TRUE;
 
       do {
         // Send an incremental reflow notification to the target frame.
@@ -6973,22 +7114,19 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
           continue;
         }
 
-        DoReflow(target);
+        interrupted = !DoReflow(target, aInterruptible);
 
         // Keep going until we're out of reflow commands, or we've run
-        // past our deadline.
-      } while (mDirtyRoots.Length() &&
+        // past our deadline, or we're interrupted.
+      } while (!interrupted && mDirtyRoots.Length() &&
                (!aInterruptible || PR_IntervalNow() < deadline));
 
-      // XXXwaterson for interruptible reflow, examine the tree and
-      // re-enqueue any unflowed reflow targets.
-
-      mIsReflowing = PR_FALSE;
+      interrupted = mDirtyRoots.Length() != 0;
     }
 
     // Exiting the scriptblocker might have killed us
     if (!mIsDestroying) {
-      DidDoReflow();
+      DidDoReflow(aInterruptible);
     }
 
     // DidDoReflow might have killed us
@@ -7024,7 +7162,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     UnsuppressAndInvalidate();
   }
 
-  return NS_OK;
+  return !interrupted;
 }
 
 void

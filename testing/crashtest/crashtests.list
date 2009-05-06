@@ -27,6 +27,7 @@ include ../../dom/src/jsurl/crashtests/crashtests.list
 
 include ../../editor/libeditor/html/crashtests/crashtests.list
 include ../../editor/libeditor/base/crashtests/crashtests.list
+include ../../editor/libeditor/text/crashtests/crashtests.list
 include ../../editor/composer/src/crashtests/crashtests.list
 include ../../editor/txmgr/tests/crashtests/crashtests.list
 
@@ -57,3 +58,8 @@ include ../../security/manager/ssl/crashtests/crashtests.list
 include ../../view/crashtests/crashtests.list
 
 include ../../widget/src/cocoa/crashtests/crashtests.list
+include ../../widget/src/crashtests/crashtests.list
+
+include ../../modules/libimg/png/crashtests/crashtests.list
+
+include ../../xpcom/string/crashtests/crashtests.list

@@ -66,6 +66,8 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 50630-4.html 50630-4-ref.html
 == 50630-4.html 50630-4-ref2.html
 == 50630-5.html 50630-5-ref.html
+== 67752-1.html 67752-1-ref.html
+== 67752-2.html 67752-2-ref.html
 == 68061-1.xml 68061-1-ref.xml
 == 68061-2.xml 68061-2-ref.xml
 == 76331-1.html 76331-1-ref.html
@@ -270,6 +272,7 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # 
 == 307102-4.html 307102-4-ref.html
 == 308406-1.html 308406-1-ref.html
 == 308406-2.html 308406-2-ref.html
+== 309550-1.html 309550-1-ref.html
 == 309914-1.xul 309914-1-ref.xul
 == 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
 == 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
@@ -569,6 +572,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 3
 == 370692-1.xhtml 370692-1-ref.xhtml
 == 371041-1.html 371041-1-ref.html
 == 371043-1.html 371043-1-ref.html
+== 371354-1.html 371354-1-ref.html
 == 371483-1.html about:blank # assertion test
 == 371561-1.html 371561-1-ref.html
 != 371681-1.xhtml about:blank
@@ -835,6 +839,9 @@ HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
 == 408782-1b.html 408782-1-ref.html
 == 408782-2a.html 408782-2-ref.html
 == 408782-2b.html 408782-2-ref.html
+== 409089-1.html 409089-1-ref.html
+== 409089-2.html 409089-2-ref.html
+== 409089-3.html 409089-3-ref.html
 == 409084-1a.html 409084-1-ref.html
 == 409084-1b.html 409084-1-ref.html
 == 409659-1a.html 409659-1-ref.html
@@ -844,6 +851,9 @@ HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
 == 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
+== 411367-1.html 411367-1-ref.html
+== 411367-2.html 411367-2-ref.html
+== 411367-3.html 411367-3-ref.html
 == 411585-1.html 411585-1-ref.html
 == 411585-2.html 411585-2-ref.html
 fails == 411585-3.html 411585-3-ref.html # bug 426909
@@ -1188,6 +1198,15 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 480880-2a.html about:blank
 == 480880-2b.html about:blank
 == 480880-2c.html about:blank
+== 481024-1a.html 481024-1-ref.html
+== 481024-1b.html 481024-1-ref.html
+== 481024-1c.html 481024-1-ref.html
+== 481024-1d.html 481024-1-ref.html
+== 481024-1e.html 481024-1-ref.html
+!= 481948-1.html 481948-1-ref.html
+!= 481948-2.html 481948-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 481948-3.html 481948-3-ref.html # different behavior on Linux, see bug 488364
+== 482398-1.html 482398-1-ref.html
 == 482592-1a.xhtml 482592-1-ref.html
 == 482592-1b.xhtml 482592-1-ref.html
 == 482659-1a.html 482659-1-ref.html
@@ -1209,3 +1228,4 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 486848-1.xul 486848-1-ref.xul
 == 487539-1.html about:blank
 == 488390-1.html 488390-1-ref.html
+== 488685-1.html 488685-1-ref.html

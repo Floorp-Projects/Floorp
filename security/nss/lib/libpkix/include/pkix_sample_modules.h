@@ -399,6 +399,51 @@ PKIX_PL_NssContext_SetTimeout(PKIX_UInt32 timeout, PKIX_PL_NssContext *nssContex
 PKIX_Error *
 PKIX_PL_NssContext_SetMaxResponseLen(PKIX_UInt32 len, PKIX_PL_NssContext *nssContext);
 
+/*
+ * FUNCTION: PKIX_PL_NssContext_SetCrlReloadDelay
+ * DESCRIPTION:
+ *
+ * Sets user defined timeout between attempts to load crl using
+ * CRLDP.
+ *
+ * PARAMETERS:
+ *  "delaySeconds"
+ *      Reload delay in seconds.
+ *  "nssContext"
+ *      Address of NssContext to be destroyed. Must be non-NULL.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Context Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_PL_NssContext_SetCrlReloadDelay(PKIX_UInt32 delaySeconds,
+                                       PKIX_PL_NssContext *nssContext);
+
+/*
+ * FUNCTION: PKIX_PL_NssContext_SetBadDerCrlReloadDelay
+ * DESCRIPTION:
+ *
+ * Sets user defined timeout between attempts to load crls
+ * that failed to decode.
+ *
+ * PARAMETERS:
+ *  "delaySeconds"
+ *      Reload delay in seconds.
+ *  "nssContext"
+ *      Address of NssContext to be destroyed. Must be non-NULL.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Context Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_PL_NssContext_SetBadDerCrlReloadDelay(PKIX_UInt32 delaySeconds,
+                                           PKIX_PL_NssContext *nssContext);
 #ifdef __cplusplus
 }
 #endif

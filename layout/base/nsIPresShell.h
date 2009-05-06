@@ -101,10 +101,10 @@ class nsPIDOMEventTarget;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// fa7f090d-b19a-4ef8-9552-82992a3b4a83
+// 4fb87dae-8986-429f-b6ba-f040750e3ee8
 #define NS_IPRESSHELL_IID \
-{ 0xfa7f090d, 0xb19a, 0x4ef8, \
-  { 0x95, 0x52, 0x82, 0x99, 0x2a, 0x3b, 0x4a, 0x83 } }
+  { 0x4fb87dae, 0x8986, 0x429f, \
+    { 0xb6, 0xba, 0xf0, 0x40, 0x75, 0x0e, 0x3e, 0xe8 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -123,6 +123,8 @@ typedef PRUint32 nsFrameState;
 #define VERIFY_REFLOW_NOISY_RC        0x10
 #define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x40
+
+#undef NOISY_INTERRUPTIBLE_REFLOW
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -367,6 +369,19 @@ public:
                               IntrinsicDirty aIntrinsicDirty,
                               nsFrameState aBitToAdd) = 0;
 
+  /**
+   * Tell the presshell that the given frame's reflow was interrupted.  This
+   * will mark as having dirty children a path from the given frame (inclusive)
+   * to the nearest ancestor with a dirty subtree, or to the reflow root
+   * currently being reflowed if no such ancestor exists (inclusive).  This is
+   * to be done immediately after reflow of the current reflow root completes.
+   * This method must only be called during reflow, and the frame it's being
+   * called on must be in the process of being reflowed when it's called.  This
+   * method doesn't mark any intrinsic widths dirty and doesn't add any bits
+   * other than NS_FRAME_HAS_DIRTY_CHILDREN.
+   */
+  NS_IMETHOD_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame) = 0;
+
   NS_IMETHOD CancelAllPendingReflows() = 0;
 
   /**
@@ -461,7 +476,7 @@ public:
    */
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
-                                   PRIntn      aHPercent) const = 0;
+                                   PRIntn      aHPercent) = 0;
 
   /**
    * Suppress notification of the frame manager that frames are
@@ -793,6 +808,20 @@ public:
   void SetCanvasBackground(nscolor aColor) { mCanvasBackgroundColor = aColor; }
   nscolor GetCanvasBackground() { return mCanvasBackgroundColor; }
 
+  /* Use the current frame tree (if it exists) to update the background
+   * color of the most recent canvas.
+   */
+  virtual void UpdateCanvasBackground() = 0;
+
+  void ObserveNativeAnonMutationsForPrint(PRBool aObserve)
+  {
+    mObservesMutationsForPrint = aObserve;
+  }
+  PRBool ObservesNativeAnonMutationsForPrint()
+  {
+    return mObservesMutationsForPrint;
+  }
+
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -828,6 +857,8 @@ protected:
   // Set to true when the accessibility service is being used to mirror
   // the dom/layout trees
   PRPackedBool              mIsAccessibilityActive;
+
+  PRPackedBool              mObservesMutationsForPrint;
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;

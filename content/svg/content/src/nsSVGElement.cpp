@@ -1153,6 +1153,12 @@ nsSVGElement::GetCtx()
   return static_cast<nsSVGSVGElement*>(svg.get());
 }
 
+/* virtual */ gfxMatrix
+nsSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+{
+  return aMatrix;
+}
+
 nsSVGElement::LengthAttributesInfo
 nsSVGElement::GetLengthInfo()
 {

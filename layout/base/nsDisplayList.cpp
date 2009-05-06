@@ -171,6 +171,8 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   state->mCaretFrame = nsnull;
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
 
+  state->mPresShell->UpdateCanvasBackground();
+
   if (!mBuildCaret)
     return;
 
@@ -192,8 +194,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
 
 void
 nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
-                                     const nsRect& aDirtyRect)
-{
+                                     const nsRect& aDirtyRect) {
   if (CurrentPresShellState()->mPresShell != aReferenceFrame->PresContext()->PresShell()) {
     // Must have not allocated a state for this presshell, presumably due
     // to OOM.
@@ -254,7 +255,7 @@ nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
     if (isMoving) {
       // The display list should include items for both the before and after
       // states (see nsLayoutUtils::ComputeRepaintRegionForCopy. So the
-      // only area we want to cover is the the area that was opaque in the
+      // only area we want to cover is the area that was opaque in the
       // before state and in the after state.
       opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
     }
@@ -491,6 +492,42 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
   ::Sort(this, Count(), aCmp, aClosure);
 }
 
+void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  nsRect dirty;
+  dirty.IntersectRect(GetBounds(aBuilder), aDirtyRect);
+  aCtx->SetColor(mColor);
+  aCtx->FillRect(dirty);
+}
+
+// Returns TRUE if aContainedRect is guaranteed to be contained in
+// the rounded rect defined by aRoundedRect and aRadii. Complex cases are
+// handled conservatively by returning FALSE in some situations where
+// a more thorough analysis could return TRUE.
+static PRBool RoundedRectContainsRect(const nsRect& aRoundedRect,
+                                      const nscoord aRadii[8],
+                                      const nsRect& aContainedRect) {
+  // rectFullHeight and rectFullWidth together will approximately contain
+  // the total area of the frame minus the rounded corners.
+  nsRect rectFullHeight = aRoundedRect;
+  nscoord xDiff = PR_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
+  rectFullHeight.x += xDiff;
+  rectFullHeight.width -= PR_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
+                                 aRadii[NS_CORNER_BOTTOM_RIGHT_X]) + xDiff;
+  if (rectFullHeight.Contains(aContainedRect))
+    return PR_TRUE;
+
+  nsRect rectFullWidth = aRoundedRect;
+  nscoord yDiff = PR_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
+  rectFullWidth.y += yDiff;
+  rectFullWidth.height -= PR_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
+                                 aRadii[NS_CORNER_BOTTOM_RIGHT_Y]) + yDiff;
+  if (rectFullWidth.Contains(aContainedRect))
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
 PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
@@ -697,16 +734,23 @@ nsDisplayBoxShadowOuter::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
     return PR_FALSE;
 
-  const nsStyleBorder* border = mFrame->GetStyleBorder();
   nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
-  if (nsRect(origin, mFrame->GetSize()).Contains(aVisibleRegion->GetBounds()) &&
-      !nsLayoutUtils::HasNonZeroCorner(border->mBorderRadius)) {
-    // the visible region is entirely inside the border-rect, and box shadows
-    // never render within the border-rect (unless there's a border radius).
-    return PR_FALSE;
-  }
+  nsRect frameRect(origin, mFrame->GetSize());
+  const nsRect visibleBounds = aVisibleRegion->GetBounds();
+  if (!frameRect.Contains(visibleBounds))
+    return PR_TRUE;
 
-  return PR_TRUE;
+  // the visible region is entirely inside the border-rect, and box shadows
+  // never render within the border-rect (unless there's a border radius).
+  nscoord twipsRadii[8];
+  PRBool hasBorderRadii =
+     nsCSSRendering::GetBorderRadiusTwips(mFrame->GetStyleBorder()->mBorderRadius,
+                                          frameRect.width,
+                                          twipsRadii);
+  if (!hasBorderRadii)
+    return PR_FALSE;
+
+  return !RoundedRectContainsRect(frameRect, twipsRadii, visibleBounds);
 }
 
 void

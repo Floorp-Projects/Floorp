@@ -72,10 +72,6 @@ function testHtmlSerializer_1 () {
   out = encoder.encodeToString();
   is(out, expected, "test OutputPreformatted");
 
-  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputWrap);
-  out = encoder.encodeToString();
-  is(out, expected, "test OutputWrap");
-
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatFlowed);
   out = encoder.encodeToString();
   is(out, expected, "test OutputFormatFlowed");
@@ -88,6 +84,13 @@ function testHtmlSerializer_1 () {
   out = encoder.encodeToString();
   is(out, expected, "test OutputNoFramesContent");
 
+
+  //------------ OutputWrap
+  // by default, this flag is set, so we should have the same result as
+  // when there are no flags.
+  encoder.init(doc, "text/html", de.OutputLFLineBreak |de.OutputWrap);
+  out = encoder.encodeToString();
+  is(out, expected, "test OutputWrap");
 
   //------------ OutputFormatted
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatted);
@@ -180,7 +183,6 @@ function testHtmlSerializer_1 () {
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_no_body.html");
   is(out, expected, "test with no body element");
-
 
   SimpleTest.finish();
 }

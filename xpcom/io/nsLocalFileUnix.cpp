@@ -973,12 +973,12 @@ nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModTime)
     PRFileInfo64 info;
     if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS)
         return NSRESULT_FOR_ERRNO();
+    PRInt64 modTime = PRInt64(info.modifyTime);
+    if (modTime == 0)
+        *aLastModTime = 0;
+    else
+        *aLastModTime = modTime / PRInt64(PR_USEC_PER_MSEC);
 
-    // PRTime is a 64 bit value
-    // microseconds -> milliseconds
-    PRInt64 usecPerMsec;
-    LL_I2L(usecPerMsec, PR_USEC_PER_MSEC);
-    LL_DIV(*aLastModTime, info.modifyTime, usecPerMsec);
     return NS_OK;
 }
 
@@ -988,15 +988,13 @@ nsLocalFile::SetLastModifiedTime(PRInt64 aLastModTime)
     CHECK_mPath();
 
     int result;
-    if (! LL_IS_ZERO(aLastModTime)) {
+    if (aLastModTime != 0) {
         ENSURE_STAT_CACHE();
         struct utimbuf ut;
         ut.actime = mCachedStat.st_atime;
 
         // convert milliseconds to seconds since the unix epoch
-        double dTime;
-        LL_L2D(dTime, aLastModTime);
-        ut.modtime = (time_t) (dTime / PR_MSEC_PER_SEC);
+        ut.modtime = (time_t)(PRFloat64(aLastModTime) / PR_MSEC_PER_SEC);
         result = utime(mPath.get(), &ut);
     } else {
         result = utime(mPath.get(), nsnull);
@@ -1013,12 +1011,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModTimeOfLink)
     struct STAT sbuf;
     if (LSTAT(mPath.get(), &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
-    LL_I2L(*aLastModTimeOfLink, (PRInt32)sbuf.st_mtime);
-
-    // lstat returns st_mtime in seconds
-    PRInt64 msecPerSec;
-    LL_I2L(msecPerSec, PR_MSEC_PER_SEC);
-    LL_MUL(*aLastModTimeOfLink, *aLastModTimeOfLink, msecPerSec);
+    *aLastModTimeOfLink = PRInt64(sbuf.st_mtime) * PRInt64(PR_MSEC_PER_SEC);
 
     return NS_OK;
 }
@@ -1087,7 +1080,7 @@ NS_IMETHODIMP
 nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
     NS_ENSURE_ARG_POINTER(aFileSize);
-    *aFileSize = LL_ZERO;
+    *aFileSize = 0;
     ENSURE_STAT_CACHE();
 
 #if defined(VMS)

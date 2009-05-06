@@ -42,12 +42,12 @@ function fillform(doc) {
 function checkform(doc) {
     for (var i in textareas) {
         var textContent = doc.getElementById(textareas[i]).textContent;
-        ok(/form state/.test(textContent),
+        ok(/form\s+state/m.test(textContent),
             "Modified textarea "+textareas[i]+" form state not preserved!");
     }
     for (var i in textboxes) {
         var value = doc.getElementById(textboxes[i]).value;
-        ok(/form state/.test(value),
+        ok(/form\s+state/m.test(value),
             "Modified textbox "+textboxes[i]+" form state not preserved!");
     }
     ok(doc.getElementById('a-checkbox').checked,

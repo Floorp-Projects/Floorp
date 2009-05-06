@@ -146,7 +146,74 @@ function runTest2() {
   isnot(window.frames[0].counter, 0, "Timers should have run!");
   counter = window.frames[0].counter;
   window.frames[0].counterTimeout = "";
+  setTimeout(runTest3, 0);
+}
+
+var elementIndex = 0;
+var compareEmptyElement = true;
+var emptyFormElements =
+  ["<input type='text'>",
+   "<input type='password'>",
+   "<input type='file'>",
+   "<input type='button'>",
+   "<input type='submit'>",
+   "<input type='reset'>",
+   "<input type='checkbox'>",
+   "<input type='radio'>",
+   "<select></select>",
+   "<select size='5'></select>",
+   "<textarea></textarea>"];
+
+var formElements =
+  ["<input type='text' value='text'>",
+   "<input type='password' value='password'>",
+   "<input type='file' value='file'>",
+   "<input type='button' value='button'>",
+   "<input type='submit' value='submit button'>",
+   "<input type='reset' value='reset button'>",
+   "<input type='checkbox' checked>",
+   "<input type='radio' checked>",
+   "<select><option>option1</option></select>",
+   "<select size='5'><option>1</option><option>2</option><option>3</option></select>",
+   "<textarea value='textarea'>textarea</textarea>"];
+
+function runTest3() {
+  if (compareEmptyElement) {
+    var currentIndex = elementIndex;
+    ++elementIndex;
+    if (elementIndex >= emptyFormElements.length) {
+      elementIndex = 0;
+      compareEmptyElement = false;
+    }
+    compareFormElementPrint(emptyFormElements[currentIndex], emptyFormElements[currentIndex], true);
+    return;
+  } else if (elementIndex < emptyFormElements.length) {
+    var currentIndex = elementIndex;
+    ++elementIndex;
+    compareFormElementPrint(emptyFormElements[currentIndex], formElements[currentIndex], false);
+    return;
+  }
+
   SimpleTest.finish();
+}
+
+function compareFormElementPrint(el1, el2, equals) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  window.frames[0].document.body.innerHTML = el1;
+  window.frames[0].document.body.firstChild.value =
+    window.frames[0].document.body.firstChild.getAttribute('value');
+  printpreview();
+  ctx1.drawWindow(window.frames[0], 0, 0, 300, 300, "rgb(256,256,256)");
+  exitprintpreview();
+  window.frames[0].document.body.innerHTML = el2;
+  window.frames[0].document.body.firstChild.value =
+    window.frames[0].document.body.firstChild.getAttribute('value');
+  printpreview();
+  ctx2.drawWindow(window.frames[0], 0, 0, 300, 300, "rgb(256,256,256)");
+  exitprintpreview();
+  is(compareCanvases(), equals,
+     "Comparing print preview didn't succeed [" + el1 + " : " + el2 + "]");
+  setTimeout(runTest3, 100);
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -154,7 +221,7 @@ SimpleTest.waitForExplicitFinish();
 </script>
 <iframe height="200" width="600"></iframe>
 <table>
-<tr><th>Print preview canvas before mutations</th><th>Print preview canvas after mutations</th></tr>
+<tr><th>Print preview canvas 1</th><th>Print preview canvas 2</th></tr>
 <tr>
 <td><canvas height="300" width="300"></canvas></td>
 <td><canvas height="300" width="300"></canvas></td>

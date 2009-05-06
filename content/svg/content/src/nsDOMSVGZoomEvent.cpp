@@ -80,23 +80,21 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(nsPresContext* aPresContext,
         // properties will be left null which is probably what we want.
         nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(rootContent);
         if (svgElement) {
-          svgElement->GetCurrentScale(&mNewScale);
-          float x, y;
-          nsCOMPtr<nsIDOMSVGPoint> currentTranslate;
-          svgElement->GetCurrentTranslate(getter_AddRefs(currentTranslate));
-          currentTranslate->GetX(&x);
-          currentTranslate->GetY(&y);
-          NS_NewSVGReadonlyPoint(getter_AddRefs(mNewTranslate), x, y);
-
           nsSVGSVGElement *SVGSVGElement =
             static_cast<nsSVGSVGElement*>(rootContent);
+  
+          mNewScale = SVGSVGElement->GetCurrentScale();
           mPreviousScale = SVGSVGElement->GetPreviousScale();
+
+          const nsSVGTranslatePoint& translate =
+            SVGSVGElement->GetCurrentTranslate();
+          NS_NewSVGReadonlyPoint(getter_AddRefs(mNewTranslate),
+                                 translate.GetX(), translate.GetY());
+
+          const nsSVGTranslatePoint& prevTranslate =
+            SVGSVGElement->GetPreviousTranslate();
           NS_NewSVGReadonlyPoint(getter_AddRefs(mPreviousTranslate),
-                                 SVGSVGElement->GetPreviousTranslate_x(),
-                                 SVGSVGElement->GetPreviousTranslate_y());
-          // Important: we call RecordCurrentST() here to make sure that
-          // scripts that create an SVGZoomEvent won't get our "Previous" data
-          SVGSVGElement->RecordCurrentScaleTranslate();
+                                 prevTranslate.GetX(), prevTranslate.GetY());
         }
       }
     }

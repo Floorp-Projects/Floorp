@@ -83,4 +83,20 @@ ifndef NSS_LIB_DIR
     NSS_LIB_DIR = $(DIST)/lib
 endif
 
+ifdef NSSUTIL_INCLUDE_DIR
+    INCLUDES += -I$(NSSUTIL_INCLUDE_DIR)
+endif
+
+ifndef NSSUTIL_LIB_DIR
+    NSSUTIL_LIB_DIR = $(DIST)/lib
+endif
+
+ifdef SOFTOKEN_INCLUDE_DIR
+    INCLUDES += -I$(SOFTOKEN_INCLUDE_DIR)
+endif
+
+ifndef SOFTOKEN_LIB_DIR
+    SOFTOKEN_LIB_DIR = $(DIST)/lib
+endif
+
 MK_LOCATION = included

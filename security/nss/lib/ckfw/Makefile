@@ -41,9 +41,9 @@ include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
 include $(CORE_DEPTH)/coreconf/rules.mk
 
-#ifdef MOZILLA_CLIENT
-#NSS_BUILD_CAPI = 1
-#endif
+ifdef MOZILLA_CLIENT
+NSS_BUILD_CAPI = 1
+endif
 
 # This'll need some help from a build person.
 

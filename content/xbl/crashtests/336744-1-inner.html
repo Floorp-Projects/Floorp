@@ -1,0 +1,6 @@
+<html><head>
+<title>Testcase bug 336744 - Crash when window gets destroyed during popuphiding event</title>
+</head><body>
+This should not crash Mozilla within 1 second<br>
+<iframe src="data:application/vnd.mozilla.xul+xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%3F%3E%0A%3C%3Fxml-stylesheet%20href%3D%22chrome%3A//global/skin%22%20type%3D%22text/css%22%3F%3E%0A%0A%3Cwindow%20xmlns%3Ahtml%3D%22http%3A//www.w3.org/1999/xhtml%22%0A%20%20%20%20%20%20%20%20xmlns%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%3E%0A%3Chtml%3Ascript%3E%0Adocument.addEventListener%28%22popuphiding%22%2C%20doe%2C%20true%29%3B%0Afunction%20doe%28e%29%20%7B%0Avar%20x%3D%20parent.document.getElementsByTagName%28%27iframe%27%29%5B0%5D%3B%0Ax.parentNode.removeChild%28x%29%3B%0A%7D%0AsetTimeout%28function%28%29%20%7B%20document.getElementsByTagName%28%22menupopup%22%29%5B0%5D.showPopup%28%29%3B%20%7D%2C%20800%29%3B%0AsetTimeout%28function%28%29%20%7B%20document.getElementsByTagName%28%22menupopup%22%29%5B0%5D.hidePopup%28%29%3B%20%7D%2C%201000%29%3B%0A%3C/html%3Ascript%3E%0A%3Cscript%3E%0A%0A%3C/script%3E%0A%3Cmenupopup%3E%0A%20%20%3Cmenuitem%20label%3D%22One%22/%3E%0A%3C/menupopup%3E%0A%3C/window%3E%0A"></iframe>
+</body></html>

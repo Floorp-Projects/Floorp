@@ -3200,7 +3200,7 @@ HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
     else if (mCurrentContext) {
       mCurrentContext->FlushText();
     }
-    if (aType >= Flush_Layout) {
+    if (aType >= Flush_InterruptibleLayout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       StartLayout(PR_TRUE);

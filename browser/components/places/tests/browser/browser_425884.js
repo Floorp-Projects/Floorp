@@ -102,6 +102,10 @@ function test() {
   folderBNode = testRootNode.getChild(1);
   validate(folderBNode);
 
+  // Close containers, cleaning up their observers.
+  testRootNode.containerOpen = false;
+  toolbarNode.containerOpen = false;
+
   // clean up
   PlacesUIUtils.ptm.undoTransaction();
   PlacesUtils.bookmarks.removeItem(folderAId);

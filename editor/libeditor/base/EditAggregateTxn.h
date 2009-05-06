@@ -41,13 +41,8 @@
 #include "EditTxn.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
-
-#define EDIT_AGGREGATE_TXN_CID \
-{/* 345921a0-ac49-11d2-86d8-000064657374 */ \
-0x345921a0, 0xac49, 0x11d2, \
-{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
-
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 /**
  * base class for all document editing transactions that require aggregation.
@@ -57,8 +52,6 @@ class EditAggregateTxn : public EditTxn
 {
 public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void **aInstancePtr);
-
-  static const nsIID& GetCID() { static const nsIID cid = EDIT_AGGREGATE_TXN_CID; return cid; }
 
   EditAggregateTxn();
 
@@ -88,7 +81,7 @@ public:
 
 protected:
 
-  nsCOMPtr<nsISupportsArray> mChildren;
+  nsTArray< nsRefPtr<EditTxn> > mChildren;
   nsCOMPtr<nsIAtom> mName;
 };
 

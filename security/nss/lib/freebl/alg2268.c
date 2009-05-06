@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* $Id: alg2268.c,v 1.8 2008/11/18 19:48:21 rrelyea%redhat.com Exp $ */
+/* $Id: alg2268.c,v 1.9 2009/04/09 22:11:07 julien.pierre.boogz%sun.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -105,7 +105,7 @@ struct RC2ContextStr {
     ((PRUint16 *)output)[2] =  R[2]; \
     ((PRUint16 *)output)[3] =  R[3];   
 
-#if defined (_X86_)
+#if defined (NSS_X86_OR_X64)
 #define LOAD(R)  LOAD_EASY(R)
 #define STORE(R) STORE_EASY(R)
 #elif !defined(IS_LITTLE_ENDIAN)

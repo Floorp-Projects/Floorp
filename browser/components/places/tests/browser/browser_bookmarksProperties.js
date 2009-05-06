@@ -210,23 +210,61 @@ gTests.push({
     // open tags autocomplete and press enter
     var tagsField = this.window.document.getElementById("editBMPanel_tagsField");
     var self = this;
-    tagsField.popup.addEventListener("popupshown", function (aEvent) {
-        tagsField.popup.removeEventListener("popupshown", arguments.callee, true);
-        tagsField.popup.focus();
-        EventUtils.synthesizeKey("VK_RETURN", {}, self.window);
-      }, true);
-    tagsField.popup.addEventListener("popuphidden", function (aEvent) {
-        tagsField.popup.removeEventListener("popuphidden", arguments.callee, true);
-        self.finish();
-      }, true);
+
+    var windowObserver = {
+      observe: function(aSubject, aTopic, aData) {
+        if (aTopic === "domwindowclosed") {
+          ww.unregisterNotification(this);
+          tagsField.popup.removeEventListener("popuphidden", popupListener, true);
+          ok(false, "Dialog window should not be closed by pressing Enter on the autocomplete popup");
+          self.finish();
+        }
+      }
+    };
+
+    var popupListener = {
+      handleEvent: function(aEvent) {
+        switch (aEvent.type) {
+          case "popuphidden":
+            // Everything worked fine, we can stop observing the window.
+            ww.unregisterNotification(windowObserver);
+            tagsField.popup.removeEventListener("popuphidden", this, true);
+            self.window.document.documentElement.cancelDialog();
+            self.finish();
+            break;
+          case "popupshown":
+            tagsField.popup.removeEventListener("popupshown", this, true);
+            // In case this test fails the window will close, we should mark the
+            // failure and continue, to avoid timing out.
+            ww.registerNotification(windowObserver);
+            var tree = tagsField.popup.tree;
+            // Focus and select first result.
+            isnot(tree, null, "Autocomplete results tree exists");
+            is(tree.view.rowCount, 1, "We have 1 autocomplete result");
+            tagsField.popup.selectedIndex = 0;
+            is(tree.view.selection.count, 1,
+               "We have selected a tag from the autocomplete popup");
+            dump("About to focus the autocomplete results tree\n");
+            tree.focus();
+            EventUtils.synthesizeKey("VK_RETURN", {}, self.window);
+            break;
+          default:
+            ok(false, "unknown event: " + aEvent.type);
+            return;
+        }
+      }
+    };
+    tagsField.popup.addEventListener("popupshown", popupListener, true);
+    tagsField.popup.addEventListener("popuphidden", popupListener, true);
+
+    // Open tags autocomplete popup.
+    dump("About to focus the tagsField\n");
     tagsField.focus();
     tagsField.value = "";
     EventUtils.synthesizeKey("t", {}, this.window);
   },
 
   finish: function() {
-    isnot(this.window, null, "Window is still open");
-    this.window.document.documentElement.cancelDialog();
     toggleSidebar("viewBookmarksSidebar", false);
     runNextTest();
   },
@@ -268,7 +306,7 @@ gTests.push({
     this._itemId = this.window.gEditItemOverlay._itemId;
     // Change folder name
     var namePicker = this.window.document.getElementById("editBMPanel_namePicker");
-    namePicker.value = "";
+    var userEnteredName = this.window.document.getElementById("editBMPanel_userEnteredName");
     var self = this;
     this.window.addEventListener("unload", function(event) {
         this.window.removeEventListener("unload", arguments.callee, false);
@@ -276,8 +314,10 @@ gTests.push({
           self.finish();
         });
       }, false);
+    namePicker.value = "n";
+    userEnteredName.label = "n";
+    dump("About to focus the namePicker field\n");
     namePicker.focus();
-    EventUtils.synthesizeKey("n", {}, this.window);
     EventUtils.synthesizeKey("VK_RETURN", {}, this.window);
   },
 
@@ -328,23 +368,61 @@ gTests.push({
     // open tags autocomplete and press enter
     var tagsField = this.window.document.getElementById("editBMPanel_tagsField");
     var self = this;
-    tagsField.popup.addEventListener("popupshown", function (aEvent) {
-        tagsField.popup.removeEventListener("popupshown", arguments.callee, true);
-        tagsField.popup.focus();
-        EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
-      }, true);
-    tagsField.popup.addEventListener("popuphidden", function (aEvent) {
-        tagsField.popup.removeEventListener("popuphidden", arguments.callee, true);
-        self.finish();
-      }, true);
+
+    var windowObserver = {
+      observe: function(aSubject, aTopic, aData) {
+        if (aTopic === "domwindowclosed") {
+          ww.unregisterNotification(this);
+          tagsField.popup.removeEventListener("popuphidden", popupListener, true);
+          ok(false, "Dialog window should not be closed by pressing Escape on the autocomplete popup");
+          self.finish();
+        }
+      }
+    };
+
+    var popupListener = {
+      handleEvent: function(aEvent) {
+        switch (aEvent.type) {
+          case "popuphidden":
+            // Everything worked fine, we can stop observing the window.
+            ww.unregisterNotification(windowObserver);
+            tagsField.popup.removeEventListener("popuphidden", this, true);
+            self.window.document.documentElement.cancelDialog();
+            self.finish();
+            break;
+          case "popupshown":
+            tagsField.popup.removeEventListener("popupshown", this, true);
+            // In case this test fails the window will close, we should mark the
+            // failure and continue, to avoid timing out.
+            ww.registerNotification(windowObserver);
+            var tree = tagsField.popup.tree;
+            // Focus and select first result.
+            isnot(tree, null, "Autocomplete results tree exists");
+            is(tree.view.rowCount, 1, "We have 1 autocomplete result");
+            tagsField.popup.selectedIndex = 0;
+            is(tree.view.selection.count, 1,
+               "We have selected a tag from the autocomplete popup");
+            dump("About to focus the autocomplete results tree\n");
+            tree.focus();
+            EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
+            break;
+          default:
+            ok(false, "unknown event: " + aEvent.type);
+            return;
+        }
+      }
+    };
+    tagsField.popup.addEventListener("popupshown", popupListener, true);
+    tagsField.popup.addEventListener("popuphidden", popupListener, true);
+
+    // Open tags autocomplete popup.
+    dump("About to focus the tagsField\n");
     tagsField.focus();
     tagsField.value = "";
     EventUtils.synthesizeKey("t", {}, this.window);
   },
 
   finish: function() {
-    isnot(this.window, null, "Window is still open");
-    this.window.document.documentElement.cancelDialog();
     toggleSidebar("viewBookmarksSidebar", false);
     runNextTest();
   },
@@ -364,6 +442,7 @@ gTests.push({
 //------------------------------------------------------------------------------
 
 function test() {
+  dump("Starting test browser_bookmarksProperties.js\n");
   waitForExplicitFinish();
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils in context");
@@ -384,6 +463,7 @@ function runNextTest() {
     // Goto next tests.
     gCurrentTest = gTests.shift();
     ok(true, "*** TEST: " + gCurrentTest.desc);
+    dump("*** TEST: " + gCurrentTest.desc + "\n");
     gCurrentTest.setup();
     execute_test_in_sidebar();
   }
@@ -401,7 +481,6 @@ function execute_test_in_sidebar() {
     var sidebar = document.getElementById("sidebar");
     sidebar.addEventListener("load", function() {
       sidebar.removeEventListener("load", arguments.callee, true);
-      sidebar.focus();
       // Need to executeSoon since the tree is initialized on sidebar load.
       executeSoon(open_properties_dialog);
     }, true);

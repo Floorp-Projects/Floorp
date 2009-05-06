@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=79: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -445,6 +446,23 @@ nsINode::GetChildNodesList()
 
   return slots->mChildNodes;
 }
+
+#ifdef DEBUG
+void
+nsINode::CheckNotNativeAnonymous() const
+{
+  if (!IsNodeOfType(eCONTENT))
+    return;
+  nsIContent* content = static_cast<const nsIContent *>(this)->GetBindingParent();
+  while (content) {
+    if (content->IsRootOfNativeAnonymousSubtree()) {
+      NS_ERROR("Element not marked to be in native anonymous subtree!");
+      break;
+    }
+    content = content->GetBindingParent();
+  }
+}
+#endif
 
 nsresult
 nsINode::GetParentNode(nsIDOMNode** aParentNode)

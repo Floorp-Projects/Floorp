@@ -1,0 +1,7 @@
+# Colormangement
+
+# bug 489133 and bug 460520
+== invalid-chrm.png invalid-chrm-ref.png
+== invalid-whitepoint.png invalid-chrm-ref.png
+# bug 488955
+== trc-type.html trc-type-ref.html

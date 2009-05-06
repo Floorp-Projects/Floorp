@@ -46,12 +46,11 @@
 
       native OSType(OSType);
       native FSSpec(FSSpec);
-[ptr] native FSSpecPtr(FSSpec);
       native FSRef(FSRef);
 [ptr] native FSRefPtr(FSRef);
       native CFURLRef(CFURLRef);
 
-[scriptable, uuid(7224E826-3F6C-4BB2-9C6E-02DA44575743)]
+[scriptable, uuid(86D685E5-EE3F-405A-B521-446529DB82E5)]
 interface nsILocalFileMac : nsILocalFile
 {
    /**
@@ -164,29 +163,7 @@ interface nsILocalFileMac : nsILocalFile
     */
    [noscript] attribute OSType fileType;
    [noscript] attribute OSType fileCreator;
-    
-   /**
-    * setFileTypeAndCreatorFromMIMEType
-    *
-    * Sets the file type and creator code from a MIME type.
-    * Internet Config is used to determine the mapping.
-    *
-    * @param   aMIMEType
-    *
-    */
-   void setFileTypeAndCreatorFromMIMEType(in string aMIMEType);
-    
-   /**
-    * setFileTypeAndCreatorFromExtension
-    *
-    * Sets the file type and creator code from a file extension
-    * Internet Config is used to determine the mapping.
-    *
-    * @param   aExtension
-    *
-    */
-   void setFileTypeAndCreatorFromExtension(in string aExtension);
-    
+
    /**
     * launchWithDoc
     *

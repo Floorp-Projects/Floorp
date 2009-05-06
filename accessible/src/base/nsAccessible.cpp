@@ -319,21 +319,27 @@ nsAccessible::GetName(nsAString& aName)
 
 NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
 {
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   // There are 4 conditions that make an accessible have no accDescription:
   // 1. it's a text node; or
   // 2. It has no DHTML describedby property
   // 3. it doesn't have an accName; or
   // 4. its title attribute already equals to its accName nsAutoString name; 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node shut down
-  }
+  NS_ASSERTION(content, "No content of valid accessible!");
+  if (!content)
+    return NS_ERROR_FAILURE;
+
   if (!content->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString description;
     nsresult rv = nsTextEquivUtils::
       GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
                              description);
-    if (NS_FAILED(rv)) {
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (description.IsEmpty()) {
       PRBool isXUL = content->IsNodeOfType(nsINode::eXUL);
       if (isXUL) {
         // Try XUL <description control="[id]">description text</description>
@@ -2335,6 +2341,17 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
    case eSwitchAction:
      aName.AssignLiteral("switch");
      return NS_OK;
+     
+   case eSortAction:
+     aName.AssignLiteral("sort");
+     return NS_OK;
+   
+   case eExpandAction:
+     if (states & nsIAccessibleStates::STATE_COLLAPSED)
+       aName.AssignLiteral("expand");
+     else
+       aName.AssignLiteral("collapse");
+     return NS_OK;
   }
 
   return NS_ERROR_INVALID_ARG;
@@ -3206,7 +3223,7 @@ nsAccessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (!mDOMNode)
+  if (IsDefunct())
     return NS_ERROR_FAILURE;  // Node already shut down
 
  if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
@@ -3215,12 +3232,19 @@ nsAccessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ENSURE_STATE(content);
 
-  PRInt32 result = NS_OK;
-  nsAutoString value;
-  if (content->GetAttr(kNameSpaceID_None, aProperty, value))
-    *aValue = value.ToFloat(&result);
+  nsAutoString attrValue;
+  content->GetAttr(kNameSpaceID_None, aProperty, attrValue);
 
-  return result;
+  // Return zero value if there is no attribute or its value is empty.
+  if (attrValue.IsEmpty())
+    return NS_OK;
+
+  PRInt32 error = NS_OK;
+  double value = attrValue.ToFloat(&error);
+  if (NS_SUCCEEDED(error))
+    *aValue = value;
+
+  return NS_OK;
 }
 
 PRUint32
@@ -3229,8 +3253,11 @@ nsAccessible::GetActionRule(PRUint32 aStates)
   if (aStates & nsIAccessibleStates::STATE_UNAVAILABLE)
     return eNoAction;
 
+  nsIContent* content = nsCoreUtils::GetRoleContent(mDOMNode);
+  if (!content)
+    return eNoAction;
+  
   // Check if it's simple xlink.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (nsCoreUtils::IsXLink(content))
     return eJumpAction;
 
@@ -3240,10 +3267,16 @@ nsAccessible::GetActionRule(PRUint32 aStates)
 
   if (isOnclick)
     return eClickAction;
-
+  
   // Get an action based on ARIA role.
-  if (mRoleMapEntry)
+  if (mRoleMapEntry &&
+      mRoleMapEntry->actionRule != eNoAction)
     return mRoleMapEntry->actionRule;
+
+  // Get an action based on ARIA attribute.
+  if (nsAccUtils::HasDefinedARIAToken(content,
+                                   nsAccessibilityAtoms::aria_expanded))
+    return eExpandAction;
 
   return eNoAction;
 }

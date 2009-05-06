@@ -133,8 +133,6 @@ class KeyboardLayout
   #define NUM_OF_KEYS   50
 
   HKL mKeyboardLayout;
-  UINT mCodePage;
-  DWORD mIMEProperty;
 
   VirtualKey mVirtualKeys [NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
@@ -178,16 +176,6 @@ public:
                                      PRUint32 aMaxChars) const;
 
   HKL GetLayout() { return mKeyboardLayout; }
-  UINT GetCodePage() { return mCodePage; }
-  DWORD GetIMEProperty() { return mIMEProperty; }
-  PRBool ShouldDrawCompositionStringOurselves() const
-  {
-    // If current IME has special UI or its composition window should not
-    // positioned to caret position, we should now draw composition string
-    // ourselves.
-    return !(mIMEProperty & IME_PROP_SPECIAL_UI) &&
-            (mIMEProperty & IME_PROP_AT_CARET);
-  }
 };
 
 #endif

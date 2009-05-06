@@ -19,39 +19,20 @@
 /* ::::: Identity Indicator Styling ::::: */
 
 #urlbar[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: 8px;
+  -moz-margin-start: 9px;
 }
 
 #identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: -6px;
+  -moz-margin-start: -7px;
 }
 
-#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  margin: -4px 0;
-  padding: 3px 2px 3px 3px;
-  background-position: 0 3px;
-  -moz-border-radius-topleft: 14px;
-  -moz-border-radius-bottomleft: 14px;
-}
-#identity-box:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -57px;
-}
-#identity-box.verifiedDomain[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -117px;
-}
-#identity-box.verifiedDomain:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -177px;
-}
-#identity-box.verifiedIdentity[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -237px;
-}
-#identity-box.verifiedIdentity:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
-  background-position: 0 -297px;
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+  -moz-border-radius: 11px 0 2px 11px / 15px 0 2px 15px;
 }
 
 /* Match #identity-box[chromedir="ltr"]'s -moz-margin-start */
 #identity-popup[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: 6px;
+  -moz-margin-start: 7px;
 }
 
 /* Bug 413060, comment 16: Vista Aero is a special case where we use a
@@ -62,18 +43,11 @@
   color: InfoText;
 }
 
-/* Bug 432529 - Don't let the button have an end and bottom margin */
-#identity-popup-more-info-button:-moz-system-metric(windows-default-theme) {
-  margin-bottom: 0;
-  -moz-margin-end: 0;
-}
-
 /* Make the left and right paddings smaller, to compensate for the horizontal
    space added by the tooltip appearance, see bug 432529. */
 #identity-popup-container:-moz-system-metric(windows-default-theme) {
   -moz-padding-start: 6px;
   -moz-padding-end: 6px;
-  padding-bottom: 9px;
 }
 
 #sidebar-splitter:-moz-system-metric(windows-default-theme) {

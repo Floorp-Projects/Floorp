@@ -41,7 +41,7 @@
 function run_test() {
   // Verify write access to the custom app dir
   dump("Testing: write access is required to the application directory\n");
-  var testFile = gCustomGreD.clone();
+  var testFile = getCurrentProcessDir();
   testFile.append("update_write_access_test");
   testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
   do_check_true(testFile.exists());

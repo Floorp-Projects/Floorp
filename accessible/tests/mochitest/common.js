@@ -215,7 +215,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
         acc.QueryInterface(aInterfaces[index]);
       } catch (e) {
         if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
-          ok(false, "Can't query " + aInterfaces[index] + " for " + aID);
+          ok(false, "Can't query " + aInterfaces[index] + " for " + aAccOrElmOrID);
 
         return null;
       }
@@ -226,7 +226,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
   try {
     acc.QueryInterface(aInterfaces);
   } catch (e) {
-    ok(false, "Can't query " + aInterfaces + " for " + aID);
+    ok(false, "Can't query " + aInterfaces + " for " + aAccOrElmOrID);
     return null;
   }
   
@@ -266,6 +266,38 @@ function ensureAccessibleTree(aAccOrElmOrID)
 }
 
 /**
+ * Compare expected and actual accessibles trees.
+ */
+function testAccessibleTree(aAccOrElmOrID, aAccTree)
+{
+  var acc = getAccessible(aAccOrElmOrID);
+  if (!acc)
+    return;
+
+  for (var prop in aAccTree) {
+    var msg = "Wrong value of property '" + prop + "'.";
+    if (prop == "role")
+      is(roleToString(acc[prop]), roleToString(aAccTree[prop]), msg);
+    else if (prop != "children")
+      is(acc[prop], aAccTree[prop], msg);
+  }
+
+  if ("children" in aAccTree) {
+    var children = acc.children;
+    is(aAccTree.children.length, children.length,
+       "Different amount of expected children.");
+
+    if (aAccTree.children.length == children.length) { 
+      for (var i = 0; i < children.length; i++) {
+        var child = children.queryElementAt(i, nsIAccessible);
+        testAccessibleTree(child, aAccTree.children[i]);
+      }
+    }
+  }
+}
+
+
+/**
  * Convert role to human readable string.
  */
 function roleToString(aRole)
@@ -292,7 +324,7 @@ function statesToString(aStates, aExtraStates)
  */
 function eventTypeToString(aEventType)
 {
-  gAccRetrieval.getStringEventType(aEventType);
+  return gAccRetrieval.getStringEventType(aEventType);
 }
 
 /**

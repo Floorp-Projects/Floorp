@@ -183,8 +183,29 @@ function populateDB(aArray) {
                                         "SET title = :title WHERE url = :url");
           stmt.params.title = qdata.title;
           stmt.params.url = qdata.uri;
-          stmt.execute();
-          stmt.finalize();
+          try {
+            stmt.execute();
+          }
+          finally {
+            stmt.finalize();
+          }
+        }
+        if (qdata.visitCount && !qdata.isDetails) {
+          // Set a fake visit_count, this is not a real count but can be used
+          // to test sorting by visit_count.
+          let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+                   getService(Ci.nsPIPlacesDatabase).
+                   DBConnection;
+          let stmt = db.createStatement("UPDATE moz_places_view " +
+                                        "SET visit_count = :vc WHERE url = :url");
+          stmt.params.vc = qdata.visitCount;
+          stmt.params.url = qdata.uri;
+          try {
+            stmt.execute();
+          }
+          finally {
+            stmt.finalize();
+          }
         }
       }
 
@@ -225,10 +246,6 @@ function populateDB(aArray) {
                                         qdata.annoExpiration);
       }
 
-      if (qdata.isTag) {
-        tagssvc.tagURI(uri(qdata.uri), qdata.tagArray);
-      }
-
       if (qdata.isFavicon) {
         // Not planning on doing deep testing of favIcon service so these two
         // calls should be sufficient to get favicons into the database
@@ -260,6 +277,10 @@ function populateDB(aArray) {
           bmsvc.setItemLastModified(itemId, qdata.lastModified);
 
         LOG("added bookmark");
+      }
+
+      if (qdata.isTag) {
+        tagssvc.tagURI(uri(qdata.uri), qdata.tagArray);
       }
 
       if (qdata.isDynContainer) {
@@ -329,6 +350,7 @@ function queryData(obj) {
   this.lastModified = obj.lastModified ? obj.lastModified : today;
   this.dateAdded = obj.dateAdded ? obj.dateAdded : today;
   this.keyword = obj.keyword ? obj.keyword : "";
+  this.visitCount = obj.visitCount ? obj.visitCount : 0;
 
   // And now, the attribute for whether or not this object should appear in the
   // resulting query

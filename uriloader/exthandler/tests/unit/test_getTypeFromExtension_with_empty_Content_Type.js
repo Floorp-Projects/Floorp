@@ -41,9 +41,16 @@
  * "Content Type" is empty in the registry.
  */
 function run_test() {
-  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  // --- Preliminary platform check ---
+
+  // If this test is not running on the Windows platform, stop now, before
+  // calling XPCOMUtils.generateQI during the MockWindowsRegKey declaration.
+  if (!("@mozilla.org/windows-registry-key;1" in Components.classes))
+    return;
 
   // --- Modified nsIWindowsRegKey implementation ---
+
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
   /**
    * Constructs a new mock registry key by wrapping the provided object.
@@ -192,33 +199,21 @@ function run_test() {
     );
   }
 
-  // --- Test support functions ---
-
-  /**
-   * Returns true if the application is executing on Windows.
-   */
-  function isOnWindows() {
-    return ("@mozilla.org/windows-registry-key;1" in Components.classes);
-  }
-
   // --- Test procedure ---
 
-  // This test is Windows-specific
-  if(isOnWindows()) {
-    // Activate the override of the ".txt" file association data in the registry
-    registerMockWindowsRegKeyFactory();
-    try {
-      // Try and get the MIME type associated with the extension. If this
-      // operation does not throw an unexpected exception, the test succeeds.
-      var type = Cc["@mozilla.org/mime;1"].
-                 getService(Ci.nsIMIMEService).
-                 getTypeFromExtension(".txt");
-    } catch (e if (e instanceof Ci.nsIException &&
-                   e.result == Cr.NS_ERROR_NOT_AVAILABLE)) {
-      // This is an expected exception, thrown if the type can't be determined
-    } finally {
-      // Ensure we restore the original factory when the test is finished
-      unregisterMockWindowsRegKeyFactory();
-    }
+  // Activate the override of the ".txt" file association data in the registry
+  registerMockWindowsRegKeyFactory();
+  try {
+    // Try and get the MIME type associated with the extension. If this
+    // operation does not throw an unexpected exception, the test succeeds.
+    var type = Cc["@mozilla.org/mime;1"].
+               getService(Ci.nsIMIMEService).
+               getTypeFromExtension(".txt");
+  } catch (e if (e instanceof Ci.nsIException &&
+                 e.result == Cr.NS_ERROR_NOT_AVAILABLE)) {
+    // This is an expected exception, thrown if the type can't be determined
+  } finally {
+    // Ensure we restore the original factory when the test is finished
+    unregisterMockWindowsRegKeyFactory();
   }
 }

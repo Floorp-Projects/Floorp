@@ -120,7 +120,9 @@ gfxCoreTextFont::gfxCoreTextFont(MacOSFontEntry *aFontEntry,
                            &kCFTypeDictionaryValueCallBacks);
 
     // Remaining initialization is largely based on CommonInit() in the gfxAtsuiFont code
-    mFontFace = cairo_quartz_font_face_create_for_atsu_font_id(FMGetFontFromATSFontRef(mATSFont));
+    CGFontRef cgFont = ::CGFontCreateWithPlatformFont(&mATSFont);
+    mFontFace = cairo_quartz_font_face_create_for_cgfont(cgFont);
+    ::CGFontRelease(cgFont);
 
     cairo_matrix_t sizeMatrix, ctm;
     cairo_matrix_init_identity(&ctm);
@@ -828,7 +830,7 @@ gfxCoreTextFontGroup::InitTextRun(gfxTextRun *aTextRun,
                     CFRelease(matchedCTFont);
             }
 
-            aTextRun->AddGlyphRun(matchedFont, runStart-aLayoutStart, matchedLength);
+            aTextRun->AddGlyphRun(matchedFont, runStart-aLayoutStart, (matchedLength > 0));
 
         } else {
             // no font available, so record missing glyph info instead
@@ -1032,49 +1034,74 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
 
     while (glyphStart < numGlyphs) { // keep finding groups until all glyphs are accounted for
 
-        // We will iterate over the characters, need to ensure we have found the first glyph
-        PRInt32 charEnd = charStart;
+        PRBool inOrder = PR_TRUE;
+        PRInt32 charEnd = glyphToChar[glyphStart] - stringRange.location;
         PRInt32 glyphEnd = glyphStart;
-        PRBool firstGlyphFound = PR_FALSE;
-
+        PRInt32 charLimit = isLTR ? stringRange.length : -1;
         do {
-            // at the top of this loop, charEnd points to (NOT beyond) the current end of the clump;
-            // we'll advance it after using it to read the corresponding glyph index.
-            // glyphEnd is the limit of the (initially empty) glyph range we've found
-
-            // check whether we've found the char for the first glyph in the clump;
-            // can't break until we have seen this
-            if (charEnd == glyphToChar[glyphStart] - stringRange.location)
-                firstGlyphFound = PR_TRUE;
-
-            // find glyph offset corresponding to current char
-            PRInt32 curGlyph = charToGlyph[charEnd];
+            // This is normally executed once for each iteration of the outer loop,
+            // but in unusual cases where the character/glyph association is complex,
+            // the initial character range might correspond to a non-contiguous
+            // glyph range with "holes" in it. If so, we will repeat this loop to
+            // extend the character range until we have a contiguous glyph sequence.
             charEnd += direction;
-            if (curGlyph == NO_GLYPH)
-                continue; // if the char has no glyph, just continue
+            while (charEnd != charLimit && charToGlyph[charEnd] == NO_GLYPH) {
+                charEnd += direction;
+            }
 
-            glyphEnd = PR_MAX(glyphEnd, curGlyph + 1); // update extent of glyph range
+            // find the maximum glyph index covered by the clump so far
+            for (PRInt32 i = charStart; i != charEnd; i += direction) {
+                if (charToGlyph[i] != NO_GLYPH) {
+                    glyphEnd = PR_MAX(glyphEnd, charToGlyph[i] + 1); // update extent of glyph range
+                }
+            }
 
-        } while (!firstGlyphFound); // found a starting glyph, it's a valid clump
+            if (glyphEnd == glyphStart + 1) {
+                // for the common case of a single-glyph clump, we can skip the following checks
+                break;
+            }
 
-        // We also need to check if there are any following glyphs that have to be
-        // included because they are associated with a char that we've already passed;
-        // otherwise we'll never find the expected startGlyph next time around the loop
-        if (isLTR) {
-            while (glyphEnd < numGlyphs &&
-                   glyphToChar[glyphEnd] < charEnd + stringRange.location)
-                glyphEnd++;
-        } else {
-            while (glyphEnd < numGlyphs &&
-                   glyphToChar[glyphEnd] > charEnd + stringRange.location)
-                glyphEnd++;
-        }
+            if (glyphEnd == glyphStart) {
+                // no glyphs, try to extend the clump
+                continue;
+            }
+
+            // check whether all glyphs in the range are associated with the characters
+            // in our clump; if not, we have a discontinuous range, and should extend it
+            // unless we've reached the end of the text
+            PRBool allGlyphsAreWithinCluster = PR_TRUE;
+            PRInt32 prevGlyphCharIndex = charStart;
+            for (PRInt32 i = glyphStart; i < glyphEnd; ++i) {
+                PRInt32 glyphCharIndex = glyphToChar[i] - stringRange.location;
+                if (isLTR) {
+                    if (glyphCharIndex < charStart || glyphCharIndex >= charEnd) {
+                        allGlyphsAreWithinCluster = PR_FALSE;
+                        break;
+                    }
+                    if (glyphCharIndex < prevGlyphCharIndex) {
+                        inOrder = PR_FALSE;
+                    }
+                    prevGlyphCharIndex = glyphCharIndex;
+                } else {
+                    if (glyphCharIndex > charStart || glyphCharIndex <= charEnd) {
+                        allGlyphsAreWithinCluster = PR_FALSE;
+                        break;
+                    }
+                    if (glyphCharIndex > prevGlyphCharIndex) {
+                        inOrder = PR_FALSE;
+                    }
+                    prevGlyphCharIndex = glyphCharIndex;
+                }
+            }
+            if (allGlyphsAreWithinCluster) {
+                break;
+            }
+        } while (charEnd != charLimit);
 
         NS_ASSERTION(glyphStart < glyphEnd, "character/glyph clump contains no glyphs!");
         NS_ASSERTION(charStart != charEnd, "character/glyph contains no characters!");
 
         // Now charStart..charEnd is a ligature clump, corresponding to glyphStart..glyphEnd;
-        // also collect any following chars with no glyph assigned (trailing parts of ligature).
         // Set baseCharIndex to the char we'll actually attach the glyphs to (1st of ligature),
         // and endCharIndex to the limit (position beyond the last char).
         PRInt32 baseCharIndex, endCharIndex;
@@ -1090,16 +1117,13 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
             endCharIndex = charStart + stringRange.location + 1;
         }
 
-        // Then we check if the clump falls outside our real string range; if so, just go to the next.
-        if (baseCharIndex >= aLayoutStart + aLayoutLength || endCharIndex <= aLayoutStart) {
+        // Then we check if the clump falls outside our actual string range; if so, just go to the next.
+        if (baseCharIndex < aLayoutStart || baseCharIndex >= aLayoutStart + aLayoutLength) {
             glyphStart = glyphEnd;
             charStart = charEnd;
             continue;
         }
-
-        // charIndex might be < aLayoutStart if we had a leading combining mark, for example,
-        // that got ligated with the space that was prefixed to the string
-        baseCharIndex = PR_MAX(baseCharIndex, aLayoutStart);
+        // Ensure we won't try to go beyond the valid length of the textRun's text
         endCharIndex = PR_MIN(endCharIndex, aLayoutStart + aLayoutLength);
 
         // for missing glyphs, we already recorded the info in the textRun
@@ -1158,8 +1182,7 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
         // the rest of the chars in the group are ligature continuations, no associated glyphs
         while (++baseCharIndex != endCharIndex &&
             (baseCharIndex - aLayoutStart) < aLayoutLength) {
-            g.SetComplex(glyphsInClump > 1 ?
-                             PR_FALSE : aTextRun->IsClusterStart(baseCharIndex - aLayoutStart),
+            g.SetComplex(inOrder && aTextRun->IsClusterStart(baseCharIndex - aLayoutStart),
                          PR_FALSE, 0);
             aTextRun->SetGlyphs(baseCharIndex - aLayoutStart, g, nsnull);
         }

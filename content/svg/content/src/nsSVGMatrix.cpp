@@ -82,6 +82,15 @@ NS_NewSVGMatrix(nsIDOMSVGMatrix** result,
   return NS_OK;
 }
 
+already_AddRefed<nsIDOMSVGMatrix>
+NS_NewSVGMatrix(const gfxMatrix &aMatrix)
+{
+  nsSVGMatrix *matrix = new nsSVGMatrix(aMatrix.xx, aMatrix.yx, aMatrix.xy,
+                                        aMatrix.yy, aMatrix.x0, aMatrix.y0);
+  NS_IF_ADDREF(matrix);
+  return matrix;
+}
+
 nsSVGMatrix::nsSVGMatrix(float a, float b, float c,
                          float d, float e, float f)
   : mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
