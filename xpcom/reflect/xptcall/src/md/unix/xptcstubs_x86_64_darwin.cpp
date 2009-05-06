@@ -38,12 +38,12 @@
 
 // Implement shared vtbl methods.
 
-// Keep this in sync with the darwin version.
+// Keep this in sync with the linux version.
 
 #include "xptcprivate.h"
 #include "xptiprivate.h"
 
-// The Linux/x86-64 ABI passes the first 6 integer parameters and the
+// The Darwin/x86-64 ABI passes the first 6 integer parameters and the
 // first 8 floating point parameters in registers (rdi, rsi, rdx, rcx,
 // r8, r9 and xmm0-xmm7), no stack space is allocated for these by the
 // caller.  The rest of the parameters are passed in the callers stack
@@ -158,43 +158,29 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
     return result;
 }
 
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
-// Linux/x86-64 uses gcc >= 3.1
+// Darwin/x86-64 uses gcc >= 4.2
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 1002
 #define STUB_ENTRY(n) \
-asm(".section	\".text\"\n\t" \
+asm(".section	\".text\",regular\n\t" \
     ".align	2\n\t" \
     ".if	" #n " < 10\n\t" \
-    ".globl	_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
-    ".hidden	_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
-    ".type	_ZN14nsXPTCStubBase5Stub" #n "Ev,@function\n" \
-    "_ZN14nsXPTCStubBase5Stub" #n "Ev:\n\t" \
+    ".globl	__ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
+    "__ZN14nsXPTCStubBase5Stub" #n "Ev:\n\t" \
     ".elseif	" #n " < 100\n\t" \
-    ".globl	_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
-    ".hidden	_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
-    ".type	_ZN14nsXPTCStubBase6Stub" #n "Ev,@function\n" \
-    "_ZN14nsXPTCStubBase6Stub" #n "Ev:\n\t" \
+    ".globl	__ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
+    "__ZN14nsXPTCStubBase6Stub" #n "Ev:\n\t" \
     ".elseif    " #n " < 1000\n\t" \
-    ".globl     _ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
-    ".hidden    _ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
-    ".type      _ZN14nsXPTCStubBase7Stub" #n "Ev,@function\n" \
-    "_ZN14nsXPTCStubBase7Stub" #n "Ev:\n\t" \
+    ".globl     __ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
+    "__ZN14nsXPTCStubBase7Stub" #n "Ev:\n\t" \
     ".else\n\t" \
     ".err	\"stub number " #n " >= 1000 not yet supported\"\n\t" \
     ".endif\n\t" \
     "movl	$" #n ", %eax\n\t" \
-    "jmp	SharedStub\n\t" \
-    ".if	" #n " < 10\n\t" \
-    ".size	_ZN14nsXPTCStubBase5Stub" #n "Ev,.-_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
-    ".elseif	" #n " < 100\n\t" \
-    ".size	_ZN14nsXPTCStubBase6Stub" #n "Ev,.-_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
-    ".else\n\t" \
-    ".size	_ZN14nsXPTCStubBase7Stub" #n "Ev,.-_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
-    ".endif");
+    "jmp	SharedStub\n\t");
 
 // static nsresult SharedStub(PRUint32 methodIndex)
-asm(".section   \".text\"\n\t"
+asm(".section   \".text\",regular\n\t"
     ".align     2\n\t"
-    ".type      SharedStub,@function\n\t"
     "SharedStub:\n\t"
     // make room for gpregs (48), fpregs (64)
     "pushq      %rbp\n\t"
@@ -221,10 +207,9 @@ asm(".section   \".text\"\n\t"
     // rdi has the 'self' pointer already
     "movl       %eax,%esi\n\t"
     "leaq       16(%rbp),%rdx\n\t"
-    "call       PrepareAndDispatch@plt\n\t"
+    "call       _PrepareAndDispatch\n\t"
     "leave\n\t"
-    "ret\n\t"
-    ".size      SharedStub,.-SharedStub");
+    "ret\n\t");
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
@@ -236,5 +221,5 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 #include "xptcstubsdef.inc"
 
 #else
-#error "Unsupported compiler. Use gcc >= 3.1 for Linux/x86-64."
+#error "Unsupported compiler. Use gcc >= 4.2 for Darwin/x86-64."
 #endif /* __GNUC__ */
