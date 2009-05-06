@@ -805,7 +805,7 @@ namespace nanojit
 		return out->ins1(v, i);
 	}
 
-	LIns* ExprFilter::ins2(LOpcode v, LIns* oprnd1, LIns* oprnd2)
+    LIns* ExprFilter::ins2(LOpcode v, LIns* oprnd1, LIns* oprnd2)
 	{
 		NanoAssert(oprnd1 && oprnd2);
 		if (v == LIR_cmov || v == LIR_qcmov) {
@@ -832,61 +832,92 @@ namespace nanojit
 		}
 		if (oprnd1->isconst() && oprnd2->isconst())
 		{
-			int c1 = oprnd1->constval();
-			int c2 = oprnd2->constval();
+			int32_t c1 = oprnd1->constval();
+			int32_t c2 = oprnd2->constval();
+			double d;
+			int32_t r;
 			if (v == LIR_qjoin) {
 				uint64_t q = c1 | uint64_t(c2)<<32;
 				return insImmq(q);
 			}
-			if (v == LIR_eq)
+			switch (v) {
+			case LIR_eq:
 				return insImm(c1 == c2);
-            if (v == LIR_ov)
+			case LIR_ov:
                 return insImm((c2 != 0) && ((c1 + c2) <= c1)); 
-            if (v == LIR_cs)
+			case LIR_cs:
                 return insImm((c2 != 0) && ((uint32_t(c1) + uint32_t(c2)) <= uint32_t(c1)));
-			if (v == LIR_lt)
+			case LIR_lt:
 				return insImm(c1 < c2);
-			if (v == LIR_gt)
+			case LIR_gt:
 				return insImm(c1 > c2);
-			if (v == LIR_le)
+			case LIR_le:
 				return insImm(c1 <= c2);
-			if (v == LIR_ge)
+			case LIR_ge:
 				return insImm(c1 >= c2);
-			if (v == LIR_ult)
+			case LIR_ult:
 				return insImm(uint32_t(c1) < uint32_t(c2));
-			if (v == LIR_ugt)
+			case LIR_ugt:
 				return insImm(uint32_t(c1) > uint32_t(c2));
-			if (v == LIR_ule)
+			case LIR_ule:
 				return insImm(uint32_t(c1) <= uint32_t(c2));
-			if (v == LIR_uge)
+			case LIR_uge:
 				return insImm(uint32_t(c1) >= uint32_t(c2));
-			if (v == LIR_rsh)
+			case LIR_rsh:
 				return insImm(int32_t(c1) >> int32_t(c2));
-			if (v == LIR_lsh)
+			case LIR_lsh:
 				return insImm(int32_t(c1) << int32_t(c2));
-			if (v == LIR_ush)
+			case LIR_ush:
 				return insImm(uint32_t(c1) >> int32_t(c2));
-            if (v == LIR_or)
+			case LIR_or:
                 return insImm(uint32_t(c1) | int32_t(c2));
-            if (v == LIR_and)
+			case LIR_and:
                 return insImm(uint32_t(c1) & int32_t(c2));
-            if (v == LIR_xor)
+			case LIR_xor:
                 return insImm(uint32_t(c1) ^ int32_t(c2));
+			case LIR_add:
+			    d = double(c1) + double(c2);
+			fold:
+			    r = int32_t(d);
+			    if (r == d)
+                    return insImm(r);
+			    break;
+			case LIR_sub:
+			    d = double(c1) - double(c2);
+			    goto fold;
+			case LIR_mul:
+			    d = double(c1) * double(c2);
+			    goto fold;
+			default:
+			    ;
+			}
 		}
 		else if (oprnd1->isconstq() && oprnd2->isconstq())
 		{
 			double c1 = oprnd1->constvalf();
 			double c2 = oprnd2->constvalf();
-			if (v == LIR_feq)
+			switch (v) {
+			case LIR_feq:
 				return insImm(c1 == c2);
-			if (v == LIR_flt)
+			case LIR_flt:
 				return insImm(c1 < c2);
-			if (v == LIR_fgt)
+			case LIR_fgt:
 				return insImm(c1 > c2);
-			if (v == LIR_fle)
+			case LIR_fle:
 				return insImm(c1 <= c2);
-			if (v == LIR_fge)
+			case LIR_fge:
 				return insImm(c1 >= c2);
+            case LIR_fadd:
+                return insImmf(c1 + c2);
+            case LIR_fsub:
+                return insImmf(c1 - c2);
+            case LIR_fmul:
+                return insImmf(c1 * c2);
+            case LIR_fdiv:
+                return insImmf(c1 / c2);
+            default:
+                ;
+			}
 		}
 		else if (oprnd1->isconst() && !oprnd2->isconst())
 		{
