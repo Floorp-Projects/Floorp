@@ -623,8 +623,9 @@ js_AttemptCompilation(JSTraceMonitor* tm, JSObject* globalObj, jsbytecode* pc)
     }
 }
 
-JS_DEFINE_CALLINFO_1(static, DOUBLE,    i2f, INT32,                 1, 1)
-JS_DEFINE_CALLINFO_1(static, DOUBLE,    u2f, UINT32,                1, 1)
+// Forward declarations.
+JS_DEFINE_CALLINFO_1(static, DOUBLE, i2f,  INT32, 1, 1)
+JS_DEFINE_CALLINFO_1(static, DOUBLE, u2f, UINT32, 1, 1)
 
 static bool isi2f(LInsp i)
 {
@@ -727,88 +728,87 @@ static bool overflowSafe(LIns* i)
 
 /* soft float support */
 
-JS_DEFINE_CALLINFO_1(static, DOUBLE,    fneg, DOUBLE,               1, 1)
-JS_DEFINE_CALLINFO_2(static, INT32,     fcmpeq, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(static, INT32,     fcmplt, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(static, INT32,     fcmple, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(static, INT32,     fcmpgt, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(static, INT32,     fcmpge, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(static, DOUBLE,    fmul, DOUBLE, DOUBLE,       1, 1)
-JS_DEFINE_CALLINFO_2(static, DOUBLE,    fadd, DOUBLE, DOUBLE,       1, 1)
-JS_DEFINE_CALLINFO_2(static, DOUBLE,    fdiv, DOUBLE, DOUBLE,       1, 1)
-JS_DEFINE_CALLINFO_2(static, DOUBLE,    fsub, DOUBLE, DOUBLE,       1, 1)
-
-jsdouble FASTCALL
+static jsdouble FASTCALL
 fneg(jsdouble x)
 {
     return -x;
 }
+JS_DEFINE_CALLINFO_1(static, DOUBLE, fneg, DOUBLE, 1, 1)
 
-jsdouble FASTCALL
+static jsdouble FASTCALL
 i2f(int32 i)
 {
     return i;
 }
 
-jsdouble FASTCALL
+static jsdouble FASTCALL
 u2f(jsuint u)
 {
     return u;
 }
 
-int32 FASTCALL
+static int32 FASTCALL
 fcmpeq(jsdouble x, jsdouble y)
 {
     return x==y;
 }
+JS_DEFINE_CALLINFO_2(static, INT32, fcmpeq, DOUBLE, DOUBLE, 1, 1)
 
-int32 FASTCALL
+static int32 FASTCALL
 fcmplt(jsdouble x, jsdouble y)
 {
     return x < y;
 }
+JS_DEFINE_CALLINFO_2(static, INT32, fcmplt, DOUBLE, DOUBLE, 1, 1)
 
-int32 FASTCALL
+static int32 FASTCALL
 fcmple(jsdouble x, jsdouble y)
 {
     return x <= y;
 }
+JS_DEFINE_CALLINFO_2(static, INT32, fcmple, DOUBLE, DOUBLE, 1, 1)
 
-int32 FASTCALL
+static int32 FASTCALL
 fcmpgt(jsdouble x, jsdouble y)
 {
     return x > y;
 }
+JS_DEFINE_CALLINFO_2(static, INT32, fcmpgt, DOUBLE, DOUBLE, 1, 1)
 
-int32 FASTCALL
+static int32 FASTCALL
 fcmpge(jsdouble x, jsdouble y)
 {
     return x >= y;
 }
+JS_DEFINE_CALLINFO_2(static, INT32, fcmpge, DOUBLE, DOUBLE, 1, 1)
 
-jsdouble FASTCALL
+static jsdouble FASTCALL
 fmul(jsdouble x, jsdouble y)
 {
     return x * y;
 }
+JS_DEFINE_CALLINFO_2(static, DOUBLE, fmul, DOUBLE, DOUBLE, 1, 1)
 
-jsdouble FASTCALL
+static jsdouble FASTCALL
 fadd(jsdouble x, jsdouble y)
 {
     return x + y;
 }
+JS_DEFINE_CALLINFO_2(static, DOUBLE, fadd, DOUBLE, DOUBLE, 1, 1)
 
-jsdouble FASTCALL
+static jsdouble FASTCALL
 fdiv(jsdouble x, jsdouble y)
 {
     return x / y;
 }
+JS_DEFINE_CALLINFO_2(static, DOUBLE, fdiv, DOUBLE, DOUBLE, 1, 1)
 
-jsdouble FASTCALL
+static jsdouble FASTCALL
 fsub(jsdouble x, jsdouble y)
 {
     return x - y;
 }
+JS_DEFINE_CALLINFO_2(static, DOUBLE, fsub, DOUBLE, DOUBLE, 1, 1)
 
 class SoftFloatFilter: public LirWriter
 {
