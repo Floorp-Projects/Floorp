@@ -246,6 +246,7 @@ user_pref("browser.EULA.override", true);
 user_pref("javascript.options.jit.content", true);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
+user_pref("test.mousescroll", true);
 user_pref("security.default_personal_cert", "Select Automatically"); // Need to client auth test be w/o any dialogs
 user_pref("network.http.prompt-temp-redirect", false);
 user_pref("svg.smil.enabled", true); // Needed for SMIL mochitests until bug 482402 lands
