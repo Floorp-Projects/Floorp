@@ -321,6 +321,60 @@ ns_new_runnable_method(ClassType* obj, ReturnType (ClassType::*method)())
   return new nsRunnableMethod<ClassType, ReturnType>(obj, method);
 }
 
+// An event that can be used to call a method on a class, but holds only
+// a raw pointer to the object on which the method will be called.  This
+// event supports Revoke for use with nsRevocableEventPtr and should
+// almost always be used with it.
+template <class ClassType, typename ReturnType = void>
+class nsNonOwningRunnableMethod : public nsRunnable
+{
+public:
+  typedef ReturnType (ClassType::*Method)();
+
+  nsNonOwningRunnableMethod(ClassType *obj, Method method)
+    : mObj(obj), mMethod(method) {
+  }
+
+  NS_IMETHOD Run() {
+    if (!mObj)
+      return NS_OK;
+    (mObj->*mMethod)();
+    return NS_OK;
+  }
+
+  void Revoke() {
+    mObj = nsnull;
+  }
+
+  // These ReturnTypeEnforcer classes set up a blacklist for return types that
+  // we know are not safe. The default ReturnTypeEnforcer compiles just fine but
+  // already_AddRefed will not.
+  template <typename OtherReturnType>
+  class ReturnTypeEnforcer
+  {
+  public:
+    typedef int ReturnTypeIsSafe;
+  };
+
+  template <class T>
+  class ReturnTypeEnforcer<already_AddRefed<T> >
+  {
+    // No ReturnTypeIsSafe makes this illegal!
+  };
+
+  // Make sure this return type is safe.
+  typedef typename ReturnTypeEnforcer<ReturnType>::ReturnTypeIsSafe check;
+
+protected:
+  virtual ~nsNonOwningRunnableMethod() {
+  }
+
+private:
+  ClassType* mObj;
+  Method mMethod;
+};
+
+
 #endif  // XPCOM_GLUE_AVOID_NSPR
 
 // This class is designed to be used when you have an event class E that has a
