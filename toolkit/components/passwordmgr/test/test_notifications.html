@@ -103,7 +103,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         break;
 
       case 2:
@@ -114,7 +114,7 @@ function checkTest() {
         ok(bar, "got notification bar");
         is(true, pwmgr.getLoginSavingEnabled("http://localhost:8888"),
            "Checking for login saving enabled");
-        clickNotificationButton(bar, "Never for This Site");
+        clickNotificationButton(bar, kNeverButton);
         break;
 
       case 3:
@@ -135,7 +135,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Remember");
+        clickNotificationButton(bar, kRememberButton);
         break;
 
       case 5:
@@ -156,7 +156,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         // Change prefs to no longer remember signons
         prefs.setBoolPref("rememberSignons", false);
         break;
@@ -177,7 +177,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         break;
 
       /* autocomplete=off tests... */
@@ -249,7 +249,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         pwmgr.removeLogin(login2B);
 
         // Add login for the next test
@@ -262,7 +262,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         pwmgr.removeLogin(login1B);
 
         // Add login for the next tests
@@ -275,7 +275,7 @@ function checkTest() {
         is(gotPass, "pass2",    "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-change");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Don't Change");
+        clickNotificationButton(bar, kDontChangeButton);
         break;
 
       case 18:
@@ -284,7 +284,7 @@ function checkTest() {
         is(gotPass, "pass2",    "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-change");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Change");
+        clickNotificationButton(bar, kChangeButton);
 
         // cleanup
         login1.password = "pass2";
@@ -305,7 +305,7 @@ function checkTest() {
         is(gotPass, "pass2",    "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-change");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Change");
+        clickNotificationButton(bar, kChangeButton);
         break;
 
       case 20:
@@ -314,7 +314,7 @@ function checkTest() {
         is(gotPass, "notifyp1", "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-change");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Change");
+        clickNotificationButton(bar, kChangeButton);
 
         pwmgr.removeLogin(login2);
         break;
@@ -329,7 +329,7 @@ function checkTest() {
         notificationText = bar.getAttribute("label");
         expectedText = /^Do you want .+ to remember the password for \"notifyu1\" on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         break;
 
       case 22:
@@ -342,7 +342,7 @@ function checkTest() {
         notificationText = bar.getAttribute("label");
         expectedText = /^Do you want .+ to remember the password for \"nowisthetimeforallgoodmentocom[^e]\" on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         break;
 
       case 23:
@@ -355,7 +355,7 @@ function checkTest() {
         notificationText = bar.getAttribute("label");
         expectedText = /^Do you want .+ to remember this password on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
-        clickNotificationButton(bar, "Not Now");
+        clickNotificationButton(bar, kNotNowButton);
         break;
 
       default:

@@ -372,7 +372,7 @@ function handleLoad() {
         // Check for the notification bar, and change the password.
         bar = getNotificationBar(notifyBox, "password-change");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Change");
+        clickNotificationButton(bar, kChangeButton);
 
         // Housekeeping: change it back
         tmpLogin.init("http://localhost:8888", null, "mochitest",
@@ -395,7 +395,7 @@ function handleLoad() {
         // Check for the notification bar, and change the password.
         bar = getNotificationBar(notifyBox, "password-change");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Change");
+        clickNotificationButton(bar, kChangeButton);
 
         // Housekeeping: change it back to the original login4. Actually,
         // just delete it and we'll re-add it as the next test.
@@ -421,7 +421,7 @@ function handleLoad() {
         // Check for the notification bar, and change the password.
         bar = getNotificationBar(notifyBox, "password-save");
         ok(bar, "got notification bar");
-        clickNotificationButton(bar, "Remember");
+        clickNotificationButton(bar, kRememberButton);
 
         finishTest();
         break;
