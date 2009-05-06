@@ -245,7 +245,10 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest*
                                                                        nsIInputStream* aStream, PRUint32 aOffset,
                                                                        PRUint32 aCount)
 {
-  NS_ABORT_IF_FALSE(mNextListener, "Must have a listener");
+  if (!mNextListener) {
+    NS_ERROR("Must have a chained listener; OnStartRequest should have canceled this request");
+    return NS_BINDING_ABORTED;
+  }
   return mNextListener->OnDataAvailable(aRequest, aContext, aStream, aOffset, aCount);
 }
 

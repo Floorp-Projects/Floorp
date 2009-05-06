@@ -290,6 +290,10 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mPreferredWidth     = 0;
 	mPreferredHeight    = 0;
 	mFontMetrics        = nsnull;
+	mIsShiftDown        = PR_FALSE;
+	mIsControlDown      = PR_FALSE;
+	mIsAltDown          = PR_FALSE;
+	mIsDestroying       = PR_FALSE;
 	mIsVisible          = PR_FALSE;
 	mEnabled            = PR_TRUE;
 	mIsScrolling        = PR_FALSE;

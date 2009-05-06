@@ -87,14 +87,7 @@ ifeq ($(OS_ARCH), WINNT)
 
 DEFINES += -DNSS_USE_STATIC_LIBS
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
-ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/crypto.lib
-endif
-ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB+=$(DIST)/lib/bsafe$(BSAFEVER).lib
-	CRYPTOLIB+=$(DIST)/lib/freebl.lib
-endif
+CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
 
 PKIXLIB = \
 	$(DIST)/lib/$(LIB_PREFIX)pkixcertsel.$(LIB_SUFFIX) \
@@ -143,14 +136,7 @@ EXTRA_LIBS += \
 else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
-ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)crypto.$(LIB_SUFFIX)
-endif
-ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB+=$(DIST)/lib/$(LIB_PREFIX)bsafe.$(LIB_SUFFIX)
-	CRYPTOLIB+=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
-endif
+CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
 
 PKIXLIB = \
 	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
@@ -202,6 +188,7 @@ endif
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	$(SQLITE) \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
@@ -253,6 +240,7 @@ EXTRA_SHARED_LIBS += \
 	-lssl3 \
 	-lsmime3 \
 	-lnss3 \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \

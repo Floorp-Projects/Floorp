@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="#stylesheet"?>
+<!DOCTYPE root [
+  <!ATTLIST xsl:stylesheet id ID #IMPLIED>
+]>
+<root>
+<xsl:stylesheet id="stylesheet" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+  <xsl:attribute-set name="a">
+	<xsl:attribute name="b">c</xsl:attribute>
+  </xsl:attribute-set>
+  <xsl:template match="/">
+    <b>Please output something!</b>
+  </xsl:template>
+  <xsl:attribute-set name="a">
+	<xsl:attribute name="b">c</xsl:attribute>
+  </xsl:attribute-set>
+</xsl:stylesheet>
+<doc id="foo">this</doc>
+</root>

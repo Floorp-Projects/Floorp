@@ -216,7 +216,7 @@ static SETTING gSettings[] = {
 PRBool
 nsWindowsShellService::IsDefaultBrowserVista(PRBool* aIsDefaultBrowser)
 {
-#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   IApplicationAssociationRegistration* pAAR;
   
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,

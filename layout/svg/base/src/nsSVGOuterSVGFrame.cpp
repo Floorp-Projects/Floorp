@@ -149,6 +149,7 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 #ifdef XP_MACOSX
     , mEnableBitmapFallback(PR_FALSE)
 #endif
+    , mIsRootContent(PR_FALSE)
 {
 }
 
@@ -170,9 +171,7 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
     if (doc->GetRootContent() == mContent) {
-      nsSVGSVGElement *SVGElement = static_cast<nsSVGSVGElement*>(mContent);
-      SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
-      SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
+      mIsRootContent = PR_TRUE;
     }
     // AddMutationObserver checks that the observer is not already added.
     // sSVGMutationObserver has the same lifetime as the document so does
@@ -741,15 +740,9 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGOuterSVGFrame::GetCanvasTM()
 {
-  if (!GetMatrixPropagation()) {
-    nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
-    return retval;
-  }
-
   if (!mCanvasTM) {
     nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
 
@@ -774,24 +767,20 @@ nsSVGOuterSVGFrame::GetCanvasTM()
 
     // our content is the document element so we must premultiply the values
     // of its currentScale and currentTranslate properties
-    if (mCurrentScale &&
-        mCurrentTranslate) {
+    if (mIsRootContent) {
       nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
       nsCOMPtr<nsIDOMSVGMatrix> temp;
-      float scale, x, y;
-      mCurrentScale->GetValue(&scale);
-      mCurrentTranslate->GetX(&x);
-      mCurrentTranslate->GetY(&y);
+      float scale = svgElement->GetCurrentScale();
+      const nsSVGTranslatePoint& translate = svgElement->GetCurrentTranslate();
+
       svgElement->CreateSVGMatrix(getter_AddRefs(zoomPanMatrix));
-      zoomPanMatrix->Translate(x, y, getter_AddRefs(temp));
+      zoomPanMatrix->Translate(translate.GetX(), translate.GetY(), getter_AddRefs(temp));
       temp->Scale(scale, getter_AddRefs(zoomPanMatrix));
       zoomPanMatrix->Multiply(mCanvasTM, getter_AddRefs(temp));
       temp.swap(mCanvasTM);
     }
   }
-  nsIDOMSVGMatrix* retval = mCanvasTM.get();
-  NS_IF_ADDREF(retval);
-  return retval;
+  return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
 }
 
 //----------------------------------------------------------------------

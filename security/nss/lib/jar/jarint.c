@@ -49,36 +49,36 @@ PRFileDesc*
 JAR_FOPEN_to_PR_Open(const char* name, const char *mode)
 {
 
-	PRIntn	prflags=0, prmode=0;
+    PRIntn  prflags=0, prmode=0;
 
-	/* Get read/write flags */
-	if(strchr(mode, 'r') && !strchr(mode, '+')) {
-		prflags |= PR_RDONLY;
-	} else if( (strchr(mode, 'w') || strchr(mode, 'a')) &&
-			!strchr(mode,'+') ) {
-		prflags |= PR_WRONLY;
-	} else {
-		prflags |= PR_RDWR;
-	}
+    /* Get read/write flags */
+    if (strchr(mode, 'r') && !strchr(mode, '+')) {
+	prflags |= PR_RDONLY;
+    } else if( (strchr(mode, 'w') || strchr(mode, 'a')) &&
+	!strchr(mode,'+') ) {
+	prflags |= PR_WRONLY;
+    } else {
+	prflags |= PR_RDWR;
+    }
 
-	/* Create a new file? */
-	if(strchr(mode, 'w') || strchr(mode, 'a')) {
-		prflags |= PR_CREATE_FILE;
-	}
+    /* Create a new file? */
+    if (strchr(mode, 'w') || strchr(mode, 'a')) {
+	prflags |= PR_CREATE_FILE;
+    }
 
-	/* Append? */
-	if(strchr(mode, 'a')) {
-		prflags |= PR_APPEND;
-	}
+    /* Append? */
+    if (strchr(mode, 'a')) {
+	prflags |= PR_APPEND;
+    }
 
-	/* Truncate? */
-	if(strchr(mode, 'w')) {
-		prflags |= PR_TRUNCATE;
-	}
+    /* Truncate? */
+    if (strchr(mode, 'w')) {
+	prflags |= PR_TRUNCATE;
+    }
 
-	/* We can't do umask because it isn't XP.  Choose some default
+    /* We can't do umask because it isn't XP.  Choose some default
 	   mode for created files */
-	prmode = 0755;
+    prmode = 0755;
 
-	return PR_Open(name, prflags, prmode);
+    return PR_Open(name, prflags, prmode);
 }

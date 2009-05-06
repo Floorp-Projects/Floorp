@@ -42,12 +42,14 @@ const AUS_Cc = Components.classes;
 const AUS_Ci = Components.interfaces;
 const AUS_Cr = Components.results;
 
-const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
-const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-const NS_GRE_DIR                 = "GreD";
-const XRE_UPDATE_ROOT_DIR        = "UpdRootD";
+const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
+const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
+const NS_GRE_DIR                   = "GreD";
+const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD"
+const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
 
-const PREF_APP_UPDATE_URL_OVERRIDE = "app.update.url.override";
+const PREF_APP_UPDATE_URL_OVERRIDE      = "app.update.url.override";
+const PREF_APP_UPDATE_SHOW_INSTALLED_UI = "app.update.showInstalledUI";
 
 const URI_UPDATES_PROPERTIES = "chrome://mozapps/locale/update/updates.properties";
 const gUpdateBundle = AUS_Cc["@mozilla.org/intl/stringbundle;1"]
@@ -77,6 +79,8 @@ const PERMS_DIRECTORY = 0755;
 const URL_HOST = "http://localhost:4444/"
 const DIR_DATA = "data"
 
+var gDirSvc = AUS_Cc["@mozilla.org/file/directory_service;1"]
+                .getService(AUS_Ci.nsIProperties);
 var gPrefs = AUS_Cc["@mozilla.org/preferences;1"]
                .getService(AUS_Ci.nsIPrefBranch);
 var gAUS;
@@ -104,6 +108,9 @@ var gStatusText;
 function startAUS() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
 
+  // Don't display UI for a successful installation. Some apps may not set this
+  // pref to false like Firefox does.
+  gPrefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
   // Enable Update logging
   gPrefs.setBoolPref("app.update.log.all", true);
   // Lessens the noise in the logs when using Update Service logging
@@ -348,7 +355,7 @@ function getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) {
  *          write to the updates.xml file.
  */
 function writeUpdatesToXMLFile(aContent, aIsActiveUpdate) {
-  var file = gCustomGreD.clone();
+  var file = getCurrentProcessDir();
   file.append(aIsActiveUpdate ? FILE_UPDATE_ACTIVE : FILE_UPDATES_DB);
   writeFile(file, aContent);
 }
@@ -361,7 +368,7 @@ function writeUpdatesToXMLFile(aContent, aIsActiveUpdate) {
  *          The status value to write.
  */
 function writeStatusFile(aStatus) {
-  var file = gCustomGreD.clone();
+  var file = getCurrentProcessDir();
   file.append("updates");
   file.append("0");
   file.append("update.status");
@@ -587,7 +594,8 @@ const updateCheckListener = {
  * behind when the tests are interrupted.
  */
 function removeUpdateDirsAndFiles() {
-  var file = gCustomGreD.clone();
+  var appDir = getCurrentProcessDir();
+  file = appDir.clone();
   file.append("active-update.xml");
   try {
     if (file.exists())
@@ -598,7 +606,7 @@ function removeUpdateDirsAndFiles() {
          "\nException: " + e + "\n");
   }
 
-  file = gCustomGreD.clone();
+  file = appDir.clone();
   file.append("updates.xml");
   try {
     if (file.exists())
@@ -609,7 +617,7 @@ function removeUpdateDirsAndFiles() {
          "\nException: " + e + "\n");
   }
 
-  file = gCustomGreD.clone();
+  file = appDir.clone();
   file.append("updates");
   file.append("last-update.log");
   try {
@@ -621,7 +629,7 @@ function removeUpdateDirsAndFiles() {
          "\nException: " + e + "\n");
   }
 
-  var updatesSubDir = gCustomGreD.clone();
+  var updatesSubDir = appDir.clone();
   updatesSubDir.append("updates");
   updatesSubDir.append("0");
   if (updatesSubDir.exists()) {
@@ -668,7 +676,7 @@ function removeUpdateDirsAndFiles() {
   }
 
   // This fails sporadically on Mac OS X so wrap it in a try catch
-  var updatesDir = gCustomGreD.clone();
+  var updatesDir = appDir.clone();
   updatesDir.append("updates");
   try {
     if (updatesDir.exists())
@@ -748,52 +756,31 @@ function createAppInfo(id, name, version, platformVersion) {
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
 
-function copyUpdaterINI() {
-  try {
-    // Copy the updater.ini into the custom GRE dir
-    var updaterINI = gRealGreD.clone();
-    updaterINI.append("updater.ini");
-    updaterINI.copyTo(gCustomGreD, updaterINI.leafName);
-  }
-  catch (e) {
-    do_throw("Unable to copy updater.ini to the custom GRE directory\n" +
-             "Exception: " + e + "\n");
-  }
+/**
+ * Returns the Gecko Runtime Engine directory. This is used to locate the the
+ * updater binary (Windows and Linux) or updater package (Mac OS X). For
+ * XULRunner applications this is different than the currently running process
+ * directory.
+ */
+function getGREDir() {
+  return gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
 }
 
-// Use a custom profile dir to keep the dist/bin dir clean
-var gDirSvc = AUS_Cc["@mozilla.org/file/directory_service;1"].
-             getService(AUS_Ci.nsIProperties);
+/**
+ * Returns the directory for the currently running process. This is used to
+ * clean up after the tests and to locate the active-update.xml and updates.xml
+ * files.
+ */
+function getCurrentProcessDir() {
+  return gDirSvc.get(NS_XPCOM_CURRENT_PROCESS_DIR, AUS_Ci.nsIFile);
+}
 
-// Create and register a profile directory.
+// Create and register a custom profile directory to keep dist/bin clean.
 var gProfD = do_get_cwd();
 gProfD.append("profile");
 if (gProfD.exists())
   gProfD.remove(true);
 gProfD.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
-var gRealGreD = gDirSvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
-
-// Use a custom GRE dir to keep the dist/bin dir clean
-// XXXrstrong - Custom GreD is disabled for now since it isn't working on
-// Thunderbird Linux and possibly others.
-var gCustomGreD = gRealGreD.clone();
-
-//var gCustomGreD = do_get_cwd();
-//gCustomGreD.append("app_dir");
-//try {
-  // This will likely fail sporadically on Mac OS X as the removal of the
-  // updates directory has in the past so wrap it in a try catch
-//  if (gCustomGreD.exists())
-//    gCustomGreD.remove(true);
-//}
-//catch (e) {
-//  dump("Unable to remove directory\npath: " + gCustomGreD.path +
-//       "\nException: " + e + "\n");
-//}
-
-//if (!gCustomGreD.exists())
-//  gCustomGreD.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
 var dirProvider = {
   getFile: function(prop, persistent) {
@@ -802,10 +789,9 @@ var dirProvider = {
       case NS_APP_PROFILE_DIR_STARTUP:
         persistent.value = true;
         return gProfD.clone();
-//      case NS_GRE_DIR:
-//      case XRE_UPDATE_ROOT_DIR:
-//        persistent.value = true;
-//        return gCustomGreD.clone();
+      case XRE_UPDATE_ROOT_DIR:
+        persistent.value = true;
+        return getCurrentProcessDir();
     }
     return null;
   },

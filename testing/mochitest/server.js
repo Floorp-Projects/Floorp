@@ -414,20 +414,45 @@ function linksToListItems(links)
 /**
  * Transform nested hashtables of paths to a flat table rows.
  */
-function linksToTableRows(links)
+function linksToTableRows(links, recursionLevel)
 {
   var response = "";
   for (var [link, value] in links) {
     var classVal = (!isTest(link) && !(value instanceof Object))
       ? "non-test invisible"
       : "";
+
+    spacer = "padding-left: " + (10 * recursionLevel) + "px";
+
     if (value instanceof Object) {
       response += TR({class: "dir", id: "tr-" + link },
-                     TD({colspan: "3"},"&#160;"));
-      response += linksToTableRows(value);
+                     TD({colspan: "3"}, "&#160;"),
+                     TD({style: spacer},
+                        A({href: link}, link)));
+      response += linksToTableRows(value, recursionLevel + 1);
     } else {
-      response += TR({class: classVal, id: "tr-" + link},
-                     TD("0"), TD("0"), TD("0"));
+      var bug_title = link.match(/test_bug\S+/);
+      var bug_num = null;
+      if (bug_title != null) {
+          bug_num = bug_title[0].match(/\d+/);
+      }
+      if ((bug_title == null) || (bug_num == null)) {
+        response += TR({class: classVal, id: "tr-" + link },
+                       TD("0"),
+                       TD("0"),
+                       TD("0"),
+                       TD({style: spacer},
+                          A({href: link}, link)));
+      } else {
+        var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=" + bug_num;
+        response += TR({class: classVal, id: "tr-" + link },
+                       TD("0"),
+                       TD("0"),
+                       TD("0"),
+                       TD({style: spacer},
+                          A({href: link}, link), " - ",
+                          A({href: bug_url}, "Bug " + bug_num)));
+      }
     }
   }
   return response;
@@ -539,15 +564,8 @@ function testListing(metadata, response)
           ),
     
           TABLE({cellpadding: 0, cellspacing: 0, id: "test-table"},
-            TR(TD("Passed"), TD("Failed"), TD("Todo"), 
-                TD({rowspan: count+1},
-                   UL({class: "top"},
-                      LI(B("Test Files")),        
-                      linksToListItems(links)
-                      )
-                )
-            ),
-            linksToTableRows(links)
+            TR(TD("Passed"), TD("Failed"), TD("Todo"), TD("Test Files")),
+            linksToTableRows(links, 0)
           ),
           DIV({class: "clear"})
         )

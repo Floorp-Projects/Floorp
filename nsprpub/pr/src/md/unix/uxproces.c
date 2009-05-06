@@ -281,7 +281,7 @@ ForkAndExec(
 
 #ifdef AIX
     process->md.pid = (*pr_wp.forkptr)();
-#elif defined(NTO)
+#elif defined(NTO) || defined(SYMBIAN)
     /*
      * fork() & exec() does not work in a multithreaded process.
      * Use spawn() instead.
@@ -312,7 +312,12 @@ ForkAndExec(
             PR_ASSERT(attr->currentDirectory == NULL);  /* not implemented */
         }
 
+#ifdef SYMBIAN
+        /* In Symbian OS, we use posix_spawn instead of fork() and exec() */
+        posix_spawn(&(process->md.pid), path, NULL, NULL, argv, childEnvp);
+#else
         process->md.pid = spawn(path, 3, fd_map, NULL, argv, childEnvp);
+#endif
 
         if (fd_map[0] != 0)
             close(fd_map[0]);
@@ -339,7 +344,7 @@ ForkAndExec(
          * the parent process's standard I/O data structures.
          */
 
-#if !defined(NTO)
+#if !defined(NTO) && !defined(SYMBIAN)
 #ifdef VMS
        /* OpenVMS has already handled all this above */
 #else
@@ -980,6 +985,11 @@ PRStatus _MD_KillUnixProcess(PRProcess *process)
     PRErrorCode prerror;
     PRInt32 oserror;
 
+#ifdef SYMBIAN
+    /* In Symbian OS, we can not kill other process with Open C */
+    PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, oserror);
+    return PR_FAILURE;
+#else
     if (kill(process->md.pid, SIGKILL) == 0) {
 	return PR_SUCCESS;
     }
@@ -997,4 +1007,5 @@ PRStatus _MD_KillUnixProcess(PRProcess *process)
     }
     PR_SetError(prerror, oserror);
     return PR_FAILURE;
+#endif
 }  /* _MD_KillUnixProcess */

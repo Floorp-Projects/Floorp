@@ -2151,7 +2151,9 @@ SFTK_SlotReInit(SFTKSlot *slot, char *configdir, char *updatedir,
 		params->updCertPrefix, params->updKeyPrefix,
 		params->updateID  ? params->updateID : updateID, 
 		params->readOnly, params->noCertDB, params->noKeyDB,
-		params->forceOpen, &certHandle, &keyHandle);
+		params->forceOpen, 
+		moduleIndex == NSC_FIPS_MODULE,
+		&certHandle, &keyHandle);
 	if (crv != CKR_OK) {
 	    goto loser;
 	}

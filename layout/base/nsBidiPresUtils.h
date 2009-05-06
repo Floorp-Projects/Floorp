@@ -436,29 +436,15 @@ private:
    *                          any fluid continuations)
    * @param aEnd         [IN] the offset of the end of the single-directional
    *                          text run.
-   * @param aLineNeedsUpdate [OUT] set to true if we're re-using a frame (which
-   *                               might be on another line).
-   *
-   * If there is already a bidi continuation for this frame in mLogicalFrames,
-   * no new frame will be created. On exit aNewFrame will point to the existing
-   * bidi continuation and aFrameIndex will contain its index.
-   *
-   * If aFrame has fluid continuations (which can happen when re-resolving
-   * after line breaking) all the frames in the continuation chain except for
-   * the last one will be set to zero length and the last one will be truncated
-   * at aEnd.
-   *
-   * aFrame must always be a first-in-flow.
-   *
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
-  PRBool EnsureBidiContinuation(nsIFrame*       aFrame,
-                                nsIFrame**      aNewFrame,
-                                PRInt32&        aFrameIndex,
-                                PRInt32         aStart,
-                                PRInt32         aEnd,
-                                PRBool&         aLineNeedsUpdate);
+  inline
+  void EnsureBidiContinuation(nsIFrame*       aFrame,
+                              nsIFrame**      aNewFrame,
+                              PRInt32&        aFrameIndex,
+                              PRInt32         aStart,
+                              PRInt32         aEnd);
 
   /**
    * Helper method for Resolve()

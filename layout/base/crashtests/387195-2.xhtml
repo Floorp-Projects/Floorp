@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<title>Testcase for bug </title>
+<head>
+<script type="text/javascript">
+function boom() {
+  var colgroup = document.createElementNS("http://www.w3.org/1999/xhtml", 'colgroup');
+  document.getElementById('thead').insertBefore(colgroup, null);
+}
+</script>
+
+<style type="text/css">
+    thead {border:3px solid purple;}
+</style>
+</head>
+
+
+<body onload="boom()">
+
+<table><thead id="thead"></thead></table>
+
+</body>
+</html>

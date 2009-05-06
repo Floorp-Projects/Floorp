@@ -192,8 +192,7 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGImageFrame::GetImageTransform()
 {
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  GetCanvasTM(getter_AddRefs(ctm));
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
 
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
@@ -264,8 +263,7 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     if (GetStyleDisplay()->IsScrollableOverflow()) {
       gfx->Save();
 
-      nsCOMPtr<nsIDOMSVGMatrix> ctm;
-      GetCanvasTM(getter_AddRefs(ctm));
+      nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
 
       if (ctm) {
         nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);

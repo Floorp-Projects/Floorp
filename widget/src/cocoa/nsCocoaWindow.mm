@@ -62,6 +62,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsStyleConsts.h"
 #include "nsNativeThemeColors.h"
+#include "nsChildView.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -146,10 +147,19 @@ nsCocoaWindow::~nsCocoaWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // notify the children that we're gone
+  // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
+  // have nsChildView children.  'kid' is an nsChildView object if and only if
+  // its 'type' is 'eWindowType_child'.
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
-    childWindow->mParent = nsnull;
+    nsWindowType kidType;
+    kid->GetWindowType(kidType);
+    if (kidType == eWindowType_child) {
+      nsChildView* childView = static_cast<nsChildView*>(kid);
+      childView->ResetParent();
+    } else {
+      nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
+      childWindow->mParent = nsnull;
+    }
   }
 
   if (mWindow) {
@@ -1312,6 +1322,11 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+PRBool
+nsCocoaWindow::HasPendingInputEvent()
+{
+  return nsChildView::DoHasPendingInputEvent();
+}
 
 NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
 {

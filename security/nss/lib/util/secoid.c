@@ -361,6 +361,8 @@ CONST_OID x509ExtKeyUsage[]           		= { ID_CE_OID, 37 };
 CONST_OID x509FreshestCRL[]           		= { ID_CE_OID, 46 };
 CONST_OID x509InhibitAnyPolicy[]           	= { ID_CE_OID, 54 };
 
+CONST_OID x509CertificatePoliciesAnyPolicy[]    = { ID_CE_OID, 32, 0 };
+
 CONST_OID x509AuthInfoAccess[]        		= { PKIX_CERT_EXTENSIONS,  1 };
 CONST_OID x509SubjectInfoAccess[]               = { PKIX_CERT_EXTENSIONS, 11 };
 
@@ -1586,6 +1588,9 @@ const static SECOidData oids[SEC_OID_TOTAL] = {
     OD( seed_CBC, SEC_OID_SEED_CBC,
 	"SEED-CBC", CKM_SEED_CBC, INVALID_CERT_EXTENSION),
 
+    OD( x509CertificatePoliciesAnyPolicy, SEC_OID_X509_ANY_POLICY,
+ 	"Certificate Policies AnyPolicy",
+        CKM_INVALID_MECHANISM, UNSUPPORTED_CERT_EXTENSION ),
 };
 
 /* PRIVATE EXTENDED SECOID Table

@@ -618,8 +618,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
       }
     }
     
-    PRInt32 i;
-    
+
     if (!appendToList) {
       // The new stuff is somewhere in the middle of our list; check
       // whether we need to invalidate
@@ -633,7 +632,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
           break;
         }
       }
- 
+
       ASSERT_IN_SYNC;
       return;
     }

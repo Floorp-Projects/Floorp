@@ -753,6 +753,37 @@ PKIX_ProcessingParams_SetUseAIAForCertFetching(
         void *plContext);
 
 /*
+ * FUNCTION: PKIX_ProcessingParams_SetQualifyTargetCert
+ * DESCRIPTION:
+ *
+ * Sets a boolean value that tells if libpkix needs to check that
+ * the target certificate satisfies the conditions set in processing
+ * parameters. Includes but not limited to date, ku and eku checks.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams whose List of TrustAnchors are to
+ *      be stored. Must be non-NULL.
+ *  "qualifyTargetCert"
+ *      boolean value if set to true will trigger qualification of the
+ *      target certificate.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Conditionally Thread Safe
+ *      (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_SetQualifyTargetCert(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean qualifyTargetCert,
+        void *plContext);
+
+/*
  * FUNCTION: PKIX_ProcessingParams_GetHintCerts
  * DESCRIPTION:
  *

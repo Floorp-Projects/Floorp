@@ -44,7 +44,7 @@
 #include "nsISelectionListener.h"
 #include "nsEditProperty.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 struct PropItem
 {
@@ -101,7 +101,7 @@ public:
   nsresult GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp, 
                           const nsString &aAttr, nsString* outValue);
 
-  static   PRBool FindPropInList(nsIAtom *aProp, const nsAString &aAttr, nsAString *outValue, nsVoidArray &aList, PRInt32 &outIndex);
+  static   PRBool FindPropInList(nsIAtom *aProp, const nsAString &aAttr, nsAString *outValue, nsTArray<PropItem*> &aList, PRInt32 &outIndex);
 
 protected:
 
@@ -112,8 +112,8 @@ protected:
   PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr);
   PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr, PRInt32 &outIndex);
 
-  nsVoidArray mSetArray;
-  nsVoidArray mClearedArray;
+  nsTArray<PropItem*> mSetArray;
+  nsTArray<PropItem*> mClearedArray;
   PRInt32 mRelativeFontSize;
   nsCOMPtr<nsIDOMNode> mLastSelectionContainer;
   PRInt32 mLastSelectionOffset;

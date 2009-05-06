@@ -384,18 +384,6 @@ nsLeafBoxFrame::GetType() const
   return nsGkAtoms::leafBoxFrame;
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsLeafBoxFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsLeafBoxFrame::Release(void)
-{
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsLeafBoxFrame::CharacterDataChanged(nsPresContext* aPresContext,
                                      nsIContent*     aChild,

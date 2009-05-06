@@ -1,0 +1,361 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 et :
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#ifndef mozilla_BlockingResourceBase_h
+#define mozilla_BlockingResourceBase_h
+
+#include "prlock.h"
+#include "prlog.h"
+
+#include "nscore.h"
+#include "nsDebug.h"
+#include "nsError.h"
+
+#ifdef DEBUG
+#include "prinit.h"
+#include "prthread.h"
+
+#include "nsStringGlue.h"
+
+#include "mozilla/DeadlockDetector.h"
+#endif
+
+//
+// This header is not meant to be included by client code.
+//
+
+namespace mozilla {
+
+
+/**
+ * BlockingResourceBase
+ * Base class of resources that might block clients trying to acquire them.  
+ * Does debugging and deadlock detection in DEBUG builds.
+ **/
+class NS_COM_GLUE BlockingResourceBase
+{
+public:
+    // Needs to be kept in sync with kResourceTypeNames.
+    enum BlockingResourceType { eMutex, eMonitor, eCondVar };
+
+    /**
+     * kResourceTypeName
+     * Human-readable version of BlockingResourceType enum.
+     */
+    static const char* const kResourceTypeName[];
+
+
+#ifdef DEBUG
+
+private:
+    // forward declaration for the following typedef
+    struct DeadlockDetectorEntry;
+
+    // ``DDT'' = ``Deadlock Detector Type''
+    typedef DeadlockDetector<DeadlockDetectorEntry> DDT;
+
+    /**
+     * DeadlockDetectorEntry
+     * We free BlockingResources, but we never free entries in the
+     * deadlock detector.  This struct outlives its BlockingResource
+     * and preserves all the state needed to print subsequent
+     * error messages.
+     *
+     * These objects are owned by the deadlock detector.
+     */
+    struct DeadlockDetectorEntry
+    {
+        DeadlockDetectorEntry(const char* aName,
+                              BlockingResourceType aType) :
+            mName(aName),
+            mType(aType),
+            mAcquisitionContext(CallStack::kNone)
+        {
+        }
+        
+        /**
+         * Print
+         * Write a description of this blocking resource to |out|.  If
+         * the resource appears to be currently acquired, the current
+         * acquisition context is printed and true is returned.
+         * Otherwise, we print the context from |aFirstSeen|, the
+         * first acquisition from which the code calling |Print()|
+         * became interested in us, and return false.  |Print()| can
+         * be forced to print the context from |aFirstSeen| regardless
+         * by passing |aPrintFirstSeenCx=true|.
+         *
+         * *NOT* thread safe.  Reads |mAcquisitionContext| without
+         * synchronization, but this will not cause correctness
+         * problems.
+         *
+         * FIXME bug 456272: hack alert: because we can't write call
+         * contexts into strings, all info is written to stderr, but
+         * only some info is written into |out|
+         */
+        bool Print(const DDT::ResourceAcquisition& aFirstSeen,
+                   nsACString& out,
+                   bool aPrintFirstSeenCx=false) const;
+
+        /**
+         * mName
+         * A descriptive name for this resource.  Used in error
+         * messages etc.
+         */
+        const char* mName;
+        /**
+         * mType
+         * The more specific type of this resource.  Used to implement
+         * special semantics (e.g., reentrancy of monitors).
+         **/
+        BlockingResourceType mType;
+        /**
+         * mAcquisitionContext
+         * The calling context from which this resource was acquired, or
+         * |CallStack::kNone| if it is currently free (or freed).
+         */
+        CallStack mAcquisitionContext;
+    };
+
+protected:
+    /**
+     * BlockingResourceBase
+     * Initialize this blocking resource.  Also hooks the resource into
+     * instrumentation code.
+     *
+     * Thread safe.
+     *
+     * @param aName A meaningful, unique name that can be used in
+     *              error messages, et al.
+     * @param aType The specific type of |this|, if any.
+     **/
+    BlockingResourceBase(const char* aName, BlockingResourceType aType);
+
+    ~BlockingResourceBase();
+
+    /**
+     * CheckAcquire
+     *
+     * Thread safe.
+     *
+     * @param aCallContext the client's calling context from which the
+     *        original acquisition request was made.
+     **/
+    void CheckAcquire(const CallStack& aCallContext);
+
+    /**
+     * Acquire
+     *
+     * *NOT* thread safe.  Requires ownership of underlying resource.
+     *
+     * @param aCallContext the client's calling context from which the
+     *        original acquisition request was made.
+     **/
+    void Acquire(const CallStack& aCallContext); //NS_NEEDS_RESOURCE(this)
+
+    /**
+     * Release
+     * Remove this resource from the current thread's acquisition chain.
+     * The resource does not have to be at the front of the chain, although
+     * it is confusing to release resources in a different order than they
+     * are acquired.  This generates a warning.
+     *
+     * *NOT* thread safe.  Requires ownership of underlying resource.
+     **/
+    void Release();             //NS_NEEDS_RESOURCE(this)
+
+    /**
+     * PrintCycle
+     * Append to |out| detailed information about the circular
+     * dependency in |cycle|.  Returns true if it *appears* that this
+     * cycle may represent an imminent deadlock, but this is merely a
+     * heuristic; the value returned may be a false positive or false
+     * negative.
+     *
+     * *NOT* thread safe.  Calls |Print()|.
+     *
+     * FIXME bug 456272 hack alert: because we can't write call
+     * contexts into strings, all info is written to stderr, but only
+     * some info is written into |out|
+     */
+    static bool PrintCycle(const DDT::ResourceAcquisitionArray* cycle,
+                           nsACString& out);
+
+    /**
+     * ResourceChainFront
+     *
+     * Thread safe.
+     *
+     * @return the front of the resource acquisition chain, i.e., the last
+     *         resource acquired.
+     */
+    static BlockingResourceBase* ResourceChainFront()
+    {
+        return (BlockingResourceBase*)
+            PR_GetThreadPrivate(sResourceAcqnChainFrontTPI);
+    }
+
+    /**
+     * ResourceChainPrev
+     *
+     * *NOT* thread safe.  Requires ownership of underlying resource.
+     */
+    static BlockingResourceBase*
+    ResourceChainPrev(const BlockingResourceBase* aResource)
+    {
+        return aResource->mChainPrev;
+    } //NS_NEEDS_RESOURCE(this)
+
+    /**
+     * ResourceChainAppend
+     * Set |this| to the front of the resource acquisition chain, and link
+     * |this| to |aPrev|.
+     *
+     * *NOT* thread safe.  Requires ownership of underlying resource.
+     */
+    void ResourceChainAppend(BlockingResourceBase* aPrev)
+    {
+        mChainPrev = aPrev;
+        PR_SetThreadPrivate(sResourceAcqnChainFrontTPI, this);
+    } //NS_NEEDS_RESOURCE(this)
+
+    /**
+     * ResourceChainRemove
+     * Remove |this| from the front of the resource acquisition chain.
+     *
+     * *NOT* thread safe.  Requires ownership of underlying resource.
+     */
+    void ResourceChainRemove()
+    {
+        NS_ASSERTION(this == ResourceChainFront(), "not at chain front");
+        PR_SetThreadPrivate(sResourceAcqnChainFrontTPI, mChainPrev);
+    } //NS_NEEDS_RESOURCE(this)
+
+    /**
+     * GetAcquisitionContext
+     * Return the calling context from which this resource was acquired,
+     * or CallStack::kNone if it's currently free.
+     *
+     * *NOT* thread safe.  Requires ownership of underlying resource.
+     */
+    CallStack
+    GetAcquisitionContext()
+    {
+        return mDDEntry->mAcquisitionContext;
+    }
+
+    /**
+     * SetAcquisitionContext
+     * Set the calling context from which this resource was acquired.
+     *
+     * *NOT* thread safe.  Requires ownership of underlying resource.
+     */
+    void
+    SetAcquisitionContext(CallStack aAcquisitionContext)
+    {
+        mDDEntry->mAcquisitionContext = aAcquisitionContext;
+    }
+
+    /**
+     * mChainPrev
+     * A series of resource acquisitions creates a chain of orders.  This
+     * chain is implemented as a linked list; |mChainPrev| points to the
+     * resource most recently Acquire()'d before this one.
+     **/
+    BlockingResourceBase* mChainPrev;
+
+private:
+    /**
+     * mDDEntry
+     * The key for this BlockingResourceBase in the deadlock detector.
+     */
+    DeadlockDetectorEntry* mDDEntry;
+
+    /**
+     * sCallOnce
+     * Ensures static members are initialized only once, and in a
+     * thread-safe way.
+     */
+    static PRCallOnceType sCallOnce;
+
+    /**
+     * sResourceAcqnChainFrontTPI
+     * Thread-private index to the front of each thread's resource
+     * acquisition chain.
+     */
+    static PRUintn sResourceAcqnChainFrontTPI;
+
+    /**
+     * sDeadlockDetector
+     * Does as named.
+     */
+    static DDT sDeadlockDetector;
+
+    /**
+     * InitStatics
+     *
+     * *NOT* thread safe.
+     *
+     * Inititialize static members of BlockingResourceBase that can't
+     * be statically initialized.
+     */
+    static PRStatus InitStatics() {
+        PR_NewThreadPrivateIndex(&sResourceAcqnChainFrontTPI, 0);
+        return PR_SUCCESS;
+    }
+
+
+#else  // non-DEBUG implementation
+
+    BlockingResourceBase(const char* aName, BlockingResourceType aType)
+    {
+    }
+
+    ~BlockingResourceBase()
+    {
+    }
+
+#endif
+};
+
+
+} // namespace mozilla
+
+
+#endif // mozilla_BlockingResourceBase_h

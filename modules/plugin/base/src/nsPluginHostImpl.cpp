@@ -4024,6 +4024,12 @@ public:
     return pluginPath->GetLeafName(aFilename);
   }
 
+  NS_METHOD GetVersion(nsAString& aVersion)
+  {
+    CopyUTF8toUTF16(mPluginTag.mVersion, aVersion);
+    return NS_OK;
+  }
+
   NS_METHOD GetName(nsAString& aName)
   {
     CopyUTF8toUTF16(mPluginTag.mName, aName);

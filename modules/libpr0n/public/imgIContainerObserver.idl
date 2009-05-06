@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "gfxtypes.idl"
+#include "gfxidltypes.idl"
 
 %{C++
 #include "nsRect.h"

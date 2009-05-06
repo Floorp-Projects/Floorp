@@ -721,7 +721,7 @@ var gEditItemOverlay = {
     ptm.doTransaction(aggregate);
   },
 
-  onDescriptionFieldBlur: function EIO_onDescriptionFieldInput() {
+  onDescriptionFieldBlur: function EIO_onDescriptionFieldBlur() {
     var description = this._element("descriptionField").value;
     if (description != PlacesUIUtils.getItemDescription(this._itemId)) {
       var txn = PlacesUIUtils.ptm
@@ -842,7 +842,8 @@ var gEditItemOverlay = {
     var menupopup = this._folderMenuList.menupopup;
 
     for (var i=0;  i < menupopup.childNodes.length; i++) {
-      if (menupopup.childNodes[i].folderId == aFolderId)
+      if (menupopup.childNodes[i].folderId &&
+          menupopup.childNodes[i].folderId == aFolderId)
         return menupopup.childNodes[i];
     }
 

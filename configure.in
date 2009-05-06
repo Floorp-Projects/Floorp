@@ -218,6 +218,12 @@ if test ! -z "$L10NBASEDIR"; then
 fi
 AC_SUBST(L10NBASEDIR)
 
+dnl Check for Perl first -- needed for win32 SDK checks
+MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
+if test -z "$PERL" || test "$PERL" = ":"; then
+    AC_MSG_ERROR([perl not found in \$PATH])
+fi
+
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -262,7 +268,7 @@ case "$target" in
 
     _pwdw=`pwd -W`
     _pwd=`pwd`
-    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$srcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
+    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
 
     CC="$_pwd/dist/sdk/bin/arm-wince-gcc"
     CXX="$_pwd/dist/sdk/bin/arm-wince-gcc"
@@ -457,23 +463,49 @@ case "$target" in
     ;;
 esac
 
-MOZ_ARG_WITH_STRING(windows-version,
-[  --with-windows-version=WINVER
-                          Minimum Windows version (WINVER) to support
-                              400: Windows 95
-                              500: Windows 2000
-                              501: Windows XP],
-  WINVER=$withval)
+dnl Target the Windows Vista SDK by default
+WINSDK_TARGETVER=600
 
-case "$WINVER" in
-400|500|501)
+MOZ_ARG_WITH_STRING(windows-version,
+[  --with-windows-version=WINSDK_TARGETVER
+                          Highest Windows version to target using this SDK
+                              502: Windows Server 2003
+                              600: Windows Vista
+                              601: Windows 7],
+  WINSDK_TARGETVER=$withval)
+
+case "$WINSDK_TARGETVER" in
+502|600|601)
+    MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value --with-windows-version, must be 400, 500 or 501]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 502, 600 or 601]);
     ;;
 
 esac
+
+dnl Vista SDK specific api (deprecated)
+MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
+[  --disable-vista-sdk-requirements
+                           Do not build Vista SDK specific code],
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
+   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
+if test -n "$COMPILE_ENVIRONMENT"; then
+if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
+    AC_MSG_WARN([--disable-vista-sdk-requirements is deprecated, use --with-windows-version=502 instead])
+    MOZ_WINSDK_TARGETVER=05020000
+fi
+
+if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+    MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
+    AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+    # We can't build parental controls either
+    MOZ_DISABLE_PARENTAL_CONTROLS=1
+fi
+fi
+
+AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
@@ -688,8 +720,22 @@ EOF
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     # Require OS features provided by IE 5.0
     AC_DEFINE_UNQUOTED(_WIN32_IE,0x0500)
-    # we need Python 2.5 on Windows
-    PYTHON_VERSION=2.5
+
+    # If the maximum version supported by this SDK is lower than the target
+    # version, error out
+    AC_MSG_CHECKING([for Windows SDK being recent enough])
+    if $PERL -e "exit(0x$MOZ_WINSDK_TARGETVER > $MOZ_WINSDK_MAXVER)"; then
+        AC_MSG_RESULT("yes")
+    else
+        AC_MSG_RESULT("no")
+        AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
+    fi
+
+    AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
+    # Definitions matching sdkddkver.h
+    AC_DEFINE_UNQUOTED(MOZ_NTDDI_WS03, 0x05020000)
+    AC_DEFINE_UNQUOTED(MOZ_NTDDI_LONGHORN, 0x06000000)
+    AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
     ;;
 esac
 
@@ -743,10 +789,6 @@ dnl Checks for programs.
 dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
-MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
-if test -z "$PERL" || test "$PERL" = ":"; then
-    AC_MSG_ERROR([perl not found in \$PATH])
-fi
 
 if test -z "$TINDERBOX_SKIP_PERL_VERSION_CHECK"; then
 AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
@@ -773,18 +815,6 @@ MOZ_PATH_PROGS(PYTHON, $PYTHON python2.5 python2.4 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
-
-dnl We require version 2.4 or newer of Python to build,
-dnl and 2.5 or newer on Windows.
-AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
-changequote(,)
-$PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
-_python_res=$?
-changequote([,])
-if test "$_python_res" != 0; then
-    AC_MSG_ERROR([Python $PYTHON_VERSION or higher is required.])
-fi
-AC_MSG_RESULT([yes])
 
 MOZ_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
@@ -1162,13 +1192,13 @@ solaris*)
     SOLARIS_SUNPRO_CC=
     SOLARIS_SUNPRO_CXX=
     if test -z "$GNU_CC"; then
-        if test "`$_SUBDIR_CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
+        if test "`$CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
             SOLARIS_SUNPRO_CC=1
        fi
     fi
 
     if test -z "$GNU_CXX"; then
-       if test "`$_SUBDIR_CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
+       if test "`$CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
            SOLARIS_SUNPRO_CXX=1
        fi
     fi
@@ -1640,6 +1670,8 @@ case "$host" in
     ;;
 
 *cygwin*|*mingw*|*mks*|*msvc*|*wince)
+    # we need Python 2.5 on Windows
+    PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -1706,6 +1738,18 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 esac
+
+dnl We require version 2.4 or newer of Python to build,
+dnl and 2.5 or newer on Windows.
+AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
+changequote(,)
+$PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
+_python_res=$?
+changequote([,])
+if test "$_python_res" != 0; then
+    AC_MSG_ERROR([Python $PYTHON_VERSION or higher is required.])
+fi
+AC_MSG_RESULT([yes])
 
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
@@ -2070,6 +2114,7 @@ case "$target" in
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(NEW_H, <new>)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
+    AC_DEFINE(HAVE_LOCALTIME_R)
 
     TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='windows'
@@ -5237,13 +5282,15 @@ dnl ========================================================
 dnl = libnotify support
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(libnotify,
-[  --enable-libnotify       Enable libnotify support ],
-    MOZ_ENABLE_LIBNOTIFY=1,
-    MOZ_ENABLE_LIBNOTIFY=)
-
 if test "$MOZ_ENABLE_GTK2"
 then
+    MOZ_ENABLE_LIBNOTIFY=1
+
+    MOZ_ARG_DISABLE_BOOL(libnotify,
+    [  --disable-libnotify       Disable libnotify support ],
+    MOZ_ENABLE_LIBNOTIFY=,
+    MOZ_ENABLE_LIBNOTIFY=1)
+
     if test "$MOZ_ENABLE_LIBNOTIFY"
     then
         AC_DEFINE(MOZ_ENABLE_LIBNOTIFY)
@@ -6075,34 +6122,7 @@ if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
     AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
 fi
 
-dnl ========================================================
-dnl Vista SDK specific api
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
-[  --disable-vista-sdk-requirements
-                           Do not build Vista SDK specific code],
-   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
-   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
-if test -n "$COMPILE_ENVIRONMENT"; then
-if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
-    AC_MSG_WARN([Resulting builds will not be compatible with Windows Vista. (bug 428970)])
-    AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
-    if test -z "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
-        AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
-    fi
-    MOZ_DISABLE_PARENTAL_CONTROLS=1
-else
-case "$target" in
-*-mingw*|*-cygwin*|*-msvc*|*-mks*)
-    if test "$ac_cv_header_wpcapi_h" = "no"; then
-        AC_MSG_ERROR([System header wpcapi.h is not available. See updated http://developer.mozilla.org/en/docs/wpcapi.h for details on fixing this problem.])
-    fi
-    ;;
-esac
-fi
-fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
-AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 dnl ========================================================
 dnl =
@@ -6301,6 +6321,15 @@ fi
 
 AC_SUBST(MOZ_LOCATION_CFLAGS)
 AC_SUBST(MOZ_LOCATION_LIBS)
+
+dnl ========================================================
+dnl = faststripe theme
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(faststripe,
+[  --enable-faststripe  Use faststripe theme],
+    MOZ_THEME_FASTSTRIPE=1,
+    MOZ_THEME_FASTSTRIPE= )
+AC_SUBST(MOZ_THEME_FASTSTRIPE)
 
 dnl ========================================================
 dnl =
@@ -6587,46 +6616,37 @@ if test "$MOZ_MEMORY"; then
     ;;
   msvc*|mks*|cygwin*|mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    dnl XXX: should test for vc8sp1 here, otherwise patching the crt src
-    dnl will fail miserably
-    if test "$_CC_SUITE" -lt "8"; then
-        AC_MSG_ERROR([Building jemalloc requires Visual C++ 2005 or better])
+    dnl This is sort of awful. Will revisit if we add support for more versions
+    if test "$CC_VERSION" != "14.00.50727.762"; then
+        AC_MSG_ERROR([Building jemalloc requires exactly Visual C++ 2005 SP1 currently.])
     fi
-    if test -z "$WIN32_CRT_SRC_DIR" -a -z "$WIN32_CUSTOM_CRT_DIR"; then
+    if test -z "$WIN32_CRT_SRC_DIR"; then
       if test -z "$VCINSTALLDIR" -o ! -d "$VCINSTALLDIR"; then
-        AC_MSG_ERROR([When building jemalloc, either set WIN32_CRT_SRC_DIR to the path to the Visual C++ CRT source (usually VCINSTALLDIR\crt\src), or set WIN32_CUSTOM_CRT_DIR to the path to a folder containing a pre-built CRT DLL.])
+        AC_MSG_ERROR([When building jemalloc, set WIN32_CRT_SRC_DIR to the path to the Visual C++ CRT source (usually VCINSTALLDIR\crt\src, but VCINSTALLDIR is not set, so I can't autodetect it for you).])
       else
         WIN32_CRT_SRC_DIR="$VCINSTALLDIR\crt\src"
       fi
     fi
-    if test -z "$WIN32_CRT_SRC_DIR"; then
-      # pre-built dll
-      WIN32_CUSTOM_CRT_DIR=`cd "$WIN32_CUSTOM_CRT_DIR" && pwd`
-      _WIN_UNIX_CRT_PATH="$WIN32_CUSTOM_CRT_DIR"
-    else
-      # CRT source directory
-      WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd`
-      _CRT_BASE_DIR=`basename "$WIN32_CRT_SRC_DIR"`
-      _WIN_UNIX_CRT_PATH="$_objdir/memory/jemalloc/$_CRT_BASE_DIR/build/intel"
+
+    if test ! -d "$WIN32_CRT_SRC_DIR"; then
+      AC_MSG_ERROR([Invalid Win32 CRT source directory: ${WIN32_CRT_SRC_DIR}])
     fi
-    dnl need win32 paths in LIB, hence this python abuse.  extra brackets
-    dnl are to avoid m4
-    _WIN_CRT_PATH=[`$PYTHON -c 'import sys, os.path; print os.path.normpath(sys.argv[1])' "$_WIN_UNIX_CRT_PATH"`]
-    MOZ_LIB="$_WIN_CRT_PATH;$LIB"
-    dnl Needs to be in PATH too, since our tools will wind up linked against it.
-    dnl This needs to be unix style.
-    MOZ_PATH="$PATH:$_WIN_UNIX_CRT_PATH"
+    WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
+    _objdir_win=`pwd -W`
+    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/intel"
     dnl Statically link the C++ stdlib.  We only use this for Breakpad anyway.
     AC_DEFINE(_STATIC_CPPLIB)
-    dnl Don't generate a manifest, since we're linking to a custom CRT.
-    LDFLAGS="$LDFLAGS -MANIFEST:NO"
+    MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -DEFAULTLIB:mozcrt19"
     dnl Also pass this to NSPR/NSS
-    DLLFLAGS="$DLLFLAGS -MANIFEST:NO"
+    DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
     ;;
   *wince)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    if test -z "$WINCE_WINDOWS_MOBILE"; then
+      AC_DEFINE(MOZ_MEMORY_WINCE6)
+    fi
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -6634,10 +6654,8 @@ if test "$MOZ_MEMORY"; then
   esac
 fi
 AC_SUBST(MOZ_MEMORY)
+AC_SUBST(MOZ_MEMORY_LDFLAGS)
 AC_SUBST(WIN32_CRT_SRC_DIR)
-AC_SUBST(WIN32_CUSTOM_CRT_DIR)
-AC_SUBST(MOZ_LIB)
-AC_SUBST(MOZ_PATH)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
 
@@ -6840,10 +6858,9 @@ MOZ_ARG_ENABLE_BOOL(reflow-perf,
 [  --enable-reflow-perf    Enable reflow performance tracing],
     MOZ_REFLOW_PERF=1,
     MOZ_REFLOW_PERF= )
-if test -n "$MOZ_REFLOW_PREF"; then
-    AC_DEFINE(MOZ_REFLOW_PREF)
+if test -n "$MOZ_REFLOW_PERF"; then
+    AC_DEFINE(MOZ_REFLOW_PERF)
 fi
-AC_SUBST(MOZ_REFLOW_PERF)
 
 dnl ========================================================
 dnl Enable performance metrics.
@@ -7045,7 +7062,7 @@ if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
     echo '#include <stdio.h>' > dummy-hello.c
     echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
     ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
-    cat dummy-hello.s | ${AS_BIN} -o dummy-hello.S - 2>&5
+    cat dummy-hello.s 2> /dev/null | ${AS_BIN} -o dummy-hello.S - 2>&5
     if test $? = 0; then
         _res_as_stdin="yes"
     else
@@ -7598,8 +7615,17 @@ if test "$MOZ_TREE_CAIRO"; then
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
         if test -z "$WINCE"; then
            WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
+           DDRAW_SURFACE_FEATURE=
         else
            WIN32_FONT_FEATURE=
+
+           AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
+           if test -z "$HAS_DDRAW"; then
+               AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
+             DDRAW_SURFACE_FEATURE=
+           else
+             DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
+           fi
         fi  
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
     fi
@@ -7639,6 +7665,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(QUARTZ_IMAGE_SURFACE_FEATURE)
     AC_SUBST(XCB_SURFACE_FEATURE)
     AC_SUBST(WIN32_SURFACE_FEATURE)
+    AC_SUBST(DDRAW_SURFACE_FEATURE)
     AC_SUBST(OS2_SURFACE_FEATURE)
     AC_SUBST(BEOS_SURFACE_FEATURE)
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)
@@ -7887,6 +7914,8 @@ if test "$NECKO_WIFI"; then
     NECKO_WIFI=1
   elif test "$OS_ARCH" = "WINNT"; then
     NECKO_WIFI=1
+  elif test "$OS_ARCH" = "WINCE"; then
+    NECKO_WIFI=1    
   else
     AC_MSG_WARN([Necko WiFi scanning not supported on your platform.])
   fi
@@ -8529,7 +8558,10 @@ ac_configure_args="$ac_configure_args --bindir=$dist/bin"
 ac_configure_args="$ac_configure_args --libdir=$dist/lib"
 ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
-   ac_configure_args="$ac_configure_args --enable-jemalloc"  
+   ac_configure_args="$ac_configure_args --enable-jemalloc"
+   if test -n "$MOZ_MEMORY_LDFLAGS"; then
+     export MOZ_MEMORY_LDFLAGS
+   fi
 fi
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"

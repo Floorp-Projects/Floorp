@@ -72,12 +72,26 @@ ifdef MOZ_MEMORY
 REQUIRES = jemalloc 
 CFLAGS += -DMOZ_MEMORY
 CXXFLAGS += -DMOZ_MEMORY
+EXPORTS += $(topsrcdir)/memory/jemalloc/jemalloc.h
+
+# We have to include the obj file directly, because we want to export
+# some of its symbols through our def file
+EXTRA_LIBS += $(OBJDIR)/memory/jemalloc/jemalloc.obj
 endif
 
-EXTRA_LIBS += $(JEMALLOC_LIBS)
+DEFFILE = mozce_shunt.def
 
-CPPSRCS = map.cpp
+CPPSRCS = \
+	shunt.cpp \
+	environment.cpp \
+	time.cpp \
+	memory.cpp \
+	$(NULL)
 
 DEFINES += -DMOZCE_SHUNT_EXPORTS
 
 include $(topsrcdir)/config/rules.mk
+
+mozce_shunt.def: mozce_shunt.def.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@
+

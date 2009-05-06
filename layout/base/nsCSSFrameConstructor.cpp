@@ -5432,16 +5432,6 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
                               aFrameItems);
   }
 
-  // If the page contains markup that overrides text direction, and
-  // does not contain any characters that would activate the Unicode
-  // bidi algorithm, we need to call |SetBidiEnabled| on the pres
-  // context before reflow starts.  This requires us to resolve some
-  // style information now.  See bug 115921.
-  {
-    if (styleContext->GetStyleVisibility()->mDirection ==
-        NS_STYLE_DIRECTION_RTL)
-      aState.mPresContext->SetBidiEnabled();
-  }
   // Start background loads during frame construction. This is just
   // a hint; the paint code will do the right thing in any case.
   {
@@ -6031,6 +6021,89 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
   return (newParent) ? newParent : aParentFrame;
 }
 
+nsIFrame*
+nsCSSFrameConstructor::GetInsertionPrevSibling(nsIFrame*& aParentFrame,
+                                               nsIContent* aContainer,
+                                               nsIContent* aChild,
+                                               PRInt32 aIndexInContainer,
+                                               PRBool* aIsAppend)
+{
+  *aIsAppend = PR_FALSE;
+
+  // Find the frame that precedes the insertion point. Walk backwards
+  // from the parent frame to get the parent content, because if an
+  // XBL insertion point is involved, we'll need to use _that_ to find
+  // the preceding frame.
+
+  NS_PRECONDITION(aParentFrame, "Must have parent frame to start with");
+  nsIContent* container = aParentFrame->GetContent();
+
+  ChildIterator first, last;
+  ChildIterator::Init(container, &first, &last);
+  ChildIterator iter(first);
+  if (iter.XBLInvolved() || container != aContainer) {
+    iter.seek(aChild);
+    // Don't touch our aIndexInContainer, though it's almost certainly bogus in
+    // this case.  If someone wants to use an index below, they should make
+    // sure to use the right index (aIndexInContainer vs iter.position()) with
+    // the right parent node.
+  } else if (aIndexInContainer != -1) {
+    // Do things the fast way if we can.  The check for -1 is because editor is
+    // severely broken and calls us directly for native anonymous nodes that it
+    // creates.
+    iter.seek(aIndexInContainer);
+    NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
+  }
+#ifdef DEBUG
+  else {
+    NS_WARNING("Someone passed native anonymous content directly into frame "
+               "construction.  Stop doing that!");
+  }
+#endif
+
+  nsIFrame* prevSibling = FindPreviousSibling(first, iter);
+
+  // Now, find the geometric parent so that we can handle
+  // continuations properly. Use the prev sibling if we have it;
+  // otherwise use the next sibling.
+  if (prevSibling) {
+    aParentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
+  }
+  else {
+    // If there is no previous sibling, then find the frame that follows
+    nsIFrame* nextSibling = FindNextSibling(iter, last);
+
+    if (nextSibling) {
+      aParentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
+    }
+    else {
+      // No previous or next sibling, so treat this like an appended frame.
+      *aIsAppend = PR_TRUE;
+      if (IsFrameSpecial(aParentFrame)) {
+        // Since we're appending, we'll walk to the last anonymous frame
+        // that was created for the broken inline frame.  But don't walk
+        // to the trailing inline if it's empty; stop at the block.
+        aParentFrame = GetLastSpecialSibling(aParentFrame, PR_TRUE);
+      }
+      // Get continuation that parents the last child.  This MUST be done
+      // before the AdjustAppendParentForAfterContent call.
+      aParentFrame = nsLayoutUtils::GetLastContinuationWithChild(aParentFrame);
+      // Deal with fieldsets
+      aParentFrame = ::GetAdjustedParentFrame(aParentFrame,
+                                              aParentFrame->GetType(),
+                                              aChild);
+      nsIFrame* appendAfterFrame;
+      aParentFrame =
+        ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
+                                            container, aParentFrame,
+                                            &appendAfterFrame);
+      prevSibling = ::FindAppendPrevSibling(aParentFrame, appendAfterFrame);
+    }
+  }
+
+  return prevSibling;
+}
+
 static PRBool
 IsSpecialFramesetChild(nsIContent* aContent)
 {
@@ -6482,76 +6555,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   parentFrame = insertionPoint;
 
-  // Find the frame that precedes the insertion point. Walk backwards
-  // from the parent frame to get the parent content, because if an
-  // XBL insertion point is involved, we'll need to use _that_ to find
-  // the preceding frame.
+  PRBool isAppend;
+  nsIFrame* prevSibling =
+    GetInsertionPrevSibling(parentFrame, aContainer, aChild, aIndexInContainer,
+                            &isAppend);
+
   nsIContent* container = parentFrame->GetContent();
-
-  ChildIterator first, last;
-  ChildIterator::Init(container, &first, &last);
-  ChildIterator iter(first);
-  if (iter.XBLInvolved() || container != aContainer) {
-    iter.seek(aChild);
-    // Don't touch our aIndexInContainer, though it's almost certainly bogus in
-    // this case.  If someone wants to use an index below, they should make
-    // sure to use the right index (aIndexInContainer vs iter.position()) with
-    // the right parent node.
-  } else if (aIndexInContainer != -1) {
-    // Do things the fast way if we can.  The check for -1 is because editor is
-    // severely broken and calls us directly for native anonymous nodes that it
-    // creates.
-    iter.seek(aIndexInContainer);
-    NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
-  }
-#ifdef DEBUG
-  else {
-    NS_WARNING("Someone passed native anonymous content directly into frame "
-               "construction.  Stop doing that!");
-  }
-#endif
-  
-  nsIFrame* prevSibling = FindPreviousSibling(first, iter);
-
-  PRBool    isAppend = PR_FALSE;
-
-  // Now, find the geometric parent so that we can handle
-  // continuations properly. Use the prev sibling if we have it;
-  // otherwise use the next sibling.
-  if (prevSibling) {
-    parentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
-  }
-  else {
-    // If there is no previous sibling, then find the frame that follows
-    nsIFrame* nextSibling = FindNextSibling(iter, last);
-
-    if (nextSibling) {
-      parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
-    }
-    else {
-      // No previous or next sibling, so treat this like an appended frame.
-      isAppend = PR_TRUE;
-      if (IsFrameSpecial(parentFrame)) {
-        // Since we're appending, we'll walk to the last anonymous frame
-        // that was created for the broken inline frame.  But don't walk
-        // to the trailing inline if it's empty; stop at the block.
-        parentFrame = GetLastSpecialSibling(parentFrame, PR_TRUE);
-      }
-      // Get continuation that parents the last child.  This MUST be done
-      // before the AdjustAppendParentForAfterContent call.
-      parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
-      // Deal with fieldsets
-      parentFrame = ::GetAdjustedParentFrame(parentFrame,
-                                             parentFrame->GetType(),
-                                             aChild);
-      nsIFrame* appendAfterFrame;
-      parentFrame =
-        ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
-                                            container, parentFrame,
-                                            &appendAfterFrame);
-      prevSibling = ::FindAppendPrevSibling(parentFrame, appendAfterFrame);
-    }
-  }
 
   if (parentFrame->GetType() == nsGkAtoms::frameSetFrame &&
       IsSpecialFramesetChild(aChild)) {
@@ -6606,11 +6615,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     }
 
     if (haveFirstLetterStyle) {
-      // Get the correct parentFrame and prevSibling - if a
-      // letter-frame is present, use its parent.
+      // If our current parentFrame is a Letter frame, use its parent as our
+      // new parent hint
       if (parentFrame->GetType() == nsGkAtoms::letterFrame) {
         parentFrame = parentFrame->GetParent();
-        container = parentFrame->GetContent();
       }
 
       // Remove the old letter frames before doing the insertion
@@ -6619,16 +6627,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                          state.mFloatedItems.containingBlock);
 
       // Removing the letterframes messes around with the frame tree, removing
-      // and creating frames.  We need to reget our prevsibling.
-      ChildIterator::Init(container, &first, &last);
-      if (last.XBLInvolved() || container != aContainer) {
-        last.seek(aChild);
-      } else if (aIndexInContainer != -1) {
-        last.seek(aIndexInContainer);
-        NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
-      }
-
-      prevSibling = FindPreviousSibling(first, last);
+      // and creating frames.  We need to reget our prevsibling, parent frame,
+      // etc.
+      prevSibling =
+        GetInsertionPrevSibling(parentFrame, aContainer, aChild,
+                                aIndexInContainer, &isAppend);
+      container = parentFrame->GetContent();
     }
   }
 
@@ -6642,7 +6646,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                              nsCSSPseudoElements::before)) {
       // Insert the new frames after the last continuation of the :before
       prevSibling = firstChild->GetTailContinuation();
-      parentFrame = prevSibling->GetParent();
+      parentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
       // Don't change isAppend here; we'll can call AppendFrames as needed, and
       // the change to our prevSibling doesn't affect that.
     }
@@ -8831,7 +8835,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   // get merged with the frame's prevSibling.
   // XXXbz it would be really nice if we had the prevSibling here too, to check
   // whether this is in fact the case...
-  nsIFrame* nextSibling = inFlowFrame->GetNextSibling();
+  nsIFrame* nextSibling =
+    FindNextNonWhitespaceSibling(inFlowFrame->GetLastContinuation());
   NS_ASSERTION(!IsTablePseudo(inFlowFrame), "Shouldn't happen here");
   if (nextSibling && IsTablePseudo(nextSibling)) {
 #ifdef DEBUG

@@ -369,6 +369,8 @@ public:
 
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 
+  virtual PRBool HasPendingInputEvent();
+
   NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString);
   NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString);
 
@@ -409,6 +411,11 @@ public:
 
   void              HidePlugin();
 
+  void              ResetParent();
+
+  static PRBool DoHasPendingInputEvent();
+  static PRUint32 GetCurrentInputEventCount();
+  static void UpdateCurrentInputEventCount();
 protected:
 
   PRBool            ReportDestroyEvent();
@@ -446,7 +453,7 @@ protected:
   PRPackedBool          mVisible;
   PRPackedBool          mDrawing;
   PRPackedBool          mLiveResizeInProgress;
-  PRPackedBool          mIsPluginView; // true if this is a plugin view
+  PRPackedBool          mIsPluginView;
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
 
@@ -454,6 +461,8 @@ protected:
 
   nsPluginPort          mPluginPort;
   nsIPluginInstanceOwner* mPluginInstanceOwner; // [WEAK]
+
+  static PRUint32 sLastInputEventCount;
 };
 
 void NS_InstallPluginKeyEventsHandler();

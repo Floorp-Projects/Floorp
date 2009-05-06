@@ -99,7 +99,6 @@ class nsXPCConstructor;
 class AutoMarkingPtr;
 
 class xpcProperty;
-class xpcPropertyBagEnumerator;
 
 #ifdef XPC_IDISPATCH_SUPPORT
 class XPCDispInterface;

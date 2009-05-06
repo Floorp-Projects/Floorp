@@ -46,7 +46,6 @@ CSRCS =	\
 	jar.c \
 	jar-ds.c \
 	jarfile.c \
-	jarjart.c \
 	jarint.c \
 	$(NULL)
 

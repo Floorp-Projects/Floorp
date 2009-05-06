@@ -58,6 +58,9 @@ struct PKIX_PL_CRLStruct {
         PKIX_Boolean crlNumberAbsent;
         PKIX_List *crlEntryList; /* list of PKIX_PL_CRLEntry */
         PKIX_List *critExtOids;
+        SECItem *adoptedDerCrl;
+        SECItem *derGenName; /* der of general name which was used
+                              * to download the crl. */
 };
 
 /* see source file for function documentation */
@@ -65,14 +68,12 @@ struct PKIX_PL_CRLStruct {
 PKIX_Error *pkix_pl_CRL_RegisterSelf(void *plContext);
 
 PKIX_Error *
-pkix_pl_CRL_CreateWithSignedCRL(
-        CERTSignedCrl *nssSignedCrl,
-        PKIX_PL_CRL **pCrl,
-        void *plContext);
+pkix_pl_CRL_CreateWithSignedCRL(CERTSignedCrl *nssSignedCrl,
+                                SECItem *derCrl,
+                                SECItem *derGenName,
+                                PKIX_PL_CRL **pCrl,
+                                void *plContext);
 
-PKIX_Error *
-pkix_pl_CRL_CreateToList(SECItem *derCrlItem, PKIX_List *crlList,
-                         void *plContext);
 #ifdef __cplusplus
 }
 #endif

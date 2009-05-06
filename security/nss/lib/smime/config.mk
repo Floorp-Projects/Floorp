@@ -50,6 +50,7 @@ ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	-lnss3 \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
@@ -71,6 +72,7 @@ else
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	-lnss3 \
+	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \

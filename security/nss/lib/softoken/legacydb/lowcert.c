@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.4 2008/02/08 02:50:50 julien.pierre.boogz%sun.com Exp $
+ * $Id: lowcert.c,v 1.5 2009/04/12 01:31:45 nelson%bolyard.com Exp $
  */
 
 #include "seccomon.h"
@@ -361,6 +361,10 @@ nsslowcert_KeyFromIssuerAndSN(PRArenaPool *arena,
 
     if (!arena) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	goto loser;
+    }
+    if (len > NSS_MAX_LEGACY_DB_KEY_SIZE) {
+	PORT_SetError(SEC_ERROR_INPUT_LEN);
 	goto loser;
     }
     key->data = (unsigned char*)PORT_ArenaAlloc(arena, len);

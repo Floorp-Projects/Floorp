@@ -66,6 +66,9 @@ fails == 156888-1.html 156888-1-ref.html # bug 484825
 == dynamic-removal-12.html white-space-ref.html
 == dynamic-removal-13.html 3x3-ref.html
 == dynamic-removal-14.html 3x3-ref.html
+== dynamic-removal-15.html 3x3-ref.html
+== dynamic-removal-16.html 3x3-ref.html
+== dynamic-removal-17.html 3x3-ref.html
 == dynamic-insert-cell-1.html 3x3-ref.html
 == dynamic-switch-block-to-cell-1.html 3x3-ref.html
 == dynamic-switch-block-to-cell-2.html 3x3-ref.html

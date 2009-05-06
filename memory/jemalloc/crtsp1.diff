@@ -130,7 +130,7 @@ LINKIMPLIB=link -lib -nologo
 209d
 21,22c
 RETAIL_DLL_NAME=MOZCRT19
-RETAIL_LIB_NAME=msvcrt
+RETAIL_LIB_NAME=mozcrt19
 .
 diff -re crt/src/makefile.inc crt-sp1/src/makefile.inc
 1623a

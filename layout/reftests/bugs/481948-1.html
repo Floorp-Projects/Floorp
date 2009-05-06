@@ -1,0 +1,15 @@
+<!-- test for bug 481948: check whether Indic cluster shows all glyphs -->
+<html>
+  <head>
+    <style type="text/css">
+      body {
+        font-size: 24pt;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- The cluster here is longer than in the reference, so display should be different.
+         In FF3.0.x on Mac OS X, they look identical. -->
+    <p>&#x0930;&#x094d;&#x0915;&#x094d;&#x0915;&#x094d;&#x0915;&#x094d;&#x0915;</p>
+  </body>
+</html>

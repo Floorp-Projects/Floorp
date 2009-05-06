@@ -44,6 +44,7 @@
 #include "nsString.h"
 #include "nsCOMArray.h"
 #include "nsIStringBundleOverride.h"
+#include "nsAutoLock.h"
 
 class nsStringBundle : public nsIStringBundle
 {
@@ -70,6 +71,7 @@ protected:
 private:
     nsCString              mPropertiesURL;
     nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
+    PRMonitor*                   mMonitor;
     PRPackedBool                 mAttemptedLoad;
     PRPackedBool                 mLoaded;
     

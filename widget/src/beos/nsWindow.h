@@ -235,6 +235,10 @@ protected:
 	//Just for saving space we use packed bools.
 	PRPackedBool           mIsTopWidgetWindow;
 	PRPackedBool           mIsMetaDown;
+	PRPackedBool           mIsShiftDown;
+	PRPackedBool           mIsControlDown;
+	PRPackedBool           mIsAltDown;
+	PRPackedBool           mIsDestroying;
 	PRPackedBool           mIsVisible;
 	PRPackedBool           mEnabled;
 	PRPackedBool           mIsScrolling;

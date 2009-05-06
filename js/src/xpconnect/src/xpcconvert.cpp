@@ -1281,8 +1281,23 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                     }
 
                     if(triedWrapping)
-                        return destObj &&
-                               CreateHolderIfNeeded(ccx, destObj, d, dest);
+                    {
+                        if(!destObj)
+                            return JS_FALSE;
+
+                        jsval wrappedObjVal = OBJECT_TO_JSVAL(destObj);
+                        AUTO_MARK_JSVAL(ccx, &wrappedObjVal);
+                        if(wrapper->NeedsChromeWrapper())
+                        {
+                            if(!XPC_SOW_WrapObject(ccx, xpcscope->GetGlobalJSObject(),
+                                                   OBJECT_TO_JSVAL(destObj),
+                                                   &wrappedObjVal))
+                                return JS_FALSE;
+                        }
+
+                        return CreateHolderIfNeeded(ccx, JSVAL_TO_OBJECT(wrappedObjVal),
+                                                    d, dest);
+                    }
                 }
             }
 
@@ -1297,11 +1312,23 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                 if(!strongWrapper)
                     strongWrapper = wrapper;
 
+                AUTO_MARK_JSVAL(ccx, &v);
                 return XPC_XOW_WrapObject(ccx, scope, &v) &&
+                       (!wrapper->NeedsChromeWrapper() ||
+                        XPC_SOW_WrapObject(ccx, xpcscope->GetGlobalJSObject(),
+                                           v, &v)) &&
                        CreateHolderIfNeeded(ccx, JSVAL_TO_OBJECT(v), d, dest);
             }
 
-            *d = v;
+            if(allowNativeWrapper && wrapper->NeedsChromeWrapper())
+            {
+                if(!XPC_SOW_WrapObject(ccx, xpcscope->GetGlobalJSObject(), v, d))
+                    return JS_FALSE;
+            }
+            else
+            {
+                *d = v;
+            }
             if(dest)
                 *dest = strongWrapper.forget().get();
             return JS_TRUE;
@@ -1428,9 +1455,9 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
     if(NS_SUCCEEDED(res) && cx && jsExceptionPtr && *exceptn)
     {
-        nsCOMPtr<nsXPCException> xpcEx = do_QueryInterface(*exceptn);
+        nsCOMPtr<nsIXPCException> xpcEx = do_QueryInterface(*exceptn);
         if(xpcEx)
-            xpcEx->StowThrownJSVal(cx, *jsExceptionPtr);
+            xpcEx->StowJSVal(cx, *jsExceptionPtr);
     }
 
     if(sz)

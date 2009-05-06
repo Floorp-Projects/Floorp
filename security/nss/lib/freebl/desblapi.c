@@ -49,7 +49,7 @@
 #include <stddef.h>
 #include "secerr.h"
 
-#if defined(_X86_)
+#if defined(NSS_X86_OR_X64)
 /* Intel X86 CPUs do unaligned loads and stores without complaint. */
 #define COPY8B(to, from, ptr) \
     	HALFPTR(to)[0] = HALFPTR(from)[0]; \

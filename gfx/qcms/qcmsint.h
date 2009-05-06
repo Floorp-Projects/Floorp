@@ -86,8 +86,9 @@ struct lutType {
 	uint16_t *output_table;
 };
 #if 0
-this is from an intial idea of having the struct correspond to the data in
-the file. I decided that it wasn't a good idea.
+/* this is from an intial idea of having the struct correspond to the data in
+ * the file. I decided that it wasn't a good idea.
+ */
 struct tag_value {
 	uint32_t type;
 	union {
@@ -139,4 +140,4 @@ static inline s15Fixed16Number double_to_s15Fixed16Number(double v)
 }
 
 void precache_release(struct precache_output *p);
-void set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
+qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);

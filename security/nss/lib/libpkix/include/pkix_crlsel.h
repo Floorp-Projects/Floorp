@@ -158,6 +158,8 @@ typedef PKIX_Error *
  * PARAMETERS:
  *  "issue"
  *      crl issuer.
+ *  "crlDpList"
+ *      distribution points list
  *  "callback"
  *      The MatchCallback function to be used.
  *  "pSelector"
@@ -174,6 +176,7 @@ typedef PKIX_Error *
 PKIX_Error *
 PKIX_CRLSelector_Create(
         PKIX_PL_Cert *issuer,
+        PKIX_List *crlDpList,
         PKIX_PL_Date *date,
         PKIX_CRLSelector **pSelector,
         void *plContext);
@@ -753,6 +756,34 @@ PKIX_ComCRLSelParams_SetMinCRLNumber(
         PKIX_ComCRLSelParams *params,
         PKIX_PL_BigInt *number,
         void *plContext);
+
+/*
+ * FUNCTION: PKIX_ComCRLSelParams_SetCrlDp
+ * DESCRIPTION:
+ *
+ * Sets crldp list that can be used to download a crls.
+ * 
+ * PARAMETERS:
+ *  "params"
+ *      Address of ComCRLSelParamsParams whose minCRLNumber criterion is to be
+ *      set. Must be non-NULL.
+ *  "crldpList"
+ *      A list of CRLDPs. Can be an emptry list.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Not Thread Safe - assumes exclusive access to "params"
+ *  (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a CRLSelector Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error*
+PKIX_ComCRLSelParams_SetCrlDp(
+         PKIX_ComCRLSelParams *params,
+         PKIX_List *crldpList,
+         void *plContext);
 
 #ifdef __cplusplus
 }

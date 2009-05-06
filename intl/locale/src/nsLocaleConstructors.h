@@ -48,7 +48,7 @@
 #include "nsLanguageAtomService.h"
 #include "nsLocaleCID.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #define USE_MAC_LOCALE
 #endif
 
@@ -69,13 +69,7 @@
 #endif
 
 #ifdef USE_MAC_LOCALE
-// We currently do not define USE_UCCOLLATIONKEY because it causes crashes.
-// See bug 128323 and bug 255192
-#ifdef USE_UCCOLLATIONKEY
 #include "nsCollationMacUC.h"
-#else
-#include "nsCollationMac.h"
-#endif
 #include "nsDateTimeFormatMac.h"
 #include "nsMacLocale.h"
 #endif
@@ -123,11 +117,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatUnix)
 
 #ifdef USE_MAC_LOCALE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacLocale)
-#ifdef USE_UCCOLLATIONKEY 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMacUC)
-#else
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMac)
-#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatMac)
 #endif  
 
