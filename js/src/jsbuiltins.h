@@ -251,10 +251,33 @@ struct JSTraceableNative {
 #endif
 
 /*
- * Declare a C function named <op> and a CallInfo struct named <op>_callinfo so the
- * tracer can call it. |linkage| controls the visibility of both the function
- * and the CallInfo global. It can be extern, static, or FRIEND, which
- * specifies JS_FRIEND_API linkage for the function.
+ * This macro is used for builtin functions that can be called from JITted
+ * code.  It declares a C function named <op> and a CallInfo struct named
+ * <op>_ci so the tracer can call it.  The <N> in JS_DEFINE_CALLINFO_<N> is
+ * the number of arguments the builtin takes.  Builtins with no arguments
+ * are not supported.  Using a macro is clunky but ensures that the types
+ * for each C function matches those for the corresponding CallInfo struct;
+ * mismatched types can cause subtle problems.
+ *
+ * The macro arguments are:
+ *
+ * - The linkage for the function and the associated CallInfo global.  It
+ *   can be extern, static, or FRIEND, which specifies JS_FRIEND_API linkage
+ *   for the function.
+ *
+ * - The return type. This identifier must name one of the _JS_TYPEINFO_*
+ *   macros defined in jsbuiltins.h.
+ *
+ * - The builtin name.
+ *
+ * - The parameter types.
+ *
+ * - The cse flag. 1 if the builtin call can be optimized away by common
+ *   subexpression elimination; otherwise 0. This should be 1 only if the
+ *   function is idempotent and the return value is determined solely by the
+ *   arguments.
+ *
+ * - The fold flag. Reserved. The same as cse for now.
  */
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)                                     \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt), (_JS_CTYPE_TYPE(at0)),                   \
@@ -442,17 +465,28 @@ JS_DECLARE_CALLINFO(js_String_p_charCodeAt0_int)
 JS_DECLARE_CALLINFO(js_String_p_charCodeAt_int)
 
 /* Defined in jsbuiltins.cpp. */
-#define BUILTIN1(linkage, rt, op, at0,                     cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN2(linkage, rt, op, at0, at1,                cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN3(linkage, rt, op, at0, at1, at2,           cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN4(linkage, rt, op, at0, at1, at2, at3,      cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)  JS_DECLARE_CALLINFO(op)
-#include "builtins.tbl"
-#undef BUILTIN
-#undef BUILTIN1
-#undef BUILTIN2
-#undef BUILTIN3
-#undef BUILTIN4
-#undef BUILTIN5
+JS_DECLARE_CALLINFO(js_BoxDouble)
+JS_DECLARE_CALLINFO(js_BoxInt32)
+JS_DECLARE_CALLINFO(js_UnboxDouble)
+JS_DECLARE_CALLINFO(js_UnboxInt32)
+JS_DECLARE_CALLINFO(js_dmod)
+JS_DECLARE_CALLINFO(js_imod)
+JS_DECLARE_CALLINFO(js_DoubleToInt32)
+JS_DECLARE_CALLINFO(js_DoubleToUint32)
+
+JS_DECLARE_CALLINFO(js_StringToNumber)
+JS_DECLARE_CALLINFO(js_StringToInt32)
+JS_DECLARE_CALLINFO(js_CloseIterator)
+JS_DECLARE_CALLINFO(js_CallTree)
+JS_DECLARE_CALLINFO(js_AddProperty)
+JS_DECLARE_CALLINFO(js_HasNamedProperty)
+JS_DECLARE_CALLINFO(js_HasNamedPropertyInt32)
+JS_DECLARE_CALLINFO(js_CallGetter)
+JS_DECLARE_CALLINFO(js_TypeOfObject)
+JS_DECLARE_CALLINFO(js_TypeOfBoolean)
+JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToNumber)
+JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
+JS_DECLARE_CALLINFO(js_Arguments)
+JS_DECLARE_CALLINFO(js_NewNullClosure)
 
 #endif /* jsbuiltins_h___ */

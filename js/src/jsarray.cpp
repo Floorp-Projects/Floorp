@@ -930,6 +930,7 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
     obj->dslots[u] = v;
     return JS_TRUE;
 }
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem, CONTEXT, OBJECT, INT32, JSVAL, 0, 0)
 #endif
 
 static JSBool
@@ -2314,6 +2315,7 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
     obj->dslots[length] = v;
     return JS_TRUE;
 }
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_ArrayCompPush, CONTEXT, OBJECT, JSVAL, 0, 0)
 
 #ifdef JS_TRACER
 static jsval FASTCALL
@@ -3271,6 +3273,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     obj->dslots = NULL;
     return obj;
 }
+JS_DEFINE_CALLINFO_2(extern, OBJECT, js_NewEmptyArray, CONTEXT, OBJECT, 0, 0)
 
 JSObject* FASTCALL
 js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
@@ -3284,6 +3287,7 @@ js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
         return NULL;
     return obj;
 }
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewUninitializedArray, CONTEXT, OBJECT, UINT32, 0, 0)
 
 #endif /* JS_TRACER */
 
@@ -3561,7 +3565,3 @@ js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint cou
     return JS_TRUE;
 }
 
-JS_DEFINE_CALLINFO_4(extern, BOOL,   js_Array_dense_setelem, CONTEXT, OBJECT, INT32, JSVAL,   0, 0)
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_NewEmptyArray, CONTEXT, OBJECT,                       0, 0)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewUninitializedArray, CONTEXT, OBJECT, UINT32,       0, 0)
-JS_DEFINE_CALLINFO_3(extern, BOOL,   js_ArrayCompPush, CONTEXT, OBJECT, JSVAL,                0, 0)

@@ -1012,6 +1012,7 @@ js_String_p_charCodeAt_int(JSString* str, jsint i)
         return 0;
     return JSSTRING_CHARS(str)[i];
 }
+JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int,  STRING, INT32, 1, 1)
 
 jsdouble FASTCALL
 js_String_p_charCodeAt0(JSString* str)
@@ -1021,6 +1022,10 @@ js_String_p_charCodeAt0(JSString* str)
     return jsdouble(JSSTRING_CHARS(str)[0]);
 }
 
+/*
+ * The FuncFilter replaces the generic double version of charCodeAt with the
+ * integer fast path if appropriate.
+ */
 int32 FASTCALL
 js_String_p_charCodeAt0_int(JSString* str)
 {
@@ -1028,13 +1033,7 @@ js_String_p_charCodeAt0_int(JSString* str)
         return 0;
     return JSSTRING_CHARS(str)[0];
 }
-
-/*
- * The FuncFilter replaces the generic double version of charCodeAt with the
- * integer fast path if appropriate.
- */
 JS_DEFINE_CALLINFO_1(extern, INT32, js_String_p_charCodeAt0_int, STRING,        1, 1)
-JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int,  STRING, INT32, 1, 1)
 #endif
 
 jsint
@@ -2383,9 +2382,6 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 }
 #endif
 
-JS_DEFINE_CALLINFO_2(extern, BOOL,   js_EqualStrings, STRING, STRING,                       1, 1)
-JS_DEFINE_CALLINFO_2(extern, INT32,  js_CompareStrings, STRING, STRING,                     1, 1)
-
 JS_DEFINE_TRCINFO_1(str_toString,
     (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                        1, 1)))
 JS_DEFINE_TRCINFO_1(str_charAt,
@@ -2491,7 +2487,6 @@ js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
     obj->fslots[JSSLOT_PRIVATE] = STRING_TO_JSVAL(str);
     return obj;
 }
-
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0, 0)
 
 #endif /* !JS_TRACER */
@@ -3061,6 +3056,7 @@ js_EqualStrings(JSString *str1, JSString *str2)
 
     return JS_TRUE;
 }
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_EqualStrings, STRING, STRING, 1, 1)
 
 int32 JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2)
@@ -3086,6 +3082,7 @@ js_CompareStrings(JSString *str1, JSString *str2)
     }
     return (intN)(l1 - l2);
 }
+JS_DEFINE_CALLINFO_2(extern, INT32, js_CompareStrings, STRING, STRING, 1, 1)
 
 size_t
 js_strlen(const jschar *s)

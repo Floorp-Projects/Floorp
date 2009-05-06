@@ -252,10 +252,6 @@ OTHER_HFILES =		\
 	jskeyword.tbl	\
 	$(NULL)
 
-ifdef ENABLE_JIT
-OTHER_HFILES += builtins.tbl
-endif
-
 ifndef PREBUILT_CPUCFG
 OTHER_HFILES += $(OBJDIR)/jsautocfg.h
 endif
