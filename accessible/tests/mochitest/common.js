@@ -215,7 +215,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
         acc.QueryInterface(aInterfaces[index]);
       } catch (e) {
         if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
-          ok(false, "Can't query " + aInterfaces[index] + " for " + aID);
+          ok(false, "Can't query " + aInterfaces[index] + " for " + aAccOrElmOrID);
 
         return null;
       }
@@ -226,7 +226,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
   try {
     acc.QueryInterface(aInterfaces);
   } catch (e) {
-    ok(false, "Can't query " + aInterfaces + " for " + aID);
+    ok(false, "Can't query " + aInterfaces + " for " + aAccOrElmOrID);
     return null;
   }
   
