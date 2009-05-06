@@ -90,10 +90,12 @@
     <command id="cmd_popupDef"      oncommand="onCheckboxClick('popup');"/>
     <command id="cmd_cookieDef"     oncommand="onCheckboxClick('cookie');"/>
     <command id="cmd_installDef"    oncommand="onCheckboxClick('install');"/>
+    <command id="cmd_geoDef"        oncommand="onCheckboxClick('geo');"/>
     <command id="cmd_imageToggle"   oncommand="onRadioClick('image');"/>
     <command id="cmd_popupToggle"   oncommand="onRadioClick('popup');"/>
     <command id="cmd_cookieToggle"  oncommand="onRadioClick('cookie');"/>
     <command id="cmd_installToggle" oncommand="onRadioClick('install');"/>
+    <command id="cmd_geoToggle"     oncommand="onRadioClick('geo');"/>
   </commandset>
 
   <keyset>
@@ -357,6 +359,18 @@
             <radiogroup id="installRadioGroup" orient="horizontal">
               <radio id="install#1" command="cmd_installToggle" label="&permAllow;"/>
               <radio id="install#2" command="cmd_installToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+
+        <vbox>
+          <label value="&permGeo;" control="permGeoGroup geoRadioGroup"/>
+          <hbox id="permGeoGroup" role="group">
+            <checkbox id="geoDef" command="cmd_geoDef" label="&permAskAlways;"/>
+            <spacer flex="1"/>
+            <radiogroup id="geoRadioGroup" orient="horizontal">
+              <radio id="geo#1" command="cmd_geoToggle" label="&permAllow;"/>
+              <radio id="geo#2" command="cmd_geoToggle" label="&permBlock;"/>
             </radiogroup>
           </hbox>
         </vbox>
