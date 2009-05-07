@@ -386,7 +386,7 @@ CanvasBrowser.prototype = {
 
   _redrawRects: function _redrawRects(rects) {
     // skip the region logic for basic paints
-    if (!this._pageLoading && rects.length == 1
+    if (!this._isPanning && !this._pageLoading && rects.length == 1
         && this._visibleBounds.contains(rects[0])) {
       this._drawRects(rects, false);
       return;
