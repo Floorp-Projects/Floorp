@@ -339,6 +339,9 @@ private:
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
   nsresult
+  LoadXPCOMPlugins(nsIComponentManager* aComponentManager);
+
+  nsresult
   NewEmbeddedPluginStreamListener(nsIURI* aURL, nsIPluginInstanceOwner *aOwner,
                                   nsIPluginInstance* aInstance,
                                   nsIStreamListener** aListener);
@@ -409,6 +412,9 @@ private:
   nsresult EnsurePrivateDirServiceProvider();
 
   nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
+
+  // one-off hack to include nppl3260.dll from the components folder
+  nsresult ScanForRealInComponentsFolder(nsIComponentManager * aCompManager);
 
   // calls PostPluginUnloadEvent for each library in mUnusedLibraries
   void UnloadUnusedLibraries();
