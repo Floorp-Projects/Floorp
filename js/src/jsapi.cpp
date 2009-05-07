@@ -5552,11 +5552,11 @@ JS_EncodeString(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
+JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data)
 {
     CHECK_REQUEST(cx);
-    return js_Stringify(cx, vp, replacer, callback, data, 0);
+    return js_Stringify(cx, vp, replacer, space, callback, data);
 }
 
 JS_PUBLIC_API(JSBool)
