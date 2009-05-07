@@ -121,6 +121,8 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include "nsUUIDGenerator.h"
 
+#include "nsIOUtil.h"
+
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
 #endif
@@ -234,6 +236,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacUtilsImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSystemInfo, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMemoryReporterManager)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIOUtil)
 
 static NS_METHOD
 nsThreadManagerGetSingleton(nsISupports* outer,
@@ -485,6 +489,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(SYSTEMINFO, nsSystemInfoConstructor),
 #define NS_MEMORY_REPORTER_MANAGER_CLASSNAME "Memory Reporter Manager"
     COMPONENT(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor),
+    COMPONENT(IOUTIL, nsIOUtilConstructor),
 };
 
 #undef COMPONENT

@@ -92,6 +92,12 @@
 #define NS_OBSERVERSERVICE_CONTRACTID "@mozilla.org/observer-service;1"
 
 /**
+ * IO utilities service contract id.
+ * This guarantees implementation of nsIIOUtil.  Usable from any thread.
+ */
+#define NS_IOUTIL_CONTRACTID "@mozilla.org/io-util;1"
+
+/**
  * The following are the CIDs and Contract IDs of the nsISupports wrappers for 
  * primative types.  
  */
