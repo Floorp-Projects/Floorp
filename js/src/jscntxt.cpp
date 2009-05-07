@@ -594,6 +594,8 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
     rt = cx->runtime;
 
+    JS_ASSERT_IF(rt->gcRunning, cx->outstandingRequests == 0);
+
     if (mode != JSDCM_NEW_FAILED) {
         cxCallback = rt->cxCallback;
         if (cxCallback) {
@@ -629,6 +631,8 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         || cx->requestDepth != 0
 #endif
         ) {
+        JS_ASSERT(rt->gcLevel == 0);
+
         JS_UNLOCK_GC(rt);
 
         if (last) {
