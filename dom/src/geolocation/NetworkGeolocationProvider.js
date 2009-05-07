@@ -13,7 +13,6 @@ function LOG(aMsg) {
     //Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
 }
 
-
 function getAccessTokenForURL(url)
 {
     // check to see if we have an access token:
@@ -165,6 +164,17 @@ WifiGeoPositionProvider.prototype = {
         if (this.timer != null) {
             this.timer.cancel();
             this.timer = null;
+        }
+
+        // Although we aren't using cookies, we should error on the side of not
+        // saving any access tokens if the user asked us not to save cookies or
+        // has changed the lifetimePolicy.  The access token in these cases is
+        // used and valid for the life of this object (eg. between startup and
+        // shutdown).e
+        let prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+        if (prefService.getIntPref("network.cookie.lifetimePolicy") != 0) {
+            let branch = prefService.getBranch("geo.wifi.access_token.");
+            branch.deleteBranch("");
         }
 
         let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
