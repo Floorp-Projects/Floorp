@@ -235,6 +235,7 @@ public:
 
   static nsresult ClearChromeImageCache();
   static nsresult ClearImageCache();
+  static void MinimizeCaches();
 
   static nsresult InitCache();
 
@@ -302,7 +303,8 @@ private: // methods
 
   typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
 
-  static nsresult EvictEntries(imgCacheTable &aCacheToClear, imgCacheQueue &aQueueToClear);
+  static nsresult EvictEntries(imgCacheTable &aCacheToClear);
+  static nsresult EvictEntries(imgCacheQueue &aQueueToClear);
 
   static imgCacheTable &GetCache(nsIURI *aURI);
   static imgCacheQueue &GetCacheQueue(nsIURI *aURI);
