@@ -120,6 +120,10 @@ EXTRA_COMPONENTS = \
 		$(srcdir)/nsProxyAutoConfig.js \
 		$(NULL)
 
+EXTRA_JS_MODULES = \
+		NetUtil.jsm \
+		$(NULL)
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
