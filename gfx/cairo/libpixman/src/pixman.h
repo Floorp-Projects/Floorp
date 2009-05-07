@@ -767,6 +767,7 @@ void            pixman_image_set_alpha_map           (pixman_image_t            
 						      int16_t                       y);
 void            pixman_image_set_component_alpha     (pixman_image_t               *image,
 						      pixman_bool_t                 component_alpha);
+pixman_bool_t   pixman_image_get_component_alpha     (pixman_image_t               *image);
 void		pixman_image_set_accessors	     (pixman_image_t		   *image,
 						      pixman_read_memory_func_t	    read_func,
 						      pixman_write_memory_func_t    write_func);

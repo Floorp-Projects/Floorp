@@ -1286,7 +1286,7 @@ _wrap_image (cairo_surface_t *src,
 	     cairo_image_surface_t **out)
 {
     static cairo_user_data_key_t wrap_image_key;
-    cairo_surface_t *surface;
+    cairo_image_surface_t *surface;
     cairo_status_t status;
 
     struct acquire_source_image_data *data = malloc(sizeof(*data));
@@ -1294,25 +1294,28 @@ _wrap_image (cairo_surface_t *src,
     data->image = image;
     data->image_extra = image_extra;
 
-    surface = cairo_image_surface_create_for_data (image->data,
+    surface = (cairo_image_surface_t*)cairo_image_surface_create_for_data (image->data,
 	    image->format,
 	    image->width,
 	    image->height,
 	    image->stride);
-    status = surface->status;
+    status = surface->base.status;
     if (status)
 	return status;
 
-    status = _cairo_user_data_array_set_data (&surface->user_data,
+    status = _cairo_user_data_array_set_data (&surface->base.user_data,
 	    &wrap_image_key,
 	    data,
 	    _wrap_release_source_image);
     if (status) {
-	cairo_surface_destroy (surface);
+	cairo_surface_destroy (&surface->base);
 	return status;
     }
 
-    *out = (cairo_image_surface_t *) surface;
+    pixman_image_set_component_alpha (surface->pixman_image,
+            pixman_image_get_component_alpha (surface->pixman_image));
+
+    *out = surface;
     return CAIRO_STATUS_SUCCESS;
 }
 
