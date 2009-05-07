@@ -42,6 +42,7 @@
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
 #include "nsINode.h"
+#include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
 
 // Forward declarations
 class nsIAtom;
@@ -63,8 +64,8 @@ class nsISMILAttr;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x3ca5afbe, 0x1052, 0x4682, \
-  { 0x9f, 0xa0, 0x0e, 0x39, 0xe4, 0xf8, 0xef, 0x9d } }
+{ 0x48cb2d6d, 0x9ccc, 0x4d0b, \
+  { 0x8c, 0x07, 0x29, 0x96, 0xb5, 0xf9, 0x68, 0x55 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -753,6 +754,19 @@ public:
   // XXXbz this is PRInt32 because all the ESM content state APIs use
   // PRInt32.  We should really use PRUint32 instead.
   virtual PRInt32 IntrinsicState() const;
+
+  /* The default script type (language) ID for this content.
+     All content must support fetching the default script language.
+   */
+  virtual PRUint32 GetScriptTypeID() const
+  { return nsIProgrammingLanguage::JAVASCRIPT; }
+
+  /* Not all content supports setting a new default language */
+  virtual nsresult SetScriptTypeID(PRUint32 aLang)
+  {
+    NS_NOTREACHED("SetScriptTypeID not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   /**
    * Get the ID of this content node (the atom corresponding to the
