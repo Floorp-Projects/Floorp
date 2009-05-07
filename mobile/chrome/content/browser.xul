@@ -418,6 +418,17 @@
       <placetree id="folder-items" type="bookmarks" mode="folders" flex="1" onselect="FolderPicker.moveItem();"/>
     </vbox>
 
+    <vbox id="helperapp-container" class="dialog-dark" hidden="true" style="-moz-stack-sizing: ignore;" align="center" top="0" left="0">
+      <label id="helperapp-prompt" value="What would you like to do with"/>
+      <label id="helperapp-target" value=""/>
+      <separator/>
+      <hbox pack="center">
+        <button id="helperapp-open" label="Open" oncommand="HelperAppDialog.open();"/>
+        <button id="helperapp-save" label="Save" oncommand="HelperAppDialog.save();"/>
+        <button id="helperapp-nothing" label="Nothing" oncommand="HelperAppDialog.close();"/>
+      </hbox>
+    </vbox>
+
     <hbox id="alerts-container" hidden="true" style="-moz-stack-sizing: ignore;" align="start" top="0" left="0" width="200"
           onclick="AlertsHelper.click(event);">
       <image id="alerts-image"/>

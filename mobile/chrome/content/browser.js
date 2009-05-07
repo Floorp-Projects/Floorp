@@ -1100,6 +1100,40 @@ var AlertsHelper = {
   }
 }
 
+var HelperAppDialog = {
+  _launcher: null,
+
+  show: function had_show(aLauncher) {
+    this._launcher = aLauncher;
+    document.getElementById("helperapp-target").value = this._launcher.suggestedFileName;
+
+    let toolbar = document.getElementById("toolbar-main");
+    let top = toolbar.top + toolbar.boxObject.height;
+    let container = document.getElementById("helperapp-container");
+    container.hidden = false;
+
+    let rect = container.getBoundingClientRect();
+    container.top = top < 0 ? 0 : top;
+    container.left = (window.innerWidth - rect.width) / 2;
+  },
+
+  save: function had_save() {
+    this._launcher.saveToDisk(null, false);
+    this.close();
+  },
+
+  open: function had_open() {
+    this._launcher.launchWithApplication(null, false);
+    this.close();
+  },
+
+  close: function had_close() {
+    document.getElementById("helperapp-target").value = "";
+    let container = document.getElementById("helperapp-container");
+    container.hidden = true;
+  }
+}
+
 function ProgressController(tab) {
   this._tab = tab;
 }
