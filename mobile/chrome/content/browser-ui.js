@@ -542,6 +542,8 @@ var BrowserUI = {
         break;
       case "cmd_star":
       {
+        this.hideControls();
+
         var bookmarkURI = browser.currentURI;
         var bookmarkTitle = browser.contentDocument.title || bookmarkURI.spec;
 
@@ -558,8 +560,6 @@ var BrowserUI = {
         else {
           BookmarkHelper.edit(bookmarkURI);
         }
-
-        this.hideControls();
         break;
       }
       case "cmd_bookmarks":
@@ -625,9 +625,11 @@ var BookmarkHelper = {
     this._editor.setAttribute("onclose", "BookmarkHelper.close()");
     document.getElementById("bookmark-form").appendChild(this._editor);
 
-    let container = document.getElementById("browser-container");
+    let toolbar = document.getElementById("toolbar-main");
+    let top = toolbar.top + toolbar.boxObject.height;
+
     this._panel = document.getElementById("bookmark-container");
-    this._panel.width = container.boxObject.width;
+    this._panel.top = (top < 0 ? 0 : top);
     this._panel.hidden = false;
 
     let self = this;
