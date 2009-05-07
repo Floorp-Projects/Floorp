@@ -43,12 +43,14 @@
 #define __SYSTEM_PREF_SERVICE_H__
 
 #include "prlink.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 #include "nsWeakPtr.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 
 class GConfProxy;
+struct SysPrefCallbackData;
 
 ////////////////////////////////////////////////////////////////////////////
 // nsSystemPrefService provide a interface for read system prefs. It is
@@ -74,7 +76,7 @@ private:
     GConfProxy *mGConf;
 
     //listeners
-    nsAutoVoidArray *mObservers;
+    nsAutoTArray<nsAutoPtr<SysPrefCallbackData>, 8> mObservers;
 };
 
 #define NS_SYSTEMPREF_SERVICE_CID                  \

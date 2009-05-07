@@ -123,6 +123,20 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
       return mArray.IsEmpty();
     }
 
+    // This method provides direct access to the array elements.
+    // @return A pointer to the first element of the array.  If the array is
+    // empty, then this pointer must not be dereferenced.
+    elem_type* Elements() {
+      return mArray.Elements();
+    }
+
+    // This method provides direct, readonly access to the array elements.
+    // @return A pointer to the first element of the array.  If the array is
+    // empty, then this pointer must not be dereferenced.
+    const elem_type* Elements() const {
+      return mArray.Elements();
+    }
+
     // This method provides direct access to the i'th element of the array.
     // The given index must be within the array bounds.
     // @param i  The index of an element in the array.
@@ -241,6 +255,11 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     void Clear() {
       mArray.Clear();
       ClearIterators();
+    }
+
+    // Compact the array to minimize the memory it uses
+    void Compact() {
+      mArray.Compact();
     }
 
     //

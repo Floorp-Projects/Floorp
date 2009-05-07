@@ -40,7 +40,8 @@
 
 #include "nsXPTCUtils.h"
 #include "jni.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 #include "nsIInterfaceInfo.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
@@ -138,7 +139,7 @@ private:
   jint                        mJavaRefHashCode;
   nsCOMPtr<nsIInterfaceInfo>  mIInfo;
 
-  nsVoidArray     mChildren; // weak references (cleared by the children)
+  nsTArray<nsAutoPtr<nsJavaXPTCStub> > mChildren; // weak references (cleared by the children)
   nsJavaXPTCStub *mMaster;   // strong reference
 
   nsAutoRefCnt    mWeakRefCnt;  // count for number of associated weak refs
