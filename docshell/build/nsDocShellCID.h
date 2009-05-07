@@ -76,6 +76,19 @@
 #define NS_CHANNELCLASSIFIER_CONTRACTID "@mozilla.org/channelclassifier"
 
 /**
+ * Class and contract ID for the docshell.  This is the container for a web
+ * navigation context.  It implements too many interfaces to count, and the
+ * exact ones keep changing; if they stabilize somewhat that will get
+ * documented.
+ */
+#define NS_DOCSHELL_CID                                             \
+    { 0xf1eac762, 0x87e9, 0x11d3,                                   \
+      { 0xaf, 0x80, 0x00, 0xa0, 0x24, 0xff, 0xc0, 0x8c } }
+#define NS_DOCSHELL_CONTRACTID "@mozilla.org/docshell/html;1"
+
+
+
+/**
  * An observer service topic that can be listened to to catch creation
  * of content browsing areas (both toplevel ones and subframes).  The
  * subject of the notification will be the nsIWebNavigation being

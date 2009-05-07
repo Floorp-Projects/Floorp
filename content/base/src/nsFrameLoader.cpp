@@ -406,7 +406,7 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
 
     aItem->SetItemType(nsIDocShellTreeItem::typeContent);
   } else {
-    // Inherit our type from our parent webshell.  If it is
+    // Inherit our type from our parent docshell.  If it is
     // chrome, we'll be chrome.  If it is content, we'll be
     // content.
 
@@ -808,7 +808,7 @@ nsFrameLoader::EnsureDocShell()
     do_GetInterface(doc->GetScriptGlobalObject());
 
   // Create the docshell...
-  mDocShell = do_CreateInstance("@mozilla.org/webshell;1");
+  mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   // Get the frame name and tell the docshell about it.

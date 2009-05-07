@@ -59,7 +59,7 @@ public:
    */
 protected:
 
-  NS_IMETHOD NotifyWebShell(nsISupports* aWebShell,
+  NS_IMETHOD NotifyDocShell(nsISupports* aDocShell,
                             nsISupports* aChannel,
                             const char* charset, 
                             PRInt32 source);

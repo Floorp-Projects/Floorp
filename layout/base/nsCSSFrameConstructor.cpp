@@ -2861,7 +2861,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   // will act as the scrolling mechanism for the viewport. 
   // XXX Do we even need a viewport when printing to a printer?
 
-  // As long as the webshell doesn't prohibit it, and the device supports
+  // As long as the docshell doesn't prohibit it, and the device supports
   // it, create a scroll frame that will act as the scolling mechanism for
   // the viewport.
   //

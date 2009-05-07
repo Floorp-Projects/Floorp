@@ -42,7 +42,7 @@
 
 #include "nsDocShellCID.h"
 
-#include "nsWebShell.h"
+#include "nsDocShell.h"
 #include "nsDefaultURIFixup.h"
 #include "nsWebNavigationInfo.h"
 
@@ -100,7 +100,7 @@ Shutdown(nsIModule* aSelf)
 }
 
 // docshell
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWebShell, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocShell, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWebNavigationInfo, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClassifierCallback)
@@ -132,19 +132,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHistory)
 // download history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadHistory)
 
-// Currently no-one is instantiating docshell's directly because
-// nsWebShell is still our main "shell" class. nsWebShell is a subclass
-// of nsDocShell. Once migration is complete, docshells will be the main
-// "shell" class and this module will need to register the docshell as
-// a component
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocShell)
-
 static const nsModuleComponentInfo gDocShellModuleInfo[] = {
   // docshell
-    { "WebShell", 
-      NS_WEB_SHELL_CID,
-      "@mozilla.org/webshell;1",
-      nsWebShellConstructor
+    { "DocShell", 
+      NS_DOCSHELL_CID,
+      "@mozilla.org/docshell;1",
+      nsDocShellConstructor
     },
     { "Default keyword fixup", 
       NS_DEFAULTURIFIXUP_CID,

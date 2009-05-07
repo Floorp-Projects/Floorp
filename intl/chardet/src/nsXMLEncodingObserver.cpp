@@ -178,7 +178,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                                                      preferred);
                           if(NS_SUCCEEDED(res))
                           {
-                            res = NotifyWebShell(0,0, preferred.get(), kCharsetFromMetaTag );
+                            res = NotifyDocShell(0,0, preferred.get(), kCharsetFromMetaTag );
                             return res;
                           } // if check for GetPreferred
                     } // if check res for Equals

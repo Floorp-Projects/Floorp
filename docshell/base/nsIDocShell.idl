@@ -297,12 +297,18 @@ interface nsIDocShell : nsISupports
   attribute float zoom;
 
   /*
-   * XXX Comment here!
+   * The size, in CSS pixels, of the horizontal margins for the <body> of an
+   * HTML document in this docshel; used to implement the marginwidth attribute
+   * on HTML <frame>/<iframe> elements.  A value smaller than zero indicates
+   * that the attribute was not set.
    */
   attribute long marginWidth;
 
   /*
-   * XXX Comment here!
+   * The size, in CSS pixels, of the vertical margins for the <body> of an HTML
+   * document in this docshel; used to implement the marginheight attribute on
+   * HTML <frame>/<iframe> elements.  A value smaller than zero indicates that
+   * the attribute was not set.
    */
   attribute long marginHeight;
 

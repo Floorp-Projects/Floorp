@@ -135,9 +135,12 @@ var gViewSourceUtils = {
                     .getService(Components.interfaces.nsPIExternalAppLauncher)
                     .deleteTemporaryFileOnExit(file);
         } else {
-          // we'll use nsIWebPageDescriptor to get the source because it may not have to refetch
-          // the file from the server
-          var webShell = Components.classes["@mozilla.org/webshell;1"].createInstance();
+          // we'll use nsIWebPageDescriptor to get the source because it may
+          // not have to refetch the file from the server
+          // XXXbz this is so broken...  This code doesn't set up this docshell
+          // at all correctly; if somehow the view-source stuff managed to
+          // execute script we'd be in big trouble here, I suspect.
+          var webShell = Components.classes["@mozilla.org/docshell;1"].createInstance();
           this.viewSourceProgressListener.webShell = webShell;
           var progress = webShell.QueryInterface(this.mnsIWebProgress);
           progress.addProgressListener(this.viewSourceProgressListener,
