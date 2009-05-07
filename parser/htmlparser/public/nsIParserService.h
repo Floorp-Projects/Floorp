@@ -63,7 +63,7 @@ class nsIObserverEntry : public nsISupports {
 
   NS_IMETHOD Notify(nsIParserNode* aNode,
                     nsIParser* aParser,
-                    nsISupports* aWebShell,
+                    nsISupports* aDocShell,
                     const PRUint32 aFlags) = 0;
 
 };
