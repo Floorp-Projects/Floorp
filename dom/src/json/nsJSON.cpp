@@ -243,7 +243,7 @@ nsJSON::EncodeInternal(nsJSONWriter *writer)
     return NS_ERROR_INVALID_ARG;
   }
 
-  ok = JS_Stringify(cx, vp, NULL, &WriteCallback, writer);
+  ok = JS_Stringify(cx, vp, NULL, JSVAL_NULL, WriteCallback, writer);
   if (!ok)
     return NS_ERROR_FAILURE;
     
