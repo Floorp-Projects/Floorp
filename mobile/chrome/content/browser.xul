@@ -288,6 +288,12 @@
       <findbar id="findbar" flex="1"/>
     </hbox>
 
+    <vbox id="bookmark-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0">
+      <hbox id="bookmark-form" align="start">
+        <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
+      </hbox>
+    </vbox>
+
     <!-- barrier to the left of the right bar -->
     <hbox id="panel-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
@@ -388,12 +394,6 @@
                       oncommand="BrowserUI.doButtonSearch(event.target);">
         <image class="tool-search"/>
       </arrowscrollbox>
-    </vbox>
-
-    <vbox id="bookmark-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
-      <hbox id="bookmark-form" align="start">
-        <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
-      </hbox>
     </vbox>
 
     <vbox id="bookmarklist-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
