@@ -552,8 +552,6 @@ nsThebesImage::Draw(gfxContext*        aContext,
         NS_WARNING("Destination area too large, bailing out");
         return;
     }
-
-    // BEGIN working around cairo/pixman bug (bug 364968)
     // Compute device-space-to-image-space transform. We need to sanity-
     // check it to work around a pixman bug :-(
     // XXX should we only do this for certain surface types?
@@ -567,6 +565,11 @@ nsThebesImage::Draw(gfxContext*        aContext,
     gfxMatrix deviceToImage = deviceToUser;
     deviceToImage.Multiply(userSpaceToImageSpace);
   
+    PRBool pushedGroup = PR_FALSE;
+    if (currentTarget->GetType() != gfxASurface::SurfaceTypeQuartz) {
+        // BEGIN working around cairo/pixman bug (bug 364968)
+        // Quartz's limits for matrix are much larger than pixman
+
     // Our device-space-to-image-space transform may not be acceptable to pixman.
     if (!IsSafeImageTransformComponent(deviceToImage.xx) ||
         !IsSafeImageTransformComponent(deviceToImage.xy) ||
@@ -576,7 +579,6 @@ nsThebesImage::Draw(gfxContext*        aContext,
         return;
     }
 
-    PRBool pushedGroup = PR_FALSE;
     if (!IsSafeImageTransformComponent(deviceToImage.x0) ||
         !IsSafeImageTransformComponent(deviceToImage.y0)) {
         // We'll push a group, which will hopefully reduce our transform's
@@ -597,6 +599,7 @@ nsThebesImage::Draw(gfxContext*        aContext,
         pushedGroup = PR_TRUE;
     }
     // END working around cairo/pixman bug (bug 364968)
+    }
   
     nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
     pattern->SetMatrix(userSpaceToImageSpace);
