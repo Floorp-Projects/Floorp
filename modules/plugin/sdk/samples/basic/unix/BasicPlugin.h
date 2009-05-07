@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,46 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __PLUGIN_H__
-#define __PLUGIN_H__
+#ifndef BasicPlugin_h_
+#define BasicPlugin_h_
 
-/* Xlib/Xt stuff */
-#include <X11/Xlib.h>
-#include <X11/Intrinsic.h>
-#include <X11/cursorfont.h>
+// This just needs to include NPAPI headers, change the path to whatever works
+// for you. Note that "XP_UNIX=1" is defined in the makefile so that the NPAPI
+// headers know we're compiling for unix.
+#include "../../../../base/public/npapi.h"
+#include "../../../../base/public/npfunctions.h"
 
-#include "pluginbase.h"
+NPError NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs);
+NPError NP_Shutdown();
 
-class nsPluginInstance : public nsPluginInstanceBase
-{
-public:
-  nsPluginInstance(NPP aInstance);
-  virtual ~nsPluginInstance();
+NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
+NPError NPP_Destroy(NPP instance, NPSavedData** save);
+NPError NPP_SetWindow(NPP instance, NPWindow* window);
+NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
+NPError NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason);
+int32_t NPP_WriteReady(NPP instance, NPStream* stream);
+int32_t NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
+void    NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
+void    NPP_Print(NPP instance, NPPrint* platformPrint);
+int16_t NPP_HandleEvent(NPP instance, void* event);
+void    NPP_URLNotify(NPP instance, const char* URL, NPReason reason, void* notifyData);
+NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value);
+NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value);
 
-  NPBool init(NPWindow* aWindow);
-  void shut();
-  NPBool isInitialized() {return mInitialized;}
-  NPError GetValue(NPPVariable variable, void *value);
-  NPError SetWindow(NPWindow* aWindow);
-
-  // locals
-  const char * getVersion();
-  void draw();
-
-private:
-  NPP mInstance;
-  NPBool mInitialized;
-
-  Window mWindow;
-  Display *mDisplay;
-  Widget mXtwidget;
-  int mX, mY;
-  int mWidth, mHeight;
-  Visual* mVisual;
-  Colormap mColormap;
-  unsigned int mDepth;
-  XFontStruct *mFontInfo;
-  GC mGC;
-};
-
-#endif // __PLUGIN_H__
+#endif // BasicPlugin_h_
