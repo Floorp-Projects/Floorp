@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Josh Aas <josh@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,44 +36,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+# Basic plugin requires GTK and X11
+CFLAGS = -Wall -DXP_UNIX=1 -DMOZ_X11=1 -fPIC -g
 
-include $(DEPTH)/config/autoconf.mk
+npbasicplugin : BasicPlugin.o
+	cc $(CFLAGS) -shared BasicPlugin.o -o npbasicplugin.so
 
-LIBRARY_NAME	= npSDKbasic
+BasicPlugin.o : BasicPlugin.c BasicPlugin.h
+	cc `pkg-config --cflags gtk+-2.0` $(CFLAGS) -c BasicPlugin.c
 
-REQUIRES        = idl \
-                  xpcom \
-                  nspr \
-                  $(NULL)
+clean :
+	rm npbasicplugin.so BasicPlugin.o
 
-CPPSRCS         = plugin.cpp
-
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libplugingate_s.$(LIB_SUFFIX) \
-
-include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DMOZILLA_STRICT_API
-
-EXTRA_DSO_LDOPTS +=  $(XLDFLAGS) -rdynamic  -lXi -lXext -lX11 -lm -lXt
-
-INSTALL_PLUGIN	= $(CONFIG_TOOLS)/nsinstall -R 
-INSTALL = true
-
-ifeq ($(OS_ARCH), UNIX)
-# This needs to get defined for npapi.h on unix platforms.
-DEFINES         += -DXP_UNIX
-endif
-
-LOCAL_INCLUDES	+= -I$(srcdir)/../../include -I$(srcdir)/../../../include
-
-install-plugin:	$(SHARED_LIBRARY)
-ifdef SHARED_LIBRARY
-	$(INSTALL_PLUGIN) $(SHARED_LIBRARY) $(DIST)/bin/plugins
-endif
-
-libs:: install-plugin
