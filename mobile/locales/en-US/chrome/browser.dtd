@@ -52,8 +52,8 @@
 <!ENTITY addonsHeader.label        "Add-ons">
 <!ENTITY addonsLocal.label         "Your Add-ons">
 <!ENTITY addonsRepo.label          "Get Add-ons">
-<!ENTITY addonsRecommended.label   "See Recommended">
-<!ENTITY addonsSearch.label        "Search Catalog">
+<!ENTITY addonsRecommended.label   "Recommended">
+<!ENTITY addonsSearch.label        "Search">
 <!ENTITY addonsSearch.emptytext    "Search all add-ons">
 
 <!ENTITY addonOptions.label        "Options">
@@ -64,9 +64,9 @@
 <!ENTITY addonCancel.label         "Cancel">
 
 <!ENTITY downloadsHeader.label     "Downloads">
-<!ENTITY downloadsSortDate.label   "By Date">
-<!ENTITY downloadsSortSite.label   "By Site">
-<!ENTITY downloadsSortName.label   "By Name">
+<!ENTITY downloadsSortDate.label   "Date">
+<!ENTITY downloadsSortSite.label   "Site">
+<!ENTITY downloadsSortName.label   "Name">
 <!ENTITY downloadsSearch.label     "Search">
 <!ENTITY downloadsSearch.emptytext "Search for downloaded file">
 
