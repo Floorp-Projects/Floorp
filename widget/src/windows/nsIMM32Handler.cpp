@@ -74,8 +74,10 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 PRPackedBool nsIMM32Handler::sIsComposingOnPlugin = PR_FALSE;
 PRPackedBool nsIMM32Handler::sIsStatusChanged = PR_FALSE;
 
+#ifndef WINCE
 UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
+#endif
 
 /* static */ void
 nsIMM32Handler::EnsureHandlerInstance()
