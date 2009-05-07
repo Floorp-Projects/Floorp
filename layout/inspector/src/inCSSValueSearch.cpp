@@ -39,7 +39,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsVoidArray.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMDocumentStyle.h"
 #include "nsIDOM3Node.h"

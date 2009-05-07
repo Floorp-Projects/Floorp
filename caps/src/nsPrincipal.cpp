@@ -49,7 +49,6 @@
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsJSPrincipals.h"
-#include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"

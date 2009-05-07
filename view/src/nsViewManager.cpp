@@ -142,11 +142,10 @@ nsViewManager::PostInvalidateEvent()
 
 #undef DEBUG_MOUSE_LOCATION
 
-PRInt32 nsViewManager::mVMCount = 0;
 nsIRenderingContext* nsViewManager::gCleanupContext = nsnull;
 
 // Weakly held references to all of the view managers
-nsVoidArray* nsViewManager::gViewManagers = nsnull;
+nsTArray<nsViewManager*>* nsViewManager::gViewManagers = nsnull;
 PRUint32 nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
@@ -155,9 +154,8 @@ nsViewManager::nsViewManager()
   , mRootViewManager(this)
 {
   if (gViewManagers == nsnull) {
-    NS_ASSERTION(mVMCount == 0, "View Manager count is incorrect");
     // Create an array to hold a list of view managers
-    gViewManagers = new nsVoidArray;
+    gViewManagers = new nsTArray<nsViewManager*>;
   }
  
   if (gCleanupContext == nsnull) {
@@ -168,8 +166,6 @@ nsViewManager::nsViewManager()
   }
 
   gViewManagers->AppendElement(this);
-
-  ++mVMCount;
 
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
@@ -198,16 +194,13 @@ nsViewManager::~nsViewManager()
 
   mRootScrollable = nsnull;
 
-  NS_ASSERTION((mVMCount > 0), "underflow of viewmanagers");
-  --mVMCount;
-
 #ifdef DEBUG
   PRBool removed =
 #endif
     gViewManagers->RemoveElement(this);
-  NS_ASSERTION(removed, "Viewmanager instance not was not in the global list of viewmanagers");
+  NS_ASSERTION(removed, "Viewmanager instance was not in the global list of viewmanagers");
 
-  if (0 == mVMCount) {
+  if (gViewManagers->IsEmpty()) {
     // There aren't any more view managers so
     // release the global array of view managers
    
@@ -2093,9 +2086,9 @@ nsViewManager::FlushPendingInvalidates()
     mRefreshEnabled = PR_FALSE;
     ++mUpdateBatchCnt;
     
-    PRInt32 index;
-    for (index = 0; index < mVMCount; index++) {
-      nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
+    PRUint32 index;
+    for (index = 0; index < gViewManagers->Length(); index++) {
+      nsViewManager* vm = gViewManagers->ElementAt(index);
       if (vm->RootViewManager() == this) {
         // One of our kids
         nsIViewObserver* observer = vm->GetViewObserver();
