@@ -1286,7 +1286,9 @@ nsJSContext::~nsJSContext()
 #endif
   NS_PRECONDITION(!mTerminations, "Shouldn't have termination funcs by now");
 
-  Unlink();
+  mGlobalWrapperRef = nsnull;
+
+  DestroyJSContext();
 
   --sContextCount;
 
@@ -1303,7 +1305,7 @@ nsJSContext::~nsJSContext()
 }
 
 void
-nsJSContext::Unlink()
+nsJSContext::DestroyJSContext()
 {
   if (!mContext)
     return;
@@ -1316,30 +1318,37 @@ nsJSContext::Unlink()
                                          JSOptionChangedCallback,
                                          this);
 
-  // Release mGlobalWrapperRef before the context is destroyed
-  mGlobalWrapperRef = nsnull;
+  PRBool do_gc = mGCOnDestruction && !sGCTimer && sReadyForGC;
 
   // Let xpconnect destroy the JSContext when it thinks the time is right.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   if (xpc) {
-    PRBool do_gc = mGCOnDestruction && !sGCTimer && sReadyForGC;
-
     xpc->ReleaseJSContext(mContext, !do_gc);
-  } else {
+  } else if (do_gc) {
     ::JS_DestroyContext(mContext);
+  } else {
+    ::JS_DestroyContextNoGC(mContext);
   }
   mContext = nsnull;
 }
 
 // QueryInterface implementation for nsJSContext
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSContext)
+  NS_ASSERTION(!tmp->mContext || tmp->mContext->outstandingRequests == 0,
+               "Trying to unlink a context with outstanding requests.");
+  tmp->mIsInitialized = PR_FALSE;
+  tmp->mGCOnDestruction = PR_FALSE;
+  tmp->DestroyJSContext();
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalWrapperRef)
-  tmp->Unlink();
-  tmp->mIsInitialized = PR_FALSE;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_REFCNT(nsJSContext, tmp->GetCCRefcnt())
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContext");
   nsContentUtils::XPConnect()->NoteJSContext(tmp->mContext, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1352,6 +1361,12 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSContext, nsIScriptContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSContext, nsIScriptContext)
+
+nsrefcnt
+nsJSContext::GetCCRefcnt()
+{
+  return mRefCnt.get() + mContext->outstandingRequests;
+}
 
 nsresult
 nsJSContext::EvaluateStringWithValue(const nsAString& aScript,

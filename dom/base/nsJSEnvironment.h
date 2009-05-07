@@ -57,7 +57,8 @@ public:
   virtual ~nsJSContext();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsJSContext, nsIScriptContext)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
+                                                         nsIScriptContext)
 
   virtual PRUint32 GetScriptTypeID()
     { return nsIProgrammingLanguage::JAVASCRIPT; }
@@ -218,7 +219,9 @@ protected:
   // related to our exception.
   void ReportPendingException(PRBool aSetAsideFrameChain);
 private:
-  void Unlink();
+  void DestroyJSContext();
+
+  nsrefcnt GetCCRefcnt();
 
   JSContext *mContext;
   PRUint32 mNumEvaluations;
