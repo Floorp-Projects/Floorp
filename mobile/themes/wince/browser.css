@@ -127,45 +127,27 @@ toolbarbutton.urlbar-cap-button {
 /* creates the left endcap */
 #identity-box {
   color: #fff;
-  padding: 6px 4px;
+  padding: 9px 4px;
   -moz-border-radius-topleft: 0.5em;
   -moz-border-radius-bottomleft: 0.5em;
-  border-top: 4px solid #ccc;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #aaa;
-  -moz-border-top-colors:#3b3b3b #6d6d6d #535353 #494949;
-  -moz-border-right-colors:#2d2d2d #484848 #484848 #414141;
-  -moz-border-left-colors:#2d2d2d #484848 #484848 #414141;
-  -moz-border-bottom-colors:#111111 #484848 #484848 #414141;
-  background: #414141;
+  border: 1px solid #777;
+  background: #525252;
 }
 
 #identity-box:hover:active {
-  -moz-border-top-colors:#323232 #111111 #272727 #2a2a2a;
-  -moz-border-right-colors:#323232 #111111 #272727 #2a2a2a;
-  -moz-border-left-colors:#323232 #111111 #272727 #2a2a2a;
-  -moz-border-bottom-colors:#515151 #111111 #272727 #2a2a2a;
-  background-color: #2d2d2d;
+  border: 1px solid #202020;
+  background: #303030;
 }
 
 /* add special color and extra width */
 #identity-box.verifiedIdentity {
   min-width: 50px;
-  -moz-border-top-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
-  -moz-border-right-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
-  -moz-border-left-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
-  -moz-border-bottom-colors:#323232 #bff3d2 #8dd4a7 #7fcb9b;
   background-color: #77c494;
 }
 
 /* add special color and extra width */
 #identity-box.verifiedDomain {
   min-width: 50px;
-  -moz-border-top-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
-  -moz-border-right-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
-  -moz-border-left-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
-  -moz-border-bottom-colors:#323232 #b2cee5 #86b2d5 #74a7cf;
   background-color: #6ca0c9;
 }
 
@@ -189,16 +171,10 @@ toolbarbutton.urlbar-cap-button {
 
 #urlbar-editarea {
   -moz-box-align: center;
-  padding: 4px 4px;
-  border-top: 4px solid #ccc;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #aaa;
-  -moz-border-top-colors:#414141 #aaa #dedede #efefef;
-  -moz-border-right-colors:#2d2d2d #dedede #efefef #fafafa;
-  -moz-border-left-colors:#2d2d2d #dedede #efefef #fafafa;
-  -moz-border-bottom-colors:#2d2d2d #fff #fff #fff;
-  background-color: #fff;
+  padding: 7px 4px 8px 4px;
+  border-top: 1px solid #777;
+  border-bottom: 1px solid #777;
+  background: #fff;
 }
 
 #urlbar-edit {
@@ -211,26 +187,16 @@ toolbarbutton.urlbar-cap-button {
 /* make sure this endcap matches the other endcap */
 #urlbar-icons {
   color: #fff;
-  padding: 9px 4px;
+  padding: 12px 4px;
   -moz-border-radius-topright: 0.5em;
   -moz-border-radius-bottomright: 0.5em;
-  border-top: 4px solid #ccc;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #aaa;
-  -moz-border-top-colors:#3b3b3b #6d6d6d #535353 #494949;
-  -moz-border-right-colors:#2d2d2d #484848 #484848 #414141;
-  -moz-border-left-colors:#2d2d2d #484848 #484848 #414141;
-  -moz-border-bottom-colors:#111111 #484848 #484848 #414141;
-  background: #414141;
+  border: 1px solid #777;
+  background: #525252;
 }
 
 #urlbar-icons:hover:active {
-  -moz-border-top-colors:#323232 #111111 #272727 #2a2a2a;
-  -moz-border-right-colors:#323232 #111111 #272727 #2a2a2a;
-  -moz-border-left-colors:#323232 #111111 #272727 #2a2a2a;
-  -moz-border-bottom-colors:#515151 #111111 #272727 #2a2a2a;
-  background-color: #2d2d2d;
+  border: 1px solid #202020;
+  background: #303030;
 }
 
 /* right toolbar (browser controls) ---------------------------------------- */
@@ -275,7 +241,7 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/settings-24.png");
   margin-right: -14px;
   /* XXX not sure why we need the padding here, but not in #tool-panel-close */
-  padding-right: 24px;
+  padding-right: 26px;
 }
 
 /* button is moved off the left edge */
