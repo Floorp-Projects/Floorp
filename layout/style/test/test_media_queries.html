@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=156716
 -->
 <head>
   <title>Test for Bug 156716</title>
-  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=156716
   
 </div>
 <pre id="test">
-<script class="testbody" type="application/javascript; version=1.7">
+<script class="testbody" type="application/javascript">
 
 /** Test for Bug 156716 **/
 
@@ -101,8 +101,11 @@ function run() {
   query_should_be_parseable("not all and (orientation)");
   query_should_be_parseable("only all and (orientation)");
 
-  for each (let feature in [ "width", "height", "device-width",
-                             "device-height" ]) {
+  var features = [ "width", "height", "device-width", "device-height" ];
+  var feature;
+  var i;
+  for (i in features) {
+    feature = features[i];
     expression_should_be_parseable(feature);
     expression_should_be_parseable(feature + ": 0");
     expression_should_be_parseable(feature + ": 0px");
@@ -129,17 +132,18 @@ function run() {
     getComputedStyle(content_div, "").fontSize.match(/^(\d+)px$/)[1];
 
   // in this test, assume the common underlying implementation is correct
-  let width_val = 117; // pick two not-too-round numbers
-  let height_val = 76;
+  var width_val = 117; // pick two not-too-round numbers
+  var height_val = 76;
   iframe_style.width = width_val + "px";
   iframe_style.height = height_val + "px";
-  let device_width = window.screen.width;
-  let device_height = window.screen.height;
-  for (let [feature, value] in
-         Iterator({ "width": width_val,
+  var device_width = window.screen.width;
+  var device_height = window.screen.height;
+  features = { "width": width_val,
                     "height": height_val,
                     "device-width": device_width,
-                    "device-height": device_height })) {
+                    "device-height": device_height };
+  for (feature in features) {
+    var value = features[feature];
     should_apply("all and (" + feature + ": " + value + "px)");
     should_not_apply("all and (" + feature + ": " + (value + 1) + "px)");
     should_not_apply("all and (" + feature + ": " + (value - 1) + "px)");
@@ -225,11 +229,11 @@ function run() {
   should_apply("(max-aspect-ratio: 59/79)");
   expression_should_not_be_parseable("max-aspect-ratio");
 
-  let real_dar = device_width + "/" + device_height;
-  let high_dar_1 = (device_width + 1) + "/" + device_height;
-  let high_dar_2 = device_width + "/" + (device_height - 1);
-  let low_dar_1 = (device_width - 1) + "/" + device_height;
-  let low_dar_2 = device_width + "/" + (device_height + 1);
+  var real_dar = device_width + "/" + device_height;
+  var high_dar_1 = (device_width + 1) + "/" + device_height;
+  var high_dar_2 = device_width + "/" + (device_height - 1);
+  var low_dar_1 = (device_width - 1) + "/" + device_height;
+  var low_dar_2 = device_width + "/" + (device_height + 1);
   should_apply("(device-aspect-ratio: " + real_dar + ")");
   should_apply("not all and (device-aspect-ratio: " + high_dar_1 + ")");
   should_not_apply("all and (device-aspect-ratio: " + high_dar_2 + ")");
@@ -251,7 +255,9 @@ function run() {
   should_apply("not all and (max-device-aspect-ratio: " + low_dar_2 + ")");
   expression_should_not_be_parseable("max-device-aspect-ratio");
 
-  for each (let feature in [ "max-aspect-ratio", "device-aspect-ratio" ]) {
+  features = [ "max-aspect-ratio", "device-aspect-ratio" ];
+  for (i in features) {
+    feature = features[i];
     expression_should_be_parseable(feature + ": 1/1");
     expression_should_be_parseable(feature + ": 1  /1");
     expression_should_be_parseable(feature + ": 1  / \t\n1");
@@ -305,7 +311,9 @@ function run() {
   (is_color ? should_apply : should_not_apply)("only all and (color)");
   (is_color ? should_not_apply : should_apply)("only all and (monochrome)");
 
-  for each (let feature in [ "color", "min-monochrome", "max-color-index" ]) {
+  features = [ "color", "min-monochrome", "max-color-index" ];
+  for (i in features) {
+    feature = features[i];
     expression_should_be_parseable(feature + ": 1");
     expression_should_be_parseable(feature + ": 327");
     expression_should_be_parseable(feature + ": 0");
@@ -324,8 +332,9 @@ function run() {
   should_apply("(max-color-index: 1)");
   should_apply("(max-color-index: 157)");
 
-  for each (let feature in [ "resolution", "min-resolution",
-                             "max-resolution" ]) {
+  features = [ "resolution", "min-resolution", "max-resolution" ];
+  for (i in features) {
+    feature = features[i];
     expression_should_be_parseable(feature + ": 3dpi");
     expression_should_be_parseable(feature + ":3dpi");
     expression_should_not_be_parseable(feature + ": 3.0dpi");
@@ -336,7 +345,7 @@ function run() {
   }
 
   // Find the resolution using max-resolution
-  let resolution = 0;
+  var resolution = 0;
   do {
     ++resolution;
     if (resolution > 10000) {
@@ -346,8 +355,8 @@ function run() {
   } while (!query_applies("(max-resolution: " + resolution + "dpi)"));
 
   // resolution should now be Math.ceil() of the actual resolution.
-  let dpi_high;
-  let dpi_low = resolution - 1;
+  var dpi_high;
+  var dpi_low = resolution - 1;
   if (query_applies("(min-resolution: " + resolution + "dpi)")) {
     // It's exact!
     should_apply("(resolution: " + resolution + "dpi)");
@@ -368,8 +377,8 @@ function run() {
   should_not_apply("all and (min-resolution: " + dpi_high + "dpi)");
 
   // Test dpcm units based on what we computed in dpi.
-  let dpcm_high = Math.ceil(dpi_high / 2.54);
-  let dpcm_low = Math.floor(dpi_low / 2.54);
+  var dpcm_high = Math.ceil(dpi_high / 2.54);
+  var dpcm_low = Math.floor(dpi_low / 2.54);
   should_apply("(min-resolution: " + dpcm_low + "dpcm)");
   should_apply("(max-resolution: " + dpcm_high + "dpcm)");
   should_not_apply("(max-resolution: " + dpcm_low + "dpcm)");
@@ -442,4 +451,5 @@ function run() {
 </pre>
 </body>
 </html>
+
 

@@ -120,7 +120,11 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_StringSetIsVoid_P,
     &NS_StringGetIsVoid_P,
     &NS_CStringSetIsVoid_P,
-    &NS_CStringGetIsVoid_P
+    &NS_CStringGetIsVoid_P,
+
+    // these functions were added post 1.9.1
+    &NS_CycleCollectorSuspect2_P,
+    &NS_CycleCollectorForget2_P
 };
 
 EXPORT_XPCOM_API(nsresult)
@@ -552,4 +556,18 @@ EXPORT_XPCOM_API(PRBool)
 NS_CycleCollectorForget(nsISupports* obj)
 {
   return NS_CycleCollectorForget_P(obj);
+}
+
+#undef NS_CycleCollectorSuspect2
+EXPORT_XPCOM_API(nsPurpleBufferEntry*)
+NS_CycleCollectorSuspect2(nsISupports* obj)
+{
+  return NS_CycleCollectorSuspect2_P(obj);
+}
+
+#undef NS_CycleCollectorForget2
+EXPORT_XPCOM_API(PRBool)
+NS_CycleCollectorForget2(nsPurpleBufferEntry* e)
+{
+  return NS_CycleCollectorForget2_P(e);
 }

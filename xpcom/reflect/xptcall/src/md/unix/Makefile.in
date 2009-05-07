@@ -64,12 +64,21 @@ include $(topsrcdir)/config/config.mk
 #
 # Lots of Unixish x86 flavors
 #
-ifneq (,$(filter FreeBSD NetBSD OpenBSD BSD_OS Darwin,$(OS_ARCH)))
+
+ifeq (Darwin,$(OS_ARCH))
+ifeq (86,$(findstring 86,$(OS_TEST)))
+ifeq (x86_64,$(OS_TEST))
+CPPSRCS		:= xptcinvoke_x86_64_unix.cpp xptcstubs_x86_64_darwin.cpp
+else
+DEFINES		+= -DKEEP_STACK_16_BYTE_ALIGNED
+CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+endif
+endif
+endif
+
+ifneq (,$(filter FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
-ifeq (Darwin,$(OS_ARCH))
-DEFINES		+= -DKEEP_STACK_16_BYTE_ALIGNED
-endif
 endif
 endif
 #
@@ -79,7 +88,7 @@ endif
 ifneq (,$(filter Linux GNU_%,$(OS_ARCH)))
 # Linux/x86-64
 ifeq (x86_64,$(OS_TEST))
-CPPSRCS		:= xptcinvoke_x86_64_linux.cpp xptcstubs_x86_64_linux.cpp
+CPPSRCS		:= xptcinvoke_x86_64_unix.cpp xptcstubs_x86_64_linux.cpp
 else
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
