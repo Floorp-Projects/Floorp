@@ -53,6 +53,7 @@ _TEST_FILES =\
 		attributes.js \
 		common.js \
 		events.js \
+		grid.js \
 		layout.js \
 		namerules.xml \
 		nsIAccessible_actions.js \
@@ -72,6 +73,7 @@ _TEST_FILES =\
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
+		test_aria_role_grid.html \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
