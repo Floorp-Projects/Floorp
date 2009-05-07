@@ -76,27 +76,10 @@ nsresult
 nsSelectionState::SaveSelection(nsISelection *aSel)
 {
   if (!aSel) return NS_ERROR_NULL_POINTER;
-  PRInt32 i,rangeCount, arrayCount = mArray.Length();
+  PRInt32 i,rangeCount;
   aSel->GetRangeCount(&rangeCount);
   
-  // if we need more items in the array, new them
-  if (arrayCount<rangeCount)
-  {
-    PRInt32 count = rangeCount-arrayCount;
-    for (i=0; i<count; i++)
-    {
-      mArray.AppendElement();
-    }
-  }
-  
-  // else if we have too many, delete them
-  else if (arrayCount>rangeCount)
-  {
-    for (i = arrayCount-1; i >= rangeCount; i--)
-    {
-      mArray.RemoveElementAt(i);
-    }
-  }
+  mArray.SetLength(rangeCount);
   
   // now store the selection ranges
   nsresult res = NS_OK;

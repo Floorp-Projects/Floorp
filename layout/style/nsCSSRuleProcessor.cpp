@@ -937,13 +937,12 @@ RuleProcessorData::~RuleProcessorData()
   // Destroy potentially long chains of previous sibling and parent data
   // without more than one level of recursion.
   if (mPreviousSiblingData || mParentData) {
-    nsAutoVoidArray destroyQueue;
+    nsAutoTArray<RuleProcessorData*, 8> destroyQueue;
     destroyQueue.AppendElement(this);
 
     do {
-      RuleProcessorData *d = static_cast<RuleProcessorData*>
-                                        (destroyQueue.FastElementAt(destroyQueue.Count() - 1));
-      destroyQueue.RemoveElementAt(destroyQueue.Count() - 1);
+      RuleProcessorData *d = destroyQueue[destroyQueue.Length() - 1];
+      destroyQueue.RemoveElementAt(destroyQueue.Length() - 1);
 
       if (d->mPreviousSiblingData) {
         destroyQueue.AppendElement(d->mPreviousSiblingData);
@@ -956,7 +955,7 @@ RuleProcessorData::~RuleProcessorData()
 
       if (d != this)
         d->Destroy();
-    } while (destroyQueue.Count());
+    } while (destroyQueue.Length());
   }
 
   delete mLanguage;
