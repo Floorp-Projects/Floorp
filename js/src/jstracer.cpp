@@ -3690,8 +3690,17 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer)
     }
 
     /* If this exit does not have enough globals, there might exist a peer with more globals that we
-     * can join to.
+     * can join to, but only if the parent's globals match.
      */
+    m = getFullTypeMap(exit);
+    if (exit->numGlobalSlots < from_ti->nGlobalTypes()) {
+        uint32 partial = exit->numStackSlots + exit->numGlobalSlots;
+        m = (uint8*)alloca(from_ti->typeMap.length());
+        memcpy(m, getFullTypeMap(exit), partial);
+        memcpy(m + partial, from_ti->globalTypeMap() + exit->numGlobalSlots,
+               from_ti->nGlobalTypes() - exit->numGlobalSlots);
+    }
+
     bool bound = false;
     for (Fragment* f = from->first; f != NULL; f = f->peer) {
         if (!f->code())
@@ -3699,8 +3708,7 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer)
         TreeInfo* ti = (TreeInfo*)f->vmprivate;
         JS_ASSERT(exit->numStackSlots == ti->nStackTypes);
         /* Check the minimum number of slots that need to be compared. */
-        unsigned checkSlots = JS_MIN(exit->numStackSlots + exit->numGlobalSlots, ti->typeMap.length());
-        m = getFullTypeMap(exit);
+        unsigned checkSlots = JS_MIN(from_ti->typeMap.length(), ti->typeMap.length());
         uint8* m2 = ti->typeMap.data();
         /* Analyze the exit typemap against the peer typemap.
          * Two conditions are important:
