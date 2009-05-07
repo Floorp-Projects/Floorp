@@ -500,24 +500,70 @@ Oracle::clearDemotability()
     _globalDontDemote.reset();
 }
 
+
+struct PCHashEntry : public JSDHashEntryStub {
+    size_t          count;
+};
+
+#define PC_HASH_COUNT 1024
+
 static void
-js_Blacklist(Fragment* tree)
+js_Blacklist(jsbytecode* pc)
 {
-    JS_ASSERT(tree->root == tree);
-    jsbytecode* pc = (jsbytecode*)tree->ip;
     JS_ASSERT(*pc == JSOP_LOOP || *pc == JSOP_NOP);
     *pc = JSOP_NOP;
 }
 
 static void
-js_Backoff(Fragment* tree, const jsbytecode* where)
+js_Backoff(JSContext *cx, jsbytecode* pc, Fragment* tree=NULL)
 {
-    JS_ASSERT(tree->root == tree);
-    if (++tree->recordAttempts > BL_ATTEMPTS) {
-        js_Blacklist(tree);
-        return;
+    JSDHashTable *table = &JS_TRACE_MONITOR(cx).recordAttempts;
+
+    if (table->ops) {
+        PCHashEntry *entry = (PCHashEntry *)
+            JS_DHashTableOperate(table, pc, JS_DHASH_ADD);
+        
+        if (entry) {
+            if (!entry->key) {
+                entry->key = pc;
+                JS_ASSERT(entry->count == 0);
+            }
+            JS_ASSERT(JS_DHASH_ENTRY_IS_LIVE(&(entry->hdr)));
+            if (entry->count++ > (BL_ATTEMPTS * MAXPEERS)) {
+                entry->count = 0;
+                js_Blacklist(pc);
+                return;
+            }
+        }
     }
-    tree->hits() -= BL_BACKOFF;
+
+    if (tree) {
+        tree->hits() -= BL_BACKOFF;
+
+        /* 
+         * In case there is no entry or no table (due to OOM) or some
+         * serious imbalance in the recording-attempt distribution on a
+         * multitree, give each tree another chance to blacklist here as
+         * well.
+         */
+        if (++tree->recordAttempts > BL_ATTEMPTS)
+            js_Blacklist(pc);
+    }
+}
+
+static void
+js_resetRecordingAttempts(JSContext *cx, jsbytecode* pc)
+{
+    JSDHashTable *table = &JS_TRACE_MONITOR(cx).recordAttempts;
+    if (table->ops) {
+        PCHashEntry *entry = (PCHashEntry *)
+            JS_DHashTableOperate(table, pc, JS_DHASH_LOOKUP);
+
+        if (JS_DHASH_ENTRY_IS_FREE(&(entry->hdr)))
+            return;
+        JS_ASSERT(JS_DHASH_ENTRY_IS_LIVE(&(entry->hdr)));
+        entry->count = 0;
+    }
 }
 
 static inline size_t
@@ -592,13 +638,14 @@ getAnchor(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 global
 }
 
 static void
-js_AttemptCompilation(JSTraceMonitor* tm, JSObject* globalObj, jsbytecode* pc)
+js_AttemptCompilation(JSContext *cx, JSTraceMonitor* tm, JSObject* globalObj, jsbytecode* pc)
 {
     /*
      * If we already permanently blacklisted the location, undo that.
      */
     JS_ASSERT(*(jsbytecode*)pc == JSOP_NOP || *(jsbytecode*)pc == JSOP_LOOP);
     *(jsbytecode*)pc = JSOP_LOOP;
+    js_resetRecordingAttempts(cx, pc);
 
     /*
      * Breath new live into all peer fragments at the designated loop header.
@@ -2683,7 +2730,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     Fragmento* fragmento = tm->fragmento;
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only_v(printf("Blacklist: excessive stack use.\n"));
-        js_Blacklist(fragment->root);
+        js_Blacklist((jsbytecode*) fragment->root->ip);
         return;
     }
     if (anchor && anchor->exitType != CASE_EXIT)
@@ -2697,9 +2744,11 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         return;
     if (fragmento->assm()->error() != nanojit::None) {
         debug_only_v(printf("Blacklisted: error during compilation\n");)
-        js_Blacklist(fragment->root);
+        js_Blacklist((jsbytecode*) fragment->root->ip);
         return;
     }
+    js_resetRecordingAttempts(cx, (jsbytecode*) fragment->ip);
+    js_resetRecordingAttempts(cx, (jsbytecode*) fragment->root->ip);
     if (anchor) {
 #ifdef NANOJIT_IA32
         if (anchor->exitType == CASE_EXIT)
@@ -2763,7 +2812,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
 
     if (callDepth != 0) {
         debug_only_v(printf("Blacklisted: stack depth mismatch, possible recursion.\n");)
-        js_Blacklist(fragment->root);
+        js_Blacklist((jsbytecode*) fragment->root->ip);
         trashSelf = true;
         return;
     }
@@ -2840,7 +2889,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
      * should try to compile the outer tree again.
      */
     if (outer)
-        js_AttemptCompilation(tm, globalObj, outer);
+        js_AttemptCompilation(cx, tm, globalObj, outer);
     
     debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n",
                         cx->fp->script->filename,
@@ -2934,7 +2983,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
 {
     if (callDepth != 0) {
         debug_only_v(printf("Blacklisted: stack depth mismatch, possible recursion.\n");)
-        js_Blacklist(fragment->root);
+        js_Blacklist((jsbytecode*) fragment->root->ip);
         trashSelf = true;
         return;
     }
@@ -2960,7 +3009,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
      * should try to compile the outer tree again.
      */
     if (outer)
-        js_AttemptCompilation(tm, globalObj, outer);
+        js_AttemptCompilation(cx, tm, globalObj, outer);
     
     debug_only_v(printf("recording completed at %s:%u@%u via endLoop\n",
                         cx->fp->script->filename,
@@ -3135,7 +3184,7 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
              * flush it during garbage collection.)
              */
             if (demote)
-                js_AttemptCompilation(traceMonitor, globalObj, outer);
+                js_AttemptCompilation(cx, traceMonitor, globalObj, outer);
         } else {
             endLoop(traceMonitor);
         }
@@ -3268,6 +3317,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
             debug_only_v(printf("Global object/shape mismatch (%p/%u vs. %p/%u), flushing cache.\n",
                                 (void*)globalObj, globalShape, (void*)root->globalObj,
                                 root->globalShape);)
+            js_Backoff(cx, (jsbytecode*) root->ip);
             FlushJITCache(cx);
             return false;
         }
@@ -3583,8 +3633,10 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     JS_ASSERT(f->root == f);
 
     /* Make sure the global type map didn't change on us. */
-    if (!CheckGlobalObjectShape(cx, tm, globalObj))
+    if (!CheckGlobalObjectShape(cx, tm, globalObj)) {
+        js_Backoff(cx, (jsbytecode*) f->root->ip);
         return false;
+    }
 
     AUDIT(recorderStarted);
 
@@ -3603,6 +3655,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     f->lirbuf = tm->lirbuf;
 
     if (f->lirbuf->outOMem() || js_OverfullFragmento(tm, tm->fragmento)) {
+        js_Backoff(cx, (jsbytecode*) f->root->ip);
         FlushJITCache(cx);
         debug_only_v(printf("Out of memory recording new tree, flushing cache.\n");)
         return false;
@@ -4561,8 +4614,10 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     uint32 globalShape = -1;
     SlotList* globalSlots = NULL;
 
-    if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots))
+    if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
+        js_Backoff(cx, cx->fp->regs->pc);
         return false;
+    }
 
     /* Do not enter the JIT code with a pending operation callback. */
     if (cx->operationCallbackFlag)
@@ -4602,7 +4657,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
         /* If we hit the max peers ceiling, don't try to lookup fragments all the time. Thats
            expensive. This must be a rather type-unstable loop. */
         debug_only_v(printf("Blacklisted: too many peer trees.\n");)
-        js_Blacklist(f->root);
+        js_Blacklist((jsbytecode*) f->root->ip);
         return false;
     }
 
@@ -4750,7 +4805,7 @@ js_AbortRecording(JSContext* cx, const char* reason)
                         reason);)
 #endif
 
-    js_Backoff(f->root, cx->fp->regs->pc);
+    js_Backoff(cx, (jsbytecode*) f->root->ip, f->root);
 
     /*
      * If js_DeleteRecorder flushed the code cache, we can't rely on f any more.
@@ -4958,6 +5013,12 @@ js_InitJIT(JSTraceMonitor *tm)
      */
     tm->maxCodeCacheBytes = 16 M;
 
+    if (!tm->recordAttempts.ops) {
+        JS_DHashTableInit(&tm->recordAttempts, JS_DHashGetStubOps(),
+                          NULL, sizeof(PCHashEntry),
+                          JS_DHASH_DEFAULT_CAPACITY(PC_HASH_COUNT));
+    }
+
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, 32);
@@ -5012,6 +5073,10 @@ js_FinishJIT(JSTraceMonitor *tm)
 #endif
         delete tm->lirbuf;
         tm->lirbuf = NULL;
+
+        if (tm->recordAttempts.ops)
+            JS_DHashTableFinish(&tm->recordAttempts);
+
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
             VMFragment* f = tm->vmfragments[i];
             while(f) {
@@ -5065,6 +5130,20 @@ js_PurgeJITOracle()
     oracle.clear();
 }
 
+static JSDHashOperator
+js_PurgeScriptRecordingAttempts(JSDHashTable *table,
+                                JSDHashEntryHdr *hdr,
+                                uint32 number, void *arg)
+{
+    PCHashEntry *e = (PCHashEntry *)hdr;
+    JSScript *script = (JSScript *)arg;
+    jsbytecode *pc = (jsbytecode *)e->key;
+
+    if (JS_UPTRDIFF(pc, script->code) < script->length)
+        return JS_DHASH_REMOVE;
+    return JS_DHASH_NEXT;
+}
+
 JS_REQUIRES_STACK void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script)
 {
@@ -5089,6 +5168,9 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
             }
         }
     }
+    JS_DHashTableEnumerate(&(tm->recordAttempts),
+                           js_PurgeScriptRecordingAttempts, script);
+
 }
 
 bool
