@@ -39,7 +39,6 @@
 #include "nsMorkReader.h"
 #include "prio.h"
 #include "nsNetUtil.h"
-#include "nsVoidArray.h"
 
 // A FixedString implementation that can hold 2 80-character lines
 class nsCLineString : public nsFixedCString

@@ -243,7 +243,7 @@ CanLoadResource(nsIURI* aResourceURI)
 nsChromeRegistry::ProviderEntry*
 nsChromeRegistry::nsProviderArray::GetProvider(const nsACString& aPreferred, MatchType aType)
 {
-  PRInt32 i = mArray.Count();
+  PRInt32 i = mArray.Length();
   if (!i)
     return nsnull;
 
@@ -251,7 +251,7 @@ nsChromeRegistry::nsProviderArray::GetProvider(const nsACString& aPreferred, Mat
   ProviderEntry* entry;
 
   while (i--) {
-    entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
+    entry = &mArray[i];
     if (aPreferred.Equals(entry->provider))
       return entry;
 
@@ -306,32 +306,21 @@ nsChromeRegistry::nsProviderArray::SetBase(const nsACString& aProvider, nsIURI* 
   }
 
   // no existing entries, add a new one
-  provider = new ProviderEntry(aProvider, aBaseURL);
-  if (!provider)
-    return; // It's safe to silently fail on OOM
-
-  mArray.AppendElement(provider);
+  mArray.AppendElement(ProviderEntry(aProvider, aBaseURL));
 }
 
 void
 nsChromeRegistry::nsProviderArray::EnumerateToArray(nsTArray<nsCString> *a)
 {
-  PRInt32 i = mArray.Count();
+  PRInt32 i = mArray.Length();
   while (i--) {
-    ProviderEntry *entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    a->AppendElement(entry->provider);
+    a->AppendElement(mArray[i].provider);
   }
 }
 
 void
 nsChromeRegistry::nsProviderArray::Clear()
 {
-  PRInt32 i = mArray.Count();
-  while (i--) {
-    ProviderEntry* entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    delete entry;
-  }
-
   mArray.Clear();
 }
 
