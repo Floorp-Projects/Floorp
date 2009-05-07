@@ -72,6 +72,10 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #endif
 
 PRPackedBool nsIMM32Handler::sIsComposingOnPlugin = PR_FALSE;
+PRPackedBool nsIMM32Handler::sIsStatusChanged = PR_FALSE;
+
+UINT nsIMM32Handler::sCodePage = 0;
+DWORD nsIMM32Handler::sIMEProperty = 0;
 
 /* static */ void
 nsIMM32Handler::EnsureHandlerInstance()
@@ -84,11 +88,18 @@ nsIMM32Handler::EnsureHandlerInstance()
 /* static */ void
 nsIMM32Handler::Initialize()
 {
+#ifdef PR_LOGGING
+  if (!gIMM32Log)
+    gIMM32Log = PR_NewLogModule("nsIMM32HandlerWidgets");
+#endif
+
 #ifdef ENABLE_IME_MOUSE_HANDLING
   if (!sWM_MSIME_MOUSE) {
     sWM_MSIME_MOUSE = ::RegisterWindowMessage(RWM_MOUSE);
   }
 #endif
+
+  InitKeyboardLayout(::GetKeyboardLayout(0));
 }
 
 /* static */ void
@@ -105,12 +116,6 @@ nsIMM32Handler::IsComposing(nsWindow* aWindow)
 {
   return aWindow->PluginHasFocus() ? !!sIsComposingOnPlugin :
            gIMM32Handler && gIMM32Handler->mIsComposing;
-}
-
-/* static */ PRBool
-nsIMM32Handler::IsStatusChanged()
-{
-  return gIMM32Handler && gIMM32Handler->mIsStatusChanged;
 }
 
 /* static */ PRBool
@@ -148,12 +153,46 @@ nsIMM32Handler::IsDoingKakuteiUndo(HWND aWnd)
          imeCompositionMsg.time <= charMsg.time;
 }
 
-/* static */ void
-nsIMM32Handler::NotifyEndStatusChange()
+/* static */ PRBool
+nsIMM32Handler::ShouldDrawCompositionStringOurselves()
 {
-  if (gIMM32Handler)
-    gIMM32Handler->mIsStatusChanged = PR_FALSE;
+#ifdef WINCE
+  // We are not sure we should use native IME behavior...
+  return PR_TRUE;
+#else
+  // If current IME has special UI or its composition window should not
+  // positioned to caret position, we should now draw composition string
+  // ourselves.
+  return !(sIMEProperty & IME_PROP_SPECIAL_UI) &&
+          (sIMEProperty & IME_PROP_AT_CARET);
+#endif
 }
+
+/* static */ void
+nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
+{
+#ifndef WINCE
+  WORD langID = LOWORD(aKeyboardLayout);
+  ::GetLocaleInfoW(MAKELCID(langID, SORT_DEFAULT),
+                   LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
+                   (PWSTR)&sCodePage, sizeof(sCodePage) / sizeof(WCHAR));
+  sIMEProperty = ::ImmGetProperty(aKeyboardLayout, IGP_PROPERTY);
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x, sCodePage=%lu, sIMEProperty=%08x\n",
+     aKeyboardLayout, sCodePage, sIMEProperty));
+#endif
+}
+
+/* static */ UINT
+nsIMM32Handler::GetKeyboardCodePage()
+{
+#ifdef WINCE
+  return ::GetACP();
+#else
+  return sCodePage;
+#endif
+}
+
 
 // used for checking the lParam of WM_IME_COMPOSITION
 #define IS_COMPOSING_LPARAM(lParam) \
@@ -165,13 +204,9 @@ nsIMM32Handler::NotifyEndStatusChange()
 
 nsIMM32Handler::nsIMM32Handler() :
   mCursorPosition(NO_IME_CARET), mIsComposing(PR_FALSE),
-  mIsStatusChanged(PR_FALSE), mNativeCaretIsCreated(PR_FALSE)
+  mNativeCaretIsCreated(PR_FALSE)
 {
-#ifdef PR_LOGGING
-  if (!gIMM32Log)
-    gIMM32Log = PR_NewLogModule("nsIMM32HandlerWidgets");
-#endif
-  InitKeyboardLayout(::GetKeyboardLayout(0));
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS, ("IMM32: nsIMM32Handler is created\n"));
 }
 
 nsIMM32Handler::~nsIMM32Handler()
@@ -180,6 +215,7 @@ nsIMM32Handler::~nsIMM32Handler()
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: ~nsIMM32Handler, ERROR, the instance is still composing\n"));
   }
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS, ("IMM32: nsIMM32Handler is destroyed\n"));
 }
 
 nsresult
@@ -244,9 +280,10 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
 #endif // ENABLE_IME_MOUSE_HANDLING
     case WM_INPUTLANGCHANGE:
       // We don't need to create the instance of the handler here.
-      if (!gIMM32Handler)
-        return PR_FALSE;
-      aEatMessage = gIMM32Handler->OnInputLangChange(aWindow, wParam, lParam);
+      if (gIMM32Handler) {
+        aEatMessage = gIMM32Handler->OnInputLangChange(aWindow, wParam, lParam);
+      }
+      InitKeyboardLayout(reinterpret_cast<HKL>(lParam));
       // We can release the instance here, because the instance may be nerver
       // used. E.g., the new keyboard layout may not use IME, or it may use TSF.
       delete gIMM32Handler;
@@ -265,12 +302,10 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
       aEatMessage = gIMM32Handler->OnIMEEndComposition(aWindow);
       return PR_TRUE;
     case WM_IME_CHAR:
-      EnsureHandlerInstance();
-      aEatMessage = gIMM32Handler->OnIMEChar(aWindow, wParam, lParam);
+      aEatMessage = OnIMEChar(aWindow, wParam, lParam);
       return PR_TRUE;
     case WM_IME_NOTIFY:
-      EnsureHandlerInstance();
-      aEatMessage = gIMM32Handler->OnIMENotify(aWindow, wParam, lParam);
+      aEatMessage = OnIMENotify(aWindow, wParam, lParam);
       return PR_TRUE;
     case WM_IME_REQUEST:
       EnsureHandlerInstance();
@@ -278,12 +313,10 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
         gIMM32Handler->OnIMERequest(aWindow, wParam, lParam, aRetValue);
       return PR_TRUE;
     case WM_IME_SELECT:
-      EnsureHandlerInstance();
-      aEatMessage = gIMM32Handler->OnIMESelect(aWindow, wParam, lParam);
+      aEatMessage = OnIMESelect(aWindow, wParam, lParam);
       return PR_TRUE;
     case WM_IME_SETCONTEXT:
-      EnsureHandlerInstance();
-      aEatMessage = gIMM32Handler->OnIMESetContext(aWindow, wParam, lParam);
+      aEatMessage = OnIMESetContext(aWindow, wParam, lParam);
       return PR_TRUE;
     default:
       return PR_FALSE;
@@ -332,8 +365,6 @@ nsIMM32Handler::OnInputLangChange(nsWindow* aWindow,
   if (mIsComposing) {
     HandleEndComposition(aWindow);
   }
-
-  InitKeyboardLayout(reinterpret_cast<HKL>(lParam));
 
   return PR_FALSE;
 }
@@ -406,7 +437,7 @@ nsIMM32Handler::OnIMEEndComposition(nsWindow* aWindow)
   return ShouldDrawCompositionStringOurselves();
 }
 
-PRBool
+/* static */ PRBool
 nsIMM32Handler::OnIMEChar(nsWindow* aWindow,
                           WPARAM wParam,
                           LPARAM lParam)
@@ -424,7 +455,7 @@ nsIMM32Handler::OnIMEChar(nsWindow* aWindow,
   return PR_TRUE;
 }
 
-PRBool
+/* static */ PRBool
 nsIMM32Handler::OnIMECompositionFull(nsWindow* aWindow)
 {
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -435,7 +466,7 @@ nsIMM32Handler::OnIMECompositionFull(nsWindow* aWindow)
   return PR_FALSE;
 }
 
-PRBool
+/* static */ PRBool
 nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
                             WPARAM wParam,
                             LPARAM lParam)
@@ -515,7 +546,7 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
   }
 #endif // PR_LOGGING
 
-  if (GetKeyState(NS_VK_ALT) >= 0) {
+  if (::GetKeyState(NS_VK_ALT) >= 0) {
     return PR_FALSE;
   }
 
@@ -529,10 +560,10 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
   // add hacky code here
   nsModifierKeyState modKeyState(PR_FALSE, PR_FALSE, PR_TRUE);
   aWindow->DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, 192, nsnull, modKeyState);
-  mIsStatusChanged = mIsStatusChanged || (wParam == IMN_SETOPENSTATUS);
+  sIsStatusChanged = sIsStatusChanged || (wParam == IMN_SETOPENSTATUS);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: OnIMENotify, mIsStatusChanged=%s\n",
-     mIsStatusChanged ? "TRUE" : "FALSE"));
+    ("IMM32: OnIMENotify, sIsStatusChanged=%s\n",
+     sIsStatusChanged ? "TRUE" : "FALSE"));
 
   // not implement yet
   return PR_FALSE;
@@ -563,7 +594,7 @@ nsIMM32Handler::OnIMERequest(nsWindow* aWindow,
   }
 }
 
-PRBool
+/* static */ PRBool
 nsIMM32Handler::OnIMESelect(nsWindow* aWindow,
                             WPARAM wParam,
                             LPARAM lParam)
@@ -576,7 +607,7 @@ nsIMM32Handler::OnIMESelect(nsWindow* aWindow,
   return PR_FALSE;
 }
 
-PRBool
+/* static */ PRBool
 nsIMM32Handler::OnIMESetContext(nsWindow* aWindow,
                                 WPARAM wParam,
                                 LPARAM &lParam)
@@ -589,7 +620,8 @@ nsIMM32Handler::OnIMESetContext(nsWindow* aWindow,
     aWindow->ResetInputState();
   }
 
-  if (ShouldDrawCompositionStringOurselves()) {
+  if (wParam && (lParam & ISC_SHOWUICOMPOSITIONWINDOW) &&
+      ShouldDrawCompositionStringOurselves()) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: OnIMESetContext, ISC_SHOWUICOMPOSITIONWINDOW is removed\n"));
     lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
@@ -750,7 +782,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     // will crash in ImmGetCompositionStringW for GCS_COMPCLAUSE (bug 424663).
     // See comment 35 of the bug for the detail. Therefore, we should use A
     // API for it, however, we should not kill Unicode support on all IMEs.
-    PRBool useA_API = !(mIMEProperty & IME_PROP_UNICODE);
+    PRBool useA_API = !(sIMEProperty & IME_PROP_UNICODE);
 
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleComposition, GCS_COMPCLAUSE, useA_API=%s\n",
@@ -1436,43 +1468,6 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
 
   if (aNewOriginWidget)
     aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffset());
-}
-
-void
-nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
-{
-#ifndef WINCE
-  WORD langID = LOWORD(aKeyboardLayout);
-  ::GetLocaleInfoA(MAKELCID(langID, SORT_DEFAULT),
-                   LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-                   (PSTR)&mCodePage, sizeof(mCodePage));
-  mIMEProperty = ::ImmGetProperty(aKeyboardLayout, IGP_PROPERTY);
-#endif
-}
-
-PRBool
-nsIMM32Handler::ShouldDrawCompositionStringOurselves() const
-{
-#ifdef WINCE
-  // We are not sure we should use native IME behavior...
-  return PR_TRUE;
-#else
-  // If current IME has special UI or its composition window should not
-  // positioned to caret position, we should now draw composition string
-  // ourselves.
-  return !(mIMEProperty & IME_PROP_SPECIAL_UI) &&
-          (mIMEProperty & IME_PROP_AT_CARET);
-#endif
-}
-
-UINT
-nsIMM32Handler::GetKeyboardCodePage() const
-{
-#ifdef WINCE
-  return ::GetACP();
-#else
-  return mCodePage;
-#endif
 }
 
 
