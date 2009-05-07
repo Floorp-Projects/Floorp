@@ -1284,15 +1284,15 @@ nsEventListenerManager::RemoveEventListener(const nsAString& aType,
 NS_IMETHODIMP
 nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
-  nsCOMPtr<nsIContent> targetContent(do_QueryInterface(mTarget));
-  if (!targetContent) {
+  nsCOMPtr<nsINode> targetNode(do_QueryInterface(mTarget));
+  if (!targetNode) {
     // nothing to dispatch on -- bad!
     return NS_ERROR_FAILURE;
   }
   
   // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
   // if that's the XBL document?  Would we want its presshell?  Or what?
-  nsCOMPtr<nsIDocument> document = targetContent->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> document = targetNode->GetOwnerDoc();
 
   // Do nothing if the element does not belong to a document
   if (!document) {
@@ -1308,7 +1308,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(targetContent, nsnull, aEvent,
+    nsEventDispatcher::DispatchDOMEvent(targetNode, nsnull, aEvent,
                                         context, &status);
   *_retval = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
