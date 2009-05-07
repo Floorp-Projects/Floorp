@@ -37,14 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/***
+/**
  * Necko utilities
  */
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
-var NetUtil = {
+const NetUtil = {
     /**
      * Function to perform simple async copying from aSource (an input stream)
      * to aSink (an output stream).  The copy will happen on some background
