@@ -82,45 +82,34 @@ richlistitem {
 
 button {
   color: #414141;
-  padding: 0px 4px;
+  padding: 4px 8px;
   -moz-border-radius: 0.5em;
-  border-top: 4px solid #aaa;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #ccc;
-  -moz-border-top-colors: #888 #fff #fcfcfc #f8f8f8;
-  -moz-border-right-colors: #888 #c3c3c3 #dddddd #e9e9e9;
-  -moz-border-left-colors: #888 #c3c3c3 #dddddd #e9e9e9;
-  -moz-border-bottom-colors: #888 #c3c3c3 #dddddd #e9e9e9;
-  background-color: #efefef;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-right-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  border: 1px solid #414141;
+  background: #efefef;
 }
 
 button[disabled="true"] {
-  -moz-appearance: none;
   color: #ccc;
-  border-top: 4px solid #ccc;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #aaa;
-  -moz-border-top-colors: #ccc #fff #fff #fff;
-  -moz-border-right-colors: #ccc #dedede #efefef #fafafa;
-  -moz-border-left-colors: #ccc #dedede #efefef #fafafa;
-  -moz-border-bottom-colors: #ccc #dedede #efefef #fafafa;
-  background-color: #fff;
+  -moz-border-top-colors: -moz-initial !important;
+  -moz-border-right-colors: -moz-initial !important;
+  -moz-border-left-colors: -moz-initial !important;
+  -moz-border-bottom-colors: -moz-initial !important;
+  border: 1px solid #ccc;
+  background: #fff;
 }
 
 /* XXX needs to be updated */
 button:active {
-  padding: 0px 4px;
-  border-top: 8px solid #ccc;
-  border-left: 8px solid #ccc;
-  border-right: 8px solid #ccc;
-  border-bottom: 8px solid #aaa;
-  -moz-border-top-colors: #aaa #bbb #ccc #ddd;
-  -moz-border-right-colors: #aaa #bbb #ccc #ddd;
-  -moz-border-left-colors: #aaa #bbb #ccc #ddd;
-  -moz-border-bottom-colors: #aaa #bbb #ccc #ddd;
-  background-color: #ddd;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-right-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  border: 1px solid #aaa;
+  background: #ddd;
 }
 
 /* dark buttons ------------------------------------------------------------ */
@@ -128,60 +117,26 @@ button:active {
   color: #fff;
   padding: 4px 8px;
   -moz-border-radius: 0.5em;
-  border-top: 4px solid #ccc;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #aaa;
-  -moz-border-top-colors: #3b3b3b #6d6d6d #535353 #494949;
-  -moz-border-right-colors: #2d2d2d #484848 #484848 #414141;
-  -moz-border-left-colors: #2d2d2d #484848 #484848 #414141;
-  -moz-border-bottom-colors: #111111 #484848 #484848 #414141;
-  background-color: #414141;
+  border: 1px solid #777 !important;
+  background: #525252;
 }
 
 .button-dark:active {
-  padding: 0px 4px;
-  border-top: 8px solid #ccc;
-  border-left: 8px solid #ccc;
-  border-right: 8px solid #ccc;
-  border-bottom: 8px solid #aaa;
-  -moz-border-top-colors:#323232 #111111 #111111 #1f1f1f #272727 #2a2a2a #2c2c2c #2d2d2d;
-  -moz-border-right-colors:#323232 #111111 #1f1f1f #272727 #292929 #2a2a2a #2c2c2c #2d2d2d;
-  -moz-border-left-colors:#323232 #111111 #1f1f1f #272727 #292929 #2a2a2a #2c2c2c #2d2d2d;
-  -moz-border-bottom-colors:#515151 #111111 #1f1f1f #272727 #292929 #2a2a2a #2c2c2c #2d2d2d;
-  background-color: #2d2d2d;
+  border: 1px solid #202020 !important;
+  background: #303030;
 }
 
 .button-dark[disabled="true"],
 .button-dark[disabled="true"]:active {
-  color: #ccc;
-  padding: 4px 8px;
-  background-color: #414141;
-  border-top: 4px solid #ccc;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #aaa;
-  -moz-border-top-colors: #3b3b3b #6d6d6d #535353 #494949;
-  -moz-border-right-colors: #3b3b3b #484848 #484848 #414141;
-  -moz-border-left-colors: #3b3b3b #484848 #484848 #414141;
-  -moz-border-bottom-colors: #2d2d2d #484848 #484848 #414141;
+  border: 1px solid #515151;
+  background: #414141;
 }
 
 .button-dark[checked="true"] {
   /* checked overrides */
-  background: none !important;
-  border-color: transparent !important;
-  padding: 0px 4px !important;
-  background-color: #2d2d2d !important;
-
-  border-top: 8px solid #ccc;
-  border-left: 8px solid #ccc;
-  border-right: 8px solid #ccc;
-  border-bottom: 8px solid #aaa;
-  -moz-border-top-colors:#323232 #111111 #111111 #1f1f1f #272727 #2a2a2a #2c2c2c #2d2d2d;
-  -moz-border-right-colors:#323232 #111111 #1f1f1f #272727 #292929 #2a2a2a #2c2c2c #2d2d2d;
-  -moz-border-left-colors:#323232 #111111 #1f1f1f #272727 #292929 #2a2a2a #2c2c2c #2d2d2d;
-  -moz-border-bottom-colors:#515151 #111111 #1f1f1f #272727 #292929 #2a2a2a #2c2c2c #2d2d2d;
+  border: 1px solid #202020 !important;
+  background: #303030 !important;
+  padding: 4px 8px !important;
 }
 
 /* re-theme radio buttons */
@@ -198,29 +153,15 @@ radio {
   color: #414141;
   padding: 0px 12px 0px 8px;
   margin: 0px;
-  border-top: 4px solid #ccc;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #aaa;
-  -moz-border-top-colors: #aaa #fff #fff #fff;
-  -moz-border-right-colors: #aaa #dedede #efefef #fafafa;
-  -moz-border-left-colors: #aaa #dedede #efefef #fafafa;
-  -moz-border-bottom-colors: #aaa #dedede #efefef #fafafa;
+  border: 1px solid #414141;
   -moz-box-align: center;
   -moz-appearance: none;
-  background-color: #fff;
+  background: #fff;
 }
 
 radio[selected] {
   padding: 0px 8px 0px 12px;
-  border-top: 4px solid #aaa;
-  border-left: 4px solid #ccc;
-  border-right: 4px solid #ccc;
-  border-bottom: 4px solid #ccc;
-  -moz-border-top-colors:#aaa #bbb #ccc #ddd;
-  -moz-border-left-colors:#aaa #bbb #ccc #ddd;
-  -moz-border-bottom-colors:#aaa #bbb #ccc #ddd;
-  -moz-border-right-colors:#aaa #bbb #ccc #ddd;
+  border: 1px solid #aaa;
   background-color: #ddd;
 }
 
