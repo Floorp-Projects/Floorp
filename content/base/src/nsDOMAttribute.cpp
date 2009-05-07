@@ -111,12 +111,6 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
 
@@ -737,7 +731,8 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 nsresult
 nsDOMAttribute::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  aVisitor.mCanHandle = PR_TRUE;
+  // We don't support event dispatching to attributes yet.
+  aVisitor.mCanHandle = PR_FALSE;
   return NS_OK;
 }
 
@@ -752,9 +747,7 @@ nsDOMAttribute::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                  nsPresContext* aPresContext,
                                  nsEventStatus* aEventStatus)
 {
-  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsINode*>(this),
-                                             aEvent, aDOMEvent,
-                                             aPresContext, aEventStatus);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
