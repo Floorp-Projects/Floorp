@@ -309,7 +309,7 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
                  "not the nsISupports pointer we expect");                  \
     _class *tmp = static_cast<_class*>(Downcast(s));                        \
     if (!tmp->IsPartOfAggregated())                                         \
-        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
+        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
 
 #define NS_GENERIC_AGGREGATED_CONSTRUCTOR(_InstanceClass)                   \
 static NS_METHOD                                                            \

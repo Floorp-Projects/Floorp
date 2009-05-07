@@ -322,14 +322,14 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG_CC
-#define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)                              \
-    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(_class), #_class);
+#define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, _refcnt)                     \
+    cb.DescribeNode(RefCounted, _refcnt, sizeof(_class), #_class);
 #else
-#define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)                              \
-    cb.DescribeNode(RefCounted, tmp->mRefCnt.get());
+#define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, _refcnt)                     \
+    cb.DescribeNode(RefCounted, _refcnt);
 #endif
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                        \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_REFCNT(_class, _refcnt)        \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
                          (void *p,                                             \
@@ -339,7 +339,10 @@ public:
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = Downcast(s);                                                 \
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, _refcnt)
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                        \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_REFCNT(_class, tmp->mRefCnt.get())
 
 // Base class' CC participant should return NS_SUCCESS_INTERRUPTED_TRAVERSE
 // from Traverse if it wants derived classes to not traverse anything from
@@ -369,7 +372,7 @@ public:
                           nsCycleCollectionTraversalCallback &cb)              \
   {                                                                            \
     _class *tmp = static_cast<_class*>(p);                                     \
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
 
 #ifdef DEBUG_CC
   #define NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(_cb, _name)                       \
