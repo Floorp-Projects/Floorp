@@ -990,7 +990,7 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
 
   // We want to call the base class EndDocumentLoad,
   // but avoid some of the stuff
-  // that nsWebShell does (need to refactor).
+  // that nsDocShell does (need to refactor).
   
   // OK, time to make an editor on this document
   nsCOMPtr<nsIDOMWindow> domWindow;

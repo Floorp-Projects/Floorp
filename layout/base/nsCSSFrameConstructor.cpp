@@ -148,6 +148,7 @@
 #include "nsMathMLParts.h"
 #endif
 #ifdef MOZ_SVG
+#include "nsSVGFeatures.h"
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
@@ -192,8 +193,6 @@ nsIFrame*
 NS_NewSVGContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-PRBool 
-NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent);
 extern nsIFrame*
 NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 extern nsIFrame*
@@ -2861,7 +2860,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   // will act as the scrolling mechanism for the viewport. 
   // XXX Do we even need a viewport when printing to a printer?
 
-  // As long as the webshell doesn't prohibit it, and the device supports
+  // As long as the docshell doesn't prohibit it, and the device supports
   // it, create a scroll frame that will act as the scolling mechanism for
   // the viewport.
   //
@@ -4939,7 +4938,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
   // Reduce the number of frames we create unnecessarily. Note that this is not
   // where we select which frame in a <switch> to render! That happens in
   // nsSVGSwitchFrame::PaintSVG.
-  if (!NS_SVG_PassesConditionalProcessingTests(aContent)) {
+  if (!nsSVGFeatures::PassesConditionalProcessingTests(aContent)) {
     // Note that just returning is probably not right.  According
     // to the spec, <use> is allowed to use an element that fails its
     // conditional, but because we never actually create the frame when
@@ -5300,6 +5299,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     NS_ASSERTION(data, "Should have frame construction data now");
 
     if (data->mBits & FCDATA_SUPPRESS_FRAME) {
+      aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
       return;
     }
 
@@ -5309,6 +5309,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
          aParentFrame->GetType() != nsGkAtoms::menuFrame)) {
       if (!aState.mPopupItems.containingBlock &&
           !aState.mHavePendingPopupgroup) {
+        aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
         return;
       }
 
@@ -5324,6 +5325,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       aParentFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
       (!(bits & FCDATA_IS_TABLE_PART) ||
        display->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)) {
+    aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
     return;
   }
 

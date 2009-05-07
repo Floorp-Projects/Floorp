@@ -46,7 +46,7 @@
  *   http://www.w3.org/TR/SVG11/struct.html#ConditionalProcessing
  */
 
-#include "nsString.h"
+#include "nsSVGFeatures.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
@@ -55,14 +55,8 @@
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
 
-/**
- * Check whether we support the given feature string.
- *
- * @param aFeature one of the feature strings specified at
- *    http://www.w3.org/TR/SVG11/feature.html
- */
-PRBool
-NS_SVG_HaveFeature(const nsAString& aFeature)
+/*static*/ PRBool
+nsSVGFeatures::HaveFeature(const nsAString& aFeature)
 {
   if (!NS_SVGEnabled()) {
     return PR_FALSE;
@@ -76,32 +70,20 @@ NS_SVG_HaveFeature(const nsAString& aFeature)
   return PR_FALSE;
 }
 
-/**
- * Check whether we support the given list of feature strings.
- *
- * @param aFeatures a whitespace separated list containing one or more of the
- *   feature strings specified at http://www.w3.org/TR/SVG11/feature.html
- */
-static PRBool
-HaveFeatures(const nsSubstring& aFeatures)
+/*static*/ PRBool
+nsSVGFeatures::HaveFeatures(const nsSubstring& aFeatures)
 {
   nsWhitespaceTokenizer tokenizer(aFeatures);
   while (tokenizer.hasMoreTokens()) {
-    if (!NS_SVG_HaveFeature(tokenizer.nextToken())) {
+    if (!HaveFeature(tokenizer.nextToken())) {
       return PR_FALSE;
     }
   }
   return PR_TRUE;
 }
 
-/**
- * Check whether we support the given extension string.
- *
- * @param aExtension the URI of an extension. Known extensions are
- *   MathML and XHTML.
- */
-static PRBool
-HaveExtension(const nsAString& aExtension)
+/*static*/ PRBool
+nsSVGFeatures::HaveExtension(const nsAString& aExtension)
 {
 #define SVG_SUPPORTED_EXTENSION(str) if (aExtension.Equals(NS_LITERAL_STRING(str).get())) return PR_TRUE;
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
@@ -113,14 +95,8 @@ HaveExtension(const nsAString& aExtension)
   return PR_FALSE;
 }
 
-/**
- * Check whether we support the given list of extension strings.
- *
- * @param aExtension a whitespace separated list containing one or more
- *   extension strings
- */
-static PRBool
-HaveExtensions(const nsSubstring& aExtensions)
+/*static*/ PRBool
+nsSVGFeatures::HaveExtensions(const nsSubstring& aExtensions)
 {
   nsWhitespaceTokenizer tokenizer(aExtensions);
   while (tokenizer.hasMoreTokens()) {
@@ -131,17 +107,9 @@ HaveExtensions(const nsSubstring& aExtensions)
   return PR_TRUE;
 }
 
-/**
- * Compare the language name(s) in a systemLanguage attribute to the
- * user's language preferences, as defined in
- * http://www.w3.org/TR/SVG11/struct.html#SystemLanguageAttribute
- * We have a match if a language name in the users language preferences
- * exactly equals one of the language names or exactly equals a prefix of
- * one of the language names in the systemLanguage attribute.
- * XXX This algorithm is O(M*N).
- */
-static PRBool
-MatchesLanguagePreferences(const nsSubstring& aAttribute, const nsSubstring& aLanguagePreferences) 
+/*static*/ PRBool
+nsSVGFeatures::MatchesLanguagePreferences(const nsSubstring& aAttribute,
+                                          const nsSubstring& aAcceptLangs) 
 {
   const nsDefaultStringComparator defaultComparator;
 
@@ -149,7 +117,7 @@ MatchesLanguagePreferences(const nsSubstring& aAttribute, const nsSubstring& aLa
 
   while (attributeTokenizer.hasMoreTokens()) {
     const nsSubstring &attributeToken = attributeTokenizer.nextToken();
-    nsCommaSeparatedTokenizer languageTokenizer(aLanguagePreferences);
+    nsCommaSeparatedTokenizer languageTokenizer(aAcceptLangs);
     while (languageTokenizer.hasMoreTokens()) {
       if (nsStyleUtil::DashMatchCompare(attributeToken,
                                         languageTokenizer.nextToken(),
@@ -161,17 +129,43 @@ MatchesLanguagePreferences(const nsSubstring& aAttribute, const nsSubstring& aLa
   return PR_FALSE;
 }
 
-/**
- * Check whether this element supports the specified attributes
- * (i.e. whether the SVG specification defines the attributes
- * for the specified element).
- *
- * @param aTagName the tag for the element
- * @param aAttr the conditional to test for, either
- *    ATTRS_TEST or ATTRS_EXTERNAL
- */
-static PRBool
-ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr)
+/*static*/ PRInt32
+nsSVGFeatures::GetBestLanguagePreferenceRank(const nsSubstring& aAttribute,
+                                             const nsSubstring& aAcceptLangs) 
+{
+  const nsDefaultStringComparator defaultComparator;
+
+  nsCommaSeparatedTokenizer attributeTokenizer(aAttribute);
+  PRInt32 lowestRank = -1;
+
+  while (attributeTokenizer.hasMoreTokens()) {
+    const nsSubstring &attributeToken = attributeTokenizer.nextToken();
+    nsCommaSeparatedTokenizer languageTokenizer(aAcceptLangs);
+    PRInt32 index = 0;
+    while (languageTokenizer.hasMoreTokens()) {
+      const nsSubstring &languageToken = languageTokenizer.nextToken();
+      PRBool exactMatch = (languageToken == attributeToken);
+      PRBool prefixOnlyMatch =
+        !exactMatch &&
+        nsStyleUtil::DashMatchCompare(attributeToken,
+                                      languageTokenizer.nextToken(),
+                                      defaultComparator);
+      if (index == 0 && exactMatch) {
+        // best possible match
+        return 0;
+      }
+      if ((exactMatch || prefixOnlyMatch) &&
+          (lowestRank == -1 || 2 * index + prefixOnlyMatch < lowestRank)) {
+        lowestRank = 2 * index + prefixOnlyMatch;
+      }
+      ++index;
+    }
+  }
+  return lowestRank;
+}
+
+/*static*/ PRBool
+nsSVGFeatures::ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr)
 {
 #define SVG_ELEMENT(_atom, _supports) if (aTagName == nsGkAtoms::_atom) return (_supports & aAttr) != 0;
 #include "nsSVGElementList.h"
@@ -179,16 +173,11 @@ ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr)
   return PR_FALSE;
 }
 
-/**
- * Check whether the conditional processing attributes requiredFeatures,
- * requiredExtensions and systemLanguage all "return true" if they apply to
- * and are specified on the given element. Returns true if this element
- * should be rendered, false if it should not.
- *
- * @param aContent the element to test
- */
-PRBool
-NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent)
+const nsAdoptingString * const nsSVGFeatures::kIgnoreSystemLanguage = (nsAdoptingString *) 0x01;
+
+/*static*/ PRBool
+nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
+                                                const nsAdoptingString *aAcceptLangs)
 {
   if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
     return PR_FALSE;
@@ -219,6 +208,13 @@ NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent)
     }
   }
 
+  if (aAcceptLangs == kIgnoreSystemLanguage) {
+    return PR_TRUE;
+  }
+
+  const nsAdoptingString& acceptLangs = aAcceptLangs ? *aAcceptLangs :
+    nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+
   // systemLanguage
   //
   // Evaluates to "true" if one of the languages indicated by user preferences
@@ -229,11 +225,8 @@ NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent)
   if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage,
                         value)) {
     // Get our language preferences
-    nsAutoString langPrefs(nsContentUtils::GetLocalizedStringPref("intl.accept_languages"));
-    if (!langPrefs.IsEmpty()) {
-      langPrefs.StripWhitespace();
-      value.StripWhitespace();
-      return MatchesLanguagePreferences(value, langPrefs);
+    if (!acceptLangs.IsEmpty()) {
+      return MatchesLanguagePreferences(value, acceptLangs);
     } else {
       // For now, evaluate to true.
       NS_WARNING("no default language specified for systemLanguage conditional test");

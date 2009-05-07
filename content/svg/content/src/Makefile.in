@@ -161,6 +161,7 @@ EXPORTS =  			\
 	nsISVGValue.h              \
 	nsISVGValueObserver.h      \
 	nsISVGValueUtils.h         \
+	nsSVGFeatures.h            \
 	nsSVGNumber.h              \
 	nsSVGRect.h                \
 	nsSVGPoint.h               \

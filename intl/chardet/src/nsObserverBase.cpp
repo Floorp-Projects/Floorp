@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#define DONT_INFORM_WEBSHELL
+//#define DONT_INFORM_DOCSHELL
 
 #include "nsIServiceManager.h"
 #include "nsIWebShellServices.h"
@@ -46,7 +46,7 @@
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsObserverBase::NotifyWebShell(nsISupports* aWebShell,
+NS_IMETHODIMP nsObserverBase::NotifyDocShell(nsISupports* aDocShell,
                                              nsISupports* aChannel,
                                              const char* charset, 
                                              PRInt32 source)
@@ -65,10 +65,10 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(nsISupports* aWebShell,
    }
 
    nsCOMPtr<nsIWebShellServices> wss;
-   wss = do_QueryInterface(aWebShell,&res);
+   wss = do_QueryInterface(aDocShell,&res);
    if (NS_SUCCEEDED(res)) {
 
-#ifndef DONT_INFORM_WEBSHELL
+#ifndef DONT_INFORM_DOCSHELL
      // ask the webshellservice to load the URL
      if (NS_FAILED( res = wss->SetRendering(PR_FALSE) ))
        rv = res;

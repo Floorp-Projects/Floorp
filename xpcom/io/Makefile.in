@@ -75,6 +75,7 @@ CPPSRCS		= \
 		nsStringStream.cpp \
 		nsUnicharInputStream.cpp \
 		nsNativeCharsetUtils.cpp \
+		nsIOUtil.cpp \
 		$(NULL)
 
 ifndef MOZ_NO_FAST_LOAD
@@ -152,6 +153,7 @@ XPIDLSRCS	= \
 		nsIUnicharOutputStream.idl \
 		nsIConverterInputStream.idl \
 		nsIConverterOutputStream.idl \
+		nsIIOUtil.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
