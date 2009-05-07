@@ -5300,6 +5300,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     NS_ASSERTION(data, "Should have frame construction data now");
 
     if (data->mBits & FCDATA_SUPPRESS_FRAME) {
+      aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
       return;
     }
 
@@ -5309,6 +5310,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
          aParentFrame->GetType() != nsGkAtoms::menuFrame)) {
       if (!aState.mPopupItems.containingBlock &&
           !aState.mHavePendingPopupgroup) {
+        aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
         return;
       }
 
@@ -5324,6 +5326,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       aParentFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
       (!(bits & FCDATA_IS_TABLE_PART) ||
        display->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)) {
+    aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
     return;
   }
 
