@@ -1136,7 +1136,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
                               nsnull, nsnull, nsnull, &widgetInit);  
       }
 
-   nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/webshell;1"));
+   nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/docshell;1"));
    NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
 
    // get the system default window background colour

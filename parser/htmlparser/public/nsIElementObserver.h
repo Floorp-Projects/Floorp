@@ -77,7 +77,7 @@ public:
                     PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
                     const PRUnichar* valueArray[]) = 0;
   
-  NS_IMETHOD Notify(nsISupports* aWebShell, 
+  NS_IMETHOD Notify(nsISupports* aDocShell, 
                     nsISupports* aChannel,
                     const PRUnichar* aTag, 
                     const nsTArray<nsString>* aKeys, 

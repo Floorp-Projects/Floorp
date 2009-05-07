@@ -1262,7 +1262,7 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
   }
 
   nsCOMPtr<nsIContent> startContent( do_QueryInterface(aStartNode) );
-
+  NS_ENSURE_STATE(startContent);
   nsIContent *priorContent = startContent->GetChildAt(aOffset - 1);
   if (!priorContent) 
     return NS_ERROR_NULL_POINTER;

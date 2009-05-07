@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __NS_SVGSWITCHELEMENT_H__
+#define __NS_SVGSWITCHELEMENT_H__
+
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGSwitchElement.h"
 
@@ -51,7 +54,7 @@ protected:
   nsSVGSwitchElement(nsINodeInfo *aNodeInfo);
 
 public:
-  nsIContent * GetActiveChild()
+  nsIContent * GetActiveChild() const
   { return mActiveChild; }
   void MaybeInvalidate();
     
@@ -78,8 +81,12 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 private:
-  void UpdateActiveChild();
+  void UpdateActiveChild()
+  { mActiveChild = FindActiveChild(); }
+  nsIContent* FindActiveChild() const;
 
   // only this child will be displayed
   nsCOMPtr<nsIContent> mActiveChild;
 };
+
+#endif // __NS_SVGSWITCHELEMENT_H__

@@ -50,7 +50,12 @@
 #include "nsIScriptContext.h"
 #include "nsITimer.h"
 
-#include "nsCDocShell.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
+#include "nsIBaseWindow.h"
+#include "nsIScrollable.h"
+#include "nsITextScroll.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDeviceContext.h"
@@ -108,9 +113,16 @@
 #include "nsIChannelClassifier.h"
 #include "nsILoadContext.h"
 #include "nsIWidget.h"
+#include "nsIWebShellServices.h"
+#include "nsILinkHandler.h"
+#include "nsIClipboardCommands.h"
+#include "nsICommandManager.h"
+#include "nsCRT.h"
 
 class nsIScrollableView;
 class nsDocShell;
+class nsIController;
+class OnLinkClickEvent;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */
@@ -171,6 +183,14 @@ private:
     PRBool HasBeenClassified(nsIChannel *aChannel);
 };
 
+#define NS_ERROR_DOCSHELL_REQUEST_REJECTED  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL,1001)
+
+typedef enum {
+    eCharsetReloadInit,
+    eCharsetReloadRequested,
+    eCharsetReloadStopOrigional
+} eCharsetReloadState;
+
 //*****************************************************************************
 //***    nsDocShell
 //*****************************************************************************
@@ -193,13 +213,18 @@ class nsDocShell : public nsDocLoader,
                    public nsIAuthPromptProvider,
                    public nsIObserver,
                    public nsILoadContext,
-                   public nsIDocShell_MOZILLA_1_9_1
+                   public nsIDocShell_MOZILLA_1_9_1,
+                   public nsIWebShellServices,
+                   public nsILinkHandler,
+                   public nsIClipboardCommands
 {
-friend class nsDSURIContentListener;
+    friend class nsDSURIContentListener;
 
 public:
     // Object Management
     nsDocShell();
+
+    NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
     virtual nsresult Init();
 
@@ -224,6 +249,8 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSILOADCONTEXT
     NS_DECL_NSIDOCSHELL_MOZILLA_1_9_1
+    NS_DECL_NSICLIPBOARDCOMMANDS
+    NS_DECL_NSIWEBSHELLSERVICES
 
     NS_IMETHOD Stop() {
         // Need this here because otherwise nsIWebNavigation::Stop
@@ -234,6 +261,25 @@ public:
     // Need to implement (and forward) nsISecurityEventSink, because
     // nsIWebProgressListener has methods with identical names...
     NS_FORWARD_NSISECURITYEVENTSINK(nsDocLoader::)
+
+    // nsILinkHandler
+    NS_IMETHOD OnLinkClick(nsIContent* aContent,
+        nsIURI* aURI,
+        const PRUnichar* aTargetSpec,
+        nsIInputStream* aPostDataStream = 0,
+        nsIInputStream* aHeadersDataStream = 0);
+    NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
+        nsIURI* aURI,
+        const PRUnichar* aTargetSpec,
+        nsIInputStream* aPostDataStream = 0,
+        nsIInputStream* aHeadersDataStream = 0,
+        nsIDocShell** aDocShell = 0,
+        nsIRequest** aRequest = 0);
+    NS_IMETHOD OnOverLink(nsIContent* aContent,
+        nsIURI* aURI,
+        const PRUnichar* aTargetSpec);
+    NS_IMETHOD OnLeaveLink();
+    NS_IMETHOD GetLinkState(nsIURI* aLinkURI, nsLinkState& aState);
 
     nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType);
     PRUint32 ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
@@ -252,6 +298,8 @@ public:
     // aTimer must not be null.
     nsresult ForceRefreshURIFromTimer(nsIURI * aURI, PRInt32 aDelay,
                                       PRBool aMetaRefresh, nsITimer* aTimer);
+
+    friend class OnLinkClickEvent;
 
 protected:
     // Object Management
@@ -559,6 +607,14 @@ protected:
     nsresult GetSessionStorageForURI(nsIURI* aURI,
                                      PRBool create,
                                      nsIDOMStorage** aStorage);
+
+    // helpers for executing commands
+    nsresult GetControllerForCommand(const char *inCommand,
+                                     nsIController** outController);
+    nsresult IsCommandEnabled(const char * inCommand, PRBool* outEnabled);
+    nsresult DoCommand(const char * inCommand);
+    nsresult EnsureCommandHandler();
+    
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
@@ -703,11 +759,20 @@ protected:
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsPIDOMEventTarget *       mChromeEventHandler; //Weak Reference
 
+    eCharsetReloadState mCharsetReloadState;
+    nsCOMPtr<nsICommandManager> mCommandManager;
+
 #ifdef DEBUG
     PRBool mInEnsureScriptEnv;
 #endif
 
     static nsIURIFixup *sURIFixup;
+
+#ifdef DEBUG
+private:
+    // We're counting the number of |nsDocShells| to help find leaks
+    static unsigned long gNumberOfDocShells;
+#endif /* DEBUG */
 
 public:
     class InterfaceRequestorProxy : public nsIInterfaceRequestor {

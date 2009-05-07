@@ -13,7 +13,6 @@ function LOG(aMsg) {
     //Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
 }
 
-
 function getAccessTokenForURL(url)
 {
     // check to see if we have an access token:
@@ -115,6 +114,18 @@ WifiGeoPositionProvider.prototype = {
     timer:           null,
     hasSeenWiFi:     false,
 
+    observe: function (aSubject, aTopic, aData) {
+        if (aTopic == "private-browsing") {
+            if (aData == "enter" || aData == "exit") {
+                let psvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+                try {
+                    let branch = psvc.getBranch("geo.wifi.access_token.");
+                    branch.deleteBranch("");
+                } catch (e) {}
+            }
+        }
+    },
+
     startup:         function() {
         LOG("startup called");
 
@@ -126,6 +137,9 @@ WifiGeoPositionProvider.prototype = {
         this.hasSeenWiFi = false;
         this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         this.timer.initWithCallback(this, 5000, this.timer.TYPE_ONE_SHOT);
+
+        let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+        os.addObserver(this, "private-browsing", false);
     },
 
     isReady:         function() {
@@ -151,6 +165,20 @@ WifiGeoPositionProvider.prototype = {
             this.timer.cancel();
             this.timer = null;
         }
+
+        // Although we aren't using cookies, we should error on the side of not
+        // saving any access tokens if the user asked us not to save cookies or
+        // has changed the lifetimePolicy.  The access token in these cases is
+        // used and valid for the life of this object (eg. between startup and
+        // shutdown).e
+        let prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+        if (prefService.getIntPref("network.cookie.lifetimePolicy") != 0) {
+            let branch = prefService.getBranch("geo.wifi.access_token.");
+            branch.deleteBranch("");
+        }
+
+        let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+        os.removeObserver(this, "private-browsing");
     },
 
     onChange: function(accessPoints) {
