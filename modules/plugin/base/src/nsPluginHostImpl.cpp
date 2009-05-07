@@ -1053,6 +1053,12 @@ nsresult PostPluginUnloadEvent(PRLibrary* aLibrary)
 
 void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
 {
+  PRBool isXPCOM = PR_FALSE;
+  if (!(mFlags & NS_PLUGIN_FLAG_NPAPI))
+    isXPCOM = PR_TRUE;
+
+  if (isXPCOM && !aForceShutdown) return;
+
   if (mEntryPoint) {
     mEntryPoint->Shutdown();
     mEntryPoint->Release();
@@ -1060,7 +1066,8 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
   }
 
   // before we unload check if we are allowed to, see bug #61388
-  if (mLibrary && mCanUnloadLibrary) {
+  // also, never unload an XPCOM plugin library
+  if (mLibrary && mCanUnloadLibrary && !isXPCOM) {
     // NPAPI plugins can be unloaded now if they don't use XPConnect
     if (!mXPConnected)
       // unload the plugin asynchronously by posting a PLEvent
@@ -2652,8 +2659,12 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   for (nsRefPtr<nsPluginTag> p = mPlugins; p != nsnull;) {
     next = p->mNext;
 
-    // only remove our plugin from the list if it's not running.
-    if (!IsRunningPlugin(p)) {
+    // XXX only remove our plugin from the list if it's not running and not
+    // an XPCOM plugin. XPCOM plugins do not get a call to nsIPlugin::Shutdown
+    // if plugins are reloaded. This also fixes a crash on UNIX where the call
+    // to shutdown would break the ProxyJNI connection to the JRE after a reload.
+    // see bug 86591
+    if (!IsRunningPlugin(p) && (!p->mEntryPoint || p->HasFlag(NS_PLUGIN_FLAG_NPAPI))) {
       if (p == mPlugins)
         mPlugins = next;
       else
@@ -3518,8 +3529,10 @@ nsresult nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
     aURL->GetSpec(url);
 
   // let's find the corresponding plugin tag by matching nsIPlugin pointer
-  // It is going to be used later when we decide whether or not we should delay
-  // unloading NPAPI dll from memory.
+  // it's legal for XPCOM plugins not to have nsIPlugin implemented but
+  // this is OK, we don't need the plugin tag for XPCOM plugins. It is going
+  // to be used later when we decide whether or not we should delay unloading
+  // NPAPI dll from memory, and XPCOM dlls will stay in memory anyway.
   nsPluginTag * pluginTag = nsnull;
   if (aPlugin) {
     for (pluginTag = mPlugins; pluginTag != nsnull; pluginTag = pluginTag->mNext) {
@@ -3689,44 +3702,67 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
       return NS_ERROR_FAILURE;
     }
   }
-  else {
+  else
     mimetype = aMimeType;
-  }
 
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
+  PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
+
+  nsCAutoString contractID(
+          NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
+          nsDependentCString(mimetype));
 
   GetPluginFactory(mimetype, getter_AddRefs(plugin));
 
-  if (plugin) {
-#if defined(XP_WIN) && !defined(WINCE)
-    static BOOL firstJavaPlugin = FALSE;
-    BOOL restoreOrigDir = FALSE;
-    char origDir[_MAX_PATH];
-    if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
-      DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
-      NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
-      nsCOMPtr<nsIFile> binDirectory;
-      result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                      getter_AddRefs(binDirectory));
+  instance = do_CreateInstance(contractID.get(), &result);
 
+  // couldn't create an XPCOM plugin, try to create wrapper for a
+  // legacy plugin
+  if (NS_FAILED(result)) {
+    if (plugin) {
+#if defined(XP_WIN) && !defined(WINCE)
+      static BOOL firstJavaPlugin = FALSE;
+      BOOL restoreOrigDir = FALSE;
+      char origDir[_MAX_PATH];
+      if (isJavaPlugin && !firstJavaPlugin) {
+        DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
+        NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
+        nsCOMPtr<nsIFile> binDirectory;
+        result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                        getter_AddRefs(binDirectory));
+
+        if (NS_SUCCEEDED(result)) {
+          nsCAutoString path;
+          binDirectory->GetNativePath(path);
+          restoreOrigDir = ::SetCurrentDirectory(path.get());
+        }
+      }
+#endif
+      result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)getter_AddRefs(instance));
+
+#if defined(XP_WIN) && !defined(WINCE)
+      if (!firstJavaPlugin && restoreOrigDir) {
+        BOOL bCheck = ::SetCurrentDirectory(origDir);
+        NS_ASSERTION(bCheck, " Error restoring driectoy");
+        firstJavaPlugin = TRUE;
+      }
+#endif
+    }
+
+    if (NS_FAILED(result)) {
+      nsCOMPtr<nsIPlugin> bwPlugin =
+        do_GetService("@mozilla.org/blackwood/pluglet-engine;1", &result);
       if (NS_SUCCEEDED(result)) {
-        nsCAutoString path;
-        binDirectory->GetNativePath(path);
-        restoreOrigDir = ::SetCurrentDirectory(path.get());
+        result = bwPlugin->CreatePluginInstance(NULL,
+                                                kIPluginInstanceIID,
+                                                aMimeType,
+                                                (void **)getter_AddRefs(instance));
       }
     }
-#endif
-    result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)getter_AddRefs(instance));
-
-#if defined(XP_WIN) && !defined(WINCE)
-    if (!firstJavaPlugin && restoreOrigDir) {
-      BOOL bCheck = ::SetCurrentDirectory(origDir);
-      NS_ASSERTION(bCheck, " Error restoring driectoy");
-      firstJavaPlugin = TRUE;
-    }
-#endif
   }
 
+  // neither an XPCOM or legacy plugin could be instantiated,
+  // so return the failure
   if (NS_FAILED(result))
     return result;
 
@@ -3769,6 +3805,7 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
 {
   if (mDefaultPluginDisabled) {
     // The default plugin is disabled, don't load it.
+
     return NS_OK;
   }
 
@@ -3781,10 +3818,20 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
 
   GetPluginFactory("*", getter_AddRefs(plugin));
 
-  nsresult result = NS_ERROR_OUT_OF_MEMORY;
-  if (plugin)
-    result = plugin->CreateInstance(NULL, kIPluginInstanceIID,
-                                    getter_AddRefs(instance));
+  nsresult result;
+  instance = do_CreateInstance(NS_INLINE_PLUGIN_CONTRACTID_PREFIX "*",
+                               &result);
+
+  // couldn't create an XPCOM plugin, try to create wrapper for a
+  // legacy plugin
+  if (NS_FAILED(result)) {
+    if (plugin)
+      result = plugin->CreateInstance(NULL, kIPluginInstanceIID,
+                                      getter_AddRefs(instance));
+  }
+
+  // neither an XPCOM or legacy plugin could be instantiated, so
+  // return the failure
   if (NS_FAILED(result))
     return result;
 
@@ -4150,6 +4197,102 @@ nsPluginHostImpl::FindPluginEnabledForExtension(const char* aExtension,
   return nsnull;
 }
 
+#if defined(XP_MACOSX)
+/* The following code examines the format of a Mac OS X binary, and determines whether it
+ * is compatible with the current executable.
+ */
+
+#include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <unistd.h>
+
+static inline PRBool is_directory(const char* path)
+{
+  struct stat sb;
+  return ::stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
+}
+
+static inline PRBool is_symbolic_link(const char* path)
+{
+  struct stat sb;
+  return ::lstat(path, &sb) == 0 && S_ISLNK(sb.st_mode);
+}
+
+static int open_executable(const char* path)
+{
+  int fd = 0;
+  char resolvedPath[PATH_MAX] = "\0";
+
+  // If the root of the bundle as referred to by path is a symbolic link,
+  // CFBundleCopyExecutableURL will not return an absolute URL, but will
+  // instead only return the executable name, such as "MRJPlugin".  Work
+  // around that by always using a fully-resolved absolute pathname.
+  if (is_symbolic_link(path)) {
+    path = realpath(path, resolvedPath);
+    if (!path)
+      return fd;
+  }
+
+  // if this is a directory, it must be a bundle, so get the true path using CFBundle...
+  if (is_directory(path)) {
+    CFBundleRef bundle = NULL;
+    CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
+    if (pathRef) {
+      CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
+      CFRelease(pathRef);
+      if (bundleURL != NULL) {
+        bundle = CFBundleCreate(NULL, bundleURL);
+        CFRelease(bundleURL);
+        if (bundle) {
+          CFURLRef executableURL = CFBundleCopyExecutableURL(bundle);
+          if (executableURL) {
+            pathRef = CFURLCopyFileSystemPath(executableURL, kCFURLPOSIXPathStyle);
+            CFRelease(executableURL);
+            if (pathRef) {
+              CFIndex bufferSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(pathRef), kCFStringEncodingUTF8) + 1;
+              char* executablePath = new char[bufferSize];
+              if (executablePath && CFStringGetCString(pathRef, executablePath, bufferSize, kCFStringEncodingUTF8)) {
+                fd = open(executablePath, O_RDONLY, 0);
+                delete[] executablePath;
+                            }
+              CFRelease(pathRef);
+            }
+          }
+          CFRelease(bundle);
+        }
+      }
+    }
+  } else {
+    fd = open(path, O_RDONLY, 0);
+  }
+  return fd;
+}
+
+static PRBool IsCompatibleExecutable(const char* path)
+{
+  int fd = open_executable(path);
+  if (fd > 0) {
+    // Check the executable header to see if it is something we can use. Currently
+    // we can only use 32-bit mach-o and FAT binaries (FAT headers are always big
+    // endian, so we do network-to-host swap on the bytes from disk).
+    // Note: We assume FAT binaries contain the right arch. Maybe fix that later.
+    UInt32 magic;
+    ssize_t n = read(fd, &magic, sizeof(magic));
+    close(fd);
+    if (n == sizeof(magic)) {
+      if ((magic == MH_MAGIC) || (PR_ntohl(magic) == FAT_MAGIC))
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+#else
+
+inline PRBool IsCompatibleExecutable(const char* path) { return PR_TRUE; }
+
+#endif
+
 static nsresult ConvertToNative(nsIUnicodeEncoder *aEncoder,
                                 const nsACString& aUTF8String,
                                 nsACString& aNativeString)
@@ -4251,17 +4394,64 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
     nsIPlugin* plugin = pluginTag->mEntryPoint;
     if (!plugin) {
+      // nsIPlugin* of xpcom plugins can be found thru a call to
+      // nsIComponentManager::GetClassObjectByContractID()
+      nsCAutoString contractID(
+              NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
+              nsDependentCString(aMimeType));
+      nsresult rv = CallGetClassObject(contractID.get(), &plugin);
+      if (NS_SUCCEEDED(rv) && plugin) {
+        // plugin is already addref'd
+        pluginTag->mEntryPoint = plugin;
+        plugin->Initialize();
+      }
+    }
+
+    if (!plugin) {
       // No, this is not a leak. GetGlobalServiceManager() doesn't
       // addref the pointer on the way out. It probably should.
       nsIServiceManagerObsolete* serviceManager;
       nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&serviceManager);
 
-      // Now lets try to get the entry point from an NPAPI plugin
-      rv = CreateNPAPIPlugin(serviceManager, pluginTag, &plugin);
-      if (NS_SUCCEEDED(rv))
-        pluginTag->mEntryPoint = plugin;
-      pluginTag->Mark(NS_PLUGIN_FLAG_NPAPI);
-      // no need to initialize, already done by CreatePlugin()
+      // need to get the plugin factory from this plugin.
+      nsFactoryProc nsGetFactory = nsnull;
+#ifdef XP_OS2
+      nsGetFactory = (nsFactoryProc) PR_FindFunctionSymbol(pluginTag->mLibrary, "_NSGetFactory");
+#else
+      nsGetFactory = (nsFactoryProc) PR_FindFunctionSymbol(pluginTag->mLibrary, "NSGetFactory");
+#endif
+      if (nsGetFactory && IsCompatibleExecutable(pluginTag->mFullPath.get())) {
+        rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ContractID
+                          (nsIFactory**)&pluginTag->mEntryPoint);
+        plugin = pluginTag->mEntryPoint;
+        if (plugin)
+          plugin->Initialize();
+      }
+#ifdef XP_OS2
+      // on OS2, first check if this might be legacy XPCOM module.
+      else if (PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory") &&
+               IsCompatibleExecutable(pluginTag->mFullPath.get())) {
+        // Possibly a legacy XPCOM module. We'll need to create a calling
+        // vtable/calling convention wrapper for it.
+        nsCOMPtr<nsILegacyPluginWrapperOS2> wrapper =
+                       do_GetService(NS_LEGACY_PLUGIN_WRAPPER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+          rv = wrapper->GetFactory(serviceManager, kPluginCID, nsnull, nsnull,
+                                   pluginTag->mLibrary, &pluginTag->mEntryPoint);
+          plugin = pluginTag->mEntryPoint;
+          if (plugin)
+            plugin->Initialize();
+        }
+      }
+#endif
+      else {
+        // Now lets try to get the entry point from an NPAPI plugin
+        rv = CreateNPAPIPlugin(serviceManager, pluginTag, &plugin);
+        if (NS_SUCCEEDED(rv))
+          pluginTag->mEntryPoint = plugin;
+        pluginTag->Mark(NS_PLUGIN_FLAG_NPAPI);
+        // no need to initialize, already done by CreatePlugin()
+      }
     }
 
     if (plugin) {
@@ -4744,6 +4934,8 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
 
   nsCOMPtr<nsIComponentManager> compManager;
   NS_GetComponentManager(getter_AddRefs(compManager));
+  if (compManager)
+    LoadXPCOMPlugins(compManager);
 
 #ifdef XP_WIN
   // Failure here is not a show-stopper so just warn.
@@ -4886,6 +5078,15 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   // No more need for cached plugins. Clear it up.
   mCachedPlugins = nsnull;
 
+  /*
+   * XXX Big time hack alert!!!!
+   *     Because Real Player 8 installs in the components folder, we must have this one off
+   *     scan for nppl3260.dll because XPCOM has shut off nsGetFactory type plugins.
+   *     When we stop supporting Real 8 or they fix their installer, this can go away.
+   */
+  if (aCreatePluginList)
+    ScanForRealInComponentsFolder(compManager);
+
   // reverse our list of plugins
   nsRefPtr<nsPluginTag> next;
   nsRefPtr<nsPluginTag> prev;
@@ -4899,6 +5100,23 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
 
   NS_TIMELINE_STOP_TIMER("LoadPlugins");
   NS_TIMELINE_MARK_TIMER("LoadPlugins");
+
+  return NS_OK;
+}
+
+nsresult
+nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager)
+{
+  // the component reg is a flat file now see 48888
+  // we have to reimplement this method if we need it
+
+  // The "new style" XPCOM plugins have their information stored in
+  // the component registry, under the key
+  //
+  //   nsIRegistry::Common/software/plugins
+  //
+  // Enumerate through that list now, creating an nsPluginTag for
+  // each.
 
   return NS_OK;
 }
@@ -6263,6 +6481,78 @@ nsPluginHostImpl::GetPluginName(nsIPluginInstance *aPluginInstance,
 }
 
 // end of nsPIPluginHost implementation
+
+nsresult
+nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManager)
+{
+  nsresult rv = NS_OK;
+
+#ifdef XP_WIN
+
+  // First, lets check if we already have Real. No point in doing this if it's installed correctly
+  if (NS_SUCCEEDED(IsPluginEnabledForType("audio/x-pn-realaudio-plugin")))
+    return rv;
+
+  // Next, maybe the pref wants to override
+  PRBool bSkipRealPlayerHack = PR_FALSE;
+  if (!mPrefService ||
+     (NS_SUCCEEDED(mPrefService->GetBoolPref("plugin.skip_real_player_hack", &bSkipRealPlayerHack)) &&
+     bSkipRealPlayerHack))
+  return rv;
+
+  // now we need the XPCOM components folder
+  nsCOMPtr<nsIFile> RealPlugin;
+  if (NS_FAILED(NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(RealPlugin))) || !RealPlugin)
+    return rv;
+
+  // make sure the file is actually there
+  RealPlugin->AppendNative(nsDependentCString("nppl3260.dll"));
+  PRBool exists;
+  nsCAutoString filePath;
+  RealPlugin->Exists(&exists);
+  if (!exists || NS_FAILED(RealPlugin->GetNativePath(filePath)))
+    return rv;
+
+  // now make sure it's a plugin
+  nsCOMPtr<nsILocalFile> localfile;
+  NS_NewNativeLocalFile(filePath,
+                        PR_TRUE,
+                        getter_AddRefs(localfile));
+
+  if (!nsPluginsDir::IsPluginFile(localfile))
+    return rv;
+
+  // try to get the mime info and descriptions out of the plugin
+  nsPluginFile pluginFile(localfile);
+  nsPluginInfo info;
+  memset(&info, 0, sizeof(info));
+  if (NS_FAILED(pluginFile.GetPluginInfo(info)))
+    return rv;
+
+  nsCOMPtr<nsIComponentManager> compManager;
+  NS_GetComponentManager(getter_AddRefs(compManager));
+
+  // finally, create our "plugin tag" and add it to the list
+  if (info.fMimeTypeArray) {
+    nsRefPtr<nsPluginTag> pluginTag = new nsPluginTag(&info);
+    if (pluginTag) {
+      pluginTag->SetHost(this);
+      pluginTag->mNext = mPlugins;
+      mPlugins = pluginTag;
+
+      // last thing we need is to register this plugin with layout so it can be used in full-page mode
+      if (pluginTag->IsEnabled())
+        pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
+    }
+  }
+
+  // free allocated strings in GetPluginInfo
+  pluginFile.FreePluginInfo(info);
+
+#endif
+
+  return rv;
+}
 
 nsresult nsPluginHostImpl::AddUnusedLibrary(PRLibrary * aLibrary)
 {
