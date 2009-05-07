@@ -48,7 +48,6 @@
 #include "nsIDOMStorageList.h"
 #include "nsIDOMStorageItem.h"
 #include "nsInterfaceHashtable.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsPIDOMStorage.h"
 #include "nsIDOMToString.h"

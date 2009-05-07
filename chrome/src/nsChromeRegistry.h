@@ -52,7 +52,6 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
 
@@ -171,7 +170,7 @@ public:
   private:
     ProviderEntry* GetProvider(const nsACString& aPreferred, MatchType aType);
 
-    nsVoidArray mArray;
+    nsTArray<ProviderEntry> mArray;
   };
 
   struct PackageEntry : public PLDHashEntryHdr
