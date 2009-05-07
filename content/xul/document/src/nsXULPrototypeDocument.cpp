@@ -693,6 +693,7 @@ nsXULPDGlobalObject::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScrip
   void *script_glob = nsnull;
 
   if (aScriptContext) {
+    aScriptContext->SetGCOnDestruction(PR_FALSE);
     aScriptContext->DidInitializeContext();
     script_glob = aScriptContext->GetNativeGlobal();
     NS_ASSERTION(script_glob, "GetNativeGlobal returned NULL!");
