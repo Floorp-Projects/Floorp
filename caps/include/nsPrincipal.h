@@ -42,7 +42,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsJSPrincipals.h"
 #include "nsTArray.h"

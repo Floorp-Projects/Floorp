@@ -43,7 +43,7 @@
 #include "nsITimer.h"
 #include "prtime.h"
 #include "prinrval.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
@@ -413,13 +413,12 @@ private:
   PRPackedBool      mInScroll;
 
   //from here to public should be static and locked... MMP
-  static PRInt32           mVMCount;        //number of viewmanagers
 
   //Rendering context used to cleanup the blending buffers
   static nsIRenderingContext* gCleanupContext;
 
   //list of view managers
-  static nsVoidArray       *gViewManagers;
+  static nsTArray<nsViewManager*> *gViewManagers;
 
   void PostInvalidateEvent();
 
