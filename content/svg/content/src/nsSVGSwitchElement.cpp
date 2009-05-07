@@ -34,13 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsSVGFeatures.h"
 #include "nsSVGSwitchElement.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsSVGUtils.h"
-
-PRBool 
-NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent);
 
 ////////////////////////////////////////////////////////////////////////
 // implementation
@@ -86,39 +84,17 @@ nsSVGSwitchElement::MaybeInvalidate()
   // to determine if we should call nsSVGUtils::UpdateGraphic. If we did that,
   // nsSVGUtils::UpdateGraphic would not invalidate the old mActiveChild area!
 
-  PRUint32 count = GetChildCount();
-  for (PRUint32 i = 0; i < count; i++) {
-    nsIContent * child = GetChildAt(i);
-    if (NS_SVG_PassesConditionalProcessingTests(child)) {
+  if (FindActiveChild() == mActiveChild) {
+    return;
+  }
 
-      if (mActiveChild == child) {
-        return;
-      }
-
-      nsIFrame *frame = GetPrimaryFrame();
-      if (frame) {
-        nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
-        if (svgFrame) {
-          nsSVGUtils::UpdateGraphic(svgFrame);
-        }
-      }
-      return;
+  nsIFrame *frame = GetPrimaryFrame();
+  if (frame) {
+    nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
+    if (svgFrame) {
+      nsSVGUtils::UpdateGraphic(svgFrame);
     }
   }
-}
-
-void
-nsSVGSwitchElement::UpdateActiveChild()
-{
-  PRUint32 count = GetChildCount();
-  for (PRUint32 i = 0; i < count; i++) {
-    nsIContent * child = GetChildAt(i);
-    if (NS_SVG_PassesConditionalProcessingTests(child)) {
-      mActiveChild = child;
-      return;
-    }
-  }
-  mActiveChild = nsnull;
 }
 
 //----------------------------------------------------------------------
@@ -171,4 +147,63 @@ nsSVGSwitchElement::IsAttributeMapped(const nsIAtom* name) const
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGSwitchElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
+// Implementation Helpers:
+
+nsIContent *
+nsSVGSwitchElement::FindActiveChild() const
+{
+  PRBool allowReorder = AttrValueIs(kNameSpaceID_None,
+                                    nsGkAtoms::allowReorder,
+                                    nsGkAtoms::yes, eCaseMatters);
+
+  const nsAdoptingString& acceptLangs =
+    nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+
+  PRUint32 count = GetChildCount();
+
+  if (allowReorder && !acceptLangs.IsEmpty()) {
+    PRInt32 bestLanguagePreferenceRank = -1;
+    nsIContent *bestChild = nsnull;
+    for (PRUint32 i = 0; i < count; i++) {
+      nsIContent *child = GetChildAt(i);
+      if (nsSVGFeatures::PassesConditionalProcessingTests(
+            child, nsSVGFeatures::kIgnoreSystemLanguage)) {
+        nsAutoString value;
+        if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage,
+                           value)) {
+          PRInt32 languagePreferenceRank =
+            nsSVGFeatures::GetBestLanguagePreferenceRank(value, acceptLangs);
+          switch (languagePreferenceRank) {
+          case 0:
+            // best possible match
+            return child;
+          case -1:
+            // not found
+            break;
+          default:
+            if (bestLanguagePreferenceRank == -1 ||
+                languagePreferenceRank < bestLanguagePreferenceRank) {
+              bestLanguagePreferenceRank = languagePreferenceRank;
+              bestChild = child;
+            }
+            break;
+          }
+        } else if (!bestChild) {
+          bestChild = child;
+        }
+      }
+    }
+    return bestChild;
+  }
+
+  for (PRUint32 i = 0; i < count; i++) {
+    nsIContent *child = GetChildAt(i);
+    if (nsSVGFeatures::PassesConditionalProcessingTests(child, &acceptLangs)) {
+      return child;
+    }
+  }
+  return nsnull;
 }
