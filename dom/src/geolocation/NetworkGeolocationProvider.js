@@ -115,6 +115,18 @@ WifiGeoPositionProvider.prototype = {
     timer:           null,
     hasSeenWiFi:     false,
 
+    observe: function (aSubject, aTopic, aData) {
+        if (aTopic == "private-browsing") {
+            if (aData == "enter" || aData == "exit") {
+                let psvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+                try {
+                    let branch = psvc.getBranch("geo.wifi.access_token.");
+                    branch.deleteBranch("");
+                } catch (e) {}
+            }
+        }
+    },
+
     startup:         function() {
         LOG("startup called");
 
@@ -126,6 +138,9 @@ WifiGeoPositionProvider.prototype = {
         this.hasSeenWiFi = false;
         this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         this.timer.initWithCallback(this, 5000, this.timer.TYPE_ONE_SHOT);
+
+        let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+        os.addObserver(this, "private-browsing", false);
     },
 
     isReady:         function() {
@@ -151,6 +166,9 @@ WifiGeoPositionProvider.prototype = {
             this.timer.cancel();
             this.timer = null;
         }
+
+        let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+        os.removeObserver(this, "private-browsing");
     },
 
     onChange: function(accessPoints) {
