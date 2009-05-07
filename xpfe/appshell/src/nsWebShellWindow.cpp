@@ -219,7 +219,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
   // Create web shell
-  mDocShell = do_CreateInstance("@mozilla.org/webshell;1");
+  mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   // Make sure to set the item type on the docshell _before_ calling

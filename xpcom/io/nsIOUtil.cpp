@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Boris Zbarsky <bzbarsky@mit.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,46 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __PLUGIN_H__
-#define __PLUGIN_H__
+#include "nsIOUtil.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsStreamUtils.h"
 
-/* Xlib/Xt stuff */
-#include <X11/Xlib.h>
-#include <X11/Intrinsic.h>
-#include <X11/cursorfont.h>
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOUtil, nsIIOUtil)
 
-#include "pluginbase.h"
-
-class nsPluginInstance : public nsPluginInstanceBase
+NS_IMETHODIMP
+nsIOUtil::InputStreamIsBuffered(nsIInputStream* aStream, PRBool* _retval)
 {
-public:
-  nsPluginInstance(NPP aInstance);
-  virtual ~nsPluginInstance();
+  NS_ENSURE_ARG_POINTER(aStream);
+  *_retval = NS_InputStreamIsBuffered(aStream);
+  return NS_OK;
+}
 
-  NPBool init(NPWindow* aWindow);
-  void shut();
-  NPBool isInitialized() {return mInitialized;}
-  NPError GetValue(NPPVariable variable, void *value);
-  NPError SetWindow(NPWindow* aWindow);
-
-  // locals
-  const char * getVersion();
-  void draw();
-
-private:
-  NPP mInstance;
-  NPBool mInitialized;
-
-  Window mWindow;
-  Display *mDisplay;
-  Widget mXtwidget;
-  int mX, mY;
-  int mWidth, mHeight;
-  Visual* mVisual;
-  Colormap mColormap;
-  unsigned int mDepth;
-  XFontStruct *mFontInfo;
-  GC mGC;
-};
-
-#endif // __PLUGIN_H__
+NS_IMETHODIMP
+nsIOUtil::OutputStreamIsBuffered(nsIOutputStream* aStream, PRBool* _retval)
+{
+  NS_ENSURE_ARG_POINTER(aStream);
+  *_retval = NS_OutputStreamIsBuffered(aStream);
+  return NS_OK;
+}

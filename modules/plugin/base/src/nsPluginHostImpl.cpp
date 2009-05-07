@@ -5595,7 +5595,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull,
         nsnull, /* do not add this internal plugin's channel
                 on the load group otherwise this channel could be canceled
-                form |nsWebShell::OnLinkClickSync| bug 166613 */
+                form |nsDocShell::OnLinkClickSync| bug 166613 */
         callbacks);
       if (NS_FAILED(rv))
         return rv;

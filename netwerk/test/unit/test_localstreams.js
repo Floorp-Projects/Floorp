@@ -14,6 +14,12 @@ function test_stream(stream) {
   // This test only handles blocking streams; that's desired for file streams
   // anyway.
   do_check_eq(stream.isNonBlocking(), false);
+
+  // Check that the stream is not buffered
+  do_check_eq(Components.classes["@mozilla.org/io-util;1"]
+                         .getService(Components.interfaces.nsIIOUtil)
+                         .inputStreamIsBuffered(stream),
+              false);
   
   // Wrap it in a binary stream (to avoid wrong results that
   // scriptablestream would produce with binary content)

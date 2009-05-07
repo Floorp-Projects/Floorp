@@ -563,6 +563,11 @@ pixman_image_set_component_alpha   (pixman_image_t       *image,
     image->common.component_alpha = component_alpha;
 }
 
+PIXMAN_EXPORT pixman_bool_t
+pixman_image_get_component_alpha   (pixman_image_t       *image)
+{
+    return image->common.component_alpha;
+}
 
 PIXMAN_EXPORT void
 pixman_image_set_accessors (pixman_image_t             *image,

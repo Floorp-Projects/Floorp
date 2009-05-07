@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,15 +15,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Boris Zbarsky <bzbarsky@mit.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,37 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef	nsIRDFFileSystem_h__
-#define	nsIRDFFileSystem_h__
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
-#include "nscore.h"
-#include "nsISupports.h"
-#include "nsIRDFNode.h"
-
-class nsVoidArray;
-
-
-#define NS_IRDFFILESYSTEMDATAOURCE_IID \
-{ 0x1222e6f0, 0xa5e3, 0x11d2, { 0x8b, 0x7c, 0x00, 0x80, 0x5f, 0x8a, 0x7d, 0xb5 } }
-
-class nsIRDFFileSystemDataSource : public nsIRDFDataSource
+function run_test()
 {
-public:
-};
+    var s = Cc["@mozilla.org/io/string-input-stream;1"]
+              .createInstance(Ci.nsIStringInputStream);
+    var body = "This is a test";
+    s.setData(body, body.length);
+    do_check_eq(s.available(), body.length);
 
+    var sis = Cc["@mozilla.org/scriptableinputstream;1"]
+                .createInstance(Ci.nsIScriptableInputStream);
+    sis.init(s);
 
-
-#define NS_IRDFFILESYSTEM_IID \
-{ 0x204a1a00, 0xa5e4, 0x11d2, { 0x8b, 0x7c, 0x00, 0x80, 0x5f, 0x8a, 0x7d, 0xb5 } }
-
-class nsIRDFFileSystem : public nsIRDFResource
-{
-public:
-	NS_IMETHOD	GetFolderList(nsIRDFResource *source, nsVoidArray **array) const = 0;
-	NS_IMETHOD	GetName(nsVoidArray **array) const = 0;
-	NS_IMETHOD	GetURL(nsVoidArray **array) const = 0;
-};
-
-
-
-#endif // nsIRDFFileSystem_h__
+    do_check_eq(sis.read(body.length), body);
+}
