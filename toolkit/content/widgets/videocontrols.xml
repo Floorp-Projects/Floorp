@@ -210,7 +210,7 @@
 
         <constructor>
             <![CDATA[
-            this.init();
+            this.Utils.init(this);
             ]]>
         </constructor>
 
@@ -701,72 +701,68 @@
                 log : function (msg) {
                     if (this.debug)
                         dump("videoctl: " + msg + "\n");
+                },
+
+                init : function (binding) {
+                    this.video = binding.parentNode;
+                    this.videocontrols = binding;
+                    this.isAudioOnly = (this.video instanceof HTMLAudioElement);
+
+                    this.controlFader.element = document.getAnonymousElementByAttribute(binding, "class", "controlBar");
+                    this.statusFader.element  = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
+                    this.volumeFader.element  = document.getAnonymousElementByAttribute(binding, "class", "volumeStack");
+
+                    this.statusIcon    = document.getAnonymousElementByAttribute(binding, "class", "statusIcon");
+                    this.playButton    = document.getAnonymousElementByAttribute(binding, "class", "playButton");
+                    this.muteButton    = document.getAnonymousElementByAttribute(binding, "class", "muteButton");
+                    this.volumeControl = document.getAnonymousElementByAttribute(binding, "class", "volumeControl");
+                    this.volumeStack   = document.getAnonymousElementByAttribute(binding, "class", "volumeStack");
+                    this.progressBar   = document.getAnonymousElementByAttribute(binding, "class", "progressBar");
+                    this.bufferBar     = document.getAnonymousElementByAttribute(binding, "class", "bufferBar");
+                    this.scrubber      = document.getAnonymousElementByAttribute(binding, "class", "scrubber");
+                    this.scrubberThumb = document.getAnonymousElementByAttribute(this.scrubber, "class", "scale-thumb");
+                    this.durationLabel = document.getAnonymousElementByAttribute(binding, "class", "durationLabel");
+
+                    this.setupInitialState();
+
+                    // videocontrols.css hides the control bar by default, because if script
+                    // is disabled our binding's script is disabled too (bug 449358). Thus,
+                    // the controls are broken and we don't want them shown. But if script is
+                    // enabled, the code here will run and can explicitly unhide the controls.
+                    //
+                    // For videos with |autoplay| set, we'll leave the controls initially hidden,
+                    // so that they don't get in the way of the playing video. Otherwise we'll
+                    // go ahead and reveal the controls now, so they're an obvious user cue.
+                    //
+                    // (Note: the |controls| attribute is already handled via layout/style/html.css)
+                    if (!(this.video.autoplay && this.video.mozAutoplayEnabled) || !this.dynamicControls) {
+                        var fader = this.controlFader;
+                        fader.element.setAttribute("hidden", "false");
+                        fader.isVisible = true;
+                        fader.fadingIn = true;
+                    }
+
+                    // Use the handleEvent() callback for all media events.
+                    for each (var event in this.videoEvents)
+                        this.video.addEventListener(event, this, false);
+
+                    // Determine the height of the volumeFader when extended (which is controlled by CSS).
+                    // Its .clientHeight seems to be 0 here, so use the theme's initial value. (eg "-70px")
+                    this.volumeFader.maxSlide = parseInt(window.getComputedStyle(this.volumeStack, null)
+                                                               .getPropertyValue("margin-top"));
+                    var self = this;
+                    this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
+                    this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
+                    this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
+                    this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
+                    this.volumeStack.addEventListener("mouseover", function(e) { self.onVolumeMouseInOut(e); }, false);
+                    this.volumeStack.addEventListener("mouseout",  function(e) { self.onVolumeMouseInOut(e); }, false);
+
+                    this.log("--- videocontrols initialized ---");
                 }
             }) ]]>
         </field>
 
-        <method name="init">
-            <body>
-            <![CDATA[
-            var video = this.parentNode;
-            this.Utils.video = video;
-            this.Utils.videocontrols = this;
-            this.Utils.isAudioOnly = (video instanceof HTMLAudioElement);
-
-            this.Utils.controlFader.element = document.getAnonymousElementByAttribute(this, "class", "controlBar");
-            this.Utils.statusFader.element  = document.getAnonymousElementByAttribute(this, "class", "statusOverlay");
-            this.Utils.volumeFader.element  = document.getAnonymousElementByAttribute(this, "class", "volumeStack");
-
-            this.Utils.statusIcon     = document.getAnonymousElementByAttribute(this, "class", "statusIcon");
-            this.Utils.playButton     = document.getAnonymousElementByAttribute(this, "class", "playButton");
-            this.Utils.muteButton     = document.getAnonymousElementByAttribute(this, "class", "muteButton");
-            this.Utils.volumeControl  = document.getAnonymousElementByAttribute(this, "class", "volumeControl");
-            this.Utils.volumeStack    = document.getAnonymousElementByAttribute(this, "class", "volumeStack");
-            this.Utils.progressBar    = document.getAnonymousElementByAttribute(this, "class", "progressBar");
-            this.Utils.bufferBar      = document.getAnonymousElementByAttribute(this, "class", "bufferBar");
-            this.Utils.scrubber       = document.getAnonymousElementByAttribute(this, "class", "scrubber");
-            this.Utils.scrubberThumb  = document.getAnonymousElementByAttribute(this.Utils.scrubber, "class", "scale-thumb");
-            this.Utils.durationLabel  = document.getAnonymousElementByAttribute(this, "class", "durationLabel");
-             
-            this.Utils.setupInitialState();
-
-            // videocontrols.css hides the control bar by default, because if script
-            // is disabled our binding's script is disabled too (bug 449358). Thus,
-            // the controls are broken and we don't want them shown. But if script is
-            // enabled, the code here will run and can explicitly unhide the controls.
-            //
-            // For videos with |autoplay| set, we'll leave the controls initially hidden,
-            // so that they don't get in the way of the playing video. Otherwise we'll
-            // go ahead and reveal the controls now, so they're an obvious user cue.
-            //
-            // (Note: the |controls| attribute is already handled via layout/style/html.css)
-            if (!(video.autoplay && video.mozAutoplayEnabled) || !this.Utils.dynamicControls) {
-                var fader = this.Utils.controlFader;
-                fader.element.setAttribute("hidden", "false");
-                fader.isVisible = true;
-                fader.fadingIn = true;
-            }
-
-            // Use the Utils.handleEvent() callback for all media events.
-            for each (var event in this.Utils.videoEvents)
-                video.addEventListener(event, this.Utils, false);
-
-            // Determine the height of the volumeFader when extended (which is controlled by CSS).
-            // Its .clientHeight seems to be 0 here, so use the theme's initial value. (eg "-70px")
-            this.Utils.volumeFader.maxSlide = parseInt(window.getComputedStyle(this.Utils.volumeStack, null)
-                                                             .getPropertyValue("margin-top"));
-            var self = this;
-            this.Utils.muteButton.addEventListener("command", function() { self.Utils.toggleMute(); }, false);
-            this.Utils.playButton.addEventListener("command", function() { self.Utils.togglePause(); }, false);
-            this.Utils.muteButton.addEventListener("mouseover",  function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
-            this.Utils.muteButton.addEventListener("mouseout",   function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
-            this.Utils.volumeStack.addEventListener("mouseover", function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
-            this.Utils.volumeStack.addEventListener("mouseout",  function(e) { self.Utils.onVolumeMouseInOut(e); }, false);
-
-            this.Utils.log("--- videocontrols initialized ---");
-            ]]>
-            </body>
-        </method>
 
     </implementation>
 

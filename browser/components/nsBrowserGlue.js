@@ -1038,22 +1038,26 @@ GeolocationPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
  
   prompt: function(request) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 
-    var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
+    var result = pm.testExactPermission(request.requestingURI, "geo");
 
-    if (prefService.hasPref(request.requestingURI, "geo.request.remember")) {
-        if (prefService.getPref(request.requestingURI, "geo.request.remember"))
-            request.allow();
-        else
-            request.cancel();
-        return;
+    if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      request.allow();
+      return;
+    }
+    
+    if (result == Ci.nsIPermissionManager.DENY_ACTION) {
+      request.cancel();
+      return;
     }
 
     function setPagePermission(uri, allow) {
-        var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
-        prefService.setPref(uri, "geo.request.remember", allow);
+      if (allow == true)
+        pm.add(uri, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
+      else
+        pm.add(uri, "geo", Ci.nsIPermissionManager.DENY_ACTION);
     }
-
 
     function getChromeWindow(aWindow) {
       var chromeWin = aWindow 
@@ -1079,8 +1083,8 @@ GeolocationPrompt.prototype = {
       var browserBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
 
       var buttons = [{
-              label: browserBundle.GetStringFromName("geolocation.tellThem"),
-              accessKey: browserBundle.GetStringFromName("geolocation.tellThemKey"),
+              label: browserBundle.GetStringFromName("geolocation.shareLocation"),
+              accessKey: browserBundle.GetStringFromName("geolocation.shareLocation.accesskey"),
               callback: function(notification) {                  
                   if (notification.getElementsByClassName("rememberChoice")[0].checked)
                       setPagePermission(request.requestingURI, true);
@@ -1088,8 +1092,8 @@ GeolocationPrompt.prototype = {
               },
           },
           {
-              label: browserBundle.GetStringFromName("geolocation.dontTellThem"),
-              accessKey: browserBundle.GetStringFromName("geolocation.dontTellThemKey"),
+              label: browserBundle.GetStringFromName("geolocation.dontShareLocation"),
+              accessKey: browserBundle.GetStringFromName("geolocation.dontShareLocation.accesskey"),
               callback: function(notification) {
                   if (notification.getElementsByClassName("rememberChoice")[0].checked)
                       setPagePermission(request.requestingURI, false);
@@ -1115,6 +1119,7 @@ GeolocationPrompt.prototype = {
         var checkbox = newBar.ownerDocument.createElementNS(XULNS, "checkbox");
         checkbox.className = "rememberChoice";
         checkbox.setAttribute("label", browserBundle.GetStringFromName("geolocation.remember"));
+        checkbox.setAttribute("accesskey", browserBundle.GetStringFromName("geolocation.remember.accesskey"));
         newBar.appendChild(checkbox);
 
         var link = newBar.ownerDocument.createElementNS(XULNS, "label");

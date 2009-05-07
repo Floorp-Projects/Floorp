@@ -306,8 +306,7 @@ public:
         PRUint32 host_len;
     };
 
-protected:
-
+    // These values correspond to the integer network.proxy.type preference
     enum ProxyConfig {
         eProxyConfig_Direct,
         eProxyConfig_Manual,
@@ -317,6 +316,8 @@ protected:
         eProxyConfig_System, // use system proxy settings if available, otherwise DIRECT
         eProxyConfig_Last
     };
+
+protected:
 
     // simplified array of filters defined by this struct
     struct HostInfo {

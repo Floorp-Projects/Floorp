@@ -183,7 +183,7 @@ nsHTMLDNSPrefetch::Prefetch(nsAString &hostname, PRUint16 flags)
     return NS_ERROR_NOT_AVAILABLE;
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
-  return sDNSService->AsyncResolve(NS_ConvertUTF16toUTF8(hostname), flags,
+  return sDNSService->AsyncResolve(NS_ConvertUTF16toUTF8(hostname), flags | nsIDNSService::RESOLVE_SPECULATE,
                                    sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
 }
 
@@ -293,7 +293,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
         nsCOMPtr<nsICancelable> tmpOutstanding;
 
         sDNSService->AsyncResolve(hostName, 
-                                  mEntries[mTail].mFlags,
+                                  mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
                                   sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
       }
     }
