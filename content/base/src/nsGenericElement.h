@@ -249,7 +249,7 @@ private:
   // nsDOMEventRTTearoff::Create(). That's why the constructor and
   // destrucor of this class is private.
 
-  nsDOMEventRTTearoff(nsIContent *aContent);
+  nsDOMEventRTTearoff(nsINode *aNode);
 
   static nsDOMEventRTTearoff *mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
   static PRUint32 mCachedEventTearoffCount;
@@ -270,7 +270,7 @@ public:
    * Use this static method to create instances of nsDOMEventRTTearoff.
    * @param aContent the content to create a tearoff for
    */
-  static nsDOMEventRTTearoff *Create(nsIContent *aContent);
+  static nsDOMEventRTTearoff *Create(nsINode *aNode);
 
   /**
    * Call before shutdown to clear the cache and free memory for this class.
@@ -297,7 +297,7 @@ private:
    * Strong reference back to the content object from where an instance of this
    * class was 'torn off'
    */
-  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsINode> mNode;
 };
 
 /**

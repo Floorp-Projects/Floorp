@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=484775
+-->
+<head>
+  <title>Test for Bug 484775</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=484775">Mozilla Bug 484775</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 484775 **/
+
+var expectedTarget = null;
+var expectedType = null;
+var eventCount = 0;
+
+function listener(evt) {
+  ++eventCount;
+  ok(evt.type, expectedType, "Wrong event type!");
+  ok(evt.target, expectedTarget, "Wrong event type!");
+}
+
+expectedType = "TestEvent";
+var event = document.createEvent("Event");
+event.initEvent(expectedType, true, true);
+ok(event.type, expectedType, "Wrong event type!");
+
+var attr = document.createAttribute("attribute");
+attr.addEventListener(expectedType, listener, false);
+attr.dispatchEvent(event);
+is(eventCount, 1, "Should have fired an event!");
+attr.removeEventListener(expectedType, listener, false);
+
+var df = document.createDocumentFragment();
+df.addEventListener(expectedType, listener, false);
+df.dispatchEvent(event);
+is(eventCount, 2, "Should have fired an event!");
+df.removeEventListener(expectedType, listener, false);
+
+</script>
+</pre>
+</body>
+</html>
