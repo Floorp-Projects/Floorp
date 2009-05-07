@@ -41,7 +41,7 @@
 #define nsXPITriggerInfo_h
 
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
 #include "nsILocalFile.h"
@@ -113,14 +113,14 @@ class nsXPITriggerInfo
     ~nsXPITriggerInfo();
 
     void                Add( nsXPITriggerItem *aItem )
-                        { if ( aItem ) mItems.AppendElement( (void*)aItem ); }
+                        { if ( aItem ) mItems.AppendElement( aItem ); }
 
     nsXPITriggerItem*   Get( PRUint32 aIndex )
-                        { return (nsXPITriggerItem*)mItems.ElementAt(aIndex);}
+                        { return mItems.ElementAt(aIndex);}
 
     void                SaveCallback( JSContext *aCx, jsval aVal );
 
-    PRUint32            Size() { return mItems.Count(); }
+    PRUint32            Size() { return mItems.Length(); }
 
     void                SendStatus(const PRUnichar* URL, PRInt32 status);
 
@@ -128,7 +128,7 @@ class nsXPITriggerInfo
 
 
   private:
-    nsVoidArray mItems;
+    nsTArray<nsXPITriggerItem*> mItems;
     JSContext   *mCx;
     nsCOMPtr<nsISupports> mContextWrapper;
     jsval       mCbval;

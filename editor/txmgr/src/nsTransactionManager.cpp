@@ -40,7 +40,6 @@
 
 #include "nsTransactionItem.h"
 #include "nsTransactionStack.h"
-#include "nsVoidArray.h"
 #include "nsTransactionManager.h"
 #include "nsTransactionList.h"
 #include "nsAutoPtr.h"
