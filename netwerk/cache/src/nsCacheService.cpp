@@ -66,7 +66,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
-#include "nsVoidArray.h"
 #include "nsDeleteDir.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
