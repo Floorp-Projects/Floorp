@@ -265,6 +265,7 @@ nsXBLDocGlobalObject::SetContext(nsIScriptContext *aScriptContext)
   nsresult rv;
   rv = aScriptContext->InitContext(nsnull);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Script Language's InitContext failed");
+  aScriptContext->SetGCOnDestruction(PR_FALSE);
   aScriptContext->DidInitializeContext();
   // and we set up our global manually
   mScriptContext = aScriptContext;
