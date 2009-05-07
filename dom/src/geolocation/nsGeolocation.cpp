@@ -348,6 +348,15 @@ NS_INTERFACE_MAP_END
 NS_IMPL_THREADSAFE_ADDREF(nsGeolocationService)
 NS_IMPL_THREADSAFE_RELEASE(nsGeolocationService)
 
+
+static PRBool sGeoEnabled = PR_TRUE;
+static int
+GeoEnabledChangedCallback(const char *aPrefName, void *aClosure)
+{
+  sGeoEnabled = nsContentUtils::GetBoolPref("geo.enabled", PR_TRUE);
+  return 0;
+}
+
 nsGeolocationService::nsGeolocationService()
 {
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
@@ -357,8 +366,13 @@ nsGeolocationService::nsGeolocationService()
 
   mTimeout = nsContentUtils::GetIntPref("geo.timeout", 6000);
 
-  PRBool enabled = nsContentUtils::GetBoolPref("geo.enabled", PR_TRUE);
-  if (!enabled)
+  nsContentUtils::RegisterPrefCallback("geo.enabled",
+                                       GeoEnabledChangedCallback,
+                                       nsnull);
+
+  GeoEnabledChangedCallback("geo.enabled", nsnull);
+
+  if (sGeoEnabled == PR_FALSE)
     return;
 
   mProvider = do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
@@ -450,6 +464,9 @@ nsGeolocationService::HasGeolocationProvider()
 nsresult
 nsGeolocationService::StartDevice()
 {
+  if (sGeoEnabled == PR_FALSE)
+    return NS_ERROR_NOT_AVAILABLE;
+
   if (!mProvider)
     return NS_ERROR_NOT_AVAILABLE;
   
@@ -664,6 +681,9 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
                                   nsIDOMGeoPositionErrorCallback *errorCallback,
                                   nsIDOMGeoPositionOptions *options)
 {
+  if (sGeoEnabled == PR_FALSE)
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsCOMPtr<nsIGeolocationPrompt> prompt = do_GetService(NS_GEOLOCATION_PROMPT_CONTRACTID);
   if (prompt == nsnull)
     return NS_ERROR_NOT_AVAILABLE;
@@ -691,6 +711,9 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *aCallback,
                              nsIDOMGeoPositionOptions *aOptions, 
                              PRInt32 *_retval NS_OUTPARAM)
 {
+  if (sGeoEnabled == PR_FALSE)
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsCOMPtr<nsIGeolocationPrompt> prompt = do_GetService(NS_GEOLOCATION_PROMPT_CONTRACTID);
   if (prompt == nsnull)
     return NS_ERROR_NOT_AVAILABLE;

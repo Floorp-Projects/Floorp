@@ -82,8 +82,8 @@ nsDNSPrefetch::Prefetch(PRUint16 flags)
     
     nsCOMPtr<nsICancelable> tmpOutstanding;  
 
-    return sDNSService->AsyncResolve(mHostname, flags, this, nsnull,
-                                     getter_AddRefs(tmpOutstanding));
+    return sDNSService->AsyncResolve(mHostname, flags | nsIDNSService::RESOLVE_SPECULATE,
+                                     this, nsnull, getter_AddRefs(tmpOutstanding));
 }
 
 nsresult
