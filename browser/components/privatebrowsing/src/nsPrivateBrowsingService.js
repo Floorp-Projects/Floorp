@@ -378,6 +378,12 @@ PrivateBrowsingService.prototype = {
 
   removeDataFromDomain: function PBS_removeDataFromDomain(aDomain)
   {
+
+    // clear any and all network geolocation provider sessions
+    try {
+        this._prefs.deleteBranch("geo.wifi.access_token.");
+    } catch (e) {}
+    
     // History
     let (bh = Cc["@mozilla.org/browser/global-history;2"].
               getService(Ci.nsIBrowserHistory)) {
