@@ -54,7 +54,7 @@
 <!ENTITY addonsRepo.label          "Get Add-ons">
 <!ENTITY addonsRecommended.label   "See Recommended">
 <!ENTITY addonsSearch.label        "Search Catalog">
-<!ENTITY addonsSearch.emptytext    "Search for an add-ons">
+<!ENTITY addonsSearch.emptytext    "Search all add-ons">
 
 <!ENTITY addonOptions.label        "Options">
 <!ENTITY addonEnable.label         "Enable">
