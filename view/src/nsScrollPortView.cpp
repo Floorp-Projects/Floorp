@@ -578,8 +578,8 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsIntP
           }
         }
         toScrollPtr = &toScroll;
-        toScroll = nsRect::ToInsidePixels(biggestRect, aP2A);
-        biggestRect = nsIntRect::ToAppUnits(toScroll, aP2A);
+        toScroll = biggestRect.ToInsidePixels(aP2A);
+        biggestRect = toScroll.ToAppUnits(aP2A);
         regionToScroll.Sub(regionToScroll, biggestRect);
         updateRegion.Or(updateRegion, regionToScroll);
       }

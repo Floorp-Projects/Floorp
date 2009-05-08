@@ -126,9 +126,9 @@ nsSVGIntegrationUtils::ComputeFrameEffectsRect(nsIFrame* aFrame,
   nsRect r = GetSVGBBox(firstFrame, aFrame, aOverflowRect, userSpaceRect);
   // r is relative to user space
   PRUint32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  nsIntRect p = nsRect::ToOutsidePixels(r, appUnitsPerDevPixel);
+  nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
   p = filterFrame->GetFilterBBox(firstFrame, &p);
-  r = nsIntRect::ToAppUnits(p, appUnitsPerDevPixel);
+  r = p.ToAppUnits(appUnitsPerDevPixel);
   // Make it relative to aFrame again
   return r + userSpaceRect.TopLeft() - aFrame->GetOffsetTo(firstFrame);
 }
@@ -157,9 +157,9 @@ nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
   nsRect userSpaceRect = GetNonSVGUserSpace(firstFrame);
   nsPoint offset = aFrame->GetOffsetTo(firstFrame) - userSpaceRect.TopLeft();
   nsRect r = aInvalidRect + offset;
-  nsIntRect p = nsRect::ToOutsidePixels(r, appUnitsPerDevPixel);
+  nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
   p = filterFrame->GetInvalidationBBox(firstFrame, p);
-  r = nsIntRect::ToAppUnits(p, appUnitsPerDevPixel);
+  r = p.ToAppUnits(appUnitsPerDevPixel);
   return r - offset;
 }
 
@@ -180,9 +180,9 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   nsRect userSpaceRect = GetNonSVGUserSpace(firstFrame);
   nsPoint offset = aFrame->GetOffsetTo(firstFrame) - userSpaceRect.TopLeft();
   nsRect r = aDamageRect + offset;
-  nsIntRect p = nsRect::ToOutsidePixels(r, appUnitsPerDevPixel);
+  nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
   p = filterFrame->GetSourceForInvalidArea(firstFrame, p);
-  r = nsIntRect::ToAppUnits(p, appUnitsPerDevPixel);
+  r = p.ToAppUnits(appUnitsPerDevPixel);
   return r - offset;
 }
 
@@ -212,7 +212,7 @@ public:
     nsIRenderingContext::AutoPushTranslation push(ctx, -mOffset.x, -mOffset.y);
     nsRect dirty;
     if (aDirtyRect) {
-      dirty = nsIntRect::ToAppUnits(*aDirtyRect, nsIDeviceContext::AppUnitsPerCSSPixel());
+      dirty = aDirtyRect->ToAppUnits(nsIDeviceContext::AppUnitsPerCSSPixel());
       dirty += mOffset;
     } else {
       dirty = mInnerList->GetBounds(mBuilder);
@@ -281,7 +281,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
 
   nsRect userSpaceRect = GetNonSVGUserSpace(firstFrame) + aBuilder->ToReferenceFrame(firstFrame);
   PRInt32 appUnitsPerDevPixel = aEffectsFrame->PresContext()->AppUnitsPerDevPixel();
-  userSpaceRect = nsIntRect::ToAppUnits(nsRect::ToNearestPixels(userSpaceRect, appUnitsPerDevPixel), appUnitsPerDevPixel);
+  userSpaceRect = userSpaceRect.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
   aCtx->Translate(userSpaceRect.x, userSpaceRect.y);
 
   nsCOMPtr<nsIDOMSVGMatrix> matrix = GetInitialMatrix(aEffectsFrame);
@@ -306,7 +306,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
   /* Paint the child */
   if (filterFrame) {
     RegularFramePaintCallback paint(aBuilder, aInnerList, userSpaceRect.TopLeft());
-    nsIntRect r = nsRect::ToOutsidePixels(aDirtyRect - userSpaceRect.TopLeft(), appUnitsPerDevPixel);
+    nsIntRect r = (aDirtyRect - userSpaceRect.TopLeft()).ToOutsidePixels(appUnitsPerDevPixel);
     filterFrame->FilterPaint(&svgContext, aEffectsFrame, &paint, &r);
   } else {
     gfx->SetMatrix(savedCTM);

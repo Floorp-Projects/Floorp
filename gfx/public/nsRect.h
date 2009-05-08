@@ -186,9 +186,9 @@ struct NS_GFX nsRect {
   nscoord XMost() const {return x + width;}
   nscoord YMost() const {return y + height;}
 
-  static inline nsIntRect ToNearestPixels(const nsRect &aRect, nscoord aAppUnitsPerPixel);
-  static inline nsIntRect ToOutsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel);
-  static inline nsIntRect ToInsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel);
+  inline nsIntRect ToNearestPixels(nscoord aAppUnitsPerPixel) const;
+  inline nsIntRect ToOutsidePixels(nscoord aAppUnitsPerPixel) const;
+  inline nsIntRect ToInsidePixels(nscoord aAppUnitsPerPixel) const;
 };
 
 struct NS_GFX nsIntRect {
@@ -305,7 +305,7 @@ struct NS_GFX nsIntRect {
   PRInt32 XMost() const {return x + width;}
   PRInt32 YMost() const {return y + height;}
 
-  static inline nsRect ToAppUnits(const nsIntRect &aRect, nscoord aAppUnitsPerPixel);
+  inline nsRect ToAppUnits(nscoord aAppUnitsPerPixel) const;
 };
 
 /*
@@ -313,54 +313,54 @@ struct NS_GFX nsIntRect {
  */
 // scale the rect but round to preserve centers
 inline nsIntRect
-nsRect::ToNearestPixels(const nsRect &aRect, nscoord aAppUnitsPerPixel)
+nsRect::ToNearestPixels(nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntRound(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerPixel)));
-  rect.y = NSToIntRound(NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerPixel)));
-  rect.width  = NSToIntRound(NSAppUnitsToFloatPixels(aRect.XMost(),
+  rect.x = NSToIntRound(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
+  rect.y = NSToIntRound(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
+  rect.width  = NSToIntRound(NSAppUnitsToFloatPixels(XMost(),
                              float(aAppUnitsPerPixel))) - rect.x;
-  rect.height = NSToIntRound(NSAppUnitsToFloatPixels(aRect.YMost(),
+  rect.height = NSToIntRound(NSAppUnitsToFloatPixels(YMost(),
                              float(aAppUnitsPerPixel))) - rect.y;
   return rect;
 }
 
 // scale the rect but round to smallest containing rect
 inline nsIntRect
-nsRect::ToOutsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel)
+nsRect::ToOutsidePixels(nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerPixel)));
-  rect.y = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerPixel)));
-  rect.width  = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.XMost(),
+  rect.x = NSToIntFloor(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
+  rect.y = NSToIntFloor(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
+  rect.width  = NSToIntCeil(NSAppUnitsToFloatPixels(XMost(),
                             float(aAppUnitsPerPixel))) - rect.x;
-  rect.height = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.YMost(),
+  rect.height = NSToIntCeil(NSAppUnitsToFloatPixels(YMost(),
                             float(aAppUnitsPerPixel))) - rect.y;
   return rect;
 }
 
 // scale the rect but round to largest contained rect
 inline nsIntRect
-nsRect::ToInsidePixels(const nsRect &aRect, nscoord aAppUnitsPerPixel)
+nsRect::ToInsidePixels(nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerPixel)));
-  rect.y = NSToIntCeil(NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerPixel)));
-  rect.width  = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.XMost(),
+  rect.x = NSToIntCeil(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
+  rect.y = NSToIntCeil(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
+  rect.width  = NSToIntFloor(NSAppUnitsToFloatPixels(XMost(),
                              float(aAppUnitsPerPixel))) - rect.x;
-  rect.height = NSToIntFloor(NSAppUnitsToFloatPixels(aRect.YMost(),
+  rect.height = NSToIntFloor(NSAppUnitsToFloatPixels(YMost(),
                              float(aAppUnitsPerPixel))) - rect.y;
   return rect;
 }
 
 // app units are integer multiples of pixels, so no rounding needed
 inline nsRect
-nsIntRect::ToAppUnits(const nsIntRect &aRect, nscoord aAppUnitsPerPixel)
+nsIntRect::ToAppUnits(nscoord aAppUnitsPerPixel) const
 {
-  return nsRect(NSIntPixelsToAppUnits(aRect.x, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(aRect.y, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(aRect.width, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(aRect.height, aAppUnitsPerPixel));
+  return nsRect(NSIntPixelsToAppUnits(x, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(y, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(width, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(height, aAppUnitsPerPixel));
 }
 
 #ifdef DEBUG

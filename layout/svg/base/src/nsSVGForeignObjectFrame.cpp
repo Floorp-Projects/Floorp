@@ -680,7 +680,7 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
   nsCOMPtr<nsIDOMSVGMatrix> localTM;
   ctm->Translate(x, y, getter_AddRefs(localTM));
 
-  nsIntRect r = nsRect::ToOutsidePixels(aRect, presContext->AppUnitsPerDevPixel());
+  nsIntRect r = aRect.ToOutsidePixels(presContext->AppUnitsPerDevPixel());
   nsRect rect = GetTransformedRegion(r.x, r.y, r.width, r.height,
                                      localTM, presContext);
 
