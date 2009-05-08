@@ -53,6 +53,9 @@
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
 #include "nsIClassInfo.h"
+#include "prclist.h"
+
+#define DEBUG_DUMP_URLS_AT_SHUTDOWN
 
 class nsIBinaryInputStream;
 class nsIBinaryOutputStream;
@@ -271,6 +274,12 @@ private:
     static PRBool                       gEscapeUTF8;
     static PRBool                       gAlwaysEncodeInUTF8;
     static PRBool                       gEncodeQueryInUTF8;
+
+public:
+#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
+    PRCList mDebugCList;
+    void PrintSpec() const { printf("  %s\n", mSpec.get()); }
+#endif
 };
 
 #define NS_THIS_STANDARDURL_IMPL_CID                 \
