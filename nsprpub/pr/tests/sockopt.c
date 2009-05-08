@@ -39,37 +39,19 @@
 #include "prio.h"
 #include "prinit.h"
 #include "prprf.h"
-#ifdef XP_MAC
-#include "probslet.h"
-#else
 #include "obsolete/probslet.h"
-#endif
 
 #include "plerror.h"
 
 static PRFileDesc *err = NULL;
 static PRBool failed = PR_FALSE;
 
-#ifndef XP_MAC
 static void Failed(const char *msg1, const char *msg2)
 {
     if (NULL != msg1) PR_fprintf(err, "%s ", msg1);
     PL_FPrintError(err, msg2);
     failed = PR_TRUE;
 }  /* Failed */
-
-#else
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-static void Failed(const char *msg1, const char *msg2)
-{
-    if (NULL != msg1) printf("%s ", msg1);
-    printf (msg2);
-    failed |= PR_TRUE;
-}  /* Failed */
-
-#endif
 
 static PRSockOption Incr(PRSockOption *option)
 {
@@ -109,10 +91,6 @@ int main(int argc, char **argv)
 
     err = PR_GetSpecialFD(PR_StandardError);
     PR_STDIO_INIT();
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("sockopt.log");
-#endif
 
     if (NULL == udp) Failed("PR_NewUDPSocket()", NULL);
     else if (NULL == tcp) Failed("PR_NewTCPSocket()", NULL);
@@ -207,11 +185,7 @@ int main(int argc, char **argv)
         PR_Close(udp);
         PR_Close(tcp);
     }
-#ifndef XP_MAC
     PR_fprintf(err, "%s\n", (failed) ? "FAILED" : "PASSED");
-#else
-   printf("%s\n", (failed) ? "FAILED" : "PASSED");
-#endif
     return (failed) ? 1 : 0;
 }  /* main */
 

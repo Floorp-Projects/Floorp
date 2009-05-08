@@ -46,12 +46,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 /* for synchronization between the main thread and iothread */
 static PRLock *lock;
 static PRCondVar *cvar;

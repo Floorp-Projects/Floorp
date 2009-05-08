@@ -64,19 +64,7 @@
 static int _debug_on = 0;
 static int test_cancelio = 0;
 
-#ifdef XP_MAC
-#include "prlog.h"
-#include "prsem.h"
-int fprintf(FILE *stream, const char *fmt, ...)
-{
-    PR_LogPrint(fmt);
-    return 0;
-}
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#else
 #include "obsolete/prsem.h"
-#endif
 
 #ifdef XP_PC
 #define mode_t int
@@ -129,15 +117,10 @@ char *LARGE_FILE_NAME = "/tmp/prsocket_test_dir/large_file";
 #define NUM_TCP_CLIENTS            5	/* for a listen queue depth of 5 */
 #define NUM_UDP_CLIENTS            10
 
-#ifndef XP_MAC
 #ifdef SYMBIAN
 #define NUM_TRANSMITFILE_CLIENTS    1
 #else
 #define NUM_TRANSMITFILE_CLIENTS    4
-#endif
-#else
-/* Mac can't handle more than 2* (3Mb) allocations for large file size buffers */
-#define NUM_TRANSMITFILE_CLIENTS    2
 #endif
 
 #define NUM_TCP_CONNECTIONS_PER_CLIENT    5
@@ -1103,12 +1086,7 @@ UDP_Socket_Client_Server_Test(void)
         /*
          * Cause every other client thread to connect udp sockets
          */
-#ifndef XP_MAC
         cparamp->udp_connect = udp_connect;
-#else
-        /* No support for UDP connects on Mac */
-        cparamp->udp_connect = 0;
-#endif
         if (udp_connect)
             udp_connect = 0;
         else
@@ -2237,9 +2215,6 @@ int main(int argc, char **argv)
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
-#ifdef XP_MAC
-    SetupMacPrintfLog("socket.log");
-#endif
     PR_SetConcurrency(4);
 
     emuSendFileIdentity = PR_GetUniqueIdentity("Emulated SendFile");

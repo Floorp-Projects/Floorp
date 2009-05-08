@@ -169,11 +169,7 @@ NSPR_API(PRInt32) PR_GetSysfdTableMax(void);
 NSPR_API(PRInt32) PR_SetSysfdTableSize(PRIntn table_size);
 
 #ifndef NO_NSPR_10_SUPPORT
-#ifdef XP_MAC
-#include <stat.h>
-#else
 #include <sys/stat.h>
-#endif
 
 NSPR_API(PRInt32) PR_Stat(const char *path, struct stat *buf);
 #endif /* NO_NSPR_10_SUPPORT */

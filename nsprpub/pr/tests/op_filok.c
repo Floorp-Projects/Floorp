@@ -55,19 +55,11 @@
 #include "prerror.h"
 #include <stdio.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-#else
-#endif
-
 /*
  * The name of a file that is guaranteed to exist
  * on every machine of a particular OS.
  */
-#ifdef VMS
-#define EXISTING_FILENAME "SYS$LOGIN:LOGIN.COM"
-#elif defined(SYMBIAN)
+#if defined(SYMBIAN)
 #define EXISTING_FILENAME "z:\\system\\install\\Series60v3.0.sis"
 #elif defined (XP_UNIX)
 #define EXISTING_FILENAME "/bin/sh"
@@ -85,11 +77,6 @@ static PRFileDesc *t1;
 
 int main(int argc, char **argv)
 {
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("pr_open_re.log");
-#endif
-	
     PR_STDIO_INIT();
 
 	t1 = PR_Open(EXISTING_FILENAME, PR_RDONLY, 0666);

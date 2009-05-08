@@ -97,12 +97,6 @@ static PRInt32 pageSize = 1024;
 static const char* baseName = "./";
 static const char *programName = "Random File";
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 /***********************************************************************
 ** PRIVATE FUNCTION:    RandomNum
 ** DESCRIPTION:
@@ -327,11 +321,6 @@ int main(int argc, char **argv)
     PR_STDIO_INIT();
 
     interleave = PR_SecondsToInterval(10);
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("ranfile.log");
-	debug_mode = 1;
-#endif
 
     ml = PR_NewLock();
     cv = PR_NewCondVar(ml);

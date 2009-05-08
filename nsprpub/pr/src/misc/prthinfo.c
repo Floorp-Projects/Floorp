@@ -37,11 +37,7 @@
 
 #include "prlog.h"
 #include "prthread.h"
-#ifdef XP_MAC
-#include "pprthred.h"
-#else
 #include "private/pprthred.h"
-#endif
 #include "primpl.h"
 
 PR_IMPLEMENT(PRWord *)
@@ -175,9 +171,6 @@ typedef struct PRScanStackData {
 static PRStatus PR_CALLBACK
 pr_ScanStack(PRThread* t, int i, void* arg)
 {
-#if defined(XP_MAC)
-#pragma unused (i)
-#endif
     PRScanStackData* data = (PRScanStackData*)arg;
     return PR_ThreadScanStackPointers(t, data->scanFun, data->scanClosure);
 }

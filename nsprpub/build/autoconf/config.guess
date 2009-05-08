@@ -1134,16 +1134,6 @@ EOF
                       # says <Richard.M.Bartel@ccMail.Census.GOV>
         echo i586-unisys-sysv4
         exit ;;
-#### MozillaHack 
-    *:*OpenVMS*:*:*)
-        case "${UNAME_SYSTEM}" in
-            POSIX_for_OpenVMS_AXP) echo alpha-dec-openvmsposix ;;
-            POSIX_for_OpenVMS_VAX) echo vax-dec-openvmsposix ;;
-            OpenVMS) echo alpha-dec-openvms ;;
-            *) echo unknown-dec-openvms ;;
-        esac
-        exit ;;
-#### End MozillaHack 
     *:UNIX_System_V:4*:FTX*)
 	# From Gerald Hewes <hewes@openmarket.com>.
 	# How about differentiating between stratus architectures? -djm

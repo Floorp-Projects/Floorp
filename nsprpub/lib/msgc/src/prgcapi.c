@@ -43,11 +43,7 @@
 #include "prmon.h"
 #include "prlog.h"
 #include "prthread.h"
-#if defined(XP_MAC)
-#include "pprthred.h"
-#else
 #include "private/pprthred.h"
-#endif
 #include "gcint.h"
 
 /*
@@ -82,10 +78,6 @@ extern PRLogModuleInfo *_pr_msgc_lm;
 static PRStatus PR_CALLBACK
 pr_ScanOneThread(PRThread* t, void** addr, PRUword count, void* closure)
 {
-#if defined(XP_MAC)
-#pragma unused (t, closure)
-#endif
-
     _pr_gcData.processRootBlock(addr, count);
     return PR_SUCCESS;
 }

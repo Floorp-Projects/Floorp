@@ -82,14 +82,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #if defined(XP_UNIX)
 #include <math.h>
-#endif
-
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
 #endif
 
 /*
@@ -1032,10 +1026,6 @@ int main(int argc, char** argv)
     MY_ASSERT(NULL != cltsrv_log_file);
     boolean = PR_SetLogFile("cltsrv.log");
     MY_ASSERT(boolean);
-
-#ifdef XP_MAC
-    debug_mode = PR_TRUE;
-#endif
 
     rv = PR_SetFDCacheSize(low, high);
     PR_ASSERT(PR_SUCCESS == rv);

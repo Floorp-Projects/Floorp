@@ -312,10 +312,6 @@ if test -z "$CC"; then
         CC=cc
     ;;
 
-    *-openvms*)
-        CC=cc
-    ;;
-
     *-osf*)
         CC=cc
     ;;
@@ -359,10 +355,6 @@ if test -z "$CXX"; then
 
     *-irix*)
         CXX=CC
-    ;;
-
-    *-openvms*)
-        CXX=cxx
     ;;
 
     *-osf*)
@@ -679,10 +671,6 @@ fi
 if test "$OS_ARCH" = "Linux"; then
     OS_RELEASE=`echo $OS_RELEASE | sed 's/-.*//'`
     OS_RELEASE=`echo $OS_RELEASE | awk -F\. '{ print $1 "." $2 }'`
-fi
-
-if test "$OS_ARCH" = "OpenVMS"; then
-    OS_RELEASE=`uname -v`
 fi
 
 #######################################################################
@@ -1833,22 +1821,6 @@ mips-sony-newsos*)
     fi
     DSO_LDOPTS='-shared -fPIC'
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-    ;;
-
-*-openvms*)
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(VMS)
-    AC_DEFINE(PR_GETIPNODE_NOT_THREADSAFE)
-    RESOLVE_LINK_SYMBOLS=1
-    AR_FLAGS='c $@'
-    MDCPUCFG_H=_openvms.cfg
-    PR_MD_CSRCS=openvms.c
-    DSO_LDOPTS='-shared -auto_symvec'
-    if test -n "$MOZ_DEBUG"; then
-      DSO_LDOPTS="$DSO_LDOPTS $_DEBUG_FLAGS"
-    else
-      DSO_LDOPTS="$DSO_LDOPTS $_OPTIMIZE_FLAGS"
-    fi
     ;;
 
 *-osf*)
