@@ -84,6 +84,7 @@ function InputHandler() {
   window.addEventListener("mouseup", this, true);
   window.addEventListener("mousemove", this, true);
   window.addEventListener("click", this, true);
+  window.addEventListener("mouseout", this, true);
 
   let stack = document.getElementById("browser-container");
   stack.addEventListener("DOMMouseScroll", this, true);
@@ -137,15 +138,6 @@ InputHandler.prototype = {
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
-
-    // relatedTarget should only be NULL if we move out of window
-    // if so, ungrab and reset everything.  We don't always get
-    // mouseout events if the mouse movement causes other window
-    // activity, but this catches many of the cases
-    if (aEvent.type == "mouseout" && !aEvent.relatedTarget) {
-      this.grab(null);
-      return;
-    }
 
     if (this._grabbed) {
       this._grabbed.handleEvent(aEvent);
@@ -600,6 +592,7 @@ ContentPanningModule.prototype = {
       case "mousemove":
         this._onMouseMove(aEvent);
         break;
+      case "mouseout":
       case "mouseup":
         this._onMouseUp(aEvent);
         break;
