@@ -620,27 +620,46 @@ nsThebesImage::Draw(gfxContext*        aContext,
             // EXTEND_PAD won't help us here; we have to create a temporary
             // surface to hold the subimage of pixels we're allowed to
             // sample
-            gfxRect needed = subimage.Intersect(sourceRect);
+
+            gfxRect userSpaceClipExtents = aContext->GetClipExtents();
+            // This isn't optimal --- if aContext has a rotation then
+            // GetClipExtents will have to do a bounding-box computation,
+            // and TransformBounds might too, so we could get a better
+            // result if we computed image space clip extents in one go
+            // --- but it doesn't really matter and this is easier to
+            // understand.
+            gfxRect imageSpaceClipExtents =
+              userSpaceToImageSpace.TransformBounds(userSpaceClipExtents);
+            // Inflate by one pixel because bilinear filtering will sample
+            // at most one pixel beyond the computed image pixel coordinate.
+            imageSpaceClipExtents.Outset(1.0);
+
+            gfxRect needed =
+              imageSpaceClipExtents.Intersect(sourceRect).Intersect(subimage);
             needed.RoundOut();
-            gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
-            NS_ASSERTION(size.width > 0 && size.height > 0,
-                         "We must have some needed pixels, otherwise we don't know what to sample");
-            nsRefPtr<gfxASurface> temp =
-                gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, format);
-            if (temp && temp->CairoStatus() == 0) {
-                gfxContext tmpCtx(temp);
-                tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-                nsRefPtr<gfxPattern> tmpPattern = new gfxPattern(surface);
-                if (tmpPattern) {
-                    tmpPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
-                    tmpPattern->SetMatrix(gfxMatrix().Translate(needed.pos));
-                    tmpCtx.SetPattern(tmpPattern);
-                    tmpCtx.Paint();
-                    tmpPattern = new gfxPattern(temp);
+            // if 'needed' is empty, nothing will be drawn since aFill
+            // must be entirely outside the clip region, so it doesn't
+            // matter what we do here, but we should avoid trying to
+            // create a zero-size surface.
+            if (!needed.IsEmpty()) {
+                gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
+                nsRefPtr<gfxASurface> temp =
+                    gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, format);
+                if (temp && temp->CairoStatus() == 0) {
+                    gfxContext tmpCtx(temp);
+                    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+                    nsRefPtr<gfxPattern> tmpPattern = new gfxPattern(surface);
                     if (tmpPattern) {
-                        pattern.swap(tmpPattern);
-                        pattern->SetMatrix(
-                            gfxMatrix(userSpaceToImageSpace).Multiply(gfxMatrix().Translate(-needed.pos)));
+                        tmpPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
+                        tmpPattern->SetMatrix(gfxMatrix().Translate(needed.pos));
+                        tmpCtx.SetPattern(tmpPattern);
+                        tmpCtx.Paint();
+                        tmpPattern = new gfxPattern(temp);
+                        if (tmpPattern) {
+                            pattern.swap(tmpPattern);
+                            pattern->SetMatrix(
+                                gfxMatrix(userSpaceToImageSpace).Multiply(gfxMatrix().Translate(-needed.pos)));
+                        }
                     }
                 }
             }
