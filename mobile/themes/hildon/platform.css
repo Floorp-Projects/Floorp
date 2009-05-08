@@ -162,8 +162,8 @@ radio {
 radio[selected] {
   padding: 2px 8px 2px 12px;
   color: #fff;
-  border: 1px solid #575757;
-  background-color: #578550;
+  border: 1px solid #91875a;
+  background-color: #DDC763;
 }
 
 radio .radio-check-box1, .radio-check {
@@ -180,24 +180,14 @@ radio:last-child {
   -moz-border-radius-bottomright: 0.5em;
 }
 
-radio.checkbox-radio-on[selected] {
-  color: #fff;
-  background-color: #578550;
-}
-
-radio.checkbox-radio-off[selected] {
-  color: #fff;
-  background-color: #812222;
-}
-
 /* dark radios ------------------------------------------------------------- */
 .toggle-dark radio {
   color: #fff;
   border: 1px solid #777;
-  background: #525252;
+  background-color: #525252;
 }
 
 .toggle-dark radio[selected] {
   border: 1px solid #202020;
-  background: #303030;
+  background-color: #303030;
 }
