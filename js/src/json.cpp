@@ -739,6 +739,7 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
         JS_ReportOutOfMemory(cx);
         goto bad;
     }
+
     return jp;
 
 bad:
