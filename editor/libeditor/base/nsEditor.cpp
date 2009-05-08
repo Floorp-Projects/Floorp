@@ -2001,8 +2001,7 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
                                     &(aReply->mCursorIsCollapsed),
                                     &view);
       aReply->mCursorPosition =
-        nsRect::ToOutsidePixels(rect,
-                                ps->GetPresContext()->AppUnitsPerDevPixel());
+        rect.ToOutsidePixels(ps->GetPresContext()->AppUnitsPerDevPixel());
       if (NS_SUCCEEDED(result) && view)
         aReply->mReferenceWidget = view->GetWidget();
     }
