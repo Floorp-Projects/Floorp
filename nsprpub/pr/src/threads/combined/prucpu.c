@@ -392,9 +392,6 @@ static void PR_CALLBACK _PR_CPU_Idle(void *_cpu)
 PR_IMPLEMENT(void) PR_SetConcurrency(PRUintn numCPUs)
 {
 #if defined(_PR_GLOBAL_THREADS_ONLY) || defined(_PR_LOCAL_THREADS_ONLY)
-#ifdef XP_MAC 
-#pragma unused(numCPUs) 
-#endif
 
     /* do nothing */
 

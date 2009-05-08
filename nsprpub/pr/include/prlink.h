@@ -107,13 +107,13 @@ NSPR_API(PRLibrary*) PR_LoadLibrary(const char *name);
 /*
 ** Each operating system has its preferred way of specifying
 ** a file in the file system.  Most operating systems use
-** a pathname.  Mac OS, on the other hand, uses the FSSpec
+** a pathname.  Mac OS Classic, on the other hand, uses the FSSpec
 ** structure to specify a file. PRLibSpec allows NSPR clients
 ** to use the type of file specification that is most efficient
 ** for a particular platform.
 **
-** On some operating systems such as Mac OS, a shared library may
-** contain code fragments that can be individually loaded.
+** On some operating systems such as Mac OS Classic, a shared library
+** may contain code fragments that can be individually loaded.
 ** PRLibSpec also allows NSPR clients to identify a code fragment
 ** in a library, if code fragments are supported by the OS.
 ** A code fragment can be specified by name or by an integer index.
@@ -130,7 +130,7 @@ typedef enum PRLibSpecType {
     PR_LibSpec_PathnameU           /* supported only on Win32 */ 
 } PRLibSpecType;
 
-struct FSSpec; /* Mac OS FSSpec */
+struct FSSpec; /* Mac OS Classic FSSpec */
 
 typedef struct PRLibSpec {
     PRLibSpecType type;

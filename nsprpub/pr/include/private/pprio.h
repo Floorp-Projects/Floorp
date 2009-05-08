@@ -269,15 +269,6 @@ NSPR_API(PRStatus) PR_NT_CancelIo(PRFileDesc *fd);
 
 #endif /* WIN32 */
 
-/*
-** Need external access to this on Mac so we can first set up our faux
-** environment vars
-*/
-#ifdef XP_MAC
-NSPR_API(void) PR_Init_Log(void);
-#endif
-
-
 PR_END_EXTERN_C
 
 #endif /* pprio_h___ */

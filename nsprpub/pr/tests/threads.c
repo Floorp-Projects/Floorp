@@ -43,12 +43,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 PRMonitor *mon;
 PRInt32 count, iterations, alive;
 
@@ -200,16 +194,8 @@ int main(int argc, char **argv)
     	PL_DestroyOptState(opt);
     }
 
-#ifdef XP_MAC
-	SetupMacPrintfLog("threads.log");
-	count = 10;
-	iterations = 10;
-	debug_mode = PR_TRUE;
-#else
     if (0 == count) count = 50;
     if (0 == iterations) iterations = 10;
-
-#endif
 
     if (debug_mode)
     {
