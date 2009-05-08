@@ -6163,26 +6163,23 @@ var FeedHandler = {
     }
   }, 
 
-  addFeed: function(feed, targetDoc) {
-    if (feed) {
-      // find which tab this is for, and set the attribute on the browser
-      var browserForLink = gBrowser.getBrowserForDocument(targetDoc);
-      if (!browserForLink) {
-        // ignore feeds loaded in subframes (see bug 305472)
-        return;
-      }
+  addFeed: function(link, targetDoc) {
+    // find which tab this is for, and set the attribute on the browser
+    var browserForLink = gBrowser.getBrowserForDocument(targetDoc);
+    if (!browserForLink) {
+      // ignore feeds loaded in subframes (see bug 305472)
+      return;
+    }
 
-      var feeds = [];
-      if (browserForLink.feeds != null)
-        feeds = browserForLink.feeds;
+    if (!browserForLink.feeds)
+      browserForLink.feeds = [];
 
-      feeds.push(feed);
-      browserForLink.feeds = feeds;
-      if (browserForLink == gBrowser.mCurrentBrowser) {
-        var feedButton = document.getElementById("feed-button");
-        if (feedButton)
-          feedButton.collapsed = false;
-      }
+    browserForLink.feeds.push({ href: link.href, title: link.title });
+
+    if (browserForLink == gBrowser.mCurrentBrowser) {
+      var feedButton = document.getElementById("feed-button");
+      if (feedButton)
+        feedButton.collapsed = false;
     }
   }
 };
