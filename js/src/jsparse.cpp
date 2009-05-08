@@ -7568,6 +7568,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     /* So CURRENT_TOKEN gets TOK_COMMA and not TOK_LB. */
                     js_MatchToken(cx, ts, TOK_COMMA);
                     pn2 = NewParseNode(PN_NULLARY, tc);
+                    pn->pn_xflags |= PNX_HOLEY;
                 } else {
                     pn2 = AssignExpr(cx, ts, tc);
                 }

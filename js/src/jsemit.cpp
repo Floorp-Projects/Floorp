@@ -3828,13 +3828,10 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
             return JS_FALSE;
         }
 
-        if (pn->pn_type == TOK_COMMA) {
-            if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
-                return JS_FALSE;
-        } else {
-            if (!js_EmitTree(cx, cg, pn))
-                return JS_FALSE;
-        }
+        /* MaybeEmitGroupAssignment won't call us if rhs is holey. */
+        JS_ASSERT(pn->pn_type != TOK_COMMA);
+        if (!js_EmitTree(cx, cg, pn))
+            return JS_FALSE;
         ++limit;
     }
 
@@ -3843,17 +3840,13 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 
     i = depth;
     for (pn = lhs->pn_head; pn; pn = pn->pn_next, ++i) {
-        if (i < limit) {
-            jsint slot;
+        /* MaybeEmitGroupAssignment requires lhs->pn_count <= rhs->pn_count. */
+        JS_ASSERT(i < limit);
+        jsint slot = AdjustBlockSlot(cx, cg, i);
+        if (slot < 0)
+            return JS_FALSE;
+        EMIT_UINT16_IMM_OP(JSOP_GETLOCAL, slot);
 
-            slot = AdjustBlockSlot(cx, cg, i);
-            if (slot < 0)
-                return JS_FALSE;
-            EMIT_UINT16_IMM_OP(JSOP_GETLOCAL, slot);
-        } else {
-            if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
-                return JS_FALSE;
-        }
         if (pn->pn_type == TOK_COMMA && pn->pn_arity == PN_NULLARY) {
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
@@ -3885,6 +3878,7 @@ MaybeEmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     lhs = pn->pn_left;
     rhs = pn->pn_right;
     if (lhs->pn_type == TOK_RB && rhs->pn_type == TOK_RB &&
+        !(rhs->pn_xflags & PNX_HOLEY) &&
         lhs->pn_count <= rhs->pn_count) {
         if (!EmitGroupAssignment(cx, cg, prologOp, lhs, rhs))
             return JS_FALSE;
