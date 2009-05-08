@@ -6060,6 +6060,15 @@ BumpStaticLevel(JSParseNode *pn, JSTreeContext *tc)
     }
 }
 
+static void
+AdjustBlockId(JSParseNode *pn, uintN adjust, JSTreeContext *tc)
+{
+    JS_ASSERT(pn->pn_arity == PN_LIST || pn->pn_arity == PN_FUNC || pn->pn_arity == PN_NAME);
+    pn->pn_blockid += adjust;
+    if (pn->pn_blockid >= tc->blockidGen)
+        tc->blockidGen = pn->pn_blockid + 1;
+}
+
 bool
 CompExprTransplanter::transplant(JSParseNode *pn)
 {
@@ -6071,7 +6080,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
         for (JSParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
             transplant(pn2);
         if (pn->pn_pos >= root->pn_pos)
-            pn->pn_blockid += adjust;
+            AdjustBlockId(pn, adjust, tc);
         break;
 
       case PN_TERNARY:
@@ -6147,7 +6156,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
             if (dn->isPlaceholder() && dn->pn_pos >= root->pn_pos && dn->dn_uses == pn) {
                 if (genexp)
                     BumpStaticLevel(dn, tc);
-                dn->pn_blockid += adjust;
+                AdjustBlockId(dn, adjust, tc);
             }
 
             JSAtom *atom = pn->pn_atom;
@@ -6196,7 +6205,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
         }
 
         if (pn->pn_pos >= root->pn_pos)
-            pn->pn_blockid += adjust;
+            AdjustBlockId(pn, adjust, tc);
         break;
 
       case PN_NAMESET:
