@@ -9,11 +9,12 @@ function tooDeep() {
   }
   JSON.stringify(root);
 }
+
 function run_test() {
-  do_check_eq("undefined", JSON.stringify(undefined));
-  do_check_eq("undefined", JSON.stringify(function(){}));
-  do_check_eq("undefined", JSON.stringify(<x><y></y></x>));
-  
+  do_check_eq(undefined, JSON.stringify(undefined));
+  do_check_eq(undefined, JSON.stringify(function(){}));
+  do_check_eq(undefined, JSON.stringify(<x><y></y></x>));
+
   var ok = false;
   try {
     tooDeep();
@@ -23,3 +24,4 @@ function run_test() {
   }
   do_check_true(ok);
 }
+

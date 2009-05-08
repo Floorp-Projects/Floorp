@@ -2461,7 +2461,7 @@ typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
  * JSON.stringify as specified by ES3.1 (draft)
  */
 JS_PUBLIC_API(JSBool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
+JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data);
 
 /*

@@ -94,6 +94,10 @@ function getTestPairs() {
   testPairs.push([null, undefined]);
   testPairs.push([null, 5]);
 
+  return testPairs;
+}
+
+function testIterator() {
   // custom iterator: JS 1.7+
   var x = {
    "a": "foo",
@@ -103,8 +107,6 @@ function getTestPairs() {
    __iterator__: function() { return (function() { yield "a"; yield "c"; yield 4; })() }
   }
   do_check_eq('{"a":"foo","c":"bar","4":"qux"}', nativeJSON.encode(x));
-
-  return testPairs;
 }
 
 function testStringEncode() {
@@ -234,6 +236,7 @@ function deleteDuringEncode() {
 
 function run_test() {
   testStringEncode();
+  testIterator();
   throwingToJSON();
   throwingIterator();
   deleteDuringEncode();
