@@ -54,3 +54,4 @@ load 467873-1.html
 load 470418-1.html
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") load 441360.html # filed bug 455463 for gtk2
 load 487549-1.html
+load 490777-1.html
