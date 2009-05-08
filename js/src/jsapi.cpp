@@ -1332,7 +1332,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Initialize the rest of the standard objects and functions. */
     return js_InitArrayClass(cx, obj) &&
-           js_InitBlockClass(cx, obj) &&
            js_InitBooleanClass(cx, obj) &&
            js_InitExceptionClasses(cx, obj) &&
            js_InitMathClass(cx, obj) &&
@@ -1398,7 +1397,6 @@ static JSStdName standard_class_atoms[] = {
     {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Function)},
     {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Object)},
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
-    {js_InitBlockClass,                 EAGER_ATOM_AND_CLASP(Block)},
     {js_InitBooleanClass,               EAGER_ATOM_AND_CLASP(Boolean)},
     {js_InitDateClass,                  EAGER_ATOM_AND_CLASP(Date)},
     {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
@@ -2738,7 +2736,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 {
     CHECK_REQUEST(cx);
     return js_InitClass(cx, obj, parent_proto, clasp, constructor, nargs,
-                        ps, fs, static_ps, static_fs, NULL);
+                        ps, fs, static_ps, static_fs);
 }
 
 #ifdef JS_THREADSAFE
@@ -5242,9 +5240,14 @@ JS_IsRunning(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
 {
-    JSStackFrame *fp;
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx)) {
+        JS_ASSERT(cx->bailExit);
+        return *cx->bailExit->pc == JSOP_NEW;
+    }
+#endif
 
-    fp = js_GetTopStackFrame(cx);
+    JSStackFrame *fp = js_GetTopStackFrame(cx);
     return fp && (fp->flags & JSFRAME_CONSTRUCTING);
 }
 
@@ -5549,11 +5552,11 @@ JS_EncodeString(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
+JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data)
 {
     CHECK_REQUEST(cx);
-    return js_Stringify(cx, vp, replacer, callback, data, 0);
+    return js_Stringify(cx, vp, replacer, space, callback, data);
 }
 
 JS_PUBLIC_API(JSBool)

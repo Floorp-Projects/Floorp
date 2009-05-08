@@ -507,7 +507,7 @@ GetStringForArgument(nsAString& aString,
 
   nsJSONWriter writer;
 
-  ok = JS_Stringify(cx, jsonVal.ToJSValPtr(), NULL, &WriteCallback, &writer);
+  ok = JS_Stringify(cx, jsonVal.ToJSValPtr(), NULL, JSVAL_NULL, WriteCallback, &writer);
   if (!ok) {
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }

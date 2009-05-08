@@ -121,7 +121,7 @@ js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);
 
 typedef uint32 JSIntervalTime;
 
-JSIntervalTime
+extern JS_FRIEND_API(JSIntervalTime)
 js_IntervalNow();
 
 JS_END_EXTERN_C
