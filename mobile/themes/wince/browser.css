@@ -256,6 +256,10 @@ toolbarbutton.page-button {
   padding: 0px 10px;
 }
 
+.panel-header {
+  padding: 5px;
+}
+
 #tool-addons {
   list-style-image: url("chrome://browser/skin/images/addons-24.png");
 }
@@ -459,7 +463,6 @@ findbar {
   background-color: #fff;
   padding: 8px;
 }
-
 
 /* Identity popup   -------------------------------------------------------- */
 /* Popup Icons */
