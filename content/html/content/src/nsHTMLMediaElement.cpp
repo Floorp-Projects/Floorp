@@ -1205,6 +1205,7 @@ void nsHTMLMediaElement::NetworkError()
 void nsHTMLMediaElement::PlaybackEnded()
 {
   NS_ASSERTION(mDecoder->IsEnded(), "Decoder fired ended, but not in ended state");
+  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("ended"));
 }
 
