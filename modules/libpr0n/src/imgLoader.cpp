@@ -451,6 +451,7 @@ NS_IMETHODIMP
 imgCacheObserver::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
 {
   if (strcmp(aTopic, "memory-pressure") == 0) {
+    printf("Under memory pressure, minimizing image cache...\n");
     mLoader.MinimizeCaches();
   } else if (strcmp(aTopic, "chrome-flush-skin-caches") == 0 ||
              strcmp(aTopic, "chrome-flush-caches") == 0) {
