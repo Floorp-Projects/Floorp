@@ -73,9 +73,20 @@
 #include "jsdate.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
+#include "jsxml.h"
 
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
+
+#if JS_HAS_XML_SUPPORT
+#define ABORT_IF_XML(v)                                                       \
+    JS_BEGIN_MACRO                                                            \
+    if (!JSVAL_IS_PRIMITIVE(v) && OBJECT_IS_XML(BOGUS_CX, JSVAL_TO_OBJECT(v)))\
+        ABORT_TRACE("xml detected");                                          \
+    JS_END_MACRO
+#else
+#define ABORT_IF_XML(cx, v) ((void) 0)
+#endif
 
 /* Never use JSVAL_IS_BOOLEAN because it restricts the value (true, false) and
    the type. What you want to use is JSVAL_TAG(x) == JSVAL_BOOLEAN and then
@@ -5887,10 +5898,14 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                                       tryBranchAfterCond, rval);
             }
         } else {
-            if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r))
+            if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r)) {
+                ABORT_IF_XML(r);
                 return call_imacro(equality_imacros.any_obj);
-            if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r)))
+            }
+            if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r))) {
+                ABORT_IF_XML(l);
                 return call_imacro(equality_imacros.obj_any);
+            }
         }
 
         l_ins = lir->insImm(0);
@@ -5952,12 +5967,17 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
      * properties, abort.
      */
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(binary_imacros.obj_obj);
+        }
         return call_imacro(binary_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(binary_imacros.any_obj);
+    }
 
     /* 11.8.5 steps 3, 16-21. */
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
@@ -6089,12 +6109,17 @@ TraceRecorder::binary(LOpcode op)
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(binary_imacros.obj_obj);
+        }
         return call_imacro(binary_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(binary_imacros.any_obj);
+    }
 
     bool intop = !(op & LIR64);
     LIns* a = get(&l);
@@ -6930,12 +6955,17 @@ TraceRecorder::record_JSOP_ADD()
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(add_imacros.obj_obj);
+        }
         return call_imacro(add_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(add_imacros.any_obj);
+    }
 
     if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
         LIns* args[] = { stringify(r), stringify(l), cx_ins };
@@ -6973,12 +7003,17 @@ TraceRecorder::record_JSOP_MOD()
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(binary_imacros.obj_obj);
+        }
         return call_imacro(binary_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(binary_imacros.any_obj);
+    }
 
     if (isNumber(l) && isNumber(r)) {
         LIns* l_ins = get(&l);
@@ -7036,8 +7071,10 @@ TraceRecorder::record_JSOP_NEG()
 {
     jsval& v = stackval(-1);
 
-    if (!JSVAL_IS_PRIMITIVE(v))
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        ABORT_IF_XML(v);
         return call_imacro(unary_imacros.sign);
+    }
 
     if (isNumber(v)) {
         LIns* a = get(&v);
@@ -7088,8 +7125,10 @@ TraceRecorder::record_JSOP_POS()
 {
     jsval& v = stackval(-1);
 
-    if (!JSVAL_IS_PRIMITIVE(v))
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        ABORT_IF_XML(v);
         return call_imacro(unary_imacros.sign);
+    }
 
     if (isNumber(v))
         return JSRS_CONTINUE;
@@ -7120,7 +7159,8 @@ TraceRecorder::record_JSOP_PRIMTOP()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_OBJTOP()
 {
-    // See the comment in record_JSOP_PRIMTOP.
+    jsval& v = stackval(-1);
+    ABORT_IF_XML(v);
     return JSRS_CONTINUE;
 }
 
@@ -7174,8 +7214,10 @@ TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
 {
     JS_ASSERT(argc == 1);
 
-    if (!JSVAL_IS_PRIMITIVE(argv[0]))
+    if (!JSVAL_IS_PRIMITIVE(argv[0])) {
+        ABORT_IF_XML(argv[0]);
         return call_imacro(new_imacros.String);
+    }
 
     LIns* proto_ins;
     CHECK_STATUS(getClassPrototype(ctor, proto_ins));
@@ -7607,8 +7649,10 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         if (native == js_String && argc >= 1) {
             if (mode == JSOP_NEW)
                 return newString(JSVAL_TO_OBJECT(fval), 1, argv, &fval);
-            if (!JSVAL_IS_PRIMITIVE(argv[0]))
-              return call_imacro(call_imacros.String);
+            if (!JSVAL_IS_PRIMITIVE(argv[0])) {
+                ABORT_IF_XML(argv[0]);
+                return call_imacro(call_imacros.String);
+            }
             set(&fval, stringify(argv[0]));
             pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
             return JSRS_CONTINUE;
@@ -7958,6 +8002,7 @@ TraceRecorder::record_JSOP_GETELEM()
 
     if (JSVAL_IS_PRIMITIVE(lval))
         ABORT_TRACE("JSOP_GETLEM on a primitive");
+    ABORT_IF_XML(lval);
 
     JSObject* obj = JSVAL_TO_OBJECT(lval);
     jsval id;
@@ -8078,6 +8123,7 @@ TraceRecorder::record_JSOP_SETELEM()
     /* no guards for type checks, trace specialized this already */
     if (JSVAL_IS_PRIMITIVE(lval))
         ABORT_TRACE("left JSOP_SETELEM operand is not an object");
+    ABORT_IF_XML(lval);
 
     JSObject* obj = JSVAL_TO_OBJECT(lval);
     LIns* obj_ins = get(&lval);
@@ -8353,6 +8399,7 @@ TraceRecorder::record_JSOP_APPLY()
 
     if (!VALUE_IS_FUNCTION(cx, vp[0]))
         return record_JSOP_CALL();
+    ABORT_IF_XML(vp[0]);
 
     JSObject* obj = JSVAL_TO_OBJECT(vp[0]);
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
@@ -9139,6 +9186,7 @@ TraceRecorder::record_JSOP_ITER()
     jsval& v = stackval(-1);
     if (JSVAL_IS_PRIMITIVE(v))
         ABORT_TRACE("for-in on a primitive value");
+    ABORT_IF_XML(v);
 
     jsuint flags = cx->fp->regs->pc[1];
 
@@ -9162,6 +9210,7 @@ TraceRecorder::record_JSOP_NEXTITER()
     jsval& iterobj_val = stackval(-2);
     if (JSVAL_IS_PRIMITIVE(iterobj_val))
         ABORT_TRACE("for-in on a primitive value");
+    ABORT_IF_XML(iterobj_val);
     JSObject* iterobj = JSVAL_TO_OBJECT(iterobj_val);
     JSClass* clasp = STOBJ_GET_CLASS(iterobj);
     LIns* iterobj_ins = get(&iterobj_val);
