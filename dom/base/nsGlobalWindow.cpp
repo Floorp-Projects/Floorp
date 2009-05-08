@@ -925,11 +925,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 
   ClearAllTimeouts();
 
-  nsIFocusController* focusController = GetRootFocusController();
-  if (focusController) {
-    focusController->Disconnect(this);
-  }
-
   mChromeEventHandler = nsnull;
 
   if (mListenerManager) {
@@ -6552,6 +6547,7 @@ nsGlobalWindow::GetPrivateRoot()
   GetTop(getter_AddRefs(top));
 
   nsCOMPtr<nsPIDOMWindow> ptop = do_QueryInterface(top);
+  NS_ASSERTION(ptop, "cannot get ptop");
   if (!ptop)
     return nsnull;
 

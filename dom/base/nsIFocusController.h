@@ -50,13 +50,12 @@ class nsIDOMNode;
 class nsIDOMWindowInternal;
 class nsIController;
 class nsIControllers;
-class nsPIDOMWindow;
 class nsAString;
 
-// 3ce5735f-3b4f-41da-8426-564d4bd8ff23
+// 58be9aa6-edec-46be-a9f5-6d8b572418d5
 #define NS_IFOCUSCONTROLLER_IID \
-{ 0x3ce5735f, 0x3b4f, 0x41da, \
-  { 0x84, 0x26, 0x56, 0x4d, 0x4b, 0xd8, 0xff, 0x23 } }
+{ 0x58be9aa6, 0xedec, 0x46be, \
+  { 0xa9, 0xf5, 0x6d, 0x8b, 0x57, 0x24, 0x18, 0xd5 } }
 
 class nsIFocusController : public nsISupports {
 public:
@@ -87,8 +86,6 @@ public:
   NS_IMETHOD RewindFocusState()=0;
 
   NS_IMETHOD ResetElementFocus() = 0;
-
-  NS_IMETHOD Disconnect(nsPIDOMWindow* aWindow) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFocusController, NS_IFOCUSCONTROLLER_IID)
