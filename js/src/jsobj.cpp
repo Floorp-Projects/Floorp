@@ -2080,14 +2080,14 @@ CreateMapForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
 #ifdef JS_TRACER
 
 static inline JSObject*
-NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
+NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto, JSObject *parent)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         return NULL;
 
-    obj->classword = jsuword(&js_ObjectClass);
+    obj->classword = jsuword(clasp);
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
     for (unsigned i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
@@ -2103,22 +2103,18 @@ NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
 JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
-    return NewNativeObject(cx, proto, JSVAL_TO_OBJECT(proto->fslots[JSSLOT_PARENT]));
+    return NewNativeObject(cx, &js_ObjectClass, proto, JSVAL_TO_OBJECT(proto->fslots[JSSLOT_PARENT]));
 }
 
 JS_DEFINE_TRCINFO_1(js_Object,
     (2, (extern, CONSTRUCTOR_RETRY, js_Object_tn, CONTEXT, CALLEE_PROTOTYPE, 0, 0)))
 
 JSObject* FASTCALL
-js_NewInstance(JSContext* cx, JSObject *ctor)
+js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
-#ifdef DEBUG
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
-    JS_ASSERT(FUN_INTERPRETED(fun));
-#endif
 
-    JSAtom* atom = cx->runtime->atomState.classPrototypeAtom;
+    JSAtom *atom = cx->runtime->atomState.classPrototypeAtom;
 
     JSScope *scope = OBJ_SCOPE(ctor);
 #ifdef JS_THREADSAFE
@@ -2131,16 +2127,16 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
             return NULL;
     }
 
-    JSScopeProperty* sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    JSScopeProperty *sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
     jsval pval = sprop ? STOBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
 
-    JSObject* proto;
+    JSObject *proto;
     if (!JSVAL_IS_PRIMITIVE(pval)) {
         /* An object in ctor.prototype, let's use it as the new instance's proto. */
         proto = JSVAL_TO_OBJECT(pval);
     } else if (pval == JSVAL_HOLE) {
         /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
-        proto = js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, ctor), 0);
+        proto = js_NewObject(cx, clasp, NULL, OBJ_GET_PARENT(cx, ctor), 0);
         if (!proto)
             return NULL;
         if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
@@ -2153,10 +2149,10 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
         }
     }
 
-    return NewNativeObject(cx, proto, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]));
+    return NewNativeObject(cx, clasp, proto, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]));
 }
 
-JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CALLEE_PROTOTYPE, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0, 0)
 
 #else  /* !JS_TRACER */
 
@@ -2411,24 +2407,14 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 JSObject *
 js_NewBlockObject(JSContext *cx)
 {
-    JSObject *obj;
-    JSBool ok;
-
     /*
      * Null obj's proto slot so that Object.prototype.* does not pollute block
-     * scopes.  Make sure obj has its own scope too, since clearing proto does
-     * not affect OBJ_SCOPE(obj).
+     * scopes and to give the block object its own scope.
      */
-    obj = js_NewObject(cx, &js_BlockClass, NULL, NULL, 0);
-    if (!obj)
-        return NULL;
-    JS_LOCK_OBJ(cx, obj);
-    ok = js_GetMutableScope(cx, obj) != NULL;
-    JS_UNLOCK_OBJ(cx, obj);
-    if (!ok)
-        return NULL;
-    OBJ_CLEAR_PROTO(cx, obj);
-    return obj;
+    JSObject *blockObj = js_NewObjectWithGivenProto(cx, &js_BlockClass,
+                                                    NULL, NULL, 0);
+    JS_ASSERT_IF(blockObj, !OBJ_IS_CLONED_BLOCK(blockObj));
+    return blockObj;
 }
 
 JSObject *
@@ -2446,6 +2432,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
     STOBJ_SET_SLOT(clone, JSSLOT_BLOCK_DEPTH,
                    OBJ_GET_SLOT(cx, proto, JSSLOT_BLOCK_DEPTH));
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(clone));
+    JS_ASSERT(OBJ_SCOPE(clone)->object == proto);
     return clone;
 }
 
@@ -2573,8 +2560,8 @@ FindObjectIndex(JSObjectArray *array, JSObject *obj)
     return NO_PARENT_INDEX;
 }
 
-static JSBool
-block_xdrObject(JSXDRState *xdr, JSObject **objp)
+JSBool
+js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
     uint32 parentId;
@@ -2687,8 +2674,6 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
     return ok;
 }
 
-#else
-# define block_xdrObject NULL
 #endif
 
 static uint32
@@ -2699,26 +2684,11 @@ block_reserveSlots(JSContext *cx, JSObject *obj)
 
 JSClass js_BlockClass = {
     "Block",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_CACHED_PROTO(JSProto_Block),
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,  JS_PropertyStub,  block_getProperty, block_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    JS_FinalizeStub,
-    NULL, NULL, NULL, NULL, block_xdrObject, NULL, NULL, block_reserveSlots
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, block_reserveSlots
 };
-
-JSObject*
-js_InitBlockClass(JSContext *cx, JSObject* obj)
-{
-    JSObject *proto;
-
-    proto = JS_InitClass(cx, obj, NULL, &js_BlockClass, NULL, 0, NULL,
-                         NULL, NULL, NULL);
-    if (!proto)
-        return NULL;
-
-    OBJ_CLEAR_PROTO(cx, proto);
-    return proto;
-}
 
 JSObject *
 js_InitEval(JSContext *cx, JSObject *obj)
@@ -2736,16 +2706,14 @@ JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     return js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
-                        object_props, object_methods, NULL, object_static_methods,
-                        js_Object_trcinfo);
+                        object_props, object_methods, NULL, object_static_methods);
 }
 
 JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
-             JSTraceableNative *trcinfo)
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
     JSAtom *atom;
     JSProtoKey key;
@@ -2790,8 +2758,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     JS_PUSH_TEMP_ROOT_OBJECT(cx, proto, &tvr);
 
     if (!constructor) {
-        JS_ASSERT(!trcinfo);
-
         /*
          * Lacking a constructor, name the prototype (e.g., Math) unless this
          * class (a) is anonymous, i.e. for internal use only; (b) the class
@@ -2829,15 +2795,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * constructor.
          */
         FUN_CLASP(fun) = clasp;
-
-        /*
-         * If we have a traceable native constructor, update the function to
-         * point at the given trcinfo and flag it.
-         */
-        if (trcinfo) {
-            fun->u.n.trcinfo = trcinfo;
-            fun->flags |= JSFUN_TRACEABLE;
-        }
 
         /*
          * Optionally construct the prototype object, before the class has
@@ -4277,7 +4234,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
     scope = OBJ_SCOPE(obj);
-    JS_ASSERT(scope->object == obj);
+    JS_ASSERT(scope->object == obj || (sprop->attrs & JSPROP_SHARED));
 
     slot = sprop->slot;
     if (slot != SPROP_INVALID_SLOT) {
@@ -4311,7 +4268,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
         return JS_FALSE;
 
     JS_LOCK_SCOPE(cx, scope);
-    JS_ASSERT(scope->object == obj);
+    JS_ASSERT(scope->object == obj || (sprop->attrs & JSPROP_SHARED));
     if (SLOT_IN_SCOPE(slot, scope) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
          SCOPE_GET_PROPERTY(scope, sprop->id) == sprop)) {

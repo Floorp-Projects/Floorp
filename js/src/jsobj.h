@@ -434,6 +434,9 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
 extern JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind);
 
+JSBool
+js_XDRBlockObject(JSXDRState *xdr, JSObject **objp);
+
 struct JSSharpObjectMap {
     jsrefcount  depth;
     jsatomid    sharpgen;
@@ -475,9 +478,6 @@ extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSObject *
-js_InitBlockClass(JSContext *cx, JSObject* obj);
-
-extern JSObject *
 js_InitEval(JSContext *cx, JSObject *obj);
 
 extern JSObject *
@@ -487,8 +487,7 @@ extern JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
-             JSTraceableNative *trcinfo);
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
 /*
  * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.
