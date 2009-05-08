@@ -44,7 +44,6 @@ const TOOLBARSTATE_LOADED   = 2;
 const URLBAR_FORCE  = 1;
 const URLBAR_EDIT   = 2;
 
-const kMaxEngines = 4;
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
 
 [
@@ -369,7 +368,7 @@ var BrowserUI = {
 
     const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var container = this._autocompleteNavbuttons;
-    for (var e = 0; e < kMaxEngines && e < engines.length; e++) {
+    for (var e = 0; e < engines.length; e++) {
       var button = document.createElementNS(kXULNS, "toolbarbutton");
       var engine = engines[e];
       button.id = engine.name;
