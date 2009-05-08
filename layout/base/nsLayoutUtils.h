@@ -944,6 +944,13 @@ public:
   static PRBool HasNonZeroCorner(const nsStyleCorners& aCorners);
 
   /**
+   * Determine if there is any corner radius on corners adjacent to the
+   * given side.
+   */
+  static PRBool HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
+                                       PRUint8 aSide);
+
+  /**
    * Determine if a widget is likely to require transparency or translucency.
    *   @param aFrame the frame of a <window>, <popup> or <menupopup> element.
    *   @return a value suitable for passing to SetWindowTranslucency

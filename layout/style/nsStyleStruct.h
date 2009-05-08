@@ -578,7 +578,7 @@ struct nsStyleBorder {
     return mComputedBorder;
   }
 
-  // Get the actual border width for a particular side, in twips.  Note that
+  // Get the actual border width for a particular side, in appunits.  Note that
   // this is zero if and only if there is no border to be painted for this
   // side.  That is, this value takes into account the border style and the
   // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
