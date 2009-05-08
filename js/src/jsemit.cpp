@@ -1843,11 +1843,17 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 static bool
 MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 {
-    if (cg->funbox && (cg->funbox->node->pn_dflags & PND_FUNARG))
-        return true;
+    JSFunction *fun = cg->compiler->callerFrame->fun;
+    uintN upvarLevel = fun->u.i.script->staticLevel;
+
+    JSFunctionBox *funbox = cg->funbox;
+    while (funbox && funbox->level >= upvarLevel) {
+        if (funbox->node->pn_dflags & PND_FUNARG)
+            return true;
+        funbox = funbox->parent;
+    }
 
     JSContext *cx = cg->compiler->context;
-    JSFunction *fun = cg->compiler->callerFrame->fun;
     JSAtom *atom = pn->pn_atom;
 
     uintN index;
@@ -1855,7 +1861,6 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
     if (localKind == JSLOCAL_NONE)
         return true;
 
-    uintN upvarLevel = fun->u.i.script->staticLevel;
     JS_ASSERT(cg->staticLevel > upvarLevel);
     if (cg->staticLevel >= JS_DISPLAY_SIZE || upvarLevel >= JS_DISPLAY_SIZE)
         return true;
