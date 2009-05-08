@@ -59,6 +59,7 @@ try {
 
 var gSelectionListener = {
   timeout: 0,
+  attached: false,
   notifySelectionChanged: function(doc, sel, reason)
   {
     // Coalesce notifications within 100ms intervals.
@@ -295,6 +296,7 @@ function onLoadContent()
   window.content.getSelection()
    .QueryInterface(nsISelectionPrivate)
    .addSelectionListener(gSelectionListener);
+  gSelectionListener.attached = true;
 }
 
 function onUnloadContent()
@@ -304,6 +306,15 @@ function onUnloadContent()
   // or toggling of syntax highlighting.
   //
   document.getElementById('cmd_goToLine').setAttribute('disabled', 'true');
+
+  // If we're not just unloading the initial "about:blank" which doesn't have
+  // a selection listener, get rid of it so it doesn't try to fire after the
+  // window has gone away.
+  if (gSelectionListener.attached) {
+    window.content.getSelection().QueryInterface(nsISelectionPrivate)
+          .removeSelectionListener(gSelectionListener);
+    gSelectionListener.attached = false;
+  }
 }
 
 function HandleAppCommandEvent(evt)
