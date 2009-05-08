@@ -4,7 +4,9 @@
 <script language="JavaScript">
 
 function initNav() {
-	window.location.href='GeneralIndex.html';
+  ++parent.i;
+  if (parent.i < 10)
+  	window.location.href=window.location.href;
 }
 
 </script>
