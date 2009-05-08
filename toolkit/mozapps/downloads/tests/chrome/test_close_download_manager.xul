@@ -61,8 +61,7 @@
 
   <![CDATA[
 
-const dmui = Cc["@mozilla.org/download-manager-ui;1"].
-             getService(Ci.nsIDownloadManagerUI);
+const dmui = getDMUI();
 
 function testCloseDMWithEscKey(aWin)
 {
@@ -91,6 +90,11 @@ function testCloseDMWithAccelKey(aWin)
 
 function runTest()
 {
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    return;
+  }
+
   const DLMGR_UI_DONE = "download-manager-ui-done";
 
   // Close the DM UI if it is already open
