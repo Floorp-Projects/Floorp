@@ -353,6 +353,7 @@ var Browser = {
     // reset the viewportBounds to ensure a redraw
     this._currentViewportBounds = { width: 0, height: 0};
 
+    ws.beginUpdateBatch();
     this._canvasBrowser.setCurrentBrowser(this.selectedBrowser, firstTab);
     document.getElementById("tabs").selectedItem = tab.content;
 
@@ -375,6 +376,7 @@ var Browser = {
       event.initEvent("TabSelect", true, false);
       tab.content.dispatchEvent(event);
     }
+    ws.endUpdateBatch();
   },
 
   supportsCommand: function(cmd) {
