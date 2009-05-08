@@ -95,8 +95,6 @@ public:
 
   NS_IMETHOD ResetElementFocus();
 
-  NS_IMETHOD Disconnect(nsPIDOMWindow* aWindow);
-
   // nsIDOMFocusListener
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);
