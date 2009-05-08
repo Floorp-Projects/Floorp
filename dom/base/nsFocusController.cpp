@@ -579,49 +579,6 @@ nsFocusController::ResetElementFocus()
   return NS_OK;
 }
 
-inline PRBool
-ElementMayBeDisconnected(nsIDOMElement* aElement,
-                         nsPIDOMWindow* aWindow)
-{
-  if (!aElement) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsINode> node(do_QueryInterface(aElement));
-  NS_ASSERTION(node, "This shouldn't fail!");
-
-  nsIDocument* doc = node->GetOwnerDoc();
-  if (doc) {
-    nsPIDOMWindow* win = doc->GetWindow();
-    if (win && win != aWindow) {
-      return PR_FALSE;
-    }
-  }
-  return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsFocusController::Disconnect(nsPIDOMWindow* aWindow)
-{
-  aWindow = aWindow->GetOuterWindow();
-
-  if (aWindow == mCurrentWindow) {
-    mCurrentWindow = nsnull;
-    if (ElementMayBeDisconnected(mCurrentElement, aWindow)) {
-      mCurrentElement = nsnull;
-    }
-  }
-
-  if (aWindow == mPreviousWindow) {
-    mPreviousWindow = nsnull;
-    if (ElementMayBeDisconnected(mPreviousElement, aWindow)) {
-      mPreviousElement = nsnull;
-    }
-  }
-
-  return NS_OK;
-}
-
 void
 nsFocusController::UpdateWWActiveWindow()
 {
