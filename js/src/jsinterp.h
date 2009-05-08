@@ -529,7 +529,7 @@ extern JSBool
 js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
                     JSAccessMode mode, uintN argc, jsval *argv, jsval *rval);
 
-extern JSBool
+extern JS_FORCES_STACK JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 
