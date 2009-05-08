@@ -491,11 +491,12 @@ nsThebesImage::Draw(gfxContext*        aContext,
     NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
                  "We must be allowed to sample *some* source pixels!");
 
+    PRBool doTile = !imageRect.Contains(sourceRect);
     if (doPadding || doPartialDecode) {
         gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height) +
             gfxPoint(aPadding.left, aPadding.top);
   
-        if (imageRect.Contains(sourceRect) && !mSinglePixel) {
+        if (!doTile && !mSinglePixel) {
             // Not tiling, and we have a surface, so we can account for
             // padding and/or a partial decode just by twiddling parameters.
             // First, update our user-space fill rect.
@@ -595,44 +596,21 @@ nsThebesImage::Draw(gfxContext*        aContext,
     nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
     pattern->SetMatrix(userSpaceToImageSpace);
 
-    // Figure out if we're tiling in either direction
-    PRBool doTileX = (subimage.X() < imageRect.X()) ||
-        (subimage.XMost() > imageRect.XMost());
-    PRBool doTileY = (subimage.Y() < imageRect.Y()) ||
-        (subimage.YMost() > imageRect.YMost());
-
     // OK now, the hard part left is to account for the subimage sampling
     // restriction. If all the transforms involved are just integer
     // translations, then we assume no resampling will occur so there's
     // nothing to do.
     // XXX if only we had source-clipping in cairo!
-
-    // If we're tiling a 1px wide/tall image in the 1px direction, then
-    // we don't care about handling the sampling correctly -- it will always
-    // sample the same pixel.  Note that we can't have a 1x1 image here,
-    // because that's handled by mSinglePixel.
-    if ((mWidth == 1 && doTileX && !doTileY) ||
-        (mHeight == 1 && doTileY && !doTileX) ||
-        (!currentMatrix.HasNonIntegerTranslation() &&
-         !userSpaceToImageSpace.HasNonIntegerTranslation()))
-    {
-        if (doTileX || doTileY) {
+    if (!currentMatrix.HasNonIntegerTranslation() &&
+        !userSpaceToImageSpace.HasNonIntegerTranslation()) {
+        if (doTile) {
             pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
         }
     } else {
-        if (doTileX || doTileY || !subimage.Contains(imageRect)) {
+        if (doTile || !subimage.Contains(imageRect)) {
             // EXTEND_PAD won't help us here; we have to create a temporary
             // surface to hold the subimage of pixels we're allowed to
             // sample
-
-            // XXX this is going to create a very large temporary
-            // surface if we're tiling; it will be the size of the
-            // full destination area to be tiled, regardless of the
-            // current dirty region.  Instead, we should create a new
-            // tile so that the destiation region can be tiled without
-            // scaling (so we don't have to worry about the edge
-            // filtering problem).
-
             gfxRect needed = subimage.Intersect(sourceRect);
             needed.RoundOut();
             gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
