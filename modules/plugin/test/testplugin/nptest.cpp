@@ -68,6 +68,9 @@ static bool hasWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 static bool getEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getClipRegionRectCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getClipRegionRectEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool startWatchingInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool stopWatchingInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "setUndefinedValueTest",
@@ -78,6 +81,9 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getEdge",
   "getClipRegionRectCount",
   "getClipRegionRectEdge",
+  "startWatchingInstanceCount",
+  "getInstanceCount",
+  "stopWatchingInstanceCount",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -89,9 +95,27 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   getEdge,
   getClipRegionRectCount,
   getClipRegionRectEdge,
+  startWatchingInstanceCount,
+  getInstanceCount,
+  stopWatchingInstanceCount,
 };
 
 static bool sIdentifiersInitialized = false;
+
+/**
+ * Incremented for every startWatchingInstanceCount.
+ */
+static int32_t sCurrentInstanceCountWatchGeneration = 0;
+/**
+ * Tracks the number of instances created or destroyed since the last
+ * startWatchingInstanceCount.
+ */
+static int32_t sInstanceCount = 0;
+/**
+ * True when we've had a startWatchingInstanceCount with no corresponding
+ * stopWatchingInstanceCount.
+ */
+static bool sWatchingInstanceCount = false;
 
 static void initializeIdentifiers()
 {
@@ -272,6 +296,8 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   scriptableObject->drawColor = 0;
   instanceData->scriptableObject = scriptableObject;
 
+  instanceData->instanceCountWatchGeneration = sCurrentInstanceCountWatchGeneration;
+  
   bool requestWindow = false;
   // handle extra params
   for (int i = 0; i < argc; i++) {
@@ -317,6 +343,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     return err;
   }
 
+  ++sInstanceCount;
   return NPERR_NO_ERROR;
 }
 
@@ -327,6 +354,11 @@ NPP_Destroy(NPP instance, NPSavedData** save)
   pluginInstanceShutdown(instanceData);
   NPN_ReleaseObject(instanceData->scriptableObject);
   free(instanceData);
+
+  if (sCurrentInstanceCountWatchGeneration == instanceData->instanceCountWatchGeneration) {
+    --sInstanceCount;
+  }
+
   return NPERR_NO_ERROR;
 }
 
@@ -717,5 +749,43 @@ getClipRegionRectEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   if (r == NPTEST_INT32_ERROR)
     return false;
   INT32_TO_NPVARIANT(r, *result);
+  return true;
+}
+
+static bool
+startWatchingInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+  if (sWatchingInstanceCount)
+    return false;
+
+  sWatchingInstanceCount = true;
+  sInstanceCount = 0;
+  ++sCurrentInstanceCountWatchGeneration;
+  return true;
+}
+
+static bool
+getInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+  if (!sWatchingInstanceCount)
+    return false;
+
+  INT32_TO_NPVARIANT(sInstanceCount, *result);
+  return true;
+}
+
+static bool
+stopWatchingInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+  if (!sWatchingInstanceCount)
+    return false;
+
+  sWatchingInstanceCount = false;
   return true;
 }
