@@ -1735,8 +1735,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
                                          &(aReply->mCursorIsCollapsed),
                                          &view);
     aReply->mCursorPosition =
-       nsRect::ToOutsidePixels(rect,
-                               ps->GetPresContext()->AppUnitsPerDevPixel());
+       rect.ToOutsidePixels(ps->GetPresContext()->AppUnitsPerDevPixel());
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret position");
     if (NS_SUCCEEDED(result) && view)
       aReply->mReferenceWidget = view->GetWidget();

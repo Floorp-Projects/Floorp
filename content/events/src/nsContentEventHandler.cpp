@@ -595,7 +595,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
     rect.UnionRect(rect, frameRect);
   }
   aEvent->mReply.mRect =
-      nsRect::ToOutsidePixels(rect, mPresContext->AppUnitsPerDevPixel());
+      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;
 }
@@ -624,7 +624,7 @@ nsContentEventHandler::OnQueryEditorRect(nsQueryContentEvent* aEvent)
   }
 
   aEvent->mReply.mRect =
-      nsRect::ToOutsidePixels(resultRect, mPresContext->AppUnitsPerDevPixel());
+      resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;
 }
@@ -658,7 +658,7 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
                                       mSelection, &rect,
                                       &isCollapsed, nsnull);
       aEvent->mReply.mRect =
-          nsRect::ToOutsidePixels(rect, mPresContext->AppUnitsPerDevPixel());
+          rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
       NS_ENSURE_SUCCESS(rv, rv);
       aEvent->mSucceeded = PR_TRUE;
       return NS_OK;
@@ -690,7 +690,7 @@ nsContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   aEvent->mReply.mRect =
-      nsRect::ToOutsidePixels(rect, mPresContext->AppUnitsPerDevPixel());
+      rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;
 }

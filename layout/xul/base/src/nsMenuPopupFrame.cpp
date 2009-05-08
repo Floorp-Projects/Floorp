@@ -1052,7 +1052,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
                              &screenRectPixels.width, &screenRectPixels.height);
     }
   }
-  nsRect screenRect = nsIntRect::ToAppUnits(screenRectPixels, presContext->AppUnitsPerDevPixel());
+  nsRect screenRect = screenRectPixels.ToAppUnits(presContext->AppUnitsPerDevPixel());
 
   // keep a 3 pixel margin to the right and bottom of the screen for the WinXP dropshadow
   screenRect.SizeBy(-nsPresContext::CSSPixelsToAppUnits(3),

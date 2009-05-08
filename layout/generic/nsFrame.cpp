@@ -870,7 +870,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   rect.IntersectRect(rect, aDirtyRect);
-  nsIntRect pxRect = nsRect::ToOutsidePixels(rect, mFrame->PresContext()->AppUnitsPerDevPixel());
+  nsIntRect pxRect = rect.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
   ctx->NewPath();
   ctx->Rectangle(gfxRect(pxRect.x, pxRect.y, pxRect.width, pxRect.height), PR_TRUE);
   ctx->Fill();
@@ -3608,7 +3608,7 @@ nsIntRect nsIFrame::GetScreenRectExternal() const
 
 nsIntRect nsIFrame::GetScreenRect() const
 {
-  return nsRect::ToNearestPixels(GetScreenRectInAppUnits(), PresContext()->AppUnitsPerDevPixel());
+  return GetScreenRectInAppUnits().ToNearestPixels(PresContext()->AppUnitsPerDevPixel());
 }
 
 // virtual
