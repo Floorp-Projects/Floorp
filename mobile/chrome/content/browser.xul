@@ -305,7 +305,7 @@
       </vbox>
       <deck id="panel-items" selectedIndex="2" flex="1">
         <vbox id="addons-container" flex="1">
-          <hbox id="addons-header">
+          <hbox id="addons-header" class="panel-header">
             <label value="&addonsHeader.label;"/>
           </hbox>
           <notificationbox id="addons-messages" flex="1">
@@ -331,10 +331,10 @@
         </vbox>
 
         <vbox id="downloads-container" flex="1">
-          <vbox id="downloads-header">
+          <vbox id="downloads-header" class="panel-header">
             <hbox align="center">
               <label value="&downloadsHeader.label;" flex="1"/>
-              <radiogroup id="downloads-sort-mode" oncommand="DownloadsView.toggleMode();">
+              <radiogroup id="downloads-sort-mode" class="toggle-dark" oncommand="DownloadsView.toggleMode();">
                 <radio label="&downloadsSortDate.label;" value="date" selected="true"/>
                 <radio label="&downloadsSortSite.label;" value="site"/>
                 <radio label="&downloadsSortName.label;" value="name"/>
