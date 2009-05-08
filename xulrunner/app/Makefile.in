@@ -87,10 +87,14 @@ CPPSRCS = nsXULRunnerApp.cpp
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 CPPSRCS += nsRegisterGREWin.cpp
 else
-ifneq (,$(filter OS2 Darwin,$(OS_ARCH)))
+ifeq (OS2,$(OS_ARCH))
+CPPSRCS += nsRegisterGREVoid.cpp
+else
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsRegisterGREVoid.cpp
 else
 CPPSRCS += nsRegisterGREUnix.cpp
+endif
 endif
 endif
 
@@ -104,7 +108,7 @@ TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
 ifndef MOZ_ENABLE_LIBXUL
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (bundle,$(MOZ_FS_LAYOUT))
 LIBS += $(DIST)/bin/XUL
 else
 EXTRA_DSO_LIBS += xul
@@ -206,7 +210,8 @@ LDFLAGS += /HEAP:0x40000
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINCE WINNT Darwin BeOS,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WINCE WINNT BeOS,$(OS_ARCH)))
+ifeq (unix, $(MOZ_FS_LAYOUT))
 
 xulrunner:: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)
 	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" \
@@ -221,6 +226,7 @@ install:: xulrunner
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += xulrunner
+endif
 endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
