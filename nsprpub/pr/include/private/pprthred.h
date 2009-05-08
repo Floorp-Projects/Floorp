@@ -313,16 +313,6 @@ NSPR_API(PRIntn) PR_GetMonitorEntryCount(PRMonitor *mon);
 NSPR_API(PRMonitor*) PR_CTestAndEnterMonitor(void *address);
 
 /*---------------------------------------------------------------------------
-** PLATFORM-SPECIFIC THREAD SYNCHRONIZATION FUNCTIONS
----------------------------------------------------------------------------*/
-#if defined(XP_MAC)
-
-NSPR_API(void) PR_Mac_WaitForAsyncNotify(PRIntervalTime timeout);
-NSPR_API(void) PR_Mac_PostAsyncNotify(PRThread *thread);
-
-#endif /* XP_MAC */
-
-/*---------------------------------------------------------------------------
 ** PLATFORM-SPECIFIC INITIALIZATION FUNCTIONS
 ---------------------------------------------------------------------------*/
 #if defined(IRIX)

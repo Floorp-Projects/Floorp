@@ -49,10 +49,6 @@
 #pragma warning(disable : 4101)
 #endif          
 
-#if defined(XP_MAC)
-#include <LowMem.h>
-#endif
-
 /* _pr_activeLock protects the following global variables */
 PRLock *_pr_activeLock;
 PRInt32 _pr_primordialExitCount;   /* In PR_Cleanup(), the primordial thread
@@ -98,10 +94,6 @@ static void _PR_UserRunThread(void);
 void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
     PRUintn maxPTDs)
 {
-#if defined(XP_MAC)
-#pragma unused (maxPTDs)
-#endif
-
     PRThread *thread;
     PRThreadStack *stack;
 
@@ -116,8 +108,6 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
 #else
 #if defined(SOLARIS) || defined (UNIXWARE) && defined (USR_SVR4_THREADS)
     stack->stackTop = (char*) &thread;
-#elif defined(XP_MAC)
-    stack->stackTop = (char*) LMGetCurStackBase();
 #else
     stack->stackTop = (char*) ((((long)&type + _pr_pageSize - 1)
                 >> _pr_pageShift) << _pr_pageShift);
@@ -923,9 +913,7 @@ void _PR_Schedule(void)
                 /*
                 * skip non-schedulable threads
                 */
-#if !defined(XP_MAC)
                 PR_ASSERT(!(thread->flags & _PR_IDLE_THREAD));
-#endif
                 if ((thread->no_sched) && (me != thread)){
                     thread = NULL;
                     continue;
@@ -1005,10 +993,6 @@ static PRThread *
 _PR_AttachThread(PRThreadType type, PRThreadPriority priority,
     PRThreadStack *stack)
 {
-#if defined(XP_MAC)
-#pragma unused (type)
-#endif
-
     PRThread *thread;
     char *mem;
 
@@ -1047,10 +1031,6 @@ _PR_NativeCreateThread(PRThreadType type,
                      PRUint32 stackSize,
                      PRUint32 flags)
 {
-#if defined(XP_MAC)
-#pragma unused (scope)
-#endif
-
     PRThread *thread;
 
     thread = _PR_AttachThread(type, priority, NULL);
@@ -1504,9 +1484,6 @@ PRThread* _PRI_AttachThread(PRThreadType type,
 PR_IMPLEMENT(PRThread*) PR_AttachThread(PRThreadType type,
     PRThreadPriority priority, PRThreadStack *stack)
 {
-#ifdef XP_MAC
-#pragma unused( type, priority, stack )
-#endif
     return PR_GetCurrentThread();
 }
 

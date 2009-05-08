@@ -65,10 +65,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-#endif
 PRIntn failed_already=0;
 PRIntn debug_mode;
 
@@ -163,12 +159,6 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
-#ifdef XP_MAC
-	SetupMacPrintfLog("joinuu.log");
-#endif
-
-	
-	
  /* main test */
     if (debug_mode) printf("User-User test\n");
     runTest(PR_LOCAL_THREAD, PR_LOCAL_THREAD);

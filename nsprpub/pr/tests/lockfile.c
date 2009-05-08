@@ -66,21 +66,11 @@
 #include "prthread.h"
 #include "prtypes.h"
 
-#ifndef XP_MAC
 #include "private/pprio.h"
-#else
-#include "pprio.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
 
 PRIntn failed_already=0;
 PRIntn debug_mode;
@@ -240,11 +230,6 @@ int main(int argc,  char **argv)
 	
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("lockfile.log");
-	debug_mode = 1;
-#endif
 
     if (argc > 1) loops = atoi(argv[1]);
     if (loops == 0) loops = 100;

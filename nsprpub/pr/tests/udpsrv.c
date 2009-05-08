@@ -495,10 +495,6 @@ int main(int argc, char **argv)
     PR_STDIO_INIT();
     output = PR_STDERR;
 
-#ifdef XP_MAC
-    SetupMacPrintfLog("udpsrv.log");
-#endif
-
     PR_SetConcurrency(4);
     
     /*

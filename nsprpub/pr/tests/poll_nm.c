@@ -63,17 +63,9 @@
 #include "prlog.h"
 #include "prprf.h"
 #include "prnetdb.h"
-#ifndef XP_MAC
 #include "obsolete/probslet.h"
-#else
-#include "probslet.h"
-#endif
 
-#ifndef XP_MAC
 #include "private/pprio.h"
-#else
-#include "pprio.h"
-#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -83,16 +75,6 @@ PRIntn failed_already=0;
 PRIntn debug_mode;
 
 #define NUM_ITERATIONS 5
-
-#ifdef XP_MAC
-int fprintf(FILE *stream, const char *fmt, ...)
-{
-PR_LogPrint(fmt);
-return 0;
-}
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
 
 static void PR_CALLBACK
 clientThreadFunc(void *arg)
@@ -165,11 +147,6 @@ int main(int argc, char **argv)
 	
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
-
-#ifdef XP_MAC
-	debug_mode = 1;
-	SetupMacPrintfLog("poll_nm.log");
-#endif
 
     if (debug_mode) {
 		printf("This program tests PR_Poll with sockets.\n");

@@ -66,9 +66,7 @@ void _PR_IntsOn(_PRCPU *cpu)
     PR_ASSERT(cpu);   /* Global threads don't have CPUs */
     PR_ASSERT(_PR_MD_GET_INTSOFF() > 0);
 	me = _PR_MD_CURRENT_THREAD();
-#if !defined(XP_MAC)
     PR_ASSERT(!(me->flags & _PR_IDLE_THREAD));
-#endif
 
     /*
     ** Process delayed interrupts. This logic is kinda scary because we
@@ -92,10 +90,8 @@ void _PR_IntsOn(_PRCPU *cpu)
             cpu->u.missed[i] = 0;
             for (it = _pr_interruptTable; it->name; it++) {
                 if (missed & it->missed_bit) {
-#ifndef XP_MAC
                     PR_LOG(_pr_sched_lm, PR_LOG_MIN,
                            ("IntsOn[0]: %s intr", it->name));
-#endif
                     (*it->handler)();
                 }
             }
@@ -230,9 +226,7 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
     PRCList *q;
 
     PR_ASSERT(me != suspendAllThread); 
-#if !defined(XP_MAC)
     PR_ASSERT(!(me->flags & _PR_IDLE_THREAD));
-#endif
     PR_ASSERT(lock != NULL);
 #ifdef _PR_GLOBAL_THREADS_ONLY 
     PR_ASSERT(lock->owner != me);
@@ -343,9 +337,7 @@ PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
     PR_ASSERT(lock != NULL);
     PR_ASSERT(lock->owner == me);
     PR_ASSERT(me != suspendAllThread); 
-#if !defined(XP_MAC)
     PR_ASSERT(!(me->flags & _PR_IDLE_THREAD));
-#endif
     if (lock->owner != me) {
         return PR_FAILURE;
     }

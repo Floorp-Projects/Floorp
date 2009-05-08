@@ -147,6 +147,7 @@ CSRCS =             \
 	prpollml.c		\
 	ranfile.c       \
 	randseed.c      \
+	reinit.c        \
 	rmdir.c			\
 	rwlocktest.c    \
 	sel_spd.c  		\
