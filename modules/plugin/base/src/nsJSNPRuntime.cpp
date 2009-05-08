@@ -1136,6 +1136,9 @@ GetNPObject(JSContext *cx, JSObject *obj)
   return (NPObject *)::JS_GetPrivate(cx, obj);
 }
 
+
+// Does not actually add a property because this is always followed by a
+// SetProperty call.
 static JSBool
 NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -1150,17 +1153,26 @@ NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
+  JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
+
+  if (hasProperty)
+    return JS_TRUE;
+
   // We must permit methods here since JS_DefineUCFunction() will add
   // the function as a property
-  if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id) &&
-      !npobj->_class->hasMethod(npobj, (NPIdentifier)id)) {
-    ThrowJSException(cx, "Trying to add unsupported property on scriptable "
-                     "plugin object!");
+  JSBool hasMethod = npobj->_class->hasMethod(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
+
+  if (!hasMethod) {
+    ThrowJSException(cx, "Trying to add unsupported property on NPObject!");
 
     return JS_FALSE;
   }
 
-  return ReportExceptionIfPending(cx);
+  return JS_TRUE;
 }
 
 static JSBool
@@ -1177,7 +1189,11 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
-  if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id))
+  JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
+
+  if (!hasProperty)
     return JS_TRUE;
 
   if (!npobj->_class->removeProperty(npobj, (NPIdentifier)id))
@@ -1210,9 +1226,12 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(npp);
 
-  if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id)) {
-    ThrowJSException(cx, "Trying to set unsupported property on scriptable "
-                     "plugin object!");
+  JSBool hasProperty = !npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
+
+  if (!hasProperty) {
+    ThrowJSException(cx, "Trying to set unsupported property on NPObject!");
 
     return JS_FALSE;
   }
@@ -1225,18 +1244,17 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   JSBool ok = npobj->_class->setProperty(npobj, (NPIdentifier)id, &npv);
-
-  // Release the variant
-  _releasevariantvalue(&npv);
+  _releasevariantvalue(&npv); // Release the variant
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
 
   if (!ok) {
-    ThrowJSException(cx, "Error setting property on scriptable plugin "
-                     "object!");
+    ThrowJSException(cx, "Error setting property on NPObject!");
 
     return JS_FALSE;
   }
 
-  return ReportExceptionIfPending(cx);
+  return JS_TRUE;
 }
 
 static JSBool
@@ -1263,9 +1281,14 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   PluginDestructionGuard pdg(npp);
 
   PRBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
-  PRBool hasMethod = npobj->_class->hasMethod(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
 
-  // To support ambiguous members, we return NPObject Member class here.
+  PRBool hasMethod = npobj->_class->hasMethod(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
+
+  // We return NPObject Member class here to support ambiguous members.
   if (hasProperty && hasMethod)
     return CreateNPObjectMember(npp, cx, obj, npobj, id, vp);
 
@@ -1273,22 +1296,16 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     NPVariant npv;
     VOID_TO_NPVARIANT(npv);
 
-    if (!npobj->_class->getProperty(npobj, (NPIdentifier)id, &npv)) {
-      ThrowJSException(cx, "Error setting property on scriptable plugin "
-                       "object!");
+    if (npobj->_class->getProperty(npobj, (NPIdentifier)id, &npv))
+      *vp = NPVariantToJSVal(npp, cx, &npv);
 
-      return JS_FALSE;
-    }
-
-    *vp = NPVariantToJSVal(npp, cx, &npv);
-
-    // *vp now owns the value, release our reference.
     _releasevariantvalue(&npv);
 
-    return JS_TRUE;
+    if (!ReportExceptionIfPending(cx))
+      return JS_FALSE;
   }
 
-  return ReportExceptionIfPending(cx);
+  return JS_TRUE;
 }
 
 static JSBool
