@@ -462,6 +462,9 @@ globalSlotHash(JSContext* cx, unsigned slot)
 
 Oracle::Oracle()
 {
+    /* Grow the oracle bitsets to their (fixed) size here, once. */
+    _stackDontDemote.set(&gc, ORACLE_SIZE-1);
+    _globalDontDemote.set(&gc, ORACLE_SIZE-1);
     clear();
 }
 
