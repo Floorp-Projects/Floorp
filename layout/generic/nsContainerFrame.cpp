@@ -989,6 +989,11 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
   nsOverflowContinuationTracker tracker(aPresContext, this, PR_FALSE, PR_FALSE);
   for (nsIFrame* frame = overflowContainers->FirstChild(); frame;
        frame = frame->GetNextSibling()) {
+    if (frame->GetPrevInFlow()->GetParent() != GetPrevInFlow()) {
+      // frame's prevInFlow has moved, skip reflowing this frame;
+      // it will get reflowed once it's been placed
+      continue;
+    }
     if (NS_SUBTREE_DIRTY(frame)) {
       // Get prev-in-flow
       nsIFrame* prevInFlow = frame->GetPrevInFlow();
