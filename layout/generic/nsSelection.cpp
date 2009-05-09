@@ -3623,8 +3623,9 @@ nsTypedSelection::FindInsertionPoint(
 // nsTypedSelection::SubtractRange
 //
 //    A helper function that subtracts aSubtract from aRange, and adds
-//    0 or 1 RangeData objects representing the remaining non-overlapping
-//    difference to aOutput
+//    1 or 2 RangeData objects representing the remaining non-overlapping
+//    difference to aOutput. It is assumed that the caller has checked that
+//    aRange and aSubtract do indeed overlap
 
 nsresult
 nsTypedSelection::SubtractRange(RangeData* aRange, nsIRange* aSubtract,
