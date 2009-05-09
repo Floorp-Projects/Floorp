@@ -186,7 +186,7 @@ verbose_only( extern const char* shiftNames[]; )
     void underrunProtect(int bytes);                                    \
     void nativePageReset();                                             \
     void nativePageSetup();                                             \
-    void asm_quad_nochk(Register, const int32_t*);                      \
+    void asm_quad_nochk(Register, int32_t, int32_t);                    \
     void asm_add_imm(Register, Register, int32_t, int stat = 0);        \
     void asm_sub_imm(Register, Register, int32_t, int stat = 0);        \
     void asm_cmpi(Register, int32_t imm);                               \

@@ -132,7 +132,7 @@ namespace nanojit
 
 	int32_t LirBuffer::insCount() 
 	{
-		// doesn't include embedded constants nor LIR_skip payload
+        // Doesn't include LIR_skip payload or LIR_call arg slots.
 		return _stats.lir;
 	}
 
@@ -159,96 +159,33 @@ namespace nanojit
 
 	void LirBufWriter::ensureRoom(uint32_t count)
 	{
-		NanoAssert(count <= NJ_PAGE_SIZE - (LIR_FAR_SLOTS + 1) * sizeof(LIns));
+		NanoAssert(count <= NJ_PAGE_SIZE - sizeof(LIns));
 		LInsp before = _buf->next();
-		LInsp after = before+count+LIR_FAR_SLOTS;
+		LInsp after = before+count+1;
 		// transition to the next page?
 		if (!samepage(before,after))
 		{
 			// we don't want this to fail, so we always have a page in reserve
 			NanoAssert(_buf->_nextPage);
 			_buf->_unused = &_buf->_nextPage->lir[0];	
-			// link LIR stream back to prior instruction (careful insLink relies on _unused...)
-			insLinkTo(LIR_skip, before-1);
+            // link LIR stream back to prior instruction (careful,
+            // insSkipWithoutBuffer relies on _unused...)
+            insSkipWithoutBuffer(before-1);
 			_buf->_nextPage = _buf->pageAlloc();
 			NanoAssert(_buf->_nextPage || _buf->_noMem);
 		}
 	}
 
-	LInsp LirBufWriter::insLinkTo(LOpcode op, LInsp to)
+    LInsp LirBufWriter::insSkipWithoutBuffer(LInsp to)
 	{
 		LInsp l = _buf->next();
-		NanoAssert(samepage(l,l+LIR_FAR_SLOTS)); // must have called ensureRoom()
-        if (can24bReach(l,to))
-		{
-		    NanoStaticAssert(LIR_nearskip == LIR_skip - 1);
-		    NanoStaticAssert(LIR_neartramp == LIR_tramp - 1);
-            l->initOpcode(LOpcode(op-1)); // nearskip or neartramp
-            l->setimm24(to-l);
-            _buf->commit(1);
-			_buf->_stats.lir++;
-        }
-        else
-		{
-			l = insLinkToFar(op,to);
-		}
+        NanoAssert(samepage(l,l+1));    // make sure we have room
+        l->initOpcodeAndClearResv(LIR_skip);
+        l->setOprnd1(to);
+        _buf->commit(1);
+        _buf->_stats.lir++;
 		return l;
-	}
-
-	LInsp LirBufWriter::insLinkToFar(LOpcode op, LInsp to)
-	{
-		LirFarIns* ov = (LirFarIns*) _buf->next();
-		ov->v = to;
-		ov->i.initOpcode(op);
-		_buf->commit(LIR_FAR_SLOTS);
-		_buf->_stats.lir++;
-
-		NanoAssert( (LInsp)(ov+1) == _buf->next() );
-		return &(ov->i);
-	}
-	
-	void LirBufWriter::makeReachable(LInsp& o, LInsp from)
-	{
-		if (o && !can8bReach(from,o))
-		{
-			if (o == _buf->sp && spref && can8bReach(from, spref)) {
-				o = spref;
-				return;
-			}
-			if (o == _buf->rp && rpref && can8bReach(from, rpref)) {
-				o = rpref;
-				return;
-			}
-
-			// need a trampoline to get to from
-			LInsp tramp = insLinkTo(LIR_tramp, o);  // will produce neartramp if possible
-			NanoAssert( tramp->ref() == o && samepage(from,tramp) );
-			if (o == _buf->sp)
-				spref = tramp;
-			else if (o == _buf->rp)
-				rpref = tramp;
-			o = tramp;
-		}
-	}
-
-	void LirBufWriter::prepFor(LInsp& i1, LInsp& i2, LInsp& i3)
-	{
-		uint32_t i = 0;  // count of operands
-		i += (i1) ? 1 : 0;
-		i += (i2) ? 1 : 0;
-		i += (i3) ? 1 : 0;
-		
-		uint32_t count = (LIR_FAR_SLOTS*i)+1;  // count of LIns if all operands require tramp
-		ensureRoom(count);
-		NanoAssert( samepage(_buf->next()+count,_buf->next()) );
-		
-		// guaranteed space for far tramps if necc.
-		LInsp from = _buf->next()+count;
-		makeReachable(i1, from);
-		makeReachable(i2, from);
-		makeReachable(i3, from);
-		NanoAssert(from>i1 && from>i2 && from>i3);
-	}
+    }
 
 	LInsp LirBuffer::commit(uint32_t count)
 	{
@@ -256,48 +193,15 @@ namespace nanojit
 		return _unused += count;
 	}
 	
-	uint32_t LIns::reference(LIns *r) const
+    LInsp LirBufWriter::insStorei(LInsp val, LInsp base, int32_t d)
 	{
-		int delta = this-r-1;
-		NanoAssert(isU8(delta));
-		return delta;
-	}
-
-    LIns* LIns::deref(int32_t off) const
-    {
-		LInsp i = (LInsp) this-1 - off;
-        while (i && i->isTramp()) {
-            i = i->ref();
-        }
-		return i;
-    }
-
-	LInsp LirBufWriter::insStore(LInsp val, LInsp base, LInsp off)
-	{
-		LOpcode op = val->isQuad() ? LIR_stq : LIR_st;
-		NanoAssert(val && base && off);
-		prepFor(val, base, off);
+        ensureRoom(1);
+        LOpcode op = val->isQuad() ? LIR_stqi : LIR_sti;
 		LInsp l = _buf->next();
-		l->initOpcode(op);
+        l->initOpcodeAndClearResv(op);
 		l->setOprnd1(val);
 		l->setOprnd2(base);
-		l->setOprnd3(off);
-		_buf->commit(1);
-		_buf->_stats.lir++;
-		return l;
-	}
-	
-	LInsp LirBufWriter::insStorei(LInsp val, LInsp base, int32_t d)
-	{
-		LOpcode op = val->isQuad() ? LIR_stqi : LIR_sti;
-		NanoAssert(val && base && isS8(d));
-		LInsp u3=0;
-		prepFor(val, base, u3);
-		LInsp l = _buf->next();
-		l->initOpcode(op);
-		l->setOprnd1(val);
-		l->setOprnd2(base);
-		l->setDisp(int8_t(d));
+        l->setDisp(d);
 		_buf->commit(1);
 		_buf->_stats.lir++;
 		return l;
@@ -308,7 +212,7 @@ namespace nanojit
 		ensureRoom(1);
         LirBuffer *b = this->_buf;
 		LInsp l = b->next();
-		l->initOpcode(op);
+        l->initOpcodeAndClearResv(op);
 		b->commit(1);
 		b->_stats.lir++;
 		return l;
@@ -316,10 +220,9 @@ namespace nanojit
 	
 	LInsp LirBufWriter::ins1(LOpcode op, LInsp o1)
 	{
-		LInsp u2=0,u3=0;
-		prepFor(o1,u2,u3);
+        ensureRoom(1);
 		LInsp l = _buf->next();
-		l->initOpcode(op);
+        l->initOpcodeAndClearResv(op);
 		l->setOprnd1(o1);
 		_buf->commit(1);
 		_buf->_stats.lir++;
@@ -328,10 +231,9 @@ namespace nanojit
 	
 	LInsp LirBufWriter::ins2(LOpcode op, LInsp o1, LInsp o2)
 	{
-		LInsp u3=0;
-		prepFor(o1,o2,u3);
+        ensureRoom(1);
 		LInsp l = _buf->next();
-		l->initOpcode(op);
+        l->initOpcodeAndClearResv(op);
 		l->setOprnd1(o1);
 		l->setOprnd2(o2);		
 		_buf->commit(1);
@@ -351,13 +253,8 @@ namespace nanojit
 
 	LInsp LirBufWriter::insBranch(LOpcode op, LInsp condition, LInsp toLabel)
 	{
-		if (!toLabel)
-			toLabel = insFar(LIR_tramp,0); //empty tramp
-        if (!condition) {
-            // unconditional, just point to something
-            condition = toLabel;
-        }
-	    return ins2(op,condition,toLabel);
+        NanoAssert(condition);
+        return ins2(op, condition, toLabel);
 	}
 
     LInsp LirBufWriter::insAlloc(int32_t size)
@@ -366,8 +263,8 @@ namespace nanojit
         NanoAssert(isU16(size));
 		ensureRoom(1);
 		LInsp l = _buf->next();
-		l->initOpcode(LIR_alloc);
-		l->i.imm16 = uint16_t(size);
+        l->initOpcodeAndClearResv(LIR_alloc);
+        l->i.imm32 = size;
 		_buf->commit(1);
 		_buf->_stats.lir++;
 		return l;
@@ -378,10 +275,11 @@ namespace nanojit
 		ensureRoom(1);
         LirBuffer *b = this->_buf;
 		LInsp l = b->next();
-		l->initOpcode(LIR_param);
+        l->initOpcodeAndClearResv(LIR_param);
         NanoAssert(isU8(arg) && isU8(kind));
 		l->c.imm8a = arg;
         l->c.imm8b = kind;
+        l->c.ci = NULL;
         if (kind) {
             NanoAssert(arg < NumSavedRegs);
             b->savedRegs[arg] = l;
@@ -392,58 +290,38 @@ namespace nanojit
 		return l;
     }
 	
-	LInsp LirBufWriter::insFar(LOpcode op, LInsp target)
-	{
-		ensureRoom(LIR_FAR_SLOTS);  // make room for it
-		LInsp l = insLinkToFar(op, target);
-		_buf->_stats.lir++;
-		return l;
-	}
-	
 	LInsp LirBufWriter::insImm(int32_t imm)
 	{
-		if (isS16(imm)) {
-			ensureRoom(1);
-			LInsp l = _buf->next();
-			l->initOpcode(LIR_short);
-			l->setimm16(imm);
-			_buf->commit(1);
-			_buf->_stats.lir++;
-			return l;
-		} else {
-			ensureRoom(LIR_IMM32_SLOTS);
-			LirImm32Ins* l = (LirImm32Ins*)_buf->next();
-			l->v = imm;
-			l->i.initOpcode(LIR_int);
-			_buf->commit(LIR_IMM32_SLOTS);	
-			_buf->_stats.lir++;
-			NanoAssert((LInsp)(l+1)==_buf->next());
-			return &(l->i);
-		}
+        ensureRoom(1);
+        LInsp l = _buf->next();
+        l->initOpcodeAndClearResv(LIR_int);
+        l->setimm32(imm);
+        _buf->commit(1);
+        _buf->_stats.lir++;
+        return l;
 	}
 	
 	LInsp LirBufWriter::insImmq(uint64_t imm)
 	{
-		ensureRoom(LIR_IMM64_SLOTS);
-		LirImm64Ins* l = (LirImm64Ins*)_buf->next();
-		l->v[0] = int32_t(imm);
-		l->v[1] = int32_t(imm>>32);
-		l->i.initOpcode(LIR_quad);
-		_buf->commit(LIR_IMM64_SLOTS);	
+        ensureRoom(1);
+        LInsp l = _buf->next();
+        l->initOpcodeAndClearResv(LIR_quad);
+        l->i64.imm64_0 = int32_t(imm);
+        l->i64.imm64_1 = int32_t(imm>>32);
+        _buf->commit(1);
 		_buf->_stats.lir++;
-		NanoAssert((LInsp)(l+1)==_buf->next());
-		return &(l->i);
+        return l;
 	}
 
-	LInsp LirBufWriter::skip(size_t size)
+	LInsp LirBufWriter::insSkip(size_t size)
 	{
-        const uint32_t n = (size+sizeof(LIns)-1)/sizeof(LIns);
-		ensureRoom(n); // make room for it
- 		LInsp last = _buf->next()-1;  // safe, next()-1+n guaranteed to be on same page
-		_buf->commit(n);
+        const uint32_t nSlots = (size+sizeof(LIns)-1)/sizeof(LIns);
+        ensureRoom(nSlots); // make room for it
+        LInsp last = _buf->next()-1;  // safe, next()-1+nSlots guaranteed to be on same page
+        _buf->commit(nSlots);
 		NanoAssert(samepage(last,_buf->next()));
-		ensureRoom(LIR_FAR_SLOTS);
-		return insLinkTo(LIR_skip, last);
+        ensureRoom(1);
+        return insSkipWithoutBuffer(last);
 	}
 
 	LInsp LirReader::read()	
@@ -468,29 +346,13 @@ namespace nanojit
 				case LIR_fcall:
                 case LIR_calli:
                 case LIR_fcalli:
-					NanoAssert( samepage(i,i+1-i->callInsWords()) );
-					i -= i->callInsWords();
+                    NanoAssert( samepage(i, i + 1 - i->callInsSlots()) );
+                    i -= i->callInsSlots();
 					break;
 
 				case LIR_skip:
-				case LIR_nearskip:
-					NanoAssert(i->ref() != i);
-					i = i->ref();
-					break;
-
-                case LIR_tramp:
-                    NanoAssert(samepage(i,i+1-LIR_FAR_SLOTS));
-					i -= LIR_FAR_SLOTS;
-                    break;
-
-				case LIR_int:
-                    NanoAssert(samepage(i,i+1-LIR_IMM32_SLOTS));
-					i -= LIR_IMM32_SLOTS;					
-					break;
-
-				case LIR_quad:
-                    NanoAssert(samepage(i,i+1-LIR_IMM64_SLOTS));
-					i -= LIR_IMM64_SLOTS;					
+                    NanoAssert(i->oprnd1() != i);
+                    i = i->oprnd1();
 					break;
 
 				case LIR_start:
@@ -499,7 +361,7 @@ namespace nanojit
 			}
 			iop = i->opcode();
 		}
-		while (is_trace_skip_tramp(iop)||iop==LIR_2);
+        while (iop==LIR_skip || iop==LIR_2);
 		_i = i;
 		return cur;
 	}
@@ -549,7 +411,7 @@ namespace nanojit
     
 	bool LIns::isconstval(int32_t val) const
 	{
-		return isconst() && constval()==val;
+        return isconst() && imm32()==val;
 	}
 
 	bool LIns::isconstq() const
@@ -576,66 +438,18 @@ namespace nanojit
 		return nanojit::isCse(u.code) || (isCall() && callInfo()->_cse);
     }
 
-	void LIns::setimm16(int32_t x)
+    void LIns::initOpcodeAndClearResv(LOpcode op)
 	{
-		NanoAssert(isS16(x));
-		i.imm16 = int16_t(x);
+        NanoAssert(4*sizeof(void*) == sizeof(LIns));
+        u.code = op;
+        u.resv = 0;     // have to zero this;  the Assembler relies on it
 	}
 
-	void LIns::setimm24(int32_t x)
-	{
-		NanoAssert(isS24(x));
-		t.imm24 = x;
-	}
-
-	void LIns::setresv(uint32_t resv)
-	{
-		NanoAssert(isU8(resv));
-		g.resv = resv;
-	}
-
-	void LIns::initOpcode(LOpcode op)
-	{
-		i.code = op;
-		i.imm16 = 0;
-        i.resv = 0;
-	}
-
-	void LIns::setOprnd1(LInsp r)
-	{
-		u.oprnd_1 = reference(r);
-	}
-
-	void LIns::setOprnd2(LInsp r)
-	{
-		u.oprnd_2 = reference(r);
-	}
-
-	void LIns::setOprnd3(LInsp r)
-	{
-		u.oprnd_3 = reference(r);
-	}
-
-    void LIns::setDisp(int8_t d)
+    void LIns::setTarget(LInsp label)
     {
-        sti.disp = d;
-    }
-
-    LIns **LIns::targetAddr() {
-		NanoAssert(isBranch());
-		LInsp i = (LInsp) this-1 - u.oprnd_2;
-        NanoAssert(i->isTramp());
-        LInsp ref;
-        while ((ref=i->ref()) != 0 && ref->isTramp())
-            i = ref;
-		NanoAssert(i->isop(LIR_tramp));
-		LirFarIns* ov = (LirFarIns*)(i-LIR_FAR_SLOTS+1);
-		return &(ov->v);
-    }
-
-    void LIns::target(LInsp label) {
         NanoAssert(label && label->isop(LIR_label));
-        *(targetAddr()) = label;
+		NanoAssert(isBranch());
+        setOprnd2(label);
 	}
 
 	LInsp LIns::getTarget()
@@ -644,103 +458,69 @@ namespace nanojit
         return oprnd2();
 	}
 
-	LInsp	LIns::oprnd1() const	
-	{
-        return deref(u.oprnd_1);
-	}
-	
-	LInsp	LIns::oprnd2() const
-	{ 
-        return deref(u.oprnd_2);
-	}
-
-	LInsp	LIns::oprnd3() const
-	{ 
-        return deref(u.oprnd_3);
-	}
-
     void *LIns::payload() const
     {
-        NanoAssert(opcode()==LIR_skip || opcode()==LIR_nearskip);
-        return (void*) (ref()+1);
+        NanoAssert(isop(LIR_skip));
+        return (void*) (oprnd1()+1);
     }
 
-	LIns* LIns::ref() const	
-	{ 
-		LIns const *r = 0;
-		if (t.code&1)
-			r = this + t.imm24;
-		else
-		{
-			LirFarIns* l = (LirFarIns*)(this-LIR_FAR_SLOTS+1);
-			r = l->v;
-		}
-		return (const LInsp)r;
-	}
-
-	int32_t LIns::imm32() const	
-	{ 
-		LirImm32Ins* l = (LirImm32Ins*)(this-LIR_IMM32_SLOTS+1);
-		return l->v; 
-	}
-
-	uint64_t LIns::constvalq() const
+    uint64_t LIns::imm64() const
 	{
-		LirImm64Ins* l = (LirImm64Ins*)(this-LIR_IMM64_SLOTS+1);
     #ifdef AVMPLUS_UNALIGNED_ACCESS
-        int* ptr = (int*)l->v;
-        return *(const uint64_t*)ptr;
+        return *(const uint64_t*)i64.imm32;
     #else
         union { uint64_t tmp; int32_t dst[2]; } u;
 		#ifdef AVMPLUS_BIG_ENDIAN
-        u.dst[0] = l->v[1];
-        u.dst[1] = l->v[0];
+        u.dst[0] = i64.imm64_1;
+        u.dst[1] = i64.imm64_0;
 		#else
-        u.dst[0] = l->v[0];
-        u.dst[1] = l->v[1];
+        u.dst[0] = i64.imm64_0;
+        u.dst[1] = i64.imm64_1;
 		#endif
         return u.tmp;
     #endif
 	}
 
-	double LIns::constvalf() const
+    double LIns::imm64f() const
 	{
-		LirImm64Ins* l = (LirImm64Ins*)(this-LIR_IMM64_SLOTS+1);
 		NanoAssert(isconstq());
 	#ifdef AVMPLUS_UNALIGNED_ACCESS
-        int* ptr = (int*)l->v;
-		return *(const double*)ptr;
+        return *(const double*)i64.imm32;
 	#else
 		union { uint32_t dst[2]; double tmpf; } u;
 		#ifdef AVMPLUS_BIG_ENDIAN
-		u.dst[0] = l->v[1];
-		u.dst[1] = l->v[0];
+        u.dst[0] = i64.imm64_1;
+        u.dst[1] = i64.imm64_0;
 		#else
-		u.dst[0] = l->v[0];
-		u.dst[1] = l->v[1];
+        u.dst[0] = i64.imm64_0;
+        u.dst[1] = i64.imm64_1;
 		#endif
 		return u.tmpf;
 	#endif
 	}
 
-	size_t LIns::callInsWords() const
+    inline uint32_t argSlots(uint32_t argc) {
+        NanoAssert(4*sizeof(void*) == sizeof(LIns));
+        return (argc + 3) / 4;          // we can fit four args per slot
+    }
+
+    size_t LIns::callInsSlots() const
 	{
-		return LIR_CALL_SLOTS + argwords(argc());
+        return argSlots(argc()) + 1;
 	}
 
 	const CallInfo* LIns::callInfo() const
 	{
-		LirCallIns* l = (LirCallIns*)(this-LIR_CALL_SLOTS+1);
-		return l->ci; 
+        return c.ci;
 	}
 
-	// index args in r-l order.  arg(0) is rightmost arg
-	LIns* LIns::arg(uint32_t i) 
+    // Index args in r-l order.  arg(0) is rightmost arg.
+    // Nb: this must be kept in sync with insCall().
+    LInsp LIns::arg(uint32_t i) 
 	{
-		NanoAssert(i < argc());
-		LirCallIns* l = (LirCallIns*)(this-LIR_CALL_SLOTS+1);
-		uint8_t* offs = (uint8_t*)l - (i+1);
-		return deref(*offs);
+        NanoAssert(i < argc());
+        LInsp* offs = (LInsp*)this - (i+1);
+        return *offs;
 	}
 
     LIns* LirWriter::ins2i(LOpcode v, LIns* oprnd1, int32_t imm)
@@ -751,7 +531,7 @@ namespace nanojit
     bool insIsS16(LInsp i)
     {
         if (i->isconst()) {
-            int c = i->constval();
+            int c = i->imm32();
             return isS16(c);
         }
         if (i->isop(LIR_cmov) || i->isop(LIR_qcmov)) {
@@ -768,18 +548,18 @@ namespace nanojit
 	{
 		if (v == LIR_qlo) {
 			if (i->isconstq())
-				return insImm(int32_t(i->constvalq()));
+				return insImm(int32_t(i->imm64()));
 			if (i->isop(LIR_qjoin))
 				return i->oprnd1();
 		}
 		else if (v == LIR_qhi) {
 			if (i->isconstq())
-				return insImm(int32_t(i->constvalq()>>32));
+				return insImm(int32_t(i->imm64()>>32));
 			if (i->isop(LIR_qjoin))
 				return i->oprnd2();
 		}
 		else if (i->isconst()) {
-			int32_t c = i->constval();
+			int32_t c = i->imm32();
 			if (v == LIR_neg)
 				return insImm(-c);
 			if (v == LIR_not)
@@ -792,10 +572,10 @@ namespace nanojit
         /* [ed 8.27.08] this causes a big slowdown in gameoflife.as.  why?
         else if (i->isconst()) {
             if (v == LIR_i2f) {
-                return insImmf(i->constval());
+                return insImmf(i->imm32());
             }
             else if (v == LIR_u2f) {
-                return insImmf((uint32_t)i->constval());
+                return insImmf((uint32_t)i->imm32());
             }
         }*/
 
@@ -815,7 +595,7 @@ namespace nanojit
 			}
 			if (oprnd1->isconst()) {
 			    // const ? x : y => return x or y depending on const
-			    return oprnd1->constval() ? oprnd2->oprnd1() : oprnd2->oprnd2();
+			    return oprnd1->imm32() ? oprnd2->oprnd1() : oprnd2->oprnd2();
 			}
 		}
 		if (oprnd1 == oprnd2)
@@ -832,8 +612,8 @@ namespace nanojit
 		}
 		if (oprnd1->isconst() && oprnd2->isconst())
 		{
-			int32_t c1 = oprnd1->constval();
-			int32_t c2 = oprnd2->constval();
+			int32_t c1 = oprnd1->imm32();
+			int32_t c2 = oprnd2->imm32();
 			double d;
 			int32_t r;
 			if (v == LIR_qjoin) {
@@ -894,8 +674,8 @@ namespace nanojit
 		}
 		else if (oprnd1->isconstq() && oprnd2->isconstq())
 		{
-			double c1 = oprnd1->constvalf();
-			double c2 = oprnd2->constvalf();
+			double c1 = oprnd1->imm64f();
+			double c2 = oprnd2->imm64f();
 			switch (v) {
 			case LIR_feq:
 				return insImm(c1 == c2);
@@ -946,16 +726,16 @@ namespace nanojit
 
 		if (oprnd2->isconst())
 		{
-			int c = oprnd2->constval();
+			int c = oprnd2->imm32();
 			if (v == LIR_add && oprnd1->isop(LIR_add) && oprnd1->oprnd2()->isconst()) {
 				// add(add(x,c1),c2) => add(x,c1+c2)
-				c += oprnd1->oprnd2()->constval();
+				c += oprnd1->oprnd2()->imm32();
 				oprnd2 = insImm(c);
 				oprnd1 = oprnd1->oprnd1();
 			}
 			else if (v == LIR_sub && oprnd1->isop(LIR_add) && oprnd1->oprnd2()->isconst()) {
 				// sub(add(x,c1),c2) => add(x,c1-c2)
-				c = oprnd1->oprnd2()->constval() - c;
+				c = oprnd1->oprnd2()->imm32() - c;
 				oprnd2 = insImm(c);
 				oprnd1 = oprnd1->oprnd1();
 				v = LIR_add;
@@ -972,8 +752,8 @@ namespace nanojit
 					LInsp a = oprnd1->oprnd2()->oprnd1();
 					LInsp b = oprnd1->oprnd2()->oprnd2();
 					if (a->isconst() && b->isconst()) {
-						bool a_lt = uint32_t(a->constval()) < uint32_t(oprnd2->constval());
-						bool b_lt = uint32_t(b->constval()) < uint32_t(oprnd2->constval());
+						bool a_lt = uint32_t(a->imm32()) < uint32_t(oprnd2->imm32());
+						bool b_lt = uint32_t(b->imm32()) < uint32_t(oprnd2->imm32());
 						if (a_lt == b_lt)
 							return insImm(a_lt);
 					}
@@ -989,7 +769,7 @@ namespace nanojit
 					return oprnd2;
 				else if (v == LIR_eq && oprnd1->isop(LIR_or) && 
 					oprnd1->oprnd2()->isconst() &&
-					oprnd1->oprnd2()->constval() != 0) {
+					oprnd1->oprnd2()->imm32() != 0) {
 					// (x or c) != 0 if c != 0
 					return insImm(0);
 				}
@@ -1020,7 +800,7 @@ namespace nanojit
 	{
 		if (v == LIR_xt || v == LIR_xf) {
 			if (c->isconst()) {
-				if ((v == LIR_xt && !c->constval()) || (v == LIR_xf && c->constval())) {
+				if ((v == LIR_xt && !c->imm32()) || (v == LIR_xf && c->imm32())) {
 					return 0; // no guard needed
 				}
 				else {
@@ -1069,12 +849,6 @@ namespace nanojit
 	{
 		return insLoad(op, base, insImm(disp));
 	}
-
-    LIns* LirWriter::store(LInsp value, LInsp base, int32_t d)
-    {
-		return isS8(d) ? insStorei(value, base, d)
-			: insStore(value, base, insImm(d));
-    }
 
 	LIns* LirWriter::ins_eq0(LIns* oprnd1)
 	{
@@ -1127,7 +901,7 @@ namespace nanojit
 
     LIns* LirBufWriter::insCall(const CallInfo *ci, LInsp args[])
 	{
-		static const LOpcode k_callmap[] = { LIR_call, LIR_fcall, LIR_call, LIR_callh };
+		static const LOpcode k_callmap[]  = { LIR_call,  LIR_fcall,  LIR_call,  LIR_callh };
 		static const LOpcode k_callimap[] = { LIR_calli, LIR_fcalli, LIR_calli, LIR_skip };
 
 		uint32_t argt = ci->_argtypes;
@@ -1142,60 +916,48 @@ namespace nanojit
 				op = LIR_callh;
 		}
 
-		//
-		// An example of the what we're trying to serialize:
-		//
-		// byte                                             word
-		// ----                                             ----
-		//    N  [ arg tramp #0 ------------------------ ]  K
-		//  N+4  [ arg tramp #1 ------------------------ ]  K+1
-		//  N+8  [ arg tramp #2 ------------------------ ]  K+2
-		// N+12  [ arg tramp #3 ------------------------ ]  K+3
-		// N+16  [ argoff3 | argoff2 | argoff1 | argoff0 ]  K+4
-		// N+20  [ CallInfo* --------------------------- ]  K+5
-		// N+24  [ LIR_call ---------| imm8a=0 | imm8b=4 ]  K+6
-		//
-		// In this example:
-		//    32 bit words
-		//    'argc' = 4
-		//    'words' = argwords(argc) = 1  (word K+4       )
-		//    'LIR_CALL_SLOTS' = 2          (words K+5 - K+6)
-		//    'insSz' = 1+2 = 3             (words K+4 - K+6)
-		//    'from' = next + (insSz - 1)   (word K+6       )
-		//
+        // An example of what we're trying to serialize (for a 32-bit machine):
+        //
+        // byte                                             slot
+        // ----                                             ----
+        // N     [ arg operand #3 ----------------------    K
+        // N+4     arg operand #2 ----------------------
+        // N+8     arg operand #1 ----------------------
+        // N+12    arg operand #0 ---------------------- ]
+        // N+16  [ code=LIR_call | resv | (pad16) ------    K+1
+        //         imm8a | (pad24) ---------------------
+        //         imm8b | (pad24) ---------------------
+        //         ci ---------------------------------- ]
+        //
+        // In this example:
+        //    'argc' = 4
+        //    argSlots(argc) = 1
 
 		NanoAssert(argc <= (int)MAXARGS);
-		uint32_t words = argwords(argc);
-		int32_t insSz = words + LIR_CALL_SLOTS; // words need for offsets + size of instruction
-		ensureRoom(argc * LIR_FAR_SLOTS + insSz);  // argc=# possible tramps for args
+        int32_t nSlots = argSlots(argc) + 1;
+        ensureRoom(nSlots);
 
-		// Argument deltas are calculated relative to the final LIns,
-		// which is the last word in the cluster.
-		LInsp from = _buf->next() + argc * LIR_FAR_SLOTS + insSz - 1; 
-		for (int32_t i=0; i < argc; i++)
-			makeReachable(args[i], from);
+        // Skip slots needed for call parameters.
+        LInsp l = _buf->next() + argSlots(argc);
 
-		// skip 'words' needed for call parameters
-		LirCallIns *l = (LirCallIns*) (_buf->next()+words);
-		l->ci = ci;
+        // Call parameters laid in reverse order.
+        // Nb: this must be kept in sync with arg().
+        LInsp* offs = (LInsp*)l;
+        for (int32_t i=0; i < argc; i++)
+            *--offs = args[i];
+        NanoAssert((LInsp)offs >= _buf->next());
 
-		// call parameters laid in reverse order
-		uint8_t* offs = (uint8_t*)l;
-		for (int32_t i=0; i < argc; i++)
-			*--offs = (uint8_t) l->i.reference(args[i]);
-		NanoAssert((LInsp)offs>=_buf->next());
-		
 #ifndef NANOJIT_64BIT
-		l->i.initOpcode(op==LIR_callh ? LIR_call : op);
+        l->initOpcodeAndClearResv(op==LIR_callh ? LIR_call : op);
 #else
-		l->i.initOpcode(op);
+        l->initOpcodeAndClearResv(op);
 #endif
-		l->i.c.imm8a = 0;
-		l->i.c.imm8b = argc;
-		_buf->commit(insSz);	
+        l->c.imm8a = 0;
+        l->c.imm8b = argc;
+        l->c.ci = ci;
+        _buf->commit(nSlots);
 		_buf->_stats.lir++;
-		NanoAssert((LInsp)(l+1)==_buf->next());
-		return &(l->i);
+        return l;
 	}
 
     using namespace avmplus;
@@ -1326,12 +1088,10 @@ namespace nanojit
 		const LOpcode op = i->opcode();
 		switch (op)
 		{
-			case LIR_short:
-				return hashimm(i->imm16());
 			case LIR_int:
 				return hashimm(i->imm32());
 			case LIR_quad:
-				return hashimmq(i->constvalq());
+				return hashimmq(i->imm64());
 			case LIR_call:
 			case LIR_fcall:
 #if defined NANOJIT_64BIT
@@ -1357,21 +1117,19 @@ namespace nanojit
 	{
 		if (a==b)
 			return true;
+        if (a->opcode() != b->opcode())
+            return false;
 		AvmAssert(a->opcode() == b->opcode());
 		const LOpcode op = a->opcode();
 		switch (op)
 		{
-			case LIR_short:
-			{
-				return a->imm16() == b->imm16();
-			} 
 			case LIR_int:
 			{
 				return a->imm32() == b->imm32();
 			} 
 			case LIR_quad:
 			{
-				return a->constvalq() == b->constvalq();
+				return a->imm64() == b->imm64();
 			}
 			case LIR_call:
 			case LIR_fcall:
@@ -1424,8 +1182,7 @@ namespace nanojit
 		uint32_t n = 7 << 1;
 		hash &= bitmask;  
 		LInsp k;
-		while ((k = list[hash]) != NULL &&
-			(!LIns::sameop(k,name) || !equals(k, name)))
+		while ((k = list[hash]) != NULL && !equals(k, name))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
 		}
@@ -1494,7 +1251,7 @@ namespace nanojit
 		uint32_t n = 7 << 1;
 		LInsp k;
 		while ((k = list[hash]) != NULL && 
-			(!k->isconst() || k->constval() != a))
+			(!k->isconst() || k->imm32() != a))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
 		}
@@ -1511,7 +1268,7 @@ namespace nanojit
 		uint32_t n = 7 << 1;
 		LInsp k;
 		while ((k = list[hash]) != NULL && 
-			(!k->isconstq() || k->constvalq() != a))
+			(!k->isconstq() || k->imm64() != a))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
 		}
@@ -1776,16 +1533,16 @@ namespace nanojit
 		}
 		else if (ref->isconstq()) {
 #if defined NANOJIT_64BIT
-            sprintf(buf, "#0x%lx", (nj_printf_ld)ref->constvalq());
+            sprintf(buf, "#0x%lx", (nj_printf_ld)ref->imm64());
 #else
-			formatImm(uint32_t(ref->constvalq()>>32), buf);
+			formatImm(uint32_t(ref->imm64()>>32), buf);
 			buf += strlen(buf);
 			*buf++ = ':';
-			formatImm(uint32_t(ref->constvalq()), buf);
+			formatImm(uint32_t(ref->imm64()), buf);
 #endif
 		}
 		else if (ref->isconst()) {
-			formatImm(ref->constval(), buf);
+			formatImm(ref->imm32(), buf);
 		}
 		else {
 			if (ref->isCall()) {
@@ -1816,7 +1573,6 @@ namespace nanojit
 		LOpcode op = i->opcode();
 		switch(op)
 		{
-			case LIR_short:
 			case LIR_int:
 			{
                 sprintf(s, "%s", formatRef(i));
@@ -1830,8 +1586,7 @@ namespace nanojit
 
 			case LIR_quad:
 			{
-				int32_t *p = (int32_t*) (i-2);
-				sprintf(s, "#%X:%X /* %g */", p[1], p[0], i->constvalf());
+				sprintf(s, "#%X:%X /* %g */", i->imm64_1(), i->imm64_0(), i->imm64f());
 				break;
 			}
 
@@ -1989,9 +1744,7 @@ namespace nanojit
 					formatRef(i->oprnd2()));
 				break;
 
-			case LIR_st: 
             case LIR_sti:
-			case LIR_stq: 
             case LIR_stqi:
 				sprintf(s, "%s %s[%d] = %s", lirNames[op],
 					formatRef(i->oprnd2()), 
@@ -2211,12 +1964,6 @@ namespace nanojit
     {
         if (p != sp && p != rp)
             exprs.clear();
-    }
-
-    LInsp LoadFilter::insStore(LInsp v, LInsp b, LInsp d)
-    {
-        clear(b);
-        return out->insStore(v, b, d);
     }
 
     LInsp LoadFilter::insStorei(LInsp v, LInsp b, int32_t d)
