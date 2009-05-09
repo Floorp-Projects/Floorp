@@ -120,10 +120,12 @@ nsSMILTimeContainer::SetCurrentTime(nsSMILTime aSeekTo)
   //  #getCurrentTime_setCurrentTime_undefined_before_document_timeline_begin
   // which says that if SetCurrentTime is called before the document timeline
   // has begun we should still adjust the offset.
-  mParentOffset = GetParentTime() - aSeekTo;
+  nsSMILTime parentTime = GetParentTime();
+  mParentOffset = parentTime - aSeekTo;
 
   if (mPauseState) {
     mNeedsPauseSample = PR_TRUE;
+    mPauseStart = parentTime;
   }
 
   // Force an update to the current time in case we get a call to GetCurrentTime
