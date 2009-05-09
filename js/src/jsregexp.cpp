@@ -2063,7 +2063,7 @@ class RegExpNativeCompiler {
     {
         if (fragment->lirbuf->outOMem()) 
             return JS_FALSE;
-        ins->target(lir->ins0(LIR_label)); 
+        ins->setTarget(lir->ins0(LIR_label)); 
         return JS_TRUE;
     }
 
@@ -2073,7 +2073,7 @@ class RegExpNativeCompiler {
             return JS_FALSE;
         LIns* fail = lir->ins0(LIR_label);
         for (size_t i = 0; i < fails.size(); ++i) {
-            fails[i]->target(fail);
+            fails[i]->setTarget(fail);
         }
         fails.clear();
         return JS_TRUE;
@@ -2179,13 +2179,13 @@ class RegExpNativeCompiler {
          */
         RECharSet *charSet = &re->classList[node->u.ucclass.index];
         size_t bitmapLen = (charSet->length >> 3) + 1;
-        /* skip() can't hold large data blocks. */
+        /* insSkip() can't hold large data blocks. */
         if (bitmapLen > 1024)
             return NULL;
         /* The following line allocates charSet.u.bits if successful. */
         if (!charSet->converted && !ProcessCharSet(cx, re, charSet))
             return NULL;
-        LIns* skip = lirBufWriter->skip(bitmapLen);
+        LIns* skip = lirBufWriter->insSkip(bitmapLen);
         if (fragment->lirbuf->outOMem())
             return NULL;
         void* bitmapData = skip->payload();
@@ -2355,9 +2355,9 @@ class RegExpNativeCompiler {
      */
     GuardRecord* insertGuard(jschar* re_chars, size_t re_length)
     {
-        LIns* skip = lirBufWriter->skip(sizeof(GuardRecord) + 
-                                        sizeof(RESideExit) + 
-                                        (re_length-1) * sizeof(jschar));
+        LIns* skip = lirBufWriter->insSkip(sizeof(GuardRecord) + 
+                                           sizeof(RESideExit) + 
+                                           (re_length-1) * sizeof(jschar));
         GuardRecord* guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
         RESideExit* exit = (RESideExit*)(guard+1);

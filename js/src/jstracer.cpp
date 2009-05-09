@@ -141,8 +141,8 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max global object size. */
 #define MAX_GLOBAL_SLOTS 4096
 
-/* Max memory you can allocate in a LIR buffer via a single skip() call. */
-#define MAX_SKIP_BYTES (NJ_PAGE_SIZE - (LIR_FAR_SLOTS + 1) * sizeof(LIns))
+/* Max memory you can allocate in a LIR buffer via a single insSkip() call. */
+#define MAX_SKIP_BYTES (NJ_PAGE_SIZE - sizeof(LIns))
 
 /* Max memory needed to rebuild the interpreter stack when falling off trace. */
 #define MAX_INTERP_STACK_BYTES                                                \
@@ -743,7 +743,7 @@ static LIns* demote(LirWriter *out, LInsp i)
     if (i->isconst())
         return i;
     AvmAssert(i->isconstq());
-    double cf = i->constvalf();
+    double cf = i->imm64f();
     int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
     return out->insImm(ci);
 }
@@ -754,7 +754,7 @@ static bool isPromoteInt(LIns* i)
         return true;
     if (!i->isconstq())
         return false;
-    jsdouble d = i->constvalf();
+    jsdouble d = i->imm64f();
     return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
 }
 
@@ -764,7 +764,7 @@ static bool isPromoteUint(LIns* i)
         return true;
     if (!i->isconstq())
         return false;
-    jsdouble d = i->constvalf();
+    jsdouble d = i->imm64f();
     return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
 }
 
@@ -775,16 +775,16 @@ static bool isPromote(LIns* i)
 
 static bool isconst(LIns* i, int32_t c)
 {
-    return i->isconst() && i->constval() == c;
+    return i->isconst() && i->imm32() == c;
 }
 
 static bool overflowSafe(LIns* i)
 {
     LIns* c;
     return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
-            ((c->constval() & 0xc0000000) == 0)) ||
+            ((c->imm32() & 0xc0000000) == 0)) ||
            (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
-            ((c->constval() > 0)));
+            ((c->imm32() > 0)));
 }
 
 /* soft float support */
@@ -1008,7 +1008,7 @@ public:
         {
             // needed on ARM -- arm doesn't mask shifts to 31 like x86 does
             if (s1->isconst())
-                s1->setimm16(s1->constval() & 31);
+                s1->setimm32(s1->imm32() & 31);
             else
                 s1 = out->ins2(LIR_and, s1, out->insImm(31));
             return out->ins2(v, s0, s1);
@@ -1023,13 +1023,13 @@ public:
         if (ci == &js_DoubleToUint32_ci) {
             LInsp s0 = args[0];
             if (s0->isconstq())
-                return out->insImm(js_DoubleToECMAUint32(s0->constvalf()));
+                return out->insImm(js_DoubleToECMAUint32(s0->imm64f()));
             if (isi2f(s0) || isu2f(s0))
                 return iu2fArg(s0);
         } else if (ci == &js_DoubleToInt32_ci) {
             LInsp s0 = args[0];
             if (s0->isconstq())
-                return out->insImm(js_DoubleToECMAInt32(s0->constvalf()));
+                return out->insImm(js_DoubleToECMAInt32(s0->imm64f()));
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub)) {
                 LInsp lhs = s0->oprnd1();
                 LInsp rhs = s0->oprnd2();
@@ -2102,14 +2102,9 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
         ? -treeInfo->nativeStackBase + nativeStackOffset(p)                   \
         : nativeGlobalOffset(p)));                                            \
 
-        if (x->isop(LIR_st) || x->isop(LIR_stq)) {
-            ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->oprnd3()->constval());
-            writeBack(i, x->oprnd2(), x->oprnd3()->constval());
-        } else {
-            JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
-            ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->immdisp());
-            writeBack(i, x->oprnd2(), x->immdisp());
-        }
+        JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
+        ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->immdisp());
+        writeBack(i, x->oprnd2(), x->immdisp());
     }
 #undef ASSERT_VALID_CACHE_HIT
 }
@@ -2339,7 +2334,7 @@ TraceRecorder::snapshot(ExitType exitType)
     }
 
     /* We couldn't find a matching side exit, so create a new one. */
-    LIns* data = lir->skip(sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8));
+    LIns* data = lir->insSkip(sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8));
     VMSideExit* exit = (VMSideExit*) data->payload();
 
     /* Setup side exit structure. */
@@ -2365,7 +2360,7 @@ TraceRecorder::snapshot(ExitType exitType)
 JS_REQUIRES_STACK LIns*
 TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
-    LIns* guardRec = lir->skip(sizeof(GuardRecord));
+    LIns* guardRec = lir->insSkip(sizeof(GuardRecord));
     GuardRecord* gr = (GuardRecord*) guardRec->payload();
 
     memset(gr, 0, sizeof(GuardRecord));
@@ -2411,8 +2406,7 @@ JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::copy(VMSideExit* copy)
 {
     size_t typemap_size = copy->numGlobalSlots + copy->numStackSlots;
-    LIns* data = lir->skip(sizeof(VMSideExit) +
-                           typemap_size * sizeof(uint8));
+    LIns* data = lir->insSkip(sizeof(VMSideExit) + typemap_size * sizeof(uint8));
     VMSideExit* exit = (VMSideExit*) data->payload();
 
     /* Copy side exit structure. */
@@ -3145,7 +3139,7 @@ TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
          * whether to emit a loop edge or a loop end.
          */
         if (x->isconst()) {
-            loop = (x->constval() == cond);
+            loop = (x->imm32() == cond);
             return;
         }
     } else {
@@ -5610,7 +5604,7 @@ TraceRecorder::tableswitch()
     }
 
     /* Generate switch LIR. */
-    LIns* si_ins = lir_buf_writer->skip(sizeof(SwitchInfo));
+    LIns* si_ins = lir_buf_writer->insSkip(sizeof(SwitchInfo));
     SwitchInfo* si = (SwitchInfo*) si_ins->payload();
     si->count = high + 1 - low;
     si->table = 0;
@@ -5618,7 +5612,7 @@ TraceRecorder::tableswitch()
     LIns* diff = lir->ins2(LIR_sub, v_ins, lir->insImm(low));
     LIns* cmp = lir->ins2(LIR_ult, diff, lir->insImm(si->count));
     lir->insGuard(LIR_xf, cmp, createGuardRecord(snapshot(DEFAULT_EXIT)));
-    lir->insStore(diff, lir->insImmPtr(&si->index), lir->insImm(0));
+    lir->insStorei(diff, lir->insImmPtr(&si->index), 0);
     VMSideExit* exit = snapshot(CASE_EXIT);
     exit->switchInfo = si;
     return lir->insGuard(LIR_xtbl, diff, createGuardRecord(exit));
@@ -7571,7 +7565,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     // use JSTN_UNBOX_AFTER for mode JSOP_NEW because record_NativeCallComplete
     // unboxes the result specially.
 
-    CallInfo* ci = (CallInfo*) lir->skip(sizeof(struct CallInfo))->payload();
+    CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
     ci->_address = uintptr_t(fun->u.n.native);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
@@ -8316,7 +8310,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
     if (sizeof(FrameInfo) + stackSlots * sizeof(uint8) > MAX_SKIP_BYTES)
         ABORT_TRACE("interpreted function call requires saving too much stack");
-    LIns* data = lir->skip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
+    LIns* data = lir->insSkip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
     FrameInfo* fi = (FrameInfo*)data->payload();
     uint8* typemap = (uint8 *)(fi + 1);
     uint8* m = typemap;
@@ -8811,10 +8805,10 @@ TraceRecorder::elem(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins, LIns*& a
         lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
         LIns* label = lir->ins0(LIR_label);
         if (br1)
-            br1->target(label);
-        br2->target(label);
-        br3->target(label);
-        br4->target(label);
+            br1->setTarget(label);
+        br2->setTarget(label);
+        br3->setTarget(label);
+        br4->setTarget(label);
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
@@ -8865,7 +8859,7 @@ TraceRecorder::elem(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins, LIns*& a
                                   lir->ins2i(LIR_eq, v_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE)),
                                   NULL);
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
-        br->target(lir->ins0(LIR_label));
+        br->setTarget(lir->ins0(LIR_label));
 
         /*
          * Don't let the hole value escape. Turn it into an undefined.
