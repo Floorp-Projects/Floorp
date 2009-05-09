@@ -114,8 +114,15 @@ nsTextEditRules::~nsTextEditRules()
  *  XPCOM Cruft
  ********************************************************/
 
-NS_IMPL_ISUPPORTS1(nsTextEditRules, nsIEditRules)
+NS_IMPL_CYCLE_COLLECTION_2(nsTextEditRules, mBogusNode, mCachedSelectionNode)
 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTextEditRules)
+  NS_INTERFACE_MAP_ENTRY(nsIEditRules)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditRules)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextEditRules)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTextEditRules)
 
 /********************************************************
  *  Public methods 
