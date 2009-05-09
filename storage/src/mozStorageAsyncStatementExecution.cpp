@@ -317,7 +317,7 @@ AsyncExecuteStatements::executeAndProcessStatement(sqlite3_stmt *aStatement,
 
 #ifdef DEBUG
   // Check to make sure that this statement was smart about what it did.
-  CheckAndLogStatementPerformance(aStatement);
+  checkAndLogStatementPerformance(aStatement);
 #endif
 
   // If we are done, we need to set our state accordingly while we still hold
