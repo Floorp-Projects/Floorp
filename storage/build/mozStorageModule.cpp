@@ -52,11 +52,11 @@ namespace storage {
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Service,
                                          Service::getSingleton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(StatementWrapper)
+
 
 } // namespace storage
 } // namespace mozilla
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageStatementWrapper)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -69,7 +69,7 @@ static const nsModuleComponentInfo components[] =
     { "Unified Data Store Scriptable Statement Wrapper",
       MOZ_STORAGE_STATEMENT_WRAPPER_CID,
       MOZ_STORAGE_STATEMENT_WRAPPER_CONTRACTID,
-      mozStorageStatementWrapperConstructor
+      mozilla::storage::StatementWrapperConstructor
     }
 };
 

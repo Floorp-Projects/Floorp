@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMemory.h"
 #include "nsString.h"
 
 #include "mozStorageStatementWrapper.h"
@@ -47,350 +46,176 @@
 
 #include "sqlite3.h"
 
-using namespace mozilla::storage;
+namespace mozilla {
+namespace storage {
 
-/*************************************************************************
- ****
- **** mozStorageStatementWrapper
- ****
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+//// StatementWrapper
 
-NS_IMPL_ISUPPORTS2(mozStorageStatementWrapper, mozIStorageStatementWrapper, nsIXPCScriptable)
-
-mozStorageStatementWrapper::mozStorageStatementWrapper()
-    : mStatement(nsnull)
+StatementWrapper::StatementWrapper()
+: mStatement(nsnull)
 {
 }
 
-mozStorageStatementWrapper::~mozStorageStatementWrapper()
+StatementWrapper::~StatementWrapper()
 {
-    mStatement = nsnull;
+  mStatement = nsnull;
+}
+
+NS_IMPL_ISUPPORTS2(
+  StatementWrapper,
+  mozIStorageStatementWrapper,
+  nsIXPCScriptable
+)
+
+////////////////////////////////////////////////////////////////////////////////
+//// mozIStorageStatementWrapper
+
+NS_IMETHODIMP
+StatementWrapper::Initialize(mozIStorageStatement *aStatement)
+{
+  NS_ASSERTION(mStatement == nsnull, "StatementWrapper is already initialized");
+  NS_ENSURE_ARG_POINTER(aStatement);
+
+  mStatement = static_cast<mozStorageStatement *>(aStatement);
+
+  // fetch various things we care about
+  (void)mStatement->GetParameterCount(&mParamCount);
+  (void)mStatement->GetColumnCount(&mResultColumnCount);
+
+  for (unsigned int i = 0; i < mResultColumnCount; i++) {
+    const void *name = ::sqlite3_column_name16(nativeStatement(), i);
+    (void)mColumnNames.AppendElement(nsDependentString(static_cast<const PRUnichar*>(name)));
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-mozStorageStatementWrapper::Initialize(mozIStorageStatement *aStatement)
+StatementWrapper::GetStatement(mozIStorageStatement **_statement)
 {
-    NS_ASSERTION(mStatement == nsnull, "mozStorageStatementWrapper is already initialized");
-    NS_ENSURE_ARG_POINTER(aStatement);
+  NS_IF_ADDREF(*_statement = mStatement);
+  return NS_OK;
+}
 
-    mStatement = static_cast<mozStorageStatement *>(aStatement);
+NS_IMETHODIMP
+StatementWrapper::Reset()
+{
+  if (!mStatement)
+    return NS_ERROR_FAILURE;
 
-    // fetch various things we care about
-    mStatement->GetParameterCount(&mParamCount);
-    mStatement->GetColumnCount(&mResultColumnCount);
+  return mStatement->Reset();
+}
 
-    for (unsigned int i = 0; i < mResultColumnCount; i++) {
-        const void *name = sqlite3_column_name16 (NativeStatement(), i);
-        mColumnNames.AppendElement(nsDependentString(static_cast<const PRUnichar*>(name)));
-    }
+NS_IMETHODIMP
+StatementWrapper::Step(PRBool *_hasMoreResults)
+{
+  if (!mStatement)
+    return NS_ERROR_FAILURE;
 
+  PRBool hasMore = PR_FALSE;
+  nsresult rv = mStatement->ExecuteStep(&hasMore);
+  if (NS_SUCCEEDED(rv) && !hasMore) {
+    *_hasMoreResults = PR_FALSE;
+    (void)mStatement->Reset();
     return NS_OK;
+  }
+
+  *_hasMoreResults = hasMore;
+  return rv;
 }
 
 NS_IMETHODIMP
-mozStorageStatementWrapper::GetStatement(mozIStorageStatement **aStatement)
+StatementWrapper::Execute()
 {
-    NS_IF_ADDREF(*aStatement = mStatement);
-    return NS_OK;
+  if (!mStatement)
+    return NS_ERROR_FAILURE;
+
+  return mStatement->Execute();
 }
 
 NS_IMETHODIMP
-mozStorageStatementWrapper::Reset()
+StatementWrapper::GetRow(mozIStorageStatementRow **_row)
 {
-    if (!mStatement)
-        return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(_row);
 
-    return mStatement->Reset();
+  if (!mStatement)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 state;
+  mStatement->GetState(&state);
+  if (state != mozIStorageStatement::MOZ_STORAGE_STATEMENT_EXECUTING)
+    return NS_ERROR_FAILURE;
+
+  if (!mStatementRow) {
+    mStatementRow = new StatementRow(mStatement);
+    NS_ENSURE_TRUE(mStatementRow, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  NS_ADDREF(*_row = mStatementRow);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-mozStorageStatementWrapper::Step(PRBool *_retval)
+StatementWrapper::GetParams(mozIStorageStatementParams **_params)
 {
-    if (!mStatement)
-        return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(_params);
 
-    PRBool hasMore = PR_FALSE;
-    nsresult rv = mStatement->ExecuteStep(&hasMore);
-    if (NS_SUCCEEDED(rv) && !hasMore) {
-        *_retval = PR_FALSE;
-        mStatement->Reset();
-        return NS_OK;
-    }
+  if (!mStatementParams) {
+    mStatementParams = new StatementParams(mStatement);
+    NS_ENSURE_TRUE(mStatementParams, NS_ERROR_OUT_OF_MEMORY);
+  }
 
-    *_retval = hasMore;
-    return rv;
+  NS_ADDREF(*_params = mStatementParams);
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-mozStorageStatementWrapper::Execute()
-{
-    if (!mStatement)
-        return NS_ERROR_FAILURE;
+////////////////////////////////////////////////////////////////////////////////
+//// nsIXPCScriptable
 
-    return mStatement->Execute();
-}
-
-NS_IMETHODIMP
-mozStorageStatementWrapper::GetRow(mozIStorageStatementRow **aRow)
-{
-    NS_ENSURE_ARG_POINTER(aRow);
-
-    if (!mStatement)
-        return NS_ERROR_FAILURE;
-
-    PRInt32 state;
-    mStatement->GetState(&state);
-    if (state != mozIStorageStatement::MOZ_STORAGE_STATEMENT_EXECUTING)
-        return NS_ERROR_FAILURE;
-
-    if (!mStatementRow) {
-        StatementRow *row = new StatementRow(mStatement);
-        if (!row)
-            return NS_ERROR_OUT_OF_MEMORY;
-        mStatementRow = row;
-    }
-
-    NS_ADDREF(*aRow = mStatementRow);
-    return NS_OK;
-}
+#define XPC_MAP_CLASSNAME StatementWrapper
+#define XPC_MAP_QUOTED_CLASSNAME "StatementWrapper"
+#define XPC_MAP_WANT_CALL
+#define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE | \
+                      nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY
+#include "xpc_map_end.h"
 
 NS_IMETHODIMP
-mozStorageStatementWrapper::GetParams(mozIStorageStatementParams **aParams)
+StatementWrapper::Call(nsIXPConnectWrappedNative *aWrapper,
+                       JSContext *aCtx,
+                       JSObject *aScopeObj,
+                       PRUint32 aArgc,
+                       jsval *aArgv,
+                       jsval *_vp,
+                       PRBool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(aParams);
+  if (!mStatement)
+    return NS_ERROR_FAILURE;
 
-    if (!mStatementParams) {
-        StatementParams *params = new StatementParams(mStatement);
-        if (!params)
-            return NS_ERROR_OUT_OF_MEMORY;
-        mStatementParams = params;
-    }
-
-    NS_ADDREF(*aParams = mStatementParams);
-    return NS_OK;
-}
-
-/*** nsIXPCScriptable interface ***/
-
-/* readonly attribute string className; */
-NS_IMETHODIMP
-mozStorageStatementWrapper::GetClassName(char * *aClassName)
-{
-    NS_ENSURE_ARG_POINTER(aClassName);
-    *aClassName = (char *) nsMemory::Clone("mozStorageStatementWrapper", 27);
-    if (!*aClassName)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-/* readonly attribute PRUint32 scriptableFlags; */
-NS_IMETHODIMP
-mozStorageStatementWrapper::GetScriptableFlags(PRUint32 *aScriptableFlags)
-{
-    *aScriptableFlags =
-        nsIXPCScriptable::WANT_CALL |
-        nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY |
-        nsIXPCScriptable::WANT_NEWRESOLVE |
-        nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE;
-    return NS_OK;
-}
-
-/* PRBool call (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 argc, in JSValPtr argv, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Call(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                          JSObject * obj, PRUint32 argc, jsval * argv, jsval * vp, PRBool *_retval)
-{
-    if (!mStatement) {
-        *_retval = PR_TRUE;
-        return NS_ERROR_FAILURE;
-    }
-
-    if (argc != mParamCount) {
-        *_retval = PR_FALSE;
-        return NS_ERROR_FAILURE;
-    }
-
-    // reset
-    mStatement->Reset();
-
-    // bind parameters
-    for (int i = 0; i < (int) argc; i++) {
-        if (!JSValStorageStatementBinder(cx, mStatement, i, argv[i])) {
-            *_retval = PR_FALSE;
-            return NS_ERROR_INVALID_ARG;
-        }
-    }
-
-    // if there are no results, we just execute
-    if (mResultColumnCount == 0)
-        mStatement->Execute();
-
-    *vp = JSVAL_TRUE;
-    *_retval = PR_TRUE;
-    return NS_OK;
-}
-
-/* PRBool getProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                 JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
+  if (aArgc != mParamCount) {
     *_retval = PR_FALSE;
-    return NS_OK;
+    return NS_ERROR_FAILURE;
+  }
+
+  // reset
+  (void)mStatement->Reset();
+
+  // bind parameters
+  for (int i = 0; i < (int)aArgc; i++) {
+    if (!JSValStorageStatementBinder(aCtx, mStatement, i, aArgv[i])) {
+      *_retval = PR_FALSE;
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  // if there are no results, we just execute
+  if (mResultColumnCount == 0)
+    (void)mStatement->Execute();
+
+  *_vp = JSVAL_TRUE;
+  *_retval = PR_TRUE;
+  return NS_OK;
 }
 
-
-/* PRBool setProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                         JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
-    *_retval = PR_FALSE;
-    return NS_OK;
-}
-
-/* void preCreate (in nsISupports nativeObj, in JSContextPtr cx, in JSObjectPtr globalObj, out JSObjectPtr parentObj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::PreCreate(nsISupports *nativeObj, JSContext * cx,
-                       JSObject * globalObj, JSObject * *parentObj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void create (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Create(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void postCreate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool addProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                 JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool delProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                 JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool enumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                               JSObject * obj, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 enum_op, in JSValPtr statep, out JSID idp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                  JSObject * obj, PRUint32 enum_op, jsval * statep, jsid *idp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp, PRBool *_retval)
-{
-    *_retval = PR_TRUE;
-    return NS_OK;
-}
-
-/* PRBool convert (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 type, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Convert(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                JSObject * obj, PRUint32 type, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void finalize (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                              JSObject * obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool checkAccess (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 mode, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                 JSObject * obj, jsval id, PRUint32 mode, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool construct (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 argc, in JSValPtr argv, in JSValPtr vp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                               JSObject * obj, PRUint32 argc, jsval * argv, jsval * vp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal val, out PRBool bp); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                                 JSObject * obj, jsval val, PRBool *bp, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void trace (in nsIXPConnectWrappedNative wrapper, in JSTracerPtr trc, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Trace(nsIXPConnectWrappedNative *wrapper,
-                                  JSTracer *trc, JSObject *obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* PRBool equality(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal val); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::Equality(nsIXPConnectWrappedNative *wrapper,
-                                    JSContext *cx, JSObject *obj, jsval val,
-                                    PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* JSObjectPtr outerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::OuterObject(nsIXPConnectWrappedNative *wrapper,
-                                        JSContext *cx, JSObject *obj,
-                                        JSObject **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::InnerObject(nsIXPConnectWrappedNative *wrapper,
-                                        JSContext *cx, JSObject *obj,
-                                        JSObject **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void postCreatePrototype (in JSContextPtr cx, in JSObjectPtr proto); */
-NS_IMETHODIMP
-mozStorageStatementWrapper::PostCreatePrototype(JSContext * cx,
-                                                JSObject * proto)
-{
-    return NS_OK;
-}
+} // namespace storage
+} // namespace mozilla
