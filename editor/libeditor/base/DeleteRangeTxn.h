@@ -64,6 +64,9 @@ public:
 
   DeleteRangeTxn();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteRangeTxn, EditAggregateTxn)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   NS_DECL_EDITTXN
 
   NS_IMETHOD RedoTransaction();

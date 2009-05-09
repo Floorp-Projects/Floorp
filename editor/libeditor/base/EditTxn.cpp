@@ -38,7 +38,16 @@
 
 #include "EditTxn.h"
 
-NS_IMPL_ISUPPORTS2(EditTxn, nsITransaction, nsPIEditorTransaction)
+NS_IMPL_CYCLE_COLLECTION_0(EditTxn)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditTxn)
+  NS_INTERFACE_MAP_ENTRY(nsITransaction)
+  NS_INTERFACE_MAP_ENTRY(nsPIEditorTransaction)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITransaction)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(EditTxn, nsITransaction)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(EditTxn, nsITransaction)
 
 EditTxn::~EditTxn()
 {

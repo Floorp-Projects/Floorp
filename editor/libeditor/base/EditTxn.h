@@ -41,6 +41,7 @@
 #include "nsITransaction.h"
 #include "nsString.h"
 #include "nsPIEditorTransaction.h"
+#include "nsCycleCollectionParticipant.h"
 
 /**
  * Base class for all document editing transactions.
@@ -49,7 +50,8 @@ class EditTxn : public nsITransaction,
                 public nsPIEditorTransaction
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditTxn, nsITransaction)
 
   virtual ~EditTxn();
 

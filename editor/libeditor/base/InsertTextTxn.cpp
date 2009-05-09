@@ -49,6 +49,24 @@ InsertTextTxn::InsertTextTxn()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(InsertTextTxn)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(InsertTextTxn, EditTxn)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(InsertTextTxn, EditTxn)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTxn)
+  if (aIID.Equals(InsertTextTxn::GetCID())) {
+    *aInstancePtr = (void*)(InsertTextTxn*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+
 NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                                   PRUint32             aOffset,
                                   const nsAString     &aStringToInsert,
@@ -152,22 +170,6 @@ NS_IMETHODIMP InsertTextTxn::GetTxnDescription(nsAString& aString)
   aString.AssignLiteral("InsertTextTxn: ");
   aString += mStringToInsert;
   return NS_OK;
-}
-
-/* ============= nsISupports implementation ====================== */
-
-NS_IMETHODIMP
-InsertTextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(InsertTextTxn::GetCID())) {
-    *aInstancePtr = (void*)(InsertTextTxn*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return (EditTxn::QueryInterface(aIID, aInstancePtr));
 }
 
 /* ============ protected methods ================== */

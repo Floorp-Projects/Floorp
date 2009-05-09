@@ -79,6 +79,8 @@ public:
 
   IMETextTxn();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IMETextTxn, EditTxn)
+
   NS_DECL_EDITTXN
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
