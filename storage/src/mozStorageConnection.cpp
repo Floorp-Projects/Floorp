@@ -629,13 +629,13 @@ Connection::CreateStatement(const nsACString &aSQLStatement,
   NS_ENSURE_ARG_POINTER(_stmt);
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  nsRefPtr<mozStorageStatement> statement(new mozStorageStatement());
+  nsRefPtr<Statement> statement(new Statement());
   NS_ENSURE_TRUE(statement, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = statement->Initialize(this, aSQLStatement);
+  nsresult rv = statement->initialize(this, aSQLStatement);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozStorageStatement *rawPtr;
+  Statement *rawPtr;
   statement.forget(&rawPtr);
   *_stmt = rawPtr;
   return NS_OK;
@@ -661,7 +661,7 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
   nsTArray<sqlite3_stmt *> stmts(aNumStatements);
   for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
     sqlite3_stmt *old_stmt =
-        static_cast<mozStorageStatement *>(aStatements[i])->nativeStatement();
+        static_cast<Statement *>(aStatements[i])->nativeStatement();
     if (!old_stmt) {
       rc = SQLITE_MISUSE;
       break;
@@ -670,8 +670,8 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
                  "Statement must be from this database connection!");
 
     // Clone this statement.  We only need a sqlite3_stmt object, so we can
-    // avoid all the extra work that making a new mozStorageStatement would
-    // normally involve and use the SQLite API.
+    // avoid all the extra work that making a new Statement would normally
+    // involve and use the SQLite API.
     sqlite3_stmt *new_stmt;
     rc = ::sqlite3_prepare_v2(mDBConn, ::sqlite3_sql(old_stmt), -1, &new_stmt,
                               NULL);

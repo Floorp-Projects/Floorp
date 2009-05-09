@@ -74,8 +74,7 @@ stepFunc(JSContext *aCtx,
     return JS_FALSE;
   }
 
-  mozStorageStatement *stmt =
-    static_cast<mozStorageStatement *>(wrapper->Native());
+  Statement *stmt = static_cast<Statement *>(wrapper->Native());
 
 #ifdef DEBUG
   {
@@ -105,7 +104,7 @@ stepFunc(JSContext *aCtx,
 //// StatementJSHelper
 
 nsresult
-StatementJSHelper::getRow(mozStorageStatement *aStatement,
+StatementJSHelper::getRow(Statement *aStatement,
                           JSContext *aCtx,
                           JSObject *aScopeObj,
                           jsval *_row)
@@ -141,7 +140,7 @@ StatementJSHelper::getRow(mozStorageStatement *aStatement,
 }
 
 nsresult
-StatementJSHelper::getParams(mozStorageStatement *aStatement,
+StatementJSHelper::getParams(Statement *aStatement,
                              JSContext *aCtx,
                              JSObject *aScopeObj,
                              jsval *_params)
@@ -205,8 +204,7 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
   if (!JSVAL_IS_STRING(aId))
     return NS_OK;
 
-  mozStorageStatement *stmt =
-    static_cast<mozStorageStatement *>(aWrapper->Native());
+  Statement *stmt = static_cast<Statement *>(aWrapper->Native());
 
 #ifdef DEBUG
   {
