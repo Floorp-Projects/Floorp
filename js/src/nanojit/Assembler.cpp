@@ -799,7 +799,7 @@ namespace nanojit
 		
 		// When outOMem, nIns is set to startingIns and we overwrite the region until the error is handled
 		underrunProtect(LARGEST_UNDERRUN_PROT);  // the largest value passed to underrunProtect() 
-		_startingIns = _nIns;
+        recordStartingInstructionPointer();
 		
 	#ifdef AVMPLUS_PORTING_API
 		_endJit2Addr = _nExitIns;
@@ -870,7 +870,8 @@ namespace nanojit
 		    }
         }
 		else {
-			_nIns = _startingIns;  // in case of failure reset nIns ready for the next assembly run
+            // In case of failure, reset _nIns ready for the next assembly run.
+            resetInstructionPointer();
 		}
 	}
 
@@ -927,7 +928,8 @@ namespace nanojit
 		}
 		else
 		{
-			_nIns = _startingIns;  // in case of failure reset nIns ready for the next assembly run
+            // In case of failure, reset _nIns ready for the next assembly run.
+            resetInstructionPointer();
 		}
 		
 		NanoAssertMsgf(error() || _fpuStkDepth == 0,"_fpuStkDepth %d",_fpuStkDepth);
