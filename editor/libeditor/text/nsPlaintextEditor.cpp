@@ -735,6 +735,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   if (!bCollapsed &&
       (aAction == eNextWord || aAction == ePreviousWord ||
        aAction == eToBeginningOfLine || aAction == eToEndOfLine))
+  {
     if (mCaretStyle == 1)
     {
       result = selection->CollapseToStart();
@@ -744,6 +745,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
     { 
       aAction = eNone;
     }
+  }
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kDeleteSelection);
   ruleInfo.collapsedAction = aAction;
