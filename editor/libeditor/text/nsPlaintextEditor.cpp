@@ -115,6 +115,9 @@ nsPlaintextEditor::~nsPlaintextEditor()
   // Remove event listeners. Note that if we had an HTML editor,
   //  it installed its own instead of these
   RemoveEventListeners();
+
+  if (mRules)
+    mRules->DetachEditor();
 }
 
 NS_IMPL_ADDREF_INHERITED(nsPlaintextEditor, nsEditor)
