@@ -65,6 +65,9 @@ public:
 
   SplitElementTxn();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitElementTxn, EditTxn)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   NS_DECL_EDITTXN
 
   NS_IMETHOD RedoTransaction(void);

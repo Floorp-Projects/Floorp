@@ -56,6 +56,22 @@ nsSelectionState::~nsSelectionState()
   MakeEmpty();
 }
 
+void
+nsSelectionState::DoTraverse(nsCycleCollectionTraversalCallback &cb)
+{
+  nsRangeStore *item;
+  for (PRUint32 i = 0, iEnd = mArray.Length(); i < iEnd; ++i)
+  {
+    nsRangeStore &item = mArray[i];
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                       "selection state mArray[i].startNode");
+    cb.NoteXPCOMChild(item.startNode);
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                       "selection state mArray[i].endNode");
+    cb.NoteXPCOMChild(item.endNode);
+  }
+}
+
 nsresult  
 nsSelectionState::SaveSelection(nsISelection *aSel)
 {

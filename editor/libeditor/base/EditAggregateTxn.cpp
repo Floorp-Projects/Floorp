@@ -42,6 +42,21 @@ EditAggregateTxn::EditAggregateTxn()
   : EditTxn()
 {
 }
+NS_IMPL_CYCLE_COLLECTION_CLASS(EditAggregateTxn)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EditAggregateTxn, EditTxn)
+  tmp->mChildren.Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EditAggregateTxn, EditTxn)
+  for (PRUint32 i = 0; i < tmp->mChildren.Length(); ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildren[i]");
+    cb.NoteXPCOMChild(static_cast<nsITransaction*>(tmp->mChildren[i]));
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditAggregateTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP EditAggregateTxn::DoTransaction(void)
 {
@@ -179,11 +194,3 @@ NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
   }
   return NS_ERROR_NULL_POINTER;
 }
-
-NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
- 
-  return EditTxn::QueryInterface(aIID, aInstancePtr);
-}
-
