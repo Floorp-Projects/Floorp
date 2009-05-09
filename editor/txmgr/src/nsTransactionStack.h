@@ -58,6 +58,9 @@ public:
   virtual nsresult GetItem(PRInt32 aIndex, nsTransactionItem **aTransactionItem);
   virtual nsresult Clear(void);
   virtual nsresult GetSize(PRInt32 *aStackSize);
+
+  void DoUnlink() { Clear(); }
+  void DoTraverse(nsCycleCollectionTraversalCallback &cb);
 };
 
 class nsTransactionRedoStack: public nsTransactionStack

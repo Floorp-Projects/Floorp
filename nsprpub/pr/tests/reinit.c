@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ludovico Cavedon <ludovico.cavedon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,41 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "primpl.h"
-#include "MacMemAllocator.h"
+/* This test verifies that NSPR can be cleaned up and reinitialized. */
 
-void _MD_InitGC() {}
+#include "nspr.h"
+#include <stdio.h>
 
-void *_MD_GrowGCHeap(size_t *sizep)
+int main()
 {
-	void			*heapPtr = NULL;
-	size_t			heapSize = *sizep;
-	
-	// In previous versions of this code we tried to allocate GC heaps from the application
-	// heap.  In the 4.0 application, we try to keep our app heap allications to a minimum
-	// and instead go through our own memory allocation routines.
-	heapPtr = malloc(heapSize);
-	
-	if (heapPtr == NULL) {		
-		FreeMemoryStats		stats;
-		
-		memtotal(heapSize, &stats);		// How much can we allcoate?
-		
-		if (stats.maxBlockSize < heapSize)
-			heapSize = stats.maxBlockSize;
-		
-		heapPtr = malloc(heapSize);
-		
-		if (heapPtr == NULL) 			// Now we're hurting
-			heapSize = 0;
-	}
-	
-	*sizep = heapSize;
-	return heapPtr;
-}
+    PRStatus rv;
 
+    fprintf(stderr, "Init 1\n");
+    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+    fprintf(stderr, "Cleanup 1\n");
+    rv = PR_Cleanup();
+    if (rv != PR_SUCCESS) {
+        fprintf(stderr, "FAIL\n");
+        return 1;
+    }
 
-void _MD_FreeGCSegment(void *base, int32 /* len */)
-{
-	free(base);
+    fprintf(stderr, "Init 2\n");
+    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+    fprintf(stderr, "Cleanup 2\n");
+    rv = PR_Cleanup();
+    if (rv != PR_SUCCESS) {
+        fprintf(stderr, "FAIL\n");
+        return 1;
+    }
+
+    fprintf(stderr, "PASS\n");
+    return 0;
 }

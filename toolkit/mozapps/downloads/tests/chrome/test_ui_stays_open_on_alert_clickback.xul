@@ -51,16 +51,20 @@
           src="chrome://mochikit/content/MochiKit/packed.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome/toolkit/mozapps/downloads/tests/chrome/utils.js"/>
 
   <script type="application/javascript">
   <![CDATA[
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 function test()
 {
+  var dmui = getDMUI();
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    return;
+  }
+
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
 
@@ -80,7 +84,7 @@ function test()
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   const DLMGR_UI_DONE = "download-manager-ui-done";
- 
+
   let testObs = {
     observe: function(aSubject, aTopic, aData)
     {
@@ -92,8 +96,6 @@ function test()
       // Note:  This test will not be valid if the download list is built
       //        synchronously in Startup in downloads.js
       // Make sure the window stays open
-      let dmui = Cc["@mozilla.org/download-manager-ui;1"].
-                 getService(Ci.nsIDownloadManagerUI);
       ok(dmui.visible, "Download Manager stays open on alert click");
 
       win.close();

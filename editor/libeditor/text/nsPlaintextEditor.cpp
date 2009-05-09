@@ -115,12 +115,27 @@ nsPlaintextEditor::~nsPlaintextEditor()
   // Remove event listeners. Note that if we had an HTML editor,
   //  it installed its own instead of these
   RemoveEventListeners();
+
+  if (mRules)
+    mRules->DetachEditor();
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsPlaintextEditor)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsPlaintextEditor, nsEditor)
+  if (tmp->mRules)
+    tmp->mRules->DetachEditor();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRules)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsPlaintextEditor, nsEditor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRules)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsPlaintextEditor, nsEditor)
 NS_IMPL_RELEASE_INHERITED(nsPlaintextEditor, nsEditor)
 
-NS_INTERFACE_MAP_BEGIN(nsPlaintextEditor)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsPlaintextEditor)
   NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
 NS_INTERFACE_MAP_END_INHERITING(nsEditor)
@@ -720,6 +735,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   if (!bCollapsed &&
       (aAction == eNextWord || aAction == ePreviousWord ||
        aAction == eToBeginningOfLine || aAction == eToEndOfLine))
+  {
     if (mCaretStyle == 1)
     {
       result = selection->CollapseToStart();
@@ -729,6 +745,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
     { 
       aAction = eNone;
     }
+  }
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kDeleteSelection);
   ruleInfo.collapsedAction = aAction;
@@ -1735,8 +1752,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
                                          &(aReply->mCursorIsCollapsed),
                                          &view);
     aReply->mCursorPosition =
-       nsRect::ToOutsidePixels(rect,
-                               ps->GetPresContext()->AppUnitsPerDevPixel());
+       rect.ToOutsidePixels(ps->GetPresContext()->AppUnitsPerDevPixel());
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret position");
     if (NS_SUCCEEDED(result) && view)
       aReply->mReferenceWidget = view->GetWidget();

@@ -65,30 +65,32 @@ nsTransactionManager::~nsTransactionManager()
   }
 }
 
-#ifdef DEBUG_TXMGR_REFCNT
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsTransactionManager)
 
-nsrefcnt nsTransactionManager::AddRef(void)
-{
-  return ++mRefCnt;
-}
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsTransactionManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mListeners)
+  tmp->mDoStack.DoUnlink();
+  tmp->mUndoStack.DoUnlink();
+  tmp->mRedoStack.DoUnlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-nsrefcnt nsTransactionManager::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  if (--mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTransactionManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mListeners)
+  tmp->mDoStack.DoTraverse(cb);
+  tmp->mUndoStack.DoTraverse(cb);
+  tmp->mRedoStack.DoTraverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_QUERY_INTERFACE2(nsTransactionManager, nsITransactionManager, nsISupportsWeakReference)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTransactionManager)
+  NS_INTERFACE_MAP_ENTRY(nsITransactionManager)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITransactionManager)
+NS_INTERFACE_MAP_END
 
-#else
-
-NS_IMPL_ISUPPORTS2(nsTransactionManager, nsITransactionManager, nsISupportsWeakReference)
-
-#endif
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsTransactionManager,
+                                          nsITransactionManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsTransactionManager,
+                                           nsITransactionManager)
 
 NS_IMETHODIMP
 nsTransactionManager::DoTransaction(nsITransaction *aTransaction)

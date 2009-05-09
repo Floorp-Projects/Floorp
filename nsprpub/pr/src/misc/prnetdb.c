@@ -760,15 +760,10 @@ _pr_find_getipnodebyname(void)
 {
     PRLibrary *lib;	
     PRStatus rv;
-#if defined(VMS)
-#define GETIPNODEBYNAME getenv("GETIPNODEBYNAME")
-#define GETIPNODEBYADDR getenv("GETIPNODEBYADDR")
-#define FREEHOSTENT     getenv("FREEHOSTENT")
-#else
 #define GETIPNODEBYNAME "getipnodebyname"
 #define GETIPNODEBYADDR "getipnodebyaddr"
 #define FREEHOSTENT     "freehostent"
-#endif
+
     _pr_getipnodebyname_fp = PR_FindSymbolAndLibrary(GETIPNODEBYNAME, &lib);
     if (NULL != _pr_getipnodebyname_fp) {
         _pr_freehostent_fp = PR_FindSymbol(lib, FREEHOSTENT);
@@ -1893,15 +1888,9 @@ static FN_GETADDRINFO   _pr_getaddrinfo   = NULL;
 static FN_FREEADDRINFO  _pr_freeaddrinfo  = NULL;
 static FN_GETNAMEINFO   _pr_getnameinfo   = NULL;
 
-#if defined(VMS)
-#define GETADDRINFO_SYMBOL getenv("GETADDRINFO")
-#define FREEADDRINFO_SYMBOL getenv("FREEADDRINFO")
-#define GETNAMEINFO_SYMBOL getenv("GETNAMEINFO")
-#else
 #define GETADDRINFO_SYMBOL "getaddrinfo"
 #define FREEADDRINFO_SYMBOL "freeaddrinfo"
 #define GETNAMEINFO_SYMBOL "getnameinfo"
-#endif
 
 PRStatus
 _pr_find_getaddrinfo(void)

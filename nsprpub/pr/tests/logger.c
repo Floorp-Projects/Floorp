@@ -49,10 +49,6 @@
 
 #include <stdio.h>
 
-#ifdef XP_MAC
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 /* lth. re-define PR_LOG() */
 #if 0
 #undef PR_LOG_TEST
@@ -126,7 +122,6 @@ int main(int argc, char **argv)
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
-#ifndef XP_MAC
     if (argc > 1)
     {
         if (!PR_SetLogFile(argv[1]))
@@ -135,9 +130,6 @@ int main(int argc, char **argv)
             goto exit;
         }
     }
-#else
-	SetupMacPrintfLog("logger.log");
-#endif
 
     /* Start logging something here */
     PR_LogPrint("%s logging into %s\n", argv[0], argv[1]);

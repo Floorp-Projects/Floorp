@@ -72,19 +72,7 @@ static int _debug_on = 0;
 static char *program_name = NULL;
 static void serve_client_write(void *arg);
 
-#ifdef XP_MAC
-#include "prlog.h"
-#include "prsem.h"
-int fprintf(FILE *stream, const char *fmt, ...)
-{
-    PR_LogPrint(fmt);
-    return 0;
-}
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#else
 #include "obsolete/prsem.h"
-#endif
 
 #ifdef XP_PC
 #define mode_t int
@@ -581,9 +569,6 @@ int main(int argc, char **argv)
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
-#ifdef XP_MAC
-    SetupMacPrintfLog("socket.log");
-#endif
     PR_SetConcurrency(4);
 
 	tp = PR_CreateThreadPool(initial_threads, max_threads, stacksize);

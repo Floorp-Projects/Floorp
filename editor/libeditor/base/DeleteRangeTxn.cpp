@@ -65,6 +65,27 @@ DeleteRangeTxn::DeleteRangeTxn()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(DeleteRangeTxn)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DeleteRangeTxn,
+                                                EditAggregateTxn)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRange)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mStartParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEndParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCommonParent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DeleteRangeTxn,
+                                                  EditAggregateTxn)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStartParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEndParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCommonParent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditAggregateTxn)
+
 NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, 
                                    nsIDOMRange *aRange,
                                    nsRangeUpdater *aRangeUpdater)

@@ -57,6 +57,7 @@ typedef struct InstanceData {
   NPWindow window;
   TestNPObject* scriptableObject;
   void* platformData;
+  uint32_t instanceCountWatchGeneration;
   bool lastReportedPrivateModeState;
   bool hasWidget;
 } InstanceData;

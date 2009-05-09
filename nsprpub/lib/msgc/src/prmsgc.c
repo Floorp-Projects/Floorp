@@ -58,11 +58,7 @@
 #include "prprf.h"
 #include "gcint.h"
 
-#if defined(XP_MAC)
-#include "pprthred.h"
-#else
 #include "private/pprthred.h"
-#endif
 
 typedef void (*PRFileDumper)(FILE *out, PRBool detailed);
 
@@ -130,11 +126,7 @@ static PRInt32 _pr_pageSize;
 /* The minimum percentage of free heap space after a collection. If
    the amount of free space doesn't meet this criteria then we will
    attempt to grow the heap */
-#ifdef XP_MAC
-#define MIN_FREE_THRESHOLD_AFTER_GC 10L
-#else
 #define MIN_FREE_THRESHOLD_AFTER_GC 20L
-#endif
 
 static PRInt32 segmentSize = SEGMENT_SIZE;
 
@@ -1287,9 +1279,6 @@ static void PrepareFinalize(void)
 */
 extern void PR_CALLBACK _PR_ScanFinalQueue(void *notused)
 {
-#ifdef XP_MAC
-#pragma unused (notused)
-#endif
     PRCList *qp;
     GCFinal *fp;
     PRWord *p;
@@ -1308,9 +1297,6 @@ extern void PR_CALLBACK _PR_ScanFinalQueue(void *notused)
 
 void PR_CALLBACK FinalizerLoop(void* unused)
 {
-#ifdef XP_MAC
-#pragma unused (unused)
-#endif
     GCFinal *fp;
     PRWord *p;
     PRWord h, tix;
@@ -1421,9 +1407,6 @@ PRCList _pr_freeWeakLinks = PR_INIT_STATIC_CLIST(&_pr_freeWeakLinks);
  * freed
  */
 static void PR_CALLBACK ScanWeakFreeList(void *notused) {
-#ifdef XP_MAC
-#pragma unused (notused)
-#endif
     PRCList *qp = _pr_freeWeakLinks.next;
     while (qp != &_pr_freeWeakLinks) {
     GCWeak *wp = WeakPtr(qp);
@@ -1951,10 +1934,6 @@ pr_DumpUnknown(FILE *out, GCType* tp, PRWord tix, PRWord *p,
 static void PR_CALLBACK
 pr_DumpFree(FILE *out, PRWord *p, size_t size, PRBool detailed)
 {
-#if defined(XP_MAC) && XP_MAC
-# pragma unused( detailed )
-#endif
-
     fprintf(out, "0x%p: 0x%.6lX -  FREE\n", p, (long) size);
 }
 
@@ -2003,9 +1982,6 @@ PR_DumpMemory(PRBool detailed)
 static PRInt32 PR_CALLBACK
 pr_DumpRootPointer(PRWord* p, void* data)
 {
-#ifdef XP_MAC
-#pragma unused(data)
-#endif
     PRWord h = p[0];
     PRWord tix = GET_TYPEIX(h);
       size_t bytes = OBJ_BYTES(h);
@@ -2089,10 +2065,6 @@ static void PR_CALLBACK
 pr_SummarizeObject(FILE *out, GCType* tp, PRWord *p,
            size_t bytes, PRBool detailed)
 {
-#if defined(XP_MAC) && XP_MAC
-# pragma unused( out, detailed )
-#endif
-
     if (tp->summarize)
     (*tp->summarize)((void GCPTR*)(p + 1), bytes);
 }

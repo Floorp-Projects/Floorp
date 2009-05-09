@@ -64,10 +64,6 @@
 #define _PRSTR_BP bp
 #define _PRSTR_DELBUF(x)	delbuf(x)
 #define _PRSTR_DELBUF_C(c, x)	c::_PRSTR_DELBUF(x)
-#elif defined(VMS)
-#undef  _PRSTR_BP
-#define _PRSTR_DELBUF(x) /* as nothing */
-#define _PRSTR_DELBUF_C(c, x)	/* as nothing */
 #elif defined(OSF1)
 #define _PRSTR_BP m_psb
 #define _PRSTR_DELBUF(x) /* as nothing */

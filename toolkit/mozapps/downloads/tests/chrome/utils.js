@@ -45,6 +45,22 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 /**
+ * Returns the toolkit implementation of the download manager UI service.
+ * If the toolkit implementation of the service can't be found (e.g. because
+ * SeaMonkey doesn't package that version but an own implementation that calls
+ * different UI), then returns false (see bug 483781).
+ *
+ * @returns toolkit's nsIDownloadManagerUI implementation or false if not found
+ */
+function getDMUI()
+{
+  if (Components.classesByID["{7dfdf0d1-aff6-4a34-bad1-d0fe74601642}"])
+    return Components.classesByID["{7dfdf0d1-aff6-4a34-bad1-d0fe74601642}"].
+           getService(Ci.nsIDownloadManagerUI);
+  return false;
+}
+
+/**
  * Adds a live download to the download manager.
  *
  * @param [optional] aName

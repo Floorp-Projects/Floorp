@@ -870,7 +870,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   rect.IntersectRect(rect, aDirtyRect);
-  nsIntRect pxRect = nsRect::ToOutsidePixels(rect, mFrame->PresContext()->AppUnitsPerDevPixel());
+  nsIntRect pxRect = rect.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
   ctx->NewPath();
   ctx->Rectangle(gfxRect(pxRect.x, pxRect.y, pxRect.width, pxRect.height), PR_TRUE);
   ctx->Fill();
@@ -3608,7 +3608,7 @@ nsIntRect nsIFrame::GetScreenRectExternal() const
 
 nsIntRect nsIFrame::GetScreenRect() const
 {
-  return nsRect::ToNearestPixels(GetScreenRectInAppUnits(), PresContext()->AppUnitsPerDevPixel());
+  return GetScreenRectInAppUnits().ToNearestPixels(PresContext()->AppUnitsPerDevPixel());
 }
 
 // virtual
@@ -4051,11 +4051,22 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
     return;
   }
 
-  // Invalidate the old frame borders if the frame has borders. Those borders
-  // may be moving.
+  // Invalidate the old frame border box if the frame has borders. Those
+  // borders may be moving.
   const nsStyleBorder* border = GetStyleBorder();
   NS_FOR_CSS_SIDES(side) {
     if (border->GetActualBorderWidth(side) != 0) {
+      if ((side == NS_SIDE_LEFT || side == NS_SIDE_TOP) &&
+          !nsLayoutUtils::HasNonZeroCornerOnSide(border->mBorderRadius, side) &&
+          !border->GetBorderImage() &&
+          border->GetBorderStyle(side) == NS_STYLE_BORDER_STYLE_SOLID) {
+        // We also need to be sure that the bottom-left or top-right
+        // corner is simple. For example, if the bottom or right border
+        // has a different color, we would need to invalidate the corner
+        // area. But that's OK because if there is a right or bottom border,
+        // we'll invalidate the entire border-box here anyway.
+        continue;
+      }
       Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
     }

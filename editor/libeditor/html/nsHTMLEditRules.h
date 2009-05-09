@@ -75,7 +75,7 @@ struct StyleCache : public PropItem
 
 #define SIZE_STYLE_TABLE 19
 
-class nsHTMLEditRules : public nsIHTMLEditRules, public nsTextEditRules, public nsIEditActionListener
+class nsHTMLEditRules : public nsTextEditRules, public nsIHTMLEditRules, public nsIEditActionListener
 {
 public:
 
@@ -87,6 +87,7 @@ public:
 
   // nsIEditRules methods
   NS_IMETHOD Init(nsPlaintextEditor *aEditor, PRUint32 aFlags);
+  NS_IMETHOD DetachEditor();
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);

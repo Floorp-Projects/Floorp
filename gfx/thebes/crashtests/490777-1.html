@@ -1,0 +1,9 @@
+<!-- This crashed on Mac OS X with the modified ATSUI font backend implemented in
+     bug 481948. Crash occurs due to an unpaired low surrogate in text with the
+     right-to-left direction override; this cannot occur in direct HTML content
+     because the unpaired surrogate will be replaced with U+FFFD, but it can be
+     generated from Javascript. -->
+<html>
+<body onload="document.body.appendChild(document.createTextNode('\u202E\u4839\uDC1D'));">
+</body>
+</html>

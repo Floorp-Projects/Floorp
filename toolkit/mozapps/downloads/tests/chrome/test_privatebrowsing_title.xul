@@ -52,13 +52,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome/toolkit/mozapps/downloads/tests/chrome/utils.js"/>
 
   <script type="application/javascript">
   <![CDATA[
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
 
 function test()
 {
@@ -68,8 +66,16 @@ function test()
     pbs = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
   } catch (e) {
   }
-  if (!pbs)
+  if (!pbs) {
+    todo(false, "skip test - no private browsing supported");
     return;
+  }
+
+  var dmui = getDMUI();
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    return;
+  }
 
   // We should prevent the private browsing service from changing the current
   // session on private mode transitions, in order to play nice with the
@@ -128,8 +134,7 @@ function test()
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
 
   // Show the Download Manager UI
-  Cc["@mozilla.org/download-manager-ui;1"].
-  getService(Ci.nsIDownloadManagerUI).show();
+  dmui.show();
 
   SimpleTest.waitForExplicitFinish();
 }
