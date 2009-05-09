@@ -55,7 +55,6 @@
 #include "prlog.h"
 #include "nsAutoPtr.h"
 #include "nsIProgrammingLanguage.h"
-#include "nsVoidArray.h"
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
@@ -270,10 +269,6 @@ nsSegmentEncoder::InitUnicodeEncoder()
 // nsStandardURL <public>
 //----------------------------------------------------------------------------
 
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-static PRCList gAllURLs;
-#endif
-
 nsStandardURL::nsStandardURL(PRBool aSupportsFileURL)
     : mDefaultPort(-1)
     , mPort(-1)
@@ -298,10 +293,6 @@ nsStandardURL::nsStandardURL(PRBool aSupportsFileURL)
 
     // default parser in case nsIStandardURL::Init is never called
     mParser = net_GetStdURLParser();
-
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_APPEND_LINK(&mDebugCList, &gAllURLs);
-#endif
 }
 
 nsStandardURL::~nsStandardURL()
@@ -309,23 +300,7 @@ nsStandardURL::~nsStandardURL()
     LOG(("Destroying nsStandardURL @%p\n", this));
 
     CRTFREEIF(mHostA);
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_REMOVE_LINK(&mDebugCList);
-#endif
 }
-
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-static void DumpLeakedURLs()
-{
-    if (!PR_CLIST_IS_EMPTY(&gAllURLs)) {
-        printf("Leaked URLs:\n");
-        for (PRCList *l = PR_LIST_HEAD(&gAllURLs); l != &gAllURLs; l = PR_NEXT_LINK(l)) {
-            nsStandardURL *url = reinterpret_cast<nsStandardURL*>(reinterpret_cast<char*>(l) - offsetof(nsStandardURL, mDebugCList));
-            url->PrintSpec();
-        }
-    }
-}
-#endif
 
 void
 nsStandardURL::InitGlobalObjects()
@@ -340,11 +315,6 @@ nsStandardURL::InitGlobalObjects()
 
         PrefsChanged(prefBranch, nsnull);
     }
-
-#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_INIT_CLIST(&gAllURLs);
-    atexit(DumpLeakedURLs);
-#endif
 }
 
 void
