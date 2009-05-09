@@ -345,7 +345,7 @@ AsyncExecuteStatements::buildAndNotifyResults(sqlite3_stmt *aStatement)
     mResultSet = new ResultSet();
   NS_ENSURE_TRUE(mResultSet, NS_ERROR_OUT_OF_MEMORY);
 
-  nsRefPtr<mozStorageRow> row(new mozStorageRow());
+  nsRefPtr<Row> row(new Row());
   NS_ENSURE_TRUE(row, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = row->initialize(aStatement);
