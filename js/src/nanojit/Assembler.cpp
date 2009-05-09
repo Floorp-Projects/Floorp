@@ -1134,12 +1134,6 @@ namespace nanojit
                     freeRsrcOf(ins, 0);
                     break;
                 }
-				case LIR_short:
-				{
-                    countlir_imm();
-					asm_short(ins);
-					break;
-				}
 				case LIR_int:
 				{
                     countlir_imm();
@@ -1270,14 +1264,12 @@ namespace nanojit
 					asm_u2f(ins);
 					break;
 				}
-				case LIR_st:
 				case LIR_sti:
 				{
                     countlir_st();
                     asm_store32(ins->oprnd1(), ins->immdisp(), ins->oprnd2());
                     break;
 				}
-				case LIR_stq:
 				case LIR_stqi:
 				{
                     countlir_stq();
@@ -1621,8 +1613,6 @@ namespace nanojit
 	
 	uint32_t Assembler::arReserve(LIns* l)
 	{
-		NanoAssert(!l->isTramp());
-
 		//verbose_only(printActivationState());
         int32_t size = l->isop(LIR_alloc) ? (l->size()>>2) : l->isQuad() ? 2 : sizeof(intptr_t)>>2;
         AR &ar = _activation;
