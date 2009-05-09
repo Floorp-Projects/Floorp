@@ -65,6 +65,9 @@ for (var p in jitProps)
 
 function test(f)
 {
+  // Clear out any accumulated confounding state in the oracle / JIT cache.
+  gc();
+
   if (!testName || testName == f.name) {
     var expectedJITstats = f.jitstats;
     if (hadJITstats && expectedJITstats)
