@@ -43,17 +43,23 @@
 #include "mozIStorageError.h"
 #include "nsString.h"
 
-class mozStorageError : public mozIStorageError
+namespace mozilla {
+namespace storage {
+
+class Error : public mozIStorageError
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEERROR
 
-  mozStorageError(int aResult, const char *aMessage);
+  Error(int aResult, const char *aMessage);
 
 private:
   int mResult;
   nsCString mMessage;
 };
+
+} // namespace stoarge
+} // namespace mozilla
 
 #endif // __mozStorageError_h__

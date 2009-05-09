@@ -425,8 +425,7 @@ AsyncExecuteStatements::notifyError(PRInt32 aErrorCode,
   if (!mCallback)
     return NS_OK;
 
-  nsCOMPtr<mozIStorageError> errorObj =
-    new mozStorageError(aErrorCode, aMessage);
+  nsCOMPtr<mozIStorageError> errorObj(new Error(aErrorCode, aMessage));
   NS_ENSURE_TRUE(errorObj, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<ErrorNotifier> notifier =
