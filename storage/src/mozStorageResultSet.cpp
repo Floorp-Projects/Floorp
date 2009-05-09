@@ -40,36 +40,42 @@
 #include "mozStorageRow.h"
 #include "mozStorageResultSet.h"
 
+namespace mozilla {
+namespace storage {
+
 ////////////////////////////////////////////////////////////////////////////////
-//// mozStorageResultSet
+//// ResultSet
 
-/**
- * Note:  This object is only ever accessed on one thread at a time.  It it not
- *        threadsafe, but it does need threadsafe AddRef and Release.
- */
-NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageResultSet, mozIStorageResultSet)
-
-mozStorageResultSet::mozStorageResultSet() :
-    mCurrentIndex(0)
+ResultSet::ResultSet()
+: mCurrentIndex(0)
 {
 }
 
-mozStorageResultSet::~mozStorageResultSet()
+ResultSet::~ResultSet()
 {
   mData.Clear();
 }
 
 nsresult
-mozStorageResultSet::add(mozIStorageRow *aRow)
+ResultSet::add(mozIStorageRow *aRow)
 {
   return mData.AppendObject(aRow) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
+
+/**
+ * Note:  This object is only ever accessed on one thread at a time.  It it not
+ *        threadsafe, but it does need threadsafe AddRef and Release.
+ */
+NS_IMPL_THREADSAFE_ISUPPORTS1(
+  ResultSet,
+  mozIStorageResultSet
+)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// mozIStorageResultSet
 
 NS_IMETHODIMP
-mozStorageResultSet::GetNextRow(mozIStorageRow **_row)
+ResultSet::GetNextRow(mozIStorageRow **_row)
 {
   if (mCurrentIndex >= mData.Count()) {
     // Just return null here
@@ -79,3 +85,6 @@ mozStorageResultSet::GetNextRow(mozIStorageRow **_row)
   NS_ADDREF(*_row = mData.ObjectAt(mCurrentIndex++));
   return NS_OK;
 }
+
+} // namespace storage
+} // namespace mozilla
