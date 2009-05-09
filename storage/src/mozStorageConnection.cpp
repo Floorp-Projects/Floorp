@@ -47,7 +47,6 @@
 #include "nsHashSets.h"
 #include "nsAutoPtr.h"
 #include "nsIFile.h"
-#include "nsIVariant.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
@@ -105,98 +104,6 @@ findFunctionEnumerator(const nsACString &aKey,
   return PL_DHASH_NEXT;
 }
 
-nsresult
-VariantToSQLite3Result(sqlite3_context *aCtx,
-                       nsIVariant *aValue)
-{
-  // Allow to return NULL not wrapped to nsIVariant for speed.
-  if (!aValue) {
-    ::sqlite3_result_null(aCtx);
-    return NS_OK;
-  }
-
-  PRUint16 type;
-  (void)aValue->GetDataType(&type);
-  switch (type) {
-    case nsIDataType::VTYPE_INT8: 
-    case nsIDataType::VTYPE_INT16:
-    case nsIDataType::VTYPE_INT32:
-    case nsIDataType::VTYPE_UINT8:
-    case nsIDataType::VTYPE_UINT16:
-    {
-      PRInt32 value;
-      nsresult rv = aValue->GetAsInt32(&value);
-      NS_ENSURE_SUCCESS(rv, rv);
-      ::sqlite3_result_int(aCtx, value);
-      break;
-    }
-    case nsIDataType::VTYPE_UINT32: // Try to preserve full range
-    case nsIDataType::VTYPE_INT64:
-    // Data loss possible, but there is no unsigned types in SQLite
-    case nsIDataType::VTYPE_UINT64:
-    {
-      PRInt64 value;
-      nsresult rv = aValue->GetAsInt64(&value);
-      NS_ENSURE_SUCCESS(rv, rv);
-      ::sqlite3_result_int64(aCtx, value);
-      break;
-    }
-    case nsIDataType::VTYPE_FLOAT:
-    case nsIDataType::VTYPE_DOUBLE:
-    {
-      double value;
-      nsresult rv = aValue->GetAsDouble(&value);
-      NS_ENSURE_SUCCESS(rv, rv);
-      ::sqlite3_result_double(aCtx, value);
-      break;
-    }
-    case nsIDataType::VTYPE_BOOL:
-    {
-      PRBool value;
-      nsresult rv = aValue->GetAsBool(&value);
-      NS_ENSURE_SUCCESS(rv, rv);
-      ::sqlite3_result_int(aCtx, value ? 1 : 0);
-      break;
-    }
-    case nsIDataType::VTYPE_CHAR:
-    case nsIDataType::VTYPE_WCHAR:
-    case nsIDataType::VTYPE_DOMSTRING:
-    case nsIDataType::VTYPE_CHAR_STR:
-    case nsIDataType::VTYPE_WCHAR_STR:
-    case nsIDataType::VTYPE_STRING_SIZE_IS:
-    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-    case nsIDataType::VTYPE_UTF8STRING:
-    case nsIDataType::VTYPE_CSTRING:
-    case nsIDataType::VTYPE_ASTRING:
-    {
-      nsAutoString value;
-      // GetAsAString does proper conversion to UCS2 from all string-like types.
-      // It can be used universally without problems.
-      nsresult rv = aValue->GetAsAString(value);
-      NS_ENSURE_SUCCESS(rv, rv);
-      ::sqlite3_result_text16(aCtx,
-                              nsPromiseFlatString(value).get(),
-                              value.Length() * 2, // Number of bytes!
-                              SQLITE_TRANSIENT);
-      break;
-    }
-    case nsIDataType::VTYPE_VOID:
-    case nsIDataType::VTYPE_EMPTY:
-      ::sqlite3_result_null(aCtx);
-      break;
-    // Maybe, it'll be possible to convert these
-    // in future too.
-    case nsIDataType::VTYPE_ID:
-    case nsIDataType::VTYPE_INTERFACE:
-    case nsIDataType::VTYPE_INTERFACE_IS:
-    case nsIDataType::VTYPE_ARRAY:
-    case nsIDataType::VTYPE_EMPTY_ARRAY:
-    default:
-      return NS_ERROR_CANNOT_CONVERT_DATA;
-  }
-  return NS_OK;
-}
-
 void
 basicFunctionHelper(sqlite3_context *aCtx,
                     int aArgc,
@@ -218,7 +125,7 @@ basicFunctionHelper(sqlite3_context *aCtx,
                            -1);
     return;
   }
-  if (NS_FAILED(VariantToSQLite3Result(aCtx, result))) {
+  if (variantToSQLiteT(aCtx, result) != SQLITE_OK) {
     NS_WARNING("User function returned invalid data type!");
     ::sqlite3_result_error(aCtx,
                            "User function returned invalid data type",
@@ -259,7 +166,7 @@ aggregateFunctionFinalHelper(sqlite3_context *aCtx)
     return;
   }
 
-  if (NS_FAILED(VariantToSQLite3Result(aCtx, result))) {
+  if (variantToSQLiteT(aCtx, result) != SQLITE_OK) {
     NS_WARNING("User aggregate final function returned invalid data type!");
     ::sqlite3_result_error(aCtx,
                            "User aggregate final function returned invalid data type",
@@ -269,6 +176,56 @@ aggregateFunctionFinalHelper(sqlite3_context *aCtx)
 
 
 } // anonymous namespace
+
+////////////////////////////////////////////////////////////////////////////////
+//// sqlite3_context Specialization Functions
+
+template < >
+int
+sqlite3_T_int(sqlite3_context *aCtx,
+              int aValue)
+{
+  ::sqlite3_result_int(aCtx, aValue);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_int64(sqlite3_context *aCtx,
+                sqlite3_int64 aValue)
+{
+  ::sqlite3_result_int64(aCtx, aValue);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_double(sqlite3_context *aCtx,
+                 double aValue)
+{
+  ::sqlite3_result_double(aCtx, aValue);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_text16(sqlite3_context *aCtx,
+                 nsString aValue)
+{
+  ::sqlite3_result_text16(aCtx,
+                          PromiseFlatString(aValue).get(),
+                          aValue.Length() * 2, // Number of bytes.
+                          SQLITE_TRANSIENT);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_null(sqlite3_context *aCtx)
+{
+  ::sqlite3_result_null(aCtx);
+  return SQLITE_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Connection

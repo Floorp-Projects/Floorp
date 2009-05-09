@@ -45,9 +45,9 @@
  * This file contains convenience methods for mozStorage.
  */
 
+#include "sqlite3.h"
+#include "nsIVariant.h"
 #include "mozStorage.h"
-
-struct sqlite3_stmt;
 
 namespace mozilla {
 namespace storage {
@@ -80,6 +80,13 @@ nsresult convertResultCode(int aSQLiteResultCode);
  *        The sqlite3_stmt object to check.
  */
 void checkAndLogStatementPerformance(sqlite3_stmt *aStatement);
+
+/**
+ * Used to convert an nsIVariant to the proper SQLite type.
+ */
+template <typename T>
+int variantToSQLiteT(T aObj, nsIVariant *aValue);
+#include "variantToSQLiteT_impl.h" // To keep this file easier to read.
 
 } // namespace storage
 } // namespace mozilla
