@@ -7559,9 +7559,10 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsPresContext *pctx = shell->GetPresContext();
   NS_ENSURE_TRUE(pctx, NS_ERROR_UNEXPECTED);
 
-  // Make sure the style context goes away _before_ we execute the binding
-  // constructor, since the constructor can destroy the relevant presshell.
-  nsRefPtr<nsXBLBinding> binding;
+  // Make sure the style context goes away _before_ we load the binding
+  // since that can destroy the relevant presshell.
+  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIPrincipal> principal;
   {
     // Scope for the nsRefPtr
     nsRefPtr<nsStyleContext> sc = pctx->StyleSet()->ResolveStyleFor(content,
@@ -7574,16 +7575,19 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
-    // We have a binding that must be installed.
-    PRBool dummy;
-
-    nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
-    NS_ENSURE_TRUE(xblService, NS_ERROR_NOT_AVAILABLE);
-
-    xblService->LoadBindings(content, bindingURL->mURI,
-                             bindingURL->mOriginPrincipal, PR_FALSE,
-                             getter_AddRefs(binding), &dummy);
+    uri = bindingURL->mURI;
+    principal = bindingURL->mOriginPrincipal;
   }
+
+  // We have a binding that must be installed.
+  PRBool dummy;
+
+  nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
+  NS_ENSURE_TRUE(xblService, NS_ERROR_NOT_AVAILABLE);
+
+  nsRefPtr<nsXBLBinding> binding;
+  xblService->LoadBindings(content, uri, principal, PR_FALSE,
+                           getter_AddRefs(binding), &dummy);
   
   if (binding) {
     if (nsContentUtils::IsSafeToRunScript()) {

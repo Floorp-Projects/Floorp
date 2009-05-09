@@ -52,9 +52,27 @@ PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(),
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(PlaceholderTxn)
 
-NS_IMPL_ISUPPORTS_INHERITED2(PlaceholderTxn, EditAggregateTxn,
-                             nsIAbsorbingTransaction, nsISupportsWeakReference)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PlaceholderTxn,
+                                                EditAggregateTxn)
+  tmp->mStartSel->DoUnlink();
+  tmp->mEndSel.DoUnlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PlaceholderTxn,
+                                                  EditAggregateTxn)
+  tmp->mStartSel->DoTraverse(cb);
+  tmp->mEndSel.DoTraverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PlaceholderTxn)
+  NS_INTERFACE_MAP_ENTRY(nsIAbsorbingTransaction)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END_INHERITING(EditAggregateTxn)
+
+NS_IMPL_ADDREF_INHERITED(PlaceholderTxn, EditAggregateTxn)
+NS_IMPL_RELEASE_INHERITED(PlaceholderTxn, EditAggregateTxn)
 
 NS_IMETHODIMP PlaceholderTxn::Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor)
 {

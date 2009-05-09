@@ -108,9 +108,9 @@
 
 
 <!ENTITY  securityView.identity.header   "Web Site Identity">
-<!ENTITY  securityView.identity.owner    "Owner: ">
-<!ENTITY  securityView.identity.domain   "Web site: ">
-<!ENTITY  securityView.identity.verifier "Verified by: ">
+<!ENTITY  securityView.identity.owner    "Owner:">
+<!ENTITY  securityView.identity.domain   "Web site:">
+<!ENTITY  securityView.identity.verifier "Verified by:">
 
 <!ENTITY  securityView.privacy.header                   "Privacy &amp; History">
 <!ENTITY  securityView.privacy.history                  "Have I visited this web site before today?">

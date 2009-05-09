@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -36,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGESTATEMENT_H_
-#define _MOZSTORAGESTATEMENT_H_
+#ifndef _mozStorageStatement_h_
+#define _mozStorageStatement_h_
 
 #include "nsAutoPtr.h"
 #include "nsString.h"
@@ -46,55 +47,50 @@
 
 #include "mozIStorageStatement.h"
 
-#include <sqlite3.h>
-
 class nsIXPConnectJSObjectHolder;
+struct sqlite3_stmt;
 
 namespace mozilla {
 namespace storage {
 class StatementJSHelper;
 class Connection;
-} // storage
-} // mozilla
 
-class mozStorageStatement : public mozIStorageStatement
+class Statement : public mozIStorageStatement
 {
 public:
-    mozStorageStatement();
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENT
+  NS_DECL_MOZISTORAGEVALUEARRAY
 
-    // interfaces
-    NS_DECL_ISUPPORTS
-    NS_DECL_MOZISTORAGESTATEMENT
-    NS_DECL_MOZISTORAGEVALUEARRAY
+  Statement();
 
-    /**
-     * Initializes the object on aDBConnection by preparing the SQL statement
-     * given by aSQLStatement.
-     *
-     * @param aDBConnection
-     *        The mozStorageConnection object this statement is associated with.
-     * @param aSQLStatement
-     *        The SQL statement to prepare that this object will represent.
-     */
-    nsresult Initialize(mozilla::storage::Connection *aDBConnection,
-                        const nsACString &aSQLStatement);
+  /**
+   * Initializes the object on aDBConnection by preparing the SQL statement
+   * given by aSQLStatement.
+   *
+   * @param aDBConnection
+   *        The Connection object this statement is associated with.
+   * @param aSQLStatement
+   *        The SQL statement to prepare that this object will represent.
+   */
+  nsresult initialize(Connection *aDBConnection,
+                      const nsACString &aSQLStatement);
 
 
-    /**
-     * Obtains the native statement pointer.
-     */
-    inline sqlite3_stmt *nativeStatement() { return mDBStatement; }
+  /**
+   * Obtains the native statement pointer.
+   */
+  inline sqlite3_stmt *nativeStatement() { return mDBStatement; }
 
 private:
-    ~mozStorageStatement();
+    ~Statement();
 
-protected:
-    nsRefPtr<mozilla::storage::Connection> mDBConnection;
+    nsRefPtr<Connection> mDBConnection;
     sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
     nsTArray<nsCString> mColumnNames;
-    PRBool mExecuting;
+    bool mExecuting;
 
     /**
      * The following two members are only used with the JS helper.  They cache
@@ -103,7 +99,10 @@ protected:
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
     nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementRowHolder;
 
-    friend class mozilla::storage::StatementJSHelper;
+    friend class StatementJSHelper;
 };
 
-#endif /* _MOZSTORAGESTATEMENT_H_ */
+} // storage
+} // mozilla
+
+#endif // _mozStorageStatement_h_

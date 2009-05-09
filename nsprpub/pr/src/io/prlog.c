@@ -128,8 +128,6 @@ static void OutputDebugStringA(const char* msg) {
 #define _PUT_LOG(fd, buf, nb) {fwrite(buf, 1, nb, fd); fflush(fd);}
 #elif defined(_PR_PTHREADS)
 #define _PUT_LOG(fd, buf, nb) PR_Write(fd, buf, nb)
-#elif defined(XP_MAC)
-#define _PUT_LOG(fd, buf, nb) _PR_MD_WRITE_SYNC(fd, buf, nb)
 #else
 #define _PUT_LOG(fd, buf, nb) _PR_MD_WRITE(fd, buf, nb)
 #endif
@@ -146,6 +144,7 @@ static FILE *logFile = NULL;
 #else
 static PRFileDesc *logFile = 0;
 #endif
+static PRBool outputTimeStamp = PR_FALSE;
 
 #define LINE_BUF_SIZE           512
 #define DEFAULT_BUF_SIZE        16384
@@ -231,6 +230,8 @@ void _PR_InitLog(void)
                 if (level >= LINE_BUF_SIZE) {
                     bufSize = level;
                 }
+            } else if (strcasecmp(module, "__timestamp") == 0) {
+                outputTimeStamp = PR_TRUE;
             } else {
                 PRLogModuleInfo *lm = logModules;
                 PRBool skip_modcheck =
@@ -296,14 +297,13 @@ void _PR_LogCleanup(void)
 #endif
         ) {
         fclose(logFile);
-        logFile = NULL;
     }
 #else
     if (logFile && logFile != _pr_stdout && logFile != _pr_stderr) {
         PR_Close(logFile);
-        logFile = NULL;
     }
 #endif
+    logFile = NULL;
 
     if (logBuf)
         PR_DELETE(logBuf);
@@ -419,9 +419,6 @@ PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
             PR_Close(logFile);
         }
         logFile = newLogFile;
-#if defined(XP_MAC)
-        SetLogFileTypeCreator(file);
-#endif
     }
     return (PRBool) (newLogFile != 0);
 #endif /* _PR_USE_STDIO_FOR_LOGGING */
@@ -445,8 +442,9 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
     va_list ap;
     char line[LINE_BUF_SIZE];
     char *line_long = NULL;
-    PRUint32 nb_tid, nb;
+    PRUint32 nb_tid = 0, nb;
     PRThread *me;
+    PRExplodedTime now;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
@@ -454,17 +452,18 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
         return;
     }
 
+    if (outputTimeStamp) {
+        PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
+        nb_tid = PR_FormatTimeUSEnglish(line, sizeof(line)-1,
+                                        "%Y-%m-%d %H:%M:%S - ", &now);
+    }
+
     me = PR_GetCurrentThread();
-    nb_tid = PR_snprintf(line, sizeof(line)-1, "%ld[%p]: ",
-#if defined(_PR_DCETHREADS)
-             /* The problem is that for _PR_DCETHREADS, pthread_t is not a 
-              * pointer, but a structure; so you can't easily print it...
-              */
-                         me ? &(me->id): 0L, me);
-#elif defined(_PR_BTHREADS)
-                         me, me);
+    nb_tid += PR_snprintf(line+nb_tid, sizeof(line)-nb_tid-1, "%ld[%p]: ",
+#if defined(_PR_BTHREADS)
+                          me, me);
 #else
-                         me ? me->id : 0L, me);
+                          me ? me->id : 0L, me);
 #endif
 
     va_start(ap, fmt);
@@ -489,7 +488,10 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
             _PUT_LOG(logFile, logBuf, logp - logBuf);
             logp = logBuf;
         }
-        /* Write out the thread id and the malloc'ed buffer. */
+        /*
+         * Write out the thread id (with an optional timestamp) and the
+         * malloc'ed buffer.
+         */
         _PUT_LOG(logFile, line, nb_tid);
         _PUT_LOG(logFile, line_long, nb);
         /* Ensure there is a trailing newline. */
@@ -549,23 +551,11 @@ PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
 #endif
-#ifdef XP_MAC
-    dprintf("Assertion failure: %s, at %s:%d\n", s, file, ln);
-#endif
 #ifdef WIN32
     DebugBreak();
 #endif
 #ifdef XP_OS2
     asm("int $3");
 #endif
-#ifndef XP_MAC
     abort();
-#endif
 }
-
-#ifdef XP_MAC
-PR_IMPLEMENT(void) PR_Init_Log(void)
-{
-	_PR_InitLog();
-}
-#endif

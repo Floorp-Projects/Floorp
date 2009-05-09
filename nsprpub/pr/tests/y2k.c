@@ -56,12 +56,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#include "macstdlibextras.h"
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 #define PRINT_DETAILS
 
 int failed_already=0;
@@ -792,12 +786,6 @@ int main(int argc, char** argv)
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     lm = PR_NewLogModule("test");
 
-#ifdef XP_MAC
-	/* Set up the console */
-	InitializeSIOUX(true);
-	debug_mode = PR_TRUE;
-#endif
-
     if ( PR_FAILURE == TestExplodeImplodeTime())
     {
         PR_LOG( lm, PR_LOG_ERROR,
@@ -821,16 +809,6 @@ int main(int argc, char** argv)
     }
     else
     	printf("Test 3: Parse Time Test passed\n");
-
-#ifdef XP_MAC
-	if (1)
-	{
-		char dummyChar;
-		
-		printf("Press return to exit\n\n");
-		scanf("%c", &dummyChar);
-	}
-#endif
 
 	if (failed_already) 
 	    return 1;

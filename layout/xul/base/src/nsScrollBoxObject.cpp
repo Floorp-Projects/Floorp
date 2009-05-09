@@ -290,7 +290,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
 
     nsIntRect prect;
     GetOffsetRect(prect);
-    crect = nsIntRect::ToAppUnits(prect, nsPresContext::AppUnitsPerCSSPixel());
+    crect = prect.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
     nscoord newx=cp.x, newy=cp.y;
 
     // we only scroll in the direction of the scrollbox orientation
@@ -390,7 +390,7 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     scrollableView->GetScrollPosition(cp.x,cp.y);
     nsIntRect prect;
     GetOffsetRect(prect);
-    crect = nsIntRect::ToAppUnits(prect, nsPresContext::AppUnitsPerCSSPixel());
+    crect = prect.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
 
     nscoord newx=cp.x, newy=cp.y;
 

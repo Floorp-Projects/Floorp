@@ -91,6 +91,12 @@ const ActiveDownloadData = [
 
 function runTest()
 {
+  var dmui = getDMUI();
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    return;
+  }
+
   setCleanState();
   populateDM(DoneDownloadData);
 
@@ -164,8 +170,6 @@ function runTest()
 
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
 
-  let dmui = Cc["@mozilla.org/download-manager-ui;1"].
-             getService(Ci.nsIDownloadManagerUI);
   dmui.show();
 
   SimpleTest.waitForExplicitFinish();

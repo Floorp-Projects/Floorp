@@ -53,8 +53,8 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// StatementRow
 
-StatementRow::StatementRow(mozStorageStatement *aStatement) :
-    mStatement(aStatement)
+StatementRow::StatementRow(Statement *aStatement)
+: mStatement(aStatement)
 {
 }
 

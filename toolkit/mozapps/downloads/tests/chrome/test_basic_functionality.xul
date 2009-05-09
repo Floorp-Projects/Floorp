@@ -52,13 +52,11 @@
           src="chrome://mochikit/content/MochiKit/packed.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome/toolkit/mozapps/downloads/tests/chrome/utils.js"/>
 
   <script type="application/javascript">
   <![CDATA[
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
 
 var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var dmFile = Cc["@mozilla.org/file/directory_service;1"].
@@ -183,6 +181,12 @@ var testFuncs = [
 
 function test()
 {
+  var dmui = getDMUI();
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    return;
+  }
+
   var dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   var db = dm.DBConnection;
@@ -215,7 +219,7 @@ function test()
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   const DLMGR_UI_DONE = "download-manager-ui-done";
- 
+
   let testObs = {
     observe: function(aSubject, aTopic, aData)
     {
@@ -239,8 +243,7 @@ function test()
   os.addObserver(testObs, DLMGR_UI_DONE, false);
 
   // Show the Download Manager UI
-  Cc["@mozilla.org/download-manager-ui;1"].
-  getService(Ci.nsIDownloadManagerUI).show();
+  dmui.show();
 
   SimpleTest.waitForExplicitFinish();
 }

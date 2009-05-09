@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -36,27 +37,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGESTATEMENTWRAPPER_H_
-#define _MOZSTORAGESTATEMENTWRAPPER_H_
+#ifndef _mozStorageStatementWrapper_h_
+#define _mozStorageStatementWrapper_h_
+
+#include "nsTArray.h"
+#include "nsIXPCScriptable.h"
 
 #include "mozStorageStatement.h"
 #include "mozIStorageStatementWrapper.h"
-#include "nsIXPCScriptable.h"
 
-#include "nsVoidArray.h"
-#include "nsTArray.h"
+namespace mozilla {
+namespace storage {
 
-#include "sqlite3.h"
-
-
-/***
- *** mozStorageStatementWrapper
- ***/
-class mozStorageStatementWrapper : public mozIStorageStatementWrapper,
-                                   public nsIXPCScriptable
+class StatementWrapper : public mozIStorageStatementWrapper
+                       , public nsIXPCScriptable
 {
 public:
-    mozStorageStatementWrapper();
+    StatementWrapper();
 
     // interfaces
     NS_DECL_ISUPPORTS
@@ -64,15 +61,13 @@ public:
     NS_DECL_NSIXPCSCRIPTABLE
 
 private:
-    ~mozStorageStatementWrapper();
+    ~StatementWrapper();
 
-protected:
-    sqlite3_stmt* NativeStatement() {
-        return mStatement->nativeStatement();
+    sqlite3_stmt *nativeStatement() {
+      return mStatement->nativeStatement();
     }
 
-    // note: pointer to the concrete statement
-    nsRefPtr<mozStorageStatement> mStatement;
+    nsRefPtr<Statement> mStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
     nsTArray<nsString> mColumnNames;
@@ -81,4 +76,7 @@ protected:
     nsCOMPtr<mozIStorageStatementParams> mStatementParams;
 };
 
-#endif /* _MOZSTORAGESTATEMENTWRAPPER_H_ */
+} // namespace storage
+} // namespace mozilla
+
+#endif // _mozStorageStatementWrapper_h_

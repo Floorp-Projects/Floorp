@@ -83,7 +83,7 @@
 
 #define SERVER_MAX_BIND_COUNT        100
 
-#if defined(XP_MAC) || defined(XP_OS2) || defined(SYMBIAN)
+#if defined(XP_OS2) || defined(SYMBIAN)
 #define TIMEOUTSECS 10
 #else
 #define TIMEOUTSECS 2
@@ -488,11 +488,6 @@ int main(int argc, char **argv)
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     output = PR_STDERR;
     PR_STDIO_INIT();
-
-#ifdef XP_MAC
-    SetupMacPrintfLog("accept.log");
-    debug_mode = 1;
-#endif
 
     timeoutTime = PR_SecondsToInterval(TIMEOUTSECS);
     if (debug_mode)

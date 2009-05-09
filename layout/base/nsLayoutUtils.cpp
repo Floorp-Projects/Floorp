@@ -3060,6 +3060,44 @@ nsLayoutUtils::HasNonZeroCorner(const nsStyleCorners& aCorners)
   return PR_FALSE;
 }
 
+// aCorner is a "full corner" value, i.e. NS_CORNER_TOP_LEFT etc
+static PRBool IsCornerAdjacentToSide(PRUint8 aCorner, PRUint8 aSide)
+{
+  PR_STATIC_ASSERT(NS_SIDE_TOP == NS_CORNER_TOP_LEFT);
+  PR_STATIC_ASSERT(NS_SIDE_RIGHT == NS_CORNER_TOP_RIGHT);
+  PR_STATIC_ASSERT(NS_SIDE_BOTTOM == NS_CORNER_BOTTOM_RIGHT);
+  PR_STATIC_ASSERT(NS_SIDE_LEFT == NS_CORNER_BOTTOM_LEFT);
+  PR_STATIC_ASSERT(NS_SIDE_TOP == ((NS_CORNER_TOP_RIGHT - 1)&3));
+  PR_STATIC_ASSERT(NS_SIDE_RIGHT == ((NS_CORNER_BOTTOM_RIGHT - 1)&3));
+  PR_STATIC_ASSERT(NS_SIDE_BOTTOM == ((NS_CORNER_BOTTOM_LEFT - 1)&3));
+  PR_STATIC_ASSERT(NS_SIDE_LEFT == ((NS_CORNER_TOP_LEFT - 1)&3));
+
+  return aSide == aCorner || aSide == ((aCorner - 1)&3);
+}
+
+/* static */ PRBool
+nsLayoutUtils::HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
+                                      PRUint8 aSide)
+{
+  PR_STATIC_ASSERT(NS_CORNER_TOP_LEFT_X/2 == NS_CORNER_TOP_LEFT);
+  PR_STATIC_ASSERT(NS_CORNER_TOP_LEFT_Y/2 == NS_CORNER_TOP_LEFT);
+  PR_STATIC_ASSERT(NS_CORNER_TOP_RIGHT_X/2 == NS_CORNER_TOP_RIGHT);
+  PR_STATIC_ASSERT(NS_CORNER_TOP_RIGHT_Y/2 == NS_CORNER_TOP_RIGHT);
+  PR_STATIC_ASSERT(NS_CORNER_BOTTOM_RIGHT_X/2 == NS_CORNER_BOTTOM_RIGHT);
+  PR_STATIC_ASSERT(NS_CORNER_BOTTOM_RIGHT_Y/2 == NS_CORNER_BOTTOM_RIGHT);
+  PR_STATIC_ASSERT(NS_CORNER_BOTTOM_LEFT_X/2 == NS_CORNER_BOTTOM_LEFT);
+  PR_STATIC_ASSERT(NS_CORNER_BOTTOM_LEFT_Y/2 == NS_CORNER_BOTTOM_LEFT);
+
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    // corner is a "half corner" value, so dividing by two gives us a
+    // "full corner" value.
+    if (NonZeroStyleCoord(aCorners.Get(corner)) &&
+        IsCornerAdjacentToSide(corner/2, aSide))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 /* static */ nsTransparencyMode
 nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
   if (aFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)

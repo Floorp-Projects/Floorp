@@ -500,8 +500,8 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
  *     returns the time parameters for the local time zone
  *
  *     The following uses localtime() from the standard C library.
- *     (time.h)  This is our fallback implementation.  Unix and PC
- *     use this version.  Mac has its own machine-dependent
+ *     (time.h)  This is our fallback implementation.  Unix, PC, and BeOS
+ *     use this version.  A platform may have its own machine-dependent
  *     implementation of this function.
  *
  *-------------------------------------------------------------------------
@@ -528,10 +528,6 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
 #define MT_safe_localtime localtime_r
 
 #else
-
-#if defined(XP_MAC)
-extern struct tm *Maclocaltime(const time_t * t);
-#endif
 
 #define HAVE_LOCALTIME_MONITOR 1  /* We use 'monitor' to serialize our calls
                                    * to localtime(). */
@@ -562,11 +558,7 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
      * structs returned for timezones west of Greenwich when clock == 0.
      */
     
-#if defined(XP_MAC)
-    tmPtr = Maclocaltime(clock);
-#else
     tmPtr = localtime(clock);
-#endif
 
 #if defined(WIN16) || defined(XP_OS2)
     if ( (PRInt32) *clock < 0 ||
@@ -754,7 +746,7 @@ PR_LocalTimeParameters(const PRExplodedTime *gmt)
     return retVal;
 }
 
-#endif    /* defined(XP_UNIX) !! defined(XP_PC) */
+#endif    /* defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS) */
 
 /*
  *------------------------------------------------------------------------
@@ -908,10 +900,6 @@ PR_USPacificTimeParameters(const PRExplodedTime *gmt)
 PR_IMPLEMENT(PRTimeParameters)
 PR_GMTParameters(const PRExplodedTime *gmt)
 {
-#if defined(XP_MAC)
-#pragma unused (gmt)
-#endif
-
     PRTimeParameters retVal = { 0, 0 };
     return retVal;
 }

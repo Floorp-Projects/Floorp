@@ -61,14 +61,6 @@
 
 static int _debug_on = 0;
 
-#ifdef XP_MAC
-#include "prlog.h"
-#include "primpl.h"
-#define printf PR_LogPrint
-#define setbuf(x,y)
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 #ifdef WINCE
 #define setbuf(x,y)
 #endif
@@ -687,14 +679,14 @@ HANDLE hfile;
 		}
         PR_Close(fd_file);
 	}
-#if defined(XP_UNIX) || defined(XP_MAC) || (defined(XP_PC) && defined(WIN32)) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) || (defined(XP_PC) && defined(WIN32)) || defined(XP_OS2) || defined(XP_BEOS)
 	/*
 	 * Create a hidden file - a platform-dependent operation
 	 */
 	strcpy(pathname, TEST_DIR);
 	strcat(pathname, "/");
 	strcat(pathname, HIDDEN_FILE_NAME);
-#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 	DPRINTF(("Creating hidden test file %s\n",pathname));
 	fd_file = PR_Open(pathname, PR_RDWR | PR_CREATE_FILE, 0777);
 
@@ -705,56 +697,8 @@ HANDLE hfile;
 		return -1;
 	}
 
-#if defined(XP_MAC)
-	{
-#include <files.h>
-
-	OSErr			err;
-	FCBPBRec		fcbpb;
-	CInfoPBRec		pb;
-	Str255			pascalMacPath;
-
-	fcbpb.ioNamePtr = pascalMacPath;
-	fcbpb.ioVRefNum = 0;
-	fcbpb.ioRefNum = fd_file->secret->md.osfd;
-	fcbpb.ioFCBIndx = 0;
-	
-	err = PBGetFCBInfoSync(&fcbpb);
-	if (err != noErr) {
-    	PR_Close(fd_file);
-    	return -1;
-	}
-	
-	pb.hFileInfo.ioNamePtr = pascalMacPath;
-	pb.hFileInfo.ioVRefNum = fcbpb.ioFCBVRefNum;
-	pb.hFileInfo.ioDirID = fcbpb.ioFCBParID;
-	pb.hFileInfo.ioFDirIndex = 0;
-	
-	err = PBGetCatInfoSync(&pb);
-	if (err != noErr) {
-    	PR_Close(fd_file);
-    	return -1;
-	}
-
-	pb.hFileInfo.ioNamePtr = pascalMacPath;
-	pb.hFileInfo.ioVRefNum = fcbpb.ioFCBVRefNum;
-	pb.hFileInfo.ioDirID = fcbpb.ioFCBParID;
-	pb.hFileInfo.ioFDirIndex = 0;
-	
-	pb.hFileInfo.ioFlFndrInfo.fdFlags |= fInvisible;
-
-	err = PBSetCatInfoSync(&pb);
-	if (err != noErr) {
-    	PR_Close(fd_file);
-    	return -1;
-	}
-
-	}
-#endif
-
     PR_Close(fd_file);
 
-	
 #elif defined(WINCE)
 	DPRINTF(("Creating hidden test file %s\n",pathname));
     MultiByteToWideChar(CP_ACP, 0, pathname, -1, wPathname, 256); 
@@ -796,9 +740,9 @@ HANDLE hfile;
 		return -1;
 	}
 	PR_Close(fd_file);
-#endif	/* XP _UNIX || XP_MAC*/
+#endif	/* XP_UNIX */
 
-#endif	/* XP_UNIX || XP_MAC ||(XP_PC && WIN32) */
+#endif	/* XP_UNIX || (XP_PC && WIN32) */
 
 
 	if (PR_FAILURE == PR_CloseDir(fd_dir))
@@ -820,7 +764,7 @@ HANDLE hfile;
 	 * List all files, including hidden files
 	 */
 	DPRINTF(("Listing all files in directory %s\n",TEST_DIR));
-#if defined(XP_UNIX) || defined(XP_MAC) || (defined(XP_PC) && defined(WIN32)) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) || (defined(XP_PC) && defined(WIN32)) || defined(XP_OS2) || defined(XP_BEOS)
 	num_files = FILES_IN_DIR + 1;
 #else
 	num_files = FILES_IN_DIR;
@@ -856,7 +800,7 @@ HANDLE hfile;
 
     PR_CloseDir(fd_dir);
 
-#if defined(XP_UNIX) || defined(XP_MAC) || (defined(XP_PC) && defined(WIN32)) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) || (defined(XP_PC) && defined(WIN32)) || defined(XP_OS2) || defined(XP_BEOS)
 
 	/*
 	 * List all files, except hidden files
@@ -893,7 +837,7 @@ HANDLE hfile;
 	}
 
     PR_CloseDir(fd_dir);
-#endif	/* XP_UNIX || XP_MAC || (XP_PC && WIN32) */
+#endif	/* XP_UNIX || (XP_PC && WIN32) */
 
 	strcpy(renamename, TEST_DIR);
 	strcat(renamename, ".RENAMED");
@@ -999,10 +943,6 @@ int main(int argc, char **argv)
 #endif
 	PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("testfile.log");
-#endif
 
 	mon = PR_NewMonitor();
 	if (mon == NULL) {

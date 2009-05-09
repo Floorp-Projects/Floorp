@@ -47,6 +47,21 @@
 
 #define kNullCh (PRUnichar('\0'))
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(ChangeCSSInlineStyleTxn)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ChangeCSSInlineStyleTxn,
+                                                EditTxn)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ChangeCSSInlineStyleTxn,
+                                                  EditTxn)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeCSSInlineStyleTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+
 // answers true if aValue is in the string list of white-space separated values aValueList
 // a case-sensitive search is performed if aCaseSensitive is true
 PRBool

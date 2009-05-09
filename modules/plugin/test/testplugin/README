@@ -101,3 +101,19 @@ plugin's clip region. If i is less than zero or greater than or equal to
 getClipRegionRectCount(), this will throw an error. The coordinates are
 the same as for getEdge. See getClipRegionRectCount() above for
 notes on platform plugin limitations.
+
+== Instance lifecycle ==
+
+The test plugin supports the following scriptable methods:
+
+* startWatchingInstanceCount()
+Marks all currently running instances as "ignored". Throws an exception if
+there is already a watch (startWatchingInstanceCount has already been
+called on some instance without a corresponding stopWatchingInstanceCount).
+
+* getInstanceCount()
+Returns the count of currently running instances that are not ignored.
+Throws an exception if there is no watch.
+
+* stopWatchingInstanceCount()
+Stops watching. Throws an exception if there is no watch.

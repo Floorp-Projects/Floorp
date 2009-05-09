@@ -226,12 +226,6 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
 
     GetSystemInfo( &info );
     numCpus = info.dwNumberOfProcessors;
-#elif defined(XP_MAC)
-/* Hard-code the number of processors to 1 on the Mac
-** MacOS/9 will always be 1. The MPProcessors() call is for
-** MacOS/X, when issued. Leave it commented out for now. */
-/*  numCpus = MPProcessors(); */
-    numCpus = 1;
 #elif defined(BEOS)
     system_info sysInfo;
 

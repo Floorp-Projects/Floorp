@@ -55,6 +55,9 @@ public:
 
   AddStyleSheetTxn();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AddStyleSheetTxn, EditTxn)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   NS_DECL_EDITTXN
 
 protected:
@@ -76,6 +79,9 @@ public:
                   nsICSSStyleSheet  *aSheet);
 	
   RemoveStyleSheetTxn();
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RemoveStyleSheetTxn, EditTxn)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   NS_DECL_EDITTXN
 

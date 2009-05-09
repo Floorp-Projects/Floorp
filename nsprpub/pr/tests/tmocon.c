@@ -72,11 +72,6 @@
 #include <direct.h>
 #endif
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-#endif
-
 
 #define BASE_PORT 9867
 
