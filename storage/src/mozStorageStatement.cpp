@@ -345,8 +345,12 @@ Statement::GetParameterIndex(const nsACString &aName,
   if (!mDBStatement)
     return NS_ERROR_NOT_INITIALIZED;
 
+  // We do not accept any forms of names other than ":name", but we need to add
+  // the colon for SQLite.
+  nsCAutoString name(":");
+  name.Append(aName);
   int ind = ::sqlite3_bind_parameter_index(mDBStatement,
-                                           PromiseFlatCString(aName).get());
+                                           PromiseFlatCString(name).get());
   if (ind  == 0) // Named parameter not found.
     return NS_ERROR_INVALID_ARG;
 
