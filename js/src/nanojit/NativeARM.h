@@ -194,6 +194,7 @@ verbose_only( extern const char* shiftNames[]; )
     void asm_ld_imm(Register d, int32_t imm);                           \
     void asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd);        \
     int* _nSlot;                                                        \
+    int* _startingSlot;                                                \
     int* _nExitSlot;
 
 

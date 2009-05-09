@@ -836,6 +836,7 @@ void
 Assembler::nativePageReset()
 {
     _nSlot = 0;
+    _startingSlot = 0;
     _nExitSlot = 0;
 }
 
@@ -857,6 +858,26 @@ Assembler::nativePageSetup()
         // code starts at bottom of page and moves up
         _nSlot = pageDataStart(_nIns); //(int*)(&((Page*)pageTop(_nIns))->lir[0]);
     }
+}
+
+// Record the starting value of _nIns. On ARM, it is also necessary to record
+// the starting value of the literal pool pointer, _nSlot.
+void
+Assembler::recordStartingInstructionPointer()
+{
+    _startingIns = _nIns;
+    _startingSlot = _nSlot;
+    NanoAssert(samepage(_nIns,_nSlot));
+}
+
+// ARM uses a literal pool which needs to be reset along with the instruction
+// pointer.
+void
+Assembler::resetInstructionPointer()
+{
+    _nIns = _startingIns;
+    _nSlot = _startingSlot;
+    NanoAssert(samepage(_nIns,_nSlot));
 }
 
 // Note: underrunProtect should not touch any registers, even IP; it
