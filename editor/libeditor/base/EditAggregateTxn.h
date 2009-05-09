@@ -55,6 +55,8 @@ public:
 
   EditAggregateTxn();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EditAggregateTxn, EditTxn)
+
   NS_DECL_EDITTXN
 
   NS_IMETHOD RedoTransaction();

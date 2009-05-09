@@ -65,6 +65,9 @@ public:
 
   DeleteTextTxn();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteTextTxn, EditTxn)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   NS_DECL_EDITTXN
 
   PRUint32 GetOffset() { return mOffset; }
