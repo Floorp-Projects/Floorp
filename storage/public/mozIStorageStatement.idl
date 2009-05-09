@@ -41,11 +41,10 @@
 #include "mozIStorageValueArray.idl"
 
 interface mozIStorageConnection;
-interface nsISimpleEnumerator;
 interface mozIStorageStatementCallback;
 interface mozIStoragePendingStatement;
 
-[scriptable, uuid(471e161a-af46-4eb3-adf6-f6b0c41fe81c)]
+[scriptable, uuid(52d740cd-1c25-471f-a848-98d1a00a2963)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Finalizes a statement so you can successfully close a database connection.
@@ -76,8 +75,10 @@ interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Returns the index of the named parameter.
    *
-   * @param aName The name of the parameter you want the index for.
-   * @return The index of the named parameter.
+   * @param aName
+   *        The name of the parameter you want the index for.  This does not
+   *        include the leading ':'.
+   * @returns the index of the named parameter.
    */
   unsigned long getParameterIndex(in AUTF8String aName);
 
