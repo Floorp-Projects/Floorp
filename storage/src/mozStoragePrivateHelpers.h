@@ -41,14 +41,25 @@
 #ifndef _mozStoragePrivateHelpers_h_
 #define _mozStoragePrivateHelpers_h_
 
-#include "mozStorage.h"
-
 /**
  * This file contains convenience methods for mozStorage.
  */
 
+#include "mozStorage.h"
+
+struct sqlite3_stmt;
+
 namespace mozilla {
 namespace storage {
+
+////////////////////////////////////////////////////////////////////////////////
+//// Macros
+
+#define ENSURE_INDEX_VALUE(aIndex, aCount) \
+  NS_ENSURE_TRUE(aIndex < aCount, NS_ERROR_INVALID_ARG)
+
+////////////////////////////////////////////////////////////////////////////////
+//// Functions
 
 /**
  * Converts a SQLite return code to an nsresult return code.
