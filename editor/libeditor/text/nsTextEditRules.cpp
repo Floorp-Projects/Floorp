@@ -183,6 +183,13 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
 }
 
 NS_IMETHODIMP
+nsTextEditRules::DetachEditor()
+{
+  mEditor = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTextEditRules::GetFlags(PRUint32 *aFlags)
 {
   if (!aFlags) { return NS_ERROR_NULL_POINTER; }
