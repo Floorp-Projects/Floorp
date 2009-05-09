@@ -227,6 +227,16 @@ sqlite3_T_null(sqlite3_context *aCtx)
   return SQLITE_OK;
 }
 
+template < >
+int
+sqlite3_T_blob(sqlite3_context *aCtx,
+               const void *aData,
+               int aSize)
+{
+  ::sqlite3_result_blob(aCtx, aData, aSize, NS_Free);
+  return SQLITE_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Connection
 

@@ -53,6 +53,8 @@ template <typename T>
 int sqlite3_T_text16(T aObj, nsString aValue);
 template <typename T>
 int sqlite3_T_null(T aObj);
+template <typename T>
+int sqlite3_T_blob(T aObj, const void *aBlob, int aSize);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// variantToSQLiteT Implementation
@@ -126,14 +128,36 @@ variantToSQLiteT(T aObj,
     }
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_EMPTY:
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
       return sqlite3_T_null(aObj);
+    case nsIDataType::VTYPE_ARRAY:
+    {
+      PRUint16 type;
+      nsIID iid;
+      PRUint32 count;
+      void *data;
+      nsresult rv = aValue->GetAsArray(&type, &iid, &count, &data);
+      NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
+
+      // Check to make sure it's a supported type.
+      NS_ASSERTION(type == nsIDataType::VTYPE_UINT8,
+                   "Invalid type passed!  You may leak!");
+      if (type != nsIDataType::VTYPE_UINT8) {
+        // Technically this could leak with certain data types, but somebody was
+        // being stupid passing us this anyway.
+        NS_Free(data);
+        return SQLITE_MISMATCH;
+      }
+
+      // Finally do our thing.  The function should free the array accordingly!
+      int rc = sqlite3_T_blob(aObj, data, count);
+      return rc;
+    }
     // Maybe, it'll be possible to convert these
     // in future too.
     case nsIDataType::VTYPE_ID:
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
-    case nsIDataType::VTYPE_ARRAY:
-    case nsIDataType::VTYPE_EMPTY_ARRAY:
     default:
       return SQLITE_MISMATCH;
   }
