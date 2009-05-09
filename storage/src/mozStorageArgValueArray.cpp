@@ -41,13 +41,11 @@
 #include "nsMemory.h"
 #include "nsString.h"
 
+#include "mozStoragePrivateHelpers.h"
 #include "mozStorageArgValueArray.h"
 
 namespace mozilla {
 namespace storage {
-
-#define ENSURE_INDEX_VALUE(aIndex, aCount) \
-  NS_ENSURE_TRUE(aIndex < aCount, NS_ERROR_INVALID_ARG)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// ArgValueArray
