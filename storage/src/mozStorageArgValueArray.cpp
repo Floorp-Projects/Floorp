@@ -171,7 +171,8 @@ ArgValueArray::GetString(PRUint32 aIndex,
 
 NS_IMETHODIMP
 ArgValueArray::GetBlob(PRUint32 aIndex,
-                       PRUint32 *_size, PRUint8 **_blob)
+                       PRUint32 *_size,
+                       PRUint8 **_blob)
 {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 

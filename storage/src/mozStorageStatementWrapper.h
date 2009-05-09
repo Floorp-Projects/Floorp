@@ -67,7 +67,7 @@ private:
       return mStatement->nativeStatement();
     }
 
-    nsRefPtr<mozStorageStatement> mStatement;
+    nsRefPtr<Statement> mStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
     nsTArray<nsString> mColumnNames;

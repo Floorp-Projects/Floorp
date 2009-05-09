@@ -42,7 +42,7 @@
 
 #include "nsIXPCScriptable.h"
 
-class mozStorageStatement;
+class Statement;
 
 namespace mozilla {
 namespace storage {
@@ -54,8 +54,8 @@ public:
   NS_DECL_NSIXPCSCRIPTABLE
 
 private:
-  nsresult getRow(mozStorageStatement *, JSContext *, JSObject *, jsval *);
-  nsresult getParams(mozStorageStatement *, JSContext *, JSObject *, jsval *);
+  nsresult getRow(Statement *, JSContext *, JSObject *, jsval *);
+  nsresult getParams(Statement *, JSContext *, JSObject *, jsval *);
 };
 
 } // namespace storage
