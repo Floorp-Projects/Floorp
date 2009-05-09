@@ -3446,6 +3446,10 @@ nsTypedSelection::~nsTypedSelection()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsTypedSelection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsTypedSelection)
+  // Unlink the selection listeners *before* we do RemoveAllRanges since
+  // we don't want to notify the listeners during JS GC (they could be
+  // in JS!).
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mSelectionListeners)
   tmp->RemoveAllRanges();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameSelection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -3458,6 +3462,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTypedSelection)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAnchorFocusRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameSelection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mSelectionListeners)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsTypedSelection
