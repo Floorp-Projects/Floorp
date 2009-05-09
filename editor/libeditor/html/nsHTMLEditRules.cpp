@@ -225,11 +225,12 @@ mDocChangeRange(nsnull)
 nsHTMLEditRules::~nsHTMLEditRules()
 {
   // remove ourselves as a listener to edit actions
-  // In the normal case, we have already been removed by 
-  // ~nsHTMLEditor, in which case we will get an error here
+  // In some cases, we have already been removed by 
+  // ~nsHTMLEditor, in which case we will get a null pointer here
   // which we ignore.  But this allows us to add the ability to
   // switch rule sets on the fly if we want.
-  mHTMLEditor->RemoveEditActionListener(this);
+  if (mHTMLEditor)
+    mHTMLEditor->RemoveEditActionListener(this);
 }
 
 /********************************************************
@@ -302,6 +303,12 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   return res;
 }
 
+NS_IMETHODIMP
+nsHTMLEditRules::DetachEditor()
+{
+  mHTMLEditor = nsnull;
+  return nsTextEditRules::DetachEditor();
+}
 
 NS_IMETHODIMP
 nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
