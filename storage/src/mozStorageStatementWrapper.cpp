@@ -77,7 +77,7 @@ StatementWrapper::Initialize(mozIStorageStatement *aStatement)
   NS_ASSERTION(mStatement == nsnull, "StatementWrapper is already initialized");
   NS_ENSURE_ARG_POINTER(aStatement);
 
-  mStatement = static_cast<mozStorageStatement *>(aStatement);
+  mStatement = static_cast<Statement *>(aStatement);
 
   // fetch various things we care about
   (void)mStatement->GetParameterCount(&mParamCount);
