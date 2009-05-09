@@ -538,7 +538,7 @@ enum {
 //#define INT3()  underrunProtect(1); *(--_nIns) = 0xcc;  asm_output("int3")
 //#define RET() INT3()
 
-#define BKPT_insn ((NIns)( (0xE<<24) | (0x12<<20) | (0x7<<4) ))
+#define BKPT_insn ((NIns)( COND_AL | (0x12<<20) | (0x7<<4) ))
 #define BKPT_nochk() do { \
         *(--_nIns) = BKPT_insn; } while (0)
 
