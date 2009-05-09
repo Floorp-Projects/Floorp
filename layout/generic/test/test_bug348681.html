@@ -1,0 +1,321 @@
+<!DOCTYPE HTML>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Selection Test code
+   -
+   - The Initial Developer of the Original Code is
+   - Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>.
+   - Portions created by the Initial Developer are Copyright (C) 2009
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=348681
+-->
+
+<head>
+  <title>Test for Bug 348681</head>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+
+<body onload="doTest();">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=348681">Mozilla Bug 348681</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 348681 **/
+    
+      SimpleTest.waitForExplicitFinish();
+
+      var rangeChecker = {
+        ranges: [],
+
+        reset: function() {
+          this.ranges = [];
+        },
+
+        check: function(testID, selection) {
+          is(selection.rangeCount, this.ranges.length,
+             "Test "+testID+": correct number of ranges in selection");
+          var rangesMatch = true;
+          var foundMsg = "Found ";
+          var expectedMsg = "Expected ";
+          var maxIndex = Math.max(selection.rangeCount, this.ranges.length);
+          for (var x = 0; x < maxIndex; x++) {
+            var expect = null;
+            if (x < this.ranges.length)
+              expect = this.ranges[x];
+
+            var found = null;
+            if (x < selection.rangeCount)
+              found = selection.getRangeAt(x);
+
+            if (found) {
+              foundMsg +="["+found.startOffset+","+found.endOffset+"] ";
+            } else {
+              foundMsg +="[] ";
+            }
+            if (expect) {
+              expectedMsg +="["+expect.start+","+expect.end+"] ";
+            } else {
+              expectedMsg+="[] ";
+            }
+            if (found && expect) {
+              if (found.startContainer != expect.node ||
+                  found.endContainer != expect.node ||
+                  found.startOffset != expect.start ||
+                  found.endOffset != expect.end)
+                rangesMatch = false;
+            } else {
+              rangesMatch = false;
+            }
+          }
+          var okMsg = "Test "+testID+": correct ranges in selection.";
+          okMsg = okMsg + foundMsg + expectedMsg;
+          ok(rangesMatch, okMsg);
+        },
+
+        addExpected: function(node, start, end) {
+          var expected = {};
+          expected.node = node;
+          expected.start = start;
+          expected.end = end;
+          this.ranges[this.ranges.length] = expected;
+          this.ranges.sort(function(a,b) {return a.start - b.start;});
+        }
+      }
+
+      function doTest() {
+       var testNode = document.getElementById("testparagraph").firstChild;
+
+       var selection = window.getSelection();
+       selection.removeAllRanges();
+       ok(selection.rangeCount == 0, "Test 0 - No selections so far");
+       
+       // Test 1. Add a single range, to ensure we've not broken anything
+       var range1 = document.createRange();
+       range1.setStart(testNode, 0);
+       range1.setEnd(testNode, 5);
+       selection.addRange(range1);
+       rangeChecker.addExpected(testNode, 0, 5);
+       rangeChecker.check(1, selection);
+
+       // Test 2. Add a non-overlapping range, to ensure it gets added too
+       var range2 = document.createRange();
+       range2.setStart(testNode, 8);
+       range2.setEnd(testNode, 10);
+       selection.addRange(range2);
+       rangeChecker.addExpected(testNode, 8, 10);
+       rangeChecker.check(2, selection);
+
+       // Test 3. Add the same range again. This should silently succeed
+       selection.addRange(range2);
+       rangeChecker.check(3, selection);
+
+       // Test 4. Add a range that is left-adjacent to an existing range
+       var range3 = document.createRange();
+       range3.setStart(testNode, 6);
+       range3.setEnd(testNode, 8);
+       selection.addRange(range3);
+       rangeChecker.addExpected(testNode, 6, 8);
+       rangeChecker.check(4, selection);
+
+       // Test 5. Add a range that is right-adjacent to an existing range
+       var range4 = document.createRange();
+       range4.setStart(testNode, 10);
+       range4.setEnd(testNode, 12);
+       selection.addRange(range4);
+       rangeChecker.addExpected(testNode, 10, 12);
+       rangeChecker.check(5, selection);
+
+       // Test 6. Add a range, add a second range that overlaps it
+       var range5 = document.createRange();
+       range5.setStart(testNode, 20);
+       range5.setEnd(testNode, 25);
+       selection.addRange(range5);
+       var range6 = document.createRange();
+       range6.setStart(testNode, 23);
+       range6.setEnd(testNode, 26);
+       selection.addRange(range6);
+       rangeChecker.addExpected(testNode, 20, 23);
+       rangeChecker.addExpected(testNode, 23, 26);
+       rangeChecker.check(6, selection);
+
+       // Test 7. Add a range, and this time a left-hand overlap
+       var range7 = document.createRange();
+       range7.setStart(testNode, 30);
+       range7.setEnd(testNode, 35);
+       selection.addRange(range7);
+       var range8 = document.createRange();
+       range8.setStart(testNode, 28);
+       range8.setEnd(testNode, 31);
+       selection.addRange(range8);
+       rangeChecker.addExpected(testNode, 31, 35);
+       rangeChecker.addExpected(testNode, 28, 31);
+       rangeChecker.check(7, selection);
+
+       // Test 8. Add a range, and add a second range wholly contained
+       // within it
+       var range9 = document.createRange();
+       range9.setStart(testNode, 40);
+       range9.setEnd(testNode, 50);
+       selection.addRange(range9);
+       var range10 = document.createRange();
+       range10.setStart(testNode, 43);
+       range10.setEnd(testNode, 47);
+       selection.addRange(range10);
+       rangeChecker.addExpected(testNode, 40, 43);
+       rangeChecker.addExpected(testNode, 43, 47);
+       rangeChecker.addExpected(testNode, 47, 50);
+       rangeChecker.check(8, selection);
+
+       // Test 9. Add a range that will wholly contain some existing ranges
+       rangeChecker.reset();
+       selection.removeAllRanges();
+       var range11 = document.createRange();
+       range11.setStart(testNode, 5);
+       range11.setEnd(testNode, 7);
+       selection.addRange(range11);
+       var range12 = document.createRange();
+       range12.setStart(testNode, 9);
+       range12.setEnd(testNode, 11);
+       selection.addRange(range12);
+       var range13 = document.createRange();
+       range13.setStart(testNode, 4);
+       range13.setEnd(testNode, 12);
+       selection.addRange(range13);
+       rangeChecker.addExpected(testNode, 4, 12);
+       rangeChecker.check(9, selection);
+
+       // Test 10. This time with the last range being a partial overlap
+       selection.removeAllRanges();
+       selection.addRange(range11);
+       selection.addRange(range12);
+       var range14 = document.createRange();
+       range14.setStart(testNode, 11);
+       range14.setEnd(testNode, 14);
+       selection.addRange(range14);
+       selection.addRange(range13);
+       rangeChecker.addExpected(testNode, 12, 14);
+       rangeChecker.check(10, selection);
+
+       // Test 11. Check we can add a collapsed range without problem
+       selection.removeAllRanges();
+       rangeChecker.reset();
+       range1.collapse(true);
+       selection.addRange(range1);
+       rangeChecker.addExpected(testNode, 0, 0);
+       rangeChecker.check(11, selection);
+
+       // Test 12. Check GetRangesForInterval returns correct results
+       // part 1 - non-adjacency
+       selection.removeAllRanges();
+       selection.addRange(range2);
+       selection.addRange(range3);
+       selection.addRange(range4);
+       var sel2 = selection.QueryInterface(Components.interfaces.nsISelection2);
+       ok(sel2, "Test 12 - QIed to instance of nsISelection2 interface");
+       var numResults = {};
+       var results = sel2.GetRangesForInterval(testNode, 8, testNode, 10,
+                                               false, numResults);
+       is(numResults.value, 1, "Test 12 - Correct number of ranges returned");
+       var result = results[0];
+       var correctNode = result.startContainer == testNode &&
+                         result.endContainer == testNode &&
+                         result.startOffset == 8 && result.endOffset == 10;
+       ok(correctNode, "Test 12 - Correct range returned");
+
+       // Test 13. Check GetRangesForInterval returns correct results
+       // part 2 - adjacent ranges allowed
+       numResults = {};
+       results = sel2.GetRangesForInterval(testNode, 8, testNode, 10,
+                                           true, numResults);
+       is(numResults.value, 3, "Test 13 - Correct number of ranges returned");
+       correctNode = true;
+       for (var x = 0; x < numResults.value; x++) {
+         var result = results[x];
+         var correct = result.startContainer == testNode &&
+                       result.endContainer == testNode &&
+                       result.startOffset == (2*x+6) &&
+                       result.endOffset == (2*x+8);
+         correctNode = correctNode && correct;
+       }
+       ok(correctNode, "Test 13 - Correct ranges returned");
+
+       // Test 14. Check GetRangesForInterval returns correct results
+       // part 3 - no ranges in interval
+       numResults = {};
+       results = sel2.GetRangesForInterval(testNode, 14, testNode, 16,
+                                           true, numResults);
+       is(numResults.value, 0, "Test 14 - Correct number of ranges returned");
+
+       // Test 15. Check that when adding a range where after overlap
+       // adjustment an exisiting range would collapse that the collapsed range
+       // is removed - part 1 (LHS)
+       selection.removeAllRanges();
+       rangeChecker.reset();
+       selection.addRange(range2);
+       var range15 = document.createRange();
+       range15.setStart(testNode, 6);
+       range15.setEnd(testNode, 10);
+       selection.addRange(range15);
+       rangeChecker.addExpected(testNode, 6, 10);
+       rangeChecker.check(15, selection);
+
+       // Test 16. Check that when adding a range where after overlap
+       // adjustment an exisiting range would collapse that the collapsed range
+       // is removed - part 2 (RHS)
+       selection.removeAllRanges();
+       rangeChecker.reset();
+       selection.addRange(range2);
+       var range16 = document.createRange();
+       range16.setStart(testNode, 8);
+       range16.setEnd(testNode, 12);
+       selection.addRange(range16);
+       rangeChecker.addExpected(testNode, 8, 12);
+       rangeChecker.check(16, selection);
+
+       SimpleTest.finish();
+     }
+   </script>
+  </pre>
+
+  <p id="testparagraph">
+This will be the first child of the p node above. The intention is that it is a suitably long text node to which we can add multiple ranges in order to test the various aspects of the bug.
+</p>
+</body>
+</html>
