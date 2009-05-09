@@ -75,7 +75,7 @@ struct StyleCache : public PropItem
 
 #define SIZE_STYLE_TABLE 19
 
-class nsHTMLEditRules : public nsIHTMLEditRules, public nsTextEditRules, public nsIEditActionListener
+class nsHTMLEditRules : public nsTextEditRules, public nsIHTMLEditRules, public nsIEditActionListener
 {
 public:
 
