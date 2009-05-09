@@ -351,7 +351,7 @@ Connection::initialize(nsIFile *aDatabaseFile)
   }
   if (srv != SQLITE_OK) {
     mDBConn = nsnull;
-    return ConvertResultCode(srv);
+    return convertResultCode(srv);
   }
 
 #ifdef PR_LOGGING
@@ -370,7 +370,7 @@ Connection::initialize(nsIFile *aDatabaseFile)
   // Register our built-in SQL functions.
   if (registerFunctions(mDBConn) != SQLITE_OK) {
     mDBConn = nsnull;
-    return ConvertResultCode(srv);
+    return convertResultCode(srv);
   }
 
   // Execute a dummy statement to force the db open, and to verify if it is
@@ -390,7 +390,7 @@ Connection::initialize(nsIFile *aDatabaseFile)
     ::sqlite3_close(mDBConn);
     mDBConn = nsnull;
 
-    return ConvertResultCode(srv);
+    return convertResultCode(srv);
   }
 
   // Set the synchronous PRAGMA, according to the pref
@@ -441,7 +441,7 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
   sqlite3_stmt *stmt;
   int srv = ::sqlite3_prepare_v2(mDBConn, query.get(), -1, &stmt, NULL);
   if (srv != SQLITE_OK)
-      return ConvertResultCode(srv);
+    return convertResultCode(srv);
 
   srv = ::sqlite3_step(stmt);
   // we just care about the return value from step
@@ -456,7 +456,7 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
     return NS_OK;
   }
 
-  return ConvertResultCode(srv);
+  return convertResultCode(srv);
 }
 
 bool
@@ -541,7 +541,7 @@ Connection::Close()
     NS_ERROR("sqlite3_close failed. There are probably outstanding statements that are listed above!");
 
   mDBConn = NULL;
-  return ConvertResultCode(srv);
+  return convertResultCode(srv);
 }
 
 NS_IMETHODIMP
@@ -648,7 +648,7 @@ Connection::ExecuteSimpleSQL(const nsACString &aSQLStatement)
 
   int srv = ::sqlite3_exec(mDBConn, PromiseFlatCString(aSQLStatement).get(),
                            NULL, NULL, NULL);
-  return ConvertResultCode(srv);
+  return convertResultCode(srv);
 }
 
 nsresult
@@ -705,7 +705,7 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
       (void)::sqlite3_finalize(stmts[i]);
 
     if (rc != SQLITE_OK)
-      rv = ConvertResultCode(rc);
+      rv = convertResultCode(rc);
   }
 
   // Always reset all the statements
@@ -805,7 +805,7 @@ Connection::CreateTable(const char *aTableName,
   int srv = ::sqlite3_exec(mDBConn, buf, NULL, NULL, NULL);
   ::PR_smprintf_free(buf);
 
-  return ConvertResultCode(srv);
+  return convertResultCode(srv);
 }
 
 NS_IMETHODIMP
@@ -829,7 +829,7 @@ Connection::CreateFunction(const nsACString &aFunctionName,
                                       NULL,
                                       NULL);
   if (srv != SQLITE_OK)
-    return ConvertResultCode(srv);
+    return convertResultCode(srv);
 
   NS_ENSURE_TRUE(mFunctions.Put(aFunctionName, aFunction),
                  NS_ERROR_OUT_OF_MEMORY);
@@ -862,7 +862,7 @@ Connection::CreateAggregateFunction(const nsACString &aFunctionName,
                                       aggregateFunctionStepHelper,
                                       aggregateFunctionFinalHelper);
   if (srv != SQLITE_OK)
-    return ConvertResultCode(srv);
+    return convertResultCode(srv);
 
   NS_ENSURE_TRUE(mFunctions.Put(aFunctionName, aFunction),
                  NS_ERROR_OUT_OF_MEMORY);
@@ -887,7 +887,7 @@ Connection::RemoveFunction(const nsACString &aFunctionName)
                                       NULL,
                                       NULL);
   if (srv != SQLITE_OK)
-    return ConvertResultCode(srv);
+    return convertResultCode(srv);
 
   mFunctions.Remove(aFunctionName);
 
