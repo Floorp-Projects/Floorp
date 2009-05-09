@@ -69,16 +69,16 @@ function test_getParameterName()
 function test_getParameterIndex_different()
 {
   var stmt = createStatement("SELECT * FROM test WHERE id = :id OR name = :name");
-  do_check_eq(0, stmt.getParameterIndex("id"));
-  do_check_eq(1, stmt.getParameterIndex("name"));
+  do_check_eq(0, stmt.getParameterIndex(":id"));
+  do_check_eq(1, stmt.getParameterIndex(":name"));
   stmt.reset();
   stmt.finalize();
 }
 
 function test_getParameterIndex_same()
 {
-  var stmt = createStatement("SELECT * FROM test WHERE id = :test OR name = :test");
-  do_check_eq(0, stmt.getParameterIndex("test"));
+  var stmt = createStatement("SELECT * FROM test WHERE id = @test OR name = @test");
+  do_check_eq(0, stmt.getParameterIndex("@test"));
   stmt.reset();
   stmt.finalize();
 }
