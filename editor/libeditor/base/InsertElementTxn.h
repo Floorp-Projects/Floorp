@@ -61,6 +61,9 @@ public:
 
   InsertElementTxn();
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertElementTxn, EditTxn)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   NS_DECL_EDITTXN
 
 protected:

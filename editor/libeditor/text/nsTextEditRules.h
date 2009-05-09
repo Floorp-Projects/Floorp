@@ -59,13 +59,15 @@
 class nsTextEditRules : public nsIEditRules
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsTextEditRules)
   
               nsTextEditRules();
   virtual     ~nsTextEditRules();
 
   // nsIEditRules methods
   NS_IMETHOD Init(nsPlaintextEditor *aEditor, PRUint32 aFlags);
+  NS_IMETHOD DetachEditor();
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);

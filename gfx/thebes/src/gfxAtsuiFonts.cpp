@@ -1075,8 +1075,10 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
             while (charEnd != charLimit && charToGlyph[charEnd] == NO_GLYPH) {
                 charEnd += direction;
             }
-            // in RTL, back up if we ended at a low surrogate (belongs with the next clump)
-            if (!isLTR && NS_IS_LOW_SURROGATE(aString[charEnd+1])) {
+            // in RTL, back up if we ended at a "deleted" low surrogate
+            // (belongs with the next clump)
+            if (!isLTR && charToGlyph[charEnd+1] == NO_GLYPH &&
+                NS_IS_LOW_SURROGATE(aString[charEnd+1])) {
                 charEnd += 1;
             }
 

@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,14 +38,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGEPRIVATEHELPERS_H_
-#define _MOZSTORAGEPRIVATEHELPERS_H_
-
-#include "mozStorage.h"
+#ifndef _mozStoragePrivateHelpers_h_
+#define _mozStoragePrivateHelpers_h_
 
 /**
  * This file contains convenience methods for mozStorage.
  */
+
+#include "sqlite3.h"
+#include "nsIVariant.h"
+#include "mozStorage.h"
+
+namespace mozilla {
+namespace storage {
+
+////////////////////////////////////////////////////////////////////////////////
+//// Macros
+
+#define ENSURE_INDEX_VALUE(aIndex, aCount) \
+  NS_ENSURE_TRUE(aIndex < aCount, NS_ERROR_INVALID_ARG)
+
+////////////////////////////////////////////////////////////////////////////////
+//// Functions
 
 /**
  * Converts a SQLite return code to an nsresult return code.
@@ -54,7 +68,7 @@
  *        The SQLite return code to convert.
  * @returns the corresponding nsresult code for aSQLiteResultCode.
  */
-nsresult ConvertResultCode(int aSQLiteResultCode);
+nsresult convertResultCode(int aSQLiteResultCode);
 
 /**
  * Checks the performance of a SQLite statement and logs a warning with
@@ -65,7 +79,16 @@ nsresult ConvertResultCode(int aSQLiteResultCode);
  * @param aStatement
  *        The sqlite3_stmt object to check.
  */
-void CheckAndLogStatementPerformance(sqlite3_stmt *aStatement);
+void checkAndLogStatementPerformance(sqlite3_stmt *aStatement);
 
-#endif // _MOZSTORAGEPRIVATEHELPERS_H_
+/**
+ * Used to convert an nsIVariant to the proper SQLite type.
+ */
+template <typename T>
+int variantToSQLiteT(T aObj, nsIVariant *aValue);
+#include "variantToSQLiteT_impl.h" // To keep this file easier to read.
 
+} // namespace storage
+} // namespace mozilla
+
+#endif // _mozStoragePrivateHelpers_h_

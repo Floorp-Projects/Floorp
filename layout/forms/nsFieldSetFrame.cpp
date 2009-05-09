@@ -431,7 +431,9 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     reflowLegend = mLegendFrame && NS_SUBTREE_DIRTY(mLegendFrame);
   }
 
-  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.availableHeight);
+  // We don't allow fieldsets to break vertically. If we did, we'd
+  // need logic here to push and pull overflow frames.
+  nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   NS_ASSERTION(!mContentFrame ||
       nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
                                            mContentFrame,
@@ -484,12 +486,6 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // content area as well.
     if (mLegendSpace != oldSpace && mContentFrame) {
       reflowContent = PR_TRUE;
-    }
-
-    // if we are contrained then remove the legend from our available height.
-    if (NS_INTRINSICSIZE != availSize.height) {
-      availSize.height -= mLegendSpace;
-      availSize.height = PR_MAX(availSize.height, 0);
     }
 
     FinishReflowChild(mLegendFrame, aPresContext, &legendReflowState, 

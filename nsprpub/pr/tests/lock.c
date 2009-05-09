@@ -87,12 +87,6 @@
 #include <string.h>
 #endif
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 static PRIntn failed_already=0;
 static PRFileDesc *std_err = NULL;
 static PRBool verbosity = PR_FALSE;
@@ -498,11 +492,6 @@ int main(int argc,  char **argv)
 
  /* main test */
     PR_SetConcurrency(8);
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("lock.log");
-	debug_mode = 1;
-#endif
 
     if (loops == 0) loops = 100;
     if (debug_mode)

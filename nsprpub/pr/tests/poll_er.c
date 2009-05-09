@@ -89,8 +89,6 @@ ClientThreadFunc(void *arg)
     soclose(PR_FileDesc2NativeHandle(badFD));
 #elif defined(WIN32) || defined(WIN16)
     closesocket(PR_FileDesc2NativeHandle(badFD));
-#elif defined(XP_MAC)
-    _PR_MD_CLOSE_SOCKET(PR_FileDesc2NativeHandle(badFD));
 #else
 #error "Unknown architecture"
 #endif

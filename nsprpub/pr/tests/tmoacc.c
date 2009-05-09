@@ -43,11 +43,6 @@
 #include "plerror.h"
 #include "plgetopt.h"
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-#endif
-
 #define BASE_PORT 9867
 #define DEFAULT_THREADS 1
 #define DEFAULT_BACKLOG 10

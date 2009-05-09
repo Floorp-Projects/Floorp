@@ -50,12 +50,12 @@
 
 struct sqlite3_stmt;
 class mozStorageTransaction;
-class mozStorageResultSet;
 
 namespace mozilla {
 namespace storage {
 
 class Connection;
+class ResultSet;
 
 class AsyncExecuteStatements : public nsIRunnable
                              , public mozIStoragePendingStatement
@@ -175,7 +175,7 @@ private:
   mozStorageTransaction *mTransactionManager;
   mozIStorageStatementCallback *mCallback;
   nsCOMPtr<nsIThread> mCallingThread;
-  nsRefPtr<mozStorageResultSet> mResultSet;
+  nsRefPtr<ResultSet> mResultSet;
 
   /**
    * The maximum amount of time we want to wait between results.  Defined by

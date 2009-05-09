@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for plugin freezing and thawing</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content" style="display: none">
+</div>
+<embed id='e1' type='application/x-test'></embed>
+<script>
+var e1 = document.getElementById('e1');
+var w;
+
+var testIndex = 0;
+var tests;
+
+window.addEventListener("unload", function() {
+  e1.stopWatchingInstanceCount();
+  if (w) {
+    w.close();
+  }
+}, false);
+
+function nextTest() {
+  if (testIndex == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests[testIndex];
+  ++testIndex;
+  test();
+}
+
+function waitForInstanceCount(n) {
+  if (e1.getInstanceCount() == n) {
+    ok(true, "reached instance count " + n);
+    nextTest();
+    return;
+  }
+  setTimeout(function() { waitForInstanceCount(n); }, 100);
+}
+
+tests = [
+  function() { waitForInstanceCount(1); },
+  function() { w.location.href = "about:blank";
+               waitForInstanceCount(0); },
+];
+
+try {
+  e1.startWatchingInstanceCount();
+  var w = window.open("data:text/html,<embed id='e2' type='application/x-test'></embed>");
+  w.onload = nextTest;
+  SimpleTest.waitForExplicitFinish();
+} catch (err) {
+  todo(false, "Instances already being watched?");
+}
+
+</script>
+<pre id="test">
+</pre>
+</body>
+</html>

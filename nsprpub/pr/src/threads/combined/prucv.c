@@ -299,9 +299,7 @@ void _PR_NotifyCondVar(PRCondVar *cvar, PRThread *me)
     _PR_CVAR_LOCK(cvar);
     q = cvar->condQ.next;
     while (q != &cvar->condQ) {
-#ifndef XP_MAC
         PR_LOG(_pr_cvar_lm, PR_LOG_MIN, ("_PR_NotifyCondVar: cvar=%p", cvar));
-#endif
         if (_PR_THREAD_CONDQ_PTR(q)->wait.cvar)  {
             if (_PR_NotifyThread(_PR_THREAD_CONDQ_PTR(q), me) == PR_TRUE)
                 break;
@@ -348,10 +346,8 @@ void _PR_ClockInterrupt(void)
     elapsed = now - cpu->last_clock;
     cpu->last_clock = now;
 
-#ifndef XP_MAC
     PR_LOG(_pr_clock_lm, PR_LOG_MAX,
 	   ("ExpireWaits: elapsed=%lld usec", elapsed));
-#endif
 
     while(1) {
         _PR_SLEEPQ_LOCK(cpu);

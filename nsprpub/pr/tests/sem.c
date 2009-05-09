@@ -74,14 +74,7 @@ PRIntn debug_mode;
 
 #define SBSIZE 1024
 
-#ifdef XP_MAC
-#include "prlog.h"
-#include "prsem.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#else
 #include "obsolete/prsem.h"
-#endif
 
 static char stdinBuf[SBSIZE];
 static char stdoutBuf[SBSIZE];
@@ -213,11 +206,6 @@ int main(int argc, char **argv)
     }        
 
  /* main test */
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("sem.log");
-	debug_mode = 1;
-#endif
 
     emptyBufs = PR_NewSem(2);	/* two empty buffers */
 

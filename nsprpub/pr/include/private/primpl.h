@@ -73,13 +73,8 @@
 
 typedef struct PRSegment PRSegment;
 
-#ifdef XP_MAC
-#include "prosdep.h"
-#include "probslet.h"
-#else
 #include "md/prosdep.h"
 #include "obsolete/probslet.h"
-#endif  /* XP_MAC */
 
 #ifdef _PR_HAVE_POSIX_SEMAPHORES
 #include <semaphore.h>
@@ -328,10 +323,8 @@ NSPR_API(PRInt32)                      _pr_intsOff;
 #define _MD_LAST_THREAD()               (_pr_lastThread)
 #define _MD_SET_LAST_THREAD(t)          (_pr_lastThread = t)
 
-#ifndef XP_MAC
 #define _MD_GET_INTSOFF()               (_pr_intsOff)
 #define _MD_SET_INTSOFF(_val)           (_pr_intsOff = _val)
-#endif
 
 
 /* The unbalanced curly braces in these two macros are intentional */
@@ -376,19 +369,11 @@ extern PRInt32                  _native_threads_only;
 
 #else
 
-#ifdef XP_MAC
-
-#define _PR_INTSOFF(_is)        _MD_INTSOFF(_is)
-
-#else /* XP_MAC */
-
 #define _PR_INTSOFF(_is) \
     PR_BEGIN_MACRO \
         (_is) = _PR_MD_GET_INTSOFF(); \
         _PR_MD_SET_INTSOFF(1); \
     PR_END_MACRO
-
-#endif /* XP_MAC */
 
 #define _PR_FAST_INTSON(_is) \
     PR_BEGIN_MACRO \
@@ -1090,11 +1075,6 @@ extern PRStatus _PR_MD_DELETE_SEMAPHORE(const char *osname);
 /* I/O related */
 extern void _PR_MD_INIT_FILEDESC(PRFileDesc *fd);
 #define    _PR_MD_INIT_FILEDESC _MD_INIT_FILEDESC
-
-#ifdef XP_MAC
-extern void _PR_MD_FREE_FILEDESC(PRFileDesc *fd);
-#define    _PR_MD_FREE_FILEDESC _MD_FREE_FILEDESC
-#endif
 
 extern void _PR_MD_MAKE_NONBLOCK(PRFileDesc *fd);
 #define    _PR_MD_MAKE_NONBLOCK _MD_MAKE_NONBLOCK

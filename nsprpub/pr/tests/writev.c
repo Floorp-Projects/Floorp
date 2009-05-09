@@ -42,11 +42,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-#endif
-
 
 #ifndef IOV_MAX
 #define IOV_MAX 16

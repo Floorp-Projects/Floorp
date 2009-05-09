@@ -64,12 +64,6 @@
 int _debug_on = 0;
 #define DPRINTF(arg) if (_debug_on) printf arg
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 #define DEFAULT_COUNT   100
 #define DEFAULT_THREADS 5
 PRInt32 count = DEFAULT_COUNT;
@@ -947,10 +941,6 @@ static PRIntn PR_CALLBACK RealMain(int argc, char **argv)
     if (0 == count) count = DEFAULT_COUNT;
     if (0 == default_threads) default_threads = DEFAULT_THREADS;
 
-#ifdef XP_MAC
-	SetupMacPrintfLog("cvar2.log");
-#endif
-
     printf("\n\
 CondVar Test:                                                           \n\
                                                                         \n\
@@ -979,14 +969,8 @@ default_threads, default_threads*2, default_threads*3, default_threads*4);
         Measure(CondVarTestSUK, threads, "Condvar simple test shared UK");
         Measure(CondVarTestPUU, threads, "Condvar simple test priv UU");
         Measure(CondVarTestPUK, threads, "Condvar simple test priv UK");
-#ifdef XP_MAC
-	/* Mac heaps can't handle thread*4 stack allocations at a time for (10, 15, 20)*4 */
-        Measure(CondVarTest, 5, "Condvar simple test All");
-        Measure(CondVarTimeoutTest, 5,  "Condvar timeout test");
-#else
         Measure(CondVarTest, threads, "Condvar simple test All");
         Measure(CondVarTimeoutTest, threads,  "Condvar timeout test");
-#endif
 #if 0
         Measure(CondVarMixedTest, threads,  "Condvar mixed timeout test");
         Measure(CondVarCombinedTest, threads, "Combined condvar test");

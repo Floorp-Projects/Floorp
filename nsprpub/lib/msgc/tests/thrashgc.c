@@ -60,22 +60,12 @@
 #include "prinit.h"
 #include "prcvar.h"
 
-#ifndef XP_MAC
 #include "private/pprthred.h"
-#else
-#include "pprthred.h"
-#endif
 
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
 
-
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
 
 PRIntn failed_already=0;
 PRIntn debug_mode;
@@ -169,20 +159,12 @@ static void PR_CALLBACK AllocStuff(void *unused) {
 	      PR_GetCurrentThread(), loops,
 	      PR_IntervalToMilliseconds((PRIntervalTime) (end - start)));
   PR_Lock(stderrLock);
-#ifndef XP_MAC
   fprintf(stderr, "%s\n", msg);
-#else
-  if (debug_mode) printf("%s\n", msg);
-#endif
   PR_Unlock(stderrLock);
   }
 
 static void usage(char *progname) {
-#ifndef XP_MAC
   fprintf(stderr, "Usage: %s [-t threads] [-l loops]\n", progname);
-#else
-  printf("Usage: %s [-t threads] [-l loops]\n", progname);
-#endif
   exit(-1);
 }
 
@@ -190,7 +172,6 @@ static int realMain(int argc, char **argv, char *notused) {
   int i;
   int threads = 0;
 
-#ifndef XP_MAC
   progname = strrchr(argv[0], '/');
   if (progname == 0) progname = argv[0];
   for (i = 1; i < argc; i++) {
@@ -212,9 +193,6 @@ static int realMain(int argc, char **argv, char *notused) {
     }
     usage(progname);
   }
-#else
-	threads = 50;
-#endif
 
   for (i = 0; i < threads; i++) {
     PRThread* thread;
@@ -228,13 +206,8 @@ static int realMain(int argc, char **argv, char *notused) {
 			     PR_UNJOINABLE_THREAD,  /* thread state */
 			     0);   /* stack size */
     if (thread == 0) {
-#ifndef XP_MAC
       fprintf(stderr, "%s: no more threads (only %d were created)\n",
 	      progname, i);
-#else
-      printf("%s: no more threads (only %d were created)\n",
-	      progname, i);
-#endif
       break;
     }
   }
@@ -254,11 +227,6 @@ int main(int argc, char **argv) {
   
   PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
   PR_SetThreadGCAble();
-
-#ifdef XP_MAC
-  SetupMacPrintfLog("thrashgc.log");
-  debug_mode = 1;
-#endif
 
   PR_InitGC(0, 0, 0, PR_GLOBAL_THREAD);
   PR_STDIO_INIT();

@@ -48,20 +48,9 @@ int main()
 #include "prpriv.h"
 #include "prinrval.h"
 
-#if defined(XP_MAC)
-#include "gcint.h"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef XP_MAC
-#include "gcint.h"
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
 
 PRMonitor *mon;
 PRInt32 count;
@@ -200,10 +189,6 @@ int main(int argc, char **argv)
 {
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
-
-#ifdef XP_MAC
-    SetupMacPrintfLog("suspend.log");
-#endif
 
     if (argc > 1) {
         count = atoi(argv[1]);

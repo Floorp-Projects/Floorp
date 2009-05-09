@@ -168,15 +168,6 @@ ALL_TRASH		= $(TARGETS) $(OBJS) $(RES) $(filter-out . .., $(OBJDIR)) LOGS TAGS $
 			  $(NOSUCHFILE) \
 			  so_locations
 
-ifeq ($(OS_ARCH),OpenVMS)
-ALL_TRASH		+= $(wildcard *.c*_defines)
-ifdef SHARED_LIBRARY
-VMS_SYMVEC_FILE		= $(SHARED_LIBRARY:.$(DLL_SUFFIX)=_symvec.opt)
-VMS_SYMVEC_FILE_MODULE	= $(srcdir)/$(LIBRARY_NAME)_symvec.opt
-ALL_TRASH		+= $(VMS_SYMVEC_FILE)
-endif
-endif
-
 ifndef RELEASE_LIBS_DEST
 RELEASE_LIBS_DEST	= $(RELEASE_LIB_DIR)
 endif
@@ -345,14 +336,6 @@ ifdef MT
 	fi
 endif	# MSVC with manifest tool
 else	# WINNT && !GCC
-ifeq ($(OS_TARGET), OpenVMS)
-	@if test ! -f $(VMS_SYMVEC_FILE); then \
-	  if test -f $(VMS_SYMVEC_FILE_MODULE); then \
-	    echo Creating component options file $(VMS_SYMVEC_FILE); \
-	    cp $(VMS_SYMVEC_FILE_MODULE) $(VMS_SYMVEC_FILE); \
-	  fi; \
-	fi
-endif	# OpenVMS
 	$(MKSHLIB) $(OBJS) $(RES) $(LDFLAGS) $(EXTRA_LIBS)
 endif	# WINNT && !GCC
 endif	# AIX 4.1

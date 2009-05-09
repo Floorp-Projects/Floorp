@@ -56,23 +56,11 @@
 #include <stdio.h>
 #include "plgetopt.h"
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-#else
-#endif
-
 static PRFileDesc *err01;
 PRIntn error_code;
 
 int main(int argc, char **argv)
 {
-
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("pr_open_re.log");
-#endif
-	
 #ifdef XP_PC
     printf("op_noacc: Test not valid on MS-Windows.\n\tNo concept of 'mode' on Open() call\n");
     return(0);

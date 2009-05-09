@@ -52,6 +52,26 @@ IMETextTxn::IMETextTxn()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(IMETextTxn)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IMETextTxn, EditTxn)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElement)
+  // mRangeList can't lead to cycles
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IMETextTxn, EditTxn)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mElement)
+  // mRangeList can't lead to cycles
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMETextTxn)
+  if (aIID.Equals(IMETextTxn::GetCID())) {
+    *aInstancePtr = (void*)(IMETextTxn*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+
 NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
                                PRUint32                 aOffset,
                                PRUint32                 aReplaceLength,
@@ -174,22 +194,6 @@ NS_IMETHODIMP IMETextTxn::GetTxnDescription(nsAString& aString)
   aString.AssignLiteral("IMETextTxn: ");
   aString += mStringToInsert;
   return NS_OK;
-}
-
-/* ============= nsISupports implementation ====================== */
-
-NS_IMETHODIMP
-IMETextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(IMETextTxn::GetCID())) {
-    *aInstancePtr = (void*)(IMETextTxn*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return (EditTxn::QueryInterface(aIID, aInstancePtr));
 }
 
 /* ============ protected methods ================== */

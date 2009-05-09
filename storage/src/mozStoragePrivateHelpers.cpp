@@ -46,8 +46,11 @@
 
 #include "mozStoragePrivateHelpers.h"
 
+namespace mozilla {
+namespace storage {
+
 nsresult
-ConvertResultCode(int aSQLiteResultCode)
+convertResultCode(int aSQLiteResultCode)
 {
   switch (aSQLiteResultCode) {
     case SQLITE_OK:
@@ -85,18 +88,18 @@ ConvertResultCode(int aSQLiteResultCode)
 }
 
 void
-CheckAndLogStatementPerformance(sqlite3_stmt *aStatement)
+checkAndLogStatementPerformance(sqlite3_stmt *aStatement)
 {
   // Check to see if the query performed sorting operations or not.  If it
   // did, it may need to be optimized!
-  int count = sqlite3_stmt_status(aStatement, SQLITE_STMTSTATUS_SORT, 1);
+  int count = ::sqlite3_stmt_status(aStatement, SQLITE_STMTSTATUS_SORT, 1);
   if (count <= 0)
     return;
 
-  const char *sql = sqlite3_sql(aStatement);
+  const char *sql = ::sqlite3_sql(aStatement);
 
   // Check to see if this is marked to not warn
-  if (strstr(sql, "/* do not warn (bug "))
+  if (::strstr(sql, "/* do not warn (bug "))
     return;
 
   nsCAutoString message;
@@ -112,3 +115,6 @@ CheckAndLogStatementPerformance(sqlite3_stmt *aStatement)
                  "details.");
   NS_WARNING(message.get());
 }
+
+} // namespace storage
+} // namespace mozilla

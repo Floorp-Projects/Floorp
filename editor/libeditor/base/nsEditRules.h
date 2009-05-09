@@ -38,10 +38,10 @@
 #ifndef nsEditRules_h__
 #define nsEditRules_h__
 
+// 783223c9-153a-4e01-8422-39a3afe469da
 #define NS_IEDITRULES_IID \
-{ /* a6cf911d-15b3-11d2-932e-00805f8add32 */ \
-0xa6cf911d, 0x15b3, 0x11d2, \
-{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0x783223c9, 0x153a, 0x4e01, \
+  { 0x84, 0x22, 0x39, 0xa3, 0xaf, 0xe4, 0x69, 0xda } }
 
 class nsPlaintextEditor;
 class nsISelection;
@@ -73,6 +73,7 @@ public:
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsIEditRules
 
   NS_IMETHOD Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)=0;
+  NS_IMETHOD DetachEditor()=0;
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled)=0;

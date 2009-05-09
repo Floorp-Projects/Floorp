@@ -53,12 +53,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#include "macstdlibextras.h"
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 int failed_already=0;
 PRBool debug_mode = PR_FALSE;
 
@@ -206,11 +200,6 @@ int main(int argc, char** argv)
 	
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
 
-#ifdef XP_MAC
-	/* Set up the console */
-	InitializeSIOUX(true);
-	debug_mode = PR_TRUE;
-#endif
     /* Testing zero PRTime (the epoch) */
     {
 	PRTime t;
@@ -775,16 +764,6 @@ int main(int argc, char** argv)
 	    }
         }
     }
-
-#ifdef XP_MAC
-	if (1)
-	{
-		char dummyChar;
-		
-		printf("Press return to exit\n\n");
-		scanf("%c", &dummyChar);
-	}
-#endif
 
 	if (failed_already) return 1;
 	else return 0;

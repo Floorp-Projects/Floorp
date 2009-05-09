@@ -450,9 +450,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
       if (rootFrame && *aPresContext) {
         nsIntRect dragRect;
         aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
-        dragRect = nsRect::ToOutsidePixels(nsIntRect::ToAppUnits(dragRect,
-                                                                 nsPresContext::AppUnitsPerCSSPixel()),
-                                           (*aPresContext)->AppUnitsPerDevPixel());
+        dragRect = dragRect.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel()).
+                            ToOutsidePixels((*aPresContext)->AppUnitsPerDevPixel());
 
         nsIntRect screenRect = rootFrame->GetScreenRectExternal();
         aScreenDragRect->SetRect(screenRect.x + dragRect.x, screenRect.y + dragRect.y,

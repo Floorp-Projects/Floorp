@@ -566,14 +566,21 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   }
   else if (nodeInfoManager) {
     nsIDocument* oldDoc = aNode->GetOwnerDoc();
+    PRBool wasRegistered = PR_FALSE;
     if (oldDoc && aNode->IsNodeOfType(nsINode::eELEMENT)) {
-      oldDoc->ClearBoxObjectFor(static_cast<nsIContent*>(aNode));
+      nsIContent* content = static_cast<nsIContent*>(aNode);
+      oldDoc->ClearBoxObjectFor(content);
+      wasRegistered = oldDoc->UnregisterFreezableElement(content);
     }
 
     aNode->mNodeInfo.swap(newNodeInfo);
 
     nsIDocument* newDoc = aNode->GetOwnerDoc();
     if (newDoc) {
+      if (wasRegistered) {
+        newDoc->RegisterFreezableElement(static_cast<nsIContent*>(aNode));
+      }
+
       nsPIDOMWindow* window = newDoc->GetInnerWindow();
       if (window) {
         nsCOMPtr<nsIEventListenerManager> elm;

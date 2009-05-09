@@ -66,14 +66,7 @@
 
 #include <stdio.h>
 
-#ifdef XP_MAC
-#include "prsem.h"
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#else
 #include "obsolete/prsem.h"
-#endif
 
 
 #define TBSIZE 1024
@@ -194,11 +187,6 @@ int main(int argc, char **argv)
 
 	PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("fileio.log");
-	debug_mode = 1;
-#endif
 
     emptyBufs = PR_NewSem(2);	/* two empty buffers */
 
