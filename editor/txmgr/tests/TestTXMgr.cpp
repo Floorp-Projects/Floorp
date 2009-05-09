@@ -499,7 +499,7 @@ public:
     // of date.
     //
     if (sDoOrderArr && mVal != sDoOrderArr[sDoCount]) {
-      printf("ERROR: ~SimpleTransaction expected %d got %d.\n",
+      printf("ERROR: DoTransaction expected %d got %d.\n",
              mVal, sDoOrderArr[sDoCount]);
       exit(NS_ERROR_FAILURE);
     }
@@ -522,7 +522,7 @@ public:
     // of date.
     //
     if (sUndoOrderArr && mVal != sUndoOrderArr[sUndoCount]) {
-      printf("ERROR: ~SimpleTransaction expected %d got %d.\n",
+      printf("ERROR: UndoTransaction expected %d got %d.\n",
              mVal, sUndoOrderArr[sUndoCount]);
       exit(NS_ERROR_FAILURE);
     }
@@ -545,7 +545,7 @@ public:
     // of date.
     //
     if (sRedoOrderArr && mVal != sRedoOrderArr[sRedoCount]) {
-      printf("ERROR: ~SimpleTransaction expected %d got %d.\n",
+      printf("ERROR: RedoTransaction expected %d got %d.\n",
              mVal, sRedoOrderArr[sRedoCount]);
       exit(NS_ERROR_FAILURE);
     }
