@@ -755,13 +755,19 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       }
     }
 
-    if (PresContext()->HasPendingInterrupt()) {
+    if (PresContext()->CheckForInterrupt(this)) {
       // Stop the loop now while |child| still points to the frame that bailed
       // out.  We could keep going here and condition a bunch of the code in
       // this loop on whether there's an interrupt, or even just keep going and
       // trying to reflow the blocks (even though we know they'll interrupt
       // right after their first line), but stopping now is conceptually the
-      // simplest (and probably fastest) thing.
+      // simplest (and probably fastest) thing.  Note that this is a
+      // CheckForInterrupt call, not a HasPendingInterrupt, because we might
+      // have interrupted while reflowing |child|, and since we're about to add
+      // a dirty bit to |child| we need to make sure that |this| is scheduled
+      // to have dirty bits marked on it and its ancestors.  Otherwise, when we
+      // go to mark dirty bits on |child|'s ancestors we'll bail out
+      // immediately, since it'll already have a dirty bit.
       break;
     }
 
