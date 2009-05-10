@@ -1044,9 +1044,9 @@ protected:
 #endif
 
   // Helper for ScrollContentIntoView
-  nsresult DoScrollContentIntoView(nsIContent* aContent,
-                                   PRIntn      aVPercent,
-                                   PRIntn      aHPercent);
+  void DoScrollContentIntoView(nsIContent* aContent,
+                               PRIntn      aVPercent,
+                               PRIntn      aHPercent);
 
   friend class nsPresShellEventCB;
 
@@ -4135,19 +4135,10 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
                                  PRIntn      aVPercent,
                                  PRIntn      aHPercent)
 {
-  mContentToScrollTo = aContent;
-  mContentScrollVPosition = aVPercent;
-  mContentScrollHPosition = aHPercent;
-
   nsCOMPtr<nsIContent> content = aContent; // Keep content alive while flushing.
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
   NS_ENSURE_STATE(currentDoc);
-  currentDoc->FlushPendingNotifications(Flush_InterruptibleLayout);
-
-  // If mContentToScrollTo is non-null, that means we interrupted the reflow
-  // and won't necessarily get the position correct, but do a best-effort
-  // scroll.
 
   // Before we scroll the frame into view, ask the command dispatcher
   // if we're resetting focus because a window just got an activate
@@ -4170,10 +4161,28 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
     }
   }
 
-  return DoScrollContentIntoView(content, aVPercent, aHPercent);
+  mContentToScrollTo = aContent;
+  mContentScrollVPosition = aVPercent;
+  mContentScrollHPosition = aHPercent;
+
+  // Flush layout and attempt to scroll in the process.
+  currentDoc->FlushPendingNotifications(Flush_InterruptibleLayout);
+
+  // If mContentToScrollTo is non-null, that means we interrupted the reflow
+  // (or suppressed it altogether because we're suppressing interruptible
+  // flushes right now) and won't necessarily get the position correct, but do
+  // a best-effort scroll here.  The other option would be to do this inside
+  // FlushPendingNotifications, but I'm not sure the repeated scrolling that
+  // could trigger if reflows keep getting interrupted would be more desirable
+  // than a single best-effort scroll followed by one final scroll on the first
+  // completed reflow.
+  if (mContentToScrollTo) {
+    DoScrollContentIntoView(content, aVPercent, aHPercent);
+  }
+  return NS_OK;
 }
 
-nsresult
+void
 PresShell::DoScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
                                    PRIntn      aHPercent)
@@ -4181,7 +4190,7 @@ PresShell::DoScrollContentIntoView(nsIContent* aContent,
   nsIFrame* frame = GetPrimaryFrameFor(aContent);
   if (!frame) {
     mContentToScrollTo = nsnull;
-    return NS_ERROR_NULL_POINTER;
+    return;
   }
 
   // This is a two-step process.
@@ -4214,8 +4223,6 @@ PresShell::DoScrollContentIntoView(nsIContent* aContent,
     frameBounds += closestView->GetPosition();
     closestView = parent;
   }
-
-  return NS_OK;
 }
 
 // GetLinkLocation: copy link location to clipboard
