@@ -799,7 +799,7 @@ namespace nanojit
 		
 		// When outOMem, nIns is set to startingIns and we overwrite the region until the error is handled
 		underrunProtect(LARGEST_UNDERRUN_PROT);  // the largest value passed to underrunProtect() 
-		_startingIns = _nIns;
+        recordStartingInstructionPointer();
 		
 	#ifdef AVMPLUS_PORTING_API
 		_endJit2Addr = _nExitIns;
@@ -870,7 +870,8 @@ namespace nanojit
 		    }
         }
 		else {
-			_nIns = _startingIns;  // in case of failure reset nIns ready for the next assembly run
+            // In case of failure, reset _nIns ready for the next assembly run.
+            resetInstructionPointer();
 		}
 	}
 
@@ -927,7 +928,8 @@ namespace nanojit
 		}
 		else
 		{
-			_nIns = _startingIns;  // in case of failure reset nIns ready for the next assembly run
+            // In case of failure, reset _nIns ready for the next assembly run.
+            resetInstructionPointer();
 		}
 		
 		NanoAssertMsgf(error() || _fpuStkDepth == 0,"_fpuStkDepth %d",_fpuStkDepth);
@@ -1134,12 +1136,6 @@ namespace nanojit
                     freeRsrcOf(ins, 0);
                     break;
                 }
-				case LIR_short:
-				{
-                    countlir_imm();
-					asm_short(ins);
-					break;
-				}
 				case LIR_int:
 				{
                     countlir_imm();
@@ -1270,14 +1266,12 @@ namespace nanojit
 					asm_u2f(ins);
 					break;
 				}
-				case LIR_st:
 				case LIR_sti:
 				{
                     countlir_st();
                     asm_store32(ins->oprnd1(), ins->immdisp(), ins->oprnd2());
                     break;
 				}
-				case LIR_stq:
 				case LIR_stqi:
 				{
                     countlir_stq();
@@ -1621,8 +1615,6 @@ namespace nanojit
 	
 	uint32_t Assembler::arReserve(LIns* l)
 	{
-		NanoAssert(!l->isTramp());
-
 		//verbose_only(printActivationState());
         int32_t size = l->isop(LIR_alloc) ? (l->size()>>2) : l->isQuad() ? 2 : sizeof(intptr_t)>>2;
         AR &ar = _activation;

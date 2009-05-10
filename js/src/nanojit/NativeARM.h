@@ -186,7 +186,7 @@ verbose_only( extern const char* shiftNames[]; )
     void underrunProtect(int bytes);                                    \
     void nativePageReset();                                             \
     void nativePageSetup();                                             \
-    void asm_quad_nochk(Register, const int32_t*);                      \
+    void asm_quad_nochk(Register, int32_t, int32_t);                    \
     void asm_add_imm(Register, Register, int32_t, int stat = 0);        \
     void asm_sub_imm(Register, Register, int32_t, int stat = 0);        \
     void asm_cmpi(Register, int32_t imm);                               \
@@ -194,6 +194,7 @@ verbose_only( extern const char* shiftNames[]; )
     void asm_ld_imm(Register d, int32_t imm);                           \
     void asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd);        \
     int* _nSlot;                                                        \
+    int* _startingSlot;                                                \
     int* _nExitSlot;
 
 
@@ -538,7 +539,7 @@ enum {
 //#define INT3()  underrunProtect(1); *(--_nIns) = 0xcc;  asm_output("int3")
 //#define RET() INT3()
 
-#define BKPT_insn ((NIns)( (0xE<<24) | (0x12<<20) | (0x7<<4) ))
+#define BKPT_insn ((NIns)( COND_AL | (0x12<<20) | (0x7<<4) ))
 #define BKPT_nochk() do { \
         *(--_nIns) = BKPT_insn; } while (0)
 

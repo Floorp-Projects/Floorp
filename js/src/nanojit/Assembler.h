@@ -240,6 +240,9 @@ namespace nanojit
 			void		evict(Register r);
 			RegisterMask hint(LIns*i, RegisterMask allow);
 
+            void        resetInstructionPointer();
+            void        recordStartingInstructionPointer();
+
 			NIns*		pageAlloc(bool exitPage=false);
 			void		pagesFree(Page*& list);
 			void		internalReset();
