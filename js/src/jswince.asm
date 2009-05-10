@@ -65,7 +65,7 @@ $PrologName
 
     FUNC_HEADER js_arm_try_armv6_op
     ;; rev ip, ip
-    DVD 0xE6BFCF3C
+    DCD 0xE6BFCF3C
     mov pc, lr
     ENTRY_END
     endp
@@ -73,7 +73,7 @@ $PrologName
     FUNC_HEADER js_arm_try_armv5_op
     blx js_arm_try_armv5_test
     mov pc, lr
-js_arm_try_armv5_test:
+js_arm_try_armv5_test
     bx lr
     ENTRY_END
     endp
