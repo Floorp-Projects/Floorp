@@ -399,7 +399,7 @@ namespace nanojit
 
         if (hi->isconst())
 		{
-			STi(FP, d+4, hi->constval());
+			STi(FP, d+4, hi->imm32());
 		}
 		else
 		{
@@ -409,7 +409,7 @@ namespace nanojit
 
         if (lo->isconst())
 		{
-			STi(FP, d, lo->constval());
+			STi(FP, d, lo->imm32());
 		}
 		else
 		{
@@ -447,7 +447,7 @@ namespace nanojit
             if (!resv->arIndex) {
                 reserveFree(i);
             }
-            LDi(r, i->constval());
+            LDi(r, i->imm32());
         }
         else {
             int d = findMemFor(i);
@@ -461,7 +461,7 @@ namespace nanojit
         if (value->isconst())
         {
 			Register rb = getBaseReg(base, dr, GpRegs);
-            int c = value->constval();
+            int c = value->imm32();
 			STi(rb, dr, c);
         }
         else
@@ -475,7 +475,7 @@ namespace nanojit
                 ra = findRegFor(value, GpRegs);
             } else if (base->isconst()) {
                 // absolute address
-                dr += base->constval();
+                dr += base->imm32();
                 ra = findRegFor(value, GpRegs);
                 rb = UnknownReg;
             } else {
@@ -516,7 +516,7 @@ namespace nanojit
 	void Assembler::asm_load64(LInsp ins)
 	{
 		LIns* base = ins->oprnd1();
-		int db = ins->oprnd2()->constval();
+		int db = ins->oprnd2()->imm32();
 		Reservation *resv = getresv(ins);
 		Register rr = resv->reg;
 
@@ -566,9 +566,8 @@ namespace nanojit
             } else {
                 rb = findRegFor(base, GpRegs);
             }
-			const int32_t* p = (const int32_t*) (value-2);
-			STi(rb, dr+4, p[1]);
-			STi(rb, dr, p[0]);
+            STi(rb, dr+4, value->imm64_1());
+            STi(rb, dr,   value->imm64_0());
             return;
 		}
 
@@ -756,7 +755,7 @@ namespace nanojit
 		// ready to issue the compare
 		if (rhs->isconst())
 		{
-			int c = rhs->constval();
+			int c = rhs->imm32();
 			if (c == 0 && cond->isop(LIR_eq)) {
 				Register r = findRegFor(lhs, GpRegs);
 				TEST(r,r);
@@ -852,7 +851,7 @@ namespace nanojit
 		else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
 			// add alloc+const, use lea
 			Register rr = prepResultReg(ins, allow);
-			int d = findMemFor(lhs) + rhs->constval();
+			int d = findMemFor(lhs) + rhs->imm32();
 			LEA(rr, d, FP);
 		}
 
@@ -904,7 +903,7 @@ namespace nanojit
 		}
 		else
 		{
-			int c = rhs->constval();
+			int c = rhs->imm32();
 			switch (op) {
 			case LIR_addp:
 				// this doesn't set cc's, only use it when cc's not required.
@@ -973,10 +972,10 @@ namespace nanojit
 		LIns* base = ins->oprnd1();
 		LIns* disp = ins->oprnd2();
 		Register rr = prepResultReg(ins, GpRegs);
-		int d = disp->constval();
+		int d = disp->imm32();
 
 		if (base->isconst()) {
-			intptr_t addr = base->constval();
+			intptr_t addr = base->imm32();
 			addr += d;
 			if (op == LIR_ldcb)
 				LD8Zdm(rr, addr);
@@ -997,7 +996,7 @@ namespace nanojit
 			 * add(X, shl(Y,Z)) -> mov r, [X+Y*Z]
 			 */
 			if (rhs->opcode() == LIR_pilsh && rhs->oprnd2()->isconst()) {
-				scale = rhs->oprnd2()->constval();
+				scale = rhs->oprnd2()->imm32();
 				if (scale >= 1 && scale <= 3)
 					rhs = rhs->oprnd1();
 				else
@@ -1118,16 +1117,6 @@ namespace nanojit
 		}
 	}
 
-	void Assembler::asm_short(LInsp ins)
-	{
-		Register rr = prepResultReg(ins, GpRegs);
-		int32_t val = ins->imm16();
-		if (val == 0)
-			XOR(rr,rr);
-		else
-			LDi(rr, val);
-	}
-
 	void Assembler::asm_int(LInsp ins)
 	{
 		Register rr = prepResultReg(ins, GpRegs);
@@ -1149,8 +1138,8 @@ namespace nanojit
 			rR->reg = UnknownReg;
 			NanoAssert((rmask(rr) & FpRegs) != 0);
 
-			const double d = ins->constvalf();
-            const uint64_t q = ins->constvalq();
+            const double d = ins->imm64f();
+            const uint64_t q = ins->imm64();
 			if (rmask(rr) & XmmRegs) {
 				if (q == 0.0) {
                     // test (int64)0 since -0.0 == 0.0
@@ -1183,9 +1172,8 @@ namespace nanojit
 		freeRsrcOf(ins, false);
 		if (d)
 		{
-			const int32_t* p = (const int32_t*) (ins-2);
-			STi(FP,d+4,p[1]);
-			STi(FP,d,p[0]);
+            STi(FP,d+4,ins->imm64_1());
+            STi(FP,d,  ins->imm64_0());
 		}
 	}
 	
@@ -1295,7 +1283,7 @@ namespace nanojit
 			if (r != UnknownReg) {
 				// arg goes in specific register
                 if (p->isconst()) {
-					LDi(r, p->constval());
+					LDi(r, p->imm32());
                 } else {
             		Reservation* rA = getresv(p);
                     if (rA) {
@@ -1337,7 +1325,7 @@ namespace nanojit
 		if (rA == 0 && p->isconst())
 		{
 			// small const we push directly
-			PUSHi(p->constval());
+			PUSHi(p->imm32());
 		}
 		else if (rA == 0 || p->isop(LIR_alloc))
 		{
@@ -1727,6 +1715,20 @@ namespace nanojit
 		if (!_nExitIns)  _nExitIns = pageAlloc(true);
 	}
 	
+    // Reset the _nIns pointer to the starting value. This can be used to roll
+    // back the instruction pointer in case an error occurred during the code
+    // generation.
+    void Assembler::resetInstructionPointer()
+    {
+        _nIns = _startingIns;
+    }
+    
+    // Store the starting _nIns value so that it can be reset later.
+    void Assembler::recordStartingInstructionPointer()
+    {
+        _startingIns = _nIns;
+    }
+
 	// enough room for n bytes
     void Assembler::underrunProtect(int n)
     {

@@ -243,20 +243,21 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
             // if we don't have a register allocated,
             // or we're not vfp, just read from memory.
             if (arg->isop(LIR_quad)) {
-                const int32_t* p = (const int32_t*) (arg-2);
 
                 // XXX use some load-multiple action here from our const pool?
+                int32_t v = arg->imm64_0();     // for the first iteration
                 for (int k = 0; k < 2; k++) {
                     if (r != UnknownReg) {
-                        asm_ld_imm(r, *p++);
+                        asm_ld_imm(r, v);
                         r = nextreg(r);
                         if (r == R4)
                             r = UnknownReg;
                     } else {
                         STR_preindex(IP, SP, -4);
-                        asm_ld_imm(IP, *p++);
+                        asm_ld_imm(IP, v);
                         stkd += 4;
                     }
+                    v = arg->imm64_1();         // for the second iteration
                 }
             } else {
                 int d = findMemFor(arg);
@@ -303,7 +304,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
     } else if (sz == ARGSIZE_LO) {
         if (r != UnknownReg) {
             if (arg->isconst()) {
-                asm_ld_imm(r, arg->constval());
+                asm_ld_imm(r, arg->imm32());
             } else {
                 Reservation* argRes = getresv(arg);
                 if (argRes) {
@@ -586,10 +587,10 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
      * microbenchmark of const mov vs. loading from memory shows that
      * the mov is faster, though not by much.
      */
-    else if (i->isconst() && (isS8(i->constval()) || isU8(i->constval()))) {
+    else if (i->isconst() && (isS8(i->imm32()) || isU8(i->imm32()))) {
         if (!resv->arIndex)
             reserveFree(i);
-        asm_ld_imm(r, i->constval());
+        asm_ld_imm(r, i->imm32());
     }
 #endif
     else {
@@ -637,7 +638,7 @@ Assembler::asm_load64(LInsp ins)
     ///asm_output("<<< load64");
 
     LIns* base = ins->oprnd1();
-    int offset = ins->oprnd2()->constval();
+    int offset = ins->oprnd2()->imm32();
 
     Reservation *resv = getresv(ins);
     Register rr = resv->reg;
@@ -682,15 +683,13 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
         Register rb = findRegFor(base, GpRegs);
 
         if (value->isconstq()) {
-            const int32_t* p = (const int32_t*) (value-2);
-
             underrunProtect(LD32_size*2 + 8);
 
             // XXX use another reg, get rid of dependency
             STR(IP, rb, dr);
-            LD32_nochk(IP, p[0]);
+            LD32_nochk(IP, value->imm64_0());
             STR(IP, rb, dr+4);
-            LD32_nochk(IP, p[1]);
+            LD32_nochk(IP, value->imm64_1());
 
             return;
         }
@@ -717,10 +716,8 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
         // if it's a constant, make sure our baseReg/baseOffset location
         // has the right value
         if (value->isconstq()) {
-            const int32_t* p = (const int32_t*) (value-2);
-
             underrunProtect(4*4);
-            asm_quad_nochk(rv, p);
+            asm_quad_nochk(rv, value->imm64_0(), value->imm64_1());
         }
     } else {
         int da = findMemFor(value);
@@ -734,7 +731,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 // stick a quad into register rr, where p points to the two
 // 32-bit parts of the quad, optinally also storing at FP+d
 void
-Assembler::asm_quad_nochk(Register rr, const int32_t* p)
+Assembler::asm_quad_nochk(Register rr, int32_t imm64_0, int32_t imm64_1)
 {
     // We're not going to use a slot, because it might be too far
     // away.  Instead, we're going to stick a branch in the stream to
@@ -743,14 +740,14 @@ Assembler::asm_quad_nochk(Register rr, const int32_t* p)
 
     // stream should look like:
     //    branch A
-    //    p[0]
-    //    p[1]
+    //    imm64_0
+    //    imm64_1
     // A: FLDD PC-16
 
     FLDD(rr, PC, -16);
 
-    *(--_nIns) = (NIns) p[1];
-    *(--_nIns) = (NIns) p[0];
+    *(--_nIns) = (NIns) imm64_1;
+    *(--_nIns) = (NIns) imm64_0;
 
     JMP_nochk(_nIns+2);
 }
@@ -766,8 +763,6 @@ Assembler::asm_quad(LInsp ins)
 
     NanoAssert(d || rr != UnknownReg);
 
-    const int32_t* p = (const int32_t*) (ins-2);
-
     freeRsrcOf(ins, false);
 
     if (AvmCore::config.vfp &&
@@ -777,12 +772,12 @@ Assembler::asm_quad(LInsp ins)
             FSTD(rr, FP, d);
 
         underrunProtect(4*4);
-        asm_quad_nochk(rr, p);
+        asm_quad_nochk(rr, ins->imm64_0(), ins->imm64_1());
     } else {
         STR(IP, FP, d+4);
-        asm_ld_imm(IP, p[1]);
+        asm_ld_imm(IP, ins->imm64_1());
         STR(IP, FP, d);
-        asm_ld_imm(IP, p[0]);
+        asm_ld_imm(IP, ins->imm64_0());
     }
 
     //asm_output("<<< asm_quad");
@@ -841,6 +836,7 @@ void
 Assembler::nativePageReset()
 {
     _nSlot = 0;
+    _startingSlot = 0;
     _nExitSlot = 0;
 }
 
@@ -862,6 +858,26 @@ Assembler::nativePageSetup()
         // code starts at bottom of page and moves up
         _nSlot = pageDataStart(_nIns); //(int*)(&((Page*)pageTop(_nIns))->lir[0]);
     }
+}
+
+// Record the starting value of _nIns. On ARM, it is also necessary to record
+// the starting value of the literal pool pointer, _nSlot.
+void
+Assembler::recordStartingInstructionPointer()
+{
+    _startingIns = _nIns;
+    _startingSlot = _nSlot;
+    NanoAssert(samepage(_nIns,_nSlot));
+}
+
+// ARM uses a literal pool which needs to be reset along with the instruction
+// pointer.
+void
+Assembler::resetInstructionPointer()
+{
+    _nIns = _startingIns;
+    _nSlot = _startingSlot;
+    NanoAssert(samepage(_nIns,_nSlot));
 }
 
 // Note: underrunProtect should not touch any registers, even IP; it
@@ -966,9 +982,9 @@ Assembler::LD32_nochk(Register r, int32_t imm)
         return;
     }
 
-    if (AvmCore::config.v6t2) {
-        // We can just emit a movw/movt pair
-        // the movt is only necessary if the high 16 bits are nonzero
+    if (AvmCore::config.thumb2) {
+        // On ARMv6T2 and above, we can just emit a movw/movt pair.
+        // Note: The movt is only necessary if the high 16 bits are non-zero.
         if (((imm >> 16) & 0xFFFF) != 0)
             MOVT(r, (imm >> 16) & 0xFFFF);
         MOVW(r, imm & 0xFFFF);
@@ -1368,7 +1384,7 @@ Assembler::asm_cmp(LIns *cond)
 
     // ready to issue the compare
     if (rhs->isconst()) {
-        int c = rhs->constval();
+        int c = rhs->imm32();
         if (c == 0 && cond->isop(LIR_eq)) {
             Register r = findRegFor(lhs, GpRegs);
             TEST(r,r);
@@ -1487,7 +1503,7 @@ Assembler::asm_arith(LInsp ins)
     // outside of +/-255 (for AND) r outside of
     // 0..255 for others.
     if (!forceReg) {
-        if (rhs->isconst() && !isU8(rhs->constval()))
+        if (rhs->isconst() && !isU8(rhs->imm32()))
             forceReg = true;
     }
 
@@ -1499,7 +1515,7 @@ Assembler::asm_arith(LInsp ins)
     } else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
         // add alloc+const, rr wants the address of the allocated space plus a constant
         Register rr = prepResultReg(ins, allow);
-        int d = findMemFor(lhs) + rhs->constval();
+        int d = findMemFor(lhs) + rhs->imm32();
         asm_add_imm(rr, FP, d);
     }
 
@@ -1537,7 +1553,7 @@ Assembler::asm_arith(LInsp ins)
         else
             NanoAssertMsg(0, "Unsupported");
     } else {
-        int c = rhs->constval();
+        int c = rhs->imm32();
         if (op == LIR_add || op == LIR_addp)
             ADDi(rr, ra, c);
         else if (op == LIR_sub)
@@ -1587,7 +1603,7 @@ Assembler::asm_ld(LInsp ins)
     LIns* base = ins->oprnd1();
     LIns* disp = ins->oprnd2();
     Register rr = prepResultReg(ins, GpRegs);
-    int d = disp->constval();
+    int d = disp->imm32();
     Register ra = getBaseReg(base, d, GpRegs);
 
     // these will always be 4-byte aligned
@@ -1709,17 +1725,6 @@ Assembler::asm_param(LInsp ins)
         // saved param
         prepResultReg(ins, rmask(savedRegs[a]));
     }
-}
-
-void
-Assembler::asm_short(LInsp ins)
-{
-    Register rr = prepResultReg(ins, GpRegs);
-    int32_t val = ins->imm16();
-    if (val == 0)
-        EOR(rr,rr,rr);
-    else
-        LDi(rr, val);
 }
 
 void

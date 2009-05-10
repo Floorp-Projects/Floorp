@@ -73,9 +73,20 @@
 #include "jsdate.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
+#include "jsxml.h"
 
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
+
+#if JS_HAS_XML_SUPPORT
+#define ABORT_IF_XML(v)                                                       \
+    JS_BEGIN_MACRO                                                            \
+    if (!JSVAL_IS_PRIMITIVE(v) && OBJECT_IS_XML(BOGUS_CX, JSVAL_TO_OBJECT(v)))\
+        ABORT_TRACE("xml detected");                                          \
+    JS_END_MACRO
+#else
+#define ABORT_IF_XML(cx, v) ((void) 0)
+#endif
 
 /* Never use JSVAL_IS_BOOLEAN because it restricts the value (true, false) and
    the type. What you want to use is JSVAL_TAG(x) == JSVAL_BOOLEAN and then
@@ -130,8 +141,8 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max global object size. */
 #define MAX_GLOBAL_SLOTS 4096
 
-/* Max memory you can allocate in a LIR buffer via a single skip() call. */
-#define MAX_SKIP_BYTES (NJ_PAGE_SIZE - (LIR_FAR_SLOTS + 1) * sizeof(LIns))
+/* Max memory you can allocate in a LIR buffer via a single insSkip() call. */
+#define MAX_SKIP_BYTES (NJ_PAGE_SIZE - sizeof(LIns))
 
 /* Max memory needed to rebuild the interpreter stack when falling off trace. */
 #define MAX_INTERP_STACK_BYTES                                                \
@@ -462,6 +473,9 @@ globalSlotHash(JSContext* cx, unsigned slot)
 
 Oracle::Oracle()
 {
+    /* Grow the oracle bitsets to their (fixed) size here, once. */
+    _stackDontDemote.set(&gc, ORACLE_SIZE-1);
+    _globalDontDemote.set(&gc, ORACLE_SIZE-1);
     clear();
 }
 
@@ -729,7 +743,7 @@ static LIns* demote(LirWriter *out, LInsp i)
     if (i->isconst())
         return i;
     AvmAssert(i->isconstq());
-    double cf = i->constvalf();
+    double cf = i->imm64f();
     int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
     return out->insImm(ci);
 }
@@ -740,7 +754,7 @@ static bool isPromoteInt(LIns* i)
         return true;
     if (!i->isconstq())
         return false;
-    jsdouble d = i->constvalf();
+    jsdouble d = i->imm64f();
     return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
 }
 
@@ -750,7 +764,7 @@ static bool isPromoteUint(LIns* i)
         return true;
     if (!i->isconstq())
         return false;
-    jsdouble d = i->constvalf();
+    jsdouble d = i->imm64f();
     return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
 }
 
@@ -761,16 +775,16 @@ static bool isPromote(LIns* i)
 
 static bool isconst(LIns* i, int32_t c)
 {
-    return i->isconst() && i->constval() == c;
+    return i->isconst() && i->imm32() == c;
 }
 
 static bool overflowSafe(LIns* i)
 {
     LIns* c;
     return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
-            ((c->constval() & 0xc0000000) == 0)) ||
+            ((c->imm32() & 0xc0000000) == 0)) ||
            (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
-            ((c->constval() > 0)));
+            ((c->imm32() > 0)));
 }
 
 /* soft float support */
@@ -994,7 +1008,7 @@ public:
         {
             // needed on ARM -- arm doesn't mask shifts to 31 like x86 does
             if (s1->isconst())
-                s1->setimm16(s1->constval() & 31);
+                s1->setimm32(s1->imm32() & 31);
             else
                 s1 = out->ins2(LIR_and, s1, out->insImm(31));
             return out->ins2(v, s0, s1);
@@ -1009,13 +1023,13 @@ public:
         if (ci == &js_DoubleToUint32_ci) {
             LInsp s0 = args[0];
             if (s0->isconstq())
-                return out->insImm(js_DoubleToECMAUint32(s0->constvalf()));
+                return out->insImm(js_DoubleToECMAUint32(s0->imm64f()));
             if (isi2f(s0) || isu2f(s0))
                 return iu2fArg(s0);
         } else if (ci == &js_DoubleToInt32_ci) {
             LInsp s0 = args[0];
             if (s0->isconstq())
-                return out->insImm(js_DoubleToECMAInt32(s0->constvalf()));
+                return out->insImm(js_DoubleToECMAInt32(s0->imm64f()));
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub)) {
                 LInsp lhs = s0->oprnd1();
                 LInsp rhs = s0->oprnd2();
@@ -2088,14 +2102,9 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
         ? -treeInfo->nativeStackBase + nativeStackOffset(p)                   \
         : nativeGlobalOffset(p)));                                            \
 
-        if (x->isop(LIR_st) || x->isop(LIR_stq)) {
-            ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->oprnd3()->constval());
-            writeBack(i, x->oprnd2(), x->oprnd3()->constval());
-        } else {
-            JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
-            ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->immdisp());
-            writeBack(i, x->oprnd2(), x->immdisp());
-        }
+        JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
+        ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->immdisp());
+        writeBack(i, x->oprnd2(), x->immdisp());
     }
 #undef ASSERT_VALID_CACHE_HIT
 }
@@ -2325,7 +2334,7 @@ TraceRecorder::snapshot(ExitType exitType)
     }
 
     /* We couldn't find a matching side exit, so create a new one. */
-    LIns* data = lir->skip(sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8));
+    LIns* data = lir->insSkip(sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8));
     VMSideExit* exit = (VMSideExit*) data->payload();
 
     /* Setup side exit structure. */
@@ -2351,7 +2360,7 @@ TraceRecorder::snapshot(ExitType exitType)
 JS_REQUIRES_STACK LIns*
 TraceRecorder::createGuardRecord(VMSideExit* exit)
 {
-    LIns* guardRec = lir->skip(sizeof(GuardRecord));
+    LIns* guardRec = lir->insSkip(sizeof(GuardRecord));
     GuardRecord* gr = (GuardRecord*) guardRec->payload();
 
     memset(gr, 0, sizeof(GuardRecord));
@@ -2397,8 +2406,7 @@ JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::copy(VMSideExit* copy)
 {
     size_t typemap_size = copy->numGlobalSlots + copy->numStackSlots;
-    LIns* data = lir->skip(sizeof(VMSideExit) +
-                           typemap_size * sizeof(uint8));
+    LIns* data = lir->insSkip(sizeof(VMSideExit) + typemap_size * sizeof(uint8));
     VMSideExit* exit = (VMSideExit*) data->payload();
 
     /* Copy side exit structure. */
@@ -3131,7 +3139,7 @@ TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
          * whether to emit a loop edge or a loop end.
          */
         if (x->isconst()) {
-            loop = (x->constval() == cond);
+            loop = (x->imm32() == cond);
             return;
         }
     } else {
@@ -4864,11 +4872,27 @@ js_CheckForSSE2()
 #if defined(_MSC_VER) && defined(WINCE)
 
 // these come in from jswince.asm
+extern "C" int js_arm_try_thumb_op();
 extern "C" int js_arm_try_armv6t2_op();
+extern "C" int js_arm_try_armv5_op();
+extern "C" int js_arm_try_armv6_op();
+extern "C" int js_arm_try_armv7_op();
 extern "C" int js_arm_try_vfp_op();
 
 static bool
-js_arm_check_armv6t2() {
+js_arm_check_thumb() {
+    bool ret = false;
+    __try {
+        js_arm_try_thumb_op();
+        ret = true;
+    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+        ret = false;
+    }
+    return ret;
+}
+
+static bool
+js_arm_check_thumb2() {
     bool ret = false;
     __try {
         js_arm_try_armv6t2_op();
@@ -4877,6 +4901,21 @@ js_arm_check_armv6t2() {
         ret = false;
     }
     return ret;
+}
+
+static unsigned int
+js_arm_check_arch() {
+    unsigned int arch = 4;
+    __try {
+        js_arm_try_armv5_op();
+        arch = 5;
+        js_arm_try_armv6_op();
+        arch = 6;
+        js_arm_try_armv7_op();
+        arch = 7;
+    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+    }
+    return arch;
 }
 
 static bool
@@ -4902,8 +4941,9 @@ js_arm_check_vfp() {
 #include <string.h>
 #include <elf.h>
 
-static bool arm_has_v7 = false;
-static bool arm_has_v6 = false;
+// Assume ARMv4 by default.
+static unsigned int arm_arch = 4;
+static bool arm_has_thumb = false;
 static bool arm_has_vfp = false;
 static bool arm_has_neon = false;
 static bool arm_has_iwmmxt = false;
@@ -4923,6 +4963,7 @@ arm_read_auxv() {
                     hwcap = strtoul(getenv("ARM_FORCE_HWCAP"), NULL, 0);
                 // hardcode these values to avoid depending on specific versions
                 // of the hwcap header, e.g. HWCAP_NEON
+                arm_has_thumb = (hwcap & 4) != 0;
                 arm_has_vfp = (hwcap & 64) != 0;
                 arm_has_iwmmxt = (hwcap & 512) != 0;
                 // this flag is only present on kernel 2.6.29
@@ -4931,11 +4972,22 @@ arm_read_auxv() {
                 const char *plat = (const char*) aux.a_un.a_val;
                 if (getenv("ARM_FORCE_PLATFORM"))
                     plat = getenv("ARM_FORCE_PLATFORM");
-                if (strncmp(plat, "v7l", 3) == 0) {
-                    arm_has_v7 = true;
-                    arm_has_v6 = true;
-                } else if (strncmp(plat, "v6l", 3) == 0) {
-                    arm_has_v6 = true;
+                // The platform string has the form "v[0-9][lb]". The "l" or "b" indicate little-
+                // or big-endian variants and the digit indicates the version of the platform.
+                // We can only accept ARMv4 and above, but allow anything up to ARMv9 for future
+                // processors. Architectures newer than ARMv7 are assumed to be
+                // backwards-compatible with ARMv7.
+                if ((plat[0] == 'v') &&
+                    (plat[1] >= '4') && (plat[1] <= '9') &&
+                    ((plat[2] == 'l') || (plat[2] == 'b')))
+                {
+                    arm_arch = plat[1] - '0';
+                }
+                else
+                {
+                    // For production code, ignore invalid (or unexpected) platform strings and
+                    // fall back to the default. For debug code, use an assertion to catch this.
+                    JS_ASSERT(false);
                 }
             }
         }
@@ -4943,7 +4995,7 @@ arm_read_auxv() {
 
         // if we don't have 2.6.29, we have to do this hack; set
         // the env var to trust HWCAP.
-        if (!getenv("ARM_TRUST_HWCAP") && arm_has_v7)
+        if (!getenv("ARM_TRUST_HWCAP") && (arm_arch >= 7))
             arm_has_neon = true;
     }
 
@@ -4951,11 +5003,30 @@ arm_read_auxv() {
 }
 
 static bool
-js_arm_check_armv6t2() {
+js_arm_check_thumb() {
     if (!arm_tests_initialized)
         arm_read_auxv();
 
-    return arm_has_v7;
+    return arm_has_thumb;
+}
+
+static bool
+js_arm_check_thumb2() {
+    if (!arm_tests_initialized)
+        arm_read_auxv();
+
+    // ARMv6T2 also supports Thumb2, but Linux doesn't provide an easy way to test for this as
+    // there is no associated bit in auxv. ARMv7 always supports Thumb2, and future architectures
+    // are assumed to be backwards-compatible.
+    return (arm_arch >= 7);
+}
+
+static unsigned int
+js_arm_check_arch() {
+    if (!arm_tests_initialized)
+        arm_read_auxv();
+
+    return arm_arch;
 }
 
 static bool
@@ -4967,9 +5038,13 @@ js_arm_check_vfp() {
 }
 
 #else
-#warning Not sure how to check for armv6t2 and vfp on your platform, assuming neither present.
+#warning Not sure how to check for architecture variant on your platform. Assuming ARMv4.
 static bool
-js_arm_check_armv6t2() { return false; }
+js_arm_check_thumb() { return false; }
+static bool
+js_arm_check_thumb2() { return false; }
+static unsigned int
+js_arm_check_arch() { return 4; }
 static bool
 js_arm_check_vfp() { return false; }
 #endif
@@ -5001,9 +5076,26 @@ js_InitJIT(JSTraceMonitor *tm)
         avmplus::AvmCore::config.sse2 = js_CheckForSSE2();
 #endif
 #if defined NANOJIT_ARM
-        avmplus::AvmCore::config.vfp = js_arm_check_vfp();
-        avmplus::AvmCore::config.soft_float = !avmplus::AvmCore::config.vfp;
-        avmplus::AvmCore::config.v6t2 = js_arm_check_armv6t2();
+        bool            arm_vfp     = js_arm_check_vfp();
+        bool            arm_thumb   = js_arm_check_thumb();
+        bool            arm_thumb2  = js_arm_check_thumb2();
+        unsigned int    arm_arch    = js_arm_check_arch();
+
+        avmplus::AvmCore::config.vfp        = arm_vfp;
+        avmplus::AvmCore::config.soft_float = !arm_vfp;
+        avmplus::AvmCore::config.thumb      = arm_thumb;
+        avmplus::AvmCore::config.thumb2     = arm_thumb2;
+        avmplus::AvmCore::config.arch       = arm_arch;
+
+        // Sanity-check the configuration detection.
+        //  * We don't understand architectures prior to ARMv4.
+        JS_ASSERT(arm_arch >= 4);
+        //  * All architectures support Thumb with the possible exception of ARMv4.
+        JS_ASSERT((arm_thumb) || (arm_arch == 4));
+        //  * Only ARMv6T2 and ARMv7(+) support Thumb2, but ARMv6 does not.
+        JS_ASSERT((arm_thumb2) || (arm_arch <= 6));
+        //  * All architectures that support Thumb2 also support Thumb.
+        JS_ASSERT((arm_thumb2 && arm_thumb) || (!arm_thumb2));
 #endif
         did_we_check_processor_features = true;
     }
@@ -5596,7 +5688,7 @@ TraceRecorder::tableswitch()
     }
 
     /* Generate switch LIR. */
-    LIns* si_ins = lir_buf_writer->skip(sizeof(SwitchInfo));
+    LIns* si_ins = lir_buf_writer->insSkip(sizeof(SwitchInfo));
     SwitchInfo* si = (SwitchInfo*) si_ins->payload();
     si->count = high + 1 - low;
     si->table = 0;
@@ -5604,7 +5696,7 @@ TraceRecorder::tableswitch()
     LIns* diff = lir->ins2(LIR_sub, v_ins, lir->insImm(low));
     LIns* cmp = lir->ins2(LIR_ult, diff, lir->insImm(si->count));
     lir->insGuard(LIR_xf, cmp, createGuardRecord(snapshot(DEFAULT_EXIT)));
-    lir->insStore(diff, lir->insImmPtr(&si->index), lir->insImm(0));
+    lir->insStorei(diff, lir->insImmPtr(&si->index), 0);
     VMSideExit* exit = snapshot(CASE_EXIT);
     exit->switchInfo = si;
     return lir->insGuard(LIR_xtbl, diff, createGuardRecord(exit));
@@ -5884,10 +5976,14 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                                       tryBranchAfterCond, rval);
             }
         } else {
-            if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r))
+            if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r)) {
+                ABORT_IF_XML(r);
                 return call_imacro(equality_imacros.any_obj);
-            if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r)))
+            }
+            if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r))) {
+                ABORT_IF_XML(l);
                 return call_imacro(equality_imacros.obj_any);
+            }
         }
 
         l_ins = lir->insImm(0);
@@ -5949,12 +6045,17 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
      * properties, abort.
      */
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(binary_imacros.obj_obj);
+        }
         return call_imacro(binary_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(binary_imacros.any_obj);
+    }
 
     /* 11.8.5 steps 3, 16-21. */
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
@@ -6086,12 +6187,17 @@ TraceRecorder::binary(LOpcode op)
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(binary_imacros.obj_obj);
+        }
         return call_imacro(binary_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(binary_imacros.any_obj);
+    }
 
     bool intop = !(op & LIR64);
     LIns* a = get(&l);
@@ -6927,12 +7033,17 @@ TraceRecorder::record_JSOP_ADD()
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(add_imacros.obj_obj);
+        }
         return call_imacro(add_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(add_imacros.any_obj);
+    }
 
     if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
         LIns* args[] = { stringify(r), stringify(l), cx_ins };
@@ -6970,12 +7081,17 @@ TraceRecorder::record_JSOP_MOD()
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        if (!JSVAL_IS_PRIMITIVE(r))
+        ABORT_IF_XML(l);
+        if (!JSVAL_IS_PRIMITIVE(r)) {
+            ABORT_IF_XML(r);
             return call_imacro(binary_imacros.obj_obj);
+        }
         return call_imacro(binary_imacros.obj_any);
     }
-    if (!JSVAL_IS_PRIMITIVE(r))
+    if (!JSVAL_IS_PRIMITIVE(r)) {
+        ABORT_IF_XML(r);
         return call_imacro(binary_imacros.any_obj);
+    }
 
     if (isNumber(l) && isNumber(r)) {
         LIns* l_ins = get(&l);
@@ -7033,8 +7149,10 @@ TraceRecorder::record_JSOP_NEG()
 {
     jsval& v = stackval(-1);
 
-    if (!JSVAL_IS_PRIMITIVE(v))
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        ABORT_IF_XML(v);
         return call_imacro(unary_imacros.sign);
+    }
 
     if (isNumber(v)) {
         LIns* a = get(&v);
@@ -7085,8 +7203,10 @@ TraceRecorder::record_JSOP_POS()
 {
     jsval& v = stackval(-1);
 
-    if (!JSVAL_IS_PRIMITIVE(v))
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        ABORT_IF_XML(v);
         return call_imacro(unary_imacros.sign);
+    }
 
     if (isNumber(v))
         return JSRS_CONTINUE;
@@ -7117,7 +7237,8 @@ TraceRecorder::record_JSOP_PRIMTOP()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_OBJTOP()
 {
-    // See the comment in record_JSOP_PRIMTOP.
+    jsval& v = stackval(-1);
+    ABORT_IF_XML(v);
     return JSRS_CONTINUE;
 }
 
@@ -7171,8 +7292,10 @@ TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
 {
     JS_ASSERT(argc == 1);
 
-    if (!JSVAL_IS_PRIMITIVE(argv[0]))
+    if (!JSVAL_IS_PRIMITIVE(argv[0])) {
+        ABORT_IF_XML(argv[0]);
         return call_imacro(new_imacros.String);
+    }
 
     LIns* proto_ins;
     CHECK_STATUS(getClassPrototype(ctor, proto_ins));
@@ -7526,7 +7649,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     // use JSTN_UNBOX_AFTER for mode JSOP_NEW because record_NativeCallComplete
     // unboxes the result specially.
 
-    CallInfo* ci = (CallInfo*) lir->skip(sizeof(struct CallInfo))->payload();
+    CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
     ci->_address = uintptr_t(fun->u.n.native);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
@@ -7604,8 +7727,10 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         if (native == js_String && argc >= 1) {
             if (mode == JSOP_NEW)
                 return newString(JSVAL_TO_OBJECT(fval), 1, argv, &fval);
-            if (!JSVAL_IS_PRIMITIVE(argv[0]))
-              return call_imacro(call_imacros.String);
+            if (!JSVAL_IS_PRIMITIVE(argv[0])) {
+                ABORT_IF_XML(argv[0]);
+                return call_imacro(call_imacros.String);
+            }
             set(&fval, stringify(argv[0]));
             pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
             return JSRS_CONTINUE;
@@ -7955,6 +8080,7 @@ TraceRecorder::record_JSOP_GETELEM()
 
     if (JSVAL_IS_PRIMITIVE(lval))
         ABORT_TRACE("JSOP_GETLEM on a primitive");
+    ABORT_IF_XML(lval);
 
     JSObject* obj = JSVAL_TO_OBJECT(lval);
     jsval id;
@@ -8075,6 +8201,7 @@ TraceRecorder::record_JSOP_SETELEM()
     /* no guards for type checks, trace specialized this already */
     if (JSVAL_IS_PRIMITIVE(lval))
         ABORT_TRACE("left JSOP_SETELEM operand is not an object");
+    ABORT_IF_XML(lval);
 
     JSObject* obj = JSVAL_TO_OBJECT(lval);
     LIns* obj_ins = get(&lval);
@@ -8267,7 +8394,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
     if (sizeof(FrameInfo) + stackSlots * sizeof(uint8) > MAX_SKIP_BYTES)
         ABORT_TRACE("interpreted function call requires saving too much stack");
-    LIns* data = lir->skip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
+    LIns* data = lir->insSkip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
     FrameInfo* fi = (FrameInfo*)data->payload();
     uint8* typemap = (uint8 *)(fi + 1);
     uint8* m = typemap;
@@ -8350,6 +8477,7 @@ TraceRecorder::record_JSOP_APPLY()
 
     if (!VALUE_IS_FUNCTION(cx, vp[0]))
         return record_JSOP_CALL();
+    ABORT_IF_XML(vp[0]);
 
     JSObject* obj = JSVAL_TO_OBJECT(vp[0]);
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
@@ -8761,10 +8889,10 @@ TraceRecorder::elem(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins, LIns*& a
         lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
         LIns* label = lir->ins0(LIR_label);
         if (br1)
-            br1->target(label);
-        br2->target(label);
-        br3->target(label);
-        br4->target(label);
+            br1->setTarget(label);
+        br2->setTarget(label);
+        br3->setTarget(label);
+        br4->setTarget(label);
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
@@ -8815,7 +8943,7 @@ TraceRecorder::elem(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins, LIns*& a
                                   lir->ins2i(LIR_eq, v_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE)),
                                   NULL);
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
-        br->target(lir->ins0(LIR_label));
+        br->setTarget(lir->ins0(LIR_label));
 
         /*
          * Don't let the hole value escape. Turn it into an undefined.
@@ -9136,6 +9264,7 @@ TraceRecorder::record_JSOP_ITER()
     jsval& v = stackval(-1);
     if (JSVAL_IS_PRIMITIVE(v))
         ABORT_TRACE("for-in on a primitive value");
+    ABORT_IF_XML(v);
 
     jsuint flags = cx->fp->regs->pc[1];
 
@@ -9159,6 +9288,7 @@ TraceRecorder::record_JSOP_NEXTITER()
     jsval& iterobj_val = stackval(-2);
     if (JSVAL_IS_PRIMITIVE(iterobj_val))
         ABORT_TRACE("for-in on a primitive value");
+    ABORT_IF_XML(iterobj_val);
     JSObject* iterobj = JSVAL_TO_OBJECT(iterobj_val);
     JSClass* clasp = STOBJ_GET_CLASS(iterobj);
     LIns* iterobj_ins = get(&iterobj_val);
