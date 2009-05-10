@@ -2030,7 +2030,7 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
 
                             /*
                              * Watch out for code such as
-                             * 
+                             *
                              *   (function () {
                              *   ...
                              *   var jQuery = ... = function (...) {
@@ -3049,18 +3049,18 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                 return JS_FALSE;
             }
         } else {
+            bool error = (op == JSOP_DEFCONST ||
+                          dn_kind == JSDefinition::CONST ||
+                          (dn_kind == JSDefinition::LET &&
+                           (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom))));
+
             if (JS_HAS_STRICT_OPTION(cx)
                 ? op != JSOP_DEFVAR || dn_kind != JSDefinition::VAR
-                : op == JSOP_DEFCONST ||
-                  dn_kind == JSDefinition::CONST ||
-                  (dn_kind == JSDefinition::LET &&
-                   (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom)))) {
+                : error) {
                 name = js_AtomToPrintableString(cx, atom);
                 if (!name ||
                     !js_ReportCompileErrorNumber(cx, TS(tc->compiler), pn,
-                                                 (op != JSOP_DEFCONST &&
-                                                  dn_kind != JSDefinition::CONST &&
-                                                  dn_kind != JSDefinition::LET)
+                                                 !error
                                                  ? JSREPORT_WARNING | JSREPORT_STRICT
                                                  : JSREPORT_ERROR,
                                                  JSMSG_REDECLARED_VAR,
