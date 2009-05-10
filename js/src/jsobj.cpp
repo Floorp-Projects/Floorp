@@ -3748,8 +3748,15 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     /*
      * Purge the property cache of now-shadowed id in obj's scope chain.
      * Do this early, before locking obj to avoid nesting locks.
+     *
+     * But first, purge the entire cache if obj is a prototype (we approximate
+     * this via OBJ_IS_DELEGATE) and we are defining a non-shadowable property
+     * on it (see bug 452189).
      */
-    js_PurgeScopeChain(cx, obj, id);
+    if (OBJ_IS_DELEGATE(cx, obj) && (attrs & (JSPROP_READONLY | JSPROP_SETTER)))
+        js_PurgePropertyCache(cx, &JS_PROPERTY_CACHE(cx));
+    else
+        js_PurgeScopeChain(cx, obj, id);
 
     /* Lock if object locking is required by this implementation. */
     JS_LOCK_OBJ(cx, obj);
