@@ -2286,9 +2286,11 @@ nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine)
     for (nsIFrame* f = aLine->mFirstChild; n > 0;
          f = f->GetNextSibling(), --n) {
       f->AddStateBits(NS_FRAME_IS_DIRTY);
-      nsIFrame* oof = nsPlaceholderFrame::GetRealFrameFor(f);
-      if (oof != f && oof->GetParent() == this) {
-        oof->AddStateBits(NS_FRAME_IS_DIRTY);
+    }
+    // And mark all the floats whose reflows we might be skipping dirty too.
+    if (aLine->HasFloats()) {
+      for (nsFloatCache* fc = aLine->GetFirstFloat(); fc; fc = fc->Next()) {
+        fc->mPlaceholder->GetOutOfFlowFrame()->AddStateBits(NS_FRAME_IS_DIRTY);
       }
     }
   } else {
