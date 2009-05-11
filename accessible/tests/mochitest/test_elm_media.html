@@ -15,16 +15,45 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/actions.js"></script>
+  <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/role.js"></script>
 
   <script type="application/javascript">
+
+    function focusChecker(aAcc, aName)
+    {
+      this.type = EVENT_FOCUS;
+      this.target = aAcc;
+      this.getID = function focusChecker_getID()
+      {
+        return "focus handling";
+      },
+      this.check = function focusChecker_check(aEvent)
+      {
+        SimpleTest.executeSoon(
+          function()
+          {
+            is(aEvent.accessible.name, aName,
+               "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
+          }
+        );
+      }
+    }
+
     function doTest()
     {
+      //////////////////////////////////////////////////////////////////////////
+      // test the accessible tree
+
       var accTree = {
         role: ROLE_GROUPING,
         children: [
           { // start/stop button
-            role: ROLE_PUSHBUTTON
+            role: ROLE_PUSHBUTTON,
+            name: "Play"
           },
           { // buffer bar
             role: ROLE_PROGRESSBAR
@@ -39,17 +68,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
             role: ROLE_LABEL
           },
           { // mute button
-            role: ROLE_PUSHBUTTON
+            role: ROLE_PUSHBUTTON,
+            name: "Mute"
           }
         ]
       };
       testAccessibleTree("audio", accTree);
 
-      SimpleTest.finish();
+      //////////////////////////////////////////////////////////////////////////
+      // test actions of audio controls
+
+      var audioElm = getAccessible("audio");
+      var playBtn = audioElm.firstChild;
+      var muteBtn = audioElm.lastChild;
+
+      var actions = [
+        {
+          ID: playBtn,
+          actionName: "press",
+          events: CLICK_EVENTS,
+          eventSeq: [ new focusChecker(playBtn, "Pause") ],
+        },
+        {
+          ID: muteBtn,
+          actionName: "press",
+          events: CLICK_EVENTS,
+          eventSeq: [ new focusChecker(muteBtn, "Unmute") ],
+        }
+      ];
+
+      testActions(actions); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addLoadEvent(doTest);
+    addA11yLoadEvent(doTest);
   </script>
 </head>
 <body>
@@ -63,6 +115,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
   </pre>
 
   <audio id="audio" src="chrome://mochikit/content/a11y/accessible/bug461281.ogg"
-         autoplay="true" controls="true">
+         controls="true"></audio>
 </body>
 </html>

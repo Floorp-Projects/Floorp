@@ -50,13 +50,13 @@ _TEST_FILES =\
 		moz.png \
 		$(topsrcdir)/content/media/video/test/bug461281.ogg \
 		longdesc_src.html \
+		actions.js \
 		attributes.js \
 		common.js \
 		events.js \
 		grid.js \
 		layout.js \
 		namerules.xml \
-		nsIAccessible_actions.js \
 		nsIAccessible_name.css \
 		nsIAccessible_name.js \
 		nsIAccessible_name.xbl \
