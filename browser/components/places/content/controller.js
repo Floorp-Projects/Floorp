@@ -192,6 +192,9 @@ PlacesController.prototype = {
              !PlacesUtils.nodeIsReadOnly(selectedNode) &&
              this._view.getResult().sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+    case "placesCmd_createBookmark":
+      var node = this._view.selectedNode;
+      return node && PlacesUtils.nodeIsURI(node) && node.itemId == -1;
     default:
       return false;
     }
@@ -279,6 +282,10 @@ PlacesController.prototype = {
       break;
     case "placesCmd_sortBy:name":
       this.sortFolderByName();
+      break;
+    case "placesCmd_createBookmark":
+      var node = this._view.selectedNode;
+      PlacesUIUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
       break;
     }
   },

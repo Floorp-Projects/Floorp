@@ -20,6 +20,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
 #   Asaf Romano <mano@mozilla.com>
+#   Michael Kohler <michaelkohler@live.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -93,6 +94,8 @@
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
     <command id="placesCmd_deleteDataHost"
              oncommand="goDoCommand('placesCmd_deleteDataHost');"/>
+    <command id="placesCmd_createBookmark"
+             oncommand="goDoCommand('placesCmd_createBookmark');"/>
   </commandset>
 
   <popup id="placesContext"
@@ -155,6 +158,12 @@
               selection="any"
               hideifnoinsertionpoint="true"/>
     <menuseparator id="placesContext_newSeparator"/>
+    <menuitem id="placesContext_createBookmark"
+              command="placesCmd_createBookmark"
+              label="&cmd.bookmarkLink.label;"
+              accesskey="&cmd.bookmarkLink.accesskey;"
+              selection="link"
+              forcehideselection="bookmark|tagChild"/>
     <menuitem id="placesContext_cut"
               command="cmd_cut"
               label="&cutCmd.label;"
