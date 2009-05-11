@@ -53,6 +53,7 @@
 #include "nsILivemarkService.h"
 #include "nsPlacesTriggers.h"
 #include "nsPlacesTables.h"
+#include "nsPlacesIndexes.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Type = 1;
@@ -159,21 +160,16 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
     // bookmarked (used by history queries and vacuuming, for example).
     // Making it compound with "type" speeds up type-differentiation
     // queries, such as expiration and search.
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (fk, type)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_PLACETYPE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The most common operation is to find the children given a parent and position.
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_parentindex "
-        "ON moz_bookmarks (parent, position)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_PARENTPOSITION);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // fast access to lastModified is useful during sync and to get
     // last modified bookmark title for tags container's children.
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_itemlastmodifiedindex "
-        "ON moz_bookmarks (fk, lastModified)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_PLACELASTMODIFIED);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

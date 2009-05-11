@@ -1,4 +1,5 @@
-/* vim: sw=2 ts=2 sts=2 expandtab
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,8 +37,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsPlacesTables.h"
+
 #ifndef __nsPlacesTriggers_h__
 #define __nsPlacesTriggers_h__
+
+/**
+ * Exclude these visit types:
+ *  0 - invalid
+ *  4 - EMBED
+ *  7 - DOWNLOAD
+ **/
+#define EXCLUDED_VISIT_TYPES "0, 4, 7"
 
 /**
  * Trigger checks to ensure that at least one bookmark is still using a keyword
@@ -71,10 +82,7 @@
   "INSTEAD OF INSERT " \
   "ON moz_places_view " \
   "BEGIN " \
-    "INSERT INTO moz_places_temp ( " \
-      "id, url, title, rev_host, visit_count, hidden, typed, favicon_id, " \
-      "frecency " \
-    ") " \
+    "INSERT INTO moz_places_temp (" MOZ_PLACES_COLUMNS ") " \
     "VALUES (MAX(IFNULL((SELECT MAX(id) FROM moz_places_temp), 0), " \
                 "IFNULL((SELECT MAX(id) FROM moz_places), 0)) + 1," \
             "NEW.url, NEW.title, NEW.rev_host, " \
@@ -113,9 +121,8 @@
   "INSTEAD OF UPDATE " \
   "ON moz_places_view " \
   "BEGIN " \
-    "INSERT OR IGNORE INTO moz_places_temp " \
-    "SELECT * " \
-    "FROM moz_places " \
+    "INSERT OR IGNORE INTO moz_places_temp (" MOZ_PLACES_COLUMNS ") " \
+    "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places " \
     "WHERE id = OLD.id; " \
     "UPDATE moz_places_temp " \
     "SET url = IFNULL(NEW.url, OLD.url), " \
@@ -143,22 +150,19 @@
   "INSTEAD OF INSERT " \
   "ON moz_historyvisits_view " \
   "BEGIN " \
-    "INSERT INTO moz_historyvisits_temp ( " \
-      "id, from_visit, place_id, visit_date, visit_type, session " \
-    ") " \
+    "INSERT INTO moz_historyvisits_temp (" MOZ_HISTORYVISITS_COLUMNS ") " \
     "VALUES (MAX(IFNULL((SELECT MAX(id) FROM moz_historyvisits_temp), 0), " \
                 "IFNULL((SELECT MAX(id) FROM moz_historyvisits), 0)) + 1, " \
             "NEW.from_visit, NEW.place_id, NEW.visit_date, NEW.visit_type, " \
             "NEW.session); " \
-    "INSERT OR IGNORE INTO moz_places_temp " \
-    "SELECT * " \
-    "FROM moz_places " \
+    "INSERT OR IGNORE INTO moz_places_temp (" MOZ_PLACES_COLUMNS ") " \
+    "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places " \
     "WHERE id = NEW.place_id " \
-    "AND NEW.visit_type NOT IN (0, 4, 7); " \
+    "AND NEW.visit_type NOT IN (" EXCLUDED_VISIT_TYPES "); " \
     "UPDATE moz_places_temp " \
     "SET visit_count = visit_count + 1 " \
     "WHERE id = NEW.place_id " \
-    "AND NEW.visit_type NOT IN (0, 4, 7); " /* invalid, EMBED, DOWNLOAD */ \
+    "AND NEW.visit_type NOT IN (" EXCLUDED_VISIT_TYPES "); " \
   "END" \
 )
 
@@ -179,15 +183,14 @@
     "WHERE id = OLD.id; " \
     "DELETE FROM moz_historyvisits " \
     "WHERE id = OLD.id; " \
-    "INSERT OR IGNORE INTO moz_places_temp " \
-    "SELECT * " \
-    "FROM moz_places " \
+    "INSERT OR IGNORE INTO moz_places_temp (" MOZ_PLACES_COLUMNS ") " \
+    "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places " \
     "WHERE id = OLD.place_id " \
-    "AND OLD.visit_type NOT IN (0, 4, 7); " \
+    "AND OLD.visit_type NOT IN (" EXCLUDED_VISIT_TYPES "); " \
     "UPDATE moz_places_temp " \
     "SET visit_count = visit_count - 1 " \
     "WHERE id = OLD.place_id " \
-    "AND OLD.visit_type NOT IN (0, 4, 7); " /* invalid, EMBED, DOWNLOAD */ \
+    "AND OLD.visit_type NOT IN (" EXCLUDED_VISIT_TYPES "); " \
   "END" \
 )
 
@@ -204,9 +207,8 @@
   "INSTEAD OF UPDATE " \
   "ON moz_historyvisits_view " \
   "BEGIN " \
-    "INSERT OR IGNORE INTO moz_historyvisits_temp " \
-    "SELECT * " \
-    "FROM moz_historyvisits " \
+    "INSERT OR IGNORE INTO moz_historyvisits_temp (" MOZ_HISTORYVISITS_COLUMNS ") " \
+    "SELECT " MOZ_HISTORYVISITS_COLUMNS " FROM moz_historyvisits " \
     "WHERE id = OLD.id; " \
     "UPDATE moz_historyvisits_temp " \
     "SET from_visit = IFNULL(NEW.from_visit, OLD.from_visit), " \
@@ -226,18 +228,18 @@
  * that will happen is the primary key.  As a result, the row will be deleted,
  * and the replacement will be inserted with the same id.
  */
-#define CREATE_TEMP_SYNC_TRIGGER_BASE(__table) NS_LITERAL_CSTRING( \
+#define CREATE_TEMP_SYNC_TRIGGER_BASE(__table, __columns) NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER " __table "_beforedelete_trigger " \
   "BEFORE DELETE ON " __table "_temp FOR EACH ROW " \
   "BEGIN " \
-    "INSERT OR REPLACE INTO " __table " " \
-    "SELECT * FROM " __table "_temp " \
+    "INSERT OR REPLACE INTO " __table " (" __columns ") " \
+    "SELECT " __columns " FROM " __table "_temp " \
     "WHERE id = OLD.id;" \
   "END" \
 )
 #define CREATE_MOZ_PLACES_SYNC_TRIGGER \
-  CREATE_TEMP_SYNC_TRIGGER_BASE("moz_places")
+  CREATE_TEMP_SYNC_TRIGGER_BASE("moz_places", MOZ_PLACES_COLUMNS)
 #define CREATE_MOZ_HISTORYVISITS_SYNC_TRIGGER \
-  CREATE_TEMP_SYNC_TRIGGER_BASE("moz_historyvisits")
+  CREATE_TEMP_SYNC_TRIGGER_BASE("moz_historyvisits", MOZ_HISTORYVISITS_COLUMNS)
 
 #endif // __nsPlacesTriggers_h__
