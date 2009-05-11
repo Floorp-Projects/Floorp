@@ -76,6 +76,7 @@ _TEST_FILES =\
 		test_aria_role_grid.html \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
+		test_childAtPoint.html \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_cssattrs.html \
 		test_descr.html \
