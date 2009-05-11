@@ -2152,16 +2152,18 @@ js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
     return false;
 }
 
-/* Promote slots if necessary to match the called tree's type map and report error if thats
-   impossible. */
-JS_REQUIRES_STACK bool
+/*
+ * Promote slots if necessary to match the called tree's type map. This function is
+ * infallible and must only be called if we are certain that it is possible to
+ * reconcile the types for each slot in the inner and outer trees.
+ */
+JS_REQUIRES_STACK void
 TraceRecorder::adjustCallerTypes(Fragment* f)
 {
     uint16* gslots = treeInfo->globalSlots->data();
     unsigned ngslots = treeInfo->globalSlots->length();
     JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
-    bool ok = true;
     uint8* map = ti->globalTypeMap();
     uint8* m = map;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
@@ -2169,11 +2171,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
         bool isPromote = isPromoteInt(i);
         if (isPromote && *m == JSVAL_DOUBLE)
             lir->insStorei(get(vp), lirbuf->state, nativeGlobalOffset(vp));
-        else if (!isPromote && *m == JSVAL_INT) {
-            debug_only_v(printf("adjusting will fail, %s%d, slot %d\n", vpname, vpnum, m - map);)
-            oracle.markGlobalSlotUndemotable(cx, gslots[n]);
-            ok = false;
-        }
+        JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
         ++m;
     );
     JS_ASSERT(unsigned(m - map) == ti->nGlobalTypes());
@@ -2187,19 +2185,12 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
                            -treeInfo->nativeStackBase + nativeStackOffset(vp));
             /* Aggressively undo speculation so the inner tree will compile if this fails. */
             oracle.markStackSlotUndemotable(cx, unsigned(m - map));
-        } else if (!isPromote && *m == JSVAL_INT) {
-            debug_only_v(printf("adjusting will fail, %s%d, slot %d\n", vpname, vpnum, m - map);)
-            ok = false;
-            oracle.markStackSlotUndemotable(cx, unsigned(m - map));
-        } else if (JSVAL_IS_INT(*vp) && *m == JSVAL_DOUBLE) {
-            /* Aggressively undo speculation so the inner tree will compile if this fails. */
-            oracle.markStackSlotUndemotable(cx, unsigned(m - map));
         }
+        JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
         ++m;
     );
     JS_ASSERT(unsigned(m - map) == ti->nStackTypes);
     JS_ASSERT(f == f->root);
-    return ok;
 }
 
 JS_REQUIRES_STACK uint8
@@ -3917,9 +3908,9 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     VMFragment* root = (VMFragment*)r->getFragment()->root;
 
     /* Does this branch go to an inner loop? */
-    Fragment* f = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc,
-                          root->globalObj, root->globalShape);
-    if (!f) {
+    Fragment* first = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc,
+                              root->globalObj, root->globalShape);
+    if (!first) {
         /* Not an inner loop we can call, abort trace. */
         AUDIT(returnToDifferentLoopHeader);
         JS_ASSERT(!cx->fp->imacpc);
@@ -3956,22 +3947,20 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
                         js_FramePCToLineNumber(cx, cx->fp),
                         FramePCOffset(cx->fp));)
 
-    /* Find an acceptable peer, make sure our types fit. */
-    Fragment* empty;
-    bool success = false;
-
-    f = r->findNestedCompatiblePeer(f, &empty);
-    if (f && f->code())
-        success = r->adjustCallerTypes(f);
-
-    if (!success) {
+    // Find a matching inner tree. If none can be found, compile one.
+    Fragment* f = r->findNestedCompatiblePeer(first);
+    if (!f || !f->code()) {
         AUDIT(noCompatInnerTrees);
 
         jsbytecode* outer = (jsbytecode*)tm->recorder->getFragment()->root->ip;
         js_AbortRecording(cx, "No compatible inner tree");
 
-        f = empty;
-        if (!f) {
+        // Find an empty fragment we can recycle, or allocate a new one.
+        for (f = first; f != NULL; f = f->peer) {
+            if (!f->code())
+                break;
+        }
+        if (!f || f->code()) {
             f = getAnchor(tm, cx->fp->regs->pc, globalObj, globalShape);
             if (!f) {
                 FlushJITCache(cx);
@@ -3981,6 +3970,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         return js_RecordTree(cx, tm, f, outer, globalObj, globalShape, globalSlots);
     }
 
+    r->adjustCallerTypes(f);
     r->prepareTreeCall(f);
     VMSideExit* innermostNestedGuard = NULL;
     VMSideExit* lr = js_ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard);
@@ -4030,7 +4020,7 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
             !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
             return true;
         }
-        debug_only_v(printf("object != tag%u", tag);)
+        debug_only_v(printf("object != tag%u ", tag);)
         return false;
       case JSVAL_INT:
         jsint i;
@@ -4051,17 +4041,17 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
       case JSVAL_STRING:
         if (tag == JSVAL_STRING)
             return true;
-        debug_only_v(printf("string != tag%u", tag);)
+        debug_only_v(printf("string != tag%u ", tag);)
         return false;
       case JSVAL_TNULL:
         if (JSVAL_IS_NULL(*vp))
             return true;
-        debug_only_v(printf("null != tag%u", tag);)
+        debug_only_v(printf("null != tag%u ", tag);)
         return false;
       case JSVAL_BOOLEAN:
         if (tag == JSVAL_BOOLEAN)
             return true;
-        debug_only_v(printf("bool != tag%u", tag);)
+        debug_only_v(printf("bool != tag%u ", tag);)
         return false;
       default:
         JS_ASSERT(*m == JSVAL_TFUN);
@@ -4069,40 +4059,25 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
             HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))) {
             return true;
         }
-        debug_only_v(printf("fun != tag%u", tag);)
+        debug_only_v(printf("fun != tag%u ", tag);)
         return false;
     }
 }
 
 JS_REQUIRES_STACK Fragment*
-TraceRecorder::findNestedCompatiblePeer(Fragment* f, Fragment** empty)
+TraceRecorder::findNestedCompatiblePeer(Fragment* f)
 {
-    Fragment* demote;
     JSTraceMonitor* tm;
-    unsigned max_demotes;
-
-    if (empty)
-        *empty = NULL;
-    demote = NULL;
 
     tm = &JS_TRACE_MONITOR(cx);
     unsigned int ngslots = treeInfo->globalSlots->length();
     uint16* gslots = treeInfo->globalSlots->data();
 
-    /* We keep a maximum tally - we want to select the peer most likely to work so we don't keep
-     * recording.
-     */
-    max_demotes = 0;
-
     TreeInfo* ti;
     for (; f != NULL; f = f->peer) {
-        if (!f->code()) {
-            if (empty)
-                *empty = f;
+        if (!f->code())
             continue;
-        }
 
-        unsigned demotes = 0;
         ti = (TreeInfo*)f->vmprivate;
 
         debug_only_v(printf("checking nested types %p: ", (void*)f);)
@@ -4110,41 +4085,51 @@ TraceRecorder::findNestedCompatiblePeer(Fragment* f, Fragment** empty)
         if (ngslots > ti->nGlobalTypes())
             specializeTreesToMissingGlobals(cx, ti);
 
-        uint8* m = ti->typeMap.data();
+        uint8* typemap = ti->typeMap.data();
 
-        FORALL_SLOTS(cx, ngslots, gslots, 0,
+        /*
+         * Determine whether the typemap of the inner tree matches the outer tree's
+         * current state. If the inner tree expects an integer, but the outer tree
+         * doesn't guarantee an integer for that slot, we mark the slot undemotable
+         * and mismatch here. This will force a new tree to be compiled that accepts
+         * a double for the slot. If the inner tree expects a double, but the outer
+         * tree has an integer, we can proceed, but we mark the location undemotable.
+         */
+        bool ok = true;
+        uint8* m = typemap;
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
             debug_only_v(printf("%s%d=", vpname, vpnum);)
-            if (!js_IsEntryTypeCompatible(vp, m))
-                goto check_fail;
-            if (*m == JSVAL_STRING && *vp == JSVAL_VOID)
-                goto check_fail;
-            if (*m == JSVAL_INT && !isPromoteInt(get(vp)))
-                demotes++;
+            if (!js_IsEntryTypeCompatible(vp, m)) {
+                ok = false;
+            } else if (!isPromoteInt(get(vp)) && *m == JSVAL_INT) {
+                oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
+                ok = false;
+            } else if (JSVAL_IS_INT(*vp) && *m == JSVAL_DOUBLE) {
+                oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
+            }
+            m++;
+        );
+        FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+            debug_only_v(printf("%s%d=", vpname, vpnum);)
+            if (!js_IsEntryTypeCompatible(vp, m)) {
+                ok = false;
+            } else if (!isPromoteInt(get(vp)) && *m == JSVAL_INT) {
+                oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+                ok = false;
+            } else if (JSVAL_IS_INT(*vp) && *m == JSVAL_DOUBLE) {
+                oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+            }
             m++;
         );
         JS_ASSERT(unsigned(m - ti->typeMap.data()) == ti->typeMap.length());
 
-        debug_only_v(printf(" (demotes %d)\n", demotes);)
+        debug_only_v(printf(" %s\n", ok ? "match" : "");)
 
-        if (demotes) {
-            if (demotes > max_demotes) {
-                demote = f;
-                max_demotes = demotes;
-            }
-            continue;
-        } else {
+        if (ok)
             return f;
-        }
-
-check_fail:
-        debug_only_v(printf("\n"));
-        continue;
     }
 
-    if (demote)
-        return demote;
-
-   return NULL;
+    return NULL;
 }
 
 /**
