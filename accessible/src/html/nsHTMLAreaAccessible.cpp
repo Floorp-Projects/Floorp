@@ -161,3 +161,13 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
   return NS_OK;
 }
 
+// nsAccessible::GetChildAtPoint()
+nsresult
+nsHTMLAreaAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                      PRBool aDeepestChild,
+                                      nsIAccessible **aChild)
+{
+  // Don't walk into area accessibles.
+  NS_ADDREF(*aChild = this);
+  return NS_OK;
+}
