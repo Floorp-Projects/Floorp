@@ -241,8 +241,14 @@ PlacesController.prototype = {
       this.remove("Remove Selection");
       break;
     case "placesCmd_deleteDataHost":
-      let uri = PlacesUtils._uri(this._view.selectedNode.uri);
-      PlacesUIUtils.privateBrowsing.removeDataFromDomain(uri.host);
+      var host;
+      if (PlacesUtils.nodeIsHost(this._view.selectedNode)) {
+        var queries = this._view.selectedNode.getQueries({});
+        host = queries[0].domain;
+      }
+      else
+        host = PlacesUtils._uri(this._view.selectedNode.uri).host;
+      PlacesUIUtils.privateBrowsing.removeDataFromDomain(host);
       break;
     case "cmd_selectAll":
       this.selectAll();
