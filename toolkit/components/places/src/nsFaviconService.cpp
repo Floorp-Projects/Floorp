@@ -68,6 +68,7 @@
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageStatementCallback.h"
 #include "mozIStorageError.h"
+#include "nsPlacesTables.h"
 
 // For favicon optimization
 #include "imgITools.h"
@@ -184,10 +185,10 @@ nsFaviconService::Init()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT f.id, f.url, length(f.data), f.expiration "
       "FROM ( "
-        "SELECT * FROM moz_places_temp "
+        "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places_temp "
         "WHERE url = ?1 "
         "UNION ALL "
-        "SELECT * FROM moz_places "
+        "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places "
         "WHERE url = ?1 "
       ") AS h JOIN moz_favicons f ON h.favicon_id = f.id "
       "LIMIT 1"),
