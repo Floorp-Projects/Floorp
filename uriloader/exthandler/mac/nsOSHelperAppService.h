@@ -74,10 +74,6 @@ public:
 
   nsresult OSProtocolHandlerExists(const char * aScheme,
                                    PRBool * aHandlerExists);
-
-protected:
-  // add any mac specific service state here
-  void UpdateCreatorInfo(nsIMIMEInfo * aMIMEInfo);
 };
 
 #endif // nsOSHelperAppService_h__
