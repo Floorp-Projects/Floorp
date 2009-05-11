@@ -660,9 +660,8 @@ public:
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
                                             VMFragment* peer_root);
     void blacklist() { fragment->blacklist(); }
-    JS_REQUIRES_STACK bool adjustCallerTypes(nanojit::Fragment* f);
-    JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f,
-                                                                  nanojit::Fragment** empty);
+    JS_REQUIRES_STACK void adjustCallerTypes(nanojit::Fragment* f);
+    JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f);
     JS_REQUIRES_STACK void prepareTreeCall(nanojit::Fragment* inner);
     JS_REQUIRES_STACK void emitTreeCall(nanojit::Fragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
