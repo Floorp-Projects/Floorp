@@ -7696,7 +7696,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         jsval* argv = &tval + 1;
         if (native == js_Array)
             return newArray(JSVAL_TO_OBJECT(fval), argc, argv, &fval);
-        if (native == js_String && argc >= 1) {
+        if (native == js_String && argc == 1) {
             if (mode == JSOP_NEW)
                 return newString(JSVAL_TO_OBJECT(fval), 1, argv, &fval);
             if (!JSVAL_IS_PRIMITIVE(argv[0])) {
