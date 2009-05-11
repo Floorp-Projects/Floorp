@@ -5187,6 +5187,14 @@ testShiftRightArithmetic.expected =
     "-2147483648,-1073741824,-16777216,-8388608,-65536,-32768,-256,-128,-1";
 test(testShiftRightArithmetic);
 
+function testStringConstructorWithExtraArg() {
+    for (let i = 0; i < 5; ++i)
+        new String(new String(), 2);
+    return "ok";
+}
+testStringConstructorWithExtraArg.expected = "ok";
+test(testStringConstructorWithExtraArg);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
