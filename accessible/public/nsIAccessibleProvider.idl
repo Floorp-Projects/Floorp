@@ -45,7 +45,7 @@
    object. For that XBL binding of element should implement the interface.
  */
 
-[scriptable, uuid(18ba74e1-0751-41c8-81c6-c903e22491d3)]
+[scriptable, uuid(3f7f9194-c625-4a85-8148-6d92d34897fa)]
 interface nsIAccessibleProvider : nsISupports
 {
   /**
@@ -62,130 +62,56 @@ interface nsIAccessibleProvider : nsISupports
     <xul:iframe>, <xul:browser> and <xul:editor>. */
   const long OuterDoc = 0x00000001;
 
-
   /**
    * Constants set is used by XUL controls.
    */
 
-  /** popup@noautofocus="true" and notification elements */
-  const long XULAlert            = 0x00001001;
+  const long XULAlert = 0x00001001;
+  const long XULButton = 0x00001002;
+  const long XULCheckbox = 0x00001003;
+  const long XULColorPicker = 0x00001004;
+  const long XULColorPickerTile = 0x00001005;
+  const long XULCombobox = 0x00001006;
+  const long XULDropmarker = 0x00001007;
+  const long XULGroupbox = 0x00001008;
+  const long XULImage = 0x00001009;
+  const long XULLink = 0x0000100A;
+  const long XULListbox = 0x0000100B;
+  const long XULListCell = 0x00001026;
+  const long XULListHead = 0x00001024;
+  const long XULListHeader = 0x00001025;
+  const long XULListitem = 0x0000100C;
+  const long XULMenubar = 0x0000100D;
+  const long XULMenuitem = 0x0000100E;
+  const long XULMenupopup = 0x0000100F;
+  const long XULMenuSeparator = 0x00001010;
+  const long XULPane    = 0x00001011;
+  const long XULProgressMeter = 0x00001012;
+  const long XULScale = 0x00001013;
+  const long XULStatusBar = 0x00001014;
+  const long XULRadioButton = 0x00001015;
+  const long XULRadioGroup = 0x00001016;
 
-  /** button element */
-  const long XULButton           = 0x00001002;
+  /** The single tab in a dialog or tabbrowser/editor interface */
+  const long XULTab = 0x00001017;
 
-  /** checkbox element */
-  const long XULCheckbox         = 0x00001003;
+  /** A combination of a tabs object and a tabpanels object */
+  const long XULTabBox = 0x00001018;
 
-  /** colorpicker element */
-  const long XULColorPicker      = 0x00001004;
+  /** The collection of tab objects, useable in the TabBox and independant of
+   as well */
+  const long XULTabs = 0x00001019;
 
-  /** colorpickertile element */
-  const long XULColorPickerTile  = 0x00001005;
-
-  /** menulist element */
-  const long XULCombobox         = 0x00001006;
-
-  /** dropmarker element */
-  const long XULDropmarker       = 0x00001007;
-
-  /** groupbox element */
-  const long XULGroupbox         = 0x00001008;
-
-  /** image element */
-  const long XULImage            = 0x00001009;
-
-  /** label@class="text-link" and label@onclick elements */
-  const long XULLink             = 0x0000100A;
-
-  /** listbox and richlistbox elements */
-  const long XULListbox          = 0x0000100B;
-
-  /** listcell element */
-  const long XULListCell         = 0x0000100C;
-
-  /** listheader element */
-  const long XULListHead         = 0x0000100D;
-
-  /** listhead element */
-  const long XULListHeader       = 0x0000100E;
-
-  /** listitem and richlistitem elements */
-  const long XULListitem         = 0x0000100F;
-
-  /** menubar element */
-  const long XULMenubar          = 0x00001010;
-
-  /** menuitem element */
-  const long XULMenuitem         = 0x00001011;
-
-  /** popup, menupopup element */
-  const long XULMenupopup        = 0x00001012;
-
-  /** menuseparator element */
-  const long XULMenuSeparator    = 0x00001013;
-
-  /** panel element */
-  const long XULPane             = 0x00001014;
-
-  /** progressmeter element */
-  const long XULProgressMeter    = 0x00001015;
-
-  /** scale element */
-  const long XULScale            = 0x00001016;
-
-  /** scrollbar element */
-  const long XULScrollbar        = 0x00001017;
-
-  /** slider element */
-  const long XULSlider           = 0x00001018;
-
-  /** statusbar element */
-  const long XULStatusBar        = 0x00001019;
-
-  /** radio element */
-  const long XULRadioButton      = 0x0000101A;
-
-  /** radiogroup element */
-  const long XULRadioGroup       = 0x0000101B;
-
-  /** tab element */
-  const long XULTab              = 0x0000101C;
-
-  /** tabbox element, contains tabs and tabpanels elements */
-  const long XULTabBox           = 0x0000101D;
-
-  /** tabs element, a collection of tab elements */
-  const long XULTabs             = 0x0000101E;
-
-  /** label or description elements */
-  const long XULText             = 0x0000101F;
-
-  /** textbox and numberbox elements */
-  const long XULTextBox          = 0x00001020;
-
-  /** thumb element, child of scale element */
-  const long XULThumb            = 0x00001021;
-
-  /** tree element */
-  const long XULTree             = 0x00001022;
-
-  /** treecols element, child of tree element */
-  const long XULTreeColumns      = 0x00001023;
-
-  /** treecol element, child of treecols element */
-  const long XULTreeColumnItem   = 0x00001024;
-
-  /** toolbar element */
-  const long XULToolbar          = 0x00001025;
-
-  /** toolbarseparator, toolbarspacer and toolbarspring elements */
-  const long XULToolbarSeparator = 0x00001026;
-
-  /** tooltip element */
-  const long XULTooltip          = 0x00001027;
-
-  /** toolbarbutton element */
-  const long XULToolbarButton    = 0x00001028;
+  const long XULText             = 0x0000101A;
+  const long XULTextBox          = 0x0000101B;
+  const long XULThumb            = 0x0000101C;
+  const long XULTree             = 0x0000101D;
+  const long XULTreeColumns      = 0x0000101E;
+  const long XULTreeColumnItem   = 0x0000101F;
+  const long XULToolbar          = 0x00001020;
+  const long XULToolbarSeparator = 0x00001021;
+  const long XULTooltip          = 0x00001022;
+  const long XULToolbarButton    = 0x00001023;
 
 
   /**
