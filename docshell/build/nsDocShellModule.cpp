@@ -119,11 +119,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(PlatformLocalHandlerApp_t)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDBusHandlerApp)
 #endif 
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#include "nsInternetConfigService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService)
-#endif
-
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
@@ -233,10 +228,6 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
 #ifdef MOZ_ENABLE_DBUS
   { "DBus Handler App", NS_DBUSHANDLERAPP_CID,
       NS_DBUSHANDLERAPP_CONTRACTID, nsDBusHandlerAppConstructor},
-#endif
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  { "Internet Config Service", NS_INTERNETCONFIGSERVICE_CID, NS_INTERNETCONFIGSERVICE_CONTRACTID,
-    nsInternetConfigServiceConstructor, },
 #endif
         
     // session history
