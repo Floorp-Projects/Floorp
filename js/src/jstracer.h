@@ -467,7 +467,8 @@ class TraceRecorder : public avmplus::GCObject {
     JSTraceableNative*      pendingTraceableNative;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
-    jsbytecode*             outer;
+    jsbytecode*             outer;     /* outer trace header PC */
+    uint32                  outerArgc; /* outer trace deepest frame argc */
     bool                    loop;
 
     bool isGlobal(jsval* p) const;
@@ -624,7 +625,8 @@ public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, uint8* typeMap,
-                  VMSideExit* expectedInnerExit, jsbytecode* outerTree);
+                  VMSideExit* expectedInnerExit, jsbytecode* outerTree,
+                  uint32 outerArgc);
     ~TraceRecorder();
 
     static JS_REQUIRES_STACK JSRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr,
