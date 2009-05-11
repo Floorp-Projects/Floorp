@@ -5,7 +5,35 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="thumb" extends="xul:button" />
+  <binding id="thumb" extends="xul:button">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULThumb;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="slider">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULSlider;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="scrollbarbutton">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULButton;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
 
   <binding id="scrollbar-base">
     <handlers>
@@ -27,5 +55,13 @@
       <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" xbl:inherits="curpos,maxpos,disabled,sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" xbl:inherits="curpos,maxpos,disabled,sborient=orient"/>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULScrollbar;
+        </getter>
+      </property>
+    </implementation>
   </binding>
 </bindings>
