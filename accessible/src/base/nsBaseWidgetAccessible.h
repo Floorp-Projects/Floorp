@@ -133,4 +133,21 @@ protected:
   PRUint32 mRole;
 };
 
+
+/**
+ * A simple accessible that gets its enumerated role passed into constructor and
+ * allows children from anonymous content.
+ */ 
+class nsEnumRoleXBLAccessible : public nsEnumRoleAccessible
+{
+public:
+  nsEnumRoleXBLAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell,
+                          PRUint32 aRole);
+  virtual ~nsEnumRoleXBLAccessible() { }
+
+  // nsPIAccessible
+  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+
+};
+
 #endif  

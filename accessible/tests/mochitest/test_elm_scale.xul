@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.css"
+                 type="text/css"?>
+
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL scale element testing">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      var accTree = {
+        role: ROLE_GROUPING,
+        children: [
+          {
+            role: ROLE_SLIDER,
+            children: [
+              {
+                role: ROLE_INDICATOR
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("scale", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=285167"
+       title="Mozilla doesn't support Scrollbar accessible">
+      Mozilla Bug 285167
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <scale id="scale" min="0" max="10" value="2"/>
+
+</window>
+

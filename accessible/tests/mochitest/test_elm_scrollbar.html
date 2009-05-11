@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>scrollbar tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
+
+  <script type="application/javascript">
+
+    /**
+     * Return states object for scrollbar depending on it is visible or not.
+     */
+    function getScrollbarStates(aVisible)
+    {
+      var states = {
+        states: aVisible ? 0 : STATE_INVISIBLE,
+        extraStates: 0,
+        absentStates: aVisible ? STATE_INVISIBLE : 0,
+        absentExtraStates: 0
+      };
+
+      return states;
+    }
+
+    /**
+     * Return structure describing subtree of scrollbar
+     */
+    function getScrollbarChildren(aVisible)
+    {
+      var children =
+      [
+        {
+          role: ROLE_PUSHBUTTON
+        },
+        {
+          role: ROLE_SLIDER,
+          children: (aVisible ? [ { role: ROLE_INDICATOR } ] : null)
+        },
+        {
+          role: ROLE_PUSHBUTTON
+        }
+      ];
+
+      return children;
+    }
+
+    /**
+     * Return accessible tree for testing (passed into testAccessibleTree
+     * function).
+     *
+     * @param aHorizontalScrollbar  true if horizontal scrollbar is presented
+     * @param aVerticalScrollbar    true if vertical scrollbar is presented
+     */
+    function getAccTreeForScrollableArea(aHorizontalScrollbar,
+                                         aVerticalScrollbar)
+    {
+      var accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // horizontal scrollbar
+            role: ROLE_SCROLLBAR,
+            states: getScrollbarStates(aHorizontalScrollbar),
+            children: getScrollbarChildren(aHorizontalScrollbar)
+          },
+          { // vertical scrollbar
+            role: ROLE_SCROLLBAR,
+            states: getScrollbarStates(aVerticalScrollbar),
+            children: getScrollbarChildren(aVerticalScrollbar)
+          },
+          { // text child
+            role: ROLE_TEXT_LEAF,
+          }
+        ]
+      };
+
+      return accTree;
+    }
+
+    function doTest()
+    {
+      testAccessibleTree("c1", getAccTreeForScrollableArea(false, true));
+      testAccessibleTree("c2", getAccTreeForScrollableArea(true, false));
+      testAccessibleTree("c3", getAccTreeForScrollableArea(true, true));
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Mozilla doesn't support Scrollbar accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=285167">Mozilla Bug 285167</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1" style="width: 100px; height: 100px; overflow: auto;">
+    1hellohello 2hellohello 3hellohello 4hellohello 5hellohello 6hellohello 7hellohello
+  </div>
+  <br>
+
+  <div id="c2" style="width: 100px; height: 100px; overflow: auto;">
+    1hellohellohellohello 2hellohellohellohello 3hellohellohellohello
+  </div>
+  <br>
+
+  <div id="c3" style="width: 100px; height: 100px; overflow: auto;">
+    1hellohellohellohello 2hellohellohellohello 3hellohellohellohello 4hellohellohellohello 5hellohellohellohello 6hellohellohellohello 7hellohellohellohello
+  </div>
+  <br>
+</body>
+</html>

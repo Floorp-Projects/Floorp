@@ -5,18 +5,11 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
   
-  <binding id="scalethumb" extends="xul:button">
+  <binding id="scalethumb"
+           extends="chrome://global/content/bindings/scrollbar.xml#thumb">
     <resources>
       <stylesheet src="chrome://global/skin/scale.css"/>
     </resources>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULThumb;
-        </getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="scaleslider" display="xul:slider"
@@ -24,6 +17,14 @@
     <resources>
       <stylesheet src="chrome://global/skin/scale.css"/>
     </resources>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULSlider;
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="scale"
