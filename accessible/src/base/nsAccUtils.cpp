@@ -715,6 +715,16 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
   }
 }
 
+already_AddRefed<nsAccessible>
+nsAccUtils::QueryAccessible(nsIAccessible *aAccessible)
+{
+  nsAccessible* accessible = nsnull;
+  if (aAccessible)
+    CallQueryInterface(aAccessible, &accessible);
+  
+  return accessible;
+}
+
 #ifdef DEBUG_A11Y
 
 PRBool

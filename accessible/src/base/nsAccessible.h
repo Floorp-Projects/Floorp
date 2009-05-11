@@ -104,11 +104,11 @@ private:
 
 
 #define NS_ACCESSIBLE_IMPL_CID                          \
-{  /* 4E36C7A8-9203-4ef9-B619-271DDF6BB839 */           \
-  0x4e36c7a8,                                           \
-  0x9203,                                               \
-  0x4ef9,                                               \
-  { 0xb6, 0x19, 0x27, 0x1d, 0xdf, 0x6b, 0xb8, 0x39 }    \
+{  /* 16917f1e-6cee-4cde-be3f-8bb5943f506c */           \
+  0x16917f1e,                                           \
+  0x6cee,                                               \
+  0x4cde,                                               \
+  { 0xbe, 0x3f, 0x8b, 0xb5, 0x94, 0x3F, 0x50, 0x6c }    \
 }
 
 class nsAccessible : public nsAccessNodeWrap, 
@@ -178,6 +178,18 @@ public:
    * attributes.
    */
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+
+  /**
+   * Return direct or deepest child at the given point.
+   *
+   * @param  aX             [in] x coordinate relative screen
+   * @param  aY             [in] y coordinate relative screen
+   * @param  aDeepestChild  [in] flag points if deep child should be returned
+   * @param  aChild         [out] found child
+   */
+  virtual nsresult GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   PRBool aDeepestChild,
+                                   nsIAccessible **aChild);
 
   //////////////////////////////////////////////////////////////////////////////
   // Helper methods
