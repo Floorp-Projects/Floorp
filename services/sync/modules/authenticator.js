@@ -80,36 +80,11 @@ let Authenticator = {
         return this.__observerService;
     },
 
-
-    __storage : null, // Storage component which contains the saved logins
-    get _storage() {
-        if (!this.__storage) {
-
-            var contractID = "@mozilla.org/login-manager/storage/mozStorage;1";
-            try {
-                var catMan = Cc["@mozilla.org/categorymanager;1"].
-                             getService(Ci.nsICategoryManager);
-                contractID = catMan.getCategoryEntry("login-manager-storage",
-                                                     "nsILoginManagerStorage");
-                this.log("Found alternate nsILoginManagerStorage with " +
-                         "contract ID: " + contractID);
-            } catch (e) {
-                this.log("No alternate nsILoginManagerStorage registered");
-            }
-
-            this.__storage = Cc[contractID].
-                             createInstance(Ci.nsILoginManagerStorage);
-            try {
-                this.__storage.init();
-            } catch (e) {
-                this.log("Initialization of storage component failed: " + e);
-                this.__storage = null;
-            }
-        }
-
-        return this.__storage;
+    get loginManager() {
+      delete this.loginManager;
+      return this.loginManager = Cc["@mozilla.org/login-manager;1"].
+                                 getService(Ci.nsILoginManager);
     },
-
 
     // Private Browsing Service
     // If the service is not available, null will be returned.
@@ -221,49 +196,6 @@ let Authenticator = {
     },
 
     /* ---------- Primary Public interfaces ---------- */
-
-    /*
-     * getAllDisabledHosts
-     *
-     * Get a list of all hosts for which logins are disabled.
-     *
-     * |count| is only needed for XPCOM.
-     *
-     * Returns an array of disabled logins. If there are no disabled logins,
-     * the array is empty.
-     */
-    getAllDisabledHosts : function (count) {
-        this.log("Getting a list of all disabled hosts");
-        return this._storage.getAllDisabledHosts(count);
-    },
-
-
-    /*
-     * findLogins
-     *
-     * Search for the known logins for entries matching the specified criteria.
-     */
-    findLogins : function (count, hostname, formSubmitURL, httpRealm) {
-        this.log("Searching for logins matching host: " + hostname +
-            ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
-
-        return this._storage.findLogins(count, hostname, formSubmitURL,
-                                        httpRealm);
-    },
-
-    /*
-     * countLogins
-     *
-     * Search for the known logins for entries matching the specified criteria,
-     * returns only the count.
-     */
-    countLogins : function (hostname, formSubmitURL, httpRealm) {
-        this.log("Counting logins matching host: " + hostname +
-            ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
-
-        return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
-    },
-
 
     /* ------- Internal methods / callbacks for document integration ------- */
 
@@ -474,7 +406,7 @@ let Authenticator = {
         var formOrigin = this._getPasswordOrigin(doc.documentURI);
 
         // If there are no logins for this site, bail out now.
-        if (!this.countLogins(formOrigin, "", null))
+        if (!this.loginManager.countLogins(formOrigin, "", null))
             return [];
 
         this.log("fillDocument processing " + forms.length +
@@ -543,7 +475,7 @@ let Authenticator = {
             var formOrigin = 
                 this._getPasswordOrigin(form.ownerDocument.documentURI);
             var actionOrigin = this._getActionOrigin(form);
-            foundLogins = this.findLogins({}, formOrigin, actionOrigin, null);
+            foundLogins = this.loginManager.findLogins({}, formOrigin, actionOrigin, null);
             this.log("found " + foundLogins.length + " matching logins.");
         } else {
             this.log("reusing logins from last form.");
