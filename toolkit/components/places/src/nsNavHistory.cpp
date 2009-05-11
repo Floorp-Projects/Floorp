@@ -47,7 +47,12 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsAnnotationService.h"
+#include "nsIIdleService.h"
+#include "nsILivemarkService.h"
+
 #include "nsPlacesTables.h"
+#include "nsPlacesIndexes.h"
+#include "nsPlacesTriggers.h"
 
 #include "nsIArray.h"
 #include "nsTArray.h"
@@ -93,10 +98,7 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "mozIStorageError.h"
-#include "nsPlacesTriggers.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIIdleService.h"
-#include "nsILivemarkService.h"
 
 #include "nsMathUtils.h" // for NS_ceilf()
 
@@ -828,25 +830,20 @@ nsNavHistory::InitDB()
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE UNIQUE INDEX moz_places_url_uniqueindex ON moz_places (url)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_URL);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // This index is used for favicon expiration, see nsNavHistoryExpire::ExpireItems.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_faviconindex ON moz_places (favicon_id)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FAVICON);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_hostindex ON moz_places (rev_host)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_REVHOST);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_VISITCOUNT);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_frecencyindex ON moz_places (frecency)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FRECENCY);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -857,19 +854,15 @@ nsNavHistory::InitDB()
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_historyvisits_placedateindex "
-        "ON moz_historyvisits (place_id, visit_date)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_PLACEDATE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // This makes a big difference in startup time for large profiles because of
     // finding bookmark redirects using the referring page. 
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_historyvisits_fromindex ON moz_historyvisits (from_visit)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_FROMVISIT);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_historyvisits_dateindex ON moz_historyvisits (visit_date)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_VISITDATE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -983,24 +976,19 @@ nsNavHistory::InitTempTables()
   rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_TEMP);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE UNIQUE INDEX moz_places_temp_url_uniqueindex ON moz_places_temp (url)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_URL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX moz_places_temp_faviconindex ON moz_places_temp (favicon_id)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_FAVICON);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX moz_places_temp_hostindex ON moz_places_temp (rev_host)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_REVHOST);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX moz_places_temp_visitcount ON moz_places_temp (visit_count)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_VISITCOUNT);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX moz_places_temp_frecencyindex ON moz_places_temp (frecency)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_FRECENCY);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_SYNC_TRIGGER);
@@ -1011,19 +999,13 @@ nsNavHistory::InitTempTables()
   rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_TEMP);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX moz_historyvisits_temp_placedateindex "
-    "ON moz_historyvisits_temp (place_id, visit_date)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_TEMP_PLACEDATE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX moz_historyvisits_temp_fromindex "
-    "ON moz_historyvisits_temp (from_visit)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_TEMP_FROMVISIT);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX moz_historyvisits_temp_dateindex "
-    "ON moz_historyvisits_temp (visit_date)"));
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_TEMP_VISITDATE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_SYNC_TRIGGER);
@@ -1506,28 +1488,21 @@ nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn)
     // 5. recreate the indexes
     // NOTE: tests showed that it's faster to create the indexes prior to filling
     // the table than it is to add them afterwards.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE UNIQUE INDEX moz_places_url_uniqueindex ON moz_places (url)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_URL);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_faviconindex ON moz_places (favicon_id)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FAVICON);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_hostindex ON moz_places (rev_host)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_REVHOST);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_VISITCOUNT);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_places_frecencyindex ON moz_places (frecency)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FRECENCY);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // 6. copy all data into moz_places
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "INSERT INTO moz_places "
-        "SELECT id, url, title, rev_host, visit_count, hidden, typed, "
-          "favicon_id, frecency "
-        "FROM moz_places_backup"));
+        "INSERT INTO moz_places (" MOZ_PLACES_COLUMNS ")"
+        "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places_backup"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // 7. drop moz_places_backup
@@ -1554,9 +1529,7 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!lastModIndexExists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_itemlastmodifiedindex "
-        "ON moz_bookmarks (fk, lastModified)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_PLACELASTMODIFIED);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1575,9 +1548,7 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // create the new multi-column index
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX IF NOT EXISTS moz_historyvisits_placedateindex "
-        "ON moz_historyvisits (place_id, visit_date)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_PLACEDATE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1596,9 +1567,7 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
 
     // create index for the frecency column
     // XXX multi column index with typed, and visit_count?
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX IF NOT EXISTS moz_places_frecencyindex "
-          "ON moz_places (frecency)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FRECENCY);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // for place: items and unvisited livemark items, we need to set
@@ -1742,8 +1711,7 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // create new uri annos index
-    rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_annos_placeattributeindex ON moz_annos (place_id, anno_attribute_id)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ANNOS_PLACEATTRIBUTE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // drop old item annos index
@@ -1752,8 +1720,7 @@ nsNavHistory::MigrateV8Up(mozIStorageConnection *aDBConn)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // create new item annos index
-    rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_items_annos_itemattributeindex ON moz_items_annos (item_id, anno_attribute_id)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ITEMSANNOS_PLACEATTRIBUTE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

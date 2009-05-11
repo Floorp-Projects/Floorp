@@ -52,6 +52,7 @@
 #include "nsVariant.h"
 #include "nsNavBookmarks.h"
 #include "nsPlacesTables.h"
+#include "nsPlacesIndexes.h"
 
 const PRInt32 nsAnnotationService::kAnnoIndex_ID = 0;
 const PRInt32 nsAnnotationService::kAnnoIndex_PageOrItem = 1;
@@ -269,9 +270,7 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
     rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_ANNOS);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE UNIQUE INDEX moz_annos_placeattributeindex "
-        "ON moz_annos (place_id, anno_attribute_id)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ANNOS_PLACEATTRIBUTE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -287,9 +286,7 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
   if (! exists) {
     rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_ITEMS_ANNOS);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE UNIQUE INDEX moz_items_annos_itemattributeindex "
-          "ON moz_items_annos (item_id, anno_attribute_id)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ITEMSANNOS_PLACEATTRIBUTE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
