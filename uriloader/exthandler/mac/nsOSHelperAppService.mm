@@ -54,6 +54,7 @@
 #include "nsMemory.h"
 #include "nsCRT.h"
 #include "nsMIMEInfoMac.h"
+#include "nsIInternetConfigService.h"
 #include "nsEmbedCID.h"
 
 #import <Carbon/Carbon.h>
@@ -69,27 +70,6 @@ extern "C" {
                                                  CFURLRef *appURL);
 }
 
-/* This is an undocumented interface (in the Foundation framework) that has
- * been stable since at least 10.2.8 and is still present on SnowLeopard.
- * Furthermore WebKit has three public methods (in WebKitSystemInterface.h)
- * that are thin wrappers around this interface's last three methods.  So
- * it's unlikely to change anytime soon.  Now that we're no longer using
- * Internet Config Services, this is the only way to look up a MIME type
- * from an extension, or vice versa.
- */
-@class NSURLFileTypeMappingsInternal;
-
-@interface NSURLFileTypeMappings : NSObject
-{
-    NSURLFileTypeMappingsInternal *_internal;
-}
-
-+ (NSURLFileTypeMappings*)sharedMappings;
-- (NSString*)MIMETypeForExtension:(NSString*)aString;
-- (NSString*)preferredExtensionForMIMEType:(NSString*)aString;
-- (NSArray*)extensionsForMIMEType:(NSString*)aString;
-@end
-
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
 }
@@ -99,16 +79,29 @@ nsOSHelperAppService::~nsOSHelperAppService()
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
-  CFStringRef schemeString = ::CFStringCreateWithBytes(kCFAllocatorDefault,
-                                                       (const UInt8*)aProtocolScheme,
-                                                       strlen(aProtocolScheme),
-                                                       kCFStringEncodingUTF8,
-                                                       false);
-  CFStringRef handlerString = ::LSCopyDefaultHandlerForURLScheme(schemeString);
-  *aHandlerExists = !!handlerString;
-  ::CFRelease(handlerString);
-  ::CFRelease(schemeString);
-  return NS_OK;
+  // look up the protocol scheme in Internet Config....if we find a match then we have a handler for it...
+  *aHandlerExists = PR_FALSE;
+  // ask the internet config service to look it up for us...
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  if (icService)
+  {
+    rv = icService->HasProtocolHandler(aProtocolScheme, aHandlerExists);
+    if (rv == NS_ERROR_NOT_AVAILABLE)
+    {
+      // There is a protocol handler, but it's the current app!  We can't let
+      // the current app handle the protocol, as that'll get us into an infinite
+      // loop, so we just pretend there's no protocol handler available.
+      *aHandlerExists = PR_FALSE;
+      rv = NS_OK;
+
+      // FIXME: instead of pretending there's no protocol handler available,
+      // let the caller know about the loop so it can deal with the problem
+      // (i.e. either fix it automatically, if there's some way to do that,
+      // or just provide the user with options for fixing it manually).
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
@@ -217,14 +210,21 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAp
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+///////////////////////////
+// method overrides --> use internet config information for mime type lookup.
+///////////////////////////
 
 NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const nsACString& aType, const nsACString& aFileExt, nsIMIMEInfo ** aMIMEInfo)
 {
-  return nsExternalHelperAppService::GetFromTypeAndExtension(aType, aFileExt, aMIMEInfo);
+  // first, ask our base class....
+  nsresult rv = nsExternalHelperAppService::GetFromTypeAndExtension(aType, aFileExt, aMIMEInfo);
+  if (NS_SUCCEEDED(rv) && *aMIMEInfo) 
+  {
+    UpdateCreatorInfo(*aMIMEInfo);
+  }
+  return rv;
 }
 
-// aMIMEType and aFileExt might not match,  This method's documentation (in
-// nsExternalHelperAppService.h) says that the MIME type is given preference.
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
@@ -232,155 +232,101 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
 
-  *aFound = PR_FALSE;
+  nsIMIMEInfo* mimeInfo = nsnull;
+  *aFound = PR_TRUE;
 
   const nsCString& flatType = PromiseFlatCString(aMIMEType);
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
 
-  PR_LOG(mLog, PR_LOG_DEBUG, ("Mac: HelperAppService lookup for type '%s' ext '%s'\n",
-                              flatType.get(), flatExt.get()));
+  // ask the internet config service to look it up for us...
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  PR_LOG(mLog, PR_LOG_DEBUG, ("Mac: HelperAppService lookup for type '%s' ext '%s' (IC: 0x%p)\n",
+                              flatType.get(), flatExt.get(), icService.get()));
+  if (icService)
+  {
+    nsCOMPtr<nsIMIMEInfo> miByType, miByExt;
+    if (!aMIMEType.IsEmpty())
+      icService->FillInMIMEInfo(flatType.get(), flatExt.get(), getter_AddRefs(miByType));
 
-  // Create a Mac-specific MIME info so we can use Mac-specific members.
-  nsMIMEInfoMac* mimeInfoMac = new nsMIMEInfoMac(aMIMEType);
-  if (!mimeInfoMac)
-    return nsnull;
-  NS_ADDREF(mimeInfoMac);
+    PRBool hasDefault = PR_FALSE;
+    if (miByType)
+      miByType->GetHasDefaultHandler(&hasDefault);
 
-  OSStatus err;
-  PRBool haveAppForType = PR_FALSE;
-  PRBool haveAppForExt = PR_FALSE;
-  PRBool typeAppIsDefault = PR_FALSE;
-  PRBool extAppIsDefault = PR_FALSE;
-  FSRef typeAppFSRef;
-  FSRef extAppFSRef;
-
-  if (!aMIMEType.IsEmpty()) {
-    CFURLRef appURL = NULL;
-    CFStringRef CFType = ::CFStringCreateWithCString(NULL, flatType.get(), kCFStringEncodingUTF8);
-    err = ::LSCopyApplicationForMIMEType(CFType, kLSRolesAll, &appURL);
-    if ((err == noErr) && appURL && ::CFURLGetFSRef(appURL, &typeAppFSRef)) {
-      haveAppForType = PR_TRUE;
-      PR_LOG(mLog, PR_LOG_DEBUG, ("LSCopyApplicationForMIMEType found a default application\n"));
+    if (!aFileExt.IsEmpty() && (!hasDefault || !miByType)) {
+      icService->GetMIMEInfoFromExtension(flatExt.get(), getter_AddRefs(miByExt));
+      if (miByExt && !aMIMEType.IsEmpty()) {
+        // XXX see XXX comment below
+        nsIMIMEInfo* pByExt = miByExt.get();
+        nsMIMEInfoBase* byExt = static_cast<nsMIMEInfoBase*>(pByExt);
+        byExt->SetMIMEType(aMIMEType);
+      }
     }
-    if (appURL)
-      ::CFRelease(appURL);
-    ::CFRelease(CFType);
+    PR_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: By Type: 0x%p By Ext: 0x%p type has default: %s\n",
+                                miByType.get(), miByExt.get(), hasDefault ? "true" : "false"));
+
+    // If we got two matches, and the type has no default app, copy default app
+    if (!hasDefault && miByType && miByExt) {
+      // IC currently always uses nsMIMEInfoBase-derived classes.
+      // When it stops doing that, this code will need changing.
+      // XXX This assumes that IC will give os an nsMIMEInfoBase. I'd use
+      // dynamic_cast but that crashes.
+      // XXX these pBy* variables are needed because .get() returns an
+      // nsDerivedSafe thingy that can't be cast to nsMIMEInfoBase*
+      nsIMIMEInfo* pByType = miByType.get();
+      nsIMIMEInfo* pByExt = miByExt.get();
+      nsMIMEInfoBase* byType = static_cast<nsMIMEInfoBase*>(pByType);
+      nsMIMEInfoBase* byExt = static_cast<nsMIMEInfoBase*>(pByExt);
+      if (!byType || !byExt) {
+        NS_ERROR("IC gave us an nsIMIMEInfo that's no nsMIMEInfoBase! Fix nsOSHelperAppService.");
+        return nsnull;
+      }
+      // Copy the attributes of miByType onto miByExt
+      byType->CopyBasicDataTo(byExt);
+      miByType = miByExt;
+    }
+    if (miByType)
+      miByType.swap(mimeInfo);
+    else if (miByExt)
+      miByExt.swap(mimeInfo);
   }
-  if (!aFileExt.IsEmpty()) {
+
+  if (!mimeInfo) {
+    *aFound = PR_FALSE;
+    PR_LOG(mLog, PR_LOG_DEBUG, ("Creating new mimeinfo\n"));
+    // Create a Mac-specific MIME info so we can use Mac-specific members.
+    nsMIMEInfoMac* mimeInfoMac = new nsMIMEInfoMac(aMIMEType);
+    if (!mimeInfoMac)
+      return nsnull;
+    NS_ADDREF(mimeInfoMac);
+
+    if (!aFileExt.IsEmpty())
+      mimeInfoMac->AppendExtension(aFileExt);
+
+    // Now see if Launch Services knows of an application that should be run for this type.
+    OSStatus err;
+    FSRef appFSRef;
     CFStringRef CFExt = ::CFStringCreateWithCString(NULL, flatExt.get(), kCFStringEncodingUTF8);
     err = ::LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFExt,
-                                    kLSRolesAll, &extAppFSRef, nsnull);
+                                    kLSRolesAll, &appFSRef, nsnull);
     if (err == noErr) {
-      haveAppForExt = PR_TRUE;
-      PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo found a default application\n"));
-    }
-  }
-
-  if (haveAppForType && haveAppForExt) {
-    typeAppIsDefault = PR_TRUE;
-    // Only add the extension if aMIMEType and aFileExt match.
-    if (::FSCompareFSRefs((const FSRef *) &typeAppFSRef, (const FSRef *) &extAppFSRef) == noErr)
-      mimeInfoMac->AppendExtension(aFileExt);
-    *aFound = PR_TRUE;
-  } else if (haveAppForType) {
-    typeAppIsDefault = PR_TRUE;
-    *aFound = PR_TRUE;
-  } else if (haveAppForExt) {
-    extAppIsDefault = PR_TRUE;
-    mimeInfoMac->AppendExtension(aFileExt);
-    *aFound = PR_TRUE;
-  }
-
-  if (aMIMEType.IsEmpty()) {
-    if (haveAppForExt) {
-      // If aMIMEType is empty and we've found a default app for aFileExt, try
-      // to get the MIME type from aFileExt.  (It might also be worth doing
-      // this when aMIMEType isn't empty but haveAppForType is false -- but
-      // the doc for this method says that if we have a MIME type (in
-      // aMIMEType), we need to give it preference.)
-      NSURLFileTypeMappings *map = [NSURLFileTypeMappings sharedMappings];
-      NSString *extStr = [NSString stringWithCString:flatExt.get() encoding:NSASCIIStringEncoding];
-      NSString *typeStr = map ? [map MIMETypeForExtension:extStr] : NULL;
-      if (typeStr) {
-        nsCAutoString mimeType;
-        mimeType.Assign((char *)[typeStr cStringUsingEncoding:NSASCIIStringEncoding]);
-        mimeInfoMac->SetMIMEType(mimeType);
+      nsCOMPtr<nsILocalFileMac> app(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+      if (!app) {
+        ::CFRelease(CFExt);
+        NS_RELEASE(mimeInfoMac);
+        return nsnull;
       }
+      app->InitWithFSRef(&appFSRef);
+      mimeInfoMac->SetDefaultApplication(app);
+      PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo found a default application\n"));
     } else {
-      // Otherwise set the MIME type to a reasonable fallback.
-      mimeInfoMac->SetMIMEType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+      // Just leave the default application unset.
+      PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo returned error code %d; default application was not set\n", err));
     }
+    mimeInfo = mimeInfoMac;
+    ::CFRelease(CFExt);
   }
-
-  if (typeAppIsDefault || extAppIsDefault) {
-    nsCOMPtr<nsILocalFileMac> app(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-    if (!app) {
-      NS_RELEASE(mimeInfoMac);
-      return nsnull;
-    }
-
-    CFStringRef CFAppName = NULL;
-    if (typeAppIsDefault) {
-      app->InitWithFSRef(&typeAppFSRef);
-      ::LSCopyItemAttribute((const FSRef *) &typeAppFSRef, kLSRolesAll,
-                            kLSItemDisplayName, (CFTypeRef *) &CFAppName);
-    } else {
-      app->InitWithFSRef(&extAppFSRef);
-      ::LSCopyItemAttribute((const FSRef *) &extAppFSRef, kLSRolesAll,
-                            kLSItemDisplayName, (CFTypeRef *) &CFAppName);
-    }
-    if (CFAppName) {
-      nsAutoTArray<UniChar, 255> buffer;
-      CFIndex appNameLength = ::CFStringGetLength(CFAppName);
-      buffer.SetLength(appNameLength);
-      ::CFStringGetCharacters(CFAppName, CFRangeMake(0, appNameLength),
-                              buffer.Elements());
-      nsAutoString appName;
-      appName.Assign(buffer.Elements(), appNameLength);
-      mimeInfoMac->SetDefaultDescription(appName);
-      ::CFRelease(CFAppName);
-    }
-
-    mimeInfoMac->SetDefaultApplication(app);
-    mimeInfoMac->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-  } else {
-    mimeInfoMac->SetPreferredAction(nsIMIMEInfo::saveToDisk);
-  }
-
-  nsCAutoString mimeType;
-  mimeInfoMac->GetMIMEType(mimeType);
-  if (!mimeType.IsEmpty()) {
-    // If we have a MIME type, make sure its preferred extension is included
-    // in our list.
-    NSURLFileTypeMappings *map = [NSURLFileTypeMappings sharedMappings];
-    NSString *typeStr = [NSString stringWithCString:mimeType.get() encoding:NSASCIIStringEncoding];
-    NSString *extStr = map ? [map preferredExtensionForMIMEType:typeStr] : NULL;
-    if (extStr) {
-      nsCAutoString preferredExt;
-      preferredExt.Assign((char *)[extStr cStringUsingEncoding:NSASCIIStringEncoding]);
-      mimeInfoMac->AppendExtension(preferredExt);
-    }
-
-    CFStringRef CFType = ::CFStringCreateWithCString(NULL, mimeType.get(), kCFStringEncodingUTF8);
-    CFStringRef CFTypeDesc = NULL;
-    if (::LSCopyKindStringForMIMEType(CFType, &CFTypeDesc) == noErr) {
-      nsAutoTArray<UniChar, 255> buffer;
-      CFIndex typeDescLength = ::CFStringGetLength(CFTypeDesc);
-      buffer.SetLength(typeDescLength);
-      ::CFStringGetCharacters(CFTypeDesc, CFRangeMake(0, typeDescLength),
-                              buffer.Elements());
-      nsAutoString typeDesc;
-      typeDesc.Assign(buffer.Elements(), typeDescLength);
-      mimeInfoMac->SetDescription(typeDesc);
-    }
-    if (CFTypeDesc)
-      ::CFRelease(CFTypeDesc);
-    ::CFRelease(CFType);
-  }
-
-  PR_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));
-
-  return mimeInfoMac;
+  
+  return mimeInfo;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
@@ -414,3 +360,33 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
 
   return NS_OK;
 }
+
+// we never want to use a hard coded value for the creator and file type for the mac. always look these values up
+// from internet config.
+void nsOSHelperAppService::UpdateCreatorInfo(nsIMIMEInfo * aMIMEInfo)
+{
+  PRUint32 macCreatorType;
+  PRUint32 macFileType;
+  aMIMEInfo->GetMacType(&macFileType);
+  aMIMEInfo->GetMacCreator(&macCreatorType);
+  
+  if (macFileType == 0 || macCreatorType == 0)
+  {
+    // okay these values haven't been initialized yet so fetch a mime object from internet config.
+    nsCAutoString mimeType;
+    aMIMEInfo->GetMIMEType(mimeType);
+    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+    if (icService)
+    {
+      nsCOMPtr<nsIMIMEInfo> osMimeObject;
+      icService->FillInMIMEInfo(mimeType.get(), nsnull, getter_AddRefs(osMimeObject));
+      if (osMimeObject)
+      {
+        osMimeObject->GetMacType(&macFileType);
+        osMimeObject->GetMacCreator(&macCreatorType);
+        aMIMEInfo->SetMacCreator(macCreatorType);
+        aMIMEInfo->SetMacType(macFileType);
+      } // if we got an os object
+    } // if we got the ic service
+  } // if the creator or file type hasn't been initialized yet
+} 
