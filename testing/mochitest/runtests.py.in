@@ -52,6 +52,7 @@ from urllib import quote_plus as encodeURIComponent
 import urllib2
 import commands
 import automation
+from automationutils import addCommonOptions
 
 # Path to the test script on the server
 TEST_SERVER_HOST = "localhost:8888"
@@ -110,6 +111,9 @@ class MochitestOptions(optparse.OptionParser):
     optparse.OptionParser.__init__(self, **kwargs)
     defaults = {}
 
+    # we want to pass down everything from automation.__all__
+    addCommonOptions(self, defaults=dict(zip(automation.__all__, [getattr(automation, x) for x in automation.__all__])))
+
     self.add_option("--close-when-done",
                     action = "store_true", dest = "closeWhenDone",
                     help = "close the application when tests are done running")
@@ -120,21 +124,10 @@ class MochitestOptions(optparse.OptionParser):
                     help = "absolute path to application, overriding default")
     defaults["app"] = os.path.join(SCRIPT_DIRECTORY, automation.DEFAULT_APP)
 
-    self.add_option("--xre-path",
-                    action = "store", type = "string", dest = "xrePath",
-                    help = "absolute path to directory containing XRE (probably xulrunner)")
-    # we'll default this to the directory of app below
-    defaults["xrePath"] = None
-
     self.add_option("--utility-path",
                     action = "store", type = "string", dest = "utilityPath",
                     help = "absolute path to directory containing utility programs (xpcshell, ssltunnel, certutil)")
     defaults["utilityPath"] = automation.DIST_BIN
-
-    self.add_option("--symbols-path",
-                    action = "store", type = "string", dest = "symbolsPath",
-                    help = "absolute path to directory containing breakpad symbols")
-    defaults["symbolsPath"] = automation.SYMBOLS_PATH
 
     self.add_option("--certificate-path",
                     action = "store", type = "string", dest = "certPath",
