@@ -35,25 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ["WeaveLoginManager"];
+const EXPORTED_SYMBOLS = ["Authenticator"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let WeaveLoginManager = {
-
-    classDescription: "LoginManager",
-    contractID: "@mozilla.org/login-manager;1",
-    classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManager,
-                                            Ci.nsISupportsWeakReference]),
-
-
-    /* ---------- private memebers ---------- */
-
-
+let Authenticator = {
     __logService : null, // Console logging service, used for debugging.
     get _logService() {
         if (!this.__logService)
@@ -61,7 +52,6 @@ let WeaveLoginManager = {
                                 getService(Ci.nsIConsoleService);
         return this.__logService;
     },
-
 
     __ioService: null, // IO service for string -> nsIURI conversion
     get _ioService() {
@@ -155,18 +145,14 @@ let WeaveLoginManager = {
     /*
      * init
      *
-     * Initialize the Login Manager. Automatically called when service
+     * Initialize the Authenticator. Automatically called when service
      * is created.
      *
      * Note: Service created in /browser/base/content/browser.js,
      *       delayedStartup()
      */
     init : function () {
-
         // Cache references to current |this| in utility objects
-        this._webProgressListener._domEventListener = this._domEventListener;
-        this._webProgressListener._pwmgr = this;
-        this._domEventListener._pwmgr    = this;
         this._observer._pwmgr            = this;
 
         // Preferences. Add observer so we get notified of changes.
@@ -177,28 +163,12 @@ let WeaveLoginManager = {
 
         // Get current preference values.
         this._debug = this._prefBranch.getBoolPref("debug");
-
         this._remember = this._prefBranch.getBoolPref("rememberSignons");
-
 
         // Get constructor for nsILoginInfo
         this._nsLoginInfo = new Components.Constructor(
             "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
-
-
-        // Form submit observer checks forms for new logins and pw changes.
-        this._observerService.addObserver(this._observer, "earlyformsubmit", false);
-        this._observerService.addObserver(this._observer, "xpcom-shutdown", false);
-
-        // WebProgressListener for getting notification of new doc loads.
-        var progress = Cc["@mozilla.org/docloaderservice;1"].
-                       getService(Ci.nsIWebProgress);
-        progress.addProgressListener(this._webProgressListener,
-                                     Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-
-
     },
-
 
     /*
      * log
@@ -208,8 +178,8 @@ let WeaveLoginManager = {
     log : function (message) {
         if (!this._debug)
             return;
-        dump("Login Manager: " + message + "\n");
-        this._logService.logStringMessage("Login Manager: " + message);
+        dump("Authenticator: " + message + "\n");
+        this._logService.logStringMessage("Authenticator: " + message);
     },
 
 
@@ -226,25 +196,7 @@ let WeaveLoginManager = {
         _pwmgr : null,
 
         QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, 
-                                                Ci.nsIFormSubmitObserver,
                                                 Ci.nsISupportsWeakReference]),
-
-
-        // nsFormSubmitObserver
-        notify : function (formElement, aWindow, actionURI) {
-            this._pwmgr.log("observer notified for form submission.");
-
-            // We're invoked before the content's |onsubmit| handlers, so we
-            // can grab form data before it might be modified (see bug 257781).
-
-            try {
-                this._pwmgr._onFormSubmit(formElement);
-            } catch (e) {
-                this._pwmgr.log("Caught error in onFormSubmit: " + e);
-            }
-
-            return true; // Always return true, or form submit will be canceled.
-        },
 
         // nsObserver
         observe : function (subject, topic, data) {
@@ -262,219 +214,13 @@ let WeaveLoginManager = {
                 } else {
                     this._pwmgr.log("Oops! Pref not handled, change ignored.");
                 }
-            } else if (topic == "xpcom-shutdown") {
-                for (let i in this._pwmgr) {
-                  try {
-                    this._pwmgr[i] = null;
-                  } catch(ex) {}
-                }
-                this._pwmgr = null;
             } else {
                 this._pwmgr.log("Oops! Unexpected notification: " + topic);
             }
         }
     },
 
-
-    /*
-     * _webProgressListener object
-     *
-     * Internal utility object, implements nsIWebProgressListener interface.
-     * This is attached to the document loader service, so we get
-     * notifications about all page loads.
-     */
-    _webProgressListener : {
-        _pwmgr : null,
-        _domEventListener : null,
-
-        QueryInterface : XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                                Ci.nsISupportsWeakReference]),
-
-
-        onStateChange : function (aWebProgress, aRequest,
-                                  aStateFlags,  aStatus) {
-
-            // STATE_START is too early, doc is still the old page.
-            if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING))
-                return;
-
-            if (!this._pwmgr._remember)
-                return;
-
-            var domWin = aWebProgress.DOMWindow;
-            var domDoc = domWin.document;
-
-            // Only process things which might have HTML forms.
-            if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
-                return;
-
-            this._pwmgr.log("onStateChange accepted: req = " +
-                            (aRequest ?  aRequest.name : "(null)") +
-                            ", flags = 0x" + aStateFlags.toString(16));
-
-            // Fastback doesn't fire DOMContentLoaded, so process forms now.
-            if (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) {
-                this._pwmgr.log("onStateChange: restoring document");
-                return this._pwmgr._fillDocument(domDoc);
-            }
-
-            // Add event listener to process page when DOM is complete.
-            domDoc.addEventListener("DOMContentLoaded",
-                                    this._domEventListener, false);
-            return;
-        },
-
-        // stubs for the nsIWebProgressListener interfaces which we don't use.
-        onProgressChange : function() { throw "Unexpected onProgressChange"; },
-        onLocationChange : function() { throw "Unexpected onLocationChange"; },
-        onStatusChange   : function() { throw "Unexpected onStatusChange";   },
-        onSecurityChange : function() { throw "Unexpected onSecurityChange"; }
-    },
-
-
-    /*
-     * _domEventListener object
-     *
-     * Internal utility object, implements nsIDOMEventListener
-     * Used to catch certain DOM events needed to properly implement form fill.
-     */
-    _domEventListener : {
-        _pwmgr : null,
-
-        QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
-                                                Ci.nsISupportsWeakReference]),
-
-
-        handleEvent : function (event) {
-            this._pwmgr.log("domEventListener: got event " + event.type);
-
-            switch (event.type) {
-                case "DOMContentLoaded":
-                    this._pwmgr._fillDocument(event.target);
-                    return;
-
-                case "DOMAutoComplete":
-                case "blur":
-                    var acInputField = event.target;
-                    var acForm = acInputField.form;
-                    // Make sure the username field fillForm will use is the
-                    // same field as the autocomplete was activated on. If
-                    // not, the DOM has been altered and we'll just give up.
-                    var [usernameField, passwordField, ignored] =
-                        this._pwmgr._getFormFields(acForm, false);
-                    if (usernameField == acInputField && passwordField) {
-                        // Clobber any existing password.
-                        passwordField.value = "";
-                        this._pwmgr._fillForm(acForm, true, true, null);
-                    } else {
-                        this._pwmgr.log("Oops, form changed before AC invoked");
-                    }
-                    return;
-
-                default:
-                    this._pwmgr.log("Oops! This event unexpected.");
-                    return;
-            }
-        }
-    },
-
-
-
-
     /* ---------- Primary Public interfaces ---------- */
-
-
-
-
-    /*
-     * addLogin
-     *
-     * Add a new login to login storage.
-     */
-    addLogin : function (login) {
-        // Sanity check the login
-        if (login.hostname == null || login.hostname.length == 0)
-            throw "Can't add a login with a null or empty hostname.";
-
-        // For logins w/o a username, set to "", not null.
-        if (login.username == null)
-            throw "Can't add a login with a null username.";
-
-        if (login.password == null || login.password.length == 0)
-            throw "Can't add a login with a null or empty password.";
-
-        if (login.formSubmitURL || login.formSubmitURL == "") {
-            // We have a form submit URL. Can't have a HTTP realm.
-            if (login.httpRealm != null)
-                throw "Can't add a login with both a httpRealm and formSubmitURL.";
-        } else if (login.httpRealm) {
-            // We have a HTTP realm. Can't have a form submit URL.
-            if (login.formSubmitURL != null)
-                throw "Can't add a login with both a httpRealm and formSubmitURL.";
-        } else {
-            // Need one or the other!
-            throw "Can't add a login without a httpRealm or formSubmitURL.";
-        }
-
-
-        // Look for an existing entry.
-        var logins = this.findLogins({}, login.hostname, login.formSubmitURL,
-                                     login.httpRealm);
-
-        if (logins.some(function(l) login.matches(l, true)))
-            throw "This login already exists.";
-
-        this.log("Adding login: " + login);
-        return this._storage.addLogin(login);
-    },
-
-
-    /*
-     * removeLogin
-     *
-     * Remove the specified login from the stored logins.
-     */
-    removeLogin : function (login) {
-        this.log("Removing login: " + login);
-        return this._storage.removeLogin(login);
-    },
-
-
-    /*
-     * modifyLogin
-     *
-     * Change the specified login to match the new login.
-     */
-    modifyLogin : function (oldLogin, newLogin) {
-        this.log("Modifying oldLogin: " + oldLogin + " newLogin: " + newLogin);
-        return this._storage.modifyLogin(oldLogin, newLogin);
-    },
-
-
-    /*
-     * getAllLogins
-     *
-     * Get a dump of all stored logins. Used by the login manager UI.
-     *
-     * |count| is only needed for XPCOM.
-     *
-     * Returns an array of logins. If there are no logins, the array is empty.
-     */
-    getAllLogins : function (count) {
-        this.log("Getting a list of all logins");
-        return this._storage.getAllLogins(count);
-    },
-
-
-    /*
-     * removeAllLogins
-     *
-     * Remove all stored logins.
-     */
-    removeAllLogins : function () {
-        this.log("Removing all logins");
-        this._storage.removeAllLogins();
-    },
 
     /*
      * getAllDisabledHosts
@@ -505,22 +251,6 @@ let WeaveLoginManager = {
                                         httpRealm);
     },
 
-
-    /*
-     * searchLogins
-     *
-     * Public wrapper around _searchLogins to convert the nsIPropertyBag to a
-     * JavaScript object and decrypt the results.
-     *
-     * Returns an array of decrypted nsILoginInfo.
-     */
-    searchLogins : function(count, matchData) {
-       this.log("Searching for logins");
-
-        return this._storage.searchLogins(count, matchData);
-    },
-
-
     /*
      * countLogins
      *
@@ -533,105 +263,6 @@ let WeaveLoginManager = {
 
         return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
     },
-
-
-    /*
-     * getLoginSavingEnabled
-     *
-     * Check to see if user has disabled saving logins for the host.
-     */
-    getLoginSavingEnabled : function (host) {
-        this.log("Checking if logins to " + host + " can be saved.");
-        if (!this._remember)
-            return false;
-
-        return this._storage.getLoginSavingEnabled(host);
-    },
-
-
-    /*
-     * setLoginSavingEnabled
-     *
-     * Enable or disable storing logins for the specified host.
-     */
-    setLoginSavingEnabled : function (hostname, enabled) {
-        // Nulls won't round-trip with getAllDisabledHosts().
-        if (hostname.indexOf("\0") != -1)
-            throw "Invalid hostname";
-
-        this.log("Saving logins for " + hostname + " enabled? " + enabled);
-        return this._storage.setLoginSavingEnabled(hostname, enabled);
-    },
-
-
-    /*
-     * autoCompleteSearch
-     *
-     * Yuck. This is called directly by satchel:
-     * nsFormFillController::StartSearch()
-     * [toolkit/components/satchel/src/nsFormFillController.cpp]
-     *
-     * We really ought to have a simple way for code to register an
-     * auto-complete provider, and not have satchel calling pwmgr directly.
-     */
-    autoCompleteSearch : function (aSearchString, aPreviousResult, aElement) {
-        // aPreviousResult & aResult are nsIAutoCompleteResult,
-        // aElement is nsIDOMHTMLInputElement
-
-        if (!this._remember)
-            return false;
-
-        this.log("AutoCompleteSearch invoked. Search is: " + aSearchString);
-
-        var result = null;
-
-        if (aPreviousResult) {
-            this.log("Using previous autocomplete result");
-            result = aPreviousResult;
-
-            // We have a list of results for a shorter search string, so just
-            // filter them further based on the new search string.
-            // Count backwards, because result.matchCount is decremented
-            // when we remove an entry.
-            for (var i = result.matchCount - 1; i >= 0; i--) {
-                var match = result.getValueAt(i);
-
-                // Remove results that are too short, or have different prefix.
-                if (aSearchString.length > match.length ||
-                    aSearchString.toLowerCase() !=
-                        match.substr(0, aSearchString.length).toLowerCase())
-                {
-                    this.log("Removing autocomplete entry '" + match + "'");
-                    result.removeValueAt(i, false);
-                }
-            }
-        } else {
-            this.log("Creating new autocomplete search result.");
-
-            var doc = aElement.ownerDocument;
-            var origin = this._getPasswordOrigin(doc.documentURI);
-            var actionOrigin = this._getActionOrigin(aElement.form);
-
-            var logins = this.findLogins({}, origin, actionOrigin, null);
-            var matchingLogins = [];
-
-            for (i = 0; i < logins.length; i++) {
-                var username = logins[i].username.toLowerCase();
-                if (aSearchString.length <= username.length &&
-                    aSearchString.toLowerCase() ==
-                        username.substr(0, aSearchString.length))
-                {
-                    matchingLogins.push(logins[i]);
-                }
-            }
-            this.log(matchingLogins.length + " autocomplete logins avail.");
-            result = new UserAutoCompleteResult(aSearchString, matchingLogins);
-        }
-
-        return result;
-    },
-
-
 
 
     /* ------- Internal methods / callbacks for document integration ------- */
@@ -783,155 +414,6 @@ let WeaveLoginManager = {
 
         return false;
     },
-
-    /*
-     * _onFormSubmit
-     *
-     * Called by the our observer when notified of a form submission.
-     * [Note that this happens before any DOM onsubmit handlers are invoked.]
-     * Looks for a password change in the submitted form, so we can update
-     * our stored password.
-     */
-    _onFormSubmit : function (form) {
-
-        // local helper function
-        function getPrompter(aWindow) {
-            var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
-                              createInstance(Ci.nsILoginManagerPrompter);
-            prompterSvc.init(aWindow);
-            return prompterSvc;
-        }
-
-        if (this._inPrivateBrowsing) {
-            // We won't do anything in private browsing mode anyway,
-            // so there's no need to perform further checks.
-            this.log("(form submission ignored in private browsing mode)");
-            return;
-        }
-
-        var doc = form.ownerDocument;
-        var win = doc.defaultView;
-
-        // If password saving is disabled (globally or for host), bail out now.
-        if (!this._remember)
-            return;
-
-        var hostname      = this._getPasswordOrigin(doc.documentURI);
-        var formSubmitURL = this._getActionOrigin(form)
-        if (!this.getLoginSavingEnabled(hostname)) {
-            this.log("(form submission ignored -- saving is " +
-                     "disabled for: " + hostname + ")");
-            return;
-        }
-
-
-        // Get the appropriate fields from the form.
-        var [usernameField, newPasswordField, oldPasswordField] =
-            this._getFormFields(form, true);
-
-        // Need at least 1 valid password field to do anything.
-        if (newPasswordField == null)
-                return;
-
-        // Check for autocomplete=off attribute. We don't use it to prevent
-        // autofilling (for existing logins), but won't save logins when it's
-        // present.
-        if (this._isAutocompleteDisabled(form) ||
-            this._isAutocompleteDisabled(usernameField) ||
-            this._isAutocompleteDisabled(newPasswordField) ||
-            this._isAutocompleteDisabled(oldPasswordField)) {
-                this.log("(form submission ignored -- autocomplete=off found)");
-                return;
-        }
-
-
-        var formLogin = new this._nsLoginInfo();
-        formLogin.init(hostname, formSubmitURL, null,
-                    (usernameField ? usernameField.value : ""),
-                    newPasswordField.value,
-                    (usernameField ? usernameField.name  : ""),
-                    newPasswordField.name);
-
-        // If we didn't find a username field, but seem to be changing a
-        // password, allow the user to select from a list of applicable
-        // logins to update the password for.
-        if (!usernameField && oldPasswordField) {
-
-            var logins = this.findLogins({}, hostname, formSubmitURL, null);
-
-            if (logins.length == 0) {
-                // Could prompt to save this as a new password-only login.
-                // This seems uncommon, and might be wrong, so ignore.
-                this.log("(no logins for this host -- pwchange ignored)");
-                return;
-            }
-
-            var prompter = getPrompter(win);
-
-            if (logins.length == 1) {
-                var oldLogin = logins[0];
-                formLogin.username      = oldLogin.username;
-                formLogin.usernameField = oldLogin.usernameField;
-
-                prompter.promptToChangePassword(oldLogin, formLogin);
-            } else {
-                prompter.promptToChangePasswordWithUsernames(
-                                    logins, logins.length, formLogin);
-            }
-
-            return;
-        }
-
-
-        // Look for an existing login that matches the form login.
-        var existingLogin = null;
-        var logins = this.findLogins({}, hostname, formSubmitURL, null);
-
-        for (var i = 0; i < logins.length; i++) {
-            var same, login = logins[i];
-
-            // If one login has a username but the other doesn't, ignore
-            // the username when comparing and only match if they have the
-            // same password. Otherwise, compare the logins and match even
-            // if the passwords differ.
-            if (!login.username && formLogin.username) {
-                var restoreMe = formLogin.username;
-                formLogin.username = ""; 
-                same = formLogin.matches(login, false);
-                formLogin.username = restoreMe;
-            } else if (!formLogin.username && login.username) {
-                formLogin.username = login.username;
-                same = formLogin.matches(login, false);
-                formLogin.username = ""; // we know it's always blank.
-            } else {
-                same = formLogin.matches(login, true);
-            }
-
-            if (same) {
-                existingLogin = login;
-                break;
-            }
-        }
-
-        if (existingLogin) {
-            this.log("Found an existing login matching this form submission");
-
-            // Change password if needed.
-            if (existingLogin.password != formLogin.password) {
-                this.log("...passwords differ, prompting to change.");
-                prompter = getPrompter(win);
-                prompter.promptToChangePassword(existingLogin, formLogin);
-            }
-
-            return;
-        }
-
-
-        // Prompt user to save login (via dialog or notification bar)
-        prompter = getPrompter(win);
-        prompter.promptToSavePassword(formLogin);
-    },
-
 
     /*
      * _getPasswordOrigin
@@ -1178,118 +660,8 @@ let WeaveLoginManager = {
                  passwordField: passwordField,
                  foundLogins:   foundLogins,
                  selectedLogin: selectedLogin };
-    },
-
-
-    /*
-     * fillForm
-     *
-     * Fill the form with login information if we can find it.
-     */
-    fillForm : function (form) {
-        this.log("fillForm processing form[id=" + form.id + "]");
-        return this._fillForm(form, true, true, null)[0];
-    },
-
-
-    /*
-     * _attachToInput
-     *
-     * Hooks up autocomplete support to a username field, to allow
-     * a user editing the field to select an existing login and have
-     * the password field filled in.
-     */
-    _attachToInput : function (element) {
-        this.log("attaching autocomplete stuff");
-        element.addEventListener("blur",
-                                this._domEventListener, false);
-        element.addEventListener("DOMAutoComplete",
-                                this._domEventListener, false);
-        this._formFillService.markAsLoginManagerField(element);
     }
+
 }; // end of LoginManager implementation
 
-
-
-
-// nsIAutoCompleteResult implementation
-function UserAutoCompleteResult (aSearchString, matchingLogins) {
-    function loginSort(a,b) {
-        var userA = a.username.toLowerCase();
-        var userB = b.username.toLowerCase();
-
-        if (userA < userB)
-            return -1;
-
-        if (userB > userA)
-            return  1;
-
-        return 0;
-    };
-
-    this.searchString = aSearchString;
-    this.logins = matchingLogins.sort(loginSort);
-    this.matchCount = matchingLogins.length;
-
-    if (this.matchCount > 0) {
-        this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
-        this.defaultIndex = 0;
-    }
-}
-
-UserAutoCompleteResult.prototype = {
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult,
-                                            Ci.nsISupportsWeakReference]),
-
-    // private
-    logins : null,
-
-    // Interfaces from idl...
-    searchString : null,
-    searchResult : Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
-    defaultIndex : -1,
-    errorDescription : "",
-    matchCount : 0,
-
-    getValueAt : function (index) {
-        if (index < 0 || index >= this.logins.length)
-            throw "Index out of range.";
-
-        return this.logins[index].username;
-    },
-
-    getCommentAt : function (index) {
-        return "";
-    },
-
-    getStyleAt : function (index) {
-        return "";
-    },
-
-    getImageAt : function (index) {
-        return "";
-    },
-
-    removeValueAt : function (index, removeFromDB) {
-        if (index < 0 || index >= this.logins.length)
-            throw "Index out of range.";
-
-        var [removedLogin] = this.logins.splice(index, 1);
-
-        this.matchCount--;
-        if (this.defaultIndex > this.logins.length)
-            this.defaultIndex--;
-
-        if (removeFromDB) {
-            var pwmgr = Cc["@mozilla.org/login-manager;1"].
-                        getService(Ci.nsILoginManager);
-            pwmgr.removeLogin(removedLogin);
-        }
-    }
-};
-
-//var component = [LoginManager];
-//function NSGetModule (compMgr, fileSpec) {
-//    return XPCOMUtils.generateModule(component);
-//}
-WeaveLoginManager.init();
+Authenticator.init();
