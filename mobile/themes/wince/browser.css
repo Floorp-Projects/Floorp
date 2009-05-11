@@ -383,7 +383,8 @@ placeitem .button-text {
 }
 
 .autocomplete-items {
-  background-color: #fff;
+  color: black;
+  background-color: white;
 }
 
 .autocomplete-item,
