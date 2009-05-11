@@ -1215,7 +1215,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
   // If we're bypassing the cache, we are guaranteed to want a new cache entry,
   // since we're going to do a new load.
-  if (aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE) {
+  if (requestFlags & nsIRequest::LOAD_BYPASS_CACHE) {
     RemoveFromCache(aURI);
   } else {
     // Look in the cache for our URI, and then validate it.
