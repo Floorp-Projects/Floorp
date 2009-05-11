@@ -75,9 +75,8 @@ endif
 _HARNESS_FILES = \
   $(srcdir)/runreftest.py \
   automation.py \
+  automationutils.py \
   $(NULL)
-
-GARBAGE += automation.py
 
 $(_DEST_DIR):
 	$(NSINSTALL) -D $@
