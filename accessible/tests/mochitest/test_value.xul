@@ -26,8 +26,10 @@
       testValue("pm3", "0%", 0, 0, 1, 0);
 
       // scale
-      testValue("sc1", "500", 500, 0, 1000, 10);
-      testValue("sc2", "", 0, 0, 0, 0);
+      var sc1 = getAccessible("sc1").firstChild;
+      testValue(sc1, "500", 500, 0, 1000, 10);
+      var sc2 = getAccessible("sc2").firstChild;
+      testValue(sc2, "", 0, 0, 0, 0);
 
       // aria progressbar
       testValue("ariapb1", "500", 500, 0, 1000, 0);

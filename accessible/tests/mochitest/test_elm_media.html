@@ -61,8 +61,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
           { // progress bar
             role: ROLE_PROGRESSBAR
           },
-          { // slider of progress bar
-            role: ROLE_SLIDER
+          { // scale of progress bar
+            role: ROLE_GROUPING,
+            children: [
+              { // slider of scale
+                role: ROLE_SLIDER
+              }
+            ]
           },
           { // duration label
             role: ROLE_LABEL

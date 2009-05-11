@@ -18,7 +18,24 @@
   <script type="application/javascript">
     function doTest()
     {
-      var accTree = {
+      var c1Tree = {
+        role: ROLE_SECTION,
+        children: [
+          { // horizontal scrollbar
+            role: ROLE_SCROLLBAR,
+          },
+          { // vertical scrollbar
+            role: ROLE_SCROLLBAR,
+          },
+          { // text child
+            role: ROLE_TEXT_LEAF
+          }
+        ]
+      };
+
+      testAccessibleTree("c1", c1Tree);
+
+      var c2Tree = {
         role: ROLE_SECTION,
         children: [
           { // text child
@@ -27,8 +44,7 @@
         ]
       };
 
-      testAccessibleTree("c1", accTree);
-      testAccessibleTree("c2", accTree);
+      testAccessibleTree("c2", c2Tree);
 
       SimpleTest.finish();
     }
