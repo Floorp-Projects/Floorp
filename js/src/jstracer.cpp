@@ -1001,19 +1001,6 @@ public:
                 return out->ins2(LIR_add, x, y);
             }
         }
-#ifdef NANOJIT_ARM
-        else if (v == LIR_lsh ||
-                 v == LIR_rsh ||
-                 v == LIR_ush)
-        {
-            // needed on ARM -- arm doesn't mask shifts to 31 like x86 does
-            if (s1->isconst())
-                s1->setimm32(s1->imm32() & 31);
-            else
-                s1 = out->ins2(LIR_and, s1, out->insImm(31));
-            return out->ins2(v, s0, s1);
-        }
-#endif
 
         return out->ins2(v, s0, s1);
     }

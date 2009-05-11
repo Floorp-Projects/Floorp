@@ -406,29 +406,35 @@ enum {
 // _d = ~_r (one's compliment)
 #define MVN(_d,_r) ALUr(AL, mvn, 0, _d, 0, _r)
 
+// Logical Shift Right (LSR) rotates the bits without maintaining sign extensions.
 // MOVS _d, _r, LSR <_s>
 // _d = _r >> _s
 #define SHR(_d,_r,_s) ALUr_shr(AL, mov, 1, _d, 0, _r, LSR_reg, _s)
 
-// MOVS _d, _r, LSR #_imm
-// _d = _r >> _imm
-#define SHRi(_d,_r,_imm)  ALUr_shi(AL, mov, 1, _d, 0, _r, LSR_imm, _imm)
+// Logical Shift Right (LSR) rotates the bits without maintaining sign extensions.
+// MOVS _d, _r, LSR #(_imm & 0x1f)
+// _d = _r >> (_imm & 0x1f)
+#define SHRi(_d,_r,_imm)  ALUr_shi(AL, mov, 1, _d, 0, _r, LSR_imm, (_imm & 0x1f))
 
+// Arithmetic Shift Right (ASR) maintains the sign extension.
 // MOVS _d, _r, ASR <_s>
 // _d = _r >> _s
 #define SAR(_d,_r,_s) ALUr_shr(AL, mov, 1, _d, 0, _r, ASR_reg, _s)
 
-// MOVS _r, _r, ASR #_imm
-// _d = _r >> _imm
-#define SARi(_d,_r,_imm) ALUr_shi(AL, mov, 1, _d, 0, _r, ASR_imm, _imm)
+// Arithmetic Shift Right (ASR) maintains the sign extension.
+// MOVS _r, _r, ASR #(_imm & 0x1f)
+// _d = _r >> (_imm & 0x1f)
+#define SARi(_d,_r,_imm) ALUr_shi(AL, mov, 1, _d, 0, _r, ASR_imm, (_imm & 0x1f))
 
+// Logical Shift Left (LSL).
 // MOVS _d, _r, LSL <_s>
 // _d = _r << _s
 #define SHL(_d, _r, _s) ALUr_shr(AL, mov, 1, _d, 0, _r, LSL_reg, _s)
 
-// MOVS _d, _r, LSL #_imm
-// _d = _r << _imm
-#define SHLi(_d, _r, _imm) ALUr_shi(AL, mov, 1, _d, 0, _r, LSL_imm, _imm)
+// Logical Shift Left (LSL).
+// MOVS _d, _r, LSL #(_imm & 0x1f)
+// _d = _r << (_imm & 0x1f)
+#define SHLi(_d, _r, _imm) ALUr_shi(AL, mov, 1, _d, 0, _r, LSL_imm, (_imm & 0x1f))
                     
 // TST
 #define TEST(_l,_r)     ALUr(AL, tst, 1, 0, _l, _r)
