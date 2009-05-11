@@ -2719,7 +2719,8 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         delta = (jsuint)argc - count;
         last = length;
         if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_PrototypeHasIndexedProperties(cx, obj) &&
-            length <= js_DenseArrayCapacity(obj) && obj->dslots[length - 1] != JSVAL_HOLE) {
+            length <= js_DenseArrayCapacity(obj) &&
+            (length == 0 || obj->dslots[length - 1] != JSVAL_HOLE)) {
             if (!EnsureCapacity(cx, obj, length + delta))
                 return JS_FALSE;
             /* (uint) end could be 0, so we can't use a vanilla >= test. */
