@@ -203,7 +203,7 @@
               label="&cmd.deleteDomainData.label;"
               accesskey="&cmd.deleteDomainData.accesskey;"
               closemenu="single"
-              selection="link"
+              selection="link|host"
               selectiontype="single"
               hideifprivatebrowsing="true"
               forcehideselection="bookmark"/>
