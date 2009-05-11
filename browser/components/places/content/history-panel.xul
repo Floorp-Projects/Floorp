@@ -74,14 +74,8 @@
 #endif
   </keyset>
 
-  <popup id="placesContext">
-    <menuitem id="addBookmarkContextItem"
-              label="&bookmarkLink.label;"
-              accesskey="&bookmarkLink.accesskey;"
-              selection="link"
-              selectiontype="single"
-              oncommand="historyAddBookmarks();"/>
-  </popup>
+  <!-- required to overlay the context menu -->
+  <popup id="placesContext" />
 
   <hbox align="center">
     <label value="&find.label;" accesskey="&find.accesskey;" 
