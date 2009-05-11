@@ -38,6 +38,7 @@
 
 #include "nsLookAndFeel.h"
 #include "nsObjCExceptions.h"
+#include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
 #include "nsNativeThemeColors.h"
 
@@ -66,7 +67,17 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
   
   switch (aID) {
     case eColor_WindowBackground:
-      aColor = NS_RGB(0xff,0xff,0xff);
+    {
+      nsCOMPtr<nsIInternetConfigService> icService_wb (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+      if (icService_wb) {
+        res = icService_wb->GetColor(nsIInternetConfigService::eICColor_WebBackgroundColour, &aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
+      }
+      
+      aColor = NS_RGB(0xff,0xff,0xff); // default to white if we didn't find it in internet config
+      res = NS_OK;
+    }
       break;
     case eColor_WindowForeground:
       aColor = NS_RGB(0x00,0x00,0x00);        
@@ -92,8 +103,17 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_TextBackground:
       aColor = NS_RGB(0xff,0xff,0xff);
       break;
-    case eColor_TextForeground:
+    case eColor_TextForeground: 
+    {
+      nsCOMPtr<nsIInternetConfigService> icService_tf (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+      if (icService_tf) {
+        res = icService_tf->GetColor(nsIInternetConfigService::eICColor_WebTextColor, &aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
+      }
       aColor = NS_RGB(0x00,0x00,0x00);
+      res = NS_OK;
+    }
       break;
     case eColor_TextSelectBackground:
       res = GetMacBrushColor(kThemeBrushPrimaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
