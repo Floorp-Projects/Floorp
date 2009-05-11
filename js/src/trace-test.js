@@ -5195,6 +5195,11 @@ function testStringConstructorWithExtraArg() {
 testStringConstructorWithExtraArg.expected = "ok";
 test(testStringConstructorWithExtraArg);
 
+function testConstructorBail() {
+    for (let i = 0; i < 5; ++i) new Number(/x/);
+}
+test(testConstructorBail);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *

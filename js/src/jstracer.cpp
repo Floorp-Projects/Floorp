@@ -7344,8 +7344,7 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
     }
 
     LIns* res_ins = lir->insCall(known->builtin, args);
-    if (!constructing)
-        rval_ins = res_ins;
+    rval_ins = res_ins;
     switch (JSTN_ERRTYPE(known)) {
       case FAIL_NULL:
         guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
@@ -7365,14 +7364,12 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
 
     set(&stackval(0 - (2 + argc)), res_ins);
 
-    if (!constructing) {
-        /*
-         * The return value will be processed by NativeCallComplete since
-         * we have to know the actual return value type for calls that return
-         * jsval (like Array_p_pop).
-         */
-        pendingTraceableNative = known;
-    }
+    /*
+     * The return value will be processed by NativeCallComplete since
+     * we have to know the actual return value type for calls that return
+     * jsval (like Array_p_pop).
+     */
+    pendingTraceableNative = known;
 
     return JSRS_CONTINUE;
 }
@@ -7634,7 +7631,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     generatedTraceableNative->builtin = ci;
     generatedTraceableNative->native = (JSFastNative)fun->u.n.native;
     generatedTraceableNative->flags = FAIL_STATUS | ((mode == JSOP_NEW)
-                                                     ? 0
+                                                     ? JSTN_CONSTRUCTOR
                                                      : JSTN_UNBOX_AFTER);
 
     generatedTraceableNative->prefix = generatedTraceableNative->argtypes = NULL;
