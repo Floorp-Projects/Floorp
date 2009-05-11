@@ -97,6 +97,8 @@ REQUIRES		+= windowwatcher \
 	             $(NULL)
 
 CMMSRCS	= nsOSHelperAppService.mm \
+			nsInternetConfig.mm \
+			nsInternetConfigService.mm \
 			nsMIMEInfoMac.mm \
 			nsLocalHandlerAppMac.mm \
 			$(NULL)
@@ -142,6 +144,10 @@ XPIDLSRCS = \
 	nsIContentDispatchChooser.idl \
 	nsIHandlerService.idl	\
 	$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+XPIDLSRCS		+= nsIInternetConfigService.idl
+endif
 
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
