@@ -414,6 +414,10 @@ HistoryStore.prototype = {
     this._log.trace("  -> processing history entry: " + record.histUri);
 
     let uri = Utils.makeURI(record.histUri);
+    if (!uri) {
+      this._log.warn("Attempted to process invalid URI, skipping");
+      throw "invalid URI in record";
+    }
     let curvisits = [];
     if (this.urlExists(uri))
       curvisits = this._getVisits(record.histUri);
@@ -444,7 +448,8 @@ HistoryStore.prototype = {
   urlExists: function HistStore_urlExists(url) {
     if (typeof(url) == "string")
       url = Utils.makeURI(url);
-    return this._hsvc.isVisited(url);
+    // Don't call isVisited on a null URL to work around crasher bug 492442.
+    return url ? this._hsvc.isVisited(url) : false;
   },
 
   createRecord: function HistStore_createRecord(guid, cryptoMetaURL) {
