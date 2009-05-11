@@ -121,22 +121,25 @@ function addA11yLoadEvent(aFunc)
 // Get DOM node/accesible helpers
 
 /**
- * Return the DOM node.
+ * Return the DOM node by identifier (may be accessible, DOM node or ID).
  */
-function getNode(aNodeOrID)
+function getNode(aAccOrNodeOrID)
 {
-  if (!aNodeOrID)
+  if (!aAccOrNodeOrID)
     return null;
 
-  var node = aNodeOrID;
+  if (aAccOrNodeOrID instanceof nsIDOMNode)
+    return aAccOrNodeOrID;
 
-  if (!(aNodeOrID instanceof nsIDOMNode)) {
-    node = document.getElementById(aNodeOrID);
+  if (aAccOrNodeOrID instanceof nsIAccessible) {
+    aAccOrNodeOrID.QueryInterface(nsIAccessNode);
+    return aAccOrNodeOrID.DOMNode;
+  }
 
-    if (!node) {
-      ok(false, "Can't get DOM element for " + aNodeOrID);
-      return null;
-    }
+  node = document.getElementById(aAccOrNodeOrID);
+  if (!node) {
+    ok(false, "Can't get DOM element for " + aAccOrNodeOrID);
+    return null;
   }
 
   return node;
@@ -343,7 +346,7 @@ function prettyName(aIdentifier)
   if (aIdentifier instanceof nsIAccessible) {
     var acc = getAccessible(aIdentifier, [nsIAccessNode]);
     return getNodePrettyName(acc.DOMNode) + ", role: " +
-      roleToString(acc.finalRole);
+      roleToString(acc.role);
   }
 
   if (aIdentifier instanceof nsIDOMNode)
@@ -369,8 +372,12 @@ addLoadEvent(initialize);
 
 function getNodePrettyName(aNode)
 {
-  if (aNode.nodeType == nsIDOMNode.ELEMENT_NODE && aNode.hasAttribute("id"))
-    return " '" + aNode.getAttribute("id") + "' ";
+  try {
+    if (aNode.nodeType == nsIDOMNode.ELEMENT_NODE && aNode.hasAttribute("id"))
+      return " '" + aNode.getAttribute("id") + "' ";
 
-  return " '" + aNode.localName + " node' ";
+    return " '" + aNode.localName + " node' ";
+  } catch (e) {
+    return "no node info";
+  }
 }

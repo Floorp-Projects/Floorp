@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+  <!ENTITY % videocontrolsDTD SYSTEM "chrome://global/locale/videocontrols.dtd">
+  %videocontrolsDTD;
+]>
+
 <bindings id="videoContolBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -144,7 +149,9 @@
             <vbox>
                 <spacer flex="1"/>
                 <hbox class="controlBar" hidden="true">
-                    <button class="playButton"/>
+                    <button class="playButton"
+                            playlabel="&playButton.playLabel;"
+                            pauselabel="&playButton.pauseLabel;"/>
                     <stack class="scrubberStack" flex="1">
                         <box class="backgroundBar"/>
                         <progressmeter class="bufferBar"/>
@@ -154,7 +161,9 @@
                     <vbox class="durationBox">
                         <label class="durationLabel"/>
                     </vbox>
-                    <button class="muteButton"/>
+                    <button class="muteButton"
+                            mutelabel="&muteButton.muteLabel;"
+                            unmutelabel="&muteButton.unmuteLabel;"/>
                     <stack class="volumeStack" hidden="true">
                         <box class="volumeBackgroundBar"/>
                         <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
@@ -295,8 +304,8 @@
                     this.randomID = Math.random();
                     this.videocontrols.randomID = this.randomID;
 
-                    this.playButton.setAttribute("paused", this.video.paused);
-                    this.muteButton.setAttribute("muted", this.video.muted);
+                    this.setPlayButtonState(this.video.paused);
+                    this.setMuteButtonState(this.video.muted);
 
                     var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
                     this.volumeControl.value = volume;
@@ -368,15 +377,15 @@
 
                     switch (aEvent.type) {
                         case "play":
-                            this.playButton.setAttribute("paused", false);
+                            this.setPlayButtonState(false);
                             break;
                         case "pause":
                         case "ended":
-                            this.playButton.setAttribute("paused", true);
+                            this.setPlayButtonState(true);
                             break;
                         case "volumechange":
                             var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
-                            this.muteButton.setAttribute("muted", this.video.muted);
+                            this.setMuteButtonState(this.video.muted);
                             this.volumeControl.value = volume;
                             break;
                         case "loadedmetadata":
@@ -684,6 +693,24 @@
                     // We'll handle style changes in the event listener for
                     // the "volumechange" event, same as if content script was
                     // controlling volume.
+                },
+
+                setPlayButtonState: function(aPaused)
+                {
+                  this.playButton.setAttribute("paused", aPaused);
+
+                  var attrName = aPaused ? "playlabel" : "pauselabel";
+                  var value = this.playButton.getAttribute(attrName);
+                  this.playButton.setAttribute("aria-label", value);
+                },
+
+                setMuteButtonState: function(aMuted)
+                {
+                  this.muteButton.setAttribute("muted", aMuted);
+
+                  var attrName = aMuted ? "unmutelabel" : "mutelabel";
+                  var value = this.muteButton.getAttribute(attrName);
+                  this.muteButton.setAttribute("aria-label", value);
                 },
 
                 isEventWithin : function (event, parent1, parent2) {

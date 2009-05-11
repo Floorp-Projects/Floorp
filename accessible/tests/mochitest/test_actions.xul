@@ -17,7 +17,9 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_actions.js" />
+          src="chrome://mochikit/content/a11y/accessible/events.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/actions.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -48,13 +50,14 @@
           ID: "buttonmenu",
           actionName: "press",
           events: CLICK_EVENTS
-        },
+        }/*, // XXX: bug 490288
         {
           ID: "buttonmenu_item",
           actionName: "click",
           events: CLICK_EVENTS
-        }
+        }*/
       ];
+
       testActions(actionsArray);
     }
 
@@ -63,39 +66,43 @@
   ]]>
   </script>
 
-  <body xmlns="http://www.w3.org/1999/xhtml">
-    <a target="_blank"
-       href="https://bugzilla.mozilla.org/show_bug.cgi?id=410765"
-       title="nsIAccessible actions testing">
-      Mozilla Bug 410765
-    </a>
-    <p id="display"></p>
-    <div id="content" style="display: none">
-    </div>
-    <pre id="test">
-    </pre>
-  </body>
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=410765"
+         title="nsIAccessible actions testing">
+        Mozilla Bug 410765
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
 
-  <menubar>
-    <menu label="menu" id="menu">
-      <menupopup>
-        <menuitem label="menu item" id="menuitem"/>
-        <menu label="submenu" id="submenu">
+    <vbox flex="1">
+      <menubar>
+        <menu label="menu" id="menu">
           <menupopup>
-            <menuitem label="menu item"/>
+            <menuitem label="menu item" id="menuitem"/>
+            <menu label="submenu" id="submenu">
+              <menupopup>
+                <menuitem label="menu item"/>
+              </menupopup>
+            </menu>
           </menupopup>
         </menu>
-      </menupopup>
-    </menu>
-  </menubar>
+      </menubar>
 
-  <button label="button" id="button"/>
+      <button label="button" id="button"/>
 
-  <button type="menu" id="buttonmenu" label="button">
-    <menupopup>
-      <menuitem label="item1" id="buttonmenu_item"/>
-      <menuitem label="item1"/>
-    </menupopup>
-  </button>
+      <button type="menu" id="buttonmenu" label="button">
+        <menupopup>
+          <menuitem label="item1" id="buttonmenu_item"/>
+          <menuitem label="item1"/>
+        </menupopup>
+      </button>
+    </vbox>
+  </hbox>
 </window>
 
