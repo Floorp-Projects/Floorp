@@ -57,7 +57,6 @@ const STATE_EXTSELECTABLE = nsIAccessibleStates.STATE_EXTSELECTABLE;
 const STATE_FOCUSABLE = nsIAccessibleStates.STATE_FOCUSABLE;
 const STATE_FOCUSED = nsIAccessibleStates.STATE_FOCUSED;
 const STATE_HASPOPUP = nsIAccessibleStates.STATE_HASPOPUP;
-const STATE_INVISIBLE = nsIAccessibleStates.STATE_INVISIBLE;
 const STATE_LINKED = nsIAccessibleStates.STATE_LINKED;
 const STATE_MIXED = nsIAccessibleStates.STATE_MIXED;
 const STATE_MULTISELECTABLE = nsIAccessibleStates.STATE_MULTISELECTABLE;
@@ -281,26 +280,17 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree)
     return;
 
   for (var prop in aAccTree) {
-    var msg = "Wrong value of property '" + prop + "' of "  +
-      prettyName(acc) + ".";
-
-    if (prop == "role") {
+    var msg = "Wrong value of property '" + prop + "'.";
+    if (prop == "role")
       is(roleToString(acc[prop]), roleToString(aAccTree[prop]), msg);
-
-    } else if (prop == "states") {
-      var statesObj = aAccTree[prop];
-      testStates(acc, statesObj.states, statesObj.extraStates,
-                 statesObj.absentStates, statesObj.absentExtraStates);
-
-    } else if (prop != "children") {
+    else if (prop != "children")
       is(acc[prop], aAccTree[prop], msg);
-    }
   }
 
-  if ("children" in aAccTree && aAccTree["children"] instanceof Array) {
+  if ("children" in aAccTree) {
     var children = acc.children;
     is(children.length, aAccTree.children.length,
-       "Different amount of expected children of " + prettyName(acc) + ".");
+       "Different amount of expected children.");
 
     if (aAccTree.children.length == children.length) { 
       for (var i = 0; i < children.length; i++) {

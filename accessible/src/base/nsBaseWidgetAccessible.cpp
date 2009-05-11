@@ -319,10 +319,9 @@ nsLinkableAccessible::GetActionAccessible()
   return accessible;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
+//---------------------
 // nsEnumRoleAccessible
-////////////////////////////////////////////////////////////////////////////////
+//---------------------
 
 nsEnumRoleAccessible::nsEnumRoleAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRUint32 aRole) :
   nsAccessibleWrap(aNode, aShell),
@@ -336,28 +335,5 @@ nsresult
 nsEnumRoleAccessible::GetRoleInternal(PRUint32 *aRole)
 {
   *aRole = mRole;
-  return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsEnumRoleXBLAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-nsEnumRoleXBLAccessible::nsEnumRoleXBLAccessible(nsIDOMNode* aNode,
-                                                 nsIWeakReference* aShell,
-                                                 PRUint32 aRole) :
-  nsEnumRoleAccessible(aNode, aShell, aRole)
-{
-}
-
-// nsPIAccessible
-NS_IMETHODIMP
-nsEnumRoleXBLAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
-{
-  NS_ENSURE_ARG_POINTER(aAllowsAnonChildren);
-  
-  // Allow accessibles for anonymous content.
-  *aAllowsAnonChildren = PR_TRUE;
   return NS_OK;
 }

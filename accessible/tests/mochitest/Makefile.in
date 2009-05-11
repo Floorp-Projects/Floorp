@@ -82,8 +82,6 @@ _TEST_FILES =\
 		test_descr.html \
 		test_elm_filectrl.html \
 		test_elm_media.html \
-		test_elm_scale.xul \
-		test_elm_scrollbar.html \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_mutation.html \
