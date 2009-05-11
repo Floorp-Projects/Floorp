@@ -44,6 +44,7 @@ import sys, shutil, os, os.path
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.append(SCRIPT_DIRECTORY)
 import automation
+from automationutils import addCommonOptions
 from optparse import OptionParser
 from tempfile import mkdtemp
 
@@ -75,22 +76,17 @@ def createReftestProfile(profileDir):
 
 def main():
   parser = OptionParser()
+
+  # we want to pass down everything from automation.__all__
+  addCommonOptions(parser, defaults=dict(zip(automation.__all__, [getattr(automation, x) for x in automation.__all__])))
   parser.add_option("--appname",
                     action = "store", type = "string", dest = "app",
                     default = os.path.join(SCRIPT_DIRECTORY, automation.DEFAULT_APP),
                     help = "absolute path to application, overriding default")
-  parser.add_option("--xre-path",
-                    action = "store", type = "string", dest = "xrePath",
-                    default = None, # default is set below
-                    help = "absolute path to directory containing XRE (probably xulrunner)")
   parser.add_option("--extra-profile-file",
                     action = "append", dest = "extraProfileFiles",
                     default = [],
                     help = "copy specified files/dirs to testing profile")
-  parser.add_option("--symbols-path",
-                    action = "store", type = "string", dest = "symbolsPath",
-                    default = automation.SYMBOLS_PATH,
-                    help = "absolute path to directory containing breakpad symbols")
   parser.add_option("--leak-threshold",
                     action = "store", type = "int", dest = "leakThreshold",
                     default = 0,
