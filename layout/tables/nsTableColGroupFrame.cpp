@@ -302,11 +302,7 @@ nsTableColGroupFrame::InsertColsReflow(PRInt32         aColIndex,
 {
   AddColsToTable(aColIndex, PR_TRUE, aFirstFrame, aLastFrame);
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return;
-
-  PresContext()->PresShell()->FrameNeedsReflow(tableFrame,
+  PresContext()->PresShell()->FrameNeedsReflow(this,
                                                nsIPresShell::eTreeChange,
                                                NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -334,11 +330,8 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
       }
     }
   }
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return;
 
-  PresContext()->PresShell()->FrameNeedsReflow(tableFrame,
+  PresContext()->PresShell()->FrameNeedsReflow(this,
                                                nsIPresShell::eTreeChange,
                                                NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -368,6 +361,7 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
     }
     
     PRInt32 colIndex = colFrame->GetColIndex();
+    // The RemoveChild call handles calling FrameNeedsReflow on us.
     RemoveChild(*colFrame, PR_TRUE);
     
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
@@ -375,10 +369,6 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
       return NS_ERROR_NULL_POINTER;
 
     tableFrame->RemoveCol(this, colIndex, PR_TRUE, PR_TRUE);
-
-    PresContext()->PresShell()->FrameNeedsReflow(tableFrame,
-                                                 nsIPresShell::eTreeChange,
-                                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   }
   else {
     mFrames.DestroyFrame(aOldFrame);
