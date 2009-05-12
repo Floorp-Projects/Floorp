@@ -38,6 +38,8 @@
 
 #include "oggz_private.h"
 
+#include <oggz/oggz_stream.h>
+
 static ogg_int64_t
 oggz_metric_dirac (OGGZ * oggz, long serialno,
                    ogg_int64_t granulepos, void * user_data)
