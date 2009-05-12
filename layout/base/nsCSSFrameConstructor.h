@@ -106,8 +106,7 @@ private:
 
 public:
   // XXXbz this method needs to actually return errors!
-  nsresult ConstructRootFrame(nsIContent*     aDocElement,
-                              nsIFrame**      aNewFrame);
+  nsresult ConstructRootFrame(nsIFrame** aNewFrame);
 
   nsresult ReconstructDocElementHierarchy();
 
@@ -282,11 +281,6 @@ private:
   struct FrameConstructionItem;
   class FrameConstructionItemList;
 
-  nsresult ReconstructDocElementHierarchyInternal();
-
-  nsresult ReinsertContent(nsIContent*    aContainer,
-                           nsIContent*    aChild);
-
   nsresult ConstructPageFrame(nsIPresShell*  aPresShell, 
                               nsPresContext* aPresContext,
                               nsIFrame*      aParentFrame,
@@ -333,15 +327,16 @@ private:
                                  nsIFrame*                aParentFrame,
                                  FrameConstructionItemList& aItems);
 
-  nsresult ConstructDocElementFrame(nsFrameConstructorState& aState,
-                                    nsIContent*              aDocElement,
-                                    nsIFrame*                aParentFrame,
+  // Construct the frames for the document element.  This must always return a
+  // singe new frame (which may, of course, have a bunch of kids).
+  // XXXbz no need to return a frame here, imo.
+  nsresult ConstructDocElementFrame(nsIContent*              aDocElement,
+                                    nsILayoutHistoryState*   aFrameState,
                                     nsIFrame**               aNewFrame);
 
-  nsresult ConstructDocElementTableFrame(nsIContent*            aDocElement,
-                                         nsIFrame*              aParentFrame,
-                                         nsIFrame**             aNewTableFrame,
-                                         nsFrameConstructorState& aState);
+  // Set up our mDocElementContainingBlock correctly for the given root
+  // content.
+  nsresult SetUpDocElementContainingBlock(nsIContent* aDocElement);
 
   /**
    * CreateAttributeContent creates a single content/frame combination for an
@@ -1482,9 +1477,6 @@ private:
                                  nsIFrame*                aPrevSibling,
                                  nsFrameItems&            aFrameItems);
 
-  nsresult RemoveFixedItems(const nsFrameConstructorState& aState,
-                            nsIFrame*                      aRootElementFrame);
-
   // Find the right frame to use for aContent when looking for sibling
   // frames for aTargetContent.  If aPrevSibling is true, this
   // will look for last continuations, etc, as necessary.  This calls
@@ -1601,7 +1593,8 @@ private:
   nsIFrame*           mRootElementFrame;
   // This is the frame for the root element that has no pseudo-element style.
   nsIFrame*           mRootElementStyleFrame;
-  // This is the containing block for fixed-pos frames --- the viewport
+  // This is the containing block for fixed-pos frames --- the
+  // viewport or page frame
   nsIFrame*           mFixedContainingBlock;
   // This is the containing block that contains the root element ---
   // the real "initial containing block" according to CSS 2.1.
