@@ -786,15 +786,12 @@ Assembler::asm_quad(LInsp ins)
 void
 Assembler::asm_nongp_copy(Register r, Register s)
 {
-    if ((rmask(r) & FpRegs) && (rmask(s) & FpRegs)) {
+    if (IsFpReg(r) && IsFpReg(s)) {
         // fp->fp
         FCPYD(r, s);
-    } else if ((rmask(r) & GpRegs) && (rmask(s) & FpRegs)) {
-        // fp->gp
-        // who's doing this and why?
-        NanoAssert(0);
-        // FMRS(r, loSingleVfp(s));
     } else {
+        // We can't move a double-precision FP register into a 32-bit GP
+        // register, so assert that no calling code is trying to do that.
         NanoAssert(0);
     }
 }
