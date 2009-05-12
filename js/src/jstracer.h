@@ -385,6 +385,7 @@ struct InterpState
 #ifdef EXECUTE_TREE_TIMER
     uint64         startTime;
 #endif
+    InterpState*   prev;
 
     /*
      * Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
@@ -467,7 +468,8 @@ class TraceRecorder : public avmplus::GCObject {
     JSTraceableNative*      pendingTraceableNative;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
-    jsbytecode*             outer;
+    jsbytecode*             outer;     /* outer trace header PC */
+    uint32                  outerArgc; /* outer trace deepest frame argc */
     bool                    loop;
 
     bool isGlobal(jsval* p) const;
@@ -624,7 +626,8 @@ public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, uint8* typeMap,
-                  VMSideExit* expectedInnerExit, jsbytecode* outerTree);
+                  VMSideExit* expectedInnerExit, jsbytecode* outerTree,
+                  uint32 outerArgc);
     ~TraceRecorder();
 
     static JS_REQUIRES_STACK JSRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr,
@@ -660,9 +663,8 @@ public:
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
                                             VMFragment* peer_root);
     void blacklist() { fragment->blacklist(); }
-    JS_REQUIRES_STACK bool adjustCallerTypes(nanojit::Fragment* f);
-    JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f,
-                                                                  nanojit::Fragment** empty);
+    JS_REQUIRES_STACK void adjustCallerTypes(nanojit::Fragment* f);
+    JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f);
     JS_REQUIRES_STACK void prepareTreeCall(nanojit::Fragment* inner);
     JS_REQUIRES_STACK void emitTreeCall(nanojit::Fragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
