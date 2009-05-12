@@ -1141,6 +1141,13 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
       // Always prefer to show tags if we have them
       PRBool showTags = !entryTags.IsEmpty();
 
+      // Pretend a page isn't bookmarked/tagged if the user only wants history,
+      // but still show the star and tag if the user explicitly wants them
+      if (GET_BEHAVIOR(History) && !(GET_BEHAVIOR(Bookmark) || GET_BEHAVIOR(Tag))) {
+        showTags = PR_FALSE;
+        style = NS_LITERAL_STRING("favicon");
+      }
+
       // Add the tags to the title if necessary
       if (showTags)
         title += TITLE_TAGS_SEPARATOR + entryTags;
