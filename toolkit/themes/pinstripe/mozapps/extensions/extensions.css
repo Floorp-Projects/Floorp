@@ -86,10 +86,6 @@ richlistitem:not([selected="true"]) .addon-description {
   color: #707070;
 }
 
-richlistitem[selected="true"]:not([opType]) .descriptionCrop {
-  display: none;
-}
-
 .addon-name-version {
   font-size: 110%;
 }
@@ -152,22 +148,6 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-.updateBadge,
-.updateAvailableBox,
-.notifyBadge {
-  display: none;
-}
-
-richlistitem[availableUpdateURL][updateable="true"] .updateBadge,
-richlistitem[availableUpdateURL][updateable="true"] .updateAvailableBox,
-richlistitem[compatible="false"] .notifyBadge,
-richlistitem[providesUpdatesSecurely="false"] .notifyBadge,
-richlistitem[blocklisted="true"] .notifyBadge,
-richlistitem[blocklistedsoft="true"] .notifyBadge,
-richlistitem[satisfiesDependencies="false"] .notifyBadge {
-  display: -moz-box;
-}
-
 /* Selected Add-on buttons
    See content/extensions.css to hide / display buttons */
 .selectedButtons {
@@ -193,23 +173,7 @@ richlistitem[satisfiesDependencies="false"] .notifyBadge {
   -moz-margin-start: 5px;
 }
 
-/* Selected Add-on status messages and images */
-richlistitem[compatible="true"] .incompatibleBox,
-richlistitem[providesUpdatesSecurely="true"] .insecureUpdateBox,
-richlistitem[satisfiesDependencies="true"] .needsDependenciesBox,
-richlistitem:not([blocklisted="true"]):not([blocklistedsoft="true"]) .blocklistedBox,
-richlistitem[blocklistedsoft="false"]:not([selected="true"]) .blocklistedBox,
-richlistitem[blocklisted="false"] .blocklistedLabel,
-richlistitem[blocklistedsoft="false"] .softBlocklistedLabel,
-richlistitem[opType="needs-uninstall"] .blocklistedBox,
-richlistitem[opType="needs-uninstall"] .incompatibleBox,
-richlistitem[opType="needs-uninstall"] .needsDependenciesBox,
-richlistitem[opType="needs-uninstall"] .blocklistedBox {
-  display: none;
-}
-
 richlistitem[loading="true"] .updateBadge {
-  display: -moz-box;
   width: 16px;
   height: 16px;
   margin-bottom: -3px;
@@ -243,10 +207,6 @@ richlistitem[loading="true"] .updateBadge {
   -moz-box-pack: end;
 }
 
-richlistitem[opType="needs-uninstall"] .notifyBadge {
-  display: none;
-}
-
 .addon-search-details {
   margin-top: 5px;
   margin-bottom: 5px;
@@ -276,17 +236,12 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-.addonRating {
-  display: none;
-}
-
 .addonLearnMore {
   margin-top: 4px;
   margin-bottom: 4px;
 }
 
 .addonRating[rating] {
-  display: -moz-box;
   width: 78px;
   height: 18px;
   list-style-image: url("chrome://mozapps/skin/extensions/ratings.png");
