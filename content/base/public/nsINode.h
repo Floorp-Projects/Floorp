@@ -146,8 +146,11 @@ enum {
   NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR
                                = 0x00040000U,
 
+  NODE_ATTACH_BINDING_ON_POSTCREATE
+                               = 0x00080000U,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               19,
+  NODE_SCRIPT_TYPE_OFFSET =               20,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
@@ -738,7 +741,8 @@ public:
     NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS |
                                   NODE_MAY_HAVE_FRAME |
                                   NODE_IS_NATIVE_ANONYMOUS_ROOT |
-                                  NODE_IS_IN_ANONYMOUS_SUBTREE)) ||
+                                  NODE_IS_IN_ANONYMOUS_SUBTREE |
+                                  NODE_ATTACH_BINDING_ON_POSTCREATE)) ||
                  IsNodeOfType(eCONTENT),
                  "Flag only permitted on nsIContent nodes");
     PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
@@ -1065,11 +1069,11 @@ extern const nsIID kThisPtrOffsetsSID;
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
 
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER \
-   tmp->TraverseWrapper(cb);
+#define NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER \
+  nsContentUtils::TraceWrapper(tmp, aCallback, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
-  tmp->ReleaseWrapper();
+  nsContentUtils::ReleaseWrapper(s, tmp);
 
 
 #endif /* nsINode_h___ */

@@ -447,7 +447,7 @@ XPC_NW_RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
     }
 
     XPCWrappedNative* wrappedNative =
-      XPCWrappedNative::GetWrappedNativeOfJSObject(cx, nativeObj);
+      XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, nativeObj);
     if (!wrappedNative)
       return XPC_SJOW_Construct(cx, nsnull, 1, &v, rval);
 
@@ -884,7 +884,7 @@ MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
     *result = nsnull;
   } else {
     XPCWrappedNative *parent_wrapper =
-      XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wn_parent);
+      XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, wn_parent);
 
     // parent_wrapper can be null if we're in a Components.utils.evalInSandbox
     // scope. In that case, the best we can do is just use the
@@ -966,7 +966,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     native = OBJECT_TO_JSVAL(nativeObj);
   } else {
     wrappedNative
-      = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, nativeObj);
+      = XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, nativeObj);
 
     if (!wrappedNative) {
       return ThrowException(NS_ERROR_INVALID_ARG, cx);

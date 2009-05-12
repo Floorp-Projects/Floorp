@@ -556,19 +556,27 @@ NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(_class)  \
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _class)
 
-#define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(_class, _base_class)          \
-class NS_CYCLE_COLLECTION_INNERCLASS                                           \
- : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
-{                                                                              \
+#define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(_class,        \
+                                                                _base_class)   \
 public:                                                                        \
-  NS_IMETHOD Unlink(void *p);                                                  \
   NS_IMETHOD Traverse(void *p,                                                 \
                       nsCycleCollectionTraversalCallback &cb);                 \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
     return static_cast<_class*>(static_cast<_base_class*>(                     \
       NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Downcast(s)));               \
-  }                                                                            \
+  }
+
+#define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)     \
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(_class, _base_class) \
+  NS_IMETHOD Unlink(void *p);
+
+#define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(_class, _base_class)          \
+class NS_CYCLE_COLLECTION_INNERCLASS                                           \
+ : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
+{                                                                              \
+public:                                                                        \
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)           \
 };                                                                             \
 NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 
@@ -578,13 +586,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
 {                                                                              \
 public:                                                                        \
-  NS_IMETHOD Traverse(void *p,                                                 \
-                      nsCycleCollectionTraversalCallback &cb);                 \
-  static _class* Downcast(nsISupports* s)                                      \
-  {                                                                            \
-    return static_cast<_class*>(static_cast<_base_class*>(                     \
-      NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Downcast(s)));               \
-  }                                                                            \
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(_class, _base_class) \
 };                                                                             \
 NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 

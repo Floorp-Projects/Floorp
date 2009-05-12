@@ -981,7 +981,8 @@ public:
   
   void DecreaseEventSuppression() { --mEventsSuppressed; }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDocument, nsIDocument)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
+                                                         nsIDocument)
 
   /**
    * Utility method for getElementsByClassName.  aRootNode is the node (either
