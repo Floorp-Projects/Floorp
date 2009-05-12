@@ -137,17 +137,17 @@ private:
                       const nscolor&   aForegroundColor,
                       const nsRect&    aDirtyRect);
 
-
-  CroppingStyle mCropType;
   nsString mTitle;
   nsString mCroppedTitle;
   nsString mAccessKey;
-  nscoord mTitleWidth;
+  nsSize mTextSize;
   nsAccessKeyInfo* mAccessKeyInfo;
+
+  CroppingStyle mCropType;
+  nscoord mTitleWidth;
+  nscoord mAscent;
   PRPackedBool mNeedsRecalc;
   PRPackedBool mNeedsReflowCallback;
-  nsSize mTextSize;
-  nscoord mAscent;
 
   static PRBool gAlwaysAppendAccessKey;
   static PRBool gAccessKeyPrefInitialized;
