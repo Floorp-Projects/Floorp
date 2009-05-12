@@ -272,7 +272,7 @@ namespace nanojit
 
         if (hi->isconst()) {
             STW32(L0, d+4, FP);
-            SET32(hi->constval(), L0);
+            SET32(hi->imm32(), L0);
         } else {
             Register rh = findRegFor(hi, GpRegs);
             STW32(rh, d+4, FP);
@@ -280,7 +280,7 @@ namespace nanojit
 
         if (lo->isconst()) {
             STW32(L0, d, FP);
-            SET32(lo->constval(), L0);
+            SET32(lo->imm32(), L0);
         } else {
             // okay if r gets recycled.
             Register rl = findRegFor(lo, GpRegs);
@@ -305,7 +305,7 @@ namespace nanojit
             if (!resv->arIndex) {
                 reserveFree(i);
             }
-            int v = i->constval();
+            int v = i->imm32();
             SET32(v, r);
         } else {
             int d = findMemFor(i);
@@ -326,7 +326,7 @@ namespace nanojit
         if (value->isconst())
             {
                 Register rb = getBaseReg(base, dr, GpRegs);
-                int c = value->constval();
+                int c = value->imm32();
                 STW32(L0, dr, rb);
                 SET32(c, L0);
             }
@@ -341,7 +341,7 @@ namespace nanojit
                     ra = findRegFor(value, GpRegs);
                 } else if (base->isconst()) {
                     // absolute address
-                    dr += base->constval();
+                    dr += base->imm32();
                     ra = findRegFor(value, GpRegs);
                     rb = G0;
                 } else {
@@ -370,7 +370,7 @@ namespace nanojit
     {
         underrunProtect(72);
         LIns* base = ins->oprnd1();
-        int db = ins->oprnd2()->constval();
+        int db = ins->oprnd2()->imm32();
         Reservation *resv = getresv(ins);
         Register rr = resv->reg;
 
@@ -408,9 +408,9 @@ namespace nanojit
                 Register rb = findRegFor(base, GpRegs);
                 const int32_t* p = (const int32_t*) (value-2);
                 STW32(L0, dr+4, rb);
-                SET32(p[0], L0);
+                SET32(value->imm64_0(), L0);
                 STW32(L0, dr, rb);
-                SET32(p[1], L0);
+                SET32(value->imm64_1(), L0);
                 return;
             }
 
@@ -574,7 +574,7 @@ namespace nanojit
         // ready to issue the compare
         if (rhs->isconst())
             {
-                int c = rhs->constval();
+                int c = rhs->imm32();
                 if (c == 0 && cond->isop(LIR_eq)) {
                     Register r = findRegFor(lhs, GpRegs);
                     ANDCC(r, r, G0);
@@ -670,7 +670,7 @@ namespace nanojit
         else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
             // add alloc+const, use lea
             Register rr = prepResultReg(ins, allow);
-            int d = findMemFor(lhs) + rhs->constval();
+            int d = findMemFor(lhs) + rhs->imm32();
             ADD(FP, L0, rr);
             SET32(d, L0);
         }
@@ -711,7 +711,7 @@ namespace nanojit
             }
         else
             {
-                int c = rhs->constval();
+                int c = rhs->imm32();
                 if (op == LIR_add || op == LIR_addp) {
                     ADDCC(rr, L0, rr); 
                 } else if (op == LIR_sub) {
@@ -767,7 +767,7 @@ namespace nanojit
         LIns* base = ins->oprnd1();
         LIns* disp = ins->oprnd2();
         Register rr = prepResultReg(ins, GpRegs);
-        int d = disp->constval();
+        int d = disp->imm32();
         Register ra = getBaseReg(base, d, GpRegs);
         if (op == LIR_ldcb) {
             LDUB32(ra, d, rr);
@@ -842,17 +842,6 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_short(LInsp ins)
-    {
-        underrunProtect(8);
-        Register rr = prepResultReg(ins, GpRegs);
-        int32_t val = ins->imm16();
-        if (val == 0)
-            XOR(rr, rr, rr);
-        else
-            SET32(val, rr);
-    }
-
     void Assembler::asm_int(LInsp ins)
     {
         underrunProtect(8);
@@ -889,9 +878,9 @@ namespace nanojit
                 _allocator.addFree(r);
                 const int32_t* p = (const int32_t*) (ins-2);
                 STW32(r, d+4, FP);
-                SET32(p[0], r);
+                SET32(ins->imm64_0(), r);
                 STW32(r, d, FP);
-                SET32(p[1], r);
+                SET32(ins->imm64_1(), r);
             }
     }
     
