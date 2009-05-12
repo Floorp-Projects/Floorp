@@ -206,19 +206,10 @@ richlistitem[action] .addonInstallButton {
   display: none;
 }
 
-richlistitem[action="connecting"] .searchResultConnecting {
-  display: -moz-box;
-}
-
-richlistitem[action="installing"] .searchResultInstalling {
-  display: -moz-box;
-}
-
+richlistitem[action="connecting"] .searchResultConnecting,
+richlistitem[action="installing"] .searchResultInstalling,
 richlistitem[action="failed"] .searchResultFailed,
-richlistitem[action="failed"] .addonInstallButton {
-  display: -moz-box;
-}
-
+richlistitem[action="failed"] .addonInstallButton,
 richlistitem[action="installed"] .searchResultInstalled {
   display: -moz-box;
 }
@@ -233,4 +224,38 @@ richlistitem[addonType="2"] .addonTypeExtension {
 
 richlistitem[addonType="4"] .addonTypeTheme {
   display: -moz-box;
+}
+
+.updateBadge,
+.updateAvailableBox,
+.notifyBadge {
+  display: none;
+}
+
+richlistitem[availableUpdateURL][updateable="true"] .updateBadge,
+richlistitem[availableUpdateURL][updateable="true"] .updateAvailableBox,
+richlistitem[compatible="false"] .notifyBadge,
+richlistitem[providesUpdatesSecurely="false"] .notifyBadge,
+richlistitem[blocklisted="true"] .notifyBadge,
+richlistitem[blocklistedsoft="true"] .notifyBadge,
+richlistitem[satisfiesDependencies="false"] .notifyBadge,
+richlistitem[loading="true"] .updateBadge {
+  display: -moz-box;
+}
+
+/* Selected Add-on status messages and images */
+richlistitem[compatible="true"] .incompatibleBox,
+richlistitem[providesUpdatesSecurely="true"] .insecureUpdateBox,
+richlistitem[satisfiesDependencies="true"] .needsDependenciesBox,
+richlistitem:not([blocklisted="true"]):not([blocklistedsoft="true"]) .blocklistedBox,
+richlistitem[blocklistedsoft="false"]:not([selected="true"]) .blocklistedBox,
+richlistitem[blocklisted="false"] .blocklistedLabel,
+richlistitem[blocklistedsoft="false"] .softBlocklistedLabel,
+richlistitem[opType="needs-uninstall"] .blocklistedBox,
+richlistitem[opType="needs-uninstall"] .incompatibleBox,
+richlistitem[opType="needs-uninstall"] .needsDependenciesBox,
+richlistitem[opType="needs-uninstall"] .notifyBadge,
+richlistitem[selected="true"]:not([opType]) .descriptionCrop,
+.addonRating:not([rating]) {
+  display: none;
 }
