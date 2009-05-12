@@ -190,33 +190,37 @@ protected:
   void ComputeTotalRowCount();
   void RemoveChildFrame(nsBoxLayoutState &aState, nsIFrame *aChild);
 
-  // row height
-  PRInt32 mRowCount;
-  nscoord mRowHeight;
-  PRPackedBool mRowHeightWasSet;
-  nscoord mAvailableHeight;
-  nscoord mStringWidth;
+  nsTArray< nsRefPtr<nsPositionChangedEvent> > mPendingPositionChangeEvents;
+  nsCOMPtr<nsPIBoxObject> mBoxObject;
 
   // frame markers
   nsWeakFrame mTopFrame;
   nsIFrame* mBottomFrame;
   nsIFrame* mLinkupFrame;
+
+  nsListScrollSmoother* mScrollSmoother;
+
   PRInt32 mRowsToPrepend;
+
+  // row height
+  PRInt32 mRowCount;
+  nscoord mRowHeight;
+  nscoord mAvailableHeight;
+  nscoord mStringWidth;
 
   // scrolling
   PRInt32 mCurrentIndex; // Row-based
   PRInt32 mOldIndex; 
-  PRPackedBool mScrolling;
-  PRPackedBool mAdjustScroll;
   PRInt32 mYPosition;
-  nsListScrollSmoother* mScrollSmoother;
   PRInt32 mTimePerRow;
 
-  nsTArray< nsRefPtr<nsPositionChangedEvent> > mPendingPositionChangeEvents;
+  // row height
+  PRPackedBool mRowHeightWasSet;
+  // scrolling
+  PRPackedBool mScrolling;
+  PRPackedBool mAdjustScroll;
 
   PRPackedBool mReflowCallbackPosted;
-
-  nsCOMPtr<nsPIBoxObject> mBoxObject;
-}; 
+};
 
 #endif // nsListBoxBodyFrame_h

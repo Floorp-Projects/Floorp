@@ -164,16 +164,16 @@ protected:
   virtual nscoord GetIntrinsicWidth();
   virtual nscoord GetIntrinsicHeight();
 
+  // the prev and next neighbors are indexes into the row (for a horizontal border) or col (for
+  // a vertical border) of nsHTMLFramesetFrames or nsHTMLFrames
+  PRInt32 mPrevNeighbor;
+  PRInt32 mNextNeighbor;
+  nscolor mColor;
   PRInt32 mWidth;
   PRPackedBool mVertical;
   PRPackedBool mVisibility;
   PRPackedBool mVisibilityOverride;
-  nscolor mColor;
-  // the prev and next neighbors are indexes into the row (for a horizontal border) or col (for
-  // a vertical border) of nsHTMLFramesetFrames or nsHTMLFrames
-  PRInt32 mPrevNeighbor; 
-  PRInt32 mNextNeighbor;
-  PRBool mCanResize;
+  PRPackedBool mCanResize;
   friend class nsHTMLFramesetFrame;
 };
 /*******************************************************************************

@@ -182,10 +182,10 @@ nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
 nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   nsLeafBoxFrame(aShell, aContext),
-  mUseSrcAttr(PR_FALSE),
-  mSuppressStyleCheck(PR_FALSE),
   mIntrinsicSize(0,0),
-  mLoadFlags(nsIRequest::LOAD_NORMAL)
+  mLoadFlags(nsIRequest::LOAD_NORMAL),
+  mUseSrcAttr(PR_FALSE),
+  mSuppressStyleCheck(PR_FALSE)
 {
   MarkIntrinsicWidthsDirty();
 }
