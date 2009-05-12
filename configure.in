@@ -914,9 +914,15 @@ case "$target" in
         AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
     elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
         dnl No value specified on the command line or in the environment,
-        dnl use the lesser of the application's minimum or the architecture's
-        dnl minimum.
-        export MACOSX_DEPLOYMENT_TARGET=10.4
+        dnl use architecture minimum.
+        case "${target_cpu}" in
+          x86_64)
+            export MACOSX_DEPLOYMENT_TARGET=10.5
+            ;;
+          *)
+            export MACOSX_DEPLOYMENT_TARGET=10.4
+            ;;
+        esac
     fi
     ;;
 esac
