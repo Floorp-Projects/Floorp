@@ -1886,19 +1886,25 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget, void *aScope, JSObject 
   }
   // Get the jsobject associated with this target
   nsresult rv;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> jsholder;
-  rv = nsContentUtils::XPConnect()->WrapNative(mContext, (JSObject *)aScope,
-                                               aTarget,
-                                               NS_GET_IID(nsISupports),
-                                               getter_AddRefs(jsholder));
+  jsval v;
+  rv = nsContentUtils::XPConnect()->WrapNativeToJSVal(mContext,
+                                                      (JSObject *)aScope,
+                                                      aTarget,
+                                                      &NS_GET_IID(nsISupports),
+                                                      &v, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef NS_DEBUG
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(jsholder);
-  NS_ASSERTION(wrapper, "wrapper must impl nsIXPConnectWrappedNative");
   nsCOMPtr<nsISupports> targetSupp = do_QueryInterface(aTarget);
-  NS_ASSERTION(wrapper->Native() == targetSupp, "Native should be the target!");
+  nsCOMPtr<nsISupports> native =
+    nsContentUtils::XPConnect()->GetNativeOfWrapper(mContext,
+                                                    JSVAL_TO_OBJECT(v));
+  NS_ASSERTION(native == targetSupp, "Native should be the target!");
 #endif
-  return jsholder->GetJSObject(aRet);
+
+  *aRet = JSVAL_TO_OBJECT(v);
+
+  return NS_OK;
 }
 
 

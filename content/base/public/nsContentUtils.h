@@ -1144,6 +1144,33 @@ public:
    */
   static nsresult DropJSObjects(void* aScriptObjectHolder);
 
+  static void PreserveWrapper(nsISupports* aScriptObjectHolder,
+                              nsWrapperCache* aCache)
+  {
+    if (!aCache->PreservingWrapper()) {
+      nsXPCOMCycleCollectionParticipant* participant;
+      CallQueryInterface(aScriptObjectHolder, &participant);
+      HoldJSObjects(aScriptObjectHolder, participant);
+      aCache->SetPreservingWrapper(PR_TRUE);
+    }
+  }
+  static void ReleaseWrapper(nsISupports* aScriptObjectHolder,
+                             nsWrapperCache* aCache)
+  {
+    if (aCache->PreservingWrapper()) {
+      DropJSObjects(aScriptObjectHolder);
+      aCache->SetPreservingWrapper(PR_FALSE);
+    }
+  }
+  static void TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
+                           void *aClosure)
+  {
+    if (aCache->PreservingWrapper()) {
+      aCallback(nsIProgrammingLanguage::JAVASCRIPT, aCache->GetWrapper(),
+                aClosure);
+    }
+  }
+
   /**
    * Convert nsIContent::IME_STATUS_* to nsIWidget::IME_STATUS_*
    */

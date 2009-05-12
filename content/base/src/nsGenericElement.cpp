@@ -3443,7 +3443,7 @@ nsGenericElement::DestroyContent()
 
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  ReleaseWrapper();
+  nsContentUtils::ReleaseWrapper(this, this);
 
   PRUint32 i, count = mAttrsAndChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -3946,10 +3946,13 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, nsIContent* aParent,
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericElement)
 
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsGenericElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 
   if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
     tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
@@ -3995,7 +3998,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGenericElement)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
+  // Always need to traverse script objects, so do that before we check
+  // if we're uncollectable.
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+
   nsIDocument* currentDoc = tmp->GetCurrentDoc();
   if (currentDoc && nsCCUncollectableMarker::InGeneration(
                       currentDoc->GetMarkedCCGeneration())) {
@@ -4009,7 +4020,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
 
   if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
     nsISupports* property =

@@ -1955,17 +1955,14 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     return;
   }
 
-  nsCOMPtr<nsISupports> supp(do_QueryInterface(element));
-  nsCOMPtr<nsIXPConnectWrappedNative> holder;
-  xpc->GetWrappedNativeOfNativeObject(cx, sgo->GetGlobalJSObject(), supp,
-                                      NS_GET_IID(nsISupports),
-                                      getter_AddRefs(holder));
-  if (!holder) {
+  nsCOMPtr<nsINode> node(do_QueryInterface(element));
+
+  JSObject *obj;
+  if (!node || !(obj = node->GetWrapper())) {
     return;
   }
 
-  JSObject *obj, *proto;
-  holder->GetJSObject(&obj);
+  JSObject *proto;
 
   // Loop over the DOM element's JS object prototype chain and remove
   // all JS objects of the class sNPObjectJSWrapperClass (there should
