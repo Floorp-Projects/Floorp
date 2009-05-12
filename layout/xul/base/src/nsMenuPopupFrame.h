@@ -330,15 +330,22 @@ protected:
   // Move the popup to the position specified in its |left| and |top| attributes.
   void MoveToAttributePosition();
 
+  nsString     mIncrementalString;  // for incremental typing navigation
+
   // the content that the popup is anchored to, if any, which may be in a
   // different document than the popup.
   nsCOMPtr<nsIContent> mAnchorContent;
 
   nsMenuFrame* mCurrentMenu; // The current menu that is active.
 
-  // popup alignment relative to the anchor node
-  PRInt8 mPopupAlignment;
-  PRInt8 mPopupAnchor;
+  // A popup's preferred size may be different than its actual size stored in
+  // mRect in the case where the popup was resized because it was too large
+  // for the screen. The preferred size mPrefSize holds the full size the popup
+  // would be before resizing. Computations are performed using this size.
+  // The parent frame is responsible for setting the preferred size using
+  // SetPreferredBounds or SetPreferredSize before positioning the popup with
+  // SetPopupPosition.
+  nsSize mPrefSize;
 
   // the position of the popup. The screen coordinates, if set to values other
   // than -1, override mXPos and mYPos.
@@ -350,6 +357,10 @@ protected:
   nsPopupType mPopupType; // type of popup
   nsPopupState mPopupState; // open state of the popup
 
+  // popup alignment relative to the anchor node
+  PRInt8 mPopupAlignment;
+  PRInt8 mPopupAnchor;
+
   PRPackedBool mIsOpenChanged; // true if the open state changed since the last layout
   PRPackedBool mIsContextMenu; // true for context menus
   // true if we need to offset the popup to ensure it's not under the mouse
@@ -360,17 +371,6 @@ protected:
   PRPackedBool mShouldAutoPosition; // Should SetPopupPosition be allowed to auto position popup?
   PRPackedBool mConsumeRollupEvent; // Should the rollup event be consumed?
   PRPackedBool mInContentShell; // True if the popup is in a content shell
-
-  nsString     mIncrementalString;  // for incremental typing navigation
-
-  // A popup's preferred size may be different than its actual size stored in
-  // mRect in the case where the popup was resized because it was too large
-  // for the screen. The preferred size mPrefSize holds the full size the popup
-  // would be before resizing. Computations are performed using this size.
-  // The parent frame is responsible for setting the preferred size using
-  // SetPreferredBounds or SetPreferredSize before positioning the popup with
-  // SetPopupPosition.
-  nsSize mPrefSize;
 
   static PRInt8 sDefaultLevelParent;
 }; // class nsMenuPopupFrame

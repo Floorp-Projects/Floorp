@@ -112,13 +112,13 @@ protected:
 
   void GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
-  PRInt32 mOrdinal;
   nsMargin mPadding;
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsSize mIntrinsicSize;
   nsSize mComputedSize;
+  PRInt32 mOrdinal;
   PRBool mTextIsRTL;
 };
 
