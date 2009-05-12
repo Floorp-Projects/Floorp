@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozStorageVariant.h"
+#include "Variant.h"
 
 namespace mozilla {
 namespace storage {
