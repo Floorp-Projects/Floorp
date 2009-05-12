@@ -202,28 +202,6 @@ PRBool nsIFrameDebug::GetShowEventTargetFrameBorder()
  */
 static PRLogModuleInfo* gLogModule;
 
-static PRLogModuleInfo* gFrameVerifyTreeLogModuleInfo;
-
-static PRBool gFrameVerifyTreeEnable = PRBool(0x55);
-
-PRBool
-nsIFrameDebug::GetVerifyTreeEnable()
-{
-  if (gFrameVerifyTreeEnable == PRBool(0x55)) {
-    if (nsnull == gFrameVerifyTreeLogModuleInfo) {
-      gFrameVerifyTreeLogModuleInfo = PR_NewLogModule("frameverifytree");
-      gFrameVerifyTreeEnable = 0 != gFrameVerifyTreeLogModuleInfo->level;
-    }
-  }
-  return gFrameVerifyTreeEnable;
-}
-
-void
-nsIFrameDebug::SetVerifyTreeEnable(PRBool aEnabled)
-{
-  gFrameVerifyTreeEnable = aEnabled;
-}
-
 static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
 
 static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
@@ -4478,13 +4456,6 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
     }
     list = GetAdditionalChildListName(listIndex++);
   } while (nsnull != list);
-}
-
-NS_IMETHODIMP
-nsFrame::VerifyTree() const
-{
-  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
-  return NS_OK;
 }
 #endif
 
