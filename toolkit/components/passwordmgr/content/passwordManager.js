@@ -167,14 +167,19 @@ function DeleteAllSignons() {
 }
 
 function TogglePasswordVisible() {
-  if (!showingPasswords && !ConfirmShowPasswords())
-    return;
+  if (showingPasswords || ConfirmShowPasswords()) {
+    showingPasswords = !showingPasswords;
+    document.getElementById("togglePasswords").label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
+    document.getElementById("togglePasswords").accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
+    document.getElementById("passwordCol").hidden = !showingPasswords;
+    _filterPasswords();
+  }
 
-  showingPasswords = !showingPasswords;
-  document.getElementById("togglePasswords").label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
-  document.getElementById("togglePasswords").accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
-  document.getElementById("passwordCol").hidden = !showingPasswords;
-  _filterPasswords();
+  // Notify observers that the password visibility toggling is
+  // completed.  (Mostly useful for tests)
+  Components.classes["@mozilla.org/observer-service;1"]
+            .getService(Components.interfaces.nsIObserverService)
+            .notifyObservers(null, "passwordmgr-password-toggle-complete", null);
 }
 
 function AskUserShowPasswords() {
