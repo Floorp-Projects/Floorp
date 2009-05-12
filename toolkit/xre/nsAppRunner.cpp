@@ -3248,26 +3248,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
             NS_ENSURE_TRUE(em, 1);
 
-            ar = CheckArg("install-global-extension", PR_TRUE);
-            if (ar == ARG_BAD) {
-              PR_fprintf(PR_STDERR, "Error: argument -install-global-extension is invalid when argument -osint is specified\n");
-              return 1;
-            } else if (ar == ARG_FOUND) {
-              // Do the required processing and then shut down.
-              em->HandleCommandLineArgs(cmdLine);
-              return 0;
-            }
-
-            ar = CheckArg("install-global-theme", PR_TRUE);
-            if (ar == ARG_BAD) {
-              PR_fprintf(PR_STDERR, "Error: argument -install-global-theme is invalid when argument -osint is specified\n");
-              return 1;
-            } else if (ar == ARG_FOUND) {
-              // Do the required processing and then shut down.
-              em->HandleCommandLineArgs(cmdLine);
-              return 0;
-            }
-
             if (upgraded) {
               rv = em->CheckForMismatches(&needsRestart);
               if (NS_FAILED(rv)) {
@@ -3277,7 +3257,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             }
             
             if (!upgraded || !needsRestart)
-              em->Start(cmdLine, &needsRestart);
+              em->Start(&needsRestart);
           }
 
           // We want to restart no more than 2 times. The first restart,

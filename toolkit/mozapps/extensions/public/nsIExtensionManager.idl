@@ -45,7 +45,6 @@ interface nsIRDFDataSource;
 interface nsIUpdateItem;
 interface nsIAddonInstallListener;
 interface nsIAddonUpdateCheckListener;
-interface nsICommandLine;
 interface nsISimpleEnumerator;
 interface nsIDirectoryEnumerator;
 interface nsIObserver;
@@ -199,7 +198,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(7fbb049a-00e6-4ce2-82fc-854c52788df9)]
+[scriptable, uuid(c6838785-ddb5-4886-8c05-4dd6424a01ac)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -213,13 +212,11 @@ interface nsIExtensionManager : nsISupports
   /**
    * Starts the Extension Manager, checking for item changes, additions and
    * removals, and finishing pending operations.
-   * @param   commandLine
-   *          The command line the application was started with.
    * @returns true if the application has rewritten the extensions.ini file
    *          and needs to restart to register components/chrome etc,
    *          false otherwise
    */
-  boolean start(in nsICommandLine commandLine);
+  boolean start();
 
   /**
    * Determines if there are incompatible items installed (and offers to
@@ -229,16 +226,6 @@ interface nsIExtensionManager : nsISupports
    *          chrome etc, false otherwise.
    */
   boolean checkForMismatches();
-
-  /**
-   * Handle command line flags, e.g. -install-global-[extension|theme]
-   * @param   cmdLine
-   *          the command line the application was started with
-   * XXXben - move this off this API - currently it is only used for
-   *          global installation, and the apprunner can do this directly
-   *          with |installItemFromFile|
-   */
-  void handleCommandLineArgs(in nsICommandLine cmdline);
 
   /**
    * Gets the Install Location for an item
