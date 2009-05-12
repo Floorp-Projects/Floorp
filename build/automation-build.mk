@@ -71,4 +71,4 @@ automation.py: $(topsrcdir)/build/automation.py.in $(topsrcdir)/build/automation
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
-GARBAGE += automation.py automationutils.py
+GARBAGE += automation.py $(CURDIR)/automationutils.py
