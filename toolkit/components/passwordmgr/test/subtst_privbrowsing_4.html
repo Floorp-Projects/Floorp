@@ -16,16 +16,19 @@
 </form>
 
 <script>
-function submitForm() {
+function startAutocomplete() {
   userField.focus();
   doKey("down");
+  setTimeout(submitForm, 100);
+}
+
+function submitForm() {
   doKey("down");
   doKey("return");
-
   setTimeout(function(){ form.submit(); }, 100);
 }
 
-window.onload = submitForm;
+window.onload = startAutocomplete;
 var form      = document.getElementById("form");
 var userField = document.getElementById("user");
 
