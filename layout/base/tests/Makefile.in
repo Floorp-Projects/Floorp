@@ -50,6 +50,8 @@ DEFINES += -D_IMPL_NS_LAYOUT
 _TEST_FILES =	\
 		test_bug66619.html \
 		test_bug114649.html \
+		test_bug369950.html \
+		bug369950-subframe.xml \
 		test_bug386575.xhtml \
 		test_bug388019.html \
 		test_bug394057.html \

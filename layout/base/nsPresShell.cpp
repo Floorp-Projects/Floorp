@@ -2537,6 +2537,11 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     return NS_OK;
   }
 
+  if (!mDocument) {
+    // Nothing to do
+    return NS_OK;
+  }
+
   NS_ASSERTION(!mDidInitialReflow, "Why are we being called?");
 
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
@@ -2563,11 +2568,28 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
-  nsIContent *root = mDocument ? mDocument->GetRootContent() : nsnull;
-
   // Get the root frame from the frame manager
+  // XXXbz it would be nice to move this somewhere else... like frame manager
+  // Init(), say.  But we need to make sure our views are all set up by the
+  // time we do this!
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  
+  NS_ASSERTION(!rootFrame, "How did that happen, exactly?");
+  if (!rootFrame) {
+    nsAutoScriptBlocker scriptBlocker;
+    mFrameConstructor->BeginUpdate();
+    mFrameConstructor->ConstructRootFrame(&rootFrame);
+    FrameManager()->SetRootFrame(rootFrame);
+    mFrameConstructor->EndUpdate();
+  }
+
+  NS_ENSURE_STATE(!mHaveShutDown);
+
+  if (!rootFrame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsIContent *root = mDocument->GetRootContent();
+
   if (root) {
     MOZ_TIMER_DEBUGLOG(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n",
                         (void*)this));
@@ -2577,13 +2599,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     {
       nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->BeginUpdate();
-
-      if (!rootFrame) {
-        // Have style sheet processor construct a frame for the
-        // precursors to the root content object's frame
-        mFrameConstructor->ConstructRootFrame(root, &rootFrame);
-        FrameManager()->SetRootFrame(rootFrame);
-      }
 
       // Have the style sheet processor construct frame for the root
       // content object down
@@ -2600,7 +2615,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       mFrameConstructor->EndUpdate();
     }
 
-    // DidCauseReflow may have killed us too
+    // nsAutoScriptBlocker going out of scope may have killed us too
     NS_ENSURE_STATE(!mHaveShutDown);
 
     // Run the XBL binding constructors for any new frames we've constructed
@@ -2618,27 +2633,22 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     // And that might have run _more_ XBL constructors
     NS_ENSURE_STATE(!mHaveShutDown);
-
-    // Now reget the root frame, since all that script might have affected it
-    // somehow.  Currently that can't happen, as long as mHaveShutDown is
-    // false, but let's not rely on that.
-    rootFrame = FrameManager()->GetRootFrame();
   }
 
-  if (rootFrame) {
-    // Note: Because the frame just got created, it has the NS_FRAME_IS_DIRTY
-    // bit set.  Unset it so that FrameNeedsReflow() will work right.
-    NS_ASSERTION(!mDirtyRoots.Contains(rootFrame),
-                 "Why is the root in mDirtyRoots already?");
+  NS_ASSERTION(rootFrame, "How did that happen?");
 
-    rootFrame->RemoveStateBits(NS_FRAME_IS_DIRTY |
-                               NS_FRAME_HAS_DIRTY_CHILDREN);
-    FrameNeedsReflow(rootFrame, eResize, NS_FRAME_IS_DIRTY);
+  // Note: Because the frame just got created, it has the NS_FRAME_IS_DIRTY
+  // bit set.  Unset it so that FrameNeedsReflow() will work right.
+  NS_ASSERTION(!mDirtyRoots.Contains(rootFrame),
+               "Why is the root in mDirtyRoots already?");
 
-    NS_ASSERTION(mDirtyRoots.Contains(rootFrame),
-                 "Should be in mDirtyRoots now");
-    NS_ASSERTION(mReflowEvent.IsPending(), "Why no reflow event pending?");
-  }
+  rootFrame->RemoveStateBits(NS_FRAME_IS_DIRTY |
+                             NS_FRAME_HAS_DIRTY_CHILDREN);
+  FrameNeedsReflow(rootFrame, eResize, NS_FRAME_IS_DIRTY);
+
+  NS_ASSERTION(mDirtyRoots.Contains(rootFrame),
+               "Should be in mDirtyRoots now");
+  NS_ASSERTION(mReflowEvent.IsPending(), "Why no reflow event pending?");
 
   // Restore our root scroll position now if we're getting here after EndLoad
   // got called, since this is our one chance to do it.  Note that we need not
