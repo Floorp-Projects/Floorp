@@ -37,6 +37,9 @@
 /**
  * Test for bug 395161 that allows special searches that restrict results to
  * history/bookmark/tagged items and title/url matches.
+ *
+ * Test 485122 by making sure results don't have tags when restricting result
+ * to just history either by default behavior or dynamic query restrict.
  */
 
 // Define some shared uris and titles (each page needs its own uri)
@@ -88,7 +91,7 @@ markTyped([0,3,10]);
 let gTests = [
   // Test restricting searches
   ["0: History restrict",
-   "^", [0,1,2,3,5,10]],
+   "^", [0,1,2,3,5,10], ignoreTags],
   ["1: Star restrict",
    "*", [4,5,6,7,8,9,10,11]],
   ["2: Tag restrict",
@@ -96,15 +99,15 @@ let gTests = [
 
   // Test specials as any word position
   ["3: Special as first word",
-   "^ foo bar", [1,2,3,5,10]],
+   "^ foo bar", [1,2,3,5,10], ignoreTags],
   ["4: Special as middle word",
-   "foo ^ bar", [1,2,3,5,10]],
+   "foo ^ bar", [1,2,3,5,10], ignoreTags],
   ["5: Special as last word",
-   "foo bar ^", [1,2,3,5,10]],
+   "foo bar ^", [1,2,3,5,10], ignoreTags],
 
   // Test restricting and matching searches with a term
   ["6: foo ^ -> history",
-   "foo ^", [1,2,3,5,10]],
+   "foo ^", [1,2,3,5,10], ignoreTags],
   ["7: foo * -> is star",
    "foo *", [5,6,7,8,9,10,11]],
   ["8: foo # -> in title",
@@ -120,13 +123,13 @@ let gTests = [
   ["11: foo ^ * -> history, is star",
    "foo ^ *", [5,10]],
   ["12: foo ^ # -> history, in title",
-   "foo ^ #", [1,3,5,10]],
+   "foo ^ #", [1,3,5,10], ignoreTags],
   ["13: foo ^ @ -> history, in url",
-   "foo ^ @", [2,3,10]],
+   "foo ^ @", [2,3,10], ignoreTags],
   ["14: foo ^ + -> history, is tag",
    "foo ^ +", [10]],
   ["14.1: foo ^ ~ -> history, is typed",
-   "foo ^ ~", [3,10]],
+   "foo ^ ~", [3,10], ignoreTags],
   ["15: foo * # -> is star, in title",
    "foo * #", [5,7,8,9,10,11]],
   ["16: foo * @ -> is star, in url",
@@ -166,5 +169,9 @@ let gTests = [
 ];
 
 function makeDefault(aDefault) {
+  // We want to ignore tags if we're restricting to history unless we're showing
+  if ((aDefault & 1) && !((aDefault & 2) || (aDefault & 4)))
+    ignoreTags();
+
   prefs.setIntPref("browser.urlbar.default.behavior", aDefault);
 }
