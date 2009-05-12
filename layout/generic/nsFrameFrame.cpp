@@ -180,8 +180,6 @@ public:
   NS_IMETHOD BeginSwapDocShells(nsIFrame* aOther);
   virtual void EndSwapDocShells(nsIFrame* aOther);
 
-  NS_IMETHOD  VerifyTree() const;
-
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
   virtual void ReflowCallbackCanceled();
@@ -644,14 +642,6 @@ void
 nsSubDocumentFrame::ReflowCallbackCanceled()
 {
   mPostedReflowCallback = PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsSubDocumentFrame::VerifyTree() const
-{
-  // XXX Completely disabled for now; once pseud-frames are reworked
-  // then we can turn it back on.
-  return NS_OK;
 }
 
 NS_IMETHODIMP

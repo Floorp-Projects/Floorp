@@ -7033,13 +7033,6 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
 void
 PresShell::DoVerifyReflow()
 {
-  if (nsIFrameDebug::GetVerifyTreeEnable()) {
-    nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-    nsIFrameDebug *frameDebug = do_QueryFrame(rootFrame);
-    if (frameDebug) {
-      frameDebug->VerifyTree();
-    }
-  }
   if (GetVerifyReflowEnable()) {
     // First synchronously render what we have so far so that we can
     // see it.

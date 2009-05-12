@@ -235,7 +235,6 @@ public:
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
   NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent);
-  NS_IMETHOD  VerifyTree() const;
 #endif
 
   NS_IMETHOD  SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread, SelectionType aType);

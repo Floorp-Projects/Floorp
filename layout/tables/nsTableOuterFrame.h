@@ -205,13 +205,6 @@ protected:
     * @see nsHTMLContainerFrame::GetSkipSides */
   virtual PRIntn GetSkipSides() const;
 
-#ifdef NS_DEBUG
-  /** overridden here to handle special caption-table relationship
-    * @see nsContainerFrame::VerifyTree
-    */
-  NS_IMETHOD VerifyTree() const;
-#endif
-
   PRUint8 GetCaptionSide(); // NS_STYLE_CAPTION_SIDE_* or NO_SIDE
 
   PRBool HasSideCaption() {
