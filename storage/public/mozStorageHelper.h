@@ -39,6 +39,8 @@
 #ifndef _MOZSTORAGEHELPER_H_
 #define _MOZSTORAGEHELPER_H_
 
+#include "nsAutoPtr.h"
+
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozStorage.h"

@@ -69,4 +69,8 @@ EXPORTS = \
 	mozStorage.h \
 	$(NULL)
 
+# TODO temp hack until build system handles this
+export:: storage.h
+	$(INSTALL) $^ $(DIST)/include/mozilla/storage
+
 include $(topsrcdir)/config/rules.mk
