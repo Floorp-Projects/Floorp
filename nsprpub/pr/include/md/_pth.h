@@ -98,11 +98,7 @@
 #else
 #define _PT_PTHREAD_MUTEX_IS_LOCKED(m)    (EBUSY == pthread_mutex_trylock(&(m)))
 #endif
-#if defined(DARWIN)
-#define _PT_PTHREAD_CONDATTR_INIT(x)      0
-#else
 #define _PT_PTHREAD_CONDATTR_INIT         pthread_condattr_init
-#endif
 #define _PT_PTHREAD_CONDATTR_DESTROY      pthread_condattr_destroy
 #define _PT_PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), &(a))
 #endif

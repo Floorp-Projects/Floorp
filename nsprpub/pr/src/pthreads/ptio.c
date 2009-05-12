@@ -1017,7 +1017,7 @@ static PRBool pt_hpux_sendfile_cont(pt_Continuation *op, PRInt16 revents)
         if (count < hdtrl[0].iov_len) {
 			/* header not sent */
 
-            hdtrl[0].iov_base = ((char *) hdtrl[0].iov_len) + count;
+            hdtrl[0].iov_base = ((char *) hdtrl[0].iov_base) + count;
             hdtrl[0].iov_len -= count;
 
         } else if (count < (hdtrl[0].iov_len + op->arg3.file_spec.nbytes)) {
