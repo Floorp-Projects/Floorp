@@ -3664,7 +3664,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
   NS_ENSURE_STATE(history);
 
   history->GetStringFromName(NS_LITERAL_STRING("localhost").get(), localFiles);
-  mAddParams.Put(NS_LITERAL_CSTRING(":localhost"), localFiles);
+  mAddParams.Put(NS_LITERAL_CSTRING("localhost"), localFiles);
 
   // We want just sites, but from whole database.
   if (mConditions.IsEmpty()) {
@@ -5979,7 +5979,7 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) {
     PRTime time = NormalizeTime(aQuery->BeginTimeReference(),
                                 aQuery->BeginTime());
-    rv = statement->BindInt64Parameter(index.For(":begin_time"), time);
+    rv = statement->BindInt64Parameter(index.For("begin_time"), time);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -5987,7 +5987,7 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt) {
     PRTime time = NormalizeTime(aQuery->EndTimeReference(),
                                 aQuery->EndTime());
-    rv = statement->BindInt64Parameter(index.For(":end_time"), time);
+    rv = statement->BindInt64Parameter(index.For("end_time"), time);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -5996,13 +5996,13 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   // min and max visit count
   PRInt32 visits = aQuery->MinVisits();
   if (visits >= 0) {
-    rv = statement->BindInt32Parameter(index.For(":min_visits"), visits);
+    rv = statement->BindInt32Parameter(index.For("min_visits"), visits);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   visits = aQuery->MaxVisits();
   if (visits >= 0) {
-    rv = statement->BindInt32Parameter(index.For(":max_visits"), visits);
+    rv = statement->BindInt32Parameter(index.For("max_visits"), visits);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -6012,29 +6012,29 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
     GetReversedHostname(NS_ConvertUTF8toUTF16(aQuery->Domain()), revDomain);
 
     if (aQuery->DomainIsHost()) {
-      rv = statement->BindStringParameter(index.For(":domain_lower"), revDomain);
+      rv = statement->BindStringParameter(index.For("domain_lower"), revDomain);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       // for "mozilla.org" do query >= "gro.allizom." AND < "gro.allizom/"
       // which will get everything starting with "gro.allizom." while using the
       // index (using SUBSTRING() causes indexes to be discarded).
       NS_ASSERTION(revDomain[revDomain.Length() - 1] == '.', "Invalid rev. host");
-      rv = statement->BindStringParameter(index.For(":domain_lower"), revDomain);
+      rv = statement->BindStringParameter(index.For("domain_lower"), revDomain);
       NS_ENSURE_SUCCESS(rv, rv);
       revDomain.Truncate(revDomain.Length() - 1);
       revDomain.Append(PRUnichar('/'));
-      rv = statement->BindStringParameter(index.For(":domain_upper"), revDomain);
+      rv = statement->BindStringParameter(index.For("domain_upper"), revDomain);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
   // URI
   if (NS_SUCCEEDED(aQuery->GetHasUri(&hasIt)) && hasIt)
-    BindStatementURI(statement, index.For(":uri"), aQuery->Uri());
+    BindStatementURI(statement, index.For("uri"), aQuery->Uri());
 
   // annotation
   if (NS_SUCCEEDED(aQuery->GetHasAnnotation(&hasIt)) && hasIt) {
-    rv = statement->BindUTF8StringParameter(index.For(":anno"), 
+    rv = statement->BindUTF8StringParameter(index.For("anno"), 
                                             aQuery->Annotation());
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -6043,16 +6043,16 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   const nsTArray<nsString> &tags = aQuery->Tags();
   if (tags.Length() > 0) {
     for (PRUint32 i = 0; i < tags.Length(); ++i) {
-      nsPrintfCString param(":tag%d_", i);
+      nsPrintfCString param("tag%d_", i);
       NS_ConvertUTF16toUTF8 tag(tags[i]);
       rv = statement->BindUTF8StringParameter(index.For(param.get()), tag);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     PRInt64 tagsFolder = GetTagsFolder();
-    rv = statement->BindInt64Parameter(index.For(":tags_folder"), tagsFolder);
+    rv = statement->BindInt64Parameter(index.For("tags_folder"), tagsFolder);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!aQuery->TagsAreNot()) {
-      rv = statement->BindInt32Parameter(index.For(":tag_count"), tags.Length());
+      rv = statement->BindInt32Parameter(index.For("tag_count"), tags.Length());
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -6060,7 +6060,7 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
   // parent parameter
   if (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
       aQuery->Folders().Length() == 1) {
-    rv = statement->BindInt64Parameter(index.For(":parent"),
+    rv = statement->BindInt64Parameter(index.For("parent"),
                                        aQuery->Folders()[0]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
