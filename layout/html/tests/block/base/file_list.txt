@@ -1,6 +1,0 @@
-file:///s:/mozilla/layout/html/tests/block/base/width-fixed.html
-file:///s:/mozilla/layout/html/tests/block/base/width-percent.html
-file:///s:/mozilla/layout/html/tests/block/base/margin1.html
-file:///s:/mozilla/layout/html/tests/block/base/pre.html
-file:///s:/mozilla/layout/html/tests/block/base/pre1.html
-file:///s:/mozilla/layout/html/tests/block/base/jlbtest1.html

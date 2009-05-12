@@ -1,9 +1,0 @@
-file:///s|/mozilla/layout/html/tests/printer/general/test0.html
-file:///s|/mozilla/layout/html/tests/printer/general/test1.html
-file:///s|/mozilla/layout/html/tests/printer/general/test2.html
-file:///s|/mozilla/layout/html/tests/printer/general/test3.html
-file:///s|/mozilla/layout/html/tests/printer/general/test4.html
-file:///s|/mozilla/layout/html/tests/printer/general/test5.html
-file:///s|/mozilla/layout/html/tests/printer/general/test6.html
-
-

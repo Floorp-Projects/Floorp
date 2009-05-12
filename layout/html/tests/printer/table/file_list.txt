@@ -1,2 +1,0 @@
-file:///s|/mozilla/layout/html/tests/printer/table/table1.html
-file:///s|/mozilla/layout/html/tests/printer/table/table2.html
