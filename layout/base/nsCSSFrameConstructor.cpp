@@ -499,9 +499,9 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
   }
 
   if (aSpecialSibling) {
-    // We should be the first-in-flow
-    NS_ASSERTION(!aFrame->GetPrevInFlow(),
-                 "assigning special sibling to other than first-in-flow!");
+    // We should be the first continuation
+    NS_ASSERTION(!aFrame->GetPrevContinuation(),
+                 "assigning special sibling to other than first continuation!");
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
