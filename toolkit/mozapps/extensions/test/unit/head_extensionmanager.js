@@ -225,7 +225,7 @@ function startupEM()
   }
 
   if (!upgraded || !needsRestart)
-    needsRestart = gEM.start(null);
+    needsRestart = gEM.start();
 }
 
 /**
@@ -245,9 +245,9 @@ function shutdownEM()
  */
 function restartEM()
 {
-  var needsRestart = gEM.start(null);
+  var needsRestart = gEM.start();
   if (needsRestart)
-    gEM.start(null);
+    gEM.start();
 }
 
 var gDirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
