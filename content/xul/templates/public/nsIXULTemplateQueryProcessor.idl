@@ -119,7 +119,13 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    * corresponding to these URIs and the builder will supply this object to
    * other query processor methods. For example, for an XML source, the
    * datasource might be an nsIDOMNode.
-   * All of these URIs are checked by the builder so it is safe to use them.
+   *
+   * All of these URIs are checked by the builder so it is safe to use them,
+   * however note that a URI that redirects may still needs to be checked to
+   * ensure that the document containing aRootNode may access it. This is the
+   * responsibility of the query processor if it needs to load the content of
+   * the URI.
+   *
    * If the query processor needs to load the datasource asynchronously, it
    * may set the aShouldDelayBuilding returned parameter to true to delay
    * building the template content, and call the builder's Rebuild method when
