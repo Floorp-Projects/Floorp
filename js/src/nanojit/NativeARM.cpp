@@ -1503,7 +1503,8 @@ Assembler::asm_arith(LInsp ins)
     // outside of +/-255 (for AND) r outside of
     // 0..255 for others.
     if (!forceReg) {
-        if (rhs->isconst() && !isU8(rhs->imm32()))
+        if ((op != LIR_lsh) && (op != LIR_rsh) && (LIR_ush) &&
+            rhs->isconst() && !isU8(rhs->imm32()))
             forceReg = true;
     }
 
@@ -1544,13 +1545,16 @@ Assembler::asm_arith(LInsp ins)
             ORR(rr, ra, rb);
         else if (op == LIR_xor)
             EOR(rr, ra, rb);
-        else if (op == LIR_lsh)
-            SHL(rr, ra, rb);
-        else if (op == LIR_rsh)
-            SAR(rr, ra, rb);
-        else if (op == LIR_ush)
-            SHR(rr, ra, rb);
-        else
+        else if (op == LIR_lsh) {
+            SHL(rr, ra, IP);
+            ANDi(IP, rb, 0x1f);
+        } else if (op == LIR_rsh) {
+            SAR(rr, ra, IP);
+            ANDi(IP, rb, 0x1f);
+        } else if (op == LIR_ush) {
+            SHR(rr, ra, IP);
+            ANDi(IP, rb, 0x1f);
+        } else
             NanoAssertMsg(0, "Unsupported");
     } else {
         int c = rhs->imm32();
