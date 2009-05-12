@@ -915,6 +915,7 @@ nsNavHistory::InitializeIdleTimer()
 NS_IMETHODIMP
 nsNavHistory::GetDatabaseStatus(PRUint16 *aDatabaseStatus)
 {
+  NS_ENSURE_ARG_POINTER(aDatabaseStatus);
   *aDatabaseStatus = mDatabaseStatus;
   return NS_OK;
 }
@@ -941,11 +942,13 @@ public:
 
 NS_IMPL_ISUPPORTS1(mozStorageFunctionGetUnreversedHost, mozIStorageFunction)
 
-NS_IMETHODIMP mozStorageFunctionGetUnreversedHost::OnFunctionCall(
+NS_IMETHODIMP
+mozStorageFunctionGetUnreversedHost::OnFunctionCall(
   mozIStorageValueArray* aFunctionArguments,
   nsIVariant** _retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ASSERTION(aFunctionArguments, "Must have non-null function args");
+  NS_ASSERTION(_retval, "Must have non-null return pointer");
 
   nsAutoString src;
   aFunctionArguments->GetString(0, src);
@@ -2429,6 +2432,7 @@ NS_IMETHODIMP
 nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG_POINTER(aHasEntries);
 
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -2516,6 +2520,7 @@ NS_IMETHODIMP
 nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   // don't add when history is disabled
   if (IsHistoryDisabled())
@@ -2550,8 +2555,8 @@ NS_IMETHODIMP
 nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(canAdd);
 
   // If the user is in private browsing mode, don't add any entry.
   if (InPrivateBrowsingMode()) {
@@ -2604,8 +2609,9 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
                        PRInt32 aTransitionType, PRBool aIsRedirect,
                        PRInt64 aSessionID, PRInt64* aVisitID)
 {
-  NS_ENSURE_ARG_POINTER(aURI);
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(aVisitID);
 
   // Filter out unwanted URIs, silently failing
   PRBool canAdd = PR_FALSE;
@@ -2762,9 +2768,11 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
 
 // nsNavHistory::GetNewQuery
 
-NS_IMETHODIMP nsNavHistory::GetNewQuery(nsINavHistoryQuery **_retval)
+NS_IMETHODIMP
+nsNavHistory::GetNewQuery(nsINavHistoryQuery **_retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG_POINTER(_retval);
 
   *_retval = new nsNavHistoryQuery();
   if (! *_retval)
@@ -2775,9 +2783,11 @@ NS_IMETHODIMP nsNavHistory::GetNewQuery(nsINavHistoryQuery **_retval)
 
 // nsNavHistory::GetNewQueryOptions
 
-NS_IMETHODIMP nsNavHistory::GetNewQueryOptions(nsINavHistoryQueryOptions **_retval)
+NS_IMETHODIMP
+nsNavHistory::GetNewQueryOptions(nsINavHistoryQueryOptions **_retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG_POINTER(_retval);
 
   *_retval = new nsNavHistoryQueryOptions();
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
@@ -2793,6 +2803,9 @@ nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery, nsINavHistoryQueryOptions
                            nsINavHistoryResult** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aQuery);
+  NS_ENSURE_ARG(aOptions);
+  NS_ENSURE_ARG_POINTER(_retval);
 
   return ExecuteQueries(&aQuery, 1, aOptions, _retval);
 }
@@ -2816,13 +2829,12 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
                              nsINavHistoryResult** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aQueries);
+  NS_ENSURE_ARG(aOptions);
+  NS_ENSURE_ARG(aQueryCount);
+  NS_ENSURE_ARG_POINTER(_retval);
 
   nsresult rv;
-  NS_ENSURE_ARG_POINTER(aQueries);
-  NS_ENSURE_ARG_POINTER(aOptions);
-  if (! aQueryCount)
-    return NS_ERROR_INVALID_ARG;
-
   // concrete options
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
   NS_ENSURE_TRUE(options, NS_ERROR_INVALID_ARG);
@@ -4208,6 +4220,7 @@ NS_IMETHODIMP
 nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver, PRBool aOwnsWeak)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aObserver);
 
   return mObservers.AppendWeakElement(aObserver, aOwnsWeak);
 }
@@ -4219,6 +4232,7 @@ NS_IMETHODIMP
 nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aObserver);
 
   return mObservers.RemoveWeakElement(aObserver);
 }
@@ -4258,8 +4272,8 @@ NS_IMETHODIMP
 nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                              nsISupports* aUserData)
 {
-  NS_ENSURE_ARG_POINTER(aCallback);
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aCallback);
 
   UpdateBatchScoper batch(*this);
   return aCallback->RunBatched(aUserData);
@@ -4268,8 +4282,8 @@ nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
 NS_IMETHODIMP
 nsNavHistory::GetHistoryDisabled(PRBool *_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG_POINTER(_retval);
 
   *_retval = IsHistoryDisabled();
   return NS_OK;
@@ -4290,6 +4304,7 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
                                  PRInt64 aLastVisited)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   PRInt64 visitID;
   nsresult rv = AddVisit(aURI, aLastVisited, 0, TRANSITION_LINK, PR_FALSE,
@@ -4367,6 +4382,7 @@ NS_IMETHODIMP
 nsNavHistory::GetCount(PRUint32 *aCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG_POINTER(aCount);
 
   PRBool hasEntries = PR_FALSE;
   nsresult rv = GetHasHistoryEntries(&hasEntries);
@@ -4477,6 +4493,7 @@ NS_IMETHODIMP
 nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotify)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURIs);
 
   nsresult rv;
   // build a list of place ids to delete
@@ -4512,6 +4529,7 @@ NS_IMETHODIMP
 nsNavHistory::RemovePage(nsIURI *aURI)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   // Before we remove, we have to notify our observers!
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
@@ -4729,6 +4747,7 @@ NS_IMETHODIMP
 nsNavHistory::HidePage(nsIURI *aURI)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   return NS_ERROR_NOT_IMPLEMENTED;
   /*
@@ -4808,6 +4827,7 @@ NS_IMETHODIMP
 nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   // don't add when history is disabled
   if (IsHistoryDisabled())
@@ -4840,6 +4860,7 @@ nsNavHistory::SetCharsetForURI(nsIURI* aURI,
                                const nsAString& aCharset)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
   NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
@@ -4870,6 +4891,7 @@ nsNavHistory::GetCharsetForURI(nsIURI* aURI,
                                nsAString& aCharset)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
   NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
@@ -4896,6 +4918,7 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
                      PRBool aToplevel, nsIURI *aReferrer)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   // don't add when history is disabled
   if (IsHistoryDisabled())
@@ -5117,6 +5140,8 @@ NS_IMETHODIMP
 nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(_retval);
 
   // if history is disabled, we can optimize
   if (IsHistoryDisabled()) {
@@ -5149,6 +5174,7 @@ nsNavHistory::SetPageTitle(nsIURI* aURI,
                            const nsAString& aTitle)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   // if aTitle is empty we want to clear the previous title.
   // We don't want to set it to an empty string, but to a NULL value,
@@ -5176,6 +5202,7 @@ NS_IMETHODIMP
 nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   aTitle.Truncate(0);
 
@@ -5206,6 +5233,8 @@ NS_IMETHODIMP
 nsNavHistory::GetURIGeckoFlags(nsIURI* aURI, PRUint32* aResult)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(aResult);
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -5219,6 +5248,7 @@ NS_IMETHODIMP
 nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -5249,6 +5279,8 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
                                   PRBool aTopLevel)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aOldChannel);
+  NS_ENSURE_ARG(aNewChannel);
 
   // ignore internal redirects
   if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)
@@ -5332,6 +5364,7 @@ nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
                           PRTime aStartTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aSource);
 
   // don't add when history is disabled and silently fail
   if (IsHistoryDisabled())
@@ -5347,6 +5380,7 @@ nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
 NS_IMETHODIMP
 nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
 {
+  NS_ENSURE_ARG_POINTER(_DBConnection);
   NS_ADDREF(*_DBConnection = mDBConn);
   return NS_OK;
 }
@@ -7202,10 +7236,11 @@ GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle)
 //    Binds the specified URI as the parameter 'index' for the statment.
 //    URIs are always bound as UTF8
 
-nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
-                          nsIURI* aURI)
+nsresult
+BindStatementURI(mozIStorageStatement* statement, PRInt32 index, nsIURI* aURI)
 {
-  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ASSERTION(statement, "Must have non-null statement");
+  NS_ASSERTION(aURI, "Must have non-null uri");
 
   nsCAutoString utf8URISpec;
   nsresult rv = aURI->GetSpec(utf8URISpec);
@@ -7737,6 +7772,9 @@ nsNavHistory::RequestCharset(nsIWebNavigation* aWebNavigation,
                              nsACString& aResult)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aChannel);
+  NS_ENSURE_ARG_POINTER(aWantCharset);
+  NS_ENSURE_ARG_POINTER(aClosure);
 
   *aWantCharset = PR_FALSE;
   *aClosure = nsnull;
