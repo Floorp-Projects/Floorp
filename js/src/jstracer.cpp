@@ -1238,7 +1238,7 @@ TypeMap::captureTypes(JSContext* cx, SlotList& slots, unsigned callDepth)
         if ((type == JSVAL_INT) && oracle.isStackSlotUndemotable(cx, unsigned(m - map)))
             type = JSVAL_DOUBLE;
         JS_ASSERT(type != JSVAL_BOXED);
-        debug_only_v(printf("capture stack type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type], vp, (uint32) *vp);)
+        debug_only_v(printf("capture stack type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type]);)
         JS_ASSERT(uintptr_t(m - map) < length());
         *m++ = type;
     );
