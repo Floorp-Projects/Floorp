@@ -3413,12 +3413,12 @@ js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
                  VMSideExit* expectedInnerExit, jsbytecode* outer, uint32 outerArgc)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JS_ASSERT(f->root != f || !cx->fp->imacpc);
+
     if (JS_TRACE_MONITOR(cx).needFlush) {
         FlushJITCache(cx);
         return false;
     }
-
-    JS_ASSERT(f->root != f || !cx->fp->imacpc);
 
     /* start recording if no exception during construction */
     tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
@@ -3776,11 +3776,7 @@ JS_REQUIRES_STACK static bool
 js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer, uint32 outerArgc)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    if (tm->needFlush) {
-        FlushJITCache(cx);
-        return false;
-    }
-
+    JS_ASSERT(!tm->needFlush);
     VMFragment* from = (VMFragment*)exit->from->root;
     TreeInfo* from_ti = (TreeInfo*)from->vmprivate;
 
@@ -3887,12 +3883,7 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer, ui
 static JS_REQUIRES_STACK bool
 js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer)
 {
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    if (tm->needFlush) {
-        FlushJITCache(cx);
-        return false;
-    }
-
+    JS_ASSERT(!JS_TRACE_MONITOR(cx).needFlush);
     Fragment* f = anchor->from->root;
     JS_ASSERT(f->vmprivate);
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
