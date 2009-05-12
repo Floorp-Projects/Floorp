@@ -230,7 +230,7 @@ void _PR_InitLog(void)
                 if (level >= LINE_BUF_SIZE) {
                     bufSize = level;
                 }
-            } else if (strcasecmp(module, "__timestamp") == 0) {
+            } else if (strcasecmp(module, "timestamp") == 0) {
                 outputTimeStamp = PR_TRUE;
             } else {
                 PRLogModuleInfo *lm = logModules;
@@ -453,9 +453,12 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
     }
 
     if (outputTimeStamp) {
-        PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
-        nb_tid = PR_FormatTimeUSEnglish(line, sizeof(line)-1,
-                                        "%Y-%m-%d %H:%M:%S - ", &now);
+        PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
+        nb_tid = PR_snprintf(line, sizeof(line)-1,
+                             "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - ",
+                             now.tm_year, now.tm_month, now.tm_mday,
+                             now.tm_hour, now.tm_min, now.tm_sec,
+                             now.tm_usec);
     }
 
     me = PR_GetCurrentThread();
