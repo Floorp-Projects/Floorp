@@ -2688,7 +2688,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 void
 PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
 {
-  PresShell* self = static_cast<PresShell*>(aPresShell);
+  nsRefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
   if (self)
     self->UnsuppressPainting();
 }
@@ -4521,7 +4521,7 @@ PresShell::IsPaintingSuppressed(PRBool* aResult)
 void
 PresShell::UnsuppressAndInvalidate()
 {
-  if (!mPresContext->EnsureVisible(PR_FALSE)) {
+  if (!mPresContext->EnsureVisible(PR_FALSE) || mHaveShutDown) {
     // No point; we're about to be torn down anyway.
     return;
   }
@@ -4547,7 +4547,7 @@ PresShell::UnsuppressAndInvalidate()
   if (focusController) // Unsuppress now that we've shown the new window and focused it.
     focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
 
-  if (mViewManager)
+  if (!mHaveShutDown && mViewManager)
     mViewManager->SynthesizeMouseMove(PR_FALSE);
 }
 
