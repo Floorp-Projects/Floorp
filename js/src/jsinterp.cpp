@@ -2024,7 +2024,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
     return JS_TRUE;
 }
 
-jsval
+jsval&
 js_GetUpvar(JSContext *cx, uintN level, uintN cookie)
 {
     level -= UPVAR_FRAME_SKIP(cookie);

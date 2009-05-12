@@ -555,7 +555,7 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
  * Given an active context, a static scope level, and an upvar cookie, return
  * the value of the upvar.
  */
-extern jsval
+extern jsval&
 js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
 
 /*

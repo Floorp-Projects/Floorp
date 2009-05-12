@@ -8334,78 +8334,60 @@ TraceRecorder::record_JSOP_GETUPVAR()
     JSUpvarArray* uva = JS_SCRIPT_UPVARS(script);
     JS_ASSERT(index < uva->length);
 
-    uintN skip = UPVAR_FRAME_SKIP(uva->vector[index]);
-    if (skip > callDepth) {
-        /*
-         * The frame containing the upvar is not part of the trace, so we 
-         * get the upvar value exactly as the interpreter does and unbox.
-         */
-        jsval v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
-        uint8 type = getCoercedType(v);
-
-        LIns* outp = lir->insAlloc(sizeof(double));
-
-        LIns* args[] = { 
-            outp,
-            lir->insImm(uva->vector[index]), 
-            lir->insImm(script->staticLevel), 
-            cx_ins 
-        };
-        const CallInfo* ci = &js_GetUpvarOnTrace_ci;
-        LIns* call_ins = lir->insCall(ci, args);
-        guard(true,
-              addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
-                      "guard(type-stable upvar)"),
-              BRANCH_EXIT);
-
-        LOpcode loadOp;
-        switch (type) {
-        case JSVAL_DOUBLE:
-            loadOp = LIR_ldq;
-            break;
-        case JSVAL_OBJECT:
-        case JSVAL_STRING:
-        case JSVAL_TFUN:
-        case JSVAL_TNULL:
-            loadOp = LIR_ldp;
-            break;
-        case JSVAL_INT:
-        case JSVAL_BOOLEAN:
-            loadOp = LIR_ld;
-            break;
-        case JSVAL_BOXED:
-        default:
-            JS_NOT_REACHED("found boxed type in an upvar type map entry");
-            return JSRS_STOP;
-        }
-
-        LIns* result = lir->insLoad(loadOp, outp, lir->insImm(0));
-        if (type == JSVAL_INT)
-            result = lir->ins1(LIR_i2f, result);
-        stack(0, result);
+    /*
+     * Try to find the upvar in the current trace's tracker.
+     */
+    jsval& v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+    LIns* upvar_ins = get(&v);
+    if (upvar_ins) {
+        stack(0, upvar_ins);
         return JSRS_CONTINUE;
     }
 
     /*
-     * At this point, the frame containing the upvar is part of the trace,
-     * so the upvar is in the tracker. We only need to update the tracker.
+     * The upvar is not in the current trace, so get the upvar value 
+     * exactly as the interpreter does and unbox.
      */
-    JSStackFrame* fp2 = cx->display[script->staticLevel - skip];
-    JS_ASSERT(fp2->script);
+    LIns* outp = lir->insAlloc(sizeof(double));
+    LIns* args[] = { 
+        outp,
+        lir->insImm(uva->vector[index]), 
+        lir->insImm(script->staticLevel), 
+        cx_ins 
+    };
+    const CallInfo* ci = &js_GetUpvarOnTrace_ci;
+    LIns* call_ins = lir->insCall(ci, args);
+    uint8 type = getCoercedType(v);
+    guard(true,
+          addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
+                  "guard(type-stable upvar)"),
+          BRANCH_EXIT);
 
-    uintN slot = UPVAR_FRAME_SLOT(uva->vector[index]);
-    jsval* vp;
-    if (!fp2->fun) {
-        vp = fp2->slots + fp2->script->nfixed;
-    } else if (slot < fp2->fun->nargs) {
-        vp = fp2->argv;
-    } else {
-        slot -= fp2->fun->nargs;
-        JS_ASSERT(slot < fp2->script->nslots);
-        vp = fp2->slots;
+    LOpcode loadOp;
+    switch (type) {
+      case JSVAL_DOUBLE:
+        loadOp = LIR_ldq;
+        break;
+      case JSVAL_OBJECT:
+      case JSVAL_STRING:
+      case JSVAL_TFUN:
+      case JSVAL_TNULL:
+        loadOp = LIR_ldp;
+        break;
+      case JSVAL_INT:
+      case JSVAL_BOOLEAN:
+        loadOp = LIR_ld;
+        break;
+      case JSVAL_BOXED:
+      default:
+        JS_NOT_REACHED("found boxed type in an upvar type map entry");
+        return JSRS_STOP;
     }
 
-    stack(0, get(&vp[slot]));
+    LIns* result = lir->insLoad(loadOp, outp, lir->insImm(0));
+    if (type == JSVAL_INT)
+        result = lir->ins1(LIR_i2f, result);
+    stack(0, result);
     return JSRS_CONTINUE;
 }
 
