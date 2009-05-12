@@ -2499,27 +2499,23 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
       psd->mLeftEdge += dx;
     }
   }
-  PRBool isRTL = ( (NS_STYLE_DIRECTION_RTL == psd->mDirection)
-                && (!psd->mChangedFrameDirection) );
-  if (dx || isRTL) {
-    nscoord maxX = aLineBounds.XMost() + dx;
 
-    if (isRTL) {
-      if (psd->mLastFrame->GetFlag(PFD_ISBULLET) ) {
-        PerFrameData* bulletPfd = psd->mLastFrame;
-        bulletPfd->mBounds.x -= remainingWidth;
-        bulletPfd->mFrame->SetRect(bulletPfd->mBounds);
-      }
-  
-      psd->mChangedFrameDirection = PR_TRUE;
+  if (NS_STYLE_DIRECTION_RTL == psd->mDirection &&
+      !psd->mChangedFrameDirection) {
+    if (psd->mLastFrame->GetFlag(PFD_ISBULLET) ) {
+      PerFrameData* bulletPfd = psd->mLastFrame;
+      bulletPfd->mBounds.x -= remainingWidth;
+      bulletPfd->mFrame->SetRect(bulletPfd->mBounds);
     }
-    if (dx) {
-      for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
-        pfd->mBounds.x += dx;
-        pfd->mFrame->SetRect(pfd->mBounds);
-      }
-      aLineBounds.x += dx;
+    psd->mChangedFrameDirection = PR_TRUE;
+  }
+
+  if (dx) {
+    for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
+      pfd->mBounds.x += dx;
+      pfd->mFrame->SetRect(pfd->mBounds);
     }
+    aLineBounds.x += dx;
   }
 }
 
