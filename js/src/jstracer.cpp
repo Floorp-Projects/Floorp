@@ -10622,12 +10622,19 @@ TraceRecorder::record_JSOP_NEWARRAY()
     guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
 
     LIns* dslots_ins = NULL;
+    uint32 count = 0;
     for (uint32 i = 0; i < len; i++) {
         jsval& v = stackval(int(i) - int(len));
+        if (v != JSVAL_HOLE)
+            count++;
         LIns* elt_ins = get(&v);
         box_jsval(v, elt_ins);
         stobj_set_dslot(v_ins, i, dslots_ins, elt_ins, "set_array_elt");
     }
+
+    LIns* dummy = NULL;
+    if (count > 0)
+        stobj_set_slot(v_ins, JSSLOT_ARRAY_COUNT, dummy, INS_CONST(count));
 
     stack(-int(len), v_ins);
     return JSRS_CONTINUE;
