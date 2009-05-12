@@ -1324,27 +1324,10 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
         if (NS_FAILED(rv) || !uri)
             continue; // Necko will barf if our URI is weird
 
-        nsCOMPtr<nsIPrincipal> principal;
-        if (!isTrusted) {
-            // Our document is untrusted, so check to see if we can
-            // load the datasource that they've asked for.
-
-            rv = gScriptSecurityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get codebase principal");
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            PRBool same;
-            rv = docPrincipal->Equals(principal, &same);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test same origin");
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (! same)
-                continue;
-
-            // If we get here, we've run the gauntlet, and the
-            // datasource's URI has the same origin as our
-            // document. Let it load!
-        }
+        // don't add the uri to the list if the document is not allowed to
+        // load it
+        if (!isTrusted && NS_FAILED(docPrincipal->CheckMayLoad(uri, PR_TRUE)))
+          continue;
 
         uriList->AppendElement(uri, PR_FALSE);
     }
@@ -1357,7 +1340,6 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
                                         aShouldDelayBuilding,
                                         getter_AddRefs(mDataSource));
     NS_ENSURE_SUCCESS(rv, rv);
-
 
     if (aIsRDFQuery && mDataSource) {  
         // check if we were given an inference engine type
