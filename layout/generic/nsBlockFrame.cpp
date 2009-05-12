@@ -6395,21 +6395,6 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
   nsBlockFrameSuper::ChildIsDirty(aChild);
 }
 
-//////////////////////////////////////////////////////////////////////
-// Start Debugging
-
-#ifdef NS_DEBUG
-NS_IMETHODIMP
-nsBlockFrame::VerifyTree() const
-{
-  // XXX rewrite this
-  return NS_OK;
-}
-#endif
-
-// End Debugging
-//////////////////////////////////////////////////////////////////////
-
 NS_IMETHODIMP
 nsBlockFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,

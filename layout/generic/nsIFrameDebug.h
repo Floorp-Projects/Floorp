@@ -80,21 +80,6 @@ public:
    */
   NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) = 0;
 
-  NS_IMETHOD  VerifyTree() const = 0;
-
-  /**
-   * See if tree verification is enabled. To enable tree verification add
-   * "frameverifytree:1" to your NSPR_LOG_MODULES environment variable
-   * (any non-zero debug level will work). Or, call SetVerifyTreeEnable
-   * with PR_TRUE.
-   */
-  static PRBool GetVerifyTreeEnable();
-
-  /**
-   * Set the verify-tree enable flag.
-   */
-  static void SetVerifyTreeEnable(PRBool aEnabled);
-
   /**
    * See if style tree verification is enabled. To enable style tree 
    * verification add "styleverifytree:1" to your NSPR_LOG_MODULES 

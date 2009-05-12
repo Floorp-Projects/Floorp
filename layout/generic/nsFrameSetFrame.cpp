@@ -1467,15 +1467,6 @@ nsHTMLFramesetFrame::SetBorderResize(PRInt32*                   aChildTypes,
   }
 }
   
-        
-NS_IMETHODIMP
-nsHTMLFramesetFrame::VerifyTree() const
-{
-  // XXX Completely disabled for now; once pseud-frames are reworked
-  // then we can turn it back on.
-  return NS_OK;
-}
-
 void
 nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*            aPresContext, 
                                     nsHTMLFramesetBorderFrame* aBorder, 
