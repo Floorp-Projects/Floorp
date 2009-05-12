@@ -8203,8 +8203,9 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     if (!::JS_DefineUCProperty(cx, JSVAL_TO_OBJECT(winVal),
                                reinterpret_cast<const jschar *>
                                                (doc_str.get()),
-                               doc_str.Length(), OBJECT_TO_JSVAL(obj), nsnull,
-                               nsnull, JSPROP_READONLY | JSPROP_ENUMERATE)) {
+                               doc_str.Length(), OBJECT_TO_JSVAL(obj),
+                               JS_PropertyStub, JS_PropertyStub,
+                               JSPROP_READONLY | JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }
