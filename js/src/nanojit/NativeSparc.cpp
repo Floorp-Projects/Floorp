@@ -406,7 +406,6 @@ namespace nanojit
                 // if a constant 64-bit value just store it now rather than
                 // generating a pointless store/load/store sequence
                 Register rb = findRegFor(base, GpRegs);
-                const int32_t* p = (const int32_t*) (value-2);
                 STW32(L0, dr+4, rb);
                 SET32(value->imm64_0(), L0);
                 STW32(L0, dr, rb);
@@ -876,7 +875,6 @@ namespace nanojit
             {
                 Register r = registerAlloc(GpRegs);
                 _allocator.addFree(r);
-                const int32_t* p = (const int32_t*) (ins-2);
                 STW32(r, d+4, FP);
                 SET32(ins->imm64_0(), r);
                 STW32(r, d, FP);
