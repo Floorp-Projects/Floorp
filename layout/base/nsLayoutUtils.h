@@ -1004,6 +1004,26 @@ public:
    * @param aFrame The nsIFrame object, which uses text fragment data.
    */
   static nsTextFragment* GetTextFragmentForPrinting(const nsIFrame* aFrame);
+
+  /**
+   * Return whether aFrame is an inline frame in the first part of an {ib}
+   * split.
+   */
+  static PRBool FrameIsInFirstPartOfIBSplit(const nsIFrame* aFrame) {
+    return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+      !aFrame->GetFirstContinuation()->
+        GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling);
+  }
+
+  /**
+   * Return whether aFrame is an inline frame in the last part of an {ib}
+   * split.
+   */
+  static PRBool FrameIsInLastPartOfIBSplit(const nsIFrame* aFrame) {
+    return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+      !aFrame->GetFirstContinuation()->
+        GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+  }
 };
 
 class nsAutoDisableGetUsedXAssertions
