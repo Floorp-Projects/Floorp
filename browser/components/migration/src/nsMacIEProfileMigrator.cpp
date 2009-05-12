@@ -231,22 +231,20 @@ nsMacIEProfileMigrator::CopyBookmarks(PRBool aReplace)
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIStringBundle> bundle;
   rv = bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString toolbarFolderNameMacIE;
-  bundle->GetStringFromName(NS_LITERAL_STRING("toolbarFolderNameMacIE").get(), 
-                            getter_Copies(toolbarFolderNameMacIE));
-  nsCAutoString ctoolbarFolderNameMacIE;
-  CopyUTF16toUTF8(toolbarFolderNameMacIE, ctoolbarFolderNameMacIE);
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("toolbarFolderNameMacIE").get(),
+                                 getter_Copies(toolbarFolderNameMacIE));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now read the 4.x bookmarks file, correcting the Personal Toolbar Folder 
   // line and writing to the temporary file.
   rv = AnnotatePersonalToolbarFolder(sourceFile,
                                      tempFile,
-                                     ctoolbarFolderNameMacIE.get());
+                                     NS_ConvertUTF16toUTF8(toolbarFolderNameMacIE).get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // import the temp file

@@ -94,8 +94,18 @@
 #include "nsToolkitCompsCID.h"
 #include "nsUnicharUtils.h"
 #include "nsIWindowsRegKey.h"
+#include "nsISupportsPrimitives.h"
 
 #define TRIDENTPROFILE_BUNDLE       "chrome://browser/locale/migration/migration.properties"
+
+#define REGISTRY_IE_MAIN_KEY \
+  NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\Main")
+#define REGISTRY_IE_TYPEDURL_KEY \
+  NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\TypedURLs")
+#define REGISTRY_IE_TOOLBAR_KEY \
+  NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\Toolbar")
+#define REGISTRY_IE_SEARCHURL_KEY \
+  NS_LITERAL_STRING("Software\\Microsoft\\Internet Explorer\\SearchUrl")
 
 const int sInitialCookieBufferSize = 1024; // but it can grow
 const int sUsernameLengthLimit     = 80;
@@ -489,11 +499,10 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
 {
   nsCOMPtr<nsIWindowsRegKey> regKey = 
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
-  NS_NAMED_LITERAL_STRING(homeURLKey,
-                          "Software\\Microsoft\\Internet Explorer\\Main");
   if (!regKey ||
       NS_FAILED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                             homeURLKey, nsIWindowsRegKey::ACCESS_READ)))
+                             REGISTRY_IE_MAIN_KEY,
+                             nsIWindowsRegKey::ACCESS_READ)))
     return NS_OK;
   // Read in the main home page
   NS_NAMED_LITERAL_STRING(homeURLValName, "Start Page");
@@ -549,7 +558,7 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
 // nsIEProfileMigrator
 NS_IMPL_ISUPPORTS2(nsIEProfileMigrator, nsIBrowserProfileMigrator, nsINavHistoryBatchCallback);
 
-nsIEProfileMigrator::nsIEProfileMigrator() 
+nsIEProfileMigrator::nsIEProfileMigrator()
 {
   mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
@@ -627,18 +636,58 @@ nsIEProfileMigrator::TestForIE7()
   return PR_FALSE;
 }
 
-nsresult
-nsIEProfileMigrator::CopyHistory(PRBool aReplace) 
-{
-  nsresult rv;
-  nsCOMPtr<nsINavHistoryService> history = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return history->RunInBatchMode(this, nsnull);
-}
-
 NS_IMETHODIMP
 nsIEProfileMigrator::RunBatched(nsISupports* aUserData)
+{
+  PRUint8 batchAction;
+  nsCOMPtr<nsISupportsPRUint8> strWrapper(do_QueryInterface(aUserData));
+  NS_ASSERTION(strWrapper, "Unable to create nsISupportsPRUint8 wrapper!");
+  nsresult rv = strWrapper->GetData(&batchAction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (batchAction) {
+    case BATCH_ACTION_HISTORY:
+      rv = CopyHistoryBatched(PR_FALSE);
+      break;
+    case BATCH_ACTION_HISTORY_REPLACE:
+      rv = CopyHistoryBatched(PR_TRUE);
+      break;
+    case BATCH_ACTION_BOOKMARKS:
+      rv = CopyFavoritesBatched(PR_FALSE);
+      break;
+    case BATCH_ACTION_BOOKMARKS_REPLACE:
+      rv = CopyFavoritesBatched(PR_TRUE);
+      break;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsIEProfileMigrator::CopyHistory(PRBool aReplace)
+{
+  nsresult rv;
+  nsCOMPtr<nsINavHistoryService> history =
+    do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint8 batchAction = aReplace ? BATCH_ACTION_HISTORY_REPLACE
+                                 : BATCH_ACTION_HISTORY;
+  nsCOMPtr<nsISupportsPRUint8> supports =
+    do_CreateInstance(NS_SUPPORTS_PRUINT8_CONTRACTID);
+  NS_ENSURE_TRUE(supports, NS_ERROR_OUT_OF_MEMORY);
+  rv = supports->SetData(batchAction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = history->RunInBatchMode(this, supports);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsIEProfileMigrator::CopyHistoryBatched(PRBool aReplace)
 {
   nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
   nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
@@ -738,11 +787,10 @@ nsIEProfileMigrator::RunBatched(nsISupports* aUserData)
   // Now, find out what URLs were typed in by the user
   nsCOMPtr<nsIWindowsRegKey> regKey = 
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
-  NS_NAMED_LITERAL_STRING(typedURLKey,
-                          "Software\\Microsoft\\Internet Explorer\\TypedURLs");
   if (regKey && 
       NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                                typedURLKey, nsIWindowsRegKey::ACCESS_READ))) {
+                                REGISTRY_IE_TYPEDURL_KEY,
+                                nsIWindowsRegKey::ACCESS_READ))) {
     int offset = 0;
 
     while (1) {
@@ -1264,7 +1312,7 @@ nsIEProfileMigrator::AddDataToFormHistory(const nsAString& aKey, PRUnichar* aDat
     return NS_ERROR_OUT_OF_MEMORY;
 
   PRUnichar* cursor = aData;
-  PRInt32 offset = 0;
+  PRUint32 offset = 0;
 
   while (offset < aCount) {
     nsAutoString curr; curr = cursor;
@@ -1285,40 +1333,72 @@ nsIEProfileMigrator::AddDataToFormHistory(const nsAString& aKey, PRUnichar* aDat
 // favorites
 // search keywords
 //
+nsresult
+nsIEProfileMigrator::CopyFavorites(PRBool aReplace)
+{
+  nsresult rv;
+  nsCOMPtr<nsINavBookmarksService> bookmarks =
+    do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool batchAction = aReplace ? BATCH_ACTION_BOOKMARKS_REPLACE
+                                : BATCH_ACTION_BOOKMARKS;
+  nsCOMPtr<nsISupportsPRUint8> supports =
+    do_CreateInstance(NS_SUPPORTS_PRUINT8_CONTRACTID);
+  NS_ENSURE_TRUE(supports, NS_ERROR_OUT_OF_MEMORY);
+  rv = supports->SetData(batchAction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = bookmarks->RunInBatchMode(this, supports);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 nsresult
-nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
-  // If "aReplace" is true, merge into the root level of bookmarks. Otherwise, create
-  // a folder called "Imported IE Favorites" and place all the Bookmarks there. 
+nsIEProfileMigrator::CopyFavoritesBatched(PRBool aReplace)
+{
+  // If "aReplace" is true, merge into the root level of bookmarks. Otherwise,
+  // create a folder called "Imported IE Favorites" and place all the Bookmarks
+  // there.
   nsresult rv;
 
-  nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsINavBookmarksService> bms =
+    do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt64 root;
-  rv = bms->GetBookmarksMenuFolder(&root);
+
+  PRInt64 bookmarksMenuFolderId;
+  rv = bms->GetBookmarksMenuFolder(&bookmarksMenuFolderId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString personalToolbarFolderName;
-
   PRInt64 folder;
   if (!aReplace) {
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIStringBundle> bundle;
-    bundleService->CreateBundle(TRIDENTPROFILE_BUNDLE, getter_AddRefs(bundle));
+    rv = bundleService->CreateBundle(TRIDENTPROFILE_BUNDLE,
+                                     getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsString sourceNameIE;
-    bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(), 
-                              getter_Copies(sourceNameIE));
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(),
+                                   getter_Copies(sourceNameIE));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     const PRUnichar* sourceNameStrings[] = { sourceNameIE.get() };
     nsString importedIEFavsTitle;
-    bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
-                                 sourceNameStrings, 1, getter_Copies(importedIEFavsTitle));
+    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
+                                      sourceNameStrings, 1,
+                                      getter_Copies(importedIEFavsTitle));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    bms->CreateFolder(root, NS_ConvertUTF16toUTF8(importedIEFavsTitle), -1,
-                      &folder);
+    rv = bms->CreateFolder(bookmarksMenuFolderId,
+                           NS_ConvertUTF16toUTF8(importedIEFavsTitle),
+                           nsINavBookmarksService::DEFAULT_INDEX,
+                           &folder);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
     // Initialize the default bookmarks
@@ -1327,65 +1407,65 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     rv = InitializeBookmarks(profile);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Locate the Links toolbar folder, we want to replace the Personal Toolbar content with 
-    // Favorites in this folder. 
-    nsCOMPtr<nsIWindowsRegKey> regKey = 
+    // Locate the Links toolbar folder, we want to replace the Personal Toolbar
+    // content with Favorites in this folder.
+    nsCOMPtr<nsIWindowsRegKey> regKey =
       do_CreateInstance("@mozilla.org/windows-registry-key;1");
-    NS_NAMED_LITERAL_STRING(toolbarKey,
-                            "Software\\Microsoft\\Internet Explorer\\Toolbar");
-    if (regKey && 
+    if (regKey &&
         NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                                  toolbarKey, nsIWindowsRegKey::ACCESS_READ))) {
+                                  REGISTRY_IE_TOOLBAR_KEY,
+                                  nsIWindowsRegKey::ACCESS_READ))) {
       nsAutoString linksFolderName;
       if (NS_SUCCEEDED(regKey->ReadStringValue(
-                       NS_LITERAL_STRING("LinksFolderName"),
-                       linksFolderName)))
-        personalToolbarFolderName = linksFolderName; 
+                         NS_LITERAL_STRING("LinksFolderName"),
+                         linksFolderName)))
+        personalToolbarFolderName = linksFolderName;
     }
-    folder = root;
+    folder = bookmarksMenuFolderId;
   }
 
-  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1", &rv));
-  if (NS_FAILED(rv)) 
-      return rv;
-
+  nsCOMPtr<nsIProperties> fileLocator =
+    do_GetService("@mozilla.org/file/directory_service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIFile> favoritesDirectory;
-  fileLocator->Get("Favs", NS_GET_IID(nsIFile), getter_AddRefs(favoritesDirectory));
+  (void)fileLocator->Get("Favs", NS_GET_IID(nsIFile),
+                         getter_AddRefs(favoritesDirectory));
 
-  // If |favoritesDirectory| is null, it means that we're on a Windows 
-  // platform that does not have a Favorites folder, e.g. Windows 95 
-  // (early SRs, before IE integrated with the shell). Only try to 
-  // read Favorites folder if it exists on the machine. 
+  // If |favoritesDirectory| is null, it means that we're on a Windows
+  // platform that does not have a Favorites folder, e.g. Windows 95
+  // (early SRs, before IE integrated with the shell).
+  // Only try to read Favorites folder if it exists on the machine.
   if (favoritesDirectory) {
-    rv = ParseFavoritesFolder(favoritesDirectory, folder, bms, personalToolbarFolderName, PR_TRUE);
+    rv = ParseFavoritesFolder(favoritesDirectory, folder, bms,
+                              personalToolbarFolderName, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return CopySmartKeywords(root);
+  return CopySmartKeywords(bms, bookmarksMenuFolderId);
 }
 
 nsresult
-nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
+nsIEProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
+                                       PRInt64 aParentFolder)
 { 
-  nsCOMPtr<nsIWindowsRegKey> regKey = 
+  nsresult rv;
+
+  nsCOMPtr<nsIWindowsRegKey> regKey =
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
-  NS_NAMED_LITERAL_STRING(searchUrlKey,
-                          "Software\\Microsoft\\Internet Explorer\\SearchUrl");
   if (regKey && 
       NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                                searchUrlKey, nsIWindowsRegKey::ACCESS_READ))) {
+                                REGISTRY_IE_SEARCHURL_KEY,
+                                nsIWindowsRegKey::ACCESS_READ))) {
 
-    nsresult rv;
-    nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRInt64 keywordsFolder = 0;
-
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    
     nsCOMPtr<nsIStringBundle> bundle;
-    bundleService->CreateBundle(TRIDENTPROFILE_BUNDLE, getter_AddRefs(bundle));
+    rv = bundleService->CreateBundle(TRIDENTPROFILE_BUNDLE,
+                                     getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-
+    PRInt64 keywordsFolder = 0;
     int offset = 0;
     while (1) {
       nsAutoString keyName;
@@ -1394,15 +1474,21 @@ nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
 
       if (!keywordsFolder) {
         nsString sourceNameIE;
-        bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(), 
-                                  getter_Copies(sourceNameIE));
+        rv = bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameIE").get(),
+                                       getter_Copies(sourceNameIE));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         const PRUnichar* sourceNameStrings[] = { sourceNameIE.get() };
         nsString importedIESearchUrlsTitle;
-        bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
-                                    sourceNameStrings, 1, getter_Copies(importedIESearchUrlsTitle));
-        bms->CreateFolder(aParentFolder, NS_ConvertUTF16toUTF8(importedIESearchUrlsTitle),
-                          -1, &keywordsFolder);
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
+                                          sourceNameStrings, 1,
+                                          getter_Copies(importedIESearchUrlsTitle));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = aBMS->CreateFolder(aParentFolder,
+                                NS_ConvertUTF16toUTF8(importedIESearchUrlsTitle),
+                                nsINavBookmarksService::DEFAULT_INDEX,
+                                &keywordsFolder);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       nsCOMPtr<nsIWindowsRegKey> childKey; 
@@ -1419,10 +1505,11 @@ nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
             continue;
           }
           PRInt64 id;
-          bms->InsertBookmark(keywordsFolder, uri,
-                              nsINavBookmarksService::DEFAULT_INDEX,
-                              NS_ConvertUTF16toUTF8(keyName),
-                              &id);
+          rv = aBMS->InsertBookmark(keywordsFolder, uri,
+                                    nsINavBookmarksService::DEFAULT_INDEX,
+                                    NS_ConvertUTF16toUTF8(keyName),
+                                    &id);
+          NS_ENSURE_SUCCESS(rv, rv);
         }
         childKey->Close();
       }
@@ -1465,7 +1552,7 @@ nsIEProfileMigrator::ResolveShortcut(const nsString &aFileName, char** aOutURL)
 nsresult
 nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory, 
                                           PRInt64 aParentFolder,
-                                          nsINavBookmarksService* aBookmarksService,
+                                          nsINavBookmarksService* aBMS,
                                           const nsAString& aPersonalToolbarFolderName,
                                           PRBool aIsAtRootLevel)
 {
@@ -1473,7 +1560,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 
   nsCOMPtr<nsISimpleEnumerator> entries;
   rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   do {
     PRBool hasMore = PR_FALSE;
@@ -1528,28 +1615,31 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 
       nsCOMPtr<nsIURI> bookmarkURI;
       rv = NS_NewFileURI(getter_AddRefs(bookmarkURI), localFile);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) continue;
       PRInt64 id;
-      rv = aBookmarksService->InsertBookmark(aParentFolder, bookmarkURI,
-                                             nsINavBookmarksService::DEFAULT_INDEX,
-                                             NS_ConvertUTF16toUTF8(bookmarkName), &id);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aBMS->InsertBookmark(aParentFolder, bookmarkURI,
+                                nsINavBookmarksService::DEFAULT_INDEX,
+                                NS_ConvertUTF16toUTF8(bookmarkName),
+                                &id);
       if (NS_FAILED(rv)) continue;
     }
     else if (isDir) {
-      PRInt64 folder;
+      PRInt64 folderId;
       if (bookmarkName.Equals(aPersonalToolbarFolderName)) {
-        aBookmarksService->GetToolbarFolder(&folder);
+        rv = aBMS->GetToolbarFolder(&folderId);
+        if (NS_FAILED(rv)) break;
       }
       else {
-        rv = aBookmarksService->CreateFolder(aParentFolder,
-                                             NS_ConvertUTF16toUTF8(bookmarkName),
-                                             nsINavBookmarksService::DEFAULT_INDEX,
-                                             &folder);
+        rv = aBMS->CreateFolder(aParentFolder,
+                                NS_ConvertUTF16toUTF8(bookmarkName),
+                                nsINavBookmarksService::DEFAULT_INDEX,
+                                &folderId);
         if (NS_FAILED(rv)) continue;
       }
 
-      rv = ParseFavoritesFolder(currFile, folder, aBookmarksService, aPersonalToolbarFolderName, PR_FALSE);
+      rv = ParseFavoritesFolder(currFile, folderId,
+                                aBMS, aPersonalToolbarFolderName,
+                                PR_FALSE);
       if (NS_FAILED(rv)) continue;
     }
     else {
@@ -1571,11 +1661,11 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 
       nsCOMPtr<nsIURI> resolvedURI;
       rv = NS_NewURI(getter_AddRefs(resolvedURI), resolvedURL);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) continue;
       PRInt64 id;
-      rv = aBookmarksService->InsertBookmark(aParentFolder, resolvedURI,
-                                             nsINavBookmarksService::DEFAULT_INDEX,
-                                             NS_ConvertUTF16toUTF8(name), &id);
+      rv = aBMS->InsertBookmark(aParentFolder, resolvedURI,
+                                nsINavBookmarksService::DEFAULT_INDEX,
+                                NS_ConvertUTF16toUTF8(name), &id);
       if (NS_FAILED(rv)) continue;
     }
   }
