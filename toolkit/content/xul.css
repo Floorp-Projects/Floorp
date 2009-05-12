@@ -792,6 +792,8 @@ popup[type="autocomplete"][hidden="true"] {
 .autocomplete-result-popupset {
   max-width: 0px;
   width: 0 !important;
+  min-width: 0%;
+  min-height: 0%;
 }
 
 /********** colorpicker **********/
