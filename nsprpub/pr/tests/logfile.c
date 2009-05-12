@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,8 +15,8 @@
  * The Original Code is the Netscape Portable Runtime (NSPR).
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,10 +36,35 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * A dummy header file that is a dependency for all the object files.
- * Used to force a full recompilation of NSPR in Mozilla's Tinderbox
- * depend builds.  See comments in rules.mk.
+ * A regression test for bug 491441.  NSPR should not crash on startup in
+ * PR_SetLogFile when the NSPR_LOG_MODULES and NSPR_LOG_FILE environment
+ * variables are set.
+ *
+ * This test could be extended to be a full-blown test for NSPR_LOG_FILE.
  */
 
-#error "Do not include this header file."
+#include "prinit.h"
+#include "prlog.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    PRLogModuleInfo *test_lm;
+
+    if (putenv("NSPR_LOG_MODULES=all:5") != 0) {
+        fprintf(stderr, "putenv failed\n");
+        exit(1);
+    }
+    if (putenv("NSPR_LOG_FILE=logfile.log") != 0) {
+        fprintf(stderr, "putenv failed\n");
+        exit(1);
+    }
+
+    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+    test_lm = PR_NewLogModule("test");
+    PR_LOG(test_lm, PR_LOG_MIN, ("logfile: test log message"));
+    PR_Cleanup();
+    return 0;
+}
