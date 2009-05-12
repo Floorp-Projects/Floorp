@@ -60,6 +60,13 @@ Login Manager test: multiple login autocomplete
     <input  type="password"   name="pword">
     <button type="submit">Submit</button>
   </form>
+
+  <!-- test for no autofill after onblur with blank username -->
+  <form id="form8" action="http://autocomplete4" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
 </div>
 
 <pre id="test">
@@ -84,6 +91,11 @@ Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                        Components.interfaces.nsILoginInfo, "init");
 ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
+
+// login0 has no username, so should be filtered out from the autocomplete list.
+var login0 = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete:8888", null,
+    "", "user0pass", "", "pword");
 
 var login1 = new nsLoginInfo(
     "http://localhost:8888", "http://autocomplete:8888", null,
@@ -113,8 +125,12 @@ var login6B = new nsLoginInfo(
     "http://localhost:8888", "http://autocomplete3", null,
     "form7user2", "form7pass2", "uname", "pword");
 
+var login7  = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete4", null,
+    "form8user", "form8pass", "uname", "pword");
 // try/catch in case someone runs the tests manually, twice.
 try {
+    pwmgr.addLogin(login0);
     pwmgr.addLogin(login1);
     pwmgr.addLogin(login2);
     pwmgr.addLogin(login3);
@@ -122,6 +138,7 @@ try {
     pwmgr.addLogin(login5);
     pwmgr.addLogin(login6A);
     pwmgr.addLogin(login6B);
+    pwmgr.addLogin(login7);
 } catch (e) {
     ok(false, "addLogin threw: " + e);
 }
@@ -347,7 +364,7 @@ function runTest(testNum) {
         doKey("down");
         var numLogins;
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
-        is(numLogins, 4, "Correct number of logins before deleting one");
+        is(numLogins, 5, "Correct number of logins before deleting one");
 
         // On OS X, shift-backspace and shift-delete work, just delete does not.
         // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
@@ -355,7 +372,7 @@ function runTest(testNum) {
 
         checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
-        is(numLogins, 3, "Correct number of logins after deleting one");
+        is(numLogins, 4, "Correct number of logins after deleting one");
         doKey("return");
         checkACForm("testuser2", "testpass2");
 
@@ -382,7 +399,7 @@ function runTest(testNum) {
         doKey("delete", shiftModifier);
         checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
-        is(numLogins, 2, "Correct number of logins after deleting one");
+        is(numLogins, 3, "Correct number of logins after deleting one");
         doKey("return");
         checkACForm("zzzuser4", "zzzpass4");
 
@@ -409,7 +426,7 @@ function runTest(testNum) {
         doKey("delete", shiftModifier);
         checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
-        is(numLogins, 1, "Correct number of logins after deleting one");
+        is(numLogins, 2, "Correct number of logins after deleting one");
         doKey("return");
         checkACForm("testuser2", "testpass2");
 
@@ -436,7 +453,8 @@ function runTest(testNum) {
         //doKey("return");
         checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
-        is(numLogins, 0, "Correct number of logins after deleting one");
+        is(numLogins, 1, "Correct number of logins after deleting one");
+        pwmgr.removeLogin(login0); // remove the login that's not shown in the list.
         testNum = 99;
         break;
 
@@ -460,6 +478,7 @@ function runTest(testNum) {
         checkACForm("", ""); // value shouldn't update
         doKey("return"); // not "enter"!
         checkACForm("singleuser5", "singlepass5");
+        restoreForm(); // clear field, so reloading test doesn't fail
         break;
 
     case 102:
@@ -565,9 +584,34 @@ function runTest(testNum) {
         // the password field should have any values filled in.
         checkACForm("form7user1", "");
         is($_(7, "uname2").value, "", "Verifying empty uname2");;
+        restoreForm(); // clear field, so reloading test doesn't fail
 
         pwmgr.removeLogin(login6A);
+        testNum = 599;
+        break;
 
+    case 600:
+        // Turn our attention to form8
+        uname = $_(8, "uname");
+        pword = $_(8, "pword");
+        checkACForm("form8user", "form8pass");
+        restoreForm();
+        break;
+
+    case 601:
+        checkACForm("", "");
+        // Focus the previous form to trigger a blur.
+        $_(7, "uname").focus();
+        break;
+
+    case 602:
+        checkACForm("", "");
+        restoreForm();
+        break;
+
+    case 603:
+        checkACForm("", "");
+        pwmgr.removeLogin(login7);
 
         SimpleTest.finish();
         return;
