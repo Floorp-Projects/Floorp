@@ -708,14 +708,15 @@ read_more_data:
     oggplay_data_clean_list (me->decode_data[i]);
   }
 
+  if (me->shutdown) {
+    return E_OGGPLAY_OK;
+  }
+
   if (info == NULL) {
     goto read_more_data;
   }
 
   me->target += me->callback_period;
-  if (me->shutdown) {
-    return E_OGGPLAY_OK;
-  }
   if (r == -1) {
     return E_OGGPLAY_USER_INTERRUPT;
   }

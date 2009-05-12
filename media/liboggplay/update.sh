@@ -46,4 +46,4 @@ rm ./src/liboggplay/oggplay_private.h1
 sed s/\#ifdef\ HAVE_INTTYPES_H/\#if\ HAVE_INTTYPES_H/g $1/src/liboggplay/oggplay_data.c >./src/liboggplay/oggplay_data.c
 patch -p3 < bug485291_yuv_align.patch
 patch -p3 < endian.patch
-
+patch -p3 < trac466.patch

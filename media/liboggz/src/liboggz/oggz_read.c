@@ -90,6 +90,8 @@ oggz_read_init (OGGZ * oggz)
 
   reader->current_unit = 0;
 
+  reader->current_page_bytes = 0;
+
   return oggz;
 }
 
@@ -187,26 +189,33 @@ oggz_read_get_next_page (OGGZ * oggz, ogg_page * og)
   oggz_off_t page_offset = 0, ret;
   int found = 0;
 
+  /* Increment oggz->offset by length of the last page processed */
+  oggz->offset += reader->current_page_bytes;
+
   do {
     more = ogg_sync_pageseek (&reader->ogg_sync, og);
 
     if (more == 0) {
+      /* No page available */
       page_offset = 0;
       return -2;
     } else if (more < 0) {
 #ifdef DEBUG_VERBOSE
       printf ("get_next_page: skipped %ld bytes\n", -more);
 #endif
-      page_offset -= more;
+      page_offset += (-more);
+      oggz->offset += (-more);
     } else {
 #ifdef DEBUG_VERBOSE
       printf ("get_next_page: page has %ld bytes\n", more);
 #endif
+      reader->current_page_bytes = more;
       found = 1;
     }
 
   } while (!found);
 
+#if 0 /* This is now done by the increment at the top of the file */
   /* Calculate the byte offset of the page which was found */
   if (bytes > 0) {
     oggz->offset = oggz_io_tell (oggz) - bytes + page_offset;
@@ -218,6 +227,9 @@ oggz_read_get_next_page (OGGZ * oggz, ogg_page * og)
   }
 
   return ret;
+#else
+  return oggz->offset;
+#endif
 }
 
 typedef struct {
@@ -364,8 +376,10 @@ oggz_read_sync (OGGZ * oggz)
 #ifdef DEBUG
           printf ("oggz_read_sync: hole in the data\n");
 #endif
-          /* We can't tolerate holes in headers, so bail out. */
-          if (stream->packetno < 3) return OGGZ_ERR_HOLE_IN_DATA;
+          /* We can't tolerate holes in headers, so bail out. NB. as stream->packetno
+           * has not yet been incremented, the current value refers to how many packets
+           * have been processed prior to this one. */
+          if (stream->packetno < 2) return OGGZ_ERR_HOLE_IN_DATA;
 
           /* Holes in content occur in some files and pretty much don't matter,
            * so we silently swallow the notification and reget the packet.

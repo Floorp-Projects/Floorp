@@ -14,3 +14,4 @@ bug485291_yuv_align: only use optimized YUV routines if video dimensions are a m
 
 endian: pick up NSPR's little/big endian defines in oggplay's config.h.
 
+trac466: Fix for infinite loop in liboggplay when running decoder on its own thread.
