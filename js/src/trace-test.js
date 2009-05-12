@@ -4180,8 +4180,8 @@ function testBug458838() {
 testBug458838.expected = 10;
 testBug458838.jitstats = {
   recorderStarted: 1,
-  recorderAborted: 1,
-  traceCompleted: 0
+  recorderAborted: 0,
+  traceCompleted: 1
 };
 test(testBug458838);
 
