@@ -4312,6 +4312,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     JS_ASSERT(!tm->tracecx);
     tm->tracecx = cx;
+    state->prev = cx->interpState;
     cx->interpState = state;
 
     debug_only(fflush(NULL);)
@@ -4325,9 +4326,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     AUDIT(traceTriggered);
 
-#ifdef DEBUG
-    cx->interpState = NULL;
-#endif
+    cx->interpState = state->prev;
 
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
     tm->tracecx = NULL;
