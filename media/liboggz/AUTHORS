@@ -23,6 +23,9 @@ Ian Malone
         - oggz_comment_generate(), oggz_comment_set_vendor(),
           oggz_packet_destroy(), FLAC header fixes
 
+ogg.k.ogg.k
+	- Kate support, many bugfixes
+
 Mike Smith
         - examples/fix-eos.c, page-level validation in oggz-validate
 
