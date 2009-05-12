@@ -49,7 +49,7 @@ function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
   document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
   document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
-  document.getElementById("signonsIntro").value = kSignonBundle.getString("loginsSpielAll");
+  document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsSpielAll");
   LoadSignons();
 
   // filter the table if requested by caller
@@ -274,7 +274,7 @@ function SignonClearFilter() {
   }
   signonsTreeView._lastSelectedRanges = [];
 
-  document.getElementById("signonsIntro").value = kSignonBundle.getString("loginsSpielAll");
+  document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsSpielAll");
 }
 
 function FocusFilterBox() {
@@ -344,5 +344,5 @@ function _filterPasswords()
   if (signonsTreeView.rowCount > 0)
     signonsTreeView.selection.select(0);
 
-  document.getElementById("signonsIntro").value = kSignonBundle.getString("loginsSpielFiltered");
+  document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsSpielFiltered");
 }
