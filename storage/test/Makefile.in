@@ -44,13 +44,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM = teststorage1$(BIN_SUFFIX)
-
 MODULE = test_storage
 
 XPCSHELL_TESTS = unit
 
-CPPSRCS = storage1.cpp
+CPP_UNIT_TESTS = \
+  test_transaction_helper.cpp \
+  test_statement_scoper.cpp \
+  $(NULL)
 
 REQUIRES = \
 	xpcom \
