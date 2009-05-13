@@ -43,7 +43,10 @@ VPATH   = @srcdir@
 include $(topsrcdir)/config/config.mk
 
 ifndef SUITE_USING_XPFE_DM
-DIRS = src tests
+DIRS = src
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
