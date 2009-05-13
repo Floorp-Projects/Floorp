@@ -2670,6 +2670,15 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
     return NS_OK;
   }
   
+  // Joining a list item to its parent is a NOP.
+  if (nsHTMLEditUtils::IsList(*aLeftBlock) && nsHTMLEditUtils::IsListItem(*aRightBlock))
+  {
+    nsCOMPtr<nsIDOMNode> rightParent;
+    (*aRightBlock)->GetParentNode(getter_AddRefs(rightParent));
+    if (rightParent == *aLeftBlock)
+      return NS_OK;
+  }
+
   // special rule here: if we are trying to join list items, and they are in different lists,
   // join the lists instead.
   PRBool bMergeLists = PR_FALSE;
@@ -2816,7 +2825,7 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
 *         nsIDOMNode *aLeftBlock         parent to receive moved content
 *         nsIDOMNode *aRightBlock        parent to provide moved content
 *         PRInt32 aLeftOffset            offset in aLeftBlock to move content to
-*         PRInt32 aRightOffset           offset in aLeftBlock to move content to
+*         PRInt32 aRightOffset           offset in aRightBlock to move content from
 */
 nsresult
 nsHTMLEditRules::MoveBlock(nsIDOMNode *aLeftBlock, nsIDOMNode *aRightBlock, PRInt32 aLeftOffset, PRInt32 aRightOffset)
@@ -2854,7 +2863,7 @@ nsHTMLEditRules::MoveBlock(nsIDOMNode *aLeftBlock, nsIDOMNode *aRightBlock, PRIn
 *    inserted content.
 *         nsIDOMNode *aSource       the selection.  
 *         nsIDOMNode *aDest         parent to receive moved content
-*         PRInt32 *aOffset          offset in aNewParent to move content to
+*         PRInt32 *aOffset          offset in aDest to move content to
 */
 nsresult
 nsHTMLEditRules::MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset)
@@ -2891,13 +2900,14 @@ nsHTMLEditRules::MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *
 *    inserted content.  aSource is deleted.
 *         nsIDOMNode *aSource       the selection.  
 *         nsIDOMNode *aDest         parent to receive moved content
-*         PRInt32 *aOffset          offset in aNewParent to move content to
+*         PRInt32 *aOffset          offset in aDest to move content to
 */
 nsresult
 nsHTMLEditRules::MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset)
 {
   if (!aSource || !aDest || !aOffset) return NS_ERROR_NULL_POINTER;
   if (aSource == aDest) return NS_ERROR_ILLEGAL_VALUE;
+  NS_ASSERTION(!mHTMLEditor->IsTextNode(aSource), "#text does not have contents");
   
   nsCOMPtr<nsIDOMNode> child;
   nsAutoString tag;
