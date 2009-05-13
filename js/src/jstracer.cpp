@@ -4607,10 +4607,10 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                               stack, NULL);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
 
-    if (innermost->nativeCalleeWord) {
+    if (innermost->nativeCalleeWord)
         SynthesizeSlowNativeFrame(cx, innermost);
-        cx->nativeVp = NULL;
-    }
+
+    cx->nativeVp = NULL;
 
 #ifdef DEBUG
     // Verify that our state restoration worked.
