@@ -44,7 +44,6 @@
 #include "pk11func.h"
 #include "nspr.h"
 #include "ocspt.h"
-#include "nsDataHashtable.h"
 #include "nsIStreamLoader.h"
 
 char* PR_CALLBACK
@@ -253,30 +252,7 @@ public:
   void unregisterHttpClient();
 };
 
-class nsSSLStatus;
-class nsNSSSocketInfo;
-
-class nsPSMRememberCertErrorsTable
-{
-private:
-  struct CertStateBits
-  {
-    PRBool mIsDomainMismatch;
-    PRBool mIsNotValidAtThisTime;
-    PRBool mIsUntrusted;
-  };
-  nsDataHashtableMT<nsCStringHashKey, CertStateBits> mErrorHosts;
-  nsresult GetHostPortKey(nsNSSSocketInfo* infoObject, nsCAutoString& result);
-
-public:
-  nsPSMRememberCertErrorsTable();
-  void RememberCertHasError(nsNSSSocketInfo* infoObject,
-                           nsSSLStatus* status,
-                           SECStatus certVerificationResult);
-  void LookupCertErrorBits(nsNSSSocketInfo* infoObject,
-                           nsSSLStatus* status);
-};
-
-extern nsPSMRememberCertErrorsTable sHostsWithCertErrors;
-
 #endif // _NSNSSCALLBACKS_H_
+
+
+
