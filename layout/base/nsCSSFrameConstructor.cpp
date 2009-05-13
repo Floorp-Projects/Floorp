@@ -6758,8 +6758,6 @@ DoDeletingFrameSubtree(nsFrameManager*      aFrameManager,
         nsIFrame* outOfFlowFrame =
           nsPlaceholderFrame::GetRealFrameForPlaceholder(childFrame);
   
-        // Remove the mapping from the out-of-flow frame to its placeholder.
-        aFrameManager->UnregisterPlaceholderFrame((nsPlaceholderFrame*)childFrame);
         // Don't SetOutOfFlowFrame(nsnull) here because the float cache depends
         // on it when the float is removed later on, see bug 348688 comment 6.
         
@@ -6884,18 +6882,6 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame)
   CaptureStateFor(aRemovedFrame, mTempFrameTreeState);
 
   return ::DeletingFrameSubtree(frameManager, aRemovedFrame);
-}
-
-static void UnregisterPlaceholderChain(nsFrameManager* frameManager,
-                                       nsPlaceholderFrame* placeholderFrame)
-{
-  // Remove the mapping from the frame to its placeholder
-  nsPlaceholderFrame* curFrame = placeholderFrame;
-  do {
-    frameManager->UnregisterPlaceholderFrame(curFrame);
-    curFrame->SetOutOfFlowFrame(nsnull);
-    curFrame = static_cast<nsPlaceholderFrame*>(curFrame->GetNextContinuation());
-  } while (curFrame);
 }
 
 nsresult
@@ -7077,8 +7063,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       nsPlaceholderFrame* placeholderFrame =
         frameManager->GetPlaceholderFrameFor(childFrame);
       NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
-
-      UnregisterPlaceholderChain(frameManager, placeholderFrame);
 
       // Now we remove the out-of-flow frame
       // XXX has to be done first for now: for floats, the block's line list
@@ -10146,8 +10130,6 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   printf("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
          textContent.get(), textFrame, newTextFrame);
 #endif
-
-  UnregisterPlaceholderChain(aFrameManager, placeholderFrame);
 
   // Remove the float frame
   ::DeletingFrameSubtree(aFrameManager, floatFrame);
