@@ -1125,6 +1125,12 @@ cairo_surface_get_fallback_resolution (cairo_surface_t	*surface,
 	*y_pixels_per_inch = surface->y_fallback_resolution;
 }
 
+int
+_cairo_surface_get_text_path_fill_threshold (const cairo_surface_t *surface)
+{
+    return surface->backend->fill == NULL ? 10240 : 256;
+}
+
 cairo_bool_t
 _cairo_surface_has_device_transform (cairo_surface_t *surface)
 {
