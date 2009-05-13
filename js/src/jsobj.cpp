@@ -286,7 +286,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
     JS_ASSERT_IF(!checkForCycles, obj != pobj);
 
     if (slot == JSSLOT_PROTO) {
-        JS_UNLOCK_OBJ(cx, obj);
+        JS_LOCK_OBJ(cx, obj);
         bool ok = !!js_GetMutableScope(cx, obj);
         JS_UNLOCK_OBJ(cx, obj);
         if (!ok)
