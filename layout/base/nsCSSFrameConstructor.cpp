@@ -848,6 +848,11 @@ public:
   nsAbsoluteItems           mAbsoluteItems;
   nsAbsoluteItems           mFloatedItems;
 
+  nsCOMPtr<nsILayoutHistoryState> mFrameState;
+  // These bits will be added to the state bits of any frame we construct
+  // using this state.
+  nsFrameState              mAdditionalStateBits;
+
   // When working with the -moz-transform property, we want to hook
   // the abs-pos and fixed-pos lists together, since transformed
   // elements are fixed-pos containing blocks.  This flag determines
@@ -859,11 +864,6 @@ public:
   // have already created the FrameConstructionItem for the root popupgroup but
   // we have not yet created the relevant frame.
   PRPackedBool              mHavePendingPopupgroup;
-
-  nsCOMPtr<nsILayoutHistoryState> mFrameState;
-  // These bits will be added to the state bits of any frame we construct
-  // using this state.
-  nsFrameState              mAdditionalStateBits; 
 
   // Constructor
   // Use the passed-in history state.
@@ -977,12 +977,12 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
     // See PushAbsoluteContaningBlock below
+    mFrameState(aHistoryState),
+    mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
                         HasTransform()),
-    mHavePendingPopupgroup(PR_FALSE),
-    mFrameState(aHistoryState),
-    mAdditionalStateBits(0)
+    mHavePendingPopupgroup(PR_FALSE)
 {
 #ifdef MOZ_XUL
   nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
@@ -1007,11 +1007,11 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
     // See PushAbsoluteContaningBlock below
+    mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
                         HasTransform()),
-    mHavePendingPopupgroup(PR_FALSE),
-    mAdditionalStateBits(0)
+    mHavePendingPopupgroup(PR_FALSE)
 {
 #ifdef MOZ_XUL
   nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
