@@ -2070,6 +2070,9 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 cairo_private cairo_bool_t
 _cairo_surface_is_opaque (const cairo_surface_t *surface);
 
+cairo_private int
+_cairo_surface_get_text_path_fill_threshold (const cairo_surface_t *surface);
+
 cairo_private void
 _cairo_surface_set_device_scale (cairo_surface_t *surface,
 				 double		  sx,
