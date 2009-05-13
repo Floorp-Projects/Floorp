@@ -91,6 +91,8 @@ using mozilla::TimeStamp;
 // based on current playback rate.
 #define BUFFERING_SECONDS_LOW_WATER_MARK 1
 
+class nsOggStepDecodeEvent;
+
 /* 
   All reading (including seeks) from the nsMediaStream are done on the
   decoding thread. The decoder thread is informed before closing that
@@ -126,6 +128,7 @@ using mozilla::TimeStamp;
 */
 class nsOggDecodeStateMachine : public nsRunnable
 {
+  friend class nsOggStepDecodeEvent;
 public:
   // Object to hold the decoded data from a frame
   class FrameData {
@@ -450,6 +453,10 @@ private:
   // Read/Write from the decode thread only.
   PRInt64 mLastFramePosition;
 
+  // Thread that steps through decoding each frame using liboggplay. Only accessed
+  // via the decode thread.
+  nsCOMPtr<nsIThread> mStepDecodeThread;
+
   // *****
   // The follow fields are accessed by the decoder thread or
   // the main thread.
@@ -495,6 +502,91 @@ private:
   // the event is run. This allows coalescing of these events as they can be
   // produced many times per second. Synchronised via decoder monitor.
   PRPackedBool mPositionChangeQueued;
+
+  // PR_TRUE if the step decode loop thread has finished decoding. It is read
+  // and written from two threads. The decode state machine thread and the
+  // step decode thread. Synchronised via decoder monitor.
+  PRPackedBool mDecodingCompleted;
+
+  // PR_TRUE if the step decode loop has indicated that we need to buffer.
+  // Accessed by the step decode thread and the decode state machine thread.
+  // Synchronised via the decoder monitor.
+  PRPackedBool mBufferExhausted;
+};
+
+// Event that gets posted to the thread that is responsible for decoding
+// Ogg frames. Decodes each frame of an Ogg file. Locking of liboggplay 
+// is managed by liboggplay. The thread is created when the frames first
+// need to be decoded and is shutdown when decoding is not needed (either
+// completed, or seeking).
+class nsOggStepDecodeEvent : public nsRunnable {
+private:
+  // Since the lifetime of this event loop is controlled by the
+  // decode state machine object, it is safe to keep an 
+  // unreferenced counted pointer to it, so we can inform 
+  // it when we've finished decoding.
+  nsOggDecodeStateMachine* mDecodeStateMachine;
+
+  // The lifetime of this player is managed by the decode state
+  // machine thread. This event is created and destroyed before
+  // the mPlayer object itself is deleted. 
+  OggPlay* mPlayer;
+
+public:
+  nsOggStepDecodeEvent(nsOggDecodeStateMachine* machine, OggPlay* player) : 
+    mDecodeStateMachine(machine), mPlayer(player) {}
+  
+  // Return true if we are in a state where the decoder should not be running.
+  PRBool InStopDecodingState() {
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecodeStateMachine->mDecoder->GetMonitor());
+    return 
+      mDecodeStateMachine->mState != nsOggDecodeStateMachine::DECODER_STATE_DECODING &&
+      mDecodeStateMachine->mState != nsOggDecodeStateMachine::DECODER_STATE_BUFFERING;
+  }
+  
+  // This method will block on oggplay_step_decoding when oggplay's
+  // internal buffers are full. It is unblocked by the decode
+  // state machine thread via a call to oggplay_prepare_for_close
+  // during the shutdown protocol. It is unblocked during seeking
+  // by release frames from liboggplay's frame queue.
+  NS_IMETHOD Run() {
+    OggPlayErrorCode r = E_OGGPLAY_TIMEOUT;
+    nsAutoMonitor mon(mDecodeStateMachine->mDecoder->GetMonitor());
+    nsOggDecoder* decoder = mDecodeStateMachine->mDecoder;
+
+    do {
+      if (mDecodeStateMachine->mBufferExhausted) {
+        mon.Wait();
+        if (InStopDecodingState())
+          break;
+      }
+      else {
+        PRInt64 initialDownloadPosition =
+          decoder->mReader->Stream()->GetCachedDataEnd(decoder->mDecoderPosition);
+
+        mon.Exit();
+        r = oggplay_step_decoding(mPlayer);
+        mon.Enter();
+
+        if (InStopDecodingState())
+          break;
+        
+        // Check whether decoding the last frame required us to read data
+        // that wasn't available at the start of the frame. That means
+        // we should probably start buffering.
+        if (decoder->mDecoderPosition > initialDownloadPosition) {
+          mDecodeStateMachine->mBufferExhausted = PR_TRUE;
+        }
+      }
+    } while (!mDecodeStateMachine->mDecodingCompleted &&
+             !InStopDecodingState() &&
+             (r == E_OGGPLAY_TIMEOUT ||
+              r == E_OGGPLAY_USER_INTERRUPT ||
+              r == E_OGGPLAY_CONTINUE));
+
+    mDecodeStateMachine->mDecodingCompleted = PR_TRUE;
+    return NS_OK;
+  }
 };
 
 nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
@@ -520,7 +612,9 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mVolume(1.0),
   mDuration(-1),
   mSeekable(PR_TRUE),
-  mPositionChangeQueued(PR_FALSE)
+  mPositionChangeQueued(PR_FALSE),
+  mDecodingCompleted(PR_FALSE),
+  mBufferExhausted(PR_FALSE)
 {
 }
 
@@ -664,39 +758,41 @@ void nsOggDecodeStateMachine::PlayFrame() {
 
     if (!mDecodedFrames.IsEmpty()) {
       FrameData* frame = mDecodedFrames.Peek();
-      TimeStamp now = TimeStamp::Now();
       if (frame->mState == OGGPLAY_STREAM_JUST_SEEKED) {
         // After returning from a seek all mTime members of
         // FrameData start again from a time position of 0.
         // Reset the play start time.
-        mPlayStartTime = now;
+        mPlayStartTime = TimeStamp::Now();
         mPauseDuration = TimeDuration(0);
         frame->mState = OGGPLAY_STREAM_INITIALISED;
       }
 
-      double time = (now - mPlayStartTime - mPauseDuration).ToSeconds();
-      if (time >= frame->mTime) {
-        // Audio for the current frame is played, but video for the next frame
-        // is displayed, to account for lag from the time the audio is written
-        // to when it is played. This will go away when we move to a/v sync
-        // using the audio hardware clock.
-        PlayAudio(frame);
-        mDecodedFrames.Pop();
-        PlayVideo(mDecodedFrames.IsEmpty() ? frame : mDecodedFrames.Peek());
-        mDecoder->mPlaybackPosition = frame->mEndStreamPosition;
-        UpdatePlaybackPosition(frame->mDecodedFrameTime);
-        delete frame;
-      }
-      else {
-        // If the queue of decoded frame is full then we wait for the
-        // approximate time until the next frame. 
-        if (mDecodedFrames.IsFull()) {
+      double time;
+      for (;;) {
+        time = (TimeStamp::Now() - mPlayStartTime - mPauseDuration).ToSeconds();
+        if (time < frame->mTime) {
           mon.Wait(PR_MillisecondsToInterval(PRInt64((frame->mTime - time)*1000)));
-          if (mState == DECODER_STATE_SHUTDOWN) {
+          if (mState == DECODER_STATE_SHUTDOWN)
             return;
-          }
+          continue;
         }
+        break;
       }
+
+      mDecodedFrames.Pop();
+
+      // Skip frames up to the one we should be showing.
+      while (!mDecodedFrames.IsEmpty() && time >= mDecodedFrames.Peek()->mTime) {
+        LOG(PR_LOG_DEBUG, ("Skipping frame time %f with audio at time %f", mDecodedFrames.Peek()->mTime, time));
+        delete frame;
+        frame = mDecodedFrames.Peek();
+        mDecodedFrames.Pop();
+      }
+      PlayAudio(frame);
+      PlayVideo(frame);
+      mDecoder->mPlaybackPosition = frame->mEndStreamPosition;
+      UpdatePlaybackPosition(frame->mDecodedFrameTime);
+      delete frame;
     }
   }
   else {
@@ -704,7 +800,7 @@ void nsOggDecodeStateMachine::PlayFrame() {
       StopPlayback();
     }
 
-    if (mDecodedFrames.IsFull() && mState == DECODER_STATE_DECODING) {
+    if (mState == DECODER_STATE_DECODING) {
       mon.Wait();
       if (mState == DECODER_STATE_SHUTDOWN) {
         return;
@@ -876,12 +972,29 @@ void nsOggDecodeStateMachine::Shutdown()
   // mPlayer object cannot decode any more frames. Once we've entered
   // the shutdown state here there's no going back.
   nsAutoMonitor mon(mDecoder->GetMonitor());
-  if (mPlayer) {
-    oggplay_prepare_for_close(mPlayer);
-  }
+
+  // Change state before issuing shutdown request to threads so those
+  // threads can start exiting cleanly during the Shutdown call.
   LOG(PR_LOG_DEBUG, ("Changed state to SHUTDOWN"));
   mState = DECODER_STATE_SHUTDOWN;
   mon.NotifyAll();
+
+  if (mPlayer) {
+    // This will unblock the step decode loop in the
+    // StepDecode thread. The thread can then be safely
+    // shutdown.
+    mBufferExhausted = PR_FALSE;
+    oggplay_prepare_for_close(mPlayer);
+  }
+  if (mStepDecodeThread) {
+    // nsOggDecodeStateMachine::Shutdown is called at a safe
+    // time to spin the event loop. This makes the following call
+    // also safe.
+    mon.Exit();
+    mStepDecodeThread->Shutdown();
+    mon.Enter();
+    mStepDecodeThread = nsnull;
+  }
 }
 
 void nsOggDecodeStateMachine::Decode()
@@ -892,6 +1005,7 @@ void nsOggDecodeStateMachine::Decode()
   if (mState == DECODER_STATE_BUFFERING) {
     LOG(PR_LOG_DEBUG, ("Changed state from BUFFERING to DECODING"));
     mState = DECODER_STATE_DECODING;
+    mon.NotifyAll();
   }
 }
 
@@ -961,37 +1075,45 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_DECODING:
       {
-        PRBool bufferExhausted = PR_FALSE;
-
-        if (!mDecodedFrames.IsFull()) {
-          PRInt64 initialDownloadPosition =
-            mDecoder->mReader->Stream()->GetCachedDataEnd(mDecoder->mDecoderPosition);
-
-          mon.Exit();
-          OggPlayErrorCode r = DecodeFrame();
-          mon.Enter();
-
-          // Check whether decoding that frame required us to read data
-          // that wasn't available at the start of the frame. That means
-          // we should probably start buffering.
-          bufferExhausted =
-            mDecoder->mDecoderPosition > initialDownloadPosition;
-
-          if (mState != DECODER_STATE_DECODING)
+        // If there is no step decode thread,  start it. It may not be running
+        // due to us having completed and then restarted playback, seeking, 
+        // or if this is the initial play.
+        if (!mDecodingCompleted && !mStepDecodeThread) {
+          nsresult rv = NS_NewThread(getter_AddRefs(mStepDecodeThread));
+          if (NS_FAILED(rv)) {
+            mState = DECODER_STATE_SHUTDOWN;
             continue;
+          }
 
-          // Get the decoded frame and store it in our queue of decoded frames
+          mBufferExhausted = PR_FALSE;
+          mDecodingCompleted = PR_FALSE;
+          nsCOMPtr<nsIRunnable> event = new nsOggStepDecodeEvent(this, mPlayer);
+          mStepDecodeThread->Dispatch(event, NS_DISPATCH_NORMAL);
+        }
+
+        // Get the decoded frame and store it in our queue of decoded frames
+        while (mDecodedFrames.IsEmpty()) {
+          mon.Wait(PR_MillisecondsToInterval(PRInt64(mCallbackPeriod*500)));
+          if (mState != DECODER_STATE_DECODING)
+            break;
           FrameData* frame = NextFrame();
           if (frame) {
             mDecodedFrames.Push(frame);
           }
+        }
 
-          if (r != E_OGGPLAY_CONTINUE &&
-              r != E_OGGPLAY_USER_INTERRUPT &&
-              r != E_OGGPLAY_TIMEOUT)  {
-            LOG(PR_LOG_DEBUG, ("Changed state from DECODING to COMPLETED"));
-            mState = DECODER_STATE_COMPLETED;
-          }
+        if (mState != DECODER_STATE_DECODING)
+          continue;
+
+        if (mDecodingCompleted) {
+          LOG(PR_LOG_DEBUG, ("Changed state from DECODING to COMPLETED"));
+          mState = DECODER_STATE_COMPLETED;
+          mStepDecodeThread->Shutdown();
+          mStepDecodeThread = nsnull;
+          mDecodingCompleted = PR_FALSE;
+          mBufferExhausted = PR_FALSE;
+          mon.NotifyAll();
+          continue;
         }
 
         // Show at least the first frame if we're not playing
@@ -1000,7 +1122,7 @@ nsresult nsOggDecodeStateMachine::Run()
           PlayVideo(mDecodedFrames.Peek());
         }
 
-        if (bufferExhausted && mState == DECODER_STATE_DECODING &&
+        if (mBufferExhausted && mState == DECODER_STATE_DECODING &&
             mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING &&
             !mDecoder->mReader->Stream()->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
             !mDecoder->mReader->Stream()->IsSuspendedByCache()) {
@@ -1035,6 +1157,10 @@ nsresult nsOggDecodeStateMachine::Run()
           }
           LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
         } else {
+          if (mBufferExhausted) {
+            mBufferExhausted = PR_FALSE;
+            mon.NotifyAll();
+          }
           PlayFrame();
         }
       }
@@ -1052,6 +1178,24 @@ nsresult nsOggDecodeStateMachine::Run()
         // during the time when we didn't have the lock.
         float seekTime = mSeekTime;
         mDecoder->StopProgressUpdates();
+
+        if (mStepDecodeThread) {
+          mDecodingCompleted = PR_TRUE;
+          mBufferExhausted = PR_FALSE;
+          mon.NotifyAll();
+
+          // Flush liboggplay frame buffers so that we break out of
+          // of the decoding loop - this ensures the shutdown call
+          // below doesn't block.
+          delete NextFrame();
+
+          mon.Exit();
+          mStepDecodeThread->Shutdown();
+          mon.Enter();
+          mDecodingCompleted = PR_FALSE;
+          mStepDecodeThread = nsnull;
+        }
+
         mon.Exit();
         nsCOMPtr<nsIRunnable> startEvent = 
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStarted);
@@ -1087,7 +1231,6 @@ nsresult nsOggDecodeStateMachine::Run()
           r = DecodeFrame();
           mon.Enter();
         } while (mState != DECODER_STATE_SHUTDOWN && r == E_OGGPLAY_TIMEOUT);
-
         if (mState == DECODER_STATE_SHUTDOWN)
           continue;
 
@@ -1108,6 +1251,7 @@ nsresult nsOggDecodeStateMachine::Run()
         if (mState == DECODER_STATE_SEEKING && mSeekTime == seekTime) {
           LOG(PR_LOG_DEBUG, ("Changed state from SEEKING (to %f) to DECODING", seekTime));
           mState = DECODER_STATE_DECODING;
+          mon.NotifyAll();
         }
       }
       break;
@@ -1132,6 +1276,9 @@ nsresult nsOggDecodeStateMachine::Run()
         }
 
         if (mState != DECODER_STATE_BUFFERING) {
+          mBufferExhausted = PR_FALSE;
+          // Notify to allow blocked decoder thread to continue
+          mon.NotifyAll();
           nsCOMPtr<nsIRunnable> event = 
             NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
@@ -1147,6 +1294,17 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_COMPLETED:
       {
+        // Get all the remaining decoded frames in the liboggplay buffer and
+        // place them in the frame queue.
+        FrameData* frame;
+        do {
+          frame = NextFrame();
+          if (frame) {
+            mDecodedFrames.Push(frame);
+          }
+        } while (frame);
+
+        // Play the remaining frames in the frame queue
         while (mState == DECODER_STATE_COMPLETED &&
                !mDecodedFrames.IsEmpty()) {
           PlayFrame();
