@@ -21,4 +21,12 @@
     </content>
   </binding>
 
+  <binding id="third">
+    <content>
+      <xul:description anonid="label" value="It's a " />
+      <xul:description anonid="label2" value="cool button" />
+      <xul:button anonid="button" aria-labelledby="label label2"
+                  value="button" />
+    </content>
+  </binding>
 </bindings>

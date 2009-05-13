@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.css"
+<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/name.css"
                  type="text/css"?>
 
 
@@ -19,7 +19,8 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/role.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.js"></script>
+          src="chrome://mochikit/content/a11y/accessible/name.js"></script>
+
   <script type="application/javascript">
   <![CDATA[
     function doTest()
@@ -47,6 +48,10 @@
       testName("rememberHistoryDays", "Remember 3 days");
       testName("historyDays", "Remember 3 days");
       testName("rememberAfter", null); // XUL labels doesn't allow name from subtree
+
+      // Anonymous content (see name.xbl#third)
+      var anonBtn = getAccessible("labelledby_box_anon").lastChild;
+      testName(anonBtn, "It's a cool button");
 
       //////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
@@ -171,6 +176,8 @@
   ]]>
   </script>
 
+  <hbox flex="1" style="overflow: auto;">
+
   <body xmlns="http://www.w3.org/1999/xhtml">
     <a target="_blank"
        href="https://bugzilla.mozilla.org/show_bug.cgi?id=444279"
@@ -183,6 +190,8 @@
     <pre id="test">
     </pre>
   </body>
+
+  <vbox flex="1">
 
   <!-- aria-label, simple label -->
   <button id="btn_simple_aria_label" aria-label="I am a button"/>
@@ -200,6 +209,9 @@
   <description id="labelledby_text2">text2</description>
   <button id="btn_labelledby_texts"
           aria-labelledby="labelledby_text1 labelledby_text2"/>
+
+  <!-- aria-labelledby, multiple relations -->
+  <box class="third" id="labelledby_box_anon" role="group" />
 
   <!-- trick aria-labelledby -->
   <checkbox id="rememberHistoryDays"
@@ -314,5 +326,7 @@
     </hbox>
   </vbox>
 
+  </vbox>
+  </hbox>
 </window>
 

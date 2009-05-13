@@ -749,17 +749,21 @@ nsCoreUtils::GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
                                      nsIArray **aRefElements)
 {
   *aRefElements = nsnull;
-  
+
   nsAutoString ids;
   if (!aContent->GetAttr(kNameSpaceID_None, aAttr, ids))
     return;
-  
+
   ids.CompressWhitespace(PR_TRUE, PR_TRUE);
-  
+
   nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(aContent->GetOwnerDoc());
   NS_ASSERTION(document, "The given node is not in document!");
   if (!document)
     return;
+
+  nsCOMPtr<nsIDOMDocumentXBL> xblDocument;
+  if (aContent->IsInAnonymousSubtree())
+    xblDocument = do_QueryInterface(document);
 
   nsCOMPtr<nsIMutableArray> refElms = do_CreateInstance(NS_ARRAY_CONTRACTID);
 
@@ -777,8 +781,20 @@ nsCoreUtils::GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
       ids.Cut(0, idLength + 1);
     }
 
+    // If content is anonymous subtree then use "anonid" attribute to get
+    // elements, otherwise search elements in DOM by ID attribute.
     nsCOMPtr<nsIDOMElement> refElement;
-    document->GetElementById(id, getter_AddRefs(refElement));
+    if (xblDocument) {
+      nsCOMPtr<nsIDOMElement> elm =
+        do_QueryInterface(aContent->GetBindingParent());
+      xblDocument->GetAnonymousElementByAttribute(elm,
+                                                  NS_LITERAL_STRING("anonid"),
+                                                  id,
+                                                  getter_AddRefs(refElement));
+    } else {
+      document->GetElementById(id, getter_AddRefs(refElement));
+    }
+
     if (!refElement)
       continue;
 
