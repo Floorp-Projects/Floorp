@@ -588,6 +588,9 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   rv = cols->GetKeyColumn(getter_AddRefs(col));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!col)
+    return NS_OK;
+
   PRInt32 colIdx = 0;
   rv = col->GetIndex(&colIdx);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -675,6 +678,9 @@ nsXULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
   nsCOMPtr<nsITreeColumn> col;
   rv = treeColumns->GetKeyColumn(getter_AddRefs(col));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!col)
+    return NS_OK;
 
   PRInt32 colIdx = 0;
   rv = col->GetIndex(&colIdx);
