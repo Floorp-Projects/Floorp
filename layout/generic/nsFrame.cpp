@@ -452,10 +452,14 @@ nsFrame::Destroy()
   nsPresContext* presContext = PresContext();
 
   nsIPresShell *shell = presContext->GetPresShell();
-  NS_ASSERTION(!(mState & NS_FRAME_OUT_OF_FLOW) ||
-               !shell->FrameManager()->GetPlaceholderFrameFor(this),
-               "Deleting out of flow without tearing down placeholder "
-               "relationship; see comments in nsFrame.h");
+  if (mState & NS_FRAME_OUT_OF_FLOW) {
+    nsPlaceholderFrame* placeholder =
+      shell->FrameManager()->GetPlaceholderFrameFor(this);
+    if (placeholder) {
+      shell->FrameManager()->UnregisterPlaceholderFrame(placeholder);
+      placeholder->SetOutOfFlowFrame(nsnull);
+    }
+  }
 
   shell->NotifyDestroyingFrame(this);
 
