@@ -223,6 +223,16 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // parent's reflow state
   const nsHTMLReflowState* parentReflowState;
 
+  // pointer to the float manager associated with this area
+  nsFloatManager* mFloatManager;
+
+  // LineLayout object (only for inline reflow; set to NULL otherwise)
+  nsLineLayout*    mLineLayout;
+
+  // The appropriate reflow state for the containing block (for
+  // percentage widths, etc.) of this reflow state's frame.
+  const nsHTMLReflowState *mCBReflowState;
+
   // the available width in which to reflow the frame. The space
   // represents the amount of room for the frame's border, padding,
   // and content area (not the margin area. The parent frame deals
@@ -244,9 +254,6 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // initialized by the Init method below.
   nsCSSFrameType   mFrameType;
 
-  // pointer to the float manager associated with this area
-  nsFloatManager* mFloatManager;
-
   // The amount the in-flow position of the block is moving vertically relative
   // to its previous in-flow position (i.e. the amount the line containing the
   // block is moving).
@@ -256,13 +263,6 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // of the potential impact of a float
   // This takes on an arbitrary value the first time a block is reflowed
   nscoord mBlockDelta;
-
-  // LineLayout object (only for inline reflow; set to NULL otherwise)
-  nsLineLayout*    mLineLayout;
-
-  // The appropriate reflow state for the containing block (for
-  // percentage widths, etc.) of this reflow state's frame.
-  const nsHTMLReflowState *mCBReflowState;
 
 private:
   // The computed width specifies the frame's content area width, and it does
