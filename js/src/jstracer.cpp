@@ -5291,15 +5291,16 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
+            VMFragment* frag = *f;
             /* Disable future use of any script-associated VMFragment.*/
-            if (JS_UPTRDIFF((*f)->ip, script->code) < script->length) {
+            if (JS_UPTRDIFF(frag->ip, script->code) < script->length) {
+                JS_ASSERT(frag->root == frag);
                 debug_only_v(printf("Disconnecting VMFragment %p "
                                     "with ip %p, in range [%p,%p).\n",
-                                    (void*)(*f), (*f)->ip, script->code,
+                                    (void*)frag, frag->ip, script->code,
                                     script->code + script->length));
-                VMFragment* next = (*f)->next;
-                if (tm->fragmento)
-                    tm->fragmento->clearFragment(*f);
+                VMFragment* next = frag->next;
+                js_TrashTree(cx, frag);
                 *f = next;
             } else {
                 f = &((*f)->next);
