@@ -179,13 +179,12 @@ struct InlineBackgroundData
 
 protected:
   nsIFrame*     mFrame;
+  nsBlockFrame* mBlockFrame;
+  nsRect        mBoundingBox;
   nscoord       mContinuationPoint;
   nscoord       mUnbrokenWidth;
-  nsRect        mBoundingBox;
-
-  PRBool        mBidiEnabled;
-  nsBlockFrame* mBlockFrame;
   nscoord       mLineContinuationPoint;
+  PRBool        mBidiEnabled;
   
   void SetFrame(nsIFrame* aFrame)
   {

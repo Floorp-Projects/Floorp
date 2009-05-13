@@ -107,8 +107,7 @@ struct nsCSSBorderRenderer {
                       PRIntn aSkipSides,
                       nscolor aBackgroundColor);
 
-  // core app units per pixel
-  PRInt32 mAUPP;
+  gfxCornerSizes mBorderCornerDimensions;
 
   // destination context
   gfxContext* mContext;
@@ -126,6 +125,9 @@ struct nsCSSBorderRenderer {
   const nscolor* mBorderColors;
   nsBorderColors* const* mCompositeColors;
 
+  // core app units per pixel
+  PRInt32 mAUPP;
+
   // misc -- which sides to skip, the background color
   PRIntn mSkipSides;
   nscolor mBackgroundColor;
@@ -133,8 +135,6 @@ struct nsCSSBorderRenderer {
   // calculated values
   PRPackedBool mOneUnitBorder;
   PRPackedBool mNoBorderRadius;
-
-  gfxCornerSizes mBorderCornerDimensions;
 
   // For all the sides in the bitmask, would they be rendered
   // in an identical color and style?
