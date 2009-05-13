@@ -31,8 +31,16 @@ addLoadEvent(function() {
 });
 
 function doTheTest() {
+  // do a layout flush
+  var rect = $("i").getBoundingClientRect();
+  // And do the rest of it later
+  SimpleTest.executeSoon(reallyDoTheTest);
+}
+
+function reallyDoTheTest() {
   var rect = $("i").getBoundingClientRect();
   var rect2 = $("i").contentDocument.documentElement.getBoundingClientRect();
+
   // We want coords relative to the iframe, so subtract off rect2.left/top.
   // 7px is a guess to get us from the bottom of the iframe into the scrollbar
   // groove for the horizontal scrollbar on the bottom.
@@ -44,6 +52,13 @@ function doTheTest() {
 };
 
 function checkScroll() {
+  // do a layout flush
+  var rect = $("i").getBoundingClientRect();
+  // And do the rest of it later
+  SimpleTest.executeSoon(reallyCheckScroll);
+}
+
+function reallyCheckScroll() {
   var rect = $("i").getBoundingClientRect();
   var rect2 = $("i").contentDocument.documentElement.getBoundingClientRect();
   isnot($("i").contentWindow.scrollX, 0, "Clicking scrollbar should scroll");
