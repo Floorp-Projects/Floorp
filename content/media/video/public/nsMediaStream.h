@@ -44,6 +44,8 @@
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "prlock.h"
 #include "nsMediaCache.h"
 #include "nsTimeStamp.h"
@@ -149,8 +151,6 @@ public:
   }
 
   // The following can be called on the main thread only:
-  // Get the current principal for the channel
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   // Get the decoder
   nsMediaDecoder* Decoder() { return mDecoder; }
   // Close the stream, stop any listeners, channels, etc.
@@ -161,6 +161,8 @@ public:
   virtual void Suspend() = 0;
   // Resume any downloads that have been suspended.
   virtual void Resume() = 0;
+  // Get the current principal for the channel
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -317,6 +319,7 @@ public:
   virtual nsresult Close();
   virtual void     Suspend();
   virtual void     Resume();
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   // Return PR_TRUE if the stream has been closed.
   PRBool IsClosed() const { return mCacheStream.IsClosed(); }
 
@@ -337,13 +340,18 @@ public:
   virtual PRBool  IsSuspendedByCache();
 
 protected:
-  class Listener : public nsIStreamListener {
+  class Listener : public nsIStreamListener,
+                   public nsIInterfaceRequestor,
+                   public nsIChannelEventSink
+  {
   public:
     Listener(nsMediaChannelStream* aStream) : mStream(aStream) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSICHANNELEVENTSINK
+    NS_DECL_NSIINTERFACEREQUESTOR
 
     void Revoke() { mStream = nsnull; }
 
@@ -358,10 +366,12 @@ protected:
   nsresult OnDataAvailable(nsIRequest* aRequest,
                            nsIInputStream* aStream,
                            PRUint32 aCount);
+  nsresult OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew, PRUint32 aFlags);
 
   // Opens the channel, using an HTTP byte range request to start at aOffset
   // if possible. Main thread only.
   nsresult OpenChannel(nsIStreamListener** aStreamListener, PRInt64 aOffset);
+  void SetupChannelHeaders();
   // Closes the channel. Main thread only.
   void CloseChannel();
 
@@ -373,9 +383,9 @@ protected:
                                       PRUint32 *aWriteCount);
 
   // Main thread access only
+  PRInt64            mLastSeekOffset;
   nsRefPtr<Listener> mListener;
   PRUint32           mSuspendCount;
-  PRPackedBool       mSeeking;
 
   // Any thread access
   nsMediaCacheStream mCacheStream;
