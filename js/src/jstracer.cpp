@@ -367,7 +367,7 @@ Tracker::set(const void* v, LIns* i)
     p->map[(jsuword(v) & PAGEMASK) >> 2] = i;
 }
 
-static inline jsint argSlots(JSStackFrame* fp)
+static inline jsuint argSlots(JSStackFrame* fp)
 {
     return JS_MAX(fp->argc, fp->fun->nargs);
 }
@@ -1238,7 +1238,7 @@ TypeMap::captureTypes(JSContext* cx, SlotList& slots, unsigned callDepth)
         if ((type == JSVAL_INT) && oracle.isStackSlotUndemotable(cx, unsigned(m - map)))
             type = JSVAL_DOUBLE;
         JS_ASSERT(type != JSVAL_BOXED);
-        debug_only_v(printf("capture stack type %s%d: %d=%c vp=%p v=%x\n", vpname, vpnum, type, typeChar[type], vp, (uint32) *vp);)
+        debug_only_v(printf("capture stack type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type]);)
         JS_ASSERT(uintptr_t(m - map) < length());
         *m++ = type;
     );
@@ -1836,6 +1836,47 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     );
     debug_only_v(printf("\n");)
     return mp - mp_base;
+}
+
+/*
+ * Builtin to get an upvar on trace. See js_GetUpvar for the meaning
+ * of the first three arguments. The value of the upvar is stored in
+ * *result as an unboxed native. The return value is the typemap type.
+ */
+uint32 JS_FASTCALL
+js_GetUpvarOnTrace(JSContext *cx, uint32 level, uint32 cookie, double* result)
+{
+    uintN skip = UPVAR_FRAME_SKIP(cookie);
+    InterpState* state = cx->interpState;
+    uintN callDepth = state->rp - state->callstackBase;
+
+    /*
+     * If we are skipping past all frames that are part of active traces,
+     * then we simply get the value from the interpreter state.
+     */
+    if (skip > callDepth) {
+        jsval v = js_GetUpvar(cx, level, cookie);
+        uint8 type = getCoercedType(v);
+        ValueToNative(cx, v, type, result);
+        return type;
+    }
+
+    /*
+     * The value we need is logically in a stack frame that is part of
+     * an active trace. We reconstruct the value we need from the tracer
+     * stack records.
+     */
+    uintN frameIndex = callDepth - skip; // pos of target frame in rp stack
+    uintN nativeStackFramePos = 0; // pos of target stack frame in sp stack
+    for (uintN i = 0; i < frameIndex; ++i)
+        nativeStackFramePos += state->callstackBase[i]->s.spdist;
+    FrameInfo* fi = state->callstackBase[frameIndex];
+    uint8* typemap = (uint8*) (fi+1);
+
+    uintN slot = UPVAR_FRAME_SLOT(cookie);
+    slot = slot == CALLEE_UPVAR_SLOT ? 0 : slot + 2;
+    *result = state->stackBase[nativeStackFramePos + slot];
+    return typemap[slot];
 }
 
 /**
@@ -8282,6 +8323,8 @@ TraceRecorder::record_JSOP_CALLNAME()
     return JSRS_CONTINUE;
 }
 
+JS_DEFINE_CALLINFO_4(extern, UINT32, js_GetUpvarOnTrace, CONTEXT, UINT32, UINT32, DOUBLEPTR, 0, 0)
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_GETUPVAR()
 {
@@ -8291,26 +8334,60 @@ TraceRecorder::record_JSOP_GETUPVAR()
     JSUpvarArray* uva = JS_SCRIPT_UPVARS(script);
     JS_ASSERT(index < uva->length);
 
-    uintN skip = UPVAR_FRAME_SKIP(uva->vector[index]);
-    if (skip > callDepth)
-        ABORT_TRACE("upvar out of reach");
-
-    JSStackFrame* fp2 = cx->display[script->staticLevel - skip];
-    JS_ASSERT(fp2->script);
-
-    uintN slot = UPVAR_FRAME_SLOT(uva->vector[index]);
-    jsval* vp;
-    if (!fp2->fun) {
-        vp = fp2->slots + fp2->script->nfixed;
-    } else if (slot < fp2->fun->nargs) {
-        vp = fp2->argv;
-    } else {
-        slot -= fp2->fun->nargs;
-        JS_ASSERT(slot < fp2->script->nslots);
-        vp = fp2->slots;
+    /*
+     * Try to find the upvar in the current trace's tracker.
+     */
+    jsval& v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+    LIns* upvar_ins = get(&v);
+    if (upvar_ins) {
+        stack(0, upvar_ins);
+        return JSRS_CONTINUE;
     }
 
-    stack(0, get(&vp[slot]));
+    /*
+     * The upvar is not in the current trace, so get the upvar value 
+     * exactly as the interpreter does and unbox.
+     */
+    LIns* outp = lir->insAlloc(sizeof(double));
+    LIns* args[] = { 
+        outp,
+        lir->insImm(uva->vector[index]), 
+        lir->insImm(script->staticLevel), 
+        cx_ins 
+    };
+    const CallInfo* ci = &js_GetUpvarOnTrace_ci;
+    LIns* call_ins = lir->insCall(ci, args);
+    uint8 type = getCoercedType(v);
+    guard(true,
+          addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
+                  "guard(type-stable upvar)"),
+          BRANCH_EXIT);
+
+    LOpcode loadOp;
+    switch (type) {
+      case JSVAL_DOUBLE:
+        loadOp = LIR_ldq;
+        break;
+      case JSVAL_OBJECT:
+      case JSVAL_STRING:
+      case JSVAL_TFUN:
+      case JSVAL_TNULL:
+        loadOp = LIR_ldp;
+        break;
+      case JSVAL_INT:
+      case JSVAL_BOOLEAN:
+        loadOp = LIR_ld;
+        break;
+      case JSVAL_BOXED:
+      default:
+        JS_NOT_REACHED("found boxed type in an upvar type map entry");
+        return JSRS_STOP;
+    }
+
+    LIns* result = lir->insLoad(loadOp, outp, lir->insImm(0));
+    if (type == JSVAL_INT)
+        result = lir->ins1(LIR_i2f, result);
+    stack(0, result);
     return JSRS_CONTINUE;
 }
 
@@ -10527,12 +10604,19 @@ TraceRecorder::record_JSOP_NEWARRAY()
     guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
 
     LIns* dslots_ins = NULL;
+    uint32 count = 0;
     for (uint32 i = 0; i < len; i++) {
         jsval& v = stackval(int(i) - int(len));
+        if (v != JSVAL_HOLE)
+            count++;
         LIns* elt_ins = get(&v);
         box_jsval(v, elt_ins);
         stobj_set_dslot(v_ins, i, dslots_ins, elt_ins, "set_array_elt");
     }
+
+    LIns* dummy = NULL;
+    if (count > 0)
+        stobj_set_slot(v_ins, JSSLOT_ARRAY_COUNT, dummy, INS_CONST(count));
 
     stack(-int(len), v_ins);
     return JSRS_CONTINUE;
