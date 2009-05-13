@@ -4180,8 +4180,8 @@ function testBug458838() {
 testBug458838.expected = 10;
 testBug458838.jitstats = {
   recorderStarted: 1,
-  recorderAborted: 1,
-  traceCompleted: 0
+  recorderAborted: 0,
+  traceCompleted: 1
 };
 test(testBug458838);
 
@@ -5199,6 +5199,19 @@ function testConstructorBail() {
     for (let i = 0; i < 5; ++i) new Number(/x/);
 }
 test(testConstructorBail);
+
+function testNewArrayCount()
+{
+  var a = [];
+  for (var i = 0; i < 5; i++)
+    a = [0];
+  assertEq(a.__count__, 1);
+  for (var i = 0; i < 5; i++)
+    a = [0, , 2];
+  assertEq(a.__count__, 2);
+}
+test(testNewArrayCount);
+
 
 /*****************************************************************************
  *                                                                           *
