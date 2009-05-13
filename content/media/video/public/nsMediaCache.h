@@ -41,6 +41,8 @@
 
 #include "nsTArray.h"
 #include "nsAutoLock.h"
+#include "nsIPrincipal.h"
+#include "nsCOMPtr.h"
 
 /**
  * Media applications want fast, "on demand" random access to media data,
@@ -186,6 +188,13 @@
  * we must not acquire any nsMediaDecoder locks or nsMediaStream locks
  * while holding the nsMediaCache lock. But it's OK to hold those locks
  * and then get the nsMediaCache lock.
+ * 
+ * nsMediaCache associates a principal with each stream. CacheClientSeek
+ * can trigger new HTTP requests; due to redirects to other domains,
+ * each HTTP load can return data with a different principal. This
+ * principal must be passed to NotifyDataReceived, and nsMediaCache
+ * will detect when different principals are associated with data in the
+ * same stream, and replace them with a null principal.
  */
 class nsMediaCache;
 // defined in nsMediaStream.h
@@ -215,7 +224,8 @@ public:
       mStreamOffset(0), mStreamLength(-1), mPlaybackBytesPerSecond(10000),
       mPinCount(0), mCurrentMode(MODE_PLAYBACK), mClosed(PR_FALSE),
       mIsSeekable(PR_FALSE), mCacheSuspended(PR_FALSE),
-      mMetadataInPartialBlockBuffer(PR_FALSE) {}
+      mMetadataInPartialBlockBuffer(PR_FALSE),
+      mUsingNullPrincipal(PR_FALSE) {}
   ~nsMediaCacheStream();
 
   // Set up this stream with the cache. Can fail on OOM. Must be called
@@ -236,6 +246,8 @@ public:
   void Close();
   // This returns true when the stream has been closed
   PRBool IsClosed() const { return mClosed; }
+  // Get the principal for this stream.
+  nsIPrincipal* GetCurrentPrincipal() { return mPrincipal; }
 
   // These callbacks are called on the main thread by the client
   // when data has been received via the channel.
@@ -263,7 +275,9 @@ public:
   // the starting offset is known via NotifyDataStarted or because
   // the cache requested the offset in
   // nsMediaChannelStream::CacheClientSeek, or because it defaulted to 0.
-  void NotifyDataReceived(PRInt64 aSize, const char* aData);
+  // We pass in the principal that was used to load this data.
+  void NotifyDataReceived(PRInt64 aSize, const char* aData,
+                          nsIPrincipal* aPrincipal);
   // Notifies the cache that the channel has closed with the given status.
   void NotifyDataEnded(nsresult aStatus);
 
@@ -363,9 +377,12 @@ private:
   // This is used to NotifyAll to wake up threads that might be
   // blocked on reading from this stream.
   void CloseInternal(nsAutoMonitor* aMonitor);
+  // Update mPrincipal given that data has been received from aPrincipal
+  void UpdatePrincipal(nsIPrincipal* aPrincipal);
 
-  // This field is main-thread-only.
-  nsMediaChannelStream* mClient;
+  // These fields are main-thread-only.
+  nsMediaChannelStream*  mClient;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // All other fields are all protected by the cache's monitor and
   // can be accessed by by any thread.
@@ -401,6 +418,9 @@ private:
   PRPackedBool      mCacheSuspended;
   // true if some data in mPartialBlockBuffer has been read as metadata
   PRPackedBool      mMetadataInPartialBlockBuffer;
+  // true if mPrincipal is a null principal because we saw data from
+  // multiple origins
+  PRPackedBool      mUsingNullPrincipal;
 
   // Data received for the block containing mChannelOffset. Data needs
   // to wait here so we can write back a complete block. The first
