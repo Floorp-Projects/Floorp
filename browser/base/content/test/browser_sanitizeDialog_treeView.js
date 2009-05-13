@@ -111,7 +111,7 @@ var gAllTests = [
                      wh.getRowCount() - 1);
 
       // Cancel the dialog, make sure history visits are not cleared.
-      wh.checkPrefCheckbox("history-downloads-checkbox", false);
+      wh.checkPrefCheckbox("history", false);
 
       wh.cancelDialog();
       ensureHistoryClearedState(uris, false);
@@ -157,7 +157,7 @@ var gAllTests = [
 
       // Accept the dialog, make sure history visits and downloads within one
       // hour are cleared.
-      wh.checkPrefCheckbox("history-downloads-checkbox", true);
+      wh.checkPrefCheckbox("history", true);
       wh.acceptDialog();
       ensureHistoryClearedState(uris, true);
       ensureDownloadsClearedState(downloadIDs, true);
@@ -200,8 +200,8 @@ var gAllTests = [
                      "duration",
                      wh.getRowCount() - 1);
 
-      // Remove only form entries, leave history and downloads.
-      wh.checkPrefCheckbox("history-downloads-checkbox", false);
+      // Remove only form entries, leave history (including downloads).
+      wh.checkPrefCheckbox("history", false);
       wh.checkPrefCheckbox("formdata", true);
       wh.acceptDialog();
 
@@ -232,7 +232,7 @@ var gAllTests = [
     openWindow(function (aWin) {
       let wh = new WindowHelper(aWin);
       wh.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-      wh.checkPrefCheckbox("history-downloads-checkbox", true);
+      wh.checkPrefCheckbox("history", true);
       wh.acceptDialog();
       ensureHistoryClearedState(uris, true);
     });
@@ -304,22 +304,17 @@ WindowHelper.prototype = {
    * form history, etc.).
    *
    * @param aPrefName
-   *        Either the ID of the checkbox or the final portion of its
-   *        privacy.cpd.* preference name
+   *        The final portion of the checkbox's privacy.cpd.* preference name
    * @param aCheckState
    *        True if the checkbox should be checked, false otherwise
    */
   checkPrefCheckbox: function (aPrefName, aCheckState) {
-    let checkBoxes = this.win.document.getElementsByTagName("listitem");
-    for (let i = 0; i < checkBoxes.length; i++) {
-      let cb = checkBoxes[i];
-      if (cb.id === aPrefName ||
-          (cb.hasAttribute("preference") &&
-           cb.getAttribute("preference") === "privacy.cpd." + aPrefName)) {
-        cb.checked = aCheckState;
-        break;
-      }
-    }
+    var pref = "privacy.cpd." + aPrefName;
+    var cb = this.win.document.querySelectorAll(
+               "#itemList > [preference='" + pref + "']");
+    is(cb.length, 1, "found checkbox for " + pref + " preference");
+    if (cb[0].checked != aCheckState)
+      cb[0].click();
   },
 
   /**

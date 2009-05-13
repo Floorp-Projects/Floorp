@@ -84,7 +84,7 @@ var gAllTests = [
     let wh = new WindowHelper();
     wh.onload = function () {
       this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-      this.checkPrefCheckbox("history-downloads-checkbox", false);
+      this.checkPrefCheckbox("history", false);
       this.checkDetails();
       this.toggleDetails();
       this.checkDetails();
@@ -125,7 +125,7 @@ var gAllTests = [
     let wh = new WindowHelper();
     wh.onload = function () {
       this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-      this.checkPrefCheckbox("history-downloads-checkbox", true);
+      this.checkPrefCheckbox("history", true);
       this.acceptDialog();
 
       intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_HOUR,
@@ -133,10 +133,10 @@ var gAllTests = [
                 "hour selected");
       boolPrefIs("cpd.history", true,
                  "history pref should be true after accepting dialog with " +
-                 "combined history-downloads checkbox checked");
+                 "history checkbox checked");
       boolPrefIs("cpd.downloads", true,
                  "downloads pref should be true after accepting dialog with " +
-                 "combined history-downloads checkbox checked");
+                 "history checkbox checked");
 
       // History visits and downloads within one hour should be cleared.
       ensureHistoryClearedState(uris, true);
@@ -180,8 +180,8 @@ var gAllTests = [
          "with a predefined timespan");
       this.selectDuration(Sanitizer.TIMESPAN_HOUR);
 
-      // Remove only form entries, leave history and downloads.
-      this.checkPrefCheckbox("history-downloads-checkbox", false);
+      // Remove only form entries, leave history (including downloads).
+      this.checkPrefCheckbox("history", false);
       this.checkPrefCheckbox("formdata", true);
       this.acceptDialog();
 
@@ -190,10 +190,10 @@ var gAllTests = [
                 "hour selected");
       boolPrefIs("cpd.history", false,
                  "history pref should be false after accepting dialog with " +
-                 "combined history-downloads checkbox unchecked");
+                 "history checkbox unchecked");
       boolPrefIs("cpd.downloads", false,
                  "downloads pref should be false after accepting dialog with " +
-                 "combined history-downloads checkbox unchecked");
+                 "history checkbox unchecked");
 
       // Of the three only form entries should be cleared.
       ensureHistoryClearedState(uris, false);
@@ -225,7 +225,7 @@ var gAllTests = [
          "Warning panel should be hidden after previously accepting dialog " +
          "with a predefined timespan");
       this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-      this.checkPrefCheckbox("history-downloads-checkbox", true);
+      this.checkPrefCheckbox("history", true);
       this.checkDetails();
       this.toggleDetails();
       this.checkDetails();
@@ -257,7 +257,7 @@ var gAllTests = [
          "Warning panel should be visible after previously accepting dialog " +
          "with clearing everything");
       this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-      this.checkPrefCheckbox("history-downloads-checkbox", true);
+      this.checkPrefCheckbox("history", true);
       this.acceptDialog();
 
       intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
@@ -336,22 +336,17 @@ WindowHelper.prototype = {
    * form history, etc.).
    *
    * @param aPrefName
-   *        Either the ID of the checkbox or the final portion of its
-   *        privacy.cpd.* preference name
+   *        The final portion of the checkbox's privacy.cpd.* preference name
    * @param aCheckState
    *        True if the checkbox should be checked, false otherwise
    */
   checkPrefCheckbox: function (aPrefName, aCheckState) {
-    let checkBoxes = this.win.document.getElementsByTagName("listitem");
-    for (let i = 0; i < checkBoxes.length; i++) {
-      let cb = checkBoxes[i];
-      if (cb.id === aPrefName ||
-          (cb.hasAttribute("preference") &&
-           cb.getAttribute("preference") === "privacy.cpd." + aPrefName)) {
-        cb.checked = aCheckState;
-        break;
-      }
-    }
+    var pref = "privacy.cpd." + aPrefName;
+    var cb = this.win.document.querySelectorAll(
+               "#itemList > [preference='" + pref + "']");
+    is(cb.length, 1, "found checkbox for " + pref + " preference");
+    if (cb[0].checked != aCheckState)
+      cb[0].click();
   },
 
   /**
