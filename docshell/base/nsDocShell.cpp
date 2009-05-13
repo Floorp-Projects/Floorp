@@ -682,6 +682,18 @@ DispatchPings(nsIContent *content, nsIURI *referrer)
 // Note: operator new zeros our memory
 nsDocShell::nsDocShell():
     nsDocLoader(),
+    mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
+    mTreeOwner(nsnull),
+    mChromeEventHandler(nsnull),
+    mCharsetReloadState(eCharsetReloadInit),
+    mChildOffset(0),
+    mBusyFlags(BUSY_FLAGS_NONE),
+    mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
+    mMarginWidth(-1),
+    mMarginHeight(-1),
+    mItemType(typeContent),
+    mPreviousTransIndex(-1),
+    mLoadedTransIndex(-1),
     mAllowSubframes(PR_TRUE),
     mAllowPlugins(PR_TRUE),
     mAllowJavascript(PR_TRUE),
@@ -702,19 +714,7 @@ nsDocShell::nsDocShell():
     mIsBeingDestroyed(PR_FALSE),
     mIsExecutingOnLoadHandler(PR_FALSE),
     mIsPrintingOrPP(PR_FALSE),
-    mSavingOldViewer(PR_FALSE),
-    mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
-    mChildOffset(0),
-    mBusyFlags(BUSY_FLAGS_NONE),
-    mMarginWidth(-1),
-    mMarginHeight(-1),
-    mItemType(typeContent),
-    mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
-    mPreviousTransIndex(-1),
-    mLoadedTransIndex(-1),
-    mTreeOwner(nsnull),
-    mChromeEventHandler(nsnull),
-    mCharsetReloadState(eCharsetReloadInit)
+    mSavingOldViewer(PR_FALSE)
 #ifdef DEBUG
     , mInEnsureScriptEnv(PR_FALSE)
 #endif
@@ -7494,11 +7494,11 @@ public:
         mURI(aURI),
         mReferrer(aReferrer),
         mOwner(aOwner),
-        mFlags(aFlags),
         mPostData(aPostData),
         mHeadersData(aHeadersData),
-        mLoadType(aLoadType),
         mSHEntry(aSHEntry),
+        mFlags(aFlags),
+        mLoadType(aLoadType),
         mFirstParty(aFirstParty)
     {
         // Make sure to keep null things null as needed
@@ -7515,20 +7515,20 @@ public:
     }
 
 private:
-    nsRefPtr<nsDocShell> mDocShell;
-    nsCOMPtr<nsIURI> mURI;
-    nsCOMPtr<nsIURI> mReferrer;
-    nsCOMPtr<nsISupports> mOwner;
-    PRUint32 mFlags;
 
     // Use IDL strings so .get() returns null by default
     nsXPIDLString mWindowTarget;
     nsXPIDLCString mTypeHint;
-    
+
+    nsRefPtr<nsDocShell> mDocShell;
+    nsCOMPtr<nsIURI> mURI;
+    nsCOMPtr<nsIURI> mReferrer;
+    nsCOMPtr<nsISupports> mOwner;
     nsCOMPtr<nsIInputStream> mPostData;
     nsCOMPtr<nsIInputStream> mHeadersData;
-    PRUint32 mLoadType;
     nsCOMPtr<nsISHEntry> mSHEntry;
+    PRUint32 mFlags;
+    PRUint32 mLoadType;
     PRBool mFirstParty;
 };
 
@@ -9880,7 +9880,7 @@ nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
 class nsDebugAutoBoolTrueSetter
 {
 public:
-    nsDebugAutoBoolTrueSetter(PRBool *aBool)
+    nsDebugAutoBoolTrueSetter(PRPackedBool *aBool)
         : mBool(aBool)
     {
         *mBool = PR_TRUE;
@@ -9891,7 +9891,7 @@ public:
         *mBool = PR_FALSE;
     }
 protected:
-    PRBool *mBool;
+    PRPackedBool *mBool;
 };
 #endif
 
