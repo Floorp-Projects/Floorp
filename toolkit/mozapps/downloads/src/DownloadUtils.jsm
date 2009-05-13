@@ -296,8 +296,9 @@ let DownloadUtils = {
       let pair2 = replaceInsert(gStr.timePair, 1, time2);
       pair2 = replaceInsert(pair2, 2, unit2);
 
-      // Only show minutes for under 1 hour or the second pair is 0
-      if (aSeconds < 3600 || time2 == 0) {
+      // Only show minutes for under 1 hour unless there's a few minutes left;
+      // or the second pair is 0.
+      if ((aSeconds < 3600 && time1 >= 4) || time2 == 0) {
         timeLeft = replaceInsert(gStr.timeLeftSingle, 1, pair1);
       } else {
         // We've got 2 pairs of times to display
