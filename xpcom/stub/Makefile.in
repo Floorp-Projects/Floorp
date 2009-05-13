@@ -107,7 +107,7 @@ else
 DEPENDENT_LIBS_LIST += $(LIB_PREFIX)mozjs$(DLL_SUFFIX)
 endif
 
-ifeq (Darwin,$(OS_ARCH))
+ifeq (bundle,$(MOZ_FS_LAYOUT))
 EXTRA_DSO_LDOPTS += $(DIST)/bin/XUL
 DEPENDENT_LIBS_LIST += XUL
 else
