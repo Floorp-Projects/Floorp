@@ -136,18 +136,6 @@ HistoryStore.prototype = {
     return anno;
   },
 
-  get _histDB_30() {
-    let file = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties).
-      get("ProfD", Ci.nsIFile);
-    file.append("places.sqlite");
-    let stor = Cc["@mozilla.org/storage/service;1"].
-      getService(Ci.mozIStorageService);
-    let db = stor.openDatabase(file);
-    this.__defineGetter__("_histDB_30", function() db);
-    return db;
-  },
-
   get _db() {
     return this._hsvc.DBConnection;
   },
