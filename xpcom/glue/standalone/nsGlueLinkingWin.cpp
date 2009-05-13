@@ -77,7 +77,7 @@ static void
 ReadDependentCB(const char *aDependentLib)
 {
     wchar_t wideDependentLib[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, aDependentLib, -1, wideDependentLib, MAX_PATH);
+    MultiByteToWideChar(CP_UTF8, 0, aDependentLib, -1, wideDependentLib, MAX_PATH);
 
     HINSTANCE h =
         LoadLibraryExW(wideDependentLib, NULL, MOZ_LOADLIBRARY_FLAGS);
@@ -141,7 +141,7 @@ GetFrozenFunctionsFunc
 XPCOMGlueLoad(const char *aXpcomFile)
 {
     wchar_t xpcomFile[MAXPATHLEN];
-    MultiByteToWideChar(CP_ACP, 0, aXpcomFile,-1,
+    MultiByteToWideChar(CP_UTF8, 0, aXpcomFile,-1,
                         xpcomFile, MAXPATHLEN);
    
     
@@ -163,7 +163,7 @@ XPCOMGlueLoad(const char *aXpcomFile)
         if (lastSlash) {
             *lastSlash = '\0';
             char xpcomDir_narrow[MAXPATHLEN];
-            WideCharToMultiByte(CP_ACP, 0, xpcomDir,-1,
+            WideCharToMultiByte(CP_UTF8, 0, xpcomDir,-1,
                                 xpcomDir_narrow, MAX_PATH, NULL, NULL);
 
             XPCOMGlueLoadDependentLibs(xpcomDir_narrow, ReadDependentCB);
