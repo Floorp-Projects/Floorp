@@ -367,7 +367,7 @@ typedef enum JSBuiltinStatus {
 struct InterpState
 {
     double        *sp;                  // native stack pointer, stack[0] is spbase[0]
-    void          *rp;                  // call stack pointer
+    FrameInfo**   rp;                   // call stack pointer
     JSContext     *cx;                  // current VM context handle
     double        *eos;                 // first unusable word after the native stack
     void          *eor;                 // first unusable word after the call stack
