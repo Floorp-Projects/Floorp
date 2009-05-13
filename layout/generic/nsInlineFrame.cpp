@@ -575,13 +575,10 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
    * We want to only apply the end border and padding if we're the last
    * continuation and not in the first part of an {ib} split.  To be the last
    * continuation we have to be complete (so that we won't get a next-in-flow)
-   * and have no non-fluid continuations.
-   *
-   * FIXME the check for non-fluid continuations is not quite correct in the
-   * code (though the comment above describes it correctly); see bug 492469.
+   * and have no non-fluid continuations on our continuation chain.
    */
   if (NS_FRAME_IS_COMPLETE(aStatus) &&
-      (!GetNextContinuation() || GetNextInFlow()) &&
+      !GetLastInFlow()->GetNextContinuation() &&
       !nsLayoutUtils::FrameIsInFirstPartOfIBSplit(this)) {
     aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.right
                           : aReflowState.mComputedBorderPadding.left;

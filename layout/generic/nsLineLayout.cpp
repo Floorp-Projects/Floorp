@@ -1166,16 +1166,16 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
      * not in the first part of an {ib} split.  In all other cases we want to
      * zero it out.  That means zeroing it out if any of these conditions hold:
      * 1) The frame is not complete (in this case it will get a next-in-flow)
-     * 2) The frame is complete but has a non-fluid continuation.  Note that if
-     *    it has a fluid continuation, that continuation will get destroyed
-     *    later, so we don't want to drop the end-margin in that case.
-     *    // FIXME: bug 492469
+     * 2) The frame is complete but has a non-fluid continuation on its
+     *    continuation chain.  Note that if it has a fluid continuation, that
+     *    continuation will get destroyed later, so we don't want to drop the
+     *    end-margin in that case.
      * 3) The frame is in the first part of an {ib} split.
      *
      * However, none of that applies if this is a letter frame (XXXbz why?)
      */
     if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) ||
-         (pfd->mFrame->GetNextContinuation() && !pfd->mFrame->GetNextInFlow()) ||
+         pfd->mFrame->GetLastInFlow()->GetNextContinuation() ||
          nsLayoutUtils::FrameIsInFirstPartOfIBSplit(pfd->mFrame))
         && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
       if (ltr)
