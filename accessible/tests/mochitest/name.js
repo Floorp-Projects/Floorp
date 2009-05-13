@@ -6,10 +6,11 @@ function testName(aAccOrElmOrID, aName, aMsg)
   if (!acc)
     return;
 
+  var txtID = prettyName(aAccOrElmOrID);
   try {
-    is(acc.name, aName, msg + "Wrong name of the accessible for " + aAccOrElmOrID);
+    is(acc.name, aName, msg + "Wrong name of the accessible for " + txtID);
   } catch (e) {
-    ok(false, msg + "Can't get name of the accessible for " + aAccOrElmOrID);
+    ok(false, msg + "Can't get name of the accessible for " + txtID);
   }
   return acc;
 }
