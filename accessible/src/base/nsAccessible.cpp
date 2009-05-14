@@ -43,6 +43,7 @@
 
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleHyperText.h"
+#include "nsIXBLAccessible.h"
 #include "nsAccessibleTreeWalker.h"
 
 #include "nsIDOMElement.h"
@@ -282,6 +283,13 @@ nsAccessible::GetName(nsAString& aName)
   GetARIAName(aName);
   if (!aName.IsEmpty())
     return NS_OK;
+
+  nsCOMPtr<nsIXBLAccessible> xblAccessible(do_QueryInterface(mDOMNode));
+  if (xblAccessible) {
+    nsresult rv = xblAccessible->GetAccessibleName(aName);
+    if (!aName.IsEmpty())
+      return NS_OK;
+  }
 
   nsresult rv = GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
