@@ -286,7 +286,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
     JS_ASSERT_IF(!checkForCycles, obj != pobj);
 
     if (slot == JSSLOT_PROTO) {
-        JS_UNLOCK_OBJ(cx, obj);
+        JS_LOCK_OBJ(cx, obj);
         bool ok = !!js_GetMutableScope(cx, obj);
         JS_UNLOCK_OBJ(cx, obj);
         if (!ok)
@@ -3746,17 +3746,19 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 #endif /* JS_HAS_GETTER_SETTER */
 
     /*
-     * Purge the property cache of now-shadowed id in obj's scope chain.
-     * Do this early, before locking obj to avoid nesting locks.
-     *
-     * But first, purge the entire cache if obj is a prototype (we approximate
-     * this via OBJ_IS_DELEGATE) and we are defining a non-shadowable property
-     * on it (see bug 452189).
+     * Purge the property cache of any properties named by id that are about to
+     * be shadowed in obj's scope chain. We do this before locking obj to avoid
+     * nesting locks.
+     */
+    js_PurgeScopeChain(cx, obj, id);
+
+    /*
+     * Check whether a readonly property or setter is being defined on a known
+     * prototype object. See the comment in jscntxt.h before protoHazardShape's
+     * member declaration.
      */
     if (OBJ_IS_DELEGATE(cx, obj) && (attrs & (JSPROP_READONLY | JSPROP_SETTER)))
-        js_PurgePropertyCache(cx, &JS_PROPERTY_CACHE(cx));
-    else
-        js_PurgeScopeChain(cx, obj, id);
+        cx->runtime->protoHazardShape = js_GenerateShape(cx, false);
 
     /* Lock if object locking is required by this implementation. */
     JS_LOCK_OBJ(cx, obj);
