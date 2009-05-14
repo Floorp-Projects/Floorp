@@ -6651,7 +6651,7 @@ TraceRecorder::getThis(LIns*& this_ins)
         JS_ASSERT(callDepth == 0);
         JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
         if (!thisObj)
-            ABORT_TRACE_ERROR("error in js_ComputeThis");
+            ABORT_TRACE_ERROR("error in js_ComputeThisForFrame");
         this_ins = INS_CONSTPTR(thisObj);
 
         /*
@@ -6660,6 +6660,8 @@ TraceRecorder::getThis(LIns*& this_ins)
         return JSRS_CONTINUE;
     }
 
+    jsval& thisv = cx->fp->argv[-1];
+
     /*
      * Traces type-specialize between null and objects, so if we currently see a null
      * value in argv[-1], this trace will only match if we see null at runtime as well.
@@ -6667,31 +6669,30 @@ TraceRecorder::getThis(LIns*& this_ins)
      * can only detect this condition prior to calling js_ComputeThisForFrame, since it
      * updates the interpreter's copy of argv[-1].
      */
-    if (JSVAL_IS_NULL(cx->fp->argv[-1])) {
+    if (JSVAL_IS_NULL(thisv)) {
         JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
         if (!thisObj)
-            ABORT_TRACE_ERROR("js_ComputeThis failed");
-        JS_ASSERT(!JSVAL_IS_PRIMITIVE(cx->fp->argv[-1]));
+            ABORT_TRACE_ERROR("js_ComputeThisForName failed");
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             ABORT_TRACE("global object was wrapped while recording");
         this_ins = INS_CONSTPTR(thisObj);
-        set(&cx->fp->argv[-1], this_ins);
+        set(&thisv, this_ins);
         return JSRS_CONTINUE;
     }
-    this_ins = get(&cx->fp->argv[-1]);
+    this_ins = get(&thisv);
 
     /*
-     * When we inline through scripted functions, we have already previously touched the 'this'
-     * object and hence it is already guaranteed to be wrapped. Otherwise we have to explicitly
-     * check that the object has been wrapped. If not, we side exit and let the interpreter
-     * wrap it.
+     * mrbkap says its not necessary to ever call the thisObject hook if obj is not the global
+     * object, because the only implicit way to obtain a reference to an object that must be
+     * wrapped is via the global object. All other sources (API, explicit references) already
+     * are wrapped as we obtain them through XPConnect. The only exception are With objects,
+     * which have to call the getThis object hook. We don't trace those cases.
      */
-    if (callDepth == 0) {
-        LIns* map_ins = lir->insLoad(LIR_ldp, this_ins, (int)offsetof(JSObject, map));
-        LIns* ops_ins = lir->insLoad(LIR_ldp, map_ins, (int)offsetof(JSObjectMap, ops));
-        LIns* op_ins = lir->insLoad(LIR_ldp, ops_ins, (int)offsetof(JSObjectOps, thisObject));
-        guard(true, lir->ins_eq0(op_ins), MISMATCH_EXIT);
-    }
+
+    if (guardClass(JSVAL_TO_OBJECT(thisv), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
+        ABORT_TRACE("can't trace getThis on With object");
+
     return JSRS_CONTINUE;
 }
 
@@ -7577,6 +7578,10 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             return status;
     }
 
+    JSFastNative native = (JSFastNative)fun->u.n.native;
+    if (native == js_fun_apply || native == js_fun_call)
+        ABORT_TRACE("trying to call native apply or call");
+
     // Allocate the vp vector and emit code to root it.
     uintN vplen = 2 + JS_MAX(argc, FUN_MINARGS(fun)) + fun->u.n.extra;
     if (!(fun->flags & JSFUN_FAST_NATIVE))
@@ -7616,29 +7621,27 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         this_ins = INS_CONSTWORD(OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, funobj)));
     } else {
         this_ins = get(&vp[1]);
-        if (mode == JSOP_APPLY) {
-            // For JSOP_CALL or JSOP_NEW, the preceding JSOP_CALLNAME (or
-            // similar) instruction ensures that vp[1] is an appropriate
-            // |this|.  In the case of JSOP_APPLY, that has not happened, so we
-            // must do the equivalent of js_ComputeThis.
+        /*
+         * For fast natives, 'null' or primitives are fine as as 'this' value.
+         * For slow natives we have to ensure the object is substituted for the
+         * appropriate global object or boxed object value. JSOP_NEW allocates its
+         * own object so its guaranteed to have a valid 'this' value.
+         */
+        if (!(fun->flags & JSFUN_FAST_NATIVE)) {
             if (JSVAL_IS_NULL(vp[1])) {
-                // For fast natives, null is fine here.  Slow natives require a
-                // call to js_ComputeGlobalThis, which we do not yet attempt on
-                // trace.
-                if (!(fun->flags & JSFUN_FAST_NATIVE))
-                    ABORT_TRACE("slowNative.apply(null, args)");
-            } else if (!JSVAL_IS_PRIMITIVE(vp[1])) {
-                // Check that there is no thisObject hook to call.
-                if (JSVAL_TO_OBJECT(vp[1])->map->ops->thisObject)
-                    ABORT_TRACE("|this| argument with thisObject hook");
-                LIns* map_ins = lir->insLoad(LIR_ldp, this_ins, (int) offsetof(JSObject, map));
-                LIns* ops_ins = lir->insLoad(LIR_ldp, map_ins, (int) offsetof(JSObjectMap, ops));
-                LIns* hook_ins = lir->insLoad(LIR_ldp, ops_ins,
-                                              (int) offsetof(JSObjectOps, thisObject));
-                guard(true, lir->ins_eq0(hook_ins), MISMATCH_EXIT);
+                JSObject* thisObj = js_ComputeThis(cx, JS_FALSE, vp + 2);
+                if (!thisObj)
+                    ABORT_TRACE_ERROR("error in js_ComputeGlobalThis");
+                this_ins = INS_CONSTPTR(thisObj);
+            } else if (!JSVAL_IS_OBJECT(vp[1])) {
+                ABORT_TRACE("slow native(primitive, args)");
             } else {
-                if (!PRIMITIVE_THIS_TEST(fun, vp[1]))
-                    ABORT_TRACE("fun.apply(primitive, args)");
+                if (guardClass(JSVAL_TO_OBJECT(vp[1]), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
+                    ABORT_TRACE("can't trace slow native invocation on With object");
+
+                this_ins = lir->ins_choose(lir->ins_eq0(stobj_get_fslot(this_ins, JSSLOT_PARENT)),
+                                           INS_CONSTPTR(globalObj),
+                                           this_ins);
             }
         }
         box_jsval(vp[1], this_ins);
@@ -10375,8 +10378,10 @@ TraceRecorder::record_JSOP_GETTHISPROP()
     LIns* this_ins;
 
     CHECK_STATUS(getThis(this_ins));
-    /* its safe to just use cx->fp->thisp here because getThis() returns JSRS_STOP if thisp
-       is not available */
+    /*
+     * It's safe to just use cx->fp->thisp here because getThis() returns JSRS_STOP if thisp
+     * is not available.
+     */
     CHECK_STATUS(getProp(cx->fp->thisp, this_ins));
     return JSRS_CONTINUE;
 }
