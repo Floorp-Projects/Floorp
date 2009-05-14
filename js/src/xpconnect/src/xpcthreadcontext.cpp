@@ -42,6 +42,9 @@
 /* Implement global service to track stack of JSContext per thread. */
 
 #include "xpcprivate.h"
+#include "XPCWrapper.h"
+#include "nsDOMJSUtils.h"
+#include "nsIScriptGlobalObject.h"
 
 /***************************************************************************/
 
@@ -113,6 +116,20 @@ XPCJSContextStack::Pop(JSContext * *_retval)
     return NS_OK;
 }
 
+static nsIPrincipal*
+GetPrincipalFromCx(JSContext *cx)
+{
+    nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
+    if(scriptContext)
+    {
+        nsCOMPtr<nsIScriptObjectPrincipal> globalData =
+            do_QueryInterface(scriptContext->GetGlobalObject());
+        if(globalData)
+            return globalData->GetPrincipal();
+    }
+    return nsnull;
+}
+
 /* void push (in JSContext cx); */
 NS_IMETHODIMP
 XPCJSContextStack::Push(JSContext * cx)
@@ -122,8 +139,28 @@ XPCJSContextStack::Push(JSContext * cx)
     if(mStack.Length() > 1)
     {
         XPCJSContextInfo & e = mStack[mStack.Length() - 2];
-        if(e.cx && e.cx != cx)
+        if(e.cx)
         {
+            if(e.cx == cx)
+            {
+                nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
+                if(ssm)
+                {
+                    nsIPrincipal* globalObjectPrincipal =
+                        GetPrincipalFromCx(cx);
+                    if(globalObjectPrincipal)
+                    {
+                        nsIPrincipal* subjectPrincipal = ssm->GetCxSubjectPrincipal(cx);
+                        PRBool equals = PR_FALSE;
+                        globalObjectPrincipal->Equals(subjectPrincipal, &equals);
+                        if(equals)
+                        {
+                            return NS_OK;
+                        }
+                    }
+                }
+            }
+
             e.frame = JS_SaveFrameChain(e.cx);
 
             if(JS_GetContextThread(e.cx))
