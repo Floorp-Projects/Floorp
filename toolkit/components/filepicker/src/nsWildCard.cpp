@@ -48,15 +48,15 @@
  */
 
 #include "nsWildCard.h"
-#include "nsCRT.h"
-#include "plstr.h"
-#include "prmem.h"
+#include "nsXPCOM.h"
+#include "nsCRTGlue.h"
+#include "nsCharTraits.h"
 
 /* ----------------------------- _valid_subexp ---------------------------- */
 
-
+template<class T>
 static int 
-_valid_subexp(PRUnichar *expr, PRUnichar stop) 
+_valid_subexp(const T *expr, T stop) 
 {
     register int x,y,t;
     int nsc,np,tld;
@@ -125,15 +125,26 @@ _valid_subexp(PRUnichar *expr, PRUnichar stop)
     return ((expr[x] == stop) ? x : INVALID_SXP);
 }
 
-int 
-NS_WildCardValid(PRUnichar *expr) 
-{
-    int x;
 
-    x = _valid_subexp(expr, '\0');
+template<class T>
+int 
+NS_WildCardValid_(const T *expr)
+{
+    int x = _valid_subexp(expr, T('\0'));
     return (x < 0 ? x : VALID_SXP);
 }
 
+int 
+NS_WildCardValid(const char *expr)
+{
+    return NS_WildCardValid_(expr);
+}
+
+int 
+NS_WildCardValid(const PRUnichar *expr)
+{
+    return NS_WildCardValid_(expr);
+}
 
 /* ----------------------------- _shexp_match ----------------------------- */
 
@@ -142,14 +153,14 @@ NS_WildCardValid(PRUnichar *expr)
 #define NOMATCH 1
 #define ABORTED -1
 
-static int _shexp_match(const PRUnichar *str, const PRUnichar *expr,
-                        PRBool case_insensitive);
+template<class T>
+static int _shexp_match(const T *str, const T *expr, PRBool case_insensitive);
 
+template<class T>
 static int 
-_handle_union(const PRUnichar *str, const PRUnichar *expr,
-              PRBool case_insensitive) 
+_handle_union(const T *str, const T *expr, PRBool case_insensitive) 
 {
-    PRUnichar *e2 = (PRUnichar *) PR_Malloc(sizeof(PRUnichar)*nsCRT::strlen(expr));
+    T *e2 = (T *) NS_Alloc(sizeof(T)*nsCharTraits<T>::length(expr));
     register int t,p2,p1 = 1;
     int cp;
 
@@ -164,11 +175,11 @@ _handle_union(const PRUnichar *str, const PRUnichar *expr,
         }
         for (t=cp+1; ((e2[p2] = expr[t]) != 0); ++t,++p2) {}
         if(_shexp_match(str,e2, case_insensitive) == MATCH) {
-            PR_Free(e2);
+            NS_Free(e2);
             return MATCH;
         }
         if(p1 == cp) {
-            PR_Free(e2);
+            NS_Free(e2);
             return NOMATCH;
         }
         else ++p1;
@@ -176,9 +187,9 @@ _handle_union(const PRUnichar *str, const PRUnichar *expr,
 }
 
 
+template<class T>
 static int 
-_shexp_match(const PRUnichar *str, const PRUnichar *expr,
-             PRBool case_insensitive) 
+_shexp_match(const T *str, const T *expr, PRBool case_insensitive) 
 {
     register int x,y;
     int ret,neg;
@@ -277,16 +288,17 @@ _shexp_match(const PRUnichar *str, const PRUnichar *expr,
     return (ret ? ret : (str[x] ? NOMATCH : MATCH));
 }
 
+
+template<class T>
 int 
-NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
-                 PRBool case_insensitive) {
-    register int x;
-    PRUnichar *expr = nsCRT::strdup(xp);
+NS_WildCardMatch_(const T *str, const T *xp, PRBool case_insensitive)
+{
+    T *expr = NS_strdup(xp);
 
 	if(!expr)
 		return 1;
 
-    for(x=nsCRT::strlen(expr)-1;x;--x) {
+    for(int x=nsCharTraits<T>::length(expr)-1;x;--x) {
         if((expr[x] == '~') && (expr[x-1] != '\\')) {
             expr[x] = '\0';
             if(_shexp_match(str,&expr[++x], case_insensitive) == MATCH)
@@ -295,11 +307,25 @@ NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
         }
     }
     if(_shexp_match(str,expr, case_insensitive) == MATCH) {
-        PR_Free(expr);
+        NS_Free(expr);
         return 0;
     }
 
   punt:
-    PR_Free(expr);
+    NS_Free(expr);
     return 1;
+}
+
+int 
+NS_WildCardMatch(const char *str, const char *xp,
+                 PRBool case_insensitive)
+{
+    return NS_WildCardMatch_(str, xp, case_insensitive);
+}
+
+int 
+NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
+                 PRBool case_insensitive)
+{
+    return NS_WildCardMatch_(str, xp, case_insensitive);
 }
