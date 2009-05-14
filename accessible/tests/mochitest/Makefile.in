@@ -110,6 +110,7 @@ _TEST_FILES =\
  		test_objectattrs.html \
 		test_relations.html \
 		test_relations.xul \
+		test_relations_table.html \
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
 		test_states.html \
