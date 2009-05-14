@@ -81,6 +81,8 @@ nsCocoaWindowList *gGeckoAppModalWindowList = NULL;
 
 PRBool gCocoaWindowMethodsSwizzled = PR_FALSE;
 
+PRBool gConsumeRollupEvent;
+
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
@@ -1286,6 +1288,9 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     NS_ADDREF(aListener);
     gRollupWidget = this;
     NS_ADDREF(this);
+
+    gConsumeRollupEvent = aConsumeRollupEvent;
+
     // Sometimes more than one popup window can be visible at the same time
     // (e.g. nested non-native context menus, or the test case (attachment
     // 276885) for bmo bug 392389, which displays a non-native combo-box in
