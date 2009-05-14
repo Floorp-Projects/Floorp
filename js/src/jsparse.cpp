@@ -2297,7 +2297,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSTreeContext *tc,
                      */
                     *pnup = outer_dn->dn_uses;
                     outer_dn->dn_uses = dn;
-                    outer_dn->pn_dflags |= (dn->pn_dflags & ~PND_PLACEHOLDER);
+                    outer_dn->pn_dflags |= dn->pn_dflags & ~(PND_FORWARD | PND_PLACEHOLDER);
                     dn->pn_defn = false;
                     dn->pn_used = true;
                     dn->pn_lexdef = outer_dn;
