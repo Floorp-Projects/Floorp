@@ -58,7 +58,7 @@ function FormEngine() {
 FormEngine.prototype = {
   __proto__: SyncEngine.prototype,
   name: "forms",
-  displayname: "Forms",
+  displayName: "Forms",
   logName: "Forms",
   _storeObj: FormStore,
   _trackerObj: FormTracker,
