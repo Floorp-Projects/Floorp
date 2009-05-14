@@ -321,6 +321,8 @@ WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv)
 		  NULL
 		  );
     wprintf(L"Error restarting: %s\n", lpMsgBuf ? lpMsgBuf : L"(null)");
+    if (lpMsgBuf)
+      LocalFree(lpMsgBuf);
   }
 
   free(cl);
