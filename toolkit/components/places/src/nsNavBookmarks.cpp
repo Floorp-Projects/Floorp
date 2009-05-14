@@ -233,20 +233,16 @@ nsNavBookmarks::InitStatements()
   // a reference into that table.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, COALESCE(b.title, h.title), "
-        "h.rev_host, h.visit_count, "
-        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-        ", f.url, null, b.id, b.dateAdded, b.lastModified, "
-        "b.position, b.type, b.fk, b.folder_type "
+        "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
+        "b.dateAdded, b.lastModified, b.position, b.type, b.fk, b.folder_type "
       "FROM moz_bookmarks b "
       "JOIN moz_places_temp h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE b.parent = ?1 "
       "UNION ALL "
       "SELECT h.id, h.url, COALESCE(b.title, h.title), "
-        "h.rev_host, h.visit_count, "
-        SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
-        ", f.url, null, b.id, b.dateAdded, b.lastModified, "
-        "b.position, b.type, b.fk, b.folder_type "
+        "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
+        "b.dateAdded, b.lastModified, b.position, b.type, b.fk, b.folder_type "
       "FROM moz_bookmarks b "
       "LEFT JOIN moz_places h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -419,8 +415,8 @@ nsNavBookmarks::InitStatements()
         "WHERE url = ?1 "
         "UNION ALL "
         "SELECT id FROM moz_places "
-        "WHERE +id NOT IN (SELECT id FROM moz_places_temp) "
-          "AND url = ?1 "
+        "WHERE url = ?1 "
+        "LIMIT 1 "
       ") AS h "
       "JOIN moz_bookmarks b ON b.fk = h.id "
       "JOIN moz_keywords k ON k.id = b.keyword_id"),
@@ -438,7 +434,7 @@ nsNavBookmarks::InitStatements()
       "JOIN moz_bookmarks b ON b.keyword_id = k.id "
       "JOIN moz_places h ON b.fk = h.id "
       "WHERE k.keyword = ?1 "
-        "AND h.id NOT IN (SELECT id FROM moz_places_temp)"),
+      "LIMIT 1"),
     getter_AddRefs(mDBGetURIForKeyword));
   NS_ENSURE_SUCCESS(rv, rv);
 
