@@ -42,11 +42,13 @@
 #include "prio.h"
 #include "prproces.h"
 
-#include "TestHarness.h"
+#include "nsMemory.h"
 
 #include "mozilla/CondVar.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
+
+#include "TestHarness.h"
 
 using namespace mozilla;
 
@@ -74,8 +76,6 @@ spawn(void (*run)(void*), void* arg)
         fail(why);                              \
         return NS_ERROR_FAILURE;                \
     } while (0);
-
-#define ALEN(arr) (sizeof(arr) / sizeof(arr[0]))
 
 //-----------------------------------------------------------------------------
 
@@ -485,10 +485,10 @@ ContentionNoDeadlock_thread(void* arg)
     PRInt32 starti = NS_PTR_TO_INT32(arg);
 
     for (PRUint32 k = 0; k < K; ++k) {
-        for (PRInt32 i = starti; i < ALEN(cndMs); ++i)
+        for (PRInt32 i = starti; i < (PRInt32) NS_ARRAY_LENGTH(cndMs); ++i)
             cndMs[i]->Lock();
         // comment out the next two lines for deadlocking fun!
-        for (PRInt32 i = ALEN(cndMs) - 1; i >= starti; --i)
+        for (PRInt32 i = NS_ARRAY_LENGTH(cndMs) - 1; i >= starti; --i)
             cndMs[i]->Unlock();
 
         starti = (starti + 1) % 3;
@@ -500,16 +500,16 @@ ContentionNoDeadlock_Child()
 {
     PRThread* threads[3];
 
-    for (PRUint32 i = 0; i < ALEN(cndMs); ++i)
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(cndMs); ++i)
         cndMs[i] = new mozilla::Mutex("dd.cnd.ms");
 
-    for (PRInt32 i = 0; i < ALEN(threads); ++i)
+    for (PRInt32 i = 0; i < (PRInt32) NS_ARRAY_LENGTH(threads); ++i)
         threads[i] = spawn(ContentionNoDeadlock_thread, NS_INT32_TO_PTR(i));
 
-    for (PRUint32 i = 0; i < ALEN(threads); ++i)
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(threads); ++i)
         PR_JoinThread(threads[i]);
 
-    for (PRUint32 i = 0; i < ALEN(cndMs); ++i)
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(cndMs); ++i)
         delete cndMs[i];
 
     return 0;
