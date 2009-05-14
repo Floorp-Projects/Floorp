@@ -22,8 +22,8 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,9 +38,10 @@
 /* *
  * 
  *
- * shexp.c: shell-like wildcard match routines
+ * nsWildCard.cpp: shell-like wildcard match routines
  *
- * See shexp.h for public documentation.
+ * See nsIZipReader.findEntries documentation in nsIZipReader.idl for
+ * a description of the syntax supported by the routines in this file.
  *
  * Rob McCool
  * 
@@ -51,7 +52,7 @@
 #include "plstr.h"
 #include "prmem.h"
 
-/* ----------------------------- shexp_valid ------------------------------ */
+/* ----------------------------- _valid_subexp ---------------------------- */
 
 
 static int 
@@ -77,7 +78,7 @@ _valid_subexp(PRUnichar *expr, PRUnichar stop)
             ++nsc;
             if((!expr[++x]) || (expr[x] == ']'))
                 return INVALID_SXP;
-            for(++x;expr[x] && (expr[x] != ']');++x)
+            for(;expr[x] && (expr[x] != ']');++x)
                 if(expr[x] == '\\')
                     if(!expr[++x])
                         return INVALID_SXP;
@@ -134,7 +135,7 @@ NS_WildCardValid(PRUnichar *expr)
 }
 
 
-/* ----------------------------- shexp_match ----------------------------- */
+/* ----------------------------- _shexp_match ----------------------------- */
 
 
 #define MATCH 0
@@ -235,8 +236,16 @@ _shexp_match(const PRUnichar *str, const PRUnichar *expr,
                 else {
                     int matched;
                     
-                    for (matched=0;expr[y] != ']';y++)
+                    for (matched=0;expr[y] != ']';y++) {
+                        /* match an escaped ']' character */
+                        if('\\' == expr[y] && ']' == expr[y+1]) {
+                            if(']' == str[x])
+                                matched |= 1;
+                            y++; /* move an extra char to compensate for '\\' */
+                            continue;
+                        }
                         matched |= (str[x] == expr[y]);
+                    }
                     if (neg ^ (!matched))
                         ret = NOMATCH;
                 }
