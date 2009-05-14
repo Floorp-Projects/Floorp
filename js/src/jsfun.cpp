@@ -629,8 +629,14 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         if (!env)
             return NULL;
 
-        /* Root env. */
+        /* Root env before js_DefineNativeProperty (-> JSClass.addProperty). */
         fp->scopeChain = env;
+        if (!js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
+                                     OBJECT_TO_JSVAL(fp->callee), NULL, NULL,
+                                     JSPROP_PERMANENT | JSPROP_READONLY,
+                                     0, 0, NULL)) {
+            return NULL;
+        }
     }
 
     callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL,
@@ -641,14 +647,6 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     JS_SetPrivate(cx, callobj, fp);
     JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->callee));
     STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(fp->callee));
-    if (lambdaName &&
-        !js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
-                                 OBJECT_TO_JSVAL(fp->callee), NULL, NULL,
-                                 JSPROP_PERMANENT | JSPROP_READONLY,
-                                 0, 0, NULL)) {
-        return NULL;
-    }
-
     fp->callobj = callobj;
 
     /*

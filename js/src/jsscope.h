@@ -336,13 +336,15 @@ struct JSScopeProperty {
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
 
 static inline void
-js_MakeScopeShapeUnique(JSContext* cx, JSScope* scope) {
+js_MakeScopeShapeUnique(JSContext *cx, JSScope *scope)
+{
     js_LeaveTraceIfGlobalObject(cx, scope->object);
     scope->shape = js_GenerateShape(cx, JS_FALSE);
 }
 
 static inline void
-js_ExtendScopeShape(JSContext *cx, JSScope *scope, JSScopeProperty *sprop) {
+js_ExtendScopeShape(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
+{
     js_LeaveTraceIfGlobalObject(cx, scope->object);
     if (!scope->lastProp ||
         scope->shape == scope->lastProp->shape) {
