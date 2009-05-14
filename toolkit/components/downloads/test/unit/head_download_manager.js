@@ -38,6 +38,7 @@
 // This file tests the download manager backend
 
 do_load_httpd_js();
+do_get_profile();
 
 function createURI(aObj)
 {
@@ -49,37 +50,27 @@ function createURI(aObj)
 
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);
-var profileDir = null;
-try {
-  profileDir = dirSvc.get("ProfD", Ci.nsIFile);
-} catch (e) { }
-if (!profileDir) {
-  // Register our own provider for the profile directory.
-  // It will simply return the current directory.
-  var provider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
-      if (prop == "ProfD") {
-        return dirSvc.get("CurProcD", Ci.nsILocalFile);
-      } else if (prop == "DLoads") {
-        var file = dirSvc.get("CurProcD", Ci.nsILocalFile);
-        file.append("downloads.rdf");
-        return file;
-      }
-      print("*** Throwing trying to get " + prop);
-      throw Cr.NS_ERROR_FAILURE;
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
 
+var provider = {
+  getFile: function(prop, persistent) {
+    persistent.value = true;
+    if (prop == "DLoads") {
+      var file = dirSvc.get("ProfD", Ci.nsILocalFile);
+      file.append("downloads.rdf");
+      return file;
+     }
+    print("*** Throwing trying to get " + prop);
+    throw Cr.NS_ERROR_FAILURE;
+  },
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIDirectoryProvider) ||
+        iid.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
+dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
 /**
  * Imports a download test file to use.  Works with rdf and sqlite files.
@@ -98,31 +89,6 @@ function importDownloadsFile(aFName)
     file.copyTo(newFile, "downloads.sqlite");
   else
     do_throw("Unexpected filename!");
-}
-
-function cleanup()
-{
-  // removing rdf
-  var rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
-  if (rdfFile.exists()) rdfFile.remove(true);
-
-  // removing database
-  var dbFile = dirSvc.get("ProfD", Ci.nsIFile);
-  dbFile.append("downloads.sqlite");
-  if (dbFile.exists())
-    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
-
-  // remove places.sqlite since expiration won't work properly if we do not have
-  // a clean database file.
-  dbFile = dirSvc.get("ProfD", Ci.nsIFile);
-  dbFile.append("places.sqlite");
-  if (dbFile.exists())
-    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
-
-  // removing downloaded file
-  var destFile = dirSvc.get("ProfD", Ci.nsIFile);
-  destFile.append("download.result");
-  if (destFile.exists()) destFile.remove(true);
 }
 
 var gDownloadCount = 0;
@@ -147,7 +113,7 @@ function addDownload(aParams)
     aParams.targetFile.append(aParams.resultFileName);
   }
   if (!("sourceURI" in aParams))
-    aParams.sourceURI = "http://localhost:4444/res/language.properties";
+    aParams.sourceURI = "http://localhost:4444/head_download_manager.js";
   if (!("downloadName" in aParams))
     aParams.downloadName = null;
   if (!("runBeforeStart" in aParams))
@@ -210,6 +176,3 @@ function getDownloadListener()
 // Disable alert service notifications
 let ps = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefBranch);
 ps.setBoolPref("browser.download.manager.showAlertOnComplete", false);
-
-cleanup();
-
