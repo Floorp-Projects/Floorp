@@ -183,8 +183,10 @@ JS_BEGIN_EXTERN_C
  * TOK_RB       list        pn_head: list of pn_count array element exprs
  *                          [,,] holes are represented by TOK_COMMA nodes
  *                          pn_xflags: PN_ENDCOMMA if extra comma at end
- * TOK_RC       list        pn_head: list of pn_count TOK_COLON nodes where
- *                          each has pn_left: property id, pn_right: value
+ * TOK_RC       list        pn_head: list of pn_count binary TOK_COLON nodes
+ * TOK_COLON    binary      key-value pair in object initializer or
+ *                          destructuring lhs
+ *                          pn_left: property id, pn_right: value
  *                          var {x} = object destructuring shorthand shares
  *                          PN_NAME node for x on left and right of TOK_COLON
  *                          node in TOK_RC's list, has PNX_DESTRUCT flag
