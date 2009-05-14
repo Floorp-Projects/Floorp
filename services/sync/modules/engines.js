@@ -156,7 +156,9 @@ Engine.prototype = {
   _storeObj: Store,
   _trackerObj: Tracker,
 
-  get enabled() Utils.prefs.getBoolPref("engine." + this.name),
+  get enabled() Svc.Prefs.get("engine." + this.name, null),
+  set enabled(val) Svc.Prefs.set("engine." + this.name, !!val),
+
   get score() this._tracker.score,
 
   get _store() {
