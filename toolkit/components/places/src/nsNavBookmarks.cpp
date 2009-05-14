@@ -2251,7 +2251,7 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsACString &aTitle)
   NS_ENSURE_SUCCESS(rv, rv);
   // Support setting a null title, we support this in insertBookmark.
   if (aTitle.IsVoid())
-    rv = mDBInsertBookmark->BindNullParameter(0);
+    rv = statement->BindNullParameter(0);
   else
     rv = statement->BindUTF8StringParameter(0, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
