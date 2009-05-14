@@ -172,15 +172,11 @@ void nsHTMLMediaElement::QueueLoadFromSourceTask()
   NS_DispatchToMainThread(event);
 }
 
-class nsHTMLMediaElement::MediaLoadListener : public nsIStreamListener,
-                                              public nsIChannelEventSink,
-                                              public nsIInterfaceRequestor
+class nsHTMLMediaElement::MediaLoadListener : public nsIStreamListener
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIINTERFACEREQUESTOR
 
 public:
   MediaLoadListener(nsHTMLMediaElement* aElement)
@@ -194,9 +190,7 @@ private:
   nsCOMPtr<nsIStreamListener> mNextListener;
 };
 
-NS_IMPL_ISUPPORTS4(nsHTMLMediaElement::MediaLoadListener, nsIRequestObserver,
-                   nsIStreamListener, nsIChannelEventSink,
-                   nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS2(nsHTMLMediaElement::MediaLoadListener, nsIRequestObserver, nsIStreamListener)
 
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
@@ -256,21 +250,6 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest*
     return NS_BINDING_ABORTED;
   }
   return mNextListener->OnDataAvailable(aRequest, aContext, aStream, aOffset, aCount);
-}
-
-NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnChannelRedirect(nsIChannel* aOldChannel,
-                                                                       nsIChannel* aNewChannel,
-                                                                       PRUint32 aFlags)
-{
-  nsCOMPtr<nsIChannelEventSink> sink = do_QueryInterface(mNextListener);
-  if (sink)
-    return sink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::GetInterface(const nsIID & aIID, void **aResult)
-{
-  return QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLMediaElement, nsGenericHTMLElement)
@@ -534,10 +513,8 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   // The listener holds a strong reference to us.  This creates a reference
   // cycle which is manually broken in the listener's OnStartRequest method
   // after it is finished with the element.
-  nsRefPtr<MediaLoadListener> loadListener = new MediaLoadListener(this);
+  nsCOMPtr<nsIStreamListener> loadListener = new MediaLoadListener(this);
   if (!loadListener) return NS_ERROR_OUT_OF_MEMORY;
-  
-  mChannel->SetNotificationCallbacks(loadListener);
 
   nsCOMPtr<nsIStreamListener> listener;
   if (ShouldCheckAllowOrigin()) {
