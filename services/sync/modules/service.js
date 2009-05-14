@@ -98,8 +98,10 @@ Cu.import("resource://weave/engines.js", Weave);
 
 Cu.import("resource://weave/engines/bookmarks.js", Weave);
 Cu.import("resource://weave/engines/clientData.js", Weave);
+Cu.import("resource://weave/engines/cookies.js", Weave);
 Cu.import("resource://weave/engines/forms.js", Weave);
 Cu.import("resource://weave/engines/history.js", Weave);
+Cu.import("resource://weave/engines/input.js", Weave);
 Cu.import("resource://weave/engines/passwords.js", Weave);
 Cu.import("resource://weave/engines/tabs.js", Weave);
 
@@ -389,7 +391,8 @@ WeaveSvc.prototype = {
         break;
 
       case "Firefox":
-        engines = ["Bookmarks", "Form", "History", "Password", "Tab"];
+        engines = ["Bookmarks", "Cookie", "Form", "History", "Input",
+          "Password", "Tab"];
         break;
 
       case "SeaMonkey":
