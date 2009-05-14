@@ -77,23 +77,23 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
      * birth, and runtime clone of a block objects are never mutated.
      */
     JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_BlockClass);
-    newscope = js_NewScope(cx, 0, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj),
-                           obj);
+    newscope = js_NewScope(cx, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj), obj);
     if (!newscope)
         return NULL;
     JS_LOCK_SCOPE(cx, newscope);
-    obj->map = js_HoldObjectMap(cx, &newscope->map);
-    JS_ASSERT(newscope->map.freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
+    obj->map = &newscope->map;
+
+    JS_ASSERT(newscope->freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
     clasp = STOBJ_GET_CLASS(obj);
     if (clasp->reserveSlots) {
         freeslot = JSSLOT_FREE(clasp) + clasp->reserveSlots(cx, obj);
         if (freeslot > STOBJ_NSLOTS(obj))
             freeslot = STOBJ_NSLOTS(obj);
-        if (newscope->map.freeslot < freeslot)
-            newscope->map.freeslot = freeslot;
+        if (newscope->freeslot < freeslot)
+            newscope->freeslot = freeslot;
     }
-    scope = (JSScope *) js_DropObjectMap(cx, &scope->map, obj);
     JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
+    js_DropScope(cx, scope, obj);
     return newscope;
 }
 
@@ -160,17 +160,19 @@ CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report)
 }
 
 JSScope *
-js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
-            JSObject *obj)
+js_NewScope(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
 {
-    JSScope *scope;
+    JS_ASSERT(OPS_IS_NATIVE(ops));
+    JS_ASSERT(obj);
 
-    scope = (JSScope *) JS_malloc(cx, sizeof(JSScope));
+    JSScope *scope = (JSScope *) JS_malloc(cx, sizeof(JSScope));
     if (!scope)
         return NULL;
 
-    js_InitObjectMap(&scope->map, nrefs, ops, clasp);
+    scope->map.ops = ops;
     scope->object = obj;
+    scope->nrefs = 1;
+    scope->freeslot = JSSLOT_FREE(clasp);
     scope->flags = 0;
     InitMinimalScope(cx, scope);
 
@@ -201,6 +203,28 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
     LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= scope->entryCount);
     JS_RUNTIME_UNMETER(cx->runtime, liveScopes);
     JS_free(cx, scope);
+}
+
+void
+js_HoldScope(JSScope *scope)
+{
+    JS_ASSERT(scope->nrefs >= 0);
+    JS_ATOMIC_INCREMENT(&scope->nrefs);
+}
+
+JSBool
+js_DropScope(JSContext *cx, JSScope *scope, JSObject *obj)
+{
+    JS_ASSERT(scope->nrefs > 0);
+    JS_ATOMIC_DECREMENT(&scope->nrefs);
+
+    if (scope->nrefs == 0) {
+        js_DestroyScope(cx, scope);
+        return false;
+    }
+    if (scope->object == obj)
+        scope->object = NULL;
+    return true;
 }
 
 #ifdef JS_DUMP_PROPTREE_STATS
