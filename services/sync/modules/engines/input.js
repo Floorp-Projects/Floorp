@@ -44,7 +44,6 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 
@@ -54,10 +53,10 @@ function InputEngine(pbeId) {
   this._init(pbeId);
 }
 InputEngine.prototype = {
-  __proto__: new SyncEngine(),
+  __proto__: SyncEngine.prototype,
 
   get name() { return "input"; },
-  get displayName() { return "Input History"; },
+  get displayName() { return "Input History (Location Bar)"; },
   get logName() { return "InputEngine"; },
   get serverPrefix() { return "user-data/input/"; },
 
@@ -68,13 +67,6 @@ InputEngine.prototype = {
     return this.__store;
   },
 
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new InputSyncCore(this._store);
-    return this.__core;
-  },
-
   __tracker: null,
   get _tracker() {
     if (!this.__tracker)
@@ -83,25 +75,13 @@ InputEngine.prototype = {
   }
 };
 
-function InputSyncCore(store) {
-  this._store = store;
-  this._init();
-}
-InputSyncCore.prototype = {
-  _logName: "InputSync",
-  _store: null,
-
-  _commandLike: function FSC_commandLike(a, b) {
-    /* Not required as GUIDs for similar data sets will be the same */
-    return false;
-  }
-};
-InputSyncCore.prototype.__proto__ = new SyncCore();
-
 function InputStore() {
+  // XXX disabled for now..
+  return;
   this._init();
 }
 InputStore.prototype = {
+  __proto__: Store.prototype,
   _logName: "InputStore",
   _lookup: null,
 
@@ -231,12 +211,14 @@ InputStore.prototype = {
     // Not needed.
   }
 };
-InputStore.prototype.__proto__ = new Store();
 
 function InputTracker() {
+  // XXX disabled for now..
+  return;
   this._init();
 }
 InputTracker.prototype = {
+  __proto__: Tracker.prototype,
   _logName: "InputTracker",
 
   __placeDB: null,
@@ -292,4 +274,3 @@ InputTracker.prototype = {
     stmnt.reset();
   }
 };
-InputTracker.prototype.__proto__ = new Tracker();

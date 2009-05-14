@@ -43,7 +43,6 @@ const Cu = Components.utils;
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 
@@ -53,7 +52,7 @@ function CookieEngine(pbeId) {
   this._init(pbeId);
 }
 CookieEngine.prototype = {
-  __proto__: new SyncEngine(),
+  __proto__: SyncEngine.prototype,
 
   get name() { return "cookies"; },
   get displayName() { return "Cookies"; },
@@ -67,13 +66,6 @@ CookieEngine.prototype = {
     return this.__store;
   },
 
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new CookieSyncCore(this._store);
-    return this.__core;
-  },
-
   __tracker: null,
   get _tracker() {
     if (!this.__tracker)
@@ -82,27 +74,9 @@ CookieEngine.prototype = {
   }
 };
 
-function CookieSyncCore(store) {
-  this._store = store;
-  this._init();
-}
-CookieSyncCore.prototype = {
-  _logName: "CookieSync",
-  _store: null,
-
-  _commandLike: function CSC_commandLike(a, b) {
-    /* Method required to be overridden.
-       a and b each have a .data and a .GUID
-       If this function returns true, an editCommand will be
-       generated to try to resolve the thing.
-       but are a and b objects of the type in the Store or
-       are they "commands"?? */
-    return false;
-  }
-};
-CookieSyncCore.prototype.__proto__ = new SyncCore();
-
 function CookieStore( cookieManagerStub ) {
+  // XXX disabled for now..
+  return;
   /* If no argument is passed in, this store will query/write to the real
      Mozilla cookie manager component.  This is the normal way to use this
      class in production code.  But for unit-testing purposes, you can pass
@@ -111,6 +85,7 @@ function CookieStore( cookieManagerStub ) {
   this._cookieManagerStub = cookieManagerStub;
 }
 CookieStore.prototype = {
+  __proto__: Store.prototype,
   _logName: "CookieStore",
   _lookup: null,
 
@@ -297,12 +272,14 @@ CookieStore.prototype = {
        nothing to do here. */
   }
 };
-CookieStore.prototype.__proto__ = new Store();
 
 function CookieTracker() {
+  // XXX disabled for now..
+  return;
   this._init();
 }
 CookieTracker.prototype = {
+  __proto__: Tracker.prototype,
   _logName: "CookieTracker",
 
   _init: function CT__init() {
@@ -332,4 +309,3 @@ CookieTracker.prototype = {
     }
   }
 }
-CookieTracker.prototype.__proto__ = new Tracker();
