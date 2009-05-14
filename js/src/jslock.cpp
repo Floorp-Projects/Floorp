@@ -57,11 +57,6 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
-/*
- * Check that we can cast the data after JSObjectMap as JSTitle.
- */
-JS_STATIC_ASSERT(offsetof(JSScope, title) == sizeof(JSObjectMap));
-
 #define ReadWord(W) (W)
 
 /* Implement NativeCompareAndSwap. */
@@ -456,7 +451,6 @@ ShareTitle(JSContext *cx, JSTitle *title)
 static void
 FinishSharingTitle(JSContext *cx, JSTitle *title)
 {
-    JSObjectMap *map;
     JSScope *scope;
     JSObject *obj;
     uint32 nslots, i;
@@ -464,14 +458,10 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
 
     js_InitLock(&title->lock);
     title->u.count = 0;     /* NULL may not pun as 0 */
-    map = TITLE_TO_MAP(title);
-    if (!MAP_IS_NATIVE(map))
-        return;
-    scope = (JSScope *)map;
-
+    scope = TITLE_TO_SCOPE(title);
     obj = scope->object;
     if (obj) {
-        nslots = scope->map.freeslot;
+        nslots = scope->freeslot;
         for (i = 0; i != nslots; ++i) {
             v = STOBJ_GET_SLOT(obj, i);
             if (JSVAL_IS_STRING(v) &&
@@ -617,9 +607,9 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * non-null test, and avoid double-insertion bugs.
          */
         if (!title->u.link) {
+            js_HoldScope(TITLE_TO_SCOPE(title));
             title->u.link = rt->titleSharingTodo;
             rt->titleSharingTodo = title;
-            js_HoldObjectMap(cx, TITLE_TO_MAP(title));
         }
 
         /*
@@ -693,13 +683,13 @@ js_ShareWaitingTitles(JSContext *cx)
         title->u.link = NULL;       /* null u.link for sanity ASAP */
 
         /*
-         * If js_DropObjectMap returns null, we held the last ref to scope.
-         * The waiting thread(s) must have been killed, after which the GC
+         * If js_DropScope returns false, we held the last ref to scope. The
+         * waiting thread(s) must have been killed, after which the GC
          * collected the object that held this scope.  Unlikely, because it
          * requires that the GC ran (e.g., from an operation callback)
          * during this request, but possible.
          */
-        if (js_DropObjectMap(cx, TITLE_TO_MAP(title), NULL)) {
+        if (js_DropScope(cx, TITLE_TO_SCOPE(title), NULL)) {
             FinishSharingTitle(cx, title); /* set ownercx = NULL */
             shared = true;
         }
@@ -740,7 +730,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     scope = OBJ_SCOPE(obj);
     title = &scope->title;
     JS_ASSERT(title->ownercx != cx);
-    JS_ASSERT(slot < obj->map->freeslot);
+    JS_ASSERT(slot < scope->freeslot);
 
     /*
      * Avoid locking if called from the GC.  Also avoid locking an object
@@ -835,7 +825,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     scope = OBJ_SCOPE(obj);
     title = &scope->title;
     JS_ASSERT(title->ownercx != cx);
-    JS_ASSERT(slot < obj->map->freeslot);
+    JS_ASSERT(slot < scope->freeslot);
 
     /*
      * Avoid locking if called from the GC.  Also avoid locking an object
@@ -1478,9 +1468,7 @@ js_IsRuntimeLocked(JSRuntime *rt)
 JSBool
 js_IsObjLocked(JSContext *cx, JSObject *obj)
 {
-    JSScope *scope = OBJ_SCOPE(obj);
-
-    return MAP_IS_NATIVE(&scope->map) && js_IsTitleLocked(cx, &scope->title);
+    return js_IsTitleLocked(cx, &OBJ_SCOPE(obj)->title);
 }
 
 JSBool

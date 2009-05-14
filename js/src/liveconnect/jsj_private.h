@@ -643,13 +643,6 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp);
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env);
 
-extern JSObjectMap *
-jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-                         JSClass *clasp, JSObject *obj);
-
-extern void
-jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map);
-
 extern jsval
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
