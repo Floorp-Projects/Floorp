@@ -131,6 +131,10 @@ oggplay_set_track_active(OggPlay *me, int track_num) {
     return E_OGGPLAY_TRACK_IS_SKELETON;
   }
 
+  if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_UNKNOWN) {
+    return E_OGGPLAY_TRACK_IS_UNKNOWN;
+  }
+
   if ((p = me->decode_data[track_num]->final_granulepos) != -1) {
     if (p * me->decode_data[track_num]->granuleperiod > me->target) {
       return E_OGGPLAY_TRACK_IS_OVER;
@@ -177,6 +181,10 @@ oggplay_set_track_inactive(OggPlay *me, int track_num) {
 
   if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_SKELETON) {
     return E_OGGPLAY_TRACK_IS_SKELETON;
+  }
+
+  if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_UNKNOWN) {
+    return E_OGGPLAY_TRACK_IS_UNKNOWN;
   }
 
   if (me->decode_data[track_num]->active == 1) {

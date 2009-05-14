@@ -508,6 +508,7 @@ OggPlayCallbackFunctions callbacks[] = {
   {NULL, NULL, NULL, sizeof(OggPlayDecode)}, /* CELT */
   {oggplay_init_kate, oggplay_callback_kate, oggplay_shutdown_kate,
         sizeof(OggPlayKateDecode)},          /* KATE */
+  {NULL, NULL, NULL, sizeof(OggPlayDecode)}, /* DIRAC */
   {NULL, NULL, NULL, sizeof(OggPlayDecode)}  /* UNKNOWN */
 };
 
