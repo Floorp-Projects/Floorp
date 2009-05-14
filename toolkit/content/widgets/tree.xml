@@ -1326,6 +1326,13 @@
           if (event.target != event.originalTarget)
             return;
 
+#ifdef XP_WIN
+          // On Windows multiple clicking on tree columns only cycles one time
+          // every 2 clicks.
+          if (event.detail % 2 == 0)
+            return;
+#endif
+
           var tree = this.parentNode.parentNode;
           var column = tree.columns.getColumnFor(this);
           tree.view.cycleHeader(column);
