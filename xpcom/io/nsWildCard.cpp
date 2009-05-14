@@ -1,4 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sts=4 sw=4 cin et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* *
- * 
+ *
  *
  * nsWildCard.cpp: shell-like wildcard match routines
  *
@@ -44,7 +45,7 @@
  * a description of the syntax supported by the routines in this file.
  *
  * Rob McCool
- * 
+ *
  */
 
 #include "nsWildCard.h"
@@ -55,8 +56,8 @@
 /* ----------------------------- _valid_subexp ---------------------------- */
 
 template<class T>
-static int 
-_valid_subexp(const T *expr, T stop) 
+static int
+_valid_subexp(const T *expr, T stop)
 {
     register int x,y,t;
     int nsc,np,tld;
@@ -127,20 +128,20 @@ _valid_subexp(const T *expr, T stop)
 
 
 template<class T>
-int 
+int
 NS_WildCardValid_(const T *expr)
 {
     int x = _valid_subexp(expr, T('\0'));
     return (x < 0 ? x : VALID_SXP);
 }
 
-NS_COM int 
+NS_COM int
 NS_WildCardValid(const char *expr)
 {
     return NS_WildCardValid_(expr);
 }
 
-NS_COM int 
+NS_COM int
 NS_WildCardValid(const PRUnichar *expr)
 {
     return NS_WildCardValid_(expr);
@@ -157,8 +158,8 @@ template<class T>
 static int _shexp_match(const T *str, const T *expr, PRBool case_insensitive);
 
 template<class T>
-static int 
-_handle_union(const T *str, const T *expr, PRBool case_insensitive) 
+static int
+_handle_union(const T *str, const T *expr, PRBool case_insensitive)
 {
     T *e2 = (T *) NS_Alloc(sizeof(T)*nsCharTraits<T>::length(expr));
     register int t,p2,p1 = 1;
@@ -188,8 +189,8 @@ _handle_union(const T *str, const T *expr, PRBool case_insensitive)
 
 
 template<class T>
-static int 
-_shexp_match(const T *str, const T *expr, PRBool case_insensitive) 
+static int
+_shexp_match(const T *str, const T *expr, PRBool case_insensitive)
 {
     register int x,y;
     int ret,neg;
@@ -212,12 +213,12 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive)
                     return MATCH;
                 while(str[x]) {
                     switch(_shexp_match(&str[x++],&expr[y], case_insensitive)) {
-                    case NOMATCH:
+                      case NOMATCH:
                         continue;
-                    case ABORTED:
+                      case ABORTED:
                         ret = ABORTED;
                         break;
-                    default:
+                      default:
                         return MATCH;
                     }
                     break;
@@ -228,15 +229,15 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive)
                     ret = ABORTED;
                 break;
               case '[':
-              	neg = ((expr[++y] == '^') && (expr[y+1] != ']'));
+                neg = ((expr[++y] == '^') && (expr[y+1] != ']'));
                 if (neg)
                     ++y;
-                
-                if ((isalnum(expr[y])) && (expr[y+1] == '-') && 
+
+                if ((isalnum(expr[y])) && (expr[y+1] == '-') &&
                    (isalnum(expr[y+2])) && (expr[y+3] == ']'))
                     {
                         int start = expr[y], end = expr[y+2];
-                        
+
                         /* Droolproofing for pinheads not included */
                         if(neg ^ ((str[x] < start) || (str[x] > end))) {
                             ret = NOMATCH;
@@ -246,7 +247,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive)
                     }
                 else {
                     int matched;
-                    
+
                     for (matched=0;expr[y] != ']';y++) {
                         /* match an escaped ']' character */
                         if('\\' == expr[y] && ']' == expr[y+1]) {
@@ -269,16 +270,16 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive)
               case '\\':
                 ++y;
               default:
-				if(case_insensitive)
-				  {
+                if(case_insensitive)
+                  {
                     if(toupper(str[x]) != toupper(expr[y]))
                         ret = NOMATCH;
-				  }
-				else
-				  {
+                  }
+                else
+                  {
                     if(str[x] != expr[y])
                         ret = NOMATCH;
-				  }
+                  }
                 break;
             }
         }
@@ -290,13 +291,13 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive)
 
 
 template<class T>
-int 
+int
 NS_WildCardMatch_(const T *str, const T *xp, PRBool case_insensitive)
 {
     T *expr = NS_strdup(xp);
 
-	if(!expr)
-		return 1;
+    if(!expr)
+        return 1;
 
     for(int x=nsCharTraits<T>::length(expr)-1;x;--x) {
         if((expr[x] == '~') && (expr[x-1] != '\\')) {
@@ -316,14 +317,14 @@ NS_WildCardMatch_(const T *str, const T *xp, PRBool case_insensitive)
     return 1;
 }
 
-NS_COM int 
+NS_COM int
 NS_WildCardMatch(const char *str, const char *xp,
                  PRBool case_insensitive)
 {
     return NS_WildCardMatch_(str, xp, case_insensitive);
 }
 
-NS_COM int 
+NS_COM int
 NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
                  PRBool case_insensitive)
 {
