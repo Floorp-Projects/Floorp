@@ -188,6 +188,7 @@ XPCOMGlueLoad(const char *aXpcomFile)
                               NULL
                               );
                 wprintf(L"Error loading %s: %s\n", xpcomDir, lpMsgBuf);
+                LocalFree(lpMsgBuf);
             }
 #endif //DEBUG                
         }
@@ -211,6 +212,7 @@ XPCOMGlueLoad(const char *aXpcomFile)
                       NULL
                       );
         wprintf(L"Error loading %s: %s\n", xpcomFile, lpMsgBuf);
+        LocalFree(lpMsgBuf);
 #endif        
         return nsnull;
     }
