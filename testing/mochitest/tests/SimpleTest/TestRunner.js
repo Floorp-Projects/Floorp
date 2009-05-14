@@ -12,7 +12,7 @@ TestRunner._currentTest = 0;
 TestRunner.currentTestURL = "";
 TestRunner._urls = [];
 
-TestRunner.timeout = 300; // seconds
+TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
 
 /**
@@ -23,21 +23,29 @@ TestRunner._currentTestStartTime = new Date().valueOf();
 
 TestRunner._checkForHangs = function() {
   if (TestRunner._currentTest < TestRunner._urls.length) {
-    var runtime = (new Date().valueOf() - TestRunner._currentTestStartTime) / 1000;
+    var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
     if (runtime >= TestRunner.timeout) {
       var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
-                       	$('testframe').contentWindow;
+                          $('testframe').contentWindow;
       frameWindow.SimpleTest.ok(false, "Test timed out.");
 
       // If we have too many timeouts, give up. We don't want to wait hours
       // for results if some bug causes lots of tests to time out.
       if (++TestRunner._numTimeouts >= TestRunner.maxTimeouts) {
         TestRunner._haltTests = true;
-        frameWindow.SimpleTest.ok(false, "Too many test timeouts, giving up.");
+
+        TestRunner.currentTestURL = "(SimpleTest/TestRunner.js)";
+        frameWindow.SimpleTest.ok(false, TestRunner.maxTimeouts + " test timeouts, giving up.");
+        var skippedTests = TestRunner._urls.length - TestRunner._currentTest;
+        frameWindow.SimpleTest.ok(false, "Skipping " + skippedTests + " remaining tests.");
       }
 
       frameWindow.SimpleTest.finish();
+
+      if (TestRunner._haltTests)
+        return;
     }
+
     TestRunner.deferred = callLater(30, TestRunner._checkForHangs);
   }
 }
@@ -84,8 +92,6 @@ TestRunner._makeIframe = function (url, retry) {
         }
 
         if (TestRunner.logEnabled) {
-            var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
-                              $('testframe').contentWindow;
             TestRunner.logger.log("Error: Unable to restore focus, expect failures and timeouts.");
         }
     }
@@ -115,12 +121,13 @@ TestRunner.runTests = function (/*url...*/) {
 };
 
 /**
- * Run the next test. If no test remains, calls makeSummary
-**/
+ * Run the next test. If no test remains, calls onComplete().
+ **/
 TestRunner._haltTests = false;
 TestRunner.runNextTest = function() {
     if (TestRunner._currentTest < TestRunner._urls.length &&
-        !TestRunner._haltTests) {
+        !TestRunner._haltTests)
+    {
         var url = TestRunner._urls[TestRunner._currentTest];
         TestRunner.currentTestURL = url;
 
@@ -132,15 +139,33 @@ TestRunner.runNextTest = function() {
             TestRunner.logger.log("Running " + url + "...");
 
         TestRunner._makeIframe(url, 0);
-    }  else {
+    } else {
         $("current-test").innerHTML = "<b>Finished</b>";
         TestRunner._makeIframe("about:blank", 0);
+
+        if (parseInt($("pass-count").innerHTML) == 0 &&
+            parseInt($("fail-count").innerHTML) == 0 &&
+            parseInt($("todo-count").innerHTML) == 0)
+        {
+          // No |$('testframe').contentWindow|, so manually update: ...
+          // ... the log,
+          if (TestRunner.logEnabled)
+            TestRunner.logger.error("TEST-UNEXPECTED-FAIL | (SimpleTest/TestRunner.js) | No checks actually run.");
+          // ... the count,
+          $("fail-count").innerHTML = 1;
+          // ... the indicator.
+          var indicator = $("indicator");
+          indicator.innerHTML = "Status: Fail (No checks actually run)";
+          indicator.style.backgroundColor = "red";
+        }
+
         if (TestRunner.logEnabled) {
             TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
             TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
             TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
             TestRunner.logger.log("SimpleTest FINISHED");
         }
+
         if (TestRunner.onComplete)
             TestRunner.onComplete();
     }
@@ -150,10 +175,9 @@ TestRunner.runNextTest = function() {
  * This stub is called by SimpleTest when a test is finished.
 **/
 TestRunner.testFinished = function(doc) {
-    var finishedURL = TestRunner._urls[TestRunner._currentTest];
-
     if (TestRunner.logEnabled)
-        TestRunner.logger.debug("SimpleTest finished " + finishedURL);
+        TestRunner.logger.debug("SimpleTest finished " +
+                                TestRunner._urls[TestRunner._currentTest]);
 
     TestRunner.updateUI();
     TestRunner._currentTest++;
@@ -192,16 +216,19 @@ TestRunner.updateUI = function() {
     indicator.style.backgroundColor = "red";
   } else if (passCount > 0) {
     indicator.innerHTML = "Status: Pass";
-    indicator.style.backgroundColor = "green";
+    indicator.style.backgroundColor = "#0d0";
+  } else {
+    indicator.innerHTML = "Status: ToDo";
+    indicator.style.backgroundColor = "orange";
   }
 
   // Set the table values
   var trID = "tr-" + $('current-test-path').innerHTML;
   var row = $(trID);
   var tds = row.getElementsByTagName("td");
-  tds[0].style.backgroundColor = results.notOK > 0 ? "#f00" : "#0d0";
+  tds[0].style.backgroundColor = "#0d0";
   tds[0].textContent = results.OK;
-  tds[1].style.backgroundColor = results.notOK > 0 ? "#f00" : "#0d0";
+  tds[1].style.backgroundColor = results.notOK > 0 ? "red" : "#0d0";
   tds[1].textContent = results.notOK;
   tds[2].style.backgroundColor = results.todo > 0 ? "orange" : "#0d0";
   tds[2].textContent = results.todo;
