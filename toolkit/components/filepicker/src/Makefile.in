@@ -63,7 +63,6 @@ REQUIRES	= \
 
 CPPSRCS		= \
 		nsFileView.cpp \
-		nsWildCard.cpp \
 		$(NULL)
 
 EXTRA_COMPONENTS = nsFilePicker.js
