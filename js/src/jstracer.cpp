@@ -3413,12 +3413,12 @@ js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
                  VMSideExit* expectedInnerExit, jsbytecode* outer, uint32 outerArgc)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(f->root != f || !cx->fp->imacpc);
-
     if (JS_TRACE_MONITOR(cx).needFlush) {
         FlushJITCache(cx);
         return false;
     }
+
+    JS_ASSERT(f->root != f || !cx->fp->imacpc);
 
     /* start recording if no exception during construction */
     tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
@@ -3776,7 +3776,11 @@ JS_REQUIRES_STACK static bool
 js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer, uint32 outerArgc)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(!tm->needFlush);
+    if (tm->needFlush) {
+        FlushJITCache(cx);
+        return false;
+    }
+
     VMFragment* from = (VMFragment*)exit->from->root;
     TreeInfo* from_ti = (TreeInfo*)from->vmprivate;
 
@@ -3883,7 +3887,12 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer, ui
 static JS_REQUIRES_STACK bool
 js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer)
 {
-    JS_ASSERT(!JS_TRACE_MONITOR(cx).needFlush);
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    if (tm->needFlush) {
+        FlushJITCache(cx);
+        return false;
+    }
+
     Fragment* f = anchor->from->root;
     JS_ASSERT(f->vmprivate);
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
@@ -4598,10 +4607,10 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                               stack, NULL);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
 
-    if (innermost->nativeCalleeWord) {
+    if (innermost->nativeCalleeWord)
         SynthesizeSlowNativeFrame(cx, innermost);
-        cx->nativeVp = NULL;
-    }
+
+    cx->nativeVp = NULL;
 
 #ifdef DEBUG
     // Verify that our state restoration worked.
@@ -5282,15 +5291,16 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
+            VMFragment* frag = *f;
             /* Disable future use of any script-associated VMFragment.*/
-            if (JS_UPTRDIFF((*f)->ip, script->code) < script->length) {
+            if (JS_UPTRDIFF(frag->ip, script->code) < script->length) {
+                JS_ASSERT(frag->root == frag);
                 debug_only_v(printf("Disconnecting VMFragment %p "
                                     "with ip %p, in range [%p,%p).\n",
-                                    (void*)(*f), (*f)->ip, script->code,
+                                    (void*)frag, frag->ip, script->code,
                                     script->code + script->length));
-                VMFragment* next = (*f)->next;
-                if (tm->fragmento)
-                    tm->fragmento->clearFragment(*f);
+                VMFragment* next = frag->next;
+                js_TrashTree(cx, frag);
                 *f = next;
             } else {
                 f = &((*f)->next);
@@ -7956,11 +7966,8 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     LIns* obj_ins = get(&l);
     JSScope* scope = OBJ_SCOPE(obj);
 
-#ifdef DEBUG
     JS_ASSERT(scope->object == obj);
-    JS_ASSERT(scope->shape == PCVCAP_SHAPE(entry->vcap));
     JS_ASSERT(SCOPE_HAS_PROPERTY(scope, sprop));
-#endif
 
     if (!isValidSlot(scope, sprop))
         return JSRS_STOP;
@@ -7996,10 +8003,17 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
         ABORT_TRACE("non-native map");
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
+    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)"),
           BRANCH_EXIT);
 
-    if (entry->kshape != PCVCAP_SHAPE(entry->vcap)) {
+    uint32 vshape = PCVCAP_SHAPE(entry->vcap);
+    if (entry->kshape != vshape) {
+        LIns *vshape_ins = lir->insLoad(LIR_ld,
+                                        lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime)),
+                                        offsetof(JSRuntime, protoHazardShape));
+        guard(true, addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard(vshape)"),
+              MISMATCH_EXIT);
+
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(&js_AddProperty_ci, args);
         guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
