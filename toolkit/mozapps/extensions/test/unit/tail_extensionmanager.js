@@ -39,13 +39,3 @@
 // Close down any remaining EM
 if (gEM)
   shutdownEM();
-
-// Clean up the temporary profile dir.
-try {
-  if (gProfD.exists())
-    gProfD.remove(true);
-}
-catch (e) {
-  // There are many valid reasons for being unable to remove the temporary
-  // profile dir so not much point in failing on it.
-}
