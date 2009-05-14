@@ -112,7 +112,8 @@ var ExtensionsView = {
   },
 
   clearSection: function ev_clearSection(aSection) {
-    let start = end = null;
+    let start = null;
+    let end = null;
 
     if (aSection == "local") {
       start = this._localItem;
