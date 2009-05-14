@@ -1,3 +1,5 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Download Manager Test Code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *  Ted Mielczarek <ted.mielczarek@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,31 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This tests that downloads in the scanning state are set to a completed state
-// upon service initialization.
-
-importDownloadsFile("bug_401582_downloads.sqlite");
-
-const nsIDownloadManager = Ci.nsIDownloadManager;
-const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
-
-function test_noScanningDownloads()
-{
-  var stmt = dm.DBConnection.createStatement(
-    "SELECT * " +
-    "FROM moz_downloads " +
-    "WHERE state = ?1");
-  stmt.bindInt32Parameter(0, nsIDownloadManager.DOWNLOAD_SCANNING);
-
-  do_check_false(stmt.executeStep());
-  stmt.reset();
-  stmt.finalize();
-}
-
-var tests = [test_noScanningDownloads];
-
 function run_test()
 {
-  for (var i = 0; i < tests.length; i++)
-    tests[i]();
+  let profd = do_get_profile();
+  do_check_true(profd.exists());
+  do_check_true(profd.isDirectory());
+  let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties);
+  let profd2 = dirSvc.get("ProfD", Components.interfaces.nsILocalFile);
+  do_check_true(profd2.exists());
+  do_check_true(profd2.isDirectory());
+  // make sure we got the same thing back...
+  do_check_true(profd.equals(profd2));
 }
