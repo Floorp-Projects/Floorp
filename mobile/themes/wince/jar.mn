@@ -5,6 +5,7 @@ firstrun.jar:
   content/firstrun_splash.gif           (firstrun/firstrun_splash.gif)
   content/firstrun_background.gif       (firstrun/firstrun_background.gif)
   content/firstrun.html                 (firstrun/firstrun.html)
+  content/favicon.png                   (firstrun/favicon.png)
 
 classic.jar:
 % skin browser classic/1.0 %
