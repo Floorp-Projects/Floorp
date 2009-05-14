@@ -53,7 +53,7 @@
       Start it and enter private browsing mode immediately after.
     * Check that Download-C has been paused.
     * Exit the private browsing mode.
-    * Verify that Download-C resumes and finishes correctly now. 
+    * Verify that Download-C resumes and finishes correctly now.
 **/
 
 this.__defineGetter__("pb", function () {
@@ -115,7 +115,7 @@ function run_test() {
 
   do_test_pending();
   let httpserv = new nsHttpServer();
-  httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
+  httpserv.registerDirectory("/", do_get_cwd());
 
   let tmpDir = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties).
@@ -308,7 +308,7 @@ function run_test() {
 
   // properties of Download-C
   let downloadC = -1;
-  const downloadCSource = "http://localhost:4444/res/language.properties";
+  const downloadCSource = "http://localhost:4444/head_download_manager.js";
   const downloadCDest = "download-file-C";
   const downloadCName = "download-C";
 
