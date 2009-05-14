@@ -966,8 +966,9 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow)
 function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo)
 {
   // check if cycleHeader sorts the columns
+  var columnIndex = 0;
   var view = tree.view;
-  var column = tree.columns[0];
+  var column = tree.columns[columnIndex];
   var columnElement = column.element;
   var sortkey = columnElement.getAttribute("sort");
   if (sortkey) {
@@ -984,6 +985,30 @@ function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo)
     is(columnElement.getAttribute("sortDirection"), "", "cycleHeader column sortDirection natural");
     // XXXndeakin content view isSorted needs to be tested
   }
+
+  // Check that clicking on column header sorts the column.
+  var columns = getSortedColumnArray(tree);
+  is(columnElement.getAttribute("sortDirection"), "",
+     "cycleHeader column sortDirection");
+
+  // Click once on column header and check sorting has cycled once.
+  mouseClickOnColumnHeader(columns, columnIndex, 0, 1);
+  is(columnElement.getAttribute("sortDirection"), "ascending",
+     "single click cycleHeader column sortDirection ascending");
+
+  // Now simulate a double click.
+  mouseClickOnColumnHeader(columns, columnIndex, 0, 2);
+  if (navigator.platform == "Win32") {
+    // Windows cycles only once on double click.
+    is(columnElement.getAttribute("sortDirection"), "descending",
+       "double click cycleHeader column sortDirection descending");
+    // 1 single clicks should restore natural sorting.
+    mouseClickOnColumnHeader(columns, columnIndex, 0, 1);
+  }
+
+  // Check we have gone back to natural sorting.
+  is(columnElement.getAttribute("sortDirection"), "",
+     "cycleHeader column sortDirection");
 }
 
 // checks if the current and selected rows are correct
@@ -1209,6 +1234,21 @@ function mouseOnCell(tree, row, column, testname)
   tree.boxObject.getCoordsForCellItem(row, column, "text", x, y, width, height);
 
   synthesizeMouseExpectEvent(tree.body, x.value, y.value, {}, tree, "select", testname);
+}
+
+function mouseClickOnColumnHeader(aColumns, aColumnIndex, aButton, aClickCount)
+{
+  var columnHeader = aColumns[aColumnIndex].element;
+  var columnHeaderRect = columnHeader.getBoundingClientRect();
+  var columnWidth = columnHeaderRect.right - columnHeaderRect.left;
+  // For multiple click we send separate click events, with increasing
+  // clickCount.  This simulates the common behavior of multiple clicks.
+  for (var i = 1; i <= aClickCount; i++) {
+    // Target the middle of the column header.
+    synthesizeMouse(columnHeader, columnWidth / 2, 3,
+                    { button: aButton,
+                      clickCount: i }, null);
+  }
 }
 
 function mouseDblClickOnCell(tree, row, column, testname)
