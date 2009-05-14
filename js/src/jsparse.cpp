@@ -2973,7 +2973,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         !js_ReallocSlots(cx, blockObj, slot + 1, JS_FALSE)) {
         return JS_FALSE;
     }
-    blockObj->map->freeslot = slot + 1;
+    OBJ_SCOPE(blockObj)->freeslot = slot + 1;
     STOBJ_SET_SLOT(blockObj, slot, PRIVATE_TO_JSVAL(pn));
     return JS_TRUE;
 }
