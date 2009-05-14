@@ -134,13 +134,13 @@ NS_WildCardValid_(const T *expr)
     return (x < 0 ? x : VALID_SXP);
 }
 
-int 
+NS_COM int 
 NS_WildCardValid(const char *expr)
 {
     return NS_WildCardValid_(expr);
 }
 
-int 
+NS_COM int 
 NS_WildCardValid(const PRUnichar *expr)
 {
     return NS_WildCardValid_(expr);
@@ -316,14 +316,14 @@ NS_WildCardMatch_(const T *str, const T *xp, PRBool case_insensitive)
     return 1;
 }
 
-int 
+NS_COM int 
 NS_WildCardMatch(const char *str, const char *xp,
                  PRBool case_insensitive)
 {
     return NS_WildCardMatch_(str, xp, case_insensitive);
 }
 
-int 
+NS_COM int 
 NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
                  PRBool case_insensitive)
 {

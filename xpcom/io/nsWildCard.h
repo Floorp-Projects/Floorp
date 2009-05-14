@@ -53,6 +53,7 @@
 #define nsWildCard_h__
 
 #include "prtypes.h"
+#include "nscore.h"
 
 /* --------------------------- Public routines ---------------------------- */
 
@@ -69,9 +70,9 @@
 #define INVALID_SXP -2
 #define VALID_SXP 1
 
-extern int NS_WildCardValid(const char *expr);
+NS_COM int NS_WildCardValid(const char *expr);
 
-extern int NS_WildCardValid(const PRUnichar *expr);
+NS_COM int NS_WildCardValid(const PRUnichar *expr);
 
 /* return values for the search routines */
 #define MATCH 0
@@ -86,10 +87,10 @@ extern int NS_WildCardValid(const PRUnichar *expr);
  * Returns 0 on match and 1 on non-match.
  */
 
-extern int NS_WildCardMatch(const char *str, const char *expr,
+NS_COM int NS_WildCardMatch(const char *str, const char *expr,
                             PRBool case_insensitive);
 
-extern int NS_WildCardMatch(const PRUnichar *str, const PRUnichar *expr,
+NS_COM int NS_WildCardMatch(const PRUnichar *str, const PRUnichar *expr,
                             PRBool case_insensitive);
 
 #endif /* nsWildCard_h__ */
