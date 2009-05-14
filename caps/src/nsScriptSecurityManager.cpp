@@ -784,7 +784,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             }
         }
     }
-    rv = CheckXPCPermissions(cx, aObj, aJSObject, subjectPrincipal,
+    rv = CheckXPCPermissions(aObj, aJSObject, subjectPrincipal,
                              objectSecurityLevel);
 #ifdef DEBUG_CAPS_CheckPropertyAccessImpl
     if(NS_SUCCEEDED(rv))
@@ -2859,7 +2859,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     if (checkedComponent)
         checkedComponent->CanCreateWrapper((nsIID *)&aIID, getter_Copies(objectSecurityLevel));
 
-    nsresult rv = CheckXPCPermissions(cx, aObj, nsnull, nsnull, objectSecurityLevel);
+    nsresult rv = CheckXPCPermissions(aObj, nsnull, nsnull, objectSecurityLevel);
     if (NS_FAILED(rv))
     {
         //-- Access denied, report an error
@@ -2970,7 +2970,7 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
     nsCRT::free(cidStr);
 #endif
 
-    nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull, nsnull);
+    nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull);
     if (NS_FAILED(rv))
 #ifdef XPC_IDISPATCH_SUPPORT
     {
@@ -3007,7 +3007,7 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
     nsCRT::free(cidStr);
 #endif
 
-    nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull, nsnull);
+    nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull);
     if (NS_FAILED(rv))
     {
         //-- Access denied, report an error
@@ -3046,8 +3046,7 @@ nsScriptSecurityManager::CanAccess(PRUint32 aAction,
 }
 
 nsresult
-nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
-                                             nsISupports* aObj, JSObject* aJSObject,
+nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj, JSObject* aJSObject,
                                              nsIPrincipal* aSubjectPrincipal,
                                              const char* aObjectSecurityLevel)
 {
@@ -3061,40 +3060,20 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
     {
         if (PL_strcasecmp(aObjectSecurityLevel, "allAccess") == 0)
             return NS_OK;
-        if (cx && PL_strcasecmp(aObjectSecurityLevel, "sameOrigin") == 0)
+        if (aSubjectPrincipal && aJSObject &&
+            PL_strcasecmp(aObjectSecurityLevel, "sameOrigin") == 0)
         {
-            nsresult rv;
-            if (!aJSObject)
-            {
-                nsCOMPtr<nsIXPConnectWrappedJS> xpcwrappedjs =
-                    do_QueryInterface(aObj);
-                if (xpcwrappedjs)
-                {
-                    rv = xpcwrappedjs->GetJSObject(&aJSObject);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                }
-            }
+            nsIPrincipal* objectPrincipal = doGetObjectPrincipal(aJSObject);
 
-            if (!aSubjectPrincipal)
+            // Only do anything if we have both a subject and object
+            // principal.
+            if (objectPrincipal)
             {
-                // No subject principal passed in. Compute it.
-                aSubjectPrincipal = GetSubjectPrincipal(cx, &rv);
+                PRBool subsumes;
+                nsresult rv = aSubjectPrincipal->Subsumes(objectPrincipal, &subsumes);
                 NS_ENSURE_SUCCESS(rv, rv);
-            }
-            if (aSubjectPrincipal && aJSObject)
-            {
-                nsIPrincipal* objectPrincipal = doGetObjectPrincipal(aJSObject);
-
-                // Only do anything if we have both a subject and object
-                // principal.
-                if (objectPrincipal)
-                {
-                    PRBool subsumes;
-                    rv = aSubjectPrincipal->Subsumes(objectPrincipal, &subsumes);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                    if (subsumes)
-                        return NS_OK;
-                }
+                if (subsumes)
+                    return NS_OK;
             }
         }
         else if (PL_strcasecmp(aObjectSecurityLevel, "noAccess") != 0)
