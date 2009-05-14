@@ -3385,8 +3385,6 @@
         var anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = false;
-        else
-          this.style.MozUserFocus = "";
       </handler>
       <handler event="dragstart" phase="capturing">
         this.style.MozUserFocus = '';
