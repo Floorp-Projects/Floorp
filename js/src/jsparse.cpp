@@ -6091,7 +6091,10 @@ CompExprTransplanter::transplant(JSParseNode *pn)
 
       case PN_BINARY:
         transplant(pn->pn_left);
-        transplant(pn->pn_right);
+
+        /* Binary TOK_COLON nodes can have left == right. See bug 492714. */
+        if (pn->pn_right != pn->pn_left)
+            transplant(pn->pn_right);
         break;
 
       case PN_UNARY:
