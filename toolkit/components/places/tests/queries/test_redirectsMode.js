@@ -265,6 +265,14 @@ function add_visits_to_database() {
       visitCount: visitCount++,
       isInQuery: true }));
 
+  // Add an unvisited bookmark in the database, it should never appear.
+  visits.push({ isBookmark: true,
+    uri: "http://unvisited.bookmark.com/",
+    parentFolder: bmsvc.bookmarksMenuFolder,
+    index: bmsvc.DEFAULT_INDEX,
+    title: "Unvisited Bookmark",
+    isInQuery: false });
+
   // Put visits in the database.
   populateDB(visits);
 }
