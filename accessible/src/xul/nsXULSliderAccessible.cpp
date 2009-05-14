@@ -132,17 +132,6 @@ nsXULSliderAccessible::SetCurrentValue(double aValue)
   return SetSliderAttr(nsAccessibilityAtoms::curpos, aValue);
 }
 
-// nsPIAccessible
-NS_IMETHODIMP
-nsXULSliderAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
-{
-  NS_ENSURE_ARG_POINTER(aAllowsAnonChildren);
-
-  // Allow anonymous xul:thumb inside xul:slider.
-  *aAllowsAnonChildren = PR_TRUE;
-  return NS_OK;
-}
-
 // Utils
 
 already_AddRefed<nsIContent>
