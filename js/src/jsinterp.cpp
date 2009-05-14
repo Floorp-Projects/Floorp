@@ -110,12 +110,12 @@ js_GenerateShape(JSContext *cx, JSBool gcLocked)
 JS_REQUIRES_STACK JSPropCacheEntry *
 js_FillPropertyCache(JSContext *cx, JSObject *obj,
                      uintN scopeIndex, uintN protoIndex, JSObject *pobj,
-                     JSScopeProperty *sprop, JSBool addedSprop)
+                     JSScopeProperty *sprop, JSBool adding)
 {
     JSPropertyCache *cache;
     jsbytecode *pc;
     JSScope *scope;
-    jsuword kshape, khash;
+    jsuword kshape, vshape, khash;
     JSOp op;
     const JSCodeSpec *cs;
     jsuword vword;
@@ -157,12 +157,15 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
      * but vcap vs. scope shape tests ensure nothing malfunctions.
      */
     JS_ASSERT_IF(scopeIndex == 0 && protoIndex == 0, obj == pobj);
-    if (protoIndex != 0) {
-        JSObject *tmp;
 
-        JS_ASSERT(pobj != obj);
+    if (protoIndex != 0) {
+        JSObject *tmp = obj;
+
+        for (uintN i = 0; i != scopeIndex; i++)
+            tmp = OBJ_GET_PARENT(cx, tmp);
+        JS_ASSERT(tmp != pobj);
+
         protoIndex = 1;
-        tmp = obj;
         for (;;) {
             tmp = OBJ_GET_PROTO(cx, tmp);
 
@@ -180,6 +183,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             ++protoIndex;
         }
     }
+
     if (scopeIndex > PCVCAP_SCOPEMASK || protoIndex > PCVCAP_PROTOMASK) {
         PCMETER(cache->longchains++);
         return JS_NO_PROP_CACHE_FILL;
@@ -256,7 +260,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         } else {
             /* Best we can do is to cache sprop (still a nice speedup). */
             vword = SPROP_TO_PCVAL(sprop);
-            if (addedSprop &&
+            if (adding &&
                 sprop == scope->lastProp &&
                 scope->shape == sprop->shape) {
                 /*
@@ -294,12 +298,21 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                     if (proto && OBJ_IS_NATIVE(proto))
                         kshape = OBJ_SHAPE(proto);
                 }
+
+                /*
+                 * When adding we predict no prototype object will later gain a
+                 * readonly property or setter.
+                 */
+                vshape = cx->runtime->protoHazardShape;
             }
         }
     } while (0);
 
-    if (kshape == 0)
+    if (kshape == 0) {
         kshape = OBJ_SHAPE(obj);
+        vshape = scope->shape;
+    }
+
     khash = PROPERTY_CACHE_HASH_PC(pc, kshape);
     if (obj == pobj) {
         JS_ASSERT(scopeIndex == 0 && protoIndex == 0);
@@ -312,8 +325,14 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
             GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, atom);
         }
-        JS_ASSERT_IF(scopeIndex == 0,
-                     protoIndex != 1 || OBJ_GET_PROTO(cx, obj) == pobj);
+
+#ifdef DEBUG
+        if (scopeIndex == 0) {
+            JS_ASSERT(protoIndex != 0);
+            JS_ASSERT((protoIndex == 1) == (OBJ_GET_PROTO(cx, obj) == pobj));
+        }
+#endif
+
         if (scopeIndex != 0 || protoIndex != 1) {
             khash = PROPERTY_CACHE_HASH_ATOM(atom, obj, pobj);
             PCMETER(if (PCVCAP_TAG(cache->table[khash].vcap) <= 1)
@@ -339,7 +358,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
     PCMETER(PCVAL_IS_NULL(entry->vword) || cache->recycles++);
     entry->kpc = pc;
     entry->kshape = kshape;
-    entry->vcap = PCVCAP_MAKE(scope->shape, scopeIndex, protoIndex);
+    entry->vcap = PCVCAP_MAKE(vshape, scopeIndex, protoIndex);
     entry->vword = vword;
 
     cache->empty = JS_FALSE;
@@ -4590,11 +4609,13 @@ js_Interpret(JSContext *cx)
                     PCMETER(cache->pctestentry = entry);
                     PCMETER(cache->tests++);
                     PCMETER(cache->settests++);
-                    if (entry->kpc == regs.pc && entry->kshape == kshape) {
-                        JSScope *scope;
+                    if (entry->kpc == regs.pc &&
+                        entry->kshape == kshape &&
+                        PCVCAP_SHAPE(entry->vcap) == rt->protoHazardShape) {
+                        JS_ASSERT(PCVCAP_TAG(entry->vcap) == 0);
 
                         JS_LOCK_OBJ(cx, obj);
-                        scope = OBJ_SCOPE(obj);
+                        JSScope *scope = OBJ_SCOPE(obj);
                         if (scope->shape == kshape) {
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
@@ -6303,7 +6324,11 @@ js_Interpret(JSContext *cx)
                 PCMETER(cache->tests++);
                 PCMETER(cache->initests++);
 
-                if (entry->kpc == regs.pc && entry->kshape == kshape) {
+                if (entry->kpc == regs.pc &&
+                    entry->kshape == kshape &&
+                    PCVCAP_SHAPE(entry->vcap) == rt->protoHazardShape) {
+                    JS_ASSERT(PCVCAP_TAG(entry->vcap) == 0);
+
                     PCMETER(cache->pchits++);
                     PCMETER(cache->inipchits++);
 
@@ -6341,7 +6366,6 @@ js_Interpret(JSContext *cx)
                      * obj, not a proto-property, and there cannot have been
                      * any deletions of prior properties.
                      */
-                    JS_ASSERT(PCVCAP_MAKE(sprop->shape, 0, 0) == entry->vcap);
                     JS_ASSERT(!SCOPE_HAD_MIDDLE_DELETE(scope));
                     JS_ASSERT(!scope->table ||
                               !SCOPE_HAS_PROPERTY(scope, sprop));

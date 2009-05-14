@@ -7966,11 +7966,8 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     LIns* obj_ins = get(&l);
     JSScope* scope = OBJ_SCOPE(obj);
 
-#ifdef DEBUG
     JS_ASSERT(scope->object == obj);
-    JS_ASSERT(scope->shape == PCVCAP_SHAPE(entry->vcap));
     JS_ASSERT(SCOPE_HAS_PROPERTY(scope, sprop));
-#endif
 
     if (!isValidSlot(scope, sprop))
         return JSRS_STOP;
@@ -8006,10 +8003,17 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
         ABORT_TRACE("non-native map");
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
+    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)"),
           BRANCH_EXIT);
 
-    if (entry->kshape != PCVCAP_SHAPE(entry->vcap)) {
+    uint32 vshape = PCVCAP_SHAPE(entry->vcap);
+    if (entry->kshape != vshape) {
+        LIns *vshape_ins = lir->insLoad(LIR_ld,
+                                        lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime)),
+                                        offsetof(JSRuntime, protoHazardShape));
+        guard(true, addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard(vshape)"),
+              MISMATCH_EXIT);
+
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(&js_AddProperty_ci, args);
         guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
