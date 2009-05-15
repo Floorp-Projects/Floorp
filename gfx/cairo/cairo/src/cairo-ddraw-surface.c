@@ -37,12 +37,11 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "cairoint.h"
-
 #if CAIRO_HAS_DDRAW_SURFACE
 
 #include "cairo-clip-private.h"
 #include "cairo-ddraw-private.h"
+#include "cairo-region-private.h"
 
 #include <windows.h>
 #include <ddraw.h>

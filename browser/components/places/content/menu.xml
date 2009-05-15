@@ -125,7 +125,7 @@
           var scrollDir = anonid == "scrollbutton-up" ? -1 :
                           anonid == "scrollbutton-down" ? 1 : 0;
           if (scrollDir != 0) {
-              this._scrollBox.scrollByIndex(scrollDir);
+            this._scrollBox.scrollByIndex(scrollDir, false);
           }
 
           // Check if we should hide the drop indicator for this target

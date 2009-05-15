@@ -185,7 +185,7 @@ typedef struct _tt_name {
 typedef struct _tt_composite_glyph {
     uint16_t flags;
     uint16_t index;
-    uint16_t args[7]; /* 1 to 7 arguments depending on value of flags */
+    uint16_t args[6]; /* 1 to 6 arguments depending on value of flags */
 } tt_composite_glyph_t;
 
 typedef struct _tt_glyph_data {

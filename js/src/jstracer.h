@@ -576,8 +576,9 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp);
     JS_REQUIRES_STACK JSRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot,
                                              nanojit::LIns*& v_ins);
-    JS_REQUIRES_STACK JSRecordingStatus elem(jsval& oval, jsval& idx, jsval*& vp,
-                                             nanojit::LIns*& v_ins, nanojit::LIns*& addr_ins);
+    JS_REQUIRES_STACK JSRecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,
+                                                          nanojit::LIns*& v_ins,
+                                                          nanojit::LIns*& addr_ins);
     JS_REQUIRES_STACK JSRecordingStatus getProp(JSObject* obj, nanojit::LIns* obj_ins);
     JS_REQUIRES_STACK JSRecordingStatus getProp(jsval& v);
     JS_REQUIRES_STACK JSRecordingStatus getThis(nanojit::LIns*& this_ins);

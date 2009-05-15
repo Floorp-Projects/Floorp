@@ -61,7 +61,9 @@
 #include "nsLayoutErrors.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTableCellAccessible
+// nsHTMLTableCellAccessible implementation
+
+// nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsHyperTextAccessible)
 
@@ -69,6 +71,8 @@ nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWe
 nsHyperTextAccessibleWrap(aDomNode, aShell)
 { 
 }
+
+// nsAccessible
 
 /* unsigned long getRole (); */
 nsresult
@@ -87,11 +91,94 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIAccessibleTable> tableAcc(GetTableAccessible());
+  if (!tableAcc)
+    return NS_OK;
+
+  PRInt32 rowIdx = -1, colIdx = -1;
+  rv = GetCellIndexes(rowIdx, colIdx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 idx = -1;
+  rv = tableAcc->GetIndexAt(rowIdx, colIdx, &idx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString stringIdx;
+  stringIdx.AppendInt(idx);
+  nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::tableCellIndex,
+                         stringIdx);
+  return NS_OK;
+}
+
+// nsIAccessible
+
+NS_IMETHODIMP
+nsHTMLTableCellAccessible::GetRelationByType(PRUint32 aRelationType,
+                                             nsIAccessibleRelation **aRelation)
+{
+  nsresult rv = nsHyperTextAccessibleWrap::GetRelationByType(aRelationType,
+                                                             aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aRelationType != nsIAccessibleRelation::RELATION_DESCRIBED_BY)
+    return NS_OK;
+
+  // 'described_by' relation from @headers attribute.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  rv = nsRelUtils::AddTargetFromIDRefsAttr(aRelationType, aRelation,
+                                           content, nsAccessibilityAtoms::headers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (rv != NS_OK_NO_RELATION_TARGET)
+    return rv; // Do not calculate more relations.
+
+  // 'described_by' relation from hierarchy (see 11.4.3 "Algorithm to find
+  // heading information" of w3c HTML 4.01)
+  return FindCellsForRelation(eHeadersForCell, aRelationType, aRelation);
+}
+
+// nsHTMLTableCellAccessible
+
+already_AddRefed<nsIAccessibleTable>
+nsHTMLTableCellAccessible::GetTableAccessible()
+{
+  nsCOMPtr<nsIAccessible> childAcc(this);
+
+  nsCOMPtr<nsIAccessible> parentAcc;
+  nsresult rv = childAcc->GetParent(getter_AddRefs(parentAcc));
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  while (parentAcc) {
+    if (nsAccUtils::Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
+      // Table accessible must implement nsIAccessibleTable interface but if
+      // it isn't happen (for example because of ARIA usage).
+      if (!parentAcc)
+        return nsnull;
+
+      nsIAccessibleTable* tableAcc = nsnull;
+      CallQueryInterface(parentAcc, &tableAcc);
+      return tableAcc;
+    }
+
+    parentAcc.swap(childAcc);
+    rv = childAcc->GetParent(getter_AddRefs(parentAcc));
+    if (NS_FAILED(rv))
+      return nsnull;
+  }
+
+  return nsnull;
+}
+
+nsresult
+nsHTMLTableCellAccessible::GetCellIndexes(PRInt32& aRowIndex,
+                                          PRInt32& aColIndex)
+{
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
   NS_ENSURE_STATE(shell);
-  
+
   nsIFrame *frame = shell->GetPrimaryFrameFor(content);
   NS_ASSERTION(frame, "The frame cannot be obtaied for HTML table cell.");
   NS_ENSURE_STATE(frame);
@@ -99,48 +186,211 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   nsITableCellLayout *cellLayout = do_QueryFrame(frame);
   NS_ENSURE_STATE(cellLayout);
 
-  PRInt32 rowIdx = -1, cellIdx = -1;
-  rv = cellLayout->GetCellIndexes(rowIdx, cellIdx);
+  return cellLayout->GetCellIndexes(aRowIndex, aColIndex);
+}
+
+nsresult
+nsHTMLTableCellAccessible::FindCellsForRelation(PRInt32 aSearchHint,
+                                                PRUint32 aRelationType,
+                                                nsIAccessibleRelation **aRelation)
+{
+  nsCOMPtr<nsIAccessibleTable> tableAcc(GetTableAccessible());
+  nsRefPtr<nsHTMLTableAccessible> nsTableAcc =
+    nsAccUtils::QueryAccessibleTable(tableAcc);
+  if (!nsTableAcc)
+    return NS_OK; // Do not fail because of wrong markup.
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  PRInt32 rowIdx = -1, colIdx = -1;
+  nsresult rv = GetCellIndexes(rowIdx, colIdx);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAccessible> childAcc(this);
+  PRBool moveToTopLeft = aSearchHint == eHeadersForCell;
+  PRInt32 dir = (moveToTopLeft) ? -1 : 1;
+  PRInt32 bound = 0;
 
-  nsCOMPtr<nsIAccessible> parentAcc;
-  rv = childAcc->GetParent(getter_AddRefs(parentAcc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  while (parentAcc) {
-    if (nsAccUtils::Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
-      // Table accessible must implement nsIAccessibleTable interface but if
-      // it isn't happen (for example because of ARIA usage) we shouldn't fail
-      // on getting other attributes.
-      nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(parentAcc));
-      if (!tableAcc)
-        return NS_OK;
-
-      PRInt32 idx = -1;
-      rv = tableAcc->GetIndexAt(rowIdx, cellIdx, &idx);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsAutoString stringIdx;
-      stringIdx.AppendInt(idx);
-      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::tableCellIndex,
-                             stringIdx);
-      return NS_OK;
+  // left/right direction
+  if (aSearchHint != eCellsForColumnHeader) {
+    if (!moveToTopLeft) {
+      tableAcc->GetColumns(&bound);
+      bound--;
     }
 
-    parentAcc.swap(childAcc);
-    rv = childAcc->GetParent(getter_AddRefs(parentAcc));
-    NS_ENSURE_SUCCESS(rv, rv);
+    for (PRInt32 index = colIdx + dir; dir * index <= bound; index += dir) {
+      // Left direction means we look for the first columnheader. Right direction
+      // means we look for all cells underneath of columnheader.
+      nsIContent *cellContent = FindCell(nsTableAcc, content, rowIdx, index,
+                                         moveToTopLeft);
+
+      if (cellContent) {
+        nsRelUtils::AddTargetFromContent(aRelationType, aRelation, cellContent);
+        if (moveToTopLeft)
+          break;
+      }
+    }
+  }
+
+  // up/down direction
+  if (aSearchHint != eCellsForRowHeader) {
+    if (!moveToTopLeft) {
+      tableAcc->GetRows(&bound);
+      bound--;
+    }
+
+    for (PRInt32 index = rowIdx + dir; dir * index <= bound; index += dir) {
+      // Left direction means we look for the first rowheader. Right direction
+      // means we look for all cells underneath of rowheader.
+      nsIContent *cellContent = FindCell(nsTableAcc, content, index, colIdx,
+                                         moveToTopLeft);
+
+      if (cellContent) {
+        nsRelUtils::AddTargetFromContent(aRelationType, aRelation, cellContent);
+        if (moveToTopLeft)
+          break;
+      }
+    }
   }
 
   return NS_OK;
 }
 
+nsIContent*
+nsHTMLTableCellAccessible::FindCell(nsHTMLTableAccessible *aTableAcc,
+                                    nsIContent *aAnchorCell,
+                                    PRInt32 aRowIdx, PRInt32 aColIdx,
+                                    PRInt32 aLookForHeader)
+{
+  nsCOMPtr<nsIDOMElement> cellElm;
+  aTableAcc->GetCellAt(aRowIdx, aColIdx, *getter_AddRefs(cellElm));
+  if (!cellElm)
+    return nsnull;
+
+  nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElm));
+  if (aAnchorCell == cellContent) // colspan or rowspan case
+    return nsnull;
+
+  if (aLookForHeader) {
+    if (nsCoreUtils::IsHTMLTableHeader(cellContent))
+      return cellContent;
+
+    return nsnull;
+  }
+
+  return cellContent;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLTableHeaderAccessible
+
+nsHTMLTableHeaderAccessible::
+  nsHTMLTableHeaderAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+  nsHTMLTableCellAccessible(aDomNode, aShell)
+{
+}
+
+nsresult
+nsHTMLTableHeaderAccessible::GetRoleInternal(PRUint32 *aRole)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  // Check value of @scope attribute.
+  static nsIContent::AttrValuesArray scopeValues[] =
+    {&nsAccessibilityAtoms::col, &nsAccessibilityAtoms::row, nsnull};
+  PRInt32 valueIdx = 
+    content->FindAttrValueIn(kNameSpaceID_None, nsAccessibilityAtoms::scope,
+                             scopeValues, eCaseMatters);
+
+  switch (valueIdx) {
+    case 0:
+      *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
+      return NS_OK;
+    case 1:
+      *aRole = nsIAccessibleRole::ROLE_ROWHEADER;
+      return NS_OK;
+  }
+
+  // Assume it's columnheader if there are headers in siblings, oterwise
+  // rowheader.
+  nsIContent* parent = content->GetParent();
+  PRInt32 indexInParent = parent->IndexOf(content);
+
+  for (PRInt32 idx = indexInParent - 1; idx >= 0; idx--) {
+    nsIContent* sibling = parent->GetChildAt(idx);
+    if (sibling && sibling->IsNodeOfType(nsINode::eELEMENT)) {
+      if (nsCoreUtils::IsHTMLTableHeader(sibling))
+        *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
+      else
+        *aRole = nsIAccessibleRole::ROLE_ROWHEADER;
+
+      return NS_OK;
+    }
+  }
+
+  PRInt32 childCount = parent->GetChildCount();
+  for (PRInt32 idx = indexInParent + 1; idx < childCount; idx++) {
+    nsIContent* sibling = parent->GetChildAt(idx);
+    if (sibling && sibling->IsNodeOfType(nsINode::eELEMENT)) {
+      if (nsCoreUtils::IsHTMLTableHeader(sibling))
+        *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
+      else
+        *aRole = nsIAccessibleRole::ROLE_ROWHEADER;
+      
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTableHeaderAccessible::GetRelationByType(PRUint32 aRelationType,
+                                               nsIAccessibleRelation **aRelation)
+{
+  nsresult rv = nsHyperTextAccessibleWrap::
+    GetRelationByType(aRelationType, aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aRelationType != nsIAccessibleRelation::RELATION_DESCRIPTION_FOR)
+    return rv;
+
+  // 'description_for' relation from @headers attribute placed on table cells.
+  nsCOMPtr<nsIAccessibleTable> tableAcc(GetTableAccessible());
+  if (!tableAcc)
+    return NS_OK;
+
+  nsCOMPtr<nsIAccessNode> tableAccNode(do_QueryInterface(tableAcc));
+  nsCOMPtr<nsIDOMNode> tableNode;
+  tableAccNode->GetDOMNode(getter_AddRefs(tableNode));
+  nsCOMPtr<nsIContent> tableContent(do_QueryInterface(tableNode));
+  if (!tableContent)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  rv = nsRelUtils::
+    AddTargetFromChildrenHavingIDRefsAttr(aRelationType, aRelation,
+                                          tableContent, content,
+                                          nsAccessibilityAtoms::headers);
+
+  if (rv != NS_OK_NO_RELATION_TARGET)
+    return rv; // Do not calculate more relations.
+
+  // 'description_for' relation from hierarchy.
+  PRUint32 role;
+  rv = GetRoleInternal(&role);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (role == nsIAccessibleRole::ROLE_COLUMNHEADER)
+    return FindCellsForRelation(eCellsForColumnHeader, aRelationType, aRelation);
+
+  return FindCellsForRelation(eCellsForRowHeader, aRelationType, aRelation);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableAccessible
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, nsAccessible, nsIAccessibleTable)
+NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableAccessible, nsAccessible,
+                             nsHTMLTableAccessible, nsIAccessibleTable)
 
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsAccessibleWrap(aDomNode, aShell)

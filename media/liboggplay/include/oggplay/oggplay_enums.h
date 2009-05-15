@@ -64,6 +64,9 @@ typedef enum OggPlayErrorCode {
   E_OGGPLAY_NO_KATE_SUPPORT   = -19,
   E_OGGPLAY_NO_TIGER_SUPPORT  = -20,
   E_OGGPLAY_OUT_OF_MEMORY     = -21,
+  E_OGGPLAY_TYPE_OVERFLOW     = -22,  /**< Integer overflow detected */
+  
+  E_OGGPLAY_TRACK_IS_UNKNOWN  = -23,  /**< The selected track's content type is UNKNOWN */
   E_OGGPLAY_NOTCHICKENPAYBACK = -777
 } OggPlayErrorCode;
 

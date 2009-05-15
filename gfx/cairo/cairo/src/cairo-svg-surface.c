@@ -1025,6 +1025,8 @@ _cairo_surface_base64_encode_png (cairo_surface_t       *surface,
 
     cairo_surface_get_mime_data (surface, CAIRO_MIME_TYPE_PNG,
 				 &mime_data, &mime_data_length);
+    if (unlikely (surface->status))
+	return surface->status;
     if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 

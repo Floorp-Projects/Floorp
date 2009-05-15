@@ -285,25 +285,34 @@ var PlacesOrganizer = {
   },
 
   /**
-   * Handle clicks on the tree. If the user middle clicks on a URL, load that
-   * URL according to rules. Single clicks or modified clicks do not result in
-   * any special action, since they're related to selection.
+   * Handle clicks on the tree.
+   * Single Left click, right click or modified click do not result in any
+   * special action, since they're related to selection.
    * @param   aEvent
    *          The mouse event.
    */
   onTreeClick: function PO_onTreeClick(aEvent) {
+    // Only handle clicks on tree children.
     if (aEvent.target.localName != "treechildren")
       return;
 
     var currentView = aEvent.currentTarget;
     var selectedNode = currentView.selectedNode;
-    if (selectedNode && aEvent.button == 1) {
-      if (PlacesUtils.nodeIsURI(selectedNode))
-        PlacesUIUtils.openNodeWithEvent(selectedNode, aEvent);
-      else if (PlacesUtils.nodeIsContainer(selectedNode)) {
-        // The command execution function will take care of seeing the
-        // selection is a folder/container and loading its contents in
-        // tabs for us.
+    if (selectedNode) {
+      var doubleClickOnFlatList = (aEvent.button == 0 && aEvent.detail == 2 &&
+                                   aEvent.target.parentNode.flatList);
+      var middleClick = (Event.button == 1 && aEvent.detail == 1);
+
+      if (PlacesUtils.nodeIsURI(selectedNode) &&
+          (doubleClickOnFlatList || middleClick)) {
+        // Open associated uri in the browser.
+        PlacesOrganizer.openSelectedNode(aEvent);
+      }
+      else if (middleClick &&
+               PlacesUtils.nodeIsContainer(selectedNode)) {
+        // The command execution function will take care of seeing if the
+        // selection is a folder or a different container type, and will
+        // load its contents in tabs.
         PlacesUIUtils.openContainerNodeInTabs(selectedNode, aEvent);
       }
     }

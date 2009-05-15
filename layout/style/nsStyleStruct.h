@@ -1301,14 +1301,13 @@ struct nsStyleContent {
   nsStyleCoord  mMarkerOffset;  // [reset] coord, auto
 
 protected:
-  PRUint32            mContentCount;
   nsStyleContentData* mContents;
-
-  PRUint32            mIncrementCount;
   nsStyleCounterData* mIncrements;
-
-  PRUint32            mResetCount;
   nsStyleCounterData* mResets;
+
+  PRUint32            mContentCount;
+  PRUint32            mIncrementCount;
+  PRUint32            mResetCount;
 };
 
 struct nsStyleUIReset {
@@ -1455,11 +1454,11 @@ enum nsStyleSVGPaintType {
 
 struct nsStyleSVGPaint
 {
-  nsStyleSVGPaintType mType;
   union {
     nscolor mColor;
     nsIURI *mPaintServer;
   } mPaint;
+  nsStyleSVGPaintType mType;
   nscolor mFallbackColor;
 
   nsStyleSVGPaint() : mType(nsStyleSVGPaintType(0)) { mPaint.mPaintServer = nsnull; }
@@ -1537,12 +1536,12 @@ struct nsStyleSVGReset {
   static nsChangeHint MaxDifference();
 #endif
 
-  nscolor          mStopColor;        // [reset]
-  nscolor          mFloodColor;       // [reset]
-  nscolor          mLightingColor;    // [reset]
   nsCOMPtr<nsIURI> mClipPath;         // [reset]
   nsCOMPtr<nsIURI> mFilter;           // [reset]
   nsCOMPtr<nsIURI> mMask;             // [reset]
+  nscolor          mStopColor;        // [reset]
+  nscolor          mFloodColor;       // [reset]
+  nscolor          mLightingColor;    // [reset]
 
   float            mStopOpacity;      // [reset]
   float            mFloodOpacity;     // [reset]

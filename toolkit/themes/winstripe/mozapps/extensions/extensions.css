@@ -24,6 +24,10 @@
   visibility: visible;
 }
 
+#searchfield {
+  -moz-margin-start: 0;
+}
+
 /* Command Bar */
 #commandBarBottom {
   margin: 10px 10px 5px 10px;

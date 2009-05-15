@@ -37,7 +37,7 @@
 
 /*
  * nsWildCard.h: Defines and prototypes for shell exp. match routines
- * 
+ *
  * See nsIZipReader.findEntries docs in nsIZipReader.idl for a description of
  * the supported expression syntax.
  *
@@ -48,20 +48,19 @@
  * ensure it works.
  *
  */
- 
+
 #ifndef nsWildCard_h__
 #define nsWildCard_h__
 
 #include "prtypes.h"
-#include <ctype.h>  /* isalnum */
-#include <string.h> /* strlen */
+#include "nscore.h"
 
 /* --------------------------- Public routines ---------------------------- */
 
 
 /*
  * NS_WildCardValid takes a shell expression exp as input. It returns:
- * 
+ *
  *  NON_SXP      if exp is a standard string
  *  INVALID_SXP  if exp is a shell expression, but invalid
  *  VALID_SXP    if exp is a valid shell expression
@@ -71,8 +70,9 @@
 #define INVALID_SXP -2
 #define VALID_SXP 1
 
-extern int NS_WildCardValid(char *expr);
+NS_COM int NS_WildCardValid(const char *expr);
 
+NS_COM int NS_WildCardValid(const PRUnichar *expr);
 
 /* return values for the search routines */
 #define MATCH 0
@@ -81,12 +81,16 @@ extern int NS_WildCardValid(char *expr);
 
 /*
  * NS_WildCardMatch
- * 
+ *
  * Takes a prevalidated shell expression exp, and a string str.
  *
  * Returns 0 on match and 1 on non-match.
  */
 
-extern int NS_WildCardMatch(char *str, char *expr, PRBool case_insensitive);
+NS_COM int NS_WildCardMatch(const char *str, const char *expr,
+                            PRBool case_insensitive);
+
+NS_COM int NS_WildCardMatch(const PRUnichar *str, const PRUnichar *expr,
+                            PRBool case_insensitive);
 
 #endif /* nsWildCard_h__ */

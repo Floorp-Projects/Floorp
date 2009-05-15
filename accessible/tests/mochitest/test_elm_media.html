@@ -23,23 +23,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
 
   <script type="application/javascript">
 
-    function focusChecker(aAcc, aName)
+    function focusChecker(aAcc)
     {
       this.type = EVENT_FOCUS;
       this.target = aAcc;
       this.getID = function focusChecker_getID()
       {
         return "focus handling";
+      }
+    }
+
+    function nameChecker(aAcc, aName)
+    {
+      this.type = EVENT_NAME_CHANGE;
+      this.target = aAcc;
+      this.getID = function nameChecker_getID()
+      {
+        return "name change handling";
       },
       this.check = function focusChecker_check(aEvent)
       {
-        SimpleTest.executeSoon(
-          function()
-          {
-            is(aEvent.accessible.name, aName,
-               "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
-          }
-        );
+        is(aEvent.accessible.name, aName,
+           "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
       }
     }
 
@@ -62,10 +67,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
             role: ROLE_PROGRESSBAR
           },
           { // slider of progress bar
-            role: ROLE_SLIDER
+            role: ROLE_SLIDER,
+            name: "0:00 of 0:01 elapsed"
           },
-          { // duration label
-            role: ROLE_LABEL
+          { // duration label, role="presentation"
+            role: ROLE_NOTHING
           },
           { // mute button
             role: ROLE_PUSHBUTTON,
@@ -84,16 +90,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
 
       var actions = [
         {
-          ID: playBtn,
-          actionName: "press",
-          events: CLICK_EVENTS,
-          eventSeq: [ new focusChecker(playBtn, "Pause") ],
-        },
-        {
           ID: muteBtn,
           actionName: "press",
           events: CLICK_EVENTS,
-          eventSeq: [ new focusChecker(muteBtn, "Unmute") ],
+          eventSeq: [
+            new focusChecker(muteBtn),
+            new nameChecker(muteBtn, "Unmute"),
+          ]
+        },
+        {
+          ID: playBtn,
+          actionName: "press",
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new focusChecker(playBtn),
+            new nameChecker(playBtn, "Pause"),
+          ]
         }
       ];
 

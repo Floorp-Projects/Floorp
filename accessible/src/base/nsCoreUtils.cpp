@@ -71,7 +71,6 @@
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIMutableArray.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -803,6 +802,56 @@ nsCoreUtils::GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
 
   NS_ADDREF(*aRefElements = refElms);
   return;
+}
+
+void
+nsCoreUtils::GetElementsHavingIDRefsAttr(nsIContent *aRootContent,
+                                         nsIContent *aContent,
+                                         nsIAtom *aIDRefsAttr,
+                                         nsIArray **aElements)
+{
+  *aElements = nsnull;
+
+  nsAutoString id;
+  if (!GetID(aContent, id))
+    return;
+
+  nsCAutoString idWithSpaces(' ');
+  LossyAppendUTF16toASCII(id, idWithSpaces);
+  idWithSpaces += ' ';
+
+  nsCOMPtr<nsIMutableArray> elms = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!elms)
+    return;
+
+  GetElementsHavingIDRefsAttrImpl(aRootContent, idWithSpaces, aIDRefsAttr,
+                                  elms);
+  NS_ADDREF(*aElements = elms);
+}
+
+void
+nsCoreUtils::GetElementsHavingIDRefsAttrImpl(nsIContent *aRootContent,
+                                             nsCString& aIdWithSpaces,
+                                             nsIAtom *aIDRefsAttr,
+                                             nsIMutableArray *aElements)
+{
+  PRUint32 childCount = aRootContent->GetChildCount();
+  for (PRUint32 index = 0; index < childCount; index++) {
+    nsIContent* child = aRootContent->GetChildAt(index);
+    nsAutoString idList;
+    if (child->GetAttr(kNameSpaceID_None, aIDRefsAttr, idList)) {
+      idList.Insert(' ', 0);  // Surround idlist with spaces for search
+      idList.Append(' ');
+      // idList is now a set of id's with spaces around each, and id also has
+      // spaces around it. If id is a substring of idList then we have a match.
+      if (idList.Find(aIdWithSpaces) != -1) {
+        aElements->AppendElement(child, PR_FALSE);
+        continue; // Do not search inside children.
+      }
+    }
+    GetElementsHavingIDRefsAttrImpl(child, aIdWithSpaces,
+                                    aIDRefsAttr, aElements);
+  }
 }
 
 void

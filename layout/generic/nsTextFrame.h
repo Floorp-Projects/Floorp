@@ -153,7 +153,8 @@ public:
 #endif
   
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
-   
+  ContentOffsets GetCharacterOffsetAtFramePoint(const nsPoint &aPoint);
+
   NS_IMETHOD SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,
@@ -448,6 +449,9 @@ protected:
                                        nsRect& aRect);
 
   PRBool IsFloatingFirstLetterChild();
+
+  ContentOffsets GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
+                   PRBool aForInsertionPoint);
 };
 
 #endif

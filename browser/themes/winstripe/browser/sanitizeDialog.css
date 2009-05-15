@@ -1,3 +1,13 @@
+#sanitizeDurationChoice {
+  -moz-margin-end: 0;
+}
+
+/* Align the duration label with the warning box and item list */
+#sanitizeDurationLabel {
+  -moz-margin-start: 3px;
+}
+
+
 /* Hide the duration dropdown suffix label if it's empty.  Otherwise it
    takes up a little space, causing the end of the dropdown to not be aligned
    with the warning box. */
@@ -32,9 +42,8 @@
 }
 
 #sanitizeEverythingWarningDescBox {
-  padding: 0;
+  padding: 0 16px;
   margin: 0;
-  padding-left: 16px;
 }
 
 
@@ -43,8 +52,8 @@
   padding: 0;
   margin-top: 6px;
   margin-bottom: 6px;
-  margin-left: -1px;
-  margin-right: 0;
+  -moz-margin-start: -1px;
+  -moz-margin-end: 0;
 }
 
 .expander-up,
@@ -69,16 +78,15 @@
 
 /* Make the item list the same width as the warning box */
 #itemList {
-  margin-left: 0;
-  margin-right: 0;
+  -moz-margin-start: 0;
+  -moz-margin-end: 0;
 }
 
 
-/* Make the rightmost dialog button ("cancel") align wih right side of the
-   warning box */
+/* Align the last dialog button with the end of the warning box */
 .prefWindow-dlgbuttons {
-  margin-right: 0;
+  -moz-margin-end: 0;
 }
 .dialog-button[dlgtype="cancel"] {
-  margin-right: 0;
+  -moz-margin-end: 0;
 }

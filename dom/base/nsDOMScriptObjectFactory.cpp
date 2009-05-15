@@ -278,6 +278,21 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
       cache->Flush();
 #endif
 
+    nsCOMPtr<nsIThreadJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      JSContext *cx = nsnull;
+
+      stack->GetSafeJSContext(&cx);
+
+      if (cx) {
+        // Do one final GC to clean things up before shutdown.
+
+        ::JS_GC(cx);
+      }
+    }
+
     nsGlobalWindow::ShutDown();
     nsDOMClassInfo::ShutDown();
 

@@ -202,7 +202,7 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
 nsresult
 nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
 {
-  nsIntRect r(0, fromRow, mGIFStruct.screen_width, rows);
+  nsIntRect r(0, fromRow, mGIFStruct.width, rows);
 
   // Update image  
   nsCOMPtr<nsIImage> img(do_GetInterface(mImageFrame));
@@ -415,10 +415,10 @@ void nsGIFDecoder2::EndImageFrame()
       mImageContainer->AppendFrame(mImageFrame);
     mImageContainer->EndFrameDecode(mGIFStruct.images_decoded);
     mGIFStruct.images_decoded++; 
-
-    if (mObserver)
-      mObserver->OnStopFrame(nsnull, mImageFrame);
   }
+
+  if (mObserver)
+    mObserver->OnStopFrame(nsnull, mImageFrame);
 
   // Release reference to this frame
   mImageFrame = nsnull;

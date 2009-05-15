@@ -65,7 +65,7 @@ var StarUI = {
     // to avoid impacting startup / new window performance
     element.hidden = false;
     element.addEventListener("popuphidden", this, false);
-    element.addEventListener("keypress", this, true);
+    element.addEventListener("keypress", this, false);
     return this.panel = element;
   },
 
@@ -112,25 +112,25 @@ var StarUI = {
         }
         break;
       case "keypress":
-        if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-          // If the panel is visible the ESC key is mapped to the cancel button
-          // unless we are editing a folder in the folderTree, or an
-          // autocomplete popup is open.
-          if (!this._element("editBookmarkPanelContent").hidden) {
-            var elt = aEvent.target;
-            if ((elt.localName != "tree" || !elt.hasAttribute("editing")) &&
-                !elt.popupOpen)
-              this.cancelButtonOnCommand();
-          }
+        if (aEvent.getPreventDefault()) {
+          // The event has already been consumed inside of the panel.
+          break;
         }
-        else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
-          // hide the panel unless the folder tree or an expander are focused
-          // or an autocomplete popup is open.
-          if (aEvent.target.localName != "tree" &&
-              aEvent.target.className != "expander-up" &&
-              aEvent.target.className != "expander-down" &&
-              !aEvent.target.popupOpen)
+        switch (aEvent.keyCode) {
+          case KeyEvent.DOM_VK_ESCAPE:
+            if (!this._element("editBookmarkPanelContent").hidden)
+              this.cancelButtonOnCommand();
+            break;
+          case KeyEvent.DOM_VK_RETURN:
+            if (aEvent.target.className == "expander-up" ||
+                aEvent.target.className == "expander-down" ||
+                aEvent.target.id == "editBMPanel_newFolderButton") {
+              //XXX Why is this necessary? The getPreventDefault() check should
+              //    be enough.
+              break;
+            }
             this.panel.hidePopup();
+            break;
         }
         break;
     }
