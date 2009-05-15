@@ -62,6 +62,7 @@
 <!ENTITY addonInstall.label        "Install">
 <!ENTITY addonUninstall.label      "Uninstall">
 <!ENTITY addonCancel.label         "Cancel">
+<!ENTITY addonShowPage.label       "Go to Page">
 
 <!ENTITY downloadsHeader.label     "Downloads">
 <!ENTITY downloadsSortDate.label   "Date">

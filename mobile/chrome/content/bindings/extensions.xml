@@ -110,11 +110,10 @@
           <xul:label class="normal" xbl:inherits="value=version"/>
         </xul:hbox>
         <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
-        <xul:hbox class="show-on-select" align="start">
-          <xul:image xbl:inherits="src=thumbnailURL"/>
-          <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
-        </xul:hbox>
+        <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
         <xul:hbox class="show-on-select">
+          <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonShowPage.label;"
+                      oncommand="ExtensionsView.showPage(document.getBindingParent(this));"/>
           <xul:spacer flex="1"/>
           <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonInstall.label;"
                       oncommand="ExtensionsView.installFromRepo(document.getBindingParent(this));"/>

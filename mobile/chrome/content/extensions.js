@@ -458,11 +458,19 @@ var ExtensionsView = {
         continue;
 
       let listitem = this._createItem(addon, "search");
-      listitem.setAttribute("description", addon.description);
-      listitem.setAttribute("thumbnailURL", addon.thumbnailURL);
+      listitem.setAttribute("description", addon.summary);
+      listitem.setAttribute("homepageURL", addon.homepageURL);
       listitem.setAttribute("xpiURL", addon.xpiURL);
       listitem.setAttribute("xpiHash", addon.xpiHash);
       this._list.appendChild(listitem);
+    }
+  },
+
+  showPage: function ev_showPage(aItem) {
+    let uri = aItem.getAttribute("homepageURL");
+    if (uri) {
+      Browser.addTab(uri, true);
+      BrowserUI.hidePanel();
     }
   },
 
