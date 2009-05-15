@@ -579,32 +579,36 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(resv));
-    }
+    } else if (IsFpReg(r)) {
+        NanoAssert(AvmCore::config.vfp);
+
+        // We can't easily load immediate values directly into FP registers, so
+        // ensure that memory is allocated for the constant and load it from
+        // memory.
+        int d = findMemFor(i);
+        if (isS8(d >> 2)) {
+            FLDD(r, FP, d);
+        } else {
+            FLDD(r, IP, 0);
+            ADDi(IP, FP, d);
+        }
 #if 0
-    /* This seriously regresses crypto-aes (by about 50%!), with or
-     * without the S8/U8 check (which ensures that we can do this
-     * const load in one instruction).  I have no idea why, because a
-     * microbenchmark of const mov vs. loading from memory shows that
-     * the mov is faster, though not by much.
-     */
-    else if (i->isconst() && (isS8(i->imm32()) || isU8(i->imm32()))) {
+    // This code tries to use a small constant load to restore the value of r.
+    // However, there was a comment explaining that using this regresses
+    // crypto-aes by about 50%. I do not see that behaviour; however, enabling
+    // this code does cause a JavaScript failure in the first of the
+    // createMandelSet tests in trace-tests. I can't explain either the
+    // original performance issue or the crash that I'm seeing.
+    } else if (i->isconst()) {
+        // asm_ld_imm will automatically select between LDR and MOV as
+        // appropriate.
         if (!resv->arIndex)
             reserveFree(i);
         asm_ld_imm(r, i->imm32());
-    }
 #endif
-    else {
+    } else {
         int d = findMemFor(i);
-        if (IsFpReg(r)) {
-            if (isS8(d >> 2)) {
-                FLDD(r, FP, d);
-            } else {
-                FLDD(r, IP, 0);
-                ADDi(IP, FP, d);
-            }
-        } else {
-            LDR(r, FP, d);
-        }
+        LDR(r, FP, d);
     }
 
     verbose_only(
