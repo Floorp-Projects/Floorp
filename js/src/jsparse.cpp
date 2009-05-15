@@ -2297,7 +2297,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSTreeContext *tc,
                      */
                     *pnup = outer_dn->dn_uses;
                     outer_dn->dn_uses = dn;
-                    outer_dn->pn_dflags |= (dn->pn_dflags & ~PND_PLACEHOLDER);
+                    outer_dn->pn_dflags |= dn->pn_dflags & ~(PND_FORWARD | PND_PLACEHOLDER);
                     dn->pn_defn = false;
                     dn->pn_used = true;
                     dn->pn_lexdef = outer_dn;
@@ -2973,7 +2973,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         !js_ReallocSlots(cx, blockObj, slot + 1, JS_FALSE)) {
         return JS_FALSE;
     }
-    blockObj->map->freeslot = slot + 1;
+    OBJ_SCOPE(blockObj)->freeslot = slot + 1;
     STOBJ_SET_SLOT(blockObj, slot, PRIVATE_TO_JSVAL(pn));
     return JS_TRUE;
 }
@@ -6091,7 +6091,10 @@ CompExprTransplanter::transplant(JSParseNode *pn)
 
       case PN_BINARY:
         transplant(pn->pn_left);
-        transplant(pn->pn_right);
+
+        /* Binary TOK_COLON nodes can have left == right. See bug 492714. */
+        if (pn->pn_right != pn->pn_left)
+            transplant(pn->pn_right);
         break;
 
       case PN_UNARY:

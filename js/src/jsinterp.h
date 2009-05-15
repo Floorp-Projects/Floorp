@@ -235,7 +235,7 @@ typedef struct JSInlineFrame {
 #define PCVCAP_TAGMASK          JS_BITMASK(PCVCAP_TAGBITS)
 #define PCVCAP_TAG(t)           ((t) & PCVCAP_TAGMASK)
 
-#define PCVCAP_MAKE(t,s,p)      (((t) << PCVCAP_TAGBITS) |                    \
+#define PCVCAP_MAKE(t,s,p)      ((uint32(t) << PCVCAP_TAGBITS) |              \
                                  ((s) << PCVCAP_PROTOBITS) |                  \
                                  (p))
 #define PCVCAP_SHAPE(t)         ((t) >> PCVCAP_TAGBITS)
@@ -351,7 +351,7 @@ typedef struct JSPropertyCache {
 extern JS_REQUIRES_STACK JSPropCacheEntry *
 js_FillPropertyCache(JSContext *cx, JSObject *obj,
                      uintN scopeIndex, uintN protoIndex, JSObject *pobj,
-                     JSScopeProperty *sprop, JSBool addedSprop);
+                     JSScopeProperty *sprop, JSBool adding);
 
 /*
  * Property cache lookup macros. PROPERTY_CACHE_TEST is designed to inline the
@@ -555,7 +555,7 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
  * Given an active context, a static scope level, and an upvar cookie, return
  * the value of the upvar.
  */
-extern jsval
+extern jsval&
 js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
 
 /*
