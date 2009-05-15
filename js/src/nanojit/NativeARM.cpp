@@ -758,13 +758,9 @@ Assembler::asm_quad_nochk(Register rr, int32_t imm64_0, int32_t imm64_1)
 void
 Assembler::asm_quad(LInsp ins)
 {
-    //asm_output(">>> asm_quad");
-
-    Reservation *res = getresv(ins);
-    int d = disp(res);
-    Register rr = res->reg;
-
-    NanoAssert(d || rr != UnknownReg);
+    Reservation *   res = getresv(ins);
+    int             d = disp(res);
+    Register        rr = res->reg;
 
     freeRsrcOf(ins, false);
 
@@ -777,13 +773,12 @@ Assembler::asm_quad(LInsp ins)
         underrunProtect(4*4);
         asm_quad_nochk(rr, ins->imm64_0(), ins->imm64_1());
     } else {
+        NanoAssert(d);
         STR(IP, FP, d+4);
         asm_ld_imm(IP, ins->imm64_1());
         STR(IP, FP, d);
         asm_ld_imm(IP, ins->imm64_0());
     }
-
-    //asm_output("<<< asm_quad");
 }
 
 void
