@@ -128,9 +128,9 @@
           <xul:button anonid="showpage-button" label="&downloadShowPage.label;"
                       oncommand="DownloadsView.showPage(document.getBindingParent(this));"/>
           <xul:spacer flex="1"/>
-          <xul:button anonid="show-button" label="&downloadShow.label;"
+          <xul:button anonid="show-button" label="&downloadShow2.label;"
                       oncommand="DownloadsView.showDownload(document.getBindingParent(this));"/>
-          <xul:button anonid="open-button" label="&downloadOpen.label;"
+          <xul:button anonid="open-button" label="&downloadOpen2.label;"
                       oncommand="DownloadsView.openDownload(document.getBindingParent(this));"/>
           <xul:image anonid="remove-button" class="close-button"
                      onmousedown="DownloadsView.removeDownload(document.getBindingParent(this))"/>

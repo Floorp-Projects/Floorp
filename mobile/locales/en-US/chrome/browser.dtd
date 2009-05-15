@@ -72,8 +72,8 @@
 <!ENTITY downloadsSearch.emptytext "Search for downloaded file">
 
 <!ENTITY downloadShowPage.label    "Go to Page">
-<!ENTITY downloadShow.label        "Find File">
-<!ENTITY downloadOpen.label        "Open File">
+<!ENTITY downloadShow2.label       "Find">
+<!ENTITY downloadOpen2.label       "Open">
 <!ENTITY downloadCancel.label      "Cancel">
 <!ENTITY downloadPause.label       "Pause">
 <!ENTITY downloadResume.label      "Resume">
