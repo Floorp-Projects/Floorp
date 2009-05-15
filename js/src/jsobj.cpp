@@ -4396,6 +4396,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     JSPropertyOp getter, setter;
     bool added;
 
+    if (cacheResult)
+        JS_ASSERT_NOT_ON_TRACE(cx);
+
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
 
@@ -4493,7 +4496,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
             /* Don't clone a shared prototype property. */
             if (attrs & JSPROP_SHARED) {
                 if (cacheResult) {
-                    JS_ASSERT_NOT_ON_TRACE(cx);
                     JSPropCacheEntry *entry;
                     entry = js_FillPropertyCache(cx, obj, 0, protoIndex, pobj, sprop, false);
                     TRACE_2(SetPropHit, entry, sprop);
@@ -4577,7 +4579,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
     }
 
     if (cacheResult) {
-        JS_ASSERT_NOT_ON_TRACE(cx);
         JSPropCacheEntry *entry;
         entry = js_FillPropertyCache(cx, obj, 0, 0, obj, sprop, added);
         TRACE_2(SetPropHit, entry, sprop);
