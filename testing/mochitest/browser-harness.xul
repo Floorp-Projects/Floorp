@@ -59,11 +59,15 @@
     }
 
     #summary.success {
-      background-color: green;
+      background-color: #0d0;
     }
 
     #summary.failure {
       background-color: red;
+    }
+
+    #summary.todo {
+      background-color: orange;
     }
 
     .failed {
@@ -250,8 +254,8 @@
 
     function getHTMLLogFromTests(aTests) {
       if (!aTests.length)
-        return "<div id=\"summary\" class=\"success\">No tests to run. " +
-               "Did you pass an invalid --test-path?</div>";
+        return "<div id=\"summary\" class=\"failure\">No tests to run." +
+                 " Did you pass an invalid --test-path?</div>";
 
       var log = "";
 
@@ -259,22 +263,24 @@
       var failCount = aTests.map(function (f) f.failCount).reduce(sum);
       var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
       log += "<div id=\"summary\" class=\"";
-      log += failCount == 0 ? "success" : "failure";
+      log += failCount != 0 ? "failure" :
+               passCount == 0 ? "todo" : "success";
       log += "\">\n<p>Passed: " + passCount + "</p>\n" +
              "<p>Failed: " + failCount + "</p>\n" +
              "<p>Todo: " + todoCount + "</p>\n</div>\n<div id=\"log\">\n";
 
       return log + aTests.map(function (f) {
-                                return "<p class=\"testHeader\">" + f.path + "</p>\n" + f.htmlLog;
+                                return "<p class=\"testHeader\">Running " + f.path + "...</p>\n" + f.htmlLog;
                               }).join("\n") + "</div>";
     }
 
     function getLogFromTests(aTests) {
       if (!aTests.length)
-        return "TEST-PASS | | No tests to run";
+        return "TEST-UNEXPECTED-FAIL | (browser-harness.xul) | " +
+                 "No tests to run. Did you pass an invalid --test-path?";
 
       var log = aTests.map(function (f) {
-                             var output = f.path + "\n";
+                             var output = "Running " + f.path + "...\n";
                              if (f.log)
                                output += f.log + "\n";
                              return output;
