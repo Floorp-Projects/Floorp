@@ -4912,10 +4912,10 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
 }
 
 /*
- * js_XMLObjectOps.newObjectMap == js_NewObjectMap, so XML objects appear to
- * be native. Thus xml_lookupProperty must return a valid JSScopeProperty
- * pointer parameter via *propp to signify "property found".  Since the only
- * call to xml_lookupProperty is via OBJ_LOOKUP_PROPERTY, and then only from
+ * js_XMLObjectOps.newObjectMap is null, so XML objects appear to be native.
+ * Thus xml_lookupProperty must return a valid JSScopeProperty pointer
+ * parameter via *propp to signify "property found".  Since the only call to
+ * xml_lookupProperty is via OBJ_LOOKUP_PROPERTY, and then only from
  * js_FindProperty (in jsobj.c, called from jsinterp.c) or from JSOP_IN case
  * in the interpreter, the only time we add a JSScopeProperty here is when an
  * unqualified name is being accessed or when "name in xml" is called.
@@ -5428,9 +5428,9 @@ out:
     return ok;
 }
 
-/* Use js_NewObjectMap so XML objects satisfy OBJ_IS_NATIVE tests. */
+/* Use NULL for objectMap so XML objects satisfy OBJ_IS_NATIVE tests. */
 JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
-    js_NewObjectMap,            js_DestroyObjectMap,
+    NULL,
     xml_lookupProperty,         xml_defineProperty,
     xml_getProperty,            xml_setProperty,
     xml_getAttributes,          xml_setAttributes,

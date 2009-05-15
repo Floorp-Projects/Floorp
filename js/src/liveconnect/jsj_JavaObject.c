@@ -999,32 +999,10 @@ JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 
 #define JSJ_SLOT_COUNT (JSSLOT_PRIVATE+1)
 
-JSObjectMap *
-jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-                         JSClass *clasp, JSObject *obj)
-{
-    JSObjectMap * map;
-
-    map = (JSObjectMap *) JS_malloc(cx, sizeof(JSObjectMap));
-    if (map) {
-        map->nrefs = nrefs;
-        map->ops = ops;
-        map->freeslot = JSJ_SLOT_COUNT;
-    }
-    return map;
-}
-
-void
-jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map)
-{
-    JS_free(cx, map);
-}
-
 jsval
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
-    JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
     return STOBJ_GET_SLOT(obj, slot);
 }
 
@@ -1032,15 +1010,18 @@ JSBool
 jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
-    JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
     STOBJ_SET_SLOT(obj, slot, v);
     return JS_TRUE;
 }
 
+extern JSObjectOps JavaObject_ops;
+
+static const JSObjectMap JavaObjectMap = { &JavaObject_ops };
+
 JSObjectOps JavaObject_ops = {
+    &JavaObjectMap,                 /* objectMap */
+
     /* Mandatory non-null function pointer members. */
-    jsj_wrapper_newObjectMap,       /* newObjectMap */
-    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
     JavaObject_lookupProperty,
     JavaObject_defineProperty,
     JavaObject_getPropertyById,     /* getProperty */
