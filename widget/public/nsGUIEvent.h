@@ -865,11 +865,17 @@ struct nsTextRangeStyle
 
   // Initialize all members, because nsTextRange instances may be compared by
   // memcomp.
-  nsTextRangeStyle() :
-    mDefinedStyles(DEFINED_NONE), mLineStyle(LINESTYLE_NONE),
-    mIsBoldLine(PR_FALSE), mForegroundColor(NS_RGBA(0, 0, 0, 0)),
-    mBackgroundColor(NS_RGBA(0, 0, 0, 0)), mUnderlineColor(NS_RGBA(0, 0, 0, 0))
+  nsTextRangeStyle()
   {
+    Clear();
+  }
+
+  void Clear()
+  {
+    mDefinedStyles = DEFINED_NONE;
+    mLineStyle = LINESTYLE_NONE;
+    mIsBoldLine = PR_FALSE;
+    mForegroundColor = mBackgroundColor = mUnderlineColor = NS_RGBA(0, 0, 0, 0);
   }
 
   PRBool IsDefined() const { return mDefinedStyles != DEFINED_NONE; }
@@ -892,6 +898,12 @@ struct nsTextRangeStyle
   PRBool IsUnderlineColorDefined() const
   {
     return (mDefinedStyles & DEFINED_UNDERLINE_COLOR) != 0;
+  }
+
+  PRBool IsNoChangeStyle() const
+  {
+    return !IsForegroundColorDefined() && !IsBackgroundColorDefined() &&
+           IsLineStyleDefined() && mLineStyle == LINESTYLE_NONE;
   }
 
   PRBool Equals(const nsTextRangeStyle& aOther)

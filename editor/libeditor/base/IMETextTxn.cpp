@@ -318,6 +318,8 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 
           if(nsIPrivateTextRange::TEXTRANGE_CARETPOSITION == textRangeType)
           {
+             NS_ASSERTION(selectionStart == selectionEnd,
+                          "nsEditor doesn't support wide caret");
              // Set the caret....
              result = selection->Collapse(mElement,
                       mOffset+selectionStart);
