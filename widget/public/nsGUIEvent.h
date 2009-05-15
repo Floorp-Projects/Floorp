@@ -362,12 +362,15 @@ class nsHashKey;
 #define NS_QUERY_TEXT_RECT              (NS_QUERY_CONTENT_EVENT_START + 4)
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
-#define NS_QUERY_EDITOR_RECT             (NS_QUERY_CONTENT_EVENT_START + 5)
+#define NS_QUERY_EDITOR_RECT            (NS_QUERY_CONTENT_EVENT_START + 5)
 // Query for the current state of the content. The particular members of
 // mReply that are set for each query content event will be valid on success.
-#define NS_QUERY_CONTENT_STATE           (NS_QUERY_CONTENT_EVENT_START + 6)
+#define NS_QUERY_CONTENT_STATE          (NS_QUERY_CONTENT_EVENT_START + 6)
 // Query for the selection in the form of a nsITransferable.
 #define NS_QUERY_SELECTION_AS_TRANSFERABLE (NS_QUERY_CONTENT_EVENT_START + 7)
+// Query for character at a point.  This returns the character offset and its
+// rect.  The point is specified by nsEvent::refPoint.
+#define NS_QUERY_CHARACTER_AT_POINT     (NS_QUERY_CONTENT_EVENT_START + 8)
 
 // Video events
 #ifdef MOZ_MEDIA
@@ -1124,6 +1127,10 @@ public:
     // used by NS_QUERY_SELECTION_AS_TRANSFERABLE
     nsCOMPtr<nsITransferable> mTransferable;
   } mReply;
+
+  enum {
+    NOT_FOUND = PR_UINT32_MAX
+  };
 };
 
 class nsSelectionEvent : public nsGUIEvent
@@ -1381,7 +1388,10 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_QUERY_TEXT_CONTENT) || \
         ((evnt)->message == NS_QUERY_CARET_RECT) || \
         ((evnt)->message == NS_QUERY_TEXT_RECT) || \
-        ((evnt)->message == NS_QUERY_EDITOR_RECT))
+        ((evnt)->message == NS_QUERY_EDITOR_RECT) || \
+        ((evnt)->message == NS_QUERY_CONTENT_STATE) || \
+        ((evnt)->message == NS_QUERY_SELECTION_AS_TRANSFERABLE) || \
+        ((evnt)->message == NS_QUERY_CHARACTER_AT_POINT))
 
 #define NS_IS_SELECTION_EVENT(evnt) \
        (((evnt)->message == NS_SELECTION_SET))

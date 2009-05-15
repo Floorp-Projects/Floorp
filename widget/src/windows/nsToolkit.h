@@ -169,7 +169,8 @@ private:
 
 //-------------------------------------------------------------------------
 //
-// from http://msdn.microsoft.com/library/en-us/dnime/html/msime.asp
+// from http://download.microsoft.com/download/6/0/9/60908e9e-d2c1-47db-98f6-216af76a235f/msime.h
+// The document for this has been removed from MSDN...
 //
 //-------------------------------------------------------------------------
 
