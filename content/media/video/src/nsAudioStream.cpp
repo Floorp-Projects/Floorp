@@ -190,7 +190,9 @@ PRInt32 nsAudioStream::Available()
     return FAKE_BUFFER_SIZE;
 
   size_t s = 0; 
-  sa_stream_get_write_size(static_cast<sa_stream_t*>(mAudioHandle), &s);
+  if (sa_stream_get_write_size(static_cast<sa_stream_t*>(mAudioHandle), &s) != SA_SUCCESS)
+    return 0;
+
   return s / sizeof(short);
 }
 
@@ -218,3 +220,35 @@ void nsAudioStream::Drain()
         Shutdown();
   }
 }
+
+void nsAudioStream::Pause()
+{
+  if (!mAudioHandle)
+    return;
+
+  sa_stream_pause(static_cast<sa_stream_t*>(mAudioHandle));
+}
+
+void nsAudioStream::Resume()
+{
+  if (!mAudioHandle)
+    return;
+
+  sa_stream_resume(static_cast<sa_stream_t*>(mAudioHandle));
+}
+
+float nsAudioStream::GetPosition()
+{
+  if (!mAudioHandle)
+    return -1.0;
+
+  PRInt64 position = 0;
+  if (sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle),
+                             SA_POSITION_WRITE_SOFTWARE,
+                             &position) == SA_SUCCESS) {
+    return (position / float(mRate) / mChannels / sizeof(short));
+  }
+
+  return -1.0;
+}
+

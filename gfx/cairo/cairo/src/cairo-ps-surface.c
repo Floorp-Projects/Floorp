@@ -2138,6 +2138,8 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,
 				 &mime_data, &mime_data_length);
+    if (unlikely (source->status))
+	return source->status;
     if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -3314,6 +3316,9 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     status = _cairo_ps_surface_emit_pattern (surface, source, extents, op);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
         return CAIRO_STATUS_SUCCESS;
+
+    if (unlikely (status))
+	return status;
 
     return _cairo_pdf_operators_stroke (&surface->pdf_operators,
 					path,

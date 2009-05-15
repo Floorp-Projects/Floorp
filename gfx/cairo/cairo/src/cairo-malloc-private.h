@@ -39,6 +39,13 @@
 
 #include "cairo-wideint-private.h"
 
+#if HAVE_MEMFAULT
+#include <memfault.h>
+#define CAIRO_INJECT_FAULT() VALGRIND_INJECT_FAULT()
+#else
+#define CAIRO_INJECT_FAULT() 0
+#endif
+
 /**
  * _cairo_malloc:
  * @size: size in bytes

@@ -89,6 +89,16 @@ class nsAudioStream
   // Block until buffered audio data has been consumed.
   void Drain();
 
+  // Pause audio playback
+  void Pause();
+
+  // Resume audio playback
+  void Resume();
+
+  // Return the position in seconds of the sample being played by the
+  // audio hardware.
+  float GetPosition();
+
  private:
   double mVolume;
   void* mAudioHandle;

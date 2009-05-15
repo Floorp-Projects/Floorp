@@ -166,16 +166,14 @@ WifiGeoPositionProvider.prototype = {
             this.timer = null;
         }
 
-        // Although we aren't using cookies, we should error on the side of not
+        // Although we aren't using cookies, we should err on the side of not
         // saving any access tokens if the user asked us not to save cookies or
         // has changed the lifetimePolicy.  The access token in these cases is
         // used and valid for the life of this object (eg. between startup and
         // shutdown).e
-        let prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-        if (prefService.getIntPref("network.cookie.lifetimePolicy") != 0) {
-            let branch = prefService.getBranch("geo.wifi.access_token.");
-            branch.deleteBranch("");
-        }
+        let prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+        if (prefBranch.getIntPref("network.cookie.lifetimePolicy") != 0)
+            prefBranch.deleteBranch("geo.wifi.access_token.");
 
         let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
         os.removeObserver(this, "private-browsing");

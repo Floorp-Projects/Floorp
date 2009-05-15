@@ -1319,7 +1319,7 @@ _wrap_image (cairo_surface_t *src,
     }
 
     pixman_image_set_component_alpha (surface->pixman_image,
-            pixman_image_get_component_alpha (surface->pixman_image));
+            pixman_image_get_component_alpha (image->pixman_image));
 
     *out = surface;
     return CAIRO_STATUS_SUCCESS;
@@ -1637,14 +1637,13 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
  *
  * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
  **/
-COMPILE_TIME_ASSERT (sizeof (cairo_box_int_t) <= sizeof (cairo_rectangle_int_t));
 cairo_status_t
 _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    cairo_operator_t	    op,
 			    const cairo_color_t    *color,
 			    cairo_region_t         *region)
 {
-    int num_boxes;
+    int num_rects;
     cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
     cairo_rectangle_int_t *rects = stack_rects;
     cairo_status_t status;
@@ -1655,12 +1654,12 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     assert (! surface->is_snapshot);
 
-    num_boxes = _cairo_region_num_boxes (region);
-    if (num_boxes == 0)
+    num_rects = cairo_region_num_rectangles (region);
+    if (num_rects == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (num_boxes > ARRAY_LENGTH (stack_rects)) {
-	rects = _cairo_malloc_ab (num_boxes,
+    if (num_rects > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (num_rects,
 				  sizeof (cairo_rectangle_int_t));
 	if (rects == NULL) {
 	    return _cairo_surface_set_error (surface,
@@ -1668,19 +1667,11 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 	}
     }
 
-    for (i = 0; i < num_boxes; i++) {
-	cairo_box_int_t box;
-
-	_cairo_region_get_box (region, i, &box);
-	
-	rects[i].x = box.p1.x;
-	rects[i].y = box.p1.y;
-	rects[i].width  = box.p2.x - rects[i].x;
-	rects[i].height = box.p2.y - rects[i].y;
-    }
+    for (i = 0; i < num_rects; i++)
+	cairo_region_get_rectangle (region, i, &rects[i]);
 
     status =  _cairo_surface_fill_rectangles (surface, op,
-					      color, rects, num_boxes);
+					      color, rects, num_rects);
 
     if (rects != stack_rects)
 	free (rects);
@@ -2268,10 +2259,10 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 				cairo_region_t	    *region,
-				unsigned int	    serial)
+				unsigned int	     serial)
 {
     cairo_status_t status;
-
+    
     if (surface->status)
 	return surface->status;
 
@@ -2448,7 +2439,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 
 	    if (surface->backend->set_clip_region != NULL)
 		return _cairo_surface_set_clip_region (surface,
-						       &clip->region,
+						       clip->region,
 						       clip->serial);
 	} else {
 	    if (clip->path)
@@ -2456,9 +2447,9 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 						     clip->path,
 						     clip->serial);
 
-	    if (clip->has_region)
+	    if (clip->region)
 		return _cairo_surface_set_clip_region (surface,
-						       &clip->region,
+						       clip->region,
 						       clip->serial);
 	}
     }
@@ -2754,53 +2745,44 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 						   unsigned int		    height)
 {
     cairo_rectangle_int_t dst_rectangle;
-    cairo_rectangle_int_t drawn_rectangle;
-    cairo_bool_t has_drawn_region = FALSE;
-    cairo_region_t drawn_region;
-    cairo_region_t clear_region;
+    cairo_region_t *clear_region;
     cairo_status_t status;
 
-    /* The area that was drawn is the area in the destination rectangle but not within
-     * the source or the mask.
+    /* The area that was drawn is the area in the destination rectangle but
+     * not within the source or the mask.
      */
     dst_rectangle.x = dst_x;
     dst_rectangle.y = dst_y;
     dst_rectangle.width = width;
     dst_rectangle.height = height;
-    _cairo_region_init_rect (&clear_region, &dst_rectangle);
 
-    drawn_rectangle = dst_rectangle;
+    clear_region = cairo_region_create_rectangle (&dst_rectangle);
+    status = clear_region->status;
+    if (unlikely (status))
+        goto CLEANUP_REGIONS;
 
     if (src_rectangle) {
-        if (! _cairo_rectangle_intersect (&drawn_rectangle, src_rectangle))
+        if (! _cairo_rectangle_intersect (&dst_rectangle, src_rectangle))
 	    goto EMPTY;
     }
 
     if (mask_rectangle) {
-        if (! _cairo_rectangle_intersect (&drawn_rectangle, mask_rectangle))
+        if (! _cairo_rectangle_intersect (&dst_rectangle, mask_rectangle))
 	    goto EMPTY;
     }
 
-    /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
-     */
-    _cairo_region_init_rect (&drawn_region, &drawn_rectangle);
-    has_drawn_region = TRUE;
-
-    status = _cairo_region_subtract (&clear_region,
-				     &clear_region,
-				     &drawn_region);
+    /* Now compute the area that is in dst but not drawn */
+    status = cairo_region_subtract_rectangle (clear_region, &dst_rectangle);
     if (unlikely (status))
         goto CLEANUP_REGIONS;
 
   EMPTY:
     status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_SOURCE,
                                          CAIRO_COLOR_TRANSPARENT,
-                                         &clear_region);
+                                         clear_region);
 
   CLEANUP_REGIONS:
-    if (has_drawn_region)
-        _cairo_region_fini (&drawn_region);
-    _cairo_region_fini (&clear_region);
+    cairo_region_destroy (clear_region);
 
     return _cairo_surface_set_error (dst, status);
 }
@@ -3034,6 +3016,7 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_INVALID_STRIDE:
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_stride;
     case CAIRO_STATUS_SUCCESS:
+    case CAIRO_STATUS_LAST_STATUS:
 	ASSERT_NOT_REACHED;
 	/* fall-through */
     case CAIRO_STATUS_INVALID_RESTORE:

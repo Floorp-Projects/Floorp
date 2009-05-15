@@ -85,7 +85,7 @@
 
 CAIRO_BEGIN_DECLS
 
-#if _WIN32 && !WINCE // we don't have to worry about permissions on WINCE
+#if _WIN32 && !_WIN32_WCE // we don't have to worry about permissions on WinCE
 cairo_private FILE *
 _cairo_win32_tmpfile (void);
 #define tmpfile() _cairo_win32_tmpfile()
@@ -2418,7 +2418,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
 
 cairo_private cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t *tr,
-			     cairo_region_t      *region);
+			     cairo_region_t      **region);
 
 cairo_private cairo_status_t
 _cairo_traps_path (const cairo_traps_t *traps,
@@ -2538,7 +2538,21 @@ _cairo_pattern_reset_static_data (void);
 
 /* cairo-region.c */
 
-#include "cairo-region-private.h"
+struct _cairo_region {
+    cairo_status_t status;
+    
+    pixman_region32_t rgn;
+};
+
+cairo_private void
+_cairo_region_init (cairo_region_t *region);
+
+cairo_private void
+_cairo_region_init_rectangle (cairo_region_t *region,
+			      const cairo_rectangle_int_t *rectangle);
+
+cairo_private void
+_cairo_region_fini (cairo_region_t *region);
 
 /* cairo-unicode.c */
 
@@ -2700,6 +2714,24 @@ slim_hidden_proto (cairo_user_font_face_set_unicode_to_glyph_func);
 slim_hidden_proto (cairo_user_to_device);
 slim_hidden_proto (cairo_user_to_device_distance);
 slim_hidden_proto (cairo_version_string);
+slim_hidden_proto (cairo_region_create);
+slim_hidden_proto (cairo_region_create_rectangle);
+slim_hidden_proto (cairo_region_copy);
+slim_hidden_proto (cairo_region_destroy);
+slim_hidden_proto (cairo_region_status);
+slim_hidden_proto (cairo_region_get_extents);
+slim_hidden_proto (cairo_region_num_rectangles);
+slim_hidden_proto (cairo_region_get_rectangle);
+slim_hidden_proto (cairo_region_is_empty);
+slim_hidden_proto (cairo_region_contains_rectangle);
+slim_hidden_proto (cairo_region_contains_point);
+slim_hidden_proto (cairo_region_translate);
+slim_hidden_proto (cairo_region_subtract);
+slim_hidden_proto (cairo_region_subtract_rectangle);
+slim_hidden_proto (cairo_region_intersect);
+slim_hidden_proto (cairo_region_intersect_rectangle);
+slim_hidden_proto (cairo_region_union);
+slim_hidden_proto (cairo_region_union_rectangle);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
 

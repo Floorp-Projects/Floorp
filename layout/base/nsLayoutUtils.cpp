@@ -630,7 +630,8 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
   if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
                   aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
                   aEvent->eventStructType != NS_DRAG_EVENT &&
-                  aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT))
+                  aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
+                  aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
@@ -1215,6 +1216,8 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
 {
   NS_ASSERTION(aRootFrame != aMovingFrame,
                "The root frame shouldn't be the one that's moving, that makes no sense");
+
+  nsAutoDisableGetUsedXAssertions disableAssert;
 
   // Build the 'after' display list over the whole area of interest.
   // (We have to build the 'after' display list because the frame/view

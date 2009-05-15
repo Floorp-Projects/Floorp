@@ -131,6 +131,11 @@ _cairo_traps_grow (cairo_traps_t *traps)
     cairo_trapezoid_t *new_traps;
     int new_size = 2 * MAX (traps->traps_size, 16);
 
+    if (CAIRO_INJECT_FAULT ()) {
+	traps->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return FALSE;
+    }
+
     if (traps->traps == traps->traps_embedded) {
 	new_traps = _cairo_malloc_ab (new_size, sizeof (cairo_trapezoid_t));
 	if (new_traps != NULL)
@@ -600,7 +605,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
  * Determines if a set of trapezoids are exactly representable as a
  * cairo region.  If so, the passed-in region is initialized to
  * the area representing the given traps.  It should be finalized
- * with _cairo_region_fini().  If not, %CAIRO_INT_STATUS_UNSUPPORTED
+ * with cairo_region_fini().  If not, %CAIRO_INT_STATUS_UNSUPPORTED
  * is returned.
  *
  * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED
@@ -608,17 +613,11 @@ _cairo_traps_extents (const cairo_traps_t *traps,
  **/
 cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t  *traps,
-			     cairo_region_t       *region)
+			     cairo_region_t      **region)
 {
-    cairo_box_int_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (cairo_box_int_t)];
-    cairo_box_int_t *boxes = stack_boxes;
-    int i, box_count;
     cairo_int_status_t status;
-
-    if (traps->num_traps == 0) {
-	_cairo_region_init (region);
-	return CAIRO_STATUS_SUCCESS;
-    }
+    cairo_region_t *r;
+    int i;
 
     for (i = 0; i < traps->num_traps; i++) {
 	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
@@ -632,16 +631,13 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	}
     }
 
-    if (traps->num_traps > ARRAY_LENGTH (stack_boxes)) {
-	boxes = _cairo_malloc_ab (traps->num_traps, sizeof (cairo_box_int_t));
-
-	if (unlikely (boxes == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    box_count = 0;
+    r = cairo_region_create ();
+    if (unlikely (r->status))
+	return r->status;
 
     for (i = 0; i < traps->num_traps; i++) {
+	cairo_rectangle_int_t rect;
+
 	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
 	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
 	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
@@ -653,23 +649,20 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	if (x1 == x2 || y1 == y2)
 	    continue;
 
-	boxes[box_count].p1.x = x1;
-	boxes[box_count].p1.y = y1;
-	boxes[box_count].p2.x = x2;
-	boxes[box_count].p2.y = y2;
+	rect.x = x1;
+	rect.y = y1;
+	rect.width = x2 - x1;
+	rect.height = y2 - y1;
 
-	box_count++;
+	status = cairo_region_union_rectangle (r, &rect);
+	if (unlikely (status)) {
+	    cairo_region_destroy (r);
+	    return status;
+	}
     }
 
-    status = _cairo_region_init_boxes (region, boxes, box_count);
-
-    if (boxes != stack_boxes)
-	free (boxes);
-
-    if (unlikely (status))
-	_cairo_region_fini (region);
-
-    return status;
+    *region = r;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* moves trap points such that they become the actual corners of the trapezoid */
