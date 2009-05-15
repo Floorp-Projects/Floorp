@@ -56,9 +56,14 @@ JS_BEGIN_EXTERN_C
 
 /* For detailed comments on these function pointer types, see jsprvtd.h. */
 struct JSObjectOps {
+    /*
+     * Custom shared object map for non-native objects. For native objects
+     * this should be null indicating, that JSObject.map is an instance of
+     * JSScope.
+     */
+    const JSObjectMap   *objectMap;
+
     /* Mandatory non-null function pointer members. */
-    JSNewObjectMapOp    newObjectMap;
-    JSObjectMapOp       destroyObjectMap;
     JSLookupPropOp      lookupProperty;
     JSDefinePropOp      defineProperty;
     JSPropertyIdOp      getProperty;
@@ -83,9 +88,7 @@ struct JSObjectOps {
 };
 
 struct JSObjectMap {
-    jsrefcount  nrefs;          /* count of all referencing objects */
     JSObjectOps *ops;           /* high level object operation vtable */
-    uint32      freeslot;       /* index of next free slot in object */
 };
 
 /* Shorthand macros for frequently-made calls. */
@@ -206,8 +209,8 @@ struct JSObject {
 
 /*
  * STOBJ prefix means Single Threaded Object. Use the following fast macros to
- * directly manipulate slots in obj when only one thread can access obj and
- * when obj->map->freeslot can be inconsistent with slots.
+ * directly manipulate slots in obj when only one thread can access obj, or
+ * when accessing read-only slots within JS_INITIAL_NSLOTS.
  */
 
 #define STOBJ_NSLOTS(obj)                                                     \
@@ -266,7 +269,7 @@ STOBJ_GET_CLASS(const JSObject* obj)
      JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE)))
 
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
-    JS_ASSERT(slot < (obj)->map->freeslot)
+    JS_ASSERT_IF(OBJ_IS_NATIVE(obj), slot < OBJ_SCOPE(obj)->freeslot)
 
 #define LOCKED_OBJ_GET_SLOT(obj,slot)                                         \
     (OBJ_CHECK_SLOT(obj, slot), STOBJ_GET_SLOT(obj, slot))
@@ -368,12 +371,14 @@ STOBJ_GET_CLASS(const JSObject* obj)
 #define OBJ_GET_CLASS(cx,obj)           STOBJ_GET_CLASS(obj)
 #define OBJ_GET_PRIVATE(cx,obj)         STOBJ_GET_PRIVATE(obj)
 
-/* Test whether a map or object is native. */
-#define MAP_IS_NATIVE(map)                                                    \
-    JS_LIKELY((map)->ops == &js_ObjectOps ||                                  \
-              (map)->ops->newObjectMap == js_ObjectOps.newObjectMap)
+/*
+ * Test whether the object is native. FIXME bug 492938: consider how it would
+ * affect the performance to do just the !ops->objectMap check.
+ */
+#define OPS_IS_NATIVE(ops)                                                    \
+    JS_LIKELY((ops) == &js_ObjectOps || !(ops)->objectMap)
 
-#define OBJ_IS_NATIVE(obj)  MAP_IS_NATIVE((obj)->map)
+#define OBJ_IS_NATIVE(obj)  OPS_IS_NATIVE((obj)->map->ops)
 
 extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
 extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
@@ -501,23 +506,6 @@ extern const char js_defineGetter_str[];
 extern const char js_defineSetter_str[];
 extern const char js_lookupGetter_str[];
 extern const char js_lookupSetter_str[];
-
-extern void
-js_InitObjectMap(JSObjectMap *map, jsrefcount nrefs, JSObjectOps *ops,
-                 JSClass *clasp);
-
-extern JSObjectMap *
-js_NewObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-                JSClass *clasp, JSObject *obj);
-
-extern void
-js_DestroyObjectMap(JSContext *cx, JSObjectMap *map);
-
-extern JSObjectMap *
-js_HoldObjectMap(JSContext *cx, JSObjectMap *map);
-
-extern JSObjectMap *
-js_DropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj);
 
 extern JSBool
 js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
@@ -653,11 +641,17 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
 #ifdef __cplusplus /* FIXME: bug 442399 removes this LiveConnect requirement. */
 
+/*
+ * Flags for the defineHow parameter of js_DefineNativeProperty.
+ */
+const uintN JSDNP_CACHE_RESULT = 1; /* an interpreter call from JSOP_INITPROP */
+const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
+
 extern JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
-                        JSBool cacheResult = JS_FALSE);
+                        uintN defineHow = 0);
 #endif
 
 /*
