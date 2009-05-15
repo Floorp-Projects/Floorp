@@ -1758,6 +1758,12 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       handler.OnQuerySelectionAsTransferable(static_cast<nsQueryContentEvent*>(aEvent));
     }
     break;
+  case NS_QUERY_CHARACTER_AT_POINT:
+    {
+      nsContentEventHandler handler(mPresContext);
+      handler.OnQueryCharacterAtPoint(static_cast<nsQueryContentEvent*>(aEvent));
+    }
+    break;
   case NS_SELECTION_SET:
     {
       nsContentEventHandler handler(mPresContext);

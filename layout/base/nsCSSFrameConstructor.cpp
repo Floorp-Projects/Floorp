@@ -848,6 +848,11 @@ public:
   nsAbsoluteItems           mAbsoluteItems;
   nsAbsoluteItems           mFloatedItems;
 
+  nsCOMPtr<nsILayoutHistoryState> mFrameState;
+  // These bits will be added to the state bits of any frame we construct
+  // using this state.
+  nsFrameState              mAdditionalStateBits;
+
   // When working with the -moz-transform property, we want to hook
   // the abs-pos and fixed-pos lists together, since transformed
   // elements are fixed-pos containing blocks.  This flag determines
@@ -859,11 +864,6 @@ public:
   // have already created the FrameConstructionItem for the root popupgroup but
   // we have not yet created the relevant frame.
   PRPackedBool              mHavePendingPopupgroup;
-
-  nsCOMPtr<nsILayoutHistoryState> mFrameState;
-  // These bits will be added to the state bits of any frame we construct
-  // using this state.
-  nsFrameState              mAdditionalStateBits; 
 
   // Constructor
   // Use the passed-in history state.
@@ -977,12 +977,12 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
     // See PushAbsoluteContaningBlock below
+    mFrameState(aHistoryState),
+    mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
                         HasTransform()),
-    mHavePendingPopupgroup(PR_FALSE),
-    mFrameState(aHistoryState),
-    mAdditionalStateBits(0)
+    mHavePendingPopupgroup(PR_FALSE)
 {
 #ifdef MOZ_XUL
   nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
@@ -1007,11 +1007,11 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
     // See PushAbsoluteContaningBlock below
+    mAdditionalStateBits(0),
     mFixedPosIsAbsPos(aAbsoluteContainingBlock &&
                       aAbsoluteContainingBlock->GetStyleDisplay()->
                         HasTransform()),
-    mHavePendingPopupgroup(PR_FALSE),
-    mAdditionalStateBits(0)
+    mHavePendingPopupgroup(PR_FALSE)
 {
 #ifdef MOZ_XUL
   nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
@@ -5199,6 +5199,27 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
                                     aItems);
 }
 
+/**
+ * Set aContent as undisplayed content with style context aStyleContext.  This
+ * method enforces the invariant that all style contexts in the undisplayed
+ * content map must be non-pseudo contexts and also handles unbinding
+ * undisplayed generated content as needed.
+ */
+static void
+SetAsUndisplayedContent(nsFrameManager* aFrameManager, nsIContent* aContent,
+                        nsStyleContext* aStyleContext,
+                        PRBool aIsGeneratedContent)
+{
+  if (aStyleContext->GetPseudoType()) {
+    if (aIsGeneratedContent) {
+      aContent->UnbindFromTree();
+    }
+    return;
+  }
+
+  NS_ASSERTION(!aIsGeneratedContent, "Should have had pseudo type");
+  aFrameManager->SetUndisplayedContent(aContent, aStyleContext);
+}
 
 void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
@@ -5243,10 +5264,13 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
   }
 
+  PRBool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
+
   // Pre-check for display "none" - if we find that, don't create
   // any frame at all
   if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-    aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+    SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                            isGeneratedContent);
     return;
   }
 
@@ -5270,6 +5294,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         aParentFrame->IsFrameOfType(nsIFrame::eSVG) &&
         !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)
         ) {
+      SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                              isGeneratedContent);
       return;
     }
 #endif /* MOZ_SVG */
@@ -5304,7 +5330,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     NS_ASSERTION(data, "Should have frame construction data now");
 
     if (data->mBits & FCDATA_SUPPRESS_FRAME) {
-      aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+      SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                              isGeneratedContent);
       return;
     }
 
@@ -5314,7 +5341,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
          aParentFrame->GetType() != nsGkAtoms::menuFrame)) {
       if (!aState.mPopupItems.containingBlock &&
           !aState.mHavePendingPopupgroup) {
-        aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+        SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                                isGeneratedContent);
         return;
       }
 
@@ -5330,7 +5358,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       aParentFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
       (!(bits & FCDATA_IS_TABLE_PART) ||
        display->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)) {
-    aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+    SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                            isGeneratedContent);
     return;
   }
 
@@ -5343,8 +5372,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   if (canHavePageBreak && display->mBreakBefore) {
     AddPageBreakItem(aContent, aStyleContext, aItems);
   }
-
-  PRBool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
 
   FrameConstructionItem* item =
     aItems.AppendItem(data, aContent, aTag, aNameSpaceID,
@@ -6758,8 +6785,6 @@ DoDeletingFrameSubtree(nsFrameManager*      aFrameManager,
         nsIFrame* outOfFlowFrame =
           nsPlaceholderFrame::GetRealFrameForPlaceholder(childFrame);
   
-        // Remove the mapping from the out-of-flow frame to its placeholder.
-        aFrameManager->UnregisterPlaceholderFrame((nsPlaceholderFrame*)childFrame);
         // Don't SetOutOfFlowFrame(nsnull) here because the float cache depends
         // on it when the float is removed later on, see bug 348688 comment 6.
         
@@ -6884,18 +6909,6 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame)
   CaptureStateFor(aRemovedFrame, mTempFrameTreeState);
 
   return ::DeletingFrameSubtree(frameManager, aRemovedFrame);
-}
-
-static void UnregisterPlaceholderChain(nsFrameManager* frameManager,
-                                       nsPlaceholderFrame* placeholderFrame)
-{
-  // Remove the mapping from the frame to its placeholder
-  nsPlaceholderFrame* curFrame = placeholderFrame;
-  do {
-    frameManager->UnregisterPlaceholderFrame(curFrame);
-    curFrame->SetOutOfFlowFrame(nsnull);
-    curFrame = static_cast<nsPlaceholderFrame*>(curFrame->GetNextContinuation());
-  } while (curFrame);
 }
 
 nsresult
@@ -7077,8 +7090,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       nsPlaceholderFrame* placeholderFrame =
         frameManager->GetPlaceholderFrameFor(childFrame);
       NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
-
-      UnregisterPlaceholderChain(frameManager, placeholderFrame);
 
       // Now we remove the out-of-flow frame
       // XXX has to be done first for now: for floats, the block's line list
@@ -10146,8 +10157,6 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   printf("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
          textContent.get(), textFrame, newTextFrame);
 #endif
-
-  UnregisterPlaceholderChain(aFrameManager, placeholderFrame);
 
   // Remove the float frame
   ::DeletingFrameSubtree(aFrameManager, floatFrame);

@@ -2737,6 +2737,34 @@ nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
 }
 
 PRBool
+nsCxPusher::RePush(nsPIDOMEventTarget *aCurrentTarget)
+{
+  if (!mPushedSomething) {
+    return Push(aCurrentTarget);
+  }
+
+  if (aCurrentTarget) {
+    nsresult rv;
+    nsIScriptContext* scx =
+      aCurrentTarget->GetContextForEventHandlers(&rv);
+    if (NS_FAILED(rv)) {
+      Pop();
+      return PR_FALSE;
+    }
+
+    // If we have the same script context and native context is still
+    // alive, no need to Pop/Push.
+    if (scx && scx == mScx &&
+        scx->GetNativeContext()) {
+      return PR_TRUE;
+    }
+  }
+
+  Pop();
+  return Push(aCurrentTarget);
+}
+
+PRBool
 nsCxPusher::Push(JSContext *cx)
 {
   if (mPushedSomething) {
@@ -3737,7 +3765,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     // i is unsigned, so i >= is always true
     for (PRUint32 i = 0; i < childCount; ++i) {
       nsIContent* child = aContent->GetChildAt(removeIndex);
-      if (removeIndex == 0 && child->IsNodeOfType(nsINode::eTEXT)) {
+      if (removeIndex == 0 && child && child->IsNodeOfType(nsINode::eTEXT)) {
         nsresult rv = child->SetText(aValue, PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
 

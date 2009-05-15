@@ -173,7 +173,7 @@
 #define inline __inline
 #endif
 
-#if defined(_MSC_VER) && !defined(WINCE)
+#if defined(_MSC_VER) && defined(_M_IX86)
 /* When compiling with /Gy and /OPT:ICF identical functions will be folded in together.
    The CAIRO_ENSURE_UNIQUE macro ensures that a function is always unique and
    will never be folded into another one. Something like this might eventually

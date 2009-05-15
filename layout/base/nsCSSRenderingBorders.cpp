@@ -172,14 +172,14 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
                                          nsBorderColors* const* aCompositeColors,
                                          PRIntn aSkipSides,
                                          nscolor aBackgroundColor)
-  : mAUPP(aAppUnitsPerPixel),
-    mContext(aDestContext),
+  : mContext(aDestContext),
     mOuterRect(aOuterRect),
     mBorderStyles(aBorderStyles),
     mBorderWidths(aBorderWidths),
     mBorderRadii(aBorderRadii),
     mBorderColors(aBorderColors),
     mCompositeColors(aCompositeColors),
+    mAUPP(aAppUnitsPerPixel),
     mSkipSides(aSkipSides),
     mBackgroundColor(aBackgroundColor)
 {

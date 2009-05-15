@@ -94,6 +94,15 @@
     "frecencyindex", "moz_places", "frecency", "" \
   )
 
+#define CREATE_IDX_MOZ_PLACES_TEMP_LASTVISITDATE \
+  CREATE_PLACES_IDX( \
+    "lastvisitdateindex", "moz_places_temp", "last_visit_date", "" \
+  )
+#define CREATE_IDX_MOZ_PLACES_LASTVISITDATE \
+  CREATE_PLACES_IDX( \
+    "lastvisitdateindex", "moz_places", "last_visit_date", "" \
+  )
+
 /**
  * moz_historyvisits
  */

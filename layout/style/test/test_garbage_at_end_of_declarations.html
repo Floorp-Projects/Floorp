@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test handling of garbage at the end of CSS declarations</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for correct ExpectEndProperty calls in CSS parser **/
+
+/*
+ * Inspired by review comments on bug 378217.
+ *
+ * The original idea was to test that ExpectEndProperty calls are made
+ * in the correct places in the CSS parser so that we don't accept
+ * garbage at the end of property values.
+ *
+ * However, there's actually other code (in ParseDeclaration) that
+ * ensures that we don't accept garbage.
+ *
+ * Despite that, I'm checking it in anyway, since it caught an infinite
+ * loop in the patch for bug 435441.
+ */
+
+var gElement = document.getElementById("testnode");
+var gDeclaration = gElement.style;
+
+/*
+ * This lists properties where garbage identifiers are allowed at the
+ * end, with values in property_database.js that are exceptions that
+ * should be tested anyway.  "inherit" and "-moz-initial" are always
+ * tested
+ */
+var gAllowsExtra = {
+  "counter-increment": { "none": true },
+  "counter-reset": { "none": true },
+  "font-family": {},
+  "font": { "caption": true, "icon": true, "menu": true, "message-box": true,
+            "small-caption": true, "status-bar": true },
+  "voice-family": {},
+};
+
+function test_property(property)
+{
+  var info = gCSSProperties[property];
+
+  function test_value(value) {
+    if (property in gAllowsExtra &&
+        value != "inherit" && value != "-moz-initial" &&
+        !(value in gAllowsExtra[property])) {
+      return;
+    }
+
+    gElement.setAttribute("style", property + ": " + value + " blah");
+    if ("subproperties" in info) {
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
+        is(gDeclaration.getPropertyValue(subprop), "",
+           ["expected garbage ignored after '", property, ": ", value,
+            "' when looking at subproperty '", subprop, "'"].join(""));
+      }
+    } else {
+      is(gDeclaration.getPropertyValue(property), "",
+         ["expected garbage ignored after '", property, ": ", value,
+          "'"].join(""));
+    }
+  }
+
+  var idx;
+  test_value("inherit");
+  test_value("-moz-initial");
+  for (idx in info.initial_values)
+    test_value(info.initial_values[idx]);
+  for (idx in info.other_values)
+    test_value(info.other_values[idx]);
+}
+
+// To avoid triggering the slow script dialog, we have to test one
+// property at a time.
+SimpleTest.waitForExplicitFinish();
+var props = [];
+for (var prop in gCSSProperties)
+  props.push(prop);
+props = props.reverse();
+function do_one() {
+  if (props.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+  test_property(props.pop());
+  SimpleTest.executeSoon(do_one);
+}
+SimpleTest.executeSoon(do_one);
+
+</script>
+</pre>
+</body>
+</html>

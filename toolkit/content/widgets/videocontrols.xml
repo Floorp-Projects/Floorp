@@ -78,7 +78,24 @@
 
   <binding id="suppressChangeEvent"
             extends="chrome://global/content/bindings/scale.xml#scale">
-      <implementation>
+    <implementation implements="nsIXBLAccessible">
+      <!-- nsIXBLAccessible -->
+      <property name="accessibleName" readonly="true">
+        <getter>
+          if (this.type != "scrubber")
+              return "";
+
+          var currTime = this.thumb.timeLabel.getAttribute("value");
+          var totalTime = this.durationValue;
+
+          return this.scrubberNameFormat.replace(/#1/, currTime).
+              replace(/#2/, totalTime);
+        </getter>
+      </property>
+
+      <!-- Public -->
+      <field name="scrubberNameFormat">"&scrubberScale.nameFormat;"</field>
+      <field name="durationValue">""</field>
 
       <field name="thumb">null</field>
       <field name="type">null</field>
@@ -159,7 +176,7 @@
                         <scale class="scrubber" movetoclick="true"/>
                     </stack>
                     <vbox class="durationBox">
-                        <label class="durationLabel"/>
+                        <label class="durationLabel" role="presentation"/>
                     </vbox>
                     <button class="muteButton"
                             mutelabel="&muteButton.muteLabel;"
@@ -497,6 +514,10 @@
                         timeString = mins + ":" + secs;
                     }
                     this.durationLabel.setAttribute("value", timeString);
+
+                    // "durationValue" property is used by scale binding to
+                    // generate accessible name.
+                    this.scrubber.durationValue = timeString;
 
                     // If the duration is over an hour, thumb should show h:mm:ss instead of mm:ss
                     this.scrubberThumb.showHours = (duration >= 3600000);

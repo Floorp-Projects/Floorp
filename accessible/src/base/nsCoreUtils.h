@@ -49,6 +49,7 @@
 #include "nsIFrame.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIArray.h"
+#include "nsIMutableArray.h"
 #include "nsPoint.h"
 
 class nsCoreUtils
@@ -249,6 +250,27 @@ public:
                                       nsIArray **aRefElements);
 
   /**
+   * Return the array of elements having IDRefs that points to the given node.
+   *
+   * @param  aRootContent  [in] root element to search inside
+   * @param  aContent      [in] an element having ID attribute
+   * @param  aIDRefsAttr   [in] IDRefs attribute
+   * @param  aElements     [out] result array of elements
+   */
+  static void GetElementsHavingIDRefsAttr(nsIContent *aRootContent,
+                                          nsIContent *aContent,
+                                          nsIAtom *aIDRefsAttr,
+                                          nsIArray **aElements);
+
+  /**
+   * Helper method for GetElementsHavingIDRefsAttr.
+   */
+  static void GetElementsHavingIDRefsAttrImpl(nsIContent *aRootContent,
+                                              nsCString& aIdWithSpaces,
+                                              nsIAtom *aIDRefsAttr,
+                                              nsIMutableArray *aElements);
+
+  /**
    * Return computed styles declaration for the given node.
    */
   static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
@@ -339,6 +361,15 @@ public:
    */
   static already_AddRefed<nsIBoxObject>
     GetTreeBodyBoxObject(nsITreeBoxObject *aTreeBoxObj);
+
+  /**
+   * Return true if the given node is table header element.
+   */
+  static PRBool IsHTMLTableHeader(nsIContent *aContent)
+  {
+    return aContent->NodeInfo()->Equals(nsAccessibilityAtoms::th) ||
+      aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::scope);
+  }
 };
 
 #endif

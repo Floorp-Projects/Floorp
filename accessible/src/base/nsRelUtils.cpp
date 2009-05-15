@@ -158,3 +158,33 @@ nsRelUtils::AddTargetFromNeighbour(PRUint32 aRelationType,
     nsCoreUtils::FindNeighbourPointingToNode(aContent, aNeighboutAttr,
                                              aNeighboutTagName));
 }
+
+nsresult
+nsRelUtils::AddTargetFromChildrenHavingIDRefsAttr(PRUint32 aRelationType,
+                                                  nsIAccessibleRelation **aRelation,
+                                                  nsIContent *aRootContent,
+                                                  nsIContent *aContent,
+                                                  nsIAtom *aIDRefsAttr)
+{
+  nsCOMPtr<nsIArray> elms;
+  nsCoreUtils::GetElementsHavingIDRefsAttr(aRootContent, aContent, aIDRefsAttr,
+                                           getter_AddRefs(elms));
+  if (!elms)
+    return NS_OK_NO_RELATION_TARGET;
+
+  PRUint32 count = 0;
+  nsresult rv = elms->GetLength(&count);
+  if (NS_FAILED(rv) || count == 0)
+    return NS_OK_NO_RELATION_TARGET;
+
+  nsCOMPtr<nsIContent> content;
+  for (PRUint32 idx = 0; idx < count; idx++) {
+    content = do_QueryElementAt(elms, idx, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = AddTargetFromContent(aRelationType, aRelation, content);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}

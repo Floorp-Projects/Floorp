@@ -629,8 +629,14 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         if (!env)
             return NULL;
 
-        /* Root env. */
+        /* Root env before js_DefineNativeProperty (-> JSClass.addProperty). */
         fp->scopeChain = env;
+        if (!js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
+                                     OBJECT_TO_JSVAL(fp->callee), NULL, NULL,
+                                     JSPROP_PERMANENT | JSPROP_READONLY,
+                                     0, 0, NULL)) {
+            return NULL;
+        }
     }
 
     callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL,
@@ -641,14 +647,6 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     JS_SetPrivate(cx, callobj, fp);
     JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->callee));
     STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(fp->callee));
-    if (lambdaName &&
-        !js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
-                                 OBJECT_TO_JSVAL(fp->callee), NULL, NULL,
-                                 JSPROP_PERMANENT | JSPROP_READONLY,
-                                 0, 0, NULL)) {
-        return NULL;
-    }
-
     fp->callobj = callobj;
 
     /*
@@ -720,8 +718,8 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
             memcpy(callobj->dslots, fp->argv, fun->nargs * sizeof(jsval));
             memcpy(callobj->dslots + fun->nargs, fp->slots,
                    fun->u.i.nvars * sizeof(jsval));
-            if (scope->object == callobj && n > scope->map.freeslot)
-                scope->map.freeslot = n;
+            if (scope->object == callobj && n > scope->freeslot)
+                scope->freeslot = n;
         }
         JS_UNLOCK_SCOPE(cx, scope);
     }
@@ -912,6 +910,8 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     uintN slot, attrs;
 
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_CallClass);
+    JS_ASSERT(!STOBJ_GET_PROTO(obj));
+
     if (!JSVAL_IS_STRING(idval))
         return JS_TRUE;
 
@@ -923,6 +923,17 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     if (!js_ValueToStringId(cx, idval, &id))
         return JS_FALSE;
 
+    /*
+     * Check whether the id refers to a formal parameter, local variable or
+     * the arguments special name.
+     *
+     * We define all such names using JSDNP_DONT_PURGE to avoid an expensive
+     * shape invalidation in js_DefineNativeProperty. If such an id happens to
+     * shadow a global or upvar of the same name, any inner functions can
+     * never access the outer binding. Thus it cannot invalidate any property
+     * cache entries or derived trace guards for the outer binding. See also
+     * comments in js_PurgeScopeChainHelper from jsobj.cpp.
+     */
     localKind = js_LookupLocal(cx, fun, JSID_TO_ATOM(id), &slot);
     if (localKind != JSLOCAL_NONE && localKind != JSLOCAL_UPVAR) {
         JS_ASSERT((uint16) slot == slot);
@@ -946,7 +957,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
         }
         if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID, getter, setter,
                                      attrs, SPROP_HAS_SHORTID, (int16) slot,
-                                     NULL)) {
+                                     NULL, JSDNP_DONT_PURGE)) {
             return JS_FALSE;
         }
         *objp = obj;
@@ -961,7 +972,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
         if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
                                      GetCallArguments, SetCallArguments,
                                      JSPROP_PERMANENT | JSPROP_SHARED,
-                                     0, 0, NULL)) {
+                                     0, 0, NULL, JSDNP_DONT_PURGE)) {
             return JS_FALSE;
         }
         *objp = obj;

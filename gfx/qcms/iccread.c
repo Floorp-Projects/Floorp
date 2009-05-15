@@ -776,7 +776,7 @@ qcms_profile* qcms_profile_from_file(FILE *file)
 qcms_profile* qcms_profile_from_path(const char *path)
 {
 	qcms_profile *profile = NULL;
-	FILE *file = fopen(path, "r");
+	FILE *file = fopen(path, "rb");
 	if (file) {
 		profile = qcms_profile_from_file(file);
 		fclose(file);

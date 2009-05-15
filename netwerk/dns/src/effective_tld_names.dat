@@ -3619,7 +3619,13 @@ com.pt
 nome.pt
 
 // pw : http://en.wikipedia.org/wiki/.pw
-*.pw
+pw
+co.pw
+ne.pw
+or.pw
+ed.pw
+go.pw
+belau.pw
 
 // py : http://www.nic.py/faq_a.html#faq_b
 *.py

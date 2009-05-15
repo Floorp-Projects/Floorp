@@ -60,7 +60,7 @@ public:
      *
      * The CALLER owns |lock|.
      *
-     * @param aLock An Mutex to associate with this condition variable.
+     * @param aLock A Mutex to associate with this condition variable.
      * @param aName A name which can reference this monitor
      * @returns If failure, nsnull.
      *          If success, a valid Monitor* which must be destroyed

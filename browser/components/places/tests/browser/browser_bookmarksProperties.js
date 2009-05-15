@@ -43,8 +43,18 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 // DOM ids of Places sidebar trees.
-const SIDEBAR_HISTORY_ID = "historyTree";
-const SIDEBAR_BOOKMARKS_ID = "bookmarks-view";
+const SIDEBAR_HISTORY_TREE_ID = "historyTree";
+const SIDEBAR_BOOKMARKS_TREE_ID = "bookmarks-view";
+
+const SIDEBAR_HISTORY_ID = "viewHistorySidebar";
+const SIDEBAR_BOOKMARKS_ID = "viewBookmarksSidebar";
+
+// For history sidebar.
+const SIDEBAR_HISTORY_BYLASTVISITED_VIEW = "bylastvisited";
+const SIDEBAR_HISTORY_BYMOSTVISITED_VIEW = "byvisited";
+const SIDEBAR_HISTORY_BYDATE_VIEW = "byday";
+const SIDEBAR_HISTORY_BYSITE_VIEW = "bysite";
+const SIDEBAR_HISTORY_BYDATEANDSITE_VIEW = "bydateandsite";
 
 // Action to execute on the current node.
 const ACTION_EDIT = 0;
@@ -94,7 +104,8 @@ gTests.push({
   desc: "Bug Description",
   sidebar: SIDEBAR_BOOKMARKS_ID, // See SIDEBAR_ constants above.
   action: ACTION_EDIT, // See ACTION_ constants above.
-  itemType: null, // See TYPE_ constants above, required for ACTION_ADD.
+  itemType: null, // See TYPE_ constants above, required for ACTION_ADD, only for Bookmarks sidebar.
+  historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW, // See constants above, only for History sidebar.
   window: null, // Will contain handle of dialog window
 
   setup: function() {
@@ -112,7 +123,7 @@ gTests.push({
   finish: function() {
     // Close window, toggle sidebar and goto next test.
     this.window.document.documentElement.cancelDialog();
-    toggleSidebar("viewBookmarksSidebar", false);
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -170,7 +181,7 @@ gTests.push({
 
   finish: function() {
     this.window.document.documentElement.cancelDialog();
-    toggleSidebar("viewBookmarksSidebar", false);
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -265,7 +276,7 @@ gTests.push({
   },
 
   finish: function() {
-    toggleSidebar("viewBookmarksSidebar", false);
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -323,7 +334,7 @@ gTests.push({
 
   finish: function() {
     // Window is already closed.
-    toggleSidebar("viewBookmarksSidebar", false);
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -423,7 +434,7 @@ gTests.push({
   },
 
   finish: function() {
-    toggleSidebar("viewBookmarksSidebar", false);
+    toggleSidebar(this.sidebar, false);
     runNextTest();
   },
 
@@ -436,6 +447,82 @@ gTests.push({
     PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL),
                                  ["testTag"]);
     PlacesUtils.bookmarks.removeItem(this._itemId);
+  }
+});
+
+//------------------------------------------------------------------------------
+//  Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog
+
+gTests.push({
+  desc: " Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog",
+  sidebar: SIDEBAR_HISTORY_ID,
+  action: ACTION_ADD,
+  historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
+  window: null,
+
+  setup: function() {
+    // Add a visit.
+    add_visit(PlacesUtils._uri(TEST_URL), Date.now() * 1000);
+    // Sanity check.
+    var gh = PlacesUtils.history.QueryInterface(Ci.nsIGlobalHistory2);
+    ok(gh.isVisited(PlacesUtils._uri(TEST_URL)), TEST_URL + " is a visited url.");
+  },
+
+  selectNode: function(tree) {
+    var visitNode = tree.view.nodeForTreeIndex(0);
+    tree.selectNode(visitNode);
+    is(tree.selectedNode.uri, TEST_URL, "The correct visit has been selected");
+    is(tree.selectedNode.itemId, -1, "The selected node is not bookmarked");
+  },
+
+  run: function() {
+    // Open folder selector.
+    var foldersExpander = this.window.document.getElementById("editBMPanel_foldersExpander");
+    var folderTree = this.window.document.getElementById("editBMPanel_folderTree");
+    var self = this;
+
+    var windowObserver = {
+      observe: function(aSubject, aTopic, aData) {
+        if (aTopic === "domwindowclosed") {
+          ww.unregisterNotification(this);
+          ok(self._cleanShutdown,
+             "Dialog window should not be closed by pressing ESC in folder name textbox");
+          self.finish();
+        }
+      }
+    };
+    ww.registerNotification(windowObserver);
+
+    folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(event) {
+      if (event.attrName != "place")
+        return;
+      folderTree.removeEventListener("DOMAttrModified", arguments.callee, false);
+      executeSoon(function () {
+        // Create a new folder.
+        var newFolderButton = self.window.document.getElementById("editBMPanel_newFolderButton");
+        newFolderButton.doCommand();
+        ok(folderTree.hasAttribute("editing"),
+           "We are editing new folder name in folder tree");
+
+        // Press Escape to discard editing new folder name.
+        EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
+        ok(!folderTree.hasAttribute("editing"),
+           "We have finished editing folder name in folder tree");
+        self._cleanShutdown = true;
+        self.window.document.documentElement.cancelDialog();
+      });
+    }, false);
+    foldersExpander.doCommand();
+  },
+
+  finish: function() {
+    toggleSidebar(this.sidebar, false);
+    runNextTest();
+  },
+
+  cleanup: function() {
+    var bh = PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
+    bh.removeAllPages();
   }
 });
 
@@ -484,14 +571,23 @@ function execute_test_in_sidebar() {
       // Need to executeSoon since the tree is initialized on sidebar load.
       executeSoon(open_properties_dialog);
     }, true);
-    toggleSidebar("viewBookmarksSidebar", true);
+    toggleSidebar(gCurrentTest.sidebar, true);
 }
 
 function open_properties_dialog() {
     var sidebar = document.getElementById("sidebar");
+
+    // If this is history sidebar, set the required view.
+    if (gCurrentTest.sidebar == SIDEBAR_HISTORY_ID)
+      sidebar.contentDocument.getElementById(gCurrentTest.historyView).doCommand();
+
     // Get sidebar's Places tree.
-    var tree = sidebar.contentDocument.getElementById(gCurrentTest.sidebar);
+    var sidebarTreeID = gCurrentTest.sidebar == SIDEBAR_BOOKMARKS_ID ?
+                                                SIDEBAR_BOOKMARKS_TREE_ID :
+                                                SIDEBAR_HISTORY_TREE_ID;
+    var tree = sidebar.contentDocument.getElementById(sidebarTreeID);
     ok(tree, "Sidebar tree has been loaded");
+
     // Ask current test to select the node to edit.
     gCurrentTest.selectNode(tree);
     ok(tree.selectedNode,
@@ -528,19 +624,23 @@ function open_properties_dialog() {
         command = "placesCmd_show:info";
         break;
       case ACTION_ADD:
-        if (gCurrentTest.itemType == TYPE_FOLDER)
-          command = "placesCmd_new:folder";
-        else if (gCurrentTest.itemType == TYPE_BOOKMARK)
-          command = "placesCmd_new:bookmark";
+        if (gCurrentTest.sidebar == SIDEBAR_BOOKMARKS_ID) {
+          if (gCurrentTest.itemType == TYPE_FOLDER)
+            command = "placesCmd_new:folder";
+          else if (gCurrentTest.itemType == TYPE_BOOKMARK)
+            command = "placesCmd_new:bookmark";
+          else
+            ok(false, "You didn't set a valid itemType for adding an item");
+        }
         else
-          ok(false, "You didn't set a valid itemType for adding an item");
+          command = "placesCmd_createBookmark";
         break;
       default:
         ok(false, "You didn't set a valid action for this test");
     }
     // Ensure command is enabled for this node.
     ok(tree.controller.isCommandEnabled(command),
-       "Properties command on current selected node is enabled");
+       " command '" + command + "' on current selected node is enabled");
 
     // This will open the dialog.
     tree.controller.doCommand(command);

@@ -707,6 +707,12 @@ JS_GetTypeName(JSContext *cx, JSType type)
     return JS_TYPE_STR(type);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2)
+{
+    return js_StrictlyEqual(cx, v1, v2);
+}
+
 /************************************************************************/
 
 /*
@@ -2953,7 +2959,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
         return JS_TRUE;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
-    nslots = scope->map.freeslot;
+    nslots = scope->freeslot;
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_PRIMITIVE(v))

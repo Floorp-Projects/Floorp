@@ -339,40 +339,47 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsIFrame* f = static_cast<nsIFrame*>(subdocView->GetClientData());
 
-  if ((!f || suppressed) && !aBuilder->IsForEventDelivery()) {
+  nsDisplayList childItems;
+
+  nsRect dirty;
+  if (f) {
+    dirty = aDirtyRect - f->GetOffsetTo(this);
+    aBuilder->EnterPresShell(f, dirty);
+    NS_ASSERTION(presShell == f->PresContext()->PresShell(),
+                 "these presshells should be the same");
+
+    rv = f->BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
+  }
+
+  // Get the bounds of subdocView relative to the reference frame.
+  nsRect shellBounds = subdocView->GetBounds() +
+                       mInnerView->GetPosition() +
+                       GetOffsetTo(aBuilder->ReferenceFrame());
+
+  if (NS_SUCCEEDED(rv) && (!f || suppressed) &&
+      !aBuilder->IsForEventDelivery()) {
     // If we don't have a frame or painting of the PresShell is suppressed,
     // try to draw the default background color. (Bug 485275)
-
-    // Get the bounds of subdocView relative to the reference frame.
-    nsRect shellBounds = subdocView->GetBounds() +
-                         mInnerView->GetPosition() +
-                         GetOffsetTo(aBuilder->ReferenceFrame());
-    rv = aLists.Content()->AppendNewToBottom(
+    rv = childItems.AppendNewToBottom(
              new (aBuilder) nsDisplaySolidColor(
                   f ? f : this,
                   shellBounds,
                   presShell->GetCanvasBackground()));
   }
 
-  if (!f)
-    return NS_OK;
-  
-  nsRect dirty = aDirtyRect - f->GetOffsetTo(this);
-
-  aBuilder->EnterPresShell(f, dirty);
-
-  // Clip children to the child root frame's rectangle
-  nsDisplayList childItems;
-  rv = f->BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
   if (NS_SUCCEEDED(rv)) {
+    // Clip children to the child root frame's rectangle
     rv = aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(nsnull, this, &childItems,
-              nsRect(aBuilder->ToReferenceFrame(f), f->GetSize())));
-    // delete childItems in case of OOM
-    childItems.DeleteAll();
+        new (aBuilder) nsDisplayClip(this, this, &childItems,
+              shellBounds));
+  }
+  // delete childItems in case of OOM
+  childItems.DeleteAll();
+
+  if (f) {
+    aBuilder->LeavePresShell(f, dirty);
   }
 
-  aBuilder->LeavePresShell(f, dirty);
   return rv;
 }
 

@@ -589,6 +589,7 @@ enum {
 // offsets, use PC+8.
 #define PC_OFFSET_FROM(target,frompc) ((intptr_t)(target) - ((intptr_t)(frompc) + 8))
 #define isS12(offs) ((-(1<<12)) <= (offs) && (offs) < (1<<12))
+#define isU12(offs) (((offs) & 0xfff) == (offs))
 
 #define B_cond(_c,_t)                           \
     B_cond_chk(_c,_t,1)
