@@ -972,8 +972,23 @@ Assembler::BL(NIns* addr)
 void
 Assembler::LD32_nochk(Register r, int32_t imm)
 {
-    if (imm == 0) {
-        EOR(r, r, r);
+    // If the immediate value will fit into a simple MOV or MVN, use that to
+    // save a word of memory.
+    if (isU8(imm)) {
+        underrunProtect(4);
+
+        // MOV r, #imm
+        *(--_nIns) = (NIns)( COND_AL | 0x3B<<20 | r<<12 | imm & 0xFF );
+        asm_output("mov %s,0x%x",gpn(r), imm);
+
+        return;
+    } else if (isU8(~imm)) {
+        underrunProtect(4);
+
+        // MVN r, #imm
+        *(--_nIns) = (NIns)( COND_AL | 0x3E<<20 | r<<12 | ~imm & 0xFF );
+        asm_output("mvn %s,0x%x",gpn(r), ~imm);
+
         return;
     }
 
@@ -986,19 +1001,25 @@ Assembler::LD32_nochk(Register r, int32_t imm)
         return;
     }
 
-    // We should always reach the const pool, since it's on the same page (<4096);
-    // if we can't, someone didn't underrunProtect enough.
+    // Because the literal pool is on the same page as the generated code, it
+    // will almost always be within the ±4096 range of a LDR. However, this may
+    // not be the case if _nSlot is at the start of the page and _nIns is at
+    // the end because the PC is 8 bytes ahead of _nIns. This is unlikely to
+    // happen, but if it does occur we can simply waste a word or two of
+    // literal space.
 
-    *(++_nSlot) = (int)imm;
-
-    //fprintf (stderr, "wrote slot(2) %p with %08x, jmp @ %p\n", _nSlot, (intptr_t)imm, _nIns-1);
-
-    int offset = PC_OFFSET_FROM(_nSlot,_nIns-1);
-
+    int offset = PC_OFFSET_FROM(_nSlot+1, _nIns-1);
+    while (offset <= -4096) {
+        ++_nSlot;
+        offset += sizeof(_nSlot);
+    }
     NanoAssert(isS12(offset) && (offset < 0));
 
+    // Write the literal.
+    *(++_nSlot) = imm;
     asm_output("  (%d(PC) = 0x%x)", offset, imm);
 
+    // Load the literal.
     LDR_nochk(r,PC,offset);
 }
 
