@@ -45,6 +45,37 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/*
+ * MozContainer
+ *
+ * This class serves two purposes in the nsIWidget implementation.
+ *
+ *   - It provides objects to receive signals from GTK for events on native
+ *     windows.
+ *
+ *   - It provides a container parent for GtkWidgets.  The only GtkWidgets
+ *     that need this in Mozilla are the GtkSockets for windowed plugins (Xt
+ *     and XEmbed).
+ *
+ * Note that the window hierarchy in Mozilla differs from conventional
+ * GtkWidget hierarchies.
+ *
+ * Mozilla's hierarchy exists through the GdkWindow hierarchy, and all child
+ * GdkWindows (within a child nsIWidget hierarchy) belong to one MozContainer
+ * GtkWidget.  If the MozContainer is unrealized or its GdkWindows are
+ * destroyed for some other reason, then the hierarchy no longer exists.  (In
+ * conventional GTK clients, the hierarchy is recorded by the GtkWidgets, and
+ * so can be re-established after destruction of the GdkWindows.)
+ *
+ * One consequence of this is that the MozContainer does not know which of its
+ * GdkWindows should parent child GtkWidgets.  (Conventional GtkContainers
+ * determine which GdkWindow to assign child GtkWidgets.)
+ *
+ * Therefore, when adding a child GtkWidget to a MozContainer,
+ * gtk_widget_set_parent_window should be called on the child GtkWidget before
+ * it is realized.
+ */
+ 
 #define MOZ_CONTAINER_TYPE            (moz_container_get_type())
 #define MOZ_CONTAINER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MOZ_CONTAINER_TYPE, MozContainer))
 #define MOZ_CONTAINER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), MOZ_CONTAINER_TYPE, MozContainerClass))
