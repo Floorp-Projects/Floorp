@@ -1015,18 +1015,21 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 static cairo_status_t
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     long length;
 
     if (! surface->pdf_stream.active)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_pdf_operators_flush (&surface->pdf_operators);
-    if (unlikely (status))
-	return status;
 
     if (surface->pdf_stream.compressed) {
-	status = _cairo_output_stream_destroy (surface->output);
+	cairo_status_t status2;
+
+	status2 = _cairo_output_stream_destroy (surface->output);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    status = status2;
+
 	surface->output = surface->pdf_stream.old_output;
 	_cairo_pdf_operators_set_stream (&surface->pdf_operators, surface->output);
 	surface->pdf_stream.old_output = NULL;
@@ -1051,7 +1054,7 @@ _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 
     surface->pdf_stream.active = FALSE;
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (likely (status == CAIRO_STATUS_SUCCESS))
 	status = _cairo_output_stream_get_status (surface->output);
 
     return status;
@@ -1324,10 +1327,12 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 				 "%%%%EOF\n",
 				 offset);
 
-    status2 = _cairo_pdf_operators_fini (&surface->pdf_operators);
     /* pdf_operators has already been flushed when the last stream was
-     * closed so we should never be writing anything here. */
-    assert(status2 == CAIRO_STATUS_SUCCESS);
+     * closed so we should never be writing anything here - however,
+     * the stream may itself be in an error state. */
+    status2 = _cairo_pdf_operators_fini (&surface->pdf_operators);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     /* close any active streams still open due to fatal errors */
     status2 = _cairo_pdf_surface_close_stream (surface);
@@ -1723,6 +1728,8 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,
 				 &mime_data, &mime_data_length);
+    if (unlikely (source->status))
+	return source->status;
     if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1790,7 +1797,7 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
 
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (unlikely (status))
-	goto BAIL;
+	return status;
 
     pad_image = &image->base;
     if (cairo_pattern_get_extend (&pattern->base) == CAIRO_EXTEND_PAD) {
@@ -1840,10 +1847,10 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
     *origin_x = x;
     *origin_y = y;
 
+BAIL:
     if (pad_image != &image->base)
 	cairo_surface_destroy (pad_image);
 
-BAIL:
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
     return status;
@@ -3927,6 +3934,11 @@ _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_su
 						       null_stream,
 						       _cairo_pdf_emit_imagemask,
 						       surface->font_subsets);
+    if (unlikely (type3_surface->status)) {
+	status2 = _cairo_output_stream_destroy (null_stream);
+	return type3_surface->status;
+    }
+
     _cairo_type3_glyph_surface_set_font_subsets_callback (type3_surface,
 							  _cairo_pdf_surface_add_font,
 							  surface);
@@ -3983,6 +3995,12 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 						       NULL,
 						       _cairo_pdf_emit_imagemask,
 						       surface->font_subsets);
+    if (unlikely (type3_surface->status)) {
+        free (glyphs);
+        free (widths);
+	return type3_surface->status;
+    }
+
     _cairo_type3_glyph_surface_set_font_subsets_callback (type3_surface,
 							  _cairo_pdf_surface_add_font,
 							  surface);

@@ -1299,39 +1299,39 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 		__FUNCTION__, surface, region);
 
     if (region) {
-	int              n_boxes;
+	int              n_rects;
 	cairo_status_t   status;
 	int              i;
 
 	surface->has_clip = TRUE;
 
-	n_boxes = _cairo_region_num_boxes (region);
+	n_rects = cairo_region_num_rectangles (region);
 
-	if (n_boxes == 0)
+	if (n_rects == 0)
 	    return CAIRO_STATUS_SUCCESS;
 
-	if (surface->n_clips != n_boxes) {
+	if (surface->n_clips != n_rects) {
 	    if (surface->clips)
 		free (surface->clips);
 
-	    surface->clips = _cairo_malloc_ab (n_boxes, sizeof (DFBRegion));
+	    surface->clips = _cairo_malloc_ab (n_rects, sizeof (DFBRegion));
 	    if (!surface->clips) {
 		surface->n_clips = 0;
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 
-	    surface->n_clips = n_boxes;
+	    surface->n_clips = n_rects;
 	}
 
-	for (i = 0; i < n_boxes; i++) {
-	    cairo_box_int_t box;
+	for (i = 0; i < n_rects; i++) {
+	    cairo_rectangle_int_t rect;
 
-	    _cairo_region_get_box (region, i, &box);
+	    cairo_region_get_rectangle (region, i, &rect);
 	    
-	    surface->clips[i].x1 = box.p1.x;
-	    surface->clips[i].y1 = box.p1.y;
-	    surface->clips[i].x2 = box.p2.x - 1;
-	    surface->clips[i].y2 = box.p2.y - 1;
+	    surface->clips[i].x1 = rect.x;
+	    surface->clips[i].y1 = rect.y;
+	    surface->clips[i].x2 = rect.x + rect.width - 1;
+	    surface->clips[i].y2 = rect.y + rect.height - 1;
 	}
     } else {
 	surface->has_clip = FALSE;

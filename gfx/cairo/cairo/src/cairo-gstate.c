@@ -222,6 +222,9 @@ _cairo_gstate_save (cairo_gstate_t **gstate, cairo_gstate_t **freelist)
     cairo_gstate_t *top;
     cairo_status_t status;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     top = *freelist;
     if (top == NULL) {
 	top = malloc (sizeof (cairo_gstate_t));
