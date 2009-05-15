@@ -1319,7 +1319,7 @@ _wrap_image (cairo_surface_t *src,
     }
 
     pixman_image_set_component_alpha (surface->pixman_image,
-            pixman_image_get_component_alpha (surface->pixman_image));
+            pixman_image_get_component_alpha (image->pixman_image));
 
     *out = surface;
     return CAIRO_STATUS_SUCCESS;
