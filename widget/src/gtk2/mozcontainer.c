@@ -174,36 +174,6 @@ moz_container_move (MozContainer *container, GtkWidget *child_widget,
     gtk_widget_size_allocate(child_widget, &new_allocation);
 }
 
-/* This function updates the allocation on a child widget without
-causing a size_allocate event to be generated on that widget.  This
-should only be used for scrolling since it's assumed that the expose
-event created by the scroll will update any widgets that come into view. */
-
-void
-moz_container_scroll_update (MozContainer *container, GtkWidget *child_widget,
-                             gint x, gint y)
-{
-    MozContainerChild *child;
-    GtkAllocation new_allocation;
-
-    child = moz_container_get_child (container, child_widget);
-
-    child->x = x;
-    child->y = y;
-
-    new_allocation.x = x;
-    new_allocation.y = y;
-    new_allocation.width = child_widget->allocation.width;
-    new_allocation.height = child_widget->allocation.height;
-
-    /* printf("moz_container_update %p %p will allocate to %d %d %d %d\n",
-       (void *)container, (void *)child_widget,
-       new_allocation.x, new_allocation.y,
-       new_allocation.width, new_allocation.height); */
-
-    gtk_widget_size_allocate(child_widget, &new_allocation);
-}
-
 /* static methods */
 
 void

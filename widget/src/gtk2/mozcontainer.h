@@ -109,10 +109,6 @@ void       moz_container_move          (MozContainer *container,
                                         gint          y,
                                         gint          width,
                                         gint          height);
-void       moz_container_scroll_update (MozContainer *container,
-                                        GtkWidget    *child_widget,
-                                        gint          x,
-                                        gint          y);
 
 #ifdef __cplusplus
 }
