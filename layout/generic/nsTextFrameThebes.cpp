@@ -5032,11 +5032,12 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
     // If the selection state is changed in this content, we need to reflow
     // to recompute the overflow area for underline of spellchecking or IME if
     // their underline is thicker than normal decoration line.
-    PRBool didHaveSelectionUnderline =
-             !!(mState & TEXT_SELECTION_UNDERLINE_OVERFLOWED);
+    PRBool didHaveOverflowingSelection =
+      (mState & TEXT_SELECTION_UNDERLINE_OVERFLOWED) != 0;
     nsRect r(nsPoint(0, 0), GetSize());
-    if (didHaveSelectionUnderline != aSelected ||
-        (aSelected && CombineSelectionUnderlineRect(PresContext(), r))) {
+    PRBool willHaveOverflowingSelection =
+      aSelected && CombineSelectionUnderlineRect(PresContext(), r);
+    if (didHaveOverflowingSelection || willHaveOverflowingSelection) {
       PresContext()->PresShell()->FrameNeedsReflow(this,
                                                    nsIPresShell::eStyleChange,
                                                    NS_FRAME_IS_DIRTY);
