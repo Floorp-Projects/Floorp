@@ -244,7 +244,7 @@ _cairo_paginated_surface_release_source_image (void	  *abstract_surface,
 
 static cairo_int_status_t
 _paint_fallback_image (cairo_paginated_surface_t *surface,
-		       cairo_box_int_t           *box)
+		       cairo_rectangle_int_t     *rect)
 {
     double x_scale = surface->base.x_fallback_resolution / surface->target->x_resolution;
     double y_scale = surface->base.y_fallback_resolution / surface->target->y_resolution;
@@ -254,10 +254,10 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
     cairo_surface_t *image;
     cairo_surface_pattern_t pattern;
 
-    x = box->p1.x;
-    y = box->p1.y;
-    width = box->p2.x - x;
-    height = box->p2.y - y;
+    x = rect->x;
+    y = rect->y;
+    width = rect->width;
+    height = rect->height;
     image = _cairo_paginated_surface_create_image_surface (surface,
 							   ceil (width  * x_scale),
 							   ceil (height * y_scale));
@@ -365,23 +365,23 @@ _paint_page (cairo_paginated_surface_t *surface)
     }
 
     if (has_page_fallback) {
-	cairo_box_int_t box;
+	cairo_rectangle_int_t rect;
 
 	surface->backend->set_paginated_mode (surface->target,
 		                              CAIRO_PAGINATED_MODE_FALLBACK);
 
-	box.p1.x = 0;
-	box.p1.y = 0;
-	box.p2.x = surface->width;
-	box.p2.y = surface->height;
-	status = _paint_fallback_image (surface, &box);
+	rect.x = 0;
+	rect.y = 0;
+	rect.width = surface->width;
+	rect.height = surface->height;
+	status = _paint_fallback_image (surface, &rect);
 	if (unlikely (status))
 	    goto FAIL;
     }
 
     if (has_finegrained_fallback) {
         cairo_region_t *region;
-        int num_boxes, i;
+        int num_rects, i;
 
 	surface->backend->set_paginated_mode (surface->target,
 		                              CAIRO_PAGINATED_MODE_FALLBACK);
@@ -397,13 +397,13 @@ _paint_page (cairo_paginated_surface_t *surface)
 
 	region = _cairo_analysis_surface_get_unsupported (analysis);
 
-	num_boxes = _cairo_region_num_boxes (region);
-	for (i = 0; i < num_boxes; i++) {
-	    cairo_box_int_t box;
+	num_rects = cairo_region_num_rectangles (region);
+	for (i = 0; i < num_rects; i++) {
+	    cairo_rectangle_int_t rect;
 
-	    _cairo_region_get_box (region, i, &box);
+	    cairo_region_get_rectangle (region, i, &rect);
 	    
-	    status = _paint_fallback_image (surface, &box);
+	    status = _paint_fallback_image (surface, &rect);
 	    
 	    if (unlikely (status))
 		goto FAIL;
