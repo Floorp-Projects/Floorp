@@ -258,30 +258,6 @@ struct JSTempValueRooter {
 /* JSObjectOps function pointer typedefs. */
 
 /*
- * Create a new subclass of JSObjectMap (see jsobj.h), with the nrefs and ops
- * members initialized from the same-named parameters, and with the nslots and
- * freeslot members initialized according to ops and clasp.  Return null on
- * error, non-null on success.
- *
- * JSObjectMaps are reference-counted by generic code in the engine.  Usually,
- * the nrefs parameter to JSObjectOps.newObjectMap will be 1, to count the ref
- * returned to the caller on success.  After a successful construction, some
- * number of js_HoldObjectMap and js_DropObjectMap calls ensue.  When nrefs
- * reaches 0 due to a js_DropObjectMap call, JSObjectOps.destroyObjectMap will
- * be called to dispose of the map.
- */
-typedef JSObjectMap *
-(* JSNewObjectMapOp)(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-                     JSClass *clasp, JSObject *obj);
-
-/*
- * Generic type for an infallible JSObjectMap operation, used currently by
- * JSObjectOps.destroyObjectMap.
- */
-typedef void
-(* JSObjectMapOp)(JSContext *cx, JSObjectMap *map);
-
-/*
  * Look for id in obj and its prototype chain, returning false on error or
  * exception, true on success.  On success, return null in *propp if id was
  * not found.  If id was found, return the first object searching from obj

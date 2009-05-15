@@ -5362,7 +5362,7 @@ js_OverfullFragmento(JSTraceMonitor* tm, Fragmento *fragmento)
          */
         maxsz /= 16;
     }
-    return (fragmento->_stats.pages > (maxsz >> NJ_LOG2_PAGE_SIZE));
+    return (fragmento->cacheUsed() > maxsz);
 }
 
 JS_FORCES_STACK JS_FRIEND_API(void)
@@ -6301,21 +6301,25 @@ TraceRecorder::binary(LOpcode op)
     return JSRS_STOP;
 }
 
-JS_STATIC_ASSERT(offsetof(JSObjectOps, newObjectMap) == 0);
+JS_STATIC_ASSERT(offsetof(JSObjectOps, objectMap) == 0);
 
 bool
 TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, size_t op_offset)
 {
-#define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
-    if (OP(map->ops) != OP(&js_ObjectOps))
-        return false;
+    JS_ASSERT(op_offset < sizeof(JSObjectOps));
+    JS_ASSERT(op_offset % sizeof(void *) == 0);
 
-    ops_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSObjectMap, ops)), "ops");
+#define OP(ops) (*(void **) ((uint8 *) (ops) + op_offset))
+    void* ptr = OP(map->ops);
+    if (ptr != OP(&js_ObjectOps))
+        return false;
+#undef OP
+
+    ops_ins = addName(lir->insLoad(LIR_ldp, map_ins, int(offsetof(JSObjectMap, ops))), "ops");
     LIns* n = lir->insLoad(LIR_ldp, ops_ins, op_offset);
     guard(true,
-          addName(lir->ins2(LIR_eq, n, INS_CONSTFUNPTR(OP(&js_ObjectOps))), "guard(native-map)"),
+          addName(lir->ins2(LIR_eq, n, INS_CONSTPTR(ptr)), "guard(native-map)"),
           BRANCH_EXIT);
-#undef OP
 
     return true;
 }
@@ -6340,10 +6344,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     LIns* ops_ins;
 
     // Interpreter calls to PROPERTY_CACHE_TEST guard on native object ops
-    // (newObjectMap == js_ObjectOps.newObjectMap) which is required to use
-    // native objects (those whose maps are scopes), or even more narrow
-    // conditions required because the cache miss case will call a particular
-    // object-op (js_GetProperty, js_SetProperty).
+    // which is required to use native objects (those whose maps are scopes),
+    // or even more narrow conditions required because the cache miss case
+    // will call a particular object-op (js_GetProperty, js_SetProperty).
     //
     // We parameterize using offsetof and guard on match against the hook at
     // the given offset in js_ObjectOps. TraceRecorder::record_JSOP_SETPROP
@@ -6354,7 +6357,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // No need to guard native-ness of global object.
     JS_ASSERT(OBJ_IS_NATIVE(globalObj));
     if (aobj != globalObj) {
-        size_t op_offset = offsetof(JSObjectOps, newObjectMap);
+        size_t op_offset = offsetof(JSObjectOps, objectMap);
         if (mode == JOF_PROP || mode == JOF_VARPROP) {
             JS_ASSERT(!(format & JOF_SET));
             op_offset = offsetof(JSObjectOps, getProperty);
