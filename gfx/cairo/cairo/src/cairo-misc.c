@@ -123,9 +123,10 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for an input #cairo_font_weight_t";
     case CAIRO_STATUS_INVALID_SIZE:
 	return "invalid value for the size of the input (surface, pattern, etc.)";
+    default:
+    case CAIRO_STATUS_LAST_STATUS:
+	return "<unknown error status>";
     }
-
-    return "<unknown error status>";
 }
 
 
@@ -610,7 +611,7 @@ _cairo_lround (double d)
 #include <windows.h>
 #include <io.h>
 
-#if !WINCE
+#if !_WIN32_WCE
 /* tmpfile() replacement for Windows.
  *
  * On Windows tmpfile() creates the file in the root directory. This
@@ -660,7 +661,7 @@ _cairo_win32_tmpfile (void)
 
     return fp;
 }
-#endif /* !WINCE */
+#endif /* !_WIN32_WCE */
 
 #endif /* _WIN32 */
 
@@ -702,6 +703,9 @@ _cairo_intern_string (const char **str_inout, int len)
     char *str = (char *) *str_inout;
     cairo_intern_string_t tmpl, *istring;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (len < 0)
 	len = strlen (str);

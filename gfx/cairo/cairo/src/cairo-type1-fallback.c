@@ -449,14 +449,14 @@ cairo_type1_font_write_charstrings (cairo_type1_font_t    *font,
         /* four "random" bytes required by encryption algorithm */
         status = _cairo_array_append_multiple (&data, zeros, 4);
         if (unlikely (status))
-            goto fail;
+	    break;
 
         status = cairo_type1_font_create_charstring (font, i,
 						     font->scaled_font_subset->glyphs[i],
                                                      CAIRO_CHARSTRING_TYPE1,
 						     &data);
         if (unlikely (status))
-            goto fail;
+	    break;
 
         charstring_encrypt (&data);
         length = _cairo_array_num_elements (&data);
@@ -474,9 +474,9 @@ cairo_type1_font_write_charstrings (cairo_type1_font_t    *font,
                                     length);
         _cairo_output_stream_printf (encrypted_output, " ND\n");
     }
+    _cairo_scaled_font_thaw_cache (font->type1_scaled_font);
 
 fail:
-    _cairo_scaled_font_thaw_cache (font->type1_scaled_font);
     _cairo_array_fini (&data);
     return status;
 }

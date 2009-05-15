@@ -4251,6 +4251,7 @@ DocumentViewerImpl::DestroyPresShell()
   if (selPrivate && mSelectionListener)
     selPrivate->RemoveSelectionListener(mSelectionListener);
 
+  nsAutoScriptBlocker scriptBlocker;
   mPresShell->Destroy();
   mPresShell = nsnull;
 }

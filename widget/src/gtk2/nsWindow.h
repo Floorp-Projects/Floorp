@@ -219,6 +219,7 @@ public:
                                      GdkEventExpose *aEvent);
     gboolean           OnConfigureEvent(GtkWidget *aWidget,
                                         GdkEventConfigure *aEvent);
+    void               OnContainerUnrealize(GtkWidget *aWidget);
     void               OnSizeAllocate(GtkWidget *aWidget,
                                       GtkAllocation *aAllocation);
     void               OnDeleteEvent(GtkWidget *aWidget,

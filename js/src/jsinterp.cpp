@@ -4164,7 +4164,7 @@ js_Interpret(JSContext *cx)
                     ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
                     if (obj == obj2 && PCVAL_IS_SLOT(entry->vword)) {
                         slot = PCVAL_TO_SLOT(entry->vword);
-                        JS_ASSERT(slot < obj->map->freeslot);
+                        JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot);
                         rval = LOCKED_OBJ_GET_SLOT(obj, slot);
                         if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
                             rtmp = rval;
@@ -4420,7 +4420,7 @@ js_Interpret(JSContext *cx)
                             rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
                         } else if (PCVAL_IS_SLOT(entry->vword)) {
                             slot = PCVAL_TO_SLOT(entry->vword);
-                            JS_ASSERT(slot < obj2->map->freeslot);
+                            JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
                             rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
                         } else {
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
@@ -4511,7 +4511,7 @@ js_Interpret(JSContext *cx)
                         rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
                     } else if (PCVAL_IS_SLOT(entry->vword)) {
                         slot = PCVAL_TO_SLOT(entry->vword);
-                        JS_ASSERT(slot < obj2->map->freeslot);
+                        JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
                         rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
                     } else {
                         JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
@@ -4656,7 +4656,7 @@ js_Interpret(JSContext *cx)
 
                             if (checkForAdd &&
                                 SPROP_HAS_STUB_SETTER(sprop) &&
-                                (slot = sprop->slot) == scope->map.freeslot) {
+                                (slot = sprop->slot) == scope->freeslot) {
                                 /*
                                  * Fast path: adding a plain old property that
                                  * was once at the frontier of the property
@@ -4681,7 +4681,7 @@ js_Interpret(JSContext *cx)
                                  */
                                 if (slot < STOBJ_NSLOTS(obj) &&
                                     !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
-                                    ++scope->map.freeslot;
+                                    ++scope->freeslot;
                                 } else {
                                     if (!js_AllocSlot(cx, obj, &slot)) {
                                         JS_UNLOCK_SCOPE(cx, scope);
@@ -5262,7 +5262,7 @@ js_Interpret(JSContext *cx)
 
                     if (PCVAL_IS_SLOT(entry->vword)) {
                         slot = PCVAL_TO_SLOT(entry->vword);
-                        JS_ASSERT(slot < obj2->map->freeslot);
+                        JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
                         rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
                         JS_UNLOCK_OBJ(cx, obj2);
                         goto do_push_rval;
@@ -5742,7 +5742,7 @@ js_Interpret(JSContext *cx)
             index = GET_UINT16(regs.pc);
             JS_ASSERT(JS_INITIAL_NSLOTS + index < jsatomid(obj->dslots[-1]));
             JS_ASSERT_IF(OBJ_SCOPE(obj)->object == obj,
-                         JS_INITIAL_NSLOTS + index < obj->map->freeslot);
+                         JS_INITIAL_NSLOTS + index < OBJ_SCOPE(obj)->freeslot);
 
             PUSH_OPND(obj->dslots[index]);
             if (op == JSOP_CALLDSLOT)
@@ -6371,9 +6371,9 @@ js_Interpret(JSContext *cx)
                               !SCOPE_HAS_PROPERTY(scope, sprop));
 
                     slot = sprop->slot;
-                    JS_ASSERT(slot == scope->map.freeslot);
+                    JS_ASSERT(slot == scope->freeslot);
                     if (slot < STOBJ_NSLOTS(obj)) {
-                        ++scope->map.freeslot;
+                        ++scope->freeslot;
                     } else {
                         if (!js_AllocSlot(cx, obj, &slot)) {
                             JS_UNLOCK_SCOPE(cx, scope);

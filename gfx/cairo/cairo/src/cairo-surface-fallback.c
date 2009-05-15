@@ -417,7 +417,7 @@ _composite_trap_region (cairo_clip_t            *clip,
     cairo_status_t status;
     cairo_solid_pattern_t solid_pattern;
     cairo_surface_pattern_t mask;
-    int num_rects = _cairo_region_num_boxes (trap_region);
+    int num_rects = cairo_region_num_rectangles (trap_region);
     unsigned int clip_serial;
     cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
@@ -520,10 +520,8 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 				cairo_antialias_t antialias)
 {
     cairo_status_t status;
-    cairo_region_t trap_region;
-    cairo_region_t clear_region;
-    cairo_bool_t has_trap_region = FALSE;
-    cairo_bool_t has_clear_region = FALSE;
+    cairo_region_t *trap_region = NULL;
+    cairo_region_t *clear_region = NULL;
     cairo_rectangle_int_t extents;
     cairo_composite_traps_info_t traps_info;
 
@@ -535,23 +533,18 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
         return status;
 
     status = _cairo_traps_extract_region (traps, &trap_region);
-    if (CAIRO_INT_STATUS_UNSUPPORTED == status) {
-        has_trap_region = FALSE;
-    } else if (status) {
-        return status;
-    } else {
-        has_trap_region = TRUE;
-    }
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     if (_cairo_operator_bounded_by_mask (op)) {
         cairo_rectangle_int_t trap_extents;
 
-        if (has_trap_region) {
-            status = _cairo_clip_intersect_to_region (clip, &trap_region);
+        if (trap_region) {
+            status = _cairo_clip_intersect_to_region (clip, trap_region);
             if (unlikely (status))
                 goto out;
 
-            _cairo_region_get_extents (&trap_region, &trap_extents);
+            cairo_region_get_extents (trap_region, &trap_extents);
         } else {
             cairo_box_t trap_box;
             _cairo_traps_extents (traps, &trap_box);
@@ -569,27 +562,30 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
     } else {
         cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
-        if (has_trap_region && !clip_surface) {
+        if (trap_region && !clip_surface) {
             /* If we optimize drawing with an unbounded operator to
              * _cairo_surface_fill_rectangles() or to drawing with a
              * clip region, then we have an additional region to clear.
              */
-            _cairo_region_init_rect (&clear_region, &extents);
+            clear_region = cairo_region_create_rectangle (&extents);
 
-            has_clear_region = TRUE;
-            status = _cairo_clip_intersect_to_region (clip, &clear_region);
+	    status = cairo_region_status (clear_region);
+	    if (unlikely (status))
+		goto out;
+
+            status = _cairo_clip_intersect_to_region (clip, clear_region);
             if (unlikely (status))
                 goto out;
 
-            _cairo_region_get_extents (&clear_region, &extents);
+            cairo_region_get_extents (clear_region, &extents);
 
-            status = _cairo_region_subtract (&clear_region, &clear_region, &trap_region);
+            status = cairo_region_subtract (clear_region, trap_region);
             if (unlikely (status))
                 goto out;
 
-            if (!_cairo_region_not_empty (&clear_region)) {
-                _cairo_region_fini (&clear_region);
-                has_clear_region = FALSE;
+            if (cairo_region_is_empty (clear_region)) {
+                cairo_region_destroy (clear_region);
+		clear_region = NULL;
             }
         } else {
             status = _cairo_clip_intersect_to_rectangle (clip, &extents);
@@ -599,7 +595,7 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
     if (unlikely (status))
         goto out;
 
-    if (has_trap_region) {
+    if (trap_region) {
         cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
         if ((src->type == CAIRO_PATTERN_TYPE_SOLID ||
@@ -613,12 +609,13 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
             }
 
             /* Solid rectangles special case */
-            status = _cairo_surface_fill_region (dst, op, color, &trap_region);
+            status = _cairo_surface_fill_region (dst, op, color, trap_region);
 
-            if (!status && has_clear_region)
+            if (!status && clear_region) {
                 status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_CLEAR,
                                                      CAIRO_COLOR_TRANSPARENT,
-                                                     &clear_region);
+                                                     clear_region);
+	    }
 
             goto out;
         }
@@ -641,13 +638,13 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
              * regions. In that case, we fall through.
              */
             status = _composite_trap_region (clip, src, op, dst,
-                                             &trap_region, &extents);
+                                             trap_region, &extents);
 
             if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
-                if (!status && has_clear_region)
+                if (!status && clear_region)
                     status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_CLEAR,
                                                          CAIRO_COLOR_TRANSPARENT,
-                                                         &clear_region);
+                                                         clear_region);
                 goto out;
             }
         }
@@ -661,10 +658,10 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
                                   &traps_info, dst, &extents);
 
 out:
-    if (has_trap_region)
-        _cairo_region_fini (&trap_region);
-    if (has_clear_region)
-        _cairo_region_fini (&clear_region);
+    if (trap_region)
+        cairo_region_destroy (trap_region);
+    if (clear_region)
+        cairo_region_destroy (clear_region);
 
     return status;
 }
