@@ -3765,7 +3765,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     // i is unsigned, so i >= is always true
     for (PRUint32 i = 0; i < childCount; ++i) {
       nsIContent* child = aContent->GetChildAt(removeIndex);
-      if (removeIndex == 0 && child->IsNodeOfType(nsINode::eTEXT)) {
+      if (removeIndex == 0 && child && child->IsNodeOfType(nsINode::eTEXT)) {
         nsresult rv = child->SetText(aValue, PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
 
