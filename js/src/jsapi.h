@@ -447,6 +447,9 @@ JS_TypeOfValue(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(const char *)
 JS_GetTypeName(JSContext *cx, JSType type);
 
+extern JS_PUBLIC_API(JSBool)
+JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2);
+
 /************************************************************************/
 
 /*
