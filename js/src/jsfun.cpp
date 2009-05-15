@@ -718,8 +718,8 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
             memcpy(callobj->dslots, fp->argv, fun->nargs * sizeof(jsval));
             memcpy(callobj->dslots + fun->nargs, fp->slots,
                    fun->u.i.nvars * sizeof(jsval));
-            if (scope->object == callobj && n > scope->map.freeslot)
-                scope->map.freeslot = n;
+            if (scope->object == callobj && n > scope->freeslot)
+                scope->freeslot = n;
         }
         JS_UNLOCK_SCOPE(cx, scope);
     }
