@@ -5362,7 +5362,7 @@ js_OverfullFragmento(JSTraceMonitor* tm, Fragmento *fragmento)
          */
         maxsz /= 16;
     }
-    return (fragmento->_stats.pages > (maxsz >> NJ_LOG2_PAGE_SIZE));
+    return (fragmento->cacheUsed() > maxsz);
 }
 
 JS_FORCES_STACK JS_FRIEND_API(void)
