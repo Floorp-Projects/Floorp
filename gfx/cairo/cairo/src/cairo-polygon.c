@@ -64,6 +64,11 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
     int old_size = polygon->edges_size;
     int new_size = 4 * old_size;
 
+    if (CAIRO_INJECT_FAULT ()) {
+	polygon->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return FALSE;
+    }
+
     if (polygon->edges == polygon->edges_embedded) {
 	new_edges = _cairo_malloc_ab (new_size, sizeof (cairo_edge_t));
 	if (new_edges != NULL)

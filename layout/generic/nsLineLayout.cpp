@@ -89,9 +89,6 @@
 
 #define FIX_BUG_50257
 
-#define PLACED_LEFT  0x1
-#define PLACED_RIGHT 0x2
-
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsFloatManager* aFloatManager,
                            const nsHTMLReflowState* aOuterReflowState,
@@ -118,7 +115,6 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mTextAlign = mStyleText->mTextAlign;
   mLineNumber = 0;
   mFlags = 0; // default all flags to false except those that follow here...
-  mPlacedFloats = 0;
   mTotalPlacedFrames = 0;
   mTopEdge = 0;
   mTrimmableWidth = 0;
@@ -204,7 +200,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 
   SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
   SetFlag(LL_ISTOPOFPAGE, aIsTopOfPage);
-  mPlacedFloats = 0;
   SetFlag(LL_IMPACTEDBYFLOATS, aImpactedByFloats);
   mTotalPlacedFrames = 0;
   SetFlag(LL_LINEISEMPTY, PR_TRUE);
@@ -292,14 +287,13 @@ nsLineLayout::EndLineReflow()
 
 void
 nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
-                         PRBool aPlacedLeftFloat,
                          nsIFrame* aFloatFrame)
 {
 #ifdef REALLY_NOISY_REFLOW
-  printf("nsLL::UpdateBand %d, %d, %d, %d, frame=%p placedLeft=%s\n  will set mImpacted to PR_TRUE\n",
+  printf("nsLL::UpdateBand %d, %d, %d, %d, frame=%p\n  will set mImpacted to PR_TRUE\n",
          aNewAvailSpace.x, aNewAvailSpace.y,
          aNewAvailSpace.width, aNewAvailSpace.height,
-         aFloatFrame, aPlacedLeftFloat?"true":"false");
+         aFloatFrame);
 #endif
 #ifdef DEBUG
   if ((aNewAvailSpace.width != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aNewAvailSpace.width)) {
@@ -325,10 +319,9 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
   nscoord deltaWidth = aNewAvailSpace.width - (mRootSpan->mRightEdge - mRootSpan->mLeftEdge);
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  printf(": UpdateBand: %d,%d,%d,%d deltaWidth=%d deltaX=%d %s float\n",
+  printf(": UpdateBand: %d,%d,%d,%d deltaWidth=%d deltaX=%d\n",
          aNewAvailSpace.x, aNewAvailSpace.y,
-         aNewAvailSpace.width, aNewAvailSpace.height, deltaWidth, deltaX,
-         aPlacedLeftFloat ? "left" : "right");
+         aNewAvailSpace.width, aNewAvailSpace.height, deltaWidth, deltaX);
 #endif
 
   // Update the root span position
@@ -365,7 +358,6 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
   }
 
   mTopEdge = aNewAvailSpace.y;
-  mPlacedFloats |= (aPlacedLeftFloat ? PLACED_LEFT : PLACED_RIGHT);
   SetFlag(LL_IMPACTEDBYFLOATS, PR_TRUE);
 
   SetFlag(LL_LASTFLOATWASLETTERFRAME,

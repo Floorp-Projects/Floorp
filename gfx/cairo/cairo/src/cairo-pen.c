@@ -55,6 +55,9 @@ _cairo_pen_init (cairo_pen_t	*pen,
     int i;
     int reflect;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     pen->radius = radius;
     pen->tolerance = tolerance;
 
@@ -109,6 +112,9 @@ _cairo_pen_init_copy (cairo_pen_t *pen, const cairo_pen_t *other)
 {
     *pen = *other;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     pen->vertices = pen->vertices_embedded;
     if (pen->num_vertices) {
 	if (pen->num_vertices > ARRAY_LENGTH (pen->vertices_embedded)) {
@@ -131,6 +137,9 @@ _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
     cairo_status_t status;
     int num_vertices;
     int i;
+
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     num_vertices = pen->num_vertices + num_points;
     if (num_vertices > ARRAY_LENGTH (pen->vertices_embedded) ||

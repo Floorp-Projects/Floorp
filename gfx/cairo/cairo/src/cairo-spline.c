@@ -289,7 +289,7 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 		 *   0 < (-b±√delta)/a < 1 \
 		 */ \
 		if (_2ab >= 0) \
-		    feasible = delta > b2 && delta < a*a + b2 - _2ab; \
+		    feasible = delta > b2 && delta < a*a + b2 + _2ab; \
 		else if (-b / a >= 1) \
 		    feasible = delta < b2 && delta > a*a + b2 + _2ab; \
 		else \

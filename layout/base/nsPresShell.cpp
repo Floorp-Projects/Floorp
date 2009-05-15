@@ -1773,6 +1773,9 @@ PresShell::Init(nsIDocument* aDocument,
 NS_IMETHODIMP
 PresShell::Destroy()
 {
+  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+    "destroy called on presshell while scripts not blocked");
+
 #ifdef MOZ_REFLOW_PERF
   DumpReflows();
   if (mReflowCountMgr) {
@@ -4200,6 +4203,13 @@ PresShell::DoScrollContentIntoView(nsIContent* aContent,
   nsIFrame* frame = GetPrimaryFrameFor(aContent);
   if (!frame) {
     mContentToScrollTo = nsnull;
+    return;
+  }
+
+  if (frame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    // The reflow flush before this scroll got interrupted, and this frame's
+    // coords and size are all zero, and it has no content showing anyway.
+    // Don't bother scrolling to it.  We'll try again when we finish up layout.
     return;
   }
 

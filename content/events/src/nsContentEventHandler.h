@@ -81,6 +81,8 @@ public:
   nsresult OnQueryContentState(nsQueryContentEvent* aEvent);
   // NS_QUERY_SELECTION_AS_TRANSFERABLE event handler
   nsresult OnQuerySelectionAsTransferable(nsQueryContentEvent* aEvent);
+  // NS_QUERY_CHARACTER_AT_POINT event handler
+  nsresult OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent);
 
   // NS_SELECTION_* event
   nsresult OnSelectionEvent(nsSelectionEvent* aEvent);

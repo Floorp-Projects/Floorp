@@ -415,10 +415,10 @@ void nsGIFDecoder2::EndImageFrame()
       mImageContainer->AppendFrame(mImageFrame);
     mImageContainer->EndFrameDecode(mGIFStruct.images_decoded);
     mGIFStruct.images_decoded++; 
-
-    if (mObserver)
-      mObserver->OnStopFrame(nsnull, mImageFrame);
   }
+
+  if (mObserver)
+    mObserver->OnStopFrame(nsnull, mImageFrame);
 
   // Release reference to this frame
   mImageFrame = nsnull;

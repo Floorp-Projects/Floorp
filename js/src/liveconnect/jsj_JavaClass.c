@@ -529,10 +529,14 @@ done:
     return JS_TRUE;
 }
 
+extern JSObjectOps JavaClass_ops;
+
+static const JSObjectMap JavaClassMap = { &JavaClass_ops };
+
 JSObjectOps JavaClass_ops = {
+    &JavaClassMap,                  /* objectMap */
+
     /* Mandatory non-null function pointer members. */
-    jsj_wrapper_newObjectMap,       /* newObjectMap */
-    jsj_wrapper_destroyObjectMap,   /* destroyObjectMap */
     JavaClass_lookupProperty,
     JavaClass_defineProperty,
     JavaClass_getPropertyById,      /* getProperty */

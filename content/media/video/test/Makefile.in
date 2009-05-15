@@ -61,6 +61,7 @@ _TEST_FILES = \
 
 ifdef MOZ_OGG
 _TEST_FILES += \
+		dynamic_redirect.sjs \
 		test_access_control.html \
 		file_access_controls.html \
 		test_bug448534.html \
@@ -82,6 +83,7 @@ _TEST_FILES += \
 		test_info_leak.html \
 		test_onloadedmetadata.html \
 		test_load_candidates.html \
+		test_mixed_principals.html \
 		test_play.html \
 		test_progress1.html \
 		test_progress3.html \

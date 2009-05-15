@@ -1199,35 +1199,12 @@ array_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-static JSObjectMap *
-array_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-                   JSClass *clasp, JSObject *obj)
-{
-#ifdef DEBUG
-    extern JSClass js_ArrayClass;
-    extern JSObjectOps js_ArrayObjectOps;
-#endif
-    JSObjectMap *map = (JSObjectMap *) JS_malloc(cx, sizeof(*map));
-    if (!map)
-        return NULL;
+extern JSObjectOps js_ArrayObjectOps;
 
-    map->nrefs = nrefs;
-    JS_ASSERT(ops == &js_ArrayObjectOps);
-    map->ops = ops;
-    JS_ASSERT(clasp == &js_ArrayClass);
-    map->freeslot = JSSLOT_FREE(clasp);
-
-    return map;
-}
-
-void
-array_destroyObjectMap(JSContext *cx, JSObjectMap *map)
-{
-    JS_free(cx, map);
-}
+static const JSObjectMap SharedArrayMap = { &js_ArrayObjectOps };
 
 JSObjectOps js_ArrayObjectOps = {
-    array_newObjectMap,   array_destroyObjectMap,
+    &SharedArrayMap,
     array_lookupProperty, array_defineProperty,
     array_getProperty,    array_setProperty,
     array_getAttributes,  array_setAttributes,
@@ -1271,27 +1248,24 @@ JSClass js_SlowArrayClass = {
 JSBool
 js_MakeArraySlow(JSContext *cx, JSObject *obj)
 {
-    JSObjectMap *map, *oldmap;
-    uint32 i, capacity;
-
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ArrayClass);
 
     /* Create a native scope. */
-    map = js_NewObjectMap(cx, obj->map->nrefs, &js_SlowArrayObjectOps,
-                          &js_SlowArrayClass, obj);
-    if (!map)
+    JSScope *scope = js_NewScope(cx, &js_SlowArrayObjectOps,
+                                 &js_SlowArrayClass, obj);
+    if (!scope)
         return JS_FALSE;
 
-    capacity = js_DenseArrayCapacity(obj);
+    uint32 capacity = js_DenseArrayCapacity(obj);
     if (capacity) {
-        map->freeslot = STOBJ_NSLOTS(obj) + JS_INITIAL_NSLOTS;
+        scope->freeslot = STOBJ_NSLOTS(obj) + JS_INITIAL_NSLOTS;
         obj->dslots[-1] = JS_INITIAL_NSLOTS + capacity;
     } else {
-        map->freeslot = STOBJ_NSLOTS(obj);
+        scope->freeslot = STOBJ_NSLOTS(obj);
     }
 
     /* Create new properties pointing to existing values in dslots */
-    for (i = 0; i < capacity; i++) {
+    for (uint32 i = 0; i < capacity; i++) {
         jsid id;
         JSScopeProperty *sprop;
 
@@ -1303,7 +1277,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
             continue;
         }
 
-        sprop = js_AddScopeProperty(cx, (JSScope *)map, id, NULL, NULL,
+        sprop = js_AddScopeProperty(cx, scope, id, NULL, NULL,
                                     i + JS_INITIAL_NSLOTS, JSPROP_ENUMERATE,
                                     0, 0);
         if (!sprop)
@@ -1327,15 +1301,11 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
     obj->classword ^= (jsuword) &js_ArrayClass;
     obj->classword |= (jsuword) &js_SlowArrayClass;
 
-    /* Swap in our new map. */
-    oldmap = obj->map;
-    obj->map = map;
-    array_destroyObjectMap(cx, oldmap);
-
+    obj->map = &scope->map;
     return JS_TRUE;
 
-out_bad:
-    js_DestroyObjectMap(cx, map);
+  out_bad:
+    js_DestroyScope(cx, scope);
     return JS_FALSE;
 }
 
@@ -3387,9 +3357,9 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     if (!obj)
         return NULL;
 
-    JSClass* clasp = &js_ArrayClass;
-    obj->classword = jsuword(clasp);
-
+    /* Initialize all fields of JSObject. */
+    obj->map = const_cast<JSObjectMap *>(&SharedArrayMap);
+    obj->classword = jsuword(&js_ArrayClass);
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = proto->fslots[JSSLOT_PARENT];
 
@@ -3397,11 +3367,6 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     obj->fslots[JSSLOT_ARRAY_COUNT] = 0;
     for (unsigned i = JSSLOT_ARRAY_COUNT + 1; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
-
-    JSObjectOps* ops = clasp->getObjectOps(cx, clasp);
-    obj->map = ops->newObjectMap(cx, 1, ops, clasp, obj);
-    if (!obj->map)
-        return NULL;
     obj->dslots = NULL;
     return obj;
 }
