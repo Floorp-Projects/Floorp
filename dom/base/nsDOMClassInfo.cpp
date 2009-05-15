@@ -1182,7 +1182,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // since a call to addProperty() is always followed by a call to
   // setProperty(), except in the case when a getter or setter is set
   // for a property. But we don't care about getters or setters here.
-  NS_DEFINE_CLASSINFO_DATA(Storage, nsStorageSH,
+  NS_DEFINE_CLASSINFO_DATA(StorageObsolete, nsStorageSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_NEWRESOLVE |
                            nsIXPCScriptable::WANT_GETPROPERTY |
@@ -1191,7 +1191,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
 
-  NS_DEFINE_CLASSINFO_DATA(Storage2, nsStorage2SH,
+  NS_DEFINE_CLASSINFO_DATA(Storage, nsStorage2SH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_NEWRESOLVE |
                            nsIXPCScriptable::WANT_GETPROPERTY |
@@ -3396,11 +3396,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathResult)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)
+  DOM_CLASSINFO_MAP_BEGIN(StorageObsolete, nsIDOMStorage)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Storage2, nsIDOMStorage2)
+  DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage2)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage2)
   DOM_CLASSINFO_MAP_END
 

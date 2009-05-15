@@ -71,6 +71,7 @@ _TEST_FILES	= \
     test_localStorageQuota.html \
     test_localStorageKeyOrder.html \
     test_removeOwnersAPI.html \
+    test_storageConstructor.html \
     $(NULL)
     
 _CHROME_FILES = \
