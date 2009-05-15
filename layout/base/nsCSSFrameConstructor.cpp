@@ -5199,6 +5199,27 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
                                     aItems);
 }
 
+/**
+ * Set aContent as undisplayed content with style context aStyleContext.  This
+ * method enforces the invariant that all style contexts in the undisplayed
+ * content map must be non-pseudo contexts and also handles unbinding
+ * undisplayed generated content as needed.
+ */
+static void
+SetAsUndisplayedContent(nsFrameManager* aFrameManager, nsIContent* aContent,
+                        nsStyleContext* aStyleContext,
+                        PRBool aIsGeneratedContent)
+{
+  if (aStyleContext->GetPseudoType()) {
+    if (aIsGeneratedContent) {
+      aContent->UnbindFromTree();
+    }
+    return;
+  }
+
+  NS_ASSERTION(!aIsGeneratedContent, "Should have had pseudo type");
+  aFrameManager->SetUndisplayedContent(aContent, aStyleContext);
+}
 
 void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
@@ -5243,10 +5264,13 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
   }
 
+  PRBool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
+
   // Pre-check for display "none" - if we find that, don't create
   // any frame at all
   if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-    aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+    SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                            isGeneratedContent);
     return;
   }
 
@@ -5270,6 +5294,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         aParentFrame->IsFrameOfType(nsIFrame::eSVG) &&
         !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)
         ) {
+      SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                              isGeneratedContent);
       return;
     }
 #endif /* MOZ_SVG */
@@ -5304,7 +5330,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     NS_ASSERTION(data, "Should have frame construction data now");
 
     if (data->mBits & FCDATA_SUPPRESS_FRAME) {
-      aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+      SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                              isGeneratedContent);
       return;
     }
 
@@ -5314,7 +5341,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
          aParentFrame->GetType() != nsGkAtoms::menuFrame)) {
       if (!aState.mPopupItems.containingBlock &&
           !aState.mHavePendingPopupgroup) {
-        aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+        SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                                isGeneratedContent);
         return;
       }
 
@@ -5330,7 +5358,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       aParentFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
       (!(bits & FCDATA_IS_TABLE_PART) ||
        display->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)) {
-    aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+    SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                            isGeneratedContent);
     return;
   }
 
@@ -5343,8 +5372,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   if (canHavePageBreak && display->mBreakBefore) {
     AddPageBreakItem(aContent, aStyleContext, aItems);
   }
-
-  PRBool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
 
   FrameConstructionItem* item =
     aItems.AppendItem(data, aContent, aTag, aNameSpaceID,

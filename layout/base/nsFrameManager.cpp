@@ -581,6 +581,9 @@ void
 nsFrameManager::SetUndisplayedContent(nsIContent* aContent, 
                                       nsStyleContext* aStyleContext)
 {
+  NS_PRECONDITION(!aStyleContext->GetPseudoType(),
+                  "Should only have actual elements here");
+
 #ifdef DEBUG_UNDISPLAYED_MAP
   static int i = 0;
   printf("SetUndisplayedContent(%d): p=%p \n", i++, (void *)aContent);
@@ -1290,22 +1293,11 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                      undisplayed->mContent ==
                        mPresShell->GetDocument()->GetRootContent(),
                      "undisplayed node child of null must be root");
-        nsRefPtr<nsStyleContext> undisplayedContext;
-        nsIAtom* const undisplayedPseudoTag = undisplayed->mStyle->GetPseudoType();
-        if (!undisplayedPseudoTag) {  // child content
-          undisplayedContext = styleSet->ResolveStyleFor(undisplayed->mContent,
-                                                         newContext);
-        }
-        else if (undisplayedPseudoTag == nsCSSAnonBoxes::mozNonElement) {
-          undisplayedContext = styleSet->ResolveStyleForNonElement(newContext);
-        }
-        else {  // pseudo element
-          NS_NOTREACHED("no pseudo elements in undisplayed map");
-          NS_ASSERTION(undisplayedPseudoTag, "pseudo element without tag");
-          undisplayedContext = styleSet->ResolvePseudoStyleFor(localContent,
-                                                               undisplayedPseudoTag,
-                                                               newContext);
-        }
+        NS_ASSERTION(!undisplayed->mStyle->GetPseudoType(),
+                     "Shouldn't have random pseudo style contexts in the "
+                     "undisplayed map");
+        nsRefPtr<nsStyleContext> undisplayedContext =
+          styleSet->ResolveStyleFor(undisplayed->mContent, newContext);
         if (undisplayedContext) {
           const nsStyleDisplay* display = undisplayedContext->GetStyleDisplay();
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
