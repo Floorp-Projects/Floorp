@@ -42,24 +42,104 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleTable.h"
 
+class nsITableLayout;
+
+/**
+ * HTML table cell accessible (html:td).
+ */
 class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
+  // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  // nsIAccessible
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
+  
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+
+protected:
+  already_AddRefed<nsIAccessibleTable> GetTableAccessible();
+  nsresult GetCellIndexes(PRInt32& aRowIdx, PRInt32& aColIdx);
+
+  /**
+   * Search hint enum constants. Used by FindCellsForRelation method.
+   */
+  enum {
+    // search for header cells, up-left direction search
+    eHeadersForCell,
+    // search for row header cell, right direction search
+    eCellsForRowHeader,
+    // search for column header cell, down direction search
+    eCellsForColumnHeader
+  };
+
+  /**
+   * Add found cells as relation targets.
+   *
+   * @param  aSearchHint    [in] enum constan defined above, defines an
+   *                         algorithm to search cells
+   * @param  aRelationType  [in] relation type
+   * @param  aRelation      [in, out] relation object
+   */
+  nsresult FindCellsForRelation(PRInt32 aSearchHint, PRUint32 aRelationType,
+                                nsIAccessibleRelation **aRelation);
+
+  /**
+   * Return the cell or header cell at the given row and column.
+   *
+   * @param  aTableAcc       [in] table accessible the search is prepared in
+   * @param  aAnchorCell     [in] anchor cell, found cell should be different
+   *                          from it
+   * @param  aRowIdx         [in] row index
+   * @param  aColIdx         [in] column index
+   * @param  aLookForHeader  [in] flag specifies if found cell must be a header
+   * @return                 found cell content
+   */
+  nsIContent* FindCell(nsHTMLTableAccessible *aTableAcc, nsIContent *aAnchorCell,
+                       PRInt32 aRowIdx, PRInt32 aColIdx,
+                       PRInt32 aLookForHeader);
 };
 
-class nsITableLayout;
+
+/**
+ * HTML table row/column header accessible (html:th or html:td@scope).
+ */
+class nsHTMLTableHeaderAccessible : public nsHTMLTableCellAccessible
+{
+public:
+  nsHTMLTableHeaderAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+
+  // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
+
+  // nsIAccessible
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
+};
+
+
+/**
+ * HTML table accessible.
+ */
 
 // To turn on table debugging descriptions define SHOW_LAYOUT_HEURISTIC
 // This allow release trunk builds to be used by testers to refine the
 // data vs. layout heuristic
 // #define SHOW_LAYOUT_HEURISTIC
+
+#define NS_TABLEACCESSIBLE_IMPL_CID                     \
+{  /* 8d6d9c40-74bd-47ac-88dc-4a23516aa23d */           \
+  0x8d6d9c40,                                           \
+  0x74bd,                                               \
+  0x47ac,                                               \
+  { 0x88, 0xdc, 0x4a, 0x23, 0x51, 0x6a, 0xa2, 0x3d }    \
+}
 
 class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public nsIAccessibleTable
@@ -69,6 +149,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETABLE
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TABLEACCESSIBLE_IMPL_CID)
 
   // nsIAccessible
   NS_IMETHOD GetDescription(nsAString& aDescription);
@@ -97,6 +178,11 @@ public:
     */
   PRBool IsValidRow(PRInt32 aRow);
 
+  /**
+   * Retun cell element at the given row and column index.
+   */
+  nsresult GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex,
+                     nsIDOMElement* &aCell);
 protected:
 
   /**
@@ -124,14 +210,15 @@ protected:
   virtual void CacheChildren();
   nsresult GetTableNode(nsIDOMNode **_retval);
   nsresult GetTableLayout(nsITableLayout **aLayoutObject);
-  nsresult GetCellAt(PRInt32        aRowIndex,
-                     PRInt32        aColIndex,
-                     nsIDOMElement* &aCell);
   PRBool HasDescendant(char *aTagName, PRBool aAllowEmpty = PR_TRUE);
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsAutoString mLayoutHeuristic;
 #endif
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLTableAccessible,
+                              NS_TABLEACCESSIBLE_IMPL_CID)
+
 
 class nsHTMLTableHeadAccessible : public nsHTMLTableAccessible
 {

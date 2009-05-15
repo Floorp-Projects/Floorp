@@ -464,7 +464,6 @@
                   flatList="true"
                   enableColumnDrag="true"
                   onkeypress="if (event.keyCode == KeyEvent.DOM_VK_RETURN) PlacesOrganizer.openSelectedNode(event);"
-                  ondblclick="PlacesOrganizer.openSelectedNode(event);"
                   onopenflatcontainer="PlacesOrganizer.openFlatContainer(aContainer);"
                   onselect="PlacesOrganizer.onContentTreeSelect();"
                   onfocus="PlacesOrganizer.onTreeFocus(event);"

@@ -45,11 +45,30 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef XP_WIN
+#include <windows.h>
+#endif
 
-#if defined(XP_WIN) || defined(XP_OS2)
-#define BINARY_MODE "b"
+#if defined(XP_WIN)
+#define READ_BINARYMODE L"rb"
+#elif defined(XP_OS2)
+#define READ_BINARYMODE "rb"
 #else
-#define BINARY_MODE
+#define READ_BINARYMODE "r"
+#endif
+
+#ifdef XP_WIN
+inline FILE *TS_tfopen (const char *path, const wchar_t *mode)
+{
+    wchar_t wPath[MAX_PATH];
+    MultiByteToWideChar(CP_UTF8, 0, path, -1, wPath, MAX_PATH);
+    return _wfopen(wPath, mode);
+}
+#else
+inline FILE *TS_tfopen (const char *path, const char *mode)
+{
+    return fopen(path, mode);
+}
 #endif
 
 // Stack based FILE wrapper to ensure that fclose is called, copied from
@@ -82,14 +101,14 @@ nsINIParser::Init(nsILocalFile* aFile)
     rv = aFile->GetPath(path);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    fd = _wfopen(path.get(), L"rb");
+    fd = _wfopen(path.get(), READ_BINARYMODE);
 #else
     nsCAutoString path;
     rv = aFile->GetNativePath(path);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    fd = fopen(path.get(), "r" BINARY_MODE);
+    fd = fopen(path.get(), READ_BINARYMODE);
 #endif
+
     if (!fd)
       return NS_ERROR_FAILURE;
 
@@ -100,7 +119,8 @@ nsresult
 nsINIParser::Init(const char *aPath)
 {
     /* open the file */
-    AutoFILE fd = fopen(aPath, "r" BINARY_MODE);
+    AutoFILE fd = TS_tfopen(aPath, READ_BINARYMODE);
+
     if (!fd)
         return NS_ERROR_FAILURE;
 

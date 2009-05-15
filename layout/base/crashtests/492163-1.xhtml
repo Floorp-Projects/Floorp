@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function addSheet(text)
+{
+  var head = document.getElementsByTagName("head")[0];
+  var sheet = document.createElement("style");
+  sheet.appendChild(document.createTextNode(text));
+  head.appendChild(sheet);
+}
+
+</script>
+
+<style>colgroup:before { content: '0'; }</style>
+
+</head>
+
+<body onload="addSheet('x { }');"><table><colgroup></colgroup></table></body>
+</html>

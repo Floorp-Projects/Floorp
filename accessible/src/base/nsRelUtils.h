@@ -135,6 +135,23 @@ public:
                                          nsIAtom *aNeighboutTagName = nsnull);
 
   /**
+   * Create the relation if the given relation is null and add the targets to it
+   * that have IDRefs attribute pointing to the given node.
+   *
+   * @param  aRelationType  [in] relation type
+   * @param  aRelation      [in, out] relation object
+   * @param  aRootContent   [in] root node we search inside of
+   * @param  aContent       [in] node having ID
+   * @param  aIDRefsAttr    [in] IDRefs attribute
+   */
+  static nsresult
+    AddTargetFromChildrenHavingIDRefsAttr(PRUint32 aRelationType,
+                                          nsIAccessibleRelation **aRelation,
+                                          nsIContent *aRootContent,
+                                          nsIContent *aContent,
+                                          nsIAtom *aIDRefsAttr);
+
+  /**
    * Query nsAccessibleRelation from the given nsIAccessibleRelation.
    */
   static already_AddRefed<nsAccessibleRelation>

@@ -199,22 +199,15 @@ var gSanitizePromptDialog = {
    */
   onReadGeneric: function ()
   {
-    // We don't update the separate history and downloads prefs until
-    // dialogaccept.  So we need to handle the checked state of the combined
-    // history-downloads checkbox specially.
-    var combinedCb = document.getElementById("history-downloads-checkbox");
-    var found = combinedCb.checked;
+    var found = false;
 
     // Find any other pref that's checked and enabled.
     var i = 0;
     while (!found && i < this.sanitizePreferences.childNodes.length) {
       var preference = this.sanitizePreferences.childNodes[i];
 
-      // We took into account history and downloads above; don't do it again.
       found = !!preference.value &&
-              !preference.disabled &&
-              preference.id !== "privacy.cpd.history" &&
-              preference.id !== "privacy.cpd.downloads";
+              !preference.disabled;
       i++;
     }
 
@@ -223,23 +216,6 @@ var gSanitizePromptDialog = {
     }
     catch (e) { }
     return undefined;
-  },
-
-  /**
-   * Called when the values of the history and downloads preference elements are
-   * synced from the actual prefs.  Sets the state of the combined history-
-   * downloads checkbox appropriately.
-   */
-  onReadHistoryOrDownloads: function ()
-  {
-    // Call the common function that will update the accept button
-    this.onReadGeneric();
-
-    var historyPref = document.getElementById("privacy.cpd.history");
-    var downloadsPref = document.getElementById("privacy.cpd.downloads");
-    var combinedCb = document.getElementById("history-downloads-checkbox");
-    combinedCb.disabled = historyPref.disabled && downloadsPref.disabled;
-    combinedCb.checked = historyPref.value || downloadsPref.value;
   },
 
   /**
@@ -255,14 +231,9 @@ var gSanitizePromptDialog = {
     var tsPref = document.getElementById("privacy.sanitize.timeSpan");
     Sanitizer.prefs.setIntPref("timeSpan", this.selectedTimespan);
 
-    // First set the values of the separate history and downloads pref
-    // elements based on the combined history-downloads checkbox.
-    var combinedCbChecked =
-      document.getElementById("history-downloads-checkbox").checked;
-    var historyPref = document.getElementById("privacy.cpd.history");
-    historyPref.value = !historyPref.disabled && combinedCbChecked;
-    var downloadsPref = document.getElementById("privacy.cpd.downloads");
-    downloadsPref.value = !downloadsPref.disabled && combinedCbChecked;
+    // Keep the pref for the download history in sync with the history pref.
+    document.getElementById("privacy.cpd.downloads").value =
+      document.getElementById("privacy.cpd.history").value;
 
     // Now manually set the prefs from their corresponding preference
     // elements.

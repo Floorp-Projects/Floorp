@@ -59,7 +59,6 @@ typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
 typedef struct _cairo_rectangle_int16 cairo_glyph_size_t;
-typedef struct _cairo_region cairo_region_t;
 typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
@@ -218,43 +217,12 @@ typedef struct _cairo_trapezoid {
     cairo_line_t left, right;
 } cairo_trapezoid_t;
 
-struct _cairo_rectangle_int16 {
-    int16_t x, y;
-    uint16_t width, height;
-};
+typedef struct _cairo_point_int {
+    int x, y;
+} cairo_point_int_t;
 
-struct _cairo_rectangle_int32 {
-    int32_t x, y;
-    uint32_t width, height;
-};
-
-struct _cairo_point_int16 {
-    int16_t x, y;
-};
-
-struct _cairo_point_int32 {
-    int32_t x, y;
-};
-
-#if CAIRO_FIXED_BITS == 32 && CAIRO_FIXED_FRAC_BITS >= 16
-typedef struct _cairo_rectangle_int16 cairo_rectangle_int_t;
-typedef struct _cairo_point_int16 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN (INT16_MIN >> (CAIRO_FIXED_FRAC_BITS - 16))
-#define CAIRO_RECT_INT_MAX (INT16_MAX >> (CAIRO_FIXED_FRAC_BITS - 16))
-#elif CAIRO_FIXED_BITS == 32
-typedef struct _cairo_rectangle_int32 cairo_rectangle_int_t;
-typedef struct _cairo_point_int32 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN (INT32_MIN >> CAIRO_FIXED_FRAC_BITS)
-#define CAIRO_RECT_INT_MAX (INT32_MAX >> CAIRO_FIXED_FRAC_BITS)
-#else
-#error Not sure how to pick a cairo_rectangle_int_t and cairo_point_int_t for your CAIRO_FIXED_BITS!
-#endif
-
-typedef struct _cairo_box_int {
-    cairo_point_int_t p1;
-    cairo_point_int_t p2;
-} cairo_box_int_t;
-
+#define CAIRO_RECT_INT_MIN (INT_MIN >> CAIRO_FIXED_FRAC_BITS)
+#define CAIRO_RECT_INT_MAX (INT_MAX >> CAIRO_FIXED_FRAC_BITS)
 
 /* Rectangles that take part in a composite operation.
  *

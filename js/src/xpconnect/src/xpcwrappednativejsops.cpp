@@ -1399,7 +1399,7 @@ XPC_WN_GetObjectOpsWithCall(JSContext *cx, JSClass *clazz)
 
 JSBool xpc_InitWrappedNativeJSOps()
 {
-    if(!XPC_WN_NoCall_JSOps.newObjectMap)
+    if(!XPC_WN_NoCall_JSOps.lookupProperty)
     {
         memcpy(&XPC_WN_NoCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
         XPC_WN_NoCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;

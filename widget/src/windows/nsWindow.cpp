@@ -5380,6 +5380,7 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
   aCallDefWndProc = PR_FALSE;
   PRBool fallBackToNonPluginProcess = PR_FALSE;
   PRBool eventDispatched = PR_FALSE;
+  PRBool dispatchPendingEvents = PR_TRUE;
   switch (aMsg.message) {
     case WM_INPUTLANGCHANGEREQUEST:
     case WM_INPUTLANGCHANGE:
@@ -5422,7 +5423,12 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
     case WM_IME_NOTIFY:
     case WM_IME_REQUEST:
     case WM_IME_SELECT:
+      break;
+
     case WM_IME_SETCONTEXT:
+      // Don't synchronously dispatch when we receive WM_IME_SETCONTEXT
+      // because we get it during plugin destruction. (bug 491848)
+      dispatchPendingEvents = PR_FALSE;
       break;
 
     default:
@@ -5431,7 +5437,8 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
 
   if (!eventDispatched)
     aCallDefWndProc = !DispatchPluginEvent(aMsg);
-  DispatchPendingEvents();
+  if (dispatchPendingEvents)
+    DispatchPendingEvents();
   return PR_TRUE;
 }
 

@@ -56,12 +56,14 @@
 
 
   // Alphabetical list of generic atoms
-ACCESSIBILITY_ATOM(_empty, "")
 ACCESSIBILITY_ATOM(button, "button")
+ACCESSIBILITY_ATOM(col, "col")
+ACCESSIBILITY_ATOM(_empty, "")
 ACCESSIBILITY_ATOM(_false, "false")
 ACCESSIBILITY_ATOM(image, "image")
 ACCESSIBILITY_ATOM(password, "password")
 ACCESSIBILITY_ATOM(reset, "reset")
+ACCESSIBILITY_ATOM(row, "row")
 ACCESSIBILITY_ATOM(submit, "submit")
 ACCESSIBILITY_ATOM(_true, "true")
 ACCESSIBILITY_ATOM(_undefined, "undefined")
@@ -165,6 +167,7 @@ ACCESSIBILITY_ATOM(data, "data")
 ACCESSIBILITY_ATOM(droppable, "droppable")   // XUL combo box
 ACCESSIBILITY_ATOM(editable, "editable")
 ACCESSIBILITY_ATOM(_for, "for")
+ACCESSIBILITY_ATOM(headers, "headers")   // HTML table
 ACCESSIBILITY_ATOM(hidden, "hidden")   // XUL tree columns
 ACCESSIBILITY_ATOM(href, "href") // XUL, XLink
 ACCESSIBILITY_ATOM(increment, "increment") // XUL
@@ -178,6 +181,7 @@ ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(onclick, "onclick")
 ACCESSIBILITY_ATOM(readonly, "readonly")
+ACCESSIBILITY_ATOM(scope, "scope") // HTML table
 ACCESSIBILITY_ATOM(simple, "simple") // XLink
 ACCESSIBILITY_ATOM(src, "src")
 ACCESSIBILITY_ATOM(selected, "selected")

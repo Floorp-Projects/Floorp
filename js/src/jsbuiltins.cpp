@@ -258,10 +258,10 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     }
 
     slot = sprop->slot;
-    if (!scope->table && sprop->parent == scope->lastProp && slot == scope->map.freeslot) {
+    if (!scope->table && sprop->parent == scope->lastProp && slot == scope->freeslot) {
         if (slot < STOBJ_NSLOTS(obj) && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
-            JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->map.freeslot)));
-            ++scope->map.freeslot;
+            JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->freeslot)));
+            ++scope->freeslot;
         } else {
             if (!js_AllocSlot(cx, obj, &slot))
                 goto exit_trace;
@@ -398,26 +398,27 @@ js_Arguments(JSContext* cx)
 JS_DEFINE_CALLINFO_1(extern, OBJECT, js_Arguments, CONTEXT, 0, 0)
 
 JSObject* FASTCALL
-js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject *parent)
+js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
+    JS_ASSERT(HAS_FUNCTION_CLASS(proto));
+    JS_ASSERT(JS_ON_TRACE(cx));
 
     JSFunction *fun = (JSFunction*) funobj;
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
 
-    JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* closure = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!closure)
         return NULL;
 
+    js_HoldScope(OBJ_SCOPE(proto));
+    closure->map = proto->map;
     closure->classword = jsuword(&js_FunctionClass);
     closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     closure->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
     closure->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
     for (unsigned i = JSSLOT_PRIVATE + 1; i != JS_INITIAL_NSLOTS; ++i)
         closure->fslots[i] = JSVAL_VOID;
-
-    closure->map = js_HoldObjectMap(cx, proto->map);
     closure->dslots = NULL;
     return closure;
 }

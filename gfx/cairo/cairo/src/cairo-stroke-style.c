@@ -52,6 +52,9 @@ cairo_status_t
 _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
 			       cairo_stroke_style_t *other)
 {
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     style->line_width = other->line_width;
     style->line_cap = other->line_cap;
     style->line_join = other->line_join;

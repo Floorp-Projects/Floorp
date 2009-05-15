@@ -1750,6 +1750,7 @@ js_StartShark(JSContext *cx, JSObject *obj,
 {
     if (!JS_StartChudRemote()) {
         JS_ReportError(cx, "Error starting CHUD.");
+        return JS_FALSE;
     }
 
     return JS_TRUE;
@@ -1761,6 +1762,7 @@ js_StopShark(JSContext *cx, JSObject *obj,
 {
     if (!JS_StopChudRemote()) {
         JS_ReportError(cx, "Error stopping CHUD.");
+        return JS_FALSE;
     }
 
     return JS_TRUE;
@@ -1772,6 +1774,7 @@ js_ConnectShark(JSContext *cx, JSObject *obj,
 {
     if (!JS_ConnectShark()) {
         JS_ReportError(cx, "Error connecting to Shark.");
+        return JS_FALSE;
     }
 
     return JS_TRUE;
@@ -1783,6 +1786,7 @@ js_DisconnectShark(JSContext *cx, JSObject *obj,
 {
     if (!JS_DisconnectShark()) {
         JS_ReportError(cx, "Error disconnecting from Shark.");
+        return JS_FALSE;
     }
 
     return JS_TRUE;
@@ -1798,7 +1802,7 @@ JS_FRIEND_API(JSBool)
 js_StartCallgrind(JSContext *cx, JSObject *obj,
                   uintN argc, jsval *argv, jsval *rval)
 {
-    CALLGRIND_START_INSTRUMENTATION;    
+    CALLGRIND_START_INSTRUMENTATION;
     CALLGRIND_ZERO_STATS;
     return JS_TRUE;
 }
@@ -1868,9 +1872,9 @@ JS_FRIEND_API(JSBool)
 js_StartVtune(JSContext *cx, JSObject *obj,
               uintN argc, jsval *argv, jsval *rval)
 {
-    VTUNE_EVENT events[] = { 
-	{ 1000000, 0, 0, 0, "CPU_CLK_UNHALTED.CORE" },
-	{ 1000000, 0, 0, 0, "INST_RETIRED.ANY" },
+    VTUNE_EVENT events[] = {
+        { 1000000, 0, 0, 0, "CPU_CLK_UNHALTED.CORE" },
+        { 1000000, 0, 0, 0, "INST_RETIRED.ANY" },
     };
 
     U32 n_events = sizeof(events) / sizeof(VTUNE_EVENT);
@@ -1878,7 +1882,7 @@ js_StartVtune(JSContext *cx, JSObject *obj,
     JSString *str;
     U32 status;
 
-    VTUNE_SAMPLING_PARAMS params = { 
+    VTUNE_SAMPLING_PARAMS params =
         sizeof(VTUNE_SAMPLING_PARAMS),
         sizeof(VTUNE_EVENT),
         0, 0, /* Reserved fields */
@@ -1895,25 +1899,25 @@ js_StartVtune(JSContext *cx, JSObject *obj,
 
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        params.tb5Filename = js_DeflateString(cx, 
-                                              JSSTRING_CHARS(str), 
+        params.tb5Filename = js_DeflateString(cx,
+                                              JSSTRING_CHARS(str),
                                               JSSTRING_LENGTH(str));
     }
-    
+
     status = VTStartSampling(&params);
 
     if (params.tb5Filename != default_filename)
         JS_free(cx, params.tb5Filename);
-    
-    if (status != 0) { 
+
+    if (status != 0) {
         if (status == VTAPI_MULTIPLE_RUNS)
             VTStopSampling(0);
         if (status < sizeof(vtuneErrorMessages))
-            JS_ReportError(cx, "Vtune setup error: %s", 
+            JS_ReportError(cx, "Vtune setup error: %s",
                            vtuneErrorMessages[status]);
         else
-            JS_ReportError(cx, "Vtune setup error: %d", 
-                           status);            
+            JS_ReportError(cx, "Vtune setup error: %d",
+                           status);
         return JS_FALSE;
     }
     return JS_TRUE;
@@ -1926,10 +1930,10 @@ js_StopVtune(JSContext *cx, JSObject *obj,
     U32 status = VTStopSampling(1);
     if (status) {
         if (status < sizeof(vtuneErrorMessages))
-            JS_ReportError(cx, "Vtune shutdown error: %s", 
+            JS_ReportError(cx, "Vtune shutdown error: %s",
                            vtuneErrorMessages[status]);
         else
-            JS_ReportError(cx, "Vtune shutdown error: %d", 
+            JS_ReportError(cx, "Vtune shutdown error: %d",
                            status);
         return JS_FALSE;
     }

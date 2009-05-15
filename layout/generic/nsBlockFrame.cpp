@@ -5021,15 +5021,6 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
     }
   }
 
-  // Unlink the placeholder *after* we searched the lines, because
-  // the line search uses the placeholder relationship.
-  nsFrameManager* fm = PresContext()->GetPresShell()->FrameManager();
-  nsPlaceholderFrame* placeholder = fm->GetPlaceholderFrameFor(aFloat);
-  if (placeholder) {
-    fm->UnregisterPlaceholderFrame(placeholder);
-    placeholder->SetOutOfFlowFrame(nsnull);
-  }
-
   // Try to destroy if it's in mFloats.
   if (mFloats.DestroyFrame(aFloat)) {
     return line;
