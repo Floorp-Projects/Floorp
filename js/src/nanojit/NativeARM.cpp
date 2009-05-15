@@ -1281,7 +1281,27 @@ Assembler::asm_fcmp(LInsp ins)
 Register
 Assembler::asm_prep_fcall(Reservation*, LInsp)
 {
-    // We have nothing to do here; we do it all in asm_call.
+    /* Because ARM actually returns the result in (R0,R1), and not in a
+     * floating point register, the code to move the result into a correct
+     * register is at the beginning of asm_call(). This function does
+     * nothing.
+     *
+     * The reason being that if this function did something, the final code
+     * sequence we'd get would be something like:
+     *     MOV {R0-R3},params        [from asm_call()]
+     *     BL function               [from asm_call()]
+     *     MOV {R0-R3},spilled data  [from evictScratchRegs()]
+     *     MOV Dx,{R0,R1}            [from this function]
+     * which is clearly broken.
+     *
+     * This is not a problem for non-floating point calls, because the
+     * restoring of spilled data into R0 is done via a call to prepResultReg(R0)
+     * at the same point in the sequence as this function is called, meaning that
+     * evictScratchRegs() will not modify R0. However, prepResultReg is not aware
+     * of the concept of using a register pair (R0,R1) for the result of a single
+     * operation, so it can only be used here with the ultimate VFP register, and
+     * not R0/R1, which potentially allows for R0/R1 to get corrupted as described.
+     */
     return UnknownReg;
 }
 
