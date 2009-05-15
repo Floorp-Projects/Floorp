@@ -1217,6 +1217,8 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   NS_ASSERTION(aRootFrame != aMovingFrame,
                "The root frame shouldn't be the one that's moving, that makes no sense");
 
+  nsAutoDisableGetUsedXAssertions disableAssert;
+
   // Build the 'after' display list over the whole area of interest.
   // (We have to build the 'after' display list because the frame/view
   // hierarchy has already been updated for the move.
