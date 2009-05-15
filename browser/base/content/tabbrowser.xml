@@ -2281,7 +2281,7 @@
         <body>
           <![CDATA[
             if (this.mTabs.length == 1)
-              return;
+              return null;
 
             // tell a new window to take the "dropped" tab
             var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
