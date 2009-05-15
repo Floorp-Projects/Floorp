@@ -1557,32 +1557,32 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
     } else {
 	cairo_status_t status;
 	xcb_rectangle_t *rects = NULL;
-	int n_boxes, i;
+	int n_rects, i;
 
-	n_boxes = _cairo_region_num_boxes (region);
+	n_rects = cairo_region_num_rectangles (region);
 
-	if (n_boxes > 0) {
-	    rects = _cairo_malloc_ab (n_boxes, sizeof(xcb_rectangle_t));
+	if (n_rects > 0) {
+	    rects = _cairo_malloc_ab (n_rects, sizeof(xcb_rectangle_t));
 	    if (rects == NULL)
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	} else {
 	    rects = NULL;
 	}
 
-	for (i = 0; i < n_boxes; i++) {
-	    cairo_box_int_t box;
+	for (i = 0; i < n_rects; i++) {
+	    cairo_rectangle_int_t rect;
 
-	    _cairo_region_get_box (region, i, &box);
+	    cairo_region_get_rectangle (region, i, &rect);
 	    
-	    rects[i].x = box.p1.x;
-	    rects[i].y = box.p1.y;
-	    rects[i].width = box.p2.x - box.p1.x;
-	    rects[i].height = box.p2.y - box.p1.y;
+	    rects[i].x = rect.x;
+	    rects[i].y = rect.y;
+	    rects[i].width = rect.width;
+	    rects[i].height = rect.height;
 	}
  
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
-	surface->num_clip_rects = n_boxes;
+	surface->num_clip_rects = n_rects;
 
 	if (surface->gc)
 	    _cairo_xcb_surface_set_gc_clip_rects (surface);

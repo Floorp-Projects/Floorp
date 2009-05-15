@@ -255,6 +255,7 @@ _cairo_scan_converter_create_in_error (cairo_status_t status)
 	}
     switch (status) {
     case CAIRO_STATUS_SUCCESS:
+    case CAIRO_STATUS_LAST_STATUS:
 	ASSERT_NOT_REACHED;
 	break;
     case CAIRO_STATUS_INVALID_RESTORE: RETURN_NIL;
@@ -359,6 +360,7 @@ _cairo_span_renderer_create_in_error (cairo_status_t status)
 	}
     switch (status) {
     case CAIRO_STATUS_SUCCESS:
+    case CAIRO_STATUS_LAST_STATUS:
 	ASSERT_NOT_REACHED;
 	break;
     case CAIRO_STATUS_INVALID_RESTORE: RETURN_NIL;

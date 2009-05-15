@@ -2558,6 +2558,9 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     if (unlikely (scaled_font->status))
 	return scaled_font->status;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     /*
      * Check cache for glyph
      */

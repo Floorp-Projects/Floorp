@@ -1660,6 +1660,9 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
     if (0 == polygon->num_edges)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     has_limits = _cairo_traps_get_limit (traps, &limit);
 
     edges = stack_edges;

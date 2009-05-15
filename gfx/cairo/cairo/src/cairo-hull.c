@@ -198,6 +198,9 @@ _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices)
     cairo_hull_t *hull;
     int num_hull = *num_vertices;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     if (num_hull > ARRAY_LENGTH (hull_stack)) {
 	hull = _cairo_malloc_ab (num_hull, sizeof (cairo_hull_t));
 	if (unlikely (hull == NULL))
