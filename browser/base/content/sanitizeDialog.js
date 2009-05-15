@@ -255,14 +255,14 @@ var gSanitizePromptDialog = {
     // Showing item list
     if (itemList.collapsed) {
       expanderButton.className = "expander-up";
-      itemList.collapsed = false;
+      itemList.setAttribute("collapsed", "false");
       window.resizeBy(0, itemList.boxObject.height);
     }
     // Hiding item list
     else {
       expanderButton.className = "expander-down";
       window.resizeBy(0, -itemList.boxObject.height);
-      itemList.collapsed = true;
+      itemList.setAttribute("collapsed", "true");
     }
   }
 
