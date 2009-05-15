@@ -4812,7 +4812,21 @@ CountCharsFit(gfxTextRun* aTextRun, PRUint32 aStart, PRUint32 aLength,
 }
 
 nsIFrame::ContentOffsets
-nsTextFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint) {
+nsTextFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint)
+{
+  return GetCharacterOffsetAtFramePointInternal(aPoint, PR_TRUE);
+}
+
+nsIFrame::ContentOffsets
+nsTextFrame::GetCharacterOffsetAtFramePoint(const nsPoint &aPoint)
+{
+  return GetCharacterOffsetAtFramePointInternal(aPoint, PR_FALSE);
+}
+
+nsIFrame::ContentOffsets
+nsTextFrame::GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
+                                                    PRBool aForInsertionPoint)
+{
   ContentOffsets offsets;
   
   gfxSkipCharsIterator iter = EnsureTextRun();
@@ -4844,7 +4858,7 @@ nsTextFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint) {
         mTextRun->GetAdvanceWidth(extraCluster.GetSkippedOffset(),
                                   GetSkippedDistance(extraCluster, extraClusterLastChar) + 1,
                                   &provider);
-    selectedOffset = width <= fitWidth + charWidth/2
+    selectedOffset = !aForInsertionPoint || width <= fitWidth + charWidth/2
         ? extraCluster.GetOriginalOffset()
         : extraClusterLastChar.GetOriginalOffset() + 1;
   } else {
