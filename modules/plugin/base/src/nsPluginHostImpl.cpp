@@ -3702,11 +3702,11 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
       return NS_ERROR_FAILURE;
     }
   }
-  else
+  else {
     mimetype = aMimeType;
+  }
 
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
-  PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
   nsCAutoString contractID(
           NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
@@ -3724,7 +3724,7 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
       static BOOL firstJavaPlugin = FALSE;
       BOOL restoreOrigDir = FALSE;
       char origDir[_MAX_PATH];
-      if (isJavaPlugin && !firstJavaPlugin) {
+      if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
         DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
         NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
         nsCOMPtr<nsIFile> binDirectory;
@@ -3995,33 +3995,14 @@ public:
     PRBool bShowPath;
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefService &&
-        NS_SUCCEEDED(prefService->GetBoolPref("plugin.expose_full_path",&bShowPath)) &&
+        NS_SUCCEEDED(prefService->GetBoolPref("plugin.expose_full_path", &bShowPath)) &&
         bShowPath) {
-      // only show the full path if people have set the pref,
-      // the default should not reveal path information (bug 88183)
-#if defined(XP_MACOSX)
       CopyUTF8toUTF16(mPluginTag.mFullPath, aFilename);
-#else
-      CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
-#endif
-      return NS_OK;
-    }
-
-    nsAutoString spec;
-    if (!mPluginTag.mFullPath.IsEmpty()) {
-#if !defined(XP_MACOSX)
-      NS_ERROR("Only MAC should be using nsPluginTag::mFullPath!");
-#endif
-      CopyUTF8toUTF16(mPluginTag.mFullPath, spec);
     } else {
-      CopyUTF8toUTF16(mPluginTag.mFileName, spec);
+      CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
     }
 
-    nsCString leafName;
-    nsCOMPtr<nsILocalFile> pluginPath;
-    NS_NewLocalFile(spec, PR_TRUE, getter_AddRefs(pluginPath));
-
-    return pluginPath->GetLeafName(aFilename);
+    return NS_OK;
   }
 
   NS_METHOD GetVersion(nsAString& aVersion)
@@ -4371,14 +4352,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 #endif
 
     if (!pluginTag->mLibrary) { // if we haven't done this yet
-     nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-#if !defined(XP_MACOSX)
-      file->InitWithPath(NS_ConvertUTF8toUTF16(pluginTag->mFileName));
-#else
       if (pluginTag->mFullPath.IsEmpty())
         return NS_ERROR_FAILURE;
+      nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
       file->InitWithPath(NS_ConvertUTF8toUTF16(pluginTag->mFullPath));
-#endif
       nsPluginFile pluginFile(file);
       PRLibrary* pluginLibrary = NULL;
 
