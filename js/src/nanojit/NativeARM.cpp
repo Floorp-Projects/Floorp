@@ -1261,18 +1261,18 @@ Assembler::asm_fop(LInsp ins)
     Register rr = prepResultReg(ins, FpRegs);
 
     Register ra = findRegFor(lhs, FpRegs);
-    Register rb = (rhs == lhs) ? ra : findRegFor(rhs, FpRegs);
+    Register rb = (rhs == lhs) ? ra : findRegFor(rhs, FpRegs & ~rmask(ra));
 
     // XXX special-case 1.0 and 0.0
 
-    if (op == LIR_fadd)
-        FADDD(rr,ra,rb);
-    else if (op == LIR_fsub)
-        FSUBD(rr,ra,rb);
-    else if (op == LIR_fmul)
-        FMULD(rr,ra,rb);
-    else //if (op == LIR_fdiv)
-        FDIVD(rr,ra,rb);
+    switch (op)
+    {
+        case LIR_fadd:      FADDD(rr,ra,rb);    break;
+        case LIR_fsub:      FSUBD(rr,ra,rb);    break;
+        case LIR_fmul:      FMULD(rr,ra,rb);    break;
+        case LIR_fdiv:      FDIVD(rr,ra,rb);    break;
+        default:            NanoAssert(0);      break;
+    }
 }
 
 void
