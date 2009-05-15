@@ -4203,6 +4203,13 @@ PresShell::DoScrollContentIntoView(nsIContent* aContent,
     return;
   }
 
+  if (frame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    // The reflow flush before this scroll got interrupted, and this frame's
+    // coords and size are all zero, and it has no content showing anyway.
+    // Don't bother scrolling to it.  We'll try again when we finish up layout.
+    return;
+  }
+
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
   //         example, for an inline frame we may want to scroll in the whole
