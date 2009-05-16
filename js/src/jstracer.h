@@ -256,7 +256,7 @@ struct VMSideExit : public nanojit::SideExit
      * Ordinarily 0.  If a slow native function is atop the stack, the 1 bit is
      * set if constructing and the other bits are a pointer to the funobj.
      */
-    uintN nativeCalleeWord;
+    uintptr_t nativeCalleeWord;
 
     JSObject * nativeCallee() {
         return (JSObject *) (nativeCalleeWord & ~1);
@@ -267,7 +267,7 @@ struct VMSideExit : public nanojit::SideExit
     }
 
     void setNativeCallee(JSObject *callee, bool constructing) {
-        nativeCalleeWord = uintN(callee) | constructing;
+        nativeCalleeWord = uintptr_t(callee) | (constructing ? 1 : 0);
     }
 };
 
