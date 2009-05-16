@@ -709,11 +709,11 @@ SetWidgetForHierarchy(GdkWindow *aWindow,
         return;
     }
 
-    for (GList *list = gdk_window_peek_children(aWindow);
-         list;
-         list = list->next) {
+    GList *children = gdk_window_get_children(aWindow);
+    for(GList *list = children; list; list = list->next) {
         SetWidgetForHierarchy(GDK_WINDOW(list->data), aOldWidget, aNewWidget);
     }
+    g_list_free(children);
 
     gdk_window_set_user_data(aWindow, aNewWidget);
 }
