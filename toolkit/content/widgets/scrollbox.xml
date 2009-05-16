@@ -265,9 +265,20 @@
 
       <method name="scrollByIndex">
         <parameter name="index"/>
+        <parameter name="aSmoothScroll"/>
         <body><![CDATA[
           if (index == 0)
             return;
+
+          // Each scrollByIndex call is expected to scroll the given number of
+          // items. If a previous call is still in progress because of smooth
+          // scrolling, we need to complete it before starting a new one.
+          if (this._scrollTarget) {
+            let elements = this._getScrollableElements();
+            if (this._scrollTarget != elements[0] &&
+                this._scrollTarget != elements[elements.length - 1])
+              this.ensureElementIsVisible(this._scrollTarget, false);
+          }
 
           var rect = this.scrollClientRect;
           var [start, end] = this._startEndProps;
@@ -290,7 +301,7 @@
             index--;
           }
 
-          this.ensureElementIsVisible(targetElement);
+          this.ensureElementIsVisible(targetElement, aSmoothScroll);
         ]]></body>
       </method>
 
@@ -430,16 +441,6 @@
         // We allow vertical scrolling to scroll a horizontal scrollbox
         // because many users have a vertical scroll wheel but no
         // horizontal support.
-
-        // Each mouse scroll is expected to scroll event.detail items. If a
-        // previous scroll is still in progress because of smooth scrolling,
-        // we need to complete it before starting a new one.
-        if (this._scrollTarget) {
-          let elements = this._getScrollableElements();
-          if (this._scrollTarget != elements[0] &&
-              this._scrollTarget != elements[elements.length - 1])
-            this.ensureElementIsVisible(this._scrollTarget, false);
-        }
 
         this.scrollByIndex(event.detail);
         event.stopPropagation();

@@ -202,28 +202,6 @@ PRBool nsIFrameDebug::GetShowEventTargetFrameBorder()
  */
 static PRLogModuleInfo* gLogModule;
 
-static PRLogModuleInfo* gFrameVerifyTreeLogModuleInfo;
-
-static PRBool gFrameVerifyTreeEnable = PRBool(0x55);
-
-PRBool
-nsIFrameDebug::GetVerifyTreeEnable()
-{
-  if (gFrameVerifyTreeEnable == PRBool(0x55)) {
-    if (nsnull == gFrameVerifyTreeLogModuleInfo) {
-      gFrameVerifyTreeLogModuleInfo = PR_NewLogModule("frameverifytree");
-      gFrameVerifyTreeEnable = 0 != gFrameVerifyTreeLogModuleInfo->level;
-    }
-  }
-  return gFrameVerifyTreeEnable;
-}
-
-void
-nsIFrameDebug::SetVerifyTreeEnable(PRBool aEnabled)
-{
-  gFrameVerifyTreeEnable = aEnabled;
-}
-
 static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
 
 static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
@@ -464,6 +442,9 @@ nsFrame::RemoveFrame(nsIAtom*        aListName,
 void
 nsFrame::Destroy()
 {
+  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+    "destroy called on frame while scripts not blocked");
+
 #ifdef MOZ_SVG
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
 #endif
@@ -474,10 +455,14 @@ nsFrame::Destroy()
   nsPresContext* presContext = PresContext();
 
   nsIPresShell *shell = presContext->GetPresShell();
-  NS_ASSERTION(!(mState & NS_FRAME_OUT_OF_FLOW) ||
-               !shell->FrameManager()->GetPlaceholderFrameFor(this),
-               "Deleting out of flow without tearing down placeholder "
-               "relationship; see comments in nsFrame.h");
+  if (mState & NS_FRAME_OUT_OF_FLOW) {
+    nsPlaceholderFrame* placeholder =
+      shell->FrameManager()->GetPlaceholderFrameFor(this);
+    if (placeholder) {
+      shell->FrameManager()->UnregisterPlaceholderFrame(placeholder);
+      placeholder->SetOutOfFlowFrame(nsnull);
+    }
+  }
 
   shell->NotifyDestroyingFrame(this);
 
@@ -4478,13 +4463,6 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
     }
     list = GetAdditionalChildListName(listIndex++);
   } while (nsnull != list);
-}
-
-NS_IMETHODIMP
-nsFrame::VerifyTree() const
-{
-  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
-  return NS_OK;
 }
 #endif
 

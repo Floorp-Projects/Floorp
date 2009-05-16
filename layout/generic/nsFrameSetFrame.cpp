@@ -164,16 +164,16 @@ protected:
   virtual nscoord GetIntrinsicWidth();
   virtual nscoord GetIntrinsicHeight();
 
+  // the prev and next neighbors are indexes into the row (for a horizontal border) or col (for
+  // a vertical border) of nsHTMLFramesetFrames or nsHTMLFrames
+  PRInt32 mPrevNeighbor;
+  PRInt32 mNextNeighbor;
+  nscolor mColor;
   PRInt32 mWidth;
   PRPackedBool mVertical;
   PRPackedBool mVisibility;
   PRPackedBool mVisibilityOverride;
-  nscolor mColor;
-  // the prev and next neighbors are indexes into the row (for a horizontal border) or col (for
-  // a vertical border) of nsHTMLFramesetFrames or nsHTMLFrames
-  PRInt32 mPrevNeighbor; 
-  PRInt32 mNextNeighbor;
-  PRBool mCanResize;
+  PRPackedBool mCanResize;
   friend class nsHTMLFramesetFrame;
 };
 /*******************************************************************************
@@ -1467,15 +1467,6 @@ nsHTMLFramesetFrame::SetBorderResize(PRInt32*                   aChildTypes,
   }
 }
   
-        
-NS_IMETHODIMP
-nsHTMLFramesetFrame::VerifyTree() const
-{
-  // XXX Completely disabled for now; once pseud-frames are reworked
-  // then we can turn it back on.
-  return NS_OK;
-}
-
 void
 nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*            aPresContext, 
                                     nsHTMLFramesetBorderFrame* aBorder, 

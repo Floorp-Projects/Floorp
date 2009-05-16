@@ -1866,16 +1866,13 @@ static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
   // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524),
-  // XStandard (bug 430219), CMISS Zinc (bug 429604). ARM Flash (454756)
+  // XStandard (bug 430219), CMISS Zinc (bug 429604).
   if (aDelayedStop
-#ifndef XP_WIN
+#if !(defined XP_WIN || defined MOZ_X11)
       && !aInstanceOwner->MatchPluginName("QuickTime")
       && !aInstanceOwner->MatchPluginName("Flip4Mac")
       && !aInstanceOwner->MatchPluginName("XStandard plugin")
       && !aInstanceOwner->MatchPluginName("CMISS Zinc Plugin")
-#endif
-#if defined(XP_UNIX) && defined(__arm__)
-      && !aInstanceOwner->MatchPluginName("Shockwave Flash")
 #endif
       ) {
     nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
@@ -2036,7 +2033,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 
   nsWeakFrame weakFrame(this);
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(MOZ_X11)
   if (aDelayedStop) {
     // If we're asked to do a delayed stop it means we're stopping the
     // plugin because we're destroying the frame. In that case, tell
@@ -3619,7 +3616,7 @@ static unsigned int XInputEventState(const nsInputEvent& anEvent)
 #endif
 
 #ifdef MOZ_COMPOSITED_PLUGINS
-static void find_dest_id(XID top, XID *root, XID *dest, unsigned int target_x, unsigned int target_y)
+static void find_dest_id(XID top, XID *root, XID *dest, int target_x, int target_y)
 {
   XID target_id = top;
   XID parent;
@@ -3643,8 +3640,8 @@ loop:
         // XXX: we may need to be more careful here, i.e. if
         // this condition matches more than one child
         if (target_x >= x && target_y >= y &&
-            target_x <= (x + width) &&
-            target_y <= (y + height)) {
+            target_x <= x + int(width) &&
+            target_y <= y + int(height)) {
           target_id = children[i];
           // printf("found new target: %x\n", target_id);
           XFree(children);
@@ -4276,7 +4273,7 @@ nsPluginInstanceOwner::Destroy()
 void
 nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(MOZ_X11)
   if (aDelayedStop && mWidget) {
     // To delay stopping a plugin we need to reparent the plugin
     // so that we can safely tear down the
@@ -4565,10 +4562,13 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
   }
 #endif
 
-#ifndef MOZ_COMPOSITED_PLUGINS
-  if (doupdatewindow)
-      mInstance->SetWindow(mWindow);
+#ifdef MOZ_COMPOSITED_PLUGINS
+  if (mWindow->type == nsPluginWindowType_Drawable)
 #endif
+  {
+    if (doupdatewindow)
+      mInstance->SetWindow(mWindow);
+  }
 
 #ifdef MOZ_X11
   // Translate the dirty rect to drawable coordinates.
@@ -4578,57 +4578,61 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
   if (!dirtyRect.IntersectRect(dirtyRect, clipRect))
     return NS_OK;
 
-#ifndef MOZ_COMPOSITED_PLUGINS
-  nsPluginEvent pluginEvent;
-  XGraphicsExposeEvent& exposeEvent = pluginEvent.event.xgraphicsexpose;
-  // set the drawing info
-  exposeEvent.type = GraphicsExpose;
-  exposeEvent.display = DisplayOfScreen(screen);
-  exposeEvent.drawable =
+#ifdef MOZ_COMPOSITED_PLUGINS
+  if (mWindow->type == nsPluginWindowType_Drawable) {
+#endif
+    nsPluginEvent pluginEvent;
+    XGraphicsExposeEvent& exposeEvent =
+      pluginEvent.event.xgraphicsexpose;
+    // set the drawing info
+    exposeEvent.type = GraphicsExpose;
+    exposeEvent.display = DisplayOfScreen(screen);
+    exposeEvent.drawable =
 #if defined(MOZ_WIDGET_GTK2)
       GDK_DRAWABLE_XID(drawable);
 #elif defined(MOZ_WIDGET_QT)
       drawable->x11PictureHandle();
 #endif
-  exposeEvent.x = mDirtyRect.x + offsetX;
-  exposeEvent.y = mDirtyRect.y + offsetY;
-  exposeEvent.width  = mDirtyRect.width;
-  exposeEvent.height = mDirtyRect.height;
-  exposeEvent.count = 0;
-  // information not set:
-  exposeEvent.serial = 0;
-  exposeEvent.send_event = False;
-  exposeEvent.major_code = 0;
-  exposeEvent.minor_code = 0;
+    exposeEvent.x = mDirtyRect.x + offsetX;
+    exposeEvent.y = mDirtyRect.y + offsetY;
+    exposeEvent.width  = mDirtyRect.width;
+    exposeEvent.height = mDirtyRect.height;
+    exposeEvent.count = 0;
+    // information not set:
+    exposeEvent.serial = 0;
+    exposeEvent.send_event = False;
+    exposeEvent.major_code = 0;
+    exposeEvent.minor_code = 0;
 
-  PRBool eventHandled = PR_FALSE;
-  mInstance->HandleEvent(&pluginEvent, &eventHandled);
-#endif
-#endif
-
+    PRBool eventHandled = PR_FALSE;
+    mInstance->HandleEvent(&pluginEvent, &eventHandled);
 #ifdef MOZ_COMPOSITED_PLUGINS
-  /* XXX: this is very nasty. We need a better way of getting at mPlugWindow */
-  GtkWidget *plug = (GtkWidget*)(((nsPluginNativeWindow*)mWindow)->mPlugWindow);
-  //GtkWidget *plug = (GtkWidget*)(((nsPluginNativeWindowGtk2*)mWindow)->mSocketWidget);
+  }
+  else {
+    /* XXX: this is very nasty. We need a better way of getting at mPlugWindow */
+    GtkWidget *plug = (GtkWidget*)(((nsPluginNativeWindow*)mWindow)->mPlugWindow);
+    //GtkWidget *plug = (GtkWidget*)(((nsPluginNativeWindowGtk2*)mWindow)->mSocketWidget);
 
-  /* Cairo has bugs with IncludeInferiors when using paint
-   * so we use XCopyArea directly instead. */
-  XGCValues gcv;
-  gcv.subwindow_mode = IncludeInferiors;
-  gcv.graphics_exposures = False;
-  GC gc = XCreateGC(GDK_DISPLAY(), gdk_x11_drawable_get_xid(drawable), GCGraphicsExposures | GCSubwindowMode, &gcv);
-  /* The source and destination appear to always line up, so src and dest
-   * coords should be the same */
-  XCopyArea(GDK_DISPLAY(), gdk_x11_drawable_get_xid(plug->window),
-      gdk_x11_drawable_get_xid(drawable),
-      gc,
-      mDirtyRect.x,
-      mDirtyRect.y,
-      mDirtyRect.width,
-      mDirtyRect.height,
-      mDirtyRect.x,
-      mDirtyRect.y);
-  XFreeGC(GDK_DISPLAY(), gc);
+    /* Cairo has bugs with IncludeInferiors when using paint
+     * so we use XCopyArea directly instead. */
+    XGCValues gcv;
+    gcv.subwindow_mode = IncludeInferiors;
+    gcv.graphics_exposures = False;
+    GC gc = XCreateGC(GDK_DISPLAY(), gdk_x11_drawable_get_xid(drawable), GCGraphicsExposures | GCSubwindowMode, &gcv);
+    /* The source and destination appear to always line up, so src and dest
+     * coords should be the same */
+    XCopyArea(GDK_DISPLAY(), gdk_x11_drawable_get_xid(plug->window),
+              gdk_x11_drawable_get_xid(drawable),
+              gc,
+              mDirtyRect.x,
+              mDirtyRect.y,
+              mDirtyRect.width,
+              mDirtyRect.height,
+              mDirtyRect.x,
+              mDirtyRect.y);
+    XFreeGC(GDK_DISPLAY(), gc);
+  }
+#endif
 #endif
   return NS_OK;
 }

@@ -1490,6 +1490,9 @@ public:
 
   // Returns PR_FALSE if something erroneous happened.
   PRBool Push(nsPIDOMEventTarget *aCurrentTarget);
+  // If nothing has been pushed to stack, this works like Push.
+  // Otherwise if context will change, Pop and Push will be called.
+  PRBool RePush(nsPIDOMEventTarget *aCurrentTarget);
   // If a null JSContext is passed to Push(), that will cause no
   // push to happen and false to be returned.
   PRBool Push(JSContext *cx);

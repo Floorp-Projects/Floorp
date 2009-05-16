@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible focus event testing">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js" />
+
+  <script type="application/javascript">
+    /**
+     * Focus invoker.
+     */
+    function synthFocus(aNodeOrID)
+    {
+      this.DOMNode = getNode(aNodeOrID);
+
+      this.invoke = function synthFocus_invoke()
+      {
+        this.DOMNode.focus();
+      }
+
+      this.getID = function synthFocus_getID() { return aNodeOrID + " focus"; }
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    function doTests()
+    {
+      // Test focus events.
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
+
+      gQueue.push(new synthFocus("textbox"));
+      gQueue.push(new synthFocus("scale"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=492518"
+         title="xul:slider accessible of xul:scale is accessible illegally">
+        Mozilla Bug 492518
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <textbox id="textbox" value="hello"/>
+      <scale id="scale" min="0" max="9" value="5"/>
+    </vbox>
+  </hbox>
+</window>

@@ -36,13 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /*
-Each video element has one thread. This thread, called the Decode thread,
+Each video element has two threads. The first thread, called the Decode thread,
 owns the resources for downloading and reading the video file. It goes through the
-file, decoding the theora and vorbis data. It uses Oggplay to do the decoding.
-It indirectly uses an nsMediaStream to do the file reading and seeking via Oggplay.
-All file reads and seeks must occur on this thread only. It handles the sending
-of the audio data to the sound device and the presentation of the video data
-at the correct frame rate.
+file, prcessing any decoded theora and vorbis data. It handles the sending of the
+audio data to the sound device and the presentation of the video data at the correct
+frame rate.
+
+The second thread is the step decode thread. It uses OggPlay to decode the video and
+audio data. It indirectly uses an nsMediaStream to do the file reading and seeking via 
+Oggplay. 
+
+All file reads and seeks must occur on these two threads. Synchronisation is done via
+liboggplay internal mutexes to ensure that access to the liboggplay structures is
+done correctly in the presence of the threads.
+
+The step decode thread is created and destroyed in the decode thread. When decoding
+needs to be done it is created and event dispatched to it to start the decode loop.
+This event exits when decoding is completed or no longer required (during seeking
+or shutdown).
     
 When the decode thread is created an event is dispatched to it. The event
 runs for the lifetime of the playback of the resource. The decode thread
@@ -268,10 +279,12 @@ when destroying the nsOggDecoder object.
 
 class nsAudioStream;
 class nsOggDecodeStateMachine;
+class nsOggStepDecodeEvent;
 
 class nsOggDecoder : public nsMediaDecoder
 {
   friend class nsOggDecodeStateMachine;
+  friend class nsOggStepDecodeEvent;
 
   // ISupports
   NS_DECL_ISUPPORTS

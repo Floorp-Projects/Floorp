@@ -2748,7 +2748,7 @@ ExtensionManager.prototype = {
   /**
    * See nsIExtensionManager.idl
    */
-  start: function EM_start(commandLine) {
+  start: function EM_start() {
     var isDirty, forceAutoReg;
 
     // Check for missing manifests - e.g. missing extensions.ini, missing
@@ -2832,59 +2832,6 @@ ExtensionManager.prototype = {
                             Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
                             new BackgroundUpdateCheckListener(this.datasource),
                             null, null);
-  },
-
-  /**
-   * See nsIExtensionManager.idl
-   */
-  handleCommandLineArgs: function EM_handleCommandLineArgs(commandLine) {
-    try {
-      var globalExtension = commandLine.handleFlagWithParam("install-global-extension", false);
-      if (globalExtension) {
-        var file = commandLine.resolveFile(globalExtension);
-        this._installGlobalItem(file);
-      }
-      var globalTheme = commandLine.handleFlagWithParam("install-global-theme", false);
-      if (globalTheme) {
-        file = commandLine.resolveFile(globalTheme);
-        this._installGlobalItem(file);
-      }
-    }
-    catch (e) {
-      ERROR("ExtensionManager:handleCommandLineArgs - failure, catching exception - lineno: " +
-            e.lineNumber + " - file: " + e.fileName + " - " + e);
-    }
-    commandLine.preventDefault = true;
-  },
-
-  /**
-   * Installs an XPI/JAR file into the KEY_APP_GLOBAL install location.
-   * @param   file
-   *          The XPI/JAR file to extract
-   */
-  _installGlobalItem: function EM__installGlobalItem(file) {
-    if (!file || !file.exists())
-      throw new Error("Unable to find the file specified on the command line!");
-#ifdef XP_WIN
-    // make sure the file is local on Windows
-    file.normalize();
-    if (file.path[1] != ':')
-      throw new Error("Can't install global chrome from non-local file "+file.path);
-#endif
-    var installManifestFile = extractRDFFileToTempDir(file, FILE_INSTALL_MANIFEST, true);
-    if (!installManifestFile.exists())
-      throw new Error("The package is missing an install manifest!");
-    var installManifest = getInstallManifest(installManifestFile);
-    installManifestFile.remove(false);
-    var installData = this._getInstallData(installManifest);
-    var installer = new Installer(installManifest, installData.id,
-                                  InstallLocations.get(KEY_APP_GLOBAL),
-                                  installData.type);
-    installer._installExtensionFiles(file);
-    if (installData.type == Ci.nsIUpdateItem.TYPE_THEME)
-      installer.upgradeThemeChrome();
-    else
-      installer.upgradeExtensionChrome();
   },
 
   /**

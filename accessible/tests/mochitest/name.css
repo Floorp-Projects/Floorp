@@ -1,0 +1,11 @@
+box.first {
+  -moz-binding: url('chrome://mochikit/content/a11y/accessible/name.xbl#first');
+}
+
+.second {
+  -moz-binding: url('chrome://mochikit/content/a11y/accessible/name.xbl#second');
+}
+
+.third {
+  -moz-binding: url('chrome://mochikit/content/a11y/accessible/name.xbl#third');
+}

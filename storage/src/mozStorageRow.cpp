@@ -41,7 +41,7 @@
 
 #include "sqlite3.h"
 #include "mozStoragePrivateHelpers.h"
-#include "mozStorageVariant.h"
+#include "Variant.h"
 #include "mozStorageRow.h"
 
 namespace mozilla {

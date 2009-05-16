@@ -110,8 +110,8 @@ oggz tool
 Usage: oggz <subcommand> [options] filename ...
 
 oggz is a commandline tool for manipulating Ogg files. It supports
-multiplexed files conformant with RFC3533. Oggz can parse headers for
-CELT, CMML, FLAC, Kate, PCM, Speex, Theora and Vorbis, and can read and write
+multiplexed files conformant with RFC3533. Oggz can parse headers for CELT,
+CMML, Dirac, FLAC, Kate, PCM, Speex, Theora and Vorbis, and can read and write
 Ogg Skeleton logical bitstreams.
 
 Commands:

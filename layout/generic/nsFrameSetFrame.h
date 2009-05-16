@@ -80,11 +80,11 @@ enum nsFrameborder {
 };
 
 struct nsFramesetDrag {
-  PRBool               mVertical;  // vertical if true, otherwise horizontal
+  nsHTMLFramesetFrame* mSource;    // frameset whose border was dragged to cause the resize
   PRInt32              mIndex;     // index of left col or top row of effected area
   PRInt32              mChange;    // pos for left to right or top to bottom, neg otherwise
-  nsHTMLFramesetFrame* mSource;    // frameset whose border was dragged to cause the resize
-  PRBool               mActive;
+  PRPackedBool         mVertical;  // vertical if true, otherwise horizontal
+  PRPackedBool         mActive;
 
   nsFramesetDrag();
   nsFramesetDrag(PRBool               aVertical, 
@@ -152,8 +152,6 @@ public:
 
   virtual PRBool IsLeaf() const;
   
-  NS_IMETHOD  VerifyTree() const;
-
   void StartMouseDrag(nsPresContext*            aPresContext, 
                       nsHTMLFramesetBorderFrame* aBorder, 
                       nsGUIEvent*                aEvent);
@@ -240,34 +238,31 @@ protected:
 
   static int FrameResizePrefCallback(const char* aPref, void* aClosure);
 
+  nsFramesetDrag   mDrag;
+  nsBorderColor    mEdgeColors;
+  nsHTMLFramesetBorderFrame* mDragger;
+  nsHTMLFramesetFrame* mTopLevelFrameset;
+  nsHTMLFramesetBorderFrame** mVerBorders;  // vertical borders
+  nsHTMLFramesetBorderFrame** mHorBorders;  // horizontal borders
+  PRInt32*         mChildTypes; // frameset/frame distinction of children
+  nsFrameborder*   mChildFrameborder; // the frameborder attr of children
+  nsBorderColor*   mChildBorderColors;
+  nscoord*         mRowSizes;  // currently computed row sizes
+  nscoord*         mColSizes;  // currently computed col sizes
+  nsIntPoint       mFirstDragPoint;
   PRInt32          mNumRows;
-  nscoord*         mRowSizes;  // currently computed row sizes 
   PRInt32          mNumCols;
-  nscoord*         mColSizes;  // currently computed col sizes 
   PRInt32          mNonBorderChildCount; 
   PRInt32          mNonBlankChildCount; 
   PRInt32          mEdgeVisibility;
-  nsBorderColor    mEdgeColors;
   nsFrameborder    mParentFrameborder;
   nscolor          mParentBorderColor;
   PRInt32          mParentBorderWidth;
-
-  nsHTMLFramesetBorderFrame* mDragger;
-  nsFramesetDrag   mDrag;
-  nsIntPoint       mFirstDragPoint;
   PRInt32          mPrevNeighborOrigSize; // used during resize
   PRInt32          mNextNeighborOrigSize;
   PRInt32          mMinDrag;
   PRInt32          mChildCount;
-  nsHTMLFramesetFrame* mTopLevelFrameset;
-  nsHTMLFramesetBorderFrame** mVerBorders;  // vertical borders
-  nsHTMLFramesetBorderFrame** mHorBorders;  // horizontal borders
-
-  PRInt32*         mChildTypes; // frameset/frame distinction of children  
-  nsFrameborder*   mChildFrameborder; // the frameborder attr of children 
-  nsBorderColor*   mChildBorderColors;
-  
-  PRBool mForceFrameResizability;
+  PRBool           mForceFrameResizability;
 };
 
 #endif

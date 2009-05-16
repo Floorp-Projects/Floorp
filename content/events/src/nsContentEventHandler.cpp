@@ -58,6 +58,7 @@
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsISelection2.h"
 #include "nsIMEStateManager.h"
 
@@ -726,6 +727,46 @@ nsContentEventHandler::OnQuerySelectionAsTransferable(nsQueryContentEvent* aEven
   rv = nsCopySupport::GetTransferableForSelection(mSelection, doc, getter_AddRefs(aEvent->mReply.mTransferable));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  aEvent->mSucceeded = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
+{
+  nsresult rv = Init(aEvent);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+  nsPoint ptInRoot =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
+  nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
+  if (!targetFrame || targetFrame->GetType() != nsGkAtoms::textFrame) {
+    // there is no character at the point.
+    aEvent->mReply.mOffset = nsQueryContentEvent::NOT_FOUND;
+    aEvent->mSucceeded = PR_TRUE;
+    return NS_OK;
+  }
+  nsPoint ptInTarget = ptInRoot - targetFrame->GetOffsetTo(rootFrame);
+  nsTextFrame* textframe = static_cast<nsTextFrame*>(targetFrame);
+  nsIFrame::ContentOffsets offsets =
+    textframe->GetCharacterOffsetAtFramePoint(ptInTarget);
+  NS_ENSURE_TRUE(offsets.content, NS_ERROR_FAILURE);
+  PRUint32 nativeOffset;
+  rv = GetFlatTextOffsetOfRange(mRootContent, offsets.content, offsets.offset,
+                                &nativeOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsQueryContentEvent textRect(PR_TRUE, NS_QUERY_TEXT_RECT, aEvent->widget);
+  textRect.InitForQueryTextRect(nativeOffset, 1);
+  rv = OnQueryTextRect(&textRect);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);
+
+  // currently, we don't need to get the actual text.
+  aEvent->mReply.mOffset = nativeOffset;
+  aEvent->mReply.mRect = textRect.mReply.mRect;
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;
 }

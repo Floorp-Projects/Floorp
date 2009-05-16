@@ -914,9 +914,15 @@ case "$target" in
         AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
     elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
         dnl No value specified on the command line or in the environment,
-        dnl use the lesser of the application's minimum or the architecture's
-        dnl minimum.
-        export MACOSX_DEPLOYMENT_TARGET=10.4
+        dnl use architecture minimum.
+        case "${target_cpu}" in
+          x86_64)
+            export MACOSX_DEPLOYMENT_TARGET=10.5
+            ;;
+          *)
+            export MACOSX_DEPLOYMENT_TARGET=10.4
+            ;;
+        esac
     fi
     ;;
 esac
@@ -3190,9 +3196,23 @@ case "$target" in
                   ac_cv_have_core_text="yes",
                   ac_cv_have_core_text="no")
   AC_MSG_RESULT([$ac_cv_have_core_text])
-  if test "$ac_cv_have_core_text" = "yes"; then
-    AC_DEFINE(MOZ_CORETEXT, 1)
+
+  case "${target_cpu}" in
+  x86_64)
     MOZ_CORETEXT=1
+    ;;
+  esac
+
+  MOZ_ARG_ENABLE_BOOL(coretext,
+[  --enable-coretext      Use CoreText instead of ATSUI for text rendering],
+    MOZ_CORETEXT=1,
+    MOZ_CORETEXT=)
+
+  if test -n "$MOZ_CORETEXT"; then
+    if test "$ac_cv_have_core_text" = "no"; then
+      AC_MSG_ERROR([--enable-coretext requires MacOS SDK 10.5 or newer])
+     fi
+     AC_DEFINE(MOZ_CORETEXT)
   fi
   ;;
 esac

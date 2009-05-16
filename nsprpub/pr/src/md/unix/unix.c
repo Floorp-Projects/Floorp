@@ -2649,8 +2649,14 @@ PRInt32 _MD_getopenfileinfo64(const PRFileDesc *fd, PRFileInfo64 *info)
     return rv;
 }
 
+/*
+ * _md_iovector._open64 must be initialized to 'open' so that _PR_InitLog can
+ * open the log file during NSPR initialization, before _md_iovector is
+ * initialized by _PR_MD_FINAL_INIT.  This means the log file cannot be a
+ * large file on some platforms.
+ */
 #ifdef SYMBIAN
-struct _MD_IOVector _md_iovector;
+struct _MD_IOVector _md_iovector; /* Will crash if NSPR_LOG_FILE is set. */
 #else
 struct _MD_IOVector _md_iovector = { open };
 #endif

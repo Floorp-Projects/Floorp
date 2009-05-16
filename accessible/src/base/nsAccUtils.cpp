@@ -45,6 +45,7 @@
 
 #include "nsAccessibleEventData.h"
 #include "nsHyperTextAccessible.h"
+#include "nsHTMLTableAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibleTreeWalker.h"
 #include "nsAccessible.h"
@@ -713,6 +714,26 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
       aValue = NS_LITERAL_STRING("polite");
       break;
   }
+}
+
+already_AddRefed<nsAccessible>
+nsAccUtils::QueryAccessible(nsIAccessible *aAccessible)
+{
+  nsAccessible* accessible = nsnull;
+  if (aAccessible)
+    CallQueryInterface(aAccessible, &accessible);
+  
+  return accessible;
+}
+
+already_AddRefed<nsHTMLTableAccessible>
+nsAccUtils::QueryAccessibleTable(nsIAccessibleTable *aAccessibleTable)
+{
+  nsHTMLTableAccessible* accessible = nsnull;
+  if (aAccessibleTable)
+    CallQueryInterface(aAccessibleTable, &accessible);
+  
+  return accessible;
 }
 
 #ifdef DEBUG_A11Y

@@ -1,0 +1,90 @@
+diff --git a/gfx/cairo/cairo/src/cairo-gstate.c b/gfx/cairo/cairo/src/cairo-gstate.c
+--- a/gfx/cairo/cairo/src/cairo-gstate.c
++++ b/gfx/cairo/cairo/src/cairo-gstate.c
+@@ -1673,26 +1673,31 @@ _cairo_gstate_show_text_glyphs (cairo_gs
+ 
+     source_pattern = &source_pattern_stack.base;
+     status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern);
+     if (unlikely (status))
+ 	goto CLEANUP_GLYPHS;
+ 
+     /* For really huge font sizes, we can just do path;fill instead of
+      * show_glyphs, as show_glyphs would put excess pressure on the cache,
+-     * and moreover, not all components below us correctly handle huge font
+-     * sizes.  I wanted to set the limit at 256.  But alas, seems like cairo's
++     * not all components below us correctly handle huge font sizes, and
++     * path filling can be cheaper since parts of glyphs are likely to be
++     * clipped out.  256 seems like a good limit.  But alas, seems like cairo's
+      * rasterizer is something like ten times slower than freetype's for huge
+-     * sizes.  So, no win just yet.  For now, do it for insanely-huge sizes,
+-     * just to make sure we don't make anyone unhappy.  When we get a really
+-     * fast rasterizer in cairo, we may want to readjust this.
++     * sizes.  So, no win just yet when we're using cairo's rasterizer.
++     * For now, if we're using cairo's rasterizer, use path filling only
++     * for insanely-huge sizes, just to make sure we don't make anyone
++     * unhappy.  When we get a really fast rasterizer in cairo, we may
++     * want to readjust this.  The threshold calculation is
++     * encapsulated in _cairo_surface_get_text_path_fill_threshold.
+      *
+      * Needless to say, do this only if show_text_glyphs is not available. */
+     if (cairo_surface_has_show_text_glyphs (gstate->target) ||
+-	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240) {
++	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <=
++	_cairo_surface_get_text_path_fill_threshold (gstate->target)) {
+ 	status = _cairo_surface_show_text_glyphs (gstate->target,
+ 						  gstate->op,
+ 						  source_pattern,
+ 						  utf8, utf8_len,
+ 						  transformed_glyphs, num_glyphs,
+ 						  transformed_clusters, num_clusters,
+ 						  cluster_flags,
+ 						  gstate->scaled_font, NULL);
+diff --git a/gfx/cairo/cairo/src/cairo-surface.c b/gfx/cairo/cairo/src/cairo-surface.c
+--- a/gfx/cairo/cairo/src/cairo-surface.c
++++ b/gfx/cairo/cairo/src/cairo-surface.c
+@@ -1120,16 +1120,22 @@ cairo_surface_get_fallback_resolution (c
+ 				       double		*y_pixels_per_inch)
+ {
+     if (x_pixels_per_inch)
+ 	*x_pixels_per_inch = surface->x_fallback_resolution;
+     if (y_pixels_per_inch)
+ 	*y_pixels_per_inch = surface->y_fallback_resolution;
+ }
+ 
++int
++_cairo_surface_get_text_path_fill_threshold (const cairo_surface_t *surface)
++{
++    return surface->backend->fill == NULL ? 10240 : 256;
++}
++
+ cairo_bool_t
+ _cairo_surface_has_device_transform (cairo_surface_t *surface)
+ {
+     return ! _cairo_matrix_is_identity (&surface->device_transform);
+ }
+ 
+ /**
+  * _cairo_surface_acquire_source_image:
+diff --git a/gfx/cairo/cairo/src/cairoint.h b/gfx/cairo/cairo/src/cairoint.h
+--- a/gfx/cairo/cairo/src/cairoint.h
++++ b/gfx/cairo/cairo/src/cairoint.h
+@@ -2065,16 +2065,19 @@ _cairo_surface_composite_shape_fixup_unb
+ 						int			    dst_x,
+ 						int			    dst_y,
+ 						unsigned int		    width,
+ 						unsigned int		    height);
+ 
+ cairo_private cairo_bool_t
+ _cairo_surface_is_opaque (const cairo_surface_t *surface);
+ 
++cairo_private int
++_cairo_surface_get_text_path_fill_threshold (const cairo_surface_t *surface);
++
+ cairo_private void
+ _cairo_surface_set_device_scale (cairo_surface_t *surface,
+ 				 double		  sx,
+ 				 double		  sy);
+ 
+ cairo_private cairo_bool_t
+ _cairo_surface_has_device_transform (cairo_surface_t *surface);
+ 

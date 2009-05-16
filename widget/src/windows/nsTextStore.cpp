@@ -701,12 +701,6 @@ nsTextStore::SendTextEventForCompositionString()
 
   nsAutoTArray<nsTextRange, 4> textRanges;
   nsTextRange newRange;
-  newRange.mStartOffset =
-    PRUint32(mCompositionSelection.acpStart - mCompositionStart);
-  newRange.mEndOffset =
-    PRUint32(mCompositionSelection.acpEnd - mCompositionStart);
-  newRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-  textRanges.AppendElement(newRange);
   // No matter if we have display attribute info or not,
   // we always pass in at least one range to NS_TEXT_TEXT
   newRange.mStartOffset = 0;
@@ -762,6 +756,39 @@ nsTextStore::SendTextEventForCompositionString()
       textRanges.AppendElement(newRange);
     }
   }
+
+  // We need to hack for Korean Input System which is Korean standard TIP.
+  // It sets no change style to IME selection (the selection is always only
+  // one).  So, the composition string looks like normal (or committed) string.
+  // At this time, mCompositionSelection range is same as the composition
+  // string range.  Other applications set a wide caret which covers the
+  // composition string, however, Gecko doesn't support the wide caret drawing
+  // now (Gecko doesn't support XOR drawing), unfortunately.  For now, we should
+  // change the range style to undefined.
+  if (mCompositionSelection.acpStart != mCompositionSelection.acpEnd &&
+      textRanges.Length() == 1) {
+    nsTextRange& range = textRanges[0];
+    LONG start = PR_MIN(mCompositionSelection.acpStart,
+                        mCompositionSelection.acpEnd);
+    LONG end = PR_MAX(mCompositionSelection.acpStart,
+                      mCompositionSelection.acpEnd);
+    if (range.mStartOffset == start - mCompositionStart &&
+        range.mEndOffset == end - mCompositionStart &&
+        range.mRangeStyle.IsNoChangeStyle()) {
+      range.mRangeStyle.Clear();
+      // The looks of selected type is better than others.
+      range.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
+    }
+  }
+
+  // The caret position has to be collapsed.
+  LONG caretPosition = PR_MAX(mCompositionSelection.acpStart,
+                              mCompositionSelection.acpEnd);
+  caretPosition -= mCompositionStart;
+  nsTextRange caretRange;
+  caretRange.mStartOffset = caretRange.mEndOffset = PRUint32(caretPosition);
+  caretRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+  textRanges.AppendElement(caretRange);
 
   event.theText = mCompositionString;
   event.rangeArray = textRanges.Elements();

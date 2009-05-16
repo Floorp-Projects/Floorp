@@ -44,6 +44,15 @@ function step5()
   // listener, and focuses the current tab if another tab previously had focus
   is(document.activeElement, tab2, "mouse on another tab while focused still activeElement");
 
+  content.focus();
+  EventUtils.synthesizeMouse(tab2, 2, 2, {button: 1, type: "mousedown"});
+  setTimeout(step6, 0);
+}
+
+function step6()
+{
+  isnot(document.activeElement, tab2, "tab not focused via middle click");
+
   gBrowser.removeTab(tab1);
   gBrowser.removeTab(tab2);
 

@@ -119,7 +119,6 @@ public:
                        const nsFlowAreaRect& aFloatAvailableSpace,
                        PRBool aForceFit);
   PRBool FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
-                           PRBool*         aIsLeftFloat,
                            nsReflowStatus& aReflowStatus,
                            PRBool          aForceFit);
   PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats, PRBool aForceFit);

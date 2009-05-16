@@ -64,6 +64,11 @@ else
 AUTOMATION_PPARGS += -DIS_DEBUG_BUILD=0
 endif
 
-automation.py: $(topsrcdir)/build/automation.py.in $(topsrcdir)/build/automation-build.mk
+$(CURDIR)/automationutils.py:
+	$(INSTALL) $(topsrcdir)/build/automationutils.py .
+
+automation.py: $(topsrcdir)/build/automation.py.in $(topsrcdir)/build/automation-build.mk $(CURDIR)/automationutils.py
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
+
+GARBAGE += automation.py $(CURDIR)/automationutils.py

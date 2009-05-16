@@ -360,6 +360,13 @@ LoginManager.prototype = {
                 case "blur":
                     var acInputField = event.target;
                     var acForm = acInputField.form;
+
+                    // If the username is blank, bail out now -- we don't want
+                    // fillForm() to try filling in a login without a username
+                    // to filter on (bug 471906).
+                    if (!acInputField.value)
+                        return;
+
                     // Make sure the username field fillForm will use is the
                     // same field as the autocomplete was activated on. If
                     // not, the DOM has been altered and we'll just give up.
@@ -618,9 +625,13 @@ LoginManager.prototype = {
             var logins = this.findLogins({}, origin, actionOrigin, null);
             var matchingLogins = [];
 
+            // Filter out logins that don't match the search prefix. Also
+            // filter logins without a username, since that's confusing to see
+            // in the dropdown and we can't autocomplete them anyway.
             for (i = 0; i < logins.length; i++) {
                 var username = logins[i].username.toLowerCase();
-                if (aSearchString.length <= username.length &&
+                if (username &&
+                    aSearchString.length <= username.length &&
                     aSearchString.toLowerCase() ==
                         username.substr(0, aSearchString.length))
                 {

@@ -189,7 +189,19 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
       }
     }
 
-    if (kidNeedsReflow && aPresContext->HasPendingInterrupt()) {
+    // Make a CheckForInterrupt call, here, not just HasPendingInterrupt.  That
+    // will make sure that we end up reflowing aDelegatingFrame in cases when
+    // one of our kids interrupted.  Otherwise we'd set the dirty or
+    // dirty-children bit on the kid in the condition below, and then when
+    // reflow completes and we go to mark dirty bits on all ancestors of that
+    // kid we'll immediately bail out, because the kid already has a dirty bit.
+    // In particular, we won't set any dirty bits on aDelegatingFrame, so when
+    // the following reflow happens we won't reflow the kid in question.  This
+    // might be slightly suboptimal in cases where |kidFrame| itself did not
+    // interrupt, since we'll trigger a reflow of it too when it's not strictly
+    // needed.  But the logic to not do that is enough more complicated, and
+    // the case enough of an edge case, that this is probably better.
+    if (kidNeedsReflow && aPresContext->CheckForInterrupt(aDelegatingFrame)) {
       if (aDelegatingFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
         kidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
       } else {

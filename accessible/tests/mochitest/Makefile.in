@@ -50,16 +50,16 @@ _TEST_FILES =\
 		moz.png \
 		$(topsrcdir)/content/media/video/test/bug461281.ogg \
 		longdesc_src.html \
+		actions.js \
 		attributes.js \
 		common.js \
 		events.js \
 		grid.js \
 		layout.js \
+		name.css \
+		name.js \
+		name.xbl \
 		namerules.xml \
-		nsIAccessible_actions.js \
-		nsIAccessible_name.css \
-		nsIAccessible_name.js \
-		nsIAccessible_name.xbl \
  		nsIAccessible_selects.js \
 		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
@@ -68,7 +68,7 @@ _TEST_FILES =\
 		value.js \
 		test_accessnode_invalidation.html \
 		test_actions_aria.html \
-	$(warning test_actions_inputs.html temporarily disabled) \
+		test_actions_inputs.html \
 		test_actions.xul \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
@@ -76,6 +76,7 @@ _TEST_FILES =\
 		test_aria_role_grid.html \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
+	$(warning   test_childAtPoint.html temporarily disabled) \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_cssattrs.html \
 		test_descr.html \
@@ -83,18 +84,19 @@ _TEST_FILES =\
 		test_elm_media.html \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
+		test_events_focus.xul \
 		test_events_mutation.html \
 		test_events_tree.xul \
 		test_groupattrs.xul \
 		test_groupattrs.html \
+		test_name.html \
+		test_name.xul \
+		test_name_button.html \
+		test_name_link.html \
 		test_name_markup.html \
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_applicationAccessible.html \
 	$(warning test_nsIAccessible_comboboxes.xul temporarily disabled) \
-		test_nsIAccessible_name.html \
-		test_nsIAccessible_name_button.html \
-		test_nsIAccessible_name_link.html \
-		test_nsIAccessible_name.xul \
  		test_nsIAccessible_selects.html \
 		test_nsIAccessible_focus.html \
 		test_nsIAccessibleDocument.html \
@@ -109,6 +111,7 @@ _TEST_FILES =\
  		test_objectattrs.html \
 		test_relations.html \
 		test_relations.xul \
+		test_relations_table.html \
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
 		test_states.html \
