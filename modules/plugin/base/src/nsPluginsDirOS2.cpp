@@ -214,7 +214,7 @@ nsresult nsPluginFile::LoadPlugin( PRLibrary *&outLibrary)
 // Obtains all of the information currently available for this plugin.
 nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 {
-   nsresult   rc = NS_ERROR_FAILURE;
+   nsresult   rv = NS_ERROR_FAILURE;
    HMODULE    hPlug = 0; // Need a HMODULE to query resource statements
    char       failure[ CCHMAXPATH] = "";
    APIRET     ret;
@@ -262,14 +262,14 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
       info.fFullPath = PL_strdup(path.get());
       info.fFileName = PL_strdup(fileName.get());
 
-      rc = NS_OK;
+      rv = NS_OK;
       break;
    }
 
    if( 0 != hPlug)
       DosFreeModule( hPlug);
 
-   return rc;
+   return rv;
 }
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
