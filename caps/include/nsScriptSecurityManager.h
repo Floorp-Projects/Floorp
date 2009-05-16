@@ -529,13 +529,36 @@ private:
     nsresult
     SavePrincipal(nsIPrincipal* aToSave);
 
+    /**
+     * Check capability levels for an |aObj| that implements
+     * nsISecurityCheckedComponent.
+     *
+     * NB: This function also checks to see if aObj is a plugin and the user
+     * has set the "security.xpconnect.plugin.unrestricted" pref to allow
+     * anybody to script plugin objects from anywhere.
+     *
+     * @param aObj The nsISupports representation of the object in question
+     *             object, possibly null.
+     * @param aJSObject The JSObject representation of the object in question.
+     *                  Only used if |aObjectSecurityLevel| is "sameOrigin".
+     * @param aSubjectPrincipal The nominal subject principal used when
+     *                          aObjectSecurityLevel is "sameOrigin".
+     * @param aObjectSecurityLevel Can be one of three values:
+     *                  - allAccess: Allow access no matter what.
+     *                  - noAccess: Deny access no matter what.
+     *                  - sameOrigin: If both a subject principal and JS
+     *                                object have been passed in, returns
+     *                                true if the subject subsumes the object,
+     *                                otherwise, behaves like noAccess.
+     */
     nsresult
-    CheckXPCPermissions(nsISupports* aObj,
+    CheckXPCPermissions(nsISupports* aObj, JSObject* aJSObject,
+                        nsIPrincipal* aSubjectPrincipal,
                         const char* aObjectSecurityLevel);
 
     nsresult
     Init();
-    
+
     nsresult
     InitPrefs();
 

@@ -48,7 +48,8 @@ import signal
 import subprocess
 import sys
 import threading
-import glob
+
+from automationutils import checkForCrashes
 
 """
 Runs the browser from a script, and provides useful utilities
@@ -71,6 +72,9 @@ __all__ = [
            "environment",
            "dumpLeakLog",
            "processLeakLog",
+           "IS_TEST_BUILD",
+           "IS_DEBUG_BUILD",
+           "SYMBOLS_PATH",
           ]
 
 # These are generated in mozilla/build/Makefile.in
@@ -125,7 +129,7 @@ class Process(subprocess.Popen):
         try:
           subprocess.Popen(["kill", "-f", pid]).wait()
         except:
-          log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Missing 'kill' utility to kill process with pid=%s. Kill it manually!", pid)
+          log.info("TEST-UNEXPECTED-FAIL | automation.py | Missing 'kill' utility to kill process with pid=%s. Kill it manually!", pid)
       else:
         # Windows XP and later.
         subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
@@ -409,21 +413,6 @@ def environment(env = None, xrePath = DIST_BIN):
 
   return env
 
-def checkForCrashes(profileDir, symbolsPath):
-  stackwalkPath = os.environ.get('MINIDUMP_STACKWALK', None)
-
-  foundCrash = False
-  dumps = glob.glob(os.path.join(profileDir, 'minidumps', '*.dmp'))
-  for d in dumps:
-    log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Browser crashed (minidump found)")
-    if symbolsPath and stackwalkPath:
-      nullfd = open(os.devnull, 'w')
-      # eat minidump_stackwalk errors
-      subprocess.call([stackwalkPath, d, symbolsPath], stderr=nullfd)
-      nullfd.close()
-    os.remove(d)
-    foundCrash = True
-  return foundCrash
 
 ###############
 # RUN THE APP #
@@ -542,13 +531,13 @@ def runApp(testURL, env, app, profileDir, extraArgs,
     # create certificate database for the profile
     certificateStatus = fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
     if certificateStatus != 0:
-      log.info("TEST-UNEXPECTED FAIL | (automation.py) | Certificate integration failed")
+      log.info("TEST-UNEXPECTED FAIL | automation.py | Certificate integration failed")
       return certificateStatus
 
     # start ssltunnel to provide https:// URLs capability
     ssltunnel = os.path.join(utilityPath, "ssltunnel" + BIN_SUFFIX)
     ssltunnelProcess = Process([ssltunnel, os.path.join(profileDir, "ssltunnel.cfg")], env = environment(xrePath = xrePath))
-    log.info("INFO | (automation.py) | SSL tunnel pid: %d", ssltunnelProcess.pid)
+    log.info("INFO | automation.py | SSL tunnel pid: %d", ssltunnelProcess.pid)
 
   # now run with the profile we created
   cmd = app
@@ -588,7 +577,7 @@ def runApp(testURL, env, app, profileDir, extraArgs,
     outputPipe = subprocess.PIPE
 
   proc = Process([cmd] + args, env = environment(env), stdout = outputPipe, stderr = subprocess.STDOUT)
-  log.info("INFO | (automation.py) | Application pid: %d", proc.pid)
+  log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
   if outputPipe is None:
     log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
@@ -600,10 +589,10 @@ def runApp(testURL, env, app, profileDir, extraArgs,
 
   status = proc.wait()
   if status != 0:
-    log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Exited with code %d during test run", status)
-  log.info("INFO | (automation.py) | Application ran for: %s", str(datetime.now() - startTime))
+    log.info("TEST-UNEXPECTED-FAIL | automation.py | Exited with code %d during test run", status)
+  log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
-  if checkForCrashes(profileDir, symbolsPath):
+  if checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath):
     status = -1
 
   if IS_TEST_BUILD and runSSLTunnel:

@@ -128,12 +128,12 @@ public:
   /** Do a deep clone.  Should be used only on the first in the linked list. */
   nsAttrSelector* Clone() const { return Clone(PR_TRUE); }
 
-  PRInt32         mNameSpace;
-  nsCOMPtr<nsIAtom> mAttr;
-  PRUint8         mFunction;
-  PRPackedBool    mCaseSensitive;
   nsString        mValue;
   nsAttrSelector* mNext;
+  nsCOMPtr<nsIAtom> mAttr;
+  PRInt32         mNameSpace;
+  PRUint8         mFunction;
+  PRPackedBool    mCaseSensitive;
 private: 
   nsAttrSelector* Clone(PRBool aDeep) const;
 
@@ -188,17 +188,16 @@ private:
   PRInt32 CalcWeightWithoutNegations() const;
 
 public:
-  PRInt32         mNameSpace;
   nsCOMPtr<nsIAtom> mTag;
   nsAtomList*     mIDList;
   nsAtomList*     mClassList;
   nsPseudoClassList* mPseudoClassList; // atom for the pseudo, string for
                                        // the argument to functional pseudos
   nsAttrSelector* mAttrList;
-  PRUnichar       mOperator;
   nsCSSSelector*  mNegations;
-
   nsCSSSelector*  mNext;
+  PRInt32         mNameSpace;
+  PRUnichar       mOperator;
 private: 
   // These are not supported and are not implemented! 
   nsCSSSelector(const nsCSSSelector& aCopy);

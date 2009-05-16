@@ -149,28 +149,30 @@ protected:
   void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
 
   nsMargin mMargin;
-  PRBool   mIsPrintingSelection;
 
-  // Asynch Printing
-  PRInt32      mPageNum;
-  PRInt32      mTotalPages;
-  nsIFrame *   mCurrentPageFrame;
-  PRPackedBool mDoingPageRange;
-  PRInt32      mPrintRangeType;
-  PRInt32      mFromPageNum;
-  PRInt32      mToPageNum;
-  PRPackedBool mPrintThisPage;
+  // I18N date formatter service which we'll want to cache locally.
+  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
   nsSize       mSize;
   nsSharedPageData* mPageData; // data shared by all the nsPageFrames
+
+  // Asynch Printing
+  nsIFrame *   mCurrentPageFrame;
+  PRInt32      mPageNum;
+  PRInt32      mTotalPages;
+  PRInt32      mPrintRangeType;
+  PRInt32      mFromPageNum;
+  PRInt32      mToPageNum;
 
   // Selection Printing Info
   nscoord      mSelectionHeight;
   nscoord      mYSelOffset;
 
-  // I18N date formatter service which we'll want to cache locally.
-  nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
+  // Asynch Printing
+  PRPackedBool mPrintThisPage;
+  PRPackedBool mDoingPageRange;
 
+  PRPackedBool mIsPrintingSelection;
 };
 
 #endif /* nsSimplePageSequence_h___ */

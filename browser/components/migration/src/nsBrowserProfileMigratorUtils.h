@@ -58,6 +58,11 @@
 #define NC_URI(property) \
   NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#"#property)
 
+#define BATCH_ACTION_HISTORY 0
+#define BATCH_ACTION_HISTORY_REPLACE 1
+#define BATCH_ACTION_BOOKMARKS 2
+#define BATCH_ACTION_BOOKMARKS_REPLACE 3
+
 #include "nsIPrefBranch.h"
 #include "nsIFile.h"
 #include "nsStringAPI.h"

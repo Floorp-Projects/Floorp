@@ -39,6 +39,8 @@
 #ifndef _MOZSTORAGEHELPER_H_
 #define _MOZSTORAGEHELPER_H_
 
+#include "nsAutoPtr.h"
+
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozStorage.h"
@@ -96,7 +98,11 @@ public:
     mCompleted = PR_TRUE;
     if (! mHasTransaction)
       return NS_OK; // transaction not ours, ignore
-    return mConnection->CommitTransaction();
+    nsresult rv = mConnection->CommitTransaction();
+    if (NS_SUCCEEDED(rv))
+      mHasTransaction = PR_FALSE;
+
+    return rv;
   }
 
   /**
@@ -119,6 +125,9 @@ public:
       if (rv == NS_ERROR_STORAGE_BUSY)
         (void)PR_Sleep(PR_INTERVAL_NO_WAIT);
     } while (rv == NS_ERROR_STORAGE_BUSY);
+
+    if (NS_SUCCEEDED(rv))
+      mHasTransaction = PR_FALSE;
 
     return rv;
   }

@@ -1283,13 +1283,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   return rv;
 }
 
-#ifdef NS_DEBUG
-NS_METHOD nsTableOuterFrame::VerifyTree() const
-{
-  return NS_OK;
-}
-#endif
-
 nsIAtom*
 nsTableOuterFrame::GetType() const
 {

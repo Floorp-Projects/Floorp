@@ -51,6 +51,10 @@ _TEST_FILES = 	test_bug399925.html \
                 red.png \
                 test_bug466586.html \
                 big.png \
+                blue.png \
+                test_bug490949.html \
+                bug490949-iframe.html \
+                bug490949.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

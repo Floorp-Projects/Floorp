@@ -968,18 +968,58 @@ nsOperaCookieMigrator::ReadHeader()
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
-{
-  nsresult rv;
-  nsCOMPtr<nsINavHistoryService> history = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
- 
-  return history->RunInBatchMode(this, nsnull);
-}
- 
 NS_IMETHODIMP
 nsOperaProfileMigrator::RunBatched(nsISupports* aUserData)
+{
+  PRUint8 batchAction;
+  nsCOMPtr<nsISupportsPRUint8> strWrapper(do_QueryInterface(aUserData));
+  NS_ASSERTION(strWrapper, "Unable to create nsISupportsPRUint8 wrapper!");
+  nsresult rv = strWrapper->GetData(&batchAction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (batchAction) {
+    case BATCH_ACTION_HISTORY:
+      rv = CopyHistoryBatched(PR_FALSE);
+      break;
+    case BATCH_ACTION_HISTORY_REPLACE:
+      rv = CopyHistoryBatched(PR_TRUE);
+      break;
+    case BATCH_ACTION_BOOKMARKS:
+      rv = CopyBookmarksBatched(PR_FALSE);
+      break;
+    case BATCH_ACTION_BOOKMARKS_REPLACE:
+      rv = CopyBookmarksBatched(PR_TRUE);
+      break;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsOperaProfileMigrator::CopyHistory(PRBool aReplace) 
+{
+  nsresult rv;
+  nsCOMPtr<nsINavHistoryService> history =
+    do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint8 batchAction = aReplace ? BATCH_ACTION_HISTORY_REPLACE
+                                 : BATCH_ACTION_HISTORY;
+  nsCOMPtr<nsISupportsPRUint8> supports =
+    do_CreateInstance(NS_SUPPORTS_PRUINT8_CONTRACTID);
+  NS_ENSURE_TRUE(supports, NS_ERROR_OUT_OF_MEMORY);
+  rv = supports->SetData(batchAction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = history->RunInBatchMode(this, supports);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+ 
+nsresult
+nsOperaProfileMigrator::CopyHistoryBatched(PRBool aReplace) 
 {
   nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
 
@@ -1043,6 +1083,28 @@ nsOperaProfileMigrator::RunBatched(nsISupports* aUserData)
 nsresult
 nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
+  nsresult rv;
+  nsCOMPtr<nsINavBookmarksService> bookmarks =
+    do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint8 batchAction = aReplace ? BATCH_ACTION_BOOKMARKS_REPLACE
+                                 : BATCH_ACTION_BOOKMARKS;
+  nsCOMPtr<nsISupportsPRUint8> supports =
+    do_CreateInstance(NS_SUPPORTS_PRUINT8_CONTRACTID);
+  NS_ENSURE_TRUE(supports, NS_ERROR_OUT_OF_MEMORY);
+  rv = supports->SetData(batchAction);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = bookmarks->RunInBatchMode(this, supports);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsOperaProfileMigrator::CopyBookmarksBatched(PRBool aReplace)
+{
   // Find Opera Bookmarks
   nsCOMPtr<nsIFile> operaBookmarks;
   mOperaProfile->Clone(getter_AddRefs(operaBookmarks));
@@ -1050,34 +1112,44 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 
   nsCOMPtr<nsIInputStream> fileInputStream;
   NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), operaBookmarks);
-  if (!fileInputStream) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(fileInputStream, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
 
   nsresult rv;
-  nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsINavBookmarksService> bms =
+    do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt64 root;
-  rv = bms->GetBookmarksMenuFolder(&root);
+  PRInt64 bookmarksMenuFolderId;
+  rv = bms->GetBookmarksMenuFolder(&bookmarksMenuFolderId);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt64 parentFolder = root;
+  PRInt64 parentFolder = bookmarksMenuFolderId;
 
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIStringBundle> bundle;
-  bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
+  rv = bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!aReplace) {
     nsString sourceNameOpera;
-    bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
-                              getter_Copies(sourceNameOpera));
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
+                                   getter_Copies(sourceNameOpera));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     const PRUnichar* sourceNameStrings[] = { sourceNameOpera.get() };
     nsString importedOperaHotlistTitle;
-    bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
-                                 sourceNameStrings, 1, 
-                                 getter_Copies(importedOperaHotlistTitle));
+    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
+                                      sourceNameStrings, 1, 
+                                      getter_Copies(importedOperaHotlistTitle));
+   NS_ENSURE_SUCCESS(rv, rv);
 
-    bms->CreateFolder(parentFolder, NS_ConvertUTF16toUTF8(importedOperaHotlistTitle),
-                      nsINavBookmarksService::DEFAULT_INDEX, &parentFolder);
+    rv = bms->CreateFolder(parentFolder,
+                           NS_ConvertUTF16toUTF8(importedOperaHotlistTitle),
+                           nsINavBookmarksService::DEFAULT_INDEX,
+                           &parentFolder);
+   NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
     nsCOMPtr<nsIFile> profile;
@@ -1087,16 +1159,15 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   }
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
-  printf("*** about to copy smart keywords\n");
   CopySmartKeywords(bms, bundle, parentFolder);
-  printf("*** done copying smart keywords\n");
 #endif
 
-  PRInt64 toolbar;
-  rv = bms->GetToolbarFolder(&toolbar);
+  PRInt64 bookmarksToolbarFolderId;
+  rv = bms->GetToolbarFolder(&bookmarksToolbarFolderId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ParseBookmarksFolder(lineInputStream, parentFolder, toolbar, bms);
+  rv = ParseBookmarksFolder(lineInputStream, parentFolder,
+                            bookmarksToolbarFolderId, bms);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1105,7 +1176,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
 nsresult
 nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS, 
-                                          nsIStringBundle* aBundle, 
+                                          nsIStringBundle* aBundle,
                                           PRInt64 aParentFolder)
 {
   nsresult rv;
@@ -1115,27 +1186,27 @@ nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
   smartKeywords->Append(NS_LITERAL_STRING("search.ini"));
 
   nsCOMPtr<nsILocalFile> lf(do_QueryInterface(smartKeywords));
-  if (!lf)
-    return NS_OK;
-
   nsINIParser parser;
-  rv = parser.Init(lf);
-  if (NS_FAILED(rv))
+  if (!lf || NS_FAILED(parser.Init(lf)))
     return NS_OK;
 
   nsString sourceNameOpera;
-  aBundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
-                             getter_Copies(sourceNameOpera));
+  rv = aBundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(),
+                                  getter_Copies(sourceNameOpera));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   const PRUnichar* sourceNameStrings[] = { sourceNameOpera.get() };
   nsString importedSearchUrlsTitle;
-  aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
-                                sourceNameStrings, 1, 
-                                getter_Copies(importedSearchUrlsTitle));
+  rv = aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
+                                     sourceNameStrings, 1, 
+                                     getter_Copies(importedSearchUrlsTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 keywordsFolder;
-  rv = aBMS->CreateFolder(aParentFolder, NS_ConvertUTF16toUTF8(importedSearchUrlsTitle),
-                          nsINavBookmarksService::DEFAULT_INDEX, &keywordsFolder);
+  rv = aBMS->CreateFolder(aParentFolder,
+                          NS_ConvertUTF16toUTF8(importedSearchUrlsTitle),
+                          nsINavBookmarksService::DEFAULT_INDEX,
+                          &keywordsFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 sectionIndex = 1;
@@ -1145,23 +1216,24 @@ nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
     section.AppendInt(sectionIndex++);
 
     rv = parser.GetString(section.get(), "Name", name);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      // No more smart keywords found, stop parsing the file.
       break;
+    }
+    if (name.IsEmpty())
+      continue;
 
     rv = parser.GetString(section.get(), "URL", url);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) || url.IsEmpty())
       continue;
 
     rv = parser.GetString(section.get(), "Key", keyword);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) || keyword.IsEmpty())
       continue;
 
     PRInt32 post;
     rv = GetInteger(parser, section.get(), "Is post", &post);
     if (NS_SUCCEEDED(rv) && post)
-      continue;
-
-    if (url.IsEmpty() || keyword.IsEmpty() || name.IsEmpty())
       continue;
 
     PRUint32 length = name.Length();
@@ -1183,25 +1255,29 @@ nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
     while ((PRUint32)index < length);
 
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), url.get());
-    if (!uri)
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), url.get())) || !uri)
+      continue;
 
     nsCAutoString hostCStr;
     uri->GetHost(hostCStr);
     NS_ConvertASCIItoUTF16 host(hostCStr);
 
-    const PRUnichar* descStrings[] = { NS_ConvertUTF8toUTF16(keyword).get(), host.get() };
+    const PRUnichar* descStrings[] = { NS_ConvertUTF8toUTF16(keyword).get(),
+                                       host.get() };
     nsString keywordDesc;
-    aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
-                                  descStrings, 2, getter_Copies(keywordDesc));
+    rv = aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
+                                       descStrings, 2,
+                                       getter_Copies(keywordDesc));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt64 newId;
     rv = aBMS->InsertBookmark(keywordsFolder, uri,
                               nsINavBookmarksService::DEFAULT_INDEX,
                               name, &newId);
     NS_ENSURE_SUCCESS(rv, rv);
-    // TODO -- set bookmark keyword to keyword and description to keywordDesc.
+    rv = aBMS->SetKeywordForBookmark(newId, NS_ConvertUTF8toUTF16(keyword));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // TODO Bug 397771: set bookmark description to keywordDesc.
   }
   while (1);
   

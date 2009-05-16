@@ -58,5 +58,5 @@ that require it.  -->
      mockup at bug 480169 -->
 <!ENTITY sanitizeEverythingUndoWarning     "This action cannot be undone.">
 
-<!ENTITY dialog.width                 "32em">
+<!ENTITY dialog.width                 "28em">
 <!ENTITY column.width                 "14em">

@@ -192,6 +192,9 @@ PlacesController.prototype = {
              !PlacesUtils.nodeIsReadOnly(selectedNode) &&
              this._view.getResult().sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+    case "placesCmd_createBookmark":
+      var node = this._view.selectedNode;
+      return node && PlacesUtils.nodeIsURI(node) && node.itemId == -1;
     default:
       return false;
     }
@@ -238,8 +241,14 @@ PlacesController.prototype = {
       this.remove("Remove Selection");
       break;
     case "placesCmd_deleteDataHost":
-      let uri = PlacesUtils._uri(this._view.selectedNode.uri);
-      PlacesUIUtils.privateBrowsing.removeDataFromDomain(uri.host);
+      var host;
+      if (PlacesUtils.nodeIsHost(this._view.selectedNode)) {
+        var queries = this._view.selectedNode.getQueries({});
+        host = queries[0].domain;
+      }
+      else
+        host = PlacesUtils._uri(this._view.selectedNode.uri).host;
+      PlacesUIUtils.privateBrowsing.removeDataFromDomain(host);
       break;
     case "cmd_selectAll":
       this.selectAll();
@@ -279,6 +288,10 @@ PlacesController.prototype = {
       break;
     case "placesCmd_sortBy:name":
       this.sortFolderByName();
+      break;
+    case "placesCmd_createBookmark":
+      var node = this._view.selectedNode;
+      PlacesUIUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
       break;
     }
   },

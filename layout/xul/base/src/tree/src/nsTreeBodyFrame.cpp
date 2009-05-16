@@ -144,22 +144,22 @@ NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 :nsLeafBoxFrame(aPresShell, aContext),
- mTopRowIndex(0), 
+ mSlots(nsnull),
+ mTopRowIndex(0),
  mHorzPosition(0),
  mHorzWidth(0),
  mAdjustWidth(0),
  mRowHeight(0),
  mIndentation(0),
  mStringWidth(-1),
+ mUpdateBatchNest(0),
+ mRowCount(0),
+ mMouseOverRow(-1),
  mFocused(PR_FALSE),
  mHasFixedRowCount(PR_FALSE),
  mVerticalOverflow(PR_FALSE),
  mHorizontalOverflow(PR_FALSE),
- mReflowCallbackPosted(PR_FALSE),
- mUpdateBatchNest(0),
- mRowCount(0),
- mMouseOverRow(-1),
- mSlots(nsnull)
+ mReflowCallbackPosted(PR_FALSE)
 {
   mColumns = new nsTreeColumns(nsnull);
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));

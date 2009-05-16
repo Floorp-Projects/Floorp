@@ -124,24 +124,6 @@ moz_drawingarea_reparent (MozDrawingarea *drawingarea, GdkWindow *aNewParent)
                         aNewParent, 0, 0);
 }
 
-static void
-nullify_widget_pointers (gpointer data, GObject *widget)
-{
-    MozDrawingarea *drawingarea = data;
-
-#ifdef DEBUG
-    gpointer user_data;
-    /* This function may get called twice before widget is destroyed,
-       so the user_data may have already been nullified. */
-    gdk_window_get_user_data(drawingarea->inner_window, &user_data);
-    if (user_data && widget && user_data != widget)
-        g_critical("user_data does not match widget");
-#endif
-
-    gdk_window_set_user_data(drawingarea->inner_window, NULL);
-    gdk_window_set_user_data(drawingarea->clip_window, NULL);
-}
-
 void
 moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
                                 GtkWidget *widget, GdkVisual *visual)
@@ -189,8 +171,6 @@ moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
                                                 &attributes, attributes_mask);
     gdk_window_set_user_data(drawingarea->inner_window, widget);
 
-    g_object_weak_ref(G_OBJECT(widget), nullify_widget_pointers, drawingarea);
-
     /* set the default pixmap to None so that you don't end up with the
        gtk default which is BlackPixel. */
     gdk_window_set_back_pixmap(drawingarea->inner_window, NULL, FALSE);
@@ -209,12 +189,6 @@ moz_drawingarea_finalize (GObject *object)
     g_return_if_fail(IS_MOZ_DRAWINGAREA(object));
 
     drawingarea = MOZ_DRAWINGAREA(object);
-
-    gdk_window_get_user_data(drawingarea->inner_window, &user_data);
-    if (user_data) {
-        g_object_weak_unref(user_data, nullify_widget_pointers, drawingarea);
-        nullify_widget_pointers(drawingarea, NULL);
-    }
 
     gdk_window_destroy(drawingarea->inner_window);
     gdk_window_destroy(drawingarea->clip_window);

@@ -371,7 +371,6 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc, JSBool rootGlobals)
                 }
             }
         }
-        NS_ASSERTION(!rootGlobals || mUnrootedGlobalCount == 0, "bad state");
     }
 
     XPCWrappedNativeScope::TraceJS(trc, this);

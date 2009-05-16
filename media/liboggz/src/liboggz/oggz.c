@@ -662,7 +662,11 @@ oggz_content_type (OggzStreamContent content)
    *  GCC gives a warning for it -- other compilers (including earlier GCC
    *  versions) may use a signed type for enum OggzStreamContent.
    */
-  if (content < 0 || content >= OGGZ_CONTENT_UNKNOWN)
+  if (
+#ifdef ALLOW_SIGNED_ENUMS
+      content < OGGZ_CONTENT_THEORA ||
+#endif
+      content >= OGGZ_CONTENT_UNKNOWN)
     return NULL;
 
   return oggz_auto_codec_ident[content].content_type;

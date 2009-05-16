@@ -70,40 +70,33 @@ nsOuterDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-// nsIAccessible::getChildAtPoint(in long x, in long y)
-NS_IMETHODIMP
+// nsAccessible::GetChildAtPoint()
+nsresult
 nsOuterDocAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                      nsIAccessible **aAccessible)
+                                      PRBool aDeepestChild,
+                                      nsIAccessible **aChild)
 {
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;
-  }
-  PRInt32 docX, docY, docWidth, docHeight;
-  GetBounds(&docX, &docY, &docWidth, &docHeight);
-  if (aX < docX || aX >= docX + docWidth || aY < docY || aY >= docY + docHeight) {
-    return NS_ERROR_FAILURE;
-  }
+  PRInt32 docX = 0, docY = 0, docWidth = 0, docHeight = 0;
+  nsresult rv = GetBounds(&docX, &docY, &docWidth, &docHeight);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetFirstChild(aAccessible);  // Always return the inner doc unless bounds outside of it
-}
+  if (aX < docX || aX >= docX + docWidth || aY < docY || aY >= docY + docHeight)
+    return NS_OK;
 
-// nsIAccessible::getDeepestChildAtPoint(in long x, in long y)
-NS_IMETHODIMP
-nsOuterDocAccessible::GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                      nsIAccessible **aAccessible)
-{
-  // Call getDeepestChildAtPoint on the fist child accessible of the outer
-  // document accessible if the given point is inside of outer document.
+  // Always return the inner doc as direct child accessible unless bounds
+  // outside of it.
   nsCOMPtr<nsIAccessible> childAcc;
-  nsresult rv = GetChildAtPoint(aX, aY, getter_AddRefs(childAcc));
+  rv = GetFirstChild(getter_AddRefs(childAcc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!childAcc)
     return NS_OK;
 
-  return childAcc->GetDeepestChildAtPoint(aX, aY, aAccessible);
+  if (aDeepestChild)
+    return childAcc->GetDeepestChildAtPoint(aX, aY, aChild);
+
+  NS_ADDREF(*aChild = childAcc);
+  return NS_OK;
 }
 
 void nsOuterDocAccessible::CacheChildren()

@@ -196,7 +196,6 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  NS_IMETHOD VerifyTree() const;
 #endif
 
 #ifdef ACCESSIBILITY

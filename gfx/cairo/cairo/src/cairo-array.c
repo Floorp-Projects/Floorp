@@ -125,6 +125,9 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
     if (required_size > INT_MAX || required_size < array->num_elements)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     if (required_size <= old_size)
 	return CAIRO_STATUS_SUCCESS;
 

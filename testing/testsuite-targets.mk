@@ -97,7 +97,8 @@ crashtest:
 # See also config/rules.mk 'xpcshell-tests' target for local execution.
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] xpcshell-tests|.
 xpcshell-tests:
-	$(PYTHON) -u \
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+          -I$(topsrcdir)/build \
 	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
 	  --manifest=$(DEPTH)/_tests/xpcshell/all-test-dirs.list \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \

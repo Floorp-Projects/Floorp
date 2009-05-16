@@ -374,10 +374,6 @@ var BookmarkPropertiesPanel = {
         this._element("siteLocationField")
             .addEventListener("input", this, false);
       }
-
-      // Set on document to get the event before an autocomplete popup could
-      // be hidden on Enter.
-      document.addEventListener("keypress", this, true);
     }
 
     window.sizeToContent();
@@ -388,27 +384,6 @@ var BookmarkPropertiesPanel = {
   handleEvent: function BPP_handleEvent(aEvent) {
     var target = aEvent.target;
     switch (aEvent.type) {
-      case "keypress":
-        function canAcceptDialog(aElement) {
-          // on Enter we accept the dialog unless:
-          // - the folder tree is focused
-          // - an expander is focused
-          // - an autocomplete (eg. tags) popup is open
-          // - a menulist is open
-          // - a multiline textbox is focused
-          return aElement.localName != "tree" &&
-                 aElement.className != "expander-up" &&
-                 aElement.className != "expander-down" &&
-                 !aElement.popupOpen &&
-                 !aElement.open &&
-                 !(aElement.localName == "textbox" &&
-                   aElement.getAttribute("multiline") == "true");
-        }
-        if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN &&
-            canAcceptDialog(target))
-          document.documentElement.acceptDialog();
-        break;
-
       case "input":
         if (target.id == "editBMPanel_locationField" ||
             target.id == "editBMPanel_feedLocationField" ||
@@ -506,7 +481,6 @@ var BookmarkPropertiesPanel = {
     // currently registered EventListener on the EventTarget has no effect.
     this._element("tagsSelectorRow")
         .removeEventListener("DOMAttrModified", this, false);
-    document.removeEventListener("keypress", this, true);
     this._element("folderTreeRow")
         .removeEventListener("DOMAttrModified", this, false);
     this._element("locationField")

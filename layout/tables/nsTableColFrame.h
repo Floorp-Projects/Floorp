@@ -299,6 +299,18 @@ protected:
   nsTableColFrame(nsStyleContext* aContext);
   ~nsTableColFrame();
 
+  nscoord mMinCoord;
+  nscoord mPrefCoord;
+  nscoord mSpanMinCoord; // XXX...
+  nscoord mSpanPrefCoord; // XXX...
+  float mPrefPercent;
+  float mSpanPrefPercent; // XXX...
+  // ...XXX the four members marked above could be allocated as part of
+  // a separate array allocated only during
+  // BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths (and only
+  // when colspans were present).
+  nscoord mFinalWidth;
+
   // the index of the column with respect to the whole tabble (starting at 0) 
   // it should never be smaller then the start column index of the parent 
   // colgroup
@@ -312,17 +324,6 @@ protected:
   BCPixelSize mBottomContBorderWidth;
 
   PRPackedBool mHasSpecifiedCoord;
-  nscoord mMinCoord;
-  nscoord mPrefCoord;
-  nscoord mSpanMinCoord; // XXX...
-  nscoord mSpanPrefCoord; // XXX...
-  float mPrefPercent;
-  float mSpanPrefPercent; // XXX...
-  // ...XXX the four members marked above could be allocated as part of
-  // a separate array allocated only during
-  // BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths (and only
-  // when colspans were present).
-  nscoord mFinalWidth;
 };
 
 inline PRInt32 nsTableColFrame::GetColIndex() const

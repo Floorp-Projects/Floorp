@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     char *sp1 = "Sat, 1 Jan 3001 00:00:00";  /* no time zone */
     char *sp2 = "Fri, 31 Dec 3000 23:59:60";  /* no time zone, not normalized */
 
-#if _MSC_VER >= 1400
+#if _MSC_VER >= 1400 && !defined(WINCE)
     /* Run this test in the US Pacific Time timezone. */
     _putenv_s("TZ", "PST8PDT");
     _tzset();
