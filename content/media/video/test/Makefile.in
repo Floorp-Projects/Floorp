@@ -93,7 +93,6 @@ _TEST_FILES += \
 		test_timeupdate1.html \
 		test_timeupdate2.html \
 		320x240.ogv \
-		test_videoDocumentTitle.html \
 		320x240.allow-origin.ogv \
 		320x240.allow-origin.ogv^headers^ \
 		bug461281.ogg \
@@ -107,6 +106,10 @@ _TEST_FILES += \
 		contentDuration6.sjs \
 		seek.ogv \
 		$(NULL)
+
+# This test disabled until we figure out random failures.
+# Bug 492821.
+# test_videoDocumentTitle.html
 
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
