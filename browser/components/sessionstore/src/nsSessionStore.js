@@ -509,9 +509,7 @@ SessionStoreService.prototype = {
           this.onTabAdd(aEvent.currentTarget.ownerDocument.defaultView, tabpanel);
         }
         else {
-          // aEvent.detail determines if the tab was closed by moving to a different window
-          if (!aEvent.detail)
-            this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, aEvent.originalTarget);
+          this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, aEvent.originalTarget);
           this.onTabRemove(aEvent.currentTarget.ownerDocument.defaultView, tabpanel);
         }
         break;
@@ -640,12 +638,9 @@ SessionStoreService.prototype = {
         this._updateCookies([winData]);
       }
       
-      // save the window if it has multiple tabs or a single tab with entries
-      if (winData.tabs.length > 1 ||
-          (winData.tabs.length == 1 && winData.tabs[0].entries.length > 0)) {
-        this._closedWindows.unshift(winData);
-        this._capClosedWindows();
-      }
+      // store closed-window data for undo
+      this._closedWindows.unshift(winData);
+      this._capClosedWindows();
       
       // clear this window from the list
       delete this._windows[aWindow.__SSi];
