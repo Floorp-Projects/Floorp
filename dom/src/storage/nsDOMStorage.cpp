@@ -385,7 +385,7 @@ nsDOMStorageManager::ClearOfflineApps()
 
 NS_IMETHODIMP
 nsDOMStorageManager::GetLocalStorageForPrincipal(nsIPrincipal *aPrincipal,
-                                                 nsIDOMStorage2 **aResult)
+                                                 nsIDOMStorage **aResult)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   *aResult = nsnull;
@@ -465,13 +465,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage, nsIDOMStorage)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage, nsIDOMStorage)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorage)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorageObsolete)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageObsolete)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMStorage)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Storage)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageObsolete)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -1212,7 +1212,7 @@ CopyStorageItems(nsSessionStorageEntry* aEntry, void* userArg)
   return PL_DHASH_NEXT;
 }
 
-already_AddRefed<nsIDOMStorage>
+already_AddRefed<nsIDOMStorageObsolete>
 nsDOMStorage::Clone()
 {
   if (UseDB()) {
@@ -1319,7 +1319,7 @@ nsDOMStorage::BroadcastChangeNotification()
   // Fire off a notification that a storage object changed. If the
   // storage object is a session storage object, we don't pass a
   // domain, but if it's a global storage object we do.
-  observerService->NotifyObservers((nsIDOMStorage *)this,
+  observerService->NotifyObservers((nsIDOMStorageObsolete *)this,
                                    "dom-storage-changed",
                                    UseDB() ? NS_ConvertUTF8toUTF16(mDomain).get() : nsnull);
 }
@@ -1333,16 +1333,16 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStorage2)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mStorage)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage2)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mStorage, nsIDOMStorage)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mStorage, nsIDOMStorageObsolete)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage2)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage2)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage2)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage2)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStorage2)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMStorage)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Storage2)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Storage)
 NS_INTERFACE_MAP_END
 
 nsresult
@@ -1373,11 +1373,11 @@ nsDOMStorage2::InitAsSessionStorage(nsIURI* aURI)
   return mStorage->InitAsSessionStorage(aURI);
 }
 
-already_AddRefed<nsIDOMStorage>
+already_AddRefed<nsIDOMStorageObsolete>
 nsDOMStorage2::Clone()
 {
   // XXX: this will need to be fixed before sessionStorage is moved
-  // to nsIDOMStorage2.
+  // to nsIDOMStorage.
   NS_ASSERTION(PR_FALSE, "Cannot clone nsDOMStorage2");
   return nsnull;
 }
@@ -1459,7 +1459,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMStorageList)
 NS_IMPL_RELEASE(nsDOMStorageList)
 
-nsIDOMStorage*
+nsIDOMStorageObsolete*
 nsDOMStorageList::GetNamedItem(const nsAString& aDomain, nsresult* aResult)
 {
   nsCAutoString requestedDomain;
@@ -1514,7 +1514,7 @@ nsDOMStorageList::GetNamedItem(const nsAString& aDomain, nsresult* aResult)
 
 NS_IMETHODIMP
 nsDOMStorageList::NamedItem(const nsAString& aDomain,
-                            nsIDOMStorage** aStorage)
+                            nsIDOMStorageObsolete** aStorage)
 {
   nsresult rv;
   NS_IF_ADDREF(*aStorage = GetNamedItem(aDomain, &rv));
@@ -1529,7 +1529,7 @@ nsDOMStorageList::CanAccessDomain(const nsACString& aRequestedDomain,
   return aRequestedDomain.Equals(aCurrentDomain);
 }
 
-nsIDOMStorage*
+nsIDOMStorageObsolete*
 nsDOMStorageList::GetStorageForDomain(const nsACString& aRequestedDomain,
                                       const nsACString& aCurrentDomain,
                                       PRBool aNoCurrentDomainCheck,
@@ -1557,7 +1557,7 @@ nsDOMStorageList::GetStorageForDomain(const nsACString& aRequestedDomain,
   *aResult = NS_OK;
 
   // now have a valid domain, so look it up in the storage table
-  nsIDOMStorage* storage = mStorages.GetWeak(usedDomain);
+  nsIDOMStorageObsolete* storage = mStorages.GetWeak(usedDomain);
   if (!storage) {
     nsRefPtr<nsDOMStorage> newstorage;
     newstorage = new nsDOMStorage();
@@ -1631,7 +1631,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStorageItem)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorageItem)
   {
-    cb.NoteXPCOMChild((nsIDOMStorage*) tmp->mStorage);
+    cb.NoteXPCOMChild((nsIDOMStorageObsolete*) tmp->mStorage);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
