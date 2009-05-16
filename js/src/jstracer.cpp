@@ -117,7 +117,7 @@ static const char tagChar[]  = "OIDISIBI";
 /* Attempt recording this many times before blacklisting permanently. */
 #define BL_ATTEMPTS 2
 
-/* Skip this many future hits before allowing recording again after blacklisting. */
+/* Skip this many hits before attempting recording again, after an aborted attempt. */
 #define BL_BACKOFF 32
 
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
