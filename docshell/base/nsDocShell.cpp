@@ -53,7 +53,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMStorage.h"
+#include "nsIDOMStorageObsolete.h"
 #include "nsPIDOMStorage.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
@@ -2127,7 +2127,7 @@ nsDocShell::HistoryPurged(PRInt32 aNumEntries)
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
                                           PRBool aCreate,
-                                          nsIDOMStorage** aStorage)
+                                          nsIDOMStorageObsolete** aStorage)
 {
     NS_ENSURE_ARG_POINTER(aStorage);
     *aStorage = nsnull;
@@ -2166,7 +2166,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
 
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
-                                    nsIDOMStorage** aStorage)
+                                    nsIDOMStorageObsolete** aStorage)
 {
     return GetSessionStorageForURI(aURI, PR_TRUE, aStorage);
 }
@@ -2174,7 +2174,7 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
 nsresult
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
                                     PRBool aCreate,
-                                    nsIDOMStorage** aStorage)
+                                    nsIDOMStorageObsolete** aStorage)
 {
     NS_ENSURE_ARG(aURI);
     NS_ENSURE_ARG_POINTER(aStorage);
@@ -2206,7 +2206,7 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
         return NS_OK;
 
     if (!mStorages.Get(currentDomain, aStorage) && aCreate) {
-        nsCOMPtr<nsIDOMStorage> newstorage =
+        nsCOMPtr<nsIDOMStorageObsolete> newstorage =
             do_CreateInstance("@mozilla.org/dom/storage;1");
         if (!newstorage)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -2227,7 +2227,7 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
 
 nsresult
 nsDocShell::AddSessionStorage(const nsACString& aDomain,
-                              nsIDOMStorage* aStorage)
+                              nsIDOMStorageObsolete* aStorage)
 {
     NS_ENSURE_ARG_POINTER(aStorage);
 

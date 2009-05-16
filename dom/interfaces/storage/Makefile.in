@@ -52,12 +52,12 @@ EXPORTS =                                      \
 
 XPIDLSRCS =                                    \
        nsIDOMToString.idl                      \
-       nsIDOMStorage2.idl                      \
        nsIDOMStorageManager.idl                \
        $(NULL)
 
 SDK_XPIDLSRCS =                      \
         nsIDOMStorage.idl        \
+        nsIDOMStorageObsolete.idl\
         nsIDOMStorageEvent.idl   \
         nsIDOMStorageItem.idl    \
         nsIDOMStorageList.idl    \

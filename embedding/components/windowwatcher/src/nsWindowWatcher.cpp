@@ -85,7 +85,7 @@
 #include "nsIMutableArray.h"
 #include "nsISupportsArray.h"
 #include "nsIDeviceContext.h"
-#include "nsIDOMStorage.h"
+#include "nsIDOMStorageObsolete.h"
 #include "nsPIDOMStorage.h"
 #include "nsIWidget.h"
 
@@ -936,7 +936,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     parentDocShell = do_QueryInterface(piWindow->GetDocShell());
 
   if (subjectPrincipal && parentDocShell) {
-    nsCOMPtr<nsIDOMStorage> storage;
+    nsCOMPtr<nsIDOMStorageObsolete> storage;
     parentDocShell->GetSessionStorageForPrincipal(subjectPrincipal, PR_FALSE,
                                                   getter_AddRefs(storage));
     nsCOMPtr<nsPIDOMStorage> piStorage =
