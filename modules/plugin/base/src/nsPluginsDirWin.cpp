@@ -190,12 +190,8 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     ++extension;
 
   if (len > 5) {
-    if (!PL_strncasecmp(filename, "np", 2) && !PL_strcasecmp(extension, "dll")) {
-      // don't load OJI-based Java plugins
-      if (!PL_strncasecmp(filename, "npoji", 5))
-        return PR_FALSE;
+    if (!PL_strncasecmp(filename, "np", 2) && !PL_strcasecmp(extension, "dll"))
       return PR_TRUE;
-    }
   }
   return ret;
 }
