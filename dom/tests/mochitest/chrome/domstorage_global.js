@@ -9,10 +9,10 @@ function test_DOMStorage_global()
   is(globalStorage instanceof StorageList, true, "globalStorage property");
 
   var storage = globalStorage.namedItem(currentDomain);
-  is(storage instanceof Storage, true, "StorageList namedItem");
+  is(storage instanceof StorageObsolete, true, "StorageList namedItem");
 
   var storage2 = globalStorage[currentDomain];
-  is(storage2 instanceof Storage, true, "StorageList property syntax");
+  is(storage2 instanceof StorageObsolete, true, "StorageList property syntax");
 
   is(storage, storage2, "StorageList namedItem and array return same value");
 
