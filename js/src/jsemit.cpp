@@ -1843,17 +1843,34 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 static bool
 MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 {
+    JSContext *cx = cg->compiler->context;
     JSFunction *fun = cg->compiler->callerFrame->fun;
     uintN upvarLevel = fun->u.i.script->staticLevel;
 
     JSFunctionBox *funbox = cg->funbox;
-    while (funbox && funbox->level >= upvarLevel) {
-        if (funbox->node->pn_dflags & PND_FUNARG)
+    if (funbox) {
+        /*
+         * Treat top-level function definitions as escaping (i.e., as funargs),
+         * required since we compile each such top level function or statement
+         * and throw away the AST, so we can't yet see all funarg uses of this
+         * function being compiled (cg->funbox->object). See bug 493177.
+         */
+        if (funbox->level == fun->u.i.script->staticLevel + 1U &&
+            !(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA)) {
+            JS_ASSERT_IF(cx->options & JSOPTION_ANONFUNFIX,
+                         ((JSFunction *) funbox->object)->atom);
             return true;
-        funbox = funbox->parent;
+        }
+
+        while (funbox->level >= upvarLevel) {
+            if (funbox->node->pn_dflags & PND_FUNARG)
+                return true;
+            funbox = funbox->parent;
+            if (!funbox)
+                break;
+        }
     }
 
-    JSContext *cx = cg->compiler->context;
     JSAtom *atom = pn->pn_atom;
 
     uintN index;
