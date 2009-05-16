@@ -606,6 +606,9 @@ protected:
   void AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
                                    nsMargin             aBorderPadding);
 
+  /** check if columns or colgroups are collapsed  */
+  void CheckCollapsedColumns();
+
   nsITableLayoutStrategy* LayoutStrategy() const {
     return static_cast<nsTableFrame*>(GetFirstInFlow())->
       mTableLayoutStrategy;
