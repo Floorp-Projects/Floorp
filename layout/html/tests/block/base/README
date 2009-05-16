@@ -1,4 +1,0 @@
-These are intented to basic "baseline" tests that validate that the
-block reflow logic supports all of the desired css1 properties. css2
-tests should live in the ../css2 directory.
-

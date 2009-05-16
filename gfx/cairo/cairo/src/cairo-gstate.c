@@ -222,6 +222,9 @@ _cairo_gstate_save (cairo_gstate_t **gstate, cairo_gstate_t **freelist)
     cairo_gstate_t *top;
     cairo_status_t status;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     top = *freelist;
     if (top == NULL) {
 	top = malloc (sizeof (cairo_gstate_t));
@@ -1678,16 +1681,21 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 
     /* For really huge font sizes, we can just do path;fill instead of
      * show_glyphs, as show_glyphs would put excess pressure on the cache,
-     * and moreover, not all components below us correctly handle huge font
-     * sizes.  I wanted to set the limit at 256.  But alas, seems like cairo's
+     * not all components below us correctly handle huge font sizes, and
+     * path filling can be cheaper since parts of glyphs are likely to be
+     * clipped out.  256 seems like a good limit.  But alas, seems like cairo's
      * rasterizer is something like ten times slower than freetype's for huge
-     * sizes.  So, no win just yet.  For now, do it for insanely-huge sizes,
-     * just to make sure we don't make anyone unhappy.  When we get a really
-     * fast rasterizer in cairo, we may want to readjust this.
+     * sizes.  So, no win just yet when we're using cairo's rasterizer.
+     * For now, if we're using cairo's rasterizer, use path filling only
+     * for insanely-huge sizes, just to make sure we don't make anyone
+     * unhappy.  When we get a really fast rasterizer in cairo, we may
+     * want to readjust this.  The threshold calculation is
+     * encapsulated in _cairo_surface_get_text_path_fill_threshold.
      *
      * Needless to say, do this only if show_text_glyphs is not available. */
     if (cairo_surface_has_show_text_glyphs (gstate->target) ||
-	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240) {
+	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <=
+	_cairo_surface_get_text_path_fill_threshold (gstate->target)) {
 	status = _cairo_surface_show_text_glyphs (gstate->target,
 						  gstate->op,
 						  source_pattern,

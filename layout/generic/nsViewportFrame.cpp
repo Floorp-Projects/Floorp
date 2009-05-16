@@ -119,9 +119,9 @@ ViewportFrame::AppendFrames(nsIAtom*        aListName,
     rv = mFixedContainer.AppendFrames(this, aListName, aFrameList);
   }
   else {
-    // We only expect incremental changes for our fixed frames
-    NS_ERROR("unexpected child list");
-    rv = NS_ERROR_INVALID_ARG;
+    NS_ASSERTION(!aListName, "unexpected child list");
+    NS_ASSERTION(!GetFirstChild(nsnull), "Shouldn't have any kids!");
+    rv = nsContainerFrame::AppendFrames(aListName, aFrameList);
   }
 
   return rv;
@@ -138,9 +138,9 @@ ViewportFrame::InsertFrames(nsIAtom*        aListName,
     rv = mFixedContainer.InsertFrames(this, aListName, aPrevFrame, aFrameList);
   }
   else {
-    // We only expect incremental changes for our fixed frames
-    NS_ERROR("unexpected child list");
-    rv = NS_ERROR_INVALID_ARG;
+    NS_ASSERTION(!aListName, "unexpected child list");
+    NS_ASSERTION(!GetFirstChild(nsnull), "Shouldn't have any kids!");
+    rv = nsContainerFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
   }
 
   return rv;
@@ -156,9 +156,8 @@ ViewportFrame::RemoveFrame(nsIAtom*        aListName,
     rv = mFixedContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else {
-    // We only expect incremental changes for our fixed frames
-    NS_ERROR("unexpected child list");
-    rv = NS_ERROR_INVALID_ARG;
+    NS_ASSERTION(!aListName, "unexpected child list");
+    rv = nsContainerFrame::RemoveFrame(aListName, aOldFrame);
   }
 
   return rv;

@@ -98,6 +98,7 @@
 #include "nsCycleCollector.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
+#include "nsWildCard.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/CondVar.h"
@@ -302,4 +303,9 @@ void XXXNeverCalled()
     Mutex theMutex("dummy");
     Monitor theMonitor("dummy2");
     CondVar theCondVar(theMutex, "dummy3");
+
+    NS_WildCardValid((const char *)nsnull);
+    NS_WildCardValid((const PRUnichar *)nsnull);
+    NS_WildCardMatch((const char *)nsnull, (const char *)nsnull, PR_FALSE);
+    NS_WildCardMatch((const PRUnichar *)nsnull, (const PRUnichar *)nsnull, PR_FALSE);
 }

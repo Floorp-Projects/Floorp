@@ -65,7 +65,7 @@ using mozilla::TimeStamp;
 nsMediaChannelStream::nsMediaChannelStream(nsMediaDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI)
   : nsMediaStream(aDecoder, aChannel, aURI),
-    mSuspendCount(0), mSeeking(PR_FALSE),
+    mLastSeekOffset(0), mSuspendCount(0),
     mCacheStream(this),
     mLock(nsAutoLock::NewLock("media.channel.stream")),
     mCacheSuspendCount(0)
@@ -89,7 +89,9 @@ nsMediaChannelStream::~nsMediaChannelStream()
 // disconnect the old listener from the nsMediaChannelStream and hook up
 // a new listener, so notifications from the old channel are discarded
 // and don't confuse us.
-NS_IMPL_ISUPPORTS2(nsMediaChannelStream::Listener, nsIRequestObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS4(nsMediaChannelStream::Listener,
+                   nsIRequestObserver, nsIStreamListener, nsIChannelEventSink,
+                   nsIInterfaceRequestor)
 
 nsresult
 nsMediaChannelStream::Listener::OnStartRequest(nsIRequest* aRequest,
@@ -123,6 +125,22 @@ nsMediaChannelStream::Listener::OnDataAvailable(nsIRequest* aRequest,
 }
 
 nsresult
+nsMediaChannelStream::Listener::OnChannelRedirect(nsIChannel* aOldChannel,
+                                                  nsIChannel* aNewChannel,
+                                                  PRUint32 aFlags)
+{
+  if (!mStream)
+    return NS_OK;
+  return mStream->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+}
+
+nsresult
+nsMediaChannelStream::Listener::GetInterface(const nsIID & aIID, void **aResult)
+{
+  return QueryInterface(aIID, aResult);
+}
+
+nsresult
 nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
@@ -148,7 +166,7 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
                           ranges);
     PRBool acceptsRanges = ranges.EqualsLiteral("bytes"); 
 
-    if (!mSeeking) {
+    if (mLastSeekOffset == 0) {
       // Look for duration headers from known Ogg content systems. In the case
       // of multiple options for obtaining the duration the order of precedence is;
       // 1) The Media resource metadata if possible (done by the decoder itself).
@@ -172,12 +190,12 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
  
     PRUint32 responseStatus = 0; 
     hc->GetResponseStatus(&responseStatus);
-    if (mSeeking && responseStatus == HTTP_OK_CODE) {
+    if (mLastSeekOffset > 0 && responseStatus == HTTP_OK_CODE) {
       // If we get an OK response but we were seeking, we have to assume
       // that seeking doesn't work. We also need to tell the cache that
       // it's getting data for the start of the stream.
       mCacheStream.NotifyDataStarted(0);
-    } else if (!mSeeking && 
+    } else if (mLastSeekOffset == 0 && 
                (responseStatus == HTTP_OK_CODE ||
                 responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
       // We weren't seeking and got a valid response status,
@@ -243,6 +261,20 @@ nsMediaChannelStream::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   return NS_OK;
 }
 
+nsresult
+nsMediaChannelStream::OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew,
+                                        PRUint32 aFlags)
+{
+  mChannel = aNew;
+  SetupChannelHeaders();
+  return NS_OK;
+}
+
+struct CopySegmentClosure {
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsMediaChannelStream*  mStream;
+};
+
 NS_METHOD
 nsMediaChannelStream::CopySegmentToCache(nsIInputStream *aInStream,
                                          void *aClosure,
@@ -251,8 +283,9 @@ nsMediaChannelStream::CopySegmentToCache(nsIInputStream *aInStream,
                                          PRUint32 aCount,
                                          PRUint32 *aWriteCount)
 {
-  nsMediaChannelStream* stream = static_cast<nsMediaChannelStream*>(aClosure);
-  stream->mCacheStream.NotifyDataReceived(aCount, aFromSegment);
+  CopySegmentClosure* closure = static_cast<CopySegmentClosure*>(aClosure);
+  closure->mStream->mCacheStream.NotifyDataReceived(aCount, aFromSegment,
+                                                    closure->mPrincipal);
   *aWriteCount = aCount;
   return NS_OK;
 }
@@ -269,10 +302,17 @@ nsMediaChannelStream::OnDataAvailable(nsIRequest* aRequest,
     mChannelStatistics.AddBytes(aCount);
   }
 
+  CopySegmentClosure closure;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (secMan && mChannel) {
+    secMan->GetChannelPrincipal(mChannel, getter_AddRefs(closure.mPrincipal));
+  }
+  closure.mStream = this;
+
   PRUint32 count = aCount;
   while (count > 0) {
     PRUint32 read;
-    nsresult rv = aStream->ReadSegments(CopySegmentToCache, this, count, 
+    nsresult rv = aStream->ReadSegments(CopySegmentToCache, &closure, count, 
                                         &read);
     if (NS_FAILED(rv))
       return rv;
@@ -310,7 +350,7 @@ nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener,
     *aStreamListener = nsnull;
   }
 
-  mSeeking = aOffset != 0;
+  mLastSeekOffset = aOffset;
 
   mListener = new Listener(this);
   NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
@@ -319,6 +359,8 @@ nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener,
     *aStreamListener = mListener;
     NS_ADDREF(*aStreamListener);
   } else {
+    mChannel->SetNotificationCallbacks(mListener.get());
+
     nsCOMPtr<nsIStreamListener> listener = mListener.get();
 
     // Ensure that if we're loading cross domain, that the server is sending
@@ -342,24 +384,30 @@ nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // Use a byte range request from the start of the resource.
-    // This enables us to detect if the stream supports byte range
-    // requests, and therefore seeking, early.
-    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
-    if (hc) {
-      nsCAutoString rangeString("bytes=");
-      rangeString.AppendInt(aOffset);
-      rangeString.Append("-");
-      hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
-    } else {
-      NS_ASSERTION(aOffset == 0, "Don't know how to seek on this channel type");
-    }
+    SetupChannelHeaders();
  
     nsresult rv = mChannel->AsyncOpen(listener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
+}
+
+void nsMediaChannelStream::SetupChannelHeaders()
+{
+  // Always use a byte range request even if we're reading from the start
+  // of the resource.
+  // This enables us to detect if the stream supports byte range
+  // requests, and therefore seeking, early.
+  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
+  if (hc) {
+    nsCAutoString rangeString("bytes=");
+    rangeString.AppendInt(mLastSeekOffset);
+    rangeString.Append("-");
+    hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
+  } else {
+    NS_ASSERTION(mLastSeekOffset == 0, "Don't know how to seek on this channel type");
+  }
 }
 
 nsresult nsMediaChannelStream::Close()
@@ -369,6 +417,14 @@ nsresult nsMediaChannelStream::Close()
   mCacheStream.Close();
   CloseChannel();
   return NS_OK;
+}
+
+already_AddRefed<nsIPrincipal> nsMediaChannelStream::GetCurrentPrincipal()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  nsCOMPtr<nsIPrincipal> principal = mCacheStream.GetCurrentPrincipal();
+  return principal.forget();
 }
 
 void nsMediaChannelStream::CloseChannel()
@@ -616,6 +672,7 @@ public:
   virtual nsresult Close();
   virtual void     Suspend() {}
   virtual void     Resume() {}
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   // These methods are called off the main thread.
 
@@ -757,6 +814,18 @@ nsresult nsMediaFileStream::Close()
   return NS_OK;
 }
 
+already_AddRefed<nsIPrincipal> nsMediaFileStream::GetCurrentPrincipal()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (!secMan || !mChannel)
+    return nsnull;
+  secMan->GetChannelPrincipal(mChannel, getter_AddRefs(principal));
+  return principal.forget();
+}
+
 nsresult nsMediaFileStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
 {
   nsAutoLock lock(mLock);
@@ -829,18 +898,6 @@ nsMediaStream::Open(nsMediaDecoder* aDecoder, nsIURI* aURI,
 
   *aStream = stream;
   return NS_OK;
-}
-
-already_AddRefed<nsIPrincipal> nsMediaStream::GetCurrentPrincipal()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan || !mChannel)
-    return nsnull;
-  secMan->GetChannelPrincipal(mChannel, getter_AddRefs(principal));
-  return principal.forget();
 }
 
 void nsMediaStream::MoveLoadsToBackground() {

@@ -1586,12 +1586,12 @@ PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther) const
 
 nsStyleContent::nsStyleContent(void)
   : mMarkerOffset(),
-    mContentCount(0),
     mContents(nsnull),
-    mIncrementCount(0),
     mIncrements(nsnull),
-    mResetCount(0),
-    mResets(nsnull)
+    mResets(nsnull),
+    mContentCount(0),
+    mIncrementCount(0),
+    mResetCount(0)
 {
   mMarkerOffset.SetAutoValue();
 }
@@ -1605,12 +1605,12 @@ nsStyleContent::~nsStyleContent(void)
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
    :mMarkerOffset(),
-    mContentCount(0),
     mContents(nsnull),
-    mIncrementCount(0),
     mIncrements(nsnull),
-    mResetCount(0),
-    mResets(nsnull)
+    mResets(nsnull),
+    mContentCount(0),
+    mIncrementCount(0),
+    mResetCount(0)
 
 {
   mMarkerOffset = aSource.mMarkerOffset;

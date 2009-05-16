@@ -69,15 +69,15 @@ public:
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
 
-  NS_IMETHOD GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                    nsIAccessible **aAccessible);
-
   // nsAccessNode
   virtual nsresult Shutdown();
 
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual nsresult GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   PRBool aDeepestChild,
+                                   nsIAccessible **aChild);
 
   // nsXULTreeAccessible
   static void GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);

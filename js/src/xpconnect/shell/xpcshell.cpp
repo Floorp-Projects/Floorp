@@ -1585,7 +1585,7 @@ main(int argc, char **argv, char **envp)
     nsCOMPtr<nsILocalFile> appFile;
     rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(appFile));
     if (NS_FAILED(rv)) {
-        printf("Couldn't figure application file.\n");
+        printf("Couldn't find application file.\n");
         return 1;
     }
     nsCOMPtr<nsIFile> appDir;

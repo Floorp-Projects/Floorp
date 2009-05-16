@@ -36,11 +36,19 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import sys, os, os.path
+import sys, os, os.path, logging
 import tempfile
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
+
+from automationutils import addCommonOptions, checkForCrashes
+
+# Init logging
+log = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)
+log.setLevel(logging.INFO)
+log.addHandler(handler)
 
 def readManifest(manifest):
   """Given a manifest file containing a list of test directories,
@@ -60,7 +68,7 @@ def readManifest(manifest):
   return testdirs
 
 def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
-             manifest=None, interactive=False):
+             manifest=None, interactive=False, symbolsPath=None):
   """Run the tests in |testdirs| using the |xpcshell| executable.
 
   |xrePath|, if provided, is the path to the XRE to use.
@@ -69,6 +77,8 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
     test directories to run.
   |interactive|, if set to True, indicates to provide an xpcshell prompt
     instead of automatically executing  the test.
+  |symbolsPath|, if provided is the path to a directory containing
+    breakpad symbols for processing crashes in tests.
   """
 
   if not testdirs and not manifest:
@@ -84,6 +94,8 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
   env = dict(os.environ)
   # Make assertions fatal
   env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
+  # Don't launch the crash reporter client
+  env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
 
   # Enable leaks (only) detection to its own log file.
   # Each test will overwrite it.
@@ -201,6 +213,7 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
   >>>>>>>
   %s
   <<<<<<<""" % (test, proc.returncode, stdout)
+        checkForCrashes(testdir, symbolsPath, testName=test)
         success = False
       else:
         print "TEST-PASS | %s | all tests passed" % test
@@ -226,9 +239,8 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
 def main():
   """Process command line arguments and call runTests() to do the real work."""
   parser = OptionParser()
-  parser.add_option("--xre-path",
-                    action="store", type="string", dest="xrePath", default=None,
-                    help="absolute path to directory containing XRE (probably xulrunner)")
+
+  addCommonOptions(parser)
   parser.add_option("--test-path",
                     action="store", type="string", dest="testPath",
                     default=None, help="single path and/or test filename to test")
@@ -255,7 +267,8 @@ def main():
                   xrePath=options.xrePath,
                   testPath=options.testPath,
                   interactive=options.interactive,
-                  manifest=options.manifest):
+                  manifest=options.manifest,
+                  symbolsPath=options.symbolsPath):
     sys.exit(1)
 
 if __name__ == '__main__':

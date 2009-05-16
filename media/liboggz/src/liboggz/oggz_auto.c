@@ -64,7 +64,6 @@ int oggz_set_metric_linear (OGGZ * oggz, long serialno,
 
 #define INT16_BE_AT(x) _be_16((*(ogg_int32_t *)(x)))
 #define INT32_LE_AT(x) _le_32((*(ogg_int32_t *)(x)))
-#define INT32_BE_AT(x) _be_32((*(ogg_int32_t *)(x)))
 #define INT64_LE_AT(x) _le_64((*(ogg_int64_t *)(x)))
 
 static int
@@ -150,8 +149,8 @@ auto_theora (OGGZ * oggz, long serialno, unsigned char * data, long length, void
   /* TODO: this should check against 42 for the relevant version numbers */
   if (length < 41) return 0;
 
-  fps_numerator = INT32_BE_AT(&header[22]);
-  fps_denominator = INT32_BE_AT(&header[26]);
+  fps_numerator = int32_be_at(&header[22]);
+  fps_denominator = int32_be_at(&header[26]);
 
   /* Very old theora versions used a value of 0 to mean 1.
    * Unfortunately theora hasn't incremented its version field,
@@ -269,7 +268,7 @@ auto_oggpcm2 (OGGZ * oggz, long serialno, unsigned char * data, long length, voi
 
   if (length < 28) return 0;
 
-  granule_rate = (ogg_int64_t) INT32_BE_AT(&header[16]);
+  granule_rate = (ogg_int64_t) int32_be_at(&header[16]);
 #ifdef DEBUG
   printf ("Got OggPCM2 rate %d\n", (int)granule_rate);
 #endif

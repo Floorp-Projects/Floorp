@@ -220,35 +220,6 @@ CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   return 0;
 }
 
-// We prefer the newer Java plugin by default, but if "UseNewJavaPlugin" is
-// explicitly set to 0 then we'll use the older one.
-static PRBool
-PreferNPRuntimeJavaPlugIn(const TCHAR* javaVersion)
-{
-  HKEY javaKey = NULL;
-  TCHAR keyName[_MAX_PATH];
-  _tcscpy(keyName, TEXT("Software\\JavaSoft\\Java Plug-in\\"));
-  _tcscat(keyName, javaVersion);
-  DWORD val;
-  DWORD valSize = sizeof(DWORD);
-
-  if (ERROR_SUCCESS != ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                                      keyName, 0, KEY_READ, &javaKey)) {
-    return TRUE;
-  }
-
-  // Look for "UseNewJavaPlugin"
-  if (ERROR_SUCCESS != ::RegQueryValueEx(javaKey, TEXT("UseNewJavaPlugin"),
-                                         NULL, NULL,
-                                         (LPBYTE) &val,
-                                         &valSize)) {
-    val = 1;
-  }
-
-  ::RegCloseKey(javaKey);
-  return (val == 0) ? PR_FALSE : PR_TRUE;
-}
-
 //*****************************************************************************
 // nsPluginDirServiceProvider::Constructor/Destructor
 //*****************************************************************************
@@ -292,9 +263,8 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
   *persistant = PR_FALSE;
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (!prefs) {
-    return rv;
-  }
+  if (!prefs)
+    return NS_ERROR_FAILURE;
 
   if (nsCRT::strcmp(charProp, NS_WIN_4DOTX_SCAN_KEY) == 0) {
     // Check our prefs to see if scanning the 4.x folder has been
@@ -303,7 +273,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     PRBool bScan4x;
     if (NS_SUCCEEDED(prefs->GetBoolPref(NS_WIN_4DOTX_SCAN_KEY, &bScan4x)) &&
         !bScan4x) {
-      return rv;
+      return NS_ERROR_FAILURE;
     }
 
     // Look for the plugin folder that the user has in their
@@ -367,7 +337,6 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     TCHAR newestPath[JAVA_PATH_SIZE];
     const TCHAR mozPath[_MAX_PATH] = TEXT("Software\\mozilla.org\\Mozilla");
     TCHAR browserJavaVersion[_MAX_PATH];
-    PRBool preferNPRuntimeJavaPlugIn = PR_TRUE;
 
     newestPath[0] = 0;
     LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ,
@@ -413,7 +382,6 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
             if (CompareVersion(curVer, minVer) >= 0) {
               if (!_tcsncmp(browserJavaVersion, curKey, _MAX_PATH)) {
                 _tcscpy(newestPath, path);
-                preferNPRuntimeJavaPlugIn = PreferNPRuntimeJavaPlugIn(curKey);
                 ::RegCloseKey(keyloc);
                 break;
               }
@@ -421,7 +389,6 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
               if (CompareVersion(curVer, maxVer) >= 0) {
                 _tcscpy(newestPath, path);
                 CopyVersion(&maxVer, &curVer);
-                preferNPRuntimeJavaPlugIn = PreferNPRuntimeJavaPlugIn(curKey);
               }
             }
           }
@@ -450,31 +417,22 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
 
       _tcscat(newestPath, TEXT("\\bin"));
 
-      // Use the new NPRuntime-based Java Plug-In if preferNPRuntimeJavaPlugIn
-      // is true (which it is by default), and if the appropriate subdirectory
-      // actually exists.
-      // Note that this is a temporary code path until the old
-      // OJI-based Java Plug-In isn't being shipped alongside the new
-      // one any more.
-      if (preferNPRuntimeJavaPlugIn) {
-        // See whether the "new_plugin" directory exists
-        TCHAR tmpPath[JAVA_PATH_SIZE];
-        nsCOMPtr<nsILocalFile> tmpFile;
-        nsresult rv;
+      // See whether the "new_plugin" directory exists
+      TCHAR tmpPath[JAVA_PATH_SIZE];
+      nsCOMPtr<nsILocalFile> tmpFile;
 
-        _tcscpy(tmpPath, newestPath);
-        _tcscat(tmpPath, TEXT("\\new_plugin"));
-        rv = t_NS_NewNativeLocalFile(tmpPath, PR_TRUE, getter_AddRefs(tmpFile));
-        if (NS_SUCCEEDED(rv) && tmpFile) {
-          PRBool exists = PR_FALSE;
-          PRBool isDir = PR_FALSE;
-          if (NS_SUCCEEDED(tmpFile->Exists(&exists)) && exists &&
-              NS_SUCCEEDED(tmpFile->IsDirectory(&isDir)) && isDir) {
-            // Assume we're supposed to use this as the search
-            // directory for the Java Plug-In instead of the normal
-            // one
-            _tcscpy(newestPath, tmpPath);
-          }
+      _tcscpy(tmpPath, newestPath);
+      _tcscat(tmpPath, TEXT("\\new_plugin"));
+      rv = t_NS_NewNativeLocalFile(tmpPath, PR_TRUE, getter_AddRefs(tmpFile));
+      if (NS_SUCCEEDED(rv) && tmpFile) {
+        PRBool exists = PR_FALSE;
+        PRBool isDir = PR_FALSE;
+        if (NS_SUCCEEDED(tmpFile->Exists(&exists)) && exists &&
+            NS_SUCCEEDED(tmpFile->IsDirectory(&isDir)) && isDir) {
+          // Assume we're supposed to use this as the search
+          // directory for the Java Plug-In instead of the normal
+          // one
+          _tcscpy(newestPath, tmpPath);
         }
       }
 

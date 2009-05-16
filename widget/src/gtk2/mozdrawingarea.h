@@ -65,6 +65,8 @@ typedef struct _MozDrawingareaClass MozDrawingareaClass;
 struct _MozDrawingarea
 {
     GObject         parent_instance;
+    /* AFAIK this clip_window (and thus this whole class) exists solely to
+     * make gdk_window_scroll() smooth for nsIWidget::Scroll(). */
     GdkWindow      *clip_window;
     GdkWindow      *inner_window;
 };

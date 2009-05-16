@@ -10,7 +10,6 @@ function run_test()
   do_check_neq(cr, null);
 
   // check that we can enable the crashreporter
-  do_check_false(cr.enabled);
   cr.enabled = true;
   do_check_true(cr.enabled);
   // ensure that double-enabling doesn't error

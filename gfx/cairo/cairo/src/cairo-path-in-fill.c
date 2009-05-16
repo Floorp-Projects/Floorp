@@ -201,15 +201,19 @@ _cairo_in_fill_curve_to (void *closure,
     if (c->y > bot) bot = c->y;
     if (d->y < top) top = d->y;
     if (d->y > bot) bot = d->y;
-    if (bot < in_fill->y || top > in_fill->y)
+    if (bot < in_fill->y || top > in_fill->y) {
+	in_fill->current_point = *d;
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     left = in_fill->current_point.x;
     if (b->x < left) left = b->x;
     if (c->x < left) left = c->x;
     if (d->x < left) left = d->x;
-    if (left > in_fill->x)
+    if (left > in_fill->x) {
+	in_fill->current_point = *d;
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     /* XXX Investigate direct inspection of the inflections? */
     if (! _cairo_spline_init (&spline,

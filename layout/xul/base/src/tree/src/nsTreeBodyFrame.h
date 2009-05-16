@@ -493,70 +493,6 @@ protected:
 #endif
 
 protected: // Data Members
-  // The cached box object parent.
-  nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
-
-  // Cached column information.
-  nsRefPtr<nsTreeColumns> mColumns;
-
-  // The current view for this tree widget.  We get all of our row and cell data
-  // from the view.
-  nsCOMPtr<nsITreeView> mView;    
-
-  // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
-  // a list of atoms to a corresponding style context.  This cache stores every combination that
-  // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
-  // (the power set of all row properties).
-  nsTreeStyleCache mStyleCache;
-
-  // A hashtable that maps from URLs to image request/listener pairs.  The URL
-  // is provided by the view or by the style context. The style context
-  // represents a resolved :-moz-tree-cell-image (or twisty) pseudo-element.
-  // It maps directly to an imgIRequest.
-  nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
-
-  // The index of the first visible row and the # of rows visible onscreen.  
-  // The tree only examines onscreen rows, starting from
-  // this index and going up to index+pageLength.
-  PRInt32 mTopRowIndex;
-  PRInt32 mPageLength;
-
-  // The horizontal scroll position
-  nscoord mHorzPosition;
-  // Our desired horizontal width (the width for which we actually have tree
-  // columns).
-  nscoord mHorzWidth;
-  // The amount by which to adjust the width of the last cell.
-  // This depends on whether or not the columnpicker and scrollbars are present.
-  nscoord mAdjustWidth;
-
-  // Cached heights and indent info.
-  nsRect mInnerBox;
-  PRInt32 mRowHeight;
-  PRInt32 mIndentation;
-  nscoord mStringWidth;
-
-  // A scratch array used when looking up cached style contexts.
-  nsCOMPtr<nsISupportsArray> mScratchArray;
-
-  // Whether or not we're currently focused.
-  PRPackedBool mFocused;
-
-  // Do we have a fixed number of onscreen rows?
-  PRPackedBool mHasFixedRowCount;
-
-  PRPackedBool mVerticalOverflow;
-  PRPackedBool mHorizontalOverflow;
-
-  PRPackedBool mReflowCallbackPosted;
-
-  PRInt32 mUpdateBatchNest;
-
-  // Cached row count.
-  PRInt32 mRowCount;
-
-  // The row the mouse is hovering over.
-  PRInt32 mMouseOverRow;
 
   class Slots {
     public:
@@ -598,6 +534,71 @@ protected: // Data Members
   Slots* mSlots;
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
+
+  // The cached box object parent.
+  nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
+
+  // Cached column information.
+  nsRefPtr<nsTreeColumns> mColumns;
+
+  // The current view for this tree widget.  We get all of our row and cell data
+  // from the view.
+  nsCOMPtr<nsITreeView> mView;
+
+  // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
+  // a list of atoms to a corresponding style context.  This cache stores every combination that
+  // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
+  // (the power set of all row properties).
+  nsTreeStyleCache mStyleCache;
+
+  // A hashtable that maps from URLs to image request/listener pairs.  The URL
+  // is provided by the view or by the style context. The style context
+  // represents a resolved :-moz-tree-cell-image (or twisty) pseudo-element.
+  // It maps directly to an imgIRequest.
+  nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
+
+  // A scratch array used when looking up cached style contexts.
+  nsCOMPtr<nsISupportsArray> mScratchArray;
+
+  // The index of the first visible row and the # of rows visible onscreen.  
+  // The tree only examines onscreen rows, starting from
+  // this index and going up to index+pageLength.
+  PRInt32 mTopRowIndex;
+  PRInt32 mPageLength;
+
+  // The horizontal scroll position
+  nscoord mHorzPosition;
+  // Our desired horizontal width (the width for which we actually have tree
+  // columns).
+  nscoord mHorzWidth;
+  // The amount by which to adjust the width of the last cell.
+  // This depends on whether or not the columnpicker and scrollbars are present.
+  nscoord mAdjustWidth;
+
+  // Cached heights and indent info.
+  nsRect mInnerBox; // 4-byte aligned
+  PRInt32 mRowHeight;
+  PRInt32 mIndentation;
+  nscoord mStringWidth;
+
+  PRInt32 mUpdateBatchNest;
+
+  // Cached row count.
+  PRInt32 mRowCount;
+
+  // The row the mouse is hovering over.
+  PRInt32 mMouseOverRow;
+
+  // Whether or not we're currently focused.
+  PRPackedBool mFocused;
+
+  // Do we have a fixed number of onscreen rows?
+  PRPackedBool mHasFixedRowCount;
+
+  PRPackedBool mVerticalOverflow;
+  PRPackedBool mHorizontalOverflow;
+
+  PRPackedBool mReflowCallbackPosted;
 }; // class nsTreeBodyFrame
 
 #endif

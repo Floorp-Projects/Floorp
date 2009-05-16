@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="first">
+    <content>
+      <xul:textbox anonid="labeled" class="bottom"/>
+      <xul:label control="labeled" value="Label"/>
+      <children/>
+    </content>
+  </binding>
+
+  <binding id="second">
+    <content>
+      <xul:box class="first">
+        <xul:label control="toplabeled" value="Top textbox"/>
+        <xul:textbox anonid="toplabeled" class="top"/>
+      </xul:box>
+      <children/>
+    </content>
+  </binding>
+
+  <binding id="third">
+    <content>
+      <xul:description anonid="label" value="It's a " />
+      <xul:description anonid="label2" value="cool button" />
+      <xul:button anonid="button" aria-labelledby="label label2"
+                  value="button" />
+    </content>
+  </binding>
+</bindings>

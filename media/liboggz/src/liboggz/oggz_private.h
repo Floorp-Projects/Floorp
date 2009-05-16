@@ -139,6 +139,7 @@ struct _OggzReader {
   ogg_int64_t current_unit;
   ogg_int64_t current_granulepos;
 
+  long current_page_bytes;
 #if 0
   oggz_off_t offset_page_end; /* offset of end of current page */
 #endif

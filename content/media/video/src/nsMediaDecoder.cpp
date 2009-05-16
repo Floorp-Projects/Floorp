@@ -227,7 +227,7 @@ void nsMediaDecoder::Paint(gfxContext* aContext,
     new gfxImageSurface(mRGB,
                         gfxIntSize(mRGBWidth, mRGBHeight), 
                         mRGBWidth * 4,
-                        gfxASurface::ImageFormatARGB32);    
+                        gfxASurface::ImageFormatRGB24);    
 
   if (!surface)
     return;

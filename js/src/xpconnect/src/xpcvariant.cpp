@@ -156,7 +156,7 @@ private:
     };
 
     // Table has tUnk as a state (column) but not as a type (row).
-    static Type StateTable[tTypeCount][tTypeCount-1];
+    static const Type StateTable[tTypeCount][tTypeCount-1];
 
 public:
     static JSBool GetTypeForArray(XPCCallContext& ccx, JSObject* array, 
@@ -169,7 +169,7 @@ public:
 // Current type is the row along the top. 
 // New state is in the box at the intersection.
 
-XPCArrayHomogenizer::Type 
+const XPCArrayHomogenizer::Type 
 XPCArrayHomogenizer::StateTable[tTypeCount][tTypeCount-1] = {
 /*          tNull,tInt ,tDbl ,tBool,tStr ,tID  ,tArr ,tISup */
 /* tNull */{tNull,tVar ,tVar ,tVar ,tStr ,tID  ,tVar ,tISup },

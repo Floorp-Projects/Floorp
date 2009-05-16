@@ -61,33 +61,14 @@ function HistorySidebarInit()
     document.getElementById("bydayandsite").setAttribute("checked", "true");
   else
     document.getElementById("byday").setAttribute("checked", "true");
-
-  initContextMenu();
   
   searchHistory("");
-}
-
-function initContextMenu() {
-  // Insert "Bookmark This Link" right before the copy item
-  document.getElementById("placesContext")
-          .insertBefore(document.getElementById("addBookmarkContextItem"),
-                        document.getElementById("placesContext_copy"));
 }
 
 function GroupBy(groupingType)
 {
   gHistoryGrouping = groupingType;
   searchHistory(gSearchBox.value);
-}
-
-function historyAddBookmarks()
-{ 
-  // no need to check gHistoryTree.view.selection.count
-  // node will be null if there is a multiple selection 
-  // or if the selected item is not a URI node
-  var node = gHistoryTree.selectedNode;
-  if (node && PlacesUtils.nodeIsURI(node))
-    PlacesUIUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
 }
 
 function searchHistory(aInput)

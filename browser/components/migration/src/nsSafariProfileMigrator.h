@@ -93,8 +93,27 @@ public:
 protected:
   nsresult CopyPreferences(PRBool aReplace);
   nsresult CopyCookies(PRBool aReplace);
+  /**
+   * Migrate history to Places.
+   * This will end up calling CopyHistoryBatched helper, that provides batch
+   * support.  Batching allows for better performances and integrity.
+   *
+   * @param aReplace
+   *        Indicates if we should replace current history or append to it.
+   */
   nsresult CopyHistory(PRBool aReplace);
+  nsresult CopyHistoryBatched(PRBool aReplace);
+  /**
+   * Migrate bookmarks to Places.
+   * This will end up calling CopyBookmarksBatched helper, that provides batch
+   * support.  Batching allows for better performances and integrity.
+   *
+   * @param aReplace
+   *        Indicates if we should replace current bookmarks or append to them.
+   *        When appending we will usually default to bookmarks menu.
+   */
   nsresult CopyBookmarks(PRBool aReplace);
+  nsresult CopyBookmarksBatched(PRBool aReplace);
   nsresult ParseBookmarksFolder(CFArrayRef aChildren, 
                                 PRInt64 aParentFolder,
                                 nsINavBookmarksService * aBookmarksService,

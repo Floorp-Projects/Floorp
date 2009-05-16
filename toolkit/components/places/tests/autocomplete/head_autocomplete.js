@@ -79,6 +79,14 @@ function toURI(aSpec)
   return iosvc.newURI(aSpec, null, null);
 }
 
+let appendTags = true;
+// Helper to turn off tag matching in results
+function ignoreTags()
+{
+  print("Ignoring tags from results");
+  appendTags = false;
+}
+
 function ensure_results(aSearch, aExpected)
 {
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
@@ -116,7 +124,7 @@ function ensure_results(aSearch, aExpected)
         // Load the real uri and titles and tags if necessary
         uri = toURI(kURIs[uri]).spec;
         title = kTitles[title];
-        if (tags)
+        if (tags && appendTags)
           title += " \u2013 " + tags.map(function(aTag) kTitles[aTag]);
 
         // Got a match on both uri and title?
@@ -349,6 +357,9 @@ function run_test() {
   let [description, search, expected, func] = gTests[current_test];
   print(description);
 
+  // By default assume we want to match tags
+  appendTags = true;
+
   // Do an extra function if necessary
   if (func)
     func();
@@ -370,3 +381,4 @@ function markTyped(aURIs)
     histsvc.addVisit(toURI(kURIs[uri]), Date.now() * 1000, null,
       histsvc.TRANSITION_TYPED, false, 0);
 }
+

@@ -46,4 +46,3 @@ sed s/\#include\ \"config.h\"/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\
 cp $1/AUTHORS ./AUTHORS
 patch -p3 <wince.patch
 patch -p3 <endian.patch
-patch -p4 <seek.patch

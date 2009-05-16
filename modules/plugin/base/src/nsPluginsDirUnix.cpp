@@ -434,7 +434,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
     nsresult rv;
-    const char* mimedescr = 0, *name = 0, *description = 0;
+    const char *mimedescr = NULL, *name = NULL, *description = NULL;
 
     // No, this doesn't leak. GetGlobalServiceManager() doesn't addref
     // it's out pointer. Maybe it should.
@@ -488,13 +488,20 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 #endif
         if (NS_FAILED(rv = ParsePluginMimeDescription(mimedescr, info)))
             return rv;
-        nsCAutoString filename;
-        if (NS_FAILED(rv = mPlugin->GetNativePath(filename)))
+
+        nsCAutoString path;
+        if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
             return rv;
-        info.fFileName = PL_strdup(filename.get());
+        info.fFullPath = PL_strdup(path.get());
+
+        nsCAutoString fileName;
+        if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
+          return rv;
+        info.fFileName = PL_strdup(fileName.get());
+
         plugin->GetValue(nsPluginVariable_NameString, &name);
         if (!name)
-            name = PL_strrchr(info.fFileName, '/') + 1;
+            name = "";
         info.fName = PL_strdup(name);
 
         plugin->GetValue(nsPluginVariable_DescriptionString, &description);
@@ -528,6 +535,9 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     PR_FREEIF(info.fMimeTypeArray);
     PR_FREEIF(info.fMimeDescriptionArray);
     PR_FREEIF(info.fExtensionArray);
+
+    if (info.fFullPath != nsnull)
+        PL_strfree(info.fFullPath);
 
     if (info.fFileName != nsnull)
         PL_strfree(info.fFileName);

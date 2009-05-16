@@ -104,6 +104,7 @@ CSRCS =             \
 	lltest.c        \
 	lock.c          \
 	lockfile.c      \
+	logfile.c       \
 	logger.c		\
 	makedir.c		\
 	mbcs.c			\
