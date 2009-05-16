@@ -52,6 +52,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
+            style="width: &dialog.width;;"
             title="&sanitizePrefs2.title;">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
@@ -75,44 +76,62 @@
 
     <groupbox orient="horizontal">
       <caption label="&historySection.label;"/>
-      <vbox style="width: &column.width;">
-        <checkbox label="&itemBrowsingHistory.label;"
-                  accesskey="&itemBrowsingHistory.accesskey;"
-                  preference="privacy.item.history"/>
-        <checkbox label="&itemDownloadHistory.label;"
-                  accesskey="&itemDownloadHistory.accesskey;"
-                  preference="privacy.item.downloads"/>
-        <checkbox label="&itemFormSearchHistory.label;"
-                  accesskey="&itemFormSearchHistory.accesskey;"
-                  preference="privacy.item.formdata"/>
-      </vbox>
-      <vbox style="width: &column.width;">
-        <checkbox label="&itemCookies.label;"
-                  accesskey="&itemCookies.accesskey;"
-                  preference="privacy.item.cookies"/>
-        <checkbox label="&itemActiveLogins.label;"
-                  accesskey="&itemActiveLogins.accesskey;"
-                  preference="privacy.item.sessions"/>
-        <checkbox label="&itemCache.label;"
-                  accesskey="&itemCache.accesskey;"
-                  preference="privacy.item.cache"/>
-      </vbox>
+      <grid flex="1">
+        <columns>
+          <column style="width: &column.width;"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <checkbox label="&itemBrowsingHistory.label;"
+                      accesskey="&itemBrowsingHistory.accesskey;"
+                      preference="privacy.item.history"/>
+            <checkbox label="&itemCookies.label;"
+                      accesskey="&itemCookies.accesskey;"
+                      preference="privacy.item.cookies"/>
+          </row>
+          <row>
+            <checkbox label="&itemDownloadHistory.label;"
+                      accesskey="&itemDownloadHistory.accesskey;"
+                      preference="privacy.item.downloads"/>
+            <checkbox label="&itemActiveLogins.label;"
+                      accesskey="&itemActiveLogins.accesskey;"
+                      preference="privacy.item.sessions"/>
+          </row>
+          <row>
+            <checkbox label="&itemFormSearchHistory.label;"
+                      accesskey="&itemFormSearchHistory.accesskey;"
+                      preference="privacy.item.formdata"/>
+            <checkbox label="&itemCache.label;"
+                      accesskey="&itemCache.accesskey;"
+                      preference="privacy.item.cache"/>
+          </row>
+        </rows>
+      </grid>
     </groupbox>
     <groupbox orient="horizontal">
       <caption label="&dataSection.label;"/>
-      <vbox style="width: &column.width;">
-        <checkbox label="&itemPasswords.label;"
-                  accesskey="&itemPasswords.accesskey;"
-                  preference="privacy.item.passwords"/>
-        <checkbox label="&itemSitePreferences.label;"
-                  accesskey="&itemSitePreferences.accesskey;"
-                  preference="privacy.item.siteSettings"/>
-      </vbox>
-      <vbox style="width: &column.width;">
-        <checkbox label="&itemOfflineApps.label;"
-                  accesskey="&itemOfflineApps.accesskey;"
-                  preference="privacy.item.offlineApps"/>
-      </vbox>
+      <grid flex="1">
+        <columns>
+          <column style="width: &column.width;"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <checkbox label="&itemPasswords.label;"
+                      accesskey="&itemPasswords.accesskey;"
+                      preference="privacy.item.passwords"/>
+            <checkbox label="&itemOfflineApps.label;"
+                      accesskey="&itemOfflineApps.accesskey;"
+                      preference="privacy.item.offlineApps"/>
+          </row>
+          <row>
+            <checkbox label="&itemSitePreferences.label;"
+                      accesskey="&itemSitePreferences.accesskey;"
+                      preference="privacy.item.siteSettings"/>
+          </row>
+        </rows>
+      </grid>
     </groupbox>
   </prefpane>
 </prefwindow>
