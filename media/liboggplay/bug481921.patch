@@ -1,0 +1,32 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_callback_info.c b/media/liboggplay/src/liboggplay/oggplay_callback_info.c
+--- a/media/liboggplay/src/liboggplay/oggplay_callback_info.c
++++ b/media/liboggplay/src/liboggplay/oggplay_callback_info.c
+@@ -133,21 +133,23 @@ oggplay_callback_info_prepare(OggPlay *m
+ 
+     track_info->available_records = count;
+     track_info->required_records = 0;
+ 
+     track_info->data_type = track->decoded_type;
+  
+     count = 0;
+     for (p = q; p != NULL; p = p->next) {
+-      track_info->records[count++] = p;
+-      if (p->presentation_time <= me->target + track->offset) {
+-        track_info->required_records++;
+-        p->has_been_presented = 1;
+-        //lpt = p->presentation_time;
++      if (!p->has_been_presented) {
++        track_info->records[count++] = p;
++        if (p->presentation_time <= me->target + track->offset) {
++          track_info->required_records++;
++          p->has_been_presented = 1;
++          //lpt = p->presentation_time;
++        }
+       }
+     }
+      
+     if (track_info->required_records > 0) {
+       /*
+        * if the StreamState is FIRST_DATA then update it to INITIALISED, 
+        * as we've marked the first data instance
+        */
