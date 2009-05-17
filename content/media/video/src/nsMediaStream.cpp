@@ -597,6 +597,12 @@ nsMediaChannelStream::CacheClientResume()
 }
 
 PRInt64
+nsMediaChannelStream::GetNextCachedData(PRInt64 aOffset)
+{
+  return mCacheStream.GetNextCachedData(aOffset);
+}
+
+PRInt64
 nsMediaChannelStream::GetCachedDataEnd(PRInt64 aOffset)
 {
   return mCacheStream.GetCachedDataEnd(aOffset);
@@ -693,6 +699,10 @@ public:
     return 100*1024*1024; // arbitray, use 100MB/s
   }
   virtual PRInt64 GetLength() { return mSize; }
+  virtual PRInt64 GetNextCachedData(PRInt64 aOffset)
+  {
+    return (aOffset < mSize) ? aOffset : -1;
+  }
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) { return PR_MAX(aOffset, mSize); }
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset) { return PR_TRUE; }
   virtual PRBool  IsSuspendedByCache() { return PR_FALSE; }
