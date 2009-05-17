@@ -43,28 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= universalchardet
-MOZILLA_INTERNAL_API = 1
-
-REQUIRES	= xpcom \
-		  $(NULL)
-
-CPPSRCS		= \
-		UniversalChardetTest.cpp \
-		$(NULL)
-
-LOCAL_INCLUDES = -I$(srcdir)/../src/base
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
-include $(topsrcdir)/config/config.mk
-
-LIBS		+= \
-		$(LIBS_DIR) \
-		../src/base/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
-		$(NSPR_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 relativesrcdir = extensions/universalchardet/tests
