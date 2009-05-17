@@ -172,6 +172,7 @@ private:
     nsresult ProcessNormal();
     nsresult ProcessNotModified();
     nsresult ProcessRedirection(PRUint32 httpStatus);
+    PRBool   ShouldSSLProxyResponseContinue(PRUint32 httpStatus);
     nsresult ProcessFailedSSLConnect(PRUint32 httpStatus);
     nsresult ProcessAuthentication(PRUint32 httpStatus);
     nsresult ProcessFallback(PRBool *fallingBack);
