@@ -634,6 +634,7 @@ protected:
     PRPackedBool               mAllowJavascript;
     PRPackedBool               mAllowMetaRedirects;
     PRPackedBool               mAllowImages;
+    PRPackedBool               mAllowDNSPrefetch;
     PRPackedBool               mFocusDocFirst;
     PRPackedBool               mHasFocus;
     PRPackedBool               mCreatingDocument; // (should be) debugging only
