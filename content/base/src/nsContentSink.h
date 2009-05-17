@@ -350,6 +350,10 @@ protected:
   PRUint8 mDeferredFlushTags : 1;
   // If true, we did get a ReadyToCallDidBuildModel call
   PRUint8 mDidGetReadyToCallDidBuildModelCall : 1;
+  // If false, we're not ourselves a document observer; that means we
+  // shouldn't be performing any more content model notifications,
+  // since we're not longer updating our child counts.
+  PRUint8 mIsDocumentObserver : 1;
   
   // -- Can interrupt parsing members --
   PRUint32 mDelayTimerStart;
