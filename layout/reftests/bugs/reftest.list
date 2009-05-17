@@ -362,6 +362,7 @@ fails == 315920-5.html 315920-5-ref.html # bug 229915 ???
 == 328111-1.html 328111-1-ref.html
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
+== 329359-1.html 329359-1-ref.html
 == 331809-1.html 331809-1-ref.html
 == 332360.html 332360-ref.html
 == 332360-ltr.html 332360-ltr-ref.html
