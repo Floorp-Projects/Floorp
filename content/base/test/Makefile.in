@@ -309,7 +309,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug466751.xhtml \
 		test_bug461555.html \
 		test_sync_xhr_timer.xhtml \
-		test_bug490760.xhtml \
 		$(NULL)
 # Disabled; see bug 492181
 #		test_plugin_freezing.html
