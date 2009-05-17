@@ -1060,6 +1060,7 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
 void
 Assembler::asm_ld_imm(Register d, int32_t imm)
 {
+    NanoAssert(IsGpReg(d));
     if (isU8(imm)) {
         underrunProtect(4);
         // MOV d, #imm
@@ -1437,7 +1438,7 @@ Assembler::asm_cmp(LIns *cond)
         int c = rhs->imm32();
         if (c == 0 && cond->isop(LIR_eq)) {
             Register r = findRegFor(lhs, GpRegs);
-            TEST(r,r);
+            TST(r,r);
             // No 64-bit immediates so fall-back to below
         } else if (!rhs->isQuad()) {
             Register r = getBaseReg(lhs, c, GpRegs);
@@ -1588,7 +1589,7 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_sub)
             SUB(rr, ra, rb);
         else if (op == LIR_mul)
-            MUL(rr, rb);
+            MUL(rr, rb, rr);
         else if (op == LIR_and)
             AND(rr, ra, rb);
         else if (op == LIR_or)
@@ -1596,13 +1597,13 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_xor)
             EOR(rr, ra, rb);
         else if (op == LIR_lsh) {
-            SHL(rr, ra, IP);
+            LSL(rr, ra, IP);
             ANDi(IP, rb, 0x1f);
         } else if (op == LIR_rsh) {
-            SAR(rr, ra, IP);
+            ASR(rr, ra, IP);
             ANDi(IP, rb, 0x1f);
         } else if (op == LIR_ush) {
-            SHR(rr, ra, IP);
+            LSR(rr, ra, IP);
             ANDi(IP, rb, 0x1f);
         } else
             NanoAssertMsg(0, "Unsupported");
@@ -1619,11 +1620,11 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_xor)
             EORi(rr, ra, c);
         else if (op == LIR_lsh)
-            SHLi(rr, ra, c);
+            LSLi(rr, ra, c);
         else if (op == LIR_rsh)
-            SARi(rr, ra, c);
+            ASRi(rr, ra, c);
         else if (op == LIR_ush)
-            SHRi(rr, ra, c);
+            LSRi(rr, ra, c);
         else
             NanoAssertMsg(0, "Unsupported");
     }
@@ -1668,13 +1669,13 @@ Assembler::asm_ld(LInsp ins)
 
     // these will be 2 or 4-byte aligned
     if (op == LIR_ldcs) {
-        LDRH(rr, d, ra);
+        LDRH(rr, ra, d);
         return;
     }
 
     // aaand this is just any byte.
     if (op == LIR_ldcb) {
-        LDRB(rr, d, ra);
+        LDRB(rr, ra, d);
         return;
     }
 
