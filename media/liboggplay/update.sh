@@ -48,3 +48,4 @@ patch -p3 < bug485291_yuv_align.patch
 patch -p3 < endian.patch
 patch -p3 < trac466.patch
 patch -p3 < bug492436.patch
+patch -p3 < bug493140.patch

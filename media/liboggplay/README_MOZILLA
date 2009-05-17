@@ -17,3 +17,4 @@ endian: pick up NSPR's little/big endian defines in oggplay's config.h.
 trac466: Fix for infinite loop in liboggplay when running decoder on its own thread. Cherry picked from liboggplay git commit e6871f.
 
 bug492436: Fix for that bug cherry picked from liboggplay git commit 4b97ad.
+bug493140: Fix for offsets not being used.
