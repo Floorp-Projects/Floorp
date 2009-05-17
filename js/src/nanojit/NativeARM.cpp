@@ -1060,15 +1060,16 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
 void
 Assembler::asm_ld_imm(Register d, int32_t imm)
 {
-    if (imm == 0) {
-        EOR(d, d, d);
-    } else if (isS8(imm) || isU8(imm)) {
+    if (isU8(imm)) {
         underrunProtect(4);
-        if (imm < 0)
-            *(--_nIns) = (NIns)( COND_AL | 0x3E<<20 | d<<12 | (imm^0xFFFFFFFF)&0xFF );
-        else
-            *(--_nIns) = (NIns)( COND_AL | 0x3B<<20 | d<<12 | imm&0xFF );
-        asm_output("ld  %s,0x%x",gpn(d), imm);
+        // MOV d, #imm
+        *(--_nIns) = (NIns)( COND_AL | 0x3B<<20 | d<<12 | imm);
+        asm_output("mov %s,0x%x",gpn(d), imm);
+    } else if (isU8(~imm)) {
+        underrunProtect(4);
+        // MVN d, #imm
+        *(--_nIns) = (NIns)( COND_AL | 0x3E<<20 | d<<12 | ~imm);
+        asm_output("mvn %s,0x%x",gpn(d), ~imm);
     } else {
         underrunProtect(LD32_size);
         LD32_nochk(d, imm);
