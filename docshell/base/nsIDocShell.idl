@@ -69,7 +69,7 @@ interface nsISecureBrowserUI;
 interface nsIDOMStorageObsolete;
 interface nsIPrincipal;
 
-[scriptable, uuid(dc4daea1-b43d-406f-bd62-c2ee879192ad)]
+[scriptable, uuid(d7e4e57e-9cc5-4a14-ae2e-8503edea1ca3)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -254,6 +254,13 @@ interface nsIDocShell : nsISupports
    * Attribute stating whether or not images should be loaded.
    */
   attribute boolean allowImages;
+
+  /**
+   * Attribute that determines whether DNS prefetch is allowed for this subtree
+   * of the docshell tree.  Defaults to true.  Setting this will make it take
+   * effect starting with the next document loaded in the docshell.
+   */
+  attribute boolean allowDNSPrefetch;
 
   /**
    * Get an enumerator over this docShell and its children.

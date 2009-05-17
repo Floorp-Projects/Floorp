@@ -766,6 +766,12 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            mDocShell->SetAllowImages(!!aValue);
         }
         break;
+    case nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH:
+        {
+            NS_ENSURE_STATE(mDocShell);
+            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+            mDocShell->SetAllowDNSPrefetch(!!aValue);
+        }
     case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY:
         {
            NS_ENSURE_STATE(mDocShell);
@@ -1614,6 +1620,10 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          mDocShellAsScrollable = scrollable;
          mDocShellAsTextScroll = textScroll;
          mWebProgress = progress;
+
+         // By default, do not allow DNS prefetch, so we don't break our frozen
+         // API.  Embeddors who decide to enable it should do so manually.
+         mDocShell->SetAllowDNSPrefetch(PR_FALSE);
      }
      else
      {
