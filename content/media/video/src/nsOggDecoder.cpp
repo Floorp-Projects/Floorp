@@ -1103,6 +1103,10 @@ void nsOggDecodeStateMachine::Decode()
 void nsOggDecodeStateMachine::Seek(float aTime)
 {
   nsAutoMonitor mon(mDecoder->GetMonitor());
+  // nsOggDecoder::mPlayState should be SEEKING while we seek, and
+  // in that case nsOggDecoder shouldn't be calling us.
+  NS_ASSERTION(mState != DECODER_STATE_SEEKING,
+               "We shouldn't already be seeking");
   mSeekTime = aTime;
   LOG(PR_LOG_DEBUG, ("Changed state to SEEKING (to %f)", aTime));
   mState = DECODER_STATE_SEEKING;
@@ -1330,17 +1334,23 @@ nsresult nsOggDecodeStateMachine::Run()
           UpdatePlaybackPosition(frame->mDecodedFrameTime);
           PlayVideo(frame);
         }
+
+        // Change state to DECODING now. SeekingStopped will call
+        // nsOggDecodeStateMachine::Seek to reset our state to SEEKING
+        // if we need to seek again.
+        LOG(PR_LOG_DEBUG, ("Changed state from SEEKING (to %f) to DECODING", seekTime));
+        // mSeekTime should not have changed. While we seek, mPlayState
+        // should always be PLAY_STATE_SEEKING and no-one will call
+        // nsOggDecoderStateMachine::Seek.
+        NS_ASSERTION(seekTime == mSeekTime, "No-one should have changed mSeekTime");
+        mState = DECODER_STATE_DECODING;
+        mon.NotifyAll();
+
         mon.Exit();
         nsCOMPtr<nsIRunnable> stopEvent = 
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStopped);
         NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);        
         mon.Enter();
-
-        if (mState == DECODER_STATE_SEEKING && mSeekTime == seekTime) {
-          LOG(PR_LOG_DEBUG, ("Changed state from SEEKING (to %f) to DECODING", seekTime));
-          mState = DECODER_STATE_DECODING;
-          mon.NotifyAll();
-        }
       }
       break;
 
