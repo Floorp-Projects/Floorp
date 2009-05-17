@@ -228,6 +228,9 @@ public:
   // header and give us more or less data than it reported. We will adjust
   // the result of GetLength to reflect the data that's actually arriving.
   virtual PRInt64 GetLength() = 0;
+  // Returns the offset of the first byte of cached data at or after aOffset,
+  // or -1 if there is no such cached data.
+  virtual PRInt64 GetNextCachedData(PRInt64 aOffset) = 0;
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) = 0;
@@ -335,6 +338,7 @@ public:
   virtual void    Unpin();
   virtual double  GetDownloadRate(PRPackedBool* aIsReliable);
   virtual PRInt64 GetLength();
+  virtual PRInt64 GetNextCachedData(PRInt64 aOffset);
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset);
   virtual PRBool  IsSuspendedByCache();
