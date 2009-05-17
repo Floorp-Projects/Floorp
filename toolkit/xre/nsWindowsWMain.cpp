@@ -6,6 +6,8 @@
 #error This file only makes sense on Windows.
 #endif
 
+#include "nsUTF8Utils.h"
+
 #ifdef __MINGW32__
 
 /* MingW currently does not implement a wide version of the
@@ -30,7 +32,6 @@ int main(int argc, char **argv)
 }
 #endif /* __MINGW32__ */
 
-#include <windows.h>
 #define main NS_internal_main
 
 int main(int argc, char **argv);
@@ -44,7 +45,9 @@ AllocConvertUTF16toUTF8(const WCHAR *arg)
   if (!s)
     return NULL;
 
-  WideCharToMultiByte(CP_UTF8, 0, arg, len, s, len * 3 + 1, 0, 0);
+  ConvertUTF16toUTF8 convert(s);
+  convert.write(arg, len);
+  convert.write_terminator();
   return s;
 }
 
