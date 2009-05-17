@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait"><head>
+<title>table-repaint-d</title>
+<body>
+<table id="x">
+<tr>
+  <td>aaa</td><td>bbb</td>
+</tr>
+</table>
+<script>
+  function foo() {
+    var t = document.getElementById("x");
+    var r = document.createElement("tr");
+    var c = document.createElement("td");
+    c.appendChild(document.createTextNode("longer text: above this, first cell should say 'aaa' while second says 'bbb'."));
+    r.appendChild(c);
+    t.tBodies[0].appendChild(r);
+    document.documentElement.removeAttribute("class");
+  }
+document.addEventListener("MozReftestInvalidate", foo, false);
+</script>
+</body>
+</html>
