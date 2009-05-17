@@ -1031,12 +1031,6 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
         return;
     }
 
-    // This function can't reliably be used to generate PC-relative loads
-    // because it may emit other instructions before the LDR. Support for
-    // PC-relative loads could be added, but isn't currently required so this
-    // assertion is sufficient.
-    NanoAssert(b != PC);
-
     if (isU12(off)) {
         // LDR d, b, #+off
         if (chk) underrunProtect(4);
@@ -1048,8 +1042,15 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
     } else {
         // The offset is over 4096 (and outside the range of LDR), so we need
         // to add a level of indirection to get the address into IP.
-        if (chk) underrunProtect(4+LD32_size);
+
+        // Because of that, we can't do a PC-relative load unless it fits within
+        // the single-instruction forms above.
+
+        NanoAssert(b != PC);
         NanoAssert(b != IP);
+
+        if (chk) underrunProtect(4+LD32_size);
+
         *(--_nIns) = (NIns)( COND_AL | (0x79<<20) | (b<<16) | (d<<12) | IP );
         LD32_nochk(IP, off);
     }
