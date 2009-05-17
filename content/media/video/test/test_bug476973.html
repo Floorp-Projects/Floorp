@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=476973
+-->
+
+<head>
+  <title>Bug 476973 - multiple seeks to the same position shouldn't cause problems</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=476973">Mozilla Bug 476973</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v;
+var completed = false;
+var seekedNonZero = false;
+
+/* This test checkes that two seeks to the same position don't break things.
+   So we trigger two seeks to 1.0, trigger another when seeking starts,
+   and when we've seeked successfully to 1.0, we seek back to zero and expect
+   that to eventually happen.
+*/
+function start() {
+  v = document.getElementById('v');
+  v.currentTime = 1.0;
+  v.currentTime = 1.0;
+}
+
+function startSeeking() {
+  if (!seekedNonZero) {
+    v.currentTime = 1.0;
+  }
+}
+
+function seeked() {
+  if (completed)
+    return;
+
+  if (v.currentTime > 0) {
+    ok(v.currentTime > 0.9 && v.currentTime < 1.1, "Seek to wrong destination " + v.currentTime);
+    seekedNonZero = true;
+    v.currentTime = 0.0;
+  } else {
+    ok(seekedNonZero, "Successfully seeked to nonzero");
+    ok(true, "Seek back to zero was successful");
+    completed = true;
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v' src='seek.ogv' onseeked='seeked()' onseeking='startSeeking()'
+       onloadeddata='start()'></video>
+</body>
+</html>
