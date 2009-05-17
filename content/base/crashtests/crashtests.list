@@ -47,3 +47,4 @@ skip load 458637-1.html # sporadically fails -- see bug 473680
 load 472593-1.html
 load 474041-1.svg
 load 483818-1.html
+load 490760-1.xhtml
