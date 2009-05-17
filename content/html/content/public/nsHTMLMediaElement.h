@@ -311,6 +311,14 @@ protected:
    */
   void ChangeDelayLoadStatus(PRBool aDelay);
 
+  /**
+   * Called when our channel is redirected to another channel.
+   * Updates our mChannel reference to aNewChannel.
+   */
+  nsresult OnChannelRedirect(nsIChannel *aChannel,
+                             nsIChannel *aNewChannel,
+                             PRUint32 aFlags);
+
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   // Holds a reference to the first channel we open to the media resource.

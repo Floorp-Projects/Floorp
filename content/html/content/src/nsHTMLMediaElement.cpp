@@ -262,6 +262,8 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnChannelRedirect(nsIChanne
                                                                        nsIChannel* aNewChannel,
                                                                        PRUint32 aFlags)
 {
+  if (mElement)
+    mElement->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
   nsCOMPtr<nsIChannelEventSink> sink = do_QueryInterface(mNextListener);
   if (sink)
     return sink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
@@ -342,6 +344,16 @@ NS_IMETHODIMP nsHTMLMediaElement::GetNetworkState(PRUint16 *aNetworkState)
 {
   *aNetworkState = mNetworkState;
 
+  return NS_OK;
+}
+
+nsresult
+nsHTMLMediaElement::OnChannelRedirect(nsIChannel *aChannel,
+                                      nsIChannel *aNewChannel,
+                                      PRUint32 aFlags)
+{
+  NS_ASSERTION(aChannel == mChannel, "Channels should match!");
+  mChannel = aNewChannel;
   return NS_OK;
 }
 
