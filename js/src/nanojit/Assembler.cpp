@@ -71,7 +71,7 @@ namespace nanojit
                 ins->isRet()) {
                 return false;
             }
-	        return ins->resv() == 0;
+	        return !ins->resv()->used;
 	    }
 
 	public:
@@ -220,6 +220,7 @@ namespace nanojit
 		NanoAssert(vic != NULL);
 
 	    Reservation* resv = getresv(vic);
+        NanoAssert(resv);
 
 		// restore vic
 	    Register r = resv->reg;
@@ -230,17 +231,6 @@ namespace nanojit
 		return r;
 	}
 
-	void Assembler::reserveReset()
-	{
-		_resvTable[0].arIndex = 0;
-		int i;
-        for(i=1; i<NJ_MAX_STACK_ENTRY; i++) {
-			_resvTable[i].arIndex = i-1;
-            _resvTable[i].used = 0;
-        }
-		_resvFree= i-1;
-	}
-
     /**
      * these instructions don't have to be saved & reloaded to spill,
      * they can just be recalculated w/out any inputs.
@@ -249,41 +239,10 @@ namespace nanojit
         return i->isconst() || i->isconstq() || i->isop(LIR_alloc);
     }
 
-	Reservation* Assembler::reserveAlloc(LInsp i)
-	{
-		uint32_t item = _resvFree;
-		/* If there are no free reservations, mark the table as full and re-use an index.
-		 * This will clobber that reservation, but the error will be caught as soon as 
-		 * the current LIR instruction returns back to gen().
-		 */
-		if (!item) {
-			setError(ResvFull); 
-			item = 1;
-		}
-        Reservation *r = &_resvTable[item];
-		_resvFree = r->arIndex;
-		r->reg = UnknownReg;
-		r->arIndex = 0;
-        r->used = 1;
-        i->setresv(item);
-		return r;
-	}
-
-	void Assembler::reserveFree(LInsp i)
-	{
-        Reservation *rs = getresv(i);
-        NanoAssert(rs == &_resvTable[i->resv()]);
-		rs->arIndex = _resvFree;
-        rs->used = 0;
-		_resvFree = i->resv();
-        i->setresv(0);
-	}
-
 	void Assembler::internalReset()
 	{
 		// readies for a brand spanking new code generation pass.
 		registerResetAll();
-		reserveReset();
 		arReset();
         pending_lives.clear();
 	}
@@ -426,8 +385,6 @@ namespace nanojit
 				continue;
 			Reservation *r = getresv(ins);
             NanoAssert(r != 0);
-			int32_t idx = r - _resvTable;
-			NanoAssertMsg(idx, "MUST have a resource for the instruction for it to have a stack location assigned to it");
             if (r->arIndex) {
                 if (ins->isop(LIR_alloc)) {
                     int j=i+1;
@@ -449,21 +406,6 @@ namespace nanojit
 		}
 	
 		registerConsistencyCheck();
-				
-		// check resv table
-		int32_t inuseCount = 0;
-		int32_t notInuseCount = 0;
-        for(uint32_t i=1; i < sizeof(_resvTable)/sizeof(_resvTable[0]); i++) {
-            _resvTable[i].used ? inuseCount++ : notInuseCount++;
-        }
-
-		int32_t freeCount = 0;
-		uint32_t free = _resvFree;
-        while(free) {
-			free = _resvTable[free].arIndex;
-			freeCount++;
-		}
-		NanoAssert( ( freeCount==notInuseCount && inuseCount+notInuseCount==(NJ_MAX_STACK_ENTRY-1) ) );
 	}
 
 	void Assembler::registerConsistencyCheck()
@@ -486,9 +428,6 @@ namespace nanojit
 					// @todo we should be able to check across RegAlloc's somehow (to include savedGP...)
 					Reservation *v = getresv(ins);
 					NanoAssert(v != 0);
-					int32_t idx = v - _resvTable;
-					NanoAssert(idx >= 0 && idx < NJ_MAX_STACK_ENTRY);
-					NanoAssertMsg(idx, "MUST have a resource for the instruction for it to have a register assigned to it");
 					NanoAssertMsg( regs->getActive(v->reg)==ins, "Register record mismatch");
 				}			
 			}
@@ -570,7 +509,7 @@ namespace nanojit
 
 		// if we didn't have a reservation, allocate one now
         if (!resv)
-			resv = reserveAlloc(i);
+			resv = i->initResv();
 
         r = resv->reg;
 
@@ -619,7 +558,7 @@ namespace nanojit
 	{
 		Reservation* resv = getresv(i);
 		if (!resv)
-			resv = reserveAlloc(i);
+			resv = i->initResv();
         if (!resv->arIndex) {
 			resv->arIndex = arReserve(i);
             NanoAssert(resv->arIndex <= _activation.highwatermark);
@@ -658,7 +597,7 @@ namespace nanojit
 		}
 		if (index)
             arFree(index);			// free any stack stack space associated with entry
-		reserveFree(i);		// clear fields of entry and add it to free list
+        i->clearResv();
 	}
 
 	void Assembler::evict(Register r)
@@ -1007,7 +946,7 @@ namespace nanojit
 
 				if (!resv->arIndex && resv->reg == UnknownReg)
 				{
-					reserveFree(i);
+                    i->clearResv();
 				}
 			}
 		}

@@ -367,7 +367,7 @@ namespace nanojit
 	}
 
     bool LIns::isFloat() const {
-        switch (u.code) {
+        switch (firstWord.code) {
             default:
                 return false;
             case LIR_fadd:
@@ -384,22 +384,22 @@ namespace nanojit
     }
     
 	bool LIns::isCmp() const {
-        LOpcode op = u.code;
+        LOpcode op = firstWord.code;
         return (op >= LIR_eq && op <= LIR_uge) || (op >= LIR_feq && op <= LIR_fge);
 	}
 
     bool LIns::isCond() const {
-        LOpcode op = u.code;
+        LOpcode op = firstWord.code;
         return (op == LIR_ov) || (op == LIR_cs) || isCmp();
     }
 	
 	bool LIns::isQuad() const {
 		#ifdef AVMPLUS_64BIT
 			// callh in 64bit cpu's means a call that returns an int64 in a single register
-			return (u.code & LIR64) != 0 || u.code == LIR_callh;
+			return (firstWord.code & LIR64) != 0 || firstWord.code == LIR_callh;
 		#else
 			// callh in 32bit cpu's means the 32bit MSW of an int64 result in 2 registers
-			return (u.code & LIR64) != 0;
+			return (firstWord.code & LIR64) != 0;
 		#endif
 	}
     
@@ -410,7 +410,7 @@ namespace nanojit
 
 	bool LIns::isconstq() const
 	{	
-        return u.code == LIR_quad;
+        return firstWord.code == LIR_quad;
 	}
 
 	bool LIns::isconstp() const
@@ -424,14 +424,27 @@ namespace nanojit
 
     bool LIns::isCse(const CallInfo *functions) const
     { 
-        return nanojit::isCseOpcode(u.code) || (isCall() && callInfo()->_cse);
+        return nanojit::isCseOpcode(firstWord.code) || (isCall() && callInfo()->_cse);
     }
 
     void LIns::initOpcodeAndClearResv(LOpcode op)
 	{
         NanoAssert(4*sizeof(void*) == sizeof(LIns));
-        u.code = op;
-        u.resv = 0;     // have to zero this;  the Assembler relies on it
+        firstWord.code = op;
+        firstWord.used = 0;
+	}
+
+    Reservation* LIns::initResv()
+	{
+        firstWord.reg     = UnknownReg;
+        firstWord.arIndex = 0;
+        firstWord.used    = 1;
+        return &firstWord;
+	}
+
+    void LIns::clearResv()
+	{
+        firstWord.used = 0;
 	}
 
     void LIns::setTarget(LInsp label)
@@ -894,7 +907,7 @@ namespace nanojit
         // N+4     arg operand #2 ----------------------
         // N+8     arg operand #1 ----------------------
         // N+12    arg operand #0 ---------------------- ]
-        // N+16  [ code=LIR_call | resv | (pad16) ------    K+1
+        // N+16  [ arIndex | reg | used | code=LIR_call     K+1
         //         imm8a | (pad24) ---------------------
         //         imm8b | (pad24) ---------------------
         //         ci ---------------------------------- ]
