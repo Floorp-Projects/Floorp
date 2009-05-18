@@ -2674,6 +2674,15 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
         AddTargetFromContent(aRelationType, aRelation, regionContent);
     }
 
+  case nsIAccessibleRelation::RELATION_SUBWINDOW_OF:
+  case nsIAccessibleRelation::RELATION_EMBEDS:
+  case nsIAccessibleRelation::RELATION_EMBEDDED_BY:
+  case nsIAccessibleRelation::RELATION_POPUP_FOR:
+  case nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF:
+    {
+      return NS_OK_NO_RELATION_TARGET;
+    }
+
   default:
     return NS_ERROR_INVALID_ARG;
   }
