@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+        <title>Test for bug 481751</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<!--
+	    The primary font MarkA has a small line height.  The default font
+	    (used for the character '1') will probably have a maximum ascent
+	    greater than the ascent plus half leading of MarkA, but this
+	    should not change the baseline (and thus position) of the text
+	    control.
+	  -->
+        <style type="text/css">
+        @font-face {
+                font-family: "MarkA";
+                src: url(../fonts/markA.ttf);
+        }
+	body {
+	  background-color: white;
+	}
+        input, textarea {
+	  font-family: "MarkA", sans-serif;
+          font-size: 32px;
+	  background-color: black;
+	  color: black;
+	  vertical-align: baseline;
+	}
+        </style>
+</head>
+<body>
+  <input size="2" value="A">
+  <input size="2" value="A1">
+  <textarea cols="2">A</textarea>
+  <textarea cols="2">A1</textarea>
+</body>
+</html>
