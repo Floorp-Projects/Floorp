@@ -156,10 +156,10 @@ function test_value(property, val, is_initial)
   } else {
     (xfail_value(property, val, is_initial, false) ? todo_isnot : isnot)(
        val_computed_n, initial_computed_n,
-       "should not get initial value for '" + property + ":" + val + "'");
+       "should not get initial value for '" + property + ":" + val + "' on elementn.");
     (xfail_value(property, val, is_initial, true) ? todo_isnot : isnot)(
        val_computed_f, initial_computed_f,
-       "should not get initial value for '" + property + ":" + val + "'");
+       "should not get initial value for '" + property + ":" + val + "' on elementf.");
   }
   if (is_initial)
     gRule1.style.removeProperty(property);

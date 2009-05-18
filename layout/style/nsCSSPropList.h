@@ -423,7 +423,7 @@ CSS_PROP_LIST(-moz-image-region, image_region, MozImageRegion, 0, List, mImageRe
 CSS_PROP_UIRESET(ime-mode, ime_mode, ImeMode, 0, UserInterface, mIMEMode, eCSSType_Value, kIMEModeKTable)
 CSS_PROP_POSITION(left, left, Left, 0, Position, mOffset.mLeft, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(letter-spacing, letter_spacing, LetterSpacing, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mLetterSpacing, eCSSType_Value, nsnull)
-CSS_PROP_TEXT(line-height, line_height, LineHeight, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mLineHeight, eCSSType_Value, nsnull)
+CSS_PROP_TEXT(line-height, line_height, LineHeight, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mLineHeight, eCSSType_Value, kLineHeightKTable)
 CSS_PROP_SHORTHAND(list-style, list_style, ListStyle, 0)
 CSS_PROP_LIST(list-style-image, list_style_image, ListStyleImage, 0, List, mImage, eCSSType_Value, nsnull)
 CSS_PROP_LIST(list-style-position, list_style_position, ListStylePosition, 0, List, mPosition, eCSSType_Value, kListStylePositionKTable)
