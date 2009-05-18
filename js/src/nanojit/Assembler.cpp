@@ -1856,11 +1856,6 @@ namespace nanojit
 		debug_only(saved.used = 0);  // marker that we are no longer in exit path
 	}
 	
-	void Assembler::setCallTable(const CallInfo* functions)
-	{
-		_functions = functions;
-	}
-
 	#ifdef NJ_VERBOSE
 		char Assembler::outline[8192];
 		char Assembler::outlineEOL[512];
