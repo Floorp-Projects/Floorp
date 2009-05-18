@@ -39,7 +39,8 @@
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
 #include "nsDOMStorage.h"
-#include "nsDOMStorageDB.h"
+#include "nsDOMStorageDBWrapper.h"
+#include "nsDOMStoragePersistentDB.h"
 #include "nsIFile.h"
 #include "nsIVariant.h"
 #include "nsIEffectiveTLDService.h"
@@ -51,23 +52,6 @@
 #include "mozIStorageFunction.h"
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
-
-static
-void ReverseString(const nsCSubstring& source, nsCSubstring& result)
-{
-  nsACString::const_iterator sourceBegin, sourceEnd;
-  source.BeginReading(sourceBegin);
-  source.EndReading(sourceEnd);
-
-  result.SetLength(source.Length());
-  nsACString::iterator destEnd;
-  result.EndWriting(destEnd);
-
-  while (sourceBegin != sourceEnd) {
-    *(--destEnd) = *sourceBegin;
-    ++sourceBegin;
-  }
-}
 
 class nsReverseStringSQLFunction : public mozIStorageFunction
 {
@@ -103,7 +87,7 @@ nsReverseStringSQLFunction::OnFunctionCall(
 }
 
 nsresult
-nsDOMStorageDB::Init()
+nsDOMStoragePersistentDB::Init()
 {
   nsresult rv;
 
@@ -170,7 +154,7 @@ nsDOMStorageDB::Init()
              NS_LITERAL_CSTRING("DROP TABLE webappsstore"));
       NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
   // Check if there is storage of Gecko 1.8 and if so, upgrade that storage
   // to actual webappsstore2 table and drop the obsolete table. Potential
   // duplicates will be ignored.
@@ -190,7 +174,7 @@ nsDOMStorageDB::Init()
              NS_LITERAL_CSTRING("DROP TABLE moz_webappsstore"));
       NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
   // retrieve all keys associated with a domain
   rv = mConnection->CreateStatement(
          NS_LITERAL_CSTRING("SELECT key, secure FROM webappsstore2 "
@@ -259,20 +243,21 @@ nsDOMStorageDB::Init()
          NS_LITERAL_CSTRING("DELETE FROM webappsstore2"),
          getter_AddRefs(mRemoveAllStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // check the usage for a given owner
   rv = mConnection->CreateStatement(
          NS_LITERAL_CSTRING("SELECT SUM(LENGTH(key) + LENGTH(value)) "
                             "FROM webappsstore2 "
                             "WHERE scope GLOB ?1"),
          getter_AddRefs(mGetUsageStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
-nsDOMStorageDB::GetAllKeys(nsDOMStorage* aStorage,
-                           nsTHashtable<nsSessionStorageEntry>* aKeys)
+nsDOMStoragePersistentDB::GetAllKeys(nsDOMStorage* aStorage,
+                                     nsTHashtable<nsSessionStorageEntry>* aKeys)
 {
   mozStorageStatementScoper scope(mGetAllKeysStatement);
 
@@ -293,7 +278,7 @@ nsDOMStorageDB::GetAllKeys(nsDOMStorage* aStorage,
 
     nsSessionStorageEntry* entry = aKeys->PutEntry(key);
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
- 
+
     entry->mItem = new nsDOMStorageItem(aStorage, key, EmptyString(), secureInt);
     if (!entry->mItem) {
       aKeys->RawRemoveEntry(entry);
@@ -305,10 +290,10 @@ nsDOMStorageDB::GetAllKeys(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDB::GetKeyValue(nsDOMStorage* aStorage,
-                            const nsAString& aKey,
-                            nsAString& aValue,
-                            PRBool* aSecure)
+nsDOMStoragePersistentDB::GetKeyValue(nsDOMStorage* aStorage,
+                                      const nsAString& aKey,
+                                      nsAString& aValue,
+                                      PRBool* aSecure)
 {
   mozStorageStatementScoper scope(mGetKeyValueStatement);
 
@@ -340,15 +325,15 @@ nsDOMStorageDB::GetKeyValue(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDB::SetKey(nsDOMStorage* aStorage,
-                       const nsAString& aKey,
-                       const nsAString& aValue,
-                       PRBool aSecure,
-                       PRInt32 aQuota,
-                       PRInt32 *aNewUsage)
+nsDOMStoragePersistentDB::SetKey(nsDOMStorage* aStorage,
+                                 const nsAString& aKey,
+                                 const nsAString& aValue,
+                                 PRBool aSecure,
+                                 PRInt32 aQuota,
+                                 PRInt32 *aNewUsage)
 {
   mozStorageStatementScoper scope(mGetKeyValueStatement);
- 
+
   PRInt32 usage = 0;
   nsresult rv;
   if (!aStorage->GetQuotaDomainDBKey().IsEmpty()) {
@@ -380,7 +365,7 @@ nsDOMStorageDB::SetKey(nsDOMStorage* aStorage,
     nsAutoString previousValue;
     rv = mGetKeyValueStatement->GetString(0, previousValue);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     usage -= aKey.Length() + previousValue.Length();
 
     mGetKeyValueStatement->Reset();
@@ -408,9 +393,9 @@ nsDOMStorageDB::SetKey(nsDOMStorage* aStorage,
     if (usage > aQuota) {
       return NS_ERROR_DOM_QUOTA_REACHED;
     }
-    
+
     mozStorageStatementScoper scopeinsert(mInsertKeyStatement);
-    
+
     rv = mInsertKeyStatement->BindUTF8StringParameter(0,
                                                       aStorage->GetScopeDBKey());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -436,9 +421,9 @@ nsDOMStorageDB::SetKey(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDB::SetSecure(nsDOMStorage* aStorage,
-                          const nsAString& aKey,
-                          const PRBool aSecure)
+nsDOMStoragePersistentDB::SetSecure(nsDOMStorage* aStorage,
+                                    const nsAString& aKey,
+                                    const PRBool aSecure)
 {
   nsresult rv;
 
@@ -455,9 +440,9 @@ nsDOMStorageDB::SetSecure(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDB::RemoveKey(nsDOMStorage* aStorage,
-                          const nsAString& aKey,
-                          PRInt32 aKeyUsage)
+nsDOMStoragePersistentDB::RemoveKey(nsDOMStorage* aStorage,
+                                    const nsAString& aKey,
+                                    PRInt32 aKeyUsage)
 {
   mozStorageStatementScoper scope(mRemoveKeyStatement);
 
@@ -475,7 +460,7 @@ nsDOMStorageDB::RemoveKey(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDB::ClearStorage(nsDOMStorage* aStorage)
+nsDOMStoragePersistentDB::ClearStorage(nsDOMStorage* aStorage)
 {
   mozStorageStatementScoper scope(mRemoveStorageStatement);
 
@@ -492,12 +477,13 @@ nsDOMStorageDB::ClearStorage(nsDOMStorage* aStorage)
 }
 
 nsresult
-nsDOMStorageDB::RemoveOwner(const nsACString& aOwner, PRBool aIncludeSubDomains)
+nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner,
+                                      PRBool aIncludeSubDomains)
 {
   mozStorageStatementScoper scope(mRemoveOwnerStatement);
 
   nsCAutoString subdomainsDBKey;
-  nsDOMStorageDB::CreateDomainScopeDBKey(aOwner, subdomainsDBKey);
+  nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aOwner, subdomainsDBKey);
 
   if (!aIncludeSubDomains)
     subdomainsDBKey.AppendLiteral(":");
@@ -518,8 +504,9 @@ nsDOMStorageDB::RemoveOwner(const nsACString& aOwner, PRBool aIncludeSubDomains)
 
 
 nsresult
-nsDOMStorageDB::RemoveOwners(const nsTArray<nsString> &aOwners,
-                             PRBool aIncludeSubDomains, PRBool aMatch)
+nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
+                                       PRBool aIncludeSubDomains,
+                                       PRBool aMatch)
 {
   if (aOwners.Length() == 0) {
     if (aMatch) {
@@ -555,7 +542,8 @@ nsDOMStorageDB::RemoveOwners(const nsTArray<nsString> &aOwners,
 
   for (PRUint32 i = 0; i < aOwners.Length(); i++) {
     nsCAutoString quotaKey;
-    rv = nsDOMStorageDB::CreateDomainScopeDBKey(NS_ConvertUTF16toUTF8(aOwners[i]), quotaKey);
+    rv = nsDOMStorageDBWrapper::CreateDomainScopeDBKey(
+      NS_ConvertUTF16toUTF8(aOwners[i]), quotaKey);
 
     if (!aIncludeSubDomains)
       quotaKey.AppendLiteral(":");
@@ -572,36 +560,37 @@ nsDOMStorageDB::RemoveOwners(const nsTArray<nsString> &aOwners,
 }
 
 nsresult
-nsDOMStorageDB::RemoveAll()
+nsDOMStoragePersistentDB::RemoveAll()
 {
   mozStorageStatementScoper scope(mRemoveAllStatement);
   return mRemoveAllStatement->Execute();
 }
 
 nsresult
-nsDOMStorageDB::GetUsage(nsDOMStorage* aStorage, PRInt32 *aUsage)
+nsDOMStoragePersistentDB::GetUsage(nsDOMStorage* aStorage, PRInt32 *aUsage)
 {
   return GetUsageInternal(aStorage->GetQuotaDomainDBKey(), aUsage);
 }
 
 nsresult
-nsDOMStorageDB::GetUsage(const nsACString& aDomain,
-                         PRBool aIncludeSubDomains, PRInt32 *aUsage)
+nsDOMStoragePersistentDB::GetUsage(const nsACString& aDomain,
+                                   PRBool aIncludeSubDomains,
+                                   PRInt32 *aUsage)
 {
   nsresult rv;
 
   nsCAutoString quotadomainDBKey;
-  rv = nsDOMStorageDB::CreateQuotaDomainDBKey(aDomain,
-                                              aIncludeSubDomains,
-                                              quotadomainDBKey);
+  rv = nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomain,
+                                                     aIncludeSubDomains,
+                                                     quotadomainDBKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return GetUsageInternal(quotadomainDBKey, aUsage);
 }
 
 nsresult
-nsDOMStorageDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
-                                 PRInt32 *aUsage)
+nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
+                                           PRInt32 *aUsage)
 {
   if (aQuotaDomainDBKey == mCachedOwner) {
     *aUsage = mCachedUsage;
@@ -612,9 +601,10 @@ nsDOMStorageDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
 
   nsresult rv;
 
-  rv = mGetUsageStatement->BindUTF8StringParameter(0, aQuotaDomainDBKey);
+  rv = mGetUsageStatement->BindUTF8StringParameter(0, aQuotaDomainDBKey +
+      NS_LITERAL_CSTRING("*"));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   PRBool exists;
   rv = mGetUsageStatement->ExecuteStep(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -623,7 +613,7 @@ nsDOMStorageDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
     *aUsage = 0;
     return NS_OK;
   }
-  
+
   rv = mGetUsageStatement->GetInt32(0, aUsage);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -632,91 +622,5 @@ nsDOMStorageDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
     mCachedUsage = *aUsage;
   }
 
-  return NS_OK;
-}
-
-nsresult
-nsDOMStorageDB::CreateOriginScopeDBKey(nsIURI* aUri, nsACString& aKey)
-{
-  nsresult rv;
-
-  rv = CreateDomainScopeDBKey(aUri, aKey);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCAutoString scheme;
-  rv = aUri->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aKey.AppendLiteral(":");
-  aKey.Append(scheme);
-
-  PRInt32 port = NS_GetRealPort(aUri);
-  if (port != -1) {
-    aKey.AppendLiteral(":");
-    aKey.Append(nsPrintfCString(32, "%d", port));
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMStorageDB::CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey)
-{
-  nsresult rv;
-
-  nsCAutoString host;
-  rv = aUri->GetAsciiHost(host);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CreateDomainScopeDBKey(host, aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMStorageDB::CreateDomainScopeDBKey(const nsACString& aAsciiDomain, nsACString& aKey)
-{
-  if (aAsciiDomain.IsEmpty())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  ReverseString(aAsciiDomain, aKey);
-
-  aKey.AppendLiteral(".");
-  return NS_OK;
-}
-
-nsresult
-nsDOMStorageDB::CreateQuotaDomainDBKey(const nsACString& aAsciiDomain,
-                                       PRBool aIncludeSubDomains, nsACString& aKey)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIEffectiveTLDService> eTLDService(do_GetService(
-    NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aAsciiDomain);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString eTLDplusOne;
-  rv = eTLDService->GetBaseDomain(uri, 0, eTLDplusOne);
-  if (NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS == rv) {
-    // XXX bug 357323 - what to do for localhost/file exactly?
-    eTLDplusOne = aAsciiDomain;
-    rv = NS_OK;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString subdomainsDBKey;
-  nsDOMStorageDB::CreateDomainScopeDBKey(eTLDplusOne, subdomainsDBKey);
-
-  if (!aIncludeSubDomains)
-    subdomainsDBKey.AppendLiteral(":");
-  subdomainsDBKey.AppendLiteral("*");
-
-  aKey.Assign(subdomainsDBKey);
   return NS_OK;
 }

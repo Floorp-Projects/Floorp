@@ -1,9 +1,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>localStorage basic test</title>
+<title>localStorage basic test, while in sesison only mode</title>
 
 <script type="text/javascript" src="/MochiKit/packed.js"></script>
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="pbSwitch.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
@@ -25,6 +26,24 @@ function checkException(func, exc)
 
 function startTest()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  if (get_PBSvc())
+    doTest();
+  else
+    ok(true, "No private browsing service, test could not be performed");
+
+  SimpleTest.finish();
+}
+
+function doTest()
+{
+  localStorage.setItem("persistent", "persistent1");
+
+  enterPrivateBrowsing();
+
+  is(localStorage.getItem("persistent"), null, "previous values are inaccessible");
+
   // Initially check the localStorage is empty
   is(localStorage.length, 0, "The storage is empty [1]");
   checkException(function() {localStorage.key(0);}, INDEX_SIZE_ERR);
@@ -127,38 +146,38 @@ function startTest()
   checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
   checkException(function() {localStorage.key(1);}, INDEX_SIZE_ERR);
   is(localStorage.getItem("key1"), "value1-2");
-  
+
   // JS property test
   localStorage.testA = "valueA";
   is(localStorage.testA, "valueA");
   is(localStorage["testA"], "valueA");
   is(localStorage.getItem("testA"), "valueA");
-  
+
   localStorage.testA = "valueA2";
   is(localStorage.testA, "valueA2");
   is(localStorage["testA"], "valueA2");
   is(localStorage.getItem("testA"), "valueA2");
-  
+
   localStorage["testB"] = "valueB";
   is(localStorage.testB, "valueB");
   is(localStorage["testB"], "valueB");
   is(localStorage.getItem("testB"), "valueB");
-  
+
   localStorage["testB"] = "valueB2";
   is(localStorage.testB, "valueB2");
   is(localStorage["testB"], "valueB2");
   is(localStorage.getItem("testB"), "valueB2");
-  
+
   localStorage.setItem("testC", "valueC");
   is(localStorage.testC, "valueC");
   is(localStorage["testC"], "valueC");
   is(localStorage.getItem("testC"), "valueC");
-  
+
   localStorage.setItem("testC", "valueC2");
   is(localStorage.testC, "valueC2");
   is(localStorage["testC"], "valueC2");
   is(localStorage.getItem("testC"), "valueC2");
-  
+
   // Clear the storage
   localStorage.clear();
   is(localStorage.length, 0, "The storage is empty [3]");
@@ -172,8 +191,19 @@ function startTest()
   localStorage.removeItem("key1"); // Just check there is no exception
   localStorage.removeItem("key2"); // Just check there is no exception
 
+  localStorage.setItem("must disappear", "private browsing value");
+
+  leavePrivateBrowsing();
+
+  enterPrivateBrowsing();
+
+  is(localStorage.getItem("must disappear"), null, "private browsing values threw away");
+  is(localStorage.length, 0, "No items");
+
+  leavePrivateBrowsing();
+
+  is(localStorage.getItem("persistent"), "persistent1", "back in normal mode");
   localStorage.clear();
-  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
