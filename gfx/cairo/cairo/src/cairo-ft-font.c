@@ -545,8 +545,10 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 	/* See comments in _ft_font_face_destroy about the "zombie" state
 	 * for a _ft_font_face.
 	 */
-	if (unscaled->faces && !unscaled->faces->unscaled)
+	if (unscaled->faces && unscaled->faces->unscaled == NULL) {
+	    assert (unscaled->faces->next == NULL);
 	    cairo_font_face_destroy (&unscaled->faces->base);
+	}
     } else {
 	_font_map_release_face_lock_held (font_map, unscaled);
     }
@@ -2237,9 +2239,10 @@ _cairo_ft_font_face_destroy (void *abstract_face)
     if (font_face == NULL)
 	return;
 
-    /* When destroying the face created by cairo_ft_font_face_create_for_ft_face,
+    /* When destroying a face created by cairo_ft_font_face_create_for_ft_face,
      * we have a special "zombie" state for the face when the unscaled font
-     * is still alive but there are no public references to the font face.
+     * is still alive but there are no other references to a font face with
+     * the same FT_Face.
      *
      * We go from:
      *
@@ -2253,6 +2256,8 @@ _cairo_ft_font_face_destroy (void *abstract_face)
 
     if (font_face->unscaled &&
 	font_face->unscaled->from_face &&
+	font_face->next == NULL &&
+	font_face->unscaled->faces == font_face &&
 	CAIRO_REFERENCE_COUNT_GET_VALUE (&font_face->unscaled->base.ref_count) > 1)
     {
 	cairo_font_face_reference (&font_face->base);
@@ -2398,12 +2403,21 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 	    font_face->ft_options.extra_flags == ft_options->extra_flags &&
 	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options->base))
 	{
-	    if (font_face->base.status == CAIRO_STATUS_SUCCESS)
-		return cairo_font_face_reference (&font_face->base);
+	    if (font_face->base.status) {
+		/* The font_face has been left in an error state, abandon it. */
+		*prev_font_face = font_face->next;
+		break;
+	    }
 
-	    /* The font_face has been left in an error state, abandon it. */
-	    *prev_font_face = font_face->next;
-	    break;
+	    if (font_face->unscaled == NULL) {
+		/* Resurrect this "zombie" font_face (from
+		 * _cairo_ft_font_face_destroy), switching its unscaled_font
+		 * from owner to ownee. */
+		font_face->unscaled = unscaled;
+		_cairo_unscaled_font_reference (&unscaled->base);
+		return &font_face->base;
+	    } else
+		return cairo_font_face_reference (&font_face->base);
 	}
     }
 
@@ -2418,6 +2432,14 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
     _cairo_unscaled_font_reference (&unscaled->base);
 
     font_face->ft_options = *ft_options;
+
+    if (unscaled->faces && unscaled->faces->unscaled == NULL) {
+	/* This "zombie" font_face (from _cairo_ft_font_face_destroy)
+	 * is no longer needed. */
+	assert (unscaled->from_face && unscaled->faces->next == NULL);
+	cairo_font_face_destroy (&unscaled->faces->base);
+	unscaled->faces = NULL;
+    }
 
     font_face->next = unscaled->faces;
     unscaled->faces = font_face;
