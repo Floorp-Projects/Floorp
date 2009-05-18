@@ -617,8 +617,6 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
     return rv;
   }
 
-  mBegun = PR_TRUE;
-
   DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
@@ -1196,6 +1194,8 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
     rv = mDecoder->Play();
   }
 
+  mBegun = PR_TRUE;
+
   return rv;
 }
 
@@ -1289,6 +1289,28 @@ void nsHTMLMediaElement::SeekCompleted()
 {
   mPlayingBeforeSeek = PR_FALSE;
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeked"));
+}
+
+void nsHTMLMediaElement::DownloadSuspended()
+{
+  if (mBegun) {
+    mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("suspend"));
+  }
+}
+
+void nsHTMLMediaElement::DownloadResumed()
+{
+  if (mBegun) {
+    mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
+  }
+}
+
+void nsHTMLMediaElement::DownloadStalled()
+{
+  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
+    DispatchAsyncProgressEvent(NS_LITERAL_STRING("stalled"));
+  }
 }
 
 PRBool nsHTMLMediaElement::ShouldCheckAllowOrigin()

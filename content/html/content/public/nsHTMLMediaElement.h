@@ -128,6 +128,20 @@ public:
   // when the resource has completed seeking.
   void SeekCompleted();
 
+  // Called by the media stream, on the main thread, when the download
+  // has been suspended by the cache or because the element itself
+  // asked the decoder to suspend the download.
+  void DownloadSuspended();
+
+  // Called by the media stream, on the main thread, when the download
+  // has been resumed by the cache or because the element itself
+  // asked the decoder to resumed the download.
+  void DownloadResumed();
+
+  // Called by the media decoder to indicate that the download has stalled
+  // (no data has arrived for a while).
+  void DownloadStalled();
+
   // Draw the latest video data. See nsMediaDecoder for 
   // details.
   void Paint(gfxContext* aContext,
