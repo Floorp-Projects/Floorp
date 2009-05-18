@@ -188,7 +188,7 @@ public:
     FrameQueue() :
       mHead(0),
       mTail(0),
-      mEmpty(PR_TRUE)
+      mCount(0)
     {
     }
 
@@ -197,40 +197,45 @@ public:
       NS_ASSERTION(!IsFull(), "FrameQueue is full");
       mQueue[mTail] = frame;
       mTail = (mTail+1) % OGGPLAY_BUFFER_SIZE;
-      mEmpty = PR_FALSE;
+      ++mCount;
     }
 
-    FrameData* Peek()
+    FrameData* Peek() const
     {
-      NS_ASSERTION(!mEmpty, "FrameQueue is empty");
+      NS_ASSERTION(mCount > 0, "FrameQueue is empty");
 
       return mQueue[mHead];
     }
 
     FrameData* Pop()
     {
-      NS_ASSERTION(!mEmpty, "FrameQueue is empty");
+      NS_ASSERTION(mCount, "FrameQueue is empty");
 
       FrameData* result = mQueue[mHead];
       mHead = (mHead + 1) % OGGPLAY_BUFFER_SIZE;
-      mEmpty = mHead == mTail;
+      --mCount;
       return result;
     }
 
     PRBool IsEmpty() const
     {
-      return mEmpty;
+      return mCount == 0;
+    }
+
+    PRInt32 GetCount() const
+    {
+      return mCount;
     }
 
     PRBool IsFull() const
     {
-      return !mEmpty && mHead == mTail;
+      return mCount == OGGPLAY_BUFFER_SIZE;
     }
 
     float ResetTimes(float aPeriod)
     {
       float time = 0.0;
-      if (!mEmpty) {
+      if (mCount > 0) {
         PRInt32 current = mHead;
         do {
           mQueue[current]->mTime = time;
@@ -245,7 +250,9 @@ public:
     FrameData* mQueue[OGGPLAY_BUFFER_SIZE];
     PRInt32 mHead;
     PRInt32 mTail;
-    PRPackedBool mEmpty;
+    // This isn't redundant with mHead/mTail, since when mHead == mTail
+    // it's ambiguous whether the queue is full or empty
+    PRInt32 mCount;
   };
 
   // Enumeration for the valid states
@@ -340,8 +347,8 @@ public:
   // thread.
   PRBool HaveNextFrameData() const {
     return !mDecodedFrames.IsEmpty() &&
-      (mState == DECODER_STATE_DECODING ||
-       mState == DECODER_STATE_COMPLETED);
+      (mDecodedFrames.Peek()->mDecodedFrameTime > mCurrentFrameTime ||
+       mDecodedFrames.GetCount() > 1);
   }
 
   // Must be called with the decode monitor held. Can be called by main
@@ -608,7 +615,12 @@ public:
 
         if (InStopDecodingState())
           break;
-        
+
+        // If PlayFrame is waiting, wake it up so we can run the
+        // decoder loop and move frames from the oggplay queue to our
+        // queue.
+        mon.NotifyAll();
+
         // Check whether decoding the last frame required us to read data
         // that wasn't available at the start of the frame. That means
         // we should probably start buffering.
@@ -1021,6 +1033,16 @@ void nsOggDecodeStateMachine::QueueDecodedFrames()
   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "QueueDecodedFrames() called without acquiring decoder monitor");
   FrameData* frame;
   while (!mDecodedFrames.IsFull() && (frame = NextFrame())) {
+    if (mDecodedFrames.GetCount() < 2) {
+      // Transitioning from 0 to 1 frames or from 1 to 2 frames could
+      // affect HaveNextFrameData and hence what UpdateReadyStateForData does.
+      // This could change us from HAVE_CURRENT_DATA to HAVE_FUTURE_DATA
+      // (or even HAVE_ENOUGH_DATA), so we'd better trigger an
+      // UpdateReadyStateForData.
+      nsCOMPtr<nsIRunnable> event = 
+        NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
+      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    }
     mDecodedFrames.Push(frame);
   }
 }
@@ -1194,7 +1216,8 @@ nsresult nsOggDecodeStateMachine::Run()
           mStepDecodeThread->Dispatch(event, NS_DISPATCH_NORMAL);
         }
 
-        // Get the decoded frame and store it in our queue of decoded frames
+        // Get the decoded frames and store them in our queue of decoded frames
+        QueueDecodedFrames();
         while (mDecodedFrames.IsEmpty()) {
           mon.Wait(PR_MillisecondsToInterval(PRInt64(mCallbackPeriod*500)));
           if (mState != DECODER_STATE_DECODING)
