@@ -455,37 +455,18 @@ namespace nanojit
 
     uint64_t LIns::imm64() const
 	{
-    #ifdef AVMPLUS_UNALIGNED_ACCESS
-        return *(const uint64_t*)i64.imm32;
-    #else
-        union { uint64_t tmp; int32_t dst[2]; } u;
-		#ifdef AVMPLUS_BIG_ENDIAN
-        u.dst[0] = i64.imm64_1;
-        u.dst[1] = i64.imm64_0;
-		#else
-        u.dst[0] = i64.imm64_0;
-        u.dst[1] = i64.imm64_1;
-		#endif
-        return u.tmp;
-    #endif
+        NanoAssert(isconstq());
+        return (uint64_t(i64.imm64_1) << 32) | uint64_t(i64.imm64_0);
 	}
 
     double LIns::imm64f() const
 	{
-		NanoAssert(isconstq());
-	#ifdef AVMPLUS_UNALIGNED_ACCESS
-        return *(const double*)i64.imm32;
-	#else
-		union { uint32_t dst[2]; double tmpf; } u;
-		#ifdef AVMPLUS_BIG_ENDIAN
-        u.dst[0] = i64.imm64_1;
-        u.dst[1] = i64.imm64_0;
-		#else
-        u.dst[0] = i64.imm64_0;
-        u.dst[1] = i64.imm64_1;
-		#endif
-		return u.tmpf;
-	#endif
+        union {
+            double f;
+            uint64_t q;
+        } u;
+        u.q = imm64();
+        return u.f;
 	}
 
     inline uint32_t argSlots(uint32_t argc) {
@@ -537,13 +518,13 @@ namespace nanojit
 	{
 		if (v == LIR_qlo) {
 			if (i->isconstq())
-				return insImm(int32_t(i->imm64()));
+                return insImm(i->imm64_0());
 			if (i->isop(LIR_qjoin))
 				return i->oprnd1();
 		}
 		else if (v == LIR_qhi) {
 			if (i->isconstq())
-				return insImm(int32_t(i->imm64()>>32));
+                return insImm(i->imm64_1());
 			if (i->isop(LIR_qjoin))
 				return i->oprnd2();
 		}
@@ -1524,10 +1505,10 @@ namespace nanojit
 #if defined NANOJIT_64BIT
             sprintf(buf, "#0x%lx", (nj_printf_ld)ref->imm64());
 #else
-			formatImm(uint32_t(ref->imm64()>>32), buf);
+			formatImm(ref->imm64_1(), buf);
 			buf += strlen(buf);
 			*buf++ = ':';
-			formatImm(uint32_t(ref->imm64()), buf);
+			formatImm(ref->imm64_0(), buf);
 #endif
 		}
 		else if (ref->isconst()) {
