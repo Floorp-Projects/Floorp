@@ -6825,25 +6825,18 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 
   NS_ENSURE_ARG(aLocalStorage);
 
-  if (nsDOMStorageManager::gStorageManager &&
-      nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return NS_ERROR_DOM_SECURITY_ERR;
-
   if (!mLocalStorage) {
     *aLocalStorage = nsnull;
 
     nsresult rv;
 
+    PRPackedBool unused;
+    if (!nsDOMStorage::CanUseStorage(&unused))
+      return NS_ERROR_DOM_SECURITY_ERR;
+
     nsIPrincipal *principal = GetPrincipal();
     if (!principal)
       return NS_OK;
-
-    PRPackedBool sessionOnly;
-    if (!nsDOMStorage::CanUseStorage(&sessionOnly))
-      return NS_ERROR_DOM_SECURITY_ERR;
-
-    if (sessionOnly)
-      return NS_ERROR_DOM_SECURITY_ERR;
 
     nsCOMPtr<nsIDOMStorageManager> storageManager =
       do_GetService("@mozilla.org/dom/storagemanager;1", &rv);

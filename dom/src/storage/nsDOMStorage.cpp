@@ -23,6 +23,7 @@
  *   Neil Deakin <enndeakin@sympatico.ca>
  *   Johnny Stenback <jst@mozilla.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -242,6 +243,7 @@ nsDOMStorageManager::Initialize()
     os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
     os->AddObserver(gStorageManager, "offline-app-removed", PR_FALSE);
     os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+    os->AddObserver(gStorageManager, "perm-changed", PR_FALSE);
 
     nsCOMPtr<nsIPrivateBrowsingService> pbs =
       do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
@@ -355,6 +357,39 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
       mInPrivateBrowsing = PR_TRUE;
     else if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).get()))
       mInPrivateBrowsing = PR_FALSE;
+#ifdef MOZ_STORAGE
+    nsresult rv = nsDOMStorage::InitDB();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return nsDOMStorage::gStorageDB->DropPrivateBrowsingStorages();
+#endif
+  } else if (!strcmp(aTopic, "perm-changed")) {
+    // Check for cookie permission change
+    nsCOMPtr<nsIPermission> perm(do_QueryInterface(aSubject));
+    if (perm) {
+      nsCAutoString type;
+      perm->GetType(type);
+      if (type != NS_LITERAL_CSTRING("cookie"))
+        return NS_OK;
+
+      PRUint32 cap = 0;
+      perm->GetCapability(&cap);
+      if (!(cap & nsICookiePermission::ACCESS_SESSION) ||
+          nsDependentString(aData) != NS_LITERAL_STRING("deleted"))
+        return NS_OK;
+
+      nsCAutoString host;
+      perm->GetHost(host);
+      if (host.IsEmpty())
+        return NS_OK;
+
+#ifdef MOZ_STORAGE
+      nsresult rv = nsDOMStorage::InitDB();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return nsDOMStorage::gStorageDB->DropSessionOnlyStoragesForHost(host);
+#endif
+    }
   }
 
   return NS_OK;
@@ -427,7 +462,7 @@ nsDOMStorageManager::RemoveFromStoragesHash(nsDOMStorage* aStorage)
 //
 
 #ifdef MOZ_STORAGE
-nsDOMStorageDB* nsDOMStorage::gStorageDB = nsnull;
+nsDOMStorageDBWrapper* nsDOMStorage::gStorageDB = nsnull;
 #endif
 
 nsDOMStorageEntry::nsDOMStorageEntry(KeyTypePointer aStr)
@@ -546,7 +581,7 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal)
   innerUri->GetAsciiHost(mDomain);
 
 #ifdef MOZ_STORAGE
-  nsDOMStorageDB::CreateOriginScopeDBKey(innerUri, mScopeDBKey);
+  nsDOMStorageDBWrapper::CreateOriginScopeDBKey(innerUri, mScopeDBKey);
 
   // XXX Bug 357323, we have to solve the issue how to define
   // origin for file URLs. In that case CreateOriginScopeDBKey
@@ -554,7 +589,7 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal)
   // in that case because it produces broken entries w/o owner.
   mUseDB = !mScopeDBKey.IsEmpty();
 
-  nsDOMStorageDB::CreateQuotaDomainDBKey(mDomain, PR_TRUE, mQuotaDomainDBKey);
+  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(mDomain, PR_TRUE, mQuotaDomainDBKey);
 #endif
 
   mLocalStorage = PR_TRUE;
@@ -566,7 +601,7 @@ nsDOMStorage::InitAsGlobalStorage(const nsACString &aDomainDemanded)
 {
   mDomain = aDomainDemanded;
 #ifdef MOZ_STORAGE
-  nsDOMStorageDB::CreateDomainScopeDBKey(aDomainDemanded, mScopeDBKey);
+  nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aDomainDemanded, mScopeDBKey);
 
   // XXX Bug 357323, we have to solve the issue how to define
   // origin for file URLs. In that case CreateOriginScopeDBKey
@@ -575,7 +610,7 @@ nsDOMStorage::InitAsGlobalStorage(const nsACString &aDomainDemanded)
   if (!(mUseDB = !mScopeDBKey.IsEmpty()))
     mScopeDBKey.AppendLiteral(":");
 
-  nsDOMStorageDB::CreateQuotaDomainDBKey(aDomainDemanded, PR_TRUE, mQuotaDomainDBKey);
+  nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomainDemanded, PR_TRUE, mQuotaDomainDBKey);
 #endif
   return NS_OK;
 }
@@ -636,7 +671,11 @@ nsDOMStorage::CanUseStorage(PRPackedBool* aSessionOnly)
   if (perm == nsIPermissionManager::DENY_ACTION)
     return PR_FALSE;
 
-  if (perm == nsICookiePermission::ACCESS_SESSION) {
+  // In private browsing mode we ougth to behave as in session-only cookies
+  // mode to prevent detection of being in private browsing mode and ensuring
+  // that there will be no traces left.
+  if (perm == nsICookiePermission::ACCESS_SESSION ||
+      nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode()) {
     *aSessionOnly = PR_TRUE;
   }
   else if (perm != nsIPermissionManager::ALLOW_ACTION) {
@@ -657,6 +696,9 @@ nsDOMStorage::CanUseStorage(PRPackedBool* aSessionOnly)
 PRBool
 nsDOMStorage::CacheStoragePermissions()
 {
+  // Bug 488446, disallowing storage use when in session only mode.
+  // This is temporary fix before we find complete solution for storage
+  // behavior in private browsing mode or session-only cookies mode.
   if (!CanUseStorage(&mSessionOnly))
     return PR_FALSE;
 
@@ -1003,7 +1045,7 @@ nsDOMStorage::InitDB()
 {
 #ifdef MOZ_STORAGE
   if (!gStorageDB) {
-    gStorageDB = new nsDOMStorageDB();
+    gStorageDB = new nsDOMStorageDBWrapper();
     if (!gStorageDB)
       return NS_ERROR_OUT_OF_MEMORY;
 
