@@ -64,12 +64,6 @@ namespace nanojit
 		free |= rmask(r);
 	}
 
-	void RegAlloc::removeFree(Register r)
-	{
-		NanoAssert(isFree(r));
-		free &= ~rmask(r);
-	}
-
 	void RegAlloc::addActive(Register r, LIns* v)
 	{
 		//  Count++;

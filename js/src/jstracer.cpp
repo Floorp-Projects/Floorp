@@ -5164,7 +5164,7 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->fragmento = fragmento;
         tm->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
 #ifdef DEBUG
-        tm->lirbuf->names = new (&gc) LirNameMap(&gc, NULL, tm->fragmento->labels);
+        tm->lirbuf->names = new (&gc) LirNameMap(&gc, tm->fragmento->labels);
 #endif
         for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
             tm->globalStates[i].globalShape = -1;

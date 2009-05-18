@@ -55,7 +55,6 @@ namespace nanojit
 			void	clear();
 			bool	isFree(Register r); 
 			void	addFree(Register r);
-			void	removeFree(Register r);
 			void	addActive(Register r, LIns* ins);
             void    useActive(Register r);
 			void	removeActive(Register r);

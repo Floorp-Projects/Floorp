@@ -499,16 +499,14 @@ namespace nanojit
 			DRCWB(avmplus::String*) name;
 		};
 		avmplus::SortedMap<LInsp, Entry*, avmplus::LIST_GCObjects> names;
-		const CallInfo *_functions;
 		LabelMap *labels;
 		void formatImm(int32_t c, char *buf);
 	public:
 
-		LirNameMap(avmplus::GC *gc, const CallInfo *_functions, LabelMap *r) 
+		LirNameMap(avmplus::GC *gc, LabelMap *r) 
 			: lircounts(gc),
 			funccounts(gc),
 			names(gc),
-			_functions(_functions),
 			labels(r)
 		{}
         ~LirNameMap();
@@ -708,7 +706,6 @@ namespace nanojit
 	class LirBufWriter : public LirWriter
 	{
 		DWB(LirBuffer*)	_buf;		// underlying buffer housing the instructions
-        LInsp spref, rpref;
 
         public:			
 			LirBufWriter(LirBuffer* buf)
