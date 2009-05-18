@@ -389,21 +389,21 @@ WeaveSvc.prototype = {
    */
   _registerEngines: function WeaveSvc__registerEngines() {
     let engines = [];
-    switch (Svc.AppInfo.name) {
-      case "Fennec":
+    switch (Svc.AppInfo.ID) {
+      case FENNEC_ID:
         engines = ["Bookmarks", "History", "Password", "Tab"];
         break;
 
-      case "Firefox":
+      case FIREFOX_ID:
         engines = ["Bookmarks", "Cookie", "Extension", "Form", "History", "Input",
           "MicroFormat", "Password", "Plugin", "Tab", "Theme"];
         break;
 
-      case "SeaMonkey":
+      case SEAMONKEY_ID:
         engines = ["Form", "History", "Password"];
         break;
 
-      case "Thunderbird":
+      case THUNDERBIRD_ID:
         engines = ["Cookie", "Password"];
         break;
     }
