@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=479863
+-->
+<head>
+  <title>Test for Bug 479863</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479863">Mozilla Bug 479863</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<video id='v1' onerror="event.stopPropagation();"></video><audio id='a1' onerror="ev
+ent.stopPropagation();"></audio>
+<video id='v2' onerror="event.stopPropagation();" autobuffer></video><audio id='a2' on
+error="event.stopPropagation();" autobuffer></audio>
+
+<pre id="test">
+<script type="application/javascript">
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+var v2 = document.getElementById('v2');
+var a2 = document.getElementById('a2');
+ok(!v1.autobuffer, "v1.autobuffer should be false by default");
+ok(!a1.autobuffer, "v1.autobuffer should be false by default");
+ok(v2.autobuffer, "v2.autobuffer should be true");
+ok(a2.autobuffer, "v2.autobuffer should be true");
+
+v1.autobuffer = true;
+a1.autobuffer = true;
+ok(v1.autobuffer, "video.autobuffer not true");
+ok(a1.autobuffer, "audio.autobuffer not true");
+is(v1.getAttribute("autobuffer"), "", "video autobuffer attribute not set");
+is(a1.getAttribute("autobuffer"), "", "video autobuffer attribute not set");
+
+</script>
+</pre>
+</body>
+</html>
