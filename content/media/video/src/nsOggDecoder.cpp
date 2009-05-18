@@ -280,6 +280,7 @@ public:
   void Shutdown();
   void Decode();
   void Seek(float aTime);
+  void StopStepDecodeThread(nsAutoMonitor* aMonitor);
 
   NS_IMETHOD Run();
 
@@ -565,10 +566,17 @@ private:
   // produced many times per second. Synchronised via decoder monitor.
   PRPackedBool mPositionChangeQueued;
 
-  // PR_TRUE if the step decode loop thread has finished decoding. It is read
-  // and written from two threads. The decode state machine thread and the
-  // step decode thread. Synchronised via decoder monitor.
+  // PR_TRUE if the step decode loop thread has finished decoding. It is
+  // written by the step decode thread and read and written by the state
+  // machine thread (but only written by the state machine thread while
+  // the step decode thread is not running).
+  // Synchronised via decoder monitor.
   PRPackedBool mDecodingCompleted;
+
+  // PR_TRUE if the step decode loop thread should exit now. It is
+  // written by the state machine thread and read by the step decode thread.
+  // Synchronised via decoder monitor.
+  PRPackedBool mExitStepDecodeThread;
 
   // PR_TRUE if the step decode loop has indicated that we need to buffer.
   // Accessed by the step decode thread and the decode state machine thread.
@@ -620,23 +628,26 @@ public:
     OggPlayErrorCode r = E_OGGPLAY_TIMEOUT;
     nsAutoMonitor mon(mDecodeStateMachine->mDecoder->GetMonitor());
     nsOggDecoder* decoder = mDecodeStateMachine->mDecoder;
+    NS_ASSERTION(!mDecodeStateMachine->mDecodingCompleted,
+                 "State machine should have cleared this flag");
 
-    do {
+    while (!mDecodeStateMachine->mExitStepDecodeThread &&
+           !InStopDecodingState() &&
+           (r == E_OGGPLAY_TIMEOUT ||
+            r == E_OGGPLAY_USER_INTERRUPT ||
+            r == E_OGGPLAY_CONTINUE)) {
       if (mDecodeStateMachine->mBufferExhausted) {
         mon.Wait();
-        if (InStopDecodingState())
-          break;
-      }
-      else {
+      } else {
+        // decoder and decoder->mReader are never null here because
+        // they are non-null through the lifetime of the state machine
+        // thread, which includes the lifetime of this thread.
         PRInt64 initialDownloadPosition =
           decoder->mReader->Stream()->GetCachedDataEnd(decoder->mDecoderPosition);
 
         mon.Exit();
         r = oggplay_step_decoding(mPlayer);
         mon.Enter();
-
-        if (InStopDecodingState())
-          break;
 
         // If PlayFrame is waiting, wake it up so we can run the
         // decoder loop and move frames from the oggplay queue to our
@@ -650,11 +661,7 @@ public:
           mDecodeStateMachine->mBufferExhausted = PR_TRUE;
         }
       }
-    } while (!mDecodeStateMachine->mDecodingCompleted &&
-             !InStopDecodingState() &&
-             (r == E_OGGPLAY_TIMEOUT ||
-              r == E_OGGPLAY_USER_INTERRUPT ||
-              r == E_OGGPLAY_CONTINUE));
+    }
 
     mDecodeStateMachine->mDecodingCompleted = PR_TRUE;
     return NS_OK;
@@ -688,6 +695,7 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mSeekable(PR_TRUE),
   mPositionChangeQueued(PR_FALSE),
   mDecodingCompleted(PR_FALSE),
+  mExitStepDecodeThread(PR_FALSE),
   mBufferExhausted(PR_FALSE),
   mGotDurationFromHeader(PR_FALSE)
 {
@@ -1148,17 +1156,7 @@ void nsOggDecodeStateMachine::Shutdown()
     // This will unblock the step decode loop in the
     // StepDecode thread. The thread can then be safely
     // shutdown.
-    mBufferExhausted = PR_FALSE;
     oggplay_prepare_for_close(mPlayer);
-  }
-  if (mStepDecodeThread) {
-    // nsOggDecodeStateMachine::Shutdown is called at a safe
-    // time to spin the event loop. This makes the following call
-    // also safe.
-    mon.Exit();
-    mStepDecodeThread->Shutdown();
-    mon.Enter();
-    mStepDecodeThread = nsnull;
   }
 }
 
@@ -1267,6 +1265,30 @@ nsresult nsOggDecodeStateMachine::Seek(float aTime, nsChannelReader* aReader)
   return (rv < 0) ? NS_ERROR_FAILURE : NS_OK;
 }
 
+void nsOggDecodeStateMachine::StopStepDecodeThread(nsAutoMonitor* aMonitor)
+{
+  PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
+
+  if (!mStepDecodeThread)
+    return;
+
+  if (!mDecodingCompleted) {
+    // Break the step-decode thread out of the decoding loop. First
+    // set the exit flag so it will exit the loop.
+    mExitStepDecodeThread = PR_TRUE;
+    // Remove liboggplay frame buffer so that the step-decode thread
+    // can unblock in liboggplay.
+    delete NextFrame();
+    // Now notify to wake it up if it's waiting on the monitor.
+    aMonitor->NotifyAll();
+  }
+
+  aMonitor->Exit();
+  mStepDecodeThread->Shutdown();
+  aMonitor->Enter();
+  mStepDecodeThread = nsnull;
+}
+
 nsresult nsOggDecodeStateMachine::Run()
 {
   nsChannelReader* reader = mDecoder->GetReader();
@@ -1278,6 +1300,9 @@ nsresult nsOggDecodeStateMachine::Run()
       if (mPlaying) {
         StopPlayback();
       }
+      StopStepDecodeThread(&mon);
+      NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
+                   "How did we escape from the shutdown state???");
       return NS_OK;
 
     case DECODER_STATE_DECODING_METADATA:
@@ -1340,7 +1365,7 @@ nsresult nsOggDecodeStateMachine::Run()
         // If there is no step decode thread,  start it. It may not be running
         // due to us having completed and then restarted playback, seeking, 
         // or if this is the initial play.
-        if (!mDecodingCompleted && !mStepDecodeThread) {
+        if (!mStepDecodeThread) {
           nsresult rv = NS_NewThread(getter_AddRefs(mStepDecodeThread));
           if (NS_FAILED(rv)) {
             mState = DECODER_STATE_SHUTDOWN;
@@ -1349,6 +1374,7 @@ nsresult nsOggDecodeStateMachine::Run()
 
           mBufferExhausted = PR_FALSE;
           mDecodingCompleted = PR_FALSE;
+          mExitStepDecodeThread = PR_FALSE;
           nsCOMPtr<nsIRunnable> event = new nsOggStepDecodeEvent(this, mPlayer);
           mStepDecodeThread->Dispatch(event, NS_DISPATCH_NORMAL);
         }
@@ -1368,11 +1394,7 @@ nsresult nsOggDecodeStateMachine::Run()
         if (mDecodingCompleted) {
           LOG(PR_LOG_DEBUG, ("Changed state from DECODING to COMPLETED"));
           mState = DECODER_STATE_COMPLETED;
-          mDecodingCompleted = PR_FALSE;
-          mBufferExhausted = PR_FALSE;
-          mon.NotifyAll();
-          mStepDecodeThread->Shutdown();
-          mStepDecodeThread = nsnull;
+          StopStepDecodeThread(&mon);
           continue;
         }
 
@@ -1436,25 +1458,12 @@ nsresult nsOggDecodeStateMachine::Run()
         // the lock since it won't deadlock. We check the state when
         // acquiring the lock again in case shutdown has occurred
         // during the time when we didn't have the lock.
+        StopStepDecodeThread(&mon);
+        if (mState == DECODER_STATE_SHUTDOWN)
+          continue;
+
         float seekTime = mSeekTime;
         mDecoder->StopProgressUpdates();
-
-        if (mStepDecodeThread) {
-          mDecodingCompleted = PR_TRUE;
-          mBufferExhausted = PR_FALSE;
-          mon.NotifyAll();
-
-          // Flush liboggplay frame buffers so that we break out of
-          // of the decoding loop - this ensures the shutdown call
-          // below doesn't block.
-          delete NextFrame();
-
-          mon.Exit();
-          mStepDecodeThread->Shutdown();
-          mon.Enter();
-          mDecodingCompleted = PR_FALSE;
-          mStepDecodeThread = nsnull;
-        }
 
         StopPlayback();
 
@@ -1765,14 +1774,57 @@ PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
   return mMonitor && nsMediaDecoder::Init(aElement);
 }
 
+void nsOggDecoder::Stop()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+
+  // The decode thread must die before the state machine can die.
+  // The state machine must die before the reader.
+  // The state machine must die before the decoder.
+  if (mDecodeThread)
+    mDecodeThread->Shutdown();
+
+  mDecodeThread = nsnull;
+  mDecodeStateMachine = nsnull;
+  mReader = nsnull;
+}
+
 void nsOggDecoder::Shutdown()
 {
+  NS_ASSERTION(NS_IsMainThread(), 
+               "nsOggDecoder::Shutdown called on non-main thread");  
+  
+  if (mShuttingDown)
+    return;
+
   mShuttingDown = PR_TRUE;
+
+  // This changes the decoder state to SHUTDOWN and does other things
+  // necessary to unblock the state machine thread if it's blocked, so
+  // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
+  if (mDecodeStateMachine) {
+    mDecodeStateMachine->Shutdown();
+  }
+
+  // Force any outstanding seek and byterange requests to complete
+  // to prevent shutdown from deadlocking.
+  mReader->Stream()->Close();
 
   ChangeState(PLAY_STATE_SHUTDOWN);
   nsMediaDecoder::Shutdown();
 
-  Stop();
+  // We can't destroy mDecodeStateMachine until mDecodeThread is shut down.
+  // It's unsafe to Shutdown() the decode thread here, as
+  // nsIThread::Shutdown() may run events, such as JS event handlers,
+  // and we could be running at an unsafe time such as during element
+  // destruction.
+  // So we destroy the decoder on the main thread in an asynchronous event.
+  // See bug 468721.
+  nsCOMPtr<nsIRunnable> event =
+    NS_NEW_RUNNABLE_METHOD(nsOggDecoder, this, Stop);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+
+  UnregisterShutdownObserver();
 }
 
 nsOggDecoder::~nsOggDecoder()
@@ -1784,10 +1836,6 @@ nsOggDecoder::~nsOggDecoder()
 nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
                             nsIStreamListener** aStreamListener)
 {
-  // Reset Stop guard flag flag, else shutdown won't occur properly when
-  // reusing decoder.
-  mStopping = PR_FALSE;
-
   // Reset progress member variables
   mDecoderPosition = 0;
   mPlaybackPosition = 0;
@@ -1889,92 +1937,6 @@ nsresult nsOggDecoder::Seek(float aTime)
 nsresult nsOggDecoder::PlaybackRateChanged()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// Postpones destruction of nsOggDecoder's objects, so they can be safely
-// performed later, when events can't interfere.
-class nsDestroyStateMachine : public nsRunnable {
-public:
-  nsDestroyStateMachine(nsOggDecoder *aDecoder,
-                        nsOggDecodeStateMachine *aMachine,
-                        nsChannelReader *aReader,
-                        nsIThread *aThread)
-  : mDecoder(aDecoder),
-    mDecodeStateMachine(aMachine),
-    mReader(aReader),
-    mDecodeThread(aThread)
-  {
-  }
-
-  NS_IMETHOD Run() {
-    NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
-    // The decode thread must die before the state machine can die.
-    // The state machine must die before the reader.
-    // The state machine must die before the decoder.
-    if (mDecodeThread)
-      mDecodeThread->Shutdown();
-    mDecodeThread = nsnull;
-    mDecodeStateMachine = nsnull;
-    mReader = nsnull;
-    mDecoder = nsnull;
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsOggDecoder> mDecoder;
-  nsCOMPtr<nsOggDecodeStateMachine> mDecodeStateMachine;
-  nsAutoPtr<nsChannelReader> mReader;
-  nsCOMPtr<nsIThread> mDecodeThread;
-};
-
-void nsOggDecoder::Stop()
-{
-  NS_ASSERTION(NS_IsMainThread(), 
-               "nsOggDecoder::Stop called on non-main thread");  
-  
-  if (mStopping)
-    return;
-
-  mStopping = PR_TRUE;
-
-  ChangeState(PLAY_STATE_ENDED);
-
-  StopProgress();
-
-  // Force any outstanding seek and byterange requests to complete
-  // to prevent shutdown from deadlocking.
-  mReader->Stream()->Close();
-
-  // Shutdown must be on called the mDecodeStateMachine before deleting.
-  // This is required to ensure that the state machine isn't running
-  // in the thread and using internal objects when it is deleted.
-  if (mDecodeStateMachine) {
-    mDecodeStateMachine->Shutdown();
-  }
-
-  // mDecodeThread holds a ref to mDecodeStateMachine, so we can't destroy
-  // mDecodeStateMachine until mDecodeThread is destroyed. We can't destroy
-  // mReader until mDecodeStateMachine is destroyed because mDecodeStateMachine
-  // uses mReader in its destructor. In addition, it's unsafe to Shutdown() the
-  // decode thread here, as nsIThread::Shutdown() may run events, such as JS
-  // event handlers, which could kick off a new Load().
-  // mDecodeStateMachine::Run() may also be holding a reference to the decoder
-  // in an event runner object on its stack, so the decoder must outlive the
-  // state machine, else we may destroy the decoder on a non-main thread,
-  // and its monitor doesn't like that. So we need to create a new event which
-  // holds references the decoder, reader, thread, and state machine, and
-  // releases them safely later on the main thread when events can't interfere.
-  // See bug 468721.
-  nsCOMPtr<nsIRunnable> event = new nsDestroyStateMachine(this,
-                                                          mDecodeStateMachine,
-                                                          mReader.forget(),
-                                                          mDecodeThread);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-
-  // Null data fields. They can be reinitialized in future Load()s safely now.
-  mDecodeThread = nsnull;
-  mDecodeStateMachine = nsnull;
-  UnregisterShutdownObserver();
 }
 
 float nsOggDecoder::GetCurrentTime()
@@ -2083,12 +2045,13 @@ void nsOggDecoder::ResourceLoaded()
 
 void nsOggDecoder::NetworkError()
 {
-  if (mStopping || mShuttingDown)
+  if (mShuttingDown)
     return;
 
   if (mElement)
     mElement->NetworkError();
-  Stop();
+
+  Shutdown();
 }
 
 PRBool nsOggDecoder::IsSeeking() const

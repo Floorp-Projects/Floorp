@@ -318,9 +318,6 @@ class nsOggDecoder : public nsMediaDecoder
   // called.
   virtual nsresult Play();
 
-  // Stop playback of a video, and stop download of video stream.
-  virtual void Stop();
-
   // Seek to the time position in (seconds) from the start of the video.
   virtual nsresult Seek(float time);
 
@@ -383,6 +380,10 @@ class nsOggDecoder : public nsMediaDecoder
 
   // Tells our nsMediaStream to put all loads in the background.
   virtual void MoveLoadsToBackground();
+
+  // Stop the state machine thread and drop references to the thread,
+  // state machine and channel reader.
+  void Stop();
 
 protected:
 

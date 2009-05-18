@@ -74,8 +74,7 @@ nsMediaDecoder::nsMediaDecoder() :
   mFramerate(0.0),
   mAspectRatio(1.0),
   mSizeChanged(PR_FALSE),
-  mShuttingDown(PR_FALSE),
-  mStopping(PR_FALSE)
+  mShuttingDown(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsMediaDecoder);
 }

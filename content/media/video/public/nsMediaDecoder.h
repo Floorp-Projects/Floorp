@@ -107,9 +107,6 @@ public:
   // called.
   virtual nsresult Play() = 0;
 
-  // Stop playback of a video, and stop download of video stream.
-  virtual void Stop() = 0;
-
   // Start downloading the video. Decode the downloaded data up to the
   // point of the first frame of data.
   // Exactly one of aURI and aChannel must be null. aListener must be
@@ -308,12 +305,6 @@ protected:
   // being run that operates on the element and decoder during shutdown.
   // Read/Write from the main thread only.
   PRPackedBool mShuttingDown;
-
-  // True if the decoder is currently in the Stop() method. This is used to
-  // prevent recursive calls into Stop while it is spinning the event loop
-  // waiting for the playback event loop to shutdown. Read/Write from the
-  // main thread only.
-  PRPackedBool mStopping;
 };
 
 #endif
