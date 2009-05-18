@@ -161,56 +161,53 @@ namespace nanojit
 	#define _sign_int int32_t
 	#endif
 
-    // Low-level Instruction.  4 words per instruction.
-	// had to lay it our as a union with duplicate code fields since msvc couldn't figure out how to compact it otherwise.
+    // The opcode is not logically part of the Reservation, but we include it
+    // in this struct to ensure that opcode plus the Reservation fits in a
+    // single word.  Yuk.
+    struct Reservation
+    {
+        uint32_t arIndex:16;    // index into stack frame.  displ is -4*arIndex
+        Register reg:7;         // register UnknownReg implies not in register
+        uint32_t used:1;        // when set, the reservation is active
+        LOpcode  code:8;
+	};
+
+    // Low-level Instruction.  4 words per instruction -- it's important this
+    // doesn't change unintentionally, so it is checked in LIR.cpp by an
+    // assertion in initOpcodeAndClearResv().
+    // The first word is the same for all LIns kinds;  the last three differ.
 	class LIns
 	{
-        #define LI_BITS_PER_WORD   (8 * sizeof(void*))
-
         friend class LirBufWriter;
 
-        // 2-operand form.  Also used for LIR_skip (for which oprnd_1 is the target).
+        // 2-operand form.  Used for most LIns kinds, including LIR_skip (for
+        // which oprnd_1 is the target).
 		struct u_type
 		{
-            LOpcode     code:8;
-            uintptr_t   resv:8;     // clobbered during assembly
-            uintptr_t   unused1:(LI_BITS_PER_WORD - 16);
-
-            // Nb: oprnd_1 and oprnd_2 layout must match that in sti_type.
+            // Nb: oprnd_1 and oprnd_2 layout must match that in sti_type
+            // because oprnd1() and oprnd2() are used for both.
             LIns*       oprnd_1;
 
             LIns*       oprnd_2;  
-
-            uintptr_t   unused4;
 		};
 
+        // Used for LIR_sti and LIR_stqi.
         struct sti_type
         {
-            LOpcode     code:8;
-            uintptr_t   resv:8;     // clobbered during assembly
-            uintptr_t   :(LI_BITS_PER_WORD - 16);
-
-            // Nb: oprnd_1 and oprnd_2 layout must match that in u_type.
+            // Nb: oprnd_1 and oprnd_2 layout must match that in u_type
+            // because oprnd1() and oprnd2() are used for both.
             LIns*       oprnd_1;
 
             LIns*       oprnd_2;  
 
             int32_t     disp;
-            uintptr_t   :(LI_BITS_PER_WORD - 32);
         };
 
         // Used for LIR_call and LIR_param.
 		struct c_type
 		{
-            LOpcode     code:8;
-            uintptr_t   resv:8;     // clobbered during assembly
-            uintptr_t   :(LI_BITS_PER_WORD - 16);
-
             uintptr_t   imm8a:8;    // call: 0 (not used);  param: arg
-            uintptr_t   :(LI_BITS_PER_WORD - 8);
-                            
             uintptr_t   imm8b:8;    // call: argc;  param: kind
-            uintptr_t   :(LI_BITS_PER_WORD - 8);
 
             const CallInfo* ci;     // call: callInfo;  param: NULL (not used)
 		};
@@ -218,37 +215,23 @@ namespace nanojit
         // Used for LIR_int.
 		struct i_type
 		{
-            LOpcode     code:8;
-            uintptr_t   resv:8;     // clobbered during assembly
-            uintptr_t   :(LI_BITS_PER_WORD - 16);
-
             int32_t     imm32;
-            uintptr_t   :(LI_BITS_PER_WORD - 32);
-
-            uintptr_t   unused3;
-
-            uintptr_t   unused4;
 		};
 
         // Used for LIR_quad.
         struct i64_type
 		{
-            LOpcode     code:8;
-            uintptr_t   resv:8;     // clobbered during assembly
-            uintptr_t   unused1:(LI_BITS_PER_WORD - 16);
-
             int32_t     imm64_0;
-            uintptr_t   :(LI_BITS_PER_WORD - 32);
-
             int32_t     imm64_1;
-            uintptr_t   :(LI_BITS_PER_WORD - 32);
-
-            uintptr_t   unused4;
 		};
 
         #undef _sign_int
 		
-        // Various forms of the instruction.
+        // 1st word: fields shared by all LIns kinds.  The reservation fields
+        // are read/written during assembly.
+        Reservation firstWord;
+
+        // 2nd, 3rd and 4th words: differ depending on the LIns kind.
 		union
 		{
             u_type      u;
@@ -262,7 +245,7 @@ namespace nanojit
         LIns* oprnd1() const { return u.oprnd_1; }
         LIns* oprnd2() const { return u.oprnd_2; }
 
-        inline LOpcode opcode()   const { return u.code; }
+        inline LOpcode opcode()   const { return firstWord.code; }
         inline uint8_t imm8()     const { return c.imm8a; }
         inline uint8_t imm8b()    const { return c.imm8b; }
         inline int32_t imm32()    const { NanoAssert(isconst());  return i.imm32; }
@@ -270,7 +253,7 @@ namespace nanojit
         inline int32_t imm64_1()  const { NanoAssert(isconstq()); return i64.imm64_1; }
         uint64_t       imm64()    const;
         double         imm64f()   const;
-        inline uint8_t resv()     const { return u.resv; }
+        Reservation*   resv()           { return &firstWord; }
         void*	payload() const;
         inline Page*	page()			{ return (Page*) alignTo(this,NJ_PAGE_SIZE); }
         inline int32_t  size() const {
@@ -300,32 +283,32 @@ namespace nanojit
 		}
 		
 		bool isCse(const CallInfo *functions) const;
-        bool isRet() const { return nanojit::isRetOpcode(u.code); }
-		bool isop(LOpcode o) const { return u.code == o; }
+        bool isRet() const { return nanojit::isRetOpcode(firstWord.code); }
+		bool isop(LOpcode o) const { return firstWord.code == o; }
 		bool isQuad() const;
 		bool isCond() const;
         bool isFloat() const;
 		bool isCmp() const;
         bool isCall() const { 
-            LOpcode op = LOpcode(u.code & ~LIR64);
+            LOpcode op = LOpcode(firstWord.code & ~LIR64);
             return op == LIR_call || op == LIR_calli;
         }
         bool isStore() const {
-            LOpcode op = LOpcode(u.code & ~LIR64);
+            LOpcode op = LOpcode(firstWord.code & ~LIR64);
             return op == LIR_sti;
         }
         bool isLoad() const { 
-            LOpcode op = u.code;
+            LOpcode op = firstWord.code;
             return op == LIR_ldq  || op == LIR_ld || op == LIR_ldc || 
                    op == LIR_ldqc || op == LIR_ldcs;
         }
         bool isGuard() const {
-            LOpcode op = u.code;
+            LOpcode op = firstWord.code;
             return op == LIR_x || op == LIR_xf || op == LIR_xt || 
                    op == LIR_loop || op == LIR_xbarrier || op == LIR_xtbl;
         }
 		// True if the instruction is a 32-bit or smaller constant integer.
-        bool isconst() const { return u.code == LIR_int; }
+        bool isconst() const { return firstWord.code == LIR_int; }
 		// True if the instruction is a 32-bit or smaller constant integer and
 		// has the value val when treated as a 32-bit signed integer.
 		bool isconstval(int32_t val) const;
@@ -337,14 +320,11 @@ namespace nanojit
 			return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
 		}
         void setimm32(int32_t x) { i.imm32 = x; }
-		// Set the resv member.  Should only be used on instructions that use
-		// that.  If you're not sure, you shouldn't be calling it.
-        void setresv(uint32_t resv) {
-            NanoAssert(isU8(resv));
-            u.resv = resv;
-        }
         // Set the opcode and clear resv.
         void initOpcodeAndClearResv(LOpcode);
+        Reservation* initResv();
+        void         clearResv();
+
 		// operand-setting methods
         void setOprnd1(LIns* r) { u.oprnd_1 = r; }
         void setOprnd2(LIns* r) { u.oprnd_2 = r; }
