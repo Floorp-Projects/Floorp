@@ -51,7 +51,10 @@ function seekEnded() {
 
   var v = document.getElementById('v');
   var t = v.currentTime;
-  ok(t >= 2 && t <= 3, "Video currentTime should be around 2: " + t);
+  // Since we were playing, and we only paused asynchronously, we can't be
+  // sure that we paused before the seek finished, so we may have played
+  // ahead arbitrarily far.
+  ok(t >= 1.9, "Video currentTime should be around 2: " + t);
   v.play();
   endPassed = true;
   seekFlagEnd = v.seeking;
