@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait"><head>
+<title>table-repaint-b-ref</title>
+<body>
+<table id="x">
+<tr>
+  <td>aaa</td>
+  <td>
+   <span style="position: relative">
+     <div style="height: 0px">
+      <div style="height: 300px; width: 10px; background: green"></div>
+     </div>bbb
+  </td>
+</tr>
+</table>
+<script>
+  function foo() {
+    var t = document.getElementById("x");
+    var r = document.createElement("tr");
+    var c = document.createElement("td");
+    c.appendChild(document.createTextNode("longer text: above this, first cell should say 'aaa' while second says 'bbb'.  There should be only one green rectangle."));
+    r.appendChild(c);
+    t.tBodies[0].appendChild(r);
+    document.documentElement.removeAttribute("class");
+  }
+document.addEventListener("MozReftestInvalidate", foo, false);
+</script>
+</body>
+</html>

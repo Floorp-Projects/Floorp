@@ -14,6 +14,7 @@ SimpleTest.waitForExplicitFinish();
 function maketest(expect_load, attach_media, name, type, check_metadata) {
   return function (testNum) {
     var e = document.createElement('video');
+    e.setAttribute("autobuffer", "true");
     var errorRun = false;
     if (expect_load) {
       e.addEventListener('loadedmetadata', function () {

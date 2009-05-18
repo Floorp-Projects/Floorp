@@ -56,6 +56,7 @@
 #include "prio.h"
 #include "prnetdb.h"
 #include "prtpool.h"
+#include "prtypes.h"
 #include "nss.h"
 #include "pk11func.h"
 #include "key.h"
@@ -859,10 +860,8 @@ int main(int argc, char** argv)
   }
 
   // create a thread pool to handle connections
-  threads = PR_CreateThreadPool(std::max<PRInt32>(INITIAL_THREADS,
-                                                  servers.size()*2),
-                                std::max<PRInt32>(MAX_THREADS,
-                                                  servers.size()*2),
+  threads = PR_CreateThreadPool(PR_MAX(INITIAL_THREADS, servers.size()*2),
+                                PR_MAX(MAX_THREADS, servers.size()*2),
                                 DEFAULT_STACKSIZE);
   if (!threads) {
     fprintf(stderr, "Failed to create thread pool\n");

@@ -92,7 +92,7 @@
 #include "nsSize.h"
 #include "mozFlushType.h"
 #include "prclist.h"
-#include "nsIDOMStorage.h"
+#include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorageList.h"
 #include "nsIDOMStorageWindow.h"
 #include "nsIDOMOfflineResourceList.h"
@@ -708,7 +708,7 @@ protected:
 
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
 
-  nsCOMPtr<nsIDOMStorage2>      mLocalStorage;
+  nsCOMPtr<nsIDOMStorage>      mLocalStorage;
 
   nsCOMPtr<nsISupports>         mInnerWindowHolders[NS_STID_ARRAY_UBOUND];
   nsCOMPtr<nsIPrincipal> mOpenerScriptPrincipal; // strong; used to determine
@@ -721,7 +721,7 @@ protected:
   nsTimeout*                    mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
-  nsCOMPtr<nsIDOMStorage>       mSessionStorage;
+  nsCOMPtr<nsIDOMStorageObsolete>       mSessionStorage;
 
   // Holder of the dummy java plugin, used to expose window.java and
   // window.packages.

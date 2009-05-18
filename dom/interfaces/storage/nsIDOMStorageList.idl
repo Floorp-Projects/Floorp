@@ -45,7 +45,7 @@
  * Allows access to contextual storage areas by domain.
  */
 
-interface nsIDOMStorage;
+interface nsIDOMStorageObsolete;
 
 [scriptable, uuid(f2166929-91B6-4372-8D5F-C366F47A5F54)]
 interface nsIDOMStorageList : nsISupports
@@ -56,5 +56,5 @@ interface nsIDOMStorageList : nsISupports
    * @param domain domain to retrieve
    * @returns a storage area for the given domain
    */
-  nsIDOMStorage namedItem(in DOMString domain);
+  nsIDOMStorageObsolete namedItem(in DOMString domain);
 };

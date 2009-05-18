@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -120,6 +120,17 @@ interface nsIWebBrowserSetup : nsISupports
      * @see setProperty
      */
     const unsigned long SETUP_IS_CHROME_WRAPPER     = 7;
+
+
+    /**
+     * Boolean. Enables/disables DNS prefetch for HTML anchors in this browser.
+     * This takes effect starting with the next pageload after the property is
+     * set.  The default is to not allow DNS prefetch, for backwards
+     * compatibility.
+     *
+     * @see setProperty
+     */
+    const unsigned long SETUP_ALLOW_DNS_PREFETCH    = 8;
 
     /**
      * Sets an integer or boolean property on the new web browser object.

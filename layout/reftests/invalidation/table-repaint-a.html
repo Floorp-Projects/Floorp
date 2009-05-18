@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+ <title>table-repaint-a</title>
+</head>
+<body>
+<table>
+ <tr>
+  <td bgcolor="black"></td>
+  <td bgcolor="lime"></td>
+ </tr>
+</table>
+<script>
+function foo() {
+ var x=document.getElementsByTagName('td')[0];
+ x.style.display = 'none';
+ document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", foo, false);
+</script>
+</body>
+</html>

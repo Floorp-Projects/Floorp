@@ -46,11 +46,38 @@ interface nsIAccessible;
 [scriptable, uuid(dcc1e5c3-966e-45b2-b30a-839d35432b24)]
 interface nsIAccessibleTable : nsISupports
 {
+  /**
+   * Returns the caption accessible for the table. For example, html:caption
+   * element of html:table element.
+   */
   readonly attribute nsIAccessible       caption;
+
+  /**
+   * Returns summary description for the table. For example, @summary attribute
+   * on html:element.
+   */
   readonly attribute AString             summary;
+
+  /**
+   * Returns columns count in the table.
+   * XXX: not very well named property.
+   */
   readonly attribute long                columns;
+
+  /**
+   * Returns table accessible containing column headers.
+   */
   readonly attribute nsIAccessibleTable  columnHeader;
+
+  /**
+   * Returns rows count in the table.
+   * XXX: not very well named property.
+   */
   readonly attribute long                rows;
+
+  /**
+   * Returns table accessible containing row headers.
+   */
   readonly attribute nsIAccessibleTable  rowHeader;
 
   /**

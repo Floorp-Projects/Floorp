@@ -147,7 +147,14 @@ function run_test() {
                 value: TEST_DESCRIPTION,
               expires: annosvc.EXPIRE_NEVER }];
   var txn1 = ptSvc.createFolder("Testing folder", root, bmStartIndex, annos);
-  txn1.doTransaction();
+  ptSvc.doTransaction(txn1);
+
+  // the check check that calling undoTransaction on an "empty batch" doesn't undo
+  // the previous transaction
+  ptSvc.beginBatch();
+  ptSvc.endBatch();
+  ptSvc.undoTransaction();
+
   var folderId = bmsvc.getChildFolder(root, "Testing folder");
   do_check_eq(TEST_DESCRIPTION, 
               annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));

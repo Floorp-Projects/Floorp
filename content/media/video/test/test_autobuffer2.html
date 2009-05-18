@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=479863
+-->
+<head>
+  <title>Test for Bug 479863</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="use_large_cache.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479863">Mozilla Bug 479863</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+<video id='v1' onerror="event.stopPropagation()"></video>
+<video id='v2' onerror="event.stopPropagation()" autobuffer></video>
+<video id='v3' onerror="event.stopPropagation()" autoplay></video>
+<video id='v4' onerror="event.stopPropagation()"></video>
+<video id='v5' onerror="event.stopPropagation()"></video>
+<video id='v6' onerror="event.stopPropagation()"></video>
+
+<pre id="test">
+<script type="application/javascript">
+var suspends = {};
+var loads = {};
+var totalLoadEvents = 0;
+var expectedLoadEvents = 6;
+
+function loaded(event) {
+  loads[event.target.id] = true;
+  ++totalLoadEvents;
+  if (totalLoadEvents == expectedLoadEvents) {
+    ok(suspends.v1, "v1 should suspend");
+    ok(!suspends.v2, "v2 should not suspend");
+    ok(!suspends.v3, "v3 should not suspend");
+    ok(suspends.v4, "v4 should suspend");
+    ok(suspends.v5, "v5 should suspend");
+    ok(suspends.v6, "v6 should suspend");
+    ok(loads.v1, "v1 should load after setting autobuffer");
+    ok(loads.v2, "v2 should load");
+    ok(loads.v3, "v3 should load");
+    ok(loads.v4, "v4 should load after calling play()");
+    ok(loads.v5, "v5 should load after seeking");
+    ok(loads.v6, "v6 should load after setting autoplay");
+    SimpleTest.finish();
+  }
+}
+
+function suspended(event) {
+  // we *can* be in state NETWORK_LOADED --- the suspend can happen after
+  // all the data is already loaded...
+  isnot(event.target.networkState, event.target.NETWORK_LOADING,
+        event.target.id + " suspended networkState");
+  suspends[event.target.id] = true;
+  if (event.target.id == "v1") {
+    event.target.autobuffer = true;
+  } else if (event.target.id == "v4") {
+    event.target.play();
+  } else if (event.target.id == "v5") {
+    event.target.currentTime = 0.1;
+  } else if (event.target.id == "v6") {
+    event.target.autoplay = true;
+  }
+}
+
+function logEvent(event) {
+  dump(event.type + " " + event.target.id + "\n");
+}
+
+var key = Math.random();
+var eventList = ["metadataloaded", "loadeddata", "playing", "load", "stalled", "suspend", "ended"];
+for (var i = 1; i <= expectedLoadEvents; ++i) {
+  var id = "v" + i;
+  suspends[id] = loads[id] = false;
+  var v = document.getElementById(id);
+  v.addEventListener("suspend", suspended, false);
+  v.addEventListener("load", loaded, false);
+  for (var n = 0; n < eventList.length; ++n) {
+    v.addEventListener(eventList[n], logEvent, false);
+  }
+  v.src = "seek.ogv?key=" + key + "&id=" + id;
+}
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

@@ -144,6 +144,7 @@ protected:
     virtual ~nsWebBrowser();
     NS_IMETHOD InternalDestroy();
 
+    // XXXbz why are these NS_IMETHOD?  They're not interface methods!
     NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
     NS_IMETHOD EnsureDocShellTreeOwner();
     NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindowInternal **aDomWindow);

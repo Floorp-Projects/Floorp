@@ -45,8 +45,8 @@
  * Allows access to contextual storage areas.
  */
 
+interface nsIDOMStorageObsolete;
 interface nsIDOMStorage;
-interface nsIDOMStorage2;
 interface nsIDOMStorageList;
 
 [scriptable, uuid(B4F572FB-9BA5-480b-9361-C230863323E4)]
@@ -55,7 +55,7 @@ interface nsIDOMStorageWindow : nsISupports
   /**
    * Session storage for the current browsing context.
    */
-  readonly attribute nsIDOMStorage sessionStorage;
+  readonly attribute nsIDOMStorageObsolete sessionStorage;
 
   /**
    * Global storage, accessible by domain.
@@ -65,5 +65,5 @@ interface nsIDOMStorageWindow : nsISupports
   /**
    * Local storage for the current browsing context.
    */
-  readonly attribute nsIDOMStorage2 localStorage;
+  readonly attribute nsIDOMStorage localStorage;
 };

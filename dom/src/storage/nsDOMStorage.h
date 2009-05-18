@@ -43,8 +43,8 @@
 
 #include "nscore.h"
 #include "nsAutoPtr.h"
+#include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorage.h"
-#include "nsIDOMStorage2.h"
 #include "nsIDOMStorageList.h"
 #include "nsIDOMStorageItem.h"
 #include "nsInterfaceHashtable.h"
@@ -58,11 +58,11 @@
 #include "nsCycleCollectionParticipant.h"
 
 #ifdef MOZ_STORAGE
-#include "nsDOMStorageDB.h"
+#include "nsDOMStorageDBWrapper.h"
 #endif
 
 class nsDOMStorage;
-class nsIDOMStorage2;
+class nsIDOMStorage;
 class nsDOMStorageItem;
 
 class nsDOMStorageEntry : public nsVoidPtrHashKey
@@ -120,7 +120,7 @@ protected:
   PRBool mInPrivateBrowsing;
 };
 
-class nsDOMStorage : public nsIDOMStorage,
+class nsDOMStorage : public nsIDOMStorageObsolete,
                      public nsPIDOMStorage
 {
 public:
@@ -130,12 +130,12 @@ public:
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorage, nsIDOMStorage)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
 
-  // nsIDOMStorage
-  NS_DECL_NSIDOMSTORAGE
+  // nsIDOMStorageObsolete
+  NS_DECL_NSIDOMSTORAGEOBSOLETE
 
-  // Helpers for implementing nsIDOMStorage2
+  // Helpers for implementing nsIDOMStorage
   nsresult GetItem(const nsAString& key, nsAString& aData);
   nsresult Clear();
 
@@ -143,7 +143,7 @@ public:
   virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal);
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
   virtual nsresult InitAsSessionStorage(nsIURI* aURI);
-  virtual already_AddRefed<nsIDOMStorage> Clone();
+  virtual already_AddRefed<nsIDOMStorageObsolete> Clone();
   virtual nsTArray<nsString> *GetKeys();
   virtual const nsCString &Domain();
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal);
@@ -155,8 +155,11 @@ public:
   // after a CacheStoragePermissions() call.  See the comments
   // for mSessionOnly below.
   PRBool UseDB() {
-    return mUseDB && !mSessionOnly &&
-           !nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode();
+    return mUseDB;
+  }
+
+  PRBool SessionOnly() {
+    return mSessionOnly;
   }
 
   // Check whether storage may be used by the caller, and whether it
@@ -194,7 +197,7 @@ public:
 
   static nsDOMStorage* FromSupports(nsISupports* aSupports)
   {
-    return static_cast<nsDOMStorage*>(static_cast<nsIDOMStorage*>(aSupports));
+    return static_cast<nsDOMStorage*>(static_cast<nsIDOMStorageObsolete*>(aSupports));
   }
 
 protected:
@@ -252,25 +255,25 @@ public:
   nsCString& GetQuotaDomainDBKey() {return mQuotaDomainDBKey;}
 
  #ifdef MOZ_STORAGE
-   static nsDOMStorageDB* gStorageDB;
+   static nsDOMStorageDBWrapper* gStorageDB;
  #endif
 };
 
-class nsDOMStorage2 : public nsIDOMStorage2,
+class nsDOMStorage2 : public nsIDOMStorage,
                       public nsPIDOMStorage
 {
 public:
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage2)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
 
-  NS_DECL_NSIDOMSTORAGE2
+  NS_DECL_NSIDOMSTORAGE
 
   // nsPIDOMStorage
   virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal);
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
   virtual nsresult InitAsSessionStorage(nsIURI* aURI);
-  virtual already_AddRefed<nsIDOMStorage> Clone();
+  virtual already_AddRefed<nsIDOMStorageObsolete> Clone();
   virtual nsTArray<nsString> *GetKeys();
   virtual const nsCString &Domain();
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal);
@@ -299,7 +302,7 @@ public:
   // nsIDOMStorageList
   NS_DECL_NSIDOMSTORAGELIST
 
-  nsIDOMStorage* GetNamedItem(const nsAString& aDomain, nsresult* aResult);
+  nsIDOMStorageObsolete* GetNamedItem(const nsAString& aDomain, nsresult* aResult);
 
   /**
    * Check whether aCurrentDomain has access to aRequestedDomain
@@ -311,7 +314,7 @@ public:
 protected:
 
   /**
-   * Return the global nsIDOMStorage for a particular domain.
+   * Return the global nsIDOMStorageObsolete for a particular domain.
    * aNoCurrentDomainCheck may be true to skip the domain comparison;
    * this is used for chrome code so that it may retrieve data from
    * any domain.
@@ -320,7 +323,7 @@ protected:
    * @param aCurrentDomain domain of current caller
    * @param aNoCurrentDomainCheck true to skip domain comparison
    */
-  nsIDOMStorage*
+  nsIDOMStorageObsolete*
   GetStorageForDomain(const nsACString& aRequestedDomain,
                       const nsACString& aCurrentDomain,
                       PRBool aNoCurrentDomainCheck,
@@ -333,7 +336,7 @@ protected:
   ConvertDomainToArray(const nsACString& aDomain,
                        nsTArray<nsCString>* aArray);
 
-  nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
+  nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorageObsolete> mStorages;
 };
 
 class nsDOMStorageItem : public nsIDOMStorageItem,
@@ -350,7 +353,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
 
-  // nsIDOMStorage
+  // nsIDOMStorageObsolete
   NS_DECL_NSIDOMSTORAGEITEM
 
   // nsIDOMToString

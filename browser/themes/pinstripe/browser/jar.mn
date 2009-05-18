@@ -13,8 +13,6 @@ classic.jar:
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/expander-round.png 
   skin/classic/browser/feed-icons.png
-  skin/classic/browser/find.png
-  skin/classic/browser/find-bar-background.png
   skin/classic/browser/Geo.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
@@ -46,14 +44,9 @@ classic.jar:
   skin/classic/browser/Search.png
   skin/classic/browser/Search-addengines.png
   skin/classic/browser/Search-bar.png
-  skin/classic/browser/search-bar-background-left.png
-  skin/classic/browser/search-bar-background-mid.png
-  skin/classic/browser/search-bar-background-right.png
   skin/classic/browser/section_collapsed.png
   skin/classic/browser/section_expanded.png
   skin/classic/browser/Secure-Glyph-White.png
-  skin/classic/browser/Secure.png
-  skin/classic/browser/Security-broken.png
   skin/classic/browser/Secure-statusbar.png
   skin/classic/browser/Secure-statusbar-broken.png
   skin/classic/browser/Secure-background.gif

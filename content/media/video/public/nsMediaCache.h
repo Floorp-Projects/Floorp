@@ -268,7 +268,8 @@ public:
   // requested. In particular we might unexpectedly start providing
   // data at offset 0. This need not be called if the offset is the
   // offset that the cache requested in
-  // nsMediaChannelStream::CacheClientSeek.
+  // nsMediaChannelStream::CacheClientSeek. This can be called at any
+  // time by the client, not just after a CacheClientSeek.
   void NotifyDataStarted(PRInt64 aOffset);
   // Notifies the cache that data has been received. The stream already
   // knows the offset because data is received in sequence and
@@ -296,7 +297,18 @@ public:
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
   PRInt64 GetCachedDataEnd(PRInt64 aOffset);
-  // XXX we may need to add GetUncachedDataEnd at some point.
+  // Returns the offset of the first byte of cached data at or after aOffset,
+  // or -1 if there is no such cached data.
+  PRInt64 GetNextCachedData(PRInt64 aOffset);
+
+  // Reads from buffered data only. Will fail if not all data to be read is
+  // in the cache. Will not mark blocks as read. Can be called from the main
+  // thread. It's the caller's responsibility to wrap the call in a pin/unpin,
+  // and also to check that the range they want is cached before calling this.
+  nsresult ReadFromCache(char* aBuffer,
+                         PRInt64 aOffset,
+                         PRInt64 aCount);
+
   // IsDataCachedToEndOfStream returns true if all the data from
   // aOffset to the end of the stream (the server-reported end, if the
   // real end is not known) is in cache. If we know nothing about the
@@ -309,6 +321,8 @@ public:
   // because it doesn't know when the decoder was paused, buffering, etc.
   // Do not pass zero.
   void SetPlaybackRate(PRUint32 aBytesPerSecond);
+  // Returns the last set value of SetSeekable.
+  PRBool IsSeekable();
 
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
@@ -371,6 +385,11 @@ private:
   // This method assumes that the cache monitor is held and can be called on
   // any thread.
   PRInt64 GetCachedDataEndInternal(PRInt64 aOffset);
+  // Returns the offset of the first byte of cached data at or after aOffset,
+  // or -1 if there is no such cached data.
+  // This method assumes that the cache monitor is held and can be called on
+  // any thread.
+  PRInt64 GetNextCachedDataInternal(PRInt64 aOffset);
   // A helper function to do the work of closing the stream. Assumes
   // that the cache monitor is held. Main thread only.
   // aMonitor is the nsAutoMonitor wrapper holding the cache monitor.

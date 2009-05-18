@@ -71,6 +71,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 68061-1.xml 68061-1-ref.xml
 == 68061-2.xml 68061-2-ref.xml
 == 76331-1.html 76331-1-ref.html
+== 81947-1.html 81947-ref.html
 == 84400-1.html 84400-1-ref.html
 == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
@@ -361,6 +362,7 @@ fails == 315920-5.html 315920-5-ref.html # bug 229915 ???
 == 328111-1.html 328111-1-ref.html
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
+== 329359-1.html 329359-1-ref.html
 == 331809-1.html 331809-1-ref.html
 == 332360.html 332360-ref.html
 == 332360-ltr.html 332360-ltr-ref.html
@@ -1228,6 +1230,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 481948-3.html 481948-3-ref.html # differ
 == 486848-1.xul 486848-1-ref.xul
 == 487539-1.html about:blank
 == 488390-1.html 488390-1-ref.html
+== 492661-1.html 492661-1-ref.html
 == 488685-1.html 488685-1-ref.html
 == 490182-1a.html 490182-1-ref.html
 == 490182-1b.html 490182-1-ref.html

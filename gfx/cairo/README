@@ -50,6 +50,8 @@ zero-sized.patch: deal with zero sized surface in ways less likely to crash.
 
 text-path-filling-threshold.patch: use path filling instead of platform glyph rasterization at a smaller size threshold of 256 device pixels, if the backend supports native filling (which we assume will be fast).
 
+zombie-face.patch: bug 486974; leak and possible crash with @font-face{src:url()}.  Upstream commit: 0238fe2cafea2e1ed19bb222117bd73ee6898d4d
+
 ==== pixman patches ====
 
 pixman-neon.patch: add ARM NEON optimized compositing functions

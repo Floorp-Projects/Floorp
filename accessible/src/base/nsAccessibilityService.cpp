@@ -41,6 +41,7 @@
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 #include "nsAccUtils.h"
+#include "nsARIAGridAccessible.h"
 #include "nsARIAMap.h"
 #include "nsIContentViewer.h"
 #include "nsCURILoader.h"
@@ -1493,31 +1494,18 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     return NS_OK;
   }
 
-  // Elements may implement nsIAccessibleProvider via XBL. This allows them to
-  // say what kind of accessible to create.
-  nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!newAcc && !isHTML) {
-    if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-             content->Tag() == nsAccessibilityAtoms::svg) {
-      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell,
-                                        nsIAccessibleRole::ROLE_DIAGRAM);
-    }
-    else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
-             content->Tag() == nsAccessibilityAtoms::math) {
-      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell,
-                                        nsIAccessibleRole::ROLE_EQUATION);
-    }
-  } else if (!newAcc) {  // HTML accessibles
+  if (!newAcc && isHTML) {  // HTML accessibles
     PRBool tryTagNameOrFrame = PR_TRUE;
 
     nsIAtom *frameType = frame->GetType();
-    if (!roleMapEntry &&
-        (frameType == nsAccessibilityAtoms::tableCaptionFrame ||
-         frameType == nsAccessibilityAtoms::tableCellFrame ||
-         frameType == nsAccessibilityAtoms::tableRowGroupFrame ||
-         frameType == nsAccessibilityAtoms::tableRowFrame)) {
+
+    PRBool partOfHTMLTable =
+      frameType == nsAccessibilityAtoms::tableCaptionFrame ||
+      frameType == nsAccessibilityAtoms::tableCellFrame ||
+      frameType == nsAccessibilityAtoms::tableRowGroupFrame ||
+      frameType == nsAccessibilityAtoms::tableRowFrame;
+
+    if (!roleMapEntry && partOfHTMLTable) {
       // Table-related frames don't get table-related roles
       // unless they are inside a table, but they may still get generic
       // accessibles
@@ -1562,14 +1550,27 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         tryTagNameOrFrame = PR_FALSE;
     }
 
-    if (tryTagNameOrFrame) {
+    if (roleMapEntry && (!partOfHTMLTable || !tryTagNameOrFrame ||
+        frameType != nsAccessibilityAtoms::tableOuterFrame)) {
+      // Try to create ARIA grid/treegrid accessibles.
+      if (roleMapEntry->role == nsIAccessibleRole::ROLE_TABLE ||
+          roleMapEntry->role == nsIAccessibleRole::ROLE_TREE_TABLE) {
+        newAcc = new nsARIAGridAccessible(aNode, aWeakShell);
+      } else if (roleMapEntry->role == nsIAccessibleRole::ROLE_GRID_CELL ||
+                 roleMapEntry->role == nsIAccessibleRole::ROLE_ROWHEADER ||
+                 roleMapEntry->role == nsIAccessibleRole::ROLE_COLUMNHEADER) {
+        newAcc = new nsARIAGridCellAccessible(aNode, aWeakShell);
+      }
+    }
+
+    if (!newAcc && tryTagNameOrFrame) {
       // Prefer to use markup (mostly tag name, perhaps attributes) to
       // decide if and what kind of accessible to create.
       // The method creates accessibles for table related content too therefore
       // we do not call it if accessibles for table related content are
       // prevented above.
-      rv = CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode,
-                                        getter_AddRefs(newAcc));
+      nsresult rv = CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode,
+                                                 getter_AddRefs(newAcc));
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!newAcc) {
@@ -1588,6 +1589,27 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         }
         frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
       }
+    }
+  }
+
+  if (!newAcc) {
+    // Elements may implement nsIAccessibleProvider via XBL. This allows them to
+    // say what kind of accessible to create.
+    nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!newAcc) {
+    // Create generic accessibles for SVG and MathML nodes.
+    if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+        content->Tag() == nsAccessibilityAtoms::svg) {
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell,
+                                        nsIAccessibleRole::ROLE_DIAGRAM);
+    }
+    else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
+             content->Tag() == nsAccessibilityAtoms::math) {
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell,
+                                        nsIAccessibleRole::ROLE_EQUATION);
     }
   }
 

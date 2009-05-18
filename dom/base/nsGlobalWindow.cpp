@@ -6772,7 +6772,7 @@ nsGlobalWindow::GetDocument(nsIDOMDocumentView ** aDocumentView)
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
+nsGlobalWindow::GetSessionStorage(nsIDOMStorageObsolete ** aSessionStorage)
 {
   FORWARD_TO_INNER(GetSessionStorage, (aSessionStorage), NS_ERROR_UNEXPECTED);
 
@@ -6819,31 +6819,24 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetLocalStorage(nsIDOMStorage2 ** aLocalStorage)
+nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 {
   FORWARD_TO_INNER(GetLocalStorage, (aLocalStorage), NS_ERROR_UNEXPECTED);
 
   NS_ENSURE_ARG(aLocalStorage);
-
-  if (nsDOMStorageManager::gStorageManager &&
-      nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return NS_ERROR_DOM_SECURITY_ERR;
 
   if (!mLocalStorage) {
     *aLocalStorage = nsnull;
 
     nsresult rv;
 
+    PRPackedBool unused;
+    if (!nsDOMStorage::CanUseStorage(&unused))
+      return NS_ERROR_DOM_SECURITY_ERR;
+
     nsIPrincipal *principal = GetPrincipal();
     if (!principal)
       return NS_OK;
-
-    PRPackedBool sessionOnly;
-    if (!nsDOMStorage::CanUseStorage(&sessionOnly))
-      return NS_ERROR_DOM_SECURITY_ERR;
-
-    if (sessionOnly)
-      return NS_ERROR_DOM_SECURITY_ERR;
 
     nsCOMPtr<nsIDOMStorageManager> storageManager =
       do_GetService("@mozilla.org/dom/storagemanager;1", &rv);
@@ -6996,7 +6989,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       nsCOMPtr<nsIDocShell_MOZILLA_1_9_1> docShell =
         do_QueryInterface(GetDocShell());
       if (principal && docShell) {
-        nsCOMPtr<nsIDOMStorage> storage;
+        nsCOMPtr<nsIDOMStorageObsolete> storage;
         docShell->GetSessionStorageForPrincipal(principal,
                                                 PR_FALSE,
                                                 getter_AddRefs(storage));
@@ -7090,7 +7083,7 @@ FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
 {
   nsGlobalWindow *win = static_cast<nsGlobalWindow *>(userArg);
 
-  nsCOMPtr<nsIDOMStorage> storage;
+  nsCOMPtr<nsIDOMStorageObsolete> storage;
   win->GetSessionStorage(getter_AddRefs(storage));
 
   if (storage) {

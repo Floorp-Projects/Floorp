@@ -606,7 +606,7 @@ protected:
 
     nsresult GetSessionStorageForURI(nsIURI* aURI,
                                      PRBool create,
-                                     nsIDOMStorage** aStorage);
+                                     nsIDOMStorageObsolete** aStorage);
 
     // helpers for executing commands
     nsresult GetControllerForCommand(const char *inCommand,
@@ -634,6 +634,7 @@ protected:
     PRPackedBool               mAllowJavascript;
     PRPackedBool               mAllowMetaRedirects;
     PRPackedBool               mAllowImages;
+    PRPackedBool               mAllowDNSPrefetch;
     PRPackedBool               mFocusDocFirst;
     PRPackedBool               mHasFocus;
     PRPackedBool               mCreatingDocument; // (should be) debugging only
@@ -726,7 +727,7 @@ protected:
     nsRevocableEventPtr<RestorePresentationEvent> mRestorePresentationEvent;
 
     // hash of session storages, keyed by domain
-    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
+    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorageObsolete> mStorages;
 
     // Index into the SHTransaction list, indicating the previous and current
     // transaction at the time that this DocShell begins to load

@@ -3878,13 +3878,31 @@ nsContentUtils::IsInSameAnonymousTree(nsINode* aNode,
  
 }
 
+class AnonymousContentDestroyer : public nsRunnable {
+public:
+  AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent) {
+    mContent.swap(*aContent);
+    mParent = mContent->GetParent();
+    mDoc = mContent->GetOwnerDoc();
+  }
+  NS_IMETHOD Run() {
+    mContent->UnbindFromTree();
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIContent> mContent;
+  // Hold strong refs to the parent content and document so that they
+  // don't die unexpectedly
+  nsCOMPtr<nsIDocument> mDoc;
+  nsCOMPtr<nsIContent> mParent;
+};
+
 /* static */
 void
 nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
 {
   if (*aContent) {
-    (*aContent)->UnbindFromTree();
-    *aContent = nsnull;
+    AddScriptRunner(new AnonymousContentDestroyer(aContent));
   }
 }
 

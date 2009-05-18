@@ -235,6 +235,26 @@ placesTransactionsService.prototype = {
   },
 
   // nsITransactionManager
+  beginBatch: function() {
+    this.mTransactionManager.beginBatch();
+
+    // A no-op transaction is pushed to the stack, in order to make safe and
+    // easy to implement "Undo" an unknown number of transactions (including 0),
+    // "above" beginBatch and endBatch. Otherwise,implementing Undo that way
+    // head to dataloss: for example, if no changes were done in the
+    // edit-item panel, the last transaction on the undo stack would be the
+    // initial createItem transaction, or even worse, the batched editing of
+    // some other item.
+    // DO NOT MOVE this to the window scope, that would leak (bug 490068)! 
+    this.doTransaction({ doTransaction: function() { },
+                         undoTransaction: function() { },
+                         redoTransaction: function() { },
+                         isTransient: false,
+                         merge: function() { return false; } });
+  },
+
+  endBatch: function() this.mTransactionManager.endBatch(),
+
   doTransaction: function placesTxn_doTransaction(txn) {
     this.mTransactionManager.doTransaction(txn);
     this._updateCommands();
@@ -251,8 +271,6 @@ placesTransactionsService.prototype = {
   },
 
   clear: function() this.mTransactionManager.clear(),
-  beginBatch: function() this.mTransactionManager.beginBatch(),
-  endBatch: function() this.mTransactionManager.endBatch(),
 
   get numberOfUndoItems() {
     return this.mTransactionManager.numberOfUndoItems;
