@@ -41,17 +41,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= oggplay
+EXPORTS_NAMESPACES = oggplay
 
-EXPORTS		= \
-		config_win32.h \
-		oggplay.h \
-		oggplay_callback_info.h \
-		oggplay_enums.h \
-		oggplay_reader.h \
-		oggplay_tools.h \
-		oggplay_seek.h \
-		oggplay_query.h \
-		$(NULL)
+EXPORTS_oggplay = \
+  config_win32.h \
+  oggplay.h \
+  oggplay_callback_info.h \
+  oggplay_enums.h \
+  oggplay_reader.h \
+  oggplay_tools.h \
+  oggplay_seek.h \
+  oggplay_query.h \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

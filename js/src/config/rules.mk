@@ -38,8 +38,9 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+
 ifndef topsrcdir
-topsrcdir		= $(DEPTH)
+$(error topsrcdir was not set))
 endif
 
 ifndef MOZILLA_DIR
@@ -52,6 +53,13 @@ endif
 
 ifndef INCLUDED_VERSION_MK
 include $(topsrcdir)/config/version.mk
+endif
+
+ifdef SDK_XPIDLSRCS
+XPIDLSRCS += $(SDK_XPIDLSRCS)
+endif
+ifdef SDK_HEADERS
+EXPORTS += $(SDK_HEADERS)
 endif
 
 REPORT_BUILD = @echo $(notdir $<)
@@ -195,7 +203,7 @@ ifdef CPP_UNIT_TESTS
 # which stuff links.
 CPPSRCS += $(CPP_UNIT_TESTS)
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-REQUIRES += testing xpcom
+INCLUDES += -I$(DIST)/include/testing
 LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
 
 # ...and run them the usual way
@@ -385,11 +393,10 @@ LIBOBJS			:= $(addprefix \", $(OBJS))
 LIBOBJS			:= $(addsuffix \", $(LIBOBJS))
 
 ifndef MOZ_AUTO_DEPS
-ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS))
 MDDEPFILES		= $(addprefix $(MDDEPDIR)/,$(OBJS:.$(OBJ_SUFFIX)=.pp))
 ifndef NO_GEN_XPT
-MDDEPFILES		+= $(addprefix $(MDDEPDIR)/,$(XPIDLSRCS:.idl=.xpt)) \
-			   $(addprefix $(MDDEPDIR)/,$(SDK_XPIDLSRCS:.idl=.xpt))
+MDDEPFILES		+= $(addprefix $(MDDEPDIR)/,$(XPIDLSRCS:.idl=.xpt))
 endif
 endif
 endif
@@ -506,7 +513,7 @@ endif
 # MAKE_DIRS: List of directories to build while looping over directories.
 # A Makefile that needs $(MDDEPDIR) created but doesn't set any of these
 # variables we know to check can just set NEED_MDDEPDIR explicitly.
-ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS)$(NEED_MDDEPDIR))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS)$(NEED_MDDEPDIR))
 MAKE_DIRS		+= $(CURDIR)/$(MDDEPDIR)
 GARBAGE_DIRS		+= $(MDDEPDIR)
 endif
@@ -785,7 +792,7 @@ $(PARALLEL_DIRS_export): %_export: %/Makefile
 	+@$(call SUBMAKE,export,$*)
 endif
 
-export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),$(PUBLIC)) $(if $(SDK_HEADERS)$(SDK_XPIDLSRCS),$(SDK_PUBLIC)) $(if $(XPIDLSRCS),$(IDL_DIR)) $(if $(SDK_XPIDLSRCS),$(SDK_IDL_DIR))
+export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(XPIDLSRCS),$(IDL_DIR))
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
 
@@ -1551,15 +1558,10 @@ endif
 ###############################################################################
 
 ################################################################################
-# Copy each element of EXPORTS to $(PUBLIC)
-
-ifneq ($(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),)
-$(SDK_PUBLIC) $(PUBLIC):
-	$(NSINSTALL) -D $@
-endif
+# Copy each element of EXPORTS to $(DIST)/include
 
 ifdef MOZ_JAVAXPCOM
-ifneq ($(XPIDLSRCS)$(SDK_XPIDLSRCS),)
+ifneq ($(XPIDLSRCS),)
 $(JAVA_DIST_DIR)::
 	$(NSINSTALL) -D $@
 endif
@@ -1573,18 +1575,18 @@ export:: $(FINAL_TARGET)
 endif
 
 ifndef NO_DIST_INSTALL
-ifneq ($(EXPORTS),)
-export:: $(EXPORTS) $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
-endif 
 
-ifneq ($(SDK_HEADERS),)
-export:: $(SDK_HEADERS) $(SDK_PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
+ifneq (,$(EXPORTS))
+export:: $(EXPORTS)
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/include
+endif
 
-export:: $(SDK_HEADERS) $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
-endif 
+define EXPORT_NAMESPACE_RULE
+export:: $(EXPORTS_$(namespace))
+	$(INSTALL) $(IFLAGS1) $$^ $(DIST)/include/$(namespace)
+endef
+
+$(foreach namespace,$(EXPORTS_NAMESPACES),$(eval $(EXPORT_NAMESPACE_RULE)))
 endif # NO_DIST_INSTALL
 
 ################################################################################
@@ -1634,10 +1636,10 @@ endif
 
 endif 
 ################################################################################
-# Export the elements of $(XPIDLSRCS) & $(SDK_XPIDLSRCS), 
+# Export the elements of $(XPIDLSRCS)
 # generating .h and .xpt files and moving them to the appropriate places.
 
-ifneq ($(XPIDLSRCS)$(SDK_XPIDLSRCS),)
+ifneq ($(XPIDLSRCS),)
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS))
 
@@ -1654,10 +1656,10 @@ export:: FORCE
 	@echo; sleep 2; false
 endif
 
-$(SDK_IDL_DIR) $(IDL_DIR)::
+$(IDL_DIR)::
 	$(NSINSTALL) -D $@
 
-# generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
+# generate .h files from into $(XPIDL_GEN_DIR), then export to $(DIST)/include;
 # warn against overriding existing .h file. 
 $(XPIDL_GEN_DIR)/.done:
 	@if test ! -d $(XPIDL_GEN_DIR); then echo Creating $(XPIDL_GEN_DIR)/.done; rm -rf $(XPIDL_GEN_DIR); mkdir $(XPIDL_GEN_DIR); fi
@@ -1669,7 +1671,7 @@ $(XPIDL_GEN_DIR)/.done:
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
 	$(ELOG) $(XPIDL_COMPILE) -m header -w $(XPIDL_FLAGS) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
-	@if test -n "$(findstring $*.h, $(EXPORTS) $(SDK_HEADERS))"; \
+	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
 ifndef NO_GEN_XPT
@@ -1681,8 +1683,8 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
-$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) $(GLOBAL_DEPS) $(XPIDL_LINK)
-	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) 
+$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS)) $(GLOBAL_DEPS) $(XPIDL_LINK)
+	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
@@ -1694,7 +1696,7 @@ endif # NO_GEN_XPT
 
 GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 
-endif # XPIDLSRCS || SDK_XPIDLSRCS
+endif # XPIDLSRCS
 
 ifneq ($(XPIDLSRCS),)
 # export .idl files to $(IDL_DIR)
@@ -1702,7 +1704,7 @@ ifndef NO_DIST_INSTALL
 export:: $(XPIDLSRCS) $(IDL_DIR)
 	$(INSTALL) $(IFLAGS1) $^
 
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(PUBLIC)
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(DIST)/include
 	$(INSTALL) $(IFLAGS1) $^ 
 endif # NO_DIST_INSTALL
 
@@ -1722,9 +1724,9 @@ $(IDL_DIR)::
 
 export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
 
-ifneq ($(XPIDLSRCS)$(SDK_XPIDLSRCS),)
+ifneq ($(XPIDLSRCS),)
 ifndef NO_DIST_INSTALL
-export-idl:: $(XPIDLSRCS) $(SDK_XPIDLSRCS) $(IDL_DIR)
+export-idl:: $(XPIDLSRCS) $(IDL_DIR)
 	$(INSTALL) $(IFLAGS1) $^
 endif
 endif
@@ -1732,33 +1734,10 @@ endif
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
 
-
-
-
-ifneq ($(SDK_XPIDLSRCS),)
-# export .idl files to $(IDL_DIR) & $(SDK_IDL_DIR)
-ifndef NO_DIST_INSTALL
-export:: $(SDK_XPIDLSRCS) $(IDL_DIR)
-	$(INSTALL) $(IFLAGS1) $^
-
-export:: $(SDK_XPIDLSRCS) $(SDK_IDL_DIR)
-	$(INSTALL) $(IFLAGS1) $^
-
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS)) $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
-
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS)) $(SDK_PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
-endif
-
-endif # SDK_XPIDLSRCS
-
-
-
 ifdef MOZ_JAVAXPCOM
-ifneq ($(XPIDLSRCS)$(SDK_XPIDLSRCS),)
+ifneq ($(XPIDLSRCS),)
 
-JAVA_XPIDLSRCS = $(XPIDLSRCS) $(SDK_XPIDLSRCS)
+JAVA_XPIDLSRCS = $(XPIDLSRCS)
 
 # A single IDL file can contain multiple interfaces, which result in multiple
 # Java interface files.  So use hidden dependency files.
@@ -1792,7 +1771,7 @@ $(JAVA_INSTALL_DIR):
 export:: $(JAVA_DIST_DIR) $(JAVADEPFILES) $(JAVA_INSTALL_DIR)
 	(cd $(JAVA_GEN_DIR) && tar $(TAR_CREATE_FLAGS) - .) | (cd $(JAVA_INSTALL_DIR) && tar -xf -)
 
-endif # XPIDLSRCS || SDK_XPIDLSRCS
+endif # XPIDLSRCS
 endif # MOZ_JAVAXPCOM
 
 ################################################################################
@@ -1842,31 +1821,6 @@ ifndef NO_DIST_INSTALL
 endif
 
 endif
-
-################################################################################
-# SDK
-
-ifneq (,$(SDK_LIBRARY))
-$(SDK_LIB_DIR)::
-	$(NSINSTALL) -D $@
-
-ifndef NO_DIST_INSTALL
-libs:: $(SDK_LIBRARY) $(SDK_LIB_DIR)
-	$(INSTALL) $(IFLAGS2) $^
-endif
-
-endif # SDK_LIBRARY
-
-ifneq (,$(SDK_BINARY))
-$(SDK_BIN_DIR)::
-	$(NSINSTALL) -D $@
-
-ifndef NO_DIST_INSTALL
-libs:: $(SDK_BINARY) $(SDK_BIN_DIR)
-	$(INSTALL) $(IFLAGS2) $^
-endif
-
-endif # SDK_BINARY
 
 ################################################################################
 # CHROME PACKAGING
@@ -2022,7 +1976,7 @@ $(MDDEPDIR)/%.pp: %.s
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_NOAUTO)
 
-ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS))
 depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MDDEPFILES)
 else
 depend:: $(SUBMAKEFILES)
@@ -2058,7 +2012,7 @@ $(CURDIR)/$(MDDEPDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
 ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
-ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS))
 MDDEPEND_FILES		:= $(strip $(wildcard $(MDDEPDIR)/*.pp))
 
 ifneq (,$(MDDEPEND_FILES))
@@ -2266,3 +2220,25 @@ check:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
 endif
+
+
+FREEZE_VARIABLES = \
+  CSRCS \
+  CPPSRCS \
+  EXPORTS \
+  XPIDLSRCS \
+  DIRS \
+  LIBRARY \
+  MODULE \
+  REQUIRES \
+  SHORT_LIBNAME \
+  TIERS \
+  $(NULL)
+
+$(foreach var,$(FREEZE_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
+
+CHECK_FROZEN_VARIABLES = $(foreach var,$(FREEZE_VARIABLES), \
+  $(if $(subst $($(var)_FROZEN),,'$($(var))'),$(error Makefile variable '$(var)' changed value after including rules.mk. Was $($(var)_FROZEN), now $($(var)).)))
+
+libs export libs::
+	$(CHECK_FROZEN_VARIABLES)

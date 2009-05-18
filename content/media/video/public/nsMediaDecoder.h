@@ -38,14 +38,14 @@
 #if !defined(nsMediaDecoder_h_)
 #define nsMediaDecoder_h_
 
-#include "nsIObserver.h"
+#include "mozilla/XPCOM.h"
+
 #include "nsIPrincipal.h"
 #include "nsSize.h"
 #include "prlog.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsITimer.h"
-#include "nsTimeStamp.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gVideoDecoderLog;

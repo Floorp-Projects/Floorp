@@ -76,3 +76,5 @@ OS_LIBS += winmm.lib
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += -I$(srcdir)/../include

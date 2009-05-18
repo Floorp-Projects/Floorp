@@ -77,6 +77,8 @@ RCFLAGS += -I$(srcdir)
 else
 RCFLAGS += --include-dir $(srcdir)
 endif
+
+REQUIRES += string
 endif
 
 ifneq ($(MOZ_ENABLE_GTK2),)
@@ -138,7 +140,6 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 # Pick up nsWindowsRestart.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
-REQUIRES += string
 endif
 
 CXXFLAGS += $(BZ2_CFLAGS)
