@@ -2062,8 +2062,12 @@ nsComputedDOMStyle::GetLineHeight(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscoord lineHeight;
-  GetLineHeightCoord(lineHeight);
-  val->SetAppUnits(lineHeight);
+  if (GetLineHeightCoord(lineHeight)) {
+    val->SetAppUnits(lineHeight);
+  } else {
+    SetValueToCoord(val, GetStyleText()->mLineHeight,
+                    nsnull, nsCSSProps::kLineHeightKTable);
+  }
 
   return CallQueryInterface(val, aValue);
 }
@@ -3213,7 +3217,22 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 PRBool
 nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 {
-  aCoord = nsHTMLReflowState::CalcLineHeight(mStyleContextHolder);
+  AssertFlushedPendingReflows();
+
+  nscoord blockHeight = NS_AUTOHEIGHT;
+  if (GetStyleText()->mLineHeight.GetUnit() == eStyleUnit_Enumerated) {
+    if (!mInnerFrame)
+      return PR_FALSE;
+
+    if (mInnerFrame->IsContainingBlock()) {
+      blockHeight = mInnerFrame->GetContentRect().height;
+    } else {
+      GetCBContentHeight(blockHeight);
+    }
+  }
+
+  aCoord = nsHTMLReflowState::CalcLineHeight(mStyleContextHolder,
+                                             blockHeight);
   
   // CalcLineHeight uses font->mFont.size, but we want to use
   // font->mSize as the font size.  Adjust for that.  Also adjust for
@@ -4124,7 +4143,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(height,                 Height),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(left,                   Left),
     COMPUTED_STYLE_MAP_ENTRY(letter_spacing,                LetterSpacing),
-    COMPUTED_STYLE_MAP_ENTRY(line_height,                   LineHeight),
+    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(line_height,            LineHeight),
     //// COMPUTED_STYLE_MAP_ENTRY(list_style,               ListStyle),
     COMPUTED_STYLE_MAP_ENTRY(list_style_image,              ListStyleImage),
     COMPUTED_STYLE_MAP_ENTRY(list_style_position,           ListStylePosition),
@@ -4184,7 +4203,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(text_transform,                TextTransform),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(top,                    Top),
     COMPUTED_STYLE_MAP_ENTRY(unicode_bidi,                  UnicodeBidi),
-    COMPUTED_STYLE_MAP_ENTRY(vertical_align,                VerticalAlign),
+    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(vertical_align,         VerticalAlign),
     COMPUTED_STYLE_MAP_ENTRY(visibility,                    Visibility),
     // COMPUTED_STYLE_MAP_ENTRY(voice_family,               VoiceFamily),
     // COMPUTED_STYLE_MAP_ENTRY(volume,                     Volume),

@@ -398,18 +398,21 @@ public:
   static nsIFrame* GetContainingBlockFor(const nsIFrame* aFrame);
 
   /**
-   * Calculate the raw line-height property for the given frame. The return
-   * value will be >= 0.
+   * Calculate the used line-height property. The return value will be >= 0.
    */
-  static nscoord CalcLineHeight(nsIFrame* aFrame)
-  {
-    return CalcLineHeight(aFrame->GetStyleContext());
-  }
-  
+  nscoord CalcLineHeight() const;
+
   /**
-   * Same as above, but doesn't need a frame.
+   * Same as CalcLineHeight() above, but doesn't need a reflow state.
+   *
+   * @param aBlockHeight The computed height of the content rect of the block
+   *                     that the line should fill.
+   *                     Only used with line-height:-moz-block-height.
+   *                     NS_AUTOHEIGHT results in a normal line-height for
+   *                     line-height:-moz-block-height.
    */
-  static nscoord CalcLineHeight(nsStyleContext* aStyleContext);
+  static nscoord CalcLineHeight(nsStyleContext* aStyleContext,
+                                nscoord aBlockHeight);
 
 
   void ComputeContainingBlockRectangle(nsPresContext*          aPresContext,
