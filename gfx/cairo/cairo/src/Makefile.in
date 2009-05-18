@@ -130,7 +130,9 @@ CSRCS   = \
         cairo-wideint.c \
         $(NULL)
 
-EXPORTS = cairo.h cairo-version.h cairo-features.h cairo-platform.h cairo-deprecated.h cairo-rename.h
+EXPORTS_NAMESPACES = cairo
+
+EXPORTS_cairo = cairo.h cairo-version.h cairo-features.h cairo-platform.h cairo-deprecated.h cairo-rename.h
 
 # cairo-type1-subset.c should be here, but it's only supported on freetype platforms
 

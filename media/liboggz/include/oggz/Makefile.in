@@ -41,11 +41,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= oggz
+EXPORTS_NAMESPACES = oggz
 
-EXPORTS		= \
-		config.h \
-		config_win32.h \
+EXPORTS_oggz = \
 		oggz.h \
 		oggz_comments.h \
 		oggz_constants.h \

@@ -38,8 +38,7 @@
 #if !defined(nsMediaStream_h_)
 #define nsMediaStream_h_
 
-#include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
+#include "mozilla/XPCOM.h"
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
@@ -48,7 +47,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "prlock.h"
 #include "nsMediaCache.h"
-#include "nsTimeStamp.h"
 
 // For HTTP seeking, if number of bytes needing to be
 // seeked forward is less than this value then a read is
