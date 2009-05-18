@@ -2479,6 +2479,19 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
   return width;
 }
 
+/* static */ nscoord
+nsLayoutUtils::GetCenteredFontBaseline(nsIFontMetrics* aFontMetrics,
+                                       nscoord         aLineHeight)
+{
+  nscoord fontAscent, fontHeight;
+  aFontMetrics->GetMaxAscent(fontAscent);
+  aFontMetrics->GetHeight(fontHeight);
+
+  nscoord leading = aLineHeight - fontHeight;
+  return fontAscent + leading/2;
+}
+
+
 /* static */ PRBool
 nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 {

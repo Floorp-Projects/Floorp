@@ -1161,11 +1161,12 @@ var gCSSProperties = {
 		 * getComputedStyle (which uses the CSS2 computed value, or
 		 * CSS2.1 used value) doesn't match what the CSS2.1 computed
 		 * value is.  And they even require consistent font metrics for
-		 * computation of 'normal'.
+		 * computation of 'normal'.  -moz-block-height requires height
+		 * on a block.
 		 */
-		prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal" },
+		prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal", "height": "18px", "display": "block"},
 		initial_values: [ "normal" ],
-		other_values: [ "1.0", "1", "1em", "47px" ],
+		other_values: [ "1.0", "1", "1em", "47px", "-moz-block-height" ],
 		invalid_values: []
 	},
 	"list-style": {
