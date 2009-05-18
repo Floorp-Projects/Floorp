@@ -312,6 +312,11 @@ protected:
   void ChangeDelayLoadStatus(PRBool aDelay);
 
   /**
+   * If we suspended downloading after the first frame, unsuspend now.
+   */
+  void StopSuspendingAfterFirstFrame();
+
+  /**
    * Called when our channel is redirected to another channel.
    * Updates our mChannel reference to aNewChannel.
    */
@@ -435,4 +440,12 @@ protected:
   // PR_TRUE when we've got a task queued to call SelectResource(),
   // or while we're running SelectResource().
   PRPackedBool mIsRunningSelectResource;
+
+  // PR_TRUE if we suspended the decoder because we were paused,
+  // autobuffer and autoplay were not set, and we loaded the first frame.
+  PRPackedBool mSuspendedAfterFirstFrame;
+
+  // PR_TRUE if we are allowed to suspend the decoder because we were paused,
+  // autobuffer and autoplay were not set, and we loaded the first frame.
+  PRPackedBool mAllowSuspendAfterFirstFrame;
 };
