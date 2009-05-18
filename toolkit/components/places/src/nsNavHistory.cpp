@@ -272,6 +272,44 @@ inline void ReverseString(const nsString& aInput, nsAString& aReversed)
     aReversed.Append(aInput[i]);
 }
 
+namespace mozilla {
+  namespace places {
+
+    bool hasRecentCorruptDB()
+    {
+      nsCOMPtr<nsIFile> profDir;
+      nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                           getter_AddRefs(profDir));
+      NS_ENSURE_SUCCESS(rv, false);
+      nsCOMPtr<nsISimpleEnumerator> entries;
+      rv = profDir->GetDirectoryEntries(getter_AddRefs(entries));
+      NS_ENSURE_SUCCESS(rv, false);
+      PRBool hasMore;
+      while (NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> next;
+        rv = entries->GetNext(getter_AddRefs(next));
+        NS_ENSURE_SUCCESS(rv, false);
+        nsCOMPtr<nsIFile> currFile = do_QueryInterface(next, &rv);
+        NS_ENSURE_SUCCESS(rv, false);
+
+        nsAutoString leafName;
+        rv = currFile->GetLeafName(leafName);
+        NS_ENSURE_SUCCESS(rv, false);
+        if (leafName.Length() >= DB_CORRUPT_FILENAME.Length() &&
+            leafName.Find(".corrupt", DB_FILENAME.Length()) != -1) {
+          PRInt64 lastMod;
+          rv = currFile->GetLastModifiedTime(&lastMod);
+          NS_ENSURE_SUCCESS(rv, false);
+          if (PR_Now() - lastMod > (PRInt64)24 * 60 * 60 * 1000 * 1000)
+           return true;
+        }
+      }
+      return false;
+    }
+
+  }
+}
+
 // UpdateBatchScoper
 //
 //    This just sets begin/end of batch updates to correspond to C++ scopes so
@@ -445,25 +483,36 @@ nsNavHistory::Init()
   // prefs
   LoadPrefs(PR_TRUE);
 
-  // init db file
+  // Init the database file.  If we won't be able to connect to the database it
+  // is most likely corrupt, so we will backup it and create a new one.
   rv = InitDBFile(PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // init db and statements
+  // Init the database schema.  If this will fail there's an high possibility
+  // the schema is corrupt or incorrect, so we will force a new database
+  // initialization.
   rv = InitDB();
   if (NS_FAILED(rv)) {
-    // if unable to initialize the db, force-re-initialize it:
-    // InitDBFile will backup the old db and create a new one.
+    // Forced InitDBFile will backup the old db and create a new one.
     rv = InitDBFile(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
+    // Try to initialize the schema again on the new database.
     rv = InitDB();
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Notify we have finished database initialization
+  // Initialize all the items that are not part of the on-disk database, like
+  // views, temp tables, functions.  Do not initialize these in InitDBFile, or
+  // in case of failure we would mark the database as corrupt and try to
+  // replace it, even if it's sane.
+  rv = InitAdditionalDBItems();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify we have finished database initialization.
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
-  nsCOMPtr<PlacesEvent> completeEvent = new PlacesEvent(PLACES_INIT_COMPLETE_EVENT_TOPIC);
+  nsRefPtr<PlacesEvent> completeEvent =
+    new PlacesEvent(PLACES_INIT_COMPLETE_EVENT_TOPIC);
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -589,20 +638,39 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
   rv = mDBFile->Append(DB_FILENAME);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if forcing, backup and remove the old file
   if (aForceInit) {
-    // backup the database
-    nsCOMPtr<nsIFile> backup;
-    rv = mDBService->BackupDatabaseFile(mDBFile, DB_CORRUPT_FILENAME, profDir,
-                                        getter_AddRefs(backup));
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If forcing initialization, backup and remove the old file.  If we have
+    // already failed in the last 24 hours avoid to create another corrupt file,
+    // since doing so, in some situation, could cause us to create a new corrupt
+    // file at every try to access any Places service.  That is bad because it
+    // would quickly fill the user's disk space without any notice.
+    if (!mozilla::places::hasRecentCorruptDB()) {
+      // backup the database
+      nsCOMPtr<nsIFile> backup;
+      rv = mDBService->BackupDatabaseFile(mDBFile, DB_CORRUPT_FILENAME, profDir,
+                                          getter_AddRefs(backup));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-    // close database connection if open
+    // Close database connection if open.
+    // If there's any not finalized statement or this fails for any reason
+    // we won't be able to remove the database.
     rv = mDBConn->Close();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // and remove the file
+    // Remove the broken database.
     rv = mDBFile->Remove(PR_FALSE);
+    if (NS_FAILED(rv)) {
+      // If the file is still in use this will fail and we won't be able to
+      // start with a clean database.  The process of backing up a corrupt
+      // database will loop on the same database file at any next service
+      // request.
+      // We can't do much at this point, so fire a locked event so that user is
+      // notified that we can't ensure Places to work.
+      nsRefPtr<PlacesEvent> lockedEvent =
+        new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
+      (void)NS_DispatchToMainThread(lockedEvent);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If aForceInit is true we were unable to initialize or upgrade the current
@@ -649,7 +717,8 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     // If the database cannot be opened for any reason other than corruption,
     // send out a notification and do not continue initialization.
     // Note: We swallow errors here, since we want service init to fail anyway.
-    nsCOMPtr<PlacesEvent> lockedEvent = new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
+    nsRefPtr<PlacesEvent> lockedEvent =
+      new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
     (void)NS_DispatchToMainThread(lockedEvent);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -893,11 +962,18 @@ nsNavHistory::InitDB()
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
+  // ANY FAILURE IN THIS METHOD WILL CAUSE US TO MARK THE DATABASE AS CORRUPT
+  // AND TRY TO REPLACE IT.
+  // DO NOT PUT HERE ANYTHING THAT IS NOT RELATED TO INITIALIZATION OR MODIFYING
+  // THE DISK DATABASE.
 
-  // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
+  return NS_OK;
+}
 
-  rv = InitTempTables();
+nsresult
+nsNavHistory::InitAdditionalDBItems()
+{
+  nsresult rv = InitTempTables();
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InitViews();
   NS_ENSURE_SUCCESS(rv, rv);
