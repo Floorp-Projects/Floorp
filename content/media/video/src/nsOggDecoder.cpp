@@ -347,7 +347,15 @@ public:
   // Must be called with the decode monitor held. Can be called by main
   // thread.
   PRBool IsBuffering() const {
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
     return mState == nsOggDecodeStateMachine::DECODER_STATE_BUFFERING;
+  }
+
+  // Must be called with the decode monitor held. Can be called by main
+  // thread.
+  PRBool IsSeeking() const {
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mDecoder->GetMonitor());
+    return mState == nsOggDecodeStateMachine::DECODER_STATE_SEEKING;
   }
 
 protected:
@@ -1288,6 +1296,14 @@ nsresult nsOggDecodeStateMachine::Run()
           mStepDecodeThread = nsnull;
         }
 
+        // Remove all frames decoded prior to seek from the queue
+        while (!mDecodedFrames.IsEmpty()) {
+          delete mDecodedFrames.Pop();
+        }
+        // SeekingStarted will do a UpdateReadyStateForData which will
+        // inform the element and its users that we have no frames
+        // to display
+
         mon.Exit();
         nsCOMPtr<nsIRunnable> startEvent = 
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStarted);
@@ -1311,11 +1327,6 @@ nsresult nsOggDecodeStateMachine::Run()
         mLastFramePosition = mDecoder->mPlaybackPosition;
         if (mState == DECODER_STATE_SHUTDOWN)
           continue;
-
-        // Remove all frames decoded prior to seek from the queue
-        while (!mDecodedFrames.IsEmpty()) {
-          delete mDecodedFrames.Pop();
-        }
 
         OggPlayErrorCode r;
         do {
@@ -1428,12 +1439,15 @@ nsresult nsOggDecodeStateMachine::Run()
             continue;
         }
 
+        mon.Exit();
         nsCOMPtr<nsIRunnable> event =
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, PlaybackEnded);
-        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-        do {
+        NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+        mon.Enter();
+
+        while (mState == DECODER_STATE_COMPLETED) {
           mon.Wait();
-        } while (mState == DECODER_STATE_COMPLETED);
+        }
       }
       break;
     }
@@ -1935,6 +1949,7 @@ void nsOggDecoder::PlaybackEnded()
   ChangeState(PLAY_STATE_ENDED);
 
   if (mElement)  {
+    UpdateReadyStateForData();
     mElement->PlaybackEnded();
   }
 }
@@ -2057,10 +2072,11 @@ void nsOggDecoder::UpdateReadyStateForData()
   nsHTMLMediaElement::NextFrameStatus frameStatus;
   {
     nsAutoMonitor mon(mMonitor);
-    if (mDecodeStateMachine->HaveNextFrameData()) {
-      frameStatus = nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
-    } else if (mDecodeStateMachine->IsBuffering()) {
+    if (mDecodeStateMachine->IsBuffering() ||
+        mDecodeStateMachine->IsSeeking()) {
       frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+    } else if (mDecodeStateMachine->HaveNextFrameData()) {
+      frameStatus = nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
     } else {
       frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
     }
@@ -2085,8 +2101,8 @@ void nsOggDecoder::SeekingStopped()
   }
 
   if (mElement) {
-    mElement->SeekCompleted();
     UpdateReadyStateForData();
+    mElement->SeekCompleted();
   }
 }
 
@@ -2096,6 +2112,7 @@ void nsOggDecoder::SeekingStarted()
     return;
 
   if (mElement) {
+    UpdateReadyStateForData();
     mElement->SeekStarted();
   }
 }
