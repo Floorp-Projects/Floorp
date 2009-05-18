@@ -587,6 +587,10 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         }
         break;
 
+      case eState_ERROR:
+        NS_NOTREACHED("unhandled case");
+        goto error2;
+
     } // switch
     src++;
   }

@@ -583,7 +583,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JSBool last;
 
     rt = cx->runtime;
-
 #ifdef JS_THREADSAFE
     /*
      * For API compatibility we allow to destroy contexts without a thread in
@@ -593,6 +592,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JS_ASSERT(cx->thread && CURRENT_THREAD_IS_ME(cx->thread));
     if (!cx->thread)
         JS_SetContextThread(cx);
+
     JS_ASSERT_IF(rt->gcRunning, cx->outstandingRequests == 0);
 #endif
 

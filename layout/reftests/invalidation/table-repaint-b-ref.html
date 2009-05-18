@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<title>table-repaint-b-ref</title>
+<body>
+<table>
+<tr>
+  <td>aaa</td><td><span style="position: relative"><div style="height: 0px"><div style="height: 300px; width: 10px; background: green"></div></div>bbb</td>
+</tr>
+<tr>
+ <td>
+  longer text: above this, first cell should say 'aaa' while second says 'bbb'.  There should be only one green rectangle.
+ </td>
+</tr>
+</table>
+</script>
+</body>
+</html>

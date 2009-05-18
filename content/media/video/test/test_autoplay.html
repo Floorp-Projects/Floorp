@@ -21,9 +21,11 @@ ok(v2.autoplay, "v2.autoplay should be true");
 ok(a2.autoplay, "v2.autoplay should be true");
 
 v1.autoplay = true;
-v1.autoplay = true;
+a1.autoplay = true;
 ok(v1.autoplay, "video.autoplay not true");
-ok(v1.autoplay, "audio.autoplay not true");
+ok(a1.autoplay, "audio.autoplay not true");
+is(v1.getAttribute("autoplay"), "", "video autoplay attribute not set");
+is(a1.getAttribute("autoplay"), "", "video autoplay attribute not set");
 </script>
 </pre>
 </body>

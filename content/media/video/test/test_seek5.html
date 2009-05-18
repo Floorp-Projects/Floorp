@@ -15,9 +15,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 // Test for a seek, followed by another seek before the first is complete.
-var startPassed = false;
-var seek1Passed = false;
-var seek2Passed = false;
 var seekCount = 0;
 var completed = false;
 
@@ -34,7 +31,6 @@ function seekStarted() {
   if (completed)
     return false;
 
-  startPassed = true;
   var v = document.getElementById('v');
   v.currentTime=1;
   return false;
@@ -43,19 +39,11 @@ function seekStarted() {
 function seekEnded() {
   if (completed)
     return false;
+
   var v = document.getElementById('v');
   seekCount++;
-  if(seekCount == 1) {
-    if (v.currentTime >= 2 && v.currentTime <= 2.2)
-      seek1Passed = true;
-  }
-
-  if(seekCount == 2) {
-    if (v.currentTime >= 1 && v.currentTime <= 1.2)
-      seek2Passed = true;
-
-    ok(seek1Passed, "First seek");
-    ok(seek2Passed, "Second seek");
+  if (seekCount == 2) {
+    ok(v.currentTime >= 0.9 && v.currentTime <= 1.1, "Second seek on target: " + v.currentTime);
     completed = true;
     SimpleTest.finish();
   }

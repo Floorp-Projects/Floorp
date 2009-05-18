@@ -130,10 +130,12 @@ var gPrivacyPane = {
     let getVal = function (aPref)
       document.getElementById(aPref).value;
 
-    if (getVal("browser.privatebrowsing.autostart"))
-      mode = "dontremember";
-    else if (this._checkDefaultValues(this.prefsForDefault))
-      mode = "remember";
+    if (this._checkDefaultValues(this.prefsForDefault)) {
+      if (getVal("browser.privatebrowsing.autostart"))
+        mode = "dontremember";
+      else 
+        mode = "remember";
+    }
     else
       mode = "custom";
 

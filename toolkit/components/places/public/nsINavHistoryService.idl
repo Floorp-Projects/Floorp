@@ -714,7 +714,7 @@ interface nsINavHistoryObserver : nsISupports
   void onPageChanged(in nsIURI aURI, in unsigned long aWhat, in AString aValue);
 
   /**
-   * Called when a history entry expires. You will recieve notifications that
+   * Called when a history entry expires. You will receive notifications that
    * a specific visit has expired with the time of that visit. When the last
    * visit for a history entry expires, the history entry itself is deleted
    * and aWholeEntry is set. (If your observer only cares about URLs and not

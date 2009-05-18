@@ -213,13 +213,16 @@ public:
   virtual void Shutdown();
 
   // Suspend any media downloads that are in progress. Called by the
-  // media element when it is sent to the bfcache. Call on the main
-  // thread only.
+  // media element when it is sent to the bfcache, or when we need
+  // to throttle the download. Call on the main thread only. This can
+  // be called multiple times, there's an internal "suspend count".
   virtual void Suspend() = 0;
 
   // Resume any media downloads that have been suspended. Called by the
-  // media element when it is restored from the bfcache. Call on the
-  // main thread only.
+  // media element when it is restored from the bfcache, or when we need
+  // to stop throttling the download. Call on the main thread only.
+  // The download will only actually resume once as many Resume calls
+  // have been made as Suspend calls.
   virtual void Resume() = 0;
 
   // Returns a weak reference to the media element we're decoding for,

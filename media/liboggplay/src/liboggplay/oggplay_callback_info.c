@@ -167,11 +167,13 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
  
     count = 0;
     for (p = q; p != NULL; p = p->next) {
-      track_info->records[count++] = p;
-      if (p->presentation_time <= me->target + track->offset) {
-        track_info->required_records++;
-        p->has_been_presented = 1;
-        //lpt = p->presentation_time;
+      if (!p->has_been_presented) {
+        track_info->records[count++] = p;
+        if (p->presentation_time <= me->target + track->offset) {
+          track_info->required_records++;
+          p->has_been_presented = 1;
+          //lpt = p->presentation_time;
+        }
       }
     }
      

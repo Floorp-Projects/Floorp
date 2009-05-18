@@ -65,10 +65,11 @@ using mozilla::TimeStamp;
 nsMediaChannelStream::nsMediaChannelStream(nsMediaDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI)
   : nsMediaStream(aDecoder, aChannel, aURI),
-    mLastSeekOffset(0), mSuspendCount(0),
+    mOffset(0), mSuspendCount(0), 
+    mReopenOnError(PR_FALSE), mIgnoreClose(PR_FALSE),
     mCacheStream(this),
     mLock(nsAutoLock::NewLock("media.channel.stream")),
-    mCacheSuspendCount(0)
+    mCacheSuspendCount(0)    
 {
 }
 
@@ -166,7 +167,7 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
                           ranges);
     PRBool acceptsRanges = ranges.EqualsLiteral("bytes"); 
 
-    if (mLastSeekOffset == 0) {
+    if (mOffset == 0) {
       // Look for duration headers from known Ogg content systems. In the case
       // of multiple options for obtaining the duration the order of precedence is;
       // 1) The Media resource metadata if possible (done by the decoder itself).
@@ -190,12 +191,13 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
  
     PRUint32 responseStatus = 0; 
     hc->GetResponseStatus(&responseStatus);
-    if (mLastSeekOffset > 0 && responseStatus == HTTP_OK_CODE) {
+    if (mOffset > 0 && responseStatus == HTTP_OK_CODE) {
       // If we get an OK response but we were seeking, we have to assume
       // that seeking doesn't work. We also need to tell the cache that
       // it's getting data for the start of the stream.
       mCacheStream.NotifyDataStarted(0);
-    } else if (mLastSeekOffset == 0 && 
+      mOffset = 0;
+    } else if (mOffset == 0 && 
                (responseStatus == HTTP_OK_CODE ||
                 responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
       // We weren't seeking and got a valid response status,
@@ -206,6 +208,8 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
         mCacheStream.NotifyDataLength(cl);
       }
     }
+    // XXX we probably should examine the Content-Range header in case
+    // the server gave us a range which is not quite what we asked for
 
     // If we get an HTTP_OK_CODE response to our byte range request,
     // and the server isn't sending Accept-Ranges:bytes then we don't
@@ -230,6 +234,8 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
     mChannelStatistics.Start(TimeStamp::Now());
   }
 
+  mReopenOnError = PR_FALSE;
+  mIgnoreClose = PR_FALSE;
   if (mSuspendCount > 0) {
     // Re-suspend the channel if it needs to be suspended
     mChannel->Suspend();
@@ -246,18 +252,30 @@ nsresult
 nsMediaChannelStream::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
+  NS_ASSERTION(mSuspendCount == 0,
+               "How can OnStopRequest fire while we're suspended?");
 
   {
     nsAutoLock lock(mLock);
     mChannelStatistics.Stop(TimeStamp::Now());
   }
 
-  mCacheStream.NotifyDataEnded(aStatus);
-  if (mDecoder) {
-    mDecoder->NotifyDownloadEnded(aStatus);
+  if (NS_FAILED(aStatus) && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
+      mReopenOnError) {
+    nsresult rv = CacheClientSeek(mOffset, PR_FALSE);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+    // If the reopen/reseek fails, just fall through and treat this
+    // error as fatal.
   }
-  NS_ASSERTION(mSuspendCount == 0,
-               "How can OnStopRequest fire while we're suspended?");
+
+  if (!mIgnoreClose) {
+    mCacheStream.NotifyDataEnded(aStatus);
+    if (mDecoder) {
+      mDecoder->NotifyDownloadEnded(aStatus);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -284,6 +302,8 @@ nsMediaChannelStream::CopySegmentToCache(nsIInputStream *aInStream,
                                          PRUint32 *aWriteCount)
 {
   CopySegmentClosure* closure = static_cast<CopySegmentClosure*>(aClosure);
+  // Keep track of where we're up to
+  closure->mStream->mOffset += aCount;
   closure->mStream->mCacheStream.NotifyDataReceived(aCount, aFromSegment,
                                                     closure->mPrincipal);
   *aWriteCount = aCount;
@@ -336,11 +356,11 @@ nsresult nsMediaChannelStream::Open(nsIStreamListener **aStreamListener)
   nsresult rv = mCacheStream.Init();
   if (NS_FAILED(rv))
     return rv;
-  return OpenChannel(aStreamListener, 0);
+  NS_ASSERTION(mOffset == 0, "Who set mOffset already?");
+  return OpenChannel(aStreamListener);
 }
 
-nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener,
-                                           PRInt64 aOffset)
+nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ENSURE_TRUE(mChannel, NS_ERROR_NULL_POINTER);
@@ -349,8 +369,6 @@ nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener,
   if (aStreamListener) {
     *aStreamListener = nsnull;
   }
-
-  mLastSeekOffset = aOffset;
 
   mListener = new Listener(this);
   NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
@@ -402,11 +420,11 @@ void nsMediaChannelStream::SetupChannelHeaders()
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
   if (hc) {
     nsCAutoString rangeString("bytes=");
-    rangeString.AppendInt(mLastSeekOffset);
+    rangeString.AppendInt(mOffset);
     rangeString.Append("-");
     hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
   } else {
-    NS_ASSERTION(mLastSeekOffset == 0, "Don't know how to seek on this channel type");
+    NS_ASSERTION(mOffset == 0, "Don't know how to seek on this channel type");
   }
 }
 
@@ -479,38 +497,69 @@ PRInt64 nsMediaChannelStream::Tell()
   return mCacheStream.Tell();
 }
 
-void nsMediaChannelStream::Suspend()
+void nsMediaChannelStream::Suspend(PRBool aCloseImmediately)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
 
-  if (mSuspendCount == 0 && mChannel) {
-    {
-      nsAutoLock lock(mLock);
-      mChannelStatistics.Stop(TimeStamp::Now());
-    }
-    mChannel->Suspend();
+  nsHTMLMediaElement* element = mDecoder->GetMediaElement();
+  if (!element) {
+    // Shutting down; do nothing.
+    return;
   }
+
+  if (mChannel) {
+    if (aCloseImmediately && mCacheStream.IsSeekable()) {
+      // Kill off our channel right now, but don't tell anyone about it.
+      mIgnoreClose = PR_TRUE;
+      CloseChannel();
+      element->DownloadSuspended();
+    } else if (mSuspendCount == 0) {
+      {
+        nsAutoLock lock(mLock);
+        mChannelStatistics.Stop(TimeStamp::Now());
+      }
+      mChannel->Suspend();
+      element->DownloadSuspended();
+    }
+  }
+
   ++mSuspendCount;
 }
 
 void nsMediaChannelStream::Resume()
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
+  NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
+
+  nsHTMLMediaElement* element = mDecoder->GetMediaElement();
+  if (!element) {
+    // Shutting down; do nothing.
+    return;
+  }
 
   --mSuspendCount;
-  if (mSuspendCount == 0 && mChannel) {
-    {
-      nsAutoLock lock(mLock);
-      mChannelStatistics.Start(TimeStamp::Now());
+  if (mSuspendCount == 0) {
+    if (mChannel) {
+      // Just wake up our existing channel
+      {
+        nsAutoLock lock(mLock);
+        mChannelStatistics.Start(TimeStamp::Now());
+      }
+      // if an error occurs after Resume, assume it's because the server
+      // timed out the connection and we should reopen it.
+      mReopenOnError = PR_TRUE;
+      mChannel->Resume();
+      element->DownloadResumed();
+    } else {
+      // Need to recreate the channel
+      CacheClientSeek(mOffset, PR_FALSE);
+      element->DownloadResumed();
     }
-    mChannel->Resume();
-    // XXX need to do something fancier here because we often won't
-    // be able to resume cleanly
   }
 }
 
 nsresult
-nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset)
+nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, PRBool aResume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on main thread");
 
@@ -528,6 +577,12 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset)
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
+  if (aResume) {
+    NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
+    // No need to mess with the channel, since we're making a new one
+    --mSuspendCount;
+  }
+
   nsresult rv =
     NS_NewChannel(getter_AddRefs(mChannel),
                   mURI,
@@ -537,7 +592,8 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset)
                   loadFlags);
   if (NS_FAILED(rv))
     return rv;
-  return OpenChannel(nsnull, aOffset);
+  mOffset = aOffset;
+  return OpenChannel(nsnull);
 }
 
 class SuspendedStatusChanged : public nsRunnable 
@@ -569,7 +625,7 @@ nsMediaChannelStream::CacheClientSuspend()
     nsAutoLock lock(mLock);
     ++mCacheSuspendCount;
   }
-  Suspend();
+  Suspend(PR_FALSE);
 
   // We have to spawn an event here since we're being called back from
   // a sensitive place in nsMediaCache, which doesn't want us to reenter
@@ -594,6 +650,12 @@ nsMediaChannelStream::CacheClientResume()
   nsCOMPtr<nsIRunnable> event = new SuspendedStatusChanged(mDecoder);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   return NS_OK;
+}
+
+PRInt64
+nsMediaChannelStream::GetNextCachedData(PRInt64 aOffset)
+{
+  return mCacheStream.GetNextCachedData(aOffset);
 }
 
 PRInt64
@@ -670,7 +732,7 @@ public:
   // Main thread
   virtual nsresult Open(nsIStreamListener** aStreamListener);
   virtual nsresult Close();
-  virtual void     Suspend() {}
+  virtual void     Suspend(PRBool aCloseImmediately) {}
   virtual void     Resume() {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
@@ -693,6 +755,10 @@ public:
     return 100*1024*1024; // arbitray, use 100MB/s
   }
   virtual PRInt64 GetLength() { return mSize; }
+  virtual PRInt64 GetNextCachedData(PRInt64 aOffset)
+  {
+    return (aOffset < mSize) ? aOffset : -1;
+  }
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) { return PR_MAX(aOffset, mSize); }
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset) { return PR_TRUE; }
   virtual PRBool  IsSuspendedByCache() { return PR_FALSE; }

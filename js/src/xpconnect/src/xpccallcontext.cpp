@@ -340,7 +340,7 @@ XPCCallContext::~XPCCallContext()
         if(mDestroyJSContextInDestructor)
         {
 #ifdef DEBUG_xpc_hacker
-            printf("!xpc - doing deferred destruction of JSContext @ %0x\n", 
+            printf("!xpc - doing deferred destruction of JSContext @ %p\n", 
                    mJSContext);
 #endif
             NS_ASSERTION(!mThreadData->GetJSContextStack() || 

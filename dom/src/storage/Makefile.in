@@ -72,7 +72,7 @@ CPPSRCS =                  \
        $(NULL)
 
 ifdef MOZ_STORAGE
-CPPSRCS += nsDOMStorageDB.cpp
+CPPSRCS += nsDOMStorageDBWrapper.cpp nsDOMStoragePersistentDB.cpp nsDOMStorageMemoryDB.cpp
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

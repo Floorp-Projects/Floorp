@@ -307,9 +307,9 @@ sa_stream_pause(sa_stream_t *s) {
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
-#if 0 /* TODO */
-  AudioOutputUnitStop(s->output_unit);
-#endif
+
+  if (snd_pcm_pause(s->output_unit, 1) != 0)
+    return SA_ERROR_NOT_SUPPORTED;
 
   return SA_SUCCESS;
 }
@@ -322,12 +322,8 @@ sa_stream_resume(sa_stream_t *s) {
     return SA_ERROR_NO_INIT;
   }
 
-  /*
-   * The audio device resets its mSampleTime counter after pausing,
-   * so we need to clear our tracking value to keep that in sync.
-   */
-  s->bytes_played = s->bytes_written = 0;
-
+  if (snd_pcm_pause(s->output_unit, 0) != 0)
+    return SA_ERROR_NOT_SUPPORTED;
   return SA_SUCCESS;
 }
 

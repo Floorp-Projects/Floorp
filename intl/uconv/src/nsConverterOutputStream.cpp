@@ -101,7 +101,7 @@ nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
 
     nsCAutoString buf;
     buf.SetLength(maxLen);
-    if (buf.Length() != maxLen)
+    if (buf.Length() != (PRUint32) maxLen)
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRInt32 outLen = maxLen;
@@ -112,7 +112,7 @@ nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
         // Yes, NS_ERROR_UENC_NOMAPPING is a success code
         return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
     }
-    NS_ASSERTION(inLen == aCount,
+    NS_ASSERTION((PRUint32) inLen == aCount,
                  "Converter didn't consume all the data!");
 
     PRUint32 written;

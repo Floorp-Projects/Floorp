@@ -43,7 +43,7 @@
 #include "nsISupports.h"
 #include "nsTArray.h"
 
-class nsIDOMStorage;
+class nsIDOMStorageObsolete;
 class nsIURI;
 class nsIPrincipal;
 
@@ -60,7 +60,7 @@ public:
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded) = 0;
   virtual nsresult InitAsSessionStorage(nsIURI* aURI) = 0;
 
-  virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
+  virtual already_AddRefed<nsIDOMStorageObsolete> Clone() = 0;
 
   virtual nsTArray<nsString> *GetKeys() = 0;
 

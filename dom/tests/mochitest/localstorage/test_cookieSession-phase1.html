@@ -1,0 +1,49 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>cookie per-session only test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+/*
+  Set cookie access to be just per session and store to the localStorage.
+  Content stored must prevail only for session of the browser, so it must
+  be accessible in another window we try to access that key in the same
+  storage.
+ */
+
+function startTest()
+{
+  localStorage.setItem("persistent1", "persistent value 1");
+  localStorage.setItem("persistent2", "persistent value 2");
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var io = Components.classes["@mozilla.org/network/io-service;1"]
+    .getService(Components.interfaces.nsIIOService);
+  var uri = io.newURI(window.location, "", null);
+  var cp = Components.classes["@mozilla.org/cookie/permission;1"]
+    .getService(Components.interfaces.nsICookiePermission);
+  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+
+  localStorage.setItem("session only", "session value");
+  is(localStorage.getItem("session only"), "session value");
+  is(localStorage.getItem("persistent1"), "persistent value 1");
+  is(localStorage.getItem("persistent2"), "persistent value 2");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>

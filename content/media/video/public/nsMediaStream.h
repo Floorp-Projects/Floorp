@@ -158,7 +158,11 @@ public:
   // return an error.
   virtual nsresult Close() = 0;
   // Suspend any downloads that are in progress.
-  virtual void Suspend() = 0;
+  // If aCloseImmediately is set, resources should be released immediately
+  // since we don't expect to resume again any time soon. Otherwise we
+  // may resume again soon so resources should be held for a little
+  // while.
+  virtual void Suspend(PRBool aCloseImmediately) = 0;
   // Resume any downloads that have been suspended.
   virtual void Resume() = 0;
   // Get the current principal for the channel
@@ -228,6 +232,9 @@ public:
   // header and give us more or less data than it reported. We will adjust
   // the result of GetLength to reflect the data that's actually arriving.
   virtual PRInt64 GetLength() = 0;
+  // Returns the offset of the first byte of cached data at or after aOffset,
+  // or -1 if there is no such cached data.
+  virtual PRInt64 GetNextCachedData(PRInt64 aOffset) = 0;
   // Returns the end of the bytes starting at the given offset
   // which are in cache.
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) = 0;
@@ -308,7 +315,7 @@ public:
   // and no more data from the old load will be notified via
   // nsMediaCacheStream::NotifyDataReceived/Ended.
   // This can fail.
-  nsresult CacheClientSeek(PRInt64 aOffset);
+  nsresult CacheClientSeek(PRInt64 aOffset, PRBool aResume);
   // Suspend the current load since data is currently not wanted
   nsresult CacheClientSuspend();
   // Resume the current load since data is wanted again
@@ -317,7 +324,7 @@ public:
   // Main thread
   virtual nsresult Open(nsIStreamListener** aStreamListener);
   virtual nsresult Close();
-  virtual void     Suspend();
+  virtual void     Suspend(PRBool aCloseImmediately);
   virtual void     Resume();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   // Return PR_TRUE if the stream has been closed.
@@ -335,6 +342,7 @@ public:
   virtual void    Unpin();
   virtual double  GetDownloadRate(PRPackedBool* aIsReliable);
   virtual PRInt64 GetLength();
+  virtual PRInt64 GetNextCachedData(PRInt64 aOffset);
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
   virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset);
   virtual PRBool  IsSuspendedByCache();
@@ -368,9 +376,9 @@ protected:
                            PRUint32 aCount);
   nsresult OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew, PRUint32 aFlags);
 
-  // Opens the channel, using an HTTP byte range request to start at aOffset
+  // Opens the channel, using an HTTP byte range request to start at mOffset
   // if possible. Main thread only.
-  nsresult OpenChannel(nsIStreamListener** aStreamListener, PRInt64 aOffset);
+  nsresult OpenChannel(nsIStreamListener** aStreamListener);
   void SetupChannelHeaders();
   // Closes the channel. Main thread only.
   void CloseChannel();
@@ -383,9 +391,15 @@ protected:
                                       PRUint32 *aWriteCount);
 
   // Main thread access only
-  PRInt64            mLastSeekOffset;
+  PRInt64            mOffset;
   nsRefPtr<Listener> mListener;
   PRUint32           mSuspendCount;
+  // When this flag is set, if we get a network error we should silently
+  // reopen the stream.
+  PRPackedBool       mReopenOnError;
+  // When this flag is set, we should not report the next close of the
+  // channel.
+  PRPackedBool       mIgnoreClose;
 
   // Any thread access
   nsMediaCacheStream mCacheStream;

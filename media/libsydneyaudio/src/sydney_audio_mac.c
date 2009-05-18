@@ -70,6 +70,7 @@ struct sa_stream {
   pthread_mutex_t   mutex;
   bool              playing;
   int64_t           bytes_played;
+  int64_t           total_bytes_played;
 
   /* audio format info */
   unsigned int      rate;
@@ -153,6 +154,7 @@ sa_stream_create_pcm(
   s->output_unit  = NULL;
   s->playing      = FALSE;
   s->bytes_played = 0;
+  s->total_bytes_played = 0;
   s->rate         = rate;
   s->n_channels   = n_channels;
   s->bytes_per_ch = 2;
@@ -536,7 +538,7 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
   }
 
   pthread_mutex_lock(&s->mutex);
-  *pos = s->bytes_played;
+  *pos = s->total_bytes_played + s->bytes_played;
   pthread_mutex_unlock(&s->mutex);
   return SA_SUCCESS;
 }
@@ -573,6 +575,7 @@ sa_stream_resume(sa_stream_t *s) {
    * The audio device resets its mSampleTime counter after pausing,
    * so we need to clear our tracking value to keep that in sync.
    */
+  s->total_bytes_played += s->bytes_played;
   s->bytes_played = 0;
   pthread_mutex_unlock(&s->mutex);
 

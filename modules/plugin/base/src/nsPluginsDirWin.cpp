@@ -190,12 +190,8 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     ++extension;
 
   if (len > 5) {
-    if (!PL_strncasecmp(filename, "np", 2) && !PL_strcasecmp(extension, "dll")) {
-      // don't load OJI-based Java plugins
-      if (!PL_strncasecmp(filename, "npoji", 5))
-        return PR_FALSE;
+    if (!PL_strncasecmp(filename, "np", 2) && !PL_strcasecmp(extension, "dll"))
       return PR_TRUE;
-    }
   }
   return ret;
 }
@@ -263,7 +259,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-  nsresult rv = NS_OK;
+  nsresult res = NS_OK;
   DWORD zerome, versionsize;
   TCHAR* verbuf = nsnull;
 
@@ -272,20 +268,15 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
-  nsCAutoString fullPath;
-  if (NS_FAILED(rv = mPlugin->GetNativePath(fullPath)))
-    return rv;
-
-  nsCAutoString fileName;
-  if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
-    return rv;
+  nsCAutoString temp;
+  mPlugin->GetNativePath(temp);
 
 #ifdef UNICODE
-  NS_ConvertASCIItoUTF16 utf16Path(fullPath);
-  path = utf16Path.get();
+  NS_ConvertASCIItoUTF16 temp2(temp);
+  path = temp2.get();
   versionsize = ::GetFileVersionInfoSizeW((TCHAR*)path, &zerome);
 #else
-  path = fullPath.get();
+  path = temp.get();
   versionsize = ::GetFileVersionInfoSize((TCHAR*)path, &zerome);
 #endif
 
@@ -311,8 +302,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
     info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
     info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
-    info.fFullPath = PL_strdup(fullPath.get());
-    info.fFileName = PL_strdup(fileName.get());
+    info.fFileName = PL_strdup(temp.get());
     info.fVersion = GetVersion(verbuf);
 
     PL_strfree(mimeType);
@@ -320,12 +310,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     PL_strfree(extensions);
   }
   else {
-    rv = NS_ERROR_FAILURE;
+    res = NS_ERROR_FAILURE;
   }
 
   PR_Free(verbuf);
 
-  return rv;
+  return res;
 }
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
@@ -344,9 +334,6 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 
   if (info.fExtensionArray)
     FreeStringArray(info.fVariantCount, info.fExtensionArray);
-
-  if (info.fFullPath)
-    PL_strfree(info.fFullPath);
 
   if (info.fFileName)
     PL_strfree(info.fFileName);

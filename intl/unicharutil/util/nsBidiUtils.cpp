@@ -662,8 +662,8 @@ nsCharType GetCharType(PRUint32 aChar)
   nsCharType oResult;
   eBidiCategory bCat = GetBidiCat(aChar);
   if (eBidiCat_CC != bCat) {
-    NS_ASSERTION(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)), "size mismatch");
-    if(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)))
+    NS_ASSERTION((PRUint32) bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)), "size mismatch");
+    if((PRUint32) bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)))
       oResult = ebc2ucd[bCat];
     else 
       oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
