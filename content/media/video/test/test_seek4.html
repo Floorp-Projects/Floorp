@@ -40,7 +40,7 @@ function seekEnded() {
     return false;
 
   var t = document.getElementById('v').currentTime;
-  ok(t >= 2 && t<= 3, "Video currentTime should be around 2: " + t);
+  ok(t >= 1.9 && t <= 2.1, "Video currentTime should be around 2: " + t);
   completed = true;
   SimpleTest.finish();
   return false;

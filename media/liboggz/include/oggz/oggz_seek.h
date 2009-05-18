@@ -475,4 +475,23 @@ int oggz_set_data_start (OGGZ * oggz, oggz_off_t offset);
 /** \}
  */
 
+/**
+ * Seeks Oggz to time unit_target, but with the bounds of the offset range
+ * [offset_begin, offset_end]. This is useful when seeking in network streams
+ * where only parts of a media are buffered, and retrieving unbuffered
+ * parts is expensive.
+ * \param oggz An OGGZ handle previously opened for reading
+ * \param unit_target The seek target, in milliseconds, or custom units
+ * \param offset_begin Start of offset range to seek inside, in bytes
+ * \param offset_end End of offset range to seek inside, in bytes,
+          pass -1 for end of media
+ * \returns The new position, in milliseconds or custom units
+ * \retval -1 on failure (unit_target is not within range)
+ */
+ogg_int64_t
+oggz_bounded_seek_set (OGGZ * oggz,
+                       ogg_int64_t unit_target,
+                       ogg_int64_t offset_begin,
+                       ogg_int64_t offset_end);
+
 #endif /* __OGGZ_SEEK_H__ */

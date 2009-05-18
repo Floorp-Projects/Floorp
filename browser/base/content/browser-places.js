@@ -217,17 +217,6 @@ var StarUI = {
     this._itemId = aItemId !== undefined ? aItemId : this._itemId;
     this.beginBatch();
 
-    // XXXmano hack: We push a no-op transaction on the stack so it's always
-    // safe for the Cancel button to call undoTransaction after endBatch.
-    // Otherwise, if no changes were done in the edit-item panel, the last
-    // transaction on the undo stack may be the initial createItem transaction,
-    // or worse, the batched editing of some other item.
-    PlacesUIUtils.ptm.doTransaction({ doTransaction: function() { },
-                                      undoTransaction: function() { },
-                                      redoTransaction: function() { },
-                                      isTransient: false,
-                                      merge: function() { return false; } });
-
     // Consume dismiss clicks, see bug 400924
     this.panel.popupBoxObject
         .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);

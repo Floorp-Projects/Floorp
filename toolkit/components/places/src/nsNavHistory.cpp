@@ -4320,6 +4320,40 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
+  nsresult rv = PreparePlacesForVisitsDelete(aPlaceIdsQueryString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // delete all visits
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_historyvisits_view WHERE place_id IN (") +
+        aPlaceIdsQueryString +
+        NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CleanupPlacesOnVisitsDelete(aPlaceIdsQueryString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return transaction.Commit();
+}
+
+
+/**
+ * Prepares for deletion places that are about to have all their visits removed.
+ * This is an internal method used by RemovePagesInternal and
+ * RemoveVisitsByTimeframe.  This method does not execute in a transaction, so
+ * callers should make sure they begin one if needed.
+ *
+ * @param aPlaceIdsQueryString
+ *        A comma-separated list of place IDs, each of which is about to have
+ *        all its visits removed
+ */
+nsresult
+nsNavHistory::PreparePlacesForVisitsDelete(const nsCString& aPlaceIdsQueryString)
+{
+  // Return early if there is nothing to delete.
+  if (aPlaceIdsQueryString.IsEmpty())
+    return NS_OK;
+
   // if a moz_place is annotated or was a bookmark,
   // we won't delete it, but we will delete the moz_visits
   // so we need to reset the frecency.  Note, we set frecency to
@@ -4349,12 +4383,27 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
       ")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // delete all visits
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits_view WHERE place_id IN (") +
-        aPlaceIdsQueryString +
-        NS_LITERAL_CSTRING(")"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+
+/**
+ * Performs cleanup on places that just had all their visits removed, including
+ * deletion of those places.  This is an internal method used by
+ * RemovePagesInternal and RemoveVisitsByTimeframe.  This method does not
+ * execute in a transaction, so callers should make sure they begin one if
+ * needed.
+ *
+ * @param aPlaceIdsQueryString
+ *        A comma-separated list of place IDs, each of which just had all its
+ *        visits removed
+ */
+nsresult
+nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
+{
+  // Return early if there is nothing to delete.
+  if (aPlaceIdsQueryString.IsEmpty())
+    return NS_OK;
 
   // now that visits have been removed, run annotation expiration.
   // this will remove all expire-able annotations for these URIs.
@@ -4364,7 +4413,7 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
   // then we can remove it from moz_places.
   // Note that we do NOT delete favicons. Any unreferenced favicons will be
   // deleted next time the browser is shut down.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "DELETE FROM moz_places_view WHERE id IN ("
         "SELECT h.id FROM moz_places_temp h "
         "WHERE h.id IN ( ") + aPlaceIdsQueryString + NS_LITERAL_CSTRING(") "
@@ -4387,7 +4436,7 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
   rv = FixInvalidFrecenciesForExcludedPlaces();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return transaction.Commit();
+  return NS_OK;
 }
 
 
@@ -4608,6 +4657,103 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 
   // force a full refresh calling onEndUpdateBatch (will call Refresh())
   UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
+
+  return NS_OK;
+}
+
+
+/**
+ * Removes all visits in a given timeframe.  Limits are included:
+ * aBeginTime <= timeframe <= aEndTime.  Any place that becomes unvisited
+ * as a result will also be deleted.
+ *
+ * Note that removal is performed in batch, so observers will not be
+ * notified of individual places that are deleted.  Instead they will be
+ * notified onBeginUpdateBatch and onEndUpdateBatch.
+ *
+ * @param aBeginTime
+ *        The start of the timeframe, inclusive
+ * @param aEndTime
+ *        The end of the timeframe, inclusive
+ */
+NS_IMETHODIMP
+nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  nsresult rv;
+
+  // Build a list of place IDs whose visits fall entirely within the timespan.
+  // These places will be deleted by the call to CleanupPlacesOnVisitsDelete
+  // below.
+  nsCString deletePlaceIdsQueryString;
+  {
+    nsCOMPtr<mozIStorageStatement> selectByTime;
+    mozStorageStatementScoper scope(selectByTime);
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT place_id "
+        "FROM moz_historyvisits_temp "
+        "WHERE ?1 <= visit_date AND visit_date <= ?2 "
+        "UNION "
+        "SELECT place_id "
+        "FROM moz_historyvisits "
+        "WHERE ?1 <= visit_date AND visit_date <= ?2 "
+        "EXCEPT "
+        "SELECT place_id "
+        "FROM moz_historyvisits_temp "
+        "WHERE visit_date < ?1 OR ?2 < visit_date "
+        "EXCEPT "
+        "SELECT place_id "
+        "FROM moz_historyvisits "
+        "WHERE visit_date < ?1 OR ?2 < visit_date"),
+      getter_AddRefs(selectByTime));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = selectByTime->BindInt64Parameter(0, aBeginTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = selectByTime->BindInt64Parameter(1, aEndTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(selectByTime->ExecuteStep(&hasMore)) && hasMore) {
+      PRInt64 placeId;
+      rv = selectByTime->GetInt64(0, &placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // placeId should not be <= 0, but be defensive.
+      if (placeId > 0) {
+        if (!deletePlaceIdsQueryString.IsEmpty())
+          deletePlaceIdsQueryString.AppendLiteral(",");
+        deletePlaceIdsQueryString.AppendInt(placeId);
+      }
+    }
+  }
+
+  // force a full refresh calling onEndUpdateBatch (will call Refresh())
+  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
+
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
+  rv = PreparePlacesForVisitsDelete(deletePlaceIdsQueryString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Delete all visits within the timeframe.
+  nsCOMPtr<mozIStorageStatement> deleteVisitsStmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_historyvisits_view "
+      "WHERE ?1 <= visit_date AND visit_date <= ?2"),
+    getter_AddRefs(deleteVisitsStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteVisitsStmt->BindInt64Parameter(0, aBeginTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteVisitsStmt->BindInt64Parameter(1, aEndTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteVisitsStmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CleanupPlacesOnVisitsDelete(deletePlaceIdsQueryString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

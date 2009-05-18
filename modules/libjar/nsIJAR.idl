@@ -74,7 +74,7 @@
 
 interface nsIPrincipal;
 
-[uuid(04501DB2-0409-11d3-BCF8-00805F0E1353)]
+[scriptable, uuid(04501DB2-0409-11d3-BCF8-00805F0E1353)]
 interface nsIJAR : nsISupports
 {
      /**
@@ -85,7 +85,7 @@ interface nsIJAR : nsISupports
      * stored in the jar, verifyExternalFile (not yet implemented) must 
      * be called before getPrincipal.
      */
-    void getCertificatePrincipal(in string aEntryName, out nsIPrincipal aPrincipal);   
+    nsIPrincipal getCertificatePrincipal(in string aEntryName);   
     
     readonly attribute PRUint32 manifestEntriesCount;
 

@@ -2435,9 +2435,20 @@ nsDocument::GetPrincipal()
   return NodePrincipal();
 }
 
+extern PRBool sDisablePrefetchHTTPSPref;
+
 void
 nsDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
 {
+  if (aNewPrincipal && mAllowDNSPrefetch && sDisablePrefetchHTTPSPref) {
+    nsCOMPtr<nsIURI> uri;
+    aNewPrincipal->GetURI(getter_AddRefs(uri));
+    PRBool isHTTPS;
+    if (!uri || NS_FAILED(uri->SchemeIs("https", &isHTTPS)) ||
+        isHTTPS) {
+      mAllowDNSPrefetch = PR_FALSE;
+    }
+  }
   mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
 }
 
@@ -2938,6 +2949,12 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       refresher->SetupRefreshURIFromHeader(mDocumentURI,
                                            NS_ConvertUTF16toUTF8(aData));
     }
+  }
+
+  if (aHeaderField == nsGkAtoms::headerDNSPrefetchControl &&
+      mAllowDNSPrefetch) {
+    // Chromium treats any value other than 'on' (case insensitive) as 'off'.
+    mAllowDNSPrefetch = aData.IsEmpty() || aData.LowerCaseEqualsLiteral("on");
   }
 }
 
@@ -3554,6 +3571,21 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     // Go back to using the docshell for the layout history state
     mLayoutHistoryState = nsnull;
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
+
+    if (mAllowDNSPrefetch) {
+      nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+      if (docShell) {
+#ifdef DEBUG
+        nsCOMPtr<nsIWebNavigation> webNav =
+          do_GetInterface(aScriptGlobalObject);
+        NS_ASSERTION(SameCOMIdentity(webNav, docShell),
+                     "Unexpected container or script global?");
+#endif
+        PRBool allowDNSPrefetch;
+        docShell->GetAllowDNSPrefetch(&allowDNSPrefetch);
+        mAllowDNSPrefetch = allowDNSPrefetch;
+      }
+    }
   }
 
   // Remember the pointer to our window (or lack there of), to avoid

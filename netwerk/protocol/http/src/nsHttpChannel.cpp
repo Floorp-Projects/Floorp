@@ -871,6 +871,13 @@ nsHttpChannel::ProcessFailedSSLConnect(PRUint32 httpStatus)
     nsresult rv;
     switch (httpStatus) 
     {
+    case 300: case 301: case 302: case 303: case 307:
+        // Bad redirect: not top-level, or it's a POST, bad/missing Location,
+        // or ProcessRedirect() failed for some other reason.  Legal
+        // redirects that fail because site not available, etc., are handled
+        // elsewhere, in the regular codepath.
+        rv = NS_ERROR_CONNECTION_REFUSED;
+        break;
     case 403: // HTTP/1.1: "Forbidden"
     case 407: // ProcessAuthentication() failed
     case 501: // HTTP/1.1: "Not Implemented"
@@ -917,6 +924,24 @@ nsHttpChannel::ProcessFailedSSLConnect(PRUint32 httpStatus)
     return rv;
 }
 
+PRBool
+nsHttpChannel::ShouldSSLProxyResponseContinue(PRUint32 httpStatus)
+{
+    // When SSL connect has failed, allow proxy reply to continue only if it's
+    // an auth request, or a redirect of a non-POST top-level document load.
+    switch (httpStatus) {
+    case 407:
+        return PR_TRUE;
+    case 300: case 301: case 302: case 303: case 307:
+      {
+        return ( (mLoadFlags & nsIChannel::LOAD_DOCUMENT_URI) &&
+                 mURI == mDocumentURI &&
+                 mRequestHead.Method() != nsHttp::Post);
+      }
+    }
+    return PR_FALSE;
+}
+
 nsresult
 nsHttpChannel::ProcessResponse()
 {
@@ -926,7 +951,8 @@ nsHttpChannel::ProcessResponse()
     LOG(("nsHttpChannel::ProcessResponse [this=%x httpStatus=%u]\n",
         this, httpStatus));
 
-    if (mTransaction->SSLConnectFailed() && httpStatus != 407)
+    if (mTransaction->SSLConnectFailed() &&
+        !ShouldSSLProxyResponseContinue(httpStatus))
         return ProcessFailedSSLConnect(httpStatus);
 
     // notify "http-on-examine-response" observers
@@ -1000,6 +1026,8 @@ nsHttpChannel::ProcessResponse()
         }    
         else {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
+            if (mTransaction->SSLConnectFailed())
+                return ProcessFailedSSLConnect(httpStatus);
             rv = ProcessNormal();
         }
         break;

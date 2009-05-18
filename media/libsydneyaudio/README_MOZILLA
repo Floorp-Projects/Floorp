@@ -6,3 +6,6 @@ the Mozilla build system.
 http://svn.annodex.net/libsydneyaudio/trunk
 
 The svn revision number used was r3895.
+
+pause-resume.patch is applied to implement and fix issues
+with pausing and resuming audio streams.

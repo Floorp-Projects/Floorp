@@ -219,15 +219,11 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
    char       failure[ CCHMAXPATH] = "";
    APIRET     ret;
 
-   nsCAutoString path;
-   if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
-     return rv;
-
-   nsCAutoString fileName;
-   if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
-     return rv;
-
-   ret = DosLoadModule( failure, CCHMAXPATH, path.get(), &hPlug);
+   const char* path;
+   nsCAutoString temp;
+   mPlugin->GetNativePath(temp);
+   path = temp.get();
+   ret = DosLoadModule( failure, CCHMAXPATH, path, &hPlug);
    info.fVersion = nsnull;
 
    while( ret == NO_ERROR)
@@ -259,8 +255,7 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
       info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
       if( nsnull == info.fExtensionArray) break;
 
-      info.fFullPath = PL_strdup(path.get());
-      info.fFileName = PL_strdup(fileName.get());
+      info.fFileName = PL_strdup(path);
 
       rc = NS_OK;
       break;
@@ -276,10 +271,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
    if(info.fName != nsnull)
      PL_strfree(info.fName);
-
-   if(info.fFullPath != nsnull)
-     PL_strfree(info.fFullPath);
-
+ 
    if(info.fFileName != nsnull)
      PL_strfree(info.fFileName);
  

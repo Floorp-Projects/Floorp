@@ -1180,18 +1180,118 @@ protected:
   PRIntn mContentScrollVPosition;
   PRIntn mContentScrollHPosition;
 
-  struct nsBlurOrFocusTarget
+  class nsDelayedEvent
   {
-    nsBlurOrFocusTarget(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
+  public:
+    virtual ~nsDelayedEvent() {};
+    virtual void Dispatch(PresShell* aShell) {}
+    // This is needed only by nsDelayedFocusBlur.
+    virtual PRBool Equals(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
+    {
+      return PR_FALSE;
+    }
+  };
+
+  class nsDelayedFocusBlur : public nsDelayedEvent
+  {
+  public:
+    nsDelayedFocusBlur(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
     : mTarget(aTarget), mEventType(aEventType) {}
-    nsBlurOrFocusTarget(const nsBlurOrFocusTarget& aOther)
-    : mTarget(aOther.mTarget), mEventType(aOther.mEventType) {}
+
+    virtual void Dispatch(PresShell* aShell)
+    {
+      nsEvent event(PR_TRUE, mEventType);
+      event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+      nsEventDispatcher::Dispatch(mTarget, aShell->GetPresContext(), &event);
+    }
+
+    virtual PRBool Equals(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
+    {
+      return aTarget == mTarget && aEventType == mEventType;
+    }
 
     nsCOMPtr<nsPIDOMEventTarget> mTarget;
     PRUint32                     mEventType;
   };
 
-  nsTArray<nsBlurOrFocusTarget> mDelayedBlurFocusTargets;
+  class nsDelayedInputEvent : public nsDelayedEvent
+  {
+  public:
+    virtual void Dispatch(PresShell* aShell)
+    {
+      if (mEvent && mEvent->widget) {
+        nsCOMPtr<nsIWidget> w = mEvent->widget;
+        nsEventStatus status;
+        w->DispatchEvent(mEvent, status);
+      }
+    }
+
+  protected:
+    void Init(nsInputEvent* aEvent)
+    {
+      mEvent->time = aEvent->time;
+      mEvent->refPoint = aEvent->refPoint;
+      mEvent->isShift = aEvent->isShift;
+      mEvent->isControl = aEvent->isControl;
+      mEvent->isAlt = aEvent->isAlt;
+      mEvent->isMeta = aEvent->isMeta;
+    }
+
+    nsDelayedInputEvent()
+    : nsDelayedEvent(), mEvent(nsnull) {}
+
+    nsInputEvent* mEvent;
+  };
+
+  class nsDelayedMouseEvent : public nsDelayedInputEvent
+  {
+  public:
+    nsDelayedMouseEvent(nsMouseEvent* aEvent) : nsDelayedInputEvent()
+    {
+      mEvent = new nsMouseEvent(NS_IS_TRUSTED_EVENT(aEvent),
+                                aEvent->message,
+                                aEvent->widget,
+                                aEvent->reason,
+                                aEvent->context);
+      if (mEvent) {
+        Init(aEvent);
+        static_cast<nsMouseEvent*>(mEvent)->clickCount = aEvent->clickCount;
+      }
+    }
+
+    virtual ~nsDelayedMouseEvent()
+    {
+      delete static_cast<nsMouseEvent*>(mEvent);
+    }
+  };
+
+  class nsDelayedKeyEvent : public nsDelayedInputEvent
+  {
+  public:
+    nsDelayedKeyEvent(nsKeyEvent* aEvent) : nsDelayedInputEvent()
+    {
+      mEvent = new nsKeyEvent(NS_IS_TRUSTED_EVENT(aEvent),
+                              aEvent->message,
+                              aEvent->widget);
+      if (mEvent) {
+        Init(aEvent);
+        static_cast<nsKeyEvent*>(mEvent)->keyCode = aEvent->keyCode;
+        static_cast<nsKeyEvent*>(mEvent)->charCode = aEvent->charCode;
+        static_cast<nsKeyEvent*>(mEvent)->alternativeCharCodes =
+          aEvent->alternativeCharCodes;
+        static_cast<nsKeyEvent*>(mEvent)->isChar = aEvent->isChar;
+      }
+    }
+
+    virtual ~nsDelayedKeyEvent()
+    {
+      delete static_cast<nsKeyEvent*>(mEvent);
+    }
+  };
+
+  PRPackedBool                         mNoDelayedMouseEvents;
+  PRPackedBool                         mNoDelayedKeyEvents;
+  nsTArray<nsAutoPtr<nsDelayedEvent> > mDelayedEvents;
 
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
@@ -5880,10 +5980,27 @@ PresShell::HandleEvent(nsIView         *aView,
      aEvent->message == NS_DEACTIVATE);
   if (mDocument && mDocument->EventHandlingSuppressed()) {
     if (!widgetHandlingEvent) {
+      nsDelayedEvent* event = nsnull;
+      if (aEvent->eventStructType == NS_KEY_EVENT) {
+        if (aEvent->message == NS_KEY_DOWN) {
+          mNoDelayedKeyEvents = PR_TRUE;
+        } else if (!mNoDelayedKeyEvents) {
+          event = new nsDelayedKeyEvent(static_cast<nsKeyEvent*>(aEvent));
+        }
+      } else if (aEvent->eventStructType == NS_MOUSE_EVENT) {
+        if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+          mNoDelayedMouseEvents = PR_TRUE;
+        } else if (!mNoDelayedMouseEvents && aEvent->message == NS_MOUSE_BUTTON_UP) {
+          event = new nsDelayedMouseEvent(static_cast<nsMouseEvent*>(aEvent));
+        }
+      }
+      if (event && !mDelayedEvents.AppendElement(event)) {
+        delete event;
+      }
       return NS_OK;
     }
   } else if (widgetHandlingEvent) {
-    mDelayedBlurFocusTargets.Clear();
+    FireOrClearDelayedEvents(PR_FALSE);
   }
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
@@ -6731,22 +6848,21 @@ PresShell::Freeze()
 void
 PresShell::FireOrClearDelayedEvents(PRBool aFireEvents)
 {
+  mNoDelayedMouseEvents = PR_FALSE;
+  mNoDelayedKeyEvents = PR_FALSE;
   if (!aFireEvents) {
-    mDelayedBlurFocusTargets.Clear();
+    mDelayedEvents.Clear();
     return;
   }
 
   if (!mIsDestroying && mDocument) {
     nsCOMPtr<nsIDocument> doc = mDocument;
-    while (mDelayedBlurFocusTargets.Length() && !doc->EventHandlingSuppressed()) {
-      nsEvent event(PR_TRUE, mDelayedBlurFocusTargets[0].mEventType);
-      event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-      nsEventDispatcher::Dispatch(mDelayedBlurFocusTargets[0].mTarget,
-                                  mPresContext, &event);
-      mDelayedBlurFocusTargets.RemoveElementAt(0);
+    while (mDelayedEvents.Length() && !doc->EventHandlingSuppressed()) {
+      mDelayedEvents[0]->Dispatch(this);
+      mDelayedEvents.RemoveElementAt(0);
     }
     if (!doc->EventHandlingSuppressed()) {
-      mDelayedBlurFocusTargets.Clear();
+      mDelayedEvents.Clear();
     }
   }
 }
@@ -6756,14 +6872,16 @@ PresShell::NeedsFocusOrBlurAfterSuppression(nsPIDOMEventTarget* aTarget,
                                             PRUint32 aEventType)
 {
   if (mDocument && mDocument->EventHandlingSuppressed()) {
-    for (PRUint32 i = mDelayedBlurFocusTargets.Length(); i > 0; --i) {
-      if (mDelayedBlurFocusTargets[i - 1].mTarget == aTarget &&
-          mDelayedBlurFocusTargets[i - 1].mEventType == aEventType) {
-        mDelayedBlurFocusTargets.RemoveElementAt(i - 1);
+    for (PRUint32 i = mDelayedEvents.Length(); i > 0; --i) {
+      if (mDelayedEvents[i - 1]->Equals(aTarget, aEventType)) {
+        mDelayedEvents.RemoveElementAt(i - 1);
       }
     }
 
-    mDelayedBlurFocusTargets.AppendElement(nsBlurOrFocusTarget(aTarget, aEventType));
+    nsDelayedFocusBlur* delayed = new nsDelayedFocusBlur(aTarget, aEventType);
+    if (delayed && !mDelayedEvents.AppendElement(delayed)) {
+      delete delayed;
+    }
   }
 }
 

@@ -621,6 +621,18 @@ nsThebesDeviceContext::SetDPI()
 {
     PRInt32 dpi = -1;
     PRBool dotsArePixels = PR_TRUE;
+    // The number of device pixels per CSS pixel. A value <= 0 means choose
+    // automatically based on the DPI. A positive value is used as-is. This effectively
+    // controls the size of a CSS "px".
+    PRInt32 prefDevPixelsPerCSSPixel = -1;
+
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+        nsresult rv = prefs->GetIntPref("layout.css.devPixelsPerPx", &prefDevPixelsPerCSSPixel);
+        if (NS_FAILED(rv)) {
+            prefDevPixelsPerCSSPixel = -1;
+        }
+    }
 
     // PostScript, PDF and Mac (when printing) all use 72 dpi
     if (mPrintingSurface &&
@@ -630,16 +642,12 @@ nsThebesDeviceContext::SetDPI()
         dpi = 72;
         dotsArePixels = PR_FALSE;
     } else {
-        // Get prefVal the value of the preference
-        // "layout.css.dpi"
-        // or -1 if we can't get it.
-        // If it's negative, use the default DPI setting
-        // If it's 0, force the use of the OS's set resolution.  Set this if your
-        //      X server has the correct DPI and it's less than 96dpi.
-        // If it's positive, we use it as the logical resolution
         nsresult rv;
-        PRInt32 prefDPI;
-        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        // A value of -1 means use the minimum of 96 and the system DPI.
+        // A value of 0 means use the system DPI. A positive value is used as the DPI.
+        // This sets the physical size of a device pixel and thus controls the
+        // interpretation of physical units such as "pt".
+        PRInt32 prefDPI = -1;
         if (prefs) {
             rv = prefs->GetIntPref("layout.css.dpi", &prefDPI);
             if (NS_FAILED(rv)) {
@@ -715,18 +723,23 @@ nsThebesDeviceContext::SetDPI()
     NS_ASSERTION(dpi != -1, "no dpi set");
 
     if (dotsArePixels) {
-        // First figure out the closest multiple of 96, which is the number of
-        // dev pixels per CSS pixel.  Then, divide that into AppUnitsPerCSSPixel()
-        // to get the number of app units per dev pixel.  The PR_MAXes are to
-        // make sure we don't end up dividing by zero.
-        PRUint32 roundedDPIScaleFactor = (dpi + 48)/96;
+        if (prefDevPixelsPerCSSPixel <= 0) {
+            // First figure out the closest multiple of 96, which is the number of
+            // dev pixels per CSS pixel.  Then, divide that into AppUnitsPerCSSPixel()
+            // to get the number of app units per dev pixel.  The PR_MAXes are to
+            // make sure we don't end up dividing by zero.
+            PRUint32 roundedDPIScaleFactor = (dpi + 48)/96;
 #ifdef MOZ_WIDGET_GTK2
-        // be more conservative about activating scaling on GTK2, since the dpi
-        // information is more likely to be wrong
-        roundedDPIScaleFactor = dpi/96;
+            // be more conservative about activating scaling on GTK2, since the dpi
+            // information is more likely to be wrong
+            roundedDPIScaleFactor = dpi/96;
 #endif
-        mAppUnitsPerDevNotScaledPixel =
-          PR_MAX(1, AppUnitsPerCSSPixel() / PR_MAX(1, roundedDPIScaleFactor));
+            mAppUnitsPerDevNotScaledPixel =
+                PR_MAX(1, AppUnitsPerCSSPixel() / PR_MAX(1, roundedDPIScaleFactor));
+        } else {
+            mAppUnitsPerDevNotScaledPixel =
+                PR_MAX(1, AppUnitsPerCSSPixel() / prefDevPixelsPerCSSPixel);
+        }
     } else {
         /* set mAppUnitsPerDevPixel so we're using exactly 72 dpi, even
          * though that means we have a non-integer number of device "pixels"

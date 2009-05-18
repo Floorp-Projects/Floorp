@@ -998,21 +998,30 @@ function BrowserStartup() {
     // The opener can be the hidden window too, if we're coming from the state
     // where no windows are open, and the hidden window has no sidebar box.
     if (openerSidebarBox && !openerSidebarBox.hidden) {
-      let sidebarBox = document.getElementById("sidebar-box");
-      let sidebarTitle = document.getElementById("sidebar-title");
-      sidebarTitle.setAttribute("value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
-      sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
       let sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
-      sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
-      // Note: we're setting 'src' on sidebarBox, which is a <vbox>, not on the
-      // <browser id="sidebar">. This lets us delay the actual load until
-      // delayedStartup().
-      sidebarBox.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
-      mustLoadSidebar = true;
+      let sidebarCmdElem = document.getElementById(sidebarCmd);
 
-      sidebarBox.hidden = false;
-      document.getElementById("sidebar-splitter").hidden = false;
-      document.getElementById(sidebarCmd).setAttribute("checked", "true");
+      // dynamically generated sidebars will fail this check.
+      if (sidebarCmdElem) {
+        let sidebarBox = document.getElementById("sidebar-box");
+        let sidebarTitle = document.getElementById("sidebar-title");
+
+        sidebarTitle.setAttribute(
+          "value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
+        sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
+
+        sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
+        // Note: we're setting 'src' on sidebarBox, which is a <vbox>, not on
+        // the <browser id="sidebar">. This lets us delay the actual load until
+        // delayedStartup().
+        sidebarBox.setAttribute(
+          "src", window.opener.document.getElementById("sidebar").getAttribute("src"));
+        mustLoadSidebar = true;
+
+        sidebarBox.hidden = false;
+        document.getElementById("sidebar-splitter").hidden = false;
+        sidebarCmdElem.setAttribute("checked", "true");
+      }
     }
   }
   else {
@@ -1028,7 +1037,7 @@ function BrowserStartup() {
           command.setAttribute("checked", "true");
         }
         else {
-          // Remove the |sidebarcommand| attribute, because the element it 
+          // Remove the |sidebarcommand| attribute, because the element it
           // refers to no longer exists, so we should assume this sidebar
           // panel has been uninstalled. (249883)
           box.removeAttribute("sidebarcommand");

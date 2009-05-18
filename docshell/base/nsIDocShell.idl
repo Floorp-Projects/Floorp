@@ -66,10 +66,10 @@ interface nsIRequest;
 interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
-interface nsIDOMStorage;
+interface nsIDOMStorageObsolete;
 interface nsIPrincipal;
 
-[scriptable, uuid(dc4daea1-b43d-406f-bd62-c2ee879192ad)]
+[scriptable, uuid(d7e4e57e-9cc5-4a14-ae2e-8503edea1ca3)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -256,6 +256,13 @@ interface nsIDocShell : nsISupports
   attribute boolean allowImages;
 
   /**
+   * Attribute that determines whether DNS prefetch is allowed for this subtree
+   * of the docshell tree.  Defaults to true.  Setting this will make it take
+   * effect starting with the next document loaded in the docshell.
+   */
+  attribute boolean allowDNSPrefetch;
+
+  /**
    * Get an enumerator over this docShell and its children.
    *
    * @param aItemType  - Only include docShells of this type, or if typeAll,
@@ -432,7 +439,7 @@ interface nsIDocShell : nsISupports
    *
    * @param uri the uri of the storage object to retrieve
    */
-  nsIDOMStorage getSessionStorageForURI(in nsIURI uri);
+  nsIDOMStorageObsolete getSessionStorageForURI(in nsIURI uri);
 
   /*
    * Add a WebApps session storage object to the docshell.
@@ -440,7 +447,7 @@ interface nsIDocShell : nsISupports
    * @param domain the domain the storage object is associated with
    * @param storage the storage object to add
    */
-  void addSessionStorage(in ACString aDomain, in nsIDOMStorage storage);
+  void addSessionStorage(in ACString aDomain, in nsIDOMStorageObsolete storage);
 
   /**
    * Gets the channel for the currently loaded document, if any. 
@@ -493,6 +500,6 @@ interface nsIDocShell_MOZILLA_1_9_1 : nsISupports
    * @param create If true and a session storage object doesn't
    *               already exist, a new one will be created.
    */
-  nsIDOMStorage getSessionStorageForPrincipal(in nsIPrincipal principal,
-                                              in boolean create);
+  nsIDOMStorageObsolete getSessionStorageForPrincipal(in nsIPrincipal principal,
+                                                      in boolean create);
 };

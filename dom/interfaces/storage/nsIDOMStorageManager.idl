@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMStorage2;
+interface nsIDOMStorage;
 interface nsIPrincipal;
 
 [scriptable, uuid(9efc2081-218f-4622-837b-40bdb870a1c8)]
@@ -64,5 +64,5 @@ interface nsIDOMStorageManager : nsISupports
    * This method ensures there is always only a single instance
    * for a single origin.
    */
-  nsIDOMStorage2 getLocalStorageForPrincipal(in nsIPrincipal aPrincipal);
+  nsIDOMStorage getLocalStorageForPrincipal(in nsIPrincipal aPrincipal);
 };

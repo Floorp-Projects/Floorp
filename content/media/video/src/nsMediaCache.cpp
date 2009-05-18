@@ -985,9 +985,11 @@ nsMediaCache::Update()
     PRBool enableReading;
     if (stream->mStreamLength >= 0 &&
         desiredOffset >= stream->mStreamLength) {
-      // We're at the end of the stream. Nothing to read.
+      // We're at the end of the stream. Nothing to read, but we don't
+      // need to suspend, we may as well just keep reading and hit EOF
+      // (or discover more data if the server lied to us).
       LOG(PR_LOG_DEBUG, ("Stream %p at end of stream", stream));
-      enableReading = PR_FALSE;
+      enableReading = PR_TRUE;
     } else if (desiredOffset < stream->mStreamOffset) {
       // We're reading to try to catch up to where the current stream
       // reader wants to be. Better not stop.
@@ -1031,18 +1033,13 @@ nsMediaCache::Update()
       // We need to seek now.
       NS_ASSERTION(stream->mIsSeekable || desiredOffset == 0,
                    "Trying to seek in a non-seekable stream!");
-      if (stream->mCacheSuspended) {
-        LOG(PR_LOG_DEBUG, ("Stream %p Resumed", stream));
-        rv = stream->mClient->CacheClientResume();
-        stream->mCacheSuspended = PR_FALSE;
-      }
-      if (NS_SUCCEEDED(rv)) {
-        // Round seek offset down to the start of the block
-        stream->mChannelOffset = (desiredOffset/BLOCK_SIZE)*BLOCK_SIZE;
-        LOG(PR_LOG_DEBUG, ("Stream %p CacheSeek to %lld", stream,
-            (long long)stream->mChannelOffset));
-        rv = stream->mClient->CacheClientSeek(stream->mChannelOffset);
-      }
+      // Round seek offset down to the start of the block
+      stream->mChannelOffset = (desiredOffset/BLOCK_SIZE)*BLOCK_SIZE;
+      LOG(PR_LOG_DEBUG, ("Stream %p CacheSeek to %lld (resume=%d)", stream,
+          (long long)stream->mChannelOffset, stream->mCacheSuspended));
+      rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
+                                            stream->mCacheSuspended);
+      stream->mCacheSuspended = PR_FALSE;
     } else if (enableReading && stream->mCacheSuspended) {
       LOG(PR_LOG_DEBUG, ("Stream %p Resumed", stream));
       rv = stream->mClient->CacheClientResume();
@@ -1534,6 +1531,13 @@ nsMediaCacheStream::SetSeekable(PRBool aIsSeekable)
   gMediaCache->QueueUpdate();
 }
 
+PRBool
+nsMediaCacheStream::IsSeekable()
+{
+  nsAutoMonitor mon(gMediaCache->Monitor());
+  return mIsSeekable;
+}
+
 void
 nsMediaCacheStream::Close()
 {
@@ -1589,6 +1593,13 @@ nsMediaCacheStream::GetLength()
 }
 
 PRInt64
+nsMediaCacheStream::GetNextCachedData(PRInt64 aOffset)
+{
+  nsAutoMonitor mon(gMediaCache->Monitor());
+  return GetNextCachedDataInternal(aOffset);
+}
+
+PRInt64
 nsMediaCacheStream::GetCachedDataEnd(PRInt64 aOffset)
 {
   nsAutoMonitor mon(gMediaCache->Monitor());
@@ -1607,6 +1618,7 @@ nsMediaCacheStream::IsDataCachedToEndOfStream(PRInt64 aOffset)
 PRInt64
 nsMediaCacheStream::GetCachedDataEndInternal(PRInt64 aOffset)
 {
+  PR_ASSERT_CURRENT_THREAD_IN_MONITOR(gMediaCache->Monitor());
   PRUint32 startBlockIndex = aOffset/BLOCK_SIZE;
   PRUint32 blockIndex = startBlockIndex;
   while (blockIndex < mBlocks.Length() && mBlocks[blockIndex] != -1) {
@@ -1624,6 +1636,53 @@ nsMediaCacheStream::GetCachedDataEndInternal(PRInt64 aOffset)
     result = PR_MIN(result, mStreamLength);
   }
   return PR_MAX(result, aOffset);
+}
+
+PRInt64
+nsMediaCacheStream::GetNextCachedDataInternal(PRInt64 aOffset)
+{
+  PR_ASSERT_CURRENT_THREAD_IN_MONITOR(gMediaCache->Monitor());
+  if (aOffset == mStreamLength)
+    return -1;
+  
+  PRUint32 startBlockIndex = aOffset/BLOCK_SIZE;
+  PRUint32 channelBlockIndex = mChannelOffset/BLOCK_SIZE;
+
+  if (startBlockIndex == channelBlockIndex &&
+      aOffset < mChannelOffset) {
+    // The block containing mChannelOffset is partially read, but not
+    // yet committed to the main cache. aOffset lies in the partially
+    // read portion, thus it is effectively cached.
+    return aOffset;
+  }
+
+  if (startBlockIndex >= mBlocks.Length())
+    return -1;
+
+  // Is the current block cached?
+  if (mBlocks[startBlockIndex] != -1)
+    return aOffset;
+
+  // Count the number of uncached blocks
+  PRBool hasPartialBlock = (mChannelOffset % BLOCK_SIZE) != 0;
+  PRUint32 blockIndex = startBlockIndex + 1;
+  while (PR_TRUE) {
+    if ((hasPartialBlock && blockIndex == channelBlockIndex) ||
+        (blockIndex < mBlocks.Length() && mBlocks[blockIndex] != -1)) {
+      // We at the incoming channel block, which has has data in it,
+      // or are we at a cached block. Return index of block start.
+      return blockIndex * BLOCK_SIZE;
+    }
+
+    // No more cached blocks?
+    if (blockIndex >= mBlocks.Length())
+      return -1;
+
+    ++blockIndex;
+  }
+
+  NS_NOTREACHED("Should return in loop");
+  return -1;
 }
 
 void
@@ -1721,7 +1780,7 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
     PRUint32 channelBlock = PRUint32(mChannelOffset/BLOCK_SIZE);
     PRInt32 cacheBlock = streamBlock < mBlocks.Length() ? mBlocks[streamBlock] : -1;
     if (channelBlock == streamBlock && mStreamOffset < mChannelOffset) {
-      // We can just use the data in mPartialBuffer. In fact we should
+      // We can just use the data in mPartialBlockBuffer. In fact we should
       // use it rather than waiting for the block to fill and land in
       // the cache.
       bytes = PR_MIN(size, mChannelOffset - mStreamOffset);
@@ -1772,6 +1831,61 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
   LOG(PR_LOG_DEBUG,
       ("Stream %p Read at %lld count=%d", this, (long long)(mStreamOffset-count), count));
   *aBytes = count;
+  return NS_OK;
+}
+
+nsresult
+nsMediaCacheStream::ReadFromCache(char* aBuffer,
+                                  PRInt64 aOffset,
+                                  PRInt64 aCount)
+{
+  nsAutoMonitor mon(gMediaCache->Monitor());
+  if (mClosed)
+    return NS_ERROR_FAILURE;
+
+  // Read one block (or part of a block) at a time
+  PRUint32 count = 0;
+  PRInt64 streamOffset = aOffset;
+  while (count < aCount) {
+    PRUint32 streamBlock = PRUint32(streamOffset/BLOCK_SIZE);
+    PRUint32 offsetInStreamBlock =
+      PRUint32(streamOffset - streamBlock*BLOCK_SIZE);
+    PRInt32 size = PR_MIN(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
+
+    if (mStreamLength >= 0) {
+      // Don't try to read beyond the end of the stream
+      PRInt64 bytesRemaining = mStreamLength - streamOffset;
+      if (bytesRemaining <= 0) {
+        return NS_ERROR_FAILURE;
+      }
+      size = PR_MIN(size, PRInt32(bytesRemaining));
+    }
+
+    PRInt32 bytes;
+    PRUint32 channelBlock = PRUint32(mChannelOffset/BLOCK_SIZE);
+    PRInt32 cacheBlock = streamBlock < mBlocks.Length() ? mBlocks[streamBlock] : -1;
+    if (channelBlock == streamBlock && streamOffset < mChannelOffset) {
+      // We can just use the data in mPartialBlockBuffer. In fact we should
+      // use it rather than waiting for the block to fill and land in
+      // the cache.
+      bytes = PR_MIN(size, mChannelOffset - streamOffset);
+      memcpy(aBuffer + count,
+        reinterpret_cast<char*>(mPartialBlockBuffer) + offsetInStreamBlock, bytes);
+    } else {
+      if (cacheBlock < 0) {
+        // We expect all blocks to be cached! Fail!
+        return NS_ERROR_FAILURE;
+      }
+      PRInt64 offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
+      nsresult rv = gMediaCache->ReadCacheFile(offset, aBuffer + count, size, &bytes);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+    streamOffset += bytes;
+    count += bytes;
+  }
+  
   return NS_OK;
 }
 

@@ -17,40 +17,23 @@ function startTest()
   var uri = io.newURI(window.location, "", null);
   var cp = Components.classes["@mozilla.org/cookie/permission;1"]
     .getService(Components.interfaces.nsICookiePermission);
+
   cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DENY);
 
   try {
     localStorage.setItem("blocked", "blockedvalue");
-    ok(false, "Exception while accessing localStorage");
+    ok(false, "Exception for localStorage.setItem, ACCESS_DENY");
   }
   catch (ex) {
-    ok(true, "Exception while accessing localStorage");
+    ok(true, "Exception for localStorage.setItem, ACCESS_DENY");
   }
 
   try {
     localStorage.getItem("blocked");
-    ok(false, "Exception while accessing localStorage");
+    ok(false, "Exception for localStorage.getItem, ACCESS_DENY");
   }
   catch (ex) {
-    ok(true, "Exception while accessing localStorage");
-  }
-
-  cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_SESSION);
-
-  try {
-    localStorage.setItem("blocked", "blockedvalue");
-    ok(false, "Exception while accessing localStorage");
-  }
-  catch (ex) {
-    ok(true, "Exception while accessing localStorage");
-  }
-
-  try {
-    localStorage.getItem("blocked");
-    ok(false, "Exception while accessing localStorage");
-  }
-  catch (ex) {
-    ok(true, "Exception while accessing localStorage");
+    ok(true, "Exception for localStorage.getItem, ACCESS_DENY");
   }
 
   cp.setAccess(uri, Components.interfaces.nsICookiePermission.ACCESS_DEFAULT);

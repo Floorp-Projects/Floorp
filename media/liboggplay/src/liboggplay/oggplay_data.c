@@ -323,6 +323,7 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
 
   int                   size = sizeof (OggPlayVideoRecord);
   int                   i;
+  int                   uv_offset;
   unsigned char       * p;
   unsigned char       * q;
   unsigned char       * p2;
@@ -359,17 +360,20 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
    * a row-by-row copy (stride may be negative)
    */
   p = data->y;
-  q = buffer->y;
+  q = buffer->y + (decode->video_info.offset_x&~1)+buffer->y_stride*(decode->video_info.offset_y&~1);
   for (i = 0; i < decode->y_height; i++) {
     memcpy(p, q, decode->y_width);
     p += decode->y_width;
     q += buffer->y_stride;
   }
 
+  uv_offset = (decode->video_info.offset_x/(decode->y_width/decode->uv_width)) + 
+              (buffer->uv_stride) *(decode->video_info.offset_y/(decode->y_height/decode->uv_height));
+
   p = data->u;
-  q = buffer->u;
+  q = buffer->u + uv_offset;
   p2 = data->v;
-  q2 = buffer->v;
+  q2 = buffer->v + uv_offset;
   for (i = 0; i < decode->uv_height; i++) {
     memcpy(p, q, decode->uv_width);
     memcpy(p2, q2, decode->uv_width);

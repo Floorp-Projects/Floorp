@@ -5,94 +5,58 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
 -->
 <head>
   <title>Table indexes chrome tests</title>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/table.js"></script>
 
   <script type="application/javascript">
-    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-    const nsIAccessibleTable = Components.interfaces.nsIAccessibleTable;
-
-    var gAccService = null;
-
     function doTest()
     {
-      gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                    getService(nsIAccessibleRetrieval);
-
       //////////////////////////////////////////////////////////////////////////
       // table
       var tRow = new Array(0,0,0,1,1,1,2,2,3,3);
       var tCol = new Array(0,1,2,0,1,2,0,1,1,2);
 
-      testTable("table", 10, tRow, tCol);
+      testTableIndexes("table", 10, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableinsane1
       tRow = [0,0,0,1,1,1,2,2,3,3];
       tCol = [0,1,2,0,1,2,0,1,1,2];
 
-      testTable("tableinsane1", 10, tRow, tCol);
+      testTableIndexes("tableinsane1", 10, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableinsane2
       tRow = [0,0,0,1,1,1,2,2,3,3,4,4,4];
       tCol = [0,1,2,0,1,2,0,1,1,2,1,3,4];
 
-      testTable("tableinsane2", 13, tRow, tCol);
+      testTableIndexes("tableinsane2", 13, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableinsane4
       tRow = [0,0,0,1,1,1,2,2,3,4];
       tCol = [0,1,2,0,1,2,0,2,0,0];
 
-      testTable("tableinsane4", 10, tRow, tCol);
+      testTableIndexes("tableinsane4", 10, tRow, tCol);
 
       //////////////////////////////////////////////////////////////////////////
       // tableborder
       tRow = [0,0,0,1,1,1,2,2,3,3];
       tCol = [0,1,2,0,1,2,0,1,1,2];
 
-      testTable("tableborder", 10, tRow, tCol);
+      testTableIndexes("tableborder", 10, tRow, tCol);
 
       SimpleTest.finish();
-    }
-
-    function testTable(aId, aLen, aRowIdxes, aColIdxes)
-    {
-      var table = document.getElementById(aId);
-      var tableAcc = gAccService.getAccessibleFor(table).
-        QueryInterface(nsIAccessibleTable);
-
-      var row, column, index;
-      var cellAcc;
-
-      for (var i = 0; i < aLen; i++) {
-        row = tableAcc.getRowAtIndex(i);
-        column = tableAcc.getColumnAtIndex(i);
-        index = tableAcc.getIndexAt(aRowIdxes[i], aColIdxes[i]);
-
-        is(row, aRowIdxes[i], aId + ": row  for index " + i +" is nor correct");
-        is(column, aColIdxes[i],
-           aId + ": column  for index " + i +"is nor correct");
-        is(index, i,
-           aId + ": row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
-
-        try {
-          cellAcc = null;
-          cellAcc = tableAcc.cellRefAt(row, column);
-        } catch (e) { }
-
-        ok(cellAcc,
-           aId + ": Can't get cell accessible at row = " + row + ", column = " + column);
-
-        if (cellAcc) {
-          var attrs = cellAcc.attributes;
-          is (parseInt(attrs.getStringProperty("table-cell-index")), index,
-              aId + ": cell index from object attributes of cell accessible isn't corrent.");
-        }
-      }
     }
 
     SimpleTest.waitForExplicitFinish();

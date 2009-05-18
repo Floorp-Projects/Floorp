@@ -1182,7 +1182,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // since a call to addProperty() is always followed by a call to
   // setProperty(), except in the case when a getter or setter is set
   // for a property. But we don't care about getters or setters here.
-  NS_DEFINE_CLASSINFO_DATA(Storage, nsStorageSH,
+  NS_DEFINE_CLASSINFO_DATA(StorageObsolete, nsStorageSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_NEWRESOLVE |
                            nsIXPCScriptable::WANT_GETPROPERTY |
@@ -1191,7 +1191,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
 
-  NS_DEFINE_CLASSINFO_DATA(Storage2, nsStorage2SH,
+  NS_DEFINE_CLASSINFO_DATA(Storage, nsStorage2SH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_NEWRESOLVE |
                            nsIXPCScriptable::WANT_GETPROPERTY |
@@ -3396,12 +3396,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathResult)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
+  DOM_CLASSINFO_MAP_BEGIN(StorageObsolete, nsIDOMStorageObsolete)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageObsolete)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Storage2, nsIDOMStorage2)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage2)
+  DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(StorageList, nsIDOMStorageList)
@@ -10249,7 +10249,7 @@ nsStorageSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // We're resolving property that doesn't exist on the prototype,
   // check if the key exists in the storage object.
 
-  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+  nsCOMPtr<nsIDOMStorageObsolete> storage(do_QueryWrappedNative(wrapper));
 
   // GetItem() will return null if the caller can't access the session
   // storage item.
@@ -10285,7 +10285,7 @@ nsStorageSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                          JSContext *cx, JSObject *obj, jsval id,
                          jsval *vp, PRBool *_retval)
 {
-  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+  nsCOMPtr<nsIDOMStorageObsolete> storage(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
 
   JSString *key = ::JS_ValueToString(cx, id);
@@ -10308,7 +10308,7 @@ nsStorageSH::DelProperty(nsIXPConnectWrappedNative *wrapper,
                          JSContext *cx, JSObject *obj, jsval id,
                          jsval *vp, PRBool *_retval)
 {
-  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+  nsCOMPtr<nsIDOMStorageObsolete> storage(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
 
   JSString *key = ::JS_ValueToString(cx, id);
@@ -10419,7 +10419,7 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // We're resolving property that doesn't exist on the prototype,
   // check if the key exists in the storage object.
 
-  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
 
   // GetItem() will return null if the caller can't access the session
   // storage item.
@@ -10444,7 +10444,7 @@ NS_IMETHODIMP
 nsStorage2SH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
-  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
 
   nsAutoString val;
@@ -10488,7 +10488,7 @@ nsStorage2SH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                           JSContext *cx, JSObject *obj, jsval id,
                           jsval *vp, PRBool *_retval)
 {
-  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
 
   JSString *key = ::JS_ValueToString(cx, id);
@@ -10511,7 +10511,7 @@ nsStorage2SH::DelProperty(nsIXPConnectWrappedNative *wrapper,
                           JSContext *cx, JSObject *obj, jsval id,
                           jsval *vp, PRBool *_retval)
 {
-  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
 
   JSString *key = ::JS_ValueToString(cx, id);

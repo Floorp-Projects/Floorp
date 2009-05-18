@@ -65,6 +65,7 @@ _TEST_FILES =\
 		nsIAccessibleEditableText.js \
 		relations.js \
 		role.js \
+		table.js \
 		value.js \
 		test_accessnode_invalidation.html \
 		test_actions_aria.html \
@@ -94,7 +95,6 @@ _TEST_FILES =\
 		test_name_button.html \
 		test_name_link.html \
 		test_name_markup.html \
-	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_applicationAccessible.html \
 	$(warning test_nsIAccessible_comboboxes.xul temporarily disabled) \
  		test_nsIAccessible_selects.html \
@@ -123,6 +123,8 @@ _TEST_FILES =\
 		test_table_2.html \
 		test_table_3.html \
 		test_table_4.html \
+  $(warning test_table_indexes.html temporarily disabled) \
+		test_table_indexes_ariagrid.html \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \

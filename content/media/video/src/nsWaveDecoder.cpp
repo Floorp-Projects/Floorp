@@ -1616,7 +1616,7 @@ void
 nsWaveDecoder::Suspend()
 {
   if (mStream) {
-    mStream->Suspend();
+    mStream->Suspend(PR_TRUE);
   }
 }
 
