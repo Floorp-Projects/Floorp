@@ -113,6 +113,21 @@ function doNextTest()
       break;
 
     case 8:
+      slaveOrigin = "http://example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear";
+      break;
+      
+    case 9:
+      slaveOrigin = "https://test1.example.com";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear";
+      break;
+      
+    case 10:
+      slaveOrigin = "http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp";
+      slave.location = slaveOrigin + slavePath + "frameQuotaSessionOnly.html?clear";
+      break;
+      
+    case 11:
       SimpleTest.finish();
   }
 
