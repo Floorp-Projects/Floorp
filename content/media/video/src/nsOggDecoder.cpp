@@ -1891,8 +1891,10 @@ void nsOggDecoder::FirstFrameLoaded()
     notifyElement = mNextState != PLAY_STATE_SEEKING;
   }  
 
+  PRBool resourceIsLoaded = !mResourceLoaded && mReader &&
+    mReader->Stream()->IsDataCachedToEndOfStream(mDecoderPosition);
   if (mElement && notifyElement) {
-    mElement->FirstFrameLoaded();
+    mElement->FirstFrameLoaded(resourceIsLoaded);
   }
 
   // The element can run javascript via events
@@ -1909,8 +1911,7 @@ void nsOggDecoder::FirstFrameLoaded()
     }
   }
 
-  if (!mResourceLoaded && mReader &&
-      mReader->Stream()->IsDataCachedToEndOfStream(mDecoderPosition)) {
+  if (resourceIsLoaded) {
     ResourceLoaded();
   }
 }
