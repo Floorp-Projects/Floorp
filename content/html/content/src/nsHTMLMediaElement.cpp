@@ -1240,7 +1240,7 @@ void nsHTMLMediaElement::MetadataLoaded()
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
 }
 
-void nsHTMLMediaElement::FirstFrameLoaded()
+void nsHTMLMediaElement::FirstFrameLoaded(PRBool aResourceFullyLoaded)
 {
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
   ChangeDelayLoadStatus(PR_FALSE);
@@ -1248,6 +1248,7 @@ void nsHTMLMediaElement::FirstFrameLoaded()
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
 
   if (mDecoder && mAllowSuspendAfterFirstFrame && mPaused &&
+      !aResourceFullyLoaded &&
       !HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
       !HasAttr(kNameSpaceID_None, nsGkAtoms::autobuffer)) {
     mSuspendedAfterFirstFrame = PR_TRUE;

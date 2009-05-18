@@ -52,10 +52,12 @@ function loaded(event) {
 }
 
 function suspended(event) {
-  // we *can* be in state NETWORK_LOADED --- the suspend can happen after
-  // all the data is already loaded...
-  isnot(event.target.networkState, event.target.NETWORK_LOADING,
-        event.target.id + " suspended networkState");
+  // If the element suspends the download, it should not then be able to
+  // complete it, so we should be stuck in NETWORK_IDLE even though this
+  // even though this event handler could run a long time after the actual
+  // suspend.
+  is(event.target.networkState, event.target.NETWORK_IDLE,
+     event.target.id + " suspended networkState");
   suspends[event.target.id] = true;
   if (event.target.id == "v1") {
     event.target.autobuffer = true;
