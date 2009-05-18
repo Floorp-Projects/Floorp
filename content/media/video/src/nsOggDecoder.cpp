@@ -1110,15 +1110,6 @@ void nsOggDecodeStateMachine::Shutdown()
     mBufferExhausted = PR_FALSE;
     oggplay_prepare_for_close(mPlayer);
   }
-  if (mStepDecodeThread) {
-    // nsOggDecodeStateMachine::Shutdown is called at a safe
-    // time to spin the event loop. This makes the following call
-    // also safe.
-    mon.Exit();
-    mStepDecodeThread->Shutdown();
-    mon.Enter();
-    mStepDecodeThread = nsnull;
-  }
 }
 
 void nsOggDecodeStateMachine::Decode()
@@ -1155,6 +1146,19 @@ nsresult nsOggDecodeStateMachine::Run()
     case DECODER_STATE_SHUTDOWN:
       if (mPlaying) {
         StopPlayback();
+      }
+      // Ensure mStepDecodeThread exits
+      if (mStepDecodeThread) {
+        mDecodingCompleted = PR_TRUE;
+        mBufferExhausted = PR_FALSE;
+        mon.NotifyAll();
+
+        mon.Exit();
+        mStepDecodeThread->Shutdown();
+        mon.Enter();
+        NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
+                     "How did we escape from the shutdown state???");
+        mStepDecodeThread = nsnull;
       }
       return NS_OK;
 
@@ -1237,6 +1241,9 @@ nsresult nsOggDecodeStateMachine::Run()
           mDecodingCompleted = PR_FALSE;
           mBufferExhausted = PR_FALSE;
           mon.NotifyAll();
+          // We can call Shutdown here without releasing our monitor
+          // because mStepDecodeThread has already exited
+          // nsOggStepDecodeEvent.
           mStepDecodeThread->Shutdown();
           mStepDecodeThread = nsnull;
           continue;
@@ -1767,11 +1774,13 @@ public:
 
   NS_IMETHOD Run() {
     NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+
     // The decode thread must die before the state machine can die.
     // The state machine must die before the reader.
     // The state machine must die before the decoder.
     if (mDecodeThread)
       mDecodeThread->Shutdown();
+
     mDecodeThread = nsnull;
     mDecodeStateMachine = nsnull;
     mReader = nsnull;
@@ -1830,7 +1839,6 @@ void nsOggDecoder::Stop()
                                                           mDecodeThread);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
-  // Null data fields. They can be reinitialized in future Load()s safely now.
   mDecodeThread = nsnull;
   mDecodeStateMachine = nsnull;
   UnregisterShutdownObserver();
