@@ -667,9 +667,16 @@ var PlacesOrganizer = {
 
       // don't update the panel if we are already editing this node unless we're
       // in multi-edit mode
-      if (aSelectedNode && gEditItemOverlay.itemId == aSelectedNode.itemId &&
-          detailsDeck.selectedIndex == 1 && !gEditItemOverlay.multiEdit)
-        return;
+      if (aSelectedNode) {
+        var concreteId = PlacesUtils.getConcreteItemId(aSelectedNode);
+        var nodeIsSame = gEditItemOverlay.itemId == aSelectedNode.itemId ||
+                         gEditItemOverlay.itemId == concreteId ||
+                         (aSelectedNode.itemId == -1 && gEditItemOverlay.uri &&
+                          gEditItemOverlay.uri == aSelectedNode.uri);
+        if (nodeIsSame && detailsDeck.selectedIndex == 1 &&
+            !gEditItemOverlay.multiEdit)
+          return;
+      }
     }
 
     // Clean up the panel before initing it again.
