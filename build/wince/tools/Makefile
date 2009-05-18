@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,19 +12,18 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla core build scripts.
+# The Original Code is Mozilla CE Shunt Library.
 #
-# The Initial Developer of the Original Code is
-# Brad Lassey <blassey@mozilla.com>
+# The Initial Developer of the Original Code is Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
 #
-# Portions created by the Initial Developer are Copyright (C) 2005
-# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
-#
-# Contributor(s): 
+# Contributor(s):
+#	John Wolfe (wolfe@lobo.us)
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,24 +35,101 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../..
-topsrcdir = ../../..
-srcdir = .
-VPATH = .
+# this file is used directly during configure as well as included from Makefile.in
 
+DEVENV_FLAG=-
 
-TOPSRCDIR = $(topsrcdir)
-OBJDIR = $(shell cd $(DEPTH); pwd -W)
-CFLAGS += -DHAVE_SHUNT
-MOZCE_NOT_CONFIGURE=1
-include $(DEPTH)/config/autoconf.mk
+CC=cl -O2
 
-ifdef MOZ_MEMORY
-CFLAGS += -DMOZ_MEMORY
+MOZCE_DEVENV=vs$(MOZ_MSVCVERSION)
+
+MOZCE_TOOLS_DIR=$(TOPSRCDIR)/build/wince/tools
+
+ifdef MOZCE_NOT_CONFIGURE
+MOZCE_TOOLS_BIN_DIR=$(OBJDIR)/build/wince/tools
+else
+# if we're building the tools in configure, we want them to go directly to the sdk 
+# so they get rebuilt once we have a full environment
+MOZCE_TOOLS_BIN_DIR=$(OBJDIR)/dist/sdk/bin
 endif
 
-include $(topsrcdir)/build/wince/tools/Makefile
+BUILD_SWITCH=$(DEVENV_FLAG)Build
+REBUILD_SWITCH=$(DEVENV_FLAG)Rebuild
+CLEAN_SWITCH=$(DEVENV_FLAG)clean
 
-export::
+ifeq ($(VCINSTALLDIR),)
+$(error Environment variable VCINSTALLDIR not set! Are you using MozillaBuild?)
+endif
 
-tools::
+ifeq ($(WINCE_SDK_DIR),)
+$(error Environment variable WINCE_SDK_DIR not set! It must be passed to make if not running from configure)
+endif
+
+ifeq ($(MOZ_MSVCVERSION),)
+$(error Environment variable MOZ_MSVCVERSION not set! Are you using MozillaBuild?)
+endif
+
+CFLAGS += \
+  -DVC_PATH='"$(subst \,\\,$(VCINSTALLDIR))\\"' \
+  -DWM_SDK_PATH='"$(subst \,\\,$(WINCE_SDK_DIR))\\"' \
+  -DMOZCE_DEVENV='"$(MOZCE_DEVENV)"' \
+  -DTOPSRCDIR='"$(TOPSRCDIR)"' \
+  $(NULL)
+
+ifneq ($(WINDOWSSDKDIR),)
+CFLAGS += -DWIN_SDK_PATH='"$(subst \,\\,$(WINDOWSSDKDIR))"'
+else
+ifeq ($(SDKDIR),)
+$(error Environment variable WINDOWSSDKDIR not set! Are you using MozillaBuild?)
+else
+CFLAGS += -DWIN_SDK_PATH='"$(subst \,\\,$(SDKDIR))"'
+endif
+endif
+
+ifdef VPATH
+CFLAGS	+= -DSHUNT_INC='"$(OBJDIR)/dist/include/mozce_shunt"'
+CFLAGS	+= -DSHUNT_LIB='"$(OBJDIR)/dist/lib"'
+CFLAGS	+= -DJEMALLOC_LIB='"$(OBJDIR)/dist/lib/jemalloc.lib"'
+endif
+CFLAGS += -DEBUG -Zi
+
+SDK_TOOLS = $(MOZCE_TOOLS_BIN_DIR)/arm-wince-as.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-gcc.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-lib.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-link.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-res.exe 
+
+all: libs export
+
+libs: $(SDK_TOOLS)
+
+clean: clobber
+
+
+clobber:
+	rm $(MOZCE_TOOLS_BIN_DIR)/*.exe  
+
+$(MOZCE_TOOLS_BIN_DIR)/arm-wince-as.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-as.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile
+	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
+	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-as.c
+
+$(MOZCE_TOOLS_BIN_DIR)/arm-wince-gcc.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-gcc.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile
+	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
+	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-gcc.c
+
+$(MOZCE_TOOLS_BIN_DIR)/arm-wince-lib.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-lib.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile
+	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
+	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-lib.c
+
+$(MOZCE_TOOLS_BIN_DIR)/arm-wince-link.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-link.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile
+	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
+	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-link.c
+
+$(MOZCE_TOOLS_BIN_DIR)/arm-wince-res.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-res.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile
+	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
+	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-res.c
+
+
+export:: $(SDK_TOOLS)
+	mkdir -p $(OBJDIR)/dist/sdk/bin
+	cp $^ $(OBJDIR)/dist/sdk/bin
