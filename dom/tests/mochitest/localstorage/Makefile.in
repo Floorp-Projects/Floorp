@@ -54,14 +54,20 @@ _TEST_FILES	= \
     frameSlaveNotEqual.html \
     frameReplace.html \
     frameQuota.html \
+    frameQuotaSessionOnly.html \
     frameOrder.html \
     interOriginFrame.js \
     interOriginTest.js \
     interOriginTest2.js \
+    pbSwitch.js \
     test_brokenUTF-16.html \
     test_cookieBlock.html \
+    test_cookieSession-phase1.html \
+    test_cookieSession-phase2.html \
     test_embededNulls.html \
     test_localStorageBase.html \
+    test_localStorageBasePrivateBrowsing.html \
+    test_localStorageBaseSessionOnly.html \
     test_localStorageOriginsEquals.html \
     test_localStorageOriginsDiff.html \
     test_localStorageOriginsPortDiffs.html \
@@ -69,8 +75,11 @@ _TEST_FILES	= \
     test_localStorageOriginsSchemaDiffs.html \
     test_localStorageReplace.html \
     test_localStorageQuota.html \
+    test_localStorageQuotaPrivateBrowsing.html \
+    test_localStorageQuotaSessionOnly.html \
     test_localStorageKeyOrder.html \
     test_removeOwnersAPI.html \
+    test_removeOwnersAPISessionOnly.html \
     test_storageConstructor.html \
     $(NULL)
     

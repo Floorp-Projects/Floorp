@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMStorageDB_h___
-#define nsDOMStorageDB_h___
+#ifndef nsDOMStoragePersistentDB_h___
+#define nsDOMStoragePersistentDB_h___
 
 #include "nscore.h"
 #include "mozIStorageConnection.h"
@@ -47,44 +47,11 @@
 class nsDOMStorage;
 class nsSessionStorageEntry;
 
-/**
- * For the purposes of quota checking, we want to be able to efficiently
- * reference data items that belong to a host or its subhosts.  We do this by
- * using a reversed domain name as the key for an item.  For example, a
- * storage for foo.bar.com would use a key of 'moc.rab.oof.".
- *
- * Additionally, globalStorage and localStorage items must be distinguished.
- * globalStorage items are scoped to the host, and localStorage are items are
- * scoped to the scheme/host/port.  To scope localStorage data, its port and
- * scheme are appended to its key.  http://foo.bar.com is stored as
- * moc.rab.foo.:http:80.
- *
- * So the following queries can be used, for http://foo.bar.com:
- *
- * All data owned by globalStorage["foo.bar.com"] -> SELECT * WHERE Domain =
- * "moc.rab.foo.:"
- *
- * All data owned by localStorage -> SELECT * WHERE Domain =
- * "moc.rab.foo.:http:80"
- *
- * All data owned by foo.bar.com, in any storage ->
- * SELECT * WHERE Domain GLOB "moc.rab.foo.:*"
- *
- * All data owned by foo.bar.com or any subdomain, in any storage ->
- * SELECT * WHERE Domain GLOB "moc.rab.foo.*".
- *
- * This key is called the "scope DB key" throughout the code.  So the scope DB
- * key for localStorage at http://foo.bar.com is "moc.rab.foo.:http:80".
- *
- * When calculating quotas, we want to lump together everything in an ETLD+1.
- * So we use a "quota key" during lookups to calculate the quota.  So the
- * quota key for localStorage at http://foo.bar.com is "moc.rab.". */
-
-class nsDOMStorageDB
+class nsDOMStoragePersistentDB
 {
 public:
-  nsDOMStorageDB() {}
-  ~nsDOMStorageDB() {}
+  nsDOMStoragePersistentDB() {}
+  ~nsDOMStoragePersistentDB() {}
 
   nsresult
   Init();
@@ -173,26 +140,9 @@ public:
   GetUsage(const nsACString& aDomain, PRBool aIncludeSubDomains, PRInt32 *aUsage);
 
   /**
-    * Turns "http://foo.bar.com:80" to "moc.rab.oof.:http:80",
-    * i.e. reverses the host, appends a dot, appends the schema
-    * and a port number.
-    */
-  static nsresult CreateOriginScopeDBKey(nsIURI* aUri, nsACString& aKey);
-
-  /**
-    * Turns "http://foo.bar.com" to "moc.rab.oof.",
-    * i.e. reverses the host and appends a dot.
-    */
-  static nsresult CreateDomainScopeDBKey(nsIURI* aUri, nsACString& aKey);
-  static nsresult CreateDomainScopeDBKey(const nsACString& aAsciiDomain, nsACString& aKey);
-
-  /**
-    * Turns "foo.bar.com" to "moc.rab.",
-    * i.e. extracts eTLD+1 from the host, reverses the result
-    * and appends a dot.
-    */
-  static nsresult CreateQuotaDomainDBKey(const nsACString& aAsciiDomain,
-                                         PRBool aIncludeSubDomains, nsACString& aKey);
+   * Clears all in-memory data from private browsing mode
+   */
+  nsresult ClearAllPrivateBrowsingData();
 
 protected:
 
@@ -212,6 +162,8 @@ protected:
   nsCString mCachedOwner;
   PRInt32 mCachedUsage;
 
+  friend class nsDOMStorageDBWrapper;
+  friend class nsDOMStorageMemoryDB;
   nsresult
   GetUsageInternal(const nsACString& aQuotaDomainDBKey, PRInt32 *aUsage);
 };
