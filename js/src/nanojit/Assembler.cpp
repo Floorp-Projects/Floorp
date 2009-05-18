@@ -68,7 +68,7 @@ namespace nanojit
                 op == LIR_loop ||
                 op == LIR_label ||
                 op == LIR_live ||
-                isRet(op)) {
+                ins->isRet()) {
                 return false;
             }
 	        return ins->resv() == 0;
@@ -126,7 +126,7 @@ namespace nanojit
 				if (i->oprnd1())
 					block.add(i->oprnd1());
             }
-            else if (isRet(i->opcode()) || i->isBranch()) {
+            else if (i->isRet() || i->isBranch()) {
                 flush_add(i);
             }
 			else {
