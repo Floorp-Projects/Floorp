@@ -146,26 +146,12 @@ namespace nanojit
 		uint32_t    index;
 	};
 
-    inline bool isGuard(LOpcode op) {
-        return op == LIR_x || op == LIR_xf || op == LIR_xt || op == LIR_loop || op == LIR_xbarrier || op == LIR_xtbl;
-    }
-
-    inline bool isCall(LOpcode op) {
+    inline bool isCseOpcode(LOpcode op) {
         op = LOpcode(op & ~LIR64);
-        return op == LIR_call || op == LIR_calli;
+        return op >= LIR_ldcs && op <= LIR_uge;
     }
-
-    inline bool isStore(LOpcode op) {
-        op = LOpcode(op & ~LIR64);
-        return op == LIR_sti;
-    }
-
-    inline bool isConst(LOpcode op) {
-        return op == LIR_int;
-    }
-
-    inline bool isLoad(LOpcode op) {
-        return op == LIR_ldq || op == LIR_ld || op == LIR_ldc || op == LIR_ldqc || op == LIR_ldcs;
+    inline bool isRetOpcode(LOpcode op) {
+        return (op & ~LIR64) == LIR_ret;
     }
 
 	// Sun Studio requires explicitly declaring signed int bit-field
@@ -314,16 +300,32 @@ namespace nanojit
 		}
 		
 		bool isCse(const CallInfo *functions) const;
+        bool isRet() const { return nanojit::isRetOpcode(u.code); }
 		bool isop(LOpcode o) const { return u.code == o; }
 		bool isQuad() const;
 		bool isCond() const;
+        bool isFloat() const;
 		bool isCmp() const;
-		bool isCall() const { return nanojit::isCall(u.code); }
-        bool isStore() const { return nanojit::isStore(u.code); }
-        bool isLoad() const { return nanojit::isLoad(u.code); }
-		bool isGuard() const { return nanojit::isGuard(u.code); }
+        bool isCall() const { 
+            LOpcode op = LOpcode(u.code & ~LIR64);
+            return op == LIR_call || op == LIR_calli;
+        }
+        bool isStore() const {
+            LOpcode op = LOpcode(u.code & ~LIR64);
+            return op == LIR_sti;
+        }
+        bool isLoad() const { 
+            LOpcode op = u.code;
+            return op == LIR_ldq  || op == LIR_ld || op == LIR_ldc || 
+                   op == LIR_ldqc || op == LIR_ldcs;
+        }
+        bool isGuard() const {
+            LOpcode op = u.code;
+            return op == LIR_x || op == LIR_xf || op == LIR_xt || 
+                   op == LIR_loop || op == LIR_xbarrier || op == LIR_xtbl;
+        }
 		// True if the instruction is a 32-bit or smaller constant integer.
-		bool isconst() const { return nanojit::isConst(u.code); }
+        bool isconst() const { return u.code == LIR_int; }
 		// True if the instruction is a 32-bit or smaller constant integer and
 		// has the value val when treated as a 32-bit signed integer.
 		bool isconstval(int32_t val) const;
@@ -361,13 +363,6 @@ namespace nanojit
 	};
 	typedef LIns*		LInsp;
 
-	bool FASTCALL isCse(LOpcode v);
-	bool FASTCALL isCmp(LOpcode v);
-	bool FASTCALL isCond(LOpcode v);
-    inline bool isRet(LOpcode c) {
-        return (c & ~LIR64) == LIR_ret;
-    }
-    bool FASTCALL isFloat(LOpcode v);
 	LIns* FASTCALL callArgN(LInsp i, uint32_t n);
 	extern const uint8_t operandCount[];
 
@@ -576,7 +571,7 @@ namespace nanojit
 		}
 
 		LIns* ins1(LOpcode v, LInsp a) {
-            return isRet(v) ? add_flush(out->ins1(v, a)) : add(out->ins1(v, a));
+            return isRetOpcode(v) ? add_flush(out->ins1(v, a)) : add(out->ins1(v, a));
 		}
 		LIns* ins2(LOpcode v, LInsp a, LInsp b) {
 			return v == LIR_2 ? out->ins2(v,a,b) : add(out->ins2(v, a, b));

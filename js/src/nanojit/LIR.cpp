@@ -366,16 +366,8 @@ namespace nanojit
 		return cur;
 	}
 
-	bool FASTCALL isCmp(LOpcode c) {
-		return (c >= LIR_eq && c <= LIR_uge) || (c >= LIR_feq && c <= LIR_fge);
-	}
-    
-	bool FASTCALL isCond(LOpcode c) {
-		return (c == LIR_ov) || (c == LIR_cs) || isCmp(c);
-	}
-
-    bool FASTCALL isFloat(LOpcode c) {
-        switch (c) {
+    bool LIns::isFloat() const {
+        switch (u.code) {
             default:
                 return false;
             case LIR_fadd:
@@ -392,11 +384,13 @@ namespace nanojit
     }
     
 	bool LIns::isCmp() const {
-		return nanojit::isCmp(u.code);
+        LOpcode op = u.code;
+        return (op >= LIR_eq && op <= LIR_uge) || (op >= LIR_feq && op <= LIR_fge);
 	}
 
     bool LIns::isCond() const {
-        return nanojit::isCond(u.code);
+        LOpcode op = u.code;
+        return (op == LIR_ov) || (op == LIR_cs) || isCmp();
     }
 	
 	bool LIns::isQuad() const {
@@ -416,7 +410,7 @@ namespace nanojit
 
 	bool LIns::isconstq() const
 	{	
-		return isop(LIR_quad);
+        return u.code == LIR_quad;
 	}
 
 	bool LIns::isconstp() const
@@ -428,14 +422,9 @@ namespace nanojit
     #endif
 	}
 
-	bool FASTCALL isCse(LOpcode op) {
-		op = LOpcode(op & ~LIR64);
-		return op >= LIR_ldcs && op <= LIR_uge;
-	}
-
     bool LIns::isCse(const CallInfo *functions) const
     { 
-		return nanojit::isCse(u.code) || (isCall() && callInfo()->_cse);
+        return nanojit::isCseOpcode(u.code) || (isCall() && callInfo()->_cse);
     }
 
     void LIns::initOpcodeAndClearResv(LOpcode op)
@@ -1464,7 +1453,7 @@ namespace nanojit
 				NanoAssert(s < livebuf+sizeof(livebuf));
             }
 			printf("%-60s %s\n", livebuf, names->formatIns(e->i));
-            if (e->i->isGuard() || e->i->isBranch() || isRet(e->i->opcode())) {
+            if (e->i->isGuard() || e->i->isBranch() || e->i->isRet()) {
 				printf("\n");
                 newblock = true;
             }
@@ -1791,7 +1780,7 @@ namespace nanojit
 	
 	LIns* CseFilter::ins1(LOpcode v, LInsp a)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			NanoAssert(operandCount[v]==1);
 			uint32_t k;
 			LInsp found = exprs.find1(v, a, k);
@@ -1804,7 +1793,7 @@ namespace nanojit
 
 	LIns* CseFilter::ins2(LOpcode v, LInsp a, LInsp b)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			NanoAssert(operandCount[v]==2);
 			uint32_t k;
 			LInsp found = exprs.find2(v, a, b, k);
@@ -1817,7 +1806,7 @@ namespace nanojit
 
 	LIns* CseFilter::insLoad(LOpcode v, LInsp base, LInsp disp)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			NanoAssert(operandCount[v]==2);
 			uint32_t k;
 			LInsp found = exprs.find2(v, base, disp, k);
@@ -1830,7 +1819,7 @@ namespace nanojit
 
 	LInsp CseFilter::insGuard(LOpcode v, LInsp c, LInsp x)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			// conditional guard
 			NanoAssert(operandCount[v]==1);
 			uint32_t k;
