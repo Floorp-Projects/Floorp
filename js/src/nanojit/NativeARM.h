@@ -183,7 +183,6 @@ verbose_only( extern const char* shiftNames[]; )
 #define DECLARE_PLATFORM_ASSEMBLER()                                    \
     const static Register argRegs[4], retRegs[2];                       \
     void LD32_nochk(Register r, int32_t imm);                           \
-    void BL(NIns*);                                                     \
     void JMP_far(NIns*);                                                \
     void B_cond_chk(ConditionCode, NIns*, bool);                        \
     void underrunProtect(int bytes);                                    \
