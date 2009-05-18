@@ -71,6 +71,7 @@ _TEST_FILES += \
 		test_bug468190.html \
 		test_bug482461.html \
 		test_can_play_type_ogg.html \
+		test_closing_connections.html \
 		test_contentDuration1.html \
 		test_contentDuration2.html \
 		test_contentDuration3.html \
