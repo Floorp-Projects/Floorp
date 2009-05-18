@@ -1329,7 +1329,7 @@ nsWaveDecoder::MetadataLoaded()
 
   if (mElement) {
     mElement->MetadataLoaded();
-    mElement->FirstFrameLoaded();
+    mElement->FirstFrameLoaded(mResourceLoaded);
   }
 
   mMetadataLoadedReported = PR_TRUE;
