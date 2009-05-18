@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Table indexes for ARIA grid tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/table.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA grid
+      var tRow = new Array(0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3);
+      var tCol = new Array(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2);
+
+      testTableIndexes("grid", 12, tRow, tCol);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=386813"
+     title="support nsIAccessibleTable on ARIA grid/treegrid">Mozilla Bug 386813</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="grid" id="grid">
+    <div role="row">
+      <span role="columnheader">column1</span>
+      <span id="a" role="columnheader">column2</span>
+      <span role="columnheader">column3</span>
+    </div>
+    <div role="row">
+      <span role="rowheader">row1</span>
+      <span role="gridcell">cell1</span>
+      <span role="gridcell">cell2</span>
+    </div>
+    <div role="row">
+      <span role="rowheader">row2</span>
+      <span role="gridcell">cell3</span>
+      <span role="gridcell">cell4</span>
+    </div>
+    <div role="row">
+      <span role="rowheader">row3</span>
+      <span role="gridcell">cell5</span>
+      <span role="gridcell">cell6</span>
+    </div>
+  </div>
+
+</body>
+</html>
