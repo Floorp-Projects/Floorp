@@ -1031,18 +1031,13 @@ nsMediaCache::Update()
       // We need to seek now.
       NS_ASSERTION(stream->mIsSeekable || desiredOffset == 0,
                    "Trying to seek in a non-seekable stream!");
-      if (stream->mCacheSuspended) {
-        LOG(PR_LOG_DEBUG, ("Stream %p Resumed", stream));
-        rv = stream->mClient->CacheClientResume();
-        stream->mCacheSuspended = PR_FALSE;
-      }
-      if (NS_SUCCEEDED(rv)) {
-        // Round seek offset down to the start of the block
-        stream->mChannelOffset = (desiredOffset/BLOCK_SIZE)*BLOCK_SIZE;
-        LOG(PR_LOG_DEBUG, ("Stream %p CacheSeek to %lld", stream,
-            (long long)stream->mChannelOffset));
-        rv = stream->mClient->CacheClientSeek(stream->mChannelOffset);
-      }
+      // Round seek offset down to the start of the block
+      stream->mChannelOffset = (desiredOffset/BLOCK_SIZE)*BLOCK_SIZE;
+      LOG(PR_LOG_DEBUG, ("Stream %p CacheSeek to %lld (resume=%d)", stream,
+          (long long)stream->mChannelOffset, stream->mCacheSuspended));
+      rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
+                                            stream->mCacheSuspended);
+      stream->mCacheSuspended = PR_FALSE;
     } else if (enableReading && stream->mCacheSuspended) {
       LOG(PR_LOG_DEBUG, ("Stream %p Resumed", stream));
       rv = stream->mClient->CacheClientResume();
@@ -1532,6 +1527,13 @@ nsMediaCacheStream::SetSeekable(PRBool aIsSeekable)
   // Queue an Update since we may change our strategy for dealing
   // with this stream
   gMediaCache->QueueUpdate();
+}
+
+PRBool
+nsMediaCacheStream::IsSeekable()
+{
+  nsAutoMonitor mon(gMediaCache->Monitor());
+  return mIsSeekable;
 }
 
 void

@@ -2232,7 +2232,7 @@ PRBool nsOggDecoder::GetSeekable()
 void nsOggDecoder::Suspend()
 {
   if (mReader) {
-    mReader->Stream()->Suspend();
+    mReader->Stream()->Suspend(PR_TRUE);
   }
 }
 
