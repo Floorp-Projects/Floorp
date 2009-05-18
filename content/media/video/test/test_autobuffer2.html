@@ -17,9 +17,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479863
   
 </div>
 
+<video id='v1' onerror="event.stopPropagation()"></video>
+<video id='v2' onerror="event.stopPropagation()" autobuffer></video>
+<video id='v3' onerror="event.stopPropagation()" autoplay></video>
+<video id='v4' onerror="event.stopPropagation()"></video>
+<video id='v5' onerror="event.stopPropagation()"></video>
+<video id='v6' onerror="event.stopPropagation()"></video>
+
+<pre id="test">
 <script type="application/javascript">
-var stalls = { v1:false, v2:false, v3:false, v4:false, v5:false, v6:false };
-var loads = { v1:false, v2:false, v3:false, v4:false, v5:false, v6:false };
+var suspends = {};
+var loads = {};
 var totalLoadEvents = 0;
 var expectedLoadEvents = 6;
 
@@ -27,13 +35,12 @@ function loaded(event) {
   loads[event.target.id] = true;
   ++totalLoadEvents;
   if (totalLoadEvents == expectedLoadEvents) {
-    ok(stalls.v1, "v1 should stall");
-    // We might get accidental stalls on very slow machines, so lets not test these
-    // ok(!stalls.v2, "v2 should not stall");
-    // ok(!stalls.v3, "v3 should not stall");
-    ok(stalls.v4, "v4 should stall");
-    ok(stalls.v5, "v5 should stall");
-    ok(stalls.v6, "v6 should stall");
+    ok(suspends.v1, "v1 should suspend");
+    ok(!suspends.v2, "v2 should not suspend");
+    ok(!suspends.v3, "v3 should not suspend");
+    ok(suspends.v4, "v4 should suspend");
+    ok(suspends.v5, "v5 should suspend");
+    ok(suspends.v6, "v6 should suspend");
     ok(loads.v1, "v1 should load after setting autobuffer");
     ok(loads.v2, "v2 should load");
     ok(loads.v3, "v3 should load");
@@ -43,8 +50,11 @@ function loaded(event) {
     SimpleTest.finish();
   }
 }
-function stalled(event) {
-  stalls[event.target.id] = true;
+
+function suspended(event) {
+  is(event.target.networkState, event.target.NETWORK_IDLE,
+     event.target.id + " suspended networkState");
+  suspends[event.target.id] = true;
   if (event.target.id == "v1") {
     event.target.autobuffer = true;
   } else if (event.target.id == "v4") {
@@ -55,17 +65,24 @@ function stalled(event) {
     event.target.autoplay = true;
   }
 }
-</script>
 
-<video id='v1' src="seek.ogv" onstalled="stalled(event)" onload="loaded(event)"></video>
-<video id='v2' src="seek.ogv" onstalled="stalled(event)" onload="loaded(event)" autobuffer></video>
-<video id='v3' src="seek.ogv" onstalled="stalled(event)" onload="loaded(event)" autoplay></video>
-<video id='v4' src="seek.ogv" onstalled="stalled(event)" onload="loaded(event)"></video>
-<video id='v5' src="seek.ogv" onstalled="stalled(event)" onload="loaded(event)"></video>
-<video id='v6' src="seek.ogv" onstalled="stalled(event)" onload="loaded(event)"></video>
+function logEvent(event) {
+  dump(event.type + " " + event.target.id + "\n");
+}
 
-<pre id="test">
-<script type="application/javascript">
+var key = Math.random();
+var eventList = ["metadataloaded", "loadeddata", "playing", "load", "stalled", "suspend", "ended"];
+for (var i = 1; i <= expectedLoadEvents; ++i) {
+  var id = "v" + i;
+  suspends[id] = loads[id] = false;
+  var v = document.getElementById(id);
+  v.addEventListener("suspend", suspended, false);
+  v.addEventListener("load", loaded, false);
+  for (var n = 0; n < eventList.length; ++n) {
+    v.addEventListener(eventList[n], logEvent, false);
+  }
+  v.src = "seek.ogv?key=" + key + "&id=" + id;
+}
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
