@@ -226,13 +226,6 @@ namespace nanojit
 		NJ_DELETE(f);
 	}
 
-	void Fragmento::clearFrag(const void* ip)
-	{
-		if (_frags.containsKey(ip)) {
-			clearFragment(_frags.remove(ip));
-		}
-	}
-
 	void Fragmento::clearFrags()
 	{
 		// reclaim any dangling native pages
@@ -294,29 +287,6 @@ namespace nanojit
 		labels->add(f, sizeof(Fragment), 0, fragname);
 	}
 #endif
-
-	Fragment *Fragmento::getMerge(GuardRecord *lr, const void* ip)
-    {
-		Fragment *anchor = lr->exit->from->anchor;
-		for (Fragment *f = anchor->branches; f != 0; f = f->nextbranch) {
-			if (f->kind == MergeTrace && f->ip == ip /*&& f->calldepth == lr->calldepth*/) {
-				// found existing shared branch on anchor
-				return f;
-			}
-		}
-
-		Fragment *f = newBranch(anchor, ip);
-		f->root = f;
-		f->kind = MergeTrace;
-		verbose_only(
-			int mergeid = 1;
-			for (Fragment *g = anchor->branches; g != 0; g = g->nextbranch)
-				if (g->kind == MergeTrace)
-					mergeid++;
-			addLabel(f, "M", mergeid); 
-		)
-        return f;
-    }
 
 	Fragment *Fragmento::createBranch(SideExit* exit, const void* ip)
     {
@@ -561,7 +531,6 @@ namespace nanojit
 		  loopEntry(NULL),
 		  vmprivate(NULL),
 		  _code(NULL),
-		  _links(NULL),
 		  _hits(0),
 		  _pages(NULL)
 	{
@@ -573,12 +542,6 @@ namespace nanojit
 		NanoAssert(_pages == 0);
     }
 
-    void Fragment::resetHits()
-    {
-        blacklistLevel >>= 1;
-        _hits = 0;
-    }
-	
     void Fragment::blacklist()
     {
         blacklistLevel++;
