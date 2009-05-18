@@ -164,10 +164,11 @@ Assembler::nFragExit(LInsp guard)
 NIns*
 Assembler::genEpilogue()
 {
-    BX(LR); // return
+    // On ARMv5+, loading directly to PC correctly handles interworking.
+    // Note that we don't support anything older than ARMv5.
+    NanoAssert(AvmCore::config.arch >= 5);
 
-    RegisterMask savingMask = rmask(FP) | rmask(LR);
-
+    RegisterMask savingMask = rmask(FP) | rmask(PC);
     if (!_thisfrag->lirbuf->explicitSavedRegs)
         for (int i = 0; i < NumSavedRegs; ++i)
             savingMask |= rmask(savedRegs[i]);
