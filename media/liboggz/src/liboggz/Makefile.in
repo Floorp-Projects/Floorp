@@ -62,3 +62,5 @@ CSRCS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += -I$(srcdir)/../../include/oggz

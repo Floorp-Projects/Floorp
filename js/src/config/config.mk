@@ -506,16 +506,14 @@ JAVA_GEN_DIR  = _javagen
 JAVA_DIST_DIR = $(DEPTH)/$(JAVA_GEN_DIR)
 JAVA_IFACES_PKG_NAME = org/mozilla/interfaces
 
-REQ_INCLUDES	= -I$(srcdir) -I. $(foreach d,$(REQUIRES),-I$(DIST)/include/$d) -I$(DIST)/include 
-ifdef LIBXUL_SDK
-REQ_INCLUDES_SDK = $(foreach d,$(REQUIRES),-I$(LIBXUL_SDK)/include/$d) -I$(LIBXUL_SDK)/include
-endif
-
-INCLUDES	= $(LOCAL_INCLUDES) $(REQ_INCLUDES) $(REQ_INCLUDES_SDK) -I$(PUBLIC) $(OS_INCLUDES)
-
-ifndef MOZILLA_INTERNAL_API
-INCLUDES	+= -I$(LIBXUL_DIST)/sdk/include
-endif
+INCLUDES = \
+  $(LOCAL_INCLUDES) \
+  -I$(srcdir) \
+  -I. \
+  -I$(DIST)/include -I$(DIST)/include/nsprpub \
+  $(if $(LIBXUL_SDK),-I$(LIBXUL_SDK)/include -I$(LIBXUL_SDK)/include/nsprpub) \
+  $(OS_INCLUDES) \
+  $(NULL) 
 
 include $(topsrcdir)/config/static-checking-config.mk
 
@@ -626,21 +624,11 @@ endif
 
 # Default location of include files
 IDL_DIR		= $(DIST)/idl
-ifdef MODULE
-PUBLIC		= $(DIST)/include/$(MODULE)
-else
-PUBLIC		= $(DIST)/include
-endif
 
 XPIDL_FLAGS = -I$(srcdir) -I$(IDL_DIR)
 ifdef LIBXUL_SDK
 XPIDL_FLAGS += -I$(LIBXUL_SDK)/idl
 endif
-
-SDK_PUBLIC  = $(DIST)/sdk/include
-SDK_IDL_DIR = $(DIST)/sdk/idl
-SDK_LIB_DIR = $(DIST)/sdk/lib
-SDK_BIN_DIR = $(DIST)/sdk/bin
 
 DEPENDENCIES	= .md
 

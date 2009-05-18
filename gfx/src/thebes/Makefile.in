@@ -144,8 +144,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS  += $(TK_CFLAGS)
-CFLAGS    += $(TK_CFLAGS)
+CXXFLAGS  += $(TK_CFLAGS) $(MOZ_CAIRO_CFLAGS)
 
 ifdef MOZ_ENABLE_GTK2
 DEFINES += -DMOZ_ENABLE_GTK2

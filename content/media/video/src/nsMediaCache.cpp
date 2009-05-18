@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/XPCOM.h"
+
 #include "nsMediaCache.h"
 #include "nsAutoLock.h"
 #include "nsContentUtils.h"
@@ -47,7 +49,6 @@
 #include "nsMediaStream.h"
 #include "nsMathUtils.h"
 #include "prlog.h"
-#include "nsTimeStamp.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaCacheLog;

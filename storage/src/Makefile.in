@@ -61,6 +61,10 @@ REQUIRES = xpcom \
            necko \
            $(NULL)
 
+EXPORTS_namespaces = mozilla/storage
+
+EXPORTS_mozilla/storage = Variant.h
+
 CPPSRCS = \
   mozStorageService.cpp \
   mozStorageConnection.cpp \
@@ -85,9 +89,5 @@ LOCAL_INCLUDES = \
 # This is the default value.  If we ever change it when compiling sqlite, we
 # will need to change it here as well.
 DEFINES += -DSQLITE_MAX_LIKE_PATTERN_LENGTH=50000
-
-# TODO temp hack until build system handles this
-export:: Variant.h
-	$(INSTALL) $^ $(DIST)/include/mozilla/storage
 
 include $(topsrcdir)/config/rules.mk

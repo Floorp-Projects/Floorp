@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsTimeStamp_h_
-#define nsTimeStamp_h_
+#ifndef mozilla_TimeStamp_h
+#define mozilla_TimeStamp_h
 
 #include "prinrval.h"
 #include "nsDebug.h"
@@ -238,4 +238,4 @@ private:
 
 }
 
-#endif /* nsTimeStamp_h_ */
+#endif /* mozilla_TimeStamp_h */
