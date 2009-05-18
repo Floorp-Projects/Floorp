@@ -4,19 +4,21 @@
 <SCRIPT>
 
 function doIt() {
-  var table = document.getElementsByTagName("TABLE")[0];
+  var colgroup = document.getElementsByTagName("COLGROUP")[0];
   var refCol = document.getElementsByTagName("COL")[2];
   var col = document.createElement("COL", null);
   col.width = 150;
-  table.insertBefore(col, refCol);
+  colgroup.insertBefore(col, refCol);
 }
 </SCRIPT>  
 </HEAD>
 <BODY onload="doIt()">
 <table bgcolor=orange border>
+<colgroup>
  <col width=50>
  <col width=100>
  <col width=200>
+</colgroup>
  <tr>
   <td>50</td><td>100</td><td>150</td><td>200</td>
  </tr>
