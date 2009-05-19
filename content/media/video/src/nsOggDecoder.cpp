@@ -474,7 +474,6 @@ private:
   // They are only accessed from the decoder thread.
   PRInt32 mVideoTrack;
   float   mFramerate;
-  float   mAspectRatio;
 
   // Audio data. These are initially set when the metadata is loaded.
   // They are only accessed from the decoder thread.
@@ -650,7 +649,6 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mCallbackPeriod(1.0),
   mVideoTrack(-1),
   mFramerate(0.0),
-  mAspectRatio(0.0),
   mAudioRate(0),
   mAudioChannels(0),
   mAudioTrack(-1),
@@ -904,8 +902,7 @@ void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
 
     oggplay_yuv2bgra(&yuv, &rgb);
 
-    mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight,
-                         mFramerate, mAspectRatio, buffer.forget());
+    mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight, mFramerate, buffer.forget());
   }
 }
 
@@ -1510,14 +1507,10 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
         mCallbackPeriod = 1.0 / mFramerate;
         LOG(PR_LOG_DEBUG, ("Frame rate: %f", mFramerate));
 
-        int aspectd, aspectn;
-        oggplay_get_video_aspect_ratio(mPlayer, i, &aspectd, &aspectn);
-        mAspectRatio = aspectd == 0 ? 0.0 : float(aspectn)/float(aspectd);
-
         int y_width;
         int y_height;
         oggplay_get_video_y_size(mPlayer, i, &y_width, &y_height);
-        mDecoder->SetRGBData(y_width, y_height, mFramerate, mAspectRatio, nsnull);
+        mDecoder->SetRGBData(y_width, y_height, mFramerate, nsnull);
       }
       else if (mAudioTrack == -1 && oggplay_get_track_type(mPlayer, i) == OGGZ_CONTENT_VORBIS) {
         mAudioTrack = i;
