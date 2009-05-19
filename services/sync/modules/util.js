@@ -224,42 +224,19 @@ let Utils = {
     dest.__defineGetter__(prop, getter);
   },
 
-  deepEquals: function Weave_deepEquals(a, b) {
-    if (!a && !b)
+  deepEquals: function eq(a, b) {
+    // If they're triple equals, then it must be equals!
+    if (a === b)
       return true;
-    if (!a || !b)
+
+    // Grab the keys from both sides
+    let [A, B] = [[i for (i in a)], [i for (i in b)]];
+    // Don't bother doing any more if they aren't objects with same # keys
+    if (typeof a != "object" || typeof b != "object" || A.length != B.length)
       return false;
 
-    // if neither is an object, just use ==
-    if (typeof(a) != "object" && typeof(b) != "object")
-      return a == b;
-
-    // check if only one of them is an object
-    if (typeof(a) != "object" || typeof(b) != "object")
-      return false;
-
-    let isArray = [Utils.isArray(a), Utils.isArray(b)];
-    if (isArray[0] && isArray[1]) {
-      if (a.length != b.length)
-        return false;
-
-      for (let i = 0; i < a.length; i++) {
-        if (!Utils.deepEquals(a[i], b[i]))
-          return false;
-      }
-
-    } else {
-      // check if only one of them is an array
-      if (isArray[0] || isArray[1])
-        return false;
-
-      for (let key in a) {
-        if (!Utils.deepEquals(a[key], b[key]))
-          return false;
-      }
-    }
-
-    return true;
+    // Check if both sides have the same keys and same value for the key
+    return A.every(function(A) B.some(function(B) A == B && eq(a[A], b[B])));
   },
 
   deepCopy: function Weave_deepCopy(thing, noSort) {
