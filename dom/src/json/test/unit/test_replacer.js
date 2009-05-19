@@ -1,4 +1,10 @@
 function run_test() {
+  var x = JSON.stringify({key:2},function(k,v){return k?undefined:v;})
+  do_check_eq("{}", x);
+  
+  var x = JSON.stringify(["hmm", "hmm"],function(k,v){return k!==""?undefined:v;})
+  do_check_eq("[null,null]", x);
+  
   var foo = ["hmm"];
   function censor(k, v) {
     if (v !== foo)
