@@ -1387,6 +1387,21 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
 void
 nsTextControlFrame::DelayedEditorInit()
 {
+  nsIDocument* doc = mContent->GetCurrentDoc();
+  if (!doc) {
+    return;
+  }
+  
+  nsWeakFrame weakFrame(this);
+
+  // Flush out content on our document.  Have to do this, because script
+  // blockers don't prevent the sink flushing out content and notifying in the
+  // process, which can destroy frames.
+  doc->FlushPendingNotifications(Flush_ContentAndNotify);
+  if (!weakFrame.IsAlive()) {
+    return;
+  }
+  
   // Make sure that editor init doesn't do things that would kill us off
   // (especially off the script blockers it'll create for its DOM mutations).
   nsAutoScriptBlocker scriptBlocker;
