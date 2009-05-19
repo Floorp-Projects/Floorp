@@ -27,12 +27,6 @@ function startTest() {
   }
 
   try {
-    v.currentTime = -1;
-  } catch(e) {
-    thrown2 = true;
-  }
-
-  try {
     v.currentTime = Math.random;
   } catch(e) {
     thrown3 = true;
@@ -40,7 +34,6 @@ function startTest() {
 
   completed = true;
   ok(thrown1, "Setting currentTime to invalid value of NaN");
-  ok(thrown2, "Setting currentTime to invalid value of -1");
   ok(thrown3, "Setting currentTime to invalid value of a function");
   SimpleTest.finish();
   return false;

@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek test 9: clamping</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var completed = false;
+var doneTests = 0;
+
+function doneTest() {
+  ++doneTests;
+  if (doneTests == 2) {
+    completed = true;
+    SimpleTest.finish();
+  }
+}
+
+function startTest(event, dest) {
+  event.target.currentTime = dest;
+}
+
+function didSeek(event, dest) {
+  if (completed)
+    return false;
+
+  ok(Math.abs(event.target.currentTime - dest) < 0.2,
+     event.target.id + " currentTime " + event.target.currentTime + " close to " + dest);
+  doneTest();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v1' src='seek.ogv'
+       onloadedmetadata='startTest(event, 1000)' onseeked='didSeek(event, event.target.duration)'></video>
+<video id='v2' src='seek.ogv'
+       onloadedmetadata='startTest(event, -100)' onseeked='didSeek(event, 0)'></video>
+</body>
+</html>
