@@ -113,7 +113,7 @@ public:
       time += aNow - mLastStartTime;
     }
     double seconds = time.ToSeconds();
-    *aReliable = seconds >= 1.0;
+    *aReliable = seconds >= 3.0;
     if (seconds <= 0.0)
       return 0.0;
     return double(mAccumulatedBytes)/seconds;

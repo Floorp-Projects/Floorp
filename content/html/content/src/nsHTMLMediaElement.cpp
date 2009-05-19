@@ -1345,11 +1345,14 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     return;
   }
 
-  // Now see if we should set HAVE_ENOUGH_DATA
-  if (stats.mTotalBytes < 0 || stats.mTotalBytes == stats.mDownloadPosition) {
-    // If it's something we don't know the size of, then we can't
-    // make an estimate, so let's just go straight to HAVE_ENOUGH_DATA,
-    // since otherwise autoplay elements will never play.
+  // Now see if we should set HAVE_ENOUGH_DATA.
+  // If it's something we don't know the size of, then we can't
+  // make a real estimate, so we go straight to HAVE_ENOUGH_DATA once
+  // we've downloaded enough data that our download rate is considered
+  // reliable. We have to move to HAVE_ENOUGH_DATA at some point or
+  // autoplay elements for live streams will never play.
+  if (stats.mTotalBytes < 0 ? stats.mDownloadRateReliable :
+                              stats.mTotalBytes == stats.mDownloadPosition) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
