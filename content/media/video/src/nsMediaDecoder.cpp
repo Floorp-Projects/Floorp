@@ -72,7 +72,6 @@ nsMediaDecoder::nsMediaDecoder() :
   mDataTime(),
   mVideoUpdateLock(nsnull),
   mFramerate(0.0),
-  mAspectRatio(0.0),
   mSizeChanged(PR_FALSE),
   mShuttingDown(PR_FALSE),
   mStopping(PR_FALSE)
@@ -115,14 +114,6 @@ nsresult nsMediaDecoder::InitLogger()
   return NS_OK;
 }
 
-static PRInt32 ConditionDimension(float aValue, PRInt32 aDefault)
-{
-  // This will exclude NaNs and infinities
-  if (aValue >= 1.0 && aValue <= 10000.0)
-    return PRInt32(NS_round(aValue));
-  return aDefault;
-}
-
 void nsMediaDecoder::Invalidate()
 {
   if (!mElement)
@@ -133,20 +124,7 @@ void nsMediaDecoder::Invalidate()
   {
     nsAutoLock lock(mVideoUpdateLock);
     if (mSizeChanged) {
-      nsIntSize scaledSize(mRGBWidth, mRGBHeight);
-      // Apply the aspect ratio to produce the intrinsic size we report
-      // to the element.
-      if (mAspectRatio > 1.0) {
-        // Increase the intrinsic width
-        scaledSize.width =
-          ConditionDimension(mAspectRatio*scaledSize.width, scaledSize.width);
-      } else {
-        // Increase the intrinsic height
-        scaledSize.height =
-          ConditionDimension(scaledSize.height/mAspectRatio, scaledSize.height);
-      }
-      mElement->UpdateMediaSize(scaledSize);
-
+      mElement->UpdateMediaSize(nsIntSize(mRGBWidth, mRGBHeight));
       mSizeChanged = PR_FALSE;
       if (frame) {
         nsPresContext* presContext = frame->PresContext();      
@@ -222,16 +200,13 @@ nsresult nsMediaDecoder::StopProgress()
   return rv;
 }
 
-void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerate,
-                                float aAspectRatio, unsigned char* aRGBBuffer)
+void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerate, unsigned char* aRGBBuffer)
 {
   nsAutoLock lock(mVideoUpdateLock);
 
-  if (mRGBWidth != aWidth || mRGBHeight != aHeight ||
-      mAspectRatio != aAspectRatio) {
+  if (mRGBWidth != aWidth || mRGBHeight != aHeight) {
     mRGBWidth = aWidth;
     mRGBHeight = aHeight;
-    mAspectRatio = aAspectRatio;
     mSizeChanged = PR_TRUE;
   }
   mFramerate = aFramerate;
