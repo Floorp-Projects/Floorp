@@ -42,8 +42,8 @@ function run_test() {
   dump("Testing: addition of a successful update to " + FILE_UPDATES_DB +
        " and verification of update properties\n");
   removeUpdateDirsAndFiles();
-  var defaults = gPrefs.QueryInterface(AUS_Ci.nsIPrefService)
-                   .getDefaultBranch(null);
+  var defaults = getPrefBranch().QueryInterface(AUS_Ci.nsIPrefService).
+                 getDefaultBranch(null);
   defaults.setCharPref("app.update.channel", "bogus_channel");
 
   var patches = getLocalPatchString(null, null, null, null, null, null,
@@ -114,4 +114,5 @@ function run_test() {
   do_check_eq(patch.size, "775");
   do_check_true(patch.selected);
   do_check_eq(patch.state, STATE_FAILED);
+  cleanUp();
 }

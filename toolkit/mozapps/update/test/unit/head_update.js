@@ -52,9 +52,9 @@ const PREF_APP_UPDATE_URL_OVERRIDE      = "app.update.url.override";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI = "app.update.showInstalledUI";
 
 const URI_UPDATES_PROPERTIES = "chrome://mozapps/locale/update/updates.properties";
-const gUpdateBundle = AUS_Cc["@mozilla.org/intl/stringbundle;1"]
-                       .getService(AUS_Ci.nsIStringBundleService)
-                       .createBundle(URI_UPDATES_PROPERTIES);
+const gUpdateBundle = AUS_Cc["@mozilla.org/intl/stringbundle;1"].
+                      getService(AUS_Ci.nsIStringBundleService).
+                      createBundle(URI_UPDATES_PROPERTIES);
 
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
@@ -79,10 +79,9 @@ const PERMS_DIRECTORY = 0755;
 const URL_HOST = "http://localhost:4444/"
 const DIR_DATA = "data"
 
-var gDirSvc = AUS_Cc["@mozilla.org/file/directory_service;1"]
-                .getService(AUS_Ci.nsIProperties);
-var gPrefs = AUS_Cc["@mozilla.org/preferences;1"]
-               .getService(AUS_Ci.nsIPrefBranch);
+var gDirSvc = AUS_Cc["@mozilla.org/file/directory_service;1"].
+              getService(AUS_Ci.nsIProperties);
+
 var gAUS;
 var gUpdateChecker;
 var gUpdateManager;
@@ -101,6 +100,37 @@ var gUpdates;
 var gStatusCode;
 var gStatusText;
 
+
+function getPrefBranch() {
+  return AUS_Cc["@mozilla.org/preferences;1"].getService(AUS_Ci.nsIPrefBranch);
+}
+
+/**
+ * Nulls out the most commonly used global vars used by tests as appropriate.
+ * This is not in the tail file due to check-interactive executing the tail file
+ * prior to _execute_test();.
+ */
+function cleanUp() {
+  gDirSvc.unregisterProvider(dirProvider);
+
+  if (gXHR) {
+    gXHRCallback     = null;
+
+    gXHR.responseXML = null;
+    // null out the event handlers to prevent a mFreeCount leak of 1
+    gXHR.onerror     = null;
+    gXHR.onload      = null;
+    gXHR.onprogress  = null;
+
+    gXHR             = null;
+  }
+
+  gUpdateManager = null;
+  gUpdateChecker = null;
+  gAUS           = null;
+  gTestserver    = null;
+}
+
 /**
  * Initializes the most commonly used global vars used by tests and
  * nsIApplicationUpdateService
@@ -108,35 +138,36 @@ var gStatusText;
 function startAUS() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
 
+  var pb = getPrefBranch();
   // Don't display UI for a successful installation. Some apps may not set this
   // pref to false like Firefox does.
-  gPrefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
+  pb.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
   // Enable Update logging
-  gPrefs.setBoolPref("app.update.log.all", true);
+  pb.setBoolPref("app.update.log.all", true);
   // Lessens the noise in the logs when using Update Service logging
-  gPrefs.setBoolPref("app.update.enabled", false);
-  gPrefs.setBoolPref("extensions.blocklist.enabled", false);
-  gPrefs.setBoolPref("extensions.update.enabled", false);
-  gPrefs.setBoolPref("browser.search.update", false);
-  gPrefs.setBoolPref("browser.microsummary.updateGenerators", false);
+  pb.setBoolPref("app.update.enabled", false);
+  pb.setBoolPref("extensions.blocklist.enabled", false);
+  pb.setBoolPref("extensions.update.enabled", false);
+  pb.setBoolPref("browser.search.update", false);
+  pb.setBoolPref("browser.microsummary.updateGenerators", false);
 
-  gAUS = AUS_Cc["@mozilla.org/updates/update-service;1"]
-           .getService(AUS_Ci.nsIApplicationUpdateService);
-  var os = AUS_Cc["@mozilla.org/observer-service;1"]
-             .getService(AUS_Ci.nsIObserverService);
+  gAUS = AUS_Cc["@mozilla.org/updates/update-service;1"].
+         getService(AUS_Ci.nsIApplicationUpdateService);
+  var os = AUS_Cc["@mozilla.org/observer-service;1"].
+           getService(AUS_Ci.nsIObserverService);
   os.notifyObservers(null, "profile-after-change", null);
 }
 
 /* Initializes nsIUpdateChecker */
 function startUpdateChecker() {
-  gUpdateChecker = AUS_Cc["@mozilla.org/updates/update-checker;1"]
-                     .createInstance(AUS_Ci.nsIUpdateChecker);
+  gUpdateChecker = AUS_Cc["@mozilla.org/updates/update-checker;1"].
+                   createInstance(AUS_Ci.nsIUpdateChecker);
 }
 
 /* Initializes nsIUpdateManager */
 function startUpdateManager() {
-  gUpdateManager = AUS_Cc["@mozilla.org/updates/update-manager;1"]
-                     .getService(AUS_Ci.nsIUpdateManager);
+  gUpdateManager = AUS_Cc["@mozilla.org/updates/update-manager;1"].
+                   getService(AUS_Ci.nsIUpdateManager);
 }
 
 /**
@@ -386,8 +417,8 @@ function writeStatusFile(aStatus) {
  *          replaced.
  */
 function writeFile(aFile, aText) {
-  var fos = AUS_Cc["@mozilla.org/network/safe-file-output-stream;1"]
-              .createInstance(AUS_Ci.nsIFileOutputStream);
+  var fos = AUS_Cc["@mozilla.org/network/safe-file-output-stream;1"].
+            createInstance(AUS_Ci.nsIFileOutputStream);
   if (!aFile.exists())
     aFile.create(AUS_Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
   fos.init(aFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
@@ -412,8 +443,8 @@ function writeFile(aFile, aText) {
  * @returns The string of text read from the file.
  */
 function readFile(aFile) {
-  var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"]
-              .createInstance(AUS_Ci.nsIFileInputStream);
+  var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
+            createInstance(AUS_Ci.nsIFileInputStream);
   if (!aFile.exists())
     return null;
   fis.init(aFile, MODE_RDONLY, PERMS_FILE, 0);
@@ -456,8 +487,8 @@ function getString(aName) {
  * WARNING: unable to post SHUTDOWN message
  */
 function toggleOffline(aOffline) {
-  const ioService = AUS_Cc["@mozilla.org/network/io-service;1"]
-                      .getService(AUS_Ci.nsIIOService);
+  const ioService = AUS_Cc["@mozilla.org/network/io-service;1"].
+                    getService(AUS_Ci.nsIIOService);
 
   try {
     ioService.manageOfflineStatus = !aOffline;
@@ -505,9 +536,9 @@ xhr.prototype = {
   _url: null,
   _method: null,
   open: function (method, url) {
-    gXHR.channel.originalURI = AUS_Cc["@mozilla.org/network/io-service;1"]
-                                 .getService(AUS_Ci.nsIIOService)
-                                 .newURI(url, null, null);
+    gXHR.channel.originalURI = AUS_Cc["@mozilla.org/network/io-service;1"].
+                               getService(AUS_Ci.nsIIOService).
+                               newURI(url, null, null);
     gXHR._method = method; gXHR._url = url;
   },
   responseXML: null,
@@ -629,63 +660,47 @@ function removeUpdateDirsAndFiles() {
          "\nException: " + e + "\n");
   }
 
-  var updatesSubDir = appDir.clone();
-  updatesSubDir.append("updates");
-  updatesSubDir.append("0");
-  if (updatesSubDir.exists()) {
-    file = updatesSubDir.clone();
-    file.append("update.mar");
-    try {
-      if (file.exists())
-        file.remove(false);
-    }
-    catch (e) {
-      dump("Unable to remove file\npath: " + file.path +
-           "\nException: " + e + "\n");
-    }
-
-    file = updatesSubDir.clone();
-    file.append("update.status");
-    try {
-      if (file.exists())
-        file.remove(false);
-    }
-    catch (e) {
-      dump("Unable to remove file\npath: " + file.path +
-           "\nException: " + e + "\n");
-    }
-
-    file = updatesSubDir.clone();
-    file.append("update.version");
-    try {
-      if (file.exists())
-        file.remove(false);
-    }
-    catch (e) {
-      dump("Unable to remove file\npath: " + file.path +
-           "\nException: " + e + "\n");
-    }
-
-    try {
-      updatesSubDir.remove(true);
-    }
-    catch (e) {
-      dump("Unable to remove directory\npath: " + updatesSubDir.path +
-           "\nException: " + e + "\n");
-    }
-  }
-
   // This fails sporadically on Mac OS X so wrap it in a try catch
   var updatesDir = appDir.clone();
   updatesDir.append("updates");
   try {
-    if (updatesDir.exists())
-      updatesDir.remove(true);
+    removeDirRecursive(updatesDir);
   }
   catch (e) {
     dump("Unable to remove directory\npath: " + updatesDir.path +
          "\nException: " + e + "\n");
   }
+}
+
+/**
+ * Deletes a directory and its children. First it tries nsIFile::Remove(true).
+ * If that fails it will fall back to recursing, setting the appropriate
+ * permissions, and deleting the current entry.
+ * @param   dir
+ *          A nsIFile for the directory to be deleted
+ */
+function removeDirRecursive(aDir) {
+  try {
+    aDir.remove(true);
+    return;
+  }
+  catch (e) {
+  }
+
+  var dirEntries = aDir.directoryEntries;
+  while (dirEntries.hasMoreElements()) {
+    var entry = dirEntries.getNext().QueryInterface(AUS_Ci.nsIFile);
+
+    if (entry.isDirectory()) {
+      removeDirRecursive(entry);
+    }
+    else {
+      entry.permissions = PERMS_FILE;
+      entry.remove(false);
+    }
+  }
+  aDir.permissions = PERMS_DIRECTORY;
+  aDir.remove(true);
 }
 
 /**
