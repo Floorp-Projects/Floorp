@@ -65,7 +65,6 @@ _TEST_FILES += \
 		dynamic_redirect.sjs \
 		test_access_control.html \
 		file_access_controls.html \
-		test_autobuffer2.html \
 		test_bug448534.html \
 		test_bug461281.html \
 		test_bug468190.html \
@@ -111,9 +110,11 @@ _TEST_FILES += \
 		seek.ogv \
 		$(NULL)
 
-# This test disabled until we figure out random failures.
-# Bug 492821.
+# These tests disabled until we figure out random failures.
+# Bug 492821:
 # test_videoDocumentTitle.html
+# Bug 493692:
+# test_autobuffer2.html
 
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
