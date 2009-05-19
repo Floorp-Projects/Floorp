@@ -4,19 +4,19 @@
 <SCRIPT>
 
 function doIt() {
-  var colgroup = document.getElementsByTagName("COLGROUP")[0];
   var col = document.getElementsByTagName("COL")[2];
-  colgroup.removeChild(col);
+  col.parentNode.removeChild(col);
+  // HTML5 implies a colgroup around the cols,
+  // so this test case should really be XHTML
+  // in order to test bare col
 }
 </SCRIPT>  
 </HEAD>
 <BODY onload="doIt()">
 <table bgcolor=orange border>
-<colgroup>
  <col width=100>
  <col width=200>
  <col width=300>
-</colgroup>
  <tr>
   <td>100</td><td>200</td><td>auto</td>
  </tr>
