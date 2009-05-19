@@ -76,10 +76,6 @@ ifdef MOZ_UPDATER
 DEFINES += -DMOZ_UPDATER=1
 endif
 
-ifneq (,$(filter mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-DEFINES += -DTOOLBAR_CUSTOMIZATION_SHEET
-endif
-
 ifndef MOZ_BRANDING_DIRECTORY
 libs locale::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/content/browserconfig.properties $(DIST)/bin

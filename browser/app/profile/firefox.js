@@ -822,3 +822,10 @@ pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 
 // base url for the wifi geolocation network provider
 pref("geo.wifi.uri", "https://www.google.com/loc/json");
+
+// Whether to use a panel that looks like an OS X sheet for customization
+#ifdef XP_MACOSX
+pref("toolbar.customization.usesheet", true);
+#else
+pref("toolbar.customization.usesheet", false);
+#endif
