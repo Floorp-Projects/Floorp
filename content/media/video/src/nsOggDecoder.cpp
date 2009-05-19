@@ -1225,7 +1225,7 @@ nsresult nsOggDecodeStateMachine::Run()
 
         // Get the decoded frames and store them in our queue of decoded frames
         QueueDecodedFrames();
-        while (mDecodedFrames.IsEmpty()) {
+        while (mDecodedFrames.IsEmpty() && !mDecodingCompleted) {
           mon.Wait(PR_MillisecondsToInterval(PRInt64(mCallbackPeriod*500)));
           if (mState != DECODER_STATE_DECODING)
             break;
