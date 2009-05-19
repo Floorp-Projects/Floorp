@@ -34,6 +34,7 @@
  */
 
 #include <pthread.h>
+#include <CoreServices/CoreServices.h>
 #include <AudioUnit/AudioUnit.h>
 #include "sydney_audio.h"
 
