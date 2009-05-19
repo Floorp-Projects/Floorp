@@ -229,4 +229,12 @@
 // {93ad72a6-02cd-4716-9626-d47d5ec275ec}
 #define NS_DOMJSON_CID \
 { 0x93ad72a6, 0x02cd, 0x4716, { 0x96, 0x26, 0xd4, 0x7d, 0x5e, 0xc2, 0x75, 0xec } }
+
+#ifdef MOZ_MEDIA
+#define NS_HTMLAUDIOELEMENT_CID                   \
+{ /* 1d40026b-4c44-4f6f-b158-26bb5e9c65e9 */      \
+ 0x1d40026b, 0x4c44, 0x4f6f,                      \
+ {0xb1, 0x58, 0x26, 0xbb, 0x5e, 0x9c, 0x65, 0xe9}}
+#endif
+
 #endif /* nsLayoutCID_h__ */

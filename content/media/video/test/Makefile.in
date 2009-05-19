@@ -65,6 +65,8 @@ _TEST_FILES += \
 		dynamic_redirect.sjs \
 		test_access_control.html \
 		file_access_controls.html \
+		test_audio1.html \
+		test_audio2.html \
 		test_bug448534.html \
 		test_bug461281.html \
 		test_bug468190.html \
@@ -108,6 +110,7 @@ _TEST_FILES += \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
 		seek.ogv \
+		sound.ogg \
 		$(NULL)
 
 # These tests disabled until we figure out random failures.
@@ -165,7 +168,7 @@ _TEST_FILES += \
 		test_wav_timeupdate1.html \
 		test_wav_timeupdate2.html \
 		test_wav_trailing.html \
- 		test_wav_trunc.html \
+		test_wav_trunc.html \
 		test_wav_trunc_seek.html \
 		r11025_s16_c1.wav \
 		r11025_s16_c1_trailing.wav \
