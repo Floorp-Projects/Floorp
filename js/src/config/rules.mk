@@ -1575,19 +1575,20 @@ export:: $(FINAL_TARGET)
 endif
 
 ifndef NO_DIST_INSTALL
-
 ifneq (,$(EXPORTS))
 export:: $(EXPORTS)
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/include
 endif
+endif # NO_DIST_INSTALL
 
 define EXPORT_NAMESPACE_RULE
+ifndef NO_DIST_INSTALL
 export:: $(EXPORTS_$(namespace))
 	$(INSTALL) $(IFLAGS1) $$^ $(DIST)/include/$(namespace)
+endif # NO_DIST_INSTALL
 endef
 
 $(foreach namespace,$(EXPORTS_NAMESPACES),$(eval $(EXPORT_NAMESPACE_RULE)))
-endif # NO_DIST_INSTALL
 
 ################################################################################
 # Copy each element of PREF_JS_EXPORTS
