@@ -729,40 +729,47 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
   mLastFramePosition = frame->mEndStreamPosition;
 
   int num_tracks = oggplay_get_num_tracks(mPlayer);
-  float audioTime = 0.0;
-  float videoTime = 0.0;
+  float audioTime = -1.0;
+  float videoTime = -1.0;
 
   if (mVideoTrack != -1 &&
       num_tracks > mVideoTrack &&
       oggplay_callback_info_get_type(info[mVideoTrack]) == OGGPLAY_YUV_VIDEO) {
     OggPlayDataHeader** headers = oggplay_callback_info_get_headers(info[mVideoTrack]);
-    videoTime = ((float)oggplay_callback_info_get_presentation_time(headers[0]))/1000.0;
-    HandleVideoData(frame, mVideoTrack, headers[0]);
+    if (headers[0]) {
+      videoTime = ((float)oggplay_callback_info_get_presentation_time(headers[0]))/1000.0;
+      HandleVideoData(frame, mVideoTrack, headers[0]);
+    }
   }
 
   if (mAudioTrack != -1 &&
       num_tracks > mAudioTrack &&
       oggplay_callback_info_get_type(info[mAudioTrack]) == OGGPLAY_FLOATS_AUDIO) {
     OggPlayDataHeader** headers = oggplay_callback_info_get_headers(info[mAudioTrack]);
-    audioTime = ((float)oggplay_callback_info_get_presentation_time(headers[0]))/1000.0;
-    int required = oggplay_callback_info_get_required(info[mAudioTrack]);
-    for (int j = 0; j < required; ++j) {
-      int size = oggplay_callback_info_get_record_size(headers[j]);
-      OggPlayAudioData* audio_data = oggplay_callback_info_get_audio_data(headers[j]);
-      HandleAudioData(frame, audio_data, size);
+    if (headers[0]) {
+      audioTime = ((float)oggplay_callback_info_get_presentation_time(headers[0]))/1000.0;
+      int required = oggplay_callback_info_get_required(info[mAudioTrack]);
+      for (int j = 0; j < required; ++j) {
+        int size = oggplay_callback_info_get_record_size(headers[j]);
+        OggPlayAudioData* audio_data = oggplay_callback_info_get_audio_data(headers[j]);
+        HandleAudioData(frame, audio_data, size);
+      }
     }
   }
 
   // Pick one stream to act as the reference track to indicate if the
   // stream has ended, seeked, etc.
-  if (mVideoTrack >= 0 )
+  if (videoTime >= 0) {
     frame->mState = oggplay_callback_info_get_stream_info(info[mVideoTrack]);
-  else if (mAudioTrack >= 0)
+    frame->mDecodedFrameTime = videoTime;
+  } else if (audioTime >= 0) {
     frame->mState = oggplay_callback_info_get_stream_info(info[mAudioTrack]);
-  else
+    frame->mDecodedFrameTime = audioTime;
+  } else {
+    NS_WARNING("Encountered frame with no audio or video data");
     frame->mState = OGGPLAY_STREAM_UNINITIALISED;
-
-  frame->mDecodedFrameTime = (mVideoTrack == -1 ? audioTime : videoTime);
+    frame->mDecodedFrameTime = 0.0;
+  }
 
   oggplay_buffer_release(mPlayer, info);
   return frame;
