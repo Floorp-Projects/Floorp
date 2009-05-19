@@ -33,20 +33,15 @@ var expectedLoadEvents = 6;
 
 function loaded(event) {
   loads[event.target.id] = true;
+  ok(true, "Loaded " + event.target.id);
   ++totalLoadEvents;
   if (totalLoadEvents == expectedLoadEvents) {
-    ok(suspends.v1, "v1 should suspend");
-    ok(!suspends.v2, "v2 should not suspend");
-    ok(!suspends.v3, "v3 should not suspend");
-    ok(suspends.v4, "v4 should suspend");
-    ok(suspends.v5, "v5 should suspend");
-    ok(suspends.v6, "v6 should suspend");
-    ok(loads.v1, "v1 should load after setting autobuffer");
-    ok(loads.v2, "v2 should load");
-    ok(loads.v3, "v3 should load");
-    ok(loads.v4, "v4 should load after calling play()");
-    ok(loads.v5, "v5 should load after seeking");
-    ok(loads.v6, "v6 should load after setting autoplay");
+    ok(suspends.v1, "v1 should have suspended");
+    ok(!suspends.v2, "v2 should not have suspended");
+    ok(!suspends.v3, "v3 should not have suspended");
+    ok(suspends.v4, "v4 should have suspended");
+    ok(suspends.v5, "v5 should have suspended");
+    ok(suspends.v6, "v6 should have suspended");
     SimpleTest.finish();
   }
 }
