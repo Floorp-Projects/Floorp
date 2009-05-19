@@ -712,7 +712,7 @@ function ContentClickingModule(owner) {
 ContentClickingModule.prototype = {
   _clickTimeout : -1,
   _events : [],
-  _zoomed : false,
+  _zoomedTo : null,
 
   handleEvent: function handleEvent(aEvent) {
     // exit early for events outside displayed content area
@@ -781,36 +781,18 @@ ContentClickingModule.prototype = {
 
     function optimalElementForPoint(cX, cY) {
       var element = Browser.canvasBrowser.elementFromPoint(cX, cY);
-      if (!element)
-        return null;
-
-      // Find the nearest non-inline ancestor
-      while (element.parentNode) {
-        let display = window.getComputedStyle(element, "").getPropertyValue("display");
-        let zoomable = /table/.test(display) || /block/.test(display);
-        if (zoomable)
-          break;
-
-        element = element.parentNode;
-      }
       return element;
     }
 
     let firstEvent = this._events[0].event;
     let zoomElement = optimalElementForPoint(firstEvent.clientX, firstEvent.clientY);
 
-    if (zoomElement) {
-      if (this._zoomed) {
-        // zoom out
-        this._zoomed = false;
-        Browser.canvasBrowser.zoomFromElement(zoomElement);
-      }
-      else {
-        // zoom in
-        this._zoomed = true;
-        Browser.canvasBrowser.zoomToElement(zoomElement);
-      }
-
+    if (zoomElement != this._zoomedTo) {
+      this._zoomedTo = zoomElement;
+      Browser.canvasBrowser.zoomToElement(zoomElement);
+    } else {
+      this._zoomedTo = null;
+      Browser.canvasBrowser.zoomFromElement(zoomElement);
     }
 
     this._owner.ungrab(this);
