@@ -82,6 +82,7 @@ richlistitem {
 }
 
 button {
+  min-width: 0;
   color: #414141;
   padding: 4px 8px;
   -moz-border-radius: 0.5em;
