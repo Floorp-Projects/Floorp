@@ -40,7 +40,7 @@
 interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(9efc2081-218f-4622-837b-40bdb870a1c8)]
+[scriptable, uuid(c8e54beb-48f3-4538-a0ce-d6229f4d8f45)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**

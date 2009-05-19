@@ -69,7 +69,7 @@ interface nsISecureBrowserUI;
 interface nsIDOMStorageObsolete;
 interface nsIPrincipal;
 
-[scriptable, uuid(d7e4e57e-9cc5-4a14-ae2e-8503edea1ca3)]
+[scriptable, uuid(f100ede8-fa36-4ed2-99b2-71a3b94f9a70)]
 interface nsIDocShell : nsISupports
 {
   /**
