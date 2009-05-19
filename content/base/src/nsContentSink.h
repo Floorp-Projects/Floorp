@@ -271,15 +271,6 @@ protected:
     return mNotificationInterval;
   }
 
-  inline PRInt32 GetMaxTokenProcessingTime()
-  {
-    if (mDynamicLowerValue) {
-      return 3000;
-    }
-
-    return mMaxTokenProcessingTime;
-  }
-
   // Overridable hooks into script evaluation
   virtual void PreEvaluateScript()                            {return;}
   virtual void PostEvaluateScript(nsIScriptElement *aElement) {return;}
@@ -326,12 +317,6 @@ protected:
   // Timer used for notification
   nsCOMPtr<nsITimer> mNotificationTimer;
 
-  // The number of tokens that have been processed while in the low
-  // frequency parser interrupt mode without falling through to the
-  // logic which decides whether to switch to the high frequency
-  // parser interrupt mode.
-  PRUint8 mDeflectedCount;
-
   // Do we notify based on time?
   PRPackedBool mNotifyOnTimer;
 
@@ -355,16 +340,43 @@ protected:
   // since we're not longer updating our child counts.
   PRUint8 mIsDocumentObserver : 1;
   
+  //
   // -- Can interrupt parsing members --
-  PRUint32 mDelayTimerStart;
+  //
 
-  // Interrupt parsing during token procesing after # of microseconds
-  PRInt32 mMaxTokenProcessingTime;
+  // The number of tokens that have been processed since we measured
+  // if it's time to return to the main event loop.
+  PRUint32 mDeflectedCount;
 
-  // Switch between intervals when time is exceeded
-  PRInt32 mDynamicIntervalSwitchThreshold;
+  // How many times to deflect in interactive/perf modes
+  PRInt32 mInteractiveDeflectCount;
+  PRInt32 mPerfDeflectCount;
 
-  PRInt32 mMaxTokensDeflectedInLowFreqMode;
+  // 0 = don't check for pending events
+  // 1 = don't deflect if there are pending events
+  // 2 = bail if there are pending events
+  PRInt32 mPendingEventMode;
+
+  // How often to probe for pending events. 1=every token
+  PRInt32 mEventProbeRate;
+
+  // Is there currently a pending event?
+  PRBool mHasPendingEvent;
+
+  // When to return to the main event loop
+  PRInt32 mCurrentParseEndTime;
+
+  // How long to stay off the event loop in interactive/perf modes
+  PRInt32 mInteractiveParseTime;
+  PRInt32 mPerfParseTime;
+
+  // How long to be in interactive mode after an event
+  PRInt32 mInteractiveTime;
+  // How long to stay in perf mode after initial loading
+  PRInt32 mInitialPerfTime;
+
+  // Should we switch between perf-mode and interactive-mode
+  PRBool mEnablePerfMode;
 
   PRInt32 mBeginLoadTime;
 

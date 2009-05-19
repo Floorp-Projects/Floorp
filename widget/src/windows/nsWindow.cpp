@@ -7018,18 +7018,6 @@ void nsWindow::StopFlashing()
 #endif
 }
 
-NS_IMETHODIMP
-nsWindow::GetLastInputEventTime(PRUint32& aTime)
-{
-  if (HasPendingInputEvent()) {
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-  }
-
-  aTime = gLastInputEventTime;
-
-  return NS_OK;
-}
-
 PRBool
 nsWindow::HasPendingInputEvent()
 {

@@ -121,7 +121,6 @@ public:
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
-  NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
   virtual PRBool          HasPendingInputEvent();
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec);
   NS_IMETHOD              BeginSecureKeyboardInput();

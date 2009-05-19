@@ -160,7 +160,6 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD DispatchEvent( struct nsGUIEvent *event, nsEventStatus &aStatus);
    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
-   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
    virtual PRBool          HasPendingInputEvent();
 
    // Widget appearance
