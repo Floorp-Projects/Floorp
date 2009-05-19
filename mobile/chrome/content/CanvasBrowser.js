@@ -486,7 +486,7 @@ CanvasBrowser.prototype = {
 
   _clampZoomLevel: function _clampZoomLevel(aZoomLevel) {
     const min = 0.2;
-    const max = 2.0;
+    const max = 4.0;
 
     return Math.min(Math.max(min, aZoomLevel), max);
   },
