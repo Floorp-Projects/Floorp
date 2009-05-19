@@ -226,7 +226,7 @@ OPDEF64(fsub,   LIR_sub, 2)
 OPDEF64(fmul,   LIR_mul, 2)
 OPDEF64(fdiv,   40,      2)
 
-OPDEF64(qjoin, 41,      2)
+OPDEF64(qjoin, 41,      2) // 1st arg is low 32 bits, 2nd arg is high 32 bits
 OPDEF64(i2f,   42,      1) // convert an integer to a float
 OPDEF64(u2f,   43,      1) // convert an unsigned integer to a float
 OPDEF64(qior,  44,      2)

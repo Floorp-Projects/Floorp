@@ -366,16 +366,8 @@ namespace nanojit
 		return cur;
 	}
 
-	bool FASTCALL isCmp(LOpcode c) {
-		return (c >= LIR_eq && c <= LIR_uge) || (c >= LIR_feq && c <= LIR_fge);
-	}
-    
-	bool FASTCALL isCond(LOpcode c) {
-		return (c == LIR_ov) || (c == LIR_cs) || isCmp(c);
-	}
-
-    bool FASTCALL isFloat(LOpcode c) {
-        switch (c) {
+    bool LIns::isFloat() const {
+        switch (firstWord.code) {
             default:
                 return false;
             case LIR_fadd:
@@ -392,20 +384,22 @@ namespace nanojit
     }
     
 	bool LIns::isCmp() const {
-		return nanojit::isCmp(u.code);
+        LOpcode op = firstWord.code;
+        return (op >= LIR_eq && op <= LIR_uge) || (op >= LIR_feq && op <= LIR_fge);
 	}
 
     bool LIns::isCond() const {
-        return nanojit::isCond(u.code);
+        LOpcode op = firstWord.code;
+        return (op == LIR_ov) || (op == LIR_cs) || isCmp();
     }
 	
 	bool LIns::isQuad() const {
 		#ifdef AVMPLUS_64BIT
 			// callh in 64bit cpu's means a call that returns an int64 in a single register
-			return (u.code & LIR64) != 0 || u.code == LIR_callh;
+			return (firstWord.code & LIR64) != 0 || firstWord.code == LIR_callh;
 		#else
 			// callh in 32bit cpu's means the 32bit MSW of an int64 result in 2 registers
-			return (u.code & LIR64) != 0;
+			return (firstWord.code & LIR64) != 0;
 		#endif
 	}
     
@@ -416,7 +410,7 @@ namespace nanojit
 
 	bool LIns::isconstq() const
 	{	
-		return isop(LIR_quad);
+        return firstWord.code == LIR_quad;
 	}
 
 	bool LIns::isconstp() const
@@ -428,21 +422,29 @@ namespace nanojit
     #endif
 	}
 
-	bool FASTCALL isCse(LOpcode op) {
-		op = LOpcode(op & ~LIR64);
-		return op >= LIR_ldcs && op <= LIR_uge;
-	}
-
     bool LIns::isCse(const CallInfo *functions) const
     { 
-		return nanojit::isCse(u.code) || (isCall() && callInfo()->_cse);
+        return nanojit::isCseOpcode(firstWord.code) || (isCall() && callInfo()->_cse);
     }
 
     void LIns::initOpcodeAndClearResv(LOpcode op)
 	{
         NanoAssert(4*sizeof(void*) == sizeof(LIns));
-        u.code = op;
-        u.resv = 0;     // have to zero this;  the Assembler relies on it
+        firstWord.code = op;
+        firstWord.used = 0;
+	}
+
+    Reservation* LIns::initResv()
+	{
+        firstWord.reg     = UnknownReg;
+        firstWord.arIndex = 0;
+        firstWord.used    = 1;
+        return &firstWord;
+	}
+
+    void LIns::clearResv()
+	{
+        firstWord.used = 0;
 	}
 
     void LIns::setTarget(LInsp label)
@@ -466,37 +468,18 @@ namespace nanojit
 
     uint64_t LIns::imm64() const
 	{
-    #ifdef AVMPLUS_UNALIGNED_ACCESS
-        return *(const uint64_t*)i64.imm32;
-    #else
-        union { uint64_t tmp; int32_t dst[2]; } u;
-		#ifdef AVMPLUS_BIG_ENDIAN
-        u.dst[0] = i64.imm64_1;
-        u.dst[1] = i64.imm64_0;
-		#else
-        u.dst[0] = i64.imm64_0;
-        u.dst[1] = i64.imm64_1;
-		#endif
-        return u.tmp;
-    #endif
+        NanoAssert(isconstq());
+        return (uint64_t(i64.imm64_1) << 32) | uint64_t(i64.imm64_0);
 	}
 
     double LIns::imm64f() const
 	{
-		NanoAssert(isconstq());
-	#ifdef AVMPLUS_UNALIGNED_ACCESS
-        return *(const double*)i64.imm32;
-	#else
-		union { uint32_t dst[2]; double tmpf; } u;
-		#ifdef AVMPLUS_BIG_ENDIAN
-        u.dst[0] = i64.imm64_1;
-        u.dst[1] = i64.imm64_0;
-		#else
-        u.dst[0] = i64.imm64_0;
-        u.dst[1] = i64.imm64_1;
-		#endif
-		return u.tmpf;
-	#endif
+        union {
+            double f;
+            uint64_t q;
+        } u;
+        u.q = imm64();
+        return u.f;
 	}
 
     inline uint32_t argSlots(uint32_t argc) {
@@ -548,13 +531,13 @@ namespace nanojit
 	{
 		if (v == LIR_qlo) {
 			if (i->isconstq())
-				return insImm(int32_t(i->imm64()));
+                return insImm(i->imm64_0());
 			if (i->isop(LIR_qjoin))
 				return i->oprnd1();
 		}
 		else if (v == LIR_qhi) {
 			if (i->isconstq())
-				return insImm(int32_t(i->imm64()>>32));
+                return insImm(i->imm64_1());
 			if (i->isop(LIR_qjoin))
 				return i->oprnd2();
 		}
@@ -924,7 +907,7 @@ namespace nanojit
         // N+4     arg operand #2 ----------------------
         // N+8     arg operand #1 ----------------------
         // N+12    arg operand #0 ---------------------- ]
-        // N+16  [ code=LIR_call | resv | (pad16) ------    K+1
+        // N+16  [ arIndex | reg | used | code=LIR_call     K+1
         //         imm8a | (pad24) ---------------------
         //         imm8b | (pad24) ---------------------
         //         ci ---------------------------------- ]
@@ -1464,7 +1447,7 @@ namespace nanojit
 				NanoAssert(s < livebuf+sizeof(livebuf));
             }
 			printf("%-60s %s\n", livebuf, names->formatIns(e->i));
-            if (e->i->isGuard() || e->i->isBranch() || isRet(e->i->opcode())) {
+            if (e->i->isGuard() || e->i->isBranch() || e->i->isRet()) {
 				printf("\n");
                 newblock = true;
             }
@@ -1535,10 +1518,10 @@ namespace nanojit
 #if defined NANOJIT_64BIT
             sprintf(buf, "#0x%lx", (nj_printf_ld)ref->imm64());
 #else
-			formatImm(uint32_t(ref->imm64()>>32), buf);
+			formatImm(ref->imm64_1(), buf);
 			buf += strlen(buf);
 			*buf++ = ':';
-			formatImm(uint32_t(ref->imm64()), buf);
+			formatImm(ref->imm64_0(), buf);
 #endif
 		}
 		else if (ref->isconst()) {
@@ -1791,7 +1774,7 @@ namespace nanojit
 	
 	LIns* CseFilter::ins1(LOpcode v, LInsp a)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			NanoAssert(operandCount[v]==1);
 			uint32_t k;
 			LInsp found = exprs.find1(v, a, k);
@@ -1804,7 +1787,7 @@ namespace nanojit
 
 	LIns* CseFilter::ins2(LOpcode v, LInsp a, LInsp b)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			NanoAssert(operandCount[v]==2);
 			uint32_t k;
 			LInsp found = exprs.find2(v, a, b, k);
@@ -1817,7 +1800,7 @@ namespace nanojit
 
 	LIns* CseFilter::insLoad(LOpcode v, LInsp base, LInsp disp)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			NanoAssert(operandCount[v]==2);
 			uint32_t k;
 			LInsp found = exprs.find2(v, base, disp, k);
@@ -1830,7 +1813,7 @@ namespace nanojit
 
 	LInsp CseFilter::insGuard(LOpcode v, LInsp c, LInsp x)
 	{
-		if (isCse(v)) {
+        if (isCseOpcode(v)) {
 			// conditional guard
 			NanoAssert(operandCount[v]==1);
 			uint32_t k;

@@ -107,9 +107,7 @@ namespace nanojit
 			// that this does not destroy any resources shared with other
 			// fragments (such as a LirBuffer or this fragment itself as a
 			// jump target).
-    		void        clearFrag(const void* ip);
 			void        clearFrags();	// clear all fragments from the cache
-            Fragment*   getMerge(GuardRecord *lr, const void* ip);
             Fragment*   createBranch(SideExit *exit, const void* ip);
             Fragment*   newFrag(const void* ip);
             Fragment*   newBranch(Fragment *from, const void* ip);
@@ -180,12 +178,9 @@ namespace nanojit
 
 			NIns*			code()							{ return _code; }
 			void			setCode(NIns* codee, Page* pages) { _code = codee; _pages = pages; }
-			GuardRecord*	links()							{ return _links; }
 			int32_t&		hits()							{ return _hits; }
-            void            resetHits();
             void            blacklist();
 			bool			isBlacklisted()		{ return _hits < 0; }
-			debug_only( bool hasOnlyTreeLinks(); )
 			void			releaseLirBuffer();
 			void			releaseCode(Fragmento* frago);
 			void			releaseTreeMem(Fragmento* frago);

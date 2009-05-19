@@ -46,10 +46,6 @@ namespace nanojit
 	/**
 	 * Some notes on this Assembler (Emitter).
 	 * 
-	 *     LIR_call is a generic call operation that is encoded using form [2].  The 24bit
-	 *     integer is used as an index into a function look-up table that contains information
-	 *     about the target that is to be called; including address, # parameters, etc.
-	 * 
 	 *   The class RegAlloc is essentially the register allocator from MIR
 	 * 
 	 *   The Assembler class parses the LIR instructions starting at any point and converts 
@@ -66,16 +62,6 @@ namespace nanojit
 	 */
 
 	#define STACK_GRANULARITY		sizeof(void *)
-
-	/**
-	 * The Assembler is only concerned with transforming LIR to native instructions
-	 */
-    struct Reservation
-	{
-		uint32_t arIndex:16;	/* index into stack frame.  displ is -4*arIndex */
-		Register reg:15;			/* register UnkownReg implies not in register */
-        uint32_t used:1;
-	};
 
 	struct AR
 	{
@@ -118,7 +104,6 @@ namespace nanojit
 		 None = 0
 		,OutOMem
 		,StackFull
-		,ResvFull
 		,RegionFull
         ,MaxLength
         ,MaxExit
@@ -162,7 +147,6 @@ namespace nanojit
 	 */
 	class Assembler MMGC_SUBCLASS_DECL
 	{
-		friend class DeadCodeFilter;
 		friend class VerboseBlockReader;
 		public:
 			#ifdef NJ_VERBOSE
@@ -248,13 +232,9 @@ namespace nanojit
 			void		internalReset();
             bool        canRemat(LIns*);
 
-			Reservation* reserveAlloc(LInsp i);
-			void		reserveFree(LInsp i);
-			void		reserveReset();
-
 			Reservation* getresv(LIns *x) {
-                uint32_t resv_index = x->resv();
-                return resv_index ? &_resvTable[resv_index] : 0;
+                Reservation* r = x->resv();
+                return r->used ? r : 0;
             }
 
 			DWB(Fragmento*)		_frago;
@@ -262,8 +242,6 @@ namespace nanojit
             DWB(Fragment*)		_thisfrag;
 			RegAllocMap*		_branchStateMap;
 		
-			const CallInfo	*_functions;
-			
 			NIns*		_nIns;			// current native instruction
 			NIns*		_nExitIns;		// current instruction in exit fragment page
 			NIns*		_startingIns;	// starting location of code compilation for error handling
@@ -277,8 +255,6 @@ namespace nanojit
 
 			LabelStateMap	_labels; 
 			NInsMap		_patches;
-			Reservation _resvTable[ NJ_MAX_STACK_ENTRY ]; // table where we house stack and register information
-			uint32_t	_resvFree;
 			bool		_inExit, vpad2[3];
             InsList     pending_lives;
 
@@ -341,7 +317,6 @@ namespace nanojit
 			Register	nRegisterAllocFromSet(int32_t set);
 			void		nRegisterResetAll(RegAlloc& a);
 			void		nMarkExecute(Page* page, int flags);
-			void		nFrameRestore(RegisterMask rmask);
 			NIns*    	nPatchBranch(NIns* branch, NIns* location);
 			void		nFragExit(LIns* guard);
 
