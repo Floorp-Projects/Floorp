@@ -121,7 +121,7 @@ libs::
 
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
-	$(LIBXUL_DIST)/sdk/bin/redit $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
+	$(LIBXUL_DIST)/host/bin/redit $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
 endif
 
 endif
