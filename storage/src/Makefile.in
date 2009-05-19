@@ -61,7 +61,7 @@ REQUIRES = xpcom \
            necko \
            $(NULL)
 
-EXPORTS_namespaces = mozilla/storage
+EXPORTS_NAMESPACES = mozilla/storage
 
 EXPORTS_mozilla/storage = Variant.h
 
