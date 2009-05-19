@@ -822,6 +822,35 @@ function getZipReaderForFile(zipFile) {
 }
 
 /**
+ * Verifies that a zip file's contents are all signed by the same principal.
+ * Directory entries and anything in the META-INF directory are not checked.
+ * @param   zip
+ *          A nsIZipReader to check
+ * @param   principal
+ *          The nsIPrincipal to compare against
+ * @return  true if all the contents were signed by the principal, false
+ *          otherwise.
+ */
+function verifyZipSigning(zip, principal) {
+  var count = 0;
+  var entries = zip.findEntries(null);
+  while (entries.hasMore()) {
+    var entry = entries.getNext();
+    // Nothing in META-INF is in the manifest.
+    if (entry.substr(0, 9) == "META-INF/")
+      continue;
+    // Directory entries aren't in the manifest.
+    if (entry.substr(-1) == "/")
+      continue;
+    count++;
+    var entryPrincipal = zip.getCertificatePrincipal(entry);
+    if (!entryPrincipal || !principal.equals(entryPrincipal))
+      return false;
+  }
+  return zip.manifestEntriesCount == count;
+}
+
+/**
  * Extract a RDF file from a ZIP archive to a random location in the system
  * temp directory.
  * @param   zipFile
@@ -3108,19 +3137,29 @@ ExtensionManager.prototype = {
           // walk these lists multiple times on every startup.
           var item = this._getItemForDroppedFile(entry, location);
           if (item) {
-            droppedInFiles.push({ file: entry, location: location });
             var prettyName = "";
             try {
               var zipReader = getZipReaderForFile(entry);
-              var principal = { };
-              var certPrincipal = zipReader.getCertificatePrincipal(null, principal);
-              // XXXbz This string could be empty.  This needs better
-              // UI to present principal.value.certificate's subject.
-              prettyName = principal.value.prettyName;
+              zipReader.QueryInterface(Ci.nsIJAR);
+              var principal = zipReader.getCertificatePrincipal(null);
+              if (principal && principal.hasCertificate) {
+                if (principal.hasCertificate && verifyZipSigning(zipReader, principal)) {
+                  // XXX Bug 372980 This string could be empty. This needs
+                  // better UI to present principal.value.certificate's subject.
+                  prettyName = principal.prettyName;
+                }
+                else {
+                  // The xpi isn't correctly signed, don't offer to install.
+                  LOG("Ignoring " + entry.path + " as it is not correctly signed.");
+                  entry.remove(true);
+                  continue;
+                }
+              }
             }
             catch (e) { }
             if (zipReader)
               zipReader.close();
+            droppedInFiles.push({ file: entry, location: location });
             xpinstallStrings = xpinstallStrings.concat([item.name,
                                                         getURLSpecFromFile(entry),
                                                         item.iconURL,
