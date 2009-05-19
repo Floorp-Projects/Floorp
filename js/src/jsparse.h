@@ -412,12 +412,11 @@ struct JSParseNode {
 #define PND_ASSIGNED    0x08            /* set if ever LHS of assignment */
 #define PND_TOPLEVEL    0x10            /* function at top of body or prog */
 #define PND_BLOCKCHILD  0x20            /* use or def is direct block child */
-#define PND_FORWARD     0x40            /* forward referenced definition */
+#define PND_GVAR        0x40            /* gvar binding, can't close over
+                                           because it could be deleted */
 #define PND_PLACEHOLDER 0x80            /* placeholder definition for lexdep */
 #define PND_FUNARG     0x100            /* downward or upward funarg usage */
 #define PND_BOUND      0x200            /* bound to a stack or global slot */
-#define PND_GVAR       0x400            /* gvar binding, can't close over
-                                           because it could be deleted */
 
 /* PN_LIST pn_xflags bits. */
 #define PNX_STRCAT      0x01            /* TOK_PLUS list has string term */
@@ -459,7 +458,6 @@ struct JSParseNode {
     bool isInitialized() const  { return test(PND_INITIALIZED); }
     bool isTopLevel() const     { return test(PND_TOPLEVEL); }
     bool isBlockChild() const   { return test(PND_BLOCKCHILD); }
-    bool isForward() const      { return test(PND_FORWARD); }
     bool isPlaceholder() const  { return test(PND_PLACEHOLDER); }
 
     /* Defined below, see after struct JSDefinition. */

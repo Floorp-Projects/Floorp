@@ -8436,7 +8436,7 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_GETDSLOT()
 {
     JSObject* callee = cx->fp->callee;
-    LIns* callee_ins = (callDepth == 0) ? get(&cx->fp->argv[-2]) : INS_CONSTPTR(callee);
+    LIns* callee_ins = get(&cx->fp->argv[-2]);
 
     unsigned index = GET_UINT16(cx->fp->regs->pc);
     LIns* dslots_ins = NULL;
@@ -9703,7 +9703,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_CALLEE()
 {
-    stack(0, INS_CONSTPTR(cx->fp->callee));
+    stack(0, get(&cx->fp->argv[-2]));
     return JSRS_CONTINUE;
 }
 
