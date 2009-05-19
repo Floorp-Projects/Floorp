@@ -20,3 +20,5 @@ trac466: Fix for infinite loop in liboggplay when running decoder on its own thr
 
 bug492436: Fix for that bug cherry picked from liboggplay git commit 4b97ad.
 bug493140: Fix for offsets not being used.
+
+aspect-ratio: Adds oggplay_get_video_aspect_ratio, used for bug 480058.
