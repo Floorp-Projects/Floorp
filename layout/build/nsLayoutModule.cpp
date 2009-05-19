@@ -223,6 +223,11 @@ class nsIDocumentLoaderFactory;
 #define NS_HTMLOPTIONELEMENT_CONTRACTID \
   "@mozilla.org/content/element/html;1?name=option"
 
+#ifdef MOZ_MEDIA
+#define NS_HTMLAUDIOELEMENT_CONTRACTID \
+  "@mozilla.org/content/element/html;1?name=audio"
+#endif
+
 /* 0ddf4df8-4dbb-4133-8b79-9afb966514f5 */
 #define NS_PLUGINDOCLOADERFACTORY_CID \
 { 0x0ddf4df8, 0x4dbb, 0x4133, { 0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 } }
@@ -492,6 +497,7 @@ MAKE_CTOR(CreatePreContentIterator,       nsIContentIterator,          NS_NewPre
 MAKE_CTOR(CreateSubtreeIterator,          nsIContentIterator,          NS_NewContentSubtreeIterator)
 // CreateHTMLImgElement, see below
 // CreateHTMLOptionElement, see below
+// CreateHTMLAudioElement, see below
 MAKE_CTOR(CreateTextEncoder,              nsIDocumentEncoder,          NS_NewTextEncoder)
 MAKE_CTOR(CreateHTMLCopyTextEncoder,      nsIDocumentEncoder,          NS_NewHTMLCopyTextEncoder)
 MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
@@ -672,6 +678,53 @@ UnregisterHTMLOptionElement(nsIComponentManager* aCompMgr,
   // XXX remove category entry
   return NS_OK;
 }
+
+#ifdef MOZ_MEDIA
+static NS_IMETHODIMP
+CreateHTMLAudioElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+  // Note! NS_NewHTMLAudioElement is special cased to handle a null nodeinfo
+  nsCOMPtr<nsIContent> inst(NS_NewHTMLAudioElement(nsnull));
+  return inst ? inst->QueryInterface(aIID, aResult) : NS_ERROR_OUT_OF_MEMORY;
+}
+
+static NS_IMETHODIMP
+RegisterHTMLAudioElement(nsIComponentManager *aCompMgr,
+                         nsIFile* aPath,
+                         const char* aRegistryLocation,
+                         const char* aComponentType,
+                         const nsModuleComponentInfo* aInfo)
+{
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+
+  if (!catman)
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLCString previous;
+  nsresult rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                         "Audio", NS_HTMLAUDIOELEMENT_CONTRACTID,
+                                         PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
+                                  "Audio", "HTMLAudioElement",
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static NS_IMETHODIMP
+UnregisterHTMLAudioElement(nsIComponentManager* aCompMgr,
+                           nsIFile* aPath,
+                           const char* aRegistryLocation,
+                           const nsModuleComponentInfo* aInfo)
+{
+  // XXX remove category entry
+  return NS_OK;
+}
+#endif
 
 static NS_METHOD
 RegisterDataDocumentContentPolicy(nsIComponentManager *aCompMgr,
@@ -1000,7 +1053,7 @@ static const nsModuleComponentInfo gComponents[] = {
     nsnull,
     nsInspectorCSSUtilsConstructor },
 
-  // Needed to support "new Option;" and "new Image;" in JavaScript
+  // Needed to support "new Option;", "new Image;" and "new Audio;" in JavaScript
   { "HTML img element",
     NS_HTMLIMAGEELEMENT_CID,
     NS_HTMLIMGELEMENT_CONTRACTID,
@@ -1014,6 +1067,15 @@ static const nsModuleComponentInfo gComponents[] = {
     CreateHTMLOptionElement,
     RegisterHTMLOptionElement,
     UnregisterHTMLOptionElement },
+
+#ifdef MOZ_MEDIA
+  { "HTML audio element",
+    NS_HTMLAUDIOELEMENT_CID,
+    NS_HTMLAUDIOELEMENT_CONTRACTID,
+    CreateHTMLAudioElement,
+    RegisterHTMLAudioElement,
+    UnregisterHTMLAudioElement },
+#endif
 
 #ifdef MOZ_ENABLE_CANVAS
   { "Canvas 2D Rendering Context",

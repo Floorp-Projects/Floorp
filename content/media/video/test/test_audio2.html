@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: Audio Constructor Test 2</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var a1 = Audio('sound.ogg');
+a1.addEventListener('load', function() {
+  is(a1.networkState, HTMLMediaElement.NETWORK_LOADED, "Audio loaded");
+  SimpleTest.finish();
+}, false);
+a1.load();
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
