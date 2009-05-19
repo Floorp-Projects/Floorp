@@ -64,7 +64,7 @@
 // Definitions
 struct EnumerateData {
   const char  *parent;
-  nsTArray<const char*> *pref_list;
+  nsVoidArray *pref_list;
 };
 
 struct PrefCallbackData {
@@ -562,11 +562,11 @@ NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray)
 {
   char**          outArray;
-  const char*     theElement;
-  PRUint32        numPrefs;
-  PRUint32        dwIndex;
+  char*           theElement;
+  PRInt32         numPrefs;
+  PRInt32         dwIndex;
   EnumerateData   ed;
-  nsAutoTArray<const char*, 8> prefArray;
+  nsAutoVoidArray prefArray;
 
   NS_ENSURE_ARG_POINTER(aStartingAt);
   NS_ENSURE_ARG_POINTER(aCount);
@@ -587,7 +587,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
 
   // now that we've built up the list, run the callback on
   // all the matching elements
-  numPrefs = prefArray.Length();
+  numPrefs = prefArray.Count();
 
   if (numPrefs) {
     outArray = (char **)nsMemory::Alloc(numPrefs * sizeof(char *));
@@ -597,7 +597,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
     for (dwIndex = 0; dwIndex < numPrefs; ++dwIndex) {
       // we need to lop off mPrefRoot in case the user is planning to pass this
       // back to us because if they do we are going to add mPrefRoot again.
-      theElement = (prefArray.ElementAt(dwIndex)) + mPrefRootLength;
+      theElement = ((char *)prefArray.ElementAt(dwIndex)) + mPrefRootLength;
       outArray[dwIndex] = (char *)nsMemory::Clone(theElement, strlen(theElement) + 1);
  
       if (!outArray[dwIndex]) {
@@ -629,7 +629,7 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
   NS_ENSURE_ARG_POINTER(aObserver);
 
   if (!mObservers) {
-    mObservers = new nsAutoTArray<PrefCallbackData*, 8>();
+    mObservers = new nsAutoVoidArray();
     if (nsnull == mObservers)
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -669,8 +669,8 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
 {
   const char *pref;
   PrefCallbackData *pCallback;
-  PRUint32 count;
-  PRUint32 i;
+  PRInt32 count;
+  PRInt32 i;
   nsresult rv;
   nsCAutoString domain;
 
@@ -681,12 +681,12 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
     return NS_OK;
     
   // need to find the index of observer, so we can remove it from the domain list too
-  count = mObservers->Length();
+  count = mObservers->Count();
   if (count == 0)
     return NS_OK;
 
   for (i = 0; i < count; i++) {
-    pCallback = mObservers->ElementAt(i);
+    pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
     if (pCallback) {
       if (pCallback->pObserver == aObserver) {
         domain = mObserverDomains[i];
@@ -759,21 +759,21 @@ void nsPrefBranch::freeObserverList(void)
 
   if (mObservers) {
     // unregister the observers
-    PRUint32 count;
+    PRInt32 count;
 
-    count = mObservers->Length();
+    count = mObservers->Count();
     if (count > 0) {
-      PRUint32 i;
+      PRInt32 i;
       nsCAutoString domain;
       for (i = 0; i < count; ++i) {
-        pCallback = mObservers->ElementAt(i);
+        pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
         if (pCallback) {
           domain = mObserverDomains[i];
           // We must pass a fully qualified preference name to remove the callback
           pref = getPrefName(domain.get()); // can't fail because domain must be valid
           // Remove this observer from our array so that nobody else can remove
           // what we're trying to remove right now.
-          mObservers->ElementAt(i) = nsnull;
+          mObservers->ReplaceElementAt(nsnull, i);
           PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
           if (pCallback->pWeakRef) {
             NS_RELEASE(pCallback->pWeakRef);
@@ -788,7 +788,7 @@ void nsPrefBranch::freeObserverList(void)
       mObserverDomains.Clear();
     }
     delete mObservers;
-    mObservers = nsnull;
+    mObservers = 0;
   }
 }
  
@@ -872,7 +872,7 @@ pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
   PrefHashEntry *he = static_cast<PrefHashEntry*>(heh);
   EnumerateData *d = reinterpret_cast<EnumerateData *>(arg);
   if (PL_strncmp(he->key, d->parent, PL_strlen(d->parent)) == 0) {
-    d->pref_list->AppendElement(he->key);
+    d->pref_list->AppendElement((void*)he->key);
   }
   return PL_DHASH_NEXT;
 }
