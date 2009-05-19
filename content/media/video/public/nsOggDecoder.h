@@ -69,9 +69,7 @@ the decode thread. It has the following states:
 
 DECODING_METADATA
   The Ogg headers are being loaded, and things like framerate, etc are
-  being decoded.  
-DECODING_FIRSTFRAME
-  The first frame of audio/video data is being decoded.
+  being determined, and the first frame of audio/video data is being decoded.
 DECODING
   Video/Audio frames are being decoded.
 SEEKING
@@ -101,13 +99,11 @@ Seek(float)
 A state transition diagram:
 
 DECODING_METADATA
-|        | Shutdown()
+  |      |
+  v      | Shutdown()
+  |      |
   v      -->-------------------->--------------------------|
-  |                                                        |
-DECODING_FIRSTFRAME                                        v
-  |        | Shutdown()                                    |
-  v        >-------------------->--------------------------|
-  |  |------------->----->------------------------|        v
+  |---------------->----->------------------------|        v
 DECODING             |          |  |              |        |
   ^                  v Seek(t)  |  |              |        |
   |         Decode() |          v  |              |        |
@@ -157,7 +153,7 @@ object to cause it to behave appropriate to the play state.
 The following represents the states that the player can be in, and the
 valid states the decode thread can be in at that time:
 
-player LOADING   decoder DECODING_METADATA, DECODING_FIRSTFRAME
+player LOADING   decoder DECODING_METADATA
 player PLAYING   decoder DECODING, BUFFERING, SEEKING, COMPLETED
 player PAUSED    decoder DECODING, BUFFERING, SEEKING, COMPLETED
 player SEEKING   decoder SEEKING
