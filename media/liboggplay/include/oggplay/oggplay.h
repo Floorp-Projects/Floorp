@@ -115,6 +115,9 @@ OggPlayErrorCode
 oggplay_get_video_fps(OggPlay *me, int track, int* fps_denom, int* fps_num);
 
 OggPlayErrorCode
+oggplay_get_video_aspect_ratio(OggPlay *me, int track, int* aspect_denom, int* aspect_num);
+
+OggPlayErrorCode
 oggplay_convert_video_to_rgb(OggPlay *me, int track, int convert);
 
 OggPlayErrorCode
