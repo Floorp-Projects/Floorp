@@ -3253,7 +3253,7 @@ NoteLValue(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN dflag = PND_
          * Save the win of PND_INITIALIZED if we can prove 'var x;' and 'x = y'
          * occur as direct kids of the same block with no forward refs to x.
          */
-        if (!(dn->pn_dflags & PND_INITIALIZED) &&
+        if ((dn->pn_dflags & PND_INITIALIZED) &&
             dn->isBlockChild() &&
             pn->isBlockChild() &&
             dn->pn_blockid == pn->pn_blockid &&
