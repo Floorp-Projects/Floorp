@@ -1937,6 +1937,7 @@ UpdateManager.prototype = {
       // User switched channels, clear out any old active updates and remove
       // partial downloads
       this._activeUpdate = null;
+      this.saveUpdates();
 
       // Destroy the updates directory, since we're done with it.
       cleanUpUpdatesDir();
@@ -2028,6 +2029,7 @@ UpdateManager.prototype = {
     if (this._activeUpdate)
       this._addUpdate(this._activeUpdate);
 
+    this._ensureUpdates();
     // Don't write updates that have a temporary state to the updates.xml file.
     if (this._updates) {
       let updates = this._updates.slice();
