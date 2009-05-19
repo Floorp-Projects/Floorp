@@ -164,10 +164,11 @@ Assembler::nFragExit(LInsp guard)
 NIns*
 Assembler::genEpilogue()
 {
-    BX(LR); // return
+    // On ARMv5+, loading directly to PC correctly handles interworking.
+    // Note that we don't support anything older than ARMv5.
+    NanoAssert(AvmCore::config.arch >= 5);
 
-    RegisterMask savingMask = rmask(FP) | rmask(LR);
-
+    RegisterMask savingMask = rmask(FP) | rmask(PC);
     if (!_thisfrag->lirbuf->explicitSavedRegs)
         for (int i = 0; i < NumSavedRegs; ++i)
             savingMask |= rmask(savedRegs[i]);
@@ -603,7 +604,7 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
         // asm_ld_imm will automatically select between LDR and MOV as
         // appropriate.
         if (!resv->arIndex)
-            reserveFree(i);
+            i->clearResv();
         asm_ld_imm(r, i->imm32());
 #endif
     } else {
@@ -1031,12 +1032,6 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
         return;
     }
 
-    // This function can't reliably be used to generate PC-relative loads
-    // because it may emit other instructions before the LDR. Support for
-    // PC-relative loads could be added, but isn't currently required so this
-    // assertion is sufficient.
-    NanoAssert(b != PC);
-
     if (isU12(off)) {
         // LDR d, b, #+off
         if (chk) underrunProtect(4);
@@ -1048,8 +1043,15 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
     } else {
         // The offset is over 4096 (and outside the range of LDR), so we need
         // to add a level of indirection to get the address into IP.
-        if (chk) underrunProtect(4+LD32_size);
+
+        // Because of that, we can't do a PC-relative load unless it fits within
+        // the single-instruction forms above.
+
+        NanoAssert(b != PC);
         NanoAssert(b != IP);
+
+        if (chk) underrunProtect(4+LD32_size);
+
         *(--_nIns) = (NIns)( COND_AL | (0x79<<20) | (b<<16) | (d<<12) | IP );
         LD32_nochk(IP, off);
     }
@@ -1060,15 +1062,17 @@ Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
 void
 Assembler::asm_ld_imm(Register d, int32_t imm)
 {
-    if (imm == 0) {
-        EOR(d, d, d);
-    } else if (isS8(imm) || isU8(imm)) {
+    NanoAssert(IsGpReg(d));
+    if (isU8(imm)) {
         underrunProtect(4);
-        if (imm < 0)
-            *(--_nIns) = (NIns)( COND_AL | 0x3E<<20 | d<<12 | (imm^0xFFFFFFFF)&0xFF );
-        else
-            *(--_nIns) = (NIns)( COND_AL | 0x3B<<20 | d<<12 | imm&0xFF );
-        asm_output("ld  %s,0x%x",gpn(d), imm);
+        // MOV d, #imm
+        *(--_nIns) = (NIns)( COND_AL | 0x3B<<20 | d<<12 | imm);
+        asm_output("mov %s,0x%x",gpn(d), imm);
+    } else if (isU8(~imm)) {
+        underrunProtect(4);
+        // MVN d, #imm
+        *(--_nIns) = (NIns)( COND_AL | 0x3E<<20 | d<<12 | ~imm);
+        asm_output("mvn %s,0x%x",gpn(d), ~imm);
     } else {
         underrunProtect(LD32_size);
         LD32_nochk(d, imm);
@@ -1436,7 +1440,7 @@ Assembler::asm_cmp(LIns *cond)
         int c = rhs->imm32();
         if (c == 0 && cond->isop(LIR_eq)) {
             Register r = findRegFor(lhs, GpRegs);
-            TEST(r,r);
+            TST(r,r);
             // No 64-bit immediates so fall-back to below
         } else if (!rhs->isQuad()) {
             Register r = getBaseReg(lhs, c, GpRegs);
@@ -1587,7 +1591,7 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_sub)
             SUB(rr, ra, rb);
         else if (op == LIR_mul)
-            MUL(rr, rb);
+            MUL(rr, rb, rr);
         else if (op == LIR_and)
             AND(rr, ra, rb);
         else if (op == LIR_or)
@@ -1595,13 +1599,13 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_xor)
             EOR(rr, ra, rb);
         else if (op == LIR_lsh) {
-            SHL(rr, ra, IP);
+            LSL(rr, ra, IP);
             ANDi(IP, rb, 0x1f);
         } else if (op == LIR_rsh) {
-            SAR(rr, ra, IP);
+            ASR(rr, ra, IP);
             ANDi(IP, rb, 0x1f);
         } else if (op == LIR_ush) {
-            SHR(rr, ra, IP);
+            LSR(rr, ra, IP);
             ANDi(IP, rb, 0x1f);
         } else
             NanoAssertMsg(0, "Unsupported");
@@ -1618,11 +1622,11 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_xor)
             EORi(rr, ra, c);
         else if (op == LIR_lsh)
-            SHLi(rr, ra, c);
+            LSLi(rr, ra, c);
         else if (op == LIR_rsh)
-            SARi(rr, ra, c);
+            ASRi(rr, ra, c);
         else if (op == LIR_ush)
-            SHRi(rr, ra, c);
+            LSRi(rr, ra, c);
         else
             NanoAssertMsg(0, "Unsupported");
     }
@@ -1667,13 +1671,13 @@ Assembler::asm_ld(LInsp ins)
 
     // these will be 2 or 4-byte aligned
     if (op == LIR_ldcs) {
-        LDRH(rr, d, ra);
+        LDRH(rr, ra, d);
         return;
     }
 
     // aaand this is just any byte.
     if (op == LIR_ldcb) {
-        LDRB(rr, d, ra);
+        LDRB(rr, ra, d);
         return;
     }
 
