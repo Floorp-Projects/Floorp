@@ -652,17 +652,24 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
   if (!mDecoder)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
-  // Detect for a NaN and invalid values.
-  if (!(aCurrentTime >= 0.0))
-    return NS_ERROR_FAILURE;
-
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) 
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+
+  // Detect for a NaN and invalid values.
+  if (aCurrentTime != aCurrentTime)
+    return NS_ERROR_FAILURE;
+
+  // Clamp the time to [0, duration] as required by the spec
+  float clampedTime = PR_MAX(0, aCurrentTime);
+  float duration = mDecoder->GetDuration();
+  if (duration >= 0) {
+    clampedTime = PR_MIN(clampedTime, duration);
+  }
 
   mPlayingBeforeSeek = IsPotentiallyPlaying();
   // The media backend is responsible for dispatching the timeupdate
   // event if it changes the playback position as a result of the seek.
-  nsresult rv = mDecoder->Seek(aCurrentTime);
+  nsresult rv = mDecoder->Seek(clampedTime);
   return rv;
 }
 
