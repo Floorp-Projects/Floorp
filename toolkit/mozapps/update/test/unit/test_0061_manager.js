@@ -42,8 +42,8 @@ function run_test() {
   dump("Testing: removal of an update download in progress for an older " +
        "version of the application on startup - bug 485624\n");
   removeUpdateDirsAndFiles();
-  var defaults = gPrefs.QueryInterface(AUS_Ci.nsIPrefService)
-                   .getDefaultBranch(null);
+  var defaults = getPrefBranch().QueryInterface(AUS_Ci.nsIPrefService).
+                 getDefaultBranch(null);
   defaults.setCharPref("app.update.channel", "bogus_channel");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
@@ -59,4 +59,5 @@ function run_test() {
 
   do_check_eq(gUpdateManager.activeUpdate, null);
   do_check_eq(gUpdateManager.updateCount, 0);
+  cleanUp();
 }
