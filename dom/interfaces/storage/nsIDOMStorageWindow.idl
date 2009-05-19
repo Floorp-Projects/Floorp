@@ -49,7 +49,7 @@ interface nsIDOMStorageObsolete;
 interface nsIDOMStorage;
 interface nsIDOMStorageList;
 
-[scriptable, uuid(B4F572FB-9BA5-480b-9361-C230863323E4)]
+[scriptable, uuid(390FBF21-36F5-4516-B3F2-9D1232718C69)]
 interface nsIDOMStorageWindow : nsISupports
 {
   /**
