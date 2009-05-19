@@ -1088,7 +1088,7 @@ pref("layout.css.report_errors", true);
 // Should the :visited selector ever match (otherwise :link matches instead)?
 pref("layout.css.visited_links_enabled", true);
 
-// Override DPI. A value of -1 means use the minimum of 96 and the system DPI.
+// Override DPI. A value of -1 means use the maxium of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.
 // This sets the physical size of a device pixel and thus controls the
 // interpretation of physical units such as "pt".
