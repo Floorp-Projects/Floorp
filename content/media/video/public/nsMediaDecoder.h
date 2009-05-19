@@ -244,14 +244,12 @@ protected:
   // Stop progress information timer.
   nsresult StopProgress();
 
-  // Set the RGB width, height, pixel aspect ratio, and framerate.
-  // Ownership of the passed RGB buffer is transferred to the decoder.
-  // This is the only nsMediaDecoder method that may be called from
-  // threads other than the main thread.
+  // Set the RGB width, height and framerate. Ownership of the passed RGB
+  // buffer is transferred to the decoder.  This is the only nsMediaDecoder
+  // method that may be called from threads other than the main thread.
   void SetRGBData(PRInt32 aWidth,
                   PRInt32 aHeight,
                   float aFramerate,
-                  float aAspectRatio,
                   unsigned char* aRGBBuffer);
 
 protected:
@@ -296,9 +294,6 @@ protected:
   // Framerate of video being displayed in the element
   // expressed in numbers of frames per second.
   float mFramerate;
-
-  // Pixel aspect ratio (ratio of the pixel width to pixel height)
-  float mAspectRatio;
 
   // Has our size changed since the last repaint?
   PRPackedBool mSizeChanged;
