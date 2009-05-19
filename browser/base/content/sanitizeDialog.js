@@ -156,18 +156,9 @@ var gSanitizePromptDialog = {
 
     this._warningIsInited = true;
 
-    // Get the number of items in history and the oldest item.
-    var histServ = Cc["@mozilla.org/browser/nav-history-service;1"].
-                   getService(Ci.nsINavHistoryService);
-    var query = histServ.getNewQuery();
-    var opts = histServ.getNewQueryOptions();
-    opts.sortingMode = opts.SORT_BY_DATE_ASCENDING;
-    opts.queryType = opts.QUERY_TYPE_HISTORY;
-    var result = histServ.executeQuery(query, opts);
-    result.root.containerOpen = true;
-    var numItems = result.root.childCount;
-    var oldestTime = numItems > 0 ? result.root.getChild(0).time : null;
-    result.root.containerOpen = false;
+    // If the date and time-aware locale warning string is ever used again,
+    // initialize it here.  Currently we use the no-visits warning string,
+    // which does not include date and time.  See bug 480169 comment 48.
 
     var warningDesc = document.getElementById("sanitizeEverythingWarning");
     warningDesc.textContent =
