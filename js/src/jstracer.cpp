@@ -6501,6 +6501,13 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 }
 
 void
+TraceRecorder::stobj_set_fslot(LIns *obj_ins, unsigned slot, LIns* v_ins, const char *name)
+{
+    addName(lir->insStorei(v_ins, obj_ins, offsetof(JSObject, fslots) + slot * sizeof(jsval)),
+            name);
+}
+
+void
 TraceRecorder::stobj_set_dslot(LIns *obj_ins, unsigned slot, LIns*& dslots_ins, LIns* v_ins,
                                const char *name)
 {
@@ -6513,9 +6520,7 @@ void
 TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, LIns* v_ins)
 {
     if (slot < JS_INITIAL_NSLOTS) {
-        addName(lir->insStorei(v_ins, obj_ins,
-                               offsetof(JSObject, fslots) + slot * sizeof(jsval)),
-                "set_slot(fslots)");
+        stobj_set_fslot(obj_ins, slot, v_ins, "set_slot(fslots)");
     } else {
         stobj_set_dslot(obj_ins, slot - JS_INITIAL_NSLOTS, dslots_ins, v_ins,
                         "set_slot(dslots)");
@@ -7397,6 +7402,9 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
             box_jsval(argv[i], elt_ins);
             stobj_set_dslot(arr_ins, i, dslots_ins, elt_ins, "set_array_elt");
         }
+
+        if (argc > 0)
+            stobj_set_fslot(arr_ins, JSSLOT_ARRAY_COUNT, INS_CONST(argc), "set_array_count");
     }
 
     set(rval, arr_ins);
@@ -10636,9 +10644,8 @@ TraceRecorder::record_JSOP_NEWARRAY()
         stobj_set_dslot(v_ins, i, dslots_ins, elt_ins, "set_array_elt");
     }
 
-    LIns* dummy = NULL;
     if (count > 0)
-        stobj_set_slot(v_ins, JSSLOT_ARRAY_COUNT, dummy, INS_CONST(count));
+        stobj_set_fslot(v_ins, JSSLOT_ARRAY_COUNT, INS_CONST(count), "set_array_count");
 
     stack(-int(len), v_ins);
     return JSRS_CONTINUE;
