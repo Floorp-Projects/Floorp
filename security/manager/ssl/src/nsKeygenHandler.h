@@ -41,6 +41,7 @@
 #define _NSKEYGENHANDLER_H_
 // Form Processor 
 #include "nsIFormProcessor.h" 
+#include "nsVoidArray.h" 
 #include "nsTArray.h" 
 
 nsresult GetSlotWithMechanism(PRUint32 mechanism,
