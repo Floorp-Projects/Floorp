@@ -130,6 +130,7 @@ _TEST_FILES += \
 		test_seek6.html \
 		test_seek7.html \
 		test_seek8.html \
+		test_seek9.html \
 		test_timeupdate3.html \
 		$(NULL)
 endif
