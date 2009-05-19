@@ -742,6 +742,8 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
     }
   }
 
+  PRBool needSilence = mAudioTrack != -1;
+
   if (mAudioTrack != -1 &&
       num_tracks > mAudioTrack &&
       oggplay_callback_info_get_type(info[mAudioTrack]) == OGGPLAY_FLOATS_AUDIO) {
@@ -753,7 +755,17 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
         int size = oggplay_callback_info_get_record_size(headers[j]);
         OggPlayAudioData* audio_data = oggplay_callback_info_get_audio_data(headers[j]);
         HandleAudioData(frame, audio_data, size);
+        needSilence = PR_FALSE;
       }
+    }
+  }
+
+  if (needSilence) {
+    // Write silence to keep audio clock moving for av sync
+    size_t count = mAudioChannels * mAudioRate * mCallbackPeriod;
+    float* data = frame->mAudioData.AppendElements(count);
+    if (data) {
+      memset(data, 0, sizeof(float)*count);
     }
   }
 
