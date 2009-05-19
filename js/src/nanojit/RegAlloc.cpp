@@ -64,12 +64,6 @@ namespace nanojit
 		free |= rmask(r);
 	}
 
-	void RegAlloc::removeFree(Register r)
-	{
-		NanoAssert(isFree(r));
-		free &= ~rmask(r);
-	}
-
 	void RegAlloc::addActive(Register r, LIns* v)
 	{
 		//  Count++;
@@ -100,28 +94,6 @@ namespace nanojit
 		NanoAssert(active[r] != NULL);
 		active[r] = NULL;
 		free |= rmask(r);
-	}
-
-	// scan table for instruction with the lowest priority, meaning it is used
-    // furthest in the future.
-	LIns* Assembler::findVictim(RegAlloc &regs, RegisterMask allow)
-	{
-		NanoAssert(allow != 0);
-		LIns *i, *a=0;
-        int allow_pri = 0x7fffffff;
-		for (Register r=FirstReg; r <= LastReg; r = nextreg(r))
-		{
-            if ((allow & rmask(r)) && (i = regs.getActive(r)) != 0)
-            {
-                int pri = canRemat(i) ? 0 : regs.getPriority(r);
-                if (!a || pri < allow_pri) {
-                    a = i;
-                    allow_pri = pri;
-                }
-			}
-		}
-        NanoAssert(a != 0);
-        return a;
 	}
 
 	#ifdef  NJ_VERBOSE
