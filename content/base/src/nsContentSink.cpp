@@ -274,35 +274,32 @@ nsContentSink::Init(nsIDocument* aDoc,
   mNotificationInterval =
     nsContentUtils::GetIntPref("content.notify.interval", 120000);
 
-  // The mMaxTokenProcessingTime controls how long we stay away from
-  // the event loop when processing token. A lower value makes the app
-  // more responsive, but may increase page load time.  The content
-  // sink mNotificationInterval gates how frequently the content is
-  // processed so it will also affect how interactive the app is
-  // during page load also. The mNotification prevents contents
-  // flushes from happening too frequently. while
-  // mMaxTokenProcessingTime prevents flushes from happening too
-  // infrequently.
+  mInteractiveDeflectCount =
+    nsContentUtils::GetIntPref("content.sink.interactive_deflect_count", 0);
+  mPerfDeflectCount =
+    nsContentUtils::GetIntPref("content.sink.perf_deflect_count", 200);
+  mPendingEventMode =
+    nsContentUtils::GetIntPref("content.sink.pending_event_mode", 1);
+  mEventProbeRate =
+    nsContentUtils::GetIntPref("content.sink.event_probe_rate", 1);
+  mInteractiveParseTime =
+    nsContentUtils::GetIntPref("content.sink.interactive_parse_time", 3000);
+  mPerfParseTime =
+    nsContentUtils::GetIntPref("content.sink.perf_parse_time", 360000);
+  mInteractiveTime =
+    nsContentUtils::GetIntPref("content.sink.interactive_time", 750000);
+  mInitialPerfTime =
+    nsContentUtils::GetIntPref("content.sink.initial_perf_time", 2000000);
+  mEnablePerfMode =
+    nsContentUtils::GetIntPref("content.sink.enable_perf_mode", 0);
 
-  // The current ratio of 3 to 1 was determined to be the lowest
-  // mMaxTokenProcessingTime which does not impact page load
-  // performance.  See bugzilla bug 76722 for details.
-
-  mMaxTokenProcessingTime =
-    nsContentUtils::GetIntPref("content.max.tokenizing.time",
-                               mNotificationInterval * 3);
-
-  // 3/4 second (750000us) default for switching
-  mDynamicIntervalSwitchThreshold =
-    nsContentUtils::GetIntPref("content.switch.threshold", 750000);
+  if (mEnablePerfMode != 0) {
+    mDynamicLowerValue = mEnablePerfMode == 1;
+    FavorPerformanceHint(!mDynamicLowerValue, 0);
+  }
 
   mCanInterruptParser =
     nsContentUtils::GetBoolPref("content.interrupt.parsing", PR_TRUE);
-
-  // 200 determined empirically to provide good user response without
-  // sampling the clock too often.
-  mMaxTokensDeflectedInLowFreqMode =
-    nsContentUtils::GetIntPref("content.max.deflected.tokens", 200);
 
   return NS_OK;
 
@@ -403,6 +400,8 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
                                nsIScriptElement *aElement,
                                PRBool aIsInline)
 {
+  mDeflectedCount = mPerfDeflectCount;
+
   // Check if this is the element we were waiting for
   PRInt32 count = mScriptElements.Count();
   if (count == 0 || aElement != mScriptElements[count - 1]) {
@@ -1511,111 +1510,46 @@ nsContentSink::WillResumeImpl()
 nsresult
 nsContentSink::DidProcessATokenImpl()
 {
-  if (!mCanInterruptParser) {
+  if (!mCanInterruptParser || !mParser || !mParser->CanInterrupt()) {
     return NS_OK;
   }
-  // There is both a high frequency interrupt mode and a low
-  // frequency interupt mode controlled by the flag
-  // mDynamicLowerValue The high frequency mode
-  // interupts the parser frequently to provide UI responsiveness at
-  // the expense of page load time. The low frequency mode
-  // interrupts the parser and samples the system clock infrequently
-  // to provide fast page load time. When the user moves the mouse,
-  // clicks or types the mode switches to the high frequency
-  // interrupt mode. If the user stops moving the mouse or typing
-  // for a duration of time (mDynamicIntervalSwitchThreshold) it
-  // switches to low frequency interrupt mode.
 
   // Get the current user event time
   nsIPresShell *shell = mDocument->GetPrimaryShell();
-
   if (!shell) {
     // If there's no pres shell in the document, return early since
     // we're not laying anything out here.
     return NS_OK;
   }
 
-  nsIViewManager* vm = shell->GetViewManager();
-  NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-  PRUint32 eventTime;
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv = vm->GetWidget(getter_AddRefs(widget));
-  if (!widget || NS_FAILED(widget->GetLastInputEventTime(eventTime))) {
-      // If we can't get the last input time from the widget
-      // then we will get it from the viewmanager.
-      rv = vm->GetLastUserEventTime(eventTime);
+  // Increase before comparing to mEventProbeRate
+  ++mDeflectedCount;
+
+  // Check if there's a pending event
+  if (mPendingEventMode != 0 && !mHasPendingEvent &&
+      (mDeflectedCount % mEventProbeRate) == 0) {
+    nsIViewManager* vm = shell->GetViewManager();
+    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIWidget> widget;
+    vm->GetWidget(getter_AddRefs(widget));
+    mHasPendingEvent = widget && widget->HasPendingInputEvent();
   }
 
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-  if (!mDynamicLowerValue && mLastSampledUserEventTime == eventTime) {
-    // The default value of mMaxTokensDeflectedInLowFreqMode (200)
-    // was selected by empirical testing. It provides reasonable
-    // user response and prevents us from sampling the clock too
-    // frequently.  This value may be decreased if responsiveness is
-    // valued more than end-to-end pageload time (e.g., for mobile).
-    if (mDeflectedCount < mMaxTokensDeflectedInLowFreqMode) {
-      mDeflectedCount++;
-      // return early to prevent sampling the clock. Note: This
-      // prevents us from switching to higher frequency (better UI
-      // responsive) mode, so limit ourselves to doing for no more
-      // than mMaxTokensDeflectedInLowFreqMode tokens.
-
-      return NS_OK;
-    }
-
-    // reset count and drop through to the code which samples the
-    // clock and does the dynamic switch between the high
-    // frequency and low frequency interruption of the parser.
-    mDeflectedCount = 0;
-  }
-  mLastSampledUserEventTime = eventTime;
-
-  PRUint32 currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-
-  // Get the last user event time and compare it with the current
-  // time to determine if the lower value for content notification
-  // and max token processing should be used. But only consider
-  // using the lower value if the document has already been loading
-  // for 2 seconds. 2 seconds was chosen because it is greater than
-  // the default 3/4 of second that is used to determine when to
-  // switch between the modes and it gives the document a little
-  // time to create windows.  This is important because on some
-  // systems (Windows, for example) when a window is created and the
-  // mouse is over it, a mouse move event is sent, which will kick
-  // us into interactive mode otherwise. It also suppresses reaction
-  // to pressing the ENTER key in the URL bar...
-
-  PRUint32 delayBeforeLoweringThreshold =
-    static_cast<PRUint32>(((2 * mDynamicIntervalSwitchThreshold) +
-                              NS_DELAY_FOR_WINDOW_CREATION));
-
-  if ((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) {
-    if ((currentTime - eventTime) <
-        static_cast<PRUint32>(mDynamicIntervalSwitchThreshold)) {
-
-      if (!mDynamicLowerValue) {
-        // lower the dynamic values to favor application
-        // responsiveness over page load time.
-        mDynamicLowerValue = PR_TRUE;
-        // Set the performance hint to prevent event starvation when
-        // dispatching PLEvents. This improves application responsiveness
-        // during page loads.
-        FavorPerformanceHint(PR_FALSE, 0);
-      }
-
-    }
-    else if (mDynamicLowerValue) {
-      // raise the content notification and MaxTokenProcessing time
-      // to favor overall page load speed over responsiveness.
-      mDynamicLowerValue = PR_FALSE;
-      // Reset the hint that to favoring performance for PLEvent dispatch.
-      FavorPerformanceHint(PR_TRUE, 0);
-    }
+  if (mHasPendingEvent && mPendingEventMode == 2) {
+    return NS_ERROR_HTMLPARSER_INTERRUPTED;
   }
 
-  if ((currentTime - mDelayTimerStart) >
-      static_cast<PRUint32>(GetMaxTokenProcessingTime())) {
+  // Have we processed enough tokens to check time?
+  if (!mHasPendingEvent &&
+      mDeflectedCount < (mDynamicLowerValue ? mInteractiveDeflectCount :
+                                              mPerfDeflectCount)) {
+    return NS_OK;
+  }
+
+  mDeflectedCount = 0;
+
+  // Check if it's time to return to the main event loop
+  if (PR_IntervalToMicroseconds(PR_IntervalNow()) > mCurrentParseEndTime) {
     return NS_ERROR_HTMLPARSER_INTERRUPTED;
   }
 
@@ -1737,9 +1671,38 @@ nsContentSink::IsScriptExecutingImpl()
 nsresult
 nsContentSink::WillParseImpl(void)
 {
-  if (mCanInterruptParser) {
-    mDelayTimerStart = PR_IntervalToMicroseconds(PR_IntervalNow());
+  if (!mCanInterruptParser) {
+    return NS_OK;
   }
+
+  nsIPresShell *shell = mDocument->GetPrimaryShell();
+  if (!shell) {
+    return NS_OK;
+  }
+
+  PRUint32 currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
+  if (mEnablePerfMode == 0) {
+    nsIViewManager* vm = shell->GetViewManager();
+    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+    PRUint32 lastEventTime;
+    vm->GetLastUserEventTime(lastEventTime);
+
+    PRBool newDynLower =
+      (currentTime - mBeginLoadTime) > mInitialPerfTime &&
+      (currentTime - lastEventTime) < mInteractiveTime;
+    
+    if (mDynamicLowerValue != newDynLower) {
+      FavorPerformanceHint(!newDynLower, 0);
+      mDynamicLowerValue = newDynLower;
+    }
+  }
+  
+  mDeflectedCount = 0;
+  mHasPendingEvent = PR_FALSE;
+
+  mCurrentParseEndTime = currentTime +
+    (mDynamicLowerValue ? mInteractiveParseTime : mPerfParseTime);
 
   return NS_OK;
 }

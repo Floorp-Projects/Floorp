@@ -4942,6 +4942,7 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
       MarkLineDirty(prevSibLine);
       // The new line will also need its textruns recomputed because of the
       // frame changes.
+      line->MarkDirty();
       line->SetInvalidateTextRuns(PR_TRUE);
     }
 
@@ -4950,6 +4951,7 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
   }
   else if (! mLines.empty()) {
     prevSiblingNextFrame = mLines.front()->mFirstChild;
+    mLines.front()->MarkDirty();
     mLines.front()->SetInvalidateTextRuns(PR_TRUE);
   }
 
@@ -5433,9 +5435,11 @@ found_frame:;
   
   if (!(aFlags & FRAMES_ARE_EMPTY)) {
     if (line != line_start) {
+      line.prev()->MarkDirty();
       line.prev()->SetInvalidateTextRuns(PR_TRUE);
     }
     else if (searchingOverflowList && !mLines.empty()) {
+      mLines.back()->MarkDirty();
       mLines.back()->SetInvalidateTextRuns(PR_TRUE);
     }
   }
@@ -5452,6 +5456,7 @@ found_frame:;
     NS_ASSERTION(line->Contains(aDeletedFrame), "frame not in line");
 
     if (!(aFlags & FRAMES_ARE_EMPTY)) {
+      line->MarkDirty();
       line->SetInvalidateTextRuns(PR_TRUE);
     }
 
@@ -5605,6 +5610,7 @@ found_frame:;
   }
 
   if (!(aFlags & FRAMES_ARE_EMPTY) && line.next() != line_end) {
+    line.next()->MarkDirty();
     line.next()->SetInvalidateTextRuns(PR_TRUE);
   }
 
