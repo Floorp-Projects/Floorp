@@ -11,6 +11,7 @@ HTTP(..) == canvas-1b.xhtml basic-1-ref.html
 == empty-1b.html empty-1-ref.html
 HTTP(..) == object-aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
 HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+HTTP(..) == offset-1.xhtml offset-1-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html

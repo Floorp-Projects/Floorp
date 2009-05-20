@@ -31,3 +31,6 @@ bug488951: Fix for YUV conversion for odd sized frames.  Cherrypicked from
 
 bug488951_fix_yuv: Additional fixes to YUV conversion that have not been
                    upstreamed yet.
+
+bug488951_fix_yuv_2: Additional fix to YUV conversion for odd height videos
+                     that has not been upstreamed yet.

@@ -53,6 +53,6 @@ patch -p3 < aspect_ratio.patch
 patch -p3 < bug493678.patch
 patch -p1 < bug493224.patch
 patch -p3 < seek_to_key_frame.patch
-
 patch -p3 < bug488951.patch
 patch -p3 < bug488951_yuv_fix.patch
+patch -p3 < bug488951_yuv_fix_2.patch
