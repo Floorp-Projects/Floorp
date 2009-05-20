@@ -469,7 +469,7 @@ namespace nanojit
     uint64_t LIns::imm64() const
 	{
         NanoAssert(isconstq());
-        return (uint64_t(i64.imm64_1) << 32) | uint64_t(i64.imm64_0);
+        return (uint64_t(i64.imm64_1) << 32) | uint32_t(i64.imm64_0);
 	}
 
     double LIns::imm64f() const
