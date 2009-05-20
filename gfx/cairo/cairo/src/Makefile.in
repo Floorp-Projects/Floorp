@@ -161,7 +161,7 @@ ifndef WINCE
 CSRCS	+=	cairo-win32-font.c
 else
 CSRCS	+=	cairo-ddraw-surface.c
-EXPORTS +=	cairo-ddraw.h
+EXPORTS_cairo +=	cairo-ddraw.h
 endif
 
 ifdef NS_PRINTING
@@ -170,9 +170,9 @@ else
 DEFINES += -DCAIRO_OMIT_WIN32_PRINTING
 endif
 
-EXPORTS += cairo-win32.h
+EXPORTS_cairo += cairo-win32.h
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
-EXPORTS += $(PDF_EXPORTS)
+EXPORTS_cairo += $(PDF_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -181,35 +181,35 @@ ifdef MOZ_OS2_HIGH_MEMORY
 DEFINES += -DOS2_HIGH_MEMORY
 endif
 CSRCS   += cairo-os2-surface.c
-EXPORTS += cairo-os2.h cairo-os2-private.h
+EXPORTS_cairo += cairo-os2.h cairo-os2-private.h
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
-EXPORTS += $(PDF_EXPORTS)
+EXPORTS_cairo += $(PDF_EXPORTS)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CSRCS   += cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-quartz-font.c
-EXPORTS += cairo-quartz.h cairo-quartz-image.h
+EXPORTS_cairo += cairo-quartz.h cairo-quartz-image.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS += cairo-beos-surface.cpp
-EXPORTS += cairo-beos.h
+EXPORTS_cairo += cairo-beos.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
-EXPORTS += $(PDF_EXPORTS) $(PS_EXPORTS)
+EXPORTS_cairo += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += cairo-qpainter-surface.cpp
-EXPORTS += cairo-qpainter.h
+EXPORTS_cairo += cairo-qpainter.h
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 
 ifdef BUILD_CAIRO_SVG
 CSRCS	+= cairo-svg-surface.c
-EXPORTS += cairo-svg.h
+EXPORTS_cairo += cairo-svg.h
 endif
 
 ifdef MOZ_X11
@@ -217,12 +217,12 @@ CSRCS   += cairo-xlib-surface.c \
 	   cairo-xlib-screen.c \
 	   cairo-xlib-visual.c \
 	   cairo-xlib-display.c
-EXPORTS += cairo-xlib.h cairo-xlib-xrender.h
+EXPORTS_cairo += cairo-xlib.h cairo-xlib-xrender.h
 endif
 
 ifdef MOZ_ENABLE_CAIRO_FT
 CSRCS   += cairo-ft-font.c cairo-type1-subset.c
-EXPORTS += cairo-ft.h
+EXPORTS_cairo += cairo-ft.h
 OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
 
