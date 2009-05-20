@@ -98,9 +98,8 @@ NS_GFX_(nscolor) NS_ComposeColors(nscolor aBG, nscolor aFG);
 // This version accepts 1 to 9 digits (missing digits are 0)
 NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResult);
 
-// Translate a color to a hex string and prepend a '#'.
-// The returned string is always 7 characters including a '#' character.
-NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult);
+// There is no function to translate a color to a hex string, because
+// the hex-string syntax does not support transparency.
 
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.

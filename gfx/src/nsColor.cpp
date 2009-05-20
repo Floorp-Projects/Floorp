@@ -201,14 +201,6 @@ NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
   return PR_TRUE;
 }
 
-NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult)
-{
-  char buf[10];
-  PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
-              NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
-  CopyASCIItoUTF16(buf, aResult);
-}
-
 NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 {
   if (!gColorTable) return PR_FALSE;
