@@ -6206,8 +6206,8 @@ js_DumpStackFrame(JSStackFrame *fp)
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
         if (sp && fp->slots) {
-            fprintf(stderr, "  slots: %p\n", fp->slots);
-            fprintf(stderr, "  sp:    %p = slots + %u\n", sp, (unsigned) (sp - fp->slots));
+            fprintf(stderr, "  slots: %p\n", (void *) fp->slots);
+            fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots));
             if (sp - fp->slots < 10000) { // sanity
                 for (jsval *p = fp->slots; p < sp; p++) {
                     fprintf(stderr, "    %p: ", (void *) p);
@@ -6219,7 +6219,7 @@ js_DumpStackFrame(JSStackFrame *fp)
             fprintf(stderr, "  sp:    %p\n", (void *) sp);
             fprintf(stderr, "  slots: %p\n", (void *) fp->slots);
         }
-        fprintf(stderr, "  argv:  %p (argc: %u)\n", fp->argv, (unsigned) fp->argc);
+        fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
         MaybeDumpObject("callobj", fp->callobj);
         MaybeDumpObject("argsobj", fp->argsobj);
         MaybeDumpObject("varobj", fp->varobj);
@@ -6261,12 +6261,12 @@ js_DumpStackFrame(JSStackFrame *fp)
         if (fp->sharpDepth)
             fprintf(stderr, "  sharpDepth: %u\n", (unsigned) fp->sharpDepth);
         if (fp->xmlNamespace)
-            fprintf(stderr, "  xmlNamespace: (JSObject *) %p\n", fp->xmlNamespace);
+            fprintf(stderr, "  xmlNamespace: (JSObject *) %p\n", (void *) fp->xmlNamespace);
 
         if (fp->dormantNext)
-            fprintf(stderr, "  dormantNext: (JSStackFrame *) %p\n", fp->dormantNext);
+            fprintf(stderr, "  dormantNext: (JSStackFrame *) %p\n", (void *) fp->dormantNext);
         if (fp->displaySave)
-            fprintf(stderr, "  displaySave: (JSStackFrame *) %p\n", fp->displaySave);
+            fprintf(stderr, "  displaySave: (JSStackFrame *) %p\n", (void *) fp->displaySave);
 
         fputc('\n', stderr);
     }
