@@ -147,6 +147,20 @@ public:
    */
   NS_IMETHOD ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinexY,
                            PRUint32 aUpdateFlags = 0) = 0;
+  /**
+   * Identical to ScrollByLines while also returning overscroll values.
+   * @param aNumLinesX number of lines to scroll the view horizontally
+   * @param aNumLinesY number of lines to scroll the view vertically
+   * @param aOverflowX returns the number of pixels that could not
+   *                   be scrolled due to scroll bounds.
+   * @param aOverflowY returns the number of pixels that could not
+   *                   be scrolled due to scroll bounds.
+   * @param aUpdateFlags indicate smooth or async scrolling
+   * @return error status
+   */
+  NS_IMETHOD ScrollByLinesWithOverflow(PRInt32 aNumLinesX, PRInt32 aNumLinexY,
+                                       PRInt32& aOverflowX, PRInt32& aOverflowY,
+                                       PRUint32 aUpdateFlags = 0) = 0;
 
   /**
    * Get the desired size of a page scroll in each dimension.
@@ -181,12 +195,17 @@ public:
    * Scroll the view left or right by aNumLinesX pixels.  Positive values move 
    * right.  Scroll the view up or down by aNumLinesY pixels.  Positive values
    * move down.  Prevents scrolling off the end of the view.
-   * @param aNumLinesX number of lines to scroll the view horizontally
-   * @param aNumLinesY number of lines to scroll the view vertically
-   * @param aUpdateFlags indicate smooth or async scrolling
+   * @param aNumPixelsX number of pixels to scroll the view horizontally
+   * @param aNumPixelsY number of pixels to scroll the view vertically
+   * @param aOverflowX returns the number of pixels that could not
+   *                   be scrolled due to scroll bounds.
+   * @param aOverflowY returns the number of pixels that could not
+   *                   be scrolled due to scroll bounds.
+   * @param aUpdateFlags indicate smooth, async, or immediate scrolling
    * @return error status
    */
   NS_IMETHOD ScrollByPixels(PRInt32 aNumPixelsX, PRInt32 aNumPixelsY,
+                            PRInt32& aOverflowX, PRInt32& aOverflowY,
                             PRUint32 aUpdateFlags = 0) = 0;
 
   /**

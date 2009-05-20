@@ -5221,13 +5221,18 @@ PRBool nsWindow::ProcessGestureMessage(WPARAM wParam, LPARAM lParam)
     event.button    = 0;
     event.time      = ::GetMessageTime();
 
+    PRBool endFeedback = PR_TRUE;
+    
     if (mGesture.PanDeltaToPixelScrollX(event)) {
       DispatchEvent(&event, status);
     }
+    mGesture.UpdatePanFeedbackX(mWnd, event, endFeedback);
+    
     if (mGesture.PanDeltaToPixelScrollY(event)) {
       DispatchEvent(&event, status);
     }
-
+    mGesture.UpdatePanFeedbackY(mWnd, event, endFeedback);
+    mGesture.PanFeedbackFinalize(mWnd, endFeedback);
     mGesture.CloseGestureInfoHandle((HGESTUREINFO)lParam);
 
     return PR_TRUE;

@@ -44,7 +44,6 @@
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 
-
 #if !defined(NTDDI_WIN7) ||  NTDDI_VERSION < NTDDI_WIN7
 
 DECLARE_HANDLE(HGESTUREINFO);
@@ -131,7 +130,7 @@ typedef struct tagGESTURENOTIFYSTRUCT {
 
 #define GC_TWOFINGERTAP                             0x00000001
 
-#define GC_ROLLOVER                                 0x00000001
+#define GC_PRESSANDTAP                              0x00000001
 
 /*
  * Gesture IDs
@@ -142,7 +141,7 @@ typedef struct tagGESTURENOTIFYSTRUCT {
 #define GID_PAN                         4
 #define GID_ROTATE                      5
 #define GID_TWOFINGERTAP                6
-#define GID_ROLLOVER                    7
+#define GID_PRESSANDTAP                 7
 
 // Maximum number of gestures that can be included
 // in a single call to SetGestureConfig / GetGestureConfig
@@ -204,6 +203,9 @@ public:
   PRBool ProcessPanMessage(HWND hWnd, WPARAM wParam, LPARAM lParam);
   PRBool PanDeltaToPixelScrollX(nsMouseScrollEvent& evt);
   PRBool PanDeltaToPixelScrollY(nsMouseScrollEvent& evt);
+  void UpdatePanFeedbackX(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback);
+  void UpdatePanFeedbackY(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback);
+  void PanFeedbackFinalize(HWND hWnd, PRBool endFeedback);
   
 public:
   // Helpers
@@ -212,6 +214,9 @@ public:
   PRBool GetGestureExtraArgs(HGESTUREINFO hGestureInfo, UINT cbExtraArgs, PBYTE pExtraArgs);
   PRBool SetGestureConfig(HWND hWnd, UINT cIDs, PGESTURECONFIG pGestureConfig);
   PRBool GetGestureConfig(HWND hWnd, DWORD dwFlags, PUINT pcIDs, PGESTURECONFIG pGestureConfig);
+  PRBool BeginPanningFeedback(HWND hWnd);
+  PRBool EndPanningFeedback(HWND hWnd);
+  PRBool UpdatePanningFeedback(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia);
 
 protected:
 
@@ -222,6 +227,9 @@ private:
   typedef BOOL (WINAPI * GetGestureExtraArgsPtr)(HGESTUREINFO hGestureInfo, UINT cbExtraArgs, PBYTE pExtraArgs);
   typedef BOOL (WINAPI * SetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
   typedef BOOL (WINAPI * GetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, DWORD dwFlags, PUINT pcIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
+  typedef BOOL (WINAPI * BeginPanningFeedbackPtr)(HWND hWnd);
+  typedef BOOL (WINAPI * EndPanningFeedbackPtr)(HWND hWnd, BOOL fAnimateBack);
+  typedef BOOL (WINAPI * UpdatePanningFeedbackPtr)(HWND hWnd, LONG offsetX, LONG offsetY, BOOL fInInertia);
 
   // Static function pointers
   static GetGestureInfoPtr getGestureInfo;
@@ -229,6 +237,9 @@ private:
   static GetGestureExtraArgsPtr getGestureExtraArgs;
   static SetGestureConfigPtr setGestureConfig;
   static GetGestureConfigPtr getGestureConfig;
+  static BeginPanningFeedbackPtr beginPanningFeedback;
+  static EndPanningFeedbackPtr endPanningFeedback;
+  static UpdatePanningFeedbackPtr updatePanningFeedback;
 
   // Delay load info 
   PRBool InitLibrary();
@@ -236,12 +247,18 @@ private:
 
   static HMODULE sLibraryHandle;
   static const PRUnichar kGestureLibraryName[];
+  static const PRUnichar kThemeLibraryName[];
 
-  PRBool mAvailable;
-  
-  // Pan state
+  // Pan and feedback state
   nsPointWin mPanIntermediate;
+  nsPointWin mPanRefPoint;
   nsPointWin mPixelScrollDelta;
+  PRPackedBool mPanActive;
+  PRPackedBool mFeedbackActive;
+  PRPackedBool mXAxisFeedback;
+  PRPackedBool mYAxisFeedback;
+  PRPackedBool mPanInertiaActive;
+  nsPointWin mPixelScrollOverflow;
 
   // Zoom state
   double mZoomIntermediate;

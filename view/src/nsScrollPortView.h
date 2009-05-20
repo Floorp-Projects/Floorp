@@ -73,11 +73,15 @@ public:
   NS_IMETHOD  GetLineHeight(nscoord *aHeight);
   NS_IMETHOD  ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY,
                             PRUint32 aUpdateFlags = 0);
+  NS_IMETHOD  ScrollByLinesWithOverflow(PRInt32 aNumLinesX, PRInt32 aNumLinesY,
+                                        PRInt32& aOverflowX, PRInt32& aOverflowY,
+                                        PRUint32 aUpdateFlags = 0);
   NS_IMETHOD  GetPageScrollDistances(nsSize *aDistances);
   NS_IMETHOD  ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY,
                             PRUint32 aUpdateFlags = 0);
   NS_IMETHOD  ScrollByWhole(PRBool aTop, PRUint32 aUpdateFlags = 0);
   NS_IMETHOD  ScrollByPixels(PRInt32 aNumPixelsX, PRInt32 aNumPixelsY,
+                             PRInt32& aOverflowX, PRInt32& aOverflowY,
                              PRUint32 aUpdateFlags = 0);
   NS_IMETHOD  CanScroll(PRBool aHorizontal, PRBool aForward, PRBool &aResult);
 
@@ -107,6 +111,7 @@ protected:
   //private
   void Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsIntPoint aPixDelta, nscoord aP2A);
   PRBool CannotBitBlt(nsView* aScrolledView);
+  nsresult CalcScrollOverflow(nscoord aX, nscoord aY, PRInt32& aOverflowX, PRInt32& aOverflowY);
 
   nscoord             mOffsetX, mOffsetY;
   nscoord             mDestinationX, mDestinationY;

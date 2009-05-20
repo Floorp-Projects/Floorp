@@ -1061,21 +1061,24 @@ public:
                             // When kHasPixels is set, the event is guaranteed to
                             // be followed up by an event that contains pixel
                             // scrolling information.
-    kNoLines =      1 << 4  // Marks pixel scroll events that will not be
+    kNoLines =      1 << 4, // Marks pixel scroll events that will not be
                             // followed by a line scroll events. EventStateManager
                             // will compute the appropriate height/width based on
                             // view lineHeight and generate line scroll events
                             // as needed.
+    kNoDefer =      1 << 5  // For scrollable views, indicates scroll should not
+                            // occur asynchronously.
   };
 
   nsMouseScrollEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
-      scrollFlags(0), delta(0)
+      scrollFlags(0), delta(0), scrollOverflow(0)
   {
   }
 
   PRInt32               scrollFlags;
   PRInt32               delta;
+  PRInt32               scrollOverflow;
 };
 
 class nsQueryContentEvent : public nsGUIEvent
