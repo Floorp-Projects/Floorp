@@ -211,16 +211,36 @@ is(iframe.getAttribute("marginwidth"), "foobar",
 var bd = document.createElement("body");
 bd.setAttribute("bgcolor", "red");
 is(bd.getAttribute("bgcolor"), "red", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "red", ".bgColor didn't return the right value!");
+
 bd.setAttribute("bgcolor", "  red  ");
-todo(bd.getAttribute("bgcolor") == "  red  ", "Bgcolor attribute didn't store the original value");
-td.setAttribute("colspan", "100k");
-is(td.getAttribute("colspan"), "100k", "Colspan attribute didn't store the original value");
-bd.setAttribute("bgcolor", "red");
-is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
-bd.setAttribute("bgcolor", "  red  ");
-is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
+todo_is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
+todo_is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
+
 bd.setAttribute("bgcolor", "#ff0000");
+is(bd.getAttribute("bgcolor"), "#ff0000", "Bgcolor attribute didn't store the original value");
 is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
+
+bd.setAttribute("bgcolor", "  #ff0000  ");
+todo_is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
+todo_is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
+
+// same test again setting the prop
+bd.bgColor = "red";
+is(bd.getAttribute("bgcolor"), "red", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "red", ".bgColor didn't return the right value!");
+
+bd.bgColor = "  red  ";
+todo_is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
+todo_is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
+
+bd.bgColor = "#ff0000";
+is(bd.getAttribute("bgcolor"), "#ff0000", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
+
+bd.bgColor = "  #ff0000  ";
+todo_is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
+todo_is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
 
 var video = document.createElement("video");
 video.setAttribute("playbackrate", "1");
