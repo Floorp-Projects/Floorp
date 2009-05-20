@@ -93,6 +93,7 @@
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIChromeRegistry.h"
+#include "nsPrintfCString.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -1214,7 +1215,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     nsCAutoString spec;
     if (NS_FAILED(aURI->GetAsciiSpec(spec)))
         return NS_ERROR_FAILURE;
-    JS_ReportError(cx, "Access to '%s' from script denied", spec.get());
+    SetPendingException(cx, nsPrintfCString("Access to '%s' from script denied", spec.get()).get());
     return NS_ERROR_DOM_BAD_URI;
 }
 
