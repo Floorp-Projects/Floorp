@@ -6772,15 +6772,14 @@ nsGlobalWindow::GetDocument(nsIDOMDocumentView ** aDocumentView)
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsGlobalWindow::GetSessionStorage(nsIDOMStorageObsolete ** aSessionStorage)
+nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
 {
   FORWARD_TO_INNER(GetSessionStorage, (aSessionStorage), NS_ERROR_UNEXPECTED);
 
   *aSessionStorage = nsnull;
 
   nsIPrincipal *principal = GetPrincipal();
-  nsCOMPtr<nsIDocShell_MOZILLA_1_9_1> docShell =
-    do_QueryInterface(GetDocShell());
+  nsIDocShell* docShell = GetDocShell();
 
   if (!principal || !docShell) {
     return NS_OK;
@@ -6986,10 +6985,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
     principal = GetPrincipal();
     if (!aData) {
-      nsCOMPtr<nsIDocShell_MOZILLA_1_9_1> docShell =
-        do_QueryInterface(GetDocShell());
+      nsIDocShell* docShell = GetDocShell();
       if (principal && docShell) {
-        nsCOMPtr<nsIDOMStorageObsolete> storage;
+        nsCOMPtr<nsIDOMStorage> storage;
         docShell->GetSessionStorageForPrincipal(principal,
                                                 PR_FALSE,
                                                 getter_AddRefs(storage));
@@ -7083,7 +7081,7 @@ FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
 {
   nsGlobalWindow *win = static_cast<nsGlobalWindow *>(userArg);
 
-  nsCOMPtr<nsIDOMStorageObsolete> storage;
+  nsCOMPtr<nsIDOMStorage> storage;
   win->GetSessionStorage(getter_AddRefs(storage));
 
   if (storage) {
