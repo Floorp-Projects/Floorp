@@ -2260,15 +2260,20 @@
             if (dt.mozUserCancelled || dt.dropEffect != "none")
               return;
 
-            // Deatch happens only if the tab was dropped below the tabbar.
-            // That is applied even if it was dropped outside the browser
-            // window.
-            var bo = this.mTabContainer.mTabstrip.boxObject;
-            var tabbarEndScreenY = bo.screenY + bo.height;
-            if (aEvent.screenY > tabbarEndScreenY) {
-              var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-              this.replaceTabWithWindow(draggedTab);
+            // Disable detach within the browser toolbox
+            var eX = aEvent.screenX;
+            var wX = window.screenX;
+            // check if the drop point is horizontally within the window
+            if (eX > wX && eX < (wX + window.outerWidth)) {
+              var bo = this.mTabContainer.mTabstrip.boxObject;
+              var tabbarEndScreenY = bo.screenY + bo.height;
+              var eY = aEvent.screenY;
+              if (eY < tabbarEndScreenY && eY > window.screenY)
+                return;
             }
+
+            var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
+            this.replaceTabWithWindow(draggedTab);
             aEvent.stopPropagation();
           ]]>
         </body>
