@@ -1927,7 +1927,22 @@ skip:
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->callee) {
+                /*
+                 * We might return from trace with a different function object, but it still
+                 * has to be the same function (FIXME: bug 471425, eliminate fp->callee).
+                 */
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
+                JS_ASSERT(HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(fp->argv[-2])));
+                JS_ASSERT(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2])) ==
+                          GET_FUNCTION_PRIVATE(cx, fp->callee));
+                fp->callee = JSVAL_TO_OBJECT(fp->argv[-2]);
+                /*
+                 * SynthesizeFrame sets scopeChain to NULL, because we can't calculate the
+                 * correct scope chain until we have the final callee. Calculate the real
+                 * scope object here.
+                 */
+                if (!fp->scopeChain)
+                    fp->scopeChain = OBJ_GET_PARENT(cx, fp->callee);
                 fp->thisp = JSVAL_TO_OBJECT(fp->argv[-1]);
                 if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
                     fp->flags |= JSFRAME_COMPUTED_THIS;
@@ -3534,7 +3549,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.argsobj = NULL;
     newifp->frame.varobj = NULL;
     newifp->frame.script = script;
-    newifp->frame.callee = fi.callee;
+    newifp->frame.callee = fi.callee; // Roll with a potentially stale callee for now.
     newifp->frame.fun = fun;
 
     bool constructing = (fi.s.argc & 0x8000) != 0;
@@ -3563,7 +3578,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.rval = JSVAL_VOID;
     newifp->frame.down = fp;
     newifp->frame.annotation = NULL;
-    newifp->frame.scopeChain = OBJ_GET_PARENT(cx, fi.callee);
+    newifp->frame.scopeChain = NULL; // will be updated in FlushNativeStackFrame
     newifp->frame.sharpDepth = 0;
     newifp->frame.sharpArray = NULL;
     newifp->frame.flags = constructing ? JSFRAME_CONSTRUCTING : 0;
@@ -4592,12 +4607,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                ti->nGlobalTypes() - innermost->numGlobalSlots);
     }
 
-    /* write back interned globals */
-    double* global = (double*)(&state + 1);
-    FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, global);
-    JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(JS_GetGlobalForObject(cx, cx->fp->scopeChain))] ==
-              0xdeadbeefdeadbeefLL);
-
     /* write back native stack frame */
 #ifdef DEBUG
     int slots =
@@ -4609,6 +4618,12 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 
     if (innermost->nativeCalleeWord)
         SynthesizeSlowNativeFrame(cx, innermost);
+
+    /* write back interned globals */
+    double* global = (double*)(&state + 1);
+    FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, global);
+    JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(JS_GetGlobalForObject(cx, cx->fp->scopeChain))] ==
+              0xdeadbeefdeadbeefLL);
 
     cx->nativeVp = NULL;
 

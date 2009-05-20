@@ -6038,7 +6038,7 @@ dumpValue(jsval val)
 JS_FRIEND_API(void)
 js_DumpValue(jsval val)
 {
-    fprintf(stderr, "jsval %d (%p) = ", (int) val, (void *) val);
+    fprintf(stderr, "jsval %p = ", (void *) val);
     dumpValue(val);
     fputc('\n', stderr);
 }
@@ -6046,7 +6046,7 @@ js_DumpValue(jsval val)
 JS_FRIEND_API(void)
 js_DumpId(jsid id)
 {
-    fprintf(stderr, "id %d (%p) = ", (int) id, (void *) id);
+    fprintf(stderr, "jsid %p = ", (void *) id);
     dumpValue(ID_TO_VALUE(id));
     fputc('\n', stderr);
 }
@@ -6157,6 +6157,119 @@ js_DumpObject(JSObject *obj)
         fputc('\n', stderr);
     }
     fputc('\n', stderr);
+}
+
+static void
+MaybeDumpObject(const char *name, JSObject *obj)
+{
+    if (obj) {
+        fprintf(stderr, "  %s: ", name);
+        dumpValue(OBJECT_TO_JSVAL(obj));
+        fputc('\n', stderr);
+    }
+}
+
+JS_FRIEND_API(void)
+js_DumpStackFrame(JSStackFrame *fp)
+{
+    jsval *sp = NULL;
+
+    for (; fp; fp = fp->down) {
+        fprintf(stderr, "JSStackFrame at %p\n", (void *) fp);
+        if (fp->callee)
+            dumpValue(OBJECT_TO_JSVAL(fp->callee));
+        else
+            fprintf(stderr, "global frame, no callee");
+        fputc('\n', stderr);
+
+        if (fp->script)
+            fprintf(stderr, "file %s line %u\n", fp->script->filename, (unsigned) fp->script->lineno);
+
+        if (fp->regs) {
+            if (!fp->regs->pc) {
+                fprintf(stderr, "*** regs && !regs->pc, skipping frame\n\n");
+                continue;
+            }
+            if (!fp->script) {
+                fprintf(stderr, "*** regs && !script, skipping frame\n\n");
+                continue;
+            }
+            jsbytecode *pc = fp->regs->pc;
+            sp = fp->regs->sp;
+            if (fp->imacpc) {
+                fprintf(stderr, "  pc in imacro at %p\n  called from ", pc);
+                pc = fp->imacpc;
+            } else {
+                fprintf(stderr, "  ");
+            }
+            fprintf(stderr, "pc = %p\n", pc);
+            fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
+        }
+        if (sp && fp->slots) {
+            fprintf(stderr, "  slots: %p\n", fp->slots);
+            fprintf(stderr, "  sp:    %p = slots + %u\n", sp, (unsigned) (sp - fp->slots));
+            if (sp - fp->slots < 10000) { // sanity
+                for (jsval *p = fp->slots; p < sp; p++) {
+                    fprintf(stderr, "    %p: ", (void *) p);
+                    dumpValue(*p);
+                    fputc('\n', stderr);
+                }
+            }
+        } else {
+            fprintf(stderr, "  sp:    %p\n", (void *) sp);
+            fprintf(stderr, "  slots: %p\n", (void *) fp->slots);
+        }
+        fprintf(stderr, "  argv:  %p (argc: %u)\n", fp->argv, (unsigned) fp->argc);
+        MaybeDumpObject("callobj", fp->callobj);
+        MaybeDumpObject("argsobj", fp->argsobj);
+        MaybeDumpObject("varobj", fp->varobj);
+        MaybeDumpObject("this", fp->thisp);
+        fprintf(stderr, "  rval: ");
+        dumpValue(fp->rval);
+        fputc('\n', stderr);
+
+        fprintf(stderr, "  flags:");
+        if (fp->flags == 0)
+            fprintf(stderr, " none");
+        if (fp->flags & JSFRAME_CONSTRUCTING)
+            fprintf(stderr, " constructing");
+        if (fp->flags & JSFRAME_COMPUTED_THIS)
+            fprintf(stderr, " computed_this");
+        if (fp->flags & JSFRAME_ASSIGNING)
+            fprintf(stderr, " assigning");
+        if (fp->flags & JSFRAME_DEBUGGER)
+            fprintf(stderr, " debugger");
+        if (fp->flags & JSFRAME_EVAL)
+            fprintf(stderr, " eval");
+        if (fp->flags & JSFRAME_ROOTED_ARGV)
+            fprintf(stderr, " rooted_argv");
+        if (fp->flags & JSFRAME_YIELDING)
+            fprintf(stderr, " yielding");
+        if (fp->flags & JSFRAME_ITERATOR)
+            fprintf(stderr, " iterator");
+        if (fp->flags & JSFRAME_GENERATOR)
+            fprintf(stderr, " generator");
+        if ((fp->flags >> JSFRAME_OVERRIDE_SHIFT) & JS_BITMASK(JSFRAME_OVERRIDE_BITS))
+            fprintf(stderr, " override_bits(0x%x)", (fp->flags >> JSFRAME_OVERRIDE_SHIFT) & JS_BITMASK(JSFRAME_OVERRIDE_BITS));
+        fputc('\n', stderr);
+
+        if (fp->scopeChain)
+            fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->scopeChain);
+        if (fp->blockChain)
+            fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain);
+
+        if (fp->sharpDepth)
+            fprintf(stderr, "  sharpDepth: %u\n", (unsigned) fp->sharpDepth);
+        if (fp->xmlNamespace)
+            fprintf(stderr, "  xmlNamespace: (JSObject *) %p\n", fp->xmlNamespace);
+
+        if (fp->dormantNext)
+            fprintf(stderr, "  dormantNext: (JSStackFrame *) %p\n", fp->dormantNext);
+        if (fp->displaySave)
+            fprintf(stderr, "  displaySave: (JSStackFrame *) %p\n", fp->displaySave);
+
+        fputc('\n', stderr);
+    }
 }
 
 #endif
