@@ -1899,8 +1899,6 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                           aURL, aLineNo);
 
   if (!fun) {
-    // Set aside the frame chain on cx while reporting, since it has
-    // nothing to do with the error we just hit.
     ReportPendingException();
     return NS_ERROR_ILLEGAL_VALUE;
   }
