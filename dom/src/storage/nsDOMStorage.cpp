@@ -516,10 +516,17 @@ NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (!storage)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(storage);
-  *aResult = storage;
+  return storage->QueryInterface(aIID, aResult);
+}
 
-  return NS_OK;
+NS_IMETHODIMP
+NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  nsDOMStorage2* storage = new nsDOMStorage2();
+  if (!storage)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return storage->QueryInterface(aIID, aResult);
 }
 
 nsDOMStorage::nsDOMStorage()
@@ -533,6 +540,20 @@ nsDOMStorage::nsDOMStorage()
     nsDOMStorageManager::gStorageManager->AddToStoragesHash(this);
 }
 
+static PLDHashOperator
+CopyStorageItems(nsSessionStorageEntry* aEntry, void* userArg)
+{
+  nsDOMStorage* newstorage = static_cast<nsDOMStorage*>(userArg);
+
+  newstorage->SetItem(aEntry->GetKey(), aEntry->mItem->GetValueInternal());
+
+  if (aEntry->mItem->IsSecure()) {
+    newstorage->SetSecure(aEntry->GetKey(), PR_TRUE);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
   : mUseDB(PR_FALSE) // Any clone is not using the database
   , mSessionOnly(PR_TRUE)
@@ -544,6 +565,8 @@ nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
 #endif
 {
   mItems.Init(8);
+  aThat.mItems.EnumerateEntries(CopyStorageItems, this);
+
   if (nsDOMStorageManager::gStorageManager)
     nsDOMStorageManager::gStorageManager->AddToStoragesHash(this);
 }
@@ -552,6 +575,29 @@ nsDOMStorage::~nsDOMStorage()
 {
   if (nsDOMStorageManager::gStorageManager)
     nsDOMStorageManager::gStorageManager->RemoveFromStoragesHash(this);
+}
+
+nsresult
+nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> uri;
+  rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
+  if (!innerUri)
+    return NS_ERROR_UNEXPECTED;
+
+  innerUri->GetAsciiHost(mDomain);
+
+#ifdef MOZ_STORAGE
+  mUseDB = PR_FALSE;
+  mScopeDBKey.Truncate();
+  mQuotaDomainDBKey.Truncate();
+#endif
+  return NS_OK;
 }
 
 nsresult
@@ -611,20 +657,6 @@ nsDOMStorage::InitAsGlobalStorage(const nsACString &aDomainDemanded)
     mScopeDBKey.AppendLiteral(":");
 
   nsDOMStorageDBWrapper::CreateQuotaDomainDBKey(aDomainDemanded, PR_TRUE, mQuotaDomainDBKey);
-#endif
-  return NS_OK;
-}
-
-nsresult
-nsDOMStorage::InitAsSessionStorage(nsIURI* aURI)
-{
-  nsCAutoString domain;
-  aURI->GetAsciiHost(domain);
-  mDomain = domain;
-#ifdef MOZ_STORAGE
-  mUseDB = PR_FALSE;
-  mScopeDBKey.Truncate();
-  mQuotaDomainDBKey.Truncate();
 #endif
   return NS_OK;
 }
@@ -1240,41 +1272,11 @@ nsDOMStorage::ClearAll()
   mItemsCached = PR_FALSE;
 }
 
-static PLDHashOperator
-CopyStorageItems(nsSessionStorageEntry* aEntry, void* userArg)
-{
-  nsDOMStorage* newstorage = static_cast<nsDOMStorage*>(userArg);
-
-  newstorage->SetItem(aEntry->GetKey(), aEntry->mItem->GetValueInternal());
-
-  if (aEntry->mItem->IsSecure()) {
-    newstorage->SetSecure(aEntry->GetKey(), PR_TRUE);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-already_AddRefed<nsIDOMStorageObsolete>
+already_AddRefed<nsIDOMStorage>
 nsDOMStorage::Clone()
 {
-  if (UseDB()) {
-    NS_ERROR("Uh, don't clone a global or local storage object.");
-
-    return nsnull;
-  }
-
-  nsDOMStorage* storage = new nsDOMStorage(*this);
-  if (!storage)
-    return nsnull;
-
-  mItems.EnumerateEntries(CopyStorageItems, storage);
-
-  NS_ADDREF(storage);
-
-  if (nsDOMStorageManager::gStorageManager)
-    nsDOMStorageManager::gStorageManager->AddToStoragesHash(storage);
-
-  return storage;
+  NS_ASSERTION(PR_FALSE, "Old DOMStorage doesn't implement cloning");
+  return nsnull;
 }
 
 struct KeysArrayBuilderStruct
@@ -1309,10 +1311,10 @@ nsDOMStorage::GetKeys()
   return keystruct.keys;
 }
 
-const nsCString &
-nsDOMStorage::Domain()
+nsIPrincipal*
+nsDOMStorage::Principal()
 {
-  return mDomain;
+  return nsnull;
 }
 
 PRBool
@@ -1387,6 +1389,27 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage2)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Storage)
 NS_INTERFACE_MAP_END
 
+nsDOMStorage2::nsDOMStorage2()
+{
+}
+
+nsDOMStorage2::nsDOMStorage2(nsDOMStorage2& aThat)
+{
+  mStorage = new nsDOMStorage(*aThat.mStorage.get());
+  mPrincipal = aThat.mPrincipal;
+}
+
+nsresult
+nsDOMStorage2::InitAsSessionStorage(nsIPrincipal *aPrincipal)
+{
+  mStorage = new nsDOMStorage();
+  if (!mStorage)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mPrincipal = aPrincipal;
+  return mStorage->InitAsSessionStorage(aPrincipal);
+}
+
 nsresult
 nsDOMStorage2::InitAsLocalStorage(nsIPrincipal *aPrincipal)
 {
@@ -1405,23 +1428,16 @@ nsDOMStorage2::InitAsGlobalStorage(const nsACString &aDomainDemanded)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-nsDOMStorage2::InitAsSessionStorage(nsIURI* aURI)
-{
-  mStorage = new nsDOMStorage();
-  if (!mStorage)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return mStorage->InitAsSessionStorage(aURI);
-}
-
-already_AddRefed<nsIDOMStorageObsolete>
+already_AddRefed<nsIDOMStorage>
 nsDOMStorage2::Clone()
 {
-  // XXX: this will need to be fixed before sessionStorage is moved
-  // to nsIDOMStorage.
-  NS_ASSERTION(PR_FALSE, "Cannot clone nsDOMStorage2");
-  return nsnull;
+  nsDOMStorage2* storage = new nsDOMStorage2(*this);
+  if (!storage)
+    return nsnull;
+
+  NS_ADDREF(storage);
+
+  return storage;
 }
 
 nsTArray<nsString> *
@@ -1430,10 +1446,10 @@ nsDOMStorage2::GetKeys()
   return mStorage->GetKeys();
 }
 
-const nsCString &
-nsDOMStorage2::Domain()
+nsIPrincipal*
+nsDOMStorage2::Principal()
 {
-  return mStorage->Domain();
+  return mPrincipal;
 }
 
 PRBool
