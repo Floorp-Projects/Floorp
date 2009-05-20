@@ -880,14 +880,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // We might as well allow zero-width floats to be placed, though.
           availableWidth = 0;
         }
-        // XXXldb What is this test supposed to be?
-        if (!NS_SUBTREE_DIRTY(aFrame)) {
-          // incremental reflow of child
-          placedFloat = InitFloat(placeholder, availableWidth, aReflowStatus);
-        }
-        else {
-          placedFloat = AddFloat(placeholder, availableWidth, aReflowStatus);
-        }
+        placedFloat = AddFloat(placeholder, availableWidth, aReflowStatus);
         NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
                        GetFirstLetterStyleOK()),
                     "FirstLetterStyle set on line with floating first letter");
