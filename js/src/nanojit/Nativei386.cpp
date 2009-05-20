@@ -566,8 +566,8 @@ namespace nanojit
             } else {
                 rb = findRegFor(base, GpRegs);
             }
-            STi(rb, dr+4, value->imm64_1());
-            STi(rb, dr,   value->imm64_0());
+            STi(rb, dr+4, value->imm64hi());
+            STi(rb, dr,   value->imm64lo());
             return;
 		}
 
@@ -1172,8 +1172,8 @@ namespace nanojit
 		freeRsrcOf(ins, false);
 		if (d)
 		{
-            STi(FP,d+4,ins->imm64_1());
-            STi(FP,d,  ins->imm64_0());
+            STi(FP,d+4,ins->imm64hi());
+            STi(FP,d,  ins->imm64lo());
 		}
 	}
 	

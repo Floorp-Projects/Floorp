@@ -219,11 +219,11 @@ namespace nanojit
 		};
 
         // Used for LIR_quad.
-        struct i64_type
-		{
-            int32_t     imm64_0;
-            int32_t     imm64_1;
-		};
+        union i64_type
+        {
+            uint64_t    imm64;
+            double      d;
+        };
 
         #undef _sign_int
 		
@@ -249,9 +249,9 @@ namespace nanojit
         inline uint8_t imm8()     const { return c.imm8a; }
         inline uint8_t imm8b()    const { return c.imm8b; }
         inline int32_t imm32()    const { NanoAssert(isconst());  return i.imm32; }
-        inline int32_t imm64_0()  const { NanoAssert(isconstq()); return i64.imm64_0; }
-        inline int32_t imm64_1()  const { NanoAssert(isconstq()); return i64.imm64_1; }
         uint64_t       imm64()    const;
+        uint32_t       imm64lo()  const { return uint32_t(imm64()); }
+        uint32_t       imm64hi()  const { return uint32_t(imm64() >> 32); }
         double         imm64f()   const;
         Reservation*   resv()           { return &firstWord; }
         void*	payload() const;
