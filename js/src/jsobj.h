@@ -861,6 +861,7 @@ JS_FRIEND_API(void) js_DumpAtom(JSAtom *atom);
 JS_FRIEND_API(void) js_DumpValue(jsval val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
+JS_FRIEND_API(void) js_DumpStackFrame(JSStackFrame *fp);
 #endif
 
 JS_END_EXTERN_C
