@@ -43,12 +43,6 @@
 #include "nsChannelReader.h"
 #include "nsIScriptSecurityManager.h"
 
-// The minimum size buffered byte range inside which we'll consider
-// trying a bounded-seek. When we seek, we first try to seek inside all
-// buffered ranges larger than this, and if they all fail we fall back to
-// an unbounded seek over the whole media. 64K is approximately 16 pages.
-#define MIN_BOUNDED_SEEK_SIZE (64 * 1024)
-
 OggPlayErrorCode nsChannelReader::initialise(int aBlock)
 {
   return E_OGGPLAY_OK;
@@ -137,70 +131,6 @@ static ogg_int64_t oggplay_channel_reader_duration(struct _OggPlayReader *aReade
   return me->duration();
 }
 
-class ByteRange {
-public:
-  ByteRange() : mStart(-1), mEnd(-1) {}
-  ByteRange(PRInt64 aStart, PRInt64 aEnd) : mStart(aStart), mEnd(aEnd) {}
-  PRInt64 mStart, mEnd;
-};
-
-static void GetBufferedBytes(nsMediaStream* aStream, nsTArray<ByteRange>& aRanges)
-{
-  PRInt64 startOffset = 0;
-  while (PR_TRUE) {
-    PRInt64 endOffset = aStream->GetCachedDataEnd(startOffset);
-    if (endOffset == startOffset) {
-      // Uncached at startOffset.
-      endOffset = aStream->GetNextCachedData(startOffset);
-      if (endOffset == -1) {
-        // Uncached at startOffset until endOffset of stream, or we're at
-        // the end of stream.
-        break;
-      }
-    } else {
-      // Bytes [startOffset..endOffset] are cached.
-      PRInt64 cachedLength = endOffset - startOffset;
-      // Only bother trying to seek inside ranges greater than
-      // MIN_BOUNDED_SEEK_SIZE, so that the bounded seek is unlikely to
-      // read outside of the range when finding Ogg page boundaries.
-      if (cachedLength > MIN_BOUNDED_SEEK_SIZE) {
-        aRanges.AppendElement(ByteRange(startOffset, endOffset));
-      }
-    }
-    startOffset = endOffset;
-  }
-}
-
-OggPlayErrorCode oggplay_channel_reader_seek(struct _OggPlayReader *me,
-                                             OGGZ *oggz, 
-                                             ogg_int64_t aTargetMs)
-{
-  nsChannelReader* reader = static_cast<nsChannelReader*>(me);
-  nsMediaStream* stream = reader->Stream(); 
-  nsAutoTArray<ByteRange, 16> ranges;
-  stream->Pin();
-  GetBufferedBytes(stream, ranges);
-  PRInt64 rv = -1;
-  for (PRUint32 i = 0; rv == -1 && i < ranges.Length(); i++) {
-    rv = oggz_bounded_seek_set(oggz,
-                               aTargetMs,
-                               ranges[i].mStart,
-                               ranges[i].mEnd);
-  }
-  stream->Unpin();
-
-  if (rv == -1) {
-    // Could not seek in a buffered range, fall back to seeking over the
-    // entire media.
-    rv = oggz_bounded_seek_set(oggz,
-                               aTargetMs,
-                               0,
-                               stream->GetLength());
-  }
-  return (rv == -1) ? E_OGGPLAY_CANT_SEEK : E_OGGPLAY_OK;
-  
-}
-
 nsresult nsChannelReader::Init(nsMediaDecoder* aDecoder, nsIURI* aURI,
                                nsIChannel* aChannel,
                                nsIStreamListener** aStreamListener)
@@ -221,7 +151,7 @@ nsChannelReader::nsChannelReader() :
   OggPlayReader* reader = this;
   reader->initialise = &oggplay_channel_reader_initialise;
   reader->destroy = &oggplay_channel_reader_destroy;
-  reader->seek = &oggplay_channel_reader_seek;
+  reader->seek = 0;
   reader->io_read  = &oggplay_channel_reader_io_read;
   reader->io_seek  = &oggplay_channel_reader_io_seek;
   reader->io_tell  = &oggplay_channel_reader_io_tell;
