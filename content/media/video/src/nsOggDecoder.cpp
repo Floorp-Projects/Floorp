@@ -1514,8 +1514,10 @@ nsresult nsOggDecodeStateMachine::Run()
           frame = NextFrame();
         } while (frame && frame->mDecodedFrameTime < seekTarget);
 
-        if (mState == DECODER_STATE_SHUTDOWN)
+        if (mState == DECODER_STATE_SHUTDOWN) {
+          delete frame;
           continue;
+        }
 
         NS_ASSERTION(frame != nsnull, "No frame after seek!");
         if (frame) {
