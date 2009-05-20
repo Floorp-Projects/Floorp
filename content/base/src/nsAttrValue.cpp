@@ -387,8 +387,15 @@ nsAttrValue::ToString(nsAString& aResult) const
     {
       nscolor v;
       GetColorValue(v);
-      NS_RGBToHex(v, aResult);
-
+      if (NS_GET_A(v) == 255) {
+        char buf[10];
+        PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
+                    NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
+        CopyASCIItoUTF16(buf, aResult);
+      } else {
+        NS_NOTREACHED("non-opaque color attribute cannot be stringified");
+        aResult.Truncate();
+      }
       break;
     }
     case eEnum:
