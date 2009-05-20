@@ -521,22 +521,6 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
   }
 }
 
-PRBool
-nsBlockReflowState::InitFloat(nsLineLayout&       aLineLayout,
-                              nsPlaceholderFrame* aPlaceholder,
-                              nscoord             aAvailableWidth,
-                              nsReflowStatus&     aReflowStatus)
-{
-  // Set the geometric parent of the float
-  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
-  floatFrame->SetParent(mBlock);
-
-  // Then add the float to the current line and place it when
-  // appropriate
-  return AddFloat(aLineLayout, aPlaceholder, PR_TRUE,
-                  aAvailableWidth, aReflowStatus);
-}
-
 // This is called by the line layout's AddFloat method when a
 // place-holder frame is reflowed in a line. If the float is a
 // left-most child (it's x coordinate is at the line's left margin)
@@ -550,11 +534,13 @@ nsBlockReflowState::InitFloat(nsLineLayout&       aLineLayout,
 PRBool
 nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
                              nsPlaceholderFrame* aPlaceholder,
-                             PRBool              aInitialReflow,
                              nscoord             aAvailableWidth,
                              nsReflowStatus&     aReflowStatus)
 {
   NS_PRECONDITION(mBlock->end_lines() != mCurrentLine, "null ptr");
+
+  // Set the geometric parent of the float
+  aPlaceholder->GetOutOfFlowFrame()->SetParent(mBlock);
 
   aReflowStatus = NS_FRAME_COMPLETE;
   // Allocate a nsFloatCache for the float
