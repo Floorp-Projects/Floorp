@@ -351,7 +351,7 @@
 
         <vbox id="prefs-container" flex="1">
           <hbox pack="center" id="buttons"/>
-          <richlistbox id="pref-list" seltype="single" flex="1">
+          <richlistbox id="prefs-list" seltype="single" flex="1">
             <vbox class="prefsection">
               <label value="&content.title;" crop="end" flex="1"/>
             </vbox>
@@ -379,7 +379,7 @@
             </richpref>
             <richpref title="&clear.private.data.title;" type="button">
               &clear.private.data.description;
-              <button label="&clear.private.data.button;" command="cmd_sanitize"/>
+              <button id="prefs-clear-data" label="&clear.private.data.button;" command="cmd_sanitize"/>
             </richpref>
           </richlistbox>
         </vbox>
