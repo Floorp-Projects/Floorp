@@ -122,7 +122,7 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_CStringSetIsVoid_P,
     &NS_CStringGetIsVoid_P,
 
-    // these functions were added post 1.9.1
+    // these functions were added post 1.9
     &NS_CycleCollectorSuspect2_P,
     &NS_CycleCollectorForget2_P
 };
