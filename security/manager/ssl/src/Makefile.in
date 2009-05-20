@@ -58,6 +58,7 @@ CPPSRCS = 				\
 	nsNSSCleaner.cpp                \
 	nsCertOverrideService.cpp   \
 	nsRecentBadCerts.cpp \
+        nsClientAuthRemember.cpp        \
 	nsPSMBackgroundThread.cpp       \
 	nsSSLThread.cpp                 \
 	nsCertVerificationThread.cpp    \
