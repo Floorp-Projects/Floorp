@@ -197,7 +197,7 @@ typedef struct XPCOMFunctions{
     CStringSetIsVoidFunc cstringSetIsVoid;
     CStringGetIsVoidFunc cstringGetIsVoid;
 
-    // Added for Mozilla 1.9.2
+    // Added for Mozilla 1.9.1
     CycleCollectorSuspect2Func cycleSuspect2Func;
     CycleCollectorForget2Func cycleForget2Func;
 
