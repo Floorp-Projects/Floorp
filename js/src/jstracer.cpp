@@ -1813,7 +1813,7 @@ BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 
 /* Attempt to unbox the given JS frame onto a native frame. */
 static JS_REQUIRES_STACK void
-BuildNativeStackFrames(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
+BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 {
     debug_only_v(printf("stack: ");)
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
@@ -1895,8 +1895,8 @@ js_GetUpvarOnTrace(JSContext *cx, uint32 level, uint32 cookie, double* result)
  * @return the number of things we popped off of np.
  */
 static JS_REQUIRES_STACK int
-FlushNativeStackFrames(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
-                       JSStackFrame* stopFrame)
+FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
+                      JSStackFrame* stopFrame)
 {
     jsval* stopAt = stopFrame ? &stopFrame->argv[-2] : NULL;
     uint8* mp_base = mp;
@@ -1927,16 +1927,7 @@ skip:
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->callee) {
-                /*
-                 * We might return from trace with a different function object, but it still
-                 * has to be the same function (FIXME: bug 471425, eliminate fp->callee).
-                 */
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
-                JS_ASSERT(HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(fp->argv[-2])));
-                JS_ASSERT(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2])) ==
-                          GET_FUNCTION_PRIVATE(cx, fp->callee));
-                fp->callee = JSVAL_TO_OBJECT(fp->argv[-2]);
-                fp->scopeChain = OBJ_GET_PARENT(cx, fp->callee);
                 fp->thisp = JSVAL_TO_OBJECT(fp->argv[-1]);
                 if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
                     fp->flags |= JSFRAME_COMPUTED_THIS;
@@ -3543,7 +3534,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.argsobj = NULL;
     newifp->frame.varobj = NULL;
     newifp->frame.script = script;
-    newifp->frame.callee = fi.callee; // Roll with a potential wrong callee for now.
+    newifp->frame.callee = fi.callee;
     newifp->frame.fun = fun;
 
     bool constructing = (fi.s.argc & 0x8000) != 0;
@@ -3572,7 +3563,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.rval = JSVAL_VOID;
     newifp->frame.down = fp;
     newifp->frame.annotation = NULL;
-    newifp->frame.scopeChain = NULL; // will be updated in FlushNativeStackFrames
+    newifp->frame.scopeChain = OBJ_GET_PARENT(cx, fi.callee);
     newifp->frame.sharpDepth = 0;
     newifp->frame.sharpArray = NULL;
     newifp->frame.flags = constructing ? JSFRAME_CONSTRUCTING : 0;
@@ -3580,7 +3571,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.xmlNamespace = NULL;
     newifp->frame.blockChain = NULL;
     newifp->mark = newmark;
-    newifp->frame.thisp = NULL; // will be updated in FlushNativeStackFrames
+    newifp->frame.thisp = NULL; // will be updated in FlushNativeStackFrame
 
     newifp->frame.regs = fp->regs;
     newifp->frame.regs->pc = script->code;
@@ -4360,7 +4351,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     if (ngslots)
         BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap(), global);
-    BuildNativeStackFrames(cx, 0/*callDepth*/, ti->typeMap.data(), stack_buffer);
+    BuildNativeStackFrame(cx, 0/*callDepth*/, ti->typeMap.data(), stack_buffer);
 
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
@@ -4506,7 +4497,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
         /* Synthesize a stack frame and write out the values in it using the type map pointer
            on the native call stack. */
         js_SynthesizeFrame(cx, **callstack);
-        int slots = FlushNativeStackFrames(cx, 1/*callDepth*/, (uint8*)(*callstack+1), stack, cx->fp);
+        int slots = FlushNativeStackFrame(cx, 1/*callDepth*/, (uint8*)(*callstack+1), stack, cx->fp);
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized deep frame for %s:%u@%u, slots=%d\n",
@@ -4601,27 +4592,23 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                ti->nGlobalTypes() - innermost->numGlobalSlots);
     }
 
-    /* write back native stack frame */
-#ifdef DEBUG
-    int slots =
-#endif
-        FlushNativeStackFrames(cx, innermost->calldepth,
-                               getStackTypeMap(innermost),
-                               stack, NULL);
-    JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
-
-    if (innermost->nativeCalleeWord)
-        SynthesizeSlowNativeFrame(cx, innermost);
-
-    /*
-     * Write back interned globals. This must occur after we have restored and synthesized
-     * stack frames, since we will use cx->fp->scopeChain to obtain a reference to the
-     * global object.
-     */
+    /* write back interned globals */
     double* global = (double*)(&state + 1);
     FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, global);
     JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(JS_GetGlobalForObject(cx, cx->fp->scopeChain))] ==
               0xdeadbeefdeadbeefLL);
+
+    /* write back native stack frame */
+#ifdef DEBUG
+    int slots =
+#endif
+        FlushNativeStackFrame(cx, innermost->calldepth,
+                              getStackTypeMap(innermost),
+                              stack, NULL);
+    JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
+
+    if (innermost->nativeCalleeWord)
+        SynthesizeSlowNativeFrame(cx, innermost);
 
     cx->nativeVp = NULL;
 
