@@ -20,6 +20,8 @@ bug493140: Fix for offsets not being used.
 
 aspect-ratio: Adds oggplay_get_video_aspect_ratio, used for bug 480058.
 
+seek_to_key_frame.patch: Adds oggplay_seek_to_keyframe(), as per bug 463358.
+
 bug488951: Fix for YUV conversion for odd sized frames.  Cherrypicked from
            upstream commits dabde8, 683f23, and 4d7581.
 
