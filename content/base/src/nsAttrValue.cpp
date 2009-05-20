@@ -52,6 +52,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsIURI.h"
+#include "prprf.h"
 #ifdef MOZ_SVG
 #include "nsISVGValue.h"
 #endif
