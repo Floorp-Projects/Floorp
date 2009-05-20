@@ -869,7 +869,10 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
 
     if (headData->checkSumAdjustment != (HeadTable::HEAD_CHECKSUM_CALC_CONST - checksum)) {
         NS_WARNING("invalid font (bad checksum)");
-        return PR_FALSE;
+        // Bug 483459 - warn about a bad checksum but allow the font to be 
+        // used, since a small percentage of fonts don't calculate this 
+        // correctly and font systems aren't fussy about this
+        // return PR_FALSE;
     }
     
     // need glyf or CFF table based on sfnt version
