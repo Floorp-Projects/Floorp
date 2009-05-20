@@ -407,9 +407,9 @@ namespace nanojit
                 // generating a pointless store/load/store sequence
                 Register rb = findRegFor(base, GpRegs);
                 STW32(L0, dr+4, rb);
-                SET32(value->imm64lo(), L0);
+                SET32(value->imm64_0(), L0);
                 STW32(L0, dr, rb);
-                SET32(value->imm64hi(), L0);
+                SET32(value->imm64_1(), L0);
                 return;
             }
 
@@ -876,9 +876,9 @@ namespace nanojit
                 Register r = registerAlloc(GpRegs);
                 _allocator.addFree(r);
                 STW32(r, d+4, FP);
-                SET32(ins->imm64lo(), r);
+                SET32(ins->imm64_0(), r);
                 STW32(r, d, FP);
-                SET32(ins->imm64hi(), r);
+                SET32(ins->imm64_1(), r);
             }
     }
     
