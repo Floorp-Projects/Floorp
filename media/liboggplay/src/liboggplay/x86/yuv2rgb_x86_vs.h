@@ -4,7 +4,8 @@
 #define ATTR_ALIGN(_align) __declspec(align(_align))
 
 #define emms() __asm emms
-#define MMX_MOVNTQ movntq
+#define MMX_MOVNTQ movq
+#define SSE_MOVNTQ movntq
 #define SSE2_MOVNTQ movdqu
 
 #define LOAD_YUV_PLANAR_2(mov_instr, reg_type)		\

@@ -44,10 +44,11 @@ sed 's/#include <config.h>/#ifdef WIN32\
 #endif/g' ./src/liboggplay/oggplay_private.h1 >./src/liboggplay/oggplay_private.h
 rm ./src/liboggplay/oggplay_private.h1
 sed s/\#ifdef\ HAVE_INTTYPES_H/\#if\ HAVE_INTTYPES_H/g $1/src/liboggplay/oggplay_data.c >./src/liboggplay/oggplay_data.c
-patch -p3 < bug485291_yuv_align.patch
 patch -p3 < endian.patch
 patch -p3 < trac466.patch
 patch -p3 < bug492436.patch
 patch -p3 < bug493140.patch
 patch -p3 < bug481921.patch
 patch -p3 < aspect_ratio.patch
+patch -p3 < bug488951.patch
+patch -p3 < bug488951_yuv_fix.patch
