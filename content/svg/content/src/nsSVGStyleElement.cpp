@@ -161,7 +161,9 @@ nsSVGStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                   aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UpdateStyleSheetInternal(nsnull);
+  nsContentUtils::AddScriptRunner(
+    new nsRunnableMethod<nsSVGStyleElement>(this,
+                                            &nsSVGStyleElement::UpdateStyleSheetInternal));
 
   return rv;  
 }
