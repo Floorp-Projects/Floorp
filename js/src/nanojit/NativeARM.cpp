@@ -246,7 +246,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
             if (arg->isop(LIR_quad)) {
 
                 // XXX use some load-multiple action here from our const pool?
-                int32_t v = arg->imm64lo();     // for the first iteration
+                int32_t v = arg->imm64_0();     // for the first iteration
                 for (int k = 0; k < 2; k++) {
                     if (r != UnknownReg) {
                         asm_ld_imm(r, v);
@@ -258,7 +258,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
                         asm_ld_imm(IP, v);
                         stkd += 4;
                     }
-                    v = arg->imm64hi();         // for the second iteration
+                    v = arg->imm64_1();         // for the second iteration
                 }
             } else {
                 int d = findMemFor(arg);
@@ -691,9 +691,9 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 
             // XXX use another reg, get rid of dependency
             STR(IP, rb, dr);
-            LD32_nochk(IP, value->imm64lo());
+            LD32_nochk(IP, value->imm64_0());
             STR(IP, rb, dr+4);
-            LD32_nochk(IP, value->imm64hi());
+            LD32_nochk(IP, value->imm64_1());
 
             return;
         }
@@ -721,7 +721,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
         // has the right value
         if (value->isconstq()) {
             underrunProtect(4*4);
-            asm_quad_nochk(rv, value->imm64lo(), value->imm64hi());
+            asm_quad_nochk(rv, value->imm64_0(), value->imm64_1());
         }
     } else {
         int da = findMemFor(value);
@@ -735,7 +735,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 // stick a quad into register rr, where p points to the two
 // 32-bit parts of the quad, optinally also storing at FP+d
 void
-Assembler::asm_quad_nochk(Register rr, int32_t imm64lo, int32_t imm64hi)
+Assembler::asm_quad_nochk(Register rr, int32_t imm64_0, int32_t imm64_1)
 {
     // We're not going to use a slot, because it might be too far
     // away.  Instead, we're going to stick a branch in the stream to
@@ -744,14 +744,14 @@ Assembler::asm_quad_nochk(Register rr, int32_t imm64lo, int32_t imm64hi)
 
     // stream should look like:
     //    branch A
-    //    imm64lo
-    //    imm64hi
+    //    imm64_0
+    //    imm64_1
     // A: FLDD PC-16
 
     FLDD(rr, PC, -16);
 
-    *(--_nIns) = (NIns) imm64hi;
-    *(--_nIns) = (NIns) imm64lo;
+    *(--_nIns) = (NIns) imm64_1;
+    *(--_nIns) = (NIns) imm64_0;
 
     JMP_nochk(_nIns+2);
 }
@@ -772,13 +772,13 @@ Assembler::asm_quad(LInsp ins)
             FSTD(rr, FP, d);
 
         underrunProtect(4*4);
-        asm_quad_nochk(rr, ins->imm64lo(), ins->imm64hi());
+        asm_quad_nochk(rr, ins->imm64_0(), ins->imm64_1());
     } else {
         NanoAssert(d);
         STR(IP, FP, d+4);
-        asm_ld_imm(IP, ins->imm64hi());
+        asm_ld_imm(IP, ins->imm64_1());
         STR(IP, FP, d);
-        asm_ld_imm(IP, ins->imm64lo());
+        asm_ld_imm(IP, ins->imm64_0());
     }
 }
 
