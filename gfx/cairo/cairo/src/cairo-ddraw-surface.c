@@ -37,11 +37,12 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
+#include "cairoint.h"
+
 #if CAIRO_HAS_DDRAW_SURFACE
 
 #include "cairo-clip-private.h"
 #include "cairo-ddraw-private.h"
-#include "cairo-region-private.h"
 
 #include <windows.h>
 #include <ddraw.h>
@@ -122,7 +123,7 @@ _cairo_ddraw_surface_set_clip_list (cairo_ddraw_surface_t * surface)
 {
     DWORD stack_data[CAIRO_STACK_BUFFER_SIZE / sizeof (DWORD)];
     cairo_rectangle_int_t extents;
-    int num_boxes;
+    int num_rects;
     RGNDATA * rgn;
     DWORD size;
     cairo_status_t status;
@@ -143,12 +144,12 @@ _cairo_ddraw_surface_set_clip_list (cairo_ddraw_surface_t * surface)
 
     surface->has_clip_list = TRUE;
 	
-    _cairo_region_get_extents (&surface->clip_region, &extents);
+    cairo_region_get_extents (&surface->clip_region, &extents);
     
     rgn = (RGNDATA *) stack_data;
-    num_boxes = _cairo_region_num_boxes (&surface->clip_region);
+    num_rects = cairo_region_num_rectangles (&surface->clip_region);
     
-    size = sizeof (RGNDATAHEADER) + sizeof (RECT) * num_boxes;
+    size = sizeof (RGNDATAHEADER) + sizeof (RECT) * num_rects;
     if (size > sizeof (stack_data)) {
 	if ((rgn = (RGNDATA *) malloc (size)) == 0)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -159,23 +160,23 @@ _cairo_ddraw_surface_set_clip_list (cairo_ddraw_surface_t * surface)
     
     rgn->rdh.dwSize = sizeof(RGNDATAHEADER);
     rgn->rdh.iType = RDH_RECTANGLES;
-    rgn->rdh.nCount = num_boxes;
-    rgn->rdh.nRgnSize = num_boxes * sizeof (RECT);
+    rgn->rdh.nCount = num_rects;
+    rgn->rdh.nRgnSize = num_rects * sizeof (RECT);
     rgn->rdh.rcBound.left = extents.x + offset.x;
     rgn->rdh.rcBound.top = extents.y + offset.y;
     rgn->rdh.rcBound.right = extents.x + extents.width + offset.x;
     rgn->rdh.rcBound.bottom = extents.y + extents.height + offset.y;
     
     prect = (RECT *) &rgn->Buffer;
-    for (i = 0; i < num_boxes; ++i) {
-	cairo_box_int_t box;
+    for (i = 0; i < num_rects; ++i) {
+	cairo_rectangle_int_t rect;
 	
-	_cairo_region_get_box (&surface->clip_region, i, &box);
+	cairo_region_get_rectangle (&surface->clip_region, i, &rect);
 	
-	prect->left = box.p1.x + offset.x;
-	prect->top = box.p1.y + offset.y;
-	prect->right = box.p2.x + offset.x;
-	prect->bottom = box.p2.y + offset.y;
+	prect->left = rect.x + offset.x;
+	prect->top = rect.y + offset.y;
+	prect->right = rect.x + rect.width + offset.x;
+	prect->bottom = rect.y + rect.height + offset.y;
 	++prect;
     }
     
@@ -426,21 +427,21 @@ cairo_int_status_t
 _cairo_ddraw_surface_set_clip_region (void *abstract_surface,
 				      cairo_region_t *region)
 {
-    cairo_status_t status;
     cairo_ddraw_surface_t * surface =
 	(cairo_ddraw_surface_t *) abstract_surface;
 
     if (region) {
+	cairo_region_t *tmp_region;
 	surface->has_clip_region = TRUE;
 	surface->image_clip_invalid = TRUE;
 	surface->clip_list_invalid = TRUE;
 
-	status = _cairo_region_copy (&surface->clip_region, region);
-	if (status)
-	    return status;
+	tmp_region = &surface->clip_region;
+	if (! pixman_region32_copy (&tmp_region->rgn, &region->rgn))
+	    return CAIRO_STATUS_NO_MEMORY;
 
 	if (surface->origin.x < 0 || surface->origin.y < 0)
-	    _cairo_region_translate (&surface->clip_region,
+	    cairo_region_translate (&surface->clip_region,
 		MIN (0, surface->origin.x),
 		MIN (0, surface->origin.y));
     } else {
