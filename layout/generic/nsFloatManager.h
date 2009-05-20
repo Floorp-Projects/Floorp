@@ -107,17 +107,28 @@ public:
   void GetTranslation(nscoord& aX, nscoord& aY) const { aX = mX; aY = mY; }
 
   /**
-   * Get information about the band containing vertical coordinate |aY|,
-   * but up to at most |aMaxHeight| (which may be nscoord_MAX).  This
-   * will return the tallest rectangle whose top is |aY| and in which
-   * there are no changes in what floats are on the sides of that
-   * rectangle, but will limit the height of the rectangle to
-   * |aMaxHeight|.  The left and right edges of the rectangle give the
-   * area available for line boxes in that space.
+   * Get information about the area available to content that flows
+   * around floats.  Two different types of space can be requested:
+   *   BAND_FROM_POINT: returns the band containing vertical coordinate
+   *     |aY| (though actually with the top truncated to begin at aY),
+   *     but up to at most |aHeight| (which may be nscoord_MAX).
+   *     This will return the tallest rectangle whose top is |aY| and in
+   *     which there are no changes in what floats are on the sides of
+   *     that rectangle, but will limit the height of the rectangle to
+   *     |aHeight|.  The left and right edges of the rectangle give the
+   *     area available for line boxes in that space.  The width of this
+   *     resulting rectangle will not be negative.
+   *   WIDTH_WITHIN_HEIGHT: This returns a rectangle whose top is aY and
+   *     whose height is exactly aHeight.  Its left and right edges give
+   *     the left and right edges of the space that can be used for line
+   *     boxes *throughout* that space.  (It is possible that more
+   *     horizontal space could be used in part of the space if a float
+   *     begins or ends in it.)  The width of the resulting rectangle
+   *     can be negative.
    *
    * @param aY [in] vertical coordinate for top of available space
    *           desired
-   * @param aMaxHeight [in] maximum height of available space desired
+   * @param aHeight [in] see above
    * @param aContentAreaWidth [in] the width of the content area (whose left
    *                          edge must be zero in the current translation)
    * @param aState [in] If null, use the current state, otherwise, do
@@ -133,8 +144,10 @@ public:
    *
    * aY and aAvailSpace are positioned relative to the current translation
    */
-  nsFlowAreaRect GetBand(nscoord aY, nscoord aMaxHeight,
-                         nscoord aContentAreaWidth, SavedState* aState) const;
+  enum BandInfoType { BAND_FROM_POINT, WIDTH_WITHIN_HEIGHT };
+  nsFlowAreaRect GetFlowArea(nscoord aY, BandInfoType aInfoType,
+                             nscoord aHeight, nscoord aContentAreaWidth,
+                             SavedState* aState) const;
 
   /**
    * Add a float that comes after all floats previously added.  Its top

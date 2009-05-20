@@ -346,10 +346,11 @@ nsBlockReflowState::GetFloatAvailableSpaceWithState(
 #endif
 
   nsFlowAreaRect result =
-    mFloatManager->GetBand(aY - BorderPadding().top, 
-                           aRelaxHeightConstraint ? nscoord_MAX
-                                                  : mContentArea.height,
-                           mContentArea.width, aState);
+    mFloatManager->GetFlowArea(aY - BorderPadding().top, 
+                               nsFloatManager::BAND_FROM_POINT,
+                               aRelaxHeightConstraint ? nscoord_MAX
+                                                      : mContentArea.height,
+                               mContentArea.width, aState);
   // Keep the width >= 0 for compatibility with nsSpaceManager.
   if (result.mRect.width < 0)
     result.mRect.width = 0;
