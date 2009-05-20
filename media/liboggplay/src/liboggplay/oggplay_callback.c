@@ -554,7 +554,7 @@ oggplay_initialise_decoder(OggPlay *me, int content_type, int serialno) {
   decoder->content_type = content_type;
   decoder->content_type_name =
           oggz_stream_get_content_type (me->oggz, serialno);
-  decoder->active = 1;
+  decoder->active = 0;
   decoder->final_granulepos = -1;
   decoder->player = me;
   decoder->decoded_type = OGGPLAY_TYPE_UNKNOWN;
