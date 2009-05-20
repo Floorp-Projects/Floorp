@@ -90,7 +90,7 @@ static void                                                     \
 		ptro += rgb->rgb_width * 4;                     \
 		ptry += yuv->y_width;                           \
 								\
-		if (i & 0x1)                                    \
+		if (i & 0x1 && !(i+1==h-1 && h&1))              \
 		{                                               \
 			ptru += yuv->uv_width;                  \
 			ptrv += yuv->uv_width;                  \
