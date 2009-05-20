@@ -36,14 +36,14 @@
 == 23604-1.html 23604-1-ref.html
 == 23604-2.html 23604-2-ref.html
 != 24998-1.html 24998-1-ref.html
-fails == 25888-1l.html 25888-1l-ref.html # bug 25888
-fails != 25888-1l.html 25888-1l-notref.html # bug 25888
-fails == 25888-1r.html 25888-1r-ref.html # bug 25888
-fails != 25888-1r.html 25888-1r-notref.html # bug 25888
-fails == 25888-2l.html 25888-2l-ref.html # bug 25888
-fails == 25888-2r.html 25888-2r-ref.html # bug 25888
-fails == 25888-3l.html 25888-3l-ref.html # bug 25888
-fails == 25888-3r.html 25888-3r-ref.html # bug 25888
+== 25888-1l.html 25888-1l-ref.html
+!= 25888-1l.html 25888-1l-notref.html
+== 25888-1r.html 25888-1r-ref.html
+!= 25888-1r.html 25888-1r-notref.html
+== 25888-2l.html 25888-2l-ref.html
+== 25888-2r.html 25888-2r-ref.html
+== 25888-3l.html 25888-3l-ref.html
+== 25888-3r.html 25888-3r-ref.html
 == 28811-1a.html 28811-1-ref.html
 == 28811-1b.html 28811-1-ref.html
 == 28811-2a.html 28811-2-ref.html

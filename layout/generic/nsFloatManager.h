@@ -227,6 +227,13 @@ public:
    */
   nscoord ClearFloats(nscoord aY, PRUint8 aBreakType) const;
 
+  void AssertStateMatches(SavedState *aState) const
+  {
+    NS_ASSERTION(aState->mX == mX && aState->mY == mY &&
+                 aState->mFloatInfoCount == mFloats.Length(),
+                 "float manager state should match saved state");
+  }
+
 #ifdef DEBUG
   /**
    * Dump the state of the float manager out to a file.

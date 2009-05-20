@@ -100,6 +100,9 @@ public:
   nsFlowAreaRect
     GetFloatAvailableSpaceWithState(nscoord aY, PRBool aRelaxHeightConstraint,
                                     nsFloatManager::SavedState *aState) const;
+  nsFlowAreaRect
+    GetFloatAvailableSpaceForHeight(nscoord aY, nscoord aHeight,
+                                    nsFloatManager::SavedState *aState) const;
 
   /*
    * The following functions all return PR_TRUE if they were able to
