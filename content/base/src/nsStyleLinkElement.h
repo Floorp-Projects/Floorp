@@ -82,6 +82,7 @@ public:
 
   static void ParseLinkTypes(const nsAString& aTypes, nsTArray<nsString>& aResult);
 
+  void UpdateStyleSheetInternal() { UpdateStyleSheetInternal(nsnull); }
 protected:
   /**
    * @param aOldDocument should be non-null only if we're updating because we
