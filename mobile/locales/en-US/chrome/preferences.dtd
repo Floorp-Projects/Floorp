@@ -1,17 +1,15 @@
 <!ENTITY content.title                             "Content">
-<!ENTITY permissions.default.image.title           "Load images automatically">
-<!ENTITY permissions.default.image.description     "Makes websites pretty">
-<!ENTITY javascript.enabled.title                  "Enable JavaScript">
-<!ENTITY javascript.enabled.description            "Makes websites flashy">
+<!ENTITY showImages.title                          "Show images">
+<!ENTITY enableJavaScript.title                    "Enable JavaScript">
+<!ENTITY enableJavaScript.description              "Most interactive sites use JavaScript">
 <!ENTITY javascript.options.jit.content.title      "Enable JavaScript tracing">
 <!ENTITY javascript.options.jit.content.description "Use native‐code compilation in JavaScript">
-<!ENTITY plugins.enabled.title                     "Enable Plugins">
-<!ENTITY plugins.enabled.description               "Makes websites annoying">
+<!ENTITY enablePlugins.title                       "Enable Plugins">
+<!ENTITY enablePlugins.description                 "Plugins are used for special content such as video">
 <!ENTITY privacy.title                             "Privacy &amp; Security">
-<!ENTITY network.cookie.cookieBehavior.title       "Save cookies">
-<!ENTITY network.cookie.cookieBehavior.description "Delicious delicacies">
-<!ENTITY clear.private.data.title                  "Clear private data">
-<!ENTITY clear.private.data.button                 "Clear…">
-<!ENTITY clear.private.data.description            "Saves your hide">
-<!ENTITY signon.rememberSignons.title              "Save passwords">
-<!ENTITY signon.rememberSignons.description        "Lets you type less">
+<!ENTITY allowCookies.title                        "Allow cookies">
+<!ENTITY allowCookies.description                  "Sites use cookies to identify you and remember your settings">
+<!ENTITY clearPrivateData.title                    "Clear recent browsing history">
+<!ENTITY clearPrivateData.button                   "Clear">
+<!ENTITY clearPrivateData.description              "Your history helps &brandShortName; suggest where you want to go">
+<!ENTITY rememberPasswords.title                   "Remember passwords">
