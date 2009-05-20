@@ -1,0 +1,95 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>sessionStorage clone equal origins</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="interOriginTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+var currentTest = 1;
+var currentStep = 1;
+
+/*
+window.addEventListener("storage", onStorageEvent, false);
+
+function onStorageEvent(event)
+{
+}
+*/
+
+function doNextTest()
+{
+  // We must perform the first step of the test
+  // to prepare the land.
+  currentStep = 1;
+  doStep();
+
+  switch (currentTest)
+  {
+    case 1:
+      // Open a window from the same origin and check data
+      // are copied but not further modified on our side
+      slaveOrigin = "http://localhost:8888";
+      slave = window.open(slaveOrigin + slavePath + "frameEqual.html");
+      break;
+
+    case 2:
+      slave.close();
+      // Open a window from a different origin and check data
+      // are NOT copied and not modified on our side
+      slaveOrigin = "http://example.com";
+      slave = window.open(slaveOrigin + slavePath + "frameNotEqual.html");
+      break;
+
+    case 3:
+      slave.close();
+      sessionStorage.clear();
+      SimpleTest.finish();
+      break;
+  }
+
+  ++currentTest;
+}
+
+function doStep()
+{
+  switch (currentStep)
+  {
+    case 1:
+      sessionStorage.setItem("A", "1");
+      sessionStorage.setItem("B", "2");
+      is(sessionStorage.getItem("A"), "1", "A is 1 in the master");
+      is(sessionStorage.getItem("B"), "2", "B is 2 in the master");
+      is(sessionStorage.length, 2, "Num of items is 2");
+      break;
+
+    case 3:
+      is(sessionStorage.getItem("A"), "1", "A is 1 in the master");
+      is(sessionStorage.getItem("B"), "2", "B is 2 in the master");
+      is(sessionStorage.getItem("C"), null, "C is null in the master");
+      is(sessionStorage.length, 2, "Num of items is 2");
+
+      sessionStorage.setItem("C", "4");
+      is(sessionStorage.getItem("C"), "4", "C is 4 in the master");
+      is(sessionStorage.length, 3, "Num of items is 3");
+      break;
+  }
+
+  ++currentStep;
+  ++currentStep;
+
+  return true;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="doNextTest();">
+</body>
+</html>

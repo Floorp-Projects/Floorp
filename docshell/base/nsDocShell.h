@@ -213,7 +213,6 @@ class nsDocShell : public nsDocLoader,
                    public nsIAuthPromptProvider,
                    public nsIObserver,
                    public nsILoadContext,
-                   public nsIDocShell_MOZILLA_1_9_1,
                    public nsIWebShellServices,
                    public nsILinkHandler,
                    public nsIClipboardCommands
@@ -248,7 +247,6 @@ public:
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSIOBSERVER
     NS_DECL_NSILOADCONTEXT
-    NS_DECL_NSIDOCSHELL_MOZILLA_1_9_1
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
 
@@ -606,7 +604,7 @@ protected:
 
     nsresult GetSessionStorageForURI(nsIURI* aURI,
                                      PRBool create,
-                                     nsIDOMStorageObsolete** aStorage);
+                                     nsIDOMStorage** aStorage);
 
     // helpers for executing commands
     nsresult GetControllerForCommand(const char *inCommand,
@@ -630,10 +628,13 @@ protected:
     };
 
     // hash of session storages, keyed by domain
-    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorageObsolete> mStorages;
-    nsIntRect                  mBounds; // Dimensions of the docshell
+    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
+
+    // Dimensions of the docshell
+    nsIntRect                  mBounds;
     nsString                   mName;
     nsString                   mTitle;
+
     /**
      * Content-Type Hint of the most-recently initiated load. Used for
      * session history entries.
