@@ -66,10 +66,10 @@ interface nsIRequest;
 interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
-interface nsIDOMStorageObsolete;
+interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(f100ede8-fa36-4ed2-99b2-71a3b94f9a70)]
+[scriptable, uuid(3156f677-f444-4c3e-a47f-b47e568eafd6)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -439,15 +439,25 @@ interface nsIDocShell : nsISupports
    *
    * @param uri the uri of the storage object to retrieve
    */
-  nsIDOMStorageObsolete getSessionStorageForURI(in nsIURI uri);
+  nsIDOMStorage getSessionStorageForURI(in nsIURI uri);
+
+  /*
+   * Retrieves the WebApps session storage object for the supplied principal.
+   *
+   * @param principal returns a storage for this principal
+   * @param create If true and a session storage object doesn't
+   *               already exist, a new one will be created.
+   */
+  nsIDOMStorage getSessionStorageForPrincipal(in nsIPrincipal principal,
+                                              in boolean create);
 
   /*
    * Add a WebApps session storage object to the docshell.
    *
-   * @param domain the domain the storage object is associated with
+   * @param principal the principal the storage object is associated with
    * @param storage the storage object to add
    */
-  void addSessionStorage(in ACString aDomain, in nsIDOMStorageObsolete storage);
+  void addSessionStorage(in nsIPrincipal principal, in nsIDOMStorage storage);
 
   /**
    * Gets the channel for the currently loaded document, if any. 
@@ -488,18 +498,4 @@ interface nsIDocShell : nsISupports
    * and should be treated accordingly.
    **/
   attribute boolean isOffScreenBrowser;    
-};
-
-[scriptable, uuid(460ba822-e664-4c38-9b08-98d2736473d7)]
-interface nsIDocShell_MOZILLA_1_9_1 : nsISupports
-{
-  /*
-   * Retrieves the WebApps session storage object for the supplied principal.
-   *
-   * @param principal returns a storage for this principal
-   * @param create If true and a session storage object doesn't
-   *               already exist, a new one will be created.
-   */
-  nsIDOMStorageObsolete getSessionStorageForPrincipal(in nsIPrincipal principal,
-                                                      in boolean create);
 };
