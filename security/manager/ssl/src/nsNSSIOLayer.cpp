@@ -782,6 +782,11 @@ void nsSSLIOLayerHelpers::Cleanup()
     PR_DestroyLock(mutex);
     mutex = nsnull;
   }
+
+  if (mHostsWithCertErrors) {
+    delete mHostsWithCertErrors;
+    mHostsWithCertErrors = nsnull;
+  }
 }
 
 static nsresult
@@ -1474,6 +1479,95 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   return status;
 }
 
+// nsPSMRememberCertErrorsTable
+
+nsPSMRememberCertErrorsTable::nsPSMRememberCertErrorsTable()
+{
+  mErrorHosts.Init(16);
+}
+
+nsresult
+nsPSMRememberCertErrorsTable::GetHostPortKey(nsNSSSocketInfo* infoObject,
+                                             nsCAutoString &result)
+{
+  nsresult rv;
+
+  result.Truncate();
+
+  nsXPIDLCString hostName;
+  rv = infoObject->GetHostName(getter_Copies(hostName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 port;
+  rv = infoObject->GetPort(&port);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  result.Assign(hostName);
+  result.Append(':');
+  result.AppendInt(port);
+
+  return NS_OK;
+}
+
+void
+nsPSMRememberCertErrorsTable::RememberCertHasError(nsNSSSocketInfo* infoObject,
+                                                   nsSSLStatus* status,
+                                                   SECStatus certVerificationResult)
+{
+  nsresult rv;
+
+  nsCAutoString hostPortKey;
+  rv = GetHostPortKey(infoObject, hostPortKey);
+  if (NS_FAILED(rv))
+    return;
+
+  if (certVerificationResult != SECSuccess) {
+    NS_ASSERTION(status,
+        "Must have nsSSLStatus object when remembering flags");
+
+    if (!status)
+      return;
+
+    CertStateBits bits;
+    bits.mIsDomainMismatch = status->mIsDomainMismatch;
+    bits.mIsNotValidAtThisTime = status->mIsNotValidAtThisTime;
+    bits.mIsUntrusted = status->mIsUntrusted;
+    mErrorHosts.Put(hostPortKey, bits);
+  }
+  else {
+    mErrorHosts.Remove(hostPortKey);
+  }
+}
+
+void
+nsPSMRememberCertErrorsTable::LookupCertErrorBits(nsNSSSocketInfo* infoObject,
+                                                  nsSSLStatus* status)
+{
+  // Get remembered error bits from our cache, because of SSL session caching
+  // the NSS library potentially hasn't notified us for this socket.
+  if (status->mHaveCertErrorBits)
+    // Rather do not modify bits if already set earlier
+    return;
+
+  nsresult rv;
+
+  nsCAutoString hostPortKey;
+  rv = GetHostPortKey(infoObject, hostPortKey);
+  if (NS_FAILED(rv))
+    return;
+
+  CertStateBits bits;
+  if (!mErrorHosts.Get(hostPortKey, &bits))
+    // No record was found, this host had no cert errors
+    return;
+
+  // This host had cert errors, update the bits correctly
+  status->mHaveCertErrorBits = PR_TRUE;
+  status->mIsDomainMismatch = bits.mIsDomainMismatch;
+  status->mIsNotValidAtThisTime = bits.mIsNotValidAtThisTime;
+  status->mIsUntrusted = bits.mIsUntrusted;
+}
+
 // Call this function to report a site that is possibly TLS intolerant.
 // This function will return true, if the given socket is currently using TLS.
 PRBool
@@ -1779,6 +1873,7 @@ PRDescIdentity nsSSLIOLayerHelpers::nsSSLIOLayerIdentity;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
 PRLock *nsSSLIOLayerHelpers::mutex = nsnull;
 nsCStringHashSet *nsSSLIOLayerHelpers::mTLSIntolerantSites = nsnull;
+nsPSMRememberCertErrorsTable *nsSSLIOLayerHelpers::mHostsWithCertErrors = nsnull;
 PRFileDesc *nsSSLIOLayerHelpers::mSharedPollableEvent = nsnull;
 nsNSSSocketInfo *nsSSLIOLayerHelpers::mSocketOwningPollableEvent = nsnull;
 PRBool nsSSLIOLayerHelpers::mPollableEventCurrentlySet = PR_FALSE;
@@ -1987,6 +2082,10 @@ nsresult nsSSLIOLayerHelpers::Init()
     return NS_ERROR_OUT_OF_MEMORY;
 
   mTLSIntolerantSites->Init(1);
+
+  mHostsWithCertErrors = new nsPSMRememberCertErrorsTable();
+  if (!mHostsWithCertErrors || !mHostsWithCertErrors->mErrorHosts.IsInitialized())
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -3021,6 +3120,9 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     status->mIsDomainMismatch = collected_errors & nsICertOverrideService::ERROR_MISMATCH;
     status->mIsNotValidAtThisTime = collected_errors & nsICertOverrideService::ERROR_TIME;
     status->mIsUntrusted = collected_errors & nsICertOverrideService::ERROR_UNTRUSTED;
+
+    nsSSLIOLayerHelpers::mHostsWithCertErrors->RememberCertHasError(
+      infoObject, status, SECFailure);
   }
 
   remaining_display_errors = collected_errors;

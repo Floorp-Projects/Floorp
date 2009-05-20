@@ -25,6 +25,7 @@
  *   Terry Hayes <thayes@netscape.com>
  *   Kai Engert <kengert@redhat.com>
  *   Petr Kostka <petr.kostka@st.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -903,6 +904,9 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       infoObject->SetSSLStatus(status);
     }
 
+    nsSSLIOLayerHelpers::mHostsWithCertErrors->LookupCertErrorBits(
+      infoObject, status);
+
     CERTCertificate *serverCert = SSL_PeerCertificate(fd);
     if (serverCert) {
       nsRefPtr<nsNSSCertificate> nssc = new nsNSSCertificate(serverCert);
@@ -1028,6 +1032,19 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
       status = new nsSSLStatus();
       infoObject->SetSSLStatus(status);
     }
+
+    if (rv == SECSuccess) {
+      // Certificate verification succeeded delete any potential record
+      // of certificate error bits.
+      nsSSLIOLayerHelpers::mHostsWithCertErrors->RememberCertHasError(
+        infoObject, nsnull, rv);
+    }
+    else {
+      // Certificate verification failed, update the status' bits.
+      nsSSLIOLayerHelpers::mHostsWithCertErrors->LookupCertErrorBits(
+        infoObject, status);
+    }
+
     if (status && !status->mServerCert) {
       status->mServerCert = nsc;
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
