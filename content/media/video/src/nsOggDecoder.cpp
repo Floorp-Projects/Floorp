@@ -1510,6 +1510,7 @@ nsresult nsOggDecodeStateMachine::Run()
             break;
 
           mLastFrameTime = 0;
+          delete frame;
           frame = NextFrame();
         } while (frame && frame->mDecodedFrameTime < seekTarget);
 
