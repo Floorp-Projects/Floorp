@@ -1402,11 +1402,6 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/dom/storage;1",
     NS_NewDOMStorage },
 
-  { "DOM Storage 2",
-    NS_DOMSTORAGE2_CID,
-    "@mozilla.org/dom/storage;2",
-    NS_NewDOMStorage2 },
-
   { "DOM Storage Manager",
     NS_DOMSTORAGEMANAGER_CID,
     "@mozilla.org/dom/storagemanager;1",
