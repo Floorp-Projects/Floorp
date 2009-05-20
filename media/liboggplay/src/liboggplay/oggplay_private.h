@@ -146,22 +146,22 @@ struct _OggPlayCallbackInfo {
  *                              track
  */
 typedef struct {
-  long                  serialno;
-  int                   content_type;
-  const char          * content_type_name;
-  OggPlayDataType       decoded_type;
-  ogg_int64_t           granuleperiod;
-  ogg_int64_t           last_granulepos;
-  ogg_int64_t           offset;
-  ogg_int64_t           current_loc;
-  int                   active;
-  ogg_int64_t           final_granulepos;
-  struct _OggPlay     * player;
-  OggPlayDataHeader   * data_list;
-  OggPlayDataHeader   * end_of_data_list;
-  OggPlayDataHeader   * untimed_data_list;
-  OggPlayStreamInfo     stream_info;
-  int                   preroll;
+  long                  serialno;           /**< identifies the logical bit stream */
+  int                   content_type;       
+  const char          * content_type_name;  
+  OggPlayDataType       decoded_type;       /**< type of the track @see OggPlayDataType */
+  ogg_int64_t           granuleperiod;      
+  ogg_int64_t           last_granulepos;    /**< last seen granule position */
+  ogg_int64_t           offset;             /**<  */
+  ogg_int64_t           current_loc;        /**< current location in the stream (in ) */
+  int                   active;             /**< indicates whether the track is active or not */
+  ogg_int64_t           final_granulepos;   /**<  */
+  struct _OggPlay     * player;             /**< reference to the OggPlay handle */
+  OggPlayDataHeader   * data_list;          
+  OggPlayDataHeader   * end_of_data_list;   
+  OggPlayDataHeader   * untimed_data_list;  
+  OggPlayStreamInfo     stream_info;        /**< @see OggPlayStreamInfo */
+  int                   preroll;            /**< num. of past content packets to take into account when decoding the current Ogg page */
 } OggPlayDecode;
 
 typedef struct {
@@ -193,6 +193,9 @@ typedef struct {
   int             granuleshift;
 } OggPlayCmmlDecode;
 
+/**
+ * OggPlaySkeletonDecode
+ */
 typedef struct {
   OggPlayDecode   decoder;
   ogg_int64_t     presentation_time;
