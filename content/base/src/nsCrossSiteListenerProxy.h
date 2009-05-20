@@ -78,6 +78,9 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
+  // Must be called at startup.
+  static void Startup();
+
 private:
   nsresult UpdateChannel(nsIChannel* aChannel);
   nsresult CheckRequestApproved(nsIRequest* aRequest, PRBool aIsRedirect);

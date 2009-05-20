@@ -460,10 +460,10 @@ function runTest() {
     if ("headers" in test) {
       req.url += "&headers=" + escape(test.headers.toSource());
       reqHeaders =
-        escape([name for (name in test.headers)].filter(function(name)
-          name != "Content-Type" &&
-          name != "Accept" &&
-          name != "Accept-Language").join(","));
+        escape([name for (name in test.headers)].map(String.toLowerCase).filter(function(name)
+          name != "content-type" &&
+          name != "accept" &&
+          name != "accept-language").sort().join(","));
       req.url += reqHeaders ? "&requestHeaders=" + reqHeaders : "";
     }
     if ("allowHeaders" in test)
