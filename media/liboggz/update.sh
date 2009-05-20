@@ -47,3 +47,4 @@ cp $1/AUTHORS ./AUTHORS
 patch -p3 <wince.patch
 patch -p3 <endian.patch
 patch -p3 <bounded_seek.patch
+patch -p3 <key_frame_seek.patch
