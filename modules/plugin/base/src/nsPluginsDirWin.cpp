@@ -227,6 +227,10 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
   char* pluginFolderPath = PL_strdup(temp.get());
 
   index = PL_strrchr(pluginFolderPath, '\\');
+  if (!index) {
+    PL_strfree(pluginFolderPath);
+    return NS_ERROR_FILE_INVALID_PATH;
+  }
   *index = 0;
 
   BOOL restoreOrigDir = FALSE;
