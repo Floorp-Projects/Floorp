@@ -54,7 +54,6 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMStorageObsolete.h"
-#include "nsIDOMStorage.h"
 #include "nsPIDOMStorage.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
@@ -854,6 +853,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsILoadContext)
+    NS_INTERFACE_MAP_ENTRY(nsIDocShell_MOZILLA_1_9_1)
     NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
     NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
     NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
@@ -2143,7 +2143,7 @@ nsDocShell::HistoryPurged(PRInt32 aNumEntries)
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
                                           PRBool aCreate,
-                                          nsIDOMStorage** aStorage)
+                                          nsIDOMStorageObsolete** aStorage)
 {
     NS_ENSURE_ARG_POINTER(aStorage);
     *aStorage = nsnull;
@@ -2151,46 +2151,19 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
     if (!aPrincipal)
         return NS_OK;
 
-    nsresult rv;
-
-    nsCOMPtr<nsIDocShellTreeItem> topItem;
-    rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (!topItem)
-        return NS_ERROR_FAILURE;
-
-    nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
-    if (topDocShell != this)
-        return topDocShell->GetSessionStorageForPrincipal(aPrincipal, aCreate,
-                                                          aStorage);
-
-    nsXPIDLCString origin;
-    rv = aPrincipal->GetOrigin(getter_Copies(origin));
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (origin.IsEmpty())
-        return NS_ERROR_FAILURE;
-
-    if (!mStorages.Get(origin, aStorage) && aCreate) {
-        nsCOMPtr<nsIDOMStorage> newstorage =
-            do_CreateInstance("@mozilla.org/dom/storage;2");
-        if (!newstorage)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
-        if (!pistorage)
-            return NS_ERROR_FAILURE;
-        pistorage->InitAsSessionStorage(aPrincipal);
-
-        if (!mStorages.Put(origin, newstorage))
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        newstorage.swap(*aStorage);
-        return NS_OK;
+    nsCOMPtr<nsIURI> codebaseURI;
+    nsresult rv = aPrincipal->GetDomain(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!codebaseURI) {
+        rv = aPrincipal->GetURI(getter_AddRefs(codebaseURI));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    if (!codebaseURI)
+        return NS_OK;
+
+    rv = GetSessionStorageForURI(codebaseURI, aCreate, aStorage);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
     if (piStorage) {
@@ -2209,7 +2182,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
 
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
-                                    nsIDOMStorage** aStorage)
+                                    nsIDOMStorageObsolete** aStorage)
 {
     return GetSessionStorageForURI(aURI, PR_TRUE, aStorage);
 }
@@ -2217,35 +2190,64 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
 nsresult
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
                                     PRBool aCreate,
-                                    nsIDOMStorage** aStorage)
+                                    nsIDOMStorageObsolete** aStorage)
 {
     NS_ENSURE_ARG(aURI);
     NS_ENSURE_ARG_POINTER(aStorage);
 
     *aStorage = nsnull;
 
-    nsresult rv;
+    nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
+    NS_ASSERTION(innerURI, "Failed to get innermost URI");
+    if (!innerURI)
+        return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIScriptSecurityManager> securityManager =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // This is terrible hack and should go away along with this whole method.
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
+    nsCOMPtr<nsIDocShellTreeItem> topItem;
+    nsresult rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
     if (NS_FAILED(rv))
         return rv;
 
-    return GetSessionStorageForPrincipal(principal, aCreate, aStorage);
+    if (!topItem)
+        return NS_ERROR_FAILURE;
+
+    nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
+    if (topDocShell != this)
+        return topDocShell->GetSessionStorageForURI(aURI, aCreate, aStorage);
+
+    nsCAutoString currentDomain;
+    rv = innerURI->GetAsciiHost(currentDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (currentDomain.IsEmpty())
+        return NS_OK;
+
+    if (!mStorages.Get(currentDomain, aStorage) && aCreate) {
+        nsCOMPtr<nsIDOMStorageObsolete> newstorage =
+            do_CreateInstance("@mozilla.org/dom/storage;1");
+        if (!newstorage)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
+        if (!pistorage)
+            return NS_ERROR_FAILURE;
+        pistorage->InitAsSessionStorage(aURI);
+
+        if (!mStorages.Put(currentDomain, newstorage))
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        newstorage.swap(*aStorage);
+    }
+
+    return NS_OK;
 }
 
 nsresult
-nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
-                              nsIDOMStorage* aStorage)
+nsDocShell::AddSessionStorage(const nsACString& aDomain,
+                              nsIDOMStorageObsolete* aStorage)
 {
     NS_ENSURE_ARG_POINTER(aStorage);
 
-    if (!aPrincipal)
+    if (aDomain.IsEmpty())
         return NS_OK;
 
     nsCOMPtr<nsIDocShellTreeItem> topItem;
@@ -2256,23 +2258,15 @@ nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
     if (topItem) {
         nsCOMPtr<nsIDocShell> topDocShell = do_QueryInterface(topItem);
         if (topDocShell == this) {
-            nsXPIDLCString origin;
-            rv = aPrincipal->GetOrigin(getter_Copies(origin));
-            if (NS_FAILED(rv))
-                return rv;
-
-            if (origin.IsEmpty())
-                return NS_ERROR_FAILURE;
-
             // Do not replace an existing session storage.
-            if (mStorages.GetWeak(origin))
+            if (mStorages.GetWeak(aDomain))
                 return NS_ERROR_NOT_AVAILABLE;
 
-            if (!mStorages.Put(origin, aStorage))
+            if (!mStorages.Put(aDomain, aStorage))
                 return NS_ERROR_OUT_OF_MEMORY;
         }
         else {
-            return topDocShell->AddSessionStorage(aPrincipal, aStorage);
+            return topDocShell->AddSessionStorage(aDomain, aStorage);
         }
     }
 
