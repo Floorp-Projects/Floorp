@@ -306,8 +306,7 @@ namespace nanojit
         ensureRoom(1);
         LInsp l = _buf->next();
         l->initOpcodeAndClearResv(LIR_quad);
-        l->i64.imm64_0 = int32_t(imm);
-        l->i64.imm64_1 = int32_t(imm>>32);
+        l->i64.imm64 = imm;
         _buf->commit(1);
 		_buf->_stats.lir++;
         return l;
@@ -469,17 +468,13 @@ namespace nanojit
     uint64_t LIns::imm64() const
 	{
         NanoAssert(isconstq());
-        return (uint64_t(i64.imm64_1) << 32) | uint64_t(i64.imm64_0);
+        return i64.imm64;
 	}
 
     double LIns::imm64f() const
 	{
-        union {
-            double f;
-            uint64_t q;
-        } u;
-        u.q = imm64();
-        return u.f;
+        NanoAssert(isconstq());
+        return i64.d;
 	}
 
     inline uint32_t argSlots(uint32_t argc) {
@@ -531,13 +526,13 @@ namespace nanojit
 	{
 		if (v == LIR_qlo) {
 			if (i->isconstq())
-                return insImm(i->imm64_0());
+                return insImm(i->imm64lo());
 			if (i->isop(LIR_qjoin))
 				return i->oprnd1();
 		}
 		else if (v == LIR_qhi) {
 			if (i->isconstq())
-                return insImm(i->imm64_1());
+                return insImm(i->imm64hi());
 			if (i->isop(LIR_qjoin))
 				return i->oprnd2();
 		}
@@ -1518,10 +1513,10 @@ namespace nanojit
 #if defined NANOJIT_64BIT
             sprintf(buf, "#0x%lx", (nj_printf_ld)ref->imm64());
 #else
-			formatImm(ref->imm64_1(), buf);
+			formatImm(ref->imm64hi(), buf);
 			buf += strlen(buf);
 			*buf++ = ':';
-			formatImm(ref->imm64_0(), buf);
+			formatImm(ref->imm64lo(), buf);
 #endif
 		}
 		else if (ref->isconst()) {
@@ -1569,7 +1564,7 @@ namespace nanojit
 
 			case LIR_quad:
 			{
-				sprintf(s, "#%X:%X /* %g */", i->imm64_1(), i->imm64_0(), i->imm64f());
+				sprintf(s, "#%X:%X /* %g */", i->imm64hi(), i->imm64lo(), i->imm64f());
 				break;
 			}
 
