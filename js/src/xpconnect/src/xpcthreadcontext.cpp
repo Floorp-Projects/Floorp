@@ -163,7 +163,7 @@ XPCJSContextStack::Push(JSContext * cx)
 
             e.frame = JS_SaveFrameChain(e.cx);
 
-            if(JS_GetContextThread(e.cx))
+            if(e.cx != cx && JS_GetContextThread(e.cx))
                 e.requestDepth = JS_SuspendRequest(e.cx);
         }
     }
