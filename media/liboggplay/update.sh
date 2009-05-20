@@ -50,6 +50,7 @@ patch -p3 < bug492436.patch
 patch -p3 < bug493140.patch
 patch -p3 < bug481921.patch
 patch -p3 < aspect_ratio.patch
+patch -p1 < bug493224.patch
 patch -p3 < seek_to_key_frame.patch
 
 patch -p3 < bug488951.patch

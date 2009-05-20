@@ -184,6 +184,7 @@ oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
     track->data_list = track->end_of_data_list = NULL;
     track->untimed_data_list = NULL;
     track->current_loc = -1;
+    track->last_granulepos = -1;
     track->stream_info = OGGPLAY_STREAM_JUST_SEEKED;
   }
 
