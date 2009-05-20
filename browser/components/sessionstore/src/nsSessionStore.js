@@ -1271,7 +1271,7 @@ SessionStoreService.prototype = {
 
     for (let i = 0; i < aHistory.count; i++) {
       let uri = aHistory.getEntryAtIndex(i, false).URI;
-      // sessionStorage is saved per origin (cf. nsDocShell::GetSessionStorageForURI)
+      // sessionStorage is saved per domain (cf. nsDocShell::GetSessionStorageForURI)
       let domain = uri.spec;
       try {
         if (uri.host)
@@ -1295,7 +1295,9 @@ SessionStoreService.prototype = {
         try {
           let key = storage.key(j);
           let item = storage.getItem(key);
-          data[key] = item;
+          data[key] = { value: item.value };
+          if (uri.schemeIs("https") && item.secure)
+            data[key].secure = true;
         }
         catch (ex) { /* XXXzeniko this currently throws for secured items (cf. bug 442048) */ }
       }
@@ -2106,7 +2108,9 @@ SessionStoreService.prototype = {
       let storage = aDocShell.getSessionStorageForURI(uri);
       for (let key in aStorageData[url]) {
         try {
-          storage.setItem(key, aStorageData[url][key]);
+          storage.setItem(key, aStorageData[url][key].value);
+          if (uri.schemeIs("https"))
+            storage.getItem(key).secure = aStorageData[url][key].secure || false;
         }
         catch (ex) { Cu.reportError(ex); } // throws e.g. for URIs that can't have sessionStorage
       }
