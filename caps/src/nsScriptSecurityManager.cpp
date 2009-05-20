@@ -1215,7 +1215,10 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     nsCAutoString spec;
     if (NS_FAILED(aURI->GetAsciiSpec(spec)))
         return NS_ERROR_FAILURE;
-    SetPendingException(cx, nsPrintfCString("Access to '%s' from script denied", spec.get()).get());
+    nsCAutoString msg("Access to '");
+    msg.Append(spec);
+    msg.AppendLiteral("' from script denied");
+    SetPendingException(cx, msg.get());
     return NS_ERROR_DOM_BAD_URI;
 }
 
