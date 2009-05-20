@@ -631,7 +631,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         || cx->requestDepth != 0
 #endif
         ) {
-        JS_ASSERT(rt->gcLevel == 0);
+        JS_ASSERT(!rt->gcRunning);
 
         JS_UNLOCK_GC(rt);
 
