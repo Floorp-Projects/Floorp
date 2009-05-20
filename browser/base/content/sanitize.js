@@ -198,7 +198,7 @@ Sanitizer.prototype = {
         var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
                                       .getService(Components.interfaces.nsIBrowserHistory);
         if (this.range)
-          globalHistory.removePagesByTimeframe(this.range[0], this.range[1]);
+          globalHistory.removeVisitsByTimeframe(this.range[0], this.range[1]);
         else
           globalHistory.removeAllPages();
         
