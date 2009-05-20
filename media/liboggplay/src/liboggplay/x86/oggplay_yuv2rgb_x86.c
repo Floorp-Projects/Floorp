@@ -33,6 +33,9 @@
 /**
  * YUV to RGB conversion using x86 CPU extensions
  */
+#include "oggplay_private.h"
+#include "oggplay_yuv2rgb_template.h"
+#include "cpu.h"
 
 #if defined(_MSC_VER)
 #include "yuv2rgb_x86_vs.h" 
@@ -83,7 +86,8 @@ static const simd_t simd_table[9] = {
  */
 
 /* template for the MMX conversion functions */
-#define YUV_CONVERT_MMX(FUNC, CONVERT) YUV_CONVERT(FUNC, CONVERT, 8, 32, 8, 4)
+#define YUV_CONVERT_MMX(FUNC, CONVERT, CONV_BY_PIXEL) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIXEL, 8, 32, 8, 4)
+
 #define CLEANUP emms()
 #define OUT_RGBA_32 OUTPUT_RGBA_32(movq, mm, 8, 16, 24)
 #define OUT_ARGB_32 OUTPUT_ARGB_32(movq, mm, 8, 16, 24)
@@ -92,26 +96,38 @@ static const simd_t simd_table[9] = {
 
 /* yuv420 -> */
 #define CONVERT(OUTPUT_FUNC) LOAD_YUV_PLANAR_2(movq, mm) \
-			     YUV_2_RGB(movq, mm) 	\
-			     OUTPUT_FUNC
+                             YUV_2_RGB(movq, mm) 	\
+                             OUTPUT_FUNC
 
-YUV_CONVERT_MMX(yuv420_to_rgba_mmx, CONVERT(OUT_RGBA_32))
-YUV_CONVERT_MMX(yuv420_to_bgra_mmx, CONVERT(OUT_BGRA_32)) 
-YUV_CONVERT_MMX(yuv420_to_argb_mmx, CONVERT(OUT_ARGB_32)) 
+YUV_CONVERT_MMX(yuv420_to_rgba_mmx, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
+YUV_CONVERT_MMX(yuv420_to_bgra_mmx, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT) 
+YUV_CONVERT_MMX(yuv420_to_argb_mmx, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT) 
+
+#undef MOVNTQ
+
+
+/* template for the SSE conversion functions */
+#define MOVNTQ SSE_MOVNTQ
+
+YUV_CONVERT_MMX(yuv420_to_rgba_sse, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
+YUV_CONVERT_MMX(yuv420_to_bgra_sse, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT)
+YUV_CONVERT_MMX(yuv420_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT)
+
 #undef CONVERT
-
 #undef CLEANUP
 #undef OUT_RGBA_32
 #undef OUT_ARGB_32
 #undef OUT_BGRA_32
 #undef MOVNTQ
 
+
 /**
  *  the conversion functions using SSE2 instructions 
  */
 
 /* template for the SSE2 conversion functions */
-#define YUV_CONVERT_SSE2(FUNC, CONVERT) YUV_CONVERT(FUNC, CONVERT, 16, 64, 16, 8)
+#define YUV_CONVERT_SSE2(FUNC, CONVERT, CONV_BY_PIX) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIX, 16, 64, 16, 8)
+
 #define OUT_RGBA_32 OUTPUT_RGBA_32(movdqa, xmm, 16, 32, 48)
 #define OUT_ARGB_32 OUTPUT_ARGB_32(movdqa, xmm, 16, 32, 48)
 #define OUT_BGRA_32 OUTPUT_BGRA_32(movdqa, xmm, 16, 32, 48)
@@ -120,17 +136,17 @@ YUV_CONVERT_MMX(yuv420_to_argb_mmx, CONVERT(OUT_ARGB_32))
 
 /* yuv420 -> */
 #define CONVERT(OUTPUT_FUNC) LOAD_YUV_PLANAR_2(movdqu, xmm) \
-       			     YUV_2_RGB(movdqa, xmm)	\
-			     OUTPUT_FUNC
+				YUV_2_RGB(movdqa, xmm)	\
+				OUTPUT_FUNC
 
-YUV_CONVERT_SSE2(yuv420_to_rgba_sse2, CONVERT(OUT_RGBA_32))
-YUV_CONVERT_SSE2(yuv420_to_bgra_sse2, CONVERT(OUT_BGRA_32))
-YUV_CONVERT_SSE2(yuv420_to_argb_sse2, CONVERT(OUT_ARGB_32)) 
+YUV_CONVERT_SSE2(yuv420_to_rgba_sse2, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
+YUV_CONVERT_SSE2(yuv420_to_bgra_sse2, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT)
+YUV_CONVERT_SSE2(yuv420_to_argb_sse2, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT)
+
 #undef CONVERT
-
 #undef OUT_RGBA_32
 #undef OUT_ARGB_32
 #undef OUT_BGRA_32
 #undef MOVNTQ
-#undef CLEANUP 
+#undef CLEANUP
 

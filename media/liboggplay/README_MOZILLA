@@ -9,9 +9,6 @@ The git commit ID used was b4a7efa06d46596515071490cb255c3548d90371.
 
 The following local patches have been applied:
 
-bug485291_yuv_align: only use optimized YUV routines if video dimensions are a multiple of the
-                     optimized routine's supported alignment.
-
 endian: pick up NSPR's little/big endian defines in oggplay's config.h.
 
 bug481921: fix a crash in oggplay_callback_info_prepare().
@@ -22,3 +19,9 @@ bug492436: Fix for that bug cherry picked from liboggplay git commit 4b97ad.
 bug493140: Fix for offsets not being used.
 
 aspect-ratio: Adds oggplay_get_video_aspect_ratio, used for bug 480058.
+
+bug488951: Fix for YUV conversion for odd sized frames.  Cherrypicked from
+           upstream commits dabde8, 683f23, and 4d7581.
+
+bug488951_fix_yuv: Additional fixes to YUV conversion that have not been
+                   upstreamed yet.

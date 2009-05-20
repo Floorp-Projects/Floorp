@@ -1,0 +1,43 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
+--- a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
++++ b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
+@@ -55,28 +55,38 @@ static void                             
+ 			CONVERT                                 \
+ 		}                                               \
+ 		/*						\
+ 		 * the video frame is not the multiple of NUM_PIXELS, \
+ 		 * thus we have to deal with remaning pixels using 	\
+ 		 * vanilla implementation.				\
+ 		 */						\
+ 		if (r) { 					\
++			/* if there's only 1 remaining pixel to process  \
++			   and the luma width is odd, the for loop above \
++			   has already advanced pu and pv too far. */    \
++			if (r==1 && yuv->y_width&1) {           \
++				pu -= 1; pv -= 1;               \
++			}                                       \
+ 			for 					\
+ 			( 					\
+ 			  j=(yuv->y_width-r); j < yuv->y_width; \
+ 			  ++j, 					\
+ 			  dst += 4,				\
+ 			  py += 1 				\
+ 			) 					\
+ 			{ 					\
+ 				LOOKUP_COEFFS			\
+ 				VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv) \
+ 				VANILLA_OUT(dst, r, g, b)	\
+-				if (!(j%2)) { 			\
++				/* advance chroma ptrs every second sample, except \
++				   when the luma width is odd, in which case the   \
++				   chroma samples are truncated and we must reuse  \
++				   the previous chroma sample */                   \
++				if (j%2 && !(j+1==yuv->y_width-1 && yuv->y_width&1)) { \
+ 					pu += 1; pv += 1;	\
+ 				} 				\
+ 			}					\
+ 		} 						\
+ 								\
+ 		ptro += rgb->rgb_width * 4;                     \
+ 		ptry += yuv->y_width;                           \
+ 								\

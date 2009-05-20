@@ -8,7 +8,8 @@
 # endif
 
 #define emms() __asm__ __volatile__ ( "emms;" );
-#define MMX_MOVNTQ "movntq"
+#define MMX_MOVNTQ "movq"
+#define SSE_MOVNTQ "movntq"
 #define SSE2_MOVNTQ "movdqu"
 
 #define YUV_2_RGB(mov_instr, reg_type) \
