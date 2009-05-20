@@ -153,34 +153,19 @@
     }
     browserTestFile.prototype = {
       get passCount() {
-        return this.tests.filter(function (t) !t.todo && t.pass).length;
+        return this.tests.filter(function (t) !t.info && !t.todo && t.pass).length;
       },
       get todoCount() {
-        return this.tests.filter(function (t) t.todo && t.pass).length;
+        return this.tests.filter(function (t) !t.info && t.todo && t.pass).length;
       },
       get failCount() {
-        return this.tests.filter(function (t) !t.pass).length;
+        return this.tests.filter(function (t) !t.info && !t.pass).length;
       },
       get log() {
-        var path = this.path;
-        return this.tests.map(function (t) {
-                                  return t.result + " | " + path + " | " + t.msg;
-                              }).join("\n");
+        return this.tests.map(function (t) t.log).join("\n");
       },
       get htmlLog() {
-        let txtToHTML = Cc["@mozilla.org/txttohtmlconv;1"].
-                        getService(Ci.mozITXTToHTMLConv);
-        function _entityEncode(str) {
-          return txtToHTML.scanTXT(str, Ci.mozITXTToHTMLConv.kEntities);
-        }
-        var path = _entityEncode( this.path );
-        return this.tests.map(function (t) {
-                                  var result = "<p class=\"result ";
-                                  result += t.pass ? "passed" : "failed";
-                                  result += "\">" + t.result + " | " + path +
-                                    " | " + _entityEncode( t.msg ) + "</p>";
-                                  return result;
-                              }).join("\n");
+        return this.tests.map(function (t) t.htmlLog).join("\n");
       }
     };
 
