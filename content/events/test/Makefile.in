@@ -69,6 +69,7 @@ _TEST_FILES = \
 		bug457672.html \
 		test_draggableprop.html \
 		test_dragstart.html \
+		test_bug489671.html \
 		test_bug493251.html \
 		$(NULL)
 
