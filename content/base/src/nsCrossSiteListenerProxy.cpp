@@ -55,7 +55,8 @@
 #include "nsCommaSeparatedTokenizer.h"
 #include "nsXMLHttpRequest.h"
 
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
+static PRBool gDisableCORS = PR_FALSE;
+static PRBool gDisableCORSPrivateData = PR_FALSE;
 
 class nsChannelCanceller
 {
@@ -84,6 +85,14 @@ NS_IMPL_ISUPPORTS4(nsCrossSiteListenerProxy, nsIStreamListener,
                    nsIRequestObserver, nsIChannelEventSink,
                    nsIInterfaceRequestor)
 
+/* static */
+void
+nsCrossSiteListenerProxy::Startup()
+{
+  nsContentUtils::AddBoolPrefVarCache("content.cors.disable", &gDisableCORS);
+  nsContentUtils::AddBoolPrefVarCache("content.cors.no_private_data", &gDisableCORSPrivateData);
+}
+
 nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                                                    nsIPrincipal* aRequestingPrincipal,
                                                    nsIChannel* aChannel,
@@ -91,7 +100,7 @@ nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                                                    nsresult* aResult)
   : mOuterListener(aOuter),
     mRequestingPrincipal(aRequestingPrincipal),
-    mWithCredentials(aWithCredentials),
+    mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
     mRequestApproved(PR_FALSE),
     mHasBeenCrossSite(PR_FALSE),
     mIsPreflight(PR_FALSE)
@@ -117,13 +126,18 @@ nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                                                    nsresult* aResult)
   : mOuterListener(aOuter),
     mRequestingPrincipal(aRequestingPrincipal),
-    mWithCredentials(aWithCredentials),
+    mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
     mRequestApproved(PR_FALSE),
     mHasBeenCrossSite(PR_FALSE),
     mIsPreflight(PR_TRUE),
     mPreflightMethod(aPreflightMethod),
     mPreflightHeaders(aPreflightHeaders)
 {
+  for (PRUint32 i = 0; i < mPreflightHeaders.Length(); ++i) {
+    ToLowerCase(mPreflightHeaders[i]);
+  }
+  mPreflightHeaders.Sort();
+
   aChannel->GetNotificationCallbacks(getter_AddRefs(mOuterNotificationCallbacks));
   aChannel->SetNotificationCallbacks(this);
 
@@ -209,6 +223,10 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
   // Check if this was actually a cross domain request
   if (!mHasBeenCrossSite) {
     return NS_OK;
+  }
+
+  if (gDisableCORS) {
+    return NS_ERROR_DOM_BAD_URI;
   }
 
   // Check if the request failed
