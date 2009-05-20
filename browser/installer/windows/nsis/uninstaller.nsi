@@ -52,6 +52,10 @@ RequestExecutionLevel user
 
 !addplugindir ./
 
+; On Vista and above attempt to elevate Standard Users in addition to users that
+; are a member of the Administrators group.
+!define NONADMIN_ELEVATE
+
 ; prevents compiling of the reg write logging.
 !define NO_LOG
 
@@ -88,6 +92,7 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 
 !insertmacro AddDDEHandlerValues
 !insertmacro CleanVirtualStore
+!insertmacro ElevateUAC
 !insertmacro FindSMProgramsDir
 !insertmacro GetLongPath
 !insertmacro GetPathFromString

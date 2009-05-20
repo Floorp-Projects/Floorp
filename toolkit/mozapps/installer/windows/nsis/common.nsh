@@ -4451,26 +4451,24 @@
       Push $R6
       Push $R5
 
-      !ifdef ___WINVER__NSH___
-        ${Unless} ${AtLeastWin2000}
-          ; XXX-rstrong - some systems fail the AtLeastWin2000 test for an
-          ; unknown reason. To work around this also check if the Windows NT
-          ; registry Key exists and if it does if the first char in
-          ; CurrentVersion is equal to 3 (Windows NT 3.5 and 3.5.1) or 4
-          ; (Windows NT 4).
-          StrCpy $R8 ""
-          ClearErrors
-          ReadRegStr $R8 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
-          StrCpy $R8 "$R8" 1
-          ${If} ${Errors}
-          ${OrIf} "$R8" == "3"
-          ${OrIf} "$R8" == "4"
-            MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
-            ; Nothing initialized so no need to call OnEndCommon
-            Quit
-          ${EndIf}
-        ${EndUnless}
-      !endif
+      ${Unless} ${AtLeastWin2000}
+        ; XXX-rstrong - some systems fail the AtLeastWin2000 test for an
+        ; unknown reason. To work around this also check if the Windows NT
+        ; registry Key exists and if it does if the first char in
+        ; CurrentVersion is equal to 3 (Windows NT 3.5 and 3.5.1) or 4
+        ; (Windows NT 4).
+        StrCpy $R8 ""
+        ClearErrors
+        ReadRegStr $R8 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentVersion"
+        StrCpy $R8 "$R8" 1
+        ${If} ${Errors}
+        ${OrIf} "$R8" == "3"
+        ${OrIf} "$R8" == "4"
+          MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
+          ; Nothing initialized so no need to call OnEndCommon
+          Quit
+        ${EndIf}
+      ${EndUnless}
 
       ${GetParameters} $R8
 
@@ -4673,7 +4671,9 @@
       ClearErrors
       ${GetOptions} "$R0" "/HideShortcuts" $R2
       IfErrors showshortcuts +1
+!ifndef NONADMIN_ELEVATE
       ${ElevateUAC}
+!endif
       ${HideShortcuts}
       GoTo finish
 
@@ -4682,7 +4682,9 @@
       ClearErrors
       ${GetOptions} "$R0" "/ShowShortcuts" $R2
       IfErrors defaultappuser +1
+!ifndef NONADMIN_ELEVATE
       ${ElevateUAC}
+!endif
       ${ShowShortcuts}
       GoTo finish
 
@@ -4801,6 +4803,7 @@
     Function PreDirectoryCommon
       Push $R9
 
+!ifndef NO_INSTDIR_PREDIRCOMMON
 !ifndef NO_INSTDIR_FROM_REG
       SetShellVarContext all      ; Set SHCTX to HKLM
       ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
@@ -4813,6 +4816,7 @@
       fix_install_dir:
       StrCmp "$R9" "false" +2 +1
       StrCpy $INSTDIR "$R9"
+!endif
 !endif
 
       IfFileExists "$INSTDIR" +1 check_install_dir
@@ -4829,9 +4833,9 @@
       check_install_dir:
       IntCmp $InstallType ${INSTALLTYPE_CUSTOM} end +1 +1
       ${CanWriteToInstallDir} $R9
-      StrCmp $R9 "false" end +1
+      StrCmp "$R9" "false" end +1
       ${CheckDiskSpace} $R9
-      StrCmp $R9 "false" end +1
+      StrCmp "$R9" "false" end +1
       Abort
 
       end:
@@ -5020,24 +5024,22 @@
 !macro ElevateUAC
 
   !ifndef ${_MOZFUNC_UN}ElevateUAC
-    !ifdef ___WINVER__NSH___
-      !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
-      !insertmacro ${_MOZFUNC_UN_TMP}GetOptions
-      !insertmacro ${_MOZFUNC_UN_TMP}GetParameters
-      !undef _MOZFUNC_UN
-      !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
-      !undef _MOZFUNC_UN_TMP
-    !endif
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetOptions
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParameters
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
     !define ${_MOZFUNC_UN}ElevateUAC "!insertmacro ${_MOZFUNC_UN}ElevateUACCall"
 
     Function ${_MOZFUNC_UN}ElevateUAC
-      !ifdef ___WINVER__NSH___
-        Push $R9
-        Push $0
+      Push $R9
+      Push $0
 
+!ifndef NONADMIN_ELEVATE
         ${If} ${AtLeastWinVista}
           UAC::IsAdmin
           ; If the user is not an admin already
@@ -5068,10 +5070,64 @@
             ${EndIf}
           ${EndIf}
         ${EndIf}
+!else
+      ${If} ${AtLeastWinVista}
+        UAC::IsAdmin
+        ; If the user is not an admin already
+        ${If} "$0" != "1"
+          UAC::SupportsUAC
+          ; If the system supports UAC require that the user elevate
+          ${If} "$0" == "1"
+            UAC::GetElevationType
+            ; If the user account has a split token
+            ${If} "$0" == "3"
+              UAC::RunElevated
+              UAC::Unload
+              ; Nothing besides UAC initialized so no need to call OnEndCommon
+              Quit
+            ${EndIf}
+          ${Else}
+            ; Check if UAC is enabled. If the user has turned UAC on or off
+            ; without rebooting this value will be incorrect. This is an
+            ; edgecase that we have to live with when trying to allow
+            ; installing when the user doesn't have privileges such as a public
+            ; computer while trying to also achieve UAC elevation. When this
+            ; happens the user will be presented with the runas dialog if the
+            ; value is 1 and won't be presented with the UAC dialog when the
+            ; value is 0.
+            ReadRegDWord $R9 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" "EnableLUA"
+            ${If} "$R9" == "1"
+              ; This will display the UAC version of the runas dialog which
+              ; requires a password for an existing user account.
+              UAC::RunElevated
+              ${If} "$0" == "0" ; Was elevation successful
+                UAC::Unload
+                ; Nothing besides UAC initialized so no need to call OnEndCommon
+                Quit
+              ${EndIf}
+              ; Unload UAC since the elevation request was not successful and
+              ; install anyway.
+              UAC::Unload
+            ${EndIf}
+          ${EndIf}
+        ${Else}
+          ClearErrors
+          ${${_MOZFUNC_UN}GetParameters} $R9
+          ${${_MOZFUNC_UN}GetOptions} "$R9" "/UAC:" $R9
+          ; If the command line contains /UAC then we need to initialize the UAC
+          ; plugin to use UAC::ExecCodeSegment to execute code in the
+          ; non-elevated context.
+          ${Unless} ${Errors}
+            UAC::RunElevated 
+          ${EndUnless}
+        ${EndIf}
+      ${EndIf}
+!endif
 
-        Pop $0
-        Pop $R9
-      !endif
+      ClearErrors
+
+      Pop $0
+      Pop $R9
     FunctionEnd
 
     !verbose pop
@@ -5116,38 +5172,34 @@
 !macro UnloadUAC
 
   !ifndef ${_MOZFUNC_UN}UnloadUAC
-    !ifdef ___WINVER__NSH___
-      !define _MOZFUNC_UN_TMP_UnloadUAC ${_MOZFUNC_UN}
-      !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetOptions
-      !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetParameters
-      !undef _MOZFUNC_UN
-      !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP_UnloadUAC}
-      !undef _MOZFUNC_UN_TMP_UnloadUAC
-    !endif
+    !define _MOZFUNC_UN_TMP_UnloadUAC ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetOptions
+    !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetParameters
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP_UnloadUAC}
+    !undef _MOZFUNC_UN_TMP_UnloadUAC
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
     !define ${_MOZFUNC_UN}UnloadUAC "!insertmacro ${_MOZFUNC_UN}UnloadUACCall"
 
     Function ${_MOZFUNC_UN}UnloadUAC
-      !ifdef ___WINVER__NSH___
-        ${Unless} ${AtLeastWinVista}
-          Return
-        ${EndUnless}
+      ${Unless} ${AtLeastWinVista}
+        Return
+      ${EndUnless}
 
-        Push $R9
+      Push $R9
 
-        ClearErrors
-        ${${_MOZFUNC_UN}GetParameters} $R9
-        ${${_MOZFUNC_UN}GetOptions} "$R9" "/UAC:" $R9
-        ; If the command line contains /UAC then we need to unload the UAC plugin
-        IfErrors +2 +1
-        UAC::Unload
+      ClearErrors
+      ${${_MOZFUNC_UN}GetParameters} $R9
+      ${${_MOZFUNC_UN}GetOptions} "$R9" "/UAC:" $R9
+      ; If the command line contains /UAC then we need to unload the UAC plugin
+      IfErrors +2 +1
+      UAC::Unload
 
-        ClearErrors
+      ClearErrors
 
-        Pop $R9
-      !endif
+      Pop $R9
     FunctionEnd
 
     !verbose pop

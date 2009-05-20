@@ -60,6 +60,14 @@ Var AddQuickLaunchSC
 Var AddDesktopSC
 Var PageName
 
+; On Vista and above attempt to elevate Standard Users in addition to users that
+; are a member of the Administrators group.
+!define NONADMIN_ELEVATE
+
+; Don't use the PreDirectoryCommon macro's code for finding a pre-existing
+; installation directory.
+!define NO_INSTDIR_PREDIRCOMMON
+
 !define AbortSurveyURL "http://www.kampyle.com/feedback_form/ff-feedback-form.php?site_code=8166124&form_id=12116&url="
 
 ; Other included files may depend upon these includes!
@@ -95,6 +103,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro _LoggingShortcutsCommon
 
 !insertmacro AddDDEHandlerValues
+!insertmacro CanWriteToInstallDir
 !insertmacro ChangeMUIHeaderImage
 !insertmacro CheckForFilesInUse
 !insertmacro CleanUpdatesDir
@@ -348,6 +357,10 @@ Section "-Application" APP_IDX
 
   ${FixClassKeys}
 
+  ; Uninstall keys can only exist under HKLM on some versions of windows. Since
+  ; it doesn't cause problems always add them.
+  ${SetUninstallKeys}
+
   ; On install always add the FirefoxHTML and FirefoxURL keys.
   ; An empty string is used for the 5th param because FirefoxHTML and FirefoxURL
   ; are not protocol handlers.
@@ -361,15 +374,12 @@ Section "-Application" APP_IDX
   ${AddDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" "true" \
                          "${DDEApplication}" "$3" "WWW_OpenURL"
 
-  ${FixShellIconHandler}
-
   ; The following keys should only be set if we can write to HKLM
   ${If} $TmpVal == "HKLM"
-    ; Uninstall keys can only exist under HKLM on some versions of windows.
-    ${SetUninstallKeys}
-
     ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
     ${SetStartMenuInternet}
+
+    ${FixShellIconHandler}
 
     ; If we are writing to HKLM and create the quick launch and the desktop
     ; shortcuts set IconsVisible to 1 otherwise to 0.
@@ -392,10 +402,10 @@ Section "-Application" APP_IDX
   StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\$R9"
   ${CreateRegKey} "$TmpVal" "$0" 0
 
-  !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-
   ; Create shortcuts
   ${LogHeader} "Adding Shortcuts"
+
+  !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 
   ; Always add the relative path to the application's Start Menu directory and
   ; the application's shortcuts to the shortcuts log ini file. The
@@ -407,6 +417,10 @@ Section "-Application" APP_IDX
   ${LogQuickLaunchShortcut} "${BrandFullName}.lnk"
   ${LogDesktopShortcut} "${BrandFullName}.lnk"
 
+  ; UAC only allows elevating to an Admin account so there is no need to add
+  ; the Start Menu or Desktop shortcuts from the original unelevated process
+  ; since this will either add it for the user if unelevated or All Users if
+  ; elevated.
   ${If} $AddStartMenuSC == 1
     ${Unless} ${FileExists} "$SMPROGRAMS\$StartMenuDir"
       CreateDirectory "$SMPROGRAMS\$StartMenuDir"
@@ -418,17 +432,31 @@ Section "-Application" APP_IDX
     ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
   ${EndIf}
 
-  ${If} $AddQuickLaunchSC == 1
-    CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandFullName}.lnk"
-  ${EndIf}
+  !insertmacro MUI_STARTMENU_WRITE_END
 
   ${If} $AddDesktopSC == 1
     CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
     ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
   ${EndIf}
 
-  !insertmacro MUI_STARTMENU_WRITE_END
+  ; If elevated the Quick Launch shortcut must be added from the unelevated
+  ; original process.
+  ${If} $AddQuickLaunchSC == 1
+    ClearErrors
+    ${GetParameters} $0
+    ${GetOptions} "$0" "/UAC:" $0
+    ${If} ${Errors}
+      Call AddQuickLaunchShortcut
+      ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandFullName}.lnk"
+    ${Else}
+      ; It is not possible to add a log entry from the unelevated process so
+      ; add the log entry without the path since there is no simple way to know
+      ; the correct full path.
+      ${LogMsg} "Added Quick Launch Shortcut: ${BrandFullName}.lnk"
+      GetFunctionAddress $0 AddQuickLaunchShortcut
+      UAC::ExecCodeSegment $0
+    ${EndIf}
+  ${EndIf}
 SectionEnd
 
 ; Cleanup operations to perform at the end of the installation.
@@ -441,7 +469,15 @@ Section "-InstallEndCleanup"
     ${MUI_INSTALLOPTIONS_READ} $0 "options.ini" "Field 6" "State"
     ${If} "$0" == "1"
       ${LogHeader} "Setting as the default browser"
-      ${SetAsDefaultAppUser}
+      ClearErrors
+      ${GetParameters} $0
+      ${GetOptions} "$0" "/UAC:" $0
+      ${If} ${Errors}
+        Call SetAsDefaultAppUserHKCU
+      ${Else}
+        GetFunctionAddress $0 SetAsDefaultAppUserHKCU
+        UAC::ExecCodeSegment $0
+      ${EndIf}
     ${EndIf}
   ${EndUnless}
 
@@ -452,9 +488,9 @@ Section "-InstallEndCleanup"
 
   ${InstallEndCleanupCommon}
 
-  ; If we have to reboot give SHChangeNotify time to finish the refreshing
-  ; the icons so the OS doesn't display the icons from helper.exe
   ${If} ${RebootFlag}
+    ; When a reboot is required give SHChangeNotify time to finish the
+    ; refreshing the icons so the OS doesn't display the icons from helper.exe
     Sleep 10000
     ${LogHeader} "Reboot Required To Finish Installation"
     ; ${FileMainEXE}.moz-upgrade should never exist but just in case...
@@ -557,6 +593,10 @@ FunctionEnd
 
 ################################################################################
 # Helper Functions
+
+Function AddQuickLaunchShortcut
+  CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+FunctionEnd
 
 Function CheckExistingInstall
   ; If there is a pending file copy from a previous uninstall don't allow
@@ -673,22 +713,37 @@ Function leaveOptions
   StrCmp $R0 "1" +1 +2
   StrCpy $InstallType ${INSTALLTYPE_CUSTOM}
 
-  ${If} $InstallType != ${INSTALLTYPE_CUSTOM}
 !ifndef NO_INSTDIR_FROM_REG
-    SetShellVarContext all      ; Set SHCTX to HKLM
-    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+  SetShellVarContext all      ; Set SHCTX to HKLM
+  ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
-    StrCmp "$R9" "false" +1 fix_install_dir
+  StrCmp "$R9" "false" +1 fix_install_dir
 
-    SetShellVarContext current  ; Set SHCTX to HKCU
-    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+  SetShellVarContext current  ; Set SHCTX to HKCU
+  ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
-    fix_install_dir:
-    StrCmp "$R9" "false" +2 +1
-    StrCpy $INSTDIR "$R9"
+  fix_install_dir:
+  StrCmp "$R9" "false" +2 +1
+  StrCpy $INSTDIR "$R9"
 !endif
 
-    Call CheckExistingInstall
+  ; If the user doesn't have write access to the installation directory set
+  ; the installation directory to a subdirectory of the All Users application
+  ; directory and if the user can't write to that location set the installation
+  ; directory to a subdirectory of the users local application directory
+  ; (e.g. non-roaming).
+  ${CanWriteToInstallDir} $R8
+  ${If} "$R8" == "false"
+    SetShellVarContext all      ; Set SHCTX to All Users
+    StrCpy $INSTDIR "$APPDATA\${BrandFullName}\"
+    ${If} ${FileExists} "$INSTDIR"
+      ; Always display the long path if the path already exists.
+      ${GetLongPath} "$INSTDIR" $INSTDIR
+    ${EndIf}
+    ${CanWriteToInstallDir} $R8
+    ${If} "$R8" == "false"
+      StrCpy $INSTDIR "$LOCALAPPDATA\${BrandFullName}\"
+    ${EndIf}
   ${EndIf}
 FunctionEnd
 
@@ -699,6 +754,9 @@ FunctionEnd
 
 Function leaveDirectory
   ${LeaveDirectoryCommon} "$(WARN_DISK_SPACE)" "$(WARN_WRITE_ACCESS)"
+  ${If} $InstallType != ${INSTALLTYPE_CUSTOM}
+    Call CheckExistingInstall
+  ${EndIf}
 FunctionEnd
 
 Function preShortcuts
@@ -867,8 +925,29 @@ Function .onInit
   !insertmacro InitInstallOptionsFile "shortcuts.ini"
   !insertmacro InitInstallOptionsFile "summary.ini"
 
-  ; Setup the options.ini file for the Custom Options Page
-  WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "6"
+  ClearErrors
+  ${If} ${AtLeastWinVista}
+    WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
+  ${EndIf}
+  ${If} ${Errors}
+    ; Setup the options.ini file for the Custom Options Page without the option
+    ; to set as default for Vista and above since the installer is unable to
+    ; write to HKLM.
+    WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "5"
+  ${Else}
+    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    ; Setup the options.ini file for the Custom Options Page with the option
+    ; to set as default
+    WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "6"
+
+    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Type   "checkbox"
+    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Text   "$(OPTIONS_MAKE_DEFAULT)"
+    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Left   "0"
+    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Top    "124"
+    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Bottom "145"
+    WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" State  "1"
+  ${EndIf}
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Type   "label"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 1" Text   "$(OPTIONS_SUMMARY)"
@@ -907,14 +986,6 @@ Function .onInit
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Right  "-1"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Top    "67"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Bottom "87"
-
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Type   "checkbox"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Text   "$(OPTIONS_MAKE_DEFAULT)"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Left   "0"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Right  "-1"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Top    "124"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" Bottom "145"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 6" State  "1"
 
   ; Setup the shortcuts.ini file for the Custom Shortcuts Page
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Settings" NumFields "4"
