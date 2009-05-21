@@ -1320,14 +1320,15 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                        CreateHolderIfNeeded(ccx, JSVAL_TO_OBJECT(v), d, dest);
             }
 
-            if(allowNativeWrapper && wrapper->NeedsChromeWrapper())
+            *d = v;
+            if(allowNativeWrapper)
             {
-                if(!XPC_SOW_WrapObject(ccx, xpcscope->GetGlobalJSObject(), v, d))
-                    return JS_FALSE;
-            }
-            else
-            {
-                *d = v;
+                if(wrapper->NeedsChromeWrapper())
+                    if(!XPC_SOW_WrapObject(ccx, xpcscope->GetGlobalJSObject(), v, d))
+                        return JS_FALSE;
+                if(wrapper->IsDoubleWrapper())
+                    if(!XPC_COW_WrapObject(ccx, xpcscope->GetGlobalJSObject(), v, d))
+                        return JS_FALSE;
             }
             if(dest)
                 *dest = strongWrapper.forget().get();

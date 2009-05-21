@@ -61,7 +61,8 @@ const char* XPCJSRuntime::mStrings[] = {
     "createInstance",       // IDX_CREATE_INSTANCE
     "item",                 // IDX_ITEM
     "__proto__",            // IDX_PROTO
-    "__iterator__"          // IDX_ITERATOR
+    "__iterator__",         // IDX_ITERATOR
+    "__parent__"            // IDX_PARENT
 #ifdef XPC_IDISPATCH_SUPPORT
     , "GeckoActiveXObject"  // IDX_ACTIVEX_OBJECT
     , "COMObject"           // IDX_COMOBJECT

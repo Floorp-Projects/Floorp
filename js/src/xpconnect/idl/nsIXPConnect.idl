@@ -405,7 +405,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(b2ddc328-194b-45d6-95c6-52e487438096)]
+[uuid(b76828b8-3ac5-469e-946d-3401c6a2104d)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -476,12 +476,15 @@ interface nsIXPConnect : nsISupports
      * &NS_GET_IID(nsISupports) but when passing in null certain shortcuts
      * can be taken because we know without comparing IIDs that the caller is
      * asking for an nsISupports wrapper.
+     * If aAllowWrapper, then the returned value will be wrapped in the proper
+     * type of security wrapper on top of the XPCWrappedNative (if needed).
      */
     void
     wrapNativeToJSVal(in JSContextPtr aJSContext,
                       in JSObjectPtr  aScope,
                       in nsISupports  aCOMObj,
                       in nsIIDPtr     aIID,
+                      in boolean      aAllowWrapper,
                       out JSVal       aVal,
                       out nsIXPConnectJSObjectHolder aHolder);
 
@@ -702,6 +705,16 @@ interface nsIXPConnect : nsISupports
      * @param aWrappedObj The object to wrap.
      */
     [noscript] JSVal getXOWForObject(in JSContextPtr aJSContext,
+                                     in JSObjectPtr aParent,
+                                     in JSObjectPtr aWrappedObj);
+
+    /**
+     * Wrap a jsval in a chrome object wrapper.
+     * @param aJSContext A context to use to create objects.
+     * @param aParent The parent to create the wrapper with.
+     * @param aWrappedObj The object to wrap.
+     */
+    [noscript] JSVal getCOWForObject(in JSContextPtr aJSContext,
                                      in JSObjectPtr aParent,
                                      in JSObjectPtr aWrappedObj);
 
