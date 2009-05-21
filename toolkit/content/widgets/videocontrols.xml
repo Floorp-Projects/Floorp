@@ -98,6 +98,7 @@
       <field name="durationValue">""</field>
 
       <field name="thumb">null</field>
+      <field name="valueBar">null</field>
       <field name="type">null</field>
       <field name="Utils">null</field>
       <constructor>
@@ -105,6 +106,8 @@
           this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
           this.type = this.getAttribute("class");
           this.Utils = document.getBindingParent(this.parentNode).Utils;
+          if (this.type == "scrubber")
+              this.valueBar = this.Utils.progressBar;
           ]]>
       </constructor>
 
@@ -119,9 +122,13 @@
             // just calls the videocontrol's seekToPosition() method directly.
             switch (which) {
               case "curpos":
-                // Update the time shown in the thumb.
-                if (this.type == "scrubber")
+                if (this.type == "scrubber") {
+                    // Update the time shown in the thumb.
                     this.thumb.setTime(newValue);
+                    // Update the value bar to match the thumb position.
+                    var percent = newValue / this.max;
+                    this.valueBar.value = Math.round(percent * 10000); // has max=10000
+                }
 
                 // The value of userChanged is true when changing the position with the mouse,
                 // but not when pressing an arrow key. However, the base binding sets
@@ -141,6 +148,11 @@
                 break;
   
               case "maxpos":
+                if (this.type == "scrubber") {
+                    // Update the value bar to match the thumb position.
+                    var percent = this.value / newValue;
+                    this.valueBar.value = Math.round(percent * 10000); // has max=10000
+                }
                 this.setAttribute("max", newValue);
                 break;
             }
@@ -596,11 +608,6 @@
 
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
                     this.scrubber.value = currentTime;
-
-                    // Extend the progressBar to the middle of the scrubber thumb.
-                    var percent = currentTime / duration;
-                    // The progressBar has max=10000
-                    this.progressBar.value = Math.round(percent * 10000);
                 },
 
                 onVolumeMouseInOut : function (event) {
