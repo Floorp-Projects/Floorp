@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
-   <tree flex="20" id="t" ref="urn:data:row" datasources="rdf:null" seltype="single">
+   <tree flex="20" id="t" ref="urn:data:row" datasources="" seltype="single" >
      <treecols> 
       <treecol flex="1" id="id" label="id" sort="rdf:http://dummy/rdf#id" />
       <splitter class="tree-splitter"/>
@@ -18,95 +18,21 @@
        </treechildren>
      </template>
    </tree>
-   <tree flex="20" id="tc" ref="urn:data:row" datasources="rdf:null" seltype="single" flags="dont-build-content">
-     <treecols> 
-      <treecol flex="1" id="idc" label="id" sort="rdf:http://dummy/rdf#id" />
-      <splitter class="tree-splitter"/>
-      <treecol flex="1" id="titlec" label="title" sort="rdf:http://dummy/rdf#title" sortActive="true" sortDirection="ascending" /><splitter class="tree-splitter"/>
-     </treecols>
-     <template>
-       <treechildren>
-         <treeitem uri="rdf:*" seltype="single">
-           <treerow >
-             <treecell label="rdf:http://dummy/rdf#id"/>
-             <treecell label="rdf:http://dummy/rdf#title"/>
-           </treerow>
-         </treeitem>
-       </treechildren>
-     </template>
-   </tree>
 
 <script type="application/x-javascript">
 <![CDATA[
 
-var buildCount = 0;
-
-var TemplateBuilderListener = {
-  willRebuild: function(aBuilder) {
-  },
-
-  didRebuild: function(aBuilder) {
-  ++buildCount;
-    var remove = false;
-    if (buildCount == 2) {
-      remove =true;
-      setTimeout(nextDataSource, 0);
-    } else if (buildCount == 4) {
-      remove = true;
-      setTimeout(continueTest, 0);
-    }
-    if (remove) {
-      var tree = document.getElementById('t');
-      var treec = document.getElementById('tc');
-      tree.builder.removeListener(TemplateBuilderListener);
-      treec.builder.removeListener(TemplateBuilderListener);
-    }
-  },
-
-  QueryInterface: function (aIID)
-  {
-    if (!aIID.equals(Components.interfaces.nsIXULBuilderListener) &&
-        !aIID.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
+var tree = document.getElementById('t');
 
 function runTest() {
-  var tree = document.getElementById('t');
-  var treec = document.getElementById('tc');
-
-  tree.builder.addListener(TemplateBuilderListener);
-  treec.builder.addListener(TemplateBuilderListener);
   tree.setAttribute('datasources', '441785-1.rdf');
-  treec.setAttribute('datasources', '441785-1.rdf');
-}
-
-var oldtreefirstrow, oldtreecfirstrow;
-
-function nextDataSource()
-{
-  var tree = document.getElementById('t');
-  var treec = document.getElementById('tc');
-  tree.treeBoxObject.scrollToRow(10);
-  treec.treeBoxObject.scrollToRow(10);
-
-  if (tree.treeBoxObject.getFirstVisibleRow() == 10 &&
-      treec.treeBoxObject.getFirstVisibleRow() == 10) {
-    tree.builder.addListener(TemplateBuilderListener);
-    treec.builder.addListener(TemplateBuilderListener);
-    tree.setAttribute('datasources', '441785-2.rdf');
-    treec.setAttribute('datasources', '441785-2.rdf');
-  }
+  tree.setAttribute('datasources', '441785-2.rdf');
+  
+  setTimeout('continueTest()', 1000);
 }
 
 function continueTest() {
-  var tree = document.getElementById('t');
-  var treec = document.getElementById('tc');
-
-  // there should only be one row visible in each tree at this point
-  if (tree.treeBoxObject.getFirstVisibleRow() == 0 &&
-      treec.treeBoxObject.getFirstVisibleRow() == 0) {
+  if (tree.view && tree.view.rowCount > 1) {
     //netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     try {
       window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -117,9 +43,8 @@ function continueTest() {
     // Hit the bug, crash 
     // (not exactly the same kind of crash as 441785, but from the same cause)
     tree.parentNode.removeChild(tree);
-    treec.parentNode.removeChild(treec);
-    document.documentElement.className = "";
   }
+  document.documentElement.className = "";
 }
 
 window.addEventListener("load", runTest, false);

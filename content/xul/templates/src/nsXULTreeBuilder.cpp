@@ -319,9 +319,6 @@ nsXULTreeBuilder::Uninit(PRBool aIsFinal)
     if (mBoxObject) {
         mBoxObject->BeginUpdateBatch();
         mBoxObject->RowCountChanged(0, -count);
-        if (mBoxObject) {
-            mBoxObject->EndUpdateBatch();
-        }
     }
 
     nsXULTemplateBuilder::Uninit(aIsFinal);
@@ -1363,21 +1360,29 @@ nsXULTreeBuilder::RebuildAll()
     }
 
     nsresult rv = CompileQueries();
-    if (NS_SUCCEEDED(rv) && mQuerySets.Length() > 0) {
-        // Seed the rule network with assignments for the tree row variable
-        nsAutoString ref;
-        mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, ref);
-        if (!ref.IsEmpty()) {
-            rv = mQueryProcessor->TranslateRef(mDataSource, ref,
-                                               getter_AddRefs(mRootResult));
-            if (NS_SUCCEEDED(rv) && mRootResult) {
-                OpenContainer(-1, mRootResult);
+    if (NS_FAILED(rv))
+        return rv;
 
-                nsCOMPtr<nsIRDFResource> rootResource;
-                GetResultResource(mRootResult, getter_AddRefs(rootResource));
+    if (mQuerySets.Length() == 0)
+        return NS_OK;
 
-                mRows.SetRootResource(rootResource);
-            }
+    // Seed the rule network with assignments for the tree row variable
+    nsAutoString ref;
+    mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, ref);
+
+    if (! ref.IsEmpty()) {
+        rv = mQueryProcessor->TranslateRef(mDataSource, ref,
+                                           getter_AddRefs(mRootResult));
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (mRootResult) {
+            OpenContainer(-1, mRootResult);
+
+            nsCOMPtr<nsIRDFResource> rootResource;
+            GetResultResource(mRootResult, getter_AddRefs(rootResource));
+
+            mRows.SetRootResource(rootResource);
         }
     }
 
@@ -1385,7 +1390,7 @@ nsXULTreeBuilder::RebuildAll()
         mBoxObject->EndUpdateBatch();
     }
 
-    return rv;
+    return NS_OK;
 }
 
 nsresult
