@@ -267,7 +267,7 @@
 
                 // controlFader holds the fade state for the control bar.
                 controlFader  : {
-                                    name : "controls", // shorthand for debugging
+                                    name : "controls", // fader identifier
                                     element : null,    // the element to fade in/out
                                     runtime : 0,       // duration of active animation
                                     fadingIn : false,  // are we fading in, or fading out?
@@ -708,6 +708,12 @@
                     if (pos > 1)
                         pos = 1;
                     
+                    // Bug 493523, the scrubber doesn't call valueChanged while hidden,
+                    // so our dependent state (eg, timestamp in the thumb) will be stale.
+                    // As a workaround, update it manually when it first becomes unhidden.
+                    if (fader.name == "controls" && fader.fadingIn && fader.element.hidden)
+                        self.scrubber.valueChanged("curpos", self.video.currentTime * 1000, false);
+
                     // Calculate the opacity for our position in the animation.
                     var opacity;
                     if (fader.fadingIn)
