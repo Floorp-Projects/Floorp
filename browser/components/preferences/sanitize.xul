@@ -61,15 +61,15 @@
             helpTopic="prefs-clear-private-data">
 
     <preferences>
-      <preference id="privacy.item.history"               name="privacy.item.history"               type="bool"/>
-      <preference id="privacy.item.formdata"              name="privacy.item.formdata"              type="bool"/>
-      <preference id="privacy.item.passwords"             name="privacy.item.passwords"             type="bool"/>
-      <preference id="privacy.item.downloads"             name="privacy.item.downloads"             type="bool"/>
-      <preference id="privacy.item.cookies"               name="privacy.item.cookies"               type="bool"/>
-      <preference id="privacy.item.cache"                 name="privacy.item.cache"                 type="bool"/>
-      <preference id="privacy.item.offlineApps"           name="privacy.item.offlineApps"           type="bool"/>
-      <preference id="privacy.item.sessions"              name="privacy.item.sessions"              type="bool"/>
-      <preference id="privacy.item.siteSettings"          name="privacy.item.siteSettings"          type="bool"/>
+      <preference id="privacy.clearOnShutdown.history"               name="privacy.clearOnShutdown.history"               type="bool"/>
+      <preference id="privacy.clearOnShutdown.formdata"              name="privacy.clearOnShutdown.formdata"              type="bool"/>
+      <preference id="privacy.clearOnShutdown.passwords"             name="privacy.clearOnShutdown.passwords"             type="bool"/>
+      <preference id="privacy.clearOnShutdown.downloads"             name="privacy.clearOnShutdown.downloads"             type="bool"/>
+      <preference id="privacy.clearOnShutdown.cookies"               name="privacy.clearOnShutdown.cookies"               type="bool"/>
+      <preference id="privacy.clearOnShutdown.cache"                 name="privacy.clearOnShutdown.cache"                 type="bool"/>
+      <preference id="privacy.clearOnShutdown.offlineApps"           name="privacy.clearOnShutdown.offlineApps"           type="bool"/>
+      <preference id="privacy.clearOnShutdown.sessions"              name="privacy.clearOnShutdown.sessions"              type="bool"/>
+      <preference id="privacy.clearOnShutdown.siteSettings"          name="privacy.clearOnShutdown.siteSettings"          type="bool"/>
     </preferences>
 
     <description>&clearDataSettings2.label;</description>
@@ -85,26 +85,26 @@
           <row>
             <checkbox label="&itemBrowsingHistory.label;"
                       accesskey="&itemBrowsingHistory.accesskey;"
-                      preference="privacy.item.history"/>
+                      preference="privacy.clearOnShutdown.history"/>
             <checkbox label="&itemCookies.label;"
                       accesskey="&itemCookies.accesskey;"
-                      preference="privacy.item.cookies"/>
+                      preference="privacy.clearOnShutdown.cookies"/>
           </row>
           <row>
             <checkbox label="&itemDownloadHistory.label;"
                       accesskey="&itemDownloadHistory.accesskey;"
-                      preference="privacy.item.downloads"/>
+                      preference="privacy.clearOnShutdown.downloads"/>
             <checkbox label="&itemActiveLogins.label;"
                       accesskey="&itemActiveLogins.accesskey;"
-                      preference="privacy.item.sessions"/>
+                      preference="privacy.clearOnShutdown.sessions"/>
           </row>
           <row>
             <checkbox label="&itemFormSearchHistory.label;"
                       accesskey="&itemFormSearchHistory.accesskey;"
-                      preference="privacy.item.formdata"/>
+                      preference="privacy.clearOnShutdown.formdata"/>
             <checkbox label="&itemCache.label;"
                       accesskey="&itemCache.accesskey;"
-                      preference="privacy.item.cache"/>
+                      preference="privacy.clearOnShutdown.cache"/>
           </row>
         </rows>
       </grid>
@@ -120,15 +120,15 @@
           <row>
             <checkbox label="&itemPasswords.label;"
                       accesskey="&itemPasswords.accesskey;"
-                      preference="privacy.item.passwords"/>
+                      preference="privacy.clearOnShutdown.passwords"/>
             <checkbox label="&itemOfflineApps.label;"
                       accesskey="&itemOfflineApps.accesskey;"
-                      preference="privacy.item.offlineApps"/>
+                      preference="privacy.clearOnShutdown.offlineApps"/>
           </row>
           <row>
             <checkbox label="&itemSitePreferences.label;"
                       accesskey="&itemSitePreferences.accesskey;"
-                      preference="privacy.item.siteSettings"/>
+                      preference="privacy.clearOnShutdown.siteSettings"/>
           </row>
         </rows>
       </grid>
