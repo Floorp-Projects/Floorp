@@ -1824,6 +1824,31 @@ endif
 endif
 
 ################################################################################
+# SDK
+
+ifneq (,$(SDK_LIBRARY))
+$(SDK_LIB_DIR)::
+	$(NSINSTALL) -D $@
+
+ifndef NO_DIST_INSTALL
+libs:: $(SDK_LIBRARY) $(SDK_LIB_DIR)
+	$(INSTALL) $(IFLAGS2) $^
+endif
+
+endif # SDK_LIBRARY
+
+ifneq (,$(SDK_BINARY))
+$(SDK_BIN_DIR)::
+	$(NSINSTALL) -D $@
+
+ifndef NO_DIST_INSTALL
+libs:: $(SDK_BINARY) $(SDK_BIN_DIR)
+	$(INSTALL) $(IFLAGS2) $^
+endif
+
+endif # SDK_BINARY
+
+################################################################################
 # CHROME PACKAGING
 
 JAR_MANIFEST := $(srcdir)/jar.mn
