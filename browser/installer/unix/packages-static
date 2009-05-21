@@ -26,6 +26,7 @@ bin/defaults/profile/localstore.rdf
 bin/defaults/profile/prefs.js
 bin/defaults/profile/mimeTypes.rdf
 bin/defaults/profile/chrome/*
+bin/update.locale
 bin/updater.ini
 bin/dictionaries/*
 

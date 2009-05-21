@@ -68,6 +68,12 @@ ifdef MOZ_PSM
 endif
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$*
 
+
+ifdef MOZ_UPDATER
+libs:: update.locale
+	cat $< | sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/update.locale
+endif
+
 ifdef MOZ_CRASHREPORTER
 libs:: crashreporter.ini
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
