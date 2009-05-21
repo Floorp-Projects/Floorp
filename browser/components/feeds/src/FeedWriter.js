@@ -845,8 +845,6 @@ FeedWriter.prototype = {
 
   // nsIDomEventListener
   handleEvent: function(event) {
-    // see comments in init()
-    event = new XPCNativeWrapper(event);
     if (event.target.ownerDocument != this._document) {
       LOG("FeedWriter.handleEvent: Someone passed the feed writer as a listener to the events of another document!");
       return;
@@ -1152,10 +1150,7 @@ FeedWriter.prototype = {
 
   // nsIFeedWriter
   init: function FW_init(aWindow) {
-    // Explicitly wrap |window| in an XPCNativeWrapper to make sure
-    // it's a real native object! This will throw an exception if we
-    // get a non-native object.
-    var window = new XPCNativeWrapper(aWindow);
+    var window = aWindow;
     this._feedURI = this._getOriginalURI(window);
     if (!this._feedURI)
       return;
@@ -1332,9 +1327,6 @@ FeedWriter.prototype = {
 
   // nsIObserver
   observe: function FW_observe(subject, topic, data) {
-    // see init()
-    subject = new XPCNativeWrapper(subject);
-    
     if (!this._window) {
       // this._window is null unless this.init was called with a trusted
       // window object.
@@ -1401,9 +1393,6 @@ FeedWriter.prototype = {
 
    // nsINavHistoryService
    onPageChanged: function FW_onPageChanged(aURI, aWhat, aValue) {
-     // see init()
-     aURI = new XPCNativeWrapper(aURI);
-
      if (aWhat == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
        // Go through the readers menu and look for the corresponding
        // reader menu-item for the page if any.

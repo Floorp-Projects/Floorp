@@ -111,6 +111,7 @@ XPC_XOW_ClassNeedsXOW(const char *name)
   return JS_FALSE;
 }
 
+extern JSExtendedClass sXPC_COW_JSClass;
 extern JSExtendedClass sXPC_SJOW_JSClass;
 extern JSExtendedClass sXPC_SOW_JSClass;
 extern JSExtendedClass sXPC_XOW_JSClass;
@@ -285,6 +286,21 @@ public:
     return wrapper;
   }
 
+  static JSObject *UnwrapCOW(JSContext *cx, JSObject *wrapper) {
+    wrapper = UnwrapGeneric(cx, &sXPC_COW_JSClass, wrapper);
+    if (!wrapper) {
+      return nsnull;
+    }
+
+    nsresult rv = CanAccessWrapper(cx, wrapper);
+    if (NS_FAILED(rv)) {
+      JS_ClearPendingException(cx);
+      wrapper = nsnull;
+    }
+
+    return wrapper;
+  }
+
   /**
    * Rewraps a property if it needs to be rewrapped. Used by
    * GetOrSetNativeProperty to rewrap the return value.
@@ -377,7 +393,6 @@ public:
                                uintN argc, jsval *argv, jsval *rval,
                                JSBool isNativeWrapper);
 
-private:
   /**
    * Looks up a property on obj. If it exists, then the parameters are filled
    * in with useful values.
