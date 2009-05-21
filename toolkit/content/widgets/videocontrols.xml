@@ -261,8 +261,9 @@
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
                                "loadstart", "durationchange", "timeupdate", "progress",
-                               "playing", "waiting", "canplaythrough", "seeking",
-                               "seeked", "emptied", "loadedmetadata", "error"],
+                               "playing", "waiting", "canplay", "canplaythrough",
+                               "seeking", "seeked", "emptied", "loadedmetadata",
+                               "error", "suspend"],
 
                 // controlFader holds the fade state for the control bar.
                 controlFader  : {
@@ -308,9 +309,30 @@
                                 },
 
                 firstFrameShown : false,
+                timeUpdateCount : 0,
                 lastTimeUpdate : 0,
                 maxCurrentTimeSeen : 0,
                 isAudioOnly : false,
+
+                setupStatusFader : function(immediate) {
+                    if (this.video.seeking || this.video.error ||
+                        (this.video.paused || this.video.ended
+                         ? this.video.readyState < this.video.HAVE_CURRENT_DATA
+                         : this.video.readyState < this.video.HAVE_FUTURE_DATA) ||
+                        (this.timeUpdateCount <= 1 &&
+                         this.video.readyState < this.video.HAVE_ENOUGH_DATA &&
+                         this.video.networkState >= this.video.NETWORK_LOADING))
+                        this.startFadeIn(this.statusFader, immediate);
+                    else
+                        this.startFadeOut(this.statusFader, immediate);
+
+                    this.log("Status fader: seeking=" + this.video.seeking +
+                             " error=" + this.video.error + " readyState=" + this.video.readyState +
+                             " paused=" + this.video.paused + " ended=" + this.video.ended +
+                             " networkState=" + this.video.networkState +
+                             " timeUpdateCount=" + this.timeUpdateCount +
+                             " --> " + (this.statusFader.fadingIn ? "SHOW" : "HIDE"));
+                },
 
                 /*
                  * Set the initial state of the controls. The binding is normally created along
@@ -347,8 +369,6 @@
                     // If the first frame hasn't loaded, kick off a throbber fade-in.
                     if (this.video.readyState >= this.video.HAVE_CURRENT_DATA)
                         this.firstFrameShown = true;
-                    else
-                        this.startFadeIn(this.statusFader);
 
                     // We can't determine the exact buffering status, but do know if it's
                     // fully loaded. (If it's still loading, it will fire a progress event
@@ -359,13 +379,13 @@
                     else
                         this.bufferBar.setAttribute("value", 0);
 
-                    // Set the current status icon. If the video is in an error state,
-                    // show the status overlay now.
+                    // Set the current status icon.
                     if (this.video.error) {
                         this.statusIcon.setAttribute("type", "error");
-                        this.startFadeIn(this.statusFader, true);
+                        this.setupStatusFader(true);
                     } else {
                         this.statusIcon.setAttribute("type", "throbber");
+                        this.setupStatusFader();
                     }
                 },
 
@@ -396,10 +416,12 @@
                     switch (aEvent.type) {
                         case "play":
                             this.setPlayButtonState(false);
+                            this.setupStatusFader();
                             break;
                         case "pause":
                         case "ended":
                             this.setPlayButtonState(true);
+                            this.setupStatusFader();
                             break;
                         case "volumechange":
                             var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
@@ -417,6 +439,7 @@
                             break;
                         case "loadeddata":
                             this.firstFrameShown = true;
+                            this.setupStatusFader();
                             break;
                         case "loadstart":
                             this.maxCurrentTimeSeen = 0;
@@ -437,17 +460,31 @@
                                 total = loaded;
                             this.bufferBar.max = total;
                             this.bufferBar.value = loaded;
+                            this.setupStatusFader();
+                            break;
+                        case "suspend":
+                            this.setupStatusFader();
                             break;
                         case "timeupdate":
                             var currentTime = Math.round(this.video.currentTime * 1000); // in ms
                             var duration = Math.round(this.video.duration * 1000); // in ms
+
+                            this.timeUpdateCount++;
+                            // Whether we show the statusFader sometimes depends
+                            // on whether we've seen more than one timeupdate
+                            // event (if we haven't, there hasn't been any
+                            // "playback activity" and we may wish to show the
+                            // statusFader while we wait for HAVE_ENOUGH_DATA).
+                            // If we've seen more than 2 timeupdate events,
+                            // the count is no longer relevant to setupStatusFader.
+                            if (this.timeUpdateCount <= 2)
+                                this.setupStatusFader();
 
                             // Timeupdate events are dispatched *every frame*. Reduce workload by
                             // ignoring position changes that are within 333ms of the current position.
                             if (Math.abs(currentTime - this.lastTimeUpdate) < 333)
                                 return;
                             this.lastTimeUpdate = currentTime;
-
                             this.showPosition(currentTime, duration);
                             break;
                         case "emptied":
@@ -456,21 +493,17 @@
                         case "seeking":
                         case "waiting":
                             this.statusIcon.setAttribute("type", "throbber");
-                            this.startFadeIn(this.statusFader);
+                            this.setupStatusFader();
                             break;
                         case "seeked":
-                            // Normally we'd expect canplaythough to fire, but if we already
-                            // have the data cached it shouldn't fire again.
-                            if (this.video.readyState == this.video.HAVE_ENOUGH_DATA)
-                                this.startFadeOut(this.statusFader);
-                            break;
                         case "playing":
+                        case "canplay":
                         case "canplaythrough":
-                            this.startFadeOut(this.statusFader);
+                            this.setupStatusFader();
                             break;
                         case "error":
                             this.statusIcon.setAttribute("type", "error");
-                            this.startFadeIn(this.statusFader, true);
+                            this.setupStatusFader(true);
                             // If video hasn't shown anything yet, disable the controls.
                             if (!this.firstFrameShown)
                                 this.startFadeOut(this.controlFader);
