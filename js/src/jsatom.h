@@ -88,9 +88,15 @@ struct JSAtomListElement {
 
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
 #define ALE_INDEX(ale)  ((jsatomid) JS_PTR_TO_UINT32((ale)->entry.value))
-#define ALE_DEFN(ale)   ((JSDefinition *) (ale)->entry.value)
 #define ALE_VALUE(ale)  ((jsval) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
+
+/*
+ * In an upvars list, ALE_DEFN(ale)->resolve() is the outermost definition the
+ * name may reference. If a with block or a function that calls eval encloses
+ * the use, the name may end up referring to something else at runtime.
+ */
+#define ALE_DEFN(ale)   ((JSDefinition *) (ale)->entry.value)
 
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
 #define ALE_SET_INDEX(ale,index)((ale)->entry.value = JS_UINT32_TO_PTR(index))
