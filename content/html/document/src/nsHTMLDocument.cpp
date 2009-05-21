@@ -80,6 +80,7 @@
 #include "nsIXPConnect.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
+#include "nsContentErrors.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsAttrName.h"
@@ -2418,7 +2419,7 @@ nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
   } else if (mAttrStyleSheet) {
     nscolor color;
     nsresult rv = mAttrStyleSheet->GetActiveLinkColor(color);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && rv != NS_HTML_STYLE_PROPERTY_NOT_THERE) {
       LegacyRGBToHex(color, aAlinkColor);
     }
   }
@@ -2457,7 +2458,7 @@ nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
   } else if (mAttrStyleSheet) {
     nscolor color;
     nsresult rv = mAttrStyleSheet->GetLinkColor(color);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && rv != NS_HTML_STYLE_PROPERTY_NOT_THERE) {
       LegacyRGBToHex(color, aLinkColor);
     }
   }
@@ -2496,7 +2497,7 @@ nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
   } else if (mAttrStyleSheet) {
     nscolor color;
     nsresult rv = mAttrStyleSheet->GetVisitedLinkColor(color);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && rv != NS_HTML_STYLE_PROPERTY_NOT_THERE) {
       LegacyRGBToHex(color, aVlinkColor);
     }
   }
