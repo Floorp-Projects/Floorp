@@ -88,3 +88,6 @@ HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html
 
 # Leak test
 HTTP(..) load 486974-1.html
+
+# compare fonts with and without bad head checksum
+HTTP(..) == load-badchecksum.html load-badchecksum-ref.html
