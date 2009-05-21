@@ -99,6 +99,8 @@
 
       <field name="thumb">null</field>
       <field name="valueBar">null</field>
+      <field name="isDragging">false</field>
+      <field name="wasPausedBeforeDrag">true</field>
       <field name="type">null</field>
       <field name="Utils">null</field>
       <constructor>
@@ -159,6 +161,26 @@
           ]]>
           </body>
       </method>
+
+      <method name="dragStateChanged">
+        <parameter name="isDragging"/>
+          <body>
+          <![CDATA[
+            if (this.type == "scrubber") {
+                this.Utils.log("--- dragStateChanged: " + isDragging + " ---");
+                this.isDragging = isDragging;
+                if (isDragging) {
+                    this.wasPausedBeforeDrag = this.Utils.video.paused;
+                    this.Utils.video.pause();
+                } else if (!this.wasPausedBeforeDrag) {
+                    // After the drag ends, resume playing.
+                    this.Utils.video.play();
+                }
+            }
+          ]]>
+          </body>
+      </method>
+
       </implementation>
   </binding>
 
@@ -431,7 +453,10 @@
                             this.setupStatusFader();
                             break;
                         case "pause":
-                            this.setPlayButtonState(true);
+                            // Little white lie: if we've internally paused the video
+                            // while dragging the scrubber, don't change the button state.
+                            if (!this.scrubber.isDragging)
+                                this.setPlayButtonState(true);
                             this.setupStatusFader();
                             break;
                         case "ended":
@@ -498,6 +523,11 @@
                             // the count is no longer relevant to setupStatusFader.
                             if (this.timeUpdateCount <= 2)
                                 this.setupStatusFader();
+
+                            // If the user is dragging the scrubber ignore the delayed seek
+                            // responses (don't yank the thumb away from the user)
+                            if (this.scrubber.isDragging)
+                                return;
 
                             // Timeupdate events are dispatched *every frame*. Reduce workload by
                             // ignoring position changes that are within 333ms of the current position.
