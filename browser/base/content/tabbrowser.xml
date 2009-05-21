@@ -2266,9 +2266,11 @@
             // check if the drop point is horizontally within the window
             if (eX > wX && eX < (wX + window.outerWidth)) {
               var bo = this.mTabContainer.mTabstrip.boxObject;
-              var tabbarEndScreenY = bo.screenY + bo.height;
+              // also avoid detaching if the the tab was dropped too close to
+              // the tabbar (half a tab)
+              var endScreenY = bo.screenY + 1.5 * bo.height;
               var eY = aEvent.screenY;
-              if (eY < tabbarEndScreenY && eY > window.screenY)
+              if (eY < endScreenY && eY > window.screenY)
                 return;
             }
 
