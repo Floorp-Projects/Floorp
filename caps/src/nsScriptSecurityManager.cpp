@@ -143,6 +143,14 @@ nsresult
 GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
                          nsACString& aOrigin)
 {
+  if (nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin > 1) {
+      // Allow a single recursive call to GetPrincipalDomainOrigin, since that
+      // might be happening on a different principal from the first call.  But
+      // after that, cut off the recursion; it just indicates that something
+      // we're doing in this method causes us to reenter a security check here.
+      return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsAutoInPrincipalDomainOriginSetter autoSetter;
   aOrigin.Truncate();
 
