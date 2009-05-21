@@ -1106,6 +1106,11 @@ LoginManager.prototype = {
             return [false, foundLogins];
 
 
+        // The reason we didn't end up filling the form, if any.  We include
+        // this in the formInfo object we send with the passwordmgr-found-logins
+        // notification.  See the _notifyFoundLogins docs for possible values.
+        var didntFillReason = null;
+
         // Attach autocomplete stuff to the username field, if we have
         // one. This is normally used to select from multiple accounts,
         // but even with one account we should refill if the user edits.
@@ -1113,8 +1118,12 @@ LoginManager.prototype = {
             this._attachToInput(usernameField);
 
         // Don't clobber an existing password.
-        if (passwordField.value)
+        if (passwordField.value) {
+            didntFillReason = "existingPassword";
+            this._notifyFoundLogins(didntFillReason, usernameField,
+                                    passwordField, foundLogins, null);
             return [false, foundLogins];
+        }
 
         // If the form has an autocomplete=off attribute in play, don't
         // fill in the login automatically. We check this after attaching
@@ -1141,11 +1150,13 @@ LoginManager.prototype = {
 
             let matchingLogins = logins.filter(function(l)
                                      l.username.toLowerCase() == username);
-            if (matchingLogins.length)
+            if (matchingLogins.length) {
                 selectedLogin = matchingLogins[0];
-            else
+            } else {
+                didntFillReason = "existingUsername";
                 this.log("Password not filled. None of the stored " +
                          "logins match the username already present.");
+            }
         } else if (logins.length == 1) {
             selectedLogin = logins[0];
         } else {
@@ -1158,10 +1169,12 @@ LoginManager.prototype = {
                 matchingLogins = logins.filter(function(l) l.username);
             else
                 matchingLogins = logins.filter(function(l) !l.username);
-            if (matchingLogins.length == 1)
+            if (matchingLogins.length == 1) {
                 selectedLogin = matchingLogins[0];
-            else
+            } else {
+                didntFillReason = "multipleLogins";
                 this.log("Multiple logins for form, so not filling any.");
+            }
         }
 
         var didFillForm = false;
@@ -1174,18 +1187,74 @@ LoginManager.prototype = {
         } else if (selectedLogin && !autofillForm) {
             // For when autofillForm is false, but we still have the information
             // to fill a form, we notify observers.
-            this._observerService.notifyObservers(form, "passwordmgr-found-form", "noAutofillForms");
+            didntFillReason = "noAutofillForms";
+            this._observerService.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
             this.log("autofillForms=false but form can be filled; notified observers");
         } else if (selectedLogin && isFormDisabled) {
             // For when autocomplete is off, but we still have the information
             // to fill a form, we notify observers.
-            this._observerService.notifyObservers(form, "passwordmgr-found-form", "autocompleteOff");
+            didntFillReason = "autocompleteOff";
+            this._observerService.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
             this.log("autocomplete=off but form can be filled; notified observers");
         }
+
+        this._notifyFoundLogins(didntFillReason, usernameField, passwordField,
+                                foundLogins, selectedLogin);
 
         return [didFillForm, foundLogins];
     },
 
+    /**
+     * Notify observers about an attempt to fill a form that resulted in some
+     * saved logins being found for the form.
+     *
+     * This does not get called if the login manager attempts to fill a form
+     * but does not find any saved logins.  It does, however, get called when
+     * the login manager does find saved logins whether or not it actually
+     * fills the form with one of them.
+     *
+     * @param didntFillReason {String}
+     *        the reason the login manager didn't fill the form, if any;
+     *        if the value of this parameter is null, then the form was filled;
+     *        otherwise, this parameter will be one of these values:
+     *          existingUsername: the username field already contains a username
+     *                            that doesn't match any stored usernames
+     *          existingPassword: the password field already contains a password
+     *          autocompleteOff:  autocomplete has been disabled for the form
+     *                            or its username or password fields
+     *          multipleLogins:   we have multiple logins for the form
+     *          noAutofillForms:  the autofillForms pref is set to false
+     *
+     * @param usernameField   {HTMLInputElement}
+     *        the username field detected by the login manager, if any;
+     *        otherwise null
+     *
+     * @param passwordField   {HTMLInputElement}
+     *        the password field detected by the login manager
+     *
+     * @param foundLogins     {Array}
+     *        an array of nsILoginInfos that can be used to fill the form
+     *
+     * @param selectedLogin   {nsILoginInfo}
+     *        the nsILoginInfo that was/would be used to fill the form, if any;
+     *        otherwise null; whether or not it was actually used depends on
+     *        the value of the didntFillReason parameter
+     */
+    _notifyFoundLogins : function (didntFillReason, usernameField,
+                                   passwordField, foundLogins, selectedLogin) {
+        let formInfo = Cc["@mozilla.org/hash-property-bag;1"].
+                       createInstance(Ci.nsIWritablePropertyBag2);
+
+        formInfo.setPropertyAsACString("didntFillReason", didntFillReason);
+        formInfo.setPropertyAsInterface("usernameField", usernameField);
+        formInfo.setPropertyAsInterface("passwordField", passwordField);
+        formInfo.setPropertyAsInterface("foundLogins", foundLogins.concat());
+        formInfo.setPropertyAsInterface("selectedLogin", selectedLogin);
+
+        this._observerService.notifyObservers(formInfo,
+                                              "passwordmgr-found-logins",
+                                              null);
+    },
 
     /*
      * fillForm
