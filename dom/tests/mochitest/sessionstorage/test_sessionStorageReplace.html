@@ -29,12 +29,12 @@ function onMessageReceived(event)
     case "init_done":
       // This is frame with different origin in the same browsing context
       // as the first frame adding data to sessionStorage of the first origin.
-      shell.location = "http://example.com/tests/dom/tests/mochitest/sessionStorage/frameReplace.html?check&" + shellType;
+      shell.location = "http://example.com/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?check&" + shellType;
       break;
 
     case "check_done":
       // Recheck and clean the sessionStorage of the first origin.
-      shell.location = "http://example.org:80/tests/dom/tests/mochitest/sessionStorage/frameReplace.html?clean&" + shellType;
+      shell.location = "http://example.org:80/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?clean&" + shellType;
       break;
 
     case "clean_done":
@@ -44,7 +44,7 @@ function onMessageReceived(event)
           // We finished testing in a frame
           // proceed with test in a separate window
           shellType = "window";
-          shell = window.open("http://example.org/tests/dom/tests/mochitest/sessionStorage/frameReplace.html?init&" + shellType);
+          shell = window.open("http://example.org/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?init&" + shellType);
           break;
 
         case "window":
@@ -64,7 +64,7 @@ function startTest()
 {
   shellType = "frame";
   shell = frame;
-  shell.location = "http://example.org/tests/dom/tests/mochitest/sessionStorage/frameReplace.html?init&" + shellType;
+  shell.location = "http://example.org/tests/dom/tests/mochitest/sessionstorage/frameReplace.html?init&" + shellType;
 }
 
 SimpleTest.waitForExplicitFinish();
