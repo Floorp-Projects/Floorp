@@ -154,7 +154,7 @@ function check_test_pt4() {
 }
 
 // url constructed with %LOCALE%
-// Bug 488936 added the locale to the updater.locale file
+// Bug 488936 added the update.locale file that stores the update locale
 function run_test_pt5() {
   gCheckFunc = check_test_pt5;
   var url = URL_PREFIX + "%LOCALE%/";
