@@ -3499,9 +3499,9 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 }
 
 /* A macro for inlining at the top of js_EmitTree (whence it came). */
-#define UPDATE_LINE_NUMBER_NOTES(cx, cg, pn)                                  \
+#define UPDATE_LINE_NUMBER_NOTES(cx, cg, line)                                \
     JS_BEGIN_MACRO                                                            \
-        uintN line_ = (pn)->pn_pos.begin.lineno;                              \
+        uintN line_ = (line);                                                 \
         uintN delta_ = line_ - CG_CURRENT_LINE(cg);                           \
         if (delta_ != 0) {                                                    \
             /*                                                                \
@@ -3530,9 +3530,9 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 
 /* A function, so that we avoid macro-bloating all the other callsites. */
 static JSBool
-UpdateLineNumberNotes(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+UpdateLineNumberNotes(JSContext *cx, JSCodeGenerator *cg, uintN line)
 {
-    UPDATE_LINE_NUMBER_NOTES(cx, cg, pn);
+    UPDATE_LINE_NUMBER_NOTES(cx, cg, line);
     return JS_TRUE;
 }
 
@@ -3555,7 +3555,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     if (JOF_OPTYPE(pn->pn_op) == JOF_ATOM &&
         (!(cg->flags & TCF_IN_FUNCTION) || (cg->flags & TCF_FUN_HEAVYWEIGHT))) {
         CG_SWITCH_TO_PROLOG(cg);
-        if (!UpdateLineNumberNotes(cx, cg, pn))
+        if (!UpdateLineNumberNotes(cx, cg, pn->pn_pos.begin.lineno))
             return JS_FALSE;
         EMIT_INDEX_OP(prologOp, atomIndex);
         CG_SWITCH_TO_MAIN(cg);
@@ -4228,7 +4228,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     pn->pn_offset = top = CG_OFFSET(cg);
 
     /* Emit notes to tell the current bytecode's source line number. */
-    UPDATE_LINE_NUMBER_NOTES(cx, cg, pn);
+    UPDATE_LINE_NUMBER_NOTES(cx, cg, pn->pn_pos.begin.lineno);
 
     switch (pn->pn_type) {
       case TOK_FUNCTION:
@@ -5194,7 +5194,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             /* Indicate that we're emitting a subroutine body. */
             stmtInfo.type = STMT_SUBROUTINE;
-            if (!UpdateLineNumberNotes(cx, cg, pn->pn_kid3))
+            if (!UpdateLineNumberNotes(cx, cg, pn->pn_kid3->pn_pos.begin.lineno))
                 return JS_FALSE;
             if (js_Emit1(cx, cg, JSOP_FINALLY) < 0 ||
                 !js_EmitTree(cx, cg, pn->pn_kid3) ||
@@ -6777,8 +6777,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(0);
     }
 
-    if (ok && --cg->emitLevel == 0 && cg->spanDeps)
-        ok = OptimizeSpanDeps(cx, cg);
+    if (ok && --cg->emitLevel == 0) {
+        if (cg->spanDeps)
+            ok = OptimizeSpanDeps(cx, cg);
+        if (!UpdateLineNumberNotes(cx, cg, pn->pn_pos.end.lineno))
+            return JS_FALSE;
+    }
 
     return ok;
 }
