@@ -298,6 +298,7 @@ struct FrameInfo {
         } s;
         uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
     };
+    uint32          caller_argc;   // fp->argv - stackBase
 };
 
 struct UnstableExit
