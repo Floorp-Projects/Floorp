@@ -74,7 +74,8 @@
     padding-left: 8px; /* don't bump into the scrubber bar */
     padding-top: 2px; /* center vertically with scrubber bar */
     color: rgba(255,255,255,0.75);
-    font: 11px sans-serif;
+    font-size: 11px;
+    font-family: Helvetica, sans-serif;
 }
 
 .backgroundBar {
@@ -143,7 +144,8 @@
 
 .timeLabel {
     color: rgba(255,255,255,0.75);
-    font: 10px sans-serif;
+    font-size: 10px;
+    font-family: Helvetica, sans-serif;
     text-shadow: rgba(0,0,0, 0.3) 0 1px;
     padding-top: 4px;
 }
