@@ -5221,6 +5221,19 @@ function testNewArrayCount2() {
 testNewArrayCount2.expected = 3;
 test(testNewArrayCount2);
 
+function testGetCallObjInlined(i) {
+    if (i > 7) eval("1");
+    return 1;
+}
+
+function testGetCallObj() {
+    for (var i = 0; i < 10; ++i)
+        testGetCallObjInlined(i);
+    return "ok";
+}
+testGetCallObj.expected = "ok";
+test(testGetCallObj);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
