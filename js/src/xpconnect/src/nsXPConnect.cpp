@@ -1200,7 +1200,8 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
     NS_ASSERTION(aHolder, "bad param");
 
     jsval v;
-    return WrapNativeToJSVal(aJSContext, aScope, aCOMObj, &aIID, &v, aHolder);
+    return WrapNativeToJSVal(aJSContext, aScope, aCOMObj, &aIID, PR_FALSE,
+                             &v, aHolder);
 }
 
 /* void wrapNativeToJSVal (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDPtr aIID, out JSVal aVal, out nsIXPConnectJSObjectHolder aHolder); */
@@ -1209,6 +1210,7 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
                                JSObject * aScope,
                                nsISupports *aCOMObj,
                                const nsIID * aIID,
+                               PRBool aAllowWrapping,
                                jsval *aVal,
                                nsIXPConnectJSObjectHolder **aHolder)
 {
@@ -1225,7 +1227,7 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
 
     nsresult rv;
     if(!XPCConvert::NativeInterface2JSObject(ccx, aVal, aHolder, aCOMObj, aIID,
-                                             nsnull, nsnull, aScope, PR_FALSE,
+                                             nsnull, nsnull, aScope, aAllowWrapping,
                                              OBJ_IS_NOT_GLOBAL, &rv))
         return rv;
 
@@ -1946,6 +1948,17 @@ nsXPConnect::GetXOWForObject(JSContext * aJSContext,
 {
     *rval = OBJECT_TO_JSVAL(aWrappedObj);
     return XPC_XOW_WrapObject(aJSContext, aParent, rval)
+           ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXPConnect::GetCOWForObject(JSContext * aJSContext,
+                             JSObject * aParent,
+                             JSObject * aWrappedObj,
+                             jsval * rval)
+{
+    *rval = OBJECT_TO_JSVAL(aWrappedObj);
+    return XPC_COW_WrapObject(aJSContext, aParent, *rval, rval)
            ? NS_OK : NS_ERROR_FAILURE;
 }
 
