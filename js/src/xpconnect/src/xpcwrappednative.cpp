@@ -420,7 +420,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     XPCMarkableJSVal newParentVal_markable(&newParentVal);
     AutoMarkingJSVal newParentVal_automarker(ccx, &newParentVal_markable);
     JSBool chromeOnly = JS_FALSE;
-    JSBool crossDoubleWrapped = JS_FALSE;
 
     if(sciWrapper.GetFlags().WantPreCreate())
     {
@@ -476,21 +475,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             DEBUG_CheckWrapperThreadSafety(wrapper);
             *resultWrapper = wrapper;
             return NS_OK;
-        }
-    }
-    else
-    {
-        if(nsXPCWrappedJSClass::IsWrappedJS(Object))
-        {
-            nsCOMPtr<nsIXPConnectWrappedJS> wrappedjs(do_QueryInterface(Object));
-            JSObject *obj;
-            wrappedjs->GetJSObject(&obj);
-            if((STOBJ_IS_SYSTEM(obj) ||
-                STOBJ_IS_SYSTEM(JS_GetGlobalForObject(ccx, obj))) &&
-               !STOBJ_IS_SYSTEM(Scope->GetGlobalJSObject()))
-            {
-                crossDoubleWrapped = JS_TRUE;
-            }
         }
     }
 
@@ -556,8 +540,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     if(chromeOnly)
         wrapper->SetNeedsChromeWrapper();
-    if(crossDoubleWrapped)
-        wrapper->SetIsDoubleWrapper();
+
 
 #if DEBUG_xpc_leaks
     {
@@ -722,7 +705,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
       mSet(aProto->GetSet()),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
-      mWrapperWord(0)
+      mWrapper(nsnull)
 {
     mIdentity = aIdentity.get();
 
@@ -741,7 +724,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
       mSet(aSet),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
-      mWrapperWord(0)
+      mWrapper(nsnull)
 {
     mIdentity = aIdentity.get();
 
