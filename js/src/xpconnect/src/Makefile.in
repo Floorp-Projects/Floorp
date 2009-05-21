@@ -109,7 +109,6 @@ CPPSRCS		= \
 		xpcJSWeakReference.cpp \
 		XPCSafeJSObjectWrapper.cpp \
 		XPCCrossOriginWrapper.cpp \
-		XPCChromeObjectWrapper.cpp \
 		XPCSystemOnlyWrapper.cpp \
 		XPCWrapper.cpp \
 		xpcquickstubs.cpp \
