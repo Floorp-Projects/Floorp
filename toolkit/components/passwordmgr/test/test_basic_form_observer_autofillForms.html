@@ -43,18 +43,23 @@ prefs = prefs.getBranch("signon.");
 prefs.setBoolPref("autofillForms", false);
 
 var TestObserver = {
-  receivedNotification : false,
-  data : "",
+  receivedNotificationFoundForm : false,
+  receivedNotificationFoundLogins : false,
+  dataFoundForm : "",
+  dataFoundLogins : null,
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
   observe : function (subject, topic, data) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var pwmgr = Cc["@mozilla.org/login-manager;1"].
                 getService(Ci.nsILoginManager);
     if (topic == "passwordmgr-found-form") {
-      this.receivedNotification = true;
-      this.data = data;
+      this.receivedNotificationFoundForm = true;
+      this.dataFoundForm = data;
       // Now fill the form
       pwmgr.fillForm(subject);
+    } else if (topic == "passwordmgr-found-logins") {
+      this.receivedNotificationFoundLogins = true;
+      this.dataFoundLogins = subject.QueryInterface(Ci.nsIPropertyBag2);
     }
   }
 };
@@ -63,22 +68,35 @@ var TestObserver = {
 var os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
 os.addObserver(TestObserver, "passwordmgr-found-form", false);
+os.addObserver(TestObserver, "passwordmgr-found-logins", false);
 
 function startTest(){
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  // Test that observer is notified & got correct data
-  is(TestObserver.receivedNotification, true, "Checking observer was notified");
-  is(TestObserver.data, "noAutofillForms", "Checking observer got correct data");
+  // Test that found-form observer is notified & got correct data
+  is(TestObserver.receivedNotificationFoundForm, true, "Checking found-form observer was notified");
+  is(TestObserver.dataFoundForm, "noAutofillForms", "Checking found-form observer got correct data");
 
   // Check that form1 was filled
   is($_(1, "uname").value, "testuser", "Checking for filled username");
   is($_(1, "pword").value, "testpass", "Checking for filled password");
+
+  // Test that found-logins observer is notified & got correct data
+  is(TestObserver.receivedNotificationFoundLogins, true, "Checking found-logins observer was notified");
+  is(TestObserver.dataFoundLogins.get("didntFillReason"), "noAutofillForms", "Checking didntFillReason is noAutofillForms");
+  is(TestObserver.dataFoundLogins.get("usernameField"), $_(1, "uname"), "Checking username field is correct");
+  is(TestObserver.dataFoundLogins.get("passwordField"), $_(1, "pword"), "Checking password field is correct");
+  is(TestObserver.dataFoundLogins.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
+  is(TestObserver.dataFoundLogins.get("foundLogins").length, 1, "Checking foundLogins contains one login");
+  ok(TestObserver.dataFoundLogins.get("selectedLogin").QueryInterface(Ci.nsILoginInfo), "Checking selectedLogin is nsILoginInfo");
+  ok(TestObserver.dataFoundLogins.get("selectedLogin").equals(TestObserver.dataFoundLogins.get("foundLogins")[0]),
+     "Checking selectedLogin is found login");
 
   // Reset pref (since we assumed it was true to start)
   prefs.setBoolPref("autofillForms", true);
 
   // Remove the observer
   os.removeObserver(TestObserver, "passwordmgr-found-form");
+  os.removeObserver(TestObserver, "passwordmgr-found-logins");
 
   SimpleTest.finish();
 }
