@@ -56,5 +56,11 @@ _TEST_FILES	= \
     interOriginTest.js \
     $(NULL)
 
+_CHROME_FILES = \
+    test_sessionStorageFromChrome.xhtml \
+    $(NULL)
+
 libs::	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+libs::	$(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
