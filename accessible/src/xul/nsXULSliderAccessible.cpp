@@ -55,7 +55,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULSliderAccessible,
                              nsAccessibleWrap,
                              nsIAccessibleValue)
 
-// nsIAccessible
+// nsAccessible
 
 nsresult
 nsXULSliderAccessible::GetRoleInternal(PRUint32 *aRole)
@@ -64,10 +64,66 @@ nsXULSliderAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
+nsresult
+nsXULSliderAccessible::GetStateInternal(PRUint32 *aState,
+                                        PRUint32 *aExtraState)
+{
+  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> sliderContent(GetSliderNode());
+  NS_ENSURE_STATE(sliderContent);
+
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+  NS_ENSURE_STATE(shell);
+
+  nsIFrame *frame = shell->GetPrimaryFrameFor(sliderContent);
+  if (frame && frame->IsFocusable())
+    *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+
+  if (gLastFocusedNode == mDOMNode)
+    *aState |= nsIAccessibleStates::STATE_FOCUSED;
+
+  return NS_OK;
+}
+
+// nsIAccessible
+
 NS_IMETHODIMP
 nsXULSliderAccessible::GetValue(nsAString& aValue)
 {
   return GetSliderAttr(nsAccessibilityAtoms::curpos, aValue);
+}
+
+NS_IMETHODIMP
+nsXULSliderAccessible::GetNumActions(PRUint8 *aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+
+  *aCount = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULSliderAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  aName.Truncate();
+
+  NS_ENSURE_ARG(aIndex == 0);
+
+  aName.AssignLiteral("activate"); 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULSliderAccessible::DoAction(PRUint8 aIndex)
+{
+  NS_ENSURE_ARG(aIndex == 0);
+
+  nsCOMPtr<nsIContent> sliderContent(GetSliderNode());
+  NS_ENSURE_STATE(sliderContent);
+
+  return DoCommand(sliderContent);
 }
 
 // nsIAccessibleValue
@@ -130,6 +186,17 @@ nsXULSliderAccessible::SetCurrentValue(double aValue)
     return rv;
 
   return SetSliderAttr(nsAccessibilityAtoms::curpos, aValue);
+}
+
+// nsPIAccessible
+NS_IMETHODIMP
+nsXULSliderAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+{
+  NS_ENSURE_ARG_POINTER(aAllowsAnonChildren);
+
+  // Do not allow anonymous xul:slider be accessible.
+  *aAllowsAnonChildren = PR_FALSE;
+  return NS_OK;
 }
 
 // Utils

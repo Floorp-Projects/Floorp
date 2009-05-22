@@ -61,10 +61,10 @@ _TEST_FILES =\
 		name.xbl \
 		namerules.xml \
  		nsIAccessible_selects.js \
-		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
 		relations.js \
 		role.js \
+		states.js \
 		table.js \
 		value.js \
 		test_accessnode_invalidation.html \
