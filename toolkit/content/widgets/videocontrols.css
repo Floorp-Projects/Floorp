@@ -8,6 +8,10 @@
     -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#timeThumb");
 }
 
+.playButton, .muteButton {
+    -moz-user-focus: none;
+}
+
 .mediaControlsFrame {
     direction: ltr;
 }
