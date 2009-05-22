@@ -577,20 +577,40 @@ nsDOMStorage::~nsDOMStorage()
     nsDOMStorageManager::gStorageManager->RemoveFromStoragesHash(this);
 }
 
+static
+nsresult
+GetDomainURI(nsIPrincipal *aPrincipal, nsIURI **_domain)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check if we really got any URI. System principal doesn't return a URI
+  // instance and we would crash in NS_GetInnermostURI below.
+  if (!uri)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(uri);
+  if (!innerURI)
+    return NS_ERROR_UNEXPECTED;
+  innerURI.forget(_domain);
+
+  return NS_OK;
+}
+
 nsresult
 nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIURI> domainURI;
+  nsresult rv = GetDomainURI(aPrincipal, getter_AddRefs(domainURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
-  if (!innerUri)
-    return NS_ERROR_UNEXPECTED;
-
-  innerUri->GetAsciiHost(mDomain);
+  // No need to check for a return value. If this would fail we would not get
+  // here as we call GetPrincipalURIAndHost (nsDOMStorage.cpp:88) from
+  // nsDOMStorage::CanUseStorage before we query the storage manager for a new
+  // sessionStorage. It calls GetAsciiHost on innermost URI. If it fails, we
+  // won't get to InitAsSessionStorage.
+  domainURI->GetAsciiHost(mDomain);
 
 #ifdef MOZ_STORAGE
   mUseDB = PR_FALSE;
@@ -603,20 +623,9 @@ nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal)
 nsresult
 nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIURI> domainURI;
+  nsresult rv = GetDomainURI(aPrincipal, getter_AddRefs(domainURI));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check if we really got any URI. System principal doesn't return a URI
-  // instance and we would crash in NS_GetInnermostURI bellow.
-  if (!uri)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
-  if (!innerUri)
-    return NS_ERROR_UNEXPECTED;
 
   // No need to check for a return value. If this would fail we would not get
   // here as we call GetPrincipalURIAndHost (nsDOMStorage.cpp:88) from
@@ -624,10 +633,10 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal)
   // localStorage. It calls GetAsciiHost on innermost URI. If it fails, we won't
   // get to InitAsLocalStorage. Actually, mDomain will get replaced with
   // mPrincipal in bug 455070. It is not even used for localStorage.
-  innerUri->GetAsciiHost(mDomain);
+  domainURI->GetAsciiHost(mDomain);
 
 #ifdef MOZ_STORAGE
-  nsDOMStorageDBWrapper::CreateOriginScopeDBKey(innerUri, mScopeDBKey);
+  nsDOMStorageDBWrapper::CreateOriginScopeDBKey(domainURI, mScopeDBKey);
 
   // XXX Bug 357323, we have to solve the issue how to define
   // origin for file URLs. In that case CreateOriginScopeDBKey
