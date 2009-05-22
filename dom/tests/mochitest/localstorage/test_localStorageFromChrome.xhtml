@@ -32,6 +32,19 @@ function startTest()
     SimpleTest.finish();
   }
   aframe.src = "http://example.com/tests/dom/tests/mochitest/localstorage/frameChromeSlave.html";  
+
+  // Additionally check that we do not crash when we access the localStorage
+  // object in the owning chrome window (but we should throw).  See bug 485396.
+  var exceptionCaught = false;
+  try {
+    localStorage;
+  }
+  catch (e) {
+    is(e.result, Components.results.NS_ERROR_NOT_AVAILABLE,
+       "Testing that we get the expected exception.");
+    exceptionCaught = true;
+  }
+  is(exceptionCaught, true, "Testing that an exception was thrown.");
 }
 
 SimpleTest.waitForExplicitFinish();
