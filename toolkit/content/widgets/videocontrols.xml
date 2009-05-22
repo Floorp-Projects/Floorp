@@ -800,7 +800,8 @@
                     // controlling volume.
                 },
 
-                setPlayButtonState : function(aPaused) {
+                setPlayButtonState: function(aPaused)
+                {
                   this.playButton.setAttribute("paused", aPaused);
 
                   var attrName = aPaused ? "playlabel" : "pauselabel";
@@ -808,115 +809,13 @@
                   this.playButton.setAttribute("aria-label", value);
                 },
 
-                setMuteButtonState : function(aMuted) {
+                setMuteButtonState: function(aMuted)
+                {
                   this.muteButton.setAttribute("muted", aMuted);
 
                   var attrName = aMuted ? "unmutelabel" : "mutelabel";
                   var value = this.muteButton.getAttribute(attrName);
                   this.muteButton.setAttribute("aria-label", value);
-                },
-
-                keyHandler : function(event) {
-                    // Ignore keys when content might be providing its own.
-                    if (!this.video.hasAttribute("controls"))
-                        return;
-
-                    var keystroke = "";
-                    if (event.altKey)
-                        keystroke += "alt-";
-                    if (event.shiftKey)
-                        keystroke += "shift-";
-#ifdef XP_MACOSX
-                    if (event.metaKey)
-                        keystroke += "accel-";
-                    if (event.ctrlKey)
-                        keystroke += "control-";
-#else
-                    if (event.metaKey)
-                        keystroke += "meta-";
-                    if (event.ctrlKey)
-                        keystroke += "accel-";
-#endif
-
-                    switch (event.keyCode) {
-                        case KeyEvent.DOM_VK_UP:
-                            keystroke += "upArrow";
-                            break;
-                        case KeyEvent.DOM_VK_DOWN:
-                            keystroke += "downArrow";
-                            break;
-                        case KeyEvent.DOM_VK_LEFT:
-                            keystroke += "leftArrow";
-                            break;
-                        case KeyEvent.DOM_VK_RIGHT:
-                            keystroke += "rightArrow";
-                            break;
-                        case KeyEvent.DOM_VK_HOME:
-                            keystroke += "home";
-                            break;
-                        case KeyEvent.DOM_VK_END:
-                            keystroke += "end";
-                            break;
-                    }
-
-                    if (String.fromCharCode(event.charCode) == ' ')
-                        keystroke += "space";
-
-                    this.log("Got keystroke: " + keystroke);
-                    var oldval, newval;
-
-                    try {
-                        switch (keystroke) {
-                            case "space": /* Play */
-                                this.togglePause();
-                                break;
-                            case "downArrow": /* Volume decrease */
-                                oldval = this.video.volume;
-                                this.video.volume = (oldval < 0.1 ? 0 : oldval - 0.1);
-                                this.video.muted = false;
-                                break;
-                            case "upArrow": /* Volume increase */
-                                oldval = this.video.volume;
-                                this.video.volume = (oldval > 0.9 ? 1 : oldval + 0.1);
-                                this.video.muted = false;
-                                break;
-                            case "accel-downArrow": /* Mute */
-                                this.video.muted = true;
-                                break;
-                            case "accel-upArrow": /* Unmute */
-                                this.video.muted = false;
-                                break;
-                            case "leftArrow": /* Seek back 15 seconds */
-                            case "accel-leftArrow": /* Seek back 10% */
-                                oldval = this.video.currentTime;
-                                if (keystroke == "leftArrow")
-                                    newval = oldval - 15;
-                                else
-                                    newval = oldval - (this.video.duration || this.maxCurrentTimeSeen) / 10;
-                                this.video.currentTime = (newval >= 0 ? newval : 0);
-                                break;
-                            case "rightArrow": /* Seek forward 15 seconds */
-                            case "accel-rightArrow": /* Seek forward 10% */
-                                oldval = this.video.currentTime;
-                                var maxtime = (this.video.duration || this.maxCurrentTimeSeen);
-                                if (keystroke == "rightArrow")
-                                    newval = oldval + 15;
-                                else
-                                    newval = oldval + maxtime / 10;
-                                this.video.currentTime = (newval <= maxtime ? newval : maxtime);
-                                break;
-                            case "home": /* Seek to beginning */
-                                this.video.currentTime = 0;
-                                break;
-                            case "end": /* Seek to end */
-                                this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen);
-                                break;
-                            default:
-                                return;
-                        }
-                    } catch(e) { /* ignore any exception from setting .currentTime */ }
-
-                    event.preventDefault(); // Prevent page scrolling
                 },
 
                 isEventWithin : function (event, parent1, parent2) {
@@ -990,10 +889,6 @@
                     this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
                     this.volumeStack.addEventListener("mouseover", function(e) { self.onVolumeMouseInOut(e); }, false);
                     this.volumeStack.addEventListener("mouseout",  function(e) { self.onVolumeMouseInOut(e); }, false);
-
-                    // Make the <video> element keyboard accessible.
-                    this.video.setAttribute("tabindex", 0);
-                    this.video.addEventListener("keypress", function (e) { self.keyHandler(e) }, false);
 
                     this.log("--- videocontrols initialized ---");
                 }
