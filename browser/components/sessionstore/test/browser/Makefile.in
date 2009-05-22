@@ -86,6 +86,7 @@ _BROWSER_TEST_FILES = \
 	browser_485482.js \
 	browser_485482_sample.html \
 	browser_485563.js \
+	browser_490040.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
