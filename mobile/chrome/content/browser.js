@@ -1001,11 +1001,6 @@ const gXPInstallObserver = {
             accessKey: browserBundle.getString("xpinstallPromptAllowButton.accesskey"),
             popup: null,
             callback: function() {
-              // Force the add-ons manager panel to appear. We do this so the
-              // xpinstall and download observers in the add-ons manager can
-              // complete the installation
-              BrowserUI.showPanel("addons-container");
-
               // Kick off the xpinstall
               var mgr = Cc["@mozilla.org/xpinstall/install-manager;1"].createInstance(Ci.nsIXPInstallManager);
               mgr.initManagerWithInstallInfo(installInfo);
