@@ -68,16 +68,7 @@ var ExtensionsView = {
       locked = this._pref.prefIsLocked("xpinstall.enabled");
     }
     catch (e) { }
-/*
-    var msgText = getExtensionString(locked ? "xpinstallDisabledMsgLocked" :
-                                              "xpinstallDisabledMsg");
-    var buttonLabel = locked ? null : getExtensionString("enableButtonLabel");
-    var buttonAccesskey = locked ? null : getExtensionString("enableButtonAccesskey");
-    var notifyData = locked ? null : "addons-enable-xpinstall";
-    showMessage(URI_NOTIFICATION_ICON_WARNING,
-                msgText, buttonLabel, buttonAccesskey,
-                !locked, notifyData);
-*/
+
     return false;
   },
 
@@ -200,18 +191,6 @@ var ExtensionsView = {
       return;
 
     this._extmgr = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
-    this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
-    this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-    this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
-    let repository = "@mozilla.org/extensions/addon-repository;1";
-    try {
-      var repo = pref.getCharPref(PREF_GETADDONS_REPOSITORY);
-      if (repo in Components.classes)
-        repository = repo;
-    } catch (e) { }
-    this._repo = Cc[repository].createInstance(Ci.nsIAddonRepository);
-
     this._dloadmgr = new XPInstallDownloadManager();
     this._extmgr.addInstallListener(this._dloadmgr);
 
@@ -224,14 +203,26 @@ var ExtensionsView = {
     panels.addEventListener("select",
                             function(aEvent) {
                               if (panels.selectedPanel.id == "addons-container")
-                                self.show();
+                                self._delayedInit();
                             },
                             false);
   },
 
-  show: function ev_show() {
+  _delayedInit: function ev__delayedInit() {
     if (this._list)
       return;
+
+    this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
+    this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+    this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+    let repository = "@mozilla.org/extensions/addon-repository;1";
+    try {
+      var repo = pref.getCharPref(PREF_GETADDONS_REPOSITORY);
+      if (repo in Components.classes)
+        repository = repo;
+    } catch (e) { }
+    this._repo = Cc[repository].createInstance(Ci.nsIAddonRepository);
 
     this._list = document.getElementById("addons-list");
     this._localItem = document.getElementById("addons-local");
@@ -570,7 +561,7 @@ XPInstallDownloadManager.prototype = {
     let strings = document.getElementById("bundle_browser");
     var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 strings.getString("alertAddonsStart"), true, "", this);
+                                 strings.getString("alertAddonsStart"), false, "", null);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -613,7 +604,7 @@ XPInstallDownloadManager.prototype = {
 
     var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 message, true, "", this);
+                                 message, false, "", null);
   },
 
   onDownloadProgress: function xpidm_onDownloadProgress(aAddon, aValue, aMaxValue) {
