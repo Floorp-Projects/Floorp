@@ -1365,7 +1365,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSContext, nsIScriptContext)
 nsrefcnt
 nsJSContext::GetCCRefcnt()
 {
-  return mRefCnt.get() + mContext->outstandingRequests;
+  nsrefcnt refcnt = mRefCnt.get();
+  if (NS_LIKELY(mContext))
+    refcnt += mContext->outstandingRequests;
+  return refcnt;
 }
 
 nsresult
