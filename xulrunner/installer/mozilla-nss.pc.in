@@ -7,4 +7,4 @@ Description: Mozilla Network Security Services
 Version: %MOZILLA_VERSION%
 Requires: %NSPR_NAME% >= %NSPR_VERSION%
 Libs: -L${sdkdir}/lib -lnss3 -lnssutil3 -lsmime3 -lssl3 -lsoftokn3
-Cflags: -I${includedir}/stable
+Cflags: -I${includedir}
