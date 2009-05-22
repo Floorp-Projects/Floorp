@@ -418,6 +418,18 @@ namespace nanojit
 		LIns*		insImmf(double f);
 	};
 
+
+	// We want to keep the blob + skip together, plus we need room for a
+	// possible page-crossing skip, plus a spare slot to ensure we're never
+	// leaving _unused on a page boundary. That makes for 3 LIns we need to
+	// reserve. We throw in 3 more slots for paranoia's sake (we've
+	// mistakenly set this too high several times so far), and also reserve
+	// the size of the the page header, giving a total of 100 bytes
+	// reserved from end-of-page.
+#define MAX_SKIP_BYTES (NJ_PAGE_SIZE			\
+						- sizeof(PageHeader)	\
+						- 6*sizeof(LIns))
+
 #ifdef NJ_VERBOSE
 	extern const char* lirNames[];
 
