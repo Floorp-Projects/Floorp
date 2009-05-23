@@ -159,7 +159,7 @@ namespace nanojit
 
 	void LirBufWriter::ensureRoom(uint32_t count)
 	{
-		NanoAssert(count <= NJ_PAGE_SIZE - sizeof(LIns));
+		NanoAssert(count * sizeof(LIns) <= MAX_SKIP_BYTES);
 		LInsp before = _buf->next();
 		LInsp after = before+count+1;
 		// transition to the next page?
@@ -315,12 +315,12 @@ namespace nanojit
 
 	LInsp LirBufWriter::insSkip(size_t size)
 	{
+        NanoAssert(size <= MAX_SKIP_BYTES);
         const uint32_t nSlots = (size+sizeof(LIns)-1)/sizeof(LIns);
-        ensureRoom(nSlots); // make room for it
+        ensureRoom(nSlots+1); // make room for it (blob + skip instruction)
         LInsp last = _buf->next()-1;  // safe, next()-1+nSlots guaranteed to be on same page
         _buf->commit(nSlots);
 		NanoAssert(samepage(last,_buf->next()));
-        ensureRoom(1);
         return insSkipWithoutBuffer(last);
 	}
 
