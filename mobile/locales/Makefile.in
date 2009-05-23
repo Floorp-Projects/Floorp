@@ -84,10 +84,10 @@ installers-%: clobber-% langpack-% repackage-zip-%
 
 ifdef MOZ_UPDATER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
-	cat $< $(srcdir)/updater_append.ini | \
+	cat $< | \
 	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
-	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" | \
-	  sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/updater.ini
+	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" > \
+	  $(FINAL_TARGET)/updater.ini
 endif
 
 ident:
