@@ -1956,20 +1956,41 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                             afunbox = afunbox->parent;
 
                             /*
-                             * We can't form a flat closure that reaches up
-                             * across a funarg that encloses the closure, or
-                             * into the top level (to a 'let' variable in an
-                             * enclosing block in global code; this is the
-                             * !afunbox case).
+                             * afunbox cannot be null here. That is, we are
+                             * sure to find a function box whose level ==
+                             * lexdepLevel before walking off the top of the
+                             * funbox tree.
+                             *
+                             * Proof: lexdepLevel is at least the base
+                             * staticLevel for this compilation (often 0 but
+                             * nonzero when compiling for local eval) and at
+                             * most funbox->level. The path we are walking
+                             * includes one function box each of precisely that
+                             * range of levels.
+                             *
+                             * Assert but check anyway (bug 493260 comment 16).
                              */
-                            if (!afunbox || afunbox->node->isFunArg()) {
-                                JS_ASSERT_IF(!afunbox,
-                                             lexdep->isLet() ||
-                                             (!(tcflags & TCF_IN_FUNCTION) &&
-                                              callerFrame && callerFrame->fun));
+                            JS_ASSERT(afunbox);
+
+                            /*
+                             * If this function is reaching up across an
+                             * enclosing funarg, we cannot make a flat
+                             * closure. The display stops working once the
+                             * funarg escapes.
+                             */
+                            if (!afunbox || afunbox->node->isFunArg())
                                 goto break2;
-                            }
                         }
+
+                        /*
+                         * with and eval defeat lexical scoping; eval anywhere
+                         * in a variable's scope can assign to it. Both defeat
+                         * the flat closure optimization. The parser detects
+                         * these cases and flags the function heavyweight.
+                         */
+                        JSFunctionBox *parentbox = afunbox->parent ? afunbox->parent : afunbox;
+                        if (parentbox->tcflags & TCF_FUN_HEAVYWEIGHT)
+                            break;
 
                         /*
                          * If afunbox's function (which is at the same level as
