@@ -332,7 +332,11 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
         } else {
             int d = findMemFor(arg);
             STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d);
+            if (arg->isop(LIR_alloc)) {
+                asm_add_imm(IP, FP, d);
+            } else {
+                LDR(IP, FP, d);
+            }
             stkd += 4;
         }
     } else {

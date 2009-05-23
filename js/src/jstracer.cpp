@@ -141,9 +141,6 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max global object size. */
 #define MAX_GLOBAL_SLOTS 4096
 
-/* Max memory you can allocate in a LIR buffer via a single insSkip() call. */
-#define MAX_SKIP_BYTES (NJ_PAGE_SIZE - sizeof(LIns))
-
 /* Max memory needed to rebuild the interpreter stack when falling off trace. */
 #define MAX_INTERP_STACK_BYTES                                                \
     (MAX_NATIVE_STACK_SLOTS * sizeof(jsval) +                                 \
@@ -1844,39 +1841,49 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
  * *result as an unboxed native. The return value is the typemap type.
  */
 uint32 JS_FASTCALL
-js_GetUpvarOnTrace(JSContext *cx, uint32 level, uint32 cookie, double* result)
+js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth, double* result)
 {
     uintN skip = UPVAR_FRAME_SKIP(cookie);
+    uintN upvarLevel = level - skip;
     InterpState* state = cx->interpState;
-    uintN callDepth = state->rp - state->callstackBase;
+    FrameInfo** fip = state->rp + callDepth;
 
     /*
-     * If we are skipping past all frames that are part of active traces,
-     * then we simply get the value from the interpreter state.
+     * First search the FrameInfo call stack for an entry containing
+     * our upvar, namely one with staticLevel == upvarLevel.
      */
-    if (skip > callDepth) {
-        jsval v = js_GetUpvar(cx, level, cookie);
-        uint8 type = getCoercedType(v);
-        ValueToNative(cx, v, type, result);
-        return type;
+    while (--fip >= state->callstackBase) {
+        FrameInfo* fi = *fip;
+        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, fi->callee);
+        uintN calleeLevel = fun->u.i.script->staticLevel;
+        if (calleeLevel == upvarLevel) {
+            /*
+             * Now find the upvar's value in the native stack.
+             * nativeStackFramePos is the offset of the start of the 
+             * activation record corresponding to *fip in the native
+             * stack.
+             */
+            uintN nativeStackFramePos = state->callstackBase[0]->caller_argc;
+            for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
+                nativeStackFramePos += (*fip2)->s.spdist;
+            nativeStackFramePos -= (2 + (*fip)->s.argc);
+            uint8* typemap = (uint8*) (fi+1);
+
+            uintN slot = UPVAR_FRAME_SLOT(cookie);
+            slot = (slot == CALLEE_UPVAR_SLOT) ? 0 : 2/*callee,this*/ + slot;
+            *result = state->stackBase[nativeStackFramePos + slot];
+            return typemap[slot];
+        }
     }
 
     /*
-     * The value we need is logically in a stack frame that is part of
-     * an active trace. We reconstruct the value we need from the tracer
-     * stack records.
+     * If we did not find the upvar in the frames for the active traces,
+     * then we simply get the value from the interpreter state.
      */
-    uintN frameIndex = callDepth - skip; // pos of target frame in rp stack
-    uintN nativeStackFramePos = 0; // pos of target stack frame in sp stack
-    for (uintN i = 0; i < frameIndex; ++i)
-        nativeStackFramePos += state->callstackBase[i]->s.spdist;
-    FrameInfo* fi = state->callstackBase[frameIndex];
-    uint8* typemap = (uint8*) (fi+1);
-
-    uintN slot = UPVAR_FRAME_SLOT(cookie);
-    slot = slot == CALLEE_UPVAR_SLOT ? 0 : slot + 2;
-    *result = state->stackBase[nativeStackFramePos + slot];
-    return typemap[slot];
+    jsval v = js_GetUpvar(cx, level, cookie);
+    uint8 type = getCoercedType(v);
+    ValueToNative(cx, v, type, result);
+    return type;
 }
 
 /**
@@ -8372,7 +8379,8 @@ TraceRecorder::record_JSOP_CALLNAME()
     return JSRS_CONTINUE;
 }
 
-JS_DEFINE_CALLINFO_4(extern, UINT32, js_GetUpvarOnTrace, CONTEXT, UINT32, UINT32, DOUBLEPTR, 0, 0)
+JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarOnTrace, CONTEXT, UINT32, UINT32, UINT32,
+                     DOUBLEPTR, 0, 0)
 
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_GETUPVAR()
@@ -8400,8 +8408,9 @@ TraceRecorder::record_JSOP_GETUPVAR()
     LIns* outp = lir->insAlloc(sizeof(double));
     LIns* args[] = { 
         outp,
-        lir->insImm(uva->vector[index]), 
-        lir->insImm(script->staticLevel), 
+        INS_CONST(callDepth),
+        INS_CONST(uva->vector[index]), 
+        INS_CONST(script->staticLevel), 
         cx_ins 
     };
     const CallInfo* ci = &js_GetUpvarOnTrace_ci;
@@ -8533,6 +8542,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->imacpc = fp->imacpc;
     fi->s.spdist = fp->regs->sp - fp->slots;
     fi->s.argc = argc | (constructing ? 0x8000 : 0);
+    fi->caller_argc = 2 + fp->argc;
 
     unsigned callDepth = getCallDepth();
     if (callDepth >= treeInfo->maxCallDepth)
