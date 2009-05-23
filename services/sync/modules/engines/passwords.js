@@ -111,10 +111,11 @@ PasswordStore.prototype = {
     prop.setPropertyAsAUTF8String("guid", id);
     
     let logins = Svc.Login.searchLogins({}, prop);
-    if (logins.length == 1) {
+    if (logins.length > 0) {
+      this._log.info(logins.length + " items matching " + id + " found.");
       return logins[0];
     } else {
-      this._log.warn(logins.length + " items matching " + id + ". Ignoring");
+      this._log.warn("No items matching " + id + " found. Ignoring");
     }
     return false;
   },
