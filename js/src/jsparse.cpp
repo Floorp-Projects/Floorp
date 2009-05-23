@@ -5646,7 +5646,24 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         return NULL;
     }
 
-    return NewBinary(TOK_ASSIGN, op, pn2, AssignExpr(cx, ts, tc), tc);
+    JSParseNode *pn3 = AssignExpr(cx, ts, tc);
+    if (pn3 && PN_TYPE(pn2) == TOK_NAME && pn2->pn_used) {
+        JSDefinition *dn = pn2->pn_lexdef;
+
+        /*
+         * If the definition is not flagged as assigned, we must have imputed
+         * the initialized flag to it, to optimize for flat closures. But that
+         * optimization uses source coordinates to check dominance relations,
+         * so we must extend the end of the definition to cover the right-hand
+         * side of this assignment, i.e., the initializer.
+         */
+        if (!dn->isAssigned()) {
+            JS_ASSERT(dn->isInitialized());
+            dn->pn_pos.end = pn3->pn_pos.end;
+        }
+    }
+
+    return NewBinary(TOK_ASSIGN, op, pn2, pn3, tc);
 }
 
 static JSParseNode *
