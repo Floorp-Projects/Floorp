@@ -64,19 +64,6 @@ PasswordEngine.prototype = {
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
 
-  _syncStartup: function PasswordEngine__syncStartup() {
-    let self = yield;
-    this._store.cacheLogins();
-    yield SyncEngine.prototype._syncStartup.async(this, self.cb);
-  },
-
-  /* Wipe cache when sync finishes */
-  _syncFinish: function PasswordEngine__syncFinish() {
-    let self = yield;
-    this._store.clearLoginCache();
-    yield SyncEngine.prototype._syncFinish.async(this, self.cb);
-  },
-
   _recordLike: function SyncEngine__recordLike(a, b) {
     if (a.deleted || b.deleted)
       return false;
@@ -118,16 +105,20 @@ PasswordStore.prototype = {
     return info;
   },
 
-  cacheLogins: function PasswordStore_cacheLogins() {
-    this._log.debug("Caching all logins");
-    this._loginItems = this.getAllIDs();
+  _getLoginFromGUID: function PasswordStore__getLoginFromGUID(id) {
+    let prop = Cc["@mozilla.org/hash-property-bag;1"].
+      createInstance(Ci.nsIWritablePropertyBag2);
+    prop.setPropertyAsAUTF8String("guid", id);
+    
+    let logins = Svc.Login.searchLogins({}, prop);
+    if (logins.length == 1) {
+      return logins[0];
+    } else {
+      this._log.warn(logins.length + " items matching " + id + ". Ignoring");
+    }
+    return false;
   },
-
-  clearLoginCache: function PasswordStore_clearLoginCache() {
-    this._log.debug("Clearing login cache");
-    this._loginItems = null;
-  },
-
+  
   getAllIDs: function PasswordStore__getAllIDs() {
     let items = {};
     let logins = Svc.Login.getAllLogins({});
@@ -143,11 +134,12 @@ PasswordStore.prototype = {
   changeItemID: function PasswordStore__changeItemID(oldID, newID) {
     this._log.debug("Changing item ID: " + oldID + " to " + newID);
 
-    if (!(oldID in this._loginItems)) {
+    let oldLogin = this._getLoginFromGUID(oldID);
+    if (!oldLogin) {
       this._log.warn("Can't change item ID: item doesn't exist");
       return;
     }
-    if (newID in this._loginItems) {
+    if (this._getLoginFromGUID(newID)) {
       this._log.warn("Can't change item ID: new ID already in use");
       return;
     }
@@ -156,18 +148,21 @@ PasswordStore.prototype = {
       createInstance(Ci.nsIWritablePropertyBag2);
     prop.setPropertyAsAUTF8String("guid", newID);
 
-    Svc.Login.modifyLogin(this._loginItems[oldID], prop);
+    Svc.Login.modifyLogin(oldLogin, prop);
   },
 
   itemExists: function PasswordStore__itemExists(id) {
-    return (id in this._loginItems);
+    if (this._getLoginFromGUID(id))
+      return true;
+    return false;
   },
 
   createRecord: function PasswordStore__createRecord(guid, cryptoMetaURL) {
     let record = new LoginRec();
-    record.id = guid;
-    if (guid in this._loginItems) {
-      let login = this._loginItems[guid];
+    let login = this._getLoginFromGUID(guid);
+
+    record.id = guid;    
+    if (login) {
       record.encryption = cryptoMetaURL;
       record.hostname = login.hostname;
       record.formSubmitURL = login.formSubmitURL;
@@ -189,26 +184,26 @@ PasswordStore.prototype = {
 
   remove: function PasswordStore__remove(record) {
     this._log.debug("Removing login " + record.id);
-    if (record.id in this._loginItems) {
-      Svc.Login.removeLogin(this._loginItems[record.id]);
+    
+    let loginItem = this._getLoginFromGUID(record.id);
+    if (!loginItem) {
+      this._log.debug("Asked to remove record that doesn't exist, ignoring");
       return;
     }
 
-    this._log.debug("Asked to remove record that doesn't exist, ignoring!");
+    Svc.Login.removeLogin(loginItem);
   },
 
   update: function PasswordStore__update(record) {
-    this._log.debug("Updating login for " + record.hostname);
-
-    if (!(record.id in this._loginItems)) {
+    let loginItem = this._getLoginFromGUID(record.id);
+    if (!loginItem) {
       this._log.debug("Skipping update for unknown item: " + record.id);
       return;
     }
-    let login = this._loginItems[record.id];
-    this._log.trace("Updating " + record.id);
 
+    this._log.debug("Updating " + record.id);
     let newinfo = this._nsLoginInfoFromRecord(record);
-    Svc.Login.modifyLogin(login, newinfo);
+    Svc.Login.modifyLogin(loginItem, newinfo);
   },
 
   wipe: function PasswordStore_wipe() {
