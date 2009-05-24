@@ -1334,13 +1334,12 @@ nsDOMStorage::CanAccessSystem(nsIPrincipal *aPrincipal)
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (!ssm)
-    return PR_TRUE;
+    return PR_FALSE;
 
   PRBool isSystem;
-  if (NS_SUCCEEDED(ssm->IsSystemPrincipal(aPrincipal, &isSystem) && isSystem))
-    return PR_TRUE;
+  nsresult rv = ssm->IsSystemPrincipal(aPrincipal, &isSystem);
 
-  return PR_FALSE;
+  return NS_SUCCEEDED(rv) && isSystem;
 }
 
 PRBool
