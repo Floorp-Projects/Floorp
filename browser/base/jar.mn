@@ -59,9 +59,6 @@ browser.jar:
 *       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
 *       content/browser/softwareUpdateOverlay.xul  (content/softwareUpdateOverlay.xul)
 #endif
-#ifdef TOOLBAR_CUSTOMIZATION_SHEET
-*       content/browser/customizeToolbarSheet.js          (content/customizeToolbarSheet.js)
-#endif
 *       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
 #ifdef MOZ_USE_GENERIC_BRANDING
 % content branding %content/branding/ xpcnativewrappers=yes
@@ -74,8 +71,3 @@ browser.jar:
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html
-
-#ifdef TOOLBAR_CUSTOMIZATION_SHEET
-toolkit.jar:
-*+      content/global/customizeToolbar.xul           (content/customizeToolbarSheet.xul)
-#endif

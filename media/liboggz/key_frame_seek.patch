@@ -1,0 +1,161 @@
+diff --git a/media/liboggz/include/oggz/oggz_seek.h b/media/liboggz/include/oggz/oggz_seek.h
+--- a/media/liboggz/include/oggz/oggz_seek.h
++++ b/media/liboggz/include/oggz/oggz_seek.h
+@@ -489,9 +489,22 @@ int oggz_set_data_start (OGGZ * oggz, og
+  * \retval -1 on failure (unit_target is not within range)
+  */
+ ogg_int64_t
+ oggz_bounded_seek_set (OGGZ * oggz,
+                        ogg_int64_t unit_target,
+                        ogg_int64_t offset_begin,
+                        ogg_int64_t offset_end);
+ 
++/**
++ * Seeks to the first key frame before unit_target, in the range
++ * [offset_begin, offset_end]. serial_nos contains an array of size serial_nos
++ * of serialnos of the streams which need to be seeked.
++ */
++ogg_int64_t
++oggz_keyframe_seek_set(OGGZ * oggz,
++                       long* serial_nos,
++                       int num_serialno,
++                       ogg_int64_t unit_target,
++                       ogg_int64_t offset_begin,
++                       ogg_int64_t offset_end);
++
+ #endif /* __OGGZ_SEEK_H__ */
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -935,8 +935,131 @@ oggz_seek_byorder (OGGZ * oggz, void * t
+ 
+ long
+ oggz_seek_packets (OGGZ * oggz, long serialno, long packets, int whence)
+ {
+   return OGGZ_ERR_DISABLED;
+ }
+ 
+ #endif
++
++// Returns 1 if any of the elements of array |a|, which is of length |n|,
++// contain the value |val|. Otherwise returns 0.
++static int
++is_any(ogg_int64_t* a, int n, ogg_int64_t val)
++{
++  int i;
++  for (i=0; i<n; i++) {
++    if (a[i] == val) {
++      return 1;
++    }
++  }
++  return 0;    
++}
++
++// Returns the index of the element in array |a|, which is of length |n|,
++// which contains the value |val|, or -1 of it's not present.
++static int
++find(long* a, int n, ogg_int64_t val)
++{
++  int i;
++  for (i=0; i<n; i++) {
++    if (a[i] == val) {
++      return i;
++    }
++  }
++  return -1;    
++}
++
++// Returns the element with the smallest value in array |a|, which is
++// of length |n|.
++static ogg_int64_t
++minimum(ogg_int64_t* a, int n) {
++  ogg_int64_t m = 0x7FFFFFFFFFFFFFFF;
++  int i;
++  for (i=0; i<n; i++) {
++    if (a[i] < m) {
++      m = a[i];
++    }
++  }
++  return m;
++}
++
++ogg_int64_t
++oggz_keyframe_seek_set(OGGZ * oggz,
++                       long* serial_nos,
++                       int num_serialno,
++                       ogg_int64_t unit_target,
++                       ogg_int64_t offset_begin,
++                       ogg_int64_t offset_end)
++{
++  oggz_off_t offset_at;
++  oggz_off_t offset_next;
++  ogg_int64_t granule_at;
++  ogg_int64_t unit_at;
++  ogg_int64_t key_granule_at, key_unit_at;
++  long serialno;
++  ogg_page * og;
++  int granule_shift = 0, idx;
++  ogg_int64_t* key_frames = 0;
++  
++  unit_at = oggz_bounded_seek_set(oggz,
++                                  unit_target,
++                                  offset_begin,
++                                  offset_end);
++  // Time isn't in the specified offset range, fail.
++  if (unit_at == -1)
++    return -1;
++
++  // We've seeked to beginning, we're at a key frame.
++  if (unit_at == 0)
++    return 0; 
++
++  // Backup this, in case we need to fail.
++  offset_at = oggz->offset;
++
++  key_frames = oggz_malloc(sizeof(ogg_int64_t) * num_serialno);
++  if (!key_frames) {
++    // Malloc failure. We can still exit with the seek finishing at a non
++    // key frame.
++    return unit_at;
++  }
++  memset(key_frames, -1, sizeof(ogg_int64_t) * num_serialno);
++
++  // Find the key frame offset for every stream.
++  og = &oggz->current_page;
++  while (is_any(key_frames, num_serialno, -1)) {
++    do {
++      offset_next = oggz_get_prev_start_page (oggz, og, &granule_at, &serialno);
++      if (offset_next <= 0 || granule_at == 0) {
++        // At beginning of file, or some other failure. Return with
++        // non-key frame seek if possible.
++        oggz_free(key_frames);
++        offset_at = oggz_reset (oggz, offset_at, unit_at, SEEK_SET);
++        return (offset_at == -1) ? -1 : unit_at;
++      }
++    } while (granule_at < 0);
++
++    idx = find(serial_nos, num_serialno, serialno);
++    if (idx == -1 || key_frames[idx] != -1)
++      continue;
++
++    granule_shift = oggz_get_granuleshift(oggz, serialno);
++    key_granule_at = (granule_at >> granule_shift) << granule_shift;
++    key_unit_at = oggz_get_unit(oggz, serialno, key_granule_at);
++
++    if (key_unit_at < unit_target)
++      key_frames[idx] = key_unit_at;
++  }
++
++  // Seek to 100ms before the earliest of all the streams' key frames.
++  // This is so that after the seek, the decoder will defintately return frames
++  // at or before get the key frame. Without this, some decoders will return
++  // frames which start after the specified time - after the key frame.
++  key_unit_at = minimum(key_frames, num_serialno);
++  unit_at = oggz_bounded_seek_set(oggz,
++                                  MAX((key_unit_at - 100), 0),
++                                  offset_begin,
++                                  offset_end);
++  oggz_free(key_frames);
++
++  return unit_at;
++}

@@ -56,6 +56,12 @@
 #include <signal.h>
 #include "nsError.h"
 
+/* NOTE: Macros that claim to abort no longer abort, see bug 486574.
+ * If you actually want to log and abort, call "nsObjCExceptionLogAbort"
+ * from an exception handler. At some point we will fix this by replacing
+ * all macros in the tree with appropriately-named macros.
+ */
+
 // See Mozilla bug 163260.
 // This file can only be included in an Objective-C context.
 
@@ -188,7 +194,7 @@ NS_OBJC_TRY(_e, )
 #define NS_OBJC_TRY_ABORT(_e)                      \
 @try { _e; }                                       \
 @catch(NSException *_exn) {                        \
-  nsObjCExceptionLogAbort(_exn);                   \
+  nsObjCExceptionLog(_exn);                        \
 }
 
 #define NS_OBJC_TRY_EXPR_ABORT(_e)                 \
@@ -196,15 +202,15 @@ NS_OBJC_TRY(_e, )
    typeof(_e) _tmp;                                \
    @try { _tmp = (_e); }                           \
    @catch(NSException *_exn) {                     \
-     nsObjCExceptionLogAbort(_exn);                \
+     nsObjCExceptionLog(_exn);                     \
    }                                               \
    _tmp;                                           \
 })
 
-// For wrapping blocks of Obj-C calls. Terminates app after logging.
+// For wrapping blocks of Obj-C calls. Does not actually terminate.
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK   } @catch(NSException *_exn) {            \
-                                        nsObjCExceptionLogAbort(_exn);         \
+#define NS_OBJC_END_TRY_ABORT_BLOCK   } @catch(NSException *_exn) {             \
+                                        nsObjCExceptionLog(_exn);               \
                                       }
 
 // Same as above ABORT_BLOCK but returns a value after the try/catch block to
@@ -212,26 +218,26 @@ NS_OBJC_TRY(_e, )
 // to get scoping right when wrapping an entire method.
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NIL   } @catch(NSException *_exn) {        \
-                                            nsObjCExceptionLogAbort(_exn);     \
-                                          }                                    \
+#define NS_OBJC_END_TRY_ABORT_BLOCK_NIL   } @catch(NSException *_exn) {         \
+                                            nsObjCExceptionLog(_exn);           \
+                                          }                                     \
                                           return nil;
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL   } @catch(NSException *_exn) {     \
-                                               nsObjCExceptionLogAbort(_exn);  \
-                                             }                                 \
+#define NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL   } @catch(NSException *_exn) {      \
+                                               nsObjCExceptionLog(_exn);        \
+                                             }                                  \
                                              return nsnull;
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT   } @catch(NSException *_exn) {   \
-                                                 nsObjCExceptionLogAbort(_exn);\
-                                               }                               \
+#define NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT   } @catch(NSException *_exn) {    \
+                                                 nsObjCExceptionLog(_exn);      \
+                                               }                                \
                                                return NS_ERROR_FAILURE;
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN    @try {
 #define NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(_rv) } @catch(NSException *_exn) {   \
-                                                  nsObjCExceptionLogAbort(_exn);\
+                                                  nsObjCExceptionLog(_exn);\
                                                 }                               \
                                                 return _rv;
 

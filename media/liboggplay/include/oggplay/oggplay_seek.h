@@ -42,4 +42,15 @@
 OggPlayErrorCode
 oggplay_seek(OggPlay *me, ogg_int64_t milliseconds);
 
+/**
+ * Seeks to key frame before |milliseconds|.
+ */
+OggPlayErrorCode
+oggplay_seek_to_keyframe(OggPlay *me,
+                         int* tracks,
+                         int num_tracks,
+                         ogg_int64_t milliseconds,
+                         ogg_int64_t offset_begin,
+                         ogg_int64_t offset_end);
+
 #endif

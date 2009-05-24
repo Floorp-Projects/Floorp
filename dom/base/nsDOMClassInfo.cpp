@@ -6458,7 +6458,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       PRBool ok =
         ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                               ::JS_GetStringLength(str),
-                              winVal, nsnull, nsnull,
+                              winVal, JS_PropertyStub, JS_PropertyStub,
                               JSPROP_READONLY | JSPROP_ENUMERATE);
 
       sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
@@ -8403,6 +8403,16 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
   // document.all.item(), etc.
   if (id == sItem_id || id == sNamedItem_id) {
     return JS_TRUE;
+  }
+
+  while (STOBJ_GET_CLASS(obj) != &sHTMLDocumentAllClass) {
+    obj = STOBJ_GET_PROTO(obj);
+
+    if (!obj) {
+      NS_ERROR("The JS engine lies!");
+
+      return JS_TRUE;
+    }
   }
 
   nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);

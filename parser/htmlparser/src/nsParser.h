@@ -339,7 +339,7 @@ class nsParser : public nsIParser,
      *  @return PR_TRUE if parser can be interrupted, PR_FALSE if it can not be interrupted.
      *  @update  kmcclusk 5/18/98
      */
-    PRBool CanInterrupt(void);
+    virtual PRBool CanInterrupt();
 
     /**  
      *  Set to parser state to indicate whether parsing tokens can be interrupted

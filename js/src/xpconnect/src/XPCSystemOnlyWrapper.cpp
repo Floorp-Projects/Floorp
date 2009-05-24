@@ -286,6 +286,66 @@ XPC_SOW_WrapFunction(JSContext *cx, JSObject *outerObj, JSObject *funobj,
 }
 
 static JSBool
+XPC_SOW_RewrapValue(JSContext *cx, JSObject *wrapperObj, jsval *vp)
+{
+  jsval v = *vp;
+  if (JSVAL_IS_PRIMITIVE(v)) {
+    return JS_TRUE;
+  }
+
+  JSObject *obj = JSVAL_TO_OBJECT(v);
+
+  if (JS_ObjectIsFunction(cx, obj)) {
+    // NB: The JS_ValueToFunction call is guaranteed to succeed.
+    JSNative native = JS_GetFunctionNative(cx, JS_ValueToFunction(cx, v));
+
+    // This is really tricky! We need to unwrap this when calling native
+    // functions to preserve their assumptions, but *not* when calling
+    // scripted functions, since they expect 'this' to be wrapped.
+    if (!native) {
+     return JS_TRUE;
+    }
+
+    if (native == XPC_SOW_FunctionWrapper) {
+      // If this is a system function wrapper, make sure its ours, otherwise,
+      // its prototype could come from the wrong scope.
+      if (STOBJ_GET_PROTO(wrapperObj) == STOBJ_GET_PARENT(obj)) {
+        return JS_TRUE;
+      }
+
+      // It isn't ours, rewrap the wrapped function.
+      if (!JS_GetReservedSlot(cx, obj, XPCWrapper::eWrappedFunctionSlot, &v)) {
+        return JS_FALSE;
+      }
+      obj = JSVAL_TO_OBJECT(v);
+    }
+
+    return XPC_SOW_WrapFunction(cx, wrapperObj, obj, vp);
+  }
+
+  if (STOBJ_GET_CLASS(obj) == &sXPC_SOW_JSClass.base) {
+    // We are extra careful about content-polluted wrappers here. I don't know
+    // if it's possible to reach them through objects that we wrap, but figuring
+    // that out is more expensive (and harder) than simply checking and
+    // rewrapping here.
+    if (STOBJ_GET_PARENT(wrapperObj) == STOBJ_GET_PARENT(obj)) {
+      // Already wrapped.
+      return JS_TRUE;
+    }
+
+    obj = GetWrappedObject(cx, obj);
+    if (!obj) {
+      // XXX Can this happen?
+      *vp = JSVAL_NULL;
+      return JS_TRUE;
+    }
+    v = *vp = OBJECT_TO_JSVAL(obj);
+  }
+
+  return XPC_SOW_WrapObject(cx, STOBJ_GET_PARENT(wrapperObj), v, vp);
+}
+
+static JSBool
 XPC_SOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   NS_ASSERTION(STOBJ_GET_CLASS(obj) == &sXPC_SOW_JSClass.base, "Wrong object");
@@ -361,9 +421,14 @@ XPC_SOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_FALSE;
   }
 
-  return isSet
-         ? JS_SetPropertyById(cx, wrappedObj, interned_id, vp)
-         : JS_GetPropertyById(cx, wrappedObj, interned_id, vp);
+  JSBool ok = isSet
+              ? JS_SetPropertyById(cx, wrappedObj, interned_id, vp)
+              : JS_GetPropertyById(cx, wrappedObj, interned_id, vp);
+  if (!ok) {
+    return JS_FALSE;
+  }
+
+  return XPC_SOW_RewrapValue(cx, obj, vp);
 }
 
 static JSBool

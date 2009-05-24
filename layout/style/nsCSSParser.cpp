@@ -5619,7 +5619,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_word_spacing:
     return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
   case eCSSProperty_line_height:
-    return ParseNonNegativeVariant(aValue, VARIANT_HLPN | VARIANT_NORMAL | VARIANT_SYSFONT, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_HLPN | VARIANT_KEYWORD | VARIANT_NORMAL | VARIANT_SYSFONT, nsCSSProps::kLineHeightKTable);
   case eCSSProperty_list_style_image:
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_list_style_position:

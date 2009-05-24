@@ -213,7 +213,6 @@ class nsDocShell : public nsDocLoader,
                    public nsIAuthPromptProvider,
                    public nsIObserver,
                    public nsILoadContext,
-                   public nsIDocShell_MOZILLA_1_9_1,
                    public nsIWebShellServices,
                    public nsILinkHandler,
                    public nsIClipboardCommands
@@ -248,7 +247,6 @@ public:
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSIOBSERVER
     NS_DECL_NSILOADCONTEXT
-    NS_DECL_NSIDOCSHELL_MOZILLA_1_9_1
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
 
@@ -606,7 +604,7 @@ protected:
 
     nsresult GetSessionStorageForURI(nsIURI* aURI,
                                      PRBool create,
-                                     nsIDOMStorageObsolete** aStorage);
+                                     nsIDOMStorage** aStorage);
 
     // helpers for executing commands
     nsresult GetControllerForCommand(const char *inCommand,
@@ -628,6 +626,101 @@ protected:
     private:
         nsDocShell *mDocShell;
     };
+
+    // hash of session storages, keyed by domain
+    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
+
+    // Dimensions of the docshell
+    nsIntRect                  mBounds;
+    nsString                   mName;
+    nsString                   mTitle;
+
+    /**
+     * Content-Type Hint of the most-recently initiated load. Used for
+     * session history entries.
+     */
+    nsCString                  mContentTypeHint;
+    nsIntPoint                 mDefaultScrollbarPref; // persistent across doc loads
+
+    nsCOMPtr<nsISupportsArray> mRefreshURIList;
+    nsCOMPtr<nsISupportsArray> mSavedRefreshURIList;
+    nsRefPtr<nsDSURIContentListener> mContentListener;
+    nsCOMPtr<nsIContentViewer> mContentViewer;
+    nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
+    nsCOMPtr<nsIWidget>        mParentWidget;
+    nsCOMPtr<nsIPrefBranch>    mPrefs;
+
+    // mCurrentURI should be marked immutable on set if possible.
+    nsCOMPtr<nsIURI>           mCurrentURI;
+    nsCOMPtr<nsIURI>           mReferrerURI;
+    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
+    nsCOMPtr<nsISHistory>      mSessionHistory;
+    nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
+    nsCOMPtr<nsIWebBrowserFind> mFind;
+    nsCOMPtr<nsICommandManager> mCommandManager;
+    // Reference to the SHEntry for this docshell until the page is destroyed.
+    // Somebody give me better name
+    nsCOMPtr<nsISHEntry>       mOSHE;
+    // Reference to the SHEntry for this docshell until the page is loaded
+    // Somebody give me better name
+    nsCOMPtr<nsISHEntry>       mLSHE;
+
+    // Holds a weak pointer to a RestorePresentationEvent object if any that
+    // holds a weak pointer back to us.  We use this pointer to possibly revoke
+    // the event whenever necessary.
+    nsRevocableEventPtr<RestorePresentationEvent> mRestorePresentationEvent;
+
+    // Editor data, if this document is designMode or contentEditable.
+    nsAutoPtr<nsDocShellEditorData> mEditorData;
+
+    // Transferable hooks/callbacks
+    nsCOMPtr<nsIClipboardDragDropHookList> mTransferableHookData;
+
+    // Secure browser UI object
+    nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
+
+    // Suspends/resumes channels based on the URI classifier.
+    nsRefPtr<nsClassifierCallback> mClassifier;
+
+    // The URI we're currently loading.  This is only relevant during the
+    // firing of a pagehide/unload.  The caller of FirePageHideNotification()
+    // is responsible for setting it and unsetting it.  It may be null if the
+    // pagehide/unload is happening for some reason other than just loading a
+    // new URI.
+    nsCOMPtr<nsIURI>           mLoadingURI;
+
+    // WEAK REFERENCES BELOW HERE.
+    // Note these are intentionally not addrefd.  Doing so will create a cycle.
+    // For that reasons don't use nsCOMPtr.
+
+    nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
+    nsPIDOMEventTarget *       mChromeEventHandler; //Weak Reference
+
+    eCharsetReloadState        mCharsetReloadState;
+
+    // Offset in the parent's child list.
+    // XXXmats the line above is bogus, it's the offset in the parent's
+    // child list at the time this docshell was added to it,
+    // see nsDocShell::AddChild().  It isn't updated after that so if children
+    // with lower indices are removed this offset is no longer valid to be used
+    // as an index into the parent's child list (see bug 162283).  It MUST not
+    // be used for that purpose.  It's used as an index to get/add history
+    // entries into nsIDocShellHistory, although I very much doubt that it
+    // can be correct for that purpose as well...
+    // Try not to use it, we should get rid of it.
+    PRUint32                   mChildOffset;
+    PRUint32                   mBusyFlags;
+    PRUint32                   mAppType;
+    PRUint32                   mLoadType;
+
+    PRInt32                    mMarginWidth;
+    PRInt32                    mMarginHeight;
+    PRInt32                    mItemType;
+
+    // Index into the SHTransaction list, indicating the previous and current
+    // transaction at the time that this DocShell begins to load
+    PRInt32                    mPreviousTransIndex;
+    PRInt32                    mLoadedTransIndex;
 
     PRPackedBool               mAllowSubframes;
     PRPackedBool               mAllowPlugins;
@@ -653,7 +746,7 @@ protected:
     // which don't result in new documents being created (i.e. a new
     // content viewer) we want to make sure we don't call a on load
     // event more than once for a given content viewer.
-    PRPackedBool               mEODForCurrentDocument; 
+    PRPackedBool               mEODForCurrentDocument;
     PRPackedBool               mURIResultedInDocument;
 
     PRPackedBool               mIsBeingDestroyed;
@@ -667,104 +760,8 @@ protected:
     // presentation of the page, and to SetupNewViewer() that the old viewer
     // should be passed a SHEntry to save itself into.
     PRPackedBool               mSavingOldViewer;
-
-    PRUint32                   mAppType;
-
-    // Offset in the parent's child list.
-    // XXXmats the line above is bogus, it's the offset in the parent's
-    // child list at the time this docshell was added to it,
-    // see nsDocShell::AddChild().  It isn't updated after that so if children
-    // with lower indices are removed this offset is no longer valid to be used
-    // as an index into the parent's child list (see bug 162283).  It MUST not
-    // be used for that purpose.  It's used as an index to get/add history
-    // entries into nsIDocShellHistory, although I very much doubt that it
-    // can be correct for that purpose as well...
-    // Try not to use it, we should get rid of it.
-    PRUint32                   mChildOffset;
-
-    PRUint32                   mBusyFlags;
-
-    PRInt32                    mMarginWidth;
-    PRInt32                    mMarginHeight;
-    PRInt32                    mItemType;
-
-    PRUint32                   mLoadType;
-
-    nsString                   mName;
-    nsString                   mTitle;
-    /**
-     * Content-Type Hint of the most-recently initiated load. Used for
-     * session history entries.
-     */
-    nsCString                  mContentTypeHint;
-    nsCOMPtr<nsISupportsArray> mRefreshURIList;
-    nsCOMPtr<nsISupportsArray> mSavedRefreshURIList;
-    nsRefPtr<nsDSURIContentListener> mContentListener;
-    nsIntRect                  mBounds; // Dimensions of the docshell
-    nsCOMPtr<nsIContentViewer> mContentViewer;
-    nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
-    nsCOMPtr<nsIWidget>        mParentWidget;
-    nsCOMPtr<nsIPrefBranch>    mPrefs;
-
-    // mCurrentURI should be marked immutable on set if possible.
-    nsCOMPtr<nsIURI>           mCurrentURI;
-    nsCOMPtr<nsIURI>           mReferrerURI;
-    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
-    nsCOMPtr<nsISHistory>      mSessionHistory;
-    nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
-    nsCOMPtr<nsIWebBrowserFind> mFind;
-    nsIntPoint                 mDefaultScrollbarPref; // persistent across doc loads
-    // Reference to the SHEntry for this docshell until the page is destroyed.
-    // Somebody give me better name
-    nsCOMPtr<nsISHEntry>       mOSHE; 
-    // Reference to the SHEntry for this docshell until the page is loaded
-    // Somebody give me better name
-    nsCOMPtr<nsISHEntry>       mLSHE;
-
-    // Holds a weak pointer to a RestorePresentationEvent object if any that
-    // holds a weak pointer back to us.  We use this pointer to possibly revoke
-    // the event whenever necessary.
-    nsRevocableEventPtr<RestorePresentationEvent> mRestorePresentationEvent;
-
-    // hash of session storages, keyed by domain
-    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorageObsolete> mStorages;
-
-    // Index into the SHTransaction list, indicating the previous and current
-    // transaction at the time that this DocShell begins to load
-    PRInt32                    mPreviousTransIndex;
-    PRInt32                    mLoadedTransIndex;
-
-    // Editor data, if this document is designMode or contentEditable.
-    nsAutoPtr<nsDocShellEditorData> mEditorData;
-
-    // Transferable hooks/callbacks
-    nsCOMPtr<nsIClipboardDragDropHookList>  mTransferableHookData;
-
-    // Secure browser UI object
-    nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
-
-    // Suspends/resumes channels based on the URI classifier.
-    nsRefPtr<nsClassifierCallback> mClassifier;
-
-    // The URI we're currently loading.  This is only relevant during the
-    // firing of a pagehide/unload.  The caller of FirePageHideNotification()
-    // is responsible for setting it and unsetting it.  It may be null if the
-    // pagehide/unload is happening for some reason other than just loading a
-    // new URI.
-    nsCOMPtr<nsIURI> mLoadingURI;
-
-    // WEAK REFERENCES BELOW HERE.
-    // Note these are intentionally not addrefd.  Doing so will create a cycle.
-    // For that reasons don't use nsCOMPtr.
-
-    nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
-    nsPIDOMEventTarget *       mChromeEventHandler; //Weak Reference
-
-    eCharsetReloadState mCharsetReloadState;
-    nsCOMPtr<nsICommandManager> mCommandManager;
-
 #ifdef DEBUG
-    PRBool mInEnsureScriptEnv;
+    PRPackedBool               mInEnsureScriptEnv;
 #endif
 
     static nsIURIFixup *sURIFixup;

@@ -766,6 +766,15 @@ public:
                                 PRInt32              aLength);
 
   /**
+   * Gets the baseline to vertically center text from a font within a
+   * line of specified height.
+   *
+   * Returns the baseline position relative to the top of the line.
+   */
+  static nscoord GetCenteredFontBaseline(nsIFontMetrics* aFontMetrics,
+                                         nscoord         aLineHeight);
+
+  /**
    * Derive a baseline of |aFrame| (measured from its top border edge)
    * from its first in-flow line box (not descending into anything with
    * 'overflow' not 'visible', potentially including aFrame itself).

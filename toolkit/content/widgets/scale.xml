@@ -178,6 +178,11 @@
         </body>
       </method>
 
+      <method name="dragStateChanged">
+        <parameter name="isDragging"/>
+        <body/>
+      </method>
+
     </implementation>
 
     <handlers>

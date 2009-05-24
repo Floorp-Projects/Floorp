@@ -1325,13 +1325,6 @@ public:
     XPCContext *GetContext() { return mContext; }
     void SetContext(XPCContext *xpcc) { mContext = nsnull; }
 
-#ifndef XPCONNECT_STANDALONE
-    /**
-     * Fills the hash mapping global object to principal.
-     */
-    static void TraverseScopes(XPCCallContext& ccx);
-#endif
-
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal);
     virtual ~XPCWrappedNativeScope();
@@ -1371,7 +1364,7 @@ private:
     // XXXbz what happens if someone calls JS_SetPrivate on mGlobalJSObject.
     // How do we deal?  Do we need to?  I suspect this isn't worth worrying
     // about, since all of our scope objects are verified as not doing that.
-    nsCOMPtr<nsIScriptObjectPrincipal> mScriptObjectPrincipal;
+    nsIScriptObjectPrincipal* mScriptObjectPrincipal;
 #endif
 };
 

@@ -210,7 +210,6 @@ public:
   NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
-  NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
   virtual PRBool          HasPendingInputEvent();
 
   // Note that the result of GetTopLevelWindow method can be different from the

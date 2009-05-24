@@ -78,6 +78,7 @@ const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.proper
 const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 
 const KEY_APPDIR          = "XCurProcD";
+const KEY_GRED            = "GreD";
 #ifdef XP_WIN
 const KEY_UPDROOT         = "UpdRootD";
 const KEY_UAPPDATA        = "UAppData";
@@ -92,7 +93,7 @@ const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
 const FILE_PERMS_TEST     = "update.test";
 const FILE_LAST_LOG       = "last-update.log";
-const FILE_UPDATER_INI    = "updater.ini";
+const FILE_UPDATE_LOCALE  = "update.locale";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -363,8 +364,11 @@ function getUpdatesDir(key) {
   }
   updateDir.append(DIR_UPDATES);
   updateDir.append("0");
-  if (!updateDir.exists() && !key)
+  if (!updateDir.exists() && !key) {
+    LOG("General", "getUpdatesDir - update directory " + updateDir.path +
+        " doesn't exist, creating...");
     updateDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+  }
   return updateDir;
 }
 
@@ -378,8 +382,10 @@ function getUpdatesDir(key) {
 function readStatusFile(dir) {
   var statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
-  LOG("General", "readStatusFile - Reading Status File: " + statusFile.path);
-  return readStringFromFile(statusFile) || STATE_NONE;
+  var status = readStringFromFile(statusFile) || STATE_NONE;
+  LOG("General", "readStatusFile - status: " + status + ", path: " +
+      statusFile.path);
+  return status;
 }
 
 /**
@@ -470,6 +476,8 @@ function cleanUpUpdatesDir(key) {
         updateDir.path + " - This is almost always bad. Exception = " + e);
     throw e;
   }
+  LOG("General", "cleanUpUpdatesDir - successfully removed update directory: " +
+      updateDir.path);
 }
 
 /**
@@ -511,19 +519,26 @@ function getPref(func, preference, defaultValue) {
 }
 
 /**
- * Gets the locale specified by the 'Locale' key in the 'Installation' section
- * of updater.ini.
+ * Gets the locale from the update.locale file for replacing %LOCALE% in the
+ * update url. The update.locale file can be located in the application
+ * directory or the GRE directory with preference given to it being located in
+ * the application directory.
  */
 function getLocale() {
   if (gLocale)
     return gLocale;
 
-  var updaterIni = getFile(KEY_APPDIR, [FILE_UPDATER_INI]);
-  var iniParser = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
-                  getService(Ci.nsIINIParserFactory).
-                  createINIParser(updaterIni);
-  gLocale = iniParser.getString("Installation", "Locale");
-  LOG("General", "getLocale - getting locale from file: " + updaterIni.path +
+  var localeFile = getFile(KEY_APPDIR, [FILE_UPDATE_LOCALE]);
+  if (!localeFile.exists())
+    localeFile = getFile(KEY_GRED, [FILE_UPDATE_LOCALE]);
+
+  if (!localeFile.exists())
+    throw Components.Exception(FILE_UPDATE_LOCALE + " file doesn't exist in " +
+                               "either the " + KEY_APPDIR + " or " + KEY_GRED +
+                               " directories", Cr.NS_ERROR_FILE_NOT_FOUND);
+
+  gLocale = readStringFromFile(localeFile);
+  LOG("General", "getLocale - getting locale from file: " + localeFile.path +
       ", locale: " + gLocale);
   return gLocale;
 }
@@ -640,8 +655,10 @@ function readStringFromFile(file) {
   var fis = Cc["@mozilla.org/network/file-input-stream;1"].
             createInstance(Ci.nsIFileInputStream);
   var modeFlags = MODE_RDONLY;
-  if (!file.exists())
+  if (!file.exists()) {
+    LOG("General", "readStringFromFile - file doesn't exist: " + file.path);
     return null;
+  }
   fis.init(file, modeFlags, PERMS_FILE, 0);
   var sis = Cc["@mozilla.org/scriptableinputstream;1"].
             createInstance(Ci.nsIScriptableInputStream);
@@ -1937,6 +1954,7 @@ UpdateManager.prototype = {
       // User switched channels, clear out any old active updates and remove
       // partial downloads
       this._activeUpdate = null;
+      this.saveUpdates();
 
       // Destroy the updates directory, since we're done with it.
       cleanUpUpdatesDir();
@@ -2028,6 +2046,7 @@ UpdateManager.prototype = {
     if (this._activeUpdate)
       this._addUpdate(this._activeUpdate);
 
+    this._ensureUpdates();
     // Don't write updates that have a temporary state to the updates.xml file.
     if (this._updates) {
       let updates = this._updates.slice();

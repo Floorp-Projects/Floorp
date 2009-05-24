@@ -64,6 +64,7 @@ MOCHI_TESTS = \
 		test_basic_form_autocomplete.html \
 		test_basic_form_observer_autofillForms.html \
 		test_basic_form_observer_autocomplete.html \
+		test_basic_form_observer_foundLogins.html \
 		test_basic_form_pwonly.html \
 		test_bug_227640.html \
 		test_bug_242956.html \

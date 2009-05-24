@@ -1564,6 +1564,44 @@ function initializeSanitizer()
     // check it at next app start even if the browser exits abruptly
     gPrefService.QueryInterface(Ci.nsIPrefService).savePrefFile(null);
   }
+
+  /**
+   * Migrate Firefox 3.0 privacy.item prefs under one of these conditions:
+   *
+   * a) User has customized any privacy.item prefs
+   * b) privacy.sanitize.sanitizeOnShutdown is set
+   */
+  (function() {
+    var prefService = Cc["@mozilla.org/preferences-service;1"].
+                      getService(Ci.nsIPrefService);
+    if (!prefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
+      var itemBranch = prefService.getBranch("privacy.item.");
+      var itemCount = { value: 0 };
+      var itemArray = itemBranch.getChildList("", itemCount);
+
+      // See if any privacy.item prefs are set
+      var doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
+      // Or if sanitizeOnShutdown is set
+      if (!doMigrate)
+        doMigrate = prefService.getBoolPref("privacy.sanitize.sanitizeOnShutdown");
+
+      if (doMigrate) {
+        var cpdBranch = prefService.getBranch("privacy.cpd.");
+        var clearOnShutdownBranch = prefService.getBranch("privacy.clearOnShutdown.");
+        itemArray.forEach(function (name) {
+          try {
+            cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
+            clearOnShutdownBranch.setBoolPref(name, itemBranch.getBoolPref(name));
+          }
+          catch(e) {
+            Components.utils.reportError("Exception thrown during privacy pref migration: " + e);
+          }
+        });
+      }
+
+      prefService.setBoolPref("privacy.sanitize.migrateFx3Prefs", true);
+    }
+  })();
 }
 
 function gotoHistoryIndex(aEvent)
@@ -2673,6 +2711,7 @@ var homeButtonObserver = {
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       flavourSet.appendFlavour("text/x-moz-url");
       flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/x-moz-text-internal");  // for tabs
       return flavourSet;
     }
 }
@@ -2793,6 +2832,7 @@ var newWindowButtonObserver = {
       flavourSet.appendFlavour("text/unicode");
       flavourSet.appendFlavour("text/x-moz-url");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-text-internal");  // for tabs
       return flavourSet;
     }
 }
@@ -3275,6 +3315,7 @@ function OpenBrowserWindow()
   return win;
 }
 
+var gCustomizeSheet = false;
 // Returns a reference to the window in which the toolbar
 // customization document is loaded.
 function BrowserCustomizeToolbar()
@@ -3292,38 +3333,42 @@ function BrowserCustomizeToolbar()
     splitter.parentNode.removeChild(splitter);
 
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
-#ifdef TOOLBAR_CUSTOMIZATION_SHEET
-  var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
-  sheetFrame.hidden = false;
+  gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
-  // The document might not have been loaded yet, if this is the first time.
-  // If it is already loaded, reload it so that the onload initialization code
-  // re-runs.
-  if (sheetFrame.getAttribute("src") == customizeURL)
-    sheetFrame.contentWindow.location.reload()
-  else
-    sheetFrame.setAttribute("src", customizeURL);
+  if (gCustomizeSheet) {
+    var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
+    sheetFrame.hidden = false;
+    sheetFrame.toolbox = gNavToolbox;
 
-  // XXXmano: there's apparently no better way to get this when the iframe is
-  // hidden
-  var sheetWidth = sheetFrame.style.width.match(/([0-9]+)px/)[1];
-  document.getElementById("customizeToolbarSheetPopup")
-          .openPopup(gNavToolbox, "after_start", (window.innerWidth - sheetWidth) / 2, 0);
+    // The document might not have been loaded yet, if this is the first time.
+    // If it is already loaded, reload it so that the onload initialization code
+    // re-runs.
+    if (sheetFrame.getAttribute("src") == customizeURL)
+      sheetFrame.contentWindow.location.reload()
+    else
+      sheetFrame.setAttribute("src", customizeURL);
 
-  return sheetFrame.contentWindow;
-#else
-  return window.openDialog(customizeURL,
-                           "CustomizeToolbar",
-                           "chrome,titlebar,toolbar,location,resizable,dependent",
-                           gNavToolbox);
-#endif
+    // XXXmano: there's apparently no better way to get this when the iframe is
+    // hidden
+    var sheetWidth = sheetFrame.style.width.match(/([0-9]+)px/)[1];
+    document.getElementById("customizeToolbarSheetPopup")
+            .openPopup(gNavToolbox, "after_start",
+                       (window.innerWidth - sheetWidth) / 2, 0);
+
+    return sheetFrame.contentWindow;
+  } else {
+    return window.openDialog(customizeURL,
+                             "CustomizeToolbar",
+                             "chrome,titlebar,toolbar,location,resizable,dependent",
+                             gNavToolbox);
+  }
 }
 
 function BrowserToolboxCustomizeDone(aToolboxChanged) {
-#ifdef TOOLBAR_CUSTOMIZATION_SHEET
-  document.getElementById("customizeToolbarSheetIFrame").hidden = true;
-  document.getElementById("customizeToolbarSheetPopup").hidePopup();
-#endif
+  if (gCustomizeSheet) {
+    document.getElementById("customizeToolbarSheetIFrame").hidden = true;
+    document.getElementById("customizeToolbarSheetPopup").hidePopup();
+  }
 
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
@@ -3379,10 +3424,10 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     SetClickAndHoldHandlers();
 #endif
 
-#ifndef TOOLBAR_CUSTOMIZATION_SHEET
   // XXX Shouldn't have to do this, but I do
-  window.focus();
-#endif
+  if (!gCustomizeSheet)
+    window.focus();
+
 }
 
 function BrowserToolboxCustomizeChange() {

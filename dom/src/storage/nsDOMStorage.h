@@ -140,12 +140,12 @@ public:
   nsresult Clear();
 
   // nsPIDOMStorage
+  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal);
   virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal);
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
-  virtual nsresult InitAsSessionStorage(nsIURI* aURI);
-  virtual already_AddRefed<nsIDOMStorageObsolete> Clone();
+  virtual already_AddRefed<nsIDOMStorage> Clone();
   virtual nsTArray<nsString> *GetKeys();
-  virtual const nsCString &Domain();
+  virtual nsIPrincipal* Principal();
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal);
 
   // If true, the contents of the storage should be stored in the
@@ -267,15 +267,18 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
 
+  nsDOMStorage2(nsDOMStorage2& aThat);
+  nsDOMStorage2();
+
   NS_DECL_NSIDOMSTORAGE
 
   // nsPIDOMStorage
+  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal);
   virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal);
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
-  virtual nsresult InitAsSessionStorage(nsIURI* aURI);
-  virtual already_AddRefed<nsIDOMStorageObsolete> Clone();
+  virtual already_AddRefed<nsIDOMStorage> Clone();
   virtual nsTArray<nsString> *GetKeys();
-  virtual const nsCString &Domain();
+  virtual nsIPrincipal* Principal();
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal);
 
 private:
@@ -431,6 +434,9 @@ protected:
 
 NS_IMETHODIMP
 NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+NS_IMETHODIMP
+NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult
 NS_NewDOMStorageList(nsIDOMStorageList** aResult);

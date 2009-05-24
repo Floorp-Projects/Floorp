@@ -216,6 +216,14 @@
 // this setting we had a Ts hit on Linux.  See bug 460315 for details.
 #define DEFAULT_JOURNAL_MODE "TRUNCATE"
 
+// These macros are used when splitting history by date.
+// These are the day containers and catch-all final container.
+#define ADDITIONAL_DATE_CONT_NUM 3
+// We use a guess of the number of months considering all of them 30 days
+// long, but we split only the last 6 months.
+#define DATE_CONT_NUM(_expireDays) \
+  (ADDITIONAL_DATE_CONT_NUM + PR_MIN(6, (_expireDays/30)))
+
 NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
 NS_IMPL_THREADSAFE_RELEASE(nsNavHistory)
 
@@ -262,6 +270,44 @@ inline void ReverseString(const nsString& aInput, nsAString& aReversed)
   aReversed.Truncate(0);
   for (PRInt32 i = aInput.Length() - 1; i >= 0; i --)
     aReversed.Append(aInput[i]);
+}
+
+namespace mozilla {
+  namespace places {
+
+    bool hasRecentCorruptDB()
+    {
+      nsCOMPtr<nsIFile> profDir;
+      nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                           getter_AddRefs(profDir));
+      NS_ENSURE_SUCCESS(rv, false);
+      nsCOMPtr<nsISimpleEnumerator> entries;
+      rv = profDir->GetDirectoryEntries(getter_AddRefs(entries));
+      NS_ENSURE_SUCCESS(rv, false);
+      PRBool hasMore;
+      while (NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> next;
+        rv = entries->GetNext(getter_AddRefs(next));
+        NS_ENSURE_SUCCESS(rv, false);
+        nsCOMPtr<nsIFile> currFile = do_QueryInterface(next, &rv);
+        NS_ENSURE_SUCCESS(rv, false);
+
+        nsAutoString leafName;
+        rv = currFile->GetLeafName(leafName);
+        NS_ENSURE_SUCCESS(rv, false);
+        if (leafName.Length() >= DB_CORRUPT_FILENAME.Length() &&
+            leafName.Find(".corrupt", DB_FILENAME.Length()) != -1) {
+          PRInt64 lastMod;
+          rv = currFile->GetLastModifiedTime(&lastMod);
+          NS_ENSURE_SUCCESS(rv, false);
+          if (PR_Now() - lastMod > (PRInt64)24 * 60 * 60 * 1000 * 1000)
+           return true;
+        }
+      }
+      return false;
+    }
+
+  }
 }
 
 // UpdateBatchScoper
@@ -437,25 +483,36 @@ nsNavHistory::Init()
   // prefs
   LoadPrefs(PR_TRUE);
 
-  // init db file
+  // Init the database file.  If we won't be able to connect to the database it
+  // is most likely corrupt, so we will backup it and create a new one.
   rv = InitDBFile(PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // init db and statements
+  // Init the database schema.  If this will fail there's an high possibility
+  // the schema is corrupt or incorrect, so we will force a new database
+  // initialization.
   rv = InitDB();
   if (NS_FAILED(rv)) {
-    // if unable to initialize the db, force-re-initialize it:
-    // InitDBFile will backup the old db and create a new one.
+    // Forced InitDBFile will backup the old db and create a new one.
     rv = InitDBFile(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
+    // Try to initialize the schema again on the new database.
     rv = InitDB();
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Notify we have finished database initialization
+  // Initialize all the items that are not part of the on-disk database, like
+  // views, temp tables, functions.  Do not initialize these in InitDBFile, or
+  // in case of failure we would mark the database as corrupt and try to
+  // replace it, even if it's sane.
+  rv = InitAdditionalDBItems();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify we have finished database initialization.
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
-  nsCOMPtr<PlacesEvent> completeEvent = new PlacesEvent(PLACES_INIT_COMPLETE_EVENT_TOPIC);
+  nsRefPtr<PlacesEvent> completeEvent =
+    new PlacesEvent(PLACES_INIT_COMPLETE_EVENT_TOPIC);
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -581,20 +638,39 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
   rv = mDBFile->Append(DB_FILENAME);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if forcing, backup and remove the old file
   if (aForceInit) {
-    // backup the database
-    nsCOMPtr<nsIFile> backup;
-    rv = mDBService->BackupDatabaseFile(mDBFile, DB_CORRUPT_FILENAME, profDir,
-                                        getter_AddRefs(backup));
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If forcing initialization, backup and remove the old file.  If we have
+    // already failed in the last 24 hours avoid to create another corrupt file,
+    // since doing so, in some situation, could cause us to create a new corrupt
+    // file at every try to access any Places service.  That is bad because it
+    // would quickly fill the user's disk space without any notice.
+    if (!mozilla::places::hasRecentCorruptDB()) {
+      // backup the database
+      nsCOMPtr<nsIFile> backup;
+      rv = mDBService->BackupDatabaseFile(mDBFile, DB_CORRUPT_FILENAME, profDir,
+                                          getter_AddRefs(backup));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-    // close database connection if open
+    // Close database connection if open.
+    // If there's any not finalized statement or this fails for any reason
+    // we won't be able to remove the database.
     rv = mDBConn->Close();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // and remove the file
+    // Remove the broken database.
     rv = mDBFile->Remove(PR_FALSE);
+    if (NS_FAILED(rv)) {
+      // If the file is still in use this will fail and we won't be able to
+      // start with a clean database.  The process of backing up a corrupt
+      // database will loop on the same database file at any next service
+      // request.
+      // We can't do much at this point, so fire a locked event so that user is
+      // notified that we can't ensure Places to work.
+      nsRefPtr<PlacesEvent> lockedEvent =
+        new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
+      (void)NS_DispatchToMainThread(lockedEvent);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If aForceInit is true we were unable to initialize or upgrade the current
@@ -641,7 +717,8 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     // If the database cannot be opened for any reason other than corruption,
     // send out a notification and do not continue initialization.
     // Note: We swallow errors here, since we want service init to fail anyway.
-    nsCOMPtr<PlacesEvent> lockedEvent = new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
+    nsRefPtr<PlacesEvent> lockedEvent =
+      new PlacesEvent(PLACES_DB_LOCKED_EVENT_TOPIC);
     (void)NS_DispatchToMainThread(lockedEvent);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -885,11 +962,18 @@ nsNavHistory::InitDB()
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
+  // ANY FAILURE IN THIS METHOD WILL CAUSE US TO MARK THE DATABASE AS CORRUPT
+  // AND TRY TO REPLACE IT.
+  // DO NOT PUT HERE ANYTHING THAT IS NOT RELATED TO INITIALIZATION OR MODIFYING
+  // THE DISK DATABASE.
 
-  // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
+  return NS_OK;
+}
 
-  rv = InitTempTables();
+nsresult
+nsNavHistory::InitAdditionalDBItems()
+{
+  nsresult rv = InitTempTables();
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InitViews();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3374,13 +3458,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
    nsNavHistory* history = nsNavHistory::GetHistoryService();
    NS_ENSURE_STATE(history);
 
-  // These are the day containers and catch-all final container.
-  PRInt32 additionalContainers = 3;
-  // We use a guess of the number of months considering all of them 30 days
-  // long, but we split only the last 6 months.
-  PRInt32 monthContainers = PR_MIN(6, (history->mExpireDaysMax/30));
-  PRInt32 numContainers = monthContainers + additionalContainers;
-  for (PRInt32 i = 0; i <= numContainers; i++) {
+  for (PRInt32 i = 0; i <= DATE_CONT_NUM(history->mExpireDaysMax); i++) {
     nsCAutoString dateName;
     // Timeframes are calculated as BeginTime <= container < EndTime.
     // Notice times can't be relative to now, since to recognize a query we
@@ -3453,7 +3531,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
           "(strftime('%s','now','localtime','start of day','-7 days','utc')*1000000)");
          break;
        default:
-        if (i == additionalContainers + 6) {
+        if (i == ADDITIONAL_DATE_CONT_NUM + 6) {
           // Older than 6 months
           history->GetAgeInDaysString(6,
             NS_LITERAL_STRING("finduri-AgeInMonths-isgreater").get(), dateName);
@@ -3468,7 +3546,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
           sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
           break;
         }
-        PRInt32 MonthIndex = i - additionalContainers;
+        PRInt32 MonthIndex = i - ADDITIONAL_DATE_CONT_NUM;
         // Previous months' titles are month's name if inside this year,
         // month's name and year for previous years.
         PRExplodedTime tm;
@@ -3500,9 +3578,12 @@ PlacesSQLQueryBuilder::SelectAsDay()
         sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
         break;
     }
- 
+
+    nsPrintfCString dateParam("dayTitle%d", i);
+    mAddParams.Put(dateParam, dateName);
+
      nsPrintfCString dayRange(1024,
-        "SELECT '%s' AS dayTitle, "
+        "SELECT :%s AS dayTitle, "
                "%s AS beginTime, "
                "%s AS endTime "
          "WHERE EXISTS ( "
@@ -3519,7 +3600,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
              "{QUERY_OPTIONS_VISITS} "
            "LIMIT 1 "
         ") ",
-      dateName.get(),
+      dateParam.get(),
       sqlFragmentContainerBeginTime.get(),
       sqlFragmentContainerEndTime.get(),
       sqlFragmentSearchBeginTime.get(),
@@ -3531,7 +3612,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
 
     mQueryString.Append(dayRange);
 
-    if (i < numContainers)
+    if (i < DATE_CONT_NUM(history->mExpireDaysMax))
         mQueryString.Append(NS_LITERAL_CSTRING(" UNION ALL "));
   }
 
@@ -3795,6 +3876,12 @@ PlacesSQLQueryBuilder::OrderBy()
   switch(mSortingMode)
   {
     case nsINavHistoryQueryOptions::SORT_BY_NONE:
+      // If this is an URI bookmarks query the sorting could change based on the
+      // sync status of disk and temp tables, we must ensure sorting does not
+      // change between queries.
+      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
+          mResultType == nsINavHistoryQueryOptions::RESULTS_AS_URI)
+        mQueryString += NS_LITERAL_CSTRING(" ORDER BY b.id ASC ");
       break;
     case nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING:
     case nsINavHistoryQueryOptions::SORT_BY_TITLE_DESCENDING:
@@ -4004,6 +4091,10 @@ nsNavHistory::ConstructQueryString(
         TRANSITION_REDIRECT_PERMANENT,
         TRANSITION_REDIRECT_TEMPORARY,
         TRANSITION_REDIRECT_PERMANENT,
+        TRANSITION_REDIRECT_TEMPORARY,
+        TRANSITION_REDIRECT_PERMANENT,
+        TRANSITION_REDIRECT_TEMPORARY,
+        TRANSITION_REDIRECT_PERMANENT,
         TRANSITION_REDIRECT_TEMPORARY);
     }
     queryString.ReplaceSubstring("{QUERY_OPTIONS}",
@@ -4085,7 +4176,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   nsCString queryString;
   PRBool paramsPresent = PR_FALSE;
   nsNavHistory::StringHash addParams;
-  addParams.Init(1);
+  addParams.Init(DATE_CONT_NUM(mExpireDaysMax));
   nsresult rv = ConstructQueryString(aQueries, aOptions, queryString, 
                                      paramsPresent, addParams);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -5609,51 +5700,50 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       mExpire.OnExpirationChanged();
   }
   else if (strcmp(aTopic, gIdleDaily) == 0) {
+    // Ensure our connection is still alive.  The idle-daily observer is removed
+    // on xpcom-shutdown, but we could have closed the connection earlier due
+    // to errors or during normal shutdown process.
+    NS_ENSURE_TRUE(mDBConn, NS_OK);
+
     // Update frecency values
     (void)FixInvalidFrecencies();
 
-    if (mDBConn) {
-      // Globally decay places frecency rankings to estimate reduced frecency
-      // values of pages that haven't been visited for a while, i.e., they do
-      // not get an updated frecency. We directly modify moz_places to avoid
-      // bringing the whole database into places_temp through places_view. A
-      // scaling factor of .975 results in .5 the original value after 28 days.
-      nsCOMPtr<mozIStorageStatement> decayFrecency;
-      nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
-        "WHERE frecency > 0"),
-        getter_AddRefs(decayFrecency));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to create decayFrecency");
+    // Globally decay places frecency rankings to estimate reduced frecency
+    // values of pages that haven't been visited for a while, i.e., they do
+    // not get an updated frecency. We directly modify moz_places to avoid
+    // bringing the whole database into places_temp through places_view. A
+    // scaling factor of .975 results in .5 the original value after 28 days.
+    nsCOMPtr<mozIStorageStatement> decayFrecency;
+    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
+      "WHERE frecency > 0"),
+      getter_AddRefs(decayFrecency));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
-      // Decay potentially unused adaptive entries (e.g. those that are at 1)
-      // to allow better chances for new entries that will start at 1
-      nsCOMPtr<mozIStorageStatement> decayAdaptive;
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "UPDATE moz_inputhistory SET use_count = use_count * .975"),
-        getter_AddRefs(decayAdaptive));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to create decayAdaptive");
+    // Decay potentially unused adaptive entries (e.g. those that are at 1)
+    // to allow better chances for new entries that will start at 1
+    nsCOMPtr<mozIStorageStatement> decayAdaptive;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_inputhistory SET use_count = use_count * .975"),
+      getter_AddRefs(decayAdaptive));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
-      // Delete any adaptive entries that won't help in ordering anymore
-      nsCOMPtr<mozIStorageStatement> deleteAdaptive;
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_inputhistory WHERE use_count < .01"),
-        getter_AddRefs(deleteAdaptive));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to create deleteAdaptive");
+    // Delete any adaptive entries that won't help in ordering anymore
+    nsCOMPtr<mozIStorageStatement> deleteAdaptive;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_inputhistory WHERE use_count < .01"),
+      getter_AddRefs(deleteAdaptive));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
-      // Run these statements asynchronously if they were created successfully
-      if (decayFrecency && decayAdaptive && deleteAdaptive) {
-        nsCOMPtr<mozIStoragePendingStatement> ps;
-        mozIStorageStatement *stmts[] = {
-          decayFrecency,
-          decayAdaptive,
-          deleteAdaptive
-        };
-
-        rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
-                                    getter_AddRefs(ps));
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to exec async idle stmts");
-      }
-    }
+    nsCOMPtr<mozIStoragePendingStatement> ps;
+    mozIStorageStatement *stmts[] = {
+      decayFrecency,
+      decayAdaptive,
+      deleteAdaptive
+    };
+    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
+                                getter_AddRefs(ps));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
   }
   else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {

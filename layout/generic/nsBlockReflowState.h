@@ -100,19 +100,17 @@ public:
   nsFlowAreaRect
     GetFloatAvailableSpaceWithState(nscoord aY, PRBool aRelaxHeightConstraint,
                                     nsFloatManager::SavedState *aState) const;
+  nsFlowAreaRect
+    GetFloatAvailableSpaceForHeight(nscoord aY, nscoord aHeight,
+                                    nsFloatManager::SavedState *aState) const;
 
   /*
    * The following functions all return PR_TRUE if they were able to
    * place the float, PR_FALSE if the float did not fit in available
    * space.
    */
-  PRBool InitFloat(nsLineLayout&       aLineLayout,
-                   nsPlaceholderFrame* aPlaceholderFrame,
-                   nscoord             aAvailableWidth,
-                   nsReflowStatus&     aReflowStatus);
   PRBool AddFloat(nsLineLayout&       aLineLayout,
                   nsPlaceholderFrame* aPlaceholderFrame,
-                  PRBool              aInitialReflow,
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
   PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,

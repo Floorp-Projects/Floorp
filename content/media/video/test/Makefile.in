@@ -65,11 +65,13 @@ _TEST_FILES += \
 		dynamic_redirect.sjs \
 		test_access_control.html \
 		file_access_controls.html \
-		test_autobuffer2.html \
+		test_audio1.html \
+		test_audio2.html \
 		test_bug448534.html \
 		test_bug461281.html \
 		test_bug468190.html \
 		test_bug482461.html \
+		test_bug493187.html \
 		test_can_play_type_ogg.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \
@@ -108,11 +110,14 @@ _TEST_FILES += \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
 		seek.ogv \
+		sound.ogg \
 		$(NULL)
 
-# This test disabled until we figure out random failures.
-# Bug 492821.
+# These tests disabled until we figure out random failures.
+# Bug 492821:
 # test_videoDocumentTitle.html
+# Bug 493692:
+# test_autobuffer2.html
 
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
@@ -125,6 +130,7 @@ _TEST_FILES += \
 		test_seek6.html \
 		test_seek7.html \
 		test_seek8.html \
+		test_seek9.html \
 		test_timeupdate3.html \
 		$(NULL)
 endif
@@ -163,7 +169,7 @@ _TEST_FILES += \
 		test_wav_timeupdate1.html \
 		test_wav_timeupdate2.html \
 		test_wav_trailing.html \
- 		test_wav_trunc.html \
+		test_wav_trunc.html \
 		test_wav_trunc_seek.html \
 		r11025_s16_c1.wav \
 		r11025_s16_c1_trailing.wav \

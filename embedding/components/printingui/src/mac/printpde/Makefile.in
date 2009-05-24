@@ -40,6 +40,9 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+MODULE       = printpde
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_DEBUG
@@ -53,8 +56,6 @@ endif
 PROJECT=PrintPDE.xcode
 PROJECT_ARG=-project $(PROJECT)
 PBBUILD_ARG=$(PBBUILD_SETTINGS)
-
-MODULE       = printpde
 
 unexport CC CXX
 

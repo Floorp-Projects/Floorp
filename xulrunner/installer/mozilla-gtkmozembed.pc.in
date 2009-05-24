@@ -5,4 +5,4 @@ includedir=%includedir%
 Name: mozilla-gtkembedmoz
 Description: Mozilla Embedding Widget for Gtk+
 Version: %MOZILLA_VERSION%
-Requires: libxul-unstable = %MOZILLA_VERSION%
+Requires: libxul = %MOZILLA_VERSION%

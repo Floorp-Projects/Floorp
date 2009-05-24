@@ -652,17 +652,24 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
   if (!mDecoder)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
-  // Detect for a NaN and invalid values.
-  if (!(aCurrentTime >= 0.0))
-    return NS_ERROR_FAILURE;
-
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) 
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+
+  // Detect for a NaN and invalid values.
+  if (aCurrentTime != aCurrentTime)
+    return NS_ERROR_FAILURE;
+
+  // Clamp the time to [0, duration] as required by the spec
+  float clampedTime = PR_MAX(0, aCurrentTime);
+  float duration = mDecoder->GetDuration();
+  if (duration >= 0) {
+    clampedTime = PR_MIN(clampedTime, duration);
+  }
 
   mPlayingBeforeSeek = IsPotentiallyPlaying();
   // The media backend is responsible for dispatching the timeupdate
   // event if it changes the playback position as a result of the seek.
-  nsresult rv = mDecoder->Seek(aCurrentTime);
+  nsresult rv = mDecoder->Seek(clampedTime);
   return rv;
 }
 
@@ -1240,7 +1247,7 @@ void nsHTMLMediaElement::MetadataLoaded()
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
 }
 
-void nsHTMLMediaElement::FirstFrameLoaded()
+void nsHTMLMediaElement::FirstFrameLoaded(PRBool aResourceFullyLoaded)
 {
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
   ChangeDelayLoadStatus(PR_FALSE);
@@ -1248,6 +1255,7 @@ void nsHTMLMediaElement::FirstFrameLoaded()
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
 
   if (mDecoder && mAllowSuspendAfterFirstFrame && mPaused &&
+      !aResourceFullyLoaded &&
       !HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
       !HasAttr(kNameSpaceID_None, nsGkAtoms::autobuffer)) {
     mSuspendedAfterFirstFrame = PR_TRUE;
@@ -1276,7 +1284,6 @@ void nsHTMLMediaElement::NetworkError()
 void nsHTMLMediaElement::PlaybackEnded()
 {
   NS_ASSERTION(mDecoder->IsEnded(), "Decoder fired ended, but not in ended state");
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("ended"));
 }
 
@@ -1336,9 +1343,7 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
 
   nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
 
-  if (aNextFrame != NEXT_FRAME_AVAILABLE &&
-      !mDecoder->IsEnded() &&
-      stats.mDownloadPosition < stats.mTotalBytes) {
+  if (aNextFrame != NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
     if (!mWaitingFired && aNextFrame == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
@@ -1347,11 +1352,14 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     return;
   }
 
-  // Now see if we should set HAVE_ENOUGH_DATA
-  if (stats.mTotalBytes < 0 || stats.mTotalBytes == stats.mDownloadPosition) {
-    // If it's something we don't know the size of, then we can't
-    // make an estimate, so let's just go straight to HAVE_ENOUGH_DATA,
-    // since otherwise autoplay elements will never play.
+  // Now see if we should set HAVE_ENOUGH_DATA.
+  // If it's something we don't know the size of, then we can't
+  // make a real estimate, so we go straight to HAVE_ENOUGH_DATA once
+  // we've downloaded enough data that our download rate is considered
+  // reliable. We have to move to HAVE_ENOUGH_DATA at some point or
+  // autoplay elements for live streams will never play.
+  if (stats.mTotalBytes < 0 ? stats.mDownloadRateReliable :
+                              stats.mTotalBytes == stats.mDownloadPosition) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }

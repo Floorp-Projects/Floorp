@@ -61,10 +61,10 @@ _TEST_FILES =\
 		name.xbl \
 		namerules.xml \
  		nsIAccessible_selects.js \
-		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
 		relations.js \
 		role.js \
+		states.js \
 		table.js \
 		value.js \
 		test_accessnode_invalidation.html \
@@ -82,7 +82,7 @@ _TEST_FILES =\
 		test_cssattrs.html \
 		test_descr.html \
 		test_elm_filectrl.html \
-		test_elm_media.html \
+	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_focus.xul \

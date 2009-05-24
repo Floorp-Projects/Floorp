@@ -117,3 +117,11 @@ findbar {
 .find-status-icon[status="wrapped"] {
   list-style-image: url("chrome://global/skin/icons/wrap.png");
 }
+
+/* XXX workaround bug 479957, disable bug 69710 in findbar */
+checkbox:-moz-system-metric(windows-classic) {
+  text-shadow: none;
+}
+checkbox:-moz-system-metric(windows-classic) > .checkbox-label-box > .checkbox-label {
+  margin-bottom: 0 !important;
+}

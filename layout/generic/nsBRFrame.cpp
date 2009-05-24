@@ -147,13 +147,10 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       nsCOMPtr<nsIFontMetrics> fm;
       aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
       if (fm) {
-        nscoord ascent, descent;
-        fm->GetMaxAscent(ascent);
-        fm->GetMaxDescent(descent);
-        nscoord logicalHeight = aReflowState.CalcLineHeight(this);
-        nscoord leading = logicalHeight - ascent - descent;
+        nscoord logicalHeight = aReflowState.CalcLineHeight();
         aMetrics.height = logicalHeight;
-        aMetrics.ascent = ascent + (leading/2);
+        aMetrics.ascent =
+          nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight);
       }
       else {
         aMetrics.ascent = aMetrics.height = 0;

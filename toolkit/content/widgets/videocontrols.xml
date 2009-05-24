@@ -98,6 +98,9 @@
       <field name="durationValue">""</field>
 
       <field name="thumb">null</field>
+      <field name="valueBar">null</field>
+      <field name="isDragging">false</field>
+      <field name="wasPausedBeforeDrag">true</field>
       <field name="type">null</field>
       <field name="Utils">null</field>
       <constructor>
@@ -105,6 +108,8 @@
           this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
           this.type = this.getAttribute("class");
           this.Utils = document.getBindingParent(this.parentNode).Utils;
+          if (this.type == "scrubber")
+              this.valueBar = this.Utils.progressBar;
           ]]>
       </constructor>
 
@@ -119,9 +124,13 @@
             // just calls the videocontrol's seekToPosition() method directly.
             switch (which) {
               case "curpos":
-                // Update the time shown in the thumb.
-                if (this.type == "scrubber")
+                if (this.type == "scrubber") {
+                    // Update the time shown in the thumb.
                     this.thumb.setTime(newValue);
+                    // Update the value bar to match the thumb position.
+                    var percent = newValue / this.max;
+                    this.valueBar.value = Math.round(percent * 10000); // has max=10000
+                }
 
                 // The value of userChanged is true when changing the position with the mouse,
                 // but not when pressing an arrow key. However, the base binding sets
@@ -141,12 +150,37 @@
                 break;
   
               case "maxpos":
+                if (this.type == "scrubber") {
+                    // Update the value bar to match the thumb position.
+                    var percent = this.value / newValue;
+                    this.valueBar.value = Math.round(percent * 10000); // has max=10000
+                }
                 this.setAttribute("max", newValue);
                 break;
             }
           ]]>
           </body>
       </method>
+
+      <method name="dragStateChanged">
+        <parameter name="isDragging"/>
+          <body>
+          <![CDATA[
+            if (this.type == "scrubber") {
+                this.Utils.log("--- dragStateChanged: " + isDragging + " ---");
+                this.isDragging = isDragging;
+                if (isDragging) {
+                    this.wasPausedBeforeDrag = this.Utils.video.paused;
+                    this.Utils.video.pause();
+                } else if (!this.wasPausedBeforeDrag) {
+                    // After the drag ends, resume playing.
+                    this.Utils.video.play();
+                }
+            }
+          ]]>
+          </body>
+      </method>
+
       </implementation>
   </binding>
 
@@ -157,7 +191,8 @@
         <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
     </resources>
 
-    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                 class="mediaControlsFrame">
         <stack flex="1">
             <vbox class="statusOverlay" hidden="true">
                 <box class="statusIcon" flex="1"/>
@@ -260,12 +295,13 @@
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
                                "loadstart", "durationchange", "timeupdate", "progress",
-                               "playing", "waiting", "canplaythrough", "seeking",
-                               "seeked", "emptied", "loadedmetadata", "error"],
+                               "playing", "waiting", "canplay", "canplaythrough",
+                               "seeking", "seeked", "emptied", "loadedmetadata",
+                               "error", "suspend"],
 
                 // controlFader holds the fade state for the control bar.
                 controlFader  : {
-                                    name : "controls", // shorthand for debugging
+                                    name : "controls", // fader identifier
                                     element : null,    // the element to fade in/out
                                     runtime : 0,       // duration of active animation
                                     fadingIn : false,  // are we fading in, or fading out?
@@ -307,9 +343,30 @@
                                 },
 
                 firstFrameShown : false,
+                timeUpdateCount : 0,
                 lastTimeUpdate : 0,
                 maxCurrentTimeSeen : 0,
                 isAudioOnly : false,
+
+                setupStatusFader : function(immediate) {
+                    if (this.video.seeking || this.video.error ||
+                        (this.video.paused || this.video.ended
+                         ? this.video.readyState < this.video.HAVE_CURRENT_DATA
+                         : this.video.readyState < this.video.HAVE_FUTURE_DATA) ||
+                        (this.timeUpdateCount <= 1 &&
+                         this.video.readyState < this.video.HAVE_ENOUGH_DATA &&
+                         this.video.networkState >= this.video.NETWORK_LOADING))
+                        this.startFadeIn(this.statusFader, immediate);
+                    else
+                        this.startFadeOut(this.statusFader, immediate);
+
+                    this.log("Status fader: seeking=" + this.video.seeking +
+                             " error=" + this.video.error + " readyState=" + this.video.readyState +
+                             " paused=" + this.video.paused + " ended=" + this.video.ended +
+                             " networkState=" + this.video.networkState +
+                             " timeUpdateCount=" + this.timeUpdateCount +
+                             " --> " + (this.statusFader.fadingIn ? "SHOW" : "HIDE"));
+                },
 
                 /*
                  * Set the initial state of the controls. The binding is normally created along
@@ -346,8 +403,6 @@
                     // If the first frame hasn't loaded, kick off a throbber fade-in.
                     if (this.video.readyState >= this.video.HAVE_CURRENT_DATA)
                         this.firstFrameShown = true;
-                    else
-                        this.startFadeIn(this.statusFader);
 
                     // We can't determine the exact buffering status, but do know if it's
                     // fully loaded. (If it's still loading, it will fire a progress event
@@ -358,13 +413,13 @@
                     else
                         this.bufferBar.setAttribute("value", 0);
 
-                    // Set the current status icon. If the video is in an error state,
-                    // show the status overlay now.
+                    // Set the current status icon.
                     if (this.video.error) {
                         this.statusIcon.setAttribute("type", "error");
-                        this.startFadeIn(this.statusFader, true);
+                        this.setupStatusFader(true);
                     } else {
                         this.statusIcon.setAttribute("type", "throbber");
+                        this.setupStatusFader();
                     }
                 },
 
@@ -395,10 +450,22 @@
                     switch (aEvent.type) {
                         case "play":
                             this.setPlayButtonState(false);
+                            this.setupStatusFader();
                             break;
                         case "pause":
+                            // Little white lie: if we've internally paused the video
+                            // while dragging the scrubber, don't change the button state.
+                            if (!this.scrubber.isDragging)
+                                this.setPlayButtonState(true);
+                            this.setupStatusFader();
+                            break;
                         case "ended":
                             this.setPlayButtonState(true);
+                            // We throttle timechange events, so the thumb might not be
+                            // exactly at the end when the video finishes.
+                            this.showPosition(Math.round(this.video.currentTime * 1000),
+                                              Math.round(this.video.duration * 1000));
+                            this.setupStatusFader();
                             break;
                         case "volumechange":
                             var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
@@ -416,6 +483,7 @@
                             break;
                         case "loadeddata":
                             this.firstFrameShown = true;
+                            this.setupStatusFader();
                             break;
                         case "loadstart":
                             this.maxCurrentTimeSeen = 0;
@@ -436,17 +504,36 @@
                                 total = loaded;
                             this.bufferBar.max = total;
                             this.bufferBar.value = loaded;
+                            this.setupStatusFader();
+                            break;
+                        case "suspend":
+                            this.setupStatusFader();
                             break;
                         case "timeupdate":
                             var currentTime = Math.round(this.video.currentTime * 1000); // in ms
                             var duration = Math.round(this.video.duration * 1000); // in ms
+
+                            this.timeUpdateCount++;
+                            // Whether we show the statusFader sometimes depends
+                            // on whether we've seen more than one timeupdate
+                            // event (if we haven't, there hasn't been any
+                            // "playback activity" and we may wish to show the
+                            // statusFader while we wait for HAVE_ENOUGH_DATA).
+                            // If we've seen more than 2 timeupdate events,
+                            // the count is no longer relevant to setupStatusFader.
+                            if (this.timeUpdateCount <= 2)
+                                this.setupStatusFader();
+
+                            // If the user is dragging the scrubber ignore the delayed seek
+                            // responses (don't yank the thumb away from the user)
+                            if (this.scrubber.isDragging)
+                                return;
 
                             // Timeupdate events are dispatched *every frame*. Reduce workload by
                             // ignoring position changes that are within 333ms of the current position.
                             if (Math.abs(currentTime - this.lastTimeUpdate) < 333)
                                 return;
                             this.lastTimeUpdate = currentTime;
-
                             this.showPosition(currentTime, duration);
                             break;
                         case "emptied":
@@ -455,21 +542,17 @@
                         case "seeking":
                         case "waiting":
                             this.statusIcon.setAttribute("type", "throbber");
-                            this.startFadeIn(this.statusFader);
+                            this.setupStatusFader();
                             break;
                         case "seeked":
-                            // Normally we'd expect canplaythough to fire, but if we already
-                            // have the data cached it shouldn't fire again.
-                            if (this.video.readyState == this.video.HAVE_ENOUGH_DATA)
-                                this.startFadeOut(this.statusFader);
-                            break;
                         case "playing":
+                        case "canplay":
                         case "canplaythrough":
-                            this.startFadeOut(this.statusFader);
+                            this.setupStatusFader();
                             break;
                         case "error":
                             this.statusIcon.setAttribute("type", "error");
-                            this.startFadeIn(this.statusFader, true);
+                            this.setupStatusFader(true);
                             // If video hasn't shown anything yet, disable the controls.
                             if (!this.firstFrameShown)
                                 this.startFadeOut(this.controlFader);
@@ -555,11 +638,6 @@
 
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
                     this.scrubber.value = currentTime;
-
-                    // Extend the progressBar to the middle of the scrubber thumb.
-                    var percent = currentTime / duration;
-                    // The progressBar has max=10000
-                    this.progressBar.value = Math.round(percent * 10000);
                 },
 
                 onVolumeMouseInOut : function (event) {
@@ -667,6 +745,12 @@
                     if (pos > 1)
                         pos = 1;
                     
+                    // Bug 493523, the scrubber doesn't call valueChanged while hidden,
+                    // so our dependent state (eg, timestamp in the thumb) will be stale.
+                    // As a workaround, update it manually when it first becomes unhidden.
+                    if (fader.name == "controls" && fader.fadingIn && fader.element.hidden)
+                        self.scrubber.valueChanged("curpos", self.video.currentTime * 1000, false);
+
                     // Calculate the opacity for our position in the animation.
                     var opacity;
                     if (fader.fadingIn)
@@ -716,8 +800,7 @@
                     // controlling volume.
                 },
 
-                setPlayButtonState: function(aPaused)
-                {
+                setPlayButtonState : function(aPaused) {
                   this.playButton.setAttribute("paused", aPaused);
 
                   var attrName = aPaused ? "playlabel" : "pauselabel";
@@ -725,13 +808,115 @@
                   this.playButton.setAttribute("aria-label", value);
                 },
 
-                setMuteButtonState: function(aMuted)
-                {
+                setMuteButtonState : function(aMuted) {
                   this.muteButton.setAttribute("muted", aMuted);
 
                   var attrName = aMuted ? "unmutelabel" : "mutelabel";
                   var value = this.muteButton.getAttribute(attrName);
                   this.muteButton.setAttribute("aria-label", value);
+                },
+
+                keyHandler : function(event) {
+                    // Ignore keys when content might be providing its own.
+                    if (!this.video.hasAttribute("controls"))
+                        return;
+
+                    var keystroke = "";
+                    if (event.altKey)
+                        keystroke += "alt-";
+                    if (event.shiftKey)
+                        keystroke += "shift-";
+#ifdef XP_MACOSX
+                    if (event.metaKey)
+                        keystroke += "accel-";
+                    if (event.ctrlKey)
+                        keystroke += "control-";
+#else
+                    if (event.metaKey)
+                        keystroke += "meta-";
+                    if (event.ctrlKey)
+                        keystroke += "accel-";
+#endif
+
+                    switch (event.keyCode) {
+                        case KeyEvent.DOM_VK_UP:
+                            keystroke += "upArrow";
+                            break;
+                        case KeyEvent.DOM_VK_DOWN:
+                            keystroke += "downArrow";
+                            break;
+                        case KeyEvent.DOM_VK_LEFT:
+                            keystroke += "leftArrow";
+                            break;
+                        case KeyEvent.DOM_VK_RIGHT:
+                            keystroke += "rightArrow";
+                            break;
+                        case KeyEvent.DOM_VK_HOME:
+                            keystroke += "home";
+                            break;
+                        case KeyEvent.DOM_VK_END:
+                            keystroke += "end";
+                            break;
+                    }
+
+                    if (String.fromCharCode(event.charCode) == ' ')
+                        keystroke += "space";
+
+                    this.log("Got keystroke: " + keystroke);
+                    var oldval, newval;
+
+                    try {
+                        switch (keystroke) {
+                            case "space": /* Play */
+                                this.togglePause();
+                                break;
+                            case "downArrow": /* Volume decrease */
+                                oldval = this.video.volume;
+                                this.video.volume = (oldval < 0.1 ? 0 : oldval - 0.1);
+                                this.video.muted = false;
+                                break;
+                            case "upArrow": /* Volume increase */
+                                oldval = this.video.volume;
+                                this.video.volume = (oldval > 0.9 ? 1 : oldval + 0.1);
+                                this.video.muted = false;
+                                break;
+                            case "accel-downArrow": /* Mute */
+                                this.video.muted = true;
+                                break;
+                            case "accel-upArrow": /* Unmute */
+                                this.video.muted = false;
+                                break;
+                            case "leftArrow": /* Seek back 15 seconds */
+                            case "accel-leftArrow": /* Seek back 10% */
+                                oldval = this.video.currentTime;
+                                if (keystroke == "leftArrow")
+                                    newval = oldval - 15;
+                                else
+                                    newval = oldval - (this.video.duration || this.maxCurrentTimeSeen) / 10;
+                                this.video.currentTime = (newval >= 0 ? newval : 0);
+                                break;
+                            case "rightArrow": /* Seek forward 15 seconds */
+                            case "accel-rightArrow": /* Seek forward 10% */
+                                oldval = this.video.currentTime;
+                                var maxtime = (this.video.duration || this.maxCurrentTimeSeen);
+                                if (keystroke == "rightArrow")
+                                    newval = oldval + 15;
+                                else
+                                    newval = oldval + maxtime / 10;
+                                this.video.currentTime = (newval <= maxtime ? newval : maxtime);
+                                break;
+                            case "home": /* Seek to beginning */
+                                this.video.currentTime = 0;
+                                break;
+                            case "end": /* Seek to end */
+                                this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen);
+                                break;
+                            default:
+                                return;
+                        }
+                    } catch(e) { /* ignore any exception from setting .currentTime */ }
+
+                    event.preventDefault(); // Prevent page scrolling
                 },
 
                 isEventWithin : function (event, parent1, parent2) {
@@ -805,6 +990,10 @@
                     this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
                     this.volumeStack.addEventListener("mouseover", function(e) { self.onVolumeMouseInOut(e); }, false);
                     this.volumeStack.addEventListener("mouseout",  function(e) { self.onVolumeMouseInOut(e); }, false);
+
+                    // Make the <video> element keyboard accessible.
+                    this.video.setAttribute("tabindex", 0);
+                    this.video.addEventListener("keypress", function (e) { self.keyHandler(e) }, false);
 
                     this.log("--- videocontrols initialized ---");
                 }

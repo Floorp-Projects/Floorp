@@ -14,15 +14,15 @@ SimpleTest.waitForExplicitFinish();
 function maketest(expect_load, attach_media, name, type, check_metadata) {
   return function (testNum) {
     var e = document.createElement('video');
-    e.setAttribute("autobuffer", "true");
     var errorRun = false;
     if (expect_load) {
       e.addEventListener('loadedmetadata', function () {
           ok(e.readyState >= HTMLMediaElement.HAVE_METADATA,
              'test ' +  testNum + ' readyState ' + e.readyState + ' expected >= ' + HTMLMediaElement.HAVE_METADATA);
           is(e.currentSrc.substring(e.currentSrc.length - name.length), name, 'test ' + testNum);
-          ok(e.networkState >= HTMLMediaElement.NETWORK_LOADING,
-              'test ' + testNum + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_LOADING);
+          // The load can go idle due to cache size limits
+          ok(e.networkState >= HTMLMediaElement.NETWORK_IDLE,
+              'test ' + testNum + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_IDLE);
           check_metadata(e);
           e.parentNode.removeChild(e);
           runNextTest();

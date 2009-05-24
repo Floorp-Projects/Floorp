@@ -880,14 +880,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // We might as well allow zero-width floats to be placed, though.
           availableWidth = 0;
         }
-        // XXXldb What is this test supposed to be?
-        if (!NS_SUBTREE_DIRTY(aFrame)) {
-          // incremental reflow of child
-          placedFloat = InitFloat(placeholder, availableWidth, aReflowStatus);
-        }
-        else {
-          placedFloat = AddFloat(placeholder, availableWidth, aReflowStatus);
-        }
+        placedFloat = AddFloat(placeholder, availableWidth, aReflowStatus);
         NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
                        GetFirstLetterStyleOK()),
                     "FirstLetterStyle set on line with floating first letter");
@@ -1678,7 +1671,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // Compute the logical height for this span. The logical height
     // is based on the line-height value, not the font-size. Also
     // compute the top leading.
-    nscoord logicalHeight = nsHTMLReflowState::CalcLineHeight(spanFrame);
+    nscoord logicalHeight = nsHTMLReflowState::
+      CalcLineHeight(spanFrame->GetStyleContext(),
+                     mBlockReflowState->ComputedHeight());
     nscoord contentHeight = spanFramePFD->mBounds.height -
       spanFramePFD->mBorderPadding.top - spanFramePFD->mBorderPadding.bottom;
 
@@ -1925,7 +1920,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       case eStyleUnit_Percent:
         // Similar to a length value (eStyleUnit_Coord) except that the
         // percentage is a function of the elements line-height value.
-        elementLineHeight = nsHTMLReflowState::CalcLineHeight(frame);
+        elementLineHeight = nsHTMLReflowState::
+          CalcLineHeight(frame->GetStyleContext(),
+                         mBlockReflowState->ComputedHeight());
         percentOffset = nscoord(
           textStyle->mVerticalAlign.GetPercentValue() * elementLineHeight
           );
@@ -2052,13 +2049,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         printf("  [span]==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
 #endif
         nscoord minimumLineHeight = mMinLineHeight;
-        nscoord fontAscent, fontHeight;
-        fm->GetMaxAscent(fontAscent);
-        fm->GetHeight(fontHeight);
-
-        nscoord leading = minimumLineHeight - fontHeight;
-        nscoord yTop = -fontAscent - leading/2;
+        nscoord yTop =
+          -nsLayoutUtils::GetCenteredFontBaseline(fm, minimumLineHeight);
         nscoord yBottom = yTop + minimumLineHeight;
+
         if (yTop < minY) minY = yTop;
         if (yBottom > maxY) maxY = yBottom;
 

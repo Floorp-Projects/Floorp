@@ -494,4 +494,17 @@ oggz_bounded_seek_set (OGGZ * oggz,
                        ogg_int64_t offset_begin,
                        ogg_int64_t offset_end);
 
+/**
+ * Seeks to the first key frame before unit_target, in the range
+ * [offset_begin, offset_end]. serial_nos contains an array of size serial_nos
+ * of serialnos of the streams which need to be seeked.
+ */
+ogg_int64_t
+oggz_keyframe_seek_set(OGGZ * oggz,
+                       long* serial_nos,
+                       int num_serialno,
+                       ogg_int64_t unit_target,
+                       ogg_int64_t offset_begin,
+                       ogg_int64_t offset_end);
+
 #endif /* __OGGZ_SEEK_H__ */

@@ -1,0 +1,189 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Login Manager</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: notifying observers of passwordmgr-found-logins
+<p id="display"></p>
+
+<div id="content" style="display: block">
+
+  <form id="form1" action="formtest.js">
+    <p>This is form 1.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+  
+  <form id="form2" action="formtest.js">
+    <p>This is form 2.</p>
+    <input  type="text"       name="uname" value="existing">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form3" action="formtest.js">
+    <p>This is form 3.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword" value="existing">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form4" action="formtest.js" autocomplete="off">
+    <p>This is form 4.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form5" action="http://www.example.com">
+    <p>This is form 5.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: notifying observers of passwordmgr-found-logins **/
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+// Configure the login manager with two logins for one of the forms
+// so we can do a multiple logins test.
+var nsLoginInfo =
+  new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                             Components.interfaces.nsILoginInfo);
+var login1 = new nsLoginInfo();
+login1.init("http://localhost:8888", "http://www.example.com", null,
+            "testuser1", "testpass1", "uname", "pword");
+var login2 = new nsLoginInfo();
+login2.init("http://localhost:8888", "http://www.example.com", null,
+            "testuser2", "testpass2", "uname", "pword");
+var pwmgr = Cc["@mozilla.org/login-manager;1"].
+            getService(Ci.nsILoginManager);
+pwmgr.addLogin(login1);
+pwmgr.addLogin(login2);
+
+var TestObserver = {
+  results: {},
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  observe : function (subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (topic == "passwordmgr-found-logins") {
+      var formInfo = subject.QueryInterface(Ci.nsIPropertyBag2);
+      var id = formInfo.get("passwordField").form.id;
+      this.results[id].receivedNotification = true;
+      this.results[id].data = formInfo;
+    }
+  }
+};
+
+// Initialize the object that stores the results of notifications.
+for each (var formID in ["form1", "form2", "form3", "form4", "form5"])
+  TestObserver.results[formID] = { receivedNotification: false, data: null };
+
+// Add the observer
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+os.addObserver(TestObserver, "passwordmgr-found-logins", false);
+
+function startTest(){
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  // Test notification of a form that was filled.
+  is(TestObserver.results["form1"].receivedNotification, true, "Checking observer was notified");
+  is(TestObserver.results["form1"].data.get("didntFillReason"), null, "Checking didntFillReason is null");
+  is(TestObserver.results["form1"].data.get("usernameField"), $_(1, "uname"), "Checking username field is correct");
+  is(TestObserver.results["form1"].data.get("passwordField"), $_(1, "pword"), "Checking password field is correct");
+  is(TestObserver.results["form1"].data.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
+  is(TestObserver.results["form1"].data.get("foundLogins").length, 1, "Checking foundLogins contains one login");
+  ok(TestObserver.results["form1"].data.get("selectedLogin").QueryInterface(Ci.nsILoginInfo), "Checking selectedLogin is nsILoginInfo");
+  ok(TestObserver.results["form1"].data.get("selectedLogin").equals(TestObserver.results["form1"].data.get("foundLogins")[0]),
+     "Checking selectedLogin is found login");
+
+  // Test notification of a form that wasn't filled because its username field
+  // already contained a value.
+  is(TestObserver.results["form2"].receivedNotification, true, "Checking observer was notified");
+  is(TestObserver.results["form2"].data.get("didntFillReason"), "existingUsername", "Checking didntFillReason is existingUsername");
+  is(TestObserver.results["form2"].data.get("usernameField"), $_(2, "uname"), "Checking username field is correct");
+  is(TestObserver.results["form2"].data.get("passwordField"), $_(2, "pword"), "Checking password field is correct");
+  is(TestObserver.results["form2"].data.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
+  is(TestObserver.results["form2"].data.get("foundLogins").length, 1, "Checking foundLogins contains one login");
+  is(TestObserver.results["form2"].data.get("selectedLogin"), null, "Checking selectedLogin is null");
+
+  // Test notification of a form that wasn't filled because its password field
+  // already contained a value.
+  is(TestObserver.results["form3"].receivedNotification, true, "Checking observer was notified");
+  is(TestObserver.results["form3"].data.get("didntFillReason"), "existingPassword", "Checking didntFillReason is existingPassword");
+  is(TestObserver.results["form3"].data.get("usernameField"), $_(3, "uname"), "Checking username field is correct");
+  is(TestObserver.results["form3"].data.get("passwordField"), $_(3, "pword"), "Checking password field is correct");
+  is(TestObserver.results["form3"].data.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
+  is(TestObserver.results["form3"].data.get("foundLogins").length, 1, "Checking foundLogins contains one login");
+  is(TestObserver.results["form3"].data.get("selectedLogin"), null, "Checking selectedLogin is null");
+
+  // Test notification of a form that wasn't filled because autocomplete is off.
+  is(TestObserver.results["form4"].receivedNotification, true, "Checking observer was notified");
+  is(TestObserver.results["form4"].data.get("didntFillReason"), "autocompleteOff", "Checking didntFillReason is autocompleteOff");
+  is(TestObserver.results["form4"].data.get("usernameField"), $_(4, "uname"), "Checking username field is correct");
+  is(TestObserver.results["form4"].data.get("passwordField"), $_(4, "pword"), "Checking password field is correct");
+  is(TestObserver.results["form4"].data.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
+  is(TestObserver.results["form4"].data.get("foundLogins").length, 1, "Checking foundLogins contains one login");
+  ok(TestObserver.results["form4"].data.get("selectedLogin").QueryInterface(Ci.nsILoginInfo), "Checking selectedLogin is nsILoginInfo");
+  ok(TestObserver.results["form4"].data.get("selectedLogin").equals(TestObserver.results["form4"].data.get("foundLogins")[0]),
+     "Checking selectedLogin is found login");
+
+  // Test notification of a form that wasn't filled because multiple logins
+  // are available for the form.
+  is(TestObserver.results["form5"].receivedNotification, true, "Checking observer was notified");
+  is(TestObserver.results["form5"].data.get("didntFillReason"), "multipleLogins", "Checking didntFillReason is multipleLogins");
+  is(TestObserver.results["form5"].data.get("usernameField"), $_(5, "uname"), "Checking username field is correct");
+  is(TestObserver.results["form5"].data.get("passwordField"), $_(5, "pword"), "Checking password field is correct");
+  is(TestObserver.results["form5"].data.get("foundLogins").constructor.name, "Array", "Checking foundLogins is array");
+  is(TestObserver.results["form5"].data.get("foundLogins").length, 2, "Checking foundLogins contains two logins");
+  is(TestObserver.results["form5"].data.get("selectedLogin"), null, "Checking selectedLogin is null");
+
+  // Test notification of a form that wasn't filled because autofillForms
+  // was set to false (didntFillReason == noAutofillForms) is done in
+  // test_basic_form_observer_autofillForms.html.
+
+  // Remove the observer
+  os.removeObserver(TestObserver, "passwordmgr-found-logins");
+
+  // Remove the logins added for the multiple logins test.
+  pwmgr.removeLogin(login1);
+  pwmgr.removeLogin(login2);
+
+  SimpleTest.finish();
+}
+
+window.onload = startTest;
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

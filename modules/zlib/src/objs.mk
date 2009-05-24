@@ -50,8 +50,5 @@ MODULES_ZLIB_SRC_LCSRCS = \
 		zutil.c \
 		$(NULL)
 
-MODULES_ZLIB_SRC_LEXPORTS = zlib.h zconf.h mozzconf.h
-
 MODULES_ZLIB_SRC_CSRCS := $(addprefix $(topsrcdir)/modules/zlib/src/, $(MODULES_ZLIB_SRC_LCSRCS))
-MODULES_ZLIB_SRC_EXPORTS := $(addprefix $(topsrcdir)/modules/zlib/src/, $(MODULES_ZLIB_SRC_LEXPORTS))
 

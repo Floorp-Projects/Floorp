@@ -1077,7 +1077,7 @@ nsCSSStyleSheet::AddRuleProcessor(nsCSSRuleProcessor* aProcessor)
     if (!mRuleProcessors)
       return NS_ERROR_OUT_OF_MEMORY;
   }
-  NS_ASSERTION(-1 == mRuleProcessors->IndexOf(aProcessor),
+  NS_ASSERTION(mRuleProcessors->NoIndex == mRuleProcessors->IndexOf(aProcessor),
                "processor already registered");
   mRuleProcessors->AppendElement(aProcessor); // weak ref
   return NS_OK;

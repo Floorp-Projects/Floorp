@@ -36,22 +36,5 @@
  * ***** END LICENSE BLOCK *****
  */
 
-gDirSvc.unregisterProvider(dirProvider);
-
-if (gXHR) {
-  gXHRCallback     = null;
-
-  gXHR.responseXML = null;
-  // null out the event handlers to prevent a mFreeCount leak of 1
-  gXHR.onerror     = null;
-  gXHR.onload      = null;
-  gXHR.onprogress  = null;
-
-  gXHR             = null;
-}
-
-gUpdateManager = null;
-gUpdateChecker = null;
-gAUS           = null;
-gPrefs         = null;
-gTestserver    = null;
+// Not used since check-interactive executes this prior to _execute_test();
+// being executed.
