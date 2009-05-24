@@ -465,6 +465,10 @@
       <method name="_getSelectionController">
         <parameter name="aWindow"/>
         <body><![CDATA[
+          // display: none iframes don't have a selection controller, see bug 493658
+          if (!aWindow.innerWidth || !aWindow.innerHeight)
+            return null;
+
           // Yuck. See bug 138068.
           var Ci = Components.interfaces;
           var docShell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)

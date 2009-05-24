@@ -133,6 +133,7 @@ function run_test() {
   }
 
   removeUpdateDirsAndFiles();
+  cleanUp();
 }
 
 // Launches the updater binary to apply a mar file
@@ -155,8 +156,8 @@ function runUpdate(aUpdatesSubDir, aUpdater) {
   if (/ /.test(updatesSubDirPath))
     updatesSubDirPath = '"' + updatesSubDirPath + '"';
 
-  var process = AUS_Cc["@mozilla.org/process/util;1"]
-                  .createInstance(AUS_Ci.nsIProcess);
+  var process = AUS_Cc["@mozilla.org/process/util;1"].
+                createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
   var args = [updatesSubDirPath];
   process.run(true, args, args.length);
@@ -176,11 +177,11 @@ function getTestFile(aDir, aLeafName) {
 
 // Returns the binary contents of a file
 function getFileBytes(aFile) {
-  var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"]
-              .createInstance(AUS_Ci.nsIFileInputStream);
+  var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
+            createInstance(AUS_Ci.nsIFileInputStream);
   fis.init(aFile, -1, -1, false);
-  var bis = AUS_Cc["@mozilla.org/binaryinputstream;1"]
-              .createInstance(AUS_Ci.nsIBinaryInputStream);
+  var bis = AUS_Cc["@mozilla.org/binaryinputstream;1"].
+            createInstance(AUS_Ci.nsIBinaryInputStream);
   bis.setInputStream(fis);
   var data = bis.readBytes(bis.available());
   bis.close();

@@ -330,7 +330,6 @@ def readConfigFile(filename, includePath, cachedir, traceable):
 
 def writeHeaderFile(filename, name):
     print "Creating header file", filename
-    make_targets.append(filename)
 
     headerMacro = '__gen_%s__' % filename.replace('.', '_')
     f = open(filename, 'w')

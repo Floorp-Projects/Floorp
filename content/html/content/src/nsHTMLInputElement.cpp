@@ -316,6 +316,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLInputElement,
                                                      nsGenericHTMLFormElement)
 
+  void MaybeLoadImage();
 protected:
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
@@ -1966,6 +1967,19 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return rv;
 }
 
+void
+nsHTMLInputElement::MaybeLoadImage()
+{
+  // Our base URI may have changed; claim that our URI changed, and the
+  // nsImageLoadingContent will decide whether a new image load is warranted.
+  nsAutoString uri;
+  if (mType == NS_FORM_INPUT_IMAGE &&
+      GetAttr(kNameSpaceID_None, nsGkAtoms::src, uri) &&
+      (NS_FAILED(LoadImage(uri, PR_FALSE, PR_TRUE)) ||
+       !LoadingEnabled())) {
+    CancelImageRequests(PR_TRUE);
+  }
+}
 
 nsresult
 nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -1980,11 +1994,11 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (mType == NS_FORM_INPUT_IMAGE) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
-    nsAutoString uri;
-    if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, uri)) {
-      // Note: no need to notify here; since we're just now being bound
-      // we don't have any frames or anything yet.
-      LoadImage(uri, PR_FALSE, PR_FALSE);
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+      ClearBrokenState();
+      nsContentUtils::AddScriptRunner(
+        new nsRunnableMethod<nsHTMLInputElement>(this,
+                                                 &nsHTMLInputElement::MaybeLoadImage));
     }
   }
 

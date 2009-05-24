@@ -981,12 +981,12 @@ nsSplitterFrameInner::UpdateState()
     nsIFrame* splitterSibling;
     if (newState == CollapsedBefore || mState == CollapsedBefore) {
       splitterSibling =
-        nsFrameList(mOuter->GetParent()).GetPrevSiblingFor(mOuter);
+        nsFrameList(mOuter->GetParent()->GetFirstChild(nsnull)).GetPrevSiblingFor(mOuter);
     } else {
       splitterSibling = mOuter->GetNextSibling();
     }
 
-    if (splitterSibling && splitterSibling->IsBoxFrame()) {
+    if (splitterSibling) {
       nsCOMPtr<nsIContent> sibling = splitterSibling->GetContent();
       if (sibling) {
         if (mState == CollapsedBefore || mState == CollapsedAfter) {

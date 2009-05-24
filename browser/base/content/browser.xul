@@ -557,13 +557,11 @@
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
-#ifdef TOOLBAR_CUSTOMIZATION_SHEET
   <panel id="customizeToolbarSheetPopup" noautohide="true">
     <iframe id="customizeToolbarSheetIFrame"
             style="&dialog.style;"
             hidden="true"/>
   </panel>
-#endif
 
   <vbox id="browser-bottombox">
     <findbar browserid="content" id="FindToolbar"/>

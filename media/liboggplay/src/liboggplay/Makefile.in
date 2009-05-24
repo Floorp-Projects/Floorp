@@ -48,11 +48,9 @@ LIBRARY_NAME	= oggplay
 FORCE_STATIC_LIB= 1
 
 EXPORTS		= \
-		oggplay_private.h \
 		oggplay_buffer.h \
 		oggplay_callback.h \
 		oggplay_data.h \
-		oggplay_private.h \
 		std_semaphore.h \
 		$(NULL)
 
@@ -69,3 +67,5 @@ CSRCS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += -I$(srcdir)/../../include/oggplay

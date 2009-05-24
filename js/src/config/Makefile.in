@@ -49,7 +49,7 @@ include $(DEPTH)/config/autoconf.mk
 VISIBILITY_FLAGS =
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
-ifneq ($(OS_ARCH), WINCE)
+ifneq (,$(filter-out SYMBIAN WINCE,$(OS_ARCH)))
 HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= nsinstall.c pathsub.c
 endif

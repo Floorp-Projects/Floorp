@@ -208,8 +208,8 @@ public:
   static const PRInt32 kFontStyleKTable[];
   static const PRInt32 kFontVariantKTable[];
   static const PRInt32 kFontWeightKTable[];
-  static const PRInt32 kKeyEquivalentKTable[];
   static const PRInt32 kIMEModeKTable[];
+  static const PRInt32 kLineHeightKTable[];
   static const PRInt32 kListStylePositionKTable[];
   static const PRInt32 kListStyleKTable[];
   static const PRInt32 kOutlineStyleKTable[];

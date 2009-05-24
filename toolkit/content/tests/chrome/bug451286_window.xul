@@ -44,7 +44,7 @@
         width="600"
         height="600"
         onload="onLoad();"
-        title="451286 test">
+        title="451286 test (also tests bug 493658)">
 
   <script type="application/javascript"><![CDATA[
     const Ci = Components.interfaces;
@@ -69,7 +69,7 @@
         gFindBar = document.getElementById("FindToolbar");
         gBrowser = document.getElementById("content");
         gBrowser.addEventListener("pageshow", onPageShow, false);
-        gBrowser.loadURI("data:text/html,<iframe id='if' src='data:text/html,text'></iframe>");
+        gBrowser.loadURI("data:text/html,text<iframe style='display: none;' src='data:text/html,text'></iframe>text<iframe id='if' src='data:text/html,text'></iframe>text");
       }
       let tm = Cc["@mozilla.org/thread-manager;1"].
                getService(Ci.nsIThreadManager);
@@ -105,7 +105,7 @@
       var ifBody = iframe.contentDocument.body;
       var range = iframe.contentDocument.createRange();
       range.selectNodeContents(ifBody.childNodes[0]);
-      var ifWindow = gWin.frames[0];
+      var ifWindow = doc.getElementById("if").contentWindow;
       var ifDocShell = ifWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIWebNavigation)
                                .QueryInterface(Ci.nsIDocShell);
@@ -116,6 +116,26 @@
 
       var findSelection = ifController.getSelection(ifController.SELECTION_FIND);
       findSelection.addRange(range);
+
+
+      var docShell = gWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsIDocShell);
+
+      var controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsISelectionDisplay)
+                               .QueryInterface(Ci.nsISelectionController);
+
+      var findSelection2 = controller.getSelection(ifController.SELECTION_FIND);
+      range = doc.createRange();
+      range.selectNodeContents(doc.body.childNodes[0]);
+      findSelection2.addRange(range);
+      range = doc.createRange();
+      range.selectNodeContents(doc.body.childNodes[2]);
+      findSelection2.addRange(range);
+      range = doc.createRange();
+      range.selectNodeContents(doc.body.childNodes[4]);
+      findSelection2.addRange(range);
 
       //Take snapshots
       var manualSnapshot = snapshotWindow(gBrowser.contentWindow);

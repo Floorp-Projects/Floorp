@@ -54,6 +54,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMStorageObsolete.h"
+#include "nsIDOMStorage.h"
 #include "nsPIDOMStorage.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
@@ -682,6 +683,18 @@ DispatchPings(nsIContent *content, nsIURI *referrer)
 // Note: operator new zeros our memory
 nsDocShell::nsDocShell():
     nsDocLoader(),
+    mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
+    mTreeOwner(nsnull),
+    mChromeEventHandler(nsnull),
+    mCharsetReloadState(eCharsetReloadInit),
+    mChildOffset(0),
+    mBusyFlags(BUSY_FLAGS_NONE),
+    mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
+    mMarginWidth(-1),
+    mMarginHeight(-1),
+    mItemType(typeContent),
+    mPreviousTransIndex(-1),
+    mLoadedTransIndex(-1),
     mAllowSubframes(PR_TRUE),
     mAllowPlugins(PR_TRUE),
     mAllowJavascript(PR_TRUE),
@@ -702,19 +715,7 @@ nsDocShell::nsDocShell():
     mIsBeingDestroyed(PR_FALSE),
     mIsExecutingOnLoadHandler(PR_FALSE),
     mIsPrintingOrPP(PR_FALSE),
-    mSavingOldViewer(PR_FALSE),
-    mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
-    mChildOffset(0),
-    mBusyFlags(BUSY_FLAGS_NONE),
-    mMarginWidth(-1),
-    mMarginHeight(-1),
-    mItemType(typeContent),
-    mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
-    mPreviousTransIndex(-1),
-    mLoadedTransIndex(-1),
-    mTreeOwner(nsnull),
-    mChromeEventHandler(nsnull),
-    mCharsetReloadState(eCharsetReloadInit)
+    mSavingOldViewer(PR_FALSE)
 #ifdef DEBUG
     , mInEnsureScriptEnv(PR_FALSE)
 #endif
@@ -853,7 +854,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsILoadContext)
-    NS_INTERFACE_MAP_ENTRY(nsIDocShell_MOZILLA_1_9_1)
     NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
     NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
     NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
@@ -2143,7 +2143,7 @@ nsDocShell::HistoryPurged(PRInt32 aNumEntries)
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
                                           PRBool aCreate,
-                                          nsIDOMStorageObsolete** aStorage)
+                                          nsIDOMStorage** aStorage)
 {
     NS_ENSURE_ARG_POINTER(aStorage);
     *aStorage = nsnull;
@@ -2151,19 +2151,46 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
     if (!aPrincipal)
         return NS_OK;
 
-    nsCOMPtr<nsIURI> codebaseURI;
-    nsresult rv = aPrincipal->GetDomain(getter_AddRefs(codebaseURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!codebaseURI) {
-        rv = aPrincipal->GetURI(getter_AddRefs(codebaseURI));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+    nsresult rv;
 
-    if (!codebaseURI)
+    nsCOMPtr<nsIDocShellTreeItem> topItem;
+    rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (!topItem)
+        return NS_ERROR_FAILURE;
+
+    nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
+    if (topDocShell != this)
+        return topDocShell->GetSessionStorageForPrincipal(aPrincipal, aCreate,
+                                                          aStorage);
+
+    nsXPIDLCString origin;
+    rv = aPrincipal->GetOrigin(getter_Copies(origin));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (origin.IsEmpty())
+        return NS_ERROR_FAILURE;
+
+    if (!mStorages.Get(origin, aStorage) && aCreate) {
+        nsCOMPtr<nsIDOMStorage> newstorage =
+            do_CreateInstance("@mozilla.org/dom/storage;2");
+        if (!newstorage)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
+        if (!pistorage)
+            return NS_ERROR_FAILURE;
+        pistorage->InitAsSessionStorage(aPrincipal);
+
+        if (!mStorages.Put(origin, newstorage))
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        newstorage.swap(*aStorage);
         return NS_OK;
-
-    rv = GetSessionStorageForURI(codebaseURI, aCreate, aStorage);
-    NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
     if (piStorage) {
@@ -2182,7 +2209,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
 
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
-                                    nsIDOMStorageObsolete** aStorage)
+                                    nsIDOMStorage** aStorage)
 {
     return GetSessionStorageForURI(aURI, PR_TRUE, aStorage);
 }
@@ -2190,64 +2217,35 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
 nsresult
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
                                     PRBool aCreate,
-                                    nsIDOMStorageObsolete** aStorage)
+                                    nsIDOMStorage** aStorage)
 {
     NS_ENSURE_ARG(aURI);
     NS_ENSURE_ARG_POINTER(aStorage);
 
     *aStorage = nsnull;
 
-    nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-    NS_ASSERTION(innerURI, "Failed to get innermost URI");
-    if (!innerURI)
-        return NS_ERROR_FAILURE;
+    nsresult rv;
 
-    nsCOMPtr<nsIDocShellTreeItem> topItem;
-    nsresult rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
+    nsCOMPtr<nsIScriptSecurityManager> securityManager =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // This is terrible hack and should go away along with this whole method.
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
     if (NS_FAILED(rv))
         return rv;
 
-    if (!topItem)
-        return NS_ERROR_FAILURE;
-
-    nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
-    if (topDocShell != this)
-        return topDocShell->GetSessionStorageForURI(aURI, aCreate, aStorage);
-
-    nsCAutoString currentDomain;
-    rv = innerURI->GetAsciiHost(currentDomain);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (currentDomain.IsEmpty())
-        return NS_OK;
-
-    if (!mStorages.Get(currentDomain, aStorage) && aCreate) {
-        nsCOMPtr<nsIDOMStorageObsolete> newstorage =
-            do_CreateInstance("@mozilla.org/dom/storage;1");
-        if (!newstorage)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
-        if (!pistorage)
-            return NS_ERROR_FAILURE;
-        pistorage->InitAsSessionStorage(aURI);
-
-        if (!mStorages.Put(currentDomain, newstorage))
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        newstorage.swap(*aStorage);
-    }
-
-    return NS_OK;
+    return GetSessionStorageForPrincipal(principal, aCreate, aStorage);
 }
 
 nsresult
-nsDocShell::AddSessionStorage(const nsACString& aDomain,
-                              nsIDOMStorageObsolete* aStorage)
+nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
+                              nsIDOMStorage* aStorage)
 {
     NS_ENSURE_ARG_POINTER(aStorage);
 
-    if (aDomain.IsEmpty())
+    if (!aPrincipal)
         return NS_OK;
 
     nsCOMPtr<nsIDocShellTreeItem> topItem;
@@ -2258,15 +2256,23 @@ nsDocShell::AddSessionStorage(const nsACString& aDomain,
     if (topItem) {
         nsCOMPtr<nsIDocShell> topDocShell = do_QueryInterface(topItem);
         if (topDocShell == this) {
+            nsXPIDLCString origin;
+            rv = aPrincipal->GetOrigin(getter_Copies(origin));
+            if (NS_FAILED(rv))
+                return rv;
+
+            if (origin.IsEmpty())
+                return NS_ERROR_FAILURE;
+
             // Do not replace an existing session storage.
-            if (mStorages.GetWeak(aDomain))
+            if (mStorages.GetWeak(origin))
                 return NS_ERROR_NOT_AVAILABLE;
 
-            if (!mStorages.Put(aDomain, aStorage))
+            if (!mStorages.Put(origin, aStorage))
                 return NS_ERROR_OUT_OF_MEMORY;
         }
         else {
-            return topDocShell->AddSessionStorage(aDomain, aStorage);
+            return topDocShell->AddSessionStorage(aPrincipal, aStorage);
         }
     }
 
@@ -7494,11 +7500,11 @@ public:
         mURI(aURI),
         mReferrer(aReferrer),
         mOwner(aOwner),
-        mFlags(aFlags),
         mPostData(aPostData),
         mHeadersData(aHeadersData),
-        mLoadType(aLoadType),
         mSHEntry(aSHEntry),
+        mFlags(aFlags),
+        mLoadType(aLoadType),
         mFirstParty(aFirstParty)
     {
         // Make sure to keep null things null as needed
@@ -7515,20 +7521,20 @@ public:
     }
 
 private:
-    nsRefPtr<nsDocShell> mDocShell;
-    nsCOMPtr<nsIURI> mURI;
-    nsCOMPtr<nsIURI> mReferrer;
-    nsCOMPtr<nsISupports> mOwner;
-    PRUint32 mFlags;
 
     // Use IDL strings so .get() returns null by default
     nsXPIDLString mWindowTarget;
     nsXPIDLCString mTypeHint;
-    
+
+    nsRefPtr<nsDocShell> mDocShell;
+    nsCOMPtr<nsIURI> mURI;
+    nsCOMPtr<nsIURI> mReferrer;
+    nsCOMPtr<nsISupports> mOwner;
     nsCOMPtr<nsIInputStream> mPostData;
     nsCOMPtr<nsIInputStream> mHeadersData;
-    PRUint32 mLoadType;
     nsCOMPtr<nsISHEntry> mSHEntry;
+    PRUint32 mFlags;
+    PRUint32 mLoadType;
     PRBool mFirstParty;
 };
 
@@ -9880,7 +9886,7 @@ nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
 class nsDebugAutoBoolTrueSetter
 {
 public:
-    nsDebugAutoBoolTrueSetter(PRBool *aBool)
+    nsDebugAutoBoolTrueSetter(PRPackedBool *aBool)
         : mBool(aBool)
     {
         *mBool = PR_TRUE;
@@ -9891,7 +9897,7 @@ public:
         *mBool = PR_FALSE;
     }
 protected:
-    PRBool *mBool;
+    PRPackedBool *mBool;
 };
 #endif
 

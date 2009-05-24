@@ -63,6 +63,10 @@ var gEditItemOverlay = {
     return this._itemId;
   },
 
+  get uri() {
+    return this._uri;
+  },
+
   get multiEdit() {
     return this._multiEdit;
   },

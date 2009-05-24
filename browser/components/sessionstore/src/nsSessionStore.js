@@ -326,8 +326,10 @@ SessionStoreService.prototype = {
       this._loadState = STATE_QUITTING;
       break;
     case "quit-application":
-      if (aData == "restart")
+      if (aData == "restart") {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
+        this._clearingOnShutdown = false;
+      }
       this._loadState = STATE_QUITTING; // just to be sure
       this._uninit();
       break;
@@ -1271,7 +1273,7 @@ SessionStoreService.prototype = {
 
     for (let i = 0; i < aHistory.count; i++) {
       let uri = aHistory.getEntryAtIndex(i, false).URI;
-      // sessionStorage is saved per domain (cf. nsDocShell::GetSessionStorageForURI)
+      // sessionStorage is saved per origin (cf. nsDocShell::GetSessionStorageForURI)
       let domain = uri.spec;
       try {
         if (uri.host)
@@ -1295,9 +1297,7 @@ SessionStoreService.prototype = {
         try {
           let key = storage.key(j);
           let item = storage.getItem(key);
-          data[key] = { value: item.value };
-          if (uri.schemeIs("https") && item.secure)
-            data[key].secure = true;
+          data[key] = item;
         }
         catch (ex) { /* XXXzeniko this currently throws for secured items (cf. bug 442048) */ }
       }
@@ -2108,9 +2108,7 @@ SessionStoreService.prototype = {
       let storage = aDocShell.getSessionStorageForURI(uri);
       for (let key in aStorageData[url]) {
         try {
-          storage.setItem(key, aStorageData[url][key].value);
-          if (uri.schemeIs("https"))
-            storage.getItem(key).secure = aStorageData[url][key].secure || false;
+          storage.setItem(key, aStorageData[url][key]);
         }
         catch (ex) { Cu.reportError(ex); } // throws e.g. for URIs that can't have sessionStorage
       }

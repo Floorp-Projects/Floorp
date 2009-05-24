@@ -59,7 +59,7 @@ check-%::
 	if test -d $(FINAL_TARGET); then rm -rf $(FINAL_TARGET); fi;
 	make realchrome MOZ_CHROME_FILE_FORMAT=$*
 	@echo "Comparing manifests..."
-	@if ! sort $(MY_MANIFEST) | diff -U 0 $(srcdir)/../$(REF_MANIFEST).$* - ; then \
+	@if ! sort $(MY_MANIFEST) | diff --text -U 0 $(srcdir)/../$(REF_MANIFEST).$* - ; then \
 	  echo "TEST-UNEXPECTED-FAIL | config/tests/$(REF_MANIFEST).$* | differing content in manifest!" ; \
 	  false; \
 	fi

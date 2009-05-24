@@ -311,9 +311,17 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 status;
-
   rv = block->GetInt(0, &status);
   if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIClientAuthUserDecision> extraResult = do_QueryInterface(ctx);
+  if (extraResult) {
+    PRInt32 rememberSelection;
+    rv = block->GetInt(2, &rememberSelection);
+    if (NS_SUCCEEDED(rv)) {
+      extraResult->SetRememberClientAuthCertificate(rememberSelection!=0);
+    }
+  }
 
   *canceled = (status == 0)?PR_TRUE:PR_FALSE;
   if (!*canceled) {

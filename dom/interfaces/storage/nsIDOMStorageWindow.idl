@@ -49,13 +49,13 @@ interface nsIDOMStorageObsolete;
 interface nsIDOMStorage;
 interface nsIDOMStorageList;
 
-[scriptable, uuid(B4F572FB-9BA5-480b-9361-C230863323E4)]
+[scriptable, uuid(A44581FE-DD9B-4fd7-9893-00C4AB43F12E)]
 interface nsIDOMStorageWindow : nsISupports
 {
   /**
    * Session storage for the current browsing context.
    */
-  readonly attribute nsIDOMStorageObsolete sessionStorage;
+  readonly attribute nsIDOMStorage sessionStorage;
 
   /**
    * Global storage, accessible by domain.

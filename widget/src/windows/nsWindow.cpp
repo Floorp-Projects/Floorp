@@ -5221,13 +5221,18 @@ PRBool nsWindow::ProcessGestureMessage(WPARAM wParam, LPARAM lParam)
     event.button    = 0;
     event.time      = ::GetMessageTime();
 
+    PRBool endFeedback = PR_TRUE;
+    
     if (mGesture.PanDeltaToPixelScrollX(event)) {
       DispatchEvent(&event, status);
     }
+    mGesture.UpdatePanFeedbackX(mWnd, event, endFeedback);
+    
     if (mGesture.PanDeltaToPixelScrollY(event)) {
       DispatchEvent(&event, status);
     }
-
+    mGesture.UpdatePanFeedbackY(mWnd, event, endFeedback);
+    mGesture.PanFeedbackFinalize(mWnd, endFeedback);
     mGesture.CloseGestureInfoHandle((HGESTUREINFO)lParam);
 
     return PR_TRUE;
@@ -7016,18 +7021,6 @@ void nsWindow::StopFlashing()
     FLASHW_STOP, 0, 0 };
   ::FlashWindowEx(&flashInfo);
 #endif
-}
-
-NS_IMETHODIMP
-nsWindow::GetLastInputEventTime(PRUint32& aTime)
-{
-  if (HasPendingInputEvent()) {
-    gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-  }
-
-  aTime = gLastInputEventTime;
-
-  return NS_OK;
 }
 
 PRBool

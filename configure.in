@@ -1868,7 +1868,7 @@ case "$target" in
 *-darwin*) 
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    MOZ_OPTIMIZE_FLAGS="-O2"
+    MOZ_OPTIMIZE_FLAGS="-O3"
     _PEDANTIC=
     CFLAGS="$CFLAGS -fpascal-strings -fno-common"
     CXXFLAGS="$CXXFLAGS -fpascal-strings -fno-common"
@@ -4209,8 +4209,8 @@ if test "$LIBXUL_SDK_DIR" = "yes"; then
 elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
     LIBXUL_SDK=`cd "$LIBXUL_SDK_DIR" && pwd`
 
-    if test ! -f "$LIBXUL_SDK/sdk/include/xpcom-config.h"; then
-        AC_MSG_ERROR([$LIBXUL_SDK/sdk/include/xpcom-config.h doesn't exist])
+    if test ! -f "$LIBXUL_SDK/include/xpcom-config.h"; then
+        AC_MSG_ERROR([$LIBXUL_SDK/include/xpcom-config.h doesn't exist])
     fi
 
     MOZ_ENABLE_LIBXUL=1

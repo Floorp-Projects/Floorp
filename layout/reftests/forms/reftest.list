@@ -1,9 +1,14 @@
 
 == checkbox-label-dynamic.html checkbox-label-dynamic-ref.html
 == checkbox-radio-stretched.html checkbox-radio-stretched-ref.html # bug 464589
+
 == input-file-width-clip-1.html input-file-width-clip-ref.html # bug 409587
 == input-text-size-1.html input-text-size-1-ref.html
 == input-text-size-2.html input-text-size-2-ref.html
+HTTP(..) == input-text-baseline-1.html input-text-baseline-1-ref.html
+HTTP(..) == input-text-centering-1.xul input-text-centering-1-ref.xul
+HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
+
 == radio-label-dynamic.html radio-label-dynamic-ref.html
 == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # bug 471741
 != indeterminate-checked.html indeterminate-checked-notref.html

@@ -298,6 +298,12 @@ CompareVP(VersionPartW &v1, VersionPartW &v2)
   if (r)
     return r;
 
+  if (!v1.extraD)
+    return v2.extraD != 0;
+
+  if (!v2.extraD)
+    return -1;
+
   return wcscmp(v1.extraD, v2.extraD);
 }
 

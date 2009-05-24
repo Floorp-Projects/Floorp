@@ -181,6 +181,16 @@ nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                              aValue, aNotify);
 }
 
+void
+nsSVGImageElement::MaybeLoadSVGImage()
+{
+  if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) &&
+      (NS_FAILED(LoadSVGImage(PR_FALSE, PR_TRUE)) ||
+       !LoadingEnabled())) {
+    CancelImageRequests(PR_TRUE);
+  }
+}
+
 nsresult
 nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -192,11 +202,10 @@ nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
-    // Our base URI may have changed; claim that our URI changed, and the
-    // nsImageLoadingContent will decide whether a new image load is warranted.
-    // Note: no need to notify here; since we're just now being bound
-    // we don't have any frames or anything yet.
-    LoadSVGImage(PR_FALSE, PR_FALSE);
+    ClearBrokenState();
+    nsContentUtils::AddScriptRunner(
+      new nsRunnableMethod<nsSVGImageElement>(this,
+                                              &nsSVGImageElement::MaybeLoadSVGImage));
   }
 
   return rv;

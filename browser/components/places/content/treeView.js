@@ -1184,9 +1184,13 @@ PlacesTreeView.prototype = {
           return PlacesUtils.bookmarks.getKeywordForBookmark(node.itemId);
         return "";
       case this.COLUMN_TYPE_DESCRIPTION:
-        const annos = PlacesUtils.annotations;
-        if (annos.itemHasAnnotation(node.itemId, DESCRIPTION_ANNO))
-          return annos.getItemAnnotation(node.itemId, DESCRIPTION_ANNO)
+        if (node.itemId != -1) {
+          try {
+            return PlacesUtils.annotations.
+                               getItemAnnotation(node.itemId, DESCRIPTION_ANNO);
+          }
+          catch (ex) { /* has no description */ }
+        }
         return "";
       case this.COLUMN_TYPE_DATEADDED:
         if (node.dateAdded)

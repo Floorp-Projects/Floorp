@@ -20,8 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
           src="chrome://mochikit/content/a11y/accessible/actions.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/states.js"></script>
 
   <script type="application/javascript">
+
+    // gA11yEventDumpID = "eventDump";
 
     function focusChecker(aAcc)
     {
@@ -30,6 +34,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
       this.getID = function focusChecker_getID()
       {
         return "focus handling";
+      }
+      this.check = function focusChecker_check(aEvent)
+      {
+        testStates(this.target, STATE_FOCUSED);
       }
     }
 
@@ -41,7 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
       {
         return "name change handling";
       },
-      this.check = function focusChecker_check(aEvent)
+      this.check = function nameChecker_check(aEvent)
       {
         is(aEvent.accessible.name, aName,
            "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
@@ -58,7 +66,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
         children: [
           { // start/stop button
             role: ROLE_PUSHBUTTON,
-            name: "Play"
+            name: "Play",
+            states: {
+              states: STATE_FOCUSABLE
+            }
           },
           { // buffer bar
             role: ROLE_PROGRESSBAR
@@ -68,14 +79,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
           },
           { // slider of progress bar
             role: ROLE_SLIDER,
-            name: "0:00 of 0:01 elapsed"
+            name: "0:00 of 0:01 elapsed",
+            states: {
+              states: STATE_FOCUSABLE
+            }
           },
           { // duration label, role="presentation"
             role: ROLE_NOTHING
           },
           { // mute button
             role: ROLE_PUSHBUTTON,
-            name: "Mute"
+            name: "Mute",
+            states: {
+              states: STATE_FOCUSABLE
+            }
           }
         ]
       };
@@ -86,6 +103,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
 
       var audioElm = getAccessible("audio");
       var playBtn = audioElm.firstChild;
+      var scrubber = playBtn.nextSibling.nextSibling.nextSibling;
       var muteBtn = audioElm.lastChild;
 
       var actions = [
@@ -96,6 +114,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
           eventSeq: [
             new focusChecker(muteBtn),
             new nameChecker(muteBtn, "Unmute"),
+          ]
+        },
+        {
+          ID: scrubber,
+          actionName: "activate",
+          events: null,
+          eventSeq: [
+            new focusChecker(scrubber)
           ]
         },
         {
@@ -128,5 +154,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
 
   <audio id="audio" src="chrome://mochikit/content/a11y/accessible/bug461281.ogg"
          controls="true"></audio>
+
+  <div id="eventDump"></div>
 </body>
 </html>

@@ -6,6 +6,7 @@ classic.jar:
         skin/classic/browser/sanitizeDialog.css                      (sanitizeDialog.css)
 *       skin/classic/browser/aboutPrivateBrowsing.css                (aboutPrivateBrowsing.css)
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
+        skin/classic/browser/aboutSessionRestore-window-icon.png     (aboutSessionRestore-window-icon.png)
         skin/classic/browser/aboutCertError.css                      (aboutCertError.css)
 *       skin/classic/browser/browser.css                             (browser.css)
 *       skin/classic/browser/engineManager.css                       (engineManager.css)
@@ -24,13 +25,9 @@ classic.jar:
         skin/classic/browser/Secure.png                              (Secure.png)
         skin/classic/browser/Secure24.png                            (Secure24.png)
         skin/classic/browser/Security-broken.png                     (Security-broken.png)
-        skin/classic/browser/Throbber.gif
-        skin/classic/browser/Throbber.png
-        skin/classic/browser/Throbber-small.png
         skin/classic/browser/Toolbar.png                             (Toolbar.png)
         skin/classic/browser/Toolbar-small.png                       (Toolbar-small.png)
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
-        skin/classic/browser/Go-arrow-rtl.png                        (Go-arrow-rtl.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
         skin/classic/browser/Search-addengines.png
         skin/classic/browser/section_collapsed.png
@@ -100,6 +97,7 @@ classic.jar:
         skin/classic/aero/browser/sanitizeDialog.css                       (sanitizeDialog.css)
 *       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
+        skin/classic/aero/browser/aboutSessionRestore-window-icon.png (aboutSessionRestore-window-icon-aero.png)
         skin/classic/aero/browser/aboutCertError.css                 (aboutCertError.css)
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
@@ -118,13 +116,9 @@ classic.jar:
         skin/classic/aero/browser/Secure.png                         (Secure-aero.png)
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/Security-broken.png                (Security-broken-aero.png)
-        skin/classic/aero/browser/Throbber.gif
-        skin/classic/aero/browser/Throbber.png
-        skin/classic/aero/browser/Throbber-small.png
         skin/classic/aero/browser/Toolbar.png                        (Toolbar-aero.png)
         skin/classic/aero/browser/Toolbar-small.png                  (Toolbar-small-aero.png)
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
-        skin/classic/aero/browser/Go-arrow-rtl.png                   (Go-arrow-rtl-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
         skin/classic/aero/browser/Search-addengines.png
         skin/classic/aero/browser/section_collapsed.png

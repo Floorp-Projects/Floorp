@@ -1,0 +1,22 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
+--- a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
++++ b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
+@@ -85,17 +85,17 @@ static void                             
+ 					pu += 1; pv += 1;	\
+ 				} 				\
+ 			}					\
+ 		} 						\
+ 								\
+ 		ptro += rgb->rgb_width * 4;                     \
+ 		ptry += yuv->y_width;                           \
+ 								\
+-		if (i & 0x1)                                    \
++		if (i & 0x1 && !(i+1==h-1 && h&1))              \
+ 		{                                               \
+ 			ptru += yuv->uv_width;                  \
+ 			ptrv += yuv->uv_width;                  \
+ 		}                                               \
+ 	}                                                       \
+ 	CLEANUP                                                 \
+ }  
+ 

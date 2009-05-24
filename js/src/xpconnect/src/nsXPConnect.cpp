@@ -571,25 +571,8 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
     GetRuntime()->AddXPConnectRoots(mCycleCollectionContext->GetJSContext(),
                                     cb);
 
-#ifndef XPCONNECT_STANDALONE
-    if(!mScopes.IsInitialized())
-    {
-        mScopes.Init();
-    }
-    NS_ASSERTION(mScopes.Count() == 0, "Didn't clear mScopes?");
-    XPCWrappedNativeScope::TraverseScopes(*mCycleCollectionContext);
-#endif
-
     return NS_OK;
 }
-
-#ifndef XPCONNECT_STANDALONE
-void
-nsXPConnect::RecordTraversal(void *p, nsISupports *s)
-{
-    mScopes.Put(p, s);
-}
-#endif
 
 nsresult 
 nsXPConnect::FinishCycleCollection()
@@ -602,10 +585,6 @@ nsXPConnect::FinishCycleCollection()
 
         GetRuntime()->RootContextGlobals();
     }
-#endif
-
-#ifndef XPCONNECT_STANDALONE
-    mScopes.Clear();
 #endif
 
 #ifdef DEBUG_CC
@@ -946,16 +925,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
     }
-
-#ifndef XPCONNECT_STANDALONE
-    if(clazz->flags & JSCLASS_IS_GLOBAL)
-    {
-        nsISupports *principal = nsnull;
-        mScopes.Get(obj, &principal);
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "scope principal");
-        cb.NoteXPCOMChild(principal);
-    }
-#endif
 
     return NS_OK;
 }

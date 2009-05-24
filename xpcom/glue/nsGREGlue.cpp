@@ -39,6 +39,7 @@
 
 #include "nsXPCOMGlue.h"
 
+#include "nsAutoPtr.h"
 #include "nsINIParser.h"
 #include "nsVersionComparator.h"
 #include "nsXPCOMPrivate.h"
@@ -150,7 +151,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
                       PRUint32 versionsLength,
                       const GREProperty *properties,
                       PRUint32 propertiesLength,
-                      PRUnichar* buffer, PRUint32 buflen);
+                      char* buffer, PRUint32 buflen);
 
 #endif
 
@@ -447,7 +448,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
       PRBool ok = GRE_GetPathFromRegKey(hRegKey,
                                         versions, versionsLength,
                                         allProperties, allPropertiesLength,
-                                        (WCHAR*) NS_ConvertUTF8toUTF16(aBuffer).get(), aBufLen);
+                                        aBuffer, aBufLen);
       ::RegCloseKey(hRegKey);
 
       if (ok)
@@ -459,7 +460,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
       PRBool ok = GRE_GetPathFromRegKey(hRegKey,
                                         versions, versionsLength,
                                         allProperties, allPropertiesLength,
-                                        (WCHAR*) NS_ConvertUTF8toUTF16(aBuffer).get(), aBufLen);
+                                        aBuffer, aBufLen);
       ::RegCloseKey(hRegKey);
 
       if (ok)
@@ -500,23 +501,39 @@ CheckVersion(const char* toCheck,
 }
 
 #ifdef XP_WIN
+
+// Allocate an array of characters using new[], converting from UTF8 to UTF-16.
+// @note Use nsAutoArrayPtr for this result.
+
+static PRUnichar*
+ConvertUTF8toNewUTF16(const char *cstr)
+{
+  int len = MultiByteToWideChar(CP_UTF8, 0, cstr, -1, NULL, 0);
+  WCHAR *wstr = new WCHAR[len];
+  MultiByteToWideChar(CP_UTF8, 0, cstr, -1, wstr, len);
+  return wstr;
+}
+
+typedef nsAutoArrayPtr<PRUnichar> AutoWString;
+
 static PRBool
 CheckVersion(const PRUnichar* toCheck,
              const GREVersionRange *versions,
              PRUint32 versionsLength)
 {
-  
   for (const GREVersionRange *versionsEnd = versions + versionsLength;
        versions < versionsEnd;
        ++versions) {
-      PRInt32 c = NS_CompareVersions(toCheck, NS_ConvertUTF8toUTF16(versions->lower).get());
+      AutoWString wlower(ConvertUTF8toNewUTF16(versions->lower));
+      PRInt32 c = NS_CompareVersions(toCheck, wlower);
       if (c < 0)
         continue;
 
       if (!c && !versions->lowerInclusive)
         continue;
 
-      c = NS_CompareVersions(toCheck, NS_ConvertUTF8toUTF16(versions->upper).get());
+      AutoWString wupper(ConvertUTF8toNewUTF16(versions->upper));
+      c = NS_CompareVersions(toCheck, wupper);
       if (c > 0)
         continue;
 
@@ -723,7 +740,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
                       PRUint32 versionsLength,
                       const GREProperty *properties,
                       PRUint32 propertiesLength,
-                      PRUnichar* aBuffer, PRUint32 aBufLen)
+                      char* aBuffer, PRUint32 aBufLen)
 {
   // Formerly, GREs were registered at the registry key
   // HKLM/Software/mozilla.org/GRE/<version> valuepair GreHome=Path.
@@ -745,6 +762,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
   //   1.1 (already in use), 1.1_1, 1.1_2, etc...
 
   DWORD i = 0;
+  PRUnichar buffer[MAXPATHLEN + 1];
 
   while (PR_TRUE) {
     PRUnichar name[MAXPATHLEN + 1];
@@ -762,7 +780,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
 
     PRUnichar version[40];
     DWORD versionlen = 40;
-    PRUnichar pathbuf[MAXPATHLEN];
+    PRUnichar pathbuf[MAXPATHLEN + 1];
     DWORD pathlen;
     DWORD pathtype;
 
@@ -776,11 +794,13 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
       const GREProperty *props = properties;
       const GREProperty *propsEnd = properties + propertiesLength;
       for (; ok && props < propsEnd; ++props) {
-        pathlen = sizeof(pathbuf);
+        pathlen = MAXPATHLEN + 1;
 
-        if (::RegQueryValueExW(subKey, NS_ConvertUTF8toUTF16(props->property).get(), NULL, &pathtype,
+        AutoWString wproperty(ConvertUTF8toNewUTF16(props->property));
+        AutoWString wvalue(ConvertUTF8toNewUTF16(props->value));
+        if (::RegQueryValueExW(subKey, wproperty, NULL, &pathtype,
                                (BYTE*) pathbuf, &pathlen) != ERROR_SUCCESS ||
-              wcscmp(pathbuf,  NS_ConvertUTF8toUTF16(props->value).get()))
+            wcscmp(pathbuf,  wvalue))
             ok = PR_FALSE;
       }
 
@@ -789,14 +809,14 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
           (!::RegQueryValueExW(subKey, L"GreHome", NULL, &pathtype,
                               (BYTE*) pathbuf, &pathlen) == ERROR_SUCCESS ||
            !*pathbuf ||
-           !CopyWithEnvExpansion(aBuffer, pathbuf, aBufLen, pathtype))) {
+           !CopyWithEnvExpansion(buffer, pathbuf, MAXPATHLEN, pathtype))) {
         ok = PR_FALSE;
       }
-      else if (!wcsncat(aBuffer, L"\\" LXPCOM_DLL, aBufLen) 
+      else if (!wcsncat(buffer, L"\\" LXPCOM_DLL, aBufLen) 
 #ifdef WINCE
-               || (GetFileAttributesW(aBuffer) != INVALID_FILE_ATTRIBUTES)
+               || (GetFileAttributesW(buffer) != INVALID_FILE_ATTRIBUTES)
 #else
-               || _waccess(aBuffer, R_OK)
+               || _waccess(buffer, R_OK)
 #endif
                ) {
         ok = PR_FALSE;
@@ -805,8 +825,10 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
 
     RegCloseKey(subKey);
 
-    if (ok)
+    if (ok) {
+      WideCharToMultiByte(CP_UTF8, 0, buffer, -1, aBuffer, aBufLen, NULL, NULL);
       return PR_TRUE;
+    }
 
     ++i;
   }
