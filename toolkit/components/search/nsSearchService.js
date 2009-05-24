@@ -92,7 +92,7 @@ const CACHE_INVALIDATION_DELAY = 1000;
 
 // Current cache version. This should be incremented if the format of the cache
 // file is modified.
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
@@ -2453,15 +2453,17 @@ SearchService.prototype = {
     cache.buildID = buildID;
     cache.locale = locale;
 
+    cache.directories = {};
+
     for each (let engine in this._engines) {
       let parent = engine._file.parent;
-      if (!cache[parent.path]) {
+      if (!cache.directories[parent.path]) {
         let cacheEntry = {};
         cacheEntry.lastModifiedTime = parent.lastModifiedTime;
         cacheEntry.engines = [];
-        cache[parent.path] = cacheEntry;
+        cache.directories[parent.path] = cacheEntry;
       }
-      cache[parent.path].engines.push(engine._serializeToJSON(true));
+      cache.directories[parent.path].engines.push(engine._serializeToJSON(true));
     }
 
     let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
@@ -2496,29 +2498,45 @@ SearchService.prototype = {
         cache = this._readCacheFile(cacheFile);
     }
 
+    let loadDirs = [];
     let locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
-    let locale = getLocale();
-    let buildID = Cc["@mozilla.org/xre/app-info;1"].
-                  getService(Ci.nsIXULAppInfo).platformBuildID;
-
-    // loop through our directories and check the cache object
-    let rebuildCache = false;
     while (locations.hasMoreElements()) {
       let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-      let path = dir.path;
-      if (!cache[path] || cache[path].lastModifiedTime < dir.lastModifiedTime ||
-          cache.locale != locale || cache.buildID != buildID ||
-          cache.version != CACHE_VERSION) {
-        LOG("_loadEngines: Absent or outdated cache. Loading engines from disk.");
-        this._loadEnginesFromDir(dir);
-        rebuildCache = true;
-      } else {
-        this._loadEnginesFromCache(cache[path]);
-      }
+      if (dir.directoryEntries.hasMoreElements())
+        loadDirs.push(dir);
     }
 
-    if (rebuildCache && cacheEnabled)
-      this._buildCache();
+    function modifiedDir(aDir) {
+      return (!cache.directories[aDir.path] ||
+              cache.directories[aDir.path].lastModifiedTime != aDir.lastModifiedTime);
+    }
+
+    function notInLoadDirs(aCachePath, aIndex)
+      aCachePath != loadDirs[aIndex].path;
+
+    let buildID = Cc["@mozilla.org/xre/app-info;1"].
+                  getService(Ci.nsIXULAppInfo).platformBuildID;
+    let cachePaths = [path for (path in cache.directories)];
+
+    let rebuildCache = !cache.directories ||
+                       cache.version != CACHE_VERSION ||
+                       cache.locale != getLocale() ||
+                       cache.buildID != buildID ||
+                       cachePaths.length != loadDirs.length ||
+                       cachePaths.some(notInLoadDirs) ||
+                       loadDirs.some(modifiedDir);
+
+    if (!cacheEnabled || rebuildCache) {
+      LOG("_loadEngines: Absent or outdated cache. Loading engines from disk.");
+      loadDirs.forEach(this._loadEnginesFromDir, this);
+
+      if (cacheEnabled)
+        this._buildCache();
+      return;
+    }
+
+    for each (let dir in cache.directories)
+      this._loadEnginesFromCache(dir);
   },
 
   _readCacheFile: function SRCH_SVC__readCacheFile(aFile) {

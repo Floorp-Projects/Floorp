@@ -54,6 +54,7 @@ DIRS	+= \
 	whatwg \
 	geolocation \
 	localstorage \
+	sessionstorage \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

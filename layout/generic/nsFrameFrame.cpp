@@ -320,24 +320,27 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!subdocView)
     return NS_OK;
 
-  // Get the PresShell so we can check if painting is suppressed
-  // on the subdocument. We use this roundabout way in case we
-  // don't have a frame tree.
-  if (!mFrameLoader)
-    return NS_OK;
-  nsCOMPtr<nsIDocShell> docShell;
-  mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-  if (!docShell)
-    return NS_OK;
   nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell)
-    return NS_OK;
+
+  nsIFrame* f = static_cast<nsIFrame*>(subdocView->GetClientData());
+
+  if (f) {
+    presShell = f->PresContext()->PresShell();
+  } else {
+    // If we don't have a frame we use this roundabout way to get the pres shell.
+    if (!mFrameLoader)
+      return NS_OK;
+    nsCOMPtr<nsIDocShell> docShell;
+    mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+    if (!docShell)
+      return NS_OK;
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    if (!presShell)
+      return NS_OK;
+  }
 
   PRBool suppressed = PR_TRUE;
   presShell->IsPaintingSuppressed(&suppressed);
-
-  nsIFrame* f = static_cast<nsIFrame*>(subdocView->GetClientData());
 
   nsDisplayList childItems;
 
@@ -345,8 +348,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (f) {
     dirty = aDirtyRect - f->GetOffsetTo(this);
     aBuilder->EnterPresShell(f, dirty);
-    NS_ASSERTION(presShell == f->PresContext()->PresShell(),
-                 "these presshells should be the same");
 
     rv = f->BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
   }

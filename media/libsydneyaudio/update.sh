@@ -6,3 +6,4 @@ cp $1/include/sydney_audio.h include/sydney_audio.h
 cp $1/src/*.c src/
 cp $1/AUTHORS ./AUTHORS
 patch -p4 <pause-resume.patch
+patch -p4 <include-CoreServices.patch

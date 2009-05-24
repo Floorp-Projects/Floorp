@@ -76,7 +76,6 @@ var gSanitizePromptDialog = {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
 
-    this.checkPrefs();
     var s = new Sanitizer();
     s.prefDomain = "privacy.cpd.";
     for (let i = 0; i < this.sanitizePreferences.childNodes.length; ++i) {
@@ -156,41 +155,13 @@ var gSanitizePromptDialog = {
 
     this._warningIsInited = true;
 
-    // Get the number of items in history and the oldest item.
-    var histServ = Cc["@mozilla.org/browser/nav-history-service;1"].
-                   getService(Ci.nsINavHistoryService);
-    var query = histServ.getNewQuery();
-    var opts = histServ.getNewQueryOptions();
-    opts.sortingMode = opts.SORT_BY_DATE_ASCENDING;
-    opts.queryType = opts.QUERY_TYPE_HISTORY;
-    var result = histServ.executeQuery(query, opts);
-    result.root.containerOpen = true;
-    var numItems = result.root.childCount;
-    var oldestTime = numItems > 0 ? result.root.getChild(0).time : null;
-    result.root.containerOpen = false;
+    // If the date and time-aware locale warning string is ever used again,
+    // initialize it here.  Currently we use the no-visits warning string,
+    // which does not include date and time.  See bug 480169 comment 48.
 
     var warningDesc = document.getElementById("sanitizeEverythingWarning");
     warningDesc.textContent =
       this.bundleBrowser.getString("sanitizeEverythingNoVisitsWarning");
-  },
-
-  checkPrefs : function ()
-  {
-    var prefService = Cc["@mozilla.org/preferences-service;1"].
-                      getService(Ci.nsIPrefService);
-    var cpdBranch = prefService.getBranch("privacy.cpd.");
-
-    // If we don't have defaults for the privacy.cpd branch,
-    // clone the privacy.item (clear at shutdown) defaults
-    if (cpdBranch.prefHasUserValue("history"))
-      return;
-
-    var itemBranch = prefService.getBranch("privacy.item.");
-    var itemCount = { value: 0 };
-    var itemArray = itemBranch.getChildList("", itemCount);
-    itemArray.forEach(function (name) {
-      cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
-    });
   },
 
   /**
@@ -287,7 +258,6 @@ var gSanitizePromptDialog = {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
 
-    this.checkPrefs();
     var s = new Sanitizer();
     s.prefDomain = "privacy.cpd.";
     for (let i = 0; i < this.sanitizePreferences.childNodes.length; ++i) {

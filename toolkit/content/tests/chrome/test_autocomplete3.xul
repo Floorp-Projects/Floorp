@@ -31,7 +31,7 @@ function nsAutoCompleteSimpleResult(aString)
   if (returnResult) {
     this.searchResult = ACR.RESULT_SUCCESS;
     this.matchCount = 1;
-    this._param = "result";
+    this._param = "Result";
   }
 }
 
@@ -93,7 +93,7 @@ const tests = [
     start: 1, end: 1 },
   { completeDefaultIndex: "true", key: "e", result: "result",
     start: 2, end: 6 },
-  { completeDefaultIndex: "true", key: "t", result: "ret >> result",
+  { completeDefaultIndex: "true", key: "t", result: "ret >> Result",
     start: 3, end: 13 }
 ];
 
@@ -151,6 +151,15 @@ function checkResult() {
   if (currentTest < tests.length)
     setTimeout(checkNext, 0);
   else {
+    // Test result if user accepts autocomplete suggestion.
+    synthesizeKey("VK_RIGHT", {});
+    is(autocomplete.value, "Result",
+       "Test complete: autocomplete.value should equal 'Result'");
+    is(autocomplete.selectionStart, 6,
+       "Test complete: autocomplete selection should start at 6");
+    is(autocomplete.selectionEnd, 6,
+       "Test complete: autocomplete selection should end at 6");
+
     setTimeout(function() {
       // Unregister the factory so that we don't get in the way of other tests
       componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);

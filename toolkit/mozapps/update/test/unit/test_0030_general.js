@@ -46,7 +46,7 @@ function run_test() {
   do_test_pending();
   removeUpdateDirsAndFiles();
   // The mock XMLHttpRequest is MUCH faster
-  gPrefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, URL_HOST + "update.xml");
+  getPrefBranch().setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, URL_HOST + "update.xml");
   overrideXHR(callHandleEvent);
   startAUS();
   startUpdateChecker();
@@ -57,6 +57,7 @@ function run_test() {
 
 function end_test() {
   stop_httpserver(do_test_finished);
+  cleanUp();
 }
 
 // Callback function used by the custom XMLHttpRequest implemetation to
@@ -65,8 +66,8 @@ function callHandleEvent() {
   gXHR.status = 400;
   gXHR.responseText = gResponseBody;
   try {
-    var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"]
-                   .createInstance(AUS_Ci.nsIDOMParser);
+    var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"].
+                 createInstance(AUS_Ci.nsIDOMParser);
     gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
   }
   catch(e) {

@@ -41,9 +41,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= fishsound
+EXPORTS_NAMESPACES = fishsound
 
-EXPORTS		= \
+EXPORTS_fishsound = \
 		comments.h \
 		constants.h \
 		decode.h \

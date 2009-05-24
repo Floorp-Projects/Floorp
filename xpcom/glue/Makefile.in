@@ -121,20 +121,25 @@ SDK_HEADERS = \
 		pldhash.h \
 		$(NULL)
 
+EXPORTS_NAMESPACES = mozilla
+
 EXPORTS = \
 		nsThreadUtils.h \
 		nsProxyRelease.h \
 		nsXPTCUtils.h \
 		$(NULL)
 
+EXPORTS_mozilla = \
+  BlockingResourceBase.h \
+  CondVar.h \
+  DeadlockDetector.h \
+  Monitor.h \
+  Mutex.h \
+  $(NULL)
+
 SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(NULL)
-
-
-## TODO temp hack until build system handles this
-export:: BlockingResourceBase.h CondVar.h DeadlockDetector.h Monitor.h Mutex.h
-	$(INSTALL) $^ $(DIST)/include/mozilla
 
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

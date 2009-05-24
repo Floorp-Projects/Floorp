@@ -16,7 +16,7 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/role.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js" />
+          src="chrome://mochikit/content/a11y/accessible/states.js" />
 
   <script type="application/javascript">
   <![CDATA[

@@ -53,6 +53,7 @@ REQUIRES	= \
 		  $(NULL)
 
 CPPSRCS		= \
+		TimeStamp.cpp \
 		nsArray.cpp \
 		nsAtomTable.cpp \
 		nsAtomService.cpp \
@@ -75,10 +76,15 @@ CPPSRCS		= \
 		nsSupportsArrayEnumerator.cpp \
 		nsSupportsPrimitives.cpp \
 		nsTimelineService.cpp \
-		nsTimeStamp.cpp \
 		nsUnicharBuffer.cpp \
 		nsVariant.cpp \
 		$(NULL)
+
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla = \
+  TimeStamp.h \
+  $(NULL)
 
 EXPORTS		= \
 		nsAtomService.h \
@@ -101,7 +107,6 @@ EXPORTS		= \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
 		nsTime.h \
-		nsTimeStamp.h \
 		nsVariant.h \
 		nsStringEnumerator.h \
 		nsHashPropertyBag.h \
@@ -146,8 +151,6 @@ CPPSRCS += nsWindowsRegKey.cpp
 XPIDLSRCS += nsIWindowsRegKey.idl
 EXPORTS += nsWindowsRegKey.h
 endif
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

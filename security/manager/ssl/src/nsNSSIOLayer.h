@@ -55,8 +55,10 @@
 #include "nsIAssociatedContentSecurity.h"
 #include "nsXPIDLString.h"
 #include "nsNSSShutDown.h"
+#include "nsIClientAuthDialogs.h"
 #include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
+#include "nsDataHashtable.h"
 
 class nsIChannel;
 class nsSSLThread;
@@ -132,6 +134,7 @@ class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsIAssociatedContentSecurity,
                         public nsISerializable,
                         public nsIClassInfo,
+                        public nsIClientAuthUserDecision,
                         public nsNSSShutDownObject,
                         public nsOnPK11LogoutCancelObject
 {
@@ -148,6 +151,7 @@ public:
   NS_DECL_NSIASSOCIATEDCONTENTSECURITY
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
+  NS_DECL_NSICLIENTAUTHUSERDECISION
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
@@ -220,6 +224,7 @@ protected:
   PRPackedBool mHasCleartextPhase;
   PRPackedBool mHandshakeInProgress;
   PRPackedBool mAllowTLSIntoleranceTimeout;
+  PRPackedBool mRememberClientAuthCertificate;
   PRIntervalTime mHandshakeStartTime;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
@@ -242,6 +247,31 @@ friend class nsSSLThread;
 
 class nsCStringHashSet;
 
+class nsSSLStatus;
+class nsNSSSocketInfo;
+
+class nsPSMRememberCertErrorsTable
+{
+private:
+  struct CertStateBits
+  {
+    PRBool mIsDomainMismatch;
+    PRBool mIsNotValidAtThisTime;
+    PRBool mIsUntrusted;
+  };
+  nsDataHashtableMT<nsCStringHashKey, CertStateBits> mErrorHosts;
+  nsresult GetHostPortKey(nsNSSSocketInfo* infoObject, nsCAutoString& result);
+
+public:
+  friend class nsSSLIOLayerHelpers;
+  nsPSMRememberCertErrorsTable();
+  void RememberCertHasError(nsNSSSocketInfo* infoObject,
+                           nsSSLStatus* status,
+                           SECStatus certVerificationResult);
+  void LookupCertErrorBits(nsNSSSocketInfo* infoObject,
+                           nsSSLStatus* status);
+};
+
 class nsSSLIOLayerHelpers
 {
 public:
@@ -254,6 +284,7 @@ public:
 
   static PRLock *mutex;
   static nsCStringHashSet *mTLSIntolerantSites;
+  static nsPSMRememberCertErrorsTable* mHostsWithCertErrors;
   
   static PRBool rememberPossibleTLSProblemSite(PRFileDesc* fd, nsNSSSocketInfo *socketInfo);
 

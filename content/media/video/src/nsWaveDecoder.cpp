@@ -1240,14 +1240,6 @@ nsWaveDecoder::Play()
 void
 nsWaveDecoder::Stop()
 {
-  if (mStopping) {
-    return;
-  }
-
-  mStopping = PR_TRUE;
-
-  StopProgress();
-
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Shutdown();
   }
@@ -1275,8 +1267,6 @@ nsWaveDecoder::Stop()
 nsresult
 nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 {
-  mStopping = PR_FALSE;
-
   // Reset progress member variables
   mResourceLoaded = PR_FALSE;
   mResourceLoadedReported = PR_FALSE;
@@ -1329,7 +1319,7 @@ nsWaveDecoder::MetadataLoaded()
 
   if (mElement) {
     mElement->MetadataLoaded();
-    mElement->FirstFrameLoaded();
+    mElement->FirstFrameLoaded(mResourceLoaded);
   }
 
   mMetadataLoadedReported = PR_TRUE;
@@ -1389,7 +1379,7 @@ nsWaveDecoder::NetworkError()
   if (mElement) {
     mElement->NetworkError();
   }
-  Stop();
+  Shutdown();
 }
 
 PRBool
@@ -1446,38 +1436,23 @@ nsWaveDecoder::NotifyDownloadEnded(nsresult aStatus)
   UpdateReadyStateForData();
 }
 
-// An event that gets posted to the main thread, when the media element is
-// being destroyed, to destroy the decoder. Since the decoder shutdown can
-// block and post events this cannot be done inside destructor calls. So
-// this event is posted asynchronously to the main thread to perform the
-// shutdown. It keeps a strong reference to the decoder to ensure it does
-// not get deleted when the element is deleted.
-class nsWaveDecoderShutdown : public nsRunnable
-{
-public:
-  nsWaveDecoderShutdown(nsWaveDecoder* aDecoder)
-    : mDecoder(aDecoder)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    mDecoder->Stop();
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsWaveDecoder> mDecoder;
-};
-
 void
 nsWaveDecoder::Shutdown()
 {
+  if (mShuttingDown)
+    return;
+
   mShuttingDown = PR_TRUE;
 
   nsMediaDecoder::Shutdown();
 
-  nsCOMPtr<nsIRunnable> event = new nsWaveDecoderShutdown(this);
+  // An event that gets posted to the main thread, when the media element is
+  // being destroyed, to destroy the decoder. Since the decoder shutdown can
+  // block and post events this cannot be done inside destructor calls. So
+  // this event is posted asynchronously to the main thread to perform the
+  // shutdown.
+  nsCOMPtr<nsIRunnable> event =
+    NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, this, Stop);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
@@ -1513,6 +1488,7 @@ nsWaveDecoder::SeekingStarted()
   }
 
   if (mElement) {
+    UpdateReadyStateForData();
     mElement->SeekStarted();
   }
 }
@@ -1525,8 +1501,8 @@ nsWaveDecoder::SeekingStopped()
   }
 
   if (mElement) {
-    mElement->SeekCompleted();
     UpdateReadyStateForData();
+    mElement->SeekCompleted();
   }
 }
 
@@ -1589,6 +1565,7 @@ nsWaveDecoder::PlaybackPositionChanged()
   }
 
   if (mElement && lastTime != mCurrentTime) {
+    UpdateReadyStateForData();
     mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
   }
 }

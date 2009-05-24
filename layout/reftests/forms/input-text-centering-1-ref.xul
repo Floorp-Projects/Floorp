@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<window title="Text input text centering reference"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <html:style type="text/css">
+    @font-face {
+      font-family: "Ahem";
+      src: url(../fonts/Ahem.ttf);
+    }
+    hbox {
+      height: 128px;
+      background-color: white;
+    }
+    input {
+      height: 64px;
+      background-color: white;
+      border: none;
+      margin: 0px;
+      padding: 0px;
+      font-family: "Ahem", sans-serif;
+      font-size: 32px;
+    }
+  </html:style>
+
+  <hbox align="center">
+    <html:input value="Ahem"/>
+  </hbox>
+</window>

@@ -85,8 +85,6 @@ endif
 pkg_config_files = \
 	libxul.pc \
 	libxul-embedding.pc \
-	libxul-unstable.pc \
-	libxul-embedding-unstable.pc \
 	mozilla-js.pc \
 	mozilla-plugin.pc \
 	mozilla-gtkmozembed.pc \
@@ -99,7 +97,7 @@ NSPR_VERSION=$(shell $(NSPR_CONFIG) --version)
 else
 pkg_config_files += mozilla-nspr.pc
 NSPR_NAME=mozilla-nspr
-FULL_NSPR_CFLAGS=-I\$${includedir}/stable
+FULL_NSPR_CFLAGS=-I\$${includedir}
 FULL_NSPR_LIBS=$(subst $(prefix),\$${sdkdir},$(shell $(DEPTH)/nsprpub/config/nspr-config --libs))
 NSPR_VERSION=$(shell $(DEPTH)/nsprpub/config/nspr-config --version)
 endif
