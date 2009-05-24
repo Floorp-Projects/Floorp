@@ -3,6 +3,7 @@ classic.jar:
   skin/classic/browser/sanitizeDialog.css                   (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
+  skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutCertError.css                   (aboutCertError.css)
   skin/classic/browser/bookmark_toolbar_background.png
   skin/classic/browser/bookmark-open-left.png
