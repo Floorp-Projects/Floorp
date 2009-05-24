@@ -58,7 +58,7 @@ treechildren::-moz-tree-image(noicon) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 treechildren::-moz-tree-image(container, noicon) {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+  list-style-image: url("chrome://browser/skin/aboutSessionRestore-window-icon.png");
 }
 treechildren::-moz-tree-image(checked) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
