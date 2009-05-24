@@ -103,6 +103,7 @@ Cu.import("resource://weave/engines/extensions.js", Weave);
 Cu.import("resource://weave/engines/forms.js", Weave);
 Cu.import("resource://weave/engines/history.js", Weave);
 Cu.import("resource://weave/engines/input.js", Weave);
+Cu.import("resource://weave/engines/prefs.js", Weave);
 Cu.import("resource://weave/engines/microformats.js", Weave);
 Cu.import("resource://weave/engines/passwords.js", Weave);
 Cu.import("resource://weave/engines/plugins.js", Weave);
@@ -395,8 +396,9 @@ WeaveSvc.prototype = {
         break;
 
       case FIREFOX_ID:
-        engines = ["Bookmarks", "Cookie", "Extension", "Form", "History", "Input",
-          "MicroFormat", "Password", "Plugin", "Tab", "Theme"];
+        engines = ["Bookmarks", "Cookie", "Extension", "Form", "History", 
+          "Input", "MicroFormat", "Password", "Plugin", "Prefs", "Tab", 
+          "Theme"];
         break;
 
       case SEAMONKEY_ID:
