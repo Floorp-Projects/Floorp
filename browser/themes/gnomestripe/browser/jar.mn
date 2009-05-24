@@ -9,7 +9,6 @@ classic.jar:
 * skin/classic/browser/engineManager.css              (engineManager.css)
   skin/classic/browser/Geo.png
   skin/classic/browser/Go-arrow.png
-  skin/classic/browser/Go-arrow-rtl.png
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/monitor.png
@@ -25,9 +24,6 @@ classic.jar:
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
-  skin/classic/browser/Throbber.gif
-  skin/classic/browser/Throbber.png
-  skin/classic/browser/Throbber-small.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/urlbar-favicon-glow.png
@@ -55,7 +51,6 @@ classic.jar:
   skin/classic/browser/places/tag.png                 (places/tag.png)
   skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)
   skin/classic/browser/places/unsortedBookmarks.png   (places/unsortedBookmarks.png)
-  skin/classic/browser/places/wrench.png              (places/wrench.png)
   skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/mail.png           (preferences/mail.png)
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
