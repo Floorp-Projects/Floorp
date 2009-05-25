@@ -174,6 +174,9 @@ PrivateBrowsingService.prototype = {
             this._savedBrowserState = blankState;
         }
       }
+
+      this._closePageInfoWindows();
+
       if (!this._quitting && this._saveSession) {
         let browserWindow = this._getBrowserWindow();
 
@@ -210,6 +213,8 @@ PrivateBrowsingService.prototype = {
       if (!this._inPrivateBrowsing) {
         ss.setBrowserState(this._savedBrowserState);
         this._savedBrowserState = null;
+
+        this._closePageInfoWindows();
       }
       else {
         // otherwise, if we have transitioned into private browsing mode, load
@@ -250,6 +255,16 @@ PrivateBrowsingService.prototype = {
     return Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator).
            getMostRecentWindow("navigator:browser");
+  },
+
+  _closePageInfoWindows: function PBS__closePageInfoWindows() {
+    let pageInfoEnum = Cc["@mozilla.org/appshell/window-mediator;1"].
+                       getService(Ci.nsIWindowMediator).
+                       getEnumerator("Browser:page-info");
+    while (pageInfoEnum.hasMoreElements()) {
+      let win = pageInfoEnum.getNext();
+      win.close();
+    }
   },
 
   // nsIObserver
