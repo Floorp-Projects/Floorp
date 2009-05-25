@@ -142,6 +142,7 @@
 #include "nsRange.h"
 #include "mozAutoDocUpdate.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsHtml5Module.h"
 #include "prprf.h"
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
@@ -655,6 +656,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   PRBool aReset,
                                   nsIContentSink* aSink)
 {
+  PRBool loadAsHtml5 = nsContentUtils::GetBoolPref("html5.enable", PR_TRUE);
+  if (aSink) {
+    loadAsHtml5 = PR_FALSE;
+  }
+
   nsCAutoString contentType;
   aChannel->GetContentType(contentType);
 
@@ -664,6 +670,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     mIsRegularHTML = PR_FALSE;
     mCompatMode = eCompatibility_FullStandards;
+    loadAsHtml5 = PR_FALSE;
+  }
+  
+  if (!(contentType.Equals("text/html") && aCommand && !nsCRT::strcmp(aCommand, "view"))) {
+    loadAsHtml5 = PR_FALSE;
   }
 #ifdef DEBUG
   else {
@@ -710,8 +721,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   if (needsParser) {
-    mParser = do_CreateInstance(kCParserCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (loadAsHtml5) {
+      mParser = nsHtml5Module::NewHtml5Parser();
+    } else {
+      mParser = do_CreateInstance(kCParserCID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   PRInt32 textType = GET_BIDI_OPTION_TEXTTYPE(GetBidiOptions());
@@ -926,9 +941,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // create the content sink
     nsCOMPtr<nsIContentSink> sink;
 
-    if (aSink)
+    if (aSink) {
+      NS_ASSERTION((!loadAsHtml5), "Panic: We are loading as HTML5 and someone tries to set an external sink!");
       sink = aSink;
-    else {
+    } else {
       if (IsXHTML()) {
         nsCOMPtr<nsIXMLContentSink> xmlsink;
         rv = NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, uri,
@@ -936,12 +952,17 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
         sink = xmlsink;
       } else {
-        nsCOMPtr<nsIHTMLContentSink> htmlsink;
+        if (loadAsHtml5) {
+          nsHtml5Module::Initialize(mParser, this, uri, docShell, aChannel);
+          sink = mParser->GetContentSink();
+        } else {
+          nsCOMPtr<nsIHTMLContentSink> htmlsink;
 
-        rv = NS_NewHTMLContentSink(getter_AddRefs(htmlsink), this, uri,
-                                   docShell, aChannel);
+          rv = NS_NewHTMLContentSink(getter_AddRefs(htmlsink), this, uri,
+                                     docShell, aChannel);
 
-        sink = htmlsink;
+          sink = htmlsink;
+        }
       }
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1788,6 +1809,8 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
+  PRBool loadAsHtml5 = nsContentUtils::GetBoolPref("html5.enable", PR_TRUE);
+
   nsresult rv = NS_OK;
 
   // If we already have a parser we ignore the document.open call.
@@ -1919,6 +1942,56 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     }
   }
 
+  if (loadAsHtml5) {
+    // Really zap all children (copied from nsDocument.cpp -- maybe factor into a method)
+    PRUint32 count = mChildren.ChildCount();
+    { // Scope for update
+      MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, PR_TRUE);    
+      for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
+        nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
+        // XXXbz this is backwards from how ContentRemoved normally works.  That
+        // is, usually it's dispatched after the content has been removed from
+        // the tree.
+        nsNodeUtils::ContentRemoved(this, content, i);
+        content->UnbindFromTree();
+        mChildren.RemoveChildAt(i);
+      }
+    }
+  }
+
+  // XXX This is a nasty workaround for a scrollbar code bug
+  // (http://bugzilla.mozilla.org/show_bug.cgi?id=55334).
+
+  // Hold on to our root element
+  nsCOMPtr<nsIContent> root = GetRootContent();
+
+  if (root) {
+    PRInt32 rootIndex = mChildren.IndexOfChild(root);
+    NS_ASSERTION(rootIndex >= 0, "Root must be in list!");
+    
+    PRUint32 count = root->GetChildCount();
+
+    // Remove all the children from the root.
+    while (count-- > 0) {
+      root->RemoveChildAt(count, PR_TRUE);
+    }
+
+    count = root->GetAttrCount();
+
+    // Remove all attributes from the root element
+    while (count-- > 0) {
+      const nsAttrName* name = root->GetAttrNameAt(count);
+      // Hold a strong reference here so that the atom doesn't go away during
+      // UnsetAttr.
+      nsCOMPtr<nsIAtom> localName = name->LocalName();
+      root->UnsetAttr(name->NamespaceID(), localName, PR_FALSE);
+    }
+
+    // Remove the root from the childlist
+    mChildren.RemoveChildAt(rootIndex);
+    mCachedRootContent = nsnull;
+  }
+
   // Call Reset(), this will now do the full reset
   Reset(channel, group);
   if (baseURI) {
@@ -1939,7 +2012,12 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // resetting the document.
   mSecurityInfo = securityInfo;
 
-  mParser = do_CreateInstance(kCParserCID, &rv);
+  if (loadAsHtml5) {
+    mParser = nsHtml5Module::NewHtml5Parser();
+    rv = NS_OK;
+  } else {
+    mParser = do_CreateInstance(kCParserCID, &rv);  
+  }
 
   // This will be propagated to the parser when someone actually calls write()
   mContentType = aContentType;
@@ -1947,18 +2025,22 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   mWriteState = eDocumentOpened;
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIHTMLContentSink> sink;
+    if (loadAsHtml5) {
+      nsHtml5Module::Initialize(mParser, this, uri, shell, channel);
+    } else {
+      nsCOMPtr<nsIHTMLContentSink> sink;
 
-    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, uri, shell,
-                               channel);
-    if (NS_FAILED(rv)) {
-      // Don't use a parser without a content sink.
-      mParser = nsnull;
-      mWriteState = eNotWriting;
-      return rv;
+      rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, uri, shell,
+                                 channel);
+      if (NS_FAILED(rv)) {
+        // Don't use a parser without a content sink.
+        mParser = nsnull;
+        mWriteState = eNotWriting;
+        return rv;
+      }
+
+      mParser->SetContentSink(sink);
     }
-
-    mParser->SetContentSink(sink);
   }
 
   // Prepare the docshell and the document viewer for the impending
@@ -2255,13 +2337,7 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                        const nsAString& aLocalName,
                                        nsIDOMNodeList** aReturn)
 {
-  nsAutoString tmp(aLocalName);
-
-  if (!IsXHTML()) {
-    ToLowerCase(tmp); // HTML elements are lower case internally.
-  }
-
-  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, tmp, aReturn);
+  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
 }
 
 NS_IMETHODIMP
@@ -4056,31 +4132,6 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
 
   return rv;
 }
-
-#ifdef DEBUG
-nsresult
-nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
-                           PRInt32 aNamespaceID, PRBool aDocumentDefaultType,
-                           nsIContent** aResult)
-{
-  NS_ASSERTION(!aDocumentDefaultType || IsXHTML() ||
-               aNamespaceID == kNameSpaceID_None,
-               "HTML elements in an HTML document should have "
-               "kNamespaceID_None as their namespace ID.");
-
-  if (IsXHTML() &&
-      (aDocumentDefaultType || aNamespaceID == kNameSpaceID_XHTML)) {
-    nsCAutoString name, lcName;
-    aName->ToUTF8String(name);
-    ToLowerCase(name, lcName);
-    NS_ASSERTION(lcName.Equals(name),
-                 "aName should be lowercase, fix caller.");
-  }
-
-  return nsDocument::CreateElem(aName, aPrefix, aNamespaceID,
-                                aDocumentDefaultType, aResult);
-}
-#endif
 
 nsresult
 nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
