@@ -958,7 +958,7 @@ static const char* gOggCodecs[] = {
 
 static const char* gOggMaybeCodecs[] = {
   nsnull
-}; 
+};
 
 static PRBool IsOggEnabled()
 {
@@ -1034,6 +1034,21 @@ PRBool nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
     return PR_TRUE;
   }
 #endif
+  return PR_FALSE;
+}
+
+/* static */
+PRBool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
+{
+#ifdef MOZ_OGG
+  if (IsOggType(nsDependentCString(aMIMEType)))
+    return PR_TRUE;
+#endif
+  // We should not return true for Wave types, since there are some
+  // Wave codecs actually in use in the wild that we don't support, and
+  // we should allow those to be handled by plugins or helper apps.
+  // Furthermore people can play Wave files on most platforms by other
+  // means.
   return PR_FALSE;
 }
 

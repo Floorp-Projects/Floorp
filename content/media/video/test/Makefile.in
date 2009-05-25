@@ -142,7 +142,6 @@ endif
 
 ifdef MOZ_WAVE
 _TEST_FILES += \
-		test_audioDocumentTitle.html \
 		big.wav \
 		test_bug463162.xhtml \
 		test_bug465498.html \
@@ -165,7 +164,6 @@ _TEST_FILES += \
 		test_wav_seek8.html \
 		test_wav_seek_past_end.html \
 		test_wav_seek_then_play.html \
-		test_wav_standalone.html \
 		test_wav_timeupdate1.html \
 		test_wav_timeupdate2.html \
 		test_wav_trailing.html \
@@ -182,6 +180,10 @@ _TEST_FILES += \
 		test_can_play_type_no_wave.html \
 		$(NULL)
 endif
+
+# Disabled since we don't play Wave files standalone, for now
+#		test_wav_standalone.html
+#		test_audioDocumentTitle.html
 
 ifdef MOZ_OGG
 ifdef MOZ_WAVE

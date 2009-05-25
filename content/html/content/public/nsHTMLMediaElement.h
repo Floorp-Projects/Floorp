@@ -205,8 +205,7 @@ public:
   void Freeze();
   void Thaw();
 
-  // Returns true if we can handle this MIME type in a <video> or <audio>
-  // element.
+  // Returns true if we can handle this MIME type.
   // If it returns true, then it also returns a null-terminated list
   // of supported codecs in *aSupportedCodecs, and a null-terminated list
   // of codecs that *may* be supported in *aMaybeSupportedCodecs. These
@@ -214,6 +213,12 @@ public:
   static PRBool CanHandleMediaType(const char* aMIMEType,
                                    const char*** aSupportedCodecs,
                                    const char*** aMaybeSupportedCodecs);
+
+  // Returns true if we should handle this MIME type when it appears
+  // as an <object> or as a toplevel page. If, in practice, our support
+  // for the type is more limited than appears in the wild, we should return
+  // false here even if CanHandleMediaType would return true.
+  static PRBool ShouldHandleMediaType(const char* aMIMEType);
 
   /**
    * Initialize data for available media types
