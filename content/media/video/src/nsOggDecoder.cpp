@@ -649,17 +649,18 @@ public:
         r = oggplay_step_decoding(mPlayer);
         mon.Enter();
 
-        // If PlayFrame is waiting, wake it up so we can run the
-        // decoder loop and move frames from the oggplay queue to our
-        // queue.
-        mon.NotifyAll();
-
         // Check whether decoding the last frame required us to read data
         // that wasn't available at the start of the frame. That means
         // we should probably start buffering.
         if (decoder->mDecoderPosition > initialDownloadPosition) {
           mDecodeStateMachine->mBufferExhausted = PR_TRUE;
         }
+
+        // If PlayFrame is waiting, wake it up so we can run the
+        // decoder loop and move frames from the oggplay queue to our
+        // queue. Also needed to wake up the decoder loop that waits
+        // for a frame to be ready to display.
+        mon.NotifyAll();
       }
     }
 
@@ -1385,7 +1386,8 @@ nsresult nsOggDecodeStateMachine::Run()
 
         // Get the decoded frames and store them in our queue of decoded frames
         QueueDecodedFrames();
-        while (mDecodedFrames.IsEmpty() && !mDecodingCompleted) {
+        while (mDecodedFrames.IsEmpty() && !mDecodingCompleted &&
+               !mBufferExhausted) {
           mon.Wait(PR_MillisecondsToInterval(PRInt64(mCallbackPeriod*500)));
           if (mState != DECODER_STATE_DECODING)
             break;
@@ -1408,7 +1410,7 @@ nsresult nsOggDecodeStateMachine::Run()
           PlayVideo(mDecodedFrames.Peek());
         }
 
-        if (mBufferExhausted && mState == DECODER_STATE_DECODING &&
+        if (mBufferExhausted &&
             mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING &&
             !mDecoder->mReader->Stream()->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
             !mDecoder->mReader->Stream()->IsSuspendedByCache()) {
@@ -1444,6 +1446,9 @@ nsresult nsOggDecodeStateMachine::Run()
           LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
         } else {
           if (mBufferExhausted) {
+            // This will wake up the step decode thread and force it to
+            // call oggplay_step_decoding at least once. This guarantees
+            // we make progress.
             mBufferExhausted = PR_FALSE;
             mon.NotifyAll();
           }
