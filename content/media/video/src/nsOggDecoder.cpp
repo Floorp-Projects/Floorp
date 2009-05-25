@@ -432,6 +432,10 @@ protected:
   // media stream.
   nsresult Seek(float aTime, nsChannelReader* aReader);
 
+  // Sets the current video and audio track to active in liboggplay.
+  // Called from the decoder thread only.
+  void SetTracksActive();
+
 private:
   // *****
   // The follow fields are only accessed by the decoder thread
@@ -1494,11 +1498,7 @@ nsresult nsOggDecodeStateMachine::Run()
         // Reactivate all tracks. Liboggplay deactivates tracks when it
         // reads to the end of stream, but they must be reactivated in order
         // to start reading from them again.
-        for (int i = 0; i < oggplay_get_num_tracks(mPlayer); ++i) {
-         if (oggplay_set_track_active(mPlayer, i) < 0)  {
-            LOG(PR_LOG_ERROR, ("Could not set track %d active", i));
-          }
-        }
+        SetTracksActive();
 
         mon.Enter();
         mDecoder->StartProgressUpdates();
@@ -1714,11 +1714,9 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
         oggplay_get_audio_channels(mPlayer, i, &mAudioChannels);
         LOG(PR_LOG_DEBUG, ("samplerate: %d, channels: %d", mAudioRate, mAudioChannels));
       }
- 
-      if (oggplay_set_track_active(mPlayer, i) < 0)  {
-        LOG(PR_LOG_ERROR, ("Could not set track %d active", i));
-      }
     }
+
+    SetTracksActive();
 
     if (mVideoTrack == -1) {
       oggplay_set_callback_num_frames(mPlayer, mAudioTrack, OGGPLAY_FRAMES_PER_CALLBACK);
@@ -1755,6 +1753,19 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
       if (mState == DECODER_STATE_SHUTDOWN)
         return;
     }
+  }
+}
+
+void nsOggDecodeStateMachine::SetTracksActive()
+{
+  if (mVideoTrack != -1 && 
+      oggplay_set_track_active(mPlayer, mVideoTrack) < 0)  {
+    LOG(PR_LOG_ERROR, ("Could not set track %d active", mVideoTrack));
+  }
+
+  if (mAudioTrack != -1 && 
+      oggplay_set_track_active(mPlayer, mAudioTrack) < 0)  {
+    LOG(PR_LOG_ERROR, ("Could not set track %d active", mAudioTrack));
   }
 }
 
