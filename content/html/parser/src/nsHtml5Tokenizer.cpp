@@ -2821,47 +2821,6 @@ nsHtml5Tokenizer::emitDoctypeToken()
   nsHtml5Portability::releaseString(systemIdentifier);
 }
 
-PRUnichar 
-nsHtml5Tokenizer::read()
-{
-  PRUnichar c;
-  pos++;
-  if (pos == endPos) {
-    return '\0';
-  }
-  linePrev = line;
-  colPrev = col;
-  if (nextCharOnNewLine) {
-    line++;
-    col = 1;
-    nextCharOnNewLine = PR_FALSE;
-  } else {
-    col++;
-  }
-  c = buf[pos];
-  switch(c) {
-    case '\r': {
-      nextCharOnNewLine = PR_TRUE;
-      buf[pos] = '\n';
-      prev = '\r';
-      return '\n';
-    }
-    case '\n': {
-      if (prev == '\r') {
-        return '\0';
-      }
-      nextCharOnNewLine = PR_TRUE;
-      break;
-    }
-    case '\0': {
-      c = buf[pos] = 0xfffd;
-      break;
-    }
-  }
-  prev = c;
-  return c;
-}
-
 void 
 nsHtml5Tokenizer::internalEncodingDeclaration(nsString* internalCharset)
 {
