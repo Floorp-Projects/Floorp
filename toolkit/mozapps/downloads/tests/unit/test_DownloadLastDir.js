@@ -56,8 +56,15 @@ function run_test()
   do_check_eq(gDownloadLastDir.file, null);
   gDownloadLastDir.file = tmpDir;
 
-  let pb = Cc["@mozilla.org/privatebrowsing;1"].
-           getService(Ci.nsIPrivateBrowsingService);
+  let pb;
+  try {
+    pb = Cc["@mozilla.org/privatebrowsing;1"].
+         getService(Ci.nsIPrivateBrowsingService);
+  } catch (e) {
+    print("PB service is not available, bail out");
+    return;
+  }
+
   pb.privateBrowsingEnabled = true;
   do_check_eq(gDownloadLastDir.file, null);
 
