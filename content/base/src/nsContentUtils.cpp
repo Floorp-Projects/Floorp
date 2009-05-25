@@ -162,6 +162,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsCPrefetchService.h"
 #include "nsIChromeRegistry.h"
 #include "nsIMIMEHeaderParam.h"
+#include "nsHtml5Module.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3584,6 +3585,44 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   // for compiling event handlers... so just bail out.
   nsCOMPtr<nsIDocument> document = node->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
+  
+  PRBool bCaseSensitive = document->IsCaseSensitive();
+
+  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
+  PRBool bHTML = htmlDoc && !bCaseSensitive;
+
+  if (bHTML && nsContentUtils::GetBoolPref("html5.enable", PR_TRUE)) {
+    // See if the document has a cached fragment parser. nsHTMLDocument is the
+    // only one that should really have one at the moment.
+    nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
+    if (parser) {
+      // Get the parser ready to use.
+      parser->Reset();
+    }
+    else {
+      // Create a new parser for this operation.
+      parser = nsHtml5Module::NewHtml5Parser();
+      if (!parser) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      document->SetFragmentParser(parser);
+    }
+    nsCOMPtr<nsIDOMDocumentFragment> frag;
+    rv = NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
+    NS_ASSERTION(contextAsContent, "Context node did not QI to nsIContent");
+    
+    parser->ParseFragment(aFragment, 
+                          frag, 
+                          contextAsContent->Tag(), 
+                          contextAsContent->GetNameSpaceID(), 
+                          (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
+  
+    NS_ADDREF(*aReturn = frag);
+    return NS_OK;
+  }
 
   nsAutoTArray<nsString, 32> tagStack;
   nsAutoString uriStr, nameStr;
@@ -3641,14 +3680,9 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   }
 
   nsCAutoString contentType;
-  PRBool bCaseSensitive = PR_TRUE;
   nsAutoString buf;
   document->GetContentType(buf);
   LossyCopyUTF16toASCII(buf, contentType);
-  bCaseSensitive = document->IsCaseSensitive();
-
-  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
-  PRBool bHTML = htmlDoc && !bCaseSensitive;
 
   // See if the document has a cached fragment parser. nsHTMLDocument is the
   // only one that should really have one at the moment.

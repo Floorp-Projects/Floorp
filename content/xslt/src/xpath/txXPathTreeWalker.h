@@ -143,8 +143,9 @@ public:
     static PRBool isProcessingInstruction(const txXPathNode& aNode);
     static PRBool isComment(const txXPathNode& aNode);
     static PRBool isText(const txXPathNode& aNode);
-
-#ifdef TX_EXE
+#ifndef TX_EXE
+    static PRBool isHTMLElementInHTMLDocument(const txXPathNode& aNode);
+#else
 private:
     static void appendNodeValueHelper(NodeDefinition* aNode, nsAString& aResult);
 #endif
