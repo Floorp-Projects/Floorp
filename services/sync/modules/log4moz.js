@@ -452,7 +452,6 @@ function FileAppender(file, formatter) {
 }
 FileAppender.prototype = {
   __proto__: Appender.prototype,
-
   __fos: null,
   get _fos() {
     if (!this.__fos)
@@ -461,10 +460,19 @@ FileAppender.prototype = {
   },
 
   openStream: function FApp_openStream() {
-    this.__fos = Cc["@mozilla.org/network/file-output-stream;1"].
-      createInstance(Ci.nsIFileOutputStream);
-    let flags = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
-    this.__fos.init(this._file, flags, PERMS_FILE, 0);
+    try {
+      let __fos = Cc["@mozilla.org/network/file-output-stream;1"].
+        createInstance(Ci.nsIFileOutputStream);
+      let flags = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
+      __fos.init(this._file, flags, PERMS_FILE, 0);
+
+      this.__fos = Cc["@mozilla.org/intl/converter-output-stream;1"]
+            .createInstance(Ci.nsIConverterOutputStream);
+      this.__fos.init(__fos, "UTF-8", 4096,
+            Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+    } catch(e) {
+      dump("Error opening stream:\n" + e);
+    }
   },
 
   closeStream: function FApp_closeStream() {
@@ -482,7 +490,7 @@ FileAppender.prototype = {
     if (message === null || message.length <= 0)
       return;
     try {
-      this._fos.write(message, message.length);
+      this._fos.writeString(message);
     } catch(e) {
       dump("Error writing file:\n" + e);
     }
@@ -524,11 +532,12 @@ RotatingFileAppender.prototype = {
       return;
     try {
       this.rotateLogs();
-      this._fos.write(message, message.length);
+      FileAppender.prototype.doAppend.call(this, message);
     } catch(e) {
-      dump("Error writing file:\n" + e);
+      dump("Error writing file:" + e + "\n");
     }
   },
+
   rotateLogs: function RFApp_rotateLogs() {
     if(this._file.exists() &&
        this._file.fileSize < this._maxSize)
