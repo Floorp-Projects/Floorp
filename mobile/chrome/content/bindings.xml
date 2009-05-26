@@ -32,19 +32,19 @@
   </binding>
 
   <binding id="popup_autocomplete">
-    <content hidden="true">
+    <content hidden="true" noresults="&noResults.label;">
       <xul:vbox class="autocomplete-box" flex="1">
         <xul:scrollbox orient="vertical"
                        class="autocomplete-items"
                        anonid="autocomplete-items"
                        flex="1000">
-          <xul:label/>
-          <xul:label/>
-          <xul:label/>
-          <xul:label/>
-          <xul:label/>
-          <xul:label/>
-          <xul:label/>
+          <xul:label value=""/>
+          <xul:label value=""/>
+          <xul:label value=""/>
+          <xul:label value=""/>
+          <xul:label value=""/>
+          <xul:label value=""/>
+          <xul:label value=""/>
         </xul:scrollbox>
         <children/>
       </xul:vbox>
@@ -139,14 +139,14 @@
           let controller = this.input.controller;
           let searchString = controller.searchString;
 
-          let matchCount = this._matchCount;
-          let children = this._items.childNodes.length;
           // Need to iterate over all our existing entries at a minimum, to make
           // sure they're either updated or cleared out. We might also have to
           // add extra items.
-          let iterCount = Math.max(children, matchCount);
+          let matchCount = this._matchCount;
+          let children = this._items.childNodes;
+          let iterCount = Math.max(children.length, matchCount);
           for (let i = 0; i < iterCount; ++i) {
-            let label = this._items.childNodes.item(i);
+            let label = children.item(i);
             if (!label) {
               // create a new entry
               label = document.createElementNS(this._XULNS, "label");
@@ -154,6 +154,19 @@
             }
 
             label._index = i;
+
+            // Use the third item as a "no results" entry if needed.
+            // Kind of gross, but using a separate element makes layout more
+            // complicated outside of the scrollbox, and makes iteration over
+            // childNodes more complicated inside the scrollbox (also
+            // getElementsByTagName seems to be broken for the anonymous labels
+            // hardcoded above in the <content>).
+            if (i == 3 && matchCount == 0) {
+              label.setAttribute("value", this.getAttribute("noresults"));
+              label.setAttribute("class", "autocomplete-item noresults");
+
+              continue;
+            }
 
             // Check whether there's an entry to fill
             if (i > matchCount - 1) {
