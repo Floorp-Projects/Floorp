@@ -321,7 +321,7 @@ namespace nanojit
 			main = ((intptr_t)_stats.codeStart & (NJ_PAGE_SIZE-1)) ? bytesFromTop(_stats.codeStart)+1 : 0;
 			main += bytesToBottom(_nIns)+1;
 		}
-		//fprintf(stderr,"size %d, exit is %d, main is %d, page count %d, sizeof %d\n", (int)((pages) * NJ_PAGE_SIZE + main + exit),(int)exit, (int)main, (int)_stats.pages, (int)sizeof(Page));
+		//nj_dprintf("size %d, exit is %d, main is %d, page count %d, sizeof %d\n", (int)((pages) * NJ_PAGE_SIZE + main + exit),(int)exit, (int)main, (int)_stats.pages, (int)sizeof(Page));
 		return (pages) * NJ_PAGE_SIZE + main + exit;		
 	}
 
@@ -750,7 +750,7 @@ namespace nanojit
 		_stats.pages = 0;
 		_stats.codeStart = _nIns-1;
 		_stats.codeExitStart = _nExitIns-1;		
-		//fprintf(stderr,"pageReset %d start %x exit start %x\n", _stats.pages, (int)_stats.codeStart, (int)_stats.codeExitStart);
+		//nj_dprintf("pageReset %d start %x exit start %x\n", _stats.pages, (int)_stats.codeStart, (int)_stats.codeExitStart);
 #endif /* PERFM */
 
         _epilogue = genEpilogue();
@@ -788,7 +788,7 @@ namespace nanojit
         gen(rdr, loopJumps);
 		frag->loopEntry = _nIns;
 		//frag->outbound = core->config.tree_opt? _latestGuard : 0;
-		//fprintf(stderr, "assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
+		//nj_dprintf("assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 
         if (!error()) {
 		    // patch all branches
@@ -862,7 +862,7 @@ namespace nanojit
 			// let the fragment manage the pages if we're using trees and there are branches
 			Page* manage = (_frago->core()->config.tree_opt) ? handoverPages() : 0;			
 			frag->setCode(code, manage); // root of tree should manage all pages
-			//fprintf(stderr, "endAssembly frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
+			//nj_dprintf("endAssembly frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 		}
 		else
 		{
@@ -1847,7 +1847,7 @@ namespace nanojit
 			}
 			else
 			{
-				_frago->core()->console << s << "\n";
+                nj_dprintf("%s\n", s);
 			}
 		}
 
