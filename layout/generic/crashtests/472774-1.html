@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style id="ss" type="text/css">
+
+div div:first-letter { font-size: 0%; }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("ss").textContent = "div div { height: 1px; }";
+}
+
+</script>
+</head>
+<body onload="boom();">
+
+<div style="-moz-column-width: 1px; word-wrap: break-word;"><div>ABCDE</div></div>
+
+</body>
+</html>
