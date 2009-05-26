@@ -813,8 +813,8 @@ struct ChildSheetListBuilder {
   }
 };
   
-static PRBool
-RebuildChildList(nsICSSRule* aRule, void* aBuilder)
+PRBool
+nsCSSStyleSheet::RebuildChildList(nsICSSRule* aRule, void* aBuilder)
 {
   PRInt32 type;
   aRule->GetType(type);
@@ -848,6 +848,7 @@ RebuildChildList(nsICSSRule* aRule, void* aBuilder)
 
   (*builder->sheetSlot) = static_cast<nsCSSStyleSheet*>(cssSheet.get());
   builder->SetParentLinks(*builder->sheetSlot);
+  builder->sheetSlot = &(*builder->sheetSlot)->mNext;
   return PR_TRUE;
 }
 
@@ -869,7 +870,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
   mOrderedRules.EnumerateForwards(SetStyleSheetReference, aPrimarySheet);
 
   ChildSheetListBuilder builder = { &mFirstChild, aPrimarySheet };
-  mOrderedRules.EnumerateForwards(RebuildChildList, &builder);
+  mOrderedRules.EnumerateForwards(nsCSSStyleSheet::RebuildChildList, &builder);
 
   RebuildNameSpaces();
 }
