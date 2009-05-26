@@ -260,6 +260,8 @@ class nsHtml5Parser : public nsIParser,
      */
     virtual void ScriptDidExecute();
     
+    virtual PRBool CanInterrupt();
+    
     /* End nsIParser  */
 
      //*********************************************

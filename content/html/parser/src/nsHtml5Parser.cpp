@@ -866,16 +866,6 @@ nsHtml5Parser::SetParser(nsIParser* aParser)
 void
 nsHtml5Parser::FlushPendingNotifications(mozFlushType aType)
 {
-  // Only flush tags if we're not doing the notification ourselves
-  // (since we aren't reentrant)
-  if (!mInNotification) {
-    mTreeBuilder->Flush();
-    if (aType >= Flush_Layout) {
-      // Make sure that layout has started so that the reflow flush
-      // will actually happen.
-      StartLayout(PR_TRUE);
-    }
-  }
 }
 
 NS_IMETHODIMP
@@ -1545,6 +1535,12 @@ nsHtml5Parser::ScriptDidExecute()
 {
   NS_ASSERTION(mScriptsExecuting > 0, "Too many calls to ScriptDidExecute");
   --mScriptsExecuting;
+}
+
+PRBool
+nsHtml5Parser::CanInterrupt()
+{
+  return !mFragmentMode;
 }
 
 #ifdef DEBUG
