@@ -238,6 +238,8 @@ var Browser = {
     os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
     os.removeObserver(gXPInstallObserver, "xpinstall-download-started");
     os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+    window.controllers.removeController(this);
+    window.controllers.removeController(BrowserUI);
   },
 
   updateViewportSize: function() {
