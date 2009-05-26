@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Without floats, no clearance applies, thus margin-top of #clear
+     should collapse with margin-bottom of its parent element. -->
+<style type="text/css">
+#parent {
+ margin-bottom: 10px;
+}
+.separator {
+ height: 20px;
+ background-color: green;
+}
+#clear {
+ clear: left;
+ margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div id="parent">
+ <div class="separator"></div>
+ <div id="clear"></div>
+</div>
+<div class="separator"></div>
+</body>
+</html>
