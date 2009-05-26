@@ -2788,7 +2788,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntryInfo( HREG hReg, RKEY key, char *name,
  *    bufsize  - size of buffer
  * ---------------------------------------------------------------------
  */
-VR_INTERFACE(REGERR) NR_RegGetEntryString( HREG  hReg, RKEY  key, char  *name,
+VR_INTERFACE(REGERR) NR_RegGetEntryString( HREG  hReg, RKEY  key, const char *name,
                             char  *buffer, uint32 bufsize)
 {
     REGERR      err;
