@@ -75,6 +75,7 @@ CPPSRCS   = \
 # currently building the toolkit version, but other things need it.
 EXTRA_JS_MODULES = \
 	../../../../toolkit/mozapps/downloads/src/DownloadUtils.jsm \
+	../../../../toolkit/mozapps/downloads/src/DownloadLastDir.jsm \
 	$(NULL)
 
 EXTRA_COMPONENTS = nsDownloadProgressListener.js
