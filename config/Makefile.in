@@ -166,9 +166,9 @@ check-python-modules::
 	done
 
 check-jar-mn::
-	make -C tests/src-simple check-jar
-	make -C tests/src-simple check-flat
-	make -C tests/src-simple check-flat USE_EXTENSION_MANIFEST=1
+	$(MAKE) -C tests/src-simple check-jar
+	$(MAKE) -C tests/src-simple check-flat
+	$(MAKE) -C tests/src-simple check-flat USE_EXTENSION_MANIFEST=1
 ifneq (,$(filter-out WINNT OS2,$(OS_ARCH)))
-	make -C tests/src-simple check-symlink
+	$(MAKE) -C tests/src-simple check-symlink
 endif
