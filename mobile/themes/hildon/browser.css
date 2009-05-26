@@ -398,6 +398,14 @@ placeitem .button-text {
   background-color: grey;
 }
 
+.autocomplete-item.noresults {
+  text-align: center;
+  font-style: italic;
+  color: grey;
+  background-color: white;
+  border-bottom: none;
+}
+
 .ac-result-type-bookmark {
   list-style-image: url("chrome://browser/skin/images/page-starred.png");
   width: 16px;

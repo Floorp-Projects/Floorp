@@ -268,6 +268,7 @@
                    maxrows="6"
                    readonly="true"
                    completeselectedindex="true"
+                   minresultsforpopup="0"
                    flex="1"
                    ontextentered="BrowserUI.goToURI();"
                    clickSelectsAll="true"/>
