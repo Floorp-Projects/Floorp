@@ -278,16 +278,7 @@ description {
 }
   
 .text-link:focus {
-  color: red;
   border: 1px dotted -moz-DialogText;
-}
-  
-.text-link:hover:active {
-  color: red;
-}
-
-.text-link[visited="true"] {
-  color: purple;
 }
 
 .toolbar-focustarget {
