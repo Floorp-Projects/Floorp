@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Autocomplete Widget Test 3"
+<window title="Autocomplete Widget Test 4"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" 
@@ -12,9 +12,11 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-<textbox id="autocomplete" type="autocomplete"
-         autocompletesearch="simple"
-         onsearchcomplete="checkResult();"/>
+<textbox id="autocomplete"
+         type="autocomplete"
+         completedefaultindex="true"
+         onsearchcomplete="searchComplete();"
+         autocompletesearch="simple"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -83,94 +85,130 @@ componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete
 // Test Bug 325842 - completeDefaultIndex
 
 SimpleTest.waitForExplicitFinish();
-setTimeout(startTest, 0);
+setTimeout(nextTest, 0);
 
-var currentTest = 0;
+var currentTest = null;
 
 // Note the entries for these tests (key) are incremental.
 const tests = [
-  { completeDefaultIndex: "false", key: "r", result: "r",
-    start: 1, end: 1 },
-  { completeDefaultIndex: "true", key: "e", result: "result",
-    start: 2, end: 6 },
-  { completeDefaultIndex: "true", key: "t", result: "ret >> Result",
-    start: 3, end: 13 }
+  {
+    desc: "HOME key remove selection",
+    key: "VK_HOME",
+    removeSelection: true,
+    result: "re",
+    start: 0, end: 0
+  },
+  {
+    desc: "LEFT key remove selection",
+    key: "VK_LEFT",
+    removeSelection: true,
+    result: "re",
+    start: 1, end: 1
+  },
+  { desc: "RIGHT key remove selection",
+    key: "VK_RIGHT",
+    removeSelection: true,
+    result: "re",
+    start: 2, end: 2
+  },
+  { desc: "ENTER key remove selection",
+    key: "VK_RETURN",
+    removeSelection: true,
+    result: "re",
+    start: 2, end: 2
+  },
+  {
+    desc: "HOME key",
+    key: "VK_HOME",
+    removeSelection: false,
+    result: "Result",
+    start: 0, end: 0
+  },
+  {
+    desc: "LEFT key",
+    key: "VK_LEFT",
+    removeSelection: false,
+    result: "Result",
+    start: 5, end: 5
+  },
+  { desc: "RIGHT key",
+    key: "VK_RIGHT",
+    removeSelection: false,
+    result: "Result",
+    start: 6, end: 6
+  },
+  { desc: "ENTER key",
+    key: "VK_RETURN",
+    removeSelection: false,
+    result: "Result",
+    start: 6, end: 6
+  },
 ];
 
-function startTest() {
-  var autocomplete = $("autocomplete");
-
-  // These should not be set by default.
-  is(autocomplete.hasAttribute("completedefaultindex"), false,
-     "completedefaultindex not set by default");
-
-  autocomplete.completeDefaultIndex = "true";
-
-  is(autocomplete.getAttribute("completedefaultindex"), "true",
-     "completedefaultindex attribute set correctly");
-  is(autocomplete.completeDefaultIndex, true,
-     "autoFill getter returned correctly");
-
-  autocomplete.completeDefaultIndex = "false";
-
-  is(autocomplete.getAttribute("completedefaultindex"), "false",
-     "completedefaultindex attribute set to false correctly");
-  is(autocomplete.completeDefaultIndex, false,
-     "completeDefaultIndex getter returned false correctly");
-
-  checkNext();
-}
-
-function checkNext() {
-  var autocomplete = $("autocomplete");
-
-  autocomplete.completeDefaultIndex = tests[currentTest].completeDefaultIndex;
-  autocomplete.focus();
-
-  synthesizeKey(tests[currentTest].key, {});
-}
-
-function checkResult() {
-  var autocomplete = $("autocomplete");
-  var style = window.getComputedStyle(autocomplete, "");
-
-  is(autocomplete.value, tests[currentTest].result,
-     "Test " + currentTest + ": autocomplete.value should equal '" +
-     tests[currentTest].result + "'");
-
-  is(autocomplete.selectionStart, tests[currentTest].start,
-     "Test " + currentTest + ": autocomplete selection should start at " +
-     tests[currentTest].start);
-
-  is(autocomplete.selectionEnd, tests[currentTest].end,
-     "Test " + currentTest + ": autocomplete selection should end at " +
-     tests[currentTest].end);
-
-  ++currentTest;
-
-  if (currentTest < tests.length)
-    setTimeout(checkNext, 0);
-  else {
-    // TODO (bug 494809): Autocomplete-in-the-middle should take in count RTL
-    // and complete on VK_RIGHT or VK_LEFT based on that.  It should also revert
-    // what user has typed to far if he moves in the opposite direction.
-    if (autocomplete.value.indexOf(">>") == -1) {
-      // Test result if user accepts autocomplete suggestion.
-      synthesizeKey("VK_RIGHT", {});
-      is(autocomplete.value, "Result",
-         "Test complete: autocomplete.value should equal 'Result'");
-      is(autocomplete.selectionStart, 6,
-         "Test complete: autocomplete selection should start at 6");
-      is(autocomplete.selectionEnd, 6,
-         "Test complete: autocomplete selection should end at 6");
-    }
-
+function nextTest() {
+  if (!tests.length) {
+    // No more tests to run, finish.
     setTimeout(function() {
       // Unregister the factory so that we don't get in the way of other tests
       componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
       SimpleTest.finish();
     }, 0);
+    return;
   }
+
+  var autocomplete = $("autocomplete");
+  autocomplete.value = "";
+  currentTest = tests.shift();
+
+  // HOME key works differently on Mac, so we skip tests using it.
+  if (currentTest.key == "VK_HOME" && navigator.platform.indexOf("Mac") != -1)
+    nextTest();
+  else
+    setTimeout(runCurrentTest, 0);
+}
+
+function runCurrentTest() {
+  var autocomplete = $("autocomplete");
+
+  autocomplete.focus();
+
+  synthesizeKey("r", {});
+  synthesizeKey("e", {});
+}
+
+function searchComplete() {
+  var autocomplete = $("autocomplete");
+  is(autocomplete.value, "result",
+     "Test '" + currentTest.desc + "': autocomplete.value should equal 'result'");
+
+  if (autocomplete.selectionStart == 2) {  // Finished inserting "re" string.
+    if (currentTest.removeSelection) {
+      // remove current selection
+      synthesizeKey("VK_DELETE", {});
+    }
+
+    synthesizeKey(currentTest.key, {});
+
+    checkResult();
+  }
+}
+
+function checkResult() {
+  var autocomplete = $("autocomplete");
+
+  is(autocomplete.value, currentTest.result,
+     "Test '" + currentTest.desc + "': autocomplete.value should equal '" +
+     currentTest.result + "'");
+
+  is(autocomplete.selectionStart, currentTest.start,
+     "Test '" + currentTest.desc + "': autocomplete selection should start at " +
+     currentTest.start);
+
+  is(autocomplete.selectionEnd, currentTest.end,
+     "Test '" + currentTest.desc + "': autocomplete selection should end at " +
+     currentTest.end);
+
+  setTimeout(nextTest, 0);
 }
 
 ]]>
