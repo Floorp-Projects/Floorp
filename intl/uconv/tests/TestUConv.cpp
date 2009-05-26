@@ -76,10 +76,10 @@ private:
 
 public:
 
-  void AddTrace(char * aTrace);
-  void DelTrace(char * aTrace);
-  void PrintError(char * aCall, int aError);
-  void PrintError(char * aCall, char * aMessage);
+  void AddTrace(const char * aTrace);
+  void DelTrace(const char * aTrace);
+  void PrintError(const char * aCall, const int aError);
+  void PrintError(const char * aCall, const char * aMessage);
 };
   
 //----------------------------------------------------------------------------
@@ -178,24 +178,24 @@ int main(int argc, char ** argv)
 
 const char * nsTestLog::kTraceDelimiter = ".";
 
-void nsTestLog::AddTrace(char * aTrace)
+void nsTestLog::AddTrace(const char * aTrace)
 {
   mTrace.Append(aTrace);
   mTrace.Append(kTraceDelimiter);
 }
 
-void nsTestLog::DelTrace(char * aTrace)
+void nsTestLog::DelTrace(const char * aTrace)
 {
   mTrace.Truncate(mTrace.Length() - strlen(aTrace) - strlen(kTraceDelimiter));
 }
 
-void nsTestLog::PrintError(char * aCall, int aError)
+void nsTestLog::PrintError(const char * aCall, const int aError)
 {
   const char * trace = mTrace.get();
   printf("ERROR at %s%s code=0x%x.\n", trace, aCall, aError);
 }
 
-void nsTestLog::PrintError(char * aCall, char * aMessage)
+void nsTestLog::PrintError(const char * aCall, const char * aMessage)
 {
   const char * trace = mTrace.get();
   printf("ERROR at %s%s reason: %s.\n", trace, aCall, aMessage);
@@ -206,7 +206,7 @@ void nsTestLog::PrintError(char * aCall, char * aMessage)
 
 nsresult nsTestUConv::TestEncoders()
 {
-  char * trace = "TestEncoders";
+  const char * trace = "TestEncoders";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
@@ -234,7 +234,7 @@ nsresult nsTestUConv::TestEncoders()
 
 nsresult nsTestUConv::TestDecoders()
 {
-  char * trace = "TestDecoders";
+  const char * trace = "TestDecoders";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
@@ -246,7 +246,7 @@ nsresult nsTestUConv::TestDecoders()
 
 nsresult nsTestUConv::TestCharsetManager()
 {
-  char * trace = "TestCharsetManager";
+  const char * trace = "TestCharsetManager";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
   nsAutoString name;
@@ -265,7 +265,7 @@ nsresult nsTestUConv::TestCharsetManager()
 
 nsresult nsTestUConv::DisplayDetectors()
 {
-  char * trace = "DisplayDetectors";
+  const char * trace = "DisplayDetectors";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
@@ -314,7 +314,7 @@ nsresult nsTestUConv::DisplayDetectors()
 
 nsresult nsTestUConv::DisplayCharsets()
 {
-  char * trace = "DisplayCharsets";
+  const char * trace = "DisplayCharsets";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
@@ -448,7 +448,7 @@ nsresult nsTestUConv::DisplayCharsets()
 
 nsresult nsTestUConv::TestTempBug()
 {
-  char * trace = "TestTempBug";
+  const char * trace = "TestTempBug";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
@@ -471,7 +471,7 @@ nsresult nsTestUConv::Encode(PRUnichar ** aSrc, PRUnichar * aSrcEnd,
                              char ** aDest, char * aDestEnd, 
                              const nsAFlatCString& aCharset)
 {
-  char * trace = "Encode";
+  const char * trace = "Encode";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
@@ -540,7 +540,7 @@ void nsTestUConv::PrintSpaces(int aCount)
 
 nsresult nsTestUConv::Main(int aArgC, char ** aArgV)
 {
-  char * trace = "Main";
+  const char * trace = "Main";
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 

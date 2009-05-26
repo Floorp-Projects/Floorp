@@ -64,7 +64,7 @@ CacheLogInit()
 
 
 void
-CacheLogPrintPath(PRLogModuleLevel level, char * format, nsIFile * item)
+CacheLogPrintPath(PRLogModuleLevel level, const char * format, nsIFile * item)
 {
     nsCAutoString path;
     nsresult rv = item->GetNativePath(path);
