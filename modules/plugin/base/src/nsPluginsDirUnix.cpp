@@ -168,10 +168,9 @@ static void LoadExtraSharedLibs()
     nsresult res;
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
     if (NS_SUCCEEDED(res) && (prefs != nsnull)) {
-        char *sonamesListFromPref = PREF_PLUGINS_SONAME;
         char *sonameList = NULL;
         PRBool prefSonameListIsSet = PR_TRUE;
-        res = prefs->GetCharPref(sonamesListFromPref, &sonameList);
+        res = prefs->GetCharPref(PREF_PLUGINS_SONAME, &sonameList);
         if (!sonameList) {
             // pref is not set, lets use hardcoded list
             prefSonameListIsSet = PR_FALSE;
@@ -247,7 +246,7 @@ static void LoadExtraSharedLibs()
                 // if user specified some bogus soname I overwrite it here,
                 // otherwise it'll decrease performance by calling popen() in SearchForSoname
                 // every time for each bogus name
-                prefs->SetCharPref(sonamesListFromPref, (const char *)sonameListToSave);
+                prefs->SetCharPref(PREF_PLUGINS_SONAME, (const char *)sonameListToSave);
             }
             PL_strfree(sonameList);
         }
