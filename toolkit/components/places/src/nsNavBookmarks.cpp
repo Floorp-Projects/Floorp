@@ -271,14 +271,10 @@ nsNavBookmarks::InitStatements()
   // get bookmark/folder/separator properties
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT b.id, "
-        "IFNULL( "
-          "(SELECT url FROM moz_places_temp "
-          "WHERE id = (SELECT fk FROM moz_bookmarks WHERE id = ?1)) "
-          ", "
-          "(SELECT url FROM moz_places "
-          "WHERE id = (SELECT fk FROM moz_bookmarks WHERE id = ?1)) "
-        "), b.title, b.position, b.fk, b.parent, b.type, b.folder_type, "
-        "b.dateAdded, b.lastModified "
+             "IFNULL((SELECT url FROM moz_places_temp WHERE id = b.fk), "
+                    "(SELECT url FROM moz_places WHERE id = b.fk)), "
+             "b.title, b.position, b.fk, b.parent, b.type, b.folder_type, "
+             "b.dateAdded, b.lastModified "
       "FROM moz_bookmarks b "
       "WHERE b.id = ?1"),
     getter_AddRefs(mDBGetItemProperties));
