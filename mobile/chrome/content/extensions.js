@@ -57,6 +57,7 @@ var ExtensionsView = {
   _msg: null,
   _dloadmgr: null,
   _restartCount: 0,
+  _observerIndex: -1,
 
   _isXPInstallEnabled: function isXPInstallEnabled() {
     let enabled = false;
@@ -192,7 +193,7 @@ var ExtensionsView = {
 
     this._extmgr = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
     this._dloadmgr = new XPInstallDownloadManager();
-    this._extmgr.addInstallListener(this._dloadmgr);
+    this._observerIndex = this._extmgr.addInstallListener(this._dloadmgr);
 
     // Now look and see if we're being opened by XPInstall
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -234,6 +235,10 @@ var ExtensionsView = {
       self.getAddonsFromLocal();
       self.getAddonsFromRepo("");
     }, 0);
+  },
+
+  uninit: function ev_uninit() {
+    this._extmgr.removeInstallListenerAt(this._observerIndex);
   },
 
   getAddonsFromLocal: function ev_getAddonsFromLocal() {

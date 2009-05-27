@@ -234,6 +234,8 @@ var Browser = {
   },
 
   shutdown: function() {
+    BrowserUI.uninit();
+
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
     os.removeObserver(gXPInstallObserver, "xpinstall-download-started");

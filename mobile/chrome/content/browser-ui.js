@@ -247,6 +247,10 @@ var BrowserUI = {
     DownloadsView.init();
   },
 
+  uninit : function() {
+    ExtensionsView.uninit();
+  },
+
   update : function(aState) {
     var icons = document.getElementById("urlbar-icons");
 
