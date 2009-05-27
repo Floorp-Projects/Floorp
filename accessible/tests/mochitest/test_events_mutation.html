@@ -53,15 +53,31 @@
       this.doNotExpectEvents = aDoNotExpectEvents;
       this.eventSeq = [];
 
+      /**
+       * Change default target (aNodeOrID) registered for the given event type.
+       */
       this.setTarget = function mutateA11yTree_setTarget(aEventType, aTarget)
       {
         var type = this.getA11yEventType(aEventType);
         for (var idx = 0; idx < this.eventSeq.length; idx++) {
           if (this.eventSeq[idx][0] == type) {
             this.eventSeq[idx][1] = aTarget;
-            break;
+            return idx;
           }
         }
+        return -1;
+      }
+
+      /**
+       * Replace the default target currently registered for a given event type
+       * with the nodes in the targets array.
+       */
+      this.setTargets = function mutateA11yTree_setTargets(aEventType, aTargets) {
+        var targetIdx = this.setTarget(aEventType, aTargets[0]);
+
+        var type = this.getA11yEventType(aEventType);
+        for (var i = 1; i < aTargets.length; i++)
+          this.eventSeq.splice(++targetIdx, 0, [type, aTargets[i]]);
       }
 
       // Implementation
@@ -140,7 +156,7 @@
      * Clone the node and append it to its parent.
      */
     function cloneAndAppendToDOM(aNodeOrID, aEventTypes,
-                                 aTargetFunc, aReorderTargetFunc)
+                                 aTargetsFunc, aReorderTargetFunc)
     {
       var eventTypes = aEventTypes || kShowEvents;
       var doNotExpectEvents = (aEventTypes == kNoEvents);
@@ -153,12 +169,12 @@
         var newElm = this.DOMNode.cloneNode(true);
         newElm.removeAttribute('id');
 
-        var target = this.mTargetFunc ?
-          this.mTargetFunc.call(null, newElm) : newElm;          
-        this.setTarget(kShowEvent, target);
+        var targets = aTargetsFunc ?
+          aTargetsFunc.call(null, newElm) : [newElm];
+        this.setTargets(kShowEvent, targets);
 
-        if (this.mReorderTargetFunc) {
-          var reorderTarget = this.mReorderTargetFunc.call(null, this.DOMNode);
+        if (aReorderTargetFunc) {
+          var reorderTarget = aReorderTargetFunc.call(null, this.DOMNode);
           this.setTarget(kReorderEvent, reorderTarget);
         }
 
@@ -169,16 +185,13 @@
       {
         return aNodeOrID + " clone and append to DOM.";
       }
-
-      this.mTargetFunc = aTargetFunc;
-      this.mReorderTargetFunc = aReorderTargetFunc;
     }
 
     /**
      * Removes the node from DOM.
      */
     function removeFromDOM(aNodeOrID, aEventTypes,
-                           aTargetFunc, aReorderTargetFunc)
+                           aTargetsFunc, aReorderTargetFunc)
     {
       var eventTypes = aEventTypes || kHideEvents;
       var doNotExpectEvents = (aEventTypes == kNoEvents);
@@ -196,8 +209,8 @@
         return aNodeOrID + " remove from DOM.";
       }
 
-      if (aTargetFunc && (eventTypes & kHideEvent))
-        this.setTarget(kHideEvent, aTargetFunc.call(null, this.DOMNode));
+      if (aTargetsFunc && (eventTypes & kHideEvent))
+        this.setTargets(kHideEvent, aTargetsFunc.call(null, this.DOMNode));
 
       if (aReorderTargetFunc && (eventTypes & kReorderEvent))
         this.setTarget(kReorderEvent,
@@ -226,8 +239,38 @@
       }
     }
 
-    function getFirstChild(aNode) { return aNode.firstChild; }
-    function getParent(aNode) { return aNode.parentNode; }
+    /**
+     * Target getters.
+     */
+    function getFirstChild(aNode)
+    {
+      return [aNode.firstChild];
+    }
+
+    function getNEnsureFirstChild(aNode)
+    {
+      var node = aNode.firstChild;
+      getAccessible(node);
+      return [node];
+    }
+
+    function getNEnsureChildren(aNode)
+    {
+      var children = [];
+      var node = aNode.firstChild;
+      do {
+        children.push(node);
+        getAccessible(node);
+        node = node.nextSibling;
+      } while (node);
+
+      return children;
+    }
+
+    function getParent(aNode)
+    {
+      return aNode.parentNode;
+    }
 
     /**
      * Do tests.
@@ -289,8 +332,15 @@
       gQueue.push(new cloneAndAppendToDOM(id, kShowEvents, getFirstChild,
                                           getParent));
 
-      // XXX: bug 475503, there is no hide event
-      gQueue.push(new removeFromDOM(id, kReorderEvent, getFirstChild, getParent));
+      // Hide event for accessible child of unaccessible removed DOM node and
+      // reorder event for its parent.
+      gQueue.push(new removeFromDOM(id, kHideEvents,
+                                    getNEnsureFirstChild, getParent));
+
+      // Hide events for accessible children of unaccessible removed DOM node
+      // and reorder event for its parent.
+      gQueue.push(new removeFromDOM("child4", kHideEvents,
+                                    getNEnsureChildren, getParent));
 
       // Show/hide events by creating new accessible DOM node and replacing
       // old one.
@@ -343,6 +393,7 @@
       <span id="child1"></span>
       <span id="child2" role="listitem"></span>
       <span id="child3"><span role="listitem"></span></span>
+      <span id="child4"><span role="listitem"></span><span role="listitem"></span></span>
     </div>
 
     <a id="link6" href="http://www.google.com">Link #6</a>
