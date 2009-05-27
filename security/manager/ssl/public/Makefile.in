@@ -71,7 +71,6 @@ XPIDLSRCS = \
     nsIX509Cert3.idl \
     nsIX509CertDB2.idl \
     nsIX509CertList.idl \
-    nsIPKCS11.idl \
     nsIPKCS11Slot.idl \
     nsIPK11TokenDB.idl \
     nsICertPickDialogs.idl \
