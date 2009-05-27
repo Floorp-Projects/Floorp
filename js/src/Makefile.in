@@ -75,7 +75,7 @@ MODULE_OPTIMIZE_FLAGS = -O2 -ip
 #XXX: do we want different INTERP_OPTIMIZER flags here?
 endif
 else # not INTEL_CXX
-MODULE_OPTIMIZE_FLAGS = -Os -fstrict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
+MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
 # Special optimization flags for jsinterp.c
 INTERP_OPTIMIZER = -O3 -fstrict-aliasing
 endif
