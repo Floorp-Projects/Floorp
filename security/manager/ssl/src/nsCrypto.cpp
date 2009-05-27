@@ -251,8 +251,9 @@ NS_IMPL_RELEASE(nsCRMFObject)
 
 // QueryInterface implementation for nsPkcs11
 NS_INTERFACE_MAP_BEGIN(nsPkcs11)
-  NS_INTERFACE_MAP_ENTRY(nsIPKCS11)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMPkcs11)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Pkcs11)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsPkcs11)
@@ -2944,18 +2945,33 @@ confirm_user(const PRUnichar *message)
 
 //Delete a PKCS11 module from the user's profile.
 NS_IMETHODIMP
-nsPkcs11::DeleteModule(const nsAString& aModuleName)
+nsPkcs11::Deletemodule(const nsAString& aModuleName, PRInt32* aReturn)
 {
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
   nsString errorMessage;
 
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
   if (aModuleName.IsEmpty()) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    *aReturn = JS_ERR_BAD_MODULE_NAME;
+    nssComponent->GetPIPNSSBundleString("DelModuleBadName", errorMessage);
+    alertUser(errorMessage.get());
+    return NS_OK;
+  }
+  nsString final;
+  nsAutoString temp;
+  //Make sure the user knows we're trying to do this.
+  nssComponent->GetPIPNSSBundleString("DelModuleWarning", final);
+  final.Append(NS_LITERAL_STRING("\n").get());
+  PRUnichar *tempUni = ToNewUnicode(aModuleName);
+  const PRUnichar *formatStrings[1] = { tempUni };
+  rv = nssComponent->PIPBundleFormatStringFromName("AddModuleName",
+                                                   formatStrings, 1, temp);
+  nsMemory::Free(tempUni);
+  final.Append(temp);
+  if (!confirm_user(final.get())) {
+    *aReturn = JS_ERR_USER_CANCEL_ACTION;
+    return NS_OK;
   }
   
   char *modName = ToNewCString(aModuleName);
@@ -2967,25 +2983,69 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
       nssComponent->ShutdownSmartCardThread(module);
       SECMOD_DestroyModule(module);
     }
-    rv = NS_OK;
+    if (modType == SECMOD_EXTERNAL) {
+      nssComponent->GetPIPNSSBundleString("DelModuleExtSuccess", errorMessage);
+      *aReturn = JS_OK_DEL_EXTERNAL_MOD;
+    } else {
+      nssComponent->GetPIPNSSBundleString("DelModuleIntSuccess", errorMessage);
+      *aReturn = JS_OK_DEL_INTERNAL_MOD;
+    }
   } else {
-    rv = NS_ERROR_FAILURE;
+    *aReturn = JS_ERR_DEL_MOD;
+    nssComponent->GetPIPNSSBundleString("DelModuleError", errorMessage);
   }
-  NS_Free(modName);
-  return rv;
+  alertUser(errorMessage.get());
+  return NS_OK;
 }
 
 //Add a new PKCS11 module to the user's profile.
 NS_IMETHODIMP
-nsPkcs11::AddModule(const nsAString& aModuleName, 
+nsPkcs11::Addmodule(const nsAString& aModuleName, 
                     const nsAString& aLibraryFullPath, 
                     PRInt32 aCryptoMechanismFlags, 
-                    PRInt32 aCipherFlags)
+                    PRInt32 aCipherFlags, PRInt32* aReturn)
 {
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  nsString final;
+  nsAutoString temp;
 
+  rv = nssComponent->GetPIPNSSBundleString("AddModulePrompt", final);
+  if (NS_FAILED(rv))
+    return rv;
+
+  final.Append(NS_LITERAL_STRING("\n").get());
+  
+  PRUnichar *tempUni = ToNewUnicode(aModuleName); 
+  const PRUnichar *formatStrings[1] = { tempUni };
+  rv = nssComponent->PIPBundleFormatStringFromName("AddModuleName",
+                                                   formatStrings, 1, temp);
+  nsMemory::Free(tempUni);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  final.Append(temp);
+  final.Append(NS_LITERAL_STRING("\n").get());
+
+  tempUni = ToNewUnicode(aLibraryFullPath);
+  formatStrings[0] = tempUni;
+  rv = nssComponent->PIPBundleFormatStringFromName("AddModulePath",
+                                                   formatStrings, 1, temp);
+  nsMemory::Free(tempUni);
+  if (NS_FAILED(rv))
+    return rv;
+
+  final.Append(temp);
+  final.Append(NS_LITERAL_STRING("\n").get());
+ 
+  if (!confirm_user(final.get())) {
+    // The user has canceled. So let's return now.
+    *aReturn = JS_ERR_USER_CANCEL_ACTION;
+    return NS_OK;
+  }
+  
   char *moduleName = ToNewCString(aModuleName);
   char *fullPath   = ToNewCString(aLibraryFullPath);
   PRUint32 mechFlags = SECMOD_PubMechFlagstoInternal(aCryptoMechanismFlags);
@@ -3007,12 +3067,22 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
   // what the return value for SEDMOD_AddNewModule is
   switch (srv) {
   case SECSuccess:
-    return NS_OK;
+    nssComponent->GetPIPNSSBundleString("AddModuleSuccess", final);
+    *aReturn = JS_OK_ADD_MOD;
+    break;
   case SECFailure:
+    nssComponent->GetPIPNSSBundleString("AddModuleFailure", final);
+    *aReturn = JS_ERR_ADD_MOD;
+    break;
   case -2:
+    nssComponent->GetPIPNSSBundleString("AddModuleDup", final);
+    *aReturn = JS_ERR_ADD_DUPLICATE_MOD;
+    break;
+  default:
+    NS_ASSERTION(0,"Bogus return value, this should never happen");
     return NS_ERROR_FAILURE;
   }
-  NS_ASSERTION(0,"Bogus return value, this should never happen");
-  return NS_ERROR_FAILURE;
+  alertUser(final.get());
+  return NS_OK;
 }
 
