@@ -3302,7 +3302,7 @@ NoteLValue(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN dflag = PND_
         if (dn->frameLevel() != tc->staticLevel) {
             /*
              * The above condition takes advantage of the all-ones nature of
-             * FREE_UPVAR_COOKIE, and the reserved frame level JS_BITMASK(16).
+             * FREE_UPVAR_COOKIE, and the reserved level FREE_STATIC_LEVEL.
              * We make a stronger assertion by excluding FREE_UPVAR_COOKIE.
              */
             JS_ASSERT_IF(dn->pn_cookie != FREE_UPVAR_COOKIE,
