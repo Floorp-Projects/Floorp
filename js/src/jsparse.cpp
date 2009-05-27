@@ -294,6 +294,13 @@ JSCompiler::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->queued = false;
+    funbox->inLoop = false;
+    for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
+        if (STMT_IS_LOOP(stmt)) {
+            funbox->inLoop = true;
+            break;
+        }
+    }
     funbox->level = tc->staticLevel;
     funbox->tcflags = TCF_IN_FUNCTION | (tc->flags & TCF_COMPILE_N_GO);
     return funbox;
@@ -743,6 +750,8 @@ JSCompiler::parse(JSObject *chain)
     }
     return pn;
 }
+
+JS_STATIC_ASSERT(FREE_STATIC_LEVEL == JS_BITMASK(JSFB_LEVEL_BITS));
 
 static inline bool
 SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
@@ -1956,19 +1965,13 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                             afunbox = afunbox->parent;
 
                             /*
-                             * afunbox cannot be null here. That is, we are
-                             * sure to find a function box whose level ==
-                             * lexdepLevel before walking off the top of the
-                             * funbox tree.
+                             * afunbox can't be null because we are sure
+                             * to find a function box whose level == lexdepLevel
+                             * before walking off the top of the funbox tree.
+                             * See bug 493260 comments 16-18.
                              *
-                             * Proof: lexdepLevel is at least the base
-                             * staticLevel for this compilation (often 0 but
-                             * nonzero when compiling for local eval) and at
-                             * most funbox->level. The path we are walking
-                             * includes one function box each of precisely that
-                             * range of levels.
-                             *
-                             * Assert but check anyway (bug 493260 comment 16).
+                             * Assert but check anyway, to check future changes
+                             * that bind eval upvars in the parser.
                              */
                             JS_ASSERT(afunbox);
 
@@ -1983,6 +1986,17 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                         }
 
                         /*
+                         * If afunbox's function (which is at the same level as
+                         * lexdep) is in a loop, pessimistically assume the
+                         * variable initializer may be in the same loop. A flat
+                         * closure would then be unsafe, as the captured
+                         * variable could be assigned after the closure is
+                         * created. See bug 493232.
+                         */
+                        if (afunbox->inLoop)
+                            break;
+
+                        /*
                          * with and eval defeat lexical scoping; eval anywhere
                          * in a variable's scope can assign to it. Both defeat
                          * the flat closure optimization. The parser detects
@@ -1993,13 +2007,13 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                             break;
 
                         /*
-                         * If afunbox's function (which is at the same level as
-                         * lexdep) is not a lambda, it will be hoisted, so it
-                         * could capture the undefined value that by default
-                         * initializes var/let/const bindings. And if lexdep is
-                         * a function that comes at (meaning a function refers
-                         * to its own name) or strictly after afunbox, we also
-                         * break to defeat the flat closure optimization.
+                         * If afunbox's function is not a lambda, it will be
+                         * hoisted, so it could capture the undefined value
+                         * that by default initializes var/let/const
+                         * bindings. And if lexdep is a function that comes at
+                         * (meaning a function refers to its own name) or
+                         * strictly after afunbox, we also break to defeat the
+                         * flat closure optimization.
                          */
                         JSFunction *afun = (JSFunction *) afunbox->object;
                         if (!(afun->flags & JSFUN_LAMBDA)) {
@@ -6084,15 +6098,22 @@ class CompExprTransplanter {
  * expression must move "down" one static level, which of course increases the
  * upvar-frame-skip count.
  */
-static void
+static bool
 BumpStaticLevel(JSParseNode *pn, JSTreeContext *tc)
 {
     if (pn->pn_cookie != FREE_UPVAR_COOKIE) {
         uintN level = UPVAR_FRAME_SKIP(pn->pn_cookie) + 1;
 
         JS_ASSERT(level >= tc->staticLevel);
+        if (level >= FREE_STATIC_LEVEL) {
+            JS_ReportErrorNumber(tc->compiler->context, js_GetErrorMessage, NULL,
+                                 JSMSG_TOO_DEEP, js_function_str);
+            return false;
+        }
+
         pn->pn_cookie = MAKE_UPVAR_COOKIE(level, UPVAR_FRAME_SLOT(pn->pn_cookie));
     }
+    return true;
 }
 
 static void
@@ -6173,8 +6194,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
             --funcLevel;
 
         if (pn->pn_defn) {
-            if (genexp)
-                BumpStaticLevel(pn, tc);
+            if (genexp && !BumpStaticLevel(pn, tc))
+                return false;
         } else if (pn->pn_used) {
             JS_ASSERT(pn->pn_op != JSOP_NOP);
             JS_ASSERT(pn->pn_cookie == FREE_UPVAR_COOKIE);
@@ -6192,8 +6213,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
              * will be visited further below.
              */
             if (dn->isPlaceholder() && dn->pn_pos >= root->pn_pos && dn->dn_uses == pn) {
-                if (genexp)
-                    BumpStaticLevel(dn, tc);
+                if (genexp && !BumpStaticLevel(dn, tc))
+                    return false;
                 AdjustBlockId(dn, adjust, tc);
             }
 
@@ -6208,7 +6229,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                 if (dn->pn_pos < root->pn_pos || dn->isPlaceholder()) {
                     JSAtomListElement *ale = tc->lexdeps.add(tc->compiler, dn->pn_atom);
                     if (!ale)
-                        return NULL;
+                        return false;
 
                     if (dn->pn_pos >= root->pn_pos) {
                         tc->parent->lexdeps.remove(tc->compiler, atom);
@@ -6216,7 +6237,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         JSDefinition *dn2 = (JSDefinition *)
                             NewNameNode(tc->compiler->context, TS(tc->compiler), dn->pn_atom, tc);
                         if (!dn2)
-                            return NULL;
+                            return false;
 
                         dn2->pn_type = dn->pn_type;
                         dn2->pn_pos = root->pn_pos;
