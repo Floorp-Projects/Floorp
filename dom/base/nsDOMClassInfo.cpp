@@ -332,6 +332,7 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMCRMFObject.h"
+#include "nsIDOMPkcs11.h"
 #include "nsIControllers.h"
 #include "nsISelection.h"
 #include "nsIBoxObject.h"
@@ -855,6 +856,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Crypto, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CRMFObject, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(Pkcs11, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // DOM Traversal classes
@@ -2641,6 +2644,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CRMFObject, nsIDOMCRMFObject)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCRMFObject)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Pkcs11, nsIDOMPkcs11)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPkcs11)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLStylesheetProcessingInstruction, nsIDOMProcessingInstruction)
