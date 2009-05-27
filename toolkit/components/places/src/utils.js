@@ -1213,41 +1213,15 @@ var PlacesUtils = {
           var childIds = [];
           for (var i = 0; i < root.childCount; i++) {
             var childId = root.getChild(i).itemId;
-            if (excludeItems.indexOf(childId) == -1)
+            if (excludeItems.indexOf(childId) == -1 &&
+                childId != this._utils.tagsFolderId)
               childIds.push(childId);
           }
           root.containerOpen = false;
 
           for (var i = 0; i < childIds.length; i++) {
             var rootItemId = childIds[i];
-            if (rootItemId == this._utils.tagsFolderId) {
-              // remove tags via the tagging service
-              var tags = this._utils.tagging.allTags;
-              var uris = [];
-              var bogusTagContainer = false;
-              for (let i in tags) {
-                var tagURIs = [];
-                // skip empty tags since getURIsForTag would throw
-                if (tags[i])
-                  tagURIs = this._utils.tagging.getURIsForTag(tags[i]);
-
-                if (!tagURIs.length) {
-                  // This is a bogus tag container, empty tags should be removed
-                  // automatically, but this does not work if they contain some
-                  // not-uri node, so we remove them manually.
-                  // XXX this is a temporary workaround until we implement
-                  // preventive database maintenance in bug 431558.
-                  bogusTagContainer = true;
-                }
-                for (let j in tagURIs)
-                  this._utils.tagging.untagURI(tagURIs[j], [tags[i]]);
-              }
-              if (bogusTagContainer)
-                this._utils.bookmarks.removeFolderChildren(rootItemId);
-            }
-            else if ([this._utils.toolbarFolderId,
-                      this._utils.unfiledBookmarksFolderId,
-                      this._utils.bookmarksMenuFolderId].indexOf(rootItemId) != -1)
+            if (this._utils.isRootItem(rootItemId))
               this._utils.bookmarks.removeFolderChildren(rootItemId);
             else
               this._utils.bookmarks.removeItem(rootItemId);
@@ -1385,7 +1359,8 @@ var PlacesUtils = {
         }
         break;
       case this.TYPE_X_MOZ_PLACE:
-        id = this.bookmarks.insertBookmark(aContainer, this._uri(aData.uri), aIndex, aData.title);
+        id = this.bookmarks.insertBookmark(aContainer, this._uri(aData.uri),
+                                           aIndex, aData.title);
         if (aData.keyword)
           this.bookmarks.setKeywordForBookmark(id, aData.keyword);
         if (aData.tags) {
