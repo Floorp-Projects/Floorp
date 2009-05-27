@@ -1290,8 +1290,18 @@ SessionStoreService.prototype = {
 
       let storage, storageItemCount = 0;
       try {
-        storage = aDocShell.getSessionStorageForURI(uri);
-        storageItemCount = storage.length;
+        var principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                        getService(Ci.nsIScriptSecurityManager).
+                        getCodebasePrincipal(uri);
+
+        // Using getSessionStorageForPrincipal instead of getSessionStorageForURI
+        // just to be able to pass aCreate = false, that avoids creation of the
+        // sessionStorage object for the page earlier than the page really
+        // requires it. It was causing problems while accessing a storage when
+        // a page later changed its domain.
+        storage = aDocShell.getSessionStorageForPrincipal(principal, false);
+        if (storage)
+          storageItemCount = storage.length;
       }
       catch (ex) { /* sessionStorage might throw if it's turned off, see bug 458954 */ }
       if (storageItemCount == 0)
