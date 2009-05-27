@@ -43,6 +43,10 @@
   list-style-image: url("chrome://mozapps/skin/profile/profileicon.png");
 }
 
+#profiles:focus > listitem[selected="true"] {
+  list-style-image: url("chrome://mozapps/skin/profile/profileicon-selected.png");
+}
+
 #profiles > listitem > listcell > image {
   width: 16px;
   height: 16px;
