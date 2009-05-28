@@ -48,6 +48,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsThreadUtils.h"
+#include "nsAutoPtr.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsSecurityWarningDialogs, nsISecurityWarningDialogs)
 
@@ -91,7 +93,8 @@ nsSecurityWarningDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBo
 
   rv = AlertDialog(ctx, ENTER_SITE_PREF, 
                    NS_LITERAL_STRING("EnterSecureMessage").get(),
-                   NS_LITERAL_STRING("EnterSecureShowAgain").get());
+                   NS_LITERAL_STRING("EnterSecureShowAgain").get(),
+                   PR_FALSE);
 
   *_retval = PR_TRUE;
   return rv;
@@ -104,7 +107,8 @@ nsSecurityWarningDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool
 
   rv = AlertDialog(ctx, WEAK_SITE_PREF,
                    NS_LITERAL_STRING("WeakSecureMessage").get(),
-                   NS_LITERAL_STRING("WeakSecureShowAgain").get());
+                   NS_LITERAL_STRING("WeakSecureShowAgain").get(),
+                   PR_FALSE);
 
   *_retval = PR_TRUE;
   return rv;
@@ -117,7 +121,8 @@ nsSecurityWarningDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBoo
 
   rv = AlertDialog(ctx, LEAVE_SITE_PREF, 
                    NS_LITERAL_STRING("LeaveSecureMessage").get(),
-                   NS_LITERAL_STRING("LeaveSecureShowAgain").get());
+                   NS_LITERAL_STRING("LeaveSecureShowAgain").get(),
+                   PR_FALSE);
 
   *_retval = PR_TRUE;
   return rv;
@@ -131,23 +136,45 @@ nsSecurityWarningDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_
 
   rv = AlertDialog(ctx, MIXEDCONTENT_PREF, 
                    NS_LITERAL_STRING("MixedContentMessage").get(),
-                   NS_LITERAL_STRING("MixedContentShowAgain").get());
+                   NS_LITERAL_STRING("MixedContentShowAgain").get(),
+                   PR_TRUE);
 
   *_retval = PR_TRUE;
   return rv;
 }
 
+class nsAsyncAlert : public nsRunnable
+{
+public:
+  nsAsyncAlert(nsIPrompt*       aPrompt,
+               const char*      aPrefName,
+               const PRUnichar* aDialogMessageName,
+               const PRUnichar* aShowAgainName,
+               nsIPrefBranch*   aPrefBranch,
+               nsIStringBundle* aStringBundle)
+  : mPrompt(aPrompt), mPrefName(aPrefName),
+    mDialogMessageName(aDialogMessageName),
+    mShowAgainName(aShowAgainName), mPrefBranch(aPrefBranch),
+    mStringBundle(aStringBundle) {}
+  NS_IMETHOD Run();
 
-nsresult
-nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                          const PRUnichar *dialogMessageName,
-                          const PRUnichar *showAgainName)
+protected:
+  nsCOMPtr<nsIPrompt>       mPrompt;
+  nsCString                 mPrefName;
+  nsString                  mDialogMessageName;
+  nsString                  mShowAgainName;
+  nsCOMPtr<nsIPrefBranch>   mPrefBranch;
+  nsCOMPtr<nsIStringBundle> mStringBundle;
+};
+
+NS_IMETHODIMP
+nsAsyncAlert::Run()
 {
   nsresult rv;
 
   // Get user's preference for this alert
   PRBool prefValue;
-  rv = mPrefBranch->GetBoolPref(prefName, &prefValue);
+  rv = mPrefBranch->GetBoolPref(mPrefName.get(), &prefValue);
   if (NS_FAILED(rv)) prefValue = PR_TRUE;
 
   // Stop if alert is not requested
@@ -158,7 +185,7 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *pr
   //   - The default value of the "show every time" checkbox is unchecked
   //   - If the user checks the checkbox, we clear the show-once pref.
 
-  nsCAutoString showOncePref(prefName);
+  nsCAutoString showOncePref(mPrefName);
   showOncePref += ".show_once";
 
   PRBool showOnce = PR_FALSE;
@@ -167,32 +194,52 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *pr
   if (showOnce)
     prefValue = PR_FALSE;
 
-  // Get Prompt to use
-  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
-  if (!prompt) return NS_ERROR_FAILURE;
-
   // Get messages strings from localization file
   nsXPIDLString windowTitle, message, dontShowAgain;
 
   mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title").get(),
                                    getter_Copies(windowTitle));
-  mStringBundle->GetStringFromName(dialogMessageName,
+  mStringBundle->GetStringFromName(mDialogMessageName.get(),
                                    getter_Copies(message));
-  mStringBundle->GetStringFromName(showAgainName,
+  mStringBundle->GetStringFromName(mShowAgainName.get(),
                                    getter_Copies(dontShowAgain));
   if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
 
-  rv = prompt->AlertCheck(windowTitle, message, dontShowAgain, &prefValue);
+  rv = mPrompt->AlertCheck(windowTitle, message, dontShowAgain, &prefValue);
   if (NS_FAILED(rv)) return rv;
       
   if (!prefValue) {
-    mPrefBranch->SetBoolPref(prefName, PR_FALSE);
+    mPrefBranch->SetBoolPref(mPrefName.get(), PR_FALSE);
   } else if (showOnce) {
     mPrefBranch->SetBoolPref(showOncePref.get(), PR_FALSE);
   }
 
   return rv;
 }
+
+
+nsresult
+nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor* aCtx,
+                                      const char* aPrefName,
+                                      const PRUnichar* aDialogMessageName,
+                                      const PRUnichar* aShowAgainName,
+                                      PRBool aAsync)
+{
+  // Get Prompt to use
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(aCtx);
+  if (!prompt) return NS_ERROR_FAILURE;
+
+  nsRefPtr<nsAsyncAlert> alert = new nsAsyncAlert(prompt,
+                                                  aPrefName,
+                                                  aDialogMessageName,
+                                                  aShowAgainName,
+                                                  mPrefBranch,
+                                                  mStringBundle);
+  NS_ENSURE_TRUE(alert, NS_ERROR_OUT_OF_MEMORY);
+  return aAsync ? NS_DispatchToCurrentThread(alert) : alert->Run();
+}
+
+
 
 NS_IMETHODIMP 
 nsSecurityWarningDialogs::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool* _result)
