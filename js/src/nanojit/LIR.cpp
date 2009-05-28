@@ -44,6 +44,19 @@
 #include "../vprof/vprof.h"
 #endif /* PERFM */
 
+
+#if defined(NJ_VERBOSE)
+void nj_dprintf( const char* format, ... )
+{
+	va_list vargs;
+	va_start(vargs, format);
+	vfprintf(stdout, format, vargs);
+	va_end(vargs);
+}
+#endif /* NJ_VERBOSE */
+
+
+
 namespace nanojit
 {
     using namespace avmplus;
@@ -1424,9 +1437,9 @@ namespace nanojit
 			}
 		}
  
-		printf("live instruction count %d, total %u, max pressure %d\n",
+		nj_dprintf("live instruction count %d, total %u, max pressure %d\n",
 			live.retired.size(), total, live.maxlive);
-        printf("side exits %u\n", exits);
+        nj_dprintf("side exits %u\n", exits);
 
 		// print live exprs, going forwards
 		LirNameMap *names = lirbuf->names;
@@ -1437,7 +1450,7 @@ namespace nanojit
             char livebuf[4000], *s=livebuf;
             *s = 0;
             if (!newblock && e->i->isop(LIR_label)) {
-                printf("\n");
+                nj_dprintf("\n");
             }
             newblock = false;
             for (int k=0,n=e->live.size(); k < n; k++) {
@@ -1446,9 +1459,9 @@ namespace nanojit
 				*s++ = ' '; *s = 0;
 				NanoAssert(s < livebuf+sizeof(livebuf));
             }
-			printf("%-60s %s\n", livebuf, names->formatIns(e->i));
+			nj_dprintf("%-60s %s\n", livebuf, names->formatIns(e->i));
             if (e->i->isGuard() || e->i->isBranch() || e->i->isRet()) {
-				printf("\n");
+				nj_dprintf("\n");
                 newblock = true;
             }
 		}
@@ -1879,7 +1892,7 @@ namespace nanojit
 		if (assm->error())
 			return;
 
-		//fprintf(stderr, "recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
+		//nj_dprintf("recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
 		Fragment* root = triggerFrag;
 		if (treeCompile)
 		{
@@ -1922,6 +1935,11 @@ namespace nanojit
 		assm->endAssembly(root, loopJumps);
 			
 		// reverse output so that assembly is displayed low-to-high
+		// Up to this point, assm->_outputCache has been non-NULL, and so
+		// has been accumulating output.  Now we set it to NULL, traverse
+		// the entire list of stored strings, and hand them a second time
+		// to assm->output.  Since _outputCache is now NULL, outputf just
+		// hands these strings directly onwards to nj_dprintf.
 		verbose_only( assm->_outputCache = 0; )
 		verbose_only(for(int i=asmOutput.size()-1; i>=0; --i) { assm->outputf("%s",asmOutput.get(i)); } );
 

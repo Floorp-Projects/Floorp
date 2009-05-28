@@ -294,6 +294,13 @@ JSCompiler::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->queued = false;
+    funbox->inLoop = false;
+    for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
+        if (STMT_IS_LOOP(stmt)) {
+            funbox->inLoop = true;
+            break;
+        }
+    }
     funbox->level = tc->staticLevel;
     funbox->tcflags = TCF_IN_FUNCTION | (tc->flags & TCF_COMPILE_N_GO);
     return funbox;
@@ -744,6 +751,8 @@ JSCompiler::parse(JSObject *chain)
     return pn;
 }
 
+JS_STATIC_ASSERT(FREE_STATIC_LEVEL == JS_BITMASK(JSFB_LEVEL_BITS));
+
 static inline bool
 SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
 {
@@ -806,16 +815,21 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     JSCodeGenerator cg(&jsc, &codePool, &notePool, jsc.tokenStream.lineno);
 
     MUST_FLOW_THROUGH("out");
+
+    /* Null script early in case of error, to reduce our code footprint. */
+    script = NULL;
+
     cg.flags |= (uint16) tcflags;
     cg.scopeChain = scopeChain;
     if (!SetStaticLevel(&cg, TCF_GET_STATIC_LEVEL(tcflags)))
-        return NULL;
+        goto out;
 
     /*
      * If funbox is non-null after we create the new script, callerFrame->fun
      * was saved in the 0th object table entry.
      */
-    JSObjectBox *funbox = NULL;
+    JSObjectBox *funbox;
+    funbox = NULL;
 
     if (tcflags & TCF_COMPILE_N_GO) {
         if (source) {
@@ -825,7 +839,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
              */
             JSAtom *atom = js_AtomizeString(cx, source, 0);
             if (!atom || !cg.atomList.add(&jsc, atom))
-                return NULL;
+                goto out;
         }
 
         if (callerFrame && callerFrame->fun) {
@@ -836,7 +850,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
              */
             funbox = jsc.newObjectBox(FUN_OBJECT(callerFrame->fun));
             if (!funbox)
-                return NULL;
+                goto out;
             funbox->emitLink = cg.objectList.lastbox;
             cg.objectList.lastbox = funbox;
             cg.objectList.length++;
@@ -849,14 +863,13 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
      */
     uint32 bodyid;
     if (!GenerateBlockId(&cg, bodyid))
-        return NULL;
+        goto out;
     cg.bodyid = bodyid;
 
-    /* Null script early in case of error, to reduce our code footprint. */
-    script = NULL;
 #if JS_HAS_XML_SUPPORT
     pn = NULL;
-    bool onlyXML = true;
+    bool onlyXML;
+    onlyXML = true;
 #endif
 
     for (;;) {
@@ -1501,6 +1514,7 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
             if (fn->pn_body) {
                 JS_ASSERT(PN_TYPE(fn->pn_body) == TOK_ARGSBODY);
                 fn->pn_body->append(pn);
+                fn->pn_body->pn_pos = pn->pn_pos;
                 pn = fn->pn_body;
             }
 
@@ -1956,19 +1970,13 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                             afunbox = afunbox->parent;
 
                             /*
-                             * afunbox cannot be null here. That is, we are
-                             * sure to find a function box whose level ==
-                             * lexdepLevel before walking off the top of the
-                             * funbox tree.
+                             * afunbox can't be null because we are sure
+                             * to find a function box whose level == lexdepLevel
+                             * before walking off the top of the funbox tree.
+                             * See bug 493260 comments 16-18.
                              *
-                             * Proof: lexdepLevel is at least the base
-                             * staticLevel for this compilation (often 0 but
-                             * nonzero when compiling for local eval) and at
-                             * most funbox->level. The path we are walking
-                             * includes one function box each of precisely that
-                             * range of levels.
-                             *
-                             * Assert but check anyway (bug 493260 comment 16).
+                             * Assert but check anyway, to check future changes
+                             * that bind eval upvars in the parser.
                              */
                             JS_ASSERT(afunbox);
 
@@ -1983,6 +1991,17 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                         }
 
                         /*
+                         * If afunbox's function (which is at the same level as
+                         * lexdep) is in a loop, pessimistically assume the
+                         * variable initializer may be in the same loop. A flat
+                         * closure would then be unsafe, as the captured
+                         * variable could be assigned after the closure is
+                         * created. See bug 493232.
+                         */
+                        if (afunbox->inLoop)
+                            break;
+
+                        /*
                          * with and eval defeat lexical scoping; eval anywhere
                          * in a variable's scope can assign to it. Both defeat
                          * the flat closure optimization. The parser detects
@@ -1993,13 +2012,13 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                             break;
 
                         /*
-                         * If afunbox's function (which is at the same level as
-                         * lexdep) is not a lambda, it will be hoisted, so it
-                         * could capture the undefined value that by default
-                         * initializes var/let/const bindings. And if lexdep is
-                         * a function that comes at (meaning a function refers
-                         * to its own name) or strictly after afunbox, we also
-                         * break to defeat the flat closure optimization.
+                         * If afunbox's function is not a lambda, it will be
+                         * hoisted, so it could capture the undefined value
+                         * that by default initializes var/let/const
+                         * bindings. And if lexdep is a function that comes at
+                         * (meaning a function refers to its own name) or
+                         * strictly after afunbox, we also break to defeat the
+                         * flat closure optimization.
                          */
                         JSFunction *afun = (JSFunction *) afunbox->object;
                         if (!(afun->flags & JSFUN_LAMBDA)) {
@@ -2766,10 +2785,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     pn->pn_funbox = funbox;
     pn->pn_op = op;
-    if (pn->pn_body)
+    if (pn->pn_body) {
         pn->pn_body->append(body);
-    else
+        pn->pn_body->pn_pos = body->pn_pos;
+    } else {
         pn->pn_body = body;
+    }
 
     pn->pn_blockid = tc->blockid();
 
@@ -3288,7 +3309,7 @@ NoteLValue(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN dflag = PND_
         if (dn->frameLevel() != tc->staticLevel) {
             /*
              * The above condition takes advantage of the all-ones nature of
-             * FREE_UPVAR_COOKIE, and the reserved frame level JS_BITMASK(16).
+             * FREE_UPVAR_COOKIE, and the reserved level FREE_STATIC_LEVEL.
              * We make a stronger assertion by excluding FREE_UPVAR_COOKIE.
              */
             JS_ASSERT_IF(dn->pn_cookie != FREE_UPVAR_COOKIE,
@@ -6084,15 +6105,22 @@ class CompExprTransplanter {
  * expression must move "down" one static level, which of course increases the
  * upvar-frame-skip count.
  */
-static void
+static bool
 BumpStaticLevel(JSParseNode *pn, JSTreeContext *tc)
 {
     if (pn->pn_cookie != FREE_UPVAR_COOKIE) {
         uintN level = UPVAR_FRAME_SKIP(pn->pn_cookie) + 1;
 
         JS_ASSERT(level >= tc->staticLevel);
+        if (level >= FREE_STATIC_LEVEL) {
+            JS_ReportErrorNumber(tc->compiler->context, js_GetErrorMessage, NULL,
+                                 JSMSG_TOO_DEEP, js_function_str);
+            return false;
+        }
+
         pn->pn_cookie = MAKE_UPVAR_COOKIE(level, UPVAR_FRAME_SLOT(pn->pn_cookie));
     }
+    return true;
 }
 
 static void
@@ -6173,8 +6201,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
             --funcLevel;
 
         if (pn->pn_defn) {
-            if (genexp)
-                BumpStaticLevel(pn, tc);
+            if (genexp && !BumpStaticLevel(pn, tc))
+                return false;
         } else if (pn->pn_used) {
             JS_ASSERT(pn->pn_op != JSOP_NOP);
             JS_ASSERT(pn->pn_cookie == FREE_UPVAR_COOKIE);
@@ -6192,8 +6220,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
              * will be visited further below.
              */
             if (dn->isPlaceholder() && dn->pn_pos >= root->pn_pos && dn->dn_uses == pn) {
-                if (genexp)
-                    BumpStaticLevel(dn, tc);
+                if (genexp && !BumpStaticLevel(dn, tc))
+                    return false;
                 AdjustBlockId(dn, adjust, tc);
             }
 
@@ -6208,7 +6236,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                 if (dn->pn_pos < root->pn_pos || dn->isPlaceholder()) {
                     JSAtomListElement *ale = tc->lexdeps.add(tc->compiler, dn->pn_atom);
                     if (!ale)
-                        return NULL;
+                        return false;
 
                     if (dn->pn_pos >= root->pn_pos) {
                         tc->parent->lexdeps.remove(tc->compiler, atom);
@@ -6216,7 +6244,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         JSDefinition *dn2 = (JSDefinition *)
                             NewNameNode(tc->compiler->context, TS(tc->compiler), dn->pn_atom, tc);
                         if (!dn2)
-                            return NULL;
+                            return false;
 
                         dn2->pn_type = dn->pn_type;
                         dn2->pn_pos = root->pn_pos;
