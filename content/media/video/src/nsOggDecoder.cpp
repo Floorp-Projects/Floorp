@@ -1774,7 +1774,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsOggDecoder, nsIObserver)
 void nsOggDecoder::Pause() 
 {
   nsAutoMonitor mon(mMonitor);
-  if (mPlayState == PLAY_STATE_SEEKING) {
+  if (mPlayState == PLAY_STATE_SEEKING || mPlayState == PLAY_STATE_ENDED) {
     mNextState = PLAY_STATE_PAUSED;
     return;
   }
