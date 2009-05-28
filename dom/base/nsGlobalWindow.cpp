@@ -3234,12 +3234,18 @@ nsGlobalWindow::GetInnerWidth(PRInt32* aInnerWidth)
   EnsureSizeUpToDate();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-  PRInt32 width = 0;
-  PRInt32 notused;
-  if (docShellWin)
-    docShellWin->GetSize(&width, &notused);
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
 
-  *aInnerWidth = DevToCSSIntPixels(width);
+  if (docShellWin && presContext) {
+    PRInt32 width, notused;
+    docShellWin->GetSize(&width, &notused);
+    *aInnerWidth = nsPresContext::
+      AppUnitsToIntCSSPixels(presContext->DevPixelsToAppUnits(width));
+  } else {
+    *aInnerWidth = 0;
+  }
+
   return NS_OK;
 }
 
@@ -3291,12 +3297,17 @@ nsGlobalWindow::GetInnerHeight(PRInt32* aInnerHeight)
   EnsureSizeUpToDate();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-  PRInt32 height = 0;
-  PRInt32 notused;
-  if (docShellWin)
-    docShellWin->GetSize(&notused, &height);
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
 
-  *aInnerHeight = DevToCSSIntPixels(height);
+  if (docShellWin && presContext) {
+    PRInt32 height, notused;
+    docShellWin->GetSize(&notused, &height);
+    *aInnerHeight = nsPresContext::
+      AppUnitsToIntCSSPixels(presContext->DevPixelsToAppUnits(height));
+  } else {
+    *aInnerHeight = 0;
+  }
   return NS_OK;
 }
 
