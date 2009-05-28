@@ -109,7 +109,7 @@ toolbarpaletteitem[type="spacer"] {
 
 .toolbarpaletteitem-box[type="spring"] {
   border: 1px solid #A3A3A3;
-  background: url("chrome://global/skin/toolbar/spring.gif") #FFFFFF no-repeat;
+  background: url("chrome://global/skin/toolbar/spring.png") #FFFFFF no-repeat;
   width: 32px;
   margin-top: 18px;
 }
