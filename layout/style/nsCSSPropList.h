@@ -470,6 +470,16 @@ CSS_PROP_BACKGROUND(
     mBackRepeat,
     eCSSType_ValueList,
     kBackgroundRepeatKTable)
+CSS_PROP_BACKGROUND(
+    -moz-background-size,
+    _moz_background_size,
+    MozBackgroundSize,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    Color,
+    mBackSize,
+    eCSSType_ValuePairList,
+    kBackgroundSizeKTable)
 CSS_PROP_DISPLAY(
     -moz-binding,
     binding,
