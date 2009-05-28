@@ -538,10 +538,10 @@ namespace nanojit
             int n = code.size();
             if (n) {
 			    for (int i=0; i < n; i++)
-				    printf("    %s\n",names->formatIns(code[i]));
+				    nj_dprintf("    %s\n",names->formatIns(code[i]));
 			    code.clear();
                 if (n > 1)
-        			printf("\n");
+        			nj_dprintf("\n");
             }
 		}
 
