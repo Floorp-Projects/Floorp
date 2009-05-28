@@ -59,7 +59,8 @@ public:
 protected:
   nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName,
-                   const PRUnichar *showAgainName);
+                   const PRUnichar *showAgainName,
+                   PRBool aAsync);
   nsresult ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName, 
                    const PRUnichar *showAgainName, PRBool* _result);
