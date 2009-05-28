@@ -365,9 +365,17 @@ interface nsIHttpRequestHandler : nsISupports
    * Processes the HTTP request represented by metadata and initializes the
    * passed-in response to reflect the correct HTTP response.
    *
-   * Note that in some uses of nsIHttpRequestHandler, this method is required to
-   * not throw an exception; in the general case, however, this method may throw
-   * an exception (causing an HTTP 500 response to occur).
+   * If this method throws an exception, externally observable behavior depends
+   * upon whether is being processed asynchronously and the connection has had
+   * any data written to it (even an explicit zero bytes of data being written)
+   * or whether seizePower() has been called on it.  If such has happened, sent
+   * data will be exactly that data written at the time the exception was
+   * thrown.  If no data has been written, the response has not had seizePower()
+   * called on it, and it is not being asynchronously created, an error handler
+   * will be invoked (usually 500 unless otherwise specified).  Note that some
+   * uses of nsIHttpRequestHandler may require this method to never throw an
+   * exception; in the general case, however, this method may throw an exception
+   * (causing an HTTP 500 response to occur).
    *
    * @param metadata
    *   data representing an HTTP request
@@ -504,7 +512,8 @@ interface nsIHttpResponse : nsISupports
    *   than 999, or description contains invalid characters
    * @throws NS_ERROR_NOT_AVAILABLE
    *   if this response is being processed asynchronously and data has been
-   *   written to this response's body
+   *   written to this response's body, or if seizePower() has been called on
+   *   this
    */
   void setStatusLine(in string httpVersion,
                      in unsigned short statusCode,
@@ -530,23 +539,29 @@ interface nsIHttpResponse : nsISupports
    *   if name or value is not a valid header component
    * @throws NS_ERROR_NOT_AVAILABLE
    *   if this response is being processed asynchronously and data has been
-   *   written to this response's body
+   *   written to this response's body, or if seizePower() has been called on
+   *   this
    */
   void setHeader(in string name, in string value, in boolean merge);
 
   /**
-   * A stream to which data appearing in the body of this response should be
-   * written.  After this response has been designated as being processed
-   * asynchronously, subsequent writes will be synchronously written to the
-   * underlying transport.  However, immediate write-through visible to the HTTP
-   * client cannot be guaranteed, as intermediate buffers both in the server
-   * socket and in the client may delay written data; be prepared for potential
-   * delays.
+   * A stream to which data appearing in the body of this response (or in the
+   * totality of the response if seizePower() is called) should be written.
+   * After this response has been designated as being processed asynchronously,
+   * or after seizePower() has been called on this, subsequent writes will no
+   * longer be buffered and will be written to the underlying transport without
+   * delaying until the entire response is constructed.  Write-through may or
+   * may not be synchronous in the implementation, and in any case particular
+   * behavior may not be observable to the HTTP client as intermediate buffers
+   * both in the server socket and in the client may delay written data; be
+   * prepared for delays at any time.
    *
    * @note
-   *   As writes to the underlying transport are synchronous, care must be taken
-   *   not to block on these writes; it is even possible for deadlock to occur
-   *   in the case that the server and the client reside in the same process.
+   *   Although in the asynchronous cases writes to the underlying transport
+   *   are not buffered, care must still be taken not to block for too long on
+   *   any such writes; it is even possible for deadlock to occur in the case
+   *   that the server and the client reside in the same process.  Write data in
+   *   small chunks if necessary to avoid this problem.
    * @throws NS_ERROR_NOT_AVAILABLE
    *   if accessed after this response is fully constructed
    */
@@ -578,16 +593,43 @@ interface nsIHttpResponse : nsISupports
    * @throws NS_ERROR_UNEXPECTED
    *   if not initially called within a nsIHttpRequestHandler.handle call or if
    *   called after this response has been finished
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if seizePower() has been called on this
    */
   void processAsync();
 
   /**
+   * Seizes complete control of this response (and its connection) from the
+   * server, allowing raw and unfettered access to data being sent in the HTTP
+   * response.  Once this method has been called the only property which may be
+   * accessed without an exception being thrown is bodyOutputStream, and the
+   * only methods which may be accessed without an exception being thrown are
+   * write(), finish(), and seizePower() (which may be called multiple times
+   * without ill effect so long as all calls are otherwise allowed).
+   *
+   * After a successful call, all data subsequently written to the body of this
+   * response is written directly to the corresponding connection.  (Previously-
+   * written data is silently discarded.)  No status line or headers are sent
+   * before doing so; if the response handler wishes to write such data, it must
+   * do so manually.  Data generation completes only when finish() is called; it
+   * is not enough to simply call close() on bodyOutputStream.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if processAsync() has been called on this
+   * @throws NS_ERROR_UNEXPECTED
+   *   if finish() has been called on this
+   */
+  void seizePower();
+
+  /**
    * Signals that construction of this response is complete and that it may be
-   * sent over the network to the client.  This method may only be called after
-   * processAsync() has been called.  This method is idempotent.
+   * sent over the network to the client, or if seizePower() has been called
+   * signals that all data has been written and that the underlying connection
+   * may be closed.  This method may only be called after processAsync() or
+   * seizePower() has been called.  This method is idempotent.
    *
    * @throws NS_ERROR_UNEXPECTED
-   *   if processAsync() has not already been properly called
+   *   if processAsync() or seizePower() has not already been properly called
    */
   void finish();
 };
