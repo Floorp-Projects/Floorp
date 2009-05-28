@@ -1510,6 +1510,7 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
             if (fn->pn_body) {
                 JS_ASSERT(PN_TYPE(fn->pn_body) == TOK_ARGSBODY);
                 fn->pn_body->append(pn);
+                fn->pn_body->pn_pos = pn->pn_pos;
                 pn = fn->pn_body;
             }
 
@@ -2780,10 +2781,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     pn->pn_funbox = funbox;
     pn->pn_op = op;
-    if (pn->pn_body)
+    if (pn->pn_body) {
         pn->pn_body->append(body);
-    else
+        pn->pn_body->pn_pos = body->pn_pos;
+    } else {
         pn->pn_body = body;
+    }
 
     pn->pn_blockid = tc->blockid();
 
