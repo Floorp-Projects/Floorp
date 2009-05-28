@@ -7,10 +7,6 @@ if (Cc === undefined) {
 }
 window.addEventListener("load", testOnLoad, false);
 
-let txtToHTML = Cc["@mozilla.org/txttohtmlconv;1"].
-                getService(Ci.mozITXTToHTMLConv);
-function entityEncode(str) txtToHTML.scanTXT(str, Ci.mozITXTToHTMLConv.kEntities);
-
 function testOnLoad() {
   window.removeEventListener("load", testOnLoad, false);
 
@@ -34,8 +30,6 @@ function testOnLoad() {
 function Tester(aTests, aCallback) {
   this.tests = aTests;
   this.callback = aCallback;
-  this._cs = Cc["@mozilla.org/consoleservice;1"].
-             getService(Ci.nsIConsoleService);
 }
 Tester.prototype = {
   checker: null,
@@ -51,7 +45,6 @@ Tester.prototype = {
   },
 
   start: function Tester_start() {
-    this._cs.registerListener(this);
     if (this.tests.length)
       this.execTest();
     else
@@ -60,15 +53,9 @@ Tester.prototype = {
 
   finish: function Tester_finish() {
     // Tests complete, notify the callback and return
-    this._cs.unregisterListener(this);
     this.callback(this.tests);
     this.callback = null;
     this.tests = null;
-  },
-
-  observe: function Tester_observe(aConsoleMessage) {
-    var msg = "Console message: " + aConsoleMessage.message;
-    this.currentTest.tests.push(new testMessage(this.currentTest.path, msg));
   },
 
   execTest: function Tester_execTest() {
@@ -91,7 +78,7 @@ Tester.prototype = {
       // Run the test
       this.currentTest.scope.test();
     } catch (ex) {
-      this.currentTest.tests.push(new testResult(this.currentTest.path, false, "Exception thrown", ex, false));
+      this.currentTest.tests.push(new testResult(false, "Exception thrown", ex, false));
       this.currentTest.scope.done = true;
     }
 
@@ -103,28 +90,20 @@ Tester.prototype = {
     else {
       var self = this;
       this.currentTest.scope.waitTimer = setTimeout(function() {
-        self.currentTest.tests.push(new testResult(self.currentTest.path, false, "Timed out", "", false));
+        self.currentTest.tests.push(new testResult(false, "Timed out", "", false));
         self.currentTest.scope.waitTimer = null;
         self.execTest();
       }, TIMEOUT_SECONDS * 1000);
     }
-  },
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIConsoleListener) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };
 
-function testResult(aPath, aCondition, aName, aDiag, aIsTodo) {
-  this.info = false;
-  this.path = aPath;
+function testResult(aCondition, aName, aDiag, aIsTodo) {
+  aName = aName || "";
+
   this.pass = !!aCondition;
   this.todo = aIsTodo;
-  this.msg = aName || "";
+  this.msg = aName;
   if (this.pass) {
     if (aIsTodo)
       this.result = "TEST-KNOWN-FAIL";
@@ -140,35 +119,6 @@ function testResult(aPath, aCondition, aName, aDiag, aIsTodo) {
   }
 }
 
-testResult.prototype = {
-  get log() {
-    return this.result + " | " + this.path + " | " + this.msg;
-  },
-
-  get htmlLog() {
-    return "<p class=\"result " + (this.pass ? "passed" : "failed") + "\">" +
-           this.result + " | " + entityEncode(this.path) + " | " +
-           entityEncode(this.msg) + "</p>";
-  }
-}
-
-function testMessage(aPath, aMessage) {
-  this.info = true;
-  this.path = aPath;
-  this.msg = aMessage || "";
-}
-
-testMessage.prototype = {
-  get log() {
-    return "TEST-INFO | " + this.path + " | " + this.msg;
-  },
-
-  get htmlLog() {
-    return "<p class=\"info\">TEST-INFO | " + entityEncode(this.path) + " | " +
-           entityEncode(this.msg) + "</p>";
-  }
-}
-
 function testScope(aTester, aTests) {
   var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
@@ -179,7 +129,7 @@ function testScope(aTester, aTests) {
 
   var self = this;
   this.ok = function test_ok(condition, name, diag) {
-    self.tests.push(new testResult(self.tester.currentTest.path, condition, name, diag, false));
+    self.tests.push(new testResult(condition, name, diag, false));
   };
   this.is = function test_is(a, b, name) {
     self.ok(a == b, name, "Got " + a + ", expected " + b);
@@ -188,7 +138,7 @@ function testScope(aTester, aTests) {
     self.ok(a != b, name, "Didn't expect " + a + ", but got it");
   };
   this.todo = function test_todo(condition, name, diag) {
-    self.tests.push(new testResult(self.tester.currentTest.path, !condition, name, diag, true));
+    self.tests.push(new testResult(!condition, name, diag, true));
   };
   this.todo_is = function test_todo_is(a, b, name) {
     self.todo(a == b, name, "Got " + a + ", expected " + b);
@@ -196,9 +146,6 @@ function testScope(aTester, aTests) {
   this.todo_isnot = function test_todo_isnot(a, b, name) {
     self.todo(a != b, name, "Didn't expect " + a + ", but got it");
   };
-  this.info = function(message) {
-    self.tests.push(new testMessage(self.tester.currentTest.path, message));
-  }
 
   this.executeSoon = function test_executeSoon(func) {
     let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
