@@ -576,7 +576,7 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
 
   nsRect backgroundRect = nsRect(nsPoint(0, 0), pageContentFrame->GetSize());
   nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
-                                  rect, backgroundRect, PR_TRUE);
+                                  rect, backgroundRect, 0);
 
   nsLayoutUtils::PaintFrame(&aRenderingContext, pageContentFrame,
                             nsRegion(rect), NS_RGBA(0,0,0,0));
