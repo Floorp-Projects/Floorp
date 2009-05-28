@@ -27,6 +27,7 @@
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *   Michael Ventnor <m.ventnor@gmail.com>
  *   Rob Arnold <robarnold@mozilla.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1395,8 +1396,12 @@ IsSolidBorder(const nsStyleBorder& aBorder)
   return PR_TRUE;
 }
 
+/**
+ * Returns true if the given request is for a background image (that is, it is
+ * non-null) and that image is fully loaded and its size calculated.
+ */
 static PRBool
-UseImageRequestForBackground(imgIRequest *aRequest)
+HaveCompleteBackgroundImage(imgIRequest *aRequest)
 {
   if (!aRequest)
     return PR_FALSE;
@@ -1496,37 +1501,37 @@ static nscolor
 DetermineBackgroundColorInternal(nsPresContext* aPresContext,
                                  const nsStyleBackground& aBackground,
                                  nsIFrame* aFrame,
-                                 PRBool* aDrawBackgroundImage,
-                                 PRBool* aDrawBackgroundColor,
+                                 PRBool& aDrawBackgroundImage,
+                                 PRBool& aDrawBackgroundColor,
                                  nsCOMPtr<imgIRequest>& aBottomImage)
 {
-  *aDrawBackgroundImage = PR_TRUE;
-  *aDrawBackgroundColor = PR_TRUE;
+  aDrawBackgroundImage = PR_TRUE;
+  aDrawBackgroundColor = PR_TRUE;
 
   if (aFrame->HonorPrintBackgroundSettings()) {
-    *aDrawBackgroundImage = aPresContext->GetBackgroundImageDraw();
-    *aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
+    aDrawBackgroundImage = aPresContext->GetBackgroundImageDraw();
+    aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
   aBottomImage = aBackground.BottomLayer().mImage;
 
-  if (!aDrawBackgroundImage || !UseImageRequestForBackground(aBottomImage)) {
+  if (!aDrawBackgroundImage || !HaveCompleteBackgroundImage(aBottomImage)) {
     aBottomImage = nsnull;
   }
 
   nscolor bgColor;
-  if (*aDrawBackgroundColor) {
+  if (aDrawBackgroundColor) {
     bgColor = aBackground.mBackgroundColor;
     if (NS_GET_A(bgColor) == 0)
-      *aDrawBackgroundColor = PR_FALSE;
+      aDrawBackgroundColor = PR_FALSE;
   } else {
     // If GetBackgroundColorDraw() is false, we are still expected to
     // draw color in the background of any frame that's not completely
     // transparent, but we are expected to use white instead of whatever
     // color was specified.
     bgColor = NS_RGB(255, 255, 255);
-    if (*aDrawBackgroundImage || !aBackground.IsTransparent())
-      *aDrawBackgroundColor = PR_TRUE;
+    if (aDrawBackgroundImage || !aBackground.IsTransparent())
+      aDrawBackgroundColor = PR_TRUE;
     else
       bgColor = NS_RGBA(0,0,0,0);
   }
@@ -1545,8 +1550,8 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
   return DetermineBackgroundColorInternal(aPresContext,
                                           aBackground,
                                           aFrame,
-                                          &drawBackgroundImage,
-                                          &drawBackgroundColor,
+                                          drawBackgroundImage,
+                                          drawBackgroundColor,
                                           bottomImage);
 }
 
@@ -1596,8 +1601,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   nscolor bgColor = DetermineBackgroundColorInternal(aPresContext,
                                                      aBackground,
                                                      aForFrame,
-                                                     &drawBackgroundImage,
-                                                     &drawBackgroundColor,
+                                                     drawBackgroundImage,
+                                                     drawBackgroundColor,
                                                      bottomImage);
 
   // At this point, drawBackgroundImage and drawBackgroundColor are
@@ -1628,7 +1633,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // determined by the value of 'background-clip' in
   // SetupCurrentBackgroundClip.  (Arguably it should be the
   // intersection, but that breaks the table painter -- in particular,
-  // taking the intersection breaks reftests/bugs/403429-1[ab].)
+  // taking the intersection breaks reftests/bugs/403249-1[ab].)
   nsRect bgClipArea, dirtyRect;
   gfxRect dirtyRectGfx;
   PRUint8 currentBackgroundClip;
@@ -1722,6 +1727,25 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   }
 }
 
+static inline float
+ScaleDimension(nsStyleBackground::Size::Dimension aDimension,
+               PRUint8 aType,
+               nscoord aLength, nscoord aAvailLength)
+{
+  switch (aType) {
+    case nsStyleBackground::Size::ePercentage:
+      return double(aDimension.mFloat) * (double(aAvailLength) / double(aLength));
+    case nsStyleBackground::Size::eLength:
+      return double(aDimension.mCoord) / double(aLength);
+    default:
+      NS_ABORT_IF_FALSE(PR_FALSE, "bad aDimension.mType");
+      return 1.0f;
+    case nsStyleBackground::Size::eAuto:
+      NS_ABORT_IF_FALSE(PR_FALSE, "aDimension.mType == eAuto isn't handled");
+      return 1.0f;
+  }
+}
+
 static void
 PaintBackgroundLayer(nsPresContext* aPresContext,
                      nsIRenderingContext& aRenderingContext,
@@ -1732,15 +1756,69 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
                      const nsStyleBackground& aBackground,
                      const nsStyleBackground::Layer& aLayer)
 {
+  /*
+   * The background properties we need to keep in mind when drawing background
+   * layers are:
+   *
+   *   background-image
+   *   background-repeat
+   *   background-attachment
+   *   background-position
+   *   background-clip (-moz-background-clip)
+   *   background-origin (-moz-background-origin)
+   *   background-size (-moz-background-size)
+   *   background-break (-moz-background-inline-policy)
+   *
+   * (background-color applies to the entire element and not to individual
+   * layers, so it is irrelevant to this method.)
+   *
+   * These properties have the following dependencies upon each other when
+   * determining rendering:
+   *
+   *   background-image
+   *     no dependencies
+   *   background-repeat
+   *     no dependencies
+   *   background-attachment
+   *     no dependencies
+   *   background-position
+   *     depends upon background-size (for the image's scaled size) and
+   *     background-break (for the background positioning area)
+   *   background-clip
+   *     no dependencies
+   *   background-origin
+   *     depends upon background-attachment (only in the case where that value
+   *     is 'fixed')
+   *   background-size
+   *     depends upon background-break (for the background positioning area for
+   *     resolving percentages), background-image (for the image's intrinsic
+   *     size), background-repeat (if that value is 'round'), and
+   *     background-origin (for the background painting area, when
+   *     background-repeat is 'round')
+   *   background-break
+   *     depends upon background-origin (specifying how the boxes making up the
+   *     background positioning area are determined)
+   *
+   * As a result of only-if dependencies we don't strictly do a topological
+   * sort of the above properties when processing, but it's pretty close to one:
+   *
+   *   background-clip (by caller)
+   *   background-image
+   *   background-break, background-origin
+   *   background-attachment (postfix for background-{origin,break} if 'fixed')
+   *   background-size
+   *   background-position
+   *   background-repeat
+   */
+
   // Lookup the image
   imgIRequest *req = aLayer.mImage;
-  if (!UseImageRequestForBackground(req)) {
-    // There's no image or it's not ready to be painted.
+  if (!HaveCompleteBackgroundImage(req))
     return;
-  }
 
   nsCOMPtr<imgIContainer> image;
   req->GetImage(getter_AddRefs(image));
+  req = nsnull;
 
   nsIntSize imageIntSize;
   image->GetWidth(&imageIntSize.width);
@@ -1750,27 +1828,33 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   imageSize.width = nsPresContext::CSSPixelsToAppUnits(imageIntSize.width);
   imageSize.height = nsPresContext::CSSPixelsToAppUnits(imageIntSize.height);
 
-  req = nsnull;
+  if (imageSize.width == 0 || imageSize.height == 0)
+    return;
 
   // relative to aBorderArea
-  nsRect bgOriginRect(0, 0, 0, 0);
+  nsRect bgPositioningArea(0, 0, 0, 0);
 
   nsIAtom* frameType = aForFrame->GetType();
   nsIFrame* geometryFrame = aForFrame;
   if (frameType == nsGkAtoms::inlineFrame ||
       frameType == nsGkAtoms::positionedInlineFrame) {
+    // XXXjwalden Strictly speaking this is not quite faithful to how
+    // background-break is supposed to interact with background-origin values,
+    // but it's a non-trivial amount of work to make it fully conformant, and
+    // until the specification is more finalized (and assuming background-break
+    // even makes the cut) it doesn't make sense to hammer out exact behavior.
     switch (aBackground.mBackgroundInlinePolicy) {
     case NS_STYLE_BG_INLINE_POLICY_EACH_BOX:
-      bgOriginRect = nsRect(nsPoint(0,0), aBorderArea.Size());
+      bgPositioningArea = nsRect(nsPoint(0,0), aBorderArea.Size());
       break;
     case NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX:
-      bgOriginRect = gInlineBGData->GetBoundingRect(aForFrame);
+      bgPositioningArea = gInlineBGData->GetBoundingRect(aForFrame);
       break;
     default:
       NS_ERROR("Unknown background-inline-policy value!  "
                "Please, teach me what to do.");
     case NS_STYLE_BG_INLINE_POLICY_CONTINUOUS:
-      bgOriginRect = gInlineBGData->GetContinuousRect(aForFrame);
+      bgPositioningArea = gInlineBGData->GetContinuousRect(aForFrame);
       break;
     }
   } else if (frameType == nsGkAtoms::canvasFrame) {
@@ -1780,10 +1864,10 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
     // finished and this page only displays the continuations of
     // absolutely positioned content).
     if (geometryFrame) {
-      bgOriginRect = geometryFrame->GetRect();
+      bgPositioningArea = geometryFrame->GetRect();
     }
   } else {
-    bgOriginRect = nsRect(nsPoint(0,0), aBorderArea.Size());
+    bgPositioningArea = nsRect(nsPoint(0,0), aBorderArea.Size());
   }
 
   // Background images are tiled over the 'background-clip' area
@@ -1791,11 +1875,11 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_BORDER && geometryFrame) {
     nsMargin border = geometryFrame->GetUsedBorder();
     geometryFrame->ApplySkipSides(border);
-    bgOriginRect.Deflate(border);
+    bgPositioningArea.Deflate(border);
     if (aLayer.mOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
       nsMargin padding = geometryFrame->GetUsedPadding();
       geometryFrame->ApplySkipSides(padding);
-      bgOriginRect.Deflate(padding);
+      bgPositioningArea.Deflate(padding);
       NS_ASSERTION(aLayer.mOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
                    "unknown background-origin value");
     }
@@ -1805,7 +1889,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   //
   // relative to aBorderArea.TopLeft() (which is where the top-left
   // of aForFrame's border-box will be rendered)
-  nsPoint imageTopLeft, anchor;
+  nsPoint imageTopLeft, anchor, offset;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aLayer.mAttachment) {
     // If it's a fixed background attachment, then the image is placed
     // relative to the viewport, which is the area of the root frame
@@ -1827,7 +1911,8 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
       // else this is an embedded shell and its root frame is what we want
     }
 
-    nsRect viewportArea(nsPoint(0, 0), topFrame->GetSize());
+    // Set the background positioning area to the viewport's area.
+    bgPositioningArea.SetRect(nsPoint(0, 0), topFrame->GetSize());
 
     if (!pageContentFrame) {
       // Subtract the size of scrollbars.
@@ -1835,29 +1920,70 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
         aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
       if (scrollableFrame) {
         nsMargin scrollbars = scrollableFrame->GetActualScrollbarSizes();
-        viewportArea.Deflate(scrollbars);
+        bgPositioningArea.Deflate(scrollbars);
       }
     }
-     
-    // Get the anchor point, relative to the viewport.
-    ComputeBackgroundAnchorPoint(aLayer, viewportArea.Size(), imageSize,
-                                 &imageTopLeft, &anchor);
 
-    // Convert the anchor point from viewport coordinates to aForFrame
-    // coordinates.
-    nsPoint offset = viewportArea.TopLeft() - aForFrame->GetOffsetTo(topFrame);
-    imageTopLeft += offset;
-    anchor += offset;
+    offset = bgPositioningArea.TopLeft() - aForFrame->GetOffsetTo(topFrame);
   } else {
-    ComputeBackgroundAnchorPoint(aLayer, bgOriginRect.Size(), imageSize,
-                                 &imageTopLeft, &anchor);
-    imageTopLeft += bgOriginRect.TopLeft();
-    anchor += bgOriginRect.TopLeft();
+    offset = bgPositioningArea.TopLeft();
   }
+     
+  // Scale the image as specified for background-size and as required for
+  // proper background positioning when background-position is defined with
+  // percentages.
+  float scaleX, scaleY;
+  switch (aLayer.mSize.mWidthType) {
+    case nsStyleBackground::Size::eContain:
+    case nsStyleBackground::Size::eCover: {
+      float scaleFitX = double(bgPositioningArea.width) / imageSize.width;
+      float scaleFitY = double(bgPositioningArea.height) / imageSize.height;
+      if (aLayer.mSize.mWidthType == nsStyleBackground::Size::eCover) {
+        scaleX = scaleY = PR_MAX(scaleFitX, scaleFitY);
+      } else {
+        scaleX = scaleY = PR_MIN(scaleFitX, scaleFitY);
+      }
+      break;
+    }
+    default: {
+      if (aLayer.mSize.mWidthType == nsStyleBackground::Size::eAuto) {
+        if (aLayer.mSize.mHeightType == nsStyleBackground::Size::eAuto) {
+          scaleX = scaleY = 1.0f;
+        } else {
+          scaleX = scaleY =
+            ScaleDimension(aLayer.mSize.mHeight, aLayer.mSize.mHeightType,
+                           imageSize.height, bgPositioningArea.height);
+        }
+      } else {
+        if (aLayer.mSize.mHeightType == nsStyleBackground::Size::eAuto) {
+          scaleX = scaleY =
+            ScaleDimension(aLayer.mSize.mWidth, aLayer.mSize.mWidthType,
+                           imageSize.width, bgPositioningArea.width);
+        } else {
+          scaleX = ScaleDimension(aLayer.mSize.mWidth, aLayer.mSize.mWidthType,
+                                  imageSize.width, bgPositioningArea.width);
+          scaleY = ScaleDimension(aLayer.mSize.mHeight, aLayer.mSize.mHeightType,
+                                  imageSize.height, bgPositioningArea.height);
+        }
+      }
+      break;
+    }
+  }
+  imageSize.width = NSCoordSaturatingMultiply(imageSize.width, scaleX);
+  imageSize.height = NSCoordSaturatingMultiply(imageSize.height, scaleY);
+
+  // Compute the position of the background now that the background's size is
+  // determined.
+  ComputeBackgroundAnchorPoint(aLayer, bgPositioningArea.Size(), imageSize,
+                               &imageTopLeft, &anchor);
+  imageTopLeft += offset;
+  anchor += offset;
 
   nsRect destArea(imageTopLeft + aBorderArea.TopLeft(), imageSize);
   nsRect fillArea = destArea;
   PRIntn repeat = aLayer.mRepeat;
+  PR_STATIC_ASSERT(NS_STYLE_BG_REPEAT_XY ==
+                   (NS_STYLE_BG_REPEAT_X | NS_STYLE_BG_REPEAT_Y));
   if (repeat & NS_STYLE_BG_REPEAT_X) {
     fillArea.x = aBGClipRect.x;
     fillArea.width = aBGClipRect.width;

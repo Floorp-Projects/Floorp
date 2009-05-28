@@ -269,10 +269,15 @@
 #define NS_STYLE_BG_POSITION_RIGHT   (1<<4)
 
 // See nsStyleBackground
+// Code depends on (BG_REPEAT_X | BG_REPEAT_Y) == BG_REPEAT_XY
 #define NS_STYLE_BG_REPEAT_OFF                  0x00
 #define NS_STYLE_BG_REPEAT_X                    0x01
 #define NS_STYLE_BG_REPEAT_Y                    0x02
 #define NS_STYLE_BG_REPEAT_XY                   0x03
+
+// See nsStyleBackground
+#define NS_STYLE_BG_SIZE_CONTAIN  0
+#define NS_STYLE_BG_SIZE_COVER    1
 
 // See nsStyleTable
 #define NS_STYLE_BORDER_COLLAPSE                0

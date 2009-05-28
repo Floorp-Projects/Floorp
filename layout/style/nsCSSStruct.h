@@ -312,6 +312,7 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValueList* mBackRepeat;
   nsCSSValueList* mBackAttachment;
   nsCSSValuePairList* mBackPosition;
+  nsCSSValuePairList* mBackSize;
   nsCSSValueList* mBackClip;
   nsCSSValueList* mBackOrigin;
   nsCSSValue      mBackInlinePolicy;

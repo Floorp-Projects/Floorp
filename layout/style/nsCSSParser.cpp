@@ -26,6 +26,7 @@
  *   Boris Zbarsky <bzbarsky@mit.edu>
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -407,6 +408,7 @@ protected:
     nsCSSValuePair mPosition;
     nsCSSValue mClip;
     nsCSSValue mOrigin;
+    nsCSSValuePair mSize;
     // The background-color is set as a side-effect, and if so, mLastItem
     // is set to true.
     PRBool mLastItem;
@@ -421,6 +423,8 @@ protected:
   PRBool ParseBackgroundList(nsCSSProperty aPropID); // a single value prop-id
   PRBool ParseBackgroundPosition();
   PRBool ParseBoxPositionValues(nsCSSValuePair& aOut);
+  PRBool ParseBackgroundSize();
+  PRBool ParseBackgroundSizeValues(nsCSSValuePair& aOut);
   PRBool ParseBorderColor();
   PRBool ParseBorderColors(nsCSSValueList** aResult,
                            nsCSSProperty aProperty);
@@ -5061,6 +5065,8 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   case eCSSProperty__moz_background_origin:
   case eCSSProperty_background_repeat:
     return ParseBackgroundList(aPropID);
+  case eCSSProperty__moz_background_size:
+    return ParseBackgroundSize();
   case eCSSProperty_border:
     return ParseBorderSide(kBorderTopIDs, PR_TRUE);
   case eCSSProperty_border_color:
@@ -5341,6 +5347,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_border_start:
   case eCSSProperty_border_top:
   case eCSSProperty_border_width:
+  case eCSSProperty__moz_background_size:
   case eCSSProperty__moz_border_radius:
   case eCSSProperty__moz_border_radius_topLeft:
   case eCSSProperty__moz_border_radius_topRight:
@@ -5986,6 +5993,7 @@ CSSParserImpl::ParseBackground()
 
   BackgroundItem bgitem;
   nsCSSValuePairList *positionHead = nsnull, **positionTail = &positionHead;
+  nsCSSValuePairList *sizeHead = nsnull, **sizeTail = &sizeHead;
   static const BackgroundItemSimpleValueInfo simpleValues[] = {
     { &BackgroundItem::mImage,      eCSSProperty_background_image },
     { &BackgroundItem::mRepeat,     eCSSProperty_background_repeat },
@@ -6003,6 +6011,7 @@ CSSParserImpl::ParseBackground()
     if (!ParseBackgroundItem(bgitem, !positionHead)) {
       break;
     }
+
     nsCSSValuePairList *positionItem = new nsCSSValuePairList;
     if (!positionItem) {
       mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
@@ -6012,6 +6021,16 @@ CSSParserImpl::ParseBackground()
     positionItem->mYValue = bgitem.mPosition.mYValue;
     *positionTail = positionItem;
     positionTail = &positionItem->mNext;
+
+    nsCSSValuePairList *sizeItem = new nsCSSValuePairList;
+    if (!sizeItem) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+    sizeItem->mXValue = bgitem.mSize.mXValue;
+    sizeItem->mYValue = bgitem.mSize.mYValue;
+    *sizeTail = sizeItem;
+    sizeTail = &sizeItem->mNext;
 
     PRBool fail = PR_FALSE;
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(simpleValues); ++i) {
@@ -6037,6 +6056,7 @@ CSSParserImpl::ParseBackground()
     }
 
     mTempData.mColor.mBackPosition = positionHead;
+    mTempData.mColor.mBackSize = sizeHead;
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(simpleValues); ++i) {
       nsCSSValueList **source = static_cast<nsCSSValueList**>(
         mTempData.PropertyAt(simpleValues[i].propID));
@@ -6049,9 +6069,11 @@ CSSParserImpl::ParseBackground()
     mTempData.SetPropertyBit(eCSSProperty_background_position);
     mTempData.SetPropertyBit(eCSSProperty__moz_background_clip);
     mTempData.SetPropertyBit(eCSSProperty__moz_background_origin);
+    mTempData.SetPropertyBit(eCSSProperty__moz_background_size);
     return PR_TRUE;
   }
   delete positionHead;
+  delete sizeHead;
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(simpleValues); ++i) {
     delete simpleHeads[i];
   }
@@ -6073,6 +6095,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
   aItem.mPosition.mYValue.SetPercentValue(0.0f);
   aItem.mClip.SetIntValue(NS_STYLE_BG_CLIP_BORDER, eCSSUnit_Enumerated);
   aItem.mOrigin.SetIntValue(NS_STYLE_BG_ORIGIN_PADDING, eCSSUnit_Enumerated);
+  aItem.mSize.mXValue.SetAutoValue();
+  aItem.mSize.mYValue.SetAutoValue();
   aItem.mLastItem = PR_FALSE;
 
   PRBool haveColor = PR_FALSE,
@@ -6113,6 +6137,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         aItem.mPosition.SetBothValuesTo(val);
         aItem.mClip = val;
         aItem.mOrigin = val;
+        aItem.mSize.mXValue = val;
+        aItem.mSize.mYValue = val;
         aItem.mLastItem = PR_TRUE;
         haveSomething = PR_TRUE;
         break;
@@ -6160,9 +6186,9 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
     // support for content-box on background-clip.
       } else if (nsCSSProps::FindKeyword(keyword,
                    nsCSSProps::kBackgroundClipKTable, dummy)) {
-        // For now, we use the background-clip table, because we don't
-        // support 'content' on background-clip.  But that's dangerous
-        // if we eventually support no-clip.
+        // For now, we use the background-clip table rather than have a special
+        // background-origin table, because we don't support 'content-box' on
+        // background-origin.
         NS_ASSERTION(
           nsCSSProps::kBackgroundClipKTable[0] == eCSSKeyword_border &&
           nsCSSProps::kBackgroundClipKTable[2] == eCSSKeyword_padding &&
@@ -6230,7 +6256,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
   return haveSomething;
 }
 
-// This function is very similar to ParseBackgroundPosition.
+// This function is very similar to ParseBackgroundPosition and
+// ParseBackgroundSize.
 PRBool
 CSSParserImpl::ParseBackgroundList(nsCSSProperty aPropID)
 {
@@ -6271,7 +6298,7 @@ CSSParserImpl::ParseBackgroundList(nsCSSProperty aPropID)
   return PR_FALSE;
 }
 
-// This function is very similar to ParseBackgroundList.
+// This function is very similar to ParseBackgroundList and ParseBackgroundSize.
 PRBool
 CSSParserImpl::ParseBackgroundPosition()
 {
@@ -6316,7 +6343,7 @@ CSSParserImpl::ParseBackgroundPosition()
  * values corresponding to percentages of the box, raw offsets, or keywords
  * like "top," "left center," etc.
  *
- * @param aOut The nsCSSValuePair where to place the result.
+ * @param aOut The nsCSSValuePair in which to place the result.
  * @return Whether or not the operation succeeded.
  */
 PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut)
@@ -6395,6 +6422,90 @@ PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut)
   // Create style values
   xValue = BoxPositionMaskToCSSValue(mask, PR_TRUE);
   yValue = BoxPositionMaskToCSSValue(mask, PR_FALSE);
+  return PR_TRUE;
+}
+
+// This function is very similar to ParseBackgroundList and
+// ParseBackgroundPosition.
+PRBool
+CSSParserImpl::ParseBackgroundSize()
+{
+  nsCSSValuePair valuePair;
+  nsCSSValuePairList *head = nsnull, **tail = &head;
+  if (ParseVariant(valuePair.mXValue, VARIANT_INHERIT, nsnull)) {
+    // 'initial' and 'inherit' stand alone, no second value.
+    head = new nsCSSValuePairList;
+    if (!head) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      return PR_FALSE;
+    }
+    head->mXValue = valuePair.mXValue;
+    head->mYValue.Reset();
+    mTempData.mColor.mBackSize = head;
+    mTempData.SetPropertyBit(eCSSProperty__moz_background_size);
+    return ExpectEndProperty();
+  }
+
+  for (;;) {
+    if (!ParseBackgroundSizeValues(valuePair)) {
+      break;
+    }
+    nsCSSValuePairList *item = new nsCSSValuePairList;
+    if (!item) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+    item->mXValue = valuePair.mXValue;
+    item->mYValue = valuePair.mYValue;
+    *tail = item;
+    tail = &item->mNext;
+    if (ExpectSymbol(',', PR_TRUE)) {
+      continue;
+    }
+    if (!ExpectEndProperty()) {
+      break;
+    }
+    mTempData.mColor.mBackSize = head;
+    mTempData.SetPropertyBit(eCSSProperty__moz_background_size);
+    return PR_TRUE;
+  }
+  delete head;
+  return PR_FALSE;
+}
+
+/**
+ * Parses two values that correspond to lengths for the -moz-background-size
+ * property.  These can be one or two lengths (or the 'auto' keyword) or
+ * percentages corresponding to the element's dimensions or the single keywords
+ * 'contain' or 'cover'.  'initial' and 'inherit' must be handled by the caller
+ * if desired.
+ *
+ * @param aOut The nsCSSValuePair in which to place the result.
+ * @return Whether or not the operation succeeded.
+ */
+PRBool CSSParserImpl::ParseBackgroundSizeValues(nsCSSValuePair &aOut)
+{
+  // First try a percentage or a length value
+  nsCSSValue &xValue = aOut.mXValue,
+             &yValue = aOut.mYValue;
+  if (ParseNonNegativeVariant(xValue, VARIANT_LP | VARIANT_AUTO, nsnull)) {
+    // We have one percentage/length/auto. Get the optional second
+    // percentage/length/keyword.
+    if (ParseNonNegativeVariant(yValue, VARIANT_LP | VARIANT_AUTO, nsnull)) {
+      // We have a second percentage/length/auto.
+      return PR_TRUE;
+    }
+
+    // If only one percentage or length value is given, it sets the
+    // horizontal size only, and the vertical size will be as if by 'auto'.
+    yValue.SetAutoValue();
+    return PR_TRUE;
+  }
+
+  // Now address 'contain' and 'cover'.
+  if (!ParseEnum(xValue, nsCSSProps::kBackgroundSizeKTable))
+    return PR_FALSE;
+  yValue.Reset();
   return PR_TRUE;
 }
 
