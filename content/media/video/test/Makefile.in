@@ -72,6 +72,7 @@ _TEST_FILES += \
 		test_bug468190.html \
 		test_bug482461.html \
 		test_bug493187.html \
+		test_bug495145.html \
 		test_can_play_type_ogg.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \
@@ -146,6 +147,7 @@ _TEST_FILES += \
 		test_bug463162.xhtml \
 		test_bug465498.html \
 		test_bug468190_wav.html \
+		test_bug495145_wav.html \
 		test_can_play_type_wave.html \
 		test_paused_after_ended.html \
 		test_wav_8bit.html \
