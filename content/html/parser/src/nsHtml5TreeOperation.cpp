@@ -70,7 +70,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       if (parent) {
         PRUint32 pos = parent->IndexOf(mNode);
         NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
-        rv = parent->RemoveChildAt(pos, PR_TRUE);
+        rv = parent->RemoveChildAt(pos, PR_TRUE, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
 //        nsNodeUtils::ContentRemoved(parent, mNode, pos);
       }
