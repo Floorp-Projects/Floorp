@@ -648,10 +648,10 @@ CanvasBrowser.prototype = {
     var body = cdoc.body || {};
     var html = cdoc.documentElement || {};
 
-    var w = Math.max(body.scrollWidth, html.scrollWidth);
-    var h = Math.max(body.scrollHeight, html.scrollHeight);
+    var w = Math.max(body.scrollWidth || 0, html.scrollWidth);
+    var h = Math.max(body.scrollHeight || 0, html.scrollHeight);
 
-    if (isNaN(w) || isNaN(h) || w == 0 || h == 0)
+    if (w == 0 || h == 0)
       return [this._canvas.width, this._canvas.height];
 
     return [w, h];
