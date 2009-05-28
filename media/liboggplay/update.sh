@@ -56,3 +56,5 @@ patch -p3 < seek_to_key_frame.patch
 patch -p3 < bug488951.patch
 patch -p3 < bug488951_yuv_fix.patch
 patch -p3 < bug488951_yuv_fix_2.patch
+patch -p3 < bug495129a.patch
+patch -p3 < bug495129b.patch
