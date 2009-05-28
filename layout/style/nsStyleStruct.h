@@ -194,6 +194,40 @@ struct nsStyleBackground {
     }
   };
 
+  struct Size;
+  friend struct Size;
+  struct Size {
+    typedef union {
+      nscoord mCoord; // for lengths
+      float mFloat; // for percents
+    } Dimension;
+    Dimension mWidth, mHeight;
+
+    enum DimensionType {
+      // If one of mWidth and mHeight is eContain or eCover, then both are.
+      // Also, these two values must equal the corresponding values in
+      // kBackgroundSizeKTable.
+      eContain, eCover,
+
+      eAuto,
+      ePercentage,
+      eLength,
+      eDimensionType_COUNT
+    };
+    PRUint8 mWidthType, mHeightType;
+
+    // Initialize nothing
+    Size() {}
+
+    // Initialize to initial values
+    void SetInitialValues();
+
+    PRBool operator==(const Size& aOther) const;
+    PRBool operator!=(const Size& aOther) const {
+      return !(*this == aOther);
+    }
+  };
+
   struct Layer;
   friend struct Layer;
   struct Layer {
@@ -203,6 +237,7 @@ struct nsStyleBackground {
     PRUint8 mRepeat;                    // [reset] See nsStyleConsts.h
     Position mPosition;                 // [reset]
     nsCOMPtr<imgIRequest> mImage;       // [reset]
+    Size mSize;                         // [reset]
 
     // Initializes only mImage
     Layer();
@@ -225,7 +260,8 @@ struct nsStyleBackground {
            mOriginCount,
            mRepeatCount,
            mPositionCount,
-           mImageCount;
+           mImageCount,
+           mSizeCount;
   // Layers are stored in an array, matching the top-to-bottom order in
   // which they are specified in CSS.  The number of layers to be used
   // should come from the background-image property.  We create
@@ -234,7 +270,7 @@ struct nsStyleBackground {
   // callers in layout care about (which is also the one whose
   // background-clip applies to the background-color) may not be last
   // layer.  In layers below the bottom layer, properties will be
-  // unitialized unless their count, above, indicates that they are
+  // uninitialized unless their count, above, indicates that they are
   // present.
   nsAutoTArray<Layer, 1> mLayers;
 

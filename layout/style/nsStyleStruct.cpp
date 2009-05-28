@@ -1217,6 +1217,7 @@ nsStyleBackground::nsStyleBackground()
   , mRepeatCount(1)
   , mPositionCount(1)
   , mImageCount(1)
+  , mSizeCount(1)
   , mBackgroundColor(NS_RGBA(0, 0, 0, 0))
   , mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS)
 {
@@ -1232,6 +1233,7 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   , mRepeatCount(aSource.mRepeatCount)
   , mPositionCount(aSource.mPositionCount)
   , mImageCount(aSource.mImageCount)
+  , mSizeCount(aSource.mSizeCount)
   , mLayers(aSource.mLayers) // deep copy
   , mBackgroundColor(aSource.mBackgroundColor)
   , mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy)
@@ -1246,6 +1248,7 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
     mRepeatCount = PR_MAX(mRepeatCount, count);
     mPositionCount = PR_MAX(mPositionCount, count);
     mImageCount = PR_MAX(mImageCount, count);
+    mSizeCount = PR_MAX(mSizeCount, count);
   }
 }
 
@@ -1303,6 +1306,46 @@ nsStyleBackground::Position::SetInitialValues()
   mYIsPercent = PR_TRUE;
 }
 
+void
+nsStyleBackground::Size::SetInitialValues()
+{
+  mWidthType = mHeightType = eAuto;
+}
+
+PRBool
+nsStyleBackground::Size::operator==(const Size& aOther) const
+{
+  NS_ABORT_IF_FALSE(mWidthType < eDimensionType_COUNT,
+                    "bad mWidthType for this");
+  NS_ABORT_IF_FALSE(mHeightType < eDimensionType_COUNT,
+                    "bad mHeightType for this");
+  NS_ABORT_IF_FALSE(aOther.mWidthType < eDimensionType_COUNT,
+                    "bad mWidthType for aOther");
+  NS_ABORT_IF_FALSE(aOther.mHeightType < eDimensionType_COUNT,
+                    "bad mHeightType for aOther");
+
+  if (mWidthType != aOther.mWidthType || mHeightType != aOther.mHeightType)
+    return PR_FALSE;
+
+  if (mWidthType == ePercentage) {
+    if (mWidth.mFloat != aOther.mWidth.mFloat)
+      return PR_FALSE;
+  } else if (mWidthType == eLength) {
+    if (mWidth.mCoord != aOther.mWidth.mCoord)
+      return PR_FALSE;
+  }
+
+  if (mHeightType == ePercentage) {
+    if (mHeight.mFloat != aOther.mHeight.mFloat)
+      return PR_FALSE;
+  } else if (mHeightType == eLength) {
+    if (mHeight.mCoord != aOther.mHeight.mCoord)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
 nsStyleBackground::Layer::Layer()
 {
 }
@@ -1319,6 +1362,7 @@ nsStyleBackground::Layer::SetInitialValues()
   mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
   mRepeat = NS_STYLE_BG_REPEAT_XY;
   mPosition.SetInitialValues();
+  mSize.SetInitialValues();
   mImage = nsnull;
 }
 
@@ -1329,6 +1373,7 @@ PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
          mOrigin == aOther.mOrigin &&
          mRepeat == aOther.mRepeat &&
          mPosition == aOther.mPosition &&
+         mSize == aOther.mSize &&
          EqualImages(mImage, aOther.mImage);
 }
 
