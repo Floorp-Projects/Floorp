@@ -53,6 +53,8 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIContentViewer.h"
+#include "nsIScriptGlobalObjectOwner.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5Tokenizer.h"
@@ -173,6 +175,36 @@ nsHtml5Parser::~nsHtml5Parser()
 #ifdef DEBUG
   delete mSnapshot;
 #endif  
+}
+
+// copied from HTML content sink
+static PRBool
+IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
+{
+  NS_ENSURE_TRUE(aDoc && aContainer, PR_TRUE);
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = aDoc->GetScriptGlobalObject();
+
+  // Getting context is tricky if the document hasn't had its
+  // GlobalObject set yet
+  if (!globalObject) {
+    nsCOMPtr<nsIScriptGlobalObjectOwner> owner = do_GetInterface(aContainer);
+    NS_ENSURE_TRUE(owner, PR_TRUE);
+
+    globalObject = owner->GetScriptGlobalObject();
+    NS_ENSURE_TRUE(globalObject, PR_TRUE);
+  }
+
+  nsIScriptContext *scriptContext = globalObject->GetContext();
+  NS_ENSURE_TRUE(scriptContext, PR_TRUE);
+
+  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  NS_ENSURE_TRUE(cx, PR_TRUE);
+
+  PRBool enabled = PR_TRUE;
+  nsContentUtils::GetSecurityManager()->
+    CanExecuteScripts(cx, aDoc->NodePrincipal(), &enabled);
+  return enabled;
 }
 
 NS_IMETHODIMP_(void) 
@@ -320,6 +352,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     case TERMINATED:
       return NS_OK;
     case NOT_STARTED:
+      mTreeBuilder->setScriptingEnabled(IsScriptEnabled(mDocument, mDocShell));
       mTokenizer->start();
       mLifeCycle = PARSING;
       mParser = this;
@@ -465,6 +498,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   mFragmentMode = PR_TRUE;
   mCanInterruptParser = PR_FALSE;
   NS_ASSERTION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
+  mTreeBuilder->setScriptingEnabled(IsScriptEnabled(mDocument, mDocShell));
   mTokenizer->start();
   mLifeCycle = PARSING;
   mParser = this;
@@ -631,6 +665,7 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
     case TERMINATED:
       break;
     case NOT_STARTED:
+      mTreeBuilder->setScriptingEnabled(IsScriptEnabled(mDocument, mDocShell));
       mTokenizer->start();
       mLifeCycle = STREAM_ENDING;
       mParser = this;
@@ -1238,6 +1273,7 @@ nsHtml5Parser::ParseUntilSuspend()
     case TERMINATED:
       return;
     case NOT_STARTED:
+      mTreeBuilder->setScriptingEnabled(IsScriptEnabled(mDocument, mDocShell));
       mTokenizer->start();
       mLifeCycle = PARSING;
       mParser = this;
