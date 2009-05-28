@@ -406,7 +406,7 @@ nsWaveStateMachine::Pause()
   nsAutoMonitor monitor(mMonitor);
   mPaused = PR_TRUE;
   if (mState == STATE_LOADING_METADATA || mState == STATE_SEEKING ||
-      mState == STATE_BUFFERING) {
+      mState == STATE_BUFFERING || mState == STATE_ENDED) {
     mNextState = STATE_PAUSED;
   } else if (mState == STATE_PLAYING) {
     ChangeState(STATE_PAUSED);
