@@ -352,6 +352,7 @@ WidgetStack.prototype = {
   _dragState: null,
 
   _skipViewportUpdates: 0,
+  _forceViewportUpdate: false,
 
   //
   // init:
@@ -734,21 +735,26 @@ WidgetStack.prototype = {
   },
 
   beginUpdateBatch: function startUpdate() {
-    if (!this._skipViewportUpdates)
+    if (!this._skipViewportUpdates) {
       this._startViewportBoundsString = this._viewportBounds.toString();
+      this._forceViewportUpdate = false;
+    }
     this._skipViewportUpdates++;
   },
 
-  endUpdateBatch: function endUpdate() {
+  endUpdateBatch: function endUpdate(aForceRedraw) {
     if (!this._skipViewportUpdates)
       throw new Error("Unbalanced call to endUpdateBatch");
+
+    this._forceViewportUpdate = this._forceViewportUpdate || aForceRedraw;
+
     this._skipViewportUpdates--;
     if (this._skipViewportUpdates)
       return
 
     let boundsSizeChanged =
       this._startViewportBoundsString != this._viewportBounds.toString();
-    this._callViewportUpdateHandler(boundsSizeChanged);
+    this._callViewportUpdateHandler(boundsSizeChanged || this._forceViewportUpdate);
   },
 
   //
