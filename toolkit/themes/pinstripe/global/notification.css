@@ -34,15 +34,15 @@ notification[type="critical"] {
 /* Default icons for notifications */
 
 notification[type="info"] .messageImage {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
+  list-style-image: url("chrome://global/skin/notification/info-icon.png");
 }
 
 notification[type="warning"] .messageImage {
-  list-style-image: url("chrome://global/skin/icons/warning-16.png");
+  list-style-image: url("chrome://global/skin/notification/warning-icon.png");
 }
 
 notification[type="critical"] .messageImage {
-  list-style-image: url("chrome://global/skin/icons/error-16.png");
+  list-style-image: url("chrome://global/skin/notification/error-icon.png");
 }
 
 .notification-inner {
