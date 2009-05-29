@@ -97,15 +97,16 @@ public:
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();
   
-  // nsISVGTextContentMetrics
-  NS_IMETHOD GetNumberOfChars(PRInt32 *_retval);
-  NS_IMETHOD GetComputedTextLength(float *_retval);
-  NS_IMETHOD GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval);
+  // nsSVGTextContainerFrame methods:
+  virtual PRUint32 GetNumberOfChars();
+  virtual float GetComputedTextLength();
+  virtual float GetSubStringLength(PRUint32 charnum, PRUint32 nchars);
+  virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point);
+
   NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
   NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
   NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval);
   NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval);
-  NS_IMETHOD GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval);
 
   // nsSVGTextFrame
   void NotifyGlyphMetricsChange();

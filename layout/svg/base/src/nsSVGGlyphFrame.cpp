@@ -292,7 +292,7 @@ nsSVGGlyphFrame::Init(nsIContent* aContent,
   nsIFrame* ancestorFrame = nsSVGUtils::GetFirstNonAAncestorFrame(aParent);
   NS_ASSERTION(ancestorFrame, "Must have ancestor");
 
-  nsISVGTextContentMetrics *metrics = do_QueryFrame(ancestorFrame);
+  nsSVGTextContainerFrame *metrics = do_QueryFrame(ancestorFrame);
   NS_ASSERTION(metrics,
                "trying to construct an SVGGlyphFrame for an invalid container");
 
@@ -1106,7 +1106,7 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
 //----------------------------------------------------------------------
 // nsISVGGlyphFragmentNode interface:
 
-NS_IMETHODIMP_(PRUint32)
+PRUint32
 nsSVGGlyphFrame::GetNumberOfChars()
 {
   if (mWhitespaceHandling == PRESERVE_WHITESPACE)
@@ -1117,13 +1117,13 @@ nsSVGGlyphFrame::GetNumberOfChars()
   return text.Length();
 }
 
-NS_IMETHODIMP_(float)
+float
 nsSVGGlyphFrame::GetComputedTextLength()
 {
   return GetAdvance(PR_FALSE);
 }
 
-NS_IMETHODIMP_(float)
+float
 nsSVGGlyphFrame::GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars)
 {
   float drawScale, metricsScale;
@@ -1135,7 +1135,7 @@ nsSVGGlyphFrame::GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars)
   return float(advanceAppUnits)*metricsScale;
 }
 
-NS_IMETHODIMP_(PRInt32)
+PRInt32
 nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
 {
   float xPos, yPos;
