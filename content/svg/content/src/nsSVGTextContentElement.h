@@ -15,12 +15,12 @@
  * The Original Code is the Mozilla SVG project.
  *
  * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Arpad Borsos <arpad.borsos@googlemail.com>
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Arpad Borsos <arpad.borsos@googlemail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,30 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ISVGTEXTCONTENTMETRICS_H__
-#define __NS_ISVGTEXTCONTENTMETRICS_H__
+#ifndef __NS_SVGTEXTCONTENTELEMENTBASE_H__
+#define __NS_SVGTEXTCONTENTELEMENTBASE_H__
 
-#include "nsQueryFrame.h"
+#include "nsIDOMSVGTextContentElement.h"
+#include "nsSVGTextContainerFrame.h"
 
-class nsIDOMSVGRect;
-class nsIDOMSVGPoint;
-
-////////////////////////////////////////////////////////////////////////
-// nsISVGTextContentMetrics
-
-class nsISVGTextContentMetrics
+class nsSVGTextContentElement
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsISVGTextContentMetrics)
-  
-  NS_IMETHOD GetNumberOfChars(PRInt32 *_retval)=0;
-  NS_IMETHOD GetComputedTextLength(float *_retval)=0;
-  NS_IMETHOD GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)=0;
-  NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;
-  NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)=0;
-  NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)=0;
-  NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval)=0;
-  NS_IMETHOD GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)=0;
+  NS_DECL_NSIDOMSVGTEXTCONTENTELEMENT
+
+protected:
+  virtual nsSVGTextContainerFrame* GetTextContainerFrame()=0;
 };
 
-#endif // __NS_ISVGTEXTCONTENTMETRICS_H__
+#endif

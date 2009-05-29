@@ -46,7 +46,6 @@
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGRect.h"
-#include "nsISVGTextContentMetrics.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsGkAtoms.h"
@@ -112,29 +111,37 @@ nsSVGTextFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISVGTextContentMetrics
-NS_IMETHODIMP
-nsSVGTextFrame::GetNumberOfChars(PRInt32 *_retval)
+// nsSVGTextContainerFrame
+PRUint32
+nsSVGTextFrame::GetNumberOfChars()
 {
   UpdateGlyphPositioning(PR_FALSE);
 
-  return nsSVGTextFrameBase::GetNumberOfChars(_retval);
+  return nsSVGTextFrameBase::GetNumberOfChars();
 }
 
-NS_IMETHODIMP
-nsSVGTextFrame::GetComputedTextLength(float *_retval)
+float
+nsSVGTextFrame::GetComputedTextLength()
 {
   UpdateGlyphPositioning(PR_FALSE);
 
-  return nsSVGTextFrameBase::GetComputedTextLength(_retval);
+  return nsSVGTextFrameBase::GetComputedTextLength();
 }
 
-NS_IMETHODIMP
-nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
+float
+nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
 {
   UpdateGlyphPositioning(PR_FALSE);
 
-  return nsSVGTextFrameBase::GetSubStringLength(charnum, nchars, _retval);
+  return nsSVGTextFrameBase::GetSubStringLength(charnum, nchars);
+}
+
+PRInt32
+nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
+{
+  UpdateGlyphPositioning(PR_FALSE);
+
+  return nsSVGTextFrameBase::GetCharNumAtPosition(point);
 }
 
 NS_IMETHODIMP
@@ -168,15 +175,6 @@ nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 
   return nsSVGTextFrameBase::GetRotationOfChar(charnum,  _retval);
 }
-
-NS_IMETHODIMP
-nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
-{
-  UpdateGlyphPositioning(PR_FALSE);
-
-  return nsSVGTextFrameBase::GetCharNumAtPosition(point,  _retval);
-}
-
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
