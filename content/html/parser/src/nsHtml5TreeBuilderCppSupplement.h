@@ -53,6 +53,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsTraceRefcnt.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIScriptElement.h"
 
 #define NS_HTML5_TREE_BUILDER_MAX_QUEUE_TIME 3000000UL // microseconds
 #define NS_HTML5_TREE_BUILDER_DEFAULT_QUEUE_LENGTH 200
@@ -244,6 +245,16 @@ nsHtml5TreeBuilder::addAttributesToElement(nsIContent* aElement, nsHtml5HtmlAttr
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   // XXX if null, OOM!
   treeOp->Init(eTreeOpAddAttributes, holder, aElement);
+}
+
+void
+nsHtml5TreeBuilder::markMalformedIfScript(nsIContent* elt)
+{
+  nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(elt);
+  if (sele) {
+    // Make sure to serialize this script correctly, for nice round tripping.
+    sele->SetIsMalformed();    
+  }
 }
 
 void

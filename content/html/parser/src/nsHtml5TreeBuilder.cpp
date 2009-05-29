@@ -427,7 +427,7 @@ nsHtml5TreeBuilder::eof()
     case NS_HTML5TREE_BUILDER_IN_FOREIGN: {
 
       while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
-        pop();
+        popOnEof();
       }
       foreignFlag = NS_HTML5TREE_BUILDER_NOT_IN_FOREIGN;
     }
@@ -456,7 +456,7 @@ nsHtml5TreeBuilder::eof()
 
         }
         while (currentPtr > 0) {
-          pop();
+          popOnEof();
         }
         mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
         continue;
@@ -464,7 +464,7 @@ nsHtml5TreeBuilder::eof()
       case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT: {
 
         while (currentPtr > 1) {
-          pop();
+          popOnEof();
         }
         mode = NS_HTML5TREE_BUILDER_IN_HEAD;
         continue;
@@ -479,7 +479,7 @@ nsHtml5TreeBuilder::eof()
 
           goto eofloop_end;
         } else {
-          pop();
+          popOnEof();
           mode = NS_HTML5TREE_BUILDER_IN_TABLE;
           continue;
         }
@@ -493,9 +493,9 @@ nsHtml5TreeBuilder::eof()
       case NS_HTML5TREE_BUILDER_IN_CDATA_RCDATA: {
 
         if (originalMode == NS_HTML5TREE_BUILDER_AFTER_HEAD) {
-          pop();
+          popOnEof();
         }
-        pop();
+        popOnEof();
         mode = originalMode;
         continue;
       }
@@ -521,10 +521,10 @@ nsHtml5TreeBuilder::eof()
   }
   eofloop_end: ;
   while (currentPtr > 0) {
-    pop();
+    popOnEof();
   }
   if (!fragment) {
-    pop();
+    popOnEof();
   }
 }
 
@@ -3260,6 +3260,18 @@ nsHtml5TreeBuilder::pop()
 
   currentPtr--;
   elementPopped(node->ns, node->popName, node->node);
+  node->release();
+}
+
+void 
+nsHtml5TreeBuilder::popOnEof()
+{
+  flushCharacters();
+  nsHtml5StackNode* node = stack[currentPtr];
+
+  currentPtr--;
+  elementPopped(node->ns, node->popName, node->node);
+  markMalformedIfScript(node->node);
   node->release();
 }
 

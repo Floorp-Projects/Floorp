@@ -2541,9 +2541,6 @@ nsHtml5Tokenizer::eof()
           goto eofloop_end;
         } else {
 
-          endTag = PR_TRUE;
-          tagName = contentModelElement;
-          emitCurrentTagToken(PR_FALSE);
           goto eofloop_end;
         }
       }
@@ -2554,37 +2551,27 @@ nsHtml5Tokenizer::eof()
       }
       case NS_HTML5TOKENIZER_TAG_NAME: {
 
-        tagName = strBufToElementNameString();
-        emitCurrentTagToken(PR_FALSE);
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
       case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_VALUE_QUOTED:
       case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG: {
 
-        emitCurrentTagToken(PR_FALSE);
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_ATTRIBUTE_NAME: {
 
-        attributeNameComplete();
-        addAttributeWithoutValue();
-        emitCurrentTagToken(PR_FALSE);
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_NAME:
       case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_VALUE: {
 
-        addAttributeWithoutValue();
-        emitCurrentTagToken(PR_FALSE);
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_DOUBLE_QUOTED:
       case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_SINGLE_QUOTED:
       case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED: {
 
-        addAttributeWithValue();
-        emitCurrentTagToken(PR_FALSE);
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_BOGUS_COMMENT: {
