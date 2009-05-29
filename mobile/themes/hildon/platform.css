@@ -160,6 +160,8 @@ radiogroup {
 }
 
 radio {
+  min-width: 7.2mm !important;
+  min-height: 7.2mm !important;
   color: #414141;
   padding: 0.2mm 1mm;
   margin: 0;
@@ -170,8 +172,6 @@ radio {
 }
 
 radio[selected] {
-  min-width: 7.2mm !important;
-  min-height: 7.2mm !important;
   color: #fff;
   border: 0.1mm solid #91875a;
   background-color: #DDC763;
