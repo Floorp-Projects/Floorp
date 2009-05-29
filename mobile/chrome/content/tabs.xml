@@ -11,8 +11,8 @@
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <content>
       <xul:stack anonid="page" class="documenttab-container" flex="1">
-        <html:canvas anonid="canvas" class="documenttab-canvas" width="80" height="60"/>
-        <xul:vbox align="start">
+        <html:canvas anonid="canvas" class="documenttab-canvas" left="8" width="100" height="75"/>
+        <xul:vbox left="0" top="28">
           <xul:image anonid="close" class="documenttab-close"/>
         </xul:vbox>
       </xul:stack>
@@ -30,8 +30,8 @@
         <parameter name="srcCanvas"/>
         <body>
           <![CDATA[
-            const tabWidth = 80;
-            const tabHeight = 60;
+            const tabWidth = 100;
+            const tabHeight = 75;
             let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
 
             let domWin = browser.contentWindow;
