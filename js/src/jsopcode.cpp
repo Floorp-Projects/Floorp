@@ -750,7 +750,7 @@ JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
     jp->pcstack = NULL;
     jp->fun = fun;
     jp->localNames = NULL;
-    if (fun && FUN_INTERPRETED(fun) && JS_GET_LOCAL_NAME_COUNT(fun)) {
+    if (fun && FUN_INTERPRETED(fun) && fun->hasLocalNames()) {
         jp->localNames = js_GetLocalNameArray(cx, fun, &jp->pool);
         if (!jp->localNames) {
             js_DestroyPrinter(jp);
@@ -1253,7 +1253,7 @@ GetArgOrVarAtom(JSPrinter *jp, uintN slot)
     JSAtom *name;
 
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < (uintN) JS_GET_LOCAL_NAME_COUNT(jp->fun), NULL);
+    LOCAL_ASSERT_RV(slot < jp->fun->countLocalNames(), NULL);
     name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -2806,6 +2806,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALLUPVAR:
               case JSOP_GETDSLOT:
               case JSOP_CALLDSLOT:
+              {
                 if (!jp->fun) {
                     JS_ASSERT(jp->script->flags & JSSF_SAVED_CALLER_FUN);
                     JS_GET_SCRIPT_FUNCTION(jp->script, 0, jp->fun);
@@ -2814,8 +2815,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if (!jp->localNames)
                     jp->localNames = js_GetLocalNameArray(cx, jp->fun, &jp->pool);
 
-                i = JS_UPVAR_LOCAL_NAME_START(jp->fun) + GET_UINT16(pc);
-                if (i >= JS_GET_LOCAL_NAME_COUNT(jp->fun)) {
+                uintN index = GET_UINT16(pc);
+                if (index < jp->fun->u.i.nupvars) {
+                    index += jp->fun->countArgsAndVars();
+                } else {
                     JSUpvarArray *uva;
 #ifdef DEBUG
                     /*
@@ -2839,11 +2842,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     }
 #endif
                     uva = JS_SCRIPT_UPVARS(jp->script);
-                    i = GET_UINT16(pc);
-                    i = UPVAR_FRAME_SLOT(uva->vector[i]);
+                    index = UPVAR_FRAME_SLOT(uva->vector[index]);
                 }
-                atom = GetArgOrVarAtom(jp, i);
+                atom = GetArgOrVarAtom(jp, index);
                 goto do_name;
+              }
 
               case JSOP_CALLLOCAL:
               case JSOP_GETLOCAL:
@@ -3989,8 +3992,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * release to mark before returning.
                      */
                     mark = JS_ARENA_MARK(&cx->tempPool);
-                    uintN n = JS_GET_LOCAL_NAME_COUNT(fun);
-                    if (n == 0) {
+                    if (!fun->hasLocalNames()) {
                         innerLocalNames = NULL;
                     } else {
                         innerLocalNames = js_GetLocalNameArray(cx, fun, &cx->tempPool);
