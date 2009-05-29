@@ -2465,6 +2465,10 @@ TraceRecorder::createGuardRecord(VMSideExit* exit)
 JS_REQUIRES_STACK void
 TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
 {
+    debug_only_v(nj_dprintf("    About to try emitting guard code for "
+                            "SideExit=%p exitType=%d\n",
+                            (void*)exit, exit->exitType);)
+
     LIns* guardRec = createGuardRecord(exit);
 
     /*
@@ -2483,10 +2487,8 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
 
     LIns* guardIns =
         lir->insGuard(expected ? LIR_xf : LIR_xt, cond, guardRec);
-    if (guardIns) {
-        debug_only_v(nj_dprintf("    SideExit=%p exitType=%d\n", (void*)exit, exit->exitType);)
-    } else {
-        debug_only_v(nj_dprintf("    redundant guard, eliminated\n");)
+    if (!guardIns) {
+        debug_only_v(nj_dprintf("    redundant guard, eliminated, no codegen\n");)
     }
 }
 
@@ -6473,7 +6475,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         if (aobj != globalObj) {
             LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                       "shape");
-            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)"),
+            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)(test_property_cache)"),
                   BRANCH_EXIT);
         }
     } else {
@@ -6517,7 +6519,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                   "shape");
         guard(true,
-              addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard(vshape)"),
+              addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard(vshape)(test_property_cache)"),
               BRANCH_EXIT);
     }
 
@@ -8046,7 +8048,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
         ABORT_TRACE("non-native map");
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)"),
+    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)(record_SetPropHit)"),
           BRANCH_EXIT);
 
     uint32 vshape = PCVCAP_SHAPE(entry->vcap);
@@ -8054,7 +8056,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
         LIns *vshape_ins = lir->insLoad(LIR_ld,
                                         lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime)),
                                         offsetof(JSRuntime, protoHazardShape));
-        guard(true, addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard(vshape)"),
+        guard(true, addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard(vshape)(record_SetPropHit)"),
               MISMATCH_EXIT);
 
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
