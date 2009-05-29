@@ -2007,9 +2007,10 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint16& tcflags)
                          * the flat closure optimization. The parser detects
                          * these cases and flags the function heavyweight.
                          */
-                        JSFunctionBox *parentbox = afunbox->parent ? afunbox->parent : afunbox;
-                        if (parentbox->tcflags & TCF_FUN_HEAVYWEIGHT)
+                        if ((afunbox->parent ? afunbox->parent->tcflags : tcflags)
+                            & TCF_FUN_HEAVYWEIGHT) {
                             break;
+                        }
 
                         /*
                          * If afunbox's function is not a lambda, it will be
