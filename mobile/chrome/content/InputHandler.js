@@ -520,8 +520,8 @@ KineticData.prototype = {
     }
 
     // average the speeds out (this could probably be a bit smarter)
-    this.speedX = tempX / mblen;
-    this.speedY = tempY / mblen;
+    this._speedX = tempX / mblen;
+    this._speedY = tempY / mblen;
 
     // fire off our kinetic timer which will do all the work
     this._startKineticTimer();
