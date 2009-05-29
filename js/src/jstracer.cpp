@@ -5327,7 +5327,9 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
                                         (void*)frag, frag->ip, script->code,
                                         script->code + script->length));
                 VMFragment* next = frag->next;
-                js_TrashTree(cx, frag);
+                for (Fragment *p = frag; p; p = p->peer)
+                    js_TrashTree(cx, p);
+                tm->fragmento->clearFragment(frag);
                 *f = next;
             } else {
                 f = &((*f)->next);
