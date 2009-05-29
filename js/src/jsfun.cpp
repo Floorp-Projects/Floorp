@@ -707,7 +707,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 
     fun = fp->fun;
     JS_ASSERT(fun == GetCallObjectFunction(callobj));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->countArgsAndVars();
     if (n != 0) {
         JS_LOCK_OBJ(cx, callobj);
         n += JS_INITIAL_NSLOTS;
@@ -747,7 +747,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSProperty *prop;
 
     fun = GetCallObjectFunction(obj);
-    n = fun ? JS_GET_LOCAL_NAME_COUNT(fun) : 0;
+    n = fun ? fun->countArgsAndVars() : 0;
     if (n == 0)
         return JS_TRUE;
 
@@ -774,14 +774,13 @@ call_enumerate(JSContext *cx, JSObject *obj)
             goto out;
 
         /*
-         * If this local name was not an upvar name, the call object will
-         * always have a property corresponding to the local name because
-         * call_resolve creates the property using JSPROP_PERMANENT.
+         * The call object will always have a property corresponding to the
+         * argument or variable name because call_resolve creates the property
+         * using JSPROP_PERMANENT.
          */
-        if (prop) {
-            JS_ASSERT(pobj == obj);
-            OBJ_DROP_PROPERTY(cx, pobj, prop);
-        }
+        JS_ASSERT(prop);
+        JS_ASSERT(pobj == obj);
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
     ok = JS_TRUE;
 
@@ -1004,7 +1003,7 @@ call_reserveSlots(JSContext *cx, JSObject *obj)
     JSFunction *fun;
 
     fun = GetCallObjectFunction(obj);
-    return JS_GET_LOCAL_NAME_COUNT(fun);
+    return fun->countArgsAndVars();
 }
 
 JS_FRIEND_DATA(JSClass) js_CallClass = {
@@ -2467,7 +2466,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
         else
             JS_ASSERT(kind == JSLOCAL_VAR);
     }
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->countLocalNames();
     if (n == 0) {
         JS_ASSERT(fun->u.i.names.taggedAtom == 0);
         fun->u.i.names.taggedAtom = taggedAtom;
@@ -2567,7 +2566,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
     JSLocalNameHashEntry *entry;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->countLocalNames();
     if (n == 0)
         return JSLOCAL_NONE;
     if (n <= MAX_ARRAY_LOCALS) {
@@ -2575,7 +2574,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
 
         /* Search from the tail to pick up the last duplicated name. */
         i = n;
-        upvar_base = JS_UPVAR_LOCAL_NAME_START(fun);
+        upvar_base = fun->countArgsAndVars();
         do {
             --i;
             if (atom == JS_LOCAL_NAME_TO_ATOM(array[i])) {
@@ -2661,9 +2660,8 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
     JSLocalNameEnumeratorArgs args;
     JSNameIndexPair *dup;
 
-    JS_ASSERT(FUN_INTERPRETED(fun));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
-    JS_ASSERT(n != 0);
+    JS_ASSERT(fun->hasLocalNames());
+    n = fun->countLocalNames();
 
     if (n <= MAX_ARRAY_LOCALS)
         return (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
@@ -2728,7 +2726,7 @@ TraceLocalNames(JSTracer *trc, JSFunction *fun)
     jsuword *array;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->countLocalNames();
     if (n == 0)
         return;
     if (n <= MAX_ARRAY_LOCALS) {
@@ -2760,7 +2758,7 @@ DestroyLocalNames(JSContext *cx, JSFunction *fun)
 {
     uintN n;
 
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->countLocalNames();
     if (n <= 1)
         return;
     if (n <= MAX_ARRAY_LOCALS)

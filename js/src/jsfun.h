@@ -63,35 +63,9 @@ typedef union JSLocalNames {
     JSLocalNameMap  *map;
 } JSLocalNames;
 
-struct JSFunction {
-    JSObject        object;       /* GC'ed object header */
-    uint16          nargs;        /* maximum number of specified arguments,
-                                     reflected as f.length/f.arity */
-    uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
-    union {
-        struct {
-            uint16      extra;    /* number of arg slots for local GC roots */
-            uint16      spare;    /* reserved for future use */
-            JSNative    native;   /* native method pointer or null */
-            JSClass     *clasp;   /* class of objects constructed
-                                     by this function */
-            JSTraceableNative *trcinfo;  /* tracer metadata; can be first
-                                            element of array */
-        } n;
-        struct {
-            uint16      nvars;    /* number of local variables */
-            uint16      nupvars;  /* number of upvars (computable from script
-                                     but here for faster access) */
-            JSScript    *script;  /* interpreted bytecode descriptor or null */
-            JSLocalNames names;   /* argument and variable names */
-        } i;
-    } u;
-    JSAtom          *atom;        /* name for diagnostics and decompiling */
-};
-
 /*
- * The high two bits of fun->flags encode whether the function is native or
- * interpreted, and if interpreted, what kind of optimized closure form (if
+ * The high two bits of JSFunction.flags encode whether the function is native
+ * or interpreted, and if interpreted, what kind of optimized closure form (if
  * any) it might be.
  *
  *   00   not interpreted
@@ -153,6 +127,50 @@ struct JSFunction {
 #define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
                               JS_ASSERT((fun)->flags & JSFUN_TRACEABLE),      \
                               fun->u.n.trcinfo)
+
+struct JSFunction {
+    JSObject        object;       /* GC'ed object header */
+    uint16          nargs;        /* maximum number of specified arguments,
+                                     reflected as f.length/f.arity */
+    uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
+    union {
+        struct {
+            uint16      extra;    /* number of arg slots for local GC roots */
+            uint16      spare;    /* reserved for future use */
+            JSNative    native;   /* native method pointer or null */
+            JSClass     *clasp;   /* class of objects constructed
+                                     by this function */
+            JSTraceableNative *trcinfo;  /* tracer metadata; can be first
+                                            element of array */
+        } n;
+        struct {
+            uint16      nvars;    /* number of local variables */
+            uint16      nupvars;  /* number of upvars (computable from script
+                                     but here for faster access) */
+            JSScript    *script;  /* interpreted bytecode descriptor or null */
+            JSLocalNames names;   /* argument and variable names */
+        } i;
+    } u;
+    JSAtom          *atom;        /* name for diagnostics and decompiling */
+
+#ifdef __cplusplus
+
+    uintN countArgsAndVars() const {
+        JS_ASSERT(FUN_INTERPRETED(this));
+        return nargs + u.i.nvars;
+    }
+
+    uintN countLocalNames() const {
+        JS_ASSERT(FUN_INTERPRETED(this));
+        return countArgsAndVars() + u.i.nupvars;
+    }
+
+    bool hasLocalNames() const {
+        JS_ASSERT(FUN_INTERPRETED(this));
+        return countLocalNames() != 0;
+    }
+#endif
+};
 
 /*
  * Traceable native.  This expands to a JSFunctionSpec initializer (like JS_FN
@@ -273,10 +291,6 @@ typedef enum JSLocalKind {
     JSLOCAL_UPVAR
 } JSLocalKind;
 
-#define JS_UPVAR_LOCAL_NAME_START(fun)  ((fun)->nargs + (fun)->u.i.nvars)
-#define JS_GET_LOCAL_NAME_COUNT(fun)    (JS_UPVAR_LOCAL_NAME_START(fun) +     \
-                                         (fun)->u.i.nupvars)
-
 extern JSBool
 js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind);
 
@@ -293,7 +307,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
  * Functions to work with local names as an array of words.
  *
  * js_GetLocalNameArray returns the array, or null if we are out of memory.
- * This function must not be called when JS_GET_LOCAL_NAME_COUNT(fun) is zero.
+ * This function must be called only when fun->hasLocalNames().
  *
  * The supplied pool is used to allocate the returned array, so the caller is
  * obligated to mark and release to free it.
