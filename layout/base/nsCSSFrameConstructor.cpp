@@ -162,7 +162,7 @@ NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 #endif
 
 #ifdef MOZ_SVG
-#include "nsISVGTextContentMetrics.h"
+#include "nsSVGTextContainerFrame.h"
 
 PRBool
 NS_SVGEnabled();
@@ -3555,7 +3555,7 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
+      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
       if (metrics) {
         static const FrameConstructionData sSVGGlyphData =
           SIMPLE_FCDATA(NS_NewSVGGlyphFrame);
@@ -4974,7 +4974,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
+      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
       // Text cannot be nested
       if (metrics) {
         return &sGenericContainerData;
@@ -4986,7 +4986,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
+      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
       if (!metrics) {
         return &sGenericContainerData;
       }
