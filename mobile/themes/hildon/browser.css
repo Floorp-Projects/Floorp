@@ -44,18 +44,17 @@
 #toolbar-main {
   -moz-appearance: none;
   -moz-box-align: center;
-  padding: 0px 10px;
+  padding: 0.5mm;
   border: none;
 }
 
 toolbarbutton {
   -moz-appearance: none !important;
   -moz-box-orient: vertical;
-  min-width: 48px;
-  min-height: 48px;
+  min-width: 0;
   /* override default toolbarbutton padding/margin */
   margin: 0;
-  padding: 5px;
+  padding: 0.5mm;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
@@ -63,7 +62,7 @@ toolbarbutton:not(.show-text) .toolbarbutton-text {
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-icon {
-  -moz-margin-end: 0px;
+  -moz-margin-end: 0;
 }
 
 toolbarbutton:hover,
@@ -75,31 +74,35 @@ toolbarbutton[open="true"] {
 /* main toolbar buttons */
 toolbarbutton.urlbar-button {
   /* space out the buttons a bit horizontally */
-  margin-left: 8px
+  margin-left: 0.5mm;
 }
 
 #tool-bookmarks {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-24.png");
+  list-style-image: url("chrome://browser/skin/images/bookmarks-default-64.png");
+}
+
+#tool-bookmarks:hover:active {
+  list-style-image: url("chrome://browser/skin/images/bookmarks-active-64.png");
 }
 
 /* URL bar cap buttons */
 toolbarbutton.urlbar-cap-button {
-  margin: 2px;
-  padding: 0px;
-  min-width: 0px;
-  min-height: 0px;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
 }
 
 #tool-go {
-  list-style-image: url("chrome://browser/skin/images/go-16.png");
+  list-style-image: url("chrome://browser/skin/images/go-default-30.png");
 }
 
 #tool-reload {
-  list-style-image: url("chrome://browser/skin/images/reload-16.png");
+  list-style-image: url("chrome://browser/skin/images/reload-default-30.png");
 }
 
 #tool-stop {
-  list-style-image: url("chrome://browser/skin/images/stop-16.png");
+  list-style-image: url("chrome://browser/skin/images/stop-default-30.png");
 }
 
 #urlbar-icons[mode="loading"] > #tool-go,
@@ -121,34 +124,37 @@ toolbarbutton.urlbar-cap-button {
 #urlbar-container {
   color: #000;
   -moz-box-align: center;
-  min-height: 60px;
 }
 
 /* creates the left endcap */
 #identity-box {
-  color: #fff;
-  padding: 9px 4px;
-  -moz-border-radius-topleft: 0.5em;
-  -moz-border-radius-bottomleft: 0.5em;
-  border: 1px solid #777;
-  background: #525252;
+  min-height: 64px;
+  min-width: 64px;
+  background: url("images/leftcap-default-64.png") top left no-repeat;
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 #identity-box:hover:active {
-  border: 1px solid #202020;
-  background: #303030;
+  background: url("images/leftcap-active-64.png");
 }
 
-/* add special color and extra width */
+/* add special color */
 #identity-box.verifiedIdentity {
-  min-width: 50px;
-  background-color: #77c494;
+  background: url("images/leftcapEV-default-64.png");
 }
 
-/* add special color and extra width */
+#identity-box.verifiedIdentity:hover:active {
+  background: url("images/leftcapEV-active-64.png");
+}
+
+/* add special color */
 #identity-box.verifiedDomain {
-  min-width: 50px;
-  background-color: #6ca0c9;
+  background: url("images/leftcapSSL-default-64.png");
+}
+
+#identity-box.verifiedDomain:hover:active {
+  background: url("images/leftcapSSL-active-64.png");
 }
 
 /* favicon images are 16x16 */
@@ -170,10 +176,11 @@ toolbarbutton.urlbar-cap-button {
 }
 
 #urlbar-editarea {
+  min-height: 64px;
   -moz-box-align: center;
-  padding: 7px 4px 8px 4px;
-  border-top: 1px solid #777;
-  border-bottom: 1px solid #777;
+  padding: 0;
+  border-top: 1px solid #262629;
+  border-bottom: 3px solid #262629;
   background: #fff;
 }
 
@@ -186,128 +193,157 @@ toolbarbutton.urlbar-cap-button {
 
 /* make sure this endcap matches the other endcap */
 #urlbar-icons {
-  color: #fff;
-  padding: 12px 4px;
-  -moz-border-radius-topright: 0.5em;
-  -moz-border-radius-bottomright: 0.5em;
-  border: 1px solid #777;
-  background: #525252;
+  min-height: 64px;
+  min-width: 64px;
+  background: url("images/rightcap-default-64.png") top right no-repeat;
+  -moz-box-pack: center;
 }
 
 #urlbar-icons:hover:active {
-  border: 1px solid #202020;
-  background: #303030;
+  background: url("images/rightcap-active-64.png");
 }
 
 /* right toolbar (browser controls) ---------------------------------------- */
 #browser-controls {
-  -moz-box-align: end;
-  padding: 0px 10px;
+  -moz-box-align: start;
+  padding: 0 0.5mm;
 }
 
 toolbarbutton.browser-control-button,
 toolbarbutton.panel-button,
 toolbarbutton.page-button {
   /* space out the buttons a bit vertically */
-  margin-bottom: 8px;
+  margin-bottom: 0.5mm;
 }
 
 #tool-star {
-  list-style-image: url("chrome://browser/skin/images/bookmarkpage-24.png");
+  list-style-image: url("chrome://browser/skin/images/bookmark-default-64.png");
+}
+
+#tool-star:hover:active {
+  list-style-image: url("chrome://browser/skin/images/bookmark-active-64.png");
 }
 
 #tool-star[starred="true"] {
-  list-style-image: url("chrome://browser/skin/images/bookmarkpage-on-24.png");
+  list-style-image: url("chrome://browser/skin/images/bookmarked-default-64.png");
+}
+
+#tool-star[starred="true"]:hover:active {
+  list-style-image: url("chrome://browser/skin/images/bookmarked-active-64.png");
 }
 
 #tool-back {
-  list-style-image: url("chrome://browser/skin/images/back-24.png");
+  list-style-image: url("chrome://browser/skin/images/back-default-64.png");
 }
 
-#tool-back[disabled="true"] {
-  list-style-image: url("chrome://browser/skin/images/back-disabled-24.png");
+#tool-back:hover:active {
+  list-style-image: url("chrome://browser/skin/images/back-active-64.png");
+}
+
+#tool-back[disabled="true"],
+#tool-back[disabled="true"]:hover:active {
+  list-style-image: url("chrome://browser/skin/images/back-disabled-64.png");
 }
 
 #tool-forward {
-  list-style-image: url("chrome://browser/skin/images/forward-24.png");
+  list-style-image: url("chrome://browser/skin/images/forward-default-64.png");
 }
 
-#tool-forward[disabled="true"] {
-  list-style-image: url("chrome://browser/skin/images/forward-disabled-24.png");
+#tool-forward:hover:active {
+  list-style-image: url("chrome://browser/skin/images/forward-active-64.png");
 }
 
-/* button is moved off the right edge */
+#tool-forward[disabled="true"],
+#tool-forward[disabled="true"]:hover:active {
+  list-style-image: url("chrome://browser/skin/images/forward-disabled-64.png");
+}
+
+/* button overflows off the right edge */
 #tool-panel-open {
-  list-style-image: url("chrome://browser/skin/images/settings-24.png");
-  margin-right: -14px;
-  /* XXX not sure why we need the padding here, but not in #tool-panel-close */
-  padding-right: 26px;
+  list-style-image: url("chrome://browser/skin/images/settings-default-64.png");
+  margin-right: -40px; /* big number just to make sure the image overflows the edge */
 }
 
-/* button is moved off the left edge */
+/* button overflows off the left edge */
 #tool-panel-close {
-  list-style-image: url("chrome://browser/skin/images/back-24.png");
-  margin-left: -14px;
+  list-style-image: url("chrome://browser/skin/images/settings-active-64.png");
+  margin-left: -40px; /* big number just to make sure the image overflows the edge */
 }
 
 /* "extras" panel UI   ----------------------------------------------------- */
 #panel-controls {
   /* match #browser-controls end padding */
-  padding: 0px 10px;
+  padding: 0 0.5mm;
+  -moz-box-align: end;
 }
 
 .panel-header {
-  padding: 5px;
+  padding: 0.5mm;
 }
 
 #tool-addons {
-  list-style-image: url("chrome://browser/skin/images/addons-24.png");
+  list-style-image: url("chrome://browser/skin/images/addons-default-64.png");
+}
+
+#tool-addons:hover:active,
+#tool-addons[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/addons-active-64.png");
 }
 
 #tool-downloads {
-  list-style-image: url("chrome://browser/skin/images/downloads-24.png");
+  list-style-image: url("chrome://browser/skin/images/downloads-default-64.png");
+}
+
+#tool-downloads:hover:active,
+#tool-downloads[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/downloads-active-64.png");
 }
 
 #tool-preferences {
-  list-style-image: url("chrome://browser/skin/images/preferences-24.png");
+  list-style-image: url("chrome://browser/skin/images/preferences-default-64.png");
+}
+
+#tool-preferences:hover:active,
+#tool-preferences[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/preferences-active-64.png");
 }
 
 /* URL List and autocomplete navigation popup ------------------------------ */
 #tool-bookmarks-close,
 #tool-folders-close {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-24.png");
+  list-style-image: url("chrome://browser/skin/images/bookmarks-active-64.png");
 }
 
 #bookmarklist-container {
-  padding: 0px;
+  padding: 0;
 }
 
 #bookmarklist-header, #folder-header {
   color: rgb(255,255,255);
   -moz-box-align: center;
-  padding: 0px 10px;
+  padding: 0 0.5mm;
 }
 
 #bookmark-items, #folder-items {
   -moz-appearance: none !important;
   background-color: rgb(255,255,255);
-  padding: 0px;
+  padding: 0;
 }
 
 .place-list-parents {
   background-color: rgb(207,207,207);
-  padding: 4px;
+  padding: 0.5mm;
 }
 
 .place-list-children {
   -moz-appearance: none;
   border: none !important;
-  padding: 0px;
+  padding: 0;
 }
 
 .bookmark-folder, .bookmark-item {
-  padding: 5px 2px;
-  border-bottom: 1px solid rgb(207,207,207);
+  padding: 0.5mm 0.2mm;
+  border-bottom: 0.1mm solid rgb(207,207,207);
 }
 
 .bookmark-folder textbox[readonly="true"], .bookmark-item textbox[readonly="true"] {
@@ -318,7 +354,7 @@ toolbarbutton.page-button {
 }
 
 placelabel.bookmark-folder {
-  border-bottom: 1px solid rgb(255,255,255);
+  border-bottom: 0.1mm solid rgb(255,255,255);
 }
 
 .bookmark-item-image, .bookmark-folder-image {
@@ -328,7 +364,7 @@ placelabel.bookmark-folder {
 
 /* hack to align with 1st grid/row */
 .bookmark-item-image {
-  margin-top: 8px;
+  margin-top: 1mm;
 }
 
 /* folders have a fixed image */
@@ -378,8 +414,8 @@ placeitem .button-text {
 }
 
 #autocomplete_navbuttons {
-  margin: 10px;
-  min-height: 50px;
+  margin: 1mm;
+  min-height: 6mm;
 }
 
 .autocomplete-items {
@@ -389,8 +425,8 @@ placeitem .button-text {
 
 .autocomplete-item,
 .autocomplete-item-selected {
-  padding: 5px 2px;
-  border-bottom: 1px solid rgb(207,207,207);
+  padding: 0.5mm 0.2mm;
+  border-bottom: 0.1mm solid rgb(207,207,207);
 }
 
 .autocomplete-item-selected {
@@ -407,47 +443,55 @@ placeitem .button-text {
 }
 
 .ac-result-type-bookmark {
-  list-style-image: url("chrome://browser/skin/images/page-starred.png");
-  width: 16px;
-  height: 16px;
+  list-style-image: url("chrome://browser/skin/images/star-default-30.png");
 }
 
 .ac-result-type-tag {
-  list-style-image: url("chrome://browser/skin/images/tag.png");
-  width: 16px;
-  height: 16px;
+  list-style-image: url("chrome://browser/skin/images/tag-default-30.png");
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
-  padding-left: 10px;
-  min-width: 132px;
+  -moz-padding-start: 0.2mm; /* allow the thumbnails to get close to the edge */
+  -moz-padding-end: 0.5mm;
 }
 
 #tabs {
   -moz-appearance: none;
   margin: 0;
-  padding: 4px;
-  -moz-padding-end: 12px;
+  padding: 0;
   background-color: transparent;
+}
+
+#tabs-controls {
+  margin-top: 0.5mm;
+  -moz-padding-start: 0.3mm; /* keep the buttons farther away from the edge */
 }
 
 richlistitem[type="documenttab"] {
   -moz-appearance: none;
-  border: 1px solid transparent;
-  -moz-border-radius: 5px;
-  background: none;
-  padding: 4px;
+  padding: 0;
+  border: none;
+}
+
+richlistitem[type="documenttab"] .documenttab-canvas {
+  /* keep the unselected thumbnails aligned with the selected one */
+  border: 2mm solid transparent;
 }
 
 richlistitem[type="documenttab"][selected="true"] {
-  border: 1px solid white !important;
+  background-color: transparent;
+}
+
+richlistitem[type="documenttab"][selected="true"] .documenttab-canvas {
+  border: 2mm solid #262629;
+  -moz-border-radius: 4px;
 }
 
 .documenttab-close {
-  width: 24px;
-  height: 24px;
-  list-style-image: url(chrome://browser/skin/images/tab_close.png);
+  width: 28px;
+  height: 30px;
+  list-style-image: url("chrome://browser/skin/images/tab-close.png");
 }
 
 vbox:first-child richlistitem[type="documenttab"]:only-child .documenttab-close {
@@ -455,7 +499,11 @@ vbox:first-child richlistitem[type="documenttab"]:only-child .documenttab-close 
 }
 
 #newtab-button {
-  list-style-image: url("images/newtab-24.png");
+  list-style-image: url("images/newtab-default-64.png");
+}
+
+#newtab-button:hover:active {
+  list-style-image: url("images/newtab-active-64.png");
 }
 
 /* findbar   --------------------------------------------------------------- */
@@ -465,30 +513,27 @@ findbar {
 
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  padding: 8px;
+  padding: 1mm;
 }
 
 #bookmark-form {
   background-color: #fff;
-  padding: 8px;
+  padding: 1mm;
 }
 
 /* Identity popup   -------------------------------------------------------- */
 /* Popup Icons */
 #identity-popup-icon {
-  height: 32px;
-  width: 32px;
   padding: 0;
-  list-style-image: url("chrome://browser/skin/images/identity.png");
-  -moz-image-region: rect(0px, 64px, 64px, 0px);
+  list-style-image: url("chrome://browser/skin/images/identity-64.png");
 }
 
 #identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
-  -moz-image-region: rect(64px, 64px, 128px, 0px);
+  list-style-image: url("chrome://browser/skin/images/identitySSL-64.png");
 }
 
 #identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
-  -moz-image-region: rect(128px, 64px, 192px, 0px);
+  list-style-image: url("chrome://browser/skin/images/identityEV-64.png");
 }
 
 /* Popup Body Text */
@@ -545,7 +590,7 @@ findbar {
 
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-encryption > vbox > #identity-popup-encryption-icon {
-  list-style-image: url("chrome://browser/skin/images/secure24.png");
+  list-style-image: url("chrome://browser/skin/images/lock-40.png");
 }
 
 #identity-popup-more-info-button {
@@ -578,13 +623,13 @@ richpref {
   font-weight: bold;
   color: #000;
   background-color: lightgray;
-  padding: 5px;
+  padding: 0.5mm;
 }
 
 /* XXX should be a richlistitem */
 .prefbox {
-  padding: 5px;
-  border-bottom: 1px solid rgb(207,207,207);
+  padding: 0.5mm;
+  border-bottom: 0.1mm solid rgb(207,207,207);
   -moz-box-align: center;
 }
 
@@ -600,20 +645,14 @@ richpref {
   background-color: white;
 }
 
-/* Shortcut editor   ------------------------------------------------------- */
-#shortcuts {
-  border: 0;
-  padding: .2em;
-}
-
 /* alerts popup ----------------------------------------------------------- */
 #alerts-container {
   color: #000;
   background-color: #fff;
-  border: 4px solid gray;
-  -moz-border-radius: 8px;
-  padding: 8px;
-  -moz-box-shadow: black 4px 4px 10px;
+  border: 0.5mm solid gray;
+  -moz-border-radius: 1mm;
+  padding: 1mm;
+  -moz-box-shadow: black 0.5mm 0.5mm 1mm;
 }
 
 #alerts-text {

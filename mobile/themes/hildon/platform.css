@@ -69,9 +69,9 @@ richlistitem {
 .dialog-dark {
   color: #fff;
   background-color: #414141;
-  -moz-border-radius: 0px 0px 8px 8px;
+  -moz-border-radius: 0 0 2mm 2mm;
   padding: 8px;
-  -moz-box-shadow: black 0px 4px 4px;
+  -moz-box-shadow: black 0 0.5mm 0.5mm;
 }
 
 /* buttons ----------------------------------------------------------------- */
@@ -82,15 +82,16 @@ richlistitem {
 }
 
 button {
-  min-width: 0;
+  min-width: 7.2mm !important;
+  min-height: 7.2mm !important;
   color: #414141;
-  padding: 4px 8px;
-  -moz-border-radius: 0.5em;
+  padding: 0.5mm 1mm;
+  -moz-border-radius: 2mm;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
-  border: 1px solid #414141;
+  border: 0.1mm solid #414141;
   background: #efefef;
 }
 
@@ -100,7 +101,7 @@ button[disabled="true"] {
   -moz-border-right-colors: -moz-initial !important;
   -moz-border-left-colors: -moz-initial !important;
   -moz-border-bottom-colors: -moz-initial !important;
-  border: 1px solid #ccc;
+  border: 0.1mm solid #ccc;
   background: #fff;
 }
 
@@ -110,15 +111,15 @@ button:active {
   -moz-border-right-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
-  border: 1px solid #aaa;
+  border: 0.1mm solid #aaa;
   background: #ddd;
 }
 
 /* dark buttons ------------------------------------------------------------ */
 .button-dark {
   color: #fff;
-  padding: 4px 8px;
-  -moz-border-radius: 0.5em;
+  padding: 0.5mm 1mm;
+  -moz-border-radius: 0.5mm;
   border: 1px solid #777 !important;
   background: #525252;
 }
@@ -136,12 +137,19 @@ button:active {
 
 .button-dark[checked="true"] {
   /* checked overrides */
-  border: 1px solid #202020 !important;
+  border: 0.1mm solid #202020 !important;
   background: #303030 !important;
-  padding: 4px 8px !important;
+  padding: 0.5mm 1mm !important;
 }
 
-/* re-theme radio buttons */
+/* image buttons ----------------------------------------------------------- */
+.button-image {
+  padding: 0 !important;
+  background: #414141 !important;
+  border: none !important;
+}
+
+/* radio buttons ----------------------------------------------------------- */
 radiogroup {
   -moz-box-orient: horizontal;
 }
@@ -153,18 +161,19 @@ radiogroup {
 
 radio {
   color: #414141;
-  padding: 2px 12px 2px 8px;
-  margin: 0px;
-  border: 1px solid #414141;
+  padding: 0.2mm 1mm;
+  margin: 0;
+  border: 0.1mm solid #414141;
   -moz-box-align: center;
   -moz-appearance: none;
   background: #fff;
 }
 
 radio[selected] {
-  padding: 2px 8px 2px 12px;
+  min-width: 7.2mm !important;
+  min-height: 7.2mm !important;
   color: #fff;
-  border: 1px solid #91875a;
+  border: 0.1mm solid #91875a;
   background-color: #DDC763;
 }
 
@@ -173,23 +182,28 @@ radio .radio-check-box1, .radio-check {
 }
 
 radio:first-child {
-  -moz-border-radius-topleft: 0.5em;
-  -moz-border-radius-bottomleft: 0.5em;
+  -moz-border-radius-topleft: 2mm;
+  -moz-border-radius-bottomleft: 2mm;
 }
 
 radio:last-child {
-  -moz-border-radius-topright: 0.5em;
-  -moz-border-radius-bottomright: 0.5em;
+  -moz-border-radius-topright: 2mm;
+  -moz-border-radius-bottomright: 2mm;
 }
 
 /* dark radios ------------------------------------------------------------- */
 .toggle-dark radio {
   color: #fff;
-  border: 1px solid #777;
+  border: 0.1mm solid #777;
   background-color: #525252;
 }
 
 .toggle-dark radio[selected] {
-  border: 1px solid #202020;
+  border: 0.1mm solid #202020;
   background-color: #303030;
+}
+
+/* richlistbox ------------------------------------------------------------- */
+richlistbox {
+  margin: 0;
 }
