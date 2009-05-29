@@ -2018,7 +2018,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8 t,
     const char* funName = NULL;
     if (*prefix == 'a' || *prefix == 'v') {
         mark = JS_ARENA_MARK(&cx->tempPool);
-        if (JS_GET_LOCAL_NAME_COUNT(fp->fun) != 0)
+        if (fp->fun->hasLocalNames())
             localNames = js_GetLocalNameArray(cx, fp->fun, &cx->tempPool);
         funName = fp->fun->atom ? js_AtomToPrintableString(cx, fp->fun->atom) : "<anonymous>";
     }
