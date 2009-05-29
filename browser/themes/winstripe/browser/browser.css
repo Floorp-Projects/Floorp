@@ -1536,17 +1536,18 @@ tabpanels {
 
 .tabs-newtab-button {
   opacity: .8;
+  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
+  -moz-image-region: rect(0, 18px, 18px, 0);
+}
+
+.tabs-newtab-button:hover:active {
+  -moz-image-region: rect(0, 36px, 18px, 18px);
 }
 
 .tabbrowser-arrowscrollbox > .tabs-newtab-button {
-  width: 32px;
+  width: 31px;
   -moz-border-radius-topright: 2px;
   -moz-border-radius-topleft: 2px;
-}
-
-.tabs-newtab-button > .toolbarbutton-icon {
-  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
-  margin: 3px 0 0;
 }
 
 .tabs-alltabs-button > .toolbarbutton-text {
