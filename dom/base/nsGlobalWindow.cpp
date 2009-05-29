@@ -107,7 +107,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
-#include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsDOMString.h"
@@ -2963,14 +2962,7 @@ nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
 NS_IMETHODIMP
 nsGlobalWindow::GetPkcs11(nsIDOMPkcs11** aPkcs11)
 {
-  FORWARD_TO_OUTER(GetPkcs11, (aPkcs11), NS_ERROR_NOT_INITIALIZED);
-
-  if (!mPkcs11) {
-    mPkcs11 = do_CreateInstance(kPkcs11ContractID);
-  }
-
-  NS_IF_ADDREF(*aPkcs11 = mPkcs11);
-
+  *aPkcs11 = nsnull;
   return NS_OK;
 }
 
