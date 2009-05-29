@@ -4822,7 +4822,8 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
     SIMPLE_MATHML_CREATE(mroot_, NS_NewMathMLmrootFrame),
     SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
     SIMPLE_MATHML_CREATE(mrow_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame)
+    SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame),
+    SIMPLE_MATHML_CREATE(menclose_, NS_NewMathMLmencloseFrame)
   };
 
   return FindDataByTag(aTag, aContent, aStyleContext, sMathMLData,
