@@ -156,6 +156,7 @@ class nsHtml5TreeBuilder
     void insertIntoFosterParent(nsIContent* child);
     PRBool isInStack(nsHtml5StackNode* node);
     void pop();
+    void popOnEof();
     void appendHtmlElementToDocumentAndPush(nsHtml5HtmlAttributes* attributes);
     void appendHtmlElementToDocumentAndPush();
     void appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes* attributes);
@@ -190,6 +191,7 @@ class nsHtml5TreeBuilder
     void appendComment(nsIContent* parent, PRUnichar* buf, PRInt32 start, PRInt32 length);
     void appendCommentToDocument(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void addAttributesToElement(nsIContent* element, nsHtml5HtmlAttributes* attributes);
+    void markMalformedIfScript(nsIContent* elt);
     void start(PRBool fragment);
     void end();
     void appendDoctypeToDocument(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier);
