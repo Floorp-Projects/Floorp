@@ -189,15 +189,31 @@ var BrowserUI = {
     document.getElementById("panel-items").selectedPanel = document.getElementById(id);
   },
 
+  get toolbarH() {
+    if (!this._toolbarH) {
+      let toolbar = document.getElementById("toolbar-main");
+      this._toolbarH = toolbar.boxObject.height;
+    }
+    return this._toolbarH;
+  },
+
+  _initControls : false,
   sizeControls : function(windowW, windowH) {
     let toolbar = document.getElementById("toolbar-main");
-    if (!this._toolbarH)
-      this._toolbarH = toolbar.boxObject.height;
+    let tabs = document.getElementById("tabs-container");
+    let controls = document.getElementById("browser-controls");
+    if (!this._initControls) {
+      this._initControls = true;
+      ws.moveUnfrozenTo("toolbar-main", null, -this.toolbarH)
+      ws.moveUnfrozenTo("tabs-container", -tabs.boxObject.width, this.toolbarH)
+      ws.moveUnfrozenTo("browser-controls", null, this.toolbarH)
+    }
 
     toolbar.width = windowW;
 
     let popup = document.getElementById("popup_autocomplete");
-    popup.height = windowH - this._toolbarH;
+    popup.top = this.toolbarH;
+    popup.height = windowH - this.toolbarH;
     popup.width = windowW;
 
     // notification box
@@ -207,9 +223,9 @@ var BrowserUI = {
     document.getElementById("findbar-container").width = windowW;
 
     // sidebars
-    let sideBarHeight = windowH - this._toolbarH;
-    document.getElementById("browser-controls").height = sideBarHeight;
-    document.getElementById("tabs-container").height = sideBarHeight;
+    let sideBarHeight = windowH - this.toolbarH;
+    controls.height = sideBarHeight;
+    tabs.height = sideBarHeight;
 
     // bookmark editor
     let bmkeditor = document.getElementById("bookmark-container");
@@ -267,7 +283,7 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        ws.panTo(0, -60);
+        ws.panTo(0, -this.toolbarH);
         this.showToolbar();
         icons.setAttribute("mode", "loading");
         this._favicon.src = "";
@@ -411,7 +427,7 @@ var BrowserUI = {
 
   newTab : function newTab() {
     Browser.addTab("about:blank", true);
-    ws.panTo(0, -60);
+    ws.panTo(0, -this.toolbarH);
     this.showToolbar(URLBAR_EDIT);
   },
 

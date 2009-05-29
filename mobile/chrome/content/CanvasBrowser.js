@@ -518,7 +518,7 @@ CanvasBrowser.prototype = {
     if (needToPanToTop) {
       ws.beginUpdateBatch();
       this._needToPanToTop = false;
-      ws.panTo(0, -60);
+      ws.panTo(0, -BrowserUI.toolbarH);
     }
     // Adjust the zoomLevel to fit the page contents in our window
     // width

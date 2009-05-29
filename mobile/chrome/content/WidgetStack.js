@@ -473,6 +473,19 @@ WidgetStack.prototype = {
     state.widget.setAttribute("top", y);
   },
 
+  // moveUnfrozenTo: move an unfrozen, pannable widget with id wid to x, y in
+  // the stack. should only be used on unfrozen widgets when a dynamic change
+  // in position needs to be made. we basically remove, adjust and re-add
+  // the widget
+  moveUnfrozenTo: function (wid, x, y) {
+    delete this._widgetState[wid];
+    let widget = document.getElementById(wid);
+    if (x) widget.setAttribute("left", x);
+    if (y) widget.setAttribute("top", y);
+    this._addNewWidget(widget);
+    this._updateWidgets();
+  },
+
   // we're relying on viewportBounds and viewingRect having the same origin
   get viewportVisibleRect () {
     let rect = this._viewportBounds.intersect(this._viewingRect);

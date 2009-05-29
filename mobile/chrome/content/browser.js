@@ -358,7 +358,7 @@ var Browser = {
     this._canvasBrowser.setCurrentBrowser(this.selectedBrowser, firstTab);
     document.getElementById("tabs").selectedItem = tab.content;
 
-    ws.panTo(0, -60, true);
+    ws.panTo(0, -BrowserUI.toolbarH);
 
     if (!firstTab) {
       let webProgress = this.selectedBrowser.webProgress;
