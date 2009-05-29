@@ -280,6 +280,7 @@ nsCSSSelector::Clone(PRBool aDeepNext, PRBool aDeepNegations) const
 
   result->mNameSpace = mNameSpace;
   result->mTag = mTag;
+  result->mOperator = mOperator;
   
   NS_IF_CLONE(mIDList);
   NS_IF_CLONE(mClassList);
