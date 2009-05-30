@@ -298,7 +298,16 @@ struct FrameInfo {
         } s;
         uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
     };
-    uint32          caller_argc;   // fp->argv - stackBase
+    /*
+     * Stack pointer adjustment needed for navigation of native stack in
+     * js_GetUpvarOnTrace. spoffset is the number of slots in the native
+     * stack frame for the caller *before* the slots covered by spdist.
+     * This may be negative if the caller is the top level script.
+     * The key fact is that if we let 'cpos' be the start of the caller's
+     * native stack frame, then (cpos + spoffset) points to the first 
+     * non-argument slot in the callee's native stack frame.
+     */
+    int32          spoffset;
 };
 
 struct UnstableExit
