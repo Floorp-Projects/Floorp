@@ -1863,7 +1863,7 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
              * activation record corresponding to *fip in the native
              * stack.
              */
-            uintN nativeStackFramePos = state->callstackBase[0]->caller_argc;
+            uintN nativeStackFramePos = state->callstackBase[0]->spoffset;
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
                 nativeStackFramePos += (*fip2)->s.spdist;
             nativeStackFramePos -= (2 + (*fip)->s.argc);
@@ -8546,11 +8546,13 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->imacpc = fp->imacpc;
     fi->s.spdist = fp->regs->sp - fp->slots;
     fi->s.argc = argc | (constructing ? 0x8000 : 0);
-    fi->caller_argc = 2 + fp->argc;
+    fi->spoffset = 2 /*callee,this*/ + fp->argc;
 
     unsigned callDepth = getCallDepth();
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
+    if (callDepth == 0)
+        fi->spoffset = 2 /*callee,this*/ + argc - fi->s.spdist;
 
     lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
