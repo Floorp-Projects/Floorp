@@ -6687,6 +6687,10 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::getThis(LIns*& this_ins)
 {
+    /*
+     * js_ComputeThisForFrame updates cx->fp->argv[-1], so sample it into 'original' first.
+     */
+    jsval original = cx->fp->argv[-1];
     JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
     if (!thisObj)
         ABORT_TRACE_ERROR("js_ComputeThisForName failed");
@@ -6713,7 +6717,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      * can only detect this condition prior to calling js_ComputeThisForFrame, since it
      * updates the interpreter's copy of argv[-1].
      */
-    if (JSVAL_IS_NULL(thisv)) {
+    if (JSVAL_IS_NULL(original)) {
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             ABORT_TRACE("global object was wrapped while recording");
@@ -6730,6 +6734,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      * are wrapped as we obtain them through XPConnect. The only exception are With objects,
      * which have to call the getThis object hook. We don't trace those cases.
      */
+    JS_ASSERT(original == thisv);
 
     if (guardClass(JSVAL_TO_OBJECT(thisv), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
         ABORT_TRACE("can't trace getThis on With object");
