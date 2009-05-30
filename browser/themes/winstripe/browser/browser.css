@@ -1471,24 +1471,29 @@ tabpanels {
   background-image: url("chrome://browser/skin/tabbrowser/tab-hover-bkgnd.png");
 }
 
+.tabbrowser-arrowscrollbox > .scrollbutton-up,
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  -moz-image-region: rect(0, 15px, 17px, 0);
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover {
-  -moz-image-region: rect(0, 22px, 14px, 11px);
+  -moz-image-region: rect(0, 30px, 17px, 15px);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"],
 .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled="true"] {
-  opacity: .4;
+  -moz-image-region: rect(0, 45px, 17px, 30px);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(0, 44px, 14px, 33px);
+  -moz-image-region: rect(0, 60px, 17px, 45px);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
   border-left-style: none;
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start.png");
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   -moz-border-radius-topright: 2px;
 }
 
@@ -1497,11 +1502,7 @@ tabpanels {
   border-right-style: none;
   -moz-border-radius-topleft: 2px;
   -moz-border-radius-topright: 0px;
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end.png");
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon {    
-  margin: 5px 0px 1px 0px;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
@@ -1512,7 +1513,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end.png");
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"],
@@ -1525,13 +1526,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start.png");
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
-  margin-top: 5px;
-  margin-bottom: 1px;
-  -moz-margin-end: 2px;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
 }
 
 .tabs-newtab-button {
