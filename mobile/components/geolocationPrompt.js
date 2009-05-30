@@ -5,6 +5,8 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const kCountBeforeWeRemember = 5;
+
 function GeolocationPrompt() {}
 
 GeolocationPrompt.prototype = {
@@ -15,6 +17,38 @@ GeolocationPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
  
   prompt: function(request) {
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+    var result = pm.testExactPermission(request.requestingURI, "geo");
+    
+    if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      request.allow();
+      return;
+    }
+    if (result == Ci.nsIPermissionManager.DENY_ACTION) {
+      request.cancel();
+      return;
+    }
+
+    function setPagePermission(uri, allow) {
+      var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
+        
+      if (! prefService.hasPref(request.requestingURI, "geo.request.remember"))
+        prefService.setPref(request.requestingURI, "geo.request.remember", 0);
+      
+      var count = prefService.getPref(request.requestingURI, "geo.request.remember");
+      
+      if (allow == false)
+        count--;
+      else
+        count++;
+
+      prefService.setPref(request.requestingURI, "geo.request.remember", count);
+        
+      if (count == kCountBeforeWeRemember)
+        pm.add(uri, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
+      else if (count == -kCountBeforeWeRemember)
+        pm.add(uri, "geo", Ci.nsIPermissionManager.DENY_ACTION);
+    }
 
     function getChromeWindow(aWindow) {
       var chromeWin = aWindow 
@@ -39,23 +73,32 @@ GeolocationPrompt.prototype = {
       var browserBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
 
       var buttons = [{
-        label: browserBundle.GetStringFromName("geolocation.exactLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.exactLocationKey"),
-        callback: function() request.allow()
+        label: browserBundle.GetStringFromName("geolocation.share"),
+        accessKey: browserBundle.GetStringFromName("geolocation.share.accessKey"),
+        callback: function(notification) {
+          setPagePermission(request.requestingURI, true);
+          request.allow(); 
         },
-        {
-        label: browserBundle.GetStringFromName("geolocation.nothingLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.nothingLocationKey"),
-        callback: function() request.cancel()
-        }];
+      },
+      {
+        label: browserBundle.GetStringFromName("geolocation.dontShare"),
+        accessKey: browserBundle.GetStringFromName("geolocation.dontShare.accessKey"),
+        callback: function(notification) {
+          setPagePermission(request.requestingURI, false);
+          request.cancel();
+        },
+      }];
       
-      var message = browserBundle.formatStringFromName("geolocation.requestMessage",
-                                                       [request.requestingURI.spec], 1);      
-      notificationBox.appendNotification(message,
-                                         "geolocation",
-                                         "chrome://browser/skin/Info.png",
-                                         notificationBox.PRIORITY_INFO_HIGH,
-                                         buttons);
+      var message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
+                                                       [request.requestingURI.host], 1);      
+      
+      var newBar = notificationBox.appendNotification(message,
+                                                      "geolocation",
+                                                      "chrome://browser/skin/images/geo-16.png",
+                                                      notificationBox.PRIORITY_WARNING_MEDIUM,
+                                                      buttons);
+      // Make this a geolocation notification.
+      newBar.setAttribute("type", "geo"); 
     }
   }
 };

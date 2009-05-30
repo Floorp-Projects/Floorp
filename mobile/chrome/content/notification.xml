@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
-<!DOCTYPE bindings PUBLIC "-//MOZILLA//DTD XBL V1.0//EN" "http://www.mozilla.org/xbl">
+<!DOCTYPE bindings [
+  <!ENTITY % notificationDTD SYSTEM
+   "chrome://browser/locale/notification.dtd">
+  %notificationDTD;
+]>
 
 <bindings
     xmlns="http://www.mozilla.org/xbl"
@@ -30,6 +34,51 @@
                            oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
     </content>
+  </binding>
+
+  <binding id="geo-notification" extends="chrome://global/content/bindings/notification.xml#notification">
+
+    <resources>
+      <stylesheet src="chrome://browser/skin/notification.css"/>
+    </resources>
+
+    <content>
+      <xul:vbox class="notification-inner outset" flex="1" xbl:inherits="type">
+        <xul:hbox anonid="details">
+          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
+          <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
+          <xul:spacer flex="1"/>
+          <xul:label anonid="learnMore"
+                     class="text-link"
+                     value="&geolocation.learnMore;"
+                     onclick="Browser.addTab(this.href, true); return false;"/>
+        </xul:hbox>
+        
+        <xul:hbox pack="center"
+                  oncommand="document.getBindingParent(this)._doButtonCommand(event);">
+          <children/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+         var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+         var href = formatter.formatURLPref("browser.geolocation.warning.infoURL");
+         document.getAnonymousElementByAttribute(this, "anonid", "learnMore").href = href;
+        ]]>
+      </constructor>
+
+      <field name="_checkbox">
+        document.getAnonymousElementByAttribute(this, "anonid", "rememberChoice")
+      </field>
+
+      <property name="rememberChoice"
+                onget="return this._checkbox.checked;"
+                readonly="true"/>
+
+    </implementation>
   </binding>
 
   <binding id="notification-button"
