@@ -1863,7 +1863,7 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
              * activation record corresponding to *fip in the native
              * stack.
              */
-            uintN nativeStackFramePos = state->callstackBase[0]->caller_argc;
+            uintN nativeStackFramePos = state->callstackBase[0]->spoffset;
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
                 nativeStackFramePos += (*fip2)->s.spdist;
             nativeStackFramePos -= (2 + (*fip)->s.argc);
@@ -2465,6 +2465,10 @@ TraceRecorder::createGuardRecord(VMSideExit* exit)
 JS_REQUIRES_STACK void
 TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
 {
+    debug_only_v(nj_dprintf("    About to try emitting guard code for "
+                            "SideExit=%p exitType=%d\n",
+                            (void*)exit, exit->exitType);)
+
     LIns* guardRec = createGuardRecord(exit);
 
     /*
@@ -2483,10 +2487,8 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
 
     LIns* guardIns =
         lir->insGuard(expected ? LIR_xf : LIR_xt, cond, guardRec);
-    if (guardIns) {
-        debug_only_v(nj_dprintf("    SideExit=%p exitType=%d\n", (void*)exit, exit->exitType);)
-    } else {
-        debug_only_v(nj_dprintf("    redundant guard, eliminated\n");)
+    if (!guardIns) {
+        debug_only_v(nj_dprintf("    redundant guard, eliminated, no codegen\n");)
     }
 }
 
@@ -5325,7 +5327,9 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
                                         (void*)frag, frag->ip, script->code,
                                         script->code + script->length));
                 VMFragment* next = frag->next;
-                js_TrashTree(cx, frag);
+                for (Fragment *p = frag; p; p = p->peer)
+                    js_TrashTree(cx, p);
+                tm->fragmento->clearFragment(frag);
                 *f = next;
             } else {
                 f = &((*f)->next);
@@ -6473,7 +6477,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         if (aobj != globalObj) {
             LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                       "shape");
-            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)"),
+            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)(test_property_cache)"),
                   BRANCH_EXIT);
         }
     } else {
@@ -6517,7 +6521,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                   "shape");
         guard(true,
-              addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard(vshape)"),
+              addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard(vshape)(test_property_cache)"),
               BRANCH_EXIT);
     }
 
@@ -6683,6 +6687,10 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::getThis(LIns*& this_ins)
 {
+    /*
+     * js_ComputeThisForFrame updates cx->fp->argv[-1], so sample it into 'original' first.
+     */
+    jsval original = cx->fp->callee ? cx->fp->argv[-1] : JSVAL_NULL;
     JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
     if (!thisObj)
         ABORT_TRACE_ERROR("js_ComputeThisForName failed");
@@ -6709,7 +6717,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      * can only detect this condition prior to calling js_ComputeThisForFrame, since it
      * updates the interpreter's copy of argv[-1].
      */
-    if (JSVAL_IS_NULL(thisv)) {
+    if (JSVAL_IS_NULL(original)) {
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             ABORT_TRACE("global object was wrapped while recording");
@@ -6726,6 +6734,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      * are wrapped as we obtain them through XPConnect. The only exception are With objects,
      * which have to call the getThis object hook. We don't trace those cases.
      */
+    JS_ASSERT(original == thisv);
 
     if (guardClass(JSVAL_TO_OBJECT(thisv), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
         ABORT_TRACE("can't trace getThis on With object");
@@ -8046,7 +8055,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
         ABORT_TRACE("non-native map");
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)"),
+    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)(record_SetPropHit)"),
           BRANCH_EXIT);
 
     uint32 vshape = PCVCAP_SHAPE(entry->vcap);
@@ -8054,7 +8063,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
         LIns *vshape_ins = lir->insLoad(LIR_ld,
                                         lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime)),
                                         offsetof(JSRuntime, protoHazardShape));
-        guard(true, addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard(vshape)"),
+        guard(true, addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard(vshape)(record_SetPropHit)"),
               MISMATCH_EXIT);
 
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
@@ -8542,11 +8551,13 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->imacpc = fp->imacpc;
     fi->s.spdist = fp->regs->sp - fp->slots;
     fi->s.argc = argc | (constructing ? 0x8000 : 0);
-    fi->caller_argc = 2 + fp->argc;
+    fi->spoffset = 2 /*callee,this*/ + fp->argc;
 
     unsigned callDepth = getCallDepth();
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
+    if (callDepth == 0)
+        fi->spoffset = 2 /*callee,this*/ + argc - fi->s.spdist;
 
     lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
