@@ -1483,12 +1483,12 @@ tabpanels {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"],
 .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled="true"] {
-  -moz-image-region: rect(0, 45px, 17px, 30px);
+  opacity: .4;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(0, 60px, 17px, 45px);
+  -moz-image-region: rect(0, 45px, 17px, 30px);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
