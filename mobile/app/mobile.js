@@ -263,8 +263,20 @@ pref("privacy.item.formdata", true);
 pref("privacy.item.downloads", true);
 pref("privacy.item.passwords", true);
 pref("privacy.item.sessions", true);
+pref("privacy.item.geolocation", true);
+pref("privacy.item.siteSettings", true);
+
 
 pref("plugins.enabled", true);
+
+// URL to the Learn More link XXX this is the firefox one.  Bug XXX fixes this.
+pref("browser.geolocation.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/geolocation/");
+
+// base url for the wifi geolocation network provider
+pref("geo.wifi.uri", "https://www.google.com/loc/json");
+
+// enable geo
+pref("geo.enabled", true);
 
 #ifdef WINCE
 pref("layout.css.dpi", 96);
@@ -279,3 +291,4 @@ pref("javascript.options.jit.chrome", true);
 
 pref("dom.max_chrome_script_run_time", 30);
 pref("dom.max_script_run_time", 20);
+
