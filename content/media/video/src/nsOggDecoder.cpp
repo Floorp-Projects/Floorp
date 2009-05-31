@@ -1802,36 +1802,6 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
           mSeekable &&
           mDuration == -1) {
         mDecoder->StopProgressUpdates();
-
-        // Workaround for bug 481933. Decoding a frame
-        // before seeking allows us to detect errors in
-        // the Ogg file before the seek destroys the
-        // information about the error triggering the
-        // bug in the Ogg libraries.
-        mon.Exit();
-        OggPlayErrorCode decodeResult = DecodeFrame();
-        mon.Enter();
-
-        HandleDecodeErrors(decodeResult);
-        if (mState == DECODER_STATE_SHUTDOWN) {
-          return;
-        }
-
-        // An additional frame is decoded here to work around a
-        // liboggplay bug.  When decoding one frame, then seeking back
-        // to position 0 (as done a few lines down), liboggplay does
-        // not seek and continues from the frame following the first
-        // decode. By doing a second decode frame, the following
-        // oggplay_seek works correctly to go back to time position 0.
-        mon.Exit();
-        decodeResult = DecodeFrame();
-        mon.Enter();
-
-        HandleDecodeErrors(decodeResult);
-        if (mState == DECODER_STATE_SHUTDOWN) {
-          return;
-        }
-
         // Don't hold the monitor during the duration
         // call as it can issue seek requests
         // and blocks until these are completed.
