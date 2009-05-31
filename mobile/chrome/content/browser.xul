@@ -382,7 +382,7 @@
       </deck>
     </hbox>
 
-    <vbox id="popup_autocomplete" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="72" left="0" constraint="ignore-x,vp-relative">
+    <vbox id="popup_autocomplete" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0" constraint="ignore-x,vp-relative">
       <arrowscrollbox id="autocomplete_navbuttons"
                       align="center"
                       flex="1"
@@ -393,7 +393,7 @@
     </vbox>
 
     <vbox id="bookmarklist-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
-      <hbox id="bookmarklist-header" style="height: 60px">
+      <hbox id="bookmarklist-header">
         <description flex="1">&bookmarksHeader.label;</description>
         <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="check" autocheck="true" label="&bookmarksManage.label;"
                        oncommand="BookmarkList.toggleManage();"/>
@@ -406,7 +406,7 @@
     </vbox>
 
     <vbox id="folder-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
-      <hbox id="folder-header" style="height: 60px">
+      <hbox id="folder-header">
         <description flex="1">&foldersHeader.label;</description>
         <toolbarbutton id="tool-folders-close" class="urlbar-button button-image" type="check" checked="true"
                        oncommand="FolderPicker.close()"/>

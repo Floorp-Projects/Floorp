@@ -498,7 +498,7 @@
   </binding>
 
   <binding id="place-item" extends="chrome://browser/content/bindings.xml#place-base">
-    <content align="start">
+    <content>
       <xul:image anonid="favicon" class="bookmark-item-image"/>
       <xul:grid flex="1">
         <xul:columns>
