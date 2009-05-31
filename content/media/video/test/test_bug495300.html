@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495300
+-->
+
+<head>
+  <title>Bug 495300 - seeking to the end should behave as "ended"</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495300">Mozilla Bug 495300</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v;
+var completed = false;
+
+function start(event) {
+  event.target.currentTime = event.target.duration + 1;
+}
+
+function didEnd(event) {
+  ok(true, "Got ended event");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video src='seek.ogv' onloadeddata='start(event)' onended='didEnd(event)' controls></video>
+</body>
+</html>
