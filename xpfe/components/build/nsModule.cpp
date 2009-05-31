@@ -45,11 +45,6 @@
 #include "nsRDFCID.h"
 #endif
 
-#ifdef SUITE_USING_XPFE_DM
-#include "nsDownloadManager.h"
-#include "nsDownloadProxy.h"
-#endif
-
 #if !defined(MOZ_MACBROWSER)
 #include "nsBrowserStatusFilter.h"
 #include "nsBrowserInstance.h"
@@ -66,11 +61,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 #if !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
-#endif
-
-#ifdef SUITE_USING_XPFE_DM
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 #endif
 
 static NS_METHOD
@@ -115,13 +105,6 @@ static const nsModuleComponentInfo components[] = {
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
-#endif
-
-#ifdef SUITE_USING_XPFE_DM
-    { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
-      nsDownloadManagerConstructor },
-    { "Download", NS_DOWNLOAD_CID, NS_TRANSFER_CONTRACTID,
-      nsDownloadProxyConstructor },
 #endif
 
 #if !defined(MOZ_MACBROWSER)
