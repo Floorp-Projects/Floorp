@@ -359,9 +359,6 @@
             <richpref pref="javascript.enabled" type="bool" title="&enableJavaScript.title;">
               &enableJavaScript.description;
             </richpref>
-            <richpref pref="javascript.options.jit.content" type="bool" title="&javascript.options.jit.content.title;">
-              &javascript.options.jit.content.description;
-            </richpref>
             <richpref pref="plugins.enabled" type="bool" title="&enablePlugins.title;" onsynctopreference="Browser.setPluginState(this.value);">
               &enablePlugins.description;
             </richpref>
