@@ -1614,6 +1614,17 @@ nsresult nsOggDecodeStateMachine::Run()
           if (mState == DECODER_STATE_SHUTDOWN) {
             continue;
           }
+
+          // Now try to decode another frame to see if we're at the end.
+          do {
+            mon.Exit();
+            r = DecodeFrame();
+            mon.Enter();
+          } while (mState != DECODER_STATE_SHUTDOWN && r == E_OGGPLAY_TIMEOUT);
+          HandleDecodeErrors(r);
+          if (mState == DECODER_STATE_SHUTDOWN)
+            continue;
+          QueueDecodedFrames();
         }
 
         // Change state to DECODING now. SeekingStopped will call
@@ -1624,8 +1635,12 @@ nsresult nsOggDecodeStateMachine::Run()
         mon.NotifyAll();
 
         mon.Exit();
-        nsCOMPtr<nsIRunnable> stopEvent = 
-          NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStopped);
+        nsCOMPtr<nsIRunnable> stopEvent;
+        if (mDecodedFrames.GetCount() > 1) {
+          stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStopped);
+        } else {
+          stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStoppedAtEnd);
+        }
         NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);        
         mon.Enter();
       }
@@ -2329,6 +2344,36 @@ void nsOggDecoder::SeekingStopped()
   if (mElement) {
     UpdateReadyStateForData();
     mElement->SeekCompleted();
+  }
+}
+
+// This is called when seeking stopped *and* we're at the end of the
+// media.
+void nsOggDecoder::SeekingStoppedAtEnd()
+{
+  if (mShuttingDown)
+    return;
+
+  PRBool fireEnded = PR_FALSE;
+  {
+    nsAutoMonitor mon(mMonitor);
+
+    // An additional seek was requested while the current seek was
+    // in operation.
+    if (mRequestedSeekTime >= 0.0) {
+      ChangeState(PLAY_STATE_SEEKING);
+    } else {
+      ChangeState(PLAY_STATE_ENDED);
+      fireEnded = PR_TRUE;
+    }
+  }
+
+  if (mElement) {
+    UpdateReadyStateForData();
+    mElement->SeekCompleted();
+    if (fireEnded) {
+      mElement->PlaybackEnded();
+    }
   }
 }
 
