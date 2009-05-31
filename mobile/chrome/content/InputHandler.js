@@ -726,9 +726,10 @@ ContentClickingModule.prototype = {
 
         // we're waiting for a click
         if (this._clickTimeout != -1) {
-          // if we just got another mousedown, don't send anything until we get another mousedown
+          // go ahead and stop the timeout so no single click gets
+          // sent, but don't clear clickTimeout here so that mouseUp
+          // handler will treat this as a double click
           window.clearTimeout(this._clickTimeout);
-          this.clickTimeout = -1;
         }
         break;
       case "mouseup":
@@ -745,7 +746,7 @@ ContentClickingModule.prototype = {
         }
         else {
           window.clearTimeout(this._clickTimeout);
-          this.clickTimeout = -1;
+          this._clickTimeout = -1;
           this._sendDoubleClick();
         }
         break;
