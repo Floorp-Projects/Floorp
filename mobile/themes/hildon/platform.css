@@ -62,13 +62,13 @@ richlistitem {
 /* panels ------------------------------------------------------------------ */
 .panel-dark {
   color: white;
-  background-color: #414141;
+  background-color: #36373b;
 }
 
 /* dialog popups ----------------------------------------------------------- */
 .dialog-dark {
   color: #fff;
-  background-color: #414141;
+  background-color: #36373b;
   -moz-border-radius: 0 0 2mm 2mm;
   padding: 8px;
   -moz-box-shadow: black 0 0.5mm 0.5mm;
@@ -82,16 +82,16 @@ richlistitem {
 }
 
 button {
-  min-width: 7.2mm !important;
-  min-height: 7.2mm !important;
-  color: #414141;
+  min-width: 12mm !important; /* button size */
+  min-height: 12mm !important; /* button size */
+  color: #36373b;
   padding: 0.5mm 1mm;
   -moz-border-radius: 2mm;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
-  border: 0.1mm solid #414141;
+  border: 0.1mm solid #36373b;
   background: #efefef;
 }
 
@@ -115,11 +115,33 @@ button:active {
   background: #ddd;
 }
 
+toolbarbutton {
+  min-width: 14.4mm !important; /* primary button size */
+  min-height: 14.4mm !important; /* primary button size */
+  -moz-appearance: none !important;
+  margin: 0;
+  padding: 0.5mm;
+}
+
+toolbarbutton:not(.show-text) .toolbarbutton-text {
+  display: none !important;
+}
+
+toolbarbutton:not(.show-text) .toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
+toolbarbutton:hover,
+toolbarbutton:hover:active,
+toolbarbutton[open="true"] {
+  border-color: transparent;
+}
+
 /* dark buttons ------------------------------------------------------------ */
 .button-dark {
   color: #fff;
   padding: 0.5mm 1mm;
-  -moz-border-radius: 0.5mm;
+  -moz-border-radius: 2mm;
   border: 1px solid #777 !important;
   background: #525252;
 }
@@ -132,7 +154,7 @@ button:active {
 .button-dark[disabled="true"],
 .button-dark[disabled="true"]:active {
   border: 1px solid #515151;
-  background: #414141;
+  background: #36373b;
 }
 
 .button-dark[checked="true"] {
@@ -145,7 +167,7 @@ button:active {
 /* image buttons ----------------------------------------------------------- */
 .button-image {
   padding: 0 !important;
-  background: #414141 !important;
+  background: #36373b !important;
   border: none !important;
 }
 
@@ -160,12 +182,12 @@ radiogroup {
 }
 
 radio {
-  min-width: 7.2mm !important;
-  min-height: 7.2mm !important;
-  color: #414141;
-  padding: 0.2mm 1mm;
+  min-width: 12mm !important; /* button size */
+  min-height: 12mm !important; /* button size */
+  color: #36373b;
+  padding: 0.2mm 2.2mm 0.2mm 1mm !important;
   margin: 0;
-  border: 0.1mm solid #414141;
+  border: 0.1mm solid #36373b;
   -moz-box-align: center;
   -moz-appearance: none;
   background: #fff;
@@ -177,7 +199,7 @@ radio[selected] {
   background-color: #DDC763;
 }
 
-radio .radio-check-box1, .radio-check {
+radio .radio-check-box1, radio .radio-icon, radio .radio-check {
   display: none;
 }
 
@@ -207,3 +229,8 @@ radio:last-child {
 richlistbox {
   margin: 0;
 }
+
+richlistitem {
+  min-height: 14.4mm; /* row size */
+}
+

@@ -44,37 +44,14 @@
 #toolbar-main {
   -moz-appearance: none;
   -moz-box-align: center;
-  padding: 0.5mm;
+  padding: 2.2mm; /* core spacing */
   border: none;
-}
-
-toolbarbutton {
-  -moz-appearance: none !important;
-  -moz-box-orient: vertical;
-  min-width: 0;
-  /* override default toolbarbutton padding/margin */
-  margin: 0;
-  padding: 0.5mm;
-}
-
-toolbarbutton:not(.show-text) .toolbarbutton-text {
-  display: none !important;
-}
-
-toolbarbutton:not(.show-text) .toolbarbutton-icon {
-  -moz-margin-end: 0;
-}
-
-toolbarbutton:hover,
-toolbarbutton:hover:active,
-toolbarbutton[open="true"] {
-  border-color: transparent;
 }
 
 /* main toolbar buttons */
 toolbarbutton.urlbar-button {
   /* space out the buttons a bit horizontally */
-  margin-left: 0.5mm;
+  margin-left: 2.2mm; /* core spacing */
 }
 
 #tool-bookmarks {
@@ -157,30 +134,21 @@ toolbarbutton.urlbar-cap-button {
   background: url("images/leftcapSSL-active-64.png");
 }
 
-/* favicon images are 16x16 */
-#urlbar-image-box {
-  max-width: 24px;
-  max-height: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  margin: 2px;
-}
-
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
 
 #urlbar-favicon {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
 }
 
 #urlbar-editarea {
   min-height: 64px;
   -moz-box-align: center;
   padding: 0;
-  border-top: 1px solid #262629;
-  border-bottom: 3px solid #262629;
+  border-top: 1px solid #262629; /* keep pixels */
+  border-bottom: 3px solid #262629; /* keep pixels */
   background: #fff;
 }
 
@@ -188,6 +156,7 @@ toolbarbutton.urlbar-cap-button {
   -moz-appearance: none !important;
   padding: 0px !important;
   border: none !important;
+  color: #000;
   background-color: #fff;
 }
 
@@ -206,14 +175,15 @@ toolbarbutton.urlbar-cap-button {
 /* right toolbar (browser controls) ---------------------------------------- */
 #browser-controls {
   -moz-box-align: start;
-  padding: 0 0.5mm;
+  padding: 0 2.2mm; /* core spacing + tiny bit for a rounding issue? */
+  border-left: 3px solid #262629; /* keep pixels */
 }
 
 toolbarbutton.browser-control-button,
 toolbarbutton.panel-button,
 toolbarbutton.page-button {
   /* space out the buttons a bit vertically */
-  margin-bottom: 0.5mm;
+  margin-bottom: 2.2mm; /* core spacing */
 }
 
 #tool-star {
@@ -273,12 +243,12 @@ toolbarbutton.page-button {
 /* "extras" panel UI   ----------------------------------------------------- */
 #panel-controls {
   /* match #browser-controls end padding */
-  padding: 0 0.5mm;
+  padding: 0 2.2mm; /* core spacing */
   -moz-box-align: end;
 }
 
 .panel-header {
-  padding: 0.5mm;
+  padding: 2.2mm; /* core spacing */
 }
 
 #tool-addons {
@@ -321,7 +291,7 @@ toolbarbutton.page-button {
 #bookmarklist-header, #folder-header {
   color: rgb(255,255,255);
   -moz-box-align: center;
-  padding: 0 0.5mm;
+  padding: 2.2mm; /* core spacing */
 }
 
 #bookmark-items, #folder-items {
@@ -344,6 +314,8 @@ toolbarbutton.page-button {
 .bookmark-folder, .bookmark-item {
   padding: 0.5mm 0.2mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
+  min-height: 14.4mm; /* row size */
+  -moz-box-align: center;
 }
 
 .bookmark-folder textbox[readonly="true"], .bookmark-item textbox[readonly="true"] {
@@ -360,11 +332,6 @@ placelabel.bookmark-folder {
 .bookmark-item-image, .bookmark-folder-image {
   width: 24px;
   height: 24px;
-}
-
-/* hack to align with 1st grid/row */
-.bookmark-item-image {
-  margin-top: 1mm;
 }
 
 /* folders have a fixed image */
@@ -389,7 +356,8 @@ placeitem[ui="manage"] .bookmark-item-image {
 
 /* be consistent with the size of placeitem */
 placelabel {
-  height: 34px;
+  min-height: 14.4mm; /* row size */
+  -moz-box-align: center;
 }
 
 /* use a smaller font size for the manage buttons */
@@ -414,8 +382,8 @@ placeitem .button-text {
 }
 
 #autocomplete_navbuttons {
-  margin: 1mm;
-  min-height: 6mm;
+  margin: 2.2mm; /* core spacing */
+  min-height: 14.4mm; /* row size */
 }
 
 .autocomplete-items {
@@ -427,6 +395,8 @@ placeitem .button-text {
 .autocomplete-item-selected {
   padding: 0.5mm 0.2mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
+  min-height: 14.4mm; /* row size */
+  -moz-box-pack: center;
 }
 
 .autocomplete-item-selected {
@@ -452,8 +422,9 @@ placeitem .button-text {
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
-  -moz-padding-start: 0.2mm; /* allow the thumbnails to get close to the edge */
-  -moz-padding-end: 0.5mm;
+  -moz-padding-start: 1.2mm; /* allow the thumbnails to get close to the edge */
+  -moz-padding-end: 2.2mm; /* core spacing */
+  border-right: 3px solid #262629; /* keep pixels */
 }
 
 #tabs {
@@ -464,8 +435,8 @@ placeitem .button-text {
 }
 
 #tabs-controls {
-  margin-top: 0.5mm;
-  -moz-padding-start: 0.3mm; /* keep the buttons farther away from the edge */
+  margin-top: 2.2mm; /* core spacing */
+  -moz-box-pack: center;
 }
 
 richlistitem[type="documenttab"] {
@@ -513,12 +484,12 @@ findbar {
 
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  padding: 1mm;
+  padding: 2.2mm; /* core spacing */
 }
 
 #bookmark-form {
   background-color: #fff;
-  padding: 1mm;
+  padding: 2.2mm; /* core spacing */
 }
 
 /* Identity popup   -------------------------------------------------------- */
@@ -630,6 +601,7 @@ richpref {
 .prefbox {
   padding: 0.5mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
+  min-height: 14.4mm; /* row size */
   -moz-box-align: center;
 }
 
@@ -650,8 +622,8 @@ richpref {
   color: #000;
   background-color: #fff;
   border: 0.5mm solid gray;
-  -moz-border-radius: 1mm;
-  padding: 1mm;
+  -moz-border-radius: 2mm;
+  padding: 2.2mm; /* core spacing */
   -moz-box-shadow: black 0.5mm 0.5mm 1mm;
 }
 
