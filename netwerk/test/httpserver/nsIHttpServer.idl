@@ -491,7 +491,7 @@ interface nsIHttpRequestMetadata : nsIPropertyBag
 /**
  * Represents an HTTP response, as described in RFC 2616, section 6.
  */
-[scriptable, uuid(4b023876-274e-41e8-83fb-e51f7aba43a6)]
+[scriptable, uuid(1acd16c2-dc59-42fa-9160-4f26c43c1c21)]
 interface nsIHttpResponse : nsISupports
 {
   /**
