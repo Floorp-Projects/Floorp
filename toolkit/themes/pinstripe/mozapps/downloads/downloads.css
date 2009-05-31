@@ -7,16 +7,13 @@
 
 /* Download View Items */
 richlistitem[type="download"] {
-  padding: 3px 8px;
-  min-height: 40px !important;
+  padding: 5px;
+  min-height: 44px !important;
+  border: 1px solid transparent;
 }
 
 richlistitem[type="download"]:not([selected="true"]):nth-child(odd) {
   background-color: -moz-oddtreerow;
-}
-
-richlistitem[type="download"] .name {
-  font-size: small;
 }
 
 richlistitem[type="download"] .dateTime,
@@ -25,9 +22,35 @@ richlistitem[type="download"] .status {
   color: #555;
 }
 
-richlistbox:focus > richlistitem[selected="true"][type="download"] .dateTime,
-richlistbox:focus > richlistitem[selected="true"][type="download"] .status {
-  color: highlighttext;
+richlistitem[selected="true"][type="download"] {
+  background-color: #3973C0;
+  -moz-border-image: url(chrome://mozapps/skin/downloads/listitem.png) 1 stretch;
+}
+
+richlistbox:focus > richlistitem[selected="true"][type="download"] {
+  background-color: #8496B9;
+  -moz-border-image: url(chrome://mozapps/skin/downloads/listitem-focused.png) 1 stretch;
+  outline: none;
+}
+
+richlistitem[selected="true"][type="download"]:-moz-system-metric(mac-graphite-theme) {
+  background-color: #60748A;
+  -moz-border-image: url(chrome://mozapps/skin/downloads/listitem-graphite.png) 1 stretch;
+}
+
+richlistbox:focus > richlistitem[selected="true"][type="download"]:-moz-system-metric(mac-graphite-theme) {
+  background-color: #95A4B2;
+  -moz-border-image: url(chrome://mozapps/skin/downloads/listitem-graphite-focused.png) 1 stretch;
+}
+
+:root:not([active]) richlistitem[selected="true"][type="download"] {
+  background-color: #A1A1A1;
+  -moz-border-image: url(chrome://mozapps/skin/downloads/listitem-inactive.png) 1 stretch;
+}
+
+richlistitem[selected="true"][type="download"] label {
+  color: HighlightText;
+  text-shadow: 0 1px rgba(0, 0, 0, 0.4);
 }
 
 
