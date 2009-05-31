@@ -1615,6 +1615,7 @@ nsresult nsOggDecodeStateMachine::Run()
             continue;
           }
 
+          OggPlayErrorCode r;
           // Now try to decode another frame to see if we're at the end.
           do {
             mon.Exit();
