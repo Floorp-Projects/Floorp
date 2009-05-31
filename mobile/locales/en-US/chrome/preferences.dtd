@@ -2,8 +2,6 @@
 <!ENTITY showImages.title                          "Show images">
 <!ENTITY enableJavaScript.title                    "Enable JavaScript">
 <!ENTITY enableJavaScript.description              "Most interactive sites use JavaScript">
-<!ENTITY javascript.options.jit.content.title      "Enable JavaScript tracing">
-<!ENTITY javascript.options.jit.content.description "Use native‐code compilation in JavaScript">
 <!ENTITY enablePlugins.title                       "Enable Plugins">
 <!ENTITY enablePlugins.description                 "Plugins are used for special content such as video">
 <!ENTITY privacy.title                             "Privacy &amp; Security">
