@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE overlay SYSTEM "chrome://exta/locale/exta.dtd">
+<overlay id="extA1"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <vbox id="browser-bottombox">
+    <statusbar id="extAbar" />
+  </vbox>
+</overlay>
