@@ -76,6 +76,18 @@ function getScrollboxFromElement(elem) {
  */
 
 function InputHandler() {
+  /* the list of modules that will handle input */
+  this._modules = [];
+
+  /* which module, if any, has all events directed to it */
+  this._grabbed = null;
+
+  /* when true, don't process any events */
+  this._ignoreEvents = false;
+
+  /* if set, allow a click event to get through */
+  this._allowNextClick = false;
+
   /* used to stop everything if mouse leaves window on desktop */
   window.addEventListener("mouseout", this, true);
 
@@ -102,10 +114,6 @@ function InputHandler() {
 }
 
 InputHandler.prototype = {
-  _modules : [],
-  _grabbed : null,
-  _ignoreEvents: false,
-
   grab: function grab(obj) {
     // do nothing if we have a grab and it's the one requested
     // grab(null) is allowed because of mouseout handling
@@ -135,9 +143,27 @@ InputHandler.prototype = {
     this._ignoreEvents = true;
   },
 
+  allowNextClick: function allowNextClick() {
+    this._allowNextClick = true;
+  },
+
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
+
+    // to allow supressing most clicks we don't generate ourselves,
+    // filter them here unless handler code has asked us to allow it
+    // through one time
+    if (aEvent.type == "click") {
+      if (this._allowNextClick) {
+        this._allowNextClick = false;
+      }
+      else {
+        aEvent.stopPropagation();
+        aEvent.preventDefault();
+        return;
+      }
+    }
 
     if (this._grabbed) {
       this._grabbed.handleEvent(aEvent);
@@ -235,15 +261,11 @@ function ChromeInputModule(owner, browserCanvas) {
   this._owner = owner;
   this._browserCanvas = browserCanvas;
   this._dragData = new DragData(this, 50, 200);
+  this._targetScrollbox = null;
+  this._clickEvents = [];
 }
 
 ChromeInputModule.prototype = {
-  _owner: null,
-  _ignoreNextClick: false,
-  _dragData: null,
-  _clickEvents : [],
-  _targetScrollbox: null,
-
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "mousedown":
@@ -254,13 +276,6 @@ ChromeInputModule.prototype = {
         break;
       case "mouseup":
         this._onMouseUp(aEvent);
-        break;
-      case "click":
-        if (this._ignoreNextClick) {
-          aEvent.stopPropagation();
-          aEvent.preventDefault();
-          this._ignoreNextClick = false;
-        }
         break;
     }
   },
@@ -318,7 +333,6 @@ ChromeInputModule.prototype = {
 
     // absorb the event for the scrollable XUL element and make all future events grabbed too
     this._owner.grab(this);
-
     aEvent.stopPropagation();
     aEvent.preventDefault();
 
@@ -337,9 +351,10 @@ ChromeInputModule.prototype = {
 
   _onMouseUp: function _onMouseUp(aEvent) {
     // only process if original mousedown was on a scrollable element
-    let dragData = this._dragData;
-    if (!this._targetScrollbox)
+    if (!this._targetScrollbox) {
+      this._owner.allowNextClick();
       return;
+    }
 
     // keep an eye out for mouseups that didn't start with a mousedown
     if (!(this._clickEvents.length % 2)) {
@@ -354,7 +369,6 @@ ChromeInputModule.prototype = {
                                 aEvent.button, aEvent.relatedTarget);
       this._clickEvents.push({event: clickEvent, target: aEvent.target, time: Date.now()});
 
-      this._ignoreNextClick = true;
       this._sendSingleClick();
       this._targetScrollbox = null;
     }
@@ -362,6 +376,7 @@ ChromeInputModule.prototype = {
     aEvent.stopPropagation();
     aEvent.preventDefault();
 
+    let dragData = this._dragData;
     if (dragData.dragging)
       this._dragStop(aEvent.screenX, aEvent.screenY);
 
@@ -398,6 +413,8 @@ ChromeInputModule.prototype = {
 
   // resend original events with our handler out of the loop
   _sendSingleClick: function _sendSingleClick() {
+    this._owner.allowNextClick();
+
     this._owner.grab(this);
     this._owner.stopListening();
 
@@ -575,11 +592,6 @@ function ContentPanningModule(owner, browserCanvas, useEarlyMouseMoves) {
 }
 
 ContentPanningModule.prototype = {
-  _owner: null,
-  _dragData: null,
-
-  _kineticData: null,
-
   handleEvent: function handleEvent(aEvent) {
     // exit early for events outside displayed content area
     if (aEvent.target !== this._browserCanvas)
@@ -706,14 +718,12 @@ ContentPanningModule.prototype = {
 
 function ContentClickingModule(owner) {
   this._owner = owner;
+  this._clickTimeout = -1;
+  this._events = [];
+  this._zoomed = false;
 }
 
-
 ContentClickingModule.prototype = {
-  _clickTimeout : -1,
-  _events : [],
-  _zoomedTo : null,
-
   handleEvent: function handleEvent(aEvent) {
     // exit early for events outside displayed content area
     if (aEvent.target !== document.getElementById("browser-canvas"))
@@ -769,6 +779,8 @@ ContentClickingModule.prototype = {
   },
 
   _sendSingleClick: function _sendSingleClick() {
+    this._owner.allowNextClick();
+
     this._owner.grab(this);
     this._dispatchContentMouseEvent(this._events[0].event);
     this._dispatchContentMouseEvent(this._events[1].event);
