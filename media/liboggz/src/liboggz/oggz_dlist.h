@@ -36,7 +36,7 @@
 struct _OggzDList;
 typedef struct _OggzDList OggzDList;
 
-typedef enum {DLIST_ITER_CANCEL, DLIST_ITER_CONTINUE} OggzDListIterResponse;
+typedef enum {DLIST_ITER_ERROR=-1, DLIST_ITER_CANCEL=0, DLIST_ITER_CONTINUE=1} OggzDListIterResponse;
 
 typedef OggzDListIterResponse (*OggzDListIterFunc) (void *elem);
 
@@ -55,13 +55,13 @@ oggz_dlist_append(OggzDList *dlist, void *elem);
 int
 oggz_dlist_prepend(OggzDList *dlist, void *elem);
 
-void
+int
 oggz_dlist_iter(OggzDList *dlist, OggzDListIterFunc func);
 
 void
 oggz_dlist_reverse_iter(OggzDList *dlist, OggzDListIterFunc func);
 
-void
+int
 oggz_dlist_deliter(OggzDList *dlist, OggzDListIterFunc func);
 
 void
