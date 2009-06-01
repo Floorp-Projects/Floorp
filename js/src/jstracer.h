@@ -291,13 +291,9 @@ struct FrameInfo {
     JSObject*       block;      // caller block chain head
     jsbytecode*     pc;         // caller fp->regs->pc
     jsbytecode*     imacpc;     // caller fp->imacpc
-    union {
-        struct {
-            uint16  spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
-            uint16  argc;       // actual argument count, may be < fun->nargs
-        } s;
-        uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
-    };
+    uint16          spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
+    uint16          argc;       // actual argument count, may be < fun->nargs
+
     /*
      * Stack pointer adjustment needed for navigation of native stack in
      * js_GetUpvarOnTrace. spoffset is the number of slots in the native
