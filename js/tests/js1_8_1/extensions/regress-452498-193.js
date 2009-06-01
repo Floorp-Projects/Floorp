@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Gary Kwong
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,26 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465567-02.js';
+var gTestfile = 'regress-452498-193.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 465567;
-var summary = 'TM: Do not assert: JSVAL_TAG(v) == JSVAL_OBJECT';
+var BUGNUMBER = 452498;
+var summary = 'TM: upvar2 regression tests';
 var actual = '';
 var expect = '';
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
+//-------  Comment #193  From  Gary Kwong
 
-jit(true);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-try
+function test()
 {
-  eval("for each (e in ['', true, 1, true, 1]) { e = null; if (0) { let e; var e; } }");
-}
-catch(ex)
-{
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-jit(false);
+// Assertion failure: afunbox->parent, at ../jsparse.cpp:1912
 
-reportCompare(expect, actual, summary);
+  watch("x", Function);
+  NaN = uneval({ get \u3056 (){ return undefined } });
+  x+=NaN;
+
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

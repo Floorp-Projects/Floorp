@@ -35,26 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465567-02.js';
+var gTestfile = 'regress-452498-185.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 465567;
-var summary = 'TM: Do not assert: JSVAL_TAG(v) == JSVAL_OBJECT';
+var BUGNUMBER = 452498;
+var summary = 'TM: upvar2 regression tests';
 var actual = '';
 var expect = '';
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
+//-------  Comment #185  From  Jesse Ruderman
 
-jit(true);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-try
+function test()
 {
-  eval("for each (e in ['', true, 1, true, 1]) { e = null; if (0) { let e; var e; } }");
-}
-catch(ex)
-{
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-jit(false);
+  expect = 'TypeError: redeclaration of variable e';
+  try
+  {
+    eval('{ var e = 3; let e = ""; } print(typeof e);');
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
 
-reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}
