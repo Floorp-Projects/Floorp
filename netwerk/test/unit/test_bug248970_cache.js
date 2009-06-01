@@ -47,7 +47,7 @@ const kOfflineDevice = "offline";
 // the name for our cache session
 const kPrivateBrowsing = "PrivateBrowsing";
 
-var _PBSvc = null;
+var _PBSvc;
 function get_privatebrowsing_service() {
   if (_PBSvc)
     return _PBSvc;
@@ -57,10 +57,11 @@ function get_privatebrowsing_service() {
              getService(Ci.nsIPrivateBrowsingService);
     return _PBSvc;
   } catch (e) {}
+
   return null;
 }
 
-var _CSvc = null;
+var _CSvc;
 function get_cache_service() {
   if (_CSvc)
     return _CSvc;
@@ -72,27 +73,32 @@ function get_cache_service() {
 function setup_profile_dir() {
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
-  var leafRandomName = "Cache" + Math.floor(Math.random() * 10000);
   var dir = dirSvc.get("TmpD", Ci.nsILocalFile);
-  dir.append(leafRandomName);
+  dir.append("Cache" + Math.floor(Math.random() * 10000));
   dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0700);
+
   var provider = {
     getFile: function(prop, persistent) {
       persistent.value = true;
+
       if (prop == "ProfLD" ||
           prop == "ProfD" ||
           prop == "cachePDir")
         return dir;
+
       throw Cr.NS_ERROR_FAILURE;
     },
+
     QueryInterface: function(iid) {
       if (iid.equals(Ci.nsIDirectoryProvider) ||
           iid.equals(Ci.nsISupports)) {
         return this;
       }
+
       throw Cr.NS_ERROR_NO_INTERFACE;
     }
   };
+
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
@@ -201,8 +207,9 @@ function retrieve_from_cache(aKey, aWhere) {
       // to let the caller know that no data was retrieved.  We also expect
       // a generic failure error in case of the offline cache.
       return null;
-    else
-      do_throw(e); // throw the textual error description
+
+    // Throw the textual error description.
+    do_throw(e);
   }
 
   var iStream = make_input_stream_scriptable(cacheEntry.openInputStream(0));
