@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<?xul-overlay href="extA1.xul"?>
+<?xul-overlay href="extB1.xul"?>
+<?xul-overlay href="extA2.xul"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<vbox id="browser-bottombox">
+</vbox>
+</window>
