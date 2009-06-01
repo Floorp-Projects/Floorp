@@ -67,6 +67,18 @@ const RECORDLOOP = HOTLOOP;
 // The loop count at which we run the trace
 const RUNLOOP = HOTLOOP + 1;
 
+var gDoMandelbrotTest = true;
+if ("gSkipSlowTests" in this && gSkipSlowTests) {
+    print("** Skipping slow tests");
+    gDoMandelbrotTest = false;
+}
+
+if (!('gSrcdir' in this))
+    gSrcdir = '.';
+
+if (!('gReportSummary' in this))
+    gReportSummary = true;
+
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
   testName = arguments[0];
@@ -107,6 +119,9 @@ for (var p in jitProps)
 
 function test(f)
 {
+  // Clear out any accumulated confounding state in the oracle / JIT cache.
+  gc();
+
   if (!testName || testName == f.name) {
     var expectedJITstats = f.jitstats;
     if (hadJITstats && expectedJITstats)
@@ -189,7 +204,7 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
     if (pass) {
       reportCompare(expected, actual, desc);
       passes.push(desc);
-      return print(desc, ": passed");
+      return print("TEST-PASS | trace-test.js |", desc);
     }
   }
 
@@ -1729,11 +1744,6 @@ function testNestedExitStackOuter() {
   return counter;
 }
 testNestedExitStackOuter.expected = 81;
-testNestedExitStackOuter.jitstats = {
-recorderStarted: 5,
-recorderAborted: 1,
-traceTriggered: 10
-};
 test(testNestedExitStackOuter);
 
 function testHOTLOOPSize() {
@@ -2593,7 +2603,7 @@ testThinLoopDemote.jitstats = {
 recorderStarted: 2,
 recorderAborted: 0,
 traceCompleted: 2,
-traceTriggered: 3,
+traceTriggered: 2,
 unstableLoopVariable: 1
 };
 test(testThinLoopDemote);
@@ -4247,8 +4257,8 @@ function testBug458838() {
 testBug458838.expected = 10;
 testBug458838.jitstats = {
   recorderStarted: 1,
-  recorderAborted: 1,
-  traceCompleted: 0
+  recorderAborted: 0,
+  traceCompleted: 1
 };
 test(testBug458838);
 
@@ -4604,6 +4614,690 @@ testAddNull.jitstats = {
 };
 test(testAddNull);
 
+function testClosures()
+{
+    function MyObject(id) {
+        var thisObject = this;
+        this.id = id;
+        this.toString = str;
+
+        function str() {
+            return "" + this.id + thisObject.id;
+        }
+    }
+
+    var a = [];
+    for (var i = 0; i < 5; i++)
+        a.push(new MyObject(i));
+    return a.toString();
+}
+testClosures.expected = "00,11,22,33,44";
+test(testClosures);
+
+function testMoreClosures() {
+    var f = {}, max = 3;
+
+    var hello = function(n) {
+        function howdy() { return n * n }
+        f.test = howdy;
+    };
+
+    for (var i = 0; i <= max; i++)
+        hello(i);
+
+    return f.test();
+}
+testMoreClosures.expected = 9;
+test(testMoreClosures);
+
+function testLambdaInitedVar() {
+    var jQuery = function (a, b) {
+        return jQuery && jQuery.length;
+    }
+    return jQuery();
+}
+
+testLambdaInitedVar.expected = 2;
+test(testLambdaInitedVar);
+
+function testNestedEscapingLambdas()
+{
+    try {
+        return (function() {
+            var a = [], r = [];
+            function setTimeout(f, t) {
+                a.push(f);
+            }
+
+            function runTimeouts() {
+                for (var i = 0; i < a.length; i++)
+                    a[i]();
+            }
+
+            var $foo = "#nothiddendiv";
+            setTimeout(function(){
+                r.push($foo);
+                setTimeout(function(){
+                    r.push($foo);
+                }, 100);
+            }, 100);
+
+            runTimeouts();
+
+            return r.join("");
+        })();
+    } catch (e) {
+        return e;
+    }
+}
+testNestedEscapingLambdas.expected = "#nothiddendiv#nothiddendiv";
+test(testNestedEscapingLambdas);
+
+function testPropagatedFunArgs()
+{
+  var win = this;
+  var res = [], q = [];
+  function addEventListener(name, func, flag) {
+    q.push(func);
+  }
+
+  var pageInfo, obs;
+  addEventListener("load", handleLoad, true);
+
+  var observer = {
+    observe: function(win, topic, data) {
+      // obs.removeObserver(observer, "page-info-dialog-loaded");
+      handlePageInfo();
+    }
+  };
+
+  function handleLoad() {
+    pageInfo = { toString: function() { return "pageInfo"; } };
+    obs = { addObserver: function (obs, topic, data) { obs.observe(win, topic, data); } };
+    obs.addObserver(observer, "page-info-dialog-loaded", false);
+  }
+
+  function handlePageInfo() {
+    res.push(pageInfo);
+    function $(aId) { res.push(pageInfo); };
+    var feedTab = $("feedTab");
+  }
+
+  q[0]();
+  return res.join(',');
+}
+testPropagatedFunArgs.expected = "pageInfo,pageInfo";
+test(testPropagatedFunArgs);
+
+// Second testPropagatedFunArgs test -- this is a crash-test.
+(function () {
+  var escapee;
+
+  function testPropagatedFunArgs()
+  {
+    const magic = 42;
+
+    var win = this;
+    var res = [], q = [];
+    function addEventListener(name, func, flag) {
+      q.push(func);
+    }
+
+    var pageInfo = "pageInfo", obs;
+    addEventListener("load", handleLoad, true);
+
+    var observer = {
+      observe: function(win, topic, data) {
+        // obs.removeObserver(observer, "page-info-dialog-loaded");
+        handlePageInfo();
+      }
+    };
+
+    function handleLoad() {
+      //pageInfo = { toString: function() { return "pageInfo"; } };
+      obs = { addObserver: function (obs, topic, data) { obs.observe(win, topic, data); } };
+      obs.addObserver(observer, "page-info-dialog-loaded", false);
+    }
+
+    function handlePageInfo() {
+      res.push(pageInfo);
+      function $(aId) {
+        function notSafe() {
+          return magic;
+        }
+        notSafe();
+        res.push(pageInfo);
+      };
+      var feedTab = $("feedTab");
+    }
+
+    escapee = q[0];
+    return res.join(',');
+  }
+
+  testPropagatedFunArgs();
+
+  escapee();
+})();
+
+function testStringLengthNoTinyId()
+{
+  var x = "unset";
+  var t = new String("");
+  for (var i = 0; i < 5; i++)
+    x = t["-1"];
+
+  var r = "t['-1'] is " + x;
+  t["-1"] = "foo";
+  r += " when unset, '" + t["-1"] + "' when set";
+  return r;
+}
+testStringLengthNoTinyId.expected = "t['-1'] is undefined when unset, 'foo' when set";
+test(testStringLengthNoTinyId);
+
+function testLengthInString()
+{
+  var s = new String();
+  var res = "length" in s;
+  for (var i = 0; i < 5; i++)
+    res = res && ("length" in s);
+  res = res && s.hasOwnProperty("length");
+  for (var i = 0; i < 5; i++)
+    res = res && s.hasOwnProperty("length");
+  return res;
+}
+testLengthInString.expected = true;
+test(testLengthInString);
+
+function testSlowArrayLength()
+{
+  var counter = 0;
+  var a = [];
+  a[10000000 - 1] = 0;
+  for (var i = 0; i < a.length; i++)
+    counter++;
+  return counter;
+}
+testSlowArrayLength.expected = 10000000;
+testSlowArrayLength.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExitIntoInterpreter: 1
+};
+test(testSlowArrayLength);
+
+function testObjectLength()
+{
+  var counter = 0;
+  var a = {};
+  a.length = 10000000;
+  for (var i = 0; i < a.length; i++)
+    counter++;
+  return counter;
+}
+testObjectLength.expected = 10000000;
+testObjectLength.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExitIntoInterpreter: 1
+};
+test(testObjectLength);
+
+function testChangingObjectWithLength()
+{
+  var obj = { length: 10 };
+  var dense = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  var slow = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; slow.slow = 5;
+
+  /*
+   * The elements of objs constitute a De Bruijn sequence repeated 4x to trace
+   * and run native code for every object and transition.
+   */
+  var objs = [obj, obj, obj, obj,
+              obj, obj, obj, obj,
+              dense, dense, dense, dense,
+              obj, obj, obj, obj,
+              slow, slow, slow, slow,
+              dense, dense, dense, dense,
+              dense, dense, dense, dense,
+              slow, slow, slow, slow,
+              slow, slow, slow, slow,
+              obj, obj, obj, obj];
+
+  var counter = 0;
+
+  for (var i = 0, sz = objs.length; i < sz; i++)
+  {
+    var o = objs[i];
+    for (var j = 0; j < o.length; j++)
+      counter++;
+  }
+
+  return counter;
+}
+testChangingObjectWithLength.expected = 400;
+testChangingObjectWithLength.jitstats = {
+  recorderAborted: 0,
+  sideExitIntoInterpreter: 15 // empirically determined
+};
+test(testChangingObjectWithLength);
+
+function testNEWINIT()
+{
+    var a;
+    for (var i = 0; i < 10; ++i)
+        a = [{}];
+    return uneval(a);
+}
+testNEWINIT.expected = "[{}]";
+test(testNEWINIT);
+
+function testNEWINIT_DOUBLE()
+{
+    for (var z = 0; z < 2; ++z) { ({ 0.1: null })}
+    return "ok";
+}
+testNEWINIT_DOUBLE.expected = "ok";
+test(testNEWINIT_DOUBLE);
+
+function testIntOverflow() {
+    // int32_max - 7
+    var ival = 2147483647 - 7;
+    for (var i = 0; i < 30; i++) {
+        ival += 2;
+    }
+    return (ival < 2147483647);
+}
+testIntOverflow.expected = false;
+testIntOverflow.jitstats = {
+    recorderStarted: 2,
+    recorderAborted: 0,
+    traceCompleted: 2,
+    traceTriggered: 2,
+};
+test(testIntOverflow);
+
+function testIntUnderflow() {
+    // int32_min + 8
+    var ival = -2147483648 + 8;
+    for (var i = 0; i < 30; i++) {
+        ival -= 2;
+    }
+    return (ival > -2147483648);
+}
+testIntUnderflow.expected = false;
+testIntUnderflow.jitstats = {
+    recorderStarted: 2,
+    recorderAborted: 0,
+    traceCompleted: 2,
+    traceTriggered: 2,
+};
+test(testIntUnderflow);
+
+function testCALLELEM()
+{
+    function f() {
+        return 5;
+    }
+
+    function g() {
+        return 7;
+    }
+
+    var x = [f,f,f,f,g];
+    var y = 0;
+    for (var i = 0; i < 5; ++i)
+        y = x[i]();
+    return y;
+}
+testCALLELEM.expected = 7;
+test(testCALLELEM);
+
+function testNewString()
+{
+  var o = { toString: function() { return "string"; } };
+  var r = [];
+  for (var i = 0; i < 5; i++)
+    r.push(typeof new String(o));
+  for (var i = 0; i < 5; i++)
+    r.push(typeof new String(3));
+  for (var i = 0; i < 5; i++)
+    r.push(typeof new String(2.5));
+  for (var i = 0; i < 5; i++)
+    r.push(typeof new String("string"));
+  for (var i = 0; i < 5; i++)
+    r.push(typeof new String(null));
+  for (var i = 0; i < 5; i++)
+    r.push(typeof new String(true));
+  for (var i = 0; i < 5; i++)
+    r.push(typeof new String(undefined));
+  return r.length === 35 && r.every(function(v) { return v === "object"; });
+}
+testNewString.expected = true;
+testNewString.jitstats = {
+  recorderStarted:  7,
+  recorderAborted: 0,
+  traceCompleted: 7,
+  sideExitIntoInterpreter: 7
+};
+test(testNewString);
+
+function testWhileObjectOrNull()
+{
+  try
+  {
+    for (var i = 0; i < 3; i++)
+    {
+      var o = { p: { p: null } };
+      while (o.p)
+        o = o.p;
+    }
+    return "pass";
+  }
+  catch (e)
+  {
+    return "threw exception: " + e;
+  }
+}
+testWhileObjectOrNull.expected = "pass";
+test(testWhileObjectOrNull);
+
+function testDenseArrayProp()
+{
+    [].__proto__.x = 1;
+    ({}).__proto__.x = 2;
+    var a = [[],[],[],({}).__proto__];
+    for (var i = 0; i < a.length; ++i)
+        uneval(a[i].x);
+    delete [].__proto__.x;
+    delete ({}).__proto__.x;
+    return "ok";
+}
+testDenseArrayProp.expected = "ok";
+test(testDenseArrayProp);
+
+function testNewWithNonNativeProto()
+{
+  function f() { }
+  var a = f.prototype = [];
+  for (var i = 0; i < 5; i++)
+    var o = new f();
+  return Object.getPrototypeOf(o) === a && o.splice === Array.prototype.splice;
+}
+testNewWithNonNativeProto.expected = true;
+testNewWithNonNativeProto.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExitIntoInterpreter: 1
+};
+test(testNewWithNonNativeProto);
+
+function testLengthOnNonNativeProto()
+{
+  var o = {};
+  o.__proto__ = [3];
+  for (var j = 0; j < 5; j++)
+    o[0];
+
+  var o2 = {};
+  o2.__proto__ = [];
+  for (var j = 0; j < 5; j++)
+    o2.length;
+
+  function foo() { }
+  foo.__proto__ = [];
+  for (var j = 0; j < 5; j++)
+    foo.length;
+
+  return "no assertion";
+}
+testLengthOnNonNativeProto.expected = "no assertion";
+test(testLengthOnNonNativeProto);
+
+function testDeepPropertyShadowing()
+{
+    function h(node) {
+        var x = 0;
+        while (node) {
+            x++;
+            node = node.parent;
+        }
+        return x;
+    }
+    var tree = {__proto__: {__proto__: {parent: null}}};
+    h(tree);
+    h(tree);
+    tree.parent = {};
+    assertEq(h(tree), 2);
+}
+test(testDeepPropertyShadowing);
+
+// Complicated whitebox test for bug 487845.
+function testGlobalShapeChangeAfterDeepBail() {
+    function f(name) {
+        this[name] = 1;  // may change global shape
+        for (var i = 0; i < 4; i++)
+            ; // MonitorLoopEdge eventually triggers assertion
+    }
+
+    // When i==3, deep-bail, then change global shape enough times to exhaust
+    // the array of GlobalStates.
+    var arr = [[], [], [], ["bug0", "bug1", "bug2", "bug3", "bug4"]];
+    for (var i = 0; i < arr.length; i++)
+        arr[i].forEach(f);
+}
+test(testGlobalShapeChangeAfterDeepBail);
+for (let i = 0; i < 5; i++)
+    delete this["bug" + i];
+
+function testFunctionIdentityChange()
+{
+  function a() {}
+  function b() {}
+
+  var o = { a: a, b: b };
+
+  for (var prop in o)
+  {
+    for (var i = 0; i < 1000; i++)
+      o[prop]();
+  }
+
+  return true;
+}
+testFunctionIdentityChange.expected = true;
+testFunctionIdentityChange.jitstats = {
+  recorderStarted: 2,
+  traceCompleted: 2,
+  sideExitIntoInterpreter: 3
+};
+test(testFunctionIdentityChange);
+
+function testStringObjectLength() {
+    var x = new String("foo"), y = 0;
+    for (var i = 0; i < 10; ++i)
+        y = x.length;
+    return y;
+}
+testStringObjectLength.expected = 3;
+test(testStringObjectLength);
+
+var _quit;
+function testNestedDeepBail()
+{
+    _quit = false;
+    function loop() {
+        for (var i = 0; i < 4; i++)
+            ;
+    }
+    loop();
+
+    function f() {
+        loop();
+        _quit = true;
+    }
+    var stk = [[1], [], [], [], []];
+    while (!_quit)
+        stk.pop().forEach(f);
+}
+test(testNestedDeepBail);
+delete _quit;
+
+function testSlowNativeCtor() {
+    for (var i = 0; i < 4; i++)
+	new Date().valueOf();
+}
+test(testSlowNativeCtor);
+
+function testSlowNativeBail() {
+    var a = ['0', '1', '2', '3', '+'];
+    try {
+	for (var i = 0; i < a.length; i++)
+	    new RegExp(a[i]);
+    } catch (exc) {
+	assertEq(""+exc.stack.match(/^RegExp/), "RegExp");
+    }
+}
+test(testSlowNativeBail);
+
+/* Test the proper operation of the left shift operator. This is especially
+ * important on ARM as an explicit mask is required at the native instruction
+ * level. */
+function testShiftLeft()
+{
+    var r = [];
+    var i = 0;
+    var j = 0;
+
+    var shifts = [0,1,7,8,15,16,23,24,31];
+
+    /* Samples from the simple shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = 1 << shifts[i];
+
+    /* Samples outside the normal shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = 1 << (shifts[i] + 32);
+
+    /* Samples far outside the normal shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = 1 << (shifts[i] + 224);
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = 1 << (shifts[i] + 256);
+
+    return r.join(",");
+}
+testShiftLeft.expected =
+    "1,2,128,256,32768,65536,8388608,16777216,-2147483648,"+
+    "1,2,128,256,32768,65536,8388608,16777216,-2147483648,"+
+    "1,2,128,256,32768,65536,8388608,16777216,-2147483648,"+
+    "1,2,128,256,32768,65536,8388608,16777216,-2147483648";
+test(testShiftLeft);
+
+/* Test the proper operation of the logical right shift operator. This is
+ * especially important on ARM as an explicit mask is required at the native
+ * instruction level. */
+function testShiftRightLogical()
+{
+    var r = [];
+    var i = 0;
+    var j = 0;
+
+    var shifts = [0,1,7,8,15,16,23,24,31];
+
+    /* Samples from the simple shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >>> shifts[i];
+
+    /* Samples outside the normal shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >>> (shifts[i] + 32);
+
+    /* Samples far outside the normal shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >>> (shifts[i] + 224);
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >>> (shifts[i] + 256);
+
+    return r.join(",");
+}
+/* Note: Arguments to the ">>>" operator are converted to unsigned 32-bit
+ * integers during evaluation. As a result, -2147483648 >>> 0 evaluates to the
+ * unsigned interpretation of the same value, which is 2147483648. */
+testShiftRightLogical.expected =
+    "2147483648,1073741824,16777216,8388608,65536,32768,256,128,1,"+
+    "2147483648,1073741824,16777216,8388608,65536,32768,256,128,1,"+
+    "2147483648,1073741824,16777216,8388608,65536,32768,256,128,1,"+
+    "2147483648,1073741824,16777216,8388608,65536,32768,256,128,1";
+test(testShiftRightLogical);
+
+/* Test the proper operation of the arithmetic right shift operator. This is
+ * especially important on ARM as an explicit mask is required at the native
+ * instruction level. */
+function testShiftRightArithmetic()
+{
+    var r = [];
+    var i = 0;
+    var j = 0;
+
+    var shifts = [0,1,7,8,15,16,23,24,31];
+
+    /* Samples from the simple shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >> shifts[i];
+
+    /* Samples outside the normal shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >> (shifts[i] + 32);
+
+    /* Samples far outside the normal shift range. */
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >> (shifts[i] + 224);
+    for (i = 0; i < shifts.length; i++)
+        r[j++] = -2147483648 >> (shifts[i] + 256);
+
+    return r.join(",");
+}
+testShiftRightArithmetic.expected =
+    "-2147483648,-1073741824,-16777216,-8388608,-65536,-32768,-256,-128,-1,"+
+    "-2147483648,-1073741824,-16777216,-8388608,-65536,-32768,-256,-128,-1,"+
+    "-2147483648,-1073741824,-16777216,-8388608,-65536,-32768,-256,-128,-1,"+
+    "-2147483648,-1073741824,-16777216,-8388608,-65536,-32768,-256,-128,-1";
+test(testShiftRightArithmetic);
+
+function testStringConstructorWithExtraArg() {
+    for (let i = 0; i < 5; ++i)
+        new String(new String(), 2);
+    return "ok";
+}
+testStringConstructorWithExtraArg.expected = "ok";
+test(testStringConstructorWithExtraArg);
+
+function testConstructorBail() {
+    for (let i = 0; i < 5; ++i) new Number(/x/);
+}
+test(testConstructorBail);
+
+function testNewArrayCount()
+{
+  var a = [];
+  for (var i = 0; i < 5; i++)
+    a = [0];
+  assertEq(a.__count__, 1);
+  for (var i = 0; i < 5; i++)
+    a = [0, , 2];
+  assertEq(a.__count__, 2);
+}
+test(testNewArrayCount);
+
+function testNewArrayCount2() {
+    var x = 0;
+    for (var i = 0; i < 10; ++i)
+        x = new Array(1,2,3).__count__;
+    return x;
+}
+testNewArrayCount2.expected = 3;
+test(testNewArrayCount2);
 
 /*****************************************************************************
  *                                                                           *
@@ -4671,7 +5365,7 @@ test(testGlobalProtoAccess);
 jit(false);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
-if (0) {
+if (gReportSummary) {
   print("\npassed:", passes.length && passes.join(","));
   print("\nFAILED:", fails.length && fails.join(","));
 }
