@@ -1836,6 +1836,19 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 }
 
 /*
+ * Helper for js_GetUpvarOnTrace.
+ */
+static uint32 
+GetUpvarOnTraceTail(InterpState* state, uint32 cookie,
+                    uint32 nativeStackFramePos, uint8* typemap, double* result)
+{
+    uintN slot = UPVAR_FRAME_SLOT(cookie);
+    slot = (slot == CALLEE_UPVAR_SLOT) ? 0 : 2/*callee,this*/ + slot;
+    *result = state->stackBase[nativeStackFramePos + slot];
+    return typemap[slot];
+}
+
+/*
  * Builtin to get an upvar on trace. See js_GetUpvar for the meaning
  * of the first three arguments. The value of the upvar is stored in
  * *result as an unboxed native. The return value is the typemap type.
@@ -1865,15 +1878,17 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
              */
             uintN nativeStackFramePos = state->callstackBase[0]->spoffset;
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
-                nativeStackFramePos += (*fip2)->s.spdist;
-            nativeStackFramePos -= (2 + (*fip)->s.argc);
+                nativeStackFramePos += (*fip2)->spdist;
+            nativeStackFramePos -= (2 + (*fip)->argc);
             uint8* typemap = (uint8*) (fi+1);
-
-            uintN slot = UPVAR_FRAME_SLOT(cookie);
-            slot = (slot == CALLEE_UPVAR_SLOT) ? 0 : 2/*callee,this*/ + slot;
-            *result = state->stackBase[nativeStackFramePos + slot];
-            return typemap[slot];
+            return GetUpvarOnTraceTail(state, cookie, nativeStackFramePos,
+                                       typemap, result);
         }
+    }
+
+    if (cx->fp->fun && cx->fp->fun->u.i.script->staticLevel == upvarLevel) {
+        return GetUpvarOnTraceTail(state, cookie, 0, 
+                                   state->outermostTree->stackTypeMap(), result);
     }
 
     /*
@@ -3516,7 +3531,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     JSStackFrame* fp = cx->fp;
     JS_ASSERT_IF(!fi.imacpc,
                  js_ReconstructStackDepth(cx, fp->script, fi.pc)
-                 == uintN(fi.s.spdist - fp->script->nfixed));
+                 == uintN(fi.spdist - fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
     JSScript* script = fun->u.i.script;
@@ -3525,8 +3540,8 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     /* Code duplicated from inline_call: case in js_Interpret (FIXME). */
     JSArena* a = cx->stackPool.current;
     void* newmark = (void*) a->avail;
-    uintN argc = fi.s.argc & 0x7fff;
-    jsval* vp = fp->slots + fi.s.spdist - (2 + argc);
+    uintN argc = fi.argc & 0x7fff;
+    jsval* vp = fp->slots + fi.spdist - (2 + argc);
     uintN missing = 0;
     jsval* newsp;
 
@@ -3584,10 +3599,10 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee; // Roll with a potentially stale callee for now.
     newifp->frame.fun = fun;
 
-    bool constructing = (fi.s.argc & 0x8000) != 0;
+    bool constructing = (fi.argc & 0x8000) != 0;
     newifp->frame.argc = argc;
     newifp->callerRegs.pc = fi.pc;
-    newifp->callerRegs.sp = fp->slots + fi.s.spdist;
+    newifp->callerRegs.sp = fp->slots + fi.spdist;
     fp->imacpc = fi.imacpc;
 
 #ifdef DEBUG
@@ -3655,7 +3670,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     // FIXME? we must count stack slots from caller's operand stack up to (but not including)
     // callee's, including missing arguments. Could we shift everything down to the caller's
     // fp->slots (where vars start) and avoid some of the complexity?
-    return (fi.s.spdist - fp->down->script->nfixed) +
+    return (fi.spdist - fp->down->script->nfixed) +
            ((fun->nargs > fp->argc) ? fun->nargs - fp->argc : 0) +
            script->nfixed;
 }
@@ -8549,15 +8564,15 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->block = fp->blockChain;
     fi->pc = fp->regs->pc;
     fi->imacpc = fp->imacpc;
-    fi->s.spdist = fp->regs->sp - fp->slots;
-    fi->s.argc = argc | (constructing ? 0x8000 : 0);
+    fi->spdist = fp->regs->sp - fp->slots;
+    fi->argc = argc | (constructing ? 0x8000 : 0);
     fi->spoffset = 2 /*callee,this*/ + fp->argc;
 
     unsigned callDepth = getCallDepth();
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
     if (callDepth == 0)
-        fi->spoffset = 2 /*callee,this*/ + argc - fi->s.spdist;
+        fi->spoffset = 2 /*callee,this*/ + argc - fi->spdist;
 
     lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
