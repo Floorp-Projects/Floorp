@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Brendan Eich 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,26 +35,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465567-02.js';
+var gTestfile = 'regress-452498-191.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 465567;
-var summary = 'TM: Do not assert: JSVAL_TAG(v) == JSVAL_OBJECT';
+var BUGNUMBER = 452498;
+var summary = 'TM: upvar2 regression tests';
 var actual = '';
 var expect = '';
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
+//-------  Comment #191  From  Brendan Eich
 
-jit(true);
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-try
+function test()
 {
-  eval("for each (e in ['', true, 1, true, 1]) { e = null; if (0) { let e; var e; } }");
-}
-catch(ex)
-{
-}
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-jit(false);
+  expect = actual = 'No Error';
+  try
+  {
+    eval('{ var x; {let x;} }');
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary);
 
-reportCompare(expect, actual, summary);
+  expect = 'TypeError: redeclaration of let x';
+  try
+  {
+    eval('{ let x; {var x;} }');
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}
