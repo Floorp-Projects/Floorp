@@ -567,7 +567,7 @@ var BrowserUI = {
         var bookmarkTitle = browser.contentDocument.title || bookmarkURI.spec;
 
         if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
-          var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
+          var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.unfiledBookmarksFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
           BrowserUI.updateStar();
 
           var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
