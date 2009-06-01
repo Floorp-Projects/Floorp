@@ -4,7 +4,6 @@
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
   locale/@AB_CD@/browser/browser.dtd              (%chrome/browser.dtd)
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
-  locale/@AB_CD@/browser/shortcuts.properties     (%chrome/shortcuts.properties)
   locale/@AB_CD@/browser/search.properties        (%chrome/search.properties)
   locale/@AB_CD@/browser/region.properties        (%chrome/region.properties)
   locale/@AB_CD@/browser/preferences.dtd          (%chrome/preferences.dtd)
