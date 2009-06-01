@@ -74,6 +74,7 @@ _TEST_FILES += \
 		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \
+		test_bug495319.html \
 		test_can_play_type_ogg.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \
@@ -112,6 +113,7 @@ _TEST_FILES += \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
 		seek.ogv \
+		small-shot.ogg \
 		sound.ogg \
 		$(NULL)
 

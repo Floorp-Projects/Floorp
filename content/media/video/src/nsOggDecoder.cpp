@@ -1721,6 +1721,9 @@ nsresult nsOggDecodeStateMachine::Run()
             continue;
         }
 
+        // Set the right current time
+        mCurrentFrameTime += mCallbackPeriod;
+
         mon.Exit();
         nsCOMPtr<nsIRunnable> event =
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, PlaybackEnded);
@@ -2185,6 +2188,7 @@ void nsOggDecoder::PlaybackEnded()
   if (mShuttingDown || mPlayState == nsOggDecoder::PLAY_STATE_SEEKING)
     return;
 
+  PlaybackPositionChanged();
   ChangeState(PLAY_STATE_ENDED);
 
   if (mElement)  {
