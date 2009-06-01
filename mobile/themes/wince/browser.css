@@ -600,12 +600,6 @@ richpref {
   background-color: white;
 }
 
-/* Shortcut editor   ------------------------------------------------------- */
-#shortcuts {
-  border: 0;
-  padding: .2em;
-}
-
 /* alerts popup ----------------------------------------------------------- */
 #alerts-container {
   color: #000;
