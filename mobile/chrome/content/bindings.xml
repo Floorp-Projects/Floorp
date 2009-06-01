@@ -705,7 +705,7 @@
         <parameter name="aRootFolder"/>
         <body>
           <![CDATA[
-            aRootFolder = aRootFolder || PlacesUtils.bookmarks.bookmarksMenuFolder;
+            aRootFolder = aRootFolder || PlacesUtils.bookmarks.unfiledBookmarksFolder;
 
             this._activeItem = null;
 
@@ -900,7 +900,7 @@
         <parameter name="aLevel"/>
         <body>
           <![CDATA[
-            aRootFolder = aRootFolder || PlacesUtils.bookmarks.bookmarksMenuFolder;
+            aRootFolder = aRootFolder || PlacesUtils.bookmarks.unfiledBookmarksFolder;
             aLevel = aLevel || 0;
 
             let items = this._items;
