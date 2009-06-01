@@ -167,6 +167,7 @@ for step in step1; do # dummy loop for handling exits
             # directory to the home directory prior to executing the command.
 
             if [[ -e "/c/mozilla-build" && $branch != "1.8.0" ]]; then
+                export PYTHON=/c/mozilla-build/python25/python
                 export BUILDDIR=${BUILDDIR:-/c/work/mozilla/builds}
                 export buildbash="/c/mozilla-build/msys/bin/bash"
                 export bashlogin=--login # this is for msys' bash.
