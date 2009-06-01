@@ -58,3 +58,4 @@ patch -p3 < bug488951_yuv_fix.patch
 patch -p3 < bug488951_yuv_fix_2.patch
 patch -p3 < bug495129a.patch
 patch -p3 < bug495129b.patch
+patch -p3 < bug487519.patch
