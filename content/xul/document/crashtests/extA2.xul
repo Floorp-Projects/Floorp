@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE overlay SYSTEM "chrome://exta/locale/exta.dtd">
+<overlay id="extA2"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <statusbar id="extAbar">
+    <statusbarpanel id="extApanel" label="panel 1">
+    </statusbarpanel>
+    <statusbarpanel id="extApanel2" label="panel 2" />
+  </statusbar>
+</overlay>
