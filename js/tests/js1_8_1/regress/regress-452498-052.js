@@ -70,7 +70,7 @@ function test()
 // Assertion failure: pnu->pn_cookie == FREE_UPVAR_COOKIE, at ../jsemit.cpp:1815
 // In EmitEnterBlock. x has one use, which is pnu here.
 // pnu is indeed a name, but pnu->pn_cookie is 0.
-    let (x = 1) { var x; }
+    try { eval('let (x = 1) { var x; }'); } catch(ex) {}
 
 // Assertion failure: cg->upvars.lookup(atom), at ../jsemit.cpp:1992
 // atom="x", upvars is empty.
