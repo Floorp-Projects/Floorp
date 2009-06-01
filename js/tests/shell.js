@@ -274,6 +274,23 @@ function escapeString (str)
 }
 
 /*
+ * assertEq(actual, expected)
+ *           Throw if the two arguments are not ===
+ * see https://bugzilla.mozilla.org/show_bug.cgi?id=480199
+ */
+if (typeof assertEq == 'undefined')
+{
+  var assertEq =
+    function (actual, expected)
+    {
+      if (actual !== expected)
+      {
+        throw new TypeError('Assertion failed: got "' + actual + '", expected "' + expected);
+      }
+    };
+}
+
+/*
  * Compare expected result to actual result, if they differ (in value and/or
  * type) report a failure.  If description is provided, include it in the
  * failure report.
