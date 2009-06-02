@@ -8969,7 +8969,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
             }
             ABORT_TRACE("non-stub getter");
         }
-        if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
+        if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
             ABORT_TRACE("no valid slot");
         slot = sprop->slot;
     } else {
