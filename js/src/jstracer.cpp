@@ -1886,7 +1886,7 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
         }
     }
 
-    if (cx->fp->fun && cx->fp->fun->u.i.script->staticLevel == upvarLevel) {
+    if (state->outermostTree->script->staticLevel == upvarLevel) {
         return GetUpvarOnTraceTail(state, cookie, 0, 
                                    state->outermostTree->stackTypeMap(), result);
     }
