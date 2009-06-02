@@ -770,7 +770,7 @@
                         else
                             marginTop = Math.round(fader.maxSlide * Math.pow(1 - pos, 0.5));
 
-                        fader.element.style.marginTop = marginTop;
+                        fader.element.style.marginTop = marginTop + "px";
                     }
 
                     // Is the animation done?
