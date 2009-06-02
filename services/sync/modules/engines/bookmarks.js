@@ -768,5 +768,6 @@ dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in al
 
   onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
   onEndUpdateBatch: function BMT_onEndUpdateBatch() {},
+  onBeforeItemRemoved: function BMT_onBeforeItemRemoved(itemId) {},
   onItemVisited: function BMT_onItemVisited(itemId, aVisitID, time) {}
 };
