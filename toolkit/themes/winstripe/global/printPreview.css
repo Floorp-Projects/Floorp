@@ -1,19 +1,47 @@
 /* ..... page navigation ..... */
 
-.home-arrow, .end-arrow[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp-end.gif");
+.home-arrow,
+.end-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/printpreview/arrow-left-end.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.end-arrow, .home-arrow[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp-end.gif");
+.home-arrow:hover,
+.end-arrow[chromedir="rtl"]:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-.left-arrow, .right-arrow[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
+.end-arrow,
+.home-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/printpreview/arrow-right-end.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.right-arrow, .left-arrow[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
+.end-arrow:hover,
+.home-arrow[chromedir="rtl"]:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.left-arrow,
+.right-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/printpreview/arrow-left.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.left-arrow:hover,
+.right-arrow[chromedir="rtl"]:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.right-arrow,
+.left-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/printpreview/arrow-right.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.right-arrow:hover,
+.left-arrow[chromedir="rtl"]:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 /* ...... scale in/decrement ..... */

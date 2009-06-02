@@ -1934,7 +1934,7 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsRect rect(mRect + aBuilder->ToReferenceFrame(mFrame));
   nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
                                         aDirtyRect, rect, *backg, *border,
-                                        PR_TRUE);
+                                        0);
 }
 
 class nsDisplayMathMLCharForeground : public nsDisplayItem {

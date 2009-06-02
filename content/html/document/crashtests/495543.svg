@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<script type="text/javascript">
+
+function boom()
+{
+  var htmlBody = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  document.documentElement.appendChild(htmlBody);
+  htmlBody.setAttribute('vlink', "transparent");
+  document.height;
+  document.vlinkColor;
+}
+
+window.addEventListener("load", boom, false);
+</script>
+
+</svg>
