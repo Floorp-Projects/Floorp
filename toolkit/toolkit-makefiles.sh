@@ -559,10 +559,6 @@ MAKEFILES_xpfe="
   xpfe/browser/src/Makefile
   xpfe/components/Makefile
   xpfe/components/directory/Makefile
-  xpfe/components/download-manager/Makefile
-  xpfe/components/download-manager/src/Makefile
-  xpfe/components/download-manager/public/Makefile
-  xpfe/components/download-manager/resources/Makefile
   xpfe/components/find/Makefile
   xpfe/components/find/public/Makefile
   xpfe/components/find/src/Makefile

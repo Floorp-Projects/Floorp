@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495145
+-->
+
+<head>
+  <title>Bug 495145 - pausing while ended shouldn't cause problems</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495145">Mozilla Bug 495145</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v;
+var completed = false;
+var testFinishedCount = 0;
+var ended1Count = 0;
+
+function finishTest() {
+  ++testFinishedCount;
+  if (testFinishedCount == 2) {
+    completed = true;
+    SimpleTest.finish();
+  }
+}
+
+function start(event) {
+  event.target.play();
+}
+
+function ended1(event) {
+  if (completed)
+    return;
+
+  ++ended1Count;
+  if (ended1Count == 2) {
+    ok(true, "Playing after pause while ended works");
+    finishTest();
+    return;
+  }
+
+  event.target.pause();
+  event.target.play();
+}
+
+function ended2(event) {
+  if (completed)
+    return;
+
+  event.target.pause();
+  event.target.currentTime = 0;
+}
+
+function seeked2(event) {
+  if (completed)
+    return;
+
+  ok(event.target.paused, "Paused after seek after pause while ended");
+  finishTest();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video src='320x240.ogv' onloadeddata='start(event)' onended='ended1(event)'></video>
+<video src='320x240.ogv' onloadeddata='start(event)' onended='ended2(event)' onseeked="seeked2(event)"></video>
+</body>
+</html>

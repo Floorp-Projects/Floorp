@@ -155,6 +155,9 @@ oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
   /*
    * store the old buffer in it next.
    */
+  if (me->buffer == NULL)
+    return;
+  
   trash->old_buffer = (OggPlayBuffer *)me->buffer;
 
   /*

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.documentElement.style.MozColumnCount = '3';
+  document.documentElement.offsetHeight;
+  document.documentElement.style.MozColumnCount = '';
+}
+
+</script>
+
+<style type="text/css">
+
+html:before { content: '0'; }
+
+</style>
+
+</head>
+
+<frameset onload="boom();"></frameset>
+
+</html>

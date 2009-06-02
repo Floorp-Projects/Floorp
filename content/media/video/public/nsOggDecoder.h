@@ -443,6 +443,10 @@ protected:
   // thread.
   void SeekingStopped();
 
+  // Seeking has stopped at the end of the resource. Inform the element on the main
+  // thread.
+  void SeekingStoppedAtEnd();
+
   // Seeking has started. Inform the element on the main
   // thread.
   void SeekingStarted();

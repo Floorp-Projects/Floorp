@@ -299,12 +299,8 @@ function stop_handleAsyncError(ch, cx, status, data)
   // Lies!  But not really!
   do_check_true(ch.requestSucceeded);
 
-  // There's no way server APIs will ever guarantee exactly what data will show
-  // up here, but they will guarantee sending a (not necessarily strict) prefix
-  // of what was written.
-  do_check_true(data.length <= ASYNC_ERROR_BODY.length);
-  for (var i = 0, sz = data.length; i < sz; i++)
-    do_check_eq(data[i] == ASYNC_ERROR_BODY.charCodeAt(i));
+  do_check_eq(data.length, ASYNC_ERROR_BODY.length);
+  do_check_eq(String.fromCharCode.apply(null, data), ASYNC_ERROR_BODY);
 }
 
 test = new Test(PREPATH + "/handleAsyncError",

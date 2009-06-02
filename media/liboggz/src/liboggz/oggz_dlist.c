@@ -142,17 +142,23 @@ oggz_dlist_prepend(OggzDList *dlist, void *elem) {
   return 0;
 }
 
-void
+int
 oggz_dlist_iter(OggzDList *dlist, OggzDListIterFunc func) {
 
   OggzDListElem *p;
 
   for (p = dlist->head->next; p != dlist->tail; p = p->next) {
-    if (func(p->data) == DLIST_ITER_CANCEL) {
+    int r = func(p->data);
+    if (r == DLIST_ITER_ERROR) {
+      return -1;
+    }
+
+    if (r == DLIST_ITER_CANCEL) {
       break;
     }
   }
 
+  return 0;
 }
 
 void
@@ -167,13 +173,19 @@ oggz_dlist_reverse_iter(OggzDList *dlist, OggzDListIterFunc func) {
   }
 }
 
-void
+int
 oggz_dlist_deliter(OggzDList *dlist, OggzDListIterFunc func) {
 
   OggzDListElem *p, *q;
+  int result = 0;
 
   for (p = dlist->head->next; p != dlist->tail; p = q) {
-    if (func(p->data) == DLIST_ITER_CANCEL) {
+    int r = func(p->data);
+    if (r == DLIST_ITER_ERROR) {
+      result = -1;
+    }
+
+    if (r == DLIST_ITER_CANCEL) {
       break;
     }
 
@@ -183,7 +195,7 @@ oggz_dlist_deliter(OggzDList *dlist, OggzDListIterFunc func) {
 
     oggz_free(p);
   }
-
+  return result;
 }
 
 void
@@ -195,7 +207,6 @@ oggz_dlist_reverse_deliter(OggzDList *dlist, OggzDListIterFunc func) {
     if (func(p->data) == DLIST_ITER_CANCEL) {
       break;
     }
-
     q = p->prev;
     p->prev->next = p->next;
     p->next->prev = p->prev;

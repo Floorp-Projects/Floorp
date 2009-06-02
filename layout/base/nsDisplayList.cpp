@@ -622,9 +622,15 @@ void
 nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  PRUint32 flags = 0;
+  nsDisplayItem* nextItem = GetAbove();
+  if (nextItem && nextItem->GetUnderlyingFrame() == mFrame &&
+      nextItem->GetType() == TYPE_BORDER) {
+    flags |= nsCSSRendering::PAINT_WILL_PAINT_BORDER;
+  }
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                   aDirtyRect, nsRect(offset, mFrame->GetSize()),
-                                  mFrame->HonorPrintBackgroundSettings());
+                                  flags);
 }
 
 nsRect

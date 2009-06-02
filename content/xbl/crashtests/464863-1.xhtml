@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo"><content><qqq><children xmlns="http://www.mozilla.org/xbl"/></qqq></content></binding></bindings>
+
+<script type="text/javascript">
+// <![CDATA[
+
+function boom()
+{
+  var s = document.getElementById("s");
+  var o = document.getAnonymousNodes(s)[0];
+  (document.body).appendChild(s);
+  o.appendChild(document.createTextNode("F"));
+}
+
+// ]]>
+</script>
+</head>
+
+<body onload="boom();"><span id="s" style="-moz-binding: url(#foo)"></span></body>
+</html>

@@ -151,11 +151,11 @@
               <description>&rememberDescription.label;</description>
               <separator/>
               <description>&rememberActions.pre.label;<html:a
-                class="inline-link"
-                onclick="gPrivacyPane.clearPrivateDataNow(false);"
+                class="inline-link" href="#"
+                onclick="gPrivacyPane.clearPrivateDataNow(false); return false;"
               >&rememberActions.clearHistory.label;</html:a>&rememberActions.middle.label;<html:a
-                class="inline-link"
-                onclick="gPrivacyPane.showCookies();"
+                class="inline-link" href="#"
+                onclick="gPrivacyPane.showCookies(); return false;"
               >&rememberActions.removeCookies.label;</html:a>&rememberActions.post.label;</description>
             </vbox>
             <spacer flex="1" class="indent"/>
@@ -168,8 +168,8 @@
               <description>&dontrememberDescription.label;</description>
               <separator/>
               <description>&dontrememberActions.pre.label;<html:a
-                class="inline-link"
-                onclick="gPrivacyPane.clearPrivateDataNow(true);"
+                class="inline-link" href="#"
+                onclick="gPrivacyPane.clearPrivateDataNow(true); return false;"
               >&dontrememberActions.clearHistory.label;</html:a>&dontrememberActions.post.label;</description>
             </vbox>
             <spacer flex="1" class="indent"/>

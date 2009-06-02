@@ -958,7 +958,7 @@ static const char* gOggCodecs[] = {
 
 static const char* gOggMaybeCodecs[] = {
   nsnull
-}; 
+};
 
 static PRBool IsOggEnabled()
 {
@@ -1034,6 +1034,21 @@ PRBool nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
     return PR_TRUE;
   }
 #endif
+  return PR_FALSE;
+}
+
+/* static */
+PRBool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
+{
+#ifdef MOZ_OGG
+  if (IsOggType(nsDependentCString(aMIMEType)))
+    return PR_TRUE;
+#endif
+  // We should not return true for Wave types, since there are some
+  // Wave codecs actually in use in the wild that we don't support, and
+  // we should allow those to be handled by plugins or helper apps.
+  // Furthermore people can play Wave files on most platforms by other
+  // means.
   return PR_FALSE;
 }
 
@@ -1119,15 +1134,6 @@ void nsHTMLMediaElement::InitMediaTypes()
     if (IsOggEnabled()) {
       for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gOggTypes); i++) {
         catMan->AddCategoryEntry("Gecko-Content-Viewers", gOggTypes[i],
-                                 "@mozilla.org/content/document-loader-factory;1",
-                                 PR_FALSE, PR_TRUE, nsnull);
-      }
-    }
-#endif
-#ifdef MOZ_WAVE
-    if (IsWaveEnabled()) {
-      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); i++) {
-        catMan->AddCategoryEntry("Gecko-Content-Viewers", gWaveTypes[i],
                                  "@mozilla.org/content/document-loader-factory;1",
                                  PR_FALSE, PR_TRUE, nsnull);
       }

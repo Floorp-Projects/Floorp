@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=495319
+-->
+
+<head>
+  <title>Bug 495319 - playing back small audio files should fire timeupdate</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495319">Mozilla Bug 495319</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v;
+var timeUpdateCount = 0;
+
+function timeUpdate(event) {
+  ++timeUpdateCount;
+}
+
+function done(event) {
+  ok(timeUpdateCount > 0, "Should see at least one timeupdate: " + event.target.currentTime);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<audio src='small-shot.ogg' ontimeupdate="timeUpdate(event)" onended='done(event)' controls autoplay></video>
+</body>
+</html>

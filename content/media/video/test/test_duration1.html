@@ -17,7 +17,7 @@ function startTest() {
   if (completed)
     return false;
   var v = document.getElementById('v');
-  ok(Math.round(v.duration*1000) == 3833, "Check duration of video: " + v.duration);
+  is(Math.round(v.duration*1000), 3966, "Check duration of video: " + v.duration);
   completed = true;
   clearTimeout(timeout);
   SimpleTest.finish();
