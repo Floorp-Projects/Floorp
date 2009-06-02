@@ -796,20 +796,25 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
     }
   }
 
-  PRBool needSilence = mAudioTrack != -1;
+  // If the audio stream has finished, but there's still video frames to
+  // be rendered, we need to send blank audio data to the audio hardware,
+  // so that the audio clock, which maintains the presentation time, keeps
+  // incrementing.
+  PRBool needSilence = PR_FALSE;
 
-  if (mAudioTrack != -1 &&
-      num_tracks > mAudioTrack &&
-      oggplay_callback_info_get_type(info[mAudioTrack]) == OGGPLAY_FLOATS_AUDIO) {
-    OggPlayDataHeader** headers = oggplay_callback_info_get_headers(info[mAudioTrack]);
-    if (headers[0]) {
-      audioTime = ((float)oggplay_callback_info_get_presentation_time(headers[0]))/1000.0;
-      int required = oggplay_callback_info_get_required(info[mAudioTrack]);
-      for (int j = 0; j < required; ++j) {
-        int size = oggplay_callback_info_get_record_size(headers[j]);
-        OggPlayAudioData* audio_data = oggplay_callback_info_get_audio_data(headers[j]);
-        HandleAudioData(frame, audio_data, size);
-        needSilence = PR_FALSE;
+  if (mAudioTrack != -1 && num_tracks > mAudioTrack) {
+    OggPlayDataType type = oggplay_callback_info_get_type(info[mAudioTrack]);
+    needSilence = (type == OGGPLAY_INACTIVE);
+    if (type == OGGPLAY_FLOATS_AUDIO) {
+      OggPlayDataHeader** headers = oggplay_callback_info_get_headers(info[mAudioTrack]);
+      if (headers[0]) {
+        audioTime = ((float)oggplay_callback_info_get_presentation_time(headers[0]))/1000.0;
+        int required = oggplay_callback_info_get_required(info[mAudioTrack]);
+        for (int j = 0; j < required; ++j) {
+          int size = oggplay_callback_info_get_record_size(headers[j]);
+          OggPlayAudioData* audio_data = oggplay_callback_info_get_audio_data(headers[j]);
+          HandleAudioData(frame, audio_data, size);
+        }
       }
     }
   }
