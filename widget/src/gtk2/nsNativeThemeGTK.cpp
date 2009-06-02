@@ -122,7 +122,7 @@ nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame)
 
 static PRBool IsFrameContentNodeOfType(nsIFrame *aFrame, PRUint32 aFlags)
 {
-  nsIContent *content = aFrame ? nsnull : aFrame->GetContent();
+  nsIContent *content = aFrame ? aFrame->GetContent() : nsnull;
   if (!content)
     return false;
   return content->IsNodeOfType(aFlags);
