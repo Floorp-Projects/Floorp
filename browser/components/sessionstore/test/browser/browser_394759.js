@@ -141,6 +141,10 @@ function test() {
       let window = openDialog(location, "_blank", settings, url);
       window.addEventListener("load", function(aEvent) {
         window.gBrowser.addEventListener("load", function(aEvent) {
+          // the window _should_ have state with a tab of url, but it doesn't
+          // always happend before window.close(). addTab ensure we don't treat
+          // this window as a stateless window
+          window.gBrowser.addTab();
           window.gBrowser.removeEventListener("load", arguments.callee, true);
           executeSoon(function() {
             window.close();

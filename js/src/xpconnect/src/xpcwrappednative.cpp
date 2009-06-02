@@ -501,8 +501,12 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     }
     else
     {
+        AutoMarkingNativeInterfacePtr iface(ccx, Interface);
+        if(!iface)
+            iface = XPCNativeInterface::GetISupports(ccx);
+
         AutoMarkingNativeSetPtr set(ccx);
-        set = XPCNativeSet::GetNewOrUsed(ccx, nsnull, Interface, 0);
+        set = XPCNativeSet::GetNewOrUsed(ccx, nsnull, iface, 0);
 
         if(!set)
             return NS_ERROR_FAILURE;

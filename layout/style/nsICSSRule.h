@@ -47,24 +47,30 @@ class nsICSSStyleSheet;
 class nsICSSGroupRule;
 class nsAString;
 
-// IID for the nsICSSRule interface {e775eac0-b022-462c-b1f9-221c01aa2988}
+// IID for the nsICSSRule interface {98d426f7-2ef9-44f5-8d06-e064f486a18c}
 #define NS_ICSS_RULE_IID     \
-{0xe775eac0, 0xb022, 0x462c, {0xb1, 0xf9, 0x22, 0x1c, 0x01, 0xaa, 0x29, 0x88}}
+{ 0x98d426f7, 0x2ef9, 0x44f5, \
+ { 0x8d, 0x06, 0xe0, 0x64, 0xf4, 0x86, 0xa1, 0x8c } }
 
 // inheriting from nsIStyleRule is only for style rules, not other rule types
 class nsICSSRule : public nsIStyleRule {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_RULE_IID)
+  // The constants in this list must maintain the following invariants:
+  //   If a rule of type N must appear before a rule of type M in stylesheets
+  //   then N < M
+  // Note that nsCSSStyleSheet::RebuildChildList assumes that no other kinds of
+  // rules can come between two rules of type IMPORT_RULE.
   enum {
     UNKNOWN_RULE = 0,
-    STYLE_RULE = 1,
-    IMPORT_RULE = 2,
-    MEDIA_RULE = 3,
-    FONT_FACE_RULE = 4,
-    PAGE_RULE = 5,
-    CHARSET_RULE = 6,
-    NAMESPACE_RULE = 7,
-    DOCUMENT_RULE = 8
+    CHARSET_RULE,
+    IMPORT_RULE,
+    NAMESPACE_RULE,
+    STYLE_RULE,
+    MEDIA_RULE,
+    FONT_FACE_RULE,
+    PAGE_RULE,
+    DOCUMENT_RULE
   };
 
   NS_IMETHOD GetType(PRInt32& aType) const = 0;

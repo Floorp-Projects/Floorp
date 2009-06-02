@@ -183,6 +183,10 @@ public:
   // nsIDOMCSSStyleSheet interface
   NS_DECL_NSIDOMCSSSTYLESHEET
 
+  // Function used as a callback to rebuild our inner's child sheet
+  // list after we clone a unique inner for ourselves.
+  static PRBool RebuildChildList(nsICSSRule* aRule, void* aBuilder);
+
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
                   nsICSSStyleSheet* aParentToUse,

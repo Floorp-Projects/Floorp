@@ -151,14 +151,19 @@ function checkResult() {
   if (currentTest < tests.length)
     setTimeout(checkNext, 0);
   else {
-    // Test result if user accepts autocomplete suggestion.
-    synthesizeKey("VK_RIGHT", {});
-    is(autocomplete.value, "Result",
-       "Test complete: autocomplete.value should equal 'Result'");
-    is(autocomplete.selectionStart, 6,
-       "Test complete: autocomplete selection should start at 6");
-    is(autocomplete.selectionEnd, 6,
-       "Test complete: autocomplete selection should end at 6");
+    // TODO (bug 494809): Autocomplete-in-the-middle should take in count RTL
+    // and complete on VK_RIGHT or VK_LEFT based on that.  It should also revert
+    // what user has typed to far if he moves in the opposite direction.
+    if (autocomplete.value.indexOf(">>") == -1) {
+      // Test result if user accepts autocomplete suggestion.
+      synthesizeKey("VK_RIGHT", {});
+      is(autocomplete.value, "Result",
+         "Test complete: autocomplete.value should equal 'Result'");
+      is(autocomplete.selectionStart, 6,
+         "Test complete: autocomplete selection should start at 6");
+      is(autocomplete.selectionEnd, 6,
+         "Test complete: autocomplete selection should end at 6");
+    }
 
     setTimeout(function() {
       // Unregister the factory so that we don't get in the way of other tests

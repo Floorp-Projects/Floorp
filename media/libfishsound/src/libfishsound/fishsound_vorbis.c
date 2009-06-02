@@ -154,9 +154,13 @@ fs_vorbis_decode (FishSound * fsound, unsigned char * buf, long bytes)
   } else {
     FishSoundDecoded_FloatIlv df;
     FishSoundDecoded_Float dfi;
-
-    if (vorbis_synthesis (&fsv->vb, &op) == 0)
+    int r;
+    if ((r = vorbis_synthesis (&fsv->vb, &op)) == 0) 
       vorbis_synthesis_blockin (&fsv->vd, &fsv->vb);
+    
+    if (r == OV_EBADPACKET) {
+      return FISH_SOUND_ERR_GENERIC;
+    }
 
     while ((samples = vorbis_synthesis_pcmout (&fsv->vd, &fsv->pcm)) > 0) {
       vorbis_synthesis_read (&fsv->vd, samples);

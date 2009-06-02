@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479859
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="use_large_cache.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479859">Mozilla Bug 479859</a>
@@ -49,6 +50,7 @@ var gMedia = null;
 
 function createMedia(tag) {
   gMedia = document.createElement(tag);
+  gMedia.setAttribute("autobuffer", "true");
   for (var i=0; i<gEventTypes.length; i++) {
     gMedia.addEventListener(gEventTypes[i], listener, false);
   }

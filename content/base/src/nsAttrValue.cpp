@@ -393,8 +393,10 @@ nsAttrValue::ToString(nsAString& aResult) const
         PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
                     NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
         CopyASCIItoUTF16(buf, aResult);
+      } else if (v == NS_RGBA(0,0,0,0)) {
+        aResult.AssignLiteral("transparent");
       } else {
-        NS_NOTREACHED("non-opaque color attribute cannot be stringified");
+        NS_NOTREACHED("translucent color attribute cannot be stringified");
         aResult.Truncate();
       }
       break;

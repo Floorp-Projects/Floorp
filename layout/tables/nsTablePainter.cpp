@@ -326,7 +326,7 @@ TableBackgroundPainter::PaintTableFrame(nsTableFrame*         aTableFrame,
                                           tableData.mRect + mRenderPt,
                                           *tableData.mBackground,
                                           *tableData.mBorder,
-                                          PR_TRUE);
+                                          0);
   }
   tableData.Destroy(mPresContext);
   return NS_OK;
@@ -631,7 +631,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                           mCols[colIndex].mColGroup->mRect + mRenderPt,
                                           *mCols[colIndex].mColGroup->mBackground,
                                           *mCols[colIndex].mColGroup->mBorder,
-                                          PR_TRUE, &mCellRect);
+                                          0, &mCellRect);
   }
 
   //Paint column background
@@ -641,7 +641,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                           mCols[colIndex].mCol.mRect + mRenderPt,
                                           *mCols[colIndex].mCol.mBackground,
                                           *mCols[colIndex].mCol.mBorder,
-                                          PR_TRUE, &mCellRect);
+                                          0, &mCellRect);
   }
 
   //Paint row group background
@@ -650,7 +650,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                           mRowGroup.mFrame, mDirtyRect,
                                           mRowGroup.mRect + mRenderPt,
                                           *mRowGroup.mBackground, *mRowGroup.mBorder,
-                                          PR_TRUE, &mCellRect);
+                                          0, &mCellRect);
   }
 
   //Paint row background
@@ -659,7 +659,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                           mRow.mFrame, mDirtyRect,
                                           mRow.mRect + mRenderPt,
                                           *mRow.mBackground, *mRow.mBorder,
-                                          PR_TRUE, &mCellRect);
+                                          0, &mCellRect);
   }
 
   //Paint cell background in border-collapse unless we're just passing
