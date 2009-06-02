@@ -132,13 +132,9 @@ SymKey.prototype = {
   },
 
   unwrap: function SymKey_unwrap(privkey, passphrase, meta_record) {
-    let svc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-      createInstance(Ci.IWeaveCrypto);
-    this._data = svc.unwrapSymmetricKey(this._data,
-                                        privkey.keyData,
-                                        passphrase,
-                                        identity.passphraseSalt,
-                                        identity.privkeyWrapIV);
+    this._data =
+      Svc.Crypto.unwrapSymmetricKey(this._data, privkey.keyData, passphrase,
+                                    privkey.salt, privkey.iv);
   }
 };
 
