@@ -143,6 +143,8 @@ XPCWrappedNativeProto::Init(
             nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
             if(NS_FAILED(rv))
             {
+                JS_SetPrivate(ccx, mJSProtoObject, nsnull);
+                mJSProtoObject = nsnull;
                 XPCThrower::Throw(rv, ccx);
                 return JS_FALSE;
             }
