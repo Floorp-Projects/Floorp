@@ -828,8 +828,18 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #urlbar-search-splitter {
-  min-width: 4px;
-  width: 4px;
+  /* This is a bit of a mess, because the location bar and the search bar are bigger
+     than they look. For example, -moz-margin-start: -6px should really be -4px.
+     Bug 482086 and bug 482105 will solve this. */
+  min-width: 8px;
+  width: 8px;
+  background-image: none;
+  -moz-margin-start: -6px;
+}
+
+#urlbar-search-splitter + #urlbar-container > #urlbar,
+#urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
+  -moz-margin-start: 0;
 }
 
 #wrapper-urlbar-container #urlbar,
