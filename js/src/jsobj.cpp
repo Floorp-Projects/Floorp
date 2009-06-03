@@ -299,7 +299,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
          * old prototype chain to invalidate their property cache entries, in
          * case any entries were filled by looking up starting from obj.
          */
-        JSObject *oldproto = STOBJ_GET_PROTO(obj);
+        JSObject *oldproto = obj;
         while (oldproto && OBJ_IS_NATIVE(oldproto)) {
             JS_LOCK_OBJ(cx, oldproto);
             JSScope *scope = OBJ_SCOPE(oldproto);
