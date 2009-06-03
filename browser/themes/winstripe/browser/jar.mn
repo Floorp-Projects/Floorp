@@ -14,6 +14,7 @@ classic.jar:
         skin/classic/browser/Info.png                                (Info.png)
         skin/classic/browser/identity.png                            (identity.png)
         skin/classic/browser/KUI-background.png
+        skin/classic/browser/mainwindow-dropdown-arrow.png
         skin/classic/browser/pageInfo.css
         skin/classic/browser/pageInfo.png                            (pageInfo.png)
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
@@ -105,6 +106,7 @@ classic.jar:
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
         skin/classic/aero/browser/identity.png                       (identity-aero.png)
         skin/classic/aero/browser/KUI-background.png
+        skin/classic/aero/browser/mainwindow-dropdown-arrow.png      (mainwindow-dropdown-arrow-aero.png)
         skin/classic/aero/browser/pageInfo.css
         skin/classic/aero/browser/pageInfo.png                       (pageInfo-aero.png)
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
