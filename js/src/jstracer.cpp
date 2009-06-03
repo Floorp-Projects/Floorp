@@ -1308,19 +1308,6 @@ TypeMap::matches(TypeMap& other) const
     return !memcmp(data(), other.data(), length());
 }
 
-/* Use the provided storage area to create a new type map that contains the partial type map
-   with the rest of it filled up from the complete type map. */
-static void
-mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clength, uint8* mem)
-{
-    unsigned l = *plength;
-    JS_ASSERT(l < clength);
-    memcpy(mem, *partial, l * sizeof(uint8));
-    memcpy(mem + l, complete + l, (clength - l) * sizeof(uint8));
-    *partial = mem;
-    *plength = clength;
-}
-
 /* Specializes a tree to any missing globals, including any dependent trees. */
 static JS_REQUIRES_STACK void
 specializeTreesToMissingGlobals(JSContext* cx, TreeInfo* root)
@@ -2090,29 +2077,16 @@ JS_REQUIRES_STACK void
 TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigned ngslots,
                       unsigned callDepth, uint8* typeMap)
 {
-    /* If we get a partial list that doesn't have all the types (i.e. recording from a side
-       exit that was recorded but we added more global slots later), merge the missing types
-       from the entry type map. This is safe because at the loop edge we verify that we
-       have compatible types for all globals (entry type and loop edge type match). While
-       a different trace of the tree might have had a guard with a different type map for
-       these slots we just filled in here (the guard we continue from didn't know about them),
-       since we didn't take that particular guard the only way we could have ended up here
-       is if that other trace had at its end a compatible type distribution with the entry
-       map. Since thats exactly what we used to fill in the types our current side exit
-       didn't provide, this is always safe to do. */
-
-    uint8* globalTypeMap = typeMap + stackSlots;
-    unsigned length = treeInfo->nGlobalTypes();
-
     /*
-     * This is potentially the typemap of the side exit and thus shorter than the tree's
-     * global type map.
+     * If we get a partial list that doesn't have all the types, capture the missing types
+     * from the current environment.
      */
-    if (ngslots < length) {
-        mergeTypeMaps(&globalTypeMap/*out param*/, &ngslots/*out param*/,
-                      treeInfo->globalTypeMap(), length,
-                      (uint8*)alloca(sizeof(uint8) * length));
+    TypeMap fullTypeMap(typeMap, stackSlots + ngslots);
+    if (ngslots < treeInfo->globalSlots->length()) {
+        fullTypeMap.captureMissingGlobalTypes(cx, *treeInfo->globalSlots, stackSlots);
+        ngslots = treeInfo->globalSlots->length();
     }
+    uint8* globalTypeMap = fullTypeMap.data() + stackSlots;
     JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
 
     /*
@@ -8443,23 +8417,21 @@ TraceRecorder::record_JSOP_CALLNAME()
 JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarOnTrace, CONTEXT, UINT32, UINT32, UINT32,
                      DOUBLEPTR, 0, 0)
 
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::record_JSOP_GETUPVAR()
+/*
+ * Record LIR to get the given upvar. Return the LIR instruction for
+ * the upvar value. NULL is returned only on a can't-happen condition
+ * with an invalid typemap. The value of the upvar is returned as v.
+ */
+JS_REQUIRES_STACK LIns*
+TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
 {
-    uintN index = GET_UINT16(cx->fp->regs->pc);
-    JSScript *script = cx->fp->script;
-
-    JSUpvarArray* uva = JS_SCRIPT_UPVARS(script);
-    JS_ASSERT(index < uva->length);
-
     /*
      * Try to find the upvar in the current trace's tracker.
      */
-    jsval& v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+    v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
     LIns* upvar_ins = get(&v);
     if (upvar_ins) {
-        stack(0, upvar_ins);
-        return JSRS_CONTINUE;
+        return upvar_ins;
     }
 
     /*
@@ -8500,13 +8472,28 @@ TraceRecorder::record_JSOP_GETUPVAR()
       case JSVAL_BOXED:
       default:
         JS_NOT_REACHED("found boxed type in an upvar type map entry");
-        return JSRS_STOP;
+        return NULL;
     }
 
     LIns* result = lir->insLoad(loadOp, outp, lir->insImm(0));
     if (type == JSVAL_INT)
         result = lir->ins1(LIR_i2f, result);
-    stack(0, result);
+    return result;
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_JSOP_GETUPVAR()
+{
+    uintN index = GET_UINT16(cx->fp->regs->pc);
+    JSScript *script = cx->fp->script;
+    JSUpvarArray* uva = JS_SCRIPT_UPVARS(script);
+    JS_ASSERT(index < uva->length);
+
+    jsval v;
+    LIns* upvar_ins = upvar(script, uva, index, v);
+    if (!upvar_ins)
+        return JSRS_STOP;
+    stack(0, upvar_ins);
     return JSRS_CONTINUE;
 }
 
@@ -9786,7 +9773,36 @@ TraceRecorder::record_JSOP_LAMBDA()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_LAMBDA_FC()
 {
-    return JSRS_STOP;
+    JSFunction* fun;
+    JS_GET_SCRIPT_FUNCTION(cx->fp->script, getFullIndex(), fun);
+    
+    LIns* scopeChain_ins = get(&cx->fp->argv[-2]);
+    JS_ASSERT(scopeChain_ins);
+
+    LIns* args[] = {
+        scopeChain_ins,
+        INS_CONSTPTR(fun),
+        cx_ins
+    };
+    LIns* call_ins = lir->insCall(&js_AllocFlatClosure_ci, args);
+    guard(false,
+          addName(lir->ins2(LIR_eq, call_ins, INS_CONSTPTR(0)),
+                  "guard(js_AllocFlatClosure)"),
+          OOM_EXIT);
+    stack(0, call_ins);
+ 
+    JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+    for (uint32 i = 0, n = uva->length; i < n; i++) {
+        jsval v;
+        LIns* upvar_ins = upvar(fun->u.i.script, uva, i, v);
+        if (!upvar_ins)
+            return JSRS_STOP;
+        box_jsval(v, upvar_ins);
+        LIns* dslots_ins = NULL;
+        stobj_set_dslot(call_ins, i, dslots_ins, upvar_ins, "fc upvar");
+    }
+
+    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus

@@ -1672,60 +1672,81 @@ TryNotes(JSContext *cx, JSScript *script)
     return JS_TRUE;
 }
 
-static JSBool
-Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+static bool
+DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 {
-    JSBool lines;
-    uintN i;
-    JSScript *script;
-
-    if (argc > 0 &&
-        JSVAL_IS_STRING(argv[0]) &&
-        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(argv[0])), "-l")) {
-        lines = JS_TRUE;
-        argv++, argc--;
-    } else {
-        lines = JS_FALSE;
-    }
-    for (i = 0; i < argc; i++) {
-        script = ValueToScript(cx, argv[i]);
-        if (!script)
-            return JS_FALSE;
-        if (VALUE_IS_FUNCTION(cx, argv[i])) {
-            JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
-            if (fun && (fun->flags & ~7U)) {
-                uint16 flags = fun->flags;
-                fputs("flags:", stdout);
+    JSScript *script = ValueToScript(cx, v);
+    if (!script)
+        return false;
+    if (VALUE_IS_FUNCTION(cx, v)) {
+        JSFunction *fun = JS_ValueToFunction(cx, v);
+        if (fun && (fun->flags & ~7U)) {
+            uint16 flags = fun->flags;
+            fputs("flags:", stdout);
 
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
 
-                SHOW_FLAG(LAMBDA);
-                SHOW_FLAG(SETTER);
-                SHOW_FLAG(GETTER);
-                SHOW_FLAG(BOUND_METHOD);
-                SHOW_FLAG(HEAVYWEIGHT);
-                SHOW_FLAG(THISP_STRING);
-                SHOW_FLAG(THISP_NUMBER);
-                SHOW_FLAG(THISP_BOOLEAN);
-                SHOW_FLAG(EXPR_CLOSURE);
-                SHOW_FLAG(TRACEABLE);
+            SHOW_FLAG(LAMBDA);
+            SHOW_FLAG(SETTER);
+            SHOW_FLAG(GETTER);
+            SHOW_FLAG(BOUND_METHOD);
+            SHOW_FLAG(HEAVYWEIGHT);
+            SHOW_FLAG(THISP_STRING);
+            SHOW_FLAG(THISP_NUMBER);
+            SHOW_FLAG(THISP_BOOLEAN);
+            SHOW_FLAG(EXPR_CLOSURE);
+            SHOW_FLAG(TRACEABLE);
 
 #undef SHOW_FLAG
 
-                if (FUN_NULL_CLOSURE(fun))
-                    fputs(" NULL_CLOSURE", stdout);
-                else if (FUN_FLAT_CLOSURE(fun))
-                    fputs(" FLAT_CLOSURE", stdout);
+            if (FUN_NULL_CLOSURE(fun))
+                fputs(" NULL_CLOSURE", stdout);
+            else if (FUN_FLAT_CLOSURE(fun))
+                fputs(" FLAT_CLOSURE", stdout);
+            putchar('\n');
+        }
+    }
+
+    if (!js_Disassemble(cx, script, lines, stdout))
+        return false;
+    SrcNotes(cx, script);
+    TryNotes(cx, script);
+
+    if (recursive && script->objectsOffset != 0) {
+        JSObjectArray *objects = JS_SCRIPT_OBJECTS(script);
+        for (uintN i = 0; i != objects->length; ++i) {
+            JSObject *obj = objects->vector[i];
+            if (HAS_FUNCTION_CLASS(obj)) {
                 putchar('\n');
+                if (!DisassembleValue(cx, OBJECT_TO_JSVAL(obj),
+                                      lines, recursive)) {
+                    return false;
+                }
             }
         }
-
-        if (!js_Disassemble(cx, script, lines, stdout))
-            return JS_FALSE;
-        SrcNotes(cx, script);
-        TryNotes(cx, script);
     }
-    return JS_TRUE;
+    return true;
+}
+
+static JSBool
+Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    bool lines = false, recursive = false;
+
+    while (argc > 0 && JSVAL_IS_STRING(argv[0])) {
+        const char *bytes = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
+        lines = !strcmp(bytes, "-l");
+        recursive = !strcmp(bytes, "-r");
+        if (!lines && !recursive)
+            break;
+        argv++, argc--;
+    }
+
+    for (uintN i = 0; i < argc; i++) {
+        if (!DisassembleValue(cx, argv[i], lines, recursive))
+            return false;
+    }
+    return true;
 }
 
 static JSBool

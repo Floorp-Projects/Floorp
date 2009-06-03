@@ -181,6 +181,7 @@ struct JSTraceableNative {
 #define _JS_CTYPE_THIS_STRING       _JS_CTYPE(JSString *,             _JS_PTR,"S", "", INFALLIBLE)
 #define _JS_CTYPE_CALLEE            _JS_CTYPE(JSObject *,             _JS_PTR,"f","",  INFALLIBLE)
 #define _JS_CTYPE_CALLEE_PROTOTYPE  _JS_CTYPE(JSObject *,             _JS_PTR,"p","",  INFALLIBLE)
+#define _JS_CTYPE_FUNCTION          _JS_CTYPE(JSFunction *,           _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVALPTR          _JS_CTYPE(jsval *,                _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
@@ -450,6 +451,9 @@ JS_DECLARE_CALLINFO(js_Array_dense_setelem)
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
 JS_DECLARE_CALLINFO(js_NewUninitializedArray)
 JS_DECLARE_CALLINFO(js_ArrayCompPush)
+
+/* Defined in jsfun.cpp. */
+JS_DECLARE_CALLINFO(js_AllocFlatClosure)
 
 /* Defined in jsnum.cpp. */
 JS_DECLARE_CALLINFO(js_NumberToString)
