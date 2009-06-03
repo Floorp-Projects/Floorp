@@ -177,7 +177,5 @@ interface nsIXPCScriptable : nsISupports
     JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper,
                             in JSContextPtr cx, in JSObjectPtr obj);
 
-    // This method is called if the WANT_POSTCREATE bit is set in
-    // scriptableFlags.
     void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
 };

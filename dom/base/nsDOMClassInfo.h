@@ -46,6 +46,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
+#include "nsIScriptGlobalObject.h"
 
 class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
@@ -66,6 +67,7 @@ typedef nsresult (*nsDOMConstructorFunc)(nsISupports** aNewObject);
 struct nsDOMClassInfoData
 {
   const char *mName;
+  const PRUnichar *mNameUTF16;
   union {
     nsDOMClassInfoConstructorFnc mConstructorFptr;
     nsDOMClassInfoExternalConstructorFnc mExternalConstructorFptr;
@@ -434,6 +436,28 @@ protected:
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
+#ifdef DEBUG
+  NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj)
+  {
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
+
+    NS_ASSERTION(!sgo || sgo->GetGlobalJSObject() == nsnull,
+                 "Multiple wrappers created for global object!");
+
+    return NS_OK;
+  }
+  NS_IMETHOD GetScriptableFlags(PRUint32 *aFlags)
+  {
+    PRUint32 flags;
+    nsresult rv = nsEventReceiverSH::GetScriptableFlags(&flags);
+    if (NS_SUCCEEDED(rv)) {
+      *aFlags = flags | nsIXPCScriptable::WANT_POSTCREATE;
+    }
+
+    return rv;
+  }
+#endif
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -1535,6 +1559,10 @@ protected:
   }
 
 public:
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto)
+  {
+    return NS_OK;
+  }
   NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                   JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
                   PRBool *_retval);
