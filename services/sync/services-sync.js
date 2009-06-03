@@ -47,7 +47,6 @@ pref("extensions.weave.openId.enabled", true);
 pref("extensions.weave.authenticator.enabled", true);
 
 // Preferences to be synced by default
-
 pref("extensions.weave.prefs.sync.browser.download.manager.scanWhenDone", true);
 
 pref("extensions.weave.prefs.sync.browser.search.openintab", true);
@@ -68,6 +67,8 @@ pref("extensions.weave.prefs.sync.browser.urlbar.autoFill", true);
 pref("extensions.weave.prefs.sync.browser.urlbar.maxRichResults", true);
 pref("extensions.weave.prefs.sync.browser.urlbar.clickSelectsAll", true);
 pref("extensions.weave.prefs.sync.browser.urlbar.doubleClickSelectsAll", true);
+
+pref("extensions.weave.prefs.sync.extensions.personas.current", true);
 
 pref("extensions.weave.prefs.sync.layout.spellcheckDefault", true);
 pref("extensions.weave.prefs.sync.security.dialog_enable_delay", true);
