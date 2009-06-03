@@ -1010,21 +1010,42 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 
 /* ::::: fullscreen window controls ::::: */
 
-#window-controls {
-  -moz-box-align: start;
+#minimize-button,
+#restore-button,
+#close-button {
+  list-style-image: url("chrome://global/skin/icons/windowControls.png");
   padding: 0;
-  border-left: 2px solid;
-  -moz-border-left-colors: ThreeDHighlight ThreeDShadow;
 }
 
 #minimize-button {
-  list-style-image: url("chrome://global/skin/icons/Minimize.gif");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+#minimize-button:hover {
+  -moz-image-region: rect(16px, 16px, 32px, 0);
+}
+#minimize-button:hover:active {
+  -moz-image-region: rect(32px, 16px, 48px, 0);
 }
 #restore-button {
-  list-style-image: url("chrome://global/skin/icons/Restore.gif");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+#restore-button:hover {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+#restore-button:hover:active {
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
 }
 #close-button {
-  list-style-image: url("chrome://global/skin/icons/Close.gif");
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+  -moz-appearance: none;
+  border-style: none;
+  margin: 2px;
+}
+#close-button:hover {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+#close-button:hover:active {
+  -moz-image-region: rect(32px, 48px, 48px, 32px);
 }
 
 /* ::::: nav-bar-inner ::::: */
