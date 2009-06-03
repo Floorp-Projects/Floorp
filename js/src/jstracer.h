@@ -76,6 +76,13 @@ public:
         this->_data = (T*)malloc(max * sizeof(T));
     }
 
+    Queue(T* data, unsigned length) {
+        this->_max =
+        this->_len = length;
+        this->_data = (T*)malloc(length * sizeof(T));
+        memcpy(this->_data, data, length);
+    }
+
     ~Queue() {
         free(_data);
     }
@@ -189,6 +196,12 @@ typedef Queue<uint16> SlotList;
 
 class TypeMap : public Queue<uint8> {
 public:
+    TypeMap() : Queue<uint8>() {
+    }
+
+    TypeMap(uint8* partial, unsigned length) : Queue<uint8>(partial, length) {
+    }
+
     JS_REQUIRES_STACK void captureTypes(JSContext* cx, SlotList& slots, unsigned callDepth);
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx,
                                                      SlotList& slots,
