@@ -2179,13 +2179,19 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
     return clone;
 }
 
-JSObject *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun)
+/*
+ * Create a new flat closure, but don't initialize the imported upvar
+ * values. The tracer calls this function and then initializes the upvar
+ * slots on trace.
+ */
+JSObject * JS_FASTCALL
+js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
     JS_ASSERT(FUN_FLAT_CLOSURE(fun));
+    JS_ASSERT(fun->u.i.script->upvarsOffset);
 
-    JSObject *closure = js_CloneFunctionObject(cx, fun, cx->fp->scopeChain);
-    if (!closure || fun->u.i.script->upvarsOffset == 0)
+    JSObject *closure = js_CloneFunctionObject(cx, fun, scopeChain);
+    if (!closure)
         return closure;
 
     uint32 nslots = JSSLOT_FREE(&js_FunctionClass);
@@ -2193,6 +2199,17 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     nslots += fun_reserveSlots(cx, closure);
     if (!js_ReallocSlots(cx, closure, nslots, JS_TRUE))
         return NULL;
+
+    return closure;
+}
+
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
+                     CONTEXT, FUNCTION, OBJECT, 0, 0)
+
+JSObject *
+js_NewFlatClosure(JSContext *cx, JSFunction *fun)
+{
+    JSObject *closure = js_AllocFlatClosure(cx, fun, cx->fp->scopeChain);
 
     JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
     JS_ASSERT(uva->length <= size_t(closure->dslots[-1]));
