@@ -3138,11 +3138,22 @@ sandbox_finalize(JSContext *cx, JSObject *obj)
     NS_IF_RELEASE(sop);
 }
 
+static JSBool
+sandbox_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
+{
+    if (type == JSTYPE_OBJECT) {
+        *vp = OBJECT_TO_JSVAL(obj);
+        return JS_TRUE;
+    }
+
+    return JS_ConvertStub(cx, obj, type, vp);
+}
+
 static JSClass SandboxClass = {
     "Sandbox",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    sandbox_enumerate, sandbox_resolve, JS_ConvertStub,  sandbox_finalize,
+    sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
