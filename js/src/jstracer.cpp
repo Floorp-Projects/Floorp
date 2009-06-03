@@ -8443,23 +8443,21 @@ TraceRecorder::record_JSOP_CALLNAME()
 JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarOnTrace, CONTEXT, UINT32, UINT32, UINT32,
                      DOUBLEPTR, 0, 0)
 
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::record_JSOP_GETUPVAR()
+/*
+ * Record LIR to get the given upvar. Return the LIR instruction for
+ * the upvar value. NULL is returned only on a can't-happen condition
+ * with an invalid typemap. The value of the upvar is returned as v.
+ */
+JS_REQUIRES_STACK LIns*
+TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
 {
-    uintN index = GET_UINT16(cx->fp->regs->pc);
-    JSScript *script = cx->fp->script;
-
-    JSUpvarArray* uva = JS_SCRIPT_UPVARS(script);
-    JS_ASSERT(index < uva->length);
-
     /*
      * Try to find the upvar in the current trace's tracker.
      */
-    jsval& v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+    v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
     LIns* upvar_ins = get(&v);
     if (upvar_ins) {
-        stack(0, upvar_ins);
-        return JSRS_CONTINUE;
+        return upvar_ins;
     }
 
     /*
@@ -8500,13 +8498,28 @@ TraceRecorder::record_JSOP_GETUPVAR()
       case JSVAL_BOXED:
       default:
         JS_NOT_REACHED("found boxed type in an upvar type map entry");
-        return JSRS_STOP;
+        return NULL;
     }
 
     LIns* result = lir->insLoad(loadOp, outp, lir->insImm(0));
     if (type == JSVAL_INT)
         result = lir->ins1(LIR_i2f, result);
-    stack(0, result);
+    return result;
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_JSOP_GETUPVAR()
+{
+    uintN index = GET_UINT16(cx->fp->regs->pc);
+    JSScript *script = cx->fp->script;
+    JSUpvarArray* uva = JS_SCRIPT_UPVARS(script);
+    JS_ASSERT(index < uva->length);
+
+    jsval v;
+    LIns* upvar_ins = upvar(script, uva, index, v);
+    if (!upvar_ins)
+        return JSRS_STOP;
+    stack(0, upvar_ins);
     return JSRS_CONTINUE;
 }
 
@@ -9786,7 +9799,36 @@ TraceRecorder::record_JSOP_LAMBDA()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_LAMBDA_FC()
 {
-    return JSRS_STOP;
+    JSFunction* fun;
+    JS_GET_SCRIPT_FUNCTION(cx->fp->script, getFullIndex(), fun);
+    
+    LIns* scopeChain_ins = get(&cx->fp->argv[-2]);
+    JS_ASSERT(scopeChain_ins);
+
+    LIns* args[] = {
+        scopeChain_ins,
+        INS_CONSTPTR(fun),
+        cx_ins
+    };
+    LIns* call_ins = lir->insCall(&js_AllocFlatClosure_ci, args);
+    guard(false,
+          addName(lir->ins2(LIR_eq, call_ins, INS_CONSTPTR(0)),
+                  "guard(js_AllocFlatClosure)"),
+          OOM_EXIT);
+    stack(0, call_ins);
+ 
+    JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+    for (uint32 i = 0, n = uva->length; i < n; i++) {
+        jsval v;
+        LIns* upvar_ins = upvar(fun->u.i.script, uva, i, v);
+        if (!upvar_ins)
+            return JSRS_STOP;
+        box_jsval(v, upvar_ins);
+        LIns* dslots_ins = NULL;
+        stobj_set_dslot(call_ins, i, dslots_ins, upvar_ins, "fc upvar");
+    }
+
+    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
