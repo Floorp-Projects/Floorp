@@ -1672,10 +1672,12 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 /* Location bar dropmarker */
 #urlbar > .autocomplete-history-dropmarker {
   -moz-appearance: none;
-  padding: 0;
+  padding: 0 1px;
   background-color: transparent;
   border: none;
   width: auto;
+  list-style-image: url(mainwindow-dropdown-arrow.png);
+  -moz-image-region: rect(0, 13px, 11px, 0);
 }
 
 #urlbar > .autocomplete-history-dropmarker:hover ,
@@ -1686,10 +1688,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #urlbar > .autocomplete-history-dropmarker:hover:active,
 #urlbar > .autocomplete-history-dropmarker[open="true"] {
   background-position: 0 -120px !important;
-}
-
-#urlbar > .autocomplete-history-dropmarker > .dropmarker-icon {
-  margin: 0 5px;
+  -moz-image-region: rect(0, 26px, 11px, 13px);
 }
 
 #urlbar[chromedir="ltr"] > .autocomplete-history-dropmarker {
