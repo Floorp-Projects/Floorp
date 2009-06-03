@@ -5250,6 +5250,19 @@ function testArrayNamedProp() {
 testArrayNamedProp.expected = "ok";
 test(testArrayNamedProp);
 
+function testUndemoteLateGlobalSlots() {
+    for each (aaa in ["", "", 0/0, ""]) {
+        ++aaa;
+        for each (bbb in [0, "", aaa, "", 0, "", 0/0]) {
+        }
+    }
+    delete aaa;
+    delete bbb;
+    return "ok";
+}
+testUndemoteLateGlobalSlots.expected = "ok";
+test(testUndemoteLateGlobalSlots);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
