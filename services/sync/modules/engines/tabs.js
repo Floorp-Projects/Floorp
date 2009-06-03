@@ -358,6 +358,11 @@ TabTracker.prototype = {
   _TabTracker_init: function TabTracker__init() {
     this._init();
 
+    // Make sure "this" pointer is always set correctly for event listeners
+    this.onTabOpened = Utils.bind2(this, this.onTabOpened);
+    this.onTabClosed = Utils.bind2(this, this.onTabClosed);
+    this.onTabSelected = Utils.bind2(this, this.onTabSelected);
+
     // TODO Figure out how this will work on Fennec.
 
     // Register as an observer so we can catch windows opening and closing:
