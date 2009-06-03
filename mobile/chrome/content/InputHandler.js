@@ -481,7 +481,7 @@ KineticData.prototype = {
         } else {
           let dx = Math.round(self._speedX * self._updateInterval);
           let dy = Math.round(self._speedY * self._updateInterval);
-          //dump("dx, dy: " + dx + " " + dy + "\n");
+          // dump("dx, dy: " + dx + " " + dy + "\n");
 
           let panned = self._owner._dragBy(dx, dy);
           if (!panned) {
@@ -530,8 +530,9 @@ KineticData.prototype = {
     for (let i = 1; i < mblen; i++) {
       let me = mb[i];
 
-      tempX += (me.sx - prev.sx) / (me.t - prev.t);
-      tempY += (me.sy - prev.sy) / (me.t - prev.t);
+      let timeDiff = me.t - prev.t;
+      tempX += (me.sx - prev.sx) / timeDiff;
+      tempY += (me.sy - prev.sy) / timeDiff;
 
       prev = me;
     }
@@ -573,13 +574,16 @@ KineticData.prototype = {
   addData: function addData(sx, sy) {
     let mbLength = this.momentumBuffer.length;
     // avoid adding duplicates which would otherwise slow down the speed
+    let now = Date.now();
+
     if (mbLength > 0) {
       let mbLast = this.momentumBuffer[mbLength - 1];
-      if (mbLast.sx == sx && mbLast.sy == sy)
+      if ((mbLast.sx == sx && mbLast.sy == sy) || mbLast.t == now) {
 	return;
+      }
     }
 
-    this.momentumBuffer.push({'t': Date.now(), 'sx' : sx, 'sy' : sy});
+    this.momentumBuffer.push({'t': now, 'sx' : sx, 'sy' : sy});
   }
 };
 
