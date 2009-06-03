@@ -6729,7 +6729,15 @@ TraceRecorder::getThis(LIns*& this_ins)
     /*
      * js_ComputeThisForFrame updates cx->fp->argv[-1], so sample it into 'original' first.
      */
-    jsval original = cx->fp->callee ? cx->fp->argv[-1] : JSVAL_NULL;
+    jsval original = JSVAL_NULL;
+    if (cx->fp->callee) {
+        original = cx->fp->argv[-1];
+        if (!JSVAL_IS_PRIMITIVE(original) &&
+            guardClass(JSVAL_TO_OBJECT(original), get(&cx->fp->argv[-1]), &js_WithClass, snapshot(MISMATCH_EXIT))) {
+            ABORT_TRACE("can't trace getThis on With object");
+        }
+    }
+
     JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
     if (!thisObj)
         ABORT_TRACE_ERROR("js_ComputeThisForName failed");
@@ -6765,9 +6773,6 @@ TraceRecorder::getThis(LIns*& this_ins)
         return JSRS_CONTINUE;
     }
     this_ins = get(&thisv);
-
-    if (guardClass(JSVAL_TO_OBJECT(thisv), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
-        ABORT_TRACE("can't trace getThis on With object");
 
     /*
      * The only unwrapped object that needs to be wrapped that we can get here is the
