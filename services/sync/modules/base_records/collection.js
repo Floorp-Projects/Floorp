@@ -158,6 +158,7 @@ CollectionIterator.prototype = {
       let record = new this._coll._recordObj();
       record.deserialize(JSON.stringify(item)); // FIXME: inefficient
       record.baseUri = this._coll.uri;
+      record.id = record.data.id;
 
       self.done(record);
     };

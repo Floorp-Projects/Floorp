@@ -52,6 +52,7 @@ function WBORecord(uri) {
   this._WBORec_init(uri);
 }
 WBORecord.prototype = {
+  id: null,
   deleted: false,
   _logName: "Record.WBO",
 
@@ -72,7 +73,7 @@ WBORecord.prototype = {
     if (typeof(value) != "string")
       value = value.spec;
     let foo = value.split('/');
-    this.data.id = foo.pop();
+    this.id = foo.pop();
     this.baseUri = Utils.makeURI(foo.join('/') + '/');
   },
 
@@ -126,7 +127,7 @@ WBORecord.prototype = {
     ].join("\n  ") + " }",
 };
 
-Utils.deferGetSet(WBORecord, "data", ["id", "parentid", "modified", "depth",
+Utils.deferGetSet(WBORecord, "data", ["parentid", "modified", "depth",
   "sortindex", "payload"]);
 
 Utils.lazy(this, 'Records', RecordManager);
