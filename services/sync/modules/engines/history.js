@@ -108,7 +108,7 @@ HistoryEngine.prototype = {
     let coll = new Collection(this.engineURL, this._recordObj);
     coll.older = this.lastSync - 604800; // 1 week
     coll.full = 0;
-    yield coll.delete(self.cb);
+    coll.delete();
   }
 };
 
