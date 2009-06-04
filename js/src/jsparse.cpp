@@ -7018,8 +7018,11 @@ QualifiedIdentifier(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn = PropertySelector(cx, ts, tc);
     if (!pn)
         return NULL;
-    if (js_MatchToken(cx, ts, TOK_DBLCOLON))
+    if (js_MatchToken(cx, ts, TOK_DBLCOLON)) {
+        /* Hack for bug 496316. Slowing down E4X won't make it go away, alas. */
+        tc->flags |= TCF_FUN_HEAVYWEIGHT;
         pn = QualifiedSuffix(cx, ts, pn, tc);
+    }
     return pn;
 }
 
