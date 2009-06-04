@@ -152,7 +152,7 @@ PubKeyManager.prototype = {
   getDefaultKey: function KeyMgr_getDefaultKey(onComplete) {
     let fn = function KeyMgr__getDefaultKey() {
       let self = yield;
-      let ret = yield this.get(self.cb, this.defaultKeyUri);
+      let ret = this.get(this.defaultKeyUri);
       self.done(ret);
     };
     fn.async(this, onComplete);
