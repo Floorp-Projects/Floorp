@@ -513,6 +513,11 @@
                             var currentTime = Math.round(this.video.currentTime * 1000); // in ms
                             var duration = Math.round(this.video.duration * 1000); // in ms
 
+                            // If playing/seeking after the video ended, we won't get a "play"
+                            // event, so update the button state here.
+                            if (!this.video.paused)
+                                this.setPlayButtonState(false);
+
                             this.timeUpdateCount++;
                             // Whether we show the statusFader sometimes depends
                             // on whether we've seen more than one timeupdate
