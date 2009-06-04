@@ -353,7 +353,7 @@ SyncEngine.prototype = {
       this._lowMemCheck();
       try {
         yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
-        if (yield this._reconcile.async(this, self.cb, item)) {
+        if (this._reconcile(item)) {
           count.applied++;
           yield this._applyIncoming.async(this, self.cb, item);
         } else {
@@ -406,33 +406,25 @@ SyncEngine.prototype = {
   //    case when syncing for the first time two machines that already have the
   //    same bookmarks.  In this case we change the IDs to match.
   _reconcile: function SyncEngine__reconcile(item) {
-    let self = yield;
-    let ret = true;
-
     // Step 1: Check for conflicts
     //         If same as local record, do not upload
     this._log.trace("Reconcile step 1");
     if (item.id in this._tracker.changedIDs) {
       if (this._isEqual(item))
         this._tracker.removeChangedID(item.id);
-      self.done(false);
-      return;
+      return false;
     }
 
     // Step 2: Check for updates
     //         If different from local record, apply server update
     this._log.trace("Reconcile step 2");
-    if (this._store.itemExists(item.id)) {
-      self.done(!this._isEqual(item));
-      return;
-    }
+    if (this._store.itemExists(item.id))
+      return !this._isEqual(item);
 
     // If the incoming item has been deleted, skip step 3
     this._log.trace("Reconcile step 2.5");
-    if (item.deleted) {
-      self.done(true);
-      return;
-    }
+    if (item.deleted)
+      return true;
 
     // Step 3: Check for similar items
     this._log.trace("Reconcile step 3");
@@ -443,11 +435,11 @@ SyncEngine.prototype = {
         this._tracker.removeChangedID(id);
         this._tracker.removeChangedID(item.id);
         this._store.cache.clear(); // because parentid refs will be wrong
-        self.done(false);
-        return;
+        return false;
       }
     }
-    self.done(true);
+
+    return true;
   },
 
   // Apply incoming records

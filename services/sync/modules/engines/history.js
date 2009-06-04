@@ -77,26 +77,20 @@ HistoryEngine.prototype = {
   // Note that we don't attempt to equalize the IDs, the history store does that
   // as part of update()
   _reconcile: function HistEngine__reconcile(item) {
-    let self = yield;
-    let ret = true;
-
     // Step 1: Check for conflicts
     //         If same as local record, do not upload
     if (item.id in this._tracker.changedIDs) {
       if (this._isEqual(item))
         this._tracker.removeChangedID(item.id);
-      self.done(false);
-      return;
+      return false;
     }
 
     // Step 2: Check if the item is deleted - we don't support that (yet?)
-    if (item.deleted) {
-      self.done(false);
-      return;
-    }
+    if (item.deleted)
+      return false;
 
     // Step 3: Apply update/new record
-    self.done(true);
+    return true;
   },
 
   _syncFinish: function HistEngine__syncFinish(error) {
