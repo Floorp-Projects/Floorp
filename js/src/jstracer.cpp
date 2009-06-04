@@ -1850,7 +1850,7 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
  */
 static uint32 
 GetUpvarOnTraceTail(InterpState* state, uint32 cookie,
-                    uint32 nativeStackFramePos, uint8* typemap, double* result)
+                    int32 nativeStackFramePos, uint8* typemap, double* result)
 {
     uintN slot = UPVAR_FRAME_SLOT(cookie);
     slot = (slot == CALLEE_UPVAR_SLOT) ? 0 : 2/*callee,this*/ + slot;
@@ -1886,10 +1886,10 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
              * activation record corresponding to *fip in the native
              * stack.
              */
-            uintN nativeStackFramePos = state->callstackBase[0]->spoffset;
+            int32 nativeStackFramePos = state->callstackBase[0]->spoffset;
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
                 nativeStackFramePos += (*fip2)->spdist;
-            nativeStackFramePos -= (2 + (*fip)->argc);
+            nativeStackFramePos -= (2 + (*fip)->get_argc());
             uint8* typemap = (uint8*) (fi+1);
             return GetUpvarOnTraceTail(state, cookie, nativeStackFramePos,
                                        typemap, result);
@@ -3537,7 +3537,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     /* Code duplicated from inline_call: case in js_Interpret (FIXME). */
     JSArena* a = cx->stackPool.current;
     void* newmark = (void*) a->avail;
-    uintN argc = fi.argc & 0x7fff;
+    uintN argc = fi.get_argc();
     jsval* vp = fp->slots + fi.spdist - (2 + argc);
     uintN missing = 0;
     jsval* newsp;
@@ -3596,7 +3596,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee; // Roll with a potentially stale callee for now.
     newifp->frame.fun = fun;
 
-    bool constructing = (fi.argc & 0x8000) != 0;
+    bool constructing = fi.is_constructing();
     newifp->frame.argc = argc;
     newifp->callerRegs.pc = fi.pc;
     newifp->callerRegs.sp = fp->slots + fi.spdist;
@@ -8589,7 +8589,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->pc = fp->regs->pc;
     fi->imacpc = fp->imacpc;
     fi->spdist = fp->regs->sp - fp->slots;
-    fi->argc = argc | (constructing ? 0x8000 : 0);
+    fi->set_argc(argc, constructing);
     fi->spoffset = 2 /*callee,this*/ + fp->argc;
 
     unsigned callDepth = getCallDepth();
