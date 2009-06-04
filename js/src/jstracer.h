@@ -305,7 +305,12 @@ struct FrameInfo {
     jsbytecode*     pc;         // caller fp->regs->pc
     jsbytecode*     imacpc;     // caller fp->imacpc
     uint16          spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
-    uint16          argc;       // actual argument count, may be < fun->nargs
+
+    /*
+     * Bit  15 (0x8000) is a flag that is set if constructing (called through new).
+     * Bits 0-14 are the actual argument count. This may be less than fun->nargs.
+     */
+    uint16          argc;
 
     /*
      * Stack pointer adjustment needed for navigation of native stack in
@@ -317,6 +322,14 @@ struct FrameInfo {
      * non-argument slot in the callee's native stack frame.
      */
     int32          spoffset;
+
+    // Safer accessors for argc.
+    enum { CONSTRUCTING_MASK = 0x8000 };
+    void   set_argc(uint16 argc, bool constructing) {
+        this->argc = argc | (constructing ? CONSTRUCTING_MASK : 0);
+    }
+    uint16 get_argc() const { return argc & ~CONSTRUCTING_MASK; }
+    bool   is_constructing() const { return (argc & CONSTRUCTING_MASK) != 0; }
 };
 
 struct UnstableExit
