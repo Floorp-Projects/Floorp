@@ -58,6 +58,7 @@ _BROWSER_TEST_FILES = \
 	browser_bookmarksProperties.js \
 	browser_forgetthissite_single.js \
 	browser_library_left_pane_commands.js \
+	browser_drag_bookmarks_on_toolbar.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

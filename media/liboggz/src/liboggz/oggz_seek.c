@@ -481,6 +481,8 @@ oggz_scan_for_page (OGGZ * oggz, ogg_page * og, ogg_int64_t unit_target,
 #else
       do {
         offset_at = oggz_get_prev_start_page(oggz, og, &granule_at, &serialno);
+	if (offset_at < 0)
+	  break;
         unit_at = oggz_get_unit(oggz, serialno, granule_at);
       } while (unit_at > unit_target);
       return offset_at;
@@ -770,6 +772,8 @@ oggz_bounded_seek_set (OGGZ * oggz,
 
   do {
     offset_at = oggz_get_prev_start_page (oggz, og, &granule_at, &serialno);
+    if (offset_at < 0)
+      break;
     unit_at = oggz_get_unit (oggz, serialno, granule_at);
   } while (unit_at > unit_target);
 
