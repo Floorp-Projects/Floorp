@@ -44,6 +44,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/ext/Preferences.js");
+Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -208,7 +209,7 @@ Resource.prototype = {
       this._data = data;
 
     if ("PUT" == action || "POST" == action) {
-      yield this.filterUpload(self.cb);
+      Sync(this.filterUpload, this)();
       this._log.trace(action + " Body:\n" + this._data);
 
       let type = ('Content-Type' in this._headers)?
@@ -222,9 +223,10 @@ Resource.prototype = {
       channel.setUploadStream(stream, type, this._data.length);
     }
 
-    let listener = new ChannelListener(self.cb, this._onProgress, this._log);
+    let [chanOpen, chanCb] = Sync.withCb(channel.asyncOpen, channel);
+    let listener = new ChannelListener(chanCb, this._onProgress, this._log);
     channel.requestMethod = action;
-    this._data = yield channel.asyncOpen(listener, null);
+    this._data = chanOpen(listener, null);
 
     if (!channel.requestSucceeded) {
       this._log.debug(action + " request failed (" + channel.responseStatus + ")");
@@ -245,7 +247,7 @@ Resource.prototype = {
       case "GET":
       case "POST":
         this._log.trace(action + " Body:\n" + this._data);
-        yield this.filterDownload(self.cb);
+        Sync(this.filterDownload, this)();
         break;
       }
     }
