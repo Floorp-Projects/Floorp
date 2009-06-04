@@ -187,7 +187,7 @@ PubKeyManager.prototype = {
       let self = yield;
       for each (let key in keys) {
 	let res = new Resource(key.uri);
-	yield res.put(self.cb, key.serialize());
+	res.put(key.serialize());
       }
     };
     fn.async(this, onComplete, keys);

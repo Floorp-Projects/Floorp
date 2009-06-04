@@ -309,7 +309,7 @@ SyncEngine.prototype = {
       meta.generateIV();
       yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
       let res = new Resource(meta.uri);
-      yield res.put(self.cb, meta.serialize());
+      res.put(meta.serialize());
     }
 
     // first sync special case: upload all items
