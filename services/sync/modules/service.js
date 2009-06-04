@@ -649,8 +649,7 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
-    let meta = yield Records.import(self.cb, this.clusterURL + this.username +
-                                             "/meta/global");
+    let meta = Records.import(this.clusterURL + this.username + "/meta/global");
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
