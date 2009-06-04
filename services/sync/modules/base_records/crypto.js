@@ -81,9 +81,9 @@ CryptoWrapper.prototype = {
     }
 
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
-    let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
+    let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
-    let meta = yield CryptoMetas.get(self.cb, this.encryption);
+    let meta = CryptoMetas.get(this.encryption);
     let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
     this.ciphertext = Svc.Crypto.encrypt(JSON.stringify([this.cleartext]),
@@ -106,9 +106,9 @@ CryptoWrapper.prototype = {
     }
 
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
-    let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
+    let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
-    let meta = yield CryptoMetas.get(self.cb, this.encryption);
+    let meta = CryptoMetas.get(this.encryption);
     let symkey = yield meta.getKey(self.cb, privkey, passphrase);
 
     // note: payload is wrapped in an array, see _encrypt

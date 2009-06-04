@@ -301,7 +301,7 @@ SyncEngine.prototype = {
 
     this._log.debug("Ensuring server crypto records are there");
 
-    let meta = yield CryptoMetas.get(self.cb, this.cryptoMetaURL);
+    let meta = CryptoMetas.get(this.cryptoMetaURL);
     if (!meta) {
       let symkey = Svc.Crypto.generateRandomKey();
       let pubkey = yield PubKeys.getDefaultKey(self.cb);

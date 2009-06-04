@@ -719,7 +719,7 @@ WeaveSvc.prototype = {
       this._log.debug("Public key has no key data");
     else {
       // make sure we have a matching privkey
-      let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
+      let privkey = PrivKeys.get(pubkey.privateKeyUri);
       if (!privkey)
         this._log.debug("Could not get private key");
       else if (privkey.keyData == null)
