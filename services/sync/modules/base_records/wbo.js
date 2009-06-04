@@ -44,9 +44,6 @@ const Cu = Components.utils;
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
-
-Function.prototype.async = Async.sugar;
 
 function WBORecord(uri) {
   this._WBORec_init(uri);
