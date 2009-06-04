@@ -18,3 +18,4 @@ key_frame_seek.patch fixes bug 463358.
 offset_next.patch fixes bug 495366.
 
 bug487519.patch: Fix for bug 487519.
+bug496063.patch: Fix for infinite loop during seek while shutting down.
