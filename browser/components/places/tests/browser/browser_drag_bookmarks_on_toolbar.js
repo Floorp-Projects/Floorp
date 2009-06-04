@@ -251,7 +251,7 @@ function test() {
   var osString = Cc["@mozilla.org/xre/app-info;1"].
                  getService(Ci.nsIXULRuntime).OS;
 
-  // XXX This test fails on linux?
+  // XXX bug 496277: this test fails on linux for some reason
   if (osString == "Linux") {
     finish();
     return;
