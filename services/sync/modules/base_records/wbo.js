@@ -145,29 +145,22 @@ RecordManager.prototype = {
     this._aliases = {};
   },
 
-  import: function RegordMgr_import(onComplete, url) {
-    let fn = function RegordMgr__import(url) {
-      let self = yield;
-      let record;
+  import: function RecordMgr_import(url) {
+    this._log.trace("Importing record: " + (url.spec ? url.spec : url));
+    try {
+      this.lastResource = new Resource(url);
+      this.lastResource.get();
 
-      this._log.trace("Importing record: " + (url.spec? url.spec : url));
+      let record = new this._recordType();
+      record.deserialize(this.lastResource.data);
+      record.uri = url; // NOTE: may override id in this.lastResource.data
 
-      try {
-        this.lastResource = new Resource(url);
-        this.lastResource.get();
-
-        record = new this._recordType();
-        record.deserialize(this.lastResource.data);
-        record.uri = url; // NOTE: may override id in this.lastResource.data
-
-        this.set(url, record);
-      } catch (e) {
-        this._log.debug("Failed to import record: " + e);
-        record = null;
-      }
-      self.done(record);
-    };
-    fn.async(this, onComplete, url);
+      return this.set(url, record);
+    }
+    catch(ex) {
+      this._log.debug("Failed to import record: " + ex);
+      return null;
+    }
   },
 
   get: function RegordMgr_get(onComplete, url) {
@@ -187,7 +180,7 @@ RecordManager.prototype = {
         record = this._records[spec];
 
       if (!record)
-        record = yield this.import(self.cb, url);
+        record = this.import(url);
 
       self.done(record);
     };
@@ -196,7 +189,7 @@ RecordManager.prototype = {
 
   set: function RegordMgr_set(url, record) {
     let spec = url.spec ? url.spec : url;
-    this._records[spec] = record;
+    return this._records[spec] = record;
   },
 
   contains: function RegordMgr_contains(url) {
