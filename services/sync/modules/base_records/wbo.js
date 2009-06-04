@@ -153,7 +153,7 @@ RecordManager.prototype = {
 
       try {
         this.lastResource = new Resource(url);
-        yield this.lastResource.get(self.cb);
+        this.lastResource.get();
 
         record = new this._recordType();
         record.deserialize(this.lastResource.data);

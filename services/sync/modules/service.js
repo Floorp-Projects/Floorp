@@ -461,7 +461,7 @@ WeaveSvc.prototype = {
 
       let res = new Resource(this.baseURL + "api/register/chknode/" + username);
       try {
-        yield res.get(self.cb);
+        res.get();
       } catch (e) { /* we check status below */ }
 
       if (res.lastChannel.responseStatus == 404) {
@@ -516,7 +516,7 @@ WeaveSvc.prototype = {
           return headers;
         }
       };
-      yield res.get(self.cb);
+      res.get();
 
       //JSON.parse(res.data); // throws if not json
       self.done(true);

@@ -201,7 +201,6 @@ Resource.prototype = {
   },
 
   _request: function Res__request(action, data) {
-    let self = yield;
     let iter = 0;
     let channel = this._createRequest();
 
@@ -252,23 +251,23 @@ Resource.prototype = {
       }
     }
 
-    self.done(this._data);
+    return this._data;
   },
 
-  get: function Res_get(onComplete) {
-    this._request.async(this, onComplete, "GET");
+  get: function Res_get() {
+    return this._request("GET");
   },
 
-  put: function Res_put(onComplete, data) {
-    this._request.async(this, onComplete, "PUT", data);
+  put: function Res_put(data) {
+    return this._request("PUT", data);
   },
 
-  post: function Res_post(onComplete, data) {
-    this._request.async(this, onComplete, "POST", data);
+  post: function Res_post(data) {
+    return this._request("POST", data);
   },
 
-  delete: function Res_delete(onComplete) {
-    this._request.async(this, onComplete, "DELETE");
+  delete: function Res_delete() {
+    return this._request("DELETE");
   }
 };
 

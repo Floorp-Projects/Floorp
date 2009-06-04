@@ -343,7 +343,7 @@ SyncEngine.prototype = {
     newitems.newer = this.lastSync;
     newitems.full = true;
     newitems.sort = "depthindex";
-    yield newitems.get(self.cb);
+    newitems.get();
 
     let item;
     let count = {applied: 0, reconciled: 0};
@@ -505,7 +505,7 @@ SyncEngine.prototype = {
 
       this._log.info("Uploading " + outnum + " records + " + count + " index/depth records)");
       // do the upload
-      yield up.post(self.cb);
+      up.post();
 
       // save last modified date
       let mod = up.data.modified;
