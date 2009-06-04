@@ -368,6 +368,14 @@ js_GetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
                                    0, 0, vp);
     }
 
+    /*
+     * JSObjectOps is private, so we know there are only two implementations
+     * of the thisObject hook: with objects and XPConnect wrapped native
+     * objects.  XPConnect objects don't expect the hook to be called here,
+     * but with objects do.
+     */
+    if (STOBJ_GET_CLASS(obj) == &js_WithClass)
+        obj = obj->map->ops->thisObject(cx, obj);
     return sprop->getter(cx, obj, SPROP_USERID(sprop), vp);
 }
 
@@ -388,6 +396,9 @@ js_SetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
         return JS_FALSE;
     }
 
+    /* See the comment in js_GetSprop as to why we can check for 'with'. */
+    if (STOBJ_GET_CLASS(obj) == &js_WithClass)
+        obj = obj->map->ops->thisObject(cx, obj);
     return sprop->setter(cx, obj, SPROP_USERID(sprop), vp);
 }
 
