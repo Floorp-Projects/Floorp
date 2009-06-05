@@ -194,10 +194,10 @@ Engine.prototype = {
     this._notify("sync", this.name, this._sync)();
   },
 
-  wipeServer: function Engimne_wipeServer(onComplete) {
+  wipeServer: function Engine_wipeServer() {
     if (!this._wipeServer)
       throw "engine does not implement _wipeServer method";
-    this._notifyAsync("wipe-server", this.name, this._wipeServer).async(this, onComplete);
+    this._notify("wipe-server", this.name, this._wipeServer)();
   },
 
   /**
@@ -520,11 +520,8 @@ SyncEngine.prototype = {
   },
 
   _wipeServer: function SyncEngine__wipeServer() {
-    let self = yield;
-    let all = new Resource(this.engineURL);
-    yield all.delete(self.cb);
-    let crypto = new Resource(this.cryptoMetaURL);
-    yield crypto.delete(self.cb);
+    new Resource(this.engineURL).delete();
+    new Resource(this.cryptoMetaURL).delete();
   },
 
   _resetClient: function SyncEngine__resetClient() {
