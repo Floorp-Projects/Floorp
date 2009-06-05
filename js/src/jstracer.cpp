@@ -1850,7 +1850,7 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
  */
 static uint32 
 GetUpvarOnTraceTail(InterpState* state, uint32 cookie,
-                    uint32 nativeStackFramePos, uint8* typemap, double* result)
+                    int32 nativeStackFramePos, uint8* typemap, double* result)
 {
     uintN slot = UPVAR_FRAME_SLOT(cookie);
     slot = (slot == CALLEE_UPVAR_SLOT) ? 0 : 2/*callee,this*/ + slot;
@@ -1886,10 +1886,10 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
              * activation record corresponding to *fip in the native
              * stack.
              */
-            uintN nativeStackFramePos = state->callstackBase[0]->spoffset;
+            int32 nativeStackFramePos = state->callstackBase[0]->spoffset;
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
                 nativeStackFramePos += (*fip2)->spdist;
-            nativeStackFramePos -= (2 + (*fip)->argc);
+            nativeStackFramePos -= (2 + (*fip)->get_argc());
             uint8* typemap = (uint8*) (fi+1);
             return GetUpvarOnTraceTail(state, cookie, nativeStackFramePos,
                                        typemap, result);
@@ -2291,8 +2291,11 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         LIns* i = get(vp);
         bool isPromote = isPromoteInt(i);
-        if (isPromote && *m == JSVAL_DOUBLE)
+        if (isPromote && *m == JSVAL_DOUBLE) {
             lir->insStorei(get(vp), lirbuf->state, nativeGlobalOffset(vp));
+            /* Aggressively undo speculation so the inner tree will compile if this fails. */
+            oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+        }
         JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
         ++m;
     );
@@ -3537,7 +3540,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     /* Code duplicated from inline_call: case in js_Interpret (FIXME). */
     JSArena* a = cx->stackPool.current;
     void* newmark = (void*) a->avail;
-    uintN argc = fi.argc & 0x7fff;
+    uintN argc = fi.get_argc();
     jsval* vp = fp->slots + fi.spdist - (2 + argc);
     uintN missing = 0;
     jsval* newsp;
@@ -3596,7 +3599,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee; // Roll with a potentially stale callee for now.
     newifp->frame.fun = fun;
 
-    bool constructing = (fi.argc & 0x8000) != 0;
+    bool constructing = fi.is_constructing();
     newifp->frame.argc = argc;
     newifp->callerRegs.pc = fi.pc;
     newifp->callerRegs.sp = fp->slots + fi.spdist;
@@ -5322,12 +5325,13 @@ js_PurgeScriptRecordingAttempts(JSDHashTable *table,
     return JS_DHASH_NEXT;
 }
 
-JS_REQUIRES_STACK void
-js_PurgeScriptFragments(JSContext* cx, JSScript* script)
+/*
+ * Call 'action' for each root fragment created for 'script'.
+ */
+template<typename FragmentAction>
+static void
+js_IterateScriptFragments(JSContext* cx, JSScript* script, FragmentAction action)
 {
-    if (!TRACING_ENABLED(cx))
-        return;
-    debug_only_v(nj_dprintf("Purging fragments for JSScript %p.\n", (void*)script);)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
@@ -5340,15 +5344,39 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
                                         (void*)frag, frag->ip, script->code,
                                         script->code + script->length));
                 VMFragment* next = frag->next;
-                for (Fragment *p = frag; p; p = p->peer)
-                    js_TrashTree(cx, p);
-                tm->fragmento->clearFragment(frag);
+                action(cx, tm, frag);
                 *f = next;
             } else {
                 f = &((*f)->next);
             }
         }
     }
+}
+
+static void trashTreeAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+{
+    for (Fragment *p = frag; p; p = p->peer)
+        js_TrashTree(cx, p);
+}
+
+static void clearFragmentAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+{
+    tm->fragmento->clearFragment(frag);
+}
+
+JS_REQUIRES_STACK void
+js_PurgeScriptFragments(JSContext* cx, JSScript* script)
+{
+    if (!TRACING_ENABLED(cx))
+        return;
+    debug_only_v(nj_dprintf("Purging fragments for JSScript %p.\n", (void*)script);)
+    /*
+     * js_TrashTree trashes dependent trees recursively, so we must do all the trashing
+     * before clearing in order to avoid calling js_TrashTree with a deleted fragment.
+     */
+    js_IterateScriptFragments(cx, script, trashTreeAction);
+    js_IterateScriptFragments(cx, script, clearFragmentAction);
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_DHashTableEnumerate(&(tm->recordAttempts),
                            js_PurgeScriptRecordingAttempts, script);
 
@@ -8589,7 +8617,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->pc = fp->regs->pc;
     fi->imacpc = fp->imacpc;
     fi->spdist = fp->regs->sp - fp->slots;
-    fi->argc = argc | (constructing ? 0x8000 : 0);
+    fi->set_argc(argc, constructing);
     fi->spoffset = 2 /*callee,this*/ + fp->argc;
 
     unsigned callDepth = getCallDepth();
@@ -10768,6 +10796,19 @@ TraceRecorder::record_JSOP_LOOP()
 {
     return JSRS_CONTINUE;
 }
+
+#define DBG_STUB(OP)                                                          \
+    JS_REQUIRES_STACK JSRecordingStatus                                       \
+    TraceRecorder::record_##OP()                                              \
+    {                                                                         \
+        ABORT_TRACE("can't trace " #OP);                                      \
+    }
+
+DBG_STUB(JSOP_GETUPVAR_DBG)
+DBG_STUB(JSOP_CALLUPVAR_DBG)
+DBG_STUB(JSOP_DEFFUN_DBGFC)
+DBG_STUB(JSOP_DEFLOCALFUN_DBGFC)
+DBG_STUB(JSOP_LAMBDA_DBGFC)
 
 #ifdef JS_JIT_SPEW
 /* Prints information about entry typemaps and unstable exits for all peers at a PC */
