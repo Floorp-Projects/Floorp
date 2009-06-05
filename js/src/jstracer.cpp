@@ -4009,10 +4009,11 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             fullMap.add(getStackTypeMap(e1), e1->numStackSlotsBelowCurrentFrame);
             fullMap.add(getStackTypeMap(e2), e2->numStackSlots);
             stackSlots = fullMap.length();
-            fullMap.add(getGlobalTypeMap(e2), e2->numGlobalSlots);
-            ngslots = e2->numGlobalSlots;
+            fullMap.add(getGlobalTypeMap(e1), e1->numGlobalSlots);
+            ngslots = e1->numGlobalSlots;
             typeMap = fullMap.data();
         }
+        JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         return js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
                                 ngslots, typeMap, exitedFrom, outer, cx->fp->argc);
     }
