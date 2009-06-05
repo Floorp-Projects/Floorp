@@ -211,15 +211,13 @@ Engine.prototype = {
   },
 
   _wipeClient: function Engine__wipeClient() {
-    let self = yield;
-
     this.resetClient();
     this._log.debug("Deleting all local data");
     this._store.wipe();
   },
 
-  wipeClient: function Engine_wipeClient(onComplete) {
-    this._notifyAsync("wipe-client", this.name, this._wipeClient).async(this, onComplete);
+  wipeClient: function Engine_wipeClient() {
+    this._notify("wipe-client", this.name, this._wipeClient)();
   }
 };
 
