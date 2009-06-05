@@ -6782,6 +6782,7 @@ TraceRecorder::getThis(LIns*& this_ins)
     }
 
     jsval& thisv = cx->fp->argv[-1];
+    JS_ASSERT(JSVAL_IS_OBJECT(thisv));
 
     /*
      * Traces type-specialize between null and objects, so if we currently see a null
@@ -6790,7 +6791,8 @@ TraceRecorder::getThis(LIns*& this_ins)
      * can only detect this condition prior to calling js_ComputeThisForFrame, since it
      * updates the interpreter's copy of argv[-1].
      */
-    if (JSVAL_IS_NULL(original)) {
+    if (JSVAL_IS_NULL(original) ||
+        guardClass(JSVAL_TO_OBJECT(original), get(&thisv), &js_CallClass, snapshot(BRANCH_EXIT))) {
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             ABORT_TRACE("global object was wrapped while recording");
@@ -6804,7 +6806,6 @@ TraceRecorder::getThis(LIns*& this_ins)
      * The only unwrapped object that needs to be wrapped that we can get here is the
      * global object obtained throught the scope chain.
      */
-    JS_ASSERT(JSVAL_IS_OBJECT(thisv));
     JSObject* obj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(thisv));
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
