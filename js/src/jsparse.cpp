@@ -8072,8 +8072,20 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 if (ale) {
                     dn = ALE_DEFN(ale);
 #if JS_HAS_BLOCK_SCOPE
-                    if (dn->isLet() && !BlockIdInScope(dn->pn_blockid, tc))
-                        ale = NULL;
+                    /*
+                     * Skip out-of-scope let bindings along an ALE list or hash
+                     * chain. These can happen due to |let (x = x) x| block and
+                     * expression bindings, where the x on the right of = comes
+                     * from an outer scope. See bug 496532.
+                     */
+                    while (dn->isLet() && !BlockIdInScope(dn->pn_blockid, tc)) {
+                        do {
+                            ale = ALE_NEXT(ale);
+                        } while (ale && ALE_ATOM(ale) != pn->pn_atom);
+                        if (!ale)
+                            break;
+                        dn = ALE_DEFN(ale);
+                    }
 #endif
                 }
 
