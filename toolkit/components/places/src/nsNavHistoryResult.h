@@ -97,7 +97,7 @@ private:
   NS_DECL_NSINAVBOOKMARKOBSERVER                                        \
   NS_IMETHOD OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,      \
                      PRInt64 aSessionId, PRInt64 aReferringId,          \
-                     PRUint32 aTransitionType, PRUint32* aAdded);      \
+                     PRUint32 aTransitionType, PRUint32* aAdded);       \
   NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle); \
   NS_IMETHOD OnBeforeDeleteURI(nsIURI *aURI);                           \
   NS_IMETHOD OnDeleteURI(nsIURI *aURI);                                 \
@@ -107,6 +107,9 @@ private:
   NS_IMETHOD OnPageExpired(nsIURI* aURI, PRTime aVisitTime,             \
                            PRBool aWholeEntry);
 
+#define NS_DECL_EXTENDED_BOOKMARK_OBSERVER                              \
+  NS_IMETHOD OnItemAdded(PRInt64 aItemId, PRInt64 aFolder,              \
+                         PRInt32 aIndex, PRUint16 aItemType);
 
 // nsNavHistoryResult
 //
@@ -717,6 +720,7 @@ public:
   virtual nsresult OpenContainer();
 
   NS_DECL_BOOKMARK_HISTORY_OBSERVER
+  NS_DECL_EXTENDED_BOOKMARK_OBSERVER
   virtual void OnRemoving();
 
 public:
@@ -790,9 +794,9 @@ public:
   // the bookmark observers. This is called from the result's actual observer
   // and it knows all observers are FolderResultNodes
   NS_DECL_NSINAVBOOKMARKOBSERVER
+  NS_DECL_EXTENDED_BOOKMARK_OBSERVER
 
   virtual void OnRemoving();
-
 public:
 
   // this indicates whether the folder contents are valid, they don't go away
