@@ -13,8 +13,8 @@ function pubkey_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234",
              modified: "2454725.98283",
              payload: JSON.stringify({type: "pubkey",
-                                   private_key: "http://localhost:8080/privkey",
-                                   key_data: "asdfasdfasf..."})};
+                                   privateKeyUri: "http://localhost:8080/privkey",
+                                   keyData: "asdfasdfasf..."})};
   return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
@@ -22,8 +22,8 @@ function privkey_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234-2",
              modified: "2454725.98283",
              payload: JSON.stringify({type: "privkey",
-                                   public_key: "http://localhost:8080/pubkey",
-                                   key_data: "asdfasdfasf..."})};
+                                   publicKeyUri: "http://localhost:8080/pubkey",
+                                   keyData: "asdfasdfasf..."})};
   return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
@@ -47,13 +47,13 @@ function async_test() {
 
     let pubkey = yield PubKeys.get(self.cb, "http://localhost:8080/pubkey");
     do_check_eq(pubkey.data.payload.type, "pubkey");
-    do_check_eq(pubkey.lastRequest.status, 200);
+    do_check_eq(PubKeys.lastResource.lastChannel.responseStatus, 200);
 
-    log.info("Getting a private key");
+    log.info("Getting matching private key");
 
     let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
     do_check_eq(privkey.data.payload.type, "privkey");
-    do_check_eq(privkey.lastRequest.status, 200);
+    do_check_eq(PrivKeys.lastResource.lastChannel.responseStatus, 200);
 
     log.info("Done!");
     do_test_finished();
