@@ -159,6 +159,12 @@ class Vector;
 /* Common instantiations. */
 typedef js::Vector<jschar, 32> JSCharBuffer;
 
+static inline JSPropertyOp
+js_CastAsPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
+}
+
 } /* export "C++" */
 #endif  /* __cplusplus */
 

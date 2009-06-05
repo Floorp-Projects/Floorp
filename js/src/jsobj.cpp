@@ -422,11 +422,11 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                 if (OBJ_IS_NATIVE(obj2) &&
                     (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
                     JSScopeProperty *sprop = (JSScopeProperty *) prop;
-                    val = JSVAL_NULL;
+                    val = JSVAL_VOID;
                     if (attrs & JSPROP_GETTER)
                         val = sprop->getterValue();
                     if (attrs & JSPROP_SETTER) {
-                        if (val != JSVAL_NULL) {
+                        if (val != JSVAL_VOID) {
                             /* Mark the getter, then set val to setter. */
                             ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
                                                    NULL)
@@ -1693,45 +1693,45 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
     if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
 
-    JSBool found;
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !js_HasOwnProperty(cx, lookup, obj, id, &found))
+    JSObject *obj2;
+    JSProperty *prop;
+    if (!obj || !js_HasOwnProperty(cx, lookup, obj, id, &obj2, &prop))
         return JS_FALSE;
-    *vp = BOOLEAN_TO_JSVAL(found);
+    if (prop) {
+        *vp = JSVAL_TRUE;
+        obj2->dropProperty(cx, prop);
+    } else {
+        *vp = JSVAL_FALSE;
+    }
     return JS_TRUE;
 }
 
 JSBool
 js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
-                  JSBool *foundp)
+                  JSObject **objp, JSProperty **propp)
 {
-    JSObject *obj2;
-    JSProperty *prop;
-    JSScopeProperty *sprop;
-
-    if (!lookup(cx, obj, id, &obj2, &prop))
+    if (!lookup(cx, obj, id, objp, propp))
         return JS_FALSE;
-    if (!prop) {
-        *foundp = JS_FALSE;
-    } else if (obj2 == obj) {
-        *foundp = JS_TRUE;
-    } else {
-        JSClass *clasp;
-        JSExtendedClass *xclasp;
-        JSObject *outer;
+    if (!*propp)
+        return JS_TRUE;
 
-        clasp = OBJ_GET_CLASS(cx, obj2);
-        if (!(clasp->flags & JSCLASS_IS_EXTENDED) ||
-            !(xclasp = (JSExtendedClass *) clasp)->outerObject) {
-            outer = NULL;
-        } else {
-            outer = xclasp->outerObject(cx, obj2);
-            if (!outer)
-                return JS_FALSE;
-        }
-        if (outer == obj) {
-            *foundp = JS_TRUE;
-        } else if (OBJ_IS_NATIVE(obj2) && OBJ_GET_CLASS(cx, obj) == clasp) {
+    if (*objp == obj)
+        return JS_TRUE;
+
+    JSExtendedClass *xclasp;
+    JSObject *outer;
+    JSClass *clasp = (*objp)->getClass();
+    if (!(clasp->flags & JSCLASS_IS_EXTENDED) ||
+        !(xclasp = (JSExtendedClass *) clasp)->outerObject) {
+        outer = NULL;
+    } else {
+        outer = xclasp->outerObject(cx, *objp);
+        if (!outer)
+            return JS_FALSE;
+    }
+    if (outer != *objp) {
+        if (OBJ_IS_NATIVE(*objp) && obj->getClass() == clasp) {
             /*
              * The combination of JSPROP_SHARED and JSPROP_PERMANENT in a
              * delegated property makes that property appear to be direct in
@@ -1747,14 +1747,15 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
              * the property, there is no way to tell whether it is directly
              * owned, or indirectly delegated.
              */
-            sprop = (JSScopeProperty *)prop;
-            *foundp = SPROP_IS_SHARED_PERMANENT(sprop);
+            if (!SPROP_IS_SHARED_PERMANENT((JSScopeProperty *) *propp)) {
+                (*objp)->dropProperty(cx, *propp);
+                *propp = NULL;
+            }
         } else {
-            *foundp = JS_FALSE;
+            (*objp)->dropProperty(cx, *propp);
+            *propp = NULL;
         }
     }
-    if (prop)
-        obj2->dropProperty(cx, prop);
     return JS_TRUE;
 }
 
@@ -1763,15 +1764,18 @@ static JSBool FASTCALL
 Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id;
-    JSBool found;
 
+    JSObject *pobj;
+    JSProperty *prop;
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
-        !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &found)) {
+        !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &pobj, &prop)) {
         js_SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
-    return found;
+    if (prop)
+       pobj->dropProperty(cx, prop);
+    return !!prop;
 }
 #endif
 
@@ -2020,19 +2024,14 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ValueToId(cx, argc >= 2 ? vp[3] : JSVAL_VOID, nameidr.addr()))
         return JS_FALSE;
 
-    JSBool found;
-    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, nameidr.id(), &found))
+    JSObject *pobj;
+    JSProperty *prop;
+    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, nameidr.id(), &pobj, &prop))
         return JS_FALSE;
-    if (!found) {
+    if (!prop) {
         *vp = JSVAL_VOID;
         return JS_TRUE;
     }
-
-    JSObject *pobj;
-    JSProperty *prop;
-    if (!obj->lookupProperty(cx, nameidr.id(), &pobj, &prop))
-        return JS_FALSE;
-    JS_ASSERT(prop);
 
     uintN attrs;
     if (!pobj->getAttributes(cx, nameidr.id(), prop, &attrs)) {
@@ -2046,9 +2045,9 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
         if (OBJ_IS_NATIVE(obj)) {
             JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
             if (attrs & JSPROP_GETTER)
-                roots[0] = js_CastAsObjectJSVal(sprop->getter);
+                roots[0] = sprop->getterValue();
             if (attrs & JSPROP_SETTER)
-                roots[1] = js_CastAsObjectJSVal(sprop->setter);
+                roots[1] = sprop->setterValue();
         }
 
         pobj->dropProperty(cx, prop);
@@ -2143,6 +2142,618 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+HasProperty(JSContext* cx, JSObject* obj, jsid id, jsval* vp, JSBool* answerp)
+{
+    if (!JS_HasPropertyById(cx, obj, id, answerp))
+        return JS_FALSE;
+    if (!*answerp) {
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
+    }
+    return JS_GetPropertyById(cx, obj, id, vp);
+}
+
+PropertyDescriptor::PropertyDescriptor()
+  : id(INT_JSVAL_TO_JSID(JSVAL_ZERO)),
+    value(JSVAL_VOID),
+    get(JSVAL_VOID),
+    set(JSVAL_VOID),
+    attrs(0),
+    hasGet(false),
+    hasSet(false),
+    hasValue(false),
+    hasWritable(false),
+    hasEnumerable(false),
+    hasConfigurable(false)
+{
+}
+
+bool
+PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
+{
+    this->id = id;
+
+    /* 8.10.5 step 1 */
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_NOT_NONNULL_OBJECT,
+                             js_getter_str);
+        return false;
+    }
+    JSObject* desc = JSVAL_TO_OBJECT(v);
+
+    /* Start with the proper defaults. */
+    attrs = JSPROP_PERMANENT | JSPROP_READONLY;
+
+    JSBool hasProperty;
+
+    /* 8.10.5 step 3 */
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.enumerableAtom), &v,
+                     &hasProperty)) {
+        return false;
+    }
+    if (hasProperty) {
+        hasEnumerable = JS_TRUE;
+        if (js_ValueToBoolean(v))
+            attrs |= JSPROP_ENUMERATE;
+    }
+
+    /* 8.10.5 step 4 */
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.configurableAtom), &v,
+                     &hasProperty)) {
+        return false;
+    }
+    if (hasProperty) {
+        hasConfigurable = JS_TRUE;
+        if (js_ValueToBoolean(v))
+            attrs &= ~JSPROP_PERMANENT;
+    }
+
+    /* 8.10.5 step 5 */
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.valueAtom), &v, &hasProperty))
+        return false;
+    if (hasProperty) {
+        hasValue = true;
+        value = v;
+    }
+
+    /* 8.10.6 step 6 */
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.writableAtom), &v, &hasProperty))
+        return false;
+    if (hasProperty) {
+        hasWritable = JS_TRUE;
+        if (js_ValueToBoolean(v))
+            attrs &= ~JSPROP_READONLY;
+    }
+
+    /* 8.10.7 step 7 */
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &hasProperty))
+        return false;
+    if (hasProperty) {
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(JSVAL_TO_OBJECT(v), cx)) &&
+            v != JSVAL_VOID) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BAD_GETTER_OR_SETTER,
+                                 js_getter_str);
+            return false;
+        }
+        hasGet = true;
+        get = v;
+        attrs |= JSPROP_GETTER | JSPROP_SHARED;
+    }
+
+    /* 8.10.7 step 8 */
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &hasProperty))
+        return false;
+    if (hasProperty) {
+        if ((JSVAL_IS_PRIMITIVE(v) || !js_IsCallable(JSVAL_TO_OBJECT(v), cx)) &&
+            v != JSVAL_VOID) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BAD_GETTER_OR_SETTER,
+                                 js_setter_str);
+            return false;
+        }
+        hasSet = true;
+        set = v;
+        attrs |= JSPROP_SETTER | JSPROP_SHARED;
+    }
+
+    /* 8.10.7 step 9 */
+    if ((hasGet || hasSet) && (hasValue || hasWritable)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INVALID_DESCRIPTOR);
+        return false;
+    }
+
+    return true;
+}
+
+typedef js::Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
+
+class AutoDescriptorArray : private JSTempValueRooter
+{
+  private:
+    JSContext *cx;
+    PropertyDescriptorArray descriptors;
+
+  public:
+    AutoDescriptorArray(JSContext *cx)
+    : cx(cx), descriptors(cx)
+    {
+        JS_PUSH_TEMP_ROOT_TRACE(cx, trace, this);
+    }
+    ~AutoDescriptorArray() {
+        JS_POP_TEMP_ROOT(cx, this);
+    }
+
+    bool append(PropertyDescriptor &desc) {
+        return descriptors.append(desc);
+    }
+
+    PropertyDescriptor& operator[](size_t i) {
+        JS_ASSERT(i < descriptors.length());
+        return descriptors[i];
+    }
+
+  private:
+    static void trace(JSTracer *trc, JSTempValueRooter *tvr) {
+        PropertyDescriptorArray &descs =
+            static_cast<AutoDescriptorArray *>(tvr)->descriptors;
+        for (size_t i = 0, len = descs.length(); i < len; i++) {
+            PropertyDescriptor &desc = descs[i];
+
+            JS_CALL_VALUE_TRACER(trc, desc.value, "PropertyDescriptor::value");
+            JS_CALL_VALUE_TRACER(trc, desc.get, "PropertyDescriptor::get");
+            JS_CALL_VALUE_TRACER(trc, desc.set, "PropertyDescriptor::set");
+            js_TraceId(trc, desc.id);
+        }
+    }
+};
+
+static JSBool
+Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
+{
+    if (throwError) {
+        jsid idstr;
+        if (!js_ValueToStringId(cx, ID_TO_VALUE(id), &idstr))
+           return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
+                             JS_GetStringBytes(JSVAL_TO_STRING(ID_TO_VALUE(idstr))));
+        return JS_FALSE;
+    }
+
+    *rval = false;
+    return JS_TRUE;
+}
+
+static JSBool
+Reject(JSContext *cx, uintN errorNumber, bool throwError, bool *rval)
+{
+    if (throwError) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber);
+        return JS_FALSE;
+    }
+
+    *rval = false;
+    return JS_TRUE;
+}
+
+static JSBool
+Reject(JSContext *cx, JSObject *obj, JSProperty *prop, uintN errorNumber, bool throwError,
+       jsid id, bool *rval)
+{
+    obj->dropProperty(cx, prop);
+    return Reject(cx, errorNumber, throwError, id, rval);
+}
+
+static JSBool
+DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc,
+                     bool throwError, bool *rval)
+{
+    /* 8.12.9 step 1. */
+    JSProperty *current;
+    JSObject *obj2;
+    JS_ASSERT(obj->map->ops->lookupProperty == js_LookupProperty);
+    if (!js_HasOwnProperty(cx, js_LookupProperty, obj, desc.id, &obj2, &current))
+        return JS_FALSE;
+
+    JS_ASSERT(obj->map->ops->defineProperty == js_DefineProperty);
+
+    /* 8.12.9 steps 2-4. */
+    JSScope *scope = OBJ_SCOPE(obj);
+    if (!current) {
+        if (scope->sealed())
+            return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
+
+        *rval = true;
+
+        if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
+            JS_ASSERT(obj->map->ops->defineProperty == js_DefineProperty);
+            return js_DefineProperty(cx, obj, desc.id, desc.value,
+                                     JS_PropertyStub, JS_PropertyStub, desc.attrs);
+        }
+
+        JS_ASSERT(desc.isAccessorDescriptor());
+
+        /*
+         * Getters and setters are just like watchpoints from an access
+         * control point of view.
+         */
+        jsval dummy;
+        uintN dummyAttrs;
+        JS_ASSERT(obj->map->ops->checkAccess == js_CheckAccess);
+        if (!js_CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
+            return JS_FALSE;
+
+        return js_DefineProperty(cx, obj, desc.id, JSVAL_VOID,
+                                 desc.getterObject() ? desc.getter() : JS_PropertyStub,
+                                 desc.setterObject() ? desc.setter() : JS_PropertyStub,
+                                 desc.attrs);
+    }
+
+    /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
+    jsval v = JSVAL_VOID;
+
+    /*
+     * In the special case of shared permanent properties, the "own" property
+     * can be found on a different object.  In that case the returned property
+     * might not be native, except: the shared permanent property optimization
+     * is not applied if the objects have different classes (bug 320854), as
+     * must be enforced by js_HasOwnProperty for the JSScopeProperty cast below
+     * to be safe.
+     */
+    JS_ASSERT(obj->getClass() == obj2->getClass());
+
+    JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(current);
+    do {
+        if (desc.isAccessorDescriptor()) {
+            if (!sprop->isAccessorDescriptor())
+                break;
+
+            if (desc.hasGet &&
+                !js_SameValue(desc.getterValue(),
+                              (sprop->attrs & JSPROP_GETTER)
+                              ? sprop->getterValue()
+                              : JSVAL_VOID, cx)) {
+                break;
+            }
+
+            if (desc.hasSet &&
+                !js_SameValue(desc.setterValue(),
+                              (sprop->attrs & JSPROP_SETTER)
+                              ? sprop->setterValue()
+                              : JSVAL_VOID, cx)) {
+                break;
+            }
+        } else {
+            /*
+             * Determine the current value of the property once, if the current
+             * value might actually need to be used or preserved later.  NB: we
+             * guard on whether the current property is a data descriptor to
+             * avoid calling a getter; we won't need the value if it's not a
+             * data descriptor.
+             */
+            if (sprop->isDataDescriptor()) {
+                /*
+                 * Non-standard: if the property is non-configurable and is
+                 * represented by a native getter or setter, don't permit
+                 * redefinition.  We expose properties with native getter/setter
+                 * as though they were data properties, for the most part, but
+                 * in this particular case we must worry about integrity
+                 * concerns for JSAPI users who expected that
+                 * permanent+getter/setter means precisely controlled behavior.
+                 * If we permitted such redefinitions, such a property could be
+                 * "fixed" to some specific previous value, no longer varying
+                 * according to the intent of the native getter/setter for the
+                 * property.
+                 *
+                 * Other engines expose properties of this nature using ECMA
+                 * getter/setter pairs, but we can't because we use them even
+                 * for properties which ECMA specifies as being true data
+                 * descriptors ([].length, Function.length, /regex/.lastIndex,
+                 * &c.).  Longer-term perhaps we should convert such properties
+                 * to use data descriptors (at which point representing a
+                 * descriptor with native getter/setter as an accessor
+                 * descriptor would be fine) and take a small memory hit, but
+                 * for now we'll simply forbid their redefinition.
+                 */
+                if (!sprop->configurable() &&
+                    (!SPROP_HAS_STUB_GETTER(sprop) || !SPROP_HAS_STUB_SETTER(sprop))) {
+                    return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
+                                  throwError, desc.id, rval);
+                }
+
+                if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_NO_METHOD_BARRIER, &v)) {
+                    /* current was dropped when the failure occurred. */
+                    return JS_FALSE;
+                }
+            }
+
+            if (desc.isDataDescriptor()) {
+                if (!sprop->isDataDescriptor())
+                    break;
+
+                if (desc.hasValue && !js_SameValue(desc.value, v, cx))
+                    break;
+                if (desc.hasWritable && desc.writable() != sprop->writable())
+                    break;
+            } else {
+                /* The only fields in desc will be handled below. */
+                JS_ASSERT(desc.isGenericDescriptor());
+            }
+        }
+
+        if (desc.hasConfigurable && desc.configurable() != sprop->configurable())
+            break;
+        if (desc.hasEnumerable && desc.enumerable() != sprop->enumerable())
+            break;
+
+        /* The conditions imposed by step 5 or step 6 apply. */
+        obj2->dropProperty(cx, current);
+        *rval = true;
+        return JS_TRUE;
+    } while (0);
+
+    /* 8.12.9 step 7. */
+    if (!sprop->configurable()) {
+        /*
+         * Since [[Configurable]] defaults to false, we don't need to check
+         * whether it was specified.  We can't do likewise for [[Enumerable]]
+         * because its putative value is used in a comparison -- a comparison
+         * whose result must always be false per spec if the [[Enumerable]]
+         * field is not present.  Perfectly pellucid logic, eh?
+         */
+        JS_ASSERT_IF(!desc.hasConfigurable, !desc.configurable());
+        if (desc.configurable() ||
+            (desc.hasEnumerable && desc.enumerable() != sprop->enumerable())) {
+            return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP, throwError,
+                          desc.id, rval);
+        }
+    }
+
+    if (desc.isGenericDescriptor()) {
+        /* 8.12.9 step 8, no validation required */
+    } else if (desc.isDataDescriptor() != sprop->isDataDescriptor()) {
+        /* 8.12.9 step 9. */
+        if (!sprop->configurable()) {
+            return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
+                          throwError, desc.id, rval);
+        }
+    } else if (desc.isDataDescriptor() && sprop->isDataDescriptor()) {
+        /* 8.12.9 step 10. */
+        if (!sprop->configurable() && !sprop->writable()) {
+            if ((desc.hasWritable && desc.writable()) ||
+                (desc.hasValue && !js_SameValue(desc.value, v, cx))) {
+                return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
+                              throwError, desc.id, rval);
+            }
+        }
+    } else {
+        /* 8.12.9 step 11. */
+        JS_ASSERT(desc.isAccessorDescriptor() && sprop->isAccessorDescriptor());
+        if (!sprop->configurable()) {
+            if ((desc.hasSet &&
+                 !js_SameValue(desc.setterValue(),
+                               (sprop->attrs & JSPROP_SETTER) ? sprop->setterValue() : JSVAL_VOID,
+                               cx)) ||
+                (desc.hasGet &&
+                 !js_SameValue(desc.getterValue(),
+                               (sprop->attrs & JSPROP_GETTER) ? sprop->getterValue() : JSVAL_VOID,
+                               cx)))
+            {
+                return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
+                              throwError, desc.id, rval);
+            }
+        }
+    }
+
+    /* 8.12.9 step 12. */
+    uintN attrs;
+    JSPropertyOp getter, setter;
+    if (desc.isGenericDescriptor()) {
+        uintN changed = 0;
+        if (desc.hasConfigurable)
+            changed |= JSPROP_PERMANENT;
+        if (desc.hasEnumerable)
+            changed |= JSPROP_ENUMERATE;
+
+        attrs = (sprop->attrs & ~changed) | (desc.attrs & changed);
+        getter = sprop->getter;
+        setter = sprop->setter;
+    } else if (desc.isDataDescriptor()) {
+        uintN unchanged = 0;
+        if (!desc.hasConfigurable)
+            unchanged |= JSPROP_PERMANENT;
+        if (!desc.hasEnumerable)
+            unchanged |= JSPROP_ENUMERATE;
+        if (!desc.hasWritable)
+            unchanged |= JSPROP_READONLY;
+
+        if (desc.hasValue)
+            v = desc.value;
+        attrs = (desc.attrs & ~unchanged) | (sprop->attrs & unchanged);
+        getter = setter = JS_PropertyStub;
+    } else {
+        JS_ASSERT(desc.isAccessorDescriptor());
+
+        /*
+         * Getters and setters are just like watchpoints from an access
+         * control point of view.
+         */
+        jsval dummy;
+        JS_ASSERT(obj2->map->ops->checkAccess == js_CheckAccess);
+        if (!js_CheckAccess(cx, obj2, desc.id, JSACC_WATCH, &dummy, &attrs)) {
+             obj2->dropProperty(cx, current);
+             return JS_FALSE;
+        }
+
+        /* 8.12.9 step 12. */
+        uintN changed = 0;
+        if (desc.hasConfigurable)
+            changed |= JSPROP_PERMANENT;
+        if (desc.hasEnumerable)
+            changed |= JSPROP_ENUMERATE;
+        if (desc.hasGet)
+            changed |= JSPROP_GETTER | JSPROP_SHARED;
+        if (desc.hasSet)
+            changed |= JSPROP_SETTER | JSPROP_SHARED;
+
+        attrs = (desc.attrs & changed) | (sprop->attrs & ~changed);
+        if (desc.hasGet)
+            getter = desc.getterObject() ? desc.getter() : JS_PropertyStub;
+        else
+            getter = sprop->getter;
+        if (desc.hasSet)
+            setter = desc.setterObject() ? desc.setter() : JS_PropertyStub;
+        else
+            setter = sprop->setter;
+    }
+
+    *rval = true;
+    obj2->dropProperty(cx, current);
+    return js_DefineProperty(cx, obj, desc.id, v, getter, setter, attrs);
+}
+
+static JSBool
+DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc,
+                    bool throwError, bool *rval)
+{
+    /*
+     * We probably should optimize dense array property definitions where
+     * the descriptor describes a traditional array property (enumerable,
+     * configurable, writable, numeric index or length without altering its
+     * attributes).  Such definitions are probably unlikely, so we don't bother
+     * for now.
+     */
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_MakeArraySlow(cx, obj))
+        return JS_FALSE;
+
+    jsuint oldLen = obj->fslots[JSSLOT_ARRAY_LENGTH];
+
+    if (desc.id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
+        /*
+         * Our optimization of storage of the length property of arrays makes
+         * it very difficult to properly implement defining the property.  For
+         * now simply throw an exception (NB: not merely Reject) on any attempt
+         * to define the "length" property, rather than attempting to implement
+         * some difficult-for-authors-to-grasp subset of that functionality.
+         */
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEFINE_ARRAY_LENGTH_UNSUPPORTED);
+        return JS_FALSE;
+    }
+
+    uint32 index;
+    if (js_IdIsIndex(desc.id, &index)) {
+        /*
+        // Disabled until we support defining "length":
+        if (index >= oldLen && lengthPropertyNotWritable())
+            return ThrowTypeError(cx, JSMSG_CANT_APPEND_PROPERTIES_TO_UNWRITABLE_LENGTH_ARRAY);
+         */
+        if (!DefinePropertyObject(cx, obj, desc, false, rval))
+            return JS_FALSE;
+        if (!*rval)
+            return Reject(cx, JSMSG_CANT_DEFINE_ARRAY_INDEX, throwError, rval);
+
+        if (index >= oldLen) {
+            JS_ASSERT(index != UINT32_MAX);
+            obj->fslots[JSSLOT_ARRAY_LENGTH] = index + 1;
+        }
+
+        *rval = true;
+        return JS_TRUE;
+    }
+
+    return DefinePropertyObject(cx, obj, desc, throwError, rval);
+}
+
+static JSBool
+DefineProperty(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc, bool throwError,
+               bool *rval)
+{
+    if (OBJ_IS_ARRAY(cx, obj))
+        return DefinePropertyArray(cx, obj, desc, throwError, rval);
+
+    if (!OBJ_IS_NATIVE(obj))
+        return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
+
+    return DefinePropertyObject(cx, obj, desc, throwError, rval);
+}
+
+/* ES5 15.2.3.6: Object.defineProperty(O, P, Attributes) */
+static JSBool
+obj_defineProperty(JSContext* cx, uintN argc, jsval* vp)
+{
+    /* 15.2.3.6 steps 1 and 5. */
+    jsval v = argc == 0 ? JSVAL_VOID : vp[2];
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_NOT_NONNULL_OBJECT,
+                             js_getter_str);
+        return JS_FALSE;
+    }
+    *vp = vp[2];
+    JSObject* obj = JSVAL_TO_OBJECT(*vp);
+
+    /* 15.2.3.6 step 2. */
+    JSAutoTempIdRooter nameidr(cx);
+    if (!JS_ValueToId(cx, argc >= 2 ? vp[3] : JSVAL_VOID, nameidr.addr()))
+        return JS_FALSE;
+
+    /* 15.2.3.6 step 3. */
+    AutoDescriptorArray descs(cx);
+    PropertyDescriptor desc;
+    if (!desc.initialize(cx, nameidr.id(), argc >= 3 ? vp[4] : JSVAL_VOID) || !descs.append(desc))
+        return JS_FALSE;
+
+    /* 15.2.3.6 step 4 */
+    bool dummy;
+    return DefineProperty(cx, obj, desc, true, &dummy);
+}
+
+/* ES5 15.2.3.7: Object.defineProperties(O, Properties) */
+static JSBool
+obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
+{
+    /* 15.2.3.6 steps 1 and 5. */
+    jsval v = argc > 0 ? vp[2] : JSVAL_VOID;
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        js_ReportValueError(cx, JSMSG_NOT_NONNULL_OBJECT, -1, v, NULL);
+        return JS_FALSE;
+    }
+    *vp = vp[2];
+
+    v = argc > 1 ? vp[3] : JSVAL_VOID;
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        js_ReportValueError(cx, JSMSG_NOT_NONNULL_OBJECT, -1, v, NULL);
+        return JS_FALSE;
+    }
+
+    JSObject* props = JSVAL_TO_OBJECT(v);
+    JSAutoIdArray ida(cx, JS_Enumerate(cx, props));
+    if (!ida)
+        return JS_FALSE;
+
+    AutoDescriptorArray descs(cx);
+    size_t len = ida.length();
+    for (size_t i = 0; i < len; i++) {
+        PropertyDescriptor desc;
+        jsid id = ida[i];
+        if (!JS_GetPropertyById(cx, props, id, &vp[1]) || !desc.initialize(cx, id, vp[1]) ||
+            !descs.append(desc)) {
+            return JS_FALSE;
+        }
+    }
+
+    JSObject *obj = JSVAL_TO_OBJECT(*vp);
+    bool dummy;
+    for (size_t i = 0; i < len; i++) {
+        if (!DefineProperty(cx, obj, descs[i], true, &dummy))
+            return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
 
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
@@ -2192,6 +2803,8 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
     JS_FN("keys",                      obj_keys,                    1,0),
+    JS_FN("defineProperty",            obj_defineProperty,          3,0),
+    JS_FN("defineProperties",          obj_defineProperties,        2,0),
     JS_FS_END
 };
 

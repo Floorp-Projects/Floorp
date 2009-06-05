@@ -49,8 +49,85 @@
  * is reference counted and the slot vector is malloc'ed.
  */
 #include "jshash.h" /* Added by JSIFY */
-#include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsprvtd.h"
+#include "jsstdint.h"
+
+/*
+ * A representation of ECMA-262 ed. 5's internal property descriptor data
+ * structure.
+ */
+struct PropertyDescriptor {
+    PropertyDescriptor();
+
+    /* 8.10.5 ToPropertyDescriptor(Obj) */
+    bool initialize(JSContext* cx, jsid id, jsval v);
+
+    /* 8.10.1 IsAccessorDescriptor(desc) */
+    bool isAccessorDescriptor() const {
+        return hasGet || hasSet;
+    }
+
+    /* 8.10.2 IsDataDescriptor(desc) */
+    bool isDataDescriptor() const {
+        return hasValue || hasWritable;
+    }
+
+    /* 8.10.3 IsGenericDescriptor(desc) */
+    bool isGenericDescriptor() const {
+        return !isAccessorDescriptor() && !isDataDescriptor();
+    }
+
+    bool configurable() const {
+        return (attrs & JSPROP_PERMANENT) == 0;
+    }
+
+    bool enumerable() const {
+        return (attrs & JSPROP_ENUMERATE) != 0;
+    }
+
+    bool writable() const {
+        return (attrs & JSPROP_READONLY) == 0;
+    }
+
+    JSObject* getterObject() const {
+        return get != JSVAL_VOID ? JSVAL_TO_OBJECT(get) : NULL;
+    }
+    JSObject* setterObject() const {
+        return set != JSVAL_VOID ? JSVAL_TO_OBJECT(set) : NULL;
+    }
+
+    jsval getterValue() const {
+        return get;
+    }
+    jsval setterValue() const {
+        return set;
+    }
+
+    JSPropertyOp getter() const {
+        return js_CastAsPropertyOp(getterObject());
+    }
+    JSPropertyOp setter() const {
+        return js_CastAsPropertyOp(setterObject());
+    }
+
+    static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
+    static void finalizeDescriptorArray(JSContext* cx, JSObject* obj);
+
+    jsid id;
+    jsval value, get, set;
+
+    /* Property descriptor boolean fields. */
+    uint8_t attrs;
+
+    /* Bits indicating which values are set. */
+    bool hasGet : 1;
+    bool hasSet : 1;
+    bool hasValue : 1;
+    bool hasWritable : 1;
+    bool hasEnumerable : 1;
+    bool hasConfigurable : 1;
+};
 
 JS_BEGIN_EXTERN_C
 
@@ -581,7 +658,7 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
 
 extern JSBool
 js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
-                  JSBool *foundp);
+                  JSObject **objp, JSProperty **propp);
 
 extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
