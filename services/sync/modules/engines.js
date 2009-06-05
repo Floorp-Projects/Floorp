@@ -52,14 +52,11 @@ Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/async.js");
 
 Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/base_records/crypto.js");
 Cu.import("resource://weave/base_records/collection.js");
-
-Function.prototype.async = Async.sugar;
 
 // Singleton service, holds registered engines
 
@@ -180,7 +177,6 @@ Engine.prototype = {
     catch (e) { /* ignore unset prefs */ }
 
     this._notify = Utils.notify("weave:engine:");
-    this._notifyAsync = Wrap.notify("weave:engine:");
     this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
     this._log.level = Log4Moz.Level[level];
 
