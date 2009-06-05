@@ -5322,12 +5322,13 @@ js_PurgeScriptRecordingAttempts(JSDHashTable *table,
     return JS_DHASH_NEXT;
 }
 
-JS_REQUIRES_STACK void
-js_PurgeScriptFragments(JSContext* cx, JSScript* script)
+/*
+ * Call 'action' for each root fragment created for 'script'.
+ */
+template<typename FragmentAction>
+static void
+js_IterateScriptFragments(JSContext* cx, JSScript* script, FragmentAction action)
 {
-    if (!TRACING_ENABLED(cx))
-        return;
-    debug_only_v(nj_dprintf("Purging fragments for JSScript %p.\n", (void*)script);)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
@@ -5340,15 +5341,39 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
                                         (void*)frag, frag->ip, script->code,
                                         script->code + script->length));
                 VMFragment* next = frag->next;
-                for (Fragment *p = frag; p; p = p->peer)
-                    js_TrashTree(cx, p);
-                tm->fragmento->clearFragment(frag);
+                action(cx, tm, frag);
                 *f = next;
             } else {
                 f = &((*f)->next);
             }
         }
     }
+}
+
+static void trashTreeAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+{
+    for (Fragment *p = frag; p; p = p->peer)
+        js_TrashTree(cx, p);
+}
+
+static void clearFragmentAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+{
+    tm->fragmento->clearFragment(frag);
+}
+
+JS_REQUIRES_STACK void
+js_PurgeScriptFragments(JSContext* cx, JSScript* script)
+{
+    if (!TRACING_ENABLED(cx))
+        return;
+    debug_only_v(nj_dprintf("Purging fragments for JSScript %p.\n", (void*)script);)
+    /*
+     * js_TrashTree trashes dependent trees recursively, so we must do all the trashing
+     * before clearing in order to avoid calling js_TrashTree with a deleted fragment.
+     */
+    js_IterateScriptFragments(cx, script, trashTreeAction);
+    js_IterateScriptFragments(cx, script, clearFragmentAction);
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_DHashTableEnumerate(&(tm->recordAttempts),
                            js_PurgeScriptRecordingAttempts, script);
 
