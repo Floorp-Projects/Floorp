@@ -179,25 +179,16 @@ Resource.prototype = {
     this._lastProgress = Date.now();
   },
 
-  filterUpload: function Res_filterUpload(onComplete) {
-    let fn = function() {
-      let self = yield;
-      for each (let filter in this._filters) {
-        this._data = yield filter.beforePUT.async(filter, self.cb, this._data, this);
-      }
-    };
-    fn.async(this, onComplete);
+  filterUpload: function Resource_filterUpload() {
+    this._data = this._filters.reduce(function(data, filter) {
+      return filter.beforePUT(data);
+    }, this._data);
   },
 
-  filterDownload: function Res_filterUpload(onComplete) {
-    let fn = function() {
-      let self = yield;
-      let filters = this._filters.slice(); // reverse() mutates, so we copy
-      for each (let filter in filters.reverse()) {
-        this._data = yield filter.afterGET.async(filter, self.cb, this._data, this);
-      }
-    };
-    fn.async(this, onComplete);
+  filterDownload: function Resource_filterDownload() {
+    this._data = this._filters.reduceRight(function(data, filter) {
+      return filter.afterGET(data);
+    }, this._data);
   },
 
   _request: function Res__request(action, data) {
@@ -208,7 +199,7 @@ Resource.prototype = {
       this._data = data;
 
     if ("PUT" == action || "POST" == action) {
-      Sync(this.filterUpload, this)();
+      this.filterUpload();
       this._log.trace(action + " Body:\n" + this._data);
 
       let type = ('Content-Type' in this._headers)?
@@ -246,7 +237,7 @@ Resource.prototype = {
       case "GET":
       case "POST":
         this._log.trace(action + " Body:\n" + this._data);
-        Sync(this.filterDownload, this)();
+        this.filterDownload();
         break;
       }
     }
@@ -348,15 +339,13 @@ function JsonFilter() {
 }
 JsonFilter.prototype = {
   beforePUT: function JsonFilter_beforePUT(data) {
-    let self = yield;
     this._log.trace("Encoding data as JSON");
-    self.done(JSON.stringify(data));
+    return JSON.stringify(data);
   },
 
   afterGET: function JsonFilter_afterGET(data) {
-    let self = yield;
     this._log.trace("Decoding JSON data");
-    self.done(JSON.parse(data));
+    return JSON.parse(data);
   }
 };
 
