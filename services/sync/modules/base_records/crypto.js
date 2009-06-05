@@ -182,12 +182,10 @@ CryptoMeta.prototype = {
     this._addKey.async(this, onComplete, new_pubkey, privkey, passphrase);
   },
 
-  _addUnwrappedKey: function CryptoMeta__addUnwrappedKey(new_pubkey, symkey) {
-    let self = yield;
-
+  addUnwrappedKey: function CryptoMeta_addUnwrappedKey(new_pubkey, symkey) {
     // get the new public key
-    if (typeof new_pubkey == 'string')
-      new_pubkey = PubKeys.get(self.cb, new_pubkey);
+    if (typeof new_pubkey == "string")
+      new_pubkey = PubKeys.get(new_pubkey);
 
     // each hash key is a relative uri, resolve those and
     // if we find the one we're about to add, remove it
@@ -198,9 +196,6 @@ CryptoMeta.prototype = {
 
     this.payload.keyring[new_pubkey.uri.spec] =
       Svc.Crypto.wrapSymmetricKey(symkey, new_pubkey.keyData);
-  },
-  addUnwrappedKey: function CryptoMeta_addUnwrappedKey(onComplete, new_pubkey, symkey) {
-    this._addUnwrappedKey.async(this, onComplete, new_pubkey, symkey);
   }
 };
 
