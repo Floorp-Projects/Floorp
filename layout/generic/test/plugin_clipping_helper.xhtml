@@ -164,9 +164,21 @@ function checkClipRegionForFrame(fid, id, rects) {
 }
 
 function runTests2() {
-  var p = document.getElementById("p1");
-  if (p.getClipRegionRectEdge(0, 0) == p.getClipRegionRectEdge(0, 2)) {
-    // plugin hasn't been updated yet. wait.
+  function check(id, doc) {
+    var p = (doc || document).getElementById(id);
+    if (p.getClipRegionRectEdge(0, 0) ==
+        p.getClipRegionRectEdge(0, 2))
+      throw id;
+  }
+
+  try {
+    check("p1");
+    check("p2");
+    check("p3");
+    check("p4");
+    check("p5", f1.contentDocument);
+  } catch (id) {
+    // One or more plugins haven't been updated yet. Wait.
     setTimeout(runTests2, 100);
     return;
   }
