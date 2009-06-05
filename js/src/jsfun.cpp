@@ -1351,7 +1351,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
              * it seems foo.caller is still used on the Web.
              */
             if (FUN_ESCAPE_HAZARD(caller)) {
-                JSObject *wrapper = WrapEscapingClosure(cx, fp, FUN_OBJECT(caller), caller);
+                JSObject *wrapper = WrapEscapingClosure(cx, fp->down, FUN_OBJECT(caller), caller);
                 if (!wrapper)
                     return JS_FALSE;
                 *vp = OBJECT_TO_JSVAL(wrapper);
