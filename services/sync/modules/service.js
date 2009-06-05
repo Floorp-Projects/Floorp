@@ -763,7 +763,7 @@ WeaveSvc.prototype = {
         let keys = PubKeys.createKeypair(pass, PubKeys.defaultKeyUri,
                                          PrivKeys.defaultKeyUri);
         try {
-          yield PubKeys.uploadKeypair(self.cb, keys);
+          PubKeys.uploadKeypair(keys);
           ret = true;
         } catch (e) {
           this._setSyncFailure(KEYS_UPLOAD_FAIL);

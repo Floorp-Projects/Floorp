@@ -177,15 +177,9 @@ PubKeyManager.prototype = {
     return {pubkey: pubkey, privkey: privkey};
   },
 
-  uploadKeypair: function KeyMgr_uploadKeypair(onComplete, keys) {
-    let fn = function KeyMgr__uploadKeypair(keys) {
-      let self = yield;
-      for each (let key in keys) {
-	let res = new Resource(key.uri);
-	res.put(key.serialize());
-      }
-    };
-    fn.async(this, onComplete, keys);
+  uploadKeypair: function PubKeyManager_uploadKeypair(keys) {
+    for each (let key in keys)
+      new Resource(key.uri).put(key.serialize());
   }
 };
 
