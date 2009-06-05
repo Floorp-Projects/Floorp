@@ -1046,7 +1046,7 @@ WeaveSvc.prototype = {
 
       // Fully wipe each engine
       for each (let engine in engines)
-        yield engine.wipeClient(self.cb);
+        engine.wipeClient();
     };
     this._catchAll(this._notify("wipe-client", "", fn)).async(this, onComplete);
   },
