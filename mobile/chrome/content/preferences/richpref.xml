@@ -172,4 +172,28 @@
       </xul:preferences>
     </content>
   </binding>
+  
+  <binding id="richpref-string" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+    <content>
+      <xul:hbox flex="1" class="prefbox">
+        <xul:vbox flex="1">
+          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
+          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
+            <children/>
+          </xul:label>
+        </xul:vbox>
+        <xul:hbox anonid="input-container">
+          <xul:textbox xbl:inherits="type=inputtype" anonid="input" oninput="inputChanged();"/>
+        </xul:hbox>
+      </xul:hbox>
+      <xul:preferences>
+        <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted"
+                        instantApply="true" onchange="prefChanged();"/>
+      </xul:preferences>
+    </content>
+
+    <implementation>
+      <property name="value" onget="return this.input.value;" onset="return this.input.value=val;"/>
+    </implementation>
+  </binding>
 </bindings>
