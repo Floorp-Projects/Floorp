@@ -3626,6 +3626,9 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
  * If data is null, the caller is AssignExpr and instead of binding variables,
  * we specialize lvalues in the propery value positions of the left-hand side.
  * If right is null, just check for well-formed lvalues.
+ *
+ * See also UndominateInitializers, immediately below. If you change either of
+ * these functions, you might have to change the other to match.
  */
 static JSBool
 CheckDestructuring(JSContext *cx, BindData *data,
@@ -3776,6 +3779,77 @@ CheckDestructuring(JSContext *cx, BindData *data,
                                 JSMSG_NO_VARIABLE_NAME);
     ok = JS_FALSE;
     goto out;
+}
+
+/*
+ * This is a greatly pared down version of CheckDestructuring that extends the
+ * pn_pos.end source coordinate of each name in a destructuring binding such as
+ * 
+ *   var [x, y] = [function () y, 42];
+ *
+ * to cover its corresponding initializer, so that the initialized binding does
+ * not appear to dominate any closures in its initializer. See bug 496134.
+ *
+ * The quick-and-dirty dominance computation in JSCompiler::setFunctionKinds is
+ * not very precise. With one-pass SSA construction from structured source code
+ * (see "Single-Pass Generation of Static Single Assignment Form for Structured
+ * Languages", Brandis and Mössenböck), we could do much better.
+ *
+ * See CheckDestructuring, immediately above. If you change either of these
+ * functions, you might have to change the other to match.
+ */
+static void
+UndominateInitializers(JSParseNode *left, JSParseNode *right)
+{
+    FindPropValData fpvd;
+    JSParseNode *lhs, *rhs;
+
+    JS_ASSERT(left->pn_type != TOK_ARRAYCOMP);
+
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+    JS_ASSERT_IF(right,
+                 right->pn_arity != PN_LIST || !(right->pn_xflags & PNX_DESTRUCT));
+#endif
+
+    fpvd.table.ops = NULL;
+    lhs = left->pn_head;
+    if (left->pn_type == TOK_RB) {
+        rhs = (right && right->pn_type == left->pn_type) ? right->pn_head : NULL;
+
+        while (lhs) {
+            /* Nullary comma is an elision; binary comma is an expression.*/
+            if (lhs->pn_type != TOK_COMMA || lhs->pn_arity != PN_NULLARY) {
+                if (lhs->pn_type == TOK_RB || lhs->pn_type == TOK_RC) {
+                    UndominateInitializers(lhs, rhs);
+                } else if (rhs) {
+                    lhs->pn_pos.end = rhs->pn_pos.end;
+                }
+            }
+
+            lhs = lhs->pn_next;
+            if (rhs)
+                rhs = rhs->pn_next;
+        }
+    } else {
+        JS_ASSERT(left->pn_type == TOK_RC);
+        fpvd.numvars = left->pn_count;
+        fpvd.maxstep = 0;
+        rhs = NULL;
+
+        while (lhs) {
+            JS_ASSERT(lhs->pn_type == TOK_COLON);
+            JSParseNode *pn = lhs->pn_right;
+
+            if (pn->pn_type == TOK_RB || pn->pn_type == TOK_RC) {
+                rhs = FindPropertyValue(right, lhs->pn_left, &fpvd);
+                UndominateInitializers(pn, rhs);
+            } else if (right) {
+                pn->pn_pos.end = right->pn_pos.end;
+            }
+
+            lhs = lhs->pn_next;
+        }
+    }
 }
 
 static JSParseNode *
@@ -5488,10 +5562,10 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
             if (!pn2)
                 return NULL;
 
+            if (!CheckDestructuring(cx, &data, pn2, NULL, tc))
+                return NULL;
             if ((tc->flags & TCF_IN_FOR_INIT) &&
                 js_PeekToken(cx, ts) == TOK_IN) {
-                if (!CheckDestructuring(cx, &data, pn2, NULL, tc))
-                    return NULL;
                 pn->append(pn2);
                 continue;
             }
@@ -5514,13 +5588,10 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, bool inLetHead)
             }
 #endif
 
+            UndominateInitializers(pn2, init);
             pn2 = NewBinary(TOK_ASSIGN, JSOP_NOP, pn2, init, tc);
-            if (!pn2 ||
-                !CheckDestructuring(cx, &data,
-                                    pn2->pn_left, pn2->pn_right,
-                                    tc)) {
+            if (!pn2)
                 return NULL;
-            }
             pn->append(pn2);
             continue;
         }
