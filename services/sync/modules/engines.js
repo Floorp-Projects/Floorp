@@ -188,10 +188,10 @@ Engine.prototype = {
     this._log.debug("Engine initialized");
   },
 
-  sync: function Engine_sync(onComplete) {
+  sync: function Engine_sync() {
     if (!this._sync)
       throw "engine does not implement _sync method";
-    this._notifyAsync("sync", this.name, this._sync).async(this, onComplete);
+    this._notify("sync", this.name, this._sync)();
   },
 
   wipeServer: function Engimne_wipeServer(onComplete) {
@@ -509,8 +509,6 @@ SyncEngine.prototype = {
   },
 
   _sync: function SyncEngine__sync() {
-    let self = yield;
-
     try {
       this._syncStartup();
       Observers.notify("weave:engine:sync:status", "process-incoming");
