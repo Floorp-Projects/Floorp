@@ -27,6 +27,10 @@ richpref[type="button"] {
     -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpref-button");
 }
 
+richpref[type="string"] {
+    -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpref-string");
+}
+
 notificationbox {
   overflow: -moz-hidden-unscrollable;
 }
