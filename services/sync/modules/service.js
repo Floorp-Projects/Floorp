@@ -1127,7 +1127,7 @@ WeaveSvc.prototype = {
 
       // Have each engine drop any temporary meta data
       for each (let engine in engines)
-        yield engine.resetClient(self.cb);
+        engine.resetClient();
 
       // XXX Bug 480448: Delete any snapshots from old code
       try {

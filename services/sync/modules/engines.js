@@ -203,19 +203,17 @@ Engine.prototype = {
   /**
    * Get rid of any local meta-data
    */
-  resetClient: function Engine_resetClient(onComplete) {
+  resetClient: function Engine_resetClient() {
     if (!this._resetClient)
       throw "engine does not implement _resetClient method";
 
-    this._notifyAsync("reset-client", this.name, this._resetClient).
-      async(this, onComplete);
+    this._notify("reset-client", this.name, this._resetClient)();
   },
 
   _wipeClient: function Engine__wipeClient() {
     let self = yield;
 
-    yield this.resetClient(self.cb);
-
+    this.resetClient();
     this._log.debug("Deleting all local data");
     this._store.wipe();
   },
@@ -532,7 +530,6 @@ SyncEngine.prototype = {
   },
 
   _resetClient: function SyncEngine__resetClient() {
-    let self = yield;
     this.resetLastSync();
   }
 };
