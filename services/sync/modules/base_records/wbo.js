@@ -49,7 +49,6 @@ function WBORecord(uri) {
   this._WBORec_init(uri);
 }
 WBORecord.prototype = {
-  id: null,
   deleted: false,
   _logName: "Record.WBO",
 
@@ -124,7 +123,7 @@ WBORecord.prototype = {
     ].join("\n  ") + " }",
 };
 
-Utils.deferGetSet(WBORecord, "data", ["parentid", "modified", "depth",
+Utils.deferGetSet(WBORecord, "data", ["id", "parentid", "modified", "depth",
   "sortindex", "payload"]);
 
 Utils.lazy(this, 'Records', RecordManager);
