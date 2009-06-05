@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+#abs {
+ position: absolute;
+ left: 20px; top: 20px;
+ width: 100px;
+ background-color: red;
+}
+#parent {
+ margin-bottom: 70px;
+}
+#zero-height {
+ margin-bottom: 100px;
+ height: 0;
+}
+#child-of-zero-height {
+ height: 100px; background: green;
+}
+</style>
+</head>
+<body>
+<div id="abs">
+ <div id="parent">
+  <div id="zero-height">
+   <div id="child-of-zero-height"></div>
+  </div>
+ </div>
+</div>
+</body>
+</html>

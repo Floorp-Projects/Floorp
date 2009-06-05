@@ -1569,7 +1569,7 @@ FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag, nsDTDContext& aContext,
 
 static void
 StripWSFollowingTag(eHTMLTags aChildTag, nsITokenizer* aTokenizer,
-                    nsTokenAllocator* aTokenAllocator, PRInt32& aNewlineCount)
+                    nsTokenAllocator* aTokenAllocator, PRInt32* aNewlineCount)
 {
   if (!aTokenizer || !aTokenAllocator) {
     return;
@@ -1577,16 +1577,15 @@ StripWSFollowingTag(eHTMLTags aChildTag, nsITokenizer* aTokenizer,
 
   CToken* theToken = aTokenizer->PeekToken();
 
+  PRInt32 newlineCount = 0;
   while (theToken) {
     eHTMLTokenTypes theType = eHTMLTokenTypes(theToken->GetTokenType());
 
     switch(theType) {
       case eToken_newline:
-        ++aNewlineCount;
-        // Fall through...
-
       case eToken_whitespace:
         theToken = aTokenizer->PopToken();
+        newlineCount += theToken->GetNewlineCount();
         IF_FREE(theToken, aTokenAllocator);
 
         theToken = aTokenizer->PeekToken();
@@ -1596,6 +1595,10 @@ StripWSFollowingTag(eHTMLTags aChildTag, nsITokenizer* aTokenizer,
         theToken = nsnull;
         break;
     }
+  }
+
+  if (aNewlineCount) {
+    *aNewlineCount += newlineCount;
   }
 }
 
@@ -1628,7 +1631,8 @@ CNavDTD::HandleEndToken(CToken* aToken)
       break;
 
     case eHTMLTag_head:
-      StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator, mLineNumber);
+      StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator,
+                          IsParserInDocWrite() ? nsnull : &mLineNumber);
       if (mBodyContext->LastOf(eHTMLTag_head) != kNotFound) {
         result = CloseContainersTo(eHTMLTag_head, PR_FALSE);
       }
@@ -1656,7 +1660,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
     case eHTMLTag_body:
     case eHTMLTag_html:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator,
-                          mLineNumber);
+                          IsParserInDocWrite() ? nsnull : &mLineNumber);
       break;
 
     case eHTMLTag_script:

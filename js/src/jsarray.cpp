@@ -220,30 +220,22 @@ ValueIsLength(JSContext *cx, jsval* vp)
 JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 {
-    JSTempValueRooter tvr;
-    jsid id;
-    JSBool ok;
-    jsint i;
-
     if (OBJ_IS_ARRAY(cx, obj)) {
         *lengthp = obj->fslots[JSSLOT_ARRAY_LENGTH];
         return JS_TRUE;
     }
 
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
-    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    ok = OBJ_GET_PROPERTY(cx, obj, id, &tvr.u.value);
-    if (ok) {
-        if (JSVAL_IS_INT(tvr.u.value)) {
-            i = JSVAL_TO_INT(tvr.u.value);
-            *lengthp = (jsuint)i;       /* jsuint cast does ToUint32 */
-        } else {
-            *lengthp = js_ValueToECMAUint32(cx, &tvr.u.value);
-            ok = !JSVAL_IS_NULL(tvr.u.value);
-        }
+    JSAutoTempValueRooter tvr(cx, JSVAL_NULL);
+    if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), tvr.addr()))
+        return JS_FALSE;
+
+    if (JSVAL_IS_INT(tvr.value())) {
+        *lengthp = jsuint(jsint(JSVAL_TO_INT(tvr.value()))); /* jsuint cast does ToUint32 */
+        return JS_TRUE;
     }
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
+
+    *lengthp = js_ValueToECMAUint32(cx, tvr.addr());
+    return !JSVAL_IS_NULL(tvr.value());
 }
 
 static JSBool

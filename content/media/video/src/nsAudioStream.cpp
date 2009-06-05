@@ -242,10 +242,13 @@ float nsAudioStream::GetPosition()
   if (!mAudioHandle)
     return -1.0;
 
+  sa_position_t positionType = SA_POSITION_WRITE_SOFTWARE;
+#if defined(XP_WIN)
+  positionType = SA_POSITION_WRITE_HARDWARE;
+#endif
   PRInt64 position = 0;
   if (sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle),
-                             SA_POSITION_WRITE_SOFTWARE,
-                             &position) == SA_SUCCESS) {
+                             positionType, &position) == SA_SUCCESS) {
     return (position / float(mRate) / mChannels / sizeof(short));
   }
 

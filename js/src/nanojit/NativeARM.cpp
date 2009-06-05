@@ -845,7 +845,7 @@ Assembler::nativePageSetup()
 {
     if (!_nIns)      _nIns     = pageAlloc();
     if (!_nExitIns)  _nExitIns = pageAlloc(true);
-    //fprintf(stderr, "assemble onto %x exits into %x\n", (int)_nIns, (int)_nExitIns);
+    //nj_dprintf("assemble onto %x exits into %x\n", (int)_nIns, (int)_nExitIns);
 
     if (!_nSlot)
     {
@@ -949,7 +949,7 @@ Assembler::BL(NIns* addr)
 {
     intptr_t offs = PC_OFFSET_FROM(addr,_nIns-1);
 
-    //fprintf (stderr, "BL: 0x%x (offs: %d [%x]) @ 0x%08x\n", addr, offs, offs, (intptr_t)(_nIns-1));
+    //nj_dprintf ("BL: 0x%x (offs: %d [%x]) @ 0x%08x\n", addr, offs, offs, (intptr_t)(_nIns-1));
 
     // try to do this with a single S24 call
     if (isS24(offs>>2)) {
@@ -1100,7 +1100,7 @@ void
 Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
 {
     int32_t offs = PC_OFFSET_FROM(_t,_nIns-1);
-    //fprintf(stderr, "B_cond_chk target: 0x%08x offset: %d @0x%08x\n", _t, offs, _nIns-1);
+    //nj_dprintf("B_cond_chk target: 0x%08x offset: %d @0x%08x\n", _t, offs, _nIns-1);
 
     // optimistically check if this will fit in 24 bits
     if (isS24(offs>>2)) {

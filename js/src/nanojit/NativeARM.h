@@ -201,7 +201,7 @@ verbose_only( extern const char* shiftNames[]; )
     int* _nExitSlot;
 
 
-//printf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
+//nj_dprintf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
 
 #define swapptrs()  {                                                   \
         NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins;          \

@@ -368,7 +368,7 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
 /* ----- DEFAULT BACK/FORWARD BUTTONS ----- */
 
 toolbar[mode="icons"] #unified-back-forward-button > #back-button {
-  -moz-image-region: rect(0px, 539px, 33px, 504px);
+  -moz-image-region: rect(0px, 535px, 33px, 504px);
   -moz-margin-end: 0;
   -moz-padding-end: 0;
   border-left: none;
@@ -376,29 +376,29 @@ toolbar[mode="icons"] #unified-back-forward-button > #back-button {
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #back-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px, 582px, 33px, 547px);
+  -moz-image-region: rect(0px, 571px, 33px, 540px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #back-button[disabled="true"] {
- -moz-image-region: rect(33px, 539px, 66px, 504px);
+ -moz-image-region: rect(33px, 535px, 66px, 504px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #back-button[disabled="true"][chromedir="rtl"] {
-  -moz-image-region: rect(33px, 582px, 66px, 547px);
+  -moz-image-region: rect(33px, 571px, 66px, 540px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #back-button:hover:active:not([disabled]),
 toolbar[mode="icons"] #unified-back-forward-button > #back-button[open="true"] {
-  -moz-image-region: rect(66px, 539px, 99px, 504px);
+  -moz-image-region: rect(66px, 535px, 99px, 504px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #back-button:hover:active[chromedir="rtl"]:not([disabled]),
 toolbar[mode="icons"] #unified-back-forward-button > #back-button[open="true"][chromedir="rtl"] {
-  -moz-image-region: rect(66px, 582px, 99px, 547px);
+  -moz-image-region: rect(66px, 571px, 99px, 540px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button {
-  -moz-image-region: rect(0px, 566px, 33px, 539px);
+  -moz-image-region: rect(0px, 560px, 33px, 535px);
   -moz-margin-start: 0;
   -moz-margin-end: 0;
   -moz-padding-start: 0;
@@ -408,29 +408,30 @@ toolbar[mode="icons"] #unified-back-forward-button > #forward-button {
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px, 547px, 33px, 519px);
+  -moz-image-region: rect(0px, 540px, 33px, 514px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[disabled="true"] {
- -moz-image-region: rect(33px, 566px, 66px, 539px);
+ -moz-image-region: rect(33px, 560px, 66px, 535px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[disabled="true"][chromedir="rtl"] {
- -moz-image-region: rect(33px, 547px, 66px, 519px);
+ -moz-image-region: rect(33px, 540px, 66px, 514px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button:hover:active:not([disabled]),
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[open="true"] {
-  -moz-image-region: rect(66px, 566px, 99px, 539px);
+  -moz-image-region: rect(99px, 560px, 132px, 530px);
+  -moz-margin-start: -5px;
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[chromedir="rtl"]:hover:active:not([disabled]),
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[open="true"][chromedir="rtl"] {
-  -moz-image-region: rect(66px, 547px, 99px, 519px);
+  -moz-image-region: rect(99px, 545px, 132px, 514px);
 }
 
 #back-forward-dropmarker {
-  -moz-image-region: rect(0px, 582px, 33px, 566px);
+  -moz-image-region: rect(0px, 571px, 33px, 560px);
   -moz-margin-start: 0;
   -moz-margin-end: 3px;
   -moz-padding-start: 0;
@@ -440,7 +441,7 @@ toolbar[mode="icons"] #unified-back-forward-button > #forward-button[open="true"
 }
 
 #back-forward-dropmarker[chromedir="rtl"] {
-  -moz-image-region: rect(0px, 519px, 33px, 504px);
+  -moz-image-region: rect(0px, 514px, 33px, 504px);
 }
 
 toolbar[mode="icons"] #back-forward-dropmarker > image {
@@ -454,21 +455,21 @@ toolbar[mode="icons"] #back-forward-dropmarker > dropmarker {
 }
 
 #back-forward-dropmarker[disabled="true"] {
- -moz-image-region: rect(33px, 582px, 66px, 566px);
+ -moz-image-region: rect(33px, 571px, 66px, 560px);
 }
 
 #back-forward-dropmarker[disabled="true"][chromedir="rtl"] {
- -moz-image-region: rect(33px, 519px, 66px, 504px);
+ -moz-image-region: rect(33px, 514px, 66px, 504px);
 }
 
 #back-forward-dropmarker:hover:active:not([disabled]),
 #back-forward-dropmarker[open="true"] {
-  -moz-image-region: rect(66px, 582px, 99px, 566px);
+  -moz-image-region: rect(66px, 571px, 99px, 560px);
 }
 
 #back-forward-dropmarker[chromedir="rtl"]:hover:active:not([disabled]),
 #back-forward-dropmarker[open="true"][chromedir="rtl"] {
-  -moz-image-region: rect(66px, 519px, 99px, 504px);
+  -moz-image-region: rect(66px, 514px, 99px, 504px);
 }
 
 .unified-nav-back[_moz-menuactive],
@@ -485,7 +486,7 @@ menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
 /* ----- SMALL BACK BUTTON, PAIRED----- */	
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button {
-  -moz-image-region: rect(0px, 616px, 23px, 582px);
+  -moz-image-region: rect(0px, 605px, 23px, 571px);
   -moz-margin-end: 0;
   -moz-padding-end: 0;
   border-left: none;
@@ -493,31 +494,31 @@ toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-but
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px, 664px, 23px, 630px);
+  -moz-image-region: rect(0px, 648px, 23px, 614px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[disabled="true"] {
-  -moz-image-region: rect(23px, 616px, 46px, 582px);
+  -moz-image-region: rect(23px, 605px, 46px, 571px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[disabled="true"][chromedir="rtl"] {
-  -moz-image-region: rect(23px, 664px, 46px, 630px);
+  -moz-image-region: rect(23px, 648px, 46px, 614px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button:hover:active:not([disabled]),
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[open="true"] {
-  -moz-image-region: rect(46px, 616px, 69px, 582px);
+  -moz-image-region: rect(46px, 605px, 69px, 571px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[chromedir="rtl"]:hover:active:not([disabled]),
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[open="true"][chromedir="rtl"] {
-  -moz-image-region: rect(46px, 664px, 69px, 630px);
+  -moz-image-region: rect(46px, 648px, 69px, 614px);
 }
 
 /* ----- SMALL FORWARD BUTTON, PAIRED ----- */	
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button {
-  -moz-image-region: rect(0px, 649px, 23px, 616px);
+  -moz-image-region: rect(0px, 638px, 23px, 605px);
   -moz-margin-start: 0;
   -moz-padding-start: 0;
   border-left: none;
@@ -525,53 +526,54 @@ toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px, 630px, 23px, 597px);
+  -moz-image-region: rect(0px, 614px, 23px, 580px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[disabled="true"] {
- -moz-image-region: rect(23px, 649px, 46px, 616px);
+ -moz-image-region: rect(23px, 638px, 46px, 605px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[disabled="true"][chromedir="rtl"] {
- -moz-image-region: rect(23px, 630px, 46px, 597px);
+ -moz-image-region: rect(23px, 614px, 46px, 580px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button:hover:active:not([disabled]),
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[open="true"] {
-  -moz-image-region: rect(46px, 649px, 69px, 616px);
+  -moz-image-region: rect(46px, 638px, 69px, 605px);
+  -moz-margin-start: 0;
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[chromedir="rtl"]:hover:active:not([disabled]),
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[open="true"][chromedir="rtl"] {
-  -moz-image-region: rect(46px, 630px, 69px, 597px);
+  -moz-image-region: rect(46px, 614px, 69px, 580px);
 }
 
 /* ----- SMALL BACK/FORWARD DROPMARKER ----- */	
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker {
-  -moz-image-region: rect(0px, 664px, 23px, 649px);
+  -moz-image-region: rect(0px, 648px, 23px, 638px);
 }
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[chromedir="rtl"] {
-  -moz-image-region: rect(0px, 596px, 23px, 582px);
+  -moz-image-region: rect(0px, 580px, 23px, 571px);
 }
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[disabled="true"] {
- -moz-image-region: rect(23px, 664px, 46px, 649px);
+ -moz-image-region: rect(23px, 648px, 46px, 638px);
 }
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[disabled="true"][chromedir="rtl"] {
- -moz-image-region: rect(23px, 596px, 46px, 582px);
+ -moz-image-region: rect(23px, 580px, 46px, 571px);
 }
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker:hover:active:not([disabled]),
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[open="true"] {
-  -moz-image-region: rect(46px, 664px, 69px, 649px);
+  -moz-image-region: rect(46px, 648px, 69px, 638px);
 }
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[chromedir="rtl"]:hover:active:not([disabled]),
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[open="true"][chromedir="rtl"] {
-  -moz-image-region: rect(46px, 596px, 69px, 582px);
+  -moz-image-region: rect(46px, 580px, 69px, 571px);
 }
 
 /* ----- DEFAULT RELOAD BUTTON ----- */	
@@ -826,8 +828,18 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #urlbar-search-splitter {
-  min-width: 4px;
-  width: 4px;
+  /* This is a bit of a mess, because the location bar and the search bar are bigger
+     than they look. For example, -moz-margin-start: -6px should really be -4px.
+     Bug 482086 and bug 482105 will solve this. */
+  min-width: 8px;
+  width: 8px;
+  background-image: none;
+  -moz-margin-start: -6px;
+}
+
+#urlbar-search-splitter + #urlbar-container > #urlbar,
+#urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
+  -moz-margin-start: 0;
 }
 
 #wrapper-urlbar-container #urlbar,
@@ -1648,63 +1660,43 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
+.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down {
+  -moz-image-region: rect(0, 11px, 17px, 0);
+  margin: 0;
+  padding: 0 1px;
+  border: none;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="ltr"],
 .tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down[chromedir="rtl"] {
-  border: 0;
   border-right: 2px solid;
   -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start.png");
-  -moz-image-region: rect(0px, 7px, 11px, 0px);
-  padding: 0;
-  width: 16px;
-  margin: 0;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down[chromedir="rtl"] {
-  -moz-border-end: none;
+.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down[chromedir="ltr"],
+.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="rtl"] {
+  border-left: 2px solid;
+  -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up:hover {
+.tabbrowser-arrowscrollbox > .scrollbutton-up:hover,
+.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down:hover {
+  -moz-image-region: rect(0, 22px, 17px, 11px);
   background-color: rgba(0,0,0,0.10);
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up:hover:active {
+.tabbrowser-arrowscrollbox > .scrollbutton-up:hover:active,
+.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down:hover:active {
+  -moz-image-region: rect(0, 44px, 17px, 33px);
   background-color: rgba(0,0,0,0.20);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"],
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down[disabled="true"][chromedir="rtl"] {
-  -moz-image-region: rect(0px, 28px, 11px, 21px);
+.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down[disabled="true"] {
+  -moz-image-region: rect(0, 33px, 17px, 22px) !important;
   background-color: transparent !important; 
-}
-
-.tabbrowser-arrowscrollbox .scrollbutton-down,
-.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="rtl"] {
-  border-left: 2px solid;
-  -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end.png");
-  -moz-image-region: rect(0px, 44px, 11px, 37px);
-  -moz-padding-start: 2px;
-  -moz-padding-end: 0;
-  width: 16px;
-  margin: 0;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="rtl"] {
-  -moz-border-start: none;
-}
-
-.tabbrowser-arrowscrollbox .scrollbutton-down:hover {
-  background-color: rgba(0,0,0,0.10);
-}
-
-.tabbrowser-arrowscrollbox .scrollbutton-down:hover:active {
-  background-color: rgba(0,0,0,0.20);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down[disabled="true"],
-.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"][chromedir="rtl"] {
-  -moz-image-region: rect(0px, 23px, 11px, 16px);
-  background-color: transparent !important;
 }
 
 
@@ -1719,14 +1711,31 @@ tabbrowser > tabbox > tabpanels {
   -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   margin: 0;
-  padding: 0 4px;
+  padding: 0;
+}
+.tabs-newtab-button > .toolbarbutton-icon,
+.tabs-alltabs-button > .toolbarbutton-icon {
+  padding: 0;
 }
 .tabs-newtab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
+  -moz-image-region: rect(0, 18px, 20px, 0);
+}
+.tabs-newtab-button:hover {
+  -moz-image-region: rect(0, 36px, 20px, 18px);
+}
+.tabs-newtab-button:hover:active {
+  -moz-image-region: rect(0, 54px, 20px, 36px);
 }
 .tabs-alltabs-button {
-  padding-top: 2px;
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
+  -moz-image-region: rect(0, 22px, 20px, 0);
+}
+.tabs-alltabs-button:hover {
+  -moz-image-region: rect(0, 44px, 20px, 22px);
+}
+.tabs-alltabs-button:hover:active {
+  -moz-image-region: rect(0, 66px, 20px, 44px);
 }
 .tabs-container > .tabs-newtab-button:hover,
 .tabs-alltabs-button:hover {

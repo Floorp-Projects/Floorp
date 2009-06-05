@@ -6301,6 +6301,24 @@ static BOOL keyUpAlreadySentKeyDown = NO;
     FlipCocoaScreenCoordinate(pnt);
     dragService->SetDragEndPoint(nsIntPoint(NSToIntRound(pnt.x), NSToIntRound(pnt.y)));
 
+    // XXX: dropEffect should be updated per |operation|. 
+    // As things stand though, |operation| isn't well handled within "our"
+    // events, that is, when the drop happens within the window: it is set
+    // either to NSDragOperationGeneric or to NSDragOperationNone.
+    // For that reason, it's not yet possible to override dropEffect per the
+    // given OS value, and it's also unclear what's the correct dropEffect 
+    // value for NSDragOperationGeneric that is passed by other applications.
+    // All that said, NSDragOperationNone is still reliable.
+    if (operation == NSDragOperationNone) {
+      nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+      dragService->GetDataTransfer(getter_AddRefs(dataTransfer));
+      nsCOMPtr<nsIDOMNSDataTransfer> dataTransferNS =
+        do_QueryInterface(dataTransfer);
+
+      if (dataTransferNS)
+        dataTransferNS->SetDropEffectInt(nsIDragService::DRAGDROP_ACTION_NONE);
+    }
+
     mDragService->EndDragSession(PR_TRUE);
     NS_RELEASE(mDragService);
   }

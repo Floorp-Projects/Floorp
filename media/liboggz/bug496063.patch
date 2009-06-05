@@ -1,0 +1,42 @@
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+index fff5158..f457244 100644
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -476,16 +476,18 @@ oggz_scan_for_page (OGGZ * oggz, ogg_page * og, ogg_int64_t unit_target,
+       serialno = ogg_page_serialno (og);
+       granule_at = ogg_page_granulepos (og);
+       unit_at = oggz_get_unit (oggz, serialno, granule_at);
+ 
+       break;
+ #else
+       do {
+         offset_at = oggz_get_prev_start_page(oggz, og, &granule_at, &serialno);
++	if (offset_at < 0)
++	  break;
+         unit_at = oggz_get_unit(oggz, serialno, granule_at);
+       } while (unit_at > unit_target);
+       return offset_at;
+ #endif
+     } else if (unit_at == unit_target) {
+ #ifdef DEBUG
+       printf (" scan: (%lld) == (%lld)\n", unit_at, unit_target);
+ #endif
+@@ -765,16 +767,18 @@ oggz_bounded_seek_set (OGGZ * oggz,
+       if (unit_end == unit_begin) break;
+     } else {
+       break;
+     }
+   }
+ 
+   do {
+     offset_at = oggz_get_prev_start_page (oggz, og, &granule_at, &serialno);
++    if (offset_at < 0)
++      break;
+     unit_at = oggz_get_unit (oggz, serialno, granule_at);
+   } while (unit_at > unit_target);
+ 
+   if (offset_at < 0) {
+     oggz_reset (oggz, offset_orig, -1, SEEK_SET);
+     return -1;
+   }
+ 
