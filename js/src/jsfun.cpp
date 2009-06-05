@@ -1343,11 +1343,19 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       case FUN_CALLER:
         if (fp && fp->down && fp->down->fun) {
-            /* See the equivalent check in args_getProperty for ARGS_CALLEE. */
-            if (FUN_ESCAPE_HAZARD(fp->down->fun)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_OPTIMIZED_CLOSURE_LEAK);
-                return JS_FALSE;
+            JSFunction *caller = fp->down->fun;
+            /*
+             * See equivalent condition in args_getProperty for ARGS_CALLEE,
+             * but here we do not want to throw, since this escape can happen
+             * via foo.caller alone, without any debugger or indirect eval. And
+             * it seems foo.caller is still used on the Web.
+             */
+            if (FUN_ESCAPE_HAZARD(caller)) {
+                JSObject *wrapper = WrapEscapingClosure(cx, fp, FUN_OBJECT(caller), caller);
+                if (!wrapper)
+                    return JS_FALSE;
+                *vp = OBJECT_TO_JSVAL(wrapper);
+                return JS_TRUE;
             }
 
             *vp = OBJECT_TO_JSVAL(fp->down->callee);
