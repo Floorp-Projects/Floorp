@@ -113,6 +113,8 @@ typedef union JSLocalNames {
 #define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
 #define FUN_FLAT_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_FLAT_CLOSURE)
 #define FUN_NULL_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_NULL_CLOSURE)
+#define FUN_OPTIMIZED_CLOSURE(fun) (FUN_KIND(fun) > JSFUN_INTERPRETED)
+#define FUN_ESCAPE_HAZARD(fun)     (FUN_OPTIMIZED_CLOSURE(fun) && (fun)->u.i.skipmin != 0)
 #define FUN_SLOW_NATIVE(fun) (!FUN_INTERPRETED(fun) && !((fun)->flags & JSFUN_FAST_NATIVE))
 #define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
 #define FUN_NATIVE(fun)      (FUN_SLOW_NATIVE(fun) ? (fun)->u.n.native : NULL)
@@ -147,6 +149,15 @@ struct JSFunction {
             uint16      nvars;    /* number of local variables */
             uint16      nupvars;  /* number of upvars (computable from script
                                      but here for faster access) */
+            uint16       skipmin; /* net skip amount up (toward zero) from
+                                     script->staticLevel to nearest upvar,
+                                     including upvars in nested functions */
+            JSPackedBool wrapper; /* true if this function is a wrapper that
+                                     rewrites bytecode optimized for a function
+                                     judged non-escaping by the compiler, which
+                                     then escaped via the debugger or a rogue
+                                     indirect eval; if true, then this function
+                                     object's proto is the wrapped object */
             JSScript    *script;  /* interpreted bytecode descriptor or null */
             JSLocalNames names;   /* argument and variable names */
         } i;
@@ -231,6 +242,9 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent);
 extern JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);
 
+extern JS_REQUIRES_STACK JSObject *
+js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);
+
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
                   uintN nargs, uintN flags);
@@ -265,7 +279,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 extern JSBool
 js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_GetCallVar(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 extern JSBool
