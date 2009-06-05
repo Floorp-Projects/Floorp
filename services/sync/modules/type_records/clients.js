@@ -65,8 +65,5 @@ ClientRecord.prototype = {
 
   // XXX engines.js calls encrypt/decrypt for all records, so define these:
   encrypt: function ClientRecord_encrypt(passphrase) {},
-  decrypt: function ClientRec_decrypt(onComplete) {
-    let fn = function ClientRec__decrypt() {let self = yield;};
-    fn.async(this, onComplete);
-  }
+  decrypt: function ClientRecord_decrypt(passphrase) {}
 };

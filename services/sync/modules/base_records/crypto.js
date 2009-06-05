@@ -87,14 +87,10 @@ CryptoWrapper.prototype = {
     this.cleartext = null;
   },
 
-  _decrypt: function CryptoWrap__decrypt(passphrase) {
-    let self = yield;
-
+  decrypt: function CryptoWrapper_decrypt(passphrase) {
     // Deleted records aren't encrypted
-    if (this.deleted) {
-      self.done();
+    if (this.deleted)
       return;
-    }
 
     let pubkey = PubKeys.getDefaultKey();
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
@@ -107,10 +103,7 @@ CryptoWrapper.prototype = {
 							symkey, meta.bulkIV))[0];
     this.ciphertext = null;
 
-    self.done(this.cleartext);
-  },
-  decrypt: function CryptoWrap_decrypt(onComplete, passphrase) {
-    this._decrypt.async(this, onComplete, passphrase);
+    return this.cleartext;
   },
 
   toString: function CryptoWrap_toString() "{ " + [

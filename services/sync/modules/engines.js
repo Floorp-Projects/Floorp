@@ -352,7 +352,7 @@ SyncEngine.prototype = {
     while ((item = yield newitems.iter.next(self.cb))) {
       this._lowMemCheck();
       try {
-        yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
+        item.decrypt(ID.get('WeaveCryptoID').password);
         if (this._reconcile(item)) {
           count.applied++;
           yield this._applyIncoming.async(this, self.cb, item);

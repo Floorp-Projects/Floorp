@@ -55,15 +55,15 @@ function PlacesItem(uri) {
   this._PlacesItem_init(uri);
 }
 PlacesItem.prototype = {
-  decrypt: function PlacesItem_decrypt(onComplete, passphrase) {
-    CryptoWrapper.prototype.decrypt.call(this, Utils.bind2(this, function(ret) {
-      // Convert the abstract places item to the actual object type
-      if (!this.deleted)
-        this.__proto__ = this.getTypeObject(this.type).prototype;
+  decrypt: function PlacesItem_decrypt(passphrase) {
+    // Do the normal CryptoWrapper decrypt, but change types before returning
+    let clear = CryptoWrapper.prototype.decrypt.apply(this, arguments);
 
-      // Give the original callback the result
-      onComplete(ret);
-    }), passphrase);
+    // Convert the abstract places item to the actual object type
+    if (!this.deleted)
+      this.__proto__ = this.getTypeObject(this.type).prototype;
+
+    return clear;
   },
 
   getTypeObject: function PlacesItem_getTypeObject(type) {
