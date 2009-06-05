@@ -307,7 +307,7 @@ SyncEngine.prototype = {
       let pubkey = PubKeys.getDefaultKey();
       meta = new CryptoMeta(this.cryptoMetaURL);
       meta.generateIV();
-      yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
+      meta.addUnwrappedKey(pubkey, symkey);
       let res = new Resource(meta.uri);
       res.put(meta.serialize());
     }
