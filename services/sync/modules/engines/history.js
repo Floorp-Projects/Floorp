@@ -47,11 +47,8 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/base_records/collection.js");
 Cu.import("resource://weave/type_records/history.js");
-
-Function.prototype.async = Async.sugar;
 
 function HistoryEngine() {
   this._init();
@@ -94,7 +91,6 @@ HistoryEngine.prototype = {
   },
 
   _syncFinish: function HistEngine__syncFinish(error) {
-    let self = yield;
     this._log.debug("Finishing up sync");
     this._tracker.resetScore();
 

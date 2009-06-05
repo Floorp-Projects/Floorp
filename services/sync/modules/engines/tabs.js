@@ -45,15 +45,12 @@ const TAB_TIME_ATTR = "weave.tabEngine.lastUsed.timeStamp";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/type_records/tabs.js");
 Cu.import("resource://weave/engines/clientData.js");
-
-Function.prototype.async = Async.sugar;
 
 function TabEngine() {
   this._init();
@@ -77,7 +74,6 @@ TabEngine.prototype = {
   },
 
   _resetClient: function TabEngine__resetClient() {
-    let self = yield;
     this.resetLastSync();
     this._store.wipe();
   },

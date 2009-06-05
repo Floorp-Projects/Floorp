@@ -46,14 +46,11 @@ const WEAVE_PREFS_GUID = "preferences";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/prefs.js");
-
-Function.prototype.async = Async.sugar;
 
 function PrefsEngine() {
   this._init();

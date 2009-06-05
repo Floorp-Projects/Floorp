@@ -46,11 +46,8 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/type_records/passwords.js");
-
-Function.prototype.async = Async.sugar;
 
 function PasswordEngine() {
   this._init();

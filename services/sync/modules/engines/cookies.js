@@ -41,12 +41,9 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
-
-Function.prototype.async = Async.sugar;
 
 function CookieEngine(pbeId) {
   this._init(pbeId);
@@ -264,7 +261,6 @@ CookieStore.prototype = {
   },
 
   _resetGUIDs: function CookieStore__resetGUIDs() {
-    let self = yield;
     /* called in the case where remote/local sync GUIDs do not
        match.  We do need to override this, but since we're deriving
        GUIDs from the cookie data itself and not generating them,

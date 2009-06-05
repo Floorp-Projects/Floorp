@@ -48,10 +48,7 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/type_records/clientData.js");
-
-Function.prototype.async = Async.sugar;
 
 Utils.lazy(this, 'Clients', ClientEngine);
 
@@ -149,7 +146,6 @@ ClientEngine.prototype = {
   },
 
   _resetClient: function ClientEngine__resetClient() {
-    let self = yield;
     this.resetLastSync();
     this._store.wipe();
   }

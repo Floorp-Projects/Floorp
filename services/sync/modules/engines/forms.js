@@ -43,14 +43,11 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/forms.js");
-
-Function.prototype.async = Async.sugar;
 
 function FormEngine() {
   this._init();
@@ -65,16 +62,14 @@ FormEngine.prototype = {
   _recordObj: FormRec,
 
   _syncStartup: function FormEngine__syncStartup() {
-    let self = yield;
     this._store.cacheFormItems();
-    yield SyncEngine.prototype._syncStartup.async(this, self.cb);
+    SyncEngine.prototype._syncStartup();
   },
 
   /* Wipe cache when sync finishes */
   _syncFinish: function FormEngine__syncFinish() {
-    let self = yield;
     this._store.clearFormCache();
-    yield SyncEngine.prototype._syncFinish.async(this, self.cb);
+    SyncEngine.prototype._syncFinish();
   },
   
   _recordLike: function SyncEngine__recordLike(a, b) {
