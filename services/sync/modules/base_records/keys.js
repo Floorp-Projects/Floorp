@@ -149,13 +149,8 @@ PubKeyManager.prototype = {
   get defaultKeyUri() this._defaultKeyUri,
   set defaultKeyUri(value) { this._defaultKeyUri = value; },
 
-  getDefaultKey: function KeyMgr_getDefaultKey(onComplete) {
-    let fn = function KeyMgr__getDefaultKey() {
-      let self = yield;
-      let ret = this.get(this.defaultKeyUri);
-      self.done(ret);
-    };
-    fn.async(this, onComplete);
+  getDefaultKey: function PubKeyManager_getDefaultKey() {
+    return this.get(this.defaultKeyUri);
   },
 
   createKeypair: function KeyMgr_createKeypair(passphrase, pubkeyUri, privkeyUri) {

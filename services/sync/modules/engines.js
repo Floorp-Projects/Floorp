@@ -304,7 +304,7 @@ SyncEngine.prototype = {
     let meta = CryptoMetas.get(this.cryptoMetaURL);
     if (!meta) {
       let symkey = Svc.Crypto.generateRandomKey();
-      let pubkey = yield PubKeys.getDefaultKey(self.cb);
+      let pubkey = PubKeys.getDefaultKey();
       meta = new CryptoMeta(this.cryptoMetaURL);
       meta.generateIV();
       yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
