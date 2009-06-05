@@ -179,7 +179,8 @@ Engine.prototype = {
     try { level = Utils.prefs.getCharPref(levelPref); }
     catch (e) { /* ignore unset prefs */ }
 
-    this._notify = Wrap.notify("weave:engine:");
+    this._notify = Utils.notify("weave:engine:");
+    this._notifyAsync = Wrap.notify("weave:engine:");
     this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
     this._log.level = Log4Moz.Level[level];
 
@@ -190,13 +191,13 @@ Engine.prototype = {
   sync: function Engine_sync(onComplete) {
     if (!this._sync)
       throw "engine does not implement _sync method";
-    this._notify("sync", this.name, this._sync).async(this, onComplete);
+    this._notifyAsync("sync", this.name, this._sync).async(this, onComplete);
   },
 
   wipeServer: function Engimne_wipeServer(onComplete) {
     if (!this._wipeServer)
       throw "engine does not implement _wipeServer method";
-    this._notify("wipe-server", this.name, this._wipeServer).async(this, onComplete);
+    this._notifyAsync("wipe-server", this.name, this._wipeServer).async(this, onComplete);
   },
 
   /**
@@ -206,7 +207,7 @@ Engine.prototype = {
     if (!this._resetClient)
       throw "engine does not implement _resetClient method";
 
-    this._notify("reset-client", this.name, this._resetClient).
+    this._notifyAsync("reset-client", this.name, this._resetClient).
       async(this, onComplete);
   },
 
@@ -220,7 +221,7 @@ Engine.prototype = {
   },
 
   wipeClient: function Engine_wipeClient(onComplete) {
-    this._notify("wipe-client", this.name, this._wipeClient).async(this, onComplete);
+    this._notifyAsync("wipe-client", this.name, this._wipeClient).async(this, onComplete);
   }
 };
 

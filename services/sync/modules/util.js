@@ -52,6 +52,38 @@ Cu.import("resource://weave/log4moz.js");
  */
 
 let Utils = {
+  /**
+   * Wrap functions to notify when it starts and finishes executing or if it got
+   * an error. The message is a combination of a provided prefix and local name
+   * with the current state and the subject is the provided subject.
+   *
+   * @usage function MyObj() { this._notify = Utils.notify("prefix:"); }
+   *        MyObj.foo = function() { this._notify(name, subject, func)(); }
+   */
+  notify: function Utils_notify(prefix) {
+    return function NotifyMaker(name, subject, func) {
+      let thisArg = this;
+      let notify = function(state) {
+        let mesg = prefix + name + ":" + state;
+        thisArg._log.debug("Event: " + mesg);
+        Observers.notify(mesg, subject);
+      };
+
+      return function WrappedNotify() {
+        try {
+          notify("start");
+          let ret = func.call(thisArg);
+          notify("finish");
+          return ret;
+        }
+        catch(ex) {
+          notify("error");
+          throw ex;
+        }
+      };
+    };
+  },
+
   // Generates a brand-new globally unique identifier (GUID).
   makeGUID: function makeGUID() {
     let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
