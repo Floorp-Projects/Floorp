@@ -110,17 +110,16 @@ class nsHtml5Tokenizer
     static PRUnichar NOFRAMES_ARR_DATA[];
     #endif
     static jArray<PRUnichar,PRInt32> NOFRAMES_ARR;
+  protected:
     nsHtml5TreeBuilder* tokenHandler;
     nsHtml5Parser* encodingDeclarationHandler;
-    PRUnichar prev;
-    PRInt32 line;
-    PRInt32 linePrev;
-    PRInt32 col;
-    PRInt32 colPrev;
-    PRBool nextCharOnNewLine;
+    PRBool lastCR;
     PRInt32 stateSave;
+  private:
     PRInt32 returnStateSave;
+  protected:
     PRInt32 index;
+  private:
     PRBool forceQuirks;
     PRUnichar additional;
     PRInt32 entCol;
@@ -129,12 +128,13 @@ class nsHtml5Tokenizer
     PRInt32 candidate;
     PRInt32 strBufMark;
     PRInt32 prevValue;
+  protected:
     PRInt32 value;
+  private:
     PRBool seenDigits;
-    PRInt32 pos;
-    PRInt32 endPos;
-    PRUnichar* buf;
+  protected:
     PRInt32 cstart;
+  private:
     nsString* publicId;
     nsString* systemId;
     jArray<PRUnichar,PRInt32> strBuf;
@@ -144,20 +144,28 @@ class nsHtml5Tokenizer
     nsHtml5HtmlAttributes* attributes;
     jArray<PRUnichar,PRInt32> bmpChar;
     jArray<PRUnichar,PRInt32> astralChar;
-    PRBool alreadyWarnedAboutPrivateUseCharacters;
+  protected:
     nsHtml5ElementName* contentModelElement;
+  private:
     jArray<PRUnichar,PRInt32> contentModelElementNameAsArray;
+  protected:
     PRBool endTag;
+  private:
     nsHtml5ElementName* tagName;
+  protected:
     nsHtml5AttributeName* attributeName;
+  private:
     nsIAtom* doctypeName;
     nsString* publicIdentifier;
     nsString* systemIdentifier;
     PRInt32 mappingLangToXmlLang;
     PRBool shouldSuspend;
+  protected:
     PRBool confident;
+  private:
+    PRInt32 line;
   public:
-    nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, nsHtml5Parser* encodingDeclarationHandler);
+    nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler);
     void initLocation(nsString* newPublicId, nsString* newSystemId);
     ~nsHtml5Tokenizer();
     void setContentModelFlag(PRInt32 contentModelFlag, nsIAtom* contentModelElement);
@@ -165,25 +173,22 @@ class nsHtml5Tokenizer
   private:
     void contentModelElementToArray();
   public:
-    nsString* getPublicId();
-    nsString* getSystemId();
     PRInt32 getLineNumber();
-    PRInt32 getColumnNumber();
     nsHtml5HtmlAttributes* emptyAttributes();
   private:
-    void detachStrBuf();
-    void detachLongStrBuf();
     void clearStrBufAndAppendCurrentC(PRUnichar c);
     void clearStrBufAndAppendForceWrite(PRUnichar c);
     void clearStrBufForNextState();
     void appendStrBuf(PRUnichar c);
     void appendStrBufForceWrite(PRUnichar c);
+  protected:
     nsString* strBufToString();
-    nsIAtom* strBufToDoctypeName();
+  private:
+    void strBufToDoctypeName();
     void emitStrBuf();
     void clearLongStrBufForNextState();
     void clearLongStrBuf();
-    void clearLongStrBufAndAppendCurrentC();
+    void clearLongStrBufAndAppendCurrentC(PRUnichar c);
     void clearLongStrBufAndAppendToComment(PRUnichar c);
     void appendLongStrBuf(PRUnichar c);
     void appendSecondHyphenToBogusComment();
@@ -192,23 +197,71 @@ class nsHtml5Tokenizer
     void appendLongStrBuf(jArray<PRUnichar,PRInt32> arr);
     void appendStrBufToLongStrBuf();
     nsString* longStrBufToString();
-    void emitComment(PRInt32 provisionalHyphens);
-    PRBool isPrivateUse(PRUnichar c);
-    PRBool isAstralPrivateUse(PRInt32 c);
-    PRBool isNonCharacter(PRInt32 c);
-    void flushChars();
+    void emitComment(PRInt32 provisionalHyphens, PRInt32 pos);
+  protected:
+    void flushChars(PRUnichar* buf, PRInt32 pos);
+  private:
     void resetAttributes();
-    nsHtml5ElementName* strBufToElementNameString();
-    PRInt32 emitCurrentTagToken(PRBool selfClosing);
+    void strBufToElementNameString();
+    PRInt32 emitCurrentTagToken(PRBool selfClosing, PRInt32 pos);
     void attributeNameComplete();
     void addAttributeWithoutValue();
     void addAttributeWithValue();
+  protected:
+    void startErrorReporting();
   public:
     void start();
     PRBool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
-    void stateLoop(PRInt32 state, PRUnichar c, PRBool reconsume, PRInt32 returnState);
-    void rememberAmpersandLocation();
+    PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, PRBool reconsume, PRInt32 returnState, PRInt32 endPos);
+    inline void initDoctypeFields()
+    {
+      doctypeName = nsHtml5Atoms::emptystring;
+      systemIdentifier = nsnull;
+      publicIdentifier = nsnull;
+      forceQuirks = PR_FALSE;
+    }
+
+    inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
+    {
+      silentCarriageReturn();
+      adjustDoubleHyphenAndAppendToLongStrBuf('\n');
+    }
+
+    inline void adjustDoubleHyphenAndAppendToLongStrBufLineFeed()
+    {
+      silentLineFeed();
+      adjustDoubleHyphenAndAppendToLongStrBuf('\n');
+    }
+
+    inline void appendLongStrBufLineFeed()
+    {
+      silentLineFeed();
+      appendLongStrBuf('\n');
+    }
+
+    inline void appendLongStrBufCarriageReturn()
+    {
+      silentCarriageReturn();
+      appendLongStrBuf('\n');
+    }
+
+  protected:
+    inline void silentCarriageReturn()
+    {
+      ++line;
+      lastCR = PR_TRUE;
+    }
+
+    inline void silentLineFeed()
+    {
+      ++line;
+    }
+
+  private:
+    void emitCarriageReturn(PRUnichar* buf, PRInt32 pos);
+    void emitReplacementCharacter(PRUnichar* buf, PRInt32 pos);
+    void rememberAmpersandLocation(PRUnichar add);
     void bogusDoctype();
     void bogusDoctypeWithoutQuirks();
     void emitOrAppendStrBuf(PRInt32 returnState);
@@ -216,45 +269,11 @@ class nsHtml5Tokenizer
   public:
     void eof();
   private:
-    void emitDoctypeToken();
-    inline PRUnichar read()
+    void emitDoctypeToken(PRInt32 pos);
+  protected:
+    inline PRUnichar checkChar(PRUnichar* buf, PRInt32 pos)
     {
-      PRUnichar c;
-      pos++;
-      if (pos == endPos) {
-        return '\0';
-      }
-      linePrev = line;
-      colPrev = col;
-      if (nextCharOnNewLine) {
-        line++;
-        col = 1;
-        nextCharOnNewLine = PR_FALSE;
-      } else {
-        col++;
-      }
-      c = buf[pos];
-      switch(c) {
-        case '\r': {
-          nextCharOnNewLine = PR_TRUE;
-          buf[pos] = '\n';
-          prev = '\r';
-          return '\n';
-        }
-        case '\n': {
-          if (prev == '\r') {
-            return '\0';
-          }
-          nextCharOnNewLine = PR_TRUE;
-          break;
-        }
-        case '\0': {
-          c = buf[pos] = 0xfffd;
-          break;
-        }
-      }
-      prev = c;
-      return c;
+      return buf[pos];
     }
 
   public:
@@ -271,6 +290,7 @@ class nsHtml5Tokenizer
     PRInt32 getLine();
     PRInt32 getCol();
     PRBool isInDataState();
+    void setEncodingDeclarationHandler(nsHtml5Parser* encodingDeclarationHandler);
     static void initializeStatics();
     static void releaseStatics();
 };
@@ -366,7 +386,6 @@ jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = J_ARRAY_STATIC(PRUnic
 #define NS_HTML5TOKENIZER_ESCAPE_HYPHEN_HYPHEN 56
 #define NS_HTML5TOKENIZER_BOGUS_COMMENT_HYPHEN 57
 #define NS_HTML5TOKENIZER_LEAD_OFFSET (0xD800 - (0x10000 >> 10))
-#define NS_HTML5TOKENIZER_SURROGATE_OFFSET (0x10000 - (0xD800 << 10) - 0xDC00)
 #define NS_HTML5TOKENIZER_BUFFER_GROW_BY 1024
 
 
