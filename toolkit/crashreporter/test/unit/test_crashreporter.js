@@ -51,4 +51,6 @@ function run_test()
   do_check_false(cr.enabled);
   // ensure that double-disabling doesn't error
   cr.enabled = false;
+  // leave it enabled at the end in case of shutdown crashes
+  cr.enabled = true;
 }
