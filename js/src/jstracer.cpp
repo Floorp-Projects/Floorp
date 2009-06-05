@@ -10797,6 +10797,19 @@ TraceRecorder::record_JSOP_LOOP()
     return JSRS_CONTINUE;
 }
 
+#define DBG_STUB(OP)                                                          \
+    JS_REQUIRES_STACK JSRecordingStatus                                       \
+    TraceRecorder::record_##OP()                                              \
+    {                                                                         \
+        ABORT_TRACE("can't trace " #OP);                                      \
+    }
+
+DBG_STUB(JSOP_GETUPVAR_DBG)
+DBG_STUB(JSOP_CALLUPVAR_DBG)
+DBG_STUB(JSOP_DEFFUN_DBGFC)
+DBG_STUB(JSOP_DEFLOCALFUN_DBGFC)
+DBG_STUB(JSOP_LAMBDA_DBGFC)
+
 #ifdef JS_JIT_SPEW
 /* Prints information about entry typemaps and unstable exits for all peers at a PC */
 void

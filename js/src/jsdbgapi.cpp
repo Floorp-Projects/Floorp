@@ -684,7 +684,6 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval userid;
 
     funobj = JSVAL_TO_OBJECT(argv[-2]);
-    JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
     wrapper = GET_FUNCTION_PRIVATE(cx, funobj);
     userid = ATOM_KEY(wrapper->atom);
     *rval = argv[0];
@@ -1156,7 +1155,7 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
     if (!fp->fun)
         return NULL;
 
-    JS_ASSERT(OBJ_GET_CLASS(cx, fp->callee) == &js_FunctionClass);
+    JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee));
     JS_ASSERT(OBJ_GET_PRIVATE(cx, fp->callee) == fp->fun);
     return fp->callee;
 }
@@ -1261,11 +1260,28 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
                                        TCF_PUT_STATIC_LEVEL(JS_DISPLAY_SIZE),
                                        chars, length, NULL,
                                        filename, lineno);
+
     if (!script)
         return JS_FALSE;
 
+    JSStackFrame *displayCopy[JS_DISPLAY_SIZE];
+    if (cx->fp != fp) {
+        memcpy(displayCopy, cx->display, sizeof displayCopy);
+
+        /* This API requires an active fp on cx, so fp2 can't go null here. */
+        for (JSStackFrame *fp2 = cx->fp; fp2 != fp; fp2 = fp2->down) {
+            if (fp2->displaySave) {
+                JS_ASSERT(fp2->script->staticLevel < JS_DISPLAY_SIZE);
+                cx->display[fp2->script->staticLevel] = fp2->displaySave;
+            }
+        }
+    }
+
     ok = js_Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL,
                     rval);
+
+    if (cx->fp != fp)
+        memcpy(cx->display, displayCopy, sizeof cx->display);
     js_DestroyScript(cx, script);
     return ok;
 }

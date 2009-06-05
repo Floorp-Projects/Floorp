@@ -646,11 +646,7 @@ JS_TypeOfValue(JSContext *cx, jsval v)
         type = JSTYPE_OBJECT;           /* XXXbe JSTYPE_NULL for JS2 */
         obj = JSVAL_TO_OBJECT(v);
         if (obj) {
-            JSObject *wrapped;
-
-            wrapped = js_GetWrappedObject(cx, obj);
-            if (wrapped)
-                obj = wrapped;
+            obj = js_GetWrappedObject(cx, obj);
 
             ops = obj->map->ops;
 #if JS_HAS_XML_SUPPORT
@@ -1362,11 +1358,11 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 }
 
 #define CLASP(name)                 (&js_##name##Class)
-#define EXT_CLASP(name)             (&js_##name##Class.base)
+#define XCLASP(name)                (&js_##name##Class.base)
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
-#define EAGER_ATOM_AND_EXT_CLASP(name) EAGER_CLASS_ATOM(name), EXT_CLASP(name)
+#define EAGER_ATOM_AND_XCLASP(name) EAGER_CLASS_ATOM(name), XCLASP(name)
 #define LAZY_ATOM(name)             ATOM_OFFSET(lazy.name), js_##name##_str
 
 typedef struct JSStdName {
@@ -1415,8 +1411,8 @@ static JSStdName standard_class_atoms[] = {
 #endif
 #if JS_HAS_XML_SUPPORT
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
-    {js_InitNamespaceClass,             EAGER_ATOM_AND_EXT_CLASP(Namespace)},
-    {js_InitQNameClass,                 EAGER_ATOM_AND_EXT_CLASP(QName)},
+    {js_InitNamespaceClass,             EAGER_ATOM_AND_XCLASP(Namespace)},
+    {js_InitQNameClass,                 EAGER_ATOM_AND_XCLASP(QName)},
 #endif
 #if JS_HAS_FILE_OBJECT
     {js_InitFileClass,                  EAGER_ATOM_AND_CLASP(File)},
