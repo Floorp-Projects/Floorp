@@ -6791,8 +6791,12 @@ TraceRecorder::getThis(LIns*& this_ins)
      * can only detect this condition prior to calling js_ComputeThisForFrame, since it
      * updates the interpreter's copy of argv[-1].
      */
+    JSClass* clasp = NULL;;
     if (JSVAL_IS_NULL(original) ||
-        guardClass(JSVAL_TO_OBJECT(original), get(&thisv), &js_CallClass, snapshot(BRANCH_EXIT))) {
+        (((clasp = STOBJ_GET_CLASS(JSVAL_TO_OBJECT(original))) == &js_CallClass) ||
+         (clasp == &js_BlockClass))) {
+        if (clasp)
+            guardClass(JSVAL_TO_OBJECT(original), get(&thisv), clasp, snapshot(BRANCH_EXIT));
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             ABORT_TRACE("global object was wrapped while recording");
