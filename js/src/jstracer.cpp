@@ -2291,11 +2291,8 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         LIns* i = get(vp);
         bool isPromote = isPromoteInt(i);
-        if (isPromote && *m == JSVAL_DOUBLE) {
+        if (isPromote && *m == JSVAL_DOUBLE)
             lir->insStorei(get(vp), lirbuf->state, nativeGlobalOffset(vp));
-            /* Aggressively undo speculation so the inner tree will compile if this fails. */
-            oracle.markGlobalSlotUndemotable(cx, gslots[n]);
-        }
         JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
         ++m;
     );
