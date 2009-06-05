@@ -2901,6 +2901,18 @@ nsNavHistoryQueryResultNode::OnPageExpired(nsIURI* aURI, PRTime aVisitTime,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnItemAdded(PRInt64 aItemId,
+                                         PRInt64 aFolder,
+                                         PRInt32 aIndex)
+{
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  PRUint16 itemType;
+  nsresult rv = bookmarks->GetItemType(aItemId, &itemType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return OnItemAdded(aItemId, aFolder, aIndex, itemType);
+}
 
 // nsNavHistoryQueryResultNode bookmark observers
 //
@@ -2909,8 +2921,10 @@ nsNavHistoryQueryResultNode::OnPageExpired(nsIURI* aURI, PRTime aVisitTime,
 //    the bookmark system.
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnItemAdded(PRInt64 aItemId, PRInt64 aFolder,
-                                          PRInt32 aIndex)
+nsNavHistoryQueryResultNode::OnItemAdded(PRInt64 aItemId,
+                                         PRInt64 aFolder,
+                                         PRInt32 aIndex,
+                                         PRUint16 aItemType)
 {
   if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
     return Refresh();
@@ -3423,12 +3437,27 @@ nsNavHistoryFolderResultNode::OnEndUpdateBatch()
 }
 
 
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
+                                         PRInt64 aFolder,
+                                         PRInt32 aIndex)
+{
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  PRUint16 itemType;
+  nsresult rv = bookmarks->GetItemType(aItemId, &itemType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return OnItemAdded(aItemId, aFolder, aIndex, itemType);
+}
+
+
 // nsNavHistoryFolderResultNode::OnItemAdded (nsINavBookmarkObserver)
 
 NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
                                           PRInt64 aParentFolder,
-                                          PRInt32 aIndex)
+                                          PRInt32 aIndex,
+                                          PRUint16 aItemType)
 {
   NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
 
@@ -3437,7 +3466,16 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   if (aIndex < 0) {
     NS_NOTREACHED("Invalid index for item adding: <0");
     aIndex = 0;
-  } else if (aIndex > mChildren.Count()) {
+  }
+  else if (aIndex > mChildren.Count()) {
+    PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+                          (mParent && mParent->mOptions->ExcludeItems()) ||
+                          mOptions->ExcludeItems();
+    if (excludeItems &&
+        (aItemType == nsINavBookmarksService::TYPE_BOOKMARK ||
+         aItemType == nsINavBookmarksService::TYPE_SEPARATOR))
+      return NS_OK;
+
     NS_NOTREACHED("Invalid index for item adding: greater than count");
     aIndex = mChildren.Count();
   }
@@ -3445,14 +3483,12 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
 
-  PRUint16 itemType;
-  nsresult rv = bookmarks->GetItemType(aItemId, &itemType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
 
   // check for query URIs, which are bookmarks, but treated as containers
   // in results and views.
   PRBool isQuery = PR_FALSE;
-  if (itemType == nsINavBookmarksService::TYPE_BOOKMARK) {
+  if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
     nsCOMPtr<nsIURI> itemURI;
     rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(itemURI));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3462,7 +3498,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     isQuery = IsQueryURI(itemURISpec);
   }
 
-  if (itemType != nsINavBookmarksService::TYPE_FOLDER &&
+  if (aItemType != nsINavBookmarksService::TYPE_FOLDER &&
       !isQuery && mOptions->ExcludeItems()) {
     // don't update items when we aren't displaying them, but we still need
     // to adjust bookmark indices to account for the insertion
@@ -3477,7 +3513,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   ReindexRange(aIndex, PR_INT32_MAX, 1);
 
   nsRefPtr<nsNavHistoryResultNode> node;
-  if (itemType == nsINavBookmarksService::TYPE_BOOKMARK) {
+  if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->BookmarkIdToResultNode(aItemId, mOptions, getter_AddRefs(node));
@@ -3486,19 +3522,19 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     if (mResult && node->IsQuery())
       node->GetAsQuery()->mBatchInProgress = mResult->mBatchInProgress;
   }
-  else if (itemType == nsINavBookmarksService::TYPE_FOLDER ||
-           itemType == nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER) {
+  else if (aItemType == nsINavBookmarksService::TYPE_FOLDER ||
+           aItemType == nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER) {
     rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else if (itemType == nsINavBookmarksService::TYPE_SEPARATOR) {
+  else if (aItemType == nsINavBookmarksService::TYPE_SEPARATOR) {
     node = new nsNavHistorySeparatorResultNode();
     NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
     node->mItemId = aItemId;
   }
   node->mBookmarkIndex = aIndex;
 
-  if (itemType == nsINavBookmarksService::TYPE_SEPARATOR ||
+  if (aItemType == nsINavBookmarksService::TYPE_SEPARATOR ||
       GetSortType() == nsINavHistoryQueryOptions::SORT_BY_NONE) {
     // insert at natural bookmarks position
     return InsertChildAt(node, aIndex);
@@ -3521,7 +3557,8 @@ nsNavHistoryFolderResultNode::OnBeforeItemRemoved(PRInt64 aItemId)
 
 NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnItemRemoved(PRInt64 aItemId,
-                                            PRInt64 aParentFolder, PRInt32 aIndex)
+                                            PRInt64 aParentFolder,
+                                            PRInt32 aIndex)
 {
   // We only care about notifications when a child changes. When the deleted
   // item is us, our parent should also be registered and will remove us from
@@ -3529,19 +3566,26 @@ nsNavHistoryFolderResultNode::OnItemRemoved(PRInt64 aItemId,
   if (mItemId == aItemId)
     return NS_OK;
 
+  NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
+
+  PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+                        (mParent && mParent->mOptions->ExcludeItems()) ||
+                        mOptions->ExcludeItems();
+
   // don't trust the index from the bookmark service, find it ourselves. The
   // sorting could be different, or the bookmark services indices and ours might
   // be out of sync somehow.
   PRUint32 index;
   nsNavHistoryResultNode* node = FindChildById(aItemId, &index);
   if (!node) {
+    if (excludeItems)
+      return NS_OK;
+
     NS_NOTREACHED("Removing item we don't have");
     return NS_ERROR_FAILURE;
   }
 
-  NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
-
-  if ((node->IsURI() || node->IsSeparator()) && mOptions->ExcludeItems()) {
+  if ((node->IsURI() || node->IsSeparator()) && excludeItems) {
     // don't update items when we aren't displaying them, but we do need to
     // adjust everybody's bookmark indices to account for the removal
     ReindexRange(aIndex, PR_INT32_MAX, -1);
@@ -4199,10 +4243,18 @@ nsNavHistoryResult::OnItemAdded(PRInt64 aItemId,
                                 PRInt64 aFolder,
                                 PRInt32 aIndex)
 {
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint16 itemType;
+  nsresult rv = bookmarks->GetItemType(aItemId, &itemType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aFolder,
-      OnItemAdded(aItemId, aFolder, aIndex));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemAdded(aItemId, aFolder, aIndex));
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnItemAdded(aItemId, aFolder, aIndex));
+      OnItemAdded(aItemId, aFolder, aIndex, itemType));
+  ENUMERATE_HISTORY_OBSERVERS(OnItemAdded(aItemId, aFolder, aIndex, itemType));
+  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnItemAdded(aItemId, aFolder, aIndex,
+                                                itemType));
   return NS_OK;
 }
 
@@ -4241,23 +4293,19 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
                                   PRBool aIsAnnotationProperty,
                                   const nsACString &aValue)
 {
-  nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarkService, NS_ERROR_OUT_OF_MEMORY);
-
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
     OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue));
-
-  PRUint16 itemType;
-  nsresult rv = bookmarkService->GetItemType(aItemId, &itemType);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Note: folder-nodes set their own bookmark observer only once they're
   // opened, meaning we cannot optimize this code path for changes done to
   // folder-nodes.
 
+  nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarkService, NS_ERROR_OUT_OF_MEMORY);
+
   // Find the changed items under the folders list
   PRInt64 folderId;
-  rv = bookmarkService->GetFolderIdForItem(aItemId, &folderId);
+  nsresult rv = bookmarkService->GetFolderIdForItem(aItemId, &folderId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   FolderObserverList* list = BookmarkFolderObserversForId(folderId, PR_FALSE);
@@ -4268,11 +4316,13 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
     nsRefPtr<nsNavHistoryFolderResultNode> folder = list->ElementAt(i);
     if (folder) {
       PRUint32 nodeIndex;
-      nsRefPtr<nsNavHistoryResultNode> node = folder->FindChildById(aItemId, &nodeIndex);
+      nsRefPtr<nsNavHistoryResultNode> node =
+        folder->FindChildById(aItemId, &nodeIndex);
       // if ExcludeItems is true we don't update non visible items
+      PRBool excludeItems = (mRootNode->mOptions->ExcludeItems()) ||
+                             folder->mOptions->ExcludeItems();
       if (node &&
-          (!folder->mOptions->ExcludeItems() ||
-           !(node->IsURI() || node->IsSeparator())) &&
+          (!excludeItems || !(node->IsURI() || node->IsSeparator())) &&
           folder->StartIncrementalUpdate()) {
         node->OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue);
       }
