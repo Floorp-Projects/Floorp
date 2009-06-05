@@ -859,7 +859,7 @@ WeaveSvc.prototype = {
     }
 
     this._log.debug("Refreshing client list");
-    yield Clients.sync(self.cb);
+    Clients.sync();
 
     // Process the incoming commands if we have any
     if (Clients.getClients()[Clients.clientID].commands) {
@@ -875,7 +875,7 @@ WeaveSvc.prototype = {
       }
       finally {
         // Always immediately push back the local client (now without commands)
-        yield Clients.sync(self.cb);
+        Clients.sync();
       }
     }
 
@@ -957,7 +957,7 @@ WeaveSvc.prototype = {
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     let self = yield;
     try {
-      yield engine.sync(self.cb);
+      engine.sync();
       if (!this.cancelRequested)
         self.done(true);
     }
