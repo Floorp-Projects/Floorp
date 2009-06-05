@@ -74,17 +74,13 @@ Store.prototype = {
     this._log = Log4Moz.repository.getLogger("Store." + this._logName);
   },
 
-  applyIncoming: function Store_applyIncoming(onComplete, record) {
-    let fn = function(rec) {
-      let self = yield;
-      if (rec.deleted)
-        this.remove(rec);
-      else if (!this.itemExists(rec.id))
-        this.create(rec);
-      else
-        this.update(rec);
-    };
-    fn.async(this, onComplete, record);
+  applyIncoming: function Store_applyIncoming(record) {
+    if (record.deleted)
+      this.remove(record);
+    else if (!this.itemExists(record.id))
+      this.create(record);
+    else
+      this.update(record);
   },
 
   // override these in derived objects
