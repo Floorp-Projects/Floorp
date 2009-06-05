@@ -2449,7 +2449,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
       case NS_HTML5TREE_BUILDER_BEFORE_HEAD: {
         switch(group) {
           case NS_HTML5TREE_BUILDER_HEAD:
-          case NS_HTML5TREE_BUILDER_BR: {
+          case NS_HTML5TREE_BUILDER_BR:
+          case NS_HTML5TREE_BUILDER_HTML:
+          case NS_HTML5TREE_BUILDER_BODY: {
             appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
             mode = NS_HTML5TREE_BUILDER_IN_HEAD;
             continue;
@@ -2467,7 +2469,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
             goto endtagloop_end;
           }
-          case NS_HTML5TREE_BUILDER_BR: {
+          case NS_HTML5TREE_BUILDER_BR:
+          case NS_HTML5TREE_BUILDER_HTML:
+          case NS_HTML5TREE_BUILDER_BODY: {
             pop();
             mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
             continue;
@@ -2499,6 +2503,8 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
       }
       case NS_HTML5TREE_BUILDER_AFTER_HEAD: {
         switch(group) {
+          case NS_HTML5TREE_BUILDER_HTML:
+          case NS_HTML5TREE_BUILDER_BODY:
           case NS_HTML5TREE_BUILDER_BR: {
             appendToCurrentNodeAndPushBodyElement();
             mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
