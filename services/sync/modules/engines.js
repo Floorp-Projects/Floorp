@@ -347,7 +347,7 @@ SyncEngine.prototype = {
     let count = {applied: 0, reconciled: 0};
     this._lastSyncTmp = 0;
 
-    while ((item = yield newitems.iter.next(self.cb))) {
+    while ((item = newitems.iter.next())) {
       this._lowMemCheck();
       try {
         item.decrypt(ID.get('WeaveCryptoID').password);

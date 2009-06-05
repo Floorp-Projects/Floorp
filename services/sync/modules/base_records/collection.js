@@ -148,21 +148,17 @@ CollectionIterator.prototype = {
 
   get count() { return this._coll.data.length; },
 
-  next: function CollIter_next(onComplete) {
-    let fn = function CollIter__next() {
-      let self = yield;
+  next: function CollectionIterator_next() {
+    if (this._idx >= this.count)
+      return null;
 
-      if (this._idx >= this.count)
-        return;
-      let item = this._coll.data[this._idx++];
-      let record = new this._coll._recordObj();
-      record.deserialize(JSON.stringify(item)); // FIXME: inefficient
-      record.baseUri = this._coll.uri;
-      record.id = record.data.id;
+    let item = this._coll.data[this._idx++];
+    let record = new this._coll._recordObj();
+    record.deserialize(JSON.stringify(item)); // FIXME: inefficient
+    record.baseUri = this._coll.uri;
+    record.id = record.data.id;
 
-      self.done(record);
-    };
-    fn.async(this, onComplete);
+    return record;
   },
 
   reset: function CollIter_reset() {
