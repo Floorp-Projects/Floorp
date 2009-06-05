@@ -507,12 +507,6 @@ js_CastAsObjectJSVal(JSPropertyOp op)
     return OBJECT_TO_JSVAL(JS_FUNC_TO_DATA_PTR(JSObject *, op));
 }
 
-inline JSPropertyOp
-js_CastAsPropertyOp(JSObject *object)
-{
-    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
-}
-
 struct JSScopeProperty {
     jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
     JSPropertyOp    getter;             /* getter and setter hooks or objects */
@@ -553,34 +547,43 @@ struct JSScopeProperty {
         return js_CastAsObjectJSVal(getter);
     }
 
-    bool hasGetterObject() const {
-        return attrs & JSPROP_GETTER;
-    }
     JSObject *getterObject() const {
-        JS_ASSERT(hasGetterObject());
+        JS_ASSERT(attrs & JSPROP_GETTER);
         return js_CastAsObject(getter);
     }
     jsval getterValue() const {
-        JS_ASSERT(hasGetterObject());
-        return js_CastAsObjectJSVal(getter);
+        JS_ASSERT(attrs & JSPROP_GETTER);
+        jsval getterVal = getter ? js_CastAsObjectJSVal(getter) : JSVAL_VOID;
+        JS_ASSERT_IF(getter, VALUE_IS_FUNCTION(BOGUS_CX, getterVal));
+        return getterVal;
     }
 
-    bool hasSetterObject() const {
-        return attrs & JSPROP_SETTER;
-    }
     JSObject *setterObject() const {
-        JS_ASSERT(hasSetterObject());
+        JS_ASSERT((attrs & JSPROP_SETTER) && setter);
         return js_CastAsObject(setter);
     }
     jsval setterValue() const {
-        JS_ASSERT(hasSetterObject());
-        return js_CastAsObjectJSVal(setter);
+        JS_ASSERT(attrs & JSPROP_SETTER);
+        jsval setterVal = setter ? js_CastAsObjectJSVal(setter) : JSVAL_VOID;
+        JS_ASSERT_IF(setter, VALUE_IS_FUNCTION(BOGUS_CX, setterVal));
+        return setterVal;
     }
 
     bool get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp);
     bool set(JSContext* cx, JSObject* obj, jsval* vp);
 
     void trace(JSTracer *trc);
+
+    bool configurable() { return (attrs & JSPROP_PERMANENT) == 0; }
+    bool enumerable() { return (attrs & JSPROP_ENUMERATE) != 0; }
+    bool writable() { return (attrs & JSPROP_READONLY) == 0; }
+
+    bool isDataDescriptor() {
+        return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) == 0;
+    }
+    bool isAccessorDescriptor() {
+        return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
+    }
 };
 
 /* JSScopeProperty pointer tag bit indicating a collision. */
