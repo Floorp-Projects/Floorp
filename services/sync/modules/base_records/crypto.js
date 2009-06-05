@@ -196,7 +196,7 @@ CryptoMeta.prototype = {
 
     // get the new public key
     if (typeof new_pubkey == 'string')
-      new_pubkey = PubKeys.get(self.cb, new_pubkey);
+      new_pubkey = yield PubKeys.get(self.cb, new_pubkey);
 
     // each hash key is a relative uri, resolve those and
     // if we find the one we're about to add, remove it
