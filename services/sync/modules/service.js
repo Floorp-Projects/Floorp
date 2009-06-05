@@ -452,28 +452,24 @@ WeaveSvc.prototype = {
   // These are global (for all engines)
 
   // gets cluster from central LDAP server and returns it, or null on error
-  findCluster: function WeaveSvc_findCluster(onComplete, username) {
-    let fn = function WeaveSvc__findCluster() {
-      let self = yield;
-      let ret = null;
+  findCluster: function WeaveSvc_findCluster(username) {
+    this._log.debug("Finding cluster for user " + username);
 
-      this._log.debug("Finding cluster for user " + username);
+    let res = new Resource(this.baseURL + "api/register/chknode/" + username);
+    try {
+      res.get();
+    }
+    catch(ex) { /* we check status below */ }
 
-      let res = new Resource(this.baseURL + "api/register/chknode/" + username);
-      try {
-        res.get();
-      } catch (e) { /* we check status below */ }
+    if (res.lastChannel.responseStatus == 404) {
+      this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
+      return Svc.Prefs.get("serverURL");
+    }
 
-      if (res.lastChannel.responseStatus == 404) {
-        this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-        ret = Svc.Prefs.get("serverURL");
-      } else if (res.lastChannel.responseStatus == 200) {
-        ret = "https://" + res.data + "/";
-      }
+    if (res.lastChannel.responseStatus == 200)
+      return "https://" + res.data + "/";
 
-      self.done(ret);
-    };
-    fn.async(this, onComplete);
+    return null;
   },
 
   // gets cluster from central LDAP server and sets this.clusterURL
@@ -500,7 +496,7 @@ WeaveSvc.prototype = {
       let self = yield;
       this._log.debug("Verifying login for user " + username);
 
-      let url = yield this.findCluster(self.cb, username);
+      let url = this.findCluster(username);
       if (isLogin)
         this.clusterURL = url;
 
