@@ -152,8 +152,9 @@ nsHtml5Parser::nsHtml5Parser()
     mFirstBuffer(new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE)), // XXX allocate elsewhere for fragment parser?
     mLastBuffer(mFirstBuffer),
     mTreeBuilder(new nsHtml5TreeBuilder(this)),
-    mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, this))
+    mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
 {
+  mTokenizer->setEncodingDeclarationHandler(this);
   // There's a zeroing operator new for everything else
 }
 
