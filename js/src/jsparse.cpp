@@ -819,7 +819,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     /* Null script early in case of error, to reduce our code footprint. */
     script = NULL;
 
-    cg.flags |= (uint16) tcflags;
+    cg.flags |= uint16(tcflags);
     cg.scopeChain = scopeChain;
     if (!SetStaticLevel(&cg, TCF_GET_STATIC_LEVEL(tcflags)))
         goto out;
@@ -1688,12 +1688,21 @@ JSCompiler::analyzeFunctions(JSFunctionBox *funbox, uint16& tcflags)
  * process is potentially exponential in the number of functions, but generally
  * not so complex. But it can't be done during a single recursive traversal of
  * the funbox tree, so we must use a work queue.
+ *
+ * Return the minimal "skipmin" for funbox and its siblings. This is the delta
+ * between the static level of the bodies of funbox and its peers (which must
+ * be funbox->level + 1), and the static level of the nearest upvar among all
+ * the upvars contained by funbox and its peers. If there are no upvars, return
+ * FREE_STATIC_LEVEL. Thus this function never returns 0.
  */
-static void
+static uintN
 FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
 {
+    uintN allskipmin = FREE_STATIC_LEVEL;
+
     do {
         JSParseNode *fn = funbox->node;
+        JSFunction *fun = (JSFunction *) funbox->object;
         int fnlevel = level;
 
         /*
@@ -1709,35 +1718,78 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
                 kid->node->setFunArg();
         }
 
-        if (fn->isFunArg()) {
-            queue->push(funbox);
-            fnlevel = int(funbox->level);
-        } else {
-            JSParseNode *pn = fn->pn_body;
+        /*
+         * Compute in skipmin the least distance from fun's static level up to
+         * an upvar, whether used directly by fun, or indirectly by a function
+         * nested in fun.
+         */
+        uintN skipmin = FREE_STATIC_LEVEL;
+        JSParseNode *pn = fn->pn_body;
 
-            if (pn->pn_type == TOK_UPVARS) {
-                JSAtomList upvars(pn->pn_names);
-                JS_ASSERT(upvars.count != 0);
+        if (pn->pn_type == TOK_UPVARS) {
+            JSAtomList upvars(pn->pn_names);
+            JS_ASSERT(upvars.count != 0);
 
-                JSAtomListIterator iter(&upvars);
-                JSAtomListElement *ale;
+            JSAtomListIterator iter(&upvars);
+            JSAtomListElement *ale;
 
-                while ((ale = iter()) != NULL) {
-                    JSDefinition *lexdep = ALE_DEFN(ale)->resolve();
+            while ((ale = iter()) != NULL) {
+                JSDefinition *lexdep = ALE_DEFN(ale)->resolve();
 
-                    if (!lexdep->isFreeVar() && int(lexdep->frameLevel()) <= fnlevel) {
+                if (!lexdep->isFreeVar()) {
+                    uintN upvarLevel = lexdep->frameLevel();
+
+                    if (int(upvarLevel) <= fnlevel)
                         fn->setFunArg();
-                        queue->push(funbox);
-                        fnlevel = int(funbox->level);
-                        break;
-                    }
+
+                    uintN skip = (funbox->level + 1) - upvarLevel;
+                    if (skip < skipmin)
+                        skipmin = skip;
                 }
             }
         }
 
-        if (funbox->kids)
-            FindFunArgs(funbox->kids, fnlevel, queue);
+        /*
+         * If this function escapes, whether directly (the parser detects such
+         * escapes) or indirectly (because this non-escaping function uses an
+         * upvar that reaches across an outer function boundary where the outer
+         * function escapes), enqueue it for further analysis, and bump fnlevel
+         * to trap any non-escaping children.
+         */
+        if (fn->isFunArg()) {
+            queue->push(funbox);
+            fnlevel = int(funbox->level);
+        }
+
+        /*
+         * Now process the current function's children, and recalibrate their
+         * cumulative skipmin to be relative to the current static level.
+         */
+        if (funbox->kids) {
+            uintN kidskipmin = FindFunArgs(funbox->kids, fnlevel, queue);
+
+            JS_ASSERT(kidskipmin != 0);
+            if (kidskipmin != FREE_STATIC_LEVEL) {
+                --kidskipmin;
+                if (kidskipmin != 0 && kidskipmin < skipmin)
+                    skipmin = kidskipmin;
+            }
+        }
+
+        /*
+         * Finally, after we've traversed all of the current function's kids,
+         * minimize fun's skipmin against our accumulated skipmin. Do likewise
+         * with allskipmin, but minimize across funbox and all of its siblings,
+         * to compute our return value.
+         */
+        if (skipmin != FREE_STATIC_LEVEL) {
+            fun->u.i.skipmin = skipmin;
+            if (skipmin < allskipmin)
+                allskipmin = skipmin;
+        }
     } while ((funbox = funbox->siblings) != NULL);
+
+    return allskipmin;
 }
 
 bool
@@ -1767,13 +1819,14 @@ JSCompiler::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
                     !lexdep->isFunArg() &&
                     lexdep->kind() == JSDefinition::FUNCTION) {
                     /*
-                     * Mark this formerly-Algol-like function as a funarg,
-                     * since it is referenced from a funarg and can no longer
-                     * use JSOP_{GET,CALL}UPVAR to access upvars.
+                     * Mark this formerly-Algol-like function as an escaping
+                     * function (i.e., as a funarg), because it is used from a
+                     * funarg and therefore can not use JSOP_{GET,CALL}UPVAR to
+                     * access upvars.
                      *
-                     * Progress is guaranteed since we set PND_FUNARG here,
-                     * which suppresses revisiting this function (namely the
-                     * !lexdep->isFunArg() test just above).
+                     * Progress is guaranteed because we set the funarg flag
+                     * here, which suppresses revisiting this function (thanks
+                     * to the !lexdep->isFunArg() test just above).
                      */
                     lexdep->setFunArg();
 
@@ -7018,8 +7071,11 @@ QualifiedIdentifier(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn = PropertySelector(cx, ts, tc);
     if (!pn)
         return NULL;
-    if (js_MatchToken(cx, ts, TOK_DBLCOLON))
+    if (js_MatchToken(cx, ts, TOK_DBLCOLON)) {
+        /* Hack for bug 496316. Slowing down E4X won't make it go away, alas. */
+        tc->flags |= TCF_FUN_HEAVYWEIGHT;
         pn = QualifiedSuffix(cx, ts, pn, tc);
+    }
     return pn;
 }
 

@@ -192,7 +192,7 @@ MSG_DEF(JSMSG_SEMI_BEFORE_STMNT,      109, 0, JSEXN_SYNTAXERR, "missing ; before
 MSG_DEF(JSMSG_NO_RETURN_VALUE,        110, 1, JSEXN_TYPEERR, "function {0} does not always return a value")
 MSG_DEF(JSMSG_DUPLICATE_FORMAL,       111, 1, JSEXN_TYPEERR, "duplicate formal argument {0}")
 MSG_DEF(JSMSG_EQUAL_AS_ASSIGN,        112, 1, JSEXN_SYNTAXERR, "test for equality (==) mistyped as assignment (=)?{0}")
-MSG_DEF(JSMSG_UNUSED113,              113, 0, JSEXN_NONE, "unused113")
+MSG_DEF(JSMSG_OPTIMIZED_CLOSURE_LEAK, 113, 0, JSEXN_INTERNALERR, "cannot access optimized closure")
 MSG_DEF(JSMSG_TOO_MANY_DEFAULTS,      114, 0, JSEXN_SYNTAXERR, "more than one switch default")
 MSG_DEF(JSMSG_TOO_MANY_CASES,         115, 0, JSEXN_INTERNALERR, "too many switch cases")
 MSG_DEF(JSMSG_BAD_SWITCH,             116, 0, JSEXN_SYNTAXERR, "invalid switch statement")
@@ -309,6 +309,4 @@ MSG_DEF(JSMSG_EVAL_ARITY,             226, 0, JSEXN_TYPEERR, "eval accepts only 
 MSG_DEF(JSMSG_MISSING_FUN_ARG,        227, 2, JSEXN_TYPEERR, "missing argument {0} when calling function {1}")
 MSG_DEF(JSMSG_JSON_BAD_PARSE,         228, 0, JSEXN_SYNTAXERR, "JSON.parse")
 MSG_DEF(JSMSG_JSON_BAD_STRINGIFY,     229, 0, JSEXN_ERR, "JSON.stringify")
-
-
-
+MSG_DEF(JSMSG_XDR_CLOSURE_WRAPPER,    230, 1, JSEXN_INTERNALERR, "can't XDR closure wrapper for function {0}")
