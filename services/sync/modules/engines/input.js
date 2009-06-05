@@ -41,13 +41,10 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
-
-Function.prototype.async = Async.sugar;
 
 function InputEngine(pbeId) {
   this._init(pbeId);
@@ -207,7 +204,6 @@ InputStore.prototype = {
   },
 
   _resetGUIDs: function InputStore__resetGUIDs() {
-    let self = yield;
     // Not needed.
   }
 };
