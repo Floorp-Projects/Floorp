@@ -48,6 +48,8 @@ const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
+const nsIPKCS11 = Components.interfaces.nsIPKCS11;
+const nsPKCS11ContractID = "@mozilla.org/security/pkcs11;1";
 
 var bundle;
 var secmoddb;
@@ -63,6 +65,31 @@ function LoadModules()
   document.addEventListener("smartcard-remove", onSmartCardChange, false);
 
   RefreshDeviceList();
+}
+
+function getPKCS11()
+{
+  return Components.classes[nsPKCS11ContractID].getService(nsIPKCS11);
+}
+
+function getNSSString(name)
+{
+  return srGetStrBundle("chrome://pipnss/locale/pipnss.properties").
+    GetStringFromName(name);
+}
+
+function doPrompt(msg)
+{
+  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+    getService(Components.interfaces.nsIPromptService);
+  prompts.alert(window, null, msg);
+}
+
+function doConfirm(msg)
+{
+  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+    getService(Components.interfaces.nsIPromptService);
+  return prompts.confirm(window, null, msg);
 }
 
 function RefreshDeviceList()
@@ -398,13 +425,17 @@ function doLoad()
 function deleteSelected()
 {
   getSelectedItem();
-  if (selected_module) {
-    var retval = pkcs11.deletemodule(selected_module.name);
-    if (retval == 1 || retval == 2) {
-      // successful deletion of internal or external module
-      selected_module = null;
-      return true;
+  if (selected_module &&
+      doConfirm(getNSSString("DelModuleWarning"))) {
+    try {
+      getPKCS11().deleteModule(selected_module.name);
     }
+    catch (e) {
+      doPrompt(getNSSString("DelModuleError"));
+      return false;
+    }
+    selected_module = null;
+    return true;
   }
   return false;
 }
@@ -460,7 +491,17 @@ function doLoadDevice()
 {
   var name_box = document.getElementById("device_name");
   var path_box = document.getElementById("device_path");
-  pkcs11.addmodule(name_box.value, path_box.value, 0,0);
+  try {
+    getPKCS11().addModule(name_box.value, path_box.value, 0,0);
+  }
+  catch (e) {
+    if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE)
+      doPrompt(getNSSString("AddModuleDup"));
+    else
+      doPrompt(getNSSString("AddModuleFailure"));
+
+    return false;
+  }
   return true;
 }
 

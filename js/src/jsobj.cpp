@@ -286,18 +286,20 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
     JS_ASSERT_IF(!checkForCycles, obj != pobj);
 
     if (slot == JSSLOT_PROTO) {
-        JS_LOCK_OBJ(cx, obj);
-        bool ok = !!js_GetMutableScope(cx, obj);
-        JS_UNLOCK_OBJ(cx, obj);
-        if (!ok)
-            return JS_FALSE;
+        if (OBJ_IS_NATIVE(obj)) {
+            JS_LOCK_OBJ(cx, obj);
+            bool ok = !!js_GetMutableScope(cx, obj);
+            JS_UNLOCK_OBJ(cx, obj);
+            if (!ok)
+                return JS_FALSE;
+        }
 
         /*
          * Regenerate property cache shape ids for all of the scopes along the
          * old prototype chain to invalidate their property cache entries, in
          * case any entries were filled by looking up starting from obj.
          */
-        JSObject *oldproto = STOBJ_GET_PROTO(obj);
+        JSObject *oldproto = obj;
         while (oldproto && OBJ_IS_NATIVE(oldproto)) {
             JS_LOCK_OBJ(cx, oldproto);
             JSScope *scope = OBJ_SCOPE(oldproto);

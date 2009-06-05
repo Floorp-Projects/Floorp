@@ -1139,15 +1139,6 @@ void nsHTMLMediaElement::InitMediaTypes()
       }
     }
 #endif
-#ifdef MOZ_WAVE
-    if (IsWaveEnabled()) {
-      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); i++) {
-        catMan->AddCategoryEntry("Gecko-Content-Viewers", gWaveTypes[i],
-                                 "@mozilla.org/content/document-loader-factory;1",
-                                 PR_FALSE, PR_TRUE, nsnull);
-      }
-    }
-#endif
   }
 }
 

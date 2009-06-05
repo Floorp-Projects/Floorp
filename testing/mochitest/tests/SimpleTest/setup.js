@@ -60,7 +60,7 @@ if (params.logFile) {
 // if we get a quiet param, don't log to the console
 if (!params.quiet) {
   function dumpListener(msg) {
-    dump("*** " + msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n");
+    dump(msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n");
   }
   TestRunner.logger.addListener("dumpListener", consoleLevel + "", dumpListener);
 }

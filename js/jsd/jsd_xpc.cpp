@@ -707,10 +707,10 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
     JSRuntime *rt = JS_GetRuntime(cx);
 #endif
 
-    nsCOMPtr<jsdIScriptHook> hook;
-    gJsds->GetScriptHook (getter_AddRefs(hook));
-    
     if (creating) {
+        nsCOMPtr<jsdIScriptHook> hook;
+        gJsds->GetScriptHook(getter_AddRefs(hook));
+
         /* a script is being created */
         if (!hook) {
             /* nobody cares, just exit */
@@ -736,12 +736,15 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
             static_cast<jsdIScript *>(JSD_GetScriptPrivate(jsdscript));
         if (!jsdis)
             return;
-        
+
         jsdis->Invalidate();
-        if (!hook)
-            return;
-        
+
         if (gGCStatus == JSGC_END) {
+            nsCOMPtr<jsdIScriptHook> hook;
+            gJsds->GetScriptHook(getter_AddRefs(hook));
+            if (!hook)
+                return;
+
             /* if GC *isn't* running, we can tell the user about the script
              * delete now. */
 #ifdef CAUTIOUS_SCRIPTHOOK

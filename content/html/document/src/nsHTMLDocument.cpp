@@ -2477,8 +2477,10 @@ LegacyRGBToHex(nscolor aColor, nsAString& aResult)
     PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
                 NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
     CopyASCIItoUTF16(buf, aResult);
+  } else if (aColor == NS_RGBA(0,0,0,0)) {
+    aResult.AssignLiteral("transparent");
   } else {
-    NS_NOTREACHED("non-opaque color property cannot be stringified");
+    NS_NOTREACHED("translucent color property cannot be stringified");
     aResult.Truncate();
   }
 }

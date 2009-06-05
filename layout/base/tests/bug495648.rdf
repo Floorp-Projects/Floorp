@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:NS1="http://sitedelta.schierla.de/SD-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=19&amp;btnG=Suche&amp;meta="
+                   NC:name="19 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Bag RDF:about="urn:root:bag">
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=1&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=2&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=3&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=4&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=5&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=6&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=7&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=8&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=9&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=10&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=11&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=12&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=13&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=14&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=15&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=16&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=17&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=18&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=19&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=20&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=21&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=22&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=23&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=24&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=25&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=26&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=27&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=28&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=29&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=30&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=31&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=32&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=33&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=34&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=35&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=36&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=37&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=38&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=39&amp;btnG=Suche&amp;meta="/>
+    <RDF:li RDF:resource="http://www.google.de/search?hl=de&amp;q=40&amp;btnG=Suche&amp;meta="/>
+  </RDF:Bag>
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=2&amp;btnG=Suche&amp;meta="
+                   NC:name="2 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=12&amp;btnG=Suche&amp;meta="
+                   NC:name="12 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=5&amp;btnG=Suche&amp;meta="
+                   NC:name="5 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=6&amp;btnG=Suche&amp;meta="
+                   NC:name="6 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=22&amp;btnG=Suche&amp;meta="
+                   NC:name="22 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=17&amp;btnG=Suche&amp;meta="
+                   NC:name="17 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="urn:root">
+    <NC:links RDF:resource="urn:root:bag"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=8&amp;btnG=Suche&amp;meta="
+                   NC:name="8 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=1&amp;btnG=Suche&amp;meta="
+                   NC:name="1 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=16&amp;btnG=Suche&amp;meta="
+                   NC:name="16 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=21&amp;btnG=Suche&amp;meta="
+                   NC:name="21 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=20&amp;btnG=Suche&amp;meta="
+                   NC:name="20 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=9&amp;btnG=Suche&amp;meta="
+                   NC:name="9 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=11&amp;btnG=Suche&amp;meta="
+                   NC:name="11 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=14&amp;btnG=Suche&amp;meta="
+                   NC:name="14 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=23&amp;btnG=Suche&amp;meta="
+                   NC:name="23 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=24&amp;btnG=Suche&amp;meta="
+                   NC:name="24 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=18&amp;btnG=Suche&amp;meta="
+                   NC:name="18 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www0.pafnet.de/user/322033"
+                   NC:name="pafnet - You2_xD"
+                   NS1:nextScan="1243707104073"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=3&amp;btnG=Suche&amp;meta="
+                   NC:name="3 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=7&amp;btnG=Suche&amp;meta="
+                   NC:name="7 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=15&amp;btnG=Suche&amp;meta="
+                   NC:name="15 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=4&amp;btnG=Suche&amp;meta="
+                   NC:name="4 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=13&amp;btnG=Suche&amp;meta="
+                   NC:name="13 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=10&amp;btnG=Suche&amp;meta="
+                   NC:name="10 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=25&amp;btnG=Suche&amp;meta="
+                   NC:name="25 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=26&amp;btnG=Suche&amp;meta="
+                   NC:name="26 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=27&amp;btnG=Suche&amp;meta="
+                   NC:name="27 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=28&amp;btnG=Suche&amp;meta="
+                   NC:name="28 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=29&amp;btnG=Suche&amp;meta="
+                   NC:name="29 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=30&amp;btnG=Suche&amp;meta="
+                   NC:name="30 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=31&amp;btnG=Suche&amp;meta="
+                   NC:name="31 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=32&amp;btnG=Suche&amp;meta="
+                   NC:name="32 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=33&amp;btnG=Suche&amp;meta="
+                   NC:name="33 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=34&amp;btnG=Suche&amp;meta="
+                   NC:name="34 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=35&amp;btnG=Suche&amp;meta="
+                   NC:name="35 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />			
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=36&amp;btnG=Suche&amp;meta="
+                   NC:name="36 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />	
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=37&amp;btnG=Suche&amp;meta="
+                   NC:name="37 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />	
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=38&amp;btnG=Suche&amp;meta="
+                   NC:name="38 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />	
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=39&amp;btnG=Suche&amp;meta="
+                   NC:name="39 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />	
+  <RDF:Description RDF:about="http://www.google.de/search?hl=de&amp;q=40&amp;btnG=Suche&amp;meta="
+                   NC:name="40 - Google-Suche"
+                   NS1:nextScan="0"
+                   NS1:status="0" />					   
+</RDF:RDF>

@@ -88,12 +88,10 @@ radio[pane=paneAdvanced] {
 .inline-link {
   color: -moz-nativehyperlinktext;
   text-decoration: underline;
-  outline: 1px solid transparent;
-  cursor: pointer;
 }
   
-.inline-link:focus, .inline-link:hover:active {
-  color: red;
+.inline-link:not(:focus) {
+  outline: 1px dotted transparent;
 }
 
 /* Modeless Window Dialogs */

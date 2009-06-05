@@ -299,16 +299,7 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
 }
   
 .text-link:focus {
-  color: red;
   border: 1px dotted -moz-DialogText;
-}
-  
-.text-link:hover:active {
-  color: red;
-}
-
-.text-link[visited="true"] {
-  color: purple;
 }
 
 /* :::::: autoscroll popup ::::: */

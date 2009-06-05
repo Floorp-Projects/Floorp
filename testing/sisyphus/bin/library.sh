@@ -307,6 +307,19 @@ if [[ -z "$LIBRARYSH" ]]; then
         echo $script
     }
 
+    xbasename()
+    {
+        local path=$1
+        local suffix=$2
+        local result
+
+        if ! result=`basename -s $suffix $path 2>&1`; then
+            result=`basename $path $suffix`
+        fi
+
+        echo $result
+    }
+
     LIBRARYSH=1
 
     MALLOC_CHECK_=${MALLOC_CHECK_:-2}

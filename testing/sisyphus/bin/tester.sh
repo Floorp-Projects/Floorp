@@ -101,6 +101,12 @@ for data in $datalist; do
     TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
     TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$data,$OSID,${TEST_MACHINE},$TEST_SUITE.log"
 
+    if [[ "$OSID" == "nt" ]]; then
+        # If on Windows, set up the Windbg/CDB debug log file
+        # name to point to our log. 
+        export _NT_DEBUG_LOG_FILE="`cygpath -w $TEST_LOG`"
+    fi
+
     # tell caller what the log files are
     echo "log: $TEST_LOG "
 

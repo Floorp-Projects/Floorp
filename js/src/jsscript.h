@@ -87,7 +87,7 @@ typedef struct JSUpvarArray {
 } JSUpvarArray;
 
 #define CALLEE_UPVAR_SLOT               0xffff
-#define FREE_STATIC_LEVEL               0xffff
+#define FREE_STATIC_LEVEL               0x3fff
 #define FREE_UPVAR_COOKIE               0xffffffff
 #define MAKE_UPVAR_COOKIE(skip,slot)    ((skip) << 16 | (slot))
 #define UPVAR_FRAME_SKIP(cookie)        ((uint32)(cookie) >> 16)

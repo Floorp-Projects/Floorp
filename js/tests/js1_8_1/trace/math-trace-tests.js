@@ -267,11 +267,17 @@ function testmath(funcname, args, expected) {
     }
     testfunc.name = funcname + "(" + args + ")";
     testfunc.expected = expected;
-    testfunc.jitstats = {
-        recorderStarted: 1,
-        recorderAborted: 0,
-        traceTriggered: 1
-    };
+
+    // Disable jitstats check. This never worked right. The actual part of the
+    // loop we cared about was never traced. We traced the filler parts early
+    // and then took a mismatch side exit on every subequent array read with
+    // a different type (gal, discovered when fixing bug 479110).
+    // testfunc.jitstats = {
+    //   recorderStarted: 1,
+    //   recorderAborted: 0,
+    //   traceTriggered: 1
+    // };
+
     test(testfunc);
 }
 

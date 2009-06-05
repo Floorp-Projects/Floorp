@@ -265,7 +265,7 @@ namespace nanojit
 		// branch+2 because PC is always 2 instructions ahead on ARM/Thumb
 		int32_t offset = int(target) - int(branch+2);
 
-		//printf("---patching branch at 0x%08x to location 0x%08x (%d-0x%08x)\n", branch, target, offset, offset);
+		//nj_dprintf("---patching branch at 0x%08x to location 0x%08x (%d-0x%08x)\n", branch, target, offset, offset);
 
 		NanoAssert(-(1<<21) <= offset && offset < (1<<21)); 
 		*branch++ = (NIns)(0xF000 | (offset>>12)&0x7FF);
@@ -910,7 +910,7 @@ namespace nanojit
 	{
 		if (!_nIns)		 _nIns	   = pageAlloc();
 		if (!_nExitIns)  _nExitIns = pageAlloc(true);
-		//fprintf(stderr, "assemble onto %x exits into %x\n", (int)_nIns, (int)_nExitIns);
+		//nj_dprintf("assemble onto %x exits into %x\n", (int)_nIns, (int)_nExitIns);
 	
 		if (!_nPool) {
 			_nSlot = _nPool = (int*)_nIns;
