@@ -353,7 +353,7 @@ SyncEngine.prototype = {
         item.decrypt(ID.get('WeaveCryptoID').password);
         if (this._reconcile(item)) {
           count.applied++;
-          yield this._applyIncoming.async(this, self.cb, item);
+          this._applyIncoming(item);
         } else {
           count.reconciled++;
           this._log.trace("Skipping reconciled incoming item " + item.id);
@@ -442,11 +442,10 @@ SyncEngine.prototype = {
 
   // Apply incoming records
   _applyIncoming: function SyncEngine__applyIncoming(item) {
-    let self = yield;
     this._log.trace("Incoming:\n" + item);
     try {
       this._tracker.ignoreAll = true;
-      yield this._store.applyIncoming(self.cb, item);
+      this._store.applyIncoming(item);
       if (this._lastSyncTmp < item.modified)
         this._lastSyncTmp = item.modified;
     } catch (e) {
