@@ -1308,6 +1308,19 @@ TypeMap::matches(TypeMap& other) const
     return !memcmp(data(), other.data(), length());
 }
 
+/* Use the provided storage area to create a new type map that contains the partial type map
+   with the rest of it filled up from the complete type map. */
+static void
+mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clength, uint8* mem)
+{
+    unsigned l = *plength;
+    JS_ASSERT(l < clength);
+    memcpy(mem, *partial, l * sizeof(uint8));
+    memcpy(mem + l, complete + l, (clength - l) * sizeof(uint8));
+    *partial = mem;
+    *plength = clength;
+}
+
 /* Specializes a tree to any missing globals, including any dependent trees. */
 static JS_REQUIRES_STACK void
 specializeTreesToMissingGlobals(JSContext* cx, TreeInfo* root)
@@ -2077,16 +2090,29 @@ JS_REQUIRES_STACK void
 TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigned ngslots,
                       unsigned callDepth, uint8* typeMap)
 {
+    /* If we get a partial list that doesn't have all the types (i.e. recording from a side
+       exit that was recorded but we added more global slots later), merge the missing types
+       from the entry type map. This is safe because at the loop edge we verify that we
+       have compatible types for all globals (entry type and loop edge type match). While
+       a different trace of the tree might have had a guard with a different type map for
+       these slots we just filled in here (the guard we continue from didn't know about them),
+       since we didn't take that particular guard the only way we could have ended up here
+       is if that other trace had at its end a compatible type distribution with the entry
+       map. Since thats exactly what we used to fill in the types our current side exit
+       didn't provide, this is always safe to do. */
+
+    uint8* globalTypeMap = typeMap + stackSlots;
+    unsigned length = treeInfo->nGlobalTypes();
+
     /*
-     * If we get a partial list that doesn't have all the types, capture the missing types
-     * from the current environment.
+     * This is potentially the typemap of the side exit and thus shorter than the tree's
+     * global type map.
      */
-    TypeMap fullTypeMap(typeMap, stackSlots + ngslots);
-    if (ngslots < treeInfo->globalSlots->length()) {
-        fullTypeMap.captureMissingGlobalTypes(cx, *treeInfo->globalSlots, stackSlots);
-        ngslots = treeInfo->globalSlots->length();
+    if (ngslots < length) {
+        mergeTypeMaps(&globalTypeMap/*out param*/, &ngslots/*out param*/,
+                      treeInfo->globalTypeMap(), length,
+                      (uint8*)alloca(sizeof(uint8) * length));
     }
-    uint8* globalTypeMap = fullTypeMap.data() + stackSlots;
     JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
 
     /*
@@ -2291,11 +2317,8 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         LIns* i = get(vp);
         bool isPromote = isPromoteInt(i);
-        if (isPromote && *m == JSVAL_DOUBLE) {
+        if (isPromote && *m == JSVAL_DOUBLE)
             lir->insStorei(get(vp), lirbuf->state, nativeGlobalOffset(vp));
-            /* Aggressively undo speculation so the inner tree will compile if this fails. */
-            oracle.markGlobalSlotUndemotable(cx, gslots[n]);
-        }
         JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
         ++m;
     );
@@ -3986,10 +4009,11 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             fullMap.add(getStackTypeMap(e1), e1->numStackSlotsBelowCurrentFrame);
             fullMap.add(getStackTypeMap(e2), e2->numStackSlots);
             stackSlots = fullMap.length();
-            fullMap.add(getGlobalTypeMap(e2), e2->numGlobalSlots);
-            ngslots = e2->numGlobalSlots;
+            fullMap.add(getGlobalTypeMap(e1), e1->numGlobalSlots);
+            ngslots = e1->numGlobalSlots;
             typeMap = fullMap.data();
         }
+        JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         return js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
                                 ngslots, typeMap, exitedFrom, outer, cx->fp->argc);
     }
@@ -6758,6 +6782,7 @@ TraceRecorder::getThis(LIns*& this_ins)
     }
 
     jsval& thisv = cx->fp->argv[-1];
+    JS_ASSERT(JSVAL_IS_OBJECT(thisv));
 
     /*
      * Traces type-specialize between null and objects, so if we currently see a null
@@ -6766,7 +6791,12 @@ TraceRecorder::getThis(LIns*& this_ins)
      * can only detect this condition prior to calling js_ComputeThisForFrame, since it
      * updates the interpreter's copy of argv[-1].
      */
-    if (JSVAL_IS_NULL(original)) {
+    JSClass* clasp = NULL;;
+    if (JSVAL_IS_NULL(original) ||
+        (((clasp = STOBJ_GET_CLASS(JSVAL_TO_OBJECT(original))) == &js_CallClass) ||
+         (clasp == &js_BlockClass))) {
+        if (clasp)
+            guardClass(JSVAL_TO_OBJECT(original), get(&thisv), clasp, snapshot(BRANCH_EXIT));
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             ABORT_TRACE("global object was wrapped while recording");
@@ -6780,7 +6810,6 @@ TraceRecorder::getThis(LIns*& this_ins)
      * The only unwrapped object that needs to be wrapped that we can get here is the
      * global object obtained throught the scope chain.
      */
-    JS_ASSERT(JSVAL_IS_OBJECT(thisv));
     JSObject* obj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(thisv));
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
