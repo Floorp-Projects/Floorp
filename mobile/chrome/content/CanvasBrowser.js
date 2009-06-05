@@ -150,7 +150,6 @@ CanvasBrowser.prototype = {
   flushRegion: function flushRegion(viewingBoundsOnly) {
     let rgn = this._rgnPage;
 
-    let clearRegion = false;
     let drawls = [];
     let updateBounds = null;
     let pixelsInRegion = 0;
@@ -166,8 +165,6 @@ CanvasBrowser.prototype = {
         rect = rect.intersect(this._visibleBounds);
         if (!rect)
           continue;
-      } else {
-        clearRegion = true;
       }
       drawls.push(rect);
 
@@ -183,7 +180,7 @@ CanvasBrowser.prototype = {
     // if we know that we're going to be clearing the region, we just
     // do it here; otherwise, we'll subtract the rects we update one by
     // one as we loop over them
-    if (clearRegion)
+    if (!viewingBoundsOnly)
       this.clearRegion();
 
     // XXX be smarter about this.  If the number of pixels
@@ -207,7 +204,7 @@ CanvasBrowser.prototype = {
     {
       drawls = [updateBounds];
     }
-    this._drawRects(drawls, !clearRegion);
+    this._drawRects(drawls, viewingBoundsOnly);
   },
 
   _drawRects: function _drawRects(drawls, subtractRects) {
