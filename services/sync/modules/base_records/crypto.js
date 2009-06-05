@@ -71,14 +71,10 @@ CryptoWrapper.prototype = {
   //        with the encrypted payload
   cleartext: null,
 
-  _encrypt: function CryptoWrap__encrypt(passphrase) {
-    let self = yield;
-
+  encrypt: function CryptoWrapper_encrypt(passphrase) {
     // No need to encrypt deleted records
-    if (this.deleted) {
-      self.done();
+    if (this.deleted)
       return;
-    }
 
     let pubkey = PubKeys.getDefaultKey();
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
@@ -89,11 +85,6 @@ CryptoWrapper.prototype = {
     this.ciphertext = Svc.Crypto.encrypt(JSON.stringify([this.cleartext]),
 					 symkey, meta.bulkIV);
     this.cleartext = null;
-
-    self.done();
-  },
-  encrypt: function CryptoWrap_encrypt(onComplete, passphrase) {
-    this._encrypt.async(this, onComplete, passphrase);
   },
 
   _decrypt: function CryptoWrap__decrypt(passphrase) {

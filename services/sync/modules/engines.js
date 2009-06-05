@@ -479,7 +479,7 @@ SyncEngine.prototype = {
         // skip getting siblings of already processed and deleted records
         if (!out.deleted && !(out.id in meta))
           this._store.createMetaRecords(out.id, meta);
-        yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
+        out.encrypt(ID.get('WeaveCryptoID').password);
         up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
       }
 
