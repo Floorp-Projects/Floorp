@@ -712,7 +712,7 @@ WeaveSvc.prototype = {
     }
 
     let needKeys = true;
-    let pubkey = yield PubKeys.getDefaultKey(self.cb);
+    let pubkey = PubKeys.getDefaultKey();
     if (!pubkey)
       this._log.debug("Could not get public key");
     else if (pubkey.keyData == null)

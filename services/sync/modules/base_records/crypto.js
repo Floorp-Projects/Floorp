@@ -80,7 +80,7 @@ CryptoWrapper.prototype = {
       return;
     }
 
-    let pubkey = yield PubKeys.getDefaultKey(self.cb);
+    let pubkey = PubKeys.getDefaultKey();
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
     let meta = CryptoMetas.get(this.encryption);
@@ -105,7 +105,7 @@ CryptoWrapper.prototype = {
       return;
     }
 
-    let pubkey = yield PubKeys.getDefaultKey(self.cb);
+    let pubkey = PubKeys.getDefaultKey();
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
     let meta = CryptoMetas.get(this.encryption);
