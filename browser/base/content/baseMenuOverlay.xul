@@ -115,7 +115,7 @@
     <keyset id="baseMenuKeyset">
 #ifdef XP_MACOSX
         <key id="key_openHelpMac"
-             oncommand="openHelpLink('firefox-help');"
+             oncommand="openHelpLink('firefox-osxkey');"
              key="&helpMac.commandkey;"
              modifiers="accel"/>
 <!-- These are used to build the Application menu under Cocoa widgets -->
@@ -130,7 +130,7 @@
              modifiers="accel,alt"/>
 #else
         <key id="key_openHelp"
-            oncommand="openHelpLink('firefox-help');"
+            oncommand="openHelpLink('firefox-f1');"
             keycode="&openHelp.commandkey;"/>
 #endif
     </keyset>

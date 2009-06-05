@@ -406,7 +406,7 @@ nsWaveStateMachine::Pause()
   nsAutoMonitor monitor(mMonitor);
   mPaused = PR_TRUE;
   if (mState == STATE_LOADING_METADATA || mState == STATE_SEEKING ||
-      mState == STATE_BUFFERING) {
+      mState == STATE_BUFFERING || mState == STATE_ENDED) {
     mNextState = STATE_PAUSED;
   } else if (mState == STATE_PLAYING) {
     ChangeState(STATE_PAUSED);
@@ -574,17 +574,18 @@ nsWaveStateMachine::Run()
           ChangeState(STATE_ENDED);
         }
 
-        PRInt64 available =
-          mStream->GetCachedDataEnd(mPlaybackPosition) - mPlaybackPosition;
+        PRInt64 availableOffset = mStream->GetCachedDataEnd(mPlaybackPosition);
 
         // don't buffer if we're at the end of the stream, or if the
         // load has been suspended by the cache (in the latter case
         // we need to advance playback to free up cache space)
-        if (mState != STATE_ENDED && available < len &&
+        if (mState != STATE_ENDED &&
+            availableOffset < mPlaybackPosition + len &&
             !mStream->IsSuspendedByCache()) {
             mBufferingStart = now;
             mBufferingEndOffset = mPlaybackPosition +
               TimeToBytes(mBufferingWait.ToSeconds());
+            mBufferingEndOffset = PR_MAX(mPlaybackPosition + len, mBufferingEndOffset);
             mNextState = mState;
             ChangeState(STATE_BUFFERING);
 

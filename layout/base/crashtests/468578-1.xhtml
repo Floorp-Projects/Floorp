@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+// <![CDATA[
+
+function boom()
+{
+  var legend = document.getElementById("legend");
+  legend.appendChild(document.createTextNode("T"));
+  document.documentElement.offsetHeight;
+  legend.removeChild(legend.firstChild);
+  document.body.removeChild(legend);
+}
+
+// ]]>
+</script>
+</head>
+
+<body onload="boom();" style="-moz-column-width: 0pc;"><legend id="legend" style="white-space: pre-line; padding-bottom: 90px; display: block;">
+    </legend></body>
+</html>

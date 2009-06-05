@@ -459,13 +459,13 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
            !IsDisabled() && IsMenu()) {
     // The menu item was selected. Bring up the menu.
     // We have children.
+    // Don't prevent the default action here, since that will also cancel
+    // potential drag starts.
     if (!mMenuParent || mMenuParent->IsMenuBar()) {
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       ToggleMenuState();
     }
     else {
       if (!IsOpen()) {
-        *aEventStatus = nsEventStatus_eConsumeNoDefault;
         OpenMenu(PR_FALSE);
       }
     }

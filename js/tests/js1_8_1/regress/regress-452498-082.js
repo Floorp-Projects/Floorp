@@ -171,10 +171,12 @@ function test()
 
   try
   {
-	  for(let x;
-	      ([,,,]
-	       .toExponential(new Function(), (function(){}))); [] = {})
-	    for(var [x, x] = * in this.__defineSetter__("", function(){}));
+    eval(
+	  'for(let x;' +
+	  '    ([,,,]' +
+	  '     .toExponential(new Function(), (function(){}))); [] = {})' +
+	  '  for(var [x, x] = * in this.__defineSetter__("", function(){}));'
+      );
   }
   catch(ex)
   {

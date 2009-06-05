@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369950
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=369950">Mozilla Bug 369950</a>
 <p id="display">
-  <iframe id="i" src="bug369950-subframe.xml"></iframe>
+  <iframe id="i" src="bug369950-subframe.xml" width="200" height="100"></iframe>
 </p>
 <div id="content" style="display: none">
   
@@ -33,6 +33,8 @@ addLoadEvent(function() {
 function doTheTest() {
   // do a layout flush
   var rect = $("i").getBoundingClientRect();
+  var rect2 = $("i").contentDocument.documentElement.getBoundingClientRect();
+
   // And do the rest of it later
   SimpleTest.executeSoon(reallyDoTheTest);
 }

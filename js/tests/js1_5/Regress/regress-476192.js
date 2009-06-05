@@ -39,7 +39,7 @@
 var gTestfile = 'regress-476192.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 476192;
-var summary = 'TM: Do not assert: Assertion failure: JSVAL_TAG(v) == JSVAL_STRING';
+var summary = 'TM: Do not assert: JSVAL_TAG(v) == JSVAL_STRING';
 var actual = '';
 var expect = '';
 

@@ -27,12 +27,8 @@ link > label {
   text-decoration: underline !important;
 }
 
-link:hover:active {
-  color: red;
-}
-
 link:focus {
-  border: 1px dotted black;
+  border: 1px dotted -moz-DialogText;
 }
 
 remotecontent {

@@ -1759,6 +1759,7 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
 NS_IMETHODIMP
 nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 {
+    NS_ASSERTION(aElement->GetCurrentDoc() == this, "Element not in doc!");
     // From here on we only care about elements.
     if (!aElement->IsNodeOfType(nsINode::eELEMENT)) {
         return NS_OK;
@@ -3961,8 +3962,11 @@ nsXULDocument::OverlayForwardReference::Resolve()
         if (NS_FAILED(rv)) return eResolve_Error;
     }
 
-    if (!notify) {
+    // Check if 'target' is still in our document --- it might not be!
+    if (!notify && target->GetCurrentDoc() == mDocument) {
         // Add child and any descendants to the element map
+        // XXX this is bogus, the content in 'target' might already be
+        // in the document
         rv = mDocument->AddSubtreeToDocument(target);
         if (NS_FAILED(rv)) return eResolve_Error;
     }

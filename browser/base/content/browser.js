@@ -2155,7 +2155,7 @@ function URLBarSetURI(aURI, aValid) {
   var value = gBrowser.userTypedValue;
   var valid = false;
 
-  if (!value) {
+  if (value == null) {
     let uri = aURI || getWebNavigation().currentURI;
 
     // Replace initial page URIs with an empty string
@@ -2165,7 +2165,8 @@ function URLBarSetURI(aURI, aValid) {
     else
       value = losslessDecodeURI(uri);
 
-    valid = value && (!aURI || aValid);
+    let isBlank = (uri.spec == "about:blank");
+    valid = !isBlank && (!aURI || aValid);
   }
 
   gURLBar.value = value;

@@ -101,7 +101,7 @@ namespace nanojit {
 			if (!isMergeFragment(treeBranch)) {
 				struct SideExit* exit = treeBranch->spawnedFrom->exit();
 				if (isValidSideExit(exit) && isCompiled(treeBranch)) {
-					verbose_draw_only(printf("Adding edge between %s and %s\n", _labels->format(lastDrawnBranch), _labels->format(treeBranch)));
+					verbose_draw_only(nj_dprintf("Adding edge between %s and %s\n", _labels->format(lastDrawnBranch), _labels->format(treeBranch)));
 					
 					this->addEdge(lastDrawnBranch, treeBranch);
 					lastDrawnBranch = treeBranch;
@@ -119,46 +119,46 @@ namespace nanojit {
     	// At the end of a tree, find out where it goes
     	if (isCrossFragment(root)) {
 			if (root->eot_target) {
-    			verbose_draw_only(printf("Found a cross fragment %s TO %s \n", _labels->format(root), _labels->format(root->eot_target)));
+    			verbose_draw_only(nj_dprintf("Found a cross fragment %s TO %s \n", _labels->format(root), _labels->format(root->eot_target)));
     			this->addEdge(root, root->eot_target);
 			}
     	}
     	else if (isBackEdgeSideExit(root)) {
-			verbose_draw_only(printf("Adding anchor branch edge from %s TO %s\n", _labels->format(root), _labels->format(root->anchor)));
+			verbose_draw_only(nj_dprintf("Adding anchor branch edge from %s TO %s\n", _labels->format(root), _labels->format(root->anchor)));
 			this->addEdge(root, root->anchor);
     	}
     	else if (isSingleTrace(root)) {
-    		verbose_draw_only(printf("Found a single trace %s\n", _labels->format(root)));
+    		verbose_draw_only(nj_dprintf("Found a single trace %s\n", _labels->format(root)));
     		this->addEdge(root, root);
     	}
     	else if (isSpawnedTrace(root)) {
     		struct SideExit *exit = root->spawnedFrom->exit();
 			if (isValidSideExit(exit) && isCompiled(root)) {
-				verbose_draw_only(printf("Found a spawned side exit from %s that is a spawn and compiled %s\n", _labels->format(root), _labels->format(exit->from)));
+				verbose_draw_only(nj_dprintf("Found a spawned side exit from %s that is a spawn and compiled %s\n", _labels->format(root), _labels->format(exit->from)));
 				this->addEdge(root, root->parent);
 			}
     	}
     	else if (hasEndOfTraceFrag(root)) {
-    		verbose_draw_only(printf("%s has an EOT to %s\n", _labels->format(root), _labels->format(root->eot_target)));
+    		verbose_draw_only(nj_dprintf("%s has an EOT to %s\n", _labels->format(root), _labels->format(root->eot_target)));
     		addEdge(root, root->eot_target);
     	}
     }
     
 	void TraceTreeDrawer::addMergeNode(Fragment *mergeRoot) {
-        verbose_draw_only(printf("Found a merge fragment %s and anchor %s\n", _labels->format(mergeRoot), _labels->format(mergeRoot->anchor)));
+        verbose_draw_only(nj_dprintf("Found a merge fragment %s and anchor %s\n", _labels->format(mergeRoot), _labels->format(mergeRoot->anchor)));
         
 		if (hasCompiledBranch(mergeRoot)) {
-			verbose_draw_only(printf("Found a branch to %s\n", _labels->format(mergeRoot->branches)));
+			verbose_draw_only(nj_dprintf("Found a branch to %s\n", _labels->format(mergeRoot->branches)));
 			addEdge(mergeRoot, mergeRoot->branches);
 			recursiveDraw(mergeRoot->branches);
 		}
 		
 		if (hasEndOfTraceFrag(mergeRoot)) {
-            verbose_draw_only(printf("Merge with an EOT to %s\n", _labels->format(mergeRoot->eot_target)));
+            verbose_draw_only(nj_dprintf("Merge with an EOT to %s\n", _labels->format(mergeRoot->eot_target)));
 			addEdge(mergeRoot, mergeRoot->eot_target);
 		}
 		else {
-            verbose_draw_only(printf("Merge to anchor %s\n", _labels->format(mergeRoot->anchor)));
+            verbose_draw_only(nj_dprintf("Merge to anchor %s\n", _labels->format(mergeRoot->anchor)));
 			addEdge(mergeRoot, mergeRoot->anchor);
 		}
 	}
@@ -166,7 +166,7 @@ namespace nanojit {
     void TraceTreeDrawer::draw(Fragment *root) {
 		this->recursiveDraw(root);
 		
-		verbose_draw_only(printf("\nFinished drawing, printing status\n"));
+		verbose_draw_only(nj_dprintf("\nFinished drawing, printing status\n"));
 		verbose_draw_only(this->printTreeStatus(root));
     }
     
@@ -179,7 +179,7 @@ namespace nanojit {
     	strncat(outputFileName, this->_fileName, 128);
     	strncat(outputFileName + fileNameLength - 1, graphMLExtension, 128);	// -1 to overwrite the \0
     	
-    	verbose_draw_only(printf("output file name is %s\n", outputFileName));
+    	verbose_draw_only(nj_dprintf("output file name is %s\n", outputFileName));
     	this->_fstream = fopen(outputFileName, "w");
     	
 		fprintf(_fstream, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
@@ -257,10 +257,10 @@ namespace nanojit {
 			return;
 		}
 		
-    	printf("\nRoot is %s\n", _labels->format(root));
+    	nj_dprintf("\nRoot is %s\n", _labels->format(root));
     	if (root->spawnedFrom) {
 			if (root->compileNbr) {
-					printf("Found a root that is a spawn and compiled %s\n", _labels->format(root->parent));
+					nj_dprintf("Found a root that is a spawn and compiled %s\n", _labels->format(root->parent));
 			}
     	}
     	
@@ -268,13 +268,13 @@ namespace nanojit {
     			if (x->kind != MergeTrace) {
     				struct SideExit* exit = x->spawnedFrom->exit();
     				if (exit && x->compileNbr) {
-    					printf("Found one with an SID and compiled %s\n", _labels->format(x));
+    					nj_dprintf("Found one with an SID and compiled %s\n", _labels->format(x));
     				}
     				
     				printTreeStatus(x);
     			}
     	}
-    	printf("\n");
+    	nj_dprintf("\n");
     }
 #endif
 }

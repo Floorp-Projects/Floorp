@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<overlay id="extA2"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <statusbar id="extAbar" removeelement="true" />
+</overlay>

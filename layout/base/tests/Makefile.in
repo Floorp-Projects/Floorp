@@ -75,6 +75,8 @@ _TEST_FILES =	\
 		test_printpreview.html \
 		test_bug482976.html \
 		decoration_line_rendering.js \
+		test_bug495648.xul \
+		bug495648.rdf \
 		$(NULL)
 # test_bug396024.html is currently disabled because it interacts badly with
 # the "You can't print-preview while the page is loading" dialog.

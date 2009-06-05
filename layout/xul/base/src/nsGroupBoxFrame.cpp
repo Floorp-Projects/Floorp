@@ -60,6 +60,8 @@ public:
   }
 #endif
 
+  virtual PRBool HonorPrintBackgroundSettings() { return PR_FALSE; }
+
   void PaintBorderBackground(nsIRenderingContext& aRenderingContext,
       nsPoint aPt, const nsRect& aDirtyRect);
 
@@ -173,7 +175,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
   groupRect += aPt;
 
   nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, PR_FALSE);
+                                  aDirtyRect, rect, 0);
 
   if (groupBox) {
 
