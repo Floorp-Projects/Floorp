@@ -468,8 +468,7 @@ WeaveSvc.prototype = {
         this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
         ret = Svc.Prefs.get("serverURL");
       } else if (res.lastChannel.responseStatus == 200) {
-        // XXX Bug 480480 Work around the server sending a trailing newline
-        ret = 'https://' + res.data.trim() + '/';
+        ret = "https://" + res.data + "/";
       }
 
       self.done(ret);
