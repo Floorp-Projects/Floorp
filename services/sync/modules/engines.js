@@ -326,8 +326,6 @@ SyncEngine.prototype = {
 
   // Generate outgoing records
   _processIncoming: function SyncEngine__processIncoming() {
-    let self = yield;
-
     this._log.debug("Downloading & applying server changes");
 
     // enable cache, and keep only the first few items.  Otherwise (when
@@ -515,7 +513,7 @@ SyncEngine.prototype = {
     try {
       this._syncStartup();
       Observers.notify("weave:engine:sync:status", "process-incoming");
-      yield this._processIncoming.async(this, self.cb);
+      this._processIncoming();
       Observers.notify("weave:engine:sync:status", "upload-outgoing");
       this._uploadOutgoing();
       this._syncFinish();
