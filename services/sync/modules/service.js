@@ -632,8 +632,6 @@ WeaveSvc.prototype = {
   // stuff we need to to after login, before we can really do
   // anything (e.g. key setup)
   _remoteSetup: function WeaveSvc__remoteSetup() {
-    let self = yield;
-    let ret = false; // false to abort sync
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
@@ -654,8 +652,7 @@ WeaveSvc.prototype = {
         this._setSyncFailure(METARECORD_DOWNLOAD_FAIL);
         this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
-        self.done(false);
-        return;
+        return false;
       }
 
       if (!meta)
@@ -669,8 +666,7 @@ WeaveSvc.prototype = {
         this._log.info("...and key generation is disabled.  Not wiping. " +
                        "Aborting sync.");
         this._setSyncFailure(DESKTOP_VERSION_OUT_OF_DATE);
-        self.done(false);
-        return;
+        return false;
       }
       reset = true;
       this._log.info("Wiping server data");
@@ -687,8 +683,7 @@ WeaveSvc.prototype = {
       this._setSyncFailure(VERSION_OUT_OF_DATE);
       this._log.warn("Server data is of a newer Weave version, this client " +
                      "needs to be upgraded.  Aborting sync.");
-      self.done(false);
-      return;
+      return false;
 
     } else if (meta.payload.syncID != Clients.syncID) {
       this._log.warn("Meta.payload.syncID is " + meta.payload.syncID +
@@ -712,10 +707,8 @@ WeaveSvc.prototype = {
         this._log.debug("Could not get private key");
       else if (privkey.keyData == null)
         this._log.debug("Private key has no key data");
-      else {
-        needKeys = false;
-        ret = true;
-      }
+      else
+        return true;
     }
 
     if (needKeys) {
@@ -728,16 +721,14 @@ WeaveSvc.prototype = {
         this._log.debug("PrivKey HTTP response status: " +
                         PrivKeys.lastResource.lastChannel.responseStatus);
         this._setSyncFailure(KEYS_DOWNLOAD_FAIL);
-        self.done(false);
-        return;
+        return false;
       }
 
       if (!this._keyGenEnabled) {
         this._log.warn("Couldn't download keys from server, and key generation" +
                        "is disabled.  Aborting sync");
         this._setSyncFailure(NO_KEYS_NO_KEYGEN);
-        self.done(false);
-        return;
+        return false;
       }
 
       if (!reset) {
@@ -752,7 +743,7 @@ WeaveSvc.prototype = {
                                          PrivKeys.defaultKeyUri);
         try {
           PubKeys.uploadKeypair(keys);
-          ret = true;
+          return true;
         } catch (e) {
           this._setSyncFailure(KEYS_UPLOAD_FAIL);
           this._log.error("Could not upload keys: " + Utils.exceptionStr(e));
@@ -765,7 +756,7 @@ WeaveSvc.prototype = {
       }
     }
 
-    self.done(ret);
+    return false;
   },
 
   /**
@@ -847,9 +838,8 @@ WeaveSvc.prototype = {
       throw reason;
     }
 
-    if (!(yield this._remoteSetup.async(this, self.cb))) {
+    if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
-    }
 
     this._log.debug("Refreshing client list");
     Clients.sync();
@@ -863,7 +853,7 @@ WeaveSvc.prototype = {
         }
 
         // Repeat remoteSetup in-case the commands forced us to reset
-        if (!(yield this._remoteSetup.async(this, self.cb)))
+        if (!(this._remoteSetup()))
           throw "aborting sync, remote setup failed after processing commands";
       }
       finally {
