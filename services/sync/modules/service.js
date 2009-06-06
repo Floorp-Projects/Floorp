@@ -152,6 +152,7 @@ function WeaveSvc() {
 }
 WeaveSvc.prototype = {
 
+  _lock: Utils.lock,
   _localLock: Wrap.localLock,
   _catch: Utils.catch,
   _catchAll: Wrap.catchAll,
