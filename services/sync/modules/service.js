@@ -699,7 +699,7 @@ WeaveSvc.prototype = {
     } else if (meta.payload.syncID != Clients.syncID) {
       this._log.warn("Meta.payload.syncID is " + meta.payload.syncID +
                      ", Clients.syncID is " + Clients.syncID);
-      yield this.resetClient(self.cb);
+      this.resetClient();
       this._log.info("Reset client because of syncID mismatch.");
       Clients.syncID = meta.payload.syncID;
       this._log.info("Reset the client after a server/client sync ID mismatch");
@@ -971,7 +971,7 @@ WeaveSvc.prototype = {
 
   _freshStart: function WeaveSvc__freshStart() {
     let self = yield;
-    yield this.resetClient(self.cb);
+    this.resetClient();
     this._log.info("Reset client data from freshStart.");
     this._log.info("Client metadata wiped, deleting server data");
     yield this.wipeServer(self.cb);
@@ -1091,15 +1091,11 @@ WeaveSvc.prototype = {
   /**
    * Reset the client by getting rid of any local server data and client data.
    *
-   * @param onComplete
-   *        Callback when this method completes
    * @param engines [optional]
    *        Array of engine names to reset. If not given, all engines are used.
    */
-  resetClient: function WeaveSvc_resetClient(onComplete, engines) {
-    let fn = function WeaveSvc__resetClient() {
-      let self = yield;
-
+  resetClient: function WeaveSvc_resetClient(engines)
+    this._catch(this._notify("reset-client", "", function() {
       // If we don't have any engines, reset everything including the service
       if (!engines) {
         // Clear out any service data
@@ -1126,9 +1122,7 @@ WeaveSvc.prototype = {
       } catch (e) {
         this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
       }
-    };
-    this._catchAll(this._notifyAsync("reset-client", "", fn)).async(this, onComplete);
-  },
+    }))(),
 
   /**
    * A hash of valid commands that the client knows about. The key is a command
@@ -1174,7 +1168,7 @@ WeaveSvc.prototype = {
             engines = null;
             // Fallthrough
           case "resetEngine":
-            yield this.resetClient(self.cb, engines);
+            this.resetClient(engines);
             break;
 
           case "wipeAll":
