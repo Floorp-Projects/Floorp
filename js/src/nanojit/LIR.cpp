@@ -396,6 +396,90 @@ namespace nanojit
         }
     }
     
+#if defined(_DEBUG)
+    bool LIns::isOp1() const {
+        switch (firstWord.code) {
+            case LIR_skip:
+            case LIR_ret:
+            case LIR_live:
+            case LIR_neg:
+#if !defined NANOJIT_64BIT
+            case LIR_callh:
+#endif
+            case LIR_not:
+            case LIR_qlo:
+            case LIR_qhi:
+            case LIR_ov:
+            case LIR_cs:
+            case LIR_file:
+            case LIR_line:
+            case LIR_fret:
+            case LIR_fneg:
+            case LIR_i2f:
+            case LIR_u2f:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    bool LIns::isOp2() const {
+        switch (firstWord.code) {
+            case LIR_ld:
+            case LIR_loop:
+            case LIR_x:
+            case LIR_jt:
+            case LIR_jf:
+            case LIR_ldcs:
+            case LIR_feq:
+            case LIR_flt:
+            case LIR_fgt:
+            case LIR_fle:
+            case LIR_fge:
+            case LIR_cmov:
+            case LIR_add:
+            case LIR_sub:
+            case LIR_mul:
+            case LIR_and:
+            case LIR_or:
+            case LIR_xor:
+            case LIR_lsh:
+            case LIR_rsh:
+            case LIR_ush:
+            case LIR_xt:
+            case LIR_xf:
+            case LIR_ldcb:
+            case LIR_eq:
+            case LIR_lt:
+            case LIR_gt:
+            case LIR_le:
+            case LIR_ge:
+            case LIR_ult:
+            case LIR_ugt:
+            case LIR_ule:
+            case LIR_uge:
+            case LIR_2:
+            case LIR_xbarrier:
+            case LIR_xtbl:
+            case LIR_ldq:
+            case LIR_qiand:
+            case LIR_qiadd:
+            case LIR_qcmov:
+            case LIR_fadd:
+            case LIR_fsub:
+            case LIR_fmul:
+            case LIR_fdiv:
+            case LIR_qior:
+            case LIR_qilsh:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+#endif // defined(_DEBUG)
+
 	bool LIns::isCmp() const {
         LOpcode op = firstWord.code;
         return (op >= LIR_eq && op <= LIR_uge) || (op >= LIR_feq && op <= LIR_fge);
@@ -507,6 +591,7 @@ namespace nanojit
 
 	const CallInfo* LIns::callInfo() const
 	{
+        NanoAssert(isCall());
         return c.ci;
 	}
 
@@ -514,6 +599,7 @@ namespace nanojit
     // Nb: this must be kept in sync with insCall().
     LInsp LIns::arg(uint32_t i) 
 	{
+        NanoAssert(isCall());
         NanoAssert(i < argc());
         LInsp* offs = (LInsp*)this - (i+1);
         return *offs;
