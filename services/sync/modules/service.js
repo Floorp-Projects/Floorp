@@ -573,42 +573,37 @@ WeaveSvc.prototype = {
     Svc.Observer.notifyObservers(null, "weave:service:logout:finish", "");
   },
 
-  createAccount: function WeaveSvc_createAccount(onComplete, username, password, email,
+  createAccount: function WeaveSvc_createAccount(username, password, email,
                                                  captchaChallenge, captchaResponse) {
-    let fn = function WeaveSvc__createAccount() {
-      let self = yield;
+    function enc(x) encodeURIComponent(x);
+    let message = "uid=" + enc(username) + "&password=" + enc(password) +
+      "&mail=" + enc(email) + "&recaptcha_challenge_field=" +
+      enc(captchaChallenge) + "&recaptcha_response_field=" + enc(captchaResponse);
 
-      function enc(x) encodeURIComponent(x);
-      let message = "uid=" + enc(username) + "&password=" + enc(password) +
-        "&mail=" + enc(email) +
-        "&recaptcha_challenge_field=" + enc(captchaChallenge) +
-        "&recaptcha_response_field=" + enc(captchaResponse);
+    let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/new';
+    let res = new Weave.Resource(url);
+    res.authenticator = new Weave.NoOpAuthenticator();
+    res.setHeader("Content-Type", "application/x-www-form-urlencoded",
+                  "Content-Length", message.length);
 
-      let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/new';
-      let res = new Weave.Resource(url);
-      res.authenticator = new Weave.NoOpAuthenticator();
-      res.setHeader("Content-Type", "application/x-www-form-urlencoded",
-                    "Content-Length", message.length);
+    // fixme: Resource throws on error - it really shouldn't :-/
+    let resp;
+    try {
+      resp = res.post(message);
+    }
+    catch(ex) {
+      this._log.trace("Create account error: " + ex);
+    }
 
-      // fixme: Resource throws on error - it really shouldn't :-/
-      let resp;
-      try {
-        resp = yield res.post(self.cb, message);
-      } catch (e) {
-        this._log.trace("Create account error: " + e);
-      }
-
-      if (res.lastChannel.responseStatus != 200 &&
-          res.lastChannel.responseStatus != 201)
-        this._log.info("Failed to create account. " +
+    if (res.lastChannel.responseStatus != 200 &&
+        res.lastChannel.responseStatus != 201)
+      this._log.info("Failed to create account. " +
                        "status: " + res.lastChannel.responseStatus + ", " +
                        "response: " + resp);
-      else
-	this._log.info("Account created: " + resp);
+    else
+      this._log.info("Account created: " + resp);
 
-      self.done(res.lastChannel.responseStatus);
-    };
-    fn.async(this, onComplete);
+    return res.lastChannel.responseStatus;
   },
 
   // stuff we need to to after login, before we can really do
