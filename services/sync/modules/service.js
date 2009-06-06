@@ -913,7 +913,7 @@ WeaveSvc.prototype = {
         }
 
         // If there's any problems with syncing the engine, report the failure
-        if (!(yield this._syncEngine.async(this, self.cb, engine))) {
+        if (!(this._syncEngine(engine))) {
           this._log.info("Aborting sync");
           break;
         }
@@ -954,18 +954,17 @@ WeaveSvc.prototype = {
   // returns true if sync should proceed
   // false / no return value means sync should be aborted
   _syncEngine: function WeaveSvc__syncEngine(engine) {
-    let self = yield;
     try {
       engine.sync();
       if (!this.cancelRequested)
-        self.done(true);
+        return true;
     }
     catch(e) {
       this._syncError = true;
       this._weaveStatusCode = WEAVE_STATUS_PARTIAL;
       this._detailedStatus.setEngineStatus(engine.name, e);
       if (FaultTolerance.Service.onException(e))
-        self.done(true);
+        return true;
     }
   },
 
