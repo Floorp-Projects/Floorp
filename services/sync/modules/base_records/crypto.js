@@ -157,13 +157,9 @@ CryptoMeta.prototype = {
       privkey.keyData, passphrase, privkey.salt, privkey.iv);
   },
 
-  _addKey: function CryptoMeta__addKey(new_pubkey, privkey, passphrase) {
-    let self = yield;
-    let symkey = yield this.getKey(self.cb, privkey, passphrase);
-    yield this.addUnwrappedKey(self.cb, new_pubkey, symkey);
-  },
-  addKey: function CryptoMeta_addKey(onComplete, new_pubkey, privkey, passphrase) {
-    this._addKey.async(this, onComplete, new_pubkey, privkey, passphrase);
+  addKey: function CryptoMeta_addKey(new_pubkey, privkey, passphrase) {
+    let symkey = this.getKey(privkey, passphrase);
+    this.addUnwrappedKey(new_pubkey, symkey);
   },
 
   addUnwrappedKey: function CryptoMeta_addUnwrappedKey(new_pubkey, symkey) {
