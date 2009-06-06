@@ -335,7 +335,7 @@ WeaveSvc.prototype = {
 
     if (Svc.Prefs.get("autoconnect") && this.username) {
       try {
-        if (yield this.login(self.cb))
+        if (this.login())
           yield this.sync(self.cb, true);
       } catch (e) {}
     }
@@ -542,21 +542,17 @@ WeaveSvc.prototype = {
         this._notifyAsync("verify-passphrase", "", fn))).async(this, onComplete);
   },
 
-  login: function WeaveSvc_login(onComplete, username, password, passphrase) {
-    let user = username, pass = password, passp = passphrase;
-
-    let fn = function WeaveSvc__login() {
-      let self = yield;
-
+  login: function WeaveSvc_login(username, password, passphrase)
+    this._catch(this._lock(this._notify("login", "", function() {
       this._loggedIn = false;
       this._detailedStatus = new StatusRecord();
 
-      if (typeof(user) != 'undefined')
-        this.username = user;
-      if (typeof(pass) != 'undefined')
-        ID.get('WeaveID').setTempPassword(pass);
-      if (typeof(passp) != 'undefined')
-        ID.get('WeaveCryptoID').setTempPassword(passp);
+      if (typeof(username) != "undefined")
+        this.username = username;
+      if (typeof(password) != "undefined")
+        ID.get("WeaveID").setTempPassword(password);
+      if (typeof(passphrase) != "undefined")
+        ID.get("WeaveCryptoID").setTempPassword(passphrase);
 
       if (!this.username) {
         this._setSyncFailure(LOGIN_FAILED_NO_USERNAME);
@@ -579,11 +575,8 @@ WeaveSvc.prototype = {
       this._loggedIn = true;
       this._checkSync();
 
-      self.done(true);
-    };
-    this._catchAll(this._localLock(this._notifyAsync("login", "", fn))).
-      async(this, onComplete);
-  },
+      return true;
+    })))(),
 
   logout: function WeaveSvc_logout() {
     this._log.info("Logging out");
