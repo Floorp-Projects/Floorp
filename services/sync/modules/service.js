@@ -493,9 +493,8 @@ WeaveSvc.prototype = {
     fn.async(this, onComplete);
   },
 
-  verifyLogin: function WeaveSvc_verifyLogin(onComplete, username, password, isLogin) {
-    let fn = function WeaveSvc__verifyLogin() {
-      let self = yield;
+  verifyLogin: function WeaveSvc_verifyLogin(username, password, isLogin)
+    this._catch(this._notify("verify-login", "", function() {
       this._log.debug("Verifying login for user " + username);
 
       let url = this.findCluster(username);
@@ -516,10 +515,8 @@ WeaveSvc.prototype = {
       res.get();
 
       //JSON.parse(res.data); // throws if not json
-      self.done(true);
-    };
-    this._catchAll(this._notifyAsync("verify-login", "", fn)).async(this, onComplete);
-  },
+      return true;
+    }))(),
 
   verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
                                                        password, passphrase) {
@@ -572,7 +569,7 @@ WeaveSvc.prototype = {
 
       this._log.debug("Logging in user " + this.username);
 
-      if (!(yield this.verifyLogin(self.cb, this.username, this.password, true))) {
+      if (!(this.verifyLogin(this.username, this.password, true))) {
         this._setSyncFailure(LOGIN_FAILED_REJECTED);
         throw "Login failed";
       }
