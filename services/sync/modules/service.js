@@ -147,11 +147,13 @@ StatusRecord.prototype = {
  */
 
 function WeaveSvc() {
-  this._notify = Wrap.notify("weave:service:");
+  this._notify = Utils.notify("weave:service:");
+  this._notifyAsync = Wrap.notify("weave:service:");
 }
 WeaveSvc.prototype = {
 
   _localLock: Wrap.localLock,
+  _catch: Utils.catch,
   _catchAll: Wrap.catchAll,
   _isQuitting: false,
   _loggedIn: false,
@@ -516,7 +518,7 @@ WeaveSvc.prototype = {
       //JSON.parse(res.data); // throws if not json
       self.done(true);
     };
-    this._catchAll(this._notify("verify-login", "", fn)).async(this, onComplete);
+    this._catchAll(this._notifyAsync("verify-login", "", fn)).async(this, onComplete);
   },
 
   verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
@@ -539,7 +541,7 @@ WeaveSvc.prototype = {
     };
     this._catchAll(
       this._localLock(
-        this._notify("verify-passphrase", "", fn))).async(this, onComplete);
+        this._notifyAsync("verify-passphrase", "", fn))).async(this, onComplete);
   },
 
   login: function WeaveSvc_login(onComplete, username, password, passphrase) {
@@ -581,7 +583,7 @@ WeaveSvc.prototype = {
 
       self.done(true);
     };
-    this._catchAll(this._localLock(this._notify("login", "", fn))).
+    this._catchAll(this._localLock(this._notifyAsync("login", "", fn))).
       async(this, onComplete);
   },
 
@@ -948,7 +950,7 @@ WeaveSvc.prototype = {
    */
   sync: function WeaveSvc_sync(onComplete, fullSync) {
     fullSync = true; // not doing thresholds yet
-    this._catchAll(this._notify("sync", "", this._localLock(this._sync))).
+    this._catchAll(this._notifyAsync("sync", "", this._localLock(this._sync))).
       async(this, onComplete, fullSync);
   },
 
@@ -1018,7 +1020,7 @@ WeaveSvc.prototype = {
         }
       }
     };
-    this._catchAll(this._notify("wipe-server", "", fn)).async(this, onComplete);
+    this._catchAll(this._notifyAsync("wipe-server", "", fn)).async(this, onComplete);
   },
 
   /**
@@ -1048,7 +1050,7 @@ WeaveSvc.prototype = {
       for each (let engine in engines)
         engine.wipeClient();
     };
-    this._catchAll(this._notify("wipe-client", "", fn)).async(this, onComplete);
+    this._catchAll(this._notifyAsync("wipe-client", "", fn)).async(this, onComplete);
   },
 
   /**
@@ -1076,7 +1078,7 @@ WeaveSvc.prototype = {
       // Tell the remote machines to wipe themselves
       this.prepCommand("wipeAll", []);
     };
-    this._catchAll(this._notify("wipe-remote", "", fn)).async(this, onComplete);
+    this._catchAll(this._notifyAsync("wipe-remote", "", fn)).async(this, onComplete);
   },
 
   /**
@@ -1099,7 +1101,7 @@ WeaveSvc.prototype = {
       for each (let cache in [PubKeys, PrivKeys, CryptoMetas, Records])
         cache.clearCache();
     };
-    this._catchAll(this._notify("reset-service", "", fn)).async(this, onComplete);
+    this._catchAll(this._notifyAsync("reset-service", "", fn)).async(this, onComplete);
   },
 
   /**
@@ -1141,7 +1143,7 @@ WeaveSvc.prototype = {
         this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
       }
     };
-    this._catchAll(this._notify("reset-client", "", fn)).async(this, onComplete);
+    this._catchAll(this._notifyAsync("reset-client", "", fn)).async(this, onComplete);
   },
 
   /**
@@ -1206,7 +1208,7 @@ WeaveSvc.prototype = {
 
       self.done(true);
     };
-    this._notify("process-commands", "", fn).async(this, onComplete);
+    this._notifyAsync("process-commands", "", fn).async(this, onComplete);
   },
 
   /**

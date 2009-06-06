@@ -53,6 +53,25 @@ Cu.import("resource://weave/log4moz.js");
 
 let Utils = {
   /**
+   * Wrap a function to catch all exceptions and log them
+   *
+   * @usage MyObj._catch = Utils.catch;
+   *        MyObj.foo = function() { this._catch(func)(); }
+   */
+  catch: function Utils_catch(func) {
+    let thisArg = this;
+    return function WrappedCatch() {
+      try {
+        return func.call(thisArg);
+      }
+      catch(ex) {
+        thisArg._log.debug(["Caught exception:", Utils.exceptionStr(ex),
+          Utils.stackTrace(ex)].join(" ").replace(/\n/g, " "));
+      }
+    };
+  },
+
+  /**
    * Wrap functions to notify when it starts and finishes executing or if it got
    * an error. The message is a combination of a provided prefix and local name
    * with the current state and the subject is the provided subject.
