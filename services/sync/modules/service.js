@@ -1023,15 +1023,11 @@ WeaveSvc.prototype = {
   /**
    * Wipe all local user data.
    *
-   * @param onComplete
-   *        Callback when this method completes
    * @param engines [optional]
    *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeClient: function WeaveSvc_wipeClient(onComplete, engines) {
-    let fn = function WeaveSvc__wipeClient() {
-      let self = yield;
-
+  wipeClient: function WeaveSvc_wipeClient(engines)
+    this._catch(this._notify("wipe-client", "", function() {
       // If we don't have any engines, reset the service and wipe all engines
       if (!engines) {
         // Clear out any service data
@@ -1046,9 +1042,7 @@ WeaveSvc.prototype = {
       // Fully wipe each engine
       for each (let engine in engines)
         engine.wipeClient();
-    };
-    this._catchAll(this._notifyAsync("wipe-client", "", fn)).async(this, onComplete);
-  },
+    }))(),
 
   /**
    * Wipe all remote user data by wiping the server then telling each remote
@@ -1187,7 +1181,7 @@ WeaveSvc.prototype = {
             engines = null;
             // Fallthrough
           case "wipeEngine":
-            yield this.wipeClient(self.cb, engines);
+            this.wipeClient(engines);
             break;
 
           default:
