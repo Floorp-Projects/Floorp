@@ -292,8 +292,7 @@ WeaveSvc.prototype = {
   // one-time initialization like setting up observers and the like
   // xxx we might need to split some of this out into something we can call
   //     again when username/server/etc changes
-  _onStartup: function WeaveSvc__onStartup() {
-    let self = yield;
+  onStartup: function WeaveSvc_onStartup() {
     this._initLogs();
     this._log.info("Weave " + WEAVE_VERSION + " initializing");
     this._registerEngines();
@@ -339,10 +338,6 @@ WeaveSvc.prototype = {
           this.sync(true);
       } catch (e) {}
     }
-    self.done();
-  },
-  onStartup: function WeaveSvc_onStartup(callback) {
-    this._onStartup.async(this, callback);
   },
 
   _initLogs: function WeaveSvc__initLogs() {
