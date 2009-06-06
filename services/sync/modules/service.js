@@ -1035,7 +1035,7 @@ WeaveSvc.prototype = {
       // If we don't have any engines, reset the service and wipe all engines
       if (!engines) {
         // Clear out any service data
-        yield this.resetService(self.cb);
+        this.resetService();
 
         engines = [Clients].concat(Engines.getAll());
       }
@@ -1080,14 +1080,9 @@ WeaveSvc.prototype = {
 
   /**
    * Reset local service information like logs, sync times, caches.
-   *
-   * @param onComplete
-   *        Callback when this method completes
    */
-  resetService: function WeaveSvc__resetService(onComplete) {
-    let fn = function WeaveSvc__resetService() {
-      let self = yield;
-
+  resetService: function WeaveSvc_resetService()
+    this._catch(this._notify("reset-service", "", function() {
       // First drop old logs to track client resetting behavior
       this.clearLogs();
       this._log.info("Logs reinitialized for service reset");
@@ -1097,9 +1092,7 @@ WeaveSvc.prototype = {
       Svc.Prefs.reset("lastSync");
       for each (let cache in [PubKeys, PrivKeys, CryptoMetas, Records])
         cache.clearCache();
-    };
-    this._catchAll(this._notifyAsync("reset-service", "", fn)).async(this, onComplete);
-  },
+    }))(),
 
   /**
    * Reset the client by getting rid of any local server data and client data.
@@ -1116,7 +1109,7 @@ WeaveSvc.prototype = {
       // If we don't have any engines, reset everything including the service
       if (!engines) {
         // Clear out any service data
-        yield this.resetService(self.cb);
+        this.resetService();
 
         engines = [Clients].concat(Engines.getAll());
       }
