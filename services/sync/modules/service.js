@@ -680,7 +680,7 @@ WeaveSvc.prototype = {
       }
       reset = true;
       this._log.info("Wiping server data");
-      yield this._freshStart.async(this, self.cb);
+      this._freshStart();
 
       if (status == 404)
         this._log.info("Metadata record not found, server wiped to ensure " +
@@ -748,7 +748,7 @@ WeaveSvc.prototype = {
 
       if (!reset) {
         this._log.warn("Calling freshStart from !reset case.");
-        yield this._freshStart.async(this, self.cb);
+        this._freshStart();
         this._log.info("Server data wiped to ensure consistency due to missing keys");
       }
 
@@ -970,7 +970,6 @@ WeaveSvc.prototype = {
   },
 
   _freshStart: function WeaveSvc__freshStart() {
-    let self = yield;
     this.resetClient();
     this._log.info("Reset client data from freshStart.");
     this._log.info("Client metadata wiped, deleting server data");
