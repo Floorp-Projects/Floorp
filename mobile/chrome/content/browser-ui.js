@@ -273,6 +273,7 @@ var BrowserUI = {
     switch (aState) {
       case TOOLBARSTATE_LOADED:
         icons.setAttribute("mode", "view");
+        this.showToolbar();
 
         if (!this._faviconLink) {
           this._faviconLink = Browser.selectedBrowser.currentURI.prePath + "/favicon.ico";
@@ -283,9 +284,8 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        ws.panTo(0, -this.toolbarH);
-        this.showToolbar();
         icons.setAttribute("mode", "loading");
+        this.showToolbar(URLBAR_FORCE);
         this._favicon.src = "";
         this._faviconLink = null;
         this.updateIcon();
