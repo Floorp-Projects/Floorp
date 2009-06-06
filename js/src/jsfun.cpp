@@ -245,19 +245,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
      * We must be in a function activation; the function must be lightweight
      * or else fp must have a variable object.
      */
-    JSFunction *fun = fp->fun;
-    JS_ASSERT(fun && (!(fun->flags & JSFUN_HEAVYWEIGHT) || fp->varobj));
-
-    /*
-     * Unlike FUN_ESCAPE_HAZARD(fun), we test here only for null closures, not
-     * flat closures -- flat ones are inherently escaping, so arguments.callee
-     * references are fine.
-     */
-    if (FUN_NULL_CLOSURE(fun) && fun->u.i.skipmin != 0) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_OPTIMIZED_CLOSURE_LEAK);
-        return JS_FALSE;
-    }
+    JS_ASSERT(fp->fun && (!(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->varobj));
 
     /* Skip eval and debugger frames. */
     while (fp->flags & JSFRAME_SPECIAL)
@@ -570,8 +558,14 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     slot = JSVAL_TO_INT(id);
     switch (slot) {
       case ARGS_CALLEE:
-        if (!TEST_OVERRIDE_BIT(fp, slot))
+        if (!TEST_OVERRIDE_BIT(fp, slot)) {
+            if (FUN_ESCAPE_HAZARD(fp->fun)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_OPTIMIZED_CLOSURE_LEAK);
+                return JS_FALSE;
+            }
             *vp = OBJECT_TO_JSVAL(fp->callee);
+        }
         break;
 
       case ARGS_LENGTH:
@@ -809,7 +803,7 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
              * We can wrap only when this Call or Declarative Environment obj
              * still has an active stack frame associated with it.
              */
-            if (FUN_ESCAPE_HAZARD(fun)) {
+            if (FUN_NEEDS_WRAPPER(fun)) {
                 JSStackFrame *fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
                 if (fp) {
                     JSObject *wrapper = WrapEscapingClosure(cx, fp, funobj, fun);
@@ -1349,15 +1343,21 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       case FUN_CALLER:
         if (fp && fp->down && fp->down->fun) {
+            JSFunction *caller = fp->down->fun;
             /*
-             * See the equivalent assertion in args_getProperty. Here we assert
-             * against a closure leak that goes through foo.caller. Wrapping an
-             * escaping optimized closure guarantees that its function cannot
-             * match the unwrapped stack frame's function (fp->fun) in the loop
-             * commented "Find fun's top-most activation record" above.
+             * See equivalent condition in args_getProperty for ARGS_CALLEE,
+             * but here we do not want to throw, since this escape can happen
+             * via foo.caller alone, without any debugger or indirect eval. And
+             * it seems foo.caller is still used on the Web.
              */
-            JS_ASSERT_IF(fp->down->fun->u.i.skipmin != 0,
-                         !FUN_NULL_CLOSURE(fp->down->fun));
+            if (FUN_ESCAPE_HAZARD(caller)) {
+                JSObject *wrapper = WrapEscapingClosure(cx, fp->down, FUN_OBJECT(caller), caller);
+                if (!wrapper)
+                    return JS_FALSE;
+                *vp = OBJECT_TO_JSVAL(wrapper);
+                return JS_TRUE;
+            }
+
             *vp = OBJECT_TO_JSVAL(fp->down->callee);
         } else {
             *vp = JSVAL_NULL;
