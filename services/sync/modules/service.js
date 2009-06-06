@@ -471,22 +471,16 @@ WeaveSvc.prototype = {
   },
 
   // gets cluster from central LDAP server and sets this.clusterURL
-  setCluster: function WeaveSvc_setCluster(onComplete, username) {
-    let fn = function WeaveSvc__setCluster() {
-      let self = yield;
-      let ret = false;
+  setCluster: function WeaveSvc_setCluster(username) {
+    let cluster = this.findCluster(username);
+    if (cluster) {
+      this._log.debug("Saving cluster setting");
+      this.clusterURL = cluster;
+      return true;
+    }
 
-      let cluster = yield this.findCluster(self.cb, username);
-      if (cluster) {
-        this._log.debug("Saving cluster setting");
-        this.clusterURL = cluster;
-        ret = true;
-      } else
-        this._log.debug("Error setting cluster for user " + username);
-
-      self.done(ret);
-    };
-    fn.async(this, onComplete);
+    this._log.debug("Error setting cluster for user " + username);
+    return false;
   },
 
   verifyLogin: function WeaveSvc_verifyLogin(username, password, isLogin)
