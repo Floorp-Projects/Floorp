@@ -47,7 +47,6 @@ Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/stores.js");

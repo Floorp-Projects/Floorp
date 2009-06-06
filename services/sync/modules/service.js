@@ -68,7 +68,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/faultTolerance.js");
 Cu.import("resource://weave/auth.js");
 Cu.import("resource://weave/resource.js");
@@ -77,16 +76,12 @@ Cu.import("resource://weave/base_records/crypto.js");
 Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/identity.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines/clientData.js");
-
-Function.prototype.async = Async.sugar;
 
 // for export
 let Weave = {};
 Cu.import("resource://weave/constants.js", Weave);
 Cu.import("resource://weave/util.js", Weave);
-Cu.import("resource://weave/async.js", Weave);
 Cu.import("resource://weave/faultTolerance.js", Weave);
 Cu.import("resource://weave/auth.js", Weave);
 Cu.import("resource://weave/resource.js", Weave);
@@ -148,14 +143,11 @@ StatusRecord.prototype = {
 
 function WeaveSvc() {
   this._notify = Utils.notify("weave:service:");
-  this._notifyAsync = Wrap.notify("weave:service:");
 }
 WeaveSvc.prototype = {
 
   _lock: Utils.lock,
-  _localLock: Wrap.localLock,
   _catch: Utils.catch,
-  _catchAll: Wrap.catchAll,
   _isQuitting: false,
   _loggedIn: false,
   _syncInProgress: false,
