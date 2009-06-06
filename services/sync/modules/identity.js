@@ -42,11 +42,9 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
-
-Function.prototype.async = Async.sugar;
 
 Utils.lazy(this, 'ID', IDManager);
 
@@ -136,26 +134,15 @@ Identity.prototype = {
   },
 
   // we'll call this if set to call out to the ui to prompt the user
-  // note:the ui is expected to set the password/setTempPassword
-  // note2: callback must be an async.js style generator function
+  // This function takes a callback function to pass back the password
   onGetPassword: null,
 
   // Attempts to get the password from the user if not set
-  _getPassword: function Id__getPassword() {
-    let self = yield;
-    let pass;
-
+  getPassword: function Identity_getPassword() {
     if (this.password)
-      pass = this.password;
-    else {
-      if (this.onGetPassword) {
-        yield Async.run(this, this.onGetPassword, self.cb, this);
-        pass = this.password; // retry after ui callback
-      }
-    }
-    self.done(pass);
-  },
-  getPassword: function Id_getPassword(onComplete) {
-    this._getPassword.async(this, onComplete);
+      return this.password;
+
+    if (typeof this.onGetPassword == "function")
+      return this.password = Sync(this.onGetPassword)();
   }
 };
