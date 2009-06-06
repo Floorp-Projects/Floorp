@@ -63,13 +63,13 @@ FormEngine.prototype = {
 
   _syncStartup: function FormEngine__syncStartup() {
     this._store.cacheFormItems();
-    SyncEngine.prototype._syncStartup();
+    SyncEngine.prototype._syncStartup.call(this);
   },
 
   /* Wipe cache when sync finishes */
   _syncFinish: function FormEngine__syncFinish() {
     this._store.clearFormCache();
-    SyncEngine.prototype._syncFinish();
+    SyncEngine.prototype._syncFinish.call(this);
   },
   
   _recordLike: function SyncEngine__recordLike(a, b) {
