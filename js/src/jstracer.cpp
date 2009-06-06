@@ -8483,10 +8483,15 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
 {
     /*
-     * Try to find the upvar in the current trace's tracker.
+     * Try to find the upvar in the current trace's tracker. For &vr to be
+     * the address of the jsval found in js_GetUpvar, we must initialize
+     * vr directly with the result, so it is a reference to the same location.
+     * It does not work to assign the result to v, because v is an already
+     * existing reference that points to something else.
      */
-    v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
-    LIns* upvar_ins = get(&v);
+    jsval& vr = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+    v = vr;
+    LIns* upvar_ins = get(&vr);
     if (upvar_ins) {
         return upvar_ins;
     }
