@@ -72,6 +72,27 @@ let Utils = {
   },
 
   /**
+   * Wrap a function to call lock before calling the function then unlock.
+   *
+   * @usage MyObj._lock = Utils.lock;
+   *        MyObj.foo = function() { this._lock(func)(); }
+   */
+  lock: function Utils_lock(func) {
+    let thisArg = this;
+    return function WrappedLock() {
+      if (!thisArg.lock())
+        throw "Could not acquire lock";
+
+      try {
+        return func.call(thisArg);
+      }
+      finally {
+        thisArg.unlock();
+      }
+    };
+  },
+
+  /**
    * Wrap functions to notify when it starts and finishes executing or if it got
    * an error. The message is a combination of a provided prefix and local name
    * with the current state and the subject is the provided subject.
