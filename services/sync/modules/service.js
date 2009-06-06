@@ -514,28 +514,21 @@ WeaveSvc.prototype = {
       return true;
     }))(),
 
-  verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
-                                                       password, passphrase) {
-    let fn = function WeaveSvc__verifyPassphrase() {
-      let self = yield;
-
+  verifyPassphrase: function WeaveSvc_verifyPassphrase(username, password, passphrase)
+    this._catch(this._lock(this._notify("verify-passphrase", "", function() {
       this._log.debug("Verifying passphrase");
 
       this.username = username;
-      ID.get('WeaveID').setTempPassword(password);
+      ID.get("WeaveID").setTempPassword(password);
 
-      let id = new Identity('Passphrase Verification', username);
+      let id = new Identity("Passphrase Verification", username);
       id.setTempPassword(passphrase);
 
-      let pubkey = yield PubKeys.getDefaultKey(self.cb);
-      let privkey = yield PrivKeys.get(self.cb, pubkey.PrivKeyUri);
+      let pubkey = PubKeys.getDefaultKey();
+      let privkey = PrivKeys.get(pubkey.PrivKeyUri);
 
       // fixme: decrypt something here
-    };
-    this._catchAll(
-      this._localLock(
-        this._notifyAsync("verify-passphrase", "", fn))).async(this, onComplete);
-  },
+    }))),
 
   login: function WeaveSvc_login(username, password, passphrase)
     this._catch(this._lock(this._notify("login", "", function() {
