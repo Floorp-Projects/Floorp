@@ -974,7 +974,7 @@ WeaveSvc.prototype = {
     this.resetClient();
     this._log.info("Reset client data from freshStart.");
     this._log.info("Client metadata wiped, deleting server data");
-    yield this.wipeServer(self.cb);
+    this.wipeServer();
 
     this._log.debug("Uploading new metadata record");
     meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
@@ -988,15 +988,11 @@ WeaveSvc.prototype = {
   /**
    * Wipe all user data from the server.
    *
-   * @param onComplete
-   *        Callback when this method completes
    * @param engines [optional]
    *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeServer: function WeaveSvc_wipeServer(onComplete, engines) {
-    let fn = function WeaveSvc__wipeServer() {
-      let self = yield;
-
+  wipeServer: function WeaveSvc_wipeServer(engines)
+    this._catch(this._notify("wipe-server", "", function() {
       // Grab all the collections for the user
       let userURL = this.clusterURL + this.username + "/";
       let res = new Resource(userURL);
@@ -1016,9 +1012,7 @@ WeaveSvc.prototype = {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));
         }
       }
-    };
-    this._catchAll(this._notifyAsync("wipe-server", "", fn)).async(this, onComplete);
-  },
+    }))(),
 
   /**
    * Wipe all local user data.
