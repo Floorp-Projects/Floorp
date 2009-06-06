@@ -343,10 +343,6 @@ let Utils = {
     else if (frame.fileName)
       tmp = frame.fileName.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
 
-    // skip async.js frames
-    if (tmp == "module:async.js")
-      return null;
-
     if (frame.lineNumber)
       tmp += ":" + frame.lineNumber;
     if (frame.name)
@@ -386,10 +382,7 @@ let Utils = {
   },
 
   stackTrace: function Weave_stackTrace(e, formatter) {
-    if (e.asyncStack) // AsyncException
-      return "Original exception: " + Utils.exceptionStr(e.originalException) + "\n" +
-             "Async stack trace:\n" + e.asyncStack;
-    else if (e.location) // Wrapped nsIException
+    if (e.location) // Wrapped nsIException
       return "Stack trace:\n" + this.stackTraceFromFrame(e.location, formatter);
     else if (e.stack) // Standard JS exception
       return "JS Stack trace:\n" + e.stack;

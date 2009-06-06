@@ -43,12 +43,9 @@ const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/crypto.js");
 Cu.import("resource://weave/base_records/keys.js");
-
-Function.prototype.async = Async.sugar;
 
 function PrefRec(uri) {
   this._PrefRec_init(uri);
