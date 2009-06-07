@@ -4009,7 +4009,11 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             fullMap.add(getStackTypeMap(e1), e1->numStackSlotsBelowCurrentFrame);
             fullMap.add(getStackTypeMap(e2), e2->numStackSlots);
             stackSlots = fullMap.length();
-            fullMap.add(getGlobalTypeMap(e1), e1->numGlobalSlots);
+            fullMap.add(getGlobalTypeMap(e2), e2->numGlobalSlots);
+            if (e1->numGlobalSlots >= e2->numGlobalSlots) {
+                fullMap.add(getGlobalTypeMap(e1) + e2->numGlobalSlots,
+                            e1->numGlobalSlots - e2->numGlobalSlots);
+            }
             ngslots = e1->numGlobalSlots;
             typeMap = fullMap.data();
         }
