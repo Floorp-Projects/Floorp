@@ -242,12 +242,18 @@ namespace nanojit
 		};
 
 	public:
-        LIns* oprnd1() const { return u.oprnd_1; }
-        LIns* oprnd2() const { return u.oprnd_2; }
+        LIns* oprnd1() const {
+            NanoAssert(isOp1() || isOp2() || isStore());
+            return u.oprnd_1;
+        }
+        LIns* oprnd2() const {
+            NanoAssert(isOp2() || isStore());
+            return u.oprnd_2;
+        }
 
         inline LOpcode opcode()   const { return firstWord.code; }
-        inline uint8_t imm8()     const { return c.imm8a; }
-        inline uint8_t imm8b()    const { return c.imm8b; }
+        inline uint8_t imm8()     const { NanoAssert(isop(LIR_param)); return c.imm8a; }
+        inline uint8_t imm8b()    const { NanoAssert(isop(LIR_param)); return c.imm8b; }
         inline int32_t imm32()    const { NanoAssert(isconst());  return i.imm32; }
         inline int32_t imm64_0()  const { NanoAssert(isconstq()); return i64.imm64_0; }
         inline int32_t imm64_1()  const { NanoAssert(isconstq()); return i64.imm64_1; }
@@ -285,6 +291,10 @@ namespace nanojit
 		bool isCse(const CallInfo *functions) const;
         bool isRet() const { return nanojit::isRetOpcode(firstWord.code); }
 		bool isop(LOpcode o) const { return firstWord.code == o; }
+        #if defined(_DEBUG)
+        bool isOp1() const;     // true for unary ops
+        bool isOp2() const;     // true for binary ops
+        #endif
 		bool isQuad() const;
 		bool isCond() const;
         bool isFloat() const;
@@ -319,16 +329,25 @@ namespace nanojit
 		bool isBranch() const {
 			return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
 		}
-        void setimm32(int32_t x) { i.imm32 = x; }
+        void setimm32(int32_t x) { NanoAssert(isconst()); i.imm32 = x; }
         // Set the opcode and clear resv.
         void initOpcodeAndClearResv(LOpcode);
         Reservation* initResv();
         void         clearResv();
 
 		// operand-setting methods
-        void setOprnd1(LIns* r) { u.oprnd_1 = r; }
-        void setOprnd2(LIns* r) { u.oprnd_2 = r; }
-        void setDisp(int32_t d) { sti.disp = d; }
+        void setOprnd1(LIns* r) {
+            NanoAssert(isOp1() || isOp2() || isStore());
+            u.oprnd_1 = r;
+        }
+        void setOprnd2(LIns* r) {
+            NanoAssert(isOp2() || isStore());
+            u.oprnd_2 = r;
+        }
+        void setDisp(int32_t d) {
+            NanoAssert(isStore());
+            sti.disp = d;
+        }
 		void setTarget(LIns* t);
 		LIns* getTarget();
 
