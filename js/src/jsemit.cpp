@@ -1987,13 +1987,29 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
      * pre-increment and pre-decrement ops, our caller will have to emit
      * JSOP_POS, JSOP_ONE, and JSOP_ADD as well).
      *
-     * Leave JSOP_DELNAME as is so it can be turned into JSOP_FALSE as
-     * appropriate, further below.
+     * Turn JSOP_DELNAME into JSOP_FALSE if dn is known, as all declared
+     * bindings visible to the compiler are permanent in JS unless the
+     * declaration originates in eval code. We detect eval code by testing
+     * cg->compiler->callerFrame, which is set only by eval or a debugger
+     * equivalent.
+     *
+     * Note that this callerFrame non-null test must be qualified by testing
+     * !cg->funbox to exclude function code nested in eval code, which is not
+     * subject to the deletable binding exception.
      */
     switch (op) {
       case JSOP_NAME:
       case JSOP_SETCONST:
+        break;
       case JSOP_DELNAME:
+        if (dn_kind != JSDefinition::UNKNOWN) {
+            if (cg->compiler->callerFrame && !cg->funbox)
+                JS_ASSERT(cg->flags & TCF_COMPILE_N_GO);
+            else
+                pn->pn_op = JSOP_FALSE;
+            pn->pn_dflags |= PND_BOUND;
+            return JS_TRUE;
+        }
         break;
       default:
         if (pn->isConst())
@@ -2228,7 +2244,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_DECNAME:  op = JSOP_DECLOCAL; break;
           case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
           case JSOP_FORNAME:  op = JSOP_FORLOCAL; break;
-          case JSOP_DELNAME:  op = JSOP_FALSE; break;
           default: JS_NOT_REACHED("let");
         }
         break;
@@ -2242,7 +2257,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_DECNAME:  op = JSOP_DECARG; break;
           case JSOP_NAMEDEC:  op = JSOP_ARGDEC; break;
           case JSOP_FORNAME:  op = JSOP_FORARG; break;
-          case JSOP_DELNAME:  op = JSOP_FALSE; break;
           default: JS_NOT_REACHED("arg");
         }
         JS_ASSERT(!pn->isConst());
@@ -2254,10 +2268,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT((cg->fun->flags & JSFUN_LAMBDA) && atom == cg->fun->atom);
 
             switch (op) {
-              case JSOP_DELNAME:
-                if (!(cg->flags & TCF_FUN_HEAVYWEIGHT))
-                    op = JSOP_FALSE;
-                break;
               default:
                 /*
                  * Leave pn->pn_op == JSOP_NAME if cg->fun is heavyweight, as
@@ -2270,6 +2280,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * lexically bound in an outer declarative environment from the
                  * function's activation. See jsfun.cpp:call_resolve.
                  */
+                JS_ASSERT(op != JSOP_DELNAME);
                 if (!(cg->flags & TCF_FUN_HEAVYWEIGHT)) {
                     op = JSOP_CALLEE;
                     pn->pn_dflags |= PND_CONST;
@@ -2295,7 +2306,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_DECNAME:  op = JSOP_DECLOCAL; break;
           case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
           case JSOP_FORNAME:  op = JSOP_FORLOCAL; break;
-          case JSOP_DELNAME:  op = JSOP_FALSE; break;
           default: JS_NOT_REACHED("local");
         }
         JS_ASSERT_IF(dn_kind == JSDefinition::CONST, pn->pn_dflags & PND_CONST);
