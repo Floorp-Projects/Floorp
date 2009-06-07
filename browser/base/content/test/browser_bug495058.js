@@ -44,7 +44,7 @@ function next() {
           if (uris.length)
             next();
           else
-            finish();
+            executeSoon(finish);
         }, 100);
       }, false);
     }, false);
