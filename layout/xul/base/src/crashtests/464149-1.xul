@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window onload="boom();" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="m"><content><xul:textbox type="text"><children/></xul:textbox></content></binding>
+</bindings>
+
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  document.getElementById("b").style.MozBinding = 'url("data:text/xml,' + encodeURIComponent("<bindings xmlns='http://www.mozilla.org/xbl'><binding id='foo'><content><hbox xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'><children xmlns='http://www.mozilla.org/xbl'/></hbox></content></binding></bindings>\n") + '")';
+}
+
+]]>
+</script>
+
+<listbox style="float: right;"><listitem/><listitem id="b"/><listitem><hbox style="-moz-binding: url(#m);"/></listitem></listbox>
+
+</window>
