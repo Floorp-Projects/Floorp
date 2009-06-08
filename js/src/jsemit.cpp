@@ -6760,6 +6760,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (pn->pn_arity == PN_LIST) {
             JS_ASSERT(pn->pn_count != 0);
             for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+                if (pn2->pn_type == TOK_LC &&
+                    js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0) {
+                    return JS_FALSE;
+                }
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
                 if (pn2 != pn->pn_head && js_Emit1(cx, cg, JSOP_ADD) < 0)
