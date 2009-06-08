@@ -1,3 +1,12 @@
+#browser-container > * {
+  -moz-stack-sizing: ignore;
+}
+
+#browser-container > spacer {
+  width: 1px;
+  height: 1px;
+}
+
 #urlbar-edit {
     -moz-binding: url("chrome://browser/content/bindings.xml#autocomplete-aligned");
 }
