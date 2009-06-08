@@ -171,29 +171,6 @@
   </keyset>
 
   <popupset id="mainPopupSet">
-    <!-- popup for site identity information -->
-    <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
-           norestorefocus="true">
-      <hbox id="identity-popup-container" align="top">
-        <image id="identity-popup-icon"/>
-        <vbox id="identity-popup-content-box">
-          <label id="identity-popup-connectedToLabel" value="&identity.connectedTo;"/>
-          <label id="identity-popup-connectedToLabel2" value="&identity.unverifiedsite2;"/>
-          <description id="identity-popup-content-host"/>
-          <label id="identity-popup-runByLabel" value="&identity.runBy;"/>
-          <description id="identity-popup-content-owner"/>
-          <description id="identity-popup-content-supplemental"/>
-          <description id="identity-popup-content-verifier"/>
-          <hbox id="identity-popup-encryption" flex="1">
-            <vbox>
-              <image id="identity-popup-encryption-icon"/>
-              <spacer flex="1"/>
-            </vbox>
-            <description id="identity-popup-encryption-label" flex="1"/>
-          </hbox>
-        </vbox>
-      </hbox>
-    </panel>
   </popupset>
 
   <!-- stupid stack needs to be in a box. not sure why -->
@@ -284,8 +261,31 @@
 
     <notificationbox id="notifications" style="-moz-stack-sizing: ignore;" top="0" left="0"/>
 
+    <!-- popup for find toolbar -->
     <hbox id="findbar-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <findbar id="findbar" flex="1"/>
+    </hbox>
+
+    <!-- popup for site identity information -->
+    <hbox id="identity-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0" align="top" mode="unknownIdentity">
+      <image id="identity-popup-icon"/>
+      <vbox id="identity-popup-content-box" flex="1">
+        <hbox flex="1">
+          <label id="identity-popup-connectedToLabel" value="&identity.connectedTo2;"/>
+          <label id="identity-popup-connectedToLabel2" flex="1">&identity.unverifiedsite2;</label>
+          <description id="identity-popup-content-host" flex="1"/>
+        </hbox>
+        <hbox flex="1">
+          <label id="identity-popup-runByLabel" value="&identity.runBy2;"/>
+          <description id="identity-popup-content-owner"/>
+          <description id="identity-popup-content-supplemental"/>
+        </hbox>
+        <description id="identity-popup-content-verifier"/>
+      </vbox>
+      <vbox align="center" pack="start">
+        <image id="identity-popup-encryption-icon"/>
+        <description id="identity-popup-encryption-label"/>
+      </vbox>
     </hbox>
 
     <vbox id="bookmark-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0">

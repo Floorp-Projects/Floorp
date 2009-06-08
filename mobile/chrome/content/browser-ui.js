@@ -102,7 +102,7 @@ var BrowserUI = {
   },
 
   _linkAdded : function(aEvent) {
-    var link = aEvent.originalTarget;
+    let link = aEvent.originalTarget;
     if (!link || !link.href)
       return;
 
@@ -225,6 +225,9 @@ var BrowserUI = {
 
     // findbar
     document.getElementById("findbar-container").width = windowW;
+
+    // identity
+    document.getElementById("identity-container").width = windowW;
 
     // sidebars
     let sideBarHeight = windowH - this.toolbarH;
