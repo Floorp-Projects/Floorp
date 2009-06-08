@@ -372,6 +372,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
 
   // XXX stop speculative script thread here
   
+  PRInt32 lineNumberSave = mTokenizer->getLineNumber();
+  
   // Maintain a reference to ourselves so we don't go away
   // till we're completely done.
   // XXX is this still necessary? -- hsivonen
@@ -442,6 +444,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   }
   // Scripting semantics require a forced tree builder flush here
   mTreeBuilder->Flush();
+  mTokenizer->setLineNumber(lineNumberSave);
   return NS_OK;
 }
 
