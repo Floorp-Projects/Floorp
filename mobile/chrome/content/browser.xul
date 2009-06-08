@@ -179,7 +179,6 @@
 
     <!-- begin: Browser View -->
     <hbox id="canvasbox"
-          style="-moz-stack-sizing: ignore;"
           left="0" top="-480"
           vptargetx="0"
           vptargety="0"
@@ -197,7 +196,7 @@
     <!-- end: Browser View -->
 
     <!-- begin: left bar -->
-    <vbox id="tabs-container" class="panel-dark" style="-moz-stack-sizing: ignore;"
+    <vbox id="tabs-container" class="panel-dark"
           left="0" top="0"
           constraint="ignore-y,vp-relative">
       <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onmouseup="BrowserUI.hideTabs();" onclosetab="BrowserUI.closeTab(this);"/>
@@ -206,14 +205,14 @@
       </hbox>
     </vbox>
     <!-- barrier to the right of the left sidebar -->
-    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="0" constraint="vp-relative"/>
+    <spacer barriertype="vertical" size="30" left="0" constraint="vp-relative"/>
     <!-- end: left bar -->
 
 
     <!-- begin: right bar -->
     <!-- barrier to the left of the right bar -->
-    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
-    <vbox id="browser-controls" class="panel-dark" style="-moz-stack-sizing: ignore;"
+    <spacer barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
+    <vbox id="browser-controls" class="panel-dark"
           left="800" top="0"
           constraint="ignore-y,vp-relative">
       <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
@@ -225,7 +224,7 @@
     <!-- end: right bar -->
 
     <!-- begin: Main Toolbar -->
-    <toolbar id="toolbar-main" class="panel-dark" style="-moz-stack-sizing: ignore; width: 800px;" top="0" left="0" constraint="ignore-x,vp-relative">
+    <toolbar id="toolbar-main" class="panel-dark" style="width: 800px;" top="0" left="0" constraint="ignore-x,vp-relative">
       <hbox id="urlbar-container" flex="1">
         <box id="identity-box"
              onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
@@ -259,15 +258,15 @@
     </toolbar>
     <!-- end: Main Toolbar -->
 
-    <notificationbox id="notifications" style="-moz-stack-sizing: ignore;" top="0" left="0"/>
+    <notificationbox id="notifications" top="0" left="0"/>
 
     <!-- popup for find toolbar -->
-    <hbox id="findbar-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <hbox id="findbar-container" hidden="true" top="0" left="0">
       <findbar id="findbar" flex="1"/>
     </hbox>
 
     <!-- popup for site identity information -->
-    <hbox id="identity-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0" align="top" mode="unknownIdentity">
+    <hbox id="identity-container" hidden="true" class="panel-dark" top="0" left="0" align="top" mode="unknownIdentity">
       <image id="identity-popup-icon"/>
       <vbox id="identity-popup-content-box" flex="1">
         <hbox flex="1">
@@ -288,14 +287,14 @@
       </vbox>
     </hbox>
 
-    <vbox id="bookmark-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="bookmark-container" hidden="true" class="panel-dark" top="0" left="0">
       <hbox id="bookmark-form" align="start">
         <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
       </hbox>
     </vbox>
 
     <!-- barrier to the left of the right bar -->
-    <hbox id="panel-container" hidden="true" class="panel-dark" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <hbox id="panel-container" hidden="true" class="panel-dark" top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-image" linkedpanel="addons-container"/>
@@ -382,7 +381,7 @@
       </deck>
     </hbox>
 
-    <vbox id="popup_autocomplete" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0" constraint="ignore-x,vp-relative">
+    <vbox id="popup_autocomplete" class="panel-dark" hidden="true" top="0" left="0" constraint="ignore-x,vp-relative">
       <arrowscrollbox id="autocomplete_navbuttons"
                       align="center"
                       flex="1"
@@ -392,7 +391,7 @@
       </arrowscrollbox>
     </vbox>
 
-    <vbox id="bookmarklist-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="bookmarklist-container" class="panel-dark" hidden="true" top="0" left="0">
       <hbox id="bookmarklist-header">
         <description flex="1">&bookmarksHeader.label;</description>
         <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="check" autocheck="true" label="&bookmarksManage.label;"
@@ -405,7 +404,7 @@
                  onopen="BookmarkList.openBookmark();"/>
     </vbox>
 
-    <vbox id="folder-container" class="panel-dark" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="folder-container" class="panel-dark" hidden="true" top="0" left="0">
       <hbox id="folder-header">
         <description flex="1">&foldersHeader.label;</description>
         <toolbarbutton id="tool-folders-close" class="urlbar-button button-image" type="check" checked="true"
@@ -414,7 +413,7 @@
       <placetree id="folder-items" type="bookmarks" mode="folders" flex="1" onselect="FolderPicker.moveItem();"/>
     </vbox>
 
-    <vbox id="helperapp-container" class="dialog-dark" hidden="true" style="-moz-stack-sizing: ignore;" align="center" top="0" left="0">
+    <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0" left="0">
       <label id="helperapp-prompt" value="What would you like to do with"/>
       <label id="helperapp-target" value=""/>
       <separator/>
@@ -425,7 +424,7 @@
       </hbox>
     </vbox>
 
-    <hbox id="alerts-container" hidden="true" style="-moz-stack-sizing: ignore;" align="start" top="0" left="0" width="200"
+    <hbox id="alerts-container" hidden="true" align="start" top="0" left="0" width="200"
           onclick="AlertsHelper.click(event);">
       <image id="alerts-image"/>
       <vbox>
