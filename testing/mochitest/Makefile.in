@@ -102,7 +102,6 @@ TEST_HARNESS_BINS := \
 # the build, but that we need for the test harness.
 TEST_HARNESS_COMPONENTS := \
   test_necko.xpt \
-  TestGeolocationProvider.js \
   $(NULL)
 
 # We need the test plugin as some tests rely on it
