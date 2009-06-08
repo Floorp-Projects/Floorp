@@ -154,10 +154,10 @@ nsHtml5Tokenizer::contentModelElementToArray()
   }
 }
 
-PRInt32 
-nsHtml5Tokenizer::getLineNumber()
+void 
+nsHtml5Tokenizer::setLineNumber(PRInt32 line)
 {
-  return line;
+  this->line = line;
 }
 
 nsHtml5HtmlAttributes* 
@@ -400,7 +400,7 @@ nsHtml5Tokenizer::start()
   longStrBuf = jArray<PRUnichar,PRInt32>(1024);
   longStrBufLen = 0;
   stateSave = NS_HTML5TOKENIZER_DATA;
-  line = -1;
+  line = 1;
   lastCR = PR_FALSE;
   tokenHandler->startTokenization(this);
   index = 0;
