@@ -173,7 +173,12 @@ class nsHtml5Tokenizer
   private:
     void contentModelElementToArray();
   public:
-    PRInt32 getLineNumber();
+    void setLineNumber(PRInt32 line);
+    inline PRInt32 getLineNumber()
+    {
+      return line;
+    }
+
     nsHtml5HtmlAttributes* emptyAttributes();
   private:
     void clearStrBufAndAppendCurrentC(PRUnichar c);
