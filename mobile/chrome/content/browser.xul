@@ -350,9 +350,12 @@
         </vbox>
 
         <vbox id="prefs-container" flex="1">
-          <hbox pack="center" id="buttons"/>
+          <hbox pack="center" id="buttons" oncommand="BrowserUI.showPrefSection(event.target.getAttribute('linkedsection'));">
+            <toolbarbutton id="prefs-content-button" class="show-text button-dark" label="&content.title;" linkedsection="prefs-content"/>
+            <toolbarbutton id="prefs-privacy-button" class="show-text button-dark" label="&privacy.title;" linkedsection="prefs-privacy"/>
+          </hbox>
           <richlistbox id="prefs-list" seltype="single" flex="1">
-            <vbox class="prefsection">
+            <vbox class="prefsection" id="prefs-content">
               <label value="&content.title;" crop="end" flex="1"/>
             </vbox>
             <richpref pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
@@ -363,7 +366,7 @@
               &enablePlugins.description;
             </richpref>
 
-            <vbox class="prefsection">
+            <vbox class="prefsection" id="prefs-privacy">
               <label value="&privacy.title;" crop="end" flex="1"/>
             </vbox>
             <richpref pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2">
