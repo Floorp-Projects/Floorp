@@ -1903,15 +1903,14 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
                 nativeStackFramePos += (*fip2)->spdist;
             nativeStackFramePos -= (2 + (*fip)->get_argc());
-            uint8* typemap = (uint8*) (fi+1);
             return GetUpvarOnTraceTail(state, cookie, nativeStackFramePos,
-                                       typemap, result);
+                                       fi->get_typemap(), result);
         }
     }
 
     if (state->outermostTree->script->staticLevel == upvarLevel) {
-        return GetUpvarOnTraceTail(state, cookie, 0, 
-                                   state->outermostTree->stackTypeMap(), result);
+        return GetUpvarOnTraceTail(state, cookie, 0, state->callstackBase[0]->get_typemap(), 
+                                   result);
     }
 
     /*
