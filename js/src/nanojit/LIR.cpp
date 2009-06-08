@@ -465,6 +465,7 @@ namespace nanojit
             case LIR_ldq:
             case LIR_qiand:
             case LIR_qiadd:
+            case LIR_qjoin:
             case LIR_qcmov:
             case LIR_fadd:
             case LIR_fsub:
