@@ -117,20 +117,20 @@ toolbarbutton.urlbar-cap-button {
 }
 
 /* add special color */
-#identity-box.verifiedIdentity {
+#identity-box[mode="verifiedIdentity"] {
   background: url("images/leftcapEV-default-64.png");
 }
 
-#identity-box.verifiedIdentity:hover:active {
+#identity-box[mode="verifiedIdentity"]:hover:active {
   background: url("images/leftcapEV-active-64.png");
 }
 
 /* add special color */
-#identity-box.verifiedDomain {
+#identity-box[mode="verifiedDomain"] {
   background: url("images/leftcapSSL-default-64.png");
 }
 
-#identity-box.verifiedDomain:hover:active {
+#identity-box[mode="verifiedDomain"]:hover:active {
   background: url("images/leftcapSSL-active-64.png");
 }
 
@@ -493,93 +493,61 @@ findbar {
 }
 
 /* Identity popup   -------------------------------------------------------- */
+#identity-container {
+  padding: 2.2mm; /* core spacing */
+}
+
 /* Popup Icons */
 #identity-popup-icon {
   padding: 0;
   list-style-image: url("chrome://browser/skin/images/identity-64.png");
 }
 
-#identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
+#identity-container[mode="verifiedDomain"] > #identity-popup-icon {
   list-style-image: url("chrome://browser/skin/images/identitySSL-64.png");
 }
 
-#identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
+#identity-container[mode="verifiedIdentity"] > #identity-popup-icon {
   list-style-image: url("chrome://browser/skin/images/identityEV-64.png");
 }
 
 /* Popup Body Text */
-#identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
-#identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
-#identity-popup-content-box.unknownIdentity > #identity-popup-content-host ,
-#identity-popup-content-box.unknownIdentity > #identity-popup-content-owner ,
-#identity-popup-content-box.verifiedIdentity > #identity-popup-connectedToLabel2 ,
-#identity-popup-content-box.verifiedDomain > #identity-popup-connectedToLabel2 {
+#identity-popup-content-box {
+  -moz-padding-start: 2.2mm; /* core spacing */
+}
+
+#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-connectedToLabel,
+#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-runByLabel,
+#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-content-host,
+#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-content-owner,
+#identity-popup-content-box.verifiedIdentity > hbox > #identity-popup-connectedToLabel2,
+#identity-popup-content-box.verifiedDomain > hbox > #identity-popup-connectedToLabel2 {
   display: none;
 }
 
-#identity-popup-content-box > description {
-  font-size: 9pt !important;
+#identity-popup-content-box > hbox > description,
+#identity-popup-content-box > hbox > label {
+  font-size: 11pt !important;
   white-space: pre-wrap;
-  -moz-padding-start: 15px;
-  margin: 2px 0 4px;
 }
 
-#identity-popup-content-box > label {
-  font-size: 9pt !important;
-  white-space: pre-wrap;
-  -moz-padding-start: 15px;
-  margin: 0;
-}
-
-#identity-popup-content-host {
-  margin-top: 3px;
-  margin-bottom: 5px;
-  font-weight: bold;
-  max-width: 240px;
-}
-
-#identity-popup-content-owner {
-  margin-top: 4px;
-  margin-bottom: 0 !important;
-  font-weight: bold;
-  max-width: 240px;
-}
-
-.verifiedDomain > #identity-popup-content-owner {
-  font-weight: normal;
-}
-
+#identity-popup-encryption-label,
 #identity-popup-content-verifier {
-  margin: 4px 0 2px;
+  font-size: 8pt !important;
 }
 
-#identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
-#identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
-  margin-top: 10px;
-  margin-left: -24px;
+#identity-popup-content-host,
+#identity-popup-content-owner {
+  font-weight: bold;
 }
 
-#identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
-#identity-popup-content-box.verifiedDomain > #identity-popup-encryption > vbox > #identity-popup-encryption-icon {
+#identity-popup-encryption-icon {
+  list-style-image: url("chrome://browser/skin/images/unlock-40.png");
+}
+
+#identity-container[mode="verifiedIdentity"] > vbox > #identity-popup-encryption-icon ,
+#identity-container[mode="verifiedDomain"] > vbox > #identity-popup-encryption-icon {
   list-style-image: url("chrome://browser/skin/images/lock-40.png");
-}
-
-#identity-popup-more-info-button {
-  margin-top: 6px;
-  -moz-margin-end: 1px;
-}
-
-/* Popup Bounding Box */
-#identity-popup {
-  -moz-appearance: none;
-  background-color: rgb(90,89,90);
-  border: 1px solid rgb(90,89,90);
-  -moz-border-radius: 0px 0px 8px 8px;
-  padding: 10px 8px 6px 8px;
-  margin-top: 3px;
-  -moz-margin-start: 11px;
-  color:  #ffffff;
-  min-width: 280px;
 }
 
 /* Preferences window   ---------------------------------------------------- */
