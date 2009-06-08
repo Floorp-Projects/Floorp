@@ -152,8 +152,11 @@ function process_cp_pre_genericize(fndecl)
 
           let i;
           for (i in xrange(stack.length - 1, -1, -1)) {
-            if (TREE_CODE(stack[i]) != NOP_EXPR)
-              break;
+            if (TREE_CODE(stack[i]) == NOP_EXPR ||
+                TREE_CODE(stack[i]) == COMPOUND_EXPR)
+              continue;
+            
+            break;
           }
           let assign = stack[i];
           switch (TREE_CODE(assign)) {
