@@ -113,9 +113,6 @@ typedef union JSLocalNames {
 #define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
 #define FUN_FLAT_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_FLAT_CLOSURE)
 #define FUN_NULL_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_NULL_CLOSURE)
-#define FUN_OPTIMIZED_CLOSURE(fun) (FUN_KIND(fun) > JSFUN_INTERPRETED)
-#define FUN_NEEDS_WRAPPER(fun)     (FUN_OPTIMIZED_CLOSURE(fun) && (fun)->u.i.skipmin != 0)
-#define FUN_ESCAPE_HAZARD(fun)     (FUN_NULL_CLOSURE(fun) && (fun)->u.i.skipmin != 0)
 #define FUN_SLOW_NATIVE(fun) (!FUN_INTERPRETED(fun) && !((fun)->flags & JSFUN_FAST_NATIVE))
 #define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
 #define FUN_NATIVE(fun)      (FUN_SLOW_NATIVE(fun) ? (fun)->u.n.native : NULL)
@@ -166,6 +163,8 @@ struct JSFunction {
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
 #ifdef __cplusplus
+    bool optimizedClosure() { return FUN_KIND(this) > JSFUN_INTERPRETED; }
+    bool needsWrapper()     { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
 
     uintN countArgsAndVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
@@ -282,6 +281,13 @@ js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JS_REQUIRES_STACK JSBool
 js_GetCallVar(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+/*
+ * Slower version of js_GetCallVar used when call_resolve detects an attempt to
+ * leak an optimized closure via indirect or debugger eval.
+ */
+extern JS_REQUIRES_STACK JSBool
+js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
 js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp);
