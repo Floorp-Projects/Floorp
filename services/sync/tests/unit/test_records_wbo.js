@@ -1,15 +1,12 @@
 try {
   Cu.import("resource://weave/log4moz.js");
   Cu.import("resource://weave/util.js");
-  Cu.import("resource://weave/async.js");
   Cu.import("resource://weave/auth.js");
   Cu.import("resource://weave/identity.js");
   Cu.import("resource://weave/resource.js");
   Cu.import("resource://weave/base_records/wbo.js");
   Cu.import("resource://weave/base_records/collection.js");
 } catch (e) { do_throw(e); }
-
-Function.prototype.async = Async.sugar;
 
 function record_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234",
@@ -32,8 +29,7 @@ function coll_handler(metadata, response) {
   return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
-function async_test() {
-  let self = yield;
+function run_test() {
   let server;
 
   try {
@@ -52,7 +48,7 @@ function async_test() {
     log.info("Getting a WBO record");
 
     let res = new Resource("http://localhost:8080/record");
-    yield res.get(self.cb);
+    res.get();
 
     let rec = new WBORecord();
     rec.deserialize(res.data);
@@ -68,7 +64,7 @@ function async_test() {
 
     log.info("Getting a WBO record using the record manager");
 
-    let rec2 = yield Records.get(self.cb, "http://localhost:8080/record2");
+    let rec2 = Records.get("http://localhost:8080/record2");
     do_check_eq(rec2.id, "record2");
     do_check_eq(rec2.modified, 2454725.98284);
     do_check_eq(typeof(rec2.payload), "object");
@@ -78,25 +74,17 @@ function async_test() {
     log.info("Using a collection to get a record");
 
     let coll = new Collection("http://localhost:8080/coll", WBORecord);
-    yield coll.get(self.cb);
+    coll.get();
     do_check_eq(coll.iter.count, 1);
 
-    let rec3 = yield coll.iter.next(self.cb);
+    let rec3 = coll.iter.next();
     do_check_eq(rec3.id, "record2");
     do_check_eq(rec3.modified, 2454725.98284);
     do_check_eq(typeof(rec3.payload), "object");
     do_check_eq(rec3.payload.cheese, "gruyere");
 
     log.info("Done!");
-    do_test_finished();
   }
   catch (e) { do_throw(e); }
   finally { server.stop(); }
-
-  self.done();
-}
-
-function run_test() {
-  async_test.async(this);
-  do_test_pending();
 }
