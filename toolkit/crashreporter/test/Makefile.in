@@ -39,6 +39,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = toolkit/crashreporter/test
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -114,3 +115,12 @@ ifndef MOZ_ENABLE_LIBXUL
 #check:: $(PROGRAM)
 #	$(RUN_TEST_PROGRAM) $(DIST)/bin/TestCrashReporterAPI
 endif
+
+_BROWSER_FILES = \
+  browser/aboutcrashes_utils.js \
+  browser/browser_aboutCrashes.js \
+  $(NULL)
+
+
+libs::  $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
