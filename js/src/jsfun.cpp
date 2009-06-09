@@ -2460,10 +2460,12 @@ JSObject * JS_FASTCALL
 js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
     JS_ASSERT(FUN_FLAT_CLOSURE(fun));
-    JS_ASSERT(fun->u.i.script->upvarsOffset);
+    JS_ASSERT((fun->u.i.script->upvarsOffset
+               ? JS_SCRIPT_UPVARS(fun->u.i.script)->length
+               : 0) == fun->u.i.nupvars);
 
     JSObject *closure = js_CloneFunctionObject(cx, fun, scopeChain);
-    if (!closure)
+    if (!closure || fun->u.i.nupvars == 0)
         return closure;
 
     uint32 nslots = JSSLOT_FREE(&js_FunctionClass);
@@ -2482,8 +2484,8 @@ JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 {
     JSObject *closure = js_AllocFlatClosure(cx, fun, cx->fp->scopeChain);
-    if (!closure)
-        return NULL;
+    if (!closure || fun->u.i.nupvars == 0)
+        return closure;
 
     JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
     JS_ASSERT(uva->length <= size_t(closure->dslots[-1]));

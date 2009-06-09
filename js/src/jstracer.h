@@ -317,6 +317,9 @@ struct FrameInfo {
     }
     uint16 get_argc() const { return argc & ~CONSTRUCTING_MASK; }
     bool   is_constructing() const { return (argc & CONSTRUCTING_MASK) != 0; }
+
+    // The typemap just before the callee is called.
+    uint8* get_typemap() { return (uint8*) (this+1); }
 };
 
 struct UnstableExit

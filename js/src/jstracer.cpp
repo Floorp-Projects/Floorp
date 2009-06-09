@@ -1903,15 +1903,14 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
                 nativeStackFramePos += (*fip2)->spdist;
             nativeStackFramePos -= (2 + (*fip)->get_argc());
-            uint8* typemap = (uint8*) (fi+1);
             return GetUpvarOnTraceTail(state, cookie, nativeStackFramePos,
-                                       typemap, result);
+                                       fi->get_typemap(), result);
         }
     }
 
     if (state->outermostTree->script->staticLevel == upvarLevel) {
-        return GetUpvarOnTraceTail(state, cookie, 0, 
-                                   state->outermostTree->stackTypeMap(), result);
+        return GetUpvarOnTraceTail(state, cookie, 0, state->callstackBase[0]->get_typemap(), 
+                                   result);
     }
 
     /*
@@ -2438,6 +2437,7 @@ TraceRecorder::snapshot(ExitType exitType)
         for (unsigned n = 0; n < nexits; ++n) {
             VMSideExit* e = exits[n];
             if (e->pc == pc && e->imacpc == fp->imacpc &&
+                ngslots == e->numGlobalSlots &&
                 !memcmp(getFullTypeMap(exits[n]), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
                 return e;
