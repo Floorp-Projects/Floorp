@@ -1530,8 +1530,6 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->regexpList.finish(JS_SCRIPT_REGEXPS(script));
     if (cg->flags & TCF_NO_SCRIPT_RVAL)
         script->flags |= JSSF_NO_SCRIPT_RVAL;
-    if ((cg->flags & TCF_COMPILE_N_GO) && cg->compiler->callerFrame)
-        script->flags |= JSSF_ESCAPE_HAZARD;
 
     if (cg->upvarList.count != 0) {
         JS_ASSERT(cg->upvarList.count <= cg->upvarMap.length);
