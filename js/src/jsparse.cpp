@@ -1586,6 +1586,10 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
     JSAtomListElement *ale;
     JSParseNode *pn;
 
+    /* Flag tc so we don't have to lookup arguments on every use. */
+    if (atom == tc->compiler->context->runtime->atomState.argumentsAtom)
+        tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
+
     JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
     ale = tc->decls.lookup(atom);
     pn = data->pn;
