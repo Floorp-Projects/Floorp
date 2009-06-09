@@ -184,3 +184,12 @@ richlistitem[opType="needs-enable"] .hide-on-enable,
 richlistitem[opType="needs-disable"] .hide-on-disable {
   display: none;
 }
+
+richlistitem[type="error"],
+richlistitem[type="warning"] {
+  -moz-binding: url("chrome://browser/content/bindings/console.xml#error");
+}
+
+richlistitem[type="message"]{
+  -moz-binding: url("chrome://browser/content/bindings/console.xml#message");
+}
