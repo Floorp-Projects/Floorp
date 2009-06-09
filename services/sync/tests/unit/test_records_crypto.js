@@ -1,7 +1,6 @@
 try {
   Cu.import("resource://weave/log4moz.js");
   Cu.import("resource://weave/util.js");
-  Cu.import("resource://weave/async.js");
   Cu.import("resource://weave/auth.js");
   Cu.import("resource://weave/identity.js");
   Cu.import("resource://weave/base_records/keys.js");
@@ -9,7 +8,6 @@ try {
 } catch (e) {
   do_throw(e);
 }
-Function.prototype.async = Async.sugar;
 
 let keys, cryptoMeta, cryptoWrap;
 
@@ -41,8 +39,7 @@ function crypto_meta_handler(metadata, response) {
   return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
-function async_test() {
-  let self = yield;
+function run_test() {
   let server;
 
   try {
@@ -74,38 +71,30 @@ function async_test() {
 
     cryptoMeta = new CryptoMeta("http://localhost:8080/crypto-meta", auth);
     cryptoMeta.generateIV();
-    yield cryptoMeta.addUnwrappedKey(self.cb, keys.pubkey, keys.symkey);
+    cryptoMeta.addUnwrappedKey(keys.pubkey, keys.symkey);
 
     log.info("Creating and encrypting a record");
 
     cryptoWrap = new CryptoWrapper("http://localhost:8080/crypted-resource", auth);
     cryptoWrap.encryption = "http://localhost:8080/crypto-meta";
     cryptoWrap.cleartext = "my payload here";
-    yield cryptoWrap.encrypt(self.cb, "my passphrase");
+    cryptoWrap.encrypt("my passphrase");
 
     log.info("Decrypting the record");
 
-    let payload = yield cryptoWrap.decrypt(self.cb, "my passphrase");
+    let payload = cryptoWrap.decrypt("my passphrase");
     do_check_eq(payload, "my payload here");
     do_check_neq(payload, cryptoWrap.payload); // wrap.data.payload is the encrypted one
 
     log.info("Re-encrypting the record with alternate payload");
 
     cryptoWrap.cleartext = "another payload";
-    yield cryptoWrap.encrypt(self.cb, "my passphrase");
-    payload = yield cryptoWrap.decrypt(self.cb, "my passphrase");
+    cryptoWrap.encrypt("my passphrase");
+    payload = cryptoWrap.decrypt("my passphrase");
     do_check_eq(payload, "another payload");
 
     log.info("Done!");
-    do_test_finished();
   }
   catch (e) { do_throw(e); }
   finally { server.stop(); }
-
-  self.done();
-}
-
-function run_test() {
-  async_test.async(this);
-  do_test_pending();
 }
