@@ -143,8 +143,16 @@ public:
     static PRBool isProcessingInstruction(const txXPathNode& aNode);
     static PRBool isComment(const txXPathNode& aNode);
     static PRBool isText(const txXPathNode& aNode);
-
-#ifdef TX_EXE
+#ifndef TX_EXE
+    static inline PRBool isHTMLElementInHTMLDocument(const txXPathNode& aNode)
+    {
+      if (!aNode.isContent()) {
+        return PR_FALSE;
+      }
+      nsIContent* content = aNode.Content();
+      return content->IsNodeOfType(nsINode::eHTML) && content->IsInHTMLDocument();
+    }
+#else
 private:
     static void appendNodeValueHelper(NodeDefinition* aNode, nsAString& aResult);
 #endif
