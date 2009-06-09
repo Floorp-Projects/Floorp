@@ -105,27 +105,6 @@ function initTestLogging(level) {
   return logStats;
 }
 
-function makeAsyncTestRunner(generator) {
-  Cu.import("resource://weave/async.js");
-
-  var logStats = initTestLogging();
-
-  function run_test() {
-    do_test_pending();
-
-    let onComplete = function() {
-      if (logStats.errorsLogged)
-        do_throw("Errors were logged.");
-      else
-        do_test_finished();
-    };
-
-    Async.run({}, generator, onComplete);
-  }
-
-  return run_test;
-}
-
 function FakePrefService(contents) {
   Cu.import("resource://weave/util.js");
   this.fakeContents = contents;
@@ -147,75 +126,6 @@ FakePrefService.prototype = {
     return this._getPref(pref);
   },
   addObserver: function fake_addObserver() {}
-};
-
-function makeFakeAsyncFunc(retval) {
-  Cu.import("resource://weave/async.js");
-  Function.prototype.async = Async.sugar;
-
-  function fakeAsyncFunc() {
-    let self = yield;
-
-    Utils.makeTimerForCall(self.cb);
-    yield;
-
-    self.done(retval);
-  }
-
-  return fakeAsyncFunc;
-}
-
-function FakeDAVService(contents) {
-  Cu.import("resource://weave/dav.js");
-
-  this.fakeContents = contents;
-  DAV.__proto__ = this;
-  this.checkLogin = makeFakeAsyncFunc(200);
-}
-
-FakeDAVService.prototype = {
-  PUT: function fake_PUT(path, data, onComplete) {
-    getTestLogger().info("HTTP PUT to " + path + " with data: " + data);
-    this.fakeContents[path] = data;
-    makeFakeAsyncFunc({status: 200}).async(this, onComplete);
-  },
-
-  GET: function fake_GET(path, onComplete) {
-    var result = {status: 404};
-    if (path in this.fakeContents)
-      result = {status: 200, responseText: this.fakeContents[path]};
-    getTestLogger().info("HTTP GET from " + path + ", returning status " +
-                         result.status);
-    return makeFakeAsyncFunc(result).async(this, onComplete);
-  },
-
-  MKCOL: function fake_MKCOL(path, onComplete) {
-    getTestLogger().info("HTTP MKCOL on " + path);
-    makeFakeAsyncFunc(true).async(this, onComplete);
-  },
-
-  DELETE: function fake_DELETE(path, onComplete) {
-    var result = {status: 404};
-    if (path in this.fakeContents) {
-      result = {status: 200};
-      delete this.fakeContents[path];
-    }
-    getTestLogger().info("HTTP DELETE on " + path + ", returning status " +
-                         result.status);
-    return makeFakeAsyncFunc(result).async(this, onComplete);
-  },
-
-  listFiles: function fake_listFiles(path) {
-    let self = yield;
-    if (typeof(path) != "undefined")
-      throw new Error("Not yet implemented!");
-    let filenames = [];
-    for (name in this.fakeContents) {
-      getTestLogger().info("file " + name);
-      filenames.push(name);
-    }
-    self.done(filenames);
-  }
 };
 
 function FakePasswordService(contents) {
@@ -318,7 +228,6 @@ function SyncTestingInfrastructure(engineFactory) {
 
   this.fakePasswordService = new FakePasswordService(__fakePasswords);
   this.fakePrefService = new FakePrefService(__fakePrefs);
-  this.fakeDAVService = new FakeDAVService({});
   this.fakeTimerService = new FakeTimerService();
   this.logStats = initTestLogging();
   this.fakeFilesystem = new FakeFilesystemService({});
