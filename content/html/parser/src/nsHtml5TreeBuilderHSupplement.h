@@ -86,7 +86,7 @@
     inline void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
       PRBool newParent = PR_TRUE;
       const nsIContentPtr* first = mElementsSeenInThisAppendBatch.Elements();
-      const nsIContentPtr* last = first + (mElementsSeenInThisAppendBatch.Length() - 1);
+      const nsIContentPtr* last = first + mElementsSeenInThisAppendBatch.Length() - 1;
       for (const nsIContentPtr* iter = last; iter >= first; --iter) {
 #ifdef DEBUG_hsivonen
         sAppendBatchSlotsExamined++;
