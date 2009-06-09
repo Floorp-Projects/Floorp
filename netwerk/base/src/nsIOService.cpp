@@ -165,10 +165,10 @@ nsIMemory* nsIOService::gBufferCache = nsnull;
 nsIOService::nsIOService()
     : mOffline(PR_FALSE)
     , mOfflineForProfileChange(PR_FALSE)
+    , mManageOfflineStatus(PR_TRUE)
     , mSettingOffline(PR_FALSE)
     , mSetOfflineValue(PR_FALSE)
     , mShutdown(PR_FALSE)
-    , mManageOfflineStatus(PR_TRUE)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
     , mContentSniffers(NS_CONTENT_SNIFFER_CATEGORY)
 {
