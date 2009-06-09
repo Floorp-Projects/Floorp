@@ -142,8 +142,8 @@ NS_IMPL_ISUPPORTS1(
 
 // nsFaviconService::nsFaviconService
 
-nsFaviconService::nsFaviconService() : mFailedFaviconSerial(0)
-                                     , mExpirationRunning(false)
+nsFaviconService::nsFaviconService() : mExpirationRunning(false)
+                                     , mFailedFaviconSerial(0)
 {
   NS_ASSERTION(! gFaviconService, "ATTEMPTING TO CREATE TWO FAVICON SERVICES!");
   gFaviconService = this;
