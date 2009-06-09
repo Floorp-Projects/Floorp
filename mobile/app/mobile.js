@@ -293,4 +293,4 @@ pref("dom.max_chrome_script_run_time", 30);
 pref("dom.max_script_run_time", 20);
 
 // JS error console
-pref("browser.console.showInPanel", true);
+pref("browser.console.showInPanel", false);
