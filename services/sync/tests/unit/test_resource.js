@@ -1,11 +1,8 @@
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/auth.js");
 Cu.import("resource://weave/identity.js");
-
-Function.prototype.async = Async.sugar;
 
 let logger;
 let Httpd = {};
@@ -42,9 +39,7 @@ function server_404(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-function async_test() {
-  let self = yield;
-
+function run_test() {
   logger = Log4Moz.repository.getLogger('Test');
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
@@ -59,14 +54,14 @@ function async_test() {
   // 1. A regular non-password-protected resource
 
   let res = new Resource("http://localhost:8080/open");
-  let content = yield res.get(self.cb);
+  let content = res.get();
   do_check_eq(content, "This path exists");
   do_check_eq(res.lastChannel.responseStatus, 200);
 
   // 2. A password protected resource (test that it'll fail w/o pass)
   let res2 = new Resource("http://localhost:8080/protected");
   try {
-    content = yield res2.get(self.cb);
+    content = res2.get();
     do_check_true(false); // unreachable, get() above must fail
   } catch (e) {}
 
@@ -75,7 +70,7 @@ function async_test() {
   let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
   let res3 = new Resource("http://localhost:8080/protected");
   res3.authenticator = auth;
-  content = yield res3.get(self.cb);
+  content = res3.get();
   do_check_eq(content, "This path exists and is protected");
   do_check_eq(res3.lastChannel.responseStatus, 200);
 
@@ -83,7 +78,7 @@ function async_test() {
 
   let res4 = new Resource("http://localhost:8080/404");
   try {
-    let content = yield res4.get(self.cb);
+    let content = res4.get();
     do_check_true(false); // unreachable, get() above must fail
   } catch (e) {}
   do_check_eq(res4.lastChannel.responseStatusText, "Not Found");
@@ -94,12 +89,5 @@ function async_test() {
   // * DELETE requests
   // * JsonFilter
 
-  do_test_finished();
   server.stop();
-  self.done();
-}
-
-function run_test() {
-  async_test.async(this);
-  do_test_pending();
 }
