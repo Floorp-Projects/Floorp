@@ -330,8 +330,8 @@ struct UnstableExit
 };
 
 class TreeInfo MMGC_SUBCLASS_DECL {
-    nanojit::Fragment*      fragment;
 public:
+    nanojit::Fragment* const      fragment;
     JSScript*               script;
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
