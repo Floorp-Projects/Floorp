@@ -1,11 +1,8 @@
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/auth.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/resource.js");
-
-Function.prototype.async = Async.sugar;
 
 let logger;
 let Httpd = {};
@@ -30,9 +27,7 @@ function server_handler(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-function async_test() {
-  let self = yield;
-
+function run_test() {
   logger = Log4Moz.repository.getLogger('Test');
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
@@ -44,16 +39,9 @@ function async_test() {
   Auth.defaultAuthenticator = auth;
 
   let res = new Resource("http://localhost:8080/foo");
-  let content = yield res.get(self.cb);
+  let content = res.get();
   do_check_eq(content, "This path exists and is protected");
   do_check_eq(res.lastChannel.responseStatus, 200);
 
-  do_test_finished();
   server.stop();
-  self.done();
-}
-
-function run_test() {
-  async_test.async(this);
-  do_test_pending();
 }
