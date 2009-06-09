@@ -1,13 +1,10 @@
 try {
   Cu.import("resource://weave/log4moz.js");
   Cu.import("resource://weave/util.js");
-  Cu.import("resource://weave/async.js");
   Cu.import("resource://weave/auth.js");
   Cu.import("resource://weave/identity.js");
   Cu.import("resource://weave/base_records/keys.js");
 } catch (e) { do_throw(e); }
-
-Function.prototype.async = Async.sugar;
 
 function pubkey_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234",
@@ -27,8 +24,7 @@ function privkey_handler(metadata, response) {
   return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
-function async_test() {
-  let self = yield;
+function run_test() {
   let server;
 
   try {
@@ -45,26 +41,18 @@ function async_test() {
 
     log.info("Getting a public key");
 
-    let pubkey = yield PubKeys.get(self.cb, "http://localhost:8080/pubkey");
+    let pubkey = PubKeys.get("http://localhost:8080/pubkey");
     do_check_eq(pubkey.data.payload.type, "pubkey");
     do_check_eq(PubKeys.lastResource.lastChannel.responseStatus, 200);
 
     log.info("Getting matching private key");
 
-    let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
+    let privkey = PrivKeys.get(pubkey.privateKeyUri);
     do_check_eq(privkey.data.payload.type, "privkey");
     do_check_eq(PrivKeys.lastResource.lastChannel.responseStatus, 200);
 
     log.info("Done!");
-    do_test_finished();
   }
   catch (e) { do_throw(e); }
   finally { server.stop(); }
-
-  self.done();
-}
-
-function run_test() {
-  async_test.async(this);
-  do_test_pending();
 }
