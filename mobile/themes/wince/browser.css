@@ -272,6 +272,10 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/preferences-24.png");
 }
 
+#tool-console {
+  list-style-image: url("chrome://browser/skin/images/console-24.png");
+}
+
 /* URL List and autocomplete navigation popup ------------------------------ */
 #tool-bookmarks-close,
 #tool-folders-close {

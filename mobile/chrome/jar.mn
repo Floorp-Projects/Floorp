@@ -12,6 +12,7 @@ browser.jar:
   content/notification.xml             (content/notification.xml)
   content/bindings/extensions.xml      (content/bindings/extensions.xml)
   content/bindings/downloads.xml       (content/bindings/downloads.xml)
+  content/bindings/console.xml         (content/bindings/console.xml)
   content/browser.css                  (content/browser.css)
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
@@ -25,3 +26,4 @@ browser.jar:
   content/InputHandler.js              (content/InputHandler.js)
   content/extensions.js                (content/extensions.js)
   content/downloads.js                 (content/downloads.js)
+  content/console.js                   (content/console.js)

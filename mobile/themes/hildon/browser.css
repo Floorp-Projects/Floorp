@@ -278,6 +278,15 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/preferences-active-64.png");
 }
 
+#tool-console {
+  list-style-image: url("chrome://browser/skin/images/console-default-64.png");
+}
+
+#tool-console:hover:active,
+#tool-console[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/console-active-64.png");
+}
+
 /* URL List and autocomplete navigation popup ------------------------------ */
 #tool-bookmarks-close,
 #tool-folders-close {

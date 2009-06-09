@@ -237,6 +237,12 @@ var Browser = {
       if (whereURI)
         this.addTab(whereURI, true);
     }
+    
+    // JavaScript Error Console
+    if (gPrefService.getBoolPref("browser.console.showInPanel")){
+      let tool_console = document.getElementById("tool-console");
+      tool_console.hidden = false;
+    }
 
     // Re-enable plugins if we had previously disabled them. We should get rid of
     // this code eventually...

@@ -176,9 +176,9 @@ pref("browser.xul.error_pages.expert_bad_cert", false);
 // disable logging for the search service by default
 pref("browser.search.log", false);
 
-// Ordering of Search Engines in the Engine list.
-pref("browser.search.order.1",                "chrome://browser/locale/region.properties");
-pref("browser.search.order.2",                "chrome://browser/locale/region.properties");
+// ordering of search engines in the engine list.
+pref("browser.search.order.1", "chrome://browser/locale/region.properties");
+pref("browser.search.order.2", "chrome://browser/locale/region.properties");
 
 // disable updating
 pref("browser.search.update", false);
@@ -191,7 +191,7 @@ pref("browser.search.suggest.enabled", true);
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
-// Various and sundry awesomebar prefs (should remove/re-evaluate
+// various and sundry awesomebar prefs (should remove/re-evaluate
 // these once bug 447900 is fixed)
 pref("browser.urlbar.clickSelectsAll", true);
 pref("browser.urlbar.doubleClickSelectsAll", false);
@@ -292,3 +292,5 @@ pref("javascript.options.jit.chrome", true);
 pref("dom.max_chrome_script_run_time", 30);
 pref("dom.max_script_run_time", 20);
 
+// JS error console
+pref("browser.console.showInPanel", true);
