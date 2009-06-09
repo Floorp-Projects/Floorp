@@ -119,6 +119,7 @@ endif
 _BROWSER_FILES = \
   browser/aboutcrashes_utils.js \
   browser/browser_aboutCrashes.js \
+  browser/browser_bug471404.js \
   $(NULL)
 
 
