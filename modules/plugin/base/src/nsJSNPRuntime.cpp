@@ -1226,7 +1226,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(npp);
 
-  JSBool hasProperty = !npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+  JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
   if (!ReportExceptionIfPending(cx))
     return JS_FALSE;
 
