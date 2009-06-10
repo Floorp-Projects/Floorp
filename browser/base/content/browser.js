@@ -1237,7 +1237,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     focusElement(content);
 
   if (gURLBar)
-    gURLBar.setAttribute("emptytext", gURLBarEmptyText.value);
+    gURLBar.emptyText = gURLBarEmptyText.value;
 
   gNavToolbox.customizeDone = BrowserToolboxCustomizeDone;
   gNavToolbox.customizeChange = BrowserToolboxCustomizeChange;
