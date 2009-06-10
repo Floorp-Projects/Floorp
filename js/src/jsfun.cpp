@@ -1207,7 +1207,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
              * null closure, not on every use.
              */
             jsval v;
-            if (!CallPropertyOp(cx, obj, INT_TO_JSID(slot), &v, JSCPK_VAR, JS_FALSE))
+            if (!CallPropertyOp(cx, obj, INT_TO_JSID((int16)slot), &v, JSCPK_VAR, JS_FALSE))
                 return JS_FALSE;
             if (VALUE_IS_FUNCTION(cx, v) &&
                 GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))->needsWrapper()) {
