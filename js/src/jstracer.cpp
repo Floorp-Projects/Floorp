@@ -1955,6 +1955,32 @@ js_GetUpvarVarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callD
     return js_GetUpvarOnTrace<UpvarVarTraits>(cx, upvarLevel, slot, callDepth, result);
 }
 
+/*
+ * For this traits type, 'slot' is an index into the stack area (within slots, after nfixed)
+ * of a frame with no function. (On trace, the top-level frame is the only one that can have
+ * no function.)
+ */
+struct UpvarStackTraits {
+    static jsval interp_get(JSStackFrame* fp, int32 slot) {
+        return fp->slots[slot + fp->script->nfixed];
+    }
+
+    static uint32 native_slot(uint32 argc, int32 slot) {
+        /* 
+         * Locals are not imported by the tracer when the frame has no function, so
+         * we do not add fp->script->nfixed.
+         */
+        JS_ASSERT(argc == 0);
+        return slot;
+    }
+};
+
+uint32 JS_FASTCALL
+js_GetUpvarStackOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, double* result)
+{
+    return js_GetUpvarOnTrace<UpvarStackTraits>(cx, upvarLevel, slot, callDepth, result);
+}
+
 /**
  * Box the given native stack frame into the virtual machine stack. This
  * is infallible.
@@ -8511,6 +8537,8 @@ JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarArgOnTrace, CONTEXT, UINT32, INT
                      DOUBLEPTR, 0, 0)
 JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarVarOnTrace, CONTEXT, UINT32, INT32, UINT32,
                      DOUBLEPTR, 0, 0)
+JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarStackOnTrace, CONTEXT, UINT32, INT32, UINT32,
+                     DOUBLEPTR, 0, 0)
 
 /*
  * Record LIR to get the given upvar. Return the LIR instruction for
@@ -8545,8 +8573,8 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
     const CallInfo* ci;
     int32 slot;
     if (!fp->fun) {
-        ci = &js_GetUpvarVarOnTrace_ci;
-        slot = cookieSlot + fp->script->nfixed;
+        ci = &js_GetUpvarStackOnTrace_ci;
+        slot = cookieSlot;
     } else if (cookieSlot < fp->fun->nargs) {
         ci = &js_GetUpvarArgOnTrace_ci;
         slot = cookieSlot;
