@@ -370,7 +370,7 @@
                  onsearchbegin="LocationBarHelpers._searchBegin();"
                  onsearchcomplete="LocationBarHelpers._searchComplete();"
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
-                 onblur="document.getElementById('identity-box').style.MozUserFocus = 'ignore';">
+                 onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
                We only add the identity-box button to the tab order when the location bar

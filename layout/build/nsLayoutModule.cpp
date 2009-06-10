@@ -100,6 +100,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsStyleSheetService.h"
 #include "nsXULPopupManager.h"
+#include "nsFocusManager.h"
 
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
@@ -126,8 +127,6 @@
 #include "nsDOMScriptObjectFactory.h"
 #include "nsDOMStorage.h"
 #include "nsJSON.h"
-
-#include "nsIFocusEventSuppressor.h"
 
 // Editor stuff
 #include "nsEditorCID.h"
@@ -425,7 +424,6 @@ nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewXBLService(nsIXBLService** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
-nsresult NS_NewFocusEventSuppressorService(nsIFocusEventSuppressorService** aResult);
 
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -514,7 +512,6 @@ MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSan
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
 MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewComputedDOMStyle)
-MAKE_CTOR(CreateFocusEventSuppressorService,nsIFocusEventSuppressorService,NS_NewFocusEventSuppressorService)
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
 // NS_NewXULContentBuilder
@@ -539,6 +536,7 @@ MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPlu
 #ifdef MOZ_MEDIA
 MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVideoDocument)
 #endif
+MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
 
 #ifdef MOZ_ENABLE_CANVAS
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
@@ -1333,11 +1331,6 @@ static const nsModuleComponentInfo gComponents[] = {
   { "View Manager", NS_VIEW_MANAGER_CID, "@mozilla.org/view-manager;1",
     nsViewManagerConstructor },
 
-  { "Focus Event Suppressor",
-    NS_NSIFOCUSEVENTSUPPRESSORSERVICE_CID,
-    NS_NSIFOCUSEVENTSUPPRESSORSERVICE_CONTRACTID,
-    CreateFocusEventSuppressorService },
-
   { "Plugin Document Loader Factory",
     NS_PLUGINDOCLOADERFACTORY_CID,
     "@mozilla.org/content/plugin/document-loader-factory;1",
@@ -1459,6 +1452,11 @@ static const nsModuleComponentInfo gComponents[] = {
       nsGeolocationServiceConstructor },
 
 
+
+  { "Focus Manager",
+    NS_FOCUSMANAGER_CID,
+    "@mozilla.org/focus-manager;1",
+    CreateFocusManager },
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(nsLayoutModule, gComponents, Initialize)

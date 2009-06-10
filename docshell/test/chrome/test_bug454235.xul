@@ -32,9 +32,6 @@ function doTest() {
   var offScreenSubBrowser = offScreenBrowser.contentDocument.getElementById("topBrowser");
   var offScreenBurriedBrowser = offScreenBrowser.contentDocument.getElementById("burriedBrowser");
   
-  shownBrowser.contentWindow.focus();
-  ok(shownBrowser.contentDocument.hasFocus(), "visible browser is not visible");  
-
   hiddenBrowser.contentWindow.focus();
   ok(!hiddenBrowser.contentDocument.hasFocus(),"hidden browser is visible");
 
@@ -54,9 +51,8 @@ function doTest() {
 
 
   ]]></script>
-  <deck flex="1" style="border:5px black solid">
-    <browser style="border:5px green solid" id="shownBrowser" src="bug454235-subframe.xul"/>
+  <box flex="1" style="visibility: hidden; border:5px black solid">
     <browser style="border:5px blue solid" id="hiddenBrowser" src="bug454235-subframe.xul"/>
     <browser style="border:5px yellow solid" id="offScreenBrowser" src="bug454235-subframe.xul"/>
-  </deck>
+  </box>
 </window>

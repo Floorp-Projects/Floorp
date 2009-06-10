@@ -93,7 +93,6 @@ menulist[disabled="true"] > .menulist-dropmarker {
 /* ::::: editable menulists ::::: */
 
 menulist[editable="true"] {
-  -moz-user-focus: normal;
   -moz-appearance: menulist-textfield;
   margin: 2px 4px;
 }

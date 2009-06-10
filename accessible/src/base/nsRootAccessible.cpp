@@ -60,7 +60,6 @@
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
-#include "nsIFocusController.h"
 #include "nsIFrame.h"
 #include "nsIMenuFrame.h"
 #include "nsIHTMLDocument.h"
@@ -75,6 +74,7 @@
 #include "nsRootAccessible.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsFocusManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
@@ -234,16 +234,18 @@ nsRootAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsCOMPtr<nsIDOMWindow> domWin;
   GetWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
-  if (privateDOMWindow) {
-    nsIFocusController *focusController =
-      privateDOMWindow->GetRootFocusController();
-    if (focusController) {
-      PRBool isActive = PR_FALSE;
-      focusController->GetActive(&isActive);
-      if (isActive) {
+  nsCOMPtr<nsIDocShellTreeItem> dsti = do_GetInterface(domWin);
+  if (dsti) {
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    dsti->GetRootTreeItem(getter_AddRefs(root));
+    nsCOMPtr<nsIDOMWindow> rootWindow = do_GetInterface(root);
+
+    nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+    if (fm && rootWindow) {
+      nsCOMPtr<nsIDOMWindow> activeWindow;
+      fm->GetActiveWindow(getter_AddRefs(activeWindow));
+      if (activeWindow == rootWindow)
         *aExtraState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
-      }
     }
   }
 #ifdef MOZ_XUL
