@@ -263,7 +263,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-  nsresult res = NS_OK;
+  nsresult rv = NS_OK;
   DWORD zerome, versionsize;
   TCHAR* verbuf = nsnull;
 
@@ -272,15 +272,20 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
-  nsCAutoString temp;
-  mPlugin->GetNativePath(temp);
+  nsCAutoString fullPath;
+  if (NS_FAILED(rv = mPlugin->GetNativePath(fullPath)))
+    return rv;
+
+  nsCAutoString fileName;
+  if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
+    return rv;
 
 #ifdef UNICODE
-  NS_ConvertASCIItoUTF16 temp2(temp);
-  path = temp2.get();
+  NS_ConvertASCIItoUTF16 utf16Path(fullPath);
+  path = utf16Path.get();
   versionsize = ::GetFileVersionInfoSizeW((TCHAR*)path, &zerome);
 #else
-  path = temp.get();
+  path = fullPath.get();
   versionsize = ::GetFileVersionInfoSize((TCHAR*)path, &zerome);
 #endif
 
@@ -306,7 +311,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
     info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
     info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
-    info.fFileName = PL_strdup(temp.get());
+    info.fFullPath = PL_strdup(fullPath.get());
+    info.fFileName = PL_strdup(fileName.get());
     info.fVersion = GetVersion(verbuf);
 
     PL_strfree(mimeType);
@@ -314,12 +320,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     PL_strfree(extensions);
   }
   else {
-    res = NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;
   }
 
   PR_Free(verbuf);
 
-  return res;
+  return rv;
 }
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
@@ -338,6 +344,9 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 
   if (info.fExtensionArray)
     FreeStringArray(info.fVariantCount, info.fExtensionArray);
+
+  if (info.fFullPath)
+    PL_strfree(info.fFullPath);
 
   if (info.fFileName)
     PL_strfree(info.fFileName);

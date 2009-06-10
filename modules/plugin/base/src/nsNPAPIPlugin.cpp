@@ -353,8 +353,8 @@ nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 
 // Creates the nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
-nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
-                            PRLibrary* aLibrary, nsIPlugin** aResult)
+nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
+                            nsIPlugin** aResult)
 {
   CheckClassInitialized();
 
@@ -377,7 +377,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
 
   NS_ADDREF(*aResult);
 
-  if (!aFileName) //do not call NP_Initialize in this case, bug 74938
+  // Do not initialize if the file path is NULL.
+  if (!aFilePath)
     return NS_OK;
 
   // we must init here because the plugin may call NPN functions
@@ -463,7 +464,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   unsigned long origDiskNum, pluginDiskNum, logicalDisk;
 
   char pluginPath[CCHMAXPATH], origPath[CCHMAXPATH];
-  strcpy(pluginPath, aFileName);
+  strcpy(pluginPath, aFilePath);
   char* slash = strrchr(pluginPath, '\\');
   *slash = '\0';
 
@@ -513,7 +514,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   short pluginRefNum;
 
   nsCOMPtr<nsILocalFile> pluginPath;
-  NS_NewNativeLocalFile(nsDependentCString(aFullPath), PR_TRUE,
+  NS_NewNativeLocalFile(nsDependentCString(aFilePath), PR_TRUE,
                         getter_AddRefs(pluginPath));
 
   nsPluginFile pluginFile(pluginPath);
