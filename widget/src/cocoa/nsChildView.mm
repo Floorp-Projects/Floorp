@@ -125,7 +125,6 @@ CFStringRef kOurTISPropertyInputSourceID = NULL;
 CFStringRef kOurTISPropertyInputSourceLanguages = NULL;
 
 // these are defined in nsCocoaWindow.mm
-extern PRBool gCocoaWindowMethodsSwizzled;
 extern PRBool gConsumeRollupEvent;
 
 PRBool gChildViewMethodsSwizzled = PR_FALSE;
@@ -492,7 +491,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mIsPluginView(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
-, mInSetFocus(PR_FALSE)
 {
 #ifdef PR_LOGGING
   if (!sCocoaLog) {
@@ -580,12 +578,6 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // See NSWindow (MethodSwizzling) in nsCocoaWindow.mm.
-  if (!gCocoaWindowMethodsSwizzled) {
-    nsToolkit::SwizzleMethods([NSWindow class], @selector(sendEvent:),
-                              @selector(nsCocoaWindow_NSWindow_sendEvent:));
-    gCocoaWindowMethodsSwizzled = PR_TRUE;
-  }
   // See NSView (MethodSwizzling) below.
   if (nsToolkit::OnLeopardOrLater() && !gChildViewMethodsSwizzled) {
     nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
@@ -674,7 +666,7 @@ void nsChildView::TearDownView()
 
   NSWindow* win = [mView window];
   NSResponder* responder = [win firstResponder];
-  
+
   // We're being unhooked from the view hierarchy, don't leave our view
   // or a child view as the window first responder.
   if (responder && [responder isKindOfClass:[NSView class]] &&
@@ -1072,55 +1064,9 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Don't do anything if SetFocus() has been called reentrantly on the same
-  // object.  Sometimes calls to nsChildView::DispatchEvent() can get
-  // temporarily stuck, causing calls to [ChildView sendFocusEvent:] and
-  // SetFocus() to be reentered.  These reentrant calls are probably the
-  // result of one or more bugs, and doing things on a reentrant call can
-  // cause problems:  For example if mView is already the first responder and
-  // we send it an NS_GOTFOCUS event (see below), this causes the Mochitests
-  // to get stuck in the toolkit/content/tests/widgets/test_popup_button.xul
-  // test.
-  if (mInSetFocus)
-    return NS_OK;
-  mInSetFocus = PR_TRUE;
   NSWindow* window = [mView window];
-  if (window) {
-    nsAutoRetainCocoaObject kungFuDeathGrip(mView);
-    // For reasons that aren't yet clear, focus changes within a window (as
-    // opposed to those between windows or between apps) should only trigger
-    // NS_LOSTFOCUS and NS_GOTFOCUS events (sent to Gecko) in the context of
-    // a call to nsChildView::SetFocus() (or nsCocoaWindow::SetFocus(), which
-    // in any case re-routes to nsChildView::SetFocus()).  If we send these
-    // events on every intra-window focus change (on every call to
-    // [ChildView becomeFirstResponder:] or [ChildView resignFirstResponder:]),
-    // the result will be strange focus bugs (like bmo bugs 399471, 403232,
-    // 404433 and 408266).
-    NSResponder* firstResponder = [window firstResponder];
-    if ([mView isEqual:firstResponder]) {
-      // Sometimes SetFocus() is called on an nsChildView object that's
-      // already focused.  In principle this shouldn't happen, and in any
-      // case we shouldn't have to dispatch any events.  But if we don't, we
-      // sometimes get text-input cursors blinking in more than one text
-      // field, or still blinking when the browser is no longer active.  For
-      // reasons that aren't at all clear, this problem can be avoided by
-      // always sending an NS_GOTFOCUS message here.
-      if ([mView isKindOfClass:[ChildView class]])
-        [(ChildView *)mView sendFocusEvent:NS_GOTFOCUS];
-    } else {
-      // Retain and release firstResponder around the call to
-      // makeFirstResponder.
-      [firstResponder retain];
-      if ([window makeFirstResponder:mView]) {
-        if ([firstResponder isKindOfClass:[ChildView class]])
-          [(ChildView *)firstResponder sendFocusEvent:NS_LOSTFOCUS];
-        if ([mView isKindOfClass:[ChildView class]])
-          [(ChildView *)mView sendFocusEvent:NS_GOTFOCUS];
-      }
-      [firstResponder release];
-    }
-  }
-  mInSetFocus = PR_FALSE;
+  if (window)
+    [window makeFirstResponder:mView];
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -2443,12 +2389,6 @@ NSEvent* gLastDragEvent = nil;
   mGeckoChild = nsnull;
   mWindow = nil;
 
-  // A child widget can be destroyed without being unfocused (by Gecko).
-  WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
-  TopLevelWindowData* windowData = [windowMap dataForWindow:[self window]];
-  if (windowData)
-    [windowData markShouldUnfocus:self];
-
   // Just in case we're destroyed abruptly and missed the draggingExited
   // or performDragOperation message.
   NS_IF_RELEASE(mDragService);
@@ -2763,22 +2703,6 @@ NSEvent* gLastDragEvent = nil;
 {
   if (!mGeckoChild)
     return;
-
-  // Keep track of the results of calling sendFocusEvent: in our NSWindow.
-  WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
-  TopLevelWindowData* windowData = [windowMap dataForWindow:[self window]];
-  if (windowData) {
-    switch (eventType) {
-      case NS_LOSTFOCUS:
-        [windowData markShouldUnfocus:self];
-        break;
-      case NS_GOTFOCUS:
-        [windowData markShouldFocus:self];
-        break;
-      default:
-        break;
-    }
-  }
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoChild);
@@ -6079,13 +6003,12 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // check to see if the window implements the mozWindow protocol. This
   // allows embedders to avoid re-entrant calls to -makeKeyAndOrderFront,
-  // which can happen because these activate/focus calls propagate out
+  // which can happen because these activate calls propagate out
   // to the embedder via nsIEmbeddingSiteWindow::SetFocus().
   BOOL isMozWindow = [[self window] respondsToSelector:@selector(setSuppressMakeKeyFront:)];
   if (isMozWindow)
     [[self window] setSuppressMakeKeyFront:YES];
 
-  [self sendFocusEvent:NS_GOTFOCUS];
   [self sendFocusEvent:NS_ACTIVATE];
 
   if (isMozWindow)
@@ -6103,7 +6026,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   [self sendFocusEvent:NS_DEACTIVATE];
-  [self sendFocusEvent:NS_LOSTFOCUS];
 }
 
 

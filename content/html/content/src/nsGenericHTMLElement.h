@@ -103,7 +103,6 @@ public:
 
   // Implementation for nsIDOMNode
   NS_METHOD GetNodeName(nsAString& aNodeName);
-  NS_METHOD GetLocalName(nsAString& aLocalName);
 
   // Implementation for nsIDOMElement
   NS_METHOD SetAttribute(const nsAString& aName,
@@ -111,9 +110,6 @@ public:
   NS_METHOD GetTagName(nsAString& aTagName);
   NS_METHOD GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn);
-  NS_METHOD GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName,
-                                   nsIDOMNodeList** aReturn);
 
   // nsIDOMHTMLElement methods. Note that these are non-virtual
   // methods, implementations are expected to forward calls to these
@@ -176,7 +172,6 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify);
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual void RemoveFocus(nsPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
   {
     PRBool isFocusable = PR_FALSE;
@@ -549,13 +544,6 @@ public:
 
 protected:
   /**
-   * Focus or blur the element.  This is what you should call if you want to
-   * *cause* a focus or blur on your element.  SetFocus / SetBlur are the
-   * methods where you want to catch what occurs on your element.
-   * @param aDoFocus true to focus, false to blur
-   */
-  void SetElementFocus(PRBool aDoFocus);
-  /**
    * Register or unregister an access key to this element based on the
    * accesskey attribute.
    * @param aDoReg true to register, false to unregister
@@ -836,6 +824,8 @@ public:
   virtual PRUint32 GetDesiredIMEState();
   virtual PRInt32 IntrinsicState() const;
 
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
@@ -849,11 +839,6 @@ protected:
   PRBool CanBeDisabled() const;
 
   void UpdateEditableFormControlState();
-
-  void SetFocusAndScrollIntoView(nsPresContext* aPresContext);
-
-  // A sane SetFocus implementation for focusable form controls
-  void DoSetFocus(nsPresContext* aPresContext);
 
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive

@@ -226,6 +226,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    *
    * @param aElement the element to focus
+   *
+   * Do not use this method. Just use element.focus if available or
+   * nsIFocusManager::SetFocus instead.
+   *
    */
   void focus(in nsIDOMElement aElement);
 

@@ -127,6 +127,7 @@ PlacesController.prototype = {
     case "cmd_redo":
       return PlacesUIUtils.ptm.numberOfRedoItems > 0;
     case "cmd_cut":
+    case "placesCmd_cut":
       var nodes = this._view.getSelectionNodes();
       // If selection includes history nodes there's no reason to allow cut.
       for (var i = 0; i < nodes.length; i++) {
@@ -135,6 +136,7 @@ PlacesController.prototype = {
       }
       // Otherwise fallback to cmd_delete check.
     case "cmd_delete":
+    case "placesCmd_delete":
       return this._hasRemovableSelection(false);
     case "placesCmd_deleteDataHost":
       return this._hasRemovableSelection(false) &&
@@ -142,8 +144,10 @@ PlacesController.prototype = {
     case "placesCmd_moveBookmarks":
       return this._hasRemovableSelection(true);
     case "cmd_copy":
+    case "placesCmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
+    case "placesCmd_paste":
       return this._canInsert(true) && this._isClipboardDataPasteable();
     case "cmd_selectAll":
       if (this._view.selType != "single") {
@@ -229,15 +233,19 @@ PlacesController.prototype = {
       PlacesUIUtils.ptm.redoTransaction();
       break;
     case "cmd_cut":
+    case "placesCmd_cut":
       this.cut();
       break;
     case "cmd_copy":
+    case "placesCmd_copy":
       this.copy();
       break;
     case "cmd_paste":
+    case "placesCmd_paste":
       this.paste();
       break;
     case "cmd_delete":
+    case "placesCmd_delete":
       this.remove("Remove Selection");
       break;
     case "placesCmd_deleteDataHost":
@@ -1604,19 +1612,13 @@ var PlacesControllerDragHelper = {
 };
 
 function goUpdatePlacesCommands() {
-  var placesController;
-  try {
-    // Or any other command...
-    placesController = top.document.commandDispatcher
-                          .getControllerForCommand("placesCmd_open");
-  }
-  catch(ex) { return; }
+  // Get the controller for one of the places commands.
+  var placesController = doGetPlacesControllerForCommand("placesCmd_open");
+  if (!placesController)
+    return;
 
   function updatePlacesCommand(aCommand) {
-    var enabled = false;
-    if (placesController)
-      enabled = placesController.isCommandEnabled(aCommand);
-    goSetCommandEnabled(aCommand, enabled);
+    goSetCommandEnabled(aCommand, placesController.isCommandEnabled(aCommand));
   }
 
   updatePlacesCommand("placesCmd_open");
@@ -1631,4 +1633,39 @@ function goUpdatePlacesCommands() {
   updatePlacesCommand("placesCmd_reload");
   updatePlacesCommand("placesCmd_reloadMicrosummary");
   updatePlacesCommand("placesCmd_sortBy:name");
+  updatePlacesCommand("placesCmd_cut");
+  updatePlacesCommand("placesCmd_copy");
+  updatePlacesCommand("placesCmd_paste");
+  updatePlacesCommand("placesCmd_delete");
 }
+
+function doGetPlacesControllerForCommand(aCommand)
+{
+  var placesController = top.document.commandDispatcher
+                            .getControllerForCommand(aCommand);
+  if (!placesController) {
+    // If building commands for a context menu, look for an element in the
+    // current popup.
+    var element = document.popupNode;
+    while (element) {
+      var isContextMenuShown = ("_contextMenuShown" in element) && element._contextMenuShown;
+      // Check for the parent menupopup or the hbox used for toolbars
+      if ((element.localName == "menupopup" || element.localName == "hbox") &&
+          isContextMenuShown) {
+        placesController = element.controllers.getControllerForCommand(aCommand);
+        break;
+      }
+      element = element.parentNode;
+    }
+  }
+
+  return placesController;
+}
+
+function goDoPlacesCommand(aCommand)
+{
+  var controller = doGetPlacesControllerForCommand(aCommand);
+  if (controller && controller.isCommandEnabled(aCommand))
+    controller.doCommand(aCommand);
+}
+

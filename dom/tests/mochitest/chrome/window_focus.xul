@@ -1,0 +1,1463 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+ This test checks focus in various ways
+-->
+<window id="outer-document" title="Focus Test" width="600" height="550"
+        onfocus="setTimeout(startTest, 0)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<body xmlns="http://www.w3.org/1999/xhtml"/>
+
+  <script type="application/javascript"><![CDATA[
+
+var fm = Components.classes["@mozilla.org/focus-manager;1"].
+           getService(Components.interfaces.nsIFocusManager);
+
+const kChildDocumentRootIndex = 13;
+const kBeforeTabboxIndex = 34;
+const kTabbableSteps = 38;
+const kFocusSteps = 18;
+const kNoFocusSteps = 15;
+const kOverflowElementIndex = 27;
+
+var gTestStarted = false;
+var gPartialTabbing = false;
+var gMoveToFocusFrame = false;
+var gLastFocus = null;
+var gLastFocusWindow = window;
+var gLastFocusMethod = -1;
+var gEvents = "";
+var gExpectedEvents = "";
+var gEventMatched = true;
+var gShowOutput = false;
+var gChildWindow = null;
+var gRefocusCallback = null;
+
+var gOldExpectedWindow = null;
+var gNewExpectedWindow = null;
+
+function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
+function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+
+function initEvents(target)
+{
+  target.addEventListener("focus", eventOccured, true);
+  target.addEventListener("blur", eventOccured, true);
+}
+
+function eventOccured(event)
+{
+  // iframes should never receive focus or blur events directly
+  if (event.target instanceof Element && event.target.localName == "iframe")
+    ok(false, "iframe " + event.type + "occured");
+
+  var id;
+  if (gOldExpectedWindow && event.type == "blur") {
+    if (event.target instanceof Window)
+      id = "frame-" + gOldExpectedWindow.document.documentElement.id + "-window";
+    else if (event.target instanceof Document)
+      id = "frame-" + gOldExpectedWindow.document.documentElement.id + "-document";
+    else
+      id = event.originalTarget.id;
+  }
+  else if (gNewExpectedWindow && event.type == "focus") {
+    if (event.target instanceof Window)
+      id = "frame-" + gNewExpectedWindow.document.documentElement.id + "-window";
+    else if (event.target instanceof Document)
+      id = "frame-" + gNewExpectedWindow.document.documentElement.id + "-document";
+    else
+      id = event.originalTarget.id;
+  }
+  else if (event.target instanceof Window)
+    id = (event.target == window) ? "outer-window" : "child-window";
+  else if (event.target instanceof Document)
+    id = (event.target == document) ? "outer-document" : "child-document";
+  else
+    id = event.originalTarget.id;
+
+  if (gEvents)
+    gEvents += " ";
+  gEvents += event.type + ": " + id;
+}
+
+function expectFocusShift(callback, expectedWindow, expectedId, focusChanged, testid)
+{
+  var expectedElement;
+  if (expectedId)
+    expectedElement = getById(expectedId);
+
+  if (expectedWindow == null)
+    expectedWindow = expectedElement ?
+                     expectedElement.ownerDocument.defaultView :
+                     gLastFocusWindow;
+
+  var expectedEvents = "";
+  if (focusChanged) {
+    if (gLastFocus && gLastFocus.id != "t" + kChildDocumentRootIndex &&
+        (!gOldExpectedWindow || gOldExpectedWindow.document.documentElement != gLastFocus)) {
+      if (!gOldExpectedWindow)
+        expectedEvents += "commandupdate: cu ";
+      expectedEvents += "blur: " + gLastFocus.id;
+    }
+
+    var id;
+    if (gLastFocusWindow && gLastFocusWindow != expectedWindow) {
+      if (!gMoveToFocusFrame) {
+        if (gOldExpectedWindow)
+          id = "frame-" + gOldExpectedWindow.document.documentElement.id;
+        else
+          id = (gLastFocusWindow == window) ? "outer" : "child";
+        if (expectedEvents)
+          expectedEvents += " ";
+        expectedEvents += "blur: " + id + "-document " +
+                          "blur: " + id + "-window";
+      }
+    }
+
+    if (expectedWindow && gLastFocusWindow != expectedWindow) {
+      if (gNewExpectedWindow)
+        id = "frame-" + gNewExpectedWindow.document.documentElement.id;
+      else
+        id = (expectedWindow == window) ? "outer" : "child";
+      if (expectedEvents)
+        expectedEvents += " ";
+      expectedEvents += "focus: " + id + "-document " +
+                        "focus: " + id + "-window";
+    }
+
+    // for this test which fires a mouse event on a label, the document will
+    // be focused first and then the label code will focus the related
+    // control. This doesn't result in different focus events, but a command
+    // update will occur for the document and then a secon command update will
+    // occur when the control is focused.
+    if (testid == "mouse on html label with content inside")
+      expectedEvents += " commandupdate: cu";
+
+    if (expectedElement && expectedId != "t" + kChildDocumentRootIndex &&
+        (!gNewExpectedWindow || gNewExpectedWindow.document.documentElement != expectedElement)) {
+      if (expectedEvents)
+        expectedEvents += " ";
+      if (!gNewExpectedWindow)
+        expectedEvents += "commandupdate: cu ";
+      expectedEvents += "focus: " + expectedElement.id;
+    }
+    else if (expectedWindow && gLastFocusWindow != expectedWindow &&
+             !expectedElement) {
+      if (expectedEvents)
+        expectedEvents += " ";
+      expectedEvents += "commandupdate: cu";
+    }
+  }
+
+  gLastFocus = expectedElement;
+  gLastFocusWindow = expectedWindow;
+
+  callback();
+
+  compareEvents(expectedEvents, expectedWindow, expectedElement, testid);
+}
+
+function compareEvents(expectedEvents, expectedWindow, expectedElement, testid)
+{
+  if (!gShowOutput) {
+    gEvents = "";
+    return;
+  }
+
+  is(gEvents, expectedEvents, testid + " events");
+  gEvents = "";
+
+  var doc;
+  if (expectedWindow == window)
+    doc = "outer-document";
+  else if (expectedWindow == gChildWindow)
+    doc = "inner-document";
+  else if (gNewExpectedWindow)
+    doc = gNewExpectedWindow.document.body ? gNewExpectedWindow.document.body.id :
+                                             gNewExpectedWindow.document.documentElement.id;
+  else
+    doc = "other-document";
+
+  var focusedElement = fm.focusedElement;
+  is(focusedElement ? focusedElement.id : "none",
+     expectedElement ? expectedElement.id : "none", testid + " focusedElement");
+  is(fm.focusedWindow, expectedWindow, testid + " focusedWindow");
+  var focusedWindow = {};
+  is(fm.getFocusedElementForWindow(expectedWindow, false, focusedWindow),
+     expectedElement, testid + " getFocusedElementForWindow");
+  is(focusedWindow.value, expectedWindow, testid + " getFocusedElementForWindow frame");
+  is(expectedWindow.document.hasFocus(), true, testid + " hasFocus");
+  is(expectedWindow.document.activeElement ? expectedWindow.document.activeElement.id : "none",
+     expectedElement ? expectedElement.id : doc, testid + " activeElement");
+  var cdwindow = getTopWindow(expectedWindow);
+  if (cdwindow.document.commandDispatcher) {
+    is(cdwindow.document.commandDispatcher.focusedWindow, expectedWindow, testid + " commandDispatcher focusedWindow");
+    is(cdwindow.document.commandDispatcher.focusedElement, focusedElement, testid + " commandDispatcher focusedElement");
+  }
+
+  if (gLastFocusMethod != -1) {
+    is(fm.getLastFocusMethod(null), gLastFocusMethod, testid + " lastFocusMethod null");
+    is(fm.getLastFocusMethod(expectedWindow), gLastFocusMethod, testid + " lastFocusMethod window");
+  }
+
+  // the parent should have the iframe focused
+  if (doc == "inner-document") {
+    is(document.hasFocus(), true, testid + " hasFocus");
+    is(fm.getFocusedElementForWindow(window, false, focusedWindow),
+       $("childframe"), testid + " getFocusedElementForWindow for parent");
+    is(focusedWindow.value, window, testid + " getFocusedElementForWindow for parent frame");
+    is(fm.getFocusedElementForWindow(window, true, focusedWindow),
+       expectedElement, testid + " getFocusedElementForWindow deep for parent");
+    is(focusedWindow.value, gChildWindow, testid + " getFocusedElementForWindow deep for parent frame");
+    is(document.activeElement.id, "childframe", testid + " activeElement for parent");
+  }
+
+  // compare the selection for the child window. Skip mouse tests as the caret
+  // is adjusted by the selection code for mouse clicks, and not the focus code.
+  if (expectedWindow == window) {
+    var selection = window.getSelection();
+    ok(selection.focusNode == null && selection.focusOffset == 0 &&
+       selection.anchorNode == null && selection.anchorOffset == 0, testid + " selection");
+  }
+  else if ((expectedWindow == gChildWindow) && !testid.indexOf("mouse") == -1) {
+    checkSelection(expectedElement, testid);
+  }
+}
+
+function checkSelection(node, testid)
+{
+  var selection = gChildWindow.getSelection();
+
+  var range = gChildWindow.document.createRange();
+  range.selectNodeContents(node);
+  if (!node.firstChild || node.localName == "input" ||
+       node.localName == "select" || node.localName == "button") {
+    range.setStartBefore(node);
+    range.setEndBefore(node);
+  }
+
+  if (node.firstChild)
+    range.setEnd(range.startContainer, range.startOffset);
+
+  is(selection.focusNode, range.startContainer, testid + " selection focusNode");
+  is(selection.focusOffset, range.startOffset, testid + " selection focusOffset");
+  is(selection.anchorNode, range.endContainer, testid + " selection anchorNode");
+  is(selection.anchorOffset, range.endOffset, testid + " selection anchorOffset");
+}
+
+function getTopWindow(win)
+{
+  return win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+             getInterface(Components.interfaces.nsIWebNavigation).
+             QueryInterface(Components.interfaces.nsIDocShellTreeItem).rootTreeItem.
+             QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+             getInterface(Components.interfaces.nsIDOMWindow);
+}
+
+function done()
+{
+  var opener = window.opener;
+  window.close();
+  opener.wrappedJSObject.SimpleTest.finish();
+}
+
+var pressTab = function () synthesizeKey("VK_TAB", { });
+
+function setFocusTo(id, fwindow)
+{
+  gLastFocus = getById(id);
+  gLastFocusWindow = fwindow;
+  gLastFocus.focus();
+  gEvents = "";
+}
+
+function getById(id)
+{
+  if (gNewExpectedWindow)
+    return gNewExpectedWindow.document.getElementById(id);
+  var element = $(id);
+  if (!element)
+    element = $("childframe").contentDocument.getElementById(id);
+  return element;
+}
+
+function startTest()
+{
+  if (gRefocusCallback) {
+    gRefocusCallback();
+    return;
+  }
+
+  if (gTestStarted)
+    return;
+  gTestStarted = true;
+
+  gChildWindow = $("childframe").contentWindow;
+  gShowOutput = true;
+
+  // synthesize a mousemove over the image to ensure that the imagemap data is
+  // created. Otherwise, the special imagemap frames might not exist, and
+  // won't be focusable.
+  synthesizeMouse(getById("image"), 4, 4, { type: "mousemove" }, gChildWindow);
+
+  initEvents(window);
+
+  is(fm.activeWindow, window, "activeWindow");
+  is(gChildWindow.document.hasFocus(), false, " child document hasFocus");
+
+  // test to see if the Mac Full Keyboard Access setting is set. If t3 is
+  // focused after tab is pressed, then it is set to textboxes and lists only.
+  // Otherwise, all elements are in the tab order.
+  pressTab();
+
+  if (fm.focusedElement.id == "t3")
+    gPartialTabbing = true;
+  else
+    is(fm.focusedElement.id, "t1", "initial tab key");
+
+  is(fm.getLastFocusMethod(null), fm.FLAG_BYKEY, "last focus method null start");
+  is(fm.getLastFocusMethod(window), fm.FLAG_BYKEY, "last focus method window start");
+
+  fm.clearFocus(window);
+  gEvents = "";
+
+  gLastFocusMethod = fm.FLAG_BYKEY;
+  if (gPartialTabbing) {
+    var partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t13", "t14",
+                          "t16", "t19", "t27", "t30"];
+    for (var idx = 0; idx < partialTabList.length; idx++) {
+      expectFocusShift(pressTab, null, partialTabList[idx], true, "partial tab key " + partialTabList[idx]);
+    }
+    setFocusTo("last", window);
+    expectFocusShift(pressTab, null, partialTabList[0], true, "partial tab key wrap to start");
+    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+                     null, "last", true, "partial shift tab key wrap to end");
+    for (var idx = partialTabList.length - 1; idx >= 0; idx--) {
+      expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+                       null, partialTabList[idx], true, "partial tab key " + partialTabList[idx]);
+    }
+  }
+  else {
+    // TAB key
+    for (var idx = 1; idx <= kTabbableSteps; idx++) {
+      // skip the tab element, as tab elements are not focusable on Mac
+      if ((navigator.platform.indexOf("Mac") == 0) && (idx == kBeforeTabboxIndex + 1))
+        continue;
+
+      expectFocusShift(pressTab, null, "t" + idx, true, "tab key t" + idx);
+    }
+
+    // wrapping around at end with TAB key
+    setFocusTo("last", window);
+    expectFocusShift(pressTab, null, "t1", true, "tab key wrap to start");
+    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+                     null, "last", true, "shift tab key wrap to end");
+
+    // Shift+TAB key
+    setFocusTo("o5", window);
+    for (idx = kTabbableSteps; idx > 0; idx--) {
+      // skip the tab element, as tab elements are not focusable on Mac
+      if (navigator.platform.indexOf("Mac") == 0 && (idx == kBeforeTabboxIndex + 1)) {
+        continue; }
+
+      expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+                       null, "t" + idx, true, "shift tab key t" + idx);
+    }
+  }
+
+  var t19 = getById("t19");
+  is(t19.selectionStart, 0, "input focused from tab key selectionStart");
+  is(t19.selectionEnd, 5, "input focused from tab key selectionEnd");
+  t19.setSelectionRange(0, 0);
+
+  // mouse clicking
+  gLastFocusMethod = fm.FLAG_BYMOUSE;
+  for (idx = kTabbableSteps; idx >= 1; idx--) {
+    // skip the document root and the overflow element
+    if (idx == kChildDocumentRootIndex || idx == kOverflowElementIndex)
+      continue;
+    if ((navigator.platform.indexOf("Mac") == 0) && (idx == kBeforeTabboxIndex + 1))
+      continue;
+
+    var element = getById("t" + idx);
+    // skip area elements, as getBoundingClientRect doesn't return their actual coordinates
+    if (element.localName == "area")
+      continue;
+
+    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+                     null, "t" + idx, true, "mouse on element t" + idx);
+  }
+
+  is(t19.selectionStart, 0, "input focused from mouse selectionStart");
+  is(t19.selectionEnd, 0, "input focused from mouse selectionEnd");
+
+  // mouse clicking on elements that are not tabbable 
+  for (idx = 1; idx <= kFocusSteps; idx++) {
+    var element = getById("o" + (idx % 2 ? idx : idx - 1));
+    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+                     element.ownerDocument.defaultView,
+                     element.id, idx % 2, "mouse on non-tabbable element o" + idx);
+  }
+
+  // mouse clicking on elements that are not tabbable and have user-focus: none
+  // or are not focusable for other reasons (for instance, being disabled)
+  // These elements will clear the focus when clicked.
+  for (idx = 1; idx <= kNoFocusSteps; idx++) {
+    var element = getById("n" + idx);
+    gLastFocusMethod = idx % 2 ? 0 : fm.FLAG_BYMOUSE;
+    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+                     element.ownerDocument.defaultView,
+                     idx % 2 ? "" : element.id, true, "mouse on unfocusable element n" + idx);
+  }
+
+  if (idx == kOverflowElementIndex) {
+    gLastFocusMethod = fm.FLAG_BYMOUSE;
+    var element = getById("t" + idx);
+    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+                     window, null, true, "mouse on scrollable element");
+  }
+
+  // focus() method
+  gLastFocusMethod = 0;
+  for (idx = kTabbableSteps; idx >= 1; idx--) {
+    if ((navigator.platform.indexOf("Mac") == 0) && (idx == kBeforeTabboxIndex + 1))
+      continue;
+    expectFocusShift(function () getById("t" + idx).focus(),
+                     null, "t" + idx, true, "focus method on element t" + idx);
+  }
+
+  $("t1").focus();
+  ok(gEvents === "", "focusing element that is already focused");
+
+  $("t2").blur();
+  ok(gEvents === "", "blurring element that is not focused");
+
+  // focus() method on elements that are not tabbable 
+  for (idx = 1; idx <= kFocusSteps; idx++) {
+    var expectedId = "o" + (idx % 2 ? idx : idx - 1);
+    expectFocusShift(function () getById("o" + idx).focus(),
+                     getById(expectedId).ownerDocument.defaultView,
+                     expectedId, idx % 2, "focus method on non-tabbable element o" + idx);
+  }
+
+  // focus() method on elements that are not tabbable and have user-focus: none
+  // or are not focusable for other reasons (for instance, being disabled)
+  for (idx = 1; idx <= kNoFocusSteps; idx++) {
+    var expectedId = "o" + (idx % 2 ? idx : idx - 1);
+    expectFocusShift(function () getById("o" + idx).focus(),
+                     getById(expectedId).ownerDocument.defaultView,
+                     expectedId, idx % 2, "focus method on unfocusable element n" + idx);
+  }
+
+  // the focus() method on the legend element should focus the legend if it is
+  // focusable, or the first element after the legend if it is not focusable.
+  if (!gPartialTabbing) {
+    var legend = getById("legend");
+    expectFocusShift(function () legend.focus(),
+                     null, "t28", true, "focus method on unfocusable legend");
+    legend.tabIndex = "0";
+    expectFocusShift(function () legend.focus(),
+                     null, "legend", true, "focus method on focusable legend");
+    legend.tabIndex = "-1";
+  }
+
+  var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
+                         { ctrlKey : true } : { altKey : true };
+
+  // test accesskeys
+  var keys = ["t26", "t19", "t22", "t29", "t15", "t17", "n14",
+              "t4", "o1", "o9", "n6"];
+  for (var k = 0; k < keys.length; k++) {
+    var key = String.fromCharCode(65 + k);
+
+    gLastFocusMethod = fm.FLAG_BYKEY;
+
+    // on Windows and Linux, the shift key must be pressed for content area access keys
+    if (navigator.platform.indexOf("Mac") == -1)
+      accessKeyDetails.shiftKey = (getById(keys[k]).ownerDocument.defaultView == gChildWindow);
+
+    expectFocusShift(function () synthesizeKey(key, accessKeyDetails),
+                     null, keys[k], true, "accesskey " + key);
+  }
+
+  // clicking on the labels
+  gLastFocusMethod = -1;
+  expectFocusShift(function () synthesizeMouse(getById("ad"), 2, 2, { }, gChildWindow),
+                   null, "t29", true, "mouse on html label with content inside");
+  expectFocusShift(function () synthesizeMouse(getById("ag"), 2, 2, { }, gChildWindow),
+                   null, "n14", true, "mouse on html label with for attribute");
+  expectFocusShift(function () synthesizeMouse(getById("aj"), 2, 2, { }),
+                   null, "o9", true, "mouse on xul label with content inside");
+  expectFocusShift(function () synthesizeMouse(getById("ak"), 2, 2, { }),
+                   null, "n6", true, "mouse on xul label with control attribute");
+
+  // test accesskeys that shouldn't work
+  gLastFocusMethod = 0;
+  k = "o".charCodeAt(0);
+  while (k++ < "v".charCodeAt(0)) {
+    var key = String.fromCharCode(k);
+    expectFocusShift(function () synthesizeKey(key, accessKeyDetails),
+                     window, "n6", false, "non accesskey " + key);
+  }
+  gLastFocusMethod = -1;
+
+  // should focus the for element when using the focus method on a label as well
+  expectFocusShift(function () getById("ad").focus(),
+                   null, "t29", true, "mouse on html label using focus method");
+
+  // make sure that the text is selected when clicking a label associated with an input
+  getById("ag").htmlFor = "t19";
+  expectFocusShift(function () synthesizeMouse(getById("ag"), 2, 2, { }, gChildWindow),
+                   null, "t19", true, "mouse on html label with for attribute changed");
+  is(t19.selectionStart, 0, "input focused from label, selectionStart");
+  is(t19.selectionEnd, 5, "input focused from label, selectionEnd");
+
+  // switch to another panel in a tabbox and ensure that tabbing moves between
+  // elements on the new panel.
+  $("tabbox").selectedIndex = 1;
+  expectFocusShift(function () getById("t" + kBeforeTabboxIndex).focus(),
+                   null, "t" + kBeforeTabboxIndex, true, "focus method on element before tabbox");
+
+  if (!gPartialTabbing) {
+    if (navigator.platform.indexOf("Mac") == -1)
+      expectFocusShift(pressTab, null, "tab2", true, "focus method on tab");
+    expectFocusShift(pressTab, null, "htab1", true, "tab key switch tabpanel 1");
+    expectFocusShift(pressTab, null, "htab2", true, "tab key switch tabpanel 2");
+    expectFocusShift(pressTab, null, "t" + (kBeforeTabboxIndex + 4), true, "tab key switch tabpanel 3");
+  }
+  $("tabbox").selectedIndex = 0;
+
+  // ---- the following checks when the focus changes during a blur or focus event ----
+
+  var o5 = $("o5");
+  var o7 = $("o7");
+  var o9 = $("o9");
+  var t17 = getById("t17");
+  var t19 = getById("t19");
+  var shiftFocusParentDocument = function() o9.focus();
+  var shiftFocusChildDocument = function() t17.focus();
+
+  var trapBlur = function (element, eventListener, blurFunction)
+  {
+    element.focus();
+    gEvents = "";
+    element.addEventListener("blur", eventListener, false);
+    blurFunction();
+    element.removeEventListener("blur", eventListener, false);
+  }
+
+  var functions = [
+    function(element) element.focus(),
+    function(element) synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView)
+  ];
+
+  // first, check cases where the focus is adjusted during the blur event. Iterate twice,
+  // once with the focus method and then focusing by mouse clicking
+  for  (var l = 0; l < 2; l++) {
+    var adjustFocus = functions[l];
+    var mod = (l == 1) ? " with mouse" : "";
+
+    // an attempt is made to switch the focus from one element (o5) to another
+    // element (o7) within the same document, yet the focus is shifted to a
+    // third element (o9) in the same document during the blur event for the
+    // first element.
+    trapBlur(o5, shiftFocusParentDocument, function () adjustFocus(o7));
+    compareEvents("commandupdate: cu blur: o5 commandupdate: cu focus: o9",
+                  window, o9, "change focus to sibling during element blur, attempted sibling" + mod);
+
+    // similar, but the third element (t17) is in a child document
+    trapBlur(o9, shiftFocusChildDocument, function () adjustFocus(o7));
+    compareEvents("commandupdate: cu blur: o9 blur: outer-document blur: outer-window " +
+                  "focus: child-document focus: child-window commandupdate: cu focus: t17",
+                  gChildWindow, t17, "change focus to child document during element blur, attempted sibling" + mod);
+
+    // similar, but an attempt to switch focus within the same document, but the
+    // third element (t17) is in a parent document
+    trapBlur(t17, shiftFocusParentDocument, function () adjustFocus(t19));
+    compareEvents("commandupdate: cu blur: t17 blur: child-document blur: child-window " +
+                  "focus: outer-document focus: outer-window commandupdate: cu focus: o9",
+                  window, o9, "change focus to parent document during element blur, attempted sibling" + mod);
+
+    // similar, but blur is called instead of switching focus
+    trapBlur(o7, shiftFocusParentDocument, function () o7.blur());
+    compareEvents("commandupdate: cu blur: o7 commandupdate: cu focus: o9",
+                  window, o9, "change focus to same document during clear focus" + mod);
+
+    // check when an element in the same document is focused during the
+    // element's blur event, but an attempt was made to focus an element in the
+    // child document. In this case, the focus in the parent document should be
+    // what was set during the blur event, but the actual focus should still
+    // move to the child document.
+    trapBlur(o7, shiftFocusParentDocument, function () adjustFocus(t17));
+    compareEvents("commandupdate: cu blur: o7 commandupdate: cu focus: o9 " +
+                  "blur: outer-document blur: outer-window " +
+                  "focus: child-document focus: child-window commandupdate: cu focus: t17",
+                  gChildWindow, t17, "change focus to sibling during element blur, attempted child" + mod);
+    is(fm.getFocusedElementForWindow(window, false, {}), $("childframe"),
+       "change focus to sibling during element blur, attempted child, focused in parent" + mod);
+
+    // similar, but with a parent
+    trapBlur(t19, shiftFocusChildDocument, function () adjustFocus(o7));
+    compareEvents("commandupdate: cu blur: t19 commandupdate: cu focus: t17 " +
+                  "blur: child-document blur: child-window " +
+                  "focus: outer-document focus: outer-window commandupdate: cu focus: o7",
+                  window, o7, "change focus to sibling during element blur, attempted parent" + mod);
+    is(fm.getFocusedElementForWindow(gChildWindow, false, {}), t17,
+       "change focus to sibling during element blur, attempted child, focused in child" + mod);
+
+    // similar, with a child, but the blur event focuses a child element also
+    trapBlur(o7, shiftFocusChildDocument, function () adjustFocus(t19));
+    compareEvents("commandupdate: cu blur: o7 blur: outer-document blur: outer-window " +
+                  "focus: child-document focus: child-window commandupdate: cu focus: t17",
+                  gChildWindow, t17, "change focus to child during element blur, attempted child" + mod);
+
+    // similar, with a parent, where the blur event focuses a parent element also
+    trapBlur(t17, shiftFocusParentDocument, function () adjustFocus(o7));
+    compareEvents("commandupdate: cu blur: t17 blur: child-document blur: child-window " +
+                  "focus: outer-document focus: outer-window commandupdate: cu focus: o9",
+                  window, o9, "change focus to parent during element blur, attempted parent" + mod);
+  }
+
+  var trapFocus = function (element, eventListener)
+  {
+    element.addEventListener("focus", eventListener, false);
+    element.focus();
+    element.removeEventListener("focus", eventListener, false);
+  }
+
+  fm.clearFocus(window);
+  gEvents = "";
+
+  // next, check cases where the focus is adjusted during the focus event
+
+  // switch focus to an element in the same document  
+  trapFocus(o5, shiftFocusParentDocument);
+  compareEvents("commandupdate: cu focus: o5 commandupdate: cu blur: o5 commandupdate: cu focus: o9",
+                window, o9, "change focus to sibling during element focus");
+
+  // similar, but the new element (t17) is in a child document
+  trapFocus(o5, shiftFocusChildDocument);
+  compareEvents("commandupdate: cu blur: o9 " +
+                "commandupdate: cu focus: o5 commandupdate: cu blur: o5 " +
+                "blur: outer-document blur: outer-window " +
+                "focus: child-document focus: child-window commandupdate: cu focus: t17",
+                gChildWindow, t17, "change focus to child document during element focus");
+
+  // similar, but the new element (o9) is in a parent document.
+  trapFocus(t19, shiftFocusParentDocument);
+  compareEvents("commandupdate: cu blur: t17 " +
+                "commandupdate: cu focus: t19 commandupdate: cu blur: t19 " +
+                "blur: child-document blur: child-window " +
+                "focus: outer-document focus: outer-window commandupdate: cu focus: o9",
+                window, o9, "change focus to parent document during element focus");
+
+  // clear the focus during the focus event
+  trapFocus(o7, function () fm.clearFocus(window));
+  compareEvents("commandupdate: cu blur: o9 commandupdate: cu focus: o7 commandupdate: cu blur: o7",
+                window, null, "clear focus during focus event");
+
+  if (!gPartialTabbing)
+    doCommandDispatcherTests();
+
+  doRemoveTests()
+
+  testMoveFocus();
+
+  // tests various focus manager apis for null checks
+  var exh = false;
+  try {
+    fm.clearFocus(null);
+  }
+  catch (ex) { exh = true; }
+  is(exh, true, "clearFocus with null window causes exception");
+
+  var exh = false;
+  try {
+    fm.getFocusedElementForWindow(null, false, focusedWindow);
+  }
+  catch (ex) { exh = true; }
+  is(exh, true, "getFocusedElementForWindow with null window causes exception");
+
+  // just make sure that this doesn't crash
+  fm.moveCaretToFocus(null);
+
+  // ---- tests for the FLAG_NOSWITCHFRAME flag
+  getById("o5").focus();
+  gEvents = "";
+  // focus is being shifted in a child, so the focus should not change
+  expectFocusShift(function () fm.setFocus(getById("t20"), fm.FLAG_NOSWITCHFRAME),
+                   window, "o5", false, "no switch frame focus to child");
+  setFocusTo("t20", gChildWindow);
+
+  // here, however, focus is being shifted in a parent, which will have to blur
+  // the child, so the focus will always change
+  expectFocusShift(function () fm.setFocus(getById("o5"), fm.FLAG_NOSWITCHFRAME),
+                   window, "o5", true, "no switch frame focus to parent");
+
+  expectFocusShift(function () fm.setFocus(getById("t1"), fm.FLAG_NOSWITCHFRAME),
+                   window, "t1", true, "no switch frame focus to same window");
+
+  // ---- tests for focus and scrolling into view ----
+  var inscroll = getById("inscroll");
+  inscroll.tabIndex = 0;
+  is(inscroll.parentNode.scrollTop, 0, "scroll position before focus");
+  inscroll.focus();
+  ok(inscroll.parentNode.scrollTop > 5, "scroll position after focus");
+  inscroll.parentNode.scrollTop = 0;
+  fm.setFocus(inscroll, fm.FLAG_NOSCROLL);
+  is(inscroll.parentNode.scrollTop, 0, "scroll position after noscroll focus");
+
+  getById("t9").focus();
+  getById("inpopup1").focus();
+  is(fm.focusedElement, getById("t9"), "focus in closed popup");
+
+  gEvents = "";
+  window.openDialog("focus_window2.xul", "_blank", "chrome", otherWindowFocused, null);
+}
+
+function doCommandDispatcherTests()
+{
+  var t19 = getById("t19");
+  t19.focus();
+  gLastFocusWindow = gChildWindow;
+  gLastFocus = t19;
+  gEvents = "";
+
+  expectFocusShift(function () document.commandDispatcher.focusedElement = getById("o9"),
+                   null, "o9", true, "command dispatcher set focusedElement");
+  expectFocusShift(function () document.commandDispatcher.advanceFocus(),
+                   null, "o13", true, "command dispatcher advanceFocus");
+  expectFocusShift(function () document.commandDispatcher.rewindFocus(),
+                   null, "o9", true, "command dispatcher rewindFocus");
+  expectFocusShift(function () document.commandDispatcher.focusedElement = null,
+                   null, null, true, "command dispatcher set focusedElement to null");
+  expectFocusShift(function () document.commandDispatcher.focusedWindow = gChildWindow,
+                   null, "t19", true, "command dispatcher set focusedElement to null");
+  expectFocusShift(function () document.commandDispatcher.focusedElement = null,
+                   gChildWindow, null, true, "command dispatcher set focusedElement to null in child");
+  expectFocusShift(function () document.commandDispatcher.advanceFocusIntoSubtree(getById("t19")),
+                   null, "t20", true, "command dispatcher advanceFocusIntoSubtree child");
+  expectFocusShift(function () document.commandDispatcher.advanceFocusIntoSubtree(null),
+                   null, "t21", true, "command dispatcher advanceFocusIntoSubtree null child");
+  expectFocusShift(function () document.commandDispatcher.advanceFocusIntoSubtree(getById("o9").parentNode),
+                   null, "o9", true, "command dispatcher advanceFocusIntoSubtree parent");
+}
+
+function doRemoveTests()
+{
+  // next, some tests which remove elements
+  var t19 = getById("t19");
+  t19.focus();
+  t19.parentNode.removeChild(t19);
+
+  is(fm.focusedElement, null, "removed element focusedElement");
+  is(fm.focusedWindow, gChildWindow, "removed element focusedWindow");
+  is(gChildWindow.document.hasFocus(), true, "removed element hasFocus");
+  is(gChildWindow.document.activeElement, getById("inner-document"), "removed element activeElement");
+
+  getById("t15").focus();
+  var abs = getById("abs");
+  abs.parentNode.removeChild(abs);
+
+  is(fm.focusedElement, null, "removed ancestor focusedElement");
+  is(fm.focusedWindow, gChildWindow, "removed ancestor focusedWindow");
+  is(gChildWindow.document.hasFocus(), true, "removed ancestor hasFocus");
+  is(gChildWindow.document.activeElement, getById("inner-document"), "removed ancestor activeElement");
+}
+
+// tests for the FocusManager moveFocus method
+function testMoveFocus()
+{
+  setFocusTo("t6", window);
+
+  // moving focus while an element is already focused
+  var newFocus;
+  var expectedFirst = gPartialTabbing ? "t3" : "t1";
+  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FIRST, 0),
+                   window, expectedFirst, true, "moveFocus to first null window null content");
+  is(newFocus, fm.focusedElement, "moveFocus to first null window null content return value");
+
+  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_LAST, 0),
+                   window, "last", true, "moveFocus to last null window null content");
+  is(newFocus, fm.focusedElement, "moveFocus to last null window null content return value");
+
+  newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_ROOT, 0);
+  is(newFocus, null, "moveFocus to root null window null content return value");
+  is(fm.focusedWindow, window, "moveFocus to root null window null content focusedWindow");
+  is(fm.focusedElement, null, "moveFocus to root null window null content focusedElement");
+
+  // moving focus while no element is focused
+  fm.clearFocus(window);
+  gEvents = "";
+  gLastFocus = null;
+  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FIRST, 0),
+                   window, expectedFirst, true, "moveFocus to first null window null content no focus");
+  is(newFocus, fm.focusedElement, "moveFocus to first null window null content no focus return value");
+  fm.clearFocus(window);
+  gEvents = "";
+  gLastFocus = null;
+  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_LAST, 0),
+                   window, "last", true, "moveFocus to last null window null content no focus");
+  is(newFocus, fm.focusedElement, "moveFocus to last null window null content no focus return value");
+  fm.clearFocus(window);
+  gEvents = "";
+  newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_ROOT, 0);
+  is(newFocus, null, "moveFocus to root null window null content no focus return value");
+  is(fm.focusedWindow, window, "moveFocus to root null window null content no focus focusedWindow");
+  is(fm.focusedElement, null, "moveFocus to root null window null content no focus focusedElement");
+
+  // moving focus from a specified element
+  setFocusTo("t6", window);
+  expectFocusShift(function () newFocus = fm.moveFocus(null, getById("specialroot"), fm.MOVEFOCUS_FIRST, 0),
+                   window, "t3", true, "moveFocus to first null window with content");
+// XXXndeakin P3 this doesn't work
+//  expectFocusShift(function () newFocus = fm.moveFocus(null, getById("specialroot"), fm.MOVEFOCUS_LAST, 0),
+//                   window, "o3", true, "moveFocus to last null window with content");
+
+  // move focus to first in child window
+  expectFocusShift(function () newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_FIRST, 0),
+                   gChildWindow, "t" + (kChildDocumentRootIndex + 1), true,
+                   "moveFocus to first child window null content");
+  is(newFocus, getById("t" + (kChildDocumentRootIndex + 1)),
+     "moveFocus to first child window null content return value");
+
+  // move focus to last in child window
+  setFocusTo("t6", window);
+  var expectedLast = gPartialTabbing ? "t30" : "t" + (kBeforeTabboxIndex - 1);
+  expectFocusShift(function () newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_LAST, 0),
+                   gChildWindow, expectedLast, true,
+                   "moveFocus to last child window null content");
+  is(newFocus, getById(expectedLast),
+     "moveFocus to last child window null content return value");
+
+  // move focus to root in child window
+  setFocusTo("t6", window);
+  var childroot = getById("t" + kChildDocumentRootIndex);
+  newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_ROOT, 0),
+  is(newFocus, childroot, "moveFocus to root child window null content return value");
+  is(fm.focusedWindow, gChildWindow, "moveFocus to root child window null content focusedWindow");
+  is(fm.focusedElement, childroot, "moveFocus to root child window null content focusedElement");
+
+  // MOVEFOCUS_CARET tests
+  getById("t20").focus();
+  gEvents = "";
+
+  var selection = gChildWindow.getSelection();
+  selection.removeAllRanges();
+
+  var node = getById("t16").firstChild;
+  var range = gChildWindow.document.createRange();
+  range.setStart(node, 3);
+  range.setEnd(node, 3);
+  selection.addRange(range);
+
+  newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_CARET, 0);
+  is(newFocus, null, "move caret to non-link return value");
+  is(fm.focusedElement, null, "move caret to non-link");
+
+  var t25 = getById("t25")
+  var node = t25.firstChild;
+  range.setStart(node, 1);
+  range.setEnd(node, 1);
+  var newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_CARET, 0);
+
+  is(newFocus, t25, "move caret to link return value");
+  is(fm.focusedElement, t25, "move caret to link focusedElement");
+
+  // enable caret browsing temporarily to test caret movement
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref("accessibility.browsewithcaret", true);
+
+  synthesizeKey("VK_LEFT", { }, gChildWindow);
+  synthesizeKey("VK_LEFT", { }, gChildWindow);
+  is(fm.focusedElement, null, "move caret away from link");
+
+  synthesizeKey("VK_LEFT", { }, gChildWindow);
+  is(fm.focusedElement, getById("t24"), "move caret away onto link");
+
+  prefs.setBoolPref("accessibility.browsewithcaret", false);
+}
+
+function otherWindowFocused(otherWindow)
+{
+  var expectedElement = getById("t9");
+
+  is(fm.activeWindow, otherWindow, "other activeWindow");
+  is(fm.focusedWindow, otherWindow, "other focusedWindow");
+  is(window.document.hasFocus(), false, "when lowered document hasFocus");
+  var focusedWindow = {};
+  is(fm.getFocusedElementForWindow(window, false, focusedWindow),
+     expectedElement, "when lowered getFocusedElementForWindow");
+  is(focusedWindow.value, window, "when lowered getFocusedElementForWindow frame");
+  is(document.activeElement.id, expectedElement.id, "when lowered activeElement");
+  is(window.document.commandDispatcher.focusedWindow, window, " commandDispatcher in other window focusedWindow");
+  is(window.document.commandDispatcher.focusedElement, expectedElement, " commandDispatcher in other window focusedElement");
+
+  compareEvents("blur: t9 blur: outer-document blur: outer-window",
+                otherWindow, null, "other window opened");
+
+  otherWindow.document.getElementById("other").focus();
+
+  for (var idx = kTabbableSteps; idx >= 1; idx--) {
+    expectedElement = getById("t" + idx);
+    if (!expectedElement) // skip elements that were removed in doRemoveTests()
+      continue;
+    if ((navigator.platform.indexOf("Mac") == 0) && (idx == kBeforeTabboxIndex + 1))
+      continue;
+
+    expectedElement.focus();
+
+    is(fm.focusedElement.id, "other", "when lowered focusedElement t" + idx);
+    is(fm.focusedWindow, otherWindow, "when lowered focusedWindow t" + idx);
+
+    var checkWindow = expectedElement.ownerDocument.defaultView;
+    is(fm.getFocusedElementForWindow(checkWindow, false, {}).id, expectedElement.id,
+       "when lowered getFocusedElementForWindow t" + idx);
+    is(checkWindow.document.activeElement.id, expectedElement.id, "when lowered activeElement t" + idx);
+    if (checkWindow != window) {
+      is(fm.getFocusedElementForWindow(window, false, {}), $("childframe"),
+         "when lowered parent getFocusedElementForWindow t" + idx);
+      is(document.activeElement.id, "childframe",
+         "when lowered parent activeElement t" + idx);
+    }
+  }
+
+  gEvents = gEvents.replace(/commandupdate: cu\s?/g, "");
+  is(gEvents, "", "when lowered no events fired");
+
+  var other = otherWindow.document.getElementById("other");
+  other.focus();
+  is(fm.focusedElement, other, "focus method in second window");
+
+  otherWindow.close();
+
+  // next, check modal dialogs
+  getById("n2").focus();
+  window.openDialog("focus_window2.xul", "_blank", "chrome,modal", modalWindowOpened, null);
+}
+
+function modalWindowOpened(modalWindow)
+{
+  var elem = modalWindow.document.getElementById("other");
+  if (gPartialTabbing)
+     synthesizeMouse(elem, 4, 4, { }, modalWindow)
+  else
+    pressTab();
+  is(fm.activeWindow, modalWindow, "modal activeWindow");
+  is(fm.focusedElement, elem, "modal focusedElement");
+
+  gRefocusCallback = modalWindowClosed;
+  modalWindow.close();
+}
+
+function modalWindowClosed()
+{
+  gRefocusCallback = null;
+  is(fm.activeWindow, window, "modal window closed activeWindow");
+  is(fm.focusedElement, getById("n2"), "modal window closed focusedElement");
+
+  var framewin = window.open("focus_frameset.html", "_blank", "width=400,height=400,toolbar=no");
+}
+
+function framesetWindowLoaded(framesetWindow)
+{
+  gLastFocus = null;
+  gEvents = "";
+
+  is(fm.activeWindow, getTopWindow(framesetWindow), "frameset window active");
+  gOldExpectedWindow = getTopWindow(framesetWindow);
+
+  gMoveToFocusFrame = true;
+  for (var idx = 1; idx <= 8; idx++) {
+    gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
+    if (idx % 2)
+      initEvents(gNewExpectedWindow);
+    expectFocusShift(function () synthesizeKey("VK_TAB", { }, framesetWindow),
+                     gNewExpectedWindow, "f" + idx, true, "frameset tab key f" + idx);
+    gMoveToFocusFrame = false;
+    gOldExpectedWindow = gNewExpectedWindow;
+  }
+
+  gNewExpectedWindow = framesetWindow.frames[0];
+  expectFocusShift(function () synthesizeKey("VK_TAB", { }, framesetWindow),
+                   gNewExpectedWindow, "f1", true, "frameset tab key wrap to start");
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[3];
+  expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f8", true, "frameset shift tab key wrap to end");
+
+  for (idx = 7; idx >= 1; idx--) {
+    gOldExpectedWindow = gNewExpectedWindow;
+    gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
+    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
+                     gNewExpectedWindow, "f" + idx, true, "frameset shift tab key f" + idx);
+  }
+
+  // document shifting
+  // XXXndeakin P3 ctrl+tab doesn't seem to be testable currently for some reason
+  gNewExpectedWindow = framesetWindow.frames[1];
+  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f3", true, "switch document forward with f6");
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[2];
+  expectFocusShift(function () synthesizeKey("VK_F6", { }, framesetWindow),
+                   gNewExpectedWindow, "f5", true, "switch document forward with ctrl+tab");
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[3];
+  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f7", true, "switch document forward with ctrl+f6");
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[0];
+  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f1", true, "switch document forward and wrap");
+
+// going backwards by document and wrapping doesn't currently work, but didn't work
+// before the focus reworking either
+
+/*
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[3];
+  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f7", true, "switch document backward and wrap");
+ */
+
+  fm.moveFocus(framesetWindow.frames[3], null, fm.MOVEFOCUS_ROOT, 0);
+  gEvents = "";
+
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[2];
+  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f5", true, "switch document backward with f6");
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[1];
+  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f3", true, "switch document backward with ctrl+tab");
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = framesetWindow.frames[0];
+  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+                   gNewExpectedWindow, "f1", true, "switch document backward with ctrl+f6");
+
+  // skip the window switching tests for now on Linux, as opening and closing
+  // a window is asynchronous there
+  if (navigator.platform.indexOf("Linux") == -1) {
+    window.openDialog("focus_window2.xul", "_blank", "chrome", switchWindowTest, framesetWindow);
+  }
+  else {
+    gNewExpectedWindow = null;
+    gRefocusCallback = doFrameSwitchingTests;
+    framesetWindow.close();
+  }
+}
+
+// test switching between two windows
+function switchWindowTest(otherWindow, framesetWindow)
+{
+  initEvents(otherWindow);
+  var otherElement = otherWindow.document.getElementById("other");
+  otherElement.focus();
+
+  framesetWindow.frames[1].document.getElementById("f4").focus();
+
+  is(fm.focusedElement, otherElement, "focus after inactive window focus");
+
+  gLastFocus = otherElement;
+  gEvents = "";
+  gOldExpectedWindow = otherWindow;
+  gNewExpectedWindow = framesetWindow.frames[1];
+
+  expectFocusShift(function () gNewExpectedWindow.focus(),
+                   gNewExpectedWindow, "f4", true, "switch to frame in another window");
+  is(fm.getFocusedElementForWindow(otherWindow, false, {}).id, "other", "inactive window has focused element");
+
+  gOldExpectedWindow = framesetWindow.frames[1];
+  gNewExpectedWindow = otherWindow;
+  expectFocusShift(function () otherWindow.focus(),
+                   gNewExpectedWindow, "other", true, "switch to another window");
+
+  var exh = false;
+  try {
+    fm.activeWindow = framesetWindow.frames[0];
+  }
+  catch (ex) { exh = true; }
+  is(exh, true, "activeWindow set to non top-level window");
+
+  exh = false;
+  try {
+    fm.activeWindow = null;
+  }
+  catch (ex) { exh = true; }
+  is(exh, true, "activeWindow set to null");
+  is(fm.activeWindow, otherWindow, "window not changed when activeWindow set to null");
+
+  var topwindow = getTopWindow(framesetWindow);
+  gOldExpectedWindow = otherWindow;
+  gNewExpectedWindow = framesetWindow.frames[1];
+  expectFocusShift(function () fm.activeWindow = topwindow,
+                   gNewExpectedWindow, "f4", true, "switch to frame activeWindow");
+
+  fm.clearFocus(otherWindow);
+  gOldExpectedWindow = gNewExpectedWindow;
+  gNewExpectedWindow = otherWindow;
+  expectFocusShift(function () fm.setFocus(otherElement, fm.FLAG_RAISE),
+                   gNewExpectedWindow, "other", true, "switch to window with raise");
+
+  getTopWindow(framesetWindow).document.commandDispatcher.focusedWindow = gOldExpectedWindow;
+  is(fm.activeWindow, gNewExpectedWindow, "setting commandDispatcher focusedWindow doesn't raise window");
+
+  gOldExpectedWindow = null;
+  gNewExpectedWindow = null;
+  otherWindow.close();
+  framesetWindow.close();
+
+  gRefocusCallback = doFrameSwitchingTests;
+}
+
+// these tests check when focus is moved between a tree of frames to ensure
+// that the focus is in the right place at each event step.
+function doFrameSwitchingTests()
+{
+  gRefocusCallback = null;
+
+  var framea = document.getElementById("ifa");
+  var frameb = document.getElementById("ifb");
+  framea.style.MozUserFocus = "";
+  frameb.style.MozUserFocus = "";
+
+  window.removeEventListener("focus", eventOccured, true);
+  window.removeEventListener("blur", eventOccured, true);
+
+  var inputa = framea.contentDocument.body.firstChild;
+  inputa.focus();
+
+  addFrameSwitchingListeners(framea);
+  addFrameSwitchingListeners(frameb);
+  var framec = framea.contentDocument.body.lastChild;
+  addFrameSwitchingListeners(framec);
+
+  var framed = framec.contentDocument.body.lastChild;
+  addFrameSwitchingListeners(framed);
+
+  var inputc = framec.contentDocument.body.firstChild;
+
+  var expectedMainWindowFocus = framea;
+
+  // An element in the immediate parent frame is focused. Focus an element in
+  // the child. The child should be focused and the parent's current focus should
+  // be the child iframe.
+  gEventMatched = true;
+  is(fm.getFocusedElementForWindow(window, false, {}), expectedMainWindowFocus,
+     "parent of framea has iframe focused");
+  gExpectedEvents = [[inputa, "blur", null, framea.contentWindow, window, framea],
+                     [framea.contentDocument, "blur", null, null, window, framea],
+                     [framea.contentWindow, "blur", null, null, window, framea],
+                     [framec.contentDocument, "focus", null, framec.contentWindow, window, framea],
+                     [framec.contentWindow, "focus", null, framec.contentWindow, window, framea],
+                     [inputc, "focus", inputc, framec.contentWindow, window, framea]];
+  inputc.focus();
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from parent input to child input" + gExpectedEvents);
+
+  // An element in a child is focused. Focus an element in the immediate
+  // parent.
+  gEventMatched = true;
+  gExpectedEvents = [[inputc, "blur", null, framec.contentWindow, window, framea],
+                     [framec.contentDocument, "blur", null, null, window, framea],
+                     [framec.contentWindow, "blur", null, null, window, framea],
+                     [framea.contentDocument, "focus", null, framea.contentWindow, window, framea],
+                     [framea.contentWindow, "focus", null, framea.contentWindow, window, framea],
+                     [inputa, "focus", inputa, framea.contentWindow, window, framea]];
+  inputa.focus();
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from child input to parent input");
+
+  // An element in a frame is focused. Focus an element in a sibling frame.
+  // The common ancestor of the two frames should have its focused node
+  // cleared after the element is blurred.
+  var inputb = frameb.contentDocument.body.firstChild;
+
+  gEventMatched = true;
+  gExpectedEvents = [[inputa, "blur", null, framea.contentWindow, window, framea],
+                     [framea.contentDocument, "blur", null, null, window, null],
+                     [framea.contentWindow, "blur", null, null, window, null],
+                     [frameb.contentDocument, "focus", null, frameb.contentWindow, window, frameb],
+                     [frameb.contentWindow, "focus", null, frameb.contentWindow, window, frameb],
+                     [inputb, "focus", inputb, frameb.contentWindow, window, frameb]];
+  inputb.focus();
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from input to sibling frame");
+  is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), inputa, 
+     "blurred frame still has input as focus");
+
+  // focus a descendant in a sibling
+  var inputd = framed.contentDocument.body.firstChild;
+  gEventMatched = true;
+  gExpectedEvents = [[inputb, "blur", null, frameb.contentWindow, window, frameb],
+                     [frameb.contentDocument, "blur", null, null, window, null],
+                     [frameb.contentWindow, "blur", null, null, window, null],
+                     [framed.contentDocument, "focus", null, framed.contentWindow, window, framea],
+                     [framed.contentWindow, "focus", null, framed.contentWindow, window, framea],
+                     [inputd, "focus", inputd, framed.contentWindow, window, framea]];
+  inputd.focus();
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from input to sibling descendant");
+  is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), framec,
+     "sibling parent focus has shifted to frame");
+
+  // focus an ancestor
+  gEventMatched = true;
+  gExpectedEvents = [[inputd, "blur", null, framed.contentWindow, window, framea],
+                     [framed.contentDocument, "blur", null, null, window, framea],
+                     [framed.contentWindow, "blur", null, null, window, framea],
+                     [framea.contentDocument, "focus", null, framea.contentWindow, window, framea],
+                     [framea.contentWindow, "focus", null, framea.contentWindow, window, framea],
+                     [inputa, "focus", inputa, framea.contentWindow, window, framea]];
+  inputa.focus();
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from child input to ancestor");
+
+  // focus a descendant
+  gEventMatched = true;
+  gExpectedEvents = [[inputa, "blur", null, framea.contentWindow, window, framea],
+                     [framea.contentDocument, "blur", null, null, window, framea],
+                     [framea.contentWindow, "blur", null, null, window, framea],
+                     [framed.contentDocument, "focus", null, framed.contentWindow, window, framea],
+                     [framed.contentWindow, "focus", null, framed.contentWindow, window, framea],
+                     [inputd, "focus", inputd, framed.contentWindow, window, framea]];
+  inputd.focus();
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from child input to ancestor");
+  is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), framec,
+     "parent focus has shifted to frame");
+
+  // focus a sibling frame by setting focusedWindow
+  gEventMatched = true;
+  gExpectedEvents = [[inputd, "blur", null, framed.contentWindow, window, framea],
+                     [framed.contentDocument, "blur", null, null, window, null],
+                     [framed.contentWindow, "blur", null, null, window, null],
+                     [frameb.contentDocument, "focus", null, frameb.contentWindow, window, frameb],
+                     [frameb.contentWindow, "focus", null, frameb.contentWindow, window, frameb],
+                     [inputb, "focus", inputb, frameb.contentWindow, window, frameb]];
+  fm.focusedWindow = frameb.contentWindow;
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch using focusedWindow");
+
+  // clear the focus in an unfocused frame
+  gEventMatched = true;
+  gExpectedEvents = [];
+  fm.clearFocus(framec.contentWindow);
+  ok(gEventMatched && gExpectedEvents.length == 0, "clearFocus in unfocused frame");
+
+  // focus a sibling frame by setting focusedWindow when no element is focused in that frame
+  gEventMatched = true;
+  gExpectedEvents = [[inputb, "blur", null, frameb.contentWindow, window, frameb],
+                     [frameb.contentDocument, "blur", null, null, window, null],
+                     [frameb.contentWindow, "blur", null, null, window, null],
+                     [framec.contentDocument, "focus", null, framec.contentWindow, window, framea],
+                     [framec.contentWindow, "focus", null, framec.contentWindow, window, framea]];
+  fm.focusedWindow = framec.contentWindow;
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch using focusedWindow with no element focused");
+  is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), framec,
+     "parent focus has shifted to frame using focusedWindow");
+
+  // focus the parent frame by setting focusedWindow. This should have no effect.
+  gEventMatched = true;
+  gExpectedEvents = [];
+  fm.focusedWindow = framea.contentWindow;
+  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch to parent using focusedWindow");
+
+  // clear the focus in the parent frame
+  gEventMatched = true;
+  gExpectedEvents = [[framec.contentDocument, "blur", null, null, window, framea],
+                     [framec.contentWindow, "blur", null, null, window, framea],
+                     [framea.contentDocument, "focus", null, framea.contentWindow, window, framea],
+                     [framea.contentWindow, "focus", null, framea.contentWindow, window, framea]];
+  fm.clearFocus(framea.contentWindow);
+  ok(gEventMatched && gExpectedEvents.length == 0, "clearFocus in parent frame");
+
+  // clear the focus in an unfocused child frame
+  gEventMatched = true;
+  gExpectedEvents = [];
+  fm.clearFocus(framed.contentWindow);
+  ok(gEventMatched && gExpectedEvents.length == 0, "clearFocus in unfocused child frame");
+
+  var exh = false;
+  try {
+    fm.focusedWindow = null;
+  }
+  catch (ex) { exh = true; }
+  is(exh, true, "focusedWindow set to null");
+  is(fm.focusedWindow, framea.contentWindow, "window not changed when focusedWindow set to null");
+
+  doFrameHistoryTests()
+}
+
+function doFrameHistoryTests()
+{
+  var t20 = getById("t20");
+  t20.focus();
+
+  addEventListener("message", function() { $("childframe").goBack(); }, true);
+  gChildWindow.addEventListener("focus",
+    function(event) {
+      if (event.target == t20) {
+        is(fm.focusedElement, t20, "focus restored after history back"); done();
+    }
+  }, true);
+
+  // make sure that loading a new page and then going back maintains the focus
+  gChildWindow.location = "data:text/html,<html><body onload='window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)." +
+                          "getInterface(Components.interfaces.nsIWebNavigation)." +
+                          "QueryInterface(Components.interfaces.nsIDocShellTreeItem).rootTreeItem." +
+                          "QueryInterface(Components.interfaces.nsIInterfaceRequestor)." +
+                          "getInterface(Components.interfaces.nsIDOMWindow).postMessage(\"content loaded\", \"*\");'>Next</body></html>";
+}
+
+function addFrameSwitchingListeners(frame)
+{
+  frame.contentWindow.addEventListener("focus", frameSwitchingEventOccured, false);
+  frame.contentWindow.addEventListener("blur", frameSwitchingEventOccured, false);
+  frame.contentDocument.addEventListener("focus", frameSwitchingEventOccured, false);
+  frame.contentDocument.addEventListener("blur", frameSwitchingEventOccured, false);
+
+  var node = frame.contentDocument.body.firstChild;
+  node.addEventListener("focus", frameSwitchingEventOccured, false);
+  node.addEventListener("blur", frameSwitchingEventOccured, false);
+}
+
+function frameSwitchingEventOccured(event)
+{
+  if (!gExpectedEvents.length) {
+    gEventMatched = false;
+    return;
+  }
+
+  try {
+    var events = gExpectedEvents.shift();
+    is(event.target, events[0], "event target");
+    is(event.type, events[1], "event type");
+    is(fm.focusedElement, events[2], "focused element");
+    is(fm.focusedWindow, events[3], "focused frame");
+    if (events[4])
+      is(fm.getFocusedElementForWindow(events[4], false, {}), events[5], "focused element in frame");
+
+    if (gEventMatched && event.target == events[0] && event.type == events[1] &&
+        fm.focusedElement == events[2] && fm.focusedWindow == events[3]) {
+      if (!events[4] || fm.getFocusedElementForWindow(events[4], false, {}) == events[5])
+        return;
+    }
+  } catch (ex) { ok(ex, "exception"); }
+
+  gEventMatched = false;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+<commandset id="cu"
+            commandupdater="true"
+            events="focus"
+            oncommandupdate="eventOccured(event)"/>
+
+<!--
+ The elements with ids starting with t are focusable and in the taborder.
+ The elements with ids starting with o are:
+   odd numbered ids - focusable but not part of the tab order
+   even numbered ids - not focusable with -moz-user-focus: ignore
+ The elements with ids starting with n are:
+   odd numbered ids - not focusable with -moz-user-focus: none
+   even numbered ids - focusable but not part of the tab order
+ -->
+<vbox id="buttonbox">
+<hbox>
+  <button id="t4" accesskey="h" label="no tabindex"/>
+  <button id="o1" accesskey="i" label="tabindex = -1" tabindex="-1"/>
+  <listbox id="t5" label="tabindex = 0" tabindex="0" rows="1">
+    <listitem/>
+  </listbox>
+  <button id="t1" label="tabindex = 2" tabindex="2"/>
+</hbox>
+<hbox>
+  <button id="o2" accesskey="o" style="-moz-user-focus: ignore;" label="no tabindex"/>
+  <button id="o4" style="-moz-user-focus: ignore;" label="tabindex = -1" tabindex="-1"/>
+  <button id="t6" style="-moz-user-focus: ignore;" label="tabindex = 0" tabindex="0"/>
+  <button id="t2" style="-moz-user-focus: ignore;" label="tabindex = 2" tabindex="2"/>
+</hbox>
+<hbox id="specialroot">
+  <button id="t7" style="-moz-user-focus: normal;" label="no tabindex"/>
+  <button id="o3" style="-moz-user-focus: normal;" label="tabindex = -1" tabindex="-1"/>
+  <button id="t8" style="-moz-user-focus: normal;" label="tabindex = 0" tabindex="0"/>
+  <listbox id="t3" style="-moz-user-focus: normal;" label="tabindex = 2" tabindex="2" rows="1">
+    <listitem/>
+  </listbox>
+</hbox>
+<hbox>
+  <button accesskey="p" style="display: none;"/> <button accesskey="q" style="visibility: collapse;"/>
+  <button style="display: none;" tabindex="2"/> <button style="visibility: collapse;" tabindex="2"/>
+</hbox>
+<hbox>
+  <button id="n5" accesskey="s" label="no tabindex" disabled="true"/>
+  <button id="n7" label="tabindex = -1" tabindex="-1" disabled="true"/>
+  <button id="n9" label="tabindex = 0" tabindex="0" disabled="true"/>
+  <button id="n11" label="tabindex = 2" tabindex="2" disabled="true"/>
+</hbox>
+</vbox>
+<vbox>
+<hbox>
+  <dropmarker id="o6" value="no tabindex"/>
+  <dropmarker id="o8" value="tabindex = -1" tabindex="-1"/>
+  <dropmarker id="o10" value="tabindex = 0" tabindex="0"/>
+  <dropmarker id="o12" value="tabindex = 2" tabindex="2"/>
+  <dropmarker id="t9" accesskey="r" style="-moz-user-focus: normal;" value="no tabindex" />
+  <dropmarker id="t10" style="-moz-user-focus: normal;" value="tabindex = -1" tabindex="-1" />
+  <dropmarker id="t11" style="-moz-user-focus: normal;" value="tabindex = 0" tabindex="0" />
+  <dropmarker id="t12" style="-moz-user-focus: normal;" value="tabindex = 2" tabindex="2" />
+  <dropmarker id="o14" style="-moz-user-focus: ignore;" value="no tabindex"/>
+  <dropmarker id="o16" style="-moz-user-focus: ignore;" value="tabindex = -1" tabindex="-1"/>
+  <dropmarker id="n1" style="-moz-user-focus: none;" value="tabindex = 0" tabindex="0"/>
+  <dropmarker id="n3" style="-moz-user-focus: none;" value="tabindex = 2" tabindex="2"/>
+</hbox>
+</vbox>
+<browser id="childframe" type="content" src="child_focus_frame.html" width="300" height="195"/>
+<button id="t34"/>
+<tabbox id="tabbox">
+  <tabs><tab id="t35" label="One"/><tab id="tab2" label="Two"/></tabs>
+  <tabpanels>
+    <tabpanel>
+      <checkbox id="t36"/>
+      <button id="t37"/>
+    </tabpanel>
+    <tabpanel>
+      <checkbox id="htab1"/>
+      <button id="nohtab2" tabindex="7"/>
+      <checkbox id="htab2" tabindex="0"/>
+    </tabpanel>
+  </tabpanels>
+</tabbox>
+<hbox>
+<panel>
+  <button id="inpopup1" label="One"/>
+  <textbox label="Two"/>
+</panel>
+<description label="o" accesskey="v"/>
+<button id="t38"/>
+<!-- The 't' element tests end here so it doesn't matter that these elements are tabbable -->
+<label id="aj" value="j" accesskey="j" control="o9"/>
+<label id="ak" accesskey="k" control="n6">k</label>
+<checkbox id="o5"/><checkbox id="o7"/><hbox><checkbox id="o9"/></hbox>
+<checkbox id="o13"/><checkbox id="o15"/><checkbox id="o17"/>
+<checkbox id="n2"/><checkbox id="n4"/><checkbox id="n6"/><checkbox id="n8"/><checkbox id="n10"/><checkbox id="n12"/>
+<listbox id="last" width="20" rows="1"/>
+
+<iframe id="ifa" width="20" height="20" style="-moz-user-focus: ignore;"
+        src="data:text/html,&lt;input id=fra&gt;
+        &lt;iframe src='data:text/html,&lt;input id=frc&gt;&lt;iframe src=&quot;data:text/html,&lt;input id=frd&gt;&quot;&gt;&lt;/iframe&gt;'&gt;&lt;/iframe&gt;"/>
+<iframe id="ifb" width="20" height="20" style="-moz-user-focus: ignore;"
+        src="data:text/html,&lt;input id=frd&gt;&lt;/iframe&gt;"/>
+
+</hbox>
+</window>
