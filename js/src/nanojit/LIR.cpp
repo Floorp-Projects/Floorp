@@ -969,7 +969,7 @@ namespace nanojit
 			iffalse = tmp;
 		}
 
-		if (true/*avmplus::AvmCore::use_cmov()*/)
+		if (avmplus::AvmCore::use_cmov())
 		{
 			return ins2((iftrue->isQuad() || iffalse->isQuad()) ? LIR_qcmov : LIR_cmov, cond, ins2(LIR_2, iftrue, iffalse));
 		}
