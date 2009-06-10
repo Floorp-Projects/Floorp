@@ -1151,37 +1151,23 @@
         -->
       <method name="close">
         <body><![CDATA[
-          var ww =
-            Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                      .getService(Components.interfaces.nsIWindowWatcher);
-          if (window == ww.activeWindow) {
-            var focusedElement = document.commandDispatcher.focusedElement;
+          var fm =
+            Components.classes["@mozilla.org/focus-manager;1"]
+                      .getService(Components.interfaces.nsIFocusManager);
+          if (window == fm.focusedWindow) {
+            var focusedElement = fm.focusedElement;
             if (focusedElement) {
               var bindingParent = document.getBindingParent(focusedElement);
               if (bindingParent == this || bindingParent == this._findField) {
                 // block scrolling on focus since find already scrolls, further
                 // scrolling is due to user action, so don't override this
-                var suppressedScroll = document.commandDispatcher.suppressFocusScroll;
-                document.commandDispatcher.suppressFocusScroll = true;
-                // We MUST reset suppressFocusScroll.
-                try {
-                  if (this._foundLink)
-                    this._foundLink.focus();
-                  else if (this._foundEditable)
-                    this._foundEditable.focus();
-                  else if (this._currentWindow)
+                var element = this._foundLink || this._foundEditable;
+                if (element)
+                  fm.setFocus(element, fm.FLAG_NOSCROLL);
+                else if (this._currentWindow)
                     this._currentWindow.focus();
-                  else
-                    this.browser.contentWindow.focus();
-                }
-                catch(ex) {
-                  // Retry to set focus.
-                  try {
-                    this.browser.contentWindow.focus();
-                  }
-                  catch(e) { /* We lose focused element! */ }
-                }
-                document.commandDispatcher.suppressFocusScroll = suppressedScroll;
+                else
+                  this.browser.contentWindow.focus();
               }
             }
           }

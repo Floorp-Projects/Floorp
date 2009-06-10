@@ -146,7 +146,6 @@
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super init])) {
-    mShouldFocusView = nil;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(windowBecameKey:)
                                                  name:NSWindowDidBecomeKeyNotification
@@ -181,49 +180,10 @@
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mShouldFocusView)
-    [mShouldFocusView release];
-
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// mShouldFocusView (if non-nil) is the ChildView object that *should* be
-// focused in our NSWindow -- even if it isn't the one that's actually
-// currently focused.  (By "focused" I mean "is our NSWindow's first
-// responder, which takes keyboard input".)  We assume that [ChildView
-// sendFocusEvent:] is sent (to a ChildView object) if and only if that
-// ChildView object is about to be (or has just been) appropriately focused
-// or unfocused.  And mShouldFocusView keeps track of the results of calls
-// to [ChildView sendFocusEvent:] on ChildView objects in our NSWindow.
-- (ChildView *)getShouldFocusView
-{
-  // A ChildView that's been detached from its window should never be made
-  // first responder (it should have been unfocused, but wasn't).
-  if (![mShouldFocusView window]) {
-    [mShouldFocusView release];
-    mShouldFocusView = nil;
-  }
-  return mShouldFocusView;
-}
-
-- (void)markShouldFocus:(ChildView *)aView
-{
-  if (aView == mShouldFocusView)
-    return;
-  if (mShouldFocusView)
-    [mShouldFocusView release];
-  mShouldFocusView = [aView retain];
-}
-
-- (void)markShouldUnfocus:(ChildView *)aView
-{
-  if (aView == mShouldFocusView) {
-    [mShouldFocusView release];
-    mShouldFocusView = nil;
-  }
 }
 
 // As best I can tell, if the notification's object has a corresponding
@@ -232,23 +192,6 @@
 // not (Camino doesn't use top-level widgets (nsCocoaWindow objects) --
 // only child widgets (nsChildView objects)).  (The notification is sent
 // to windowBecameKey: or windowBecameMain: below.)
-//
-// If we're using top-level widgets, we need to send them both kinds of
-// focus event (NS_GOTFOCUS and NS_ACTIVATE, which by convention are sent in
-// that order) -- otherwise text input can (under unusual circumstances) stop
-// working in the currently focused child widget (see bmo bug 354768).
-//
-// When we send focus events to a top-level widget, they get propagated
-// (via nsWebShellWindow::HandleEvent(), indirectly) to a child widget (an
-// nsChildView object) -- so in principle we shouldn't have to send them to
-// child widgets here.  But I've found that, unless I also send at least an
-// NS_GOTFOCUS event directly to the currently focused child widget, it's
-// easy to get blinking I-bar cursors in multiple text input fields
-// (particularly if one of them is the Google search box).  On other platforms
-// (e.g. Windows and GTK2), NS_ACTIVATE events are only sent (directly) to
-// top-level widgets -- so we do the same here.  Not sending them directly
-// to child widgets also avoids "win is null" assertions on debug builds
-// (see bug 354768 comments 55 and 58).
 //
 // For use with clients that (like Firefox) do use top-level widgets (and
 // have NSWindow delegates of class WindowDelegate).
@@ -264,16 +207,6 @@
     return;
   [delegate sendToplevelActivateEvents];
 
-  id firstResponder = [aWindow firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]]) {
-    BOOL isMozWindow = [aWindow respondsToSelector:@selector(setSuppressMakeKeyFront:)];
-    if (isMozWindow)
-      [aWindow setSuppressMakeKeyFront:YES];
-    [firstResponder sendFocusEvent:NS_GOTFOCUS];
-    if (isMozWindow)
-      [aWindow setSuppressMakeKeyFront:NO];
-  }
-
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -281,19 +214,7 @@
 //
 // If we're using top-level widgets (nsCocoaWindow objects), we send them
 // NS_DEACTIVATE events (which propagate to child widgets (nsChildView
-// objects) via nsWebShellWindow::HandleEvent()).  Sending NS_LOSTFOCUS
-// events to top-level widgets currently has no effect (nsWebShellWindow::
-// HandleEvent(), which processes focus events sent to top-level widgets,
-// doesn't have a section for NS_LOSTFOCUS).  But on general principles we
-// send them anyway.
-//
-// On other platforms (e.g. Windows and GTK2), NS_DEACTIVATE events are only
-// sent (directly) to top-level widgets.  And (as noted above) these events
-// propagate to child widgets when they're sent to top-level widgets.  But if
-// we don't send them again, blinking I-bar cursors can appear in multiple
-// text input fields.  Since we also need to send NS_LOSTFOCUS events and
-// call nsTSMManager::CommitIME(), we just always call through to ChildView
-// viewsWindowDidResignKey (whether or not we're using top-level widgets).
+// objects) via nsWebShellWindow::HandleEvent()).
 //
 // For use with clients that (like Firefox) do use top-level widgets (and
 // have NSWindow delegates of class WindowDelegate).
@@ -344,9 +265,9 @@
 
 // We make certain exceptions for top-level windows in non-embedders (see
 // comment above windowBecameMain below).  And we need (elsewhere) to guard
-// against sending duplicate events.  But in general NS_ACTIVATE and
-// NS_GOTFOCUS events should be sent when a native window becomes key, and
-// NS_LOSTFOCUS and NS_DEACTIVATE events should be sent when it resignes key.
+// against sending duplicate events.  But in general the NS_ACTIVATE event
+// should be sent when a native window becomes key, and the NS_DEACTIVATE
+// event should be sent when it resignes key.
 - (void)windowBecameKey:(NSNotification*)inNotification
 {
   NSWindow* window = (NSWindow*)[inNotification object];

@@ -80,10 +80,10 @@
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsXMLHttpRequest.h"
-#include "nsIFocusEventSuppressor.h"
 #include "nsDOMThreadService.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsCrossSiteListenerProxy.h"
+#include "nsFocusManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -254,6 +254,12 @@ nsLayoutStatics::Initialize()
   }
 #endif
 
+  rv = nsFocusManager::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsFocusManager");
+    return rv;
+  }
+
 #ifdef MOZ_MEDIA
   rv = nsMediaDecoder::InitLogger();
   if (NS_FAILED(rv)) {
@@ -276,6 +282,7 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+  nsFocusManager::Shutdown();
 #ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();
 #endif
@@ -345,8 +352,6 @@ nsLayoutStatics::Shutdown()
 #endif
 
   nsDOMThreadService::Shutdown();
-
-  NS_ShutdownFocusSuppressor();
 
 #ifdef MOZ_MEDIA
   nsHTMLMediaElement::ShutdownMediaTypes();

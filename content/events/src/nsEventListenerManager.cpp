@@ -85,7 +85,7 @@
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsIScriptObjectOwner.h" // for nsIScriptEventHandlerOwner
-#include "nsIFocusController.h"
+#include "nsFocusManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSDocument.h"
 #include "nsContentUtils.h"

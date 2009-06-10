@@ -76,6 +76,8 @@ public:
 protected:
     nsIFocusController* GetFocusController();
 
+    nsIContent* GetRootFocusedContentAndWindow(nsPIDOMWindow** aWindow);
+
     nsCOMPtr<nsIDocument> mDocument;
 
     class Updater {

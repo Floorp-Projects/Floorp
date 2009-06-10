@@ -468,14 +468,6 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             }
          }
          break;
-
-      case WM_ACTIVATE:
-        DEBUGFOCUS(frame WM_ACTIVATE);
-        if (SHORT1FROMMP(mp1) &&
-            !(WinQueryWindowULong(mFrameWnd, QWL_STYLE) & WS_MINIMIZED)) {
-           bDone = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-        }
-        break;
    }
 
    if( !bDone)

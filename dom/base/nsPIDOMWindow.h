@@ -68,6 +68,7 @@ enum PopupControlState {
 
 class nsIDocShell;
 class nsIFocusController;
+class nsIContent;
 class nsIDocument;
 class nsIScriptTimeoutHandler;
 class nsPresContext;
@@ -76,8 +77,8 @@ class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x80dd53b6, 0x8c61, 0x4dd6, \
-  { 0xb4, 0x51, 0xf7, 0xd7, 0x5c, 0xfc, 0x51, 0x96 } }
+{ 0x601e5415, 0x613e, 0x4ce2, \
+  { 0xb4, 0xe1, 0x85, 0xac, 0x2a, 0x4a, 0xf2, 0x3d } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -86,10 +87,7 @@ public:
 
   virtual nsPIDOMWindow* GetPrivateRoot() = 0;
 
-  // This is private because activate/deactivate events are not part
-  // of the DOM spec.
-  virtual nsresult Activate() = 0;
-  virtual nsresult Deactivate() = 0;
+  virtual void ActivateOrDeactivate(PRBool aActivate) = 0;
 
   nsPIDOMEventTarget* GetChromeEventHandler() const
   {
@@ -412,6 +410,48 @@ public:
   virtual void* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
   virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                                         nsScriptObjectHolder& aHandler) = 0;
+
+  /*
+   * Get and set the currently focused element within the document. If
+   * aNeedsFocus is true, then set mNeedsFocus to true to indicate that a
+   * document focus event is needed.
+   *
+   * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
+   * INSTEAD.
+   */
+  virtual nsIContent* GetFocusedNode() = 0;
+  virtual void SetFocusedNode(nsIContent* aNode,
+                              PRUint32 aFocusMethod = 0,
+                              PRBool aNeedsFocus = PR_FALSE) = 0;
+
+  /**
+   * Retrieves the method that was used to focus the current node.
+   */
+  virtual PRUint32 GetFocusMethod() = 0;
+
+  /*
+   * Tells the window that it now has focus or has lost focus, based on the
+   * state of aFocus. If this method returns true, then the document loaded
+   * in the window has never received a focus event and expects to receive
+   * one. If false is returned, the document has received a focus event before
+   * and should only receive one if the window is being focused.
+   *
+   * aFocusMethod may be set to one of the focus method constants in
+   * nsIFocusManager to indicate how focus was set.
+   */
+  virtual PRBool TakeFocus(PRBool aFocus, PRUint32 aFocusMethod) = 0;
+
+  /**
+   * Indicates that the window may now accept a document focus event. This
+   * should be called once a document has been loaded into the window.
+   */
+  virtual void SetReadyForFocus() = 0;
+
+  /**
+   * Indicates that the page in the window has been hidden. This is used to
+   * reset the focus state.
+   */
+  virtual void PageHidden() = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

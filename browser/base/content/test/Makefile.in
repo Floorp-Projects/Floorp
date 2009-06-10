@@ -84,6 +84,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug477014.js \
                  browser_bug495058.js \
                  browser_discovery.js \
+                 browser_tabfocus.js \
                  discovery.html \
                  moz.png \
                  test_bug462673.html \

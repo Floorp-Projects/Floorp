@@ -928,14 +928,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = new nsFormEvent(PR_FALSE, msg);
       break;
     }
-    case NS_FOCUS_EVENT:
-    {
-      newEvent = new nsFocusEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      static_cast<nsFocusEvent*>(newEvent)->isMozWindowTakingFocus =
-        static_cast<nsFocusEvent*>(mEvent)->isMozWindowTakingFocus;
-      break;
-    }
     case NS_POPUP_EVENT:
     {
       newEvent = new nsInputEvent(PR_FALSE, msg, nsnull);

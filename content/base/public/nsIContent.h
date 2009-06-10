@@ -63,8 +63,8 @@ class nsISMILAttr;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x3ca5afbe, 0x1052, 0x4682, \
-  { 0x9f, 0xa0, 0x0e, 0x39, 0xe4, 0xf8, 0xef, 0x9d } }
+{ 0x08dadcc4, 0x057a, 0x4b8d, \
+  { 0x89, 0x43, 0x30, 0x0e, 0x61, 0xc6, 0x9d, 0x36 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -466,36 +466,6 @@ public:
    * NOTE: This asserts and returns for elements
    */
   virtual void AppendTextTo(nsAString& aResult) = 0;
-
-  /**
-   * Set the focus on this content.  This is generally something for the event
-   * state manager to do, not ordinary people.  Ordinary people should do
-   * something like nsGenericHTMLElement::SetElementFocus().  This method is
-   * the end result, the point where the content finds out it has been focused.
-   * 
-   * All content elements are potentially focusable.
-   *
-   * @param aPresContext the pres context
-   * @see nsGenericHTMLElement::SetElementFocus()
-   */
-  virtual void SetFocus(nsPresContext* aPresContext)
-  {
-  }
-
-  /**
-   * Remove the focus on this content.  This is generally something for the
-   * event state manager to do, not ordinary people.  Ordinary people should do
-   * something like nsGenericHTMLElement::SetElementFocus().  This method is
-   * the end result, the point where the content finds out it has been focused.
-   * 
-   * All content elements are potentially focusable.
-   *
-   * @param aPresContext the pres context
-   * @see nsGenericHTMLElement::SetElementFocus()
-   */
-  virtual void RemoveFocus(nsPresContext* aPresContext)
-  {
-  }
 
   /**
    * Check if this content is focusable and in the current tab order.

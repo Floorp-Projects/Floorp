@@ -1192,7 +1192,6 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 			
 		mView->MakeFocus(true);
 		mView->UnlockLooper();
-		DispatchFocus(NS_GOTFOCUS);
 	}
 
 	return NS_OK;
@@ -1781,9 +1780,6 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 #endif
 	case nsSwitchToUIThread::KILL_FOCUS:
-		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
-		if ((uint32)info->args[0] == (uint32)mView)
-			DispatchFocus(NS_LOSTFOCUS);
 #ifdef DEBUG_FOCUS
 		else
 			printf("Wrong view to de-focus\n");
