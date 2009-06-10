@@ -214,16 +214,20 @@ nsresult nsPluginFile::LoadPlugin( PRLibrary *&outLibrary)
 // Obtains all of the information currently available for this plugin.
 nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 {
-   nsresult   rc = NS_ERROR_FAILURE;
+   nsresult   rv = NS_ERROR_FAILURE;
    HMODULE    hPlug = 0; // Need a HMODULE to query resource statements
    char       failure[ CCHMAXPATH] = "";
    APIRET     ret;
 
-   const char* path;
-   nsCAutoString temp;
-   mPlugin->GetNativePath(temp);
-   path = temp.get();
-   ret = DosLoadModule( failure, CCHMAXPATH, path, &hPlug);
+   nsCAutoString path;
+   if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
+     return rv;
+
+   nsCAutoString fileName;
+   if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
+     return rv;
+
+   ret = DosLoadModule( failure, CCHMAXPATH, path.get(), &hPlug);
    info.fVersion = nsnull;
 
    while( ret == NO_ERROR)
@@ -255,23 +259,27 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
       info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
       if( nsnull == info.fExtensionArray) break;
 
-      info.fFileName = PL_strdup(path);
+      info.fFullPath = PL_strdup(path.get());
+      info.fFileName = PL_strdup(fileName.get());
 
-      rc = NS_OK;
+      rv = NS_OK;
       break;
    }
 
    if( 0 != hPlug)
       DosFreeModule( hPlug);
 
-   return rc;
+   return rv;
 }
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
    if(info.fName != nsnull)
      PL_strfree(info.fName);
- 
+
+   if(info.fFullPath != nsnull)
+     PL_strfree(info.fFullPath);
+
    if(info.fFileName != nsnull)
      PL_strfree(info.fFileName);
  

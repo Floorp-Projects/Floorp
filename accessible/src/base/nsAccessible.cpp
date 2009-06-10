@@ -74,6 +74,7 @@
 #include "nsIViewManager.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScrollableFrame.h"
+#include "nsFocusManager.h"
 
 #include "nsXPIDLString.h"
 #include "nsUnicharUtils.h"
@@ -1469,14 +1470,11 @@ nsAccessible::TakeFocus()
     }
   }
 
-  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement(do_QueryInterface(content));
-  if (htmlElement) {
-    // HTML Elements also set the caret position
-    // in order to affect tabbing order
-    return htmlElement->Focus();
-  }
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(content));
+  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  if (fm)
+    fm->SetFocus(element, 0);
 
-  content->SetFocus(GetPresContext());
   return NS_OK;
 }
 

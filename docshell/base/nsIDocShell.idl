@@ -69,7 +69,7 @@ interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(3156f677-f444-4c3e-a47f-b47e568eafd6)]
+[scriptable, uuid(8ADFB831-1053-4A19-884D-BCDAD7277B4B)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -318,16 +318,6 @@ interface nsIDocShell : nsISupports
    * the attribute was not set.
    */
   attribute long marginHeight;
-
-  /*
-   * Tells the DocShell that it now has focus or has lost focus
-   */
-  attribute boolean hasFocus;
-
-  /*
-   * Tells the docshell whether the canvas should have focus
-   */
-  attribute boolean canvasHasFocus;
 
   /*
    * Tells the docshell to offer focus to its tree owner.

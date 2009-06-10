@@ -51,6 +51,7 @@
 #include "nsIEventStateManager.h"
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
+#include "nsFocusManager.h"
 
 class nsHTMLLabelElement : public nsGenericHTMLFormElement,
                            public nsIDOMHTMLLabelElement
@@ -80,6 +81,8 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
 
+  NS_IMETHOD Focus();
+
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -89,7 +92,6 @@ public:
 
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  virtual void SetFocus(nsPresContext* aContext);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
@@ -110,7 +112,6 @@ protected:
 
   // XXX It would be nice if we could use an event flag instead.
   PRPackedBool mHandlingEvent;
-  PRPackedBool mInSetFocus;
 };
 
 // construction, destruction
@@ -122,7 +123,6 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
 nsHTMLLabelElement::nsHTMLLabelElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mHandlingEvent(PR_FALSE)
-  , mInSetFocus(PR_FALSE)
 {
 }
 
@@ -160,6 +160,21 @@ nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
+
+NS_IMETHODIMP
+nsHTMLLabelElement::Focus()
+{
+  // retarget the focus method at the for content
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    nsCOMPtr<nsIContent> content = GetForContent();
+    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(content);
+    if (elem)
+      fm->SetFocus(elem, 0);
+  }
+
+  return NS_OK;
+}
 
 nsresult
 nsHTMLLabelElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -222,7 +237,6 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   if (mHandlingEvent ||
       (!NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
-       aVisitor.mEvent->message != NS_FOCUS_CONTENT &&
        aVisitor.mEvent->message != NS_MOUSE_BUTTON_DOWN) ||
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       !aVisitor.mPresContext) {
@@ -276,10 +290,14 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             break;
           }
 
-          if (ShouldFocus(this)) {
-            // Focus the for content.
-            aVisitor.mPresContext->EventStateManager()->
-              ChangeFocusWith(content, nsIEventStateManager::eEventFocusedByKey);
+          nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+          if (fm) {
+            // Use FLAG_BYKEY here so that the label is scrolled to. Also,
+            // within nsHTMLInputElement::PostHandleEvent, inputs will be
+            // selected only when focused via a key and we want to select
+            // the text on label clicks as well.
+            nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(content);
+            fm->SetFocus(elem, nsIFocusManager::FLAG_BYKEY);
           }
 
           // Dispatch a new click event to |content|
@@ -297,38 +315,10 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // Do we care about the status this returned?  I don't think we do...
         }
         break;
-      case NS_FOCUS_CONTENT:
-        // Since we don't have '-moz-user-focus: normal', the only time
-        // the event type will be NS_FOCUS_CONTENT will be when the accesskey
-        // is activated.  We've already redirected the |SetFocus| call in that
-        // case.
-        // Since focus doesn't bubble, this is basically the second part
-        // of redirecting |SetFocus|.
-        {
-          nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_FOCUS_CONTENT);
-          event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-          nsEventStatus status = aVisitor.mEventStatus;
-          DispatchEvent(aVisitor.mPresContext, &event,
-                        content, PR_TRUE, &status);
-          // Do we care about the status this returned?  I don't think we do...
-        }
-        break;
     }
     mHandlingEvent = PR_FALSE;
   }
   return NS_OK;
-}
-
-void
-nsHTMLLabelElement::SetFocus(nsPresContext* aContext)
-{
-  if (mInSetFocus)
-    return;
-  mInSetFocus = PR_TRUE;
-  nsCOMPtr<nsIContent> content = GetForContent();
-  if (content)
-    content->SetFocus(aContext);
-  mInSetFocus = PR_FALSE;
 }
 
 nsresult

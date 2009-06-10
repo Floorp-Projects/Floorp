@@ -285,23 +285,13 @@ var PrintUtils = {
     var printPreviewTB = document.getElementById("print-preview-toolbar");
     getNavToolbox().parentNode.removeChild(printPreviewTB);
 
-    var contentWindow = aWindow || window.content;
-    contentWindow.focus();
-
-    var cmdDispatcher = document.commandDispatcher;
-    cmdDispatcher.suppressFocusScroll = true;
-    if (gFocusedElement instanceof HTMLElement ||
-        gFocusedElement instanceof XULElement ||
-        gFocusedElement instanceof Window) {
-      gFocusedElement.focus();
-    }
-    else if (gFocusedElement instanceof Node) {
-      var content = window.content;
-      if (content instanceof Components.interfaces.nsIInterfaceRequestor)
-        content.getInterface(Components.interfaces.nsIDOMWindowUtils).focus(gFocusedElement);
-      }
+    var fm = Components.classes["@mozilla.org/focus-manager;1"]
+                       .getService(Components.interfaces.nsIFocusManager);
+    if (gFocusedElement)
+      fm.setFocus(gFocusedElement, fm.FLAG_NOSCROLL);
+    else
+      (aWindow || window.content).focus();
     gFocusedElement = null;
-    cmdDispatcher.suppressFocusScroll = false;
 
     // on Exit PP Call back
     if (this._onExitPP) {

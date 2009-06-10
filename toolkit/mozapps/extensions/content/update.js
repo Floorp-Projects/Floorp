@@ -50,6 +50,9 @@ var gUpdateWizard = {
   // add-ons. When checking for compatible versions this contains only
   // incompatible add-ons.
   items: [],
+  // Contains a list of items that were disabled prior to the application
+  // upgrade.
+  inactiveItemIDs: [],
   // The items that we found updates available for
   itemsToUpdate: [],
   shouldSuggestAutoChecking: false,
@@ -63,6 +66,7 @@ var gUpdateWizard = {
                         .getService(nsIExtensionManager);
     // Retrieve all items in order to sync their app compatibility information
     this.items = em.getItemList(nsIUpdateItem.TYPE_ANY, { });
+    this.inactiveItemIDs = window.arguments[0];
     var pref =
         Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
@@ -203,6 +207,10 @@ var gVersionInfoPage = {
     gUpdateWizard.items = em.getIncompatibleItemList(null, null, null,
                                                      nsIUpdateItem.TYPE_ANY,
                                                      true, { });
+    gUpdateWizard.items = gUpdateWizard.items.filter(function(item) {
+      return gUpdateWizard.inactiveItemIDs.indexOf(item.id) < 0;
+    });
+
     if (gUpdateWizard.items.length > 0) {
       // There are still incompatible addons, inform the user.
       document.documentElement.currentPage =

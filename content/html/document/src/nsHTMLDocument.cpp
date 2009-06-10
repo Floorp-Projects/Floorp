@@ -1212,7 +1212,7 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
   nsCOMPtr<nsIAtom> name = do_GetAtom(tagName);
 
   nsCOMPtr<nsIContent> content;
-  rv = CreateElem(name, nsnull, GetDefaultNamespaceID(), PR_TRUE,
+  rv = CreateElem(name, nsnull, kNameSpaceID_XHTML, PR_TRUE,
                   getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1593,7 +1593,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
 {
   if (!mImages) {
-    mImages = new nsContentList(this, nsGkAtoms::img, GetDefaultNamespaceID());
+    mImages = new nsContentList(this, nsGkAtoms::img, kNameSpaceID_XHTML);
     if (!mImages) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1609,8 +1609,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 {
   if (!mApplets) {
-    mApplets = new nsContentList(this, nsGkAtoms::applet,
-                                 GetDefaultNamespaceID());
+    mApplets = new nsContentList(this, nsGkAtoms::applet, kNameSpaceID_XHTML);
     if (!mApplets) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1643,10 +1642,9 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
 #endif
 
     nsINodeInfo *ni = aContent->NodeInfo();
-    PRInt32 namespaceID = doc->GetDefaultNamespaceID();
 
     nsIAtom *localName = ni->NameAtom();
-    if (ni->NamespaceID() == namespaceID &&
+    if (ni->NamespaceID() == kNameSpaceID_XHTML &&
         (localName == nsGkAtoms::a || localName == nsGkAtoms::area)) {
       return aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
     }
@@ -1688,8 +1686,7 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
   }
 #endif
 
-  PRInt32 namespaceID = aContent->GetCurrentDoc()->GetDefaultNamespaceID();
-  if (aContent->NodeInfo()->Equals(nsGkAtoms::a, namespaceID)) {
+  if (aContent->NodeInfo()->Equals(nsGkAtoms::a, kNameSpaceID_XHTML)) {
     return aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::name);
   }
 
@@ -2255,13 +2252,7 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                        const nsAString& aLocalName,
                                        nsIDOMNodeList** aReturn)
 {
-  nsAutoString tmp(aLocalName);
-
-  if (!IsXHTML()) {
-    ToLowerCase(tmp); // HTML elements are lower case internally.
-  }
-
-  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, tmp, aReturn);
+  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2585,7 +2576,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 {
   if (!mEmbeds) {
-    mEmbeds = new nsContentList(this, nsGkAtoms::embed, GetDefaultNamespaceID());
+    mEmbeds = new nsContentList(this, nsGkAtoms::embed, kNameSpaceID_XHTML);
     if (!mEmbeds) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2918,7 +2909,7 @@ nsContentList*
 nsHTMLDocument::GetForms()
 {
   if (!mForms)
-    mForms = new nsContentList(this, nsGkAtoms::form, GetDefaultNamespaceID());
+    mForms = new nsContentList(this, nsGkAtoms::form, kNameSpaceID_XHTML);
 
   return mForms;
 }
@@ -3136,7 +3127,7 @@ DocAllResultMatch(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
   }
 
   nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
-  if (!elm || aContent->GetNameSpaceID() != kNameSpaceID_None) {
+  if (!elm) {
     return PR_FALSE;
   }
 
@@ -4058,31 +4049,6 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
 
   return rv;
 }
-
-#ifdef DEBUG
-nsresult
-nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
-                           PRInt32 aNamespaceID, PRBool aDocumentDefaultType,
-                           nsIContent** aResult)
-{
-  NS_ASSERTION(!aDocumentDefaultType || IsXHTML() ||
-               aNamespaceID == kNameSpaceID_None,
-               "HTML elements in an HTML document should have "
-               "kNamespaceID_None as their namespace ID.");
-
-  if (IsXHTML() &&
-      (aDocumentDefaultType || aNamespaceID == kNameSpaceID_XHTML)) {
-    nsCAutoString name, lcName;
-    aName->ToUTF8String(name);
-    ToLowerCase(name, lcName);
-    NS_ASSERTION(lcName.Equals(name),
-                 "aName should be lowercase, fix caller.");
-  }
-
-  return nsDocument::CreateElem(aName, aPrefix, aNamespaceID,
-                                aDocumentDefaultType, aResult);
-}
-#endif
 
 nsresult
 nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const

@@ -1402,5 +1402,11 @@ nsContextMenu.prototype = {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
     clipboard.copyString(this.mediaURL);
+  },
+
+  get imageURL() {
+    if (this.onImage)
+      return this.mediaURL;
+    return "";
   }
 };

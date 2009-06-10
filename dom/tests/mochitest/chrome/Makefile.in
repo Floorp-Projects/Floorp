@@ -47,6 +47,11 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = test_domstorage.xul \
 		domstorage_global.xul \
 		domstorage_global.js \
+		test_focus.xul \
+		window_focus.xul \
+		focus_window2.xul \
+		focus_frameset.html \
+		child_focus_frame.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
