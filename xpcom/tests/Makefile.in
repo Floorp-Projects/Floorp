@@ -92,6 +92,7 @@ CPP_UNIT_TESTS = \
                  TestFile.cpp \
                  TestHashtables.cpp \
                  TestID.cpp \
+		 TestObserverArray.cpp \
                  TestObserverService.cpp \
                  TestPipe.cpp \
                  TestServMgr.cpp \
