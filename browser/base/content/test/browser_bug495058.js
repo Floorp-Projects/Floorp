@@ -38,7 +38,7 @@ function next() {
           is(win.document.activeElement, win.gBrowser.selectedBrowser, uri + ": browser is focused");
           is(win.gURLBar.value, "", uri + ": urlbar is empty");
           ok(win.gURLBar.emptyText, uri + ": emptytext is present");
-          todo(win.gURLBar.hasAttribute("isempty"), uri + ": emptytext is displayed");
+          ok(win.gURLBar.hasAttribute("isempty"), uri + ": emptytext is displayed");
 
           win.close();
           if (uris.length)
