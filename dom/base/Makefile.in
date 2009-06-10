@@ -76,6 +76,7 @@ EXPORTS = \
   nsIScriptTimeoutHandler.h \
   nsPIDOMWindow.h \
   nsPIWindowRoot.h \
+  nsFocusManager.h \
   nsWrapperCache.h \
   $(NULL)
 
@@ -86,6 +87,7 @@ CPPSRCS =			\
 	nsJSEnvironment.cpp	\
 	nsJSTimeoutHandler.cpp	\
 	nsFocusController.cpp	\
+	nsFocusManager.cpp \
 	nsGlobalWindow.cpp      \
 	nsGlobalWindowCommands.cpp \
 	nsLocation.cpp		\

@@ -52,7 +52,6 @@
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
-#include "nsIViewManager.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -88,7 +87,6 @@ public:
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor(void) {
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
-    NS_ASSERTION(mFocusSuppressCount == 0, "Focus suppression will be wrong");
   }
 
   // Maintain global objects - gXBLService
@@ -1604,7 +1602,6 @@ private:
   nsQuoteList         mQuoteList;
   nsCounterManager    mCounterManager;
   PRUint16            mUpdateCount;
-  PRUint32            mFocusSuppressCount;
   PRPackedBool        mQuotesDirty : 1;
   PRPackedBool        mCountersDirty : 1;
   PRPackedBool        mIsDestroyingFrameTree : 1;

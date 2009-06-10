@@ -83,8 +83,8 @@ function test() {
             ww.unregisterNotification(this);
 
             let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-            win.addEventListener("load", function() {
-                win.removeEventListener("load", arguments.callee, true);
+            win.addEventListener("focus", function() {
+                win.removeEventListener("focus", arguments.callee, true);
                 setTimeout(doTest, 0);
             }, true);
         }
@@ -143,8 +143,8 @@ function test() {
                             ww.unregisterNotification(this);
                         else if (aTopic == "domwindowopened") {
                             let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-                            win.addEventListener("load", function() {
-                                win.removeEventListener("load", arguments.callee, true);
+                            win.addEventListener("focus", function() {
+                                win.removeEventListener("focus", arguments.callee, true);
                                 setTimeout(function() {
                                     EventUtils.synthesizeKey("VK_RETURN", {}, win)
                                 }, 0);
@@ -173,6 +173,8 @@ function test() {
             let testCounter = 0;
 
             function setFilter(string) {
+                // make sure that the the window is focused first
+                filter.ownerDocument.defaultView.focus();
                 filter.focus();
                 filter.value = string;
                 EventUtils.synthesizeKey("VK_RETURN", {}, win);

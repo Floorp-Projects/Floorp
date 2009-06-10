@@ -959,8 +959,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   aStatus = nsEventStatus_eIgnore;
 
   // skip processing of suppressed blur events
-  if ((event->message == NS_DEACTIVATE || event->message == NS_LOSTFOCUS) &&
-      BlurEventsSuppressed())
+  if (event->message == NS_DEACTIVATE && BlurEventsSuppressed())
     return NS_OK;
 
   if (nsnull != mEventCallback) {
@@ -4113,7 +4112,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   PRBool result = PR_FALSE;                 // call the default nsWindow proc
   static PRBool getWheelInfo = PR_TRUE;
   *aRetValue = 0;
-  PRBool isMozWindowTakingFocus = PR_TRUE;
   nsPaletteInfo palInfo;
 
   // Uncomment this to see all windows messages
@@ -4597,6 +4595,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_ACTIVATE:
+      // The WM_ACTIVATE event is fired when a window is raised or lowered,
+      // and the loword of wParam specifies which. But we don't want to tell
+      // the focus system about this until the WM_SETFOCUS or WM_KILLFOCUS
+      // events are fired. Instead, set either the gJustGotActivate or
+      // gJustGotDeativate flags and fire the NS_ACTIVATE or NS_DEACTIVATE
+      // events once the focus events arrive.
       if (mEventCallback) {
         PRInt32 fActive = LOWORD(wParam);
 
@@ -4606,7 +4610,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #endif
 
         if (WA_INACTIVE == fActive) {
-          gJustGotDeactivate = PR_TRUE;
+          // when minimizing a window, the deactivation and focus events will
+          // be fired in the reverse order. Instead, just dispatch
+          // NS_DEACTIVATE right away.
+          if (HIWORD(wParam))
+            result = DispatchFocusToTopLevelWindow(NS_DEACTIVATE);
+          else
+            gJustGotDeactivate = PR_TRUE;
+
 #ifndef WINCE
           if (mIsTopWidgetWindow)
             mLastKeyboardLayout = gKbdLayout.GetLayout();
@@ -4668,12 +4679,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #endif
 
     case WM_SETFOCUS:
-      result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-      if (gJustGotActivate) {
-        gJustGotActivate = PR_FALSE;
-        gJustGotDeactivate = PR_FALSE;
-        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-      }
+      if (gJustGotActivate)
+        result = DispatchFocusToTopLevelWindow(NS_ACTIVATE);
 
 #ifdef ACCESSIBILITY
       if (nsWindow::gIsAccessibilityOn) {
@@ -4702,20 +4709,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         ImmSetOpenStatus(IMEContext.get(), FALSE);
       }
 #endif
-      WCHAR className[kMaxClassNameLength];
-      ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-      if (wcscmp(className, kClassNameUI) &&
-          wcscmp(className, kClassNameContent) &&
-          wcscmp(className, kClassNameContentFrame) &&
-          wcscmp(className, kClassNameDialog) &&
-          wcscmp(className, kClassNameGeneral)) {
-        isMozWindowTakingFocus = PR_FALSE;
-      }
-      if (gJustGotDeactivate) {
-        gJustGotDeactivate = PR_FALSE;
-        result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
-      }
-      result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
+      if (gJustGotDeactivate)
+        result = DispatchFocusToTopLevelWindow(NS_DEACTIVATE);
       
       break;
 
@@ -4819,30 +4814,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         InitEvent(event);
 
         result = DispatchWindowEvent(&event);
-
-#ifndef WINCE
-        if (pl.showCmd == SW_SHOWMINIMIZED) {
-          // Deactivate
-          WCHAR className[kMaxClassNameLength];
-          ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-          if (wcscmp(className, kClassNameUI) &&
-              wcscmp(className, kClassNameContent) &&
-              wcscmp(className, kClassNameContentFrame) &&
-              wcscmp(className, kClassNameDialog) &&
-              wcscmp(className, kClassNameGeneral)) {
-            isMozWindowTakingFocus = PR_FALSE;
-          }
-          gJustGotDeactivate = PR_FALSE;
-          result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
-        } else if (pl.showCmd == SW_SHOWNORMAL && !(wp->flags & SWP_NOACTIVATE)){
-          // Make sure we're active
-          result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-        }
-#else
-        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-#endif
       }
     }
     break;
@@ -6632,27 +6603,45 @@ PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aA
 // Deal with focus messages
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus)
+PRBool nsWindow::DispatchFocusToTopLevelWindow(PRUint32 aEventType)
+{
+  if (aEventType == NS_ACTIVATE)
+    gJustGotActivate = PR_FALSE;
+  gJustGotDeactivate = PR_FALSE;
+
+  // clear the flags, and retrieve the toplevel window. This way, it doesn't
+  // mattter what child widget received the focus event and it will always be
+  // fired at the toplevel window.
+  HWND toplevelWnd = GetTopLevelHWND(mWnd);
+  if (toplevelWnd) {
+    nsWindow *win = GetNSWindowPtr(toplevelWnd);
+    if (win)
+      return win->DispatchFocus(aEventType);
+  }
+
+  return PR_FALSE;
+}
+
+
+PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 {
   // call the event callback
   if (mEventCallback) {
-    nsFocusEvent event(PR_TRUE, aEventType, this);
+    nsGUIEvent event(PR_TRUE, aEventType, this);
     InitEvent(event);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
     event.refPoint.x = 0;
     event.refPoint.y = 0;
 
-    event.isMozWindowTakingFocus = isMozWindowTakingFocus;
-
     nsPluginEvent pluginEvent;
 
     switch (aEventType)//~~~
     {
-      case NS_GOTFOCUS:
+      case NS_ACTIVATE:
         pluginEvent.event = WM_SETFOCUS;
         break;
-      case NS_LOSTFOCUS:
+      case NS_DEACTIVATE:
         pluginEvent.event = WM_KILLFOCUS;
         break;
       case NS_PLUGIN_ACTIVATE:

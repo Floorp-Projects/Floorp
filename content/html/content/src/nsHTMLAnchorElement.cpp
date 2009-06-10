@@ -113,7 +113,6 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -240,40 +239,13 @@ nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 NS_IMETHODIMP
 nsHTMLAnchorElement::Blur()
 {
-  if (ShouldBlur(this)) {
-    SetElementFocus(PR_FALSE);
-  }
-
-  return NS_OK;
+  return nsGenericHTMLElement::Blur();
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::Focus()
 {
-  if (ShouldFocus(this)) {
-    SetElementFocus(PR_TRUE);
-  }
-
-  return NS_OK;
-}
-
-void
-nsHTMLAnchorElement::SetFocus(nsPresContext* aPresContext)
-{
-  if (!aPresContext) {
-    return;
-  }
-
-  // don't make the link grab the focus if there is no link handler
-  nsILinkHandler *handler = aPresContext->GetLinkHandler();
-  if (handler && aPresContext->EventStateManager()->
-                               SetContentState(this, NS_EVENT_STATE_FOCUS)) {
-    nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
-    if (presShell) {
-      presShell->ScrollContentIntoView(this, NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
-                                       NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-    }
-  }
+  return nsGenericHTMLElement::Focus();
 }
 
 PRBool
@@ -281,6 +253,19 @@ nsHTMLAnchorElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
     return PR_TRUE;
+  }
+
+  // cannot focus links if there is no link handler
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    nsIPresShell* presShell = doc->GetPrimaryShell();
+    if (presShell) {
+      nsPresContext* presContext = presShell->GetPresContext();
+      if (presContext && !presContext->GetLinkHandler()) {
+        *aIsFocusable = PR_FALSE;
+        return PR_FALSE;
+      }
+    }
   }
 
   if (IsEditable()) {
