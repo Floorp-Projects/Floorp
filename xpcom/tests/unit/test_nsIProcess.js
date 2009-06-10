@@ -120,7 +120,7 @@ function test_arguments()
                           .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
   
-  var args= ["mozilla"];
+  var args= ["mozilla", "firefox", "thunderbird", "seamonkey", "foo", "bar"];
   
   process.run(true, args, args.length);
   
@@ -155,7 +155,7 @@ function test_notify_nonblocking()
                           .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
 
-  process.runAsync(["mozilla"], 1, {
+  process.runAsync(["mozilla", "firefox", "thunderbird", "seamonkey", "foo", "bar"], 6, {
     observe: function(subject, topic, data) {
       process = subject.QueryInterface(Components.interfaces.nsIProcess);
       do_check_eq(topic, "process-finished");

@@ -121,11 +121,7 @@ public:
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState);
   virtual PRBool SetContentState(nsIContent *aContent, PRInt32 aState);
-  NS_IMETHOD GetFocusedContent(nsIContent **aContent);
-  NS_IMETHOD SetFocusedContent(nsIContent* aContent);
-  NS_IMETHOD GetLastFocusedContent(nsIContent **aContent);
-  NS_IMETHOD GetFocusedFrame(nsIFrame **aFrame);
-  NS_IMETHOD ContentRemoved(nsIContent* aContent);
+  NS_IMETHOD ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK);
 
   // Access Key Registration
@@ -136,15 +132,6 @@ public:
   NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                        PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
                        nsIWidget* aWidget, PRBool aLockCursor);
-
-  NS_IMETHOD ShiftFocus(PRBool aForward, nsIContent* aStart=nsnull);
-
-  virtual PRBool GetBrowseWithCaret();
-  void ResetBrowseWithCaret();
-
-  NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
-  NS_IMETHOD MoveCaretToFocus();
-  NS_IMETHOD ChangeFocusWith(nsIContent* aFocus, EFocusedWithType aFocusedWith);
 
   static void StartHandlingUserInput()
   {
@@ -167,14 +154,6 @@ public:
                                            nsIEventStateManager)
 
 protected:
-  /**
-   * In certain situations the focus controller's concept of focus gets out of
-   * whack with mCurrentFocus. This is used in known cases to reset the focus
-   * controller's focus. At some point we should probably move to a single
-   * focus storage mechanism because tracking it in several places is error-prone.
-   */
-  void EnsureFocusSynchronization();
-
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
@@ -221,20 +200,8 @@ protected:
                            nsWeakFrame& aTargetFrame);
   nsresult SetClickCount(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  nsresult GetNextTabbableContent(nsIContent* aRootContent,
-                                  nsIContent* aStartContent,
-                                  nsIFrame* aStartFrame,
-                                  PRBool forward, PRBool ignoreTabIndex,
-                                  nsIContent** aResultNode,
-                                  nsIFrame** aResultFrame);
-  nsIContent *GetNextTabbableMapArea(PRBool aForward, nsIContent *imageContent);
-
-  PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
-  nsresult SendFocusBlur(nsPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
-  void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);
-  nsIFocusController* GetFocusControllerForDocument(nsIDocument* aDocument);
 
   /**
    * The phases of HandleAccessKey processing. See below.
@@ -278,18 +245,8 @@ protected:
   // DocShell Focus Traversal Methods
   //---------------------------------------------
 
-  nsresult ShiftFocusInternal(PRBool aForward, nsIContent* aStart = nsnull);
-  void TabIntoDocument(nsIDocShell* aDocShell, PRBool aForward);
-  void ShiftFocusByDoc(PRBool forward);
-  PRBool IsFrameSetDoc(nsIDocShell* aDocShell);
-  PRBool IsIFrameDoc(nsIDocShell* aDocShell);
+  nsIContent* GetFocusedContent();
   PRBool IsShellVisible(nsIDocShell* aShell);
-  void GetLastChildDocShell(nsIDocShellTreeItem* aItem,
-                            nsIDocShellTreeItem** aResult);
-  void GetNextDocShell(nsIDocShellTreeNode* aNode,
-                       nsIDocShellTreeItem** aResult);
-  void GetPrevDocShell(nsIDocShellTreeNode* aNode,
-                       nsIDocShellTreeItem** aResult);
 
   // These functions are for mousewheel and pixel scrolling
   nsresult GetParentScrollingView(nsInputEvent* aEvent,
@@ -369,16 +326,6 @@ protected:
    */
   void FillInEventFromGestureDown(nsMouseEvent* aEvent);
 
-  PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
-
-  nsresult SetCaretEnabled(nsIPresShell *aPresShell, PRBool aVisibility);
-  nsresult SetContentCaretVisible(nsIPresShell* aPresShell, nsIContent *aContent, PRBool aVisible);
-  void FocusElementButNotDocument(nsIContent *aElement);
-
-  // Return the location of the caret
-  nsresult GetDocSelectionLocation(nsIContent **start, nsIContent **end, 
-                                   nsIFrame **startFrame, PRUint32 *startOffset);
-
   PRInt32     mLockCursor;
 
   nsWeakFrame mCurrentTarget;
@@ -409,20 +356,6 @@ protected:
   nsCOMPtr<nsIContent> mHoverContent;
   nsCOMPtr<nsIContent> mDragOverContent;
   nsCOMPtr<nsIContent> mURLTargetContent;
-  nsCOMPtr<nsIContent> mCurrentFocus;
-  nsCOMPtr<nsIContent> mLastFocus;
-  nsWeakFrame mCurrentFocusFrame;
-  PRInt32 mCurrentTabIndex;
-  EFocusedWithType mLastFocusedWith;
-
-  // DocShell Traversal Data Memebers
-  nsCOMPtr<nsIContent> mLastContentFocus;
-
-  //Anti-recursive stack controls
-
-  nsCOMPtr<nsIContent> mFirstBlurEvent;
-  nsCOMPtr<nsIDocument> mFirstDocumentBlurEvent;
-  nsCOMPtr<nsIContent> mFirstFocusEvent;
 
   // The last element on which we fired a mouseover event, or null if
   // the last mouseover event we fired has finished processing.
@@ -443,16 +376,8 @@ protected:
 
   PRPackedBool m_haveShutdown;
 
-  // So we don't have to keep checking accessibility.browsewithcaret pref
-  PRPackedBool mBrowseWithCaret;
-
-  // Recursion guard for tabbing
-  PRPackedBool mTabbedThroughDocument;
-
   // Array for accesskey support
   nsCOMArray<nsIContent> mAccessKeys;
-
-  nsCOMArray<nsIDocShell> mTabbingFromDocShells;
 
   // Unlocks pixel scrolling
   PRPackedBool mLastLineScrollConsumedX;

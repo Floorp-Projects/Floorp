@@ -45,7 +45,7 @@ function openContextMenuFor(element) {
 
     // This seems to work, as long as we explicitly set the popupNode first.
     // For frames, the popupNode needs to be set to inside the frame.
-    if (element.localName == "IFRAME")
+    if (element.localName == "iframe")
         chromeWin.document.popupNode = element.contentDocument.body;
     else
         chromeWin.document.popupNode = element;

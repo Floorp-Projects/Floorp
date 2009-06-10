@@ -1,19 +1,5 @@
 
 
-function ensure_geolocationProvider()
-{
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    
-    const testing_provider_cid = Components.ID("{10F622A4-6D7F-43A1-A938-5FFCBE2B1D1D}");
-    
-    var testing_factory = Components.manager.getClassObject(testing_provider_cid, Components.interfaces.nsIFactory);
-    
-    Components.manager.nsIComponentRegistrar.registerFactory(testing_provider_cid,
-                                                             "Test Geolocation Provider",
-                                                             "@mozilla.org/geolocation/provider;1",
-                                                             testing_factory);
-}
-
 function stop_geolocationProvider()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');

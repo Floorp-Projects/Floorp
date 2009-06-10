@@ -153,12 +153,12 @@ _TEST_FILES += \
 		test_bug495145_wav.html \
 		test_can_play_type_wave.html \
 		test_paused_after_ended.html \
+		test_progress2.html \
+		test_progress4.html \
 		test_wav_8bit.html \
 		test_wav_ended1.html \
 		test_wav_ended2.html \
 		test_wav_list.html \
-		test_progress2.html \
-		test_progress4.html \
 		test_wav_onloadedmetadata.html \
 		test_wav_seek1.html \
 		test_wav_seek3.html \

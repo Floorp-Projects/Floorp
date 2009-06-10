@@ -78,7 +78,7 @@ function grid(aTableIdentifier)
 
   this.handleKeyEvent = function handleKeyEvent(aEvent)
   {
-    if (aEvent.target.localName != "TD")
+    if (aEvent.target.localName != "td")
       return;
 
     var cell = aEvent.target;
@@ -131,7 +131,7 @@ function grid(aTableIdentifier)
 
   this.handleClickEvent = function handleClickEvent(aEvent)
   {
-    if (aEvent.target.localName != "TD")
+    if (aEvent.target.localName != "td")
       return;
     
     var curCell = this.getCurrentCell();

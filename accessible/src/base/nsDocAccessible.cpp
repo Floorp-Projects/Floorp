@@ -68,7 +68,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
-#include "nsIFocusController.h"
+#include "nsFocusManager.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif
@@ -350,6 +350,7 @@ nsDocAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
 NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 {
+  // XXXndeakin P3 accessibility shouldn't be caching the focus
   if (!gLastFocusedNode) {
     *aFocusedChild = nsnull;
     return NS_OK;
@@ -371,25 +372,18 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
     return NS_ERROR_FAILURE; // Not focusable
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  if (!shell) {
-    NS_WARNING("Was not shutdown properly via InvalidateCacheSubtree()");
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  if (fm) {
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    mDOMNode->GetOwnerDocument(getter_AddRefs(domDocument));
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
+    if (document) {
+      // focus the document
+      nsCOMPtr<nsIDOMElement> newFocus;
+      fm->MoveFocus(document->GetWindow(), nsnull, nsIFocusManager::MOVEFOCUS_ROOT, 0,
+                    getter_AddRefs(newFocus));
+    }
   }
-  nsIEventStateManager *esm = shell->GetPresContext()->EventStateManager();
-  NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
-
-  // Focus the document
-  nsresult rv = docShell->SetHasFocus(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Clear out any existing focus state
-  return esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 }
 
 // ------- nsIAccessibleDocument Methods (5) ---------------
