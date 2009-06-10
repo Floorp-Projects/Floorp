@@ -1166,8 +1166,51 @@ function Startup()
 
   gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
 
-  if (gUpdatesOnly && gExtensionsView.children.length == 0)
+  if (gUpdatesOnly && gExtensionsView.children.length == 0) {
     window.close();
+    return;
+  }
+
+  // Left/right switches panes, up/down/pageUp/pageDown/home/end switches items in
+  // the current pane, whenever either the radiogroup or the richlistbox is focused.
+  window.addEventListener("keypress", function (event) {
+    if (event.target != viewGroup &&
+        event.target != gExtensionsView)
+      return;
+
+    switch (event.keyCode) {
+      case event.DOM_VK_LEFT:
+      case event.DOM_VK_RIGHT:
+        let nextFlag = (event.keyCode == event.DOM_VK_RIGHT);
+        if (getComputedStyle(viewGroup, "").direction == "rtl")
+          nextFlag = !nextFlag;
+        viewGroup.checkAdjacentElement(nextFlag);
+        break;
+      case event.DOM_VK_UP:
+        gExtensionsView._moveByOffsetFromUserEvent(-1, event);
+        break;
+      case event.DOM_VK_DOWN:
+        gExtensionsView._moveByOffsetFromUserEvent(1, event);
+        break;
+      case event.DOM_VK_PAGE_UP:
+        gExtensionsView._moveByOffsetFromUserEvent(gExtensionsView.scrollOnePage(-1), event);
+        break;
+      case event.DOM_VK_PAGE_DOWN:
+        gExtensionsView._moveByOffsetFromUserEvent(gExtensionsView.scrollOnePage(1), event);
+        break;
+      case event.DOM_VK_HOME:
+        gExtensionsView._moveByOffsetFromUserEvent(-gExtensionsView.currentIndex, event);
+        break;
+      case event.DOM_VK_END:
+        gExtensionsView._moveByOffsetFromUserEvent(gExtensionsView.getRowCount() -
+                                                   gExtensionsView.currentIndex - 1, event);
+        break;
+      default:
+        return; // don't consume the event
+    }
+    event.stopPropagation();
+    event.preventDefault();
+  }, true);
 }
 
 function Shutdown()
