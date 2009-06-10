@@ -410,11 +410,8 @@ ChromeInputModule.prototype = {
     this._dragMove(sX, sY);
   },
 
-
   // resend original events with our handler out of the loop
   _sendSingleClick: function _sendSingleClick() {
-    this._owner.allowNextClick();
-
     this._owner.grab(this);
     this._owner.stopListening();
 
