@@ -2896,14 +2896,8 @@
                                tooltiptext="&listAllTabs.label;"
                                oncommand="ctrlTab.open(true);"/>
           </xul:stack>
-#ifdef XP_MACOSX
-          <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box" align="center" pack="end" chromedir="&locale.dir;">
-#endif
           <xul:toolbarbutton anonid="tabs-closebutton"
                              class="close-button tabs-closebutton" chromedir="&locale.dir;"/>
-#ifdef XP_MACOSX
-          </xul:hbox>
-#endif
         </xul:hbox>
       </xul:stack>
     </content>
@@ -2964,11 +2958,7 @@
       </field>
 
       <field name="mTabstripClosebutton">
-#ifdef XP_MACOSX
-        document.getAnonymousElementByAttribute(this, "anonid", "tabstrip-closebutton");
-#else
         document.getAnonymousElementByAttribute(this, "anonid", "tabs-closebutton");
-#endif
       </field>
 
       <field name="_prefObserver">({

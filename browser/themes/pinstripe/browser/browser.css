@@ -1763,19 +1763,13 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tabs-closebutton {
-  padding-right: 4px;
-  list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
-  list-style-image: none;
+  -moz-padding-end: 4px;
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
   border: none;
-  -moz-box-align: stretch;
-}
-
-.tabs-closebutton:hover > .toolbarbutton-icon {
-	background-image: none !important;
 }
 
 .tabs-closebutton:hover:active {
-	list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 
 tabpanels.plain {
