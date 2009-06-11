@@ -78,23 +78,21 @@
                    showcommentcolumn="true"
                    tabscrolling="true"
                    xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
-        <xul:box>
-          <xul:button class="searchbar-engine-button"
-                      type="menu"
-                      anonid="searchbar-engine-button"
-                      chromedir="&locale.dir;">
-            <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
-            <xul:image class="searchbar-dropmarker-image"/>
-            <xul:menupopup class="searchbar-popup"
-                           anonid="searchbar-popup">
-              <xul:menuseparator/>
-              <xul:menuitem class="open-engine-manager"
-                            anonid="open-engine-manager"
-                            label="&cmd_engineManager.label;"
-                            oncommand="openManager(event);"/>
-            </xul:menupopup>
-          </xul:button>
-        </xul:box>
+        <xul:button class="searchbar-engine-button"
+                    type="menu"
+                    anonid="searchbar-engine-button"
+                    chromedir="&locale.dir;">
+          <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
+          <xul:image class="searchbar-dropmarker-image"/>
+          <xul:menupopup class="searchbar-popup"
+                         anonid="searchbar-popup">
+            <xul:menuseparator/>
+            <xul:menuitem class="open-engine-manager"
+                          anonid="open-engine-manager"
+                          label="&cmd_engineManager.label;"
+                          oncommand="openManager(event);"/>
+          </xul:menupopup>
+        </xul:button>
         <xul:hbox class="search-go-container" chromedir="&locale.dir;">
           <xul:image class="search-go-button"
                      anonid="search-go-button"
