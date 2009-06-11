@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -648,7 +648,7 @@ date_parseString(JSString *str, jsdouble *result)
     int temp;
     JSBool seenmonthname = JS_FALSE;
 
-    JSSTRING_CHARS_AND_LENGTH(str, s, limit);
+    str->getCharsAndLength(s, limit);
     if (limit == 0)
         goto syntax;
     while (i < limit) {

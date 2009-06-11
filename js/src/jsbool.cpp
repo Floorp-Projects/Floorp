@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -170,7 +170,7 @@ js_ValueToBoolean(jsval v)
     if (JSVAL_IS_OBJECT(v))
         return JS_TRUE;
     if (JSVAL_IS_STRING(v))
-        return JSSTRING_LENGTH(JSVAL_TO_STRING(v)) != 0;
+        return JSVAL_TO_STRING(v)->length() != 0;
     if (JSVAL_IS_INT(v))
         return JSVAL_TO_INT(v) != 0;
     if (JSVAL_IS_DOUBLE(v)) {
