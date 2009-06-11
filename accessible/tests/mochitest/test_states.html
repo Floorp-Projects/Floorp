@@ -6,6 +6,16 @@
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
+  <style type="text/css">
+    .offscreen {
+      position: absolute;
+      left: -5000px;
+      top: -5000px;
+      height: 100px;
+      width: 100px;
+    }
+  </style>
+
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
@@ -40,12 +50,15 @@
       // disabled, too. See bug 429285.
       testStatesInSubtree("group", STATE_UNAVAILABLE);
 
+      testStates("aria_offscreen_textbox", STATE_OFFSCREEN);
+
       SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
     addLoadEvent(doTest);
   </script>
+
 </head>
 
 <body>
@@ -90,6 +103,10 @@
       <div role="option" id="item4">Item 4</div>
     </div>
     <div role="slider" tabindex="0">A slider</div>
+  </div>
+  
+  <div id="offscreen_log" role="log" class="offscreen">
+    <div id="aria_offscreen_textbox" role="textbox" aria-readonly="true">This text should be offscreen</div>
   </div>
 </body>
 </html>
