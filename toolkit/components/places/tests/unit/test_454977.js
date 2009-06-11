@@ -65,7 +65,6 @@ function add_visit(aURI, aVisitDate, aVisitType) {
   stmt.bindInt64Parameter(0, visitId);
   do_check_true(stmt.executeStep());
   var placeId = stmt.getInt64(0);
-  stmt.finalize();
   do_check_true(placeId > 0);
   return placeId;
 }

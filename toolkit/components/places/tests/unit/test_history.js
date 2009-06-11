@@ -198,14 +198,10 @@ function run_test() {
   // get direct db connection
   var db = histsvc.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
   var q = "SELECT id FROM moz_bookmarks";
-  var statement;
   try {
-     statement = db.createStatement(q);
+    var statement = db.createStatement(q);
   } catch(ex) {
     do_throw("bookmarks table does not have id field, schema is too old!");
-  }
-  finally {
-    statement.finalize();
   }
 
   // bug 394741 - regressed history text searches
