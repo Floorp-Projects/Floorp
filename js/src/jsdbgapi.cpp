@@ -1272,12 +1272,36 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (cx->fp != fp) {
         memcpy(displayCopy, cx->display, sizeof displayCopy);
 
-        /* This API requires an active fp on cx, so fp2 can't go null here. */
-        for (JSStackFrame *fp2 = cx->fp; fp2 != fp; fp2 = fp2->down) {
-            if (fp2->displaySave) {
-                JS_ASSERT(fp2->script->staticLevel < JS_DISPLAY_SIZE);
-                cx->display[fp2->script->staticLevel] = fp2->displaySave;
-            }
+        /*
+         * Set up cx->display as it would have been when fp was active.
+         *
+         * NB: To reconstruct cx->display for fp, we have to follow the frame
+         * chain from oldest to youngest, in the opposite direction to its
+         * single linkge. To avoid the obvious recursive reversal algorithm,
+         * which might use too much stack, we reverse in place and reverse
+         * again as we reconstruct the display. This is safe because cx is
+         * thread-local and we can't cause GC until the call to js_Execute
+         * below.
+         */
+        JSStackFrame *fp2 = fp, *last = NULL;
+        while (fp2) {
+            JSStackFrame *next = fp2->down;
+            fp2->down = last;
+            last = fp2;
+            fp2 = next;
+        }
+
+        fp2 = last;
+        last = NULL;
+        while (fp2) {
+            JSStackFrame *next = fp2->down;
+            fp2->down = last;
+            last = fp2;
+
+            JSScript *script = fp2->script;
+            if (script && script->staticLevel < JS_DISPLAY_SIZE)
+                cx->display[script->staticLevel] = fp2;
+            fp2 = next;
         }
     }
 
