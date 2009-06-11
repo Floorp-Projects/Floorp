@@ -62,6 +62,7 @@ _TEST_FILES = \
 		test_valueLeaks.xhtml \
 		viewport-helper.svg \
 		test_viewport.html \
+		test_moveUnderMouse.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
