@@ -212,3 +212,12 @@ richlistbox {
 richlistitem {
   min-height: 14.4mm; /* row size */
 }
+
+/* colorpicker ------------------------------------------------------------- */
+colorpicker > panel {
+  background-color: #36373b;
+}
+
+colorpicker > vbox {
+  background-color: #36373b;
+}
