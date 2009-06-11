@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -135,7 +135,7 @@ script_toSource(JSContext *cx, uintN argc, jsval *vp)
         str = js_QuoteString(cx, str, '\'');
         if (!str)
             return JS_FALSE;
-        JSSTRING_CHARS_AND_LENGTH(str, s, k);
+        str->getCharsAndLength(s, k);
         n += k;
     }
 
@@ -264,7 +264,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      */
     tcflags = 0;
     script = JSCompiler::compileScript(cx, scopeobj, NULL, principals, tcflags,
-                                       JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                                       str->chars(), str->length(),
                                        NULL, file, line);
     if (!script)
         return JS_FALSE;
@@ -775,7 +775,7 @@ script_thaw(JSContext *cx, uintN argc, jsval *vp)
     if (!xdr)
         return JS_FALSE;
 
-    JSSTRING_CHARS_AND_LENGTH(str, buf, len);
+    str->getCharsAndLength(buf, len);
 #if IS_BIG_ENDIAN
   {
     jschar *from, *to;

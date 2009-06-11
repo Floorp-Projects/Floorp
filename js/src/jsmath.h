@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -34,10 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-/* -*- Mode: C; tab-width: 8 -*-
- * Copyright (C) 1998-1999 Netscape Communications Corporation, All Rights Reserved.
- */
 
 #ifndef jsmath_h___
 #define jsmath_h___

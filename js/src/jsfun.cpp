@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -2240,7 +2240,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
              * JSString length fits in 2 fewer bits than size_t has.
              */
             old_args_length = args_length;
-            args_length = old_args_length + JSSTRING_LENGTH(arg);
+            args_length = old_args_length + arg->length();
             if (args_length < old_args_length) {
                 js_ReportAllocationOverflow(cx);
                 return JS_FALSE;
@@ -2275,8 +2275,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          */
         for (i = 0; i < n; i++) {
             arg = JSVAL_TO_STRING(argv[i]);
-            arg_length = JSSTRING_LENGTH(arg);
-            (void) js_strncpy(cp, JSSTRING_CHARS(arg), arg_length);
+            arg_length = arg->length();
+            (void) js_strncpy(cp, arg->chars(), arg_length);
             cp += arg_length;
 
             /* Add separating comma or terminating 0. */
@@ -2364,7 +2364,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     return JSCompiler::compileFunctionBody(cx, fun, principals,
-                                           JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                                           str->chars(), str->length(),
                                            filename, lineno);
 }
 

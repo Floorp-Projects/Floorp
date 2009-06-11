@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -765,8 +765,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         idIsLexicalIdentifier = js_IsIdentifier(idstr);
         needOldStyleGetterSetter =
             !idIsLexicalIdentifier ||
-            js_CheckKeyword(JSSTRING_CHARS(idstr),
-                            JSSTRING_LENGTH(idstr)) != TOK_EOF;
+            js_CheckKeyword(idstr->chars(), idstr->length()) != TOK_EOF;
 
 #if JS_HAS_GETTER_SETTER
 
@@ -839,7 +838,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             }
             *vp = STRING_TO_JSVAL(idstr);               /* local root */
         }
-        JSSTRING_CHARS_AND_LENGTH(idstr, idstrchars, idstrlength);
+        idstr->getCharsAndLength(idstrchars, idstrlength);
 
         for (j = 0; j < valcnt; j++) {
             /* Convert val[j] to its canonical source form. */
@@ -849,7 +848,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 goto error;
             }
             localroot[j] = STRING_TO_JSVAL(valstr);     /* local root */
-            JSSTRING_CHARS_AND_LENGTH(valstr, vchars, vlength);
+            valstr->getCharsAndLength(vchars, vlength);
 
             if (vchars[0] == '#')
                 needOldStyleGetterSetter = JS_TRUE;
@@ -945,7 +944,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 SAFE_ADD(2);
             SAFE_ADD(idstrlength + 1);
             if (gsop[j])
-                SAFE_ADD(JSSTRING_LENGTH(gsop[j]) + 1);
+                SAFE_ADD(gsop[j]->length() + 1);
             SAFE_ADD(vsharplength);
             SAFE_ADD(vlength);
             /* Account for the trailing null. */
@@ -976,16 +975,16 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 nchars += idstrlength;
                 if (gsop[j]) {
                     chars[nchars++] = ' ';
-                    gsoplength = JSSTRING_LENGTH(gsop[j]);
-                    js_strncpy(&chars[nchars], JSSTRING_CHARS(gsop[j]),
+                    gsoplength = gsop[j]->length();
+                    js_strncpy(&chars[nchars], gsop[j]->chars(),
                                gsoplength);
                     nchars += gsoplength;
                 }
                 chars[nchars++] = ':';
             } else {  /* New style "decompilation" */
                 if (gsop[j]) {
-                    gsoplength = JSSTRING_LENGTH(gsop[j]);
-                    js_strncpy(&chars[nchars], JSSTRING_CHARS(gsop[j]),
+                    gsoplength = gsop[j]->length();
+                    js_strncpy(&chars[nchars], gsop[j]->chars(),
                                gsoplength);
                     nchars += gsoplength;
                     chars[nchars++] = ' ';
@@ -1224,7 +1223,7 @@ EvalCacheHash(JSContext *cx, JSString *str)
     size_t n;
     uint32 h;
 
-    JSSTRING_CHARS_AND_LENGTH(str, s, n);
+    str->getCharsAndLength(s, n);
     if (n > 100)
         n = 100;
     for (h = 0; n; s++, n--)
@@ -1478,7 +1477,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!script) {
         script = JSCompiler::compileScript(cx, scopeobj, caller, principals, tcflags,
-                                           JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                                           str->chars(), str->length(),
                                            NULL, file, line, str);
         if (!script) {
             ok = JS_FALSE;
@@ -5977,14 +5976,14 @@ js_DumpChars(const jschar *s, size_t n)
 void
 dumpString(JSString *str)
 {
-    dumpChars(JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
+    dumpChars(str->chars(), str->length());
 }
 
 JS_FRIEND_API(void)
 js_DumpString(JSString *str)
 {
     fprintf(stderr, "JSString* (%p) = jschar * (%p) = ",
-            (void *) str, (void *) JSSTRING_CHARS(str));
+            (void *) str, (void *) str->chars());
     dumpString(str);
     fputc('\n', stderr);
 }

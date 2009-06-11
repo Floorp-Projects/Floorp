@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set sw=4 ts=8 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -159,8 +159,8 @@ js_IdIsIndex(jsval id, jsuint *indexp)
         return JS_FALSE;
 
     str = JSVAL_TO_STRING(id);
-    cp = JSSTRING_CHARS(str);
-    if (JS7_ISDEC(*cp) && JSSTRING_LENGTH(str) < sizeof(MAXSTR)) {
+    cp = str->chars();
+    if (JS7_ISDEC(*cp) && str->length() < sizeof(MAXSTR)) {
         jsuint index = JS7_UNDEC(*cp++);
         jsuint oldIndex = 0;
         jsuint c = 0;
@@ -1406,7 +1406,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
         MAKE_BUSY(he);
 
         if (sep) {
-            JSSTRING_CHARS_AND_LENGTH(sep, sepstr, seplen);
+            sep->getCharsAndLength(sepstr, seplen);
         } else {
             sepstr = NULL;      /* indicates to use "," as separator */
             seplen = 1;
@@ -1457,7 +1457,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
             seplen = (hole && op == TO_SOURCE) ? 1 : 0;
 
         /* Allocate 1 at end for closing bracket and zero. */
-        tmplen = JSSTRING_LENGTH(str);
+        tmplen = str->length();
         growth = nchars + tmplen + seplen + extratail;
         if (nchars > growth || tmplen > growth ||
             growth > (size_t)-1 / sizeof(jschar)) {
@@ -1480,7 +1480,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
             }
         }
 
-        js_strncpy(&chars[nchars], JSSTRING_CHARS(str), tmplen);
+        js_strncpy(&chars[nchars], str->chars(), tmplen);
         nchars += tmplen;
 
         if (seplen) {
