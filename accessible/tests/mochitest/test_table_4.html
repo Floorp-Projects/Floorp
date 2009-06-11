@@ -60,7 +60,7 @@ function doTest()
     accNotCreated = (!isAccessible("tr"));
     ok(!accNotCreated, "missed tr accessible");
 
-    testRole(accTable4, ROLE_NOTHING); // XXX: it's a bug, should be ROLE_TABLE
+    testRole(accTable4, ROLE_TABLE);
 
     is(accTable4.cellRefAt(0,0).firstChild.name, "cell0", "wrong cell");
     is(accTable4.cellRefAt(0,1).firstChild.name, "cell1", "wrong cell");
