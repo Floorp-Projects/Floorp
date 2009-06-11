@@ -5421,7 +5421,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       // it's conservative in the sense that anything that will really end up
       // as an in-flow non-inline will have false mIsAllInline.  It just might
       // be that even an inline that has mIsAllInline false doesn't need an
-      // {ib} split.  So this is just an optimization to keep from doint to
+      // {ib} split.  So this is just an optimization to keep from doing too
       // much work when that happens.
       (!(bits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
        aState.GetGeometricParent(display, nsnull)) ||
@@ -5433,7 +5433,14 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     aItems.InlineItemAdded();
   }
 
-  if (bits & FCDATA_IS_LINE_PARTICIPANT) {
+  // Our item should be treated as a line participant if we have the relevant
+  // bit and are going to be in-flow.  Note that this really only matters if
+  // our ancestor is a box or some such, so the fact that we might have an
+  // inline ancestor that might become a containing block is not relevant here.
+  if ((bits & FCDATA_IS_LINE_PARTICIPANT) &&
+      ((bits & FCDATA_DISALLOW_OUT_OF_FLOW) ||
+       !aState.GetGeometricParent(display, nsnull))) {
+    item->mIsLineParticipant = PR_TRUE;
     aItems.LineParticipantItemAdded();
   }
 }
@@ -11550,7 +11557,7 @@ AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta)
   if (aItem->mIsAllInline) {
     mInlineCount += aDelta;
   }
-  if (aItem->mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
+  if (aItem->mIsLineParticipant) {
     mLineParticipantCount += aDelta;
   }
   mDesiredParentCounts[aItem->DesiredParentType()] += aDelta;
