@@ -1171,7 +1171,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     size_t i;
     jsval v;
 
-    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+    JS_ASSERT(js_IsDenseArray(obj));
 
     capacity = js_DenseArrayCapacity(obj);
     for (i = 0; i < capacity; i++) {
@@ -3465,192 +3465,59 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
 JS_FRIEND_API(JSBool)
-js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                        JSUint8 *dest)
+js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
+                                JSUint8 *dest)
 {
     uint32 length;
 
-    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+    if (!obj || !js_IsDenseArray(obj))
         return JS_FALSE;
 
     length = obj->fslots[JSSLOT_ARRAY_LENGTH];
     if (length < offset + count)
         return JS_FALSE;
-
-    jsval v;
-    jsint vi;
 
     JSUint8 *dp = dest;
     for (uintN i = offset; i < offset+count; i++) {
-        v = obj->dslots[i];
-        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
-            return JS_FALSE;
+        jsval v = obj->dslots[i];
+        if (JSVAL_IS_INT(v)) {
+            jsint vi = JSVAL_TO_INT(v);
+            if (jsuint(vi) > 255)
+                vi = (vi < 0) ? 0 : 255;
+            *dp++ = JSUint8(vi);
+        } else if (JSVAL_IS_DOUBLE(v)) {
+            jsdouble vd = *JSVAL_TO_DOUBLE(v);
+            if (!(vd >= 0)) /* Not < so that NaN coerces to 0 */
+                *dp++ = 0;
+            else if (vd > 255)
+                *dp++ = 255;
+            else {
+                jsdouble toTruncate = vd + 0.5;
+                JSUint8 val = JSUint8(toTruncate);
 
-        *dp++ = (JSUint8) vi;
+                /*
+                 * now val is rounded to nearest, ties rounded up.  We want
+                 * rounded to nearest ties to even, so check whether we had a
+                 * tie.
+                 */
+                if (val == toTruncate) {
+                  /*
+                   * It was a tie (since adding 0.5 gave us the exact integer
+                   * we want).  Since we rounded up, we either already have an
+                   * even number or we have an odd number but the number we
+                   * want is one less.  So just unconditionally masking out the
+                   * ones bit should do the trick to get us the value we
+                   * want.
+                   */
+                  *dp++ = (val & ~1);
+                } else {
+                  *dp++ = val;
+                }
+            }
+        } else {
+            return JS_FALSE;
+        }
     }
 
     return JS_TRUE;
 }
-
-JS_FRIEND_API(JSBool)
-js_ArrayToJSUint16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                         JSUint16 *dest)
-{
-    uint32 length;
-
-    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
-        return JS_FALSE;
-
-    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-    if (length < offset + count)
-        return JS_FALSE;
-
-    jsval v;
-    jsint vi;
-
-    JSUint16 *dp = dest;
-    for (uintN i = offset; i < offset+count; i++) {
-        v = obj->dslots[i];
-        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
-            return JS_FALSE;
-
-        *dp++ = (JSUint16) vi;
-    }
-
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_ArrayToJSUint32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                         JSUint32 *dest)
-{
-    uint32 length;
-
-    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
-        return JS_FALSE;
-
-    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-    if (length < offset + count)
-        return JS_FALSE;
-
-    jsval v;
-    jsint vi;
-
-    JSUint32 *dp = dest;
-    for (uintN i = offset; i < offset+count; i++) {
-        v = obj->dslots[i];
-        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
-            return JS_FALSE;
-
-        *dp++ = (JSUint32) vi;
-    }
-
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_ArrayToJSInt8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                       JSInt8 *dest)
-{
-    uint32 length;
-
-    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
-        return JS_FALSE;
-
-    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-    if (length < offset + count)
-        return JS_FALSE;
-
-    jsval v;
-    JSInt8 *dp = dest;
-    for (uintN i = offset; i < offset+count; i++) {
-        v = obj->dslots[i];
-        if (!JSVAL_IS_INT(v))
-            return JS_FALSE;
-
-        *dp++ = (JSInt8) JSVAL_TO_INT(v);
-    }
-
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_ArrayToJSInt16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                        JSInt16 *dest)
-{
-    uint32 length;
-
-    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
-        return JS_FALSE;
-
-    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-    if (length < offset + count)
-        return JS_FALSE;
-
-    jsval v;
-    JSInt16 *dp = dest;
-    for (uintN i = offset; i < offset+count; i++) {
-        v = obj->dslots[i];
-        if (!JSVAL_IS_INT(v))
-            return JS_FALSE;
-
-        *dp++ = (JSInt16) JSVAL_TO_INT(v);
-    }
-
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_ArrayToJSInt32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                        JSInt32 *dest)
-{
-    uint32 length;
-
-    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
-        return JS_FALSE;
-
-    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-    if (length < offset + count)
-        return JS_FALSE;
-
-    jsval v;
-    JSInt32 *dp = dest;
-    for (uintN i = offset; i < offset+count; i++) {
-        v = obj->dslots[i];
-        if (!JSVAL_IS_INT(v))
-            return JS_FALSE;
-
-        *dp++ = (JSInt32) JSVAL_TO_INT(v);
-    }
-
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                         jsdouble *dest)
-{
-    uint32 length;
-
-    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
-        return JS_FALSE;
-
-    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-    if (length < offset + count)
-        return JS_FALSE;
-
-    jsval v;
-    jsdouble *dp = dest;
-    for (uintN i = offset; i < offset+count; i++) {
-        v = obj->dslots[i];
-        if (JSVAL_IS_INT(v))
-            *dp++ = (jsdouble) JSVAL_TO_INT(v);
-        else if (JSVAL_IS_DOUBLE(v))
-            *dp++ = *(JSVAL_TO_DOUBLE(v));
-        else
-            return JS_FALSE;
-    }
-
-    return JS_TRUE;
-}
-
