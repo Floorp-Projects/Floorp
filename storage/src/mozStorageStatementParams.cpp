@@ -196,7 +196,8 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
   if (JSVAL_IS_INT(aId)) {
     idx = JSVAL_TO_INT(aId);
 
-    // Ensure that our index is within range.
+    // Ensure that our index is within range.  We do not care about the
+    // prototype chain being checked here.
     if (idx >= mParamCount)
       return NS_ERROR_INVALID_ARG;
   }
@@ -209,8 +210,10 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
     // the rest of the prototype chain be checked.
     NS_ConvertUTF16toUTF8 name(nameChars, nameLength);
     nsresult rv = mStatement->GetParameterIndex(name, &idx);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      *_objp = NULL;
       return NS_OK;
+    }
 
     *_retval = ::JS_DefineUCProperty(aCtx, aScopeObj, nameChars, nameLength,
                                      JSVAL_VOID, nsnull, nsnull, 0);
