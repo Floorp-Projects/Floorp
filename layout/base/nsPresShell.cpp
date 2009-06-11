@@ -7086,8 +7086,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     }
 #endif
 
-    WillDoReflow();
-
     // If reflow is interruptible, then make a note of our deadline.
     const PRIntervalTime deadline = aInterruptible
         ? PR_IntervalNow() + PR_MicrosecondsToInterval(gMaxRCProcessingTime)
@@ -7096,6 +7094,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     // Scope for the reflow entry point
     {
       nsAutoScriptBlocker scriptBlocker;
+      WillDoReflow();
       AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
 
       do {

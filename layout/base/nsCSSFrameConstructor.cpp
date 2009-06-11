@@ -7782,6 +7782,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 
 void
 nsCSSFrameConstructor::BeginUpdate() {
+  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+               "Someone forgot a script blocker");
+
   ++mUpdateCount;
 }
 
