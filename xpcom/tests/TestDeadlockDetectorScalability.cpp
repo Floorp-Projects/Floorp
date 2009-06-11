@@ -56,13 +56,13 @@
 
 #ifdef OLD_API
 #  include "nsAutoLock.h"
-   typedef PRLock* lock_t;
+   typedef PRLock* moz_lock_t;
 #  define NEWLOCK(n) nsAutoLock::NewLock(n)
 #  define DELETELOCK(v) nsAutoLock::DestroyLock(v)
 #  define AUTOLOCK(v, l) nsAutoLock v(l)
 #else
 #  include "mozilla/Mutex.h"
-   typedef mozilla::Mutex* lock_t;
+   typedef mozilla::Mutex* moz_lock_t;
 #  define NEWLOCK(n) new mozilla::Mutex(n)
 #  define DELETELOCK(v) delete (v)
 #  define AUTOLOCK(v, l) mozilla::MutexAutoLock v(*l)
@@ -83,7 +83,7 @@ AllocLockRecurseUnlockFree(int i)
     if (0 == i)
         return;
 
-    lock_t lock = NEWLOCK("deadlockDetector.scalability.t1");
+    moz_lock_t lock = NEWLOCK("deadlockDetector.scalability.t1");
     {
         AUTOLOCK(_, lock);
         AllocLockRecurseUnlockFree(i - 1);
@@ -111,8 +111,8 @@ LengthNDepChain(int N)
 static nsresult
 OneLockNDeps(const int N, const int K)
 {
-    lock_t lock = NEWLOCK("deadlockDetector.scalability.t2.master");
-    lock_t* locks = new lock_t[N];
+    moz_lock_t lock = NEWLOCK("deadlockDetector.scalability.t2.master");
+    moz_lock_t* locks = new moz_lock_t[N];
     if (!locks)
         NS_RUNTIMEABORT("couldn't allocate lock array");
 
@@ -156,7 +156,7 @@ OneLockNDeps(const int N, const int K)
 static nsresult
 MaxDepsNsq(const int N, const int K)
 {
-    lock_t* locks = new lock_t[N];
+    moz_lock_t* locks = new moz_lock_t[N];
     if (!locks)
         NS_RUNTIMEABORT("couldn't allocate lock array");
 

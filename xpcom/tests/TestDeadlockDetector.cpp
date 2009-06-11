@@ -518,7 +518,8 @@ ContentionNoDeadlock_Child()
 nsresult
 ContentionNoDeadlock()
 {
-    Subprocess proc(__FUNCTION__);
+    const char * func = __func__;
+    Subprocess proc(func);
     proc.RunToCompletion(10000);
     if (0 != proc.mExitCode) {
         printf("(expected 0 == return code, got %d)\n", proc.mExitCode);
