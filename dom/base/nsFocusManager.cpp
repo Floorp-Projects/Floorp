@@ -1048,7 +1048,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
       if (!isElementInFocusedWindow)
         commonAncestor = GetCommonAncestor(newWindow, mFocusedWindow);
 
-      if (!Blur(currentIsSameOrAncestor ? mFocusedWindow : nsnull,
+      if (!Blur(currentIsSameOrAncestor ? mFocusedWindow.get() : nsnull,
                 commonAncestor, !isElementInFocusedWindow))
       return;
     }
