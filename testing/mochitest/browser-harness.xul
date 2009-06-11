@@ -85,6 +85,36 @@
   ]]></style>
   <script type="application/javascript;version=1.7"><![CDATA[
     var gConfig;
+
+    var gDumper = {
+      get fileLogger() {
+        let logger = null;
+        if (gConfig.logPath) {
+          try {
+            MozillaFileLogger.init(gConfig.logPath);
+            logger = MozillaFileLogger;
+          } catch (ex) {
+            dump("TEST-UNEXPECTED-FAIL | (browser-harness.xul) | " +
+                 "Error trying to log to " + gConfig.logPath + ": " + ex + "\n");
+          }
+        }
+        delete this.fileLogger;
+        return this.fileLogger = logger;
+      },
+
+      dump: function (str) {
+        dump(str);
+
+        if (this.fileLogger)
+          this.fileLogger._foStream.write(str, str.length);
+      },
+
+      done: function () {
+        if (this.fileLogger)
+          this.fileLogger.close();
+      }
+    }
+
     function TestStart() {
       gConfig = readConfig();
 
@@ -96,7 +126,7 @@
           "Run " + gConfig.testPath + " tests";
 
       if (gConfig.autoRun)
-        setTimeout(runAllTests, 0);
+        setTimeout(runTests, 0);
     }
 
     function readConfig() {
@@ -146,45 +176,47 @@
       return chromeDir.parent.QueryInterface(Ci.nsILocalFile);
     }
 
-    function browserTestFile(aTestFile) {
+    function browserTest(aTestFile) {
       this.path = aTestFile;
-      this.tests = [];
+      this.dumper = gDumper;
+      this.results = [];
       this.scope = null;
     }
-    browserTestFile.prototype = {
+    browserTest.prototype = {
       get passCount() {
-        return this.tests.filter(function (t) !t.todo && t.pass).length;
+        return this.results.filter(function (t) !t.todo && t.pass).length;
       },
       get todoCount() {
-        return this.tests.filter(function (t) t.todo && t.pass).length;
+        return this.results.filter(function (t) t.todo && t.pass).length;
       },
       get failCount() {
-        return this.tests.filter(function (t) !t.pass).length;
+        return this.results.filter(function (t) !t.pass).length;
       },
-      get log() {
-        var path = this.path;
-        return this.tests.map(function (t) {
-                                  return t.result + " | " + path + " | " + t.msg;
-                              }).join("\n");
+
+      addResult: function addResult(result) {
+        this.results.push(result);
+
+        this.dumper.dump(result.result + " | " + this.path + " | " + result.msg + "\n");
       },
+
       get htmlLog() {
         let txtToHTML = Cc["@mozilla.org/txttohtmlconv;1"].
                         getService(Ci.mozITXTToHTMLConv);
         function _entityEncode(str) {
           return txtToHTML.scanTXT(str, Ci.mozITXTToHTMLConv.kEntities);
         }
-        var path = _entityEncode( this.path );
-        return this.tests.map(function (t) {
+        var path = _entityEncode(this.path);
+        return this.results.map(function (t) {
                                   var result = "<p class=\"result ";
                                   result += t.pass ? "passed" : "failed";
                                   result += "\">" + t.result + " | " + path +
                                     " | " + _entityEncode( t.msg ) + "</p>";
                                   return result;
-                              }).join("\n");
+                                }).join("\n");
       }
     };
 
-    // Returns an array of chrome:// URLs to all the test files
+    // Returns an array of browserTest objects for all the selected tests
     function listTests() {
       const Cc = Components.classes; const Ci = Components.interfaces;
 
@@ -209,7 +241,7 @@
         // If we were passed a specific file, run only that test.
         if (testsDir.isFile()) {
           if (fileNameRegexp.test(testsDir.leafName))
-            return [new browserTestFile(requestPath + "/" + gConfig.testPath)];
+            return [new browserTest(requestPath + "/" + gConfig.testPath)];
 
           // We were passed a file that's not a test...
           return [];
@@ -229,14 +261,14 @@
       var fileNames = [];
       srvScope.arrayOfTestFiles(links, fileNames, fileNameRegexp);
 
-      return fileNames.map(function (f) new browserTestFile(f));
+      return fileNames.map(function (f) new browserTest(f));
     }
 
     function setStatus(aStatusString) {
       document.getElementById("status").value = aStatusString;
     }
 
-    function runAllTests() {
+    function runTests() {
       var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
                              getService(Ci.nsIWindowMediator);
       var testWin = windowMediator.getMostRecentWindow("navigator:browser");
@@ -244,7 +276,7 @@
       setStatus("Running...");
       testWin.focus();
 
-      var Tester = new testWin.Tester(listTests(), testsFinished);
+      var Tester = new testWin.Tester(listTests(), gDumper, testsFinished);
       Tester.start();
     }
 
@@ -274,44 +306,9 @@
                               }).join("\n") + "</div>";
     }
 
-    function getLogFromTests(aTests) {
-      if (!aTests.length)
-        return "TEST-UNEXPECTED-FAIL | (browser-harness.xul) | " +
-                 "No tests to run. Did you pass an invalid --test-path?";
-
-      var log = aTests.map(function (f) {
-                             var output = "Running " + f.path + "...\n";
-                             if (f.log)
-                               output += f.log + "\n";
-                             return output;
-                           }).join("");
-      log += "\nBrowser Chrome Test Summary\n";
-
-      var passCount = aTests.map(function (f) f.passCount).reduce(sum);
-      var failCount = aTests.map(function (f) f.failCount).reduce(sum);
-      var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
-      log += "\tPass: " + passCount + "\n\tFail: " + failCount + "\n\tTodo: " + todoCount + "\n";
-
-      return log;
-    }
-
     function testsFinished(aTests) {
       // Focus our window, to display the results
       window.focus();
-
-      var start = "*** Start BrowserChrome Test Results ***\n";
-      var end = "\n*** End BrowserChrome Test Results ***\n";
-      var output = start + getLogFromTests(aTests) + end;
-
-      // Output to stdout
-      dump(output);
-
-      // Output to file
-      if (gConfig.logPath) {
-        MozillaFileLogger.init(gConfig.logPath);
-        MozillaFileLogger._foStream.write(output, output.length);
-        MozillaFileLogger.close();
-      }
 
       if (gConfig.closeWhenDone) {
         goQuitApplication();
@@ -323,7 +320,7 @@
       setStatus("Done.");
     }
   ]]></script>
-  <button id="runTestsButton" onclick="runAllTests();" label="Run All Tests"/>
+  <button id="runTestsButton" onclick="runTests();" label="Run All Tests"/>
   <label id="status"/>
   <scrollbox flex="1" style="overflow: auto" align="stretch">
     <div id="results" xmlns="http://www.w3.org/1999/xhtml" flex="1"/>
