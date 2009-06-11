@@ -69,6 +69,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "nsContentUtils.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -1088,6 +1089,8 @@ struct nsAutoLayoutPhase {
         // Once bug 337957 is fixed this should become an NS_ASSERTION
         NS_WARN_IF_FALSE(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
                          "recurring into frame construction");
+        NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+                     "constructing frames and scripts are not blocked");
         break;
       default:
         break;
