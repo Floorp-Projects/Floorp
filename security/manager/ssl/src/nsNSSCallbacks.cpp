@@ -832,8 +832,9 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
       rv = NS_ERROR_NOT_AVAILABLE;
     }
     else {
+      PRBool checkState;
       rv = proxyPrompt->PromptPassword(nsnull, promptString.get(),
-                                       &password, nsnull, nsnull, &value);
+                                       &password, nsnull, &checkState, &value);
     }
   }
   
