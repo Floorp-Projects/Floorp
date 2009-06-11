@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __mozStorageVariant_h__
-#define __mozStorageVariant_h__
+#ifndef mozilla_storage_Variant_h__
+#define mozilla_storage_Variant_h__
 
 #include <utility>
 
@@ -366,4 +366,6 @@ typedef Variant_base NullVariant;
 } // namespace storage
 } // namespace mozilla
 
-#endif // __mozStorageVariant_h__
+#include "Variant_inl.h"
+
+#endif // mozilla_storage_Variant_h__
