@@ -192,6 +192,16 @@ radio:last-child {
   -moz-border-radius-bottomright: 2mm;
 }
 
+radiogroup[orient=vertical] radio:first-child {
+  -moz-border-radius-topright: 2mm;
+  -moz-border-radius-bottomleft: 0;
+}
+
+radiogroup[orient=vertical] radio:last-child {
+  -moz-border-radius-bottomleft: 2mm;
+  -moz-border-radius-topright: 0;
+}
+
 /* dark radios ------------------------------------------------------------- */
 .toggle-dark radio {
   color: #fff;
