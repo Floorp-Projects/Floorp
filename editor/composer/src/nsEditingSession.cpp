@@ -760,7 +760,7 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
     }
   }
   //
-  // A network or document Request as finished...
+  // A network or document Request has finished...
   //
   else if (aStateFlags & nsIWebProgressListener::STATE_STOP)
   {
