@@ -62,6 +62,7 @@ class nsAFlatString;
 class nsAFlatCString;
 #endif
 
+#include "nscore.h"
 #include "nsWeakReference.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
