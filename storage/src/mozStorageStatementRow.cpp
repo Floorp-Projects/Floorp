@@ -156,6 +156,8 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                          PRBool *_retval)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+  // We do not throw at any point after this because we want to allow the
+  // prototype chain to be checked for the property.
 
   if (JSVAL_IS_STRING(aId)) {
     JSString *str = JSVAL_TO_STRING(aId);
@@ -163,17 +165,22 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
 
     PRUint32 idx;
     nsresult rv = mStatement->GetColumnIndex(name, &idx);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      // It's highly likely that the name doesn't exist, so let the JS engine
+      // check the prototype chain and throw if that doesn't have the property
+      // either.
+      *_objp = NULL;
+      return NS_OK;
+    }
 
     *_retval = ::JS_DefineUCProperty(aCtx, aScopeObj, ::JS_GetStringChars(str),
                                      ::JS_GetStringLength(str),
                                      JSVAL_VOID,
                                      nsnull, nsnull, 0);
     *_objp = aScopeObj;
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
-  *_retval = PR_TRUE;
   return NS_OK;
 }
 
