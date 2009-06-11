@@ -41,33 +41,9 @@
 interface nsIURI;
 interface nsIUTF8StringEnumerator;
 
-[scriptable, uuid(94490b3f-f094-418e-b1b9-73878d29bff3)]
+[scriptable, uuid(8727651c-9530-45a0-b81e-0e0690c30c50)]
 interface nsIToolkitChromeRegistry : nsIXULChromeRegistry
 {
-  /**
-   * The "canonical" manifest is a plaintext file which sits outside of a
-   * JAR file. To provide backwards-compatibility with contents.rdf, we provide
-   * this function which reads a contents.rdf manifest and writes it to a file.
-   *
-   * @param aOldManifestURI  The URI of an old manifest to read, without
-   *                         the trailing "contents.rdf", e.g.
-   *                         "jar:resource:///chrome/foo.jar!/content/foo/" or
-   *                         "file://path/to/contents/rdf/"
-   * @param aFile            The URI of a manifest file to write. It's a good
-   *                         idea to use a resource: URI if possible.
-   * @param aBaseURI         The base URI for relative path creation
-   *                         "jar:resource:///chrome/foo.jar!/content/foo/"
-   *                         this is a separate param from aOldManifestURI so
-   *                         the "contents.rdf" can be read outside of the jar
-   *                         to keep the zipreader cache from holding it open.
-   * @param aAppend          Whether we should append to an existing manifest
-   *                         or truncate and start empty.
-   * @param aSkinOnly        Only allow skin packages.
-   */
-  void processContentsManifest(in nsIURI aOldManifestURI, in nsIURI aFile,
-                               in nsIURI aBaseURI, in boolean aAppend,
-                               in boolean aSkinOnly);
-
   /**
    * If the OS has a "high-visibility" or "disabled-friendly" theme set,
    * we want to force mozilla into the classic theme, which (for the most part
