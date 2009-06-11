@@ -5960,12 +5960,12 @@ TraceRecorder::ifop()
                       lir->ins2(LIR_feq, v_ins, v_ins),
                       lir->ins_eq0(lir->ins2(LIR_feq, v_ins, lir->insImmq(0))));
     } else if (JSVAL_IS_STRING(v)) {
-        cond = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) != 0;
+        cond = JSVAL_TO_STRING(v)->length() != 0;
         x = lir->ins2(LIR_piand,
                       lir->insLoad(LIR_ldp,
                                    v_ins,
-                                   (int)offsetof(JSString, length)),
-                      INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)));
+                                   (int)offsetof(JSString, mLength)),
+                      INS_CONSTWORD(JSString::LENGTH_MASK));
     } else {
         JS_NOT_REACHED("ifop");
         return JSRS_STOP;
@@ -7024,23 +7024,23 @@ TraceRecorder::getThis(LIns*& this_ins)
 LIns*
 TraceRecorder::getStringLength(LIns* str_ins)
 {
-    LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, length));
+    LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, mLength));
 
     LIns* masked_len_ins = lir->ins2(LIR_piand,
                                      len_ins,
-                                     INS_CONSTWORD(JSSTRING_LENGTH_MASK));
+                                     INS_CONSTWORD(JSString::LENGTH_MASK));
 
     return
         lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                len_ins,
-                                               INS_CONSTWORD(JSSTRFLAG_DEPENDENT))),
+                                               INS_CONSTWORD(JSString::DEPENDENT))),
                         masked_len_ins,
                         lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                                len_ins,
-                                                               INS_CONSTWORD(JSSTRFLAG_PREFIX))),
+                                                               INS_CONSTWORD(JSString::PREFIX))),
                                         lir->ins2(LIR_piand,
                                                   len_ins,
-                                                  INS_CONSTWORD(JSSTRDEP_LENGTH_MASK)),
+                                                  INS_CONSTWORD(JSString::DEPENDENT_LENGTH_MASK)),
                                         masked_len_ins));
 }
 
@@ -7472,8 +7472,8 @@ TraceRecorder::record_JSOP_NOT()
     }
     JS_ASSERT(JSVAL_IS_STRING(v));
     set(&v, lir->ins_eq0(lir->ins2(LIR_piand,
-                                   lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, length)),
-                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)))));
+                                   lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, mLength)),
+                                   INS_CONSTWORD(JSString::LENGTH_MASK))));
     return JSRS_CONTINUE;
 }
 
@@ -8412,7 +8412,7 @@ TraceRecorder::record_JSOP_GETELEM()
         if (call)
             ABORT_TRACE("JSOP_CALLELEM on a string");
         int i = asInt32(idx);
-        if (size_t(i) >= JSSTRING_LENGTH(JSVAL_TO_STRING(lval)))
+        if (size_t(i) >= JSVAL_TO_STRING(lval)->length())
             ABORT_TRACE("Invalid string index in JSOP_GETELEM");
         idx_ins = makeNumberInt32(idx_ins);
         LIns* args[] = { idx_ins, obj_ins, cx_ins };

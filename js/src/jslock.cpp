@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -443,7 +443,7 @@ ShareTitle(JSContext *cx, JSTitle *title)
  * to do this because such strings will soon be available to multiple threads,
  * so their buffers can't be realloc'd any longer in js_ConcatStrings, and
  * their members can't be modified by js_ConcatStrings, js_UndependString or
- * js_MinimizeDependentStrings.
+ * MinimizeDependentStrings.
  *
  * The last bit of work done by this function nulls title->ownercx and updates
  * rt->sharedTitles.

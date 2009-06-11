@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -118,7 +118,7 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    JSSTRING_CHARS_AND_END(str, bp, end);
+    str->getCharsAndEnd(bp, end);
     if (!js_strtod(cx, bp, end, &ep, &d))
         return JS_FALSE;
     if (ep == bp) {
@@ -137,7 +137,7 @@ ParseFloat(JSContext* cx, JSString* str)
     const jschar* ep;
     jsdouble d;
 
-    JSSTRING_CHARS_AND_END(str, bp, end);
+    str->getCharsAndEnd(bp, end);
     if (!js_strtod(cx, bp, end, &ep, &d) || ep == bp)
         return js_NaN;
     return d;
@@ -177,7 +177,7 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    JSSTRING_CHARS_AND_END(str, bp, end);
+    str->getCharsAndEnd(bp, end);
     if (!js_strtointeger(cx, bp, end, &ep, radix, &d))
         return JS_FALSE;
     if (ep == bp) {
@@ -196,7 +196,7 @@ ParseInt(JSContext* cx, JSString* str)
     const jschar* ep;
     jsdouble d;
 
-    JSSTRING_CHARS_AND_END(str, bp, end);
+    str->getCharsAndEnd(bp, end);
     if (!js_strtointeger(cx, bp, end, &ep, 0, &d) || ep == bp)
         return js_NaN;
     return d;
@@ -887,7 +887,7 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
              * passed to js_strtointeger (which would interpret them as
              * octal).
              */
-            JSSTRING_CHARS_AND_END(str, bp, end);
+            str->getCharsAndEnd(bp, end);
             if ((!js_strtod(cx, bp, end, &ep, &d) ||
                  js_SkipWhiteSpace(ep, end) != end) &&
                 (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
@@ -1287,7 +1287,8 @@ static intN GetNextBinaryDigit(struct BinaryDigitReader *bdr)
             bdr->digit = c - '0';
         else if ('a' <= c && c <= 'z')
             bdr->digit = c - 'a' + 10;
-        else bdr->digit = c - 'A' + 10;
+        else
+            bdr->digit = c - 'A' + 10;
         bdr->digitMask = bdr->base >> 1;
     }
     bit = (bdr->digit & bdr->digitMask) != 0;

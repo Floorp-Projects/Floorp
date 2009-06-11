@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -7572,7 +7572,7 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 js_ReportCompileErrorNumber(cx, ts, pn2,
                                             JSREPORT_UC | JSREPORT_ERROR,
                                             JSMSG_XML_TAG_NAME_MISMATCH,
-                                            JSSTRING_CHARS(str));
+                                            str->chars());
                 return NULL;
             }
 
@@ -8237,7 +8237,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                  * . or .. is not treated as a property name.
                  */
                 str = ATOM_TO_STRING(pn->pn_atom);
-                tt = js_CheckKeyword(JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
+                tt = js_CheckKeyword(str->chars(), str->length());
                 if (tt == TOK_FUNCTION) {
                     pn->pn_arity = PN_NULLARY;
                     pn->pn_type = TOK_FUNCTION;
@@ -8602,7 +8602,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 #ifdef DEBUG_brendanXXX
             printf("2: %d, %d => ", i, j);
             js_FileEscapedString(stdout, str, 0);
-            printf(" (%u)\n", JSSTRING_LENGTH(str));
+            printf(" (%u)\n", str->length());
 #endif
             ++j;
         }
@@ -8708,7 +8708,7 @@ Boolish(JSParseNode *pn)
         return pn->pn_dval != 0 && !JSDOUBLE_IS_NaN(pn->pn_dval);
 
       case JSOP_STRING:
-        return JSSTRING_LENGTH(ATOM_TO_STRING(pn->pn_atom)) != 0;
+        return ATOM_TO_STRING(pn->pn_atom)->length() != 0;
 
 #if JS_HAS_GENERATOR_EXPRS
       case JSOP_CALL:
@@ -8872,7 +8872,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 pn2 = pn3;
             break;
           case TOK_STRING:
-            if (JSSTRING_LENGTH(ATOM_TO_STRING(pn1->pn_atom)) == 0)
+            if (ATOM_TO_STRING(pn1->pn_atom)->length() == 0)
                 pn2 = pn3;
             break;
           case TOK_PRIMARY:
@@ -9023,7 +9023,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 /* XXX fold only if all operands convert to string */
                 if (pn2->pn_type != TOK_STRING)
                     return JS_TRUE;
-                length += JSFLATSTR_LENGTH(ATOM_TO_STRING(pn2->pn_atom));
+                length += ATOM_TO_STRING(pn2->pn_atom)->flatLength();
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
@@ -9039,8 +9039,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             /* Fill the buffer, advancing chars and recycling kids as we go. */
             for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
                 str2 = ATOM_TO_STRING(pn2->pn_atom);
-                length2 = JSFLATSTR_LENGTH(str2);
-                js_strncpy(chars, JSFLATSTR_CHARS(str2), length2);
+                length2 = str2->flatLength();
+                js_strncpy(chars, str2->flatChars(), length2);
                 chars += length2;
             }
             *chars = 0;

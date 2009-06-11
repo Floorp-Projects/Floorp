@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -4462,7 +4462,7 @@ js_Interpret(JSContext *cx)
             lval = FETCH_OPND(-1);
             if (JSVAL_IS_STRING(lval)) {
                 str = JSVAL_TO_STRING(lval);
-                regs.sp[-1] = INT_TO_JSVAL(JSSTRING_LENGTH(str));
+                regs.sp[-1] = INT_TO_JSVAL(str->length());
             } else if (!JSVAL_IS_PRIMITIVE(lval) &&
                        (obj = JSVAL_TO_OBJECT(lval), OBJ_IS_ARRAY(cx, obj))) {
                 jsuint length;
@@ -4803,7 +4803,7 @@ js_Interpret(JSContext *cx)
             if (JSVAL_IS_STRING(lval) && JSVAL_IS_INT(rval)) {
                 str = JSVAL_TO_STRING(lval);
                 i = JSVAL_TO_INT(rval);
-                if ((size_t)i < JSSTRING_LENGTH(str)) {
+                if ((size_t)i < str->length()) {
                     str = js_GetUnitString(cx, str, (size_t)i);
                     if (!str)
                         goto error;
