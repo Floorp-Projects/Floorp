@@ -89,6 +89,7 @@ _TEST_FILES =\
 		test_events_focus.xul \
 		test_events_mutation.html \
 		test_events_tree.xul \
+		test_events_valuechange.html \
 		test_groupattrs.xul \
 		test_groupattrs.html \
 		test_name.html \
