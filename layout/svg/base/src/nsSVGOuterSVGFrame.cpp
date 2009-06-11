@@ -53,7 +53,6 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSVGMatrix.h"
-#include "nsIViewManager.h"
 
 class nsSVGMutationObserver : public nsStubMutationObserver
 {
@@ -628,10 +627,6 @@ nsSVGOuterSVGFrame::GetType() const
 void
 nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
 {
-  // Make sure elements styled by :hover get updated if they've moved under or
-  // out from under the mouse:
-  PresContext()->PresShell()->GetViewManager()->SynthesizeMouseMove(PR_FALSE);
-
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame)
     return;
@@ -643,10 +638,6 @@ nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
 PRBool
 nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
 {
-  // Make sure elements styled by :hover get updated if they've moved under or
-  // out from under the mouse:
-  PresContext()->PresShell()->GetViewManager()->SynthesizeMouseMove(PR_FALSE);
-
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame)
     return PR_FALSE;
