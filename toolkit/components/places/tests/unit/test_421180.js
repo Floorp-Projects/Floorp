@@ -79,7 +79,7 @@ function run_test() {
   var stmt = mDBConn.createStatement(sql);
   stmt.bindUTF8StringParameter(0, keyword);
   do_check_false(stmt.executeStep());
-  stmt.finalize();
+
 
   // TEST 2
   // 1. add 2 bookmarks
@@ -106,5 +106,5 @@ function run_test() {
   var stmt = mDBConn.createStatement(sql);
   stmt.bindUTF8StringParameter(0, keyword);
   do_check_true(stmt.executeStep());
-  stmt.finalize();
+
 }
