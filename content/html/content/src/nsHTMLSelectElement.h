@@ -268,7 +268,6 @@ public:
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
-  virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);

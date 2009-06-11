@@ -453,7 +453,9 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 
             aLowercaseLocalName = owner;
         }
-        return startElementInternal(nsnull, aLowercaseLocalName, kNameSpaceID_XHTML);
+        return startElementInternal(nsnull, 
+                                    aLowercaseLocalName, 
+                                    kNameSpaceID_XHTML);
     }
 
     return startElementInternal(aPrefix, aLocalName, aNsID);

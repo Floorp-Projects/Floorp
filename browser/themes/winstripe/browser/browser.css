@@ -1551,7 +1551,6 @@ tabpanels {
 }
 
 .tabs-newtab-button {
-  opacity: .8;
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
   -moz-image-region: rect(0, 18px, 18px, 0);
 }
@@ -1868,13 +1867,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   outline: 1px dotted white;
 }
 
-#identity-icon-label {
+#identity-icon-labels {
   padding: 0 2px;
-  margin: 0;
-}
-
-#identity-icon-label[value=""] {
-  display: none;
 }
 
 /* Popup Icons */

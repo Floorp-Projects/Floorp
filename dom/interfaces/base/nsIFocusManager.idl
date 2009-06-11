@@ -1,0 +1,253 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "domstubs.idl"
+
+interface nsIDocument;
+interface nsIContent;
+
+[scriptable, uuid(CD6040A8-243F-412A-8A16-0BF2AA1083B9)]
+/**
+ * The focus manager deals with all focus related behaviour. Only one element
+ * in the entire application may have the focus at a time; this element
+ * receives any keyboard events. While there is only one application-wide
+ * focused element, each nsIDOMWindow maintains a reference to the element
+ * that would be focused if the window was active.
+ *
+ * If the window's reference is to a frame element (iframe, browser,
+ * editor), then the child window contains the element that is currently
+ * focused. If the window's reference is to a root element, then the root is
+ * focused. If a window's reference is null, then no element is focused, yet
+ * the window is still focused.
+ *
+ * The blur event is fired on an element when it loses the application focus.
+ * After this blur event, if the focus is moving away from a document, two
+ * additional blur events are fired on the old document and window containing
+ * the focus respectively.
+ *
+ * When a new document is focused, two focus events are fired on the new
+ * document and window respectively. Then the focus event is fired on an
+ * element when it gains the application focus.
+ *
+ * A special case is that the root element may be focused, yet does not
+ * receive the element focus and blur events. Instead a focus outline may be
+ * drawn around the document.
+ *
+ * Blur and focus events do not bubble as per the W3C DOM Events spec.
+ */
+interface nsIFocusManager : nsISupports
+{
+  /**
+   * The most active (frontmost) window, or null if no window that is part of
+   * the application is active. Setting the activeWindow raises it, and
+   * focuses the current child window's current element, if any. Setting this
+   * to null or to a non-top-level window throws an NS_ERROR_INVALID_ARG
+   * exception.
+   */
+  attribute nsIDOMWindow activeWindow;
+
+  /**
+   * The child window within the activeWindow that is focused. This will
+   * always be activeWindow, a child window of activeWindow or null if no
+   * child window is focused. Setting the focusedWindow changes the focused
+   * window and raises the toplevel window it is in. If the current focus
+   * within the new focusedWindow is a frame element, then the focusedWindow
+   * will actually be set to the child window and the current element within
+   * that set as the focused element. This process repeats downwards until a
+   * non-frame element is found.
+   */
+  attribute nsIDOMWindow focusedWindow;
+
+  /**
+   * The element that is currently focused. This will always be an element
+   * within the document loaded in focusedWindow or null if no element in that
+   * document is focused.
+   */
+  readonly attribute nsIDOMElement focusedElement;
+
+  /**
+   * Returns the method that was used to focus the element in window. This
+   * will either be 0, FLAG_BYMOUSE or FLAG_BYKEY. If window is null, then
+   * the current focusedWindow will be used by default. This has the result
+   * of retrieving the method that was used to focus the currently focused
+   * element.
+   */
+  PRUint32 getLastFocusMethod(in nsIDOMWindow window);
+
+  /**
+   * Changes the focused element reference within the window containing
+   * aElement to aElement.
+   */
+  void setFocus(in nsIDOMElement aElement, in unsigned long aFlags);
+
+  /**
+   * Move the focus to another element. If aStartElement is specified, then
+   * movement is done relative to aStartElement. If aStartElement is null,
+   * then movement is done relative to the currently focused element. If no
+   * element is focused, focus the first focusable element within the
+   * document (or the last focusable element if aType is MOVEFOCUS_END). This
+   * method is equivalent to setting the focusedElement to the new element.
+   *
+   * Specifying aStartElement and using MOVEFOCUS_LAST is not currently
+   * implemented.
+   *
+   * If no element is found, and aType is either MOVEFOCUS_ROOT or
+   * MOVEFOCUS_CARET, then the focus is cleared. If aType is any other value,
+   * the focus is not changed.
+   *
+   * Returns the element that was focused.
+   */
+  nsIDOMElement moveFocus(in nsIDOMWindow aWindow, in nsIDOMElement aStartElement,
+                          in unsigned long aType, in unsigned long aFlags);
+
+  /**
+   * Clears the focused element within aWindow. If the current focusedWindow
+   * is a descendant of aWindow, sets the current focusedWindow to aWindow.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aWindow is null
+   */
+  void clearFocus(in nsIDOMWindow aWindow);
+
+  /**
+   * Returns the currently focused element within aWindow. If aWindow is equal
+   * to the current value of focusedWindow, then the returned element will be
+   * the application-wide focused element (the value of focusedElement). The
+   * return value will be null if no element is focused.
+   *
+   * If aDeep is true, then child frames are traversed and the return value
+   * may be the element within a child descendant window that is focused. If
+   * aDeep if false, then the return value will be the frame element if the
+   * focus is in a child frame.
+   *
+   * aFocusedWindow will be set to the currently focused descendant window of
+   * aWindow, or to aWindow if aDeep is false. This will be set even if no
+   * element is focused.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aWindow is null
+   */
+  nsIDOMElement getFocusedElementForWindow(in nsIDOMWindow aWindow, in PRBool aDeep,
+                                           out nsIDOMWindow aFocusedWindow);
+
+  /**
+   * Moves the selection caret within aWindow to the current focus.
+   */
+  void moveCaretToFocus(in nsIDOMWindow aWindow);
+
+  /*
+   * Raise the window when switching focus
+   */
+  const unsigned long FLAG_RAISE = 1;
+
+  /**
+   * Do not scroll the element to focus into view
+   */
+  const unsigned long FLAG_NOSCROLL = 2;
+
+  /**
+   * If attempting to change focus in a window that is not focused, do not
+   * switch focus to that window. Instead, just update the focus within that
+   * window and leave the application focus as is. This flag will have no
+   * effect if a child window is focused and an attempt is made to adjust the
+   * focus in an ancestor, as the frame must be switched in this case.
+   */
+  const unsigned long FLAG_NOSWITCHFRAME = 4;
+
+  /**
+   * Focus is changing due to a mouse operation, for instance the mouse was
+   * clicked on an element.
+   */
+  const unsigned long FLAG_BYMOUSE = 0x1000;
+
+  /**
+   * Focus is changing due to a key operation, for instance pressing the tab
+   * key. This flag would normally be passed when MOVEFOCUS_FORWARD or
+   * MOVEFOCUS_BACKWARD is used.
+   */
+  const unsigned long FLAG_BYKEY = 0x2000;
+
+  // these constants are used with the aType argument to MoveFocus
+
+  /** move focus forward one element, used when pressing TAB */
+  const unsigned long MOVEFOCUS_FORWARD = 1;
+  /** move focus backward one element, used when pressing Shift+TAB */
+  const unsigned long MOVEFOCUS_BACKWARD = 2;
+  /** move focus forward to the next frame document, used when pressing F6 */
+  const unsigned long MOVEFOCUS_FORWARDDOC = 3;
+  /** move focus forward to the previous frame document, used when pressing Shift+F6 */
+  const unsigned long MOVEFOCUS_BACKWARDDOC = 4;
+  /** move focus to the first focusable element */
+  const unsigned long MOVEFOCUS_FIRST = 5;
+  /** move focus to the last focusable element */
+  const unsigned long MOVEFOCUS_LAST = 6;
+  /** move focus to the root element in the document */
+  const unsigned long MOVEFOCUS_ROOT = 7;
+  /** move focus to a link at the position of the caret. This is a special value used to
+   *  focus links as the caret moves over them in caret browsing mode.
+   */
+  const unsigned long MOVEFOCUS_CARET = 8;
+
+  /**
+   * Called when a window has been raised.
+   */
+  [noscript] void windowRaised(in nsIDOMWindow aWindow);
+
+  /**
+   * Called when a window has been lowered.
+   */
+  [noscript] void windowLowered(in nsIDOMWindow aWindow);
+
+  /**
+   * Called when content has been removed.
+   */
+  [noscript] void contentRemoved(in nsIDocument aDocument,
+                                 in nsIContent aElement);
+
+  /**
+   * Called when a new document in a window is shown.
+   */
+  [noscript] void windowShown(in nsIDOMWindow aWindow);
+
+  /**
+   * Called when a document in a window has been hidden or otherwise can no
+   * longer accept focus.
+   */
+  [noscript] void windowHidden(in nsIDOMWindow aWindow);
+
+  /**
+   * Fire any events that have been delayed due to synchronized actions.
+   */
+  [noscript] void fireDelayedEvents(in nsIDocument aDocument);
+};

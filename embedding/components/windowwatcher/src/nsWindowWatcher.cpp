@@ -89,6 +89,7 @@
 #include "nsIDOMStorage.h"
 #include "nsPIDOMStorage.h"
 #include "nsIWidget.h"
+#include "nsFocusManager.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -337,7 +338,6 @@ NS_IMPL_QUERY_INTERFACE4(nsWindowWatcher,
 nsWindowWatcher::nsWindowWatcher() :
         mEnumeratorList(),
         mOldestWindow(0),
-        mActiveWindow(0),
         mListLock(0)
 {
 }
@@ -1106,32 +1106,20 @@ nsWindowWatcher::SetWindowCreator(nsIWindowCreator *creator)
 NS_IMETHODIMP
 nsWindowWatcher::GetActiveWindow(nsIDOMWindow **aActiveWindow)
 {
-  if (!aActiveWindow)
-    return NS_ERROR_INVALID_ARG;
-
-  *aActiveWindow = mActiveWindow;
-  NS_IF_ADDREF(mActiveWindow);
+  *aActiveWindow = nsnull;
+  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  if (fm)
+    return fm->GetActiveWindow(aActiveWindow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindowWatcher::SetActiveWindow(nsIDOMWindow *aActiveWindow)
 {
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aActiveWindow));
-
-    NS_ASSERTION(!win || win->IsOuterWindow(),
-                 "Uh, the active window must be an outer window!");
-  }
-#endif
-
-  if (FindWindowEntry(aActiveWindow)) {
-    mActiveWindow = aActiveWindow;
-    return NS_OK;
-  }
-  NS_ERROR("invalid active window");
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  if (fm)
+    return fm->SetActiveWindow(aActiveWindow);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1263,10 +1251,6 @@ nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry *inInfo)
     if (inInfo == mOldestWindow)
       mOldestWindow = inInfo->mYounger == mOldestWindow ? 0 : inInfo->mYounger;
     inInfo->Unlink();
-
-    // clear the active window, if they're the same
-    if (mActiveWindow == inInfo->mWindow)
-      mActiveWindow = 0;
   }
 
   // a window being removed from us signifies a newly closed window.

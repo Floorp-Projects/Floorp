@@ -5185,12 +5185,6 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
   if (!tag)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(tempDoc);
-  if (htmlDoc) {
-      return doc->CreateElem(tag, nsnull, doc->GetDefaultNamespaceID(),
-                             PR_TRUE, aContent);
-  }
-
   return doc->CreateElem(tag, nsnull, kNameSpaceID_XHTML, PR_FALSE, aContent);
 }
 

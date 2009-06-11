@@ -118,6 +118,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsJSEnvironment.h"
 #include "nsIFocusController.h"
+#include "nsFocusManager.h"
 
 #include "nsIScrollableView.h"
 #include "nsIHTMLDocument.h"
@@ -1177,6 +1178,13 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   }
 
   mDocument->OnPageHide(!aIsUnload, nsnull);
+
+  // inform the window so that the focus state is reset.
+  NS_ENSURE_STATE(mDocument);
+  nsPIDOMWindow *window = mDocument->GetWindow();
+  if (window)
+    window->PageHidden();
+
   if (aIsUnload) {
     // if Destroy() was called during OnPageHide(), mDocument is nsnull.
     NS_ENSURE_STATE(mDocument);
@@ -4120,29 +4128,23 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
 static void
 ResetFocusState(nsIDocShell* aDocShell)
 {
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm)
+    return;
+
   nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
   aDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
                                    nsIDocShell::ENUMERATE_FORWARDS,
                                    getter_AddRefs(docShellEnumerator));
   
-  nsCOMPtr<nsIDocShell> currentDocShell;
   nsCOMPtr<nsISupports> currentContainer;
   PRBool hasMoreDocShells;
   while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells))
          && hasMoreDocShells) {
     docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
-    currentDocShell = do_QueryInterface(currentContainer);
-    if (!currentDocShell) {
-      break;
-    }
-    nsCOMPtr<nsPresContext> presContext;
-    currentDocShell->GetPresContext(getter_AddRefs(presContext));
-    nsIEventStateManager* esm =
-      presContext ? presContext->EventStateManager() : nsnull;
-    if (esm) {
-       esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-       esm->SetFocusedContent(nsnull);
-    }
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(currentContainer);
+    if (win)
+      fm->ClearFocus(win);
   }
 }
 

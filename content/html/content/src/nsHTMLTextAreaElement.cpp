@@ -41,6 +41,7 @@
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIControllers.h"
+#include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentCID.h"
 #include "nsCOMPtr.h"
@@ -142,7 +143,7 @@ public:
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  virtual void SetFocus(nsPresContext* aPresContext);
+  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
@@ -288,34 +289,18 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Blur()
 {
-  if (ShouldBlur(this)) {
-    SetElementFocus(PR_FALSE);
-  }
-
-  return NS_OK;
+  return nsGenericHTMLElement::Blur();
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Focus() 
+nsHTMLTextAreaElement::Focus()
 {
-  if (ShouldFocus(this)) {
-    SetElementFocus(PR_TRUE);
-  }
-
-  return NS_OK;
-}
-
-void
-nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
-{
-  DoSetFocus(aPresContext);
+  return nsGenericHTMLElement::Focus();
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Select()
 {
-  nsresult rv = NS_OK;
-
   // XXX Bug?  We have to give the input focus before contents can be
   // selected
 
@@ -324,13 +309,15 @@ nsHTMLTextAreaElement::Select()
     return NS_OK;
   }
 
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
   if (state == eInactiveWindow) {
+    if (fm)
+      fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
     SelectAll(presContext);
     return NS_OK;
   }
-
-  // Just like SetFocus() but without the ScrollIntoView()!
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent event(PR_TRUE, NS_FORM_SELECTED, nsnull);
@@ -341,27 +328,20 @@ nsHTMLTextAreaElement::Select()
   // If the DOM event was not canceled (e.g. by a JS event handler
   // returning false)
   if (status == nsEventStatus_eIgnore) {
-    PRBool shouldFocus = ShouldFocus(this);
+    if (fm) {
+      fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
 
-    if (shouldFocus &&
-        !presContext->EventStateManager()->SetContentState(this,
-                                                           NS_EVENT_STATE_FOCUS)) {
-      return rv; // We ended up unfocused, e.g. due to a DOM event handler.
-    }
-
-    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-    if (formControlFrame) {
-      if (shouldFocus) {
-        formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      // ensure that the element is actually focused
+      nsCOMPtr<nsIDOMElement> focusedElement;
+      fm->GetFocusedElement(getter_AddRefs(focusedElement));
+      if (SameCOMIdentity(static_cast<nsIDOMNode*>(this), focusedElement)) {
+        // Now Select all the text!
+        SelectAll(presContext);
       }
-
-      // Now Select all the text!
-      SelectAll(presContext);
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -374,6 +354,18 @@ nsHTMLTextAreaElement::SelectAll(nsPresContext* aPresContext)
   }
 
   return NS_OK;
+}
+
+PRBool
+nsHTMLTextAreaElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
+{
+  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+    return PR_TRUE;
+  }
+
+  // disabled textareas are not focusable
+  *aIsFocusable = !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+  return PR_FALSE;
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
@@ -634,7 +626,7 @@ nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+  return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
 }
 
 nsresult

@@ -189,8 +189,9 @@
 // 0.08 mime entry point on MachO, bug 137535
 // 0.09 the file encoding is changed to UTF-8, bug 420285
 // 0.10 added plugin versions on appropriate platforms, bug 427743
+// 0.11 file name and full path fields now store expected values on all platforms, bug 488181
 // The current plugin registry version (and the maximum version we know how to read)
-static const char *kPluginRegistryVersion = "0.10";
+static const char *kPluginRegistryVersion = "0.11";
 // The minimum registry version we know how to read
 static const char *kMinimumRegistryVersion = "0.9";
 
@@ -3702,11 +3703,11 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
       return NS_ERROR_FAILURE;
     }
   }
-  else
+  else {
     mimetype = aMimeType;
+  }
 
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
-  PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
   nsCAutoString contractID(
           NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
@@ -3724,7 +3725,7 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
       static BOOL firstJavaPlugin = FALSE;
       BOOL restoreOrigDir = FALSE;
       char origDir[_MAX_PATH];
-      if (isJavaPlugin && !firstJavaPlugin) {
+      if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
         DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
         NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
         nsCOMPtr<nsIFile> binDirectory;
@@ -3995,33 +3996,14 @@ public:
     PRBool bShowPath;
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefService &&
-        NS_SUCCEEDED(prefService->GetBoolPref("plugin.expose_full_path",&bShowPath)) &&
+        NS_SUCCEEDED(prefService->GetBoolPref("plugin.expose_full_path", &bShowPath)) &&
         bShowPath) {
-      // only show the full path if people have set the pref,
-      // the default should not reveal path information (bug 88183)
-#if defined(XP_MACOSX)
       CopyUTF8toUTF16(mPluginTag.mFullPath, aFilename);
-#else
-      CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
-#endif
-      return NS_OK;
-    }
-
-    nsAutoString spec;
-    if (!mPluginTag.mFullPath.IsEmpty()) {
-#if !defined(XP_MACOSX)
-      NS_ERROR("Only MAC should be using nsPluginTag::mFullPath!");
-#endif
-      CopyUTF8toUTF16(mPluginTag.mFullPath, spec);
     } else {
-      CopyUTF8toUTF16(mPluginTag.mFileName, spec);
+      CopyUTF8toUTF16(mPluginTag.mFileName, aFilename);
     }
 
-    nsCString leafName;
-    nsCOMPtr<nsILocalFile> pluginPath;
-    NS_NewLocalFile(spec, PR_TRUE, getter_AddRefs(pluginPath));
-
-    return pluginPath->GetLeafName(aFilename);
+    return NS_OK;
   }
 
   NS_METHOD GetVersion(nsAString& aVersion)
@@ -4324,7 +4306,7 @@ static nsresult CreateNPAPIPlugin(nsIServiceManagerObsolete* aServiceManager,
   rv = pcs->GetCharset(kPlatformCharsetSel_FileName, charset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString fileName, fullPath;
+  nsCAutoString fullPath;
   if (!charset.LowerCaseEqualsLiteral("utf-8")) {
     nsCOMPtr<nsIUnicodeEncoder> encoder;
     nsCOMPtr<nsICharsetConverterManager> ccm =
@@ -4332,17 +4314,13 @@ static nsresult CreateNPAPIPlugin(nsIServiceManagerObsolete* aServiceManager,
     NS_ENSURE_SUCCESS(rv, rv);
     rv = ccm->GetUnicodeEncoderRaw(charset.get(), getter_AddRefs(encoder));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = ConvertToNative(encoder, aPluginTag->mFileName, fileName);
-    NS_ENSURE_SUCCESS(rv, rv);
     rv = ConvertToNative(encoder, aPluginTag->mFullPath, fullPath);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    fileName = aPluginTag->mFileName;
     fullPath = aPluginTag->mFullPath;
   }
 
-  return nsNPAPIPlugin::CreatePlugin(fileName.get(),
-                                     fullPath.get(),
+  return nsNPAPIPlugin::CreatePlugin(fullPath.get(),
                                      aPluginTag->mLibrary,
                                      aOutNPAPIPlugnin);
 }
@@ -4371,14 +4349,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 #endif
 
     if (!pluginTag->mLibrary) { // if we haven't done this yet
-     nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-#if !defined(XP_MACOSX)
-      file->InitWithPath(NS_ConvertUTF8toUTF16(pluginTag->mFileName));
-#else
       if (pluginTag->mFullPath.IsEmpty())
         return NS_ERROR_FAILURE;
+      nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
       file->InitWithPath(NS_ConvertUTF8toUTF16(pluginTag->mFullPath));
-#endif
       nsPluginFile pluginFile(file);
       PRLibrary* pluginLibrary = NULL;
 
@@ -4541,7 +4515,7 @@ PRBool nsPluginHostImpl::IsDuplicatePlugin(nsPluginTag * aPluginTag)
 // Structure for collecting plugin files found during directory scanning
 struct pluginFileinDirectory
 {
-  nsString mFilename;
+  nsString mFilePath;
   PRInt64  mModTime;
 
   pluginFileinDirectory()
@@ -4560,7 +4534,7 @@ class nsDefaultComparator<pluginFileinDirectory, pluginFileinDirectory>
   PRBool Equals(const pluginFileinDirectory& aA,
                 const pluginFileinDirectory& aB) const {
     if (aA.mModTime == aB.mModTime &&
-        Compare(aA.mFilename, aB.mFilename,
+        Compare(aA.mFilePath, aB.mFilePath,
                 nsCaseInsensitiveStringComparator()) == 0)
       return PR_TRUE;
     else
@@ -4571,7 +4545,7 @@ class nsDefaultComparator<pluginFileinDirectory, pluginFileinDirectory>
     if (aA.mModTime < aB.mModTime)
       return PR_TRUE;
     else if(aA.mModTime == aB.mModTime)
-      return Compare(aA.mFilename, aB.mFilename,
+      return Compare(aA.mFilePath, aB.mFilePath,
                      nsCaseInsensitiveStringComparator()) < 0;
     else
       return PR_FALSE;
@@ -4673,7 +4647,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       dirEntry->GetLastModifiedTime(&fileModTime);
 
       item->mModTime = fileModTime;
-      item->mFilename = filePath;
+      item->mFilePath = filePath;
     }
   } // end round of up of plugin files
 
@@ -4686,12 +4660,12 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     pluginFileinDirectory &pfd = pluginFilesArray[i];
     nsCOMPtr <nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     nsCOMPtr <nsILocalFile> localfile = do_QueryInterface(file);
-    localfile->InitWithPath(pfd.mFilename);
+    localfile->InitWithPath(pfd.mFilePath);
     PRInt64 fileModTime = pfd.mModTime;
 
     // Look for it in our cache
     nsRefPtr<nsPluginTag> pluginTag;
-    RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd.mFilename).get(),
+    RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd.mFilePath).get(),
                             getter_AddRefs(pluginTag));
 
     PRBool enabled = PR_TRUE;
@@ -5356,14 +5330,43 @@ nsPluginHostImpl::ReadPluginInfo()
   if (!ReadSectionHeader(reader, "PLUGINS"))
     return rv;
 
-  while (reader.NextLine()) {
-    const char *filename = reader.LinePtr();
-    if (!reader.NextLine())
-      return rv;
+#if defined(XP_MACOSX)
+  PRBool hasFullPathInFileNameField = PR_FALSE;
+#else
+  PRBool hasFullPathInFileNameField = (NS_CompareVersions(values[1], "0.11") < 0);
+#endif
 
-    const char *fullpath = reader.LinePtr();
-    if (!reader.NextLine())
-      return rv;
+  while (reader.NextLine()) {
+    const char *filename;
+    const char *fullpath;
+    nsCAutoString derivedFileName;
+    
+    if (hasFullPathInFileNameField) {
+      fullpath = reader.LinePtr();
+      if (!reader.NextLine())
+        return rv;
+      // try to derive a file name from the full path
+      if (fullpath) {
+        nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+        file->InitWithNativePath(nsDependentCString(fullpath));
+        file->GetNativeLeafName(derivedFileName);
+        filename = derivedFileName.get();
+      } else {
+        filename = NULL;
+      }
+
+      // skip the next line, useless in this version
+      if (!reader.NextLine())
+        return rv;
+    } else {
+      filename = reader.LinePtr();
+      if (!reader.NextLine())
+        return rv;
+
+      fullpath = reader.LinePtr();
+      if (!reader.NextLine())
+        return rv;
+    }
 
     const char *version;
     if (regHasVersion) {
@@ -5379,7 +5382,7 @@ nsPluginHostImpl::ReadPluginInfo()
       return rv;
 
     // If this is an old plugin registry mark this plugin tag to be refreshed
-    PRInt64 lastmod = vdiff == 0 ? nsCRT::atoll(values[0]) : -1;
+    PRInt64 lastmod = (vdiff == 0) ? nsCRT::atoll(values[0]) : -1;
     PRBool canunload = atoi(values[1]);
     PRUint32 tagflag = atoi(values[2]);
     if (!reader.NextLine())
@@ -5435,7 +5438,7 @@ nsPluginHostImpl::ReadPluginInfo()
     nsRefPtr<nsPluginTag> tag = new nsPluginTag(name,
       description,
       filename,
-      (*fullpath ? fullpath : 0), // we have to pass 0 prt if it's empty str
+      fullpath,
       version,
       (const char* const*)mimetypes,
       (const char* const*)mimedescriptions,
@@ -5465,17 +5468,13 @@ nsPluginHostImpl::ReadPluginInfo()
 }
 
 void
-nsPluginHostImpl::RemoveCachedPluginsInfo(const char *filename, nsPluginTag **result)
+nsPluginHostImpl::RemoveCachedPluginsInfo(const char *filePath, nsPluginTag **result)
 {
   nsRefPtr<nsPluginTag> prev;
   nsRefPtr<nsPluginTag> tag = mCachedPlugins;
   while (tag)
   {
-    // compare filename or else the mFullPath if it exists. Mac seems to use
-    // mFullPath for fullpath and mFileName for just the leafname of fullpath.
-    // On win and unix, mFullPath is never used and mFileName is contains the
-    // full pathname. All this should move to using nsIFile.
-    if (tag->mFileName.Equals(filename) || tag->mFullPath.Equals(filename)) {
+    if (tag->mFullPath.Equals(filePath)) {
       // Found it. Remove it from our list
       if (prev)
         prev->mNext = tag->mNext;

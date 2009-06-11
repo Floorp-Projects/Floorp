@@ -434,7 +434,6 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
     nsresult rv;
-    const char* mimedescr = 0, *name = 0, *description = 0;
 
     // No, this doesn't leak. GetGlobalServiceManager() doesn't addref
     // it's out pointer. Maybe it should.
@@ -448,10 +447,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
     info.fVersion = nsnull;
     if (nsGetFactory) {
-        // It's an almost-new-style plugin. The "truly new" plugins
-        // are just XPCOM components, but there are some Mozilla
-        // Classic holdovers that live in the plugins directory but
-        // implement nsIPlugin and the factory stuff.
+        // This is an XPCOM plugin.
         static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 
         nsCOMPtr<nsIFactory> factory;
@@ -462,17 +458,18 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
             // HACK: The symbol lookup for "NSGetFactory" mistakenly returns
             // a reference to an unrelated function when we have an NPAPI
             // plugin linked to libxul.so.  Give this plugin another shot as
-            // an NPAPI plugin
-            rv = nsNPAPIPlugin::CreatePlugin(0, 0, pLibrary, getter_AddRefs(plugin));
+            // an NPAPI plugin.
+            // Passing NULL for a file path will prevent a call to NP_Initialize.
+            rv = nsNPAPIPlugin::CreatePlugin(NULL, pLibrary, getter_AddRefs(plugin));
             if (NS_FAILED(rv))
                 return rv;
         } else {
             plugin = do_QueryInterface(factory);
         }
     } else {
-        // It's old sk00l
-        // if fileName parameter == 0 nsNPAPIPlugin::CreatePlugin() will not call NP_Initialize()
-        rv = nsNPAPIPlugin::CreatePlugin(0, 0, pLibrary, getter_AddRefs(plugin));
+        // This is an NPAPI plugin.
+        // Passing NULL for a file path will prevent a call to NP_Initialize.
+        rv = nsNPAPIPlugin::CreatePlugin(NULL, pLibrary, getter_AddRefs(plugin));
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -482,21 +479,32 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         if (npGetPluginVersion)
             info.fVersion = PL_strdup(npGetPluginVersion());
 
+        const char *mimedescr = NULL;
         plugin->GetMIMEDescription(&mimedescr);
 #ifdef NS_DEBUG
         printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
 #endif
         if (NS_FAILED(rv = ParsePluginMimeDescription(mimedescr, info)))
             return rv;
-        nsCAutoString filename;
-        if (NS_FAILED(rv = mPlugin->GetNativePath(filename)))
-            return rv;
-        info.fFileName = PL_strdup(filename.get());
-        plugin->GetValue(nsPluginVariable_NameString, &name);
-        if (!name)
-            name = PL_strrchr(info.fFileName, '/') + 1;
-        info.fName = PL_strdup(name);
 
+        nsCAutoString path;
+        if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
+            return rv;
+        info.fFullPath = PL_strdup(path.get());
+
+        nsCAutoString fileName;
+        if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
+          return rv;
+        info.fFileName = PL_strdup(fileName.get());
+
+        const char *name = NULL;
+        plugin->GetValue(nsPluginVariable_NameString, &name);
+        if (name)
+          info.fName = PL_strdup(name);
+        else
+          info.fName = PL_strdup(fileName.get());
+
+        const char *description = NULL;
         plugin->GetValue(nsPluginVariable_DescriptionString, &description);
         if (!description)
             description = "";
@@ -528,6 +536,9 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     PR_FREEIF(info.fMimeTypeArray);
     PR_FREEIF(info.fMimeDescriptionArray);
     PR_FREEIF(info.fExtensionArray);
+
+    if (info.fFullPath != nsnull)
+        PL_strfree(info.fFullPath);
 
     if (info.fFileName != nsnull)
         PL_strfree(info.fFileName);

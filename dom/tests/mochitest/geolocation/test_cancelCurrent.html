@@ -32,7 +32,6 @@ function successCallback(position){
 
 /** Test for Bug  **/
 
-ensure_geolocationProvider();
 SimpleTest.waitForExplicitFinish();
 
 navigator.geolocation.getCurrentPosition(successCallback, failureCallback, null);

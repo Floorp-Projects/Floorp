@@ -477,11 +477,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
             mContentToFrameIndex.Get(content, &newIndex);
             if (newIndex > frameIndex) {
               RemoveBidiContinuation(frame, frameIndex, newIndex, temp);
-              if (lineNeedsUpdate) {
-                AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
-                lineNeedsUpdate = PR_FALSE;
-              }
-              lineIter.GetLine()->MarkDirty();
               runLength -= temp;
               fragmentLength -= temp;
               lineOffset += temp;
@@ -489,6 +484,11 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
             }
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
+          if (lineNeedsUpdate) {
+            AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
+            lineNeedsUpdate = PR_FALSE;
+          }
+          lineIter.GetLine()->MarkDirty();
         }
       } // isTextFrame
       else {
