@@ -7,22 +7,23 @@
 
 /* Download View Items */
 richlistitem[type="download"] {
-  padding: 3px 8px;
-  min-height: 40px !important;
+  padding: 5px;
+  min-height: 44px !important;
+  border: 1px solid transparent;
 }
 
 richlistitem[type="download"]:not([selected="true"]):nth-child(odd) {
   background-color: -moz-oddtreerow;
 }
 
-richlistitem[type="download"] .name {
-  font-size: small;
-}
-
 richlistitem[type="download"] .dateTime,
 richlistitem[type="download"] .status {
   font-size: smaller;
   color: #555;
+}
+
+richlistitem[selected="true"][type="download"] {
+  outline: none;
 }
 
 richlistbox:focus > richlistitem[selected="true"][type="download"] .dateTime,
@@ -131,7 +132,7 @@ richlistitem[type="download"] button {
 }
 
 :root:not([active]) #clearListButton {
-  color: #7C7C7C !important; /* remove this when we support click-through */
+  color: #7C7C7C !important; /* remove this when we support click-through, bug 392188 */
   border-color: rgba(0, 0, 0, 0.25);
   background-color: #CCC;
 }
