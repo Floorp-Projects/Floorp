@@ -47,7 +47,6 @@
 #include "nsNetUtil.h"
 #include "nsIAnnotationService.h"
 #include "nsPrintfCString.h"
-#include "nsPlacesMacros.h"
 
 struct nsNavHistoryExpireRecord {
   nsNavHistoryExpireRecord(mozIStorageStatement* statement);
@@ -280,8 +279,7 @@ nsNavHistoryExpire::ClearHistory()
   // forcibly call the "on idle" timer here to do a little work
   // but the rest will happen on idle.
 
-  ENUMERATE_OBSERVERS(mHistory->canNotify(), mHistory->mCacheObservers,
-                      mHistory->mObservers, nsINavHistoryObserver,
+  ENUMERATE_WEAKARRAY(mHistory->mObservers, nsINavHistoryObserver,
                       OnClearHistory())
 
   return NS_OK;
@@ -386,8 +384,7 @@ nsNavHistoryExpire::ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing)
     // FIXME bug 325241 provide a way to observe hidden elements
     if (expiredVisits[i].hidden) continue;
 
-    ENUMERATE_OBSERVERS(mHistory->canNotify(), mHistory->mCacheObservers,
-                        mHistory->mObservers, nsINavHistoryObserver,
+    ENUMERATE_WEAKARRAY(mHistory->mObservers, nsINavHistoryObserver,
                         OnPageExpired(uri, expiredVisits[i].visitDate,
                                       expiredVisits[i].erased));
   }
