@@ -1357,6 +1357,9 @@ UpdateService.prototype = {
     var vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
              getService(Ci.nsIVersionComparator);
     for (var i = 0; i < updates.length; ++i) {
+      // Ignore updates for older versions of the application
+      if (vc.compare(updates[i].version, gApp.version) < 0)
+        continue;
       if (updates[i].type == "major" &&
           vc.compare(newestMajor.version, updates[i].version) <= 0)
         majorUpdate = newestMajor = updates[i];
