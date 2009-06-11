@@ -132,6 +132,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 180085-1.html 180085-1-ref.html
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
+== 192902-1.html 192902-ref.html
 != 200774-1.html about:blank # really a crashtest
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
