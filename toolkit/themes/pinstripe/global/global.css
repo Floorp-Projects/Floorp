@@ -306,10 +306,6 @@ notification > button:focus {
   -moz-box-shadow: 0 0 3px 3px -moz-mac-focusring;
 }
 
-notification > button > .button-box > .button-text {
-  margin: 0 !important;
-}
-
 /* :::::: autoscroll popup ::::: */
 
 .autoscroller {
