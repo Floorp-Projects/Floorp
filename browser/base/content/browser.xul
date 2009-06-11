@@ -388,7 +388,10 @@
                        ondraggesture="PageProxyDragGesture(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
-              <label id="identity-icon-label" crop="center" flex="1"/>
+              <hbox id="identity-icon-labels">
+                <label id="identity-icon-label" class="plain" flex="1"/>
+                <label id="identity-icon-country-label" class="plain"/>
+              </hbox>
             </hbox>
           </box>
           <hbox id="urlbar-icons">
