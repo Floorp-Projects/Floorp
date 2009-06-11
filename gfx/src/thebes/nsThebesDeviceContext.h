@@ -81,7 +81,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    NS_IMETHOD Init(nsNativeWidget aWidget);
+    NS_IMETHOD Init(nsIWidget *aWidget);
     NS_IMETHOD InitForPrinting(nsIDeviceContextSpec *aDevSpec);
     NS_IMETHOD CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
     NS_IMETHOD CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
@@ -145,7 +145,6 @@ public:
 
     PRBool IsPrinterSurface(void);
 
-    nsNativeWidget GetWidget() { return mWidget; }
 #if defined(XP_WIN) || defined(XP_OS2)
     HDC GetPrintHDC();
 #endif
@@ -167,7 +166,7 @@ protected:
     nsFontCache*      mFontCache;
     nsCOMPtr<nsIAtom> mLocaleLangGroup; // XXX temp fix for performance bug - erik
     nsHashtable*      mFontAliasTable;
-    nsNativeWidget    mWidget;
+    nsIWidget*        mWidget;
 #ifdef NS_DEBUG
     PRBool            mInitialized;
 #endif
