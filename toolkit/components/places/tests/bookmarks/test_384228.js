@@ -59,34 +59,24 @@ function run_test() {
   // test querying for bookmarks in multiple folders
   var testFolder1 = bmsvc.createFolder(root, "bug 384228 test folder 1",
                                        bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder1), 0);
   var testFolder2 = bmsvc.createFolder(root, "bug 384228 test folder 2",
                                        bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder2), 1);
   var testFolder3 = bmsvc.createFolder(root, "bug 384228 test folder 3",
                                        bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder3), 2);
 
   var b1 = bmsvc.insertBookmark(testFolder1, uri("http://foo.tld/"),
                                 bmsvc.DEFAULT_INDEX, "title b1 (folder 1)");
-  do_check_eq(bmsvc.getItemIndex(b1), 0);
   var b2 = bmsvc.insertBookmark(testFolder1, uri("http://foo.tld/"),
                                 bmsvc.DEFAULT_INDEX, "title b2 (folder 1)");
-  do_check_eq(bmsvc.getItemIndex(b2), 1);
   var b3 = bmsvc.insertBookmark(testFolder2, uri("http://foo.tld/"),
                                 bmsvc.DEFAULT_INDEX, "title b3 (folder 2)");
-  do_check_eq(bmsvc.getItemIndex(b3), 0);
   var b4 = bmsvc.insertBookmark(testFolder3, uri("http://foo.tld/"),
                                 bmsvc.DEFAULT_INDEX, "title b4 (folder 3)");
-  do_check_eq(bmsvc.getItemIndex(b4), 0);
   // also test recursive search
   var testFolder1_1 = bmsvc.createFolder(testFolder1, "bug 384228 test folder 1.1",
                                          bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder1_1), 2);
   var b5 = bmsvc.insertBookmark(testFolder1_1, uri("http://a1.com/"),
                                 bmsvc.DEFAULT_INDEX, "title b5 (folder 1.1)");
-  do_check_eq(bmsvc.getItemIndex(b5), 0);
-
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
   query.searchTerms = "title";
@@ -104,6 +94,4 @@ function run_test() {
   do_check_eq(rootNode.getChild(1).itemId, b2);
   do_check_eq(rootNode.getChild(2).itemId, b3);
   do_check_eq(rootNode.getChild(3).itemId, b5);
-
-  rootNode.containerOpen = false;
 }
