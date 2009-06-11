@@ -155,20 +155,11 @@ nsSVGFilterInstance::BuildSources()
   mSourceAlpha.mImage.mFilterPrimitiveSubregion = filterRegion;
 
   nsIntRect sourceBoundsInt;
-  if (mTargetBBox) {
-    float x, y, w, h;
-    mTargetBBox->GetX(&x);
-    mTargetBBox->GetY(&y);
-    mTargetBBox->GetWidth(&w);
-    mTargetBBox->GetHeight(&h);
-
-    gfxRect sourceBounds = UserSpaceToFilterSpace(gfxRect(x, y, w, h));
-
-    sourceBounds.RoundOut();
-    // Detect possible float->int overflow
-    if (NS_FAILED(nsSVGUtils::GfxRectToIntRect(sourceBounds, &sourceBoundsInt)))
-      return NS_ERROR_FAILURE;
-  }
+  gfxRect sourceBounds = UserSpaceToFilterSpace(mTargetBBox);
+  sourceBounds.RoundOut();
+  // Detect possible float->int overflow
+  if (NS_FAILED(nsSVGUtils::GfxRectToIntRect(sourceBounds, &sourceBoundsInt)))
+    return NS_ERROR_FAILURE;
 
   mSourceColorAlpha.mResultBoundingBox = sourceBoundsInt;
   mSourceAlpha.mResultBoundingBox = sourceBoundsInt;

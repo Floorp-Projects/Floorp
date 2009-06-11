@@ -103,6 +103,8 @@ private:
   PRUint32 GetStopCount();
   void GetStopInformation(PRInt32 aIndex,
                           float *aOffset, nscolor *aColor, float *aStopOpacity);
+
+  // Will be singular for gradientUnits="objectBoundingBox" with an empty bbox.
   gfxMatrix GetGradientTransform(nsSVGGeometryFrame *aSource);
 
 protected:
