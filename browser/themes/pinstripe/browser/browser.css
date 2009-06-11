@@ -864,8 +864,12 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   background-image: url(navbar-textbox-button-verifiedIdentity.png);
 }
 
-#identity-icon-labels {
+#identity-icon-label {
   margin: 0 4px;
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
+  display: none;
 }
 
 .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box,
@@ -957,7 +961,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   max-width: 20em;
 }
 
-#wrapper-urlbar-container #identity-icon-labels,
+#wrapper-urlbar-container #identity-icon-label,
 #wrapper-urlbar-container .autocomplete-history-dropmarker {
   display: none;
 }
