@@ -397,9 +397,9 @@ private:
   // Loads all cached plugins info into mCachedPlugins
   nsresult ReadPluginInfo();
 
-  // Given a filename, returns the plugins info from our cache
+  // Given a file path, returns the plugins info from our cache
   // and removes it from the cache.
-  void RemoveCachedPluginsInfo(const char *filename,
+  void RemoveCachedPluginsInfo(const char *filePath,
                                nsPluginTag **result);
 
   //checks if the list already have the same plugin as given

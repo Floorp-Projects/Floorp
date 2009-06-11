@@ -66,7 +66,7 @@
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
 #include "nsRootAccessible.h"
-#include "nsIFocusController.h"
+#include "nsFocusManager.h"
 #include "nsIObserverService.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
@@ -776,33 +776,24 @@ already_AddRefed<nsIDOMNode> nsAccessNode::GetCurrentFocus()
   nsCOMPtr<nsIDocument> doc = shell->GetDocument();
   NS_ENSURE_TRUE(doc, nsnull);
 
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(doc->GetWindow()));
-  if (!privateDOMWindow) {
-    return nsnull;
-  }
-  nsIFocusController *focusController = privateDOMWindow->GetRootFocusController();
-  if (!focusController) {
-    return nsnull;
-  }
+  nsIDOMWindow* win = doc->GetWindow();
+
+  nsCOMPtr<nsIDOMWindow> focusedWindow;
   nsCOMPtr<nsIDOMElement> focusedElement;
-  focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  if (fm)
+    fm->GetFocusedElementForWindow(win, PR_TRUE, getter_AddRefs(focusedWindow),
+                                   getter_AddRefs(focusedElement));
+
   nsIDOMNode *focusedNode = nsnull;
-  if (!focusedElement) {
-    // Document itself has focus
-    nsCOMPtr<nsIDOMWindowInternal> focusedWinInternal;
-    focusController->GetFocusedWindow(getter_AddRefs(focusedWinInternal));
-    if (!focusedWinInternal) {
-      return nsnull;
-    }
-    nsCOMPtr<nsIDOMDocument> focusedDOMDocument;
-    focusedWinInternal->GetDocument(getter_AddRefs(focusedDOMDocument));
-    if (!focusedDOMDocument) {
-      return nsnull;
-    }
-    focusedDOMDocument->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&focusedNode);
+  if (focusedElement) {
+    CallQueryInterface(focusedElement, &focusedNode);
   }
-  else {
-    focusedElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&focusedNode);
+  else if (focusedWindow) {
+    nsCOMPtr<nsIDOMDocument> doc;
+    focusedWindow->GetDocument(getter_AddRefs(doc));
+    if (doc)
+      CallQueryInterface(doc, &focusedNode);
   }
 
   return focusedNode;

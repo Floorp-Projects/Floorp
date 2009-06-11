@@ -63,8 +63,6 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "gfxContext.h"
-#define NS_STATIC_FOCUS_SUPPRESSOR
-#include "nsIFocusEventSuppressor.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -92,10 +90,6 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 #ifdef NS_VM_PERF_METRICS
 #include "nsITimeRecorder.h"
-#endif
-
-#ifdef DEBUG_smaug
-#define DEBUG_FOCUS_SUPPRESSION
 #endif
 
 //-------------- Begin Invalidate Event Definition ------------------------
@@ -175,9 +169,8 @@ nsViewManager::nsViewManager()
 
   gViewManagers->AppendElement(this);
 
-  if (++mVMCount == 1) {
-    NS_AddFocusSuppressorCallback(&nsViewManager::SuppressFocusEvents);
-  }
+  ++mVMCount;
+
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
   mHasPendingUpdates = PR_FALSE;
@@ -922,61 +915,6 @@ void nsViewManager::UpdateViews(nsView *aView, PRUint32 aUpdateFlags)
   }
 }
 
-nsView *nsViewManager::sCurrentlyFocusView = nsnull;
-nsView *nsViewManager::sViewFocusedBeforeSuppression = nsnull;
-PRBool nsViewManager::sFocusSuppressed = PR_FALSE;
-
-void nsViewManager::SuppressFocusEvents(PRBool aSuppress)
-{
-  if (aSuppress) {
-    sFocusSuppressed = PR_TRUE;
-    SetViewFocusedBeforeSuppression(GetCurrentlyFocusedView());
-    return;
-  }
-
-  sFocusSuppressed = PR_FALSE;
-  if (GetCurrentlyFocusedView() == GetViewFocusedBeforeSuppression()) {
-    return;
-  }
-  
-  // We're turning off suppression, synthesize LOSTFOCUS/GOTFOCUS.
-  nsIWidget *widget = nsnull;
-  nsEventStatus status;
-
-  // Backup what is focused before we send the blur. If the
-  // blur causes a focus change, keep that new focus change,
-  // don't overwrite with the old "currently focused view".
-  nsIView *currentFocusBeforeBlur = GetCurrentlyFocusedView();
-
-  // Send NS_LOSTFOCUS to widget that was focused before
-  // focus/blur suppression.
-  if (GetViewFocusedBeforeSuppression()) {
-    widget = GetViewFocusedBeforeSuppression()->GetWidget();
-    if (widget) {
-#ifdef DEBUG_FOCUS_SUPPRESSION
-      printf("*** 0 INFO TODO [CPEARCE] Unsuppressing, dispatching NS_LOSTFOCUS\n");
-#endif
-      nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, widget);
-      widget->DispatchEvent(&event, status);
-    }
-  }
-
-  // Send NS_GOTFOCUS to the widget that we think should be focused.
-  if (GetCurrentlyFocusedView() &&
-      currentFocusBeforeBlur == GetCurrentlyFocusedView())
-  {
-    widget = GetCurrentlyFocusedView()->GetWidget();
-    if (widget) {
-#ifdef DEBUG_FOCUS_SUPPRESSION
-      printf("*** 0 INFO TODO [CPEARCE] Unsuppressing, dispatching NS_GOTFOCUS\n");
-#endif
-      nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, widget);
-      widget->DispatchEvent(&event, status); 
-    }
-  }
-
-}
-
 NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aStatus)
 {
   *aStatus = nsEventStatus_eIgnore;
@@ -1191,23 +1129,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
     default:
       {
-        if (aEvent->message == NS_GOTFOCUS) {
-#ifdef DEBUG_FOCUS_SUPPRESSION
-          printf("*** 0 INFO TODO [CPEARCE] Focus changing%s\n",
-            (nsViewManager::IsFocusSuppressed() ? " while suppressed" : ""));
-#endif
-          SetCurrentlyFocusedView(nsView::GetViewFor(aEvent->widget));
-        }
-        if ((aEvent->message == NS_GOTFOCUS || aEvent->message == NS_LOSTFOCUS) &&
-             nsViewManager::IsFocusSuppressed())
-        {
-#ifdef DEBUG_FOCUS_SUPPRESSION
-          printf("*** 0 INFO TODO [CPEARCE] Suppressing %s\n",
-            (aEvent->message == NS_GOTFOCUS ? "NS_GOTFOCUS" : "NS_LOSTFOCUS"));
-#endif          
-          break;
-        }
-        
         if ((NS_IS_MOUSE_EVENT(aEvent) &&
              // Ignore moves that we synthesize.
              static_cast<nsMouseEvent*>(aEvent)->reason ==

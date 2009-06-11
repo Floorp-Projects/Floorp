@@ -51,7 +51,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsIFocusController.h"
 #include "nsIDOMWindow.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"
@@ -71,7 +70,6 @@
 
 nsIContent*    nsIMEStateManager::sContent      = nsnull;
 nsPresContext* nsIMEStateManager::sPresContext  = nsnull;
-nsPIDOMWindow* nsIMEStateManager::sActiveWindow = nsnull;
 PRBool         nsIMEStateManager::sInstalledMenuKeyboardListener = PR_FALSE;
 
 nsTextStateManager* nsIMEStateManager::sTextStateObserver = nsnull;
@@ -117,11 +115,6 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
                                  nsIContent* aContent)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
-
-  if (!IsActive(aPresContext)) {
-    // The actual focus isn't changing, because this presContext isn't active.
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIWidget> widget = GetWidget(aPresContext);
   if (!widget) {
@@ -171,65 +164,11 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsresult
-nsIMEStateManager::OnActivate(nsPresContext* aPresContext)
-{
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  sActiveWindow = aPresContext->Document()->GetWindow();
-  NS_ENSURE_TRUE(sActiveWindow, NS_ERROR_FAILURE);
-  sActiveWindow = sActiveWindow->GetPrivateRoot();
-  return NS_OK;
-}
-
-nsresult
-nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
-{
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_TRUE(aPresContext->Document()->GetWindow(), NS_ERROR_FAILURE);
-  if (sActiveWindow !=
-      aPresContext->Document()->GetWindow()->GetPrivateRoot())
-    return NS_OK;
-
-  sActiveWindow = nsnull;
-  return NS_OK;
-}
-
 void
 nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
 {
   sInstalledMenuKeyboardListener = aInstalling;
   OnChangeFocus(sPresContext, sContent);
-}
-
-PRBool
-nsIMEStateManager::IsActive(nsPresContext* aPresContext)
-{
-  NS_ENSURE_TRUE(aPresContext, PR_FALSE);
-  nsPIDOMWindow* window = aPresContext->Document()->GetWindow();
-  NS_ENSURE_TRUE(window, PR_FALSE);
-  if (!sActiveWindow || sActiveWindow != window->GetPrivateRoot()) {
-    // This root window is not active.
-    return PR_FALSE;
-  }
-
-  nsIPresShell* shell = aPresContext->GetPresShell();
-  NS_ENSURE_TRUE(shell, PR_FALSE);
-  nsIViewManager* vm = shell->GetViewManager();
-  NS_ENSURE_TRUE(vm, PR_FALSE);
-  nsCOMPtr<nsIViewObserver> observer;
-  vm->GetViewObserver(*getter_AddRefs(observer));
-  NS_ENSURE_TRUE(observer, PR_FALSE);
-  return observer->IsVisible();
-}
-
-nsIFocusController*
-nsIMEStateManager::GetFocusController(nsPresContext* aPresContext)
-{
-  nsCOMPtr<nsISupports> container =
-    aPresContext->Document()->GetContainer();
-  nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
-
-  return windowPrivate ? windowPrivate->GetRootFocusController() : nsnull;
 }
 
 PRUint32

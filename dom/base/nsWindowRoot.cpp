@@ -66,12 +66,6 @@ nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
 
   // Create and init our focus controller.
   nsFocusController::Create(getter_AddRefs(mFocusController));
-
-  nsCOMPtr<nsIDOMFocusListener> focusListener(do_QueryInterface(mFocusController));
-  mRefCnt.incr(static_cast<nsIDOMEventTarget*>(this));
-  AddEventListener(NS_LITERAL_STRING("focus"), focusListener, PR_TRUE);
-  AddEventListener(NS_LITERAL_STRING("blur"), focusListener, PR_TRUE);
-  mRefCnt.decr(static_cast<nsIDOMEventTarget*>(this));
 }
 
 nsWindowRoot::~nsWindowRoot()

@@ -57,6 +57,10 @@
 #include "nsIPrefBranch.h"
 #include "nsToolkit.h"
 #include "nsPrintfCString.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMElement.h"
 #include "nsThreadUtils.h"
 #include "nsMenuBarX.h"
 #include "nsMenuUtilsX.h"
@@ -78,8 +82,6 @@ PRInt32 gXULModalLevel = 0;
 // windows.  (A non-sheet window that appears above an app-modal window is
 // also made app-modal.)  See nsCocoaWindow::SetModal().
 nsCocoaWindowList *gGeckoAppModalWindowList = NULL;
-
-PRBool gCocoaWindowMethodsSwizzled = PR_FALSE;
 
 PRBool gConsumeRollupEvent;
 
@@ -1239,18 +1241,28 @@ void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
   if (mMenuBar)
     mMenuBar->SetParent(nsnull);
   mMenuBar = aMenuBar;
-  
-  // We paint the hidden window menu bar if no other menu bar has been painted
-  // yet so that some reasonable menu bar is displayed when the app starts up.
-  if (!gSomeMenuBarPainted && mMenuBar && (nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar))
+
+  // Only paint for active windows, or paint the hidden window menu bar if no
+  // other menu bar has been painted yet so that some reasonable menu bar is
+  // displayed when the app starts up.
+  id windowDelegate = [mWindow delegate];
+  if (mMenuBar &&
+      ((!gSomeMenuBarPainted && nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar) ||
+       (windowDelegate && [windowDelegate toplevelActiveState])))
     mMenuBar->Paint();
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
 {
-  if (mPopupContentView)
+  if (mPopupContentView) {
     mPopupContentView->SetFocus(aState);
+  }
+  else if (aState) {
+    [mWindow setAcceptsMouseMovedEvents:YES];
+    [mWindow makeKeyAndOrderFront:nil];
+    SendSetZLevelEvent();
+  }
 
   return NS_OK;
 }
@@ -1689,7 +1701,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 - (void)sendToplevelActivateEvents
 {
   if (!mToplevelActiveState) {
-    [self sendFocusEvent:NS_GOTFOCUS];
     [self sendFocusEvent:NS_ACTIVATE];
     mToplevelActiveState = PR_TRUE;
   }
@@ -1700,7 +1711,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 {
   if (mToplevelActiveState) {
     [self sendFocusEvent:NS_DEACTIVATE];
-    [self sendFocusEvent:NS_LOSTFOCUS];
     mToplevelActiveState = PR_FALSE;
   }
 }
@@ -2150,58 +2160,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
 @end
 
-
-@interface NSWindow (MethodSwizzling)
-- (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent;
-@end
-
-@implementation NSWindow (MethodSwizzling)
-
-// An NSLeftMouseDown event can change the focus, but it doesn't always do
-// this correctly/appropriately.  As a result, Gecko keyboard events may be
-// sent to the wrong nsChildView object, and thereby "lost".  So if we know
-// which ChildView object should have the focus in our NSWindow, and if
-// processing an NSLeftMouseDown event has caused the focus to be set
-// incorrectly, we change the focus back to where it belongs.  This resolves
-// bmo bugs 314160, 403232, 404433 and 357535/418031.
-//
-// Only check for incorrect focus if our NSWindow's "new" first responder is
-// also a ChildView object:  Embedders (like Camino) sometimes legitimately
-// use NSView objects which are not ChildView objects (which don't have
-// corresponding child widgets), and expect them to be focusable via an
-// NSLeftMouseDown event.
-//
-// For non-embedders (e.g. Firefox, Thunderbird and Seamonkey), it would
-// probably only be necessary to add a sendEvent: method to the ToolbarWindow
-// class.  But embedders (like Camino) generally create their own NSWindows.
-// So in order to fix this problem everywhere, it's necessary to "hook"
-// NSWindow's own sendEvent: method.
-- (void)nsCocoaWindow_NSWindow_sendEvent:(NSEvent *)anEvent
-{
-  // Since we've hooked a "system call" ([NSWindow sendEvent:]), we're always
-  // called from system code (not browser code).  So avoid crashing on any
-  // Objective-C exceptions that occur here.
-  NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
-
-  [self nsCocoaWindow_NSWindow_sendEvent:anEvent];
-
-  if ([anEvent type] == NSLeftMouseDown) {
-    NSResponder *newFirstResponder = [self firstResponder];
-    if ([newFirstResponder isKindOfClass:[ChildView class]]) {
-      WindowDataMap *windowMap = [WindowDataMap sharedWindowDataMap];
-      TopLevelWindowData *windowData = [windowMap dataForWindow:self];
-      if (windowData) {
-        ChildView *shouldFocusView = [windowData getShouldFocusView];
-        if (shouldFocusView && (shouldFocusView != newFirstResponder))
-          [self makeFirstResponder:shouldFocusView];
-      }
-    }
-  }
-
-  NS_OBJC_END_TRY_LOGONLY_BLOCK;
-}
-
-@end
 
 @implementation PopupWindow
 

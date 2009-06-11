@@ -87,7 +87,6 @@ class nsHashKey;
 #define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
 #define NS_ACCESSIBLE_EVENT               20
 #define NS_FORM_EVENT                     21
-#define NS_FOCUS_EVENT                    22
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
 #define NS_POPUPBLOCKED_EVENT             25
@@ -157,10 +156,6 @@ class nsHashKey;
 #define NS_SIZE                         (NS_WINDOW_START + 3)
 // Widget size mode was changed
 #define NS_SIZEMODE                     (NS_WINDOW_START + 4)
-// Widget gained focus
-#define NS_GOTFOCUS                     (NS_WINDOW_START + 5)
-// Widget lost focus
-#define NS_LOSTFOCUS                    (NS_WINDOW_START + 6)
 // Widget got activated
 #define NS_ACTIVATE                     (NS_WINDOW_START + 7)
 // Widget got deactivated
@@ -1191,21 +1186,6 @@ public:
 };
 
 /**
-* Focus event
-*/
-class nsFocusEvent : public nsGUIEvent
-{
-public:
-  nsFocusEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_FOCUS_EVENT),
-      isMozWindowTakingFocus(PR_FALSE)
-  {
-  }
-
-  PRBool isMozWindowTakingFocus;
-};
-
-/**
  * Command event
  *
  * Custom commands for example from the operating system.
@@ -1380,9 +1360,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_COMPOSITION_QUERY))
 
 #define NS_IS_FOCUS_EVENT(evnt) \
-       (((evnt)->message == NS_GOTFOCUS) ||  \
-        ((evnt)->message == NS_LOSTFOCUS) ||  \
-        ((evnt)->message == NS_ACTIVATE) || \
+       (((evnt)->message == NS_ACTIVATE) || \
         ((evnt)->message == NS_DEACTIVATE) || \
         ((evnt)->message == NS_PLUGIN_ACTIVATE))
 

@@ -147,6 +147,15 @@ struct JSFunction {
             uint16      nvars;    /* number of local variables */
             uint16      nupvars;  /* number of upvars (computable from script
                                      but here for faster access) */
+            uint16       skipmin; /* net skip amount up (toward zero) from
+                                     script->staticLevel to nearest upvar,
+                                     including upvars in nested functions */
+            JSPackedBool wrapper; /* true if this function is a wrapper that
+                                     rewrites bytecode optimized for a function
+                                     judged non-escaping by the compiler, which
+                                     then escaped via the debugger or a rogue
+                                     indirect eval; if true, then this function
+                                     object's proto is the wrapped object */
             JSScript    *script;  /* interpreted bytecode descriptor or null */
             JSLocalNames names;   /* argument and variable names */
         } i;
@@ -154,6 +163,8 @@ struct JSFunction {
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
 #ifdef __cplusplus
+    bool optimizedClosure() { return FUN_KIND(this) > JSFUN_INTERPRETED; }
+    bool needsWrapper()     { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
 
     uintN countArgsAndVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
@@ -231,6 +242,9 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent);
 extern JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);
 
+extern JS_REQUIRES_STACK JSObject *
+js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);
+
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
                   uintN nargs, uintN flags);
@@ -265,8 +279,15 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 extern JSBool
 js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_GetCallVar(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+/*
+ * Slower version of js_GetCallVar used when call_resolve detects an attempt to
+ * leak an optimized closure via indirect or debugger eval.
+ */
+extern JS_REQUIRES_STACK JSBool
+js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
 js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp);

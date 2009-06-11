@@ -37,7 +37,7 @@
 // Event handler for display togglers in Table of Contents
 function toggleDisplay(event)
 {
-  if (event.target.localName != "IMG")
+  if (event.target.localName != "img")
     return;
   var img = event.target;
   var div = img.nextSibling.nextSibling; 

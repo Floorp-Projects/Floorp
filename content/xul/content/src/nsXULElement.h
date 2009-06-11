@@ -542,8 +542,6 @@ public:
     }
 #endif
 
-    virtual void SetFocus(nsPresContext* aPresContext);
-    virtual void RemoveFocus(nsPresContext* aPresContext);
     virtual void PerformAccesskey(PRBool aKeyCausesActivation,
                                   PRBool aIsTrustedEvent);
 

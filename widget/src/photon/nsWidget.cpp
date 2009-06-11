@@ -1158,15 +1158,11 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 			}
 		}
 
-	pWidget->DispatchStandardEvent(NS_GOTFOCUS);
-
   return Pt_CONTINUE;
 }
 
 int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) 
 {
-  nsWidget *pWidget = (nsWidget *) data;
- 	pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
   return Pt_CONTINUE;
 }
 

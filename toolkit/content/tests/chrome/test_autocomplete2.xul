@@ -118,6 +118,9 @@ function check() {
   // Toggle this value, so we can re-use the one function.
   returnResult = !returnResult;
 
+  // blur the field to ensure that the popup is closed and that the previous
+  // search has stopped, then start a new search.
+  autocomplete.blur();
   autocomplete.focus();
   synthesizeKey("r", {});
 }

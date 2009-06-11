@@ -5,6 +5,10 @@
   background-color: -moz-field;
 }
 
+.autocomplete-textbox-container {
+  -moz-box-align: stretch;
+}
+
 .textbox-input-box {
   margin: 0;
 }

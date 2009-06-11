@@ -1308,6 +1308,19 @@ TypeMap::matches(TypeMap& other) const
     return !memcmp(data(), other.data(), length());
 }
 
+/* Use the provided storage area to create a new type map that contains the partial type map
+   with the rest of it filled up from the complete type map. */
+static void
+mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clength, uint8* mem)
+{
+    unsigned l = *plength;
+    JS_ASSERT(l < clength);
+    memcpy(mem, *partial, l * sizeof(uint8));
+    memcpy(mem + l, complete + l, (clength - l) * sizeof(uint8));
+    *partial = mem;
+    *plength = clength;
+}
+
 /* Specializes a tree to any missing globals, including any dependent trees. */
 static JS_REQUIRES_STACK void
 specializeTreesToMissingGlobals(JSContext* cx, TreeInfo* root)
@@ -1846,34 +1859,26 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 }
 
 /*
- * Helper for js_GetUpvarOnTrace.
+ * Generic function to read upvars on trace.
+ *     T   Traits type parameter. Must provide static functions:
+ *             interp_get(fp, slot)     Read the value out of an interpreter frame.
+ *             native_slot(argc, slot)  Return the position of the desired value in the on-trace
+ *                                      stack frame (with position 0 being callee).
+ *
+ *     upvarLevel  Static level of the function containing the upvar definition.
+ *     slot        Identifies the value to get. The meaning is defined by the traits type.
+ *     callDepth   Call depth of current point relative to trace entry
  */
-static uint32 
-GetUpvarOnTraceTail(InterpState* state, uint32 cookie,
-                    uint32 nativeStackFramePos, uint8* typemap, double* result)
+template<typename T>
+uint32 JS_INLINE
+js_GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, double* result)
 {
-    uintN slot = UPVAR_FRAME_SLOT(cookie);
-    slot = (slot == CALLEE_UPVAR_SLOT) ? 0 : 2/*callee,this*/ + slot;
-    *result = state->stackBase[nativeStackFramePos + slot];
-    return typemap[slot];
-}
-
-/*
- * Builtin to get an upvar on trace. See js_GetUpvar for the meaning
- * of the first three arguments. The value of the upvar is stored in
- * *result as an unboxed native. The return value is the typemap type.
- */
-uint32 JS_FASTCALL
-js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth, double* result)
-{
-    uintN skip = UPVAR_FRAME_SKIP(cookie);
-    uintN upvarLevel = level - skip;
     InterpState* state = cx->interpState;
     FrameInfo** fip = state->rp + callDepth;
 
     /*
      * First search the FrameInfo call stack for an entry containing
-     * our upvar, namely one with staticLevel == upvarLevel.
+     * our upvar, namely one with level == upvarLevel.
      */
     while (--fip >= state->callstackBase) {
         FrameInfo* fi = *fip;
@@ -1886,29 +1891,94 @@ js_GetUpvarOnTrace(JSContext* cx, uint32 level, uint32 cookie, uint32 callDepth,
              * activation record corresponding to *fip in the native
              * stack.
              */
-            uintN nativeStackFramePos = state->callstackBase[0]->spoffset;
+            int32 nativeStackFramePos = state->callstackBase[0]->spoffset;
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
                 nativeStackFramePos += (*fip2)->spdist;
-            nativeStackFramePos -= (2 + (*fip)->argc);
-            uint8* typemap = (uint8*) (fi+1);
-            return GetUpvarOnTraceTail(state, cookie, nativeStackFramePos,
-                                       typemap, result);
+            nativeStackFramePos -= (2 + (*fip)->get_argc());
+            uint32 native_slot = T::native_slot((*fip)->get_argc(), slot);
+            *result = state->stackBase[nativeStackFramePos + native_slot];
+            return fi->get_typemap()[native_slot];
         }
     }
 
+    // Next search the trace entry frame, which is not in the FrameInfo stack.
     if (state->outermostTree->script->staticLevel == upvarLevel) {
-        return GetUpvarOnTraceTail(state, cookie, 0, 
-                                   state->outermostTree->stackTypeMap(), result);
+        uint32 argc = ((VMFragment*) state->outermostTree->fragment)->argc;
+        uint32 native_slot = T::native_slot(argc, slot);
+        *result = state->stackBase[native_slot];
+        return state->callstackBase[0]->get_typemap()[native_slot];
     }
 
     /*
      * If we did not find the upvar in the frames for the active traces,
      * then we simply get the value from the interpreter state.
      */
-    jsval v = js_GetUpvar(cx, level, cookie);
+    JS_ASSERT(upvarLevel < JS_DISPLAY_SIZE);
+    JSStackFrame* fp = cx->display[upvarLevel];
+    jsval v = T::interp_get(fp, slot);
     uint8 type = getCoercedType(v);
     ValueToNative(cx, v, type, result);
     return type;
+}
+
+// For this traits type, 'slot' is the argument index, which may be -2 for callee.
+struct UpvarArgTraits {
+    static jsval interp_get(JSStackFrame* fp, int32 slot) {
+        return fp->argv[slot];
+    }
+
+    static uint32 native_slot(uint32 argc, int32 slot) {
+        return 2 /*callee,this*/ + slot;
+    }
+};
+
+uint32 JS_FASTCALL
+js_GetUpvarArgOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, double* result)
+{
+    return js_GetUpvarOnTrace<UpvarArgTraits>(cx, upvarLevel, slot, callDepth, result);
+}
+
+// For this traits type, 'slot' is an index into the local slots array.
+struct UpvarVarTraits {
+    static jsval interp_get(JSStackFrame* fp, int32 slot) {
+        return fp->slots[slot];
+    }
+
+    static uint32 native_slot(uint32 argc, int32 slot) {
+        return 2 /*callee,this*/ + argc + slot;
+    }
+};
+
+uint32 JS_FASTCALL
+js_GetUpvarVarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, double* result)
+{
+    return js_GetUpvarOnTrace<UpvarVarTraits>(cx, upvarLevel, slot, callDepth, result);
+}
+
+/*
+ * For this traits type, 'slot' is an index into the stack area (within slots, after nfixed)
+ * of a frame with no function. (On trace, the top-level frame is the only one that can have
+ * no function.)
+ */
+struct UpvarStackTraits {
+    static jsval interp_get(JSStackFrame* fp, int32 slot) {
+        return fp->slots[slot + fp->script->nfixed];
+    }
+
+    static uint32 native_slot(uint32 argc, int32 slot) {
+        /* 
+         * Locals are not imported by the tracer when the frame has no function, so
+         * we do not add fp->script->nfixed.
+         */
+        JS_ASSERT(argc == 0);
+        return slot;
+    }
+};
+
+uint32 JS_FASTCALL
+js_GetUpvarStackOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, double* result)
+{
+    return js_GetUpvarOnTrace<UpvarStackTraits>(cx, upvarLevel, slot, callDepth, result);
 }
 
 /**
@@ -2077,16 +2147,29 @@ JS_REQUIRES_STACK void
 TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigned ngslots,
                       unsigned callDepth, uint8* typeMap)
 {
+    /* If we get a partial list that doesn't have all the types (i.e. recording from a side
+       exit that was recorded but we added more global slots later), merge the missing types
+       from the entry type map. This is safe because at the loop edge we verify that we
+       have compatible types for all globals (entry type and loop edge type match). While
+       a different trace of the tree might have had a guard with a different type map for
+       these slots we just filled in here (the guard we continue from didn't know about them),
+       since we didn't take that particular guard the only way we could have ended up here
+       is if that other trace had at its end a compatible type distribution with the entry
+       map. Since thats exactly what we used to fill in the types our current side exit
+       didn't provide, this is always safe to do. */
+
+    uint8* globalTypeMap = typeMap + stackSlots;
+    unsigned length = treeInfo->nGlobalTypes();
+
     /*
-     * If we get a partial list that doesn't have all the types, capture the missing types
-     * from the current environment.
+     * This is potentially the typemap of the side exit and thus shorter than the tree's
+     * global type map.
      */
-    TypeMap fullTypeMap(typeMap, stackSlots + ngslots);
-    if (ngslots < treeInfo->globalSlots->length()) {
-        fullTypeMap.captureMissingGlobalTypes(cx, *treeInfo->globalSlots, stackSlots);
-        ngslots = treeInfo->globalSlots->length();
+    if (ngslots < length) {
+        mergeTypeMaps(&globalTypeMap/*out param*/, &ngslots/*out param*/,
+                      treeInfo->globalTypeMap(), length,
+                      (uint8*)alloca(sizeof(uint8) * length));
     }
-    uint8* globalTypeMap = fullTypeMap.data() + stackSlots;
     JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
 
     /*
@@ -2412,6 +2495,7 @@ TraceRecorder::snapshot(ExitType exitType)
         for (unsigned n = 0; n < nexits; ++n) {
             VMSideExit* e = exits[n];
             if (e->pc == pc && e->imacpc == fp->imacpc &&
+                ngslots == e->numGlobalSlots &&
                 !memcmp(getFullTypeMap(exits[n]), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
                 return e;
@@ -3537,7 +3621,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     /* Code duplicated from inline_call: case in js_Interpret (FIXME). */
     JSArena* a = cx->stackPool.current;
     void* newmark = (void*) a->avail;
-    uintN argc = fi.argc & 0x7fff;
+    uintN argc = fi.get_argc();
     jsval* vp = fp->slots + fi.spdist - (2 + argc);
     uintN missing = 0;
     jsval* newsp;
@@ -3596,7 +3680,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee; // Roll with a potentially stale callee for now.
     newifp->frame.fun = fun;
 
-    bool constructing = (fi.argc & 0x8000) != 0;
+    bool constructing = fi.is_constructing();
     newifp->frame.argc = argc;
     newifp->callerRegs.pc = fi.pc;
     newifp->callerRegs.sp = fp->slots + fi.spdist;
@@ -3984,9 +4068,14 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             fullMap.add(getStackTypeMap(e2), e2->numStackSlots);
             stackSlots = fullMap.length();
             fullMap.add(getGlobalTypeMap(e2), e2->numGlobalSlots);
-            ngslots = e2->numGlobalSlots;
+            if (e1->numGlobalSlots >= e2->numGlobalSlots) {
+                fullMap.add(getGlobalTypeMap(e1) + e2->numGlobalSlots,
+                            e1->numGlobalSlots - e2->numGlobalSlots);
+            }
+            ngslots = e1->numGlobalSlots;
             typeMap = fullMap.data();
         }
+        JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         return js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
                                 ngslots, typeMap, exitedFrom, outer, cx->fp->argc);
     }
@@ -5322,12 +5411,13 @@ js_PurgeScriptRecordingAttempts(JSDHashTable *table,
     return JS_DHASH_NEXT;
 }
 
-JS_REQUIRES_STACK void
-js_PurgeScriptFragments(JSContext* cx, JSScript* script)
+/*
+ * Call 'action' for each root fragment created for 'script'.
+ */
+template<typename FragmentAction>
+static void
+js_IterateScriptFragments(JSContext* cx, JSScript* script, FragmentAction action)
 {
-    if (!TRACING_ENABLED(cx))
-        return;
-    debug_only_v(nj_dprintf("Purging fragments for JSScript %p.\n", (void*)script);)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
@@ -5340,15 +5430,39 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
                                         (void*)frag, frag->ip, script->code,
                                         script->code + script->length));
                 VMFragment* next = frag->next;
-                for (Fragment *p = frag; p; p = p->peer)
-                    js_TrashTree(cx, p);
-                tm->fragmento->clearFragment(frag);
+                action(cx, tm, frag);
                 *f = next;
             } else {
                 f = &((*f)->next);
             }
         }
     }
+}
+
+static void trashTreeAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+{
+    for (Fragment *p = frag; p; p = p->peer)
+        js_TrashTree(cx, p);
+}
+
+static void clearFragmentAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+{
+    tm->fragmento->clearFragment(frag);
+}
+
+JS_REQUIRES_STACK void
+js_PurgeScriptFragments(JSContext* cx, JSScript* script)
+{
+    if (!TRACING_ENABLED(cx))
+        return;
+    debug_only_v(nj_dprintf("Purging fragments for JSScript %p.\n", (void*)script);)
+    /*
+     * js_TrashTree trashes dependent trees recursively, so we must do all the trashing
+     * before clearing in order to avoid calling js_TrashTree with a deleted fragment.
+     */
+    js_IterateScriptFragments(cx, script, trashTreeAction);
+    js_IterateScriptFragments(cx, script, clearFragmentAction);
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_DHashTableEnumerate(&(tm->recordAttempts),
                            js_PurgeScriptRecordingAttempts, script);
 
@@ -6730,6 +6844,7 @@ TraceRecorder::getThis(LIns*& this_ins)
     }
 
     jsval& thisv = cx->fp->argv[-1];
+    JS_ASSERT(JSVAL_IS_OBJECT(thisv));
 
     /*
      * Traces type-specialize between null and objects, so if we currently see a null
@@ -6738,7 +6853,12 @@ TraceRecorder::getThis(LIns*& this_ins)
      * can only detect this condition prior to calling js_ComputeThisForFrame, since it
      * updates the interpreter's copy of argv[-1].
      */
-    if (JSVAL_IS_NULL(original)) {
+    JSClass* clasp = NULL;;
+    if (JSVAL_IS_NULL(original) ||
+        (((clasp = STOBJ_GET_CLASS(JSVAL_TO_OBJECT(original))) == &js_CallClass) ||
+         (clasp == &js_BlockClass))) {
+        if (clasp)
+            guardClass(JSVAL_TO_OBJECT(original), get(&thisv), clasp, snapshot(BRANCH_EXIT));
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             ABORT_TRACE("global object was wrapped while recording");
@@ -6752,7 +6872,6 @@ TraceRecorder::getThis(LIns*& this_ins)
      * The only unwrapped object that needs to be wrapped that we can get here is the
      * global object obtained throught the scope chain.
      */
-    JS_ASSERT(JSVAL_IS_OBJECT(thisv));
     JSObject* obj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(thisv));
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
@@ -8414,7 +8533,11 @@ TraceRecorder::record_JSOP_CALLNAME()
     return JSRS_CONTINUE;
 }
 
-JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarOnTrace, CONTEXT, UINT32, UINT32, UINT32,
+JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarArgOnTrace, CONTEXT, UINT32, INT32, UINT32,
+                     DOUBLEPTR, 0, 0)
+JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarVarOnTrace, CONTEXT, UINT32, INT32, UINT32,
+                     DOUBLEPTR, 0, 0)
+JS_DEFINE_CALLINFO_5(extern, UINT32, js_GetUpvarStackOnTrace, CONTEXT, UINT32, INT32, UINT32,
                      DOUBLEPTR, 0, 0)
 
 /*
@@ -8426,10 +8549,16 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
 {
     /*
-     * Try to find the upvar in the current trace's tracker.
+     * Try to find the upvar in the current trace's tracker. For &vr to be
+     * the address of the jsval found in js_GetUpvar, we must initialize
+     * vr directly with the result, so it is a reference to the same location.
+     * It does not work to assign the result to v, because v is an already
+     * existing reference that points to something else.
      */
-    v = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
-    LIns* upvar_ins = get(&v);
+    uint32 cookie = uva->vector[index];
+    jsval& vr = js_GetUpvar(cx, script->staticLevel, cookie);
+    v = vr;
+    LIns* upvar_ins = get(&vr);
     if (upvar_ins) {
         return upvar_ins;
     }
@@ -8438,15 +8567,33 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
      * The upvar is not in the current trace, so get the upvar value 
      * exactly as the interpreter does and unbox.
      */
+    uint32 level = script->staticLevel - UPVAR_FRAME_SKIP(cookie);
+    uint32 cookieSlot = UPVAR_FRAME_SLOT(cookie);
+    JSStackFrame* fp = cx->display[level];
+    const CallInfo* ci;
+    int32 slot;
+    if (!fp->fun) {
+        ci = &js_GetUpvarStackOnTrace_ci;
+        slot = cookieSlot;
+    } else if (cookieSlot < fp->fun->nargs) {
+        ci = &js_GetUpvarArgOnTrace_ci;
+        slot = cookieSlot;
+    } else if (cookieSlot == CALLEE_UPVAR_SLOT) {
+        ci = &js_GetUpvarArgOnTrace_ci;
+        slot = -2;
+    } else {
+        ci = &js_GetUpvarVarOnTrace_ci;
+        slot = cookieSlot - fp->fun->nargs;
+    }
+
     LIns* outp = lir->insAlloc(sizeof(double));
     LIns* args[] = { 
         outp,
         INS_CONST(callDepth),
-        INS_CONST(uva->vector[index]), 
-        INS_CONST(script->staticLevel), 
+        INS_CONST(slot), 
+        INS_CONST(level), 
         cx_ins 
     };
-    const CallInfo* ci = &js_GetUpvarOnTrace_ci;
     LIns* call_ins = lir->insCall(ci, args);
     uint8 type = getCoercedType(v);
     guard(true,
@@ -8589,7 +8736,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->pc = fp->regs->pc;
     fi->imacpc = fp->imacpc;
     fi->spdist = fp->regs->sp - fp->slots;
-    fi->argc = argc | (constructing ? 0x8000 : 0);
+    fi->set_argc(argc, constructing);
     fi->spoffset = 2 /*callee,this*/ + fp->argc;
 
     unsigned callDepth = getCallDepth();
@@ -10768,6 +10915,19 @@ TraceRecorder::record_JSOP_LOOP()
 {
     return JSRS_CONTINUE;
 }
+
+#define DBG_STUB(OP)                                                          \
+    JS_REQUIRES_STACK JSRecordingStatus                                       \
+    TraceRecorder::record_##OP()                                              \
+    {                                                                         \
+        ABORT_TRACE("can't trace " #OP);                                      \
+    }
+
+DBG_STUB(JSOP_GETUPVAR_DBG)
+DBG_STUB(JSOP_CALLUPVAR_DBG)
+DBG_STUB(JSOP_DEFFUN_DBGFC)
+DBG_STUB(JSOP_DEFLOCALFUN_DBGFC)
+DBG_STUB(JSOP_LAMBDA_DBGFC)
 
 #ifdef JS_JIT_SPEW
 /* Prints information about entry typemaps and unstable exits for all peers at a PC */

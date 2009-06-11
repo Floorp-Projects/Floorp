@@ -114,6 +114,7 @@
 #include "nsAttrName.h"
 #include "nsDataHashtable.h"
 #include "nsDOMClassInfo.h"
+#include "nsFocusManager.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -1643,11 +1644,10 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   mInstanceOwner->ConsiderNewEventloopNestingLevel();
 
   if (anEvent->message == NS_PLUGIN_ACTIVATE) {
-    nsIContent* content = GetContent();
-    if (content) {
-      content->SetFocus(aPresContext);
-      return rv;
-    }
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(GetContent());
+    if (fm && elem)
+      return fm->SetFocus(elem, 0);
   }
 
   if (mInstanceOwner->SendNativeEvents() && NS_IS_PLUGIN_EVENT(anEvent)) {
@@ -1664,8 +1664,8 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   case NS_DESTROY:
     mInstanceOwner->CancelTimer();
     break;
-  case NS_GOTFOCUS:
-  case NS_LOSTFOCUS:
+  case NS_ACTIVATE:
+  case NS_DEACTIVATE:
     *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
     break;
     
@@ -3061,8 +3061,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // (see the AddAttributes functions in the HTML and XML content sinks).
   PRInt16 start, end, increment;
   if (mContent->IsNodeOfType(nsINode::eHTML) &&
-      mContent->GetOwnerDoc() && // XXX clean up after bug 335998 lands
-      !(mContent->GetOwnerDoc()->IsCaseSensitive())) {
+      mContent->IsInHTMLDocument()) {
     // HTML.  Walk attributes in reverse order.
     start = numRealAttrs - 1;
     end = -1;
@@ -3163,25 +3162,14 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
 void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
 {
-  nsPresContext* presContext = mOwner ? mOwner->PresContext() : nsnull;
   InitializeEventRecord(&aMacEvent);
   switch (anEvent.message) {
-    case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
+    case NS_FOCUS_CONTENT: 
         aMacEvent.what = nsPluginEventType_GetFocusEvent;
-        if (presContext) {
-            nsIContent* content = mContent;
-            if (content)
-                content->SetFocus(presContext);
-        }
         break;
 
     case NS_BLUR_CONTENT:
         aMacEvent.what = nsPluginEventType_LoseFocusEvent;
-        if (presContext) {
-            nsIContent* content = mContent;
-            if (content)
-                content->RemoveFocus(presContext);
-        }
         break;
 
     case NS_MOUSE_MOVE:
@@ -3499,7 +3487,12 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
   // otherwise, we might not get key events
   if (mOwner && mPluginWindow &&
       mPluginWindow->type == nsPluginWindowType_Drawable) {
-    mContent->SetFocus(mOwner->PresContext());
+    
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (fm) {
+      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mContent);
+      fm->SetFocus(elem, 0);
+    }
   }
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
@@ -3953,49 +3946,44 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   // we can get synthetic events from the nsEventStateManager... these
   // have no nativeMsg
   nsPluginEvent pluginEvent;
-  switch (anEvent.eventStructType) {
-    case NS_MOUSE_EVENT:
-      // XXX we could synthesize Windows mouse events here for our
-      // synthetic mouse events (i.e. !pPluginEvent)
-      if (pPluginEvent) {
-        // Make event coordinates relative to our enclosing widget,
-        // not the widget they were received on.
-        // See use of nsPluginEvent in widget/src/windows/nsWindow.cpp
-        // for why this assert should be safe
-        NS_ASSERTION(anEvent.message == NS_MOUSE_BUTTON_DOWN ||
-                     anEvent.message == NS_MOUSE_BUTTON_UP ||
-                     anEvent.message == NS_MOUSE_DOUBLECLICK ||
-                     anEvent.message == NS_MOUSE_ENTER_SYNTH ||
-                     anEvent.message == NS_MOUSE_EXIT_SYNTH ||
-                     anEvent.message == NS_MOUSE_MOVE,
-                     "Incorrect event type for coordinate translation");
-        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner);
-        nsPresContext* presContext = mOwner->PresContext();
-        nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
-                        presContext->AppUnitsToDevPixels(pt.y));
-        nsIntPoint widgetPtPx = ptPx + mOwner->GetWindowOriginInPixels(PR_TRUE);
-        pPluginEvent->lParam = MAKELPARAM(widgetPtPx.x, widgetPtPx.y);
-      }
-      break;
-
-    case NS_FOCUS_EVENT:
-      if (!pPluginEvent) {
-        switch (anEvent.message) {
-          case NS_FOCUS_CONTENT:
-            pluginEvent.event = WM_SETFOCUS;
-            pluginEvent.wParam = 0;
-            pluginEvent.lParam = 0;
-            pPluginEvent = &pluginEvent;
-            break;
-          case NS_BLUR_CONTENT:
-            pluginEvent.event = WM_KILLFOCUS;
-            pluginEvent.wParam = 0;
-            pluginEvent.lParam = 0;
-            pPluginEvent = &pluginEvent;
-            break;
-        }
-      }
-      break;
+  if (anEvent.eventStructType == NS_MOUSE_EVENT) {
+    // XXX we could synthesize Windows mouse events here for our
+    // synthetic mouse events (i.e. !pPluginEvent)
+    if (pPluginEvent) {
+      // Make event coordinates relative to our enclosing widget,
+      // not the widget they were received on.
+      // See use of nsPluginEvent in widget/src/windows/nsWindow.cpp
+      // for why this assert should be safe
+      NS_ASSERTION(anEvent.message == NS_MOUSE_BUTTON_DOWN ||
+                   anEvent.message == NS_MOUSE_BUTTON_UP ||
+                   anEvent.message == NS_MOUSE_DOUBLECLICK ||
+                   anEvent.message == NS_MOUSE_ENTER_SYNTH ||
+                   anEvent.message == NS_MOUSE_EXIT_SYNTH ||
+                   anEvent.message == NS_MOUSE_MOVE,
+                   "Incorrect event type for coordinate translation");
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner);
+      nsPresContext* presContext = mOwner->PresContext();
+      nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
+                      presContext->AppUnitsToDevPixels(pt.y));
+      nsIntPoint widgetPtPx = ptPx + mOwner->GetWindowOriginInPixels(PR_TRUE);
+      pPluginEvent->lParam = MAKELPARAM(widgetPtPx.x, widgetPtPx.y);
+    }
+  }
+  else if (!pPluginEvent) {
+    switch (anEvent.message) {
+      case NS_FOCUS_CONTENT:
+        pluginEvent.event = WM_SETFOCUS;
+        pluginEvent.wParam = 0;
+        pluginEvent.lParam = 0;
+        pPluginEvent = &pluginEvent;
+        break;
+      case NS_BLUR_CONTENT:
+        pluginEvent.event = WM_KILLFOCUS;
+        pluginEvent.wParam = 0;
+        pluginEvent.lParam = 0;
+        pPluginEvent = &pluginEvent;
+        break;
+    }
   }
 
   if (pPluginEvent) {
@@ -4707,7 +4695,7 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
   // a page is reloaded. Shutdown happens usually when the last instance
   // is destroyed. Here we make sure the plugin instance in the old
   // document is destroyed before we try to create the new one.
-  aPresContext->EnsureVisible(PR_TRUE);
+  aPresContext->EnsureVisible();
 
   if (!weakFrame.IsAlive()) {
     PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,

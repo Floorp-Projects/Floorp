@@ -209,7 +209,7 @@ baseView = {
     return true;
   },
   onClickDisplay: function(event) {
-    if (event.target.localName != 'INPUT') {
+    if (event.target.localName != 'input') {
       return false;
     }
     var handler = function() {return function(){view.setTierDisplay(event.target)}};

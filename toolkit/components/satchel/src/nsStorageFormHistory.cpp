@@ -509,6 +509,7 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
         // If this input has a name/id and value, add it to the database
         nsAutoString value;
         inputElt->GetValue(value);
+        value.Trim(" \t", PR_TRUE, PR_TRUE);
         if (!value.IsEmpty()) {
           // Ignore the input if the value hasn't been changed from the
           // default. We only want to save data entered by the user.

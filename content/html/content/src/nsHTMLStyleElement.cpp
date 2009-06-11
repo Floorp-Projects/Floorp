@@ -321,8 +321,7 @@ nsHTMLStyleElement::GetStyleSheetURL(PRBool* aIsInline,
   if (*aIsInline) {
     return;
   }
-  if (GetOwnerDoc() && // XXX clean up after bug 335998 lands
-      !(GetOwnerDoc()->IsCaseSensitive())) {
+  if (!IsInHTMLDocument()) {
     // We stopped supporting <style src="..."> for XHTML as it is
     // non-standard.
     *aIsInline = PR_TRUE;

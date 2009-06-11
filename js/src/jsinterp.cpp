@@ -2589,10 +2589,18 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETGVAR_LENGTH == JSOP_CALLGVAR_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETUPVAR_LENGTH == JSOP_CALLUPVAR_LENGTH);
+JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_CALLUPVAR_DBG_LENGTH);
+JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_GETUPVAR_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETDSLOT_LENGTH == JSOP_CALLDSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
+
+/*
+ * Same for debuggable flat closures defined at top level in another function
+ * or program fragment.
+ */
+JS_STATIC_ASSERT(JSOP_DEFFUN_FC_LENGTH == JSOP_DEFFUN_DBGFC_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
@@ -5733,6 +5741,43 @@ js_Interpret(JSContext *cx)
           }
           END_CASE(JSOP_GETUPVAR)
 
+          BEGIN_CASE(JSOP_GETUPVAR_DBG)
+          BEGIN_CASE(JSOP_CALLUPVAR_DBG)
+            fun = fp->fun;
+            JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
+            JS_ASSERT(fun->u.i.wrapper);
+
+            /* Scope for tempPool mark and local names allocation in it. */
+            {
+                void *mark = JS_ARENA_MARK(&cx->tempPool);
+                jsuword *names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
+                if (!names)
+                    goto error;
+
+                index = fun->countArgsAndVars() + GET_UINT16(regs.pc);
+                atom = JS_LOCAL_NAME_TO_ATOM(names[index]);
+                id = ATOM_TO_JSID(atom);
+
+                ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
+                JS_ARENA_RELEASE(&cx->tempPool, mark);
+                if (!ok)
+                    goto error;
+            }
+
+            if (!prop)
+                goto atom_not_defined;
+
+            /* Minimize footprint with generic code instead of NATIVE_GET. */
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            vp = regs.sp;
+            PUSH_OPND(JSVAL_NULL);
+            if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
+                goto error;
+
+            if (op == JSOP_CALLUPVAR_DBG)
+                PUSH_OPND(JSVAL_NULL);
+          END_CASE(JSOP_GETUPVAR_DBG)
+
           BEGIN_CASE(JSOP_GETDSLOT)
           BEGIN_CASE(JSOP_CALLDSLOT)
             obj = fp->callee;
@@ -6018,9 +6063,12 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFFUN_FC)
+          BEGIN_CASE(JSOP_DEFFUN_DBGFC)
             LOAD_FUNCTION(0);
 
-            obj = js_NewFlatClosure(cx, fun);
+            obj = (op == JSOP_DEFFUN_FC)
+                  ? js_NewFlatClosure(cx, fun)
+                  : js_NewDebuggableFlatClosure(cx, fun);
             if (!obj)
                 goto error;
             rval = OBJECT_TO_JSVAL(obj);
@@ -6117,6 +6165,17 @@ js_Interpret(JSContext *cx)
             fp->slots[slot] = OBJECT_TO_JSVAL(obj);
           END_CASE(JSOP_DEFLOCALFUN_FC)
 
+          BEGIN_CASE(JSOP_DEFLOCALFUN_DBGFC)
+            LOAD_FUNCTION(SLOTNO_LEN);
+
+            obj = js_NewDebuggableFlatClosure(cx, fun);
+            if (!obj)
+                goto error;
+
+            slot = GET_SLOTNO(regs.pc);
+            fp->slots[slot] = OBJECT_TO_JSVAL(obj);
+          END_CASE(JSOP_DEFLOCALFUN_DBGFC)
+
           BEGIN_CASE(JSOP_LAMBDA)
             /* Load the specified function object literal. */
             LOAD_FUNCTION(0);
@@ -6151,6 +6210,16 @@ js_Interpret(JSContext *cx)
 
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_LAMBDA_FC)
+
+          BEGIN_CASE(JSOP_LAMBDA_DBGFC)
+            LOAD_FUNCTION(0);
+
+            obj = js_NewDebuggableFlatClosure(cx, fun);
+            if (!obj)
+                goto error;
+
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
+          END_CASE(JSOP_LAMBDA_DBGFC)
 
           BEGIN_CASE(JSOP_CALLEE)
             PUSH_OPND(OBJECT_TO_JSVAL(fp->callee));
