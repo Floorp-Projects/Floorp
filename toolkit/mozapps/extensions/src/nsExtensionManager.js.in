@@ -86,7 +86,6 @@ const FILE_EXTENSIONS_STARTUP_CACHE   = "extensions.cache";
 const FILE_EXTENSIONS_LOG             = "extensions.log";
 const FILE_AUTOREG                    = ".autoreg";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
-const FILE_CONTENTS_MANIFEST          = "contents.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
 
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
@@ -124,7 +123,6 @@ const CATEGORY_INSTALL_LOCATIONS      = "extension-install-locations";
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
 
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
-const PREFIX_NS_CHROME                = "http://www.mozilla.org/rdf/chrome#";
 const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 const PREFIX_EXTENSION                = "urn:mozilla:extension:";
 const PREFIX_THEME                    = "urn:mozilla:theme:";
@@ -239,10 +237,6 @@ var BundleManager = {
 //
 function EM_NS(property) {
   return PREFIX_NS_EM + property;
-}
-
-function CHROME_NS(property) {
-  return PREFIX_NS_CHROME + property;
 }
 
 function EM_R(property) {
@@ -1539,377 +1533,8 @@ WinRegInstallLocation.prototype = {
 #endif
 
 /**
- * An object which handles the installation of an Extension.
- * @constructor
- */
-function Installer(ds, id, installLocation, type) {
-  this._ds = ds;
-  this._id = id;
-  this._type = type;
-  this._installLocation = installLocation;
-}
-Installer.prototype = {
-  // Item metadata
-  _id: null,
-  _ds: null,
-  _installLocation: null,
-  _metadataDS: null,
-
-  /**
-   * Gets the Install Manifest datasource we are installing from.
-   */
-  get metadataDS() {
-    if (!this._metadataDS) {
-      var metadataFile = this._installLocation
-                             .getItemFile(this._id, FILE_INSTALL_MANIFEST);
-      if (!metadataFile.exists())
-        return null;
-      this._metadataDS = getInstallManifest(metadataFile);
-      if (!this._metadataDS) {
-        LOG("Installer::install: metadata datasource for extension " +
-            this._id + " at " + metadataFile.path + " could not be loaded. " +
-            " Installation will not proceed.");
-      }
-    }
-    return this._metadataDS;
-  },
-
-  /**
-   * Installs the Extension
-   * @param   file
-   *          A XPI/JAR file to install from. If this is null or does not exist,
-   *          the item is assumed to be an expanded directory, located at the GUID
-   *          key in the supplied Install Location.
-   */
-  installFromFile: function Installer_installFromFile(file) {
-    // Move files from the staging dir into the extension's final home.
-    if (file && file.exists()) {
-      this._installExtensionFiles(file);
-    }
-
-    if (!this.metadataDS)
-      return;
-
-    // Upgrade old-style contents.rdf Chrome Manifests if necessary.
-    if (this._type == Ci.nsIUpdateItem.TYPE_THEME)
-      this.upgradeThemeChrome();
-    else
-      this.upgradeExtensionChrome();
-
-    // Add metadata for the extension to the global extension metadata set
-    this._ds.addItemMetadata(this._id, this.metadataDS, this._installLocation);
-  },
-
-  /**
-   * Safely extract the Extension's files into the target folder.
-   * @param   file
-   *          The XPI/JAR file to install from.
-   */
-  _installExtensionFiles: function Installer__installExtensionFiles(file) {
-    /**
-      * Callback for |safeInstallOperation| that performs file level installation
-      * steps for an Extension.
-      * @param   extensionID
-      *          The GUID of the Extension being installed.
-      * @param   installLocation
-      *          The Install Location where the Extension is being installed.
-      * @param   xpiFile
-      *          The source XPI file that contains the Extension.
-      */
-    function extractExtensionFiles(extensionID, installLocation, xpiFile) {
-      // Create a logger to log install operations for uninstall. This must be
-      // created in the |safeInstallOperation| callback, since it creates a file
-      // in the target directory. If we do this outside of the callback, we may
-      // be clobbering a file we should not be.
-      var zipReader = getZipReaderForFile(xpiFile);
-
-      // create directories first
-      var entries = zipReader.findEntries("*/");
-      while (entries.hasMore()) {
-        var entryName = entries.getNext();
-        var target = installLocation.getItemFile(extensionID, entryName);
-        if (!target.exists()) {
-          try {
-            target.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-          }
-          catch (e) {
-            ERROR("extractExtensionsFiles: failed to create target directory for extraction " +
-                  " file = " + target.path + ", exception = " + e + "\n");
-          }
-        }
-      }
-
-      entries = zipReader.findEntries(null);
-      while (entries.hasMore()) {
-        var entryName = entries.getNext();
-        target = installLocation.getItemFile(extensionID, entryName);
-        if (target.exists())
-          continue;
-
-        try {
-          target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-        }
-        catch (e) {
-          ERROR("extractExtensionsFiles: failed to create target file for extraction " +
-                " file = " + target.path + ", exception = " + e + "\n");
-        }
-        zipReader.extract(entryName, target);
-      }
-      zipReader.close();
-    }
-
-    /**
-      * Callback for |safeInstallOperation| that performs file level installation
-      * steps for a Theme.
-      * @param   id
-      *          The GUID of the Theme being installed.
-      * @param   installLocation
-      *          The Install Location where the Theme is being installed.
-      * @param   jarFile
-      *          The source JAR file that contains the Theme.
-      */
-    function extractThemeFiles(id, installLocation, jarFile) {
-      var themeDirectory = installLocation.getItemLocation(id);
-      var zipReader = getZipReaderForFile(jarFile);
-
-      // The only critical file is the install.rdf and we would not have
-      // gotten this far without one.
-      var rootFiles = [FILE_INSTALL_MANIFEST, FILE_CHROME_MANIFEST,
-                       "preview.png", "icon.png"];
-      for (var i = 0; i < rootFiles.length; ++i) {
-        try {
-          var target = installLocation.getItemFile(id, rootFiles[i]);
-          zipReader.extract(rootFiles[i], target);
-        }
-        catch (e) {
-        }
-      }
-
-      var manifestFile = installLocation.getItemFile(id, FILE_CHROME_MANIFEST);
-      // new theme structure requires a chrome.manifest file
-      if (manifestFile.exists()) {
-        var entries = zipReader.findEntries(DIR_CHROME + "/*");
-        while (entries.hasMore()) {
-          var entryName = entries.getNext();
-          if (entryName.charAt(entryName.length - 1) == "/")
-            continue;
-          target = installLocation.getItemFile(id, entryName);
-          try {
-            target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-          }
-          catch (e) {
-            ERROR("extractThemeFiles: failed to create target file for extraction " +
-                  " file = " + target.path + ", exception = " + e + "\n");
-          }
-          zipReader.extract(entryName, target);
-        }
-        zipReader.close();
-      }
-      else { // old theme structure requires only an install.rdf
-        try {
-          var contentsManifestFile = installLocation.getItemFile(id, FILE_CONTENTS_MANIFEST);
-          contentsManifestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-          zipReader.extract(FILE_CONTENTS_MANIFEST, contentsManifestFile);
-        }
-        catch (e) {
-          zipReader.close();
-          ERROR("extractThemeFiles: failed to extract contents.rdf: " + target.path);
-          throw e; // let the safe-op clean up
-        }
-        zipReader.close();
-        var chromeDir = installLocation.getItemFile(id, DIR_CHROME);
-        try {
-          jarFile.copyTo(chromeDir, jarFile.leafName);
-        }
-        catch (e) {
-          ERROR("extractThemeFiles: failed to copy theme JAR file to: " + chromeDir.path);
-          throw e; // let the safe-op clean up
-        }
-
-        if (!installer.metadataDS && installer._type == Ci.nsIUpdateItem.TYPE_THEME) {
-          var themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
-          if (contentsManifestFile && contentsManifestFile.exists()) {
-            var contentsManifest = gRDF.GetDataSourceBlocking(getURLSpecFromFile(contentsManifestFile));
-            try {
-              var ctr = getContainer(contentsManifest,
-                                     gRDF.GetResource("urn:mozilla:skin:root"));
-              var elts = ctr.GetElements();
-              var nameArc = gRDF.GetResource(CHROME_NS("displayName"));
-              while (elts.hasMoreElements()) {
-                var elt = elts.getNext().QueryInterface(Ci.nsIRDFResource);
-                themeName = stringData(contentsManifest.GetTarget(elt, nameArc, true));
-                if (themeName)
-                  break;
-              }
-            }
-            catch (e) {
-              themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
-            }
-          }
-          showIncompatibleError({ name: themeName, version: "",
-                                  type: Ci.nsIUpdateItem.TYPE_THEME });
-          LOG("Theme JAR file: " + jarFile.leafName + " contains an Old-Style " +
-              "Theme that is not compatible with this version of the software.");
-          throw new Error("Old Theme"); // let the safe-op clean up
-        }
-      }
-    }
-
-    var installer = this;
-    var callback = extractExtensionFiles;
-    if (this._type == Ci.nsIUpdateItem.TYPE_THEME)
-      callback = extractThemeFiles;
-    safeInstallOperation(this._id, this._installLocation,
-                          { callback: callback, data: file });
-  },
-
-  /**
-   * Upgrade contents.rdf Chrome Manifests used by this Theme to the new
-   * chrome.manifest format if necessary.
-   */
-  upgradeThemeChrome: function Installer_upgradeThemeChrome() {
-    // Use the Chrome Registry API to install the theme there
-    var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-             getService(Ci.nsIToolkitChromeRegistry);
-    var manifestFile = this._installLocation.getItemFile(this._id, FILE_CHROME_MANIFEST);
-    if (manifestFile.exists() ||
-        this._id == stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI))
-      return;
-
-    try {
-      // creates a chrome manifest for themes
-      var manifestURI = getURIFromFile(manifestFile);
-      var chromeDir = this._installLocation.getItemFile(this._id, DIR_CHROME);
-      // We're relying on the fact that there is only one JAR file
-      // in the "chrome" directory. This is a hack, but it works.
-      var entries = chromeDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-      var jarFile = entries.nextFile;
-      if (jarFile) {
-        var jarFileURI = getURIFromFile(jarFile);
-        var contentsURI = newURI("jar:" + jarFileURI.spec + "!/");
-        var contentsFile = this._installLocation.getItemFile(this._id, FILE_CONTENTS_MANIFEST);
-        var contentsFileURI = getURIFromFile(contentsFile.parent);
-
-        cr.processContentsManifest(contentsFileURI, manifestURI, contentsURI, false, true);
-      }
-      entries.close();
-      contentsFile.remove(false);
-    }
-    catch (e) {
-      // Failed to register chrome, for any number of reasons - non-existent
-      // contents.rdf file at the location specified, malformed contents.rdf,
-      // etc. Set the pending op to be OP_NEEDS_UNINSTALL so that the
-      // extension is uninstalled properly during the subsequent uninstall
-      // pass in |ExtensionManager::_finishOperations|
-      ERROR("upgradeThemeChrome: failed for theme " + this._id + " - why " +
-            "not convert to the new chrome.manifest format while you're at it? " +
-            "Failure exception: " + e);
-      showMessage("malformedRegistrationTitle", [], "malformedRegistrationMessage",
-                  [BundleManager.appName]);
-
-      var stageFile = this._installLocation.getStageFile(this._id);
-      if (stageFile)
-        this._installLocation.removeFile(stageFile);
-
-      StartupCache.put(this._installLocation, this._id, OP_NEEDS_UNINSTALL, true);
-      StartupCache.write();
-    }
-  },
-
-  /**
-   * Upgrade contents.rdf Chrome Manifests used by this Extension to the new
-   * chrome.manifest format if necessary.
-   */
-  upgradeExtensionChrome: function Installer_upgradeExtensionChrome() {
-    // If the extension is aware of the new flat chrome manifests and has
-    // included one, just use it instead of generating one from the
-    // install.rdf/contents.rdf data.
-    var manifestFile = this._installLocation.getItemFile(this._id, FILE_CHROME_MANIFEST);
-    if (manifestFile.exists())
-      return;
-
-    try {
-      // Enumerate the metadata datasource files collection and register chrome
-      // for each file, calling _registerChrome for each.
-      var chromeDir = this._installLocation.getItemFile(this._id, DIR_CHROME);
-
-      if (!manifestFile.parent.exists())
-        return;
-
-      // Even if an extension doesn't have any chrome, we generate an empty
-      // manifest file so that we don't try to upgrade from the "old-style"
-      // chrome manifests at every startup.
-      manifestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-
-      var manifestURI = getURIFromFile(manifestFile);
-      var files = this.metadataDS.GetTargets(gInstallManifestRoot, EM_R("file"), true);
-      while (files.hasMoreElements()) {
-        var file = files.getNext().QueryInterface(Ci.nsIRDFResource);
-        var chromeFile = chromeDir.clone();
-        var fileName = file.Value.substr("urn:mozilla:extension:file:".length, file.Value.length);
-        chromeFile.append(fileName);
-
-        var fileURLSpec = getURLSpecFromFile(chromeFile);
-        if (!chromeFile.isDirectory()) {
-          var zipReader = getZipReaderForFile(chromeFile);
-          fileURLSpec = "jar:" + fileURLSpec + "!/";
-          var contentsFile = this._installLocation.getItemFile(this._id, FILE_CONTENTS_MANIFEST);
-          contentsFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-        }
-
-        var providers = [EM_R("package"), EM_R("skin"), EM_R("locale")];
-        for (var i = 0; i < providers.length; ++i) {
-          var items = this.metadataDS.GetTargets(file, providers[i], true);
-          while (items.hasMoreElements()) {
-            var item = items.getNext().QueryInterface(Ci.nsIRDFLiteral);
-            var fileURI = newURI(fileURLSpec + item.Value);
-            // Extract the contents.rdf files instead of opening them inside of
-            // the jar. This prevents the jar from being cached by the zip
-            // reader which will keep the jar in use and prevent deletion.
-            if (zipReader) {
-              zipReader.extract(item.Value + FILE_CONTENTS_MANIFEST, contentsFile);
-              var contentsFileURI = getURIFromFile(contentsFile.parent);
-            }
-            else
-              contentsFileURI = fileURI;
-
-            var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                     getService(Ci.nsIToolkitChromeRegistry);
-            cr.processContentsManifest(contentsFileURI, manifestURI, fileURI, true, false);
-          }
-        }
-        if (zipReader) {
-          zipReader.close();
-          zipReader = null;
-          contentsFile.remove(false);
-        }
-      }
-    }
-    catch (e) {
-      // Failed to register chrome, for any number of reasons - non-existent
-      // contents.rdf file at the location specified, malformed contents.rdf,
-      // etc. Set the pending op to be OP_NEEDS_UNINSTALL so that the
-      // extension is uninstalled properly during the subsequent uninstall
-      // pass in |ExtensionManager::_finishOperations|
-      ERROR("upgradeExtensionChrome: failed for extension " + this._id + " - why " +
-            "not convert to the new chrome.manifest format while you're at it? " +
-            "Failure exception: " + e);
-      showMessage("malformedRegistrationTitle", [], "malformedRegistrationMessage",
-                  [BundleManager.appName]);
-
-      var stageFile = this._installLocation.getStageFile(this._id);
-      if (stageFile)
-        this._installLocation.removeFile(stageFile);
-
-      StartupCache.put(this._installLocation, this._id, OP_NEEDS_UNINSTALL, true);
-      StartupCache.write();
-    }
-  }
-};
-
-/**
- * Safely attempt to perform a caller-defined install operation for a given
- * item ID. Using aggressive success-safety checks, this function will attempt
+ * Safely attempt to install or uninstall a given item ID in an install
+ * location. Using aggressive success-safety checks, this function will attempt
  * to move an existing location for an item aside and then allow installation
  * into the appropriate folder. If any operation fails the installation will
  * abort and roll back from the moved-aside old version.
@@ -1917,16 +1542,10 @@ Installer.prototype = {
  *          The GUID of the item to perform the operation on.
  * @param   installLocation
  *          The Install Location where the item is installed.
- * @param   installCallback
- *          A caller supplied JS object with the following properties:
- *          "data"      A data parameter to be passed to the callback.
- *          "callback"  A function to perform the install operation. This
- *                      function is passed three parameters:
- *                      1. The GUID of the item being operated on.
- *                      2. The Install Location where the item is installed.
- *                      3. The "data" parameter on the installCallback object.
+ * @param   file
+ *          An xpi file to install to the location or null to just uninstall
  */
-function safeInstallOperation(itemID, installLocation, installCallback) {
+function safeInstallOperation(itemID, installLocation, file) {
   var movedFiles = [];
 
   /**
@@ -2019,6 +1638,53 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
     }
   }
 
+  /**
+   * Extracts an XPI's files into the item's directory.
+   * @param   itemID
+   *          The ID of the item being installed.
+   * @param   installLocation
+   *          The install location where the item is being installed.
+   * @param   xpiFile
+   *          The source XPI file that contains the item.
+   */
+  function extractFiles(itemID, installLocation, xpiFile) {
+    var zipReader = getZipReaderForFile(xpiFile);
+
+    // create directories first
+    var entries = zipReader.findEntries("*/");
+    while (entries.hasMore()) {
+      var entryName = entries.getNext();
+      var target = installLocation.getItemFile(itemID, entryName);
+      if (!target.exists()) {
+        try {
+          target.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+        }
+        catch (e) {
+          ERROR("extractFiles: failed to create target directory for extraction " +
+                "file = " + target.path + ", exception = " + e + "\n");
+        }
+      }
+    }
+
+    entries = zipReader.findEntries(null);
+    while (entries.hasMore()) {
+      var entryName = entries.getNext();
+      target = installLocation.getItemFile(itemID, entryName);
+      if (target.exists())
+        continue;
+
+      try {
+        target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+      }
+      catch (e) {
+        ERROR("extractFiles: failed to create target file for extraction " +
+              "file = " + target.path + ", exception = " + e + "\n");
+      }
+      zipReader.extract(entryName, target);
+    }
+    zipReader.close();
+  }
+
   if (!installLocation.itemIsManagedIndependently(itemID)) {
     var itemLocation = installLocation.getItemLocation(itemID);
     if (itemLocation.exists()) {
@@ -2088,28 +1754,30 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
     }
   }
 
-  // Now tell the client to do their stuff.
-  try {
-    installCallback.callback(itemID, installLocation, installCallback.data);
-  }
-  catch (e) {
-    // This means the install operation failed. Remove everything and roll back.
-    ERROR("safeInstallOperation: install operation (caller-supplied callback) failed, " +
-          "rolling back file moves and aborting installation.");
+  if (file) {
+    // Extract the xpi's files into the new directory
     try {
-      // Us-generated. Safe.
-      removeDirRecursive(itemLocation);
+      extractFiles(itemID, installLocation, file);
     }
     catch (e) {
-      ERROR("safeInstallOperation: failed to remove the folder we failed to install " +
-            "an item into: " + itemLocation.path + " -- There is not much to suggest " +
-            "here... maybe restart and try again?");
+      // This means the install operation failed. Remove everything and roll back.
+      ERROR("safeInstallOperation: file extraction failed, " +
+            "rolling back file moves and aborting installation.");
+      try {
+        // Us-generated. Safe.
+        removeDirRecursive(itemLocation);
+      }
+      catch (e) {
+        ERROR("safeInstallOperation: failed to remove the folder we failed to install " +
+              "an item into: " + itemLocation.path + " -- There is not much to suggest " +
+              "here... maybe restart and try again?");
+        cleanUpTrash(itemLocationTrash);
+        throw e;
+      }
+      rollbackMove();
       cleanUpTrash(itemLocationTrash);
       throw e;
     }
-    rollbackMove();
-    cleanUpTrash(itemLocationTrash);
-    throw e;
   }
 
   // Now, and only now - after everything else has succeeded (against all odds!)
@@ -3294,107 +2962,6 @@ ExtensionManager.prototype = {
     return isDirty;
   },
 
-  /**
-   * Upgrades contents.rdf files to chrome.manifest files for any existing
-   * Extensions and Themes.
-   * @returns true if actions were performed that require a restart, false
-   *          otherwise.
-   */
-  _upgradeChrome: function EM__upgradeChrome() {
-    if (inSafeMode())
-      return false;
-
-    var checkForNewChrome = false;
-    var ds = this.datasource;
-    // If we have extensions that were installed before the new flat chrome
-    // manifests, and are still valid, we need to manually create the flat
-    // manifest files.
-    var extensions = this._getActiveItems(Ci.nsIUpdateItem.TYPE_EXTENSION +
-                                          Ci.nsIUpdateItem.TYPE_LOCALE);
-    for (var i = 0; i < extensions.length; ++i) {
-      var e = extensions[i];
-      var itemLocation = e.location.getItemLocation(e.id);
-      var manifest = itemLocation.clone();
-      manifest.append(FILE_CHROME_MANIFEST);
-      if (!manifest.exists()) {
-        var installRDF = itemLocation.clone();
-        installRDF.append(FILE_INSTALL_MANIFEST);
-        var installLocation = this.getInstallLocation(e.id);
-        if (installLocation && installRDF.exists()) {
-          var itemLocation = installLocation.getItemLocation(e.id);
-          if (itemLocation.exists() && itemLocation.isDirectory()) {
-            var installer = new Installer(ds, e.id, installLocation,
-                                          Ci.nsIUpdateItem.TYPE_EXTENSION);
-            installer.upgradeExtensionChrome();
-          }
-        }
-        else {
-          ds.removeItemMetadata(e.id);
-          ds.removeItemFromContainer(e.id);
-        }
-
-        checkForNewChrome = true;
-      }
-    }
-
-    var themes = this._getActiveItems(Ci.nsIUpdateItem.TYPE_THEME);
-    // If we have themes that were installed before the new flat chrome
-    // manifests, and are still valid, we need to manually create the flat
-    // manifest files.
-    for (i = 0; i < themes.length; ++i) {
-      var item = themes[i];
-      var itemLocation = item.location.getItemLocation(item.id);
-      var manifest = itemLocation.clone();
-      manifest.append(FILE_CHROME_MANIFEST);
-      if (manifest.exists() ||
-          item.id == stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI))
-        continue;
-
-      var entries;
-      try {
-        var manifestURI = getURIFromFile(manifest);
-        var chromeDir = itemLocation.clone();
-        chromeDir.append(DIR_CHROME);
-
-        if (!chromeDir.exists() || !chromeDir.isDirectory()) {
-          ds.removeItemMetadata(item.id);
-          ds.removeItemFromContainer(item.id);
-          continue;
-        }
-
-        // We're relying on the fact that there is only one JAR file
-        // in the "chrome" directory. This is a hack, but it works.
-        entries = chromeDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-        var jarFile = entries.nextFile;
-        if (jarFile) {
-          var jarFileURI = getURIFromFile(jarFile);
-          var contentsURI = newURI("jar:" + jarFileURI.spec + "!/");
-
-          // Use the Chrome Registry API to install the theme there
-          var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                   getService(Ci.nsIToolkitChromeRegistry);
-          cr.processContentsManifest(contentsURI, manifestURI, contentsURI, false, true);
-        }
-        entries.close();
-      }
-      catch (e) {
-        ERROR("_upgradeChrome: failed to upgrade contents manifest for " +
-              "theme: " + item.id + ", exception: " + e + "... The theme will be " +
-              "disabled.");
-        this._appDisableItem(item.id);
-      }
-      finally {
-        try {
-          entries.close();
-        }
-        catch (e) {
-        }
-      }
-      checkForNewChrome = true;
-    }
-    return checkForNewChrome;
-  },
-
   _checkForUncoveredItem: function EM__checkForUncoveredItem(id) {
     var ds = this.datasource;
     var oldLocation = this.getInstallLocation(id);
@@ -3558,14 +3125,6 @@ ExtensionManager.prototype = {
         }
       }
       while (PendingOperations.size > 0);
-
-      // Upgrade contents.rdf files to the new chrome.manifest format for
-      // existing Extensions and Themes
-      if (this._upgradeChrome()) {
-        var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                 getService(Ci.nsIChromeRegistry);
-        cr.checkForNewChrome();
-      }
 
       // If no additional restart is required, it implies that there are
       // no new components that need registering so we can inform the app
@@ -4750,10 +4309,23 @@ ExtensionManager.prototype = {
     if (!file && "stageFile" in installLocation)
       file = installLocation.getStageFile(id);
 
-    // If |file| is null or does not exist, the installer assumes the item is
-    // a dropped-in directory.
-    var installer = new Installer(this.datasource, id, installLocation, type);
-    installer.installFromFile(file);
+    // If there is a staged file then we must extract it to the correct place,
+    // otherwise we are dealing with a dropped-in directory.
+    if (file && file.exists())
+      safeInstallOperation(id, installLocation, file);
+
+    var metadataFile = installLocation.getItemFile(id, FILE_INSTALL_MANIFEST);
+    if (metadataFile.exists()) {
+      var metadataDS = getInstallManifest(metadataFile);
+      if (metadataDS) {
+        // Add metadata for the item to the extensions datasource
+        this.datasource.addItemMetadata(id, metadataDS, installLocation);
+      }
+    }
+    else {
+      LOG("_finalizeInstall: install manifest for extension " + id + " at " +
+          metadataFile.path + " could not be loaded. Add-on is not usable.");
+    }
 
     // If the file was staged, we must clean it up ourselves, otherwise the
     // EM caller is responsible for doing so (e.g. XPInstall)
@@ -4819,10 +4391,9 @@ ExtensionManager.prototype = {
     var installLocation = this.getInstallLocation(id);
     if (!installLocation.itemIsManagedIndependently(id)) {
       try {
-        // Having a callback that does nothing just causes the directory to be
+        // Passing null for the file to install will just cause the directory
         // removed.
-        safeInstallOperation(id, installLocation,
-                             { data: null, callback: function() { } });
+        safeInstallOperation(id, installLocation, null);
       }
       catch (e) {
         ERROR("_finalizeUninstall: failed to remove directory for item: " + id +
