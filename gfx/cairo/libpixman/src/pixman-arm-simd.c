@@ -1,5 +1,6 @@
 /*
  * Copyright © 2008 Mozilla Corporation
+ * Copyright © 2008 Nokia Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -21,6 +22,7 @@
  * SOFTWARE.
  *
  * Author:  Jeff Muizelaar (jeff@infidigm.net)
+ * Author:  Siarhei Siamashka <siarhei.siamashka@nokia.com>
  *
  */
 #ifdef HAVE_CONFIG_H
@@ -406,4 +408,279 @@ fbCompositeSolidMask_nx8x8888arm (pixman_op_t      op,
 			: "r4", "r5", "r6", "r7", "r8", "cc", "memory"
 			);
     }
+}
+
+/**
+ * Conversion x8r8g8b8 -> r5g6b5
+ *
+ * TODO: optimize more, eliminate stalls, try to use burst writes (4 words aligned 
+ * at 16 byte boundary)
+ */
+static inline void fbComposite_x8r8g8b8_src_r5g6b5_internal_mixed_armv6_c(
+    uint16_t *dst, uint32_t *src, int w, int dst_stride,
+    int src_stride, int h)
+{
+    uint32_t a, x, y, c1F001F = 0x1F001F;
+    int backup_w = w;
+    while (h--)
+    {
+        w = backup_w;
+        if (w > 0 && (uintptr_t)dst & 2)
+        {
+            x = *src++;
+
+            a = (x >> 3) & c1F001F;
+            x &= 0xFC00;
+            a |= a >> 5;
+            a |= x >> 5;
+
+            *dst++ = a;
+            w--;
+        }
+
+        asm volatile(
+            "subs  %[w], %[w], #2\n"
+            "blt   2f\n"
+        "1:\n"
+            "ldr   %[x], [%[src]], #4\n"
+            "ldr   %[y], [%[src]], #4\n"
+            "subs  %[w], %[w], #2\n"
+            
+            "and   %[a], %[c1F001F], %[x], lsr #3\n"
+            "and   %[x], %[x], #0xFC00\n\n"
+            "orr   %[a], %[a], %[a], lsr #5\n"
+            "orr   %[x], %[a], %[x], lsr #5\n"
+
+            "and   %[a], %[c1F001F], %[y], lsr #3\n"
+            "and   %[y], %[y], #0xFC00\n\n"
+            "orr   %[a], %[a], %[a], lsr #5\n"
+            "orr   %[y], %[a], %[y], lsr #5\n"
+
+            "pkhbt %[x], %[x], %[y], lsl #16\n"
+            "str   %[x], [%[dst]], #4\n"
+            "bge   1b\n"
+        "2:\n"
+        : [c1F001F] "+&r" (c1F001F), [src] "+&r" (src), [dst] "+&r" (dst), [a] "=&r" (a), 
+          [x] "=&r" (x), [y] "=&r" (y), [w] "+&r" (w)
+        );
+
+        if (w & 1)
+        {
+            x = *src++;
+
+            a = (x >> 3) & c1F001F;
+            x = x & 0xFC00;
+            a |= a >> 5;
+            a |= x >> 5;
+
+            *dst++ = a;
+        }
+
+        src += src_stride - backup_w;
+        dst += dst_stride - backup_w;
+    }
+}
+
+/**
+ * Conversion x8r8g8b8 -> r5g6b5
+ *
+ * Note: 'w' must be >= 7
+ */
+static void __attribute__((naked)) fbComposite_x8r8g8b8_src_r5g6b5_internal_armv6(
+    uint16_t *dst, uint32_t *src, int w, int dst_stride,
+    int src_stride, int h)
+{
+    asm volatile(
+        /* define supplementary macros */
+        ".macro cvt8888to565 PIX\n"
+            "and   A, C1F001F, \\PIX, lsr #3\n"
+            "and   \\PIX, \\PIX, #0xFC00\n\n"
+            "orr   A, A, A, lsr #5\n"
+            "orr   \\PIX, A, \\PIX, lsr #5\n"
+        ".endm\n"
+
+        ".macro combine_pixels_pair PIX1, PIX2\n"
+            "pkhbt \\PIX1, \\PIX1, \\PIX2, lsl #16\n" /* Note: assume little endian byte order */
+        ".endm\n"
+
+        /* function entry, save all registers (10 words) to stack */
+        "stmdb   sp!, {r4-r11, ip, lr}\n"
+        
+        /* define some aliases */
+        "DST     .req  r0\n"
+        "SRC     .req  r1\n"
+        "W       .req  r2\n"
+        "H       .req  r3\n"
+
+        "TMP1    .req  r4\n"
+        "TMP2    .req  r5\n"
+        "TMP3    .req  r6\n"
+        "TMP4    .req  r7\n"
+        "TMP5    .req  r8\n"
+        "TMP6    .req  r9\n"
+        "TMP7    .req  r10\n"
+        "TMP8    .req  r11\n"
+
+        "C1F001F .req  ip\n"
+        "A       .req  lr\n"
+        
+        "ldr     TMP1, [sp, #(10*4+0)]\n" /* load src_stride */
+        "ldr     C1F001F, =0x1F001F\n"
+        "sub     r3, r3, W\n"
+        "str     r3, [sp, #(10*4+0)]\n" /* store (dst_stride-w) */
+        "ldr     r3, [sp, #(10*4+4)]\n" /* load h */
+        "sub     TMP1, TMP1, W\n"
+        "str     TMP1, [sp, #(10*4+4)]\n" /* store (src_stride-w) */
+        
+        "str     W, [sp, #(8*4)]\n" /* saved ip = W */
+
+    "0:\n"
+        "subs    H, H, #1\n"
+        "blt     6f\n"
+    "1:\n"
+        /* align DST at 4 byte boundary */
+        "tst     DST, #2\n"
+        "beq     2f\n"
+        "ldr     TMP1, [SRC], #4\n"
+        "sub     W, W, #1\n"
+        "cvt8888to565 TMP1\n"
+        "strh    TMP1, [DST], #2\n"
+    "2:"
+        /* align DST at 8 byte boundary */
+        "tst     DST, #4\n"
+        "beq     2f\n"
+        "ldmia   SRC!, {TMP1, TMP2}\n"
+        "sub     W, W, #2\n"
+        "cvt8888to565 TMP1\n"
+        "cvt8888to565 TMP2\n"
+        "combine_pixels_pair TMP1, TMP2\n"
+        "str     TMP1, [DST], #4\n"
+    "2:"
+        /* align DST at 16 byte boundary */
+        "tst     DST, #8\n"
+        "beq     2f\n"
+        "ldmia   SRC!, {TMP1, TMP2, TMP3, TMP4}\n"
+        "sub     W, W, #4\n"
+        "cvt8888to565 TMP1\n"
+        "cvt8888to565 TMP2\n"
+        "cvt8888to565 TMP3\n"
+        "cvt8888to565 TMP4\n"
+        "combine_pixels_pair TMP1, TMP2\n"
+        "combine_pixels_pair TMP3, TMP4\n"
+        "stmia DST!, {TMP1, TMP3}\n"
+    "2:"
+        /* inner loop, process 8 pixels per iteration */
+        "subs    W, W, #8\n"
+        "blt     4f\n"
+    "3:\n"
+        "ldmia   SRC!, {TMP1, TMP2, TMP3, TMP4, TMP5, TMP6, TMP7, TMP8}\n"
+        "subs    W, W, #8\n"
+        "cvt8888to565 TMP1\n"
+        "cvt8888to565 TMP2\n"
+        "cvt8888to565 TMP3\n"
+        "cvt8888to565 TMP4\n"
+        "cvt8888to565 TMP5\n"
+        "cvt8888to565 TMP6\n"
+        "cvt8888to565 TMP7\n"
+        "cvt8888to565 TMP8\n"
+        "combine_pixels_pair TMP1, TMP2\n"
+        "combine_pixels_pair TMP3, TMP4\n"
+        "combine_pixels_pair TMP5, TMP6\n"
+        "combine_pixels_pair TMP7, TMP8\n"
+        "stmia   DST!, {TMP1, TMP3, TMP5, TMP7}\n"
+        "bge     3b\n"
+    "4:\n"
+
+        /* process the remaining pixels */
+        "tst     W, #4\n"
+        "beq     4f\n"
+        "ldmia   SRC!, {TMP1, TMP2, TMP3, TMP4}\n"
+        "cvt8888to565 TMP1\n"
+        "cvt8888to565 TMP2\n"
+        "cvt8888to565 TMP3\n"
+        "cvt8888to565 TMP4\n"
+        "combine_pixels_pair TMP1, TMP2\n"
+        "combine_pixels_pair TMP3, TMP4\n"
+        "stmia   DST!, {TMP1, TMP3}\n"
+    "4:\n"
+        "tst     W, #2\n"
+        "beq     4f\n"
+        "ldmia   SRC!, {TMP1, TMP2}\n"
+        "cvt8888to565 TMP1\n"
+        "cvt8888to565 TMP2\n"
+        "combine_pixels_pair TMP1, TMP2\n"
+        "str     TMP1, [DST], #4\n"
+    "4:\n"
+        "tst     W, #1\n"
+        "beq     4f\n"
+        "ldr     TMP1, [SRC], #4\n"
+        "cvt8888to565 TMP1\n"
+        "strh    TMP1, [DST], #2\n"
+    "4:\n"
+        "ldr     TMP1, [sp, #(10*4+0)]\n" /* (dst_stride-w) */
+        "ldr     TMP2, [sp, #(10*4+4)]\n" /* (src_stride-w) */
+        "ldr     W, [sp, #(8*4)]\n"
+        "subs    H, H, #1\n"
+        "add     DST, DST, TMP1, lsl #1\n"
+        "add     SRC, SRC, TMP2, lsl #2\n"
+        "bge     1b\n"
+    "6:\n"
+        "ldmia   sp!, {r4-r11, ip, pc}\n" /* restore all registers and return */
+        ".ltorg\n"
+
+        ".unreq   DST\n"
+        ".unreq   SRC\n"
+        ".unreq   W\n"
+        ".unreq   H\n"
+
+        ".unreq   TMP1\n"
+        ".unreq   TMP2\n"
+        ".unreq   TMP3\n"
+        ".unreq   TMP4\n"
+        ".unreq   TMP5\n"
+        ".unreq   TMP6\n"
+        ".unreq   TMP7\n"
+        ".unreq   TMP8\n"
+
+        ".unreq   C1F001F\n"
+        ".unreq   A\n"
+
+        ".purgem  cvt8888to565\n"
+        ".purgem  combine_pixels_pair\n"
+    );
+}
+
+
+void
+fbCompositeSrc_x888x0565arm (pixman_op_t op,
+			       pixman_image_t * pSrc,
+			       pixman_image_t * pMask,
+			       pixman_image_t * pDst,
+			       int16_t      xSrc,
+			       int16_t      ySrc,
+			       int16_t      xMask,
+			       int16_t      yMask,
+			       int16_t      xDst,
+			       int16_t      yDst,
+			       uint16_t     width,
+			       uint16_t     height)
+{
+    uint16_t	*dstLine, *dst;
+    uint32_t	*srcLine, *src;
+    int		dstStride, srcStride;
+    uint16_t	w, h;
+
+    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+
+    dst = dstLine;
+    src = srcLine;
+    h = height;
+    w = width;
+
+    if (w < 7)
+        fbComposite_x8r8g8b8_src_r5g6b5_internal_mixed_armv6_c(dst, src, w, dstStride, srcStride, h);
+    else
+        fbComposite_x8r8g8b8_src_r5g6b5_internal_armv6(dst, src, w, dstStride, srcStride, h);
+
 }
