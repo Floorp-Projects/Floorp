@@ -30,7 +30,6 @@ include moz-only/reftest.list
 == dynamic-link-style-01.svg pass.svg
 == dynamic-marker-01.svg pass.svg
 == dynamic-mask-contents-01.svg pass.svg
-skip == dynamic-move-under-mouse.svg pass.svg # disabled for now - needs privileges
 == dynamic-pattern-01.svg pass.svg
 == dynamic-pattern-02.svg pass.svg
 == dynamic-pattern-contents-01.svg pass.svg
