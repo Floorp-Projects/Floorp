@@ -283,7 +283,6 @@ function run_test() {
         // undefined), so check if frecency matches. This is okay because we
         // can still ensure the correct number of expected frecencies.
         let getFrecency = function(aURL) aURL.match(/frecency:(-?\d+)$/)[1];
-        print("### searchURL: '"+searchURL+"', expectedURL: '"+expectedURL+"'");
         do_check_eq(getFrecency(searchURL), getFrecency(expectURL));
       }
     }
