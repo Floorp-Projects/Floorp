@@ -762,18 +762,6 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
 }
 
 /* static */
-PRBool
-txXPathNodeUtils::isHTMLElementInHTMLDocument(const txXPathNode& aNode)
-{
-  if (!aNode.isContent()) {
-    return PR_FALSE;
-  }
-  nsIContent* content = aNode.Content();
-  return (content->IsNodeOfType(nsINode::eHTML) &&
-          !(content->GetOwnerDoc()->IsCaseSensitive()));
-}
-
-/* static */
 txXPathNode*
 txXPathNativeNode::createXPathNode(nsIContent* aContent, PRBool aKeepRootAlive)
 {
