@@ -1,0 +1,109 @@
+<html>
+
+<head>
+  <title>Accessible value change events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/value.js"></script>
+
+  <script type="application/javascript">
+
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    // Value change invoker
+    function changeValue(aNodeOrID, aValuenow, aValuetext)
+    {
+      this.DOMNode = getNode(aNodeOrID);
+
+      this.invoke = function changeValue_invoke() {
+
+        // Note: this should not fire an EVENT_VALUE_CHANGE when aria-valuetext
+        // is not empty
+        if (aValuenow != undefined)
+          this.DOMNode.setAttribute("aria-valuenow", aValuenow);
+ 
+        // Note: this should always fire an EVENT_VALUE_CHANGE
+        if (aValuetext != undefined)
+          this.DOMNode.setAttribute("aria-valuetext", aValuetext);
+      }
+
+      this.check = function changeValue_check() {
+        var acc = getAccessible(aNodeOrID, [nsIAccessibleValue]);
+        if (!acc)
+          return;
+
+        // Note: always test against valuetext first because the existence of 
+        // aria-valuetext takes precedence over aria-valuenow in gecko.
+        is(acc.value, (aValuetext != undefined)? aValuetext : aValuenow,
+            "Wrong value of " + prettyName(aNodeOrID));
+      }
+
+      this.getID = function changeValue_getID() {
+        return prettyName(aNodeOrID) + " value changed";
+      }
+    }
+
+    function doTests()
+    {
+      // Test initial values
+      testValue("slider_vn", "5", 5, 0, 1000, 0);
+      testValue("slider_vnvt", "plain", 0, 0, 5, 0);
+      testValue("slider_vt", "hi", 0, 0, 3, 0);
+
+      // Test value change events
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_VALUE_CHANGE);
+
+      gQueue.push(new changeValue("slider_vn", "6", undefined));
+      gQueue.push(new changeValue("slider_vt", undefined, "hey!"));
+      gQueue.push(new changeValue("slider_vnvt", "3", "sweet"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=478032"
+     title=" Fire delayed value changed event for aria-valuetext changes">
+    Mozilla Bug 478032
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <!-- ARIA sliders -->
+  <div id="slider_vn" role="slider" aria-valuenow="5"
+    aria-valuemin="0" aria-valuemax="1000">slider</div>
+
+  <div id="slider_vt" role="slider" aria-valuetext="hi"
+    aria-valuemin="0" aria-valuemax="3">greeting slider</div>
+
+  <div id="slider_vnvt" role="slider" aria-valuenow="0" aria-valuetext="plain"
+    aria-valuemin="0" aria-valuemax="5">sweetness slider</div>
+</body>
+</html>
