@@ -90,7 +90,7 @@ const INVOKER_ACTION_FAILED = 1;
  * Creates event queue for the given event type. The queue consists of invoker
  * objects, each of them generates the event of the event type. When queue is
  * started then every invoker object is asked to generate event after timeout.
- * When event is caught then current invoker object is asked to check wether
+ * When event is caught then current invoker object is asked to check whether
  * event was handled correctly.
  *
  * Invoker interface is:
