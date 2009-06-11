@@ -58,19 +58,6 @@ function makeSymLink(from, toName, relative) {
   print(to.path);
   print(to.target);
 
-  if (isMac) {
-    // Bug 484297: nsIFile.target doesn't work for symlinks.
-    if (from.leafName != DOES_NOT_EXIST) {
-      let fromN = from.clone();
-      fromN.normalize();
-      let toN = to.clone();
-      toN.normalize();
-      do_check_eq(fromN.path, toN.path);
-    }
-
-    return to;
-  }
-
   if (from.leafName != DOES_NOT_EXIST && from.isSymlink()) {
     // XXXjag wish I could set followLinks to false so we'd just get
     // the symlink's direct target instead of the final target.
@@ -136,13 +123,6 @@ function testSymLinks(testDir, relative) {
   const dirs  = [DIR_TARGET].concat(dirLinks);
   const files = [FILE_TARGET].concat(fileLinks);
   const links = otherLinks.concat(dirLinks, fileLinks);
-
-  if (isMac) {
-    // Bug 484303: nsIFile.isFile() returns true for dangling symlinks.
-    for each (link in otherLinks) {
-      files.push(link);
-    }
-  }
 
   const spaces = createSpaces(dirs, files, links);
   const bools = {false: " false", true: " true "};
