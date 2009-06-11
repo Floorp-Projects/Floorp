@@ -73,7 +73,6 @@ class gfxContext;
 class gfxASurface;
 class gfxPattern;
 class gfxImageSurface;
-struct gfxRect;
 struct gfxMatrix;
 struct gfxSize;
 struct gfxIntSize;
@@ -308,7 +307,7 @@ public:
      Input: rect - bounding box
             length - length to be converted
   */
-  static float ObjectSpace(nsIDOMSVGRect *aRect, const nsSVGLength2 *aLength);
+  static float ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength);
 
   /* Computes the input length in terms of user space coordinates.
      Input: content - object to be used for determining user space
@@ -466,7 +465,14 @@ public:
   static float
   MaxExpansion(nsIDOMSVGMatrix *aMatrix);
 
-  /* Take a CTM and adjust for object bounding box coordinates, if needed */
+  /**
+   * Take the CTM to userspace for an element, and adjust it to a CTM to its
+   * object bounding box space if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX.
+   * (I.e. so that [0,0] is at the top left of its bbox, and [1,1] is at the
+   * bottom right of its bbox).
+   *
+   * If the bbox is empty, this will return a singular matrix.
+   */
   static already_AddRefed<nsIDOMSVGMatrix>
   AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
                        nsSVGEnum *aUnits,
@@ -476,8 +482,7 @@ public:
    * Get bounding-box for aFrame. Matrix propagation is disabled so the
    * bounding box is computed in terms of aFrame's own user space.
    */
-  static already_AddRefed<nsIDOMSVGRect>
-  GetBBox(nsIFrame *aFrame);
+  static gfxRect GetBBox(nsIFrame *aFrame);
   /**
    * Compute a rectangle in userSpaceOnUse or objectBoundingBoxUnits.
    * @param aXYWH pointer to 4 consecutive nsSVGLength2 objects containing
@@ -488,8 +493,8 @@ public:
    * may be null if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
    */
   static gfxRect
-  GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH, nsIDOMSVGRect *aBBox,
-                  nsIFrame *aFrame);
+  GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
+                  const gfxRect &aBBox, nsIFrame *aFrame);
 
   /**
    * Find the first frame, starting with aStartFrame and going up its

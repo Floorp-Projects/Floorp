@@ -770,12 +770,9 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 
   nsISVGChildFrame* svgframe = do_QueryFrame(frame);
   if (svgframe) {
-    *_retval = nsSVGUtils::GetBBox(frame).get();
-    return NS_OK;
-  } else {
-    // XXX: outer svg
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_NewSVGRect(_retval, nsSVGUtils::GetBBox(frame));
   }
+  return NS_ERROR_NOT_IMPLEMENTED; // XXX: outer svg
 }
 
 /* nsIDOMSVGMatrix getCTM (); */
