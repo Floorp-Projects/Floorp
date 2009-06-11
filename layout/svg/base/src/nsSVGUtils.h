@@ -274,6 +274,8 @@ public:
   /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
+   * Note that the caller is responsible for making sure that any cached
+   * covered regions in the frame tree rooted at aFrame are up to date.
    * @param aRect the area in app units that needs to be invalidated in aFrame
    * @return the rect in app units that should be invalidated, taking
    * filters into account. Will return aRect when no filters are present.
