@@ -370,7 +370,7 @@
                  onsearchbegin="LocationBarHelpers._searchBegin();"
                  onsearchcomplete="LocationBarHelpers._searchComplete();"
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
-                 onblur="document.getElementById('identity-box').style.MozUserFocus = 'ignore';">
+                 onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
                We only add the identity-box button to the tab order when the location bar
@@ -388,7 +388,10 @@
                        ondraggesture="PageProxyDragGesture(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
-              <label id="identity-icon-label" crop="center" flex="1"/>
+              <hbox id="identity-icon-labels">
+                <label id="identity-icon-label" class="plain" flex="1"/>
+                <label id="identity-icon-country-label" class="plain"/>
+              </hbox>
             </hbox>
           </box>
           <hbox id="urlbar-icons">

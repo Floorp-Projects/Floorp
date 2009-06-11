@@ -892,13 +892,8 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   background-color: rgba(0, 0, 0, .1);
 }
 
-#identity-icon-label {
+#identity-icon-labels {
   padding: 0 2px;
-  margin: 0;
-}
-
-#identity-icon-label[value=""] {
-  display: none;
 }
 
 #identity-box.verifiedDomain {

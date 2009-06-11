@@ -58,6 +58,7 @@
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMText.h"
 #include "nsIFocusController.h"
+#include "nsFocusManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
@@ -411,12 +412,13 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
   nsCOMPtr<nsIController> controller;
   nsCOMPtr<nsIFocusController> focusController;
 
+  nsCOMPtr<nsPIDOMWindow> privateWindow;
   nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aTarget));
   if (windowRoot) {
     windowRoot->GetFocusController(getter_AddRefs(focusController));
   }
   else {
-    nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(aTarget));
+    privateWindow = do_QueryInterface(aTarget);
     if (!privateWindow) {
       nsCOMPtr<nsIContent> elt(do_QueryInterface(aTarget));
       nsCOMPtr<nsIDocument> doc;
@@ -455,16 +457,28 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
       mMisc == 1) {
     // get the focused element so that we can pageDown only at
     // certain times.
-    nsCOMPtr<nsIDOMElement> focusedElement;
-    focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+
+    nsCOMPtr<nsPIDOMWindow> windowToCheck;
+    if (windowRoot)
+      windowToCheck = do_QueryInterface(windowRoot->GetWindow());
+    else
+      windowToCheck = privateWindow->GetPrivateRoot();
+
+    nsCOMPtr<nsIContent> focusedContent;
+    if (windowToCheck) {
+      nsCOMPtr<nsPIDOMWindow> focusedWindow;
+      focusedContent =
+        nsFocusManager::GetFocusedDescendant(windowToCheck, PR_TRUE, getter_AddRefs(focusedWindow));
+    }
+
     PRBool isLink = PR_FALSE;
-    nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
     nsIContent *content = focusedContent;
 
     // if the focused element is a link then we do want space to 
-    // scroll down. focused element may be an element in a link,
-    // we need to check the parent node too.
-    if (focusedContent) {
+    // scroll down. The focused element may be an element in a link,
+    // we need to check the parent node too. Only do this check if an
+    // element is focused and has a parent.
+    if (focusedContent && focusedContent->GetParent()) {
       while (content) {
         if (content->Tag() == nsGkAtoms::a &&
             content->IsNodeOfType(nsINode::eHTML)) {

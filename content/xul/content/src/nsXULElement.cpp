@@ -86,6 +86,7 @@
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
+#include "nsFocusManager.h"
 #include "nsIFastLoadService.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsINameSpaceManager.h"
@@ -653,8 +654,12 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
     if (elm) {
         // Define behavior for each type of XUL element.
         nsIAtom *tag = content->Tag();
-        if (tag != nsGkAtoms::toolbarbutton)
-            elm->Focus();
+        if (tag != nsGkAtoms::toolbarbutton) {
+          nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(content);
+          if (fm)
+            fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
+        }
         if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist)
             elm->Click();
     }
@@ -2028,46 +2033,25 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 NS_IMETHODIMP
 nsXULElement::Focus()
 {
-    if (!nsGenericElement::ShouldFocus(this)) {
-        return NS_OK;
-    }
-
-    nsIDocument* doc = GetCurrentDoc();
-    // What kind of crazy tries to focus an element without a doc?
-    if (!doc)
-        return NS_OK;
-
-    // Obtain a presentation context and then call SetFocus.
-
-    nsIPresShell *shell = doc->GetPrimaryShell();
-    if (!shell)
-        return NS_OK;
-
-    // Set focus
-    nsCOMPtr<nsPresContext> context = shell->GetPresContext();
-    SetFocus(context);
-
-    return NS_OK;
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(static_cast<nsIContent*>(this));
+    return fm ? fm->SetFocus(this, 0) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::Blur()
 {
+    if (!ShouldBlur(this))
+      return NS_OK;
+
     nsIDocument* doc = GetCurrentDoc();
-    // What kind of crazy tries to blur an element without a doc?
     if (!doc)
-        return NS_OK;
+      return NS_OK;
 
-    // Obtain a presentation context and then call SetFocus.
-    nsIPresShell *shell = doc->GetPrimaryShell();
-    if (!shell)
-        return NS_OK;
-
-    // Set focus
-    nsCOMPtr<nsPresContext> context = shell->GetPresContext();
-    if (ShouldBlur(this))
-      RemoveFocus(context);
-
+    nsIDOMWindow* win = doc->GetWindow();
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (win && fm)
+      return fm->ClearFocus(win);
     return NS_OK;
 }
 
@@ -2132,29 +2116,6 @@ nsXULElement::DoCommand()
     }
 
     return NS_OK;
-}
-
-// nsIFocusableContent interface and helpers
-void
-nsXULElement::SetFocus(nsPresContext* aPresContext)
-{
-    if (BoolAttrIsTrue(nsGkAtoms::disabled))
-        return;
-
-    aPresContext->EventStateManager()->SetContentState(this,
-                                                       NS_EVENT_STATE_FOCUS);
-}
-
-void
-nsXULElement::RemoveFocus(nsPresContext* aPresContext)
-{
-  if (!aPresContext) 
-    return;
-  
-  if (IsInDoc()) {
-    aPresContext->EventStateManager()->SetContentState(nsnull,
-                                                       NS_EVENT_STATE_FOCUS);
-  }
 }
 
 nsIContent *

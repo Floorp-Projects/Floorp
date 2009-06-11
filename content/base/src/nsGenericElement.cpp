@@ -54,7 +54,7 @@
 #include "nsIDOMText.h"
 #include "nsIContentIterator.h"
 #include "nsIEventListenerManager.h"
-#include "nsIFocusController.h"
+#include "nsFocusManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
@@ -124,7 +124,6 @@
 #include "nsIEditorDocShell.h"
 #include "nsEventDispatcher.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsIFocusController.h"
 #include "nsIControllers.h"
 #include "nsLayoutUtils.h"
 #include "nsIView.h"
@@ -3072,84 +3071,29 @@ nsGenericElement::IsLink(nsIURI** aURI) const
   return PR_FALSE;
 }
 
-void
-nsGenericElement::SetFocus(nsPresContext* aPresContext)
-{
-  // Traditionally focusable elements can take focus as long as they don't set
-  // the disabled attribute
-
-  nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
-  if (!presShell) {
-    return;
-  }
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
-  if (frame && frame->IsFocusable() &&
-      aPresContext->EventStateManager()->SetContentState(this,
-                                                         NS_EVENT_STATE_FOCUS)) {
-    presShell->ScrollContentIntoView(this, NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
-                                     NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-  }
-}
-
-// static
-PRBool
-nsGenericElement::ShouldFocus(nsIContent *aContent)
-{
-  // Default to false, since if the document is not attached to a window,
-  // we should not focus any of its content.
-  PRBool visible = PR_FALSE;
-
-  // Figure out if we're focusing an element in an inactive (hidden)
-  // tab (whose docshell is not visible), if so, drop this focus
-  // request on the floor
-
-  nsIDocument *document = aContent->GetDocument();
-
-  if (document) {
-    nsIScriptGlobalObject *sgo = document->GetScriptGlobalObject();
-
-    if (sgo) {
-      nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(sgo));
-      nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(webNav));
-
-      if (baseWin) {
-        baseWin->GetVisibility(&visible);
-      }
-    }
-  }
-
-  return visible;
-}
-
 // static
 PRBool
 nsGenericElement::ShouldBlur(nsIContent *aContent)
 {
   // Determine if the current element is focused, if it is not focused
   // then we should not try to blur
-  PRBool isFocused = PR_FALSE;
-
   nsIDocument *document = aContent->GetDocument();
+  if (!document)
+    return PR_FALSE;
 
-  if (document) {
-    nsPIDOMWindow *win = document->GetWindow();
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(document->GetWindow());
+  if (!window)
+    return PR_FALSE;
 
-    if (win) {
-      nsCOMPtr<nsIFocusController> focusController =
-           win->GetRootFocusController();
+  nsCOMPtr<nsPIDOMWindow> focusedFrame;
+  nsIContent* contentToBlur =
+    nsFocusManager::GetFocusedDescendant(window, PR_FALSE, getter_AddRefs(focusedFrame));
+  if (contentToBlur == aContent)
+    return PR_TRUE;
 
-      if (focusController) {
-        nsCOMPtr<nsIDOMElement> focusedElement;
-        focusController->GetFocusedElement(getter_AddRefs(focusedElement));    
-        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aContent);
-        //when the element is the same as the focused element, blur it
-        if (domElement == focusedElement)
-          isFocused = PR_TRUE;
-      }
-    }
-  }
-
-  return isFocused;
+  // if focus on this element would get redirected, then check the redirected
+  // content as well when blurring.
+  return (contentToBlur && nsFocusManager::GetRedirectedFocus(aContent) == contentToBlur);
 }
 
 nsIContent*
@@ -4999,28 +4943,15 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         // don't make the link grab the focus if there is no link handler
         nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
         nsIDocument *document = GetCurrentDoc();
-        if (handler && document && ShouldFocus(this)) {
-          // If the window is not active, do not allow the focus to bring the
-          // window to the front. We update the focus controller, but do nothing
-          // else.
-          nsPIDOMWindow *win = document->GetWindow();
-          if (win) {
-            nsIFocusController *focusController =
-              win->GetRootFocusController();
-            if (focusController) {
-              PRBool isActive = PR_FALSE;
-              focusController->GetActive(&isActive);
-              if (!isActive) {
-                nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
-                if(domElement)
-                  focusController->SetFocusedElement(domElement);
-                break;
-              }
-            }
+        if (handler && document) {
+          nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+          if (fm) {
+            nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
+            fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOUSE);
           }
-  
+
           aVisitor.mPresContext->EventStateManager()->
-            SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+            SetContentState(this, NS_EVENT_STATE_ACTIVE);
         }
       }
     }

@@ -581,7 +581,8 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
 
   nsIAtom *name = aNodeInfo->NameAtom();
 
-  NS_ASSERTION(aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML), "Someone is still trying to create HTML elements is no namespace!");
+  NS_ASSERTION(aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML), 
+               "Trying to HTML elements that don't have the XHTML namespace");
   
   *aResult = CreateHTMLElement(parserService->
                                  HTMLCaseSensitiveAtomTagToId(name),

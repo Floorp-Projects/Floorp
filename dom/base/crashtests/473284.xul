@@ -86,7 +86,7 @@ try {
   result += '.';
 }
 
-document.documentElement.textContent = result == '.23.56.89abc' ? 'PASSED' : 'FAILED';
+document.documentElement.textContent = result == '.23.56.89.bc' ? 'PASSED' : 'FAILED';
 if (document.documentElement.textContent == 'PASSED') {
   document.documentElement.removeAttribute('class');
 }
