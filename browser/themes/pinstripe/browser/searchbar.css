@@ -22,6 +22,10 @@
   background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused.png");
 }
 
+.searchbar-textbox[focused="true"] > .autocomplete-textbox-container > .textbox-input-box:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused-graphite.png");
+}
+
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
@@ -53,6 +57,14 @@
   background-image: url("chrome://browser/skin/urlbar/startcap-focused-rtl.png");
 }
 
+.searchbar-textbox[focused="true"] > .searchbar-engine-button:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-focused-graphite.png");
+}
+
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"]:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-focused-graphite-rtl.png");
+}
+
 .searchbar-engine-button:hover:active,
 .searchbar-engine-button[open="true"] {
   background-image: url("chrome://browser/skin/urlbar/startcap-active.png") !important;
@@ -71,6 +83,16 @@
 .searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"]:active,
 .searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"][chromedir="rtl"] {
   background-image: url("chrome://browser/skin/urlbar/startcap-active-focused-rtl.png") !important;
+}
+
+.searchbar-textbox[focused="true"] > .searchbar-engine-button:active:-moz-system-metric(mac-graphite-theme),
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"]:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-active-focused-graphite.png") !important;
+}
+
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"]:active:-moz-system-metric(mac-graphite-theme),
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"][chromedir="rtl"]:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-active-focused-graphite-rtl.png") !important;
 }
 
 .searchbar-engine-button > .button-box {
@@ -106,6 +128,14 @@
 
 .searchbar-textbox[focused="true"] > .search-go-container[chromedir="rtl"] {
   background: url("chrome://browser/skin/urlbar/endcap-focused-rtl.png") no-repeat left top;
+}
+
+.searchbar-textbox[focused="true"] > .search-go-container:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/endcap-focused-graphite.png");
+}
+
+.searchbar-textbox[focused="true"] > .search-go-container[chromedir="rtl"]:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/endcap-focused-graphite-rtl.png");
 }
 
 .search-go-button {
