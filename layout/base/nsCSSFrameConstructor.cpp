@@ -3180,7 +3180,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
 #endif
 
     rv = ProcessChildren(aState, content, styleContext, blockFrame, PR_TRUE,
-                         childItems, aStyleDisplay->IsBlockOutside());
+                         childItems, aStyleDisplay->IsBlockInside());
     if (NS_FAILED(rv)) return rv;
   
     // Set the areas frame's initial child lists
