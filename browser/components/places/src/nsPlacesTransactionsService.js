@@ -849,7 +849,7 @@ placesEditBookmarkPostDataTransactions.prototype = {
   __proto__: placesBaseTransaction.prototype,
 
   doTransaction: function PEUPDT_doTransaction() {
-    this._oldPostData = PlacesUtils.getPostDataForBookmark(this._id);
+    this._oldPostData = PlacesUtils.getPostDataForBookmark(this.id);
     PlacesUtils.setPostDataForBookmark(this.id, this._newPostData);
   },
 

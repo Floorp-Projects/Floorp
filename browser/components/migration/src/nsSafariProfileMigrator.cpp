@@ -1088,11 +1088,13 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       if (GetDictionaryStringValue(URIDictionary, CFSTR("title"), title) &&
           GetDictionaryCStringValue(entry, CFSTR("URLString"), url, kCFStringEncodingUTF8)) {
         nsCOMPtr<nsIURI> uri;
-        rv |= NS_NewURI(getter_AddRefs(uri), url);
-        PRInt64 id;
-        rv |= aBookmarksService->InsertBookmark(aParentFolder, uri,
-                                                nsINavBookmarksService::DEFAULT_INDEX,
-                                                NS_ConvertUTF16toUTF8(title), &id);
+        rv = NS_NewURI(getter_AddRefs(uri), url);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt64 id;
+          rv = aBookmarksService->InsertBookmark(aParentFolder, uri,
+                                                 nsINavBookmarksService::DEFAULT_INDEX,
+                                                 NS_ConvertUTF16toUTF8(title), &id);
+        }
       }
     }
   }

@@ -305,8 +305,8 @@ nsFaviconService::ExpireAllFavicons()
 NS_IMETHODIMP
 nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
 {
-  NS_ENSURE_ARG_POINTER(aPageURI);
-  NS_ENSURE_ARG_POINTER(aFaviconURI);
+  NS_ENSURE_ARG(aPageURI);
+  NS_ENSURE_ARG(aFaviconURI);
 
   if (mExpirationRunning)
     return NS_OK;
@@ -326,6 +326,8 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
 NS_IMETHODIMP
 nsFaviconService::GetDefaultFavicon(nsIURI** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+
   // not found, use default
   if (!mDefaultIcon) {
     nsresult rv = NS_NewURI(getter_AddRefs(mDefaultIcon),
@@ -503,8 +505,8 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
                                            nsIURI* aFaviconURI,
                                            PRBool aForceReload)
 {
-  NS_ENSURE_ARG_POINTER(aPageURI);
-  NS_ENSURE_ARG_POINTER(aFaviconURI);
+  NS_ENSURE_ARG(aPageURI);
+  NS_ENSURE_ARG(aFaviconURI);
 
   if (mExpirationRunning)
     return NS_OK;
@@ -681,6 +683,8 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
                                  PRUint32 aDataLen, const nsACString& aMimeType,
                                  PRTime aExpiration)
 {
+  NS_ENSURE_ARG(aFaviconURI);
+
   if (mExpirationRunning)
     return NS_OK;
 
@@ -754,6 +758,7 @@ nsFaviconService::SetFaviconDataFromDataURL(nsIURI* aFaviconURI,
                                             const nsAString& aDataURL,
                                             PRTime aExpiration)
 {
+  NS_ENSURE_ARG(aFaviconURI);
   if (mExpirationRunning)
     return NS_OK;
 
@@ -814,6 +819,10 @@ NS_IMETHODIMP
 nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
                                  PRUint32* aDataLen, PRUint8** aData)
 {
+  NS_ENSURE_ARG(aFaviconURI);
+  NS_ENSURE_ARG_POINTER(aDataLen);
+  NS_ENSURE_ARG_POINTER(aData);
+
   mozStorageStatementScoper scoper(mDBGetData);
   nsresult rv = BindStatementURI(mDBGetData, 0, aFaviconURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -835,13 +844,13 @@ NS_IMETHODIMP
 nsFaviconService::GetFaviconDataAsDataURL(nsIURI* aFaviconURI,
                                           nsAString& aDataURL)
 {
-  nsresult rv;
+  NS_ENSURE_ARG(aFaviconURI);
 
   PRUint8* data;
   PRUint32 dataLen;
   nsCAutoString mimeType;
 
-  rv = GetFaviconData(aFaviconURI, mimeType, &dataLen, &data);
+  nsresult rv = GetFaviconData(aFaviconURI, mimeType, &dataLen, &data);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!data) {
@@ -871,6 +880,9 @@ nsFaviconService::GetFaviconDataAsDataURL(nsIURI* aFaviconURI,
 NS_IMETHODIMP
 nsFaviconService::GetFaviconForPage(nsIURI* aPageURI, nsIURI** _retval)
 {
+  NS_ENSURE_ARG(aPageURI);
+  NS_ENSURE_ARG_POINTER(_retval);
+
   mozStorageStatementScoper scoper(mDBGetURL);
   nsresult rv = BindStatementURI(mDBGetURL, 0, aPageURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -892,6 +904,9 @@ nsFaviconService::GetFaviconForPage(nsIURI* aPageURI, nsIURI** _retval)
 NS_IMETHODIMP
 nsFaviconService::GetFaviconImageForPage(nsIURI* aPageURI, nsIURI** _retval)
 {
+  NS_ENSURE_ARG(aPageURI);
+  NS_ENSURE_ARG_POINTER(_retval);
+
   mozStorageStatementScoper scoper(mDBGetURL);
   nsresult rv = BindStatementURI(mDBGetURL, 0, aPageURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -923,6 +938,9 @@ nsresult
 nsFaviconService::GetFaviconLinkForIcon(nsIURI* aFaviconURI,
                                         nsIURI** aOutputURI)
 {
+  NS_ENSURE_ARG(aFaviconURI);
+  NS_ENSURE_ARG_POINTER(aOutputURI);
+
   nsCAutoString spec;
   if (aFaviconURI) {
     nsresult rv = aFaviconURI->GetSpec(spec);
@@ -948,6 +966,8 @@ ExpireFailedFaviconsCallback(nsCStringHashKey::KeyType aKey,
 NS_IMETHODIMP
 nsFaviconService::AddFailedFavicon(nsIURI* aFaviconURI)
 {
+  NS_ENSURE_ARG(aFaviconURI);
+
   nsCAutoString spec;
   nsresult rv = aFaviconURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -972,6 +992,8 @@ nsFaviconService::AddFailedFavicon(nsIURI* aFaviconURI)
 NS_IMETHODIMP
 nsFaviconService::RemoveFailedFavicon(nsIURI* aFaviconURI)
 {
+  NS_ENSURE_ARG(aFaviconURI);
+
   nsCAutoString spec;
   nsresult rv = aFaviconURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
