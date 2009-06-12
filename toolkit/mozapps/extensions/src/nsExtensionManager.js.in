@@ -3983,7 +3983,7 @@ ExtensionManager.prototype = {
       var addon = makeItem(getURIFromFile(aXPIFile).spec, "",
                            aInstallLocationKey, "", "", "",
                            getURIFromFile(aXPIFile).spec,
-                           "", "", "", "", 0, gApp.id);
+                           "", "", "", "", 0, gApp.ID);
       this._callInstallListeners("onInstallStarted", addon);
 
       shouldPhoneHomeIfNecessary = true;
