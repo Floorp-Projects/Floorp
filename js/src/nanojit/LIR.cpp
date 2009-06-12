@@ -172,7 +172,6 @@ namespace nanojit
 
 	void LirBufWriter::ensureRoom(uint32_t count)
 	{
-		NanoAssert(count * sizeof(LIns) <= MAX_SKIP_BYTES);
 		LInsp before = _buf->next();
 		LInsp after = before+count+1;
 		// transition to the next page?

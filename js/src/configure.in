@@ -5323,6 +5323,7 @@ mv confdefs.h.save confdefs.h
 MAKEFILES="
   Makefile
   shell/Makefile
+  lirasm/Makefile
   config/Makefile
   config/autoconf.mk
   config/mkdepend/Makefile
