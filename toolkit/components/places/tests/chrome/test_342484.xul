@@ -83,7 +83,6 @@ function runTest() {
   SimpleTest.finish();
 }
 
-var root = bmsvc.bookmarksRoot;
 const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/bad_links.atom";
 
 gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",

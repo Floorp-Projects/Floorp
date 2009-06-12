@@ -357,6 +357,9 @@ LivemarkService.prototype = {
 
   createLivemark: function LS_createLivemark(aParentId, aName, aSiteURI,
                                              aFeedURI, aIndex) {
+    if (!aParentId || !aFeedURI)
+      throw Cr.NS_ERROR_INVALID_ARG;
+
     // Don't add livemarks to livemarks
     if (this.isLivemark(aParentId))
       throw Cr.NS_ERROR_INVALID_ARG;
@@ -374,6 +377,9 @@ LivemarkService.prototype = {
   createLivemarkFolderOnly:
   function LS_createLivemarkFolderOnly(aParentId, aName, aSiteURI,
                                        aFeedURI, aIndex) {
+    if (aParentId < 1 || !aFeedURI)
+      throw Cr.NS_ERROR_INVALID_ARG;
+
     // Don't add livemarks to livemarks
     if (this.isLivemark(aParentId))
       throw Cr.NS_ERROR_INVALID_ARG;
@@ -404,6 +410,8 @@ LivemarkService.prototype = {
   },
 
   isLivemark: function LS_isLivemark(aFolderId) {
+    if (aFolderId < 1)
+      throw Cr.NS_ERROR_INVALID_ARG;
     return this._ans.itemHasAnnotation(aFolderId, LMANNO_FEEDURI);
   },
 

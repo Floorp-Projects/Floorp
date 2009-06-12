@@ -336,6 +336,7 @@ nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
                                        PRInt32 aFlags,
                                        PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG(aValue);
 
   PRUint16 dataType;
@@ -408,6 +409,7 @@ nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
                                        PRInt32 aFlags,
                                        PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG(aValue);
 
   if (aExpiration == EXPIRE_WITH_HISTORY)
@@ -485,6 +487,8 @@ nsAnnotationService::SetPageAnnotationString(nsIURI* aURI,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG(aURI);
+
   if (InPrivateBrowsingMode())
     return NS_OK;
 
@@ -510,6 +514,8 @@ nsAnnotationService::SetItemAnnotationString(PRInt64 aItemId,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
@@ -565,6 +571,8 @@ nsAnnotationService::SetPageAnnotationInt32(nsIURI* aURI,
                                             PRInt32 aFlags,
                                             PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG(aURI);
+
   if (InPrivateBrowsingMode())
     return NS_OK;
 
@@ -589,6 +597,8 @@ nsAnnotationService::SetItemAnnotationInt32(PRInt64 aItemId,
                                             PRInt32 aFlags,
                                             PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
@@ -644,6 +654,8 @@ nsAnnotationService::SetPageAnnotationInt64(nsIURI* aURI,
                                             PRInt32 aFlags,
                                             PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG(aURI);
+
   if (InPrivateBrowsingMode())
     return NS_OK;
 
@@ -668,6 +680,8 @@ nsAnnotationService::SetItemAnnotationInt64(PRInt64 aItemId,
                                             PRInt32 aFlags,
                                             PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
@@ -723,6 +737,8 @@ nsAnnotationService::SetPageAnnotationDouble(nsIURI* aURI,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG(aURI);
+
   if (InPrivateBrowsingMode())
     return NS_OK;
 
@@ -747,6 +763,8 @@ nsAnnotationService::SetItemAnnotationDouble(PRInt64 aItemId,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
@@ -809,6 +827,8 @@ nsAnnotationService::SetPageAnnotationBinary(nsIURI* aURI,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG(aURI);
+
   if (InPrivateBrowsingMode())
     return NS_OK;
 
@@ -833,6 +853,8 @@ nsAnnotationService::SetItemAnnotationBinary(PRInt64 aItemId,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
@@ -859,6 +881,8 @@ nsAnnotationService::GetPageAnnotationString(nsIURI* aURI,
                                              const nsACString& aName,
                                              nsAString& _retval)
 {
+  NS_ENSURE_ARG(aURI);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -876,6 +900,8 @@ nsAnnotationService::GetItemAnnotationString(PRInt64 aItemId,
                                              const nsACString& aName,
                                              nsAString& _retval)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -891,6 +917,8 @@ nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
                                        const nsACString& aName,
                                        nsIVariant** _retval)
 {
+  NS_ENSURE_ARG(aURI);
+
   *_retval = nsnull;
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
@@ -934,6 +962,9 @@ nsAnnotationService::GetItemAnnotation(PRInt64 aItemId,
                                        const nsACString& aName,
                                        nsIVariant** _retval)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(_retval);
+
   *_retval = nsnull;
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   if (NS_FAILED(rv))
@@ -979,6 +1010,8 @@ nsAnnotationService::GetPageAnnotationInt32(nsIURI* aURI,
                                         const nsACString& aName,
                                         PRInt32 *_retval)
 {
+  NS_ENSURE_ARG(aURI);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -996,6 +1029,8 @@ nsAnnotationService::GetItemAnnotationInt32(PRInt64 aItemId,
                                             const nsACString& aName,
                                             PRInt32 *_retval)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -1012,6 +1047,8 @@ nsAnnotationService::GetPageAnnotationInt64(nsIURI* aURI,
                                             const nsACString& aName,
                                             PRInt64 *_retval)
 {
+  NS_ENSURE_ARG(aURI);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   NS_ENSURE_SUCCESS(rv, rv);
   ENSURE_ANNO_TYPE(TYPE_INT64, mDBGetAnnotationFromURI)
@@ -1027,6 +1064,8 @@ nsAnnotationService::GetItemAnnotationInt64(PRInt64 aItemId,
                                             const nsACString& aName,
                                             PRInt64 *_retval)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   NS_ENSURE_SUCCESS(rv, rv);
   ENSURE_ANNO_TYPE(TYPE_INT64, mDBGetAnnotationFromItemId)
@@ -1042,6 +1081,9 @@ nsAnnotationService::GetPageAnnotationType(nsIURI* aURI,
                                            const nsACString& aName,
                                            PRUint16* _retval)
 {
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   NS_ENSURE_SUCCESS(rv, rv);
   *_retval = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
@@ -1056,6 +1098,8 @@ nsAnnotationService::GetItemAnnotationType(PRInt64 aItemId,
                                            const nsACString& aName,
                                            PRUint16* _retval)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(_retval);
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   NS_ENSURE_SUCCESS(rv, rv);
   *_retval = mDBGetAnnotationFromItemId->AsInt32(kAnnoIndex_Type);
@@ -1070,6 +1114,9 @@ nsAnnotationService::GetPageAnnotationDouble(nsIURI* aURI,
                                              const nsACString& aName,
                                              double *_retval)
 {
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -1086,6 +1133,8 @@ nsAnnotationService::GetItemAnnotationDouble(PRInt64 aItemId,
                                              const nsACString& aName,
                                              double *_retval)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(_retval);
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -1104,6 +1153,10 @@ nsAnnotationService::GetPageAnnotationBinary(nsIURI* aURI,
                                              PRUint32* aDataLen,
                                              nsACString& aMimeType)
 {
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(aData);
+  NS_ENSURE_ARG_POINTER(aDataLen);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -1127,6 +1180,9 @@ nsAnnotationService::GetItemAnnotationBinary(PRInt64 aItemId,
                                              PRUint32* aDataLen,
                                              nsACString& aMimeType)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(aData);
+  NS_ENSURE_ARG_POINTER(aDataLen);
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -1151,6 +1207,11 @@ nsAnnotationService::GetPageAnnotationInfo(nsIURI* aURI,
                                            nsACString& aMimeType,
                                            PRUint16 *aStorageType)
 {
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(aFlags);
+  NS_ENSURE_ARG_POINTER(aExpiration);
+  NS_ENSURE_ARG_POINTER(aStorageType);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -1181,6 +1242,11 @@ nsAnnotationService::GetItemAnnotationInfo(PRInt64 aItemId,
                                            nsACString& aMimeType,
                                            PRUint16 *aStorageType)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(aFlags);
+  NS_ENSURE_ARG_POINTER(aExpiration);
+  NS_ENSURE_ARG_POINTER(aStorageType);
+
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   if (NS_FAILED(rv))
     return rv;
@@ -1285,6 +1351,9 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
                                             PRUint32* aResultCount,
                                             PRInt64** aResults)
 {
+  NS_ENSURE_ARG_POINTER(aResultCount);
+  NS_ENSURE_ARG_POINTER(aResults);
+
   if (aName.IsEmpty() || !aResultCount || !aResults)
     return NS_ERROR_INVALID_ARG;
 
@@ -1332,6 +1401,10 @@ NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI, PRUint32* aCount,
                                             nsIVariant*** _result)
 {
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(aCount);
+  NS_ENSURE_ARG_POINTER(_result);
+
   *aCount = 0;
   *_result = nsnull;
 
@@ -1404,6 +1477,10 @@ NS_IMETHODIMP
 nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId, PRUint32* aCount,
                                             nsIVariant*** _result)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(aCount);
+  NS_ENSURE_ARG_POINTER(_result);
+
   *aCount = 0;
   *_result = nsnull;
 
@@ -1442,6 +1519,9 @@ nsAnnotationService::PageHasAnnotation(nsIURI* aURI,
                                        const nsACString& aName,
                                        PRBool *_retval)
 {
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     *_retval = PR_FALSE;
@@ -1461,6 +1541,9 @@ nsAnnotationService::ItemHasAnnotation(PRInt64 aItemId,
                                        const nsACString& aName,
                                        PRBool *_retval)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(_retval);
+
   nsresult rv = StartGetAnnotationFromItemId(aItemId, aName);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     *_retval = PR_FALSE;
@@ -1507,6 +1590,8 @@ NS_IMETHODIMP
 nsAnnotationService::RemovePageAnnotation(nsIURI* aURI,
                                           const nsACString& aName)
 {
+  NS_ENSURE_ARG(aURI);
+
   PRInt64 placeId;
   nsresult rv = GetPlaceIdForURI(aURI, &placeId, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1529,6 +1614,8 @@ NS_IMETHODIMP
 nsAnnotationService::RemoveItemAnnotation(PRInt64 aItemId,
                                           const nsACString& aName)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   nsresult rv = RemoveAnnotationInternal(aItemId, PR_TRUE, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1548,6 +1635,8 @@ nsAnnotationService::RemoveItemAnnotation(PRInt64 aItemId,
 NS_IMETHODIMP
 nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
 {
+  NS_ENSURE_ARG(aURI);
+
   PRInt64 placeId;
   nsresult rv = GetPlaceIdForURI(aURI, &placeId, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1577,6 +1666,8 @@ nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
 NS_IMETHODIMP
 nsAnnotationService::RemoveItemAnnotations(PRInt64 aItemId)
 {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_items_annos WHERE item_id = ?1"),
@@ -1614,6 +1705,9 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
                                          nsIURI* aDestURI,
                                          PRBool aOverwriteDest)
 {
+  NS_ENSURE_ARG(aSourceURI);
+  NS_ENSURE_ARG(aDestURI);
+
   if (InPrivateBrowsingMode())
     return NS_OK;
 
@@ -1725,6 +1819,8 @@ nsAnnotationService::CopyItemAnnotations(PRInt64 aSourceItemId,
 NS_IMETHODIMP
 nsAnnotationService::AddObserver(nsIAnnotationObserver* aObserver)
 {
+  NS_ENSURE_ARG(aObserver);
+
   if (mObservers.IndexOfObject(aObserver) >= 0)
     return NS_ERROR_INVALID_ARG; // already registered
   if (!mObservers.AppendObject(aObserver))
@@ -1738,6 +1834,8 @@ nsAnnotationService::AddObserver(nsIAnnotationObserver* aObserver)
 NS_IMETHODIMP
 nsAnnotationService::RemoveObserver(nsIAnnotationObserver* aObserver)
 {
+  NS_ENSURE_ARG(aObserver);
+
   if (!mObservers.RemoveObject(aObserver))
     return NS_ERROR_INVALID_ARG;
   return NS_OK;
