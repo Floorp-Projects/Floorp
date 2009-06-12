@@ -177,6 +177,7 @@ namespace nanojit
 			~Fragment();
 
 			NIns*			code()							{ return _code; }
+			Page*			pages()							{ return _pages; }
 			void			setCode(NIns* codee, Page* pages) { _code = codee; _pages = pages; }
 			int32_t&		hits()							{ return _hits; }
             void            blacklist();
