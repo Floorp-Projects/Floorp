@@ -4,12 +4,11 @@
 <script type="text/javascript">
 function boom()
 {
-  var table = document.getElementById("table");
   var col1 = document.createElement("col");
   col1.setAttribute("width", "100");
   var next = document.getElementById("col2");
   
-  table.insertBefore(col1, next);
+  next.parentNode.insertBefore(col1, next);
   reflow();
   col1.removeAttribute("width");
 }
