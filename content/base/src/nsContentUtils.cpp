@@ -3591,11 +3591,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
   PRBool bHTML = htmlDoc && !bCaseSensitive;
 
-  nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
-
-  if (bHTML && contextAsContent && nsContentUtils::GetBoolPref("html5.enable", PR_TRUE)) {
-    // XXX the HTML5 parser can't yet deal with context not being nsIContent
-  
+  if (bHTML && nsContentUtils::GetBoolPref("html5.enable", PR_TRUE)) {
     // See if the document has a cached fragment parser. nsHTMLDocument is the
     // only one that should really have one at the moment.
     nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
@@ -3614,12 +3610,29 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
     nsCOMPtr<nsIDOMDocumentFragment> frag;
     rv = NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
-        
-    parser->ParseFragment(aFragment, 
-                          frag, 
-                          contextAsContent->Tag(), 
-                          contextAsContent->GetNameSpaceID(), 
-                          (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
+    
+    nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
+    if (contextAsContent && !contextAsContent->IsNodeOfType(nsINode::eELEMENT)) {
+      contextAsContent = contextAsContent->GetParent();
+      if (contextAsContent && !contextAsContent->IsNodeOfType(nsINode::eELEMENT)) {
+        // can this even happen?
+        contextAsContent = nsnull;
+      }
+    }
+    
+    if (contextAsContent) {
+      parser->ParseFragment(aFragment, 
+                            frag, 
+                            contextAsContent->Tag(), 
+                            contextAsContent->GetNameSpaceID(), 
+                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks));    
+    } else {
+      parser->ParseFragment(aFragment, 
+                            frag, 
+                            nsGkAtoms::body, 
+                            kNameSpaceID_XHTML, 
+                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
+    }
   
     NS_ADDREF(*aReturn = frag);
     return NS_OK;
