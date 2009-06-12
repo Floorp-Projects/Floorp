@@ -1332,6 +1332,11 @@ void nsOggDecodeStateMachine::DecodeToFrame(nsAutoMonitor& aMonitor,
   float audioTime = 0;
   nsTArray<float> audioData;
   do {
+    if (frame) {
+      audioData.AppendElements(frame->mAudioData);
+      audioTime += frame->mAudioData.Length() /
+        (float)mAudioRate / (float)mAudioChannels;
+    }
     do {
       aMonitor.Exit();
       r = DecodeFrame();
@@ -1349,10 +1354,6 @@ void nsOggDecodeStateMachine::DecodeToFrame(nsAutoMonitor& aMonitor,
 
     delete frame;
     frame = nextFrame;
-
-    audioData.AppendElements(frame->mAudioData);
-    audioTime += frame->mAudioData.Length() /
-    (float)mAudioRate / (float)mAudioChannels;
   } while (frame->mDecodedFrameTime < target);
 
   if (mState == DECODER_STATE_SHUTDOWN) {
@@ -1737,6 +1738,9 @@ nsresult nsOggDecodeStateMachine::Run()
 
         // Set the right current time
         mCurrentFrameTime += mCallbackPeriod;
+        if (mDuration >= 0) {
+          mCurrentFrameTime = PR_MAX(mCurrentFrameTime, mDuration / 1000.0);
+        }
 
         mon.Exit();
         nsCOMPtr<nsIRunnable> event =
@@ -2382,8 +2386,8 @@ void nsOggDecoder::SeekingStoppedAtEnd()
     if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
     } else {
-      ChangeState(PLAY_STATE_ENDED);
-      fireEnded = PR_TRUE;
+      fireEnded = mNextState != PLAY_STATE_PLAYING;
+      ChangeState(fireEnded ? PLAY_STATE_ENDED : mNextState);
     }
   }
 
