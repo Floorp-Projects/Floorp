@@ -1590,7 +1590,10 @@ function initializeSanitizer()
         var clearOnShutdownBranch = prefService.getBranch("privacy.clearOnShutdown.");
         itemArray.forEach(function (name) {
           try {
-            cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
+            // don't migrate password or offlineApps clearing in the CRH dialog since
+            // there's no UI for those anymore. They default to false. bug 497656
+            if (name != "passwords" && name != "offlineApps")
+              cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
             clearOnShutdownBranch.setBoolPref(name, itemBranch.getBoolPref(name));
           }
           catch(e) {
