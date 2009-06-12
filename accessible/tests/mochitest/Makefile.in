@@ -84,6 +84,7 @@ _TEST_FILES =\
 		test_descr.html \
 		test_elm_filectrl.html \
 	$(warning   test_elm_media.html temporarily disabled) \
+		test_elm_table.html \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_focus.xul \

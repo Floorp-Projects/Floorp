@@ -558,6 +558,10 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
            tag == nsAccessibilityAtoms::q) {
     return CreateHyperTextAccessible(aFrame, aAccessible);
   }
+  else if (tag == nsAccessibilityAtoms::tr) {
+    *aAccessible = new nsEnumRoleAccessible(aNode, aWeakShell,
+                                            nsIAccessibleRole::ROLE_ROW);
+  }
   else if (nsCoreUtils::IsHTMLTableHeader(content)) {
     *aAccessible = new nsHTMLTableHeaderAccessible(aNode, aWeakShell);
   }
