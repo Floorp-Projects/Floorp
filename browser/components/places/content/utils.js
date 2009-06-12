@@ -1300,11 +1300,46 @@ var PlacesUIUtils = {
     return this.leftPaneFolderId = leftPaneRoot;
   },
 
+  /**
+   * Get the folder id for the organizer left-pane folder.
+   */
   get allBookmarksFolderId() {
     // ensure the left-pane root is initialized;
     this.leftPaneFolderId;
     delete this.allBookmarksFolderId;
     return this.allBookmarksFolderId = this.leftPaneQueries["AllBookmarks"];
+  },
+
+  /**
+   * If an item is a left-pane query, returns the name of the query
+   * or an empty string if not.
+   *
+   * @param aItemId id of a container
+   * @returns the name of the query, or empty string if not a left-pane query
+   */
+  getLeftPaneQueryNameFromId: function PU_getLeftPaneQueryNameFromId(aItemId) {
+    var queryName = "";
+    // If the let pane hasn't been built, use the annotation service
+    // directly, to avoid building the left pane too early.
+    if (this.__lookupGetter__("leftPaneFolderId")) {
+      try {
+        queryName = PlacesUtils.annotations.
+                                getItemAnnotation(itemId, ORGANIZER_QUERY_ANNO);
+      }
+      catch (ex) {
+        // doesn't have the annotation
+        queryName = "";
+      }
+    }
+    else {
+      // If the left pane has already been built, use the name->id map
+      // cached in PlacesUIUtils.
+      for (let [name, id] in Iterator(this.leftPaneQueries)) {
+        if (aItemId == id)
+          queryName = name;
+      }
+    }
+    return queryName; 
   },
 
   /**
