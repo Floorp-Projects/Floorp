@@ -301,7 +301,7 @@ var PlacesOrganizer = {
     if (selectedNode) {
       var doubleClickOnFlatList = (aEvent.button == 0 && aEvent.detail == 2 &&
                                    aEvent.target.parentNode.flatList);
-      var middleClick = (Event.button == 1 && aEvent.detail == 1);
+      var middleClick = (aEvent.button == 1 && aEvent.detail == 1);
 
       if (PlacesUtils.nodeIsURI(selectedNode) &&
           (doubleClickOnFlatList || middleClick)) {
