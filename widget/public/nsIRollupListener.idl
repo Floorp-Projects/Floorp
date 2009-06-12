@@ -43,15 +43,19 @@
 
 interface nsIContent;
 
-[uuid(ee6efe03-77dc-4aac-a6a8-905731a1796e)]
+[uuid(0CA103E5-80D4-4B81-A310-BE0708F8EAA9)]
 interface nsIRollupListener : nsISupports
 {
   /**
    * Notifies the object to rollup, optionally returning the node that
    * was just rolled up.
+   *
+   * aCount is the number of popups in a chain to close. If this is
+   * PR_UINT32_MAX, then all popups are closed.
+   *
    * @result NS_Ok if no errors
    */
-  nsIContent Rollup();
+  nsIContent Rollup(in unsigned long aCount);
 
   /**
    * Asks the RollupListener if it should rollup on mousevents
