@@ -49,7 +49,6 @@ let ConsoleView = {
 
     this._list = document.getElementById("console-box");
     this._evalTextbox = document.getElementById("console-eval-textbox");
-    this._evalFrame = document.getElementById("console-evaluator");
     this._bundle = document.getElementById("bundle_browser");
 
     this._count = 0;
@@ -59,6 +58,12 @@ let ConsoleView = {
     this._console.registerListener(this);
 
     this.appendInitialItems();
+
+    // Delay creation of the iframe for startup performance
+    this._evalFrame = document.createElement("iframe");
+    this._evalFrame.id = "console-evaluator";
+    this._evalFrame.collapsed = true;
+    document.getElementById("console-container").appendChild(this._evalFrame);
 
     let self = this;
     this._evalFrame.addEventListener("load", function() { self.loadOrDisplayResult(); }, true);

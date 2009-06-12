@@ -41,7 +41,6 @@
 <?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/console.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -385,7 +384,11 @@
         <vbox id="console-container" flex="1">
           <vbox id="console-header" class="panel-header">
             <hbox align="center">
-              <label value="&consoleHeader.label;" flex="1"/>
+              <label value="&consoleCodeEval.label;" control="console-eval-textbox"/>
+              <textbox id="console-eval-textbox" class="toolbar" value="" onkeypress="ConsoleView.onEvalKeyPress(event)" flex="1"/>
+              <button id="console-button-eval" class="button-dark show-text" label="&consoleEvaluate.label;" oncommand="ConsoleView.evaluateTypein()"/>
+            </hbox>
+            <hbox align="center" pack="end">
               <radiogroup id="console-filter" class="toggle-dark" oncommand="ConsoleView.changeMode();">
                 <radio label="&consoleAll.label;" value="all" selected="true"/>
                 <radio label="&consoleErrors.label;" value="error"/>
@@ -394,16 +397,9 @@
               </radiogroup>
               <button id="console-clear" class="button-dark show-text" oncommand="ConsoleView.clearConsole();" label="&consoleClear.label;"/>
             </hbox>
-            <hbox align="center">
-              <label value="&consoleCodeEval.label;" control="console-eval-textbox"/>
-              <textbox id="console-eval-textbox" class="toolbar" value="" onkeypress="ConsoleView.onEvalKeyPress(event)" flex="1"/>
-              <button id="console-button-eval" class="button-dark show-text" label="&consoleEvaluate.label;" oncommand="ConsoleView.evaluateTypein()"/>
-            </hbox>
           </vbox>
 
           <richlistbox id="console-box" class="console-box" flex="1"/>
-
-          <iframe name="console-evaluator" id="console-evaluator" collapsed="true"/>
         </vbox>
       </deck>
     </hbox>
