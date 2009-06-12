@@ -75,7 +75,7 @@ protected:
 protected:
 
   nsHashtable       mGroupsHash;    // hash keyed on command group.
-                                    // Entries are nsTArrays of pointers to char*
+                                    // Entries are nsVoidArrays of pointers to PRUnichar*
                                     // This could be made more space-efficient, maybe with atoms
   
 };

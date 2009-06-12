@@ -41,6 +41,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIWindowWatcher.h"
+#include "nsVoidArray.h"
 #include "prmem.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
