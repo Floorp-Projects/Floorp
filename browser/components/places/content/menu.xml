@@ -578,6 +578,8 @@
         ]]></body>
       </method>
 
+      <field name="_result">null</field>
+
       <!-- nsIPlacesView -->
       <method name="getResult">
         <body><![CDATA[
