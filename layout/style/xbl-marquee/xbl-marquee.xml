@@ -705,7 +705,7 @@
     <!-- White-space isn't allowed because a marquee could be 
          inside 'white-space: pre' -->
     <content>
-      <html:div style="display: -moz-box; overflow: auto; width: -moz-available;"
+      <html:div style="display: inline-block; overflow: auto; width: -moz-available;"
         ><children
       /></html:div>
     </content>
