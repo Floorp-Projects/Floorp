@@ -36,6 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsTraceRefcnt.h"
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+#define FORCE_PR_LOG
+#endif
+
 #include "nsCRT.h"
 #include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
@@ -411,6 +417,8 @@ NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
                                              nsISupports* context)
 {
+  LOG(("OnStartRequest"));
+
   nsresult rv;
   PRBool downloadError = PR_FALSE;
   nsCAutoString strStatus;
@@ -527,6 +535,7 @@ nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
                                       const PRUnichar *aData)
 {
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
+    LOG(("Quit application"));
     if (mIsUpdating && mChannel) {
       LOG(("Cancel download"));
       nsresult rv;
