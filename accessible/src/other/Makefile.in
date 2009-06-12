@@ -75,7 +75,6 @@ CPPSRCS = \
 
 EXPORTS = \
   nsAccessNodeWrap.h \
-  nsARIAGridAccessibleWrap.h \
   nsTextAccessibleWrap.h \
   nsAccessibleWrap.h \
   nsDocAccessibleWrap.h \
