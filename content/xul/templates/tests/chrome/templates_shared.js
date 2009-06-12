@@ -58,6 +58,8 @@ try {
                            getService(Components.interfaces.nsIRDFContainerUtils);
 } catch(ex) { }
 
+var xmlDoc;
+
 function test_template()
 {
   var root = document.getElementById("root");
@@ -66,10 +68,18 @@ function test_template()
   if (queryType == "rdf" && RDF) {
     var ioService = Components.classes["@mozilla.org/network/io-service;1"].
                       getService(Components.interfaces.nsIIOService);
-    var baseURI  = ioService.newURI(document.location, null, null);
-    baseURI = baseURI.resolve(root.getAttribute("datasources"));
-    var newuri = ioService.newURI(baseURI, null, null).spec;
-    ds = RDF.GetDataSourceBlocking(newuri);
+
+    var src = window.location.href.replace(/test_tmpl.*xul/, "animals.rdf");
+    ds = RDF.GetDataSourceBlocking(src);
+
+    if (root.datasources == "rdf:null")
+      root.datasources = "animals.rdf";
+  }
+  else if (queryType == "xml") {
+    var src = window.location.href.replace(/test_tmpl.*xul/, "animals.xml");
+    xmlDoc = new XMLHttpRequest();
+    xmlDoc.open("get", src, false);
+    xmlDoc.send(null);
   }
 
   // open menus if necessary
