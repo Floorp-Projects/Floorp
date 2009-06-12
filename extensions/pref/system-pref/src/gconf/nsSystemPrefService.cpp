@@ -164,7 +164,7 @@ private:
     nsSystemPrefService *mSysPrefService;
 
     //listeners
-    nsAutoTArray<nsAutoPtr<GConfCallbackData>, 8> mObservers;
+    nsAutoVoidArray *mObservers;
 
     void InitFuncPtrs();
     //gconf public func ptrs
@@ -205,17 +205,27 @@ private:
 };
 
 struct SysPrefCallbackData {
-    nsCOMPtr<nsISupports> observer;
+    nsISupports *observer;
     PRBool bIsWeakRef;
     PRUint32 prefAtom;
 };
+
+PRBool
+sysPrefDeleteObserver(void *aElement, void *aData) {
+    SysPrefCallbackData *pElement =
+        static_cast<SysPrefCallbackData *>(aElement);
+    NS_RELEASE(pElement->observer);
+    nsMemory::Free(pElement);
+    return PR_TRUE;
+}
 
 NS_IMPL_ISUPPORTS2(nsSystemPrefService, nsIPrefBranch, nsIPrefBranch2)
 
 /* public */
 nsSystemPrefService::nsSystemPrefService()
     :mInitialized(PR_FALSE),
-     mGConf(nsnull)
+     mGConf(nsnull),
+     mObservers(nsnull)
 {
 }
 
@@ -225,6 +235,10 @@ nsSystemPrefService::~nsSystemPrefService()
 
     if (mGConf)
         delete mGConf;
+    if (mObservers) {
+        (void)mObservers->EnumerateForwards(sysPrefDeleteObserver, nsnull);
+        delete mObservers;
+    }
 }
 
 nsresult
@@ -378,10 +392,19 @@ NS_IMETHODIMP nsSystemPrefService::AddObserver(const char *aDomain, nsIObserver 
     rv = mGConf->GetAtomForMozKey(aDomain, &prefAtom);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    SysPrefCallbackData *cbData = new SysPrefCallbackData();
+    if (!mObservers) {
+        mObservers = new nsAutoVoidArray();
+        if (mObservers == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    cbData->bIsWeakRef = aHoldWeak;
-    cbData->prefAtom = prefAtom;
+    SysPrefCallbackData *pCallbackData = (SysPrefCallbackData *)
+        nsMemory::Alloc(sizeof(SysPrefCallbackData));
+    if (pCallbackData == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    pCallbackData->bIsWeakRef = aHoldWeak;
+    pCallbackData->prefAtom = prefAtom;
     // hold a weak reference to the observer if so requested
     nsCOMPtr<nsISupports> observerRef;
     if (aHoldWeak) {
@@ -390,7 +413,7 @@ NS_IMETHODIMP nsSystemPrefService::AddObserver(const char *aDomain, nsIObserver 
         if (!weakRefFactory) {
             // the caller didn't give us a object that supports weak reference.
             // ... tell them
-            delete cbData;
+            nsMemory::Free(pCallbackData);
             return NS_ERROR_INVALID_ARG;
         }
         nsCOMPtr<nsIWeakReference> tmp = do_GetWeakReference(weakRefFactory);
@@ -399,15 +422,16 @@ NS_IMETHODIMP nsSystemPrefService::AddObserver(const char *aDomain, nsIObserver 
         observerRef = aObserver;
     }
 
-    rv = mGConf->NotifyAdd(prefAtom, cbData);
+    rv = mGConf->NotifyAdd(prefAtom, pCallbackData);
     if (NS_FAILED(rv)) {
-        delete cbData;
+        nsMemory::Free(pCallbackData);
         return rv;
     }
 
-    cbData->observer = observerRef;
-    mObservers.AppendElement(cbData);
+    pCallbackData->observer = observerRef;
+    NS_ADDREF(pCallbackData->observer);
 
+    mObservers->AppendElement(pCallbackData);
     return NS_OK;
 }
 
@@ -419,6 +443,9 @@ NS_IMETHODIMP nsSystemPrefService::RemoveObserver(const char *aDomain, nsIObserv
     NS_ENSURE_ARG_POINTER(aDomain);
     NS_ENSURE_ARG_POINTER(aObserver);
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_FAILURE);
+
+    if (!mObservers)
+        return NS_OK;
     
     PRUint32 prefAtom;
     // make sure the pref name is supported
@@ -426,33 +453,38 @@ NS_IMETHODIMP nsSystemPrefService::RemoveObserver(const char *aDomain, nsIObserv
     NS_ENSURE_SUCCESS(rv, rv);
 
     // need to find the index of observer, so we can remove it
-    PRUint32 count = mObservers.Length();
-    if (!count)
+    PRIntn count = mObservers->Count();
+    if (count <= 0)
         return NS_OK;
 
-    PRUint32 i;
+    PRIntn i;
+    SysPrefCallbackData *pCallbackData;
     for (i = 0; i < count; ++i) {
-        SysPrefCallbackData *cbData = mObservers[i];
-        nsCOMPtr<nsISupports> observerRef;
-        if (cbData->bIsWeakRef) {
-            nsCOMPtr<nsISupportsWeakReference> weakRefFactory =
-                do_QueryInterface(aObserver);
-            if (weakRefFactory) {
-                nsCOMPtr<nsIWeakReference> tmp =
-                    do_GetWeakReference(aObserver);
-                observerRef = tmp;
+        pCallbackData = (SysPrefCallbackData *)mObservers->ElementAt(i);
+        if (pCallbackData) {
+            nsCOMPtr<nsISupports> observerRef;
+            if (pCallbackData->bIsWeakRef) {
+                nsCOMPtr<nsISupportsWeakReference> weakRefFactory =
+                    do_QueryInterface(aObserver);
+                if (weakRefFactory) {
+                    nsCOMPtr<nsIWeakReference> tmp =
+                        do_GetWeakReference(aObserver);
+                    observerRef = tmp;
+                }
             }
-        }
-        if (!observerRef)
-            observerRef = aObserver;
+            if (!observerRef)
+                observerRef = aObserver;
 
-        if (cbData->observer == observerRef &&
-            cbData->prefAtom == prefAtom) {
-            rv = mGConf->NotifyRemove(prefAtom, cbData);
-            if (NS_SUCCEEDED(rv)) {
-                mObservers.RemoveElementAt(i);
+            if (pCallbackData->observer == observerRef &&
+                pCallbackData->prefAtom == prefAtom) {
+                rv = mGConf->NotifyRemove(prefAtom, pCallbackData);
+                if (NS_SUCCEEDED(rv)) {
+                    mObservers->RemoveElementAt(i);
+                    NS_RELEASE(pCallbackData->observer);
+                    nsMemory::Free(pCallbackData);
+                }
+                return rv;
             }
-            return rv;
         }
     }
     return NS_OK;
@@ -478,7 +510,9 @@ nsSystemPrefService::OnPrefChange(PRUint32 aPrefAtom, void *aData)
             // this weak referenced observer went away, remove it from the list
             nsresult rv = mGConf->NotifyRemove(aPrefAtom, pData);
             if (NS_SUCCEEDED(rv)) {
-                mObservers.RemoveElement(pData);
+                mObservers->RemoveElement(pData);
+                NS_RELEASE(pData->observer);
+                nsMemory::Free(pData);
             }
             return;
         }
@@ -553,12 +587,18 @@ static const PrefNamePair sPrefNameMapping[] = {
     {nsnull, nsnull},
 };
 
+PRBool
+gconfDeleteObserver(void *aElement, void *aData) {
+    nsMemory::Free(aElement);
+    return PR_TRUE;
+}
 
 GConfProxy::GConfProxy(nsSystemPrefService *aSysPrefService):
     mGConfClient(nsnull),
     mGConfLib(nsnull),
     mInitialized(PR_FALSE),
-    mSysPrefService(aSysPrefService)
+    mSysPrefService(aSysPrefService),
+    mObservers(nsnull)
 {
 }
 
@@ -566,6 +606,11 @@ GConfProxy::~GConfProxy()
 {
     if (mGConfClient)
         g_object_unref(G_OBJECT(mGConfClient));
+
+    if (mObservers) {
+        (void)mObservers->EnumerateForwards(gconfDeleteObserver, nsnull);
+        delete mObservers;
+    }
 
     // bug 379666: can't unload GConf-2 since it registers atexit handlers
     //PR_UnloadLibrary(mGConfLib);
@@ -719,13 +764,20 @@ GConfProxy::NotifyAdd (PRUint32 aAtom, void *aUserData)
     if (!gconfKey)
         return NS_ERROR_FAILURE;
 
-    GConfCallbackData *pData = new GConfCallbackData();
+    if (!mObservers) {
+        mObservers = new nsAutoVoidArray();
+        if (mObservers == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+ 
+    GConfCallbackData *pData = (GConfCallbackData *)
+        nsMemory::Alloc(sizeof(GConfCallbackData));
     NS_ENSURE_TRUE(pData, NS_ERROR_OUT_OF_MEMORY);
 
     pData->proxy = this;
     pData->userData = aUserData;
     pData->atom = aAtom;
-    mObservers.AppendElement(pData);
+    mObservers->AppendElement(pData);
 
     GConfClientAddDir(mGConfClient, gconfKey,
                       0, // GCONF_CLIENT_PRELOAD_NONE,  don't preload anything 
@@ -742,18 +794,20 @@ GConfProxy::NotifyRemove (PRUint32 aAtom, const void *aUserData)
 {
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_FAILURE);
 
-    PRUint32 count = mObservers.Length();
-    if (!count)
+    PRIntn count = mObservers->Count();
+    if (count <= 0)
         return NS_OK;
 
-    PRUint32 i;
+    PRIntn i;
+    GConfCallbackData *pData;
     for (i = 0; i < count; ++i) {
-        GConfCallbackData *pData = mObservers[i];
-        if (pData->atom == aAtom && pData->userData == aUserData) {
+        pData = (GConfCallbackData *)mObservers->ElementAt(i);
+        if (pData && pData->atom == aAtom && pData->userData == aUserData) {
             GConfClientNotifyRemove(mGConfClient, pData->notifyId);
             GConfClientRemoveDir(mGConfClient,
                                  GetGConfKey(pData->atom), NULL);
-            mObservers.RemoveElementAt(i);
+            mObservers->RemoveElementAt(i);
+            nsMemory::Free(pData);
             break;
         }
     }

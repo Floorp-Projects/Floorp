@@ -53,6 +53,7 @@ extern "C" {
 }
 #include "nsProxiedService.h"
 #include "nsKeygenHandler.h"
+#include "nsVoidArray.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIContent.h"
