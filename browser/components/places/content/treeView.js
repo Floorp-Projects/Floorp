@@ -907,8 +907,7 @@ PlacesTreeView.prototype = {
         }
         else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
                  nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-          if (PlacesUtils.annotations.itemHasAnnotation(itemId,
-                                                        LMANNO_FEEDURI))
+          if (PlacesUtils.nodeIsLivemarkContainer(node))
             properties.push(this._getAtomFor("livemark"));
         }
 

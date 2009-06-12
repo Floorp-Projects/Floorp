@@ -699,7 +699,7 @@ var BookmarksEventHandler = {
 
     var itemId = target._resultNode.itemId;
     var siteURIString = "";
-    if (itemId != -1 && PlacesUtils.livemarks.isLivemark(itemId)) {
+    if (itemId != -1 && PlacesUtils.itemIsLivemark(itemId)) {
       var siteURI = PlacesUtils.livemarks.getSiteURI(itemId);
       if (siteURI)
         siteURIString = siteURI.spec;
