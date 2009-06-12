@@ -4453,7 +4453,9 @@ nsGlobalWindow::Print()
         printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
       }
 
+      EnterModalState();
       webBrowserPrint->Print(printSettings, nsnull);
+      LeaveModalState();
 
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
@@ -5640,6 +5642,13 @@ nsGlobalWindow::EnterModalState()
     }
   }
   topWin->mModalStateDepth++;
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->EnterModalState();
+  }
 }
 
 // static
@@ -5742,6 +5751,13 @@ nsGlobalWindow::LeaveModalState()
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nsnull;
     }
+  }
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->LeaveModalState();
   }
 }
 
