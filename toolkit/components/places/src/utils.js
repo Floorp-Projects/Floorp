@@ -419,18 +419,30 @@ var PlacesUtils = {
     return false;
   },
 
- /**
-  * Determines whether a result node is a remote container registered by the
-  * livemark service.
-  * @param aNode
-  *        A result Node
-  * @returns true if the node is a livemark container item
-  */
+  /**
+   * Determines if a container item id is a livemark.
+   * @param aItemId
+   *        The id of the potential livemark.
+   * @returns true if the item is a livemark.
+   */
+  itemIsLivemark: function PU_itemIsLivemark(aItemId) {
+    // If the Livemark service hasn't yet been initialized then
+    // use the annotations service directly to avoid instanciating
+    // it on startup. (bug 398300)
+    if (this.__lookupGetter__("livemarks"))
+      return this.annotations.itemHasAnnotation(aItemId, LMANNO_FEEDURI);
+    // If the livemark service has already been instanciated, use it.
+    return this.livemarks.isLivemark(aItemId);
+  },
+
+  /**
+   * Determines whether a result node is a livemark container.
+   * @param aNode
+   *        A result Node
+   * @returns true if the node is a livemark container item
+   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
-    // Use the annotations service directly to avoid instantiating
-    // the Livemark service on startup. (bug 398300)
-    return this.nodeIsFolder(aNode) &&
-           this.annotations.itemHasAnnotation(aNode.itemId, LMANNO_FEEDURI);
+    return this.nodeIsFolder(aNode) && this.itemIsLivemark(aNode.itemId);
   },
 
  /**
@@ -955,13 +967,13 @@ var PlacesUtils = {
 
     // filter the ids list
     return bmkIds.filter(function(aID) {
-      var parent = this.bookmarks.getFolderIdForItem(aID);
+      var parentId = this.bookmarks.getFolderIdForItem(aID);
       // Livemark child
-      if (this.annotations.itemHasAnnotation(parent, LMANNO_FEEDURI))
+      if (this.itemIsLivemark(parentId))
         return false;
-      var grandparent = this.bookmarks.getFolderIdForItem(parent);
+      var grandparentId = this.bookmarks.getFolderIdForItem(parentId);
       // item under a tag container
-      if (grandparent == this.tagsFolderId)
+      if (grandparentId == this.tagsFolderId)
         return false;
       return true;
     }, this);
@@ -977,18 +989,21 @@ var PlacesUtils = {
     for (var i = 0; i < bmkIds.length; i++) {
       // Find the first folder which isn't a tag container
       var bk = bmkIds[i];
-      var parent = this.bookmarks.getFolderIdForItem(bk);
-      if (parent == this.unfiledBookmarksFolderId)
+      var parentId = this.bookmarks.getFolderIdForItem(bk);
+      if (parentId == this.unfiledBookmarksFolderId)
         return bk;
 
-      var grandparent = this.bookmarks.getFolderIdForItem(parent);
-      if (grandparent != this.tagsFolderId &&
-          !this.annotations.itemHasAnnotation(parent, LMANNO_FEEDURI))
+      var grandparentId = this.bookmarks.getFolderIdForItem(parentId);
+      if (grandparentId != this.tagsFolderId &&
+          !this.itemIsLivemark(parentId))
         return bk;
     }
     return -1;
   },
 
+  /**
+   * TODO: this should use the livemark service's cache of folder ids (bug 492884).
+   */
   getMostRecentFolderForFeedURI:
   function PU_getMostRecentFolderForFeedURI(aURI) {
     var feedSpec = aURI.spec

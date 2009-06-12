@@ -283,7 +283,7 @@ var BookmarkPropertiesPanel = {
           break;
 
         case "folder":
-          if (PlacesUtils.livemarks.isLivemark(this._itemId)) {
+          if (PlacesUtils.itemIsLivemark(this._itemId)) {
             this._itemType = LIVEMARK_CONTAINER;
             this._feedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
             this._siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
