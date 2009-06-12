@@ -172,6 +172,7 @@ extern bool js_verboseDebug;
 class Oracle {
     avmplus::BitSet _stackDontDemote;
     avmplus::BitSet _globalDontDemote;
+    avmplus::BitSet _pcDontDemote;
 public:
     Oracle();
 
@@ -179,6 +180,9 @@ public:
     JS_REQUIRES_STACK bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
     JS_REQUIRES_STACK void markStackSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
+    void markInstructionUndemotable(jsbytecode* pc);
+    bool isInstructionUndemotable(jsbytecode* pc) const;
+
     void clearDemotability();
     void clear() {
         clearDemotability();

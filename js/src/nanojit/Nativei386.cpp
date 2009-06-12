@@ -723,6 +723,7 @@ namespace nanojit
 			else //if (condop == LIR_uge)
 				JAE(targ, isfar);
 		}
+
 		at = _nIns;
 		asm_cmp(cond);
 		return at;
@@ -829,36 +830,70 @@ namespace nanojit
 			SETAE(r);
 		asm_cmp(ins);
 	}
-	
+
 	void Assembler::asm_arith(LInsp ins)
 	{
 		LOpcode op = ins->opcode();			
 		LInsp lhs = ins->oprnd1();
+
+		if (op == LIR_mod) {
+			/* LIR_mod expects the LIR_div to be near (no interference from the register allocator) */
+			findSpecificRegFor(lhs, EDX);
+			prepResultReg(ins, 1<<EDX);
+			evict(EAX);
+			return;
+		}
+
 		LInsp rhs = ins->oprnd2();
 
-		Register rb = UnknownReg;
+		bool forceReg;
 		RegisterMask allow = GpRegs;
-		bool forceReg = (op == LIR_mul || !rhs->isconst());
+		Register rb = UnknownReg;
 
-        /* Even if lhs == rhs && forceReg, shift instructions require ECX on the rhs. */
-		if ((lhs != rhs || (op == LIR_lsh || op == LIR_rsh || op == LIR_ush)) && forceReg)
-		{
-			if ((rb = asm_binop_rhs_reg(ins)) == UnknownReg) {
-				rb = findRegFor(rhs, allow);
+		switch (op) {
+		case LIR_div:
+			forceReg = true;
+			rb = findRegFor(rhs, (GpRegs ^ (rmask(EAX)|rmask(EDX))));
+			allow = 1<<EAX;
+			evict(EDX);
+			break;
+		case LIR_mul:
+			forceReg = true;
+			break;
+		case LIR_lsh:
+		case LIR_rsh:
+		case LIR_ush:
+			forceReg = !rhs->isconst();
+			if (forceReg) {
+				rb = findSpecificRegFor(rhs, ECX);
+				allow &= ~rmask(rb);
 			}
-			allow &= ~rmask(rb);
+			break;
+		case LIR_add:
+		case LIR_addp:
+			if (lhs->isop(LIR_alloc) && rhs->isconst()) {
+				// add alloc+const, use lea
+				Register rr = prepResultReg(ins, allow);
+				int d = findMemFor(lhs) + rhs->imm32();
+				LEA(rr, d, FP);
+				return;
+			}
+			/* fall through */
+		default:
+			forceReg = !rhs->isconst();
+			break;
 		}
-		else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
-			// add alloc+const, use lea
-			Register rr = prepResultReg(ins, allow);
-			int d = findMemFor(lhs) + rhs->imm32();
-			LEA(rr, d, FP);
-			return;
+
+		// if we need a register for the rhs and don't have one yet, get it
+		if (forceReg && lhs != rhs && rb == UnknownReg) {
+			rb = findRegFor(rhs, allow);
+			allow &= ~rmask(rb);
 		}
 
 		Register rr = prepResultReg(ins, allow);
 		Reservation* rA = getresv(lhs);
 		Register ra;
+
 		// if this is last use of lhs in reg, we can re-use result reg
 		if (rA == 0 || (ra = rA->reg) == UnknownReg)
 			ra = findSpecificRegFor(lhs, rr);
@@ -897,6 +932,11 @@ namespace nanojit
 				break;
 			case LIR_ush:
 				SHR(rr, rb);
+				break;
+			case LIR_div:
+			case LIR_mod:
+ 				DIV(rb);
+ 				CDQ();
 				break;
 			default:
 				NanoAssertMsg(0, "Unsupported");
@@ -944,7 +984,7 @@ namespace nanojit
 		if ( rr != ra ) 
 			MR(rr,ra);
 	}
-	
+
 	void Assembler::asm_neg_not(LInsp ins)
 	{
 		LOpcode op = ins->opcode();			
@@ -1697,17 +1737,6 @@ namespace nanojit
 	
 	void Assembler::nativePageReset()
 	{
-	}
-
-	Register Assembler::asm_binop_rhs_reg(LInsp ins)
-	{
-		LOpcode op = ins->opcode();
-		LIns *rhs = ins->oprnd2();
-
-		if (op == LIR_lsh || op == LIR_rsh || op == LIR_ush)
-			return findSpecificRegFor(rhs, ECX);
-
-		return UnknownReg;	
 	}
 
 	void Assembler::nativePageSetup()

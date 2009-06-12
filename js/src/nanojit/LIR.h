@@ -148,7 +148,7 @@ namespace nanojit
 
     inline bool isCseOpcode(LOpcode op) {
         op = LOpcode(op & ~LIR64);
-        return op >= LIR_ldcs && op <= LIR_uge;
+        return op >= LIR_int && op <= LIR_uge;
     }
     inline bool isRetOpcode(LOpcode op) {
         return (op & ~LIR64) == LIR_ret;
