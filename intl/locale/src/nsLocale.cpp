@@ -44,6 +44,7 @@
 #include "nsLocale.h"
 #include "nsLocaleCID.h"
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
 #include "nsMemory.h"
 #include "nsCRT.h"
 
