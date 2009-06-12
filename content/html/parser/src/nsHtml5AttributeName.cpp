@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Mozilla Foundation
+ * Copyright (c) 2008-2009 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -431,7 +431,7 @@ nsHtml5AttributeName::initializeStatics()
   MAXSIZE = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::maxsize), ALL_NO_PREFIX);
   LOOPEND = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::loopend), ALL_NO_PREFIX);
   LARGEOP = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::largeop), ALL_NO_PREFIX);
-  UNICODE = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::unicode), ALL_NO_PREFIX);
+  UNI_CODE = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::unicode_), ALL_NO_PREFIX);
   TARGETX = new nsHtml5AttributeName(ALL_NO_NS, SVG_DIFFERENT(nsHtml5Atoms::targetx, nsHtml5Atoms::targetX), ALL_NO_PREFIX);
   TARGETY = new nsHtml5AttributeName(ALL_NO_NS, SVG_DIFFERENT(nsHtml5Atoms::targety, nsHtml5Atoms::targetY), ALL_NO_PREFIX);
   VIEWBOX = new nsHtml5AttributeName(ALL_NO_NS, SVG_DIFFERENT(nsHtml5Atoms::viewbox, nsHtml5Atoms::viewBox), ALL_NO_PREFIX);
@@ -1013,7 +1013,7 @@ nsHtml5AttributeName::initializeStatics()
   ATTRIBUTE_NAMES[211] = MAXSIZE;
   ATTRIBUTE_NAMES[212] = LOOPEND;
   ATTRIBUTE_NAMES[213] = LARGEOP;
-  ATTRIBUTE_NAMES[214] = UNICODE;
+  ATTRIBUTE_NAMES[214] = UNI_CODE;
   ATTRIBUTE_NAMES[215] = TARGETX;
   ATTRIBUTE_NAMES[216] = TARGETY;
   ATTRIBUTE_NAMES[217] = VIEWBOX;
@@ -1607,7 +1607,7 @@ nsHtml5AttributeName::releaseStatics()
   delete MAXSIZE;
   delete LOOPEND;
   delete LARGEOP;
-  delete UNICODE;
+  delete UNI_CODE;
   delete TARGETX;
   delete TARGETY;
   delete VIEWBOX;
