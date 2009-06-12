@@ -416,7 +416,8 @@ namespace nanojit
             case LIR_fret:
             case LIR_fneg:
             case LIR_i2f:
-            case LIR_u2f:
+		    case LIR_u2f:
+		    case LIR_mod:
                 return true;
 
             default:
@@ -441,6 +442,7 @@ namespace nanojit
             case LIR_add:
             case LIR_sub:
             case LIR_mul:
+		    case LIR_div:
             case LIR_and:
             case LIR_or:
             case LIR_xor:
@@ -751,6 +753,12 @@ namespace nanojit
 			case LIR_mul:
 			    d = double(c1) * double(c2);
 			    goto fold;
+			case LIR_div:
+			case LIR_mod:
+				// We can't easily fold div and mod, since folding div makes it
+				// impossible to calculate the mod that refers to it. The
+				// frontend shouldn't emit div and mod with constant operands.
+				NanoAssert(0);
 			default:
 			    ;
 			}
@@ -1754,6 +1762,7 @@ namespace nanojit
             case LIR_ov:
             case LIR_cs:
 			case LIR_not: 
+		    case LIR_mod:
 				sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
 				break;
 
@@ -1769,6 +1778,7 @@ namespace nanojit
 			case LIR_addp:
 			case LIR_sub: 
 		 	case LIR_mul: 
+		    case LIR_div:
 			case LIR_fadd:
 			case LIR_fsub: 
 		 	case LIR_fmul: 
