@@ -90,6 +90,8 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
     event.stopPropagation();
   }
 
+  var prevent = function(aEvent) {aEvent.preventDefault();}
+
   var xIncrement = 0;
   var yIncrement = 0;
 
@@ -127,10 +129,15 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
                              { type: "mousemove" });
   ok(trapped, "A dragstart event has been trapped.");
   gBookmarksToolbar.removeEventListener("dragstart", trapDrag, false);
+
+  // This is likely to cause a click event, and, in case we are dragging a
+  // bookmark, an unwanted page visit.  Prevent the click event.
+  aElement.addEventListener("click", prevent, false);
   EventUtils.synthesizeMouse(aElement,
                              startingPoint.x + xIncrement * 9,
                              startingPoint.y + yIncrement * 9,
                              { type: "mouseup" });
+  aElement.removeEventListener("click", prevent, false);
 
   // Cleanup eventually opened menus.
   if (aElement.localName == "menu" && aElement.open)
@@ -202,11 +209,6 @@ var gTests = [
   {
     desc: "Drag a bookmark on toolbar",
     run: function() {
-      //XXX bug 496266: this test causes a page navigation to the bookmark, which in
-      // turn causes a history visit to be added for the page, which messes up
-      // subsequent tests, so disable it for now
-      return;
-
       // Create a test bookmark to be dragged.
       var itemId = PlacesUtils.bookmarks
                               .insertBookmark(PlacesUtils.toolbarFolderId,
