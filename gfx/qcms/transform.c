@@ -668,6 +668,12 @@ static void qcms_transform_data_gray_out_lut(qcms_transform *transform, unsigned
 	}
 }
 
+/* Alpha is not corrected.
+   A rationale for this is found in Alvy Ray's "Should Alpha Be Nonlinear If
+   RGB Is?" Tech Memo 17 (December 14, 1998).
+	See: ftp://ftp.alvyray.com/Acrobat/17_Nonln.pdf
+*/
+
 static void qcms_transform_data_graya_out_lut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
 	int i;
