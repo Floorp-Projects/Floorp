@@ -7395,6 +7395,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
           *outResult = TRUE;
           return TRUE;
         }
+#ifndef WINCE
         // if we are only rolling up some popups, don't activate and don't let
         // the event go through. This prevents clicks menus higher in the
         // chain from opening when a context menu is open
@@ -7402,6 +7403,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
           *outResult = MA_NOACTIVATEANDEAT;
           return TRUE;
         }
+#endif
       }
     } // if event that might trigger a popup to rollup
   } // if rollup listeners registered
