@@ -913,14 +913,9 @@ PlacesTreeView.prototype = {
         }
 
         if (itemId != -1) {
-          var oqAnno;
-          try {
-            oqAnno = PlacesUtils.annotations
-                                .getItemAnnotation(itemId,
-                                                   ORGANIZER_QUERY_ANNO);
-            properties.push(this._getAtomFor("OrganizerQuery_" + oqAnno));
-          }
-          catch (ex) { /* not a special query */ }
+          var queryName = PlacesUIUtils.getLeftPaneQueryNameFromId(itemId);
+          if (queryName)
+            properties.push(this._getAtomFor("OrganizerQuery_" + queryName));
         }
       }
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
