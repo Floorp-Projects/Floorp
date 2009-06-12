@@ -920,7 +920,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   NSString *sender = [aNotification object];
   if (!sender || ![sender isEqualToString:@"org.mozilla.gecko.PopupWindow"]) {
     if (gRollupListener && gRollupWidget)
-      gRollupListener->Rollup(nsnull);
+      gRollupListener->Rollup(nsnull, nsnull);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
