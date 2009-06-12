@@ -91,6 +91,7 @@ endif
 
 EXPORTS = \
   nsAccessNodeWrap.h \
+  nsARIAGridAccessibleWrap.h \
   nsAccessibleWrap.h \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
