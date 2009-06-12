@@ -118,7 +118,6 @@ public:
 protected:
 
   virtual PRIntn GetSkipSides() const;
-  nsIFrame* MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName);
   void ReParentFrameList(nsIFrame* aFrameList);
 
   nsIFrame* mLegendFrame;
@@ -615,8 +614,8 @@ NS_IMETHODIMP
 nsFieldSetFrame::AppendFrames(nsIAtom*       aListName,
                               nsIFrame*      aFrameList)
 {
-  aFrameList = MaybeSetLegend(aFrameList, aListName);
   if (aFrameList) {
+    // aFrameList is not allowed to contain "the legend" for this fieldset
     ReParentFrameList(aFrameList);
     return mContentFrame->AppendFrames(aListName, aFrameList);
   }
@@ -632,8 +631,8 @@ nsFieldSetFrame::InsertFrames(nsIAtom*       aListName,
                aPrevFrame->GetParent() == mContentFrame,
                "inserting after sibling frame with different parent");
 
-  aFrameList = MaybeSetLegend(aFrameList, aListName);
   if (aFrameList) {
+    // aFrameList is not allowed to contain "the legend" for this fieldset
     ReParentFrameList(aFrameList);
     if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
       aPrevFrame = nsnull;
@@ -648,17 +647,7 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
                              nsIFrame*      aOldFrame)
 {
   // For reference, see bug 70648, bug 276104 and bug 236071.
-  if (aOldFrame == mLegendFrame) {
-    NS_ASSERTION(!aListName, "Unexpected frame list when removing legend frame");
-    NS_ASSERTION(mLegendFrame->GetParent() == this, "Legend Parent has wrong parent");
-    NS_ASSERTION(mLegendFrame->GetNextSibling() == mContentFrame, "mContentFrame is not next sibling");
-
-    mFrames.DestroyFrame(mLegendFrame);
-    mLegendFrame = nsnull;
-    PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
-    return NS_OK;
-  }
+  NS_ASSERTION(aOldFrame != mLegendFrame, "Cannot remove mLegendFrame here");
   return mContentFrame->RemoveFrame(aListName, aOldFrame);
 }
 
@@ -675,27 +664,13 @@ NS_IMETHODIMP nsFieldSetFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-nsIFrame*
-nsFieldSetFrame::MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName)
-{
-  if (!mLegendFrame && aFrameList->GetType() == nsGkAtoms::legendFrame) {
-    NS_ASSERTION(!aListName, "Unexpected frame list when adding legend frame");
-    mLegendFrame = aFrameList;
-    aFrameList = mLegendFrame->GetNextSibling();
-    mLegendFrame->SetNextSibling(mContentFrame);
-    mFrames.SetFrames(mLegendFrame);
-    PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                       NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
-  return aFrameList;
-}
-
 void
 nsFieldSetFrame::ReParentFrameList(nsIFrame* aFrameList)
 {
   nsFrameManager* frameManager = PresContext()->FrameManager();
   for (nsIFrame* frame = aFrameList; frame; frame = frame->GetNextSibling()) {
+    NS_ASSERTION(mLegendFrame || frame->GetType() != nsGkAtoms::legendFrame,
+                 "The fieldset's legend is not allowed in this list");
     frame->SetParent(mContentFrame);
     frameManager->ReParentStyleContext(frame);
   }

@@ -6482,12 +6482,24 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   nsIContent* container = parentFrame->GetContent();
 
-  if (parentFrame->GetType() == nsGkAtoms::frameSetFrame &&
+  nsIAtom* frameType = parentFrame->GetType();
+  if (frameType == nsGkAtoms::frameSetFrame &&
       IsSpecialFramesetChild(aChild)) {
     // Just reframe the parent, since framesets are weird like that.
     return RecreateFramesForContent(parentFrame->GetContent());
   }
-  
+
+  if (frameType == nsGkAtoms::fieldSetFrame &&
+      aChild->Tag() == nsGkAtoms::legend) {
+    // Just reframe the parent, since figuring out whether this
+    // should be the new legend and then handling it is too complex.
+    // We could do a little better here --- check if the fieldset already
+    // has a legend which occurs earlier in its child list than this node,
+    // and if so, proceed. But we'd have to extend nsFieldSetFrame
+    // to locate this legend in the inserted frames and extract it.
+    return RecreateFramesForContent(parentFrame->GetContent());
+  }
+
   // Don't construct kids of leaves
   if (parentFrame->IsLeaf()) {
     return NS_OK;
@@ -8700,6 +8712,14 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
 #endif
 
     *aResult = ReframeContainingBlock(aFrame);
+    return PR_TRUE;
+  }
+
+  if (aFrame->GetType() == nsGkAtoms::legendFrame &&
+      aFrame->GetParent()->GetType() == nsGkAtoms::fieldSetFrame) {
+    // When we remove the legend for a fieldset, we should reframe
+    // the fieldset to ensure another legend is used, if there is one
+    *aResult = RecreateFramesForContent(aFrame->GetParent()->GetContent());
     return PR_TRUE;
   }
 
