@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include "plhash.h"
 
-#include "nsTArray.h"
+#include "nsVoidArray.h"
 #include "nsQuickSort.h"
 
 /*
@@ -57,10 +57,10 @@ struct AllocationNode {
 
     // Other |AllocationNode| objects whose memory has a pointer to
     // this object.
-    nsAutoTArray<AllocationNode*, 8> pointers_to;
+    nsAutoVoidArray pointers_to;
 
     // The reverse.
-    nsAutoTArray<AllocationNode*, 8> pointers_from;
+    nsAutoVoidArray pointers_from;
 
     // Early on in the algorithm, the pre-order index from a DFS.
     // Later on, set to the index of the strongly connected component to
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
     // |pointers_to|) and assign the post-order index to |index|.
     {
         PRUint32 dfs_index = 0;
-        nsAutoTArray<AllocationNode*, 8> stack;
+        nsVoidArray stack;
 
         for (AllocationNode *n = nodes, *n_end = nodes+count; n != n_end; ++n) {
             if (n->reached) {
@@ -204,8 +204,9 @@ int main(int argc, char **argv)
             stack.AppendElement(n);
 
             do {
-                PRUint32 pos = stack.Length() - 1;
-                AllocationNode *n = stack[pos];
+                PRUint32 pos = stack.Count() - 1;
+                AllocationNode *n =
+                    static_cast<AllocationNode*>(stack[pos]);
                 if (n->reached) {
                     n->index = dfs_index++;
                     stack.RemoveElementAt(pos);
@@ -214,14 +215,14 @@ int main(int argc, char **argv)
 
                     // When doing post-order processing, we have to be
                     // careful not to put reached nodes into the stack.
-                    nsAutoTArray<AllocationNode*, 8> &pt = n->pointers_to;
-                    for (PRInt32 i = pt.Length() - 1; i >= 0; --i) {
-                        if (!pt[i]->reached) {
+                    nsVoidArray &pt = n->pointers_to;
+                    for (PRInt32 i = pt.Count() - 1; i >= 0; --i) {
+                        if (!static_cast<AllocationNode*>(pt[i])->reached) {
                             stack.AppendElement(pt[i]);
                         }
                     }
                 }
-            } while (stack.Length() > 0);
+            } while (stack.Count() > 0);
         }
     }
 
@@ -247,7 +248,7 @@ int main(int argc, char **argv)
         for (size_t i = 0; i < count; ++i) {
             nodes[i].reached = PR_FALSE;
         }
-        nsAutoTArray<AllocationNode*, 8> stack;
+        nsVoidArray stack;
         for (AllocationNode **sn = sorted_nodes,
                         **sn_end = sorted_nodes + count; sn != sn_end; ++sn) {
             if ((*sn)->reached) {
@@ -257,8 +258,9 @@ int main(int argc, char **argv)
             // We found a new strongly connected index.
             stack.AppendElement(*sn);
             do {
-                PRUint32 pos = stack.Length() - 1;
-                AllocationNode *n = stack[pos];
+                PRUint32 pos = stack.Count() - 1;
+                AllocationNode *n =
+                    static_cast<AllocationNode*>(stack[pos]);
                 stack.RemoveElementAt(pos);
 
                 if (!n->reached) {
@@ -266,7 +268,7 @@ int main(int argc, char **argv)
                     n->index = num_sccs;
                     stack.AppendElements(n->pointers_from);
                 }
-            } while (stack.Length() > 0);
+            } while (stack.Count() > 0);
             ++num_sccs;
         }
     }
@@ -279,7 +281,7 @@ int main(int argc, char **argv)
             nodes[i].is_root = PR_TRUE;
         }
 
-        nsAutoTArray<AllocationNode*, 8> stack;
+        nsVoidArray stack;
         for (AllocationNode *n = nodes, *n_end = nodes+count; n != n_end; ++n) {
             if (!n->is_root) {
                 continue;
@@ -287,16 +289,18 @@ int main(int argc, char **argv)
 
             // Loop through pointers_to, and add any that are in a
             // different SCC to stack:
-            for (int i = n->pointers_to.Length() - 1; i >= 0; --i) {
-                AllocationNode *target = n->pointers_to[i];
+            for (int i = n->pointers_to.Count() - 1; i >= 0; --i) {
+                AllocationNode *target =
+                    static_cast<AllocationNode*>(n->pointers_to[i]);
                 if (n->index != target->index) {
                     stack.AppendElement(target);
                 }
             }
 
-            while (stack.Length() > 0) {
-                PRUint32 pos = stack.Length() - 1;
-                AllocationNode *n = stack[pos];
+            while (stack.Count() > 0) {
+                PRUint32 pos = stack.Count() - 1;
+                AllocationNode *n =
+                    static_cast<AllocationNode*>(stack[pos]);
                 stack.RemoveElementAt(pos);
 
                 if (n->is_root) {
@@ -394,11 +398,12 @@ int main(int argc, char **argv)
                     }
                 }
 
-                if (n->pointers_from.Length()) {
+                if (n->pointers_from.Count()) {
                     printf("\nPointers from:\n");
-                    for (PRUint32 i = 0, i_end = n->pointers_from.Length();
+                    for (PRUint32 i = 0, i_end = n->pointers_from.Count();
                          i != i_end; ++i) {
-                        AllocationNode *t = n->pointers_from[i];
+                        AllocationNode *t = static_cast<AllocationNode*>
+                                                       (n->pointers_from[i]);
                         const ADLog::Entry *te = t->entry;
                         printf("    <a href=\"#o%d\">%s</a> (Object %d, ",
                                t - nodes, te->type, t - nodes);
