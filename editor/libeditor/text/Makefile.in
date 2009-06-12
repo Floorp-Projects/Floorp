@@ -74,7 +74,6 @@ CPPSRCS		=                           \
 		nsTextEditUtils.cpp         \
 		nsTextEditRules.cpp         \
 		nsEditorEventListeners.cpp  \
-		nsWrapUtils.cpp  \
 		nsInternetCiter.cpp  \
 		nsTextEditRulesBidi.cpp \
 		$(NULL)
