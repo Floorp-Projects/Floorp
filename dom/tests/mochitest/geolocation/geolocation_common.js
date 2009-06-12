@@ -1,19 +1,18 @@
 
-
 function stop_geolocationProvider()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "geolocation-test-control", "stop-responding");
+  var baseURL = "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", baseURL + "?action=stop-responding&latitude=3.14", false);
+  xhr.send(null);
 }
 
 function resume_geolocationProvider()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "geolocation-test-control", "start-responding");
+  var baseURL = "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", baseURL + "?action=start-responding", false);
+  xhr.send(null);
 }
 
 function check_geolocation(location) {
