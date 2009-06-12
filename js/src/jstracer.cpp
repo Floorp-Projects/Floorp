@@ -473,6 +473,12 @@ globalSlotHash(JSContext* cx, unsigned slot)
     return int(h);
 }
 
+static inline int
+pcHash(jsbytecode* pc)
+{
+    return int(uintptr_t(pc) & ORACLE_MASK);
+}
+
 Oracle::Oracle()
 {
     /* Grow the oracle bitsets to their (fixed) size here, once. */
@@ -495,7 +501,7 @@ Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
     return _globalDontDemote.get(globalSlotHash(cx, slot));
 }
 
-/* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
+/* Tell the oracle that a certain slot at a certain stack slot should not be demoted. */
 JS_REQUIRES_STACK void
 Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot)
 {
@@ -509,11 +515,26 @@ Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot) const
     return _stackDontDemote.get(stackSlotHash(cx, slot));
 }
 
+/* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
+void
+Oracle::markInstructionUndemotable(jsbytecode* pc)
+{
+    _pcDontDemote.set(&gc, pcHash(pc));
+}
+
+/* Consult with the oracle whether we shouldn't demote a certain bytecode location. */
+bool
+Oracle::isInstructionUndemotable(jsbytecode* pc) const
+{
+    return _pcDontDemote.get(pcHash(pc));
+}
+
 void
 Oracle::clearDemotability()
 {
     _stackDontDemote.reset();
     _globalDontDemote.reset();
+    _pcDontDemote.reset();
 }
 
 
@@ -821,13 +842,27 @@ static bool isconst(LIns* i, int32_t c)
     return i->isconst() && i->imm32() == c;
 }
 
-static bool overflowSafe(LIns* i)
+/*
+ * Determine whether this operand is guaranteed to not overflow the specified
+ * integer operation.
+ */
+static bool overflowSafe(LOpcode op, LIns* i)
 {
     LIns* c;
+    switch (op) {
+      case LIR_add:
+      case LIR_sub:
+          return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
+                  ((c->imm32() & 0xc0000000) == 0)) ||
+                 (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
+                  ((c->imm32() > 0)));
+    default:
+        JS_ASSERT(op == LIR_mul);
+    }
     return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
-            ((c->imm32() & 0xc0000000) == 0)) ||
-           (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
-            ((c->imm32() > 0)));
+            ((c->imm32() & 0xffff0000) == 0)) ||
+           (i->isop(LIR_ush) && ((c = i->oprnd2())->isconst()) &&
+            ((c->imm32() >= 16)));
 }
 
 /* soft float support */
@@ -4198,6 +4233,9 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         /* abort recording so the inner loop can become type stable. */
         js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
         return js_AttemptToStabilizeTree(cx, lr, outer, outerFragment->argc);
+      case OVERFLOW_EXIT:
+        oracle.markInstructionUndemotable(cx->fp->regs->pc);
+        /* fall through */
       case BRANCH_EXIT:
         /* abort recording the outer tree, extend the inner tree */
         js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
@@ -4857,6 +4895,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     switch (lr->exitType) {
       case UNSTABLE_LOOP_EXIT:
         return js_AttemptToStabilizeTree(cx, lr, NULL, NULL);
+      case OVERFLOW_EXIT:
+        oracle.markInstructionUndemotable(cx->fp->regs->pc);
+        /* fall through */
       case BRANCH_EXIT:
       case CASE_EXIT:
         return js_AttemptToExtendTree(cx, lr, NULL, NULL);
@@ -5691,51 +5732,135 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i, n >= 0);
 }
 
+extern jsdouble FASTCALL js_dmod(jsdouble a, jsdouble b);
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 {
-    if (v == LIR_fadd || v == LIR_fsub) {
-        jsdouble r;
-        if (v == LIR_fadd)
-            r = v0 + v1;
-        else
-            r = v0 - v1;
-        /*
-         * Calculate the result of the addition for the current values. If the
-         * value is not within the integer range, don't even try to demote
-         * here.
-         */
-        if (!JSDOUBLE_IS_NEGZERO(r) && (jsint(r) == r) && isPromoteInt(s0) && isPromoteInt(s1)) {
-            LIns* d0 = ::demote(lir, s0);
-            LIns* d1 = ::demote(lir, s1);
-            /*
-             * If the inputs are constant, generate an integer constant for
-             * this operation.
-             */
-            if (d0->isconst() && d1->isconst())
-                return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
-            /*
-             * Speculatively generate code that will perform the addition over
-             * the integer inputs as an integer addition/subtraction and exit
-             * if that fails.
-             */
-            v = (LOpcode)((int)v & ~LIR64);
-            LIns* result = lir->ins2(v, d0, d1);
-            if (!result->isconst() && (!overflowSafe(d0) || !overflowSafe(d1))) {
-                VMSideExit* exit = snapshot(OVERFLOW_EXIT);
-                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, result), createGuardRecord(exit));
-            }
-            return lir->ins1(LIR_i2f, result);
+    /*
+     * To even consider this operation for demotion, both operands have to be
+     * integers and the oracle must not give us a negative hint for the
+     * instruction.
+     */
+    if (oracle.isInstructionUndemotable(cx->fp->regs->pc) || !isPromoteInt(s0) || !isPromote(s1)) {
+    out:
+        if (v == LIR_fmod) {
+            LIns* args[] = { s1, s0 };
+            return lir->insCall(&js_dmod_ci, args);
         }
-        /*
-         * The result doesn't fit into the integer domain, so either generate
-         * a floating point constant or a floating point operation.
-         */
-        if (s0->isconst() && s1->isconst())
-            return lir->insImmf(r);
-        return lir->ins2(v, s0, s1);
+        LIns* result = lir->ins2(v, s0, s1);
+        JS_ASSERT_IF(s0->isconstq() && s1->isconstq(), result->isconstq());
+        return result;
     }
-    return lir->ins2(v, s0, s1);
+
+    jsdouble r;
+    switch (v) {
+    case LIR_fadd:
+        r = v0 + v1;
+        break;
+    case LIR_fsub:
+        r = v0 - v1;
+        break;
+    case LIR_fmul:
+        r = v0 * v1;
+        break;
+#ifdef NANOJIT_IA32
+    case LIR_fdiv:
+        if (v1 == 0)
+            goto out;
+        r = v0 / v1;
+        break;
+    case LIR_fmod:
+        if (v1 == 0)
+            goto out;
+        r = js_dmod(v0, v1);
+        break;
+#endif
+    default:
+        goto out;
+    }
+
+    /*
+     * The result must be an integer at record time, otherwise there is no
+     * point in trying to demote it.
+     */
+    if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
+        goto out;
+
+    LIns* d0 = ::demote(lir, s0);
+    LIns* d1 = ::demote(lir, s1);
+
+    /*
+     * Speculatively emit an integer operation, betting that at runtime we
+     * will get integer results again.
+     */
+    VMSideExit* exit;
+    LIns* result;
+    switch (v) {
+#ifdef NANOJIT_IA32
+      case LIR_fdiv:
+        if (d0->isconst() && d1->isconst())
+            return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
+
+        exit = snapshot(OVERFLOW_EXIT);
+
+        /*
+         * Make sure we don't trigger division by zero at runtime.
+         */
+        if (!d1->isconst())
+            guard(false, lir->ins_eq0(d1), exit);
+        result = lir->ins2(v = LIR_div, d0, d1);
+
+        /*
+         * As long the modulus is zero, the result is an integer.
+         */
+        guard(true, lir->ins_eq0(lir->ins1(LIR_mod, result)), exit);
+        break;
+      case LIR_fmod: {
+        if (d0->isconst() && d1->isconst())
+            return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
+
+        exit = snapshot(OVERFLOW_EXIT);
+
+        /*
+         * Make sure we don't trigger division by zero at runtime.
+         */
+        if (!d1->isconst())
+            guard(false, lir->ins_eq0(d1), exit);
+        result = lir->ins1(v = LIR_mod, lir->ins2(LIR_div, d0, d1));
+
+        /*
+         * If the result is not 0, it is always within the integer domain.
+         */
+        LIns* branch = lir->insBranch(LIR_jf, lir->ins_eq0(result), NULL);
+
+        /*
+         * If the result is zero, we must exit if the lhs is negative since
+         * the result is -0 in this case, which is not in the integer domain.
+         */
+        guard(false, lir->ins2i(LIR_lt, result, 0), exit);
+        branch->setTarget(lir->ins0(LIR_label));
+        break;
+      }
+#endif
+      default:
+        v = (LOpcode)((int)v & ~LIR64);
+        result = lir->ins2(v, d0, d1);
+
+        /*
+         * If the operands guarantee that the result will be an integer (i.e.
+         * z = x + y with 0 <= (x|y) <= 0xffff guarantees z <= fffe0001), we
+         * don't have to guard against an overflow. Otherwise we emit a guard
+         * that will inform the oracle and cause a non-demoted trace to be
+         * attached that uses floating-point math for this operation.
+         */
+        if (!result->isconst() && (!overflowSafe(v, d0) || !overflowSafe(v, d1)))
+            guard(false, lir->ins1(LIR_ov, result), OVERFLOW_EXIT);
+        break;
+    }
+    JS_ASSERT_IF(d0->isconst() && d1->isconst(),
+                 result->isconst() && result->imm32() == jsint(r));
+    return lir->ins1(LIR_i2f, result);
 }
 
 LIns*
@@ -6287,7 +6412,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
             break;
           case JSVAL_OBJECT:
             if (JSVAL_IS_NULL(l)) {
-                l_ins = lir->insImmq(0);
+                l_ins = lir->insImmf(0.0);
                 break;
             }
             // FALL THROUGH
@@ -6310,7 +6435,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
             break;
           case JSVAL_OBJECT:
             if (JSVAL_IS_NULL(r)) {
-                r_ins = lir->insImmq(0);
+                r_ins = lir->insImmf(0.0);
                 break;
             }
             // FALL THROUGH
@@ -6419,7 +6544,7 @@ TraceRecorder::binary(LOpcode op)
     jsdouble rnum = rightIsNumber ? asNumber(r) : 0;
 
     if ((op >= LIR_sub && op <= LIR_ush) ||  // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
-        (op >= LIR_fsub && op <= LIR_fdiv)) { // fsub, fmul, fdiv
+        (op >= LIR_fsub && op <= LIR_fmod)) { // fsub, fmul, fdiv, fmod
         LIns* args[2];
         if (JSVAL_IS_STRING(l)) {
             args[0] = a;
@@ -7316,40 +7441,7 @@ TraceRecorder::record_JSOP_DIV()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_MOD()
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-
-    if (!JSVAL_IS_PRIMITIVE(l)) {
-        ABORT_IF_XML(l);
-        if (!JSVAL_IS_PRIMITIVE(r)) {
-            ABORT_IF_XML(r);
-            return call_imacro(binary_imacros.obj_obj);
-        }
-        return call_imacro(binary_imacros.obj_any);
-    }
-    if (!JSVAL_IS_PRIMITIVE(r)) {
-        ABORT_IF_XML(r);
-        return call_imacro(binary_imacros.any_obj);
-    }
-
-    if (isNumber(l) && isNumber(r)) {
-        LIns* l_ins = get(&l);
-        LIns* r_ins = get(&r);
-        LIns* x;
-        /* We can't demote this in a filter since we need the actual values of l and r. */
-        if (isPromote(l_ins) && isPromote(r_ins) && asNumber(l) >= 0 && asNumber(r) > 0) {
-            LIns* args[] = { ::demote(lir, r_ins), ::demote(lir, l_ins) };
-            x = lir->insCall(&js_imod_ci, args);
-            guard(false, lir->ins2(LIR_eq, x, lir->insImm(-1)), BRANCH_EXIT);
-            x = lir->ins1(LIR_i2f, x);
-        } else {
-            LIns* args[] = { r_ins, l_ins };
-            x = lir->insCall(&js_dmod_ci, args);
-        }
-        set(&l, x);
-        return JSRS_CONTINUE;
-    }
-    return JSRS_STOP;
+    return binary(LIR_fmod);
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -7400,17 +7492,16 @@ TraceRecorder::record_JSOP_NEG()
            Only follow this path if we're not an integer that's 0 and we're not a double
            that's zero.
          */
-        if (isPromoteInt(a) &&
+        if (!oracle.isInstructionUndemotable(cx->fp->regs->pc) &&
+            isPromoteInt(a) &&
             (!JSVAL_IS_INT(v) || JSVAL_TO_INT(v) != 0) &&
             (!JSVAL_IS_DOUBLE(v) || !JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v))) &&
             -asNumber(v) == (int)-asNumber(v)) {
             a = lir->ins1(LIR_neg, ::demote(lir, a));
             if (!a->isconst()) {
                 VMSideExit* exit = snapshot(OVERFLOW_EXIT);
-                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, a),
-                              createGuardRecord(exit));
-                lir->insGuard(LIR_xt, lir->ins2(LIR_eq, a, lir->insImm(0)),
-                              createGuardRecord(exit));
+                guard(false, lir->ins1(LIR_ov, a), exit);
+                guard(false, lir->ins2i(LIR_eq, a, 0), exit);
             }
             a = lir->ins1(LIR_i2f, a);
         } else {

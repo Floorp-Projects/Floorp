@@ -1172,6 +1172,8 @@ namespace nanojit
 				case LIR_lsh:
 				case LIR_rsh:
 				case LIR_ush:
+			    case LIR_div:
+			    case LIR_mod:
 				{
                     countlir_alu();
 					asm_arith(ins);

@@ -69,39 +69,44 @@ OPDEF(unused0c,  4, 0)
 
 OPDEF(unused1,   5, 2)
 OPDEF(unused2,   6, 2)
-OPDEF(unused3,   7, 2)
-OPDEF(unused4,   8, 2)
 
 /* non-pure operations */
-OPDEF(addp,      9, 2)
-OPDEF(param,    10, 0)
-OPDEF(unused4b, 11, 2)
-OPDEF(ld,       12, 2) // 32-bit load
-OPDEF(alloc,    13, 0) // alloca some stack space
-OPDEF(sti,      14, 2) // 32-bit store
-OPDEF(ret,      15, 1)
-OPDEF(live,     16, 1) // extend live range of reference
-OPDEF(calli,    17, 0) // indirect call
-OPDEF(call,     18, 0) // subroutine call returning a 32-bit value
+OPDEF(addp,      7, 2)
+OPDEF(param,     8, 0)
+OPDEF(unused4b,  9, 2)
+OPDEF(ld,       10, 2) // 32-bit load
+OPDEF(alloc,    11, 0) // alloca some stack space
+OPDEF(sti,      12, 2) // 32-bit store
+OPDEF(ret,      13, 1)
+OPDEF(live,     14, 1) // extend live range of reference
+OPDEF(calli,    15, 0) // indirect call
+OPDEF(call,     16, 0) // subroutine call returning a 32-bit value
 
 /* guards */
-OPDEF(loop,     19, 0) // loop fragment
-OPDEF(x,        20, 0) // exit always
+OPDEF(loop,     17, 0) // loop fragment
+OPDEF(x,        18, 0) // exit always
 
 /* branches */
-OPDEF(j,        21, 0) // jump always
-OPDEF(jt,       22, 1) // jump true
-OPDEF(jf,       23, 1) // jump false
-OPDEF(label,    24, 0) // a jump target
-OPDEF(ji,       25, 2) // jump indirect
+OPDEF(j,        19, 0) // jump always
+OPDEF(jt,       20, 1) // jump true
+OPDEF(jf,       21, 1) // jump false
+OPDEF(label,    22, 0) // a jump target
+OPDEF(ji,       23, 2) // jump indirect
+
 /* operators */
 
 /*
- * NB: Opcodes ldcs through uge must remain continuous to aid in
+ * NB: Opcodes LIR_int through LIR_uge must remain continuous to aid in
  *     common-subexpression-elimination detection code.
  */
 
-OPDEF(ldcs, 26, 2) // non-volatile 16-bit load
+OPDEF(int,      24, 0) // constant 32-bit integer
+OPDEF(cmov,     25, 2) // conditional move (op1=cond, op2=cond(iftrue,iffalse))
+#if defined(NANOJIT_64BIT)
+OPDEF(callh,    26, 0)
+#else
+OPDEF(callh,    26, 1)
+#endif
 
 /*
  * feq though fge must only be used on float arguments.  They return integers.
@@ -118,21 +123,18 @@ OPDEF(fgt,      29, 2) // floating-point greater than: arg1 > arg2
 OPDEF(fle,      30, 2) // arg1 <= arg2, both floating-point
 OPDEF(fge,      31, 2) // arg1 >= arg2, both floating-point
 
-OPDEF(unused5,  32, 0)
-OPDEF(int,      33, 0) // constant 32-bit integer
-OPDEF(cmov,     34, 2) // conditional move (op1=cond, op2=cond(iftrue,iffalse))
-OPDEF(ldc,      35, 2) // non-volatile load
+OPDEF(ldcb,     32, 2) // non-volatile 8-bit load
+OPDEF(ldcs,     33, 2) // non-volatile 16-bit load
+OPDEF(ldc,      34, 2) // non-volatile 32-bit load
 
 // neg through ush are all integer operations
-OPDEF(neg,      36, 1) // numeric negation [ 1 integer input / integer output ]
-OPDEF(add,      37, 2) // integer addition [ 2 operand integer intputs / integer output ]
-OPDEF(sub,      38, 2) // integer subtraction
-OPDEF(mul,      39, 2) // integer multiplication
-#if defined(NANOJIT_64BIT)
-OPDEF(callh,    40, 0)
-#else
-OPDEF(callh,    40, 1)
-#endif
+OPDEF(neg,      35, 1) // numeric negation [ 1 integer input / integer output ]
+OPDEF(add,      36, 2) // integer addition [ 2 operand integer intputs / integer output ]
+OPDEF(sub,      37, 2) // integer subtraction
+OPDEF(mul,      38, 2) // integer multiplication
+OPDEF(div,      39, 2)
+OPDEF(mod,      40, 1)
+
 OPDEF(and,      41, 2)
 OPDEF(or,       42, 2)
 OPDEF(xor,      43, 2)
@@ -151,7 +153,7 @@ OPDEF(xf,       49, 1) // exit if false  0x31 0011 0001
 OPDEF(qlo,      50, 1)
 OPDEF(qhi,      51, 1)
 
-OPDEF(ldcb,     52, 2) // non-volatile 8-bit load
+OPDEF(unused52, 52, 0)
 
 OPDEF(ov,       53, 1)
 OPDEF(cs,       54, 1)
@@ -183,57 +185,63 @@ OPDEF64(unused5_64,   5, 2)
 OPDEF64(unused6_64,   6, 2)
 OPDEF64(unused7_64,   7, 2)
 OPDEF64(unused8_64,   8, 2)
-OPDEF64(unused9_64,   9, 2)
-OPDEF64(unused10_64, 10, 2)
 
-OPDEF64(unused11_64, 11, 2)
+OPDEF64(unused9_64,   9, 2)
 OPDEF64(ldq, LIR_ld, 2) // quad load
 
-OPDEF64(unused13_64, 13, 2)
+OPDEF64(unused11_64, 11, 2)
 
 OPDEF64(stqi,   LIR_sti, 2) // quad store
 OPDEF64(fret,   LIR_ret, 1)
 
-OPDEF64(unused16_64, 16, 2)
+OPDEF64(unused14_64, 14, 2)
 
 OPDEF64(fcalli,      LIR_calli, 0)
 OPDEF64(fcall,       LIR_call, 0) // subroutine call returning quad
 
+OPDEF64(unused17_64, 17, 2)
+OPDEF64(unused18_64, 18, 2)
 OPDEF64(unused19_64, 19, 2)
 OPDEF64(unused20_64, 20, 2)
 OPDEF64(unused21_64, 21, 2)
 OPDEF64(unused22_64, 22, 2)
 OPDEF64(unused23_64, 23, 2)
-OPDEF64(qiand,       24, 2)
-OPDEF64(qiadd,       25, 2)
-OPDEF64(unused26_64, 26, 2)
+
+// We strip of the 64bit flag and compare that the opcode is between LIR_int
+// and LIR_uge to decide whether we can CSE the opcode. All opcodes below
+// this marker are subject to CSE.
+
+OPDEF64(quad,        LIR_int,  0) // quad constant value
+OPDEF64(qcmov,       LIR_cmov, 2)
+OPDEF64(unused26_64, 26,       2)
+
 OPDEF64(unused27_64, 27, 2)
 OPDEF64(unused28_64, 28, 2)
 OPDEF64(unused29_64, 29, 2)
 OPDEF64(unused30_64, 30, 2)
 OPDEF64(unused31_64, 31, 2)
 OPDEF64(unused32_64, 32, 2)
+OPDEF64(unused33_64, 33, 2)
 
-OPDEF64(quad,  LIR_int,  0) // quad constant value
-OPDEF64(qcmov, LIR_cmov, 2)
-OPDEF64(ldqc,  LIR_ldc,  2)
-
+OPDEF64(ldqc,   LIR_ldc, 2)
 
 /* floating-point arithmetic operations */
 OPDEF64(fneg,   LIR_neg, 1)
 OPDEF64(fadd,   LIR_add, 2)
 OPDEF64(fsub,   LIR_sub, 2)
 OPDEF64(fmul,   LIR_mul, 2)
-OPDEF64(fdiv,   40,      2)
+OPDEF64(fdiv,   LIR_div, 2)
+OPDEF64(fmod,   LIR_mod, 2)
 
-OPDEF64(qjoin, 41,      2) // 1st arg is low 32 bits, 2nd arg is high 32 bits
-OPDEF64(i2f,   42,      1) // convert an integer to a float
-OPDEF64(u2f,   43,      1) // convert an unsigned integer to a float
-OPDEF64(qior,  44,      2)
-OPDEF64(qilsh, LIR_lsh, 2)
+OPDEF64(qiand,  41,      2)
+OPDEF64(qiadd,  42,      2)
+OPDEF64(qior,   43,      2)
+OPDEF64(qilsh,  44,      2)
+OPDEF64(qjoin,  45,      2) // 1st arg is low 32 bits, 2nd arg is high 32 bits
 
-OPDEF64(unused46_64, 46, 2)
-OPDEF64(unused47_64, 47, 2)
+OPDEF64(i2f,    46,      1) // convert an integer to a float
+OPDEF64(u2f,    47,      1) // convert an unsigned integer to a float
+
 OPDEF64(unused48_64, 48, 2)
 OPDEF64(unused49_64, 49, 2)
 OPDEF64(unused50_64, 50, 2)

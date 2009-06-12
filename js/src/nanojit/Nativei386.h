@@ -343,7 +343,8 @@ namespace nanojit
 #define XOR(l,r)	do { count_alu(); ALU(0x33, (l),(r));			asm_output("xor %s,%s",gpn(l),gpn(r)); } while(0)
 #define ADD(l,r)	do { count_alu(); ALU(0x03, (l),(r));			asm_output("add %s,%s",gpn(l),gpn(r)); } while(0)
 #define SUB(l,r)	do { count_alu(); ALU(0x2b, (l),(r));			asm_output("sub %s,%s",gpn(l),gpn(r)); } while(0)
-#define MUL(l,r)	do { count_alu(); ALU2(0x0faf,(l),(r));		asm_output("mul %s,%s",gpn(l),gpn(r)); } while(0)
+#define MUL(l,r)	do { count_alu(); ALU2(0x0faf,(l),(r));         asm_output("mul %s,%s",gpn(l),gpn(r)); } while(0)
+#define DIV(r)      do { count_alu(); ALU(0xf7, (Register)7,(r));   asm_output("idiv edx:eax, %s",gpn(r)); } while(0)
 #define NOT(r)		do { count_alu(); ALU(0xf7, (Register)2,(r));	asm_output("not %s",gpn(r)); } while(0)
 #define NEG(r)		do { count_alu(); ALU(0xf7, (Register)3,(r));	asm_output("neg %s",gpn(r)); } while(0)
 #define SHR(r,s)	do { count_alu(); ALU(0xd3, (Register)5,(r));	asm_output("shr %s,%s",gpn(r),gpn(s)); } while(0)
@@ -379,6 +380,8 @@ namespace nanojit
 // lea %r, d(%i*4)
 // This addressing mode is not supported by the MODRMSIB macro.
 #define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|(i<<3)|5; *(--_nIns) = (0<<6)|(r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
+
+#define CDQ()       do { SARi(EDX, 31); MR(EDX, EAX); } while(0)
 
 #define SETE(r)		do { count_alu(); ALU2(0x0f94,(r),(r));			asm_output("sete %s",gpn(r)); } while(0)
 #define SETNP(r)	do { count_alu(); ALU2(0x0f9B,(r),(r));			asm_output("setnp %s",gpn(r)); } while(0)
