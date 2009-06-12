@@ -1118,7 +1118,12 @@ UpdateService.prototype = {
     switch (topic) {
     case "profile-after-change":
       os.removeObserver(this, "profile-after-change");
+      os.addObserver(this, "final-ui-startup", false);
       this._start();
+      break;
+    case "final-ui-startup":
+      os.removeObserver(this, "final-ui-startup");
+      this._final_ui_start();
       break;
     case "xpcom-shutdown":
       os.removeObserver(this, "xpcom-shutdown");
@@ -1141,14 +1146,23 @@ UpdateService.prototype = {
     // Start logging
     this._initLoggingPrefs();
 
-    // Clean up any extant updates
-    this._postUpdateProcessing();
-
     // Register a background update check timer
     var tm = Cc["@mozilla.org/updates/timer-manager;1"].
              getService(Ci.nsIUpdateTimerManager);
     var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400);
     tm.registerTimer("background-update-timer", this, interval);
+  },
+
+  /**
+   * The following needs to be performed after final-ui-startup (bug 497578)
+   * 1. post update processing
+   * 2. resume of a download that was in progress during a previous session
+   * 3. start of a complete update download after the failure to apply a partial
+   *    update
+   */
+  _final_ui_start: function AUS__delayed_start() {
+    // Clean up any extant updates
+    this._postUpdateProcessing();
 
     // Resume fetching...
     var um = Cc["@mozilla.org/updates/update-manager;1"].
