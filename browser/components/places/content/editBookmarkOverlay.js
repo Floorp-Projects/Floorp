@@ -162,12 +162,12 @@ var gEditItemOverlay = {
     }
     else {
       this._itemId = aFor;
-      var container =  PlacesUtils.bookmarks.getFolderIdForItem(this._itemId);
+      var containerId = PlacesUtils.bookmarks.getFolderIdForItem(this._itemId);
       this._itemType = PlacesUtils.bookmarks.getItemType(this._itemId);
       if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
         this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
         if (!this._readOnly) // If readOnly wasn't forced through aInfo
-          this._readOnly = PlacesUtils.livemarks.isLivemark(container);
+          this._readOnly = PlacesUtils.itemIsLivemark(containerId);
         this._initTextField("keywordField",
                             PlacesUtils.bookmarks
                                        .getKeywordForBookmark(this._itemId));
@@ -181,7 +181,7 @@ var gEditItemOverlay = {
           this._readOnly = false;
 
         this._uri = null;
-        this._isLivemark = PlacesUtils.livemarks.isLivemark(this._itemId);
+        this._isLivemark = PlacesUtils.itemIsLivemark(this._itemId);
         if (this._isLivemark) {
           var feedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
           var siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
@@ -191,7 +191,7 @@ var gEditItemOverlay = {
       }
 
       // folder picker
-      this._initFolderMenuList(container);
+      this._initFolderMenuList(containerId);
 
       // description field
       this._initTextField("descriptionField", 
