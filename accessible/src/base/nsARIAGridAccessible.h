@@ -59,10 +59,74 @@ public:
   NS_DECL_NSIACCESSIBLETABLE
 
 protected:
+  /**
+   * Return true if the given row index is valid.
+   */
   PRBool IsValidRow(PRInt32 aRow);
+
+  /**
+   * Retrn true if the given column index is valid.
+   */
   PRBool IsValidColumn(PRInt32 aColumn);
+
+  /**
+   * Retrun true if given row and column indexes are valid.
+   */
   PRBool IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn);
+
+  /**
+   * Return row accessible at the given row index.
+   */
+  already_AddRefed<nsIAccessible> GetRowAt(PRInt32 aRow);
+
+  /**
+   * Return cell accessible at the given column index in the row.
+   */
+  already_AddRefed<nsIAccessible> GetCellInRowAt(nsIAccessible *aRow,
+                                                 PRInt32 aColumn);
+
+  /**
+   * Return next row accessible relative given row accessible or first row
+   * accessible if it is null.
+   *
+   * @param  aRow  [in, optional] row accessible
+   */
+  already_AddRefed<nsIAccessible> GetNextRow(nsIAccessible *aRow = nsnull);
+
+  /**
+   * Return next cell accessible relative given cell accessible or first cell
+   * in the given row accessible if given cell accessible is null.
+   *
+   * @param  aRow   [in] row accessible
+   * @param  aCell  [in, optional] cell accessible
+   */
+  already_AddRefed<nsIAccessible> GetNextCellInRow(nsIAccessible *aRow,
+                                                   nsIAccessible *aCell = nsnull);
+
+  /**
+   * Return true if the DOM node of given accessible has aria-selected="true"
+   * attribute.
+   */
+  PRBool IsARIASelected(nsIAccessible *aAccessible);
+
+  /**
+   * Set aria-selected attribute value on DOM node of the given accessible.
+   *
+   * @param  aAccessible  [in] accessible
+   * @param  aIsSelected  [in] new value of aria-selected attribute
+   * @param  aNotify      [in, optional] specifies if DOM should be notified
+   *                       about attribute change (used internally).
+   */
+  nsresult SetARIASelected(nsIAccessible *aAccessible, PRBool aIsSelected,
+                           PRBool aNotify = PR_TRUE);
+
+  /**
+   * Helper method for GetSelectedColumnsCount and GetSelectedColumns.
+   */
+  nsresult GetSelectedColumnsArray(PRUint32 *aColumnsCount,
+                                   PRInt32 **aColumns = nsnull);
 };
+
 
 /**
  * Accessible for ARIA gridcell and rowheader/columnheader.
