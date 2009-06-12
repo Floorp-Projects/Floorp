@@ -1645,15 +1645,17 @@ nsresult nsOggDecodeStateMachine::Run()
         // if we need to seek again.
         LOG(PR_LOG_DEBUG, ("Changed state from SEEKING (to %f) to DECODING", seekTime));
         mState = DECODER_STATE_DECODING;
-        mon.NotifyAll();
-
-        mon.Exit();
         nsCOMPtr<nsIRunnable> stopEvent;
         if (mDecodedFrames.GetCount() > 1) {
           stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStopped);
+          mState = DECODER_STATE_DECODING;
         } else {
           stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStoppedAtEnd);
+          mState = DECODER_STATE_COMPLETED;
         }
+        mon.NotifyAll();
+
+        mon.Exit();
         NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);        
         mon.Enter();
       }
