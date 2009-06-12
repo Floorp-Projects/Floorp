@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Mozilla Foundation
+ * Copyright (c) 2008-2009 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -302,7 +302,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* MAXSIZE;
     static nsHtml5AttributeName* LOOPEND;
     static nsHtml5AttributeName* LARGEOP;
-    static nsHtml5AttributeName* UNICODE;
+    static nsHtml5AttributeName* UNI_CODE;
     static nsHtml5AttributeName* TARGETX;
     static nsHtml5AttributeName* TARGETY;
     static nsHtml5AttributeName* VIEWBOX;
@@ -903,7 +903,7 @@ nsHtml5AttributeName* nsHtml5AttributeName::MINSIZE = nsnull;
 nsHtml5AttributeName* nsHtml5AttributeName::MAXSIZE = nsnull;
 nsHtml5AttributeName* nsHtml5AttributeName::LOOPEND = nsnull;
 nsHtml5AttributeName* nsHtml5AttributeName::LARGEOP = nsnull;
-nsHtml5AttributeName* nsHtml5AttributeName::UNICODE = nsnull;
+nsHtml5AttributeName* nsHtml5AttributeName::UNI_CODE = nsnull;
 nsHtml5AttributeName* nsHtml5AttributeName::TARGETX = nsnull;
 nsHtml5AttributeName* nsHtml5AttributeName::TARGETY = nsnull;
 nsHtml5AttributeName* nsHtml5AttributeName::VIEWBOX = nsnull;
