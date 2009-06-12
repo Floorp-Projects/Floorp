@@ -906,11 +906,13 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   // ScriptEvaluated to be called, and clearing our operation callback time.
   // See bug 302333.
   PRTime callbackTime = ctx->mOperationCallbackTime;
+  PRTime modalStateTime = ctx->mModalStateTime;
 
   MaybeGC(cx);
 
   // Now restore the callback time and count, in case they got reset.
   ctx->mOperationCallbackTime = callbackTime;
+  ctx->mModalStateTime = modalStateTime;
 
   // Check to see if we are running OOM
   nsCOMPtr<nsIMemory> mem;
@@ -965,15 +967,20 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   PRTime now = PR_Now();
 
-  if (LL_IS_ZERO(callbackTime)) {
+  if (callbackTime == 0) {
     // Initialize mOperationCallbackTime to start timing how long the
     // script has run
     ctx->mOperationCallbackTime = now;
     return JS_TRUE;
   }
 
-  PRTime duration;
-  LL_SUB(duration, now, callbackTime);
+  if (ctx->mModalStateDepth) {
+    // We're waiting on a modal dialog, nothing more to do here.
+
+    return JS_TRUE;
+  }
+
+  PRTime duration = now - callbackTime;
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
@@ -1153,6 +1160,46 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   return JS_FALSE;
 }
 
+void
+nsJSContext::EnterModalState()
+{
+  if (!mModalStateDepth) {
+    mModalStateTime =  mOperationCallbackTime ? PR_Now() : 0;
+  }
+  ++mModalStateDepth;
+}
+
+void
+nsJSContext::LeaveModalState()
+{
+  if (!mModalStateDepth) {
+    NS_ERROR("Uh, mismatched LeaveModalState() call!");
+
+    return;
+  }
+
+  --mModalStateDepth;
+
+  // If we're still in a modal dialog, or mOperationCallbackTime is still
+  // uninitialized, do nothing.
+  if (mModalStateDepth || !mOperationCallbackTime) {
+    return;
+  }
+
+  // If mOperationCallbackTime was set when we entered the first dialog
+  // (and mModalStateTime is thus non-zero), adjust mOperationCallbackTime
+  // to account for time spent in the dialog.
+  // If mOperationCallbackTime got set while the modal dialog was open,
+  // simply set mOperationCallbackTime to the closing time of the dialog so
+  // that we never adjust mOperationCallbackTime to be in the future. 
+  if (mModalStateTime) {
+    mOperationCallbackTime += PR_Now() - mModalStateTime;
+  }
+  else {
+    mOperationCallbackTime = PR_Now();
+  }
+}
+
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
@@ -1275,7 +1322,9 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mNumEvaluations = 0;
   mTerminations = nsnull;
   mScriptsEnabled = PR_TRUE;
-  mOperationCallbackTime = LL_ZERO;
+  mOperationCallbackTime = 0;
+  mModalStateTime = 0;
+  mModalStateDepth = 0;
   mProcessingScriptTag = PR_FALSE;
 }
 
@@ -3363,7 +3412,8 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
   }
 
   if (aTerminated) {
-    mOperationCallbackTime = LL_ZERO;
+    mOperationCallbackTime = 0;
+    mModalStateTime = 0;
   }
 }
 

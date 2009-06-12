@@ -165,6 +165,9 @@ public:
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);
 
+  virtual void EnterModalState();
+  virtual void LeaveModalState();
+
   NS_DECL_NSIXPCSCRIPTNOTIFY
 
   static void LoadStart();
@@ -287,6 +290,9 @@ private:
 
   PRUint32 mDefaultJSOptions;
   PRTime mOperationCallbackTime;
+
+  PRTime mModalStateTime;
+  PRUint32 mModalStateDepth;
 
   // mGlobalWrapperRef is used only to hold a strong reference to the
   // global object wrapper while the nsJSContext is alive. This cuts
