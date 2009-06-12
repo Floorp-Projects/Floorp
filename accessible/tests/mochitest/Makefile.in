@@ -127,6 +127,7 @@ _TEST_FILES =\
 		test_table_4.html \
   $(warning test_table_indexes.html temporarily disabled) \
 		test_table_indexes_ariagrid.html \
+		test_table_sels_ariagrid.html \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \
