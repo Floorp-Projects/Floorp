@@ -80,7 +80,6 @@
  *  +---------------------+                                        
  *  | nsIPluginManager    |                                        
  *  | nsIPluginManager2   |                                        
- *  | nsIFileUtilities    |                                        
  *  | nsIPref             |                                        
  *  | nsICacheManager ... |                            
  *  +---------------------+                                        
@@ -156,14 +155,6 @@
  * To obtain: QueryInterface on nsIPluginManager
  */
 #include "nsIPluginManager2.h"
-
-/**
- * The nsIFileUtilities interface provides operations to manage temporary
- * files and directories.
- *
- * To obtain: QueryInterface on nsIPluginManager
- */
-#include "nsIFileUtilities.h"
 
 /**
  * The nsIPluginTagInfo2 interface provides additional html tag information

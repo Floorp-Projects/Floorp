@@ -2517,11 +2517,10 @@ nsPluginHostImpl::~nsPluginHostImpl()
   sInst = nsnull;
 }
 
-NS_IMPL_ISUPPORTS8(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS7(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
-                   nsIFileUtilities,
                    nsICookieStorage,
                    nsIObserver,
                    nsPIPluginHost,
@@ -5668,53 +5667,6 @@ nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamLi
   }
 
   return rv;
-}
-
-
-// nsIFileUtilities interface
-NS_IMETHODIMP nsPluginHostImpl::GetProgramPath(const char* *result)
-{
-  nsresult rv;
-  NS_ENSURE_ARG_POINTER(result);
-  *result = nsnull;
-
-  nsCOMPtr<nsIProperties> dirService(do_GetService(kDirectoryServiceContractID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsILocalFile> programDir;
-  rv = dirService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(programDir));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCAutoString temp;
-  rv = programDir->GetNativePath(temp);
-  *result = ToNewCString(temp);
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::GetTempDirPath(const char* *result)
-{
-  nsresult rv;
-  NS_ENSURE_ARG_POINTER(result);
-  *result = nsnull;
-
-  nsCOMPtr<nsIProperties> dirService(do_GetService(kDirectoryServiceContractID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsILocalFile> tempDir;
-  rv = dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(tempDir));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCAutoString temp;
-  rv = tempDir->GetNativePath(temp);
-  *result = ToNewCString(temp);
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::NewTempFileName(const char* prefix, PRUint32 bufLen, char* resultBuf)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsICookieStorage interface

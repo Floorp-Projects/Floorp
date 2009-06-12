@@ -73,7 +73,6 @@ XPIDLSRCS 	= \
 		nsIPluginInstanceOwner.idl \
 		nsIPlugin.idl \
 		nsIHTTPHeaderListener.idl \
-		nsIFileUtilities.idl \
 		nsIEventHandler.idl \
 		nsICookieStorage.idl \
 		nsIClassicPluginFactory.idl \
