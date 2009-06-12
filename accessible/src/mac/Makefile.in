@@ -77,6 +77,7 @@ EXPORTS = \
   nsAccessNodeWrap.h \
   nsTextAccessibleWrap.h \
   nsAccessibleWrap.h \
+  nsARIAGridAccessibleWrap.h \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
