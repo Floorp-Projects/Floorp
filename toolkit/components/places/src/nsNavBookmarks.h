@@ -167,6 +167,7 @@ private:
   // This stores a mapping from all pages reachable by redirects from bookmarked
   // pages to the bookmarked page. Used by GetBookmarkedURIFor.
   nsDataHashtable<nsTrimInt64HashKey, PRInt64> mBookmarksHash;
+  nsDataHashtable<nsTrimInt64HashKey, PRInt64>* GetBookmarksHash();
   nsresult FillBookmarksHash();
   nsresult RecursiveAddBookmarkHash(PRInt64 aBookmarkId, PRInt64 aCurrentSource,
                                     PRTime aMinTime);

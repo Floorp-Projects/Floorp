@@ -607,7 +607,7 @@ nsNavHistory::Init()
     rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
                                 getter_AddRefs(historyFile));
     if (NS_SUCCEEDED(rv) && historyFile) {
-      ImportHistory(historyFile);
+      (void)ImportHistory(historyFile);
     }
   }
 
