@@ -1,6 +1,8 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
    <tree flex="20" id="t" ref="urn:data:row" datasources="rdf:null" seltype="single">
      <treecols> 
       <treecol flex="1" id="id" label="id" sort="rdf:http://dummy/rdf#id" />
@@ -36,10 +38,17 @@
      </template>
    </tree>
 
+<body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+<script type="application/javascript" src="/MochiKit/packed.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+
 <script type="application/x-javascript">
 <![CDATA[
 
 var buildCount = 0;
+
+SimpleTest.waitForExplicitFinish();
 
 var TemplateBuilderListener = {
   willRebuild: function(aBuilder) {
@@ -76,10 +85,22 @@ function runTest() {
   var tree = document.getElementById('t');
   var treec = document.getElementById('tc');
 
+  try {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"].
+                       getService(Components.interfaces.nsIRDFService);
+
+    var s1 = window.location.href.replace(/test_bug441785.xul/, "bug441785-1.rdf");
+    var ds1 = rdfService.GetDataSourceBlocking(s1);
+
+    var s2 = window.location.href.replace(/test_bug441785.xul/, "bug441785-2.rdf");
+    var ds2 = rdfService.GetDataSourceBlocking(s2);
+  } catch (ex) { }
+
   tree.builder.addListener(TemplateBuilderListener);
   treec.builder.addListener(TemplateBuilderListener);
-  tree.setAttribute('datasources', '441785-1.rdf');
-  treec.setAttribute('datasources', '441785-1.rdf');
+  tree.setAttribute('datasources', 'bug441785-1.rdf');
+  treec.setAttribute('datasources', 'bug441785-1.rdf');
 }
 
 var oldtreefirstrow, oldtreecfirstrow;
@@ -91,35 +112,35 @@ function nextDataSource()
   tree.treeBoxObject.scrollToRow(10);
   treec.treeBoxObject.scrollToRow(10);
 
-  if (tree.treeBoxObject.getFirstVisibleRow() == 10 &&
-      treec.treeBoxObject.getFirstVisibleRow() == 10) {
-    tree.builder.addListener(TemplateBuilderListener);
-    treec.builder.addListener(TemplateBuilderListener);
-    tree.setAttribute('datasources', '441785-2.rdf');
-    treec.setAttribute('datasources', '441785-2.rdf');
-  }
+  is(tree.treeBoxObject.getFirstVisibleRow(), 10, "first tree row count datasource 1");
+  is(treec.treeBoxObject.getFirstVisibleRow(), 10, "second tree row count datasource 1");
+
+  tree.builder.addListener(TemplateBuilderListener);
+  treec.builder.addListener(TemplateBuilderListener);
+  tree.setAttribute('datasources', 'bug441785-2.rdf');
+  treec.setAttribute('datasources', 'bug441785-2.rdf');
 }
 
 function continueTest() {
   var tree = document.getElementById('t');
   var treec = document.getElementById('tc');
 
-  // there should only be one row visible in each tree at this point
-  if (tree.treeBoxObject.getFirstVisibleRow() == 0 &&
-      treec.treeBoxObject.getFirstVisibleRow() == 0) {
-    //netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    try {
-      window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-              .getInterface(Components.interfaces.nsIDOMWindowUtils)
-              .garbageCollect();
-    } 
-    catch (e) { }
-    // Hit the bug, crash 
-    // (not exactly the same kind of crash as 441785, but from the same cause)
-    tree.parentNode.removeChild(tree);
-    treec.parentNode.removeChild(treec);
-    document.documentElement.className = "";
-  }
+  is(tree.treeBoxObject.getFirstVisibleRow(), 0, "first tree row count datasource 2");
+  is(treec.treeBoxObject.getFirstVisibleRow(), 0, "second tree row count datasource 2");
+
+  try {
+    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+            .getInterface(Components.interfaces.nsIDOMWindowUtils)
+            .garbageCollect();
+  } 
+  catch (e) { }
+
+  // Hit the bug, crash 
+  // (not exactly the same kind of crash as 441785, but from the same cause)
+  tree.parentNode.removeChild(tree);
+  treec.parentNode.removeChild(treec);
+
+  SimpleTest.finish();
 }
 
 window.addEventListener("load", runTest, false);
