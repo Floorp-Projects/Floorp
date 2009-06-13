@@ -5003,9 +5003,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
     mFrameConstructor->RestyleForRemove(aContainer, aChild, aIndexInContainer);
 
   PRBool didReconstruct;
-  mFrameConstructor->ContentRemoved(aContainer, aChild, aIndexInContainer,
-                                    nsCSSFrameConstructor::REMOVE_CONTENT,
-                                    &didReconstruct);
+  mFrameConstructor->ContentRemoved(aContainer, aChild,
+                                    aIndexInContainer, &didReconstruct);
 
   VERIFY_STYLE_TREE;
 }
