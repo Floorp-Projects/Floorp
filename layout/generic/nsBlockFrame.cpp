@@ -2202,7 +2202,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         MarkLineDirtyForInterrupt(line);
       } else {
         // Now reflow it and any lines that it makes during it's reflow
-        // (we have to loop here because reflowing the line may case a new
+        // (we have to loop here because reflowing the line may cause a new
         // line to be created; see SplitLine's callers for examples of
         // when this happens).
         while (line != end_lines()) {
