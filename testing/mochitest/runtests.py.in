@@ -465,7 +465,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       testURL += "?" + "&".join(urlOpts)
 
   browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
-  browserEnv["NSPR_LOG_MODULES"] = "UrlClassifierDbService:5,UrlClassifierStreamUpdater:5"
 
   if options.fatalAssertions:
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
