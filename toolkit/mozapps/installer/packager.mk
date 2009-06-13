@@ -370,11 +370,11 @@ endif
 endif
 else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
-endif # DMG
 	@echo "Linking XPT files..."
 	@rm -rf $(DIST)/xpt
 	@$(NSINSTALL) -D $(DIST)/xpt
 	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/.  Continuing...
+endif # DMG
 endif # MOZ_PKG_MANIFEST
 ifndef PKG_SKIP_STRIP
 	@echo "Stripping package directory..."
