@@ -898,7 +898,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   if (!content) return NS_ERROR_FAILURE;
 
-  PRBool forceFormat;
+  PRBool forceFormat = PR_FALSE;
   if (!CheckElementStart(content, forceFormat, aStr)) {
     return NS_OK;
   }
@@ -1001,7 +1001,7 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   if (!content) return NS_ERROR_FAILURE;
 
-  PRBool forceFormat, outputElementEnd;
+  PRBool forceFormat = PR_FALSE, outputElementEnd;
   outputElementEnd = CheckElementEnd(content, forceFormat, aStr);
 
   nsIAtom *name = content->Tag();
@@ -1133,11 +1133,11 @@ nsXMLContentSerializer::CheckElementEnd(nsIContent * aContent,
   // We don't output a separate end tag for empty element
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
   PRBool hasChildren;
+  aForceFormat = PR_FALSE;
+
   if (NS_SUCCEEDED(node->HasChildNodes(&hasChildren)) && !hasChildren) {
     return PR_FALSE;
   }
-
-  aForceFormat = PR_FALSE;
   return PR_TRUE;
 }
 
