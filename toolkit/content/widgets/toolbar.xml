@@ -26,9 +26,18 @@
       </field>
       
       <!-- Set by customizeToolbar.js -->
-      <field name="customizing">
-        false
-      </field>
+      <property name="customizing">
+        <getter><![CDATA[
+          return this.getAttribute("customizing") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (val)
+            this.setAttribute("customizing", "true");
+          else
+            this.removeAttribute("customizing");
+          return val;
+        ]]></setter>
+      </property>
 
       <constructor>
         <![CDATA[
@@ -154,7 +163,10 @@
               }
               node = node.nextSibling;
             }
-            
+
+            if ("currentSetChanged" in this)
+              this.currentSetChanged(currentSet);
+
             return currentSet ? currentSet : "__empty";
           ]]>
         </getter>
@@ -200,6 +212,9 @@
                   this.insertItem(itemIds[i], null, null, before);
               }
             }
+
+            if ("currentSetChanged" in this)
+              this.currentSetChanged(val);
 
             return val;
           ]]>
@@ -270,6 +285,121 @@
         </body>
       </method>      
     </implementation>
+  </binding>
+
+  <binding id="toolbar-menubar-autohide"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+    <implementation>
+      <constructor>
+        this._setInactive();
+      </constructor>
+
+      <field name="_inactiveTimeout">null</field>
+
+      <field name="_contextMenuListener"><![CDATA[({
+        toolbar: this,
+        contextMenu: null,
+
+        get active () !!this.contextMenu,
+
+        init: function (event) {
+          var node = event.target;
+          while (node != this.toolbar) {
+            if (node.localName == "menupopup")
+              return;
+            node = node.parentNode;
+          }
+
+          var contextMenuId = this.toolbar.getAttribute("context");
+          if (!contextMenuId)
+            return;
+
+          this.contextMenu = document.getElementById(contextMenuId);
+          if (!this.contextMenu)
+            return;
+
+          this.contextMenu.addEventListener("popupshown", this, false);
+          this.contextMenu.addEventListener("popuphiding", this, false);
+          this.toolbar.addEventListener("mousemove", this, false);
+        },
+        handleEvent: function (event) {
+          switch (event.type) {
+            case "popupshown":
+              this.toolbar.removeEventListener("mousemove", this, false);
+              break;
+            case "popuphiding":
+            case "mousemove":
+              this.toolbar._setInactiveAsync();
+              this.toolbar.removeEventListener("mousemove", this, false);
+              this.contextMenu.removeEventListener("popuphiding", this, false);
+              this.contextMenu.removeEventListener("popupshown", this, false);
+              this.contextMenu = null;
+              break;
+          }
+        }
+      })]]></field>
+
+      <method name="currentSetChanged">
+        <parameter name="aCurrentSet"/>
+        <body><![CDATA[
+          var defaultSet = this.getAttribute("defaultset");
+          if (!defaultSet || aCurrentSet == defaultSet) {
+            this.removeAttribute("customized");
+            return;
+          }
+
+          function normalize(aSet) {
+            return aSet.split(",").filter(function (element) {
+              return element != "separator" &&
+                     element != "spacer" &&
+                     element != "spring" &&
+                     element != "__empty";
+            }).sort().join(",");
+          }
+          if (normalize(aCurrentSet) == normalize(defaultSet)) {
+            this.removeAttribute("customized");
+            return;
+          }
+
+          this.setAttribute("customized", "true");
+        ]]></body>
+      </method>
+
+      <method name="_setInactive">
+        <body><![CDATA[
+          this.setAttribute("inactive", "true");
+        ]]></body>
+      </method>
+
+      <method name="_setInactiveAsync">
+        <body><![CDATA[
+          this._inactiveTimeout = setTimeout(function (self) {
+            self._inactiveTimeout = null;
+            self._setInactive();
+          }, 0, this);
+        ]]></body>
+      </method>
+
+      <method name="_setActive">
+        <body><![CDATA[
+          if (this._inactiveTimeout) {
+            clearTimeout(this._inactiveTimeout);
+            this._inactiveTimeout = null;
+          }
+          this.removeAttribute("inactive");
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMMenuBarActive"     action="this._setActive();"/>
+      <handler event="popupshowing"         action="this._setActive();"/>
+      <handler event="mousedown" button="2" action="this._contextMenuListener.init(event);"/>
+      <handler event="DOMMenuBarInactive"><![CDATA[
+        if (!this._contextMenuListener.active)
+          this._setInactiveAsync();
+      ]]></handler>
+    </handlers>
   </binding>
 
   <binding id="toolbar-drag"
