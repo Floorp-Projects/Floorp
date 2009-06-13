@@ -2517,11 +2517,10 @@ nsPluginHostImpl::~nsPluginHostImpl()
   sInst = nsnull;
 }
 
-NS_IMPL_ISUPPORTS7(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS6(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
-                   nsICookieStorage,
                    nsIObserver,
                    nsPIPluginHost,
                    nsISupportsWeakReference)
@@ -5665,87 +5664,6 @@ nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamLi
       return rv;
     p->mStreams->AppendElement(aStreamListener);
   }
-
-  return rv;
-}
-
-// nsICookieStorage interface
-
-NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCookieBuffer, PRUint32& inOutCookieSize)
-{
-  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-  nsXPIDLCString cookieString;
-  PRUint32 cookieStringLen = 0;
-  nsCOMPtr<nsIURI> uriIn;
-
-  if (!inCookieURL || (0 >= inOutCookieSize)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
-
-  if (NS_FAILED(rv) || !ioService)
-    return rv;
-
-  nsCOMPtr<nsICookieService> cookieService =
-           do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv) || !cookieService)
-    return NS_ERROR_INVALID_ARG;
-
-  // make an nsURI from the argument url
-  rv = ioService->NewURI(nsDependentCString(inCookieURL), nsnull, nsnull, getter_AddRefs(uriIn));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = cookieService->GetCookieString(uriIn, nsnull, getter_Copies(cookieString));
-
-  if (NS_FAILED(rv) || !cookieString ||
-      (inOutCookieSize <= (cookieStringLen = PL_strlen(cookieString.get())))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  PL_strcpy((char *) inOutCookieBuffer, cookieString.get());
-  inOutCookieSize = cookieStringLen;
-  rv = NS_OK;
-
-  return rv;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize)
-{
-  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-  nsCOMPtr<nsIURI> uriIn;
-
-  if (!inCookieURL || !inCookieBuffer ||
-      (0 >= inCookieSize)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
-
-  if (NS_FAILED(rv) || !ioService)
-    return rv;
-
-  nsCOMPtr<nsICookieService> cookieService =
-           do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv) || !cookieService)
-    return NS_ERROR_FAILURE;
-
-  // make an nsURI from the argument url
-  rv = ioService->NewURI(nsDependentCString(inCookieURL), nsnull, nsnull, getter_AddRefs(uriIn));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPrompt> prompt;
-  GetPrompt(nsnull, getter_AddRefs(prompt));
-
-  char * cookie = (char *)inCookieBuffer;
-  char c = cookie[inCookieSize];
-  cookie[inCookieSize] = '\0';
-  rv = cookieService->SetCookieString(uriIn, prompt, cookie, nsnull);
-  cookie[inCookieSize] = c;
 
   return rv;
 }

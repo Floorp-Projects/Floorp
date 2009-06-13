@@ -2488,11 +2488,33 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
   switch (variable) {
   case NPNURLVCookie:
     {
-      nsCOMPtr<nsICookieStorage> cs = do_GetService(kPluginManagerCID);
+      if (!url || !value || (0 >= len))
+        return NPERR_INVALID_PARAM;
 
-      if (cs && NS_SUCCEEDED(cs->SetCookie(url, value, len))) {
+      nsresult rv = NS_ERROR_FAILURE;
+      nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+      if (NS_FAILED(rv))
+        return NPERR_GENERIC_ERROR;
+
+      nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
+      if (NS_FAILED(rv))
+        return NPERR_GENERIC_ERROR;
+
+      nsCOMPtr<nsIURI> uriIn;
+      rv = ioService->NewURI(nsDependentCString(url), nsnull, nsnull, getter_AddRefs(uriIn));
+      if (NS_FAILED(rv))
+        return NPERR_GENERIC_ERROR;
+
+      nsCOMPtr<nsIPrompt> prompt;
+      nsPluginHostImpl::GetPrompt(nsnull, getter_AddRefs(prompt));
+
+      char *cookie = (char*)value;
+      char c = cookie[len];
+      cookie[len] = '\0';
+      rv = cookieService->SetCookieString(uriIn, prompt, cookie, nsnull);
+      cookie[len] = c;
+      if (NS_SUCCEEDED(rv))
         return NPERR_NO_ERROR;
-      }
     }
 
     break;
