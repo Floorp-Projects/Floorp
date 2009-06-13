@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Test that changes to text contents create frames when necessary -->
+<head>
+<script>
+function loaded() {
+  document.body.offsetHeight;
+  document.body.firstChild.data = 'X';
+}
+</script>
+</head>
+<body onload="loaded()" style="border:1px solid black;">
+</body>
+</html>

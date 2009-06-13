@@ -68,7 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var normalHyperlinkAcc = getAccessible("NormalHyperlink",
                                              [nsIAccessibleHyperLink]);
       testThis("NormalHyperlink", normalHyperlinkAcc, ROLE_LINK, 1,
-               "Mozilla Foundation", true, 18, 19);
+               "Mozilla Foundation", true, 17, 18);
       is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/", 
          "URI wrong for normalHyperlinkElement!");
       testStates(normalHyperlinkAcc,
@@ -84,7 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var ariaHyperlinkAcc = getAccessible("AriaHyperlink",
                                            [nsIAccessibleHyperLink]);
       testThis("AriaHyperlink", ariaHyperlinkAcc, ROLE_LINK, 1,
-               "Mozilla Foundation Home", true, 32, 33);
+               "Mozilla Foundation Home", true, 30, 31);
       testStates(ariaHyperlinkAcc,
                  (STATE_FOCUSABLE | STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -110,7 +110,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var imageMapHyperlinkAcc = getAccessible("imgmap",
                                                [nsIAccessibleHyperLink]);
       testThis("imgmap", imageMapHyperlinkAcc, ROLE_IMAGE_MAP, 2, "b", true,
-               83, 84);
+               79, 80);
       is(imageMapHyperlinkAcc.getURI(0).spec,
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
       is(imageMapHyperlinkAcc.getURI(1).spec,
@@ -137,7 +137,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // empty hyperlink
       var EmptyHLAcc = getAccessible("emptyLink",
                                      [nsIAccessibleHyperLink]);
-      testThis("emptyLink", EmptyHLAcc, ROLE_LINK, 1, null, true, 98, 99);
+      testThis("emptyLink", EmptyHLAcc, ROLE_LINK, 1, null, true, 94, 95);
       testStates(EmptyHLAcc,
                  (STATE_FOCUSABLE | STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -148,7 +148,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var hyperlinkWithSpanAcc = getAccessible("LinkWithSpan",
                                                [nsIAccessibleHyperLink]);
       testThis("LinkWithSpan", hyperlinkWithSpanAcc, ROLE_LINK, 1,
-               "Heise Online", true, 124, 125);
+               "Heise Online", true, 120, 121);
       is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/", 
          "URI wrong for hyperlinkElementWithSpan!");
       testStates(hyperlinkWithSpanAcc,
@@ -165,7 +165,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var namedAnchorAcc = getAccessible("namedAnchor",
                                          [nsIAccessibleHyperLink]);
       testThis("namedAnchor", namedAnchorAcc, ROLE_LINK, 1,
-               "This should never be of state_linked", true, 202, 203);
+               "This should never be of state_linked", true, 197, 198);
       testStates(namedAnchorAcc,
                  (STATE_SELECTABLE),
                  (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
@@ -176,7 +176,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var noLinkAcc = getAccessible("noLink",
                                     [nsIAccessibleHyperLink]);
       testThis("noLink", noLinkAcc, ROLE_LINK, 1,
-               "This should never be of state_linked", true, 262, 263);
+               "This should never be of state_linked", true, 256, 257);
       testStates(noLinkAcc,
                  0,
                  (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
@@ -187,7 +187,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var linkWithClickAcc = getAccessible("linkWithClick",
                                            [nsIAccessibleHyperLink]);
       testThis("linkWithClick", linkWithClickAcc, ROLE_LINK, 1,
-               "This should have state_linked", true, 301, 302);
+               "This should have state_linked", true, 294, 295);
       testStates(linkWithClickAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -201,7 +201,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // Link with title attribute, no name from the subtree (bug 438325).
       var id = "linkWithTitleNoNameFromSubtree";
       var linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
-      testThis(id, linkAcc, ROLE_LINK, 1, "Link with title", true, 354, 355);
+      testThis(id, linkAcc, ROLE_LINK, 1, "Link with title", true, 346, 347);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -212,8 +212,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // (bug 438325).
       id = "linkWithTitleNameFromSubtree";
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
-      testThis(id, linkAcc, ROLE_LINK, 1, "the name from subtree", true, 403,
-               404);
+      testThis(id, linkAcc, ROLE_LINK, 1, "the name from subtree", true, 395,
+               396);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -223,8 +223,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // Link with title attribute, name from the nested html:img (bug 438325).
       id = "linkWithTitleNameFromImg";
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
-      testThis(id, linkAcc, ROLE_LINK, 1, "The title for link", true, 458,
-               459);
+      testThis(id, linkAcc, ROLE_LINK, 1, "The title for link", true, 449,
+               450);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -235,7 +235,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       id = "linkWithLabelNoNameFromSubtree";
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
       testThis(id, linkAcc, ROLE_LINK, 1, "Link with label and nested image:",
-               true, 462, 463);
+               true, 452, 453);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
