@@ -1359,6 +1359,26 @@ nsTextControlFrame::DelayedEditorInit()
     SetFocus(PR_TRUE, PR_FALSE);
 }
 
+PRInt32
+nsTextControlFrame::GetWrapCols()
+{
+  if (IsTextArea()) {
+    // wrap=off means -1 for wrap width no matter what cols is
+    nsHTMLTextWrap wrapProp;
+    ::GetWrapPropertyEnum(mContent, wrapProp);
+    if (wrapProp == eHTMLTextWrap_Off) {
+      // do not wrap when wrap=off
+      return -1;
+    }
+   
+    // Otherwise we just wrap at the given number of columns
+    return GetCols();
+  }
+
+  // Never wrap non-textareas
+  return -1;
+}
+
 nsresult
 nsTextControlFrame::InitEditor()
 {
@@ -1466,22 +1486,7 @@ nsTextControlFrame::InitEditor()
   nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryInterface(mEditor));
   if (textEditor) {
     // Set up wrapping
-    if (IsTextArea()) {
-      // wrap=off means -1 for wrap width no matter what cols is
-      nsHTMLTextWrap wrapProp;
-      ::GetWrapPropertyEnum(mContent, wrapProp);
-      if (wrapProp == eHTMLTextWrap_Off) {
-        // do not wrap when wrap=off
-        textEditor->SetWrapWidth(-1);
-      } else {
-        // Set wrapping normally otherwise
-        textEditor->SetWrapWidth(GetCols());
-      }
-    } else {
-      // Never wrap non-textareas
-      textEditor->SetWrapColumn(-1);
-    }
-
+    textEditor->SetWrapColumn(GetWrapCols());
 
     // Set max text field length
     PRInt32 maxLength;
@@ -1603,7 +1608,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the div native anonymous, so CSS will be its style language
-  // no matter what.
+  // no matter what. We need to do this before we set the 'style' attribute.
   mAnonymousDiv->SetNativeAnonymous();
 
   // Set the necessary style attributes on the text control.
@@ -1612,6 +1617,13 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                               NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoString styleValue;
+  PRInt32 wrapCols = GetWrapCols();
+  if (wrapCols >= 0) {
+    styleValue.AppendLiteral("white-space:pre-wrap");
+  } else {
+    styleValue.AppendLiteral("white-space:pre");
+  }
   if (!IsSingleLineTextControl()) {
     // We can't just inherit the overflow because setting visible overflow will
     // crash when the number of lines exceeds the height of the textarea and
@@ -1620,12 +1632,12 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
-      rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                                  NS_LITERAL_STRING("overflow: inherit;"),
-                                  PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
+      styleValue.AppendLiteral(";overflow:inherit");
     }
   }
+  rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+                              styleValue, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aElements.AppendElement(mAnonymousDiv))
     return NS_ERROR_OUT_OF_MEMORY;

@@ -292,6 +292,10 @@ protected:
    */
   PRInt32 GetCols();
   /**
+   * Get the column index to wrap at, or -1 if we shouldn't wrap
+   */
+  PRInt32 GetWrapCols();
+  /**
    * Get the rows attribute (if textarea) or a default
    * @return the number of rows to use
    */
