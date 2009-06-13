@@ -205,7 +205,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   if (!content) return NS_ERROR_FAILURE;
 
-  PRBool forceFormat;
+  PRBool forceFormat = PR_FALSE;
   if (!CheckElementStart(content, forceFormat, aStr)) {
     return NS_OK;
   }
