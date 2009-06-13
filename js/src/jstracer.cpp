@@ -5678,6 +5678,11 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
         JSStackFrame* cfp = (JSStackFrame*) JS_GetPrivate(cx, obj);
         if (cfp && FrameInRange(cx->fp, cfp, callDepth)) {
             JSScopeProperty* sprop = (JSScopeProperty*) prop;
+
+            uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
+            if (setflags && (sprop->attrs & JSPROP_READONLY))
+                ABORT_TRACE("writing to a read-only property");
+
             uintN slot = sprop->shortid;
 
             vp = NULL;
