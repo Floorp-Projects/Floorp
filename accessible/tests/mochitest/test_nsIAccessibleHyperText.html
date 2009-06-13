@@ -43,22 +43,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       testThis("NormalHyperlink", 14, 0, "Mozilla Foundation");
 
       // ARIA hyperlink
-      testThis("AriaHyperlink", 28, 1, "Mozilla Foundation Home");
+      testThis("AriaHyperlink", 27, 1, "Mozilla Foundation Home");
 
       // ARIA hyperlink with status invalid
-      testThis("InvalidAriaHyperlink", 64, 2, "Invalid link");
+      testThis("InvalidAriaHyperlink", 63, 2, "Invalid link");
 
       // image map, but not its link children. They are not part of hypertext.
-      testThis("imgmap", 78, 3, "b");
+      testThis("imgmap", 76, 3, "b");
 
       // empty hyperlink
-      testThis("emptyLink", 93, 4, null);
+      testThis("emptyLink", 90, 4, null);
 
       // normal hyperlink with embedded span
-      testThis("LinkWithSpan", 119, 5, "Heise Online");
+      testThis("LinkWithSpan", 116, 5, "Heise Online");
 
       // Named anchor
-      testThis("namedAnchor", 197, 6, "This should never be of state_linked");
+      testThis("namedAnchor", 193, 6, "This should never be of state_linked");
 
       SimpleTest.finish();
     }
@@ -74,37 +74,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
-  <p id="testParagraph">  
-    <br>Simple link:<br>
-    <a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a>
-    <br>ARIA link:<br>
-    <span id="AriaHyperlink" role="link"
-           onclick="window.open('http://www.mozilla.org/');"
-           tabindex="0">Mozilla Foundation Home</span>
-    <br>Invalid, non-focusable hyperlink:<br>
-    <span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
-          onclick="window.open('http:/www.mozilla.org/');">Invalid link</span>
-    <br>Image map:<br>
-    <map name="atoz_map">
-      <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
-            coords="17,0,30,14"
-            alt="b"
-            shape="rect"></area>
-      <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
-            coords="0,0,13,14"
-            alt="a"
-            shape="rect"></area>
-    </map>
-    <img width="447" id="imgmap"
+  <p id="testParagraph"><br
+  >Simple link:<br
+  ><a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a><br
+  >ARIA link:<br
+  ><span id="AriaHyperlink" role="link"
+          onclick="window.open('http://www.mozilla.org/');"
+          tabindex="0">Mozilla Foundation Home</span><br
+  >Invalid, non-focusable hyperlink:<br
+  ><span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
+         onclick="window.open('http:/www.mozilla.org/');">Invalid link</span><br
+  >Image map:<br
+  ><map name="atoz_map"><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+                              coords="17,0,30,14"
+                              alt="b"
+                              shape="rect"></area
+   ><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+          coords="0,0,13,14"
+          alt="a"
+          shape="rect"></area></map
+   ><img width="447" id="imgmap"
          height="15"
          usemap="#atoz_map"
-         src="letters.gif"></img>
-    <br>Empty link:<br>
-    <a id="emptyLink" href=""><img src=""></img></a>
-    <br>Link with embedded span<br>
-    <a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a>
-    <br>Named anchor, must not have "linked" state for it to be exposed correctly:<br>
-    <a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
+         src="letters.gif"></img><br
+  >Empty link:<br
+  ><a id="emptyLink" href=""><img src=""></img></a><br
+  >Link with embedded span<br
+  ><a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a><br
+  >Named anchor, must not have "linked" state for it to be exposed correctly:<br
+  ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
   </p>
 </body>
 </html>
