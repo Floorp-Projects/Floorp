@@ -1081,6 +1081,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 != 449149-1b.html about:blank
 == 449149-2.html 449149-2-ref.html
 == 449171-1.html 449171-ref.html
+== 449362-1.html 449362-1-ref.html
 == 449519-1.html 449519-1-ref.html
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html
