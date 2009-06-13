@@ -414,7 +414,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // We begin by examining those style structs that are capable of
   // causing the maximal difference, a FRAMECHANGE.
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
-  // Visibility, Outline, TableBorder, Table, Text, UIReset, Quotes
+  // Visibility, Outline, TableBorder, Table, UIReset, Quotes
   DO_STRUCT_DIFFERENCE(Display);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
@@ -425,7 +425,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(TableBorder);
   DO_STRUCT_DIFFERENCE(Table);
   DO_STRUCT_DIFFERENCE(UIReset);
-  DO_STRUCT_DIFFERENCE(Text);
   DO_STRUCT_DIFFERENCE(List);
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
@@ -449,6 +448,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Padding);
   DO_STRUCT_DIFFERENCE(Border);
   DO_STRUCT_DIFFERENCE(Position);
+  DO_STRUCT_DIFFERENCE(Text);
   DO_STRUCT_DIFFERENCE(TextReset);
 
   // At this point, we know that the worst kind of damage we could do is
