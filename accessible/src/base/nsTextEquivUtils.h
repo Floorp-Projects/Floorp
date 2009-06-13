@@ -160,6 +160,18 @@ private:
                              const nsAString& aTextEquivalent);
 
   /**
+   * Returns true if the given string is empty or contains whitespace symbols
+   * only. In contrast to nsWhitespaceTokenizer class it takes into account
+   * non-breaking space (0xa0).
+   */
+  static PRBool IsWhitespaceString(const nsSubstring& aString);
+
+  /**
+   * Returns true if the given character is whitespace symbol.
+   */
+  static PRBool IsWhitespace(PRUnichar aChar);
+
+  /**
    * Map array from roles to name rules (constants of ETextEquivRule).
    */
   static PRUint32 gRoleToNameRulesMap[];
