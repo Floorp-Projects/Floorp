@@ -842,16 +842,16 @@ public:
     
   /**
    * Check for interrupts. This may return true if a pending event is
-   * detected. Once it has returned true, it will keep returning true until
-   * SetInterruptState is called again.  In all cases where returns true, the
-   * passed-in frame (which should be the frame whose reflow will be
-   * interrupted if true is returend) will be passed to
+   * detected. Once it has returned true, it will keep returning true
+   * until ReflowStarted is called. In all cases where this returns true,
+   * the passed-in frame (which should be the frame whose reflow will be
+   * interrupted if true is returned) will be passed to
    * nsIPresShell::FrameNeedsToContinueReflow.
    */
   PRBool CheckForInterrupt(nsIFrame* aFrame);
   /**
    * Returns true if CheckForInterrupt has returned true since the last
-   * SetInterruptState. Cannot itself trigger an interrupt check.
+   * ReflowStarted call. Cannot itself trigger an interrupt check.
    */
   PRBool HasPendingInterrupt() { return mHasPendingInterrupt; }
 
