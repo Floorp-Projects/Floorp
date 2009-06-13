@@ -116,11 +116,9 @@ public:
                            PRInt32                aIndexInContainer,
                            nsILayoutHistoryState* aFrameState);
 
-  enum RemoveFlags { REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION };
   nsresult ContentRemoved(nsIContent* aContainer,
                           nsIContent* aChild,
                           PRInt32     aIndexInContainer,
-                          RemoveFlags aFlags,
                           PRBool*     aDidReconstruct);
 
   nsresult CharacterDataChanged(nsIContent*     aContent,
@@ -322,14 +320,8 @@ private:
 
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.
-  // aContentIndex is the index of aContent in its parent's child list,
-  // or -1 if it's not in its parent's child list, or the index is
-  // not known. If the index is not known, optimizations that
-  // may suppress the construction of white-space-only text frames
-  // may not be performed.
   void AddFrameConstructionItems(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
-                                 PRInt32                  aContentIndex,
                                  nsIFrame*                aParentFrame,
                                  FrameConstructionItemList& aItems);
 
@@ -582,20 +574,17 @@ private:
   /* If FCDATA_IS_INLINE is set, then the frame is a non-replaced CSS
      inline box. */
 #define FCDATA_IS_INLINE 0x2000
-  /* If FCDATA_IS_LINE_PARTICIPANT is set, the frame is something that will
+  /* If FCDATA_IS_LINE_PARTICIPANT is set, the the frame is something that will
      return true for IsFrameOfType(nsIFrame::eLineParticipant) */
 #define FCDATA_IS_LINE_PARTICIPANT 0x4000
-  /* If FCDATA_IS_LINE_BREAK is set, the frame is something that will
-     induce a line break boundary before and after itself. */
-#define FCDATA_IS_LINE_BREAK 0x8000
   /* If FCDATA_ALLOW_BLOCK_STYLES is set, allow block styles when processing
      children.  This should not be used with FCDATA_FUNC_IS_FULL_CTOR. */
-#define FCDATA_ALLOW_BLOCK_STYLES 0x10000
+#define FCDATA_ALLOW_BLOCK_STYLES 0x8000
   /* If FCDATA_USE_CHILD_ITEMS is set, then use the mChildItems in the relevant
      FrameConstructionItem instead of trying to process the content's children.
      This can be used with or without FCDATA_FUNC_IS_FULL_CTOR.
      The child items might still need table pseudo processing. */
-#define FCDATA_USE_CHILD_ITEMS 0x20000
+#define FCDATA_USE_CHILD_ITEMS 0x10000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -673,10 +662,7 @@ private:
     FrameConstructionItemList() :
       mInlineCount(0),
       mLineParticipantCount(0),
-      mItemCount(0),
-      mLineBoundaryAtStart(PR_FALSE),
-      mLineBoundaryAtEnd(PR_FALSE),
-      mParentHasNoXBLChildren(PR_FALSE)
+      mItemCount(0)
     {
       PR_INIT_CLIST(&mItems);
       memset(mDesiredParentCounts, 0, sizeof(mDesiredParentCounts));
@@ -694,14 +680,6 @@ private:
       // but that's OK at this point.
     }
 
-    void SetLineBoundaryAtStart(PRBool aBoundary) { mLineBoundaryAtStart = aBoundary; }
-    void SetLineBoundaryAtEnd(PRBool aBoundary) { mLineBoundaryAtEnd = aBoundary; }
-    void SetParentHasNoXBLChildren(PRBool aHasNoXBLChildren) {
-      mParentHasNoXBLChildren = aHasNoXBLChildren;
-    }
-    PRBool HasLineBoundaryAtStart() { return mLineBoundaryAtStart; }
-    PRBool HasLineBoundaryAtEnd() { return mLineBoundaryAtEnd; }
-    PRBool ParentHasNoXBLChildren() { return mParentHasNoXBLChildren; }
     PRBool IsEmpty() const { return PR_CLIST_IS_EMPTY(&mItems); }
     PRBool AnyItemsNeedBlockParent() const { return mLineParticipantCount != 0; }
     PRBool AreAllItemsInline() const { return mInlineCount == mItemCount; }
@@ -717,19 +695,15 @@ private:
       return mDesiredParentCounts[aDesiredParentType] == mItemCount;
     }
 
-    // aContentIndex is the index of aContent in its parent's child list,
-    // or -1 if aContent is not in its parent's child list, or the index
-    // is not known.
     FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
                                       nsIAtom* aTag,
                                       PRInt32 aNameSpaceID,
-                                      PRInt32 aContentIndex,
                                       already_AddRefed<nsStyleContext> aStyleContext)
     {
       FrameConstructionItem* item =
         new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
-                                  aContentIndex, aStyleContext);
+                                  aStyleContext);
       if (item) {
         PR_APPEND_LINK(item, &mItems);
         ++mItemCount;
@@ -773,10 +747,6 @@ private:
         return *this;
       }
 
-      FrameConstructionItemList* List() {
-        return &mList;
-      }
-
       operator FrameConstructionItem& () {
         return item();
       }
@@ -789,10 +759,6 @@ private:
       void Next() {
         NS_ASSERTION(!IsDone(), "Should have checked IsDone()!");
         mCurrent = PR_NEXT_LINK(mCurrent);
-      }
-      void Prev() {
-        NS_ASSERTION(!AtStart(), "Should have checked AtStart()!");
-        mCurrent = PR_PREV_LINK(mCurrent);
       }
       void SetToEnd() { mCurrent = mEnd; }
 
@@ -855,14 +821,6 @@ private:
     PRUint32 mLineParticipantCount;
     PRUint32 mItemCount;
     PRUint32 mDesiredParentCounts[eParentTypeCount];
-    // True if there is guaranteed to be a line boundary before the
-    // frames created by these items
-    PRPackedBool mLineBoundaryAtStart;
-    // True if there is guaranteed to be a line boundary after the
-    // frames created by these items
-    PRPackedBool mLineBoundaryAtEnd;
-    // True if the parent is guaranteed to have no XBL anonymous children
-    PRPackedBool mParentHasNoXBLChildren;
   };
 
   typedef FrameConstructionItemList::Iterator FCItemIterator;
@@ -878,11 +836,9 @@ private:
                           nsIContent* aContent,
                           nsIAtom* aTag,
                           PRInt32 aNameSpaceID,
-                          PRInt32 aContentIndex,
                           already_AddRefed<nsStyleContext> aStyleContext) :
       mFCData(aFCData), mContent(aContent), mTag(aTag),
-      mNameSpaceID(aNameSpaceID), mContentIndex(aContentIndex),
-      mStyleContext(aStyleContext),
+      mNameSpaceID(aNameSpaceID), mStyleContext(aStyleContext),
       mIsText(PR_FALSE), mIsGeneratedContent(PR_FALSE),
       mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE),
       mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE),
@@ -904,10 +860,6 @@ private:
     // things.
     PRBool IsWhitespace() const;
 
-    PRBool IsLineBoundary() const {
-      return !mHasInlineEnds || (mFCData->mBits & FCDATA_IS_LINE_BREAK);
-    }
-
     // The FrameConstructionData to use.
     const FrameConstructionData* mFCData;
     // The nsIContent node to use when initializing the new frame.
@@ -916,15 +868,12 @@ private:
     nsIAtom* mTag;
     // The XBL-resolved namespace to use for frame construction.
     PRInt32 mNameSpaceID;
-    // The index of mContent in its parent's child list, or -1 if it's
-    // not in the parent's child list or not known.
-    PRInt32 mContentIndex;
     // The style context to use for creating the new frame.
     nsRefPtr<nsStyleContext> mStyleContext;
     // Whether this is a text content item.
     PRPackedBool mIsText;
-    // Whether this is a generated content container.
-    // If it is, mContent is a strong pointer.
+    // Whether this is generated content.  If it is, mContent is a strong
+    // pointer.
     PRPackedBool mIsGeneratedContent;
     // Whether this is an item for the root popupgroup.
     PRPackedBool mIsRootPopupgroup;
@@ -1023,18 +972,6 @@ private:
                               nsStyleContext*          aStyleContext,
                               nsFrameItems&            aFrameItems);
 
-  // If aParentContent's child at aContentIndex is a text node and
-  // doesn't have a frame, append a frame construction item for it to aItems.
-  void AddTextItemIfNeeded(nsIFrame* aParentFrame,
-                           nsIContent* aParentContent,
-                           PRInt32 aContentIndex,
-                           FrameConstructionItemList& aItems);
-
-  // If aParentContent's child at aContentIndex is a text node and
-  // doesn't have a frame, try to create a frame for it.
-  void ReframeTextIfNeeded(nsIContent* aParentContent,
-                           PRInt32 aContentIndex);
-
   void AddPageBreakItem(nsIContent* aContent,
                         nsStyleContext* aMainStyleContext,
                         FrameConstructionItemList& aItems);
@@ -1090,24 +1027,15 @@ private:
                                          nsIFrame*                aParentFrame,
                                          nsIAtom*                 aTag,
                                          PRInt32                  aNameSpaceID,
-                                         PRInt32                  aContentIndex,
                                          nsStyleContext*          aStyleContext,
                                          PRUint32                 aFlags,
                                          FrameConstructionItemList& aItems);
 
-  /**
-   * Construct frames for the given item list and parent frame, and put the
-   * resulting frames in aFrameItems.
-   */
-  nsresult ConstructFramesFromItemList(nsFrameConstructorState& aState,
-                                       FrameConstructionItemList& aItems,
-                                       nsIFrame* aParentFrame,
-                                       nsFrameItems& aFrameItems);
+  // On success, always puts something in aChildItems
   nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
-                                   FCItemIterator& aItem,
+                                   FrameConstructionItem& aItem,
                                    nsIFrame* aParentFrame,
                                    nsFrameItems& aFrameItems);
-  static PRBool AtLineBoundary(FCItemIterator& aIter);
 
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
@@ -1421,6 +1349,15 @@ private:
    */
   void BuildInlineChildItems(nsFrameConstructorState& aState,
                              FrameConstructionItem& aParentItem);
+
+  /**
+   * Construct frames for the given item list and parent frame, and put the
+   * resulting frames in aFrameItems.
+   */
+  nsresult ConstructFramesFromItemList(nsFrameConstructorState& aState,
+                                       FrameConstructionItemList& aItems,
+                                       nsIFrame* aParentFrame,
+                                       nsFrameItems& aFrameItems);
 
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
