@@ -738,19 +738,6 @@ typedef struct vtable_nsIPluginManager2
 
 
 /**
- * nsICookieStorage
- */
-typedef struct vtable_nsICookieStorage
-{
-    VFTnsISupports base;
-    nsresult (*VFTCALL GetCookie)(void *pvThis, const char *aCookieURL, void * aCookieBuffer, PRUint32 & aCookieSize);
-    VFTDELTA_DECL(GetCookie)
-    nsresult (*VFTCALL SetCookie)(void *pvThis, const char *aCookieURL, const void * aCookieBuffer, PRUint32 aCookieSize);
-    VFTDELTA_DECL(SetCookie)
-} VFTnsICookieStorage;
-
-
-/**
  * nsIEventHandler
  */
 typedef struct vtable_nsIEventHandler

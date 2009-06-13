@@ -426,9 +426,7 @@ nsCookiePermission::GetOriginatingURI(nsIChannel  *aChannel,
    * the window owning the load, and from there, we find the top same-type
    * window and its URI. there are several possible cases:
    *
-   * 1) no channel. this will occur for plugins using the nsICookieStorage
-   *    interface, since they have none to provide. other consumers should
-   *    have a channel.
+   * 1) no channel.
    *
    * 2) a channel, but no window. this can occur when the consumer kicking
    *    off the load doesn't provide one to the channel, and should be limited
