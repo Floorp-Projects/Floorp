@@ -442,6 +442,8 @@ MAKEFILES_caps="
   caps/idl/Makefile
   caps/include/Makefile
   caps/src/Makefile
+  caps/tests/Makefile
+  caps/tests/mochitest/Makefile
 "
 
 MAKEFILES_chrome="
