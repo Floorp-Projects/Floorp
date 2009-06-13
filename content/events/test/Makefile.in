@@ -48,6 +48,8 @@ _TEST_FILES = \
 		test_bug238987.html \
 		test_bug288392.html \
 		test_bug299673.html \
+		test_bug322588.html \
+		     bug322588-popup.html \
 		test_bug328885.html \
 		test_bug336682_1.html \
 		test_bug336682_2.xul \
