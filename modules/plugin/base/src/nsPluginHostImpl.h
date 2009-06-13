@@ -55,7 +55,6 @@
 #include "nsIPluginTagInfo2.h"
 #include "nsIPluginInstancePeer2.h"
 
-#include "nsICookieStorage.h"
 #include "nsPluginsDir.h"
 #include "nsPluginDirServiceProvider.h"
 #include "nsAutoPtr.h"
@@ -217,7 +216,6 @@ public:
 
 class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIPluginHost,
-                         public nsICookieStorage,
                          public nsIObserver,
                          public nsPIPluginHost,
                          public nsSupportsWeakReference
@@ -294,7 +292,6 @@ public:
   NS_DECL_NSIPLUGINHOST
   NS_DECL_NSIPLUGINMANAGER2
   NS_DECL_NSIFACTORY
-  NS_DECL_NSICOOKIESTORAGE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSPIPLUGINHOST
 
@@ -330,6 +327,8 @@ public:
   // checks whether aTag is a "java" plugin tag (a tag for a plugin
   // that does Java)
   static PRBool IsJavaMIMEType(const char *aType);
+
+  static nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
 
 private:
   NS_IMETHOD
@@ -404,8 +403,6 @@ private:
   PRBool IsDuplicatePlugin(nsPluginTag * aPluginTag);
 
   nsresult EnsurePrivateDirServiceProvider();
-
-  nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
 
   // calls PostPluginUnloadEvent for each library in mUnusedLibraries
   void UnloadUnusedLibraries();

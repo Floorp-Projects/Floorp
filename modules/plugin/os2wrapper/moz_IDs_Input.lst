@@ -150,7 +150,6 @@ nsICookieManager
 nsICookieManager2
 nsICookiePromptService
 nsICookieService
-nsICookieStorage
 nsICopyMessageListener
 nsICopyMsgStreamListener
 nsICRLInfo
