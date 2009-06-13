@@ -45,7 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = \
 	public \
 	src \
-	test \
 	$(NULL)
+
+ifdef ENABLE_TESTS
+DIRS += test
+endif
 
 include $(topsrcdir)/config/rules.mk
