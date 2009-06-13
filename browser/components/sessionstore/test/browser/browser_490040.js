@@ -50,7 +50,7 @@ function test() {
 
     let theWin = openDialog(location, "_blank", "chrome,all,dialog=no");
     theWin.addEventListener("load", function(aEvent) {
-      theWin.gBrowser.removeEventListener("load", arguments.callee, true);
+      theWin.removeEventListener("load", arguments.callee, true);
 
       ss.setWindowState(theWin, JSON.stringify(aState.windowState), true);
 
@@ -70,10 +70,18 @@ function test() {
       };
       os.addObserver(observer, "domwindowclosed", true);
 
-      theWin.gBrowser.addEventListener("load", function() {
-        theWin.gBrowser.removeEventListener("load", arguments.callee, true);
-        theWin.close();
-      }, true);
+      // Close the window as soon as the first tab loads, or immediately if
+      // there are no tabs.
+      if (aState.windowState.windows[0].tabs[0].entries.length) {
+        theWin.gBrowser.addEventListener("load", function() {
+          theWin.gBrowser.removeEventListener("load", arguments.callee, true);
+          theWin.close();
+        }, true);
+      } else {
+        executeSoon(function() {
+          theWin.close();
+        });
+      }
     }, true);
   }
 
