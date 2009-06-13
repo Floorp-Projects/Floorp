@@ -129,7 +129,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         ctm.y0 = NSToCoordRound(ctm.y0);
     }
 
-    QMatrix qctm(ctm.xx, ctm.xy, ctm.yx, ctm.yy, ctm.x0, ctm.y0);
+    QMatrix qctm(ctm.xx, ctm.yx, ctm.xy, ctm.yy, ctm.x0, ctm.y0);
     qPainter->setWorldMatrix(qctm, true);
 
     PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
