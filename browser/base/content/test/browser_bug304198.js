@@ -38,13 +38,15 @@
 function test() {
   waitForExplicitFinish();
 
-  let deletedURLTab, fullURLTab, partialURLTab, testPartialURL, testURL;
+  let charsToDelete, deletedURLTab, fullURLTab, partialURLTab, testPartialURL, testURL;
 
+  charsToDelete = 5;
   deletedURLTab = gBrowser.addTab();
   fullURLTab = gBrowser.addTab();
   partialURLTab = gBrowser.addTab();
-  testPartialURL = "http://example.org/brow";
   testURL = "http://example.org/browser/browser/base/content/test/dummy_page.html";
+
+  testPartialURL = testURL.substr(0, (testURL.length - charsToDelete));
 
   function cleanUp() {
 
@@ -53,36 +55,7 @@ function test() {
     gBrowser.removeTab(deletedURLTab);
   }
 
-  // function borrowed from browser_bug386835.js
-  function load(tab, url, cb) {
-    tab.linkedBrowser.addEventListener("load", function (event) {
-      event.currentTarget.removeEventListener("load", arguments.callee, true);
-      cb();
-    }, true);
-    tab.linkedBrowser.loadURI(url);
-  }
-
-  function runTests() {
-    gBrowser.selectedTab = fullURLTab;
-    is(gURLBar.value, testURL, 'gURLBar.value should be testURL after initial switch to fullURLTab');
-
-    gBrowser.selectedTab = partialURLTab;
-    is(gURLBar.value, testURL, 'gURLBar.value should be testURL after initial switch to partialURLTab');
-
-    // simulate the user removing part of the url from the location bar
-    gBrowser.userTypedValue = testPartialURL;
-    URLBarSetURI();
-    is(gURLBar.value, testPartialURL, 'gURLBar.value should be testPartialURL (just set)');
-
-    gBrowser.selectedTab = deletedURLTab;
-    is(gURLBar.value, testURL, 'gURLBar.value should be testURL after initial switch to deletedURLTab');
-
-    // simulate the user removing the whole url from the location bar
-    gBrowser.userTypedValue = '';
-    URLBarSetURI();
-    is(gURLBar.value, '', 'gURLBar.value should be "" (just set)');
-
-    // now cycle the tabs and make sure everything looks good
+  function cycleTabs() {
     gBrowser.selectedTab = fullURLTab;
     is(gURLBar.value, testURL, 'gURLBar.value should be testURL after switching back to fullURLTab');
 
@@ -94,6 +67,60 @@ function test() {
 
     gBrowser.selectedTab = fullURLTab;
     is(gURLBar.value, testURL, 'gURLBar.value should be testURL after switching back to fullURLTab');
+  }
+
+  // function borrowed from browser_bug386835.js
+  function load(tab, url, cb) {
+    tab.linkedBrowser.addEventListener("load", function (event) {
+      event.currentTarget.removeEventListener("load", arguments.callee, true);
+      cb();
+    }, true);
+    tab.linkedBrowser.loadURI(url);
+  }
+
+  function prepareDeletedURLTab() {
+    gBrowser.selectedTab = deletedURLTab;
+    is(gURLBar.value, testURL, 'gURLBar.value should be testURL after initial switch to deletedURLTab');
+
+    // simulate the user removing the whole url from the location bar
+    gPrefService.setBoolPref("browser.urlbar.clickSelectsAll", true);
+    gURLBar.focus();
+
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+    
+    is(gURLBar.value, '', 'gURLBar.value should be "" (just set)');
+    gPrefService.clearUserPref("browser.urlbar.clickSelectsAll");
+  }
+
+  function prepareFullURLTab() {
+    gBrowser.selectedTab = fullURLTab;
+    is(gURLBar.value, testURL, 'gURLBar.value should be testURL after initial switch to fullURLTab');
+  }
+
+  function preparePartialURLTab() {
+    gBrowser.selectedTab = partialURLTab;
+    is(gURLBar.value, testURL, 'gURLBar.value should be testURL after initial switch to partialURLTab');
+
+    // simulate the user removing part of the url from the location bar
+    gPrefService.setBoolPref("browser.urlbar.clickSelectsAll", false);
+    gURLBar.focus();
+    
+    for(let i = 0; i < charsToDelete; ++i) {
+      EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+    }
+
+    is(gURLBar.value, testPartialURL, 'gURLBar.value should be testPartialURL (just set)');
+    gPrefService.clearUserPref("browser.urlbar.clickSelectsAll");
+  }
+
+  function runTests() {
+    // prepare the three tabs required by this test
+    prepareFullURLTab();
+    preparePartialURLTab();
+    prepareDeletedURLTab();
+
+    // now cycle the tabs and make sure everything looks good
+    cycleTabs();
   }
 
   load(deletedURLTab, testURL, function() {
