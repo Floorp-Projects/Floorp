@@ -284,6 +284,10 @@
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
              mode="icons" iconsize="small" defaulticonsize="small"
+#ifdef XP_WIN
+             toolbarname="&menubarCmd.label;"
+             accesskey="&menubarCmd.accesskey;"
+#endif
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
