@@ -398,7 +398,6 @@ MAKEFILES_netwerk="
   netwerk/streamconv/src/Makefile
   netwerk/streamconv/test/Makefile
   netwerk/test/Makefile
-  netwerk/testserver/Makefile
   netwerk/locales/Makefile
   netwerk/system/Makefile
   netwerk/system/win32/Makefile
