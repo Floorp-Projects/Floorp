@@ -239,6 +239,19 @@ toolbar[type="menubar"] {
   min-height: 0 !important;
   border: 0 !important;
 }
+%else
+toolbar[type="menubar"][autohide="true"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-menubar-autohide");
+  overflow: hidden;
+}
+
+toolbar[type="menubar"][autohide="true"]:not([customizable="true"])[inactive="true"],
+toolbox:not([customizing="true"]) > toolbar[type="menubar"][autohide="true"][customizable="true"][inactive="true"]:not([customized="true"]) {
+  min-height: 0 !important;
+  height: 0 !important;
+  -moz-appearance: none !important;
+  border-style: none !important;
+}
 %endif
 
 toolbarseparator {
