@@ -77,7 +77,7 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
   |manifest|, if provided, is a file containing a list of
     test directories to run.
   |interactive|, if set to True, indicates to provide an xpcshell prompt
-    instead of automatically executing  the test.
+    instead of automatically executing the test.
   |symbolsPath|, if provided is the path to a directory containing
     breakpad symbols for processing crashes in tests.
   """
@@ -133,13 +133,28 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
     env["DYLD_LIBRARY_PATH"] = xrePath
   else: # unix or linux?
     env["LD_LIBRARY_PATH"] = xrePath
-  args = [xpcshell, '-g', xrePath, '-j', '-s']
 
-  headfiles = ['-f', os.path.join(testharnessdir, 'head.js'),
-               '-e', 'function do_load_httpd_js() {load("%s");}' % httpdJSPath]
-  tailfiles = ['-f', os.path.join(testharnessdir, 'tail.js')]
-  if not interactive:
-    tailfiles += ['-e', '_execute_test();']
+  # xpcsRunArgs: <head.js> function to call to run the test.
+  # pStdout, pStderr: Parameter values for later |Popen()| call.
+  if interactive:
+    xpcsRunArgs = [
+      '-e', 'print("To start the test, type |_execute_test();|.");',
+      '-i']
+    pStdout = None
+    pStderr = None
+  else:
+    xpcsRunArgs = ['-e', '_execute_test();']
+    if sys.platform == 'os2emx':
+      pStdout = None 
+    else:
+      pStdout = PIPE
+    pStderr = STDOUT
+
+  # <head.js> has to be loaded by xpchell: it can't load itself.
+  xpcsCmd = [xpcshell, '-g', xrePath, '-j', '-s'] + \
+            ['-e', 'const _HTTPD_JS_PATH = "%s";' % httpdJSPath,
+             '-f', os.path.join(testharnessdir, 'head.js')]
+  xpcsTailFile = [os.path.join(testharnessdir, 'tail.js')]
 
   # |testPath| will be the optional path only, or |None|.
   # |singleFile| will be the optional test only, or |None|.
@@ -174,14 +189,16 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
     testdir = os.path.abspath(testdir)
 
     # get the list of head and tail files from the directory
-    testheadfiles = []
+    testHeadFiles = []
     for f in sorted(glob(os.path.join(testdir, "head_*.js"))):
       if os.path.isfile(f):
-        testheadfiles += ['-f', f]
-    testtailfiles = []
-    for f in sorted(glob(os.path.join(testdir, "tail_*.js"))):
+        testHeadFiles += [f]
+    testTailFiles = []
+    # Tails are executed in the reverse order, to "match" heads order,
+    # as in "h1-h2-h3 then t3-t2-t1".
+    for f in reversed(sorted(glob(os.path.join(testdir, "tail_*.js")))):
       if os.path.isfile(f):
-        testtailfiles += ['-f', f]
+        testTailFiles += [f]
 
     # if a single test file was specified, we only want to execute that test
     testfiles = sorted(glob(os.path.join(testdir, "test_*.js")))
@@ -191,24 +208,22 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
       else: # not in this dir? skip it
         continue
 
+    cmdH = ", ".join(['"' + f.replace('\\', '/') + '"'
+                       for f in testHeadFiles])
+    cmdT = ", ".join(['"' + f.replace('\\', '/') + '"'
+                       for f in (testTailFiles + xpcsTailFile)])
+    cmdH = xpcsCmd + \
+           ['-e', 'const _HEAD_FILES = [%s];' % cmdH] + \
+           ['-e', 'const _TAIL_FILES = [%s];' % cmdT]
+
     # Now execute each test individually.
     for test in testfiles:
-      if sys.platform == 'os2emx':
-        pstdout = None 
-      else:
-        pstdout = PIPE
-      pstderr = STDOUT
-      interactiveargs = []
-      if interactive:
-        pstdout = None
-        pstderr = None
-        interactiveargs = ['-e', 'print("To start the test, type _execute_test();")', '-i']
-      full_args = args + headfiles + testheadfiles \
-                  + ['-f', test] \
-                  + tailfiles + testtailfiles + interactiveargs
-      proc = Popen(full_args, stdout=pstdout, stderr=pstderr,
-                   env=env, cwd=testdir)
-      # |stderr == None| as |pstderr| was either |None| or redirected to |stdout|.
+      # The test file will have to be loaded after the head files.
+      cmdT = ['-e', 'const _TEST_FILE = ["%s"];' %
+                      os.path.join(testdir, test).replace('\\', '/')]
+      proc = Popen(cmdH + cmdT + xpcsRunArgs,
+                   stdout=pStdout, stderr=pStderr, env=env, cwd=testdir)
+      # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
       stdout, stderr = proc.communicate()
 
       if interactive:
