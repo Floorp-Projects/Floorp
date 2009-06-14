@@ -99,7 +99,7 @@ _valid_subexp(const T *expr, T stop)
                     return INVALID_SXP;
                 if(expr[y] == '|')
                     ++np;
-                t = _valid_subexp(&expr[x],expr[y]);
+                t = ::_valid_subexp(&expr[x],expr[y]);
                 if(t == INVALID_SXP)
                     return INVALID_SXP;
                 x+=t;
@@ -131,7 +131,7 @@ template<class T>
 int
 NS_WildCardValid_(const T *expr)
 {
-    int x = _valid_subexp(expr, T('\0'));
+    int x = ::_valid_subexp(expr, T('\0'));
     return (x < 0 ? x : VALID_SXP);
 }
 
@@ -175,7 +175,7 @@ _handle_union(const T *str, const T *expr, PRBool case_insensitive)
             e2[p2] = expr[p1];
         }
         for (t=cp+1; ((e2[p2] = expr[t]) != 0); ++t,++p2) {}
-        if(_shexp_match(str,e2, case_insensitive) == MATCH) {
+        if(::_shexp_match(str,e2, case_insensitive) == MATCH) {
             NS_Free(e2);
             return MATCH;
         }
@@ -212,7 +212,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive)
                 if(!expr[y])
                     return MATCH;
                 while(str[x]) {
-                    switch(_shexp_match(&str[x++],&expr[y], case_insensitive)) {
+                    switch(::_shexp_match(&str[x++],&expr[y], case_insensitive)) {
                       case NOMATCH:
                         continue;
                       case ABORTED:
@@ -263,7 +263,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive)
                 }
                 break;
               case '(':
-                return _handle_union(&str[x],&expr[y], case_insensitive);
+                return ::_handle_union(&str[x],&expr[y], case_insensitive);
                 break;
               case '?':
                 break;
@@ -302,12 +302,12 @@ NS_WildCardMatch_(const T *str, const T *xp, PRBool case_insensitive)
     for(int x=nsCharTraits<T>::length(expr)-1;x;--x) {
         if((expr[x] == '~') && (expr[x-1] != '\\')) {
             expr[x] = '\0';
-            if(_shexp_match(str,&expr[++x], case_insensitive) == MATCH)
+            if(::_shexp_match(str,&expr[++x], case_insensitive) == MATCH)
                 goto punt;
             break;
         }
     }
-    if(_shexp_match(str,expr, case_insensitive) == MATCH) {
+    if(::_shexp_match(str,expr, case_insensitive) == MATCH) {
         NS_Free(expr);
         return 0;
     }
