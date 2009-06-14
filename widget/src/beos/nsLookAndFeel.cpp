@@ -223,6 +223,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       }
       break;
     case eColor_menutext:
+    case eColor__moz_menubartext:
       {
         color = ui_color(B_MENU_ITEM_TEXT_COLOR);
         aColor = NS_RGB(color.red, color.green, color.blue);
