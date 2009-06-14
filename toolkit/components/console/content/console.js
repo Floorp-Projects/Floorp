@@ -94,7 +94,10 @@ function updateSortCommand(aOrder)
 
 function updateModeCommand(aMode)
 {
-  var bc = document.getElementById("Console:mode" + aMode);
+  /* aMode can end up invalid if it set by an extension that replaces */
+  /* mode and then it is uninstalled or disabled */
+  var bc = document.getElementById("Console:mode" + aMode) ||
+           document.getElementById("Console:modeAll");
   bc.setAttribute("checked", true);
 }
 
