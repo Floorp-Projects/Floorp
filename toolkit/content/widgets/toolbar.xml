@@ -374,8 +374,10 @@
       <method name="_setInactiveAsync">
         <body><![CDATA[
           this._inactiveTimeout = setTimeout(function (self) {
-            self._inactiveTimeout = null;
-            self._setInactive();
+            if (self.getAttribute("autohide") == "true") {
+              self._inactiveTimeout = null;
+              self._setInactive();
+            }
           }, 0, this);
         ]]></body>
       </method>
