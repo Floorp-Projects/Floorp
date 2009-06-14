@@ -153,6 +153,9 @@ include text-indent/reftest.list
 # text-shadow/
 include text-shadow/reftest.list
 
+# theme (pinstripe)
+include ../../toolkit/themes/pinstripe/reftests/reftest.list
+
 # text-transform/
 include text-transform/reftest.list
 
