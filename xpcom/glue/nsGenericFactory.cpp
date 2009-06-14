@@ -298,7 +298,7 @@ nsGenericModule::Initialize(nsIComponentManager *compMgr)
         if (!desc->mConstructor ||
             (desc->mFlags & nsIClassInfo::EAGER_CLASSINFO)) {
             nsCOMPtr<nsIGenericFactory> fact;
-            nsresult rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
+            rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
             if (NS_FAILED(rv)) return rv;
 
             // if we don't have a mConstructor, then we should not populate
