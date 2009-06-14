@@ -1138,8 +1138,24 @@ gfxWindowsFont::Measure(gfxTextRun *aTextRun,
         }
     }
 
-    return gfxFont::Measure(aTextRun, aStart, aEnd,
-                            aBoundingBoxType, aRefContext, aSpacing);
+    gfxFont::RunMetrics metrics = gfxFont::Measure(aTextRun, aStart, aEnd,
+                                                   aBoundingBoxType, aRefContext,
+                                                   aSpacing);
+
+    // if aBoundingBoxType is LOOSE_INK_EXTENTS
+    // and the underlying cairo font may be antialiased,
+    // we can't trust Windows to have considered all the pixels
+    // so we need to add "padding" to the bounds.
+    // (see bugs 475968, 439831, compare also bug 445087)
+    if (aBoundingBoxType == LOOSE_INK_EXTENTS &&
+        mAntialiasOption != CAIRO_ANTIALIAS_NONE &&
+        metrics.mBoundingBox.size.width > 0) {
+        const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+        metrics.mBoundingBox.pos.x -= appUnitsPerDevUnit;
+        metrics.mBoundingBox.size.width += 3 * appUnitsPerDevUnit;
+    }
+
+    return metrics;
 }
 
 FontEntry*
