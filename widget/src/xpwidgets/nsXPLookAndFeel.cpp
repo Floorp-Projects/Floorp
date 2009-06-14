@@ -232,6 +232,7 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz_buttonhovertext",
   "ui.-moz_menuhover",
   "ui.-moz_menuhovertext",
+  "ui.-moz_menubartext",
   "ui.-moz_menubarhovertext",
   "ui.-moz_eventreerow",
   "ui.-moz_oddtreerow",
