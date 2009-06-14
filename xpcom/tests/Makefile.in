@@ -165,6 +165,10 @@ MOZ_DEBUG_SYMBOLS = 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),WINCE)
+EXTRA_LIBS += libcmt.lib
+endif
+
 LOCAL_INCLUDES	= \
                 -I$(srcdir)/../ds \
 		-I$(srcdir)/services \
