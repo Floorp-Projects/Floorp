@@ -64,6 +64,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocument.h"
 #include "nsIDOMNodeSelector.h"
+#include "nsIDOMXPathNSResolver.h"
 
 #ifdef MOZ_SMIL
 #include "nsISMILAttr.h"
@@ -144,14 +145,14 @@ private:
 /**
  * A tearoff class for nsGenericElement to implement additional interfaces
  */
-class nsNode3Tearoff : public nsIDOM3Node
+class nsNode3Tearoff : public nsIDOM3Node, public nsIDOMXPathNSResolver
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_NSIDOM3NODE
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsNode3Tearoff)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNode3Tearoff, nsIDOM3Node)
 
   nsNode3Tearoff(nsIContent *aContent) : mContent(aContent)
   {
