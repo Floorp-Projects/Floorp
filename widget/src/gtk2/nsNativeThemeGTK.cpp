@@ -687,6 +687,16 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
       aExtra->left = indicator_spacing;
       return PR_TRUE;
     }
+  case NS_THEME_BUTTON :
+    {
+      gint top, left, bottom, right;
+      moz_gtk_button_get_default_border(&top, &left, &bottom, &right);
+      aExtra->top = top;
+      aExtra->right = right;
+      aExtra->bottom = bottom;
+      aExtra->left = left;
+      return PR_TRUE;
+    }
   default:
     return PR_FALSE;
   }
