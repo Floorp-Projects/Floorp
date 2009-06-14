@@ -98,6 +98,12 @@ public:
         return mSpaceGlyph;
     }
 
+    virtual RunMetrics Measure(gfxTextRun *aTextRun,
+                               PRUint32 aStart, PRUint32 aEnd,
+                               BoundingBoxType aBoundingBoxType,
+                               gfxContext *aContextForTightBoundingBox,
+                               Spacing *aSpacing);
+
     PRBool TestCharacterMap(PRUint32 aCh);
 
     MacOSFontEntry* GetFontEntry();
