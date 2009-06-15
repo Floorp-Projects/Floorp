@@ -103,9 +103,23 @@
       
       <constructor>
         <![CDATA[
+          if (this.hasAttribute("firstpermanentchild")) {
+            // The toolbar is being reconstructed. The original first and last
+            // permanent child nodes need to be restored, the rest of the
+            // constructor can be skipped.
+
+            this.firstPermanentChild =
+              this.childNodes.item(this.getAttribute("firstpermanentchild"));
+            this.lastPermanentChild =
+              this.childNodes.item(this.getAttribute("lastpermanentchild"));
+            return;
+          }
+
           this.firstPermanentChild = this.firstChild;
           this.lastPermanentChild = this.lastChild;
-          
+          this.setAttribute("firstpermanentchild", this.firstChild ? 0 : -1);
+          this.setAttribute("lastpermanentchild", this.childNodes.length -1);
+
           // Searching for the toolbox palette in the toolbar binding because
           // toolbars are constructed first.
           var toolbox = this.parentNode;
@@ -139,9 +153,13 @@
       <property name="currentSet">
         <getter>
           <![CDATA[
-            var node = this.firstChild;
             var currentSet = "";
-            while (node) {
+            for (let i = 0, node; node = this.childNodes.item(i); i++) {
+              if (node == this.firstPermanentChild)
+                this.setAttribute("firstpermanentchild", i);
+              if (node == this.lastPermanentChild)
+                this.setAttribute("lastpermanentchild", i);
+
               if (node.id &&
                   node.localName == "toolbaritem" || 
                   node.localName == "toolbarbutton" ||
@@ -161,7 +179,6 @@
                 else
                   currentSet += node.id;
               }
-              node = node.nextSibling;
             }
 
             if ("currentSetChanged" in this)
@@ -211,6 +228,13 @@
                 else
                   this.insertItem(itemIds[i], null, null, before);
               }
+            }
+
+            if (this.firstPermanentChild) {
+              this.setAttribute("firstpermanentchild",
+                                Array.indexOf(this.childNodes, this.firstPermanentChild));
+              this.setAttribute("lastpermanentchild",
+                                Array.indexOf(this.childNodes, this.lastPermanentChild));
             }
 
             if ("currentSetChanged" in this)
