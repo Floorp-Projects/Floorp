@@ -4800,6 +4800,27 @@ nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsString& aOrigin)
   
   return NS_OK;
 }
+
+/* static */
+already_AddRefed<nsIDocument>
+nsContentUtils::GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
+{
+  if (!aScriptContext)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(aScriptContext->GetGlobalObject());
+  nsIDocument *doc = nsnull;
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    window->GetDocument(getter_AddRefs(domdoc));
+    if (domdoc) {
+      CallQueryInterface(domdoc, &doc);
+    }
+  }
+  return doc;
+}
+
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
   : mString(aString), mService(nsnull)
 {
