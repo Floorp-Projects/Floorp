@@ -91,8 +91,8 @@ public:
         PRBool *_retval);
 
 protected:
-    static BOOL CALLBACK ConfirmProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static BOOL CALLBACK PromptProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static INT_PTR CALLBACK ConfirmProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static INT_PTR CALLBACK PromptProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     TCHAR *mTitle;
     TCHAR *mMessage;
@@ -446,15 +446,15 @@ PromptDlg::PromptPassword(HWND hwndParent,
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 PromptDlg::PromptProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PromptDlg *pThis = (PromptDlg *) GetWindowLong(hwndDlg, DWL_USER);
+    PromptDlg *pThis = (PromptDlg *) GetWindowLongPtr(hwndDlg, DWLP_USER);
     switch (uMsg)
     {
     case WM_INITDIALOG:
         // Initialise pThis
-        SetWindowLong(hwndDlg, DWL_USER, lParam);
+        SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
         pThis = (PromptDlg *) lParam;
 
         // Set dialog title & message text
@@ -564,10 +564,10 @@ PromptDlg::PromptProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 PromptDlg::ConfirmProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PromptDlg *pThis = (PromptDlg *) GetWindowLong(hwndDlg, DWL_USER);
+    PromptDlg *pThis = (PromptDlg *) GetWindowLongPtr(hwndDlg, DWLP_USER);
     int i;
 
     switch (uMsg)
@@ -575,7 +575,7 @@ PromptDlg::ConfirmProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_INITDIALOG:
 
         // Initialise pThis
-        SetWindowLong(hwndDlg, DWL_USER, lParam);
+        SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
         pThis = (PromptDlg *) lParam;
 
         // Set dialog title & message text
