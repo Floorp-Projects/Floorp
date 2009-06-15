@@ -57,7 +57,7 @@ public:
 protected:
     virtual ~CControlEventSink();
 
-    static HRESULT WINAPI SinkQI(void* pv, REFIID riid, LPVOID* ppv, DWORD dw)
+    static HRESULT WINAPI SinkQI(void* pv, REFIID riid, LPVOID* ppv, DWORD_PTR dw)
     {
         CControlEventSink *pThis = (CControlEventSink *) pv;
         if (!IsEqualIID(pThis->m_EventIID, GUID_NULL) && 

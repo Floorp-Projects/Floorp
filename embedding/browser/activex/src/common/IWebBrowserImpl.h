@@ -797,7 +797,7 @@ public:
         return S_OK;
     }
     
-    virtual HRESULT STDMETHODCALLTYPE get_HWND(long __RPC_FAR *pHWND)
+    virtual HRESULT STDMETHODCALLTYPE get_HWND(SHANDLE_PTR __RPC_FAR *pHWND)
     {
         ATLTRACE(_T("IWebBrowserImpl::get_HWND()\n"));
         ENSURE_BROWSER_IS_VALID();
