@@ -2632,48 +2632,48 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
 {
-    NS_ENSURE_ARG_POINTER(result);
-    if (nsnull == mTagText) {
-        nsresult rv;
-        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent, &rv));
-        if (NS_FAILED(rv))
-            return rv;
+  NS_ENSURE_ARG_POINTER(result);
+  if (nsnull == mTagText) {
+    nsresult rv;
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent, &rv));
+    if (NS_FAILED(rv))
+      return rv;
 
-        nsCOMPtr<nsIDocument> document;
-        rv = GetDocument(getter_AddRefs(document));
-        if (NS_FAILED(rv))
-            return rv;
+    nsCOMPtr<nsIDocument> document;
+    rv = GetDocument(getter_AddRefs(document));
+    if (NS_FAILED(rv))
+      return rv;
 
-        nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
-        NS_ASSERTION(domDoc, "Need a document");
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
+    NS_ASSERTION(domDoc, "Need a document");
 
-        nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html", &rv));
-        if (NS_FAILED(rv))
-            return rv;
-        rv = docEncoder->Init(domDoc, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeBasicEntities);
-        if (NS_FAILED(rv))
-            return rv;
+    nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html", &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    rv = docEncoder->Init(domDoc, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeBasicEntities);
+    if (NS_FAILED(rv))
+      return rv;
 
-        nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID,&rv));
-        if (NS_FAILED(rv))
-            return rv;
+    nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID,&rv));
+    if (NS_FAILED(rv))
+      return rv;
 
-        rv = range->SelectNode(node);
-        if (NS_FAILED(rv))
-            return rv;
+    rv = range->SelectNode(node);
+    if (NS_FAILED(rv))
+      return rv;
 
-        docEncoder->SetRange(range);
-        nsString elementHTML;
-        rv = docEncoder->EncodeToString(elementHTML);
-        if (NS_FAILED(rv))
-            return rv;
+    docEncoder->SetRange(range);
+    nsString elementHTML;
+    rv = docEncoder->EncodeToString(elementHTML);
+    if (NS_FAILED(rv))
+      return rv;
 
-        mTagText = ToNewUTF8String(elementHTML);
-        if (!mTagText)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-    *result = mTagText;
-    return NS_OK;
+    mTagText = ToNewUTF8String(elementHTML);
+    if (!mTagText)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *result = mTagText;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
@@ -3165,19 +3165,19 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
   InitializeEventRecord(&aMacEvent);
   switch (anEvent.message) {
     case NS_FOCUS_CONTENT: 
-        aMacEvent.what = nsPluginEventType_GetFocusEvent;
-        break;
+      aMacEvent.what = nsPluginEventType_GetFocusEvent;
+      break;
 
     case NS_BLUR_CONTENT:
-        aMacEvent.what = nsPluginEventType_LoseFocusEvent;
-        break;
+      aMacEvent.what = nsPluginEventType_LoseFocusEvent;
+      break;
 
     case NS_MOUSE_MOVE:
     case NS_MOUSE_ENTER:
-        if (origEvent)
-          aMacEvent = *origEvent;
-        aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
-        break;
+      if (origEvent)
+        aMacEvent = *origEvent;
+      aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
+      break;
   }
 }
 
@@ -3266,51 +3266,51 @@ nsPluginInstanceOwner::GetEventloopNestingLevel()
 nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
 #ifdef XP_MACOSX
-    CancelTimer();
+  CancelTimer();
 
-    if (mInstance) {
-        nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
-        if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-            EventRecord scrollEvent;
-            InitializeEventRecord(&scrollEvent);
-            scrollEvent.what = nsPluginEventType_ScrollingBeginsEvent;
-    
-            WindowRef window = FixUpPluginWindow(ePluginPaintDisable);
-            if (window) {
-              nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(window) };
-              PRBool eventHandled = PR_FALSE;
-              mInstance->HandleEvent(&pluginEvent, &eventHandled);
-            }
-            pluginWidget->EndDrawPlugin();
-        }
+  if (mInstance) {
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
+      EventRecord scrollEvent;
+      InitializeEventRecord(&scrollEvent);
+      scrollEvent.what = nsPluginEventType_ScrollingBeginsEvent;
+
+      WindowRef window = FixUpPluginWindow(ePluginPaintDisable);
+      if (window) {
+        nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(window) };
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(&pluginEvent, &eventHandled);
+      }
+      pluginWidget->EndDrawPlugin();
     }
+  }
 #endif
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
 #ifdef XP_MACOSX
-    if (mInstance) {
-      nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
-      if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-        EventRecord scrollEvent;
-        InitializeEventRecord(&scrollEvent);
-        scrollEvent.what = nsPluginEventType_ScrollingEndsEvent;
-  
-        WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
-        if (window) {
-          nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(window) };
-          PRBool eventHandled = PR_FALSE;
-          mInstance->HandleEvent(&pluginEvent, &eventHandled);
-        }
-        pluginWidget->EndDrawPlugin();
+  if (mInstance) {
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
+      EventRecord scrollEvent;
+      InitializeEventRecord(&scrollEvent);
+      scrollEvent.what = nsPluginEventType_ScrollingEndsEvent;
+
+      WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
+      if (window) {
+        nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(window) };
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(&pluginEvent, &eventHandled);
       }
+      pluginWidget->EndDrawPlugin();
     }
+  }
 #endif
 
-    StartTimer(NORMAL_PLUGIN_DELAY);
-    return NS_OK;
+  StartTimer(NORMAL_PLUGIN_DELAY);
+  return NS_OK;
 }
 
 /*=============== nsIFocusListener ======================*/
@@ -4621,34 +4621,34 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
 NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 {
 #ifdef XP_MACOSX
-    // validate the plugin clipping information by syncing the plugin window info to
-    // reflect the current widget location. This makes sure that everything is updated
-    // correctly in the event of scrolling in the window.
-    if (mInstance) {
-        nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
-        if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-            WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
-            if (window) {
-                EventRecord idleEvent;
-                InitializeEventRecord(&idleEvent);
-                idleEvent.what = nullEvent;
-                    
-                // give a bogus 'where' field of our null event when hidden, so Flash
-                // won't respond to mouse moves in other tabs, see bug 120875
-                if (!mWidgetVisible)
-                    idleEvent.where.h = idleEvent.where.v = 20000;
-    
-                nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(window) };
-    
-                PRBool eventHandled = PR_FALSE;
-                mInstance->HandleEvent(&pluginEvent, &eventHandled);
-            }
-            
-            pluginWidget->EndDrawPlugin();
-       }
+  // validate the plugin clipping information by syncing the plugin window info to
+  // reflect the current widget location. This makes sure that everything is updated
+  // correctly in the event of scrolling in the window.
+  if (mInstance) {
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
+      WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
+      if (window) {
+        EventRecord idleEvent;
+        InitializeEventRecord(&idleEvent);
+        idleEvent.what = nullEvent;
+
+        // give a bogus 'where' field of our null event when hidden, so Flash
+        // won't respond to mouse moves in other tabs, see bug 120875
+        if (!mWidgetVisible)
+          idleEvent.where.h = idleEvent.where.v = 20000;
+
+        nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(window) };
+
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(&pluginEvent, &eventHandled);
+      }
+
+      pluginWidget->EndDrawPlugin();
     }
+  }
 #endif
-    return NS_OK;
+  return NS_OK;
 }
 
 void nsPluginInstanceOwner::StartTimer(unsigned int aDelay)
