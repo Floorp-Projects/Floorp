@@ -218,15 +218,14 @@ nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
     mTarget->GetListenerManager(PR_FALSE, getter_AddRefs(mManager));
   }
   if (mManager) {
-    nsPIDOMEventTarget* currentTarget = CurrentTarget()->GetTargetForDOMEvent();
-    aVisitor.mEvent->currentTarget = currentTarget;
-    if (aVisitor.mEvent->currentTarget) {
-      mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
-                            &aVisitor.mDOMEvent,
-                            currentTarget, aFlags,
-                            &aVisitor.mEventStatus);
-      aVisitor.mEvent->currentTarget = nsnull;
-    }
+    NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
+                 "CurrentTarget should be null!");
+    mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
+                          &aVisitor.mDOMEvent,
+                          CurrentTarget(), aFlags,
+                          &aVisitor.mEventStatus);
+    NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
+                 "CurrentTarget should be null!");
   }
   return NS_OK;
 }
