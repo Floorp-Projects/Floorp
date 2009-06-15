@@ -64,17 +64,18 @@
 jArray<PRUnichar,PRInt32> nsHtml5TreeBuilder::ISINDEX_PROMPT = jArray<PRUnichar,PRInt32>();
 
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
-  : documentModeHandler(aParser),
-    scriptingEnabled(PR_FALSE),
-    fragment(PR_FALSE),
-    formPointer(nsnull),
-    headPointer(nsnull),
-    mNeedsFlush(PR_FALSE),
+  : documentModeHandler(aParser)
+  , scriptingEnabled(PR_FALSE)
+  , fragment(PR_FALSE)
+  , formPointer(nsnull)
+  , headPointer(nsnull)
+  , mNeedsFlush(PR_FALSE)
+  , mFlushTimer(do_CreateInstance("@mozilla.org/timer;1"))
+  , mParser(aParser)
+  , mHasProcessedBase(PR_FALSE)
 #ifdef DEBUG
-    mActive(PR_FALSE),
+  , mActive(PR_FALSE)
 #endif
-    mFlushTimer(do_CreateInstance("@mozilla.org/timer;1")),
-    mParser(aParser)
 {
   MOZ_COUNT_CTOR(nsHtml5TreeBuilder);
 }
