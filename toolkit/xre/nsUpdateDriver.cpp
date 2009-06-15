@@ -303,6 +303,11 @@ IsOlderVersion(nsILocalFile *versionFile, const char *&appVersion)
   if (!result)
     return PR_TRUE;
 
+  // Trim off any trailing newline
+  int len = strlen(result);
+  if (len > 0 && result[len - 1] == '\n')
+    result[len - 1] = '\0';
+
   // If the update xml doesn't provide the application version the file will
   // contain the string "null" and it is assumed that the update is not older.
   const char kNull[] = "null";
