@@ -4328,7 +4328,7 @@ RebindLets(JSParseNode *pn, JSTreeContext *tc)
                     JSDefinition *dn = ALE_DEFN(ale);
                     dn->pn_type = TOK_NAME;
                     dn->pn_op = JSOP_NOP;
-                    dn->pn_dflags |= pn->pn_dflags & PND_FUNARG;
+                    dn->pn_dflags |= pn->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
                 }
                 LinkUseToDef(pn, ALE_DEFN(ale), tc);
             }
