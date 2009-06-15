@@ -101,7 +101,7 @@ public:
     // This is called when the drag started with the invisible widget
     // finishes.  It's called from within the drag service code but from
     // a callback - it needs to be public.
-    void           SourceEndDrag(void);
+    void           SourceEndDrag(GdkDragContext *aContext);
     void           SourceDataGet(GtkWidget        *widget,
                                  GdkDragContext   *context,
                                  GtkSelectionData *selection_data,
