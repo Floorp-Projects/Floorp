@@ -57,15 +57,15 @@ CPPSRCS	=	nsWifiMonitor.cpp \
 		nsWifiAccessPoint.cpp \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+ifeq ($(OS_ARCH),Darwin)
 CPPSRCS	+= nsWifiScannerMac.cpp
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
 CPPSRCS	+= nsWifiScannerWin.cpp
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifeq ($(OS_ARCH),Linux)
 CPPSRCS	+= nsWifiScannerUnix.cpp
-endif # gtk
+endif # linux
 endif # windows
 endif # mac
 
