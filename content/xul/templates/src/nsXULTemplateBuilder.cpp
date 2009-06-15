@@ -1109,7 +1109,9 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument* aDocument,
         // case we may need to nuke and rebuild the entire content model
         // beneath the element.
         if (aAttribute == nsGkAtoms::ref)
-            Rebuild();
+            nsContentUtils::AddScriptRunner(
+                NS_NEW_RUNNABLE_METHOD(nsXULTemplateBuilder, this,
+                                       RunnableRebuild));
 
         // Check for a change to the 'datasources' attribute. If so, setup
         // mDB by parsing the new value and rebuild.
@@ -1119,7 +1121,9 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument* aDocument,
             PRBool shouldDelay;
             LoadDataSources(aDocument, &shouldDelay);
             if (!shouldDelay)
-                Rebuild();
+                nsContentUtils::AddScriptRunner(
+                    NS_NEW_RUNNABLE_METHOD(nsXULTemplateBuilder, this,
+                                           RunnableRebuild));
         }
     }
 }
