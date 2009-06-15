@@ -2733,3 +2733,6 @@ pref("mozilla.widget.disable-native-theme", true);
 
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
+
+// Enable/Disable HTML5 parser
+pref("html5.enable", false);

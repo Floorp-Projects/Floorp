@@ -3591,7 +3591,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
   PRBool bHTML = htmlDoc && !bCaseSensitive;
 
-  if (bHTML && nsContentUtils::GetBoolPref("html5.enable", PR_TRUE)) {
+  if (bHTML && nsContentUtils::GetBoolPref("html5.enable", PR_FALSE)) {
     // See if the document has a cached fragment parser. nsHTMLDocument is the
     // only one that should really have one at the moment.
     nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
