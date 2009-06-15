@@ -685,6 +685,7 @@ placesRemoveItemTransaction.prototype = {
       this._transactions
           .push(new placesRemoveItemTransaction(contents.getChild(i).itemId));
     }
+    contents.containerOpen = false;
   }
 };
 
@@ -988,7 +989,8 @@ placesSortFolderByNameTransactions.prototype = {
   doTransaction: function PSSFBN_doTransaction() {
     this._oldOrder = [];
 
-    var contents = PlacesUtils.getFolderContents(this._folderId, false, false).root;
+    var contents =
+      PlacesUtils.getFolderContents(this._folderId, false, false).root;
     var count = contents.childCount;
 
     // sort between separators
@@ -1017,6 +1019,8 @@ placesSortFolderByNameTransactions.prototype = {
       else
         preSep.push(item);
     }
+    contents.containerOpen = false;
+
     if (preSep.length > 0) {
       preSep.sort(sortingMethod);
       newOrder = newOrder.concat(preSep);

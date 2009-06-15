@@ -808,6 +808,8 @@ PlacesTreeView.prototype = {
     // object which is already set for this viewer. At that point,
     // we should do nothing.
     if (this._result != val) {
+      if (this._result)
+        this._result.root.containerOpen = false;
       this._result = val;
       this._finishInit();
     }

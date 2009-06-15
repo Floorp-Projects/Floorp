@@ -551,7 +551,11 @@ var PlacesUtils = {
             this.value += aStr;
           }
         };
-        self.serializeNodeAsJSONToOutputStream(convertNode(aNode), writer, true, aForceCopy);
+        var node = convertNode(aNode);
+        self.serializeNodeAsJSONToOutputStream(node, writer, true, aForceCopy);
+        // Convert node could pass an open container node.
+        if (self.nodeIsContainer(node))
+          node.containerOpen = false;
         return writer.value;
       case this.TYPE_X_MOZ_URL:
         function gatherDataUrl(bNode) {
@@ -564,7 +568,13 @@ var PlacesUtils = {
           // ignore containers and separators - items without valid URIs
           return "";
         }
-        return gatherDataUrl(convertNode(aNode));
+        var node = convertNode(aNode);
+        var dataUrl = gatherDataUrl(node);
+        // Convert node could pass an open container node.
+        if (self.nodeIsContainer(node))
+          node.containerOpen = false;
+        return dataUrl;
+        
 
       case this.TYPE_HTML:
         function gatherDataHtml(bNode) {
@@ -605,7 +615,12 @@ var PlacesUtils = {
             return "<HR>" + NEWLINE;
           return "";
         }
-        return gatherDataHtml(convertNode(aNode));
+        var node = convertNode(aNode);
+        var dataHtml = gatherDataHtml(node);
+        // Convert node could pass an open container node.
+        if (self.nodeIsContainer(node))
+          node.containerOpen = false;
+        return dataHtml;
     }
     // case this.TYPE_UNICODE:
     function gatherDataText(bNode) {
@@ -634,7 +649,12 @@ var PlacesUtils = {
       return "";
     }
 
-    return gatherDataText(convertNode(aNode));
+    var node = convertNode(aNode);
+    var dataText = gatherDataText(node);
+    // Convert node could pass an open container node.
+    if (self.nodeIsContainer(node))
+      node.containerOpen = false;
+    return dataText;
   },
 
   /**
