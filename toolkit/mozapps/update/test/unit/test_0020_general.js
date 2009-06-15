@@ -249,13 +249,13 @@ function run_test_pt10() {
                                   "e6678ca40ae7582316acdeddf3c133c9c8577de4",
                                   "1316138");
   var updates = getRemoteUpdateString(patches, "XPCShell App Update Test",
-                                      "minor", "1.0pre", "2.0",
-                                      "3.0", "20080811053724",
+                                      "minor", "version 1.0pre", "2.0",
+                                      "1.0pre", "20080811053724",
                                       "http://dummylicense/index.html",
                                       "http://dummydetails/index.html");
   updates += getRemoteUpdateString(patches, "XPCShell App Update Test",
-                                   "minor", "1.0a", "2.0",
-                                   "3.0", "20080811053724",
+                                   "minor", "version 1.0a", "3.0",
+                                   "1.0a", "20080811053724",
                                    "http://dummylicense/index.html",
                                    "http://dummydetails/index.html");
   gResponseBody = getRemoteUpdatesXMLString(updates);
@@ -278,8 +278,8 @@ function run_test_pt11() {
                                   "e6678ca40ae7582316acdeddf3c133c9c8577de4",
                                   "1316138");
   var updates = getRemoteUpdateString(patches, "XPCShell App Update Test",
-                                      "minor", "1.0", "2.0",
-                                      "3.0", "20080811053724",
+                                      "minor", "version 1.0", "3.0",
+                                      "1.0", "20080811053724",
                                       "http://dummylicense/index.html",
                                       "http://dummydetails/index.html");
   gResponseBody = getRemoteUpdatesXMLString(updates);
@@ -290,6 +290,6 @@ function run_test_pt11() {
 function check_test_pt11() {
   var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
   do_check_neq(bestUpdate, null);
-  do_check_eq(bestUpdate.version, "1.0");
+  do_check_eq(bestUpdate.version, "version 1.0");
   end_test();
 }
