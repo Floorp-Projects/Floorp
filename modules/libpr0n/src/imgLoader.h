@@ -244,20 +244,28 @@ public:
 
   static PRBool PutIntoCache(nsIURI *key, imgCacheEntry *entry);
 
-  // Returns true if |one| is less than |two|
+  // Returns true if we should prefer evicting cache entry |two| over cache
+  // entry |one|.
   // This mixes units in the worst way, but provides reasonable results.
   inline static bool CompareCacheEntries(const nsRefPtr<imgCacheEntry> &one,
-                                  const nsRefPtr<imgCacheEntry> &two)
+                                         const nsRefPtr<imgCacheEntry> &two)
   {
     if (!one)
       return false;
     if (!two)
       return true;
 
-    const PRFloat64 sizeweight = 1.0 - sCacheTimeWeight;
-    PRInt32 diffsize = PRInt32(two->GetDataSize()) - PRInt32(one->GetDataSize());
-    PRInt32 difftime = one->GetTouchedTime() - two->GetTouchedTime();
-    return difftime * sCacheTimeWeight + diffsize * sizeweight < 0;
+    const double sizeweight = 1.0 - sCacheTimeWeight;
+
+    // We want large, old images to be evicted first (depending on their
+    // relative weights). Since a larger time is actually newer, we subtract
+    // time's weight, so an older image has a larger weight.
+    double oneweight = double(one->GetDataSize()) * sizeweight -
+                       double(one->GetTouchedTime()) * sCacheTimeWeight;
+    double twoweight = double(two->GetDataSize()) * sizeweight -
+                       double(two->GetTouchedTime()) * sCacheTimeWeight;
+
+    return oneweight < twoweight;
   }
 
   static void VerifyCacheSizes();
