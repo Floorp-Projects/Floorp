@@ -280,7 +280,6 @@ nsHtml5TreeBuilder::end()
 {
   mFlushTimer->Cancel();
   Flush();
-  mParser->ReadyToCallDidBuildModelHtml5();
 #ifdef DEBUG
   mActive = PR_FALSE;
 #endif
