@@ -131,6 +131,8 @@ toolbarbutton[checked="true"] {
   background-color: transparent !important;
   padding: 0;
   width: auto;
+  height: auto;
+  margin-top: 1px;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
