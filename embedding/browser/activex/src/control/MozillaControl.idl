@@ -204,7 +204,7 @@ library MOZILLACONTROLLib
         HRESULT Name([out,retval] BSTR* Name);
 
         [id(DISPID_HWND), propget, helpstring("Returns the HWND of the current IE window."), helpcontext(0x0000)]
-        HRESULT HWND([out,retval] long *pHWND);
+        HRESULT HWND([out,retval] SHANDLE_PTR *pHWND);
 
         [id(400), propget, helpstring("Returns file specification of the application, including path."), helpcontext(0x0000)]
         HRESULT FullName([out,retval] BSTR* FullName);
