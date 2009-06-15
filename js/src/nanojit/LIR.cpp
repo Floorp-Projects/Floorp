@@ -422,14 +422,14 @@ namespace nanojit
         }
     }
 
+    // Nb: this excludes loads and stores, which are covered by isLoad() and
+    // isStore().
     bool LIns::isOp2() const {
         switch (firstWord.code) {
-            case LIR_ld:
             case LIR_loop:
             case LIR_x:
             case LIR_jt:
             case LIR_jf:
-            case LIR_ldcs:
             case LIR_feq:
             case LIR_flt:
             case LIR_fgt:
@@ -448,7 +448,6 @@ namespace nanojit
             case LIR_ush:
             case LIR_xt:
             case LIR_xf:
-            case LIR_ldcb:
             case LIR_eq:
             case LIR_lt:
             case LIR_gt:
@@ -461,7 +460,6 @@ namespace nanojit
             case LIR_2:
             case LIR_xbarrier:
             case LIR_xtbl:
-            case LIR_ldq:
             case LIR_qiand:
             case LIR_qiadd:
             case LIR_qjoin:

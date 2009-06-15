@@ -243,11 +243,11 @@ namespace nanojit
 
 	public:
         LIns* oprnd1() const {
-            NanoAssert(isOp1() || isOp2() || isStore());
+            NanoAssert(isOp1() || isOp2() || isLoad() || isStore());
             return u.oprnd_1;
         }
         LIns* oprnd2() const {
-            NanoAssert(isOp2() || isStore());
+            NanoAssert(isOp2() || isLoad() || isStore());
             return u.oprnd_2;
         }
 
@@ -310,7 +310,7 @@ namespace nanojit
         bool isLoad() const { 
             LOpcode op = firstWord.code;
             return op == LIR_ldq  || op == LIR_ld || op == LIR_ldc || 
-                   op == LIR_ldqc || op == LIR_ldcs;
+                   op == LIR_ldqc || op == LIR_ldcs || op == LIR_ldcb;
         }
         bool isGuard() const {
             LOpcode op = firstWord.code;
@@ -337,11 +337,11 @@ namespace nanojit
 
 		// operand-setting methods
         void setOprnd1(LIns* r) {
-            NanoAssert(isOp1() || isOp2() || isStore());
+            NanoAssert(isOp1() || isOp2() || isLoad() || isStore());
             u.oprnd_1 = r;
         }
         void setOprnd2(LIns* r) {
-            NanoAssert(isOp2() || isStore());
+            NanoAssert(isOp2() || isLoad() || isStore());
             u.oprnd_2 = r;
         }
         void setDisp(int32_t d) {
