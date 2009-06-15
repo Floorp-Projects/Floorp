@@ -1176,6 +1176,12 @@ found:
                                            EmptyString(), aDOMEvent);
           }
           if (*aDOMEvent) {
+            if (!aEvent->currentTarget) {
+              aEvent->currentTarget = aCurrentTarget->GetTargetForDOMEvent();
+              if (!aEvent->currentTarget) {
+                break;
+              }
+            }
             nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
             if (useTypeInterface) {
               pusher.Pop();
@@ -1191,6 +1197,8 @@ found:
       }
     }
   }
+
+  aEvent->currentTarget = nsnull;
 
   if (!hasListener) {
     mNoListenerForEvent = aEvent->message;
