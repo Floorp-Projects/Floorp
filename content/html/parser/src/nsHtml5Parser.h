@@ -351,9 +351,6 @@ class nsHtml5Parser : public nsIParser,
     PRBool HasDecoder() {
       return !!mUnicodeDecoder;
     }
-    void ReadyToCallDidBuildModelHtml5() {
-      ReadyToCallDidBuildModelImpl(mTerminated);
-    }
   private:
     void ExecuteScript();
     void MaybePostContinueEvent();
