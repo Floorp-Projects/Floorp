@@ -3503,7 +3503,7 @@ typedef struct FindPropValEntry {
                ((pnkey)->pn_type == TOK_NUMBER ||                             \
                 (pnkey)->pn_type == TOK_STRING ||                             \
                 (pnkey)->pn_type == TOK_NAME)) ||                             \
-               (pnkey)->pn_arity == PN_NAME && (pnkey)->pn_type == TOK_NAME)
+               ((pnkey)->pn_arity == PN_NAME && (pnkey)->pn_type == TOK_NAME))
 
 static JSDHashNumber
 HashFindPropValKey(JSDHashTable *table, const void *key)
