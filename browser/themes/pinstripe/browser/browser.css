@@ -1552,7 +1552,6 @@ tabbrowser > tabbox {
 }
 
 .tabbrowser-tab[selected="true"] {
-  -moz-user-focus: normal;
   padding: 0 6px 1px;
   border-width: 2px;
   -moz-border-left-colors: rgba(0, 0, 0, .1) rgba(0, 0, 0, .2);
