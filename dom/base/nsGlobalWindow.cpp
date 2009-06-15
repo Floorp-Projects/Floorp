@@ -2884,11 +2884,14 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
     nsCOMPtr<nsIURI> manifestURI;
     nsContentUtils::GetOfflineAppManifest(doc, getter_AddRefs(manifestURI));
 
-    nsDOMOfflineResourceList* applicationCache =
-      new nsDOMOfflineResourceList(manifestURI, uri, this);
+    nsIScriptContext* scriptContext = GetContext();
+    NS_ENSURE_STATE(scriptContext);
 
-    if (!applicationCache)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsRefPtr<nsDOMOfflineResourceList> applicationCache =
+      new nsDOMOfflineResourceList(manifestURI, uri, this, scriptContext);
+    NS_ENSURE_TRUE(applicationCache, NS_ERROR_OUT_OF_MEMORY);
+
+    applicationCache->Init();
 
     mApplicationCache = applicationCache;
   }

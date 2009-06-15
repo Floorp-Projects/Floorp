@@ -19,6 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462856
      notification -->
 <iframe name="testFrame3" src="http://example.com/tests/browser/base/content/test/offlineChild.html"></iframe>
 
+<iframe id="eventsTestFrame" src="offlineEvent.html"></iframe>
+
 <div id="content" style="display: none">
 </div>
 <pre id="test">
@@ -44,7 +46,55 @@ window.addEventListener("message", function(event) {
     }
   }, false);
 
+var count = 0;
+var expectedEvent = "";
+function eventHandler(evt) {
+  ++count;
+  is(evt.type, expectedEvent, "Wrong event!");
+}
+
+function testEventHandling() {
+  var events = [ "checking",
+                 "error",
+                 "noupdate",
+                 "downloading",
+                 "progress",
+                 "updateready",
+                 "cached",
+                 "obsolete"];
+  var w = document.getElementById("eventsTestFrame").contentWindow;
+  var e;
+  for (var i = 0; i < events.length; ++i) {
+    count = 0;
+    expectedEvent = events[i];
+    e = w.document.createEvent("event");
+    e.initEvent(expectedEvent, true, true);
+    w.applicationCache["on" + expectedEvent] = eventHandler;
+    w.applicationCache.addEventListener(expectedEvent, eventHandler, true);
+    w.applicationCache.dispatchEvent(e);
+    is(count, 2, "Wrong number events!");
+    w.applicationCache["on" + expectedEvent] = null;
+    w.applicationCache.removeEventListener(expectedEvent, eventHandler, true);
+    w.applicationCache.dispatchEvent(e);
+    is(count, 2, "Wrong number events!");
+  }
+
+  // Test some random event.
+  count = 0;
+  expectedEvent = "foo";
+  e = w.document.createEvent("event");
+  e.initEvent(expectedEvent, true, true);
+  w.applicationCache.addEventListener(expectedEvent, eventHandler, true);
+  w.applicationCache.dispatchEvent(e);
+  is(count, 1, "Wrong number events!");
+  w.applicationCache.removeEventListener(expectedEvent, eventHandler, true);
+  w.applicationCache.dispatchEvent(e);
+  is(count, 1, "Wrong number events!");
+}
+
 function loaded() {
+  testEventHandling();
+
   // Click the notification bar's "Allow" button.  This should kick
   // off updates, which will eventually lead to getting messages from
   // the children.

@@ -52,48 +52,43 @@
 #include "nsWeakReference.h"
 #include "nsCOMArray.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 #include "nsDOMEvent.h"
 #include "nsIObserver.h"
 #include "nsIScriptContext.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsPIDOMWindow.h"
+#include "nsDOMEventTargetHelper.h"
 
 class nsIDOMWindow;
 
-class nsDOMOfflineResourceList : public nsIDOMOfflineResourceList,
+class nsDOMOfflineResourceList : public nsDOMEventTargetHelper,
+                                 public nsIDOMOfflineResourceList,
                                  public nsIObserver,
                                  public nsIOfflineCacheUpdateObserver,
-                                 public nsIDOMEventTarget,
                                  public nsSupportsWeakReference
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMOFFLINERESOURCELIST
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
-  NS_DECL_NSIDOMEVENTTARGET
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMOfflineResourceList,
-                                           nsIDOMOfflineResourceList)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMOfflineResourceList,
+                                           nsDOMEventTargetHelper)
 
   nsDOMOfflineResourceList(nsIURI* aManifestURI,
                            nsIURI* aDocumentURI,
-                           nsIDOMWindow* aWindow);
+                           nsPIDOMWindow* aWindow,
+                           nsIScriptContext* aScriptContext);
   virtual ~nsDOMOfflineResourceList();
 
   void FirePendingEvents();
   void Disconnect();
 
-private:
   nsresult Init();
 
-  void NotifyEventListeners(nsIDOMEventListener *aListener,
-                            const nsCOMArray<nsIDOMEventListener>& aListeners,
-                            nsIDOMEvent* aEvent);
-
-  nsresult SendEvent(const nsAString &aEventName,
-                     nsIDOMEventListener *aListener,
-                     const nsCOMArray<nsIDOMEventListener> &aListeners);
+private:
+  nsresult SendEvent(const nsAString &aEventName);
 
   nsresult UpdateAdded(nsIOfflineCacheUpdate *aUpdate);
   nsresult UpdateCompleted(nsIOfflineCacheUpdate *aUpdate);
@@ -114,7 +109,6 @@ private:
   nsCString mManifestSpec;
 
   nsCOMPtr<nsIURI> mDocumentURI;
-  nsCOMPtr<nsIWeakReference> mWindow;
   nsCOMPtr<nsIApplicationCacheService> mApplicationCacheService;
   nsCOMPtr<nsIOfflineCacheUpdate> mCacheUpdate;
 
@@ -122,31 +116,16 @@ private:
   char **mCachedKeys;
   PRUint32 mCachedKeysCount;
 
-  nsCOMArray<nsIDOMEventListener> mCheckingListeners;
-  nsCOMArray<nsIDOMEventListener> mErrorListeners;
-  nsCOMArray<nsIDOMEventListener> mNoUpdateListeners;
-  nsCOMArray<nsIDOMEventListener> mDownloadingListeners;
-  nsCOMArray<nsIDOMEventListener> mProgressListeners;
-  nsCOMArray<nsIDOMEventListener> mCachedListeners;
-  nsCOMArray<nsIDOMEventListener> mUpdateReadyListeners;
-  nsCOMArray<nsIDOMEventListener> mObsoleteListeners;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnCheckingListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnNoUpdateListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnDownloadingListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnCachedListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnUpdateReadyListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnObsoleteListener;
 
-  nsCOMPtr<nsIDOMEventListener> mOnCheckingListener;
-  nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
-  nsCOMPtr<nsIDOMEventListener> mOnNoUpdateListener;
-  nsCOMPtr<nsIDOMEventListener> mOnDownloadingListener;
-  nsCOMPtr<nsIDOMEventListener> mOnProgressListener;
-  nsCOMPtr<nsIDOMEventListener> mOnCachedListener;
-  nsCOMPtr<nsIDOMEventListener> mOnUpdateReadyListener;
-  nsCOMPtr<nsIDOMEventListener> mOnObsoleteListener;
-
-  struct PendingEvent {
-    nsCOMPtr<nsIDOMEvent> event;
-    nsCOMPtr<nsIDOMEventListener> listener;
-    nsCOMArray<nsIDOMEventListener> listeners;
-  };
-
-  nsTArray<PendingEvent> mPendingEvents;
+  nsCOMArray<nsIDOMEvent> mPendingEvents;
 };
 
 #endif
