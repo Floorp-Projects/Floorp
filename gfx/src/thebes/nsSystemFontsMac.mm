@@ -128,7 +128,7 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsString *aFontName,
             font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
             break;
         case eSystemFont_PullDownMenu:
-            font = [NSFont menuFontOfSize:0.0];
+            font = [NSFont menuBarFontOfSize:0.0];
             break;
         case eSystemFont_List:
             font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
