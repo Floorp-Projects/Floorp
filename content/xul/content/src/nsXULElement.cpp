@@ -656,9 +656,27 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
         nsIAtom *tag = content->Tag();
         if (tag != nsGkAtoms::toolbarbutton) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(content);
-          if (fm)
-            fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
+          if (fm) {
+            nsCOMPtr<nsIDOMElement> element;
+            // for radio buttons, focus the radiogroup instead
+            if (tag == nsGkAtoms::radio) {
+              nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem(do_QueryInterface(elm));
+              if (controlItem) {
+                PRBool disabled;
+                controlItem->GetDisabled(&disabled);
+                if (!disabled) {
+                  nsCOMPtr<nsIDOMXULSelectControlElement> selectControl;
+                  controlItem->GetControl(getter_AddRefs(selectControl));
+                  element = do_QueryInterface(selectControl);
+                }
+              }
+            }
+            else {
+              element = do_QueryInterface(content);
+            }
+            if (element)
+              fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
+          }
         }
         if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist)
             elm->Click();
