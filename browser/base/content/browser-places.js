@@ -600,13 +600,21 @@ var HistoryMenu = {
     document.getElementById("endHistorySeparator").hidden =
       resultNode.childCount == 0;
 
-    if (!wasOpen)
-      resultNode.containerOpen = false;
-
     // HistoryMenu.toggleRecentlyClosedTabs, HistoryMenu.toggleRecentlyClosedWindows
     // are defined in browser.js
     this.toggleRecentlyClosedTabs();
     this.toggleRecentlyClosedWindows();
+  },
+
+  /**
+   * popuphidden handler for the history menu.
+   * @param aMenuPopup
+   *        XULNode for the history menupopup
+   */
+  onPopupHidden: function PHM_onPopupHidden(aMenuPopup) {
+    var resultNode = aMenuPopup.getResultNode();
+    if (resultNode.containerOpen)
+      resultNode.containerOpen = false;
   }
 };
 
