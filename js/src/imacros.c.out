@@ -719,6 +719,16 @@ static struct {
 /*14*/  JSOP_STOP,
     },
 };
+static struct {
+    jsbytecode instanceof[9];
+} instanceof_imacros = {
+    {
+/* 0*/  JSOP_CALLBUILTIN, ((JSBUILTIN_HasInstance) & 0xff00) >> 8, ((JSBUILTIN_HasInstance) & 0xff),
+/* 3*/  JSOP_PICK, 2,
+/* 5*/  JSOP_CALL, 0, 1,
+/* 8*/  JSOP_STOP,
+    },
+};
 uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NOP */
     0,  /* JSOP_PUSH */
@@ -832,7 +842,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_SETNAME */
     0,  /* JSOP_THROW */
     0,  /* JSOP_IN */
-    0,  /* JSOP_INSTANCEOF */
+    1,  /* JSOP_INSTANCEOF */
     0,  /* JSOP_DEBUGGER */
     0,  /* JSOP_GOSUB */
     0,  /* JSOP_RETSUB */
@@ -983,6 +993,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_APPLY \
  || x == JSOP_NEW \
  || x == JSOP_INITELEM \
+ || x == JSOP_INSTANCEOF \
  || x == JSOP_CALLELEM \
 )
 jsbytecode*
@@ -1030,5 +1041,6 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - setelem_imacros.setelem) < 15) return setelem_imacros.setelem;
     if (size_t(pc - initelem_imacros.initprop) < 15) return initelem_imacros.initprop;
     if (size_t(pc - initelem_imacros.initelem) < 15) return initelem_imacros.initelem;
+    if (size_t(pc - instanceof_imacros.instanceof) < 9) return instanceof_imacros.instanceof;
     return NULL;
 }

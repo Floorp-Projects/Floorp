@@ -9887,9 +9887,40 @@ TraceRecorder::record_JSOP_IN()
     return JSRS_CONTINUE;
 }
 
+static JSBool
+HasInstance(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    JS_ASSERT(argc == 1);
+    argv = JS_ARGV(cx, vp);
+    JSBool result = JS_FALSE;
+    JSObject* obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj->map->ops->hasInstance(cx, obj, argv[0], &result))
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(result));
+    return JS_TRUE;
+}
+
+static JSBool FASTCALL
+HasInstance_tn(JSContext* cx, JSObject* obj, jsval v)
+{
+    JSBool result = JS_FALSE;
+    if (!obj->map->ops->hasInstance(cx, obj, v, &result))
+        js_SetBuiltinError(cx);
+    return result;
+}
+
+JS_DEFINE_TRCINFO_1(HasInstance,
+    (3, (extern, BOOL_FAIL, HasInstance_tn, CONTEXT, THIS, JSVAL, 0, 0)))
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_INSTANCEOF()
 {
+    jsval& r = stackval(-1);
+
+    if (!JSVAL_IS_PRIMITIVE(r))
+        return call_imacro(instanceof_imacros.instanceof);
+
     return JSRS_STOP;
 }
 
@@ -10875,7 +10906,8 @@ static const struct BuiltinFunctionInfo {
     {GetProperty_trcinfo,        1},
     {GetElement_trcinfo,         1},
     {SetProperty_trcinfo,        2},
-    {SetElement_trcinfo,         2}
+    {SetElement_trcinfo,         2},
+    {HasInstance_trcinfo,        1}
 };
 
 JSObject *
