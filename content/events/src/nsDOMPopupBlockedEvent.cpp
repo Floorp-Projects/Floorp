@@ -111,11 +111,12 @@ nsDOMPopupBlockedEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
 NS_IMETHODIMP
 nsDOMPopupBlockedEvent::GetRequestingWindow(nsIDOMWindow **aRequestingWindow)
 {
+  *aRequestingWindow = nsnull;
   if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
     nsPopupBlockedEvent* event = static_cast<nsPopupBlockedEvent*>(mEvent);
-    CallQueryReferent(event->mRequestingWindow.get(), aRequestingWindow);
-  } else {
-    *aRequestingWindow = 0;
+    if (event->mRequestingWindow) {
+      CallQueryReferent(event->mRequestingWindow.get(), aRequestingWindow);
+    }
   }
 
   return NS_OK;  // Don't throw an exception
