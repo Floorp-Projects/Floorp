@@ -723,7 +723,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
          if( !mp2 && 
              !bothFromSameWindow( ((nsWindow*)gRollupWidget)->GetMainWindow(), 
                                   (HWND)mp1) ) {
-            gRollupListener->Rollup(nsnull);
+            gRollupListener->Rollup(PR_UINT32_MAX, nsnull);
          }
       }
    }
@@ -949,7 +949,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
       rc = CallCreateInstance(kDeviceContextCID, &mContext);
       if( NS_SUCCEEDED(rc))
-         mContext->Init( (nsNativeWidget) mWnd);
+         mContext->Init(this);
 #ifdef DEBUG
       else
          printf( "Couldn't find DC instance for nsWindow\n");
@@ -1076,7 +1076,7 @@ NS_METHOD nsWindow::Destroy()
     // the rollup widget, rollup and turn off capture.
     if (this == gRollupWidget) {
       if (gRollupListener) {
-        gRollupListener->Rollup(nsnull);
+        gRollupListener->Rollup(PR_UINT32_MAX, nsnull);
       }
       CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
     }
