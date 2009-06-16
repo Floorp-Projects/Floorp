@@ -210,6 +210,10 @@ BookmarksStore.prototype = {
                                    this._ans.EXPIRE_NEVER);
       }
 
+      if (record.loadInSidebar)
+        this._ans.setItemAnnotation(newId, "bookmarkProperties/loadInSidebar",
+          true, 0, this._ans.EXPIRE_NEVER);
+
       if (record.type == "microsummary") {
         this._log.debug("   \-> is a microsummary");
         this._ans.setItemAnnotation(newId, "bookmarks/staticTitle",
@@ -372,6 +376,13 @@ BookmarksStore.prototype = {
                                     val, 0,
                                     this._ans.EXPIRE_NEVER);
         break;
+      case "loadInSidebar":
+        if (val)
+          this._ans.setItemAnnotation(itemId, "bookmarkProperties/loadInSidebar",
+            true, 0, this._ans.EXPIRE_NEVER);
+        else
+          this._ans.removeItemAnnotation(itemId, "bookmarkProperties/loadInSidebar");
+        break;
       case "generatorUri": {
         try {
           let micsumURI = this._bms.getBookmarkURI(itemId);
@@ -464,6 +475,10 @@ BookmarksStore.prototype = {
     }
   },
 
+  _isLoadInSidebar: function BStore__isLoadInSidebar(id) {
+    return this._ans.itemHasAnnotation(id, "bookmarkProperties/loadInSidebar");
+  },
+
   _getStaticTitle: function BStore__getStaticTitle(id) {
     try {
       return this._ans.getItemAnnotation(id, "bookmarks/staticTitle");
@@ -504,6 +519,7 @@ BookmarksStore.prototype = {
       record.tags = this._getTags(record.bmkUri);
       record.keyword = this._bms.getKeywordForBookmark(placeId);
       record.description = this._getDescription(placeId);
+      record.loadInSidebar = this._isLoadInSidebar(placeId);
       break;
 
     case this._bms.TYPE_FOLDER:
@@ -736,10 +752,11 @@ dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in al
       return;
 
     // ignore annotations except for the ones that we sync
-    if (isAnno && (property != "livemark/feedURI" ||
-		   property != "livemark/siteURI" ||
-		   property != "microsummary/generatorURI"))
-	return;
+    let annos = ["bookmarkProperties/description",
+      "bookmarkProperties/loadInSidebar", "bookmarks/staticTitle",
+      "livemark/feedURI", "livemark/siteURI", "microsummary/generatorURI"];
+    if (isAnno && annos.indexOf(property) == -1)
+      return;
 
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +

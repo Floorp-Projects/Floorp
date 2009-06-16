@@ -108,7 +108,7 @@ Bookmark.prototype = {
 };
 
 Utils.deferGetSet(Bookmark, "cleartext", ["title", "bmkUri", "description",
-  "tags", "keyword"]);
+  "loadInSidebar", "tags", "keyword"]);
 
 function BookmarkMicsum(uri) {
   this._BookmarkMicsum_init(uri);
