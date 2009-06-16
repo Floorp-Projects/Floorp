@@ -2735,4 +2735,4 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("geo.enabled", true);
 
 // Enable/Disable HTML5 parser
-pref("html5.enable", true);
+pref("html5.enable", false);
