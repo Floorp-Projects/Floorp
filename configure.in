@@ -4566,6 +4566,7 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
+MOZ_SPLASHSCREEN=
 MOZ_STATIC_MAIL_BUILD=
 MOZ_STORAGE=1
 MOZ_SVG=1
@@ -5594,6 +5595,18 @@ linux*)
    esac
 fi
 fi
+
+dnl ========================================================
+dnl Splashscreen
+dnl ========================================================
+AC_ARG_ENABLE(splashscreen,
+              [  --enable-splashscreen   display splashscreen while loading (default=no)],
+              [enable_splash="yes"],[enable_splash=""])
+if test "x$enable_splash" = "xyes"; then
+  MOZ_SPLASHSCREEN=1
+  AC_DEFINE(MOZ_SPLASHSCREEN)
+fi
+AC_SUBST(MOZ_SPLASHSCREEN)
 
 dnl ========================================================
 dnl Permissions System

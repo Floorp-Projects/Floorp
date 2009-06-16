@@ -108,6 +108,14 @@ CPPSRCS = \
 	nsAppData.cpp \
 	$(NULL)
 
+ifdef MOZ_SPLASHSCREEN
+ifeq ($(OS_ARCH),WINCE)
+CPPSRCS += nsSplashScreenWin.cpp
+else
+CPPSRCS += nsSplashScreenDummy.cpp
+endif
+endif
+
 DEFINES += -DIMPL_XREAPI
 
 ifndef BUILD_STATIC_LIBS
