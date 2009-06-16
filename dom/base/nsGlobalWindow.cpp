@@ -2884,11 +2884,14 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
     nsCOMPtr<nsIURI> manifestURI;
     nsContentUtils::GetOfflineAppManifest(doc, getter_AddRefs(manifestURI));
 
-    nsDOMOfflineResourceList* applicationCache =
-      new nsDOMOfflineResourceList(manifestURI, uri, this);
+    nsIScriptContext* scriptContext = GetContext();
+    NS_ENSURE_STATE(scriptContext);
 
-    if (!applicationCache)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsRefPtr<nsDOMOfflineResourceList> applicationCache =
+      new nsDOMOfflineResourceList(manifestURI, uri, this, scriptContext);
+    NS_ENSURE_TRUE(applicationCache, NS_ERROR_OUT_OF_MEMORY);
+
+    applicationCache->Init();
 
     mApplicationCache = applicationCache;
   }
@@ -4453,7 +4456,9 @@ nsGlobalWindow::Print()
         printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
       }
 
+      EnterModalState();
       webBrowserPrint->Print(printSettings, nsnull);
+      LeaveModalState();
 
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
@@ -5640,6 +5645,13 @@ nsGlobalWindow::EnterModalState()
     }
   }
   topWin->mModalStateDepth++;
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->EnterModalState();
+  }
 }
 
 // static
@@ -5742,6 +5754,13 @@ nsGlobalWindow::LeaveModalState()
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nsnull;
     }
+  }
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->LeaveModalState();
   }
 }
 

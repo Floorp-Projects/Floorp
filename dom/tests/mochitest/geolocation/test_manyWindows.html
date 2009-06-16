@@ -23,7 +23,7 @@ href="https://bugzilla.mozilla.org/show_bug.cgi?id=478911">Crash in Multiple Win
 
 /** Test for Bug  **/
 
-var numberOfWindows = 2;  // 20 seems to be the default max popups during the mochitest run
+var numberOfWindows = 5;  // 20 seems to be the default max popups during the mochitest run
 var totalWindows = numberOfWindows;
 
 var windows = new Array(numberOfWindows);
@@ -32,9 +32,12 @@ for(var i = 0; i < numberOfWindows; i++) {
   windows[i] = window.open("geolocation.html", "_blank", "width=700,height=400");
 }
 
-for(var i = 0; i < numberOfWindows; i++) {
-  windows[i].close();
-  totalWindows --;
+function closeWindows()
+{
+  for(var i = 0; i < numberOfWindows; i++) {
+    windows[i].close();
+    totalWindows --;
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -50,6 +53,8 @@ function checkDone()
 }
 
 var timer = setInterval(checkDone, 1000);
+
+setTimeout(closeWindows, 5000);
 
 </script>
 </pre>

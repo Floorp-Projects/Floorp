@@ -275,9 +275,9 @@
               tooltiptext="&cmd.continue.tooltip;"
               command="cmd_continue"
               hidden="true"/>
-      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
-              accesskey="&cmd.installUpdatesAll.accesskey;"
-              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll2.label;"
+              accesskey="&cmd.installUpdatesAll2.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll2.tooltip;"
               command="cmd_installUpdatesAll"/>
 #else
       <button id="installFileButton" label="&cmd.installLocalFile.label;"
@@ -291,9 +291,9 @@
               tooltiptext="&cmd.continue.tooltip;"
               command="cmd_continue"
               hidden="true"/>
-      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
-              accesskey="&cmd.installUpdatesAll.accesskey;"
-              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll2.label;"
+              accesskey="&cmd.installUpdatesAll2.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll2.tooltip;"
               command="cmd_installUpdatesAll"/>
       <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
               accesskey="&cmd.checkUpdatesAll.accesskey;"

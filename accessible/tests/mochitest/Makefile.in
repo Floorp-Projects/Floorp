@@ -75,6 +75,7 @@ _TEST_FILES =\
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
 		test_aria_role_grid.html \
+		test_aria_roles.html \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
 	$(warning   test_childAtPoint.html temporarily disabled) \
@@ -83,11 +84,13 @@ _TEST_FILES =\
 		test_descr.html \
 		test_elm_filectrl.html \
 	$(warning   test_elm_media.html temporarily disabled) \
+		test_elm_table.html \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_focus.xul \
 		test_events_mutation.html \
 		test_events_tree.xul \
+		test_events_valuechange.html \
 		test_groupattrs.xul \
 		test_groupattrs.html \
 		test_name.html \
@@ -125,6 +128,7 @@ _TEST_FILES =\
 		test_table_4.html \
   $(warning test_table_indexes.html temporarily disabled) \
 		test_table_indexes_ariagrid.html \
+		test_table_sels_ariagrid.html \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \

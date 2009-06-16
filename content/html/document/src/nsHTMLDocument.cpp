@@ -80,7 +80,6 @@
 #include "nsIXPConnect.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
-#include "nsContentErrors.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsAttrName.h"
@@ -2466,37 +2465,14 @@ nsHTMLDocument::GetHeight(PRInt32* aHeight)
   return GetBodySize(&width, aHeight);
 }
 
-static void
-LegacyRGBToHex(nscolor aColor, nsAString& aResult)
-{
-  if (NS_GET_A(aColor) == 255) {
-    char buf[10];
-    PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
-                NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
-    CopyASCIItoUTF16(buf, aResult);
-  } else if (aColor == NS_RGBA(0,0,0,0)) {
-    aResult.AssignLiteral("transparent");
-  } else {
-    NS_NOTREACHED("translucent color property cannot be stringified");
-    aResult.Truncate();
-  }
-}
-
 NS_IMETHODIMP
 nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
 {
   aAlinkColor.Truncate();
 
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->GetALink(aAlinkColor);
-  } else if (mAttrStyleSheet) {
-    nscolor color;
-    nsresult rv = mAttrStyleSheet->GetActiveLinkColor(color);
-    if (NS_SUCCEEDED(rv) && rv != NS_HTML_STYLE_PROPERTY_NOT_THERE) {
-      LegacyRGBToHex(color, aAlinkColor);
-    }
   }
 
   return NS_OK;
@@ -2506,16 +2482,8 @@ NS_IMETHODIMP
 nsHTMLDocument::SetAlinkColor(const nsAString& aAlinkColor)
 {
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->SetALink(aAlinkColor);
-  } else if (mAttrStyleSheet) {
-    nsAttrValue value;
-    if (value.ParseColor(aAlinkColor, this)) {
-      nscolor color;
-      value.GetColorValue(color);
-      mAttrStyleSheet->SetActiveLinkColor(color);
-    }
   }
 
   return NS_OK;
@@ -2527,15 +2495,8 @@ nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
   aLinkColor.Truncate();
 
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->GetLink(aLinkColor);
-  } else if (mAttrStyleSheet) {
-    nscolor color;
-    nsresult rv = mAttrStyleSheet->GetLinkColor(color);
-    if (NS_SUCCEEDED(rv) && rv != NS_HTML_STYLE_PROPERTY_NOT_THERE) {
-      LegacyRGBToHex(color, aLinkColor);
-    }
   }
 
   return NS_OK;
@@ -2545,16 +2506,8 @@ NS_IMETHODIMP
 nsHTMLDocument::SetLinkColor(const nsAString& aLinkColor)
 {
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->SetLink(aLinkColor);
-  } else if (mAttrStyleSheet) {
-    nsAttrValue value;
-    if (value.ParseColor(aLinkColor, this)) {
-      nscolor color;
-      value.GetColorValue(color);
-      mAttrStyleSheet->SetLinkColor(color);
-    }
   }
 
   return NS_OK;
@@ -2566,15 +2519,8 @@ nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
   aVlinkColor.Truncate();
 
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->GetVLink(aVlinkColor);
-  } else if (mAttrStyleSheet) {
-    nscolor color;
-    nsresult rv = mAttrStyleSheet->GetVisitedLinkColor(color);
-    if (NS_SUCCEEDED(rv) && rv != NS_HTML_STYLE_PROPERTY_NOT_THERE) {
-      LegacyRGBToHex(color, aVlinkColor);
-    }
   }
 
   return NS_OK;
@@ -2584,16 +2530,8 @@ NS_IMETHODIMP
 nsHTMLDocument::SetVlinkColor(const nsAString& aVlinkColor)
 {
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->SetVLink(aVlinkColor);
-  } else if (mAttrStyleSheet) {
-    nsAttrValue value;
-    if (value.ParseColor(aVlinkColor, this)) {
-      nscolor color;
-      value.GetColorValue(color);
-      mAttrStyleSheet->SetVisitedLinkColor(color);
-    }
   }
 
   return NS_OK;
@@ -2605,7 +2543,6 @@ nsHTMLDocument::GetBgColor(nsAString& aBgColor)
   aBgColor.Truncate();
 
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->GetBgColor(aBgColor);
   }
@@ -2617,11 +2554,9 @@ NS_IMETHODIMP
 nsHTMLDocument::SetBgColor(const nsAString& aBgColor)
 {
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->SetBgColor(aBgColor);
   }
-  // XXXldb And otherwise?
 
   return NS_OK;
 }
@@ -2632,7 +2567,6 @@ nsHTMLDocument::GetFgColor(nsAString& aFgColor)
   aFgColor.Truncate();
 
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->GetText(aFgColor);
   }
@@ -2644,11 +2578,9 @@ NS_IMETHODIMP
 nsHTMLDocument::SetFgColor(const nsAString& aFgColor)
 {
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(GetBodyContent());
-
   if (body) {
     body->SetText(aFgColor);
   }
-  // XXXldb And otherwise?
 
   return NS_OK;
 }

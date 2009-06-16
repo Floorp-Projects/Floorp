@@ -704,6 +704,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
     if (NS_FRAME_IS_FULLY_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus)) {
       NS_ASSERTION(!kidNextInFlow, "next in flow should have been deleted");
+      child = nsnull;
       break;
     } else {
       ++columnCount;
@@ -720,6 +721,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         
         if (NS_FAILED(rv)) {
           NS_NOTREACHED("Couldn't create continuation");
+          child = nsnull;
           break;
         }
       }
@@ -751,23 +753,18 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
           SetOverflowFrames(PresContext(), continuationColumns);
           child->SetNextSibling(nsnull);
         }
+        child = nsnull;
         break;
       }
     }
 
-    if (PresContext()->CheckForInterrupt(this)) {
+    if (PresContext()->HasPendingInterrupt()) {
       // Stop the loop now while |child| still points to the frame that bailed
       // out.  We could keep going here and condition a bunch of the code in
       // this loop on whether there's an interrupt, or even just keep going and
       // trying to reflow the blocks (even though we know they'll interrupt
       // right after their first line), but stopping now is conceptually the
-      // simplest (and probably fastest) thing.  Note that this is a
-      // CheckForInterrupt call, not a HasPendingInterrupt, because we might
-      // have interrupted while reflowing |child|, and since we're about to add
-      // a dirty bit to |child| we need to make sure that |this| is scheduled
-      // to have dirty bits marked on it and its ancestors.  Otherwise, when we
-      // go to mark dirty bits on |child|'s ancestors we'll bail out
-      // immediately, since it'll already have a dirty bit.
+      // simplest (and probably fastest) thing.
       break;
     }
 
@@ -787,9 +784,16 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     }
   }
 
-  if (PresContext()->HasPendingInterrupt() &&
+  if (PresContext()->CheckForInterrupt(this) &&
       (GetStateBits() & NS_FRAME_IS_DIRTY)) {
     // Mark all our kids starting with |child| dirty
+
+    // Note that this is a CheckForInterrupt call, not a HasPendingInterrupt,
+    // because we might have interrupted while reflowing |child|, and since
+    // we're about to add a dirty bit to |child| we need to make sure that
+    // |this| is scheduled to have dirty bits marked on it and its ancestors.
+    // Otherwise, when we go to mark dirty bits on |child|'s ancestors we'll
+    // bail out immediately, since it'll already have a dirty bit.
     for (; child; child = child->GetNextSibling()) {
       child->AddStateBits(NS_FRAME_IS_DIRTY);
     }
@@ -1039,9 +1043,14 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
         config.mColMaxHeight = knownFeasibleHeight;
       }
       if (!skip) {
+        // If our height is unconstrained, make sure that the last column is
+        // allowed to have arbitrary height here, even though we were balancing.
+        // Otherwise we'd have to split, and it's not clear what we'd do with
+        // that.
         AddStateBits(NS_FRAME_IS_DIRTY);
         ReflowChildren(aDesiredSize, aReflowState, aStatus, config,
-                       PR_FALSE, &carriedOutBottomMargin, colData);
+                       availableContentHeight == NS_UNCONSTRAINEDSIZE,
+                       &carriedOutBottomMargin, colData);
       }
     }
   }

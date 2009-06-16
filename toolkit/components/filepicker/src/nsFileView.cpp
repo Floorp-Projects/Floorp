@@ -293,11 +293,28 @@ nsresult
 nsFileView::Init()
 {
   mDirectoryAtom = do_GetAtom("directory");
+  if (!mDirectoryAtom)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   mFileAtom = do_GetAtom("file");
+  if (!mFileAtom)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   NS_NewISupportsArray(getter_AddRefs(mFileList));
+  if (!mFileList)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   NS_NewISupportsArray(getter_AddRefs(mDirList));
+  if (!mDirList)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   NS_NewISupportsArray(getter_AddRefs(mFilteredFiles));
+  if (!mFilteredFiles)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
+  if (!mDateFormatter)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -385,12 +402,12 @@ NS_IMETHODIMP
 nsFileView::Sort(PRInt16 aSortType, PRBool aReverseSort)
 {
   if (aSortType == mSortType) {
-    if (aReverseSort != mReverseSort) {
-      mReverseSort = aReverseSort;
-      ReverseArray(mDirList);
-      ReverseArray(mFilteredFiles);
-    } else
+    if (aReverseSort == mReverseSort)
       return NS_OK;
+
+    mReverseSort = aReverseSort;
+    ReverseArray(mDirList);
+    ReverseArray(mFilteredFiles);
   } else {
     mSortType = aSortType;
     mReverseSort = aReverseSort;
@@ -406,6 +423,8 @@ nsFileView::Sort(PRInt16 aSortType, PRBool aReverseSort)
 NS_IMETHODIMP
 nsFileView::SetDirectory(nsIFile* aDirectory)
 {
+  NS_ENSURE_ARG_POINTER(aDirectory);
+
   nsCOMPtr<nsISimpleEnumerator> dirEntries;
   aDirectory->GetDirectoryEntries(getter_AddRefs(dirEntries));
 
@@ -426,18 +445,20 @@ nsFileView::SetDirectory(nsIFile* aDirectory)
     dirEntries->GetNext(getter_AddRefs(nextItem));
     nsCOMPtr<nsIFile> theFile = do_QueryInterface(nextItem);
 
-    PRBool isDirectory;
-    theFile->IsDirectory(&isDirectory);
+    PRBool isDirectory = PR_FALSE;
+    if (theFile) {
+      theFile->IsDirectory(&isDirectory);
 
-    if (isDirectory) {
-      PRBool isHidden;
-      theFile->IsHidden(&isHidden);
-      if (mShowHiddenFiles || !isHidden) {
-        mDirList->AppendElement(theFile);
+      if (isDirectory) {
+        PRBool isHidden;
+        theFile->IsHidden(&isHidden);
+        if (mShowHiddenFiles || !isHidden) {
+          mDirList->AppendElement(theFile);
+        }
       }
-    }
-    else {
-      mFileList->AppendElement(theFile);
+      else {
+        mFileList->AppendElement(theFile);
+      }
     }
   }
 
@@ -526,6 +547,8 @@ NS_IMETHODIMP
 nsFileView::GetSelectedFiles(nsIArray** aFiles)
 {
   *aFiles = nsnull;
+  if (!mSelection)
+    return NS_OK;
 
   PRInt32 numRanges;
   mSelection->GetRangeCount(&numRanges);

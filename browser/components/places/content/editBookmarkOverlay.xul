@@ -54,11 +54,11 @@
     </hbox>
 
     <grid id="editBookmarkPanelGrid" flex="1">
-      <columns>
-        <column/>
-        <column flex="1"/>
+      <columns id="editBMPanel_columns">
+        <column id="editBMPanel_labelColumn" />
+        <column flex="1" id="editBMPanel_editColumn" />
       </columns>
-      <rows>
+      <rows id="editBMPanel_rows">
         <row align="center" id="editBMPanel_nameRow">
           <label value="&editBookmarkOverlay.name.label;"
                  accesskey="&editBookmarkOverlay.name.accesskey;"

@@ -156,6 +156,7 @@ function startAUS() {
   var os = AUS_Cc["@mozilla.org/observer-service;1"].
            getService(AUS_Ci.nsIObserverService);
   os.notifyObservers(null, "profile-after-change", null);
+  os.notifyObservers(null, "final-ui-startup", null);
 }
 
 /* Initializes nsIUpdateChecker */

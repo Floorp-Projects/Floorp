@@ -380,10 +380,12 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
     if (document) {
       // focus the document
       nsCOMPtr<nsIDOMElement> newFocus;
-      fm->MoveFocus(document->GetWindow(), nsnull, nsIFocusManager::MOVEFOCUS_ROOT, 0,
-                    getter_AddRefs(newFocus));
+      return fm->MoveFocus(document->GetWindow(), nsnull,
+                           nsIFocusManager::MOVEFOCUS_ROOT, 0,
+                           getter_AddRefs(newFocus));
     }
   }
+  return NS_ERROR_FAILURE;
 }
 
 // ------- nsIAccessibleDocument Methods (5) ---------------
@@ -1283,9 +1285,16 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::aria_valuenow) {
-    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-                            targetNode);
+  // Fire value change event whenever aria-valuetext is changed, or
+  // when aria-valuenow is changed and aria-valuetext is empty
+  if (aAttribute == nsAccessibilityAtoms::aria_valuetext ||      
+      (aAttribute == nsAccessibilityAtoms::aria_valuenow &&
+       (!aContent->HasAttr(kNameSpaceID_None,
+           nsAccessibilityAtoms::aria_valuetext) ||
+        aContent->AttrValueIs(kNameSpaceID_None,
+            nsAccessibilityAtoms::aria_valuetext, nsAccessibilityAtoms::_empty,
+            eCaseMatters)))) {
+    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, targetNode);
     return;
   }
 

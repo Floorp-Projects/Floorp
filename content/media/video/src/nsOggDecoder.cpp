@@ -910,6 +910,7 @@ void nsOggDecodeStateMachine::PlayFrame() {
       }
 
       double time;
+      double prevTime = -1.0;
       for (;;) {
         // Even if the frame has had its audio data written we call
         // PlayAudio to ensure that any data we have buffered in the
@@ -919,6 +920,12 @@ void nsOggDecodeStateMachine::PlayFrame() {
         time = hwtime < 0.0 ?
           (TimeStamp::Now() - mPlayStartTime - mPauseDuration).ToSeconds() :
           hwtime;
+        // Break out of the loop if we've not played any audio. This can
+        // happen when the frame has no audio, and there's no audio pending
+        // in the nsAudioStream.
+        if (time == prevTime)
+          break;
+        prevTime = time;
         if (time < frame->mTime) {
           mon.Wait(PR_MillisecondsToInterval(PRInt64((frame->mTime - time)*1000)));
           if (mState == DECODER_STATE_SHUTDOWN)
@@ -1325,6 +1332,11 @@ void nsOggDecodeStateMachine::DecodeToFrame(nsAutoMonitor& aMonitor,
   float audioTime = 0;
   nsTArray<float> audioData;
   do {
+    if (frame) {
+      audioData.AppendElements(frame->mAudioData);
+      audioTime += frame->mAudioData.Length() /
+        (float)mAudioRate / (float)mAudioChannels;
+    }
     do {
       aMonitor.Exit();
       r = DecodeFrame();
@@ -1342,10 +1354,6 @@ void nsOggDecodeStateMachine::DecodeToFrame(nsAutoMonitor& aMonitor,
 
     delete frame;
     frame = nextFrame;
-
-    audioData.AppendElements(frame->mAudioData);
-    audioTime += frame->mAudioData.Length() /
-    (float)mAudioRate / (float)mAudioChannels;
   } while (frame->mDecodedFrameTime < target);
 
   if (mState == DECODER_STATE_SHUTDOWN) {
@@ -1638,15 +1646,17 @@ nsresult nsOggDecodeStateMachine::Run()
         // if we need to seek again.
         LOG(PR_LOG_DEBUG, ("Changed state from SEEKING (to %f) to DECODING", seekTime));
         mState = DECODER_STATE_DECODING;
-        mon.NotifyAll();
-
-        mon.Exit();
         nsCOMPtr<nsIRunnable> stopEvent;
         if (mDecodedFrames.GetCount() > 1) {
           stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStopped);
+          mState = DECODER_STATE_DECODING;
         } else {
           stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStoppedAtEnd);
+          mState = DECODER_STATE_COMPLETED;
         }
+        mon.NotifyAll();
+
+        mon.Exit();
         NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);        
         mon.Enter();
       }
@@ -1728,6 +1738,9 @@ nsresult nsOggDecodeStateMachine::Run()
 
         // Set the right current time
         mCurrentFrameTime += mCallbackPeriod;
+        if (mDuration >= 0) {
+          mCurrentFrameTime = PR_MAX(mCurrentFrameTime, mDuration / 1000.0);
+        }
 
         mon.Exit();
         nsCOMPtr<nsIRunnable> event =
@@ -2373,8 +2386,8 @@ void nsOggDecoder::SeekingStoppedAtEnd()
     if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
     } else {
-      ChangeState(PLAY_STATE_ENDED);
-      fireEnded = PR_TRUE;
+      fireEnded = mNextState != PLAY_STATE_PLAYING;
+      ChangeState(fireEnded ? PLAY_STATE_ENDED : mNextState);
     }
   }
 

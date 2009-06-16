@@ -132,6 +132,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 180085-1.html 180085-1-ref.html
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
+== 192902-1.html 192902-ref.html
 != 200774-1.html about:blank # really a crashtest
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
@@ -1080,6 +1081,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 != 449149-1b.html about:blank
 == 449149-2.html 449149-2-ref.html
 == 449171-1.html 449171-ref.html
+== 449362-1.html 449362-1-ref.html
 == 449519-1.html 449519-1-ref.html
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html
@@ -1243,3 +1245,4 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html
 == 495274-1.html 495274-1-ref.html
+== 496032-1.html 496032-1-ref.html

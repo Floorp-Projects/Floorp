@@ -64,8 +64,7 @@ vpath book%.inc @srcdir@/en-US/profile
 endif
 
 
-run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi; if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
-_ABS_DIST := $(call core_abspath,$(DIST))
+run_for_effects_too := if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
 
 ifdef MOZ_BRANDING_DIRECTORY
 SUBMAKEFILES += \
@@ -76,8 +75,6 @@ endif
 
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
-
-AB = $(firstword $(subst -, ,$(AB_CD)))
 
 APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
@@ -90,14 +87,7 @@ PWD := $(CURDIR)
 ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
 WIN32_INSTALLER_IN ?= $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 
-DEFINES += \
-	-DAB_CD=$(AB_CD) \
-	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
-	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
-	-DLOCALE_SRCDIR=$(call core_abspath,$(LOCALE_SRCDIR)) \
-	-DPKG_BASENAME="$(PKG_BASENAME)" \
-	-DPKG_INST_BASENAME="$(PKG_INST_BASENAME)" \
-	$(NULL)
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
 
 ifndef MOZ_BRANDING_DIRECTORY
 DEFINES += -DMOZ_USE_GENERIC_BRANDING
@@ -107,9 +97,12 @@ ifeq (,$(filter-out pref,$(MOZ_EXTENSIONS)))
 DEFINES += -DEXTENSION_PREF
 endif
 
-PREF_JS_EXPORTS = $(LOCALE_SRCDIR)/firefox-l10n.js
+PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/firefox-l10n.js) \
+                       $(srcdir)/en-US/firefox-l10n.js )
 
 include $(topsrcdir)/config/rules.mk
+
+include $(topsrcdir)/toolkit/locales/l10n.mk
 
 libs::
 	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
@@ -185,8 +178,6 @@ ifneq (en-US, $(AB_CD))
 	@$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/check-locales.pl $(LOCALE_SRCDIR)/installer
 endif
 
-clobber-%:
-	$(RM) -rf $(DIST)/xpi-stage/locale-$*
 
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install
@@ -206,8 +197,6 @@ MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
 MOZ_PKG_MAC_EXTRA=--symlink "/Applications:/ "
 endif
 
-PACKAGER_NO_LIBS = 1
-include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
@@ -254,25 +243,6 @@ else
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif
 
-$(STAGEDIST): AB_CD:=en-US
-$(STAGEDIST): UNPACKAGE=$(ZIP_IN)
-$(STAGEDIST): $(ZIP_IN)
-# only mac needs to remove the parent of STAGEDIST...
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	if test -d $(DIST)/l10n-stage; then \
-	  $(RM) -r -v $(DIST)/l10n-stage; \
-	fi
-else
-# ... and windows doesn't like removing STAGEDIST itself, remove all children
-	if test -d $(DIST)/l10n-stage; then \
-	  find $(STAGEDIST) -maxdepth 1 -print0 | xargs -0 $(RM) -r ; \
-	fi
-endif
-	$(NSINSTALL) -D $(DIST)/l10n-stage
-	cd $(DIST)/l10n-stage && \
-	  $(UNMAKE_PACKAGE)
-	make clobber-zip AB_CD=en-US
-
 clobber-zip:
 	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
 	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
@@ -282,57 +252,6 @@ clobber-zip:
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/$(AB_CD)
 
-unpack: $(STAGEDIST)
-	@echo done unpacking
-
-repackage-zip: ZIP_OUT="$(_ABS_DIST)/$(PACKAGE)"
-repackage-zip: UNPACKAGE="$(ZIP_IN)"
-repackage-zip:
-ifeq (WINNT,$(OS_ARCH))
-	$(RM) -r $(STAGEDIST)/uninstall
-	$(NSINSTALL) -D $(STAGEDIST)/uninstall
-	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
-endif
-# copy xpi-stage over, but not install.rdf and chrome.manifest,
-# those are just for language packs
-	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  tar --exclude=install.rdf --exclude=chrome.manifest $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
-ifneq (en,$(AB))
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj
-endif
-endif
-	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
-	cd $(DIST)/l10n-stage; \
-	  $(MAKE_PACKAGE)
-ifdef MOZ_MAKE_COMPLETE_MAR
-	$(MAKE) -C $(DEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
-	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
-	  PACKAGE_BASE_DIR="$(_ABS_DIST)/l10n-stage" \
-	  DIST="$(_ABS_DIST)"
-endif
-# packaging done, undo l10n stuff
-ifneq (en,$(AB))
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj
-endif
-endif
-	$(MAKE) clobber-zip AB_CD=$(AB_CD)
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(DIST)/$(PACKAGE)"
-
-repackage-zip-%: $(ZIP_IN) $(STAGEDIST) libs-%
-	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN=$(ZIP_IN)
-
-langpack-%: LANGPACK_FILE=$(_ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
-langpack-%: AB_CD=$*
-langpack-%: XPI_NAME=locale-$*
-langpack-%: libs-%
-	@echo "Making langpack $(LANGPACK_FILE)"
-	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
-	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest -x chrome/$(AB_CD).manifest
 
 langpack: langpack-$(AB_CD)
 
@@ -363,25 +282,6 @@ libs:: crashreporter-override.ini
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 
-# This variable is to allow the wget-en-US target to know which ftp server to download from
-ifndef EN_US_BINARY_URL 
-EN_US_BINARY_URL = $(error You must set EN_US_BINARY_URL)
-endif
-
-# This make target allows us to wget the latest en-US binary from a specified website
-# The make installers-% target needs the en-US binary in dist/
-# and for the windows repackages we need the .installer.exe in dist/sea
-wget-en-US:
-ifndef WGET
-	$(error Wget not installed)
-endif
-	(cd $(_ABS_DIST) && $(WGET) -nv -N  $(EN_US_BINARY_URL)/$(PACKAGE))
-	@echo "Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PACKAGE)"
-ifeq ($(OS_ARCH), WINNT)
-	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH)
-	(cd $(_ABS_DIST)/$(PKG_INST_PATH) && $(WGET) -nv -N "$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe")
-	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
-endif
 
 ident:
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(STAGEDIST)/application.ini App SourceStamp

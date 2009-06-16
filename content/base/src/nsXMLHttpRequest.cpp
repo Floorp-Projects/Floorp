@@ -160,28 +160,6 @@ private:
   nsCOMPtr<nsPIDOMWindow> mWindow;
 };
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventListenerWrapper)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-NS_INTERFACE_MAP_END_AGGREGATED(mListener)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventListenerWrapper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEventListenerWrapper)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEventListenerWrapper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListener)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEventListenerWrapper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListener)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMETHODIMP
-nsDOMEventListenerWrapper::HandleEvent(nsIDOMEvent* aEvent)
-{
-  return mListener->HandleEvent(aEvent);
-}
 
 // This helper function adds the given load flags to the request's existing
 // load flags.
@@ -515,175 +493,37 @@ nsACProxyListener::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
-/**
- * Gets the nsIDocument given the script context. Will return nsnull on failure.
- *
- * @param aScriptContext the script context to get the document for; can be null
- *
- * @return the document associated with the script context
- */
-static already_AddRefed<nsIDocument>
-GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
-{
-  if (!aScriptContext)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMWindow> window =
-    do_QueryInterface(aScriptContext->GetGlobalObject());
-  nsIDocument *doc = nsnull;
-  if (window) {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    window->GetDocument(getter_AddRefs(domdoc));
-    if (domdoc) {
-      CallQueryInterface(domdoc, &doc);
-    }
-  }
-  return doc;
-}
-
 /////////////////////////////////////////////
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXHREventTarget)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
+                                                  nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadStartListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXHREventTarget)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
+                                                nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadStartListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnProgressListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN(nsXHREventTarget)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXHREventTarget)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequestEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXHREventTarget,
-                                          nsIXMLHttpRequestEventTarget)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXHREventTarget,
-                                           nsIXMLHttpRequestEventTarget)
-
-NS_IMETHODIMP
-nsXHREventTarget::AddEventListener(const nsAString& aType,
-                                   nsIDOMEventListener* aListener,
-                                   PRBool aUseCapture)
-{
-  nsresult rv;
-  nsIScriptContext* context =
-    GetContextForEventHandlers(&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(context);
-  PRBool wantsUntrusted = doc && !nsContentUtils::IsChromeDoc(doc);
-  return AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::RemoveEventListener(const nsAString& aType,
-                                      nsIDOMEventListener* aListener,
-                                      PRBool aUseCapture)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
-  if (elm) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-    elm->RemoveEventListenerByType(aListener, aType, flags, nsnull);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::AddEventListener(const nsAString& aType,
-                                   nsIDOMEventListener *aListener,
-                                   PRBool aUseCapture,
-                                   PRBool aWantsUntrusted)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  NS_ENSURE_STATE(elm);
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  if (aWantsUntrusted) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
-  }
-  return elm->AddEventListenerByType(aListener, aType, flags, nsnull);
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::GetScriptTypeID(PRUint32 *aLang)
-{
-  *aLang = mLang;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::SetScriptTypeID(PRUint32 aLang)
-{
-  mLang = aLang;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXHREventTarget::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
-{
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
-                                        nsnull, aEvent, nsnull, &status);
-
-  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
-}
-
-nsresult
-nsXHREventTarget::RemoveAddEventListener(const nsAString& aType,
-                                         nsRefPtr<nsDOMEventListenerWrapper>& aCurrent,
-                                         nsIDOMEventListener* aNew)
-{
-  if (aCurrent) {
-    RemoveEventListener(aType, aCurrent, PR_FALSE);
-    aCurrent = nsnull;
-  }
-  if (aNew) {
-    aCurrent = new nsDOMEventListenerWrapper(aNew);
-    NS_ENSURE_TRUE(aCurrent, NS_ERROR_OUT_OF_MEMORY);
-    AddEventListener(aType, aCurrent, PR_FALSE);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsXHREventTarget::GetInnerEventListener(nsRefPtr<nsDOMEventListenerWrapper>& aWrapper,
-                                        nsIDOMEventListener** aListener)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
-  if (aWrapper) {
-    NS_ADDREF(*aListener = aWrapper->GetInner());
-  } else {
-    *aListener = nsnull;
-  }
-  return NS_OK;
-}
+NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 
 NS_IMETHODIMP
 nsXHREventTarget::GetOnload(nsIDOMEventListener** aOnLoad)
@@ -748,94 +588,6 @@ nsXHREventTarget::SetOnprogress(nsIDOMEventListener* aOnprogress)
 {
   return RemoveAddEventListener(NS_LITERAL_STRING(PROGRESS_STR),
                                 mOnProgressListener, aOnprogress);
-}
-
-nsresult
-nsXHREventTarget::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
-{
-  aVisitor.mCanHandle = PR_TRUE;
-  aVisitor.mParentTarget = nsnull;
-  return NS_OK;
-}
-
-nsresult
-nsXHREventTarget::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
-nsXHREventTarget::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                   nsPresContext* aPresContext,
-                                   nsEventStatus* aEventStatus)
-{
-  return
-    nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
-                                        aEvent, aDOMEvent, aPresContext,
-                                        aEventStatus);
-}
-
-nsresult
-nsXHREventTarget::GetListenerManager(PRBool aCreateIfNotFound,
-                                     nsIEventListenerManager** aResult)
-{
-  if (!mListenerManager) {
-    if (!aCreateIfNotFound) {
-      *aResult = nsnull;
-      return NS_OK;
-    }
-    nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mListenerManager->SetListenerTarget(static_cast<nsPIDOMEventTarget*>(this));
-  }
-
-  NS_ADDREF(*aResult = mListenerManager);
-  return NS_OK;
-}
-
-nsresult
-nsXHREventTarget::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                        const nsIID& aIID)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsXHREventTarget::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                           const nsIID& aIID)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsXHREventTarget::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->GetSystemEventGroupLM(aGroup);
-  }
-  return rv;
-}
-
-nsIScriptContext*
-nsXHREventTarget::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = CheckInnerWindowCorrectness();
-  if (NS_FAILED(*aRv)) {
-    return nsnull;
-  }
-  return mScriptContext;
 }
 
 /////////////////////////////////////////////
@@ -1666,7 +1418,8 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+  nsCOMPtr<nsIDocument> doc =
+    nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
     *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
   }
@@ -1893,7 +1646,8 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 
   mState &= ~XML_HTTP_REQUEST_MPART_HEADERS;
 
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+  nsCOMPtr<nsIDocument> doc =
+    nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
   
   nsCOMPtr<nsIURI> baseURI;
   if (mBaseURI) {
@@ -2075,7 +1829,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
     nsCOMPtr<nsIInputStream> copyStream;
     rv = NS_NewByteInputStream(getter_AddRefs(copyStream), fromRawSegment, count);
 
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && xmlHttpRequest->mXMLParserStreamListener) {
       NS_ASSERTION(copyStream, "NS_NewByteInputStream lied");
       nsresult parsingResult = xmlHttpRequest->mXMLParserStreamListener
                                   ->OnDataAvailable(xmlHttpRequest->mReadRequest,
@@ -2219,7 +1973,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   if (mState & XML_HTTP_REQUEST_PARSEBODY) {
     nsCOMPtr<nsIURI> baseURI, docURI;
-    nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+    nsCOMPtr<nsIDocument> doc =
+      nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
 
     if (doc) {
       docURI = doc->GetDocumentURI();

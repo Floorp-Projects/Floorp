@@ -841,7 +841,8 @@ private:
       mNameSpaceID(aNameSpaceID), mStyleContext(aStyleContext),
       mIsText(PR_FALSE), mIsGeneratedContent(PR_FALSE),
       mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE),
-      mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE)
+      mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE),
+      mIsLineParticipant(PR_FALSE)
     {}
     ~FrameConstructionItem() {
       if (mIsGeneratedContent) {
@@ -887,6 +888,8 @@ private:
     // Whether construction from this item will create a popup that needs to
     // go into the global popup items.
     PRPackedBool mIsPopup;
+    // Whether this item should be treated as a line participant
+    PRPackedBool mIsLineParticipant;
 
     // Child frame construction items.
     FrameConstructionItemList mChildItems;

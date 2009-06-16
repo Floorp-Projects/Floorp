@@ -1394,6 +1394,16 @@ public:
                                nsString& aOrigin);
   static nsresult GetUTFOrigin(nsIURI* aURI, nsString& aOrigin);
 
+  /**
+   * Gets the nsIDocument given the script context. Will return nsnull on failure.
+   *
+   * @param aScriptContext the script context to get the document for; can be null
+   *
+   * @return the document associated with the script context
+   */
+  static already_AddRefed<nsIDocument>
+  GetDocumentFromScriptContext(nsIScriptContext *aScriptContext);
+
 private:
 
   static PRBool InitializeEventTable();

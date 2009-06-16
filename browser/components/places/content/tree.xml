@@ -57,8 +57,10 @@
         // Note: unsetting the result's viewer also unsets
         // the viewer's reference to our treeBoxObject.
         var result = this.getResult();
-        if (result)
+        if (result) {
           result.viewer = null;
+          result.root.containerOpen = false;
+        }
         this.view = null;
       ]]></destructor>
 
@@ -119,8 +121,14 @@
         <parameter name="queries"/>
         <parameter name="options"/>
         <body><![CDATA[
-          var result = PlacesUtils.history.executeQueries(queries, queries.length, 
-                                                          options);
+          // Cleanup old result if exists.
+          var oldResult = this.getResult();
+          if (oldResult)
+            oldResult.root.containerOpen = false;
+
+          var result = PlacesUtils.history
+                                  .executeQueries(queries, queries.length,
+                                                  options);
           var callback;
           if (this.flatList) {
             var onOpenFlatContainer = this.onOpenFlatContainer;

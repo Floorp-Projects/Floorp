@@ -58,10 +58,16 @@
 // some of the includes make use of internal string types
 #define nsAString_h___
 #define nsString_h___
+#define nsReadableUtils_h___
 class nsAFlatString;
 class nsAFlatCString;
+class nsAdoptingString;
+class nsAdoptingCString;
+class nsXPIDLString;
+template<class T> class nsReadingIterator;
 #endif
 
+#include "nscore.h"
 #include "nsWeakReference.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
@@ -93,6 +99,7 @@ class nsAFlatCString;
 #ifndef MOZILLA_INTERNAL_API
 #undef nsString_h___
 #undef nsAString_h___
+#undef nsReadableUtils_h___
 #endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);

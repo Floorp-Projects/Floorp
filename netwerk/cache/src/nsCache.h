@@ -59,7 +59,7 @@
 extern PRLogModuleInfo * gCacheLog;
 void   CacheLogInit();
 void   CacheLogPrintPath(PRLogModuleLevel level,
-                         char *           format,
+                         const char *     format,
                          nsIFile *        item);
 #define CACHE_LOG_INIT()        CacheLogInit()
 #define CACHE_LOG_ALWAYS(args)  PR_LOG(gCacheLog, PR_LOG_ALWAYS, args)

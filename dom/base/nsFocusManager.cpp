@@ -313,7 +313,7 @@ nsFocusManager::SetActiveWindow(nsIDOMWindow* aWindow)
 {
   // only top-level windows can be made active
   nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
-  NS_ASSERTION(piWindow && piWindow->IsOuterWindow(), "outer window expected");
+  NS_ASSERTION(!piWindow || piWindow->IsOuterWindow(), "outer window expected");
 
   NS_ENSURE_TRUE(piWindow && (piWindow == piWindow->GetPrivateRoot()),
                  NS_ERROR_INVALID_ARG);
@@ -1048,7 +1048,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
       if (!isElementInFocusedWindow)
         commonAncestor = GetCommonAncestor(newWindow, mFocusedWindow);
 
-      if (!Blur(currentIsSameOrAncestor ? mFocusedWindow : nsnull,
+      if (!Blur(currentIsSameOrAncestor ? mFocusedWindow.get() : nsnull,
                 commonAncestor, !isElementInFocusedWindow))
       return;
     }
