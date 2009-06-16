@@ -224,8 +224,9 @@ nsXHTMLContentSerializer::EscapeURI(nsIContent* aContent, const nsAString& aURI,
   nsXPIDLCString escapedURI;
   aEscapedURI.Truncate(0);
 
-  // Loop and escape parts by avoiding escaping reserved characters (and '%', '#' ).
-  while ((end = uri.FindCharInSet("%#;/?:@&=+$,", start)) != -1) {
+  // Loop and escape parts by avoiding escaping reserved characters
+  // (and '%', '#', as well as '[' and ']' for IPv6 address literals).
+  while ((end = uri.FindCharInSet("%#;/?:@&=+$,[]", start)) != -1) {
     part = Substring(aURI, start, (end-start));
     if (textToSubURI && !IsASCII(part)) {
       rv = textToSubURI->ConvertAndEscape(mCharset.get(), part.get(), getter_Copies(escapedURI));
