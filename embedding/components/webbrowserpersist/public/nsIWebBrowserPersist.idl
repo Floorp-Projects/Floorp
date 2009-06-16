@@ -100,6 +100,11 @@ interface nsIWebBrowserPersist : nsICancelable
    */
   const unsigned long PERSIST_FLAGS_APPEND_TO_FILE = 32768;
 
+  /**
+   * Force relevant cookies to be sent with this load even if normally they
+   * wouldn't be.
+   */
+  const unsigned long PERSIST_FLAGS_FORCE_ALLOW_COOKIES = 65536;
 
   /**
    * Flags governing how data is fetched and saved from the network. 

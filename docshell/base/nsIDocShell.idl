@@ -131,6 +131,7 @@ interface nsIDocShell : nsISupports
   const long INTERNAL_LOAD_FLAGS_FIRST_LOAD              = 0x8;
 
   const long INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER       = 0x10;
+  const long INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES     = 0x20;
 
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except

@@ -52,6 +52,7 @@
 #include "nsIStorageStream.h"
 #include "nsISeekableStream.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIEncodedChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsICachingChannel.h"
@@ -1260,6 +1261,14 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         {
             encodedChannel->SetApplyConversion(PR_FALSE);
         }
+    }
+
+    if (mPersistFlags & PERSIST_FLAGS_FORCE_ALLOW_COOKIES) 
+    {
+        nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+                do_QueryInterface(inputChannel);
+        if (httpChannelInternal)
+            httpChannelInternal->SetForceAllowThirdPartyCookie(PR_TRUE);
     }
 
     // Set the referrer, post data and headers if any

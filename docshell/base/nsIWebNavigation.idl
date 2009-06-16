@@ -211,6 +211,12 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_BYPASS_CLASSIFIER = 0x10000;
 
   /**
+   * Force relevant cookies to be sent with this load even if normally they
+   * wouldn't be.
+   */
+  const unsigned long LOAD_FLAGS_FORCE_ALLOW_COOKIES = 0x20000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing	this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content
