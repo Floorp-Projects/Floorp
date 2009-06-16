@@ -88,6 +88,10 @@ read_and_tokenize_line(istream &in, vector<string> &toks, size_t &linenum)
         while((start = line.find_first_not_of(tok_sep, end)) != string::npos &&
               (end = line.find_first_of(tok_sep, start)) != string::npos) {
             string ss = line.substr(start, (end-start));
+            if (ss == "=") {
+                toks[toks.size()-1] += ss;
+                continue;
+            }
             toks.push_back(ss);
         }
     }
@@ -222,7 +226,7 @@ assemble_load(LOpcode opcode,
     if (toks[1].find("0x") == 0 ||
         toks[1].find("0x") == 0 ||
         toks[1].find_first_of("0123456789") == 0) {
-        return lir->insLoad(opcode, 
+        return lir->insLoad(opcode,
                             ref(labels, toks[0], line),
                             imm(toks[1]));
     } else {
@@ -344,10 +348,11 @@ extract_any_label(string &op,
                   vector<string> &toks,
                   string &lab,
                   map<string,LIns*> const &labels,
-                  size_t line)
+                  size_t line,
+                  char lab_delim)
 {
     if (op.size() > 1 &&
-        op[op.size()-1] == ':' &&
+        op[op.size()-1] == lab_delim &&
         !toks.empty()) {
 
         lab = op;
@@ -395,8 +400,21 @@ assemble(istream &in,
 
         string op = pop_front(toks);
         string lab;
+        LIns *ins = NULL;
+        extract_any_label(op, toks, lab, labels, line, ':');
 
-        extract_any_label(op, toks, lab, labels, line);
+        /* Save label and do any back-patching of deferred forward-jumps. */
+        if (!lab.empty()) {
+            ins = lir->ins0(LIR_label);
+            typedef multimap<string,LIns*> mulmap;
+            typedef mulmap::const_iterator ci;
+            pair<ci,ci> range = fwd_jumps.equal_range(lab);
+            for (ci i = range.first; i != range.second; ++i) {
+                i->second->setTarget(ins);
+            }
+            fwd_jumps.erase(lab);
+        }
+        extract_any_label(op, toks, lab, labels, line, '=');
 
         if (op_map.find(op) == op_map.end())
             bad("unknown instruction '" + op + "'", line);
@@ -404,7 +422,6 @@ assemble(istream &in,
         pair<LOpcode,size_t> entry = op_map[op];
         LOpcode opcode = entry.first;
         size_t opcount = entry.second;
-        LIns *ins = NULL;
 
         switch (opcode) {
         // A few special opcode cases.
@@ -482,18 +499,8 @@ assemble(istream &in,
         }
 
         assert(ins);
-
-        // Save label and do any back-patching of deferred forward-jumps.
-        if (!lab.empty()) {
+        if (!lab.empty())
             labels.insert(make_pair(lab, ins));
-            typedef multimap<string,LIns*> mulmap;
-            typedef mulmap::const_iterator ci;
-            pair<ci,ci> range = fwd_jumps.equal_range(lab);
-            for (ci i = range.first; i != range.second; ++i) {
-                i->second->setTarget(ins);
-            }
-            fwd_jumps.erase(lab);
-        }
     }
     if (lirbuf->outOMem()) {
         cerr << "lirbuf out of memory" << endl;
@@ -598,10 +605,11 @@ main(int argc, char **argv)
         avmplus::AvmCore::config.sse2 =
         has_flag(args, "--sse");
 #endif
+    bool execute = has_flag(args, "--execute");
 
     if (args.empty()) {
 #if defined NANOJIT_IA32
-        cerr << "usage: " << prog << " [--sse] <filename>" << endl;
+        cerr << "usage: " << prog << " [--sse] [--execute] <filename>" << endl;
 #else
         cerr << "usage: " << prog << " <filename>" << endl;
 #endif
@@ -666,7 +674,14 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    dump_srecords(cout, frag);
+    if (execute) {
+        typedef JS_FASTCALL int32_t (*RetInt)();
+        RetInt f1;
+        f1 = reinterpret_cast<RetInt>(frag->code());
+        cout << "Output is: " << f1() << endl;
+    } else {
+        dump_srecords(cout, frag);
+    }
 
     frag->releaseCode(fragmento);
     delete frag;
