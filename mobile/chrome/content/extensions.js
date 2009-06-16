@@ -136,7 +136,7 @@ var ExtensionsView = {
 
   getElementForAddon: function ev_getElementForAddon(aID) {
     let element = document.getElementById(PREFIX_ITEM_URI + aID);
-    if (!element)
+    if (!element && this._list)
       element = this._list.getElementsByAttribute("xpiURL", aID)[0];
     return element;
   },
@@ -164,15 +164,19 @@ var ExtensionsView = {
   },
 
   showRestart: function ev_showRestart() {
+    // Increment the count in case the view is not completely initialized
     this._restartCount++;
-    let strings = document.getElementById("bundle_browser");
-    this.showMessage(strings.getString("addonsRestart"), "restart-app",
-                     strings.getString("addonsRestartButton.label"), false, "addons-restart-app");
+    
+    if (this._msg) {
+      let strings = document.getElementById("bundle_browser");
+      this.showMessage(strings.getString("addonsRestart"), "restart-app",
+                       strings.getString("addonsRestartButton.label"), false, "addons-restart-app");
+    }
   },
 
   hideRestart: function ev_hideRestart() {
     this._restartCount--;
-    if (this._restartCount == 0) {
+    if (this._restartCount == 0 && this._msg) {
       let notification = this._msg.getNotificationWithValue("restart-app");
       if (notification)
         notification.close();
@@ -192,6 +196,7 @@ var ExtensionsView = {
       return;
 
     this._extmgr = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
+    this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     this._dloadmgr = new XPInstallDownloadManager();
     this._observerIndex = this._extmgr.addInstallListener(this._dloadmgr);
 
@@ -215,7 +220,6 @@ var ExtensionsView = {
 
     this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
     this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-    this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
     let repository = "@mozilla.org/extensions/addon-repository;1";
     try {
@@ -230,6 +234,14 @@ var ExtensionsView = {
     this._repoItem = document.getElementById("addons-repo");
     this._msg = document.getElementById("addons-messages");
 
+    // Show the restart notification in case a restart is needed, but the view
+    // was not visible at the time
+    let notification = this._msg.getNotificationWithValue("restart-app");
+    if (this._restartCount > 0 && !notification) {
+      this.showRestart();
+      this._restartCount--; // showRestart() always increments
+    }
+    
     let self = this;
     setTimeout(function() {
       self.getAddonsFromLocal();
@@ -585,6 +597,9 @@ XPInstallDownloadManager.prototype = {
       this._succeeded.push(aAddon.id);
     else
       this._failed.push(aAddon.id);
+
+    if (!ExtensionsView.visible)
+      return;
 
     var element = ExtensionsView.getElementForAddon(aAddon.id);
     if (!element)
