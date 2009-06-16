@@ -2630,6 +2630,10 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(S_INTERP);
+#endif
+
     JSRuntime *rt;
     JSStackFrame *fp;
     JSScript *script;
@@ -2842,11 +2846,22 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
 
+#ifdef MOZ_TRACEVIS
+#define MONITOR_BRANCH_TRACEVIS                                               \
+    JS_BEGIN_MACRO                                                            \
+        if (jumpTable != interruptJumpTable)                                  \
+            js_EnterTraceVisState(S_RECORD, R_NONE);                          \
+    JS_END_MACRO
+#else
+#define MONITOR_BRANCH_TRACEVIS
+#endif
+
 #define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
             if (js_MonitorLoopEdge(cx, inlineCallCount)) {                    \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
+                MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
             }                                                                 \
             fp = cx->fp;                                                      \
@@ -3065,6 +3080,10 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_TRACER */
 
 #if JS_THREADED_INTERP
+#ifdef MOZ_TRACEVIS
+            if (!moreInterrupts)
+                js_ExitTraceVisState(R_ABORT);
+#endif
             jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
             JS_EXTENSION_(goto *normalJumpTable[op]);
 #else

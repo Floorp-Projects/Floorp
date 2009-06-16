@@ -531,6 +531,9 @@ usage(void)
 #ifdef JS_GC_ZEAL
 "[-Z gczeal] "
 #endif
+#ifdef MOZ_TRACEVIS
+"[-T TraceVisFileName] "
+#endif
 "[scriptfile] [scriptarg...]\n");
     return 2;
 }
@@ -613,6 +616,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
           case 't':
 #ifdef JS_GC_ZEAL
           case 'Z':
+#endif
+#ifdef MOZ_TRACEVIS
+          case 'T':
 #endif
             ++i;
             break;
@@ -795,6 +801,14 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
 #ifdef MOZ_SHARK
         case 'k':
             JS_ConnectShark();
+            break;
+#endif
+#ifdef MOZ_TRACEVIS
+        case 'T':
+            if (++i == argc)
+                return usage();
+
+            JS_StartTraceVis(argv[i]);
             break;
 #endif
         default:
@@ -3643,6 +3657,10 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("pauseVtune",     js_PauseVtune,    0,0,0),
     JS_FS("resumeVtune",    js_ResumeVtune,   0,0,0),
 #endif
+#ifdef MOZ_TRACEVIS
+    JS_FS("startTraceVis",  js_StartTraceVis, 1,0,0),
+    JS_FS("stopTraceVis",   js_StopTraceVis,  0,0,0),
+#endif
 #ifdef DEBUG_ARRAYS
     JS_FS("arrayInfo",      js_ArrayInfo,       1,0,0),
 #endif
@@ -3735,6 +3753,10 @@ static const char *const shell_help_messages[] = {
 "stopVtune()              Stop vtune instrumentation",
 "pauseVtune()             Pause vtune collection",
 "resumeVtune()            Resume vtune collection",
+#endif
+#ifdef MOZ_TRACEVIS
+"startTraceVis(filename)  Start TraceVis recording (stops any current recording)",
+"stopTraceVis()           Stop TraceVis recording",
 #endif
 #ifdef DEBUG_ARRAYS
 "arrayInfo(a1, a2, ...)   Report statistics about arrays",
