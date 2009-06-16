@@ -69,6 +69,8 @@
 #define DEFAULT_CHUNK_SIZE (4096 * 16)  // bytes
 #define DEFAULT_INTERVAL    60          // seconds
 
+#define UPDATE_PROGRESS_INTERVAL PRTime(500 * PR_USEC_PER_MSEC) // 500ms
+
 // Number of times to retry a failed byte-range request.
 #define MAX_RETRY_COUNT 20
 
@@ -140,6 +142,7 @@ public:
 private:
   ~nsIncrementalDownload() {}
   nsresult FlushChunk();
+  void     UpdateProgress();
   nsresult CallOnStartRequest();
   void     CallOnStopRequest();
   nsresult StartTimer(PRInt32 interval);
@@ -166,6 +169,7 @@ private:
   nsresult                       mStatus;
   PRPackedBool                   mIsPending;
   PRPackedBool                   mDidOnStartRequest;
+  PRTime                         mLastProgressUpdate;
 };
 
 nsIncrementalDownload::nsIncrementalDownload()
@@ -179,6 +183,7 @@ nsIncrementalDownload::nsIncrementalDownload()
   , mStatus(NS_OK)
   , mIsPending(PR_FALSE)
   , mDidOnStartRequest(PR_FALSE)
+  , mLastProgressUpdate(0)
 {
 }
 
@@ -197,11 +202,18 @@ nsIncrementalDownload::FlushChunk()
   mCurrentSize += nsInt64(mChunkLen);
   mChunkLen = 0;
 
+  return NS_OK;
+}
+
+void
+nsIncrementalDownload::UpdateProgress()
+{
+  mLastProgressUpdate = PR_Now();
+
   if (mProgressSink)
     mProgressSink->OnProgress(this, mObserverContext,
-                              PRUint64(PRInt64(mCurrentSize)),
+                              PRUint64(PRInt64(mCurrentSize) + mChunkLen),
                               PRUint64(PRInt64(mTotalSize)));
-  return NS_OK;
 }
 
 nsresult
@@ -653,6 +665,7 @@ nsIncrementalDownload::OnStopRequest(nsIRequest *request,
 
     mChunk = nsnull;  // deletes memory
     mChunkLen = 0;
+    UpdateProgress();
   }
 
   mChannel = nsnull;
@@ -691,6 +704,9 @@ nsIncrementalDownload::OnDataAvailable(nsIRequest *request,
     if (mChunkLen == mChunkSize)
       FlushChunk();
   }
+
+  if (PR_Now() > mLastProgressUpdate + UPDATE_PROGRESS_INTERVAL)
+    UpdateProgress();
 
   return NS_OK;
 }
