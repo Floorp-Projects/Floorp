@@ -1247,12 +1247,11 @@ ProgressController.prototype = {
         
         // now we can set the viewport to a real size and draw the page
         ws.endUpdateBatch();
-        Browser._selectedTab.updateThumbnail();
         Browser._isStartup = false;
       }
     }
-    if (!this._isStartup)
-      this._tab.updateThumbnail();
+
+    this._tab.updateThumbnail();
   },
 
   _documentStop: function() {
