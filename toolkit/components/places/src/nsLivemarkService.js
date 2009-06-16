@@ -95,33 +95,6 @@ const IDLE_TIMELIMIT = 1800000;
 // This cap is used only if the user sets a very high expiration time (>4h)
 const MAX_REFRESH_TIME = 3600000;
 
-/* We don't have strings, so this is currently not used.
-const PLACES_BUNDLE_URI = "chrome://places/locale/places.properties";
-
-function LOG(str) {
-  dump("*** " + str + "\n");
-}
-
-var gStringBundle;
-function GetString(name)
-{
-  try {
-    if (!gStringBundle) {
-      var bundleService = Cc[SB_CONTRACTID].getService();
-      bundleService = bundleService.QueryInterface(Ci.nsIStringBundleService);
-      gStringBundle = bundleService.createBundle(PLACES_BUNDLE_URI);
-    }
-
-    if (gStringBundle)
-      return gStringBundle.GetStringFromName(name);
-  } catch (ex) {
-    LOG("Exception loading string bundle: " + ex.message);
-  }
-
-  return null;
-}
-*/
-
 function MarkLivemarkLoadFailed(aFolderId) {
   var ans = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
   // if it failed before, nothing more to do
@@ -180,35 +153,35 @@ function LivemarkService() {
 LivemarkService.prototype = {
 
   get _bms() {
-    if (!this.__bms)
-      this.__bms = Cc[BMS_CONTRACTID].getService(Ci.nsINavBookmarksService);
-    return this.__bms;
+    var svc = Cc[BMS_CONTRACTID].getService(Ci.nsINavBookmarksService);
+    this.__defineGetter__("_bms", function() svc);
+    return this._bms;
   },
 
   get _history() {
-    if (!this.__history)
-      this.__history = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
-    return this.__history;
+    var svc = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
+    this.__defineGetter__("_history", function() svc);
+    return this._history;
   },
 
   get _ans() {
-    if (!this.__ans)
-      this.__ans = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
-    return this.__ans;
+    var svc = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
+    this.__defineGetter__("_ans", function() svc);
+    return this._ans;
   },
 
   get _ios() {
-    if (!this.__ios)
-      this.__ios = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
-    return this.__ios;
+    var svc = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
+    this.__defineGetter__("_ios", function() svc);
+    return this._ios;
   },
 
   get _idleService() {
-  if (!(IS_CONTRACTID in Cc))
-    return null;
-  if (!this.__idleService)
-    this.__idleService = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
-  return this.__idleService;
+    if (!(IS_CONTRACTID in Cc))
+      return null;
+    var svc = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
+    this.__defineGetter__("_idleService", function() svc);
+    return this._idleService;
   },
 
   _updateTimer: null,
@@ -357,6 +330,9 @@ LivemarkService.prototype = {
 
   createLivemark: function LS_createLivemark(aParentId, aName, aSiteURI,
                                              aFeedURI, aIndex) {
+    if (!aParentId || !aFeedURI)
+      throw Cr.NS_ERROR_INVALID_ARG;
+
     // Don't add livemarks to livemarks
     if (this.isLivemark(aParentId))
       throw Cr.NS_ERROR_INVALID_ARG;
@@ -374,6 +350,9 @@ LivemarkService.prototype = {
   createLivemarkFolderOnly:
   function LS_createLivemarkFolderOnly(aParentId, aName, aSiteURI,
                                        aFeedURI, aIndex) {
+    if (aParentId < 1 || !aFeedURI)
+      throw Cr.NS_ERROR_INVALID_ARG;
+
     // Don't add livemarks to livemarks
     if (this.isLivemark(aParentId))
       throw Cr.NS_ERROR_INVALID_ARG;
@@ -404,7 +383,14 @@ LivemarkService.prototype = {
   },
 
   isLivemark: function LS_isLivemark(aFolderId) {
-    return this._ans.itemHasAnnotation(aFolderId, LMANNO_FEEDURI);
+    if (aFolderId < 1)
+      throw Cr.NS_ERROR_INVALID_ARG;
+    try {
+      this._getLivemarkIndex(aFolderId);
+      return true;
+    }
+    catch (ex) {}
+    return false;
   },
 
   _ensureLivemark: function LS__ensureLivemark(aFolderId) {

@@ -616,7 +616,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 
     PRInt16 howToEnableFrameUI = (PRInt16)printDlg->lCustData;
 
-    HINSTANCE hInst = (HINSTANCE)::GetWindowLong(hdlg, GWL_HINSTANCE);
+    HINSTANCE hInst = (HINSTANCE)::GetWindowLongPtr(hdlg, GWLP_HINSTANCE);
     if (hInst == NULL) return 0L;
 
     // Start by getting the local rects of several of the controls
@@ -1116,7 +1116,7 @@ static BOOL APIENTRY PropSheetCallBack(HWND hdlg, UINT uiMsg, UINT wParam, LONG 
     PRInt16 howToEnableFrameUI = gFrameSelectedRadioBtn;
     gFrameSelectedRadioBtn     = 0;
 
-    HINSTANCE hInst = (HINSTANCE)::GetWindowLong(hdlg, GWL_HINSTANCE);
+    HINSTANCE hInst = (HINSTANCE)::GetWindowLongPtr(hdlg, GWLP_HINSTANCE);
     if (hInst == NULL) return 0L;
 
     // Get default font for the dialog & then its font metrics
@@ -1198,7 +1198,7 @@ static BOOL APIENTRY PropSheetCallBack(HWND hdlg, UINT uiMsg, UINT wParam, LONG 
 static HPROPSHEETPAGE ExtendPrintDialog(HWND aHWnd, char* aTitle)
 {
   // The resource "OPTPROPSHEET" comes out of the widget/build/widget.rc file
-  HINSTANCE hInst = (HINSTANCE)::GetWindowLong(aHWnd, GWL_HINSTANCE);
+  HINSTANCE hInst = (HINSTANCE)::GetWindowLongPtr(aHWnd, GWLP_HINSTANCE);
   PROPSHEETPAGE psp;
   memset(&psp, 0, sizeof(PROPSHEETPAGE));
   psp.dwSize      = sizeof(PROPSHEETPAGE);

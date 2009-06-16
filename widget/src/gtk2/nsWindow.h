@@ -85,11 +85,13 @@
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;
 extern PRLogModuleInfo *gWidgetIMLog;
+extern PRLogModuleInfo *gWidgetDragLog;
 extern PRLogModuleInfo *gWidgetDrawLog;
 
 #define LOG(args) PR_LOG(gWidgetLog, 4, args)
 #define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args)
 #define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args)
+#define LOGDRAG(args) PR_LOG(gWidgetDragLog, 4, args)
 #define LOGDRAW(args) PR_LOG(gWidgetDrawLog, 4, args)
 
 #else

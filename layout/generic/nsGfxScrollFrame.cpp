@@ -2370,6 +2370,12 @@ nsGfxScrollFrameInner::ReflowFinished()
 {
   mPostedReflowCallback = PR_FALSE;
 
+  if (mOuter->GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))
+    return PR_FALSE;
+
+  // Update scrollbar attributes.
+  nsPresContext* presContext = mOuter->PresContext();
+
   if (mMayHaveDirtyFixedChildren) {
     mMayHaveDirtyFixedChildren = PR_FALSE;
     nsIFrame* parentFrame = mOuter->GetParent();
@@ -2377,14 +2383,11 @@ nsGfxScrollFrameInner::ReflowFinished()
            parentFrame->GetFirstChild(nsGkAtoms::fixedList);
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
-      mOuter->PresContext()->PresShell()->
+      presContext->PresShell()->
         FrameNeedsReflow(fixedChild, nsIPresShell::eResize,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
-
-  // Update scrollbar attributes.
-  nsPresContext* presContext = mOuter->PresContext();
 
   nsIScrollableView* scrollable = GetScrollableView();
   nsRect scrollArea = scrollable->View()->GetBounds();

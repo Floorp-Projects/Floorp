@@ -57,6 +57,9 @@ _TEST_FILES =	test_feed_discovery.html \
 		offlineChild2.html \
 		offlineChild2.cacheManifest \
 		offlineChild2.cacheManifest^headers^ \
+		offlineEvent.html \
+		offlineEvent.cacheManifest \
+		offlineEvent.cacheManifest^headers^ \
 		$(NULL)
 
 # The following tests are disabled because they are unreliable:

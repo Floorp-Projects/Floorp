@@ -109,6 +109,11 @@ BrowserGlue.prototype = {
   _setPrefToSaveSession: function()
   {
     this._prefs.setBoolPref("browser.sessionstore.resume_session_once", true);
+
+    // This method can be called via [NSApplication terminate:] on Mac, which
+    // ends up causing prefs not to be flushed to disk, so we need to do that
+    // explicitly here. See bug 497652.
+    this._prefs.QueryInterface(Ci.nsIPrefService).savePrefFile(null);
   },
 
   // nsIObserver implementation 

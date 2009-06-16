@@ -253,7 +253,13 @@
             if (currentFocus == this) {
               // Focus was set on an element inside this panel,
               // so we need to move it back to where it was previously
-              prevFocus.focus();
+              try {
+                let fm = Components.classes["@mozilla.org/focus-manager;1"]
+                                   .getService(Components.interfaces.nsIFocusManager);
+                fm.setFocus(prevFocus, fm.FLAG_NOSCROLL);
+              } catch(e) {
+                prevFocus.focus();
+              }
               return;
             }
             currentFocus = currentFocus.parentNode;

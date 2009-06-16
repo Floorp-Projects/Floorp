@@ -45,7 +45,6 @@
 #include "nsIRenderingContext.h"
 // XXX we need only gfxTypes.h, but we cannot include it directly.
 #include "gfxPoint.h"
-#include "nsNativeWidget.h"
 
 class nsIView;
 class nsIFontMetrics;
@@ -169,10 +168,10 @@ const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating Renderin
 const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
 #endif
 
-// eca27eb2-ef6f-4142-bf77-89c14e595171
+// 40aebd88-a82b-48b0-8a44-be51510064a7
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0xeca27eb2, 0xef6f, 0x4142, \
-  { 0xbf, 0x77, 0x89, 0xc1, 0x4e, 0x59, 0x51, 0x71 } }
+{ 0x40aebd88, 0xa82b, 0x48b0, \
+  { 0x8a, 0x44, 0xbe, 0x51, 0x51, 0x00, 0x64, 0xa7 } }
 
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
@@ -215,10 +214,10 @@ public:
 
   /**
    * Initialize the device context from a widget
-   * @param aWidget a native widget to initialize the device context from
+   * @param aWidget a widget to initialize the device context from
    * @return error status
    */
-  NS_IMETHOD  Init(nsNativeWidget aWidget) = 0;
+  NS_IMETHOD  Init(nsIWidget* aWidget) = 0;
 
   /**
    * Initialize the device context from a device context spec

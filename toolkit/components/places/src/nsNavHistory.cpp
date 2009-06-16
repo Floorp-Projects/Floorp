@@ -607,7 +607,7 @@ nsNavHistory::Init()
     rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
                                 getter_AddRefs(historyFile));
     if (NS_SUCCEEDED(rv) && historyFile) {
-      ImportHistory(historyFile);
+      (void)ImportHistory(historyFile);
     }
   }
 
@@ -7535,8 +7535,7 @@ nsNavHistory::CalculateFrecencyInternal(PRInt64 aPlaceId,
           break;
         default:
           // 0 == undefined (see bug #375777 for details)
-          if (visitType)
-            NS_WARNING("new transition but no weight for frecency");
+          NS_WARN_IF_FALSE(!visitType, "new transition but no weight for frecency");
           bonus = mDefaultVisitBonus;
           break;
       }

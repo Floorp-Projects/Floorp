@@ -538,6 +538,8 @@ class Dumper:
                         else:
                             # pass through all other lines unchanged
                             f.write(line)
+                            # we want to return true only if at least one line is not a MODULE or FILE line
+                            result = True
                     f.close()
                     cmd.close()
                     # we output relative paths so callers can get a list of what
@@ -547,8 +549,7 @@ class Dumper:
                         self.CopyDebug(file, debug_file, guid)
                     if self.srcsrv and vcs_root:
                         # Call on SourceServerIndexing
-                        result = self.SourceServerIndexing(debug_file, guid, sourceFileStream, vcs_root)
-                    result = True
+                        self.SourceServerIndexing(debug_file, guid, sourceFileStream, vcs_root)
             except StopIteration:
                 pass
             except:
@@ -710,6 +711,12 @@ class Dumper_Mac(Dumper):
         res = Dumper.ProcessFile(self, dsymbundle)
         # CopyDebug will already have been run from Dumper.ProcessFile
         shutil.rmtree(dsymbundle)
+
+        # fallback for DWARF-less binaries
+        if not res:
+            print >> sys.stderr, "Couldn't read DWARF symbols in: %s" % dsymbundle
+            res = Dumper.ProcessFile(self, file)
+
         return res
 
     def CopyDebug(self, file, debug_file, guid):

@@ -155,6 +155,7 @@ CSS_KEY(-moz-marker, _moz_marker) // Disabled because not supported correctly.
 CSS_KEY(-moz-max-content, _moz_max_content)
 CSS_KEY(-moz-menuhover, _moz_menuhover)
 CSS_KEY(-moz-menuhovertext, _moz_menuhovertext)
+CSS_KEY(-moz-menubartext, _moz_menubartext)
 CSS_KEY(-moz-menubarhovertext, _moz_menubarhovertext)
 CSS_KEY(-moz-middle-with-baseline, _moz_middle_with_baseline)
 CSS_KEY(-moz-min-content, _moz_min_content)

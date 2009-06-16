@@ -207,6 +207,8 @@ MakeCommandLine(int argc, PRUnichar **argv)
 
 #ifdef WINCE
   wcscat(s, env);
+  if (env)
+    free(env);
 #endif
   return s;
 }

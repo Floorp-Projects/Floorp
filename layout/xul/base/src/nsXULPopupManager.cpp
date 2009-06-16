@@ -170,7 +170,7 @@ nsXULPopupManager::GetInstance()
 }
 
 NS_IMETHODIMP
-nsXULPopupManager::Rollup(nsIContent** aLastRolledUp)
+nsXULPopupManager::Rollup(PRUint32 aCount, nsIContent** aLastRolledUp)
 {
   if (aLastRolledUp)
     *aLastRolledUp = nsnull;
@@ -192,7 +192,21 @@ nsXULPopupManager::Rollup(nsIContent** aLastRolledUp)
       if (first)
         NS_ADDREF(*aLastRolledUp = first->Content());
     }
-    HidePopup(item->Content(), PR_TRUE, PR_TRUE, PR_FALSE);
+
+    // if a number of popups to close has been specified, determine the last
+    // popup to close
+    nsIContent* lastPopup = nsnull;
+    if (aCount != PR_UINT32_MAX) {
+      nsMenuChainItem* last = item;
+      while (--aCount && last->GetParent()) {
+        last = last->GetParent();
+      }
+      if (last) {
+        lastPopup = last->Content();
+      }
+    }
+
+    HidePopup(item->Content(), PR_TRUE, PR_TRUE, PR_FALSE, lastPopup);
   }
   return NS_OK;
 }
@@ -214,28 +228,36 @@ NS_IMETHODIMP nsXULPopupManager::ShouldRollupOnMouseActivate(PRBool *aShouldRoll
   return NS_OK;
 }
 
-void
-nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *_retval)
+PRUint32
+nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
 {
   // this method is used by the widget code to determine the list of popups
   // that are open. If a mouse click occurs outside one of these popups, the
   // panels will roll up. If the click is inside a popup, they will not roll up
-  NS_ASSERTION(_retval, "null parameter");
+  PRUint32 count = 0, sameTypeCount = 0;
+
+  NS_ASSERTION(aWidgetChain, "null parameter");
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
     nsCOMPtr<nsIWidget> widget;
     item->Frame()->GetWidget(getter_AddRefs(widget));
     NS_ASSERTION(widget, "open popup has no widget");
-    _retval->AppendElement(widget.get());
+    aWidgetChain->AppendElement(widget.get());
     // In the case when a menulist inside a panel is open, clicking in the
     // panel should still roll up the menu, so if a different type is found,
     // stop scanning.
     nsMenuChainItem* parent = item->GetParent();
-    if (!parent || item->Frame()->PopupType() != parent->Frame()->PopupType() ||
-                   item->IsContextMenu() != parent->IsContextMenu())
-      break;
+    if (!sameTypeCount) {
+      count++;
+      if (!parent || item->Frame()->PopupType() != parent->Frame()->PopupType() ||
+                     item->IsContextMenu() != parent->IsContextMenu()) {
+        sameTypeCount = count;
+      }
+    }
     item = parent;
   }
+
+  return sameTypeCount;
 }
 
 void
@@ -605,7 +627,8 @@ void
 nsXULPopupManager::HidePopup(nsIContent* aPopup,
                              PRBool aHideChain,
                              PRBool aDeselectMenu,
-                             PRBool aAsynchronous)
+                             PRBool aAsynchronous,
+                             nsIContent* aLastPopup)
 {
   // if the popup is on the nohide panels list, remove it but don't close any
   // other panels
@@ -676,7 +699,7 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
     if (parent && (aHideChain || topMenu != foundMenu))
       nextPopup = parent->Content();
 
-    lastPopup = aHideChain ? nsnull : aPopup;
+    lastPopup = aLastPopup ? aLastPopup : (aHideChain ? nsnull : aPopup);
   }
   else if (foundPanel) {
     popupToHide = aPopup;
@@ -777,6 +800,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
     // closes the menu and not the panel as well.
     if (foundMenu &&
         (aLastPopup || aPopupType == foundMenu->PopupType())) {
+
       nsCOMPtr<nsIContent> popupToHide = item->Content();
       nsMenuChainItem* parent = item->GetParent();
 
@@ -1885,7 +1909,7 @@ nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
         // The access key just went down and no other
         // modifiers are already down.
         if (mPopups)
-          Rollup(nsnull);
+          Rollup(nsnull, nsnull);
         else if (mActiveMenuBar)
           mActiveMenuBar->MenuClosed();
       }
@@ -1960,7 +1984,7 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
   ) {
     // close popups or deactivate menubar when Tab or F10 are pressed
     if (item)
-      Rollup(nsnull);
+      Rollup(nsnull, nsnull);
     else if (mActiveMenuBar)
       mActiveMenuBar->MenuClosed();
   }

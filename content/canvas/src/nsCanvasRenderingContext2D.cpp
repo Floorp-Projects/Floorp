@@ -3740,8 +3740,38 @@ nsCanvasRenderingContext2D::GetImageData()
 extern "C" {
 #include "jstypes.h"
 JS_FRIEND_API(JSBool)
-js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                        JSUint8 *dest);
+js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
+                                JSUint8 *dest);
+}
+
+static inline PRUint8 ToUint8(PRInt32 aInput)
+{
+    if (PRUint32(aInput) > 255)
+        return (aInput < 0) ? 0 : 255;
+    return PRUint8(aInput);
+}
+
+static inline PRUint8 ToUint8(double aInput)
+{
+    if (!(aInput >= 0)) /* Not < so that NaN coerces to 0 */
+        return 0;
+    if (aInput > 255)
+        return 255;
+    double toTruncate = aInput + 0.5;
+    PRUint8 retval = PRUint8(toTruncate);
+
+    // now retval is rounded to nearest, ties rounded up.  We want
+    // rounded to nearest ties to even, so check whether we had a tie.
+    if (retval == toTruncate) {
+        // It was a tie (since adding 0.5 gave us the exact integer we want).
+        // Since we rounded up, we either already have an even number or we
+        // have an odd number but the number we want is one less.  So just
+        // unconditionally masking out the ones bit should do the trick to get
+        // us the value we want.
+        return (retval & ~1);
+    }
+
+    return retval;
 }
 
 // void putImageData (in ImageData d, in float x, in float y);
@@ -3815,34 +3845,42 @@ nsCanvasRenderingContext2D::PutImageData()
 
     PRUint8 *imgPtr = imageBuffer.get();
 
-    JSBool ok = js_ArrayToJSUint8Buffer(ctx, dataArray, 0, w*h*4, imageBuffer);
+    JSBool canFastPath =
+        js_CoerceArrayToCanvasImageData(dataArray, 0, w*h*4, imageBuffer);
 
-    // no fast path? go slow.
-    if (!ok) {
+    // no fast path? go slow.  We sadly need this for now, instead of just
+    // throwing, because dataArray might not be dense in case someone stuck
+    // their own array on the imageData.
+    // FIXME: it'd be awfully nice if we could prevent such modification of
+    // imageData objects, since it's likely the spec won't allow it anyway.
+    // Bug 497110 covers this.
+    if (!canFastPath) {
         jsval vr, vg, vb, va;
         PRUint8 ir, ig, ib, ia;
         for (int32 j = 0; j < h; j++) {
+            int32 lineOffset = (j*w*4);
             for (int32 i = 0; i < w; i++) {
-                if (!JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 0, &vr) ||
-                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 1, &vg) ||
-                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 2, &vb) ||
-                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 3, &va))
+                int32 pixelOffset = lineOffset + i*4;
+                if (!JS_GetElement(ctx, dataArray, pixelOffset + 0, &vr) ||
+                    !JS_GetElement(ctx, dataArray, pixelOffset + 1, &vg) ||
+                    !JS_GetElement(ctx, dataArray, pixelOffset + 2, &vb) ||
+                    !JS_GetElement(ctx, dataArray, pixelOffset + 3, &va))
                     return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(vr))         ir = (PRUint8) JSVAL_TO_INT(vr);
-                else if (JSVAL_IS_DOUBLE(vr)) ir = (PRUint8) (*JSVAL_TO_DOUBLE(vr));
+                if (JSVAL_IS_INT(vr))         ir = ToUint8(JSVAL_TO_INT(vr));
+                else if (JSVAL_IS_DOUBLE(vr)) ir = ToUint8(*JSVAL_TO_DOUBLE(vr));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(vg))         ig = (PRUint8) JSVAL_TO_INT(vg);
-                else if (JSVAL_IS_DOUBLE(vg)) ig = (PRUint8) (*JSVAL_TO_DOUBLE(vg));
+                if (JSVAL_IS_INT(vg))         ig = ToUint8(JSVAL_TO_INT(vg));
+                else if (JSVAL_IS_DOUBLE(vg)) ig = ToUint8(*JSVAL_TO_DOUBLE(vg));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(vb))         ib = (PRUint8) JSVAL_TO_INT(vb);
-                else if (JSVAL_IS_DOUBLE(vb)) ib = (PRUint8) (*JSVAL_TO_DOUBLE(vb));
+                if (JSVAL_IS_INT(vb))         ib = ToUint8(JSVAL_TO_INT(vb));
+                else if (JSVAL_IS_DOUBLE(vb)) ib = ToUint8(*JSVAL_TO_DOUBLE(vb));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(va))         ia = (PRUint8) JSVAL_TO_INT(va);
-                else if (JSVAL_IS_DOUBLE(va)) ia = (PRUint8) (*JSVAL_TO_DOUBLE(va));
+                if (JSVAL_IS_INT(va))         ia = ToUint8(JSVAL_TO_INT(va));
+                else if (JSVAL_IS_DOUBLE(va)) ia = ToUint8(*JSVAL_TO_DOUBLE(va));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
                 // Convert to premultiplied color (losslessly if the input came from getImageData)

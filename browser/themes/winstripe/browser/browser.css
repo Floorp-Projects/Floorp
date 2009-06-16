@@ -1867,8 +1867,13 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   outline: 1px dotted white;
 }
 
-#identity-icon-labels {
+#identity-icon-label {
   padding: 0 2px;
+  margin: 0;
+}
+
+#identity-icon-label[value=""] {
+  display: none;
 }
 
 /* Popup Icons */

@@ -569,4 +569,270 @@ fbCompositeSolidMask_nx8x8888arm37
     dcd 0x00800080
     ENTRY_END
     ENDP
+
+    FUNC_HEADER fbComposite_x8r8g8b8_src_r5g6b5_internal_armv6
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv611
+    stmfd	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, ip, lr}
+    ldr	r4, [sp, #40]
+    ldr	ip, fbComposite_x8r8g8b8_src_r5g6b5_internal_armv60 ; 0x1f001f
+    sub	r3, r3, r2
+    str	r3, [sp, #40]
+    ldr	r3, [sp, #44]
+    sub	r4, r4, r2
+    str	r4, [sp, #44]
+    str	r2, [sp, #32]
+    subs	r3, r3, #1	; 0x1
+    blt	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv61
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv610
+    tst	r0, #2	; 0x2
+    beq	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv62
+    ldr	r4, [r1], #4
+    sub	r2, r2, #1	; 0x1
+    and	lr, ip, r4, lsr #3
+    and	r4, r4, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r4, lr, r4, lsr #5
+    strh	r4, [r0, #2]
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv62
+    tst	r0, #4	; 0x4
+    beq	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv63
+    ldmia	r1!, {r4, r5}
+    sub	r2, r2, #2	; 0x2
+    and	lr, ip, r4, lsr #3
+    and	r4, r4, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r4, lr, r4, lsr #5
+    and	lr, ip, r5, lsr #3
+    and	r5, r5, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r5, lr, r5, lsr #5
+    pkhbt	r4, r4, r5, lsl #16
+    str	r4, [r0], #4
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv63
+    tst	r0, #8	; 0x8
+    beq	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv64
+    ldmia	r1!, {r4, r5, r6, r7}
+    sub	r2, r2, #4	; 0x4
+    and	lr, ip, r4, lsr #3
+    and	r4, r4, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r4, lr, r4, lsr #5
+    and	lr, ip, r5, lsr #3
+    and	r5, r5, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r5, lr, r5, lsr #5
+    and	lr, ip, r6, lsr #3
+    and	r6, r6, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r6, lr, r6, lsr #5
+    and	lr, ip, r7, lsr #3
+    and	r7, r7, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r7, lr, r7, lsr #5
+    pkhbt	r4, r4, r5, lsl #16
+    pkhbt	r6, r6, r7, lsl #16
+    stmia	r0!, {r4, r6}
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv64
+    subs	r2, r2, #8	; 0x8
+    blt	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv65
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv66
+    ldmia	r1!, {r4, r5, r6, r7, r8, r9, sl, fp}
+    subs	r2, r2, #8	; 0x8
+    and	lr, ip, r4, lsr #3
+    and	r4, r4, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r4, lr, r4, lsr #5
+    and	lr, ip, r5, lsr #3
+    and	r5, r5, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r5, lr, r5, lsr #5
+    and	lr, ip, r6, lsr #3
+    and	r6, r6, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r6, lr, r6, lsr #5
+    and	lr, ip, r7, lsr #3
+    and	r7, r7, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r7, lr, r7, lsr #5
+    and	lr, ip, r8, lsr #3
+    and	r8, r8, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r8, lr, r8, lsr #5
+    and	lr, ip, r9, lsr #3
+    and	r9, r9, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r9, lr, r9, lsr #5
+    and	lr, ip, sl, lsr #3
+    and	sl, sl, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	sl, lr, sl, lsr #5
+    and	lr, ip, fp, lsr #3
+    and	fp, fp, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	fp, lr, fp, lsr #5
+    pkhbt	r4, r4, r5, lsl #16
+    pkhbt	r6, r6, r7, lsl #16
+    pkhbt	r8, r8, r9, lsl #16
+    pkhbt	sl, sl, fp, lsl #16
+    stmia	r0!, {r4, r6, r8, sl}
+    bge	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv66
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv65
+    tst	r2, #4	; 0x4
+    beq	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv67
+    ldmia	r1!, {r4, r5, r6, r7}
+    and	lr, ip, r4, lsr #3
+    and	r4, r4, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r4, lr, r4, lsr #5
+    and	lr, ip, r5, lsr #3
+    and	r5, r5, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r5, lr, r5, lsr #5
+    and	lr, ip, r6, lsr #3
+    and	r6, r6, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r6, lr, r6, lsr #5
+    and	lr, ip, r7, lsr #3
+    and	r7, r7, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r7, lr, r7, lsr #5
+    pkhbt	r4, r4, r5, lsl #16
+    pkhbt	r6, r6, r7, lsl #16
+    stmia	r0!, {r4, r6}
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv67
+    tst	r2, #2	; 0x2
+    beq	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv68
+    ldmia	r1!, {r4, r5}
+    and	lr, ip, r4, lsr #3
+    and	r4, r4, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r4, lr, r4, lsr #5
+    and	lr, ip, r5, lsr #3
+    and	r5, r5, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r5, lr, r5, lsr #5
+    pkhbt	r4, r4, r5, lsl #16
+    str	r4, [r0], #4
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv68
+    tst	r2, #1	; 0x1
+    beq	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv69
+    ldr	r4, [r1], #4
+    and	lr, ip, r4, lsr #3
+    and	r4, r4, #64512	; 0xfc00
+    orr	lr, lr, lr, lsr #5
+    orr	r4, lr, r4, lsr #5
+    strh	r4, [r0, #2]
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv69
+    ldr	r4, [sp, #40]
+    ldr	r5, [sp, #44]
+    ldr	r2, [sp, #32]
+    subs	r3, r3, #1	; 0x1
+    add	r0, r0, r4, lsl #1
+    add	r1, r1, r5, lsl #2
+    bge	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv610
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv61
+    ldmfd	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, ip, pc}
+fbComposite_x8r8g8b8_src_r5g6b5_internal_armv60
+    dcd 0x001f001f
+    ENTRY_END
+    ENDP
+
+    FUNC_HEADER fbCompositeSrc_x888x0565arm
+    stmfd	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
+    add	fp, sp, #32	; 0x20
+    sub	sp, sp, #12	; 0xc
+    ldr	r4, [r3, #120]
+    ldrsh	r2, [fp, #8]
+    ldrsh	r0, [fp, #24]
+    ldrsh	ip, [fp, #4]
+    ldr	r5, [r1, #120]
+    ldrsh	lr, [fp, #20]
+    mov	r4, r4, lsl #1
+    mla	r2, r5, r2, ip
+    mla	r0, r4, r0, lr
+    ldrh	r6, [fp, #28]
+    ldr	ip, [r1, #112]
+    ldr	r1, [r3, #112]
+    mov	r2, r2, lsl #2
+    mov	r0, r0, lsl #1
+    cmp	r6, #6	; 0x6
+    add	sl, r2, ip
+    add	r0, r0, r1
+    ldrh	ip, [fp, #32]
+    bhi	fbCompositeSrc_x888x0565arm0
+    cmp	ip, #0	; 0x0
+    beq	fbCompositeSrc_x888x0565arm1
+    rsb	r3, r6, r5
+    rsb	r2, r6, r4
+    ldr	lr, fbCompositeSrc_x888x0565arm2 ; 0x1f001f
+    sub	r5, ip, #1	; 0x1
+    mov	r8, r3, lsl #2
+    mov	r7, r2, lsl #1
+    mov	r1, sl
+    b	fbCompositeSrc_x888x0565arm3
+fbCompositeSrc_x888x0565arm9
+    tst	r0, #2	; 0x2
+    sub	ip, r6, #1	; 0x1
+    beq	fbCompositeSrc_x888x0565arm4
+    ldr	r3, [r1], #4
+    and	r2, r3, #64512	; 0xfc00
+    and	r3, lr, r3, lsr #3
+    orr	r2, r3, r2, lsr #5
+    orr	r2, r2, r3, lsr #5
+    strh	r2, [r0, #2]
+fbCompositeSrc_x888x0565arm10
+    mov	r9, r1
+    mov	r4, r0
+    subs	ip, ip, #2	; 0x2
+    blt	fbCompositeSrc_x888x0565arm5
+fbCompositeSrc_x888x0565arm6
+    ldr	r2, [r9], #4
+    ldr	r3, [r9], #4
+    subs	ip, ip, #2	; 0x2
+    and	sl, lr, r2, lsr #3
+    and	r2, r2, #64512	; 0xfc00
+    orr	sl, sl, sl, lsr #5
+    orr	r2, sl, r2, lsr #5
+    and	sl, lr, r3, lsr #3
+    and	r3, r3, #64512	; 0xfc00
+    orr	sl, sl, sl, lsr #5
+    orr	r3, sl, r3, lsr #5
+    pkhbt	r2, r2, r3, lsl #16
+    str	r2, [r4], #4
+    bge	fbCompositeSrc_x888x0565arm6
+fbCompositeSrc_x888x0565arm5
+    tst	ip, #1	; 0x1
+    mov	r0, r9
+    beq	fbCompositeSrc_x888x0565arm7
+    ldr	r3, [r0], #4
+    and	r2, r3, #64512	; 0xfc00
+    and	r3, lr, r3, lsr #3
+    orr	r2, r3, r2, lsr #5
+    orr	r2, r2, r3, lsr #5
+    strh	r2, [r4, #2]
+fbCompositeSrc_x888x0565arm7
+    cmp	r5, #0	; 0x0
+    add	r1, r0, r8
+    sub	r5, r5, #1	; 0x1
+    add	r0, r4, r7
+    beq	fbCompositeSrc_x888x0565arm1
+fbCompositeSrc_x888x0565arm3
+    cmp	r6, #0	; 0x0
+    bne	fbCompositeSrc_x888x0565arm9
+fbCompositeSrc_x888x0565arm4
+    mov	ip, r6
+    b	fbCompositeSrc_x888x0565arm10
+fbCompositeSrc_x888x0565arm0
+    mov	r1, sl
+    mov	r2, r6
+    mov	r3, r4
+    stmea	sp, {r5, ip}
+    bl	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv611
+fbCompositeSrc_x888x0565arm1
+    sub	sp, fp, #32	; 0x20
+    ldmfd	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
+fbCompositeSrc_x888x0565arm2
+    dcd 0x001f001f
+    ENTRY_END
+    ENDP
     end

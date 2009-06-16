@@ -75,7 +75,8 @@ nsTextEquivUtils::GetNameFromSubtree(nsIAccessible *aAccessible,
       nsAutoString name;
       AppendFromAccessibleChildren(aAccessible, &name);
       name.CompressWhitespace();
-      aName = name;
+      if (!IsWhitespaceString(name))
+        aName = name;
     }
   }
 
@@ -417,6 +418,27 @@ nsTextEquivUtils::AppendString(nsAString *aString,
 
   aString->Append(aTextEquivalent);
   return PR_TRUE;
+}
+
+PRBool
+nsTextEquivUtils::IsWhitespaceString(const nsSubstring& aString)
+{
+  nsSubstring::const_char_iterator iterBegin, iterEnd;
+
+  aString.BeginReading(iterBegin);
+  aString.EndReading(iterEnd);
+
+  while (iterBegin != iterEnd && IsWhitespace(*iterBegin))
+    ++iterBegin;
+
+  return iterBegin == iterEnd;
+}
+
+PRBool
+nsTextEquivUtils::IsWhitespace(PRUnichar aChar)
+{
+  return aChar == ' ' || aChar == '\n' ||
+    aChar == '\r' || aChar == '\t' || aChar == 0xa0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

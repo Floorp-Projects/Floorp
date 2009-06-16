@@ -45,7 +45,7 @@
 
 static const char* gFunction = "main";
 
-static PRBool VerifyResult(nsresult aRV, char* aMsg)
+static PRBool VerifyResult(nsresult aRV, const char* aMsg)
 {
     if (NS_FAILED(aRV)) {
         fail("%s %s, rv=%x", gFunction, aMsg, aRV);

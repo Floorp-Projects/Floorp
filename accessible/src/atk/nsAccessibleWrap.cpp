@@ -262,26 +262,6 @@ mai_atk_object_get_type(void)
     return type;
 }
 
-/*
- * Must keep sychronization with enumerate AtkProperty in 
- * accessible/src/base/nsAccessibleEventData.h
- */
-static char * sAtkPropertyNameArray[PROP_LAST] = {
-    0,
-    "accessible-name",
-    "accessible-description",
-    "accessible-parent",
-    "accessible-role",
-    "accessible-layer",
-    "accessible-mdi-zorder",
-    "accessible-table-caption",
-    "accessible-table-column-description",
-    "accessible-table-column-header",
-    "accessible-table-row-description",
-    "accessible-table-row-header",
-    "accessible-table-summary"
-};
-
 #ifdef MAI_LOGGING
 PRInt32 nsAccessibleWrap::mAccWrapCreated = 0;
 PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;

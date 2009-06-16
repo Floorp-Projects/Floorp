@@ -27,7 +27,7 @@ interface nsIMicrosummaryObserver : nsISupports
      * Called when an observed microsummary encounters an error during an update.
      * 
      * @param microsummary
-     *        the microsumary which could not be updated
+     *        the microsummary which could not be updated
      *
      */
     void onError(in nsIMicrosummary microsummary);

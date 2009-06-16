@@ -92,6 +92,9 @@
       // Gets the name from html:input value, ignore @title attribute on input
       testName("from_input_ignoretitle", "Custom country");
 
+      // Gets the name from @title, ignore whitespace content
+      testName("from_label_ignore_ws_subtree", "about");
+
       //////////////////////////////////////////////////////////////////////////
       // label element
 
@@ -302,6 +305,9 @@
   <input id="input_ignoretitle"
          value="Custom country"
          title="Input your country of origin"/ >
+
+  <!-- no name from subtree because it holds whitespaces only -->
+  <a id="from_label_ignore_ws_subtree" href="about:" title="about">&nbsp;&nbsp;  </a>
 
   <!-- label element, label contains the button -->
   <label>text<button id="btn_label_inside">10</button>text</label>

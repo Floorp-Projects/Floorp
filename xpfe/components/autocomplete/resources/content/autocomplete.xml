@@ -781,9 +781,10 @@
               this.setTextValue(val);
               this.mNeedToFinish = false;
             } else if (this.mTransientValue || 
-                       !(this.forceComplete || this.mDefaultMatchFilled) ||
-                       !(this.forceComplete || aForceComplete) ||
-                       !(this.mNeedToComplete || aForceComplete)) {
+                       !(this.forceComplete ||
+                        (aForceComplete &&
+                         this.mDefaultMatchFilled &&
+                         this.mNeedToComplete))) {
               this.mNeedToFinish = false;
             } else if (this.isWaiting) {
               // if the user typed, the search results are out of date, so let
@@ -926,6 +927,7 @@
             return;
 
           this.userAction = "typing";
+          this.mFinishAfterSearch = false;
           this.mNeedToFinish = true;
           this.mTransientValue = false;
           this.mNeedToComplete = true;
@@ -984,7 +986,9 @@
   
             case KeyEvent.DOM_VK_LEFT:
             case KeyEvent.DOM_VK_RIGHT:
-              this.finishAutoComplete(false, false, aEvent);
+            case KeyEvent.DOM_VK_HOME:
+            case KeyEvent.DOM_VK_END:
+              this.finishAutoComplete(true, false, aEvent);
               this.clearTimer();
               this.closeResultPopup();
               break;
