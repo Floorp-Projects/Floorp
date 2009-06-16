@@ -78,6 +78,8 @@ class nsHtml5HtmlAttributes
     nsString* getValue(nsHtml5AttributeName* name);
     void addAttribute(nsHtml5AttributeName* name, nsString* value);
     void clear(PRInt32 m);
+    void releaseValue(PRInt32 i);
+    void clearWithoutReleasingContents();
     PRBool contains(nsHtml5AttributeName* name);
     void adjustForMath();
     void adjustForSvg();
