@@ -1258,7 +1258,8 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
   if (mPopupContentView) {
     mPopupContentView->SetFocus(aState);
   }
-  else if (aState) {
+  else if (aState && [mWindow isVisible]) {
+    // if the window is shown, move it to the front
     [mWindow setAcceptsMouseMovedEvents:YES];
     [mWindow makeKeyAndOrderFront:nil];
     SendSetZLevelEvent();
