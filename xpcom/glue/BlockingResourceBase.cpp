@@ -63,7 +63,7 @@ const char* const BlockingResourceBase::kResourceTypeName[] =
 
 PRCallOnceType BlockingResourceBase::sCallOnce;
 PRUintn BlockingResourceBase::sResourceAcqnChainFrontTPI = (PRUintn)-1;
-BlockingResourceBase::DDT BlockingResourceBase::sDeadlockDetector;
+BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
 bool
 BlockingResourceBase::DeadlockDetectorEntry::Print(
@@ -109,7 +109,7 @@ BlockingResourceBase::BlockingResourceBase(
         NS_RUNTIMEABORT("can't allocated deadlock detector entry");
 
     mChainPrev = 0;
-    sDeadlockDetector.Add(mDDEntry);
+    sDeadlockDetector->Add(mDDEntry);
 }
 
 
@@ -135,7 +135,7 @@ BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
 
     BlockingResourceBase* chainFront = ResourceChainFront();
     nsAutoPtr<DDT::ResourceAcquisitionArray> cycle(
-        sDeadlockDetector.CheckAcquisition(
+        sDeadlockDetector->CheckAcquisition(
             chainFront ? chainFront->mDDEntry : 0, mDDEntry,
             aCallContext));
     if (!cycle)

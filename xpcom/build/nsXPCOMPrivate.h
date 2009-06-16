@@ -207,6 +207,26 @@ typedef nsresult (*GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const ch
 XPCOM_API(nsresult)
 NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
+
+namespace mozilla {
+
+/**
+ * Shutdown XPCOM. You must call this method after you are finished
+ * using xpcom. 
+ *
+ * @param servMgr           The service manager which was returned by NS_InitXPCOM.
+ *                          This will release servMgr.  You may pass null.
+ *
+ * @return NS_OK for success;
+ *         other error codes indicate a failure during shutdown
+ *
+ */
+nsresult
+ShutdownXPCOM(nsIServiceManager* servMgr);
+
+} // namespace mozilla
+
+
 // think hard before changing this
 #define XPCOM_GLUE_VERSION 1
 
