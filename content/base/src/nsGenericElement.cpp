@@ -3079,7 +3079,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 already_AddRefed<nsINodeList>
 nsGenericElement::GetChildren(PRUint32 aFilter)
 {
-  nsRefPtr<nsBaseContentList> list = new nsBaseContentList();
+  nsRefPtr<nsSimpleContentList> list = new nsSimpleContentList(this);
   if (!list) {
     return nsnull;
   }
@@ -5528,7 +5528,7 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
 {
   NS_PRECONDITION(aReturn, "Null out param?");
 
-  nsBaseContentList* contentList = new nsBaseContentList();
+  nsSimpleContentList* contentList = new nsSimpleContentList(aRoot);
   NS_ENSURE_TRUE(contentList, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aReturn = contentList);
   
