@@ -3147,23 +3147,34 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       // if we're dealing with menus, we probably have submenus and
       // we don't want to rollup if the click is in a parent menu of
       // the current submenu
+      PRUint32 popupsToRollup = PR_UINT32_MAX;
       nsCOMPtr<nsIMenuRollup> menuRollup;
       menuRollup = (do_QueryInterface(gRollupListener));
       if (menuRollup) {
         nsAutoTArray<nsIWidget*, 5> widgetChain;
         menuRollup->GetSubmenuWidgetChain(&widgetChain);
+        PRUint32 sameTypeCount = menuRollup->GetSubmenuWidgetChain(&widgetChain);
         for (PRUint32 i = 0; i < widgetChain.Length(); i++) {
           nsIWidget* widget = widgetChain[i];
           NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
           if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
-            shouldRollup = PR_FALSE;
+            // don't roll up if the mouse event occured within a menu of the
+            // same type. If the mouse event occured in a menu higher than
+            // that, roll up, but pass the number of popups to Rollup so
+            // that only those of the same type close up.
+            if (i < sameTypeCount) {
+              shouldRollup = PR_FALSE;
+            }
+            else {
+              popupsToRollup = sameTypeCount;
+            }
             break;
           }
         }
       }
 
       if (shouldRollup) {
-        gRollupListener->Rollup(nsnull);
+        gRollupListener->Rollup(popupsToRollup, nsnull);
         consumeEvent = (BOOL)gConsumeRollupEvent;
       }
     }

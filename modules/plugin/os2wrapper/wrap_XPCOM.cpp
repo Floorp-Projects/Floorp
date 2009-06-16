@@ -99,7 +99,6 @@
 #include "nsIPluginInstancePeer2.h"
 #include "nsIPluginTagInfo.h"
 #include "nsIPluginTagInfo2.h"
-#include "nsICookieStorage.h"
 #include "nsIHTTPHeaderListener.h"
 
 #include "nsIJRIPlugin.h"
@@ -7231,68 +7230,6 @@ MAKE_SAFE_VFT(VFTnsIPluginTagInfo2, downVFTnsIPluginTagInfo2)
 SAFE_VFT_ZEROS();
 
 
-
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//
-// DOWN: nsICookieStorage
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//
-
-/**
- * Retrieves a cookie from the browser's persistent cookie store.
- * @param aCookieURL    - URL string to look up cookie with.
- * @param aCookieBuffer - buffer large enough to accomodate cookie data.
- * @param aCookieSize   - on input, size of the cookie buffer, on output cookie's size.
- */
-/* void getCookie (in string aCookieURL, in voidPtr aCookieBuffer, in PRUint32Ref aCookieSize); */
-nsresult VFTCALL downICSGetCookie(void *pvThis, const char *aCookieURL, void * aCookieBuffer, PRUint32 & aCookieSize)
-{
-    DOWN_ENTER_RC(pvThis, nsICookieStorage);
-    dprintf(("%s: aCookieURL=%x aCookieBuffer=%x aCookieSize=%x",
-             pszFunction, aCookieURL, aCookieBuffer, VALID_REF(aCookieSize) ? aCookieSize : 0xdeadbeef));
-    DPRINTF_STR(aCookieURL);
-    rc = pMozI->GetCookie(aCookieURL, aCookieBuffer, aCookieSize);
-    if (NS_SUCCEEDED(rc) && VALID_REF(aCookieSize))
-        dprintf(("%s: aCookieSize=%d", pszFunction, aCookieSize));
-    DOWN_LEAVE_INT(pvThis, rc);
-    return rc;
-}
-
-/**
- * Stores a cookie in the browser's persistent cookie store.
- * @param aCookieURL    - URL string store cookie with.
- * @param aCookieBuffer - buffer containing cookie data.
- * @param aCookieSize   - specifies  size of cookie data.
- */
-/* void setCookie (in string aCookieURL, in constVoidPtr aCookieBuffer, in unsigned long aCookieSize); */
-nsresult VFTCALL downICSSetCookie(void *pvThis, const char *aCookieURL, const void * aCookieBuffer, PRUint32 aCookieSize)
-{
-    DOWN_ENTER_RC(pvThis, nsICookieStorage);
-    dprintf(("%s: aCookieURL=%x aCookieBuffer=%x aCookieSize=%x",
-             pszFunction, aCookieURL, aCookieBuffer, aCookieSize));
-    DPRINTF_STR(aCookieURL);
-    rc = pMozI->SetCookie(aCookieURL, aCookieBuffer, aCookieSize);
-    DOWN_LEAVE_INT(pvThis, rc);
-    return rc;
-}
-
-
-MAKE_SAFE_VFT(VFTnsICookieStorage, downVFTnsICookieStorage)
-{
- {
-    VFTFIRST_VAL()
-    downQueryInterface,                                     VFTDELTA_VAL()
-    downAddRef,                                             VFTDELTA_VAL()
-    downRelease,                                            VFTDELTA_VAL()
- },
-    downICSGetCookie,                                       VFTDELTA_VAL()
-    downICSSetCookie,                                       VFTDELTA_VAL()
-}
-SAFE_VFT_ZEROS();
-
-
-
-
-
-
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//
 // DOWN: nsIJVMThreadManager
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//
@@ -10781,7 +10718,6 @@ static struct SupportedInterface_Down
     { &kPluginInstancePeer2IID,     &downVFTnsIPluginInstancePeer2 },
     { &kPluginTagInfoIID,           &downVFTnsIPluginTagInfo },
     { &kPluginTagInfo2IID,          &downVFTnsIPluginTagInfo2 },
-    { &kCookieStorageIID,           &downVFTnsICookieStorage },
     { &kJVMThreadManagerIID,        &downVFTnsIJVMThreadManager },
     { &kJVMManagerIID,              &downVFTnsIJVMManager },
     { &kLiveconnectIID,             &downVFTnsILiveconnect },

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+<fieldset id="fs1"><legend>#2</legend></fieldset>
+<fieldset id="fs2"><legend>#1</legend><legend>#2</legend></fieldset>
+<script>
+document.body.offsetHeight;
+
+var fs1 = document.getElementById("fs1");
+var l = document.createElement("legend");
+l.textContent = "#1";
+fs1.insertBefore(l, fs1.firstChild);
+
+var fs2 = document.getElementById("fs2");
+fs2.removeChild(fs2.firstChild);
+</script>
+</body>
+</html>

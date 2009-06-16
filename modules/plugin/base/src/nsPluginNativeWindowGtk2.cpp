@@ -160,14 +160,12 @@ nsPluginNativeWindowGtk2::plugin_composite_filter_func (GdkXEvent *xevent,
 {
   nsPluginNativeWindowGtk2 *native_window = (nsPluginNativeWindowGtk2*)data;
   XDamageNotifyEvent *ev;
-  XserverRegion parts;
   ev = (XDamageNotifyEvent *) xevent;
   if (ev->type != xdamage_event_base + XDamageNotify)
     return GDK_FILTER_CONTINUE;
 
   //printf("Damage event %d %d %d %d\n",ev->area.x, ev->area.y, ev->area.width, ev->area.height);
-  parts = XFixesCreateRegion (GDK_DISPLAY(), 0, 0);
-  XDamageSubtract (GDK_DISPLAY(), native_window->mDamage, None, parts);
+  XDamageSubtract (GDK_DISPLAY(), native_window->mDamage, None, None);
 
   /* We try to do our area invalidation here */
   nsPluginRect rect;

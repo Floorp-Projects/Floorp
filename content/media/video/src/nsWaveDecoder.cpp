@@ -154,8 +154,6 @@ public:
 
   // Called on the decoder thread
   void NotifyBytesConsumed(PRInt64 aBytes);
-  // Called on the main thread
-  void NotifyDownloadEnded(nsresult aStatus);
 
   // Called by the main thread only
   nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();

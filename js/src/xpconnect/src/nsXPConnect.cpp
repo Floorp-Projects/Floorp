@@ -1385,8 +1385,8 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
                       uint32 number, void *arg)
 {
     // Every element counts.
-    nsTArray<XPCWrappedNative*> *array =
-        static_cast<nsTArray<XPCWrappedNative*> *>(arg);
+    nsTArray<nsRefPtr<XPCWrappedNative> > *array =
+        static_cast<nsTArray<nsRefPtr<XPCWrappedNative> > *>(arg);
     array->AppendElement(((Native2WrappedNativeMap::Entry*)hdr)->value);
     return JS_DHASH_NEXT;
 }
@@ -1413,7 +1413,7 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
 
     // First, look through the old scope and find all of the wrappers that
     // we're going to move.
-    nsTArray<XPCWrappedNative*> wrappersToMove;
+    nsTArray<nsRefPtr<XPCWrappedNative> > wrappersToMove;
 
     {   // scoped lock
         XPCAutoLock lock(GetRuntime()->GetMapLock());

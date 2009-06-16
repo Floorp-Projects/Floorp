@@ -4,10 +4,6 @@
   min-width: 6em;
 }
 
-.autocomplete-textbox-container {
-  -moz-box-align: stretch;
-}
-
 .searchbar-textbox:-moz-system-metric(windows-default-theme) {
   -moz-appearance: none;
   border-width: 1px;
@@ -37,6 +33,8 @@
   margin: 0;
   -moz-margin-end: 3px;
   padding: 0;
+  height: 1.23em;
+  min-height: 20px;
   -moz-box-align: center;
   background: -moz-dialog url(navbar-textbox-buttons.png) repeat-x;
   border: 0 solid;

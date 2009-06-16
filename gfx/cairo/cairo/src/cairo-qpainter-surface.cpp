@@ -41,6 +41,7 @@
 #include "cairo-types-private.h"
 
 #include "cairo-qpainter.h"
+
 #include <memory>
 
 #include <QtGui/QPainter>
@@ -740,7 +741,7 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 
 	cairo_traps_t traps;
 	cairo_int_status_t status;
-	cairo_region_t region;
+	cairo_region_t *region = NULL;
 
 	_cairo_traps_init (&traps);
 	status = (cairo_int_status_t)
@@ -781,12 +782,12 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 
         QRegion qr;
 
-        n_boxes = _cairo_region_num_boxes(&region);
+        n_boxes = cairo_region_num_rectangles (region);
         for (int i = 0; i < n_boxes; ++i)
         {
-            cairo_box_int_t box;
-            _cairo_region_get_box(&region, i, &box);
-            QRect r(box.p1.x, box.p1.y, box.p2.x - box.p1.x, box.p2.y - box.p2.y);
+            cairo_rectangle_int_t box;
+            cairo_region_get_rectangle (region, i, &box);
+            QRect r(box.x, box.y, box.width, box.height);
 
             if (0 == i)
                 clip_bounds = r;
@@ -796,7 +797,7 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
             qr = qr.unite(r);
         }
 #endif
-	    _cairo_region_fini (&region);
+	    _cairo_region_fini (region);
 
 	    qs->p->setClipRegion (qr, Qt::IntersectClip);
 	} else {
@@ -1406,7 +1407,7 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
 		    qs->clip_bounds.height()
 		};
 
-		_cairo_region_init_rect (&region, &rect);
+		_cairo_region_init_rectangle (&region, &rect);
 
 		_cairo_surface_set_clip_region (qs->xlib_equiv, &region, ++qs->xlib_clip_serial);
 

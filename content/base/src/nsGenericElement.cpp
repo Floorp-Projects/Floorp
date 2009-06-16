@@ -636,6 +636,7 @@ NS_IMPL_CYCLE_COLLECTION_1(nsNode3Tearoff, mContent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNode3Tearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathNSResolver)
 NS_INTERFACE_MAP_END_AGGREGATED(mContent)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNode3Tearoff)
@@ -856,7 +857,8 @@ nsNode3Tearoff::GetFeature(const nsAString& aFeature,
                            const nsAString& aVersion,
                            nsISupports** aReturn)
 {
-  return nsGenericElement::InternalGetFeature(this, aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalGetFeature(static_cast<nsIDOM3Node*>(this),
+                                              aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -4080,6 +4082,8 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
                                  new nsNodeSelectorTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
+                                 new nsNode3Tearoff(this))
   // nsNodeSH::PreCreate() depends on the identity pointer being the
   // same as nsINode (which nsIContent inherits), so if you change the
   // below line, make sure nsNodeSH::PreCreate() still does the right

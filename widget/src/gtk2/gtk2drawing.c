@@ -830,13 +830,16 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
                       state->depressed ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
  
     if (state->isDefault && relief == GTK_RELIEF_NORMAL) {
-        gtk_paint_box(style, drawable, button_state, shadow_type, cliprect,
-                      widget, "buttondefault", x, y, width, height);                   
+        gint default_top, default_left, default_bottom, default_right;
+        moz_gtk_button_get_default_border(&default_top, &default_left,
+                                          &default_bottom, &default_right);
+        gtk_paint_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
+                      widget, "buttondefault", x - default_left, y - default_top,
+                      width + default_left + default_right, height + default_top + default_bottom);                   
     }
  
     if (relief != GTK_RELIEF_NONE || state->depressed ||
-           (button_state != GTK_STATE_NORMAL &&
-            button_state != GTK_STATE_INSENSITIVE)) {
+        button_state == GTK_STATE_PRELIGHT) {
         TSOffsetStyleGCs(style, x, y);
         /* the following line can trigger an assertion (Crux theme)
            file ../../gdk/gdkwindow.c: line 1846 (gdk_window_clear_area):
@@ -927,6 +930,29 @@ moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
                           "focus-padding", focus_pad,
                           NULL);
 
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_button_get_default_border(gint* border_top, gint* border_left,
+                                  gint* border_bottom, gint* border_right)
+{
+    ensure_button_widget();
+
+    GtkBorder* default_outside_border;
+    gtk_widget_style_get(gButtonWidget,
+                         "default-outside-border", &default_outside_border,
+                         NULL);
+
+    if (default_outside_border) {
+        *border_top = default_outside_border->top;
+        *border_left = default_outside_border->left;
+        *border_bottom = default_outside_border->bottom;
+        *border_right = default_outside_border->right;
+        gtk_border_free(default_outside_border);
+    } else {
+        *border_top = *border_left = *border_bottom = *border_right = 0;
+    }
     return MOZ_GTK_SUCCESS;
 }
 
