@@ -377,15 +377,10 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (!value) {
       value = aAttributes->GetAttr(nsGkAtoms::background);
     }
-    if (value &&
-        aData->mColorData->mBackColor.mXValue.GetUnit() == eCSSUnit_Null) {
-      NS_ASSERTION(aData->mColorData->mBackColor.mYValue.GetUnit()
-                     == eCSSUnit_Null,
-                   "half a property?");
+    if (value && aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
       nscolor color;
       if (value->GetColorValue(color)) {
-        aData->mColorData->mBackColor.mXValue.SetColorValue(color);
-        aData->mColorData->mBackColor.mYValue.SetColorValue(color);
+        aData->mColorData->mBackColor.SetColorValue(color);
       }
     }
   }
