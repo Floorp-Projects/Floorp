@@ -40,11 +40,11 @@ Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 const URI_GENERIC_ICON_DOWNLOAD = "chrome://mozapps/skin/downloads/downloadIcon.png";
 
 var DownloadsView = {
+  _initialized: false,
   _pref: null,
   _list: null,
   _dlmgr: null,
   _progress: null,
-  _alerts: null,
 
   _initStatement: function dv__initStatement(aMode) {
     aMode = aMode || "date";
@@ -126,14 +126,21 @@ var DownloadsView = {
   },
 
   init: function dv_init() {
-    if (this._dlmgr)
+    if (this._initialized)
       return;
+    this._initialized = true;
 
-    this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
+    // Monitor downloads and display alerts
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    os.addObserver(this, "dl-start", true);
+    os.addObserver(this, "dl-failed", true);
+    os.addObserver(this, "dl-done", true);
+    os.addObserver(this, "dl-blocked", true);
+    os.addObserver(this, "dl-dirty", true);
+    os.addObserver(this, "dl-cancel", true);
 
-    this._alerts = new DownloadAlertsListener();
-    this._dlmgr.addListener(this._alerts);
+    // Monitor downloads being removed by the download manager (non-UI)
+    os.addObserver(this, "download-manager-remove-download", true);
 
     let self = this;
     let panels = document.getElementById("panel-items");
@@ -151,11 +158,10 @@ var DownloadsView = {
 
     this._list = document.getElementById("downloads-list");
 
+    this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
     this._progress = new DownloadProgressListener();
     this._dlmgr.addListener(this._progress);
-
-    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.addObserver(this, "download-manager-remove-download", false);
 
     this._initStatement();
     this.getDownloads();
@@ -448,25 +454,42 @@ var DownloadsView = {
   },
 
   observe: function (aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "download-manager-remove-download":
-        // A null subject here indicates "remove multiple", so we just rebuild.
-        if (!aSubject) {
-          // Rebuild the default view
-          this.getDownloads();
-          break;
-        }
+    if (aTopic == "download-manager-remove-download") {
+      // A null subject here indicates "remove multiple", so we just rebuild.
+      if (!aSubject) {
+        // Rebuild the default view
+        this.getDownloads();
+        return;
+      }
 
-        // Otherwise, remove a single download
-        let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
-        let element = this.getElementForDownload(id.data);
-        this._removeItem(element);
-        break;
+      // Otherwise, remove a single download
+      let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
+      let element = this.getElementForDownload(id.data);
+      this._removeItem(element);
+    }
+    else {
+      // We only show alerts if the download view is not visible
+      if (this.visible)
+        return;
+
+      let download = aSubject.QueryInterface(Ci.nsIDownload);
+      let strings = document.getElementById("bundle_browser");
+      var notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+
+      if (aTopic == "dl-start") {
+        notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
+                                       strings.getFormattedString("alertDownloadsStart", [download.displayName]), false, "", null);
+      }
+      else {
+        notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
+                                       strings.getFormattedString("alertDownloadsDone", [download.displayName]), false, "", null);
+      }
     }
   },
 
   QueryInterface: function (aIID) {
     if (!aIID.equals(Ci.nsIObserver) &&
+        !aIID.equals(Ci.nsISupportsWeakReference) &&
         !aIID.equals(Ci.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -547,55 +570,6 @@ DownloadProgressListener.prototype = {
     DownloadsView._updateStatus(element);
   },
 
-  onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload) { },
-  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) { },
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
-  QueryInterface: function (aIID) {
-    if (!aIID.equals(Ci.nsIDownloadProgressListener) &&
-        !aIID.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
-
-// DownloadAlertsListener is used for alert notifications and is active all the
-// time. We should not call into DownloadsView from this listener because we
-// don't know if the view is completely intialized
-function DownloadAlertsListener() { }
-
-DownloadAlertsListener.prototype = {
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIDownloadProgressListener
-  onDownloadStateChange: function dlPL_onDownloadStateChange(aState, aDownload) {
-    // We only show alerts if the download view is not visible
-    if (DownloadsView.visible)
-      return;
-
-    let strings = document.getElementById("bundle_browser");
-    var notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-
-    let state = aDownload.state;
-    switch (state) {
-      case Ci.nsIDownloadManager.DOWNLOAD_QUEUED:
-        notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                       strings.getFormattedString("alertDownloadsStart", [aDownload.displayName]), false, "", null);
-        break;
-
-      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY:
-      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
-      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
-      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL:
-      case Ci.nsIDownloadManager.DOWNLOAD_DIRTY:
-      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
-        notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                       strings.getFormattedString("alertDownloadsDone", [aDownload.displayName]), false, "", null);
-        break;
-    }
-  },
-
-  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload) { },
   onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload) { },
   onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) { },
 
