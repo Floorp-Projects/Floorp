@@ -118,11 +118,17 @@ CanvasBrowser.prototype = {
   setCurrentBrowser: function setCurrentBrowser(browser, skipZoom) {
     let currentBrowser = this._browser;
     if (currentBrowser) {
+      // backup state
+      currentBrowser.mZoomLevel = this.zoomLevel;
+      currentBrowser.mPanX = ws._viewingRect.x;
+      currentBrowser.mPanY = ws._viewingRect.y;
+      
       // stop monitor paint events for this browser
       currentBrowser.removeEventListener("MozAfterPaint", this._paintHandler, false);
       currentBrowser.setAttribute("type", "content");
       currentBrowser.docShell.isOffScreenBrowser = false;
     }
+
     this._contentDOMWindowUtils = null;
 
     browser.setAttribute("type", "content-primary");
@@ -139,7 +145,20 @@ CanvasBrowser.prototype = {
 
     // endLoading(and startLoading in most cases) calls zoom anyway
     if (!skipZoom) {
-      self.zoomToPage();
+      this.zoomToPage();
+    }
+
+    if ("mZoomLevel" in browser) {
+      // restore last state
+      ws.beginUpdateBatch();
+      ws.panTo(browser.mPanX, browser.mPanY);
+      this.zoomLevel = browser.mZoomLevel;
+      ws.endUpdateBatch(true);
+
+      // drop the cache
+      delete browser.mZoomLevel;
+      delete browser.mPanX;
+      delete browser.mPanY;
     }
   },
 

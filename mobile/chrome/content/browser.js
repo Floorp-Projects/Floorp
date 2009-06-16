@@ -377,8 +377,6 @@ var Browser = {
     this._canvasBrowser.setCurrentBrowser(this.selectedBrowser, firstTab);
     document.getElementById("tabs").selectedItem = tab.chromeTab;
 
-    ws.panTo(0, -BrowserUI.toolbarH);
-
     if (!firstTab) {
       let webProgress = this.selectedBrowser.webProgress;
       let securityUI = this.selectedBrowser.securityUI;
