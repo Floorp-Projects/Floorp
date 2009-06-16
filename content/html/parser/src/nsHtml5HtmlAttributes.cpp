@@ -184,6 +184,22 @@ nsHtml5HtmlAttributes::clear(PRInt32 m)
   mode = m;
 }
 
+void 
+nsHtml5HtmlAttributes::releaseValue(PRInt32 i)
+{
+  nsHtml5Portability::releaseString(values[i]);
+}
+
+void 
+nsHtml5HtmlAttributes::clearWithoutReleasingContents()
+{
+  for (PRInt32 i = 0; i < length; i++) {
+    names[i] = nsnull;
+    values[i] = nsnull;
+  }
+  length = 0;
+}
+
 PRBool 
 nsHtml5HtmlAttributes::contains(nsHtml5AttributeName* name)
 {
