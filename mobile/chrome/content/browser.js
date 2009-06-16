@@ -1242,6 +1242,9 @@ ProgressController.prototype = {
       BrowserUI.update(TOOLBARSTATE_LOADED);
       this.browser.docShell.isOffScreenBrowser = true;
       if (Browser._isStartup) {
+        // force the urlbar into position
+        ws.panTo(0, -BrowserUI.toolbarH);
+        
         // now we can set the viewport to a real size and draw the page
         ws.endUpdateBatch();
         Browser._selectedTab.updateThumbnail();
