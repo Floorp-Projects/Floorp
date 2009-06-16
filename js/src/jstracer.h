@@ -779,6 +779,105 @@ js_GetBuiltinFunction(JSContext *cx, uintN index);
 extern void
 js_SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
+#ifdef MOZ_TRACEVIS
+
+extern JS_FRIEND_API(bool)
+JS_StartTraceVis(const char* filename);
+
+extern JS_FRIEND_API(JSBool)
+js_StartTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *rval);
+
+extern JS_FRIEND_API(bool)
+JS_StopTraceVis();
+
+extern JS_FRIEND_API(JSBool)
+js_StopTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                jsval *rval);
+
+/* Must contain no more than 16 items. */
+enum TraceVisState {
+    S_EXITLAST,
+    S_INTERP,
+    S_MONITOR,
+    S_RECORD,
+    S_COMPILE,
+    S_EXECUTE,
+    S_NATIVE
+};
+
+/* Reason for an exit to the interpreter. */
+enum TraceVisExitReason {
+    R_NONE,
+    R_ABORT,
+    /* Reasons in js_MonitorLoopEdge */
+    R_INNER_SIDE_EXIT,
+    R_DOUBLES,
+    R_CALLBACK_PENDING,
+    R_OOM_GETANCHOR,
+    R_BACKED_OFF,
+    R_COLD,
+    R_FAIL_RECORD_TREE,
+    R_MAX_PEERS,
+    R_FAIL_EXECUTE_TREE,
+    R_FAIL_STABILIZE,
+    R_FAIL_EXTEND_FLUSH,
+    R_FAIL_EXTEND_MAX_BRANCHES,
+    R_FAIL_EXTEND_START,
+    R_FAIL_EXTEND_COLD,
+    R_NO_EXTEND_OUTER,
+    R_MISMATCH_EXIT,
+    R_OOM_EXIT,
+    R_TIMEOUT_EXIT,
+    R_DEEP_BAIL_EXIT,
+    R_STATUS_EXIT,
+    R_OTHER_EXIT
+};
+
+const unsigned long long MS64_MASK = 0xfllu << 60;
+const unsigned long long MR64_MASK = 0x1fllu << 55;
+const unsigned long long MT64_MASK = ~(MS64_MASK | MR64_MASK);
+
+extern FILE* traceVisLogFile;
+
+static inline void
+js_LogTraceVisState(TraceVisState s, TraceVisExitReason r)
+{
+    if (traceVisLogFile) {
+        unsigned long long sllu = s;
+        unsigned long long rllu = r;
+        unsigned long long d = (sllu << 60) | (rllu << 55) | (rdtsc() & MT64_MASK);
+        fwrite(&d, sizeof(d), 1, traceVisLogFile);
+    }
+}
+
+static inline void 
+js_EnterTraceVisState(TraceVisState s, TraceVisExitReason r)
+{
+    js_LogTraceVisState(s, r);
+}
+
+static inline void 
+js_ExitTraceVisState(TraceVisExitReason r)
+{
+    js_LogTraceVisState(S_EXITLAST, r);
+}
+
+struct TraceVisStateObj {
+    TraceVisExitReason r;
+
+    inline TraceVisStateObj(TraceVisState s) : r(R_NONE)
+    {
+        js_EnterTraceVisState(s, R_NONE);
+    }
+    inline ~TraceVisStateObj()
+    {
+        js_ExitTraceVisState(r);
+    }
+};
+
+#endif /* MOZ_TRACEVIS */
+
 #else  /* !JS_TRACER */
 
 #define TRACE_0(x)              ((void)0)
