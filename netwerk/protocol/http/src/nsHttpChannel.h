@@ -235,6 +235,7 @@ private:
     void     AddAuthorizationHeaders();
     nsresult GetCurrentPath(nsACString &);
     nsresult DoAuthRetry(nsAHttpConnection *);
+    PRBool   MustValidateBasedOnQueryUrl();
 
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;

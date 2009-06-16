@@ -1836,7 +1836,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     }
     else if (NS_SUCCEEDED(rv)) {
         mCacheEntry->GetAccessGranted(&mCacheAccess);
-        LOG(("got cache entry [access=%x]\n", mCacheAccess));
+        LOG(("nsHttpChannel::OpenCacheEntry [this=%x grantedAccess=%d]", this, mCacheAccess));
     }
     return rv;
 }
@@ -2003,8 +2003,8 @@ nsHttpChannel::CheckCache()
 {
     nsresult rv = NS_OK;
 
-    LOG(("nsHTTPChannel::CheckCache [this=%x entry=%x]",
-        this, mCacheEntry.get()));
+    LOG(("nsHTTPChannel::CheckCache enter [this=%x entry=%x access=%d]",
+        this, mCacheEntry.get(), mCacheAccess));
     
     // Be pessimistic: assume the cache entry has no useful data.
     mCachedContentIsValid = PR_FALSE;
@@ -2134,6 +2134,12 @@ nsHttpChannel::CheckCache()
         LOG(("Validating based on Vary headers returning TRUE\n"));
         doValidation = PR_TRUE;
     }
+    
+    else if (MustValidateBasedOnQueryUrl()) {
+        LOG(("Validating based on RFC 2616 section 13.9 "
+             "(query-url w/o explicit expiration-time)\n"));
+        doValidation = PR_TRUE;
+    }
     // Check if the cache entry has expired...
     else {
         PRUint32 time = 0; // a temporary variable for storing time values...
@@ -2165,28 +2171,6 @@ nsHttpChannel::CheckCache()
         LOG(("%salidating based on expiration time\n", doValidation ? "V" : "Not v"));
     }
 
-    // RFC 2616, section 13.9 states that GET-requests with a query-url
-    // MUST NOT be treated as fresh unless the server explicitly provides
-    // an expiration-time in the response. See bug #468594
-    // Section 13.2.1 (6th paragraph) defines "explicit expiration time"
-    if (!doValidation && mRequestHead.Method() == nsHttp::Get) {
-        nsCAutoString query;
-        nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
-        rv = url->GetQuery(query);
-        if (NS_SUCCEEDED(rv) && !query.IsEmpty()) {
-            PRUint32 tmp; // we don't need the value, just whether it's set
-            rv = mCachedResponseHead->GetExpiresValue(&tmp);
-            if (NS_FAILED(rv)) {
-                rv = mCachedResponseHead->GetMaxAgeValue(&tmp);
-                if (NS_FAILED(rv)) {
-                    LOG(("Validating based on RFC 2616 section 13.9 "
-                         "(query-url w/o explicit expiration-time)\n"));
-                    doValidation = PR_TRUE;
-                }
-            }
-        }
-    }
-    
     if (!doValidation) {
         //
         // Check the authorization headers used to generate the cache entry.
@@ -2243,8 +2227,34 @@ nsHttpChannel::CheckCache()
         }
     }
 
-    LOG(("CheckCache [this=%x doValidation=%d]\n", this, doValidation));
+    LOG(("nsHTTPChannel::CheckCache exit [this=%x doValidation=%d]\n", this, doValidation));
     return NS_OK;
+}
+
+PRBool
+nsHttpChannel::MustValidateBasedOnQueryUrl()
+{
+    // RFC 2616, section 13.9 states that GET-requests with a query-url
+    // MUST NOT be treated as fresh unless the server explicitly provides
+    // an expiration-time in the response. See bug #468594
+    // Section 13.2.1 (6th paragraph) defines "explicit expiration time"
+    if (mRequestHead.Method() == nsHttp::Get)
+    {
+        nsCAutoString query;
+        nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
+        nsresult rv = url->GetQuery(query);
+        if (NS_SUCCEEDED(rv) && !query.IsEmpty()) {
+            PRUint32 tmp; // we don't need the value, just whether it's set
+            rv = mCachedResponseHead->GetExpiresValue(&tmp);
+            if (NS_FAILED(rv)) {
+                rv = mCachedResponseHead->GetMaxAgeValue(&tmp);
+                if (NS_FAILED(rv)) {
+                    return PR_TRUE;
+                }
+            }
+        }
+    }
+    return PR_FALSE;
 }
 
 
