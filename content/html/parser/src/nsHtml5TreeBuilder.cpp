@@ -1095,8 +1095,11 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                     nsHtml5AttributeName* attributeQName = attributes->getAttributeName(i);
                     if (!(nsHtml5AttributeName::NAME == attributeQName || nsHtml5AttributeName::ACTION == attributeQName || nsHtml5AttributeName::PROMPT == attributeQName)) {
                       inputAttributes->addAttribute(attributeQName, attributes->getValue(i));
+                    } else {
+                      attributes->releaseValue(i);
                     }
                   }
+                  attributes->clearWithoutReleasingContents();
                   appendVoidElementToCurrentMayFoster(kNameSpaceID_XHTML, nsHtml5Atoms::input, inputAttributes, formPointer);
                   pop();
                   pop();
