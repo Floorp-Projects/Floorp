@@ -1554,16 +1554,21 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         tryTagNameOrFrame = PR_FALSE;
     }
 
-    if (roleMapEntry && (!partOfHTMLTable || !tryTagNameOrFrame ||
-        frameType != nsAccessibilityAtoms::tableOuterFrame)) {
-      // Try to create ARIA grid/treegrid accessibles.
-      if (roleMapEntry->role == nsIAccessibleRole::ROLE_TABLE ||
-          roleMapEntry->role == nsIAccessibleRole::ROLE_TREE_TABLE) {
-        newAcc = new nsARIAGridAccessibleWrap(aNode, aWeakShell);
-      } else if (roleMapEntry->role == nsIAccessibleRole::ROLE_GRID_CELL ||
-                 roleMapEntry->role == nsIAccessibleRole::ROLE_ROWHEADER ||
-                 roleMapEntry->role == nsIAccessibleRole::ROLE_COLUMNHEADER) {
-        newAcc = new nsARIAGridCellAccessible(aNode, aWeakShell);
+    if (roleMapEntry) {
+      // Create ARIA grid/treegrid accessibles if node is not of a child or
+      // valid child of HTML table and is not a HTML table.
+      if ((!partOfHTMLTable || !tryTagNameOrFrame) &&
+          frameType != nsAccessibilityAtoms::tableOuterFrame) {
+
+        if (roleMapEntry->role == nsIAccessibleRole::ROLE_TABLE ||
+            roleMapEntry->role == nsIAccessibleRole::ROLE_TREE_TABLE) {
+          newAcc = new nsARIAGridAccessibleWrap(aNode, aWeakShell);
+
+        } else if (roleMapEntry->role == nsIAccessibleRole::ROLE_GRID_CELL ||
+            roleMapEntry->role == nsIAccessibleRole::ROLE_ROWHEADER ||
+            roleMapEntry->role == nsIAccessibleRole::ROLE_COLUMNHEADER) {
+          newAcc = new nsARIAGridCellAccessible(aNode, aWeakShell);
+        }
       }
     }
 
