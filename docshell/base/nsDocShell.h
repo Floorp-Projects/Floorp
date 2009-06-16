@@ -624,7 +624,7 @@ protected:
         RestorePresentationEvent(nsDocShell *ds) : mDocShell(ds) {}
         void Revoke() { mDocShell = nsnull; }
     private:
-        nsDocShell *mDocShell;
+        nsRefPtr<nsDocShell> mDocShell;
     };
 
     // hash of session storages, keyed by domain
