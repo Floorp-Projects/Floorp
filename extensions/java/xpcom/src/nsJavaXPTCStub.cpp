@@ -177,7 +177,9 @@ nsJavaXPTCStub::Destroy()
 
   if (!mMaster) {
     // delete each child stub
-    mChildren.Clear();
+    for (PRInt32 i = 0; i < mChildren.Count(); i++) {
+      delete (nsJavaXPTCStub*) mChildren[i];
+    }
 
     // Since we are destroying this stub, also remove the mapping.
     // It is possible for mJavaStrongRef to be NULL here.  That is why we
@@ -377,9 +379,9 @@ nsJavaXPTCStub::FindStubSupportingIID(const nsID &iid)
   if (SupportsIID(iid))
     return this;
 
-  for (PRUint32 i = 0; i < mChildren.Length(); i++)
+  for (PRInt32 i = 0; i < mChildren.Count(); i++)
   {
-    nsJavaXPTCStub *child = mChildren[i];
+    nsJavaXPTCStub *child = (nsJavaXPTCStub *) mChildren[i];
     if (child->SupportsIID(iid))
       return child;
   }
