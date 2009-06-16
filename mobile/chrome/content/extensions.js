@@ -166,7 +166,7 @@ var ExtensionsView = {
   showRestart: function ev_showRestart() {
     // Increment the count in case the view is not completely initialized
     this._restartCount++;
-    
+
     if (this._msg) {
       let strings = document.getElementById("bundle_browser");
       this.showMessage(strings.getString("addonsRestart"), "restart-app",
@@ -202,7 +202,7 @@ var ExtensionsView = {
 
     // Now look and see if we're being opened by XPInstall
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.addObserver(this._dloadmgr, "xpinstall-download-started", false);
+    os.addObserver(this._dloadmgr, "xpinstall-download-started", true);
 
     let self = this;
     let panels = document.getElementById("panel-items");
@@ -241,7 +241,7 @@ var ExtensionsView = {
       this.showRestart();
       this._restartCount--; // showRestart() always increments
     }
-    
+
     let self = this;
     setTimeout(function() {
       self.getAddonsFromLocal();
@@ -640,6 +640,7 @@ XPInstallDownloadManager.prototype = {
   // nsISupports
   QueryInterface: function (aIID) {
     if (!aIID.equals(Ci.nsIAddonInstallListener) &&
+        !aIID.equals(Ci.nsISupportsWeakReference) &&
         !aIID.equals(Ci.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;

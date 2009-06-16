@@ -450,9 +450,9 @@
     <hbox id="alerts-container" hidden="true" align="start" top="0" left="0" width="200"
           onclick="AlertsHelper.click(event);">
       <image id="alerts-image"/>
-      <vbox>
+      <vbox flex="1">
         <label id="alerts-title" value=""/>
-        <description id="alerts-text"/>
+        <description id="alerts-text" flex="1"/>
       </vbox>
     </hbox>
   </stack>
