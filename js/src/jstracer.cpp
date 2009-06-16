@@ -2955,6 +2955,10 @@ FlushJITCache(JSContext* cx)
 JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(S_COMPILE);
+#endif
+
     if (tm->needFlush) {
         FlushJITCache(cx);
         return;
@@ -4047,11 +4051,18 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer, ui
 }
 
 static JS_REQUIRES_STACK bool
-js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer)
+js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer
+#ifdef MOZ_TRACEVIS
+    , TraceVisStateObj* tvso = NULL
+#endif
+    )
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->needFlush) {
         FlushJITCache(cx);
+#ifdef MOZ_TRACEVIS
+        if (tvso) tvso->r = R_FAIL_EXTEND_FLUSH;
+#endif
         return false;
     }
 
@@ -4060,8 +4071,12 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
 
     /* Don't grow trees above a certain size to avoid code explosion due to tail duplication. */
-    if (ti->branchCount >= MAX_BRANCHES)
+    if (ti->branchCount >= MAX_BRANCHES) {
+#ifdef MOZ_TRACEVIS
+        if (tvso) tvso->r = R_FAIL_EXTEND_MAX_BRANCHES;
+#endif
         return false;
+    }
 
     Fragment* c;
     if (!(c = anchor->target)) {
@@ -4114,9 +4129,17 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             typeMap = fullMap.data();
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
-        return js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
-                                ngslots, typeMap, exitedFrom, outer, cx->fp->argc);
+        bool rv = js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
+                                   ngslots, typeMap, exitedFrom, outer, cx->fp->argc);
+#ifdef MOZ_TRACEVIS
+        if (!rv && tvso)
+            tvso->r = R_FAIL_EXTEND_START;
+#endif
+        return rv;
     }
+#ifdef MOZ_TRACEVIS
+    if (tvso) tvso->r = R_FAIL_EXTEND_COLD;
+#endif
     return false;
 }
 
@@ -4449,6 +4472,10 @@ static JS_REQUIRES_STACK VMSideExit*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                VMSideExit** innermostNestedGuardp)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(S_EXECUTE);
+#endif
+
     JS_ASSERT(f->root == f && f->code() && f->vmprivate);
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -4538,11 +4565,18 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     debug_only(fflush(NULL);)
     GuardRecord* rec;
-#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-    SIMULATE_FASTCALL(rec, state, NULL, u.func);
-#else
-    rec = u.func(state, NULL);
+    // Note that the block scoping is crucial here for TraceVis;  the
+    // TraceVisStateObj constructors and destructors must run at the right times.
+    {
+#ifdef MOZ_TRACEVIS
+        TraceVisStateObj tvso_n(S_NATIVE);
 #endif
+#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
+        SIMULATE_FASTCALL(rec, state, NULL, u.func);
+#else
+        rec = u.func(state, NULL);
+#endif
+    }
     VMSideExit* lr = (VMSideExit*)rec->exit;
 
     AUDIT(traceTriggered);
@@ -4802,6 +4836,10 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 JS_REQUIRES_STACK bool
 js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(S_MONITOR);
+#endif
+
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Is the recorder currently active? */
@@ -4821,14 +4859,21 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
          * the interpreter and do not attempt to trigger or record a new tree at this
          * location.
          */
-        if (innerLoopHeaderPC != cx->fp->regs->pc)
-            return false;
+         if (innerLoopHeaderPC != cx->fp->regs->pc) {
+#ifdef MOZ_TRACEVIS
+             tvso.r = R_INNER_SIDE_EXIT;
+#endif
+             return false;
+         }
     }
     JS_ASSERT(!tm->recorder);
 
     /* Check the pool of reserved doubles (this might trigger a GC). */
     if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
         !js_ReplenishReservedPool(cx, tm)) {
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_DOUBLES;
+#endif
         return false; /* Out of memory, don't try to record now. */
     }
 
@@ -4843,8 +4888,12 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     }
 
     /* Do not enter the JIT code with a pending operation callback. */
-    if (cx->operationCallbackFlag)
+    if (cx->operationCallbackFlag) {
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_CALLBACK_PENDING;
+#endif
         return false;
+    }
     
     jsbytecode* pc = cx->fp->regs->pc;
     uint32 argc = cx->fp->argc;
@@ -4855,6 +4904,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
     if (!f) {
         FlushJITCache(cx);
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_OOM_GETANCHOR;
+#endif
         return false;
     }
 
@@ -4862,12 +4914,21 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
        activate any trees so, start compiling. */
     if (!f->code() && !f->peer) {
     record:
-        if (++f->hits() < HOTLOOP)
+        if (++f->hits() < HOTLOOP) {
+#ifdef MOZ_TRACEVIS
+            tvso.r = f->hits() < 1 ? R_BACKED_OFF : R_COLD;
+#endif
             return false;
+        }
         /* We can give RecordTree the root peer. If that peer is already taken, it will
            walk the peer list and find us a free slot or allocate a new tree if needed. */
-        return js_RecordTree(cx, tm, f->first, NULL, 0, globalObj, globalShape, 
-                             globalSlots, argc);
+        bool rv = js_RecordTree(cx, tm, f->first, NULL, 0, globalObj, globalShape,
+                                globalSlots, argc);
+#ifdef MOZ_TRACEVIS
+        if (!rv)
+            tvso.r = R_FAIL_RECORD_TREE;
+#endif
+        return rv;
     }
 
     debug_only_v(nj_dprintf("Looking for compat peer %d@%d, from %p (ip: %p)\n",
@@ -4883,6 +4944,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
            expensive. This must be a rather type-unstable loop. */
         debug_only_v(nj_dprintf("Blacklisted: too many peer trees.\n");)
         js_Blacklist((jsbytecode*) f->root->ip);
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_MAX_PEERS;
+#endif
         return false;
     }
 
@@ -4890,27 +4954,58 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     VMSideExit* innermostNestedGuard = NULL;
 
     lr = js_ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard);
-    if (!lr)
+    if (!lr) {
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_FAIL_EXECUTE_TREE;
+#endif
         return false;
+    }
 
     /* If we exit on a branch, or on a tree call guard, try to grow the inner tree (in case
        of a branch exit), or the tree nested around the tree we exited from (in case of the
        tree call guard). */
+    bool rv;
     switch (lr->exitType) {
       case UNSTABLE_LOOP_EXIT:
-        return js_AttemptToStabilizeTree(cx, lr, NULL, NULL);
+          rv = js_AttemptToStabilizeTree(cx, lr, NULL, NULL);
+#ifdef MOZ_TRACEVIS
+          if (!rv)
+              tvso.r = R_FAIL_STABILIZE;
+#endif
+          return rv;
       case OVERFLOW_EXIT:
         oracle.markInstructionUndemotable(cx->fp->regs->pc);
         /* fall through */
       case BRANCH_EXIT:
       case CASE_EXIT:
-        return js_AttemptToExtendTree(cx, lr, NULL, NULL);
+          return js_AttemptToExtendTree(cx, lr, NULL, NULL
+#ifdef MOZ_TRACEVIS
+                                          , &tvso
+#endif
+                 );
       case LOOP_EXIT:
         if (innermostNestedGuard)
-            return js_AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL);
+            return js_AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL
+#ifdef MOZ_TRACEVIS
+                                            , &tvso
+#endif
+                   );
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_NO_EXTEND_OUTER;
+#endif
         return false;
+#ifdef MOZ_TRACEVIS
+      case MISMATCH_EXIT:  tvso.r = R_MISMATCH_EXIT;  return false;
+      case OOM_EXIT:       tvso.r = R_OOM_EXIT;       return false;
+      case TIMEOUT_EXIT:   tvso.r = R_TIMEOUT_EXIT;   return false;
+      case DEEP_BAIL_EXIT: tvso.r = R_DEEP_BAIL_EXIT; return false;
+      case STATUS_EXIT:    tvso.r = R_STATUS_EXIT;    return false;
+#endif
       default:
         /* No, this was an unusual exit (i.e. out of memory/GC), so just resume interpretation. */
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_OTHER_EXIT;
+#endif
         return false;
     }
 }
@@ -11100,6 +11195,80 @@ js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, ui
     }
 }
 #endif
+
+#ifdef MOZ_TRACEVIS
+
+FILE* traceVisLogFile = NULL;
+
+JS_FRIEND_API(bool)
+JS_StartTraceVis(const char* filename = "tracevis.dat")
+{
+    if (traceVisLogFile) {
+        // If we're currently recording, first we must stop.
+        JS_StopTraceVis();
+    }
+
+    traceVisLogFile = fopen(filename, "wb");
+    if (!traceVisLogFile)
+        return false;
+
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js_StartTraceVis(JSContext *cx, JSObject *obj,
+                 uintN argc, jsval *argv, jsval *rval)
+{
+    JSBool ok;
+
+    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
+        JSString *str = JSVAL_TO_STRING(argv[0]);
+        char *filename = js_DeflateString(cx, str->chars(), str->length());
+        if (!filename)
+            goto error;
+        ok = JS_StartTraceVis(filename);
+        JS_free(cx, filename);
+    } else {
+        ok = JS_StartTraceVis();
+    }
+
+    if (ok) {
+        fprintf(stderr, "started TraceVis recording\n");
+        return JS_TRUE;
+    }
+
+  error:
+    JS_ReportError(cx, "failed to start TraceVis recording");
+    return JS_FALSE;
+}
+
+JS_FRIEND_API(bool)
+JS_StopTraceVis()
+{
+    if (!traceVisLogFile)
+        return false;
+
+    fclose(traceVisLogFile);    // not worth checking the result
+    traceVisLogFile = NULL;
+
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js_StopTraceVis(JSContext *cx, JSObject *obj,
+                uintN argc, jsval *argv, jsval *rval)
+{
+    JSBool ok = JS_StopTraceVis();
+
+    if (ok)
+        fprintf(stderr, "stopped TraceVis recording\n");
+    else
+        JS_ReportError(cx, "TraceVis isn't running");
+
+    return ok;
+}
+
+#endif /* MOZ_TRACEVIS */
 
 #define UNUSED(n)                                                             \
     JS_REQUIRES_STACK bool                                                    \
