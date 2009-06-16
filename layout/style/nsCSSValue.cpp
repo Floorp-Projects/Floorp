@@ -395,6 +395,19 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
   }
 }
 
+PRBool nsCSSValue::IsNonTransparentColor() const
+{
+  // We have the value in the form it was specified in at this point, so we
+  // have to look for both the keyword 'transparent' and its equivalent in
+  // rgba notation.
+  nsDependentString buf;
+  return
+    (mUnit == eCSSUnit_Color && NS_GET_A(GetColorValue()) > 0) ||
+    (mUnit == eCSSUnit_Ident &&
+     !nsGkAtoms::transparent->Equals(GetStringValue(buf))) ||
+    (mUnit == eCSSUnit_EnumColor);
+}
+
 // static
 nsStringBuffer*
 nsCSSValue::BufferFromString(const nsString& aValue)
