@@ -640,10 +640,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aPresContext,
                                  static_cast<nsDragEvent*>(aEvent));
-    case NS_POPUPBLOCKED_EVENT:
-      return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext,
-                                        static_cast<nsPopupBlockedEvent*>
-                                                   (aEvent));
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
                                 static_cast<nsTextEvent*>(aEvent));
