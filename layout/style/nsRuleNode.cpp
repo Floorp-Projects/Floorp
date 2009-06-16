@@ -3802,22 +3802,20 @@ struct BackgroundItemComputer<nsCSSValueList, PRUint8>
 };
 
 NS_SPECIALIZE_TEMPLATE
-struct BackgroundItemComputer<nsCSSValueList, nsStyleBackground::Image>
+struct BackgroundItemComputer<nsCSSValueList, nsCOMPtr<imgIRequest> >
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
                            const nsCSSValueList* aSpecifiedValue,
-                           nsStyleBackground::Image& aComputedValue,
+                           nsCOMPtr<imgIRequest>& aComputedValue,
                            PRBool& aCanStoreInRuleTree)
   {
     const nsCSSValue &value = aSpecifiedValue->mValue;
     if (eCSSUnit_Image == value.GetUnit()) {
-      aComputedValue.mRequest = value.GetImageValue();
-      aComputedValue.mSpecified = PR_TRUE;
+      aComputedValue = value.GetImageValue();
     }
     else {
       NS_ASSERTION(eCSSUnit_None == value.GetUnit(), "unexpected unit");
-      aComputedValue.mRequest = nsnull;
-      aComputedValue.mSpecified = PR_FALSE;
+      aComputedValue = nsnull;
     }
   }
 };
@@ -3958,23 +3956,13 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Background, (), bg, parentBG, Color, colorData)
 
-  // background-color: color, string, inherit [pair]
-  if (eCSSUnit_Initial == colorData.mBackColor.mXValue.GetUnit()) {
+  // background-color: color, string, inherit
+  if (eCSSUnit_Initial == colorData.mBackColor.GetUnit()) {
     bg->mBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  } else if (!SetColor(colorData.mBackColor.mXValue,
-                       parentBG->mBackgroundColor, mPresContext,
-                       aContext, bg->mBackgroundColor, canStoreInRuleTree)) {
-    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.mXValue.GetUnit(),
-                 "unexpected color unit");
-  }
-
-  if (eCSSUnit_Initial == colorData.mBackColor.mYValue.GetUnit()) {
-    bg->mFallbackBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  } else if (!SetColor(colorData.mBackColor.mYValue,
-                       parentBG->mFallbackBackgroundColor, mPresContext,
-                       aContext, bg->mFallbackBackgroundColor,
+  } else if (!SetColor(colorData.mBackColor, parentBG->mBackgroundColor,
+                       mPresContext, aContext, bg->mBackgroundColor,
                        canStoreInRuleTree)) {
-    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.mYValue.GetUnit(),
+    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.GetUnit(),
                  "unexpected color unit");
   }
 
@@ -3984,7 +3972,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   // background-image: url (stored as image), none, inherit [list]
   SetBackgroundList(aContext, colorData.mBackImage, bg->mLayers,
                     parentBG->mLayers, &nsStyleBackground::Layer::mImage,
-                    nsStyleBackground::Image(), parentBG->mImageCount,
+                    nsCOMPtr<imgIRequest>(nsnull), parentBG->mImageCount,
                     bg->mImageCount, maxItemCount, rebuild, canStoreInRuleTree);
 
   // background-repeat: enum, inherit, initial [list]
@@ -5677,8 +5665,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   ruleData.mMarginData = &marginData;
 
   nsCSSValue* backgroundValues[] = {
-    &colorData.mBackColor.mXValue,
-    &colorData.mBackColor.mYValue,
+    &colorData.mBackColor,
     &firstBackgroundImage
   };
 

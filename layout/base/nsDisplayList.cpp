@@ -550,9 +550,9 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
     return PR_TRUE;
 
   if (bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY) {
-    if (bottomLayer.mImage.mRequest) {
+    if (bottomLayer.mImage) {
       nsCOMPtr<imgIContainer> container;
-      bottomLayer.mImage.mRequest->GetImage(getter_AddRefs(container));
+      bottomLayer.mImage->GetImage(getter_AddRefs(container));
       if (container) {
         PRUint32 nframes;
         container->GetNumFrames(&nframes);
@@ -585,7 +585,7 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
   if (!hasBG)
     return PR_TRUE;
-  if (!bg->BottomLayer().mImage.mRequest &&
+  if (!bg->BottomLayer().mImage &&
       bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
       bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER)
