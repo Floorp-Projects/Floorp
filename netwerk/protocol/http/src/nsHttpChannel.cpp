@@ -135,6 +135,7 @@ nsHttpChannel::nsHttpChannel()
     , mChooseApplicationCache(PR_FALSE)
     , mLoadedFromApplicationCache(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
+    , mForceAllowThirdPartyCookie(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -4724,6 +4725,20 @@ NS_IMETHODIMP
 nsHttpChannel::SetDocumentURI(nsIURI *aDocumentURI)
 {
     mDocumentURI = aDocumentURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetForceAllowThirdPartyCookie(PRBool *aForceAllowThirdPartyCookie)
+{
+    *aForceAllowThirdPartyCookie = mForceAllowThirdPartyCookie;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetForceAllowThirdPartyCookie(PRBool aForceAllowThirdPartyCookie)
+{
+    mForceAllowThirdPartyCookie = aForceAllowThirdPartyCookie;
     return NS_OK;
 }
 
