@@ -49,10 +49,9 @@
 #include "nsIRelativeFilePref.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
-
-struct PrefCallbackData;
 
 class nsPrefBranch : public nsIPrefBranchInternal,
                      public nsISecurityPref,
@@ -82,7 +81,7 @@ protected:
 
 private:
   PRInt32               mPrefRootLength;
-  nsAutoTArray<PrefCallbackData*, 8> *mObservers;
+  nsAutoVoidArray       *mObservers;
   nsCString             mPrefRoot;
   nsTArray<nsCString>   mObserverDomains;
   PRBool                mIsDefault;
