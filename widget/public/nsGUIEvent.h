@@ -89,7 +89,7 @@ class nsHashKey;
 #define NS_FORM_EVENT                     21
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
-#define NS_POPUPBLOCKED_EVENT             25
+
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
 #define NS_UI_EVENT                       27
 #define NS_PAGETRANSITION_EVENT           29
@@ -1203,24 +1203,6 @@ public:
   }
 
   nsCOMPtr<nsIAtom> command;
-};
-
-/**
- * blocked popup window event
- */
-class nsPopupBlockedEvent : public nsEvent
-{
-public:
-  nsPopupBlockedEvent(PRBool isTrusted, PRUint32 msg)
-    : nsEvent(isTrusted, msg, NS_POPUPBLOCKED_EVENT),
-      mPopupWindowURI(nsnull)
-  {
-  }
-
-  nsWeakPtr mRequestingWindow;
-  nsIURI* mPopupWindowURI;      // owning reference
-  nsString mPopupWindowFeatures;
-  nsString mPopupWindowName;
 };
 
 /**
