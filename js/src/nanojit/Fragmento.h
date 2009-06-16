@@ -58,7 +58,10 @@ namespace nanojit
     struct Page: public PageHeader
     {
         union {
-            LIns lir[(NJ_PAGE_SIZE-sizeof(PageHeader))/sizeof(LIns)];
+            // Conceptually, the lir array holds mostly LIns values (plus some
+            // skip payloads and call arguments).  But we use int8_t as the
+            // element type here so the array size can be expressed in bytes.
+            int8_t lir[NJ_PAGE_SIZE-sizeof(PageHeader)];
             NIns code[(NJ_PAGE_SIZE-sizeof(PageHeader))/sizeof(NIns)];
         };
     };
