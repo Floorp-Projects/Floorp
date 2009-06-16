@@ -943,12 +943,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
-    case NS_POPUPBLOCKED_EVENT:
-    {
-      NS_WARNING("nsPopupBlockedEvent should never be an external event!");
-      newEvent = new nsPopupBlockedEvent(PR_FALSE, msg);
-      break;
-    }
     case NS_BEFORE_PAGE_UNLOAD_EVENT:
     {
       newEvent = new nsBeforePageUnloadEvent(PR_FALSE, msg);
