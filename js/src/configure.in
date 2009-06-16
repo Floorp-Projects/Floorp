@@ -4298,10 +4298,11 @@ MOZ_ARG_ENABLE_BOOL(tracevis,
     MOZ_TRACEVIS= )
 if test -n "$MOZ_TRACEVIS"; then
     AC_DEFINE(MOZ_TRACEVIS)
+    if test -z "$ENABLE_JIT"; then
+       AC_MSG_ERROR([--enable-tracevis is incompatible with --disable-jit])
+    fi
 fi
-if test -z "$ENABLE_JIT"; then
-    AC_MSG_ERROR([--enable-tracevis is incompatible with --disable-jit])
-fi
+
 
 dnl ========================================================
 dnl = Use Valgrind
