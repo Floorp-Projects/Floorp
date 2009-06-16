@@ -215,7 +215,7 @@ static PRLogModuleInfo* gDocumentLeakPRLog;
 static PRLogModuleInfo* gCspPRLog;
 #endif
 
-#define NAME_NOT_VALID ((nsBaseContentList*)1)
+#define NAME_NOT_VALID ((nsSimpleContentList*)1)
 
 nsIdentifierMapEntry::~nsIdentifierMapEntry()
 {
@@ -423,10 +423,10 @@ nsIdentifierMapEntry::SetImageElement(Element* aElement)
 }
 
 void
-nsIdentifierMapEntry::AddNameElement(Element* aElement)
+nsIdentifierMapEntry::AddNameElement(nsIDocument* aDocument, Element* aElement)
 {
   if (!mNameContentList) {
-    mNameContentList = new nsBaseContentList();
+    mNameContentList = new nsSimpleContentList(aDocument);
   }
 
   mNameContentList->AppendElement(aElement);
@@ -2559,7 +2559,7 @@ nsDocument::AddToNameTable(Element *aElement, nsIAtom* aName)
 
   // Null for out-of-memory
   if (entry) {
-    entry->AddNameElement(aElement);
+    entry->AddNameElement(this, aElement);
   }
 }
 
@@ -2846,7 +2846,7 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   
-  nsBaseContentList* elements = new nsBaseContentList();
+  nsSimpleContentList* elements = new nsSimpleContentList(this);
   NS_ADDREF(elements);
   *aReturn = elements;
 

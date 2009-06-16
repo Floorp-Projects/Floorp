@@ -167,7 +167,7 @@ public:
 
   void SetInvalidName();
   PRBool IsInvalidName();
-  void AddNameElement(Element* aElement);
+  void AddNameElement(nsIDocument* aDocument, Element* aElement);
   void RemoveNameElement(Element* aElement);
   PRBool IsEmpty();
   nsBaseContentList* GetNameContentList() {

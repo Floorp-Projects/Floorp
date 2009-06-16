@@ -565,7 +565,7 @@ public:
    * since this can happen due to content fixup when a form spans table rows or
    * table cells.
    */
-  static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
+  static PRBool BelongsInForm(nsIContent *aForm,
                               nsIContent *aContent);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,

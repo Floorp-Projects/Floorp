@@ -2522,7 +2522,7 @@ nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
 
 nsresult
 nsHTMLDocument::ResolveName(const nsAString& aName,
-                            nsIDOMHTMLFormElement *aForm,
+                            nsIContent *aForm,
                             nsISupports **aResult,
                             nsWrapperCache **aCache)
 {
