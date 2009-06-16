@@ -1,13 +1,3 @@
-== fallback-color-1.xhtml fallback-color-ref.xhtml
-== fallback-color-2.xhtml fallback-color-ref.xhtml
-== fallback-color-3.xhtml fallback-color-ref.xhtml
-== fallback-color-4.xhtml fallback-color-ref.xhtml
-== fallback-color-5.xhtml fallback-color-ref.xhtml
-== fallback-color-6.xhtml fallback-color-ref.xhtml
-== fallback-color-7.xhtml fallback-color-ref.xhtml
-== fallback-color-8.xhtml fallback-color-ref.xhtml
-== fallback-color-9.xhtml fallback-color-ref.xhtml
-!= fallback-color-ref.xhtml about:blank
 == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
 == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml

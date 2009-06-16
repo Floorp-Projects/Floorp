@@ -621,7 +621,7 @@ var gCSSProperties = {
 		        /* multiple backgrounds */
 		        "url(404.png), url(404.png)",
 		        "url(404.png), url(404.png) transparent",
-		        "url(404.png), url(404.png) transparent red",
+		        "url(404.png), url(404.png) red",
 		        "repeat-x, fixed, none",
 		        "0% top url(404.png), url(404.png) 0% top",
 		        "fixed repeat-y top left url(404.png), repeat-x green",
@@ -666,8 +666,8 @@ var gCSSProperties = {
 		domProp: "backgroundColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "transparent", "transparent transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
-		other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)", "transparent green", "green transparent", "blue fuchsia", "rgb(3,4,5) hsl(240, 50%, 50%)" ],
+		initial_values: [ "transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
+		other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "rgb(255.0,0.387,3489)" ]
 	},
 	"background-image": {

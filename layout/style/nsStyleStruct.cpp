@@ -1218,7 +1218,6 @@ nsStyleBackground::nsStyleBackground()
   , mPositionCount(1)
   , mImageCount(1)
   , mBackgroundColor(NS_RGBA(0, 0, 0, 0))
-  , mFallbackBackgroundColor(NS_RGBA(0, 0, 0, 0))
   , mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS)
 {
   Layer *onlyLayer = mLayers.AppendElement();
@@ -1235,7 +1234,6 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   , mImageCount(aSource.mImageCount)
   , mLayers(aSource.mLayers) // deep copy
   , mBackgroundColor(aSource.mBackgroundColor)
-  , mFallbackBackgroundColor(aSource.mFallbackBackgroundColor)
   , mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy)
 {
   // If the deep copy of mLayers failed, truncate the counts.
@@ -1258,7 +1256,6 @@ nsStyleBackground::~nsStyleBackground()
 nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
 {
   if (mBackgroundColor != aOther.mBackgroundColor ||
-      mFallbackBackgroundColor != aOther.mFallbackBackgroundColor ||
       mBackgroundInlinePolicy != aOther.mBackgroundInlinePolicy ||
       mImageCount != aOther.mImageCount)
     return NS_STYLE_HINT_VISUAL;
@@ -1284,8 +1281,7 @@ PRBool nsStyleBackground::HasFixedBackground() const
 {
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, this) {
     const Layer &layer = mLayers[i];
-    if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-        layer.mImage.mRequest) {
+    if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED && layer.mImage) {
       return PR_TRUE;
     }
   }
@@ -1294,7 +1290,7 @@ PRBool nsStyleBackground::HasFixedBackground() const
 
 PRBool nsStyleBackground::IsTransparent() const
 {
-  return !BottomLayer().mImage.mRequest && mImageCount == 1 &&
+  return !BottomLayer().mImage && mImageCount == 1 &&
          NS_GET_A(mBackgroundColor) == 0;
 }
 
@@ -1305,28 +1301,6 @@ nsStyleBackground::Position::SetInitialValues()
   mYPosition.mFloat = 0.0f;
   mXIsPercent = PR_TRUE;
   mYIsPercent = PR_TRUE;
-}
-
-// Initialize to initial values
-nsStyleBackground::Image::Image()
-{
-  SetInitialValues();
-}
-
-nsStyleBackground::Image::~Image()
-{
-}
-
-void nsStyleBackground::Image::SetInitialValues()
-{
-  mRequest = nsnull;
-  mSpecified = PR_FALSE;
-}
-
-PRBool nsStyleBackground::Image::operator==(const Image& aOther) const
-{
-  return mSpecified == aOther.mSpecified &&
-         EqualImages(mRequest, aOther.mRequest);
 }
 
 nsStyleBackground::Layer::Layer()
@@ -1345,7 +1319,7 @@ nsStyleBackground::Layer::SetInitialValues()
   mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
   mRepeat = NS_STYLE_BG_REPEAT_XY;
   mPosition.SetInitialValues();
-  mImage.SetInitialValues();
+  mImage = nsnull;
 }
 
 PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
@@ -1355,7 +1329,7 @@ PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
          mOrigin == aOther.mOrigin &&
          mRepeat == aOther.mRepeat &&
          mPosition == aOther.mPosition &&
-         mImage == aOther.mImage;
+         EqualImages(mImage, aOther.mImage);
 }
 
 // --------------------

@@ -194,34 +194,6 @@ struct nsStyleBackground {
     }
   };
 
-  /**
-   * We represent images as as struct because we need to distinguish the
-   * case where the imgIRequest is null because the winning
-   * background-image declaration specified no image from the case where
-   * the imgIRequest is null because the image that was specified was
-   * blocked or missing (e.g., missing file).
-   */
-  struct Image;
-  friend struct Image;
-  struct Image {
-    nsCOMPtr<imgIRequest> mRequest;
-    PRBool mSpecified; // if false, mRequest is guaranteed to be null
-
-    // These are not inline so that we can avoid #include "imgIRequest.h"
-
-    // Initialize to initial values
-    Image();
-    ~Image();
-    void SetInitialValues();
-
-    // An equality operator that compares the images using URL-equality
-    // rather than pointer-equality.
-    PRBool operator==(const Image& aOther) const;
-    PRBool operator!=(const Image& aOther) const {
-      return !(*this == aOther);
-    }
-  };
-
   struct Layer;
   friend struct Layer;
   struct Layer {
@@ -230,7 +202,7 @@ struct nsStyleBackground {
     PRUint8 mOrigin;                    // [reset] See nsStyleConsts.h
     PRUint8 mRepeat;                    // [reset] See nsStyleConsts.h
     Position mPosition;                 // [reset]
-    Image mImage;                       // [reset]
+    nsCOMPtr<imgIRequest> mImage;       // [reset]
 
     // Initializes only mImage
     Layer();
@@ -272,7 +244,6 @@ struct nsStyleBackground {
     for (PRUint32 var_ = (stylebg_)->mImageCount; var_-- != 0; )
 
   nscolor mBackgroundColor;       // [reset]
-  nscolor mFallbackBackgroundColor; // [reset]
 
   // FIXME: This (now background-break in css3-background) should
   // probably move into a different struct so that everything in

@@ -1217,42 +1217,17 @@ nsComputedDOMStyle::GetBackgroundClip(nsIDOMCSSValue** aValue)
 nsresult
 nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
 {
-  const nsStyleBackground* bg = GetStyleBackground();
-  nsresult rv;
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  if (bg->mBackgroundColor == bg->mFallbackBackgroundColor) {
-    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
-    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-    rv = SetToRGBAColor(val, bg->mBackgroundColor);
-    if (NS_FAILED(rv)) {
-      delete val;
-      return rv;
-    }
-    rv = CallQueryInterface(val, aValue);
-  } else {
-    nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
-    NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
-
-    for (PRUint32 i = 0; i < 2; ++i) {
-      nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
-      if (!val || !valueList->AppendCSSValue(val)) {
-        delete val;
-        delete valueList;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      rv = SetToRGBAColor(val, (i == 0) ? bg->mBackgroundColor
-                                        : bg->mFallbackBackgroundColor);
-      if (NS_FAILED(rv)) {
-        delete valueList;
-        return rv;
-      }
-    }
-    rv = CallQueryInterface(valueList, aValue);
+  const nsStyleBackground* color = GetStyleBackground();
+  nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
   }
 
-  return rv;
+  return CallQueryInterface(val, aValue);
 }
 
 nsresult
@@ -1271,7 +1246,7 @@ nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    imgIRequest *image = bg->mLayers[i].mImage.mRequest;
+    imgIRequest *image = bg->mLayers[i].mImage;
     if (!image) {
       val->SetIdent(eCSSKeyword_none);
     } else {
