@@ -228,6 +228,10 @@ pref("browser.urlbar.maxRichResults", 12);
 // be waiting on the timeout too often without many results.
 pref("browser.urlbar.search.chunkSize", 1000);
 pref("browser.urlbar.search.timeout", 100);
+// The amount of time (ms) to wait after the user has stopped typing
+// before starting to perform autocomplete.  50 is the default set in
+// autocomplete.xml.
+pref("browser.urlbar.delay", 50);
 
 // The special characters below can be typed into the urlbar to either restrict
 // the search to visited history, bookmarked, tagged pages; or force a match on
