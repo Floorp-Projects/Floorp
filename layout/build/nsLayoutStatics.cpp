@@ -126,6 +126,8 @@ PRBool NS_SVGEnabled();
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
 
+extern void NS_ShutdownChainItemPool();
+
 static nsrefcnt sLayoutStaticRefcnt;
 
 nsresult
@@ -361,6 +363,8 @@ nsLayoutStatics::Shutdown()
 #endif
 
   nsXMLHttpRequest::ShutdownACCache();
+
+  NS_ShutdownChainItemPool();
 }
 
 void
