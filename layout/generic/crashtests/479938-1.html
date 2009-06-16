@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("x").style.padding = "67108863pc";
+  setTimeout(boom2, 0);
+}
+
+function boom2()
+{
+  document.body.removeChild(document.getElementById("colset"));
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();"> <div style="-moz-column-count: 2;" id="colset"><div style="height: 1px;"><div id="x"><div style="width: 1px;">A B C D</div></div></div></div> </body>
+
+</html>
