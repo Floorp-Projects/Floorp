@@ -295,9 +295,6 @@ ChromeInputModule.prototype = {
     dragData.setDragStart(sX, sY);
 
     [sX, sY] = dragData.lockAxis(sX, sY);
-
-    // grab all events until we stop the drag
-    ws.dragStart(sX, sY);
   },
 
   _dragStop: function _dragStop(sX, sY) {
