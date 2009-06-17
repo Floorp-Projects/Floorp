@@ -2503,23 +2503,23 @@ NSEvent* gLastDragEvent = nil;
   // we have to loop up through superviews in case the view that received the
   // mouseDown is in fact a plugin view with no scrollbars
   while (currView) {
-    // This is a hack I learned in nsView::GetViewFor(nsIWidget* aWidget)
-    // that I'm not sure is kosher. If anyone knows a better way to get
-    // the view for a widget, I'd love to hear it. --Nathan
-
-    void* clientData;
-    [currView widget]->GetClientData(clientData);
-
-    nsISupports* data = (nsISupports*)clientData;
-    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-    if (req) {
-      req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
-      if (scrollableView)
-        break;
+    nsIWidget* widget = [currView widget];
+    if (widget) {
+      void* clientData;
+      if (NS_SUCCEEDED(widget->GetClientData(clientData))) {
+        nsISupports* data = (nsISupports*)clientData;
+        nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
+        if (req) {
+          req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+          if (scrollableView)
+            break;
+        }
+      }
     }
 
-    if ([[currView superview] isMemberOfClass:[ChildView class]])
-        currView = (ChildView*)[currView superview];
+    NSView* superview = [currView superview];
+    if (superview && [superview isMemberOfClass:[ChildView class]])
+        currView = (ChildView*)superview;
     else
         currView = nil;
   }
