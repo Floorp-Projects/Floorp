@@ -42,15 +42,11 @@ win32-canvas-glyph-position.patch: bug 475092; horizontal positioning errors whe
 
 win32-cleartype-clipping.patch: bug 445087; some glyphs are clipped, mainly on right-hand edge, when ClearType is enabled and drawing to RGBA canvas
 
-on-edge.patch: reverts the in-fill semantic change.
-
 wrap-source_image.patch: make sure we don't free the source image until we're done with it.
 
 zero-sized.patch: deal with zero sized surface in ways less likely to crash.
 
 text-path-filling-threshold.patch: use path filling instead of platform glyph rasterization at a smaller size threshold of 256 device pixels, if the backend supports native filling (which we assume will be fast).
-
-zombie-face.patch: bug 486974; leak and possible crash with @font-face{src:url()}.  Upstream commit: 0238fe2cafea2e1ed19bb222117bd73ee6898d4d
 
 ==== pixman patches ====
 

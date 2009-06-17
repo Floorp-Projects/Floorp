@@ -172,6 +172,7 @@ _test_fallback_surface_release_dest_image (void			   *abstract_surface,
 static cairo_status_t
 _test_fallback_surface_clone_similar (void		  *abstract_surface,
 				      cairo_surface_t     *src,
+				      cairo_content_t      content,
 				      int                  src_x,
 				      int                  src_y,
 				      int                  width,
