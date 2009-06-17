@@ -151,7 +151,7 @@ var ExtensionsView = {
     if (aButtonLabel) {
       buttons = [ {
         label: aButtonLabel,
-        accesskey: "",
+        accessKey: "",
         data: aNotifyData,
         callback: function(aNotification, aButton) {
           self._messageActions(aButton.data);
