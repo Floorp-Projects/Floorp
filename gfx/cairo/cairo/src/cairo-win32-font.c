@@ -979,6 +979,19 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 			      &metrics, 0, NULL, &matrix) == GDI_ERROR) {
 	  status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_init_glyph_metrics:GetGlyphOutlineW");
 	  memset (&metrics, 0, sizeof (GLYPHMETRICS));
+	} else {
+	    if (metrics.gmBlackBoxX > 0 && scaled_font->base.options.antialias != CAIRO_ANTIALIAS_NONE) {
+		/* The bounding box reported by Windows supposedly contains the glyph's "black" area;
+		 * however, antialiasing (especially with ClearType) means that the actual image that
+		 * needs to be rendered may "bleed" into the adjacent pixels, mainly on the right side.
+		 * To avoid clipping the glyphs when drawn by _cairo_surface_fallback_show_glyphs,
+		 * for example, or other code that uses glyph extents to determine the area to update,
+		 * we add a pixel of "slop" to left side of the nominal "black" area returned by GDI,
+		 * and two pixels to the right (as tests show some glyphs bleed into this column).
+		 */
+		metrics.gmptGlyphOrigin.x -= 1;
+		metrics.gmBlackBoxX += 3;
+	    }
 	}
 	cairo_win32_scaled_font_done_font (&scaled_font->base);
 	if (status)
@@ -1543,6 +1556,7 @@ _cairo_win32_scaled_font_index_to_ucs4 (void		*abstract_font,
 	goto exit1;
     }
 
+    *ucs4 = (uint32_t) -1;
     for (i = 0; i < glyph_set->cRanges; i++) {
 	num_glyphs = glyph_set->ranges[i].cGlyphs;
 

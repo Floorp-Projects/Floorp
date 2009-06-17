@@ -35,6 +35,7 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
+#define _BSD_SOURCE /* for hypot() */
 #include "cairoint.h"
 #include "cairo-path-fixed-private.h"
 
