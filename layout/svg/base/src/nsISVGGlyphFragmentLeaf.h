@@ -56,20 +56,9 @@ public:
   NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)=0;
   NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval)=0;
 
-  enum { BASELINE_ALPHABETIC = 0U };
-  enum { BASELINE_HANGING = 1U };
-  enum { BASELINE_IDEOGRAPHC = 2U };
-  enum { BASELINE_MATHEMATICAL = 3U };
-  enum { BASELINE_CENTRAL = 4U };
-  enum { BASELINE_MIDDLE = 5U };
-  enum { BASELINE_TEXT_BEFORE_EDGE = 6U };
-  enum { BASELINE_TEXT_AFTER_EDGE = 7U };
-
-  NS_IMETHOD_(float) GetBaselineOffset(PRUint16 baselineIdentifier,
-                                       PRBool aForceGlobalTransform)=0;
   NS_IMETHOD_(float) GetAdvance(PRBool aForceGlobalTransform)=0;
 
-  NS_IMETHOD_(void) SetGlyphPosition(float x, float y)=0;
+  NS_IMETHOD_(void) SetGlyphPosition(float x, float y, PRBool aForceGlobalTransform)=0;
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent()=0;
   NS_IMETHOD_(PRBool) IsStartOfChunk()=0; // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y)=0;

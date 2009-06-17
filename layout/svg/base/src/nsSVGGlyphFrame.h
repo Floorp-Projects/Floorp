@@ -147,15 +147,9 @@ public:
    * @param aForceGlobalTransform controls whether to use the
    * global transform even when NS_STATE_NONDISPLAY_CHILD
    */
-  NS_IMETHOD_(float) GetBaselineOffset(PRUint16 baselineIdentifier,
-                                       PRBool aForceGlobalTransform);
-  /**
-   * @param aForceGlobalTransform controls whether to use the
-   * global transform even when NS_STATE_NONDISPLAY_CHILD
-   */
   NS_IMETHOD_(float) GetAdvance(PRBool aForceGlobalTransform);
 
-  NS_IMETHOD_(void) SetGlyphPosition(float x, float y);
+  NS_IMETHOD_(void) SetGlyphPosition(float x, float y, PRBool aForceGlobalTransform);
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent();
   NS_IMETHOD_(PRBool) IsStartOfChunk(); // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y);
@@ -216,6 +210,8 @@ protected:
   void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
+  float GetSubStringAdvance(PRUint32 charnum, PRUint32 fragmentChars);
+  gfxFloat GetBaselineOffset(PRBool aForceGlobalTransform);
   const nsTextFragment* GetFragment() const
   {
     return !(GetStateBits() & NS_STATE_SVG_PRINTING) ?
