@@ -69,6 +69,17 @@ Cu.import("resource://weave/type_records/bookmark.js");
 
 Function.prototype.async = Async.sugar;
 
+// Lazily initialize the special top level folders
+let kSpecialIds = {};
+[["menu", "bookmarksMenuFolder"],
+ ["places", "placesRoot"],
+ ["tags", "tagsFolder"],
+ ["toolbar", "toolbarFolder"],
+ ["unfiled", "unfiledBookmarksFolder"],
+].forEach(function([weaveId, placeName]) {
+  Utils.lazy2(kSpecialIds, weaveId, function() Svc.Bookmark[placeName]);
+});
+
 function BookmarksEngine() {
   this._init();
 }
@@ -84,19 +95,10 @@ BookmarksEngine.prototype = {
 
 function BookmarksStore() {
   this._init();
-
-  // Initialize the special top level folders
-  [["menu", "bookmarksMenuFolder"],
-   ["places", "placesRoot"],
-   ["tags", "tagsFolder"],
-   ["toolbar", "toolbarFolder"],
-   ["unfiled", "unfiledBookmarksFolder"],
-  ].forEach(function(top) this.specialIds[top[0]] = this._bms[top[1]], this);
 }
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
   _logName: "BStore",
-  specialIds: {},
 
   __bms: null,
   get _bms() {
@@ -153,14 +155,14 @@ BookmarksStore.prototype = {
   },
 
   _getItemIdForGUID: function BStore__getItemIdForGUID(GUID) {
-    if (GUID in this.specialIds)
-      return this.specialIds[GUID];
+    if (GUID in kSpecialIds)
+      return kSpecialIds[GUID];
 
     return this._bms.getItemIdForGUID(GUID);
   },
 
   _getWeaveIdForItem: function BStore__getWeaveIdForItem(placeId) {
-    for (let [weaveId, id] in Iterator(this.specialIds))
+    for (let [weaveId, id] in Iterator(kSpecialIds))
       if (placeId == id)
         return weaveId;
 
@@ -168,7 +170,7 @@ BookmarksStore.prototype = {
   },
 
   _isToplevel: function BStore__isToplevel(placeId) {
-    for (let [weaveId, id] in Iterator(this.specialIds))
+    for (let [weaveId, id] in Iterator(kSpecialIds))
       if (placeId == id)
         return true;
 
@@ -296,7 +298,7 @@ BookmarksStore.prototype = {
   },
 
   remove: function BStore_remove(record) {
-    if (record.id in this.specialIds) {
+    if (record.id in kSpecialIds) {
       this._log.warn("Attempted to remove root node (" + record.id +
                      ").  Skipping record removal.");
       return;
@@ -332,7 +334,7 @@ BookmarksStore.prototype = {
   update: function BStore_update(record) {
     let itemId = this._getItemIdForGUID(record.id);
 
-    if (record.id in this.specialIds) {
+    if (record.id in kSpecialIds) {
       this._log.debug("Skipping update for root node.");
       return;
     }
@@ -618,7 +620,7 @@ BookmarksStore.prototype = {
 
   getAllIDs: function BStore_getAllIDs() {
     let items = {};
-    for (let [weaveId, id] in Iterator(this.specialIds))
+    for (let [weaveId, id] in Iterator(kSpecialIds))
       if (weaveId != "places" && weaveId != "tags")
         this._getChildren(weaveId, true, items);
     return items;
@@ -631,7 +633,7 @@ BookmarksStore.prototype = {
   },
 
   wipe: function BStore_wipe() {
-    for (let [weaveId, id] in Iterator(this.specialIds))
+    for (let [weaveId, id] in Iterator(kSpecialIds))
       if (weaveId != "places")
         this._bms.removeFolderChildren(id);
   }
@@ -668,8 +670,7 @@ BookmarksTracker.prototype = {
     this.__proto__.__proto__._init.call(this);
 
     // Ignore changes to the special roots
-    let store = new BookmarksStore();
-    for (let [weaveId, id] in Iterator(store.specialIds))
+    for (let [weaveId, id] in Iterator(kSpecialIds))
       this.ignoreID(this._bms.getItemGUID(id));
 
     this._bms.addObserver(this, false);
