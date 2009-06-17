@@ -266,7 +266,9 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
       GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
     nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
-    nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
+    gfxRect clipRect =
+      nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
+    nsSVGUtils::SetClipRect(gfx, ctm, clipRect);
   }
 
   gfx->Multiply(matrix);

@@ -431,6 +431,17 @@ public:
               float aX, float aY);
 
 
+  /**
+   * Get the clip rect for the given frame, taking into account the CSS 'clip'
+   * property. See:
+   * http://www.w3.org/TR/SVG11/masking.html#OverflowAndClipProperties
+   * The arguments for aX, aY, aWidth and aHeight should be the dimensions of
+   * the viewport established by aFrame.
+   */
+  static gfxRect
+  GetClipRectForFrame(nsIFrame *aFrame,
+                      float aX, float aY, float aWidth, float aHeight);
+
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
                                      nsIDOMSVGMatrix *aCTM, float aOpacity);
@@ -440,8 +451,8 @@ public:
                                      nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity);
 
   static void SetClipRect(gfxContext *aContext,
-                          nsIDOMSVGMatrix *aCTM, float aX, float aY,
-                          float aWidth, float aHeight);
+                          nsIDOMSVGMatrix *aCTM,
+                          const gfxRect &aRect);
 
   /**
    * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and

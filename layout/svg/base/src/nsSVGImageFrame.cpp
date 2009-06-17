@@ -266,7 +266,9 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
       nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
 
       if (ctm) {
-        nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
+        gfxRect clipRect =
+          nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
+        nsSVGUtils::SetClipRect(gfx, ctm, clipRect);
       }
     }
 
