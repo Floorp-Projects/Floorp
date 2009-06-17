@@ -369,7 +369,8 @@ assemble(istream &in,
          LirBuffer *lirbuf,
          LirWriter *lir,
          Fragment *frag,
-         vector<CallInfo*> &callinfos)
+         vector<CallInfo*> &callinfos,
+         bool *isFloat)
 {
     lir->ins0(LIR_start);
 
@@ -387,6 +388,7 @@ assemble(istream &in,
 
     vector<string> toks;
     size_t line = 0;
+    *isFloat = false;
 
     while(read_and_tokenize_line(in, toks, line)) {
 
@@ -413,6 +415,7 @@ assemble(istream &in,
                 i->second->setTarget(ins);
             }
             fwd_jumps.erase(lab);
+            lab.clear();
         }
         extract_any_label(op, toks, lab, labels, line, '=');
 
@@ -477,7 +480,7 @@ assemble(istream &in,
             need(toks, 1, line);
             {
                 int32_t count = imm(toks[0]);
-                if (uint32_t(count) > MAX_SKIP_BYTES)
+                if (uint32_t(count) > NJ_MAX_SKIP_PAYLOAD_SZB)
                     bad("oversize skip", line);
                 ins = do_skip(lir, count);
             }
@@ -492,6 +495,9 @@ assemble(istream &in,
                                 labels, callinfos, line);
             break;
 
+        case LIR_fret:
+            *isFloat = true;
+            /* FALL THROUGH */
         default:
             ins = assemble_general(opcount, opcode, toks,
                                    lir, labels, line);
@@ -649,7 +655,8 @@ main(int argc, char **argv)
         cerr << "unable to open file " << args[0] << endl;
         exit(1);
     }
-    assemble(in, lirbuf, w, frag, callinfos);
+    bool isFloat;
+    assemble(in, lirbuf, w, frag, callinfos, &isFloat);
 
     ::compile(fragmento->assm(), frag);
 
@@ -675,10 +682,15 @@ main(int argc, char **argv)
     }
 
     if (execute) {
-        typedef JS_FASTCALL int32_t (*RetInt)();
-        RetInt f1;
-        f1 = reinterpret_cast<RetInt>(frag->code());
-        cout << "Output is: " << f1() << endl;
+        if (isFloat) {
+            typedef JS_FASTCALL double (*RetDouble)();
+            RetDouble f = reinterpret_cast<RetDouble>(frag->code());
+            cout << "Output is: " << f() << endl;
+        } else {
+            typedef JS_FASTCALL int32_t (*RetInt)();
+            RetInt f = reinterpret_cast<RetInt>(frag->code());
+            cout << "Output is: " << f() << endl;
+        }
     } else {
         dump_srecords(cout, frag);
     }
