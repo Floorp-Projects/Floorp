@@ -259,6 +259,14 @@ user_pref("security.warn_viewing_mixed", false);
 
 user_pref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
+
+// Make url-classifier updates so rare that they won't affect tests
+user_pref("urlclassifier.updateinterval", 172800);
+// Point the url-classifier to the local testing server for fast failures
+user_pref("browser.safebrowsing.provider.0.gethashURL", "http://localhost:8888/safebrowsing-dummy/gethash");
+user_pref("browser.safebrowsing.provider.0.keyURL", "http://localhost:8888/safebrowsing-dummy/newkey");
+user_pref("browser.safebrowsing.provider.0.lookupURL", "http://localhost:8888/safebrowsing-dummy/lookup");
+user_pref("browser.safebrowsing.provider.0.updateURL", "http://localhost:8888/safebrowsing-dummy/update");
 """
   
   prefs.append(part)
