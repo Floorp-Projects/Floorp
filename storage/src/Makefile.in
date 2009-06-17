@@ -83,8 +83,6 @@ CPPSRCS = \
   mozStorageAsyncStatementExecution.cpp \
   mozStorageStatementJSHelper.cpp \
   mozStoragePrivateHelpers.cpp \
-  mozStorageBindingParamsArray.cpp \
-  mozStorageBindingParams.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
