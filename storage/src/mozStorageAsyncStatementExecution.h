@@ -44,6 +44,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Mutex.h"
 
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageStatementCallback.h"
@@ -107,21 +108,14 @@ public:
 
 private:
   AsyncExecuteStatements(sqlite3_stmt_array &aStatements,
-                         mozIStorageConnection *aConnection,
+                         Connection *aConnection,
                          mozIStorageStatementCallback *aCallback);
-
-  /**
-   * Initializes the object so it can be run on the background thread.
-   */
-  nsresult initialize();
-
-  ~AsyncExecuteStatements();
 
   /**
    * Executes a given statement until completion, an error occurs, or we are
    * canceled.  If aLastStatement is true, we should set mState accordingly.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    *
    * @param aStatement
    *        The statement to execute and then process.
@@ -134,10 +128,21 @@ private:
                                   bool aLastStatement);
 
   /**
+   * Executes one step of a statement, properly handling any error conditions.
+   *
+   * @pre mMutex is held
+   *
+   * @param aStatement
+   *        The statement to execute a step on.
+   * @returns true if results were obtained, false otherwise.
+   */
+  bool executeStatement(sqlite3_stmt *aStatement);
+
+  /**
    * Builds a result set up with a row from a given statement.  If we meet the
    * right criteria, go ahead and notify about this results too.
    *
-   * @pre mLock is held
+   * @pre mMutex is held
    *
    * @param aStatement
    *        The statement to get the row data from.
@@ -147,14 +152,14 @@ private:
   /**
    * Notifies callback about completion, and does any necessary cleanup.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    */
   nsresult notifyComplete();
 
   /**
    * Notifies callback about an error.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    *
    * @param aErrorCode
    *        The error code defined in mozIStorageError for the error.
@@ -166,12 +171,12 @@ private:
   /**
    * Notifies the callback about a result set.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    */
   nsresult notifyResults();
 
   sqlite3_stmt_array mStatements;
-  mozIStorageConnection *mConnection;
+  nsRefPtr<Connection> mConnection;
   mozStorageTransaction *mTransactionManager;
   mozIStorageStatementCallback *mCallback;
   nsCOMPtr<nsIThread> mCallingThread;
@@ -206,7 +211,7 @@ private:
    *     held.  It is always read from within the lock on the background thread,
    *     but not on the calling thread (see shouldNotify for why).
    */
-  PRLock *mLock;
+  Mutex &mMutex;
 };
 
 } // namespace storage
