@@ -1,6 +1,7 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=475006
+https://bugzilla.mozilla.org/show_bug.cgi?id=391829
 -->
 <head>
   <title>Group attributes tests</title>
@@ -51,6 +52,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
       testAttrs("statusChild", {"container-live" : "polite"}, true);
       testAttrs("timerChild", {"container-live" : "off"}, true);
 
+      // container-live-role object attribute
+      testAttrs("log", {"container-live-role" : "log"}, true);
+      testAttrs("marquee", {"container-live-role" : "marquee"}, true);
+      testAttrs("status", {"container-live-role" : "status"}, true);
+      testAttrs("timer", {"container-live-role" : "timer"}, true);
+      testAttrs("logChild", {"container-live-role" : "log"}, true);
+      testAttrs("marqueeChild", {"container-live-role" : "marquee"}, true);
+      testAttrs("statusChild", {"container-live-role" : "status"}, true);
+      testAttrs("timerChild", {"container-live-role" : "timer"}, true);
+
       // html
       testAttrs("radio", {"checkable" : "true"}, true); 
       testAttrs("checkbox", {"checkable" : "true"}, true); 
@@ -68,6 +79,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
      title="Extend nsARIAMap to capture ARIA attribute characteristics">
     Mozilla Bug 475006
   </a>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=391829"
+      title="Add support for container-live-role to object attributes">
+     Mozilla Bug 391829
+   </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
