@@ -52,6 +52,7 @@
         this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
+        this.timeout = this._prefs.getIntPref("delay");
 
         this._urlTooltip = document.getElementById("urlTooltip");
 
@@ -361,6 +362,9 @@
                 break;
               case "autoFill":
                 this.completeDefaultIndex = this._prefs.getBoolPref(aData);
+                break;
+              case "delay":
+                this.timeout = this._prefs.getIntPref(aData);
                 break;
             }
           }
