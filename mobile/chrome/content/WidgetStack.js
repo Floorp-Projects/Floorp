@@ -416,6 +416,9 @@ WidgetStack.prototype = {
   //
   // if ignoreBarriers is true, then barriers are ignored for the pan.
   panBy: function panBy(dx, dy, ignoreBarriers) {
+    dx = Math.round(dx);
+    dy = Math.round(dy);
+
     if (dx == 0 && dy ==0)
       return false;
 
