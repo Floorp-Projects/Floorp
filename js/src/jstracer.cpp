@@ -1216,11 +1216,10 @@ public:
 #define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code)                   \
     JS_BEGIN_MACRO                                                            \
         DEF_VPNAME;                                                           \
-        unsigned n;                                                           \
         JSStackFrame* currentFrame = cx->fp;                                  \
         JSStackFrame* entryFrame;                                             \
         JSStackFrame* fp = currentFrame;                                      \
-        for (n = 0; n < callDepth; ++n) { fp = fp->down; }                    \
+        for (unsigned n = 0; n != callDepth; ++n) { fp = fp->down; }          \
         entryFrame = fp;                                                      \
         unsigned frames = callDepth+1;                                        \
         JSStackFrame** fstack =                                               \
