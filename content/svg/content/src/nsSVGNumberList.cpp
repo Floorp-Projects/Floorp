@@ -132,8 +132,7 @@ nsSVGNumberList::SetValueString(const nsAString& aValue)
 
   nsresult rv = NS_OK;
 
-  char* str;
-  str = ToNewCString(aValue);
+  char* str = ToNewCString(aValue);
 
   char* rest = str;
   char* token;
@@ -141,10 +140,10 @@ nsSVGNumberList::SetValueString(const nsAString& aValue)
 
   while ((token = nsCRT::strtok(rest, delimiters, &rest))) {
     char *left;
-    double value = PR_strtod(token, &left);
-    if (token!=left) {
+    float val = float(PR_strtod(token, &left));
+    if (token!=left && NS_FloatIsFinite(val)) {
       nsCOMPtr<nsIDOMSVGNumber> number;
-      NS_NewSVGNumber(getter_AddRefs(number), float(value));
+      NS_NewSVGNumber(getter_AddRefs(number), val);
       if (!number) {
         rv = NS_ERROR_FAILURE;
         break;

@@ -175,19 +175,19 @@ nsSVGPointList::SetValueString(const nsAString& aValue)
 
     char *end;
     
-    double x = PR_strtod(token1, &end);
-    if (*end != '\0') {
+    float x = float(PR_strtod(token1, &end));
+    if (*end != '\0' || !NS_FloatIsFinite(x)) {
       rv = NS_ERROR_FAILURE;
       break; // parse error
     }
-    double y = PR_strtod(token2, &end);
-    if (*end != '\0') {
+    float y = float(PR_strtod(token2, &end));
+    if (*end != '\0' || !NS_FloatIsFinite(y)) {
       rv = NS_ERROR_FAILURE;
       break; // parse error
     }
     
     nsCOMPtr<nsIDOMSVGPoint> point;
-    NS_NewSVGPoint(getter_AddRefs(point), (float)x, (float)y);
+    NS_NewSVGPoint(getter_AddRefs(point), x, y);
     if (!point) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
@@ -198,8 +198,7 @@ nsSVGPointList::SetValueString(const nsAString& aValue)
   if (token1 || NS_FAILED(rv)) {
     // there was a parse error or we ran out of memory
     rv = NS_ERROR_FAILURE;
-  }
-  else {
+  } else {
     WillModify();
     ReleasePoints();
     PRInt32 count = points.Count();
