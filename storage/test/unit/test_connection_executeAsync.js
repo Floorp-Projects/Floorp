@@ -44,9 +44,11 @@ const BLOB = [1, 2];
 
 function test_create_and_add()
 {
+  dump("test_create_and_add()\n");
+
   getOpenedDatabase().executeSimpleSQL(
     "CREATE TABLE test (" +
-      "id INTEGER, " +
+      "id INTEGER PRIMARY KEY, " +
       "string TEXT, " +
       "number REAL, " +
       "nuller NULL, " +
@@ -71,6 +73,7 @@ function test_create_and_add()
   stmts[1].bindNullParameter(2);
   stmts[1].bindBlobParameter(3, BLOB, BLOB.length);
 
+  do_test_pending();
   getOpenedDatabase().executeAsync(stmts, stmts.length, {
     handleResult: function(aResultSet)
     {
@@ -120,8 +123,7 @@ function test_create_and_add()
         stmt.finalize();
       }
 
-      // Run the next test.
-      run_next_test();
+      do_test_finished();
     }
   });
   stmts[0].finalize();
@@ -130,6 +132,8 @@ function test_create_and_add()
 
 function test_transaction_created()
 {
+  dump("test_transaction_created()\n");
+
   let stmts = [];
   stmts[0] = getOpenedDatabase().createStatement(
     "BEGIN"
@@ -138,6 +142,7 @@ function test_transaction_created()
     "SELECT * FROM test"
   );
 
+  do_test_pending()
   getOpenedDatabase().executeAsync(stmts, stmts.length, {
     handleResult: function(aResultSet)
     {
@@ -152,116 +157,24 @@ function test_transaction_created()
     {
       dump("handleCompletion("+aReason+")\n");
       do_check_eq(Ci.mozIStorageStatementCallback.REASON_ERROR, aReason);
-
-      // Run the next test.
-      run_next_test();
+      do_test_finished();
     }
   });
   stmts[0].finalize();
   stmts[1].finalize();
 }
 
-function test_multiple_bindings_on_statements()
-{
-  // This tests to make sure that we pass all the statements multiply bound
-  // parameters when we call executeAsync.
-  const AMOUNT_TO_ADD = 5;
-  const ITERATIONS = 5;
-
-  let stmts = [];
-  // We run the same statement twice, and should insert 2 * AMOUNT_TO_ADD.
-  for (let i = 0; i < ITERATIONS; i++) {
-    stmts[i] = getOpenedDatabase().createStatement(
-      "INSERT INTO test (id, string, number, nuller, blober) " +
-      "VALUES (:int, :text, :real, :null, :blob)"
-    );
-    let params = stmts[i].newBindingParamsArray()
-    for (let j = 0; j < AMOUNT_TO_ADD; j++) {
-      let bp = params.newBindingParams();
-      bp.bindByName("int", INTEGER);
-      bp.bindByName("text", TEXT);
-      bp.bindByName("real", REAL);
-      bp.bindByName("null", null);
-      bp.bindBlobByName("blob", BLOB, BLOB.length);
-      params.addParams(bp);
-    }
-    stmts[i].bindParameters(params);
-  }
-
-  // Get our current number of rows in the table.
-  let currentRows = 0;
-  let countStmt = getOpenedDatabase().createStatement(
-    "SELECT COUNT(1) AS count FROM test"
-  );
-  try {
-    do_check_true(countStmt.executeStep());
-    currentRows = countStmt.row.count;
-  }
-  finally {
-    countStmt.reset();
-  }
-
-  // Execute asynchronously.
-  getOpenedDatabase().executeAsync(stmts, stmts.length, {
-    handleResult: function(aResultSet)
-    {
-      do_throw("Unexpected call to handleResult!");
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("Unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_multiple_bindings_on_statements");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-
-      // Check to make sure we added all of our rows.
-      try {
-        do_check_true(countStmt.executeStep());
-        do_check_eq(currentRows + (ITERATIONS * AMOUNT_TO_ADD),
-                    countStmt.row.count);
-      }
-      finally {
-        countStmt.finalize();
-      }
-
-      // Run the next test.
-      run_next_test();
-    }
-  });
-  stmts.forEach(function(stmt) stmt.finalize());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// Test Runner
 
 let tests =
 [
   test_create_and_add,
   test_transaction_created,
-  test_multiple_bindings_on_statements,
 ];
-let index = 0;
-
-function run_next_test()
-{
-  if (index < tests.length) {
-    do_test_pending();
-    print("Running the next test: " + tests[index].name);
-    tests[index++]();
-  }
-
-  do_test_finished();
-}
 
 function run_test()
 {
   cleanup();
 
-  do_test_pending();
-  run_next_test();
+  for (let i = 0; i < tests.length; i++)
+    tests[i]();
 }
