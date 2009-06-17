@@ -4278,7 +4278,7 @@ nsUrlClassifierDBService::Shutdown()
   // First close the db connection.
   if (mWorker) {
     rv = mWorkerProxy->CancelUpdate();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post cancel udpate event");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post cancel update event");
     rv = mWorkerProxy->CloseDb();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post close db event");
   }
