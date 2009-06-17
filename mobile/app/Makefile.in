@@ -52,6 +52,7 @@ GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBX
 APP_BUILDID = $(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid)
 APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
 APP_ICON = mobile
+APP_SPLASH = splash
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DAPP_BUILDID=$(APP_BUILDID) -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -DAPP_UA_NAME=$(APP_UA_NAME)
 
@@ -128,6 +129,7 @@ libs::
 
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
+	cp $(srcdir)/$(APP_SPLASH).bmp $(DIST)/bin/$(APP_SPLASH).bmp
 	$(REDIT_PATH)/redit $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
 endif
 
