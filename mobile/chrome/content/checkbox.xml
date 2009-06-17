@@ -43,13 +43,14 @@
 
 <bindings
     xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="checkbox-radio" display="xul:box" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
     <content>
       <xul:radiogroup anonid="group">
-        <xul:radio anonid="on" class="checkbox-radio-on" label="&checkbox.yes.label;"/>
-        <xul:radio anonid="off" class="checkbox-radio-off" label="&checkbox.no.label;"/>
+        <xul:radio anonid="on" class="checkbox-radio-on" label="&checkbox.yes.label;" xbl:inherits="label=onlabel"/>
+        <xul:radio anonid="off" class="checkbox-radio-off" label="&checkbox.no.label;" xbl:inherits="label=offlabel"/>
       </xul:radiogroup>
     </content>
     <implementation>
@@ -68,6 +69,14 @@
       <field name="_off">
         document.getAnonymousElementByAttribute(this, "anonid", "off");
       </field>
+
+      <property name="onlabel"
+        onget="return this._on.label"
+        onset="this._on.label=val"/>
+
+      <property name="offlabel"
+        onget="return this._off.label"
+        onset="this._off.label=val"/>
 
       <method name="setChecked">
         <parameter name="aValue"/>
