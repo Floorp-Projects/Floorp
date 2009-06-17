@@ -45,6 +45,7 @@
 
 #include "nsTArray.h"
 
+#include "mozStorageBindingParamsArray.h"
 #include "mozIStorageStatement.h"
 
 class nsIXPConnectJSObjectHolder;
@@ -82,6 +83,15 @@ public:
    */
   inline sqlite3_stmt *nativeStatement() { return mDBStatement; }
 
+  /**
+   * Obtains and transfers ownership of the array of parameters that are bound
+   * to this statment.  This can be null.
+   */
+  inline already_AddRefed<BindingParamsArray> bindingParamsArray()
+  {
+    return mParamsArray.forget();
+  }
+
 private:
     ~Statement();
 
@@ -91,6 +101,12 @@ private:
     PRUint32 mResultColumnCount;
     nsTArray<nsCString> mColumnNames;
     bool mExecuting;
+
+    /**
+     * Holds the array of parameters to bind to this statement when we execute
+     * it asynchronously.
+     */
+    nsRefPtr<BindingParamsArray> mParamsArray;
 
     /**
      * The following two members are only used with the JS helper.  They cache
