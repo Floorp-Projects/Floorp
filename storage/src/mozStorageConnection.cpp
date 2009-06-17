@@ -62,7 +62,6 @@
 #include "mozStorageStatement.h"
 #include "mozStorageArgValueArray.h"
 #include "mozStoragePrivateHelpers.h"
-#include "mozStorageStatementData.h"
 
 #include "prlog.h"
 #include "prprf.h"
@@ -628,7 +627,7 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
                          mozIStoragePendingStatement **_handle)
 {
   int rc = SQLITE_OK;
-  nsTArray<StatementData> stmts(aNumStatements);
+  nsTArray<sqlite3_stmt *> stmts(aNumStatements);
   for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
     sqlite3_stmt *old_stmt =
         static_cast<Statement *>(aStatements[i])->nativeStatement();
@@ -658,9 +657,7 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
     if (rc != SQLITE_OK)
       break;
 
-    Statement *storageStmt = static_cast<Statement *>(aStatements[i]);
-    StatementData data(new_stmt, storageStmt->bindingParamsArray());
-    if (!stmts.AppendElement(data)) {
+    if (!stmts.AppendElement(new_stmt)) {
       rc = SQLITE_NOMEM;
       break;
     }
