@@ -465,7 +465,7 @@ KineticData.prototype = {
   _startKineticTimer: function _startKineticTimer() {
     let callback = {
       _self: this,
-      notify: function(timer) {
+      notify: function kineticTimerCallback(timer) {
         let self = this._self;
 
         const decelerationRate = 0.15;
@@ -753,7 +753,7 @@ ContentClickingModule.prototype = {
         this._events.push({event: aEvent, time: Date.now()});
 
         if (this._clickTimeout == -1) {
-          this._clickTimeout = window.setTimeout(function(self) { self._sendSingleClick(); }, 400, this);
+          this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._sendSingleClick(); }, 400, this);
         }
         else {
           window.clearTimeout(this._clickTimeout);
