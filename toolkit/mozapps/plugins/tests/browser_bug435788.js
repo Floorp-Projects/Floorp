@@ -3,7 +3,7 @@ const Ci = Components.interfaces;
 
 const TEST_ROOT = "http://example.com/browser/toolkit/mozapps/plugins/tests/";
 
-var gPrefs, gPFS, gDS;
+var gPrefs, gPFS, gDS, gSeenAvailable;
 
 function test() {
   waitForExplicitFinish();
@@ -83,6 +83,7 @@ function prepare_test_1() {
 function test_1_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_2, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_1_available);
@@ -93,6 +94,7 @@ function test_1_start() {
 }
 
 function test_1_available() {
+  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test plugin 1", null), "Should have seen the right plugin name");
 
@@ -100,6 +102,7 @@ function test_1_available() {
 }
 
 function test_1_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test plugin 1", null);
   ok(item, "Should have seen the installed item");
@@ -127,6 +130,7 @@ function prepare_test_2() {
 function test_2_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_3, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_2_available);
@@ -137,6 +141,7 @@ function test_2_start() {
 }
 
 function test_2_available() {
+  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test plugin 2", null), "Should have seen the right plugin name");
 
@@ -144,6 +149,7 @@ function test_2_available() {
 }
 
 function test_2_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test plugin 2", null);
   ok(item, "Should have seen the installed item");
@@ -175,6 +181,7 @@ function prepare_test_3() {
 function test_3_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_4, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_3_available);
@@ -185,6 +192,7 @@ function test_3_start() {
 }
 
 function test_3_available() {
+  gSeenAvailable = true;
   is(getListCount(), 2, "Should have found 2 plugins to install");
   ok(hasListItem("Test plugin 1", null), "Should have seen the right plugin name");
   ok(hasListItem("Test plugin 2", null), "Should have seen the right plugin name");
@@ -193,6 +201,7 @@ function test_3_available() {
 }
 
 function test_3_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 2, "Should have attempted to install 2 plugins");
   var item = getResultItem("Test plugin 1", null);
   ok(item, "Should have seen the installed item");
@@ -223,6 +232,7 @@ function prepare_test_4() {
 function test_4_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_5, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_4_available);
@@ -233,6 +243,7 @@ function test_4_start() {
 }
 
 function test_4_available() {
+  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test plugin 3", null), "Should have seen the right plugin name");
 
@@ -240,6 +251,7 @@ function test_4_available() {
 }
 
 function test_4_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test plugin 3", null);
   ok(item, "Should have seen the installed item");
@@ -268,6 +280,7 @@ function prepare_test_5() {
 function test_5_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_6, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_5_available);
@@ -278,6 +291,7 @@ function test_5_start() {
 }
 
 function test_5_available() {
+  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test extension 1", null), "Should have seen the right plugin name");
 
@@ -285,6 +299,7 @@ function test_5_available() {
 }
 
 function test_5_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test extension 1", null);
   ok(item, "Should have seen the installed item");
@@ -317,6 +332,7 @@ function prepare_test_6() {
 function test_6_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_7, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_6_available);
@@ -327,6 +343,7 @@ function test_6_start() {
 }
 
 function test_6_available() {
+  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test extension 2", null), "Should have seen the right plugin name");
 
@@ -334,6 +351,7 @@ function test_6_available() {
 }
 
 function test_6_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test extension 2", null);
   ok(item, "Should have seen the installed item");
@@ -365,6 +383,7 @@ function prepare_test_7() {
 function test_7_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_8, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_7_available);
@@ -375,6 +394,7 @@ function test_7_start() {
 }
 
 function test_7_available() {
+  gSeenAvailable = true;
   is(getListCount(), 2, "Should have found 2 plugins to install");
   ok(hasListItem("Test extension 1", null), "Should have seen the right plugin name");
   ok(hasListItem("Test extension 2", null), "Should have seen the right plugin name");
@@ -383,6 +403,7 @@ function test_7_available() {
 }
 
 function test_7_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 2, "Should have attempted to install 2 plugins");
   var item = getResultItem("Test extension 1", null);
   ok(item, "Should have seen the installed item");
@@ -418,6 +439,7 @@ function prepare_test_8() {
 function test_8_start() {
   ok(true, "PFS loaded");
   gPFS.addEventListener("unload", prepare_test_9, false);
+  gSeenAvailable = false;
 
   gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
     executeSoon(test_8_available);
@@ -428,6 +450,7 @@ function test_8_start() {
 }
 
 function test_8_available() {
+  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test extension 3", null), "Should have seen the right plugin name");
 
@@ -435,6 +458,7 @@ function test_8_available() {
 }
 
 function test_8_complete() {
+  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test extension 3", null);
   ok(item, "Should have seen the installed item");
