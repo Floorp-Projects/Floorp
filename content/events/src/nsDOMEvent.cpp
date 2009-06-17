@@ -1557,6 +1557,14 @@ nsDOMEvent::ReportWrongPropertyAccessWarning(const char* aPropertyName)
                                          "DOM Events");
 }
 
+NS_IMETHODIMP
+nsDOMEvent::GetPreventDefault(PRBool* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
+  return NS_OK;
+}
+
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
                         nsPresContext* aPresContext,
                         nsEvent *aEvent) 
