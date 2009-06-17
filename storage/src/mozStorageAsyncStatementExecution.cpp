@@ -43,12 +43,14 @@
 #include "sqlite3.h"
 
 #include "mozIStorageStatementCallback.h"
+#include "mozStorageBindingParams.h"
 #include "mozStorageHelper.h"
 #include "mozStorageResultSet.h"
 #include "mozStorageRow.h"
 #include "mozStorageConnection.h"
 #include "mozStorageError.h"
 #include "mozStoragePrivateHelpers.h"
+#include "mozStorageStatementData.h"
 #include "mozStorageAsyncStatementExecution.h"
 
 namespace mozilla {
@@ -172,7 +174,7 @@ private:
 
 /* static */
 nsresult
-AsyncExecuteStatements::execute(sqlite3_stmt_array &aStatements,
+AsyncExecuteStatements::execute(StatementDataArray &aStatements,
                                 Connection *aConnection,
                                 mozIStorageStatementCallback *aCallback,
                                 mozIStoragePendingStatement **_stmt)
@@ -193,7 +195,7 @@ AsyncExecuteStatements::execute(sqlite3_stmt_array &aStatements,
   return NS_OK;
 }
 
-AsyncExecuteStatements::AsyncExecuteStatements(sqlite3_stmt_array &aStatements,
+AsyncExecuteStatements::AsyncExecuteStatements(StatementDataArray &aStatements,
                                                Connection *aConnection,
                                                mozIStorageStatementCallback *aCallback)
 : mConnection(aConnection)
@@ -224,6 +226,47 @@ AsyncExecuteStatements::shouldNotify()
   // to on the calling thread, and the only thread that can call us is the
   // calling thread, so we know that our access is serialized.
   return !mCancelRequested;
+}
+
+bool
+AsyncExecuteStatements::bindExecuteAndProcessStatement(StatementData &aData,
+                                                       bool aLastStatement)
+{
+  mMutex.AssertNotCurrentThreadOwns();
+
+  sqlite3_stmt *stmt(aData);
+  BindingParamsArray *paramsArray(aData);
+
+  // Iterate through all of our parameters, bind them, and execute.
+  bool continueProcessing = true;
+  BindingParamsArray::iterator itr = paramsArray->begin();
+  BindingParamsArray::iterator end = paramsArray->end();
+  while (itr != end && continueProcessing) {
+    // Bind the data to our statement.
+    nsCOMPtr<mozIStorageError> error;
+    error = (*itr)->bind(stmt);
+    if (error) {
+      // Set our error state.
+      {
+        MutexAutoLock mutex(mMutex);
+        mState = ERROR;
+      }
+
+      // And notify.
+      (void)notifyError(error);
+      return false;
+    }
+
+    // Advance our iterator, execute, and then process the statement.
+    itr++;
+    bool lastStatement = aLastStatement && itr == end;
+    continueProcessing = executeAndProcessStatement(stmt, lastStatement);
+
+    // Always reset our statement.
+    (void)::sqlite3_reset(stmt);
+  }
+
+  return continueProcessing;
 }
 
 bool
@@ -377,10 +420,8 @@ AsyncExecuteStatements::notifyComplete()
   // Finalize our statements before we try to commit or rollback.  If we are
   // canceling and have statements that think they have pending work, the
   // rollback will fail.
-  for (PRUint32 i = 0; i < mStatements.Length(); i++) {
-    (void)::sqlite3_finalize(mStatements[i]);
-    mStatements[i] = NULL;
-  }
+  for (PRUint32 i = 0; i < mStatements.Length(); i++)
+    mStatements[i].finalize();
 
   // Handle our transaction, if we have one
   if (mTransactionManager) {
@@ -426,8 +467,19 @@ AsyncExecuteStatements::notifyError(PRInt32 aErrorCode,
   nsCOMPtr<mozIStorageError> errorObj(new Error(aErrorCode, aMessage));
   NS_ENSURE_TRUE(errorObj, NS_ERROR_OUT_OF_MEMORY);
 
+  return notifyError(errorObj);
+}
+
+nsresult
+AsyncExecuteStatements::notifyError(mozIStorageError *aError)
+{
+  mMutex.AssertNotCurrentThreadOwns();
+
+  if (!mCallback)
+    return NS_OK;
+
   nsRefPtr<ErrorNotifier> notifier =
-    new ErrorNotifier(mCallback, errorObj, this);
+    new ErrorNotifier(mCallback, aError, this);
   NS_ENSURE_TRUE(notifier, NS_ERROR_OUT_OF_MEMORY);
 
   return mCallingThread->Dispatch(notifier, NS_DISPATCH_NORMAL);
@@ -510,7 +562,9 @@ AsyncExecuteStatements::Run()
   // If there is more than one statement, run it in a transaction.  We assume
   // that we have been given write statements since getting a batch of read
   // statements doesn't make a whole lot of sense.
-  if (mStatements.Length() > 1) {
+  // Additionally, if we have only one statement and it has parameters to be
+  // bound, we assume that the consumer would want a transaction as well.
+  if (mStatements.Length() > 1 || mStatements[0].hasParametersToBeBound()) {
     // We don't error if this failed because it's not terrible if it does.
     mTransactionManager = new mozStorageTransaction(mConnection, PR_FALSE,
                                                     mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -518,9 +572,17 @@ AsyncExecuteStatements::Run()
 
   // Execute each statement, giving the callback results if it returns any.
   for (PRUint32 i = 0; i < mStatements.Length(); i++) {
-    PRBool finished = (i == (mStatements.Length() - 1));
-    if (!executeAndProcessStatement(mStatements[i], finished))
+    bool finished = (i == (mStatements.Length() - 1));
+
+    // If we have parameters to bind, bind them, execute, and process.
+    if (mStatements[i].hasParametersToBeBound()) {
+      if (!bindExecuteAndProcessStatement(mStatements[i], finished))
+        break;
+    }
+    // Otherwise, just execute and process the statement.
+    else if (!executeAndProcessStatement(mStatements[i], finished)) {
       break;
+    }
   }
 
   // If we still have results that we haven't notified about, take care of
