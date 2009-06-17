@@ -93,7 +93,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
         aLowercaseLocalName = owner;
     }
 
-    PRBool htmlRoot = aNsID == kNameSpaceID_XHTML && !aPrefix &&
+    PRBool htmlRoot = aNsID == kNameSpaceID_None && !aPrefix &&
                       aLowercaseLocalName == txHTMLAtoms::html;
 
     // Use aLocalName and not aLowercaseLocalName in case the output
