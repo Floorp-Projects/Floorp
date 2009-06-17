@@ -1062,7 +1062,6 @@ nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
-    NS_ASSERTION(presShell, "no presShell");
     if (presShell && IsRoot()) {
       PRBool scaling = (s != mCurrentScale);
       nsEventStatus status = nsEventStatus_eIgnore;
