@@ -1753,53 +1753,83 @@ nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float 
     if (!FloatValidate(x1,y1,x2,y2,radius))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (radius < 0)
+    if (radius <= 0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+    /* This is an adaptation of the cairo_arc_to patch from Behdad
+     * Esfahbod; once that patch is accepted, we should remove this
+     * and just call cairo_arc_to() directly.
+     */
+    
+    double angle0, angle1, angle2, angled;
+    double d0, d2;
+    double sin_, cos_;
+    double dc;
+    int forward;
 
     gfxPoint p0 = mThebes->CurrentPoint();
 
-    double dir, a2, b2, c2, cosx, sinx, d, anx, any, bnx, bny, x3, y3, x4, y4, cx, cy, angle0, angle1;
-    bool anticlockwise;
+    angle0 = atan2 (p0.y - y1, p0.x - x1); /* angle from (x1,y1) to (p0.x,p0.y) */
+    angle2 = atan2 (y2 - y1, x2 - x1); /* angle from (x1,y1) to (x2,y2) */
+    angle1 = (angle0 + angle2) / 2;    /* angle from (x1,y1) to (xc,yc) */
 
-    if ((x1 == p0.x && y1 == p0.y) || (x1 == x2 && y1 == y2) || radius == 0) {
-        mThebes->LineTo(gfxPoint(x1, y1));
-        return NS_OK;
+    angled = angle2 - angle0;          /* the angle (p0.x,p0.y)--(x1,y1)--(x2,y2) */
+
+    /* Shall we go forward or backward? */
+    if (angled > M_PI || (angled < 0 && angled > -M_PI)) {
+        angle1 += M_PI;
+        angled = 2 * M_PI - angled;
+        forward = 1;
+    } else {
+        double tmp;
+        tmp = angle0;
+        angle0 = angle2;
+        angle2 = tmp;
+        forward = 0;
     }
 
-    dir = (x2-x1)*(p0.y-y1) + (y2-y1)*(x1-p0.x);
-    if (dir == 0) {
-        mThebes->LineTo(gfxPoint(x1, y1));
-        return NS_OK;
+    angle0 += M_PI_2; /* angle from (xc,yc) to (p0.x,p0.y) */
+    angle2 -= M_PI_2; /* angle from (xc,yc) to (x2,y2) */
+    angled /= 2;      /* the angle (p0.x,p0.y)--(x1,y1)--(xc,yc) */
+
+
+    /* distance from (x1,y1) to (p0.x,p0.y) */
+    d0 = sqrt ((p0.x-x1)*(p0.x-x1)+(p0.y-y1)*(p0.y-y1));
+    /* distance from (x2,y2) to (p0.x,p0.y) */
+    d2 = sqrt ((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+
+    dc = -1;
+    sin_ = sin(angled);
+    cos_ = cos(angled);
+    if (fabs(cos_) >= 1e-5) { /* the arc may not fit */
+        /* min distance of end-points from corner */
+        double min_d = d0 < d2 ? d0 : d2;
+        /* max radius of an arc that fits */
+        double max_r = min_d * sin_ / cos_;
+
+        if (radius > max_r) {
+            /* arc with requested radius doesn't fit */
+            radius = (float) max_r;
+            dc = min_d / cos_; /* distance of (xc,yc) from (x1,y1) */
+        }
     }
 
-    a2 = (p0.x-x1)*(p0.x-x1) + (p0.y-y1)*(p0.y-y1);
-    b2 = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
-    c2 = (p0.x-x2)*(p0.x-x2) + (p0.y-y2)*(p0.y-y2);
-    cosx = (a2+b2-c2)/(2*sqrt(a2*b2));
+    if (dc < 0)
+        dc = radius / sin_; /* distance of (xc,yc) from (x1,y1) */
 
-    sinx = sqrt(1 - cosx*cosx);
-    d = radius / ((1 - cosx) / sinx);
 
-    anx = (x1-p0.x) / sqrt(a2);
-    any = (y1-p0.y) / sqrt(a2);
-    bnx = (x1-x2) / sqrt(b2);
-    bny = (y1-y2) / sqrt(b2);
-    x3 = x1 - anx*d;
-    y3 = y1 - any*d;
-    x4 = x1 - bnx*d;
-    y4 = y1 - bny*d;
-    anticlockwise = (dir < 0);
-    cx = x3 + any*radius*(anticlockwise ? 1 : -1);
-    cy = y3 - anx*radius*(anticlockwise ? 1 : -1);
-    angle0 = atan2((y3-cy), (x3-cx));
-    angle1 = atan2((y4-cy), (x4-cx));
+    /* find (cx,cy), the center of the arc */
+    gfxPoint c(x1 + sin(angle1) * dc, y1 + cos(angle1) * dc);
 
-    mThebes->LineTo(gfxPoint(x3, y3));
+    /* the arc operation draws the line from current point (p0.x,p0.y)
+     * to arc center too. */
 
-    if (anticlockwise)
-        mThebes->NegativeArc(gfxPoint(cx, cy), radius, angle0, angle1);
+    if (forward)
+        mThebes->Arc(c, radius, angle0, angle2);
     else
-        mThebes->Arc(gfxPoint(cx, cy), radius, angle0, angle1);
+        mThebes->NegativeArc(c, radius, angle2, angle0);
+
+    mThebes->LineTo(gfxPoint(x2, y2));
 
     return NS_OK;
 }
