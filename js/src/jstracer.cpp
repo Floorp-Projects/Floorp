@@ -5867,6 +5867,8 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         break;
     case LIR_fmul:
         r = v0 * v1;
+        if (r == 0.0)
+            goto out;
         break;
 #ifdef NANOJIT_IA32
     case LIR_fdiv:
@@ -5958,8 +5960,12 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * that will inform the oracle and cause a non-demoted trace to be
          * attached that uses floating-point math for this operation.
          */
-        if (!result->isconst() && (!overflowSafe(v, d0) || !overflowSafe(v, d1)))
-            guard(false, lir->ins1(LIR_ov, result), OVERFLOW_EXIT);
+        if (!result->isconst() && (!overflowSafe(v, d0) || !overflowSafe(v, d1))) {
+            exit = snapshot(OVERFLOW_EXIT);
+            guard(false, lir->ins1(LIR_ov, result), exit);
+            if (v == LIR_mul) // make sure we don't lose a -0
+                guard(false, lir->ins_eq0(result), exit);
+        }
         break;
     }
     JS_ASSERT_IF(d0->isconst() && d1->isconst(),
