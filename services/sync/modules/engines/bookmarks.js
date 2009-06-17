@@ -662,33 +662,19 @@ BookmarksTracker.prototype = {
     return ls;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsINavBookmarkObserver,
+    Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS              
+  ]),
 
   _init: function BMT__init() {
     this.__proto__.__proto__._init.call(this);
 
-    // NOTE: since the callbacks give us item IDs (not GUIDs), we use
-    // getItemGUID to get it within the callback.  For removals, however,
-    // that doesn't work because the item is already gone! (and worse, Places
-    // has a bug where it will generate a new one instead of throwing).
-    // Our solution: cache item IDs -> GUIDs
-
-let before = new Date();
-    // FIXME: very roundabout way of getting id -> guid mapping!
-    let store = new BookmarksStore();
-    let all = store.getAllIDs();
-    this._all = {};
-    for (let guid in all) {
-      this._all[this._bms.getItemIdForGUID(guid)] = guid;
-    }
-let after = new Date();
-dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in all)].length + " bookmark items\n");
-
     // Ignore changes to the special roots. We use special names for them, so
     // ignore their "real" places guid as well as ours, just in case
+    let store = new BookmarksStore();
     for (let [weaveId, id] in Iterator(store.specialIds)) {
       this.ignoreID(weaveId);
-      this.ignoreID(this._all[id]);
     }
 
     this._bms.addObserver(this, false);
@@ -729,21 +715,14 @@ dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in al
       return;
 
     this._log.trace("onItemAdded: " + itemId);
-
-    this._all[itemId] = this._bms.getItemGUID(itemId);
-    if (this.addChangedID(this._all[itemId]))
+    if (this.addChangedID(this._bms.getItemGUID(itemId)))
       this._upScore();
   },
 
-  onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
-    if (this._ignore(folder))
-      return;
-
-    this._log.trace("onItemRemoved: " + itemId);
-
-    if (this.addChangedID(this._all[itemId]))
-      this._upScore();
-    delete this._all[itemId];
+  onBeforeItemRemoved: function BMT_onBeforeItemRemoved(itemId) {
+    this._log.trace("onItemBeforeRemoved: " + itemId);
+    if (this.addChangedID(this._bms.getItemGUID(itemId)))
+        this._upScore();
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
@@ -761,12 +740,10 @@ dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in al
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
                     (value? (" = \"" + value + "\"") : ""));
-    // 1) notifications for already-deleted items are ignored
-    // 2) note that engine/store are responsible for manually updating the
-    //    tracker's placesId->weaveId cache
-    if ((itemId in this._all) &&
-        (this._bms.getItemGUID(itemId) == this._all[itemId]) &&
-        this.addChangedID(this._all[itemId]))
+    
+    // we should never really get onItemChanged for a deleted item
+    let guid = this._bms.getItemGUID(itemId);
+    if (guid && this.addChangedID(guid))
       this._upScore();
   },
 
@@ -776,15 +753,12 @@ dump((after - before) + "ms spent mapping id -> guid for " + [key for (key in al
       return;
 
     this._log.trace("onItemMoved: " + itemId);
-
-    if (!this._all[itemId])
-      this._all[itemId] = this._bms.itemGUID(itemId);
-    if (this.addChangedID(this._all[itemId]))
+    if (this.addChangedID(this._bms.itemGUID(itemId)))
       this._upScore();
   },
 
   onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
   onEndUpdateBatch: function BMT_onEndUpdateBatch() {},
-  onBeforeItemRemoved: function BMT_onBeforeItemRemoved(itemId) {},
+  onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {},
   onItemVisited: function BMT_onItemVisited(itemId, aVisitID, time) {}
 };
