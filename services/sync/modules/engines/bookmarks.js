@@ -290,10 +290,8 @@ BookmarksStore.prototype = {
       let cur = this._bms.getItemGUID(newId);
       if (cur == record.id)
         this._log.warn("Item " + newId + " already has GUID " + record.id);
-      else {
+      else
         this._bms.setItemGUID(newId, record.id);
-        Engines.get("bookmarks")._tracker._all[newId] = record.id; // HACK - see tracker
-      }
     }
   },
 
@@ -441,7 +439,6 @@ BookmarksStore.prototype = {
 
     this._log.debug("Changing GUID " + oldID + " to " + newID);
     this._bms.setItemGUID(itemId, newID);
-    Engines.get("bookmarks")._tracker._all[itemId] = newID; // HACK - see tracker
   },
 
   _getNode: function BStore__getNode(folder) {
@@ -664,20 +661,29 @@ BookmarksTracker.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavBookmarkObserver,
-    Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS              
+    Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS
   ]),
 
   _init: function BMT__init() {
     this.__proto__.__proto__._init.call(this);
 
-    // Ignore changes to the special roots. We use special names for them, so
-    // ignore their "real" places guid as well as ours, just in case
+    // Ignore changes to the special roots
     let store = new BookmarksStore();
-    for (let [weaveId, id] in Iterator(store.specialIds)) {
-      this.ignoreID(weaveId);
-    }
+    for (let [weaveId, id] in Iterator(store.specialIds))
+      this.ignoreID(this._bms.getItemGUID(id));
 
     this._bms.addObserver(this, false);
+  },
+
+  /**
+   * Add a bookmark (places) id to be uploaded and bump up the sync score
+   *
+   * @param itemId
+   *        Places internal id of the bookmark to upload
+   */
+  _addId: function BMT__addId(itemId) {
+    if (this.addChangedID(this._bms.getItemGUID(itemId)))
+      this._upScore();
   },
 
   /* Every add/remove/change is worth 10 points */
@@ -689,13 +695,19 @@ BookmarksTracker.prototype = {
    * Determine if a change should be ignored: we're ignoring everything or the
    * folder is for livemarks
    *
-   * @param folder
+   * @param itemId
+   *        Item under consideration to ignore
+   * @param folder (optional)
    *        Folder of the item being changed
    */
-  _ignore: function BMT__ignore(folder) {
+  _ignore: function BMT__ignore(itemId, folder) {
     // Ignore unconditionally if the engine tells us to
     if (this.ignoreAll)
       return true;
+
+    // Get the folder id if we weren't given one
+    if (folder == null)
+      folder = this._bms.getFolderIdForItem(itemId);
 
     let tags = this._bms.tagsFolder;
     // Ignore changes to tags (folders under the tags folder)
@@ -711,23 +723,23 @@ BookmarksTracker.prototype = {
   },
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
-    if (this._ignore(folder))
+    if (this._ignore(itemId, folder))
       return;
 
     this._log.trace("onItemAdded: " + itemId);
-    if (this.addChangedID(this._bms.getItemGUID(itemId)))
-      this._upScore();
+    this._addId(itemId);
   },
 
   onBeforeItemRemoved: function BMT_onBeforeItemRemoved(itemId) {
-    this._log.trace("onItemBeforeRemoved: " + itemId);
-    if (this.addChangedID(this._bms.getItemGUID(itemId)))
-        this._upScore();
+    if (this._ignore(itemId))
+      return;
+
+    this._log.trace("onBeforeItemRemoved: " + itemId);
+    this._addId(itemId);
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
-    let folder = this._bms.getFolderIdForItem(itemId);
-    if (this._ignore(folder))
+    if (this._ignore(itemId))
       return;
 
     // ignore annotations except for the ones that we sync
@@ -740,21 +752,15 @@ BookmarksTracker.prototype = {
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
                     (value? (" = \"" + value + "\"") : ""));
-    
-    // we should never really get onItemChanged for a deleted item
-    let guid = this._bms.getItemGUID(itemId);
-    if (guid && this.addChangedID(guid))
-      this._upScore();
+    this._addId(itemId);
   },
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
-    let folder = this._bms.getFolderIdForItem(itemId);
-    if (this._ignore(folder))
+    if (this._ignore(itemId))
       return;
 
     this._log.trace("onItemMoved: " + itemId);
-    if (this.addChangedID(this._bms.itemGUID(itemId)))
-      this._upScore();
+    this._addId(itemId);
   },
 
   onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
