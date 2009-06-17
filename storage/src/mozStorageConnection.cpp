@@ -50,6 +50,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
+#include "nsAutoLock.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
@@ -241,7 +242,8 @@ sqlite3_T_blob(sqlite3_context *aCtx,
 //// Connection
 
 Connection::Connection(mozIStorageService *aService)
-: mDBConn(nsnull)
+: sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
+, mDBConn(nsnull)
 , mAsyncExecutionMutex(nsAutoLock::NewLock("AsyncExecutionMutex"))
 , mAsyncExecutionThreadShuttingDown(PR_FALSE)
 , mTransactionMutex(nsAutoLock::NewLock("TransactionMutex"))
