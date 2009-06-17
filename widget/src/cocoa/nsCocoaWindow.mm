@@ -431,7 +431,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   else {
     mWindow = (NSWindow*)aNativeWindow;
   }
-  
+
+  [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

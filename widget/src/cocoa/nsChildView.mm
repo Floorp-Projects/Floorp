@@ -179,7 +179,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 
 - (NSMenu*)contextMenu;
-- (TopLevelWindowData*)ensureWindowData;
 
 - (void)setIsPluginView:(BOOL)aIsPlugin;
 - (BOOL)isPluginView;
@@ -636,7 +635,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   // if this is a ChildView, make sure that our per-window data
   // is set up
   if ([mView isKindOfClass:[ChildView class]])
-    [(ChildView*)mView ensureWindowData];
+    [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:[mView window]];
 
   return NS_OK;
 
@@ -4056,28 +4055,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
     return [(NSView<mozView>*)superView contextMenu];
 
   return nil;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-
-- (TopLevelWindowData*)ensureWindowData
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if (!mWindow)
-    return nil;
-
-  WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
-
-  TopLevelWindowData* windowData = [windowMap dataForWindow:mWindow];
-  if (!windowData)
-  {
-    windowData = [[TopLevelWindowData alloc] initWithWindow:mWindow];
-    [windowMap setData:windowData forWindow:mWindow]; // takes ownership
-    [windowData release];
-  }
-  return windowData;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
