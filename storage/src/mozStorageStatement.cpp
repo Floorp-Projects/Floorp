@@ -506,6 +506,33 @@ Statement::BindBlobParameter(PRUint32 aParamIndex,
 }
 
 NS_IMETHODIMP
+Statement::BindParameters(mozIStorageBindingParamsArray *aParameters)
+{
+  if (!mDBStatement)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  BindingParamsArray *array = static_cast<BindingParamsArray *>(aParameters);
+  if (array->getOwner() != this)
+    return NS_ERROR_UNEXPECTED;
+
+  mParamsArray = array;
+  mParamsArray->lock();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Statement::NewBindingParamsArray(mozIStorageBindingParamsArray **_array)
+{
+  nsCOMPtr<mozIStorageBindingParamsArray> array =
+    new BindingParamsArray(this);
+  NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
+
+  array.forget(_array);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Statement::Execute()
 {
   if (!mDBStatement)
