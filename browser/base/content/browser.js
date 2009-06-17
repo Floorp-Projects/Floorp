@@ -1077,13 +1077,10 @@ function BrowserStartup() {
     document.documentElement.setAttribute("height", defaultHeight);
   }
 
-  if (gURLBar) {
-    if (document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
-      gURLBar.setAttribute("readonly", "true");
-      gURLBar.setAttribute("enablehistory", "false");
-    }
-
-    gURLBar.timeout = gPrefService.getIntPref("browser.urlbar.delay");
+  if (gURLBar &&
+      document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
+    gURLBar.setAttribute("readonly", "true");
+    gURLBar.setAttribute("enablehistory", "false");
   }
 
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
