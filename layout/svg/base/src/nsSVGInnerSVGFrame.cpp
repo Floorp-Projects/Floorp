@@ -108,7 +108,9 @@ nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext,
     if (clipTransform) {
       gfxContext *gfx = aContext->GetGfxContext();
       autoSR.SetContext(gfx);
-      nsSVGUtils::SetClipRect(gfx, clipTransform, x, y, width, height);
+      gfxRect clipRect =
+        nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
+      nsSVGUtils::SetClipRect(gfx, clipTransform, clipRect);
     }
   }
 
