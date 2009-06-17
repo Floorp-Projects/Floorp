@@ -772,6 +772,7 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
         if (other->surface) {
 	    int dx, dy;
             status = _cairo_surface_clone_similar (target, other->surface,
+						   CAIRO_CONTENT_ALPHA,
 					           0,
 						   0,
 						   other->surface_rect.width,
