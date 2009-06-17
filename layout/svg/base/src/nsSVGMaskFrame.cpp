@@ -84,8 +84,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
       &mask->mLengthAttributes[nsSVGMaskElement::X], bbox, aParent);
 
     gfx->Save();
-    nsSVGUtils::SetClipRect(gfx, aMatrix, maskArea.X(), maskArea.Y(),
-                            maskArea.Width(), maskArea.Height());
+    nsSVGUtils::SetClipRect(gfx, aMatrix, maskArea);
   }
 
   mMaskParent = aParent;
