@@ -768,9 +768,6 @@ WidgetStack.prototype = {
     if (this._skipViewportUpdates)
       return
 
-    if (this._forceViewportUpdate)
-      this._viewportUpdate();
-
     let boundsSizeChanged =
       this._startViewportBoundsString != this._viewportBounds.toString();
     this._callViewportUpdateHandler(boundsSizeChanged || this._forceViewportUpdate);
