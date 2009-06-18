@@ -166,21 +166,4 @@ private:
     nsCOMPtr<nsITimer>    mTimer;
 };
 
-
-//-------------------------------------------------------------------------
-//
-// from http://download.microsoft.com/download/6/0/9/60908e9e-d2c1-47db-98f6-216af76a235f/msime.h
-// The document for this has been removed from MSDN...
-//
-//-------------------------------------------------------------------------
-
-#define RWM_MOUSE           TEXT("MSIMEMouseOperation")
-
-#define IMEMOUSE_NONE       0x00    // no mouse button was pushed
-#define IMEMOUSE_LDOWN      0x01
-#define IMEMOUSE_RDOWN      0x02
-#define IMEMOUSE_MDOWN      0x04
-#define IMEMOUSE_WUP        0x10    // wheel up
-#define IMEMOUSE_WDOWN      0x20    // wheel down
-
 #endif  // TOOLKIT_H
