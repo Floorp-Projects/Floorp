@@ -1516,6 +1516,19 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     js_LeaveTrace(cx);
 
+#ifdef JS_TRACER
+    /* 
+     * The JIT requires that the scope chain here is equal to
+     * its global object. Disable the JIT for this call if this 
+     * condition is not true. 
+     */
+    uint32 oldOptions = cx->options;
+    if ((oldOptions & JSOPTION_JIT) &&
+        chain != JS_GetGlobalForObject(cx, chain)) {
+        cx->options &= ~JSOPTION_JIT;
+    }
+#endif
+
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_START_ENABLED())
         jsdtrace_execute_start(script);
@@ -1639,6 +1652,12 @@ out:
     if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
         jsdtrace_execute_done(script);
 #endif
+
+#ifdef JS_TRACER
+    /* Possibly re-enable JIT, if disabled above. */
+    cx->options = oldOptions;
+#endif
+
     return ok;
 }
 
