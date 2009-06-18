@@ -214,7 +214,7 @@ nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
 void
 nsAccessibleWrap::InvalidateChildren()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mNativeWrapper) {
     mozAccessible *object = mNativeWrapper->getNativeObject();
@@ -222,7 +222,7 @@ nsAccessibleWrap::InvalidateChildren()
   }
   nsAccessible::InvalidateChildren();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 PRInt32
