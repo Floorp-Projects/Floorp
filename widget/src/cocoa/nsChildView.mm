@@ -66,6 +66,7 @@
 #include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
 #include "nsIMenuRollup.h"
+#include "nsIDOMSimpleGestureEvent.h"
 
 #include "nsDragService.h"
 #include "nsClipboard.h"
@@ -75,7 +76,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
 
-#include "nsIDOMSimpleGestureEvent.h"
+#include "npapi.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -100,11 +101,6 @@
 #ifdef PR_LOGGING
 PRLogModuleInfo* sCocoaLog = nsnull;
 #endif
-
-// npapi.h defines NPEventType_AdjustCursorEvent but we don't want to include npapi.h here.
-// We need to send this in the "what" field for certain native plugin events. WebKit does
-// this as well.
-#define adjustCursorEvent 33
 
 extern "C" {
   CG_EXTERN void CGContextResetCTM(CGContextRef);
@@ -3518,7 +3514,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
 
   EventRecord macEvent;
-  macEvent.what = adjustCursorEvent;
+  macEvent.what = NPEventType_AdjustCursorEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
   ::GetGlobalMouse(&macEvent.where);
@@ -3656,7 +3652,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
-  macEvent.what = adjustCursorEvent;
+  macEvent.what = NPEventType_AdjustCursorEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
   ::GetGlobalMouse(&macEvent.where);
