@@ -94,6 +94,7 @@ struct THEBES_API gfxRect {
     gfxRect Intersect(const gfxRect& aRect) const;
     gfxRect Union(const gfxRect& aRect) const;
     PRBool Contains(const gfxRect& aRect) const;
+    PRBool Contains(const gfxPoint& aPoint) const;
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 
     gfxPoint TopLeft() { return pos; }

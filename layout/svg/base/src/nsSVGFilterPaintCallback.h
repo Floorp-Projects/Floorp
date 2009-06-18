@@ -40,7 +40,6 @@
 #include "nsRect.h"
 
 class nsIFrame;
-class nsIDOMSVGMatrix;
 class nsSVGRenderState;
 
 class nsSVGFilterPaintCallback {
