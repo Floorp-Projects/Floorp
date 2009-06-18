@@ -2409,9 +2409,6 @@ _cairo_scaled_glyph_set_surface (cairo_scaled_glyph_t *scaled_glyph,
 {
     if (scaled_glyph->surface != NULL)
 	cairo_surface_destroy (&scaled_glyph->surface->base);
-
-    /* sanity check the backend glyph contents */
-    _cairo_debug_check_image_surface_is_defined (&surface->base);
     scaled_glyph->surface = surface;
 }
 

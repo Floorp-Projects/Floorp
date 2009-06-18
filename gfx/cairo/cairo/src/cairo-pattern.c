@@ -1256,7 +1256,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     pixman_transform_t	  pixman_transform;
     cairo_status_t	  status;
     cairo_bool_t	  repeat = FALSE;
-    cairo_bool_t          opaque = TRUE;
 
     pixman_gradient_stop_t pixman_stops_static[2];
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
@@ -1280,8 +1279,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	pixman_stops[i].color.green = pattern->stops[i].color.green_short;
 	pixman_stops[i].color.blue = pattern->stops[i].color.blue_short;
 	pixman_stops[i].color.alpha = pattern->stops[i].color.alpha_short;
-	if (! CAIRO_ALPHA_SHORT_IS_OPAQUE (pixman_stops[i].color.alpha))
-	    opaque = FALSE;
     }
 
     if (pattern->base.type == CAIRO_PATTERN_TYPE_LINEAR)
@@ -1452,12 +1449,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 
     pixman_image_unref (pixman_image);
 
-    _cairo_debug_check_image_surface_is_defined (&image->base);
-
     status = _cairo_surface_clone_similar (dst, &image->base,
-					   opaque ?
-					   CAIRO_CONTENT_COLOR :
-					   CAIRO_CONTENT_COLOR_ALPHA,
 					   0, 0, width, height,
 					   &clone_offset_x,
 					   &clone_offset_y,
@@ -1789,7 +1781,6 @@ _pixman_nearest_sample (double d)
 static cairo_int_status_t
 _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pattern,
 					    cairo_surface_t	       *dst,
-					    cairo_content_t	    content,
 					    int			       x,
 					    int			       y,
 					    unsigned int	       width,
@@ -1864,7 +1855,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	if (unlikely (status))
 	    goto BAIL;
 
-	status = _cairo_surface_clone_similar (dst, surface, content,
+	status = _cairo_surface_clone_similar (dst, surface,
 					       extents.x, extents.y,
 					       extents.width, extents.height,
 					       &extents.x, &extents.y, &src);
@@ -1987,7 +1978,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 
     /* XXX can we use is_empty? */
 
-    status = _cairo_surface_clone_similar (dst, surface, content,
+    status = _cairo_surface_clone_similar (dst, surface,
 					   extents.x, extents.y,
 					   extents.width, extents.height,
 					   &x, &y, out);
@@ -2061,7 +2052,6 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 cairo_int_status_t
 _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   *dst,
-				cairo_content_t		    content,
 				int			   x,
 				int			   y,
 				unsigned int		   width,
@@ -2154,7 +2144,6 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 	cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) pattern;
 
 	status = _cairo_pattern_acquire_surface_for_surface (src, dst,
-							     content,
 							     x, y, width, height,
 							     surface_out,
 							     attributes);
@@ -2187,7 +2176,6 @@ cairo_int_status_t
 _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 				 const cairo_pattern_t	    *mask,
 				 cairo_surface_t	    *dst,
-				 cairo_content_t	    src_content,
 				 int			    src_x,
 				 int			    src_y,
 				 int			    mask_x,
@@ -2224,14 +2212,13 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
 	_cairo_pattern_init_solid (&src_tmp.solid, &combined,
-				   (src_solid->content | mask_solid->content) & src_content);
+				   src_solid->content | mask_solid->content);
 
 	src = &src_tmp.base;
 	mask = NULL;
     }
 
     status = _cairo_pattern_acquire_surface (src, dst,
-					     src_content,
 					     src_x, src_y,
 					     width, height,
 					     src_out, src_attributes);
@@ -2244,7 +2231,6 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
     }
 
     status = _cairo_pattern_acquire_surface (mask, dst,
-					     CAIRO_CONTENT_ALPHA,
 					     mask_x, mask_y,
 					     width, height,
 					     mask_out, mask_attributes);

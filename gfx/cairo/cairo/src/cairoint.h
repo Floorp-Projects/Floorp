@@ -85,7 +85,7 @@
 
 CAIRO_BEGIN_DECLS
 
-#if _WIN32 && !_WIN32_WCE /* Permissions on WinCE? No worries! */
+#if _WIN32 && !_WIN32_WCE // we don't have to worry about permissions on WinCE
 cairo_private FILE *
 _cairo_win32_tmpfile (void);
 #define tmpfile() _cairo_win32_tmpfile()
@@ -134,7 +134,7 @@ _cairo_win32_tmpfile (void);
 
 #ifdef __GNUC__
 #define cairo_container_of(ptr, type, member) ({ \
-    const __typeof__ (((type *) 0)->member) *mptr__ = (ptr); \
+    const typeof(((type *) 0)->member) *mptr__ = (ptr); \
     (type *) ((char *) mptr__ - offsetof (type, member)); \
 })
 #else
@@ -158,7 +158,7 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 #define COMPILE_TIME_ASSERT1(condition, line)		\
-    typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1]
+    typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1];
 #define COMPILE_TIME_ASSERT0(condition, line)	COMPILE_TIME_ASSERT1(condition, line)
 #define COMPILE_TIME_ASSERT(condition)		COMPILE_TIME_ASSERT0(condition, __LINE__)
 
@@ -497,8 +497,7 @@ struct _cairo_scaled_font_backend {
                            unsigned char        *buffer,
                            unsigned long        *length);
 
-    /* ucs4 is set to -1 if the unicode character could not be found
-     * for the glyph */
+    /* returns -1 if the unicode character could not be found for the glyph */
     cairo_warn cairo_int_status_t
     (*index_to_ucs4)(void                       *scaled_font,
 		     unsigned long               index,
@@ -599,7 +598,6 @@ struct _cairo_surface_backend {
     cairo_warn cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
-				 cairo_content_t	 content,
 				 int                     src_x,
 				 int                     src_y,
 				 int                     width,
@@ -1972,7 +1970,6 @@ _cairo_surface_release_dest_image (cairo_surface_t        *surface,
 cairo_private cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
-			      cairo_content_t	content,
 			      int               src_x,
 			      int               src_y,
 			      int               width,
@@ -2495,7 +2492,6 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern);
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   *dst,
-				cairo_content_t		    content,
 				int			   x,
 				int			   y,
 				unsigned int		   width,
@@ -2512,7 +2508,6 @@ cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 				 const cairo_pattern_t	    *mask,
 				 cairo_surface_t	    *dst,
-				 cairo_content_t	    src_content,
 				 int			    src_x,
 				 int			    src_y,
 				 int			    mask_x,
@@ -2751,16 +2746,5 @@ CAIRO_END_DECLS
 #include "cairo-wideint-private.h"
 #include "cairo-malloc-private.h"
 #include "cairo-hash-private.h"
-
-#if HAVE_VALGRIND
-
-cairo_private void
-_cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface);
-
-#else
-
-#define _cairo_debug_check_image_surface_is_defined(X)
-
-#endif
 
 #endif
