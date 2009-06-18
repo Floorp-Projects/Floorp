@@ -11,12 +11,10 @@ int argpath_conv(char **args_in, char **args_out)
 
     if (args_in[i])
     {
-      // First, look for the case of "-Fo/c/xxxxxxx" and "/Fo/c/xxxxx"
+      // First, look for the case of "Fo" and "Fe" options
       if ( (args_out[i][0] == '-' || args_out[i][0] == '/') &&
-           (args_out[i][1] == 'F') && (args_out[i][2] == 'o') &&
+           (args_out[i][1] == 'F') && ((args_out[i][2] == 'o') || (args_out[i][2] == 'e')) &&
            (args_out[i][3] == '/') && (strlen(args_out[i]) > 5) ) {
-
-        //printf("ARGS_IN: -FoXXXX is %s\n",args_in[i]);
 
         strcpy(noleak_buffers[next_buffer], args_in[i]);
 
@@ -25,8 +23,6 @@ int argpath_conv(char **args_in, char **args_out)
         noleak_buffers[next_buffer][4] = ':';
 
         args_out[i] = noleak_buffers[next_buffer];
-
-        //printf("ARGS_OUT: -FoXXXX is %s\n",args_out[i]);
 
         next_buffer++;
       }
