@@ -1115,7 +1115,6 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 {
     cairo_surface_t *snapshot;
     cairo_status_t status;
-    cairo_format_t format;
     cairo_surface_pattern_t pattern;
     cairo_image_surface_t *image;
     void *image_extra;
@@ -1125,14 +1124,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
-    format = image->format;
-    if (format == CAIRO_FORMAT_INVALID) {
-	/* Non-standard images formats can be generated when retrieving
-	 * images from unusual xservers, for example.
-	 */
-	format = _cairo_format_from_content (image->base.content);
-    }
-    snapshot = cairo_image_surface_create (format,
+    snapshot = cairo_image_surface_create (image->format,
 					   image->width,
 					   image->height);
     if (cairo_surface_status (snapshot)) {
@@ -1336,7 +1328,6 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
 cairo_status_t
 _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
 				       cairo_surface_t	*src,
-				       cairo_content_t	 content,
 				       int		 src_x,
 				       int		 src_y,
 				       int		 width,
@@ -1350,7 +1341,7 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
     cairo_status_t status;
 
     new_surface = _cairo_surface_create_similar_scratch (surface,
-							 src->content & content,
+							 src->content,
 							 width, height);
     if (new_surface->status)
 	return new_surface->status;

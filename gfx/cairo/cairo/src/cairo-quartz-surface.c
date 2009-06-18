@@ -1598,7 +1598,6 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
 static cairo_status_t
 _cairo_quartz_surface_clone_similar (void *abstract_surface,
 				     cairo_surface_t *src,
-				     cairo_content_t  content,
 				     int              src_x,
 				     int              src_y,
 				     int              width,

@@ -486,26 +486,24 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern,
     FcResult ret;
 
     ret = FcPatternGetFTFace (pattern, FC_FT_FACE, 0, &font_face);
-    if (ret == FcResultMatch)
+    switch ((int) ret) {
+    case FcResultMatch:
 	goto DONE;
-    if (ret == FcResultOutOfMemory)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    ret = FcPatternGetString (pattern, FC_FILE, 0, (FcChar8 **) &filename);
-    if (ret == FcResultOutOfMemory)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    if (ret == FcResultMatch) {
-	/* If FC_INDEX is not set, we just use 0 */
-	ret = FcPatternGetInteger (pattern, FC_INDEX, 0, &id);
-	if (ret == FcResultOutOfMemory)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	goto DONE;
+    case FcResultOutOfMemory:
+	break;
+    default:
+	if (FcPatternGetString (pattern, FC_FILE, 0,
+				(FcChar8 **) &filename) == FcResultMatch)
+	{
+	    /* If FC_INDEX is not set, we just use 0 */
+	    if (FcPatternGetInteger (pattern,
+				     FC_INDEX, 0, &id) != FcResultOutOfMemory)
+		goto DONE;
+	}
+	break;
     }
 
-    /* The pattern contains neither a face nor a filename, resolve it later. */
-    *out = NULL;
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 DONE:
     return _cairo_ft_unscaled_font_create_internal (font_face != NULL,
@@ -1001,8 +999,6 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	pixman_image_set_component_alpha ((*surface)->pixman_image, TRUE);
 
     _cairo_image_surface_assume_ownership_of_data ((*surface));
-
-    _cairo_debug_check_image_surface_is_defined (&(*surface)->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
