@@ -585,7 +585,8 @@ def runApp(testURL, env, app, profileDir, extraArgs,
   else:
     outputPipe = subprocess.PIPE
 
-  proc = Process([cmd] + args, env = environment(env), stdout = outputPipe, stderr = subprocess.STDOUT)
+  proc = Process([cmd] + args, env = environment(env, xrePath = xrePath),
+          stdout = outputPipe, stderr = subprocess.STDOUT)
   log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
   if outputPipe is None:
