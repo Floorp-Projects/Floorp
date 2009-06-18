@@ -433,13 +433,16 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     pobj = obj;
+    JS_LOCK_OBJ(cx, pobj);
 
     if (JOF_MODE(cs->format) == JOF_NAME) {
         while (vcap & (PCVCAP_SCOPEMASK << PCVCAP_PROTOBITS)) {
-            tmp = OBJ_GET_PARENT(cx, pobj);
+            tmp = LOCKED_OBJ_GET_PARENT(pobj);
             if (!tmp || !OBJ_IS_NATIVE(tmp))
                 break;
+            JS_UNLOCK_OBJ(cx, pobj);
             pobj = tmp;
+            JS_LOCK_OBJ(cx, pobj);
             vcap -= PCVCAP_PROTOSIZE;
         }
 
@@ -447,14 +450,16 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     while (vcap & PCVCAP_PROTOMASK) {
-        tmp = OBJ_GET_PROTO(cx, pobj);
+        tmp = LOCKED_OBJ_GET_PROTO(pobj);
         if (!tmp || !OBJ_IS_NATIVE(tmp))
             break;
+        JS_UNLOCK_OBJ(cx, pobj);
         pobj = tmp;
+        JS_LOCK_OBJ(cx, pobj);
         --vcap;
     }
 
-    if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(vcap))) {
+    if (PCVCAP_SHAPE(vcap) == OBJ_SHAPE(pobj)) {
 #ifdef DEBUG
         jsid id = ATOM_TO_JSID(atom);
 
@@ -467,6 +472,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     PCMETER(JS_PROPERTY_CACHE(cx).vcmisses++);
+    JS_UNLOCK_OBJ(cx, pobj);
     return atom;
 }
 
@@ -4635,13 +4641,13 @@ js_Interpret(JSContext *cx)
                         PCVCAP_SHAPE(entry->vcap) == rt->protoHazardShape) {
                         JS_ASSERT(PCVCAP_TAG(entry->vcap) == 0);
 
-                        if (JS_LOCK_OBJ_IF_SHAPE(cx, obj, kshape)) {
+                        JS_LOCK_OBJ(cx, obj);
+                        JSScope *scope = OBJ_SCOPE(obj);
+                        if (scope->shape == kshape) {
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-
-                            JSScope *scope = OBJ_SCOPE(obj);
-                            JS_ASSERT(!SCOPE_IS_SEALED(scope));
+                            JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj)));
 
                             /*
                              * Fastest path: check whether the cached sprop is
@@ -4770,6 +4776,8 @@ js_Interpret(JSContext *cx)
                             PCMETER(cache->setpcmisses++);
                             atom = NULL;
                         }
+
+                        JS_UNLOCK_OBJ(cx, obj);
                     }
 
                     atom = js_FullTestPropertyCache(cx, regs.pc, &obj, &obj2,
