@@ -1422,6 +1422,17 @@ js_UnlockObj(JSContext *cx, JSObject *obj)
     js_UnlockTitle(cx, &OBJ_SCOPE(obj)->title);
 }
 
+bool
+js_LockObjIfShape(JSContext *cx, JSObject *obj, uint32 shape)
+{
+    JS_ASSERT(OBJ_SCOPE(obj)->title.ownercx != cx);
+    js_LockObj(cx, obj);
+    if (OBJ_SHAPE(obj) == shape)
+        return true;
+    js_UnlockObj(cx, obj);
+    return false;
+}
+
 void
 js_InitTitle(JSContext *cx, JSTitle *title)
 {
