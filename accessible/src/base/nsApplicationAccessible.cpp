@@ -236,20 +236,21 @@ nsApplicationAccessible::CacheChildren()
 
     nsCOMPtr<nsIWeakReference> childWeakRef;
     nsCOMPtr<nsIAccessible> accessible;
-    nsCOMPtr<nsPIAccessible> previousAccessible;
+    nsRefPtr<nsAccessible> prevAcc;
     PRBool hasMoreElements;
-    while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements))
-          && hasMoreElements) {
+
+    while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) &&
+          hasMoreElements) {
       enumerator->GetNext(getter_AddRefs(childWeakRef));
       accessible = do_QueryReferent(childWeakRef);
       if (accessible) {
-        if (previousAccessible)
-          previousAccessible->SetNextSibling(accessible);
+        if (prevAcc)
+          prevAcc->SetNextSibling(accessible);
         else
           SetFirstChild(accessible);
 
-        previousAccessible = do_QueryInterface(accessible);
-        previousAccessible->SetParent(this);
+        prevAcc = nsAccUtils::QueryAccessible(accessible);
+        prevAcc->SetParent(this);
       }
     }
 

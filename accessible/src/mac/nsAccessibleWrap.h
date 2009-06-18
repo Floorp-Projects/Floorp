@@ -75,10 +75,10 @@ class nsAccessibleWrap : public nsAccessible
     void GetNativeWindow (void **aOutNativeWindow);
     
     virtual nsresult Shutdown ();
-    virtual nsresult InvalidateChildren ();
+    virtual void InvalidateChildren();
 
-    NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
-    
+    virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aEvent);
+
     // ignored means that the accessible might still have children, but is not displayed
     // to the user. it also has no native accessible object represented for it.
     PRBool IsIgnored();

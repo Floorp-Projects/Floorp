@@ -343,12 +343,11 @@ nsHTMLListBulletAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraS
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLListBulletAccessible::SetParent(nsIAccessible *aParentAccessible)
+void
+nsHTMLListBulletAccessible::SetParent(nsIAccessible *aParent)
 {
   mParent = nsnull;
-  mWeakParent = aParentAccessible;
-  return NS_OK;
+  mWeakParent = aParent;
 }
 
 NS_IMETHODIMP
@@ -358,7 +357,7 @@ nsHTMLListBulletAccessible::GetParent(nsIAccessible **aParentAccessible)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                          PRUint32 aLength)
 {

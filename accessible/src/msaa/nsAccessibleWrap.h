@@ -290,8 +290,8 @@ class nsAccessibleWrap : public nsAccessible,
         LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
-  // nsPIAccessible
-  NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
+  // nsAccessible
+  virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aEvent);
 
   // Helper methods
   static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
