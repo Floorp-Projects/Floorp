@@ -428,11 +428,12 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
                                       mPreserveAspectRatio,
                                       PR_TRUE);
     NS_ENSURE_TRUE(vb2vp, NS_ERROR_OUT_OF_MEMORY);
-    nsSVGUtils::TransformPoint(vb2vp, &refX, &refY);
+    gfxPoint ref = nsSVGUtils::ConvertSVGMatrixToThebes(vb2vp).
+                    Transform(gfxPoint(refX, refY));
 
     nsCOMPtr<nsIDOMSVGMatrix> translate;
     NS_NewSVGMatrix(getter_AddRefs(translate),
-                    1.0f, 0.0f, 0.0f, 1.0f, -refX, -refY);
+                    1.0f, 0.0f, 0.0f, 1.0f, -ref.x, -ref.y);
     NS_ENSURE_TRUE(translate, NS_ERROR_OUT_OF_MEMORY);
     translate->Multiply(vb2vp, getter_AddRefs(mViewBoxToViewportTransform));
   }

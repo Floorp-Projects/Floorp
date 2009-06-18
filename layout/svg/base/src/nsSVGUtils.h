@@ -53,7 +53,6 @@ class nsIDocument;
 class nsPresContext;
 class nsIContent;
 class nsStyleCoord;
-class nsIDOMSVGRect;
 class nsFrameList;
 class nsIFrame;
 struct nsStyleSVGPaint;
@@ -73,7 +72,6 @@ class gfxContext;
 class gfxASurface;
 class gfxPattern;
 class gfxImageSurface;
-struct gfxMatrix;
 struct gfxSize;
 struct gfxIntSize;
 struct nsStyleFont;
@@ -323,11 +321,6 @@ public:
   */
   static float UserSpace(nsIFrame *aFrame, const nsSVGLength2 *aLength);
 
-  /* Tranforms point by the matrix.  In/out: x,y */
-  static void
-  TransformPoint(nsIDOMSVGMatrix *matrix,
-                 float *x, float *y);
-
   /* Returns the angle halfway between the two specified angles */
   static float
   AngleBisect(float a1, float a2);
@@ -451,7 +444,7 @@ public:
                                      nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity);
 
   static void SetClipRect(gfxContext *aContext,
-                          nsIDOMSVGMatrix *aCTM,
+                          const gfxMatrix &aCTM,
                           const gfxRect &aRect);
 
   /**

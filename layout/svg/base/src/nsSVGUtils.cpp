@@ -51,7 +51,6 @@
 #include "nsIPresShell.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsNetUtil.h"
-#include "nsIDOMSVGRect.h"
 #include "nsFrameList.h"
 #include "nsISVGChildFrame.h"
 #include "nsContentDLF.h"
@@ -81,7 +80,6 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsIDOMSVGUnitTypes.h"
-#include "nsSVGRect.h"
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGFilterPaintCallback.h"
@@ -671,24 +669,6 @@ float
 nsSVGUtils::UserSpace(nsIFrame *aNonSVGContext, const nsSVGLength2 *aLength)
 {
   return aLength->GetAnimValue(aNonSVGContext);
-}
-
-void
-nsSVGUtils::TransformPoint(nsIDOMSVGMatrix *matrix, 
-                           float *x, float *y)
-{
-  nsCOMPtr<nsIDOMSVGPoint> point;
-  NS_NewSVGPoint(getter_AddRefs(point), *x, *y);
-  if (!point)
-    return;
-
-  nsCOMPtr<nsIDOMSVGPoint> xfpoint;
-  point->MatrixTransform(matrix, getter_AddRefs(xfpoint));
-  if (!xfpoint)
-    return;
-
-  xfpoint->GetX(x);
-  xfpoint->GetY(y);
 }
 
 float
@@ -1291,7 +1271,7 @@ nsSVGUtils::CompositePatternMatrix(gfxContext *aContext,
 
   aContext->Save();
 
-  SetClipRect(aContext, aCTM, gfxRect(0, 0, aWidth, aHeight));
+  SetClipRect(aContext, ConvertSVGMatrixToThebes(aCTM), gfxRect(0, 0, aWidth, aHeight));
 
   aContext->Multiply(matrix);
 
@@ -1303,15 +1283,14 @@ nsSVGUtils::CompositePatternMatrix(gfxContext *aContext,
 
 void
 nsSVGUtils::SetClipRect(gfxContext *aContext,
-                        nsIDOMSVGMatrix *aCTM,
+                        const gfxMatrix &aCTM,
                         const gfxRect &aRect)
 {
-  gfxMatrix matrix = ConvertSVGMatrixToThebes(aCTM);
-  if (matrix.IsSingular())
+  if (aCTM.IsSingular())
     return;
 
   gfxMatrix oldMatrix = aContext->CurrentMatrix();
-  aContext->Multiply(matrix);
+  aContext->Multiply(aCTM);
   aContext->Clip(aRect);
   aContext->SetMatrix(oldMatrix);
 }
