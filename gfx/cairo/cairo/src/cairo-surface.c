@@ -79,7 +79,6 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_TEMP_FILE_ERROR, _cairo_surface_nil_temp_
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_error);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_STRIDE, _cairo_surface_nil_invalid_stride);
-static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_SIZE, _cairo_surface_nil_invalid_size);
 
 static cairo_status_t
 _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t **pattern,
@@ -1160,8 +1159,6 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra)
 {
-    cairo_status_t status;
-
     if (surface->status)
 	return surface->status;
 
@@ -1170,14 +1167,9 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
     if (surface->backend->acquire_source_image == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = surface->backend->acquire_source_image (surface,
-						     image_out, image_extra);
-    if (unlikely (status))
-	return _cairo_surface_set_error (surface, status);
-
-    _cairo_debug_check_image_surface_is_defined (&(*image_out)->base);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_surface_set_error (surface,
+	    surface->backend->acquire_source_image (surface,
+						    image_out, image_extra));
 }
 
 /**
@@ -1236,8 +1228,6 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 				   cairo_rectangle_int_t   *image_rect,
 				   void                   **image_extra)
 {
-    cairo_status_t status;
-
     if (surface->status)
 	return surface->status;
 
@@ -1246,17 +1236,12 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
     if (surface->backend->acquire_dest_image == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = surface->backend->acquire_dest_image (surface,
-						   interest_rect,
-						   image_out,
-						   image_rect,
-						   image_extra);
-    if (unlikely (status))
-	return _cairo_surface_set_error (surface, status);
-
-    _cairo_debug_check_image_surface_is_defined (&(*image_out)->base);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_surface_set_error (surface,
+	    surface->backend->acquire_dest_image (surface,
+						  interest_rect,
+						  image_out,
+						  image_rect,
+						  image_extra));
 }
 
 /**
@@ -1346,7 +1331,6 @@ _wrap_image (cairo_surface_t *src,
  * _cairo_surface_clone_similar:
  * @surface: a #cairo_surface_t
  * @src: the source image
- * @content: target content mask
  * @src_x: extent for the rectangle in src we actually care about
  * @src_y: extent for the rectangle in src we actually care about
  * @width: extent for the rectangle in src we actually care about
@@ -1366,7 +1350,6 @@ _wrap_image (cairo_surface_t *src,
 cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
-			      cairo_content_t	content,
 			      int               src_x,
 			      int               src_y,
 			      int               width,
@@ -1387,7 +1370,6 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
     if (surface->backend->clone_similar) {
 	status = surface->backend->clone_similar (surface, src,
-						  content,
 						  src_x, src_y,
 						  width, height,
 						  clone_offset_x,
@@ -1395,15 +1377,12 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 						  clone_out);
 
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	    if (_cairo_surface_is_image (src))
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-
 	    /* First check to see if we can replay to a similar surface */
 	    if (_cairo_surface_is_meta (src)) {
 		cairo_surface_t *similar;
 
 		similar = cairo_surface_create_similar (surface,
-							src->content & content,
+							src->content,
 							width, height);
 		status = similar->status;
 		if (unlikely (status))
@@ -1432,7 +1411,6 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 		} else {
 		    status =
 		    surface->backend->clone_similar (surface, &image->base,
-						     content,
 						     src_x, src_y,
 						     width, height,
 						     clone_offset_x,
@@ -1445,16 +1423,14 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     }
 
     /* If we're still unsupported, hit our fallback path to get a clone */
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	status =
 	    _cairo_surface_fallback_clone_similar (surface, src,
-						   content,
 						   src_x, src_y,
 						   width, height,
 						   clone_offset_x,
 						   clone_offset_y,
 						   clone_out);
-    }
 
     /* We should never get UNSUPPORTED here, so if we have an error, bail. */
     if (unlikely (status))
@@ -3039,8 +3015,6 @@ _cairo_surface_create_in_error (cairo_status_t status)
 	return (cairo_surface_t *) &_cairo_surface_nil_temp_file_error;
     case CAIRO_STATUS_INVALID_STRIDE:
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_stride;
-    case CAIRO_STATUS_INVALID_SIZE:
-	return (cairo_surface_t *) &_cairo_surface_nil_invalid_size;
     case CAIRO_STATUS_SUCCESS:
     case CAIRO_STATUS_LAST_STATUS:
 	ASSERT_NOT_REACHED;
@@ -3067,7 +3041,7 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_INVALID_CLUSTERS:
     case CAIRO_STATUS_INVALID_SLANT:
     case CAIRO_STATUS_INVALID_WEIGHT:
-    case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
+    case CAIRO_STATUS_INVALID_SIZE:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;

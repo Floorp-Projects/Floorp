@@ -25,10 +25,6 @@
 
 #include "cairo-skiplist-private.h"
 
-#if HAVE_FFS
-#include <strings.h> /* ffs() */
-#endif
-
 #define ELT_DATA(elt) (void *)	((char*) (elt) - list->data_size)
 #define NEXT_TO_ELT(next)	(skip_elt_t *) ((char *) (next) - offsetof (skip_elt_t, next))
 

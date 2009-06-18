@@ -1,0 +1,70 @@
+commit a26655b3144ed273940486fc15ccdac12b0562ec
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Tue Mar 17 15:08:50 2009 -0400
+
+    Jeff Muizelaar noted that the treatment of edges differed with firefox's
+    canvas definition, which considers a point on any edge as inside. The
+    current implementation has a similar definition to that of flash, for
+    which the top and right edges are outside. Arguably, firefox has the more
+    intuitive definition here...
+
+diff --git a/src/cairo-path-in-fill.c b/src/cairo-path-in-fill.c
+index 21cd0bd..e641654 100644
+--- a/src/cairo-path-in-fill.c
++++ b/src/cairo-path-in-fill.c
+@@ -41,6 +41,7 @@ typedef struct cairo_in_fill {
+     int winding;
+ 
+     cairo_fixed_t x, y;
++    cairo_bool_t on_edge;
+ 
+     cairo_bool_t has_current_point;
+     cairo_point_t current_point;
+@@ -58,6 +59,7 @@ _cairo_in_fill_init (cairo_in_fill_t	*in_fill,
+ 
+     in_fill->x = _cairo_fixed_from_double (x);
+     in_fill->y = _cairo_fixed_from_double (y);
++    in_fill->on_edge = FALSE;
+ 
+     in_fill->has_current_point = FALSE;
+     in_fill->current_point.x = 0;
+@@ -103,6 +105,9 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
+ {
+     int dir;
+ 
++    if (in_fill->on_edge)
++	return;
++
+     /* count the number of edge crossing to -∞ */
+ 
+     dir = 1;
+@@ -116,6 +121,18 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
+ 	dir = -1;
+     }
+ 
++    /* First check whether the query is on an edge */
++    if ((p1->x == in_fill->x && p1->x == in_fill->y) ||
++	(p2->x == in_fill->x && p2->x == in_fill->y) ||
++	(! (p2->y < in_fill->y || p1->y > in_fill->y) &&
++	 ! (p1->x > in_fill->x && p2->x > in_fill->x) &&
++	 ! (p1->x < in_fill->x && p2->x < in_fill->x) &&
++	 edge_compare_for_y_against_x (p1, p2, in_fill->y, in_fill->x) == 0))
++    {
++	in_fill->on_edge = TRUE;
++	return;
++    }
++
+     /* edge is entirely above or below, note the shortening rule */
+     if (p2->y <= in_fill->y || p1->y > in_fill->y)
+ 	return;
+@@ -246,7 +263,9 @@ _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
+ 
+     _cairo_in_fill_close_path (&in_fill);
+ 
+-    switch (fill_rule) {
++    if (in_fill.on_edge) {
++	*is_inside = TRUE;
++    } else switch (fill_rule) {
+     case CAIRO_FILL_RULE_EVEN_ODD:
+ 	*is_inside = in_fill.winding & 1;
+ 	break;

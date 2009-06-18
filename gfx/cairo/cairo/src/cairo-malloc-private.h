@@ -41,7 +41,7 @@
 
 #if HAVE_MEMFAULT
 #include <memfault.h>
-#define CAIRO_INJECT_FAULT() MEMFAULT_INJECT_FAULT()
+#define CAIRO_INJECT_FAULT() VALGRIND_INJECT_FAULT()
 #else
 #define CAIRO_INJECT_FAULT() 0
 #endif
