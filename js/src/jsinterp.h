@@ -380,23 +380,20 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         if (entry->kpc == pc && entry->kshape == kshape_) {                   \
             JSObject *tmp_;                                                   \
             pobj = obj;                                                       \
-            JS_LOCK_OBJ(cx, pobj);                                            \
             JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);                          \
             if (PCVCAP_TAG(entry->vcap) == 1 &&                               \
-                (tmp_ = LOCKED_OBJ_GET_PROTO(pobj)) != NULL &&                \
+                (tmp_ = OBJ_GET_PROTO(cx, pobj)) != NULL &&                   \
                 OBJ_IS_NATIVE(tmp_)) {                                        \
-                JS_UNLOCK_OBJ(cx, pobj);                                      \
                 pobj = tmp_;                                                  \
-                JS_LOCK_OBJ(cx, pobj);                                        \
             }                                                                 \
-            if (PCVCAP_SHAPE(entry->vcap) == OBJ_SHAPE(pobj)) {               \
+                                                                              \
+            if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(entry->vcap))) {  \
                 PCMETER(cache_->pchits++);                                    \
                 PCMETER(!PCVCAP_TAG(entry->vcap) || cache_->protopchits++);   \
                 pobj = OBJ_SCOPE(pobj)->object;                               \
                 atom = NULL;                                                  \
                 break;                                                        \
             }                                                                 \
-            JS_UNLOCK_OBJ(cx, pobj);                                          \
         }                                                                     \
         atom = js_FullTestPropertyCache(cx, pc, &obj, &pobj, &entry);         \
         if (atom)                                                             \
