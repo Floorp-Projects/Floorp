@@ -419,6 +419,35 @@
     </implementation>
 
     <handlers>
+      <handler event="draggesture" phase="capturing"><![CDATA[
+        // TODO: This should use dragstart but editor code is still using
+        //       the old drag & drop APIs, so we have to handle draggesture.
+        //       This can be changed once editor code is updated to the new API.
+        //       See bug 499008 for details.
+
+        // Drag only if the gesture starts from the input field.
+        if (event.originalTarget != this.inputField)
+          return;
+
+        // Drag only if the entire value is selected and it's a valid URI.
+        var isFullSelection = this.selectionStart == 0 &&
+                              this.selectionEnd == this.textLength;
+        if (!isFullSelection ||
+            this.getAttribute("pageproxystate") != "valid")
+          return;
+
+        var urlString = content.location.href;
+        var title = content.document.title || urlString;
+        var htmlString = "<a href=\"" + urlString + "\">" + urlString + "</a>";
+
+        var dt = event.dataTransfer;
+        dt.setData("text/x-moz-url", urlString + "\n" + title);
+        dt.setData("text/unicode", urlString);
+        dt.setData("text/html", htmlString);
+
+        dt.effectAllowed = "copyLink";
+        event.stopPropagation();
+      ]]></handler>
       <handler event="focus" phase="capturing" action="this._hideURLTooltip();"/>
       <handler event="dragover" phase="capturing" action="nsDragAndDrop.dragOver(event, this);"/>
       <handler event="drop" phase="capturing" action="nsDragAndDrop.drop(event, this);"/>
