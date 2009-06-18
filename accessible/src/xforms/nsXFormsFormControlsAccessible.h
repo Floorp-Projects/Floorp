@@ -281,13 +281,10 @@ class nsXFormsSelectComboboxAccessible : public nsXFormsSelectableAccessible
 public:
   nsXFormsSelectComboboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  // Allows accessible nodes in anonymous content of xforms element by
-  // always returning PR_TRUE value.
-  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
-
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual PRBool GetAllowsAnonChildAccessibles();
 };
 
 

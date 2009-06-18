@@ -180,12 +180,6 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  if(aIID.Equals(NS_GET_IID(nsPIAccessible))) {
-    *aInstancePtr = static_cast<nsPIAccessible*>(this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
   if (aIID.Equals(NS_GET_IID(nsAccessible))) {
     *aInstancePtr = static_cast<nsAccessible*>(this);
     NS_ADDREF_THIS();
@@ -267,10 +261,10 @@ nsAccessible::~nsAccessible()
 {
 }
 
-NS_IMETHODIMP nsAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
+void
+nsAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
 {
   mRoleMapEntry = aRoleMapEntry;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -489,34 +483,32 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::SetParent(nsIAccessible *aParent)
+void
+nsAccessible::SetParent(nsIAccessible *aParent)
 {
   if (mParent != aParent) {
     // Adopt a child -- we allow this now. the new parent
     // may be a dom node which wasn't previously accessible but now is.
     // The old parent's children now need to be invalidated, since 
     // it no longer owns the child, the new parent does
-    nsCOMPtr<nsPIAccessible> privOldParent = do_QueryInterface(mParent);
-    if (privOldParent) {
-      privOldParent->InvalidateChildren();
-    }
+    nsRefPtr<nsAccessible> oldParent = nsAccUtils::QueryAccessible(mParent);
+    if (oldParent)
+      oldParent->InvalidateChildren();
   }
 
   mParent = aParent;
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::SetFirstChild(nsIAccessible *aFirstChild)
+void
+nsAccessible::SetFirstChild(nsIAccessible *aFirstChild)
 {
   mFirstChild = aFirstChild;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
+void
+nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
 {
   mNextSibling = aNextSibling;
-  return NS_OK;
 }
 
 nsresult
@@ -528,15 +520,16 @@ nsAccessible::Shutdown()
   // sure none of its children point to this parent
   InvalidateChildren();
   if (mParent) {
-    nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(mParent));
-    privateParent->InvalidateChildren();
+    nsRefPtr<nsAccessible> parent(nsAccUtils::QueryAccessible(mParent));
+    parent->InvalidateChildren();
     mParent = nsnull;
   }
 
   return nsAccessNodeWrap::Shutdown();
 }
 
-NS_IMETHODIMP nsAccessible::InvalidateChildren()
+void
+nsAccessible::InvalidateChildren()
 {
   // Document has transformed, reset our invalid children and child count
 
@@ -544,25 +537,29 @@ NS_IMETHODIMP nsAccessible::InvalidateChildren()
   // CacheChildren() is called.
   // Note: we don't want to start creating accessibles at this point,
   // so don't use GetNextSibling() here. (bug 387252)
-  nsAccessible* child = static_cast<nsAccessible*>(mFirstChild.get());
+  nsRefPtr<nsAccessible> child = nsAccUtils::QueryAccessible(mFirstChild);
   while (child) {
     child->mParent = nsnull;
 
     nsCOMPtr<nsIAccessible> next = child->mNextSibling;
     child->mNextSibling = nsnull;
-    child = static_cast<nsAccessible*>(next.get());
+    child = nsAccUtils::QueryAccessible(next);
   }
 
   mAccChildCount = eChildCountUninitialized;
   mFirstChild = nsnull;
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
+NS_IMETHODIMP
+nsAccessible::GetParent(nsIAccessible **aParent)
 {
-  nsresult rv = GetCachedParent(aParent);
-  if (NS_FAILED(rv) || *aParent) {
-    return rv;
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAccessible> cachedParent = GetCachedParent();
+  if (cachedParent) {
+    cachedParent.swap(*aParent);
+    return NS_OK;
   }
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
@@ -571,26 +568,24 @@ NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
   return docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, aParent);
 }
 
-NS_IMETHODIMP nsAccessible::GetCachedParent(nsIAccessible **  aParent)
+already_AddRefed<nsIAccessible>
+nsAccessible::GetCachedParent()
 {
-  *aParent = nsnull;
-  if (!mWeakShell) {
-    // This node has been shut down
-    return NS_ERROR_FAILURE;
-  }
-  NS_IF_ADDREF(*aParent = mParent);
-  return NS_OK;
+  if (IsDefunct())
+    return nsnull;
+
+  nsCOMPtr<nsIAccessible> cachedParent = mParent;
+  return cachedParent.forget();
 }
 
-NS_IMETHODIMP nsAccessible::GetCachedFirstChild(nsIAccessible **  aFirstChild)
+already_AddRefed<nsIAccessible>
+nsAccessible::GetCachedFirstChild()
 {
-  *aFirstChild = nsnull;
-  if (!mWeakShell) {
-    // This node has been shut down
-    return NS_ERROR_FAILURE;
-  }
-  NS_IF_ADDREF(*aFirstChild = mFirstChild);
-  return NS_OK;
+  if (IsDefunct())
+    return nsnull;
+
+  nsCOMPtr<nsIAccessible> cachedFirstChild = mFirstChild;
+  return cachedFirstChild.forget();
 }
 
   /* readonly attribute nsIAccessible nextSibling; */
@@ -660,10 +655,9 @@ NS_IMETHODIMP nsAccessible::GetFirstChild(nsIAccessible * *aFirstChild)
   GetChildCount(&numChildren);  // Make sure we cache all of the children
 
 #ifdef DEBUG
-  nsCOMPtr<nsPIAccessible> firstChild(do_QueryInterface(mFirstChild));
+  nsRefPtr<nsAccessible> firstChild(nsAccUtils::QueryAccessible(mFirstChild));
   if (firstChild) {
-    nsCOMPtr<nsIAccessible> realParent;
-    firstChild->GetCachedParent(getter_AddRefs(realParent));
+    nsCOMPtr<nsIAccessible> realParent = firstChild->GetCachedParent();
     NS_ASSERTION(!realParent || realParent == this,
                  "Two accessibles have the same first child accessible.");
   }
@@ -752,34 +746,33 @@ void nsAccessible::CacheChildren()
 
   if (mAccChildCount == eChildCountUninitialized) {
     mAccChildCount = 0;// Prevent reentry
-    PRBool allowsAnonChildren = PR_FALSE;
-    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+    PRBool allowsAnonChildren = GetAllowsAnonChildAccessibles();
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
     // Seed the frame hint early while we're still on a container node.
     // This is better than doing the GetPrimaryFrameFor() later on
     // a text node, because text nodes aren't in the frame map.
     walker.mState.frame = GetFrame();
 
-    nsCOMPtr<nsPIAccessible> privatePrevAccessible;
+    nsRefPtr<nsAccessible> prevAcc;
     PRInt32 childCount = 0;
     walker.GetFirstChild();
     SetFirstChild(walker.mState.accessible);
 
     while (walker.mState.accessible) {
       ++ childCount;
-      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
-      privatePrevAccessible->SetParent(this);
+      prevAcc = nsAccUtils::QueryAccessible(walker.mState.accessible);
+      prevAcc->SetParent(this);
       walker.GetNextSibling();
-      privatePrevAccessible->SetNextSibling(walker.mState.accessible);
+      prevAcc->SetNextSibling(walker.mState.accessible);
     }
     mAccChildCount = childCount;
   }
 }
 
-NS_IMETHODIMP nsAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+PRBool
+nsAccessible::GetAllowsAnonChildAccessibles()
 {
-  *aAllowsAnonChildren = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 /* readonly attribute long childCount; */
@@ -826,30 +819,29 @@ NS_IMETHODIMP nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::TestChildCache(nsIAccessible *aCachedChild)
+void
+nsAccessible::TestChildCache(nsIAccessible *aCachedChild)
 {
-#ifndef DEBUG_A11Y
-  return NS_OK;
-#else
+#ifdef DEBUG_A11Y
   // All cached accessible nodes should be in the parent
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  if (mAccChildCount <= 0) {
-    return NS_OK;
-  }
+  if (mAccChildCount <= 0)
+    return;
+
   nsCOMPtr<nsIAccessible> sibling = mFirstChild;
 
   while (sibling != aCachedChild) {
     NS_ASSERTION(sibling, "[TestChildCache] Never ran into the same child that we started from");
     if (!sibling)
-      return NS_ERROR_FAILURE;
+      return;
 
     nsCOMPtr<nsIAccessible> tempAccessible;
     sibling->GetNextSibling(getter_AddRefs(tempAccessible));
     sibling = tempAccessible;
   }
-  return NS_OK;
+
 #endif
 }
 
@@ -1589,7 +1581,7 @@ nsAccessible::GetXULName(nsAString& aLabel)
   return nsTextEquivUtils::GetNameFromSubtree(this, aLabel);
 }
 
-NS_IMETHODIMP
+nsresult
 nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
@@ -3104,7 +3096,7 @@ nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
 {
   return NS_OK;
