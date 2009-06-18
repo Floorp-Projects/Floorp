@@ -67,6 +67,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
   : documentModeHandler(aParser)
   , scriptingEnabled(PR_FALSE)
   , fragment(PR_FALSE)
+  , contextNode(nsnull)
   , formPointer(nsnull)
   , headPointer(nsnull)
   , mNeedsFlush(PR_FALSE)
@@ -85,7 +86,9 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
   MOZ_COUNT_DTOR(nsHtml5TreeBuilder);
   NS_ASSERTION(!mActive, "nsHtml5TreeBuilder deleted without ever calling end() on it!");
   mOpQueue.Clear();
-  mFlushTimer->Cancel(); // XXX why is this even necessary? it is, though.
+  if (mFlushTimer) {
+    mFlushTimer->Cancel(); // XXX why is this even necessary? it is, though.
+  }
 }
 
 nsIContent*
@@ -524,6 +527,64 @@ nsHtml5TreeBuilder::Flush()
   
   mFlushTimer->InitWithFuncCallback(TimerCallbackFunc, static_cast<void*> (this), NS_HTML5_TREE_BUILDER_MAX_TIME_WITHOUT_FLUSH, nsITimer::TYPE_ONE_SHOT);
 }
+
+void
+nsHtml5TreeBuilder::DoUnlink()
+{
+  nsHtml5TreeBuilder* tmp = this;
+  mFlushTimer->Cancel();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFlushTimer);
+  NS_IF_RELEASE(contextNode);
+  NS_IF_RELEASE(formPointer);
+  NS_IF_RELEASE(headPointer);
+  while (currentPtr > -1) {
+    stack[currentPtr]->release();
+    currentPtr--;
+  }
+  while (listPtr > -1) {
+    if (listOfActiveFormattingElements[listPtr]) {
+      listOfActiveFormattingElements[listPtr]->release();
+    }
+    listPtr--;
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mOpQueue);
+}
+
+void
+nsHtml5TreeBuilder::DoTraverse(nsCycleCollectionTraversalCallback &cb)
+{
+  nsHtml5TreeBuilder* tmp = this;
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFlushTimer);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(contextNode);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(formPointer);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(headPointer);
+
+  for (PRInt32 i = 0; i <= currentPtr; i++) {
+#ifdef DEBUG_CC
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "stack[i]");
+#endif
+    cb.NoteNativeChild(stack[i], &NS_CYCLE_COLLECTION_NAME(nsHtml5StackNode));
+  }
+
+  for (PRInt32 i = 0; i <= listPtr; i++) {
+    if (listOfActiveFormattingElements[i]) {
+#ifdef DEBUG_CC
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "listOfActiveFormattingElements[i]");
+#endif
+      cb.NoteNativeChild(listOfActiveFormattingElements[i], &NS_CYCLE_COLLECTION_NAME(nsHtml5StackNode));
+    }
+  }
+
+  const nsHtml5TreeOperation* start = mOpQueue.Elements();
+  const nsHtml5TreeOperation* end = start + mOpQueue.Length();
+  for (nsHtml5TreeOperation* iter = (nsHtml5TreeOperation*)start; iter < end; ++iter) {
+#ifdef DEBUG_CC
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOpQueue[i]");
+#endif
+    iter->DoTraverse(cb);
+  }
+}
+
 
 #ifdef DEBUG_hsivonen
 PRUint32 nsHtml5TreeBuilder::sInsertionBatchMaxLength = 0;

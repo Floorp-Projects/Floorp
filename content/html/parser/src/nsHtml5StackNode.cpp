@@ -162,3 +162,5 @@ nsHtml5StackNode::releaseStatics()
 }
 
 
+#include "nsHtml5StackNodeCppSupplement.h"
+

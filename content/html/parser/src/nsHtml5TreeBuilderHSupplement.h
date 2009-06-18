@@ -162,3 +162,7 @@
         mParser->StartLayout(PR_FALSE);
       }
     }
+    
+    void DoUnlink();
+    void DoTraverse(nsCycleCollectionTraversalCallback &cb);
+
