@@ -179,8 +179,7 @@ void nsXULButtonAccessible::CacheChildren()
   if (mAccChildCount == eChildCountUninitialized) {
     mAccChildCount = 0;  // Avoid reentry
     SetFirstChild(nsnull);
-    PRBool allowsAnonChildren = PR_FALSE;
-    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+    PRBool allowsAnonChildren = GetAllowsAnonChildAccessibles();
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
     walker.GetFirstChild();
     nsCOMPtr<nsIAccessible> dropMarkerAccessible;
@@ -197,9 +196,10 @@ void nsXULButtonAccessible::CacheChildren()
       if (nsAccUtils::RoleInternal(dropMarkerAccessible) ==
           nsIAccessibleRole::ROLE_PUSHBUTTON) {
         SetFirstChild(dropMarkerAccessible);
-        nsCOMPtr<nsPIAccessible> privChildAcc = do_QueryInterface(dropMarkerAccessible);
-        privChildAcc->SetNextSibling(nsnull);
-        privChildAcc->SetParent(this);
+        nsRefPtr<nsAccessible> childAcc =
+          nsAccUtils::QueryAccessible(dropMarkerAccessible);
+        childAcc->SetNextSibling(nsnull);
+        childAcc->SetParent(this);
         mAccChildCount = 1;
       }
     }
@@ -989,11 +989,10 @@ NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP
-nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+PRBool
+nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles()
 {
-  *aAllowsAnonChildren = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor)
