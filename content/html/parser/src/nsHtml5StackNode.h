@@ -80,6 +80,8 @@ class nsHtml5StackNode
     void release();
     static void initializeStatics();
     static void releaseStatics();
+
+#include "nsHtml5StackNodeHSupplement.h"
 };
 
 #ifdef nsHtml5StackNode_cpp__
