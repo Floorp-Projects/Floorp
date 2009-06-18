@@ -84,6 +84,13 @@ class nsHtml5TreeOperation {
       mParent = aParent;
       mTable = aTable;
     }
+    inline void DoTraverse(nsCycleCollectionTraversalCallback &cb) {
+      nsHtml5TreeOperation* tmp = this;
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNode);
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParent);
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTable);
+    }
+
     nsresult Perform(nsHtml5TreeBuilder* aBuilder);
   private:
     eHtml5TreeOperation mOpCode;
