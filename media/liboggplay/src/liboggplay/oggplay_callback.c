@@ -701,8 +701,8 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
    * call appropriate callback
    */
   if (callbacks[content_type].callback != NULL) {
-    callbacks[content_type].callback(oggz, op, serialno,
-                                          me->decode_data[me->num_tracks - 1]);
+    return callbacks[content_type].callback(oggz, op, serialno,
+                                            me->decode_data[me->num_tracks - 1]);
   }
 
   return 0;
