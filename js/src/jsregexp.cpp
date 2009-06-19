@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set sw=4 ts=8 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -1964,7 +1964,7 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
     uintN i;
     size_t len;
 
-    len = JSSTRING_LENGTH(str);
+    len = str->length();
 
     state.context = cx;
     state.tokenStream = ts;
@@ -2004,14 +2004,14 @@ typedef List<LIns*, LIST_NonGCObjects> LInsList;
 /* Dummy GC for nanojit placement new. */
 static GC gc;
 
-static void*
-HashRegExp(uint16 flags, jschar* s, size_t n)
+static void *
+HashRegExp(uint16 flags, const jschar *s, size_t n)
 {
     uint32 h;
 
     for (h = 0; n; s++, n--)
         h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-    return (void*)(h + flags);
+    return (void *)(h + flags);
 }
 
 struct RESideExit : public SideExit {
@@ -2021,15 +2021,15 @@ struct RESideExit : public SideExit {
 };
 
 /* Return the cached fragment for the given regexp, or NULL. */
-static Fragment* 
+static Fragment*
 LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags, 
-                   jschar* re_chars, size_t re_length)
+                   const jschar* re_chars, size_t re_length)
 {
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
     Fragment* fragment = fragmento->getLoop(hash);
     while (fragment) {
         if (fragment->lastIns) {
-            RESideExit* exit = (RESideExit*)fragment->lastIns->record()->exit;
+            RESideExit *exit = (RESideExit*)fragment->lastIns->record()->exit;
             if (exit->re_flags == re_flags && 
                 exit->re_length == re_length &&
                 !memcmp(exit->re_chars, re_chars, re_length * sizeof(jschar))) {
@@ -2353,7 +2353,7 @@ class RegExpNativeCompiler {
      * of the fields are not used. The important part is the regexp source
      * and flags, which we use as the fragment lookup key.
      */
-    GuardRecord* insertGuard(jschar* re_chars, size_t re_length)
+    GuardRecord* insertGuard(const jschar* re_chars, size_t re_length)
     {
         LIns* skip = lirBufWriter->insSkip(sizeof(GuardRecord) + 
                                            sizeof(RESideExit) + 
@@ -2379,11 +2379,11 @@ class RegExpNativeCompiler {
         GuardRecord* guard = NULL;
         LIns* start;
         bool oom = false;
-        jschar* re_chars;
+        const jschar* re_chars;
         size_t re_length;
         Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
 
-        JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+        re->source->getCharsAndLength(re_chars, re_length);
         /* 
          * If the regexp is too long nanojit will assert when we
          * try to insert the guard record.
@@ -2489,11 +2489,11 @@ static NativeRegExp
 GetNativeRegExp(JSContext* cx, JSRegExp* re)
 {
     Fragment *fragment;
-    jschar* re_chars;
+    const jschar *re_chars;
     size_t re_length;
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
 
-    JSSTRING_CHARS_AND_LENGTH(re->source, re_chars, re_length);
+    re->source->getCharsAndLength(re_chars, re_length);
     void* hash = HashRegExp(re->flags, re_chars, re_length);
     fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length);
     if (fragment) {
@@ -2596,13 +2596,13 @@ JSRegExp *
 js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat)
 {
     uintN flags;
-    jschar *s;
+    const jschar *s;
     size_t i, n;
     char charBuf[2];
 
     flags = 0;
     if (opt) {
-        JSSTRING_CHARS_AND_LENGTH(opt, s, n);
+        opt->getCharsAndLength(s, n);
         for (i = 0; i < n; i++) {
 #define HANDLE_FLAG(name)                                                     \
             JS_BEGIN_MACRO                                                    \
@@ -2907,13 +2907,12 @@ ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet)
      * source string.
      */
     JS_ASSERT(1 <= charSet->u.src.startIndex);
-    JS_ASSERT(charSet->u.src.startIndex
-              < JSSTRING_LENGTH(re->source));
-    JS_ASSERT(charSet->u.src.length <= JSSTRING_LENGTH(re->source)
+    JS_ASSERT(charSet->u.src.startIndex < re->source->length());
+    JS_ASSERT(charSet->u.src.length <= re->source->length()
                                        - 1 - charSet->u.src.startIndex);
 
     charSet->converted = JS_TRUE;
-    src = JSSTRING_CHARS(re->source) + charSet->u.src.startIndex;
+    src = re->source->chars() + charSet->u.src.startIndex;
     end = src + charSet->u.src.length;
     JS_ASSERT(src[-1] == '[');
     JS_ASSERT(end[0] == ']');
@@ -3260,12 +3259,12 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         break;
       case REOP_FLAT:
         pc = ReadCompactIndex(pc, &offset);
-        JS_ASSERT(offset < JSSTRING_LENGTH(gData->regexp->source));
+        JS_ASSERT(offset < gData->regexp->source->length());
         pc = ReadCompactIndex(pc, &length);
         JS_ASSERT(1 <= length);
-        JS_ASSERT(length <= JSSTRING_LENGTH(gData->regexp->source) - offset);
+        JS_ASSERT(length <= gData->regexp->source->length() - offset);
         if (length <= (size_t)(gData->cpend - x->cp)) {
-            source = JSSTRING_CHARS(gData->regexp->source) + offset;
+            source = gData->regexp->source->chars() + offset;
             re_debug_chars(source, length);
             for (index = 0; index != length; index++) {
                 if (source[index] != x->cp[index])
@@ -3285,11 +3284,11 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         break;
       case REOP_FLATi:
         pc = ReadCompactIndex(pc, &offset);
-        JS_ASSERT(offset < JSSTRING_LENGTH(gData->regexp->source));
+        JS_ASSERT(offset < gData->regexp->source->length());
         pc = ReadCompactIndex(pc, &length);
         JS_ASSERT(1 <= length);
-        JS_ASSERT(length <= JSSTRING_LENGTH(gData->regexp->source) - offset);
-        source = JSSTRING_CHARS(gData->regexp->source);
+        JS_ASSERT(length <= gData->regexp->source->length() - offset);
+        source = gData->regexp->source->chars();
         result = FlatNIMatcher(gData, x, source + offset, length);
         break;
       case REOP_FLAT1i:
@@ -4054,7 +4053,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
      * and we never let cp get beyond cpend.
      */
     start = *indexp;
-    JSSTRING_CHARS_AND_LENGTH(str, cp, length);
+    str->getCharsAndLength(cp, length);
     if (start > length)
         start = length;
     gData.cpbegin = cp;
@@ -4137,7 +4136,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     }                                                                         \
 }
 
-        matchstr = js_NewDependentString(cx, str, cp - JSSTRING_CHARS(str),
+        matchstr = js_NewDependentString(cx, str, cp - str->chars(),
                                          matchlen);
         if (!matchstr) {
             cx->weakRoots.newborn[GCX_OBJECT] = NULL;
@@ -4200,7 +4199,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             } else {
                 parstr = js_NewDependentString(cx, str,
                                                gData.cpbegin + parsub->index -
-                                               JSSTRING_CHARS(str),
+                                               str->chars(),
                                                parsub->length);
                 if (!parstr) {
                     cx->weakRoots.newborn[GCX_OBJECT] = NULL;
@@ -4247,7 +4246,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
      *
      * js1.3        "hi", "hi there"            "hihitherehi therebye"
      */
-    res->leftContext.chars = JSSTRING_CHARS(str);
+    res->leftContext.chars = str->chars();
     res->leftContext.length = start + gData.skipped;
     res->rightContext.chars = ep;
     res->rightContext.length = gData.cpend - ep;
@@ -4649,7 +4648,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
         return JS_TRUE;
     }
 
-    JSSTRING_CHARS_AND_LENGTH(re->source, source, length);
+    re->source->getCharsAndLength(source, length);
     if (length == 0) {
         source = empty_regexp_ucstr;
         length = JS_ARRAY_LENGTH(empty_regexp_ucstr) - 1;
@@ -4758,7 +4757,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
 
         /* Escape any naked slashes in the regexp source. */
-        JSSTRING_CHARS_AND_LENGTH(str, start, length);
+        str->getCharsAndLength(start, length);
         end = start + length;
         nstart = ncp = NULL;
         for (cp = start; cp < end; cp++) {
@@ -4885,7 +4884,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         argv[0] = STRING_TO_JSVAL(str);
     }
 
-    if (lastIndex < 0 || JSSTRING_LENGTH(str) < lastIndex) {
+    if (lastIndex < 0 || str->length() < lastIndex) {
         ok = js_SetLastIndex(cx, obj, 0);
         *rval = JSVAL_NULL;
     } else {

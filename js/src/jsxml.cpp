@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -117,8 +117,8 @@ const char js_gt_entity_str[]     = "&gt;";
 const char js_lt_entity_str[]     = "&lt;";
 const char js_quot_entity_str[]   = "&quot;";
 
-#define IS_EMPTY(str) (JSSTRING_LENGTH(str) == 0)
-#define IS_STAR(str)  (JSSTRING_LENGTH(str) == 1 && *JSSTRING_CHARS(str) == '*')
+#define IS_STAR(str)  ((str)->length() == 1 && *(str)->chars() == '*')
+
 /* Slot indexes shared between Namespace and QName objects. */
 const uint32 JSSLOT_PREFIX      = JSSLOT_PRIVATE;
 const uint32 JSSLOT_URI         = JSSLOT_PRIVATE + 1;
@@ -445,7 +445,7 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
     if (!uri) {
         /* No uri means wildcard qualifier. */
         str = ATOM_TO_STRING(cx->runtime->atomState.starQualifierAtom);
-    } else if (IS_EMPTY(uri)) {
+    } else if (uri->empty()) {
         /* Empty string for uri means localName is in no namespace. */
         str = cx->runtime->emptyString;
     } else {
@@ -459,12 +459,12 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     if (str && clasp == &js_AttributeNameClass) {
-        length = JSSTRING_LENGTH(str);
+        length = str->length();
         chars = (jschar *) JS_malloc(cx, (length + 2) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
         *chars = '@';
-        js_strncpy(chars + 1, JSSTRING_CHARS(str), length);
+        js_strncpy(chars + 1, str->chars(), length);
         chars[++length] = 0;
         str = js_NewString(cx, chars, length);
         if (!str) {
@@ -576,7 +576,7 @@ js_IsXMLName(JSContext *cx, jsval v)
         }
     }
 
-    return IsXMLName(JSSTRING_CHARS(name), JSSTRING_LENGTH(name));
+    return IsXMLName(name->chars(), name->length());
 }
 
 /*
@@ -640,7 +640,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             if (!uri)
                 return JS_FALSE;
             obj->fslots[JSSLOT_URI] = STRING_TO_JSVAL(uri);
-            if (!IS_EMPTY(uri))
+            if (!uri->empty())
                 obj->fslots[JSSLOT_PREFIX] = JSVAL_VOID;
         }
     } else if (argc == 2) {
@@ -652,12 +652,12 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
         obj->fslots[JSSLOT_URI] = STRING_TO_JSVAL(uri);
 
         prefixval = argv[0];
-        if (IS_EMPTY(uri)) {
+        if (uri->empty()) {
             if (!JSVAL_IS_VOID(prefixval)) {
                 prefix = js_ValueToString(cx, prefixval);
                 if (!prefix)
                     return JS_FALSE;
-                if (!IS_EMPTY(prefix)) {
+                if (!prefix->empty()) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_BAD_XML_NAMESPACE,
                                          js_ValueToPrintableString(cx,
@@ -804,7 +804,7 @@ QNameHelper(JSContext *cx, JSObject *obj, JSClass *clasp, intN argc,
             argv[0] = STRING_TO_JSVAL(uri);     /* local root */
 
             /* NULL here represents *undefined* in ECMA-357 13.2.2 3(c)iii. */
-            prefix = IS_EMPTY(uri) ? cx->runtime->emptyString : NULL;
+            prefix = uri->empty() ? cx->runtime->emptyString : NULL;
         }
     }
 
@@ -1237,10 +1237,10 @@ static JSPropertySpec xml_static_props[] = {
 
 /* Macros for special-casing xml:, xmlns= and xmlns:foo= in ParseNodeToQName. */
 #define IS_XML(str)                                                           \
-    (JSSTRING_LENGTH(str) == 3 && IS_XML_CHARS(JSSTRING_CHARS(str)))
+    (str->length() == 3 && IS_XML_CHARS(str->chars()))
 
 #define IS_XMLNS(str)                                                         \
-    (JSSTRING_LENGTH(str) == 5 && IS_XMLNS_CHARS(JSSTRING_CHARS(str)))
+    (str->length() == 5 && IS_XMLNS_CHARS(str->chars()))
 
 #define IS_XML_CHARS(chars)                                                   \
     (JS_TOLOWER((chars)[0]) == 'x' &&                                         \
@@ -1274,7 +1274,7 @@ ParseNodeToQName(JSCompiler *jsc, JSParseNode *pn,
 
     JS_ASSERT(pn->pn_arity == PN_NULLARY);
     str = ATOM_TO_STRING(pn->pn_atom);
-    JSSTRING_CHARS_AND_LENGTH(str, start, length);
+    str->getCharsAndLength(start, length);
     JS_ASSERT(length != 0 && *start != '@');
     JS_ASSERT(length != 1 || *start != '*');
 
@@ -1342,12 +1342,12 @@ ParseNodeToQName(JSCompiler *jsc, JSParseNode *pn,
                 --n;
                 ns = XMLARRAY_MEMBER(inScopeNSes, n, JSObject);
                 nsprefix = GetPrefix(ns);
-                if (!nsprefix || IS_EMPTY(nsprefix)) {
+                if (!nsprefix || nsprefix->empty()) {
                     uri = GetURI(ns);
                     break;
                 }
             }
-            prefix = IS_EMPTY(uri) ? jsc->context->runtime->emptyString : NULL;
+            prefix = uri->empty() ? jsc->context->runtime->emptyString : NULL;
         }
         localName = str;
     }
@@ -1362,7 +1362,7 @@ ChompXMLWhitespace(JSContext *cx, JSString *str)
     const jschar *cp, *start, *end;
     jschar c;
 
-    JSSTRING_CHARS_AND_LENGTH(str, start, length);
+    str->getCharsAndLength(start, length);
     for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
         if (!JS_ISXMLSPACE(c))
@@ -1550,7 +1550,7 @@ ParseNodeToXML(JSCompiler *jsc, JSParseNode *pn,
             if (pn2->pn_type != TOK_XMLATTR)
                 goto syntax;
 
-            JSSTRING_CHARS_AND_LENGTH(str, chars, length);
+            str->getCharsAndLength(chars, length);
             if (length >= 5 &&
                 IS_XMLNS_CHARS(chars) &&
                 (length == 5 || chars[5] == ':')) {
@@ -1849,8 +1849,8 @@ ParseXMLSource(JSContext *cx, JSString *src)
     uri = GetURI(JSVAL_TO_OBJECT(nsval));
     uri = js_EscapeAttributeValue(cx, uri, JS_FALSE);
 
-    urilen = JSSTRING_LENGTH(uri);
-    srclen = JSSTRING_LENGTH(src);
+    urilen = uri->length();
+    srclen = src->length();
     length = constrlen(prefix) + urilen + constrlen(middle) + srclen +
              constrlen(suffix);
 
@@ -1861,13 +1861,13 @@ ParseXMLSource(JSContext *cx, JSString *src)
     dstlen = length;
     js_InflateStringToBuffer(cx, prefix, constrlen(prefix), chars, &dstlen);
     offset = dstlen;
-    js_strncpy(chars + offset, JSSTRING_CHARS(uri), urilen);
+    js_strncpy(chars + offset, uri->chars(), urilen);
     offset += urilen;
     dstlen = length - offset + 1;
     js_InflateStringToBuffer(cx, middle, constrlen(middle), chars + offset,
                              &dstlen);
     offset += dstlen;
-    srcp = JSSTRING_CHARS(src);
+    srcp = src->chars();
     js_strncpy(chars + offset, srcp, srclen);
     offset += srclen;
     dstlen = length - offset + 1;
@@ -1991,7 +1991,7 @@ ToXML(JSContext *cx, jsval v)
     str = js_ValueToString(cx, v);
     if (!str)
         return NULL;
-    if (IS_EMPTY(str)) {
+    if (str->empty()) {
         length = 0;
 #ifdef __GNUC__         /* suppress bogus gcc warnings */
         xml = NULL;
@@ -2072,7 +2072,7 @@ ToXMLList(JSContext *cx, jsval v)
     str = js_ValueToString(cx, v);
     if (!str)
         return NULL;
-    if (IS_EMPTY(str)) {
+    if (str->empty()) {
         xml = NULL;
         length = 0;
     } else {
@@ -2132,8 +2132,8 @@ MakeXMLSpecialString(JSContext *cx, JSStringBuffer *sb,
         js_InitStringBuffer(sb);
     }
 
-    length = JSSTRING_LENGTH(str);
-    length2 = str2 ? JSSTRING_LENGTH(str2) : 0;
+    length = str->length();
+    length2 = str2 ? str2->length() : 0;
     newlength = STRING_BUFFER_OFFSET(sb) +
                 prefixlength + length + ((length2 != 0) ? 1 + length2 : 0) +
                 suffixlength;
@@ -2147,11 +2147,11 @@ MakeXMLSpecialString(JSContext *cx, JSStringBuffer *sb,
     bp += STRING_BUFFER_OFFSET(sb);
     js_strncpy(bp, prefix, prefixlength);
     bp += prefixlength;
-    js_strncpy(bp, JSSTRING_CHARS(str), length);
+    js_strncpy(bp, str->chars(), length);
     bp += length;
     if (length2 != 0) {
         *bp++ = (jschar) ' ';
-        js_strncpy(bp, JSSTRING_CHARS(str2), length2);
+        js_strncpy(bp, str2->chars(), length2);
         bp += length2;
     }
     js_strncpy(bp, suffix, suffixlength);
@@ -2231,7 +2231,7 @@ EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
     const jschar *cp, *start, *end;
     jschar c;
 
-    JSSTRING_CHARS_AND_LENGTH(str, start, length);
+    str->getCharsAndLength(start, length);
     newlength = length;
     for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
@@ -2286,7 +2286,7 @@ EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str,
     const jschar *cp, *start, *end;
     jschar c;
 
-    JSSTRING_CHARS_AND_LENGTH(str, start, length);
+    str->getCharsAndLength(start, length);
     newlength = length + (quote ? 2 : 0);
     for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
@@ -2403,7 +2403,7 @@ GetNamespace(JSContext *cx, JSObject *qn, const JSXMLArray *inScopeNSes)
                 if (nsprefix == prefix ||
                     ((nsprefix && prefix)
                      ? js_EqualStrings(nsprefix, prefix)
-                     : IS_EMPTY(nsprefix ? nsprefix : prefix))) {
+                     : (nsprefix ? nsprefix : prefix)->empty())) {
                     match = ns;
                     break;
                 }
@@ -2435,7 +2435,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     JSObject *ns;
     JSString *nsprefix, *prefix;
 
-    JS_ASSERT(!IS_EMPTY(uri));
+    JS_ASSERT(!uri->empty());
 
     /*
      * If there are no *declared* namespaces, skip all collision detection and
@@ -2457,7 +2457,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
      * ".../there.is.only.xul", "xbl" given ".../xbl", and "xbl2" given any
      * likely URI of the form ".../xbl2/2005".
      */
-    JSSTRING_CHARS_AND_END(uri, start, end);
+    uri->getCharsAndEnd(start, end);
     cp = end;
     while (--cp > start) {
         if (*cp == '.' || *cp == '/' || *cp == ':') {
@@ -2501,8 +2501,8 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
         for (i = 0, n = decls->length; i < n; i++) {
             ns = XMLARRAY_MEMBER(decls, i, JSObject);
             if (ns && (nsprefix = GetPrefix(ns)) &&
-                JSSTRING_LENGTH(nsprefix) == newlength &&
-                !memcmp(JSSTRING_CHARS(nsprefix), bp,
+                nsprefix->length() == newlength &&
+                !memcmp(nsprefix->chars(), bp,
                         newlength * sizeof(jschar))) {
                 if (bp == cp) {
                     newlength = length + 2 + (size_t) log10((double) n);
@@ -2744,7 +2744,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
          * erratum or not.  Note that changing setNamespace to update the list
          * of in-scope namespaces will change x.namespaceDeclarations().
          */
-        if (IS_EMPTY(prefix)) {
+        if (prefix->empty()) {
             i = XMLArrayFindMember(&decls, ns, namespace_match);
             if (i != XML_NOT_FOUND)
                 XMLArrayDelete(cx, &decls, i, JS_TRUE);
@@ -2766,7 +2766,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     /* Format the element or point-tag into sb. */
     js_AppendChar(&sb, '<');
 
-    if (prefix && !IS_EMPTY(prefix)) {
+    if (prefix && !prefix->empty()) {
         js_AppendJSString(&sb, prefix);
         js_AppendChar(&sb, ':');
     }
@@ -2812,7 +2812,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         }
 
         /* 17(b)(iii). */
-        if (!IS_EMPTY(prefix)) {
+        if (!prefix->empty()) {
             js_AppendJSString(&sb, prefix);
             js_AppendChar(&sb, ':');
         }
@@ -2844,7 +2844,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         }
 
         /* 17(c)(iii). */
-        if (!IS_EMPTY(prefix)) {
+        if (!prefix->empty()) {
             js_AppendChar(&sb, ':');
             js_AppendJSString(&sb, prefix);
         }
@@ -2899,7 +2899,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
         /* Step 26. */
         prefix = GetPrefix(ns);
-        if (prefix && !IS_EMPTY(prefix)) {
+        if (prefix && !prefix->empty()) {
             js_AppendJSString(&sb, prefix);
             js_AppendChar(&sb, ':');
         }
@@ -3084,8 +3084,8 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
     if (js_IdIsIndex(STRING_TO_JSVAL(name), &index))
         goto bad;
 
-    if (*JSSTRING_CHARS(name) == '@') {
-        name = js_NewDependentString(cx, name, 1, JSSTRING_LENGTH(name) - 1);
+    if (*name->chars() == '@') {
+        name = js_NewDependentString(cx, name, 1, name->length() - 1);
         if (!name)
             return NULL;
         *funidp = 0;
@@ -3135,7 +3135,7 @@ AddInScopeNamespace(JSContext *cx, JSXML *xml, JSObject *ns)
         if (!match && !XMLARRAY_ADD_MEMBER(cx, &xml->xml_namespaces, n, ns))
             return JS_FALSE;
     } else {
-        if (IS_EMPTY(prefix) && IS_EMPTY(GetURI(xml->name)))
+        if (prefix->empty() && GetURI(xml->name)->empty())
             return JS_TRUE;
         match = NULL;
 #ifdef __GNUC__         /* suppress bogus gcc warnings */
@@ -4675,7 +4675,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             /* XXXbe Erratum? redundant w.r.t. 7(b-c) else clause above */
             if (ok) {
                 ok = JS_ConvertValue(cx, *vp, JSTYPE_STRING, vp);
-                if (ok && !IS_EMPTY(JSVAL_TO_STRING(*vp))) {
+                if (ok && !JSVAL_TO_STRING(*vp)->empty()) {
                     roots[VAL_ROOT] = *vp;
                     if ((JSXML *) XMLArrayCursorItem(&cursor) == kid)
                         ok = Replace(cx, kid, 0, *vp);
@@ -6420,7 +6420,7 @@ xml_normalize_helper(JSContext *cx, JSObject *obj, JSXML *xml)
                 n = xml->xml_kids.length;
                 kid->xml_value = str;
             }
-            if (IS_EMPTY(kid->xml_value)) {
+            if (kid->xml_value->empty()) {
                 NormalizingDelete(cx, xml, i);
                 n = xml->xml_kids.length;
                 --i;
@@ -6885,7 +6885,7 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
          * the constructor, because we know uri of nameqn is non-empty (so
          * prefix does not need to be converted from null to empty by QName).
          */
-        JS_ASSERT(!IS_EMPTY(GetURI(nameqn)));
+        JS_ASSERT(!GetURI(nameqn)->empty());
 
         nsarray = &nsowner->xml_namespaces;
         for (i = 0, n = nsarray->length; i < n; i++) {
@@ -7795,14 +7795,15 @@ JSString *
 js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
 {
     size_t len, len2, newlen;
-    jschar *chars, *chars2;
+    jschar *chars;
+    const jschar *chars2;
 
-    JSSTRING_CHARS_AND_LENGTH(str, chars, len);
-    if (!JSSTRING_IS_MUTABLE(str)) {
+    str->getCharsAndLength(const_cast<const jschar *&>(chars), len);
+    if (!str->isMutable()) {
         str = js_NewStringCopyN(cx, chars, len);
         if (!str)
             return NULL;
-        chars = JSFLATSTR_CHARS(str);
+        chars = str->flatChars();
     } else {
         /*
          * Reallocating str (because we know it has no other references)
@@ -7811,13 +7812,13 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         js_PurgeDeflatedStringCache(cx->runtime, str);
     }
 
-    JSSTRING_CHARS_AND_LENGTH(str2, chars2, len2);
+    str2->getCharsAndLength(chars2, len2);
     newlen = (isName) ? len + 1 + len2 : len + 2 + len2 + 1;
     chars = (jschar *) JS_realloc(cx, chars, (newlen+1) * sizeof(jschar));
     if (!chars)
         return NULL;
 
-    JSFLATSTR_INIT(str, chars, newlen);
+    str->initFlat(chars, newlen);
     chars += len;
     if (isName) {
         *chars++ = ' ';

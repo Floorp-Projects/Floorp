@@ -171,11 +171,7 @@ namespace nanojit
         const CallInfo* call = ins->callInfo();
 		// must be signed, not unsigned
 		uint32_t iargs = call->count_iargs();
-		int32_t fargs = call->count_args() - iargs - call->isIndirect();
-
-        bool imt = call->isInterface();
-        if (imt)
-            iargs --;
+        int32_t fargs = call->count_args() - iargs;
 
         uint32_t max_regs = max_abi_regs[call->_abi];
         if (max_regs > iargs)
@@ -205,19 +201,8 @@ namespace nanojit
             }
         }
 
-        bool indirect = false;
-        if (ins->isop(LIR_call) || ins->isop(LIR_fcall)) {
-    		CALL(call);
-        }
-        else {
-            // indirect call.  x86 Calling conventions don't use EAX as an
-            // argument, and do use EAX as a return value.  We need a register
-            // for the address to call, so we use EAX since it will always be
-            // available
-            NanoAssert(ins->isop(LIR_calli) || ins->isop(LIR_fcalli));
-            CALLr(call, EAX);
-            indirect = true;
-        }
+        NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
+        CALL(call);
 
 		// make sure fpu stack is empty before call (restoreCallerSaved)
 		NanoAssert(_allocator.isFree(FST0));
@@ -228,17 +213,6 @@ namespace nanojit
 
         ArgSize sizes[2*MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
-        if (indirect) {
-            argc--;
-            asm_arg(ARGSIZE_LO, ins->arg(argc), EAX);
-        }
-
-        if (imt) {
-            // interface thunk calling convention: put iid in EDX
-            NanoAssert(call->_abi == ABI_CDECL);
-            argc--;
-            asm_arg(ARGSIZE_LO, ins->arg(argc), EDX);
-        }
 
 		for(uint32_t i=0; i < argc; i++)
 		{
@@ -361,10 +335,10 @@ namespace nanojit
 	{
 		uint32_t op = i->opcode();
 		int prefer = allow;
-        if (op == LIR_call || op == LIR_calli) {
+        if (op == LIR_call) {
 			prefer &= rmask(retRegs[0]);
         }
-        else if (op == LIR_fcall || op == LIR_fcalli) {
+        else if (op == LIR_fcall) {
             prefer &= rmask(FST0);
         }
         else if (op == LIR_param) {
@@ -723,6 +697,7 @@ namespace nanojit
 			else //if (condop == LIR_uge)
 				JAE(targ, isfar);
 		}
+
 		at = _nIns;
 		asm_cmp(cond);
 		return at;
@@ -829,36 +804,70 @@ namespace nanojit
 			SETAE(r);
 		asm_cmp(ins);
 	}
-	
+
 	void Assembler::asm_arith(LInsp ins)
 	{
 		LOpcode op = ins->opcode();			
 		LInsp lhs = ins->oprnd1();
+
+		if (op == LIR_mod) {
+			/* LIR_mod expects the LIR_div to be near (no interference from the register allocator) */
+			findSpecificRegFor(lhs, EDX);
+			prepResultReg(ins, 1<<EDX);
+			evict(EAX);
+			return;
+		}
+
 		LInsp rhs = ins->oprnd2();
 
-		Register rb = UnknownReg;
+		bool forceReg;
 		RegisterMask allow = GpRegs;
-		bool forceReg = (op == LIR_mul || !rhs->isconst());
+		Register rb = UnknownReg;
 
-        /* Even if lhs == rhs && forceReg, shift instructions require ECX on the rhs. */
-		if ((lhs != rhs || (op == LIR_lsh || op == LIR_rsh || op == LIR_ush)) && forceReg)
-		{
-			if ((rb = asm_binop_rhs_reg(ins)) == UnknownReg) {
-				rb = findRegFor(rhs, allow);
+		switch (op) {
+		case LIR_div:
+			forceReg = true;
+			rb = findRegFor(rhs, (GpRegs ^ (rmask(EAX)|rmask(EDX))));
+			allow = 1<<EAX;
+			evict(EDX);
+			break;
+		case LIR_mul:
+			forceReg = true;
+			break;
+		case LIR_lsh:
+		case LIR_rsh:
+		case LIR_ush:
+			forceReg = !rhs->isconst();
+			if (forceReg) {
+				rb = findSpecificRegFor(rhs, ECX);
+				allow &= ~rmask(rb);
 			}
-			allow &= ~rmask(rb);
+			break;
+		case LIR_add:
+		case LIR_addp:
+			if (lhs->isop(LIR_alloc) && rhs->isconst()) {
+				// add alloc+const, use lea
+				Register rr = prepResultReg(ins, allow);
+				int d = findMemFor(lhs) + rhs->imm32();
+				LEA(rr, d, FP);
+				return;
+			}
+			/* fall through */
+		default:
+			forceReg = !rhs->isconst();
+			break;
 		}
-		else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
-			// add alloc+const, use lea
-			Register rr = prepResultReg(ins, allow);
-			int d = findMemFor(lhs) + rhs->imm32();
-			LEA(rr, d, FP);
-			return;
+
+		// if we need a register for the rhs and don't have one yet, get it
+		if (forceReg && lhs != rhs && rb == UnknownReg) {
+			rb = findRegFor(rhs, allow);
+			allow &= ~rmask(rb);
 		}
 
 		Register rr = prepResultReg(ins, allow);
 		Reservation* rA = getresv(lhs);
 		Register ra;
+
 		// if this is last use of lhs in reg, we can re-use result reg
 		if (rA == 0 || (ra = rA->reg) == UnknownReg)
 			ra = findSpecificRegFor(lhs, rr);
@@ -897,6 +906,11 @@ namespace nanojit
 				break;
 			case LIR_ush:
 				SHR(rr, rb);
+				break;
+			case LIR_div:
+			case LIR_mod:
+ 				DIV(rb);
+ 				CDQ();
 				break;
 			default:
 				NanoAssertMsg(0, "Unsupported");
@@ -944,7 +958,7 @@ namespace nanojit
 		if ( rr != ra ) 
 			MR(rr,ra);
 	}
-	
+
 	void Assembler::asm_neg_not(LInsp ins)
 	{
 		LOpcode op = ins->opcode();			
@@ -1697,17 +1711,6 @@ namespace nanojit
 	
 	void Assembler::nativePageReset()
 	{
-	}
-
-	Register Assembler::asm_binop_rhs_reg(LInsp ins)
-	{
-		LOpcode op = ins->opcode();
-		LIns *rhs = ins->oprnd2();
-
-		if (op == LIR_lsh || op == LIR_rsh || op == LIR_ush)
-			return findSpecificRegFor(rhs, ECX);
-
-		return UnknownReg;	
 	}
 
 	void Assembler::nativePageSetup()

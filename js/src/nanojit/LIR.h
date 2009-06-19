@@ -118,14 +118,8 @@ namespace nanojit
 		uint32_t FASTCALL _count_args(uint32_t mask) const;
         uint32_t get_sizes(ArgSize*) const;
 
-        inline bool isInterface() const {
-            return _address == 2 || _address == 3; /* hack! */
-        }
-        inline bool isIndirect() const {
-            return _address < 256;
-        }
 		inline uint32_t FASTCALL count_args() const {
-            return _count_args(_ARGSIZE_MASK_ANY) + isIndirect();
+            return _count_args(_ARGSIZE_MASK_ANY);
         }
 		inline uint32_t FASTCALL count_iargs() const {
             return _count_args(_ARGSIZE_MASK_INT);
@@ -148,7 +142,7 @@ namespace nanojit
 
     inline bool isCseOpcode(LOpcode op) {
         op = LOpcode(op & ~LIR64);
-        return op >= LIR_ldcs && op <= LIR_uge;
+        return op >= LIR_int && op <= LIR_uge;
     }
     inline bool isRetOpcode(LOpcode op) {
         return (op & ~LIR64) == LIR_ret;
@@ -243,11 +237,11 @@ namespace nanojit
 
 	public:
         LIns* oprnd1() const {
-            NanoAssert(isOp1() || isOp2() || isStore());
+            NanoAssert(isOp1() || isOp2() || isLoad() || isStore());
             return u.oprnd_1;
         }
         LIns* oprnd2() const {
-            NanoAssert(isOp2() || isStore());
+            NanoAssert(isOp2() || isLoad() || isStore());
             return u.oprnd_2;
         }
 
@@ -301,7 +295,7 @@ namespace nanojit
 		bool isCmp() const;
         bool isCall() const { 
             LOpcode op = LOpcode(firstWord.code & ~LIR64);
-            return op == LIR_call || op == LIR_calli;
+            return op == LIR_call;
         }
         bool isStore() const {
             LOpcode op = LOpcode(firstWord.code & ~LIR64);
@@ -310,7 +304,7 @@ namespace nanojit
         bool isLoad() const { 
             LOpcode op = firstWord.code;
             return op == LIR_ldq  || op == LIR_ld || op == LIR_ldc || 
-                   op == LIR_ldqc || op == LIR_ldcs;
+                   op == LIR_ldqc || op == LIR_ldcs || op == LIR_ldcb;
         }
         bool isGuard() const {
             LOpcode op = firstWord.code;
@@ -337,11 +331,11 @@ namespace nanojit
 
 		// operand-setting methods
         void setOprnd1(LIns* r) {
-            NanoAssert(isOp1() || isOp2() || isStore());
+            NanoAssert(isOp1() || isOp2() || isLoad() || isStore());
             u.oprnd_1 = r;
         }
         void setOprnd2(LIns* r) {
-            NanoAssert(isOp2() || isStore());
+            NanoAssert(isOp2() || isLoad() || isStore());
             u.oprnd_2 = r;
         }
         void setDisp(int32_t d) {
@@ -357,7 +351,6 @@ namespace nanojit
 			NanoAssert(isCall());
 			return c.imm8b;
 		}
-        size_t callInsSlots() const;
 		const CallInfo *callInfo() const;
 	};
 	typedef LIns*		LInsp;
@@ -438,16 +431,19 @@ namespace nanojit
 	};
 
 
-	// We want to keep the blob + skip together, plus we need room for a
-	// possible page-crossing skip, plus a spare slot to ensure we're never
-	// leaving _unused on a page boundary. That makes for 3 LIns we need to
-	// reserve. We throw in 3 more slots for paranoia's sake (we've
-	// mistakenly set this too high several times so far), and also reserve
-	// the size of the the page header, giving a total of 100 bytes
-	// reserved from end-of-page.
-#define MAX_SKIP_BYTES (NJ_PAGE_SIZE			\
-						- sizeof(PageHeader)	\
-						- 6*sizeof(LIns))
+    // Each page has a header;  the rest of it holds code.
+    #define NJ_PAGE_CODE_AREA_SZB       (NJ_PAGE_SIZE - sizeof(PageHeader))
+
+    // The first instruction on a page is always a start instruction, or a
+    // payload-less skip instruction linking to the previous page.  The
+    // biggest possible instruction would take up the entire rest of the page.
+    #define NJ_MAX_LINS_SZB             (NJ_PAGE_CODE_AREA_SZB - sizeof(LIns))
+
+    // The maximum skip payload size is determined by the maximum instruction
+    // size.  We require that a skip's payload be adjacent to the skip LIns
+    // itself.
+    #define NJ_MAX_SKIP_PAYLOAD_SZB     (NJ_MAX_LINS_SZB - sizeof(LIns))
+ 
 
 #ifdef NJ_VERBOSE
 	extern const char* lirNames[];
@@ -680,14 +676,15 @@ namespace nanojit
 			virtual ~LirBuffer();
 			void        clear();
             void        rewind();
-			LInsp		next();
+            uintptr_t   makeRoom(size_t szB);   // make room for an instruction
+            LInsp       lastWritten();          // most recently written instruction
 			bool		outOMem() { return _noMem != 0; }
 			
 			debug_only (void validate() const;)
 			verbose_only(DWB(LirNameMap*) names;)
 			
-			int32_t insCount();
-			int32_t byteCount();
+            int32_t insCount();
+            size_t  byteCount();
 
 			// stats
 			struct 
@@ -701,16 +698,14 @@ namespace nanojit
             LInsp state,param1,sp,rp;
             LInsp savedRegs[NumSavedRegs];
             bool explicitSavedRegs;
-			
-		protected:
-			friend class LirBufWriter;
 
-			LInsp		commit(uint32_t count);
+		protected:
 			Page*		pageAlloc();
+            void        moveToNewPage(uintptr_t addrOfLastLInsOnCurrentPage);
 
 			PageList	_pages;
 			Page*		_nextPage; // allocated in preperation of a needing to growing the buffer
-			LInsp		_unused;	// next unused instruction slot
+            uintptr_t   _unused;    // next unused instruction slot
 			int			_noMem;		// set if ran out of memory when writing to buffer
 	};	
 
@@ -738,12 +733,6 @@ namespace nanojit
 			LInsp	insBranch(LOpcode v, LInsp condition, LInsp to);
             LInsp   insAlloc(int32_t size);
             LInsp   insSkip(size_t);
-
-		protected:
-			void	ensureRoom(uint32_t count);
-			
-		private:
-            LInsp   insSkipWithoutBuffer(LInsp to);     // does NOT call ensureRoom() 
 	};
 
 	class LirFilter
@@ -767,7 +756,7 @@ namespace nanojit
 		LInsp _i; // current instruction that this decoder is operating on.
 
 	public:
-		LirReader(LirBuffer* buf) : LirFilter(0), _i(buf->next()-1) { }
+        LirReader(LirBuffer* buf) : LirFilter(0), _i(buf->lastWritten()) { }
 		LirReader(LInsp i) : LirFilter(0), _i(i) { }
 		virtual ~LirReader() {}
 
