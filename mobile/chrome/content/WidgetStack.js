@@ -628,7 +628,7 @@ WidgetStack.prototype = {
     // now let's make sure that the viewing rect and inner bounds are still valid
     this._adjustViewingRect();
 
-    this._callViewportUpdateHandler(true);
+    this._viewportUpdate(0, 0, true);
   },
 
   // setViewportHandler
@@ -685,6 +685,12 @@ WidgetStack.prototype = {
     this._dragState.dragging = true;
   },
 
+  _viewportDragUpdate: function viewportDragUpdate() {
+    let vws = this._viewport;
+    this._viewportUpdate((vws.dragStartRect.x - vws.rect.x),
+                         (vws.dragStartRect.y - vws.rect.y));
+  },
+
   // dragStop: stop any drag in progress
   dragStop: function dragStop() {
     log("(dragStop)");
@@ -695,7 +701,7 @@ WidgetStack.prototype = {
     if (this._viewportUpdateTimeout != -1)
       clearTimeout(this._viewportUpdateTimeout);
 
-    this._viewportUpdate();
+    this._viewportDragUpdate();
 
     this._dragState = null;
   },
@@ -713,7 +719,7 @@ WidgetStack.prototype = {
       if (this._viewportUpdateTimeout != -1)
         clearTimeout(this._viewportUpdateTimeout);
       let self = this;
-      this._viewportUpdateTimeout = setTimeout(function () { self._viewportUpdate(); }, this._viewportUpdateInterval);
+      this._viewportUpdateTimeout = setTimeout(function () { self._viewportDragUpdate(); }, this._viewportUpdateInterval);
     }
 
     return panned;
@@ -806,6 +812,7 @@ WidgetStack.prototype = {
     dump("\tthis._viewingRect: " + this._viewingRect + "\n");
     dump("\tthis._viewport.viewportInnerBounds: " + this._viewport.viewportInnerBounds + "\n");
     dump("\tthis._viewport.rect: " + this._viewport.rect + "\n");
+    dump("\tthis._viewportOverflow: " + this._viewportOverflow + "\n");
     dump("\tthis.pannableBounds: " + this.pannableBounds + "\n");
   },
 
@@ -848,7 +855,7 @@ WidgetStack.prototype = {
     return this._dragState && this._dragState.dragging;
   },
 
-  _viewportUpdate: function _viewportUpdate() {
+  _viewportUpdate: function _viewportUpdate(dX, dY, boundsChanged) {
     if (!this._viewport)
       return;
 
@@ -862,12 +869,12 @@ WidgetStack.prototype = {
     // widget moved, but don't include offsets that we're making up from previous
     // drags that didn't affect viewportInnerBounds
     let [ignoreX, ignoreY] = this._offsets || [0, 0];
-    let rx = (vws.dragStartRect.x - vws.rect.x) - ignoreX;
-    let ry = (vws.dragStartRect.y - vws.rect.y) - ignoreY;
+    let rx = dX - ignoreX;
+    let ry = dY - ignoreY;
 
-    let [dX, dY] = this._rectTranslateConstrain(rx, ry, vwib, vpb);
+    [dX, dY] = this._rectTranslateConstrain(rx, ry, vwib, vpb);
 
-    // record the offsets that correpond to the amount of the drag we're ignoring
+    // record the offsets that correspond to the amount of the drag we're ignoring
     // to ensure the viewportInnerBounds remains within the viewportBounds
     this._offsets = [dX - rx, dY - ry];
 
@@ -880,7 +887,7 @@ WidgetStack.prototype = {
     // and get the right values.
     vws.dragStartRect = vws.rect.clone();
 
-    this._callViewportUpdateHandler(false);
+    this._callViewportUpdateHandler(boundsChanged);
   },
 
   _callViewportUpdateHandler: function _callViewportUpdateHandler(boundsChanged) {
