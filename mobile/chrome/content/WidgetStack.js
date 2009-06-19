@@ -419,7 +419,7 @@ WidgetStack.prototype = {
     dx = Math.round(dx);
     dy = Math.round(dy);
 
-    if (dx == 0 && dy ==0)
+    if (dx == 0 && dy == 0)
       return false;
 
     let needsDragWrap = !this._dragging;
@@ -495,6 +495,10 @@ WidgetStack.prototype = {
     if (!rect)
         rect = new wsRect(0, 0, 0, 0);
     return rect;
+  },
+
+  isWidgetFrozen: function isWidgetFrozen(wid) {
+    return this._getState(wid).frozen;
   },
 
   // isWidgetVisible: return true if any portion of widget with id wid is
@@ -1247,10 +1251,10 @@ WidgetStack.prototype = {
     // bottom/right values, which would otherwise happen if there aren't widgets
     // beyond each of those edges
     this._viewportOverflow = new wsBorder(
-      /*top*/ Math.min(ofRect.top, 0),
-      /*left*/ Math.min(ofRect.left, 0),
-      /*bottom*/ Math.max(ofRect.bottom - vp.rect.height, 0),
-      /*right*/ Math.max(ofRect.right - vp.rect.width, 0)
+      /*top*/ Math.round(Math.min(ofRect.top, 0)),
+      /*left*/ Math.round(Math.min(ofRect.left, 0)),
+      /*bottom*/ Math.round(Math.max(ofRect.bottom - vp.rect.height, 0)),
+      /*right*/ Math.round(Math.max(ofRect.right - vp.rect.width, 0))
     );
 
     // clear the _pannableBounds cache, since it depends on the

@@ -563,6 +563,11 @@ KineticData.prototype = {
       else
         ws.panBy(-rightVis * w, 0, true);
     }
+    
+    // unfreeze the toolbar if we have hide the sidebar
+    let visibleNow = ws.isWidgetVisible("tabs-container") || ws.isWidgetVisible("browser-controls");
+    if (!visibleNow)
+      ws.unfreeze('toolbar-main')
   },
 
   addData: function addData(sx, sy) {

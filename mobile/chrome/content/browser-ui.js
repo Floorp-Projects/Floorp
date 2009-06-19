@@ -500,7 +500,8 @@ var BrowserUI = {
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           this._edit.reallyClosePopup();
-          this.showToolbar();
+          if (!ws.isWidgetFrozen('toolbar-main'))
+            this.showToolbar();
         }
         break;
       // Favicon events
