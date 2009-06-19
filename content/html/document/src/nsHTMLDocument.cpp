@@ -2267,8 +2267,10 @@ nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
 {
   NS_PRECONDITION(aContent, "Must have content node to work with!");
   nsString* elementName = static_cast<nsString*>(aData);
-  return aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                               *elementName, eCaseMatters);
+  return
+    aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
+    aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                          *elementName, eCaseMatters);
 }
 
 NS_IMETHODIMP
