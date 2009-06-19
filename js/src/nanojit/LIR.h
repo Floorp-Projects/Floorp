@@ -118,14 +118,8 @@ namespace nanojit
 		uint32_t FASTCALL _count_args(uint32_t mask) const;
         uint32_t get_sizes(ArgSize*) const;
 
-        inline bool isInterface() const {
-            return _address == 2 || _address == 3; /* hack! */
-        }
-        inline bool isIndirect() const {
-            return _address < 256;
-        }
 		inline uint32_t FASTCALL count_args() const {
-            return _count_args(_ARGSIZE_MASK_ANY) + isIndirect();
+            return _count_args(_ARGSIZE_MASK_ANY);
         }
 		inline uint32_t FASTCALL count_iargs() const {
             return _count_args(_ARGSIZE_MASK_INT);
@@ -301,7 +295,7 @@ namespace nanojit
 		bool isCmp() const;
         bool isCall() const { 
             LOpcode op = LOpcode(firstWord.code & ~LIR64);
-            return op == LIR_call || op == LIR_calli;
+            return op == LIR_call;
         }
         bool isStore() const {
             LOpcode op = LOpcode(firstWord.code & ~LIR64);

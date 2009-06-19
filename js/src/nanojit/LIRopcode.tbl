@@ -62,24 +62,24 @@
 
 /* special operations (must be 0..N) */
 OPDEF(start,     0, 0)
-OPDEF(unused0a,  1, 0)
+OPDEF(unused1,   1, 0)
 OPDEF(skip,      2, 0)
-OPDEF(unused0b,  3, 0)
-OPDEF(unused0c,  4, 0)
+OPDEF(unused3,   3, 0)
+OPDEF(unused4,   4, 0)
 
-OPDEF(unused1,   5, 2)
-OPDEF(unused2,   6, 2)
+OPDEF(unused5,   5, 2)
+OPDEF(unused6,   6, 2)
 
 /* non-pure operations */
 OPDEF(addp,      7, 2)
 OPDEF(param,     8, 0)
-OPDEF(unused4b,  9, 2)
+OPDEF(unused9,   9, 2)
 OPDEF(ld,       10, 2) // 32-bit load
 OPDEF(alloc,    11, 0) // alloca some stack space
 OPDEF(sti,      12, 2) // 32-bit store
 OPDEF(ret,      13, 1)
 OPDEF(live,     14, 1) // extend live range of reference
-OPDEF(calli,    15, 0) // indirect call
+OPDEF(unused15, 15, 0) // indirect call
 OPDEF(call,     16, 0) // subroutine call returning a 32-bit value
 
 /* guards */
@@ -195,8 +195,8 @@ OPDEF64(stqi,   LIR_sti, 2) // quad store
 OPDEF64(fret,   LIR_ret, 1)
 
 OPDEF64(unused14_64, 14, 2)
+OPDEF64(unused15_64, 15, 2)
 
-OPDEF64(fcalli,      LIR_calli, 0)
 OPDEF64(fcall,       LIR_call, 0) // subroutine call returning quad
 
 OPDEF64(unused17_64, 17, 2)

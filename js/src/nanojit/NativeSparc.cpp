@@ -147,25 +147,11 @@ namespace nanojit
         ArgSize sizes[10];
         uint32_t argc = call->get_sizes(sizes);
 
-        if (ins->isop(LIR_call) || ins->isop(LIR_fcall)) {
-            verbose_only(if (_verbose)
-                         outputf("        %p:", _nIns);
-                         )
-                CALL(call);
-        }
-        else {
-            argc--;
-            Register r = findSpecificRegFor(ins->arg(argc), I0);
-            NanoAssert(ins->isop(LIR_calli) || ins->isop(LIR_fcalli));
-            JMPL(G0, I0, 15);
-        }
-
-        bool imt = call->isInterface();
-
-        if(imt) {
-            argc--;
-            findSpecificRegFor(ins->arg(argc), O3);
-        }
+        NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
+        verbose_only(if (_verbose)
+                     outputf("        %p:", _nIns);
+                     )
+        CALL(call);
 
         uint32_t GPRIndex = O0;
         uint32_t offset = kLinkageAreaSize; // start of parameters stack postion.
