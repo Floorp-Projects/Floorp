@@ -65,6 +65,28 @@ function $_(formNum, name) {
   return element;
 }
 
+// Mochitest gives us a sendKey(), but it's targeted to a specific element.
+// This basically sends an untargeted key event, to whatever's focused.
+function doKey(aKey, modifier) {
+    // Seems we need to enable this again, or sendKeyEvent() complaints.
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    var keyName = "DOM_VK_" + aKey.toUpperCase();
+    var key = Components.interfaces.nsIDOMKeyEvent[keyName];
+
+    // undefined --> null
+    if (!modifier)
+        modifier = null;
+
+    // Window utils for sending fake sey events.
+    var wutils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                          getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+    wutils.sendKeyEvent("keydown",  key, 0, modifier);
+    wutils.sendKeyEvent("keypress", key, 0, modifier);
+    wutils.sendKeyEvent("keyup",    key, 0, modifier);
+}
+
 function cleanUpFormHist() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var formhist = Components.classes["@mozilla.org/satchel/form-history;1"].
