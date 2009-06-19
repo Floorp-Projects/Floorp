@@ -1837,6 +1837,17 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::textIndent,
                            value);
 
+  // Expose draggable object attribute?
+  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement = do_QueryInterface(content);
+  if (htmlElement) {
+    PRBool draggable = PR_FALSE;
+    htmlElement->GetDraggable(&draggable);
+    if (draggable) {
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::draggable,
+                             NS_LITERAL_STRING("true"));
+    }
+  }
+
   return NS_OK;
 }
 

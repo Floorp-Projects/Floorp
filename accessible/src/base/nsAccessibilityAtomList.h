@@ -164,6 +164,7 @@ ACCESSIBILITY_ATOM(_class, "class")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
 ACCESSIBILITY_ATOM(data, "data")
+ACCESSIBILITY_ATOM(draggable, "draggable")
 ACCESSIBILITY_ATOM(droppable, "droppable")   // XUL combo box
 ACCESSIBILITY_ATOM(editable, "editable")
 ACCESSIBILITY_ATOM(_for, "for")
