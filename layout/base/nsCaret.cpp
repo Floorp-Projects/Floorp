@@ -1139,9 +1139,8 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 
   nsPresContext *presContext = presShell->GetPresContext();
 
-  // if we got a zero-height frame, it's probably a BR frame at the end of a non-empty line
-  // (see BRFrame::Reflow). In that case, figure out a height. We have to do this
-  // after we've got an RC.
+  // If we got a zero-height frame we should figure out a height. We have to do
+  // this after we've got an RC.
   if (frameRect.height == 0)
   {
     nsCOMPtr<nsIFontMetrics> fm;
@@ -1153,8 +1152,12 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
       fm->GetMaxAscent(ascent);
       fm->GetMaxDescent(descent);
       frameRect.height = ascent + descent;
-      frameRect.y -= ascent; // BR frames sit on the baseline of the text, so we need to subtract
-      // the ascent to account for the frame height.
+
+      // If it's a BR frame then it's probably at the end of a non-empty line
+      // (see BRFrame::Reflow). BR frames sit on the baseline of the text, so we
+      // need to subtract the ascent to account for the frame height.
+      if (aFrame->GetType() == nsGkAtoms::brFrame)
+          frameRect.y -= ascent;
     }
   }
 
