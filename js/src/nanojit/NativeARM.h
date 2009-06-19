@@ -38,8 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#ifndef __nanojit_NativeArm__
-#define __nanojit_NativeArm__
+#ifndef __nanojit_NativeARM__
+#define __nanojit_NativeARM__
 
 
 #ifdef PERFM
@@ -884,4 +884,4 @@ enum {
         asm_output("fcpyd %s,%s", gpn(_Dd), gpn(_Dm));                 \
     } while (0)
 }
-#endif // __nanojit_NativeThumb__
+#endif // __nanojit_NativeARM__
