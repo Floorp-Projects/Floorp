@@ -3,6 +3,7 @@ source distribution using the update.sh script. The changes made were
 those applied by update.sh, the addition/update of Makefile.in files
 for the Mozilla build system and the patch in bug below.
 
+bug498770.patch - Enable optimized theora code in windows build
 Bug 455357 - WinCE LibTheora Pre-defined Macro usage in local variable
   455357_wince_local_variable_macro_clash_patch
   This patch is needed for building WinCE / WinMobile because the 
