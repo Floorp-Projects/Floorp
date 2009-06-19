@@ -14,3 +14,4 @@ Bug 455357 - WinCE LibTheora Pre-defined Macro usage in local variable
   Until then, this simple patch allows WinCE to finish compiling.
 
 bug498815.patch: Fix for this bug from libtheora svn r16143.
+bug498824.patch: Fix for this bug from libtheora thusnelda branch.
