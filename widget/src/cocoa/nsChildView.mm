@@ -348,7 +348,7 @@ ConvertGeckoRectToMacRect(const nsIntRect& aRect, Rect& outMacRect)
 // Flips a screen coordinate from a point in the cocoa coordinate system (bottom-left rect) to a point
 // that is a "flipped" cocoa coordinate system (starts in the top-left).
 static inline void
-FlipCocoaScreenCoordinate (NSPoint &inPoint)
+FlipCocoaScreenCoordinate(NSPoint &inPoint)
 {  
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
@@ -4087,20 +4087,20 @@ static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outCh
 }
 
 
-static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& macEvent, PRUint32 keyType = 0)
+static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& pluginEvent, PRUint32 keyType = 0)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
     UInt32 charCode = 0;
     if ([cocoaEvent type] == NSFlagsChanged) {
-      macEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
+      pluginEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
     } else {
       if ([[cocoaEvent characters] length] > 0)
         charCode = [[cocoaEvent characters] characterAtIndex:0];
       if ([cocoaEvent type] == NSKeyDown)
-        macEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
+        pluginEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
       else
-        macEvent.what = keyUp;
+        pluginEvent.what = keyUp;
     }
 
     if (charCode >= 0x0080) {
@@ -4125,10 +4125,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
             break;
         }
     }
-    macEvent.message = (charCode & 0x00FF) | (nsCocoaUtils::GetCocoaEventKeyCode(cocoaEvent) << 8);
-    macEvent.when = ::TickCount();
-    ::GetGlobalMouse(&macEvent.where);
-    macEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    pluginEvent.message = (charCode & 0x00FF) | (nsCocoaUtils::GetCocoaEventKeyCode(cocoaEvent) << 8);
+    pluginEvent.when = ::TickCount();
+    ::GetGlobalMouse(&pluginEvent.where);
+    pluginEvent.modifiers = ::GetCurrentEventKeyModifiers();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -5050,7 +5050,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       // might send the keyDown event with wrong keyboard layout if other
       // keyboard layouts are already loaded. In that case, the native event
       // doesn't match to this gecko event...
-      ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
       geckoEvent.isShift   = (nsCocoaUtils::GetCocoaEventModifierFlags(mCurKeyEvent) & NSShiftKeyMask) != 0;
       if (!IsPrintableChar(geckoEvent.charCode)) {
@@ -5467,7 +5467,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5513,7 +5513,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5550,7 +5550,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5704,7 +5704,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
     nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&keyUpEvent];
     EventRecord macKeyUpEvent;
-    ConvertCocoaKeyEventToMacEvent(theEvent, macKeyUpEvent);
+    ConvertCocoaKeyEventToCarbonEvent(theEvent, macKeyUpEvent);
     keyUpEvent.nativeMsg = &macKeyUpEvent;
     mGeckoChild->DispatchWindowEvent(keyUpEvent);
     return;
@@ -5730,7 +5730,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(nativeKeyDownEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       keyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5758,7 +5758,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
     // create native EventRecord for use by plugins
     EventRecord macEvent;
-    ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+    ConvertCocoaKeyEventToCarbonEvent(nativeKeyDownEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5771,7 +5771,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
-  ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+  ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
   geckoEvent.nativeMsg = &macEvent;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5955,7 +5955,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
-  ConvertCocoaKeyEventToMacEvent(theEvent, macEvent, message);
+  ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent, message);
   geckoEvent.nativeMsg = &macEvent;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
