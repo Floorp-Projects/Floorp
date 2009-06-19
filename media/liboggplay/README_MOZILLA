@@ -40,3 +40,4 @@ bug495129b.patch: Fix from liboggplay commit 3602bf.
 
 bug487519.patch: Fix for bug 487519.
 bug498815.patch: Fix for bug 498815.
+bug498824.patch: Fix for bug 498824.
