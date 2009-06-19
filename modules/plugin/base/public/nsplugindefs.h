@@ -395,7 +395,6 @@ enum nsPluginReason {
 
 // Classes that must be implemented by the plugin DLL:
 class nsIPlugin;                        // plugin class (MIME-type handler)
-class nsIEventHandler;                  // event handler interface
 class nsIPluginInstance;                // plugin instance
 
 // Classes that are implemented by the browser:
