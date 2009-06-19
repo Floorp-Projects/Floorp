@@ -18,7 +18,7 @@ var parentRunner = null;
 if (typeof(parent) != "undefined" && parent.TestRunner) {
     parentRunner = parent.TestRunner;
 } else if (parent && parent.wrappedJSObject &&
-	   parent.wrappedJSObject.TestRunner) {
+           parent.wrappedJSObject.TestRunner) {
     parentRunner = parent.wrappedJSObject.TestRunner;
 }
 
@@ -180,9 +180,9 @@ SimpleTest.showReport = function() {
     toggleTodo.onclick = partial(SimpleTest.toggleByClass, 'test_todo');
     var body = document.body;  // Handles HTML documents
     if (!body) {
-	// Do the XML thing
-	body = document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml",
-					       "body")[0]
+        // Do the XML thing.
+        body = document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml",
+                                               "body")[0];
     }
     var firstChild = body.childNodes[0];
     var addNode;
@@ -407,7 +407,7 @@ SimpleTest._formatStack = function (stack) {
         if (val == null) {
             val = 'undefined';
         } else {
-             val == SimpleTest.DNE ? "Does not exist" : "'" + val + "'";
+            val == SimpleTest.DNE ? "Does not exist" : "'" + val + "'";
         }
     }
 
@@ -464,17 +464,24 @@ var todo = SimpleTest.todo;
 var todo_is = SimpleTest.todo_is;
 var todo_isnot = SimpleTest.todo_isnot;
 var isDeeply = SimpleTest.isDeeply;
-var oldOnError = window.onerror;
+
+const oldOnError = window.onerror;
 window.onerror = function (ev) {
-    is(0, 1, "Error thrown during test: " + ev);
-    if (oldOnError) {
-	try {
-	  oldOnError(ev);
-	} catch (e) {
-	}
+  // Log the error.
+  ok(false, "[SimpleTest/SimpleTest.js, window.onerror] An error occurred: [ " + ev + " ]");
+
+  // Call previous handler.
+  if (oldOnError) {
+    try {
+      oldOnError(ev);
+    } catch (e) {
+      // Log the exception.
+      ok(false, "[SimpleTest/SimpleTest.js, window.onerror] Exception thrown by oldOnError(): [ " + e + " ]");
     }
-    if (SimpleTest._stopOnLoad == false) {
-      // Need to finish() manually here
-      SimpleTest.finish();
-    }
+  }
+
+  if (!SimpleTest._stopOnLoad) {
+    // Need to finish() manually here, yet let the test actually end first.
+    SimpleTest.executeSoon(SimpleTest.finish);
+  }
 }
