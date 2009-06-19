@@ -260,7 +260,7 @@ FormAutoCompleteResult.prototype = {
 
     _checkIndexBounds : function (index) {
         if (index < 0 || index >= this.entries.length)
-            Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
+            throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
     },
 
     // Interfaces from idl...
