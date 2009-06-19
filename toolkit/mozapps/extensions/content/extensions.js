@@ -1178,6 +1178,11 @@ function Startup()
         event.target != gExtensionsView)
       return;
 
+    var contextMenu = document.getElementById("addonContextMenu");
+    if (contextMenu.state == "open" ||
+        contextMenu.state == "showing")
+      return;
+
     switch (event.keyCode) {
       case event.DOM_VK_LEFT:
       case event.DOM_VK_RIGHT:
