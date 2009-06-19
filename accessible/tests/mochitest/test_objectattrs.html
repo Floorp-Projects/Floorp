@@ -40,6 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
       testAttrs("live", {"live" : "polite"}, true);
       testAttrs("live2", {"live" : "polite"}, true);
       testAttrs("log", {"live" : "polite"}, true);
+      testAttrs("logAssertive", {"live" : "assertive"}, true);
       testAttrs("marquee", {"live" : "off"}, true);
       testAttrs("status", {"live" : "polite"}, true);
       testAttrs("timer", {"live" : "off"}, true);
@@ -48,19 +49,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
       testAttrs("liveChild", {"container-live" : "polite"}, true);
       testAttrs("live2Child", {"container-live" : "polite"}, true);
       testAttrs("logChild", {"container-live" : "polite"}, true);
+      testAttrs("logAssertiveChild", {"container-live" : "assertive"}, true);
       testAttrs("marqueeChild", {"container-live" : "off"}, true);
       testAttrs("statusChild", {"container-live" : "polite"}, true);
       testAttrs("timerChild", {"container-live" : "off"}, true);
 
       // container-live-role object attribute
       testAttrs("log", {"container-live-role" : "log"}, true);
+      testAttrs("logAssertive", {"container-live-role" : "log"}, true);
       testAttrs("marquee", {"container-live-role" : "marquee"}, true);
       testAttrs("status", {"container-live-role" : "status"}, true);
       testAttrs("timer", {"container-live-role" : "timer"}, true);
       testAttrs("logChild", {"container-live-role" : "log"}, true);
+      testAttrs("logAssertive", {"container-live-role" : "log"}, true);
+      testAttrs("logAssertiveChild", {"container-live-role" : "log"}, true);
       testAttrs("marqueeChild", {"container-live-role" : "marquee"}, true);
       testAttrs("statusChild", {"container-live-role" : "status"}, true);
       testAttrs("timerChild", {"container-live-role" : "timer"}, true);
+
+      // container that has no default live attribute
+      testAttrs("liveGroup", {"live" : "polite"}, true);
+      testAttrs("liveGroupChild", {"container-live" : "polite"}, true);
+      testAttrs("liveGroup", {"container-live-role" : "group"}, true);
+      testAttrs("liveGroupChild", {"container-live-role" : "group"}, true);
 
       // html
       testAttrs("radio", {"checkable" : "true"}, true); 
@@ -108,9 +119,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
   <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
   <div id="live2" role="marquee" aria-live="polite">excuse <div id="live2Child">me</div></div>
   <div id="log" role="log">excuse <div id="logChild">me</div></div>
+  <div id="logAssertive" role="log" aria-live="assertive">excuse <div id="logAssertiveChild">me</div></div>
   <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
   <div id="status" role="status">excuse <div id="statusChild">me</div></div>
   <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
+
+  <!-- unusual live case -->
+  <div id="liveGroup" role="group" aria-live="polite">
+    excuse <div id="liveGroupChild">me</div>
+  </div>
 
   <!-- html -->
   <input id="radio" type="radio"/>
