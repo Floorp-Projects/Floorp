@@ -1,0 +1,28 @@
+<html>
+<head>
+  <style>
+    div:first-letter {
+      float: left;
+      background: orange;
+    }
+    /* Note: there's an upper-bound on widths that trigger a crash.
+       This bound depends on the width of the characters in the div. */
+    div#v {
+      -moz-column-count: 2;
+      width: 30px;
+      height: 1em;
+      background: lightblue;
+    }
+  </style>
+  <script>
+    function boom() {
+      var v = document.getElementById("v");
+      // Note: This seems to crash regardless of what the text node is;
+      // e.g. it can be the empty string, a space character, or any number of
+      // other characters.
+      v.appendChild(document.createTextNode("CRASH"));
+    }
+  </script>
+</head>
+<body onload="boom();"><div id="v">a b</div></body>
+</html>

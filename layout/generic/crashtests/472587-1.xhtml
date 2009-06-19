@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:m="http://www.w3.org/1998/Math/MathML">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var m = document.getElementById("m");
+  m.parentNode.removeChild(m);
+  document.getElementById("s").appendChild(document.createTextNode("c"));
+}
+
+</script>
+</head>
+<body onload="boom();">
+
+<m:mrow>
+  <span>
+    <m:msup id="m"/>
+    <div style="-moz-column-width: 1px;">
+      <m:munderover/>
+      <m:msqrt/>
+    </div>
+  </span>
+  <span id="s"></span>
+</m:mrow>
+
+</body>
+</html>
