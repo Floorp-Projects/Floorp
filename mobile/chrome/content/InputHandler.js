@@ -718,7 +718,7 @@ function ContentClickingModule(owner) {
   this._owner = owner;
   this._clickTimeout = -1;
   this._events = [];
-  this._zoomed = false;
+  this._zoomedTo = null;
 }
 
 ContentClickingModule.prototype = {
@@ -798,12 +798,14 @@ ContentClickingModule.prototype = {
     let firstEvent = this._events[0].event;
     let zoomElement = optimalElementForPoint(firstEvent.clientX, firstEvent.clientY);
 
-    if (zoomElement != this._zoomedTo) {
-      this._zoomedTo = zoomElement;
-      Browser.canvasBrowser.zoomToElement(zoomElement);
-    } else {
-      this._zoomedTo = null;
-      Browser.canvasBrowser.zoomFromElement(zoomElement);
+    if (zoomElement) {
+      if (zoomElement != this._zoomedTo) {
+        this._zoomedTo = zoomElement;
+        Browser.canvasBrowser.zoomToElement(zoomElement);
+      } else {
+        this._zoomedTo = null;
+        Browser.canvasBrowser.zoomFromElement(zoomElement);
+      }
     }
 
     this._owner.ungrab(this);
