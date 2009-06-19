@@ -61,7 +61,6 @@
 #include "nsCOMArray.h"
 #include "mozStorageHelper.h"
 #include "mozStorageCID.h"
-#include "nsIAutoCompleteSimpleResult.h"
 #include "nsTArray.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
@@ -77,75 +76,6 @@
 #define MAX_HISTORY_VALUE_LEN   200
 // Limit the number of fields saved in a form
 #define MAX_FIELDS_SAVED        100
-
-// nsFormHistoryResult is a specialized autocomplete result class that knows
-// how to remove entries from the form history table.
-class nsFormHistoryResult : public nsIAutoCompleteSimpleResult
-{
-public:
-  nsFormHistoryResult(const nsAString &aFieldName)
-    : mFieldName(aFieldName) {}
-
-  nsresult Init();
-
-  NS_DECL_ISUPPORTS
-
-  // Forward everything except RemoveValueAt to the internal result
-  NS_IMETHOD GetSearchString(nsAString &_result)
-  { return mResult->GetSearchString(_result); }
-  NS_IMETHOD GetSearchResult(PRUint16 *_result)
-  { return mResult->GetSearchResult(_result); }
-  NS_IMETHOD GetDefaultIndex(PRInt32 *_result)
-  { return mResult->GetDefaultIndex(_result); }
-  NS_IMETHOD GetErrorDescription(nsAString &_result)
-  { return mResult->GetErrorDescription(_result); }
-  NS_IMETHOD GetMatchCount(PRUint32 *_result)
-  { return mResult->GetMatchCount(_result); }
-  NS_IMETHOD GetValueAt(PRInt32 aIndex, nsAString &_result)
-  { return mResult->GetValueAt(aIndex, _result); }
-  NS_IMETHOD GetCommentAt(PRInt32 aIndex, nsAString &_result)
-  { return mResult->GetCommentAt(aIndex, _result); }
-  NS_IMETHOD GetStyleAt(PRInt32 aIndex, nsAString &_result)
-  { return mResult->GetStyleAt(aIndex, _result); }
-  NS_IMETHOD GetImageAt(PRInt32 aIndex, nsAString &_result)
-  { return mResult->GetImageAt(aIndex, _result); }
-  NS_IMETHOD RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDB);
-  NS_FORWARD_NSIAUTOCOMPLETESIMPLERESULT(mResult->)
-
-protected:
-  nsCOMPtr<nsIAutoCompleteSimpleResult> mResult;
-  nsString mFieldName;
-};
-
-NS_IMPL_ISUPPORTS2(nsFormHistoryResult,
-                   nsIAutoCompleteResult, nsIAutoCompleteSimpleResult)
-
-nsresult
-nsFormHistoryResult::Init()
-{
-  nsresult rv;
-  mResult = do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsFormHistoryResult::RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDB)
-{
-  if (!aRemoveFromDB) {
-    return mResult->RemoveValueAt(aRowIndex, aRemoveFromDB);
-  }
-
-  nsAutoString value;
-  nsresult rv = mResult->GetValueAt(aRowIndex, value);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mResult->RemoveValueAt(aRowIndex, aRemoveFromDB);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsFormHistory* fh = nsFormHistory::GetInstance();
-  NS_ENSURE_TRUE(fh, NS_ERROR_OUT_OF_MEMORY);
-  return fh->RemoveEntry(mFieldName, value);
-}
 
 #define PREF_FORMFILL_BRANCH "browser.formfill."
 #define PREF_FORMFILL_ENABLE "enable"
@@ -643,11 +573,6 @@ nsFormHistory::CreateStatements()
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT value FROM moz_formhistory WHERE fieldname=?1 ORDER BY UPPER(value) ASC"),
-        getter_AddRefs(mDBGetMatchingField));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "INSERT INTO moz_formhistory (fieldname, value, timesUsed, "
         "firstUsed, lastUsed) VALUES (?1, ?2, ?3, ?4, ?5)"),
         getter_AddRefs(mDBInsertNameValue));
@@ -879,73 +804,6 @@ nsFormHistory::dbAreExpectedColumnsPresent()
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
 }
 
-
-nsresult
-nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
-                                  const nsAString &aInputValue,
-                                  nsIAutoCompleteSimpleResult *aPrevResult,
-                                  nsIAutoCompleteResult **aResult)
-{
-  if (!FormHistoryEnabled())
-    return NS_OK;
-
-  nsCOMPtr<nsIAutoCompleteSimpleResult> result;
-
-  if (aPrevResult) {
-    result = aPrevResult;
-
-    PRUint32 matchCount;
-    result->GetMatchCount(&matchCount);
-
-    for (PRInt32 i = matchCount - 1; i >= 0; --i) {
-      nsAutoString match;
-      result->GetValueAt(i, match);
-      if (!StringBeginsWith(match, aInputValue,
-                            nsCaseInsensitiveStringComparator())) {
-        result->RemoveValueAt(i, PR_FALSE);
-      }
-    }
-  } else {
-    nsCOMPtr<nsFormHistoryResult> fhResult =
-      new nsFormHistoryResult(aInputName);
-    NS_ENSURE_TRUE(fhResult, NS_ERROR_OUT_OF_MEMORY);
-    nsresult rv = fhResult->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
-    reinterpret_cast<nsCOMPtr<nsIAutoCompleteSimpleResult>*>(&fhResult)->swap(result);
-
-    result->SetSearchString(aInputValue);
-
-    // generates query string		
-    mozStorageStatementScoper scope(mDBGetMatchingField);
-    rv = mDBGetMatchingField->BindStringParameter(0, aInputName);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    PRBool hasMore = PR_FALSE;
-    PRUint32 count = 0;
-    while (NS_SUCCEEDED(mDBGetMatchingField->ExecuteStep(&hasMore)) &&
-           hasMore) {
-      nsAutoString entryString;
-      mDBGetMatchingField->GetString(0, entryString);
-      // filters out irrelevant results
-      if(StringBeginsWith(entryString, aInputValue,
-                          nsCaseInsensitiveStringComparator())) {
-        result->AppendMatch(entryString, EmptyString(), EmptyString(), EmptyString());
-        ++count;
-      }
-    }
-    if (count > 0) {
-      result->SetSearchResult(nsIAutoCompleteResult::RESULT_SUCCESS);
-      result->SetDefaultIndex(0);
-    } else {
-      result->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
-      result->SetDefaultIndex(-1);
-    }
-  }
-
-  *aResult = result;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
 
 #ifdef MOZ_MORKREADER
 
