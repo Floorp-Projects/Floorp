@@ -55,7 +55,7 @@ def getFullPath(path):
   "Get an absolute path relative to oldcwd."
   return os.path.normpath(os.path.join(oldcwd, os.path.expanduser(path)))
 
-def createReftestProfile(profileDir):
+def createReftestProfile(options, profileDir):
   "Sets up a clean profile for reftest."
 
   # Start with a clean slate.
@@ -65,6 +65,8 @@ def createReftestProfile(profileDir):
   prefsFile = open(os.path.join(profileDir, "user.js"), "w")
   prefsFile.write("""user_pref("browser.dom.window.dump.enabled", true);
 """)
+  prefsFile.write('user_pref("reftest.timeout", %d);' % options.timeout)
+
   prefsFile.close()
   # install the reftest extension bits into the profile
   profileExtensionsPath = os.path.join(profileDir, "extensions")
@@ -87,6 +89,10 @@ def main():
                     action = "append", dest = "extraProfileFiles",
                     default = [],
                     help = "copy specified files/dirs to testing profile")
+  parser.add_option("--timeout",              
+                    action = "store", dest = "timeout", type = "int", 
+                    default = 5 * 60 * 1000, # 5 minutes per bug 479518
+                    help = "reftest will timeout in specified number of milleseconds. [default %default ms].")
   parser.add_option("--leak-threshold",
                     action = "store", type = "int", dest = "leakThreshold",
                     default = 0,
@@ -117,7 +123,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
   profileDir = None
   try:
     profileDir = mkdtemp()
-    createReftestProfile(profileDir)
+    createReftestProfile(options, profileDir)
     copyExtraFilesToProfile(options, profileDir)
 
     # browser environment
