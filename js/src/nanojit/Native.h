@@ -44,11 +44,7 @@
 #ifdef NANOJIT_IA32
 #include "Nativei386.h"
 #elif defined(NANOJIT_ARM)
-#ifdef THUMB
-#include "NativeThumb.h"
-#else
 #include "NativeARM.h"
-#endif
 #elif defined(NANOJIT_PPC)
 #include "NativePpc.h"
 #elif defined(NANOJIT_SPARC)
@@ -60,7 +56,7 @@
 #endif
 
 namespace nanojit {
-	const uint32_t NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
+    const size_t NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
 	
     class Fragment;
     struct SideExit;
