@@ -197,7 +197,6 @@ pref("browser.startup.homepage",            "resource:/browserconfig.properties"
 pref("browser.enable_automatic_image_resizing", true);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
-pref("browser.formfill.enable", true);
 pref("browser.warnOnQuit", true);
 pref("browser.warnOnRestart", true);
 pref("browser.fullscreen.autohide", true);
