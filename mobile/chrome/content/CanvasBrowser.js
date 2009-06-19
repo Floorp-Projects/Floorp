@@ -87,6 +87,8 @@ function CanvasBrowser(canvas) {
 
   // Tells us to pan to top before first draw
   this._needToPanToTop = false;
+  
+  this._eventHandler.cb = this;
 }
 
 CanvasBrowser.prototype = {
@@ -115,6 +117,28 @@ CanvasBrowser.prototype = {
     return this._contentDOMWindowUtils;
   },
 
+  _eventHandler: ({
+    QueryInterface: function EH_QueryInterface(aIID) {
+      if (aIID.equals(Ci.nsISupportsWeakReference) ||
+          aIID.equals(Ci.nsIDOMEventListener) ||
+          aIID.equals(Ci.nsISupports))
+        return this;
+    
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    },
+
+    handleEvent: function EH_handleEvent(aEvent) {
+      switch (aEvent.type) {
+        case "MozAfterPaint":
+          this.cb._handleMozAfterPaint(aEvent);
+          break;
+        case "scroll":
+          this.cb._handlePageScroll(aEvent);
+          break;
+      }
+    }
+  }),
+
   setCurrentBrowser: function setCurrentBrowser(browser, skipZoom) {
     let currentBrowser = this._browser;
     if (currentBrowser) {
@@ -124,7 +148,8 @@ CanvasBrowser.prototype = {
       currentBrowser.mPanY = ws._viewingRect.y;
       
       // stop monitor paint events for this browser
-      currentBrowser.removeEventListener("MozAfterPaint", this._paintHandler, false);
+      currentBrowser.removeEventListener("MozAfterPaint", this._eventHandler, false);
+      currentBrowser.removeEventListener("scroll", this._eventHandler, false);
       currentBrowser.setAttribute("type", "content");
       currentBrowser.docShell.isOffScreenBrowser = false;
     }
@@ -136,10 +161,9 @@ CanvasBrowser.prototype = {
       browser.docShell.isOffScreenBrowser = true;
 
     // start monitoring paint events for this browser
-    var self = this;
-    this._paintHandler = function(ev) { self._handleMozAfterPaint(ev); };
-
-    browser.addEventListener("MozAfterPaint", this._paintHandler, false);
+    browser.addEventListener("MozAfterPaint", this._eventHandler, false);
+    // and scroll events
+    browser.addEventListener("scroll", this._eventHandler, false);
 
     this._browser = browser;
 
@@ -398,6 +422,14 @@ CanvasBrowser.prototype = {
     }
 
     this._redrawRects(rects);
+  },
+
+  _handlePageScroll: function _handleScroll(aEvent) {
+    if (aEvent.target != this._browser.contentDocument)
+      return;
+
+    let [scrollX, scrollY] = this.contentScrollValues;
+    ws.panTo(this._pageToScreen(scrollX), this._pageToScreen(scrollY));
   },
 
   _redrawRects: function _redrawRects(rects) {
@@ -707,10 +739,6 @@ CanvasBrowser.prototype = {
   panToElement: function panToElement(aElement) {
     var elRect = this._getPagePosition(aElement);
 
-    this.panTo(elRect.x, elRect.y);
-  },
-
-  panTo: function panTo(x, y) {
-    ws.panTo(x, y);
+    ws.panTo(elRect.x, elRect.y);
   }
 };
