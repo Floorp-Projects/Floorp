@@ -364,9 +364,7 @@ namespace nanojit
             	case LIR_callh:
 #endif
 				case LIR_call:
-				case LIR_fcall:
-                case LIR_calli:
-                case LIR_fcalli: {
+			    case LIR_fcall: {
                     int argc = ((LInsp)i)->argc();
                     uintptr_t prev = i - sizeof(LIns) - argc*sizeof(LInsp);
                     NanoAssert( samepage(i, prev) );
@@ -400,7 +398,6 @@ namespace nanojit
             case LIR_fdiv:
             case LIR_fneg:
             case LIR_fcall:
-            case LIR_fcalli:
             case LIR_i2f:
             case LIR_u2f:
                 return true;
@@ -1034,10 +1031,9 @@ namespace nanojit
     LIns* LirBufWriter::insCall(const CallInfo *ci, LInsp args[])
 	{
 		static const LOpcode k_callmap[]  = { LIR_call,  LIR_fcall,  LIR_call,  LIR_callh };
-		static const LOpcode k_callimap[] = { LIR_calli, LIR_fcalli, LIR_calli, LIR_skip };
 
 		uint32_t argt = ci->_argtypes;
-        LOpcode op = (ci->isIndirect() ? k_callimap : k_callmap)[argt & 3];
+        LOpcode op = k_callmap[argt & 3];
         NanoAssert(op != LIR_skip); // LIR_skip here is just an error condition
 
         ArgSize sizes[MAXARGS];
@@ -1726,20 +1722,6 @@ namespace nanojit
 			case LIR_call: {
 				sprintf(s, "%s = %s ( ", formatRef(i), i->callInfo()->_name);
 				for (int32_t j=i->argc()-1; j >= 0; j--) {
-					s += strlen(s);
-					sprintf(s, "%s ",formatRef(i->arg(j)));
-				}
-				s += strlen(s);
-				sprintf(s, ")");
-				break;
-			}
-			case LIR_fcalli:
-			case LIR_calli: {
-                int32_t argc = i->argc();
-				sprintf(s, "%s = [%s] ( ", formatRef(i), formatRef(i->arg(argc-1)));
-                s += strlen(s);
-                argc--;
-				for (int32_t j=argc-1; j >= 0; j--) {
 					s += strlen(s);
 					sprintf(s, "%s ",formatRef(i->arg(j)));
 				}
