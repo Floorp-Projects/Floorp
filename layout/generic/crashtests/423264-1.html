@@ -1,0 +1,19 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript">
+
+function boom()
+{
+  var y = document.createTextNode(' Y ');
+  document.getElementById("a").appendChild(y);
+  document.body.offsetHeight;
+  var z = document.createTextNode('Z');
+  document.body.insertBefore(z, document.body.lastChild);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div style="-moz-column-count: 2; width: 1px;"><div id="a">M N矋<span>م</span></div></div>H</body>
+</html>
