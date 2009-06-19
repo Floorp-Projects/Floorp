@@ -131,10 +131,12 @@ int vorbis_comment_query_count(vorbis_comment *vc, char *tag){
 void vorbis_comment_clear(vorbis_comment *vc){
   if(vc){
     long i;
-    for(i=0;i<vc->comments;i++)
-      if(vc->user_comments[i])_ogg_free(vc->user_comments[i]);
-    if(vc->user_comments)_ogg_free(vc->user_comments);
-	if(vc->comment_lengths)_ogg_free(vc->comment_lengths);
+    if (vc->user_comments) {
+      for(i=0;i<vc->comments;i++)
+	if(vc->user_comments[i])_ogg_free(vc->user_comments[i]);
+      _ogg_free(vc->user_comments);
+    }
+    if(vc->comment_lengths)_ogg_free(vc->comment_lengths);
     if(vc->vendor)_ogg_free(vc->vendor);
     memset(vc,0,sizeof(*vc));
   }
