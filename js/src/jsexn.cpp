@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -597,10 +597,10 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
 #define APPEND_STRING_TO_STACK(str)                                           \
     JS_BEGIN_MACRO                                                            \
         JSString *str_ = str;                                                 \
-        jschar *chars_;                                                       \
+        const jschar *chars_;                                                 \
         size_t length_;                                                       \
                                                                               \
-        JSSTRING_CHARS_AND_LENGTH(str_, chars_, length_);                     \
+        str_->getCharsAndLength(chars_, length_);                             \
         if (length_ > stackmax - stacklen) {                                  \
             void *ptr_;                                                       \
             if (stackmax >= STACK_LENGTH_LIMIT ||                             \
@@ -796,20 +796,20 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
     message = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v)
                                  : cx->runtime->emptyString;
 
-    if (JSSTRING_LENGTH(message) != 0) {
-        name_length = JSSTRING_LENGTH(name);
-        message_length = JSSTRING_LENGTH(message);
+    if (message->length() != 0) {
+        name_length = name->length();
+        message_length = message->length();
         length = (name_length ? name_length + 2 : 0) + message_length;
         cp = chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
 
         if (name_length) {
-            js_strncpy(cp, JSSTRING_CHARS(name), name_length);
+            js_strncpy(cp, name->chars(), name_length);
             cp += name_length;
             *cp++ = ':'; *cp++ = ' ';
         }
-        js_strncpy(cp, JSSTRING_CHARS(message), message_length);
+        js_strncpy(cp, message->chars(), message_length);
         cp += message_length;
         *cp = 0;
 
@@ -886,18 +886,18 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
             ok = JS_FALSE;
             goto out;
         }
-        lineno_length = JSSTRING_LENGTH(lineno_as_str);
+        lineno_length = lineno_as_str->length();
     } else {
         lineno_as_str = NULL;
         lineno_length = 0;
     }
 
     /* Magic 8, for the characters in ``(new ())''. */
-    name_length = JSSTRING_LENGTH(name);
-    message_length = JSSTRING_LENGTH(message);
+    name_length = name->length();
+    message_length = message->length();
     length = 8 + name_length + message_length;
 
-    filename_length = JSSTRING_LENGTH(filename);
+    filename_length = filename->length();
     if (filename_length != 0) {
         /* append filename as ``, {filename}'' */
         length += 2 + filename_length;
@@ -922,18 +922,18 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     }
 
     *cp++ = '('; *cp++ = 'n'; *cp++ = 'e'; *cp++ = 'w'; *cp++ = ' ';
-    js_strncpy(cp, JSSTRING_CHARS(name), name_length);
+    js_strncpy(cp, name->chars(), name_length);
     cp += name_length;
     *cp++ = '(';
     if (message_length != 0) {
-        js_strncpy(cp, JSSTRING_CHARS(message), message_length);
+        js_strncpy(cp, message->chars(), message_length);
         cp += message_length;
     }
 
     if (filename_length != 0) {
         /* append filename as ``, {filename}'' */
         *cp++ = ','; *cp++ = ' ';
-        js_strncpy(cp, JSSTRING_CHARS(filename), filename_length);
+        js_strncpy(cp, filename->chars(), filename_length);
         cp += filename_length;
     } else {
         if (lineno_as_str) {
@@ -947,7 +947,7 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     if (lineno_as_str) {
         /* append lineno as ``, {lineno_as_str}'' */
         *cp++ = ','; *cp++ = ' ';
-        js_strncpy(cp, JSSTRING_CHARS(lineno_as_str), lineno_length);
+        js_strncpy(cp, lineno_as_str->chars(), lineno_length);
         cp += lineno_length;
     }
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -2340,7 +2340,7 @@ js_RemoveAsGCBytes(JSRuntime *rt, size_t sz)
     ((flagp) &&                                                               \
      ((*(flagp) & GCF_TYPEMASK) >= GCX_EXTERNAL_STRING ||                     \
       ((*(flagp) & GCF_TYPEMASK) == GCX_STRING &&                             \
-       !JSSTRING_IS_DEPENDENT((JSString *) (thing)))))
+       !((JSString *) (thing))->isDependent())))
 
 /* This is compatible with JSDHashEntryStub. */
 typedef struct JSGCLockHashEntry {
@@ -2475,8 +2475,8 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 
       case JSTRACE_STRING:
         str = (JSString *)thing;
-        if (JSSTRING_IS_DEPENDENT(str))
-            JS_CALL_STRING_TRACER(trc, JSSTRDEP_BASE(str), "base");
+        if (str->isDependent())
+            JS_CALL_STRING_TRACER(trc, str->dependentBase(), "base");
         break;
 
 #if JS_HAS_XML_SUPPORT
@@ -2697,14 +2697,14 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
             flagp = THING_TO_FLAGP(thing, sizeof(JSGCThing));
             JS_ASSERT((*flagp & GCF_FINAL) == 0);
             JS_ASSERT(kind == MapGCFlagsToTraceKind(*flagp));
-            if (!JSSTRING_IS_DEPENDENT((JSString *) thing)) {
+            if (!((JSString *) thing)->isDependent()) {
                 *flagp |= GCF_MARK;
                 goto out;
             }
             if (*flagp & GCF_MARK)
                 goto out;
             *flagp |= GCF_MARK;
-            thing = JSSTRDEP_BASE((JSString *) thing);
+            thing = ((JSString *) thing)->dependentBase();
         }
         /* NOTREACHED */
     }

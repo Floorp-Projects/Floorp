@@ -577,11 +577,11 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
         if (JSID_IS_ATOM(id)) {                                               \
             JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
             JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *s_ = JSFLATSTR_CHARS(str_);                         \
+            const jschar *s_ = str_->flatChars();                             \
             JSBool negative_ = (*s_ == '-');                                  \
             if (negative_) s_++;                                              \
             if (JS7_ISDEC(*s_)) {                                             \
-                size_t n_ = JSFLATSTR_LENGTH(str_) - negative_;               \
+                size_t n_ = str_->flatLength() - negative_;                   \
                 if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
                     id = js_CheckForStringIndex(id, s_, s_ + n_, negative_);  \
             }                                                                 \
