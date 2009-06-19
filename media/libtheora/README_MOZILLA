@@ -13,3 +13,4 @@ Bug 455357 - WinCE LibTheora Pre-defined Macro usage in local variable
   the WinCE Shunt Library (Bug 456788 - reduce windows ce shunt impact).  
   Until then, this simple patch allows WinCE to finish compiling.
 
+bug498815.patch: Fix for this bug from libtheora svn r16143.
