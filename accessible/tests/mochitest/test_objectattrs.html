@@ -30,6 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
       testAttrs("checkedOption", {"checkable" : "true"}, true); 
       testAttrs("checkedRadio", {"checkable" : "true"}, true); 
       testAttrs("checkedTreeitem", {"checkable" : "true"}, true); 
+      testAttrs("grabbed", {"grabbed" : "true"}, true);
       testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
       testAttrs("sortAscending", {"sort" : "ascending"}, true);
       testAttrs("sortDescending", {"sort" : "descending"}, true);
@@ -76,6 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
       // html
       testAttrs("radio", {"checkable" : "true"}, true); 
       testAttrs("checkbox", {"checkable" : "true"}, true); 
+      testAttrs("draggable", {"draggable" : "true"}, true); 
 
       SimpleTest.finish();
     }
@@ -110,6 +112,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
   <div id="checkedOption" role="option" aria-checked="true"></div>
   <div id="checkedRadio" role="radio" aria-checked="true"></div>
   <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
+  <div id="grabbed" aria-grabbed="true"></div>
   <div id="dropeffect" aria-dropeffect="copy"></div>
   <div id="sortAscending" role="columnheader" aria-sort="ascending"></div>
   <div id="sortDescending" role="columnheader" aria-sort="descending"></div>
@@ -132,5 +135,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391829
   <!-- html -->
   <input id="radio" type="radio"/>
   <input id="checkbox" type="checkbox"/>
+  <div id="draggable" draggable="true">Draggable div</div>
 </body>
 </html>
