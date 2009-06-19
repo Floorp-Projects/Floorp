@@ -290,7 +290,7 @@
 
     <vbox id="bookmark-container" hidden="true" class="panel-dark" top="0" left="0">
       <hbox id="bookmark-form" align="start">
-        <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
+        <image id="bookmark-image" src="chrome://browser/skin/images/starred-default-64.png"/>
       </hbox>
     </vbox>
 

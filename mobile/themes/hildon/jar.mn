@@ -13,7 +13,7 @@ classic.jar:
   browser.css                          (browser.css)
   notification.css                     (notification.css)
   images/default-favicon.png           (images/default-favicon.png)
-  images/starred48.png                 (images/starred48.png)
+  images/starred-default-64.png        (images/starred-default-64.png)
   images/throbber.png                  (images/throbber.png)
   images/navigation_magnifier.gif      (images/navigation_magnifier.gif)
   images/folder.png                    (images/folder.png)
