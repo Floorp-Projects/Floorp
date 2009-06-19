@@ -44,7 +44,9 @@ relativesrcdir  = dom/tests/mochitest/general
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = test_offsets.html \
+_TEST_FILES = \
+		test_innerScreen.xul \
+		test_offsets.html \
 		test_offsets.xul \
 		test_offsets.js \
 		test_domWindowUtils.html \
