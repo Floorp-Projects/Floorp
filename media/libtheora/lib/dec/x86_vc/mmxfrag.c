@@ -27,12 +27,14 @@
 
 void oc_frag_recon_intra_mmx(unsigned char *_dst,int _dst_ystride,
  const ogg_int16_t *_residue){
+  int _save_ebx;
   /* ---------------------------------------------------------------------
   This function does the inter reconstruction step with 8 iterations
   unrolled. The iteration for each instruction is noted by the #id in the
   comments (in case you want to reconstruct it)
   --------------------------------------------------------------------- */
   _asm{
+    mov       [_save_ebx], ebx
     mov       edi, [_residue]     /* load residue ptr     */
     mov       eax, 0x00800080     /* generate constant    */
     mov       ebx, [_dst_ystride] /* load dst-stride      */
@@ -93,6 +95,7 @@ void oc_frag_recon_intra_mmx(unsigned char *_dst,int _dst_ystride,
     packuswb  mm3, mm4            /* #8 pack to byte      */
     movq      [edx + ecx*2], mm1  /* #7 write row         */
     movq      [edx + eax], mm3    /* #8 write row         */
+    mov       ebx, [_save_ebx]
   }
 }
 
@@ -100,6 +103,7 @@ void oc_frag_recon_intra_mmx(unsigned char *_dst,int _dst_ystride,
 
 void oc_frag_recon_inter_mmx (unsigned char *_dst, int _dst_ystride,
  const unsigned char *_src, int _src_ystride, const ogg_int16_t *_residue){
+  int _save_ebx;
   /* ---------------------------------------------------------------------
   This function does the inter reconstruction step with two iterations
   running in parallel to hide some load-latencies and break the dependency
@@ -107,6 +111,7 @@ void oc_frag_recon_inter_mmx (unsigned char *_dst, int _dst_ystride,
   comments (in case you want to reconstruct it)
   --------------------------------------------------------------------- */
   _asm{
+    mov       [_save_ebx], ebx
     pxor      mm0, mm0          /* generate constant 0 */
     mov       esi, [_src]
     mov       edi, [_residue]
@@ -143,6 +148,7 @@ nextchunk:
     movq      [edx + ebx], mm7  /* #2 write row          */
     lea       edx, [edx+ebx*2]  /* dst += stride * 2     */
     jne       nextchunk
+    mov       ebx, [_save_ebx]
   }
 }
 
@@ -150,6 +156,7 @@ nextchunk:
 void oc_frag_recon_inter2_mmx(unsigned char *_dst,  int _dst_ystride,
  const unsigned char *_src1,  int _src1_ystride, const unsigned char *_src2,
  int _src2_ystride,const ogg_int16_t *_residue){
+  int _save_ebx;
   /* ---------------------------------------------------------------------
   This function does the inter2 reconstruction step.The building of the
   average is done with a bit-twiddeling trick to avoid excessive register
@@ -166,6 +173,7 @@ void oc_frag_recon_inter2_mmx(unsigned char *_dst,  int _dst_ystride,
   using the pavgb instruction let me know and I'll do the 3dnow codepath.
   --------------------------------------------------------------------- */
  _asm{
+   mov        [_save_ebx], ebx
    mov        eax, 0xfefefefe
    mov        esi, [_src1]
    mov        edi, [_src2]
@@ -204,6 +212,7 @@ nextrow:
    packuswb   mm2,  mm3           /* pack and saturate   */
    movq       [edx], mm2          /* write row           */
    jne        nextrow
+   mov        ebx, [_save_ebx]
  }
 }
 

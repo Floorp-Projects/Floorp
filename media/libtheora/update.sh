@@ -53,3 +53,4 @@ cp $1/include/theora/theora.h ./include/theora/theora.h
 cp $1/include/theora/theoradec.h ./include/theora/theoradec.h
 cp $1/include/theora/codec.h ./include/theora/codec.h
 patch -p3 <455357_wince_local_variable_macro_clash_patch
+patch -p0 <bug498770.patch
