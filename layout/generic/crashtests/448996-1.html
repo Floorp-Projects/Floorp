@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+body { font-family: monospace; width: 10ch; outline: 1px solid black; }
+div { -moz-column-width: 0.4px; -moz-column-gap: 3ch; }
+b { font-weight: inherit; display: inline-block; }
+#r { border: 1px solid red; }
+#r:before { content: ""; }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("r").style.counterReset = "c";
+}
+</script>
+
+</head>
+
+<body onload="boom();"><div>a b c d <span> <b>m</b><span id="r"><b>x</b><span></span></span></span> </div></body>
+
+</html>

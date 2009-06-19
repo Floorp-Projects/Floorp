@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+div { height: 1px; }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var a = document.getElementById("a"); 
+  a.removeChild(a.firstChild);
+  document.documentElement.style.outline = "none";
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div style="-moz-column-count: 2;" id="a"><div><div style="float: right;"><div></div><span><div></div></span></div></div></div>
+
+</body>
+
+</html>
