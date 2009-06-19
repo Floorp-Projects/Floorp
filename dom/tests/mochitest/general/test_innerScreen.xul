@@ -17,13 +17,9 @@
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
-function round(func)
-{
-  return function(a, b, msg) func(Math.round(a), Math.round(b), msg);
+function isRounded(a, b, msg) {
+  is(Math.round(a), Math.round(b), msg);
 }
-
-var isRounded = round(is);
-var todo_isRounded = round(todo_is);
 
 function doTests()
 {
@@ -63,12 +59,12 @@ function doTests()
   is(f.contentWindow.mozScreenPixelsPerCSSPixel, 2*devPxPerCSSPx,
      "frame screen pixels per CSS pixel");
 
-  //isRounded(f.contentWindow.mozInnerScreenX*2+1,
-  //          window.mozInnerScreenX + fBounds.left,
-  //          "zoomed frame screen X");
-  //isRounded(f.contentWindow.mozInnerScreenY*2+1,
-  //          window.mozInnerScreenY + fBounds.top,
-  //          "zoomed frame screen Y");
+  isRounded(f.contentWindow.mozInnerScreenX*2,
+            window.mozInnerScreenX + fBounds.left,
+            "zoomed frame screen X");
+  isRounded(f.contentWindow.mozInnerScreenY*2,
+            window.mozInnerScreenY + fBounds.top,
+            "zoomed frame screen Y");
   fmudv.fullZoom = 1.0;
 
   SimpleTest.finish();
