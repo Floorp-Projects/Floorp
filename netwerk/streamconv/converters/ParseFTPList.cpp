@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <plstr.h>
+#include "plstr.h"
 
 #include "ParseFTPList.h"
 
