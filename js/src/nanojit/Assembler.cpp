@@ -1382,12 +1382,10 @@ namespace nanojit
 				}
 				
 				case LIR_fcall:
-				case LIR_fcalli:
 #if defined NANOJIT_64BIT
 				case LIR_callh:
 #endif
 				case LIR_call:
-				case LIR_calli:
 				{
                     countlir_call();
                     Register rr = UnknownReg;
@@ -1899,10 +1897,6 @@ namespace nanojit
                 break;
             }
 		}
-        if (isIndirect()) {
-            // add one more arg for indirect call address
-            argc++;
-        }
         return argc;
     }
 
