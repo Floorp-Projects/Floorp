@@ -275,16 +275,19 @@ var BrowserUI = {
   },
 
   update : function(aState) {
-    var icons = document.getElementById("urlbar-icons");
+    let icons = document.getElementById("urlbar-icons");
+    let uri = Browser.selectedBrowser.currentURI;
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
         icons.setAttribute("mode", "view");
-        this.showToolbar();
+        if (uri.spec == "about:blank")
+          this.showToolbar(URLBAR_EDIT);
+        else
+          this.showToolbar();
 
-        if (!this._faviconLink) {
-          this._faviconLink = Browser.selectedBrowser.currentURI.prePath + "/favicon.ico";
-        }
+        if (!this._faviconLink)
+          this._faviconLink = uri.prePath + "/favicon.ico";
         this._setIcon(this._faviconLink);
         this.updateIcon();
         this._faviconLink = null;
@@ -293,6 +296,7 @@ var BrowserUI = {
       case TOOLBARSTATE_LOADING:
         icons.setAttribute("mode", "loading");
         this.showToolbar(URLBAR_FORCE);
+
         this._favicon.src = "";
         this._faviconLink = null;
         this.updateIcon();
@@ -433,9 +437,8 @@ var BrowserUI = {
   },
 
   newTab : function newTab() {
+    this.hideTabs();
     Browser.addTab("about:blank", true);
-    ws.panTo(0, -this.toolbarH);
-    this.showToolbar(URLBAR_EDIT);
   },
 
   closeTab : function closeTab(aTab) {
