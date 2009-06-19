@@ -5428,9 +5428,9 @@ js_InitJIT(JSTraceMonitor *tm)
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, 32);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core);)
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->fragmento = fragmento;
-        tm->lirbuf = new (&gc) LirBuffer(fragmento);
+        tm->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
 #ifdef DEBUG
         tm->lirbuf->names = new (&gc) LirNameMap(&gc, tm->fragmento->labels);
 #endif
@@ -5444,9 +5444,9 @@ js_InitJIT(JSTraceMonitor *tm)
     }
     if (!tm->reFragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 32);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core);)
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->reFragmento = fragmento;
-        tm->reLirBuf = new (&gc) LirBuffer(fragmento);
+        tm->reLirBuf = new (&gc) LirBuffer(fragmento, NULL);
     }
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));

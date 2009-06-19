@@ -288,7 +288,7 @@ namespace nanojit
         #endif      
 		}
 		
-		bool isCse() const;
+		bool isCse(const CallInfo *functions) const;
         bool isRet() const { return nanojit::isRetOpcode(firstWord.code); }
 		bool isop(LOpcode o) const { return firstWord.code == o; }
         #if defined(_DEBUG)
@@ -372,10 +372,11 @@ namespace nanojit
 	{
 	public:
 		LirWriter *out;
+        const CallInfo *_functions;
 
 		virtual ~LirWriter() {}
 		LirWriter(LirWriter* out) 
-			: out(out) {}
+			: out(out), _functions(out?out->_functions : 0) {}
 
 		virtual LInsp ins0(LOpcode v) {
 			return out->ins0(v);
@@ -474,7 +475,7 @@ namespace nanojit
         void formatAddr(const void *p, char *buf);
     public:
         avmplus::AvmCore *core;
-        LabelMap(avmplus::AvmCore *, LabelMap* parent = NULL);
+        LabelMap(avmplus::AvmCore *, LabelMap* parent);
         ~LabelMap();
         void add(const void *p, size_t size, size_t align, const char *name);
 		void add(const void *p, size_t size, size_t align, avmplus::String*);
@@ -677,7 +678,7 @@ namespace nanojit
 	{
 		public:
 			DWB(Fragmento*)		_frago;
-			LirBuffer(Fragmento* frago);
+			LirBuffer(Fragmento* frago, const CallInfo* functions);
 			virtual ~LirBuffer();
 			void        clear();
             void        rewind();
@@ -698,6 +699,7 @@ namespace nanojit
 			}
 			_stats;
 
+			const CallInfo* _functions;
             AbiKind abi;
             LInsp state,param1,sp,rp;
             LInsp savedRegs[NumSavedRegs];
@@ -720,6 +722,7 @@ namespace nanojit
         public:			
 			LirBufWriter(LirBuffer* buf)
 				: LirWriter(0), _buf(buf) {
+				_functions = buf->_functions;
 			}
 
 			// LirWriter interface
@@ -795,8 +798,9 @@ namespace nanojit
 	class CseReader: public LirFilter
 	{
 		LInsHashSet *exprs;
+		const CallInfo *functions;
 	public:
-		CseReader(LirFilter *in, LInsHashSet *exprs);
+		CseReader(LirFilter *in, LInsHashSet *exprs, const CallInfo*);
 		LInsp read();
 	};
 

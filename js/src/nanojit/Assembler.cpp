@@ -59,6 +59,8 @@ namespace nanojit
 
 	class DeadCodeFilter: public LirFilter
 	{
+		const CallInfo *functions;
+
 	    bool ignoreInstruction(LInsp ins)
 	    {
             LOpcode op = ins->opcode();
@@ -73,12 +75,12 @@ namespace nanojit
 	    }
 
 	public:
-		DeadCodeFilter(LirFilter *in) : LirFilter(in) {}
+		DeadCodeFilter(LirFilter *in, const CallInfo *f) : LirFilter(in), functions(f) {}
 		LInsp read() {
 			for (;;) {
 				LInsp i = in->read();
 				if (!i || i->isGuard() || i->isBranch()
-					|| (i->isCall() && !i->isCse())
+					|| (i->isCall() && !i->isCse(functions))
 					|| !ignoreInstruction(i))
 					return i;
 			}
@@ -771,7 +773,7 @@ namespace nanojit
 		avmplus::GC *gc = core->gc;
 		StackFilter storefilter1(&bufreader, gc, frag->lirbuf, frag->lirbuf->sp);
 		StackFilter storefilter2(&storefilter1, gc, frag->lirbuf, frag->lirbuf->rp);
-		DeadCodeFilter deadfilter(&storefilter2);
+		DeadCodeFilter deadfilter(&storefilter2, frag->lirbuf->_functions);
 		LirFilter* rdr = &deadfilter;
 		verbose_only(
 			VerboseBlockReader vbr(rdr, this, frag->lirbuf->names);
