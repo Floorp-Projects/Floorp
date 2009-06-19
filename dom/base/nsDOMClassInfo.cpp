@@ -143,7 +143,6 @@
 #include "nsIPluginInstanceInternal.h"
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsIScriptablePlugin.h"
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
 
@@ -9658,107 +9657,10 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
 
     if (*plugin_obj) {
       *plugin_proto = ::JS_GetPrototype(cx, *plugin_obj);
-
-      return NS_OK;
     }
   }
 
-  // Check if the plugin object has the nsIScriptablePlugin interface,
-  // describing how to expose it to JavaScript. Given this interface,
-  // use it to get the scriptable peer object (possibly the plugin
-  // object itself) and the scriptable interface to expose it with.
-
-  // default to nsISupports's IID
-  nsIID scriptableIID = NS_GET_IID(nsISupports);
-  nsCOMPtr<nsISupports> scriptable_peer;
-
-  nsCOMPtr<nsIScriptablePlugin> spi(do_QueryInterface(plugin_inst));
-
-  if (spi) {
-    nsIID *scriptableInterfacePtr = nsnull;
-    spi->GetScriptableInterface(&scriptableInterfacePtr);
-
-    if (scriptableInterfacePtr) {
-      spi->GetScriptablePeer(getter_AddRefs(scriptable_peer));
-
-      scriptableIID = *scriptableInterfacePtr;
-
-      nsMemory::Free(scriptableInterfacePtr);
-    }
-  }
-
-  nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(plugin_inst));
-
-  if (!scriptable_peer) {
-    if (!ci) {
-      // This plugin doesn't support NPRuntime or nsIScriptablePlugin,
-      // nor does it have classinfo, this plugin is not scriptable
-      // using those methods. It might however be a Java plugin so
-      // let's try that.
-
-      return GetJavaPluginJSObject(cx, obj, plugin_inst, plugin_obj,
-                                   plugin_proto);
-    }
-
-    // The plugin instance has classinfo, use it as the scriptable
-    // plugin
-    scriptable_peer = plugin_inst;
-  }
-
-  // Check if the plugin can be safely scriptable, the plugin wrapper
-  // must not have a shared prototype for this to work since we'll end
-  // up setting its prototype here, and we want this change to affect
-  // this plugin object only.
-
-  if (ci) {
-    // If we have class info we must make sure that the "share my
-    // proto" flag is *not* set
-
-    PRUint32 flags;
-    ci->GetFlags(&flags);
-
-    if (!(flags & nsIClassInfo::PLUGIN_OBJECT)) {
-      // The plugin classinfo doesn't claim it's a plugin object, this
-      // means the plugin object's proto might be shared, can't do
-      // this prototype setup then.
-
-      return NS_OK;
-    }
-  }
-
-  // notify the PluginManager that this one is scriptable --
-  // it will need some special treatment later
-  nsCOMPtr<nsIPluginHost> pluginManager =
-    do_GetService(kCPluginManagerCID);
-
-  nsCOMPtr<nsPIPluginHost> pluginHost(do_QueryInterface(pluginManager));
-
-  if(pluginHost) {
-    pluginHost->SetIsScriptableInstance(plugin_inst, PR_TRUE);
-  }
-
-  // Wrap it.
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv = sXPConnect->WrapNative(cx, ::JS_GetParent(cx, obj),
-                                       scriptable_peer,
-                                       scriptableIID, getter_AddRefs(holder));
-  // Wrapping a plugin object can fail if the plugins XPT file can't
-  // be found (i.e. is incorrectly installed). Return NS_OK in such a
-  // case to avoid having this generate exceptions in JS and to let
-  // the script still access the DOM node, even if the underlying
-  // plugin won't be scriptable.
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
-  // QI holder to nsIXPConnectWrappedNative so that we can reliably
-  // access its prototype
-  nsCOMPtr<nsIXPConnectWrappedNative> pi_wrapper(do_QueryInterface(holder));
-  NS_ENSURE_TRUE(pi_wrapper, NS_ERROR_UNEXPECTED);
-
-  rv = pi_wrapper->GetJSObject(plugin_obj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return pi_wrapper->GetJSObjectPrototype(plugin_proto);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
