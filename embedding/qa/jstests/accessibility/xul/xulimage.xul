@@ -93,7 +93,7 @@
     <description>
       <html:b> Testing XUL Image for Accessibility.. </html:b>
     </description>
-    <box oreint="horizontal">
+    <box orient="horizontal">
       <!-- image element is used to display images within a window -->
       <image src="mozilla-banner.gif"/>
       <spacer flex="1"/>
