@@ -193,9 +193,8 @@ typedef Queue<uint16> SlotList;
 
 class TypeMap : public Queue<uint8> {
 public:
-    JS_REQUIRES_STACK void captureTypes(JSContext* cx, SlotList& slots, unsigned callDepth);
-    JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx,
-                                                     SlotList& slots,
+    JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth);
+    JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
                                                      unsigned stackSlots);
     bool matches(TypeMap& other) const;
 };
@@ -720,6 +719,16 @@ public:
     JS_REQUIRES_STACK JSRecordingStatus record_##op();
 # include "jsopcode.tbl"
 #undef OPDEF
+
+    friend class ImportBoxedStackSlotVisitor;
+    friend class ImportUnboxedStackSlotVisitor;
+    friend class ImportGlobalSlotVisitor;
+    friend class AdjustCallerGlobalTypesVisitor;
+    friend class AdjustCallerStackTypesVisitor;
+    friend class TypeCompatibilityVisitor;
+    friend class SelfTypeStabilityVisitor;
+    friend class PeerTypeStabilityVisitor;
+    friend class UndemoteVisitor;
 };
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
