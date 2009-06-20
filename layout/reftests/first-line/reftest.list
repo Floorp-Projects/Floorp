@@ -26,5 +26,6 @@ fails == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
 == stress-11.xhtml stress-11-ref.xhtml
 
 == border-not-apply.html border-not-apply-ref.html
+== 403177-1.html 403177-1-ref.html
 == 469227-2.html 469227-2-ref.html
 == 469227-3.html 469227-3-ref.html
