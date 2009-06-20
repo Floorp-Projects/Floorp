@@ -248,7 +248,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
         PRUint32 ch = UTF16CharEnumerator::NextChar(&start, end);
         PRUint32 index = accessKeys.IndexOf(ch);
         if (index != accessKeys.NoIndex &&
-            (foundIndex == kNotFound || index < foundIndex)) {
+            (foundIndex == accessKeys.NoIndex || index < foundIndex)) {
           foundMenu = currFrame;
           foundIndex = index;
         }
@@ -339,7 +339,8 @@ public:
     if (mOldMenu && mNewMenu) {
       menubar = static_cast<nsMenuBarFrame *>
         (pm->GetFrameOfTypeForContent(mMenuBar, nsGkAtoms::menuBarFrame, PR_FALSE));
-      menubar->SetStayActive(PR_TRUE);
+      if (menubar)
+        menubar->SetStayActive(PR_TRUE);
     }
 
     if (mOldMenu) {
