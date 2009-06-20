@@ -104,7 +104,7 @@
           </xul:label>
         </xul:vbox>
         <xul:hbox anonid="input-container">
-          <xul:checkbox anonid="input" oncommand="inputChanged();"/>
+          <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
         </xul:hbox>
       </xul:hbox>
       <xul:preferences>
@@ -127,7 +127,7 @@
           </xul:label>
         </xul:vbox>
         <xul:hbox anonid="input-container">
-          <xul:checkbox anonid="input" oncommand="inputChanged();"/>
+          <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
         </xul:hbox>
       </xul:hbox>
       <xul:preferences>
@@ -183,7 +183,7 @@
           </xul:label>
         </xul:vbox>
         <xul:hbox anonid="input-container">
-          <xul:textbox xbl:inherits="type=inputtype" anonid="input" oninput="inputChanged();"/>
+          <xul:textbox xbl:inherits="disabled,type=inputtype" anonid="input" oninput="inputChanged();"/>
         </xul:hbox>
       </xul:hbox>
       <xul:preferences>
