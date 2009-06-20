@@ -53,6 +53,9 @@
         <xul:label class="description" xbl:inherits="value=description"/>
       </xul:vbox>
     </content>
+    <implementation>
+      <property name="label" onget="return this.getAttribute('name') + ' ' + this.getAttribute('description');"/>
+    </implementation>
   </binding>
 
 </bindings>
