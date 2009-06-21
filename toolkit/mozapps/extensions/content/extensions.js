@@ -1888,7 +1888,6 @@ function buildContextMenu(aEvent)
 var gExtensionsDNDObserver =
 {
   _ioServ: null,
-  _canDrop: false,
 
   _ensureServices: function ()
   {
@@ -1898,31 +1897,38 @@ var gExtensionsDNDObserver =
   },
 
   // returns a JS object whose properties are used by xpinstall
-  _getDataFromDragSession: function (aDragSession, aPosition)
+  _getDragData: function (dataTransfer, aIndex)
   {
     var fileData = { };
     // if this fails we do not have valid data to drop
     try {
-      var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
-                           .createInstance(Components.interfaces.nsITransferable);
-      xfer.addDataFlavor("text/x-moz-url");
-      xfer.addDataFlavor("application/x-moz-file", "nsIFile");
-      aDragSession.getData(xfer, aPosition);
+      var url = dataTransfer.mozGetDataAt("text/uri-list", aIndex);
+      if (!url) {
+        url = dataTransfer.mozGetDataAt("text/x-moz-url", aIndex);
+        url = url ? url.split("\n")[0] : null;
+        if (!url) {
+          var file = dataTransfer.mozGetDataAt("application/x-moz-file", aIndex);
 
-      var flavour = { }, data = { }, length = { };
-      xfer.getAnyTransferData(flavour, data, length);
-      var selectedFlavour = this.getSupportedFlavours().flavourTable[flavour.value];
-      var xferData = new FlavourData(data.value, length.value, selectedFlavour);
+          var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                     .getService(Components.interfaces.nsIIOService);
+          var fileHandler = this._ioServ.getProtocolHandler("file")
+                                .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+          url = fileHandler.getURLSpecFromFile(file);
+        }
+      }
 
-      var fileURL = transferUtils.retrieveURLFromData(xferData.data,
-                                                      xferData.flavour.contentType);
-      fileData.fileURL = fileURL;
+      if (!url) {
+        url = dataTransfer.mozGetDataAt("text/plain", aIndex)
+        if (!url)
+          return null;
+      }
 
-      var uri = this._ioServ.newURI(fileURL, null, null);
-      var url = uri.QueryInterface(nsIURL);
-      fileData.fileName = url.fileName;
+      fileData.fileURL = url;
 
-      switch (url.fileExtension) {
+      var uri = this._ioServ.newURI(url, null, null).QueryInterface(nsIURL);
+      fileData.fileName = uri.fileName;
+
+      switch (uri.fileExtension) {
         case "xpi":
           fileData.type = nsIUpdateItem.TYPE_EXTENSION;
           break;
@@ -1940,31 +1946,16 @@ var gExtensionsDNDObserver =
     return fileData;
   },
 
-  canDrop: function (aEvent, aDragSession) { return this._canDrop; },
-
-  onDragEnter: function (aEvent, aDragSession)
+  onDragOver: function (aEvent)
   {
-    // XXXrstrong - bug 269568, GTK2 drag and drop is returning invalid data for
-    // dragenter and dragover. To workaround this we always set canDrop to true
-    // and just use the xfer data returned in ondrop which is valid.
-#ifndef MOZ_WIDGET_GTK2
-    this._ensureServices();
-
-    var count = aDragSession.numDropItems;
-    for (var i = 0; i < count; ++i) {
-      var fileData = this._getDataFromDragSession(aDragSession, i);
-      if (!fileData) {
-        this._canDrop = false;
-        return;
-      }
-    }
-#endif
-    this._canDrop = true;
+    var types = aEvent.dataTransfer.types;
+    if (types.contains("text/uri-list") ||
+        types.contains("text/x-moz-url") ||
+        types.contains("application/x-moz-file"))
+      aEvent.preventDefault();
   },
 
-  onDragOver: function (aEvent, aFlavor, aDragSession) { },
-
-  onDrop: function(aEvent, aXferData, aDragSession)
+  onDrop: function(aEvent)
   {
     if (!isXPInstallEnabled())
       return;
@@ -1976,9 +1967,10 @@ var gExtensionsDNDObserver =
     var xpiCount = 0;
     var themeCount = 0;
 
-    var count = aDragSession.numDropItems;
+    var dataTransfer = aEvent.dataTransfer; 
+    var count = dataTransfer.mozItemCount;
     for (var i = 0; i < count; ++i) {
-      var fileData = this._getDataFromDragSession(aDragSession, i);
+      var fileData = this._getDragData(dataTransfer, i);
       if (!fileData)
         continue;
 
@@ -1995,16 +1987,6 @@ var gExtensionsDNDObserver =
 
     if (xpiCount > 0)
       InstallTrigger.install(xpinstallObj);
-  },
-  _flavourSet: null,
-  getSupportedFlavours: function ()
-  {
-    if (!this._flavourSet) {
-      this._flavourSet = new FlavourSet();
-      this._flavourSet.appendFlavour("text/x-moz-url");
-      this._flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-    }
-    return this._flavourSet;
   }
 };
 

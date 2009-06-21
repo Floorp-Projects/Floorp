@@ -344,9 +344,10 @@
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class"
                      label="&homeButton.label;"
-                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                     ondragover="homeButtonObserver.onDragOver(event)"
+                     ondragenter="homeButtonObserver.onDragOver(event)"
+                     ondrop="homeButtonObserver.onDrop(event)"
+                     ondragleave="homeButtonObserver.onDragLeave(event)"
                      onclick="BrowserGoHome(event);"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
@@ -389,7 +390,7 @@
                 <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
                        pageproxystate="invalid"
-                       ondraggesture="PageProxyDragGesture(event);"
+                       ondragstart="proxyIconDNDObserver.onDragStart(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
               <label id="identity-icon-label" crop="center" flex="1"/>
@@ -449,10 +450,10 @@
 
         <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="Tools:Downloads"
-                       ondragdrop="nsDragAndDrop.drop(event, DownloadsButtonDNDObserver); event.stopPropagation()"
-                       ondragover="nsDragAndDrop.dragOver(event, DownloadsButtonDNDObserver); event.stopPropagation()"
-                       ondragenter="nsDragAndDrop.dragEnter(event, DownloadsButtonDNDObserver); event.stopPropagation()"
-                       ondragexit="nsDragAndDrop.dragExit(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       ondrop="DownloadsButtonDNDObserver.onDrop(event)"
+                       ondragover="DownloadsButtonDNDObserver.onDragOver(event)"
+                       ondragenter="DownloadsButtonDNDObserver.onDragOver(event)"
+                       ondragleave="DownloadsButtonDNDObserver.onDragLeave(event)"
                        label="&downloads.label;"
                        tooltiptext="&downloads.tooltip;"/>
 
@@ -463,25 +464,28 @@
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"
-                       ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
-                       ondragdrop="nsDragAndDrop.drop(event, bookmarksButtonObserver);"
-                       ondragexit="nsDragAndDrop.dragExit(event, bookmarksButtonObserver);"/>
+                       ondrop="bookmarksButtonObserver.onDrop(event)"
+                       ondragover="bookmarksButtonObserver.onDragOver(event)"
+                       ondragenter="bookmarksButtonObserver.onDragOver(event)"
+                       ondragleave="bookmarksButtonObserver.onDragLeave(event)"/>
 
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&tabCmd.label;"
                        command="cmd_newNavigatorTab"
                        tooltiptext="&newTabButton.tooltip;"
-                       ondragover="nsDragAndDrop.dragOver(event, newTabButtonObserver);"
-                       ondragdrop="nsDragAndDrop.drop(event, newTabButtonObserver);"
-                       ondragexit="nsDragAndDrop.dragExit(event, newTabButtonObserver);"/>
+                       ondrop="newTabButtonObserver.onDrop(event)"
+                       ondragover="newTabButtonObserver.onDragOver(event)"
+                       ondragenter="newTabButtonObserver.onDragOver(event)"
+                       ondragleave="newTabButtonObserver.onDragLeave(event)"/>
 
         <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&newNavigatorCmd.label;"
                        command="key_newNavigator"
                        tooltiptext="&newWindowButton.tooltip;"
-                       ondragover="nsDragAndDrop.dragOver(event, newWindowButtonObserver);"
-                       ondragdrop="nsDragAndDrop.drop(event, newWindowButtonObserver);"
-                       ondragexit="nsDragAndDrop.dragExit(event, newWindowButtonObserver);"/>
+                       ondrop="newWindowButtonObserver.onDrop(event)"
+                       ondragover="newWindowButtonObserver.onDragOver(event)"
+                       ondragenter="newWindowButtonObserver.onDragOver(event)"
+                       ondragleave="newWindowButtonObserver.onDragLeave(event)"/>
 
         <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&cutCmd.label;"
@@ -557,7 +561,7 @@
                   contentcontextmenu="contentAreaContextMenu"
                   onnewtab="BrowserOpenTab();"
                   autocompletepopup="PopupAutoComplete"
-                  ondrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+                  ondrop="contentAreaDNDObserver.onDrop(event)"
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
@@ -571,7 +575,7 @@
     <findbar browserid="content" id="FindToolbar"/>
   
     <statusbar class="chromeclass-status" id="status-bar"
-               ondrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+               ondrop="contentAreaDNDObserver.onDrop(event)">
       <statusbarpanel id="statusbar-display" label="" flex="1"/>
       <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
         <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
