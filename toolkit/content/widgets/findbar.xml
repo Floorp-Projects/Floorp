@@ -68,24 +68,6 @@
         </getter>
       </property>
 
-      <method name="getSupportedFlavours">
-        <body><![CDATA[
-          var flavourSet = new FlavourSet();
-          flavourSet.appendFlavour("text/unicode");
-          return flavourSet;
-        ]]></body>
-      </method>
-
-      <method name="onDrop">
-        <parameter name="aEvent"/>
-        <parameter name="aXferData"/>
-        <parameter name="aDragSession"/>
-        <body><![CDATA[
-          this.value = aXferData.data;
-          this.findbar._find(aXferData.data);
-        ]]></body>
-      </method>
-
       <method name="_handleEnter">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -206,7 +188,10 @@
       ]]></handler>
 
       <handler event="drop" phase="capturing"><![CDATA[
-        nsDragAndDrop.drop(event, this);
+        var value = event.dataTransfer.getData("text/plain");
+        this.value = value;
+        this.findbar._find(value);
+        event.stopPropagation();
       ]]></handler>
     </handlers>
   </binding>
