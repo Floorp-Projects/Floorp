@@ -303,6 +303,8 @@ public:
    *  see nsTablePainter about continuous borders
    */
   nscoord GetContinuousLeftBCBorderWidth() const;
+  void SetContinuousLeftBCBorderWidth(nscoord aValue);
+
   friend class nsDelayedCalcBCBorders;
   
   void SetBCDamageArea(const nsRect& aValue);
@@ -976,6 +978,11 @@ nsTableFrame::GetContinuousLeftBCBorderWidth() const
 {
   PRInt32 aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
   return BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mBits.mLeftContBCBorder);
+}
+
+inline void nsTableFrame::SetContinuousLeftBCBorderWidth(nscoord aValue)
+{
+  mBits.mLeftContBCBorder = (unsigned) aValue;
 }
 
 class nsTableIterator
