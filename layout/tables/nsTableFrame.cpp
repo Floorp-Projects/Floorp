@@ -1025,9 +1025,9 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame&       aRowGroupFrame,
     }
     // assign the correct row indices to the new rows. If they were adjusted above
     // it may not have been done correctly because each row is constructed with index 0
-    for (PRInt32 rowX = 0; rowX < numNewRows; rowX++) {
-      nsTableRowFrame* rowFrame = aRowFrames.ElementAt(rowX);
-      rowFrame->SetRowIndex(aRowIndex + rowX);
+    for (PRInt32 rowY = 0; rowY < numNewRows; rowY++) {
+      nsTableRowFrame* rowFrame = aRowFrames.ElementAt(rowY);
+      rowFrame->SetRowIndex(aRowIndex + rowY);
     }
     if (IsBorderCollapse()) {
       SetBCDamageArea(damageArea);
@@ -4151,64 +4151,220 @@ nsTableFrame::SetBCDamageArea(const nsRect& aValue)
     CheckFixDamageArea(GetRowCount(), GetColCount(), value->mDamageArea);
   }
 }
+
+/* BCCellBorder represents a border segment which can be either a horizontal
+ * or a vertical segment. For each segment we need to know the color, width,
+ * style, who owns it and how long it is in cellmap coordinates.
+ * Ownership of these segments is important to calculate which corners should
+ * be bevelled. This structure has dual use, its used first to compute the
+ * dominant border for horizontal and vertical segments and to store the
+ * preliminary computed border results in the BCCellBorders structure.
+ * This temporary storage is not symmetric with respect to horizontal and
+ * vertical border segments, its always column oriented. For each column in
+ * the cellmap there is a temporary stored vertical and horizontal segment.
+ * XXX_Bernd this asymmetry is the root of those rowspan bc border errors
+ */
+struct BCCellBorder
+{
+  BCCellBorder() { Reset(0, 1); }
+  void Reset(PRUint32 aRowIndex, PRUint32 aRowSpan);
+  nscolor       color;    // border segment color
+  BCPixelSize   width;    // border segment width in pixel coordinates !!
+  PRUint8       style;    // border segment style, possible values are defined
+                          // in nsStyleConsts.h as NS_STYLE_BORDER_STYLE_*
+  BCBorderOwner owner;    // border segment owner, possible values are defined
+                          // in celldata.h. In the cellmap for each border
+                          // segment we store the owner and later when
+                          // painting we know the owner and can retrieve the
+                          // style info from the corresponding frame
+  PRInt32       rowIndex; // rowIndex of temporary stored horizontal border
+                          // segments relative to the table
+  PRInt32       rowSpan;  // row span of temporary stored horizontal border
+                          // segments
+};
+
+void
+BCCellBorder::Reset(PRUint32 aRowIndex,
+                    PRUint32 aRowSpan)
+{
+  style = NS_STYLE_BORDER_STYLE_NONE;
+  color = 0;
+  width = 0;
+  owner = eTableOwner;
+  rowIndex = aRowIndex;
+  rowSpan  = aRowSpan;
+}
+
+class BCMapCellIterator;
+
 /*****************************************************************
- *  BCMapCellIterator
+ *  BCMapCellInfo
+ * This structure stores information about the cellmap and all involved
+ * table related frames that are used during the computation of winning borders
+ * in CalcBCBorders so that they do need to be looked up again and again when
+ * iterating over the cells.
  ****************************************************************/
 struct BCMapCellInfo 
 {
-  BCMapCellInfo();
-  void Reset();
+  BCMapCellInfo(nsTableFrame* aTableFrame);
+  void ResetCellInfo();
+  void SetInfo(nsTableRowFrame*   aNewRow,
+               PRInt32            aColIndex,
+               BCCellData*        aCellData,
+               BCMapCellIterator* aIter,
+               nsCellMap*         aCellMap = nsnull);
+  // The BCMapCellInfo has functions to set the continous
+  // border widths (see nsTablePainter.cpp for a description of the continous
+  // borders concept). The widths are computed inside these functions based on
+  // the current position inside the table and the cached frames that correspond
+  // to this position. The widths are stored in member variables of the internal
+  // table frames.
+  void SetTableTopLeftContBCBorder();
+  void SetRowGroupLeftContBCBorder();
+  void SetRowGroupRightContBCBorder();
+  void SetRowGroupBottomContBCBorder();
+  void SetRowLeftContBCBorder();
+  void SetRowRightContBCBorder();
+  void SetColumnTopRightContBCBorder();
+  void SetColumnBottomContBCBorder();
+  void SetColGroupBottomContBCBorder();
+  void SetInnerRowGroupBottomContBCBorder(const nsIFrame* aNextRowGroup,
+                                          nsTableRowFrame* aNextRow);
 
-  CellData*             cellData;
-  nsCellMap*            cellMap;
+  // functions to set the border widths on the table related frames, where the
+  // knowledge about the current position in the table is used.
+  void SetTableTopBorderWidth(BCPixelSize aWidth);
+  void SetTableLeftBorderWidth(PRInt32 aRowY, BCPixelSize aWidth);
+  void SetTableRightBorderWidth(PRInt32 aRowY, BCPixelSize aWidth);
+  void SetTableBottomBorderWidth(BCPixelSize aWidth);
+  void SetLeftBorderWidths(BCPixelSize aWidth);
+  void SetRightBorderWidths(BCPixelSize aWidth);
+  void SetTopBorderWidths(BCPixelSize aWidth);
+  void SetBottomBorderWidths(BCPixelSize aWidth);
 
-  nsTableRowGroupFrame* rg;
+  // functions to compute the borders; they depend on the
+  // knowledge about the current position in the table. The edge functions
+  // should be called if a table edge is involved, otherwise the internal
+  // functions should be called.
+  BCCellBorder GetTopEdgeBorder();
+  BCCellBorder GetBottomEdgeBorder();
+  BCCellBorder GetLeftEdgeBorder();
+  BCCellBorder GetRightEdgeBorder();
+  BCCellBorder GetRightInternalBorder();
+  BCCellBorder GetLeftInternalBorder();
+  BCCellBorder GetTopInternalBorder();
+  BCCellBorder GetBottomInternalBorder();
 
-  nsTableRowFrame*      topRow;
-  nsTableRowFrame*      bottomRow;
+  // functions to set the interal position information
+  void SetColumn(PRInt32 aColX);
+  // Increment the row as we loop over the rows of a rowspan
+  void IncrementRow(PRBool aResetToTopRowOfCell = PR_FALSE);
+  
+  // Helper functions to get extent of the cell
+  PRInt32 GetCellEndRowIndex() const;
+  PRInt32 GetCellEndColIndex() const;
 
-  nsTableColGroupFrame* cg;
+  // storage of table information
+  nsTableFrame*         mTableFrame;
+  PRInt32               mNumTableRows;
+  PRInt32               mNumTableCols;
+  BCPropertyData*       mTableBCData;
+
+  // storage of table ltr information, the border collapse code swaps the sides
+  // to account for rtl tables, this is done through mStartSide and mEndSide
+  PRPackedBool          mTableIsLTR;
+  PRUint8               mStartSide;
+  PRUint8               mEndSide;
+  
+  // a cell can only belong to one rowgroup
+  nsTableRowGroupFrame* mRowGroup;
+
+  // a cell with a rowspan has a top and a bottom row, and rows in between
+  nsTableRowFrame*      mTopRow;
+  nsTableRowFrame*      mBottomRow;
+  nsTableRowFrame*      mCurrentRowFrame;
+
+  // a cell with a colspan has a left and right column and columns in between
+  // they can belong to different colgroups
+  nsTableColGroupFrame* mColGroup;
+  nsTableColGroupFrame* mCurrentColGroupFrame;
  
-  nsTableColFrame*      leftCol;
-  nsTableColFrame*      rightCol;
+  nsTableColFrame*      mLeftCol;
+  nsTableColFrame*      mRightCol;
+  nsTableColFrame*      mCurrentColFrame;
+  
+  // cell information
+  BCCellData*           mCellData;
+  nsBCTableCellFrame*   mCell;
 
-  nsBCTableCellFrame*   cell;
+  PRInt32               mRowIndex;
+  PRInt32               mRowSpan;
+  PRInt32               mColIndex;
+  PRInt32               mColSpan;
 
-  PRInt32               rowIndex;
-  PRInt32               rowSpan;
-  PRInt32               colIndex;
-  PRInt32               colSpan;
-
-  PRPackedBool          rgTop;
-  PRPackedBool          rgBottom;
-  PRPackedBool          cgLeft;
-  PRPackedBool          cgRight;
+  // flags to describe the position of the cell with respect to the row- and
+  // colgroups, for instance mRgAtTop documents that the top cell border hits
+  // a rowgroup border
+  PRPackedBool          mRgAtTop;
+  PRPackedBool          mRgAtBottom;
+  PRPackedBool          mCgAtLeft;
+  PRPackedBool          mCgAtRight;
+ 
 };
 
-BCMapCellInfo::BCMapCellInfo()
+
+BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
 {
-  Reset();
+  mTableFrame = aTableFrame;
+  mTableIsLTR =
+    aTableFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
+  if (mTableIsLTR) {
+    mStartSide = NS_SIDE_LEFT;
+    mEndSide = NS_SIDE_RIGHT;
+  }
+  else {
+    mStartSide = NS_SIDE_RIGHT;
+    mEndSide = NS_SIDE_LEFT;
+  }
+  mNumTableRows = mTableFrame->GetRowCount();
+  mNumTableCols = mTableFrame->GetColCount();
+  mTableBCData =
+    static_cast <BCPropertyData*>(nsTableFrame::GetProperty(mTableFrame,
+                 nsGkAtoms::tableBCProperty, PR_FALSE));
+                 
+  ResetCellInfo();
 }
 
-void BCMapCellInfo::Reset()
+void BCMapCellInfo::ResetCellInfo()
 {
-  cellData  = nsnull;
-  rg        = nsnull;
-  topRow    = nsnull;
-  bottomRow = nsnull;
-  cg        = nsnull;
-  leftCol   = nsnull;
-  rightCol  = nsnull;
-  cell      = nsnull;
-  rowIndex = rowSpan = colIndex = colSpan = 0;
-  rgTop = rgBottom = cgLeft = cgRight = PR_FALSE;
+  mCellData  = nsnull;
+  mRowGroup  = nsnull;
+  mTopRow    = nsnull;
+  mBottomRow = nsnull;
+  mColGroup  = nsnull;
+  mLeftCol   = nsnull;
+  mRightCol  = nsnull;
+  mCell      = nsnull;
+  mRowIndex  = mRowSpan = mColIndex = mColSpan = 0;
+  mRgAtTop = mRgAtBottom = mCgAtLeft = mCgAtRight = PR_FALSE;
 }
+
+inline PRInt32 BCMapCellInfo::GetCellEndRowIndex() const
+{
+  return mRowIndex + mRowSpan - 1;
+}
+
+inline PRInt32 BCMapCellInfo::GetCellEndColIndex() const
+{
+  return mColIndex + mColSpan - 1;
+}
+
 
 class BCMapCellIterator
 {
 public:
-  BCMapCellIterator(nsTableFrame& aTableFrame,
-                  const nsRect& aDamageArea);
+  BCMapCellIterator(nsTableFrame* aTableFrame,
+                    const nsRect& aDamageArea);
 
   void First(BCMapCellInfo& aMapCellInfo);
 
@@ -4225,6 +4381,8 @@ public:
   PRBool IsNewRow() { return mIsNewRow; }
 
   nsTableRowFrame* GetPrevRow() const { return mPrevRow; }
+  nsTableRowFrame* GetCurrentRow() const { return mRow; }
+  nsTableRowGroupFrame* GetCurrentRowGroup() const { return mRowGroup;}
 
   PRInt32    mRowGroupStart;
   PRInt32    mRowGroupEnd;
@@ -4232,142 +4390,139 @@ public:
   nsCellMap* mCellMap;
 
 private:
-  void SetInfo(nsTableRowFrame* aRow,
-               PRInt32          aColIndex,
-               CellData*        aCellData,
-               BCMapCellInfo&   aMapInfo,
-               nsCellMap*       aCellMap = nsnull);
-
   PRBool SetNewRow(nsTableRowFrame* row = nsnull);
   PRBool SetNewRowGroup(PRBool aFindFirstDamagedRow);
 
-  nsTableFrame&         mTableFrame;
+  nsTableFrame*         mTableFrame;
   nsTableCellMap*       mTableCellMap;
   nsTableFrame::RowGroupArray mRowGroups;
   nsTableRowGroupFrame* mRowGroup;
   PRInt32               mRowGroupIndex;
-  PRUint32              mNumRows;
+  PRUint32              mNumTableRows;
   nsTableRowFrame*      mRow;
   nsTableRowFrame*      mPrevRow;
   PRBool                mIsNewRow;
   PRInt32               mRowIndex;
-  PRUint32              mNumCols;
+  PRUint32              mNumTableCols;
   PRInt32               mColIndex;
   nsPoint               mAreaStart;
   nsPoint               mAreaEnd;
 };
 
-BCMapCellIterator::BCMapCellIterator(nsTableFrame& aTableFrame,
+BCMapCellIterator::BCMapCellIterator(nsTableFrame* aTableFrame,
                                      const nsRect& aDamageArea)
 :mTableFrame(aTableFrame)
 {
-  mTableCellMap  = aTableFrame.GetCellMap();
+  mTableCellMap  = aTableFrame->GetCellMap();
 
   mAreaStart.x   = aDamageArea.x;
   mAreaStart.y   = aDamageArea.y;
   mAreaEnd.y     = aDamageArea.y + aDamageArea.height - 1;
   mAreaEnd.x     = aDamageArea.x + aDamageArea.width - 1;
 
-  mNumRows       = mTableFrame.GetRowCount();
+  mNumTableRows  = mTableFrame->GetRowCount();
   mRow           = nsnull;
   mRowIndex      = 0;
-  mNumCols       = mTableFrame.GetColCount();
+  mNumTableCols  = mTableFrame->GetColCount();
   mColIndex      = 0;
   mRowGroupIndex = -1;
 
   // Get the ordered row groups 
-  aTableFrame.OrderRowGroups(mRowGroups);
+  aTableFrame->OrderRowGroups(mRowGroups);
 
   mAtEnd = PR_TRUE; // gets reset when First() is called
 }
 
-void 
-BCMapCellIterator::SetInfo(nsTableRowFrame* aRow,
-                           PRInt32          aColIndex,
-                           CellData*        aCellData,
-                           BCMapCellInfo&   aCellInfo,
-                           nsCellMap*       aCellMap)
+// fill fields that we need for border collapse computation on a given cell
+void
+BCMapCellInfo::SetInfo(nsTableRowFrame*   aNewRow,
+                       PRInt32            aColIndex,
+                       BCCellData*        aCellData,
+                       BCMapCellIterator* aIter,
+                       nsCellMap*         aCellMap)
 {
-  aCellInfo.cellData = aCellData;
-  aCellInfo.cellMap = (aCellMap) ? aCellMap : mCellMap;
-  aCellInfo.colIndex = aColIndex;
+  // fill the cell information
+  mCellData = aCellData;
+  mColIndex = aColIndex;
 
-  // row frame info
-  aCellInfo.rowIndex = 0;
-  if (aRow) {
-    aCellInfo.topRow = aRow; 
-    aCellInfo.rowIndex = aRow->GetRowIndex();
+  // initialize the row information if it was not previously set for cells in
+  // this row
+  mRowIndex = 0;
+  if (aNewRow) {
+    mTopRow = aNewRow;
+    mRowIndex = aNewRow->GetRowIndex();
   }
 
-  // cell frame info
-  aCellInfo.cell      = nsnull;
-  aCellInfo.rowSpan   = 1;
-  aCellInfo.colSpan  = 1;
+  // fill cell frame info and row information
+  mCell      = nsnull;
+  mRowSpan   = 1;
+  mColSpan   = 1;
   if (aCellData) {
-    aCellInfo.cell = (nsBCTableCellFrame*)aCellData->GetCellFrame(); 
-    if (aCellInfo.cell) {
-      if (!aCellInfo.topRow) {
-        aCellInfo.topRow = static_cast<nsTableRowFrame*>
-                                      (aCellInfo.cell->GetParent());
-        if (!aCellInfo.topRow) ABORT0();
-        aCellInfo.rowIndex = aCellInfo.topRow->GetRowIndex();
+    mCell = static_cast<nsBCTableCellFrame*>(aCellData->GetCellFrame());
+    if (mCell) {
+      if (!mTopRow) {
+        mTopRow = static_cast<nsTableRowFrame*>(mCell->GetParent());
+        if (!mTopRow) ABORT0();
+        mRowIndex = mTopRow->GetRowIndex();
       }
-      aCellInfo.colSpan = mTableFrame.GetEffectiveColSpan(*aCellInfo.cell, aCellMap); 
-      aCellInfo.rowSpan = mTableFrame.GetEffectiveRowSpan(*aCellInfo.cell, aCellMap);
+      mColSpan = mTableFrame->GetEffectiveColSpan(*mCell, aCellMap);
+      mRowSpan = mTableFrame->GetEffectiveRowSpan(*mCell, aCellMap);
     }
   }
-  if (!aCellInfo.topRow) {
-    aCellInfo.topRow = mRow;
+  
+  if (!mTopRow) {
+    mTopRow = aIter->GetCurrentRow();
   }
-
-  if (1 == aCellInfo.rowSpan) {
-    aCellInfo.bottomRow = aCellInfo.topRow;
+  if (1 == mRowSpan) {
+    mBottomRow = mTopRow;
   }
   else {
-    aCellInfo.bottomRow = aCellInfo.topRow->GetNextRow();
-    if (aCellInfo.bottomRow) {
-      for (PRInt32 spanX = 2; aCellInfo.bottomRow && (spanX < aCellInfo.rowSpan); spanX++) {
-        aCellInfo.bottomRow = aCellInfo.bottomRow->GetNextRow();
+    mBottomRow = mTopRow->GetNextRow();
+    if (mBottomRow) {
+      for (PRInt32 spanY = 2; mBottomRow && (spanY < mRowSpan); spanY++) {
+        mBottomRow = mBottomRow->GetNextRow();
       }
-      NS_ASSERTION(aCellInfo.bottomRow, "program error");
+      NS_ASSERTION(mBottomRow, "spanned row not found");
     }
     else {
       NS_ASSERTION(PR_FALSE, "error in cell map");
-      aCellInfo.rowSpan = 1;
-      aCellInfo.bottomRow = aCellInfo.topRow;
+      mRowSpan = 1;
+      mBottomRow = mTopRow;
     }
   }
-
   // row group frame info
-  PRUint32 rgStart  = mRowGroupStart;
-  PRUint32 rgEnd    = mRowGroupEnd;
-  aCellInfo.rg = mTableFrame.GetRowGroupFrame(aCellInfo.topRow->GetParent());
-  if (aCellInfo.rg != mRowGroup) {
-    rgStart = aCellInfo.rg->GetStartRowIndex();
-    rgEnd   = rgStart + aCellInfo.rg->GetRowCount() - 1;
+  // try to reuse the rgStart and rgEnd from the iterator as calls to
+  // GetRowCount() are computationally expensive and should be avoided if
+  // possible
+  PRUint32 rgStart  = aIter->mRowGroupStart;
+  PRUint32 rgEnd    = aIter->mRowGroupEnd;
+  mRowGroup = mTableFrame->GetRowGroupFrame(mTopRow->GetParent());
+  if (mRowGroup != aIter->GetCurrentRowGroup()) {
+    rgStart = mRowGroup->GetStartRowIndex();
+    rgEnd   = rgStart + mRowGroup->GetRowCount() - 1;
   }
-  PRUint32 rowIndex  = aCellInfo.topRow->GetRowIndex();
-  aCellInfo.rgTop    = (rgStart == rowIndex);
-  aCellInfo.rgBottom = (rgEnd == rowIndex + aCellInfo.rowSpan - 1);
+  PRUint32 rowIndex = mTopRow->GetRowIndex();
+  mRgAtTop    = (rgStart == rowIndex);
+  mRgAtBottom = (rgEnd == rowIndex + mRowSpan - 1);
+  
+   // col frame info
+  mLeftCol = mTableFrame->GetColFrame(aColIndex);
+  if (!mLeftCol) ABORT0();
 
-  // col frame info
-  aCellInfo.leftCol = mTableFrame.GetColFrame(aColIndex); if (!aCellInfo.leftCol) ABORT0();
-
-  aCellInfo.rightCol = aCellInfo.leftCol;
-  if (aCellInfo.colSpan > 1) {
-    for (PRInt32 spanX = 1; spanX < aCellInfo.colSpan; spanX++) {
-      nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex + spanX); if (!colFrame) ABORT0();
-      aCellInfo.rightCol = colFrame;
-    }
+  mRightCol = mLeftCol;
+  if (mColSpan > 1) {
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex +
+                                                         mColSpan -1);
+    if (!colFrame) ABORT0();
+    mRightCol = colFrame;
   }
 
   // col group frame info
-  aCellInfo.cg = static_cast<nsTableColGroupFrame*>
-                            (aCellInfo.leftCol->GetParent());
-  PRInt32 cgStart  = aCellInfo.cg->GetStartColumnIndex();
-  PRInt32 cgEnd    = PR_MAX(0, cgStart + aCellInfo.cg->GetColCount() - 1);
-  aCellInfo.cgLeft  = (cgStart == aColIndex);
-  aCellInfo.cgRight = (cgEnd == aColIndex + (PRInt32)aCellInfo.colSpan - 1);
+  mColGroup = static_cast<nsTableColGroupFrame*>(mLeftCol->GetParent());
+  PRInt32 cgStart = mColGroup->GetStartColumnIndex();
+  PRInt32 cgEnd = PR_MAX(0, cgStart + mColGroup->GetColCount() - 1);
+  mCgAtLeft  = (cgStart == aColIndex);
+  mCgAtRight = (cgEnd == aColIndex + mColSpan - 1);
 }
 
 PRBool
@@ -4450,18 +4605,21 @@ BCMapCellIterator::SetNewRowGroup(PRBool aFindFirstDamagedRow)
 void 
 BCMapCellIterator::First(BCMapCellInfo& aMapInfo)
 {
-  aMapInfo.Reset();
+  aMapInfo.ResetCellInfo();
 
   SetNewRowGroup(PR_TRUE); // sets mAtEnd
   while (!mAtEnd) {
     if ((mAreaStart.y >= mRowGroupStart) && (mAreaStart.y <= mRowGroupEnd)) {
-      CellData* cellData = mCellMap->GetDataAt(mAreaStart.y - mRowGroupStart,
-                                               mAreaStart.x);
+      BCCellData* cellData =
+        static_cast<BCCellData*>(mCellMap->GetDataAt(mAreaStart.y -
+                                                      mRowGroupStart,
+                                                      mAreaStart.x));
       if (cellData && cellData->IsOrig()) {
-        SetInfo(mRow, mAreaStart.x, cellData, aMapInfo);
+        aMapInfo.SetInfo(mRow, mAreaStart.x, cellData, this);
       }
       else {
-        NS_ASSERTION(((0 == mAreaStart.x) && (mRowGroupStart == mAreaStart.y)) , "damage area expanded incorrectly");
+        NS_ASSERTION(((0 == mAreaStart.x) && (mRowGroupStart == mAreaStart.y)) ,
+                     "damage area expanded incorrectly");
         mAtEnd = PR_TRUE;
       }
       break;
@@ -4474,20 +4632,25 @@ void
 BCMapCellIterator::Next(BCMapCellInfo& aMapInfo)
 {
   if (mAtEnd) ABORT0();
-  aMapInfo.Reset();
+  aMapInfo.ResetCellInfo();
 
   mIsNewRow = PR_FALSE;
   mColIndex++;
   while ((mRowIndex <= mAreaEnd.y) && !mAtEnd) {
     for (; mColIndex <= mAreaEnd.x; mColIndex++) {
       PRInt32 rgRowIndex = mRowIndex - mRowGroupStart;
-      CellData* cellData = mCellMap->GetDataAt(rgRowIndex, mColIndex);
+      BCCellData* cellData =
+         static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, mColIndex));
       if (!cellData) { // add a dead cell data
         nsRect damageArea;
-        cellData = mCellMap->AppendCell(*mTableCellMap, nsnull, rgRowIndex, PR_FALSE, damageArea); if (!cellData) ABORT0();
+        cellData =
+          static_cast<BCCellData*>(mCellMap->AppendCell(*mTableCellMap, nsnull,
+                                                         rgRowIndex, PR_FALSE,
+                                                         damageArea));
+        if (!cellData) ABORT0();
       }
       if (cellData && (cellData->IsOrig() || cellData->IsDead())) {
-        SetInfo(mRow, mColIndex, cellData, aMapInfo);
+        aMapInfo.SetInfo(mRow, mColIndex, cellData, this);
         return;
       }
     }
@@ -4506,27 +4669,33 @@ BCMapCellIterator::PeekRight(BCMapCellInfo&   aRefInfo,
                              PRUint32         aRowIndex,
                              BCMapCellInfo&   aAjaInfo)
 {
-  aAjaInfo.Reset();
-  PRInt32 colIndex = aRefInfo.colIndex + aRefInfo.colSpan;
+  aAjaInfo.ResetCellInfo();
+  PRInt32 colIndex = aRefInfo.mColIndex + aRefInfo.mColSpan;
   PRUint32 rgRowIndex = aRowIndex - mRowGroupStart;
 
-  CellData* cellData = mCellMap->GetDataAt(rgRowIndex, colIndex);
+  BCCellData* cellData =
+    static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, colIndex));
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(colIndex < mTableCellMap->GetColCount(), "program error");
     nsRect damageArea;
-    cellData = mCellMap->AppendCell(*mTableCellMap, nsnull, rgRowIndex, PR_FALSE, damageArea); if (!cellData) ABORT0();
+    cellData =
+      static_cast<BCCellData*>(mCellMap->AppendCell(*mTableCellMap, nsnull,
+                                                     rgRowIndex, PR_FALSE,
+                                                     damageArea));
+    if (!cellData) ABORT0();
   }
   nsTableRowFrame* row = nsnull;
   if (cellData->IsRowSpan()) {
     rgRowIndex -= cellData->GetRowSpanOffset();
-    cellData = mCellMap->GetDataAt(rgRowIndex, colIndex);
+    cellData =
+      static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, colIndex));
     if (!cellData)
       ABORT0();
   }
   else {
     row = mRow;
   }
-  SetInfo(row, colIndex, cellData, aAjaInfo);
+  aAjaInfo.SetInfo(row, colIndex, cellData, this);
 }
 
 void 
@@ -4534,8 +4703,8 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
                               PRUint32         aColIndex,
                               BCMapCellInfo&   aAjaInfo)
 {
-  aAjaInfo.Reset();
-  PRInt32 rowIndex = aRefInfo.rowIndex + aRefInfo.rowSpan;
+  aAjaInfo.ResetCellInfo();
+  PRInt32 rowIndex = aRefInfo.mRowIndex + aRefInfo.mRowSpan;
   PRInt32 rgRowIndex = rowIndex - mRowGroupStart;
   nsTableRowGroupFrame* rg = mRowGroup;
   nsCellMap* cellMap = mCellMap;
@@ -4557,22 +4726,28 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
   else {
     // get the row within the same row group
     nextRow = mRow;
-    for (PRInt32 i = 0; i < aRefInfo.rowSpan; i++) {
+    for (PRInt32 i = 0; i < aRefInfo.mRowSpan; i++) {
       nextRow = nextRow->GetNextRow(); if (!nextRow) ABORT0();
     }
   }
 
-  CellData* cellData = cellMap->GetDataAt(rgRowIndex, aColIndex);
+  BCCellData* cellData =
+    static_cast<BCCellData*>(cellMap->GetDataAt(rgRowIndex, aColIndex));
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(rgRowIndex < cellMap->GetRowCount(), "program error");
     nsRect damageArea;
-    cellData = cellMap->AppendCell(*mTableCellMap, nsnull, rgRowIndex, PR_FALSE, damageArea); if (!cellData) ABORT0();
+    cellData =
+      static_cast<BCCellData*>(cellMap->AppendCell(*mTableCellMap, nsnull,
+                                                    rgRowIndex, PR_FALSE,
+                                                    damageArea));
+    if (!cellData) ABORT0();
   }
   if (cellData->IsColSpan()) {
     aColIndex -= cellData->GetColSpanOffset();
-    cellData = cellMap->GetDataAt(rgRowIndex, aColIndex);
+    cellData =
+      static_cast<BCCellData*>(cellMap->GetDataAt(rgRowIndex, aColIndex));
   }
-  SetInfo(nextRow, aColIndex, cellData, aAjaInfo, cellMap);
+  aAjaInfo.SetInfo(nextRow, aColIndex, cellData, this, cellMap);
 }
 
 // Assign priorities to border styles. For example, styleToPriority(NS_STYLE_BORDER_STYLE_SOLID)
@@ -4690,7 +4865,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
                  nscolor&         aColor,
                  PRBool           aTableIsLTR,
                  PRBool           aIgnoreTableEdge,
-                 nscoord&         aWidth)
+                 BCPixelSize&     aWidth)
 {
   GetColorAndStyle(aFrame, aSide, aStyle, aColor, aTableIsLTR, aIgnoreTableEdge);
   if ((NS_STYLE_BORDER_STYLE_NONE == aStyle) ||
@@ -4763,46 +4938,6 @@ nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
   return PR_FALSE;
 }
 
-/* BCCellBorder represents a border segment which can be either a horizontal
- * or a vertical segment. For each segment we need to know the color, width,
- * style, who owns it and how long it is in cellmap coordinates.
- * Ownership of these segments is  important to calculate which corners should
- * be bevelled. This structure has dual use, its used first to compute the
- * dominant border for horizontal and vertical segments and to store the
- * preliminary computed border results in the BCCellBorders structure.
- * This temporary storage is not symmetric with respect to horizontal and
- * vertical border segments, its always column oriented. For each column in
- * the cellmap there is a temporary stored vertical and horizontal segment.
- * XXX_Bernd this asymmetry is the root of those rowspan bc border errors
- */
-struct BCCellBorder
-{
-  BCCellBorder() { Reset(0, 1); }
-  void Reset(PRUint32 aRowIndex, PRUint32 aRowSpan);
-  nscolor       color;    // border segment color
-  nscoord       width;    // border segment width in pixel coordinates !!
-  PRUint8       style;    // border segment style, possible values are defined
-                          // in nsStyleConsts.h as NS_STYLE_BORDER_STYLE_*
-  BCBorderOwner owner;    // border segment owner, possible values are defined
-                          // in celldata.h. In the cellmap for each border
-                          // segment we store the owner and later when
-                          // painting we know the owner and can retrieve the
-                          // style info from the corresponding frame
-  PRInt32       rowIndex; // rowIndex of temporary stored horizontal border segments
-  PRInt32       rowSpan;  // row span of temporary stored horizontal border segments
-};
-
-void
-BCCellBorder::Reset(PRUint32 aRowIndex,
-                    PRUint32 aRowSpan)
-{
-  style = NS_STYLE_BORDER_STYLE_NONE;
-  color = 0;
-  width = 0;
-  owner = eTableOwner;
-  rowIndex = aRowIndex;
-  rowSpan  = aRowSpan;
-}
 
 // Compare two border segments, this comparison depends whether the two
 // segments meet at a corner and whether the second segment is horizontal.
@@ -5296,6 +5431,360 @@ LimitBorderWidth(PRUint16 aWidth)
   return PR_MIN(MAX_TABLE_BORDER_WIDTH, aWidth);
 }
 
+#define TABLE_EDGE  PR_TRUE
+#define ADJACENT    PR_TRUE
+#define HORIZONTAL  PR_TRUE
+
+void
+BCMapCellInfo::SetTableTopLeftContBCBorder()
+{
+  BCCellBorder currentBorder;
+  //calculate continuous top first row & rowgroup border: special case
+  //because it must include the table in the collapse
+  if (mTopRow) {
+    currentBorder = CompareBorders(mTableFrame, nsnull, nsnull, mRowGroup,
+                                   mTopRow, nsnull, mTableIsLTR,
+                                   TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
+    mTopRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
+  }
+  if (mCgAtRight && mColGroup) {
+    //calculate continuous top colgroup border once per colgroup
+    currentBorder = CompareBorders(mTableFrame, mColGroup, nsnull, mRowGroup,
+                                   mTopRow, nsnull, mTableIsLTR,
+                                   TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
+    mColGroup->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
+  }
+  if (0 == mColIndex) {
+    currentBorder = CompareBorders(mTableFrame, mColGroup, mLeftCol, nsnull,
+                                   nsnull, nsnull, mTableIsLTR, TABLE_EDGE,
+                                   NS_SIDE_LEFT, !ADJACENT);
+    mTableFrame->SetContinuousLeftBCBorderWidth(currentBorder.width);
+  }
+}
+
+void
+BCMapCellInfo::SetRowGroupLeftContBCBorder()
+{
+  BCCellBorder currentBorder;
+  //get row group continuous borders
+  if (mRgAtBottom && mRowGroup) { //once per row group, so check for bottom
+     currentBorder = CompareBorders(mTableFrame, mColGroup, mLeftCol, mRowGroup,
+                                    nsnull, nsnull, mTableIsLTR, TABLE_EDGE,
+                                    NS_SIDE_LEFT, !ADJACENT);
+     mRowGroup->SetContinuousBCBorderWidth(mStartSide, currentBorder.width);
+  }
+}
+
+void
+BCMapCellInfo::SetRowGroupRightContBCBorder()
+{
+  BCCellBorder currentBorder;
+  //get row group continuous borders
+  if (mRgAtBottom && mRowGroup) { //once per mRowGroup, so check for bottom
+    currentBorder = CompareBorders(mTableFrame, mColGroup, mRightCol, mRowGroup,
+                                   nsnull, nsnull, mTableIsLTR, TABLE_EDGE,
+                                   NS_SIDE_RIGHT, ADJACENT);
+    mRowGroup->SetContinuousBCBorderWidth(mEndSide, currentBorder.width);
+  }
+}
+
+void
+BCMapCellInfo::SetColumnTopRightContBCBorder()
+{
+  BCCellBorder currentBorder;
+  //calculate column continuous borders
+  //we only need to do this once, so we'll do it only on the first row
+  currentBorder = CompareBorders(mTableFrame, mCurrentColGroupFrame,
+                                 mCurrentColFrame, mRowGroup, mTopRow, nsnull,
+                                 mTableIsLTR, TABLE_EDGE, NS_SIDE_TOP,
+                                 !ADJACENT);
+  ((nsTableColFrame*) mCurrentColFrame)->SetContinuousBCBorderWidth(NS_SIDE_TOP,
+                                                           currentBorder.width);
+  if (mNumTableCols == GetCellEndColIndex() + 1) {
+    currentBorder = CompareBorders(mTableFrame, mCurrentColGroupFrame,
+                                   mCurrentColFrame, nsnull, nsnull, nsnull,
+                                   mTableIsLTR, TABLE_EDGE, NS_SIDE_RIGHT,
+                                   !ADJACENT);
+  }
+  else {
+    currentBorder = CompareBorders(nsnull, mCurrentColGroupFrame,
+                                   mCurrentColFrame, nsnull,nsnull, nsnull,
+                                   mTableIsLTR, !TABLE_EDGE, NS_SIDE_RIGHT,
+                                   !ADJACENT);
+  }
+  mCurrentColFrame->SetContinuousBCBorderWidth(NS_SIDE_RIGHT,
+                                               currentBorder.width);
+}
+
+void
+BCMapCellInfo::SetColumnBottomContBCBorder()
+{
+  BCCellBorder currentBorder;
+  //get col continuous border
+  currentBorder = CompareBorders(mTableFrame, mCurrentColGroupFrame,
+                                 mCurrentColFrame, mRowGroup, mBottomRow,
+                                 nsnull, mTableIsLTR, TABLE_EDGE,
+                                 NS_SIDE_BOTTOM, ADJACENT);
+  mCurrentColFrame->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM,
+                                               currentBorder.width);
+}
+
+void
+BCMapCellInfo::SetColGroupBottomContBCBorder()
+{
+  BCCellBorder currentBorder;
+  if (mColGroup) {
+    currentBorder = CompareBorders(mTableFrame, mColGroup, nsnull, mRowGroup,
+                                   mBottomRow, nsnull, mTableIsLTR, TABLE_EDGE,
+                                   NS_SIDE_BOTTOM, ADJACENT);
+    mColGroup->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
+  }
+}
+
+void
+BCMapCellInfo::SetRowGroupBottomContBCBorder()
+{
+  BCCellBorder currentBorder;
+  if (mRowGroup) {
+    currentBorder = CompareBorders(mTableFrame, nsnull, nsnull, mRowGroup,
+                                   mBottomRow, nsnull, mTableIsLTR, TABLE_EDGE,
+                                   NS_SIDE_BOTTOM, ADJACENT);
+    mRowGroup->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
+  }
+}
+
+void
+BCMapCellInfo::SetInnerRowGroupBottomContBCBorder(const nsIFrame* aNextRowGroup,
+                                                  nsTableRowFrame* aNextRow)
+{
+  BCCellBorder currentBorder, adjacentBorder;
+  
+  const nsIFrame* rowgroup = (mRgAtBottom) ? mRowGroup : nsnull;
+  currentBorder = CompareBorders(nsnull, nsnull, nsnull, rowgroup, mBottomRow,
+                                 nsnull, mTableIsLTR, !TABLE_EDGE,
+                                 NS_SIDE_BOTTOM, ADJACENT);
+
+  adjacentBorder = CompareBorders(nsnull, nsnull, nsnull, aNextRowGroup,
+                                  aNextRow, nsnull, mTableIsLTR, !TABLE_EDGE,
+                                  NS_SIDE_TOP, !ADJACENT);
+  currentBorder = CompareBorders(PR_FALSE, currentBorder, adjacentBorder,
+                                 HORIZONTAL);
+  if (aNextRow) {
+    aNextRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
+  }
+  if (mRgAtBottom && mRowGroup) {
+    mRowGroup->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
+  }
+}
+
+void
+BCMapCellInfo::SetRowLeftContBCBorder()
+{
+  //get row continuous borders
+  if (mCurrentRowFrame) {
+    BCCellBorder currentBorder;
+    currentBorder = CompareBorders(mTableFrame, mColGroup, mLeftCol, mRowGroup,
+                                   mCurrentRowFrame, nsnull, mTableIsLTR,
+                                   TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT);
+    mCurrentRowFrame->SetContinuousBCBorderWidth(mStartSide,
+                                                 currentBorder.width);
+  }
+}
+
+void
+BCMapCellInfo::SetRowRightContBCBorder()
+{
+  if (mCurrentRowFrame) {
+    BCCellBorder currentBorder;
+    currentBorder = CompareBorders(mTableFrame, mColGroup, mRightCol, mRowGroup,
+                                   mCurrentRowFrame, nsnull, mTableIsLTR,
+                                   TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT);
+    mCurrentRowFrame->SetContinuousBCBorderWidth(mEndSide,
+                                                 currentBorder.width);
+  }
+}
+void
+BCMapCellInfo::SetTableTopBorderWidth(BCPixelSize aWidth)
+{
+  mTableBCData->mTopBorderWidth =
+     LimitBorderWidth(PR_MAX(mTableBCData->mTopBorderWidth, (PRUint8) aWidth));
+}
+
+void
+BCMapCellInfo::SetTableLeftBorderWidth(PRInt32 aRowY, BCPixelSize aWidth)
+{
+  // update the left/right first cell border
+  if (aRowY == 0) {
+    if (mTableIsLTR) {
+      mTableBCData->mLeftCellBorderWidth = aWidth;
+    }
+    else {
+      mTableBCData->mRightCellBorderWidth = aWidth;
+    }
+  }
+  mTableBCData->mLeftBorderWidth =
+               LimitBorderWidth(PR_MAX(mTableBCData->mLeftBorderWidth, aWidth));
+}
+
+void
+BCMapCellInfo::SetTableRightBorderWidth(PRInt32 aRowY, BCPixelSize aWidth)
+{
+  // update the left/right first cell border
+  if (aRowY == 0) {
+    if (mTableIsLTR) {
+      mTableBCData->mRightCellBorderWidth = aWidth;
+    }
+    else {
+      mTableBCData->mLeftCellBorderWidth = aWidth;
+    }
+  }
+  mTableBCData->mRightBorderWidth =
+              LimitBorderWidth(PR_MAX(mTableBCData->mRightBorderWidth, aWidth));
+}
+
+void
+BCMapCellInfo::SetRightBorderWidths(BCPixelSize aWidth)
+{
+   // update the borders of the cells and cols affected
+  if (mCell) {
+    mCell->SetBorderWidth(mEndSide, PR_MAX(aWidth,
+                          mCell->GetBorderWidth(mEndSide)));
+  }
+  if (mRightCol) {
+    BCPixelSize half = BC_BORDER_LEFT_HALF(aWidth);
+    mRightCol->SetRightBorderWidth(PR_MAX(half,
+                                   mRightCol->GetRightBorderWidth()));
+  }
+}
+
+void
+BCMapCellInfo::SetBottomBorderWidths(BCPixelSize aWidth)
+{
+  // update the borders of the affected cells and rows
+  if (mCell) {
+    mCell->SetBorderWidth(NS_SIDE_BOTTOM, PR_MAX(aWidth,
+                          mCell->GetBorderWidth(NS_SIDE_BOTTOM)));
+  }
+  if (mBottomRow) {
+    BCPixelSize half = BC_BORDER_TOP_HALF(aWidth);
+    mBottomRow->SetBottomBCBorderWidth(PR_MAX(half,
+                                       mBottomRow->GetBottomBCBorderWidth()));
+  }
+}
+void
+BCMapCellInfo::SetTopBorderWidths(BCPixelSize aWidth)
+{
+ if (mCell) {
+     mCell->SetBorderWidth(NS_SIDE_TOP, PR_MAX(aWidth,
+                           mCell->GetBorderWidth(NS_SIDE_TOP)));
+  }
+  if (mTopRow) {
+    BCPixelSize half = BC_BORDER_BOTTOM_HALF(aWidth);
+    mTopRow->SetTopBCBorderWidth(PR_MAX(half, mTopRow->GetTopBCBorderWidth()));
+  }
+}
+void
+BCMapCellInfo::SetLeftBorderWidths(BCPixelSize aWidth)
+{
+  if (mCell) {
+    mCell->SetBorderWidth(mStartSide, PR_MAX(aWidth,
+                          mCell->GetBorderWidth(mStartSide)));
+  }
+  if (mLeftCol) {
+    BCPixelSize half = BC_BORDER_RIGHT_HALF(aWidth);
+    mLeftCol->SetLeftBorderWidth(PR_MAX(half, mLeftCol->GetLeftBorderWidth()));
+  }
+}
+
+void
+BCMapCellInfo::SetTableBottomBorderWidth(BCPixelSize aWidth)
+{
+  mTableBCData->mBottomBorderWidth =
+             LimitBorderWidth(PR_MAX(mTableBCData->mBottomBorderWidth, aWidth));
+}
+
+void
+BCMapCellInfo::SetColumn(PRInt32 aColX)
+{
+  mCurrentColFrame = mTableFrame->GetColFrame(aColX);
+  if (!mCurrentColFrame) {
+    NS_ERROR("null mCurrentColFrame");
+  }
+  mCurrentColGroupFrame = static_cast<nsTableColGroupFrame*>
+                            (mCurrentColFrame->GetParent());
+  if (!mCurrentColGroupFrame) {
+    NS_ERROR("null mCurrentColGroupFrame");
+  }
+}
+
+void
+BCMapCellInfo::IncrementRow(PRBool aResetToTopRowOfCell)
+{
+  mCurrentRowFrame = (aResetToTopRowOfCell) ? mTopRow :
+                                                mCurrentRowFrame->GetNextRow();
+}
+
+BCCellBorder
+BCMapCellInfo::GetTopEdgeBorder()
+{
+  return CompareBorders(mTableFrame, mCurrentColGroupFrame, mCurrentColFrame,
+                        mRowGroup, mTopRow, mCell, mTableIsLTR, TABLE_EDGE,
+                        NS_SIDE_TOP, !ADJACENT);
+}
+
+BCCellBorder
+BCMapCellInfo::GetBottomEdgeBorder()
+{
+  return CompareBorders(mTableFrame, mCurrentColGroupFrame, mCurrentColFrame,
+                        mRowGroup, mBottomRow, mCell, mTableIsLTR, TABLE_EDGE,
+                        NS_SIDE_BOTTOM, ADJACENT);
+}
+BCCellBorder
+BCMapCellInfo::GetLeftEdgeBorder()
+{
+  return CompareBorders(mTableFrame, mColGroup, mLeftCol, mRowGroup,
+                        mCurrentRowFrame, mCell, mTableIsLTR, TABLE_EDGE,
+                        NS_SIDE_LEFT, !ADJACENT);
+}
+BCCellBorder
+BCMapCellInfo::GetRightEdgeBorder()
+{
+  return CompareBorders(mTableFrame, mColGroup, mRightCol, mRowGroup,
+                        mCurrentRowFrame, mCell, mTableIsLTR, TABLE_EDGE,
+                        NS_SIDE_RIGHT, ADJACENT);
+}
+BCCellBorder
+BCMapCellInfo::GetRightInternalBorder()
+{
+  const nsIFrame* cg = (mCgAtRight) ? mColGroup : nsnull;
+  return CompareBorders(nsnull, cg, mRightCol, nsnull, nsnull, mCell,
+                        mTableIsLTR, !TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT);
+}
+
+BCCellBorder
+BCMapCellInfo::GetLeftInternalBorder()
+{
+  const nsIFrame* cg = (mCgAtLeft) ? mColGroup : nsnull;
+  return CompareBorders(nsnull, cg, mLeftCol, nsnull, nsnull, mCell,
+                        mTableIsLTR, !TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT);
+}
+
+BCCellBorder
+BCMapCellInfo::GetBottomInternalBorder()
+{
+  const nsIFrame* rg = (mRgAtBottom) ? mRowGroup : nsnull;
+  return CompareBorders(nsnull, nsnull, nsnull, rg, mBottomRow, mCell,
+                        mTableIsLTR, !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT);
+}
+
+BCCellBorder
+BCMapCellInfo::GetTopInternalBorder()
+{
+  const nsIFrame* rg = (mRgAtTop) ? mRowGroup : nsnull;
+  return CompareBorders(nsnull, nsnull, nsnull, rg, mTopRow, mCell,
+                        mTableIsLTR, !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
+}
+
 /* Here is the order for storing border edges in the cell map as a cell is processed. There are 
    n=colspan top and bottom border edges per cell and n=rowspan left and right border edges per cell.
 
@@ -5336,9 +5825,7 @@ LimitBorderWidth(PRUint16 aWidth)
    the flipping is done.
  */
 
-#define TABLE_EDGE  PR_TRUE
-#define ADJACENT    PR_TRUE
-#define HORIZONTAL  PR_TRUE
+
 
 // Calc the dominant border at every cell edge and corner within the current damage area
 void 
@@ -5353,157 +5840,109 @@ nsTableFrame::CalcBCBorders()
     return; // nothing to do
 
   // Get the property holding the table damage area and border widths
-  BCPropertyData* propData = 
-    (BCPropertyData*)nsTableFrame::GetProperty(this, nsGkAtoms::tableBCProperty, PR_FALSE);
+  BCPropertyData* propData =
+    (BCPropertyData*)nsTableFrame::GetProperty(this, nsGkAtoms::tableBCProperty,
+                                               PR_FALSE);
   if (!propData) ABORT0();
 
-  PRBool tableIsLTR = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
-  PRUint8 firstSide, secondSide;
-  if (tableIsLTR) {
-    firstSide  = NS_SIDE_LEFT;
-    secondSide = NS_SIDE_RIGHT;
-  }
-  else {
-    firstSide  = NS_SIDE_RIGHT;
-    secondSide = NS_SIDE_LEFT;
-  }
+  
+  
   CheckFixDamageArea(numRows, numCols, propData->mDamageArea);
   // calculate an expanded damage area 
   nsRect damageArea(propData->mDamageArea);
   ExpandBCDamageArea(damageArea);
 
-  // segments that are on the table border edges need to be initialized only once
+  // segments that are on the table border edges need
+  // to be initialized only once
   PRBool tableBorderReset[4];
   for (PRUint32 sideX = NS_SIDE_TOP; sideX <= NS_SIDE_LEFT; sideX++) {
     tableBorderReset[sideX] = PR_FALSE;
   }
 
   // vertical borders indexed in x-direction (cols)
-  BCCellBorders lastVerBorders(damageArea.width + 1, damageArea.x); if (!lastVerBorders.borders) ABORT0();
+  BCCellBorders lastVerBorders(damageArea.width + 1, damageArea.x);
+  if (!lastVerBorders.borders) ABORT0();
   BCCellBorder  lastTopBorder, lastBottomBorder;
   // horizontal borders indexed in x-direction (cols)
-  BCCellBorders lastBottomBorders(damageArea.width + 1, damageArea.x); if (!lastBottomBorders.borders) ABORT0();
+  BCCellBorders lastBottomBorders(damageArea.width + 1, damageArea.x);
+  if (!lastBottomBorders.borders) ABORT0();
   PRBool startSeg;
   PRBool gotRowBorder = PR_FALSE;
 
-  BCMapCellInfo  info, ajaInfo;
+  BCMapCellInfo  info(this), ajaInfo(this);
+
   BCCellBorder currentBorder, adjacentBorder;
-  PRInt32   cellEndRowIndex = -1;
-  PRInt32   cellEndColIndex = -1;
-  BCCorners topCorners(damageArea.width + 1, damageArea.x); if (!topCorners.corners) ABORT0();
-  BCCorners bottomCorners(damageArea.width + 1, damageArea.x); if (!bottomCorners.corners) ABORT0();
+  BCCorners topCorners(damageArea.width + 1, damageArea.x);
+  if (!topCorners.corners) ABORT0();
+  BCCorners bottomCorners(damageArea.width + 1, damageArea.x);
+  if (!bottomCorners.corners) ABORT0();
 
-  BCMapCellIterator iter(*this, damageArea);
+  BCMapCellIterator iter(this, damageArea);
   for (iter.First(info); !iter.mAtEnd; iter.Next(info)) {
-
-    cellEndRowIndex = info.rowIndex + info.rowSpan - 1;
-    cellEndColIndex = info.colIndex + info.colSpan - 1;
-    
     PRBool bottomRowSpan = PR_FALSE;
     // see if lastTopBorder, lastBottomBorder need to be reset
     if (iter.IsNewRow()) { 
       gotRowBorder = PR_FALSE;
-      lastTopBorder.Reset(info.rowIndex, info.rowSpan);
-      lastBottomBorder.Reset(cellEndRowIndex + 1, info.rowSpan);
+      lastTopBorder.Reset(info.mRowIndex, info.mRowSpan);
+      lastBottomBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
     }
-    else if (info.colIndex > damageArea.x) {
-      lastBottomBorder = lastBottomBorders[info.colIndex - 1];
-      if (info.rowIndex > lastBottomBorder.rowIndex - lastBottomBorder.rowSpan) { 
+    else if (info.mColIndex > damageArea.x) {
+      lastBottomBorder = lastBottomBorders[info.mColIndex - 1];
+      if (info.mRowIndex >
+          (lastBottomBorder.rowIndex - lastBottomBorder.rowSpan)) {
         // the top border's left edge butts against the middle of a rowspan
-        lastTopBorder.Reset(info.rowIndex, info.rowSpan);
+        lastTopBorder.Reset(info.mRowIndex, info.mRowSpan);
       }
-      if (lastBottomBorder.rowIndex > (cellEndRowIndex + 1)) {
+      if (lastBottomBorder.rowIndex > (info.GetCellEndRowIndex() + 1)) {
         // the bottom border's left edge butts against the middle of a rowspan
-        lastBottomBorder.Reset(cellEndRowIndex + 1, info.rowSpan);
+        lastBottomBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
         bottomRowSpan = PR_TRUE;
       }
     }
 
-    // find the dominant border considering the cell's top border and the table, row group, row
-    // if the border is at the top of the table, otherwise it was processed in a previous row
-    if (0 == info.rowIndex) {
+    // find the dominant border considering the cell's top border and the table,
+    // row group, row if the border is at the top of the table, otherwise it was
+    // processed in a previous row
+    if (0 == info.mRowIndex) {
       if (!tableBorderReset[NS_SIDE_TOP]) {
         propData->mTopBorderWidth = 0;
         tableBorderReset[NS_SIDE_TOP] = PR_TRUE;
       }
-      for (PRInt32 colX = info.colIndex; colX <= cellEndColIndex; colX++) {
-        nsIFrame* colFrame = GetColFrame(colX); if (!colFrame) ABORT0();
-        nsIFrame* cgFrame = colFrame->GetParent(); if (!cgFrame) ABORT0();
-        currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg, info.topRow,
-                                       info.cell, tableIsLTR, TABLE_EDGE, NS_SIDE_TOP,
-                                       !ADJACENT);
+      for (PRInt32 colX = info.mColIndex; colX <= info.GetCellEndColIndex();
+           colX++) {
+        info.SetColumn(colX);
+        currentBorder = info.GetTopEdgeBorder();
         // update/store the top left & top right corners of the seg 
         BCCornerInfo& tlCorner = topCorners[colX]; // top left
         if (0 == colX) {
-          tlCorner.Set(NS_SIDE_RIGHT, currentBorder); // we are on right hand side of the corner
+          // we are on right hand side of the corner
+          tlCorner.Set(NS_SIDE_RIGHT, currentBorder);
         }
         else {
           tlCorner.Update(NS_SIDE_RIGHT, currentBorder);
-          tableCellMap->SetBCBorderCorner(eTopLeft, *info.cellMap, 0, 0, colX,
-                                          tlCorner.ownerSide, tlCorner.subWidth, tlCorner.bevel);
+          tableCellMap->SetBCBorderCorner(eTopLeft, *iter.mCellMap, 0, 0, colX,
+                                          tlCorner.ownerSide, tlCorner.subWidth,
+                                          tlCorner.bevel);
         }
         topCorners[colX + 1].Set(NS_SIDE_LEFT, currentBorder); // top right
         // update lastTopBorder and see if a new segment starts
         startSeg = SetHorBorder(currentBorder, tlCorner, lastTopBorder);
         // store the border segment in the cell map
-        tableCellMap->SetBCBorderEdge(NS_SIDE_TOP, *info.cellMap, 0, 0, colX,
-                                      1, currentBorder.owner, currentBorder.width, startSeg);
-        // update the affected borders of the cell, row, and table
-        if (info.cell) {
-          info.cell->SetBorderWidth(NS_SIDE_TOP, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(NS_SIDE_TOP)));
-        }
-        if (info.topRow) {
-          BCPixelSize half = BC_BORDER_BOTTOM_HALF(currentBorder.width);
-          info.topRow->SetTopBCBorderWidth(PR_MAX(half, info.topRow->GetTopBCBorderWidth()));
-        }
-        propData->mTopBorderWidth = LimitBorderWidth(PR_MAX(propData->mTopBorderWidth, (PRUint8)currentBorder.width));
-        //calculate column continuous borders
-        //we only need to do this once, so we'll do it only on the first row
-        currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg,
-                                       info.topRow, nsnull, tableIsLTR, 
-                                       TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
-        ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_TOP,
-                                                                 currentBorder.width);
-        if (numCols == cellEndColIndex + 1) {
-          currentBorder = CompareBorders(this, cgFrame, colFrame, nsnull,
-                                         nsnull, nsnull, tableIsLTR, TABLE_EDGE,
-                                         NS_SIDE_RIGHT, !ADJACENT);
-        }
-        else {
-          currentBorder = CompareBorders(nsnull, cgFrame, colFrame, nsnull,
-                                         nsnull, nsnull, tableIsLTR, !TABLE_EDGE,
-                                         NS_SIDE_RIGHT, !ADJACENT);
-        }
-        ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_RIGHT,
-                                                                 currentBorder.width);
-        
+        tableCellMap->SetBCBorderEdge(NS_SIDE_TOP, *iter.mCellMap, 0, 0, colX,
+                                      1, currentBorder.owner,
+                                      currentBorder.width, startSeg);
+       
+        info.SetTableTopBorderWidth(currentBorder.width);
+        info.SetTopBorderWidths(currentBorder.width);
+        info.SetColumnTopRightContBCBorder();
       }
-      //calculate continuous top first row & rowgroup border: special case
-      //because it must include the table in the collapse
-      if (info.topRow) {
-        currentBorder = CompareBorders(this, nsnull, nsnull, info.rg,
-                                       info.topRow, nsnull, tableIsLTR,
-                                       TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
-        info.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
-      }
-      if (info.cgRight && info.cg) {
-        //calculate continuous top colgroup border once per colgroup
-        currentBorder = CompareBorders(this, info.cg, nsnull, info.rg,
-                                       info.topRow, nsnull, tableIsLTR, 
-                                       TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
-        info.cg->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
-      }
-      if (0 == info.colIndex) {
-        currentBorder = CompareBorders(this, info.cg, info.leftCol, nsnull,
-                                       nsnull, nsnull, tableIsLTR, TABLE_EDGE,
-                                       NS_SIDE_LEFT, !ADJACENT);
-        mBits.mLeftContBCBorder = currentBorder.width;
-      }
+      info.SetTableTopLeftContBCBorder();
     }
     else {
-      // see if the top border needs to be the start of a segment due to a vertical border owning the corner
-      if (info.colIndex > 0) {
-        BCData& data = ((BCCellData*)info.cellData)->mData;
+      // see if the top border needs to be the start of a segment due to a
+      // vertical border owning the corner
+      if (info.mColIndex > 0) {
+        BCData& data = info.mCellData->mData;
         if (!data.IsTopStart()) {
           PRUint8 cornerSide;
           PRPackedBool bevel;
@@ -5515,291 +5954,248 @@ nsTableFrame::CalcBCBorders()
       }  
     }
 
-    // find the dominant border considering the cell's left border and the table, col group, col  
-    // if the border is at the left of the table, otherwise it was processed in a previous col
-    if (0 == info.colIndex) {
+    // find the dominant border considering the cell's left border and the
+    // table, col group, col if the border is at the left of the table,
+    // otherwise it was processed in a previous col
+    if (0 == info.mColIndex) {
       if (!tableBorderReset[NS_SIDE_LEFT]) {
         propData->mLeftBorderWidth = 0;
         tableBorderReset[NS_SIDE_LEFT] = PR_TRUE;
       }
-      nsTableRowFrame* rowFrame = nsnull;
-      for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
-        rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
-        currentBorder = CompareBorders(this, info.cg, info.leftCol, info.rg, rowFrame, info.cell, 
-                                       tableIsLTR, TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT);
-        BCCornerInfo& tlCorner = (0 == rowX) ? topCorners[0] : bottomCorners[0]; // top left
+      info.mCurrentRowFrame = nsnull;
+      for (PRInt32 rowY = info.mRowIndex; rowY <= info.GetCellEndRowIndex();
+           rowY++) {
+        info.IncrementRow(rowY == info.mRowIndex);
+        currentBorder = info.GetLeftEdgeBorder();
+        BCCornerInfo& tlCorner = (0 == rowY) ? topCorners[0] : bottomCorners[0];
         tlCorner.Update(NS_SIDE_BOTTOM, currentBorder);
-        tableCellMap->SetBCBorderCorner(eTopLeft, *info.cellMap, iter.mRowGroupStart, rowX, 
-                                        0, tlCorner.ownerSide, tlCorner.subWidth, tlCorner.bevel);
-        bottomCorners[0].Set(NS_SIDE_TOP, currentBorder); // bottom left             
-        // update the left/right first cell border
-        if (0 == rowX) {
-          if (tableIsLTR) {
-            propData->mLeftCellBorderWidth = currentBorder.width;
-          }
-          else {
-            propData->mRightCellBorderWidth = currentBorder.width;
-          }
-        }
+        tableCellMap->SetBCBorderCorner(eTopLeft, *iter.mCellMap,
+                                        iter.mRowGroupStart, rowY, 0,
+                                        tlCorner.ownerSide, tlCorner.subWidth,
+                                        tlCorner.bevel);
+        bottomCorners[0].Set(NS_SIDE_TOP, currentBorder); // bottom left
+       
         // update lastVerBordersBorder and see if a new segment starts
         startSeg = SetBorder(currentBorder, lastVerBorders[0]);
         // store the border segment in the cell map 
-        tableCellMap->SetBCBorderEdge(NS_SIDE_LEFT, *info.cellMap, iter.mRowGroupStart, rowX, 
-                                      info.colIndex, 1, currentBorder.owner, currentBorder.width, startSeg);
-        // update the left border of the cell, col and table
-        if (info.cell) {
-          info.cell->SetBorderWidth(firstSide, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(firstSide)));
-        }
-        if (info.leftCol) {
-          BCPixelSize half = BC_BORDER_RIGHT_HALF(currentBorder.width);
-          info.leftCol->SetLeftBorderWidth(PR_MAX(half, info.leftCol->GetLeftBorderWidth()));
-        }
-        propData->mLeftBorderWidth = LimitBorderWidth(PR_MAX(propData->mLeftBorderWidth, currentBorder.width));
-        //get row continuous borders
-        if (rowFrame) {
-          currentBorder = CompareBorders(this, info.cg, info.leftCol,
-                                         info.rg, rowFrame, nsnull, tableIsLTR,
-                                         TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT);
-          rowFrame->SetContinuousBCBorderWidth(firstSide, currentBorder.width);
-        }
+        tableCellMap->SetBCBorderEdge(NS_SIDE_LEFT, *iter.mCellMap,
+                                      iter.mRowGroupStart, rowY, info.mColIndex,
+                                      1, currentBorder.owner,
+                                      currentBorder.width, startSeg);
+        info.SetTableLeftBorderWidth(rowY , currentBorder.width);
+        info.SetLeftBorderWidths(currentBorder.width);
+        info.SetRowLeftContBCBorder();
       }
-      //get row group continuous borders
-      if (info.rgBottom && info.rg) { //once per row group, so check for bottom
-        currentBorder = CompareBorders(this, info.cg, info.leftCol, info.rg, nsnull,
-                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_LEFT,
-                                       !ADJACENT);
-        info.rg->SetContinuousBCBorderWidth(firstSide, currentBorder.width);
-      }
+      info.SetRowGroupLeftContBCBorder();
     }
 
-    // find the dominant border considering the cell's right border, adjacent cells and the table, row group, row
-    if (numCols == cellEndColIndex + 1) { // touches right edge of table
+    // find the dominant border considering the cell's right border, adjacent
+    // cells and the table, row group, row
+    if (info.mNumTableCols == info.GetCellEndColIndex() + 1) {
+      // touches right edge of table
       if (!tableBorderReset[NS_SIDE_RIGHT]) {
         propData->mRightBorderWidth = 0;
         tableBorderReset[NS_SIDE_RIGHT] = PR_TRUE;
       }
-      nsTableRowFrame* rowFrame = nsnull;
-      for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
-        rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
-        currentBorder = CompareBorders(this, info.cg, info.rightCol, info.rg, rowFrame, info.cell, 
-                                       tableIsLTR, TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT);
+      info.mCurrentRowFrame = nsnull;
+      for (PRInt32 rowY = info.mRowIndex; rowY <= info.GetCellEndRowIndex();
+           rowY++) {
+        info.IncrementRow(rowY == info.mRowIndex);
+        currentBorder = info.GetRightEdgeBorder();
         // update/store the top right & bottom right corners 
-        BCCornerInfo& trCorner = (0 == rowX) ? topCorners[cellEndColIndex + 1] : bottomCorners[cellEndColIndex + 1]; 
+        BCCornerInfo& trCorner = (0 == rowY) ?
+                                 topCorners[info.GetCellEndColIndex() + 1] :
+                                 bottomCorners[info.GetCellEndColIndex() + 1];
         trCorner.Update(NS_SIDE_BOTTOM, currentBorder);   // top right
-        tableCellMap->SetBCBorderCorner(eTopRight, *info.cellMap, iter.mRowGroupStart, rowX, 
-                                        cellEndColIndex, trCorner.ownerSide, trCorner.subWidth, trCorner.bevel);
-        BCCornerInfo& brCorner = bottomCorners[cellEndColIndex + 1];
+        tableCellMap->SetBCBorderCorner(eTopRight, *iter.mCellMap,
+                                        iter.mRowGroupStart, rowY,
+                                        info.GetCellEndColIndex(),
+                                        trCorner.ownerSide, trCorner.subWidth,
+                                        trCorner.bevel);
+        BCCornerInfo& brCorner = bottomCorners[info.GetCellEndColIndex() + 1];
         brCorner.Set(NS_SIDE_TOP, currentBorder); // bottom right
-        tableCellMap->SetBCBorderCorner(eBottomRight, *info.cellMap, iter.mRowGroupStart, rowX,
-                                        cellEndColIndex, brCorner.ownerSide, brCorner.subWidth, brCorner.bevel);
+        tableCellMap->SetBCBorderCorner(eBottomRight, *iter.mCellMap,
+                                        iter.mRowGroupStart, rowY,
+                                        info.GetCellEndColIndex(),
+                                        brCorner.ownerSide, brCorner.subWidth,
+                                        brCorner.bevel);
         // update lastVerBorders and see if a new segment starts
-        startSeg = SetBorder(currentBorder, lastVerBorders[cellEndColIndex + 1]);
+        startSeg = SetBorder(currentBorder,
+                             lastVerBorders[info.GetCellEndColIndex() + 1]);
         // store the border segment in the cell map and update cellBorders
-        tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *info.cellMap, iter.mRowGroupStart, rowX,
-                                      cellEndColIndex, 1, currentBorder.owner, currentBorder.width, startSeg);
-        // update the left/right first cell border
-        if (0 == rowX) {
-          if (tableIsLTR) {
-            propData->mRightCellBorderWidth = currentBorder.width;
-          }
-          else {
-            propData->mLeftCellBorderWidth = currentBorder.width;
-          }
-        }
-        // update the affected borders of the cell, col, and table
-        if (info.cell) {
-          info.cell->SetBorderWidth(secondSide, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(secondSide)));
-        }
-        if (info.rightCol) {
-          BCPixelSize half = BC_BORDER_LEFT_HALF(currentBorder.width);
-          info.rightCol->SetRightBorderWidth(PR_MAX(half, info.rightCol->GetRightBorderWidth()));
-        }
-        propData->mRightBorderWidth = LimitBorderWidth(PR_MAX(propData->mRightBorderWidth, currentBorder.width));
-        //get row continuous borders
-        if (rowFrame) {
-          currentBorder = CompareBorders(this, info.cg, info.rightCol, info.rg,
-                                         rowFrame, nsnull, tableIsLTR, TABLE_EDGE,
-                                         NS_SIDE_RIGHT, ADJACENT);
-          rowFrame->SetContinuousBCBorderWidth(secondSide, currentBorder.width);
-        }
+        tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *iter.mCellMap,
+                                      iter.mRowGroupStart, rowY,
+                                      info.GetCellEndColIndex(), 1,
+                                      currentBorder.owner, currentBorder.width,
+                                      startSeg);
+        info.SetTableRightBorderWidth(rowY, currentBorder.width);
+        info.SetRightBorderWidths(currentBorder.width);
+        info.SetRowRightContBCBorder();
       }
-      //get row group continuous borders
-      if (info.rgBottom && info.rg) { //once per rg, so check for bottom
-        currentBorder = CompareBorders(this, info.cg, info.rightCol, info.rg, 
-                                       nsnull, nsnull, tableIsLTR, TABLE_EDGE,
-                                       NS_SIDE_RIGHT, ADJACENT);
-        info.rg->SetContinuousBCBorderWidth(secondSide, currentBorder.width);
-      }
+      info.SetRowGroupRightContBCBorder();
     }
     else {
       PRInt32 segLength = 0;
-      BCMapCellInfo priorAjaInfo;
-      for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX += segLength) {
-        iter.PeekRight(info, rowX, ajaInfo);
-        const nsIFrame* cg = (info.cgRight) ? info.cg : nsnull;
-        currentBorder = CompareBorders(nsnull, cg, info.rightCol, nsnull, nsnull, info.cell,
-                                       tableIsLTR, !TABLE_EDGE, NS_SIDE_RIGHT, ADJACENT);
-        cg = (ajaInfo.cgLeft) ? ajaInfo.cg : nsnull;
-        adjacentBorder = CompareBorders(nsnull, cg, ajaInfo.leftCol, nsnull, nsnull, ajaInfo.cell, 
-                                        tableIsLTR, !TABLE_EDGE, NS_SIDE_LEFT, !ADJACENT);
-        currentBorder = CompareBorders(!CELL_CORNER, currentBorder, adjacentBorder, !HORIZONTAL);
+      BCMapCellInfo priorAjaInfo(this);
+      for (PRInt32 rowY = info.mRowIndex; rowY <= info.GetCellEndRowIndex();
+           rowY += segLength) {
+        iter.PeekRight(info, rowY, ajaInfo);
+        currentBorder  = info.GetRightInternalBorder();
+        adjacentBorder = ajaInfo.GetLeftInternalBorder();
+        currentBorder = CompareBorders(!CELL_CORNER, currentBorder,
+                                        adjacentBorder, !HORIZONTAL);
                           
-        segLength = PR_MAX(1, ajaInfo.rowIndex + ajaInfo.rowSpan - rowX);
-        segLength = PR_MIN(segLength, info.rowIndex + info.rowSpan - rowX);
+        segLength = PR_MAX(1, ajaInfo.mRowIndex + ajaInfo.mRowSpan - rowY);
+        segLength = PR_MIN(segLength, info.mRowIndex + info.mRowSpan - rowY);
 
         // update lastVerBorders and see if a new segment starts
-        startSeg = SetBorder(currentBorder, lastVerBorders[cellEndColIndex + 1]);
+        startSeg = SetBorder(currentBorder,
+                             lastVerBorders[info.GetCellEndColIndex() + 1]);
         // store the border segment in the cell map and update cellBorders
-        if (cellEndColIndex < damageArea.XMost() && rowX >= damageArea.y && rowX < damageArea.YMost()) {
-          tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *info.cellMap, iter.mRowGroupStart, rowX, 
-                                        cellEndColIndex, segLength, currentBorder.owner, currentBorder.width, startSeg);
-          // update the borders of the cells and cols affected 
-          if (info.cell) {
-            info.cell->SetBorderWidth(secondSide, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(secondSide)));
-          }
-          if (info.rightCol) {
-            BCPixelSize half = BC_BORDER_LEFT_HALF(currentBorder.width);
-            info.rightCol->SetRightBorderWidth(PR_MAX(half, info.rightCol->GetRightBorderWidth()));
-          }
-          if (ajaInfo.cell) {
-            ajaInfo.cell->SetBorderWidth(firstSide, PR_MAX(currentBorder.width, ajaInfo.cell->GetBorderWidth(firstSide)));
-          }
-          if (ajaInfo.leftCol) {
-            BCPixelSize half = BC_BORDER_RIGHT_HALF(currentBorder.width);
-            ajaInfo.leftCol->SetLeftBorderWidth(PR_MAX(half, ajaInfo.leftCol->GetLeftBorderWidth()));
-          }
+        if (info.GetCellEndColIndex() < damageArea.XMost() &&
+            rowY >= damageArea.y && rowY < damageArea.YMost()) {
+          tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *iter.mCellMap,
+                                        iter.mRowGroupStart, rowY,
+                                        info.GetCellEndColIndex(), segLength,
+                                        currentBorder.owner,
+                                        currentBorder.width, startSeg);
+          info.SetRightBorderWidths(currentBorder.width);
+          ajaInfo.SetLeftBorderWidths(currentBorder.width);
         }
         // update the top right corner
-        PRBool hitsSpanOnRight = (rowX > ajaInfo.rowIndex) && (rowX < ajaInfo.rowIndex + ajaInfo.rowSpan);
-        BCCornerInfo* trCorner = ((0 == rowX) || hitsSpanOnRight) 
-                                 ? &topCorners[cellEndColIndex + 1] : &bottomCorners[cellEndColIndex + 1]; 
+        PRBool hitsSpanOnRight = (rowY > ajaInfo.mRowIndex) &&
+                                  (rowY < ajaInfo.mRowIndex + ajaInfo.mRowSpan);
+        BCCornerInfo* trCorner = ((0 == rowY) || hitsSpanOnRight) ?
+                                 &topCorners[info.GetCellEndColIndex() + 1] :
+                                 &bottomCorners[info.GetCellEndColIndex() + 1];
         trCorner->Update(NS_SIDE_BOTTOM, currentBorder);
-        // if this is not the first time through, consider the segment to the right
-        if (rowX != info.rowIndex) {
-          const nsIFrame* rg = (priorAjaInfo.rgBottom) ? priorAjaInfo.rg : nsnull;
-          currentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, priorAjaInfo.bottomRow, priorAjaInfo.cell,
-                                         tableIsLTR, !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT);
-          rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
-          adjacentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell,
-                                          tableIsLTR, !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
-          currentBorder = CompareBorders(!CELL_CORNER, currentBorder, adjacentBorder, HORIZONTAL);
+        // if this is not the first time through,
+        // consider the segment to the right
+        if (rowY != info.mRowIndex) {
+          currentBorder  = priorAjaInfo.GetBottomInternalBorder();
+          adjacentBorder = ajaInfo.GetTopInternalBorder();
+          currentBorder = CompareBorders(!CELL_CORNER, currentBorder,
+                                          adjacentBorder, HORIZONTAL);
           trCorner->Update(NS_SIDE_RIGHT, currentBorder);
         }
         // store the top right corner in the cell map 
-        if (cellEndColIndex < damageArea.XMost() && rowX >= damageArea.y) {
-          if (0 != rowX) {
-            tableCellMap->SetBCBorderCorner(eTopRight, *info.cellMap, iter.mRowGroupStart, rowX, cellEndColIndex, 
-                                            trCorner->ownerSide, trCorner->subWidth, trCorner->bevel);
+        if (info.GetCellEndColIndex() < damageArea.XMost() &&
+            rowY >= damageArea.y) {
+          if (0 != rowY) {
+            tableCellMap->SetBCBorderCorner(eTopRight, *iter.mCellMap,
+                                            iter.mRowGroupStart, rowY,
+                                            info.GetCellEndColIndex(),
+                                            trCorner->ownerSide,
+                                            trCorner->subWidth,
+                                            trCorner->bevel);
           }
           // store any corners this cell spans together with the aja cell
-          for (PRInt32 rX = rowX + 1; rX < rowX + segLength; rX++) {
-            tableCellMap->SetBCBorderCorner(eBottomRight, *info.cellMap, iter.mRowGroupStart, rX, 
-                                            cellEndColIndex, trCorner->ownerSide, trCorner->subWidth, PR_FALSE);
+          for (PRInt32 rX = rowY + 1; rX < rowY + segLength; rX++) {
+            tableCellMap->SetBCBorderCorner(eBottomRight, *iter.mCellMap,
+                                            iter.mRowGroupStart, rX,
+                                            info.GetCellEndColIndex(),
+                                            trCorner->ownerSide,
+                                            trCorner->subWidth, PR_FALSE);
           }
         }
         // update bottom right corner, topCorners, bottomCorners
-        hitsSpanOnRight = (rowX + segLength < ajaInfo.rowIndex + ajaInfo.rowSpan);
-        BCCornerInfo& brCorner = (hitsSpanOnRight) ? topCorners[cellEndColIndex + 1] 
-                                                   : bottomCorners[cellEndColIndex + 1];
+        hitsSpanOnRight = (rowY + segLength <
+                           ajaInfo.mRowIndex + ajaInfo.mRowSpan);
+        BCCornerInfo& brCorner = (hitsSpanOnRight) ?
+                                 topCorners[info.GetCellEndColIndex() + 1] :
+                                 bottomCorners[info.GetCellEndColIndex() + 1];
         brCorner.Set(NS_SIDE_TOP, currentBorder);
         priorAjaInfo = ajaInfo;
       }
     }
-    for (PRInt32 colX = info.colIndex + 1; colX <= cellEndColIndex; colX++) {
+    for (PRInt32 colX = info.mColIndex + 1; colX <= info.GetCellEndColIndex();
+         colX++) {
       lastVerBorders[colX].Reset(0,1);
     }
 
-    // find the dominant border considering the cell's bottom border, adjacent cells and the table, row group, row
-    if (numRows == cellEndRowIndex + 1) { // touches bottom edge of table
+    // find the dominant border considering the cell's bottom border, adjacent
+    // cells and the table, row group, row
+    if (info.mNumTableRows == info.GetCellEndRowIndex() + 1) {
+      // touches bottom edge of table
       if (!tableBorderReset[NS_SIDE_BOTTOM]) {
         propData->mBottomBorderWidth = 0;
         tableBorderReset[NS_SIDE_BOTTOM] = PR_TRUE;
       }
-      for (PRInt32 colX = info.colIndex; colX <= cellEndColIndex; colX++) {
-        nsIFrame* colFrame = GetColFrame(colX); if (!colFrame) ABORT0();
-        nsIFrame* cgFrame = colFrame->GetParent(); if (!cgFrame) ABORT0();
-        currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg, info.bottomRow, info.cell,
-                                       tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT);
+      for (PRInt32 colX = info.mColIndex; colX <= info.GetCellEndColIndex();
+           colX++) {
+        info.SetColumn(colX);
+        currentBorder = info.GetBottomEdgeBorder();
         // update/store the bottom left & bottom right corners 
         BCCornerInfo& blCorner = bottomCorners[colX]; // bottom left
         blCorner.Update(NS_SIDE_RIGHT, currentBorder);
-        tableCellMap->SetBCBorderCorner(eBottomLeft, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex,                
-                                        colX, blCorner.ownerSide, blCorner.subWidth, blCorner.bevel); 
+        tableCellMap->SetBCBorderCorner(eBottomLeft, *iter.mCellMap,
+                                        iter.mRowGroupStart,
+                                        info.GetCellEndRowIndex(),
+                                        colX, blCorner.ownerSide,
+                                        blCorner.subWidth, blCorner.bevel);
         BCCornerInfo& brCorner = bottomCorners[colX + 1]; // bottom right
         brCorner.Update(NS_SIDE_LEFT, currentBorder);
-        if (numCols == colX + 1) { // lower right corner of the table
-          tableCellMap->SetBCBorderCorner(eBottomRight, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex,               
-                                          colX, brCorner.ownerSide, brCorner.subWidth, brCorner.bevel, PR_TRUE);  
+        if (info.mNumTableCols == colX + 1) { // lower right corner of the table
+          tableCellMap->SetBCBorderCorner(eBottomRight, *iter.mCellMap,
+                                          iter.mRowGroupStart,
+                                          info.GetCellEndRowIndex(),colX,
+                                          brCorner.ownerSide, brCorner.subWidth,
+                                          brCorner.bevel, PR_TRUE);
         }
         // update lastBottomBorder and see if a new segment starts
         startSeg = SetHorBorder(currentBorder, blCorner, lastBottomBorder);
         if (!startSeg) { 
-           // make sure that we did not compare apples to oranges i.e. the current border 
-           // should be a continuation of the lastBottomBorder, as it is a bottom border 
-           // add 1 to the cellEndRowIndex
-           startSeg = (lastBottomBorder.rowIndex != cellEndRowIndex + 1);
+           // make sure that we did not compare apples to oranges i.e. the
+           // current border should be a continuation of the lastBottomBorder,
+           // as it is a bottom border
+           // add 1 to the info.GetCellEndRowIndex()
+           startSeg = (lastBottomBorder.rowIndex !=
+                       (info.GetCellEndRowIndex() + 1));
         }
         // store the border segment in the cell map and update cellBorders
-        tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex, 
-                                      colX, 1, currentBorder.owner, currentBorder.width, startSeg);
-        // update the bottom borders of the cell, the bottom row, and the table 
-        if (info.cell) {
-          info.cell->SetBorderWidth(NS_SIDE_BOTTOM, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(NS_SIDE_BOTTOM)));
-        }
-        if (info.bottomRow) {
-          BCPixelSize half = BC_BORDER_TOP_HALF(currentBorder.width);
-          info.bottomRow->SetBottomBCBorderWidth(PR_MAX(half, info.bottomRow->GetBottomBCBorderWidth()));
-        }
-        propData->mBottomBorderWidth = LimitBorderWidth(PR_MAX(propData->mBottomBorderWidth, currentBorder.width));
+        tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *iter.mCellMap,
+                                      iter.mRowGroupStart,
+                                      info.GetCellEndRowIndex(),
+                                      colX, 1, currentBorder.owner,
+                                      currentBorder.width, startSeg);
         // update lastBottomBorders
-        lastBottomBorder.rowIndex = cellEndRowIndex + 1;
-        lastBottomBorder.rowSpan = info.rowSpan;
+        lastBottomBorder.rowIndex = info.GetCellEndRowIndex() + 1;
+        lastBottomBorder.rowSpan = info.mRowSpan;
         lastBottomBorders[colX] = lastBottomBorder;
-        //get col continuous border
-        currentBorder = CompareBorders(this, cgFrame, colFrame, info.rg, info.bottomRow,
-                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM,
-                                       ADJACENT);
-        ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM,
-                                                                currentBorder.width);
+        
+        info.SetBottomBorderWidths(currentBorder.width);
+        info.SetTableBottomBorderWidth(currentBorder.width);
+        info.SetColumnBottomContBCBorder();
       }
-      //get row group/col group continuous border
-      if (info.rg) {
-        currentBorder = CompareBorders(this, nsnull, nsnull, info.rg, info.bottomRow,
-                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM,
-                                       ADJACENT);
-        info.rg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
-      }
-      if (info.cg) {
-        currentBorder = CompareBorders(this, info.cg, nsnull, info.rg, info.bottomRow,
-                                       nsnull, tableIsLTR, TABLE_EDGE, NS_SIDE_BOTTOM,
-                                       ADJACENT);
-        info.cg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
-      }
+      info.SetRowGroupBottomContBCBorder();
+      info.SetColGroupBottomContBCBorder();
     }
     else {
       PRInt32 segLength = 0;
-      for (PRInt32 colX = info.colIndex; colX <= cellEndColIndex; colX += segLength) {
+      for (PRInt32 colX = info.mColIndex; colX <= info.GetCellEndColIndex();
+           colX += segLength) {
         iter.PeekBottom(info, colX, ajaInfo);
-        const nsIFrame* rg = (info.rgBottom) ? info.rg : nsnull;
-        currentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, info.bottomRow, info.cell, 
-                                       tableIsLTR, !TABLE_EDGE, NS_SIDE_BOTTOM, ADJACENT);
-        rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
-        adjacentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell, 
-                                        tableIsLTR, !TABLE_EDGE, NS_SIDE_TOP, !ADJACENT);
-        currentBorder = CompareBorders(!CELL_CORNER, currentBorder, adjacentBorder, HORIZONTAL);
-        segLength = PR_MAX(1, ajaInfo.colIndex + ajaInfo.colSpan - colX);
-        segLength = PR_MIN(segLength, info.colIndex + info.colSpan - colX);
+        currentBorder  = info.GetBottomInternalBorder();
+        adjacentBorder = ajaInfo.GetTopInternalBorder();
+        currentBorder = CompareBorders(!CELL_CORNER, currentBorder,
+                                        adjacentBorder, HORIZONTAL);
+        segLength = PR_MAX(1, ajaInfo.mColIndex + ajaInfo.mColSpan - colX);
+        segLength = PR_MIN(segLength, info.mColIndex + info.mColSpan - colX);
 
         // update, store the bottom left corner
         BCCornerInfo& blCorner = bottomCorners[colX]; // bottom left
-        PRBool hitsSpanBelow = (colX > ajaInfo.colIndex) && (colX < ajaInfo.colIndex + ajaInfo.colSpan);
+        PRBool hitsSpanBelow = (colX > ajaInfo.mColIndex) &&
+                               (colX < ajaInfo.mColIndex + ajaInfo.mColSpan);
         PRBool update = PR_TRUE;
-        if ((colX == info.colIndex) && (colX > damageArea.x)) {
+        if ((colX == info.mColIndex) && (colX > damageArea.x)) {
           PRInt32 prevRowIndex = lastBottomBorders[colX - 1].rowIndex;
-          if (prevRowIndex > cellEndRowIndex + 1) { // hits a rowspan on the right
-            update = PR_FALSE; // the corner was taken care of during the cell on the left
+          if (prevRowIndex > info.GetCellEndRowIndex() + 1) {
+            // hits a rowspan on the right
+            update = PR_FALSE;
+            // the corner was taken care of during the cell on the left
           }
-          else if (prevRowIndex < cellEndRowIndex + 1) { // spans below the cell to the left
+          else if (prevRowIndex < info.GetCellEndRowIndex() + 1) {
+            // spans below the cell to the left
             topCorners[colX] = blCorner;
             blCorner.Set(NS_SIDE_RIGHT, currentBorder);
             update = PR_FALSE;
@@ -5808,99 +6204,96 @@ nsTableFrame::CalcBCBorders()
         if (update) {
           blCorner.Update(NS_SIDE_RIGHT, currentBorder);
         }
-        if (cellEndRowIndex < damageArea.YMost() && colX >= damageArea.x) {
+        if (info.GetCellEndRowIndex() < damageArea.YMost() &&
+            (colX >= damageArea.x)) {
           if (hitsSpanBelow) {
-            tableCellMap->SetBCBorderCorner(eBottomLeft, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex, colX,
-                                            blCorner.ownerSide, blCorner.subWidth, blCorner.bevel);
+            tableCellMap->SetBCBorderCorner(eBottomLeft, *iter.mCellMap,
+                                            iter.mRowGroupStart,
+                                            info.GetCellEndRowIndex(), colX,
+                                            blCorner.ownerSide,
+                                            blCorner.subWidth, blCorner.bevel);
           }
           // store any corners this cell spans together with the aja cell
           for (PRInt32 cX = colX + 1; cX < colX + segLength; cX++) {
             BCCornerInfo& corner = bottomCorners[cX];
             corner.Set(NS_SIDE_RIGHT, currentBorder);
-            tableCellMap->SetBCBorderCorner(eBottomLeft, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex,
-                                            cX, corner.ownerSide, corner.subWidth, PR_FALSE);
+            tableCellMap->SetBCBorderCorner(eBottomLeft, *iter.mCellMap,
+                                            iter.mRowGroupStart,
+                                            info.GetCellEndRowIndex(), cX,
+                                            corner.ownerSide, corner.subWidth,
+                                            PR_FALSE);
           }
         }
         // update lastBottomBorders and see if a new segment starts
         startSeg = SetHorBorder(currentBorder, blCorner, lastBottomBorder);
         if (!startSeg) { 
-           // make sure that we did not compare apples to oranges i.e. the current border 
-           // should be a continuation of the lastBottomBorder, as it is a bottom border 
-           // add 1 to the cellEndRowIndex
-           startSeg = (lastBottomBorder.rowIndex != cellEndRowIndex + 1);
+           // make sure that we did not compare apples to oranges i.e. the
+           // current border should be a continuation of the lastBottomBorder,
+           // as it is a bottom border
+           // add 1 to the info.GetCellEndRowIndex()
+           startSeg = (lastBottomBorder.rowIndex !=
+                       info.GetCellEndRowIndex() + 1);
         }
-        lastBottomBorder.rowIndex = cellEndRowIndex + 1;
-        lastBottomBorder.rowSpan = info.rowSpan;
+        lastBottomBorder.rowIndex = info.GetCellEndRowIndex() + 1;
+        lastBottomBorder.rowSpan = info.mRowSpan;
         for (PRInt32 cX = colX; cX < colX + segLength; cX++) {
           lastBottomBorders[cX] = lastBottomBorder;
         }
 
         // store the border segment the cell map and update cellBorders
-        if (cellEndRowIndex < damageArea.YMost() && colX >= damageArea.x && colX < damageArea.XMost()) {
-          tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex,
-                                        colX, segLength, currentBorder.owner, currentBorder.width, startSeg);
-          // update the borders of the affected cells and rows
-          if (info.cell) {
-            info.cell->SetBorderWidth(NS_SIDE_BOTTOM, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(NS_SIDE_BOTTOM)));
-          }
-          if (info.bottomRow) {
-            BCPixelSize half = BC_BORDER_TOP_HALF(currentBorder.width);
-            info.bottomRow->SetBottomBCBorderWidth(PR_MAX(half, info.bottomRow->GetBottomBCBorderWidth()));
-          }
-          if (ajaInfo.cell) {
-            ajaInfo.cell->SetBorderWidth(NS_SIDE_TOP, PR_MAX(currentBorder.width, ajaInfo.cell->GetBorderWidth(NS_SIDE_TOP)));
-          }
-          if (ajaInfo.topRow) {
-            BCPixelSize half = BC_BORDER_BOTTOM_HALF(currentBorder.width);
-            ajaInfo.topRow->SetTopBCBorderWidth(PR_MAX(half, ajaInfo.topRow->GetTopBCBorderWidth()));
-          }
+        if (info.GetCellEndRowIndex() < damageArea.YMost() &&
+            (colX >= damageArea.x) &&
+            (colX < damageArea.XMost())) {
+          tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *iter.mCellMap,
+                                        iter.mRowGroupStart,
+                                        info.GetCellEndRowIndex(),
+                                        colX, segLength, currentBorder.owner,
+                                        currentBorder.width, startSeg);
+          info.SetBottomBorderWidths(currentBorder.width);
+          ajaInfo.SetTopBorderWidths(currentBorder.width);
         }
         // update bottom right corner
         BCCornerInfo& brCorner = bottomCorners[colX + segLength];
         brCorner.Update(NS_SIDE_LEFT, currentBorder);
       }
-      if (!gotRowBorder && 1 == info.rowSpan && (ajaInfo.topRow || info.rgBottom)) {
+      if (!gotRowBorder && 1 == info.mRowSpan &&
+          (ajaInfo.mTopRow || info.mRgAtBottom)) {
         //get continuous row/row group border
         //we need to check the row group's bottom border if this is
         //the last row in the row group, but only a cell with rowspan=1
         //will know whether *this* row is at the bottom
-        const nsIFrame* rg = (info.rgBottom) ? info.rg : nsnull;
-        currentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, info.bottomRow,
-                                       nsnull, tableIsLTR, !TABLE_EDGE, NS_SIDE_BOTTOM,
-                                       ADJACENT);
-        rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
-        adjacentBorder = CompareBorders(nsnull, nsnull, nsnull, rg, ajaInfo.topRow,
-                                        nsnull, tableIsLTR, !TABLE_EDGE, NS_SIDE_TOP,
-                                        !ADJACENT);
-        currentBorder = CompareBorders(PR_FALSE, currentBorder, adjacentBorder, HORIZONTAL);
-        if (ajaInfo.topRow) {
-          ajaInfo.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
-        }
-        if (info.rgBottom && info.rg) {
-          info.rg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
-        }
+        const nsIFrame* nextRowGroup = (ajaInfo.mRgAtTop) ? ajaInfo.mRowGroup :
+                                                             nsnull;
+        info.SetInnerRowGroupBottomContBCBorder(nextRowGroup, ajaInfo.mTopRow);
         gotRowBorder = PR_TRUE;
       }
     }
 
-    // see if the cell to the right had a rowspan and its lower left border needs be joined with this one's bottom
-    if ((numCols != cellEndColIndex + 1) &&                  // there is a cell to the right
-        (lastBottomBorders[cellEndColIndex + 1].rowSpan > 1)) { // cell to right was a rowspan
-      BCCornerInfo& corner = bottomCorners[cellEndColIndex + 1];
-      if ((NS_SIDE_TOP != corner.ownerSide) && (NS_SIDE_BOTTOM != corner.ownerSide)) { // not a vertical owner
+    // see if the cell to the right had a rowspan and its lower left border
+    // needs be joined with this one's bottom
+    // if  there is a cell to the right and the cell to right was a rowspan
+    if ((info.mNumTableCols != info.GetCellEndColIndex() + 1) &&
+        (lastBottomBorders[info.GetCellEndColIndex() + 1].rowSpan > 1)) {
+      BCCornerInfo& corner = bottomCorners[info.GetCellEndColIndex() + 1];
+      if ((NS_SIDE_TOP != corner.ownerSide) &&
+          (NS_SIDE_BOTTOM != corner.ownerSide)) {
+        // not a vertical owner
         BCCellBorder& thisBorder = lastBottomBorder;
-        BCCellBorder& nextBorder = lastBottomBorders[info.colIndex + 1];
-        if ((thisBorder.color == nextBorder.color) && (thisBorder.width == nextBorder.width) &&
+        BCCellBorder& nextBorder = lastBottomBorders[info.mColIndex + 1];
+        if ((thisBorder.color == nextBorder.color) &&
+            (thisBorder.width == nextBorder.width) &&
             (thisBorder.style == nextBorder.style)) {
-          // set the flag on the next border indicating it is not the start of a new segment
+          // set the flag on the next border indicating it is not the start of a
+          // new segment
           if (iter.mCellMap) {
             tableCellMap->SetNotTopStart(NS_SIDE_BOTTOM, *iter.mCellMap,
-                                         cellEndRowIndex, cellEndColIndex + 1);
+                                         info.GetCellEndRowIndex(),
+                                         info.GetCellEndColIndex() + 1);
           }
         }
       }
     }
-  } // for (iter.First(info); info.cell; iter.Next(info)) {
+  } // for (iter.First(info); info.mCell; iter.Next(info)) {
 
   // reset the bc flag and damage area
   SetNeedToCalcBCBorders(PR_FALSE);
@@ -6880,7 +7273,7 @@ DestroyPointFunc(void*           aFrame,
   delete static_cast<nsPoint*>(aPropertyValue);
 }
 
-// Destructor function for nscoord properties
+// Destructor function for BCPropertyData properties
 static void
 DestroyBCPropertyDataFunc(void*           aFrame,
                           nsIAtom*        aPropertyName,
