@@ -65,7 +65,6 @@
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://mozapps/content/extensions/extensions.js"/>
-  <script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
   <stringbundleset id="extensionsSet">
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
@@ -200,9 +199,9 @@
       <hbox flex="1">
         <richlistbox id="extensionsView" flex="1" 
                      datasources="rdf:null" context="addonContextMenu"
-                     ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
-                     ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
-                     ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+                     ondragenter="gExtensionsDNDObserver.onDragOver(event)"
+                     ondragover="gExtensionsDNDObserver.onDragOver(event)"
+                     ondrop="gExtensionsDNDObserver.onDrop(event)"
                      ondblclick="onViewDoubleClick(event);"/>
   
         <splitter id="themeSplitter" hidden="true" collapse="none" persist="state"/>

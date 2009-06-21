@@ -732,262 +732,219 @@ function isToolbarItem(aElt)
 ///////////////////////////////////////////////////////////////////////////
 //// Drag and Drop observers
 
-function onToolbarDragStart(aEvent)
-{
-  nsDragAndDrop.startDrag(aEvent, dragStartObserver);
-}
-
-function onToolbarDragOver(aEvent)
-{
-  nsDragAndDrop.dragOver(aEvent, toolbarDNDObserver);
-}
-
-function onToolbarDrop(aEvent)
-{
-  nsDragAndDrop.drop(aEvent, toolbarDNDObserver);
-}
-
 function onToolbarDragLeave(aEvent)
 {
   if (gCurrentDragOverItem)
     setDragActive(gCurrentDragOverItem, false);
 }
 
-var dragStartObserver =
+function onToolbarDragStart(aEvent)
 {
-  onDragStart: function (aEvent, aXferData, aDragAction) {
-    var documentId = gToolboxDocument.documentElement.id;
-    
-    var item = aEvent.target;
-    while (item && item.localName != "toolbarpaletteitem")
-      item = item.parentNode;
-    
-    item.setAttribute("dragactive", "true");
-    
-    aXferData.data = new TransferDataSet();
-    var data = new TransferData();
-    data.addDataForFlavour("text/toolbarwrapper-id/"+documentId, item.firstChild.id);
-    aXferData.data.push(data);
-    aDragAction.action = Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE;
-  }
+  var documentId = gToolboxDocument.documentElement.id;
+
+  var item = aEvent.target;
+  while (item && item.localName != "toolbarpaletteitem")
+    item = item.parentNode;
+
+  item.setAttribute("dragactive", "true");
+
+  var dt = aEvent.dataTransfer;
+  dt.setData("text/toolbarwrapper-id/" + documentId, item.firstChild.id);
+  dt.effectAllowed = "move";
 }
 
-var toolbarDNDObserver =
+function onToolbarDragOver(aEvent)
 {
-  onDragOver: function (aEvent, aFlavour, aDragSession)
-  {
-    var toolbar = aEvent.target;
-    var dropTarget = aEvent.target;
-    while (toolbar && toolbar.localName != "toolbar") {
-      dropTarget = toolbar;
-      toolbar = toolbar.parentNode;
-    }
-    
-    var previousDragItem = gCurrentDragOverItem;
+  var documentId = gToolboxDocument.documentElement.id;
+  if (!aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/" + documentId))
+    return;
 
-    // Make sure we are dragging over a customizable toolbar.
-    if (!isCustomizableToolbar(toolbar)) {
-      gCurrentDragOverItem = null;
-      return;
-    }
-    
-    if (dropTarget.localName == "toolbar") {
-      gCurrentDragOverItem = dropTarget;
-    } else {
-      gCurrentDragOverItem = null;
-
-      var direction = window.getComputedStyle(dropTarget.parentNode, null).direction;
-      var dropTargetCenter = dropTarget.boxObject.x + (dropTarget.boxObject.width / 2);
-      var dragAfter;
-      if (direction == "ltr")
-        dragAfter = aEvent.clientX > dropTargetCenter;
-      else
-        dragAfter = aEvent.clientX < dropTargetCenter;
-        
-      if (dragAfter) {
-        gCurrentDragOverItem = dropTarget.nextSibling;
-        if (!gCurrentDragOverItem)
-          gCurrentDragOverItem = toolbar;
-      } else
-        gCurrentDragOverItem = dropTarget;
-    }    
-
-    if (previousDragItem && gCurrentDragOverItem != previousDragItem) {
-      setDragActive(previousDragItem, false);
-    }
-    
-    setDragActive(gCurrentDragOverItem, true);
-    
-    aDragSession.canDrop = true;
-  },
+  var toolbar = aEvent.target;
+  var dropTarget = aEvent.target;
+  while (toolbar && toolbar.localName != "toolbar") {
+    dropTarget = toolbar;
+    toolbar = toolbar.parentNode;
+  }
   
-  onDrop: function (aEvent, aXferData, aDragSession)
-  {
-    if (!gCurrentDragOverItem)
-      return;
-    
-    setDragActive(gCurrentDragOverItem, false);
+  var previousDragItem = gCurrentDragOverItem;
 
-    var draggedItemId = aXferData.data;
-    if (gCurrentDragOverItem.id == draggedItemId)
-      return;
-
-    var toolbar = aEvent.target;
-    while (toolbar.localName != "toolbar")
-      toolbar = toolbar.parentNode;
-
-    var draggedPaletteWrapper = document.getElementById("wrapper-"+draggedItemId);       
-    if (!draggedPaletteWrapper) {
-      // The wrapper has been dragged from the toolbar.
-      
-      // Get the wrapper from the toolbar document and make sure that
-      // it isn't being dropped on itself.
-      var wrapper = gToolboxDocument.getElementById("wrapper-"+draggedItemId);
-      if (wrapper == gCurrentDragOverItem)
-        return;
-
-      // Don't allow static kids (e.g., the menubar) to move.
-      if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
-        return;
-      if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
-        return;
-
-      // Remove the item from its place in the toolbar.
-      wrapper.parentNode.removeChild(wrapper);
-
-      // Determine which toolbar we are dropping on.
-      var dropToolbar = null;
-      if (gCurrentDragOverItem.localName == "toolbar")
-        dropToolbar = gCurrentDragOverItem;
-      else
-        dropToolbar = gCurrentDragOverItem.parentNode;
-      
-      // Insert the item into the toolbar.
-      if (gCurrentDragOverItem != dropToolbar)
-        dropToolbar.insertBefore(wrapper, gCurrentDragOverItem);
-      else
-        dropToolbar.appendChild(wrapper);
-    } else {
-      // The item has been dragged from the palette
-      
-      // Create a new wrapper for the item. We don't know the id yet.
-      var wrapper = createWrapper("", gToolboxDocument);
-
-      // Ask the toolbar to clone the item's template, place it inside the wrapper, and insert it in the toolbar.
-      var newItem = toolbar.insertItem(draggedItemId, gCurrentDragOverItem == toolbar ? null : gCurrentDragOverItem, wrapper);
-      
-      // Prepare the item and wrapper to look good on the toolbar.
-      cleanupItemForToolbar(newItem, wrapper);
-      wrapper.id = "wrapper-"+newItem.id;
-      wrapper.flex = newItem.flex;
-
-      // Remove the wrapper from the palette.
-      var currentRow = draggedPaletteWrapper.parentNode;
-      if (draggedItemId != "separator" &&
-          draggedItemId != "spring" &&
-          draggedItemId != "spacer")
-      {
-        currentRow.removeChild(draggedPaletteWrapper);
-
-        while (currentRow) {
-          // Pull the first child of the next row up
-          // into this row.
-          var nextRow = currentRow.nextSibling;
-          
-          if (!nextRow) {
-            var last = currentRow.lastChild;
-            var first = currentRow.firstChild;
-            if (first == last) {
-              // Kill the row.
-              currentRow.parentNode.removeChild(currentRow);
-              break;
-            }
-
-            if (last.localName == "spacer") {
-              var flex = last.getAttribute("flex");
-              last.setAttribute("flex", ++flex);
-              // Reflow doesn't happen for some reason.  Trigger it with a hide/show. ICK! -dwh
-              last.hidden = true;
-              last.hidden = false;
-              break;
-            } else {
-              // Make a spacer and give it a flex of 1.
-              var spacer = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                    "spacer");
-              spacer.setAttribute("flex", "1");
-              currentRow.appendChild(spacer);
-            }
-            break;
-          }
-          
-          currentRow.appendChild(nextRow.firstChild);
-          currentRow = currentRow.nextSibling;
-        }
-      }
-    }
-    
+  // Make sure we are dragging over a customizable toolbar.
+  if (!isCustomizableToolbar(toolbar)) {
+    gCurrentDragOverItem = null;
+    return;
+  }
+  
+  if (dropTarget.localName == "toolbar") {
+    gCurrentDragOverItem = dropTarget;
+  } else {
     gCurrentDragOverItem = null;
 
-    toolboxChanged();
-  },
-  
-  _flavourSet: null,
-  
-  getSupportedFlavours: function ()
-  {
-    if (!this._flavourSet) {
-      this._flavourSet = new FlavourSet();
-      var documentId = gToolboxDocument.documentElement.id;
-      this._flavourSet.appendFlavour("text/toolbarwrapper-id/"+documentId);
-    }
-    return this._flavourSet;
+    var direction = window.getComputedStyle(dropTarget.parentNode, null).direction;
+    var dropTargetCenter = dropTarget.boxObject.x + (dropTarget.boxObject.width / 2);
+    var dragAfter;
+    if (direction == "ltr")
+      dragAfter = aEvent.clientX > dropTargetCenter;
+    else
+      dragAfter = aEvent.clientX < dropTargetCenter;
+      
+    if (dragAfter) {
+      gCurrentDragOverItem = dropTarget.nextSibling;
+      if (!gCurrentDragOverItem)
+        gCurrentDragOverItem = toolbar;
+    } else
+      gCurrentDragOverItem = dropTarget;
+  }    
+
+  if (previousDragItem && gCurrentDragOverItem != previousDragItem) {
+    setDragActive(previousDragItem, false);
   }
+
+  setDragActive(gCurrentDragOverItem, true);
+
+  aEvent.preventDefault();
 }
 
-var paletteDNDObserver =
+function onToolbarDrop(aEvent)
 {
-  onDragOver: function (aEvent, aFlavour, aDragSession)
-  {
-    aDragSession.canDrop = true;
-  },
-  
-  onDrop: function(aEvent, aXferData, aDragSession)
-  {
-    var itemId = aXferData.data;
-    
-    var wrapper = gToolboxDocument.getElementById("wrapper-"+itemId);
-    if (wrapper) {
-      // Don't allow static kids (e.g., the menubar) to move.
-      if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
-        return;
-      if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
-        return;
+  if (!gCurrentDragOverItem)
+    return;
 
-      var wrapperType = wrapper.getAttribute("type");
-      if (wrapperType != "separator" &&
-          wrapperType != "spacer" &&
-          wrapperType != "spring") {
-        appendPaletteItem(document.importNode(wrapper.firstChild, true));
-        gToolbox.palette.appendChild(wrapper.firstChild);
+  setDragActive(gCurrentDragOverItem, false);
+
+  var documentId = gToolboxDocument.documentElement.id;
+  var draggedItemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
+  if (gCurrentDragOverItem.id == draggedItemId)
+    return;
+
+  var toolbar = aEvent.target;
+  while (toolbar.localName != "toolbar")
+    toolbar = toolbar.parentNode;
+
+  var draggedPaletteWrapper = document.getElementById("wrapper-"+draggedItemId);       
+  if (!draggedPaletteWrapper) {
+    // The wrapper has been dragged from the toolbar.
+    // Get the wrapper from the toolbar document and make sure that
+    // it isn't being dropped on itself.
+    var wrapper = gToolboxDocument.getElementById("wrapper-"+draggedItemId);
+    if (wrapper == gCurrentDragOverItem)
+       return;
+
+    // Don't allow static kids (e.g., the menubar) to move.
+    if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
+      return;
+    if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
+      return;
+
+    // Remove the item from its place in the toolbar.
+    wrapper.parentNode.removeChild(wrapper);
+
+    // Determine which toolbar we are dropping on.
+    var dropToolbar = null;
+    if (gCurrentDragOverItem.localName == "toolbar")
+      dropToolbar = gCurrentDragOverItem;
+    else
+      dropToolbar = gCurrentDragOverItem.parentNode;
+
+    // Insert the item into the toolbar.
+    if (gCurrentDragOverItem != dropToolbar)
+      dropToolbar.insertBefore(wrapper, gCurrentDragOverItem);
+    else
+      dropToolbar.appendChild(wrapper);
+  } else {
+    // The item has been dragged from the palette
+
+    // Create a new wrapper for the item. We don't know the id yet.
+    var wrapper = createWrapper("", gToolboxDocument);
+
+    // Ask the toolbar to clone the item's template, place it inside the wrapper, and insert it in the toolbar.
+    var newItem = toolbar.insertItem(draggedItemId, gCurrentDragOverItem == toolbar ? null : gCurrentDragOverItem, wrapper);
+
+    // Prepare the item and wrapper to look good on the toolbar.
+    cleanupItemForToolbar(newItem, wrapper);
+    wrapper.id = "wrapper-"+newItem.id;
+    wrapper.flex = newItem.flex;
+
+    // Remove the wrapper from the palette.
+    var currentRow = draggedPaletteWrapper.parentNode;
+    if (draggedItemId != "separator" &&
+        draggedItemId != "spring" &&
+        draggedItemId != "spacer")
+    {
+      currentRow.removeChild(draggedPaletteWrapper);
+
+      while (currentRow) {
+        // Pull the first child of the next row up
+        // into this row.
+        var nextRow = currentRow.nextSibling;
+
+        if (!nextRow) {
+          var last = currentRow.lastChild;
+          var first = currentRow.firstChild;
+          if (first == last) {
+            // Kill the row.
+            currentRow.parentNode.removeChild(currentRow);
+             break;
+           }
+
+          if (last.localName == "spacer") {
+            var flex = last.getAttribute("flex");
+            last.setAttribute("flex", ++flex);
+            // Reflow doesn't happen for some reason.  Trigger it with a hide/show. ICK! -dwh
+            last.hidden = true;
+            last.hidden = false;
+            break;
+          } else {
+            // Make a spacer and give it a flex of 1.
+            var spacer = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                  "spacer");
+            spacer.setAttribute("flex", "1");
+            currentRow.appendChild(spacer);
+          }
+          break;
+        }
+
+        currentRow.appendChild(nextRow.firstChild);
+        currentRow = currentRow.nextSibling;
       }
-
-      // The item was dragged out of the toolbar.
-      wrapper.parentNode.removeChild(wrapper);
     }
-    
-    toolboxChanged();
-  },
-  
-  _flavourSet: null,
-  
-  getSupportedFlavours: function ()
-  {
-    if (!this._flavourSet) {
-      this._flavourSet = new FlavourSet();
-      var documentId = gToolboxDocument.documentElement.id;
-      this._flavourSet.appendFlavour("text/toolbarwrapper-id/"+documentId);
-    }
-    return this._flavourSet;
   }
+  
+  gCurrentDragOverItem = null;
+ 
+  toolboxChanged();
+};
+
+function onPaletteDragOver(aEvent)
+{
+  var documentId = gToolboxDocument.documentElement.id;
+  if (aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/" + documentId))
+    aEvent.preventDefault();
 }
 
+function onPaletteDrop(aEvent)
+ {
+  var documentId = gToolboxDocument.documentElement.id;
+  var itemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
+
+  var wrapper = gToolboxDocument.getElementById("wrapper-"+itemId);
+  if (wrapper) {
+    // Don't allow static kids (e.g., the menubar) to move.
+    if (wrapper.parentNode.firstPermanentChild && wrapper.parentNode.firstPermanentChild.id == wrapper.firstChild.id)
+      return;
+    if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
+      return;
+
+    var wrapperType = wrapper.getAttribute("type");
+    if (wrapperType != "separator" &&
+        wrapperType != "spacer" &&
+        wrapperType != "spring") {
+      appendPaletteItem(document.importNode(wrapper.firstChild, true));
+      gToolbox.palette.appendChild(wrapper.firstChild);
+    }
+
+    // The item was dragged out of the toolbar.
+    wrapper.parentNode.removeChild(wrapper);
+  } 
+
+  toolboxChanged();
+}
