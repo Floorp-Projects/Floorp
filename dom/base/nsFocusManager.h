@@ -165,7 +165,9 @@ protected:
   nsIContent* CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags);
 
   /**
-   * Blurs the currently focused element.
+   * Blurs the currently focused element. Returns false if another element was
+   * focused as a result. This would mean that the caller should not proceed
+   * with a pending call to Focus. Normally, true would be returned.
    *
    * The currently focused element within aWindowToClear will be cleared.
    * aWindowToClear may be null, which means that no window is cleared. This
