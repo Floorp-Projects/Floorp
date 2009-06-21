@@ -2173,14 +2173,14 @@ nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
   // reset the bit, it will be set again if row/rowgroup or col/colgroup are
   // collapsed
   SetNeedToCollapse(PR_FALSE);
-  
-  CheckCollapsedColumns();
-  
+
   // collapse the rows and/or row groups as necessary
   // Get the ordered children
   RowGroupArray rowGroups;
   OrderRowGroups(rowGroups);
-  nscoord width = GetCollapsedWidth(aBorderPadding);
+  
+  nsTableFrame* firstInFlow = static_cast<nsTableFrame*> (GetFirstInFlow());
+  nscoord width = firstInFlow->GetCollapsedWidth(aBorderPadding);
   nscoord rgWidth = width - 2 * GetCellSpacingX();
   nsRect overflowArea(0, 0, 0, 0);
   // Walk the list of children
@@ -2199,39 +2199,11 @@ nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
                          nsSize(aDesiredSize.width, aDesiredSize.height));
 }
 
-void
-nsTableFrame::CheckCollapsedColumns()
-{
-  nsTableFrame* tableFrame = static_cast<nsTableFrame*>(GetFirstInFlow());
-  if (!tableFrame)
-    return;
-  // loop over colgroups
-  for (nsIFrame* groupFrame = mColGroups.FirstChild(); groupFrame;
-         groupFrame = groupFrame->GetNextSibling()) {
-    const nsStyleVisibility* groupVis = groupFrame->GetStyleVisibility();
-    PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
-    if (collapseGroup) {
-      tableFrame->SetNeedToCollapse(PR_TRUE);
-      return;
-    }
-  }
-  
-  //loop over columns
-  PRInt32 numCols = mColFrames.Length();
-  for (int colX = 0; colX < numCols; colX++) {
-    nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
-    const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
-    PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE ==
-                                colVis->mVisible);
-    if (collapseCol) {
-      tableFrame->SetNeedToCollapse(PR_TRUE);
-      return;
-    }
-  }
-}
+
 nscoord
 nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
 {
+  NS_ASSERTION(!GetPrevInFlow(), "GetCollapsedWidth called on next in flow");
   nscoord cellSpacingX = GetCellSpacingX();
   nscoord width = cellSpacingX;
   width += aBorderPadding.left + aBorderPadding.right;
@@ -2252,6 +2224,9 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
           width += colWidth;
           if (ColumnHasCellSpacingBefore(colX))
             width += cellSpacingX;
+        }
+        else {
+          SetNeedToCollapse(PR_TRUE);
         }
       }
     }
