@@ -1938,56 +1938,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     }
   }
 
-  if (loadAsHtml5) {
-    // Really zap all children (copied from nsDocument.cpp -- maybe factor into a method)
-    PRUint32 count = mChildren.ChildCount();
-    { // Scope for update
-      MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, PR_TRUE);    
-      for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
-        nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
-        // XXXbz this is backwards from how ContentRemoved normally works.  That
-        // is, usually it's dispatched after the content has been removed from
-        // the tree.
-        nsNodeUtils::ContentRemoved(this, content, i);
-        content->UnbindFromTree();
-        mChildren.RemoveChildAt(i);
-      }
-    }
-  }
-
-  // XXX This is a nasty workaround for a scrollbar code bug
-  // (http://bugzilla.mozilla.org/show_bug.cgi?id=55334).
-
-  // Hold on to our root element
-  nsCOMPtr<nsIContent> root = GetRootContent();
-
-  if (root) {
-    PRInt32 rootIndex = mChildren.IndexOfChild(root);
-    NS_ASSERTION(rootIndex >= 0, "Root must be in list!");
-    
-    PRUint32 count = root->GetChildCount();
-
-    // Remove all the children from the root.
-    while (count-- > 0) {
-      root->RemoveChildAt(count, PR_TRUE);
-    }
-
-    count = root->GetAttrCount();
-
-    // Remove all attributes from the root element
-    while (count-- > 0) {
-      const nsAttrName* name = root->GetAttrNameAt(count);
-      // Hold a strong reference here so that the atom doesn't go away during
-      // UnsetAttr.
-      nsCOMPtr<nsIAtom> localName = name->LocalName();
-      root->UnsetAttr(name->NamespaceID(), localName, PR_FALSE);
-    }
-
-    // Remove the root from the childlist
-    mChildren.RemoveChildAt(rootIndex);
-    mCachedRootContent = nsnull;
-  }
-
   // Call Reset(), this will now do the full reset
   Reset(channel, group);
   if (baseURI) {
