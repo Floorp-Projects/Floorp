@@ -655,7 +655,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   PRBool aReset,
                                   nsIContentSink* aSink)
 {
-  PRBool loadAsHtml5 = nsContentUtils::GetBoolPref("html5.enable", PR_FALSE);
+  PRBool loadAsHtml5 = nsHtml5Module::Enabled;
   if (aSink) {
     loadAsHtml5 = PR_FALSE;
   }
@@ -1805,7 +1805,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  PRBool loadAsHtml5 = nsContentUtils::GetBoolPref("html5.enable", PR_FALSE);
+  PRBool loadAsHtml5 = nsHtml5Module::Enabled;
 
   nsresult rv = NS_OK;
 
