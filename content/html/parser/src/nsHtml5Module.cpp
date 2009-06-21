@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsContentUtils.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
 #include "nsHtml5HtmlAttributes.h"
@@ -47,10 +48,13 @@
 
 #include "nsHtml5Module.h"
 
+PRBool nsHtml5Module::Enabled = PR_FALSE;
+
 // static
 void
 nsHtml5Module::InitializeStatics()
 {
+  nsContentUtils::AddBoolPrefVarCache("html5.enable", &Enabled);
   nsHtml5Atoms::AddRefAtoms();
   nsHtml5AttributeName::initializeStatics();
   nsHtml5ElementName::initializeStatics();
