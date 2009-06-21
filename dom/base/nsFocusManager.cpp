@@ -1050,7 +1050,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
 
       if (!Blur(currentIsSameOrAncestor ? mFocusedWindow.get() : nsnull,
                 commonAncestor, !isElementInFocusedWindow))
-      return;
+        return;
     }
 
     Focus(newWindow, contentToFocus, aFlags, !isElementInFocusedWindow,
@@ -1252,26 +1252,38 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
                      nsPIDOMWindow* aAncestorWindowToFocus,
                      PRBool aIsLeavingDocument)
 {
-  // hold a reference to the focused window
-  nsCOMPtr<nsPIDOMWindow> window = mFocusedWindow;
-  if (!window)
-    return PR_TRUE;
-
   // hold a reference to the focused content, which may be null
   nsCOMPtr<nsIContent> content = mFocusedContent;
-  if (content && (content == mFirstBlurEvent || !content->IsInDoc()))
+  if (content) {
+    if (!content->IsInDoc()) {
+      mFocusedContent = nsnull;
+      return PR_TRUE;
+    }
+    if (content == mFirstBlurEvent)
+      return PR_TRUE;
+  }
+
+  // hold a reference to the focused window
+  nsCOMPtr<nsPIDOMWindow> window = mFocusedWindow;
+  if (!window) {
+    mFocusedContent = nsnull;
     return PR_TRUE;
+  }
 
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
-  if (!docShell)
+  if (!docShell) {
+    mFocusedContent = nsnull;
     return PR_TRUE;
+  }
 
   // Keep a ref to presShell since dispatching the DOM event may cause
   // the document to be destroyed.
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell)
+  if (!presShell) {
+    mFocusedContent = nsnull;
     return PR_TRUE;
+  }
 
   PRBool clearFirstBlurEvent = PR_FALSE;
   if (!mFirstBlurEvent) {
