@@ -280,6 +280,9 @@ nsThread::ThreadFunc(void *arg)
   event = new nsThreadShutdownAckEvent(self->mShutdownContext);
   self->mShutdownContext->joiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
+  // Release any observer of the thread here.
+  self->SetObserver(nsnull);
+
   NS_RELEASE(self);
 }
 
@@ -468,6 +471,14 @@ nsThread::Shutdown()
 
   PR_JoinThread(mThread);
   mThread = nsnull;
+
+#ifdef DEBUG
+  {
+    nsAutoLock lock(mLock);
+    NS_ASSERTION(!mObserver, "Should have been cleared at shutdown!");
+  }
+#endif
+
   return NS_OK;
 }
 
