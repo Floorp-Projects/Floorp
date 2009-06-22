@@ -668,10 +668,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_COMMAND_EVENT:
       return NS_NewDOMCommandEvent(aDOMEvent, aPresContext,
                                    static_cast<nsCommandEvent*>(aEvent));
-    case NS_NOTIFYPAINT_EVENT:
-      return NS_NewDOMNotifyPaintEvent(aDOMEvent, aPresContext,
-                                       static_cast<nsNotifyPaintEvent*>
-                                                     (aEvent));
     case NS_SIMPLE_GESTURE_EVENT:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aPresContext,
                                          static_cast<nsSimpleGestureEvent*>(aEvent));

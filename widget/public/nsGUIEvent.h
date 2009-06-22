@@ -1221,23 +1221,6 @@ public:
 };
 
 /**
- * NotifyPaint event
- */
-class nsNotifyPaintEvent : public nsEvent
-{
-public:
-  nsNotifyPaintEvent(PRBool isTrusted, PRUint32 msg,
-                     const nsRegion& aSameDocRegion, const nsRegion& aCrossDocRegion)
-    : nsEvent(isTrusted, msg, NS_NOTIFYPAINT_EVENT),
-      sameDocRegion(aSameDocRegion), crossDocRegion(aCrossDocRegion)
-  {
-  }
-
-  nsRegion sameDocRegion;
-  nsRegion crossDocRegion;
-};
-
-/**
  * PageTransition event
  */
 class nsPageTransitionEvent : public nsEvent
