@@ -55,13 +55,13 @@ function run_test() {
   }
   dump("Testing: successful removal of the directory used to apply the mar file\n");
   do_check_false(testDir.exists());
-  testDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  testDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
   // Create an empty test file to test the complete mar's ability to replace an
   // existing file.
   var testFile = testDir.clone();
   testFile.append("text1");
-  testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+  testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
 
   var binDir = getGREDir();
 
@@ -95,7 +95,7 @@ function run_test() {
          "\nException: " + e + "\n");
   }
 
-  var mar = do_get_file("data/aus-0110_general-1.mar");
+  var mar = do_get_file("data/aus-0110_general.mar");
   mar.copyTo(updatesSubDir, "update.mar");
 
   // apply the complete mar and check the innards of the files
@@ -108,7 +108,7 @@ function run_test() {
   do_check_eq(getFileBytes(getTestFile(testDir, "text1")), "ToBeModified\n");
   do_check_eq(getFileBytes(getTestFile(testDir, "text2")), "ToBeDeleted\n");
 
-  var refImage = do_get_file("data/aus-0110_general_ref_image1.png");
+  var refImage = do_get_file("data/aus-0110_general_ref_image.png");
   var srcImage = getTestFile(testDir, "image1.png");
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
 
