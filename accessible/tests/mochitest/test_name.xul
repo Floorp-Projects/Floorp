@@ -168,6 +168,10 @@
       testName("lb_opt1_children_hidden", "i am visible");
 
 
+      //////////////////////////////////////////////////////////////////////////
+      // Name from aria-labelledby: menuitem label+ listitem label
+      testName("li_labelledby", "Show an Alert The moment the event starts");
+
       SimpleTest.finish();
     }
 
@@ -184,7 +188,13 @@
        title="mochitest for accessible name calculating">
       Mozilla Bug 444279
     </a>
-    <p id="display"></p>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=441991"
+      title="nsXULListitemAccessible::GetName prefers label \
+      		   attribute over aria-labelledby and doesn't allow recursion">
+      Mozilla Bug 441991
+    </a>
+  <p id="display"></p>
     <div id="content" style="display: none">
     </div>
     <pre id="test">
@@ -328,5 +338,24 @@
 
   </vbox>
   </hbox>
+
+  <!-- bug 441991; create name from other menuitem label listitem's own label -->
+  <hbox>
+  <listbox>
+  <listitem id="li_labelledby"
+            label="The moment the event starts"
+            aria-labelledby="menuitem-DISPLAY li_labelledby"/>
+  </listbox>
+  <menulist>
+    <menupopup>
+      <menuitem id="menuitem-DISPLAY"
+                value="DISPLAY"
+                label="Show an Alert"/>
+      <menuitem id="menuitem-EMAIL"
+                value="EMAIL"
+                label="Send an E-mail"/>
+    </menupopup>
+  </menulist>
+  </hbox>  
 </window>
 
