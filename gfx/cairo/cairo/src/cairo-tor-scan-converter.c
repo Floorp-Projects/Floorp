@@ -295,9 +295,9 @@ typedef int grid_area_t;
 #elif GRID_XY == 15
 #  define  GRID_AREA_TO_ALPHA(c)  (((c) << 4) + (c))
 #elif GRID_XY == 2*256*15
-#  define  GRID_AREA_TO_ALPHA(c)  (((c) + ((c)<<4)) >> 9)
+#  define  GRID_AREA_TO_ALPHA(c)  (((c) + ((c)<<4) + 256) >> 9)
 #else
-#  define  GRID_AREA_TO_ALPHA(c)  ((c)*255 / GRID_XY) /* tweak me for rounding */
+#  define  GRID_AREA_TO_ALPHA(c)  (((c)*255 + GRID_XY/2) / GRID_XY)
 #endif
 
 #define UNROLL3(x) x x x
