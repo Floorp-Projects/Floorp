@@ -4954,13 +4954,7 @@ function handleLinkClick(event, href, linkNode)
 
       return false;
     case 1:    // if middle button clicked
-      var tab;
-      try {
-        tab = gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick")
-      }
-      catch(ex) {
-        tab = true;
-      }
+      var tab = gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick");
       if (tab)
         openNewTabWith(href, doc, null, event, false);
       else
