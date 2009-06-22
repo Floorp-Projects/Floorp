@@ -107,11 +107,13 @@ function getPrefBranch() {
 
 /**
  * Nulls out the most commonly used global vars used by tests as appropriate.
- * This is not in the tail file due to check-interactive executing the tail file
- * prior to _execute_test();.
+ * This was moved here from the tail file due to check-interactive executing
+ * the tail file prior to _execute_test(); (bug 384339). It hasn't been moved
+ * back since it is easier to comment out the call to cleanUp when needed.
  */
 function cleanUp() {
-  gDirSvc.unregisterProvider(dirProvider);
+  removeUpdateDirsAndFiles();
+  gDirSvc.unregisterProvider(gDirProvider);
 
   if (gXHR) {
     gXHRCallback     = null;
@@ -132,12 +134,9 @@ function cleanUp() {
 }
 
 /**
- * Initializes the most commonly used global vars used by tests and
- * nsIApplicationUpdateService
+ * Sets the most commonly used preferences used by tests
  */
-function startAUS() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
-
+function setDefaultPrefs() {
   var pb = getPrefBranch();
   // Don't display UI for a successful installation. Some apps may not set this
   // pref to false like Firefox does.
@@ -150,7 +149,15 @@ function startAUS() {
   pb.setBoolPref("extensions.update.enabled", false);
   pb.setBoolPref("browser.search.update", false);
   pb.setBoolPref("browser.microsummary.updateGenerators", false);
+}
 
+/**
+ * Initializes nsIApplicationUpdateService and the most commonly used global
+ * vars used by tests.
+ */
+function startAUS() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
+  setDefaultPrefs();
   gAUS = AUS_Cc["@mozilla.org/updates/update-service;1"].
          getService(AUS_Ci.nsIApplicationUpdateService);
   var os = AUS_Cc["@mozilla.org/observer-service;1"].
@@ -418,23 +425,13 @@ function writeStatusFile(aStatus) {
  *          replaced.
  */
 function writeFile(aFile, aText) {
-  var fos = AUS_Cc["@mozilla.org/network/safe-file-output-stream;1"].
+  var fos = AUS_Cc["@mozilla.org/network/file-output-stream;1"].
             createInstance(AUS_Ci.nsIFileOutputStream);
   if (!aFile.exists())
     aFile.create(AUS_Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
   fos.init(aFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
   fos.write(aText, aText.length);
-
-  if (fos instanceof AUS_Ci.nsISafeOutputStream) {
-    try {
-      fos.finish();
-    }
-    catch (e) {
-      fos.close();
-    }
-  }
-  else
-    fos.close();
+  fos.close();
 }
 
 /**
@@ -477,27 +474,6 @@ function getString(aName) {
   catch (e) {
   }
   return null;
-}
-
-/**
- * Toggles network offline.
- *
- * Be sure to toggle back to online before the test finishes to prevent the
- * following from being printed to the test's log file.
- * WARNING: NS_ENSURE_TRUE(thread) failed: file c:/moz/mozilla-central/mozilla/netwerk/base/src/nsSocketTransportService2.cpp, line 115
- * WARNING: unable to post SHUTDOWN message
- */
-function toggleOffline(aOffline) {
-  const ioService = AUS_Cc["@mozilla.org/network/io-service;1"].
-                    getService(AUS_Ci.nsIIOService);
-
-  try {
-    ioService.manageOfflineStatus = !aOffline;
-  }
-  catch (e) {
-  }
-  if (ioService.offline != aOffline)
-    ioService.offline = aOffline;
 }
 
 /**
@@ -627,7 +603,7 @@ const updateCheckListener = {
  */
 function removeUpdateDirsAndFiles() {
   var appDir = getCurrentProcessDir();
-  file = appDir.clone();
+  var file = appDir.clone();
   file.append("active-update.xml");
   try {
     if (file.exists())
@@ -681,6 +657,8 @@ function removeUpdateDirsAndFiles() {
  *          A nsIFile for the directory to be deleted
  */
 function removeDirRecursive(aDir) {
+  if (!aDir.exists())
+    return;
   try {
     aDir.remove(true);
     return;
@@ -798,7 +776,7 @@ if (gProfD.exists())
   gProfD.remove(true);
 gProfD.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
-var dirProvider = {
+var gDirProvider = {
   getFile: function(prop, persistent) {
     switch (prop) {
       case NS_APP_USER_PROFILE_50_DIR:
@@ -818,4 +796,4 @@ var dirProvider = {
     throw AUS_Cr.NS_ERROR_NO_INTERFACE;
   }
 };
-gDirSvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(dirProvider);
+gDirSvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(gDirProvider);
