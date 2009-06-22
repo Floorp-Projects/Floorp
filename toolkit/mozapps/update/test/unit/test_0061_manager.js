@@ -48,9 +48,9 @@ function run_test() {
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
 
-  patches = getLocalPatchString(null, null, null, null, null, null,
-                                STATE_DOWNLOADING);
-  updates = getLocalUpdateString(patches, null, null, "0.9", null, "0.9");
+  var patches = getLocalPatchString(null, null, null, null, null, null,
+                                    STATE_DOWNLOADING);
+  var updates = getLocalUpdateString(patches, null, null, "0.9", null, "0.9");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
 

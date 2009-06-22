@@ -55,7 +55,7 @@ function run_test() {
   }
   dump("Testing: successful removal of the directory used to apply the mar file\n");
   do_check_false(testDir.exists());
-  testDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  testDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
   // Create the files to test the partial mar's ability to modify and delete
   // files.
@@ -67,7 +67,7 @@ function run_test() {
   testFile.append("text2");
   writeFile(testFile, "ToBeDeleted\n");
 
-  testFile = do_get_file("data/aus-0110_general_ref_image1.png");
+  testFile = do_get_file("data/aus-0110_general_ref_image.png");
   testFile.copyTo(testDir, "image1.png");
 
   var binDir = getGREDir();
@@ -102,11 +102,11 @@ function run_test() {
          "\nException: " + e + "\n");
   }
 
-  var mar = do_get_file("data/aus-0110_general-2.mar");
+  var mar = do_get_file("data/aus-0111_general.mar");
   mar.copyTo(updatesSubDir, "update.mar");
 
   // apply the partial mar and check the innards of the files
-  exitValue = runUpdate(updatesSubDir, updater);
+  var exitValue = runUpdate(updatesSubDir, updater);
   dump("Testing: updater binary process exitValue for success when applying " +
        "a partial mar\n");
   do_check_eq(exitValue, 0);
@@ -117,8 +117,8 @@ function run_test() {
   do_check_false(getTestFile(testDir, "text2").exists()); // file removed
   do_check_eq(getFileBytes(getTestFile(testDir, "text3")), "Added\n");
 
-  refImage = do_get_file("data/aus-0110_general_ref_image2.png");
-  srcImage = getTestFile(testDir, "image1.png");
+  var refImage = do_get_file("data/aus-0111_general_ref_image.png");
+  var srcImage = getTestFile(testDir, "image1.png");
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
 
   try {
@@ -132,7 +132,6 @@ function run_test() {
          "\nException: " + e + "\n");
   }
 
-  removeUpdateDirsAndFiles();
   cleanUp();
 }
 
