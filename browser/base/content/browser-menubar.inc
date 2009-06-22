@@ -451,8 +451,8 @@
                   accesskey="&historyMenu.accesskey;">
               <menupopup id="goPopup"
                          type="places"
-                         onpopupshowing="HistoryMenu.onPopupShowing(this);"
-                         onpopuphidden="HistoryMenu.onPopupHidden(this);"
+                         onpopupshowing="HistoryMenu.onPopupShowing(event);"
+                         onpopuphidden="HistoryMenu.onPopupHidden(event);"
                          place="place:redirectsMode=2&amp;sort=4&amp;maxResults=10"
                          tooltip="btTooltip">
                 <menuitem id="historyMenuBack"
