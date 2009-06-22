@@ -9269,8 +9269,18 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     if (PCVAL_IS_NULL(pcval)) {
         /*
+         * We could specialize to guard on just JSClass.getProperty, but a mere
+         * class guard is simpler and slightly faster.
+         */
+        if (OBJ_GET_CLASS(cx, obj)->getProperty != JS_PropertyStub) {
+            ABORT_TRACE("can't trace through access to undefined property if "
+                        "JSClass.getProperty hook isn't stubbed");
+        }
+        guardClass(obj, obj_ins, OBJ_GET_CLASS(cx, obj), snapshot(MISMATCH_EXIT));
+
+        /*
          * This trace will be valid as long as neither the object nor any object
-         * on its prototype chain change shape.
+         * on its prototype chain changes shape.
          */
         VMSideExit* exit = snapshot(BRANCH_EXIT);
         for (;;) {
