@@ -53,6 +53,7 @@
 #endif
 
 #include <stdlib.h>
+#include <math.h>
 
 #include "nanojit/nanojit.h"
 #include "jstracer.h"
@@ -64,6 +65,51 @@ using namespace std;
 static GC gc;
 static avmplus::AvmCore s_core;
 static avmplus::AvmCore* core = &s_core;
+struct Function {
+    const char *name;
+    struct nanojit::CallInfo callInfo;
+};
+
+#ifdef DEBUG
+#define DEBUG_ONLY_NAME(name)   ,#name
+#else
+#define DEBUG_ONLY_NAME(name)
+#endif
+
+#define FN(name, args) \
+    {#name, \
+     {(uintptr_t) (&name), args, 0, 0, nanojit::ABI_CDECL \
+      DEBUG_ONLY_NAME(name)}}
+
+const int I32 = nanojit::ARGSIZE_LO;
+const int I64 = nanojit::ARGSIZE_Q;
+const int F64 = nanojit::ARGSIZE_F;
+const int PTRARG = nanojit::ARGSIZE_LO;
+
+const int PTRRET =
+#if defined AVMPLUS_64BIT
+    nanojit::ARGSIZE_Q
+#else
+    nanojit::ARGSIZE_LO
+#endif
+    ;
+Function functions[] = {
+    FN(puts, I32 | (PTRARG<<2)),
+    FN(sin, F64 | (F64<<2)),
+    FN(malloc, PTRRET | (PTRARG<<2)),
+    FN(free, I32 | (PTRARG<<2))
+};
+
+nanojit::CallInfo *
+lookupFunction(const char *name)
+{
+    const size_t nfuns = sizeof(functions) / sizeof(functions[0]);
+
+    for (size_t i = 0; i < nfuns; i++)
+        if (strcmp(name, functions[i].name) == 0)
+            return &functions[i].callInfo;
+    return NULL;
+}
 
 istream &
 read_and_tokenize_line(istream &in, vector<string> &toks, size_t &linenum)
@@ -247,6 +293,7 @@ assemble_call(string const &op,
 {
     CallInfo *ci = new CallInfo();
     callinfos.push_back(ci);
+    LIns* args[MAXARGS];
 
     // Assembler synax for a call:
     //
@@ -264,46 +311,58 @@ assemble_call(string const &op,
 
     if (toks.size() < 2)
         bad("need at least address and ABI code for " + op, line);
-    ci->_address = imm(pop_front(toks));
 
+    string func = pop_front(toks);
     string abi = pop_front(toks);
-    if (abi == "fastcall")
-        ci->_abi = ABI_FASTCALL;
-    else if (abi == "stdcall")
-        ci->_abi = ABI_STDCALL;
-    else if (abi == "thiscall")
-        ci->_abi = ABI_THISCALL;
-    else if (abi == "cdecl")
-        ci->_abi = ABI_CDECL;
-    else
-        bad("call abi name '" + abi + "'", line);
 
-    ci->_argtypes = 0;
-
-    LIns* args[MAXARGS];
     if (toks.size() > MAXARGS)
         bad("too many args to " + op, line);
 
-    for (size_t i = 0; i < toks.size(); ++i) {
-        args[i] = ref(labels, toks[toks.size() - (i+1)], line);
-        ci->_argtypes |= args[i]->isQuad() ? ARGSIZE_F : ARGSIZE_LO;
-        ci->_argtypes <<= 2;
-    }
+    if (func.find("0x") == 0) {
+        ci->_address = imm(func);
 
-    // Select return type from opcode.
-    // FIXME: callh needs special treatment currently
-    // missing from here.
-    if (opcode == LIR_call || opcode == LIR_calli)
-        ci->_argtypes |= ARGSIZE_LO;
-    else
-        ci->_argtypes |= ARGSIZE_F;
+        if (abi == "fastcall")
+            ci->_abi = ABI_FASTCALL;
+        else if (abi == "stdcall")
+            ci->_abi = ABI_STDCALL;
+        else if (abi == "thiscall")
+            ci->_abi = ABI_THISCALL;
+        else if (abi == "cdecl")
+            ci->_abi = ABI_CDECL;
+        else
+            bad("call abi name '" + abi + "'", line);
 
-    ci->_cse = 0;
-    ci->_fold = 0;
+        ci->_argtypes = 0;
+
+        for (size_t i = 0; i < toks.size(); ++i) {
+            args[i] = ref(labels, toks[toks.size() - (i+1)], line);
+            ci->_argtypes |= args[i]->isQuad() ? ARGSIZE_F : ARGSIZE_LO;
+            ci->_argtypes <<= 2;
+        }
+
+        // Select return type from opcode.
+        // FIXME: callh needs special treatment currently
+        // missing from here.
+        if (opcode == LIR_call || opcode == LIR_calli)
+            ci->_argtypes |= ARGSIZE_LO;
+        else
+            ci->_argtypes |= ARGSIZE_F;
+
+        ci->_cse = 0;
+        ci->_fold = 0;
 
 #ifdef DEBUG
-    ci->_name = "fn";
+        ci->_name = "fn";
 #endif
+
+    } else {
+        ci = lookupFunction(func.c_str());
+        if (ci == NULL)
+            bad("invalid function reference " + func, line);
+        for (size_t i = 0; i < toks.size(); ++i) {
+            args[i] = ref(labels, toks[toks.size() - (i+1)], line);
+        }
+    }
 
     return lir->insCall(ci, args);
 }
