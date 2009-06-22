@@ -155,6 +155,11 @@ nsThreadManager::Shutdown()
     mThreadsByPRThread.Clear();
   }
 
+  // Normally thread shutdown clears the observer for the thread, but since the
+  // main thread is special we do it manually here after we're sure all events
+  // have been processed.
+  mMainThread->SetObserver(nsnull);
+
   // Release main thread object.
   mMainThread = nsnull;
 
