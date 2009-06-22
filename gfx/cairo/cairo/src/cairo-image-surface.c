@@ -1232,27 +1232,27 @@ typedef struct _cairo_image_surface_span_renderer {
     cairo_composite_rectangles_t composite_rectangles;
 } cairo_image_surface_span_renderer_t;
 
-static cairo_status_t
-_cairo_image_surface_span_renderer_render_row (
-    void				*abstract_renderer,
+void
+_cairo_image_surface_span_render_row (
     int					 y,
     const cairo_half_open_span_t	*spans,
-    unsigned				 num_spans)
+    unsigned				 num_spans,
+    cairo_image_surface_t               *mask,
+    const cairo_composite_rectangles_t  *rects)
 {
-    cairo_image_surface_span_renderer_t *renderer = abstract_renderer;
-    int xmin = renderer->composite_rectangles.mask.x;
-    int xmax = xmin + renderer->composite_rectangles.width;
+    int xmin = rects->mask.x;
+    int xmax = xmin + rects->width;
     uint8_t *row;
     int prev_x = xmin;
     int prev_alpha = 0;
     unsigned i;
 
     /* Make sure we're within y-range. */
-    y -= renderer->composite_rectangles.mask.y;
-    if (y < 0 || y >= renderer->composite_rectangles.height)
+    y -= rects->mask.y;
+    if (y < 0 || y >= rects->height)
 	return CAIRO_STATUS_SUCCESS;
 
-    row = (uint8_t*)(renderer->mask->data) + y*(size_t)renderer->mask->stride - xmin;
+    row = (uint8_t*)(mask->data) + y*(size_t)mask->stride - xmin;
 
     /* Find the first span within x-range. */
     for (i=0; i < num_spans && spans[i].x < xmin; i++) {}
@@ -1286,7 +1286,17 @@ _cairo_image_surface_span_renderer_render_row (
     if (prev_alpha != 0 && prev_x < xmax) {
 	memset(row + prev_x, prev_alpha, xmax - prev_x);
     }
+}
 
+static cairo_status_t
+_cairo_image_surface_span_renderer_render_row (
+    void				*abstract_renderer,
+    int					 y,
+    const cairo_half_open_span_t	*spans,
+    unsigned				 num_spans)
+{
+    cairo_image_surface_span_renderer_t *renderer = abstract_renderer;
+    _cairo_image_surface_span_render_row (y, spans, num_spans, renderer->mask, &renderer->composite_rectangles);
     return CAIRO_STATUS_SUCCESS;
 }
 
