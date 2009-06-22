@@ -359,7 +359,7 @@ fails == 315920-5.html 315920-5-ref.html # bug 229915 ???
 == 323656-4.html 323656-4-ref.html
 == 323656-5.svg 323656-5-ref.svg
 == 323656-6.html 323656-6-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 325292-1.html 325292-1-ref.html # bug 499578
+== 325292-1.html 325292-1-ref.html
 == 325486-1.html 325486-1-ref.html
 == 328111-1.html 328111-1-ref.html
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
