@@ -1377,9 +1377,11 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     mFocusedContent = nsnull;
 
     // pass 1 for the focus method when calling SendFocusOrBlurEvent just so
-    // that the check is made for suppressed documents
+    // that the check is made for suppressed documents. Check to ensure that
+    // the document isn't null in case someone closed it during the blur above
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
-    SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, doc, 1);
+    if (doc)
+      SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, doc, 1);
     if (mFocusedWindow == nsnull)
       SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, window, 1);
 
@@ -1418,6 +1420,8 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // Keep a reference to the presShell since dispatching the DOM event may
   // cause the document to be destroyed.
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  if (!docShell)
+    return;
 
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
@@ -1481,8 +1485,9 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // document and then the window.
   if (aIsNewDocument) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
-    SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
-                         doc, aFlags & FOCUSMETHOD_MASK);
+    if (doc)
+      SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
+                           doc, aFlags & FOCUSMETHOD_MASK);
     if (mFocusedWindow == aWindow && mFocusedContent == nsnull)
       SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
                            aWindow, aFlags & FOCUSMETHOD_MASK);
@@ -1572,7 +1577,7 @@ nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
   // for focus events, if this event was from a mouse or key and event
   // handling on the document is suppressed, queue the event and fire it
   // later. For blur events, a non-zero value would be set for aFocusMethod.
-  if (aFocusMethod && aDocument->EventHandlingSuppressed()) {
+  if (aFocusMethod && aDocument && aDocument->EventHandlingSuppressed()) {
     for (PRUint32 i = mDelayedBlurFocusEvents.Length(); i > 0; --i) {
       // if this event was already queued, remove it and append it to the end
       if (mDelayedBlurFocusEvents[i - 1].mType == aType &&
