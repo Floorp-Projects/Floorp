@@ -168,7 +168,8 @@
         </xul:hbox>
       </xul:hbox>
       <xul:preferences>
-        <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted" instantApply="true" onchange="prefChanged();"/>
+        <xul:preference anonid="pref" xbl:inherits="name=pref,inverted" type="bool"
+                        instantApply="true" onchange="prefChanged();"/>
       </xul:preferences>
     </content>
   </binding>
