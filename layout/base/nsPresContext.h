@@ -568,6 +568,21 @@ public:
   { return NSAppUnitsToIntPixels(aAppUnits,
              float(mDeviceContext->AppUnitsPerDevPixel())); }
 
+  PRInt32 CSSPixelsToDevPixels(PRInt32 aPixels)
+  { return AppUnitsToDevPixels(CSSPixelsToAppUnits(aPixels)); }
+
+  float CSSPixelsToDevPixels(float aPixels)
+  {
+    return NSAppUnitsToFloatPixels(CSSPixelsToAppUnits(aPixels),
+                                   float(mDeviceContext->AppUnitsPerDevPixel()));
+  }
+
+  PRInt32 DevPixelsToIntCSSPixels(PRInt32 aPixels)
+  { return AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPixels)); }
+
+  float DevPixelsToFloatCSSPixels(PRInt32 aPixels)
+  { return AppUnitsToFloatCSSPixels(DevPixelsToAppUnits(aPixels)); }
+
   // If there is a remainder, it is rounded to nearest app units.
   nscoord GfxUnitsToAppUnits(gfxFloat aGfxUnits) const
   { return mDeviceContext->GfxUnitsToAppUnits(aGfxUnits); }

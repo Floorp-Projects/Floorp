@@ -186,7 +186,7 @@ init_yuv_converters(void)
 		init_vanilla_coeffs ();
 		features = oc_cpu_flags_get(); 		
 #if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
-#if defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16 
+#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
 		if (features & OC_CPU_X86_SSE2) 
 		{
 			yuv_conv.yuv2rgba = yuv420_to_rgba_sse2;

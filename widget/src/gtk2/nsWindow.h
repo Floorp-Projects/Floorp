@@ -99,6 +99,7 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 #define LOG(args)
 #define LOGFOCUS(args)
 #define LOGIM(args)
+#define LOGDRAG(args)
 #define LOGDRAW(args)
 
 #endif /* MOZ_LOGGING */

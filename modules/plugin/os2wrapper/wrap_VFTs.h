@@ -724,28 +724,7 @@ typedef struct vtable_nsIPluginManager2
     VFTDELTA_DECL(NotifyStatusChange)
     nsresult (*VFTCALL FindProxyForURL)(void *pvThis, const char *aURL, char **aResult);
     VFTDELTA_DECL(FindProxyForURL)
-    nsresult (*VFTCALL RegisterWindow)(void *pvThis, nsIEventHandler *aHandler, nsPluginPlatformWindowRef aWindow);
-    VFTDELTA_DECL(RegisterWindow)
-    nsresult (*VFTCALL UnregisterWindow)(void *pvThis, nsIEventHandler *aHandler, nsPluginPlatformWindowRef aWindow);
-    VFTDELTA_DECL(UnregisterWindow)
-    nsresult (*VFTCALL AllocateMenuID)(void *pvThis, nsIEventHandler *aHandler, PRBool aIsSubmenu, PRInt16 *aResult);
-    VFTDELTA_DECL(AllocateMenuID)
-    nsresult (*VFTCALL DeallocateMenuID)(void *pvThis, nsIEventHandler *aHandler, PRInt16 aMenuID);
-    VFTDELTA_DECL(DeallocateMenuID)
-    nsresult (*VFTCALL HasAllocatedMenuID)(void *pvThis, nsIEventHandler *aHandler, PRInt16 aMenuID, PRBool *aResult);
-    VFTDELTA_DECL(HasAllocatedMenuID)
 } VFTnsIPluginManager2;
-
-
-/**
- * nsIEventHandler
- */
-typedef struct vtable_nsIEventHandler
-{
-    VFTnsISupports base;
-    nsresult (*VFTCALL HandleEvent)(void *pvThis, nsPluginEvent * aEvent, PRBool *aHandled);
-    VFTDELTA_DECL(HandleEvent)
-} VFTnsIEventHandler;
 
 
 /**

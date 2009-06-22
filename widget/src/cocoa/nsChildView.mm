@@ -66,6 +66,7 @@
 #include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
 #include "nsIMenuRollup.h"
+#include "nsIDOMSimpleGestureEvent.h"
 
 #include "nsDragService.h"
 #include "nsClipboard.h"
@@ -75,7 +76,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
 
-#include "nsIDOMSimpleGestureEvent.h"
+#include "npapi.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -100,11 +101,6 @@
 #ifdef PR_LOGGING
 PRLogModuleInfo* sCocoaLog = nsnull;
 #endif
-
-// npapi.h defines NPEventType_AdjustCursorEvent but we don't want to include npapi.h here.
-// We need to send this in the "what" field for certain native plugin events. WebKit does
-// this as well.
-#define adjustCursorEvent 33
 
 extern "C" {
   CG_EXTERN void CGContextResetCTM(CGContextRef);
@@ -179,7 +175,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 
 - (NSMenu*)contextMenu;
-- (TopLevelWindowData*)ensureWindowData;
 
 - (void)setIsPluginView:(BOOL)aIsPlugin;
 - (BOOL)isPluginView;
@@ -353,7 +348,7 @@ ConvertGeckoRectToMacRect(const nsIntRect& aRect, Rect& outMacRect)
 // Flips a screen coordinate from a point in the cocoa coordinate system (bottom-left rect) to a point
 // that is a "flipped" cocoa coordinate system (starts in the top-left).
 static inline void
-FlipCocoaScreenCoordinate (NSPoint &inPoint)
+FlipCocoaScreenCoordinate(NSPoint &inPoint)
 {  
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
@@ -636,7 +631,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   // if this is a ChildView, make sure that our per-window data
   // is set up
   if ([mView isKindOfClass:[ChildView class]])
-    [(ChildView*)mView ensureWindowData];
+    [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:[mView window]];
 
   return NS_OK;
 
@@ -2503,23 +2498,23 @@ NSEvent* gLastDragEvent = nil;
   // we have to loop up through superviews in case the view that received the
   // mouseDown is in fact a plugin view with no scrollbars
   while (currView) {
-    // This is a hack I learned in nsView::GetViewFor(nsIWidget* aWidget)
-    // that I'm not sure is kosher. If anyone knows a better way to get
-    // the view for a widget, I'd love to hear it. --Nathan
-
-    void* clientData;
-    [currView widget]->GetClientData(clientData);
-
-    nsISupports* data = (nsISupports*)clientData;
-    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-    if (req) {
-      req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
-      if (scrollableView)
-        break;
+    nsIWidget* widget = [currView widget];
+    if (widget) {
+      void* clientData;
+      if (NS_SUCCEEDED(widget->GetClientData(clientData))) {
+        nsISupports* data = (nsISupports*)clientData;
+        nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
+        if (req) {
+          req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+          if (scrollableView)
+            break;
+        }
+      }
     }
 
-    if ([[currView superview] isMemberOfClass:[ChildView class]])
-        currView = (ChildView*)[currView superview];
+    NSView* superview = [currView superview];
+    if (superview && [superview isMemberOfClass:[ChildView class]])
+        currView = (ChildView*)superview;
     else
         currView = nil;
   }
@@ -3519,7 +3514,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
 
   EventRecord macEvent;
-  macEvent.what = adjustCursorEvent;
+  macEvent.what = NPEventType_AdjustCursorEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
   ::GetGlobalMouse(&macEvent.where);
@@ -3657,7 +3652,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
-  macEvent.what = adjustCursorEvent;
+  macEvent.what = NPEventType_AdjustCursorEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
   ::GetGlobalMouse(&macEvent.where);
@@ -4061,28 +4056,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 }
 
 
-- (TopLevelWindowData*)ensureWindowData
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if (!mWindow)
-    return nil;
-
-  WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
-
-  TopLevelWindowData* windowData = [windowMap dataForWindow:mWindow];
-  if (!windowData)
-  {
-    windowData = [[TopLevelWindowData alloc] initWithWindow:mWindow];
-    [windowMap setData:windowData forWindow:mWindow]; // takes ownership
-    [windowData release];
-  }
-  return windowData;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-
 static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outChar)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -4114,20 +4087,20 @@ static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outCh
 }
 
 
-static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& macEvent, PRUint32 keyType = 0)
+static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& pluginEvent, PRUint32 keyType = 0)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
     UInt32 charCode = 0;
     if ([cocoaEvent type] == NSFlagsChanged) {
-      macEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
+      pluginEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
     } else {
       if ([[cocoaEvent characters] length] > 0)
         charCode = [[cocoaEvent characters] characterAtIndex:0];
       if ([cocoaEvent type] == NSKeyDown)
-        macEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
+        pluginEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
       else
-        macEvent.what = keyUp;
+        pluginEvent.what = keyUp;
     }
 
     if (charCode >= 0x0080) {
@@ -4152,10 +4125,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
             break;
         }
     }
-    macEvent.message = (charCode & 0x00FF) | (nsCocoaUtils::GetCocoaEventKeyCode(cocoaEvent) << 8);
-    macEvent.when = ::TickCount();
-    ::GetGlobalMouse(&macEvent.where);
-    macEvent.modifiers = ::GetCurrentEventKeyModifiers();
+    pluginEvent.message = (charCode & 0x00FF) | (nsCocoaUtils::GetCocoaEventKeyCode(cocoaEvent) << 8);
+    pluginEvent.when = ::TickCount();
+    ::GetGlobalMouse(&pluginEvent.where);
+    pluginEvent.modifiers = ::GetCurrentEventKeyModifiers();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -5077,7 +5050,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       // might send the keyDown event with wrong keyboard layout if other
       // keyboard layouts are already loaded. In that case, the native event
       // doesn't match to this gecko event...
-      ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
       geckoEvent.isShift   = (nsCocoaUtils::GetCocoaEventModifierFlags(mCurKeyEvent) & NSShiftKeyMask) != 0;
       if (!IsPrintableChar(geckoEvent.charCode)) {
@@ -5494,7 +5467,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5540,7 +5513,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5577,7 +5550,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5731,7 +5704,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
     nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&keyUpEvent];
     EventRecord macKeyUpEvent;
-    ConvertCocoaKeyEventToMacEvent(theEvent, macKeyUpEvent);
+    ConvertCocoaKeyEventToCarbonEvent(theEvent, macKeyUpEvent);
     keyUpEvent.nativeMsg = &macKeyUpEvent;
     mGeckoChild->DispatchWindowEvent(keyUpEvent);
     return;
@@ -5757,7 +5730,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
       // create native EventRecord for use by plugins
       EventRecord macEvent;
-      ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+      ConvertCocoaKeyEventToCarbonEvent(nativeKeyDownEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       keyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5785,7 +5758,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
     // create native EventRecord for use by plugins
     EventRecord macEvent;
-    ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+    ConvertCocoaKeyEventToCarbonEvent(nativeKeyDownEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5798,7 +5771,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
-  ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+  ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent);
   geckoEvent.nativeMsg = &macEvent;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5982,7 +5955,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
-  ConvertCocoaKeyEventToMacEvent(theEvent, macEvent, message);
+  ConvertCocoaKeyEventToCarbonEvent(theEvent, macEvent, message);
   geckoEvent.nativeMsg = &macEvent;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);

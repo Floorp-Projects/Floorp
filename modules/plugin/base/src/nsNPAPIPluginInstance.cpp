@@ -749,7 +749,7 @@ nsInstanceStream::~nsInstanceStream()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsNPAPIPluginInstance, nsIPluginInstance, nsIScriptablePlugin,
+NS_IMPL_ISUPPORTS2(nsNPAPIPluginInstance, nsIPluginInstance,
                    nsIPluginInstanceInternal)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
@@ -1227,20 +1227,6 @@ nsresult nsNPAPIPluginInstance::GetValueInternal(NPPVariable variable, void* val
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
     this, &fNPP, variable, value, res));
-
-#ifdef XP_OS2
-    /* Query interface for legacy Flash plugin */
-    if (res == NS_OK && variable == NPPVpluginScriptableInstance) {
-      nsCOMPtr<nsILegacyPluginWrapperOS2> wrapper =
-               do_GetService(NS_LEGACY_PLUGIN_WRAPPER_CONTRACTID, &res);
-      if (res == NS_OK) {
-        nsIID *iid = nsnull; 
-        res = (*fCallbacks->getvalue)(&fNPP, NPPVpluginScriptableIID, (void *)&iid);
-        if (res == NS_OK)
-          res = wrapper->MaybeWrap(*iid, *(nsISupports**)value, (nsISupports**)value);
-      }
-    }
-#endif
   }
 
   return res;
@@ -1329,26 +1315,6 @@ NPDrawingModel nsNPAPIPluginInstance::GetDrawingModel()
   return mDrawingModel;
 }
 #endif
-
-/* readonly attribute nsQIResult scriptablePeer; */
-NS_IMETHODIMP nsNPAPIPluginInstance::GetScriptablePeer(void * *aScriptablePeer)
-{
-  if (!aScriptablePeer)
-    return NS_ERROR_NULL_POINTER;
-
-  *aScriptablePeer = nsnull;
-  return GetValueInternal(NPPVpluginScriptableInstance, aScriptablePeer);
-}
-
-/* readonly attribute nsIIDPtr scriptableInterface; */
-NS_IMETHODIMP nsNPAPIPluginInstance::GetScriptableInterface(nsIID * *aScriptableInterface)
-{
-  if (!aScriptableInterface)
-    return NS_ERROR_NULL_POINTER;
-
-  *aScriptableInterface = nsnull;
-  return GetValueInternal(NPPVpluginScriptableIID, (void*)aScriptableInterface);
-}
 
 JSObject *
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx)

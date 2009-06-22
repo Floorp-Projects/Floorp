@@ -390,7 +390,6 @@ nsIEntropyCollector
 nsIEnumerator
 nsIErrorService
 nsIEvaluateStringProxy
-nsIEventHandler
 nsIEventQueue
 nsIEventQueueService
 nsIException
@@ -478,8 +477,6 @@ nsIJAR
 nsIJARChannel
 nsIJARProtocolHandler
 nsIJARURI
-nsIJRILiveConnectPIPeer
-nsIJRILiveConnectPlugin
 nsIJSConsoleService
 nsIJSContextStack
 nsIJSRuntimeService
@@ -738,7 +735,6 @@ nsIScreenManager
 nsIScriptableDateFormat
 nsIScriptableInputStream
 nsIScriptableInterfaces
-nsIScriptablePlugin
 nsIScriptableRegion
 nsIScriptableUConv
 nsIScriptContextOwner

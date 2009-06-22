@@ -42,7 +42,7 @@
 #include "nsSVGSMILTransform.h"
 #include "nsTArray.h"
 
-struct nsSMILValue;
+class nsSMILValue;
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGTransformSMILType

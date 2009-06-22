@@ -38,7 +38,6 @@
 #include "nsIPluginManager.idl"
 
 interface nsIPlugin;
-interface nsIEventHandler;
 
 native nsPluginPlatformWindowRef(nsPluginPlatformWindowRef);
 
@@ -46,7 +45,7 @@ native nsPluginPlatformWindowRef(nsPluginPlatformWindowRef);
  * Plugin Manager 2 Interface
  * These extensions to nsIPluginManager are only available in Communicator 5.0.
  */
-[uuid(d2962dc0-4eb6-11d2-8164-006008119d7a)]
+[uuid(C7706E95-2FD6-4701-992D-FA9D7787667B)]
 interface nsIPluginManager2 : nsIPluginManager
 {
   /**
@@ -98,53 +97,4 @@ interface nsIPluginManager2 : nsIPluginManager
    * Which proxy/SOCKS to use is determined by the plugin.
    */
    void findProxyForURL(in string aURL, out string aResult);
-
-  /**
-   * Registers a top-level window with the browser. Events received by that
-   * window will be dispatched to the event handler specified.
-   * 
-   * @param aHandler - the event handler for the window
-   * @param aWindow  - the platform window reference
-   * @result         - NS_OK if this operation was successful
-   */
-  void registerWindow(in nsIEventHandler aHandler, in nsPluginPlatformWindowRef aWindow);
-  
-  /**
-   * Unregisters a top-level window with the browser. The handler and window pair
-   * should be the same as that specified to RegisterWindow.
-   *
-   * @param aHandler - the event handler for the window
-   * @param aWindow  - the platform window reference
-   * @result         - NS_OK if this operation was successful
-   */
-  void unregisterWindow(in nsIEventHandler aHandler, in nsPluginPlatformWindowRef aWindow);
-
-  /**
-   * Allocates a new menu ID (for the Mac).
-   *
-   * @param aHandler   - the event handler for the window
-   * @param aIsSubmenu - whether this is a sub-menu ID or not
-   * @param aResult    - the resulting menu ID
-   * @result           - NS_OK if this operation was successful
-   */
-  void allocateMenuID(in nsIEventHandler aHandler, in boolean aIsSubmenu, out short aResult);
-
-  /**
-   * Deallocates a menu ID (for the Mac).
-   *
-   * @param aHandler - the event handler for the window
-   * @param aMenuID  - the menu ID
-   * @result         - NS_OK if this operation was successful
-   */
-  void deallocateMenuID(in nsIEventHandler aHandler, in short aMenuID);
-
-  /**
-   * Indicates whether this event handler has allocated the given menu ID.
-   *
-   * @param aHandler - the event handler for the window
-   * @param aMenuID  - the menu ID
-   * @param aResult  - returns PR_TRUE if the menu ID is allocated
-   * @result         - NS_OK if this operation was successful
-   */
-  void hasAllocatedMenuID(in nsIEventHandler aHandler, in short aMenuID, out boolean aResult);
 };

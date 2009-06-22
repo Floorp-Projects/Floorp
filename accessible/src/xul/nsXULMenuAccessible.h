@@ -94,7 +94,7 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
-  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+  virtual PRBool GetAllowsAnonChildAccessibles();
 };
 
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible

@@ -752,20 +752,6 @@ function placesSetItemAnnotationTransactions(aItemId, aAnnotationObject) {
                     flags: 0,
                     value: null,
                     expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-
-  if (PlacesUtils.annotations.itemHasAnnotation(this.id, this._anno.name)) {
-    // fill the old anno if it is set
-    var flags = {}, expires = {}, mimeType = {}, type = {};
-    PlacesUtils.annotations.getItemAnnotationInfo(this.id, this._anno.name,
-                                                  flags, expires, mimeType, type);
-    this._oldAnno.flags = flags.value;
-    this._oldAnno.expires = expires.value;
-    this._oldAnno.mimeType = mimeType.value;
-    this._oldAnno.type = type.value;
-    this._oldAnno.value = PlacesUtils.annotations
-                                     .getItemAnnotation(this.id, this._anno.name);
-  }
-
   this.redoTransaction = this.doTransaction;
 }
 
@@ -773,6 +759,23 @@ placesSetItemAnnotationTransactions.prototype = {
   __proto__: placesBaseTransaction.prototype,
 
   doTransaction: function PSIAT_doTransaction() {
+    // Since this can be used as a child transaction this.id will be known
+    // only at this point, after the external caller has set it.
+    if (PlacesUtils.annotations.itemHasAnnotation(this.id, this._anno.name)) {
+      // Save the old annotation if it is set.
+      var flags = {}, expires = {}, mimeType = {}, type = {};
+      PlacesUtils.annotations.getItemAnnotationInfo(this.id, this._anno.name,
+                                                    flags, expires, mimeType,
+                                                    type);
+      this._oldAnno.flags = flags.value;
+      this._oldAnno.expires = expires.value;
+      this._oldAnno.mimeType = mimeType.value;
+      this._oldAnno.type = type.value;
+      this._oldAnno.value = PlacesUtils.annotations
+                                       .getItemAnnotation(this.id,
+                                                          this._anno.name);
+    }
+
     PlacesUtils.setAnnotationsForItem(this.id, [this._anno]);
   },
 

@@ -4293,6 +4293,21 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
     WRAP_MALLOC_LIB=$withval)
 
 dnl ========================================================
+dnl = Use TraceVis
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(tracevis,
+[  --enable-tracevis       Enable TraceVis tracing tool (default=no)],
+    MOZ_TRACEVIS=1,
+    MOZ_TRACEVIS= )
+if test -n "$MOZ_TRACEVIS"; then
+    AC_DEFINE(MOZ_TRACEVIS)
+    if test -z "$ENABLE_JIT"; then
+       AC_MSG_ERROR([--enable-tracevis is incompatible with --disable-jit])
+    fi
+fi
+
+
+dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,
@@ -5329,6 +5344,7 @@ mv confdefs.h.save confdefs.h
 MAKEFILES="
   Makefile
   shell/Makefile
+  lirasm/Makefile
   config/Makefile
   config/autoconf.mk
   config/mkdepend/Makefile

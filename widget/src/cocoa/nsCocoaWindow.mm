@@ -172,7 +172,7 @@ nsCocoaWindow::~nsCocoaWindow()
       // we want to unhook the delegate here because we don't want events
       // sent to it after this object has been destroyed
       [mWindow setDelegate:nil];
-      [mWindow autorelease];
+      [mWindow close];
       [mDelegate autorelease];
     }
   }
@@ -420,7 +420,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 
     [mWindow setBackgroundColor:[NSColor whiteColor]];
     [mWindow setContentMinSize:NSMakeSize(60, 60)];
-    [mWindow setReleasedWhenClosed:NO];
 
     // setup our notification delegate. Note that setDelegate: does NOT retain.
     mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
@@ -431,7 +430,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   else {
     mWindow = (NSWindow*)aNativeWindow;
   }
-  
+
+  [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1258,7 +1259,8 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
   if (mPopupContentView) {
     mPopupContentView->SetFocus(aState);
   }
-  else if (aState) {
+  else if (aState && [mWindow isVisible]) {
+    // if the window is shown, move it to the front
     [mWindow setAcceptsMouseMovedEvents:YES];
     [mWindow makeKeyAndOrderFront:nil];
     SendSetZLevelEvent();

@@ -171,7 +171,7 @@
     <description>
       <html:b> Testing XUL Button for Accessibility.. </html:b>
     </description>
-    <box oreint="horizontal">
+    <box orient="horizontal">
       <!-- Simple Button with Label only -->
       <button label="Normal" accesskey="n"/>
       <spacer flex="1"/>

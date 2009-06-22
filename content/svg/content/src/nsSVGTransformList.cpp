@@ -367,8 +367,7 @@ NS_IMETHODIMP
 nsSVGTransformList::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix,
                                                  nsIDOMSVGTransform **_retval)
 {
-  if (!matrix)
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  NS_ENSURE_NATIVE_MATRIX(matrix, _retval);
 
   nsresult rv = NS_NewSVGTransform(_retval);
   if (NS_FAILED(rv))

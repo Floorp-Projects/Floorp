@@ -189,8 +189,12 @@ nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
   nsIFrame* kid = GetActiveChildFrame();
   nsISVGChildFrame* svgKid = do_QueryFrame(kid);
   if (svgKid) {
-    gfxMatrix transform = static_cast<nsSVGElement*>(kid->GetContent())->
-                            PrependLocalTransformTo(aToBBoxUserspace);
+    nsIContent *content = kid->GetContent();
+    gfxMatrix transform = aToBBoxUserspace;
+    if (content->IsNodeOfType(nsINode::eSVG)) {
+      transform = static_cast<nsSVGElement*>(content)->
+                    PrependLocalTransformTo(aToBBoxUserspace);
+    }
     return svgKid->GetBBoxContribution(transform);
   }
   return gfxRect(0.0, 0.0, 0.0, 0.0);

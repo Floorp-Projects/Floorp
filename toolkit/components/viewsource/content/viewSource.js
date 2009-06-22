@@ -402,7 +402,7 @@ function ViewSourceGoToLine()
 
     if (!ok) return;
 
-    var line = parseInt(input.value);
+    var line = parseInt(input.value, 10);
  
     if (!(line > 0)) {
       promptService.alert(window,

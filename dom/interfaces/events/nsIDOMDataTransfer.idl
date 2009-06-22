@@ -252,8 +252,9 @@ interface nsIDOMNSDataTransfer : nsISupports
   nsIVariant mozGetDataAt(in DOMString format, in unsigned long index);
 
   /**
-   * Will be true if the user cancelled the drag (typically by pressing Escape).
-   * This will be false otherwise, including if a drag failed for any other reason.
+   * Will be true when the user has cancelled the drag (typically by pressing
+   * Escape) and when the drag has been cancelled unexpectedly.  This will be
+   * false otherwise, including when the drop has been rejected by its target.
    * This property is only relevant for the dragend event.
    */
   readonly attribute boolean mozUserCancelled;
