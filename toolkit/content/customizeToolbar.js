@@ -96,7 +96,7 @@ function finishToolbarCustomization()
   unwrapToolbarItems();
   persistCurrentSets();
   gToolbox.customizing = false;
-  
+
   notifyParentComplete();
 }
 
@@ -119,14 +119,14 @@ function initDialog()
 
 function repositionDialog()
 {
-  // Position the dialog touching the bottom of the toolbox and centered with 
+  // Position the dialog touching the bottom of the toolbox and centered with
   // it.
   var width;
   if (document.documentElement.hasAttribute("width"))
     width = document.documentElement.getAttribute("width");
   else
     width = parseInt(document.documentElement.style.width);
-  var screenX = gToolbox.boxObject.screenX 
+  var screenX = gToolbox.boxObject.screenX
                 + ((gToolbox.boxObject.width - width) / 2);
   var screenY = gToolbox.boxObject.screenY + gToolbox.boxObject.height;
 
@@ -190,7 +190,7 @@ function persistCurrentSets()
       // Calculate currentset and store it in the attribute.
       var currentSet = toolbar.currentSet;
       toolbar.setAttribute("currentset", currentSet);
-      
+
       var customIndex = toolbar.hasAttribute("customindex");
       if (customIndex) {
         if (!toolbar.firstChild) {
@@ -211,7 +211,7 @@ function persistCurrentSets()
       }
     }
   }
-  
+
   // Remove toolbarX attributes for removed toolbars.
   while (gToolbox.toolbarset.hasAttribute("toolbar"+(++customCount))) {
     gToolbox.toolbarset.removeAttribute("toolbar"+customCount);
@@ -278,7 +278,7 @@ function createWrapper(aId, aDocument)
   var wrapper = aDocument.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                          "toolbarpaletteitem");
 
-  wrapper.id = "wrapper-"+aId;  
+  wrapper.id = "wrapper-"+aId;
   return wrapper;
 }
 
@@ -297,9 +297,9 @@ function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
   wrapper.setAttribute("minwidth", "0");
 
   wrapper.appendChild(aPaletteItem);
-  
+
   // XXX We need to call this AFTER the palette item has been appended
-  // to the wrapper or else we crash dropping certain buttons on the 
+  // to the wrapper or else we crash dropping certain buttons on the
   // palette due to removal of the command and disabled attributes - JRH
   cleanUpItemForPalette(aPaletteItem, wrapper);
 
@@ -322,9 +322,9 @@ function wrapToolbarItem(aToolbarItem)
   wrapper.flex = aToolbarItem.flex;
 
   aToolbarItem.parentNode.replaceChild(wrapper, aToolbarItem);
-  
+
   wrapper.appendChild(aToolbarItem);
-  
+
   return wrapper;
 }
 
@@ -405,11 +405,11 @@ function buildPalette()
       ++rowSlot;
       wrapPaletteItem(paletteItem, currentRow, null);
     }
-    
+
     templateNode = templateNode.nextSibling;
   }
 
-  if (currentRow) { 
+  if (currentRow) {
     fillRowWithFlex(currentRow);
     paletteBox.appendChild(currentRow);
   }
@@ -424,14 +424,14 @@ function appendPaletteItem(aItem)
   var paletteBox = document.getElementById("palette-box");
   var lastRow = paletteBox.lastChild;
   var lastSpacer = lastRow.lastChild;
-   
+
   if (lastSpacer.localName != "spacer") {
     // The current row is full, so we have to create a new row.
     lastRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                         "hbox");
     lastRow.setAttribute("class", "paletteRow");
     paletteBox.appendChild(lastRow);
-    
+
     wrapPaletteItem(aItem, lastRow, null);
 
     fillRowWithFlex(lastRow);
@@ -478,14 +478,14 @@ function cleanUpItemForPalette(aItem, aWrapper)
     var title = stringBundle.getString(aItem.localName.slice(7) + "Title");
     aWrapper.setAttribute("title", title);
   }
-  
+
   // Remove attributes that screw up our appearance.
   aItem.removeAttribute("command");
   aItem.removeAttribute("observes");
   aItem.removeAttribute("disabled");
   aItem.removeAttribute("type");
   aItem.removeAttribute("width");
-  
+
   if (aItem.localName == "toolbaritem" && aItem.firstChild) {
     aItem.firstChild.removeAttribute("observes");
 
@@ -498,7 +498,7 @@ function cleanUpItemForPalette(aItem, aWrapper)
 /**
  * Makes sure that an item that has been cloned from a template
  * is stripped of all properties that may adversely affect its
- * appearance in the toolbar.  Store critical properties on the 
+ * appearance in the toolbar.  Store critical properties on the
  * wrapper so they can be put back on the item when we're done.
  */
 function cleanupItemForToolbar(aItem, aWrapper)
@@ -539,10 +539,10 @@ function setDragActive(aItem, aValue)
     node = aItem.lastChild;
     value = direction == "ltr"? "right" : "left";
   }
-  
+
   if (!node)
     return;
-  
+
   if (aValue) {
     if (!node.hasAttribute("dragover"))
       node.setAttribute("dragover", value);
@@ -574,7 +574,7 @@ function addNewToolbar()
       doneButton.disabled = false;
       return;
     }
-    
+
     if (!name.value) {
       message = stringBundle.getFormattedString("enterToolbarBlank", [name.value]);
       continue;
@@ -600,9 +600,9 @@ function addNewToolbar()
 
     message = stringBundle.getFormattedString("enterToolbarDup", [name.value]);
   }
-    
+
   gToolbox.appendCustomToolbar(name.value, "");
-  
+
   toolboxChanged();
 
   doneButton.disabled = false;
@@ -662,10 +662,10 @@ function restoreDefaultSet()
 function updateIconSize(aUseSmallIcons, localDefault)
 {
   gToolboxIconSize = aUseSmallIcons ? "small" : "large";
-  
+
   setAttribute(gToolbox, "iconsize", gToolboxIconSize);
   gToolboxDocument.persist(gToolbox.id, "iconsize");
-  
+
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
@@ -765,7 +765,7 @@ function onToolbarDragOver(aEvent)
     dropTarget = toolbar;
     toolbar = toolbar.parentNode;
   }
-  
+
   var previousDragItem = gCurrentDragOverItem;
 
   // Make sure we are dragging over a customizable toolbar.
@@ -773,7 +773,7 @@ function onToolbarDragOver(aEvent)
     gCurrentDragOverItem = null;
     return;
   }
-  
+
   if (dropTarget.localName == "toolbar") {
     gCurrentDragOverItem = dropTarget;
   } else {
@@ -786,14 +786,14 @@ function onToolbarDragOver(aEvent)
       dragAfter = aEvent.clientX > dropTargetCenter;
     else
       dragAfter = aEvent.clientX < dropTargetCenter;
-      
+
     if (dragAfter) {
       gCurrentDragOverItem = dropTarget.nextSibling;
       if (!gCurrentDragOverItem)
         gCurrentDragOverItem = toolbar;
     } else
       gCurrentDragOverItem = dropTarget;
-  }    
+  }
 
   if (previousDragItem && gCurrentDragOverItem != previousDragItem) {
     setDragActive(previousDragItem, false);
@@ -820,7 +820,7 @@ function onToolbarDrop(aEvent)
   while (toolbar.localName != "toolbar")
     toolbar = toolbar.parentNode;
 
-  var draggedPaletteWrapper = document.getElementById("wrapper-"+draggedItemId);       
+  var draggedPaletteWrapper = document.getElementById("wrapper-"+draggedItemId);
   if (!draggedPaletteWrapper) {
     // The wrapper has been dragged from the toolbar.
     // Get the wrapper from the toolbar document and make sure that
@@ -908,9 +908,9 @@ function onToolbarDrop(aEvent)
       }
     }
   }
-  
+
   gCurrentDragOverItem = null;
- 
+
   toolboxChanged();
 };
 
@@ -944,7 +944,7 @@ function onPaletteDrop(aEvent)
 
     // The item was dragged out of the toolbar.
     wrapper.parentNode.removeChild(wrapper);
-  } 
+  }
 
   toolboxChanged();
 }
