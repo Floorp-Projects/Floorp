@@ -164,6 +164,7 @@ ACCESSIBILITY_ATOM(_class, "class")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
 ACCESSIBILITY_ATOM(data, "data")
+ACCESSIBILITY_ATOM(draggable, "draggable")
 ACCESSIBILITY_ATOM(droppable, "droppable")   // XUL combo box
 ACCESSIBILITY_ATOM(editable, "editable")
 ACCESSIBILITY_ATOM(_for, "for")
@@ -259,6 +260,7 @@ ACCESSIBILITY_ATOM(tableCellIndex, "table-cell-index")
 ACCESSIBILITY_ATOM(containerAtomic, "container-atomic")
 ACCESSIBILITY_ATOM(containerBusy, "container-busy")
 ACCESSIBILITY_ATOM(containerLive, "container-live")
+ACCESSIBILITY_ATOM(containerLiveRole, "container-live-role")
 ACCESSIBILITY_ATOM(containerRelevant, "container-relevant")
 ACCESSIBILITY_ATOM(level, "level")
 ACCESSIBILITY_ATOM(live, "live")

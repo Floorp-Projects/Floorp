@@ -43,6 +43,8 @@
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Dan Mosedale <dmose@mozilla.org>
 #   Justin Dolske <dolske@mozilla.com>
+#   Kathleen Brade <brade@pearlcrescent.com>
+#   Mark Smith <mcs@pearlcrescent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -946,8 +948,11 @@ nsContextMenu.prototype = {
     channel.notificationCallbacks = new callbacks();
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE |
                          Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS;
-    if (channel instanceof Ci.nsIHttpChannel)
+    if (channel instanceof Ci.nsIHttpChannel) {
       channel.referrer = doc.documentURIObject;
+      if (channel instanceof Ci.nsIHttpChannelInternal)
+        channel.forceAllowThirdPartyCookie = true;
+    }
 
     // fallback to the old way if we don't see the headers quickly 
     var timeToWait = 

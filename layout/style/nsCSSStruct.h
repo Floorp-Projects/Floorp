@@ -307,7 +307,7 @@ struct nsCSSColor : public nsCSSStruct  {
   ~nsCSSColor(void);
 
   nsCSSValue      mColor;
-  nsCSSValuePair  mBackColor;
+  nsCSSValue      mBackColor;
   nsCSSValueList* mBackImage;
   nsCSSValueList* mBackRepeat;
   nsCSSValueList* mBackAttachment;

@@ -57,7 +57,7 @@ const NS_XREAPPINFO_CONTRACTID =
           "@mozilla.org/xre/app-info;1";
 
 
-const LOAD_FAILURE_TIMEOUT = 10000; // ms
+var gLoadTimeout = 0;
 
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
@@ -140,6 +140,16 @@ function ReleaseCanvas(canvas)
 function OnRefTestLoad()
 {
     gBrowser = document.getElementById("browser");
+
+    /* set the gLoadTimeout */
+    try {
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch2);
+      gLoadTimeout = prefs.getIntPref("reftest.timeout");
+    }                  
+    catch(e) {
+      gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
+    }
 
     gBrowser.addEventListener("load", OnDocumentLoad, true);
 
@@ -247,9 +257,13 @@ function ReadManifest(aURL)
     var sandbox = new Components.utils.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
-    sandbox.xulRuntime = {widgetToolkit: xr.widgetToolkit,
-                          OS: xr.OS,
-                          XPCOMABI: xr.XPCOMABI};
+    sandbox.xulRuntime = {widgetToolkit: xr.widgettoolkit, OS: xr.OS};
+
+    // xr.XPCOMABI throws exception for configurations without full ABI support (mobile builds on ARM)
+    try {
+      sandbox.XPCOMABI = xr.XPCOMABI;
+    } catch(e) {}
+
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
     sandbox.http = {};
@@ -496,7 +510,7 @@ function StartCurrentURI(aState)
              "| program error managing timeouts\n");
         ++gTestResults.Exception;
     }
-    gFailureTimeout = setTimeout(LoadFailed, LOAD_FAILURE_TIMEOUT);
+    gFailureTimeout = setTimeout(LoadFailed, gLoadTimeout);
     gFailureReason = "timed out waiting for onload to fire";
 
     gState = aState;

@@ -2523,11 +2523,11 @@ function testThinLoopDemote() {
 }
 testThinLoopDemote.expected = 10000;
 testThinLoopDemote.jitstats = {
-    recorderStarted: 2,
+    recorderStarted: 1,
     recorderAborted: 0,
-    traceCompleted: 2,
+    traceCompleted: 1,
     traceTriggered: 2,
-    unstableLoopVariable: 1
+    unstableLoopVariable: 0
 };
 test(testThinLoopDemote);
 

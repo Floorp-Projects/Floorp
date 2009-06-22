@@ -616,7 +616,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
               nsIntRect(0, 0, srcSize.width, srcSize.height));
     return NS_OK;
   } else {
-    return aCanvas->RenderContexts(ctx);
+    return aCanvas->RenderContexts(ctx, gfxPattern::FILTER_GOOD);
   }
 }
 

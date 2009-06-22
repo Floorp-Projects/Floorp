@@ -53,7 +53,6 @@ class nsIDocument;
 class nsPresContext;
 class nsIContent;
 class nsStyleCoord;
-class nsIDOMSVGRect;
 class nsFrameList;
 class nsIFrame;
 struct nsStyleSVGPaint;
@@ -73,7 +72,6 @@ class gfxContext;
 class gfxASurface;
 class gfxPattern;
 class gfxImageSurface;
-struct gfxMatrix;
 struct gfxSize;
 struct gfxIntSize;
 struct nsStyleFont;
@@ -323,11 +321,6 @@ public:
   */
   static float UserSpace(nsIFrame *aFrame, const nsSVGLength2 *aLength);
 
-  /* Tranforms point by the matrix.  In/out: x,y */
-  static void
-  TransformPoint(nsIDOMSVGMatrix *matrix,
-                 float *x, float *y);
-
   /* Returns the angle halfway between the two specified angles */
   static float
   AngleBisect(float a1, float a2);
@@ -431,6 +424,17 @@ public:
               float aX, float aY);
 
 
+  /**
+   * Get the clip rect for the given frame, taking into account the CSS 'clip'
+   * property. See:
+   * http://www.w3.org/TR/SVG11/masking.html#OverflowAndClipProperties
+   * The arguments for aX, aY, aWidth and aHeight should be the dimensions of
+   * the viewport established by aFrame.
+   */
+  static gfxRect
+  GetClipRectForFrame(nsIFrame *aFrame,
+                      float aX, float aY, float aWidth, float aHeight);
+
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
                                      nsIDOMSVGMatrix *aCTM, float aOpacity);
@@ -440,8 +444,8 @@ public:
                                      nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity);
 
   static void SetClipRect(gfxContext *aContext,
-                          nsIDOMSVGMatrix *aCTM, float aX, float aY,
-                          float aWidth, float aHeight);
+                          const gfxMatrix &aCTM,
+                          const gfxRect &aRect);
 
   /**
    * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and

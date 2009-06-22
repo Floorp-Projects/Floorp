@@ -40,6 +40,7 @@
 #include "nsFormFillController.h"
 
 #include "nsStorageFormHistory.h"
+#include "nsIFormAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -496,6 +497,7 @@ NS_IMETHODIMP
 nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAString &aSearchParam,
                                   nsIAutoCompleteResult *aPreviousResult, nsIAutoCompleteObserver *aListener)
 {
+  nsresult rv;
   nsCOMPtr<nsIAutoCompleteResult> result;
 
   // If the login manager has indicated it's responsible for this field, let it
@@ -504,22 +506,21 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
   if (mPwmgrInputs.Get(mFocusedInput, &dummy)) {
     // XXX aPreviousResult shouldn't ever be a historyResult type, since we're not letting
     // satchel manage the field?
-    mLoginManager->AutoCompleteSearch(aSearchString,
+    rv = mLoginManager->AutoCompleteSearch(aSearchString,
                                          aPreviousResult,
                                          mFocusedInput,
                                          getter_AddRefs(result));
   } else {
-    nsCOMPtr<nsIAutoCompleteSimpleResult> historyResult;
-    historyResult = do_QueryInterface(aPreviousResult);
+    nsCOMPtr <nsIFormAutoComplete> formAutoComplete =
+      do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsFormHistory *history = nsFormHistory::GetInstance();
-    if (history) {
-      history->AutoCompleteSearch(aSearchParam,
-                                  aSearchString,
-                                  historyResult,
-                                  getter_AddRefs(result));
-    }
+    rv = formAutoComplete->AutoCompleteSearch(aSearchParam,
+                                              aSearchString,
+                                              aPreviousResult,
+                                              getter_AddRefs(result));
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aListener->OnSearchResult(this, result);  
   

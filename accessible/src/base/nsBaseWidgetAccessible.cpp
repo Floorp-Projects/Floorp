@@ -86,12 +86,11 @@ NS_IMETHODIMP nsLeafAccessible::GetChildCount(PRInt32 *_retval)
   return NS_OK;
 }
 
-/* readonly attribute boolean allowsAnonChildAccessibles; */
-NS_IMETHODIMP
-nsLeafAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+// nsAccessible::GetAllowsAnonChildAccessibles()
+PRBool
+nsLeafAccessible::GetAllowsAnonChildAccessibles()
 {
-  *aAllowsAnonChildren = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 // nsAccessible::GetChildAtPoint()

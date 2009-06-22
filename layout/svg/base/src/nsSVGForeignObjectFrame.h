@@ -133,13 +133,6 @@ public:
   NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_TRUE; }
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
 
-  // foreignobject public methods
-  /**
-   * @param aPt a point in the app unit coordinate system of the SVG outer frame
-   * Transforms the point to a point in this frame's app unit coordinate system
-   */
-  nsPoint TransformPointFromOuter(nsPoint aPt);
-
   gfxMatrix GetCanvasTM();
 
   // This method allows our nsSVGOuterSVGFrame to reflow us as necessary.
@@ -150,8 +143,10 @@ protected:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
   void UpdateGraphic();
-  already_AddRefed<nsIDOMSVGMatrix> GetUnZoomedTMIncludingOffset();
-  nsresult TransformPointFromOuterPx(const nsPoint &aIn, nsPoint* aOut);
+
+  // Returns GetCanvasTM followed by a scale from CSS px to Dev px. Used for
+  // painting, because children expect to paint to device space, not userspace.
+  gfxMatrix GetCanvasTMForChildren();
   void InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
                            const nsRect& aRect, PRUint32 aFlags);
   void FlushDirtyRegion();

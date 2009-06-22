@@ -263,11 +263,9 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     if (GetStyleDisplay()->IsScrollableOverflow()) {
       gfx->Save();
 
-      nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
-
-      if (ctm) {
-        nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
-      }
+      gfxRect clipRect =
+        nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
+      nsSVGUtils::SetClipRect(gfx, GetCanvasTM(), clipRect);
     }
 
     nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();

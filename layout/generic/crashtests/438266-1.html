@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("hr").removeAttribute("width");
+
+  document.documentElement.offsetHeight;
+
+  var newTR = document.createElement("tr");
+  document.getElementById("table").appendChild(newTR);
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+
+<table id="table">
+  <tbody>
+    <tr>
+      <td>
+        <div><hr width="7000" id="hr"></div>
+        <div style="-moz-column-width: 100px;">x<li></li></div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

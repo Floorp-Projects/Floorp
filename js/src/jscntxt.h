@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -321,6 +321,7 @@ typedef enum JSBuiltinFunctionId {
     JSBUILTIN_GetElement,
     JSBUILTIN_SetProperty,
     JSBUILTIN_SetElement,
+    JSBUILTIN_HasInstance,
     JSBUILTIN_LIMIT
 } JSBuiltinFunctionId;
 

@@ -856,7 +856,7 @@ Assembler::nativePageSetup()
 
         // constpool starts at top of page and goes down,
         // code starts at bottom of page and moves up
-        _nSlot = pageDataStart(_nIns); //(int*)(&((Page*)pageTop(_nIns))->lir[0]);
+        _nSlot = (int*)pageDataStart(_nIns);
     }
 }
 
@@ -906,7 +906,7 @@ Assembler::underrunProtect(int bytes)
 
         // Update slot, either to _nIns (if decremented above), or
         // _nIns-1 once the above bug is fixed/found.
-        _nSlot = pageDataStart(_nIns);
+        _nSlot = (int*)pageDataStart(_nIns);
 
         // If samepage() is used on _nIns and _nSlot, it'll fail, since _nIns
         // points to one past the end of the page right now.  Assume that
@@ -915,7 +915,7 @@ Assembler::underrunProtect(int bytes)
         JMP_nochk(target);
     } else if (!_nSlot) {
         // make sure that there's always a slot pointer
-        _nSlot = pageDataStart(_nIns);
+        _nSlot = (int*)pageDataStart(_nIns);
     }
 }
 

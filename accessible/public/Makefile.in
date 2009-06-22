@@ -58,7 +58,6 @@ XPIDLSRCS = \
       nsIAccessibleRelation.idl \
       nsIAccessibleRole.idl \
       nsIAccessibleStates.idl \
-      nsPIAccessible.idl \
       nsIAccessibleDocument.idl \
       nsPIAccessibleDocument.idl \
       nsIAccessibleProvider.idl \

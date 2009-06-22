@@ -98,17 +98,18 @@ public:
 
     NS_IMETHOD TargetSetTimeCallback (nsIDragSessionGTKTimeCB aCallback);
 
-    // This is called when the drag started with the invisible widget
-    // finishes.  It's called from within the drag service code but from
-    // a callback - it needs to be public.
-    void           SourceEndDrag(GdkDragContext *aContext);
+    //  END PUBLIC API
+
+    // These methods are public only so that they can be called from functions
+    // with C calling conventions.  They are called for drags started with the
+    // invisible widget.
+    void           SourceEndDragSession(GdkDragContext *aContext,
+                                        gint            aResult);
     void           SourceDataGet(GtkWidget        *widget,
                                  GdkDragContext   *context,
                                  GtkSelectionData *selection_data,
                                  guint             info,
                                  guint32           aTime);
-
-    //  END PUBLIC API
 
 private:
 

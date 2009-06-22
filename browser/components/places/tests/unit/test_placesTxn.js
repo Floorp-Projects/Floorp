@@ -716,14 +716,28 @@ function run_test() {
   do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), "folder");
 
   // Test creating an item with child transactions.
+  var childTxns = [];
   var newDateAdded = Date.now() - 20000;
-  var childTxn = ptSvc.editItemDateAdded(null, newDateAdded);
-  var itemWChildTxn = ptSvc.createItem(uri("http://www.example.com"), root, bmStartIndex, "Testing1", null, null, [childTxn]);
+  childTxns.push(ptSvc.editItemDateAdded(null, newDateAdded));
+  var itemChildAnnoObj = { name: "testAnno/testInt",
+                           type: Ci.nsIAnnotationService.TYPE_INT32,
+                           flags: 0,
+                           value: 123,
+                           expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+  childTxns.push(ptSvc.setItemAnnotation(null, itemChildAnnoObj));
+  var itemWChildTxn = ptSvc.createItem(uri("http://www.example.com"), root,
+                                       bmStartIndex, "Testing1", null, null,
+                                       childTxns);
   try {
     ptSvc.doTransaction(itemWChildTxn); // Also testing doTransaction
     var itemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
     do_check_eq(observer._itemAddedId, itemId);
     do_check_eq(newDateAdded, bmsvc.getItemDateAdded(itemId));
+    do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
+    do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+    do_check_true(annosvc.itemHasAnnotation(itemId, itemChildAnnoObj.name))
+    do_check_eq(annosvc.getItemAnnotation(itemId, itemChildAnnoObj.name),
+                itemChildAnnoObj.value);
     itemWChildTxn.undoTransaction();
     do_check_eq(observer._itemRemovedId, itemId);
     itemWChildTxn.redoTransaction();
@@ -731,6 +745,11 @@ function run_test() {
     var newId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
     do_check_eq(newDateAdded, bmsvc.getItemDateAdded(newId));
     do_check_eq(observer._itemAddedId, newId);
+    do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
+    do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+    do_check_true(annosvc.itemHasAnnotation(newId, itemChildAnnoObj.name))
+    do_check_eq(annosvc.getItemAnnotation(newId, itemChildAnnoObj.name),
+                itemChildAnnoObj.value);
     itemWChildTxn.undoTransaction();
     do_check_eq(observer._itemRemovedId, newId);
   } catch (ex) {

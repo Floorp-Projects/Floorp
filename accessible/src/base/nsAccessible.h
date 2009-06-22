@@ -46,7 +46,6 @@
 #include "nsTextEquivUtils.h"
 
 #include "nsIAccessible.h"
-#include "nsPIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
@@ -104,16 +103,15 @@ private:
 
 
 #define NS_ACCESSIBLE_IMPL_CID                          \
-{  /* 16917f1e-6cee-4cde-be3f-8bb5943f506c */           \
-  0x16917f1e,                                           \
-  0x6cee,                                               \
-  0x4cde,                                               \
-  { 0xbe, 0x3f, 0x8b, 0xb5, 0x94, 0x3F, 0x50, 0x6c }    \
+{  /* 53cfa871-be42-47fc-b416-0033653b3151 */           \
+  0x53cfa871,                                           \
+  0xbe42,                                               \
+  0x47fc,                                               \
+  { 0xb4, 0x16, 0x00, 0x33, 0x65, 0x3b, 0x31, 0x51 }    \
 }
 
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 
-                     public nsPIAccessible,
                      public nsIAccessibleHyperLink,
                      public nsIAccessibleSelectable,
                      public nsIAccessibleValue
@@ -126,7 +124,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsAccessible, nsAccessNode)
 
   NS_DECL_NSIACCESSIBLE
-  NS_DECL_NSPIACCESSIBLE
   NS_DECL_NSIACCESSIBLEHYPERLINK
   NS_DECL_NSIACCESSIBLESELECTABLE
   NS_DECL_NSIACCESSIBLEVALUE
@@ -144,6 +141,15 @@ public:
    * Returns the accessible name specified by ARIA.
    */
   nsresult GetARIAName(nsAString& aName);
+
+  /**
+   * Maps ARIA state attributes to state of accessible. Note the given state
+   * argument should hold states for accessible before you pass it into this
+   * method.
+   *
+   * @param  [in/out] where to fill the states into.
+   */
+  virtual nsresult GetARIAState(PRUint32 *aState);
 
   /**
    * Returns the accessible name provided by native markup. It doesn't take
@@ -190,6 +196,78 @@ public:
   virtual nsresult GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    PRBool aDeepestChild,
                                    nsIAccessible **aChild);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initializing and cache methods
+
+  /**
+   * Set accessible parent.
+   * XXX: shouldn't be virtual, bug 496783
+   */
+  virtual void SetParent(nsIAccessible *aParent);
+
+  /**
+   * Set first accessible child.
+   */
+  void SetFirstChild(nsIAccessible *aFirstChild);
+
+  /**
+   * Set next sibling accessible.
+   */
+  void SetNextSibling(nsIAccessible *aNextSibling);
+
+  /**
+   * Set the ARIA role map entry for a new accessible.
+   * For a newly created accessible, specify which role map entry should be used.
+   *
+   * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or 
+   *                      nsnull if none.
+   */
+  virtual void SetRoleMapEntry(nsRoleMapEntry *aRoleMapEntry);
+
+  /**
+   * Set the child count to -1 (unknown) and null out cached child pointers
+   */
+  virtual void InvalidateChildren();
+
+  /**
+   * Return parent accessible only if cached.
+   */
+  already_AddRefed<nsIAccessible> GetCachedParent();
+
+  /**
+   * Return first child accessible only if cached.
+   */
+  already_AddRefed<nsIAccessible> GetCachedFirstChild();
+
+  /**
+   * Assert if child not in parent's cache.
+   */
+  void TestChildCache(nsIAccessible *aCachedChild);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Miscellaneous methods.
+
+  /**
+   * Fire accessible event.
+   */
+  virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aAccEvent);
+
+  /**
+   * Return true if there are accessible children in anonymous content
+   */
+  virtual PRBool GetAllowsAnonChildAccessibles();
+
+  /**
+   * Returns text of accessible if accessible has text role otherwise empty
+   * string.
+   *
+   * @param aText         returned text of the accessible
+   * @param aStartOffset  start offset inside of the accesible
+   * @param aLength       required lenght of text
+   */
+  virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
+                                PRUint32 aLength);
 
   //////////////////////////////////////////////////////////////////////////////
   // Helper methods

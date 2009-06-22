@@ -126,7 +126,7 @@
     <description>
       <html:b> Testing XUL Radiogroup for Accessibility.. </html:b>
     </description>
-    <box oreint="horizontal">
+    <box orient="horizontal">
       <radiogroup id="test-radiogrp" accesskey="a">
         <radio group="test-radiogrp" label="First Radio Button" selected="true"/>
         <radio group="test-radiogrp" label="Second Radio Button"/>

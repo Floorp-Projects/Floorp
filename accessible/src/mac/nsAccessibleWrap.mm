@@ -159,7 +159,7 @@ nsAccessibleWrap::Shutdown ()
   return nsAccessible::Shutdown();
 }
 
-NS_IMETHODIMP
+nsresult
 nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -211,18 +211,18 @@ nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult
-nsAccessibleWrap::InvalidateChildren ()
+void
+nsAccessibleWrap::InvalidateChildren()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mNativeWrapper) {
     mozAccessible *object = mNativeWrapper->getNativeObject();
     [object invalidateChildren];
   }
-  return nsAccessible::InvalidateChildren();
+  nsAccessible::InvalidateChildren();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 PRInt32

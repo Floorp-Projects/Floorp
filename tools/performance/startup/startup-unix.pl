@@ -16,7 +16,7 @@
 #
 # For optimized builds, startup-test.html will also dump
 # the time out to stdout if you set:
-#   user_pref("browser.dom.window.dump.enabled", 1);
+#   user_pref("browser.dom.window.dump.enabled", true);
 #
 
 require 5.003;

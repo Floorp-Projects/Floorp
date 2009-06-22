@@ -1,0 +1,22 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
+--- a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
++++ b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
+@@ -181,17 +181,17 @@ init_yuv_converters(void)
+ {
+ 	ogg_uint32_t features = 0;
+ 
+ 	if ( yuv_conv.yuv2rgba == NULL )
+ 	{
+ 		init_vanilla_coeffs ();
+ 		features = oc_cpu_flags_get(); 		
+ #if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+-#if defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16 
++#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
+ 		if (features & OC_CPU_X86_SSE2) 
+ 		{
+ 			yuv_conv.yuv2rgba = yuv420_to_rgba_sse2;
+ 			yuv_conv.yuv2bgra = yuv420_to_bgra_sse2;
+ 			yuv_conv.yuv2argb = yuv420_to_argb_sse2;
+ 			return;
+ 		}
+ 		else

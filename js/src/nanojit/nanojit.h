@@ -237,10 +237,10 @@ namespace nanojit
 #define alignTo(x,s)		((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
 #define alignUp(x,s)		((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
 
-#define pageTop(x)			( (int*)alignTo(x,NJ_PAGE_SIZE) )
-#define pageDataStart(x)    ( (int*)(alignTo(x,NJ_PAGE_SIZE) + sizeof(PageHeader)) )
-#define pageBottom(x)		( (int*)(alignTo(x,NJ_PAGE_SIZE)+NJ_PAGE_SIZE)-1 )
-#define samepage(x,y)		(pageTop(x) == pageTop(y))
+#define pageTop(x)          ( alignTo(x,NJ_PAGE_SIZE) )
+#define pageDataStart(x)    ( alignTo(x,NJ_PAGE_SIZE) + sizeof(PageHeader) )
+#define pageBottom(x)       ( alignTo(x,NJ_PAGE_SIZE) + NJ_PAGE_SIZE - 1 )
+#define samepage(x,y)       ( pageTop(x) == pageTop(y) )
 
 
 /* Debug printing stuff.  All Nanojit debug printing should be routed
