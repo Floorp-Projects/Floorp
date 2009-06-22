@@ -1584,8 +1584,17 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell)
     length = 0; // The doc is now shut down, don't fire events in it anymore
-  else
+  else {
+    // Flush layout so that all the frame construction, reflow, and styles are
+    // up-to-date. This will ensure we can get frames for the related nodes, as
+    // well as get the most current information for calculating things like
+    // visibility. We don't flush the display because we don't care about
+    // painting. If no flush is necessary the method will simple return.
+    presShell->FlushPendingNotifications(Flush_Layout);
+
+    // filter events
     nsAccEvent::ApplyEventRules(mEventsToFire);
+  }
   
   for (PRUint32 index = 0; index < length; index ++) {
     nsCOMPtr<nsIAccessibleEvent> accessibleEvent(
