@@ -43,7 +43,7 @@
 interface nsIURI;
 interface nsINavBookmarksService;
 
-[scriptable, uuid(2c08ab79-7f9b-40f3-8d04-540b5857b211)]
+[scriptable, uuid(62a5fe00-d85c-4a63-aef7-176d8f1b189d)]
 interface nsILivemarkService : nsISupports
 {
   /**
@@ -94,6 +94,16 @@ interface nsILivemarkService : nsISupports
    * @throws NS_ERROR_INVALID_ARG if the folder ID isn't known
    */
   boolean isLivemark(in long long folder);
+
+  /**
+   * Determines whether the feed URI is a currently registered livemark.
+   *
+   * @param aFeedURI
+   *        Feed URI to look for.
+   *
+   * @returns the found livemark folder id, or -1 if nothing was found.
+   */
+  long long getLivemarkIdForFeedURI(in nsIURI aFeedURI);
 
   /**
    * Gets the URI of the website associated with a livemark container.
