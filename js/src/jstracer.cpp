@@ -473,6 +473,12 @@ globalSlotHash(JSContext* cx, unsigned slot)
     return int(h);
 }
 
+static inline int
+pcHash(jsbytecode* pc)
+{
+    return int(uintptr_t(pc) & ORACLE_MASK);
+}
+
 Oracle::Oracle()
 {
     /* Grow the oracle bitsets to their (fixed) size here, once. */
@@ -495,7 +501,7 @@ Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
     return _globalDontDemote.get(globalSlotHash(cx, slot));
 }
 
-/* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
+/* Tell the oracle that a certain slot at a certain stack slot should not be demoted. */
 JS_REQUIRES_STACK void
 Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot)
 {
@@ -509,11 +515,26 @@ Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot) const
     return _stackDontDemote.get(stackSlotHash(cx, slot));
 }
 
+/* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
+void
+Oracle::markInstructionUndemotable(jsbytecode* pc)
+{
+    _pcDontDemote.set(&gc, pcHash(pc));
+}
+
+/* Consult with the oracle whether we shouldn't demote a certain bytecode location. */
+bool
+Oracle::isInstructionUndemotable(jsbytecode* pc) const
+{
+    return _pcDontDemote.get(pcHash(pc));
+}
+
 void
 Oracle::clearDemotability()
 {
     _stackDontDemote.reset();
     _globalDontDemote.reset();
+    _pcDontDemote.reset();
 }
 
 
@@ -821,13 +842,27 @@ static bool isconst(LIns* i, int32_t c)
     return i->isconst() && i->imm32() == c;
 }
 
-static bool overflowSafe(LIns* i)
+/*
+ * Determine whether this operand is guaranteed to not overflow the specified
+ * integer operation.
+ */
+static bool overflowSafe(LOpcode op, LIns* i)
 {
     LIns* c;
+    switch (op) {
+      case LIR_add:
+      case LIR_sub:
+          return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
+                  ((c->imm32() & 0xc0000000) == 0)) ||
+                 (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
+                  ((c->imm32() > 0)));
+    default:
+        JS_ASSERT(op == LIR_mul);
+    }
     return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
-            ((c->imm32() & 0xc0000000) == 0)) ||
-           (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
-            ((c->imm32() > 0)));
+            ((c->imm32() & 0xffff0000) == 0)) ||
+           (i->isop(LIR_ush) && ((c = i->oprnd2())->isconst()) &&
+            ((c->imm32() >= 16)));
 }
 
 /* soft float support */
@@ -1181,11 +1216,10 @@ public:
 #define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code)                   \
     JS_BEGIN_MACRO                                                            \
         DEF_VPNAME;                                                           \
-        unsigned n;                                                           \
         JSStackFrame* currentFrame = cx->fp;                                  \
         JSStackFrame* entryFrame;                                             \
         JSStackFrame* fp = currentFrame;                                      \
-        for (n = 0; n < callDepth; ++n) { fp = fp->down; }                    \
+        for (unsigned n = 0; n != callDepth; ++n) { fp = fp->down; }          \
         entryFrame = fp;                                                      \
         unsigned frames = callDepth+1;                                        \
         JSStackFrame** fstack =                                               \
@@ -2374,8 +2408,11 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         LIns* i = get(vp);
         bool isPromote = isPromoteInt(i);
-        if (isPromote && *m == JSVAL_DOUBLE)
+        if (isPromote && *m == JSVAL_DOUBLE) {
             lir->insStorei(get(vp), lirbuf->state, nativeGlobalOffset(vp));
+            /* Aggressively undo speculation so the inner tree will compile if this fails. */
+            oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+        }
         JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
         ++m;
     );
@@ -2503,7 +2540,7 @@ TraceRecorder::snapshot(ExitType exitType)
         }
     }
 
-    if (sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8) >= MAX_SKIP_BYTES) {
+    if (sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(uint8) >= NJ_MAX_SKIP_PAYLOAD_SZB) {
         /*
          * ::snapshot() is infallible in the sense that callers don't
          * expect errors; but this is a trace-aborting error condition. So
@@ -2917,6 +2954,10 @@ FlushJITCache(JSContext* cx)
 JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(S_COMPILE);
+#endif
+
     if (tm->needFlush) {
         FlushJITCache(cx);
         return;
@@ -4009,11 +4050,18 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer, ui
 }
 
 static JS_REQUIRES_STACK bool
-js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer)
+js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer
+#ifdef MOZ_TRACEVIS
+    , TraceVisStateObj* tvso = NULL
+#endif
+    )
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->needFlush) {
         FlushJITCache(cx);
+#ifdef MOZ_TRACEVIS
+        if (tvso) tvso->r = R_FAIL_EXTEND_FLUSH;
+#endif
         return false;
     }
 
@@ -4022,8 +4070,12 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
 
     /* Don't grow trees above a certain size to avoid code explosion due to tail duplication. */
-    if (ti->branchCount >= MAX_BRANCHES)
+    if (ti->branchCount >= MAX_BRANCHES) {
+#ifdef MOZ_TRACEVIS
+        if (tvso) tvso->r = R_FAIL_EXTEND_MAX_BRANCHES;
+#endif
         return false;
+    }
 
     Fragment* c;
     if (!(c = anchor->target)) {
@@ -4076,9 +4128,17 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             typeMap = fullMap.data();
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
-        return js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
-                                ngslots, typeMap, exitedFrom, outer, cx->fp->argc);
+        bool rv = js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate, stackSlots,
+                                   ngslots, typeMap, exitedFrom, outer, cx->fp->argc);
+#ifdef MOZ_TRACEVIS
+        if (!rv && tvso)
+            tvso->r = R_FAIL_EXTEND_START;
+#endif
+        return rv;
     }
+#ifdef MOZ_TRACEVIS
+    if (tvso) tvso->r = R_FAIL_EXTEND_COLD;
+#endif
     return false;
 }
 
@@ -4198,7 +4258,11 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         /* abort recording so the inner loop can become type stable. */
         js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
         return js_AttemptToStabilizeTree(cx, lr, outer, outerFragment->argc);
+      case OVERFLOW_EXIT:
+        oracle.markInstructionUndemotable(cx->fp->regs->pc);
+        /* fall through */
       case BRANCH_EXIT:
+      case CASE_EXIT:
         /* abort recording the outer tree, extend the inner tree */
         js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
         return js_AttemptToExtendTree(cx, lr, NULL, outer);
@@ -4407,6 +4471,10 @@ static JS_REQUIRES_STACK VMSideExit*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                VMSideExit** innermostNestedGuardp)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(S_EXECUTE);
+#endif
+
     JS_ASSERT(f->root == f && f->code() && f->vmprivate);
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -4496,11 +4564,18 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     debug_only(fflush(NULL);)
     GuardRecord* rec;
-#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-    SIMULATE_FASTCALL(rec, state, NULL, u.func);
-#else
-    rec = u.func(state, NULL);
+    // Note that the block scoping is crucial here for TraceVis;  the
+    // TraceVisStateObj constructors and destructors must run at the right times.
+    {
+#ifdef MOZ_TRACEVIS
+        TraceVisStateObj tvso_n(S_NATIVE);
 #endif
+#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
+        SIMULATE_FASTCALL(rec, state, NULL, u.func);
+#else
+        rec = u.func(state, NULL);
+#endif
+    }
     VMSideExit* lr = (VMSideExit*)rec->exit;
 
     AUDIT(traceTriggered);
@@ -4760,6 +4835,10 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 JS_REQUIRES_STACK bool
 js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(S_MONITOR);
+#endif
+
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Is the recorder currently active? */
@@ -4779,14 +4858,21 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
          * the interpreter and do not attempt to trigger or record a new tree at this
          * location.
          */
-        if (innerLoopHeaderPC != cx->fp->regs->pc)
-            return false;
+         if (innerLoopHeaderPC != cx->fp->regs->pc) {
+#ifdef MOZ_TRACEVIS
+             tvso.r = R_INNER_SIDE_EXIT;
+#endif
+             return false;
+         }
     }
     JS_ASSERT(!tm->recorder);
 
     /* Check the pool of reserved doubles (this might trigger a GC). */
     if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
         !js_ReplenishReservedPool(cx, tm)) {
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_DOUBLES;
+#endif
         return false; /* Out of memory, don't try to record now. */
     }
 
@@ -4801,8 +4887,12 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     }
 
     /* Do not enter the JIT code with a pending operation callback. */
-    if (cx->operationCallbackFlag)
+    if (cx->operationCallbackFlag) {
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_CALLBACK_PENDING;
+#endif
         return false;
+    }
     
     jsbytecode* pc = cx->fp->regs->pc;
     uint32 argc = cx->fp->argc;
@@ -4813,6 +4903,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
     if (!f) {
         FlushJITCache(cx);
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_OOM_GETANCHOR;
+#endif
         return false;
     }
 
@@ -4820,12 +4913,21 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
        activate any trees so, start compiling. */
     if (!f->code() && !f->peer) {
     record:
-        if (++f->hits() < HOTLOOP)
+        if (++f->hits() < HOTLOOP) {
+#ifdef MOZ_TRACEVIS
+            tvso.r = f->hits() < 1 ? R_BACKED_OFF : R_COLD;
+#endif
             return false;
+        }
         /* We can give RecordTree the root peer. If that peer is already taken, it will
            walk the peer list and find us a free slot or allocate a new tree if needed. */
-        return js_RecordTree(cx, tm, f->first, NULL, 0, globalObj, globalShape, 
-                             globalSlots, argc);
+        bool rv = js_RecordTree(cx, tm, f->first, NULL, 0, globalObj, globalShape,
+                                globalSlots, argc);
+#ifdef MOZ_TRACEVIS
+        if (!rv)
+            tvso.r = R_FAIL_RECORD_TREE;
+#endif
+        return rv;
     }
 
     debug_only_v(nj_dprintf("Looking for compat peer %d@%d, from %p (ip: %p)\n",
@@ -4841,6 +4943,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
            expensive. This must be a rather type-unstable loop. */
         debug_only_v(nj_dprintf("Blacklisted: too many peer trees.\n");)
         js_Blacklist((jsbytecode*) f->root->ip);
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_MAX_PEERS;
+#endif
         return false;
     }
 
@@ -4848,24 +4953,58 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     VMSideExit* innermostNestedGuard = NULL;
 
     lr = js_ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard);
-    if (!lr)
+    if (!lr) {
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_FAIL_EXECUTE_TREE;
+#endif
         return false;
+    }
 
     /* If we exit on a branch, or on a tree call guard, try to grow the inner tree (in case
        of a branch exit), or the tree nested around the tree we exited from (in case of the
        tree call guard). */
+    bool rv;
     switch (lr->exitType) {
       case UNSTABLE_LOOP_EXIT:
-        return js_AttemptToStabilizeTree(cx, lr, NULL, NULL);
+          rv = js_AttemptToStabilizeTree(cx, lr, NULL, NULL);
+#ifdef MOZ_TRACEVIS
+          if (!rv)
+              tvso.r = R_FAIL_STABILIZE;
+#endif
+          return rv;
+      case OVERFLOW_EXIT:
+        oracle.markInstructionUndemotable(cx->fp->regs->pc);
+        /* fall through */
       case BRANCH_EXIT:
       case CASE_EXIT:
-        return js_AttemptToExtendTree(cx, lr, NULL, NULL);
+          return js_AttemptToExtendTree(cx, lr, NULL, NULL
+#ifdef MOZ_TRACEVIS
+                                          , &tvso
+#endif
+                 );
       case LOOP_EXIT:
         if (innermostNestedGuard)
-            return js_AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL);
+            return js_AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL
+#ifdef MOZ_TRACEVIS
+                                            , &tvso
+#endif
+                   );
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_NO_EXTEND_OUTER;
+#endif
         return false;
+#ifdef MOZ_TRACEVIS
+      case MISMATCH_EXIT:  tvso.r = R_MISMATCH_EXIT;  return false;
+      case OOM_EXIT:       tvso.r = R_OOM_EXIT;       return false;
+      case TIMEOUT_EXIT:   tvso.r = R_TIMEOUT_EXIT;   return false;
+      case DEEP_BAIL_EXIT: tvso.r = R_DEEP_BAIL_EXIT; return false;
+      case STATUS_EXIT:    tvso.r = R_STATUS_EXIT;    return false;
+#endif
       default:
         /* No, this was an unusual exit (i.e. out of memory/GC), so just resume interpretation. */
+#ifdef MOZ_TRACEVIS
+        tvso.r = R_OTHER_EXIT;
+#endif
         return false;
     }
 }
@@ -5634,6 +5773,11 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
         JSStackFrame* cfp = (JSStackFrame*) JS_GetPrivate(cx, obj);
         if (cfp && FrameInRange(cx->fp, cfp, callDepth)) {
             JSScopeProperty* sprop = (JSScopeProperty*) prop;
+
+            uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
+            if (setflags && (sprop->attrs & JSPROP_READONLY))
+                ABORT_TRACE("writing to a read-only property");
+
             uintN slot = sprop->shortid;
 
             vp = NULL;
@@ -5691,51 +5835,141 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i, n >= 0);
 }
 
+extern jsdouble FASTCALL js_dmod(jsdouble a, jsdouble b);
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 {
-    if (v == LIR_fadd || v == LIR_fsub) {
-        jsdouble r;
-        if (v == LIR_fadd)
-            r = v0 + v1;
-        else
-            r = v0 - v1;
-        /*
-         * Calculate the result of the addition for the current values. If the
-         * value is not within the integer range, don't even try to demote
-         * here.
-         */
-        if (!JSDOUBLE_IS_NEGZERO(r) && (jsint(r) == r) && isPromoteInt(s0) && isPromoteInt(s1)) {
-            LIns* d0 = ::demote(lir, s0);
-            LIns* d1 = ::demote(lir, s1);
-            /*
-             * If the inputs are constant, generate an integer constant for
-             * this operation.
-             */
-            if (d0->isconst() && d1->isconst())
-                return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
-            /*
-             * Speculatively generate code that will perform the addition over
-             * the integer inputs as an integer addition/subtraction and exit
-             * if that fails.
-             */
-            v = (LOpcode)((int)v & ~LIR64);
-            LIns* result = lir->ins2(v, d0, d1);
-            if (!result->isconst() && (!overflowSafe(d0) || !overflowSafe(d1))) {
-                VMSideExit* exit = snapshot(OVERFLOW_EXIT);
-                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, result), createGuardRecord(exit));
-            }
-            return lir->ins1(LIR_i2f, result);
+    /*
+     * To even consider this operation for demotion, both operands have to be
+     * integers and the oracle must not give us a negative hint for the
+     * instruction.
+     */
+    if (oracle.isInstructionUndemotable(cx->fp->regs->pc) || !isPromoteInt(s0) || !isPromoteInt(s1)) {
+    out:
+        if (v == LIR_fmod) {
+            LIns* args[] = { s1, s0 };
+            return lir->insCall(&js_dmod_ci, args);
         }
-        /*
-         * The result doesn't fit into the integer domain, so either generate
-         * a floating point constant or a floating point operation.
-         */
-        if (s0->isconst() && s1->isconst())
-            return lir->insImmf(r);
-        return lir->ins2(v, s0, s1);
+        LIns* result = lir->ins2(v, s0, s1);
+        JS_ASSERT_IF(s0->isconstq() && s1->isconstq(), result->isconstq());
+        return result;
     }
-    return lir->ins2(v, s0, s1);
+
+    jsdouble r;
+    switch (v) {
+    case LIR_fadd:
+        r = v0 + v1;
+        break;
+    case LIR_fsub:
+        r = v0 - v1;
+        break;
+    case LIR_fmul:
+        r = v0 * v1;
+        if (r == 0.0)
+            goto out;
+        break;
+#ifdef NANOJIT_IA32
+    case LIR_fdiv:
+        if (v1 == 0)
+            goto out;
+        r = v0 / v1;
+        break;
+    case LIR_fmod:
+        if (v1 == 0)
+            goto out;
+        r = js_dmod(v0, v1);
+        break;
+#endif
+    default:
+        goto out;
+    }
+
+    /*
+     * The result must be an integer at record time, otherwise there is no
+     * point in trying to demote it.
+     */
+    if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
+        goto out;
+
+    LIns* d0 = ::demote(lir, s0);
+    LIns* d1 = ::demote(lir, s1);
+
+    /*
+     * Speculatively emit an integer operation, betting that at runtime we
+     * will get integer results again.
+     */
+    VMSideExit* exit;
+    LIns* result;
+    switch (v) {
+#ifdef NANOJIT_IA32
+      case LIR_fdiv:
+        if (d0->isconst() && d1->isconst())
+            return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
+
+        exit = snapshot(OVERFLOW_EXIT);
+
+        /*
+         * Make sure we don't trigger division by zero at runtime.
+         */
+        if (!d1->isconst())
+            guard(false, lir->ins_eq0(d1), exit);
+        result = lir->ins2(v = LIR_div, d0, d1);
+
+        /*
+         * As long the modulus is zero, the result is an integer.
+         */
+        guard(true, lir->ins_eq0(lir->ins1(LIR_mod, result)), exit);
+        break;
+      case LIR_fmod: {
+        if (d0->isconst() && d1->isconst())
+            return lir->ins1(LIR_i2f, lir->insImm(jsint(r)));
+
+        exit = snapshot(OVERFLOW_EXIT);
+
+        /*
+         * Make sure we don't trigger division by zero at runtime.
+         */
+        if (!d1->isconst())
+            guard(false, lir->ins_eq0(d1), exit);
+        result = lir->ins1(v = LIR_mod, lir->ins2(LIR_div, d0, d1));
+
+        /*
+         * If the result is not 0, it is always within the integer domain.
+         */
+        LIns* branch = lir->insBranch(LIR_jf, lir->ins_eq0(result), NULL);
+
+        /*
+         * If the result is zero, we must exit if the lhs is negative since
+         * the result is -0 in this case, which is not in the integer domain.
+         */
+        guard(false, lir->ins2i(LIR_lt, result, 0), exit);
+        branch->setTarget(lir->ins0(LIR_label));
+        break;
+      }
+#endif
+      default:
+        v = (LOpcode)((int)v & ~LIR64);
+        result = lir->ins2(v, d0, d1);
+
+        /*
+         * If the operands guarantee that the result will be an integer (i.e.
+         * z = x + y with 0 <= (x|y) <= 0xffff guarantees z <= fffe0001), we
+         * don't have to guard against an overflow. Otherwise we emit a guard
+         * that will inform the oracle and cause a non-demoted trace to be
+         * attached that uses floating-point math for this operation.
+         */
+        if (!result->isconst() && (!overflowSafe(v, d0) || !overflowSafe(v, d1))) {
+            exit = snapshot(OVERFLOW_EXIT);
+            guard(false, lir->ins1(LIR_ov, result), exit);
+            if (v == LIR_mul) // make sure we don't lose a -0
+                guard(false, lir->ins_eq0(result), exit);
+        }
+        break;
+    }
+    JS_ASSERT_IF(d0->isconst() && d1->isconst(),
+                 result->isconst() && result->imm32() == jsint(r));
+    return lir->ins1(LIR_i2f, result);
 }
 
 LIns*
@@ -5827,12 +6061,12 @@ TraceRecorder::ifop()
                       lir->ins2(LIR_feq, v_ins, v_ins),
                       lir->ins_eq0(lir->ins2(LIR_feq, v_ins, lir->insImmq(0))));
     } else if (JSVAL_IS_STRING(v)) {
-        cond = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) != 0;
+        cond = JSVAL_TO_STRING(v)->length() != 0;
         x = lir->ins2(LIR_piand,
                       lir->insLoad(LIR_ldp,
                                    v_ins,
-                                   (int)offsetof(JSString, length)),
-                      INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)));
+                                   (int)offsetof(JSString, mLength)),
+                      INS_CONSTWORD(JSString::LENGTH_MASK));
     } else {
         JS_NOT_REACHED("ifop");
         return JSRS_STOP;
@@ -6287,7 +6521,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
             break;
           case JSVAL_OBJECT:
             if (JSVAL_IS_NULL(l)) {
-                l_ins = lir->insImmq(0);
+                l_ins = lir->insImmf(0.0);
                 break;
             }
             // FALL THROUGH
@@ -6310,7 +6544,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
             break;
           case JSVAL_OBJECT:
             if (JSVAL_IS_NULL(r)) {
-                r_ins = lir->insImmq(0);
+                r_ins = lir->insImmf(0.0);
                 break;
             }
             // FALL THROUGH
@@ -6419,7 +6653,7 @@ TraceRecorder::binary(LOpcode op)
     jsdouble rnum = rightIsNumber ? asNumber(r) : 0;
 
     if ((op >= LIR_sub && op <= LIR_ush) ||  // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
-        (op >= LIR_fsub && op <= LIR_fdiv)) { // fsub, fmul, fdiv
+        (op >= LIR_fsub && op <= LIR_fmod)) { // fsub, fmul, fdiv, fmod
         LIns* args[2];
         if (JSVAL_IS_STRING(l)) {
             args[0] = a;
@@ -6891,23 +7125,23 @@ TraceRecorder::getThis(LIns*& this_ins)
 LIns*
 TraceRecorder::getStringLength(LIns* str_ins)
 {
-    LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, length));
+    LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, mLength));
 
     LIns* masked_len_ins = lir->ins2(LIR_piand,
                                      len_ins,
-                                     INS_CONSTWORD(JSSTRING_LENGTH_MASK));
+                                     INS_CONSTWORD(JSString::LENGTH_MASK));
 
     return
         lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                len_ins,
-                                               INS_CONSTWORD(JSSTRFLAG_DEPENDENT))),
+                                               INS_CONSTWORD(JSString::DEPENDENT))),
                         masked_len_ins,
                         lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                                len_ins,
-                                                               INS_CONSTWORD(JSSTRFLAG_PREFIX))),
+                                                               INS_CONSTWORD(JSString::PREFIX))),
                                         lir->ins2(LIR_piand,
                                                   len_ins,
-                                                  INS_CONSTWORD(JSSTRDEP_LENGTH_MASK)),
+                                                  INS_CONSTWORD(JSString::DEPENDENT_LENGTH_MASK)),
                                         masked_len_ins));
 }
 
@@ -7316,40 +7550,7 @@ TraceRecorder::record_JSOP_DIV()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_MOD()
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-
-    if (!JSVAL_IS_PRIMITIVE(l)) {
-        ABORT_IF_XML(l);
-        if (!JSVAL_IS_PRIMITIVE(r)) {
-            ABORT_IF_XML(r);
-            return call_imacro(binary_imacros.obj_obj);
-        }
-        return call_imacro(binary_imacros.obj_any);
-    }
-    if (!JSVAL_IS_PRIMITIVE(r)) {
-        ABORT_IF_XML(r);
-        return call_imacro(binary_imacros.any_obj);
-    }
-
-    if (isNumber(l) && isNumber(r)) {
-        LIns* l_ins = get(&l);
-        LIns* r_ins = get(&r);
-        LIns* x;
-        /* We can't demote this in a filter since we need the actual values of l and r. */
-        if (isPromote(l_ins) && isPromote(r_ins) && asNumber(l) >= 0 && asNumber(r) > 0) {
-            LIns* args[] = { ::demote(lir, r_ins), ::demote(lir, l_ins) };
-            x = lir->insCall(&js_imod_ci, args);
-            guard(false, lir->ins2(LIR_eq, x, lir->insImm(-1)), BRANCH_EXIT);
-            x = lir->ins1(LIR_i2f, x);
-        } else {
-            LIns* args[] = { r_ins, l_ins };
-            x = lir->insCall(&js_dmod_ci, args);
-        }
-        set(&l, x);
-        return JSRS_CONTINUE;
-    }
-    return JSRS_STOP;
+    return binary(LIR_fmod);
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -7372,8 +7573,8 @@ TraceRecorder::record_JSOP_NOT()
     }
     JS_ASSERT(JSVAL_IS_STRING(v));
     set(&v, lir->ins_eq0(lir->ins2(LIR_piand,
-                                   lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, length)),
-                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)))));
+                                   lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, mLength)),
+                                   INS_CONSTWORD(JSString::LENGTH_MASK))));
     return JSRS_CONTINUE;
 }
 
@@ -7400,17 +7601,16 @@ TraceRecorder::record_JSOP_NEG()
            Only follow this path if we're not an integer that's 0 and we're not a double
            that's zero.
          */
-        if (isPromoteInt(a) &&
+        if (!oracle.isInstructionUndemotable(cx->fp->regs->pc) &&
+            isPromoteInt(a) &&
             (!JSVAL_IS_INT(v) || JSVAL_TO_INT(v) != 0) &&
             (!JSVAL_IS_DOUBLE(v) || !JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v))) &&
             -asNumber(v) == (int)-asNumber(v)) {
             a = lir->ins1(LIR_neg, ::demote(lir, a));
             if (!a->isconst()) {
                 VMSideExit* exit = snapshot(OVERFLOW_EXIT);
-                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, a),
-                              createGuardRecord(exit));
-                lir->insGuard(LIR_xt, lir->ins2(LIR_eq, a, lir->insImm(0)),
-                              createGuardRecord(exit));
+                guard(false, lir->ins1(LIR_ov, a), exit);
+                guard(false, lir->ins2i(LIR_eq, a, 0), exit);
             }
             a = lir->ins1(LIR_i2f, a);
         } else {
@@ -8313,7 +8513,7 @@ TraceRecorder::record_JSOP_GETELEM()
         if (call)
             ABORT_TRACE("JSOP_CALLELEM on a string");
         int i = asInt32(idx);
-        if (size_t(i) >= JSSTRING_LENGTH(JSVAL_TO_STRING(lval)))
+        if (size_t(i) >= JSVAL_TO_STRING(lval)->length())
             ABORT_TRACE("Invalid string index in JSOP_GETELEM");
         idx_ins = makeNumberInt32(idx_ins);
         LIns* args[] = { idx_ins, obj_ins, cx_ins };
@@ -8715,7 +8915,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
-    if (sizeof(FrameInfo) + stackSlots * sizeof(uint8) > MAX_SKIP_BYTES)
+    if (sizeof(FrameInfo) + stackSlots * sizeof(uint8) > NJ_MAX_SKIP_PAYLOAD_SZB)
         ABORT_TRACE("interpreted function call requires saving too much stack");
     LIns* data = lir->insSkip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
     FrameInfo* fi = (FrameInfo*)data->payload();
@@ -9788,9 +9988,40 @@ TraceRecorder::record_JSOP_IN()
     return JSRS_CONTINUE;
 }
 
+static JSBool
+HasInstance(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    JS_ASSERT(argc == 1);
+    argv = JS_ARGV(cx, vp);
+    JSBool result = JS_FALSE;
+    JSObject* obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj->map->ops->hasInstance(cx, obj, argv[0], &result))
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(result));
+    return JS_TRUE;
+}
+
+static JSBool FASTCALL
+HasInstance_tn(JSContext* cx, JSObject* obj, jsval v)
+{
+    JSBool result = JS_FALSE;
+    if (!obj->map->ops->hasInstance(cx, obj, v, &result))
+        js_SetBuiltinError(cx);
+    return result;
+}
+
+JS_DEFINE_TRCINFO_1(HasInstance,
+    (3, (extern, BOOL_FAIL, HasInstance_tn, CONTEXT, THIS, JSVAL, 0, 0)))
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_INSTANCEOF()
 {
+    jsval& r = stackval(-1);
+
+    if (!JSVAL_IS_PRIMITIVE(r))
+        return call_imacro(instanceof_imacros.instanceof);
+
     return JSRS_STOP;
 }
 
@@ -10776,7 +11007,8 @@ static const struct BuiltinFunctionInfo {
     {GetProperty_trcinfo,        1},
     {GetElement_trcinfo,         1},
     {SetProperty_trcinfo,        2},
-    {SetElement_trcinfo,         2}
+    {SetElement_trcinfo,         2},
+    {HasInstance_trcinfo,        1}
 };
 
 JSObject *
@@ -10968,6 +11200,80 @@ js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, ui
     }
 }
 #endif
+
+#ifdef MOZ_TRACEVIS
+
+FILE* traceVisLogFile = NULL;
+
+JS_FRIEND_API(bool)
+JS_StartTraceVis(const char* filename = "tracevis.dat")
+{
+    if (traceVisLogFile) {
+        // If we're currently recording, first we must stop.
+        JS_StopTraceVis();
+    }
+
+    traceVisLogFile = fopen(filename, "wb");
+    if (!traceVisLogFile)
+        return false;
+
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js_StartTraceVis(JSContext *cx, JSObject *obj,
+                 uintN argc, jsval *argv, jsval *rval)
+{
+    JSBool ok;
+
+    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
+        JSString *str = JSVAL_TO_STRING(argv[0]);
+        char *filename = js_DeflateString(cx, str->chars(), str->length());
+        if (!filename)
+            goto error;
+        ok = JS_StartTraceVis(filename);
+        JS_free(cx, filename);
+    } else {
+        ok = JS_StartTraceVis();
+    }
+
+    if (ok) {
+        fprintf(stderr, "started TraceVis recording\n");
+        return JS_TRUE;
+    }
+
+  error:
+    JS_ReportError(cx, "failed to start TraceVis recording");
+    return JS_FALSE;
+}
+
+JS_FRIEND_API(bool)
+JS_StopTraceVis()
+{
+    if (!traceVisLogFile)
+        return false;
+
+    fclose(traceVisLogFile);    // not worth checking the result
+    traceVisLogFile = NULL;
+
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js_StopTraceVis(JSContext *cx, JSObject *obj,
+                uintN argc, jsval *argv, jsval *rval)
+{
+    JSBool ok = JS_StopTraceVis();
+
+    if (ok)
+        fprintf(stderr, "stopped TraceVis recording\n");
+    else
+        JS_ReportError(cx, "TraceVis isn't running");
+
+    return ok;
+}
+
+#endif /* MOZ_TRACEVIS */
 
 #define UNUSED(n)                                                             \
     JS_REQUIRES_STACK bool                                                    \

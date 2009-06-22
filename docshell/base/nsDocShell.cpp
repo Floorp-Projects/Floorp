@@ -1336,6 +1336,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
     if (aLoadFlags & LOAD_FLAGS_BYPASS_CLASSIFIER)
         flags |= INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
 
+    if (aLoadFlags & LOAD_FLAGS_FORCE_ALLOW_COOKIES)
+        flags |= INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
+
     return InternalLoad(aURI,
                         referrer,
                         owner,
@@ -8018,7 +8021,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                    owner, aTypeHint, aPostData, aHeadersData, aFirstParty,
                    aDocShell, getter_AddRefs(req),
                    (aFlags & INTERNAL_LOAD_FLAGS_FIRST_LOAD) != 0,
-                   (aFlags & INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER) != 0);
+                   (aFlags & INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER) != 0,
+                   (aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES) != 0);
     if (req && aRequest)
         NS_ADDREF(*aRequest = req);
 
@@ -8105,7 +8109,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                       nsIDocShell ** aDocShell,
                       nsIRequest ** aRequest,
                       PRBool aIsNewWindowTarget,
-                      PRBool aBypassClassifier)
+                      PRBool aBypassClassifier,
+                      PRBool aForceAllowCookies)
 {
     nsresult rv;
     nsCOMPtr<nsIURILoader> uriLoader;
@@ -8179,6 +8184,9 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(channel));
     if (httpChannelInternal) {
+      if (aForceAllowCookies) {
+        httpChannelInternal->SetForceAllowThirdPartyCookie(PR_TRUE);
+      } 
       if (aFirstParty) {
         httpChannelInternal->SetDocumentURI(aURI);
       } else {

@@ -347,7 +347,8 @@ protected:
                                nsIDocShell ** aDocShell,
                                nsIRequest ** aRequest,
                                PRBool aIsNewWindowTarget,
-                               PRBool aBypassClassifier);
+                               PRBool aBypassClassifier,
+                               PRBool aForceAllowCookies);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,
@@ -624,7 +625,7 @@ protected:
         RestorePresentationEvent(nsDocShell *ds) : mDocShell(ds) {}
         void Revoke() { mDocShell = nsnull; }
     private:
-        nsDocShell *mDocShell;
+        nsRefPtr<nsDocShell> mDocShell;
     };
 
     // hash of session storages, keyed by domain

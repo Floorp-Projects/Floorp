@@ -170,11 +170,10 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsCOMPtr<nsIDOMSVGMatrix> matrix = NS_NewSVGMatrix(GetCanvasTM());
-    NS_ENSURE_TRUE(matrix, NS_ERROR_OUT_OF_MEMORY);
-
     gfx->Save();
-    nsSVGUtils::SetClipRect(gfx, matrix, x, y, width, height);
+    gfxRect clipRect =
+      nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
+    nsSVGUtils::SetClipRect(gfx, GetCanvasTM(), clipRect);
   }
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;

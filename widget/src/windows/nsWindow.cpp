@@ -86,6 +86,10 @@
 // the DirectDraw surface or not.
 #include "cairo-features.h"
 
+#if defined(MOZ_SPLASHSCREEN)
+#include "nsSplashScreen.h"
+#endif
+
 #ifdef WINCE
 
 #include "aygshell.h"
@@ -818,13 +822,22 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 
 //-------------------------------------------------------------------------
 //
-// Default for height modification is to do nothing
+// Add extra height if needed (on Windows CE)
 //
 //-------------------------------------------------------------------------
 
 PRInt32 nsWindow::GetHeight(PRInt32 aProposedHeight)
 {
-  return(aProposedHeight);
+  PRInt32 extra = 0;
+
+#if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
+  DWORD style = WindowStyle();
+  if ((style & WS_SYSMENU) && (style & WS_POPUP)) {
+    extra = GetSystemMetrics(SM_CYCAPTION);
+  }
+#endif
+
+  return aProposedHeight + extra;
 }
 
 //-------------------------------------------------------------------------
@@ -1634,6 +1647,19 @@ PRBool nsWindow::CanTakeFocus()
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
+#if defined(MOZ_SPLASHSCREEN)
+  // we're about to show the first toplevel window,
+  // so kill off any splash screen if we had one
+  nsSplashScreen *splash = nsSplashScreen::Get();
+  if (splash && splash->IsOpen() && mWnd && bState &&
+      (mWindowType == eWindowType_toplevel ||
+       mWindowType == eWindowType_dialog ||
+       mWindowType == eWindowType_popup))
+  {
+    splash->Close();
+  }
+#endif
+
   PRBool wasVisible = mIsVisible;
   // Set the status now so that anyone asking during ShowWindow or
   // SetWindowPos would get the correct answer.

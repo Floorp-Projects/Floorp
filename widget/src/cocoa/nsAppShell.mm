@@ -210,6 +210,7 @@ nsAppShell::nsAppShell()
 , mHadMoreEventsCount(0)
 , mRecursionDepth(0)
 , mNativeEventCallbackDepth(0)
+, mNativeEventScheduledDepth(0)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
   // for autoreleased objects on this thread.  Because it won't be popped
@@ -428,9 +429,45 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
                                          data2:0]
            atStart:NO];
 
-  // Each Release() here is balanced by exactly one AddRef() in
-  // ScheduleNativeEventCallback().
-  NS_RELEASE(self);
+  // Normally every call to ScheduleNativeEventCallback() results in
+  // exactly one call to ProcessGeckoEvents().  So each Release() here
+  // normally balances exactly one AddRef() in ScheduleNativeEventCallback().
+  // But if Exit() is called just after ScheduleNativeEventCallback(), the
+  // corresponding call to ProcessGeckoEvents() will never happen.  We check
+  // for this possibility in two different places -- here and in Exit()
+  // itself.  If we find here that Exit() has been called (that mTerminated
+  // is PR_TRUE), it's because we've been called recursively, that Exit() was
+  // called from self->NativeEventCallback() above, and that we're unwinding
+  // the recursion.  In this case we'll never be called again, and we balance
+  // here any extra calls to ScheduleNativeEventCallback().
+  //
+  // When ProcessGeckoEvents() is called recursively, it's because of a
+  // call to ScheduleNativeEventCallback() from NativeEventCallback().  We
+  // balance the "extra" AddRefs here (rather than always in Exit()) in order
+  // to ensure that 'self' stays alive until the end of this method.  We also
+  // make sure not to finish the balancing until all the recursion has been
+  // unwound.
+  if (self->mTerminated) {
+    PRInt32 releaseCount = 0;
+    if (self->mNativeEventScheduledDepth > self->mNativeEventCallbackDepth) {
+      releaseCount = PR_AtomicSet(&self->mNativeEventScheduledDepth,
+                                  self->mNativeEventCallbackDepth);
+    }
+    while (releaseCount-- > self->mNativeEventCallbackDepth)
+      self->Release();
+  } else {
+    // As best we can tell, every call to ProcessGeckoEvents() is triggered
+    // by a call to ScheduleNativeEventCallback().  But we've seen a few
+    // (non-reproducible) cases of double-frees that *might* have been caused
+    // by spontaneous calls (from the OS) to ProcessGeckoEvents().  So we
+    // deal with that possibility here.
+    if (PR_AtomicDecrement(&self->mNativeEventScheduledDepth) < 0) {
+      PR_AtomicSet(&self->mNativeEventScheduledDepth, 0);
+      NS_WARNING("Spontaneous call to ProcessGeckoEvents()!");
+    } else {
+      self->Release();
+    }
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -491,9 +528,11 @@ nsAppShell::ScheduleNativeEventCallback()
   if (mTerminated)
     return;
 
-  // Each AddRef() here is balanced by exactly one Release() in
-  // ProcessGeckoEvents().
+  // Each AddRef() here is normally balanced by exactly one Release() in
+  // ProcessGeckoEvents().  But there are exceptions, for which see
+  // ProcessGeckoEvents() and Exit().
   NS_ADDREF_THIS();
+  PR_AtomicIncrement(&mNativeEventScheduledDepth);
 
   // This will invoke ProcessGeckoEvents on the main thread.
   ::CFRunLoopSourceSignal(mCFRunLoopSource);
@@ -767,6 +806,18 @@ nsAppShell::Exit(void)
   if (cocoaModal)
     [NSApp stop:nsnull];
   [NSApp stop:nsnull];
+
+  // A call to Exit() just after a call to ScheduleNativeEventCallback()
+  // prevents the (normally) matching call to ProcessGeckoEvents() from
+  // happening.  If we've been called from ProcessGeckoEvents() (as usually
+  // happens), we take care of it there.  But if we have an unbalanced call
+  // to ScheduleNativeEventCallback() and ProcessGeckoEvents() isn't on the
+  // stack, we need to take care of the problem here.
+  if (!mNativeEventCallbackDepth && mNativeEventScheduledDepth) {
+    PRInt32 releaseCount = PR_AtomicSet(&mNativeEventScheduledDepth, 0);
+    while (releaseCount-- > 0)
+      NS_RELEASE_THIS();
+  }
 
   return nsBaseAppShell::Exit();
 

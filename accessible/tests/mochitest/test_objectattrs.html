@@ -1,6 +1,7 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=475006
+https://bugzilla.mozilla.org/show_bug.cgi?id=391829
 -->
 <head>
   <title>Group attributes tests</title>
@@ -29,6 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
       testAttrs("checkedOption", {"checkable" : "true"}, true); 
       testAttrs("checkedRadio", {"checkable" : "true"}, true); 
       testAttrs("checkedTreeitem", {"checkable" : "true"}, true); 
+      testAttrs("grabbed", {"grabbed" : "true"}, true);
       testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
       testAttrs("sortAscending", {"sort" : "ascending"}, true);
       testAttrs("sortDescending", {"sort" : "descending"}, true);
@@ -39,6 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
       testAttrs("live", {"live" : "polite"}, true);
       testAttrs("live2", {"live" : "polite"}, true);
       testAttrs("log", {"live" : "polite"}, true);
+      testAttrs("logAssertive", {"live" : "assertive"}, true);
       testAttrs("marquee", {"live" : "off"}, true);
       testAttrs("status", {"live" : "polite"}, true);
       testAttrs("timer", {"live" : "off"}, true);
@@ -47,13 +50,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
       testAttrs("liveChild", {"container-live" : "polite"}, true);
       testAttrs("live2Child", {"container-live" : "polite"}, true);
       testAttrs("logChild", {"container-live" : "polite"}, true);
+      testAttrs("logAssertiveChild", {"container-live" : "assertive"}, true);
       testAttrs("marqueeChild", {"container-live" : "off"}, true);
       testAttrs("statusChild", {"container-live" : "polite"}, true);
       testAttrs("timerChild", {"container-live" : "off"}, true);
 
+      // container-live-role object attribute
+      testAttrs("log", {"container-live-role" : "log"}, true);
+      testAttrs("logAssertive", {"container-live-role" : "log"}, true);
+      testAttrs("marquee", {"container-live-role" : "marquee"}, true);
+      testAttrs("status", {"container-live-role" : "status"}, true);
+      testAttrs("timer", {"container-live-role" : "timer"}, true);
+      testAttrs("logChild", {"container-live-role" : "log"}, true);
+      testAttrs("logAssertive", {"container-live-role" : "log"}, true);
+      testAttrs("logAssertiveChild", {"container-live-role" : "log"}, true);
+      testAttrs("marqueeChild", {"container-live-role" : "marquee"}, true);
+      testAttrs("statusChild", {"container-live-role" : "status"}, true);
+      testAttrs("timerChild", {"container-live-role" : "timer"}, true);
+
+      // container that has no default live attribute
+      testAttrs("liveGroup", {"live" : "polite"}, true);
+      testAttrs("liveGroupChild", {"container-live" : "polite"}, true);
+      testAttrs("liveGroup", {"container-live-role" : "group"}, true);
+      testAttrs("liveGroupChild", {"container-live-role" : "group"}, true);
+
       // html
       testAttrs("radio", {"checkable" : "true"}, true); 
       testAttrs("checkbox", {"checkable" : "true"}, true); 
+      testAttrs("draggable", {"draggable" : "true"}, true); 
 
       SimpleTest.finish();
     }
@@ -68,6 +92,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
      title="Extend nsARIAMap to capture ARIA attribute characteristics">
     Mozilla Bug 475006
   </a>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=391829"
+      title="Add support for container-live-role to object attributes">
+     Mozilla Bug 391829
+   </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -83,6 +112,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
   <div id="checkedOption" role="option" aria-checked="true"></div>
   <div id="checkedRadio" role="radio" aria-checked="true"></div>
   <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
+  <div id="grabbed" aria-grabbed="true"></div>
   <div id="dropeffect" aria-dropeffect="copy"></div>
   <div id="sortAscending" role="columnheader" aria-sort="ascending"></div>
   <div id="sortDescending" role="columnheader" aria-sort="descending"></div>
@@ -92,12 +122,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
   <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
   <div id="live2" role="marquee" aria-live="polite">excuse <div id="live2Child">me</div></div>
   <div id="log" role="log">excuse <div id="logChild">me</div></div>
+  <div id="logAssertive" role="log" aria-live="assertive">excuse <div id="logAssertiveChild">me</div></div>
   <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
   <div id="status" role="status">excuse <div id="statusChild">me</div></div>
   <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
 
+  <!-- unusual live case -->
+  <div id="liveGroup" role="group" aria-live="polite">
+    excuse <div id="liveGroupChild">me</div>
+  </div>
+
   <!-- html -->
   <input id="radio" type="radio"/>
   <input id="checkbox" type="checkbox"/>
+  <div id="draggable" draggable="true">Draggable div</div>
 </body>
 </html>

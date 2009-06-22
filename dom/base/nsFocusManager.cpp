@@ -1306,17 +1306,21 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
 
     // if an object/plug-in is being blurred, move the system focus to the
     // parent window, otherwise events will still get fired at the plugin.
-    nsIFrame* contentFrame = presShell->GetPrimaryFrameFor(content);
-    nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
-    if (objectFrame) {
-      // note that the presshell's widget is being retrieved here, not the one
-      // for the object frame.
-      nsIViewManager* vm = presShell->GetViewManager();
-      if (vm) {
-        nsCOMPtr<nsIWidget> widget;
-        vm->GetWidget(getter_AddRefs(widget));
-        if (widget)
-          widget->SetFocus(PR_TRUE);
+    // But don't do this if we are blurring due to the window being lowered,
+    // otherwise, the parent window can get raised again.
+    if (mActiveWindow) {
+      nsIFrame* contentFrame = presShell->GetPrimaryFrameFor(content);
+      nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
+      if (objectFrame) {
+        // note that the presshell's widget is being retrieved here, not the one
+        // for the object frame.
+        nsIViewManager* vm = presShell->GetViewManager();
+        if (vm) {
+          nsCOMPtr<nsIWidget> widget;
+          vm->GetWidget(getter_AddRefs(widget));
+          if (widget)
+            widget->SetFocus(PR_TRUE);
+        }
       }
     }
   }

@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: decinfo.c 15400 2008-10-15 12:10:58Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -70,12 +70,8 @@ static int oc_info_unpack(oggpack_buffer *_opb,th_info *_info){
   _info->pic_height=(ogg_uint32_t)val;
   theorapackB_read(_opb,8,&val);
   _info->pic_x=(ogg_uint32_t)val;
-  /*Note: The sense of pic_y is inverted in what we pass back to the
-     application compared to how it is stored in the bitstream.
-    This is because the bitstream uses a right-handed coordinate system, while
-     applications expect a left-handed one.*/
   theorapackB_read(_opb,8,&val);
-  _info->pic_y=_info->frame_height-_info->pic_height-(ogg_uint32_t)val;
+  _info->pic_y=(ogg_uint32_t)val;
   theorapackB_read(_opb,32,&val);
   _info->fps_numerator=(ogg_uint32_t)val;
   theorapackB_read(_opb,32,&val);
@@ -86,6 +82,11 @@ static int oc_info_unpack(oggpack_buffer *_opb,th_info *_info){
    _info->fps_numerator==0||_info->fps_denominator==0){
     return TH_EBADHEADER;
   }
+  /*Note: The sense of pic_y is inverted in what we pass back to the
+     application compared to how it is stored in the bitstream.
+    This is because the bitstream uses a right-handed coordinate system, while
+     applications expect a left-handed one.*/
+  _info->pic_y=_info->frame_height-_info->pic_height-_info->pic_y;
   theorapackB_read(_opb,24,&val);
   _info->aspect_numerator=(ogg_uint32_t)val;
   theorapackB_read(_opb,24,&val);
@@ -110,14 +111,15 @@ static int oc_comment_unpack(oggpack_buffer *_opb,th_comment *_tc){
   int  i;
   /*Read the vendor string.*/
   len=oc_unpack_length(_opb);
-  if(len<0||theorapackB_bytes(_opb)+len>_opb->storage)return TH_EBADHEADER;
+  if(len<0||len>_opb->storage-theorapackB_bytes(_opb))return TH_EBADHEADER;
   _tc->vendor=_ogg_malloc((size_t)len+1);
   oc_unpack_octets(_opb,_tc->vendor,len);
   _tc->vendor[len]='\0';
   /*Read the user comments.*/
   _tc->comments=(int)oc_unpack_length(_opb);
-  if(_tc->comments<0||_tc->comments>(LONG_MAX>>2)||
-   theorapackB_bytes(_opb)+((long)_tc->comments<<2)>_opb->storage){
+  len=_tc->comments;
+  if(len<0||len>(LONG_MAX>>2)||len<<2>_opb->storage-theorapackB_bytes(_opb)){
+    _tc->comments=0;
     return TH_EBADHEADER;
   }
   _tc->comment_lengths=(int *)_ogg_malloc(
@@ -126,7 +128,7 @@ static int oc_comment_unpack(oggpack_buffer *_opb,th_comment *_tc){
    _tc->comments*sizeof(_tc->user_comments[0]));
   for(i=0;i<_tc->comments;i++){
     len=oc_unpack_length(_opb);
-    if(len<0||theorapackB_bytes(_opb)+len>_opb->storage){
+    if(len<0||len>_opb->storage-theorapackB_bytes(_opb)){
       _tc->comments=i;
       return TH_EBADHEADER;
     }
@@ -223,12 +225,10 @@ static int oc_dec_headerin(oggpack_buffer *_opb,th_info *_info,
 int th_decode_headerin(th_info *_info,th_comment *_tc,
  th_setup_info **_setup,ogg_packet *_op){
   oggpack_buffer opb;
-  int            ret;
   if(_op==NULL)return TH_EBADHEADER;
   if(_info==NULL)return TH_EFAULT;
   theorapackB_readinit(&opb,_op->packet,_op->bytes);
-  ret=oc_dec_headerin(&opb,_info,_tc,_setup,_op);
-  return ret;
+  return oc_dec_headerin(&opb,_info,_tc,_setup,_op);
 }
 
 void th_setup_free(th_setup_info *_setup){

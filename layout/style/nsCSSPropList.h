@@ -292,7 +292,7 @@ CSS_PROP_BACKENDONLY(azimuth, azimuth, Azimuth, 0, Aural, mAzimuth, eCSSType_Val
 CSS_PROP_SHORTHAND(background, background, Background, 0)
 CSS_PROP_BACKGROUND(background-attachment, background_attachment, BackgroundAttachment, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackAttachment, eCSSType_ValueList, kBackgroundAttachmentKTable)
 CSS_PROP_BACKGROUND(-moz-background-clip, _moz_background_clip, MozBackgroundClip, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackClip, eCSSType_ValueList, kBackgroundClipKTable)
-CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mBackColor, eCSSType_ValuePair, nsnull)
+CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mBackColor, eCSSType_Value, nsnull)
 CSS_PROP_BACKGROUND(background-image, background_image, BackgroundImage, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackImage, eCSSType_ValueList, nsnull)
 CSS_PROP_BACKGROUND(-moz-background-inline-policy, _moz_background_inline_policy, MozBackgroundInlinePolicy, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mBackInlinePolicy, eCSSType_Value, kBackgroundInlinePolicyKTable)
 CSS_PROP_BACKGROUND(-moz-background-origin, _moz_background_origin, MozBackgroundOrigin, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackOrigin, eCSSType_ValueList, kBackgroundOriginKTable)

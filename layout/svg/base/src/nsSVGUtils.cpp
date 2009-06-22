@@ -51,7 +51,6 @@
 #include "nsIPresShell.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsNetUtil.h"
-#include "nsIDOMSVGRect.h"
 #include "nsFrameList.h"
 #include "nsISVGChildFrame.h"
 #include "nsContentDLF.h"
@@ -81,7 +80,6 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsIDOMSVGUnitTypes.h"
-#include "nsSVGRect.h"
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGFilterPaintCallback.h"
@@ -673,24 +671,6 @@ nsSVGUtils::UserSpace(nsIFrame *aNonSVGContext, const nsSVGLength2 *aLength)
   return aLength->GetAnimValue(aNonSVGContext);
 }
 
-void
-nsSVGUtils::TransformPoint(nsIDOMSVGMatrix *matrix, 
-                           float *x, float *y)
-{
-  nsCOMPtr<nsIDOMSVGPoint> point;
-  NS_NewSVGPoint(getter_AddRefs(point), *x, *y);
-  if (!point)
-    return;
-
-  nsCOMPtr<nsIDOMSVGPoint> xfpoint;
-  point->MatrixTransform(matrix, getter_AddRefs(xfpoint));
-  if (!xfpoint)
-    return;
-
-  xfpoint->GetX(x);
-  xfpoint->GetY(y);
-}
-
 float
 nsSVGUtils::AngleBisect(float a1, float a2)
 {
@@ -1220,6 +1200,47 @@ nsSVGUtils::HitTestRect(nsIDOMSVGMatrix *aMatrix,
   return result;
 }
 
+gfxRect
+nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
+                                float aX, float aY, float aWidth, float aHeight)
+{
+  const nsStyleDisplay* disp = aFrame->GetStyleDisplay();
+
+  if (!(disp->mClipFlags & NS_STYLE_CLIP_RECT)) {
+    NS_ASSERTION(disp->mClipFlags == NS_STYLE_CLIP_AUTO,
+                 "We don't know about this type of clip.");
+    return gfxRect(aX, aY, aWidth, aHeight);
+  }
+
+  if (disp->mOverflowX == NS_STYLE_OVERFLOW_HIDDEN ||
+      disp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
+
+    nsIntRect clipPxRect =
+      disp->mClip.ToOutsidePixels(aFrame->PresContext()->AppUnitsPerDevPixel());
+    gfxRect clipRect =
+      gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width, clipPxRect.height);
+
+    if (NS_STYLE_CLIP_RIGHT_AUTO & disp->mClipFlags) {
+      clipRect.size.width = aWidth - clipRect.X();
+    }
+    if (NS_STYLE_CLIP_BOTTOM_AUTO & disp->mClipFlags) {
+      clipRect.size.height = aHeight - clipRect.Y();
+    }
+
+    if (disp->mOverflowX != NS_STYLE_OVERFLOW_HIDDEN) {
+      clipRect.pos.x = aX;
+      clipRect.size.width = aWidth;
+    }
+    if (disp->mOverflowY != NS_STYLE_OVERFLOW_HIDDEN) {
+      clipRect.pos.y = aY;
+      clipRect.size.height = aHeight;
+    }
+     
+    return clipRect;
+  }
+  return gfxRect(aX, aY, aWidth, aHeight);
+}
+
 void
 nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
                                    gfxASurface *aSurface,
@@ -1250,7 +1271,7 @@ nsSVGUtils::CompositePatternMatrix(gfxContext *aContext,
 
   aContext->Save();
 
-  SetClipRect(aContext, aCTM, 0, 0, aWidth, aHeight);
+  SetClipRect(aContext, ConvertSVGMatrixToThebes(aCTM), gfxRect(0, 0, aWidth, aHeight));
 
   aContext->Multiply(matrix);
 
@@ -1262,16 +1283,15 @@ nsSVGUtils::CompositePatternMatrix(gfxContext *aContext,
 
 void
 nsSVGUtils::SetClipRect(gfxContext *aContext,
-                        nsIDOMSVGMatrix *aCTM, float aX, float aY,
-                        float aWidth, float aHeight)
+                        const gfxMatrix &aCTM,
+                        const gfxRect &aRect)
 {
-  gfxMatrix matrix = ConvertSVGMatrixToThebes(aCTM);
-  if (matrix.IsSingular())
+  if (aCTM.IsSingular())
     return;
 
   gfxMatrix oldMatrix = aContext->CurrentMatrix();
-  aContext->Multiply(matrix);
-  aContext->Clip(gfxRect(aX, aY, aWidth, aHeight));
+  aContext->Multiply(aCTM);
+  aContext->Clip(aRect);
   aContext->SetMatrix(oldMatrix);
 }
 

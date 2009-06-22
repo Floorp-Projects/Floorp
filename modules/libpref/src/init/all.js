@@ -2712,6 +2712,11 @@ pref("signon.SignonFileName3",              "signons3.txt"); // obsolete
 pref("signon.autofillForms",                true); 
 pref("signon.debug",                        false); // logs to Error Console
 
+// Satchel (Form Manager) prefs
+pref("browser.formfill.enable",     true);
+pref("browser.formfill.debug",      false);
+
+
 // Zoom prefs
 pref("browser.zoom.full", false);
 pref("zoom.minPercent", 30);

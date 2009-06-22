@@ -80,6 +80,13 @@ gfxRect::Contains(const gfxRect& aRect) const
          aRect.Y() >= Y() && aRect.YMost() <= YMost();
 }
 
+PRBool
+gfxRect::Contains(const gfxPoint& aPoint) const
+{
+  return aPoint.x >= X() && aPoint.x <= XMost() &&
+         aPoint.y >= Y() && aPoint.y <= YMost();
+}
+
 void
 gfxRect::Round()
 {

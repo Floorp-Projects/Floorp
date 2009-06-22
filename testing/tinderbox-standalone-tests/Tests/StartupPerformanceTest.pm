@@ -1,7 +1,7 @@
 # Startup performance test.  Time how fast it takes the browser
 # to start up.  Some help from John Morrison to get this going.
 #
-# Needs user_pref("browser.dom.window.dump.enabled", 1);
+# Needs user_pref("browser.dom.window.dump.enabled", true);
 # (or CPPFLAGS=-DMOZ_ENABLE_JS_DUMP in mozconfig since we
 # don't have profiles for tbox right now.)
 #

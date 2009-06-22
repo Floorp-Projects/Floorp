@@ -95,6 +95,20 @@
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void)ensureDataForWindow:(NSWindow*)inWindow
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!inWindow || [self dataForWindow:inWindow])
+    return;
+
+  TopLevelWindowData* windowData = [[TopLevelWindowData alloc] initWithWindow:inWindow];
+  [self setData:windowData forWindow:inWindow]; // takes ownership
+  [windowData release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 - (id)dataForWindow:(NSWindow*)inWindow
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;

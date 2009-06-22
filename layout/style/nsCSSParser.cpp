@@ -413,7 +413,6 @@ protected:
   PRBool ParseBackgroundItem(BackgroundItem& aItem, PRBool aFirstItem);
 
   PRBool ParseBackgroundList(nsCSSProperty aPropID); // a single value prop-id
-  PRBool ParseBackgroundColor(PRBool aInShorthand);
   PRBool ParseBackgroundPosition();
   PRBool ParseBoxPositionValues(nsCSSValuePair& aOut);
   PRBool ParseBorderColor();
@@ -5013,8 +5012,6 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   switch (aPropID) {  // handle shorthand or multiple properties
   case eCSSProperty_background:
     return ParseBackground();
-  case eCSSProperty_background_color:
-    return ParseBackgroundColor(PR_FALSE);
   case eCSSProperty_background_position:
     return ParseBackgroundPosition();
   case eCSSProperty_background_attachment:
@@ -5274,7 +5271,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   switch (aPropID) {
   case eCSSProperty_UNKNOWN:
   case eCSSProperty_background:
-  case eCSSProperty_background_color:
   case eCSSProperty_background_position:
   case eCSSProperty_border:
   case eCSSProperty_border_color:
@@ -5394,6 +5390,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundClipKTable);
+  case eCSSProperty_background_color:
+    return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_background_image:
     // Used only internally.
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
@@ -5943,8 +5941,7 @@ CSSParserImpl::ParseBackground()
 
   // These two are set through side-effects of ParseBackgroundItem.
   mTempData.SetPropertyBit(eCSSProperty_background_color);
-  mTempData.mColor.mBackColor.mXValue.SetColorValue(NS_RGBA(0, 0, 0, 0));
-  mTempData.mColor.mBackColor.mYValue.SetColorValue(NS_RGBA(0, 0, 0, 0));
+  mTempData.mColor.mBackColor.SetColorValue(NS_RGBA(0, 0, 0, 0));
 
   BackgroundItem bgitem;
   nsCSSValuePairList *positionHead = nsnull, **positionTail = &positionHead;
@@ -6068,7 +6065,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         } else {
           val.SetInitialValue();
         }
-        mTempData.mColor.mBackColor.SetBothValuesTo(val);
+        mTempData.mColor.mBackColor = val;
         aItem.mImage = val;
         aItem.mRepeat = val;
         aItem.mAttachment = val;
@@ -6152,7 +6149,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         if (haveColor)
           return PR_FALSE;
         haveColor = PR_TRUE;
-        if (!ParseBackgroundColor(PR_TRUE)) {
+        if (!ParseSingleValueProperty(mTempData.mColor.mBackColor,
+                                      eCSSProperty_background_color)) {
           return PR_FALSE;
         }
         aItem.mLastItem = PR_TRUE;
@@ -6177,9 +6175,10 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
       if (haveColor)
         return PR_FALSE;
       haveColor = PR_TRUE;
-      // Note: ParseBackgroundColor parses 'inherit' and 'initial', but
+      // Note: This parses 'inherit' and 'initial', but
       // we've already checked for them, so it's ok.
-      if (!ParseBackgroundColor(PR_TRUE)) {
+      if (!ParseSingleValueProperty(mTempData.mColor.mBackColor,
+                                    eCSSProperty_background_color)) {
         return PR_FALSE;
       }
       aItem.mLastItem = PR_TRUE;
@@ -6229,32 +6228,6 @@ CSSParserImpl::ParseBackgroundList(nsCSSProperty aPropID)
   }
   delete head;
   return PR_FALSE;
-}
-
-PRBool
-CSSParserImpl::ParseBackgroundColor(PRBool aInShorthand)
-{
-  nsCSSValuePair &backColor = mTempData.mColor.mBackColor;
-  mTempData.SetPropertyBit(eCSSProperty_background_color);
-  if (!ParseVariant(backColor.mXValue,
-                    aInShorthand ? VARIANT_COLOR : VARIANT_HC, nsnull)) {
-    return PR_FALSE;
-  }
-  backColor.mYValue = backColor.mXValue;
-  switch (backColor.mXValue.GetUnit()) {
-    case eCSSUnit_Inherit:
-    case eCSSUnit_Initial:
-      NS_ASSERTION(!aInShorthand,
-                   "should not get inherit or initial in shorthand");
-      return ExpectEndProperty(); // we're done
-    default:
-      break;
-  }
-
-  // Ignore success, since the value is optional.
-  ParseVariant(backColor.mYValue, VARIANT_COLOR, nsnull);
-
-  return aInShorthand || ExpectEndProperty();
 }
 
 // This function is very similar to ParseBackgroundList.

@@ -63,6 +63,7 @@
 
 + (WindowDataMap*)sharedWindowDataMap;
 
+- (void)ensureDataForWindow:(NSWindow*)inWindow;
 - (id)dataForWindow:(NSWindow*)inWindow;
 
 // set data for a given window. inData is retained (and any previously set data

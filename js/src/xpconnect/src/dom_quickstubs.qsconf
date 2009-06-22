@@ -181,6 +181,8 @@ members = [
     'nsIDOMNode.attributes',
     'nsIDOMNodeList.item',
     'nsIDOMNodeList.length',
+    'nsIDOMNodeSelector.querySelector',
+    'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
     'nsIDOM3Document.documentURI',
     'nsIDOM3Document.adoptNode',

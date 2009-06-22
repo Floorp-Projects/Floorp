@@ -644,13 +644,14 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
    */
   for (i = 0; i < me->num_tracks; i++) {
     if (serialno == me->decode_data[i]->serialno) {
+      int ret = 0;
       
       /*
        * call appropriate callback
        */
       if (callbacks[content_type].callback != NULL) {
-        callbacks[content_type].callback(oggz, op, serialno,
-                                          me->decode_data[i]);
+        ret = callbacks[content_type].callback(oggz, op, serialno,
+                                               me->decode_data[i]);
       }
 
       if 
@@ -677,7 +678,7 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
         me->all_tracks_initialised = 1;
       }
 
-      return 0;
+      return ret < 0 ? OGGZ_ERR_HOLE_IN_DATA : ret;
     }
   }
 
@@ -701,8 +702,8 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
    * call appropriate callback
    */
   if (callbacks[content_type].callback != NULL) {
-    callbacks[content_type].callback(oggz, op, serialno,
-                                          me->decode_data[me->num_tracks - 1]);
+    return callbacks[content_type].callback(oggz, op, serialno,
+                                            me->decode_data[me->num_tracks - 1]);
   }
 
   return 0;

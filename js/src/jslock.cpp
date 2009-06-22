@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -443,7 +443,7 @@ ShareTitle(JSContext *cx, JSTitle *title)
  * to do this because such strings will soon be available to multiple threads,
  * so their buffers can't be realloc'd any longer in js_ConcatStrings, and
  * their members can't be modified by js_ConcatStrings, js_UndependString or
- * js_MinimizeDependentStrings.
+ * MinimizeDependentStrings.
  *
  * The last bit of work done by this function nulls title->ownercx and updates
  * rt->sharedTitles.
@@ -1420,6 +1420,17 @@ js_UnlockObj(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     js_UnlockTitle(cx, &OBJ_SCOPE(obj)->title);
+}
+
+bool
+js_LockObjIfShape(JSContext *cx, JSObject *obj, uint32 shape)
+{
+    JS_ASSERT(OBJ_SCOPE(obj)->title.ownercx != cx);
+    js_LockObj(cx, obj);
+    if (OBJ_SHAPE(obj) == shape)
+        return true;
+    js_UnlockObj(cx, obj);
+    return false;
 }
 
 void
