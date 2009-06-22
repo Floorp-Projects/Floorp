@@ -5564,13 +5564,16 @@ js_IterateScriptFragments(JSContext* cx, JSScript* script, FragmentAction action
             /* Disable future use of any script-associated VMFragment.*/
             if (JS_UPTRDIFF(frag->ip, script->code) < script->length) {
                 JS_ASSERT(frag->root == frag);
-                debug_only_v(nj_dprintf("Disconnecting VMFragment %p "
-                                        "with ip %p, in range [%p,%p).\n",
-                                        (void*)frag, frag->ip, script->code,
-                                        script->code + script->length));
                 VMFragment* next = frag->next;
-                action(cx, tm, frag);
-                *f = next;
+                if (action(cx, tm, frag)) {
+                    debug_only_v(nj_dprintf("Disconnecting VMFragment %p "
+                                            "with ip %p, in range [%p,%p).\n",
+                                            (void*)frag, frag->ip, script->code,
+                                            script->code + script->length));
+                    *f = next;
+                } else {
+                    f = &((*f)->next);
+                }
             } else {
                 f = &((*f)->next);
             }
@@ -5578,15 +5581,19 @@ js_IterateScriptFragments(JSContext* cx, JSScript* script, FragmentAction action
     }
 }
 
-static void trashTreeAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+static bool
+trashTreeAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
 {
     for (Fragment *p = frag; p; p = p->peer)
         js_TrashTree(cx, p);
+    return false;
 }
 
-static void clearFragmentAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
+static bool
+clearFragmentAction(JSContext* cx, JSTraceMonitor* tm, Fragment* frag)
 {
     tm->fragmento->clearFragment(frag);
+    return true;
 }
 
 JS_REQUIRES_STACK void
