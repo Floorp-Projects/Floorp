@@ -91,8 +91,6 @@
 #include "nsStyleStructInlines.h"
 #include "nsIAppShell.h"
 #include "prenv.h"
-#include "nsIPrivateDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -1934,31 +1932,26 @@ nsPresContext::UserFontSetUpdated()
 void
 nsPresContext::FireDOMPaintEvent()
 {
-  nsPIDOMWindow* ourWindow = mDocument->GetWindow();
+  nsCOMPtr<nsPIDOMWindow> ourWindow = mDocument->GetWindow();
   if (!ourWindow)
     return;
 
-  nsCOMPtr<nsIDOMEventTarget> dispatchTarget = do_QueryInterface(ourWindow);
-  nsCOMPtr<nsIDOMEventTarget> eventTarget = dispatchTarget;
+  nsISupports* eventTarget = ourWindow;
   if (mSameDocDirtyRegion.IsEmpty() && !IsChrome()) {
     // Don't tell the window about this event, it should not know that
     // something happened in a subdocument. Tell only the chrome event handler.
     // (Events sent to the window get propagated to the chrome event handler
     // automatically.)
-    dispatchTarget = do_QueryInterface(ourWindow->GetChromeEventHandler());
-    if (!dispatchTarget) {
+    eventTarget = ourWindow->GetChromeEventHandler();
+    if (!eventTarget) {
       return;
     }
   }
   // Events sent to the window get propagated to the chrome event handler
   // automatically.
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMNotifyPaintEvent(getter_AddRefs(event), this, nsnull,
-                            NS_AFTERPAINT,
-                            &mSameDocDirtyRegion, &mCrossDocDirtyRegion);
-  nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(event);
-  if (!pEvent) return;
 
+  nsNotifyPaintEvent event(PR_TRUE, NS_AFTERPAINT, mSameDocDirtyRegion,
+                           mCrossDocDirtyRegion);
   // Empty our regions now in case dispatching the event causes more damage
   // (hopefully it won't, or we're likely to get an infinite loop! At least
   // it won't be blocking app execution though).
@@ -1967,9 +1960,8 @@ nsPresContext::FireDOMPaintEvent()
   // Even if we're not telling the window about the event (so eventTarget is
   // the chrome event handler, not the window), the window is still
   // logically the event target.
-  pEvent->SetTarget(eventTarget);
-  pEvent->SetTrusted(PR_TRUE);
-  nsEventDispatcher::DispatchDOMEvent(dispatchTarget, nsnull, event, this, nsnull);
+  event.target = do_QueryInterface(ourWindow);
+  nsEventDispatcher::Dispatch(eventTarget, this, &event);
 }
 
 static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
