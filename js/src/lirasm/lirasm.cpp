@@ -343,7 +343,7 @@ assemble_call(string const &op,
         // Select return type from opcode.
         // FIXME: callh needs special treatment currently
         // missing from here.
-        if (opcode == LIR_call || opcode == LIR_calli)
+        if (opcode == LIR_call)
             ci->_argtypes |= ARGSIZE_LO;
         else
             ci->_argtypes |= ARGSIZE_F;
@@ -546,10 +546,8 @@ assemble(istream &in,
             break;
 
         case LIR_call:
-        case LIR_calli:
         case LIR_callh:
         case LIR_fcall:
-        case LIR_fcalli:
             ins = assemble_call(op, opcode, toks, lir,
                                 labels, callinfos, line);
             break;
@@ -671,10 +669,18 @@ main(int argc, char **argv)
         has_flag(args, "--sse");
 #endif
     bool execute = has_flag(args, "--execute");
+    bool verbose = has_flag(args, "-v");
+
+#if defined NANOJIT_IA32
+    if (verbose && !execute) {
+        cerr << "usage: " << prog << " [--sse | --execute [-v]] <filename>" << endl;
+        exit(1);
+    }
+#endif
 
     if (args.empty()) {
 #if defined NANOJIT_IA32
-        cerr << "usage: " << prog << " [--sse] [--execute] <filename>" << endl;
+        cerr << "usage: " << prog << " [--sse | --execute [-v]] <filename>" << endl;
 #else
         cerr << "usage: " << prog << " <filename>" << endl;
 #endif
@@ -706,7 +712,8 @@ main(int argc, char **argv)
 
     LirWriter *w = expr_filter;
 #ifdef DEBUG
-    w = verb;
+    if (verbose)
+        w = verb;
 #endif
 
     ifstream in(args[0].c_str());

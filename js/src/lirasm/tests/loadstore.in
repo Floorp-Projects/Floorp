@@ -1,0 +1,9 @@
+ptr= alloc 8
+five = int 5
+sti five ptr 0
+three= int 3
+sti three ptr 4
+v= ld ptr 0
+u= ld ptr 4
+res= add u v
+ret res
