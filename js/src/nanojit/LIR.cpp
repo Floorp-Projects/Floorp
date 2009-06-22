@@ -98,12 +98,12 @@ namespace nanojit
 #endif /* NJ_PROFILE */
 
 	// LCompressedBuffer
-	LirBuffer::LirBuffer(Fragmento* frago, const CallInfo* functions)
+	LirBuffer::LirBuffer(Fragmento* frago)
 		: _frago(frago),
 #ifdef NJ_VERBOSE
 		  names(NULL),
 #endif
-		  _functions(functions), abi(ABI_FASTCALL),
+		  abi(ABI_FASTCALL),
 		  state(NULL), param1(NULL), sp(NULL), rp(NULL),
 		  _pages(frago->core()->GetGC())
 	{
@@ -533,7 +533,7 @@ namespace nanojit
 #endif
 	}
 
-    bool LIns::isCse(const CallInfo *functions) const
+    bool LIns::isCse() const
     { 
         return nanojit::isCseOpcode(firstWord.code) || (isCall() && callInfo()->_cse);
     }
@@ -1531,7 +1531,7 @@ namespace nanojit
             total++;
 
             // first handle side-effect instructions
-			if (!i->isCse(frag->lirbuf->_functions))
+			if (!i->isCse())
 			{
 				live.add(i,0);
                 if (i->isGuard())
@@ -1968,15 +1968,15 @@ namespace nanojit
 		return out->insCall(ci, args);
 	}
 
-	CseReader::CseReader(LirFilter *in, LInsHashSet *exprs, const CallInfo *functions)
-		: LirFilter(in), exprs(exprs), functions(functions)
+	CseReader::CseReader(LirFilter *in, LInsHashSet *exprs)
+		: LirFilter(in), exprs(exprs)
 	{}
 
 	LInsp CseReader::read()
 	{
 		LInsp i = in->read();
 		if (i) {
-			if (i->isCse(functions))
+			if (i->isCse())
 				exprs->replace(i);
 		}
 		return i;
