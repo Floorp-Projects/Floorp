@@ -157,8 +157,7 @@ InputHandler.prototype = {
     if (aEvent.type == "click") {
       if (this._allowNextClick) {
         this._allowNextClick = false;
-      }
-      else {
+      } else {
         aEvent.stopPropagation();
         aEvent.preventDefault();
         return;
@@ -167,8 +166,7 @@ InputHandler.prototype = {
 
     if (this._grabbed) {
       this._grabbed.handleEvent(aEvent);
-    }
-    else {
+    } else {
       for each(mod in this._modules) {
         mod.handleEvent(aEvent);
         // if event got grabbed, don't pass to other handlers
@@ -356,8 +354,7 @@ ChromeInputModule.prototype = {
     // keep an eye out for mouseups that didn't start with a mousedown
     if (!(this._clickEvents.length % 2)) {
       this._clickEvents = [];
-    }
-    else {
+    } else {
       let clickEvent = document.createEvent("MouseEvent");
       clickEvent.initMouseEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
                                 aEvent.view, aEvent.detail,
@@ -459,6 +456,10 @@ KineticData.prototype = {
     this._speedY = 0;
   },
 
+  isActive: function isActive() {
+    return (this._kineticTimer != null);
+  },
+
   _startKineticTimer: function _startKineticTimer() {
     let callback = {
       _self: this,
@@ -542,8 +543,14 @@ KineticData.prototype = {
   },
 
   endKinetic: function endKinetic() {
+
+    if (!this.isActive()) {
+      this.reset();
+      return;
+    }
+
+    Browser.canvasBrowser.endPanning();
     ws.dragStop();
-    this.reset();
 
     // Make sure that sidebars don't stay partially open
     // XXX this should live somewhere else
@@ -612,6 +619,8 @@ ContentPanningModule.prototype = {
         this._onMouseUp(aEvent);
         break;
     }
+
+    this.reset();
   },
 
 
@@ -619,10 +628,14 @@ ContentPanningModule.prototype = {
    * timeouts we may have.
    */
   cancelPending: function cancelPending() {
+    if (this._kineticData.isActive()) {
+      this._kineticData.endKinetic();
+    } else {
+      // make sure we're out of panning modes in case we weren't kinetic yet
+      ws.dragStop();
+      Browser.canvasBrowser.endPanning();
+    }
     let dragData = this._dragData;
-    // stop scrolling, pass last coordinate we used
-    this._kineticData.endKinetic(dragData.sX, dragData.sY);
-    this._owner.ungrab(this);
     dragData.reset();
   },
 
@@ -647,7 +660,8 @@ ContentPanningModule.prototype = {
 
     // start kinetic scrolling here for canvas only
     if (!this._kineticData.startKinetic(sX, sY))
-      this._kineticData.endKinetic(sX, sY);
+      this._kineticData.endKinetic();
+
     dragData.reset();
   },
 
@@ -667,8 +681,8 @@ ContentPanningModule.prototype = {
   _onMouseDown: function _onMouseDown(aEvent) {
     let dragData = this._dragData;
     // if we're in the process of kineticly scrolling, stop and start over
-    if (this._kineticData._kineticTimer != null) {
-      this._kineticData.endKinetic(aEvent.screenX, aEvent.screenY);
+    if (this._kineticData.isActive()) {
+      this._kineticData.endKinetic();
       this._owner.ungrab(this);
       dragData.reset();
     }
@@ -690,7 +704,7 @@ ContentPanningModule.prototype = {
 
   _onMouseMove: function _onMouseMove(aEvent) {
     // don't do anything if we're in the process of kineticly scrolling
-    if (this._kineticData._kineticTimer != null)
+    if (this._kineticData.isActive())
       return;
 
     let dragData = this._dragData;
@@ -756,8 +770,7 @@ ContentClickingModule.prototype = {
 
         if (this._clickTimeout == -1) {
           this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._sendSingleClick(); }, 400, this);
-        }
-        else {
+        } else {
           window.clearTimeout(this._clickTimeout);
           this._clickTimeout = -1;
           this._sendDoubleClick();
