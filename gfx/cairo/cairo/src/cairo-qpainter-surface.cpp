@@ -67,12 +67,38 @@
 
 #if 0
 #define D(x)  x
+
+static const char *
+_opstr (cairo_operator_t op)
+{
+    const char *ops[] = {
+        "CLEAR",
+        "SOURCE",
+        "OVER",
+        "IN",
+        "OUT",
+        "ATOP",
+        "DEST",
+        "DEST_OVER",
+        "DEST_IN",
+        "DEST_OUT",
+        "DEST_ATOP",
+        "XOR",
+        "ADD",
+        "SATURATE"
+    };
+        
+    if (op < CAIRO_OPERATOR_CLEAR || op > CAIRO_OPERATOR_SATURATE)
+        return "(\?\?\?)";
+        
+    return ops[op];
+}
 #else
 #define D(x) do { } while(0)
 #endif
 
 #if 0
-#define DP(x) if (g_dump_path) { x; }
+#define DP(x) x
 #else
 #define DP(x) do { } while(0)
 #endif
@@ -130,9 +156,9 @@ _cairo_qpainter_surface_paint (void *abstract_surface,
                                cairo_rectangle_int_t * rect);
 
 /* some debug timing stuff */
-static int g_dump_path = 1;
-static struct timeval timer_start_val;
 #if 0
+static struct timeval timer_start_val;
+
 static void tstart() {
     gettimeofday(&timer_start_val, NULL);
 }
@@ -155,31 +181,6 @@ static void tend(const char *what = NULL) { }
 /**
  ** Helper methods
  **/
-static const char *
-_opstr (cairo_operator_t op)
-{
-    const char *ops[] = {
-        "CLEAR",
-        "SOURCE",
-        "OVER",
-        "IN",
-        "OUT",
-        "ATOP",
-        "DEST",
-        "DEST_OVER",
-        "DEST_IN",
-        "DEST_OUT",
-        "DEST_ATOP",
-        "XOR",
-        "ADD",
-        "SATURATE"
-    };
-
-    if (op < CAIRO_OPERATOR_CLEAR || op > CAIRO_OPERATOR_SATURATE)
-        return "(\?\?\?)";
-
-    return ops[op];
-}
 
 static QPainter::CompositionMode
 _qpainter_compositionmode_from_cairo_op (cairo_operator_t op)
@@ -1834,7 +1835,7 @@ cairo_qpainter_surface_get_image (cairo_surface_t *surface)
 void
 _cairo_image_surface_write_to_ppm (cairo_image_surface_t *isurf, const char *fn)
 {
-    char *fmt;
+    const char *fmt;
     if (isurf->format == CAIRO_FORMAT_ARGB32 || isurf->format == CAIRO_FORMAT_RGB24)
         fmt = "P6";
     else if (isurf->format == CAIRO_FORMAT_A8)
