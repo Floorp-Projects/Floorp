@@ -592,7 +592,7 @@ fbComposite_x8r8g8b8_src_r5g6b5_internal_armv610
     and	r4, r4, #64512	; 0xfc00
     orr	lr, lr, lr, lsr #5
     orr	r4, lr, r4, lsr #5
-    strh	r4, [r0, #2]
+    strh	r4, [r0], #2
 fbComposite_x8r8g8b8_src_r5g6b5_internal_armv62
     tst	r0, #4	; 0x4
     beq	fbComposite_x8r8g8b8_src_r5g6b5_internal_armv63
@@ -721,7 +721,7 @@ fbComposite_x8r8g8b8_src_r5g6b5_internal_armv68
     and	r4, r4, #64512	; 0xfc00
     orr	lr, lr, lr, lsr #5
     orr	r4, lr, r4, lsr #5
-    strh	r4, [r0, #2]
+    strh	r4, [r0], #2
 fbComposite_x8r8g8b8_src_r5g6b5_internal_armv69
     ldr	r4, [sp, #40]
     ldr	r5, [sp, #44]
@@ -779,7 +779,7 @@ fbCompositeSrc_x888x0565arm9
     and	r3, lr, r3, lsr #3
     orr	r2, r3, r2, lsr #5
     orr	r2, r2, r3, lsr #5
-    strh	r2, [r0, #2]
+    strh	r2, [r0], #2
 fbCompositeSrc_x888x0565arm10
     mov	r9, r1
     mov	r4, r0
@@ -809,7 +809,7 @@ fbCompositeSrc_x888x0565arm5
     and	r3, lr, r3, lsr #3
     orr	r2, r3, r2, lsr #5
     orr	r2, r2, r3, lsr #5
-    strh	r2, [r4, #2]
+    strh	r2, [r4], #2
 fbCompositeSrc_x888x0565arm7
     cmp	r5, #0	; 0x0
     add	r1, r0, r8
