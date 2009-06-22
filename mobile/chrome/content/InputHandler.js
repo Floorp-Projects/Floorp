@@ -543,7 +543,6 @@ KineticData.prototype = {
   },
 
   endKinetic: function endKinetic() {
-
     if (!this.isActive()) {
       this.reset();
       return;
@@ -570,11 +569,13 @@ KineticData.prototype = {
       else
         ws.panBy(-rightVis * w, 0, true);
     }
-    
+
     // unfreeze the toolbar if we have hide the sidebar
     let visibleNow = ws.isWidgetVisible("tabs-container") || ws.isWidgetVisible("browser-controls");
     if (!visibleNow)
       ws.unfreeze('toolbar-main')
+
+    this.reset();
   },
 
   addData: function addData(sx, sy) {
@@ -619,8 +620,6 @@ ContentPanningModule.prototype = {
         this._onMouseUp(aEvent);
         break;
     }
-
-    this.reset();
   },
 
 
