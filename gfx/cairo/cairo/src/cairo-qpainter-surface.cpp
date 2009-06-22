@@ -88,34 +88,35 @@
 typedef struct {
     cairo_surface_t base;
 
-    QPainter *p;
-
-    /* The pixmap/image constructors will store their objects here */
-    QPixmap *pixmap;
-    QImage *image;
-
-    QRect window;
-
     bool has_clipping;
-    QRect clip_bounds;
-
     // if this is true, calls to intersect_clip_path won't
     // update the clip_bounds rect
     bool no_update_clip_bounds;
 
-    cairo_image_surface_t *image_equiv;
+    cairo_bool_t supports_porter_duff;
 
 #if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     /* temporary, so that we can share the xlib surface's glyphs code */
-    cairo_surface_t *xlib_equiv;
     bool xlib_has_clipping;
+    cairo_surface_t *xlib_equiv;
     QRect xlib_clip_bounds;
     int xlib_clip_serial;
     QPoint redir_offset;
 #endif
-
-    cairo_bool_t supports_porter_duff;
+    
+    QPainter *p;
+    
+    /* The pixmap/image constructors will store their objects here */
+    QPixmap *pixmap;
+    QImage *image;
+    
+    QRect window;
+    
+    QRect clip_bounds;
+        
+    cairo_image_surface_t *image_equiv;
 } cairo_qpainter_surface_t;
+
 
 /* Will be set to TRUE if we ever try to create a QPixmap and end
  * up with one without an alpha channel.
