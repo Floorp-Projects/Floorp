@@ -163,13 +163,6 @@ namespace nanojit
 		return page;
 	}
 	
-    LInsp LirBuffer::lastWritten()
-	{
-        // Make sure there is a most-recently-written instruction.
-        NanoAssert(_unused >= pageDataStart(_unused));
-        return (LInsp)(_unused - sizeof(LIns));     // step back one instruction
-	}
-
     // Allocate a new page, and write the first instruction to it -- a skip
     // linking to last instruction of the previous page.
     void LirBuffer::moveToNewPage(uintptr_t addrOfLastLInsOnCurrentPage)
@@ -202,8 +195,10 @@ namespace nanojit
 
         // If the instruction won't fit on the current page, move to the next
         // page.
-        if (_unused + szB - 1 > pageBottom(_unused))
-            moveToNewPage((uintptr_t)lastWritten());
+        if (_unused + szB - 1 > pageBottom(_unused)) {
+            uintptr_t addrOfLastLInsOnPage = _unused - sizeof(LIns);
+            moveToNewPage(addrOfLastLInsOnPage);
+        }
 
         // We now know that we are on a page that has the requested amount of
         // room: record the starting address of the requested space and bump
@@ -349,9 +344,19 @@ namespace nanojit
 			return 0;
         uintptr_t i = uintptr_t(cur);
         LOpcode iop = ((LInsp)i)->opcode();
-        // We pass over skip instructions below, which means we shouldn't see
-        // one here.
+
+        // We pass over skip instructions below.  Also, the last instruction
+        // for a fragment shouldn't be a skip(*).  Therefore we shouldn't see
+        // a skip here.
+        //
+        // (*) Actually, if the last *inserted* instruction exactly fills up a
+        // page, a new page will be created, and thus the last *written*
+        // instruction will be a skip -- the one needed for the cross-page
+        // link.  But the last *inserted* instruction is what is recorded and
+        // used to initialise each LirReader, and that is what is seen here,
+        // and therefore this assertion holds.
         NanoAssert(iop != LIR_skip);
+
 		do
 		{
 			switch (iop)
@@ -1509,24 +1514,24 @@ namespace nanojit
 		}
 	};
 
-    void live(GC *gc, LirBuffer *lirbuf)
+    void live(GC *gc, Fragment *frag)
 	{
 		// traverse backwards to find live exprs and a few other stats.
 
 		LiveTable live(gc);
 		uint32_t exits = 0;
-        LirReader br(lirbuf);
-		StackFilter sf(&br, gc, lirbuf, lirbuf->sp);
-		StackFilter r(&sf, gc, lirbuf, lirbuf->rp);
+        LirReader br(frag->lastIns);
+		StackFilter sf(&br, gc, frag->lirbuf, frag->lirbuf->sp);
+		StackFilter r(&sf, gc, frag->lirbuf, frag->lirbuf->rp);
         int total = 0;
-        if (lirbuf->state)
-            live.add(lirbuf->state, r.pos());
+        if (frag->lirbuf->state)
+            live.add(frag->lirbuf->state, r.pos());
 		for (LInsp i = r.read(); i != 0; i = r.read())
 		{
             total++;
 
             // first handle side-effect instructions
-			if (!i->isCse(lirbuf->_functions))
+			if (!i->isCse(frag->lirbuf->_functions))
 			{
 				live.add(i,0);
                 if (i->isGuard())
@@ -1566,7 +1571,7 @@ namespace nanojit
         nj_dprintf("side exits %u\n", exits);
 
 		// print live exprs, going forwards
-		LirNameMap *names = lirbuf->names;
+		LirNameMap *names = frag->lirbuf->names;
         bool newblock = true;
 		for (int j=live.retired.size()-1; j >= 0; j--) 
         {
@@ -1992,7 +1997,7 @@ namespace nanojit
 		verbose_only( assm->_outputCache = &asmOutput; )
 
 		verbose_only(if (assm->_verbose && core->config.verbose_live)
-			live(gc, triggerFrag->lirbuf);)
+			live(gc, triggerFrag);)
 
 		bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
 		RegAllocMap regMap(gc);
