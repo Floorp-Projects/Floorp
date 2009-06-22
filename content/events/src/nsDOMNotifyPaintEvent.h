@@ -46,11 +46,9 @@ class nsDOMNotifyPaintEvent : public nsIDOMNotifyPaintEvent,
                               public nsDOMEvent
 {
 public:
-  nsDOMNotifyPaintEvent(nsPresContext*  aPresContext,
-                        nsEvent*        aEvent,
-                        PRUint32        aEventType,
-                        const nsRegion* aSameOriginRegion,
-                        const nsRegion* aCrossDocRegion);
+  nsDOMNotifyPaintEvent(nsPresContext* aPresContext,
+                        nsNotifyPaintEvent* aEvent);
+  virtual ~nsDOMNotifyPaintEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -61,9 +59,6 @@ public:
 
 private:
   nsRegion GetRegion();
-
-  nsRegion mSameDocRegion;
-  nsRegion mCrossDocRegion;
 };
 
 #endif // nsDOMNotifyPaintEvent_h_

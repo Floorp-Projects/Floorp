@@ -53,7 +53,6 @@ class nsIDOMEventTarget;
 class nsIDOMEvent;
 class nsEvent;
 class nsCommandEvent;
-class nsRegion;
 
 class nsIPrivateDOMEvent : public nsISupports
 {
@@ -111,11 +110,7 @@ NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresCont
 nsresult
 NS_NewDOMProgressEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsEvent* aEvent);
 nsresult
-NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext,
-                          nsEvent* aEvent,
-                          PRUint32 aEventType = 0,
-                          const nsRegion* aSameOriginRegion = nsnull,
-                          const nsRegion* aCrossDocRegion = nsnull);
+NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsNotifyPaintEvent* aEvent);
 nsresult
 NS_NewDOMSimpleGestureEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsSimpleGestureEvent* aEvent);
 #endif // nsIPrivateDOMEvent_h__
