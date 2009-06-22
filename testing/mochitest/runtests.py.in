@@ -438,11 +438,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     testURL = A11YTESTS_URL
     if options.testPath:
       urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
-    # Force leak threshold. (bug 472773)
-    if automation.IS_MAC and options.leakThreshold == 0:
-      options.leakThreshold = 68
-      automation.log.info("INFO | runtests.py | setting leak threshold to %d",
-                          options.leakThreshold)
   elif options.browserChrome:
     testURL = "about:blank"
 
