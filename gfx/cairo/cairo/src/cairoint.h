@@ -2193,6 +2193,12 @@ _cairo_image_surface_set_clip_region (void *abstract_surface,
 cairo_private cairo_image_surface_t *
 _cairo_image_surface_coerce (cairo_image_surface_t	*surface,
 			     cairo_format_t		 format);
+cairo_private void
+_cairo_image_surface_span_render_row (int				 y,
+				      const cairo_half_open_span_t	 *spans,
+				      unsigned				 num_spans,
+				      cairo_image_surface_t              *mask,
+				      const cairo_composite_rectangles_t *rects);
 
 cairo_private cairo_image_transparency_t
 _cairo_image_analyze_transparency (cairo_image_surface_t      *image);
