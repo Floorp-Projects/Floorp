@@ -1092,7 +1092,7 @@ Assembler::LD32_nochk(Register r, int32_t imm)
         return;
     }
 
-    if (AvmCore::config.thumb2) {
+    if (AvmCore::config.thumb2 && (r != PC)) {
         // On ARMv6T2 and above, we can just emit a movw/movt pair.
         // Note: The movt is only necessary if the high 16 bits are non-zero.
         if (((imm >> 16) & 0xFFFF) != 0)
