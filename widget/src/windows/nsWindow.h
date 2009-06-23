@@ -339,6 +339,8 @@ protected:
   virtual void            OnDestroy();
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
+  PRBool                  OnPaintImageDDraw16();
+
   virtual PRBool          OnResize(nsIntRect &aWindowRect);
   
   void                    SetupModKeyState();
