@@ -1036,21 +1036,6 @@ nsParser::GetContentSink()
 }
 
 /**
- *  Retrieve parsemode from topmost parser context
- *
- *  @return  parsemode
- */
-NS_IMETHODIMP_(nsDTDMode)
-nsParser::GetParseMode()
-{
-  if (mParserContext) {
-    return mParserContext->mDTDMode;
-  }
-  NS_NOTREACHED("no parser context");
-  return eDTDMode_unknown;
-}
-
-/**
  * Determine what DTD mode (and thus what layout nsCompatibility mode)
  * to use for this document based on the first chunk of data received
  * from the network (each parsercontext can have its own mode).  (No,

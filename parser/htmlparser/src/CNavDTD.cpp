@@ -209,7 +209,7 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
     
-    result = aSink->WillBuildModel();
+    result = aSink->WillBuildModel(GetMode());
     
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
     START_TIMER();
@@ -463,6 +463,12 @@ NS_IMETHODIMP_(PRInt32)
 CNavDTD::GetType() 
 { 
   return NS_IPARSER_FLAG_HTML; 
+}
+
+NS_IMETHODIMP_(nsDTDMode)
+CNavDTD::GetMode() const
+{
+  return mDTDMode;
 }
 
 /**

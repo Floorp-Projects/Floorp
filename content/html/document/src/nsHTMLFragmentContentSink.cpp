@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIFragmentContentSink.h"
+#include "nsIDTD.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIParserService.h"
@@ -88,7 +89,7 @@ public:
 
   // nsIContentSink
   NS_IMETHOD WillParse(void) { return NS_OK; }
-  NS_IMETHOD WillBuildModel(void);
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
   NS_IMETHOD DidBuildModel(void);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
@@ -260,7 +261,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHTMLFragmentContentSink)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP
-nsHTMLFragmentContentSink::WillBuildModel(void)
+nsHTMLFragmentContentSink::WillBuildModel(nsDTDMode)
 {
   if (mRoot) {
     return NS_OK;
