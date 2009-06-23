@@ -339,7 +339,9 @@ protected:
   virtual void            OnDestroy();
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
+#ifdef CAIRO_HAS_DDRAW_SURFACE
   PRBool                  OnPaintImageDDraw16();
+#endif
 
   virtual PRBool          OnResize(nsIntRect &aWindowRect);
   
