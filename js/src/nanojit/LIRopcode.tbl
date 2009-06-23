@@ -102,7 +102,11 @@ OPDEF(ji,       23, 2) // jump indirect
 
 OPDEF(int,      24, 0) // constant 32-bit integer
 OPDEF(cmov,     25, 2) // conditional move (op1=cond, op2=cond(iftrue,iffalse))
+#if defined(NANOJIT_64BIT)
+OPDEF(callh,    26, 0)
+#else
 OPDEF(callh,    26, 1)
+#endif
 
 /*
  * feq though fge must only be used on float arguments.  They return integers.
