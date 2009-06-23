@@ -882,11 +882,11 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
     nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(window));
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
     if (dsti) {
-      dsti->GetParent(getter_AddRefs(dsti));
-      nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(dsti);
+      nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+      dsti->GetParent(getter_AddRefs(parentDsti));
+      nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(parentDsti);
       if (parentWindow)
         parentWindow->SetFocusedNode(nsnull);
-
     }
 
     mFocusedWindow = window;
@@ -985,8 +985,9 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
       return;
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(docShell);
-    dsti->GetParent(getter_AddRefs(dsti));
-    docShell = do_QueryInterface(dsti);
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+    dsti->GetParent(getter_AddRefs(parentDsti));
+    docShell = do_QueryInterface(parentDsti);
   }
 
   // if the new element is in the same window as the currently focused element 
@@ -1050,7 +1051,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
 
       if (!Blur(currentIsSameOrAncestor ? mFocusedWindow.get() : nsnull,
                 commonAncestor, !isElementInFocusedWindow))
-      return;
+        return;
     }
 
     Focus(newWindow, contentToFocus, aFlags, !isElementInFocusedWindow,
@@ -1097,7 +1098,9 @@ nsFocusManager::IsSameOrAncestor(nsPIDOMWindow* aPossibleAncestor,
   while (dsti) {
     if (dsti == ancestordsti)
       return PR_TRUE;
-    dsti->GetParent(getter_AddRefs(dsti));
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+    dsti->GetParent(getter_AddRefs(parentDsti));
+    dsti.swap(parentDsti);
   }
 
   return PR_FALSE;
@@ -1116,11 +1119,15 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
   nsAutoTPtrArray<nsIDocShellTreeItem, 30> parents1, parents2;
   do {
     parents1.AppendElement(dsti1);
-    dsti1->GetParent(getter_AddRefs(dsti1));
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti1;
+    dsti1->GetParent(getter_AddRefs(parentDsti1));
+    dsti1.swap(parentDsti1);
   } while (dsti1);
   do {
     parents2.AppendElement(dsti2);
-    dsti2->GetParent(getter_AddRefs(dsti2));
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti2;
+    dsti2->GetParent(getter_AddRefs(parentDsti2));
+    dsti2.swap(parentDsti2);
   } while (dsti2);
 
   PRUint32 pos1 = parents1.Length();
@@ -1154,9 +1161,12 @@ nsFocusManager::AdjustWindowFocus(nsPIDOMWindow* aWindow)
 
     nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(window));
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
-    dsti->GetParent(getter_AddRefs(dsti));
+    if (!dsti) 
+      return;
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+    dsti->GetParent(getter_AddRefs(parentDsti));
 
-    window = do_GetInterface(dsti);
+    window = do_GetInterface(parentDsti);
     if (window) {
       // if the parent window is visible but aWindow was not, then we have
       // likely moved up and out from a hidden tab to the browser window, or a
@@ -1252,26 +1262,38 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
                      nsPIDOMWindow* aAncestorWindowToFocus,
                      PRBool aIsLeavingDocument)
 {
-  // hold a reference to the focused window
-  nsCOMPtr<nsPIDOMWindow> window = mFocusedWindow;
-  if (!window)
-    return PR_TRUE;
-
   // hold a reference to the focused content, which may be null
   nsCOMPtr<nsIContent> content = mFocusedContent;
-  if (content && (content == mFirstBlurEvent || !content->IsInDoc()))
+  if (content) {
+    if (!content->IsInDoc()) {
+      mFocusedContent = nsnull;
+      return PR_TRUE;
+    }
+    if (content == mFirstBlurEvent)
+      return PR_TRUE;
+  }
+
+  // hold a reference to the focused window
+  nsCOMPtr<nsPIDOMWindow> window = mFocusedWindow;
+  if (!window) {
+    mFocusedContent = nsnull;
     return PR_TRUE;
+  }
 
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
-  if (!docShell)
+  if (!docShell) {
+    mFocusedContent = nsnull;
     return PR_TRUE;
+  }
 
   // Keep a ref to presShell since dispatching the DOM event may cause
   // the document to be destroyed.
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell)
+  if (!presShell) {
+    mFocusedContent = nsnull;
     return PR_TRUE;
+  }
 
   PRBool clearFirstBlurEvent = PR_FALSE;
   if (!mFirstBlurEvent) {
@@ -1365,9 +1387,11 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     mFocusedContent = nsnull;
 
     // pass 1 for the focus method when calling SendFocusOrBlurEvent just so
-    // that the check is made for suppressed documents
+    // that the check is made for suppressed documents. Check to ensure that
+    // the document isn't null in case someone closed it during the blur above
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
-    SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, doc, 1);
+    if (doc)
+      SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, doc, 1);
     if (mFocusedWindow == nsnull)
       SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, window, 1);
 
@@ -1406,6 +1430,8 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // Keep a reference to the presShell since dispatching the DOM event may
   // cause the document to be destroyed.
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  if (!docShell)
+    return;
 
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
@@ -1469,8 +1495,9 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // document and then the window.
   if (aIsNewDocument) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
-    SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
-                         doc, aFlags & FOCUSMETHOD_MASK);
+    if (doc)
+      SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
+                           doc, aFlags & FOCUSMETHOD_MASK);
     if (mFocusedWindow == aWindow && mFocusedContent == nsnull)
       SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
                            aWindow, aFlags & FOCUSMETHOD_MASK);
@@ -1560,7 +1587,7 @@ nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
   // for focus events, if this event was from a mouse or key and event
   // handling on the document is suppressed, queue the event and fire it
   // later. For blur events, a non-zero value would be set for aFocusMethod.
-  if (aFocusMethod && aDocument->EventHandlingSuppressed()) {
+  if (aFocusMethod && aDocument && aDocument->EventHandlingSuppressed()) {
     for (PRUint32 i = mDelayedBlurFocusEvents.Length(); i > 0; --i) {
       // if this event was already queued, remove it and append it to the end
       if (mDelayedBlurFocusEvents[i - 1].mType == aType &&

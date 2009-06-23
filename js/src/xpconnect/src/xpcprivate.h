@@ -1234,7 +1234,10 @@ public:
     GetWrapperMap() const {return mWrapperMap;}
 
     ClassInfo2WrappedNativeProtoMap*
-    GetWrappedNativeProtoMap() const {return mWrappedNativeProtoMap;}
+    GetWrappedNativeProtoMap(JSBool aMainThreadOnly) const
+        {return aMainThreadOnly ?
+                mMainThreadWrappedNativeProtoMap :
+                mWrappedNativeProtoMap;}
 
     nsXPCComponents*
     GetComponents() const {return mComponents;}
@@ -1340,6 +1343,7 @@ private:
     XPCJSRuntime*                    mRuntime;
     Native2WrappedNativeMap*         mWrappedNativeMap;
     ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;
+    ClassInfo2WrappedNativeProtoMap* mMainThreadWrappedNativeProtoMap;
     WrappedNative2WrapperMap*        mWrapperMap;
     nsXPCComponents*                 mComponents;
     XPCWrappedNativeScope*           mNext;

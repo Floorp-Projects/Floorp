@@ -44,6 +44,7 @@
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIXULRuntime.h"
 
 NS_IMPL_ISUPPORTS1(nsLayoutStylesheetCache, nsIObserver)
 
@@ -211,6 +212,13 @@ nsLayoutStylesheetCache::EnsureGlobal()
 void
 nsLayoutStylesheetCache::InitFromProfile()
 {
+  nsCOMPtr<nsIXULRuntime> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
+  if (appInfo) {
+    PRBool inSafeMode = PR_FALSE;
+    appInfo->GetInSafeMode(&inSafeMode);
+    if (inSafeMode)
+      return;
+  }
   nsCOMPtr<nsIFile> contentFile;
   nsCOMPtr<nsIFile> chromeFile;
 

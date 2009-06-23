@@ -61,14 +61,6 @@ LOCAL_INCLUDES	= -I$(srcdir)/../build
 
 CPPSRCS		= nsXPComStub.cpp
 
-ifndef MOZ_ENABLE_LIBXUL
-ifeq ($(OS_TARGET),OS2)
-ifndef MOZ_OS2_HIGH_MEMORY
-CPPSRCS         += nsOS2VACLegacy.cpp
-endif
-endif
-endif
-
 # If we have an import library, then copy that to the SDK.  Otherwise,
 # copy the shared library.
 ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))

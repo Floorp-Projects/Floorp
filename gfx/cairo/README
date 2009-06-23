@@ -52,6 +52,8 @@ text-path-filling-threshold.patch: use path filling instead of platform glyph ra
 
 zombie-face.patch: bug 486974; leak and possible crash with @font-face{src:url()}.  Upstream commit: 0238fe2cafea2e1ed19bb222117bd73ee6898d4d
 
+win32-raster.patch: bug 498689; use scanline rasterizer on win32
+
 ==== pixman patches ====
 
 pixman-neon.patch: add ARM NEON optimized compositing functions

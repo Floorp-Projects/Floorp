@@ -611,7 +611,7 @@ SuggestAutoComplete.prototype = {
   startSearch: function(searchString, searchParam, previousResult, listener) {
     // Don't reuse a previous form history result when it no longer applies.
     if (!previousResult)
-        this._formHistoryResult = null;
+      this._formHistoryResult = null;
 
     var searchService = Cc["@mozilla.org/browser/search-service;1"].
                         getService(Ci.nsIBrowserSearchService);

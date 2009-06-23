@@ -1,0 +1,18 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html class="reftest-print">
+<style>
+#second {border-bottom:green 5px solid}
+col {width:100px}
+</style>
+<body>
+<title>visibility collapse + columns + pagination</title>
+
+<table cellspacing="0" style="page-break-after:always" id="first">
+<col><col style="visibility:collapse"><col>
+<tr><td>cell1</td><td>Dont'show</td><td>cell2</td></tr></table>
+<table cellspacing="0" id="second">
+<col><col style="visibility:collapse"><col>
+<tr><td>cell3</td><td>Dont'show</td><td>cell4</td></tr>
+</table>
+</body>
+</html>
