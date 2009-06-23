@@ -77,7 +77,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD WillBuildModel();
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
   NS_IMETHOD DidBuildModel();
   NS_IMETHOD SetParser(nsIParser* aParser);
   

@@ -182,7 +182,7 @@ public:
 
   // nsIContentSink
   NS_IMETHOD WillParse(void);
-  NS_IMETHOD WillBuildModel(void);
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
   NS_IMETHOD DidBuildModel(void);
   virtual PRBool ReadyToCallDidBuildModel(PRBool aTerminated);
   NS_IMETHOD WillInterrupt(void);
@@ -1742,28 +1742,21 @@ HTMLContentSink::WillParse(void)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::WillBuildModel(void)
+HTMLContentSink::WillBuildModel(nsDTDMode aDTDMode)
 {
   WillBuildModelImpl();
+
   if (mHTMLDocument) {
-    NS_ASSERTION(mParser, "no parser");
     nsCompatibility mode = eCompatibility_NavQuirks;
-    if (mParser) {
-      nsDTDMode dtdMode = mParser->GetParseMode();
-      switch (dtdMode) {
-        case eDTDMode_full_standards:
-          mode = eCompatibility_FullStandards;
-
-          break;
-        case eDTDMode_almost_standards:
-          mode = eCompatibility_AlmostStandards;
-
-          break;
-        default:
-          mode = eCompatibility_NavQuirks;
-
-          break;
-      }
+    switch (aDTDMode) {
+      case eDTDMode_full_standards:
+        mode = eCompatibility_FullStandards;
+        break;
+      case eDTDMode_almost_standards:
+        mode = eCompatibility_AlmostStandards;
+        break;
+      default:
+        break;
     }
     mHTMLDocument->SetCompatibilityMode(mode);
   }

@@ -257,7 +257,7 @@ NS_IMPL_ISUPPORTS3(XULContentSinkImpl,
 // nsIContentSink interface
 
 NS_IMETHODIMP 
-XULContentSinkImpl::WillBuildModel(void)
+XULContentSinkImpl::WillBuildModel(nsDTDMode aDTDMode)
 {
 #if FIXME
     if (! mParentContentSink) {
