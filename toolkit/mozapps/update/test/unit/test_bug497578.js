@@ -76,10 +76,6 @@ function run_test() {
 
 function end_test() {
   do_test_finished();
-  // Call the app update service's observe method with xpcom-shutdown to force
-  // updating the active-update.xml and updates.xml files so they don't contain
-  // updates.
-  gAUS.observe(null, "xpcom-shutdown", "");
   cleanUp();
 }
 

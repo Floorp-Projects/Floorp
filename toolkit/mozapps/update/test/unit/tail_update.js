@@ -36,5 +36,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-// Not used since check-interactive executes this prior to _execute_test();
-// being executed.
+// Initially moved to head_update since check-interactive was executing this
+// prior to _execute_test(); being executed (bug 384339). It hasn't been moved
+// back since it is easier to comment out the call to cleanUp when needed.
