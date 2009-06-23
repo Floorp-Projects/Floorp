@@ -92,7 +92,6 @@
 
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
-#include "nsIInternetConfigService.h"
 #ifndef __LP64__
 #include "nsIAppleFileDecoder.h"
 #endif
@@ -492,8 +491,6 @@ struct nsExtraMimeTypeEntry {
   const char* mMimeType; 
   const char* mFileExtensions;
   const char* mDescription;
-  PRUint32 mMactype;
-  PRUint32 mMacCreator;
 };
 
 #ifdef XP_MACOSX
@@ -512,39 +509,39 @@ struct nsExtraMimeTypeEntry {
 static nsExtraMimeTypeEntry extraMimeEntries [] =
 {
 #if defined(VMS)
-  { APPLICATION_OCTET_STREAM, "exe,com,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary File", 0, 0 },
+  { APPLICATION_OCTET_STREAM, "exe,com,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary File" },
 #elif defined(XP_MACOSX) // don't define .bin on the mac...use internet config to look that up...
-  { APPLICATION_OCTET_STREAM, "exe,com", "Binary File", 0, 0 },
+  { APPLICATION_OCTET_STREAM, "exe,com", "Binary File" },
 #else
-  { APPLICATION_OCTET_STREAM, "exe,com,bin", "Binary File", 0, 0 },
+  { APPLICATION_OCTET_STREAM, "exe,com,bin", "Binary File" },
 #endif
-  { APPLICATION_GZIP2, "gz", "gzip", 0, 0 },
-  { "application/x-arj", "arj", "ARJ file", 0,0 },
-  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", MAC_TYPE('xpi*'), MAC_TYPE('MOSS') },
-  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File", 0, 0 },
-  { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
-  { IMAGE_ART, "art", "ART Image", 0, 0 },
-  { IMAGE_BMP, "bmp", "BMP Image", 0, 0 },
-  { IMAGE_GIF, "gif", "GIF Image", 0,0 },
-  { IMAGE_ICO, "ico,cur", "ICO Image", 0, 0 },
-  { IMAGE_JPG, "jpeg,jpg,jfif,pjpeg,pjp", "JPEG Image", 0, 0 },
-  { IMAGE_PNG, "png", "PNG Image", 0, 0 },
-  { IMAGE_TIFF, "tiff,tif", "TIFF Image", 0, 0 },
-  { IMAGE_XBM, "xbm", "XBM Image", 0, 0 },
-  { "image/svg+xml", "svg", "Scalable Vector Graphics", MAC_TYPE('svg '), MAC_TYPE('ttxt') },
-  { MESSAGE_RFC822, "eml", "RFC-822 data", MAC_TYPE('TEXT'), MAC_TYPE('MOSS') },
-  { TEXT_PLAIN, "txt,text", "Text File", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
-  { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('MOSS') },
-  { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
-  { APPLICATION_RDF, "rdf", "Resource Description Framework", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
-  { TEXT_XUL, "xul", "XML-Based User Interface Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
-  { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
-  { TEXT_CSS, "css", "Style Sheet", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
-  { VIDEO_OGG, "ogv", "Ogg Video", 0, 0 },
-  { VIDEO_OGG, "ogg", "Ogg Video", 0, 0 },
-  { APPLICATION_OGG, "ogg", "Ogg Video", 0, 0},
-  { AUDIO_OGG, "oga", "Ogg Audio", 0, 0 },
-  { AUDIO_WAV, "wav", "Waveform Audio", 0, 0 }
+  { APPLICATION_GZIP2, "gz", "gzip" },
+  { "application/x-arj", "arj", "ARJ file" },
+  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install" },
+  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File" },
+  { APPLICATION_JAVASCRIPT, "js", "Javascript Source File" },
+  { IMAGE_ART, "art", "ART Image" },
+  { IMAGE_BMP, "bmp", "BMP Image" },
+  { IMAGE_GIF, "gif", "GIF Image" },
+  { IMAGE_ICO, "ico,cur", "ICO Image" },
+  { IMAGE_JPG, "jpeg,jpg,jfif,pjpeg,pjp", "JPEG Image" },
+  { IMAGE_PNG, "png", "PNG Image" },
+  { IMAGE_TIFF, "tiff,tif", "TIFF Image" },
+  { IMAGE_XBM, "xbm", "XBM Image" },
+  { "image/svg+xml", "svg", "Scalable Vector Graphics" },
+  { MESSAGE_RFC822, "eml", "RFC-822 data" },
+  { TEXT_PLAIN, "txt,text", "Text File" },
+  { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language" },
+  { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language" },
+  { APPLICATION_RDF, "rdf", "Resource Description Framework" },
+  { TEXT_XUL, "xul", "XML-Based User Interface Language" },
+  { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language" },
+  { TEXT_CSS, "css", "Style Sheet" },
+  { VIDEO_OGG, "ogv", "Ogg Video" },
+  { VIDEO_OGG, "ogg", "Ogg Video" },
+  { APPLICATION_OGG, "ogg", "Ogg Video"},
+  { AUDIO_OGG, "oga", "Ogg Audio" },
+  { AUDIO_WAV, "wav", "Waveform Audio" }
 };
 
 #undef MAC_TYPE
@@ -1360,19 +1357,6 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   // On other platforms, the file permission bits are used, so we can just call
   // IsExecutable
   mTempFile->IsExecutable(&mTempFileIsExecutable);
-#endif
-
-#ifdef XP_MACOSX
-  // Now that the file exists set Mac type if the file has no extension
-  // and we can determine a type.
-  if (ext.IsEmpty() && mMimeInfo) {
-    nsCOMPtr<nsILocalFileMac> macfile = do_QueryInterface(mTempFile);
-    if (macfile) {
-      PRUint32 type;
-      mMimeInfo->GetMacType(&type);
-      macfile->SetFileType(type);
-    }
-  }
 #endif
 
   nsCOMPtr<nsIOutputStream> outputStream;
@@ -2695,28 +2679,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
       }
     }
   }
-  
-#ifdef XP_MACOSX
-  nsCOMPtr<nsILocalFileMac> macFile;
-  macFile = do_QueryInterface( aFile, &rv );
-  if (NS_SUCCEEDED( rv ) && fileExt.IsEmpty())
-  {
-    PRUint32 type, creator;
-    macFile->GetFileType( (OSType*)&type );
-    macFile->GetFileCreator( (OSType*)&creator );   
-    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
-    if (icService)
-    {
-      rv = icService->GetMIMEInfoFromTypeCreator(type, creator, fileExt.get(), getter_AddRefs(info));
-      if (NS_SUCCEEDED(rv))
-        return info->GetMIMEType(aContentType);
-    }
-  }
-#endif
 
-  // Windows, unix and mac when no type match occured.   
   if (fileExt.IsEmpty())
-    return NS_ERROR_FAILURE;    
+    return NS_ERROR_FAILURE;
+
   return GetTypeFromExtension(fileExt, aContentType);
 }
 
@@ -2738,9 +2704,6 @@ nsresult nsExternalHelperAppService::FillMIMEInfoForMimeTypeFromExtras(
           // This is the one. Set attributes appropriately.
           aMIMEInfo->SetFileExtensions(nsDependentCString(extraMimeEntries[index].mFileExtensions));
           aMIMEInfo->SetDescription(NS_ConvertASCIItoUTF16(extraMimeEntries[index].mDescription));
-          aMIMEInfo->SetMacType(extraMimeEntries[index].mMactype);
-          aMIMEInfo->SetMacCreator(extraMimeEntries[index].mMacCreator);
-
           return NS_OK;
       }
   }
