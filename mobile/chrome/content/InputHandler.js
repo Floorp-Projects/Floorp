@@ -110,7 +110,7 @@ function InputHandler() {
   this._modules.push(new ChromeInputModule(this, browserCanvas));
   this._modules.push(new ContentPanningModule(this, browserCanvas, useEarlyMouseMoves));
   this._modules.push(new ContentClickingModule(this));
-  this._modules.push(new ScrollwheelModule(this));
+  this._modules.push(new ScrollwheelModule(this, browserCanvas));
 }
 
 InputHandler.prototype = {
@@ -854,12 +854,16 @@ ContentClickingModule.prototype = {
  * Scrollwheel zooming handler
  */
 
-function ScrollwheelModule(owner) {
+function ScrollwheelModule(owner, browserCanvas) {
   this._owner = owner;
+  this._browserCanvas = browserCanvas;
 }
 
 ScrollwheelModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
+    if (aEvent.target !== this._browserCanvas)
+      return;
+
     switch (aEvent.type) {
       // UI panning events
       case "DOMMouseScroll":
