@@ -77,6 +77,52 @@ const Register Assembler::argRegs[] = { R0, R1, R2, R3 };
 const Register Assembler::retRegs[] = { R0, R1 };
 const Register Assembler::savedRegs[] = { R4, R5, R6, R7, R8, R9, R10 };
 
+// --------------------------------
+// ARM-specific utility functions.
+// --------------------------------
+
+// Calculate the number of leading zeroes in data.
+uint32_t
+Assembler::CountLeadingZeroes(uint32_t data)
+{
+    uint32_t    leading_zeroes;
+#if defined(__ARMCC__)
+    // ARMCC can do this with an intrinsic.
+    leading_zeroes = __clz(data);
+#elif defined(__GNUC__)
+    // GCC can use inline assembler to insert a CLZ instruction.
+    __asm (
+        "   clz     %0, %1  \n"
+        :   "=r"    (leading_zeroes)
+        :   "r"     (data)
+    );
+#elif defined(WINCE)
+    // WinCE can do this with an intrinsic.
+    leading_zeroes = _CountLeadingZeros(data);
+#else
+    // Other platforms must fall back to a C routine. This won't be as
+    // efficient as the CLZ instruction, but it is functional.
+    uint32_t    try_shift;
+
+    leading_zeroes = 0;
+
+    // This loop does a bisection search rather than the obvious rotation loop.
+    // This should be faster, though it will still be no match for CLZ.
+    for (try_shift = 16; try_shift != 0; try_shift /= 2) {
+        uint32_t    shift = leading_zeroes + try_shift;
+        if (((data << shift) >> shift) == data) {
+            leading_zeroes = shift;
+        }
+    }
+#endif
+
+    return leading_zeroes;
+}
+
+// --------------------------------
+// Assembler functions.
+// --------------------------------
+
 void
 Assembler::nInit(AvmCore*)
 {
@@ -443,27 +489,12 @@ Assembler::nMarkExecute(Page* page, int flags)
 Register
 Assembler::nRegisterAllocFromSet(int set)
 {
-    // Note: The clz instruction only works on armv5 and up.
-#if defined(UNDER_CE)
-    Register r;
-    r = (Register)_CountLeadingZeros(set);
-    r = (Register)(31-r);
+    // The CountLeadingZeroes function will use the CLZ instruction where
+    // available. In other cases, it will fall back to a (slower) C
+    // implementation.
+    Register r = (Register)(31-CountLeadingZeroes(set));
     _allocator.free &= ~rmask(r);
     return r;
-#elif defined(__ARMCC__)
-    register int i;
-    __asm { clz i,set }
-    Register r = Register(31-i);
-    _allocator.free &= ~rmask(r);
-    return r;
-#else
-    // need to implement faster way
-    int i=0;
-    while (!(set & rmask((Register)i)))
-        i ++;
-    _allocator.free &= ~rmask((Register)i);
-    return (Register) i;
-#endif
 }
 
 void
@@ -644,18 +675,23 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
 void
 Assembler::asm_load64(LInsp ins)
 {
-    ///asm_output("<<< load64");
+    //output("<<< load64");
+
+    NanoAssert(ins->isQuad());
 
     LIns* base = ins->oprnd1();
     int offset = ins->oprnd2()->imm32();
 
     Reservation *resv = getresv(ins);
+    NanoAssert(resv);
     Register rr = resv->reg;
     int d = disp(resv);
 
-    freeRsrcOf(ins, false);
     Register rb = findRegFor(base, GpRegs);
     NanoAssert(IsGpReg(rb));
+    freeRsrcOf(ins, false);
+ 
+    //output("--- load64: Finished register allocation.");
 
     if (AvmCore::config.vfp && rr != UnknownReg) {
         // VFP is enabled and the result will go into a register.
@@ -674,11 +710,14 @@ Assembler::asm_load64(LInsp ins)
         NanoAssert(resv->reg == UnknownReg);
         NanoAssert(d != 0);
 
-        // *(FP+dr) <- *(rb+db)
+        // Check that the offset is 8-byte (64-bit) aligned.
+        NanoAssert((d & 0x7) == 0);
+
+        // *(uint64_t*)(FP+d) = *(uint64_t*)(rb+offset)
         asm_mmq(FP, d, rb, offset);
     }
 
-    //asm_output(">>> load64");
+    //output(">>> load64");
 }
 
 void
@@ -730,6 +769,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     } else {
         int da = findMemFor(value);
         Register rb = findRegFor(base, GpRegs);
+        // *(uint64_t*)(rb+dr) = *(uint64_t*)(FP+da)
         asm_mmq(rb, dr, FP, da);
     }
 
@@ -811,25 +851,79 @@ Assembler::asm_binop_rhs_reg(LInsp)
 void
 Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
 {
-    // value is either a 64bit struct or maybe a float
-    // that isn't live in an FPU reg.  Either way, don't
-    // put it in an FPU reg just to load & store it.
+    // The value is either a 64bit struct or maybe a float that isn't live in
+    // an FPU reg.  Either way, don't put it in an FPU reg just to load & store
+    // it.
+    // This operation becomes a simple 64-bit memcpy.
 
-    // Don't use this with PC-relative loads; the registerAlloc might
-    // end up spilling a reg (and thus the offset could end up being
-    // bogus)!
+    // In order to make the operation optimal, we will require two GP
+    // registers. We can't allocate a register here because the caller may have
+    // called freeRsrcOf, and allocating a register here may cause something
+    // else to spill onto the stack which has just be conveniently freed by
+    // freeRsrcOf (resulting in stack corruption).
+    //
+    // Falling back to a single-register implementation of asm_mmq is better
+    // than adjusting the callers' behaviour (to allow us to allocate another
+    // register here) because spilling a register will end up being slower than
+    // just using the same register twice anyway.
+    //
+    // Thus, if there is a free register which we can borrow, we will emit the
+    // following code:
+    //  LDR rr, [rs, #ds]
+    //  LDR ip, [rs, #(ds+4)]
+    //  STR rr, [rd, #dd]
+    //  STR ip, [rd, #(dd+4)]
+    // (Where rr is the borrowed register.)
+    //
+    // If there is no free register, don't spill an existing allocation. Just
+    // do the following:
+    //  LDR ip, [rs, #ds]
+    //  STR ip, [rd, #dd]
+    //  LDR ip, [rs, #(ds+4)]
+    //  STR ip, [rd, #(dd+4)]
+
+    // Ensure that the PC is not used as either base register. The instruction
+    // generation macros call underrunProtect, and a side effect of this is
+    // that we may be pushed onto another page, so the PC is not a reliable
+    // base register.
     NanoAssert(rs != PC);
+    NanoAssert(rd != PC);
 
-    // use both IP and a second scratch reg
-    Register t = registerAlloc(GpRegs & ~(rmask(rd)|rmask(rs)));
-    _allocator.addFree(t);
+    // Find the list of free registers from the allocator's free list and the
+    // GpRegs mask. This excludes any floating-point registers that may be on
+    // the free list.
+    RegisterMask    free = _allocator.free & GpRegs;
 
-    // XXX maybe figure out if we can use LDRD/STRD -- hard to
-    // ensure right register allocation
-    STR(IP, rd, dd+4);
-    STR(t, rd, dd);
-    LDR(IP, rs, ds+4);
-    LDR(t, rs, ds);
+    if (free) {
+        // There is at least one register on the free list, so grab one for
+        // temporary use. There is no need to allocate it explicitly because
+        // we won't need it after this function returns.
+
+        // The CountLeadingZeroes can be used to quickly find a set bit in the
+        // free mask.
+        Register    rr = (Register)(31-CountLeadingZeroes(free));
+
+        // Note: Not every register in GpRegs is usable here. However, these
+        // registers will never appear on the free list.
+        NanoAssert((free & rmask(PC)) == 0);
+        NanoAssert((free & rmask(LR)) == 0);
+        NanoAssert((free & rmask(SP)) == 0);
+        NanoAssert((free & rmask(IP)) == 0);
+        NanoAssert((free & rmask(FP)) == 0);
+
+        // Emit the actual instruction sequence.
+
+        STR(IP, rd, dd+4);
+        STR(rr, rd, dd);
+        LDR(IP, rs, ds+4);
+        LDR(rr, rs, ds);
+    } else {
+        // There are no free registers, so fall back to using IP twice.
+        STR(IP, rd, dd+4);
+        LDR(IP, rs, ds+4);
+        STR(IP, rd, dd);
+        LDR(IP, rs, ds);
+    }
 }
 
 void
@@ -1663,6 +1757,7 @@ Assembler::asm_ld(LInsp ins)
     LOpcode op = ins->opcode();
     LIns* base = ins->oprnd1();
     LIns* disp = ins->oprnd2();
+
     Register rr = prepResultReg(ins, GpRegs);
     int d = disp->imm32();
     Register ra = getBaseReg(base, d, GpRegs);
@@ -1743,26 +1838,7 @@ Assembler::asm_qlo(LInsp ins)
     LIns *q = ins->oprnd1();
     int d = findMemFor(q);
     LD(rr, d, FP);
-
-#if 0
-    LIns *q = ins->oprnd1();
-
-    Reservation *resv = getresv(ins);
-    Register rr = resv->reg;
-    if (rr == UnknownReg) {
-        // store quad in spill loc
-        int d = disp(resv);
-        freeRsrcOf(ins, false);
-        Register qr = findRegFor(q, XmmRegs);
-        SSE_MOVDm(d, FP, qr);
-    } else {
-        freeRsrcOf(ins, false);
-        Register qr = findRegFor(q, XmmRegs);
-        SSE_MOVD(rr,qr);
-    }
-#endif
 }
-
 
 void
 Assembler::asm_param(LInsp ins)

@@ -581,6 +581,10 @@ namespace nanojit
 		asm_spill(rr, d, pop, quad);
 	}
 
+    // NOTE: Because this function frees slots on the stack, it is not safe to
+    // follow a call to this with a call to anything which might spill a
+    // register, as the stack can be corrupted. Refer to bug 495239 for a more
+    // detailed description.
 	void Assembler::freeRsrcOf(LIns *i, bool pop)
 	{
 		Reservation* resv = getresv(i);
@@ -1574,8 +1578,8 @@ namespace nanojit
 			for (i=start; i < NJ_MAX_STACK_ENTRY; i+=2) {
                 if ( (ar.entry[i+stack_direction(1)] == 0) && (i==tos || (ar.entry[i] == 0)) ) {
                     // found 2 adjacent aligned slots
-                    NanoAssert(_activation.entry[i] == 0);
-                    NanoAssert(_activation.entry[i+stack_direction(1)] == 0);
+                    NanoAssert(ar.entry[i] == 0);
+                    NanoAssert(ar.entry[i+stack_direction(1)] == 0);
                     ar.entry[i] = l;
                     ar.entry[i+stack_direction(1)] = l;
                     break;   
@@ -1590,8 +1594,8 @@ namespace nanojit
                 if (canfit(size, i, ar)) {
 		            // place the entry in the table and mark the instruction with it
                     for (int32_t j=0; j < size; j++) {
-                        NanoAssert(_activation.entry[i+stack_direction(j)] == 0);
-                        _activation.entry[i+stack_direction(j)] = l;
+                        NanoAssert(ar.entry[i+stack_direction(j)] == 0);
+                        ar.entry[i+stack_direction(j)] = l;
                     }
                     break;
                 }
@@ -1815,6 +1819,9 @@ namespace nanojit
     }
 
 	#ifdef NJ_VERBOSE
+        // "outline" must be able to hold the output line in addition to the
+        // outlineEOL buffer, which is concatenated onto outline just before it
+        // is printed.
 		char Assembler::outline[8192];
 		char Assembler::outlineEOL[512];
 
@@ -1826,35 +1833,52 @@ namespace nanojit
 			vsprintf(outlineEOL, format, args);
 		}
 
-		void Assembler::outputf(const char* format, ...)
-		{
-			va_list args;
-			va_start(args, format);
-			outline[0] = '\0';
-			vsprintf(outline, format, args);
-			output(outline);
-		}
+        void Assembler::outputf(const char* format, ...)
+        {
+            va_list     args;
+            va_start(args, format);
+            outline[0] = '\0';
 
-		void Assembler::output(const char* s)
-		{
-			if (_outputCache)
-			{
-				char* str = (char*)_gc->Alloc(strlen(s)+1);
-				strcpy(str, s);
-				_outputCache->add(str);
-			}
-			else
-			{
+            // Format the output string and remember the number of characters
+            // that were written.
+            uint32_t outline_len = vsprintf(outline, format, args);
+
+            // Add the EOL string to the output, ensuring that we leave enough
+            // space for the terminating NULL character, then reset it so it
+            // doesn't repeat on the next outputf.
+            strncat(outline, outlineEOL, sizeof(outline)-(outline_len+1));
+            outlineEOL[0] = '\0';
+
+            output(outline);
+        }
+
+        void Assembler::output(const char* s)
+        {
+            if (_outputCache)
+            {
+                char* str = (char*)_gc->Alloc(strlen(s)+1);
+                strcpy(str, s);
+                _outputCache->add(str);
+            }
+            else
+            {
                 nj_dprintf("%s\n", s);
-			}
-		}
+            }
+        }
 
-		void Assembler::output_asm(const char* s)
-		{
-			if (!verbose_enabled())
-				return;
-				output(s);
-		}
+        void Assembler::output_asm(const char* s)
+        {
+            if (!verbose_enabled())
+                return;
+
+            // Add the EOL string to the output, ensuring that we leave enough
+            // space for the terminating NULL character, then reset it so it
+            // doesn't repeat on the next outputf.
+            strncat(outline, outlineEOL, sizeof(outline)-(strlen(outline)+1));
+            outlineEOL[0] = '\0';
+
+            output(s);
+        }
 
 		char* Assembler::outputAlign(char *s, int col) 
 		{
