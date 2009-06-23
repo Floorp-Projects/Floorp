@@ -139,7 +139,8 @@
 #include "nsFrameLoader.h"
 #include "prlog.h"
 #include "rdf.h"
-
+#include "nsIDOM3EventTarget.h"
+#include "nsIDOMEventGroup.h"
 #include "nsIControllers.h"
 
 // The XUL doc interface
@@ -1563,6 +1564,17 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
     aVisitor.mForceContentDispatch = PR_TRUE; //FIXME! Bug 329119
     nsIAtom* tag = Tag();
+    if (IsRootOfNativeAnonymousSubtree() &&
+        (tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollcorner) &&
+        (aVisitor.mEvent->message == NS_MOUSE_CLICK ||
+         aVisitor.mEvent->message == NS_MOUSE_DOUBLECLICK ||
+         aVisitor.mEvent->message == NS_XUL_COMMAND ||
+         aVisitor.mEvent->message == NS_CONTEXTMENU)) {
+        // Don't propagate these events from native anonymous scrollbar.
+        aVisitor.mCanHandle = PR_TRUE;
+        aVisitor.mParentTarget = nsnull;
+        return NS_OK;
+    }
     if (aVisitor.mEvent->message == NS_XUL_COMMAND &&
         aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this) &&
         tag != nsGkAtoms::command) {
@@ -2155,13 +2167,19 @@ PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
   if (!listener) {
     return;
   }
-  nsCOMPtr<nsIDOMEventTarget> target =
+  nsCOMPtr<nsIDOM3EventTarget> target =
     do_QueryInterface(static_cast<nsINode*>(aObject));
   if (target) {
-    target->RemoveEventListener(NS_LITERAL_STRING("mousedown"), listener,
-                                PR_FALSE);
-    target->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), listener,
-                                PR_FALSE);
+    nsCOMPtr<nsIDOMEventGroup> systemGroup;
+    static_cast<nsPIDOMEventTarget*>(aObject)->
+      GetSystemEventGroup(getter_AddRefs(systemGroup));
+    if (systemGroup) {
+      target->RemoveGroupedEventListener(NS_LITERAL_STRING("mousedown"),
+                                         listener, PR_FALSE, systemGroup);
+
+      target->RemoveGroupedEventListener(NS_LITERAL_STRING("contextmenu"),
+                                         listener, PR_FALSE, systemGroup);
+    }
   }
   NS_RELEASE(listener);
 }
@@ -2183,13 +2201,17 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
         return NS_OK;
     }
 
+    nsCOMPtr<nsIDOMEventGroup> systemGroup;
+    GetSystemEventGroup(getter_AddRefs(systemGroup));
+    NS_ENSURE_STATE(systemGroup);
+
     nsresult rv = NS_NewXULPopupListener(this, isContext,
                                          getter_AddRefs(popupListener));
     if (NS_FAILED(rv))
         return rv;
 
     // Add the popup as a listener on this element.
-    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(static_cast<nsIContent *>(this)));
+    nsCOMPtr<nsIDOM3EventTarget> target(do_QueryInterface(static_cast<nsIContent *>(this)));
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
     rv = SetProperty(listenerAtom, popupListener, PopupListenerPropertyDtor,
                      PR_TRUE);
@@ -2197,10 +2219,14 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     // Want the property to have a reference to the listener.
     nsIDOMEventListener* listener = nsnull;
     popupListener.swap(listener);
-    if (isContext)
-      target->AddEventListener(NS_LITERAL_STRING("contextmenu"), listener, PR_FALSE);
-    else
-      target->AddEventListener(NS_LITERAL_STRING("mousedown"), listener, PR_FALSE);
+
+    if (isContext) {
+      target->AddGroupedEventListener(NS_LITERAL_STRING("contextmenu"),
+                                      listener, PR_FALSE, systemGroup);
+    } else {
+      target->AddGroupedEventListener(NS_LITERAL_STRING("mousedown"),
+                                      listener, PR_FALSE, systemGroup);
+    }
     return NS_OK;
 }
 
