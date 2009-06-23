@@ -169,10 +169,6 @@
 #include <mach-o/fat.h>
 #endif
 
-#ifdef XP_OS2
-#include "nsILegacyPluginWrapperOS2.h"
-#endif
-
 // this is the name of the directory which will be created
 // to cache temporary files.
 #define kPluginTmpDirName NS_LITERAL_CSTRING("plugtmp")

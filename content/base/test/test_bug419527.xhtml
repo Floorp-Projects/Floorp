@@ -27,7 +27,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=419527
              "Range should have been collapsed to newSubTree.firstChild!");
           ok(range.endContainer == window.newSubTree.firstChild,
              "Range should have been collapsed to newSubTree.firstChild!");
-          SimpleTest.finish();
+          //XXX This should just call SimpleTest.finish(), bugs 478528, 499735.
+          setTimeout(finish, 0);
         </constructor>
       </implementation>
     </binding>
@@ -45,13 +46,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=419527
 
 /** Test for Bug 419527 **/
 
+var d;
+
 function runRangeTest() {
   window.newSubTree = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
   newSubTree.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "div"));
 
-  var d = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  d = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
   document.loadBindingDocument(window.location);
   document.addBinding(d, window.location + "#rangebinding");
+}
+
+function finish() {
+  document.removeBinding(d, window.location + "#rangebinding");
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();

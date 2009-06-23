@@ -52,6 +52,7 @@ _TEST_FILES = test_domstorage.xul \
 		focus_window2.xul \
 		focus_frameset.html \
 		child_focus_frame.html \
+		test_focus_switchbinding.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

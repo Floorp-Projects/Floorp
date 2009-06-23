@@ -1,0 +1,24 @@
+<html>
+<head>
+</head>
+<body>
+<script>
+var t = 0;
+function doe() {
+setTimeout(function() {
+  if (t == 1) {
+    window.close();
+    window.opener.done();
+  }
+  else {
+    window.frames[0].location.reload();
+    t++;
+  }
+}, 300);
+}
+</script>
+
+<iframe src="data:application/xhtml+xml;charset=utf-8,%3Chtml%20xmlns%3D%22http%3A//www.w3.org/1999/xhtml%22%3E%0A%0A%3Ciframe/%3E%0A%3Cframeset%20onblur%3D%22window.frameElement.parentNode.removeChild%28window.frameElement%29%22/%3E%0A%0A%3Cscript%3E%0Afunction%20doe%28i%29%7B%0Adocument.getElementsByTagName%28%27*%27%29%5B1%5D.focus%28%29%3B%0A%7D%0AsetTimeout%28doe%2C100%29%3B%0A%3C/script%3E%0A%3C/html%3E" onload="doe()" id="content"></iframe>
+</body>
+</html>
+

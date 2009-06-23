@@ -67,12 +67,38 @@
 
 #if 0
 #define D(x)  x
+
+static const char *
+_opstr (cairo_operator_t op)
+{
+    const char *ops[] = {
+        "CLEAR",
+        "SOURCE",
+        "OVER",
+        "IN",
+        "OUT",
+        "ATOP",
+        "DEST",
+        "DEST_OVER",
+        "DEST_IN",
+        "DEST_OUT",
+        "DEST_ATOP",
+        "XOR",
+        "ADD",
+        "SATURATE"
+    };
+        
+    if (op < CAIRO_OPERATOR_CLEAR || op > CAIRO_OPERATOR_SATURATE)
+        return "(\?\?\?)";
+        
+    return ops[op];
+}
 #else
 #define D(x) do { } while(0)
 #endif
 
 #if 0
-#define DP(x) if (g_dump_path) { x; }
+#define DP(x) x
 #else
 #define DP(x) do { } while(0)
 #endif
@@ -88,34 +114,35 @@
 typedef struct {
     cairo_surface_t base;
 
-    QPainter *p;
-
-    /* The pixmap/image constructors will store their objects here */
-    QPixmap *pixmap;
-    QImage *image;
-
-    QRect window;
-
     bool has_clipping;
-    QRect clip_bounds;
-
     // if this is true, calls to intersect_clip_path won't
     // update the clip_bounds rect
     bool no_update_clip_bounds;
 
-    cairo_image_surface_t *image_equiv;
+    cairo_bool_t supports_porter_duff;
 
 #if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
     /* temporary, so that we can share the xlib surface's glyphs code */
-    cairo_surface_t *xlib_equiv;
     bool xlib_has_clipping;
+    cairo_surface_t *xlib_equiv;
     QRect xlib_clip_bounds;
     int xlib_clip_serial;
     QPoint redir_offset;
 #endif
-
-    cairo_bool_t supports_porter_duff;
+    
+    QPainter *p;
+    
+    /* The pixmap/image constructors will store their objects here */
+    QPixmap *pixmap;
+    QImage *image;
+    
+    QRect window;
+    
+    QRect clip_bounds;
+        
+    cairo_image_surface_t *image_equiv;
 } cairo_qpainter_surface_t;
+
 
 /* Will be set to TRUE if we ever try to create a QPixmap and end
  * up with one without an alpha channel.
@@ -129,9 +156,9 @@ _cairo_qpainter_surface_paint (void *abstract_surface,
                                cairo_rectangle_int_t * rect);
 
 /* some debug timing stuff */
-static int g_dump_path = 1;
-static struct timeval timer_start_val;
 #if 0
+static struct timeval timer_start_val;
+
 static void tstart() {
     gettimeofday(&timer_start_val, NULL);
 }
@@ -154,31 +181,6 @@ static void tend(const char *what = NULL) { }
 /**
  ** Helper methods
  **/
-static const char *
-_opstr (cairo_operator_t op)
-{
-    const char *ops[] = {
-        "CLEAR",
-        "SOURCE",
-        "OVER",
-        "IN",
-        "OUT",
-        "ATOP",
-        "DEST",
-        "DEST_OVER",
-        "DEST_IN",
-        "DEST_OUT",
-        "DEST_ATOP",
-        "XOR",
-        "ADD",
-        "SATURATE"
-    };
-
-    if (op < CAIRO_OPERATOR_CLEAR || op > CAIRO_OPERATOR_SATURATE)
-        return "(\?\?\?)";
-
-    return ops[op];
-}
 
 static QPainter::CompositionMode
 _qpainter_compositionmode_from_cairo_op (cairo_operator_t op)
@@ -598,25 +600,26 @@ _cairo_qpainter_surface_release_dest_image (void *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_qpainter_surface_clone_similar (void *abstract_surface,
-                                       cairo_surface_t *src,
-                                       int              src_x,
-                                       int              src_y,
-                                       int              width,
-                                       int              height,
-                                       int              *clone_offset_x,
-                                       int              *clone_offset_y,
-                                       cairo_surface_t **clone_out)
+_cairo_qpainter_surface_clone_similar (void             *abstract_surface,
+                                       cairo_surface_t  *src,
+                                       cairo_content_t   content,
+                                       int               src_x,
+                                       int               src_y,
+                                       int               width,
+                                       int               height,
+                                       int               *clone_offset_x,
+                                       int               *clone_offset_y,
+                                       cairo_surface_t  **clone_out)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
     cairo_surface_t *new_surf = NULL;
 
     // For non-image targets, always try to create a QPixmap first
-    if (qs->image == NULL && (!_qpixmaps_have_no_alpha || src->content == CAIRO_CONTENT_COLOR))
+    if (qs->image == NULL && (!_qpixmaps_have_no_alpha || content == CAIRO_CONTENT_COLOR))
     {
         new_surf = cairo_qpainter_surface_create_with_qpixmap
-	    (src->content, width, height);
-	if (cairo_surface_get_content (new_surf) != src->content) {
+	    (content, width, height);
+	if (cairo_surface_get_content (new_surf) != content) {
 	    cairo_surface_destroy (new_surf);
 	    _qpixmaps_have_no_alpha = TRUE;
 	    new_surf = NULL;
@@ -625,7 +628,7 @@ _cairo_qpainter_surface_clone_similar (void *abstract_surface,
 
     if (new_surf == NULL) {
         new_surf = cairo_qpainter_surface_create_with_qimage
-                   (_cairo_format_from_content (src->content), width, height);
+                   (_cairo_format_from_content (content), width, height);
     }
 
     if (new_surf->status)
@@ -1555,6 +1558,18 @@ _cairo_qpainter_surface_composite (cairo_operator_t op,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_qpainter_surface_flush (void *abstract_surface)
+{
+    cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
+    
+    QPaintDevice * dev = qs->p->device();
+    qs->p->end();
+    qs->p->begin(dev);
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  ** Backend struct
  **/
@@ -1581,7 +1596,7 @@ static const cairo_surface_backend_t cairo_qpainter_surface_backend = {
     _cairo_qpainter_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
-    NULL, /* flush */
+    _cairo_qpainter_surface_flush,
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
@@ -1832,7 +1847,7 @@ cairo_qpainter_surface_get_image (cairo_surface_t *surface)
 void
 _cairo_image_surface_write_to_ppm (cairo_image_surface_t *isurf, const char *fn)
 {
-    char *fmt;
+    const char *fmt;
     if (isurf->format == CAIRO_FORMAT_ARGB32 || isurf->format == CAIRO_FORMAT_RGB24)
         fmt = "P6";
     else if (isurf->format == CAIRO_FORMAT_A8)

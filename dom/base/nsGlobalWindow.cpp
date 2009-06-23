@@ -2299,6 +2299,17 @@ nsresult
 nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   NS_PRECONDITION(IsInnerWindow(), "PostHandleEvent is used on outer window!?");
+
+  // Return early if there is nothing to do.
+  switch (aVisitor.mEvent->message) {
+    case NS_RESIZE_EVENT:
+    case NS_PAGE_UNLOAD:
+    case NS_LOAD:
+      break;
+    default:
+      return NS_OK;
+  }
+
   /* mChromeEventHandler and mContext go dangling in the middle of this
    function under some circumstances (events that destroy the window)
    without this addref. */

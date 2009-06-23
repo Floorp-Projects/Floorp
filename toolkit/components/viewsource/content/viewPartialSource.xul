@@ -68,7 +68,6 @@
         persist="screenX screenY width height sizemode">
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/javascript" src="chrome://global/content/viewPartialSource.js"/>
@@ -185,9 +184,7 @@
     </menubar>  
   </toolbox>
 
-  <vbox id="appcontent" flex="1"
-        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-
+  <vbox id="appcontent" flex="1" ondrop="contentAreaDNDObserver.drop(event);">
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              disablehistory="true" context="viewSourceContextMenu"/>
     <findbar id="FindToolbar" browserid="content"/>

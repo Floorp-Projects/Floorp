@@ -1935,6 +1935,14 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
+  if (!IsDefunct()) {
+    // Flush layout so that all the frame construction, reflow, and styles are
+    // up-to-date since we rely on frames, and styles when calculating state.
+    // We don't flush the display because we don't care about painting.
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    presShell->FlushPendingNotifications(Flush_Layout);
+  }
+
   nsresult rv = GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
