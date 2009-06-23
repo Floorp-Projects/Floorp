@@ -233,7 +233,7 @@ nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
     if (!aMayHaveNewListenerManagers) {
       return NS_OK;
     }
-    mTarget->GetListenerManager(PR_FALSE, getter_AddRefs(mManager));
+    mManager = mTarget->GetListenerManager(PR_FALSE);
   }
   if (mManager) {
     NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,

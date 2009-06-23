@@ -7333,8 +7333,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
   
-  nsCOMPtr<nsIEventListenerManager> manager;
-  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+  nsIEventListenerManager* manager = piTarget->GetListenerManager(PR_TRUE);
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));

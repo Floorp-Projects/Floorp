@@ -527,6 +527,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         (EVENT_TYPE_EQUALS(ls, aType, aUserType) ||
          (!(ls->mEventType) &&
           EVENT_TYPE_DATA_EQUALS(ls->mTypeData, aTypeData)))) {
+      nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
       mListeners.RemoveElementAt(i);
       mNoListenerForEvent = NS_EVENT_TYPE_NULL;
       mNoListenerForEventAtom = nsnull;

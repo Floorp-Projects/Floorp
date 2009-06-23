@@ -500,8 +500,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       mContentStyleRule = nsnull;
 
     if (IsEventName(aName)) {
-      nsCOMPtr<nsIEventListenerManager> manager;
-      GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+      nsIEventListenerManager* manager = GetListenerManager(PR_FALSE);
       if (manager) {
         nsIAtom* eventName = GetEventNameForAttr(aName);
         manager->RemoveScriptEventListener(eventName);

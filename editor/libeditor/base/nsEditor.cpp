@@ -334,8 +334,7 @@ nsEditor::InstallEventListeners()
   // register the event listeners with the listener manager
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  nsCOMPtr<nsIEventListenerManager> elmP;
-  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
 
   if (sysGroup && elmP)
   {
@@ -398,8 +397,8 @@ nsEditor::RemoveEventListeners()
   if (piTarget)
   {
     // unregister the event listeners with the DOM event target
-    nsCOMPtr<nsIEventListenerManager> elmP;
-    piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+    nsCOMPtr<nsIEventListenerManager> elmP =
+      piTarget->GetListenerManager(PR_TRUE);
     if (mKeyListenerP)
     {
       nsCOMPtr<nsIDOMEventGroup> sysGroup;

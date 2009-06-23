@@ -1083,10 +1083,11 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
       nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(win));
       NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
-      rv = piTarget->GetListenerManager(PR_TRUE, aManager);
+      *aManager = piTarget->GetListenerManager(PR_TRUE);
 
-      if (NS_SUCCEEDED(rv)) {
+      if (*aManager) {
         NS_ADDREF(*aTarget = win);
+        NS_ADDREF(*aManager);
       }
       *aDefer = PR_FALSE;
     } else {
@@ -1145,9 +1146,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None) {
     if (nsContentUtils::IsEventAttributeName(aAttribute, EventNameType_HTML)) {
-      nsCOMPtr<nsIEventListenerManager> manager;
-      GetListenerManager(PR_FALSE, getter_AddRefs(manager));
-
+      nsIEventListenerManager* manager = GetListenerManager(PR_FALSE);
       if (manager) {
         manager->RemoveScriptEventListener(aAttribute);
       }
