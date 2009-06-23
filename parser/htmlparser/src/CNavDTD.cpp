@@ -233,18 +233,8 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
     }
 #endif    
 
-   if (mSink) {
-      PRBool enabled = PR_TRUE;
-      mSink->IsEnabled(eHTMLTag_frameset, &enabled);
-      if (enabled) {
-        mFlags |= NS_IPARSER_FLAG_FRAMES_ENABLED;
-      }
-      
-      mSink->IsEnabled(eHTMLTag_script, &enabled);
-      if (enabled) {
-        mFlags |= NS_IPARSER_FLAG_SCRIPT_ENABLED;
-      }
-    }
+    mFlags |= nsHTMLTokenizer::GetFlags(aSink);
+
   }
 
   return result;

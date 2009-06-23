@@ -118,7 +118,26 @@ nsHTMLTokenizer::~nsHTMLTokenizer()
     mTokenDeque.ForEach(theDeallocator);
   }
 }
- 
+
+/*static*/ PRUint32
+nsHTMLTokenizer::GetFlags(const nsIContentSink* aSink)
+{
+  PRUint32 flags = 0;
+  nsCOMPtr<nsIHTMLContentSink> sink =
+    do_QueryInterface(const_cast<nsIContentSink*>(aSink));
+  if (sink) {
+    PRBool enabled = PR_TRUE;
+    sink->IsEnabled(eHTMLTag_frameset, &enabled);
+    if (enabled) {
+      flags |= NS_IPARSER_FLAG_FRAMES_ENABLED;
+    }
+    sink->IsEnabled(eHTMLTag_script, &enabled);
+    if (enabled) {
+      flags |= NS_IPARSER_FLAG_SCRIPT_ENABLED;
+    }
+  }
+  return flags;
+}
 
 /*******************************************************************
   Here begins the real working methods for the tokenizer.
