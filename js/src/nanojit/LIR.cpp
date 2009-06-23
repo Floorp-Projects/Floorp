@@ -1,4 +1,4 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -178,8 +178,8 @@ namespace nanojit
         // because we know we have enough space, having just started a new
         // page.
         LInsp l = (LInsp)_unused;
-        l->initOpcodeAndClearResv(LIR_skip);
-        l->setOprnd1((LInsp)addrOfLastLInsOnCurrentPage);
+		l->setIns1(LIR_skip, (LInsp)addrOfLastLInsOnCurrentPage);
+		l->resv()->clear();
         _unused += sizeof(LIns);
         _stats.lir++;
     }
@@ -227,34 +227,32 @@ namespace nanojit
 	{
         LOpcode op = val->isQuad() ? LIR_stqi : LIR_sti;
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
-		l->setOprnd1(val);
-		l->setOprnd2(base);
-        l->setDisp(d);
+		l->setStorei(op, val, base, d);
+		l->resv()->clear();
 		return l;
 	}
 
 	LInsp LirBufWriter::ins0(LOpcode op)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
+		l->setIns0(op);
+		l->resv()->clear();
 		return l;
 	}
 	
 	LInsp LirBufWriter::ins1(LOpcode op, LInsp o1)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
-		l->setOprnd1(o1);
+		l->setIns1(op, o1);
+		l->resv()->clear();
 		return l;
 	}
 	
 	LInsp LirBufWriter::ins2(LOpcode op, LInsp o1, LInsp o2)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
-		l->setOprnd1(o1);
-		l->setOprnd2(o2);		
+		l->setIns2(op, o1, o2);
+		l->resv()->clear();
 		return l;
 	}
 
@@ -278,19 +276,16 @@ namespace nanojit
     {
         size = (size+3)>>2; // # of required 32bit words
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_alloc);
-        l->i.imm32 = size;
+		l->setAlloc(LIR_alloc, size);
+		l->resv()->clear();
 		return l;
     }
 
     LInsp LirBufWriter::insParam(int32_t arg, int32_t kind)
     {
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_param);
-        NanoAssert(isU8(arg) && isU8(kind));
-		l->c.imm8a = arg;
-        l->c.imm8b = kind;
-        l->c.ci = NULL;
+		l->setParam(LIR_param, arg, kind);
+		l->resv()->clear();
         if (kind) {
             NanoAssert(arg < NumSavedRegs);
             _buf->savedRegs[arg] = l;
@@ -302,17 +297,16 @@ namespace nanojit
 	LInsp LirBufWriter::insImm(int32_t imm)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_int);
-        l->setimm32(imm);
+		l->setImm(LIR_int, imm);
+		l->resv()->clear();
         return l;
 	}
 	
 	LInsp LirBufWriter::insImmq(uint64_t imm)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_quad);
-        l->i64.imm64_0 = int32_t(imm);
-        l->i64.imm64_1 = int32_t(imm>>32);
+		l->setImmq(LIR_quad, imm);
+		l->resv()->clear();
         return l;
 	}
 
@@ -331,8 +325,8 @@ namespace nanojit
         LInsp l = (LInsp)(payload + payload_szB);
         NanoAssert(prevLInsAddr >= pageDataStart(prevLInsAddr));
         NanoAssert(samepage(prevLInsAddr, l));
-        l->initOpcodeAndClearResv(LIR_skip);
-        l->setOprnd1((LInsp)prevLInsAddr);
+		l->setIns1(LIR_skip, (LInsp)prevLInsAddr);
+		l->resv()->clear();
         return l;
 	}
 
@@ -538,31 +532,11 @@ namespace nanojit
         return nanojit::isCseOpcode(firstWord.code) || (isCall() && callInfo()->_cse);
     }
 
-    void LIns::initOpcodeAndClearResv(LOpcode op)
-	{
-        NanoAssert(4*sizeof(void*) == sizeof(LIns));
-        firstWord.code = op;
-        firstWord.used = 0;
-	}
-
-    Reservation* LIns::initResv()
-	{
-        firstWord.reg     = UnknownReg;
-        firstWord.arIndex = 0;
-        firstWord.used    = 1;
-        return &firstWord;
-	}
-
-    void LIns::clearResv()
-	{
-        firstWord.used = 0;
-	}
-
     void LIns::setTarget(LInsp label)
     {
         NanoAssert(label && label->isop(LIR_label));
 		NanoAssert(isBranch());
-        setOprnd2(label);
+        u.oprnd_2 = label;
 	}
 
 	LInsp LIns::getTarget()
@@ -1075,13 +1049,11 @@ namespace nanojit
         // Write the call instruction itself.
         LInsp l = (LInsp)(uintptr_t(newargs) + argc*sizeof(LInsp));
 #ifndef NANOJIT_64BIT
-        l->initOpcodeAndClearResv(op==LIR_callh ? LIR_call : op);
+        l->setCall(op==LIR_callh ? LIR_call : op, argc, ci);
 #else
-        l->initOpcodeAndClearResv(op);
+        l->setCall(op, argc, ci);
 #endif
-        l->c.imm8a = 0;
-        l->c.imm8b = argc;
-        l->c.ci = ci;
+        l->resv()->clear();
         return l;
 	}
 
