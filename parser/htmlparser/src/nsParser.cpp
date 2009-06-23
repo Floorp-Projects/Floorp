@@ -1605,7 +1605,7 @@ nsParser::DidBuildModel(nsresult anErrorCode)
       PRBool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mDTD && mSink &&
           mSink->ReadyToCallDidBuildModel(terminated)) {
-        nsresult dtdResult =  mDTD->DidBuildModel(anErrorCode,this),
+        nsresult dtdResult =  mDTD->DidBuildModel(anErrorCode),
                 sinkResult = mSink->DidBuildModel();
         // nsIDTD::DidBuildModel used to be responsible for calling
         // nsIContentSink::DidBuildModel, but that obligation isn't expressible
@@ -2429,7 +2429,13 @@ nsParser::BuildModel()
   if (NS_SUCCEEDED(result)) {
     if (mDTD) {
       MOZ_TIMER_START(mDTDTime);
-      result = mDTD->BuildModel(this, theTokenizer);
+      // XXXbenjamn CanInterrupt() and !inDocWrite appear to be covariant.
+      PRBool inDocWrite = !!mParserContext->mPrevContext;
+      result = mDTD->BuildModel(theTokenizer,
+                                // ignore interruptions in document.write
+                                CanInterrupt() && !inDocWrite,
+                                !inDocWrite, // don't count lines in document.write
+                                &mCharset);
       MOZ_TIMER_STOP(mDTDTime);
     }
   } else {
