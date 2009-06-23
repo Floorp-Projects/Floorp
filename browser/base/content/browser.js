@@ -2302,16 +2302,6 @@ function PageProxyClearIcon ()
   gProxyFavIcon.removeAttribute("src");
 }
 
-
-function PageProxyDragGesture(aEvent)
-{
-  if (gProxyFavIcon.getAttribute("pageproxystate") == "valid") {
-    nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
-    return true;
-  }
-  return false;
-}
-
 function PageProxyClickHandler(aEvent)
 {
   if (aEvent.button == 1 && gPrefService.getBoolPref("middlemouse.paste"))
@@ -2668,56 +2658,88 @@ function FillInHTMLTooltip(tipElement)
   return retVal;
 }
 
+var browserDragAndDrop = {
+  getDragURLFromDataTransfer : function (dt)
+  {
+    var types = dt.types;
+    for (var t = 0; t < types.length; t++) {
+      var type = types[t];
+      switch (type) {
+        case "text/uri-list":
+          var url = dt.getData("URL").replace(/^\s+|\s+$/g, "");
+          return [url, url];
+        case "text/plain":
+        case "text/x-moz-text-internal":
+          var url = dt.getData(type).replace(/^\s+|\s+$/g, "");
+          return [url, url];
+        case "text/x-moz-url":
+          var split = dt.getData(type).split("\n");
+          return [split[0], split[1]];
+        case "application/x-moz-file":
+          var file = dt.mozGetDataAt(type, 0);
+          var name = file instanceof Components.interfaces.nsIFile ? file.leafName : "";
+          var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                    .getService(Components.interfaces.nsIIOService);
+          var fileHandler = ioService.getProtocolHandler("file")
+                                     .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+          return [fileHandler.getURLSpecFromFile(file), name];
+      }
+    }
+    return [ , ];
+  },
+
+  dragOver : function (aEvent, statusString)
+  {
+    var types = aEvent.dataTransfer.types;
+    if (types.contains("application/x-moz-file") ||
+        types.contains("text/x-moz-url") ||
+        types.contains("text/uri-list") ||
+        types.contains("text/plain")) {
+      aEvent.preventDefault();
+
+      if (statusString) {
+        var statusTextFld = document.getElementById("statusbar-display");
+        statusTextFld.label = gNavigatorBundle.getString(statusString);
+      }
+    }
+  }
+}
+
+
 var proxyIconDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
+      if (gProxyFavIcon.getAttribute("pageproxystate") != "valid")
+        return;
+
       var value = content.location.href;
       var urlString = value + "\n" + content.document.title;
       var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
-      aXferData.data = new TransferData();
-      aXferData.data.addDataForFlavour("text/x-moz-url", urlString);
-      aXferData.data.addDataForFlavour("text/unicode", value);
-      aXferData.data.addDataForFlavour("text/html", htmlString);
-
-      // we're copying the URL from the proxy icon, not moving
-      // we specify all of them though, because d&d sucks and OS's
-      // get confused if they don't get the one they want
-      aDragAction.action =
-        Components.interfaces.nsIDragService.DRAGDROP_ACTION_COPY |
-        Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE |
-        Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+      var dt = aEvent.dataTransfer;
+      dt.setData("text/x-moz-url", urlString);
+      dt.setData("text/uri-list", value);
+      dt.setData("text/plain", value);
+      dt.setData("text/html", htmlString);
     }
 }
 
 var homeButtonObserver = {
-  onDrop: function (aEvent, aXferData, aDragSession)
+  onDrop: function (aEvent)
     {
-      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+      let url = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer)[0];
       setTimeout(openHomeDialog, 0, url);
     },
 
-  onDragOver: function (aEvent, aFlavour, aDragSession)
+  onDragOver: function (aEvent)
     {
-      var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.label = gNavigatorBundle.getString("droponhomebutton");
-      aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+      browserDragAndDrop.dragOver(aEvent, "droponhomebutton");
+      aEvent.dropEffect = "link";
     },
-
-  onDragExit: function (aEvent, aDragSession)
+  onDragLeave: function (aEvent)
     {
       var statusTextFld = document.getElementById("statusbar-display");
       statusTextFld.label = "";
-    },
-
-  getSupportedFlavours: function ()
-    {
-      var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/unicode");
-      flavourSet.appendFlavour("text/x-moz-text-internal");  // for tabs
-      return flavourSet;
     }
 }
 
@@ -2746,136 +2768,100 @@ function openHomeDialog(aURL)
 }
 
 var bookmarksButtonObserver = {
-  onDrop: function (aEvent, aXferData, aDragSession)
+  onDrop: function (aEvent)
   {
-    var split = aXferData.data.split("\n");
-    var url = split[0];
-    if (url != aXferData.data)  // do nothing if it's not a valid URL
-      PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(url), split[1]);
+    let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
+    try {
+      PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(url), name);
+    } catch(ex) { }
   },
 
-  onDragOver: function (aEvent, aFlavour, aDragSession)
+  onDragOver: function (aEvent)
   {
-    var statusTextFld = document.getElementById("statusbar-display");
-    statusTextFld.label = gNavigatorBundle.getString("droponbookmarksbutton");
-    aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+    browserDragAndDrop.dragOver(aEvent, "droponbookmarksbutton");
+    aEvent.dropEffect = "link";
   },
 
-  onDragExit: function (aEvent, aDragSession)
+  onDragLeave: function (aEvent)
   {
     var statusTextFld = document.getElementById("statusbar-display");
     statusTextFld.label = "";
-  },
-
-  getSupportedFlavours: function ()
-  {
-    var flavourSet = new FlavourSet();
-    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-    flavourSet.appendFlavour("text/x-moz-url");
-    flavourSet.appendFlavour("text/unicode");
-    return flavourSet;
   }
 }
 
 var newTabButtonObserver = {
-  onDragOver: function(aEvent, aFlavour, aDragSession) {
-    var statusTextFld = document.getElementById("statusbar-display");
-    statusTextFld.label = gNavigatorBundle.getString("droponnewtabbutton");
-    return true;
+  onDragOver: function (aEvent)
+  {
+    browserDragAndDrop.dragOver(aEvent, "droponnewtabbutton");
   },
-  onDragExit: function (aEvent, aDragSession) {
+
+  onDragLeave: function (aEvent)
+  {
     var statusTextFld = document.getElementById("statusbar-display");
     statusTextFld.label = "";
   },
-  onDrop: function (aEvent, aXferData, aDragSession) {
-    var xferData = aXferData.data.split("\n");
-    var draggedText = xferData[0] || xferData[1];
+
+  onDrop: function (aEvent)
+  {
+    let url = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer)[0];
     var postData = {};
-    var url = getShortcutOrURI(draggedText, postData);
+    url = getShortcutOrURI(url, postData);
     if (url) {
-      nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
+      nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
       // allow third-party services to fixup this URL
       openNewTabWith(url, null, postData.value, aEvent, true);
     }
-  },
-  getSupportedFlavours: function () {
-    var flavourSet = new FlavourSet();
-    flavourSet.appendFlavour("text/unicode");
-    flavourSet.appendFlavour("text/x-moz-url");
-    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-    return flavourSet;
   }
 }
 
 var newWindowButtonObserver = {
-  onDragOver: function(aEvent, aFlavour, aDragSession)
-    {
-      var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.label = gNavigatorBundle.getString("droponnewwindowbutton");
-      return true;
-    },
-  onDragExit: function (aEvent, aDragSession)
-    {
-      var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.label = "";
-    },
-  onDrop: function (aEvent, aXferData, aDragSession)
-    {
-      var xferData = aXferData.data.split("\n");
-      var draggedText = xferData[0] || xferData[1];
-      var postData = {};
-      var url = getShortcutOrURI(draggedText, postData);
-      if (url) {
-        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
-        // allow third-party services to fixup this URL
-        openNewWindowWith(url, null, postData.value, true);
-      }
-    },
-  getSupportedFlavours: function ()
-    {
-      var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("text/unicode");
-      flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      flavourSet.appendFlavour("text/x-moz-text-internal");  // for tabs
-      return flavourSet;
+  onDragOver: function (aEvent)
+  {
+    browserDragAndDrop.dragOver(aEvent, "droponnewwindowbutton");
+  },
+  onDragLeave: function (aEvent)
+  {
+    var statusTextFld = document.getElementById("statusbar-display");
+    statusTextFld.label = "";
+  },
+  onDrop: function (aEvent)
+  {
+    let url = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer)[0];
+    var postData = {};
+    url = getShortcutOrURI(url, postData);
+    if (url) {
+      nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
+      // allow third-party services to fixup this URL
+      openNewWindowWith(url, null, postData.value, true);
     }
+  }
 }
 
 var DownloadsButtonDNDObserver = {
   /////////////////////////////////////////////////////////////////////////////
   // nsDragAndDrop
-  onDragOver: function (aEvent, aFlavour, aDragSession)
+  onDragOver: function (aEvent)
   {
     var statusTextFld = document.getElementById("statusbar-display");
     statusTextFld.label = gNavigatorBundle.getString("dropondownloadsbutton");
-    aDragSession.canDrop = (aFlavour.contentType == "text/x-moz-url" ||
-                            aFlavour.contentType == "text/unicode");
+    var types = aEvent.dataTransfer.types;
+    if (types.contains("text/x-moz-url") ||
+        types.contains("text/uri-list") ||
+        types.contains("text/plain"))
+      aEvent.preventDefault();
   },
 
-  onDragExit: function (aEvent, aDragSession)
+  onDragLeave: function (aEvent)
   {
     var statusTextFld = document.getElementById("statusbar-display");
     statusTextFld.label = "";
   },
 
-  onDrop: function (aEvent, aXferData, aDragSession)
+  onDrop: function (aEvent)
   {
-    var split = aXferData.data.split("\n");
-    var url = split[0];
-    if (url != aXferData.data) {  //do nothing, not a valid URL
-      nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
-
-      var name = split[1];
-      saveURL(url, name, null, true, true);
-    }
-  },
-  getSupportedFlavours: function ()
-  {
-    var flavourSet = new FlavourSet();
-    flavourSet.appendFlavour("text/x-moz-url");
-    flavourSet.appendFlavour("text/unicode");
-    return flavourSet;
+    let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
+    nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
+    saveURL(url, name, null, true, true);
   }
 }
 
@@ -4968,13 +4954,7 @@ function handleLinkClick(event, href, linkNode)
 
       return false;
     case 1:    // if middle button clicked
-      var tab;
-      try {
-        tab = gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick")
-      }
-      catch(ex) {
-        tab = true;
-      }
+      var tab = gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick");
       if (tab)
         openNewTabWith(href, doc, null, event, false);
       else
@@ -5021,15 +5001,21 @@ function middleMousePaste(event)
  */
 
 var contentAreaDNDObserver = {
-  onDrop: function (aEvent, aXferData, aDragSession)
+  onDragOver: function (aEvent)
+    {
+      var types = aEvent.dataTransfer.types;
+      if (types.contains("application/x-moz-file") ||
+          types.contains("text/x-moz-url") ||
+          types.contains("text/uri-list") ||
+          types.contains("text/plain"))
+        aEvent.preventDefault();
+    },
+  onDrop: function (aEvent)
     {
       if (aEvent.getPreventDefault())
         return;
 
-      var dragType = aXferData.flavour.contentType;
-      var dragData = aXferData.data;
-
-      var url = transferUtils.retrieveURLFromData(dragData, dragType);
+      let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
 
       // valid urls don't contain spaces ' '; if we have a space it
       // isn't a valid url, or if it's a javascript: or data: url,
@@ -5038,7 +5024,7 @@ var contentAreaDNDObserver = {
           /^\s*(javascript|data):/.test(url))
         return;
 
-      nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
+      nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
 
       switch (document.documentElement.getAttribute('windowtype')) {
         case "navigator:browser":
@@ -5054,18 +5040,7 @@ var contentAreaDNDObserver = {
       // keep the event from being handled by the dragDrop listeners
       // built-in to gecko if they happen to be above us.
       aEvent.preventDefault();
-    },
-
-  getSupportedFlavours: function ()
-    {
-      var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour(TAB_DROP_TYPE);
-      flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/plain");
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      return flavourSet;
     }
-
 };
 
 function MultiplexHandler(event)
@@ -6255,151 +6230,6 @@ var FeedHandler = {
 #include browser-textZoom.js
 
 #include browser-tabPreviews.js
-
-HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {
-  // enable/disable the Recently Closed Tabs sub menu
-  var undoPopup = document.getElementById("historyUndoPopup");
-
-  // no restorable tabs, so disable menu
-  if (this._ss.getClosedTabCount(window) == 0)
-    undoPopup.parentNode.setAttribute("disabled", true);
-  else
-    undoPopup.parentNode.removeAttribute("disabled");
-}
-
-/**
- * Populate when the history menu is opened
- */
-HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
-  var undoPopup = document.getElementById("historyUndoPopup");
-
-  // remove existing menu items
-  while (undoPopup.hasChildNodes())
-    undoPopup.removeChild(undoPopup.firstChild);
-
-  // no restorable tabs, so make sure menu is disabled, and return
-  if (this._ss.getClosedTabCount(window) == 0) {
-    undoPopup.parentNode.setAttribute("disabled", true);
-    return;
-  }
-
-  // enable menu
-  undoPopup.parentNode.removeAttribute("disabled");
-
-  // populate menu
-  var undoItems = eval("(" + this._ss.getClosedTabData(window) + ")");
-  for (var i = 0; i < undoItems.length; i++) {
-    var m = document.createElement("menuitem");
-    m.setAttribute("label", undoItems[i].title);
-    if (undoItems[i].image) {
-      let iconURL = undoItems[i].image;
-      // don't initiate a connection just to fetch a favicon (see bug 467828)
-      if (/^https?:/.test(iconURL))
-        iconURL = "moz-anno:favicon:" + iconURL;
-      m.setAttribute("image", iconURL);
-    }
-    m.setAttribute("class", "menuitem-iconic bookmark-item");
-    m.setAttribute("value", i);
-    m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
-    m.addEventListener("click", undoCloseMiddleClick, false);
-    if (i == 0)
-      m.setAttribute("key", "key_undoCloseTab");
-    undoPopup.appendChild(m);
-  }
-
-  // "Open All in Tabs"
-  var strings = gNavigatorBundle;
-  undoPopup.appendChild(document.createElement("menuseparator"));
-  m = undoPopup.appendChild(document.createElement("menuitem"));
-  m.setAttribute("label", strings.getString("menuOpenAllInTabs.label"));
-  m.setAttribute("accesskey", strings.getString("menuOpenAllInTabs.accesskey"));
-  m.addEventListener("command", function() {
-    for (var i = 0; i < undoItems.length; i++)
-      undoCloseTab();
-  }, false);
-}
-
-HistoryMenu.toggleRecentlyClosedWindows = function PHM_toggleRecentlyClosedWindows() {
-  // enable/disable the Recently Closed Windows sub menu
-  let undoPopup = document.getElementById("historyUndoWindowPopup");
-
-  // no restorable windows, so disable menu
-  if (this._ss.getClosedWindowCount() == 0)
-    undoPopup.parentNode.setAttribute("disabled", true);
-  else
-    undoPopup.parentNode.removeAttribute("disabled");
-}
-
-/**
- * Populate when the history menu is opened
- */
-HistoryMenu.populateUndoWindowSubmenu = function PHM_populateUndoWindowSubmenu() {
-  let undoPopup = document.getElementById("historyUndoWindowPopup");
-  let menuLabelString = gNavigatorBundle.getString("menuUndoCloseWindowLabel");
-  let menuLabelStringSingleTab =
-    gNavigatorBundle.getString("menuUndoCloseWindowSingleTabLabel");
-
-  // remove existing menu items
-  while (undoPopup.hasChildNodes())
-    undoPopup.removeChild(undoPopup.firstChild);
-
-  // no restorable windows, so make sure menu is disabled, and return
-  if (this._ss.getClosedWindowCount() == 0) {
-    undoPopup.parentNode.setAttribute("disabled", true);
-    return;
-  }
-
-  // enable menu
-  undoPopup.parentNode.removeAttribute("disabled");
-
-  // populate menu
-  let undoItems = JSON.parse(this._ss.getClosedWindowData());
-  for (let i = 0; i < undoItems.length; i++) {
-    let undoItem = undoItems[i];
-    let otherTabsCount = undoItem.tabs.length - 1;
-    let label = (otherTabsCount == 0) ? menuLabelStringSingleTab
-                                      : PluralForm.get(otherTabsCount, menuLabelString);
-    let menuLabel = label.replace("#1", undoItem.title)
-                         .replace("#2", otherTabsCount);
-    let m = document.createElement("menuitem");
-    m.setAttribute("label", menuLabel);
-    let selectedTab = undoItem.tabs[undoItem.selected - 1];
-    if (selectedTab.attributes.image) {
-      let iconURL = selectedTab.attributes.image;
-      // don't initiate a connection just to fetch a favicon (see bug 467828)
-      if (/^https?:/.test(iconURL))
-        iconURL = "moz-anno:favicon:" + iconURL;
-      m.setAttribute("image", iconURL);
-    }
-    m.setAttribute("class", "menuitem-iconic bookmark-item");
-    m.setAttribute("oncommand", "undoCloseWindow(" + i + ");");
-    if (i == 0)
-      m.setAttribute("key", "key_undoCloseWindow");
-    undoPopup.appendChild(m);
-  }
-
-  // "Open All in Windows"
-  undoPopup.appendChild(document.createElement("menuseparator"));
-  let m = undoPopup.appendChild(document.createElement("menuitem"));
-  m.setAttribute("label", gNavigatorBundle.getString("menuRestoreAllWindows.label"));
-  m.setAttribute("accesskey", gNavigatorBundle.getString("menuRestoreAllWindows.accesskey"));
-  m.setAttribute("oncommand",
-    "for (var i = 0; i < " + undoItems.length + "; i++) undoCloseWindow();");
-}
-
-/**
-  * Re-open a closed tab and put it to the end of the tab strip. 
-  * Used for a middle click.
-  * @param aEvent
-  *        The event when the user clicks the menu item
-  */
-function undoCloseMiddleClick(aEvent) {
-  if (aEvent.button != 1)
-    return;
-
-  undoCloseTab(aEvent.originalTarget.value);
-  gBrowser.moveTabToEnd();
-}
 
 /**
  * Re-open a closed tab.

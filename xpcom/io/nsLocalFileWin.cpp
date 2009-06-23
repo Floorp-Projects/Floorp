@@ -523,6 +523,20 @@ OpenDir(const nsAFlatString &name, nsDir * *dir)
     if ( d->handle == INVALID_HANDLE_VALUE )
     {
         PR_Free(d);
+
+#ifdef WINCE
+        /* On WinCE, there is no . or .. directory, so an empty directory will
+           return an error.  We don't want to throw an error, so instead just
+           return success here, if the last error was ERROR_NO_MORE_FILES.
+
+           Errors like the path not existing should be handled higher up, but
+           would return ERROR_PATH_NOT_FOUND, so we would still throw.
+         */
+
+        if (GetLastError() == ERROR_NO_MORE_FILES)
+            return NS_OK;
+#endif
+
         return ConvertWinError(GetLastError());
     }
     d->firstEntry = PR_TRUE;

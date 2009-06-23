@@ -393,6 +393,18 @@ LivemarkService.prototype = {
     return false;
   },
 
+  getLivemarkIdForFeedURI: function LS_getLivemarkIdForFeedURI(aFeedURI) {
+    if (!(aFeedURI instanceof Ci.nsIURI))
+      throw Cr.NS_ERROR_INVALID_ARG;
+
+    for (var i = 0; i < this._livemarks.length; ++i) {
+      if (this._livemarks[i].feedURI.equals(aFeedURI))
+        return this._livemarks[i].folderId;
+    }
+
+    return -1;
+  },
+
   _ensureLivemark: function LS__ensureLivemark(aFolderId) {
     if (!this.isLivemark(aFolderId))
       throw Cr.NS_ERROR_INVALID_ARG;

@@ -644,6 +644,9 @@ static void
 WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr);
 #endif
 
+static inline void
+ToParticipant(nsISupports *s, nsXPCOMCycleCollectionParticipant **cp);
+
 struct nsPurpleBuffer
 {
 private:
@@ -717,13 +720,36 @@ public:
 
     void FreeBlocks()
     {
+        if (mCount > 0)
+            UnmarkRemainingPurple(&mFirstBlock);
         Block *b = mFirstBlock.mNext; 
         while (b) {
+            if (mCount > 0)
+                UnmarkRemainingPurple(b);
             Block *next = b->mNext;
             delete b;
             b = next;
         }
         mFirstBlock.mNext = nsnull;
+    }
+
+    void UnmarkRemainingPurple(Block *b)
+    {
+        for (nsPurpleBufferEntry *e = b->mEntries,
+                              *eEnd = e + NS_ARRAY_LENGTH(b->mEntries);
+             e != eEnd; ++e) {
+            if (!(PRUword(e->mObject) & PRUword(1))) {
+                // This is a real entry (rather than something on the
+                // free list).
+                nsXPCOMCycleCollectionParticipant *cp;
+                ToParticipant(e->mObject, &cp);
+
+                cp->UnmarkPurple(e->mObject);
+
+                if (--mCount == 0)
+                    break;
+            }
+        }
     }
 
     void SelectPointers(GCGraphBuilder &builder);

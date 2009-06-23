@@ -1785,7 +1785,8 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     if(si && si->GetFlags().DontSharePrototype())
         return UnexpectedFailure(NS_ERROR_INVALID_ARG);
 
-    ClassInfo2WrappedNativeProtoMap* map = scope->GetWrappedNativeProtoMap();
+    ClassInfo2WrappedNativeProtoMap* map =
+        scope->GetWrappedNativeProtoMap(proto->ClassIsMainThreadOnly());
     XPCLock* lock = GetRuntime()->GetMapLock();
 
     {   // scoped lock

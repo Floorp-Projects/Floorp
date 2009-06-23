@@ -70,7 +70,6 @@
   <script type="application/javascript" src="chrome://mozapps/content/downloads/downloads.js"/>
   <script type="application/javascript" src="chrome://mozapps/content/downloads/DownloadProgressListener.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   
   <stringbundleset id="downloadSet">
@@ -179,8 +178,8 @@
   <richlistbox id="downloadView" seltype="multiple" flex="1"
                context="downloadContextMenu"
                ondblclick="onDownloadDblClick(event);"
-               ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
-               ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
+               ondragover="gDownloadDNDObserver.onDragOver(event)"
+               ondrop="gDownloadDNDObserver.onDrop(event)">
   </richlistbox>
 
   <windowdragbox id="search" align="center">

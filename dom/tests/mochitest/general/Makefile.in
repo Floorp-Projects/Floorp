@@ -49,6 +49,8 @@ _TEST_FILES = test_offsets.html \
 		test_offsets.js \
 		test_domWindowUtils.html \
 		test_domWindowUtils_scrollXY.html \
+		test_497898.html \
+		497633.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

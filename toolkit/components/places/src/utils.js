@@ -1001,38 +1001,60 @@ var PlacesUtils = {
 
   /**
    * Get the most recently added/modified bookmark for a URL, excluding items
-   * under tag or livemark containers. -1 is returned if no item is found.
+   * under tag or livemark containers.
+   *
+   * @param aURI
+   *        nsIURI of the page we will look for.
+   * @returns itemId of the found bookmark, or -1 if nothing is found.
    */
   getMostRecentBookmarkForURI:
   function PU_getMostRecentBookmarkForURI(aURI) {
     var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
     for (var i = 0; i < bmkIds.length; i++) {
       // Find the first folder which isn't a tag container
-      var bk = bmkIds[i];
-      var parentId = this.bookmarks.getFolderIdForItem(bk);
-      if (parentId == this.unfiledBookmarksFolderId)
-        return bk;
+      var itemId = bmkIds[i];
+      var parentId = this.bookmarks.getFolderIdForItem(itemId);
+      // Optimization: if this is a direct child of a root we don't need to
+      // check if its grandparent is a tag.
+      if (parentId == this.unfiledBookmarksFolderId ||
+          parentId == this.toolbarFolderId ||
+          parentId == this.bookmarksMenuFolderId)
+        return itemId;
 
       var grandparentId = this.bookmarks.getFolderIdForItem(parentId);
       if (grandparentId != this.tagsFolderId &&
           !this.itemIsLivemark(parentId))
-        return bk;
+        return itemId;
     }
     return -1;
   },
 
   /**
-   * TODO: this should use the livemark service's cache of folder ids (bug 492884).
+   * Get the most recent folder item id for a feed URI.
+   *
+   * @param aURI
+   *        nsIURI of the feed we will look for.
+   * @returns folder item id of the found livemark, or -1 if nothing is found.
    */
   getMostRecentFolderForFeedURI:
-  function PU_getMostRecentFolderForFeedURI(aURI) {
-    var feedSpec = aURI.spec
-    var annosvc = this.annotations;
-    var livemarks = annosvc.getItemsWithAnnotation(LMANNO_FEEDURI, {});
-    for (var i = 0; i < livemarks.length; i++) {
-      if (annosvc.getItemAnnotation(livemarks[i], LMANNO_FEEDURI) == feedSpec)
-        return livemarks[i];
+  function PU_getMostRecentFolderForFeedURI(aFeedURI) {
+    // If the Livemark service hasn't yet been initialized then
+    // use the annotations service directly to avoid instanciating
+    // it on startup. (bug 398300)
+    if (this.__lookupGetter__("livemarks")) {
+      var feedSpec = aFeedURI.spec
+      var annosvc = this.annotations;
+      var livemarks = annosvc.getItemsWithAnnotation(LMANNO_FEEDURI, {});
+      for (var i = 0; i < livemarks.length; i++) {
+        if (annosvc.getItemAnnotation(livemarks[i], LMANNO_FEEDURI) == feedSpec)
+          return livemarks[i];
+      }
     }
+    else {
+      // If the livemark service has already been instanciated, use it.
+      return this.livemarks.getLivemarkIdForFeedURI(aFeedURI);
+    }
+
     return -1;
   },
 
