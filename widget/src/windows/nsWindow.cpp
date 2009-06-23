@@ -5963,9 +5963,11 @@ InitDDraw()
 
 PRBool nsWindow::OnPaint(HDC aDC)
 {
+#ifdef CAIRO_HAS_DDRAW_SURFACE
   if (gRenderMode == RENDER_IMAGE_DDRAW16) {
     return OnPaintImageDDraw16();
   }
+#endif
 
   PRBool result = PR_TRUE;
   PAINTSTRUCT ps;
@@ -6366,6 +6368,7 @@ DDRAW_FAILED:
   return result;
 }
 
+#ifdef CAIRO_HAS_DDRAW_SURFACE
 // Windows Mobile Special image/direct draw painting fun
 PRBool nsWindow::OnPaintImageDDraw16()
 {
@@ -6594,6 +6597,7 @@ cleanup:
   mPainting = PR_FALSE;
   return result;
 }
+#endif
 
 //-------------------------------------------------------------------------
 //
