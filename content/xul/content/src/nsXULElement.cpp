@@ -75,7 +75,6 @@
 #include "nsIDOMFormListener.h"
 #include "nsIDOMXULListener.h"
 #include "nsIDOMContextMenuListener.h"
-#include "nsIDOMDragListener.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNodeList.h"

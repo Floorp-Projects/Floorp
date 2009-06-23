@@ -65,7 +65,6 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
-#include "nsIDOMDragListener.h"
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIDocument.h"
 #include "nsITransactionManager.h"
