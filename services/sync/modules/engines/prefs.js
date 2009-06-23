@@ -128,7 +128,7 @@ PrefStore.prototype = {
           pref["value"] = this._prefs.getBoolPref(toSync[i]);
           break;
         default:
-          this._log.warn("Unsupported pref type for " + toSync[i]);
+          this._log.trace("Unsupported pref type for " + toSync[i]);
       }
       if ("value" in pref)
         values[values.length] = pref;
@@ -150,7 +150,7 @@ PrefStore.prototype = {
           this._prefs.setBoolPref(values[i]["name"], values[i]["value"]);
           break;
         default:
-          this._log.warn("Unexpected preference type: " + values[i]["type"]);
+          this._log.trace("Unexpected preference type: " + values[i]["type"]);
       }
     }
   },
@@ -163,7 +163,7 @@ PrefStore.prototype = {
   },
   
   changeItemID: function PrefStore_changeItemID(oldID, newID) {
-    this._log.warn("PrefStore GUID is constant!");
+    this._log.trace("PrefStore GUID is constant!");
   },
   
   itemExists: function FormStore_itemExists(id) {
@@ -185,11 +185,11 @@ PrefStore.prototype = {
   },
   
   create: function PrefStore_create(record) {
-    this._log.warn("Ignoring create request");
+    this._log.trace("Ignoring create request");
   },
 
   remove: function PrefStore_remove(record) {
-    this._log.warn("Ignoring remove request")
+    this._log.trace("Ignoring remove request")
   },
 
   update: function PrefStore_update(record) {
@@ -198,7 +198,7 @@ PrefStore.prototype = {
   },
   
   wipe: function PrefStore_wipe() {
-    this._log.warn("Ignoring wipe request");
+    this._log.trace("Ignoring wipe request");
   }
 };
 
