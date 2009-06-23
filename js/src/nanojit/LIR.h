@@ -452,7 +452,6 @@ namespace nanojit
 	 */
     class LabelMap MMGC_SUBCLASS_DECL
     {
-		LabelMap* parent;
 		class Entry MMGC_SUBCLASS_DECL
 		{
 		public:
@@ -468,13 +467,12 @@ namespace nanojit
         void formatAddr(const void *p, char *buf);
     public:
         avmplus::AvmCore *core;
-        LabelMap(avmplus::AvmCore *, LabelMap* parent);
+        LabelMap(avmplus::AvmCore *);
         ~LabelMap();
         void add(const void *p, size_t size, size_t align, const char *name);
 		void add(const void *p, size_t size, size_t align, avmplus::String*);
 		const char *dup(const char *);
 		const char *format(const void *p);
-		void promoteAll(const void *newbase);
 		void clear();
     };
 
