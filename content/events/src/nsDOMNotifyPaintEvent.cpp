@@ -41,27 +41,20 @@
 #include "nsClientRect.h"
 
 nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(nsPresContext* aPresContext,
-                                             nsNotifyPaintEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? aEvent :
-               new nsNotifyPaintEvent(PR_FALSE, 0, nsRegion(), nsRegion()))
-{  
-  if (aEvent) {
-    mEventIsInternal = PR_FALSE;
-  }
-  else
-  {
-    mEventIsInternal = PR_TRUE;
-    mEvent->time = PR_Now();
-  }
-}
-
-nsDOMNotifyPaintEvent::~nsDOMNotifyPaintEvent()
+                                             nsEvent* aEvent,
+                                             PRUint32 aEventType,
+                                             const nsRegion* aSameDocRegion,
+                                             const nsRegion* aCrossDocRegion)
+: nsDOMEvent(aPresContext, aEvent)
 {
-  if (mEventIsInternal) {
-    if (mEvent->eventStructType == NS_NOTIFYPAINT_EVENT) {
-      delete static_cast<nsNotifyPaintEvent*>(mEvent);
-      mEvent = nsnull;
-    }
+  if (mEvent) {
+    mEvent->message = aEventType;
+  }
+  if (aSameDocRegion) {
+    mSameDocRegion = *aSameDocRegion;
+  }
+  if (aCrossDocRegion) {
+    mCrossDocRegion = *aCrossDocRegion;
   }
 }
 
@@ -76,13 +69,11 @@ NS_IMPL_RELEASE_INHERITED(nsDOMNotifyPaintEvent, nsDOMEvent)
 nsRegion
 nsDOMNotifyPaintEvent::GetRegion()
 {
-  nsNotifyPaintEvent* event = static_cast<nsNotifyPaintEvent*>(mEvent);
-
   nsRegion r;
   if (nsContentUtils::IsCallerTrustedForRead()) {
-    r.Or(event->sameDocRegion, event->crossDocRegion);
+    r.Or(mSameDocRegion, mCrossDocRegion);
   } else {
-    r = event->sameDocRegion;
+    r = mSameDocRegion;
   }
   return r;
 }
@@ -127,10 +118,14 @@ nsDOMNotifyPaintEvent::GetClientRects(nsIDOMClientRectList** aResult)
 
 nsresult NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aInstancePtrResult,
                                    nsPresContext* aPresContext,
-                                   nsNotifyPaintEvent *aEvent) 
+                                   nsEvent *aEvent,
+                                   PRUint32 aEventType,
+                                   const nsRegion* aSameOriginRegion,
+                                   const nsRegion* aCrossDocRegion) 
 {
   nsDOMNotifyPaintEvent* it =
-    new nsDOMNotifyPaintEvent(aPresContext, aEvent);
+    new nsDOMNotifyPaintEvent(aPresContext, aEvent, aEventType,
+                              aSameOriginRegion, aCrossDocRegion);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
