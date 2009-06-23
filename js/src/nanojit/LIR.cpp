@@ -2107,8 +2107,8 @@ namespace nanojit
 	#endif /* FEATURE_NANOJIT */
 
 #if defined(NJ_VERBOSE)
-    LabelMap::LabelMap(AvmCore *core, LabelMap* parent)
-        : parent(parent), names(core->gc), addrs(core->config.verbose_addrs), end(buf), core(core)
+    LabelMap::LabelMap(AvmCore *core)
+        : names(core->gc), addrs(core->config.verbose_addrs), end(buf), core(core)
 	{}
 
     LabelMap::~LabelMap()
@@ -2166,16 +2166,10 @@ namespace nanojit
 				return dup(b);
 			}
 			else {
-				if (parent)
-					return parent->format(p);
-
 				sprintf(b, "%p", p);
 				return dup(b);
 			}
 		}
-		if (parent)
-			return parent->format(p);
-
 		sprintf(b, "%p", p);
 		return dup(b);
     }
@@ -2191,15 +2185,6 @@ namespace nanojit
 		}
 		strcpy(s, b);
 		return s;
-	}
-
-	// copy all labels to parent, adding newbase to label addresses
-	void LabelMap::promoteAll(const void *newbase)
-	{
-		for (int i=0, n=names.size(); i < n; i++) {
-			void *base = (char*)newbase + (intptr_t)names.keyAt(i);
-			parent->names.put(base, names.at(i));
-		}
 	}
 #endif // NJ_VERBOSE
 }
