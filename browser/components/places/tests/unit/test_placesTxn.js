@@ -664,6 +664,8 @@ function run_test() {
   do_check_eq(bmsvc.getItemIndex(bkmk3_1Id), -1);
   do_check_eq(bmsvc.getItemIndex(bkmk3_2Id), -1);
   do_check_eq(bmsvc.getItemIndex(bkmk3_3Id), -1);
+  // Check last removed item id.
+  do_check_eq(observer._itemRemovedId, bkmk3Id);
 
   txn.undoTransaction();
   var newBkmk1Id = bmsvc.getIdForItemAt(root, 0);
@@ -685,6 +687,9 @@ function run_test() {
   do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
   do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
   do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), "folder");
+  // Check last added back item id.
+  // Notice items are restored in reverse order.
+  do_check_eq(observer._itemAddedId, newBkmk1Id);
 
   txn.redoTransaction();
   do_check_eq(bmsvc.getItemIndex(newBkmk1Id), -1);
@@ -693,6 +698,8 @@ function run_test() {
   do_check_eq(bmsvc.getItemIndex(newBkmk3_1Id), -1);
   do_check_eq(bmsvc.getItemIndex(newBkmk3_2Id), -1);
   do_check_eq(bmsvc.getItemIndex(newBkmk3_3Id), -1);
+  // Check last removed item id.
+  do_check_eq(observer._itemRemovedId, newBkmk3Id);
 
   txn.undoTransaction();
   newBkmk1Id = bmsvc.getIdForItemAt(root, 0);
@@ -714,6 +721,9 @@ function run_test() {
   do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
   do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
   do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), "folder");
+  // Check last added back item id.
+  // Notice items are restored in reverse order.
+  do_check_eq(observer._itemAddedId, newBkmk1Id);
 
   // Test creating an item with child transactions.
   var childTxns = [];
