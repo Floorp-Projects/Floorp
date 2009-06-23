@@ -508,12 +508,12 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
         if (!piTarget)
             return NS_ERROR_UNEXPECTED;
 
-        nsresult rv = piTarget->GetListenerManager(PR_TRUE, aManager);
-        if (NS_SUCCEEDED(rv)) {
-            NS_ADDREF(*aTarget = window);
-        }
         *aDefer = PR_FALSE;
-        return rv;
+        *aManager = piTarget->GetListenerManager(PR_TRUE);
+        NS_ENSURE_STATE(*aManager);
+        NS_ADDREF(*aManager);
+        NS_ADDREF(*aTarget = window);
+        return NS_OK;
     }
 
     return nsGenericElement::GetEventListenerManagerForAttr(aManager,

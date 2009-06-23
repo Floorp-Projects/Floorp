@@ -78,8 +78,8 @@ PRBool
 nsCoreUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
 {
   NS_ENSURE_TRUE(aContent, PR_FALSE);
-  nsCOMPtr<nsIEventListenerManager> listenerManager;
-  aContent->GetListenerManager(PR_FALSE, getter_AddRefs(listenerManager));
+  nsIEventListenerManager* listenerManager =
+    aContent->GetListenerManager(PR_FALSE);
 
   return listenerManager && listenerManager->HasListenersFor(aEventType);  
 }

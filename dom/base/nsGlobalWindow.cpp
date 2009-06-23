@@ -328,18 +328,18 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 
 // Same as FORWARD_TO_INNER, but this will create a fresh inner if an
 // inner doesn't already exists.
-#define FORWARD_TO_INNER_CREATE(method, args)                                 \
+#define FORWARD_TO_INNER_CREATE(method, args, err_rval)                       \
   PR_BEGIN_MACRO                                                              \
   if (IsOuterWindow()) {                                                      \
     if (!mInnerWindow) {                                                      \
       if (mIsClosed) {                                                        \
-        return NS_ERROR_NOT_AVAILABLE;                                        \
+        return err_rval;                                                      \
       }                                                                       \
       nsCOMPtr<nsIDOMDocument> doc;                                           \
       nsresult fwdic_nr = GetDocument(getter_AddRefs(doc));                   \
-      NS_ENSURE_SUCCESS(fwdic_nr, fwdic_nr);                                  \
+      NS_ENSURE_SUCCESS(fwdic_nr, err_rval);                                  \
       if (!mInnerWindow) {                                                    \
-        return NS_ERROR_NOT_AVAILABLE;                                        \
+        return err_rval;                                                      \
       }                                                                       \
     }                                                                         \
     return GetCurrentInnerWindowInternal()->method args;                      \
@@ -6336,7 +6336,8 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  PRBool aUseCapture)
 {
-  FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture));
+  FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture),
+                          NS_ERROR_NOT_AVAILABLE);
 
   return AddEventListener(aType, aListener, aUseCapture,
                           !nsContentUtils::IsChromeDoc(mDoc));
@@ -6387,17 +6388,13 @@ nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
                                         nsIDOMEventGroup *aEvtGrp)
 {
   FORWARD_TO_INNER_CREATE(AddGroupedEventListener,
-                          (aType, aListener, aUseCapture, aEvtGrp));
+                          (aType, aListener, aUseCapture, aEvtGrp),
+                          NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager)))) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
 }
 
 NS_IMETHODIMP
@@ -6437,9 +6434,8 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener *aListener,
                                  PRBool aUseCapture, PRBool aWantsUntrusted)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
@@ -6454,13 +6450,9 @@ nsresult
 nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                       const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager)))) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
 
 nsresult
@@ -6478,42 +6470,35 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
-                                   nsIEventListenerManager** aResult)
+nsIEventListenerManager*
+nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound)
 {
-  FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound, aResult));
+  FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound), nsnull);
 
   if (!mListenerManager) {
     if (!aCreateIfNotFound) {
-      *aResult = nsnull;
-      return NS_OK;
+      return nsnull;
     }
 
     static NS_DEFINE_CID(kEventListenerManagerCID,
                          NS_EVENTLISTENERMANAGER_CID);
-    nsresult rv;
 
-    mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mListenerManager->SetListenerTarget(
-      static_cast<nsPIDOMEventTarget*>(this));
+    mListenerManager = do_CreateInstance(kEventListenerManagerCID);
+    if (mListenerManager) {
+      mListenerManager->SetListenerTarget(
+        static_cast<nsPIDOMEventTarget*>(this));
+    }
   }
 
-  NS_ADDREF(*aResult = mListenerManager);
-
-  return NS_OK;
+  return mListenerManager;
 }
 
 nsresult
 nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager))) &&
-      manager) {
-    return manager->GetSystemEventGroupLM(aGroup);
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->GetSystemEventGroupLM(aGroup);
 }
 
 nsIScriptContext*
