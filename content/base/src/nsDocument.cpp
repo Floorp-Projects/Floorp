@@ -572,7 +572,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetList)
                       nsIDocumentObserver,
                       nsIMutationObserver)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentStyleSheetList)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(StyleSheetList)
 NS_INTERFACE_MAP_END
 
 
