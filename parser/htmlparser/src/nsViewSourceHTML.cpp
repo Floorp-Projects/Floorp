@@ -313,9 +313,8 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
 
   mLineNumber = 1;
 
-  result = mSink->WillBuildModel(GetMode());
-
   START_TIMER();
+
   return result;
 }
 
@@ -536,7 +535,7 @@ void CViewSourceHTML::AddAttrToNode(nsCParserStartNode& aNode,
  * @param
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
@@ -547,7 +546,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
     STOP_TIMER();
 
     mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
-    if((aNotifySink) && (mSink)) {
+    if (mSink) {
         //now let's close automatically auto-opened containers...
 
 #ifdef DUMP_TO_FILE
@@ -564,7 +563,6 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
         mSink->CloseContainer(eHTMLTag_body);
         mSink->CloseContainer(eHTMLTag_html);
       }
-      result = mSink->DidBuildModel();
     }
 
     START_TIMER();
