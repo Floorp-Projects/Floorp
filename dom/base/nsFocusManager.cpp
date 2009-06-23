@@ -882,11 +882,11 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
     nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(window));
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
     if (dsti) {
-      dsti->GetParent(getter_AddRefs(dsti));
-      nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(dsti);
+      nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+      dsti->GetParent(getter_AddRefs(parentDsti));
+      nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(parentDsti);
       if (parentWindow)
         parentWindow->SetFocusedNode(nsnull);
-
     }
 
     mFocusedWindow = window;
@@ -985,8 +985,9 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
       return;
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(docShell);
-    dsti->GetParent(getter_AddRefs(dsti));
-    docShell = do_QueryInterface(dsti);
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+    dsti->GetParent(getter_AddRefs(parentDsti));
+    docShell = do_QueryInterface(parentDsti);
   }
 
   // if the new element is in the same window as the currently focused element 
@@ -1097,7 +1098,9 @@ nsFocusManager::IsSameOrAncestor(nsPIDOMWindow* aPossibleAncestor,
   while (dsti) {
     if (dsti == ancestordsti)
       return PR_TRUE;
-    dsti->GetParent(getter_AddRefs(dsti));
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+    dsti->GetParent(getter_AddRefs(parentDsti));
+    dsti.swap(parentDsti);
   }
 
   return PR_FALSE;
@@ -1116,11 +1119,15 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
   nsAutoTPtrArray<nsIDocShellTreeItem, 30> parents1, parents2;
   do {
     parents1.AppendElement(dsti1);
-    dsti1->GetParent(getter_AddRefs(dsti1));
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti1;
+    dsti1->GetParent(getter_AddRefs(parentDsti1));
+    dsti1.swap(parentDsti1);
   } while (dsti1);
   do {
     parents2.AppendElement(dsti2);
-    dsti2->GetParent(getter_AddRefs(dsti2));
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti2;
+    dsti2->GetParent(getter_AddRefs(parentDsti2));
+    dsti2.swap(parentDsti2);
   } while (dsti2);
 
   PRUint32 pos1 = parents1.Length();
@@ -1154,9 +1161,12 @@ nsFocusManager::AdjustWindowFocus(nsPIDOMWindow* aWindow)
 
     nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(window));
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
-    dsti->GetParent(getter_AddRefs(dsti));
+    if (!dsti) 
+      return;
+    nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+    dsti->GetParent(getter_AddRefs(parentDsti));
 
-    window = do_GetInterface(dsti);
+    window = do_GetInterface(parentDsti);
     if (window) {
       // if the parent window is visible but aWindow was not, then we have
       // likely moved up and out from a hidden tab to the browser window, or a
