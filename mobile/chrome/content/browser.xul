@@ -173,7 +173,7 @@
 
   <popupset id="mainPopupSet">
   </popupset>
-
+  
   <!-- stupid stack needs to be in a box. not sure why -->
   <box>
   <stack id="browser-container" flex="1">
@@ -314,18 +314,10 @@
               <richlistitem id="addons-local" class="section-header" align="center">
                 <label value="&addonsLocal.label;" flex="1"/>
               </richlistitem>
-              <richlistitem id="addons-repo" class="section-header" orient="vertical" pack="center">
-                <hbox>
-                  <label value="&addonsRepo.label;" flex="1"/>
-                  <radiogroup id="addons-repo-mode" oncommand="ExtensionsView.toggleMode();">
-                    <radio label="&addonsRecommended.label;" value="recommended" selected="true"/>
-                    <radio label="&addonsSearch.label;" value="search"/>
-                  </radiogroup>
-                </hbox>
-                <hbox id="addons-search-box" pack="end" collapsed="true">
-                  <textbox id="addons-search-text" emptytext="&addonsSearch.emptytext;" type="search" searchbutton="false"
-                           oncommand="ExtensionsView.getAddonsFromRepo(this.value);"/>
-                </hbox>
+              <richlistitem id="addons-repo" class="section-header" orient="horizontal" align="center">
+                <label value="&addonsRepo.label;" flex="1"/>
+                <textbox id="addons-search-text" emptytext="&addonsSearch.emptytext;" type="search" searchbutton="false"
+                         oncommand="ExtensionsView.getAddonsFromRepo(this.value);"/>
               </richlistitem>
             </richlistbox>
           </notificationbox>

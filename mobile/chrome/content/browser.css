@@ -142,6 +142,10 @@ richlistitem[selected="true"].section-header {
   background-color: lightgray;
 }
 
+richlistitem[typeName="message"] {
+  border-bottom: 0px;
+}
+
 richlistitem[typeName="download"] {
   -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-downloading");
 }

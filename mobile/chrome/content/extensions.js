@@ -385,18 +385,6 @@ var ExtensionsView = {
     return (uri && (scheme == "http" || scheme == "https" || scheme == "ftp"));
   },
 
-  toggleMode: function ev_toggleMode() {
-    let mode = document.getElementById("addons-repo-mode");
-    if (mode.value == "search") {
-      document.getElementById("addons-search-box").collapsed = false;
-      document.getElementById("addons-search-text").value = "";
-    }
-    else {
-      document.getElementById("addons-search-box").collapsed = true;
-      this.getAddonsFromRepo("");
-    }
-  },
-
   displaySectionMessage: function ev_displaySectionMessage(aSection, aMessage, aButtonLabel, aHideThrobber) {
     let item = document.createElement("richlistitem");
     item.setAttribute("typeName", "message");
@@ -407,11 +395,10 @@ var ExtensionsView = {
       item.setAttribute("hidebutton", "true");
     item.setAttribute("hidethrobber", aHideThrobber);
 
-    let section = this._localItem;
     if (aSection == "repo")
-      section = this._repoItem;
-
-    this._list.insertBefore(item, section.nextSibling);
+      this._list.appendChild(item);
+    else
+      this._list.insertBefore(item, this._repoItem)
   },
 
   getAddonsFromRepo: function ev_getAddonsFromRepo(aTerms) {
@@ -441,10 +428,9 @@ var ExtensionsView = {
   displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aIsRecommended) {
     this.clearSection("repo");
 
+    let strings = document.getElementById("bundle_browser");
     if (aAddons.length == 0) {
-      let strings = document.getElementById("bundle_browser");
-      this.displaySectionMessage("repo", strings.getString("addonsSearchNone.label"),
-                                strings.getString("addonsSearchNone.button"), true);
+      this.displaySectionMessage("repo", strings.getString("addonsSearchNone.label"), null, true);
       return;
     }
 
@@ -472,6 +458,9 @@ var ExtensionsView = {
       listitem.setAttribute("xpiHash", addon.xpiHash);
       this._list.appendChild(listitem);
     }
+
+    if (!aIsRecommended)
+      this.displaySectionMessage("repo", null, strings.getString("addonsSearchSuccess.button"), true);
   },
 
   showPage: function ev_showPage(aItem) {
@@ -483,8 +472,8 @@ var ExtensionsView = {
   },
 
   resetSearch: function ev_resetSearch() {
-    document.getElementById("addons-repo-mode").value = "recommended";
-    this.toggleMode();
+    document.getElementById("addons-search-text").value = "";
+    this.getAddonsFromRepo("");
   }
 };
 
