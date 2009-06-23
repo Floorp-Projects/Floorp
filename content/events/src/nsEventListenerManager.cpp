@@ -55,8 +55,6 @@
 #include "nsIDOMUIListener.h"
 #include "nsITextControlFrame.h"
 #ifdef MOZ_SVG
-#include "nsIDOMSVGListener.h"
-#include "nsIDOMSVGZoomListener.h"
 #include "nsGkAtoms.h"
 #endif // MOZ_SVG
 #include "nsIEventStateManager.h"
@@ -263,21 +261,6 @@ static const EventDispatchData sUIEvents[] = {
   { NS_UI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut) }
 };
 
-#ifdef MOZ_SVG
-static const EventDispatchData sSVGEvents[] = {
-  { NS_SVG_LOAD,   HANDLER(&nsIDOMSVGListener::Load)   },
-  { NS_SVG_UNLOAD, HANDLER(&nsIDOMSVGListener::Unload) },
-  { NS_SVG_ABORT,  HANDLER(&nsIDOMSVGListener::Abort)  },
-  { NS_SVG_ERROR,  HANDLER(&nsIDOMSVGListener::Error)  },
-  { NS_SVG_RESIZE, HANDLER(&nsIDOMSVGListener::Resize) },
-  { NS_SVG_SCROLL, HANDLER(&nsIDOMSVGListener::Scroll) }
-};
-
-static const EventDispatchData sSVGZoomEvents[] = {
-  { NS_SVG_ZOOM, HANDLER(&nsIDOMSVGZoomListener::Zoom) }
-};
-#endif // MOZ_SVG
-
 #define IMPL_EVENTTYPEDATA(type) \
 { \
   s##type##Events, \
@@ -299,11 +282,6 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(Composition),
   IMPL_EVENTTYPEDATA(XUL),
   IMPL_EVENTTYPEDATA(UI)
-#ifdef MOZ_SVG
- ,
-  IMPL_EVENTTYPEDATA(SVG),
-  IMPL_EVENTTYPEDATA(SVGZoom)
-#endif // MOZ_SVG
 };
 
 // Strong references to event groups
