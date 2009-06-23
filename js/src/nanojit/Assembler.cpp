@@ -505,8 +505,9 @@ namespace nanojit
 		RegisterMask prefer = hint(i, allow);
 
 		// if we didn't have a reservation, allocate one now
-        if (!resv)
-			resv = i->initResv();
+        if (!resv) {
+			(resv = i->resv())->init();
+		}
 
         r = resv->reg;
 
@@ -555,7 +556,7 @@ namespace nanojit
 	{
 		Reservation* resv = getresv(i);
 		if (!resv)
-			resv = i->initResv();
+			(resv = i->resv())->init();
         if (!resv->arIndex) {
 			resv->arIndex = arReserve(i);
             NanoAssert(resv->arIndex <= _activation.highwatermark);
@@ -598,7 +599,7 @@ namespace nanojit
 		}
 		if (index)
             arFree(index);			// free any stack stack space associated with entry
-        i->clearResv();
+        i->resv()->clear();
 	}
 
 	void Assembler::evict(Register r)
@@ -947,7 +948,7 @@ namespace nanojit
 
 				if (!resv->arIndex && resv->reg == UnknownReg)
 				{
-                    i->clearResv();
+                    i->resv()->clear();
 				}
 			}
 		}
