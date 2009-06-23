@@ -2228,7 +2228,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
     }
 
     if (mDTD) {
-      mDTD->WillResumeParse(mSink);
+      mSink->WillResume();
       PRBool theIterationIsOk = PR_TRUE;
 
       while (result == NS_OK && theIterationIsOk) {
@@ -2265,10 +2265,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
         // If we're told to block the parser, we disable all further parsing
         // (and cache any data coming in) until the parser is re-enabled.
         if (NS_ERROR_HTMLPARSER_BLOCK == result) {
-          if (mDTD) {
-            mDTD->WillInterruptParse(mSink);
-          }
-
+          mSink->WillInterrupt();
           if (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) {
             // If we were blocked by a recursive invocation, don't re-block.
             BlockParser();
@@ -2324,7 +2321,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
               result = mInternalState;
               aIsFinalChunk = mParserContext &&
                               mParserContext->mStreamListenerState == eOnStop;
-              // ...then intentionally fall through to WillInterruptParse()...
+              // ...then intentionally fall through to mSink->WillInterrupt()...
             }
           }
         }
@@ -2332,9 +2329,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
         if (theTokenizerResult == kEOF ||
             result == NS_ERROR_HTMLPARSER_INTERRUPTED) {
           result = (result == NS_ERROR_HTMLPARSER_INTERRUPTED) ? NS_OK : result;
-          if (mDTD) {
-            mDTD->WillInterruptParse(mSink);
-          }
+          mSink->WillInterrupt();
         }
       }
     } else {

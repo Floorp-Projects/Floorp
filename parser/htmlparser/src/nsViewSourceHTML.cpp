@@ -608,35 +608,6 @@ CViewSourceHTML::GetMode() const
   return eDTDMode_full_standards;
 }
 
-
-/**
- *
- * @update  gess5/18/98
- * @param
- * @return
- */
-NS_IMETHODIMP CViewSourceHTML::WillResumeParse(nsIContentSink* aSink){
-  nsresult result = NS_OK;
-  if(mSink) {
-    result = mSink->WillResume();
-  }
-  return result;
-}
-
-/**
- *
- * @update  gess5/18/98
- * @param
- * @return
- */
-NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(nsIContentSink* aSink){
-  nsresult result = NS_OK;
-  if(mSink) {
-    result = mSink->WillInterrupt();
-  }
-  return result;
-}
-
 /**
  * Called by the parser to enable/disable dtd verification of the
  * internal context stack.
