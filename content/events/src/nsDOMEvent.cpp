@@ -532,6 +532,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsGkAtoms::oncompositionend)
       mEvent->message = NS_COMPOSITION_END;
   } else if (mEvent->eventStructType == NS_EVENT) {
+    if (atom == nsGkAtoms::onMozAfterPaint)
+      mEvent->message = NS_AFTERPAINT;
     if (atom == nsGkAtoms::onfocus)
       mEvent->message = NS_FOCUS_CONTENT;
     else if (atom == nsGkAtoms::onblur)
@@ -665,10 +667,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_MEDIA_ERROR;
   }
 #endif // MOZ_MEDIA
-  else if (mEvent->eventStructType == NS_NOTIFYPAINT_EVENT) {
-    if (atom == nsGkAtoms::onMozAfterPaint)
-      mEvent->message = NS_AFTERPAINT;
-  }
   else if (mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT) {
     if (atom == nsGkAtoms::onMozSwipeGesture)
       mEvent->message = NS_SIMPLE_GESTURE_SWIPE;
@@ -988,14 +986,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent->eventStructType = NS_XUL_COMMAND_EVENT;
        static_cast<nsXULCommandEvent*>(newEvent)->sourceEvent =
          static_cast<nsXULCommandEvent*>(mEvent)->sourceEvent;
-      break;
-    }
-    case NS_NOTIFYPAINT_EVENT:
-    {
-      nsNotifyPaintEvent* event = static_cast<nsNotifyPaintEvent*>(mEvent);
-      newEvent =
-        new nsNotifyPaintEvent(PR_FALSE, msg,
-                               event->sameDocRegion, event->crossDocRegion);
       break;
     }
     case NS_SIMPLE_GESTURE_EVENT:
