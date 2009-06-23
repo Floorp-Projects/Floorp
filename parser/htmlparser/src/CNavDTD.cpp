@@ -188,7 +188,7 @@ CNavDTD::~CNavDTD()
 #endif
 }
 
-nsresult
+NS_IMETHODIMP
 CNavDTD::WillBuildModel(const CParserContext& aParserContext,
                         nsITokenizer* aTokenizer,
                         nsIContentSink* aSink)
@@ -233,11 +233,9 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 CNavDTD::BuildModel(nsIParser* aParser,
-                    nsITokenizer* aTokenizer,
-                    nsITokenObserver* anObserver,
-                    nsIContentSink* aSink)
+                    nsITokenizer* aTokenizer)
 {
   NS_PRECONDITION(mBodyContext != nsnull,
                   "Create a context before calling build model");
@@ -345,8 +343,7 @@ CNavDTD::BuildModel(nsIParser* aParser,
 nsresult
 CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
                               eHTMLTokenTypes aType,
-                              nsIParser* aParser,
-                              nsIContentSink* aSink)
+                              nsIParser* aParser)
 { 
   NS_ASSERTION(mTokenizer, "tokenizer is null! unable to build target.");
   NS_ASSERTION(mTokenAllocator, "unable to create tokens without an allocator.");
@@ -357,15 +354,14 @@ CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
   CToken* target = mTokenAllocator->CreateTokenOfType(aType, aTarget);
   NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
   mTokenizer->PushTokenFront(target);
-  return BuildModel(aParser, mTokenizer, 0, aSink);
+  return BuildModel(aParser, mTokenizer);
 }
 
-nsresult
+NS_IMETHODIMP
 CNavDTD::DidBuildModel(nsresult anErrorCode,
-                       nsIParser* aParser,
-                       nsIContentSink* aSink)
+                       nsIParser* aParser)
 {
-  if (!aSink) {
+  if (!mSink) {
     return NS_OK;
   }
 
@@ -378,7 +374,7 @@ CNavDTD::DidBuildModel(nsresult anErrorCode,
         // Also note: We ignore the return value of BuildNeglectedTarget, we
         // can't reasonably respond to errors (or requests to block) at this
         // point in the parsing process.
-        BuildNeglectedTarget(eHTMLTag_body, eToken_start, aParser, aSink);
+        BuildNeglectedTarget(eHTMLTag_body, eToken_start, aParser);
       }
       if (mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
         // Looks like the misplaced contents are not processed yet.
@@ -2126,7 +2122,7 @@ CNavDTD::CollectAttributes(nsIParserNode *aNode, eHTMLTags aTag, PRInt32 aCount)
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool
+NS_IMETHODIMP_(PRBool)
 CNavDTD::CanContain(PRInt32 aParent, PRInt32 aChild) const
 {
   PRBool result = gHTMLElements[aParent].CanContain((eHTMLTags)aChild, mDTDMode);
@@ -2305,7 +2301,7 @@ CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRInt32& aParentContains)
  *  @param   aTag -- tag to test as a container
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool
+NS_IMETHODIMP_(PRBool)
 CNavDTD::IsContainer(PRInt32 aTag) const
 {
   return nsHTMLElement::IsContainer((eHTMLTags)aTag);
