@@ -42,7 +42,6 @@
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
 #include "nsParser.h"
-#include "nsIParser.h"
 #include "nsIHTMLContentSink.h"
 #include "nsScanner.h"
 #include "prenv.h"
@@ -81,18 +80,8 @@ static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
 
 #include "nsElementTable.h"
 
-#ifdef MOZ_PERF_METRICS
-#  define START_TIMER()                    \
-    if (mParser) MOZ_TIMER_START(mParser->mParseTime); \
-    if (mParser) MOZ_TIMER_START(mParser->mDTDTime); 
-
-#  define STOP_TIMER()                     \
-    if (mParser) MOZ_TIMER_STOP(mParser->mParseTime); \
-    if (mParser) MOZ_TIMER_STOP(mParser->mDTDTime); 
-#else
-#  define STOP_TIMER() 
-#  define START_TIMER()
-#endif
+#define START_TIMER()
+#define STOP_TIMER()
 
 // Some flags for use by the DTD.
 #define NS_DTD_FLAG_NONE                   0x00000000
@@ -126,7 +115,7 @@ CNavDTD::CNavDTD()
     mTokenAllocator(0),
     mBodyContext(new nsDTDContext()),
     mTempContext(0),
-    mParser(0),
+    mCountLines(PR_TRUE),
     mTokenizer(0),
     mDTDMode(eDTDMode_quirks),
     mDocType(eHTML_Quirks),
@@ -234,22 +223,24 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 }
 
 NS_IMETHODIMP
-CNavDTD::BuildModel(nsIParser* aParser,
-                    nsITokenizer* aTokenizer)
+CNavDTD::BuildModel(nsITokenizer* aTokenizer,
+                    PRBool aCanInterrupt,
+                    PRBool aCountLines,
+                    const nsCString*)
 {
   NS_PRECONDITION(mBodyContext != nsnull,
                   "Create a context before calling build model");
 
   nsresult result = NS_OK;
 
-  if (!aTokenizer || !aParser) {
+  if (!aTokenizer) {
     return NS_OK;
   }
 
-  nsITokenizer*  oldTokenizer = mTokenizer;
+  nsITokenizer* const oldTokenizer = mTokenizer;
 
+  mCountLines     = aCountLines;
   mTokenizer      = aTokenizer;
-  mParser         = (nsParser*)aParser;
   mTokenAllocator = mTokenizer->GetTokenAllocator();
   
   if (!mSink) {
@@ -310,7 +301,7 @@ CNavDTD::BuildModel(nsIParser* aParser,
       if (!theToken) {
         break;
       }
-      result = HandleToken(theToken, aParser);
+      result = HandleToken(theToken);
     } else {
       result = NS_ERROR_HTMLPARSER_STOPPARSING;
       break;
@@ -319,17 +310,10 @@ CNavDTD::BuildModel(nsIParser* aParser,
     if (NS_ERROR_HTMLPARSER_INTERRUPTED == mSink->DidProcessAToken()) {
       // The content sink has requested that DTD interrupt processing tokens
       // So we need to make sure the parser is in a state where it can be
-      // interrupted. 
-      // The mParser->CanInterrupt will return TRUE if BuildModel was called
-      // from a place in the parser where it prepared to handle a return value of
-      // NS_ERROR_HTMLPARSER_INTERRUPTED.
-      // If the parser is processing a script's document.write we should not
-      // allow it to be interrupted.
+      // interrupted (e.g., not in a document.write).
       // We also need to make sure that an interruption does not override
       // a request to block the parser.
-      if (mParser->CanInterrupt() && 
-          !IsParserInDocWrite() && 
-          NS_SUCCEEDED(result)) {
+      if (aCanInterrupt && NS_SUCCEEDED(result)) {
         result = NS_ERROR_HTMLPARSER_INTERRUPTED;
         break;
       }
@@ -342,8 +326,7 @@ CNavDTD::BuildModel(nsIParser* aParser,
 
 nsresult
 CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
-                              eHTMLTokenTypes aType,
-                              nsIParser* aParser)
+                              eHTMLTokenTypes aType)
 { 
   NS_ASSERTION(mTokenizer, "tokenizer is null! unable to build target.");
   NS_ASSERTION(mTokenAllocator, "unable to create tokens without an allocator.");
@@ -354,19 +337,20 @@ CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
   CToken* target = mTokenAllocator->CreateTokenOfType(aType, aTarget);
   NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
   mTokenizer->PushTokenFront(target);
-  return BuildModel(aParser, mTokenizer);
+  // Always safe to disallow interruptions, so it doesn't matter that we've
+  // forgotten the aCanInterrupt parameter to BuildModel.  Also, BuildModel
+  // doesn't seem to care about the charset, and at this point we have no idea
+  // what the charset was, so 0 can and must suffice.  If either of these
+  // values mattered, we'd want to store them as data members in BuildModel.
+  return BuildModel(mTokenizer, PR_FALSE, mCountLines, 0);
 }
 
 NS_IMETHODIMP
-CNavDTD::DidBuildModel(nsresult anErrorCode,
-                       nsIParser* aParser)
+CNavDTD::DidBuildModel(nsresult anErrorCode)
 {
-  if (!mSink) {
-    return NS_OK;
-  }
-
   nsresult result = NS_OK;
-  if (aParser) {
+
+  if (mSink) {
     if (NS_OK == anErrorCode) {
       if (!(mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER)) {
         // This document is not a frameset document, however, it did not contain
@@ -374,7 +358,7 @@ CNavDTD::DidBuildModel(nsresult anErrorCode,
         // Also note: We ignore the return value of BuildNeglectedTarget, we
         // can't reasonably respond to errors (or requests to block) at this
         // point in the parsing process.
-        BuildNeglectedTarget(eHTMLTag_body, eToken_start, aParser);
+        BuildNeglectedTarget(eHTMLTag_body, eToken_start);
       }
       if (mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
         // Looks like the misplaced contents are not processed yet.
@@ -566,7 +550,7 @@ HasOpenTagOfType(PRInt32 aType, const nsDTDContext& aContext)
 }
 
 nsresult
-CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
+CNavDTD::HandleToken(CToken* aToken)
 {
   if (!aToken) {
     return NS_OK;
@@ -579,7 +563,7 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
 
   aToken->SetLineNumber(mLineNumber);
 
-  if (!IsParserInDocWrite()) {
+  if (mCountLines) {
     mLineNumber += aToken->GetNewlineCount();
   }
 
@@ -716,7 +700,7 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
                 mTokenAllocator->CreateTokenOfType(eToken_start,
                                                    eHTMLTag_body,
                                                    NS_LITERAL_STRING("body"));
-              result = HandleToken(theBodyToken, aParser);
+              result = HandleToken(theBodyToken);
             }
             return result;
           }
@@ -725,8 +709,6 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
   }
 
   if (theToken) {
-    mParser = (nsParser*)aParser;
-
     switch (theType) {
       case eToken_text:
       case eToken_start:
@@ -794,7 +776,7 @@ CNavDTD::DidHandleStartTag(nsIParserNode& aNode, eHTMLTags aChildTag)
         if (ePlainText != mDocType && theNextToken) {
           eHTMLTokenTypes theType = eHTMLTokenTypes(theNextToken->GetTokenType());
           if (eToken_newline == theType) {
-            if (!IsParserInDocWrite()) {
+            if (mCountLines) {
               mLineNumber += theNextToken->GetNewlineCount();
             }
             theNextToken = mTokenizer->PopToken();
@@ -1611,7 +1593,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator,
-                          IsParserInDocWrite() ? nsnull : &mLineNumber);
+                          !mCountLines ? nsnull : &mLineNumber);
       if (mBodyContext->LastOf(eHTMLTag_head) != kNotFound) {
         result = CloseContainersTo(eHTMLTag_head, PR_FALSE);
       }
@@ -1631,7 +1613,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
           // like 32782.
           CToken* theToken = mTokenAllocator->CreateTokenOfType(eToken_start,
                                                                 theChildTag);
-          result = HandleToken(theToken, mParser);
+          result = HandleToken(theToken);
         }
       }
       break;
@@ -1639,7 +1621,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
     case eHTMLTag_body:
     case eHTMLTag_html:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator,
-                          IsParserInDocWrite() ? nsnull : &mLineNumber);
+                          !mCountLines ? nsnull : &mLineNumber);
       break;
 
     case eHTMLTag_script:
@@ -1726,11 +1708,11 @@ CNavDTD::HandleEndToken(CToken* aToken)
                   // Oops, we're in misplaced content. Handle these tokens
                   // directly instead of trying to push them onto the tokenizer
                   // stack.
-                  result = HandleToken(theStartToken, mParser);
+                  result = HandleToken(theStartToken);
                   NS_ENSURE_SUCCESS(result, result);
 
                   IF_HOLD(aToken);
-                  result = HandleToken(aToken, mParser);
+                  result = HandleToken(aToken);
                 }
               }
             }
@@ -1851,7 +1833,7 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
           // difficult to handle misplaced style and link tags, since it's hard
           // to propagate the block return all the way up and then re-enter this
           // method.
-          result = HandleToken(theToken, mParser);
+          result = HandleToken(theToken);
         }
       }
 
@@ -1918,7 +1900,7 @@ CNavDTD::HandleEntityToken(CToken* aToken)
     NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
 
     // theToken should get recycled automagically...
-    return HandleToken(theToken, mParser);
+    return HandleToken(theToken);
   }
 
   eHTMLTags theParentTag = mBodyContext->Last();
@@ -2030,7 +2012,7 @@ CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
   CDoctypeDeclToken* theToken = static_cast<CDoctypeDeclToken*>(aToken);
   nsAutoString docTypeStr(theToken->GetStringValue());
   // XXX Doesn't this count the newlines twice?
-  if (!IsParserInDocWrite()) {
+  if (mCountLines) {
     mLineNumber += docTypeStr.CountChar(kNewLine);
   }
 
@@ -2090,7 +2072,7 @@ CNavDTD::CollectAttributes(nsIParserNode *aNode, eHTMLTags aTag, PRInt32 aCount)
           break;
         }
 
-        if (!IsParserInDocWrite()) {
+        if (mCountLines) {
           mLineNumber += theToken->GetNewlineCount();
         }
 
@@ -3129,6 +3111,6 @@ CNavDTD::CreateContextStackFor(eHTMLTags aParent, eHTMLTags aChild)
     // Note: These tokens should all wind up on contextstack, so don't recycle
     // them.
     CToken *theToken = mTokenAllocator->CreateTokenOfType(eToken_start, theTag);
-    HandleToken(theToken, mParser);
+    HandleToken(theToken);
   }
 }
