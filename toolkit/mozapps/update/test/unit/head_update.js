@@ -112,6 +112,14 @@ function getPrefBranch() {
  * back since it is easier to comment out the call to cleanUp when needed.
  */
 function cleanUp() {
+  // Always call app update's observe method passing xpcom-shutdown to test that
+  // the shutdown of app update runs without throwing or leaking. The observer
+  // method is used directly instead of calling notifyObservers so components
+  // outside of the scope of this test don't assert and thereby cause app update
+  // tests to fail.
+  if (gAUS)
+    gAUS.observe(null, "xpcom-shutdown", "");
+
   removeUpdateDirsAndFiles();
   gDirSvc.unregisterProvider(gDirProvider);
 
@@ -159,7 +167,8 @@ function startAUS() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
   setDefaultPrefs();
   gAUS = AUS_Cc["@mozilla.org/updates/update-service;1"].
-         getService(AUS_Ci.nsIApplicationUpdateService);
+         getService(AUS_Ci.nsIApplicationUpdateService).
+         QueryInterface(AUS_Ci.nsIObserver);
   var os = AUS_Cc["@mozilla.org/observer-service;1"].
            getService(AUS_Ci.nsIObserverService);
   os.notifyObservers(null, "profile-after-change", null);
