@@ -80,7 +80,6 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMXULListener.h"
-#include "nsIDOMDragListener.h"
 #include "nsIDOMContextMenuListener.h"
 #include "nsIDOMEventGroup.h"
 #include "nsAttrName.h"
