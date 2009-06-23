@@ -2123,7 +2123,7 @@ case "$target" in
     AC_DEFINE(HAVE_LOCALTIME_R)
 
     TARGET_MD_ARCH=win32
-    _PLATFORM_DEFAULT_TOOLKIT='windows'
+    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
@@ -4828,8 +4828,7 @@ MOZ_ARG_HEADER(Toolkit Options)
                             Mac OS X - cairo-cocoa
                             Neutrino/QNX - photon
                             OS/2 - cairo-os2
-                            Win32 - cairo-windows
-                            WinCE - windows
+                            Win32/WinCE - cairo-windows
                             Gtk2 with DirectFB - cairo-gtk2-dfb
                             * - cairo-gtk2
                             * - cairo-qt],
