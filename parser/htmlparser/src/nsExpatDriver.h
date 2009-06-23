@@ -99,7 +99,7 @@ public:
                                     const PRUnichar* aNotationName);
 
 private:
-  nsresult HandleToken(CToken* aToken, nsIParser* aParser);
+  nsresult HandleToken(CToken* aToken);
 
   // Load up an external stream to get external entity information
   nsresult OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
