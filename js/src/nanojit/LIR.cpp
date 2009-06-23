@@ -359,6 +359,9 @@ namespace nanojit
                     i -= sizeof(LIns);
 					break;
 
+#if defined NANOJIT_64BIT
+            	case LIR_callh:
+#endif
 				case LIR_call:
 			    case LIR_fcall: {
                     int argc = ((LInsp)i)->argc();
@@ -407,7 +410,9 @@ namespace nanojit
             case LIR_ret:
             case LIR_live:
             case LIR_neg:
+#if !defined NANOJIT_64BIT
             case LIR_callh:
+#endif
             case LIR_not:
             case LIR_qlo:
             case LIR_qhi:
@@ -494,7 +499,13 @@ namespace nanojit
     }
 	
 	bool LIns::isQuad() const {
+#ifdef AVMPLUS_64BIT
+		// callh in 64bit cpu's means a call that returns an int64 in a single register
+		return (firstWord.code & LIR64) != 0 || firstWord.code == LIR_callh;
+#else
+		// callh in 32bit cpu's means the 32bit MSW of an int64 result in 2 registers
 		return (firstWord.code & LIR64) != 0;
+#endif
 	}
     
 	bool LIns::isconstval(int32_t val) const
@@ -998,12 +1009,19 @@ namespace nanojit
 
     LIns* LirBufWriter::insCall(const CallInfo *ci, LInsp args[])
 	{
-		// Use LIR_fcall only when using the FPU.
-		LOpcode op = (!AvmCore::config.soft_float && ((ci->_argtypes & 3) == ARGSIZE_F))
-			? LIR_fcall : LIR_call;
+		static const LOpcode k_callmap[]  = { LIR_call,  LIR_fcall,  LIR_call,  LIR_callh };
+
+		uint32_t argt = ci->_argtypes;
+        LOpcode op = k_callmap[argt & 3];
+        NanoAssert(op != LIR_skip); // LIR_skip here is just an error condition
 
         ArgSize sizes[MAXARGS];
         int32_t argc = ci->get_sizes(sizes);
+
+		if (AvmCore::config.soft_float) {
+			if (op == LIR_fcall)
+				op = LIR_callh;
+		}
 
         // An example of what we're trying to serialize (for a 32-bit machine):
         //
@@ -1030,7 +1048,11 @@ namespace nanojit
 
         // Write the call instruction itself.
         LInsp l = (LInsp)(uintptr_t(newargs) + argc*sizeof(LInsp));
+#ifndef NANOJIT_64BIT
+        l->setCall(op==LIR_callh ? LIR_call : op, argc, ci);
+#else
         l->setCall(op, argc, ci);
+#endif
         l->resv()->clear();
         return l;
 	}
@@ -1169,6 +1191,9 @@ namespace nanojit
 				return hashimmq(i->imm64());
 			case LIR_call:
 			case LIR_fcall:
+#if defined NANOJIT_64BIT
+			case LIR_callh:
+#endif
 			{
 				LInsp args[10];
 				int32_t argc = i->argc();
@@ -1205,6 +1230,9 @@ namespace nanojit
 			}
 			case LIR_call:
 			case LIR_fcall:
+#if defined NANOJIT_64BIT
+			case LIR_callh:
+#endif
 			{
 				if (a->callInfo() != b->callInfo()) return false;
 				uint32_t argc=a->argc();
@@ -1615,12 +1643,16 @@ namespace nanojit
 		}
 		else {
 			if (ref->isCall()) {
+#if !defined NANOJIT_64BIT
 				if (ref->isop(LIR_callh)) {
 					// we've presumably seen the other half already
 					ref = ref->oprnd1();
 				} else {
+#endif
 					copyName(ref, ref->callInfo()->_name, funccounts.add(ref->callInfo()));
+#if !defined NANOJIT_64BIT
 				}
+#endif
 			} else {
                 NanoAssert(size_t(ref->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
 				copyName(ref, lirNames[ref->opcode()], lircounts.add(ref->opcode()));
@@ -1660,6 +1692,9 @@ namespace nanojit
 				sprintf(s, "%s", lirNames[op]);
 				break;
 
+#if defined NANOJIT_64BIT
+			case LIR_callh:
+#endif
 			case LIR_fcall:
 			case LIR_call: {
 				sprintf(s, "%s = %s ( ", formatRef(i), i->callInfo()->_name);
