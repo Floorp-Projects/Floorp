@@ -3149,32 +3149,3 @@ CNavDTD::CreateContextStackFor(eHTMLTags aParent, eHTMLTags aChild)
     HandleToken(theToken, mParser);
   }
 }
-
-nsresult
-CNavDTD::WillResumeParse(nsIContentSink* aSink)
-{
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
-
-  nsresult result = aSink ? aSink->WillResume() : NS_OK;
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-nsresult
-CNavDTD::WillInterruptParse(nsIContentSink* aSink)
-{
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
-
-  nsresult result = aSink ? aSink->WillInterrupt() : NS_OK;
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
