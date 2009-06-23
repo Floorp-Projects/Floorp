@@ -102,7 +102,7 @@ public:
      * @param   anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,
                              nsIParser* aParser,
                              nsIContentSink* aSink) = 0;
 
@@ -174,7 +174,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
 #define NS_DECL_NSIDTD \
     NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink);\
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,nsIParser* aParser,nsIContentSink* aSink);\
     NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink);\
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
