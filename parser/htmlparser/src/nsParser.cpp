@@ -1605,7 +1605,7 @@ nsParser::DidBuildModel(nsresult anErrorCode)
       PRBool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mDTD && mSink &&
           mSink->ReadyToCallDidBuildModel(terminated)) {
-        nsresult dtdResult =  mDTD->DidBuildModel(anErrorCode,this,mSink),
+        nsresult dtdResult =  mDTD->DidBuildModel(anErrorCode,this),
                 sinkResult = mSink->DidBuildModel();
         // nsIDTD::DidBuildModel used to be responsible for calling
         // nsIContentSink::DidBuildModel, but that obligation isn't expressible
@@ -2429,7 +2429,7 @@ nsParser::BuildModel()
   if (NS_SUCCEEDED(result)) {
     if (mDTD) {
       MOZ_TIMER_START(mDTDTime);
-      result = mDTD->BuildModel(this, theTokenizer, nsnull, mSink);
+      result = mDTD->BuildModel(this, theTokenizer);
       MOZ_TIMER_STOP(mDTDTime);
     }
   } else {

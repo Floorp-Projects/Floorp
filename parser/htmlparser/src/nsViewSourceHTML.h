@@ -95,6 +95,8 @@ public:
     virtual void SetVerification(PRBool aEnable);
 
 private:
+    nsresult HandleToken(CToken* aToken, nsIParser* aParser);
+
     nsresult WriteTag(PRInt32 tagType,
                       const nsSubstring &aText,
                       PRInt32 attrCount,

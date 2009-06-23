@@ -99,6 +99,8 @@ public:
                                     const PRUnichar* aNotationName);
 
 private:
+  nsresult HandleToken(CToken* aToken, nsIParser* aParser);
+
   // Load up an external stream to get external entity information
   nsresult OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
                                           const PRUnichar* aURLStr,
@@ -156,8 +158,13 @@ private:
   // The length of the data in Expat's buffer (in number of PRUnichars).
   PRUint32         mExpatBuffered;
 
+  // These sinks all refer the same conceptual object. mOriginalSink is
+  // identical with the nsIContentSink* passed to WillBuildModel, and exists
+  // only to avoid QI-ing back to nsIContentSink*.
+  nsCOMPtr<nsIContentSink> mOriginalSink;
   nsCOMPtr<nsIExpatSink> mSink;
   nsCOMPtr<nsIExtendedExpatSink> mExtendedSink;
+
   const nsCatalogData* mCatalogData; // weak
   nsString         mURISpec;
 };
