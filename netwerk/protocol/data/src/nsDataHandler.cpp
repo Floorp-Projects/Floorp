@@ -166,7 +166,7 @@ nsDataHandler::ParseURI(nsCString& spec,
     isBase64 = PR_FALSE;
 
     // move past "data:"
-    char *buffer = (char *) strstr(spec.BeginWriting(), "data:");
+    char *buffer = (char *) PL_strcasestr(spec.BeginWriting(), "data:");
     if (!buffer) {
         // malformed uri
         return NS_ERROR_MALFORMED_URI;
@@ -181,7 +181,7 @@ nsDataHandler::ParseURI(nsCString& spec,
     *comma = '\0';
 
     // determine if the data is base64 encoded.
-    char *base64 = strstr(buffer, ";base64");
+    char *base64 = PL_strcasestr(buffer, ";base64");
     if (base64) {
         isBase64 = PR_TRUE;
         *base64 = '\0';
