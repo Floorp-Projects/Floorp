@@ -3908,6 +3908,9 @@ nsCanvasRenderingContext2D::PutImageData()
     gfxContextPathAutoSaveRestore pathSR(mThebes);
     gfxContextAutoSaveRestore autoSR(mThebes);
 
+    // ignore clipping region, as per spec
+    mThebes->ResetClip();
+
     mThebes->IdentityMatrix();
     mThebes->Translate(gfxPoint(x, y));
     mThebes->NewPath();
