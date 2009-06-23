@@ -136,6 +136,7 @@ public:
   nsXBLPrototypeBinding* GetBasePrototype() { return mBaseBinding; }
 
   nsIXBLDocumentInfo* XBLDocumentInfo() const { return mXBLDocInfoWeak; }
+  PRBool IsChrome() { return mXBLDocInfoWeak->IsChrome(); }
   
   PRBool HasBasePrototype() { return mHasBaseProto; }
   void SetHasBasePrototype(PRBool aHasBase) { mHasBaseProto = aHasBase; }
