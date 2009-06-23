@@ -1570,11 +1570,11 @@ Assembler::asm_fcond(LInsp ins)
     Register r = prepResultReg(ins, AllowableFlagRegs);
 
     switch (ins->opcode()) {
-        case LIR_feq: SET(r,EQ,NE); break;
-        case LIR_flt: SET(r,MI,PL); break;
-        case LIR_fgt: SET(r,GT,LE); break;
-        case LIR_fle: SET(r,LS,HI); break;
-        case LIR_fge: SET(r,GE,LT); break;
+        case LIR_feq: SET(r,EQ); break;
+        case LIR_flt: SET(r,LO); break;
+        case LIR_fle: SET(r,LS); break;
+        case LIR_fge: SET(r,GE); break;
+        case LIR_fgt: SET(r,GT); break;
         default: NanoAssert(0); break;
     }
 
@@ -1584,33 +1584,22 @@ Assembler::asm_fcond(LInsp ins)
 void
 Assembler::asm_cond(LInsp ins)
 {
-    // only want certain regs
-    LOpcode op = ins->opcode();
     Register r = prepResultReg(ins, AllowableFlagRegs);
-    // SETcc only sets low 8 bits, so extend
-    MOVZX8(r,r);
-    if (op == LIR_eq)
-        SETE(r);
-    else if (op == LIR_ov)
-        SETO(r);
-    else if (op == LIR_cs)
-        SETC(r);
-    else if (op == LIR_lt)
-        SETL(r);
-    else if (op == LIR_le)
-        SETLE(r);
-    else if (op == LIR_gt)
-        SETG(r);
-    else if (op == LIR_ge)
-        SETGE(r);
-    else if (op == LIR_ult)
-        SETB(r);
-    else if (op == LIR_ule)
-        SETBE(r);
-    else if (op == LIR_ugt)
-        SETA(r);
-    else // if (op == LIR_uge)
-        SETAE(r);
+    switch(ins->opcode())
+    {
+        case LIR_eq:    SET(r,EQ);      break;
+        case LIR_ov:    SET(r,VS);      break;
+        case LIR_cs:    SET(r,CS);      break;
+        case LIR_lt:    SET(r,LT);      break;
+        case LIR_le:    SET(r,LE);      break;
+        case LIR_gt:    SET(r,GT);      break;
+        case LIR_ge:    SET(r,GE);      break;
+        case LIR_ult:   SET(r,LO);      break;
+        case LIR_ule:   SET(r,LS);      break;
+        case LIR_ugt:   SET(r,HI);      break;
+        case LIR_uge:   SET(r,HS);      break;
+        default:        NanoAssert(0);  break; 
+    }
     asm_cmp(ins);
 }
 

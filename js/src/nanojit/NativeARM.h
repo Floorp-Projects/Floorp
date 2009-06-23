@@ -679,32 +679,16 @@ enum {
 #define JNP(t)  do {NanoAssert(0); B_cond(EQ,t); asm_output("jnp 0x%08x",t); } while(0)
 
 
-// MOV(EQ) _r, #1 
-// EOR(NE) _r, _r
-#define SET(_r,_cond,_opp) do {                                         \
+// MOV(cond) _r, #1 
+// MOV(!cond) _r, #0
+#define SET(_r,_cond) do {                                              \
+    ConditionCode _opp = OppositeCond(_cond);                           \
     underrunProtect(8);                                                 \
-    *(--_nIns) = (NIns)( (_opp<<28) | (1<<21) | ((_r)<<16) | ((_r)<<12) | (_r) ); \
+    *(--_nIns) = (NIns)( ( _opp<<28) | (0x3A<<20) | ((_r)<<12) | (0) ); \
     *(--_nIns) = (NIns)( (_cond<<28) | (0x3A<<20) | ((_r)<<12) | (1) ); \
-    asm_output("mov%s %s, #1", condNames[_cond], gpn(r), gpn(r));       \
-    asm_output("eor%s %s, %s", condNames[_opp], gpn(r), gpn(r));        \
+    asm_output("mov%s %s, #1", condNames[_cond], gpn(_r));              \
+    asm_output("mov%s %s, #0", condNames[_opp], gpn(_r));               \
     } while (0)
-
-
-#define SETE(r)     SET(r,EQ,NE)
-#define SETL(r)     SET(r,LT,GE)
-#define SETLE(r)    SET(r,LE,GT)
-#define SETG(r)     SET(r,GT,LE)
-#define SETGE(r)    SET(r,GE,LT)
-#define SETB(r)     SET(r,CC,CS)
-#define SETBE(r)    SET(r,LS,HI)
-#define SETAE(r)    SET(r,CS,CC)
-#define SETA(r)     SET(r,HI,LS)
-#define SETO(r)     SET(r,VS,LS)
-#define SETC(r)     SET(r,CS,LS)
-
-// This zero-extends a reg that has been set using one of the SET macros,
-// but is a NOOP on ARM/Thumb
-#define MOVZX8(r,r2)
 
 // Load and sign extend a 16-bit value into a reg
 #define MOVSX(_d,_off,_b) do {                                          \
