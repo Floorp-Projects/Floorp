@@ -284,6 +284,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
 
         // handle qjoin first; won't ever show up if VFP is available
         if (arg->isop(LIR_qjoin)) {
+            NanoAssert(!AvmCore::config.vfp);
             asm_arg(ARGSIZE_LO, arg->oprnd1(), r, stkd);
             asm_arg(ARGSIZE_LO, arg->oprnd2(), r, stkd);
         } else if (!argRes || argRes->reg == UnknownReg || !AvmCore::config.vfp) {
@@ -1427,93 +1428,67 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
     // XXX noone actually uses the far param in nj anyway... (always false)
     (void)isfar;
 
-    NIns* at = 0;
     LOpcode condop = cond->opcode();
     NanoAssert(cond->isCond());
 
-    if (condop >= LIR_feq && condop <= LIR_fge)
+    // The old "never" condition code has special meaning on newer ARM cores,
+    // so use "always" as a sensible default code.
+    ConditionCode cc = AL;
+
+    // Detect whether or not this is a floating-point comparison.
+    bool    fp_cond;
+
+    // Select the appropriate ARM condition code to match the LIR instruction.
+    switch (condop)
     {
-        ConditionCode cc = NV;
+        // Floating-point conditions. Note that the VFP LT/LE conditions
+        // require use of the unsigned condition codes, even though
+        // float-point comparisons are always signed.
+        case LIR_feq:   cc = EQ;    fp_cond = true;     break;
+        case LIR_flt:   cc = LO;    fp_cond = true;     break;
+        case LIR_fle:   cc = LS;    fp_cond = true;     break;
+        case LIR_fge:   cc = GE;    fp_cond = true;     break;
+        case LIR_fgt:   cc = GT;    fp_cond = true;     break;
 
-        if (branchOnFalse) {
-            switch (condop) {
-                case LIR_feq: cc = NE; break;
-                case LIR_flt: cc = PL; break;
-                case LIR_fgt: cc = LE; break;
-                case LIR_fle: cc = HI; break;
-                case LIR_fge: cc = LT; break;
-                default: NanoAssert(0); break;
-            }
-        } else {
-            switch (condop) {
-                case LIR_feq: cc = EQ; break;
-                case LIR_flt: cc = MI; break;
-                case LIR_fgt: cc = GT; break;
-                case LIR_fle: cc = LS; break;
-                case LIR_fge: cc = GE; break;
-                default: NanoAssert(0); break;
-            }
-        }
+        // Standard signed and unsigned integer comparisons.
+        case LIR_eq:    cc = EQ;    fp_cond = false;    break;
+        case LIR_ov:    cc = VS;    fp_cond = false;    break;
+        case LIR_cs:    cc = CS;    fp_cond = false;    break;
+        case LIR_lt:    cc = LT;    fp_cond = false;    break;
+        case LIR_le:    cc = LE;    fp_cond = false;    break;
+        case LIR_gt:    cc = GT;    fp_cond = false;    break;
+        case LIR_ge:    cc = GE;    fp_cond = false;    break;
+        case LIR_ult:   cc = LO;    fp_cond = false;    break;
+        case LIR_ule:   cc = LS;    fp_cond = false;    break;
+        case LIR_ugt:   cc = HI;    fp_cond = false;    break;
+        case LIR_uge:   cc = HS;    fp_cond = false;    break;
 
-        B_cond(cc, targ);
-        asm_output("b(%d) 0x%08x", cc, (unsigned int) targ);
+        // Default case for invalid or unexpected LIR instructions.
+        default:        cc = AL;    fp_cond = false;    break;
+    }
 
-        NIns *at = _nIns;
+    // Invert the condition if required.
+    if (branchOnFalse)
+        cc = OppositeCond(cc);
+
+    // Ensure that we got a sensible condition code.
+    NanoAssert((cc != AL) && (cc != NV));
+    
+    // Ensure that we don't hit floating-point LIR codes if VFP is disabled.
+    NanoAssert(AvmCore::config.vfp || !fp_cond);
+
+    // Emit a suitable branch instruction.
+    B_cond(cc, targ);
+    
+    // Store the address of the branch instruction so that we can return it.
+    // asm_[f]cmp will move _nIns so we must do this now.
+    NIns *at = _nIns;
+
+    if (fp_cond)
         asm_fcmp(cond);
-        return at;
-    }
+    else
+        asm_cmp(cond);
 
-    // produce the branch
-    if (branchOnFalse) {
-        if (condop == LIR_eq)
-            JNE(targ);
-        else if (condop == LIR_ov)
-            JNO(targ);
-        else if (condop == LIR_cs)
-            JNC(targ);
-        else if (condop == LIR_lt)
-            JNL(targ);
-        else if (condop == LIR_le)
-            JNLE(targ);
-        else if (condop == LIR_gt)
-            JNG(targ);
-        else if (condop == LIR_ge)
-            JNGE(targ);
-        else if (condop == LIR_ult)
-            JNB(targ);
-        else if (condop == LIR_ule)
-            JNBE(targ);
-        else if (condop == LIR_ugt)
-            JNA(targ);
-        else //if (condop == LIR_uge)
-            JNAE(targ);
-    } else // op == LIR_xt
-    {
-        if (condop == LIR_eq)
-            JE(targ);
-        else if (condop == LIR_ov)
-            JO(targ);
-        else if (condop == LIR_cs)
-            JC(targ);
-        else if (condop == LIR_lt)
-            JL(targ);
-        else if (condop == LIR_le)
-            JLE(targ);
-        else if (condop == LIR_gt)
-            JG(targ);
-        else if (condop == LIR_ge)
-            JGE(targ);
-        else if (condop == LIR_ult)
-            JB(targ);
-        else if (condop == LIR_ule)
-            JBE(targ);
-        else if (condop == LIR_ugt)
-            JA(targ);
-        else //if (condop == LIR_uge)
-            JAE(targ);
-    }
-    at = _nIns;
-    asm_cmp(cond);
     return at;
 }
 

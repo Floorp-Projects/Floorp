@@ -121,7 +121,9 @@ typedef enum {
     EQ = 0x0, // Equal
     NE = 0x1, // Not Equal
     CS = 0x2, // Carry Set (or HS)
+    HS = 0x2,
     CC = 0x3, // Carry Clear (or LO)
+    LO = 0x3,
     MI = 0x4, // MInus
     PL = 0x5, // PLus
     VS = 0x6, // oVerflow Set
@@ -133,9 +135,18 @@ typedef enum {
     GT = 0xC, // Greater Than
     LE = 0xD, // Less or Equal
     AL = 0xE, // ALways
+ 
+    // Note that condition code NV is unpredictable on ARMv3 and ARMv4, and has
+    // special meaning for ARMv5 onwards. As such, it should never be used in
+    // an instruction encoding unless the special (ARMv5+) meaning is required.
     NV = 0xF  // NeVer
 } ConditionCode;
 #define IsCond(_cc) (((_cc) & 0xf) == (_cc))
+
+// Bit 0 of the condition code can be flipped to obtain the opposite condition.
+// However, this won't work for AL because its opposite — NV — has special
+// meaning.
+#define OppositeCond(cc)  ((ConditionCode)((unsigned int)(cc)^0x1))
 
 typedef int RegisterMask;
 typedef struct _FragInfo {
