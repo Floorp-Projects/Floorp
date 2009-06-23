@@ -73,8 +73,8 @@ NS_IMPL_ISUPPORTS1(nsHTMLTokenizer, nsITokenizer)
 nsHTMLTokenizer::nsHTMLTokenizer(nsDTDMode aParseMode,
                                  eParserDocType aDocType,
                                  eParserCommands aCommand,
-                                 PRUint16 aFlags) :
-  nsITokenizer(), mTokenDeque(0), mFlags(aFlags)
+                                 PRUint32 aFlags)
+  : mTokenDeque(0), mFlags(aFlags)
 {
   if (aParseMode == eDTDMode_full_standards ||
       aParseMode == eDTDMode_almost_standards) {

@@ -56,14 +56,6 @@ class nsTokenAllocator;
 #define NS_ITOKENIZER_IID      \
   {0xe4238ddc, 0x9eb6,  0x11d2, {0xba, 0xa5, 0x0,     0x10, 0x4b, 0x98, 0x3f, 0xd4 }}
 
-/**
- * This interface is used as a callback to objects interested
- * in observing the token stream created from the parse process.
- */
-class nsITokenObserver {
-public:
-  virtual PRBool  operator()(CToken* aToken)=0;
-};
 
 /***************************************************************
   Notes: 

@@ -261,10 +261,11 @@ CViewSourceHTML::~CViewSourceHTML(){
   * @param  aSink
   * @return error code (almost always 0)
   */
-nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
-                                         nsITokenizer* aTokenizer,
-                                         nsIContentSink* aSink){
-
+NS_IMETHODIMP
+CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
+                                nsITokenizer* aTokenizer,
+                                nsIContentSink* aSink)
+{
   nsresult result=NS_OK;
 
 #ifdef RAPTOR_PERF_METRICS
@@ -326,7 +327,9 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
   * @param  aFilename is the name of the file being parsed.
   * @return error code (almost always 0)
   */
-NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
+NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,
+                                          nsITokenizer* aTokenizer)
+{
   nsresult result=NS_OK;
 
   if(aTokenizer && aParser) {
@@ -535,7 +538,9 @@ void CViewSourceHTML::AddAttrToNode(nsCParserStartNode& aNode,
  * @param
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,nsIParser* aParser,nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,
+                                             nsIParser* aParser)
+{
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
@@ -626,7 +631,9 @@ void CViewSourceHTML::SetVerification(PRBool aEnabled)
  *  @param   aChild -- int tag of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
+NS_IMETHODIMP_(PRBool)
+CViewSourceHTML::CanContain(PRInt32 aParent, PRInt32 aChild) const
+{
   PRBool result=PR_TRUE;
   return result;
 }
@@ -639,7 +646,9 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
+NS_IMETHODIMP_(PRBool)
+CViewSourceHTML::IsContainer(PRInt32 aTag) const
+{
   PRBool result=PR_TRUE;
   return result;
 }
@@ -827,7 +836,8 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
+nsresult
+CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
 {
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
