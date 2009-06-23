@@ -73,6 +73,8 @@ public:
                   PRUint16 aFlags = 0);
   virtual ~nsHTMLTokenizer();
 
+  static PRUint32 GetFlags(const nsIContentSink* aSink);
+
 protected:
 
   nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
