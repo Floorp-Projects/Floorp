@@ -70,7 +70,7 @@ NS_IMPL_ISUPPORTS1(nsHTMLTokenizer, nsITokenizer)
  * @param  aDocType The document type of the current document
  * @param  aCommand What we are trying to do (view-source, parse a fragment, etc.)
  */
-nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
+nsHTMLTokenizer::nsHTMLTokenizer(nsDTDMode aParseMode,
                                  eParserDocType aDocType,
                                  eParserCommands aCommand,
                                  PRUint16 aFlags) :

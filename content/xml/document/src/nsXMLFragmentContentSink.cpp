@@ -42,6 +42,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsContentSink.h"
 #include "nsIExpatSink.h"
+#include "nsIDTD.h"
 #include "nsIParser.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocumentFragment.h"
@@ -93,7 +94,7 @@ public:
                          PRBool *_retval);
 
   // nsIContentSink
-  NS_IMETHOD WillBuildModel(void);
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
   NS_IMETHOD DidBuildModel();
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
@@ -190,7 +191,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLFragmentContentSink,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP 
-nsXMLFragmentContentSink::WillBuildModel(void)
+nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
 {
   if (mRoot) {
     return NS_OK;

@@ -178,6 +178,12 @@ public:
     NS_IMETHOD_(void) Terminate() = 0;
 
     NS_IMETHOD_(PRInt32) GetType() = 0;
+
+    /**
+     * Call this method after calling WillBuildModel to determine what mode the
+     * DTD actually is using, as it may differ from aParserContext.mDTDMode.
+     */
+    NS_IMETHOD_(nsDTDMode) GetMode() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
@@ -192,5 +198,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
     NS_IMETHOD_(void)  Terminate();\
-    NS_IMETHOD_(PRInt32) GetType();
+    NS_IMETHOD_(PRInt32) GetType();\
+    NS_IMETHOD_(nsDTDMode) GetMode() const;
 #endif /* nsIDTD_h___ */
