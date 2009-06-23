@@ -833,6 +833,10 @@ JS_DestroyRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
+    if (rt->nativeEnumerators) {
+        fprintf(stderr,
+                "JS engine warning: leak of native enumerators is detected.\n");
+    }
     if (!JS_CLIST_IS_EMPTY(&rt->contextList)) {
         JSContext *cx, *iter = NULL;
         uintN cxcount = 0;
