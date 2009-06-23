@@ -66,7 +66,7 @@ Tester.prototype = {
       this.dumper.dump("\tPass: " + passCount + "\n\tFail: " + failCount + "\n\tTodo: " + todoCount + "\n");  
     } else {
       this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " +
-                 "No tests to run. Did you pass an invalid --test-path?");
+                       "No tests to run. Did you pass an invalid --test-path?");
     }
 
     this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
