@@ -745,7 +745,6 @@ var HistoryMenu = {
 
     var menuPopup = aEvent.target;
     var resultNode = menuPopup.getResultNode();
-    var wasOpen = resultNode.containerOpen;
     resultNode.containerOpen = true;
     document.getElementById("endHistorySeparator").hidden =
       resultNode.childCount == 0;
