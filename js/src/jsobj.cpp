@@ -5007,7 +5007,16 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 *statep = JSVAL_ZERO;
         } else {
             /* The enumerator has not iterated over all ids. */
+            JS_ASSERT(enum_op == JSENUMERATE_DESTROY);
             ne->cursor = 0;
+
+            /*
+             * Force on shutdown an extra GC cycle so all native enumerators
+             * on the rt->nativeEnumerators list will be removed when the GC
+             * calls js_TraceNativeEnumerators. See bug 499570.
+             */
+            if (cx->runtime->state == JSRTS_LANDING)
+                cx->runtime->gcPoke = true;
         }
         break;
     }
