@@ -186,6 +186,12 @@ NS_IMETHODIMP nsSmartCardEvent::GetIsTrusted(PRBool *aIsTrusted)
   return mNSEvent->GetIsTrusted(aIsTrusted);
 }
 
+NS_IMETHODIMP
+nsSmartCardEvent::GetPreventDefault(PRBool* aReturn)
+{
+  NS_ASSERTION(mNSEvent, "SmartCardEvent called without Init");
+  return mNSEvent->GetPreventDefault(aReturn);
+}
 
 // IDOMEvent maps
 NS_IMETHODIMP nsSmartCardEvent::GetType(nsAString & aType)
