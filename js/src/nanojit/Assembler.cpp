@@ -1089,6 +1089,7 @@ namespace nanojit
 					asm_quad(ins);
 					break;
 				}
+#if !defined NANOJIT_64BIT
 				case LIR_callh:
 				{
 					// return result of quad-call in register
@@ -1097,6 +1098,7 @@ namespace nanojit
                     findSpecificRegFor(ins->oprnd1(), retRegs[0]);
 					break;
 				}
+#endif
 				case LIR_param:
 				{
                     countlir_param();
@@ -1383,6 +1385,9 @@ namespace nanojit
 				}
 				
 				case LIR_fcall:
+#if defined NANOJIT_64BIT
+				case LIR_callh:
+#endif
 				case LIR_call:
 				{
                     countlir_call();
