@@ -1991,8 +1991,8 @@ static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (window)
     return MayHavePaintEventListener(window);
 
-  nsCOMPtr<nsIEventListenerManager> manager;
-  chromeEventHandler->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+  nsIEventListenerManager* manager =
+    chromeEventHandler->GetListenerManager(PR_FALSE);
   if (manager && manager->MayHavePaintEventListener())
     return PR_TRUE;
 

@@ -686,46 +686,37 @@ nsGenericDOMDataNode::DispatchDOMEvent(nsEvent* aEvent,
                                              aPresContext, aEventStatus);
 }
 
-nsresult
-nsGenericDOMDataNode::GetListenerManager(PRBool aCreateIfNotFound,
-                                         nsIEventListenerManager** aResult)
+nsIEventListenerManager*
+nsGenericDOMDataNode::GetListenerManager(PRBool aCreateIfNotFound)
 {
-  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult);
+  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
 }
 
 nsresult
 nsGenericDOMDataNode::AddEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return rv;
+  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
 
 nsresult
 nsGenericDOMDataNode::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                                const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
+  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
+  return elm ?
+    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
+    NS_OK;
 }
 
 nsresult
 nsGenericDOMDataNode::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->GetSystemEventGroupLM(aGroup);
-  }
-  return rv;
+  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->GetSystemEventGroupLM(aGroup);
 }
 
 PRUint32

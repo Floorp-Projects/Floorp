@@ -6016,42 +6016,27 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
-nsresult
-nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
-                               nsIEventListenerManager** aInstancePtrResult)
+nsIEventListenerManager*
+nsDocument::GetListenerManager(PRBool aCreateIfNotFound)
 {
-  if (mListenerManager) {
-    *aInstancePtrResult = mListenerManager;
-    NS_ADDREF(*aInstancePtrResult);
-
-    return NS_OK;
-  }
-  if (!aCreateIfNotFound) {
-    *aInstancePtrResult = nsnull;
-    return NS_OK;
+  if (mListenerManager || !aCreateIfNotFound) {
+    return mListenerManager;
   }
 
   nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   mListenerManager->SetListenerTarget(static_cast<nsIDocument *>(this));
 
-  *aInstancePtrResult = mListenerManager;
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
+  return mListenerManager;
 }
 
 nsresult
 nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager))) &&
-      manager) {
-    return manager->GetSystemEventGroupLM(aGroup);
-  }
-
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->GetSystemEventGroupLM(aGroup);
 }
 
 nsresult
@@ -6091,28 +6076,19 @@ nsresult
 nsDocument::AddEventListenerByIID(nsIDOMEventListener *aListener,
                                   const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  if (manager) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
 
 nsresult
 nsDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                      const nsIID& aIID)
 {
-  if (!mListenerManager) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mListenerManager->RemoveEventListenerByIID(aListener, aIID,
-                                             NS_EVENT_FLAG_BUBBLE);
-  return NS_OK;
+  return mListenerManager ?
+    mListenerManager->RemoveEventListenerByIID(aListener, aIID,
+                                               NS_EVENT_FLAG_BUBBLE) :
+    NS_OK;
 }
 
 nsresult
@@ -6157,17 +6133,10 @@ nsDocument::AddGroupedEventListener(const nsAString& aType,
                                     PRBool aUseCapture,
                                     nsIDOMEventGroup *aEvtGrp)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  if (NS_SUCCEEDED(rv) && manager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
-  }
-
-  return rv;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
 }
 
 NS_IMETHODIMP
@@ -6176,14 +6145,11 @@ nsDocument::RemoveGroupedEventListener(const nsAString& aType,
                                        PRBool aUseCapture,
                                        nsIDOMEventGroup *aEvtGrp)
 {
-  if (!mListenerManager) {
-    return NS_ERROR_FAILURE;
+  if (mListenerManager) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
+                                                aEvtGrp);
   }
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
-                                              aEvtGrp);
   return NS_OK;
 }
 
@@ -6204,9 +6170,8 @@ nsDocument::AddEventListener(const nsAString& aType,
                              nsIDOMEventListener *aListener,
                              PRBool aUseCapture, PRBool aWantsUntrusted)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
@@ -6851,8 +6816,8 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (piTarget) {
-    nsCOMPtr<nsIEventListenerManager> manager;
-    piTarget->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    nsIEventListenerManager* manager =
+      piTarget->GetListenerManager(PR_FALSE);
     if (manager && manager->HasUnloadListeners()) {
       return PR_FALSE;
     }

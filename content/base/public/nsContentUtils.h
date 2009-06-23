@@ -937,11 +937,9 @@ public:
    * @param aNode The node for which to get the eventlistener manager.
    * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
    *                          one already exists.
-   * @param aResult [out] Set to the eventlistener manager for aNode.
    */
-  static nsresult GetListenerManager(nsINode *aNode,
-                                     PRBool aCreateIfNotFound,
-                                     nsIEventListenerManager **aResult);
+  static nsIEventListenerManager* GetListenerManager(nsINode* aNode,
+                                                     PRBool aCreateIfNotFound);
 
   /**
    * Remove the eventlistener manager for aNode.

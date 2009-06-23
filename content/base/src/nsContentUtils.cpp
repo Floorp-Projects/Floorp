@@ -3389,8 +3389,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   if (aNode->IsInDoc()) {
     nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(window));
     if (piTarget) {
-      nsCOMPtr<nsIEventListenerManager> manager;
-      piTarget->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+      nsIEventListenerManager* manager = piTarget->GetListenerManager(PR_FALSE);
       if (manager) {
         PRBool hasListeners = PR_FALSE;
         manager->HasMutationListeners(&hasListeners);
@@ -3405,8 +3404,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   // might not be in our chain.  If we don't have a window, we might have a
   // mutation listener.  Check quickly to see.
   while (aNode) {
-    nsCOMPtr<nsIEventListenerManager> manager;
-    aNode->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    nsIEventListenerManager* manager = aNode->GetListenerManager(PR_FALSE);
     if (manager) {
       PRBool hasListeners = PR_FALSE;
       manager->HasMutationListeners(&hasListeners);
@@ -3450,22 +3448,19 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
   }
 }
 
-nsresult
+nsIEventListenerManager*
 nsContentUtils::GetListenerManager(nsINode *aNode,
-                                   PRBool aCreateIfNotFound,
-                                   nsIEventListenerManager **aResult)
+                                   PRBool aCreateIfNotFound)
 {
-  *aResult = nsnull;
-
   if (!aCreateIfNotFound && !aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
-    return NS_OK;
+    return nsnull;
   }
   
   if (!sEventListenerManagersHash.ops) {
     // We're already shut down, don't bother creating an event listener
     // manager.
 
-    return NS_ERROR_NOT_AVAILABLE;
+    return nsnull;
   }
 
   if (!aCreateIfNotFound) {
@@ -3474,10 +3469,9 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
                  (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      *aResult = entry->mListenerManager;
-      NS_ADDREF(*aResult);
+      return entry->mListenerManager;
     }
-    return NS_OK;
+    return nsnull;
   }
 
   EventListenerManagerMapEntry *entry =
@@ -3486,7 +3480,7 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
                                         PL_DHASH_ADD));
 
   if (!entry) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   }
 
   if (!entry->mListenerManager) {
@@ -3496,7 +3490,7 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
     if (NS_FAILED(rv)) {
       PL_DHashTableRawRemove(&sEventListenerManagersHash, entry);
 
-      return rv;
+      return nsnull;
     }
 
     entry->mListenerManager->SetListenerTarget(aNode);
@@ -3504,9 +3498,7 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
     aNode->SetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  NS_ADDREF(*aResult = entry->mListenerManager);
-
-  return NS_OK;
+  return entry->mListenerManager;
 }
 
 /* static */

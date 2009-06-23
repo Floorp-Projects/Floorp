@@ -111,8 +111,7 @@ nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
                                             PRBool aUseCapture)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
+  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
   if (elm) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
     elm->RemoveEventListenerByType(aListener, aType, flags, nsnull);
@@ -127,8 +126,7 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
                                          PRBool aUseCapture,
                                          PRBool aWantsUntrusted)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_TRUE, getter_AddRefs(elm));
+  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   if (aWantsUntrusted) {
@@ -220,57 +218,46 @@ nsDOMEventTargetHelper::DispatchDOMEvent(nsEvent* aEvent,
                                         aEventStatus);
 }
 
-nsresult
-nsDOMEventTargetHelper::GetListenerManager(PRBool aCreateIfNotFound,
-                                           nsIEventListenerManager** aResult)
+nsIEventListenerManager*
+nsDOMEventTargetHelper::GetListenerManager(PRBool aCreateIfNotFound)
 {
   if (!mListenerManager) {
     if (!aCreateIfNotFound) {
-      *aResult = nsnull;
-      return NS_OK;
+      return nsnull;
     }
     nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, nsnull);
     mListenerManager->SetListenerTarget(static_cast<nsPIDOMEventTarget*>(this));
   }
 
-  NS_ADDREF(*aResult = mListenerManager);
-  return NS_OK;
+  return mListenerManager;
 }
 
 nsresult
 nsDOMEventTargetHelper::AddEventListenerByIID(nsIDOMEventListener *aListener,
                                               const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
+  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
 
 nsresult
 nsDOMEventTargetHelper::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                                  const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
+  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
+  return elm ?
+    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
+    NS_OK;
 }
 
 nsresult
 nsDOMEventTargetHelper::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
 {
-  nsCOMPtr<nsIEventListenerManager> elm;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->GetSystemEventGroupLM(aGroup);
-  }
-  return rv;
+  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->GetSystemEventGroupLM(aGroup);
 }
 
 nsIScriptContext*
