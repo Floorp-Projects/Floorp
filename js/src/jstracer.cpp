@@ -1144,156 +1144,102 @@ public:
     }
 };
 
-template <typename Visitor>
-JS_REQUIRES_STACK static bool
-visitFrameSlots(Visitor &visitor, unsigned depth, JSStackFrame *fp,
-                JSStackFrame *up) {
-
-    if (depth > 0 &&
-        !visitFrameSlots(visitor, depth-1, fp->down, fp))
-        return false;
-
-    if (fp->callee) {
-        if (depth == 0) {
+/* In debug mode vpname contains a textual description of the type of the
+   slot during the forall iteration over all slots. If JS_JIT_SPEW is not
+   defined, vpnum is set to a very large integer to catch invalid uses of
+   it. Non-debug code should never use vpnum. */
 #ifdef JS_JIT_SPEW
-            visitor.setStackSlotKind("args");
+#define DEF_VPNAME          const char* vpname; unsigned vpnum
+#define SET_VPNAME(name)    do { vpname = name; vpnum = 0; } while(0)
+#define INC_VPNUM()         do { ++vpnum; } while(0)
+#else
+#define DEF_VPNAME          do {} while (0)
+#define vpname ""
+#define vpnum 0x40000000
+#define SET_VPNAME(name)    ((void)0)
+#define INC_VPNUM()         ((void)0)
 #endif
-            if (!visitor.visitStackSlots(&fp->argv[-2], argSlots(fp) + 2, fp))
-                return false;
-        }
-#ifdef JS_JIT_SPEW
-        visitor.setStackSlotKind("var");
-#endif
-        if (!visitor.visitStackSlots(fp->slots, fp->script->nfixed, fp))
-            return false;
-    }
-#ifdef JS_JIT_SPEW
-    visitor.setStackSlotKind("stack");
-#endif
-    JS_ASSERT(fp->regs->sp >= StackBase(fp));
-    if (!visitor.visitStackSlots(StackBase(fp),
-                                 size_t(fp->regs->sp - StackBase(fp)),
-                                 fp))
-        return false;
-    if (up) {
-        int missing = up->fun->nargs - up->argc;
-        if (missing > 0) {
-#ifdef JS_JIT_SPEW
-            visitor.setStackSlotKind("missing");
-#endif
-            if (!visitor.visitStackSlots(fp->regs->sp, size_t(missing), fp))
-                return false;
-        }
-    }
-    return true;
-}
 
-template <typename Visitor>
-JS_REQUIRES_STACK static JS_ALWAYS_INLINE bool
-visitStackSlots(Visitor &visitor, JSContext *cx, unsigned callDepth) {
-    return visitFrameSlots(visitor, callDepth, cx->fp, NULL);
-}
+/* Iterate over all interned global variables. */
+#define FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, code)                        \
+    JS_BEGIN_MACRO                                                            \
+        DEF_VPNAME;                                                           \
+        JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);  \
+        unsigned n;                                                           \
+        jsval* vp;                                                            \
+        SET_VPNAME("global");                                                 \
+        for (n = 0; n < ngslots; ++n) {                                       \
+            vp = &STOBJ_GET_SLOT(globalObj, gslots[n]);                       \
+            { code; }                                                         \
+            INC_VPNUM();                                                      \
+        }                                                                     \
+    JS_END_MACRO
 
-template <typename Visitor>
-JS_REQUIRES_STACK static JS_ALWAYS_INLINE void
-visitGlobalSlots(Visitor &visitor, JSContext *cx, JSObject *globalObj,
-                 unsigned ngslots, uint16 *gslots) {
-    for (unsigned n = 0; n < ngslots; ++n) {
-        unsigned slot = gslots[n];
-        visitor.visitGlobalSlot(&STOBJ_GET_SLOT(globalObj, slot), n, slot);
-    }
-}
+/* Iterate over all slots in the frame, consisting of args, vars, and stack
+   (except for the top-level frame which does not have args or vars. */
+#define FORALL_FRAME_SLOTS(fp, depth, code)                                   \
+    JS_BEGIN_MACRO                                                            \
+        jsval* vp;                                                            \
+        jsval* vpstop;                                                        \
+        if (fp->callee) {                                                     \
+            if (depth == 0) {                                                 \
+                SET_VPNAME("callee");                                         \
+                vp = &fp->argv[-2];                                           \
+                { code; }                                                     \
+                SET_VPNAME("this");                                           \
+                vp = &fp->argv[-1];                                           \
+                { code; }                                                     \
+                SET_VPNAME("argv");                                           \
+                vp = &fp->argv[0]; vpstop = &fp->argv[argSlots(fp)];          \
+                while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
+            }                                                                 \
+            SET_VPNAME("vars");                                               \
+            vp = fp->slots; vpstop = &fp->slots[fp->script->nfixed];          \
+            while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                  \
+        }                                                                     \
+        SET_VPNAME("stack");                                                  \
+        vp = StackBase(fp); vpstop = fp->regs->sp;                            \
+        while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                      \
+        if (fsp < fspstop - 1) {                                              \
+            JSStackFrame* fp2 = fsp[1];                                       \
+            int missing = fp2->fun->nargs - fp2->argc;                        \
+            if (missing > 0) {                                                \
+                SET_VPNAME("missing");                                        \
+                vp = fp->regs->sp;                                            \
+                vpstop = vp + missing;                                        \
+                while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
+            }                                                                 \
+        }                                                                     \
+    JS_END_MACRO
 
-class AdjustCallerTypeVisitor;
+/* Iterate over all slots in each pending frame. */
+#define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code)                   \
+    JS_BEGIN_MACRO                                                            \
+        DEF_VPNAME;                                                           \
+        JSStackFrame* currentFrame = cx->fp;                                  \
+        JSStackFrame* entryFrame;                                             \
+        JSStackFrame* fp = currentFrame;                                      \
+        for (unsigned n = 0; n != callDepth; ++n) { fp = fp->down; }          \
+        entryFrame = fp;                                                      \
+        unsigned frames = callDepth+1;                                        \
+        JSStackFrame** fstack =                                               \
+            (JSStackFrame**) alloca(frames * sizeof (JSStackFrame*));         \
+        JSStackFrame** fspstop = &fstack[frames];                             \
+        JSStackFrame** fsp = fspstop-1;                                       \
+        fp = currentFrame;                                                    \
+        for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }  \
+        unsigned depth;                                                       \
+        for (depth = 0, fsp = fstack; fsp < fspstop; ++fsp, ++depth) {        \
+            fp = *fsp;                                                        \
+            FORALL_FRAME_SLOTS(fp, depth, code);                              \
+        }                                                                     \
+    JS_END_MACRO
 
-template <typename Visitor>
-JS_REQUIRES_STACK static JS_ALWAYS_INLINE void
-visitGlobalSlots(Visitor &visitor, JSContext *cx, SlotList &gslots) {
-    visitGlobalSlots(visitor, cx, JS_GetGlobalForObject(cx, cx->fp->scopeChain),
-                     gslots.length(), gslots.data());
-}
-
-
-template <typename Visitor>
-JS_REQUIRES_STACK static JS_ALWAYS_INLINE void
-visitSlots(Visitor& visitor, JSContext* cx, JSObject* globalObj,
-           unsigned callDepth, unsigned ngslots, uint16* gslots) {
-    if (visitStackSlots(visitor, cx, callDepth))
-        visitGlobalSlots(visitor, cx, globalObj, ngslots, gslots);
-}
-
-template <typename Visitor>
-JS_REQUIRES_STACK static JS_ALWAYS_INLINE void
-visitSlots(Visitor& visitor, JSContext* cx, unsigned callDepth, 
-           unsigned ngslots, uint16* gslots) {
-    visitSlots(visitor, cx, JS_GetGlobalForObject(cx, cx->fp->scopeChain),
-               callDepth, ngslots, gslots);
-}
-
-template <typename Visitor>
-JS_REQUIRES_STACK static JS_ALWAYS_INLINE void
-visitSlots(Visitor &visitor, JSContext *cx, JSObject *globalObj,
-           unsigned callDepth, const SlotList& slots) {
-    visitSlots(visitor, cx, globalObj, callDepth, slots.length(),
-               slots.data());
-}
-
-template <typename Visitor>
-JS_REQUIRES_STACK static JS_ALWAYS_INLINE void
-visitSlots(Visitor &visitor, JSContext *cx, unsigned callDepth,
-           const SlotList& slots) {
-    visitSlots(visitor, cx, JS_GetGlobalForObject(cx, cx->fp->scopeChain),
-               callDepth, slots.length(), slots.data());
-}
-
-
-class SlotVisitorBase {
-protected:
-    char const *mStackSlotKind;
-public:
-    SlotVisitorBase() : 
-        mStackSlotKind(NULL)
-    {}
-#ifdef JS_JIT_SPEW
-    JS_ALWAYS_INLINE void setStackSlotKind(char const *k) {
-        mStackSlotKind = k;
-    }
-#endif
-};
-
-struct CountSlotsVisitor :
-    public SlotVisitorBase {
-    unsigned mCount;
-    bool mDone;
-    jsval* mStop;
-public:
-    JS_ALWAYS_INLINE CountSlotsVisitor(jsval* stop = NULL) :
-        mCount(0),
-        mDone(false),
-        mStop(stop)
-    {}
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        if (mDone)
-            return false;
-        if (mStop && size_t(mStop - vp) < count) {
-            mCount += size_t(mStop - vp);
-            mDone = true;
-            return false;
-        }
-        mCount += count;
-        return true;
-    }
-
-    JS_ALWAYS_INLINE unsigned count() {
-        return mCount;
-    }
-
-    JS_ALWAYS_INLINE bool stopped() {
-        return mDone;
-    }
-};
+#define FORALL_SLOTS(cx, ngslots, gslots, callDepth, code)                    \
+    JS_BEGIN_MACRO                                                            \
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code);                  \
+        FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, code);                       \
+    JS_END_MACRO
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
@@ -1302,19 +1248,21 @@ js_NativeStackSlots(JSContext *cx, unsigned callDepth)
 {
     JSStackFrame* fp = cx->fp;
     unsigned slots = 0;
-    unsigned depth = callDepth;
+#if defined _DEBUG
+    unsigned int origCallDepth = callDepth;
+#endif
     for (;;) {
         unsigned operands = fp->regs->sp - StackBase(fp);
         slots += operands;
         if (fp->callee)
             slots += fp->script->nfixed;
-        if (depth-- == 0) {
+        if (callDepth-- == 0) {
             if (fp->callee)
                 slots += 2/*callee,this*/ + argSlots(fp);
-#ifdef DEBUG
-            CountSlotsVisitor visitor;
-            visitStackSlots(visitor, cx, callDepth);
-            JS_ASSERT(visitor.count() == slots && !visitor.stopped());
+#if defined _DEBUG
+            unsigned int m = 0;
+            FORALL_SLOTS_IN_PENDING_FRAMES(cx, origCallDepth, m++);
+            JS_ASSERT(m == slots);
 #endif
             return slots;
         }
@@ -1327,73 +1275,62 @@ js_NativeStackSlots(JSContext *cx, unsigned callDepth)
     JS_NOT_REACHED("js_NativeStackSlots");
 }
 
-class CaptureTypesVisitor :
-    public SlotVisitorBase {
-    JSContext* mCx;
-    uint8* mTypeMap;
-    uint8* mPtr;
-
-public:
-    JS_ALWAYS_INLINE CaptureTypesVisitor(JSContext* cx, uint8* typeMap) :
-        mCx(cx),
-        mTypeMap(typeMap),
-        mPtr(typeMap)
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-            uint8 type = getCoercedType(*vp);
-            if ((type == JSVAL_INT) &&
-                oracle.isGlobalSlotUndemotable(mCx, slot))
-                type = JSVAL_DOUBLE;
-            JS_ASSERT(type != JSVAL_BOXED);
-            debug_only_v(nj_dprintf("capture type global%d: %d=%c\n",
-                                    n, type, typeChar[type]);)
-            *mPtr++ = type;
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, int count,
-                                          JSStackFrame* fp) {
-        for (int i = 0; i < count; ++i) {
-            uint8 type = getCoercedType(vp[i]);
-            if ((type == JSVAL_INT) &&
-                oracle.isStackSlotUndemotable(mCx, length()))
-                type = JSVAL_DOUBLE;
-            JS_ASSERT(type != JSVAL_BOXED);
-            debug_only_v(nj_dprintf("capture type %s%d: %d=%c\n",
-                                    mStackSlotKind, i, type, typeChar[type]);)
-            *mPtr++ = type;
-        }
-        return true;
-    }
-
-    JS_ALWAYS_INLINE uintptr_t length() {
-        return mPtr - mTypeMap;
-    }
-};
-
 /*
  * Capture the type map for the selected slots of the global object and currently pending
  * stack frames.
  */
 JS_REQUIRES_STACK void
-TypeMap::captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth)
+TypeMap::captureTypes(JSContext* cx, SlotList& slots, unsigned callDepth)
 {
-    setLength(js_NativeStackSlots(cx, callDepth) + slots.length());
-    CaptureTypesVisitor visitor(cx, data());
-    visitSlots(visitor, cx, globalObj, callDepth, slots);
-    JS_ASSERT(visitor.length() == length());
+    unsigned ngslots = slots.length();
+    uint16* gslots = slots.data();
+    setLength(js_NativeStackSlots(cx, callDepth) + ngslots);
+    uint8* map = data();
+    uint8* m = map;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        uint8 type = getCoercedType(*vp);
+        if ((type == JSVAL_INT) && oracle.isStackSlotUndemotable(cx, unsigned(m - map)))
+            type = JSVAL_DOUBLE;
+        JS_ASSERT(type != JSVAL_BOXED);
+        debug_only_v(nj_dprintf("capture stack type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type]);)
+        JS_ASSERT(uintptr_t(m - map) < length());
+        *m++ = type;
+    );
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        uint8 type = getCoercedType(*vp);
+        if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx, gslots[n]))
+            type = JSVAL_DOUBLE;
+        JS_ASSERT(type != JSVAL_BOXED);
+        debug_only_v(nj_dprintf("capture global type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type]);)
+        JS_ASSERT(uintptr_t(m - map) < length());
+        *m++ = type;
+    );
+    JS_ASSERT(uintptr_t(m - map) == length());
 }
 
 JS_REQUIRES_STACK void
-TypeMap::captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned stackSlots)
+TypeMap::captureMissingGlobalTypes(JSContext* cx, SlotList& slots, unsigned stackSlots)
 {
     unsigned oldSlots = length() - stackSlots;
     int diff = slots.length() - oldSlots;
     JS_ASSERT(diff >= 0);
+    unsigned ngslots = slots.length();
+    uint16* gslots = slots.data();
     setLength(length() + diff);
-    CaptureTypesVisitor visitor(cx, data() + stackSlots + oldSlots);
-    visitGlobalSlots(visitor, cx, globalObj, diff, slots.data() + oldSlots);
+    uint8* map = data() + stackSlots;
+    uint8* m = map;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        if (n >= oldSlots) {
+            uint8 type = getCoercedType(*vp);
+            if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx, gslots[n]))
+                type = JSVAL_DOUBLE;
+            JS_ASSERT(type != JSVAL_BOXED);
+            debug_only_v(nj_dprintf("capture global type %s%d: %d=%c\n", vpname, vpnum, type, typeChar[type]);)
+            *m = type;
+            JS_ASSERT((m > map + oldSlots) || (*m == type));
+        }
+        m++;
+    );
 }
 
 /* Compare this type map to another one and see whether they match. */
@@ -1420,23 +1357,23 @@ mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clen
 
 /* Specializes a tree to any missing globals, including any dependent trees. */
 static JS_REQUIRES_STACK void
-specializeTreesToMissingGlobals(JSContext* cx, JSObject* globalObj, TreeInfo* root)
+specializeTreesToMissingGlobals(JSContext* cx, TreeInfo* root)
 {
     TreeInfo* ti = root;
 
-    ti->typeMap.captureMissingGlobalTypes(cx, globalObj, *ti->globalSlots, ti->nStackTypes);
+    ti->typeMap.captureMissingGlobalTypes(cx, *ti->globalSlots, ti->nStackTypes);
     JS_ASSERT(ti->globalSlots->length() == ti->typeMap.length() - ti->nStackTypes);
 
     for (unsigned i = 0; i < root->dependentTrees.length(); i++) {
         ti = (TreeInfo*)root->dependentTrees.data()[i]->vmprivate;
         /* ti can be NULL if we hit the recording tree in emitTreeCall; this is harmless. */
         if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
-            specializeTreesToMissingGlobals(cx, globalObj, ti);
+            specializeTreesToMissingGlobals(cx, ti);
     }
     for (unsigned i = 0; i < root->linkedTrees.length(); i++) {
         ti = (TreeInfo*)root->linkedTrees.data()[i]->vmprivate;
         if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
-            specializeTreesToMissingGlobals(cx, globalObj, ti);
+            specializeTreesToMissingGlobals(cx, ti);
     }
 }
 
@@ -1501,14 +1438,14 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
     /* If we came from exit, we might not have enough global types. */
     if (ti->globalSlots->length() > ti->nGlobalTypes())
-        specializeTreesToMissingGlobals(cx, globalObj, ti);
+        specializeTreesToMissingGlobals(cx, ti);
 
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, stackSlots, ngslots, callDepth, typeMap);
 
     if (fragment == fragment->root) {
         /*
-         * We poll the operation callback request flag. It is updated asynchronously whenever
+         * We poll the operation callback request flag. It is updated asynchronously whenever 
          * the callback is to be invoked.
          */
         LIns* x = lir->insLoadi(cx_ins, offsetof(JSContext, operationCallbackFlag));
@@ -1624,18 +1561,72 @@ TraceRecorder::isGlobal(jsval* p) const
 JS_REQUIRES_STACK ptrdiff_t
 TraceRecorder::nativeStackOffset(jsval* p) const
 {
-    CountSlotsVisitor visitor(p);
-    visitStackSlots(visitor, cx, callDepth);
-    size_t offset = visitor.count() * sizeof(double);
+#ifdef DEBUG
+    size_t slow_offset = 0;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (vp == p) goto done;
+        slow_offset += sizeof(double)
+    );
+
     /*
      * If it's not in a pending frame, it must be on the stack of the current frame above
      * sp but below fp->slots + script->nslots.
      */
-    if (!visitor.stopped()) {
-        JS_ASSERT(size_t(p - cx->fp->slots) < cx->fp->script->nslots);
-        offset += size_t(p - cx->fp->regs->sp) * sizeof(double);
+    JS_ASSERT(size_t(p - cx->fp->slots) < cx->fp->script->nslots);
+    slow_offset += size_t(p - cx->fp->regs->sp) * sizeof(double);
+
+done:
+#define RETURN(offset) { JS_ASSERT((offset) == slow_offset); return offset; }
+#else
+#define RETURN(offset) { return offset; }
+#endif
+    size_t offset = 0;
+    JSStackFrame* currentFrame = cx->fp;
+    JSStackFrame* entryFrame;
+    JSStackFrame* fp = currentFrame;
+    for (unsigned n = 0; n < callDepth; ++n) { fp = fp->down; }
+    entryFrame = fp;
+    unsigned frames = callDepth+1;
+    JSStackFrame** fstack = (JSStackFrame **)alloca(frames * sizeof (JSStackFrame *));
+    JSStackFrame** fspstop = &fstack[frames];
+    JSStackFrame** fsp = fspstop-1;
+    fp = currentFrame;
+    for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }
+    for (fsp = fstack; fsp < fspstop; ++fsp) {
+        fp = *fsp;
+        if (fp->callee) {
+            if (fsp == fstack) {
+                if (size_t(p - &fp->argv[-2]) < size_t(2/*callee,this*/ + argSlots(fp)))
+                    RETURN(offset + size_t(p - &fp->argv[-2]) * sizeof(double));
+                offset += (2/*callee,this*/ + argSlots(fp)) * sizeof(double);
+            }
+            if (size_t(p - &fp->slots[0]) < fp->script->nfixed)
+                RETURN(offset + size_t(p - &fp->slots[0]) * sizeof(double));
+            offset += fp->script->nfixed * sizeof(double);
+        }
+        jsval* spbase = StackBase(fp);
+        if (size_t(p - spbase) < size_t(fp->regs->sp - spbase))
+            RETURN(offset + size_t(p - spbase) * sizeof(double));
+        offset += size_t(fp->regs->sp - spbase) * sizeof(double);
+        if (fsp < fspstop - 1) {
+            JSStackFrame* fp2 = fsp[1];
+            int missing = fp2->fun->nargs - fp2->argc;
+            if (missing > 0) {
+                if (size_t(p - fp->regs->sp) < size_t(missing))
+                    RETURN(offset + size_t(p - fp->regs->sp) * sizeof(double));
+                offset += size_t(missing) * sizeof(double);
+            }
+        }
     }
-    return offset;
+
+    /*
+     * If it's not in a pending frame, it must be on the stack of the current frame above
+     * sp but below fp->slots + script->nslots.
+     */
+    JS_ASSERT(size_t(p - currentFrame->slots) < currentFrame->script->nslots);
+    offset += size_t(p - currentFrame->regs->sp) * sizeof(double);
+    RETURN(offset);
+#undef RETURN
 }
 
 /* Track the maximum number of native frame slots we need during
@@ -1862,115 +1853,43 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
     }
 }
 
-class BuildNativeFrameVisitor :
-    public SlotVisitorBase {
-    JSContext *mCx;
-    uint8 *mTypeMap;
-    double *mGlobal;
-    double *mStack;
-public:
-    BuildNativeFrameVisitor(JSContext *cx,
-                            uint8 *typemap,
-                            double *global,
-                            double *stack) :
-        mCx(cx),
-        mTypeMap(typemap),
-        mGlobal(global),
-        mStack(stack)
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        debug_only_v(nj_dprintf("global%d: ", n);)
-        ValueToNative(mCx, *vp, *mTypeMap++, &mGlobal[slot]);
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, int count,
-                                          JSStackFrame* fp) {
-        for (int i = 0; i < count; ++i) {
-            debug_only_v(nj_dprintf("%s%d: ", mStackSlotKind, i);)
-            ValueToNative(mCx, *vp++, *mTypeMap++, mStack++);
-        }
-        return true;
-    }
-};
-
+/* Attempt to unbox the given list of interned globals onto the native global frame. */
 static JS_REQUIRES_STACK void
-BuildNativeFrame(JSContext *cx, JSObject *globalObj, unsigned callDepth,
-                 unsigned ngslots, uint16 *gslots,
-                 uint8 *typeMap, double *global, double *stack)
+BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
-    BuildNativeFrameVisitor visitor(cx, typeMap, global, stack);
-    visitSlots(visitor, cx, globalObj, callDepth, ngslots, gslots);
+    debug_only_v(nj_dprintf("global: ");)
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        ValueToNative(cx, *vp, *mp, np + gslots[n]);
+        ++mp;
+    );
     debug_only_v(nj_dprintf("\n");)
 }
 
-
-class FlushNativeGlobalFrameVisitor :
-    public SlotVisitorBase {
-    JSContext *mCx;
-    uint8 *mTypeMap;
-    double *mGlobal;
-public:
-    FlushNativeGlobalFrameVisitor(JSContext *cx,
-                                  uint8 *typeMap,
-                                  double *global) :
-        mCx(cx),
-        mTypeMap(typeMap),
-        mGlobal(global)
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        debug_only_v(nj_dprintf("global%d=", n);)
-        NativeToValue(mCx, *vp, *mTypeMap++, &mGlobal[slot]);
-    }
-};
-
-
-class FlushNativeStackFrameVisitor :
-    public SlotVisitorBase {
-    JSContext *mCx;
-    uint8 *mTypeMap;
-    double *mStack;
-    jsval *mStop;
-public:
-    FlushNativeStackFrameVisitor(JSContext *cx,
-                                 uint8 *typeMap,
-                                 double *stack,
-                                 jsval *stop) :
-        mCx(cx),
-        mTypeMap(typeMap),
-        mStack(stack),
-        mStop(stop)
-    {}
-
-    uint8* getTypeMap()
-    {
-        return mTypeMap;
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            if (vp == mStop)
-                return false;
-            debug_only_v(nj_dprintf("%s%u=", mStackSlotKind, i);)
-            NativeToValue(mCx, *vp++, *mTypeMap++, mStack++);
-        }
-        return true;
-    }
-};
+/* Attempt to unbox the given JS frame onto a native frame. */
+static JS_REQUIRES_STACK void
+BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
+{
+    debug_only_v(nj_dprintf("stack: ");)
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        debug_only_v(nj_dprintf("%s%u=", vpname, vpnum);)
+        ValueToNative(cx, *vp, *mp, np);
+        ++mp; ++np;
+    );
+    debug_only_v(nj_dprintf("\n");)
+}
 
 /* Box the given native frame into a JS frame. This is infallible. */
-static JS_REQUIRES_STACK void
-FlushNativeGlobalFrame(JSContext *cx, double *global, unsigned ngslots,
-                       uint16 *gslots, uint8 *typemap)
+static JS_REQUIRES_STACK int
+FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
-    FlushNativeGlobalFrameVisitor visitor(cx, typemap, global);
-    JSObject *globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
-    visitGlobalSlots(visitor, cx, globalObj, ngslots, gslots);
+    uint8* mp_base = mp;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        debug_only_v(nj_dprintf("%s%u=", vpname, vpnum);)
+        NativeToValue(cx, *vp, *mp, np + gslots[n]);
+        ++mp;
+    );
     debug_only_v(nj_dprintf("\n");)
+    return mp - mp_base;
 }
 
 /*
@@ -2116,11 +2035,15 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
                       JSStackFrame* stopFrame)
 {
     jsval* stopAt = stopFrame ? &stopFrame->argv[-2] : NULL;
-
+    uint8* mp_base = mp;
     /* Root all string and object references first (we don't need to call the GC for this). */
-    FlushNativeStackFrameVisitor visitor(cx, mp, np, stopAt);
-    visitStackSlots(visitor, cx, callDepth);
-
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (vp == stopAt) goto skip;
+        debug_only_v(nj_dprintf("%s%u=", vpname, vpnum);)
+        NativeToValue(cx, *vp, *mp, np);
+        ++mp; ++np
+    );
+skip:
     // Restore thisp from the now-restored argv[-1] in each pending frame.
     // Keep in mind that we didn't restore frames at stopFrame and above!
     // Scope to keep |fp| from leaking into the macros we're using.
@@ -2186,7 +2109,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
         }
     }
     debug_only_v(nj_dprintf("\n");)
-    return visitor.getTypeMap() - mp;
+    return mp - mp_base;
 }
 
 /* Emit load instructions onto the trace that read the initial stack state. */
@@ -2254,101 +2177,6 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8 t,
 #endif
 }
 
-class
-ImportGlobalSlotVisitor :
-    public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    LIns *mBase;
-    uint8 *mTypemap;
-public:
-    ImportGlobalSlotVisitor(TraceRecorder &recorder,
-                            LIns *base,
-                            uint8 *typemap) :
-        mRecorder(recorder),
-        mBase(base),
-        mTypemap(typemap)
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        JS_ASSERT(*mTypemap != JSVAL_BOXED);
-        mRecorder.import(mBase, mRecorder.nativeGlobalOffset(vp),
-                         vp, *mTypemap++, "global", n, NULL);
-    }
-};
-
-
-class
-ImportBoxedStackSlotVisitor :
-public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    LIns *mBase;
-    ptrdiff_t mStackOffset;
-    uint8 *mTypemap;
-    JSStackFrame *mFp;
-public:
-    ImportBoxedStackSlotVisitor(TraceRecorder &recorder,
-                                LIns *base,
-                                ptrdiff_t stackOffset,
-                                uint8 *typemap) :
-        mRecorder(recorder),
-        mBase(base),
-        mStackOffset(stackOffset),
-        mTypemap(typemap)
-    {}
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            if (*mTypemap == JSVAL_BOXED) {
-                mRecorder.import(mBase, mStackOffset, vp, JSVAL_BOXED,
-                                 "boxed", i, fp);
-                LIns *vp_ins = mRecorder.get(vp);
-                mRecorder.unbox_jsval(*vp, vp_ins,
-                                      mRecorder.copy(mRecorder.anchor));
-                mRecorder.set(vp, vp_ins);
-            }
-            vp++;
-            mTypemap++;
-            mStackOffset += sizeof(double);
-        }
-        return true;
-    }
-};
-
-class
-ImportUnboxedStackSlotVisitor :
-public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    LIns *mBase;
-    ptrdiff_t mStackOffset;
-    uint8 *mTypemap;
-    JSStackFrame *mFp;
-public:
-    ImportUnboxedStackSlotVisitor(TraceRecorder &recorder,
-                                  LIns *base,
-                                  ptrdiff_t stackOffset,
-                                  uint8 *typemap) :
-        mRecorder(recorder),
-        mBase(base),
-        mStackOffset(stackOffset),
-        mTypemap(typemap)
-    {}
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            if (*mTypemap != JSVAL_BOXED) {
-                mRecorder.import(mBase, mStackOffset, vp++, *mTypemap,
-                                 mStackSlotKind, i, fp);
-            }
-            mTypemap++;
-            mStackOffset += sizeof(double);
-        }
-        return true;
-    }
-};
-
 JS_REQUIRES_STACK void
 TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigned ngslots,
                       unsigned callDepth, uint8* typeMap)
@@ -2377,23 +2205,40 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigne
                       (uint8*)alloca(sizeof(uint8) * length));
     }
     JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
-    ptrdiff_t offset = -treeInfo->nativeStackBase;
 
     /*
-     * Check whether there are any values on the stack we have to unbox and
-     * do that first before we waste any time fetching the state from the
-     * stack.
+     * Check whether there are any values on the stack we have to unbox and do that first
+     * before we waste any time fetching the state from the stack.
      */
-    ImportBoxedStackSlotVisitor boxedStackVisitor(*this, sp, offset, typeMap);
-    visitStackSlots(boxedStackVisitor, cx, callDepth);
+    ptrdiff_t offset = -treeInfo->nativeStackBase;
+    uint8* m = typeMap;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (*m == JSVAL_BOXED) {
+            import(sp, offset, vp, JSVAL_BOXED, "boxed", vpnum, cx->fp);
+            LIns* vp_ins = get(vp);
+            unbox_jsval(*vp, vp_ins, copy(anchor));
+            set(vp, vp_ins);
+        }
+        m++; offset += sizeof(double);
+    );
 
-    ImportGlobalSlotVisitor globalVisitor(*this, lirbuf->state, globalTypeMap);
-    visitGlobalSlots(globalVisitor, cx, globalObj, ngslots,
-                     treeInfo->globalSlots->data());
-
-    ImportUnboxedStackSlotVisitor unboxedStackVisitor(*this, sp, offset,
-                                                      typeMap);
-    visitStackSlots(unboxedStackVisitor, cx, callDepth);
+    /*
+     * The first time we compile a tree this will be empty as we add entries lazily.
+     */
+    uint16* gslots = treeInfo->globalSlots->data();
+    m = globalTypeMap;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        JS_ASSERT(*m != JSVAL_BOXED);
+        import(lirbuf->state, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
+        m++;
+    );
+    offset = -treeInfo->nativeStackBase;
+    m = typeMap;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (*m != JSVAL_BOXED)
+            import(sp, offset, vp, *m, vpname, vpnum, fp);
+        m++; offset += sizeof(double);
+    );
 }
 
 JS_REQUIRES_STACK bool
@@ -2442,7 +2287,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     treeInfo->typeMap.add(type);
     import(lirbuf->state, sizeof(struct InterpState) + slot*sizeof(double),
            vp, type, "global", index, NULL);
-    specializeTreesToMissingGlobals(cx, globalObj, treeInfo);
+    specializeTreesToMissingGlobals(cx, treeInfo);
     return true;
 }
 
@@ -2546,90 +2391,6 @@ js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
     return false;
 }
 
-class AdjustCallerGlobalTypesVisitor :
-    public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    JSContext *mCx;
-    nanojit::LirBuffer *mLirbuf;
-    nanojit::LirWriter *mLir;
-    uint8 *mTypeMap;
-public:
-    AdjustCallerGlobalTypesVisitor(TraceRecorder &recorder,
-                                   uint8 *typeMap) :
-        mRecorder(recorder),
-        mCx(mRecorder.cx),
-        mLirbuf(mRecorder.lirbuf),
-        mLir(mRecorder.lir),
-        mTypeMap(typeMap)
-    {}
-
-    uint8* getTypeMap()
-    {
-        return mTypeMap;
-    }
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        LIns *ins = mRecorder.get(vp);
-        bool isPromote = isPromoteInt(ins);
-        if (isPromote && *mTypeMap == JSVAL_DOUBLE) {
-            mLir->insStorei(mRecorder.get(vp), mLirbuf->state,
-                            mRecorder.nativeGlobalOffset(vp));
-            /* Aggressively undo speculation so the inner tree will compile
-               if this fails. */
-            oracle.markGlobalSlotUndemotable(mCx, slot);
-        }
-        JS_ASSERT(!(!isPromote && *mTypeMap == JSVAL_INT));
-        ++mTypeMap;
-    }
-};
-
-class AdjustCallerStackTypesVisitor :
-    public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    JSContext *mCx;
-    nanojit::LirBuffer *mLirbuf;
-    nanojit::LirWriter *mLir;
-    unsigned mSlotnum;
-    uint8 *mTypeMap;
-public:
-    AdjustCallerStackTypesVisitor(TraceRecorder &recorder,
-                                  uint8 *typeMap) :
-        mRecorder(recorder),
-        mCx(mRecorder.cx),
-        mLirbuf(mRecorder.lirbuf),
-        mLir(mRecorder.lir),
-        mSlotnum(0),
-        mTypeMap(typeMap)
-    {}
-
-    uint8* getTypeMap()
-    {
-        return mTypeMap;
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            LIns *ins = mRecorder.get(vp);
-            bool isPromote = isPromoteInt(ins);
-            if (isPromote && *mTypeMap == JSVAL_DOUBLE) {
-                mLir->insStorei(mRecorder.get(vp), mLirbuf->sp,
-                                -mRecorder.treeInfo->nativeStackBase + 
-                                mRecorder.nativeStackOffset(vp));
-                /* Aggressively undo speculation so the inner tree will
-                   compile if this fails. */
-                oracle.markStackSlotUndemotable(mCx, mSlotnum);
-            }
-            JS_ASSERT(!(!isPromote && *mTypeMap == JSVAL_INT));
-            ++vp;
-            ++mTypeMap;
-            ++mSlotnum;
-        }
-        return true;
-    }
-};
-
 /*
  * Promote slots if necessary to match the called tree's type map. This function is
  * infallible and must only be called if we are certain that it is possible to
@@ -2638,14 +2399,39 @@ public:
 JS_REQUIRES_STACK void
 TraceRecorder::adjustCallerTypes(Fragment* f)
 {
+    uint16* gslots = treeInfo->globalSlots->data();
+    unsigned ngslots = treeInfo->globalSlots->length();
+    JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
-
-    AdjustCallerGlobalTypesVisitor globalVisitor(*this, ti->globalTypeMap());
-    visitGlobalSlots(globalVisitor, cx, *treeInfo->globalSlots);
-
-    AdjustCallerStackTypesVisitor stackVisitor(*this, ti->stackTypeMap());
-    visitStackSlots(stackVisitor, cx, 0);
-
+    uint8* map = ti->globalTypeMap();
+    uint8* m = map;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        LIns* i = get(vp);
+        bool isPromote = isPromoteInt(i);
+        if (isPromote && *m == JSVAL_DOUBLE) {
+            lir->insStorei(get(vp), lirbuf->state, nativeGlobalOffset(vp));
+            /* Aggressively undo speculation so the inner tree will compile if this fails. */
+            oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+        }
+        JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
+        ++m;
+    );
+    JS_ASSERT(unsigned(m - map) == ti->nGlobalTypes());
+    map = ti->stackTypeMap();
+    m = map;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
+        LIns* i = get(vp);
+        bool isPromote = isPromoteInt(i);
+        if (isPromote && *m == JSVAL_DOUBLE) {
+            lir->insStorei(get(vp), lirbuf->sp,
+                           -treeInfo->nativeStackBase + nativeStackOffset(vp));
+            /* Aggressively undo speculation so the inner tree will compile if this fails. */
+            oracle.markStackSlotUndemotable(cx, unsigned(m - map));
+        }
+        JS_ASSERT(!(!isPromote && *m == JSVAL_INT));
+        ++m;
+    );
+    JS_ASSERT(unsigned(m - map) == ti->nStackTypes);
     JS_ASSERT(f == f->root);
 }
 
@@ -2669,36 +2455,6 @@ TraceRecorder::determineSlotType(jsval* vp)
     JS_ASSERT((m != JSVAL_INT) || isInt32(*vp));
     return m;
 }
-
-class DetermineTypesVisitor :
-    public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    uint8 *mTypeMap;
-public:
-    DetermineTypesVisitor(TraceRecorder &recorder,
-                          uint8 *typeMap) :
-        mRecorder(recorder),
-        mTypeMap(typeMap)
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        *mTypeMap++ = mRecorder.determineSlotType(vp);
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i)
-            *mTypeMap++ = mRecorder.determineSlotType(vp++);
-        return true;
-    }
-
-    uint8* getTypeMap()
-    {
-        return mTypeMap;
-    }
-};
-
 
 JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::snapshot(ExitType exitType)
@@ -2735,18 +2491,15 @@ TraceRecorder::snapshot(ExitType exitType)
     unsigned ngslots = treeInfo->globalSlots->length();
     unsigned typemap_size = (stackSlots + ngslots) * sizeof(uint8);
     uint8* typemap = (uint8*)alloca(typemap_size);
+    uint8* m = typemap;
 
-    /* 
-     * Determine the type of a store by looking at the current type of the
-     * actual value the interpreter is using. For numbers we have to check
-     * what kind of store we used last (integer or double) to figure out
-     * what the side exit show reflect in its typemap.
-     */
-    DetermineTypesVisitor detVisitor(*this, typemap);
-    visitSlots(detVisitor, cx, callDepth, ngslots,
-               treeInfo->globalSlots->data());
-    JS_ASSERT(unsigned(detVisitor.getTypeMap() - typemap) == 
-              ngslots + stackSlots);
+    /* Determine the type of a store by looking at the current type of the actual value the
+       interpreter is using. For numbers we have to check what kind of store we used last
+       (integer or double) to figure out what the side exit show reflect in its typemap. */
+    FORALL_SLOTS(cx, ngslots, treeInfo->globalSlots->data(), callDepth,
+        *m++ = determineSlotType(vp);
+    );
+    JS_ASSERT(unsigned(m - typemap) == ngslots + stackSlots);
 
     /*
      * If we are currently executing a traceable native or we are attaching a second trace
@@ -2976,201 +2729,6 @@ TraceRecorder::checkType(jsval& v, uint8 t, jsval*& stage_val, LIns*& stage_ins,
     return vt == t;
 }
 
-class SelfTypeStabilityVisitor :
-    public SlotVisitorBase {
-
-    TraceRecorder &mRecorder;
-    uint8 *mTypeMap;
-    JSContext *mCx;
-    bool &mDemote;
-    jsval **&mStageVals;
-    LIns **&mStageIns;
-    unsigned &mStageCount;
-    unsigned mStackSlotNum;
-    bool mOk;
-
-public:
-    
-    SelfTypeStabilityVisitor(TraceRecorder &recorder,
-                             uint8 *typeMap,
-                             bool &demote,
-                             jsval **&stageVals,
-                             LIns **&stageIns,
-                             unsigned &stageCount) :
-        mRecorder(recorder),
-        mTypeMap(typeMap),
-        mCx(mRecorder.cx),
-        mDemote(demote),
-        mStageVals(stageVals),
-        mStageIns(stageIns),
-        mStageCount(stageCount),
-        mStackSlotNum(0),
-        mOk(true)        
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        if (mOk) {
-            debug_only_v(nj_dprintf("global%d ", n);)
-            if (!mRecorder.checkType(*vp, *mTypeMap,
-                                     mStageVals[mStageCount], 
-                                     mStageIns[mStageCount], 
-                                     mStageCount)) {
-                /* If the failure was an int->double, tell the oracle. */
-                if (*mTypeMap == JSVAL_INT && isNumber(*vp) &&
-                    !isPromoteInt(mRecorder.get(vp))) {
-                    oracle.markGlobalSlotUndemotable(mCx, slot);
-                    mDemote = true;
-                } else {
-                    mOk = false;
-                }
-            }
-            mTypeMap++;
-        }
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            debug_only_v(nj_dprintf("%s%d ", mStackSlotKind, i);)
-            if (!mRecorder.checkType(*vp, *mTypeMap,
-                                     mStageVals[mStageCount], 
-                                     mStageIns[mStageCount],
-                                     mStageCount)) {
-                if (*mTypeMap == JSVAL_INT && isNumber(*vp) &&
-                    !isPromoteInt(mRecorder.get(vp))) {
-                    oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-                    mDemote = true;
-                } else {
-                    mOk = false;
-                    break;
-                }
-            }
-            vp++;
-            mTypeMap++;
-            mStackSlotNum++;
-        }
-        return mOk;
-    }
-
-    bool isOk() {
-        return mOk;
-    }
-};
-
-class PeerTypeStabilityVisitor :
-    public SlotVisitorBase {
-
-    TraceRecorder &mRecorder;
-    uint8 *mTypeMap;
-    jsval **&mStageVals;
-    LIns **&mStageIns;
-    unsigned &mStageCount;
-    bool mOk;
-
-public:
-    
-    PeerTypeStabilityVisitor(TraceRecorder &recorder,
-                              uint8 *typeMap,
-                              jsval **&stageVals,
-                              LIns **&stageIns,
-                              unsigned &stageCount) :
-        mRecorder(recorder),
-        mTypeMap(typeMap),
-        mStageVals(stageVals),
-        mStageIns(stageIns),
-        mStageCount(stageCount),
-        mOk(true)        
-    {}
-
-    JS_ALWAYS_INLINE void check(jsval *vp) {
-        if (!mRecorder.checkType(*vp, *mTypeMap++,
-                                 mStageVals[mStageCount],
-                                 mStageIns[mStageCount],
-                                 mStageCount))
-            mOk = false;
-    }
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        if (mOk)
-            check(vp);
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            check(vp++);
-            if (!mOk)
-                break;
-        }
-        return mOk;
-    }
-
-    bool isOk() {
-        return mOk;
-    }
-};
-
-
-class UndemoteVisitor :
-    public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    JSContext *mCx;
-    uint8 *mTypeMap;
-    unsigned mStackSlotNum;
-public:
-    UndemoteVisitor(TraceRecorder &recorder,
-                    uint8 *typeMap) :
-        mRecorder(recorder),
-        mCx(mRecorder.cx),
-        mTypeMap(typeMap),
-        mStackSlotNum(0)
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        if (*mTypeMap == JSVAL_INT) {
-            JS_ASSERT(isNumber(*vp));
-            if (!isPromoteInt(mRecorder.get(vp)))
-                oracle.markGlobalSlotUndemotable(mCx, slot);
-        } else if (*mTypeMap == JSVAL_DOUBLE) {
-            JS_ASSERT(isNumber(*vp));
-            oracle.markGlobalSlotUndemotable(mCx, slot);
-        } else {
-            JS_ASSERT(*mTypeMap == JSVAL_TAG(*vp));
-        }
-        mTypeMap++;
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            if (*mTypeMap == JSVAL_INT) {
-                JS_ASSERT(isNumber(*vp));
-                if (!isPromoteInt(mRecorder.get(vp)))
-                    oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-            } else if (*mTypeMap == JSVAL_DOUBLE) {
-                JS_ASSERT(isNumber(*vp));
-                oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-            } else {
-                JS_ASSERT((*mTypeMap == JSVAL_TNULL)
-                          ? JSVAL_IS_NULL(*vp)
-                          : *mTypeMap == JSVAL_TFUN
-                          ? (!JSVAL_IS_PRIMITIVE(*vp) && 
-                             HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp)))
-                          : *mTypeMap == JSVAL_TAG(*vp));
-            }
-            mStackSlotNum++;
-            mTypeMap++;
-            vp++;
-        }
-        return true;
-    }
-};
-
-
-
 /**
  * Make sure that the current values in the given stack frame and all stack frames
  * up and including entryFrame are type-compatible with the entry map.
@@ -3183,8 +2741,11 @@ public:
 JS_REQUIRES_STACK bool
 TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, bool& demote)
 {
-    JS_ASSERT(treeInfo->globalSlots->length() == 
-              treeInfo->nGlobalTypes());
+    uint8* m;
+    uint8* typemap;
+    unsigned ngslots = treeInfo->globalSlots->length();
+    uint16* gslots = treeInfo->globalSlots->data();
+    JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
 
     if (stable_peer)
         *stable_peer = NULL;
@@ -3203,11 +2764,38 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
     success = false;
 
     debug_only_v(nj_dprintf("Checking type stability against self=%p\n", (void*)fragment);)
-    SelfTypeStabilityVisitor selfVisitor(*this, treeInfo->stackTypeMap(), demote,
-                                         stage_vals, stage_ins, stage_count);
-    visitSlots(selfVisitor, cx, 0, *treeInfo->globalSlots);
-    success = selfVisitor.isOk();
 
+    m = typemap = treeInfo->globalTypeMap();
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        debug_only_v(nj_dprintf("%s%d ", vpname, vpnum);)
+        if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count)) {
+            /* If the failure was an int->double, tell the oracle. */
+            if (*m == JSVAL_INT && isNumber(*vp) && !isPromoteInt(get(vp))) {
+                oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+                demote = true;
+            } else {
+                goto checktype_fail_1;
+            }
+        }
+        ++m;
+    );
+    m = typemap = treeInfo->stackTypeMap();
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
+        debug_only_v(nj_dprintf("%s%d ", vpname, vpnum);)
+        if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count)) {
+            if (*m == JSVAL_INT && isNumber(*vp) && !isPromoteInt(get(vp))) {
+                oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
+                demote = true;
+            } else {
+                goto checktype_fail_1;
+            }
+        }
+        ++m;
+    );
+
+    success = true;
+
+checktype_fail_1:
     /* If we got a success and we don't need to recompile, we should just close here. */
     if (success && !demote) {
         for (unsigned i = 0; i < stage_count; i++)
@@ -3238,11 +2826,23 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
         stage_count = 0;
         success = false;
 
-        PeerTypeStabilityVisitor peerVisitor(*this, ti->stackTypeMap(),
-                                             stage_vals, stage_ins, stage_count);
-        visitSlots(peerVisitor, cx, 0, *treeInfo->globalSlots);
-        success = peerVisitor.isOk();
+        m = ti->globalTypeMap();
+        FORALL_GLOBAL_SLOTS(cx, treeInfo->globalSlots->length(), treeInfo->globalSlots->data(),
+                if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count))
+                    goto checktype_fail_2;
+                ++m;
+            );
 
+        m = ti->stackTypeMap();
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
+                if (!checkType(*vp, *m, stage_vals[stage_count], stage_ins[stage_count], stage_count))
+                    goto checktype_fail_2;
+                ++m;
+            );
+
+        success = true;
+
+checktype_fail_2:
         if (success) {
             /*
              * There was a successful match.  We don't care about restoring the saved staging, but
@@ -3263,8 +2863,39 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
      * that will assumedly stabilize.
      */
     if (demote && fragment->kind == LoopTrace) {
-        UndemoteVisitor visitor(*this, treeInfo->stackTypeMap());
-        visitSlots(visitor, cx, 0, *treeInfo->globalSlots);
+        typemap = m = treeInfo->globalTypeMap();
+        FORALL_GLOBAL_SLOTS(cx, treeInfo->globalSlots->length(), treeInfo->globalSlots->data(),
+            if (*m == JSVAL_INT) {
+                JS_ASSERT(isNumber(*vp));
+                if (!isPromoteInt(get(vp)))
+                    oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+            } else if (*m == JSVAL_DOUBLE) {
+                JS_ASSERT(isNumber(*vp));
+                oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+            } else {
+                JS_ASSERT(*m == JSVAL_TAG(*vp));
+            }
+            m++;
+        );
+
+        typemap = m = treeInfo->stackTypeMap();
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
+            if (*m == JSVAL_INT) {
+                JS_ASSERT(isNumber(*vp));
+                if (!isPromoteInt(get(vp)))
+                    oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
+            } else if (*m == JSVAL_DOUBLE) {
+                JS_ASSERT(isNumber(*vp));
+                oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
+            } else {
+                JS_ASSERT((*m == JSVAL_TNULL)
+                          ? JSVAL_IS_NULL(*vp)
+                          : *m == JSVAL_TFUN
+                          ? !JSVAL_IS_PRIMITIVE(*vp) && HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))
+                          : *m == JSVAL_TAG(*vp));
+            }
+            m++;
+        );
         return true;
     } else {
         demote = false;
@@ -3486,15 +3117,15 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
 
     debug_only_v(nj_dprintf("updating specializations on dependent and linked trees\n"))
     if (fragment->root->vmprivate)
-        specializeTreesToMissingGlobals(cx, globalObj, (TreeInfo*)fragment->root->vmprivate);
+        specializeTreesToMissingGlobals(cx, (TreeInfo*)fragment->root->vmprivate);
 
-    /*
+    /* 
      * If this is a newly formed tree, and the outer tree has not been compiled yet, we
      * should try to compile the outer tree again.
      */
     if (outer)
         js_AttemptCompilation(cx, tm, globalObj, outer, outerArgc);
-
+    
     debug_only_v(nj_dprintf("recording completed at %s:%u@%u via closeLoop\n",
                             cx->fp->script->filename,
                             js_FramePCToLineNumber(cx, cx->fp),
@@ -3602,19 +3233,19 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
     VMFragment* root = (VMFragment*)fragment->root;
     joinEdgesToEntry(tm->fragmento, getLoop(tm, root->ip, root->globalObj, root->globalShape, root->argc));
 
-    /* Note: this must always be done, in case we added new globals on trace and haven't yet
+    /* Note: this must always be done, in case we added new globals on trace and haven't yet 
        propagated those to linked and dependent trees. */
     debug_only_v(nj_dprintf("updating specializations on dependent and linked trees\n"))
     if (fragment->root->vmprivate)
-        specializeTreesToMissingGlobals(cx, globalObj, (TreeInfo*)fragment->root->vmprivate);
+        specializeTreesToMissingGlobals(cx, (TreeInfo*)fragment->root->vmprivate);
 
-    /*
+    /* 
      * If this is a newly formed tree, and the outer tree has not been compiled yet, we
      * should try to compile the outer tree again.
      */
     if (outer)
         js_AttemptCompilation(cx, tm, globalObj, outer, outerArgc);
-
+    
     debug_only_v(nj_dprintf("recording completed at %s:%u@%u via endLoop\n",
                             cx->fp->script->filename,
                             js_FramePCToLineNumber(cx, cx->fp),
@@ -4211,8 +3842,8 @@ SynthesizeSlowNativeFrame(JSContext *cx, VMSideExit *exit)
 }
 
 JS_REQUIRES_STACK bool
-js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
-              uint32 outerArgc, JSObject* globalObj, uint32 globalShape,
+js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer, 
+              uint32 outerArgc, JSObject* globalObj, uint32 globalShape, 
               SlotList* globalSlots, uint32 argc)
 {
     JS_ASSERT(f->root == f);
@@ -4252,7 +3883,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     TreeInfo* ti = new (&gc) TreeInfo(f, globalSlots);
 
     /* capture the coerced type of each active slot in the type map */
-    ti->typeMap.captureTypes(cx, globalObj, *globalSlots, 0/*callDepth*/);
+    ti->typeMap.captureTypes(cx, *globalSlots, 0/*callDepth*/);
     ti->nStackTypes = ti->typeMap.length() - globalSlots->length();
 
 #ifdef DEBUG
@@ -4305,8 +3936,7 @@ isSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
 }
 
 JS_REQUIRES_STACK static bool
-js_AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit,
-                          jsbytecode* outer, uint32 outerArgc)
+js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer, uint32 outerArgc)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->needFlush) {
@@ -4387,7 +4017,7 @@ js_AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit,
                 from_ti->linkedTrees.addUnique(f);
             }
             if (ti->nGlobalTypes() < ti->globalSlots->length())
-                specializeTreesToMissingGlobals(cx, globalObj, ti);
+                specializeTreesToMissingGlobals(cx, ti);
             exit->target = f;
             tm->fragmento->assm()->patch(exit);
             /* Now erase this exit from the unstable exit list. */
@@ -4627,7 +4257,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
       case UNSTABLE_LOOP_EXIT:
         /* abort recording so the inner loop can become type stable. */
         js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
-        return js_AttemptToStabilizeTree(cx, globalObj, lr, outer, outerFragment->argc);
+        return js_AttemptToStabilizeTree(cx, lr, outer, outerFragment->argc);
       case OVERFLOW_EXIT:
         oracle.markInstructionUndemotable(cx->fp->regs->pc);
         /* fall through */
@@ -4700,63 +4330,6 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
     }
 }
 
-class TypeCompatibilityVisitor :
-    public SlotVisitorBase {
-    TraceRecorder &mRecorder;
-    JSContext *mCx;
-    uint8 *mTypeMap;
-    unsigned mStackSlotNum;
-    bool mOk;
-public:
-    TypeCompatibilityVisitor (TraceRecorder &recorder,
-                              uint8 *typeMap) :
-        mRecorder(recorder),
-        mCx(mRecorder.cx),
-        mTypeMap(typeMap),
-        mStackSlotNum(0),
-        mOk(true)
-    {}
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        debug_only_v(nj_dprintf("global%d=", n);)
-        if (!js_IsEntryTypeCompatible(vp, mTypeMap)) {
-            mOk = false;
-        } else if (!isPromoteInt(mRecorder.get(vp)) && 
-                   *mTypeMap == JSVAL_INT) {
-            oracle.markGlobalSlotUndemotable(mCx, slot);
-            mOk = false;
-        } else if (JSVAL_IS_INT(*vp) && *mTypeMap == JSVAL_DOUBLE) {
-            oracle.markGlobalSlotUndemotable(mCx, slot);
-        }
-        mTypeMap++;
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            debug_only_v(nj_dprintf("%s%d=", mStackSlotKind, i);)
-            if (!js_IsEntryTypeCompatible(vp, mTypeMap)) {
-                mOk = false;
-            } else if (!isPromoteInt(mRecorder.get(vp)) &&
-                       *mTypeMap == JSVAL_INT) {
-                oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-                mOk = false;
-            } else if (JSVAL_IS_INT(*vp) && *mTypeMap == JSVAL_DOUBLE) {
-                oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-            }
-            vp++;
-            mTypeMap++;
-            mStackSlotNum++;
-        }
-        return true;
-    }
-
-    bool isOk() {
-        return mOk;
-    }
-};
-
 JS_REQUIRES_STACK Fragment*
 TraceRecorder::findNestedCompatiblePeer(Fragment* f)
 {
@@ -4764,6 +4337,7 @@ TraceRecorder::findNestedCompatiblePeer(Fragment* f)
 
     tm = &JS_TRACE_MONITOR(cx);
     unsigned int ngslots = treeInfo->globalSlots->length();
+    uint16* gslots = treeInfo->globalSlots->data();
 
     TreeInfo* ti;
     for (; f != NULL; f = f->peer) {
@@ -4775,7 +4349,9 @@ TraceRecorder::findNestedCompatiblePeer(Fragment* f)
         debug_only_v(nj_dprintf("checking nested types %p: ", (void*)f);)
 
         if (ngslots > ti->nGlobalTypes())
-            specializeTreesToMissingGlobals(cx, globalObj, ti);
+            specializeTreesToMissingGlobals(cx, ti);
+
+        uint8* typemap = ti->typeMap.data();
 
         /*
          * Determine whether the typemap of the inner tree matches the outer tree's
@@ -4785,55 +4361,42 @@ TraceRecorder::findNestedCompatiblePeer(Fragment* f)
          * a double for the slot. If the inner tree expects a double, but the outer
          * tree has an integer, we can proceed, but we mark the location undemotable.
          */
+        bool ok = true;
+        uint8* m = typemap;
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
+            debug_only_v(nj_dprintf("%s%d=", vpname, vpnum);)
+            if (!js_IsEntryTypeCompatible(vp, m)) {
+                ok = false;
+            } else if (!isPromoteInt(get(vp)) && *m == JSVAL_INT) {
+                oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
+                ok = false;
+            } else if (JSVAL_IS_INT(*vp) && *m == JSVAL_DOUBLE) {
+                oracle.markStackSlotUndemotable(cx, unsigned(m - typemap));
+            }
+            m++;
+        );
+        FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+            debug_only_v(nj_dprintf("%s%d=", vpname, vpnum);)
+            if (!js_IsEntryTypeCompatible(vp, m)) {
+                ok = false;
+            } else if (!isPromoteInt(get(vp)) && *m == JSVAL_INT) {
+                oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+                ok = false;
+            } else if (JSVAL_IS_INT(*vp) && *m == JSVAL_DOUBLE) {
+                oracle.markGlobalSlotUndemotable(cx, gslots[n]);
+            }
+            m++;
+        );
+        JS_ASSERT(unsigned(m - ti->typeMap.data()) == ti->typeMap.length());
 
-        TypeCompatibilityVisitor visitor(*this, ti->typeMap.data());
-        visitSlots(visitor, cx, 0, *treeInfo->globalSlots);
+        debug_only_v(nj_dprintf(" %s\n", ok ? "match" : "");)
 
-        debug_only_v(nj_dprintf(" %s\n", visitor.isOk() ? "match" : "");)
-        if (visitor.isOk())
+        if (ok)
             return f;
     }
 
     return NULL;
 }
-
-class CheckEntryTypeVisitor :
-    public SlotVisitorBase {
-    bool mOk;
-    uint8 *mTypeMap;
-public:
-    CheckEntryTypeVisitor(uint8 *typeMap) :
-        mOk(true),
-        mTypeMap(typeMap)
-    {}
-
-    JS_ALWAYS_INLINE void checkSlot(jsval *vp, char const *name, int i) {
-        debug_only_v(nj_dprintf("%s%d=", name, i);)
-        JS_ASSERT(*mTypeMap != 0xCD);
-        mOk = js_IsEntryTypeCompatible(vp, mTypeMap++);
-    }
-
-    JS_ALWAYS_INLINE void visitGlobalSlot(jsval *vp, unsigned n,
-                                          unsigned slot) {
-        if (mOk)
-            checkSlot(vp, "global", n);
-    }
-
-    JS_ALWAYS_INLINE bool visitStackSlots(jsval *vp, size_t count,
-                                          JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            if (!mOk)
-                break;
-            checkSlot(vp++, mStackSlotKind, i);
-        }
-        return mOk;
-    }
-
-    bool isOk() {
-        return mOk;
-    }
-};
-
 
 /**
  * Check if types are usable for trace execution.
@@ -4843,44 +4406,55 @@ public:
  * @return              True if compatible (with or without demotions), false otherwise.
  */
 static JS_REQUIRES_STACK bool
-js_CheckEntryTypes(JSContext* cx, JSObject* globalObj, TreeInfo* ti)
+js_CheckEntryTypes(JSContext* cx, TreeInfo* ti)
 {
     unsigned int ngslots = ti->globalSlots->length();
+    uint16* gslots = ti->globalSlots->data();
 
     JS_ASSERT(ti->nStackTypes == js_NativeStackSlots(cx, 0));
 
     if (ngslots > ti->nGlobalTypes())
-        specializeTreesToMissingGlobals(cx, globalObj, ti);
+        specializeTreesToMissingGlobals(cx, ti);
+
+    uint8* m = ti->typeMap.data();
 
     JS_ASSERT(ti->typeMap.length() == js_NativeStackSlots(cx, 0) + ngslots);
     JS_ASSERT(ti->typeMap.length() == ti->nStackTypes + ngslots);
     JS_ASSERT(ti->nGlobalTypes() == ngslots);
-
-    CheckEntryTypeVisitor visitor(ti->typeMap.data());
-    visitSlots(visitor, cx, 0, *ti->globalSlots);
+    FORALL_SLOTS(cx, ngslots, gslots, 0,
+        debug_only_v(nj_dprintf("%s%d=", vpname, vpnum);)
+        JS_ASSERT(*m != 0xCD);
+        if (!js_IsEntryTypeCompatible(vp, m))
+            goto check_fail;
+        m++;
+    );
+    JS_ASSERT(unsigned(m - ti->typeMap.data()) == ti->typeMap.length());
 
     debug_only_v(nj_dprintf("\n");)
-    return visitor.isOk();
+    return true;
+
+check_fail:
+    debug_only_v(nj_dprintf("\n");)
+    return false;
 }
 
 /**
  * Find an acceptable entry tree given a PC.
  *
  * @param cx            Context.
- * @param globalObj     Global object.
  * @param f             First peer fragment.
  * @param nodemote      If true, will try to find a peer that does not require demotion.
  * @out   count         Number of fragments consulted.
  */
 static JS_REQUIRES_STACK Fragment*
-js_FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, Fragment* f, uintN& count)
+js_FindVMCompatiblePeer(JSContext* cx, Fragment* f, uintN& count)
 {
     count = 0;
     for (; f != NULL; f = f->peer) {
         if (f->vmprivate == NULL)
             continue;
         debug_only_v(nj_dprintf("checking vm types %p (ip: %p): ", (void*)f, f->ip);)
-        if (js_CheckEntryTypes(cx, globalObj, (TreeInfo*)f->vmprivate))
+        if (js_CheckEntryTypes(cx, (TreeInfo*)f->vmprivate))
             return f;
         ++count;
     }
@@ -4971,8 +4545,10 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                             f->code());)
 
     JS_ASSERT(ti->nGlobalTypes() == ngslots);
-    BuildNativeFrame(cx, globalObj, 0/*callDepth*/, ngslots, gslots,
-                     ti->typeMap.data(), global, stack_buffer);
+
+    if (ngslots)
+        BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap(), global);
+    BuildNativeStackFrame(cx, 0/*callDepth*/, ti->typeMap.data(), stack_buffer);
 
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
@@ -5234,8 +4810,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 
     /* write back interned globals */
     double* global = (double*)(&state + 1);
-    FlushNativeGlobalFrame(cx, global,
-                           ngslots, gslots, globalTypeMap);
+    FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, global);
     JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(JS_GetGlobalForObject(cx, cx->fp->scopeChain))] ==
               0xdeadbeefdeadbeefLL);
 
@@ -5360,7 +4935,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
                             FramePCOffset(cx->fp), (void*)f, f->ip);)
 
     uintN count;
-    Fragment* match = js_FindVMCompatiblePeer(cx, globalObj, f, count);
+    Fragment* match = js_FindVMCompatiblePeer(cx, f, count);
     if (!match) {
         if (count < MAXPEERS)
             goto record;
@@ -5391,7 +4966,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     bool rv;
     switch (lr->exitType) {
       case UNSTABLE_LOOP_EXIT:
-          rv = js_AttemptToStabilizeTree(cx, globalObj, lr, NULL, NULL);
+          rv = js_AttemptToStabilizeTree(cx, lr, NULL, NULL);
 #ifdef MOZ_TRACEVIS
           if (!rv)
               tvso.r = R_FAIL_STABILIZE;
@@ -8307,7 +7882,7 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
         LIns** argp = &args[argc + prefixc - 1];
         char argtype;
 
-#if defined DEBUG
+#if defined _DEBUG
         memset(args, 0xCD, sizeof(args));
 #endif
 
@@ -8376,7 +7951,7 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
             }
             argp--;
         }
-#if defined DEBUG
+#if defined _DEBUG
         JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
 #endif
         return emitNativeCall(known, argc, args);
@@ -9352,9 +8927,13 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     LIns* data = lir->insSkip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
     FrameInfo* fi = (FrameInfo*)data->payload();
     uint8* typemap = (uint8 *)(fi + 1);
-
-    DetermineTypesVisitor detVisitor(*this, typemap);
-    visitStackSlots(detVisitor, cx, 0);
+    uint8* m = typemap;
+    /* Determine the type of a store by looking at the current type of the actual value the
+       interpreter is using. For numbers we have to check what kind of store we used last
+       (integer or double) to figure out what the side exit show reflect in its typemap. */
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
+        *m++ = determineSlotType(vp);
+    );
 
     if (argc >= 0x8000)
         ABORT_TRACE("too many arguments");
