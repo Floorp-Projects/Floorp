@@ -1334,18 +1334,6 @@ nsExpatDriver::WillTokenize(PRBool aIsFinalChunk,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::WillResumeParse(nsIContentSink* aSink)
-{
-  return aSink ? aSink->WillResume() : NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpatDriver::WillInterruptParse(nsIContentSink* aSink)
-{
-  return aSink ? aSink->WillInterrupt() : NS_OK;
-}
-
-NS_IMETHODIMP
 nsExpatDriver::DidTokenize(PRBool aIsFinalChunk)
 {
   return NS_OK;

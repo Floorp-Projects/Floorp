@@ -129,22 +129,6 @@ public:
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser) = 0;
 
     /**
-     * If the parse process gets interrupted midway, this method is
-     * called by the parser prior to resuming the process.
-     * @update  gess5/18/98
-     * @return ignored
-     */
-    NS_IMETHOD WillResumeParse(nsIContentSink* aSink) = 0;
-
-    /**
-     * If the parse process gets interrupted, this method is called by
-     * the parser to notify the DTD that interruption will occur.
-     * @update  gess5/18/98
-     * @return ignored
-     */
-    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink) = 0;
-
-    /**
      * This method is called to determine whether or not a tag of one
      * type can contain a tag of another type.
      *
@@ -193,8 +177,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
     NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink);\
     NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink);\
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);\
-    NS_IMETHOD WillResumeParse(nsIContentSink* aSink = 0);\
-    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0);\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
     NS_IMETHOD_(void)  Terminate();\
