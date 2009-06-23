@@ -5428,7 +5428,7 @@ js_InitJIT(JSTraceMonitor *tm)
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, 32);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core);)
         tm->fragmento = fragmento;
         tm->lirbuf = new (&gc) LirBuffer(fragmento);
 #ifdef DEBUG
@@ -5444,7 +5444,7 @@ js_InitJIT(JSTraceMonitor *tm)
     }
     if (!tm->reFragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 32);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core);)
         tm->reFragmento = fragmento;
         tm->reLirBuf = new (&gc) LirBuffer(fragmento);
     }

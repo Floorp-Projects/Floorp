@@ -691,7 +691,7 @@ main(int argc, char **argv)
 
     Fragmento *fragmento = new (&gc) Fragmento(core, 32);
 #ifdef DEBUG
-    fragmento->labels = new (&gc) LabelMap(core, NULL);
+    fragmento->labels = new (&gc) LabelMap(core);
 #endif
     LirBuffer *lirbuf = new (&gc) LirBuffer(fragmento, NULL);
 #ifdef DEBUG
