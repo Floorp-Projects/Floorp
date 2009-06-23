@@ -2193,8 +2193,8 @@ case "$target" in
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS
         _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
+        _DEFINES_CFLAGS='-FI mozilla-config.h -DMOZILLA_CLIENT'
+        _DEFINES_CXXFLAGS='-FI mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
