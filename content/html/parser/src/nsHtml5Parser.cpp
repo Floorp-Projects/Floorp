@@ -273,11 +273,8 @@ nsHtml5Parser::SetParserFilter(nsIParserFilter* aFilter)
 NS_IMETHODIMP
 nsHtml5Parser::GetChannel(nsIChannel** aChannel)
 {
-  nsresult result = NS_ERROR_NOT_AVAILABLE;
-  if (mRequest) {
-    result = CallQueryInterface(mRequest, aChannel);
-  }
-  return result;
+  return mRequest ? CallQueryInterface(mRequest, aChannel) :
+                    NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
