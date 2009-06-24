@@ -7197,6 +7197,7 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
     if (js_PrototypeHasIndexedProperties(cx, obj))
         return JSRS_STOP;
 
+    // FIXME: this loop can become a single shape test once bug 497789 has been fixed
     while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit)) {
         LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
         LIns* ops_ins;
@@ -9293,6 +9294,9 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         /*
          * This trace will be valid as long as neither the object nor any object
          * on its prototype chain changes shape.
+         *
+         * FIXME: This loop can become a single shape guard once bug 497789 has
+         * been fixed.
          */
         VMSideExit* exit = snapshot(BRANCH_EXIT);
         do {
