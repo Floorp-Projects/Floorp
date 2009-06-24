@@ -102,10 +102,8 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     }
 
     // is the content a child of a text element
-    nsISVGTextContentMetrics* metrics = do_QueryFrame(frame);
-    if (metrics) {
-      nsSVGTextContainerFrame *containerFrame =
-        static_cast<nsSVGTextContainerFrame *>(frame);
+    nsSVGTextContainerFrame *containerFrame = do_QueryFrame(frame);
+    if (containerFrame) {
       containerFrame->NotifyGlyphMetricsChange();
       continue;
     }
@@ -584,7 +582,6 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
     // odd document is probably no worse than printing horribly for all
     // documents. Better to fix things so we don't need fallback.
     nsIFrame* frame = this;
-    nsPresContext* presContext = PresContext();
     PRUint32 flags = 0;
     while (PR_TRUE) {
       nsIFrame* next = nsLayoutUtils::GetCrossDocParentFrame(frame);

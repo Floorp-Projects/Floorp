@@ -53,7 +53,7 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)] 
+[scriptable, uuid(8E726396-3E02-467C-855E-5900E562BA42)] 
 interface nsIHandlerInfo : nsISupports {
     /**
      * The type of this handler info.  For MIME handlers, this is the MIME type.
@@ -201,12 +201,6 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * @deprecated  use nsIHandlerInfo::type instead.
      */
     readonly attribute ACString MIMEType;
-
-    /**
-     * Mac Type and creator types
-     */
-    attribute PRUint32 macType;
-    attribute PRUint32 macCreator;
 
     /**
      * Returns whether or not these two nsIMIMEInfos are logically

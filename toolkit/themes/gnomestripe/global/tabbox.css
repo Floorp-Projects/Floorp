@@ -90,7 +90,6 @@ tab[selected="true"] {
   -moz-border-radius-bottomright: 3px;
   padding-top: 4px;
   padding-bottom: 6px;
-  -moz-user-focus: normal;
 }
 
 tab + tab {

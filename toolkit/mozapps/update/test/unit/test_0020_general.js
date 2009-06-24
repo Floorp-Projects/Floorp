@@ -237,5 +237,59 @@ function run_test_pt9() {
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("one update with partial patch with size 0",
-                      0, end_test);
+                      0, run_test_pt10);
+}
+
+// check that updates for older versions of the application aren't selected
+function run_test_pt10() {
+  var patches = getRemotePatchString("complete", "http://complete/", "SHA1",
+                                     "98db9dad8e1d80eda7e1170d0187d6f53e477059",
+                                     "9856459");
+  patches += getRemotePatchString("partial", "http://partial/", "SHA1",
+                                  "e6678ca40ae7582316acdeddf3c133c9c8577de4",
+                                  "1316138");
+  var updates = getRemoteUpdateString(patches, "XPCShell App Update Test",
+                                      "minor", "version 1.0pre", "2.0",
+                                      "1.0pre", "20080811053724",
+                                      "http://dummylicense/index.html",
+                                      "http://dummydetails/index.html");
+  updates += getRemoteUpdateString(patches, "XPCShell App Update Test",
+                                   "minor", "version 1.0a", "3.0",
+                                   "1.0a", "20080811053724",
+                                   "http://dummylicense/index.html",
+                                   "http://dummydetails/index.html");
+  gResponseBody = getRemoteUpdatesXMLString(updates);
+  run_test_helper_pt1("two updates older than the current version",
+                      2, check_test_pt10);
+}
+
+function check_test_pt10() {
+  var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
+  do_check_eq(bestUpdate, null);
+  run_test_pt11();
+}
+
+// check that updates for the current version of the application are selected
+function run_test_pt11() {
+  var patches = getRemotePatchString("complete", "http://complete/", "SHA1",
+                                     "98db9dad8e1d80eda7e1170d0187d6f53e477059",
+                                     "9856459");
+  patches += getRemotePatchString("partial", "http://partial/", "SHA1",
+                                  "e6678ca40ae7582316acdeddf3c133c9c8577de4",
+                                  "1316138");
+  var updates = getRemoteUpdateString(patches, "XPCShell App Update Test",
+                                      "minor", "version 1.0", "3.0",
+                                      "1.0", "20080811053724",
+                                      "http://dummylicense/index.html",
+                                      "http://dummydetails/index.html");
+  gResponseBody = getRemoteUpdatesXMLString(updates);
+  run_test_helper_pt1("one updates equal to the current version",
+                      1, check_test_pt11);
+}
+
+function check_test_pt11() {
+  var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
+  do_check_neq(bestUpdate, null);
+  do_check_eq(bestUpdate.version, "version 1.0");
+  end_test();
 }

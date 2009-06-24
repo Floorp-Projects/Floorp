@@ -72,12 +72,12 @@ nsDOMDataTransfer::nsDOMDataTransfer()
   : mEventType(NS_DRAGDROP_START),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
     mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED),
+    mCursorState(PR_FALSE),
     mReadOnly(PR_FALSE),
     mIsExternal(PR_FALSE),
     mUserCancelled(PR_FALSE),
     mDragImageX(0),
-    mDragImageY(0),
-    mCursorState(PR_FALSE)
+    mDragImageY(0)
 {
 }
 

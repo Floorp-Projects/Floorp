@@ -119,6 +119,7 @@ extern const SequenceModel Win1251BulgarianModel;
 extern const SequenceModel Latin2HungarianModel;
 extern const SequenceModel Win1250HungarianModel;
 extern const SequenceModel Win1255Model;
+extern const SequenceModel TIS620ThaiModel;
 
 #endif /* nsSingleByteCharSetProber_h__ */
 

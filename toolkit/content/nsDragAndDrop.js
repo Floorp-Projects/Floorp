@@ -37,6 +37,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
+////////////////////////////////////////////////////////////////////////
+//
+// USE OF THIS API FOR DRAG AND DROP IS DEPRECATED!
+// Do not use this file for new code.
+//
+// For documentation about what to use instead, see:
+//   http://developer.mozilla.org/En/DragDrop/Drag_and_Drop
+//
+////////////////////////////////////////////////////////////////////////
+
+
 /** 
  *  nsTransferable - a wrapper for nsITransferable that simplifies
  *                   javascript clipboard and drag&drop. for use in
@@ -574,6 +585,9 @@ var nsDragAndDrop = {
    **/
   dragDropSecurityCheck: function (aEvent, aDragSession, aDraggedText)
     {
+      if (!aDragSession)
+        aDragSession = this.mDragService.getCurrentSession();
+
       var sourceDoc = aDragSession.sourceDocument;
       if (!sourceDoc)
         return;

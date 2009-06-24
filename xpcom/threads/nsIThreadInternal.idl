@@ -51,7 +51,9 @@ interface nsIThreadInternal : nsIThread
   /**
    * Get/set the current thread observer (may be null).  This attribute may be
    * read from any thread, but must only be set on the thread corresponding to
-   * this thread object.
+   * this thread object.  The observer will be released on the thread
+   * corresponding to this thread object after all other events have been
+   * processed during a call to Shutdown.
    */
   attribute nsIThreadObserver observer;
 

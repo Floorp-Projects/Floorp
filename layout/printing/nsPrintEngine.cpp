@@ -158,7 +158,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDocumentViewerPrint.h"
 
 #include "nsPIDOMWindow.h"
-#include "nsIFocusController.h"
+#include "nsFocusManager.h"
 
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
@@ -2700,22 +2700,15 @@ PRBool nsPrintEngine::HasFramesetChild(nsIContent* aContent)
 already_AddRefed<nsIDOMWindow>
 nsPrintEngine::FindFocusedDOMWindow()
 {
-  nsIDOMWindow * domWin = nsnull;
-
-  nsPIDOMWindow *theDOMWindow = mDocument->GetWindow();
-  if(theDOMWindow){
-    nsIFocusController *focusController =
-      theDOMWindow->GetRootFocusController();
-    if (focusController) {
-      nsCOMPtr<nsIDOMWindowInternal> theDOMWin;
-      focusController->GetFocusedWindow(getter_AddRefs(theDOMWin));
-      if(theDOMWin && IsWindowsInOurSubTree(theDOMWin)){
-        NS_ADDREF(domWin = theDOMWin);
-      }
-    }
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    nsCOMPtr<nsIDOMWindow> domWin;
+    fm->GetFocusedWindow(getter_AddRefs(domWin));
+    if (domWin && IsWindowsInOurSubTree(domWin))
+      return domWin.forget();
   }
 
-  return domWin;
+  return nsnull;
 }
 
 //---------------------------------------------------------------------

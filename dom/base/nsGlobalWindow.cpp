@@ -82,6 +82,8 @@
 #include "nsDOMThreadService.h"
 
 // Interfaces Needed
+#include "nsIFrame.h"
+#include "nsICanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
 #include "nsIContent.h"
@@ -90,6 +92,7 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIEditorDocShell.h"
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
@@ -163,6 +166,7 @@
 #include "nsIObserverService.h"
 #include "nsIXULAppInfo.h"
 #include "nsNetUtil.h"
+#include "nsFocusManager.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -324,18 +328,18 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 
 // Same as FORWARD_TO_INNER, but this will create a fresh inner if an
 // inner doesn't already exists.
-#define FORWARD_TO_INNER_CREATE(method, args)                                 \
+#define FORWARD_TO_INNER_CREATE(method, args, err_rval)                       \
   PR_BEGIN_MACRO                                                              \
   if (IsOuterWindow()) {                                                      \
     if (!mInnerWindow) {                                                      \
       if (mIsClosed) {                                                        \
-        return NS_ERROR_NOT_AVAILABLE;                                        \
+        return err_rval;                                                      \
       }                                                                       \
       nsCOMPtr<nsIDOMDocument> doc;                                           \
       nsresult fwdic_nr = GetDocument(getter_AddRefs(doc));                   \
-      NS_ENSURE_SUCCESS(fwdic_nr, fwdic_nr);                                  \
+      NS_ENSURE_SUCCESS(fwdic_nr, err_rval);                                  \
       if (!mInnerWindow) {                                                    \
-        return NS_ERROR_NOT_AVAILABLE;                                        \
+        return err_rval;                                                      \
       }                                                                       \
     }                                                                         \
     return GetCurrentInnerWindowInternal()->method args;                      \
@@ -622,12 +626,15 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mFireOfflineStatusChangeEventOnThaw(PR_FALSE),
     mCreatingInnerWindow(PR_FALSE),
     mIsChrome(PR_FALSE),
+    mNeedsFocus(PR_TRUE),
+    mHasFocus(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mJSObject(nsnull),
     mPendingStorageEvents(nsnull),
-    mTimeoutsSuspendDepth(0)
+    mTimeoutsSuspendDepth(0),
+    mFocusMethod(0)
 #ifdef DEBUG
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
@@ -1063,6 +1070,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   // Traverse mDummyJavaPluginOwner
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDummyJavaPluginOwner)
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFocusedNode)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -1096,6 +1105,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
     tmp->mDummyJavaPluginOwner->Destroy();
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDummyJavaPluginOwner)
   }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedNode)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1490,32 +1501,32 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
   NS_STID_FOR_INDEX(lang_ndx) {
     mInnerWindowHolders[lang_ndx] = aHolders[lang_ndx];
   }
-  nsIFocusController *fc = aWindow->GetRootFocusController();
-  NS_ASSERTION(fc, "null focus controller");
 
-  // We want to save the focused element/window only if they are inside of
-  // this window.
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    // We want to save the focused element/window only if they are inside of
+    // this window.
 
-  nsCOMPtr<nsIDOMWindowInternal> focusWinInternal;
-  fc->GetFocusedWindow(getter_AddRefs(focusWinInternal));
+    nsCOMPtr<nsIDOMWindow> window;
+    fm->GetFocusedWindow(getter_AddRefs(window));
+    nsCOMPtr<nsPIDOMWindow> focusedWindow = do_QueryInterface(window);
 
-  nsCOMPtr<nsPIDOMWindow> focusedWindow = do_QueryInterface(focusWinInternal);
+    // The outer window is used for focus purposes, so make sure that's what
+    // we're looking for.
+    nsPIDOMWindow *targetWindow = aWindow->GetOuterWindow();
 
-  // The outer window is used for focus purposes, so make sure that's what
-  // we're looking for.
-  nsPIDOMWindow *targetWindow = aWindow->GetOuterWindow();
+    while (focusedWindow) {
+      if (focusedWindow == targetWindow) {
+        mFocusedWindow = do_QueryInterface(window);
+        fm->GetFocusedElement(getter_AddRefs(mFocusedElement));
+        break;
+      }
 
-  while (focusedWindow) {
-    if (focusedWindow == targetWindow) {
-      fc->GetFocusedWindow(getter_AddRefs(mFocusedWindow));
-      fc->GetFocusedElement(getter_AddRefs(mFocusedElement));
-      break;
+      focusedWindow =
+        static_cast<nsGlobalWindow*>
+                   (static_cast<nsPIDOMWindow*>
+                               (focusedWindow))->GetPrivateParent();
     }
-
-    focusedWindow =
-      static_cast<nsGlobalWindow*>
-                 (static_cast<nsPIDOMWindow*>
-                             (focusedWindow))->GetPrivateParent();
   }
 
   aWindow->SuspendTimeouts();
@@ -2118,19 +2129,23 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     // if we are closing the window while in full screen mode, be sure
     // to restore os chrome
     if (mFullScreen) {
-      nsIFocusController *focusController =
-        nsGlobalWindow::GetRootFocusController();
-      PRBool isActive = PR_FALSE;
-      if (focusController)
-        focusController->GetActive(&isActive);
       // only restore OS chrome if the closing window was active
+      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+      if (fm) {
+        nsCOMPtr<nsIDOMWindow> activeWindow;
+        fm->GetActiveWindow(getter_AddRefs(activeWindow));
 
-      if (isActive) {
-        nsCOMPtr<nsIFullScreen> fullScreen =
-          do_GetService("@mozilla.org/browser/fullscreen;1");
+        nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
+        nsCOMPtr<nsIDocShellTreeItem> rootItem;
+        treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+        nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);
+        if (rootWin == activeWindow) {
+          nsCOMPtr<nsIFullScreen> fullScreen =
+            do_GetService("@mozilla.org/browser/fullscreen;1");
 
-        if (fullScreen)
-          fullScreen->ShowAllOSChrome();
+          if (fullScreen)
+            fullScreen->ShowAllOSChrome();
+        }
       }
     }
 
@@ -2284,73 +2299,22 @@ nsresult
 nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   NS_PRECONDITION(IsInnerWindow(), "PostHandleEvent is used on outer window!?");
+
+  // Return early if there is nothing to do.
+  switch (aVisitor.mEvent->message) {
+    case NS_RESIZE_EVENT:
+    case NS_PAGE_UNLOAD:
+    case NS_LOAD:
+      break;
+    default:
+      return NS_OK;
+  }
+
   /* mChromeEventHandler and mContext go dangling in the middle of this
    function under some circumstances (events that destroy the window)
    without this addref. */
   nsCOMPtr<nsPIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
-  nsGlobalWindow* outer = GetOuterWindowInternal();
-
-  if (aVisitor.mEvent->message == NS_DEACTIVATE ||
-      aVisitor.mEvent->message == NS_ACTIVATE) {
-    // if the window is deactivated while in full screen mode,
-    // restore OS chrome, and hide it again upon re-activation
-    if (outer && outer->mFullScreen) {
-      nsCOMPtr<nsIFullScreen> fullScreen =
-        do_GetService("@mozilla.org/browser/fullscreen;1");
-      if (fullScreen) {
-        if (aVisitor.mEvent->message == NS_DEACTIVATE)
-          fullScreen->ShowAllOSChrome();
-        else
-          fullScreen->HideAllOSChrome();
-      }
-    }
-
-    // Set / unset the "active" attribute on the documentElement
-    // of the top level window
-    nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
-    if (mainWidget) {
-      // Get the top level widget (if the main widget is a sheet, this will
-      // be the sheet's top (non-sheet) parent).
-      nsCOMPtr<nsIWidget> topLevelWidget = mainWidget->GetSheetWindowParent();
-      if (!topLevelWidget)
-        topLevelWidget = mainWidget;
-
-      // Get the top level widget's nsGlobalWindow
-      nsCOMPtr<nsIDOMWindowInternal> topLevelWindow;
-      if (topLevelWidget == mainWidget) {
-        topLevelWindow = static_cast<nsIDOMWindowInternal *>(this);
-      } else {
-        // This is a workaround for the following problem:
-        // When a window with an open sheet loses focus, only the sheet window
-        // receives the NS_DEACTIVATE event. However, it's not the sheet that
-        // should lose the "active" attribute, but the containing top level window.
-        void* clientData;
-        topLevelWidget->GetClientData(clientData); // clientData is nsXULWindow
-        nsISupports* data = static_cast<nsISupports*>(clientData);
-        nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-        topLevelWindow = do_GetInterface(req);
-      }
-
-      if (topLevelWindow) {
-        // Only set the attribute if the document is a XUL document and the
-        // window is a chrome window
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        topLevelWindow->GetDocument(getter_AddRefs(domDoc));
-        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-        nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-        nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(topLevelWindow);
-        if (xulDoc && chromeWin) {
-          nsCOMPtr<nsIContent> rootElem = doc->GetRootContent();
-          if (aVisitor.mEvent->message == NS_ACTIVATE)
-            rootElem->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                              NS_LITERAL_STRING("true"), PR_TRUE);
-          else
-            rootElem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
-        }
-      }
-    }
-  }
 
   if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
     mIsHandlingResizeEvent = PR_FALSE;
@@ -2931,11 +2895,14 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
     nsCOMPtr<nsIURI> manifestURI;
     nsContentUtils::GetOfflineAppManifest(doc, getter_AddRefs(manifestURI));
 
-    nsDOMOfflineResourceList* applicationCache =
-      new nsDOMOfflineResourceList(manifestURI, uri, this);
+    nsIScriptContext* scriptContext = GetContext();
+    NS_ENSURE_STATE(scriptContext);
 
-    if (!applicationCache)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsRefPtr<nsDOMOfflineResourceList> applicationCache =
+      new nsDOMOfflineResourceList(manifestURI, uri, this, scriptContext);
+    NS_ENSURE_TRUE(applicationCache, NS_ERROR_OUT_OF_MEMORY);
+
+    applicationCache->Init();
 
     mApplicationCache = applicationCache;
   }
@@ -3159,9 +3126,8 @@ nsGlobalWindow::DevToCSSIntPixels(PRInt32 px)
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return px;
-  
-  return nsPresContext::AppUnitsToIntCSSPixels(
-    presContext->DevPixelsToAppUnits(px));
+
+  return presContext->DevPixelsToIntCSSPixels(px);
 }
 
 PRInt32
@@ -3174,9 +3140,8 @@ nsGlobalWindow::CSSToDevIntPixels(PRInt32 px)
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext)
     return px;
-  
-  return presContext->AppUnitsToDevPixels(
-    nsPresContext::CSSPixelsToAppUnits(px));
+
+  return presContext->CSSPixelsToDevPixels(px);
 }
 
 nsIntSize
@@ -3191,10 +3156,8 @@ nsGlobalWindow::DevToCSSIntPixels(nsIntSize px)
     return px;
   
   return nsIntSize(
-    nsPresContext::AppUnitsToIntCSSPixels(
-      presContext->DevPixelsToAppUnits(px.width)),
-    nsPresContext::AppUnitsToIntCSSPixels(
-      presContext->DevPixelsToAppUnits(px.height)));
+      presContext->DevPixelsToIntCSSPixels(px.width),
+      presContext->DevPixelsToIntCSSPixels(px.height));
 }
 
 nsIntSize
@@ -3209,10 +3172,8 @@ nsGlobalWindow::CSSToDevIntPixels(nsIntSize px)
     return px;
   
   return nsIntSize(
-    presContext->AppUnitsToDevPixels(
-      nsPresContext::CSSPixelsToAppUnits(px.width)),
-    presContext->AppUnitsToDevPixels(
-      nsPresContext::CSSPixelsToAppUnits(px.height)));
+    presContext->CSSPixelsToDevPixels(px.width),
+    presContext->CSSPixelsToDevPixels(px.height));
 }
 
 
@@ -4243,6 +4204,10 @@ nsGlobalWindow::Focus()
 {
   FORWARD_TO_OUTER(Focus, (), NS_ERROR_NOT_INITIALIZED);
 
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm)
+    return NS_OK;
+
   nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mDocShell);
 
   PRBool isVisible = PR_FALSE;
@@ -4267,12 +4232,15 @@ nsGlobalWindow::Focus()
     CanSetProperty("dom.disable_window_flip") ||
     CheckOpenAllow(CheckForAbusePoint()) == allowNoAbuse;
 
-  PRBool isActive = PR_FALSE;
-  nsIFocusController *focusController =
-    nsGlobalWindow::GetRootFocusController();
-  if (focusController) {
-    focusController->GetActive(&isActive);
-  }
+  nsCOMPtr<nsIDOMWindow> activeWindow;
+  fm->GetActiveWindow(getter_AddRefs(activeWindow));
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
+  NS_ASSERTION(treeItem, "What happened?");
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);
+  PRBool isActive = (rootWin == activeWindow);
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -4283,56 +4251,67 @@ nsGlobalWindow::Focus()
       return NS_OK;
     }
 
-    treeOwnerAsWin->SetVisibility(PR_TRUE);
+    // XXXndeakin not sure what this is for or if it should go somewhere else
     nsCOMPtr<nsIEmbeddingSiteWindow> embeddingWin(do_GetInterface(treeOwnerAsWin));
     if (embeddingWin)
       embeddingWin->SetFocus();
   }
 
+  if (!mDocShell)
+    return NS_OK;
+
   nsCOMPtr<nsIPresShell> presShell;
-  if (mDocShell) {
-    // Don't look for a presshell if we're a root chrome window that's got
-    // about:blank loaded.  We don't want to focus our widget in that case.
-    // XXXbz should we really be checking for IsInitialDocument() instead?
-    PRBool lookForPresShell = PR_TRUE;
-    PRInt32 itemType = nsIDocShellTreeItem::typeContent;
-    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
-    NS_ASSERTION(treeItem, "What happened?");
-    treeItem->GetItemType(&itemType);
-    if (itemType == nsIDocShellTreeItem::typeChrome &&
-        GetPrivateRoot() == static_cast<nsIDOMWindowInternal*>(this) &&
-        mDocument) {
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-      NS_ASSERTION(doc, "Bogus doc?");
-      nsIURI* ourURI = doc->GetDocumentURI();
-      if (ourURI) {
-        lookForPresShell = !IsAboutBlank(ourURI);
-      }
-    }
-      
-    if (lookForPresShell) {
-      mDocShell->GetEldestPresShell(getter_AddRefs(presShell));
+  // Don't look for a presshell if we're a root chrome window that's got
+  // about:blank loaded.  We don't want to focus our widget in that case.
+  // XXXbz should we really be checking for IsInitialDocument() instead?
+  PRBool lookForPresShell = PR_TRUE;
+  PRInt32 itemType = nsIDocShellTreeItem::typeContent;
+  treeItem->GetItemType(&itemType);
+  if (itemType == nsIDocShellTreeItem::typeChrome &&
+      GetPrivateRoot() == static_cast<nsIDOMWindowInternal*>(this) &&
+      mDocument) {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+    NS_ASSERTION(doc, "Bogus doc?");
+    nsIURI* ourURI = doc->GetDocumentURI();
+    if (ourURI) {
+      lookForPresShell = !IsAboutBlank(ourURI);
     }
   }
 
-  nsresult result = NS_OK;
-  if (presShell && (canFocus || isActive)) {
-    nsIViewManager* vm = presShell->GetViewManager();
-    if (vm) {
-      nsCOMPtr<nsIWidget> widget;
-      vm->GetWidget(getter_AddRefs(widget));
-      if (widget)
-        // raise the window since this was a focus call on the window.
-        result = widget->SetFocus(PR_TRUE);
-    }
-  }
-  else {
-    if (focusController) {
-      focusController->SetFocusedWindow(this);
-    }
+  if (lookForPresShell) {
+    mDocShell->GetEldestPresShell(getter_AddRefs(presShell));
   }
 
-  return result;
+  nsCOMPtr<nsIDocShellTreeItem> parentDsti;
+  treeItem->GetParent(getter_AddRefs(parentDsti));
+
+  // set the parent's current focus to the frame containing this window.
+  nsCOMPtr<nsIDOMWindow> parent(do_GetInterface(parentDsti));
+  if (parent) {
+    nsCOMPtr<nsIDOMDocument> parentdomdoc;
+    parent->GetDocument(getter_AddRefs(parentdomdoc));
+
+    nsCOMPtr<nsIDocument> parentdoc = do_QueryInterface(parentdomdoc);
+    if (!parentdoc)
+      return NS_OK;
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    nsIContent* frame = parentdoc->FindContentForSubDocument(doc);
+    nsCOMPtr<nsIDOMElement> frameElement = do_QueryInterface(frame);
+    if (frameElement) {
+      PRUint32 flags = nsIFocusManager::FLAG_NOSCROLL;
+      if (canFocus)
+        flags |= nsIFocusManager::FLAG_RAISE;
+      return fm->SetFocus(frameElement, flags);
+    }
+  }
+  else if (canFocus) {
+    // if there is no parent, this must be a toplevel window, so raise the
+    // window if canFocus is true
+    return fm->SetActiveWindow(this);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4351,8 +4330,16 @@ nsGlobalWindow::Blur()
     // This method call may cause mDocShell to become nsnull.
     rv = siteWindow->Blur();
 
-    if (NS_SUCCEEDED(rv) && mDocShell)
-      mDocShell->SetHasFocus(PR_FALSE);
+    // if the root is focused, clear the focus
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    if (fm && mDocument) {
+      nsCOMPtr<nsIDOMElement> element;
+      fm->GetFocusedElementForWindow(this, PR_FALSE, nsnull, getter_AddRefs(element));
+      nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+      if (content == doc->GetRootContent())
+        fm->ClearFocus(this);
+    }
   }
 
   return rv;
@@ -4474,7 +4461,9 @@ nsGlobalWindow::Print()
         printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
       }
 
+      EnterModalState();
       webBrowserPrint->Print(printSettings, nsnull);
+      LeaveModalState();
 
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
@@ -5661,6 +5650,13 @@ nsGlobalWindow::EnterModalState()
     }
   }
   topWin->mModalStateDepth++;
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->EnterModalState();
+  }
 }
 
 // static
@@ -5763,6 +5759,13 @@ nsGlobalWindow::LeaveModalState()
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nsnull;
     }
+  }
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->LeaveModalState();
   }
 }
 
@@ -6333,7 +6336,8 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  PRBool aUseCapture)
 {
-  FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture));
+  FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture),
+                          NS_ERROR_NOT_AVAILABLE);
 
   return AddEventListener(aType, aListener, aUseCapture,
                           !nsContentUtils::IsChromeDoc(mDoc));
@@ -6384,17 +6388,13 @@ nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
                                         nsIDOMEventGroup *aEvtGrp)
 {
   FORWARD_TO_INNER_CREATE(AddGroupedEventListener,
-                          (aType, aListener, aUseCapture, aEvtGrp));
+                          (aType, aListener, aUseCapture, aEvtGrp),
+                          NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager)))) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
 }
 
 NS_IMETHODIMP
@@ -6434,9 +6434,8 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener *aListener,
                                  PRBool aUseCapture, PRBool aWantsUntrusted)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
@@ -6451,13 +6450,9 @@ nsresult
 nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                       const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager)))) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
 
 nsresult
@@ -6475,42 +6470,35 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
-                                   nsIEventListenerManager** aResult)
+nsIEventListenerManager*
+nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound)
 {
-  FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound, aResult));
+  FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound), nsnull);
 
   if (!mListenerManager) {
     if (!aCreateIfNotFound) {
-      *aResult = nsnull;
-      return NS_OK;
+      return nsnull;
     }
 
     static NS_DEFINE_CID(kEventListenerManagerCID,
                          NS_EVENTLISTENERMANAGER_CID);
-    nsresult rv;
 
-    mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mListenerManager->SetListenerTarget(
-      static_cast<nsPIDOMEventTarget*>(this));
+    mListenerManager = do_CreateInstance(kEventListenerManagerCID);
+    if (mListenerManager) {
+      mListenerManager->SetListenerTarget(
+        static_cast<nsPIDOMEventTarget*>(this));
+    }
   }
 
-  NS_ADDREF(*aResult = mListenerManager);
-
-  return NS_OK;
+  return mListenerManager;
 }
 
 nsresult
 nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager))) &&
-      manager) {
-    return manager->GetSystemEventGroupLM(aGroup);
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->GetSystemEventGroupLM(aGroup);
 }
 
 nsIScriptContext*
@@ -6613,61 +6601,69 @@ nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
   return NS_OK;
 }
 
-static nsresult
-FireWidgetEvent(nsIDocShell *aDocShell, PRUint32 aMsg)
+void
+nsGlobalWindow::ActivateOrDeactivate(PRBool aActivate)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  aDocShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-  nsIViewManager* vm = presShell->GetViewManager();
-  NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-
-  nsIView *rootView;
-  vm->GetRootView(rootView);
-  NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
-
-  // We're holding a STRONG REF to the widget to ensure it doesn't go away
-  // during event processing
-  nsCOMPtr<nsIWidget> widget = rootView->GetWidget();
-  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-  nsEventStatus status;
-
-  nsGUIEvent guiEvent(PR_TRUE, aMsg, widget);
-  guiEvent.time = PR_IntervalNow();
-
-  vm->DispatchEvent(&guiEvent, &status);
-
-  return NS_OK;
-}
-
-nsresult
-nsGlobalWindow::Activate()
-{
-  FORWARD_TO_OUTER(Activate, (), NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  if (treeOwnerAsWin) {
-    PRBool isEnabled = PR_TRUE;
-    if (NS_SUCCEEDED(treeOwnerAsWin->GetEnabled(&isEnabled)) && !isEnabled) {
-      NS_WARNING( "Should not try to activate a disabled window" );
-      return NS_ERROR_FAILURE;
+  // if the window is deactivated while in full screen mode,
+  // restore OS chrome, and hide it again upon re-activation
+  nsGlobalWindow* outer = GetOuterWindowInternal();
+  if (outer && outer->mFullScreen) {
+    nsCOMPtr<nsIFullScreen> fullScreen =
+      do_GetService("@mozilla.org/browser/fullscreen;1");
+    if (fullScreen) {
+      if (aActivate)
+        fullScreen->HideAllOSChrome();
+      else
+        fullScreen->ShowAllOSChrome();
     }
-
-    treeOwnerAsWin->SetVisibility(PR_TRUE);
   }
 
-  return FireWidgetEvent(mDocShell, NS_ACTIVATE);
-}
+  // Set / unset the "active" attribute on the documentElement
+  // of the top level window
+  nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
+  if (mainWidget) {
+    // Get the top level widget (if the main widget is a sheet, this will
+    // be the sheet's top (non-sheet) parent).
+    nsCOMPtr<nsIWidget> topLevelWidget = mainWidget->GetSheetWindowParent();
+    if (!topLevelWidget)
+      topLevelWidget = mainWidget;
 
-nsresult
-nsGlobalWindow::Deactivate()
-{
-  FORWARD_TO_OUTER(Deactivate, (), NS_ERROR_NOT_INITIALIZED);
+    // Get the top level widget's nsGlobalWindow
+    nsCOMPtr<nsIDOMWindowInternal> topLevelWindow;
+    if (topLevelWidget == mainWidget) {
+      topLevelWindow = static_cast<nsIDOMWindowInternal *>(this);
+    } else {
+      // This is a workaround for the following problem:
+      // When a window with an open sheet loses focus, only the sheet window
+      // receives the NS_DEACTIVATE event. However, it's not the sheet that
+      // should lose the "active" attribute, but the containing top level window.
+      void* clientData;
+      topLevelWidget->GetClientData(clientData); // clientData is nsXULWindow
+      nsISupports* data = static_cast<nsISupports*>(clientData);
+      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
+      topLevelWindow = do_GetInterface(req);
+    }
 
-  return FireWidgetEvent(mDocShell, NS_DEACTIVATE);
+    if (topLevelWindow) {
+      // Only set the attribute if the document is a XUL document and the
+      // window is a chrome window
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      topLevelWindow->GetDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
+      nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(topLevelWindow);
+      if (xulDoc && chromeWin) {
+        nsCOMPtr<nsIContent> rootElem = doc->GetRootContent();
+        if (rootElem) {
+          if (aActivate)
+            rootElem->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
+                              NS_LITERAL_STRING("true"), PR_TRUE);
+          else
+            rootElem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
+        }
+      }
+    }
+  }
 }
 
 void
@@ -6710,6 +6706,171 @@ nsGlobalWindow::GetRootFocusController()
   // this reference is going away, but the root (if found) holds onto
   // it
   return fc;
+}
+
+nsIContent*
+nsGlobalWindow::GetFocusedNode()
+{
+  FORWARD_TO_INNER(GetFocusedNode, (), NS_OK);
+
+  return mFocusedNode;
+}
+
+void
+nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
+                               PRUint32 aFocusMethod,
+                               PRBool aNeedsFocus)
+{
+  FORWARD_TO_INNER_VOID(SetFocusedNode, (aNode, aFocusMethod, aNeedsFocus));
+
+  NS_ASSERTION(!aNode || aNode->GetCurrentDoc() == mDoc,
+               "setting focus to a node from the wrong document");
+
+  if (mFocusedNode != aNode) {
+    UpdateCanvasFocus(PR_FALSE, aNode);
+    mFocusedNode = aNode;
+    mFocusMethod = aFocusMethod;
+  }
+
+  if (aNeedsFocus)
+    mNeedsFocus = aNeedsFocus;
+}
+
+PRUint32
+nsGlobalWindow::GetFocusMethod()
+{
+  FORWARD_TO_INNER(GetFocusMethod, (), 0);
+
+  return mFocusMethod;
+}
+
+PRBool
+nsGlobalWindow::TakeFocus(PRBool aFocus, PRUint32 aFocusMethod)
+{
+  FORWARD_TO_INNER(TakeFocus, (aFocus, aFocusMethod), PR_FALSE);
+
+  if (aFocus)
+    mFocusMethod = aFocusMethod;
+
+  if (mHasFocus != aFocus) {
+    mHasFocus = aFocus;
+    UpdateCanvasFocus(PR_TRUE, mFocusedNode);
+  }
+
+  // if mNeedsFocus is true, then the document has not yet received a
+  // document-level focus event. If there is a root content node, then return
+  // true to tell the calling focus manager that a focus event is expected. If
+  // there is no root content node, the document hasn't loaded enough yet, or
+  // there isn't one and there is no point in firing a focus event.
+  if (aFocus && mNeedsFocus && mDoc && mDoc->GetRootContent() != nsnull) {
+    mNeedsFocus = PR_FALSE;
+    return PR_TRUE;
+  }
+
+  mNeedsFocus = PR_FALSE;
+  return PR_FALSE;
+}
+
+void
+nsGlobalWindow::SetReadyForFocus()
+{
+  FORWARD_TO_INNER_VOID(SetReadyForFocus, ());
+
+  // if we don't need to be focused, then just return
+  if (!mNeedsFocus)
+    return;
+
+  mNeedsFocus = PR_FALSE;
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm)
+    fm->WindowShown(this);
+}
+
+void
+nsGlobalWindow::PageHidden()
+{
+  FORWARD_TO_INNER_VOID(PageHidden, ());
+
+  // the window is being hidden, so tell the focus manager that the frame is
+  // no longer valid. Use the persisted field to determine if the document
+  // is being destroyed.
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm)
+    fm->WindowHidden(this);
+
+  mNeedsFocus = PR_TRUE;
+}
+
+// Find an nsICanvasFrame under aFrame.  Only search the principal
+// child lists.  aFrame must be non-null.
+static nsICanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
+{
+    nsICanvasFrame* canvasFrame = do_QueryFrame(aFrame);
+    if (canvasFrame) {
+        return canvasFrame;
+    }
+
+    nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+    while (kid) {
+        canvasFrame = FindCanvasFrame(kid);
+        if (canvasFrame) {
+            return canvasFrame;
+        }
+        kid = kid->GetNextSibling();
+    }
+
+    return nsnull;
+}
+
+//-------------------------------------------------------
+// Tells the HTMLFrame/CanvasFrame that is now has focus
+void
+nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
+{
+  // this is called from the inner window so use GetDocShell
+  nsIDocShell* docShell = GetDocShell();
+  if (!docShell)
+    return;
+
+  nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
+  if (editorDocShell) {
+    PRBool editable;
+    editorDocShell->GetEditable(&editable);
+    if (editable)
+      return;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell || !mDocument)
+    return;
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+  nsIContent *rootContent = doc->GetRootContent();
+  if (rootContent) {
+      if ((mHasFocus || aFocusChanged) &&
+          (mFocusedNode == rootContent || aNewContent == rootContent)) {
+          nsIFrame* frame = presShell->GetPrimaryFrameFor(rootContent);
+          if (frame) {
+              frame = frame->GetParent();
+              nsICanvasFrame* canvasFrame = do_QueryFrame(frame);
+              if (canvasFrame) {
+                  canvasFrame->SetHasFocus(mHasFocus && rootContent == aNewContent);
+              }
+          }
+      }
+  } else {
+      // Look for the frame the hard way
+      nsIFrame* frame = presShell->GetRootFrame();
+      if (frame) {
+          nsICanvasFrame* canvasFrame = FindCanvasFrame(frame);
+          if (canvasFrame) {
+              canvasFrame->SetHasFocus(PR_FALSE);
+          }
+      }      
+  }
 }
 
 //*****************************************************************************
@@ -8381,49 +8542,13 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
 
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   nsIDOMElement *focusedElement = holder->GetFocusedElement();
   nsIDOMWindowInternal *focusedWindow = holder->GetFocusedWindow();
-
-  // If the toplevel window isn't focused, just update the focus controller.
-  nsIFocusController *fc = nsGlobalWindow::GetRootFocusController();
-  NS_ENSURE_TRUE(fc, NS_ERROR_UNEXPECTED);
-
-  PRBool active;
-  fc->GetActive(&active);
-  if (active) {
-    PRBool didFocusContent = PR_FALSE;
-    nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
-
-    if (focusedContent) {
-      // We don't bother checking whether the element or frame is focusable.
-      // If it was focusable when we stored the presentation, it must be
-      // focusable now.
-      nsIDocument *doc = focusedContent->GetCurrentDoc();
-      if (doc) {
-        nsIPresShell *shell = doc->GetPrimaryShell();
-        if (shell) {
-          nsPresContext *pc = shell->GetPresContext();
-          if (pc) {
-            pc->EventStateManager()->SetContentState(focusedContent,
-                                                     NS_EVENT_STATE_FOCUS);
-            didFocusContent = PR_TRUE;
-          }
-        }
-      }
-    }
-
-    if (!didFocusContent && focusedWindow) {
-      // Clear the focus controller's memory of any focused element so that
-      // the element does not get inadvertently focused again.
-      fc->ResetElementFocus();
-
-      focusedWindow->Focus();
-    }
-  } else if (focusedWindow) {
-    // Just update the saved focus memory.
-    fc->SetFocusedWindow(focusedWindow);
-    fc->SetFocusedElement(focusedElement);
-  }
+  if (fm && focusedElement)
+    fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL);
+  else if (focusedWindow)
+    focusedWindow->Focus();
 
   // And we're ready to go!
   inner->Thaw();

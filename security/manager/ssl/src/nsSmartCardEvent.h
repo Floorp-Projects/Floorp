@@ -63,11 +63,8 @@ public:
   //NS_DECL_NSIPRIVATEDOMEEVENT
   NS_IMETHOD DuplicatePrivateData();
   NS_IMETHOD SetTarget(nsIDOMEventTarget *aTarget);
-  NS_IMETHOD SetCurrentTarget(nsIDOMEventTarget *aTarget);
-  NS_IMETHOD SetOriginalTarget(nsIDOMEventTarget *aTarget);
   NS_IMETHOD_(nsEvent*) GetInternalNSEvent();
   NS_IMETHOD_(PRBool ) IsDispatchStopped();
-  NS_IMETHOD_(PRBool ) HasOriginalTarget();
   NS_IMETHOD SetTrusted(PRBool aResult);
 
   NS_DECL_NSIDOMEVENT

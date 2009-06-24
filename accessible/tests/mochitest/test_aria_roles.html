@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=481114
+-->
+<head>
+  <title>Test weak ARIA roles</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // Note:
+      // The phrase "weak foo" here means that there is no good foo-to-platform
+      // role mapping. Similarly "strong foo" means there is a good foo-to-
+      // platform role mapping.
+
+      // weak roles that are forms of "live regions"
+      testRole("log_table", ROLE_TABLE);
+      testRole("marquee_h1", ROLE_HEADING);
+      testRole("timer_div", ROLE_SECTION);
+
+      // strong landmark
+      testRole("application", ROLE_APPLICATION);
+
+      // weak landmarks
+      var weak_landmarks = ["banner", "complementary", "contentinfo",
+          "main", "navigation", "search"];
+      for (l in weak_landmarks)
+        testRole(weak_landmarks[l], ROLE_SECTION);
+
+      // test gEmptyRoleMap
+      testRole("cell", ROLE_NOTHING);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481114">Mozilla Bug 481114</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  
+  <!-- "live" roles -->
+  <table role="log" id="log_table">
+    <tr><td>Table based log</td></tr>
+  </table>
+  <h1 role="marquee" id="marquee_h1">marquee</h1>
+  <div role="timer" id="timer_div">timer</div>
+
+  <!-- landmarks -->
+  <div role="application" id="application">application</div>
+  <div role="banner" id="banner">banner</div>
+  <div role="complementary" id="complementary">complementary</div>
+  <div role="contentinfo" id="contentinfo">contentinfo</div>
+  <div role="main" id="main">main</div>
+  <div role="navigation" id="navigation">navigation</div>
+  <div role="search" id="search">search</div>
+
+  <!-- test gEmptyRoleMap -->
+  <table role="label">
+    <tr>
+      <td id="cell">cell</td>
+    </tr>
+  </table>
+
+</body>
+</html>

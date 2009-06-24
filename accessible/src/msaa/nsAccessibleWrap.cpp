@@ -203,8 +203,13 @@ __try {
       if (widget) {
         hwnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
         NS_ASSERTION(hwnd, "No window handle for window");
+
+        nsIViewManager* viewManager = view->GetViewManager();
+        if (!viewManager)
+          return E_UNEXPECTED;
+
         nsIView *rootView;
-        view->GetViewManager()->GetRootView(rootView);
+        viewManager->GetRootView(rootView);
         if (rootView == view) {
           // If the current object has a widget but was created by an
           // outer object with its own outer window, then
@@ -1618,9 +1623,9 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
   return NS_OK;
 }
 
-// nsPIAccessible
+// nsAccessible
 
-NS_IMETHODIMP
+nsresult
 nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
   NS_ENSURE_ARG(aEvent);

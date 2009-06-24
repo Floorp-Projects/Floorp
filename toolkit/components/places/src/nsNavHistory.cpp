@@ -607,7 +607,7 @@ nsNavHistory::Init()
     rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
                                 getter_AddRefs(historyFile));
     if (NS_SUCCEEDED(rv) && historyFile) {
-      ImportHistory(historyFile);
+      (void)ImportHistory(historyFile);
     }
   }
 
@@ -729,7 +729,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 // nsNavHistory::InitDB
 //
 
-#define PLACES_SCHEMA_VERSION 9
+#define PLACES_SCHEMA_VERSION 10
 
 nsresult
 nsNavHistory::InitDB()
@@ -891,7 +891,13 @@ nsNavHistory::InitDB()
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // XXX Upgrades >V9 must add migration code here.
+      // Migrate places up to V10
+      if (DBSchemaVersion < 10) {
+        rv = MigrateV10Up(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Schema Upgrades must add migration code here.
 
     } else {
       // Downgrading
@@ -1865,6 +1871,19 @@ nsNavHistory::MigrateV9Up(mozIStorageConnection *aDBConn)
   }
 
   return transaction.Commit();
+}
+
+nsresult
+nsNavHistory::MigrateV10Up(mozIStorageConnection *aDBConn)
+{
+  // LastModified is set to the same value as dateAdded on item creation.
+  // This way we can use lastModified index to sort.
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE moz_bookmarks SET lastModified = dateAdded "
+      "WHERE lastModified IS NULL"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
    
 // nsNavHistory::GetUrlIdFor
@@ -3263,17 +3282,18 @@ PlacesSQLQueryBuilder::SelectAsURI()
         "WHERE 1 "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
           "{ADDITIONAL_CONDITIONS} "
-        "UNION "
+        "GROUP BY h.id "
+        "UNION ALL "
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "h.last_visit_date, f.url, v.session, null "
         "FROM moz_places_temp h "
         "JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        // WHERE 1 is a no-op since additonal conditions will start with AND.
-        "WHERE 1 "
+        "WHERE h.id NOT IN (SELECT place_id FROM moz_historyvisits_temp) "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
           "{ADDITIONAL_CONDITIONS} "
-        "UNION "
+        "GROUP BY h.id "
+        "UNION ALL "
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "h.last_visit_date, f.url, v.session, null "
         "FROM moz_places h "
@@ -3282,13 +3302,15 @@ PlacesSQLQueryBuilder::SelectAsURI()
         "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
           "{ADDITIONAL_CONDITIONS} "
-        "UNION "
+        "GROUP BY h.id "
+        "UNION ALL "
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "h.last_visit_date, f.url, v.session, null "
         "FROM moz_places h "
         "JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
         "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
+          "AND h.id NOT IN (SELECT place_id FROM moz_historyvisits_temp) "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
           "{ADDITIONAL_CONDITIONS} "
         "GROUP BY h.id ");
@@ -7535,8 +7557,7 @@ nsNavHistory::CalculateFrecencyInternal(PRInt64 aPlaceId,
           break;
         default:
           // 0 == undefined (see bug #375777 for details)
-          if (visitType)
-            NS_WARNING("new transition but no weight for frecency");
+          NS_WARN_IF_FALSE(!visitType, "new transition but no weight for frecency");
           bonus = mDefaultVisitBonus;
           break;
       }

@@ -32,6 +32,8 @@
 <!ENTITY goOfflineCmd.label "Work Offline">
 <!ENTITY goOfflineCmd.accesskey "w">
 
+<!ENTITY menubarCmd.label "Menu Bar">
+<!ENTITY menubarCmd.accesskey "M">
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY navbarCmd.accesskey "N">
 <!ENTITY personalbarCmd.label "Bookmarks Toolbar">

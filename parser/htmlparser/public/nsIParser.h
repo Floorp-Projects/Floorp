@@ -266,15 +266,6 @@ class nsIParser : public nsISupports {
      */
     NS_IMETHOD BuildModel(void) = 0;
 
-
-    /**
-     *  Retrieve the parse mode from the parser...
-     *  
-     *  @update  gess 6/9/98
-     *  @return  ptr to scanner
-     */
-    NS_IMETHOD_(nsDTDMode) GetParseMode(void) = 0;
-
     /**
      *  Call this method to cancel any pending parsing events.
      *  Parsing events may be pending if all of the document's content

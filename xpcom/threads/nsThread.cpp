@@ -280,6 +280,9 @@ nsThread::ThreadFunc(void *arg)
   event = new nsThreadShutdownAckEvent(self->mShutdownContext);
   self->mShutdownContext->joiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
+  // Release any observer of the thread here.
+  self->SetObserver(nsnull);
+
   NS_RELEASE(self);
 }
 
@@ -468,6 +471,14 @@ nsThread::Shutdown()
 
   PR_JoinThread(mThread);
   mThread = nsnull;
+
+#ifdef DEBUG
+  {
+    nsAutoLock lock(mLock);
+    NS_ASSERTION(!mObserver, "Should have been cleared at shutdown!");
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -496,24 +507,32 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
   if (obs)
     obs->OnProcessNextEvent(this, mayWait && !ShuttingDown(), mRunningEvent);
 
-  // If we are shutting down, then do not wait for new events.
-  nsCOMPtr<nsIRunnable> event; 
-  mEvents->GetEvent(mayWait && !ShuttingDown(), getter_AddRefs(event));
-
-  *result = (event.get() != nsnull);
+  ++mRunningEvent;
 
   nsresult rv = NS_OK;
 
-  if (event) {
-    LOG(("THRD(%p) running [%p]\n", this, event.get()));
-    ++mRunningEvent;
-    event->Run();
-    --mRunningEvent;
-  } else if (mayWait) {
-    NS_ASSERTION(ShuttingDown(), "This should only happen when shutting down");
-    rv = NS_ERROR_UNEXPECTED;
+  {
+    // Scope for |event| to make sure that its destructor fires while
+    // mRunningEvent has been incremented, since that destructor can
+    // also do work.
+
+    // If we are shutting down, then do not wait for new events.
+    nsCOMPtr<nsIRunnable> event;
+    mEvents->GetEvent(mayWait && !ShuttingDown(), getter_AddRefs(event));
+
+    *result = (event.get() != nsnull);
+
+    if (event) {
+      LOG(("THRD(%p) running [%p]\n", this, event.get()));
+      event->Run();
+    } else if (mayWait) {
+      NS_ASSERTION(ShuttingDown(),
+                   "This should only happen when shutting down");
+      rv = NS_ERROR_UNEXPECTED;
+    }
   }
 
+  --mRunningEvent;
   if (obs)
     obs->AfterProcessNextEvent(this, mRunningEvent);
 

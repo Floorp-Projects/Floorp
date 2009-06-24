@@ -42,7 +42,7 @@
 #define _MOZSTORAGECONNECTION_H_
 
 #include "nsCOMPtr.h"
-#include "nsAutoLock.h"
+#include "mozilla/Mutex.h"
 
 #include "nsString.h"
 #include "nsInterfaceHashtable.h"
@@ -53,6 +53,7 @@
 
 #include <sqlite3.h>
 
+struct PRLock;
 class nsIFile;
 class nsIEventTarget;
 class nsIThread;
@@ -86,10 +87,17 @@ public:
    * Lazily creates and returns a background execution thread.  In the future,
    * the thread may be re-claimed if left idle, so you should call this
    * method just before you dispatch and not save the reference.
-   * 
+   *
    * @returns an event target suitable for asynchronous statement execution.
    */
   already_AddRefed<nsIEventTarget> getAsyncExecutionTarget();
+
+  /**
+   * Mutex used by asynchronous statements to protect state.  The mutex is
+   * declared on the connection object because there is no contention between
+   * asynchronous statements (they are serialized on mAsyncExecutionThread).
+   */
+  Mutex sharedAsyncExecutionMutex;
 
 private:
   ~Connection();
@@ -159,8 +167,7 @@ private:
   nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 
   // This isn't accessed but is used to make sure that the connections do
-  // not outlive the service. The service, for example, owns certain locks
-  // in mozStorageAsyncIO file that the connections depend on.
+  // not outlive the service.
   nsCOMPtr<mozIStorageService> mStorageService;
 };
 

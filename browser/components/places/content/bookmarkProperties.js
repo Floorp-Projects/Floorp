@@ -219,6 +219,7 @@ var BookmarkPropertiesPanel = {
 
           if ("keyword" in dialogInfo) {
             this._keyword = dialogInfo.keyword;
+            this._isAddKeywordDialog = true;
             if ("postData" in dialogInfo)
               this._postData = dialogInfo.postData;
             if ("charSet" in dialogInfo)
@@ -282,7 +283,7 @@ var BookmarkPropertiesPanel = {
           break;
 
         case "folder":
-          if (PlacesUtils.livemarks.isLivemark(this._itemId)) {
+          if (PlacesUtils.itemIsLivemark(this._itemId)) {
             this._itemType = LIVEMARK_CONTAINER;
             this._feedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
             this._siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
@@ -367,6 +368,10 @@ var BookmarkPropertiesPanel = {
       if (this._itemType == BOOKMARK_ITEM) {
         this._element("locationField")
             .addEventListener("input", this, false);
+        if (this._isAddKeywordDialog) {
+          this._element("keywordField")
+              .addEventListener("input", this, false);
+        }
       }
       else if (this._itemType == LIVEMARK_CONTAINER) {
         this._element("feedLocationField")
@@ -387,7 +392,8 @@ var BookmarkPropertiesPanel = {
       case "input":
         if (target.id == "editBMPanel_locationField" ||
             target.id == "editBMPanel_feedLocationField" ||
-            target.id == "editBMPanel_siteLocationField") {
+            target.id == "editBMPanel_siteLocationField" ||
+            target.id == "editBMPanel_keywordField") {
           // Check uri fields to enable accept button if input is valid
           document.documentElement
                   .getButton("accept").disabled = !this._inputIsValid();
@@ -510,6 +516,8 @@ var BookmarkPropertiesPanel = {
   _inputIsValid: function BPP__inputIsValid() {
     if (this._itemType == BOOKMARK_ITEM &&
         !this._containsValidURI("locationField"))
+      return false;
+    if (this._isAddKeywordDialog && !this._element("keywordField").value.length)
       return false;
 
     // Feed Location has to be a valid URI;

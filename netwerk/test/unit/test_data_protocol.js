@@ -15,7 +15,8 @@ var urls = [
   ["data:application/xhtml+xml,foo bar",            "application/xhtml+xml",    "foo bar"],
   ["data:application/xhtml+xml,foo%20bar",          "application/xhtml+xml",    "foo bar"],
   ["data:text/plain,foo%00 bar",                    "text/plain",               "foo\x00 bar"],
-  ["data:text/plain;base64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"]
+  ["data:text/plain;base64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"],
+  ["DATA:TEXT/PLAIN;BASE64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"]
 ];
 
 function run_next_test() {

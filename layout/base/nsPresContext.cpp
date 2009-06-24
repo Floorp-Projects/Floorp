@@ -48,7 +48,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsPIDOMWindow.h"
-#include "nsIFocusController.h"
 #include "nsStyleSet.h"
 #include "nsImageLoader.h"
 #include "nsIContent.h"
@@ -92,6 +91,8 @@
 #include "nsStyleStructInlines.h"
 #include "nsIAppShell.h"
 #include "prenv.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMEventTarget.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -1266,7 +1267,7 @@ nsPresContext::SetupBackgroundImageLoaders(nsIFrame* aFrame,
 {
   nsRefPtr<nsImageLoader> loaders;
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, aStyleBackground) {
-    imgIRequest *image = aStyleBackground->mLayers[i].mImage.mRequest;
+    imgIRequest *image = aStyleBackground->mLayers[i].mImage;
     loaders = nsImageLoader::Create(aFrame, image, PR_FALSE, loaders);
   }
   SetImageLoaders(aFrame, BACKGROUND_IMAGE, loaders);
@@ -1557,7 +1558,7 @@ nsPresContext::SetPrintSettings(nsIPrintSettings *aPrintSettings)
 }
 
 PRBool
-nsPresContext::EnsureVisible(PRBool aUnsuppressFocus)
+nsPresContext::EnsureVisible()
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   if (docShell) {
@@ -1569,22 +1570,8 @@ nsPresContext::EnsureVisible(PRBool aUnsuppressFocus)
       nsCOMPtr<nsPresContext> currentPresContext;
       docV->GetPresContext(getter_AddRefs(currentPresContext));
       if (currentPresContext == this) {
-        // OK, this is us.  We want to call Show() on the content viewer.  But
-        // first, we need to suppress focus changes; otherwise the focus will
-        // get sent to the wrong place (toplevel window).
-        nsCOMPtr<nsPIDOMWindow> privWindow = do_GetInterface(docShell);
-        // XXXbz privWindow should never really be null!
-        nsIFocusController* fc =
-          privWindow ? privWindow->GetRootFocusController() : nsnull;
-        if (fc) {
-          fc->SetSuppressFocus(PR_TRUE,
-                               "nsPresContext::EnsureVisible Suppression");
-        }
+        // OK, this is us.  We want to call Show() on the content viewer.
         cv->Show();
-        if (fc && aUnsuppressFocus) {
-          fc->SetSuppressFocus(PR_FALSE,
-                               "nsPresContext::EnsureVisible Suppression");
-        }
         return PR_TRUE;
       }
     }
@@ -1625,9 +1612,9 @@ nsPresContext::IsChrome() const
 nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const
 {
   return
-    UseDocumentColors() &&
     nsRuleNode::HasAuthorSpecifiedRules(aFrame->GetStyleContext(),
-                                        ruleTypeMask);
+                                        ruleTypeMask,
+                                        UseDocumentColors());
 }
 
 static void
@@ -1947,26 +1934,31 @@ nsPresContext::UserFontSetUpdated()
 void
 nsPresContext::FireDOMPaintEvent()
 {
-  nsCOMPtr<nsPIDOMWindow> ourWindow = mDocument->GetWindow();
+  nsPIDOMWindow* ourWindow = mDocument->GetWindow();
   if (!ourWindow)
     return;
 
-  nsISupports* eventTarget = ourWindow;
+  nsCOMPtr<nsIDOMEventTarget> dispatchTarget = do_QueryInterface(ourWindow);
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = dispatchTarget;
   if (mSameDocDirtyRegion.IsEmpty() && !IsChrome()) {
     // Don't tell the window about this event, it should not know that
     // something happened in a subdocument. Tell only the chrome event handler.
     // (Events sent to the window get propagated to the chrome event handler
     // automatically.)
-    eventTarget = ourWindow->GetChromeEventHandler();
-    if (!eventTarget) {
+    dispatchTarget = do_QueryInterface(ourWindow->GetChromeEventHandler());
+    if (!dispatchTarget) {
       return;
     }
   }
   // Events sent to the window get propagated to the chrome event handler
   // automatically.
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMNotifyPaintEvent(getter_AddRefs(event), this, nsnull,
+                            NS_AFTERPAINT,
+                            &mSameDocDirtyRegion, &mCrossDocDirtyRegion);
+  nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(event);
+  if (!pEvent) return;
 
-  nsNotifyPaintEvent event(PR_TRUE, NS_AFTERPAINT, mSameDocDirtyRegion,
-                           mCrossDocDirtyRegion);
   // Empty our regions now in case dispatching the event causes more damage
   // (hopefully it won't, or we're likely to get an infinite loop! At least
   // it won't be blocking app execution though).
@@ -1975,8 +1967,9 @@ nsPresContext::FireDOMPaintEvent()
   // Even if we're not telling the window about the event (so eventTarget is
   // the chrome event handler, not the window), the window is still
   // logically the event target.
-  event.target = do_QueryInterface(ourWindow);
-  nsEventDispatcher::Dispatch(eventTarget, this, &event);
+  pEvent->SetTarget(eventTarget);
+  pEvent->SetTrusted(PR_TRUE);
+  nsEventDispatcher::DispatchDOMEvent(dispatchTarget, nsnull, event, this, nsnull);
 }
 
 static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
@@ -1998,8 +1991,8 @@ static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (window)
     return MayHavePaintEventListener(window);
 
-  nsCOMPtr<nsIEventListenerManager> manager;
-  chromeEventHandler->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+  nsIEventListenerManager* manager =
+    chromeEventHandler->GetListenerManager(PR_FALSE);
   if (manager && manager->MayHavePaintEventListener())
     return PR_TRUE;
 

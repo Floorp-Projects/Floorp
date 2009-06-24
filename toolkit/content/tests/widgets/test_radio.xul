@@ -20,8 +20,8 @@
   <radio label="Three" value="three"/>
 </radiogroup>
 <radiogroup id="radiogroup-initwithselected" value="two">
-  <radio label="One" value="one"/>
-  <radio label="Two" value="two"/>
+  <radio id="one" label="One" value="one" accesskey="o"/>
+  <radio id="two" label="Two" value="two" accesskey="t"/>
   <radio label="Three" value="three" selected="true"/>
 </radiogroup>
 
@@ -38,6 +38,25 @@ function test_radio()
   var element = document.getElementById("radiogroup");
   test_nsIDOMXULSelectControlElement(element, "radio", null);
   test_nsIDOMXULSelectControlElement_UI(element, null);
+
+  window.blur();
+
+  var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
+                         { ctrlKey : true } : { altKey : true, shiftKey: true };
+  synthesizeKey("t", accessKeyDetails);  
+
+  var radiogroup = $("radiogroup-initwithselected");
+  is(document.activeElement, radiogroup, "accesskey focuses radiogroup");
+  is(radiogroup.selectedItem, $("two"), "accesskey selects radio");
+
+  $("radiogroup-initwithvalue").focus();
+
+  $("one").disabled = true;
+  synthesizeKey("o", accessKeyDetails);  
+
+  is(document.activeElement, $("radiogroup-initwithvalue"), "accesskey on disabled radio doesn't focus");
+  is(radiogroup.selectedItem, $("two"), "accesskey on disabled radio doesn't change selection");
+
   SimpleTest.finish();
 }
 

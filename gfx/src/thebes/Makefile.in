@@ -115,8 +115,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS		+= nsSystemFontsBeOS.cpp
 endif
 
-ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
-CPPSRCS          += nsSystemFontsMac.cpp
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS		= nsSystemFontsMac.mm
 endif
 
 EXPORTS         += nsIThebesFontMetrics.h

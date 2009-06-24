@@ -201,7 +201,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
 
     if (NS_SUCCEEDED(rv) && packageRegistry) {
       nsCAutoString utf8DictName;
-      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("editor"),
+      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
                                               utf8DictName);
       AppendUTF8toUTF16(utf8DictName, dictName);
     }
@@ -210,6 +210,12 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
   PRBool setDictionary = PR_FALSE;
   if (NS_SUCCEEDED(rv) && !dictName.IsEmpty()) {
     rv = SetCurrentDictionary(dictName.get());
+
+    // fall back to "en-US" if the current locale doesn't have a dictionary.
+    if (NS_FAILED(rv)) {
+      rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US").get());
+    }
+
     if (NS_SUCCEEDED(rv))
       setDictionary = PR_TRUE;
   }

@@ -115,13 +115,18 @@ TaggingService.prototype = {
   /**
    * Creates a tag container under the tags-root with the given name.
    *
-   * @param aName
-   *        the name for the new container.
-   * @returns the id of the new container.
+   * @param aTagName
+   *        the name for the new tag.
+   * @returns the id of the new tag container.
    */
-  _createTag: function TS__createTag(aName) {
-    return this._bms.createFolder(this._bms.tagsFolder, aName,
-                                  this._bms.DEFAULT_INDEX);
+  _createTag: function TS__createTag(aTagName) {
+    var newFolderId = this._bms.createFolder(this._bms.tagsFolder, aTagName,
+                                             this._bms.DEFAULT_INDEX);
+    // Add the folder to our local cache, so we can avoid doing this in the
+    // observer that would have to check itemType.
+    this._tagFolders[newFolderId] = aTagName;
+
+    return newFolderId;
   },
 
   /**
@@ -205,10 +210,10 @@ TaggingService.prototype = {
   },
 
   /**
-   * Removes the tag container from the tags-root if the given tag is empty.
+   * Removes the tag container from the tags root if the given tag is empty.
    *
    * @param aTagId
-   *        the item-id of the tag element under the tags root
+   *        the itemId of the tag element under the tags root
    */
   _removeTagIfEmpty: function TS__removeTagIfEmpty(aTagId) {
     var result = this._getTagResult(aTagId);
@@ -266,7 +271,7 @@ TaggingService.prototype = {
 
   // nsITaggingService
   getURIsForTag: function TS_getURIsForTag(aTag) {
-    if (aTag.length == 0)
+    if (!aTag || aTag.length == 0)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     var uris = [];
@@ -391,11 +396,29 @@ TaggingService.prototype = {
   onEndUpdateBatch: function() {
     this._inBatch = false;
   },
+
   onItemAdded: function(aItemId, aFolderId, aIndex) {
-    if (aFolderId == this._bms.tagsFolder &&
-        this._bms.getItemType(aItemId) == this._bms.TYPE_FOLDER)
-      this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
+    // Nothing to do if this is not a tag.
+    if (aFolderId != this._bms.tagsFolder)
+      return;
+
+    // If we are correctly called through createTag the itemId will be added
+    // to _tagFolders just after onItemAdded is called.  To avoid an useless
+    // call to getItemType we enqueue this check, so that when it runs the hash
+    // has already been updated.
+    // TODO: once bug 494380 is fixed, this 'workaround' can go away.
+    var self = this;
+    var tm = Cc["@mozilla.org/thread-manager;1"].
+             getService(Ci.nsIThreadManager);
+    tm.mainThread.dispatch({
+      run: function() {
+        if (!self._tagFolders[aItemId] &&
+            self._bms.getItemType(aItemId) == self._bms.TYPE_FOLDER)
+          self._tagFolders[aItemId] = self._bms.getItemTitle(aItemId);
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
+
   onBeforeItemRemoved: function(aItemId) {
     // Remember the bookmark's URI, because it will be gone by the time
     // onItemRemoved() is called.  getBookmarkURI() will throw if the item is
@@ -405,6 +428,7 @@ TaggingService.prototype = {
     }
     catch (e) {}
   },
+
   onItemRemoved: function(aItemId, aFolderId, aIndex) {
     var itemURI = this._itemsInRemoval[aItemId];
     delete this._itemsInRemoval[aItemId];
@@ -424,11 +448,14 @@ TaggingService.prototype = {
         this.untagURI(itemURI, tagIds);
     }
   },
+
   onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aValue) {
-    if (this._tagFolders[aItemId])
+    if (aProperty == "title" && this._tagFolders[aItemId])
       this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
   },
+
   onItemVisited: function(aItemId, aVisitID, time) {},
+
   onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     if (this._tagFolders[aItemId] && this._bms.tagFolder == aOldParent &&
         this._bms.tagFolder != aNewParent)

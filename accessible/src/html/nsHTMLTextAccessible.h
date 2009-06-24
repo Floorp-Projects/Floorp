@@ -113,7 +113,6 @@ public:
   // Don't cache via unique ID -- bullet accessible shares the same dom node as
   // this LI accessible. Also, don't cache via mParent/SetParent(), prevent
   // circular reference since li holds onto us.
-  NS_IMETHOD SetParent(nsIAccessible *aParentAccessible);
   NS_IMETHOD GetParent(nsIAccessible **aParentAccessible);
 
   // nsAccessNode
@@ -122,9 +121,9 @@ public:
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
-
-  // nsPIAccessible
-  NS_IMETHOD AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength);
+  virtual void SetParent(nsIAccessible *aParent);
+  virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
+                                PRUint32 aLength);
 
 protected:
   // XXX: Ideally we'd get the bullet text directly from the bullet frame via

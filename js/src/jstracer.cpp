@@ -7623,7 +7623,6 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
     if (js_PrototypeHasIndexedProperties(cx, obj))
         return JSRS_STOP;
 
-    // FIXME: this loop can become a single shape test once bug 497789 has been fixed
     while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit)) {
         LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
         LIns* ops_ins;

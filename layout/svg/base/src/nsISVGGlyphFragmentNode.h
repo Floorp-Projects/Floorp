@@ -55,10 +55,10 @@ class nsISVGGlyphFragmentNode : public nsQueryFrame
 public:
   NS_DECLARE_FRAME_ACCESSOR(nsISVGGlyphFragmentNode)
 
-  NS_IMETHOD_(PRUint32) GetNumberOfChars()=0;
-  NS_IMETHOD_(float) GetComputedTextLength()=0;
-  NS_IMETHOD_(float) GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars)=0;
-  NS_IMETHOD_(PRInt32) GetCharNumAtPosition(nsIDOMSVGPoint *point)=0;
+  virtual PRUint32 GetNumberOfChars()=0;
+  virtual float GetComputedTextLength()=0;
+  virtual float GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars)=0;
+  virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point)=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
   NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling)=0;

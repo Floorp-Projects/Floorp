@@ -921,13 +921,14 @@ nsAutoCompleteController::IsSorted(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
+nsAutoCompleteController::CanDrop(PRInt32 index, PRInt32 orientation,
+                                  nsIDOMDataTransfer* dataTransfer, PRBool *_retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::Drop(PRInt32 row, PRInt32 orientation)
+nsAutoCompleteController::Drop(PRInt32 row, PRInt32 orientation, nsIDOMDataTransfer* dataTransfer)
 {
   return NS_OK;
 }

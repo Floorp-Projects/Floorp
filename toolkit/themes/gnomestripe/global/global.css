@@ -296,6 +296,11 @@ label[disabled="true"] {
   border: 1px dotted -moz-DialogText;
 }
 
+notification > button {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 /* :::::: autoscroll popup ::::: */
 
 .autoscroller {

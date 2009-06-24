@@ -96,25 +96,22 @@ private:
 protected:
   nsLocalFile(const nsLocalFile& src);
 
-  nsresult SetBaseRef(CFURLRef aCFURLRef); // Does CFRetain on aCFURLRef
-  nsresult UpdateTargetRef();
+  nsresult SetBaseURL(CFURLRef aCFURLRef); // retains aCFURLRef
 
   nsresult GetFSRefInternal(FSRef& aFSRef);
   nsresult GetPathInternal(nsACString& path); // Returns path WRT mFollowLinks
   nsresult EqualsInternal(nsISupports* inFile, PRBool *_retval);
-
   nsresult CopyInternal(nsIFile* newParentDir,
                         const nsAString& newName,
                         PRBool followLinks);
+  nsresult FillStatBufferInternal(struct STAT *statBuffer);
 
   static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr);
 
 protected:
-  CFURLRef mBaseURL;   // The FS object we represent
-  CFURLRef mTargetURL; // If mBaseURL is an alias/symlink, its target
+  CFURLRef mBaseURL; // The FS object we represent
 
   PRPackedBool mFollowLinks;
-  PRPackedBool mFollowLinksDirty;
 };
 
 #endif // nsLocalFileMac_h_

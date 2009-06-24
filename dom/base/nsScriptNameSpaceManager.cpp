@@ -148,7 +148,8 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 }
 
 nsGlobalNameStruct *
-nsScriptNameSpaceManager::AddToHash(const char *aKey)
+nsScriptNameSpaceManager::AddToHash(const char *aKey,
+                                    const PRUnichar **aClassName)
 {
   NS_ConvertASCIItoUTF16 key(aKey);
   GlobalNameMapEntry *entry =
@@ -157,6 +158,10 @@ nsScriptNameSpaceManager::AddToHash(const char *aKey)
 
   if (!entry) {
     return nsnull;
+  }
+
+  if (aClassName) {
+    *aClassName = entry->mKey.get();
   }
 
   return &entry->mGlobalName;
@@ -571,13 +576,14 @@ nsScriptNameSpaceManager::LookupName(const nsAString& aName,
 
 nsresult
 nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
-                                            PRInt32 aDOMClassInfoID)
+                                            PRInt32 aDOMClassInfoID,
+                                            const PRUnichar **aResult)
 {
   if (!nsCRT::IsAscii(aClassName)) {
     NS_ERROR("Trying to register a non-ASCII class name");
     return NS_OK;
   }
-  nsGlobalNameStruct *s = AddToHash(aClassName);
+  nsGlobalNameStruct *s = AddToHash(aClassName, aResult);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   if (s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
@@ -659,7 +665,8 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
                                             PRBool aHasClassInterface,
                                             const nsCID *aConstructorCID)
 {
-  nsGlobalNameStruct *s = AddToHash(aName);
+  const PRUnichar* className;
+  nsGlobalNameStruct *s = AddToHash(aName, &className);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   // If an external constructor is already defined with aClassName we
@@ -680,6 +687,7 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
 
   s->mType = nsGlobalNameStruct::eTypeExternalClassInfo;
   s->mData->mName = aName;
+  s->mData->mNameUTF16 = className;
   if (aConstructorFptr)
     s->mData->u.mExternalConstructorFptr = aConstructorFptr;
   else

@@ -1,5 +1,5 @@
-
 #include "toolspath.h"
+#include "linkargs.h"
 
 int
 main(int argc, char **argv)
@@ -8,6 +8,8 @@ main(int argc, char **argv)
   int i = 0;
   int j = 0;
   int link = 0;
+  int s = 0;
+  int k = 0;
 
   char* args[1000];
   char  outputFileArg[1000];
@@ -66,29 +68,20 @@ main(int argc, char **argv)
 	  strcat(outputFileArg, args[startOfArgvs+j]);
 	  args[startOfArgvs+j] = outputFileArg;
 	}
+      if (strcmp(argv[j], "-link") ||
+	  strcmp(argv[j], "-LINK") ||
+	  strcmp(argv[j], "/link") ||
+	  strcmp(argv[j], "/LINK")) 
+	link = 1;
+	  
+      checkLinkArgs(&k, &s, &i, &j, args, argv);
       j++;
     }
 
   if (link)
     {
       args[i++] = "/link";
-
-      args[i++] = "/ENTRY:main";
-
-      args[i++] = "/SUBSYSTEM:WINDOWSCE,5.02";
-
-      args[i++] = "/LIBPATH:\"" WCE_LIB "\"";
-      args[i++] = "/LIBPATH:\"" WCE_CRT "\"";
-      args[i++] = "/NODEFAULTLIB";
-#ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
-      if(!getenv("NO_SHUNT")) {
-	args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";
-	args[i++] = "mozce_shunt.lib";
-      }
-#endif
-      args[i++] = "winsock.lib";
-      args[i++] = "corelibc.lib";
-      args[i++] = "coredll.lib";
+      addLinkArgs(k, s, &i, &j, args, argv);
     }
 
   args[i] = NULL;

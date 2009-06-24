@@ -353,8 +353,8 @@ nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 
 // Creates the nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
-nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
-                            PRLibrary* aLibrary, nsIPlugin** aResult)
+nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
+                            nsIPlugin** aResult)
 {
   CheckClassInitialized();
 
@@ -377,7 +377,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
 
   NS_ADDREF(*aResult);
 
-  if (!aFileName) //do not call NP_Initialize in this case, bug 74938
+  // Do not initialize if the file path is NULL.
+  if (!aFilePath)
     return NS_OK;
 
   // we must init here because the plugin may call NPN functions
@@ -463,7 +464,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   unsigned long origDiskNum, pluginDiskNum, logicalDisk;
 
   char pluginPath[CCHMAXPATH], origPath[CCHMAXPATH];
-  strcpy(pluginPath, aFileName);
+  strcpy(pluginPath, aFilePath);
   char* slash = strrchr(pluginPath, '\\');
   *slash = '\0';
 
@@ -513,7 +514,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
   short pluginRefNum;
 
   nsCOMPtr<nsILocalFile> pluginPath;
-  NS_NewNativeLocalFile(nsDependentCString(aFullPath), PR_TRUE,
+  NS_NewNativeLocalFile(nsDependentCString(aFilePath), PR_TRUE,
                         getter_AddRefs(pluginPath));
 
   nsPluginFile pluginFile(pluginPath);
@@ -2487,11 +2488,33 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
   switch (variable) {
   case NPNURLVCookie:
     {
-      nsCOMPtr<nsICookieStorage> cs = do_GetService(kPluginManagerCID);
+      if (!url || !value || (0 >= len))
+        return NPERR_INVALID_PARAM;
 
-      if (cs && NS_SUCCEEDED(cs->SetCookie(url, value, len))) {
+      nsresult rv = NS_ERROR_FAILURE;
+      nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+      if (NS_FAILED(rv))
+        return NPERR_GENERIC_ERROR;
+
+      nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
+      if (NS_FAILED(rv))
+        return NPERR_GENERIC_ERROR;
+
+      nsCOMPtr<nsIURI> uriIn;
+      rv = ioService->NewURI(nsDependentCString(url), nsnull, nsnull, getter_AddRefs(uriIn));
+      if (NS_FAILED(rv))
+        return NPERR_GENERIC_ERROR;
+
+      nsCOMPtr<nsIPrompt> prompt;
+      nsPluginHostImpl::GetPrompt(nsnull, getter_AddRefs(prompt));
+
+      char *cookie = (char*)value;
+      char c = cookie[len];
+      cookie[len] = '\0';
+      rv = cookieService->SetCookieString(uriIn, prompt, cookie, nsnull);
+      cookie[len] = c;
+      if (NS_SUCCEEDED(rv))
         return NPERR_NO_ERROR;
-      }
     }
 
     break;

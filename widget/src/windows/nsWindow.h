@@ -54,6 +54,8 @@
 
 #include "nsTArray.h"
 
+#include "cairo.h"
+
 class nsNativeDragTarget;
 class nsIRollupListener;
 
@@ -339,6 +341,10 @@ protected:
   virtual void            OnDestroy();
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+  PRBool                  OnPaintImageDDraw16();
+#endif
+
   virtual PRBool          OnResize(nsIntRect &aWindowRect);
   
   void                    SetupModKeyState();
@@ -369,7 +375,9 @@ protected:
 
   PRBool                  DispatchPluginEvent(const MSG &aMsg);
 
-  virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);
+  PRBool DispatchFocusToTopLevelWindow(PRUint32 aEventType);
+  PRBool DispatchFocus(PRUint32 aEventType);
+
   virtual PRBool          OnScroll(UINT scrollCode, int cPos);
   virtual HBRUSH          OnControlColor();
 

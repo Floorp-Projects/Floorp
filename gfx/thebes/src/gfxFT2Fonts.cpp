@@ -526,20 +526,19 @@ void gfxFT2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun)
 {
     ComputeRanges();
 
-    const PRUnichar *strStart = mString.get();
+    PRUint32 offset = 0;
     for (PRUint32 i = 0; i < mRanges.Length(); ++i) {
         const TextRange& range = mRanges[i];
-        const PRUnichar *rangeString = strStart + range.start;
         PRUint32 rangeLength = range.Length();
-
         gfxFT2Font *font = range.font ? range.font.get() : GetFontAt(0);
-        AddRange(aTextRun, font, rangeString, rangeLength);
+        AddRange(aTextRun, font, mString.get(), offset, rangeLength);
+        offset += rangeLength;
     }
     
 }
 
 void
-gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnichar *str, PRUint32 len)
+gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnichar *str, PRUint32 offset, PRUint32 len)
 {
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // we'll pass this in/figure it out dynamically, but at this point there can be only one face.
@@ -547,13 +546,13 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
 
     gfxTextRun::CompressedGlyph g;
 
-    aTextRun->AddGlyphRun(font, 0);
+    aTextRun->AddGlyphRun(font, offset);
     for (PRUint32 i = 0; i < len; i++) {
-        PRUint32 ch = str[i];
+        PRUint32 ch = str[offset + i];
 
         if (ch == 0) {
             // treat this null byte as a missing glyph, don't create a glyph for it
-            aTextRun->SetMissingGlyph(i, 0);
+            aTextRun->SetMissingGlyph(offset + i, 0);
             continue;
         }
 
@@ -573,7 +572,7 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
             FT_Pos lsbDeltaNext = 0;
 
             if (FT_HAS_KERNING(face) && i + 1 < len) {
-                chNext = str[i+1];
+                chNext = str[offset + i + 1];
                 if (chNext != 0) {
                     gidNext = FT_Get_Char_Index(face, chNext);
                     if (gidNext && gidNext != font->GetSpaceGlyph()) {
@@ -610,10 +609,10 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
         if (advance >= 0 &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid)) {
-            aTextRun->SetSimpleGlyph(i, g.SetSimpleGlyph(advance, gid));
+            aTextRun->SetSimpleGlyph(offset + i, g.SetSimpleGlyph(advance, gid));
         } else if (gid == 0) {
             // gid = 0 only happens when the glyph is missing from the font
-            aTextRun->SetMissingGlyph(i, ch);
+            aTextRun->SetMissingGlyph(offset + i, ch);
         } else {
             gfxTextRun::DetailedGlyph details;
             details.mGlyphID = gid;
@@ -621,8 +620,8 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
             details.mAdvance = advance;
             details.mXOffset = 0;
             details.mYOffset = 0;
-            g.SetComplex(aTextRun->IsClusterStart(i), PR_TRUE, 1);
-            aTextRun->SetGlyphs(i, g, &details);
+            g.SetComplex(aTextRun->IsClusterStart(offset + i), PR_TRUE, 1);
+            aTextRun->SetGlyphs(offset + i, g, &details);
         }
     }
 

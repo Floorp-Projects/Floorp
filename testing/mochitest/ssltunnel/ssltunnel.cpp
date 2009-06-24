@@ -158,9 +158,9 @@ private:
 
 // These are suggestions. If the number of ports to proxy on * 2
 // is greater than either of these, then we'll use that value instead.
-const PRInt32 INITIAL_THREADS = 1;
-const PRInt32 MAX_THREADS = 5;
-const PRInt32 DEFAULT_STACKSIZE = (512 * 1024);
+const PRUint32 INITIAL_THREADS = 1;
+const PRUint32 MAX_THREADS = 5;
+const PRUint32 DEFAULT_STACKSIZE = (512 * 1024);
 
 // global data
 string nssconfigdir;
@@ -822,7 +822,7 @@ PRIntn freeClientAuthHashItems(PLHashEntry *he, PRIntn i, void *arg)
 
 int main(int argc, char** argv)
 {
-  char* configFilePath;
+  const char* configFilePath;
   if (argc == 1)
     configFilePath = "ssltunnel.cfg";
   else

@@ -3880,7 +3880,7 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
 
   if ((0 != (mState & TEXT_BLINK_ON_OR_PRINTING)) && nsBlinkTimer::GetBlinkIsOff() &&
-      PresContext()->IsDynamic())
+      PresContext()->IsDynamic() && !aBuilder->IsForEventDelivery())
     return NS_OK;
     
   return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayText(this));

@@ -51,7 +51,6 @@
       var tableContent = srvScope.linksToTableRows(links, 0);
       function populate() {
         $("test-table").innerHTML += tableContent;
-        $("wrapper").innerHTML += " "; // redraw the table
       }
       gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
       populate();
@@ -94,13 +93,16 @@
           <br />
         </div>
         <div id="wrapper">
-          <table cellpadding="0" cellspacing="0" id="test-table">
-            <tr>
-              <td>Passed</td>
-              <td>Failed</td>
-              <td>Todo</td>
-              <td>Test Files</td>
-            </tr>
+          <table cellpadding="0" cellspacing="0">
+          <!-- tbody needed to avoid bug 494546 causing performance problems -->
+            <tbody id="test-table">
+              <tr>
+                <td>Passed</td>
+                <td>Failed</td>
+                <td>Todo</td>
+                <td>Test Files</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>

@@ -155,7 +155,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
-                                                 kNameSpaceID_None);
+                                                 kNameSpaceID_XHTML);
 
   // Create the text content
   NS_NewHTMLElement(getter_AddRefs(mTextContent), nodeInfo, PR_FALSE);
@@ -243,13 +243,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 void 
 nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  // Fix for Bug 6133 
-  if (mTextFrame) {
-    nsIContent* content = mTextFrame->GetContent();
-    if (content) {
-      content->SetFocus(PresContext());
-    }
-  }
 }
 
 /**

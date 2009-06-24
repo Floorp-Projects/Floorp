@@ -72,6 +72,15 @@
 // This sets how opaque the drag image is
 #define DRAG_IMAGE_ALPHA_LEVEL 0.5
 
+// These values are copied from GtkDragResult (rather than using GtkDragResult
+// directly) so that this code can be compiled against versions of GTK+ that
+// do not have GtkDragResult.
+// GtkDragResult is available from GTK+ version 2.12.
+enum {
+  MOZ_GTK_DRAG_RESULT_SUCCESS,
+  MOZ_GTK_DRAG_RESULT_NO_TARGET
+};
+
 static PRLogModuleInfo *sDragLm = NULL;
 
 static const char gMimeListType[] = "application/x-moz-internal-item-list";
@@ -82,6 +91,12 @@ static void
 invisibleSourceDragEnd(GtkWidget        *aWidget,
                        GdkDragContext   *aContext,
                        gpointer          aData);
+
+static gboolean
+invisibleSourceDragFailed(GtkWidget        *aWidget,
+                          GdkDragContext   *aContext,
+                          gint              aResult,
+                          gpointer          aData);
 
 static void
 invisibleSourceDragDataGet(GtkWidget        *aWidget,
@@ -110,10 +125,19 @@ nsDragService::nsDragService()
                      G_CALLBACK(invisibleSourceDragDataGet), this);
     g_signal_connect(GTK_OBJECT(mHiddenWidget), "drag_end",
                      G_CALLBACK(invisibleSourceDragEnd), this);
+    // drag-failed is available from GTK+ version 2.12
+    guint dragFailedID = g_signal_lookup("drag-failed",
+                                         G_TYPE_FROM_INSTANCE(mHiddenWidget));
+    if (dragFailedID) {
+        g_signal_connect_closure_by_id(mHiddenWidget, dragFailedID, 0,
+                                       g_cclosure_new(G_CALLBACK(invisibleSourceDragFailed),
+                                                      this, NULL),
+                                       FALSE);
+    }
 
     // set up our logging module
     if (!sDragLm)
-    sDragLm = PR_NewLogModule("nsDragService");
+        sDragLm = PR_NewLogModule("nsDragService");
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::nsDragService"));
     mTargetWidget = 0;
     mTargetDragContext = 0;
@@ -246,6 +270,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
     gtk_target_list_unref(sourceList);
 
+    StartDragSession();
+
     return rv;
 }
 
@@ -309,7 +335,8 @@ nsDragService::StartDragSession()
 NS_IMETHODIMP
 nsDragService::EndDragSession(PRBool aDoneDrag)
 {
-    PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::EndDragSession"));
+    PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::EndDragSession %d",
+                                   aDoneDrag));
     // unset our drag action
     SetDragAction(DRAGDROP_ACTION_NONE);
     return nsBaseDragService::EndDragSession(aDoneDrag);
@@ -1152,10 +1179,65 @@ nsDragService::GetSourceList(void)
 }
 
 void
-nsDragService::SourceEndDrag(void)
+nsDragService::SourceEndDragSession(GdkDragContext *aContext,
+                                    gint            aResult)
 {
     // this just releases the list of data items that we provide
-    mSourceDataItems = 0;
+    mSourceDataItems = nsnull;
+
+    if (!mDoingDrag)
+        return; // EndDragSession() was already called on drop or drag-failed
+
+    gint x, y;
+    GdkDisplay* display = gdk_display_get_default();
+    if (display) {
+      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
+      SetDragEndPoint(nsIntPoint(x, y));
+    }
+
+    // Either the drag was aborted or the drop occurred outside the app.
+    // The dropEffect of mDataTransfer is not updated for motion outside the
+    // app, but is needed for the dragend event, so set it now.
+
+    PRUint32 dropEffect;
+
+    if (aResult == MOZ_GTK_DRAG_RESULT_SUCCESS) {
+
+        // With GTK+ versions 2.10.x and prior the drag may have been
+        // cancelled (but no drag-failed signal would have been sent).
+        // aContext->dest_window will be non-NULL only if the drop was sent.
+        GdkDragAction action =
+            aContext->dest_window ? aContext->action : (GdkDragAction)0;
+
+        // Only one bit of action should be set, but, just in case someone
+        // does something funny, erring away from MOVE, and not recording
+        // unusual action combinations as NONE.
+        if (!action)
+            dropEffect = DRAGDROP_ACTION_NONE;
+        else if (action & GDK_ACTION_COPY)
+            dropEffect = DRAGDROP_ACTION_COPY;
+        else if (action & GDK_ACTION_LINK)
+            dropEffect = DRAGDROP_ACTION_LINK;
+        else if (action & GDK_ACTION_MOVE)
+            dropEffect = DRAGDROP_ACTION_MOVE;
+        else
+            dropEffect = DRAGDROP_ACTION_COPY;
+
+    } else {
+
+        dropEffect = DRAGDROP_ACTION_NONE;
+
+        if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET) {
+            mUserCancelled = PR_TRUE;
+        }
+    }
+
+    nsCOMPtr<nsIDOMNSDataTransfer> dataTransfer =
+        do_QueryInterface(mDataTransfer);
+
+    if (dataTransfer) {
+        dataTransfer->SetDropEffectInt(dropEffect);
+    }
 
     // Inform the drag session that we're ending the drag.
     EndDragSession(PR_TRUE);
@@ -1344,10 +1426,30 @@ invisibleSourceDragDataGet(GtkWidget        *aWidget,
                            guint32           aTime,
                            gpointer          aData)
 {
-    PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleDragDataGet"));
+    PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleSourceDragDataGet"));
     nsDragService *dragService = (nsDragService *)aData;
     dragService->SourceDataGet(aWidget, aContext,
                                aSelectionData, aInfo, aTime);
+}
+
+/* static */
+gboolean
+invisibleSourceDragFailed(GtkWidget        *aWidget,
+                          GdkDragContext   *aContext,
+                          gint              aResult,
+                          gpointer          aData)
+{
+    PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleSourceDragFailed %i", aResult));
+    nsDragService *dragService = (nsDragService *)aData;
+    // End the drag session now (rather than waiting for the drag-end signal)
+    // so that operations performed on dropEffect == none can start immediately
+    // rather than waiting for the drag-failed animation to finish.
+    dragService->SourceEndDragSession(aContext, aResult);
+
+    // We should return TRUE to disable the drag-failed animation iff the
+    // source performed an operation when dropEffect was none, but the handler
+    // of the dragend DOM event doesn't provide this information.
+    return FALSE;
 }
 
 /* static */
@@ -1356,17 +1458,10 @@ invisibleSourceDragEnd(GtkWidget        *aWidget,
                        GdkDragContext   *aContext,
                        gpointer          aData)
 {
-    PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleDragEnd"));
+    PR_LOG(sDragLm, PR_LOG_DEBUG, ("invisibleSourceDragEnd"));
     nsDragService *dragService = (nsDragService *)aData;
 
-    gint x, y;
-    GdkDisplay* display = gdk_display_get_default();
-    if (display) {
-      gdk_display_get_pointer(display, NULL, &x, &y, NULL);
-      dragService->SetDragEndPoint(nsIntPoint(x, y));
-    }
-
     // The drag has ended.  Release the hostages!
-    dragService->SourceEndDrag();
+    dragService->SourceEndDragSession(aContext, MOZ_GTK_DRAG_RESULT_SUCCESS);
 }
 

@@ -223,10 +223,6 @@ caption {
   border-bottom: 1px solid #ccc;
 }
 
-#enableImagesRow {
-  -moz-box-align: start !important;
-}
-
 #browserUseCurrent, #browserUseBookmark, #browserUseBlank {
   margin-top: 10px;
 }

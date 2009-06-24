@@ -353,6 +353,7 @@ js_GetVariableStackUses(JSOp op, jsbytecode *pc);
 extern uintN
 js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+#ifdef __cplusplus /* Aargh, libgjs, bug 492720. */
 static JS_INLINE uintN
 js_GetStackUses(const JSCodeSpec *cs, JSOp op, jsbytecode *pc)
 {
@@ -374,6 +375,7 @@ js_GetStackDefs(JSContext *cx, const JSCodeSpec *cs, JSOp op, JSScript *script,
     JS_ASSERT(op == JSOP_ENTERBLOCK);
     return js_GetEnterBlockStackDefs(cx, script, pc);
 }
+#endif
 
 #ifdef DEBUG
 /*

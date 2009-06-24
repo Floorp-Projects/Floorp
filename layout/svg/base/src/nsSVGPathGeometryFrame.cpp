@@ -87,8 +87,6 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsSVGPathGeometryFrameBase::DidSetStyleContext(aOldStyleContext);
 
-  nsSVGUtils::InvalidateCoveredRegion(this);
-
   // XXX: we'd like to use the style_hint mechanism and the
   // ContentStateChanged/AttributeChanged functions for style changes
   // to get slightly finer granularity, but unfortunately the
@@ -198,6 +196,10 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
+  // XXX why are we adding in markers here each time someone gets the covered
+  // region? Isn't UpdateCoveredRegion called whenever markers change?
+  // And why are the answers to these questions not documented here??!!
+
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);
 

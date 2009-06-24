@@ -60,8 +60,9 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
+  // nsAccessible
+  virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aEvent);
+
 protected:
   virtual nsresult GetModifiedText(PRBool aGetInsertedText, nsAString& aText,
                                    PRUint32 *aStartOffset,

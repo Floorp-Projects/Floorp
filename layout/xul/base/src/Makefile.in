@@ -138,6 +138,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../../../base \
+		-I$(srcdir)/../../../../content/base/src \
 		-I$(srcdir)/../../../../content/events/src \
 		-I$(srcdir)/../../../generic \
 		-I$(srcdir)/../../../style \

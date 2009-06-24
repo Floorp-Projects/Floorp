@@ -324,7 +324,7 @@ public:
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
     NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-    NS_IMETHOD Render(gfxContext *ctx);
+    NS_IMETHOD Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter);
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
@@ -984,7 +984,7 @@ nsCanvasRenderingContext2D::SetIsOpaque(PRBool isOpaque)
 }
  
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Render(gfxContext *ctx)
+nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter)
 {
     nsresult rv = NS_OK;
 
@@ -997,6 +997,8 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx)
         return NS_ERROR_FAILURE;
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
+
+    pat->SetFilter(aFilter);
 
     gfxContext::GraphicsOperator op = ctx->CurrentOperator();
     if (mOpaque)
@@ -1751,83 +1753,53 @@ nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float 
     if (!FloatValidate(x1,y1,x2,y2,radius))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (radius <= 0)
+    if (radius < 0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
-
-    /* This is an adaptation of the cairo_arc_to patch from Behdad
-     * Esfahbod; once that patch is accepted, we should remove this
-     * and just call cairo_arc_to() directly.
-     */
-    
-    double angle0, angle1, angle2, angled;
-    double d0, d2;
-    double sin_, cos_;
-    double dc;
-    int forward;
 
     gfxPoint p0 = mThebes->CurrentPoint();
 
-    angle0 = atan2 (p0.y - y1, p0.x - x1); /* angle from (x1,y1) to (p0.x,p0.y) */
-    angle2 = atan2 (y2 - y1, x2 - x1); /* angle from (x1,y1) to (x2,y2) */
-    angle1 = (angle0 + angle2) / 2;    /* angle from (x1,y1) to (xc,yc) */
+    double dir, a2, b2, c2, cosx, sinx, d, anx, any, bnx, bny, x3, y3, x4, y4, cx, cy, angle0, angle1;
+    bool anticlockwise;
 
-    angled = angle2 - angle0;          /* the angle (p0.x,p0.y)--(x1,y1)--(x2,y2) */
-
-    /* Shall we go forward or backward? */
-    if (angled > M_PI || (angled < 0 && angled > -M_PI)) {
-        angle1 += M_PI;
-        angled = 2 * M_PI - angled;
-        forward = 1;
-    } else {
-        double tmp;
-        tmp = angle0;
-        angle0 = angle2;
-        angle2 = tmp;
-        forward = 0;
+    if ((x1 == p0.x && y1 == p0.y) || (x1 == x2 && y1 == y2) || radius == 0) {
+        mThebes->LineTo(gfxPoint(x1, y1));
+        return NS_OK;
     }
 
-    angle0 += M_PI_2; /* angle from (xc,yc) to (p0.x,p0.y) */
-    angle2 -= M_PI_2; /* angle from (xc,yc) to (x2,y2) */
-    angled /= 2;      /* the angle (p0.x,p0.y)--(x1,y1)--(xc,yc) */
-
-
-    /* distance from (x1,y1) to (p0.x,p0.y) */
-    d0 = sqrt ((p0.x-x1)*(p0.x-x1)+(p0.y-y1)*(p0.y-y1));
-    /* distance from (x2,y2) to (p0.x,p0.y) */
-    d2 = sqrt ((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
-
-    dc = -1;
-    sin_ = sin(angled);
-    cos_ = cos(angled);
-    if (fabs(cos_) >= 1e-5) { /* the arc may not fit */
-        /* min distance of end-points from corner */
-        double min_d = d0 < d2 ? d0 : d2;
-        /* max radius of an arc that fits */
-        double max_r = min_d * sin_ / cos_;
-
-        if (radius > max_r) {
-            /* arc with requested radius doesn't fit */
-            radius = (float) max_r;
-            dc = min_d / cos_; /* distance of (xc,yc) from (x1,y1) */
-        }
+    dir = (x2-x1)*(p0.y-y1) + (y2-y1)*(x1-p0.x);
+    if (dir == 0) {
+        mThebes->LineTo(gfxPoint(x1, y1));
+        return NS_OK;
     }
 
-    if (dc < 0)
-        dc = radius / sin_; /* distance of (xc,yc) from (x1,y1) */
+    a2 = (p0.x-x1)*(p0.x-x1) + (p0.y-y1)*(p0.y-y1);
+    b2 = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
+    c2 = (p0.x-x2)*(p0.x-x2) + (p0.y-y2)*(p0.y-y2);
+    cosx = (a2+b2-c2)/(2*sqrt(a2*b2));
 
+    sinx = sqrt(1 - cosx*cosx);
+    d = radius / ((1 - cosx) / sinx);
 
-    /* find (cx,cy), the center of the arc */
-    gfxPoint c(x1 + sin(angle1) * dc, y1 + cos(angle1) * dc);
+    anx = (x1-p0.x) / sqrt(a2);
+    any = (y1-p0.y) / sqrt(a2);
+    bnx = (x1-x2) / sqrt(b2);
+    bny = (y1-y2) / sqrt(b2);
+    x3 = x1 - anx*d;
+    y3 = y1 - any*d;
+    x4 = x1 - bnx*d;
+    y4 = y1 - bny*d;
+    anticlockwise = (dir < 0);
+    cx = x3 + any*radius*(anticlockwise ? 1 : -1);
+    cy = y3 - anx*radius*(anticlockwise ? 1 : -1);
+    angle0 = atan2((y3-cy), (x3-cx));
+    angle1 = atan2((y4-cy), (x4-cx));
 
-    /* the arc operation draws the line from current point (p0.x,p0.y)
-     * to arc center too. */
+    mThebes->LineTo(gfxPoint(x3, y3));
 
-    if (forward)
-        mThebes->Arc(c, radius, angle0, angle2);
+    if (anticlockwise)
+        mThebes->NegativeArc(gfxPoint(cx, cy), radius, angle0, angle1);
     else
-        mThebes->NegativeArc(c, radius, angle2, angle0);
-
-    mThebes->LineTo(gfxPoint(x2, y2));
+        mThebes->Arc(gfxPoint(cx, cy), radius, angle0, angle1);
 
     return NS_OK;
 }
@@ -3335,7 +3307,7 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
                 gfxPlatform::GetPlatform()->CreateOffscreenSurface
                 (gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
             nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-            rv = canvas->RenderContexts(ctx);
+            rv = canvas->RenderContexts(ctx, gfxPattern::FILTER_NEAREST);
             if (NS_FAILED(rv))
                 return rv;
             sourceSurface = surf;
@@ -3375,7 +3347,7 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
 
         ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-        video->Paint(ctx, gfxPattern::FILTER_GOOD, gfxRect(0, 0, videoWidth, videoHeight));
+        video->Paint(ctx, gfxPattern::FILTER_NEAREST, gfxRect(0, 0, videoWidth, videoHeight));
 
         *aSurface = surf.forget().get();
         *widthOut = videoWidth;
@@ -3740,8 +3712,38 @@ nsCanvasRenderingContext2D::GetImageData()
 extern "C" {
 #include "jstypes.h"
 JS_FRIEND_API(JSBool)
-js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
-                        JSUint8 *dest);
+js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
+                                JSUint8 *dest);
+}
+
+static inline PRUint8 ToUint8(PRInt32 aInput)
+{
+    if (PRUint32(aInput) > 255)
+        return (aInput < 0) ? 0 : 255;
+    return PRUint8(aInput);
+}
+
+static inline PRUint8 ToUint8(double aInput)
+{
+    if (!(aInput >= 0)) /* Not < so that NaN coerces to 0 */
+        return 0;
+    if (aInput > 255)
+        return 255;
+    double toTruncate = aInput + 0.5;
+    PRUint8 retval = PRUint8(toTruncate);
+
+    // now retval is rounded to nearest, ties rounded up.  We want
+    // rounded to nearest ties to even, so check whether we had a tie.
+    if (retval == toTruncate) {
+        // It was a tie (since adding 0.5 gave us the exact integer we want).
+        // Since we rounded up, we either already have an even number or we
+        // have an odd number but the number we want is one less.  So just
+        // unconditionally masking out the ones bit should do the trick to get
+        // us the value we want.
+        return (retval & ~1);
+    }
+
+    return retval;
 }
 
 // void putImageData (in ImageData d, in float x, in float y);
@@ -3815,34 +3817,42 @@ nsCanvasRenderingContext2D::PutImageData()
 
     PRUint8 *imgPtr = imageBuffer.get();
 
-    JSBool ok = js_ArrayToJSUint8Buffer(ctx, dataArray, 0, w*h*4, imageBuffer);
+    JSBool canFastPath =
+        js_CoerceArrayToCanvasImageData(dataArray, 0, w*h*4, imageBuffer);
 
-    // no fast path? go slow.
-    if (!ok) {
+    // no fast path? go slow.  We sadly need this for now, instead of just
+    // throwing, because dataArray might not be dense in case someone stuck
+    // their own array on the imageData.
+    // FIXME: it'd be awfully nice if we could prevent such modification of
+    // imageData objects, since it's likely the spec won't allow it anyway.
+    // Bug 497110 covers this.
+    if (!canFastPath) {
         jsval vr, vg, vb, va;
         PRUint8 ir, ig, ib, ia;
         for (int32 j = 0; j < h; j++) {
+            int32 lineOffset = (j*w*4);
             for (int32 i = 0; i < w; i++) {
-                if (!JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 0, &vr) ||
-                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 1, &vg) ||
-                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 2, &vb) ||
-                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 3, &va))
+                int32 pixelOffset = lineOffset + i*4;
+                if (!JS_GetElement(ctx, dataArray, pixelOffset + 0, &vr) ||
+                    !JS_GetElement(ctx, dataArray, pixelOffset + 1, &vg) ||
+                    !JS_GetElement(ctx, dataArray, pixelOffset + 2, &vb) ||
+                    !JS_GetElement(ctx, dataArray, pixelOffset + 3, &va))
                     return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(vr))         ir = (PRUint8) JSVAL_TO_INT(vr);
-                else if (JSVAL_IS_DOUBLE(vr)) ir = (PRUint8) (*JSVAL_TO_DOUBLE(vr));
+                if (JSVAL_IS_INT(vr))         ir = ToUint8(JSVAL_TO_INT(vr));
+                else if (JSVAL_IS_DOUBLE(vr)) ir = ToUint8(*JSVAL_TO_DOUBLE(vr));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(vg))         ig = (PRUint8) JSVAL_TO_INT(vg);
-                else if (JSVAL_IS_DOUBLE(vg)) ig = (PRUint8) (*JSVAL_TO_DOUBLE(vg));
+                if (JSVAL_IS_INT(vg))         ig = ToUint8(JSVAL_TO_INT(vg));
+                else if (JSVAL_IS_DOUBLE(vg)) ig = ToUint8(*JSVAL_TO_DOUBLE(vg));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(vb))         ib = (PRUint8) JSVAL_TO_INT(vb);
-                else if (JSVAL_IS_DOUBLE(vb)) ib = (PRUint8) (*JSVAL_TO_DOUBLE(vb));
+                if (JSVAL_IS_INT(vb))         ib = ToUint8(JSVAL_TO_INT(vb));
+                else if (JSVAL_IS_DOUBLE(vb)) ib = ToUint8(*JSVAL_TO_DOUBLE(vb));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
-                if (JSVAL_IS_INT(va))         ia = (PRUint8) JSVAL_TO_INT(va);
-                else if (JSVAL_IS_DOUBLE(va)) ia = (PRUint8) (*JSVAL_TO_DOUBLE(va));
+                if (JSVAL_IS_INT(va))         ia = ToUint8(JSVAL_TO_INT(va));
+                else if (JSVAL_IS_DOUBLE(va)) ia = ToUint8(*JSVAL_TO_DOUBLE(va));
                 else return NS_ERROR_DOM_SYNTAX_ERR;
 
                 // Convert to premultiplied color (losslessly if the input came from getImageData)
@@ -3897,6 +3907,9 @@ nsCanvasRenderingContext2D::PutImageData()
 
     gfxContextPathAutoSaveRestore pathSR(mThebes);
     gfxContextAutoSaveRestore autoSR(mThebes);
+
+    // ignore clipping region, as per spec
+    mThebes->ResetClip();
 
     mThebes->IdentityMatrix();
     mThebes->Translate(gfxPoint(x, y));

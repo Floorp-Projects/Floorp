@@ -1645,6 +1645,10 @@ static const FastPathInfo arm_simd_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888arm,	   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8x8888arm,    NEED_SOLID_MASK },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8x8888arm,	   NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrc_x888x0565arm,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_x888x0565arm,	   0 },
+    { PIXMAN_OP_SRC,  PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrc_x888x0565arm,	   0 },
+    { PIXMAN_OP_SRC,  PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_x888x0565arm,	   0 },
 
     { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000arm,   0 },
 

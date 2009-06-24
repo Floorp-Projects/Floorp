@@ -110,7 +110,6 @@ EXPORTS		= \
 		nsIReflowCallback.h \
 		nsLayoutErrors.h \
 		nsLayoutUtils.h \
-		nsIFocusEventSuppressor.h \
 		nsPresContext.h \
 		nsPresState.h \
 		nsStyleChangeList.h \
@@ -140,7 +139,6 @@ CPPSRCS		= \
 		nsQuoteList.cpp \
 		nsStyleChangeList.cpp \
 		nsStyleSheetService.cpp \
-		nsFocusEventSuppressor.cpp \
 		$(NULL)
 
 ifndef MOZ_XUL

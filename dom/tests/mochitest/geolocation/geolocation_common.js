@@ -1,33 +1,18 @@
 
-
-function ensure_geolocationProvider()
-{
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    
-    const testing_provider_cid = Components.ID("{10F622A4-6D7F-43A1-A938-5FFCBE2B1D1D}");
-    
-    var testing_factory = Components.manager.getClassObject(testing_provider_cid, Components.interfaces.nsIFactory);
-    
-    Components.manager.nsIComponentRegistrar.registerFactory(testing_provider_cid,
-                                                             "Test Geolocation Provider",
-                                                             "@mozilla.org/geolocation/provider;1",
-                                                             testing_factory);
-}
-
 function stop_geolocationProvider()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "geolocation-test-control", "stop-responding");
+  var baseURL = "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", baseURL + "?action=stop-responding&latitude=3.14", false);
+  xhr.send(null);
 }
 
 function resume_geolocationProvider()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "geolocation-test-control", "start-responding");
+  var baseURL = "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", baseURL + "?action=start-responding", false);
+  xhr.send(null);
 }
 
 function check_geolocation(location) {

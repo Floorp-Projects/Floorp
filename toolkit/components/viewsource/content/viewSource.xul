@@ -74,7 +74,6 @@
   <script type="application/javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
@@ -235,8 +234,7 @@
     </menubar>  
   </toolbox>
 
-  <vbox id="appcontent" flex="1"
-       ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+  <vbox id="appcontent" flex="1" ondrop="contentAreaDNDObserver.drop(event);">
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              context="viewSourceContextMenu" showcaret="true"/>

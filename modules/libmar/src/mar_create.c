@@ -156,8 +156,10 @@ int mar_create(const char *dest, int num_files, char **files) {
 
   for (i = 0; i < num_files; ++i) {
 #ifdef WINCE
+    HANDLE handle;
     MultiByteToWideChar(CP_ACP, 0, files[i], -1, wide_path, MAX_PATH);
-    if (!FindFirstFile(wide_path, &file_data)) {
+    handle = FindFirstFile(wide_path, &file_data);
+    if (handle == INVALID_HANDLE_VALUE) {
 #else
     if (stat(files[i], &st)) {
 #endif
@@ -168,6 +170,7 @@ int mar_create(const char *dest, int num_files, char **files) {
     flags = (file_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ?
       0444 : 0666;
     size = (file_data.nFileSizeHigh * (MAXDWORD + 1)) + file_data.nFileSizeLow;
+    FindClose(handle);
     if (mar_push(&stack, size, flags, files[i]))
 #else
 
