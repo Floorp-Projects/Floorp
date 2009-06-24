@@ -1025,7 +1025,8 @@ private:
 
   // If aParentContent's child at aContentIndex is a text node and
   // doesn't have a frame, append a frame construction item for it to aItems.
-  void AddTextItemIfNeeded(nsIFrame* aParentFrame,
+  void AddTextItemIfNeeded(nsFrameConstructorState& aState,
+                           nsIFrame* aParentFrame,
                            nsIContent* aParentContent,
                            PRInt32 aContentIndex,
                            FrameConstructionItemList& aItems);
