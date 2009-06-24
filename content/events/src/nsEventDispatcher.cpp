@@ -641,10 +641,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
                                 static_cast<nsTextEvent*>(aEvent));
-    case NS_PAGETRANSITION_EVENT:
-      return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext,
-                                          static_cast<nsPageTransitionEvent*>
-                                                     (aEvent));
 #ifdef MOZ_SVG
     case NS_SVG_EVENT:
       return NS_NewDOMSVGEvent(aDOMEvent, aPresContext,
@@ -728,4 +724,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (aEventType.LowerCaseEqualsLiteral("pagetransition"))
+    return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext, nsnull);
 }

@@ -566,6 +566,10 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_CUT;
     else if (atom == nsGkAtoms::onpaste)
       mEvent->message = NS_PASTE;
+    else if (atom == nsGkAtoms::onpageshow)
+      mEvent->message = NS_PAGE_SHOW;
+    else if (atom == nsGkAtoms::onpagehide)
+      mEvent->message = NS_PAGE_HIDE;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsGkAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -590,11 +594,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_UI_FOCUSOUT;
     else if (atom == nsGkAtoms::oninput)
       mEvent->message = NS_FORM_INPUT;
-  } else if (mEvent->eventStructType == NS_PAGETRANSITION_EVENT) {
-    if (atom == nsGkAtoms::onpageshow)
-      mEvent->message = NS_PAGE_SHOW;
-    else if (atom == nsGkAtoms::onpagehide)
-      mEvent->message = NS_PAGE_HIDE;
   } else if (mEvent->eventStructType == NS_XUL_COMMAND_EVENT) {
     if (atom == nsGkAtoms::oncommand)
       mEvent->message = NS_XUL_COMMAND;
@@ -947,13 +946,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
     {
       newEvent = new nsUIEvent(PR_FALSE, msg,
                                static_cast<nsUIEvent*>(mEvent)->detail);
-      break;
-    }
-    case NS_PAGETRANSITION_EVENT:
-    {
-      newEvent =
-        new nsPageTransitionEvent(PR_FALSE, msg,
-                                  ((nsPageTransitionEvent*) mEvent)->persisted);
       break;
     }
 #ifdef MOZ_SVG
