@@ -116,9 +116,18 @@ var BrowserUI = {
     }
   },
 
+  _updateButtons : function(aBrowser) {
+    var back = document.getElementById("cmd_back");
+    var forward = document.getElementById("cmd_forward");
+
+    back.setAttribute("disabled", !aBrowser.canGoBack);
+    forward.setAttribute("disabled", !aBrowser.canGoForward);
+  },
+
   _tabSelect : function(aEvent) {
     var browser = Browser.selectedBrowser;
     this._titleChanged(browser.contentDocument);
+    this._updateButtons(browser);
     this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
 
     // for new tabs, _tabSelect & update(TOOLBARSTATE_LOADED) are called when
@@ -339,11 +348,8 @@ var BrowserUI = {
     if (!browser.currentURI)
       return;
 
-    var back = document.getElementById("cmd_back");
-    var forward = document.getElementById("cmd_forward");
-
-    back.setAttribute("disabled", !browser.canGoBack);
-    forward.setAttribute("disabled", !browser.canGoForward);
+    // Update the navigation buttons
+    this._updateButtons(browser);
 
     // Check for a bookmarked page
     this.updateStar();
@@ -390,7 +396,7 @@ var BrowserUI = {
   },
 
   engines : null,
-  updateSearchEngines : function () {
+  updateSearchEngines : function() {
     if (this.engines)
       return;
 
