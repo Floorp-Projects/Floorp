@@ -1078,8 +1078,9 @@ protected:
     return kNameSpaceID_None;
   }
 
-  // Dispatch an event to the ScriptGlobalObject for this document
-  void DispatchEventToWindow(nsEvent *aEvent);
+  void DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
+                              const nsAString& aType,
+                              PRBool aPersisted);
 
   // nsContentList match functions for GetElementsByClassName
   static PRBool MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID,

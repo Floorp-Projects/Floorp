@@ -39,21 +39,6 @@
 #include "nsDOMPageTransitionEvent.h"
 #include "nsContentUtils.h"
 
-nsDOMPageTransitionEvent::nsDOMPageTransitionEvent(nsPresContext* aPresContext,
-                                                   nsPageTransitionEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? aEvent :
-               new nsPageTransitionEvent(PR_FALSE, 0, PR_FALSE))
-{  
-  if ( aEvent ) {
-    mEventIsInternal = PR_FALSE;
-  }
-  else
-  {
-    mEventIsInternal = PR_TRUE;
-    mEvent->time = PR_Now();
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsDOMPageTransitionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMPageTransitionEvent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(PageTransitionEvent)
@@ -65,7 +50,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMPageTransitionEvent, nsDOMEvent)
 NS_IMETHODIMP
 nsDOMPageTransitionEvent::GetPersisted(PRBool* aPersisted)
 {
-  *aPersisted = static_cast<nsPageTransitionEvent*>(mEvent)->persisted;
+  *aPersisted = mPersisted;
   return NS_OK;
 }
 
@@ -78,13 +63,13 @@ nsDOMPageTransitionEvent::InitPageTransitionEvent(const nsAString &aTypeArg,
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static_cast<nsPageTransitionEvent*>(mEvent)->persisted = aPersisted;
+  mPersisted = aPersisted;
   return NS_OK;
 }
 
 nsresult NS_NewDOMPageTransitionEvent(nsIDOMEvent** aInstancePtrResult,
                                       nsPresContext* aPresContext,
-                                      nsPageTransitionEvent *aEvent) 
+                                      nsEvent *aEvent) 
 {
   nsDOMPageTransitionEvent* it =
     new nsDOMPageTransitionEvent(aPresContext, aEvent);
