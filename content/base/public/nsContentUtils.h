@@ -1257,6 +1257,15 @@ public:
    */
   static already_AddRefed<nsIDragSession> GetDragSession();
 
+  /*
+   * Initialize and set the dataTransfer field of an nsDragEvent.
+   */
+  static nsresult SetDataTransferInEvent(nsDragEvent* aDragEvent);
+
+  // filters the drag and drop action to fit within the effects allowed and
+  // returns it.
+  static PRUint32 FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed);
+
   /**
    * Return true if aURI is a local file URI (i.e. file://).
    */
