@@ -6654,11 +6654,13 @@ nsGlobalWindow::ActivateOrDeactivate(PRBool aActivate)
       nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(topLevelWindow);
       if (xulDoc && chromeWin) {
         nsCOMPtr<nsIContent> rootElem = doc->GetRootContent();
-        if (aActivate)
-          rootElem->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                            NS_LITERAL_STRING("true"), PR_TRUE);
-        else
-          rootElem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
+        if (rootElem) {
+          if (aActivate)
+            rootElem->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
+                              NS_LITERAL_STRING("true"), PR_TRUE);
+          else
+            rootElem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, PR_TRUE);
+        }
       }
     }
   }
