@@ -562,15 +562,30 @@ Assembler::nPatchBranch(NIns* at, NIns* target)
         }
     );
 
-    // let's see how we have to emit it
+    // Assert that the existing placeholder is not conditional.
+    NanoAssert((at[0] & 0xf0000000) == COND_AL);
+    
+    // We only have to patch unconditional branches, but these may take one of
+    // the following patterns:
+    //
+    //  --- Short branch.
+    //          B       ±32MB
+    //
+    //  --- Long branch.
+    //          LDR     PC, #lit
+    //  lit:    #target
+    
     intptr_t offs = PC_OFFSET_FROM(target, at);
     if (isS24(offs>>2)) {
-        // great, just stick it in at[0]
+        // Emit a simple branch (B) in the first of the two available
+        // instruction addresses.
         at[0] = (NIns)( COND_AL | (0xA<<24) | ((offs >> 2) & 0xffffff) );
         // and reset at[1] for good measure
         at[1] = BKPT_insn;
     } else {
-        at[0] = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) );
+        // at[0] should already hold the correct instruction, so we just need
+        // to update the target.
+        NanoAssert(at[0] == (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) ));
         at[1] = (NIns)(target);
     }
     VALGRIND_DISCARD_TRANSLATIONS(at, 2*sizeof(NIns));
@@ -1215,7 +1230,11 @@ Assembler::asm_ld_imm(Register d, int32_t imm)
 // Branch to target address _t with condition _c, doing underrun
 // checks (_chk == 1) or skipping them (_chk == 0).
 //
-// If the jump fits in a relative jump (+/-32MB), emit that.
+// Set the target address (_t) to 0 if the target is not yet known and the
+// branch will be patched up later.
+//
+// If the jump is to a known address (with _t != 0) and it fits in a relative
+// jump (±32MB), emit that.
 // If the jump is unconditional, emit the dest address inline in
 // the instruction stream and load it into pc.
 // If the jump has a condition, but noone's mucked with _nIns and our _nSlot
@@ -1231,22 +1250,49 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
     int32_t offs = PC_OFFSET_FROM(_t,_nIns-1);
     //nj_dprintf("B_cond_chk target: 0x%08x offset: %d @0x%08x\n", _t, offs, _nIns-1);
 
+    // We don't patch conditional branches, and nPatchBranch can't cope with
+    // them. We should therefore check that they are not generated at this
+    // stage.
+    NanoAssert((_t != 0) || (_c == AL));
+
     // optimistically check if this will fit in 24 bits
-    if (isS24(offs>>2)) {
-        if (_chk) underrunProtect(4);
+    if (_chk && isS24(offs>>2) && (_t != 0)) {
+        underrunProtect(4);
         // recalculate the offset, because underrunProtect may have
         // moved _nIns to a new page
         offs = PC_OFFSET_FROM(_t,_nIns-1);
     }
 
-    if (isS24(offs>>2)) {
-        // the underrunProtect for this was done above
+    // Emit one of the following patterns:
+    //
+    //  --- Short branch. This can never be emitted if the branch target is not
+    //      known.
+    //          B(cc)   ±32MB
+    //
+    //  --- Long unconditional branch.
+    //          LDR     PC, #lit
+    //  lit:    #target
+    //
+    //  --- Long conditional branch. Note that conditional branches will never
+    //      be patched, so the nPatchBranch function doesn't need to know where
+    //      the literal pool is located.
+    //          LDRcc   PC, #lit
+    //          ; #lit is in the literal pool at ++_nSlot
+    //
+    //  --- Long conditional branch (if !samepage(_nIns-1, _nSlot)).
+    //          LDRcc   PC, #lit
+    //          B       skip        ; Jump over the literal data.
+    //  lit:    #target
+    //  skip:   [...]
+
+    if (isS24(offs>>2) && (_t != 0)) {
+        // The underrunProtect for this was done above (if required by _chk).
         *(--_nIns) = (NIns)( ((_c)<<28) | (0xA<<24) | (((offs)>>2) & 0xFFFFFF) );
     } else if (_c == AL) {
         if(_chk) underrunProtect(8);
         *(--_nIns) = (NIns)(_t);
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | 0x4 );
-    } else if (samepage(_nIns,_nSlot)) {
+    } else if (samepage(_nIns-1,_nSlot)) {
         if(_chk) underrunProtect(8);
         *(++_nSlot) = (NIns)(_t);
         offs = PC_OFFSET_FROM(_nSlot,_nIns-1);
@@ -1254,8 +1300,13 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
         *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | ((-offs) & 0xFFFFFF) );
     } else {
         if(_chk) underrunProtect(12);
+        // Emit a pointer to the target as a literal in the instruction stream.
         *(--_nIns) = (NIns)(_t);
-        *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((-4)>>2) & 0xFFFFFF );
+        // Emit a branch to skip over the literal. The PC value is 8 bytes
+        // ahead of the executing instruction, so to branch two instructions
+        // forward this must branch 8-8=0 bytes.
+        *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | 0x0 );
+        // Emit the conditional branch.
         *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | 0x0 );
     }
 
