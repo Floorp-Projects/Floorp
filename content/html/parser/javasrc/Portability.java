@@ -1,0 +1,167 @@
+/*
+ * Copyright (c) 2008-2009 Mozilla Foundation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a 
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+package nu.validator.htmlparser.impl;
+
+import nu.validator.htmlparser.annotation.Literal;
+import nu.validator.htmlparser.annotation.Local;
+import nu.validator.htmlparser.annotation.NoLength;
+
+public final class Portability {
+
+    // Allocating methods
+
+    /**
+     * Allocates a new local name object. In C++, the refcount must be set up in such a way that 
+     * calling <code>releaseLocal</code> on the return value balances the refcount set by this method.
+     */
+    public static @Local String newLocalNameFromBuffer(@NoLength char[] buf, int offset, int length) {
+        return new String(buf, offset, length).intern();
+    }
+
+    public static String newStringFromBuffer(@NoLength char[] buf, int offset, int length) {
+        return new String(buf, offset, length);
+    }
+
+    public static String newEmptyString() {
+        return "";
+    }
+
+    public static String newStringFromLiteral(@Literal String literal) {
+        return literal;
+    }
+    
+    // XXX get rid of this
+    public static char[] newCharArrayFromLocal(@Local String local) {
+        return local.toCharArray();
+    }
+
+    public static char[] newCharArrayFromString(String string) {
+        return string.toCharArray();
+    }
+    
+    // Deallocation methods
+    
+    public static void releaseString(String str) {
+        // No-op in Java
+    }
+    
+    public static void retainLocal(@Local String local) {
+        // No-op in Java
+    }
+
+    /**
+     * This MUST be a no-op on locals that are known at compile time.
+     * @param local
+     */
+    public static void releaseLocal(@Local String local) {
+        // No-op in Java
+    }
+    
+    /**
+     * Releases a Java array. This method is magically replaced by a macro in C++.
+     * @param arr
+     */
+    public static void releaseArray(Object arr) {
+        // No-op in Java
+    }    
+    
+    public static void retainElement(Object elt) {
+        // No-op in Java
+    }
+
+    public static void releaseElement(Object elt) {
+        // No-op in Java
+    }
+    
+    // Comparison methods
+    
+    public static boolean localEqualsBuffer(@Local String local, @NoLength char[] buf, int offset, int length) {
+        if (local.length() != length) {
+            return false;
+        }
+        for (int i = 0; i < length; i++) {
+            if (local.charAt(i) != buf[offset + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(@Literal String lowerCaseLiteral,
+            String string) {
+        if (string == null) {
+            return false;
+        }
+        if (lowerCaseLiteral.length() > string.length()) {
+            return false;
+        }
+        for (int i = 0; i < lowerCaseLiteral.length(); i++) {
+            char c0 = lowerCaseLiteral.charAt(i);
+            char c1 = string.charAt(i);
+            if (c1 >= 'A' && c1 <= 'Z') {
+                c1 += 0x20;
+            }
+            if (c0 != c1) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public static boolean lowerCaseLiteralEqualsIgnoreAsciiCaseString(@Literal String lowerCaseLiteral,
+            String string) {
+        if (string == null) {
+            return false;
+        }
+        if (lowerCaseLiteral.length() != string.length()) {
+            return false;
+        }
+        for (int i = 0; i < lowerCaseLiteral.length(); i++) {
+            char c0 = lowerCaseLiteral.charAt(i);
+            char c1 = string.charAt(i);
+            if (c1 >= 'A' && c1 <= 'Z') {
+                c1 += 0x20;
+            }
+            if (c0 != c1) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public static boolean literalEqualsString(@Literal String literal, String string) {
+        return literal.equals(string);
+    }
+
+    public static char[] isIndexPrompt() {
+        return "This is a searchable index. Insert your search keywords here: ".toCharArray();
+    }
+
+    public static void delete(Object o) {
+        
+    }
+
+    public static void deleteArray(Object o) {
+        
+    }
+}
