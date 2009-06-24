@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  var listbox = document.createElementNS(XUL_NS, 'listbox');
+  document.body.appendChild(listbox);
+  listbox.appendChild(document.createElementNS(XUL_NS, 'listitem'));
+  listbox.appendChild(document.createElementNS(XUL_NS, 'listboxbody'));
+  listbox.appendChild(document.createElementNS(XUL_NS, 'hbox'));
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
