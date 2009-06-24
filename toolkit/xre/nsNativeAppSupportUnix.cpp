@@ -155,31 +155,37 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
                                        interact_cb, nsnull);
     return TRUE;
   }
+  
+  // Is there a request to suppress default binary launcher? 
+  char* argv1 = getenv("MOZILLA_APP_LAUNCHER");
 
-  // Tell GNOME the command for restarting us so that we can be part of XSMP session restore
-  NS_ASSERTION(gDirServiceProvider, "gDirServiceProvider is NULL! This shouldn't happen!");
-  nsCOMPtr<nsIFile> executablePath;
-  nsresult rv;
+  if(!argv1) {
+    // Tell GNOME the command for restarting us so that we can be part of XSMP session restore
+    NS_ASSERTION(gDirServiceProvider, "gDirServiceProvider is NULL! This shouldn't happen!");
+    nsCOMPtr<nsIFile> executablePath;
+    nsresult rv;
 
-  PRBool dummy;
-  rv = gDirServiceProvider->GetFile(XRE_EXECUTABLE_FILE, &dummy, getter_AddRefs(executablePath));
+    PRBool dummy;
+    rv = gDirServiceProvider->GetFile(XRE_EXECUTABLE_FILE, &dummy, getter_AddRefs(executablePath));
 
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString path;
-    char* argv[1];
+    if (NS_SUCCEEDED(rv)) {
+      nsCAutoString path;
 
-    // Strip off the -bin suffix to get the shell script we should run; this is what Breakpad does
-    nsCAutoString leafName;
-    rv = executablePath->GetNativeLeafName(leafName);
-    if (NS_SUCCEEDED(rv) && StringEndsWith(leafName, NS_LITERAL_CSTRING("-bin"))) {
-      leafName.SetLength(leafName.Length() - strlen("-bin"));
-      executablePath->SetNativeLeafName(leafName);
+      // Strip off the -bin suffix to get the shell script we should run; this is what Breakpad does
+      nsCAutoString leafName;
+      rv = executablePath->GetNativeLeafName(leafName);
+      if (NS_SUCCEEDED(rv) && StringEndsWith(leafName, NS_LITERAL_CSTRING("-bin"))) {
+        leafName.SetLength(leafName.Length() - strlen("-bin"));
+        executablePath->SetNativeLeafName(leafName);
+      }
+  
+      executablePath->GetNativePath(path);
+      argv1 = (char*)(path.get());
     }
+  }
 
-    executablePath->GetNativePath(path);
-    argv[0] = (char*)(path.get());
-
-    gnome_client_set_restart_command(client, 1, argv);
+  if(argv1) {
+    gnome_client_set_restart_command(client, 1, &argv1);
   }
 
   return TRUE;
