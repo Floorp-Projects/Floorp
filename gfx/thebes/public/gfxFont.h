@@ -160,7 +160,7 @@ public:
     gfxFontEntry(const nsAString& aName) : 
         mName(aName), mItalic(PR_FALSE), mFixedPitch(PR_FALSE),
         mIsProxy(PR_FALSE), mIsValid(PR_TRUE), 
-        mIsBadUnderlineFont(PR_FALSE),
+        mIsBadUnderlineFont(PR_FALSE), mIsUserFont(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCmapInitialized(PR_FALSE), mUserFontData(nsnull)
     { }
@@ -169,6 +169,7 @@ public:
         mName(aEntry.mName), mItalic(aEntry.mItalic), 
         mFixedPitch(aEntry.mFixedPitch), mIsProxy(aEntry.mIsProxy), 
         mIsValid(aEntry.mIsValid), mIsBadUnderlineFont(aEntry.mIsBadUnderlineFont),
+        mIsUserFont(aEntry.mIsUserFont),
         mWeight(aEntry.mWeight), mCmapInitialized(aEntry.mCmapInitialized),
         mCharacterMap(aEntry.mCharacterMap), mUserFontData(aEntry.mUserFontData)
     { }
@@ -180,6 +181,7 @@ public:
 
     PRInt32 Weight() { return mWeight; }
 
+    PRBool IsUserFont() { return mIsUserFont; }
     PRBool IsFixedPitch() { return mFixedPitch; }
     PRBool IsItalic() { return mItalic; }
     PRBool IsBold() { return mWeight >= 600; } // bold == weights 600 and above
@@ -198,11 +200,10 @@ public:
 
     PRPackedBool     mItalic      : 1;
     PRPackedBool     mFixedPitch  : 1;
-
     PRPackedBool     mIsProxy     : 1;
     PRPackedBool     mIsValid     : 1;
-
     PRPackedBool     mIsBadUnderlineFont : 1;
+    PRPackedBool     mIsUserFont  : 1;
 
     PRUint16         mWeight;
     PRUint16         mStretch;
