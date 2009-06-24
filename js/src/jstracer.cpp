@@ -7172,6 +7172,19 @@ TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, ExitType exitType)
     return guardClass(obj, obj_ins, &js_ArrayClass, snapshot(exitType));
 }
 
+JS_REQUIRES_STACK bool
+TraceRecorder::guardHasPrototype(JSObject* obj, LIns* obj_ins,
+                                 JSObject** pobj, LIns** pobj_ins,
+                                 VMSideExit* exit)
+{
+    *pobj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO]);
+    *pobj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+
+    bool cond = *pobj == NULL;
+    guard(cond, addName(lir->ins_eq0(*pobj_ins), "guard(proto-not-null)"), exit);
+    return !cond;
+}
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins, ExitType exitType)
 {
@@ -7184,8 +7197,7 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
     if (js_PrototypeHasIndexedProperties(cx, obj))
         return JSRS_STOP;
 
-    while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
-        obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+    while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit)) {
         LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
         LIns* ops_ins;
         if (!map_is_native(obj->map, map_ins, ops_ins))
@@ -9283,7 +9295,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
          * on its prototype chain changes shape.
          */
         VMSideExit* exit = snapshot(BRANCH_EXIT);
-        for (;;) {
+        do {
             LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
             LIns* ops_ins;
             if (map_is_native(obj->map, map_ins, ops_ins)) {
@@ -9294,12 +9306,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                       exit);
             } else if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
                 ABORT_TRACE("non-native object involved in undefined property access");
-
-            obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO]);
-            if (!obj)
-                break;
-            obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
-        }
+        } while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit));
 
         v_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
         slot = SPROP_INVALID_SLOT;
