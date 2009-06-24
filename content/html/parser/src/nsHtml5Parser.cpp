@@ -356,7 +356,7 @@ nsHtml5Parser::Parse(nsIURI* aURL, // legacy parameter; ignored
   mObserver = aObserver;
   mRootContextKey = aKey;
   mCanInterruptParser = PR_TRUE;
-  NS_ASSERTION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
+  NS_PRECONDITION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
   return NS_OK;
 }
 
