@@ -227,7 +227,7 @@ interface nsINavBookmarksService : nsISupports
    *         The index to insert at, or DEFAULT_INDEX to append
    *  @param aTitle
    *         The title for the new bookmark
-   *  @returns The ID of the newly-created bookmark
+   *  @return The ID of the newly-created bookmark.
    */
   long long insertBookmark(in long long aParentFolder, in nsIURI aURI,
                            in long aIndex, in AUTF8String aTitle);
@@ -247,7 +247,7 @@ interface nsINavBookmarksService : nsISupports
    *         The name of the new folder
    *  @param aIndex
    *         The index to insert at, or DEFAULT_INDEX to append
-   *  @returns the ID of the newly-inserted folder
+   *  @return The ID of the newly-inserted folder.
    */
   long long createFolder(in long long aParentFolder, in AUTF8String name,
                          in long index);
@@ -265,7 +265,7 @@ interface nsINavBookmarksService : nsISupports
    *  @param aIndex
    *         The index to insert at, or DEFAULT_INDEX to append
    *         
-   *  @returns the ID of the newly-inserted folder
+   *  @return The ID of the newly-inserted folder.
    */
   long long createDynamicContainer(in long long aParentFolder, in AUTF8String aName,
                                    in AString aContractId, in long aIndex);
@@ -287,8 +287,8 @@ interface nsINavBookmarksService : nsISupports
    * tree. 
    *  @param folder
    *         The id of the folder to remove.
-   *  @returns An object implementing nsITransaction that can be used to undo 
-   *           or redo the action. 
+   *  @return An object implementing nsITransaction that can be used to undo 
+   *          or redo the action. 
    *
    * This method exists because complex delete->undo operations rely on 
    * recreated folders to have the same ID they had before they were deleted, 
@@ -341,7 +341,7 @@ interface nsINavBookmarksService : nsISupports
    *         Parent folder of the separator
    *  @param aIndex
    *         The separator's index under folder, or DEFAULT_INDEX to append
-   *  @returns the id of the new separator
+   *  @return The ID of the new separator.
    */
   long long insertSeparator(in long long aFolder, in long aIndex);
 
@@ -360,7 +360,7 @@ interface nsINavBookmarksService : nsISupports
    *         The direct parent folder of the item
    *  @param aIndex
    *         The index of the item within aFolder, DEFAULT_INDEX for the last item
-   *  @returns the id of the found item, -1 if the item does not exists
+   *  @return The ID of the found item, -1 if the item does not exists.
    */
   long long getIdForItemAt(in long long aFolder, in long aIndex);
 
@@ -371,7 +371,7 @@ interface nsINavBookmarksService : nsISupports
    * the GUID would be different.
    *  @param   aItemId
    *           The ID of the item to get the GUID for
-   *  @returns The GUID string
+   *  @return The GUID string.
    */
   AString getItemGUID(in long long aItemId);
 
@@ -390,7 +390,7 @@ interface nsINavBookmarksService : nsISupports
    * Get the ID of the item with the given GUID.
    * @param   aGUID
    *          The GUID string of the item to search for
-   * @returns The item ID, or -1 if not found
+   * @return The item ID, or -1 if not found.
    */
   long long getItemIdForGUID(in AString aGUID);
 
@@ -410,7 +410,7 @@ interface nsINavBookmarksService : nsISupports
    *
    *  @param aItemId
    *         The id of the item whose title should be retrieved
-   *  @returns The title of the item.
+   *  @return The title of the item.
    */
   AUTF8String getItemTitle(in long long aItemId);
 
@@ -425,10 +425,18 @@ interface nsINavBookmarksService : nsISupports
 
   /**
    * Set the last modified time for an item.
+   *
+   *  @note This is the only method that will send an itemChanged notification
+   *        for the property.  lastModified will still be updated in
+   *        any other method that changes an item property, but we will send
+   *        the corresponding itemChanged notification instead.
    */
   void setItemLastModified(in long long aItemId, in PRTime aLastModified);
   /**
    * Get the last modified time for an item.
+   *
+   *  @note When an item is added lastModified is set to the same value as
+   *        dateAdded.
    */
   PRTime getItemLastModified(in long long aItemId);
 
