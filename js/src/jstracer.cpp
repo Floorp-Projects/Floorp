@@ -547,6 +547,7 @@ struct PCHashEntry : public JSDHashEntryStub {
 static void
 js_Blacklist(jsbytecode* pc)
 {
+    AUDIT(blacklisted);
     JS_ASSERT(*pc == JSOP_LOOP || *pc == JSOP_NOP);
     *pc = JSOP_NOP;
 }
@@ -5460,11 +5461,11 @@ js_FinishJIT(JSTraceMonitor *tm)
     if (js_verboseStats && jitstats.recorderStarted) {
         nj_dprintf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
                    "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
-                   "breaks(%llu), returns(%llu), unstableInnerCalls(%llu)\n",
+                   "breaks(%llu), returns(%llu), unstableInnerCalls(%llu), blacklisted(%llu)\n",
                    jitstats.recorderStarted, jitstats.recorderAborted, jitstats.traceCompleted,
                    jitstats.returnToDifferentLoopHeader, jitstats.treesTrashed, jitstats.slotPromoted,
                    jitstats.unstableLoopVariable, jitstats.breakLoopExits, jitstats.returnLoopExits,
-                   jitstats.noCompatInnerTrees);
+                   jitstats.noCompatInnerTrees, jitstats.blacklisted);
         nj_dprintf("monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
                    "global mismatch(%llu)\n", jitstats.traceTriggered, jitstats.sideExitIntoInterpreter,
                    jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry);
