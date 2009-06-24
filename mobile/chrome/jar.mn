@@ -14,7 +14,7 @@ browser.jar:
   content/bindings/downloads.xml       (content/bindings/downloads.xml)
   content/bindings/console.xml         (content/bindings/console.xml)
   content/browser.css                  (content/browser.css)
-  content/scrollbars.css               (content/scrollbars.css)
+  content/cursor.css                   (content/cursor.css)
   content/content.css                  (content/content.css)
   content/checkerboard.png             (content/checkerboard.png)
 % content branding %content/branding/

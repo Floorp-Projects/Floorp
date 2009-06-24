@@ -83,7 +83,7 @@ var Browser = {
 
     // during startup a lot of viewportHandler calls happen due to content and window resizes
     ws.beginUpdateBatch();
-    
+
     function panHandler(vr, dx, dy) {
       if (dx) {
         let visibleNow = ws.isWidgetVisible("tabs-container") || ws.isWidgetVisible("browser-controls");
@@ -116,7 +116,7 @@ var Browser = {
         return;
 
       let h = window.innerHeight;
-      
+
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
 
@@ -134,7 +134,7 @@ var Browser = {
           browserStyle.height = scaledH + "px";
         }
       }
-      
+
       ws.updateSize(w, h);
     }
     window.addEventListener("resize", resizeHandler, false);
@@ -160,12 +160,12 @@ var Browser = {
     if (hideCursor) {
       window.QueryInterface(Ci.nsIDOMChromeWindow).setCursor("none");
 
-      var styleURI = ios.newURI("chrome://browser/content/content.css", null, null);
+      var styleURI = ios.newURI("chrome://browser/content/cursor.css", null, null);
       styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
     }
 
     // load styles for scrollbars
-    var styleURI = ios.newURI("chrome://browser/content/scrollbars.css", null, null);
+    var styleURI = ios.newURI("chrome://browser/content/content.css", null, null);
     styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -235,7 +235,7 @@ var Browser = {
       if (whereURI)
         this.addTab(whereURI, true);
     }
-    
+
     // JavaScript Error Console
     if (gPrefService.getBoolPref("browser.console.showInPanel")){
       let tool_console = document.getElementById("tool-console");
@@ -1242,7 +1242,7 @@ ProgressController.prototype = {
       if (Browser._isStartup) {
         // force the urlbar into position
         ws.panTo(0, -BrowserUI.toolbarH);
-        
+
         // now we can set the viewport to a real size and draw the page
         ws.endUpdateBatch();
         Browser._isStartup = false;
@@ -1367,7 +1367,7 @@ Tab.prototype = {
     browser.setAttribute("type", "content");
     browser.setAttribute("src", uri);
 
-    // Attach the popup contextmenu    
+    // Attach the popup contextmenu
     let canvas = document.getElementById("browser-canvas");
     browser.setAttribute("contextmenu", canvas.getAttribute("contextmenu"));
     let autocompletepopup = canvas.getAttribute("autocompletepopup");

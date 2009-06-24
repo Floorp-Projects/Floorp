@@ -101,3 +101,6 @@
 <!ENTITY consoleErrFile.label      "Source File:">
 <!ENTITY consoleErrLine.label      "Line:">
 <!ENTITY consoleErrColumn.label    "Column:">
+
+<!ENTITY selectListDone.label      "Done">
+<!ENTITY selectListDisplay.format  "#1 Items">

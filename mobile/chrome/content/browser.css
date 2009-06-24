@@ -96,6 +96,10 @@ richlistitem[typeName="message"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-message");
 }
 
+#select-list > option {
+  -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select-option");
+}
+
 /* richlist defaults ------------------------------------------------------- */
 richlistitem {
   padding: 5px;

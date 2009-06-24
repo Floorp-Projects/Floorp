@@ -263,6 +263,7 @@ var BrowserUI = {
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
+    browsers.addEventListener("UIShowSelect", this, false, true);
 
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
 
@@ -489,6 +490,9 @@ var BrowserUI = {
         break;
       case "DOMLinkAdded":
         this._linkAdded(aEvent);
+        break;
+      case "UIShowSelect":
+        SelectHelper.show(aEvent.target);
         break;
       case "TabSelect":
         this._tabSelect(aEvent);
@@ -774,5 +778,131 @@ var FolderPicker = {
         this._control.removeItem(this._control.activeItem);
     }
     this.close();
+  }
+};
+
+var SelectHelper = {
+  _panel: null,
+  _list: null,
+  _control: null,
+  _selectedIndex: -1,
+
+  show: function(aControl) {
+    if (!aControl)
+      return;
+
+    this._control = aControl;
+    this._selectedIndex = this._control.selectedIndex;
+
+    this._list = document.getElementById("select-list");
+    this._list.setAttribute("multiple", this._control.multiple ? "true" : "false")
+
+    let optionIndex = 0;
+    let children = this._control.children;
+    for (let i=0; i<children.length; i++) {
+      let child = children[i];
+      if (child instanceof HTMLOptGroupElement) {
+        let group = document.createElement("option");
+        group.setAttribute("label", child.label)
+        this._list.appendChild(group);
+        group.className = "optgroup";
+
+        let subchildren = child.children;
+        for (let ii=0; ii<subchildren.length; ii++) {
+          let subchild = subchildren[ii];
+          let item = document.createElement("option");
+          item.setAttribute("label", subchild.text)
+          this._list.appendChild(item);
+          item.className = "in-optgroup";
+          item.optionIndex = optionIndex++;
+          if (subchild.selected)
+            item.setAttribute("selected", "true");
+        }
+      } else if (child instanceof HTMLOptionElement) {
+        let item = document.createElement("option");
+        item.setAttribute("label", child.textContent)
+        this._list.appendChild(item);
+        item.optionIndex = optionIndex++;
+        if (child.selected)
+          item.setAttribute("selected", "true");
+      }
+    }
+
+    this._panel = document.getElementById("select-container");
+
+    let toolbar = document.getElementById("toolbar-main");
+    let top = parseInt(toolbar.top) + toolbar.boxObject.height;
+    if (top < 0)
+      top = 0;
+
+    this._panel.top = top + 20;
+    this._panel.left = 20;
+    this._panel.width = window.innerWidth - 40;
+    this._panel.height = window.innerHeight - (top + 40);
+    this._panel.hidden = false;
+
+    this._list.focus();
+    this._list.addEventListener("click", this, false);
+  },
+
+  _forEachOption: function(aCallback) {
+      let children = this._list.children;
+      for (let i = 0; i < children.length; i++) {
+        let item = children[i];
+        if (!item.hasOwnProperty("optionIndex"))
+          continue;
+        aCallback(item);
+      }
+  },
+
+  _updateControl: function() {
+    // XXX For "multiple", we could check to see if the selected items were
+    // different than the original set of selected items
+    if (this._control.multiple || this._selectedIndex != this._control.selectedIndex)
+      this._control.wrappedJSObject._fireChange();
+  },
+
+  close: function() {
+    this._updateControl();
+
+    this._list.removeEventListener("click", this, false);
+    this._panel.hidden = true;
+
+    // Clear out the list for the next show
+    let empty = this._list.cloneNode(false);
+    this._list.parentNode.replaceChild(empty, this._list);
+    this._list = empty;
+
+    this._control.focus();
+  },
+
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+      case "click":
+        let item = aEvent.target;
+        let selectElement = this._control.wrappedJSObject.selectElement;
+        if (item && item.hasOwnProperty("optionIndex")) {
+          if (this._control.multiple) {
+            // Toggle the item state
+            item.selected = !item.selected;
+            selectElement.setOptionsSelectedByIndex(item.optionIndex, item.optionIndex, item.selected, false, false, true);
+            this._control.wrappedJSObject._updateLabel();
+          }
+          else {
+            // Unselect all options
+            this._forEachOption(
+              function(aItem) {
+                aItem.selected = false;
+              }
+            );
+
+            // Select the new one and update the control
+            item.selected = true;
+            selectElement.setOptionsSelectedByIndex(item.optionIndex, item.optionIndex, true, true, false, true);
+            this._control.wrappedJSObject._updateLabel();
+          }
+        }
+        break;
+    }
   }
 };

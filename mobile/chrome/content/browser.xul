@@ -173,7 +173,7 @@
 
   <popupset id="mainPopupSet">
   </popupset>
-  
+
   <!-- stupid stack needs to be in a box. not sure why -->
   <box>
   <stack id="browser-container" flex="1">
@@ -404,6 +404,13 @@
                       oncommand="BrowserUI.doButtonSearch(event.target);">
         <image class="tool-search"/>
       </arrowscrollbox>
+    </vbox>
+
+    <vbox id="select-container" class="panel-dark" hidden="true" top="0" left="0">
+      <scrollbox id="select-list" flex="1" orient="vertical"/>
+      <hbox id="select-buttons">
+        <button label="&selectListDone.label;" oncommand="SelectHelper.close();"/>
+      </hbox>
     </vbox>
 
     <vbox id="bookmarklist-container" class="panel-dark" hidden="true" top="0" left="0">
