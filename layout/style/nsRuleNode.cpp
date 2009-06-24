@@ -3802,22 +3802,20 @@ struct BackgroundItemComputer<nsCSSValueList, PRUint8>
 };
 
 NS_SPECIALIZE_TEMPLATE
-struct BackgroundItemComputer<nsCSSValueList, nsStyleBackground::Image>
+struct BackgroundItemComputer<nsCSSValueList, nsCOMPtr<imgIRequest> >
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
                            const nsCSSValueList* aSpecifiedValue,
-                           nsStyleBackground::Image& aComputedValue,
+                           nsCOMPtr<imgIRequest>& aComputedValue,
                            PRBool& aCanStoreInRuleTree)
   {
     const nsCSSValue &value = aSpecifiedValue->mValue;
     if (eCSSUnit_Image == value.GetUnit()) {
-      aComputedValue.mRequest = value.GetImageValue();
-      aComputedValue.mSpecified = PR_TRUE;
+      aComputedValue = value.GetImageValue();
     }
     else {
       NS_ASSERTION(eCSSUnit_None == value.GetUnit(), "unexpected unit");
-      aComputedValue.mRequest = nsnull;
-      aComputedValue.mSpecified = PR_FALSE;
+      aComputedValue = nsnull;
     }
   }
 };
@@ -3958,23 +3956,13 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Background, (), bg, parentBG, Color, colorData)
 
-  // background-color: color, string, inherit [pair]
-  if (eCSSUnit_Initial == colorData.mBackColor.mXValue.GetUnit()) {
+  // background-color: color, string, inherit
+  if (eCSSUnit_Initial == colorData.mBackColor.GetUnit()) {
     bg->mBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  } else if (!SetColor(colorData.mBackColor.mXValue,
-                       parentBG->mBackgroundColor, mPresContext,
-                       aContext, bg->mBackgroundColor, canStoreInRuleTree)) {
-    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.mXValue.GetUnit(),
-                 "unexpected color unit");
-  }
-
-  if (eCSSUnit_Initial == colorData.mBackColor.mYValue.GetUnit()) {
-    bg->mFallbackBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  } else if (!SetColor(colorData.mBackColor.mYValue,
-                       parentBG->mFallbackBackgroundColor, mPresContext,
-                       aContext, bg->mFallbackBackgroundColor,
+  } else if (!SetColor(colorData.mBackColor, parentBG->mBackgroundColor,
+                       mPresContext, aContext, bg->mBackgroundColor,
                        canStoreInRuleTree)) {
-    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.mYValue.GetUnit(),
+    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.GetUnit(),
                  "unexpected color unit");
   }
 
@@ -3984,7 +3972,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   // background-image: url (stored as image), none, inherit [list]
   SetBackgroundList(aContext, colorData.mBackImage, bg->mLayers,
                     parentBG->mLayers, &nsStyleBackground::Layer::mImage,
-                    nsStyleBackground::Image(), parentBG->mImageCount,
+                    nsCOMPtr<imgIRequest>(nsnull), parentBG->mImageCount,
                     bg->mImageCount, maxItemCount, rebuild, canStoreInRuleTree);
 
   // background-repeat: enum, inherit, initial [list]
@@ -5653,7 +5641,8 @@ nsRuleNode::Sweep()
 
 /* static */ PRBool
 nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
-                                    PRUint32 ruleTypeMask)
+                                    PRUint32 ruleTypeMask,
+                                    PRBool aAuthorColorsAllowed)
 {
   nsRuleDataColor colorData;
   nsRuleDataMargin marginData;
@@ -5677,8 +5666,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   ruleData.mMarginData = &marginData;
 
   nsCSSValue* backgroundValues[] = {
-    &colorData.mBackColor.mXValue,
-    &colorData.mBackColor.mYValue,
+    &colorData.mBackColor,
     &firstBackgroundImage
   };
 
@@ -5784,11 +5772,23 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
         } else {
           // If any of the values we care about was set by the above rule,
           // we have author style.
-          for (PRUint32 i = 0; i < nValues; ++i)
+          for (PRUint32 i = 0; i < nValues; ++i) {
             if (values[i]->GetUnit() != eCSSUnit_Null &&
                 values[i]->GetUnit() != eCSSUnit_Dummy && // see above
-                values[i]->GetUnit() != eCSSUnit_DummyInherit)
-              return PR_TRUE;
+                values[i]->GetUnit() != eCSSUnit_DummyInherit) {
+              // If author colors are not allowed, only claim to have
+              // author-specified rules if we're looking at the background
+              // color and it's set to transparent.  Anything else should get
+              // set to a dummy value instead.
+              if (aAuthorColorsAllowed ||
+                  (values[i] == &colorData.mBackColor &&
+                   !values[i]->IsNonTransparentColor())) {
+                return PR_TRUE;
+              }
+
+              values[i]->SetDummyValue();
+            }
+          }
         }
       }
     }

@@ -66,12 +66,6 @@ nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
 
   // Create and init our focus controller.
   nsFocusController::Create(getter_AddRefs(mFocusController));
-
-  nsCOMPtr<nsIDOMFocusListener> focusListener(do_QueryInterface(mFocusController));
-  mRefCnt.incr(static_cast<nsIDOMEventTarget*>(this));
-  AddEventListener(NS_LITERAL_STRING("focus"), focusListener, PR_TRUE);
-  AddEventListener(NS_LITERAL_STRING("blur"), focusListener, PR_TRUE);
-  mRefCnt.decr(static_cast<nsIDOMEventTarget*>(this));
 }
 
 nsWindowRoot::~nsWindowRoot()
@@ -132,14 +126,10 @@ NS_IMETHODIMP
 nsWindowRoot::AddGroupedEventListener(const nsAString & aType, nsIDOMEventListener *aListener, 
                                           PRBool aUseCapture, nsIDOMEventGroup *aEvtGrp)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager)))) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-    manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIEventListenerManager> manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
 }
 
 NS_IMETHODIMP
@@ -148,10 +138,10 @@ nsWindowRoot::RemoveGroupedEventListener(const nsAString & aType, nsIDOMEventLis
 {
   if (mListenerManager) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
+    return mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
+                                                       aEvtGrp);
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -171,9 +161,8 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener *aListener,
                                PRBool aUseCapture, PRBool aWantsUntrusted)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
@@ -187,57 +176,46 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
 nsresult
 nsWindowRoot::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  if (manager) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
   
 nsresult
 nsWindowRoot::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
   if (manager) {
-    manager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
+    return manager->RemoveEventListenerByIID(aListener, aIID,
+                                             NS_EVENT_FLAG_BUBBLE);
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
-nsresult
-nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound,
-                                 nsIEventListenerManager** aResult)
+nsIEventListenerManager*
+nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound)
 {
   if (!mListenerManager) {
     if (!aCreateIfNotFound) {
-      *aResult = nsnull;
-      return NS_OK;
+      return nsnull;
     }
-    nsresult rv;
-    mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    mListenerManager->SetListenerTarget(
-      static_cast<nsPIDOMEventTarget*>(this));
+
+    mListenerManager = do_CreateInstance(kEventListenerManagerCID);
+    if (mListenerManager) {
+      mListenerManager->SetListenerTarget(
+        static_cast<nsPIDOMEventTarget*>(this));
+    }
   }
 
-  *aResult = mListenerManager;
-  NS_ADDREF(*aResult);
-  return NS_OK;
+  return mListenerManager;
 }
 
 nsresult
 nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager))) &&
-    manager) {
-    return manager->GetSystemEventGroupLM(aGroup);
-  }
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->GetSystemEventGroupLM(aGroup);
 }
 
 

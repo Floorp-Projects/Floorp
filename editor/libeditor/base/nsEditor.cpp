@@ -65,7 +65,6 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
-#include "nsIDOMDragListener.h"
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIDocument.h"
 #include "nsITransactionManager.h"
@@ -335,8 +334,7 @@ nsEditor::InstallEventListeners()
   // register the event listeners with the listener manager
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  nsCOMPtr<nsIEventListenerManager> elmP;
-  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
 
   if (sysGroup && elmP)
   {
@@ -399,8 +397,8 @@ nsEditor::RemoveEventListeners()
   if (piTarget)
   {
     // unregister the event listeners with the DOM event target
-    nsCOMPtr<nsIEventListenerManager> elmP;
-    piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+    nsCOMPtr<nsIEventListenerManager> elmP =
+      piTarget->GetListenerManager(PR_TRUE);
     if (mKeyListenerP)
     {
       nsCOMPtr<nsIDOMEventGroup> sysGroup;
@@ -5184,12 +5182,6 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
   nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
   if (!tag)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(tempDoc);
-  if (htmlDoc) {
-      return doc->CreateElem(tag, nsnull, doc->GetDefaultNamespaceID(),
-                             PR_TRUE, aContent);
-  }
 
   return doc->CreateElem(tag, nsnull, kNameSpaceID_XHTML, PR_FALSE, aContent);
 }

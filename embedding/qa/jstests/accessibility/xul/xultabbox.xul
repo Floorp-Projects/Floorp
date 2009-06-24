@@ -126,7 +126,7 @@
     <description>
       <html:b> Testing XUL Tabbox for Accessibility.. </html:b>
     </description>
-    <box oreint="horizontal">
+    <box orient="horizontal">
       <!-- Tabboxes are typically used in an application in the preferences window.
       A series of tabs appears across the top of a window. The user can click each
       tab to see a different set of options. XUL provides a method to create such dialogs.

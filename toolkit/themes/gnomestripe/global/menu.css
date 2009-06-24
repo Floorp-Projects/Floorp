@@ -74,14 +74,15 @@ menuitem[disabled="true"] {
 
 menubar > menu {
   padding: 0px 4px;
+  color: -moz-menubartext;
 }
 
 menubar > menu[_moz-menuactive="true"] {
-  color: MenuText;
+  color: -moz-menubartext;
 }
 
 menubar > menu[open] {
-  color: -moz-menuhovertext;
+  color: -moz-menubarhovertext;
   background-color: -moz-menuhover;
 }
 menuitem.spell-suggestion {

@@ -173,7 +173,7 @@ protected: // new functions
     void InitTextRun(gfxTextRun *aTextRun);
 
     void CreateGlyphRunsFT(gfxTextRun *aTextRun);
-    void AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnichar *str, PRUint32 len);
+    void AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnichar *str, PRUint32 offset, PRUint32 len);
 
     static PRBool FontCallback (const nsAString & fontName, 
                                 const nsACString & genericName, 

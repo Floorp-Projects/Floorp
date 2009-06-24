@@ -47,26 +47,15 @@
  */
 #define NS_VIEWSOURCE_TOKENS_PER_BLOCK 16
 
-#ifdef RAPTOR_PERF_METRICS
-#  define START_TIMER()                    \
-    if(mParser) mParser->mParseTime.Start(PR_FALSE); \
-    if(mParser) mParser->mDTDTime.Start(PR_FALSE);
-
-#  define STOP_TIMER()                     \
-    if(mParser) mParser->mParseTime.Stop(); \
-    if(mParser) mParser->mDTDTime.Stop();
-
-#else
-#  define STOP_TIMER()
-#  define START_TIMER()
-#endif
+// TODO get rid of these unused macros
+#define STOP_TIMER()
+#define START_TIMER()
 
 #include "nsIAtom.h"
 #include "nsViewSourceHTML.h"
 #include "nsCRT.h"
 #include "nsParser.h"
 #include "nsScanner.h"
-#include "nsIParser.h"
 #include "nsDTDUtils.h"
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
@@ -223,7 +212,6 @@ CViewSourceHTML::CViewSourceHTML()
     mWrapLongLines = NS_SUCCEEDED(rv) ? temp : PR_FALSE;
   }
 
-  mParser = 0;
   mSink = 0;
   mLineNumber = 1;
   mTokenizer = 0;
@@ -249,7 +237,7 @@ CViewSourceHTML::CViewSourceHTML()
  *  @return
  */
 CViewSourceHTML::~CViewSourceHTML(){
-  mParser=0; //just to prove we destructed...
+  mSink=0; //just to prove we destructed...
 }
 
 /**
@@ -261,10 +249,11 @@ CViewSourceHTML::~CViewSourceHTML(){
   * @param  aSink
   * @return error code (almost always 0)
   */
-nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
-                                         nsITokenizer* aTokenizer,
-                                         nsIContentSink* aSink){
-
+NS_IMETHODIMP
+CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
+                                nsITokenizer* aTokenizer,
+                                nsIContentSink* aSink)
+{
   nsresult result=NS_OK;
 
 #ifdef RAPTOR_PERF_METRICS
@@ -312,21 +301,9 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
   else mDocType=aParserContext.mDocType;
 
   mLineNumber = 1;
-  // Munge the DTD mode so that the document will be in standards mode even if
-  // the original source was quirks.  The CONST_CAST is evil, but the other
-  // options seem to be:
-  // 1) Change the WillBuildModel signature to take an nsIParser so that we can
-  //    push a new parser context right here.
-  // 2) Make some assumptions about the exact class of mSink and get at the
-  //    document that way.
-  // #1 doesn't seem worth it, and #2 is even more evil, since we plan to reset
-  // the DTD mode right back to what it was before, let's risk this.
-  CParserContext& parserContext = const_cast<CParserContext&>(aParserContext);
-  parserContext.mDTDMode = eDTDMode_full_standards;
-  result = mSink->WillBuildModel();
-  // And reset the DTD mode back to the right one
-  parserContext.mDTDMode = mDTDMode;
+
   START_TIMER();
+
   return result;
 }
 
@@ -338,10 +315,14 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
   * @param  aFilename is the name of the file being parsed.
   * @return error code (almost always 0)
   */
-NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
+NS_IMETHODIMP CViewSourceHTML::BuildModel(nsITokenizer* aTokenizer,
+                                          PRBool aCanInterrupt,
+                                          PRBool aCountLines,
+                                          const nsCString* aCharsetPtr)
+{
   nsresult result=NS_OK;
 
-  if(aTokenizer && aParser) {
+  if(aTokenizer) {
 
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
@@ -453,14 +434,20 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       }
     }
 
+    NS_ASSERTION(aCharsetPtr, "CViewSourceHTML::BuildModel expects a charset!");
+    mCharset = *aCharsetPtr;
+
+    NS_ASSERTION(aCanInterrupt, "CViewSourceHTML can't run scripts, so "
+                 "document.write should not forbid interruptions. Why is "
+                 "the parser telling us not to interrupt?");
+
     while(NS_SUCCEEDED(result)){
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) {
-        result=HandleToken(theToken,aParser);
+        result=HandleToken(theToken);
         if(NS_SUCCEEDED(result)) {
           IF_FREE(theToken, mTokenizer->GetTokenAllocator());
-          if (mParser->CanInterrupt() &&
-              mSink->DidProcessAToken() == NS_ERROR_HTMLPARSER_INTERRUPTED) {
+          if (mSink->DidProcessAToken() == NS_ERROR_HTMLPARSER_INTERRUPTED) {
             result = NS_ERROR_HTMLPARSER_INTERRUPTED;
             break;
           }
@@ -547,40 +534,34 @@ void CViewSourceHTML::AddAttrToNode(nsCParserStartNode& aNode,
  * @param
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode)
+{
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
 
-  if(aParser){
+  STOP_TIMER();
 
-    mParser=(nsParser*)aParser;  //debug XXX
-    STOP_TIMER();
-
-    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
-    if((aNotifySink) && (mSink)) {
-        //now let's close automatically auto-opened containers...
+  if (mSink) {
+      //now let's close automatically auto-opened containers...
 
 #ifdef DUMP_TO_FILE
-      if(gDumpFile) {
-        fprintf(gDumpFile, "</pre>\n");
-        fprintf(gDumpFile, "</body>\n");
-        fprintf(gDumpFile, "</html>\n");
-        fclose(gDumpFile);
-      }
+    if(gDumpFile) {
+      fprintf(gDumpFile, "</pre>\n");
+      fprintf(gDumpFile, "</body>\n");
+      fprintf(gDumpFile, "</html>\n");
+      fclose(gDumpFile);
+    }
 #endif // DUMP_TO_FILE
 
-      if(ePlainText!=mDocType) {
-        mSink->CloseContainer(eHTMLTag_pre);
-        mSink->CloseContainer(eHTMLTag_body);
-        mSink->CloseContainer(eHTMLTag_html);
-      }
-      result = mSink->DidBuildModel();
+    if(ePlainText!=mDocType) {
+      mSink->CloseContainer(eHTMLTag_pre);
+      mSink->CloseContainer(eHTMLTag_body);
+      mSink->CloseContainer(eHTMLTag_html);
     }
-
-    START_TIMER();
-
   }
+
+  START_TIMER();
 
 #ifdef RAPTOR_PERF_METRICS
   NS_STOP_STOPWATCH(vsTimer);
@@ -611,32 +592,12 @@ CViewSourceHTML::GetType() {
   return NS_IPARSER_FLAG_HTML;
 }
 
-/**
- *
- * @update  gess5/18/98
- * @param
- * @return
- */
-NS_IMETHODIMP CViewSourceHTML::WillResumeParse(nsIContentSink* aSink){
-  nsresult result = NS_OK;
-  if(mSink) {
-    result = mSink->WillResume();
-  }
-  return result;
-}
-
-/**
- *
- * @update  gess5/18/98
- * @param
- * @return
- */
-NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(nsIContentSink* aSink){
-  nsresult result = NS_OK;
-  if(mSink) {
-    result = mSink->WillInterrupt();
-  }
-  return result;
+NS_IMETHODIMP_(nsDTDMode)
+CViewSourceHTML::GetMode() const
+{
+  // Quirks mode needn't affect how the source is viewed, so parse the source
+  // view in full standards mode no matter what:
+  return eDTDMode_full_standards;
 }
 
 /**
@@ -659,7 +620,9 @@ void CViewSourceHTML::SetVerification(PRBool aEnabled)
  *  @param   aChild -- int tag of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
+NS_IMETHODIMP_(PRBool)
+CViewSourceHTML::CanContain(PRInt32 aParent, PRInt32 aChild) const
+{
   PRBool result=PR_TRUE;
   return result;
 }
@@ -672,7 +635,9 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
+NS_IMETHODIMP_(PRBool)
+CViewSourceHTML::IsContainer(PRInt32 aTag) const
+{
   PRBool result=PR_TRUE;
   return result;
 }
@@ -741,6 +706,8 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
   // On the other hand, the parser messes up newline counting in some token
   // types (bug 137315).  So our line numbers will disagree with the parser's
   // in some cases...
+  // XXXbenjamn Shouldn't we be paying attention to the aCountLines BuildModel
+  // parameter here?
   mLineNumber += aText.CountChar(PRUnichar('\n'));
 
   nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
@@ -860,14 +827,14 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
+nsresult
+CViewSourceHTML::HandleToken(CToken* aToken)
 {
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
 
-  mParser=(nsParser*)aParser;
-  mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+  NS_ASSERTION(mSink, "No sink in CViewSourceHTML::HandleToken? Was WillBuildModel called?");
 
   mTokenNode.Init(theToken, mTokenizer->GetTokenAllocator());
 
@@ -878,7 +845,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser)
         const nsSubstring& startValue = aToken->GetStringValue();
         result = WriteTag(kStartTag,startValue,aToken->GetAttributeCount(),aToken->IsInError());
 
-        if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
+        if((ePlainText!=mDocType) && (NS_OK==result)) {
           result = mSink->NotifyTagObservers(&mTokenNode);
         }
       }
@@ -1073,11 +1040,6 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
 
   // Default the view source URL to the empty string in case we fail.
   viewSourceUrl.Truncate();
-  
-  // Get the character set.
-  nsCString charset;
-  PRInt32 source;
-  mParser->GetDocumentCharset(charset, source);
 
   // Get the BaseURI.
   rv = GetBaseURI(getter_AddRefs(baseURI));
@@ -1087,7 +1049,7 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
   // the link URL may have untranslated entities in it.
   nsAutoString expandedLinkUrl;
   ExpandEntities(linkUrl, expandedLinkUrl);
-  rv = NS_NewURI(getter_AddRefs(hrefURI), expandedLinkUrl, charset.get(), baseURI);
+  rv = NS_NewURI(getter_AddRefs(hrefURI), expandedLinkUrl, mCharset.get(), baseURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the absolute URL from the link URI.
@@ -1225,14 +1187,9 @@ nsresult CViewSourceHTML::GetBaseURI(nsIURI **result) {
 }
 
 nsresult CViewSourceHTML::SetBaseURI(const nsAString& baseSpec) {
-  // Get the character set.
-  nsCString charset;
-  PRInt32 source;
-  mParser->GetDocumentCharset(charset, source);
- 
   // Create a new base URI and store it in mBaseURI.
   nsCOMPtr<nsIURI> baseURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(baseURI), baseSpec, charset.get());
+  nsresult rv = NS_NewURI(getter_AddRefs(baseURI), baseSpec, mCharset.get());
   NS_ENSURE_SUCCESS(rv, rv);
   mBaseURI = baseURI;
   return NS_OK;

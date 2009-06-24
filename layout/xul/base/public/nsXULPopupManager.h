@@ -313,7 +313,7 @@ public:
   NS_DECL_NSIROLLUPLISTENER
   NS_DECL_NSITIMERCALLBACK
 
-  virtual void GetSubmenuWidgetChain(nsTArray<nsIWidget*> *_retval);
+  virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
   virtual void AdjustPopupsOnWindowChange(void);
 
   static nsXULPopupManager* sInstance;
@@ -451,11 +451,14 @@ public:
    * aAsynchronous - true if the first popuphiding event should be sent
    *                 asynchrously. This should be true if HidePopup is called
    *                 from a frame.
+   * aLastPopup - optional popup to close last when hiding a chain of menus.
+   *              If null, then all popups will be closed.
    */
   void HidePopup(nsIContent* aPopup,
                  PRBool aHideChain,
                  PRBool aDeselectMenu,
-                 PRBool aAsynchronous);
+                 PRBool aAsynchronous,
+                 nsIContent* aLastPopup = nsnull);
 
   /**
    * Hide a popup after a short delay. This is used when rolling over menu items.

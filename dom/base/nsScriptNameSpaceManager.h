@@ -101,6 +101,7 @@ private:
 
 class nsIScriptContext;
 class nsICategoryManager;
+class GlobalNameMapEntry;
 
 
 class nsScriptNameSpaceManager
@@ -122,7 +123,8 @@ public:
                       const PRUnichar **aClassName = nsnull);
 
   nsresult RegisterClassName(const char *aClassName,
-                             PRInt32 aDOMClassInfoID);
+                             PRInt32 aDOMClassInfoID,
+                             const PRUnichar **aResult);
 
   nsresult RegisterClassProto(const char *aClassName,
                               const nsIID *aConstructorProtoIID,
@@ -150,7 +152,8 @@ protected:
   // that aKey will be mapped to. If mType in the returned
   // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey
   // already existed.
-  nsGlobalNameStruct *AddToHash(const char *aKey);
+  nsGlobalNameStruct *AddToHash(const char *aKey,
+                                const PRUnichar **aClassName = nsnull);
 
   nsresult FillHash(nsICategoryManager *aCategoryManager,
                     const char *aCategory,

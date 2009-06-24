@@ -47,6 +47,7 @@ MODULE = satchel
 XPIDL_MODULE = satchel
 
 XPIDLSRCS	= nsIFormFillController.idl \
+            nsIFormAutoComplete.idl \
             nsIFormHistory.idl \
             $(NULL)
 

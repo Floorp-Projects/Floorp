@@ -126,7 +126,7 @@
     <description>
       <html:b> Testing XUL Menubar for Accessibility.. </html:b>
     </description>
-    <box oreint="horizontal">
+    <box orient="horizontal">
       <!-- There are five elements associated with creating a menu bar and its menus.
       menubar - The container for the row of menus.
       menu - Despite the name, this is actually only the title of the menu on the menubar.

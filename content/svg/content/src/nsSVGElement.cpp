@@ -500,8 +500,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       mContentStyleRule = nsnull;
 
     if (IsEventName(aName)) {
-      nsCOMPtr<nsIEventListenerManager> manager;
-      GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+      nsIEventListenerManager* manager = GetListenerManager(PR_FALSE);
       if (manager) {
         nsIAtom* eventName = GetEventNameForAttr(aName);
         manager->RemoveScriptEventListener(eventName);
@@ -1544,7 +1543,7 @@ nsSVGElement::ParseNumberOptionalNumber(const nsAString& aValue,
   float x = float(PR_strtod(str, &rest));
   float y = x;
 
-  if (str == rest) {
+  if (str == rest || !NS_FloatIsFinite(x)) {
     //first value was illformed
     return NS_ERROR_FAILURE;
   }
@@ -1558,7 +1557,7 @@ nsSVGElement::ParseNumberOptionalNumber(const nsAString& aValue,
     }
 
     y = float(PR_strtod(rest, &rest));
-    if (*rest != '\0') {
+    if (*rest != '\0' || !NS_FloatIsFinite(y)) {
       //second value was illformed or there was trailing content
       return NS_ERROR_FAILURE;
     }

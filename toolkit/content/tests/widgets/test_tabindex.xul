@@ -109,8 +109,6 @@ function runTests()
     }
   }, true);
 
-  synthesizeMouse(document.documentElement, 1, 1, { });
-
   for (t = 1; t <= gTestCount; t++)
     synthesizeKey("VK_TAB", { });
 

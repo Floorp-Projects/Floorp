@@ -63,8 +63,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 // Constructors for a MIME handler.
 nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
-    mMacType(0),
-    mMacCreator(0),
     mType(aMIMEType),
     mClass(eMIMEInfo),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
@@ -73,8 +71,6 @@ nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
 }
 
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType) :
-    mMacType(0),
-    mMacCreator(0),
     mType(aMIMEType),
     mClass(eMIMEInfo),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
@@ -88,8 +84,6 @@ nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType) :
 // for both and distinguish between the two kinds of handlers via the aClass
 // argument to this method, which can be either eMIMEInfo or eProtocolInfo.
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass) :
-    mMacType(0),
-    mMacCreator(0),
     mType(aType),
     mClass(aClass),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
@@ -212,42 +206,6 @@ nsMIMEInfoBase::Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval)
 
     *_retval = mType.Equals(type);
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEInfoBase::GetMacType(PRUint32 *aMacType)
-{
-    *aMacType = mMacType;
-
-    if (!mMacType)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEInfoBase::SetMacType(PRUint32 aMacType)
-{
-    mMacType = aMacType;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEInfoBase::GetMacCreator(PRUint32 *aMacCreator)
-{
-    *aMacCreator = mMacCreator;
-
-    if (!mMacCreator)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEInfoBase::SetMacCreator(PRUint32 aMacCreator)
-{
-    mMacCreator = aMacCreator;
     return NS_OK;
 }
 
@@ -413,9 +371,6 @@ nsMIMEInfoBase::CopyBasicDataTo(nsMIMEInfoBase* aOther)
   aOther->mType = mType;
   aOther->mDefaultAppDescription = mDefaultAppDescription;
   aOther->mExtensions = mExtensions;
-
-  aOther->mMacType = mMacType;
-  aOther->mMacCreator = mMacCreator;
 }
 
 /* static */

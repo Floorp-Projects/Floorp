@@ -114,7 +114,7 @@
           var uppercaseVal = val.toUpperCase();
           // Translate standard HTML color strings:
           if (uppercaseVal[0] != "#") {
-            switch (val) {
+            switch (uppercaseVal) {
               case "GREEN":
                 uppercaseVal = "#008000";
                 break;
@@ -155,7 +155,7 @@
                 uppercaseVal = "#FFFFFF";
                 break;
               case "SILVER":
-                uppercaseVal = "#CC0C0C0";
+                uppercaseVal = "#C0C0C0";
                 break;
               case "GRAY":
                 uppercaseVal = "#808080";

@@ -164,12 +164,16 @@ typedef char* (*BeOS_Plugin_GetMIMEDescription)();
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
     info.fVersion = nsnull;
-    nsCAutoString fpath;
-    nsresult rv = mPlugin->GetNativePath(fpath);
-    if (NS_OK != rv) {
+
+    nsCAutoString fullPath;
+    if (NS_FAILED(rv = mPlugin->GetNativePath(fullPath)))
         return rv;
-    }
-    const char *path = fpath.get();
+
+    nsCAutoString fileName;
+    if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
+        return rv;
+
+    const char *path = fullPath.get();
     int i;
 
 #ifdef NS_PLUGIN_BEOS_DEBUG
@@ -243,8 +247,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     }
 
     info.fVariantCount = types_num;
-    info.fFileName = PL_strdup(path);
-
+    info.fFullPath = PL_strdup(fullPath.get());
+    info.fFileName = PL_strdup(fileName.get());
 
 #ifdef NS_PLUGIN_BEOS_DEBUG
     printf("info.fFileName = %s\n", info.fFileName);
@@ -277,6 +281,9 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     PR_FREEIF(info.fMimeTypeArray);
     PR_FREEIF(info.fMimeDescriptionArray);
     PR_FREEIF(info.fExtensionArray);
+
+    if (info.fFullPath)
+        PL_strfree(info.fFullPath);
 
     if (info.fFileName)
         PL_strfree(info.fFileName);

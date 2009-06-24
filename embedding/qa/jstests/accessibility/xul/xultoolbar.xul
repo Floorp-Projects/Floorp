@@ -121,7 +121,7 @@
     <description>
       <html:b> Testing XUL Toolbar for Accessibility.. </html:b>
     </description>
-    <box oreint="horizontal">
+    <box orient="horizontal">
       <!-- When more than one toolbar is placed next to each other, they are typically
       grouped together in something called a toolbox.
       Along the left side of the toolbar is a little notch which, if clicked, will

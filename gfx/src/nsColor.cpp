@@ -75,7 +75,7 @@ void nsColorNames::AddRefTable(void)
 #ifdef DEBUG
     {
       // let's verify the table...
-      for (PRInt32 index = 0; index < eColorName_COUNT; ++index) {
+      for (PRUint32 index = 0; index < eColorName_COUNT; ++index) {
         nsCAutoString temp1(kColorNames[index]);
         nsCAutoString temp2(kColorNames[index]);
         ToLowerCase(temp1);
@@ -216,25 +216,37 @@ NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
   return PR_FALSE;
 }
 
+// Macro to blend two colors
+//
+// equivalent to target = (bg*(255-fgalpha) + fg*fgalpha)/255
+#define MOZ_BLEND(target, bg, fg, fgalpha)       \
+  FAST_DIVIDE_BY_255(target, (bg)*(255-fgalpha) + (fg)*(fgalpha))
+
 NS_GFX_(nscolor)
 NS_ComposeColors(nscolor aBG, nscolor aFG)
 {
-  PRIntn bgAlpha = NS_GET_A(aBG);
+  // This function uses colors that are non premultiplied alpha.
   PRIntn r, g, b, a;
 
-  // First compute what we get drawing aBG onto RGBA(0,0,0,0)
-  MOZ_BLEND(r, 0, NS_GET_R(aBG), bgAlpha);
-  MOZ_BLEND(g, 0, NS_GET_G(aBG), bgAlpha);
-  MOZ_BLEND(b, 0, NS_GET_B(aBG), bgAlpha);
-  a = bgAlpha;
-
-  // Now draw aFG on top of that
+  PRIntn bgAlpha = NS_GET_A(aBG);
   PRIntn fgAlpha = NS_GET_A(aFG);
-  MOZ_BLEND(r, r, NS_GET_R(aFG), fgAlpha);
-  MOZ_BLEND(g, g, NS_GET_G(aFG), fgAlpha);
-  MOZ_BLEND(b, b, NS_GET_B(aFG), fgAlpha);
-  MOZ_BLEND(a, a, 255, fgAlpha);
-  
+
+  // Compute the final alpha of the blended color
+  // a = fgAlpha + bgAlpha*(255 - fgAlpha)/255;
+  FAST_DIVIDE_BY_255(a, bgAlpha*(255-fgAlpha));
+  a = fgAlpha + a;
+  PRIntn blendAlpha;
+  if (a == 0) {
+    // In this case the blended color is totally trasparent,
+    // we preserve the color information of the foreground color.
+    blendAlpha = 255;
+  } else {
+    blendAlpha = (fgAlpha*255)/a;
+  }
+  MOZ_BLEND(r, NS_GET_R(aBG), NS_GET_R(aFG), blendAlpha);
+  MOZ_BLEND(g, NS_GET_G(aBG), NS_GET_G(aFG), blendAlpha);
+  MOZ_BLEND(b, NS_GET_B(aBG), NS_GET_B(aFG), blendAlpha);
+
   return NS_RGBA(r, g, b, a);
 }
 

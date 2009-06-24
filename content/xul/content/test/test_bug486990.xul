@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=486990
+-->
+<window title="Mozilla Bug 486990"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="setTimeout(runTests, 0);">
+  <script type="application/javascript" src="/MochiKit/packed.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=486990"
+     target="_blank">Mozilla Bug 486990</a>
+
+  </body>
+  <div xmlns="http://www.w3.org/1999/xhtml">
+  <select size="5" id="select">
+    <option>1</option>
+    <option>2</option>
+    <option>3</option>
+    <option>4</option>
+    <option>5</option>
+    <option>6</option>
+    <option>7</option>
+    <option>8</option>
+    <option>9</option>
+    <option>10</option>
+  </select>
+  </div>
+  <menupopup id="cm" onpopupshowing="popupShowing(event);">
+    <menuitem label="Mozilla" value="http://mozilla.org"/>
+    <menuitem label="Slashdot" value="http://slashdot.org"/>
+    <menuitem label="Sourceforge" value="http://sf.net"/>
+    <menuitem label="Freshmeat" value="http://freshmeat.net"/>
+  </menupopup>
+  <button label="test button" contextmenu="cm" id="testbutton"/>
+  
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 486990 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  var prevented = false;
+  var eventCount = 0;
+
+  function fooListener(evt) {
+    evt.preventDefault();
+    prevented = evt.getPreventDefault();
+    ++eventCount;
+  };
+
+  var clickCount = 0;
+  var mouseDownCount = 0;
+  var mouseUpCount = 0;
+  function clickListener(evt) {
+    ++clickCount;
+  }
+
+  function mouseDownListener(evt) {
+    ++mouseDownCount;
+  }
+
+  function mouseUpListener(evt) {
+    ++mouseUpCount;
+  }
+
+  var popupshowingcount = 0;
+
+  function popupShowing(evt) {
+    ++popupshowingcount;
+    evt.preventDefault();
+  }
+
+  function contextMenuStopper(evt) {
+    evt.stopPropagation();
+  }
+
+  function contextMenuPreventer(evt) {
+    evt.preventDefault();
+  }
+
+  function allowDisableContextMenu(allow) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    const prefSvcContractID = "@mozilla.org/preferences-service;1";
+    const prefSvcIID = Components.interfaces.nsIPrefService;
+    var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                                     .getBranch("dom.event.contextmenu.");
+    try {
+      if (allow) {
+        prefs.clearUserPref("enabled");
+      } else {
+        prefs.setBoolPref("enabled", allow);
+      }
+    } catch(ex) {}
+  }
+  
+  function runTests() {
+    document.addEventListener("foo", fooListener, true);
+    var e1 = document.createEvent("Event");
+    e1.initEvent("foo", true, true);
+    document.dispatchEvent(e1);
+    is(eventCount, 1, "Wrong event count");
+    ok(prevented, "Default handling should have been prevented.");
+
+    prevented = false;
+    var e2 = document.createEvent("Event");
+    e2.initEvent("foo", false, false);
+    document.dispatchEvent(e1);
+    is(eventCount, 2, "Wrong event count");
+    ok(prevented, "Default handling should have been prevented.");
+
+    var tb = document.getElementById("testbutton");
+    dispatchTrustedContextMenuEvent(tb);
+    is(popupshowingcount, 1, "Should have got 'popupShowing' event!");
+
+    tb.addEventListener("contextmenu", contextMenuStopper, true);
+    dispatchTrustedContextMenuEvent(tb);
+    is(popupshowingcount, 2, "Should have got 'popupShowing' event!");
+
+    tb.addEventListener("contextmenu", contextMenuPreventer, true);
+    dispatchTrustedContextMenuEvent(tb);
+    is(popupshowingcount, 2, "Should not have got 'popupShowing' event!");
+
+    allowDisableContextMenu(false);
+    dispatchTrustedContextMenuEvent(tb);
+    is(popupshowingcount, 3, "Should have got 'popupShowing' event!");
+
+    allowDisableContextMenu(true);
+    dispatchTrustedContextMenuEvent(tb);
+    is(popupshowingcount, 3, "Should not have got 'popupshowing' event!");
+
+    var s = document.getElementById("select");
+    s.addEventListener("click", clickListener, true);
+    s.addEventListener("mousedown", mouseDownListener, true);
+    s.addEventListener("mouseup", mouseUpListener, true);
+
+    synthesizeMouse(s, 1, 10, {}, window);
+    is(clickCount, 1, "Should have got click event!");
+    is(mouseDownCount, 1, "Should have got mousedown event!");
+    is(mouseUpCount, 1, "Should have got mouseup event!");
+
+    // Dispatch to scrollbar.
+    synthesizeMouse(s, s.getBoundingClientRect().right - 3, 10, {}, window);
+    is(clickCount, 1, "Should not have got click event!");
+    is(mouseDownCount, 2, "Should have got mousedown event!");
+    is(mouseUpCount, 2, "Should have got mouseup event!");
+
+    SimpleTest.finish();
+  }
+
+  function dispatchTrustedContextMenuEvent(target) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var e = document.createEvent("MouseEvent");
+    e.initMouseEvent("contextmenu", true, true, window, 0, 0, 0, 0, 0, 
+                      false, false, false, false, 2, null);
+    return target.dispatchEvent(e);
+  }
+
+  ]]>
+  </script>
+</window>

@@ -111,10 +111,12 @@ StatementJSHelper::getRow(Statement *aStatement,
 {
   nsresult rv;
 
+#ifdef DEBUG
   PRInt32 state;
   (void)aStatement->GetState(&state);
-  if (state != mozIStorageStatement::MOZ_STORAGE_STATEMENT_EXECUTING)
-    return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_EXECUTING,
+               "Invalid state to get the row object - all calls will fail!");
+#endif
 
   if (!aStatement->mStatementRowHolder) {
     nsCOMPtr<mozIStorageStatementRow> row(new StatementRow(aStatement));
@@ -147,10 +149,12 @@ StatementJSHelper::getParams(Statement *aStatement,
 {
   nsresult rv;
 
+#ifdef DEBUG
   PRInt32 state;
   (void)aStatement->GetState(&state);
-  if (state != mozIStorageStatement::MOZ_STORAGE_STATEMENT_READY)
-    return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_READY,
+               "Invalid state to get the params object - all calls will fail!");
+#endif
 
   if (!aStatement->mStatementParamsHolder) {
     nsCOMPtr<mozIStorageStatementParams> params =

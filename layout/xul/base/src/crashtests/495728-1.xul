@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="list-testcase" title="Testcase"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="reftest-wait">
+
+<script>
+function scrollup() {
+  var list = document.getElementById('list');
+  var firstindex = list.getIndexOfItem(document.getElementById('first'));
+  list.ensureIndexIsVisible(firstindex);
+  setTimeout("document.documentElement.removeAttribute('class')",1);
+}
+
+function scrolldown() {
+  var list = document.getElementById('list');
+  var lastindex = list.getIndexOfItem(document.getElementById('last'));
+  list.ensureIndexIsVisible(lastindex);
+  setTimeout("scrollup()",1);
+}
+
+window.addEventListener("load", scrolldown, false);
+</script>
+		
+<listbox id="list">
+<listitem label="Item x" id="first"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x"/>
+<listitem label="Item x" id="last"/>
+</listbox>
+
+</window>

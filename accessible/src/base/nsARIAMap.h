@@ -72,6 +72,10 @@ enum ELiveAttrRule
   ePoliteLiveAttr
 };
 
+// Role mapping rule
+const PRBool kUseMapRole = PR_TRUE;
+const PRBool kUseNativeRole = PR_FALSE;
+
 // ARIA attribute characteristic masks, grow as needed
 
 /**
@@ -118,6 +122,9 @@ struct nsRoleMapEntry
   
   // Role mapping rule: maps to this nsIAccessibleRole
   PRUint32 role;
+  
+  // Role rule: whether to use mapped role or native semantics
+  PRBool roleRule;
   
   // Value mapping rule: how to compute nsIAccessible value
   EValueRule valueRule;

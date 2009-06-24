@@ -143,8 +143,11 @@ enum {
                                  NODE_HAS_EDGE_CHILD_SELECTOR |
                                  NODE_HAS_SLOW_SELECTOR_NOAPPEND,
 
+  NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR
+                               = 0x00040000U,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               18,
+  NODE_SCRIPT_TYPE_OFFSET =               19,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 

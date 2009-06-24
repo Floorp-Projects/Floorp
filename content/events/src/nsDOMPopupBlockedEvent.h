@@ -41,14 +41,15 @@
 
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsDOMEvent.h"
+#include "nsIURI.h"
 
 class nsDOMPopupBlockedEvent : public nsIDOMPopupBlockedEvent,
                                public nsDOMEvent
 {
 public:
 
-  nsDOMPopupBlockedEvent(nsPresContext* aPresContext, nsPopupBlockedEvent* aEvent);
-  virtual ~nsDOMPopupBlockedEvent();
+  nsDOMPopupBlockedEvent(nsPresContext* aPresContext, nsEvent* aEvent)
+  : nsDOMEvent(aPresContext, aEvent) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -57,6 +58,11 @@ public:
 
   // nsIDOMPopupBlockedEvent Interface
   NS_DECL_NSIDOMPOPUPBLOCKEDEVENT
+protected:
+  nsWeakPtr        mRequestingWindow;
+  nsCOMPtr<nsIURI> mPopupWindowURI;
+  nsString         mPopupWindowFeatures;
+  nsString         mPopupWindowName;
 };
 
 #endif // nsDOMPopupBlockedEvent_h__

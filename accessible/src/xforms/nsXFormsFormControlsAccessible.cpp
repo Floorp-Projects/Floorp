@@ -586,13 +586,10 @@ nsXFormsSelectComboboxAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsSelectComboboxAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+PRBool
+nsXFormsSelectComboboxAccessible::GetAllowsAnonChildAccessibles()
 {
-  NS_ENSURE_ARG_POINTER(aAllowsAnonChildren);
-
-  *aAllowsAnonChildren = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 

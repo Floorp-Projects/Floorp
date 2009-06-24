@@ -13,7 +13,9 @@ var tests = [
   ["foo%ffbar", "foo\xffbar", 0],
   ["%00%1b%20%61%7f%80%ff", "%00%1b%20%61%7f\x80\xff", ONLY_NONASCII],
   ["%00%1b%20%61%7f%80%ff", "%00%1b a%7f\x80\xff", SKIP_CONTROL],
-  ["%00%1b%20%61%7f%80%ff", "%00%1b%20%61%7f\x80\xff", ONLY_NONASCII|SKIP_CONTROL]
+  ["%00%1b%20%61%7f%80%ff", "%00%1b%20%61%7f\x80\xff", ONLY_NONASCII|SKIP_CONTROL],
+  // Test that we do not drop the high-bytes of a UTF-16 string.
+  ["\u30a8\u30c9", "\xe3\x82\xa8\xe3\x83\x89", 0],
 ];
 
 function run_test() {

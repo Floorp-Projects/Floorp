@@ -43,8 +43,9 @@
 
 interface nsITreeSelection;
 interface nsITreeColumn;
+interface nsIDOMDataTransfer;
 
-[scriptable, uuid(637276b5-58c0-4eff-89ea-c7f3c5bf0b54)]
+[scriptable, uuid(C06DC4D3-63A2-4422-A0A3-5F2EDDECA8C1)]
 interface nsITreeView : nsISupports
 {
   /**
@@ -107,14 +108,14 @@ interface nsITreeView : nsISupports
    * items, such as the mailNews folder pane, always return false when
    * the orientation is not DROP_ON.
    */
-  boolean canDrop(in long index, in long orientation);
-  
+  boolean canDrop(in long index, in long orientation, in nsIDOMDataTransfer dataTransfer);
+
   /**
    * Called when the user drops something on this view. The |orientation| param
    * specifies before/on/after the given |row|.
    */
-  void drop(in long row, in long orientation); 
-  
+  void drop(in long row, in long orientation, in nsIDOMDataTransfer dataTransfer);
+
   /**
    * Methods used by the tree to draw thread lines in the tree.
    * getParentIndex is used to obtain the index of a parent row.

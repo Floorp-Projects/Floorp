@@ -24,12 +24,16 @@
 #include "os.h"
 
 int vorbis_synthesis(vorbis_block *vb,ogg_packet *op){
-  vorbis_dsp_state     *vd=vb->vd;
-  private_state        *b=vd->backend_state;
-  vorbis_info          *vi=vd->vi;
-  codec_setup_info     *ci=vi->codec_setup;
-  oggpack_buffer       *opb=&vb->opb;
+  vorbis_dsp_state     *vd= vb ? vb->vd : 0;
+  private_state        *b= vd ? vd->backend_state : 0;
+  vorbis_info          *vi= vd ? vd->vi : 0;
+  codec_setup_info     *ci= vi ? vi->codec_setup : 0;
+  oggpack_buffer       *opb=vb ? &vb->opb : 0;
   int                   type,mode,i;
+
+  if (!vd || !b || !vi || !ci || !opb) {
+    return OV_EBADPACKET;
+  }
  
   /* first things first.  Make sure decode is ready */
   _vorbis_block_ripcord(vb);

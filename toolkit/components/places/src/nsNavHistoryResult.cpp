@@ -499,7 +499,8 @@ nsNavHistoryContainerResultNode::CloseContainer(PRBool aUpdateView)
 
   // recursively close all child containers
   for (PRInt32 i = 0; i < mChildren.Count(); i ++) {
-    if (mChildren[i]->IsContainer() && mChildren[i]->GetAsContainer()->mExpanded)
+    if (mChildren[i]->IsContainer() &&
+        mChildren[i]->GetAsContainer()->mExpanded)
       mChildren[i]->GetAsContainer()->CloseContainer(PR_FALSE);
   }
 
@@ -508,17 +509,25 @@ nsNavHistoryContainerResultNode::CloseContainer(PRBool aUpdateView)
   nsresult rv;
   if (IsDynamicContainer()) {
     // notify dynamic containers that we are closing
-    nsCOMPtr<nsIDynamicContainer> svc = do_GetService(mDynamicContainerType.get(), &rv);
+    nsCOMPtr<nsIDynamicContainer> svc =
+      do_GetService(mDynamicContainerType.get(), &rv);
     if (NS_SUCCEEDED(rv))
       svc->OnContainerNodeClosed(this);
   }
 
+  nsNavHistoryResult* result = GetResult();
   if (aUpdateView) {
-    nsNavHistoryResult* result = GetResult();
     NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
     if (result->GetView())
       result->GetView()->ContainerClosed(this);
   }
+
+  // If this is the root container of a result, we can tell the result to stop
+  // observing changes, otherwise the result will stay in memory and updates
+  // itself till it is cycle collected.
+  if (result->mRootNode == this)
+    result->StopObserving();
+
   return NS_OK;
 }
 
@@ -2083,8 +2092,9 @@ nsNavHistoryQueryResultNode::CanExpand()
   if (IsContainersQuery())
     return PR_TRUE;
 
-  // if we are child of an ExcludeItems root, we should not expand
-  if (mResult && mResult->mRootNode->mOptions->ExcludeItems())
+  // If we are child of an ExcludeItems parent or root, we should not expand.
+  if ((mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+      (mParent && mParent->mOptions->ExcludeItems()))
     return PR_FALSE;
 
   nsNavHistoryQueryOptions* options = GetGeneratingOptions();
@@ -2376,12 +2386,17 @@ nsNavHistoryQueryResultNode::FillChildren()
 
   PRUint16 sortType = GetSortType();
 
-  // The default SORT_BY_NONE sorts by the bookmark index (position), 
-  // which we do not have for history queries
-  if (mOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY ||
-      sortType != nsINavHistoryQueryOptions::SORT_BY_NONE) {
-    // once we've computed all tree stats, we can sort, because containers will
-    // then have proper visit counts and dates
+  if (mResult->mNeedsToApplySortingMode) {
+    // We should repopulate container and then apply sortingMode.  To avoid
+    // sorting 2 times we simply do that here.
+    mResult->SetSortingMode(mResult->mSortingMode);
+  }
+  else if (mOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY ||
+           sortType != nsINavHistoryQueryOptions::SORT_BY_NONE) {
+    // The default SORT_BY_NONE sorts by the bookmark index (position), 
+    // which we do not have for history queries.
+    // Once we've computed all tree stats, we can sort, because containers will
+    // then have proper visit counts and dates.
     SortComparator comparator = GetSortingComparator(GetSortType());
     if (comparator) {
       nsCAutoString sortingAnnotation;
@@ -3260,13 +3275,20 @@ nsNavHistoryFolderResultNode::FillChildren()
   // nodes and the result node pointers on the containers
   FillStats();
 
-  // once we've computed all tree stats, we can sort, because containers will
-  // then have proper visit counts and dates
-  SortComparator comparator = GetSortingComparator(GetSortType());
-  if (comparator) {
-    nsCAutoString sortingAnnotation;
-    GetSortingAnnotation(sortingAnnotation);
-    RecursiveSort(sortingAnnotation.get(), comparator);
+  if (mResult->mNeedsToApplySortingMode) {
+    // We should repopulate container and then apply sortingMode.  To avoid
+    // sorting 2 times we simply do that here.
+    mResult->SetSortingMode(mResult->mSortingMode);
+  }
+  else {
+    // once we've computed all tree stats, we can sort, because containers will
+    // then have proper visit counts and dates
+    SortComparator comparator = GetSortingComparator(GetSortType());
+    if (comparator) {
+      nsCAutoString sortingAnnotation;
+      GetSortingAnnotation(sortingAnnotation);
+      RecursiveSort(sortingAnnotation.get(), comparator);
+    }
   }
 
   // if we are limiting our results remove items from the end of the
@@ -3461,6 +3483,10 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
 {
   NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
 
+  PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+                        (mParent && mParent->mOptions->ExcludeItems()) ||
+                        mOptions->ExcludeItems();
+
   // here, try to do something reasonable if the bookmark service gives us
   // a bogus index.
   if (aIndex < 0) {
@@ -3468,15 +3494,10 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     aIndex = 0;
   }
   else if (aIndex > mChildren.Count()) {
-    PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
-                          (mParent && mParent->mOptions->ExcludeItems()) ||
-                          mOptions->ExcludeItems();
-    if (excludeItems &&
-        (aItemType == nsINavBookmarksService::TYPE_BOOKMARK ||
-         aItemType == nsINavBookmarksService::TYPE_SEPARATOR))
-      return NS_OK;
-
-    NS_NOTREACHED("Invalid index for item adding: greater than count");
+    if (!excludeItems) {
+      // Something wrong happened while updating indexes.
+      NS_NOTREACHED("Invalid index for item adding: greater than count");
+    }
     aIndex = mChildren.Count();
   }
 
@@ -3499,7 +3520,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   }
 
   if (aItemType != nsINavBookmarksService::TYPE_FOLDER &&
-      !isQuery && mOptions->ExcludeItems()) {
+      !isQuery && excludeItems) {
     // don't update items when we aren't displaying them, but we still need
     // to adjust bookmark indices to account for the insertion
     ReindexRange(aIndex, PR_INT32_MAX, 1);
@@ -3704,7 +3725,10 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnItemVisited(PRInt64 aItemId,
                                             PRInt64 aVisitId, PRTime aTime)
 {
-  if (mOptions->ExcludeItems())
+  PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+                        (mParent && mParent->mOptions->ExcludeItems()) ||
+                        mOptions->ExcludeItems();
+  if (excludeItems)
     return NS_OK; // don't update items when we aren't displaying them
   if (! StartIncrementalUpdate())
     return NS_OK;
@@ -3863,7 +3887,8 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot) :
   mIsHistoryObserver(PR_FALSE),
   mIsBookmarkFolderObserver(PR_FALSE),
   mIsAllBookmarksObserver(PR_FALSE),
-  mBatchInProgress(PR_FALSE)
+  mBatchInProgress(PR_FALSE),
+  mNeedsToApplySortingMode(PR_FALSE)
 {
   mRootNode->mResult = this;
 }
@@ -3874,6 +3899,33 @@ nsNavHistoryResult::~nsNavHistoryResult()
   mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);
 }
 
+void
+nsNavHistoryResult::StopObserving()
+{
+  if (mIsBookmarkFolderObserver || mIsAllBookmarksObserver) {
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    if (bookmarks) {
+      bookmarks->RemoveObserver(this);
+      mIsBookmarkFolderObserver = PR_FALSE;
+      mIsAllBookmarksObserver = PR_FALSE;
+    }
+  }
+  if (mIsHistoryObserver) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    if (history) {
+      history->RemoveObserver(this);
+      mIsHistoryObserver = PR_FALSE;
+    }
+  }
+
+  // We stop observing when root node is closed, but when reopening it result
+  // will be out of sync.  Ensure we will call FillChildren again in such a
+  // case.
+  if (mRootNode->IsQuery())
+    mRootNode->GetAsQuery()->ClearChildren(PR_TRUE);
+  else if (mRootNode->IsFolder())
+    mRootNode->GetAsFolder()->ClearChildren(PR_TRUE);
+}
 
 // nsNavHistoryResult::Init
 //
@@ -4116,6 +4168,12 @@ nsNavHistoryResult::SetSortingMode(PRUint16 aSortingMode)
   NS_ASSERTION(mOptions, "Options should always be present for a root query");
 
   mSortingMode = aSortingMode;
+
+  if (!mRootNode->mExpanded) {
+    // Need to do this later when node will be expanded.
+    mNeedsToApplySortingMode = PR_TRUE;
+    return NS_OK;
+  }
 
   // actually do sorting
   nsNavHistoryContainerResultNode::SortComparator comparator =
@@ -4398,8 +4456,37 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
   ENUMERATE_HISTORY_OBSERVERS(OnVisit(aURI, aVisitId, aTime, aSessionId,
                                       aReferringId, aTransitionType, &added));
 
-  if (!added && mRootNode->mExpanded) {
-    // None of registered query observers has accepted our URI, this means,
+  if (!mRootNode->mExpanded)
+    return NS_OK;
+
+  // If this visit is accepted by an overlapped container, and not all
+  // overlapped containers are visible, we should still call Refresh if the
+  // visit falls into any of them.
+  PRBool todayIsMissing = PR_FALSE;
+  PRUint32 resultType = mRootNode->mOptions->ResultType();
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
+      resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY) {
+    PRUint32 childCount;
+    nsresult rv = mRootNode->GetChildCount(&childCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (childCount) {
+      nsCOMPtr<nsINavHistoryResultNode> firstChild;
+      rv = mRootNode->GetChild(0, getter_AddRefs(firstChild));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCAutoString title;
+      rv = firstChild->GetTitle(title);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsNavHistory* history = nsNavHistory::GetHistoryService();
+      NS_ENSURE_TRUE(history, 0);
+      nsCAutoString todayLabel;
+      history->GetStringFromName(
+        NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), todayLabel);
+      todayIsMissing = !todayLabel.Equals(title);
+    }
+  }
+
+  if (!added || todayIsMissing) {
+    // None of registered query observers has accepted our URI.  This means,
     // that a matching query either was not expanded or it does not exist.
     PRUint32 resultType = mRootNode->mOptions->ResultType();
     if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||

@@ -42,6 +42,7 @@
 #include "nsISupports.h"
 
 class nsIContent;
+class nsIDocument;
 class nsPresContext;
 class nsIDOMEvent;
 class nsIFrame;
@@ -52,24 +53,16 @@ class imgIContainer;
 /*
  * Event state manager interface.
  */
-// {fb7516ff-2f01-4893-84e8-e4b282813023}
+// {C224A806-A99F-4056-85C2-3B1970F94DB2}
 #define NS_IEVENTSTATEMANAGER_IID \
-{ 0x522d12ec, 0xde51, 0x4635, \
-  { 0xb0, 0x10, 0x4, 0x2a, 0x6d, 0x5, 0xa0, 0x3e } }
+{ 0xc224a806, 0xa99f, 0x4056, \
+  { 0x85, 0xc2, 0x3b, 0x19, 0x70, 0xf9, 0x4d, 0xb2 } }
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
 
 class nsIEventStateManager : public nsISupports {
 
 public:
-  enum EFocusedWithType {
-    eEventFocusedByUnknown,     // focus gained via unknown method
-    eEventFocusedByMouse,       // focus gained via mouse
-    eEventFocusedByKey,         // focus gained via key press (like tab)
-    eEventFocusedByContextMenu, // focus gained via context menu
-    eEventFocusedByApplication  // focus gained via Application (like script)
-  };
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTSTATEMANAGER_IID)
 
   NS_IMETHOD Init() = 0;
@@ -108,28 +101,8 @@ public:
    */
   virtual PRBool SetContentState(nsIContent *aContent, PRInt32 aState) = 0;
 
-  NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
-  NS_IMETHOD SetFocusedContent(nsIContent* aContent) = 0;
-
-  // Get the previously-focused content node for this document
-  NS_IMETHOD GetLastFocusedContent(nsIContent **aContent) = 0;
-
-  NS_IMETHOD GetFocusedFrame(nsIFrame **aFrame) = 0;
-
-  NS_IMETHOD ContentRemoved(nsIContent* aContent) = 0;
+  NS_IMETHOD ContentRemoved(nsIDocument* aDocument, nsIContent* aContent) = 0;
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK) = 0;
-
-  // Return whether browse with caret is enabled or not
-  virtual PRBool GetBrowseWithCaret() = 0;
-
-  // This is called after find text or when a cursor movement key is pressed
-  // If aCanFocusDoc == PR_TRUE, the current document will be focused if caret is not on a focusable element
-  NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus) = 0;
-  NS_IMETHOD MoveCaretToFocus() = 0;
-
-  // Set focus on any element that can receive focus, or on document via aFocusContent == nsnull
-  // Must supply method that focus is being set with
-  NS_IMETHOD ChangeFocusWith(nsIContent *aFocusContent, EFocusedWithType aFocusedWith) = 0;
 
   // Access Key Registration
 
@@ -162,9 +135,6 @@ public:
   NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                        PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
                        nsIWidget* aWidget, PRBool aLockCursor) = 0;
-
-  // Method for moving the focus forward/back.
-  NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 
   NS_IMETHOD NotifyDestroyPresContext(nsPresContext* aPresContext) = 0;
   

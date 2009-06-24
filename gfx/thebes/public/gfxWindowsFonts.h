@@ -114,7 +114,7 @@ public:
               PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData) : 
         gfxFontEntry(aFaceName), mFontType(aFontType),
         mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
-        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE), mUserFont(PR_FALSE),
+        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
         mCharset(0), mUnicodeRanges(0)
     {
         mUserFontData = aUserFontData;
@@ -122,6 +122,7 @@ public:
         mWeight = aWeight;
         if (IsType1())
             mForceGDI = PR_TRUE;
+        mIsUserFont = aUserFontData != nsnull;
     }
 
     FontEntry(const FontEntry& aFontEntry) :
@@ -133,7 +134,6 @@ public:
         mUnknownCMAP(aFontEntry.mUnknownCMAP),
         mUnicodeFont(aFontEntry.mUnicodeFont),
         mSymbolFont(aFontEntry.mSymbolFont),
-        mUserFont(aFontEntry.mUserFont),
         mCharset(aFontEntry.mCharset),
         mUnicodeRanges(aFontEntry.mUnicodeRanges)
     {
@@ -293,7 +293,6 @@ public:
     PRPackedBool mUnknownCMAP : 1;
     PRPackedBool mUnicodeFont : 1;
     PRPackedBool mSymbolFont  : 1;
-    PRPackedBool mUserFont    : 1;
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;

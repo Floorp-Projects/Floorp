@@ -39,7 +39,6 @@
 
 #include "nsSVGLength.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsIDOMSVGRect.h"
 #include "nsGkAtoms.h"
 #include "nsSVGValue.h"
 #include "nsTextFormatter.h"

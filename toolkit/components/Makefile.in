@@ -56,6 +56,7 @@ DIRS += \
 	apppicker \
 	filepicker \
 	console \
+	cookie \
 	exthelper \
 	viewconfig \
 	typeaheadfind \
@@ -85,12 +86,6 @@ ifdef MOZ_VIEW_SOURCE
 DIRS +=	viewsource
 endif
 
-ifndef MOZ_SUITE
-ifndef MOZ_THUNDERBIRD
-DIRS +=	search
-endif
-endif
-
 ifdef MOZ_XUL
 DIRS += \
 	autocomplete \
@@ -98,13 +93,14 @@ DIRS += \
 endif
 
 ifndef MOZ_THUNDERBIRD
-DIRS +=	\
-	cookie \
-	$(NULL)
+
+ifndef MOZ_SUITE
+DIRS +=	search
+endif
 
 ifdef MOZ_XUL
 DIRS += satchel
-endif # MOZ_XUL
+endif
 
 endif # MOZ_THUNDERBIRD
 

@@ -224,8 +224,9 @@ nsXHTMLContentSerializer::EscapeURI(nsIContent* aContent, const nsAString& aURI,
   nsXPIDLCString escapedURI;
   aEscapedURI.Truncate(0);
 
-  // Loop and escape parts by avoiding escaping reserved characters (and '%', '#' ).
-  while ((end = uri.FindCharInSet("%#;/?:@&=+$,", start)) != -1) {
+  // Loop and escape parts by avoiding escaping reserved characters
+  // (and '%', '#', as well as '[' and ']' for IPv6 address literals).
+  while ((end = uri.FindCharInSet("%#;/?:@&=+$,[]", start)) != -1) {
     part = Substring(aURI, start, (end-start));
     if (textToSubURI && !IsASCII(part)) {
       rv = textToSubURI->ConvertAndEscape(mCharset.get(), part.get(), getter_Copies(escapedURI));
@@ -491,8 +492,7 @@ nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
                                             nsAString& aStr)
 {
   nsIAtom *name = aContent->Tag();
-  if (((mIsHTMLSerializer && aContent->GetNameSpaceID() == kNameSpaceID_None) ||
-       (!mIsHTMLSerializer && aContent->GetNameSpaceID() == kNameSpaceID_XHTML)) &&
+  if (aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
       mIsWholeDocument &&
       name == nsGkAtoms::head) {
 
@@ -574,8 +574,7 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
   nsIAtom *name = aContent->Tag();
   PRInt32 namespaceID = aContent->GetNameSpaceID();
 
-  if ((mIsHTMLSerializer && namespaceID == kNameSpaceID_None) ||
-      (!mIsHTMLSerializer && namespaceID == kNameSpaceID_XHTML)) {
+  if (namespaceID == kNameSpaceID_XHTML) {
     if (name == nsGkAtoms::br && mPreLevel > 0 && 
         (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
       AppendNewLineToString(aStr);
@@ -941,8 +940,7 @@ PRBool
 nsXHTMLContentSerializer::LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName)
 {
 
-  if ((mIsHTMLSerializer && aNamespaceID != kNameSpaceID_None) ||
-      (!mIsHTMLSerializer && aNamespaceID != kNameSpaceID_XHTML)) {
+  if (aNamespaceID != kNameSpaceID_XHTML) {
     return mAddSpace;
   }
 
@@ -973,8 +971,7 @@ PRBool
 nsXHTMLContentSerializer::LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName)
 {
 
-  if ((mIsHTMLSerializer && aNamespaceID != kNameSpaceID_None) ||
-      (!mIsHTMLSerializer && aNamespaceID != kNameSpaceID_XHTML)) {
+  if (aNamespaceID != kNameSpaceID_XHTML) {
     return PR_FALSE;
   }
 
@@ -1005,8 +1002,7 @@ PRBool
 nsXHTMLContentSerializer::LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName)
 {
 
-  if ((mIsHTMLSerializer && aNamespaceID != kNameSpaceID_None) ||
-      (!mIsHTMLSerializer && aNamespaceID != kNameSpaceID_XHTML)) {
+  if (aNamespaceID != kNameSpaceID_XHTML) {
     return PR_FALSE;
   }
 
@@ -1028,8 +1024,7 @@ PRBool
 nsXHTMLContentSerializer::LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName)
 {
 
-  if ((mIsHTMLSerializer && aNamespaceID != kNameSpaceID_None) ||
-      (!mIsHTMLSerializer && aNamespaceID != kNameSpaceID_XHTML)) {
+  if (aNamespaceID != kNameSpaceID_XHTML) {
     return PR_FALSE;
   }
 
@@ -1070,8 +1065,7 @@ void
 nsXHTMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 {
 
-  if ((mIsHTMLSerializer && aNode->GetNameSpaceID() != kNameSpaceID_None) ||
-      (!mIsHTMLSerializer && aNode->GetNameSpaceID() != kNameSpaceID_XHTML)) {
+  if (aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
     return;
   }
 
@@ -1090,8 +1084,7 @@ nsXHTMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 void
 nsXHTMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
 {
-  if ((mIsHTMLSerializer && aNode->GetNameSpaceID() != kNameSpaceID_None) ||
-      (!mIsHTMLSerializer && aNode->GetNameSpaceID() != kNameSpaceID_XHTML)) {
+  if (aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
     return;
   }
 

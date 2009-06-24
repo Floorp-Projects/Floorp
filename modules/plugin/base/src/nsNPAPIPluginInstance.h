@@ -46,7 +46,6 @@
 #include "nsIPluginInstance.h"
 #include "nsIPluginInstancePeer.h"
 #include "nsIPluginTagInfo2.h"
-#include "nsIScriptablePlugin.h"
 #include "nsIPluginInstanceInternal.h"
 #include "nsPIDOMWindow.h"
 
@@ -66,14 +65,12 @@ struct nsInstanceStream
 };
 
 class nsNPAPIPluginInstance : public nsIPluginInstance,
-                              public nsIScriptablePlugin,
                               public nsIPluginInstanceInternal
 {
 public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPLUGININSTANCE
-    NS_DECL_NSISCRIPTABLEPLUGIN
 
     // nsIPluginInstanceInternal methods
 

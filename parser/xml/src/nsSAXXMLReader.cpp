@@ -89,7 +89,7 @@ nsSAXXMLReader::nsSAXXMLReader() : mIsAsyncParse(PR_FALSE)
 
 // nsIContentSink
 NS_IMETHODIMP
-nsSAXXMLReader::WillBuildModel()
+nsSAXXMLReader::WillBuildModel(nsDTDMode)
 {
   if (mContentHandler)
     return mContentHandler->StartDocument();

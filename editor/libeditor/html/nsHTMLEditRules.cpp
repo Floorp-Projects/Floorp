@@ -3488,6 +3488,8 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
       {
         res = mHTMLEditor->DeleteNode(brNode);
         if (NS_FAILED(res)) return res;
+        // we don't need to act on this node any more
+        arrayOfNodes.RemoveObject(brNode);
       }
       // make sure we can put a block here
       res = SplitAsNeeded(aBlockType, address_of(parent), &offset);

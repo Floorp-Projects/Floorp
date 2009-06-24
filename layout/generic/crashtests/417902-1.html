@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+body { width: 500px; -moz-column-count: 2; }
+body:first-letter { float: right; }
+#s { padding: 0pt 200px; }
+
+</style>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("s").appendChild(document.createElement("span"));
+}
+
+</script>
+</head>
+
+<body onload="boom();">x <span id="s"></span></body>
+
+</html>

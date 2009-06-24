@@ -51,7 +51,9 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentViewerPrint.h"
-
+#include "nsIDOMDocumentEvent.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -118,6 +120,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsJSEnvironment.h"
 #include "nsIFocusController.h"
+#include "nsFocusManager.h"
 
 #include "nsIScrollableView.h"
 #include "nsIHTMLDocument.h"
@@ -1077,12 +1080,21 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 
   // Now, fire an BeforeUnload event to the document and see if it's ok
   // to unload...
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMEvent> event;
+  docEvent->CreateEvent(NS_LITERAL_STRING("beforeunloadevent"),
+                        getter_AddRefs(event));
+  nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(event);
+  nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(beforeUnload);
+  NS_ENSURE_STATE(pEvent);
+  nsresult rv = event->InitEvent(NS_LITERAL_STRING("beforeunload"),
+                                 PR_FALSE, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // XXX Dispatching to |window|, but using |document| as the target.
-  event.target = mDocument;
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mDocument);
+  pEvent->SetTarget(target);
+  pEvent->SetTrusted(PR_TRUE);
 
   // In evil cases we might be destroyed while handling the
   // onbeforeunload event, don't let that happen. (see also bug#331040)
@@ -1094,14 +1106,16 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
     mInPermitUnload = PR_TRUE;
-    nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
+    nsEventDispatcher::DispatchDOMEvent(window, nsnull, event, mPresContext,
+                                        nsnull);
     mInPermitUnload = PR_FALSE;
   }
 
   nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
-
-  if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
-                           !event.text.IsEmpty())) {
+  nsAutoString text;
+  beforeUnload->GetReturnValue(text);
+  if (pEvent->GetInternalNSEvent()->flags & NS_EVENT_FLAG_NO_DEFAULT ||
+      !text.IsEmpty()) {
     // Ask the user if it's ok to unload the current page
 
     nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShellNode);
@@ -1123,14 +1137,14 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 
       // Limit the length of the text the page can inject into this
       // dialogue to 1024 characters.
-      PRInt32 len = PR_MIN(event.text.Length(), 1024);
+      PRInt32 len = PR_MIN(text.Length(), 1024);
 
       nsAutoString msg;
       if (len == 0) {
         msg = preMsg + NS_LITERAL_STRING("\n\n") + postMsg;
       } else {
         msg = preMsg + NS_LITERAL_STRING("\n\n") +
-              StringHead(event.text, len) +
+              StringHead(text, len) +
               NS_LITERAL_STRING("\n\n") + postMsg;
       } 
 
@@ -1177,6 +1191,13 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   }
 
   mDocument->OnPageHide(!aIsUnload, nsnull);
+
+  // inform the window so that the focus state is reset.
+  NS_ENSURE_STATE(mDocument);
+  nsPIDOMWindow *window = mDocument->GetWindow();
+  if (window)
+    window->PageHidden();
+
   if (aIsUnload) {
     // if Destroy() was called during OnPageHide(), mDocument is nsnull.
     NS_ENSURE_STATE(mDocument);
@@ -2310,16 +2331,7 @@ DocumentViewerImpl::CreateDeviceContext(nsIWidget* aWidget)
   // might have changed.
   mDeviceContext = do_CreateInstance(kDeviceContextCID);
   NS_ENSURE_TRUE(mDeviceContext, NS_ERROR_FAILURE);
-  nsNativeWidget nativeWidget = nsnull;
-  if (aWidget) {
-    // The device context should store NS_NATIVE_WINDOW of TopLevelWidget,
-    // because NS_NATIVE_WIDGET and NS_NATIVE_WINDOW of the given widget can be
-    // destroyed earlier than the device context.
-    nsIWidget* toplevelWidget = aWidget->GetTopLevelWidget();
-    NS_ASSERTION(toplevelWidget, "GetTopLevelWidget returns NULL");
-    nativeWidget = aWidget->GetNativeData(NS_NATIVE_WINDOW);
-  }
-  mDeviceContext->Init(nativeWidget);
+  mDeviceContext->Init(aWidget ? aWidget->GetTopLevelWidget() : nsnull);
   return NS_OK;
 }
 
@@ -4120,29 +4132,23 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
 static void
 ResetFocusState(nsIDocShell* aDocShell)
 {
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm)
+    return;
+
   nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
   aDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
                                    nsIDocShell::ENUMERATE_FORWARDS,
                                    getter_AddRefs(docShellEnumerator));
   
-  nsCOMPtr<nsIDocShell> currentDocShell;
   nsCOMPtr<nsISupports> currentContainer;
   PRBool hasMoreDocShells;
   while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells))
          && hasMoreDocShells) {
     docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
-    currentDocShell = do_QueryInterface(currentContainer);
-    if (!currentDocShell) {
-      break;
-    }
-    nsCOMPtr<nsPresContext> presContext;
-    currentDocShell->GetPresContext(getter_AddRefs(presContext));
-    nsIEventStateManager* esm =
-      presContext ? presContext->EventStateManager() : nsnull;
-    if (esm) {
-       esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-       esm->SetFocusedContent(nsnull);
-    }
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(currentContainer);
+    if (win)
+      fm->ClearFocus(win);
   }
 }
 

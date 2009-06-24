@@ -248,6 +248,7 @@ bin/components/aboutRights.js
 bin/components/aboutRobots.js
 bin/components/aboutCertError.js
 bin/components/nsBadCertHandler.js
+bin/components/nsFormAutoComplete.js
 
 ; Modules
 bin/modules/*

@@ -1,0 +1,32 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_callback.c b/media/liboggplay/src/liboggplay/oggplay_callback.c
+index b046618..5f4ab31 100644
+--- a/media/liboggplay/src/liboggplay/oggplay_callback.c
++++ b/media/liboggplay/src/liboggplay/oggplay_callback.c
+@@ -642,15 +642,15 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
+    */
+   for (i = 0; i < me->num_tracks; i++) {
+     if (serialno == me->decode_data[i]->serialno) {
+-
++      int ret = 0;
+       me->all_tracks_initialised = 1;
+ 
+       /*
+        * call appropriate callback
+        */
+       if (callbacks[content_type].callback != NULL) {
+-        callbacks[content_type].callback(oggz, op, serialno,
+-                                          me->decode_data[i]);
++        ret = callbacks[content_type].callback(oggz, op, serialno,
++                                               me->decode_data[i]);
+       }
+ 
+       /*
+@@ -668,7 +668,7 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
+        */
+       oggz_set_read_callback (me->oggz, -1, NULL, NULL);
+ 
+-      return 0;
++      return ret < 0 ? OGGZ_ERR_HOLE_IN_DATA : ret;
+     }
+   }
+ 

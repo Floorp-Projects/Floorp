@@ -79,7 +79,7 @@ const TCHAR *szWindowClass = _T("WINEMBED");
 // Foward declarations of functions included in this code module:
 static ATOM             MyRegisterClass(HINSTANCE hInstance);
 static LRESULT CALLBACK BrowserWndProc(HWND, UINT, WPARAM, LPARAM);
-static BOOL    CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static nsresult InitializeWindowCreator();
 static nsresult OpenWebPage(const char * url);
@@ -491,14 +491,14 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
 //
 //    The code for handling buttons and menu actions is here.
 //
-BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     // Get the browser and other pointers since they are used a lot below
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
     nsIWebBrowserChrome *chrome = nsnull ;
     if (hwndBrowser)
     {
-        chrome = (nsIWebBrowserChrome *) GetWindowLong(hwndBrowser, GWL_USERDATA);
+        chrome = (nsIWebBrowserChrome *) GetWindowLongPtr(hwndBrowser, GWLP_USERDATA);
     }
     nsCOMPtr<nsIWebBrowser> webBrowser;
     nsCOMPtr<nsIWebNavigation> webNavigation;
@@ -740,7 +740,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 //
 LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
+    nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLongPtr(hWnd, GWLP_USERDATA);
     switch (message) 
     {
     case WM_SIZE:
@@ -836,8 +836,8 @@ HWND WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 
   // Fetch the browser window handle
   HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
-  SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
-  SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
+  SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, (LONG_PTR)chrome);  // save the browser LONG_PTR.
+  SetWindowLongPtr(hwndBrowser, GWL_STYLE, GetWindowLongPtr(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
 
   // Activate the window
   PostMessage(hwndDialog, WM_ACTIVATE, WA_ACTIVE, 0);

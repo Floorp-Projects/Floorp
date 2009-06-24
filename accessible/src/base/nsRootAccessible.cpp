@@ -60,7 +60,6 @@
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
-#include "nsIFocusController.h"
 #include "nsIFrame.h"
 #include "nsIMenuFrame.h"
 #include "nsIHTMLDocument.h"
@@ -75,6 +74,7 @@
 #include "nsRootAccessible.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsFocusManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
@@ -234,16 +234,18 @@ nsRootAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsCOMPtr<nsIDOMWindow> domWin;
   GetWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
-  if (privateDOMWindow) {
-    nsIFocusController *focusController =
-      privateDOMWindow->GetRootFocusController();
-    if (focusController) {
-      PRBool isActive = PR_FALSE;
-      focusController->GetActive(&isActive);
-      if (isActive) {
+  nsCOMPtr<nsIDocShellTreeItem> dsti = do_GetInterface(domWin);
+  if (dsti) {
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    dsti->GetRootTreeItem(getter_AddRefs(root));
+    nsCOMPtr<nsIDOMWindow> rootWindow = do_GetInterface(root);
+
+    nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+    if (fm && rootWindow) {
+      nsCOMPtr<nsIDOMWindow> activeWindow;
+      fm->GetActiveWindow(getter_AddRefs(activeWindow));
+      if (activeWindow == rootWindow)
         *aExtraState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
-      }
     }
   }
 #ifdef MOZ_XUL
@@ -661,8 +663,8 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   if (eventType.EqualsLiteral("popuphiding"))
     return HandlePopupHidingEvent(aTargetNode, accessible);
 
-  nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
-  if (!privAcc)
+  nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(accessible));
+  if (!acc)
     return NS_OK;
 
 #ifdef MOZ_XUL
@@ -697,7 +699,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
       new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
                                 PR_FALSE, isEnabled);
-    privAcc->FireAccessibleEvent(accEvent);
+    acc->FireAccessibleEvent(accEvent);
 
     if (isEnabled)
       FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
@@ -715,7 +717,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
                                 nsIAccessibleStates::STATE_CHECKED,
                                 PR_FALSE, isEnabled);
 
-    return privAcc->FireAccessibleEvent(accEvent);
+    return acc->FireAccessibleEvent(accEvent);
   }
 
   nsCOMPtr<nsIAccessible> treeItemAccessible;
@@ -1126,9 +1128,8 @@ nsRootAccessible::HandlePopupShownEvent(nsIAccessible *aAccessible)
                                   PR_FALSE, PR_TRUE);
       NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-      nsCOMPtr<nsPIAccessible> pComboboxAcc(do_QueryInterface(comboboxAcc));
-
-      return pComboboxAcc->FireAccessibleEvent(event);
+      nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(comboboxAcc));
+      return acc->FireAccessibleEvent(event);
     }
   }
 
@@ -1171,9 +1172,8 @@ nsRootAccessible::HandlePopupHidingEvent(nsIDOMNode *aNode,
                                 PR_FALSE, PR_FALSE);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsPIAccessible> pComboboxAcc(do_QueryInterface(comboboxAcc));
-
-    return pComboboxAcc->FireAccessibleEvent(event);
+    nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(comboboxAcc));
+    return acc->FireAccessibleEvent(event);
   }
 
   return NS_OK;

@@ -173,6 +173,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              Invalidate( const nsIntRect & aRect, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
    NS_IMETHOD              Scroll( PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect);
+   NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
 
    // Get a HWND or a HPS.
    virtual void  *GetNativeData( PRUint32 aDataType);
@@ -226,7 +227,7 @@ protected:
    virtual PRBool OnResize( PRInt32 aX, PRInt32 aY);
    virtual PRBool OnMove( PRInt32 aX, PRInt32 aY);
    virtual PRBool OnKey( MPARAM mp1, MPARAM mp2);
-   virtual PRBool DispatchFocus( PRUint32 aEventType, PRBool isMozWindowTakingFocus);
+   virtual PRBool DispatchFocus( PRUint32 aEventType);
    virtual PRBool OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2);
    virtual PRBool OnVScroll( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnHScroll( MPARAM mp1, MPARAM mp2);

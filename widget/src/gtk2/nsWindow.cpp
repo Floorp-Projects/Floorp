@@ -381,7 +381,6 @@ nsWindow::nsWindow()
     mIsVisible           = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
     mRetryKeyboardGrab   = PR_FALSE;
-    mActivatePending     = PR_FALSE;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
@@ -510,23 +509,6 @@ nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
 }
 
 void
-nsWindow::DispatchGotFocusEvent(void)
-{
-    nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-}
-
-void
-nsWindow::DispatchLostFocusEvent(void)
-{
-    nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-}
-
-
-void
 nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 {
     nsSizeEvent event(PR_TRUE, NS_SIZE, this);
@@ -544,6 +526,9 @@ nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 void
 nsWindow::DispatchActivateEvent(void)
 {
+    if (!mIsTopLevel)
+        return;
+
 #ifdef ACCESSIBILITY
     DispatchActivateEventAccessible();
 #endif //ACCESSIBILITY
@@ -555,6 +540,9 @@ nsWindow::DispatchActivateEvent(void)
 void
 nsWindow::DispatchDeactivateEvent(void)
 {
+    if (!mIsTopLevel)
+        return;
+
     nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -748,7 +736,7 @@ nsWindow::Destroy(void)
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
     if (static_cast<nsIWidget *>(this) == rollupWidget.get()) {
         if (gRollupListener)
-            gRollupListener->Rollup(nsnull);
+            gRollupListener->Rollup(nsnull, nsnull);
         gRollupWindow = nsnull;
         gRollupListener = nsnull;
     }
@@ -1404,14 +1392,8 @@ nsWindow::SetFocus(PRBool aRaise)
         gtk_widget_grab_focus(owningWidget);
         owningWindow->mContainerBlockFocus = PR_FALSE;
 
-        DispatchGotFocusEvent();
-
-        // unset the activate flag
-        if (owningWindow->mActivatePending) {
-            owningWindow->mActivatePending = PR_FALSE;
-            DispatchActivateEvent();
-        }
-
+        gFocusWindow = this;
+        DispatchActivateEvent();
         return NS_OK;
     }
 
@@ -1421,23 +1403,19 @@ nsWindow::SetFocus(PRBool aRaise)
         return NS_OK;
     }
 
-    // If there is already a focused child window, dispatch a LOSTFOCUS
-    // event from that widget and unset its got focus flag.
-    if (gFocusWindow) {
-        nsRefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
 #ifdef USE_XIM
+    if (gFocusWindow) {
         // If the focus window and this window share the same input
         // context we don't have to change the focus of the IME
         // context
+        nsRefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
         if (IM_get_input_context(this) !=
             IM_get_input_context(gFocusWindow))
             gFocusWindow->IMELoseFocus();
-#endif
-        gFocusWindow->LoseFocus();
     }
+#endif
 
-    // Set this window to be the focused child window, update our has
-    // focus flag and dispatch a GOTFOCUS event.
+    // Set this window to be the focused child window
     gFocusWindow = this;
 
 #ifdef USE_XIM
@@ -1447,13 +1425,7 @@ nsWindow::SetFocus(PRBool aRaise)
     LOGFOCUS(("  widget now has focus - dispatching events [%p]\n",
               (void *)this));
 
-    DispatchGotFocusEvent();
-
-    // unset the activate flag
-    if (owningWindow->mActivatePending) {
-        owningWindow->mActivatePending = PR_FALSE;
-        DispatchActivateEvent();
-    }
+    DispatchActivateEvent();
 
     LOGFOCUS(("  done dispatching events in SetFocus() [%p]\n",
               (void *)this));
@@ -2067,19 +2039,6 @@ nsWindow::HasPendingInputEvent()
     haveEvent = PR_FALSE;
 #endif
     return haveEvent;
-}
-
-void
-nsWindow::LoseFocus(void)
-{
-    // make sure that we reset our key down counter so the next keypress
-    // for this widget will get the down event
-    memset(mKeyDownFlags, 0, sizeof(mKeyDownFlags));
-
-    // Dispatch a lostfocus event
-    DispatchLostFocusEvent();
-
-    LOGFOCUS(("  widget lost focus [%p]\n", (void *)this));
 }
 
 #if 0
@@ -2788,7 +2747,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     // check to see if we should rollup
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
-        containerWindow->mActivatePending = PR_FALSE;
+        gFocusWindow = this;
         DispatchActivateEvent();
     }
 
@@ -2907,9 +2866,8 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         return;
     }
 
-    if (mIsTopLevel) {
-        mActivatePending = PR_TRUE;
 #if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_ENABLE_GCONF)
+    if (mIsTopLevel) {
         // For mobile/maemo, it is desired to disable the word completion widget
         // at the bottom of the screen for some reasons: it interacts badly with
         // keyboard events sometimes and disabling it will give more screen space
@@ -2932,24 +2890,17 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
                                           PR_FALSE, nsnull);
                 g_object_unref(gConfClient);
             }
-#endif
     }
+#endif
+
     // Unset the urgency hint, if possible
     GtkWidget* top_window = nsnull;
     GetToplevelWidget(&top_window);
     if (top_window && (GTK_WIDGET_VISIBLE(top_window)))
         SetUrgencyHint(top_window, PR_FALSE);
 
-    // dispatch a got focus event
-    DispatchGotFocusEvent();
-
-    // send the activate event if it wasn't already sent via any
-    // SetFocus() calls that were the result of the GOTFOCUS event
-    // above.
-    if (mActivatePending) {
-        mActivatePending = PR_FALSE;
-        DispatchActivateEvent();
-    }
+    gFocusWindow = this;
+    DispatchActivateEvent();
 
     LOGFOCUS(("Events sent from focus in event [%p]\n", (void *)this));
 }
@@ -2968,7 +2919,7 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 #endif /* MOZ_X11 */
 
     // Figure out if the focus widget is the child of this window.  If
-    // it is, send a focus out and deactivate event for it.
+    // it is, send a deactivate event for it.
     if (!gFocusWindow)
         return;
 
@@ -3010,16 +2961,12 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     gFocusWindow->IMELoseFocus();
 #endif
 
-    gFocusWindow->LoseFocus();
-
     // We only dispatch a deactivate event if we are a toplevel
     // window, otherwise the embedding code takes care of it.
-    if (mIsTopLevel && NS_LIKELY(!gFocusWindow->mIsDestroyed))
-        gFocusWindow->DispatchDeactivateEvent();
+    if (NS_LIKELY(!gFocusWindow->mIsDestroyed))
+        DispatchDeactivateEvent();
 
     gFocusWindow = nsnull;
-
-    mActivatePending = PR_FALSE;
 
     LOGFOCUS(("Done with container focus out [%p]\n", (void *)this));
 }
@@ -3443,7 +3390,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
                             guint aTime,
                             gpointer aData)
 {
-    LOG(("nsWindow::OnDragMotionSignal\n"));
+    LOGDRAG(("nsWindow::OnDragMotionSignal\n"));
 
     if (mLastButtonReleaseTime) {
       // The drag ended before it was even setup to handle the end of the drag
@@ -3543,7 +3490,7 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
 {
     // XXX Do we want to pass this on only if the event's subwindow is null?
 
-    LOG(("nsWindow::OnDragLeaveSignal(%p)\n", (void*)this));
+    LOGDRAG(("nsWindow::OnDragLeaveSignal(%p)\n", (void*)this));
 
     sIsDraggingOutOf = PR_TRUE;
 
@@ -3574,7 +3521,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
                           gpointer *aData)
 
 {
-    LOG(("nsWindow::OnDragDropSignal\n"));
+    LOGDRAG(("nsWindow::OnDragDropSignal\n"));
 
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
@@ -3687,7 +3634,7 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
                                   guint aTime,
                                   gpointer aData)
 {
-    LOG(("nsWindow::OnDragDataReceived(%p)\n", (void*)this));
+    LOGDRAG(("nsWindow::OnDragDataReceived(%p)\n", (void*)this));
 
     // get our drag context
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
@@ -3700,7 +3647,7 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
 void
 nsWindow::OnDragLeave(void)
 {
-    LOG(("nsWindow::OnDragLeave(%p)\n", (void*)this));
+    LOGDRAG(("nsWindow::OnDragLeave(%p)\n", (void*)this));
 
     nsDragEvent event(PR_TRUE, NS_DRAGDROP_EXIT, this);
 
@@ -3733,7 +3680,7 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
 {
     // XXX Do we want to pass this on only if the event's subwindow is null?
 
-    LOG(("nsWindow::OnDragEnter(%p)\n", (void*)this));
+    LOGDRAG(("nsWindow::OnDragEnter(%p)\n", (void*)this));
 
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
 
@@ -5051,26 +4998,39 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
             // if we're dealing with menus, we probably have submenus and
             // we don't want to rollup if the clickis in a parent menu of
             // the current submenu
+            PRUint32 popupsToRollup = PR_UINT32_MAX;
             nsCOMPtr<nsIMenuRollup> menuRollup;
             menuRollup = (do_QueryInterface(gRollupListener));
             if (menuRollup) {
                 nsAutoTArray<nsIWidget*, 5> widgetChain;
-                menuRollup->GetSubmenuWidgetChain(&widgetChain);
+                PRUint32 sameTypeCount = menuRollup->GetSubmenuWidgetChain(&widgetChain);
                 for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
-                    nsIWidget* widget =  widgetChain[i];
+                    nsIWidget* widget = widgetChain[i];
                     GdkWindow* currWindow =
                         (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
                     if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-                       rollup = PR_FALSE;
-                       break;
+                      // don't roll up if the mouse event occured within a
+                      // menu of the same type. If the mouse event occured
+                      // in a menu higher than that, roll up, but pass the
+                      // number of popups to Rollup so that only those of the
+                      // same type close up.
+                      if (i < sameTypeCount) {
+                        rollup = PR_FALSE;
+                      }
+                      else {
+                        popupsToRollup = sameTypeCount;
+                      }
+                      break;
                     }
                 } // foreach parent menu widget
             } // if rollup listener knows about menus
 
             // if we've determined that we should still rollup, do it.
             if (rollup) {
-                gRollupListener->Rollup(nsnull);
-                retVal = PR_TRUE;
+                gRollupListener->Rollup(popupsToRollup, nsnull);
+                if (popupsToRollup == PR_UINT32_MAX) {
+                    retVal = PR_TRUE;
+                }
             }
         }
     } else {
@@ -5934,7 +5894,7 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
 void
 nsWindow::FireDragMotionTimer(void)
 {
-    LOG(("nsWindow::FireDragMotionTimer(%p)\n", (void*)this));
+    LOGDRAG(("nsWindow::FireDragMotionTimer(%p)\n", (void*)this));
 
     OnDragMotionEvent(mDragMotionWidget, mDragMotionContext,
                       mDragMotionX, mDragMotionY, mDragMotionTime,
@@ -5944,7 +5904,7 @@ nsWindow::FireDragMotionTimer(void)
 void
 nsWindow::FireDragLeaveTimer(void)
 {
-    LOG(("nsWindow::FireDragLeaveTimer(%p)\n", (void*)this));
+    LOGDRAG(("nsWindow::FireDragLeaveTimer(%p)\n", (void*)this));
 
     mDragLeaveTimer = nsnull;
 

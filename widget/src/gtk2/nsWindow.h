@@ -85,11 +85,13 @@
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;
 extern PRLogModuleInfo *gWidgetIMLog;
+extern PRLogModuleInfo *gWidgetDragLog;
 extern PRLogModuleInfo *gWidgetDrawLog;
 
 #define LOG(args) PR_LOG(gWidgetLog, 4, args)
 #define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args)
 #define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args)
+#define LOGDRAG(args) PR_LOG(gWidgetDragLog, 4, args)
 #define LOGDRAW(args) PR_LOG(gWidgetDrawLog, 4, args)
 
 #else
@@ -97,6 +99,7 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 #define LOG(args)
 #define LOGFOCUS(args)
 #define LOGIM(args)
+#define LOGDRAG(args)
 #define LOGDRAW(args)
 
 #endif /* MOZ_LOGGING */
@@ -117,8 +120,6 @@ public:
     // event handling code
     void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent);
 
-    void DispatchGotFocusEvent(void);
-    void DispatchLostFocusEvent(void);
     void DispatchActivateEvent(void);
     void DispatchDeactivateEvent(void);
     void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
@@ -210,8 +211,7 @@ public:
     NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
 
-    // utility methods
-    void               LoseFocus();
+    // utility method
     gint               ConvertBorderStyles(nsBorderStyle aStyle);
 
     // event callbacks
@@ -478,7 +478,6 @@ private:
                         mContainerBlockFocus : 1,
                         mIsVisible : 1,
                         mRetryPointerGrab : 1,
-                        mActivatePending : 1,
                         mRetryKeyboardGrab : 1;
     GtkWindow          *mTransientParent;
     PRInt32             mSizeState;

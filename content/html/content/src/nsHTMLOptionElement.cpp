@@ -152,7 +152,7 @@ NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
     NS_ENSURE_TRUE(doc, nsnull);
 
     nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nsnull,
-                                                   kNameSpaceID_None);
+                                                   kNameSpaceID_XHTML);
     NS_ENSURE_TRUE(nodeInfo, nsnull);
   }
 

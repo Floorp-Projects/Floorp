@@ -522,14 +522,6 @@
             this.control.focusedItem = this;
          ]]>
       </handler>
-      <handler event="focus">
-        <![CDATA[
-          if (!this.disabled) {
-            this.control.focusedItem = this;
-            this.control.focus();
-          }
-         ]]>
-      </handler>
     </handlers>
   </binding>
 </bindings>

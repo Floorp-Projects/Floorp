@@ -141,13 +141,13 @@ public:
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& aName);
   // Don't use XUL menuitems's description attribute
   NS_IMETHOD GetDescription(nsAString& aDesc) { return nsAccessibleWrap::GetDescription(aDesc); }
-  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual PRBool GetAllowsAnonChildAccessibles();
 
 protected:
   already_AddRefed<nsIAccessible> GetListAccessible();
@@ -183,10 +183,9 @@ public:
   nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULComboboxAccessible() {}
 
-  /* ----- nsIAccessible ----- */
+  // nsIAccessible
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD GetDescription(nsAString& aDescription);
-  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& aName);
@@ -197,6 +196,7 @@ public:
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual PRBool GetAllowsAnonChildAccessibles();
 };
 
 #endif

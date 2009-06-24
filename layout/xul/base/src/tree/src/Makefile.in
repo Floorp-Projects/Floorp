@@ -84,6 +84,7 @@ EXPORTS		= \
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
+		-I$(srcdir)/../../../../../../content/events/src \
 		-I$(srcdir)/../../../../base/src \
 		-I$(srcdir)/../../../../../base \
 		-I$(srcdir)/../../../../../generic \

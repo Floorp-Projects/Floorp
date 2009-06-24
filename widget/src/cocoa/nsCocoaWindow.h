@@ -103,8 +103,8 @@ typedef struct _nsCocoaWindowList {
 @interface WindowDelegate : NSObject
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
-  // Used to avoid duplication when we send NS_ACTIVATE/NS_GOTFOCUS and
-  // NS_DEACTIVATE/NS_LOSTFOCUS to Gecko for toplevel widgets.  Starts out
+  // Used to avoid duplication when we send NS_ACTIVATE and
+  // NS_DEACTIVATE to Gecko for toplevel widgets.  Starts out
   // PR_FALSE.
   PRBool mToplevelActiveState;
 }
@@ -199,17 +199,6 @@ public:
                                    nsWidgetInitData *aInitData = nsnull);
 
     NS_IMETHOD              Destroy();
-     // Utility method for implementing both Create(nsIWidget ...) and
-     // Create(nsNativeWidget...)
-
-    virtual nsresult        StandardCreate(nsIWidget *aParent,
-                                    const nsIntRect &aRect,
-                                    EVENT_CALLBACK aHandleEventFunction,
-                                    nsIDeviceContext *aContext,
-                                    nsIAppShell *aAppShell,
-                                    nsIToolkit *aToolkit,
-                                    nsWidgetInitData *aInitData,
-                                    nsNativeWidget aNativeWindow = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
     virtual nsIWidget*      GetSheetWindowParent(void);
@@ -283,7 +272,26 @@ public:
     static void UnifiedShading(void* aInfo, const float* aIn, float* aOut);
 
 protected:
-  
+
+  // Utility method for implementing both Create(nsIWidget ...) and
+  // Create(nsNativeWidget...)
+  nsresult             StandardCreate(nsIWidget *aParent,
+                                      const nsIntRect &aRect,
+                                      EVENT_CALLBACK aHandleEventFunction,
+                                      nsIDeviceContext *aContext,
+                                      nsIAppShell *aAppShell,
+                                      nsIToolkit *aToolkit,
+                                      nsWidgetInitData *aInitData,
+                                      nsNativeWidget aNativeWindow = nsnull);
+  nsresult             CreateNativeWindow(const nsIntRect &aRect,
+                                          nsBorderStyle aBorderStyle);
+  nsresult             CreatePopupContentView(const nsIntRect &aRect,
+                                              EVENT_CALLBACK aHandleEventFunction,
+                                              nsIDeviceContext *aContext,
+                                              nsIAppShell *aAppShell,
+                                              nsIToolkit *aToolkit);
+  void                 DestroyNativeWindow();
+
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
   NSWindow*            mWindow;         // our cocoa window [STRONG]
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]

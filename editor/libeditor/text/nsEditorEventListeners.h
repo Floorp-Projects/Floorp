@@ -257,7 +257,6 @@ public:
 protected:
   nsIEditor*     mEditor;		// weak reference
   nsWeakPtr mPresShell;
-  PRBool mIsFocused;
 };
 
 

@@ -34,7 +34,6 @@ function successCallback(position){
 
 /** Test for Bug  **/
 
-ensure_geolocationProvider();
 SimpleTest.waitForExplicitFinish();
 
 watchID = navigator.geolocation.getCurrentPosition(successCallback, failureCallback, null);

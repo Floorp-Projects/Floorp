@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style id="ss" type="text/css">
+
+#o {
+  height: 65px;
+}
+
+</style>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("ss").disabled = true;
+  document.documentElement.offsetHeight;
+  document.getElementById("ss").disabled = false;
+}
+
+</script>
+</head>
+<body onload="boom();">
+
+<div style="-moz-column-width: 0;">
+  <colgroup></colgroup>
+  <div>
+    <div id="o" style="float: left;"></div>
+    <div style="clear: both;">A B<div style="float: left;"></div></div>
+  </div>
+</div>
+
+</body>
+</html>

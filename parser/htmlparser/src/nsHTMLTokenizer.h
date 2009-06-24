@@ -67,11 +67,13 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSITOKENIZER
-  nsHTMLTokenizer(PRInt32 aParseMode = eDTDMode_quirks,
+  nsHTMLTokenizer(nsDTDMode aParseMode = eDTDMode_quirks,
                   eParserDocType aDocType = eHTML_Quirks,
                   eParserCommands aCommand = eViewNormal,
-                  PRUint16 aFlags = 0);
+                  PRUint32 aFlags = 0);
   virtual ~nsHTMLTokenizer();
+
+  static PRUint32 GetFlags(const nsIContentSink* aSink);
 
 protected:
 

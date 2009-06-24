@@ -192,6 +192,7 @@ protected:
         mItalic = aProxyEntry.mItalic;
         mWeight = aProxyEntry.mWeight;
         mStretch = aProxyEntry.mStretch;
+        mIsUserFont = PR_TRUE;
     }
 
     // Helper function to change a pattern so that it matches the CSS style

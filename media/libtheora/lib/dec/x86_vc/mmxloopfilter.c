@@ -38,7 +38,7 @@ static void loop_filter_v(unsigned char *_pix,int _ystride,
   _asm {
     mov       eax,  [_pix]
     mov       edx,  [_ystride]
-    mov       ebx,  [_ll]
+    mov       ecx,  [_ll]
 
     /* _pix -= ystride */
     sub       eax,   edx
@@ -104,7 +104,7 @@ static void loop_filter_v(unsigned char *_pix,int _ystride,
     /*Free up mm5.*/
     packuswb  mm4, mm5
     /*mm0=L L L L*/
-    movq      mm0, [ebx]
+    movq      mm0, [ecx]
     /*if(R_i<-2L||R_i>2L)R_i=0:*/
     movq      mm5, mm2
     pxor      mm6, mm6

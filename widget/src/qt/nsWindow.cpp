@@ -289,7 +289,7 @@ nsWindow::Destroy(void)
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
     if (static_cast<nsIWidget *>(this) == rollupWidget.get()) {
         if (gRollupListener)
-            gRollupListener->Rollup(nsnull);
+            gRollupListener->Rollup(nsnull, nsnull);
         gRollupWindow = nsnull;
         gRollupListener = nsnull;
     }
@@ -565,17 +565,6 @@ nsWindow::SetFocus(PRBool aRaise)
     if (aRaise)
         mDrawingArea->raise();
     mDrawingArea->setFocus();
-
-    // If there is already a focused child window, dispatch a LOSTFOCUS
-    // event from that widget and unset its got focus flag.
-
-    LOGFOCUS(("  widget now has focus - dispatching events [%p]\n",
-              (void *)this));
-
-    DispatchGotFocusEvent();
-
-    LOGFOCUS(("  done dispatching events in SetFocus() [%p]\n",
-              (void *)this));
 
     return NS_OK;
 }
@@ -946,25 +935,31 @@ check_for_rollup(double aMouseX, double aMouseY,
             // if we're dealing with menus, we probably have submenus and
             // we don't want to rollup if the clickis in a parent menu of
             // the current submenu
+            PRUint32 popupsToRollup = PR_UINT32_MAX;
             nsCOMPtr<nsIMenuRollup> menuRollup;
             menuRollup = (do_QueryInterface(gRollupListener));
             if (menuRollup) {
                 nsAutoTArray<nsIWidget*, 5> widgetChain;
-                menuRollup->GetSubmenuWidgetChain(&widgetChain);
+                PRUint32 sameTypeCount = menuRollup->GetSubmenuWidgetChain(&widgetChain);
                 for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
                     nsIWidget* widget =  widgetChain[i];
                     QWidget* currWindow =
                         (QWidget*) widget->GetNativeData(NS_NATIVE_WINDOW);
                     if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-                       rollup = PR_FALSE;
-                       break;
+                      if (i < sameTypeCount) {
+                        rollup = PR_FALSE;
+                      }
+                      else {
+                        popupsToRollup = sameTypeCount;
+                      }
+                      break;
                     }
                 } // foreach parent menu widget
             } // if rollup listener knows about menus
 
             // if we've determined that we should still rollup, do it.
             if (rollup) {
-                gRollupListener->Rollup(nsnull);
+                gRollupListener->Rollup(popupsToRollup, nsnull);
                 retVal = PR_TRUE;
             }
         }
@@ -1004,19 +999,6 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     SetUrgencyHint(mDrawingArea, PR_TRUE);
 
     return NS_OK;
-}
-
-void
-nsWindow::LoseFocus(void)
-{
-    // make sure that we reset our key down counter so the next keypress
-    // for this widget will get the down event
-    memset(mKeyDownFlags, 0, sizeof(mKeyDownFlags));
-
-    // Dispatch a lostfocus event
-    DispatchLostFocusEvent();
-
-    LOGFOCUS(("  widget lost focus [%p]\n", (void *)this));
 }
 
 static int gDoubleBuffering = -1;
@@ -1368,12 +1350,6 @@ nsWindow::OnFocusInEvent(QFocusEvent *aEvent)
     // Unset the urgency hint, if possible
 //    SetUrgencyHint(top_window, PR_FALSE);
 
-    // dispatch a got focus event
-    DispatchGotFocusEvent();
-
-    // send the activate event if it wasn't already sent via any
-    // SetFocus() calls that were the result of the GOTFOCUS event
-    // above.
     DispatchActivateEvent();
 
     LOGFOCUS(("Events sent from focus in event [%p]\n", (void *)this));
@@ -1385,7 +1361,6 @@ nsWindow::OnFocusOutEvent(QFocusEvent *aEvent)
 {
     LOGFOCUS(("OnFocusOutEvent [%p]\n", (void *)this));
 
-    DispatchLostFocusEvent();
     if (mDrawingArea)
         DispatchDeactivateEvent();
 
@@ -2316,22 +2291,6 @@ nsIWidget *
 nsWindow::GetParent(void)
 {
     return mParent;
-}
-
-void
-nsWindow::DispatchGotFocusEvent(void)
-{
-    nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-}
-
-void
-nsWindow::DispatchLostFocusEvent(void)
-{
-    nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
 }
 
 void

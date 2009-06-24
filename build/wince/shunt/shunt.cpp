@@ -160,7 +160,7 @@ int _unlink(const char *filename)
                       strlen(filename)+1,
                       wname,
                       MAX_PATH );
-  return DeleteFileW(wname);
+  return DeleteFileW(wname)?0:-1;
 }
 
 void abort(void)

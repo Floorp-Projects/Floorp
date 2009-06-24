@@ -85,10 +85,10 @@ public:
   virtual gfxMatrix GetCanvasTM();
   
   // nsISVGGlyphFragmentNode interface:
-  NS_IMETHOD_(PRUint32) GetNumberOfChars();
-  NS_IMETHOD_(float) GetComputedTextLength();
-  NS_IMETHOD_(float) GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars);
-  NS_IMETHOD_(PRInt32) GetCharNumAtPosition(nsIDOMSVGPoint *point);
+  virtual PRUint32 GetNumberOfChars();
+  virtual float GetComputedTextLength();
+  virtual float GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars);
+  virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point);
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
   NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);

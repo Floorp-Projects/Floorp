@@ -73,17 +73,10 @@ XPIDLSRCS 	= \
 		nsIPluginInstanceOwner.idl \
 		nsIPlugin.idl \
 		nsIHTTPHeaderListener.idl \
-		nsIFileUtilities.idl \
-		nsIEventHandler.idl \
-		nsICookieStorage.idl \
-		nsIClassicPluginFactory.idl \
 		nsIWindowlessPlugInstPeer.idl \
-		nsIScriptablePlugin.idl \
 		nsIPluginTag.idl \
 		nsIPluginTagInfo.idl \
 		nsIPluginTagInfo2.idl \
-		nsIJRILiveConnectPIPeer.idl \
-		nsIJRILiveConnectPlugin.idl \
 		nsIPluginInputStream.idl \
 		nsIPluginStreamListener.idl \
 		nsIPluginInstance.idl \
@@ -92,10 +85,6 @@ XPIDLSRCS 	= \
 		nsIPluginHost.idl \
 		nsIPluginDocument.idl \
 		$(NULL)
-
-ifeq ($(OS_ARCH),OS2)
-XPIDLSRCS += nsILegacyPluginWrapperOS2.idl
-endif
 
 # Just build headers if we don't want plugins support
 ifndef MOZ_PLUGINS

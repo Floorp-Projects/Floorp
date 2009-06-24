@@ -57,6 +57,9 @@ _TEST_FILES =	test_feed_discovery.html \
 		offlineChild2.html \
 		offlineChild2.cacheManifest \
 		offlineChild2.cacheManifest^headers^ \
+		offlineEvent.html \
+		offlineEvent.cacheManifest \
+		offlineEvent.cacheManifest^headers^ \
 		$(NULL)
 
 # The following tests are disabled because they are unreliable:
@@ -82,7 +85,9 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug462673.js \
                  browser_bug481560.js \
                  browser_bug477014.js \
+                 browser_bug495058.js \
                  browser_discovery.js \
+                 browser_tabfocus.js \
                  discovery.html \
                  moz.png \
                  test_bug462673.html \
@@ -117,6 +122,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_tabs_owner.js \
                  browser_bug491431.js \
                  browser_bug304198.js \
+                 browser_drag.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

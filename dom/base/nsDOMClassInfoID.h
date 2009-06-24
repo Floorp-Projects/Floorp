@@ -75,9 +75,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_NodeList_id,
   eDOMClassInfo_NamedNodeMap_id,
 
-  // StyleSheet classes
-  eDOMClassInfo_DocumentStyleSheetList_id,
-
   // Event classes
   eDOMClassInfo_Event_id,
   eDOMClassInfo_MutationEvent_id,
