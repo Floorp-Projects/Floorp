@@ -267,7 +267,7 @@ nsHtml5Parser::SetDocumentCharset(const nsACString& aCharset, PRInt32 aCharsetSo
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetParserFilter(nsIParserFilter* aFilter)
 {
-  NS_ASSERTION(PR_TRUE, "Attempt to set a parser filter on HTML5 parser.");
+  NS_ERROR("Attempt to set a parser filter on HTML5 parser.");
 }
 
 NS_IMETHODIMP
