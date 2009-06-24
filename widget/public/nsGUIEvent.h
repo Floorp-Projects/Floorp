@@ -90,7 +90,7 @@ class nsHashKey;
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
 
-#define NS_BEFORE_PAGE_UNLOAD_EVENT       26
+
 #define NS_UI_EVENT                       27
 #define NS_PAGETRANSITION_EVENT           29
 #ifdef MOZ_SVG
@@ -534,17 +534,6 @@ public:
   PRInt32           lineNr;
   const PRUnichar*  errorMsg;
   const PRUnichar*  fileName;
-};
-
-class nsBeforePageUnloadEvent : public nsEvent
-{
-public:
-  nsBeforePageUnloadEvent(PRBool isTrusted, PRUint32 msg)
-    : nsEvent(isTrusted, msg, NS_BEFORE_PAGE_UNLOAD_EVENT)
-  {
-  }
-
-  nsString text;
 };
 
 /**
