@@ -230,7 +230,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
 NS_IMETHODIMP_(void) 
 nsHtml5Parser::SetContentSink(nsIContentSink* aSink)
 {
-  NS_ASSERTION((aSink == static_cast<nsIContentSink*> (this)), "Attempt to set a foreign sink.");
+  NS_ASSERTION(aSink == static_cast<nsIContentSink*> (this), "Attempt to set a foreign sink.");
 }
 
 NS_IMETHODIMP_(nsIContentSink*)
@@ -254,7 +254,7 @@ nsHtml5Parser::SetCommand(const char* aCommand)
 NS_IMETHODIMP_(void) 
 nsHtml5Parser::SetCommand(eParserCommands aParserCommand)
 {
-  NS_ASSERTION((aParserCommand == eViewNormal), "Parser command was not eViewNormal.");
+  NS_ASSERTION(aParserCommand == eViewNormal, "Parser command was not eViewNormal.");
 }
 
 NS_IMETHODIMP_(void)
@@ -537,7 +537,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   mTreeBuilder->setFragmentContext(aContextLocalName, aContextNamespace, target, aQuirks);
   mFragmentMode = PR_TRUE;
   mCanInterruptParser = PR_FALSE;
-  NS_ASSERTION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
+  NS_PRECONDITION(mLifeCycle == NOT_STARTED, "Tried to start parse without initializing the parser properly.");
   mTreeBuilder->setScriptingEnabled(IsScriptEnabled(mDocument, mDocShell));
   mTokenizer->start();
   mLifeCycle = PARSING;
@@ -693,7 +693,7 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest,
                              nsresult status)
 {
   mTreeBuilder->MaybeFlush();
-  NS_ASSERTION((mRequest == aRequest), "Got Stop on wrong stream.");
+  NS_ASSERTION(mRequest == aRequest, "Got Stop on wrong stream.");
   nsresult rv = NS_OK;
   
   if (!mUnicodeDecoder) {
@@ -768,10 +768,10 @@ nsHtml5Parser::OnDataAvailable(nsIRequest* aRequest,
   NS_PRECONDITION((eOnStart == mStreamListenerState ||
                    eOnDataAvail == mStreamListenerState),
             "Error: OnStartRequest() must be called before OnDataAvailable()");
-  NS_ASSERTION((mRequest == aRequest), "Got data on wrong stream.");
+  NS_ASSERTION(mRequest == aRequest, "Got data on wrong stream.");
   PRUint32 totalRead;
   nsresult rv = aInStream->ReadSegments(ParserWriteFunc, static_cast<void*> (this), aLength, &totalRead);
-  NS_ASSERTION((totalRead == aLength), "ReadSegments read the wrong number of bytes.");
+  NS_ASSERTION(totalRead == aLength, "ReadSegments read the wrong number of bytes.");
   if (!mScriptsExecuting) {
     ParseUntilSuspend();
   }
@@ -859,12 +859,11 @@ nsHtml5Parser::WillBuildModel()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// XXX should this live in TreeBuilder::end?
 // This is called when the tree construction has ended
 NS_IMETHODIMP
 nsHtml5Parser::DidBuildModel()
 {
-  NS_ASSERTION((mLifeCycle == STREAM_ENDING), "Bad life cycle.");
+  NS_ASSERTION(mLifeCycle == STREAM_ENDING, "Bad life cycle.");
   mTokenizer->eof();
   mTokenizer->end();
   mLifeCycle = TERMINATED;
@@ -1116,7 +1115,7 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
   for (PRUint32 i = 0; i < aCount; i++) {
     switch (mBomState) {
       case BOM_SNIFFING_NOT_STARTED:
-        NS_ASSERTION((i == 0), "Bad BOM sniffing state.");
+        NS_ASSERTION(i == 0, "Bad BOM sniffing state.");
         switch (*aFromSegment) {
           case 0xEF:
             mBomState = SEEN_UTF_8_FIRST_BYTE;
@@ -1247,7 +1246,7 @@ nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
     totalByteCount += byteCount;
     aFromSegment += byteCount;
 
-    NS_ASSERTION((mLastBuffer->getEnd() <= NS_HTML5_PARSER_READ_BUFFER_SIZE), "The Unicode decoder wrote too much data.");
+    NS_ASSERTION(mLastBuffer->getEnd() <= NS_HTML5_PARSER_READ_BUFFER_SIZE, "The Unicode decoder wrote too much data.");
 
     if (NS_FAILED(convResult)) {
       if (totalByteCount < aCount) { // mimicking nsScanner even though this seems wrong
@@ -1267,9 +1266,9 @@ nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
       }
     } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
       mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
-      NS_ASSERTION(((PRUint32)totalByteCount < aCount), "The Unicode decoder has consumed too many bytes.");
+      NS_ASSERTION((PRUint32)totalByteCount < aCount, "The Unicode decoder has consumed too many bytes.");
     } else {
-      NS_ASSERTION(((PRUint32)totalByteCount == aCount), "The Unicode decoder consumed the wrong number of bytes.");
+      NS_ASSERTION((PRUint32)totalByteCount == aCount, "The Unicode decoder consumed the wrong number of bytes.");
       *aWriteCount = totalByteCount;
       return NS_OK;      
     }
