@@ -506,7 +506,10 @@ nsHtml5Parser::Terminate(void)
   // @see bug 108049
   CancelParsingEvents();
 
-  PRBool ready = ReadyToCallDidBuildModelImpl(PR_TRUE);
+#ifdef DEBUG
+  PRBool ready = 
+#endif
+  ReadyToCallDidBuildModelImpl(PR_TRUE);
   NS_ASSERTION(ready, "Should always be ready to call DidBuildModel here.");
   return DidBuildModel(); // nsIContentSink
 }
