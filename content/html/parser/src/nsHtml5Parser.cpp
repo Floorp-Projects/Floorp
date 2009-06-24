@@ -418,7 +418,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         if (buffer->hasMore()) {
           mLastWasCR = mTokenizer->tokenizeBuffer(buffer);
           if (mScriptElement) {
-            // tree builder will have flushed
+            mTreeBuilder->Flush();
             ExecuteScript();
           }
           if (mNeedsCharsetSwitch) {
@@ -1323,6 +1323,9 @@ nsHtml5Parser::ParseUntilSuspend()
     if (!mFirstBuffer->hasMore()) {
       if (mFirstBuffer == mLastBuffer) {
         switch (mLifeCycle) {
+          case TERMINATED:
+            // something like cache manisfests stopped the parse in mid-flight
+            return;
           case PARSING:
             // never release the last buffer. instead just zero its indeces for refill
             mFirstBuffer->setStart(0);
@@ -1336,7 +1339,7 @@ nsHtml5Parser::ParseUntilSuspend()
             }
             return; // no more data and not expecting more
           default:
-            NS_NOTREACHED("ParseUntilSuspended should only be called in PARSING and STREAM_ENDING life cycle states.");
+            NS_NOTREACHED("It should be impossible to reach this.");
             return;          
         }
       } else {
@@ -1370,6 +1373,7 @@ nsHtml5Parser::ParseUntilSuspend()
     if (mFirstBuffer->hasMore()) {
       mLastWasCR = mTokenizer->tokenizeBuffer(mFirstBuffer);
       if (mScriptElement) {
+        mTreeBuilder->Flush();
         ExecuteScript();
       }
       if (mNeedsCharsetSwitch) {

@@ -133,10 +133,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       }        
       return rv;
     }
-    case eTreeOpScriptEnd: {
-      aBuilder->SetScriptElement(mNode);
-      return rv;
-    }
     case eTreeOpDoneAddingChildren: {
       mNode->DoneAddingChildren(PR_FALSE);
       return rv;
