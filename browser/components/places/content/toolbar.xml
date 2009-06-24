@@ -526,7 +526,7 @@
               return;
 
             var children = popup.childNodes;
-            for (var i = 0; i < children.length; i++) {
+            for (var i = popup._startMarker + 1; i < children.length; i++) {
               if (children[i].node == aNode) {
                 this._self.removeItem(children[i]);
                 if (!popup.hasChildNodes() ||
@@ -569,14 +569,16 @@
               }
             }
           }
-          var popup = this._getPopupForContainer(aNewParent);
-          var children = popup.childNodes;
-          for (var i = 0; i < children.length; i++) {
-            var menuItem = children[i];
-            if (menuItem.node == aItem) {
-              popup.removeChild(menuItem);
-              popup.insertBefore(menuItem, children[aNewIndex]);
-              return;
+          else {
+            var popup = this._getPopupForContainer(aNewParent);
+            var children = popup.childNodes;
+            for (var i = popup._startMarker + 1; i < children.length; i++) {
+              var menuItem = children[i];
+              if (menuItem.node == aItem) {
+                popup.removeChild(menuItem);
+                popup.insertBefore(menuItem, children[aNewIndex]);
+                return;
+              }
             }
           }
         },
@@ -586,6 +588,11 @@
           var parentNode = aNode.parent;
           if (!parentNode)
             return;
+
+          if (PlacesUtils.nodeIsSeparator(aNode)) {
+            // nothing to do when a separator changes
+            return;
+          }
 
           var element;
           var onToolbar = false;
@@ -607,18 +614,13 @@
               return;
 
             var children = popup.childNodes;
-            for (var i = 0; i < children.length; i++) {
+            for (var i = popup._startMarker + 1; i < children.length; i++) {
               if (children[i].node == aNode) {
                 element = children[i];
                 break;
               }
             }
             var title = PlacesUIUtils.getBestTitle(aNode);
-          }
-
-          if (PlacesUtils.nodeIsSeparator(aNode)) {
-            // nothing to do when a separator changes
-            return;
           }
 
           var iconURI = aNode.icon;
@@ -662,8 +664,6 @@
               }
             }
           }
-          else
-            this._forwardToChildView(aParentNode, "itemReplaced", arguments);
         },
 
         containerOpened: function TV_V_containerOpened(aNode) {
