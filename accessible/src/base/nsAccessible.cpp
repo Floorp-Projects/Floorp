@@ -281,7 +281,7 @@ nsAccessible::GetName(nsAString& aName)
 
   nsCOMPtr<nsIXBLAccessible> xblAccessible(do_QueryInterface(mDOMNode));
   if (xblAccessible) {
-    nsresult rv = xblAccessible->GetAccessibleName(aName);
+    xblAccessible->GetAccessibleName(aName);
     if (!aName.IsEmpty())
       return NS_OK;
   }
