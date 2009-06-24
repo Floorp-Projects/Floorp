@@ -1389,7 +1389,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   PRUint32 length;
   nodeList->GetLength(&length);
   nsAutoString color, lastRowColor;
-  for (PRInt32 rowCount = 0; rowCount < length; rowCount ++) {
+  for (PRUint32 rowCount = 0; rowCount < length; rowCount ++) {
     nsCOMPtr<nsIDOMNode> rowNode;
     nodeList->Item(rowCount, getter_AddRefs(rowNode));
 
