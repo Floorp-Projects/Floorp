@@ -1088,37 +1088,6 @@ Assembler::JMP_far(NIns* addr)
     }
 }
 
-void
-Assembler::BL(NIns* addr)
-{
-    intptr_t offs = PC_OFFSET_FROM(addr,_nIns-1);
-
-    //nj_dprintf ("BL: 0x%x (offs: %d [%x]) @ 0x%08x\n", addr, offs, offs, (intptr_t)(_nIns-1));
-
-    // try to do this with a single S24 call
-    if (isS24(offs>>2)) {
-        underrunProtect(4);
-
-        // recompute offset in case underrunProtect had to allocate a new page.
-        offs = PC_OFFSET_FROM(addr,_nIns-1);
-        *(--_nIns) = (NIns)( COND_AL | (0xB<<24) | ((offs>>2) & 0xFFFFFF) );
-
-        asm_output("bl %p", addr);
-    } else {
-        underrunProtect(12);
-
-        // the address
-        *(--_nIns) = (NIns)((addr));
-        // ldr pc, [pc - #4] // load the address into pc, reading it from [pc-4]
-        *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
-        // add lr, pc, #4    // set lr to be past the address that we wrote
-        *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
-
-        asm_output("ldr pc, =%p", addr);
-        asm_output("add lr, pc+4");
-    }
-}
-
 // Perform a branch with link, and ARM/Thumb exchange if necessary. The actual
 // BLX instruction is only available from ARMv5 onwards, but as we don't
 // support anything older than that this function will not attempt to output
