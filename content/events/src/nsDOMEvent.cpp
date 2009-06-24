@@ -342,12 +342,6 @@ nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
   return GetTarget(aOriginalTarget);
 }
 
-NS_IMETHODIMP_(PRBool)
-nsDOMEvent::HasOriginalTarget()
-{
-  return !!mEvent->originalTarget;
-}
-
 NS_IMETHODIMP
 nsDOMEvent::SetTrusted(PRBool aTrusted)
 {
@@ -1032,36 +1026,6 @@ NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 #endif
 
   mEvent->target = aTarget;
-  return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
-{
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aCurrentTarget);
-
-    NS_ASSERTION(!win || !win->IsInnerWindow(),
-                 "Uh, inner window set as event target!");
-  }
-#endif
-
-  mEvent->currentTarget = aCurrentTarget;
-  return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
-{
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aOriginalTarget);
-
-    NS_ASSERTION(!win || !win->IsInnerWindow(),
-                 "Uh, inner window set as event target!");
-  }
-#endif
-
-  mEvent->originalTarget = aOriginalTarget;
   return NS_OK;
 }
 
