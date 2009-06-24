@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -299,6 +300,37 @@ struct variant_blob_traits<PRUint8[]>
   }
 };
 
+/**
+ * NULL type
+ */
+
+class NullVariant : public Variant_base
+{
+public:
+  NS_IMETHOD GetDataType(PRUint16 *_type)
+  {
+    NS_ENSURE_ARG_POINTER(_type);
+    *_type = nsIDataType::VTYPE_EMPTY;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetAsAUTF8String(nsACString &_str)
+  {
+    // Return a void string.
+    _str.Truncate(0);
+    _str.SetIsVoid(PR_TRUE);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetAsAString(nsAString &_str)
+  {
+    // Return a void string.
+    _str.Truncate(0);
+    _str.SetIsVoid(PR_TRUE);
+    return NS_OK;
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Template Implementation
 
@@ -361,7 +393,6 @@ typedef Variant<double> FloatVariant;
 typedef Variant<nsString> TextVariant;
 typedef Variant<nsCString> UTF8TextVariant;
 typedef Variant<PRUint8[]> BlobVariant;
-typedef Variant_base NullVariant;
 
 } // namespace storage
 } // namespace mozilla
