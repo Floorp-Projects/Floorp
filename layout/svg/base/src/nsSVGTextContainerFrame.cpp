@@ -48,7 +48,7 @@
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(nsSVGTextContainerFrame)
-  NS_QUERYFRAME_ENTRY(nsISVGTextContentMetrics)
+  NS_QUERYFRAME_ENTRY(nsSVGTextContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
 void
@@ -158,46 +158,6 @@ nsSVGTextContainerFrame::RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame)
   return rv;
 }
 
-//----------------------------------------------------------------------
-// nsISVGTextContentMetrics methods
-
-NS_IMETHODIMP
-nsSVGTextContainerFrame::GetNumberOfChars(PRInt32 *_retval)
-{
-  *_retval = GetNumberOfChars();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTextContainerFrame::GetComputedTextLength(float *_retval)
-{
-  *_retval = GetComputedTextLength();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTextContainerFrame::GetSubStringLength(PRUint32 charnum,
-                                            PRUint32 nchars,
-                                            float *_retval)
-{
-  PRUint32 charcount = GetNumberOfChars();
-  if (charcount <= charnum || nchars > charcount - charnum) {
-    *_retval = 0.0f;
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  if (nchars == 0) {
-    *_retval = 0.0f;
-    return NS_OK;
-  }
-
-  *_retval = GetSubStringLengthNoValidation(charnum, nchars);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSVGTextContainerFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
@@ -290,12 +250,79 @@ nsSVGTextContainerFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
   return fragment->GetRotationOfChar(charnum - offset, _retval);
 }
 
-NS_IMETHODIMP
-nsSVGTextContainerFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
+PRUint32
+nsSVGTextContainerFrame::GetNumberOfChars()
 {
-  *_retval = GetCharNumAtPosition(point);
+  PRUint32 nchars = 0;
+  nsISVGGlyphFragmentNode* node;
+  node = GetFirstGlyphFragmentChildNode();
 
-  return NS_OK;
+  while (node) {
+    nchars += node->GetNumberOfChars();
+    node = GetNextGlyphFragmentChildNode(node);
+  }
+
+  return nchars;
+}
+
+float
+nsSVGTextContainerFrame::GetComputedTextLength()
+{
+  float length = 0.0f;
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+
+  while (node) {
+    length += node->GetComputedTextLength();
+    node = GetNextGlyphFragmentChildNode(node);
+  }
+
+  return length;
+}
+
+float
+nsSVGTextContainerFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
+{
+  float length = 0.0f;
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
+
+  while (node) {
+    PRUint32 count = node->GetNumberOfChars();
+    if (count > charnum) {
+      PRUint32 fragmentChars = PR_MIN(nchars, count);
+      float fragmentLength = node->GetSubStringLength(charnum, fragmentChars);
+      length += fragmentLength;
+      nchars -= fragmentChars;
+      if (nchars == 0) break;
+    }
+    charnum -= PR_MIN(charnum, count);
+    node = GetNextGlyphFragmentChildNode(node);
+  }
+
+  return length;
+}
+
+PRInt32
+nsSVGTextContainerFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
+{
+  PRInt32 index = -1;
+  PRInt32 offset = 0;
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
+
+  while (node) {
+    PRUint32 count = node->GetNumberOfChars();
+    if (count > 0) {
+      PRInt32 charnum = node->GetCharNumAtPosition(point);
+      if (charnum >= 0) {
+        index = charnum + offset;
+      }
+      offset += count;
+      // Keep going, multiple characters may match 
+      // and we must return the last one
+    }
+    node = GetNextGlyphFragmentChildNode(node);
+  }
+
+  return index;
 }
 
 // -------------------------------------------------------------------------
@@ -365,82 +392,6 @@ nsSVGTextContainerFrame::SetWhitespaceHandling()
     node = next;
     whitespaceHandling &= ~TRIM_LEADING_WHITESPACE;
   }
-}
-
-PRUint32
-nsSVGTextContainerFrame::GetNumberOfChars()
-{
-  PRUint32 nchars = 0;
-  nsISVGGlyphFragmentNode* node;
-  node = GetFirstGlyphFragmentChildNode();
-
-  while (node) {
-    nchars += node->GetNumberOfChars();
-    node = GetNextGlyphFragmentChildNode(node);
-  }
-
-  return nchars;
-}
-
-float
-nsSVGTextContainerFrame::GetComputedTextLength()
-{
-  float length = 0.0f;
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-
-  while (node) {
-    length += node->GetComputedTextLength();
-    node = GetNextGlyphFragmentChildNode(node);
-  }
-
-  return length;
-}
-
-float
-nsSVGTextContainerFrame::GetSubStringLengthNoValidation(PRUint32 charnum,
-                                                        PRUint32 nchars)
-{
-  float length = 0.0f;
-  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
-
-  while (node) {
-    PRUint32 count = node->GetNumberOfChars();
-    if (count > charnum) {
-      PRUint32 fragmentChars = PR_MIN(nchars, count);
-      float fragmentLength = node->GetSubStringLength(charnum, fragmentChars);
-      length += fragmentLength;
-      nchars -= fragmentChars;
-      if (nchars == 0) break;
-    }
-    charnum -= PR_MIN(charnum, count);
-    node = GetNextGlyphFragmentChildNode(node);
-  }
-
-  return length;
-}
-
-PRInt32
-nsSVGTextContainerFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
-{
-  PRInt32 index = -1;
-  PRInt32 offset = 0;
-  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
-
-  while (node) {
-    PRUint32 count = node->GetNumberOfChars();
-    if (count > 0) {
-      PRInt32 charnum = node->GetCharNumAtPosition(point);
-      if (charnum >= 0) {
-        index = charnum + offset;
-      }
-      offset += count;
-      // Keep going, multiple characters may match 
-      // and we must return the last one
-    }
-    node = GetNextGlyphFragmentChildNode(node);
-  }
-
-  return index;
 }
 
 // -------------------------------------------------------------------------

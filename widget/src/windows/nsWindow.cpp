@@ -77,6 +77,10 @@
 #include "gfxImageSurface.h"
 #include "nsIDOMNSUIEvent.h"
 
+extern "C" {
+#include "pixman.h"
+}
+
 #ifdef DEBUG_vladimir
 #include "nsFunctionTimer.h"
 #endif
@@ -85,6 +89,10 @@
 // the #defines here; need this to figure out if we have
 // the DirectDraw surface or not.
 #include "cairo-features.h"
+
+#if defined(MOZ_SPLASHSCREEN)
+#include "nsSplashScreen.h"
+#endif
 
 #ifdef WINCE
 
@@ -116,7 +124,6 @@
 #include <zmouse.h>
 
 #endif /* WINCE */
-
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
@@ -175,6 +182,8 @@
 #endif //NS_ENABLE_TSF
 #include "nsIMM32Handler.h"
 
+#include "gfxImageSurface.h"
+
 #ifdef CAIRO_HAS_DDRAW_SURFACE
 #include "gfxDDrawSurface.h"
 
@@ -183,6 +192,11 @@ static LPDIRECTDRAW glpDD = NULL;
 static LPDIRECTDRAWSURFACE glpDDPrimary = NULL;
 static LPDIRECTDRAWCLIPPER glpDDClipper = NULL;
 static nsAutoPtr<gfxDDrawSurface> gpDDSurf;
+
+
+static LPDIRECTDRAWSURFACE glpDDSecondary = NULL;
+static DDSURFACEDESC gDDSDSecondary;
+
 
 static void DDError(const char *msg, HRESULT hr)
 {
@@ -428,6 +442,9 @@ typedef enum {
   /* Use DirectDraw on Windows CE */
   RENDER_DDRAW,
 
+  /* Use 24bpp image surfaces and DirectDraw 166bbp on Windows CE */
+  RENDER_IMAGE_DDRAW16,
+
   /* max */
   RENDER_MODE_MAX
 } WinRenderMode;
@@ -436,7 +453,7 @@ typedef enum {
  * desktop, Windows Mobile, and Windows CE.
  */
 #if defined(WINCE_WINDOWS_MOBILE)
-#define DEFAULT_RENDER_MODE   RENDER_IMAGE_STRETCH24
+#define DEFAULT_RENDER_MODE   RENDER_IMAGE_DDRAW16
 #elif defined(WINCE)
 #define DEFAULT_RENDER_MODE   RENDER_DDRAW
 #else
@@ -818,13 +835,22 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 
 //-------------------------------------------------------------------------
 //
-// Default for height modification is to do nothing
+// Add extra height if needed (on Windows CE)
 //
 //-------------------------------------------------------------------------
 
 PRInt32 nsWindow::GetHeight(PRInt32 aProposedHeight)
 {
-  return(aProposedHeight);
+  PRInt32 extra = 0;
+
+#if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
+  DWORD style = WindowStyle();
+  if ((style & WS_SYSMENU) && (style & WS_POPUP)) {
+    extra = GetSystemMetrics(SM_CYCAPTION);
+  }
+#endif
+
+  return aProposedHeight + extra;
 }
 
 //-------------------------------------------------------------------------
@@ -959,8 +985,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   aStatus = nsEventStatus_eIgnore;
 
   // skip processing of suppressed blur events
-  if ((event->message == NS_DEACTIVATE || event->message == NS_LOSTFOCUS) &&
-      BlurEventsSuppressed())
+  if (event->message == NS_DEACTIVATE && BlurEventsSuppressed())
     return NS_OK;
 
   if (nsnull != mEventCallback) {
@@ -1452,7 +1477,7 @@ NS_METHOD nsWindow::Destroy()
   // the rollup widget, rollup and turn off capture.
   if ( this == gRollupWidget ) {
     if ( gRollupListener )
-      gRollupListener->Rollup(nsnull);
+      gRollupListener->Rollup(nsnull, nsnull);
     CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
   }
 
@@ -1635,6 +1660,19 @@ PRBool nsWindow::CanTakeFocus()
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
+#if defined(MOZ_SPLASHSCREEN)
+  // we're about to show the first toplevel window,
+  // so kill off any splash screen if we had one
+  nsSplashScreen *splash = nsSplashScreen::Get();
+  if (splash && splash->IsOpen() && mWnd && bState &&
+      (mWindowType == eWindowType_toplevel ||
+       mWindowType == eWindowType_dialog ||
+       mWindowType == eWindowType_popup))
+  {
+    splash->Close();
+  }
+#endif
+
   PRBool wasVisible = mIsVisible;
   // Set the status now so that anyone asking during ShowWindow or
   // SetWindowPos would get the correct answer.
@@ -4113,7 +4151,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   PRBool result = PR_FALSE;                 // call the default nsWindow proc
   static PRBool getWheelInfo = PR_TRUE;
   *aRetValue = 0;
-  PRBool isMozWindowTakingFocus = PR_TRUE;
   nsPaletteInfo palInfo;
 
   // Uncomment this to see all windows messages
@@ -4597,6 +4634,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_ACTIVATE:
+      // The WM_ACTIVATE event is fired when a window is raised or lowered,
+      // and the loword of wParam specifies which. But we don't want to tell
+      // the focus system about this until the WM_SETFOCUS or WM_KILLFOCUS
+      // events are fired. Instead, set either the gJustGotActivate or
+      // gJustGotDeativate flags and fire the NS_ACTIVATE or NS_DEACTIVATE
+      // events once the focus events arrive.
       if (mEventCallback) {
         PRInt32 fActive = LOWORD(wParam);
 
@@ -4606,7 +4649,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #endif
 
         if (WA_INACTIVE == fActive) {
-          gJustGotDeactivate = PR_TRUE;
+          // when minimizing a window, the deactivation and focus events will
+          // be fired in the reverse order. Instead, just dispatch
+          // NS_DEACTIVATE right away.
+          if (HIWORD(wParam))
+            result = DispatchFocusToTopLevelWindow(NS_DEACTIVATE);
+          else
+            gJustGotDeactivate = PR_TRUE;
+
 #ifndef WINCE
           if (mIsTopWidgetWindow)
             mLastKeyboardLayout = gKbdLayout.GetLayout();
@@ -4668,12 +4718,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #endif
 
     case WM_SETFOCUS:
-      result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-      if (gJustGotActivate) {
-        gJustGotActivate = PR_FALSE;
-        gJustGotDeactivate = PR_FALSE;
-        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-      }
+      if (gJustGotActivate)
+        result = DispatchFocusToTopLevelWindow(NS_ACTIVATE);
 
 #ifdef ACCESSIBILITY
       if (nsWindow::gIsAccessibilityOn) {
@@ -4702,20 +4748,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         ImmSetOpenStatus(IMEContext.get(), FALSE);
       }
 #endif
-      WCHAR className[kMaxClassNameLength];
-      ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-      if (wcscmp(className, kClassNameUI) &&
-          wcscmp(className, kClassNameContent) &&
-          wcscmp(className, kClassNameContentFrame) &&
-          wcscmp(className, kClassNameDialog) &&
-          wcscmp(className, kClassNameGeneral)) {
-        isMozWindowTakingFocus = PR_FALSE;
-      }
-      if (gJustGotDeactivate) {
-        gJustGotDeactivate = PR_FALSE;
-        result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
-      }
-      result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
+      if (gJustGotDeactivate)
+        result = DispatchFocusToTopLevelWindow(NS_DEACTIVATE);
       
       break;
 
@@ -4819,30 +4853,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         InitEvent(event);
 
         result = DispatchWindowEvent(&event);
-
-#ifndef WINCE
-        if (pl.showCmd == SW_SHOWMINIMIZED) {
-          // Deactivate
-          WCHAR className[kMaxClassNameLength];
-          ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-          if (wcscmp(className, kClassNameUI) &&
-              wcscmp(className, kClassNameContent) &&
-              wcscmp(className, kClassNameContentFrame) &&
-              wcscmp(className, kClassNameDialog) &&
-              wcscmp(className, kClassNameGeneral)) {
-            isMozWindowTakingFocus = PR_FALSE;
-          }
-          gJustGotDeactivate = PR_FALSE;
-          result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
-        } else if (pl.showCmd == SW_SHOWNORMAL && !(wp->flags & SWP_NOACTIVATE)){
-          // Make sure we're active
-          result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-        }
-#else
-        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-#endif
       }
     }
     break;
@@ -4850,8 +4860,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SETTINGCHANGE:
         getWheelInfo = PR_TRUE;
 #ifdef WINCE_WINDOWS_MOBILE
-        if (wParam == SPI_SETSIPINFO)
+        if (wParam == SPI_SETSIPINFO) {
           NotifySoftKbObservers();
+	} else if (wParam == SETTINGCHANGE_RESET) {
+
+	  if (glpDDSecondary) {
+	    glpDDSecondary->Release();
+	    glpDDSecondary = NULL;
+	  }
+
+	  gfxIntSize oldSize = gSharedSurfaceSize;
+	  gSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
+	  gSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
+
+	  // if the area is different, reallocate during WM_PAINT.
+	  if (gSharedSurfaceSize.height * gSharedSurfaceSize.width !=
+	      oldSize.height * oldSize.width)
+	    gSharedSurfaceData = nsnull;
+
+	  glpDD->RestoreAllSurfaces();
+	}
 #endif
       break;
 
@@ -5915,14 +5943,18 @@ InitDDraw()
   hr = glpDDPrimary->SetClipper(glpDDClipper);
   NS_ENSURE_SUCCESS(hr, PR_FALSE);
 
-  gfxIntSize screen_size(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-  gpDDSurf = new gfxDDrawSurface(glpDD, screen_size, gfxASurface::ImageFormatRGB24);
-  if (!gpDDSurf) {
-    /*XXX*/
-    fprintf(stderr, "couldn't create ddsurf\n");
-    return PR_FALSE;
+  // we do not use the cairo ddraw surface for IMAGE_DDRAW16.  Instead, we
+  // use an 24bpp image surface, convert that to 565, then blit using ddraw.
+  if (gRenderMode != RENDER_IMAGE_DDRAW16)
+  {
+    gfxIntSize screen_size(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    gpDDSurf = new gfxDDrawSurface(glpDD, screen_size, gfxASurface::ImageFormatRGB24);
+    if (!gpDDSurf) {
+      /*XXX*/
+      fprintf(stderr, "couldn't create ddsurf\n");
+      return PR_FALSE;
+    }
   }
-
   return PR_TRUE;
 }
 
@@ -5930,6 +5962,12 @@ InitDDraw()
 
 PRBool nsWindow::OnPaint(HDC aDC)
 {
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+  if (gRenderMode == RENDER_IMAGE_DDRAW16) {
+    return OnPaintImageDDraw16();
+  }
+#endif
+
   PRBool result = PR_TRUE;
   PAINTSTRUCT ps;
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
@@ -6329,6 +6367,236 @@ DDRAW_FAILED:
   return result;
 }
 
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+// Windows Mobile Special image/direct draw painting fun
+PRBool nsWindow::OnPaintImageDDraw16()
+{
+  PRBool result = PR_TRUE;
+  PAINTSTRUCT ps;
+  gfxIntSize surfaceSize;
+  nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+  RECT renderArea;
+
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
+  nsCOMPtr<nsIRenderingContext> rc;
+  nsRefPtr<gfxImageSurface> targetSurfaceImage;
+  nsRefPtr<gfxContext> thebesContext;
+
+  mPainting = PR_TRUE;
+
+  HDC hDC = ::BeginPaint(mWnd, &ps);
+  mPaintDC = hDC;
+
+  HRGN paintRgn = ::CreateRectRgn(ps.rcPaint.left, ps.rcPaint.top, 
+                                  ps.rcPaint.right, ps.rcPaint.bottom);
+#ifdef DEBUG_vladimir
+  nsFunctionTimer ft("OnPaint [%d %d %d %d]",
+                     ps.rcPaint.left, ps.rcPaint.top, 
+                     ps.rcPaint.right - ps.rcPaint.left,
+                     ps.rcPaint.bottom - ps.rcPaint.top);
+#endif
+
+  nsCOMPtr<nsIRegion> paintRgnWin;
+  if (paintRgn) {
+    paintRgnWin = ConvertHRGNToRegion(paintRgn);
+    ::DeleteObject(paintRgn);
+  }
+
+  if (!paintRgnWin || paintRgnWin->IsEmpty() || !mEventCallback) {
+    printf("nothing to paint\n");
+    goto cleanup;
+  }
+
+  InitEvent(event);
+  
+  event.region = paintRgnWin;
+  event.rect = nsnull;
+  
+  if (!glpDD) {
+    if (!InitDDraw()) {
+      NS_WARNING("DirectDraw init failed.  Giving up.");
+      goto cleanup;
+    }
+  }  
+  
+  if (!gSharedSurfaceData) {
+    gSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
+    gSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
+    gSharedSurfaceData = (PRUint8*) malloc(gSharedSurfaceSize.width * gSharedSurfaceSize.height * 4);
+  }
+
+  if (!glpDDSecondary) {
+
+    memset(&gDDSDSecondary, 0, sizeof (gDDSDSecondary));
+    memset(&gDDSDSecondary.ddpfPixelFormat, 0, sizeof(gDDSDSecondary.ddpfPixelFormat));
+    
+    gDDSDSecondary.dwSize = sizeof (gDDSDSecondary);
+    gDDSDSecondary.ddpfPixelFormat.dwSize = sizeof(gDDSDSecondary.ddpfPixelFormat);
+    
+    gDDSDSecondary.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
+
+    gDDSDSecondary.dwHeight = gSharedSurfaceSize.height;
+    gDDSDSecondary.dwWidth  = gSharedSurfaceSize.width;
+
+    gDDSDSecondary.ddpfPixelFormat.dwFlags = DDPF_RGB;
+    gDDSDSecondary.ddpfPixelFormat.dwRGBBitCount = 16;
+    gDDSDSecondary.ddpfPixelFormat.dwRBitMask = 0xf800;
+    gDDSDSecondary.ddpfPixelFormat.dwGBitMask = 0x07e0;
+    gDDSDSecondary.ddpfPixelFormat.dwBBitMask = 0x001f;
+    
+    HRESULT hr = glpDD->CreateSurface(&gDDSDSecondary, &glpDDSecondary, 0);
+    if (FAILED(hr)) {
+      DDError("CreateSurface renderer", hr);
+      goto cleanup;
+    }
+  }
+
+  surfaceSize = gfxIntSize(ps.rcPaint.right - ps.rcPaint.left,
+                           ps.rcPaint.bottom - ps.rcPaint.top);
+
+  targetSurfaceImage = new gfxImageSurface(gSharedSurfaceData.get(),
+					   surfaceSize,
+					   surfaceSize.width * 4,
+					   gfxASurface::ImageFormatRGB24);
+
+  if (!targetSurfaceImage || targetSurfaceImage->CairoStatus()) {
+    NS_ERROR("Invalid targetSurfaceImage!");
+    goto cleanup;
+  }
+
+  targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
+
+  thebesContext = new gfxContext(targetSurfaceImage);
+  thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+  thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
+  
+  nsresult rv = mContext->CreateRenderingContextInstance (*getter_AddRefs(rc));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateRenderingContextInstance failed");
+    goto cleanup;
+  }
+  
+  rv = rc->Init(mContext, thebesContext);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("RC::Init failed");
+    goto cleanup;
+  }
+  
+#ifdef DEBUG_vladimir
+  ft.Mark("Init");
+#endif
+  event.renderingContext = rc;
+  result = DispatchWindowEvent(&event, eventStatus);
+  event.renderingContext = nsnull;
+  
+#ifdef DEBUG_vladimir
+  ft.Mark("Dispatch");
+#endif
+  
+  if (!result) {
+    printf("result is null from dispatch\n");
+    goto cleanup;
+  }
+    
+  HRESULT hr;  
+  hr = glpDDSecondary->Lock(0, &gDDSDSecondary, DDLOCK_WAITNOTBUSY | DDLOCK_DISCARD, 0);  /* should we wait here? */
+  if (FAILED(hr)) {
+    DDError("Failed to lock renderer", hr);
+    goto cleanup;
+  }
+  
+#ifdef DEBUG_vladimir
+  ft.Mark("Locked");
+#endif
+  // Convert RGB24 -> RGB565
+  pixman_image_t *srcPixmanImage = pixman_image_create_bits(PIXMAN_x8r8g8b8,
+                                                            surfaceSize.width,
+                                                            surfaceSize.height,
+                                                            (uint32_t*) gSharedSurfaceData.get(),
+                                                            surfaceSize.width * 4);
+  
+  pixman_image_t *dstPixmanImage = pixman_image_create_bits(PIXMAN_r5g6b5,
+                                                            surfaceSize.width,
+                                                            surfaceSize.height,
+                                                            (uint32_t*) gDDSDSecondary.lpSurface,
+                                                            gDDSDSecondary.dwWidth * 2);
+ 
+#ifdef DEBUG_vladimir
+  ft.Mark("created pixman images");
+#endif
+
+  pixman_image_composite(PIXMAN_OP_SRC,
+                         srcPixmanImage,
+                         NULL,
+                         dstPixmanImage,
+                         0, 0,
+                         0, 0,
+                         0, 0,
+                         surfaceSize.width,
+                         surfaceSize.height);
+
+  pixman_image_unref(dstPixmanImage);
+  pixman_image_unref(srcPixmanImage);
+
+#ifdef DEBUG_vladimir
+  ft.Mark("composite");
+#endif
+  
+  hr = glpDDSecondary->Unlock(0);
+  if (FAILED(hr)) {
+    DDError("Failed to unlock renderer", hr);
+    goto cleanup;
+  }
+
+#ifdef DEBUG_vladimir
+  ft.Mark("unlock");
+#endif
+
+  hr = glpDDClipper->SetHWnd(0, mWnd);
+  if (FAILED(hr)) {
+    DDError("SetHWnd", hr);
+    goto cleanup;
+  }
+
+#ifdef DEBUG_vladimir
+  ft.Mark("sethwnd");
+#endif
+
+  // translate the paint region to screen coordinates
+  renderArea = ps.rcPaint;
+  MapWindowPoints(mWnd, 0, (LPPOINT)&renderArea, 2);
+
+#ifdef DEBUG_vladimir
+  ft.Mark("preblt");
+#endif
+
+  // set the rect to be 0,0 based
+  ps.rcPaint.right = surfaceSize.width;
+  ps.rcPaint.bottom = surfaceSize.height;
+  ps.rcPaint.left = ps.rcPaint.top = 0;
+  
+  hr = glpDDPrimary->Blt(&renderArea,
+                         glpDDSecondary,
+                         &ps.rcPaint,
+                         DDBLT_WAITNOTBUSY, /* should we really wait here? */
+                         NULL);
+  if (FAILED(hr)) {
+    DDError("Blt", hr);
+    goto cleanup;
+  }
+
+#ifdef DEBUG_vladimir
+  ft.Mark("Blit");
+#endif
+
+cleanup:
+ 
+  ::EndPaint(mWnd, &ps);
+  mPaintDC = nsnull;
+  mPainting = PR_FALSE;
+  return result;
+}
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -6632,27 +6900,45 @@ PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aA
 // Deal with focus messages
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus)
+PRBool nsWindow::DispatchFocusToTopLevelWindow(PRUint32 aEventType)
+{
+  if (aEventType == NS_ACTIVATE)
+    gJustGotActivate = PR_FALSE;
+  gJustGotDeactivate = PR_FALSE;
+
+  // clear the flags, and retrieve the toplevel window. This way, it doesn't
+  // mattter what child widget received the focus event and it will always be
+  // fired at the toplevel window.
+  HWND toplevelWnd = GetTopLevelHWND(mWnd);
+  if (toplevelWnd) {
+    nsWindow *win = GetNSWindowPtr(toplevelWnd);
+    if (win)
+      return win->DispatchFocus(aEventType);
+  }
+
+  return PR_FALSE;
+}
+
+
+PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 {
   // call the event callback
   if (mEventCallback) {
-    nsFocusEvent event(PR_TRUE, aEventType, this);
+    nsGUIEvent event(PR_TRUE, aEventType, this);
     InitEvent(event);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
     event.refPoint.x = 0;
     event.refPoint.y = 0;
 
-    event.isMozWindowTakingFocus = isMozWindowTakingFocus;
-
     nsPluginEvent pluginEvent;
 
     switch (aEventType)//~~~
     {
-      case NS_GOTFOCUS:
+      case NS_ACTIVATE:
         pluginEvent.event = WM_SETFOCUS;
         break;
-      case NS_LOSTFOCUS:
+      case NS_DEACTIVATE:
         pluginEvent.event = WM_KILLFOCUS;
         break;
       case NS_PLUGIN_ACTIVATE:
@@ -7332,15 +7618,25 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
 
       // If we're dealing with menus, we probably have submenus and we don't
       // want to rollup if the click is in a parent menu of the current submenu.
+      PRUint32 popupsToRollup = PR_UINT32_MAX;
       if (rollup) {
         nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
         if ( menuRollup ) {
           nsAutoTArray<nsIWidget*, 5> widgetChain;
-          menuRollup->GetSubmenuWidgetChain ( &widgetChain );
+          PRUint32 sameTypeCount = menuRollup->GetSubmenuWidgetChain(&widgetChain);
           for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
             nsIWidget* widget = widgetChain[i];
             if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)widget) ) {
-              rollup = PR_FALSE;
+              // don't roll up if the mouse event occured within a menu of the
+              // same type. If the mouse event occured in a menu higher than
+              // that, roll up, but pass the number of popups to Rollup so
+              // that only those of the same type close up.
+              if (i < sameTypeCount) {
+                rollup = PR_FALSE;
+              }
+              else {
+                popupsToRollup = sameTypeCount;
+              }
               break;
             }
           } // foreach parent menu widget
@@ -7348,7 +7644,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
       }
 
 #ifndef WINCE
-      if (inMsg == WM_MOUSEACTIVATE) {
+      if (inMsg == WM_MOUSEACTIVATE && popupsToRollup == PR_UINT32_MAX) {
         // Prevent the click inside the popup from causing a change in window
         // activation. Since the popup is shown non-activated, we need to eat
         // any requests to activate the window while it is displayed. Windows
@@ -7381,7 +7677,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         // nsIRollupListener::Rollup.
         PRBool consumeRollupEvent = gRollupConsumeRollupEvent;
         // only need to deal with the last rollup for left mouse down events.
-        gRollupListener->Rollup(inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
+        gRollupListener->Rollup(popupsToRollup, inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
 
         // Tell hook to stop processing messages
         gProcessHook = PR_FALSE;
@@ -7396,6 +7692,15 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
           *outResult = TRUE;
           return TRUE;
         }
+#ifndef WINCE
+        // if we are only rolling up some popups, don't activate and don't let
+        // the event go through. This prevents clicks menus higher in the
+        // chain from opening when a context menu is open
+        if (popupsToRollup != PR_UINT32_MAX && inMsg == WM_MOUSEACTIVATE) {
+          *outResult = MA_NOACTIVATEANDEAT;
+          return TRUE;
+        }
+#endif
       }
     } // if event that might trigger a popup to rollup
   } // if rollup listeners registered

@@ -177,21 +177,18 @@ void nsHTMLImageAccessible::CacheChildren()
   PRInt32 childCount = 0;
   
   nsCOMPtr<nsIAccessible> areaAccessible;
-  nsCOMPtr<nsPIAccessible> privatePrevAccessible;
+  nsRefPtr<nsAccessible> prevAcc;
   while (childCount < (PRInt32)numMapAreas && 
          (areaAccessible = GetAreaAccessible(mapAreas, childCount)) != nsnull) {
-    if (privatePrevAccessible) {
-      privatePrevAccessible->SetNextSibling(areaAccessible);
-    }
-    else {
+    if (prevAcc)
+      prevAcc->SetNextSibling(areaAccessible);
+    else
       SetFirstChild(areaAccessible);
-    }
 
     ++ childCount;
 
-    privatePrevAccessible = do_QueryInterface(areaAccessible);
-    NS_ASSERTION(privatePrevAccessible, "nsIAccessible impl's should always support nsPIAccessible as well");
-    privatePrevAccessible->SetParent(this);
+    prevAcc = nsAccUtils::QueryAccessible(areaAccessible);
+    prevAcc->SetParent(this);
   }
   mAccChildCount = childCount;
 }

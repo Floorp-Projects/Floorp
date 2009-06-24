@@ -53,7 +53,6 @@ class nsIDocument;
 class nsPresContext;
 class nsIContent;
 class nsStyleCoord;
-class nsIDOMSVGRect;
 class nsFrameList;
 class nsIFrame;
 struct nsStyleSVGPaint;
@@ -73,8 +72,6 @@ class gfxContext;
 class gfxASurface;
 class gfxPattern;
 class gfxImageSurface;
-struct gfxRect;
-struct gfxMatrix;
 struct gfxSize;
 struct gfxIntSize;
 struct nsStyleFont;
@@ -275,6 +272,8 @@ public:
   /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
+   * Note that the caller is responsible for making sure that any cached
+   * covered regions in the frame tree rooted at aFrame are up to date.
    * @param aRect the area in app units that needs to be invalidated in aFrame
    * @return the rect in app units that should be invalidated, taking
    * filters into account. Will return aRect when no filters are present.
@@ -308,7 +307,7 @@ public:
      Input: rect - bounding box
             length - length to be converted
   */
-  static float ObjectSpace(nsIDOMSVGRect *aRect, const nsSVGLength2 *aLength);
+  static float ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength);
 
   /* Computes the input length in terms of user space coordinates.
      Input: content - object to be used for determining user space
@@ -321,11 +320,6 @@ public:
             length - length to be converted
   */
   static float UserSpace(nsIFrame *aFrame, const nsSVGLength2 *aLength);
-
-  /* Tranforms point by the matrix.  In/out: x,y */
-  static void
-  TransformPoint(nsIDOMSVGMatrix *matrix,
-                 float *x, float *y);
 
   /* Returns the angle halfway between the two specified angles */
   static float
@@ -430,6 +424,17 @@ public:
               float aX, float aY);
 
 
+  /**
+   * Get the clip rect for the given frame, taking into account the CSS 'clip'
+   * property. See:
+   * http://www.w3.org/TR/SVG11/masking.html#OverflowAndClipProperties
+   * The arguments for aX, aY, aWidth and aHeight should be the dimensions of
+   * the viewport established by aFrame.
+   */
+  static gfxRect
+  GetClipRectForFrame(nsIFrame *aFrame,
+                      float aX, float aY, float aWidth, float aHeight);
+
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
                                      nsIDOMSVGMatrix *aCTM, float aOpacity);
@@ -439,8 +444,8 @@ public:
                                      nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity);
 
   static void SetClipRect(gfxContext *aContext,
-                          nsIDOMSVGMatrix *aCTM, float aX, float aY,
-                          float aWidth, float aHeight);
+                          const gfxMatrix &aCTM,
+                          const gfxRect &aRect);
 
   /**
    * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and
@@ -466,7 +471,14 @@ public:
   static float
   MaxExpansion(nsIDOMSVGMatrix *aMatrix);
 
-  /* Take a CTM and adjust for object bounding box coordinates, if needed */
+  /**
+   * Take the CTM to userspace for an element, and adjust it to a CTM to its
+   * object bounding box space if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX.
+   * (I.e. so that [0,0] is at the top left of its bbox, and [1,1] is at the
+   * bottom right of its bbox).
+   *
+   * If the bbox is empty, this will return a singular matrix.
+   */
   static already_AddRefed<nsIDOMSVGMatrix>
   AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
                        nsSVGEnum *aUnits,
@@ -476,8 +488,7 @@ public:
    * Get bounding-box for aFrame. Matrix propagation is disabled so the
    * bounding box is computed in terms of aFrame's own user space.
    */
-  static already_AddRefed<nsIDOMSVGRect>
-  GetBBox(nsIFrame *aFrame);
+  static gfxRect GetBBox(nsIFrame *aFrame);
   /**
    * Compute a rectangle in userSpaceOnUse or objectBoundingBoxUnits.
    * @param aXYWH pointer to 4 consecutive nsSVGLength2 objects containing
@@ -488,8 +499,8 @@ public:
    * may be null if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
    */
   static gfxRect
-  GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH, nsIDOMSVGRect *aBBox,
-                  nsIFrame *aFrame);
+  GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
+                  const gfxRect &aBBox, nsIFrame *aFrame);
 
   /**
    * Find the first frame, starting with aStartFrame and going up its

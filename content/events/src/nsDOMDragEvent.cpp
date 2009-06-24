@@ -118,6 +118,10 @@ nsDOMDragEvent::InitDragEventNS(const nsAString & aNamespaceURIArg,
 NS_IMETHODIMP
 nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
 {
+  // the dataTransfer field of the event caches the DataTransfer associated
+  // with the drag. It is initialized when an attempt is made to retrieve it
+  // rather that when the event is created to avoid duplicating the data when
+  // no listener ever uses it.
   *aDataTransfer = nsnull;
 
   if (!mEvent || mEvent->eventStructType != NS_DRAG_EVENT) {
@@ -125,123 +129,15 @@ nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
     return NS_OK;
   }
 
-  // the dataTransfer field of the event caches the DataTransfer associated
-  // with the drag. It is initialized when an attempt is made to retrieve it
-  // rather that when the event is created to avoid duplicating the data when
-  // no listener ever uses it.
   nsDragEvent* dragEvent = static_cast<nsDragEvent*>(mEvent);
-  if (dragEvent->dataTransfer) {
-    CallQueryInterface(dragEvent->dataTransfer, aDataTransfer);
-    return NS_OK;
-  }
-
-  // for synthetic events, just use the supplied data transfer object
-  if (mEventIsInternal) {
-    NS_IF_ADDREF(*aDataTransfer = dragEvent->dataTransfer);
-    return NS_OK;
-  }
-
-  // For draggesture and dragstart events, the data transfer object is
-  // created before the event fires, so it should already be set. For other
-  // drag events, get the object from the drag session.
-  NS_ASSERTION(mEvent->message != NS_DRAGDROP_GESTURE &&
-               mEvent->message != NS_DRAGDROP_START,
-               "draggesture event created without a dataTransfer");
-
-  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
-  NS_ENSURE_TRUE(dragSession, NS_OK); // no drag in progress
-
-  nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
-  dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
-  if (!initialDataTransfer) {
-    // A dataTransfer won't exist when a drag was started by some other
-    // means, for instance calling the drag service directly, or a drag
-    // from another application. In either case, a new dataTransfer should
-    // be created that reflects the data. Pass true to the constructor for
-    // the aIsExternal argument, so that only system access is allowed.
-    PRUint32 action = 0;
-    dragSession->GetDragAction(&action);
-    initialDataTransfer =
-      new nsDOMDataTransfer(mEvent->message, action);
-    NS_ENSURE_TRUE(initialDataTransfer, NS_ERROR_OUT_OF_MEMORY);
-
-    // now set it in the drag session so we don't need to create it again
-    dragSession->SetDataTransfer(initialDataTransfer);
-  }
-
-  // each event should use a clone of the original dataTransfer.
-  nsCOMPtr<nsIDOMNSDataTransfer> initialDataTransferNS =
-    do_QueryInterface(initialDataTransfer);
-  NS_ENSURE_TRUE(initialDataTransferNS, NS_ERROR_FAILURE);
-  initialDataTransferNS->Clone(mEvent->message, dragEvent->userCancelled,
-                               getter_AddRefs(dragEvent->dataTransfer));
-  NS_ENSURE_TRUE(dragEvent->dataTransfer, NS_ERROR_OUT_OF_MEMORY);
-
-  // for the dragenter and dragover events, initialize the drop effect
-  // from the drop action, which platform specific widget code sets before
-  // the event is fired based on the keyboard state.
-  if (mEvent->message == NS_DRAGDROP_ENTER ||
-      mEvent->message == NS_DRAGDROP_OVER) {
-    nsCOMPtr<nsIDOMNSDataTransfer> newDataTransfer =
-      do_QueryInterface(dragEvent->dataTransfer);
-    NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_FAILURE);
-
-    PRUint32 action, effectAllowed;
-    dragSession->GetDragAction(&action);
-    newDataTransfer->GetEffectAllowedInt(&effectAllowed);
-    newDataTransfer->SetDropEffectInt(FilterDropEffect(action, effectAllowed));
-  }
-  else if (mEvent->message == NS_DRAGDROP_DROP ||
-           mEvent->message == NS_DRAGDROP_DRAGDROP ||
-           mEvent->message == NS_DRAGDROP_END) {
-    // For the drop and dragend events, set the drop effect based on the
-    // last value that the dropEffect had. This will have been set in
-    // nsEventStateManager::PostHandleEvent for the last dragenter or
-    // dragover event.
-    nsCOMPtr<nsIDOMNSDataTransfer> newDataTransfer =
-      do_QueryInterface(dragEvent->dataTransfer);
-    NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_FAILURE);
-
-    PRUint32 dropEffect;
-    initialDataTransferNS->GetDropEffectInt(&dropEffect);
-    newDataTransfer->SetDropEffectInt(dropEffect);
+  // for synthetic events, just use the supplied data transfer object even if null
+  if (!mEventIsInternal) {
+    nsresult rv = nsContentUtils::SetDataTransferInEvent(dragEvent);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   NS_IF_ADDREF(*aDataTransfer = dragEvent->dataTransfer);
   return NS_OK;
-}
-
-// static
-PRUint32
-nsDOMDragEvent::FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed)
-{
-  // It is possible for the drag action to include more than one action, but
-  // the widget code which sets the action from the keyboard state should only
-  // be including one. If multiple actions were set, we just consider them in
-  //  the following order:
-  //   copy, link, move
-  if (aAction & nsIDragService::DRAGDROP_ACTION_COPY)
-    aAction = nsIDragService::DRAGDROP_ACTION_COPY;
-  else if (aAction & nsIDragService::DRAGDROP_ACTION_LINK)
-    aAction = nsIDragService::DRAGDROP_ACTION_LINK;
-  else if (aAction & nsIDragService::DRAGDROP_ACTION_MOVE)
-    aAction = nsIDragService::DRAGDROP_ACTION_MOVE;
-
-  // Filter the action based on the effectAllowed. If the effectAllowed
-  // doesn't include the action, then that action cannot be done, so adjust
-  // the action to something that is allowed. For a copy, adjust to move or
-  // link. For a move, adjust to copy or link. For a link, adjust to move or
-  // link. Otherwise, use none.
-  if (aAction & aEffectAllowed ||
-      aEffectAllowed == nsIDragService::DRAGDROP_ACTION_UNINITIALIZED)
-    return aAction;
-  if (aEffectAllowed & nsIDragService::DRAGDROP_ACTION_MOVE)
-    return nsIDragService::DRAGDROP_ACTION_MOVE;
-  if (aEffectAllowed & nsIDragService::DRAGDROP_ACTION_COPY)
-    return nsIDragService::DRAGDROP_ACTION_COPY;
-  if (aEffectAllowed & nsIDragService::DRAGDROP_ACTION_LINK)
-    return nsIDragService::DRAGDROP_ACTION_LINK;
-  return nsIDragService::DRAGDROP_ACTION_NONE;
 }
 
 nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,

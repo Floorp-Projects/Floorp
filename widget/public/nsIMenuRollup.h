@@ -43,20 +43,29 @@
 #include "nsTArray.h"
 
 class nsIWidget;
+class nsIContent;
 
 #define NS_IMENUROLLUP_IID \
-  {0x2b65d177, 0xc3e4, 0x4564, \
-    { 0x8d, 0xed, 0x86, 0xd2, 0xfa, 0x2f, 0x65, 0x9a }}
+  {0x61c9d01f, 0x8a4c, 0x4bb0, \
+    { 0xa9, 0x90, 0xeb, 0xf6, 0x65, 0x4c, 0xda, 0x61 }}
 
 class nsIMenuRollup : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUROLLUP_IID)
 
-  /* void GetSubmenuWidgetChain (nsTArray<nsIWidget*>*); */
-  virtual void GetSubmenuWidgetChain(nsTArray<nsIWidget*> *_retval) = 0;
+  /*
+   * Retrieve the widgets for open menus are store them in the array
+   * aWidgetChain. The number of menus of the same type should be returned,
+   * for example, if a context menu is open, return only the number of menus
+   * that are part of the context menu chain. This allows closing up only
+   * those menus in different situations.
+   */
+  virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) = 0;
 
-  /* void AdjustPopupsOnWindowChange (); */
+  /**
+   * Adjust the position of open panels when a window is moved or resized.
+   */ 
   virtual void AdjustPopupsOnWindowChange(void) = 0;
 
 };

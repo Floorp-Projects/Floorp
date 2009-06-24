@@ -53,6 +53,12 @@ let testServices = [
   ["browser/nav-history-service;1", "nsINavHistoryService",
     ["queryStringToQueries", "removePagesByTimeframe", "removePagesFromHost",
      "removeVisitsByTimeframe"]],
+  ["browser/nav-bookmarks-service;1","nsINavBookmarksService",
+    ["createFolder", "getItemIdForGUID"]],
+  ["browser/livemark-service;2","nsILivemarkService", []],
+  ["browser/annotation-service;1","nsIAnnotationService", []],
+  ["browser/favicon-service;1","nsIFaviconService", []],
+  ["browser/tagging-service;1","nsITaggingService", []],
 ];
 _(testServices.join("\n"));
 
@@ -84,7 +90,7 @@ function run_test()
     _("Generating an array of functions to test service:", s);
     [i for (i in s) if (okName(i))].sort().forEach(function(n) {
       _();
-      _("Testing history function with null args:", n);
+      _("Testing " + iface + " function with null args:", n);
 
       let func = s[n];
       let num = func.length;
@@ -115,6 +121,12 @@ function run_test()
           let pos = Number(ex.message.match(/object arg (\d+)/)[1]);
           _("Function call expects an out object at", pos);
           args[pos] = {};
+        }
+        catch(ex if ex.name.match(/NS_ERROR_NOT_IMPLEMENTED/)) {
+          _("Method not implemented exception:", ex.name);
+
+          _("Moving on to the next test..");
+          tryAgain = false;
         }
         catch(ex) {
           _("Caught some unexpected exception.. dumping");

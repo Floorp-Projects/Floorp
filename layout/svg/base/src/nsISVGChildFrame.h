@@ -48,7 +48,6 @@
 
 class gfxContext;
 class nsPresContext;
-class nsIDOMSVGRect;
 class nsIDOMSVGMatrix;
 class nsSVGRenderState;
 

@@ -86,7 +86,6 @@ FORCE_STATIC_LIB = 1
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
-	-I$(srcdir) \
 	-I$(srcdir)/../../document/src \
 	-I$(srcdir)/../../templates/src \
 	-I$(srcdir)/../../../xml/content/src \

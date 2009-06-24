@@ -102,47 +102,25 @@ public:
      * @param   anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
-                             nsIParser* aParser,
-                             nsIContentSink* aSink) = 0;
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode) = 0;
 
     /**
-     * Called by the parser after the parsing process has concluded
-     * @update  gess5/18/98
-     * @param   anErrorCode - contains error code resulting from parse process
-     * @return
+     * Called (possibly repeatedly) by the parser to parse tokens and construct
+     * the document model via the sink provided to WillBuildModel.
+     *
+     * @param   aTokenizer - tokenizer providing the token stream to be parsed
+     * @param   aCanInterrupt - informs the DTD whether the parser can handle
+     *                          interruptions of the model building process
+     * @param   aCountLines - informs the DTD whether to count newlines
+     *                        (not wanted, e.g., when handling document.write)
+     * @param   aCharsetPtr - address of an nsCString containing the charset
+     *                        that the DTD should use (pointer in case the DTD
+     *                        opts to ignore this parameter)
      */
-    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer,
-                          nsITokenObserver* anObserver,
-                          nsIContentSink* aSink) = 0;
-
-    /**
-     * Called during model building phase of parse process. Each token
-     * created during the parse phase is stored in a deque (in the
-     * parser) and are passed to this method so that the DTD can
-     * process the token. Ultimately, the DTD will transform given
-     * token into calls onto a contentsink.
-     * @update  gess 3/25/98
-     * @param   aToken -- token object to be put into content model
-     * @return error code (usually 0)
-     */
-    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser) = 0;
-
-    /**
-     * If the parse process gets interrupted midway, this method is
-     * called by the parser prior to resuming the process.
-     * @update  gess5/18/98
-     * @return ignored
-     */
-    NS_IMETHOD WillResumeParse(nsIContentSink* aSink) = 0;
-
-    /**
-     * If the parse process gets interrupted, this method is called by
-     * the parser to notify the DTD that interruption will occur.
-     * @update  gess5/18/98
-     * @return ignored
-     */
-    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink) = 0;
+    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer,
+                          PRBool aCanInterrupt,
+                          PRBool aCountLines,
+                          const nsCString* aCharsetPtr) = 0;
 
     /**
      * This method is called to determine whether or not a tag of one
@@ -178,19 +156,23 @@ public:
     NS_IMETHOD_(void) Terminate() = 0;
 
     NS_IMETHOD_(PRInt32) GetType() = 0;
+
+    /**
+     * Call this method after calling WillBuildModel to determine what mode the
+     * DTD actually is using, as it may differ from aParserContext.mDTDMode.
+     */
+    NS_IMETHOD_(nsDTDMode) GetMode() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
 #define NS_DECL_NSIDTD \
     NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink);\
-    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink);\
-    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);\
-    NS_IMETHOD WillResumeParse(nsIContentSink* aSink = 0);\
-    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0);\
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode);\
+    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, PRBool aCanInterrupt, PRBool aCountLines, const nsCString* aCharsetPtr);\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
     NS_IMETHOD_(void)  Terminate();\
-    NS_IMETHOD_(PRInt32) GetType();
+    NS_IMETHOD_(PRInt32) GetType();\
+    NS_IMETHOD_(nsDTDMode) GetMode() const;
 #endif /* nsIDTD_h___ */

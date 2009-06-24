@@ -75,7 +75,7 @@ function SuggestAutoCompleteResult(searchString,
   this._errorDescription = errorDescription;
   this._results = results;
   this._comments = comments;
-  this._formHistoryResult = formHistoryResult;
+  this._formHistResult = formHistoryResult;
 }
 SuggestAutoCompleteResult.prototype = {
   /**
@@ -120,7 +120,7 @@ SuggestAutoCompleteResult.prototype = {
    * A reference to the form history nsIAutocompleteResult that we're wrapping.
    * We use this to forward removeEntryAt calls as needed.
    */
-  _formHistoryResult: null,
+  _formHistResult: null,
 
   /**
    * @return the user's query string
@@ -211,10 +211,10 @@ SuggestAutoCompleteResult.prototype = {
     // Forward the removeValueAt call to the underlying result if we have one
     // Note: this assumes that the form history results were added to the top
     // of our arrays.
-    if (removeFromDatabase && this._formHistoryResult &&
-        index < this._formHistoryResult.matchCount) {
+    if (removeFromDatabase && this._formHistResult &&
+        index < this._formHistResult.matchCount) {
       // Delete the history result from the DB
-      this._formHistoryResult.removeValueAt(index, true);
+      this._formHistResult.removeValueAt(index, true);
     }
     this._results.splice(index, 1);
     this._comments.splice(index, 1);
@@ -418,11 +418,11 @@ SuggestAutoComplete.prototype = {
    * This sends an autocompletion request to the form history service,
    * which will call onSearchResults with the results of the query.
    */
-  _startHistorySearch: function SAC_SHSearch(searchString, searchParam, previousResult) {
+  _startHistorySearch: function SAC_SHSearch(searchString, searchParam) {
     var formHistory =
       Cc["@mozilla.org/autocomplete/search;1?name=form-history"].
       createInstance(Ci.nsIAutoCompleteSearch);
-    formHistory.startSearch(searchString, searchParam, previousResult, this);
+    formHistory.startSearch(searchString, searchParam, this._formHistoryResult, this);
   },
 
   /**
@@ -609,6 +609,10 @@ SuggestAutoComplete.prototype = {
    *                        we notify when results are ready.
    */
   startSearch: function(searchString, searchParam, previousResult, listener) {
+    // Don't reuse a previous form history result when it no longer applies.
+    if (!previousResult)
+      this._formHistoryResult = null;
+
     var searchService = Cc["@mozilla.org/browser/search-service;1"].
                         getService(Ci.nsIBrowserSearchService);
 
@@ -634,7 +638,7 @@ SuggestAutoComplete.prototype = {
       // has no suggest functionality, or we're in backoff mode; so just use
       // local history.
       this._sentSuggestRequest = false;
-      this._startHistorySearch(searchString, searchParam, previousResult);
+      this._startHistorySearch(searchString, searchParam);
       return;
     }
 
@@ -657,7 +661,7 @@ SuggestAutoComplete.prototype = {
 
     if (this._includeFormHistory) {
       this._sentSuggestRequest = true;
-      this._startHistorySearch(searchString, searchParam, previousResult);
+      this._startHistorySearch(searchString, searchParam);
     }
   },
 

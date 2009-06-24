@@ -1,0 +1,15 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html class="reftest-print">
+<title>visibility collapse + columns + pagination</title>
+<style>
+table {border-bottom:green 5px solid}
+col {width:100px}
+</style>
+<body>
+<table cellspacing="0">
+<col><col style="visibility:collapse"><col>
+<tr style="page-break-after:always"><td>cell1</td><td>Dont'show</td><td>cell2</td></tr>
+<tr><td>cell3</td><td>Dont'show</td><td>cell4</td></tr>
+</table>
+</body>
+</html>

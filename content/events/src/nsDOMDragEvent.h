@@ -57,9 +57,6 @@ public:
   NS_DECL_NSIDOMDRAGEVENT
   
   NS_FORWARD_TO_NSDOMMOUSEEVENT
-
-  // filters the action to fit within the effects allowed and returns it.
-  static PRUint32 FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed);
 };
 
 nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,

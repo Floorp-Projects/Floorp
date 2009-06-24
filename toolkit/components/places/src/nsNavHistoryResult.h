@@ -155,6 +155,7 @@ public:
   void RemoveHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
+  void StopObserving();
 
   // returns the view. NOT-ADDREFED. May be NULL if there is no view
   nsINavHistoryResultViewer* GetView() const
@@ -176,6 +177,10 @@ public:
   // One of nsNavHistoryQueryOptions.SORY_BY_* This is initialized to mOptions.sortingMode,
   // but may be overridden if the user clicks on one of the columns.
   PRUint16 mSortingMode;
+  // If root node is closed and we try to apply a sortingMode, it would not
+  // work.  So we will apply it when the node will be reopened and populated.
+  // This var states the fact we need to apply sortingMode in such a situation.
+  PRBool mNeedsToApplySortingMode;
 
   // The sorting annotation to be used for in SORT_BY_ANNOTATION_* modes
   nsCString mSortingAnnotation;

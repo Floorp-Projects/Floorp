@@ -299,10 +299,10 @@ nsTemplateRule::nsTemplateRule(nsIContent* aRuleNode,
 
 nsTemplateRule::nsTemplateRule(const nsTemplateRule& aOtherRule)
         : mQuerySet(aOtherRule.mQuerySet),
+          mRuleNode(aOtherRule.mRuleNode),
           mAction(aOtherRule.mAction),
           mBindings(nsnull),
-          mConditions(nsnull),
-          mRuleNode(aOtherRule.mRuleNode)
+          mConditions(nsnull)
 {
     MOZ_COUNT_CTOR(nsTemplateRule);
 }

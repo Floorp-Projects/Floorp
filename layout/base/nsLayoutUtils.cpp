@@ -3141,7 +3141,6 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
   if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
     return eTransparencyTransparent;
   if (NS_GET_A(bg->mBackgroundColor) < 255 ||
-      NS_GET_A(bg->mFallbackBackgroundColor) < 255 ||
       // bottom layer's clip is used for the color
       bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)
     return eTransparencyTransparent;

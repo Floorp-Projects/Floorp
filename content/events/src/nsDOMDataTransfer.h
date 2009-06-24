@@ -74,6 +74,7 @@ public:
 
   friend class nsDOMDragEvent;
   friend class nsEventStateManager;
+  friend class nsContentUtils;
 
 protected:
 

@@ -137,17 +137,15 @@ void nsOuterDocAccessible::CacheChildren()
   nsCOMPtr<nsIAccessibilityService> accService = 
     do_GetService("@mozilla.org/accessibilityService;1");
   accService->GetAccessibleFor(innerNode, getter_AddRefs(innerAccessible));
-  nsCOMPtr<nsPIAccessible> privateInnerAccessible = 
-    do_QueryInterface(innerAccessible);
-  if (!privateInnerAccessible) {
+  nsRefPtr<nsAccessible> innerAcc(nsAccUtils::QueryAccessible(innerAccessible));
+  if (!innerAcc)
     return;
-  }
 
   // Success getting inner document as first child -- now we cache it.
   mAccChildCount = 1;
   SetFirstChild(innerAccessible); // weak ref
-  privateInnerAccessible->SetParent(this);
-  privateInnerAccessible->SetNextSibling(nsnull);
+  innerAcc->SetParent(this);
+  innerAcc->SetNextSibling(nsnull);
 }
 
 nsresult

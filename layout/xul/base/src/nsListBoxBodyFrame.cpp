@@ -816,8 +816,14 @@ nsListBoxBodyFrame::ScrollToIndex(PRInt32 aRowIndex)
 
   mCurrentIndex = newIndex;
 
+  nsWeakFrame weak(this);
+
   // Since we're going to flush anyway, we need to not do this off an event
   DoInternalPositionChangedSync(up, delta);
+
+  if (!weak.IsAlive()) {
+    return NS_OK;
+  }
 
   // This change has to happen immediately.
   // Flush any pending reflow commands.
@@ -869,7 +875,9 @@ nsListBoxBodyFrame::DoInternalPositionChangedSync(PRBool aUp, PRInt32 aDelta)
   nsTArray< nsRefPtr<nsPositionChangedEvent> > temp;
   temp.SwapElements(mPendingPositionChangeEvents);
   for (PRUint32 i = 0; i < temp.Length(); ++i) {
-    temp[i]->Run();
+    if (weak.IsAlive()) {
+      temp[i]->Run();
+    }
     temp[i]->Revoke();
   }
 
@@ -885,6 +893,8 @@ nsListBoxBodyFrame::DoInternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 {
   if (aDelta == 0)
     return NS_OK;
+
+  nsAutoScriptBlocker scriptBlocker;
 
   nsPresContext *presContext = PresContext();
   nsBoxLayoutState state(presContext);
@@ -1208,6 +1218,10 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
       // There is a content node that wants a frame.
       nsIContent *nextContent = parentContent->GetChildAt(i + aOffset + 1);
 
+      if (!nextContent->IsNodeOfType(nsINode::eXUL) ||
+          nextContent->Tag() != nsGkAtoms::listitem)
+        return GetNextItemBox(aBox, ++aOffset, aCreated);
+
       nsPresContext* presContext = PresContext();
       nsIFrame* existingFrame =
         presContext->GetPresShell()->GetPrimaryFrameFor(nextContent);
@@ -1238,6 +1252,9 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
     return nsnull;
 
   mBottomFrame = result;
+
+  NS_ASSERTION(!result->IsBoxFrame() || result->GetParent() == this,
+               "returning frame that is not in childlist");
 
   return result->IsBoxFrame() ? result : nsnull;
 }

@@ -61,7 +61,7 @@ public:
 
   // nsIContentSink
   NS_IMETHOD WillParse();
-  NS_IMETHOD WillBuildModel();
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
   NS_IMETHOD DidBuildModel();
   NS_IMETHOD WillInterrupt();
   NS_IMETHOD WillResume();

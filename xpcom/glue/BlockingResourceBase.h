@@ -325,21 +325,38 @@ private:
      * sDeadlockDetector
      * Does as named.
      */
-    static DDT sDeadlockDetector;
+    static DDT* sDeadlockDetector;
 
     /**
      * InitStatics
-     *
-     * *NOT* thread safe.
-     *
      * Inititialize static members of BlockingResourceBase that can't
      * be statically initialized.
+     *
+     * *NOT* thread safe.
      */
     static PRStatus InitStatics() {
         PR_NewThreadPrivateIndex(&sResourceAcqnChainFrontTPI, 0);
+        sDeadlockDetector = new DDT();
+        if (!sDeadlockDetector)
+            NS_RUNTIMEABORT("can't allocate deadlock detector");
         return PR_SUCCESS;
     }
 
+    /**
+     * Shutdown
+     * Free static members.
+     *
+     * *NOT* thread safe.
+     */
+    static void Shutdown() {
+        delete sDeadlockDetector;
+        sDeadlockDetector = 0;
+    }
+
+#  ifdef MOZILLA_INTERNAL_API
+    // so it can call BlockingResourceBase::Shutdown()
+    friend nsresult ShutdownXPCOM(nsIServiceManager*);
+#  endif  // ifdef MOZILLA_INTERNAL_API
 
 #else  // non-DEBUG implementation
 

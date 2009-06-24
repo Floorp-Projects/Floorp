@@ -614,7 +614,12 @@ pref("network.http.default-socket-type", "");
 
 pref("network.http.keep-alive", true); // set it to false in case of problems
 pref("network.http.proxy.keep-alive", true);
-pref("network.http.keep-alive.timeout", 300);
+// There is a problem with some IIS7 servers that don't close the connection
+// properly after it times out (bug #491541). Default timeout on IIS7 is
+// 120 seconds. We need to reuse or drop the connection within this time.
+// We set the timeout a little shorter to keep a reserve for cases when
+// the packet is lost or delayed on the route.
+pref("network.http.keep-alive.timeout", 115);
 
 // limit the absolute number of http connections.
 pref("network.http.max-connections", 30);
@@ -2706,6 +2711,11 @@ pref("signon.SignonFileName2",              "signons2.txt"); // obsolete
 pref("signon.SignonFileName3",              "signons3.txt"); // obsolete
 pref("signon.autofillForms",                true); 
 pref("signon.debug",                        false); // logs to Error Console
+
+// Satchel (Form Manager) prefs
+pref("browser.formfill.enable",     true);
+pref("browser.formfill.debug",      false);
+
 
 // Zoom prefs
 pref("browser.zoom.full", false);

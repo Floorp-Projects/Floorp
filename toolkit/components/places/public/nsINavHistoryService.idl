@@ -186,6 +186,9 @@ interface nsINavHistoryResultNode : nsISupports
   /**
    * If the node is an item (bookmark, folder or a separator) this value is the 
    * time that the item was last modified. For other nodes, this value is 0.
+   *
+   *  @note When an item is added lastModified is set to the same value as
+   *        dateAdded.
    */
   readonly attribute PRTime lastModified;
 
@@ -614,6 +617,13 @@ interface nsINavHistoryResult : nsISupports
   /**
    * This is the root of the results. Remember that you need to open all
    * containers for their contents to be valid.
+   *
+   * When a result goes out of scope it will continue to observe changes till
+   * it is cycle collected.  While the result waits to be collected it will stay
+   * in memory, and continue to update itself, potentially causing unwanted
+   * additional work.  When you close the root node the result will stop
+   * observing changes, so it is good practice to close the root node when you
+   * are done with a result, since that will avoid unwanted performance hits.
    */
   readonly attribute nsINavHistoryContainerResultNode root;
 };

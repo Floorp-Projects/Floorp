@@ -79,10 +79,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetMIMEType(nsACString & aMIMEType);
     NS_IMETHOD GetDescription(nsAString & aDescription);
     NS_IMETHOD SetDescription(const nsAString & aDescription);
-    NS_IMETHOD GetMacType(PRUint32 *aMacType);
-    NS_IMETHOD SetMacType(PRUint32 aMacType);
-    NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator);
-    NS_IMETHOD SetMacCreator(PRUint32 aMacCreator);
     NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval);
     NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredAppHandler);
     NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHandler);
@@ -168,7 +164,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     // member variables
     nsTArray<nsCString>    mExtensions; ///< array of file extensions associated w/ this MIME obj
     nsString               mDescription; ///< human readable description
-    PRUint32               mMacType, mMacCreator; ///< Mac file type and creator
     nsCString              mType;
     HandlerClass           mClass;
     nsCOMPtr<nsIHandlerApp> mPreferredApplication;

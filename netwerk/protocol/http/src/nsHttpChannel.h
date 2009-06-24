@@ -235,6 +235,7 @@ private:
     void     AddAuthorizationHeaders();
     nsresult GetCurrentPath(nsACString &);
     nsresult DoAuthRetry(nsAHttpConnection *);
+    PRBool   MustValidateBasedOnQueryUrl();
 
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;
@@ -342,6 +343,7 @@ private:
     PRUint32                          mChooseApplicationCache   : 1;
     PRUint32                          mLoadedFromApplicationCache : 1;
     PRUint32                          mTracingEnabled           : 1;
+    PRUint32                          mForceAllowThirdPartyCookie : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
     {

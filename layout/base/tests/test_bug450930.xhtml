@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg">
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=450930
@@ -118,24 +119,25 @@ function runTest1() {
 
 function runTest2(frameID, containerID) {
   // test reporting of painting in subdocuments
-  var fired = false;
+  var fired = 0;
   var gotSubdocPrivileged = false;
   var gotSubdocNonprivileged = false;
   var iframe = document.getElementById(frameID);
   var container = document.getElementById(containerID);
 
   function listener(event) {
-    fired = true;
     if (checkGotSubdoc(event.clientRects, container))
       gotSubdocNonprivileged = true;
 
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     if (checkGotSubdoc(event.clientRects, container))
       gotSubdocPrivileged = true;
+    if (++fired == 1)
+      setTimeout(check, 100);
   }
 
   function check() {
-    ok(fired, "Event fired (" + frameID + ")");
+    is(fired, 1, "Wrong event count (" + frameID + ")");
     ok(gotSubdocPrivileged, "Didn't get subdoc invalidation while we were privileged (" + frameID + ")");
     ok(!gotSubdocNonprivileged, "Got subdoc invalidation while we were not privileged (" + frameID + ")");
     window.removeEventListener("MozAfterPaint", listener, false);
@@ -144,7 +146,6 @@ function runTest2(frameID, containerID) {
 
   function triggerPaint() {
     window.addEventListener("MozAfterPaint", listener, false);
-    setTimeout(check, 100);
     document.body.offsetTop;
     flash(iframe.contentDocument, 'd');
     // make sure an event fires; since we're not using a chrome event handler, even though we

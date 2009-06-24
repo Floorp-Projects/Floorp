@@ -87,13 +87,11 @@ class nsHashKey;
 #define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
 #define NS_ACCESSIBLE_EVENT               20
 #define NS_FORM_EVENT                     21
-#define NS_FOCUS_EVENT                    22
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
-#define NS_POPUPBLOCKED_EVENT             25
-#define NS_BEFORE_PAGE_UNLOAD_EVENT       26
+
+
 #define NS_UI_EVENT                       27
-#define NS_PAGETRANSITION_EVENT           29
 #ifdef MOZ_SVG
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
@@ -157,10 +155,6 @@ class nsHashKey;
 #define NS_SIZE                         (NS_WINDOW_START + 3)
 // Widget size mode was changed
 #define NS_SIZEMODE                     (NS_WINDOW_START + 4)
-// Widget gained focus
-#define NS_GOTFOCUS                     (NS_WINDOW_START + 5)
-// Widget lost focus
-#define NS_LOSTFOCUS                    (NS_WINDOW_START + 6)
 // Widget got activated
 #define NS_ACTIVATE                     (NS_WINDOW_START + 7)
 // Widget got deactivated
@@ -539,17 +533,6 @@ public:
   PRInt32           lineNr;
   const PRUnichar*  errorMsg;
   const PRUnichar*  fileName;
-};
-
-class nsBeforePageUnloadEvent : public nsEvent
-{
-public:
-  nsBeforePageUnloadEvent(PRBool isTrusted, PRUint32 msg)
-    : nsEvent(isTrusted, msg, NS_BEFORE_PAGE_UNLOAD_EVENT)
-  {
-  }
-
-  nsString text;
 };
 
 /**
@@ -1191,21 +1174,6 @@ public:
 };
 
 /**
-* Focus event
-*/
-class nsFocusEvent : public nsGUIEvent
-{
-public:
-  nsFocusEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_FOCUS_EVENT),
-      isMozWindowTakingFocus(PR_FALSE)
-  {
-  }
-
-  PRBool isMozWindowTakingFocus;
-};
-
-/**
  * Command event
  *
  * Custom commands for example from the operating system.
@@ -1226,24 +1194,6 @@ public:
 };
 
 /**
- * blocked popup window event
- */
-class nsPopupBlockedEvent : public nsEvent
-{
-public:
-  nsPopupBlockedEvent(PRBool isTrusted, PRUint32 msg)
-    : nsEvent(isTrusted, msg, NS_POPUPBLOCKED_EVENT),
-      mPopupWindowURI(nsnull)
-  {
-  }
-
-  nsWeakPtr mRequestingWindow;
-  nsIURI* mPopupWindowURI;      // owning reference
-  nsString mPopupWindowFeatures;
-  nsString mPopupWindowName;
-};
-
-/**
  * DOM UIEvent
  */
 class nsUIEvent : public nsEvent
@@ -1256,38 +1206,6 @@ public:
   }
 
   PRInt32 detail;
-};
-
-/**
- * NotifyPaint event
- */
-class nsNotifyPaintEvent : public nsEvent
-{
-public:
-  nsNotifyPaintEvent(PRBool isTrusted, PRUint32 msg,
-                     const nsRegion& aSameDocRegion, const nsRegion& aCrossDocRegion)
-    : nsEvent(isTrusted, msg, NS_NOTIFYPAINT_EVENT),
-      sameDocRegion(aSameDocRegion), crossDocRegion(aCrossDocRegion)
-  {
-  }
-
-  nsRegion sameDocRegion;
-  nsRegion crossDocRegion;
-};
-
-/**
- * PageTransition event
- */
-class nsPageTransitionEvent : public nsEvent
-{
-public:
-  nsPageTransitionEvent(PRBool isTrusted, PRUint32 msg, PRBool p)
-    : nsEvent(isTrusted, msg, NS_PAGETRANSITION_EVENT),
-      persisted(p)
-  {
-  }
-
-  PRBool persisted;
 };
 
 /**
@@ -1380,9 +1298,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_COMPOSITION_QUERY))
 
 #define NS_IS_FOCUS_EVENT(evnt) \
-       (((evnt)->message == NS_GOTFOCUS) ||  \
-        ((evnt)->message == NS_LOSTFOCUS) ||  \
-        ((evnt)->message == NS_ACTIVATE) || \
+       (((evnt)->message == NS_ACTIVATE) || \
         ((evnt)->message == NS_DEACTIVATE) || \
         ((evnt)->message == NS_PLUGIN_ACTIVATE))
 

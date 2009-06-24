@@ -63,6 +63,8 @@
 
 <script class="testbody" type="application/javascript">
 
+SimpleTest.waitForExplicitFinish();
+
 var gUtils = window.
       QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -81,8 +83,6 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
   var defaultEnabledState =
         aIsEditable ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
 
-  // XXX Between designMode and contentEditable, the result is different.
-  // Is this expected difference?
   var nonFormControlNodeEnabledState =
         aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
 
@@ -93,7 +93,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       if (aTest.expectedEnabled == gUtils.IME_STATUS_DISABLED) {
         document.getElementById("text").focus();
       } else {
-        gUtils.focus(null);
+        document.activeElement.blur();
       }
       document.getElementById(aTest.id).focus();
     }
@@ -114,7 +114,10 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     if (kIMEEnabledSupported) {
       moveFocus(aTest);
       enabled = gUtils.IMEStatus;
-      is(enabled, aTest.expectedEnabled,
+      // no focusing of html elements is possible in design mode so ime should
+      // always be enabled for the document
+      var expected = aInDesignMode ? gUtils.IME_STATUS_ENABLED : aTest.expectedEnabled;
+      is(enabled, expected,
          aDescription + ": " + aTest.description + ", wrong enabled state");
     }
 
@@ -129,7 +132,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
   }
 
   if (kIMEEnabledSupported) {
-    gUtils.focus(null);
+    document.activeElement.blur();
     is(gUtils.IMEStatus, nonFormControlNodeEnabledState,
        aDescription + ": unexpected enabled state when no element has focus");
   }
@@ -436,8 +439,6 @@ function runTests()
   if (!kIMEEnabledSupported && !kIMEOpenSupported)
     return;
 
-  SimpleTest.waitForExplicitFinish();
-
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   // test for normal contents.
@@ -461,6 +462,7 @@ function runTests()
   document.designMode = "on";
   runBasicTest(true, true, "Testing designMode=\"on\"");
   document.designMode = "off";
+  document.getElementById("text").focus();
   runBasicTest(false, false, "Testing designMode=\"off\"");
 
   // changing input[type] values

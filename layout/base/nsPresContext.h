@@ -69,6 +69,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "nsContentUtils.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -567,6 +568,21 @@ public:
   { return NSAppUnitsToIntPixels(aAppUnits,
              float(mDeviceContext->AppUnitsPerDevPixel())); }
 
+  PRInt32 CSSPixelsToDevPixels(PRInt32 aPixels)
+  { return AppUnitsToDevPixels(CSSPixelsToAppUnits(aPixels)); }
+
+  float CSSPixelsToDevPixels(float aPixels)
+  {
+    return NSAppUnitsToFloatPixels(CSSPixelsToAppUnits(aPixels),
+                                   float(mDeviceContext->AppUnitsPerDevPixel()));
+  }
+
+  PRInt32 DevPixelsToIntCSSPixels(PRInt32 aPixels)
+  { return AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPixels)); }
+
+  float DevPixelsToFloatCSSPixels(PRInt32 aPixels)
+  { return AppUnitsToFloatCSSPixels(DevPixelsToAppUnits(aPixels)); }
+
   // If there is a remainder, it is rounded to nearest app units.
   nscoord GfxUnitsToAppUnits(gfxFloat aGfxUnits) const
   { return mDeviceContext->GfxUnitsToAppUnits(aGfxUnits); }
@@ -743,12 +759,8 @@ public:
   /* Helper function that ensures that this prescontext is shown in its
      docshell if it's the most recent prescontext for the docshell.  Returns
      whether the prescontext is now being shown.
-
-     @param aUnsuppressFocus If this is false, then focus will not be
-     unsuppressed when PR_TRUE is returned.  It's the caller's responsibility
-     to unsuppress focus in that case.
   */
-  NS_HIDDEN_(PRBool) EnsureVisible(PRBool aUnsuppressFocus);
+  NS_HIDDEN_(PRBool) EnsureVisible();
   
 #ifdef MOZ_REFLOW_PERF
   NS_HIDDEN_(void) CountReflows(const char * aName,
@@ -845,16 +857,16 @@ public:
     
   /**
    * Check for interrupts. This may return true if a pending event is
-   * detected. Once it has returned true, it will keep returning true until
-   * SetInterruptState is called again.  In all cases where returns true, the
-   * passed-in frame (which should be the frame whose reflow will be
-   * interrupted if true is returend) will be passed to
+   * detected. Once it has returned true, it will keep returning true
+   * until ReflowStarted is called. In all cases where this returns true,
+   * the passed-in frame (which should be the frame whose reflow will be
+   * interrupted if true is returned) will be passed to
    * nsIPresShell::FrameNeedsToContinueReflow.
    */
   PRBool CheckForInterrupt(nsIFrame* aFrame);
   /**
    * Returns true if CheckForInterrupt has returned true since the last
-   * SetInterruptState. Cannot itself trigger an interrupt check.
+   * ReflowStarted call. Cannot itself trigger an interrupt check.
    */
   PRBool HasPendingInterrupt() { return mHasPendingInterrupt; }
 
@@ -1092,6 +1104,8 @@ struct nsAutoLayoutPhase {
         // Once bug 337957 is fixed this should become an NS_ASSERTION
         NS_WARN_IF_FALSE(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
                          "recurring into frame construction");
+        NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+                     "constructing frames and scripts are not blocked");
         break;
       default:
         break;

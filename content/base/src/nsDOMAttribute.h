@@ -54,6 +54,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentUtils.h"
+#include "nsIDOMXPathNSResolver.h"
 
 class nsDOMAttribute;
 
@@ -61,7 +62,8 @@ class nsDOMAttribute;
 // object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode, nsIDOM3Node
 class nsDOMAttribute : public nsIAttribute,
                        public nsIDOMAttr,
-                       public nsIDOM3Attr
+                       public nsIDOM3Attr,
+                       public nsIDOMXPathNSResolver
 {
 public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap, nsINodeInfo *aNodeInfo,
@@ -102,8 +104,7 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult);
+  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
   virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
                                          const nsIID& aIID);
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,

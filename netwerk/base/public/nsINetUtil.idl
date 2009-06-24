@@ -46,7 +46,7 @@ interface nsIPrefBranch;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(57322c6f-f4ec-4e46-8253-b74be220de16)]
+[scriptable, uuid(a50d5516-5c0a-4f08-b427-703ca0c44ac3)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -192,7 +192,7 @@ interface nsINetUtil : nsISupports
    *               unescaped
    * @return unescaped string
    */
-  ACString unescapeString(in ACString aStr, in unsigned long aFlags);
+  ACString unescapeString(in AUTF8String aStr, in unsigned long aFlags);
 
   /**
    * Extract the charset parameter location and value from a content-type

@@ -96,6 +96,7 @@
 #include "nsIAtom.h"
 #include "nsStaticAtom.h"
 #include "nsIScriptError.h"
+#include "nsIDTD.h"
 
 ////////////////////////////////////////////////////////////////////////
 // XPCOM IIDs
@@ -160,7 +161,7 @@ public:
 
     // nsIContentSink
     NS_IMETHOD WillParse(void);
-    NS_IMETHOD WillBuildModel(void);
+    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
     NS_IMETHOD DidBuildModel(void);
     NS_IMETHOD WillInterrupt(void);
     NS_IMETHOD WillResume(void);
@@ -620,7 +621,7 @@ RDFContentSinkImpl::WillParse(void)
 
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::WillBuildModel(void)
+RDFContentSinkImpl::WillBuildModel(nsDTDMode)
 {
     if (mDataSource) {
         nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);

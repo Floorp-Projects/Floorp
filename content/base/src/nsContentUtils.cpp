@@ -162,6 +162,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsCPrefetchService.h"
 #include "nsIChromeRegistry.h"
 #include "nsIMIMEHeaderParam.h"
+#include "nsIDOMDragEvent.h"
+#include "nsDOMDataTransfer.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3389,8 +3391,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   if (aNode->IsInDoc()) {
     nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(window));
     if (piTarget) {
-      nsCOMPtr<nsIEventListenerManager> manager;
-      piTarget->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+      nsIEventListenerManager* manager = piTarget->GetListenerManager(PR_FALSE);
       if (manager) {
         PRBool hasListeners = PR_FALSE;
         manager->HasMutationListeners(&hasListeners);
@@ -3405,8 +3406,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   // might not be in our chain.  If we don't have a window, we might have a
   // mutation listener.  Check quickly to see.
   while (aNode) {
-    nsCOMPtr<nsIEventListenerManager> manager;
-    aNode->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    nsIEventListenerManager* manager = aNode->GetListenerManager(PR_FALSE);
     if (manager) {
       PRBool hasListeners = PR_FALSE;
       manager->HasMutationListeners(&hasListeners);
@@ -3450,22 +3450,19 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
   }
 }
 
-nsresult
+nsIEventListenerManager*
 nsContentUtils::GetListenerManager(nsINode *aNode,
-                                   PRBool aCreateIfNotFound,
-                                   nsIEventListenerManager **aResult)
+                                   PRBool aCreateIfNotFound)
 {
-  *aResult = nsnull;
-
   if (!aCreateIfNotFound && !aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
-    return NS_OK;
+    return nsnull;
   }
   
   if (!sEventListenerManagersHash.ops) {
     // We're already shut down, don't bother creating an event listener
     // manager.
 
-    return NS_ERROR_NOT_AVAILABLE;
+    return nsnull;
   }
 
   if (!aCreateIfNotFound) {
@@ -3474,10 +3471,9 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
                  (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      *aResult = entry->mListenerManager;
-      NS_ADDREF(*aResult);
+      return entry->mListenerManager;
     }
-    return NS_OK;
+    return nsnull;
   }
 
   EventListenerManagerMapEntry *entry =
@@ -3486,7 +3482,7 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
                                         PL_DHASH_ADD));
 
   if (!entry) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   }
 
   if (!entry->mListenerManager) {
@@ -3496,7 +3492,7 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
     if (NS_FAILED(rv)) {
       PL_DHashTableRawRemove(&sEventListenerManagersHash, entry);
 
-      return rv;
+      return nsnull;
     }
 
     entry->mListenerManager->SetListenerTarget(aNode);
@@ -3504,9 +3500,7 @@ nsContentUtils::GetListenerManager(nsINode *aNode,
     aNode->SetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  NS_ADDREF(*aResult = entry->mListenerManager);
-
-  return NS_OK;
+  return entry->mListenerManager;
 }
 
 /* static */
@@ -4537,6 +4531,115 @@ nsContentUtils::GetDragSession()
 }
 
 /* static */
+nsresult
+nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
+{
+  if (aDragEvent->dataTransfer || !NS_IS_TRUSTED_EVENT(aDragEvent))
+    return NS_OK;
+
+  // For draggesture and dragstart events, the data transfer object is
+  // created before the event fires, so it should already be set. For other
+  // drag events, get the object from the drag session.
+  NS_ASSERTION(aDragEvent->message != NS_DRAGDROP_GESTURE &&
+               aDragEvent->message != NS_DRAGDROP_START,
+               "draggesture event created without a dataTransfer");
+
+  nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
+  NS_ENSURE_TRUE(dragSession, NS_OK); // no drag in progress
+
+  nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
+  dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
+  if (!initialDataTransfer) {
+    // A dataTransfer won't exist when a drag was started by some other
+    // means, for instance calling the drag service directly, or a drag
+    // from another application. In either case, a new dataTransfer should
+    // be created that reflects the data. Pass true to the constructor for
+    // the aIsExternal argument, so that only system access is allowed.
+    PRUint32 action = 0;
+    dragSession->GetDragAction(&action);
+    initialDataTransfer =
+      new nsDOMDataTransfer(aDragEvent->message, action);
+    NS_ENSURE_TRUE(initialDataTransfer, NS_ERROR_OUT_OF_MEMORY);
+
+    // now set it in the drag session so we don't need to create it again
+    dragSession->SetDataTransfer(initialDataTransfer);
+  }
+
+  // each event should use a clone of the original dataTransfer.
+  nsCOMPtr<nsIDOMNSDataTransfer> initialDataTransferNS =
+    do_QueryInterface(initialDataTransfer);
+  NS_ENSURE_TRUE(initialDataTransferNS, NS_ERROR_FAILURE);
+  initialDataTransferNS->Clone(aDragEvent->message, aDragEvent->userCancelled,
+                               getter_AddRefs(aDragEvent->dataTransfer));
+  NS_ENSURE_TRUE(aDragEvent->dataTransfer, NS_ERROR_OUT_OF_MEMORY);
+
+  // for the dragenter and dragover events, initialize the drop effect
+  // from the drop action, which platform specific widget code sets before
+  // the event is fired based on the keyboard state.
+  if (aDragEvent->message == NS_DRAGDROP_ENTER ||
+      aDragEvent->message == NS_DRAGDROP_OVER) {
+    nsCOMPtr<nsIDOMNSDataTransfer> newDataTransfer =
+      do_QueryInterface(aDragEvent->dataTransfer);
+    NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_FAILURE);
+
+    PRUint32 action, effectAllowed;
+    dragSession->GetDragAction(&action);
+    newDataTransfer->GetEffectAllowedInt(&effectAllowed);
+    newDataTransfer->SetDropEffectInt(FilterDropEffect(action, effectAllowed));
+  }
+  else if (aDragEvent->message == NS_DRAGDROP_DROP ||
+           aDragEvent->message == NS_DRAGDROP_DRAGDROP ||
+           aDragEvent->message == NS_DRAGDROP_END) {
+    // For the drop and dragend events, set the drop effect based on the
+    // last value that the dropEffect had. This will have been set in
+    // nsEventStateManager::PostHandleEvent for the last dragenter or
+    // dragover event.
+    nsCOMPtr<nsIDOMNSDataTransfer> newDataTransfer =
+      do_QueryInterface(aDragEvent->dataTransfer);
+    NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_FAILURE);
+
+    PRUint32 dropEffect;
+    initialDataTransferNS->GetDropEffectInt(&dropEffect);
+    newDataTransfer->SetDropEffectInt(dropEffect);
+  }
+
+  return NS_OK;
+}
+
+/* static */
+PRUint32
+nsContentUtils::FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed)
+{
+  // It is possible for the drag action to include more than one action, but
+  // the widget code which sets the action from the keyboard state should only
+  // be including one. If multiple actions were set, we just consider them in
+  //  the following order:
+  //   copy, link, move
+  if (aAction & nsIDragService::DRAGDROP_ACTION_COPY)
+    aAction = nsIDragService::DRAGDROP_ACTION_COPY;
+  else if (aAction & nsIDragService::DRAGDROP_ACTION_LINK)
+    aAction = nsIDragService::DRAGDROP_ACTION_LINK;
+  else if (aAction & nsIDragService::DRAGDROP_ACTION_MOVE)
+    aAction = nsIDragService::DRAGDROP_ACTION_MOVE;
+
+  // Filter the action based on the effectAllowed. If the effectAllowed
+  // doesn't include the action, then that action cannot be done, so adjust
+  // the action to something that is allowed. For a copy, adjust to move or
+  // link. For a move, adjust to copy or link. For a link, adjust to move or
+  // link. Otherwise, use none.
+  if (aAction & aEffectAllowed ||
+      aEffectAllowed == nsIDragService::DRAGDROP_ACTION_UNINITIALIZED)
+    return aAction;
+  if (aEffectAllowed & nsIDragService::DRAGDROP_ACTION_MOVE)
+    return nsIDragService::DRAGDROP_ACTION_MOVE;
+  if (aEffectAllowed & nsIDragService::DRAGDROP_ACTION_COPY)
+    return nsIDragService::DRAGDROP_ACTION_COPY;
+  if (aEffectAllowed & nsIDragService::DRAGDROP_ACTION_LINK)
+    return nsIDragService::DRAGDROP_ACTION_LINK;
+  return nsIDragService::DRAGDROP_ACTION_NONE;
+}
+
+/* static */
 PRBool
 nsContentUtils::URIIsLocalFile(nsIURI *aURI)
 {
@@ -4800,6 +4903,27 @@ nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsString& aOrigin)
   
   return NS_OK;
 }
+
+/* static */
+already_AddRefed<nsIDocument>
+nsContentUtils::GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
+{
+  if (!aScriptContext)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(aScriptContext->GetGlobalObject());
+  nsIDocument *doc = nsnull;
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    window->GetDocument(getter_AddRefs(domdoc));
+    if (domdoc) {
+      CallQueryInterface(domdoc, &doc);
+    }
+  }
+  return doc;
+}
+
 nsContentTypeParser::nsContentTypeParser(const nsAString& aString)
   : mString(aString), mService(nsnull)
 {

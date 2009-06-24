@@ -101,7 +101,7 @@ public:
    *
    * @param aPlaceId
    *        The place_id of the location to check against.
-   * @returns true if it's a real bookmark, false otherwise.
+   * @return true if it's a real bookmark, false otherwise.
    */
   PRBool IsRealBookmark(PRInt64 aPlaceId);
 
@@ -167,6 +167,7 @@ private:
   // This stores a mapping from all pages reachable by redirects from bookmarked
   // pages to the bookmarked page. Used by GetBookmarkedURIFor.
   nsDataHashtable<nsTrimInt64HashKey, PRInt64> mBookmarksHash;
+  nsDataHashtable<nsTrimInt64HashKey, PRInt64>* GetBookmarksHash();
   nsresult FillBookmarksHash();
   nsresult RecursiveAddBookmarkHash(PRInt64 aBookmarkId, PRInt64 aCurrentSource,
                                     PRTime aMinTime);
@@ -196,6 +197,54 @@ private:
   nsresult GetDescendantChildren(PRInt64 aFolderId,
                                  PRInt64 aGrandParentId,
                                  nsTArray<folderChildrenInfo>& aFolderChildrenArray);
+
+  enum ItemType {
+    BOOKMARK = TYPE_BOOKMARK,
+    FOLDER = TYPE_FOLDER,
+    SEPARATOR = TYPE_SEPARATOR,
+    DYNAMIC_CONTAINER = TYPE_DYNAMIC_CONTAINER
+  };
+
+  /**
+   * Helper to insert a bookmark in the database.
+   *
+   *  @param aItemId
+   *         The itemId to insert, pass -1 to generate a new one.
+   *  @param aPlaceId
+   *         The placeId to which this bookmark refers to, pass nsnull for
+   *         items that don't refer to an URI (eg. folders, separators, ...).
+   *  @param aItemType
+   *         The type of the new bookmark, see TYPE_* constants.
+   *  @param aParentId
+   *         The itemId of the parent folder.
+   *  @param aIndex
+   *         The position inside the parent folder.
+   *  @param aTitle
+   *         The title for the new bookmark.
+   *         Pass a void string to set a NULL title.
+   *  @param aDateAdded
+   *         The date for the insertion.
+   *  @param [optional] aLastModified
+   *         The last modified date for the insertion.
+   *         It defaults to aDateAdded.
+   *  @param [optional] aServiceContractId
+   *         The contract id for a dynamic container.
+   *         Pass EmptyCString() for other type of containers.
+   *
+   *  @return The new item id that has been inserted.
+   *
+   *  @note This will also update last modified date of the parent folder.
+   */
+  nsresult InsertBookmarkInDB(PRInt64 aItemId,
+                              PRInt64 aPlaceId,
+                              enum ItemType aItemType,
+                              PRInt64 aParentId,
+                              PRInt32 aIndex,
+                              const nsACString &aTitle,
+                              PRTime aDateAdded,
+                              PRTime aLastModified,
+                              const nsAString &aServiceContractId,
+                              PRInt64 *_retval);
 
   // kGetInfoIndex_* results + kGetChildrenIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;
@@ -232,7 +281,18 @@ private:
 
   nsCOMPtr<mozIStorageStatement> mDBGetItemIdForGUID;
   nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
+
   nsCOMPtr<mozIStorageStatement> mDBInsertBookmark;
+  static const PRInt32 kInsertBookmarkIndex_Id;
+  static const PRInt32 kInsertBookmarkIndex_PlaceId;
+  static const PRInt32 kInsertBookmarkIndex_Type;
+  static const PRInt32 kInsertBookmarkIndex_Parent;
+  static const PRInt32 kInsertBookmarkIndex_Position;
+  static const PRInt32 kInsertBookmarkIndex_Title;
+  static const PRInt32 kInsertBookmarkIndex_ServiceContractId;
+  static const PRInt32 kInsertBookmarkIndex_DateAdded;
+  static const PRInt32 kInsertBookmarkIndex_LastModified;
+
   nsCOMPtr<mozIStorageStatement> mDBIsBookmarkedInDatabase;
   nsCOMPtr<mozIStorageStatement> mDBIsRealBookmark;
   nsCOMPtr<mozIStorageStatement> mDBGetLastBookmarkID;
