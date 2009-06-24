@@ -950,42 +950,9 @@ HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
 #######################################################################
 
 #
-# Note: OS_TARGET should be specified on the command line for gmake.
-# When OS_TARGET=WIN95 is specified, then a Windows 95 target is built.
-# The difference between the Win95 target and the WinNT target is that
-# the WinNT target uses Windows NT specific features not available
-# in Windows 95. The Win95 target will run on Windows NT, but (supposedly)
-# at lesser performance (the Win95 target uses threads; the WinNT target
-# uses fibers).
-#
 # If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
 # cross-compilation.
 #
-
-#
-# The following hack allows one to build on a WIN95 machine (as if
-# s/he were cross-compiling on a WINNT host for a WIN95 target).
-# It also accomodates for MKS's uname.exe.  If you never intend
-# to do development on a WIN95 machine, you don't need this hack.
-#
-case "$OS_ARCH" in
-WIN95)
-    OS_ARCH=WINNT
-    OS_TARGET=WIN95
-    ;;
-Windows_95)
-    OS_ARCH=Windows_NT
-    OS_TARGET=WIN95
-    ;;
-Windows_98)
-    OS_ARCH=Windows_NT
-    OS_TARGET=WIN95
-    ;;
-CYGWIN_9*|CYGWIN_ME*)
-    OS_ARCH='CYGWIN_NT-4.0'
-    OS_TARGET=WIN95
-    ;;
-esac
 
 #
 # Define and override various archtecture-specific variables, including
@@ -1231,9 +1198,6 @@ esac
 
 if test -z "$OS_TARGET"; then
     OS_TARGET=$OS_ARCH
-fi
-if test "$OS_TARGET" = "WIN95"; then
-    OS_RELEASE="4.0"
 fi
 OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
