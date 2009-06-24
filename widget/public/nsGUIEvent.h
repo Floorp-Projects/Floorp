@@ -92,6 +92,7 @@ class nsHashKey;
 
 
 #define NS_UI_EVENT                       27
+#define NS_PAGETRANSITION_EVENT           29
 #ifdef MOZ_SVG
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
@@ -1206,6 +1207,21 @@ public:
   }
 
   PRInt32 detail;
+};
+
+/**
+ * PageTransition event
+ */
+class nsPageTransitionEvent : public nsEvent
+{
+public:
+  nsPageTransitionEvent(PRBool isTrusted, PRUint32 msg, PRBool p)
+    : nsEvent(isTrusted, msg, NS_PAGETRANSITION_EVENT),
+      persisted(p)
+  {
+  }
+
+  PRBool persisted;
 };
 
 /**
