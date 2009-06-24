@@ -242,17 +242,25 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData, referrerUrl )
     loadInBackground = !loadInBackground;
     // fall through
   case "tab":
-    var browser = w.getBrowser();
+    let browser = w.getBrowser();
     browser.loadOneTab(url, referrerUrl, null, postData, loadInBackground,
                        allowThirdPartyFixup || false);
     break;
   }
 
-  // Focus the content but don't raise the window, since the URI we just loaded
-  // may have resulted in a new frontmost window (e.g. "javascript:window.open('');").
-  var browser = w.getBrowserFromContentWindow(w.content);
-  if (browser)
-    browser.focus();
+  // If this window is active, focus the target window. Otherwise, focus the
+  // content but don't raise the window, since the URI we just loaded may have
+  // resulted in a new frontmost window (e.g. "javascript:window.open('');").
+  var fm = Components.classes["@mozilla.org/focus-manager;1"].
+             getService(Components.interfaces.nsIFocusManager);
+  if (window == fm.activeWindow) {
+    w.content.focus();
+  }
+  else {
+    let browser = w.getBrowserFromContentWindow(w.content);
+    if (browser)
+      browser.focus();
+  }
 }
 
 // Used as an onclick handler for UI elements with link-like behavior.
