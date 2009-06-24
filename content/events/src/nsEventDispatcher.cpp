@@ -619,11 +619,11 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     switch(aEvent->eventStructType) {
     case NS_MUTATION_EVENT:
       return NS_NewDOMMutationEvent(aDOMEvent, aPresContext,
+                                    static_cast<nsMutationEvent*>(aEvent));
     case NS_PAGETRANSITION_EVENT:
       return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext,
                                           static_cast<nsPageTransitionEvent*>
                                                      (aEvent));
-                                    static_cast<nsMutationEvent*>(aEvent));
     case NS_GUI_EVENT:
     case NS_COMPOSITION_EVENT:
     case NS_SCROLLPORT_EVENT:
