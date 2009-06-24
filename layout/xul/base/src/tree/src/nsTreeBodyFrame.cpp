@@ -2718,9 +2718,14 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
           }
         }
 
+        NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "wrong event type");
+        nsDragEvent* dragEvent = static_cast<nsDragEvent*>(aEvent);
+        nsContentUtils::SetDataTransferInEvent(dragEvent);
+
         PRBool canDropAtNewLocation = PR_FALSE;
-        mView->CanDrop(mSlots->mDropRow, mSlots->mDropOrient, &canDropAtNewLocation);
-      
+        mView->CanDrop(mSlots->mDropRow, mSlots->mDropOrient,
+                       dragEvent->dataTransfer, &canDropAtNewLocation);
+
         if (canDropAtNewLocation) {
           // Invalidate row at the new location.
           mSlots->mDropAllowed = canDropAtNewLocation;
@@ -2749,7 +2754,11 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
       rv = mView->GetParentIndex(parentIndex, &parentIndex);
     }
 
-    mView->Drop(mSlots->mDropRow, mSlots->mDropOrient);
+    NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "wrong event type");
+    nsDragEvent* dragEvent = static_cast<nsDragEvent*>(aEvent);
+    nsContentUtils::SetDataTransferInEvent(dragEvent);
+
+    mView->Drop(mSlots->mDropRow, mSlots->mDropOrient, dragEvent->dataTransfer);
     mSlots->mDropRow = -1;
     mSlots->mDropOrient = -1;
     *aEventStatus = nsEventStatus_eConsumeNoDefault; // already handled the drop

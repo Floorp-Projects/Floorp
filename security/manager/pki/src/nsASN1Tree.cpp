@@ -451,7 +451,8 @@ nsNSSASN1Tree::PerformActionOnCell(const PRUnichar *action, PRInt32 row,
 //
 // CanDrop
 //
-NS_IMETHODIMP nsNSSASN1Tree::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
+NS_IMETHODIMP nsNSSASN1Tree::CanDrop(PRInt32 index, PRInt32 orientation,
+                                     nsIDOMDataTransfer* aDataTransfer, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -463,7 +464,7 @@ NS_IMETHODIMP nsNSSASN1Tree::CanDrop(PRInt32 index, PRInt32 orientation, PRBool 
 //
 // Drop
 //
-NS_IMETHODIMP nsNSSASN1Tree::Drop(PRInt32 row, PRInt32 orient)
+NS_IMETHODIMP nsNSSASN1Tree::Drop(PRInt32 row, PRInt32 orient, nsIDOMDataTransfer* aDataTransfer)
 {
   return NS_OK;
 }
