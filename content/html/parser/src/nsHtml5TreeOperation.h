@@ -51,7 +51,6 @@ enum eHtml5TreeOperation {
   eTreeOpAppendToDocument,
   eTreeOpAddAttributes,
   // Gecko-specific on-pop ops
-  eTreeOpScriptEnd,
   eTreeOpDoneAddingChildren,
   eTreeOpDoneCreatingElement,
   eTreeOpUpdateStyleSheet,
