@@ -248,7 +248,7 @@ nsHtml5Parser::GetCommand(nsCString& aCommand)
 NS_IMETHODIMP_(void) 
 nsHtml5Parser::SetCommand(const char* aCommand)
 {
-  NS_ASSERTION((!strcmp(aCommand, "view")), "Parser command was not view");
+  NS_ASSERTION(!strcmp(aCommand, "view"), "Parser command was not view");
 }
 
 NS_IMETHODIMP_(void) 
@@ -550,7 +550,6 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
     }
   }
 
-  NS_ASSERTION((mLifeCycle == STREAM_ENDING), "Bad life cycle.");
   mTokenizer->eof();
   mTokenizer->end();
   mLifeCycle = TERMINATED;
@@ -1379,7 +1378,7 @@ nsHtml5Parser::ParseUntilSuspend()
         }
       }
       if (mBlocked) {
-        NS_ASSERTION((!mFragmentMode), "Script blocked the parser but we are in the fragment mode.");
+        NS_ASSERTION(!mFragmentMode, "Script blocked the parser but we are in the fragment mode.");
         WillInterruptImpl();
         return;
       }
