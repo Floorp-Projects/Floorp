@@ -432,11 +432,22 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       }
     }
     if (buffer->hasMore()) {
+      // If we got here, the buffer wasn't parse synchronously to completion
+      // and it's tail needs to go into the chain of pending buffers.
+      // The script is identified by aKey. If there's nothing in the buffer
+      // chain for that key, we'll insert at the head of the queue.
+      // When the script leaves something in the queue, a zero-length 
+      // key-holder "buffer" is inserted in the queue. If the same script
+      // leaves something in the chain again, it will be inserted immediately
+      // before the old key holder belonging to the same script.
       nsHtml5UTF16Buffer* prevSearchBuf = nsnull;
       nsHtml5UTF16Buffer* searchBuf = mFirstBuffer;
       if (aKey) { // after document.open, the first level of document.write has null key
         while (searchBuf != mLastBuffer) {
           if (searchBuf->key == aKey) {
+            // found a key holder
+            // now insert the new buffer between the previous buffer 
+            // and the key holder.
             buffer->next = searchBuf;
             if (prevSearchBuf) {
               prevSearchBuf->next = buffer;
