@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<title></title>
+
+<script type="text/javascript">
+//<![CDATA[
+
+function showBug() {
+  document.getElementById('x').style.width = 0;
+  }
+
+window.addEventListener("MozReftestInvalidate",
+  function() {
+    showBug();
+    document.documentElement.className = "";
+  }, false);
+
+//]]>
+</script>
+
+</head>
+
+<body style="width: 1000px; margin: 0; padding: 0">
+  <table cellpadding="0" cellspacing="0" align="center">
+    <tr>
+      <td>
+        <div style="background:red; WIDTH: 400px; height:400px;"></div>
+        <div id="x" style="width: 600px"></div>
+
+      </td>
+    </tr>
+  </table>
+  <div style="position: absolute; top: 0; left: 300px; height: 400px; width: 400px; background: green; opacity: 0.9"></div>
+
+<br/>
+
+<div style="text-align: center;">
+<form method="get" action="#">
+  <input onclick="showBug(); return false;" value="Trigger Bug" type="button" />
+</form>
+</div>
+
+</body>
+</html>
