@@ -50,7 +50,7 @@
 #include "nsDOMScriptObjectHolder.h"
 #include "nsIMutableArray.h"
 #include "nsVariant.h"
-
+#include "nsIDOMBeforeUnloadEvent.h"
 
 #ifdef NS_DEBUG
 #include "nsIJSContextStack.h"
@@ -251,18 +251,13 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     if (vrv)
       vrv->GetDataType(&dataType);
     if (eventString.EqualsLiteral("onbeforeunload")) {
-      nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
-      NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
-
-      nsEvent *event = priv->GetInternalNSEvent();
-      NS_ENSURE_TRUE(event && event->message == NS_BEFORE_PAGE_UNLOAD,
-                     NS_ERROR_UNEXPECTED);
-
-      nsBeforePageUnloadEvent *beforeUnload =
-        static_cast<nsBeforePageUnloadEvent *>(event);
+      nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(aEvent);
+      NS_ENSURE_STATE(beforeUnload);
 
       if (dataType != nsIDataType::VTYPE_VOID) {
         aEvent->PreventDefault();
+        nsAutoString text;
+        beforeUnload->GetReturnValue(text);
 
         // Set the text in the beforeUnload event as long as it wasn't
         // already set (through event.returnValue, which takes
@@ -274,8 +269,9 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
              dataType == nsIDataType::VTYPE_WSTRING_SIZE_IS ||
              dataType == nsIDataType::VTYPE_CSTRING ||
              dataType == nsIDataType::VTYPE_ASTRING)
-            && beforeUnload->text.IsEmpty()) {
-          vrv->GetAsDOMString(beforeUnload->text);
+            && text.IsEmpty()) {
+          vrv->GetAsDOMString(text);
+          beforeUnload->SetReturnValue(text);
         }
       }
     } else if (dataType == nsIDataType::VTYPE_BOOL) {

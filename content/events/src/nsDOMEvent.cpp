@@ -550,6 +550,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_LOAD;
     else if (atom == nsGkAtoms::onunload)
       mEvent->message = NS_PAGE_UNLOAD;
+    else if (atom == nsGkAtoms::onbeforeunload)
+      mEvent->message = NS_BEFORE_PAGE_UNLOAD;
     else if (atom == nsGkAtoms::onabort)
       mEvent->message = NS_IMAGE_ABORT;
     else if (atom == nsGkAtoms::onerror)
@@ -939,14 +941,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = new nsCommandEvent(PR_FALSE, mEvent->userType,
         static_cast<nsCommandEvent*>(mEvent)->command, nsnull);
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      break;
-    }
-    case NS_BEFORE_PAGE_UNLOAD_EVENT:
-    {
-      newEvent = new nsBeforePageUnloadEvent(PR_FALSE, msg);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      static_cast<nsBeforePageUnloadEvent*>(newEvent)->text =
-        static_cast<nsBeforePageUnloadEvent*>(mEvent)->text;
       break;
     }
     case NS_UI_EVENT:

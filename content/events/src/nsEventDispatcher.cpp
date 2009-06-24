@@ -641,11 +641,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
                                 static_cast<nsTextEvent*>(aEvent));
-    case NS_BEFORE_PAGE_UNLOAD_EVENT:
-      return
-        NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext,
-                                   static_cast<nsBeforePageUnloadEvent*>
-                                              (aEvent));
     case NS_PAGETRANSITION_EVENT:
       return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext,
                                           static_cast<nsPageTransitionEvent*>
@@ -729,6 +724,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMNotifyPaintEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("simplegestureevent"))
     return NS_NewDOMSimpleGestureEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("beforeunloadevent"))
+    return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
