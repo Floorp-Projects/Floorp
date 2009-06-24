@@ -75,7 +75,7 @@ void nsColorNames::AddRefTable(void)
 #ifdef DEBUG
     {
       // let's verify the table...
-      for (PRInt32 index = 0; index < eColorName_COUNT; ++index) {
+      for (PRUint32 index = 0; index < eColorName_COUNT; ++index) {
         nsCAutoString temp1(kColorNames[index]);
         nsCAutoString temp2(kColorNames[index]);
         ToLowerCase(temp1);
