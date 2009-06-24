@@ -77,7 +77,6 @@
 #include "gfxImageSurface.h"
 #include "nsIDOMNSUIEvent.h"
 
-#include "cairo.h"
 extern "C" {
 #include "pixman.h"
 }
