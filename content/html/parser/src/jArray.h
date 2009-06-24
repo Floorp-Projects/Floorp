@@ -53,7 +53,7 @@ class jArray {
     jArray();
     operator T*() { return arr; }
     T& operator[] (L const index) { return arr[index]; }
-    void release() { delete[] arr; }
+    void release() { delete[] arr; arr = 0; length = 0; }
     L binarySearch(T const elem);
 };
 
