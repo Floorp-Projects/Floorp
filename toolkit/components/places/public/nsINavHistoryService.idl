@@ -186,6 +186,9 @@ interface nsINavHistoryResultNode : nsISupports
   /**
    * If the node is an item (bookmark, folder or a separator) this value is the 
    * time that the item was last modified. For other nodes, this value is 0.
+   *
+   *  @note When an item is added lastModified is set to the same value as
+   *        dateAdded.
    */
   readonly attribute PRTime lastModified;
 
