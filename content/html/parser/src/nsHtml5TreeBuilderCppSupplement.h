@@ -556,19 +556,23 @@ nsHtml5TreeBuilder::DoTraverse(nsCycleCollectionTraversalCallback &cb)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(formPointer);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(headPointer);
 
-  for (PRInt32 i = 0; i <= currentPtr; i++) {
+  if (stack) {
+    for (PRInt32 i = 0; i <= currentPtr; i++) {
 #ifdef DEBUG_CC
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "stack[i]");
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "stack[i]");
 #endif
-    cb.NoteNativeChild(stack[i], &NS_CYCLE_COLLECTION_NAME(nsHtml5StackNode));
+      cb.NoteNativeChild(stack[i], &NS_CYCLE_COLLECTION_NAME(nsHtml5StackNode));
+    }
   }
 
-  for (PRInt32 i = 0; i <= listPtr; i++) {
-    if (listOfActiveFormattingElements[i]) {
+  if (listOfActiveFormattingElements) {
+    for (PRInt32 i = 0; i <= listPtr; i++) {
+      if (listOfActiveFormattingElements[i]) {
 #ifdef DEBUG_CC
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "listOfActiveFormattingElements[i]");
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "listOfActiveFormattingElements[i]");
 #endif
-      cb.NoteNativeChild(listOfActiveFormattingElements[i], &NS_CYCLE_COLLECTION_NAME(nsHtml5StackNode));
+        cb.NoteNativeChild(listOfActiveFormattingElements[i], &NS_CYCLE_COLLECTION_NAME(nsHtml5StackNode));
+      }
     }
   }
 
