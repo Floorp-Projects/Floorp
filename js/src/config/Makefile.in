@@ -93,7 +93,7 @@ export::
 	$(PERL) $(srcdir)/preprocessor.pl $(DEFINES) $(ACDEFINES) \
 		-DBUILD_STATIC_LIBS=$(BUILD_STATIC_LIBS) \
 		$(srcdir)/system-headers | $(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers_js
-	$(INSTALL) system_wrappers_js $(DIST)/include
+	$(INSTALL) system_wrappers_js $(DIST)
 
 GARBAGE_DIRS += system_wrappers_js
 endif
