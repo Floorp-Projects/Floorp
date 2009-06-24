@@ -317,7 +317,7 @@ PRBool EnsureNSSInitialized(EnsureNSSOperator op)
       return PR_TRUE;
 
     {
-    nsCOMPtr<nsISupports> nssComponent
+    nsCOMPtr<nsINSSComponent> nssComponent
       = do_GetService(PSM_COMPONENT_CONTRACTID);
 
     // Nss component failed to initialize, inform the caller of that fact.
@@ -325,7 +325,9 @@ PRBool EnsureNSSInitialized(EnsureNSSOperator op)
     if (!nssComponent)
       return PR_FALSE;
 
-    return PR_TRUE;
+    PRBool isInitialized;
+    nsresult rv = nssComponent->IsNSSInitialized(&isInitialized);
+    return NS_SUCCEEDED(rv) && isInitialized;
     }
 
   default:
@@ -2531,6 +2533,14 @@ nsNSSComponent::GetClientAuthRememberService(nsClientAuthRememberService **cars)
 {
   NS_ENSURE_ARG_POINTER(cars);
   NS_IF_ADDREF(*cars = mClientAuthRememberService);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::IsNSSInitialized(PRBool *initialized)
+{
+  nsAutoLock lock(mutex);
+  *initialized = mNSSInitialized;
   return NS_OK;
 }
 
