@@ -411,7 +411,6 @@ Assembler::asm_call(LInsp ins)
     Reservation *callRes = getresv(ins);
 
     uint32_t atypes = call->_argtypes;
-    uint32_t roffset = 0;
 
     // skip return type
     ArgSize rsize = (ArgSize)(atypes & 3);
@@ -440,8 +439,9 @@ Assembler::asm_call(LInsp ins)
         }
     }
 
-    // make the call
-    BL((NIns*)(call->_address));
+    // Make the call using BLX (when necessary) so that we can interwork with
+    // Thumb(-2) code.
+    BranchWithLink((NIns*)(call->_address));
 
     ArgSize sizes[MAXARGS];
     uint32_t argc = call->get_sizes(sizes);
@@ -1080,11 +1080,11 @@ Assembler::JMP_far(NIns* addr)
     } else {
         // Insert the target address as a constant in the instruction stream.
         *(--_nIns) = (NIns)((addr));
-        // ldr pc, [pc - #4] // load the address into pc, reading it from [pc-4] (e.g.,
+        // ldr pc, [pc, #-4] // load the address into pc, reading it from [pc-4] (e.g.,
         // the next instruction)
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
 
-        asm_output("b %p (32-bit)", addr);
+        asm_output("ldr pc, =%p", addr);
     }
 }
 
@@ -1109,12 +1109,70 @@ Assembler::BL(NIns* addr)
 
         // the address
         *(--_nIns) = (NIns)((addr));
-        // ldr pc, [pc - #4] // load the address into ip, reading it from [pc-4]
+        // ldr pc, [pc - #4] // load the address into pc, reading it from [pc-4]
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
         // add lr, pc, #4    // set lr to be past the address that we wrote
         *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
 
-        asm_output("bl %p (32-bit)", addr);
+        asm_output("ldr pc, =%p", addr);
+        asm_output("add lr, pc+4");
+    }
+}
+
+// Perform a branch with link, and ARM/Thumb exchange if necessary. The actual
+// BLX instruction is only available from ARMv5 onwards, but as we don't
+// support anything older than that this function will not attempt to output
+// pre-ARMv5 sequences.
+//
+// Note: This function is not designed to be used with branches which will be
+// patched later, though it will work if the patcher knows how to patch the
+// generated instruction sequence.
+void
+Assembler::BranchWithLink(NIns* addr)
+{
+    // Most branches emitted by TM are loaded through a register, so always
+    // reserve enough space for the LDR sequence. This should give us a slight
+    // net gain over reserving the exact amount required for shorter branches.
+    // This _must_ be called before PC_OFFSET_FROM as it can move _nIns!
+    underrunProtect(4+LD32_size);
+
+    // We don't support ARMv4(T) and will emit ARMv5+ instruction, so assert
+    // that we have a suitable processor.
+    NanoAssert(AvmCore::config.arch >= 5);
+
+    // Calculate the offset from the instruction that is about to be
+    // written (at _nIns-1) to the target.
+    intptr_t offs = PC_OFFSET_FROM(addr,_nIns-1);
+
+    // ARMv5 and above can use BLX <imm> for branches within ±32MB of the
+    // PC and BLX Rm for long branches.
+    if (isS24(offs>>2)) {
+
+        if (((intptr_t)addr & 1) == 0) {
+            // The target is ARM, so just emit a BL.
+
+            // BL addr
+            NanoAssert( ((offs>>2) & ~0xffffff) == 0);
+            *(--_nIns) = (NIns)( (COND_AL) | (0xB<<24) | (offs>>2) );
+            asm_output("bl %p", addr);
+        } else {
+            // The target is Thumb, so emit a BLX.
+
+            // The (pre-shifted) value of the "H" bit in the BLX encoding.
+            uint32_t    H = (offs & 0x2) << 23;
+
+            // BLX addr
+            NanoAssert( ((offs>>2) & ~0xffffff) == 0);
+            *(--_nIns) = (NIns)( (0xF << 28) | (0x5<<25) | (H) | (offs>>2) );
+            asm_output("blx %p", addr);
+        }
+    } else {
+        // BLX IP
+        *(--_nIns) = (NIns)( (COND_AL) | (0x12<<20) | (0xFFF<<8) | (0x3<<4) | (IP) );
+        asm_output("blx ip (=%p)", addr);
+
+        // LDR IP, =addr
+        LD32_nochk(IP, (int32_t)addr);
     }
 }
 
