@@ -70,45 +70,15 @@ class nsHtml5Tokenizer
     static PRUnichar OCTYPE[];
     static PRUnichar UBLIC[];
     static PRUnichar YSTEM[];
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar TITLE_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> TITLE_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar SCRIPT_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> SCRIPT_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar STYLE_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> STYLE_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar PLAINTEXT_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> PLAINTEXT_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar XMP_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> XMP_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar TEXTAREA_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> TEXTAREA_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar IFRAME_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> IFRAME_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar NOEMBED_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> NOEMBED_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar NOSCRIPT_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> NOSCRIPT_ARR;
-    #ifdef nsHtml5Tokenizer_cpp__
-    static PRUnichar NOFRAMES_ARR_DATA[];
-    #endif
     static jArray<PRUnichar,PRInt32> NOFRAMES_ARR;
   protected:
     nsHtml5TreeBuilder* tokenHandler;
@@ -310,26 +280,16 @@ PRUnichar nsHtml5Tokenizer::CDATA_LSQB[] = { 'C', 'D', 'A', 'T', 'A', '[' };
 PRUnichar nsHtml5Tokenizer::OCTYPE[] = { 'o', 'c', 't', 'y', 'p', 'e' };
 PRUnichar nsHtml5Tokenizer::UBLIC[] = { 'u', 'b', 'l', 'i', 'c' };
 PRUnichar nsHtml5Tokenizer::YSTEM[] = { 'y', 's', 't', 'e', 'm' };
-PRUnichar nsHtml5Tokenizer::TITLE_ARR_DATA[] = { 't', 'i', 't', 'l', 'e' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TITLE_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, TITLE_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::SCRIPT_ARR_DATA[] = { 's', 'c', 'r', 'i', 'p', 't' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::SCRIPT_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, SCRIPT_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::STYLE_ARR_DATA[] = { 's', 't', 'y', 'l', 'e' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::STYLE_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, STYLE_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::PLAINTEXT_ARR_DATA[] = { 'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::PLAINTEXT_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, PLAINTEXT_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::XMP_ARR_DATA[] = { 'x', 'm', 'p' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::XMP_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, XMP_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::TEXTAREA_ARR_DATA[] = { 't', 'e', 'x', 't', 'a', 'r', 'e', 'a' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TEXTAREA_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, TEXTAREA_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::IFRAME_ARR_DATA[] = { 'i', 'f', 'r', 'a', 'm', 'e' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::IFRAME_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, IFRAME_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::NOEMBED_ARR_DATA[] = { 'n', 'o', 'e', 'm', 'b', 'e', 'd' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOEMBED_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, NOEMBED_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::NOSCRIPT_ARR_DATA[] = { 'n', 'o', 's', 'c', 'r', 'i', 'p', 't' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOSCRIPT_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, NOSCRIPT_ARR_DATA);
-PRUnichar nsHtml5Tokenizer::NOFRAMES_ARR_DATA[] = { 'n', 'o', 'f', 'r', 'a', 'm', 'e', 's' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, NOFRAMES_ARR_DATA);
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TITLE_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::SCRIPT_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::STYLE_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::PLAINTEXT_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::XMP_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TEXTAREA_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::IFRAME_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOEMBED_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOSCRIPT_ARR = 0;
+jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
 #endif
 
 #define NS_HTML5TOKENIZER_DATA 0
