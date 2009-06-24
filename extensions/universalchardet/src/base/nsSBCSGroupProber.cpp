@@ -56,21 +56,22 @@ nsSBCSGroupProber::nsSBCSGroupProber()
   mProbers[7] = new nsSingleByteCharSetProber(&Win1253Model);
   mProbers[8] = new nsSingleByteCharSetProber(&Latin5BulgarianModel);
   mProbers[9] = new nsSingleByteCharSetProber(&Win1251BulgarianModel);
+  mProbers[10] = new nsSingleByteCharSetProber(&TIS620ThaiModel);
 
   nsHebrewProber *hebprober = new nsHebrewProber();
   // Notice: Any change in these indexes - 10,11,12 must be reflected
   // in the code below as well.
-  mProbers[10] = hebprober;
-  mProbers[11] = new nsSingleByteCharSetProber(&Win1255Model, PR_FALSE, hebprober); // Logical Hebrew
-  mProbers[12] = new nsSingleByteCharSetProber(&Win1255Model, PR_TRUE, hebprober); // Visual Hebrew
+  mProbers[11] = hebprober;
+  mProbers[12] = new nsSingleByteCharSetProber(&Win1255Model, PR_FALSE, hebprober); // Logical Hebrew
+  mProbers[13] = new nsSingleByteCharSetProber(&Win1255Model, PR_TRUE, hebprober); // Visual Hebrew
   // Tell the Hebrew prober about the logical and visual probers
-  if (mProbers[10] && mProbers[11] && mProbers[12]) // all are not null
+  if (mProbers[11] && mProbers[12] && mProbers[13]) // all are not null
   {
-    hebprober->SetModelProbers(mProbers[11], mProbers[12]);
+    hebprober->SetModelProbers(mProbers[12], mProbers[13]);
   }
   else // One or more is null. avoid any Hebrew probing, null them all
   {
-    for (PRUint32 i = 10; i <= 12; ++i)
+    for (PRUint32 i = 11; i <= 13; ++i)
     { 
       delete mProbers[i]; 
       mProbers[i] = 0; 
