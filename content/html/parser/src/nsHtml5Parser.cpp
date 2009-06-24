@@ -242,7 +242,7 @@ nsHtml5Parser::GetContentSink(void)
 NS_IMETHODIMP_(void) 
 nsHtml5Parser::GetCommand(nsCString& aCommand)
 {
-  aCommand.Assign("loadAsData");
+  aCommand.Assign("view");
 }
 
 NS_IMETHODIMP_(void) 
