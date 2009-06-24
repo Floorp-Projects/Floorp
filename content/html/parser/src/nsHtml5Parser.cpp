@@ -688,8 +688,9 @@ nsHtml5Parser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
  *  has been collected from the net.
  */
 nsresult
-nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                        nsresult status)
+nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, 
+                             nsISupports* aContext,
+                             nsresult status)
 {
   mTreeBuilder->MaybeFlush();
   NS_ASSERTION((mRequest == aRequest), "Got Stop on wrong stream.");
@@ -718,42 +719,15 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
       break;
   }
 
-//  if (eOnStart == mStreamListenerState) {
-    // If you're here, then OnDataAvailable() never got called.  Prior
-    // to necko, we never dealt with this case, but the problem may
-    // have existed.  Everybody can live with an empty input stream, so
-    // just resume parsing.
-//    ParseUntilSuspend();
-//  }
-//  mStreamStatus = status;
-
-//  if (mParserFilter)
-//    mParserFilter->Finish();
-
   mStreamListenerState = eOnStop;
 
   if (!mScriptsExecuting) {
     ParseUntilSuspend();
   }
 
-  // If the parser isn't enabled, we don't finish parsing till
-  // it is reenabled.
-
-  // XXX Should we wait to notify our observers as well if the
-  // parser isn't yet enabled?
   if (mObserver) {
     mObserver->OnStopRequest(aRequest, aContext, status);
   }
-
-//  if (sParserDataListeners) {
-//    nsISupports *ctx = GetTarget();
-//    PRInt32 count = sParserDataListeners->Count();
-//
-//    while (count--) {
-//      rv |= sParserDataListeners->ObjectAt(count)->OnStopRequest(aRequest, ctx,
-//                                                                 status);
-//    }
-//  }
 
   return rv;
 }
