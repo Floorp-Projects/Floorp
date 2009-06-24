@@ -963,4 +963,179 @@
     </implementation>
   </binding>
 
+  <binding id="chrome-select" extends="xul:menu">
+    <content orient="horizontal">
+      <xul:hbox class="select-label-box" flex="1">
+        <xul:label anonid="select-label" flex="1" value="" xbl:inherits="value=label"/>
+      </xul:hbox>
+      <xul:dropmarker class="select-dropmarker" type="menu"/>
+      <xul:vbox anonid="select-options" collapsed="true">
+        <children/>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+          // XXX I wish this worked
+          // Bug 500206
+          let options = document.getAnonymousElementByAttribute(this, "anonid", "select-options");
+          let rect = options.getBoundingClientRect();
+          this._label.width = rect.width;
+
+          // Display any pre-selected option
+          this._updateLabel();
+        ]]>
+      </constructor>
+
+      <field name="_displayFormat">"&selectListDisplay.format;"</field>
+
+      <field name="_label">
+        document.getAnonymousElementByAttribute(this, "anonid", "select-label");
+      </field>
+
+      <field name="_originalIndex">
+        -1
+      </field>
+
+      <property name="selectElement" readonly="true">
+        <getter>
+          <![CDATA[
+            return this.QueryInterface(Components.interfaces.nsISelectElement);
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_updateLabel">
+        <body>
+          <![CDATA[
+            let label = "";
+            if (this.multiple) {
+              let selected = 0;
+              let options = this.options;
+              for (let i = 0; i < options.length; i++) {
+                if (options[i].selected)
+                  selected++;
+              }
+
+              label = this._displayFormat.replace(/#1/, selected);
+            } else {
+              let index = this.selectedIndex;
+              if (index != -1)
+                label = this.options[index].text;
+            }
+            this._label.value = label;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_fireChange">
+        <body>
+          <![CDATA[
+            let changeEvent = document.createEvent("Events");
+            changeEvent.initEvent("change", true, false);
+            this.dispatchEvent(changeEvent);
+
+            this._originalIndex = this.selectedIndex;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_UP">
+        <![CDATA[
+          let options = this.options;
+          if (options.length == 0)
+            return;
+
+          let index = this.selectedIndex;
+          if (index == -1) {
+            index = 0;
+          }
+          else {
+            index--;
+            if (index < 0)
+              index = options.length - 1;
+          }
+          this.selectedIndex = index;
+        ]]>
+      </handler>
+
+      <handler event="keypress" keycode="VK_DOWN">
+        <![CDATA[
+          let options = this.options;
+          if (options.length == 0)
+            return;
+
+          let index = this.selectedIndex;
+          if (index == -1) {
+            index = 0;
+          }
+          else {
+            index++;
+            if (index >= options.length)
+              index = 0;
+          }
+          this.selectedIndex = index;
+        ]]>
+      </handler>
+
+      <handler event="click" button="0">
+        <![CDATA[
+          let options = this.options;
+          if (options.length == 0)
+            return;
+
+          this.focus();
+
+          var showEvent = document.createEvent("Events");
+          showEvent.initEvent("UIShowSelect", true, false);
+          this.dispatchEvent(showEvent);
+        ]]>
+      </handler>
+
+      <handler event="focus">
+        <![CDATA[
+          this._originalIndex = this.selectedIndex;
+        ]]>
+      </handler>
+
+      <handler event="blur">
+        <![CDATA[
+          if (this._originalIndex != this.selectedIndex) {
+            this._updateLabel();
+            this._fireChange();
+          }
+        ]]>
+      </handler>
+
+    </handlers>
+  </binding>
+
+  <binding id="chrome-select-option">
+    <content orient="hortizontal" flex="1">
+      <xul:image anonid="check"/>
+      <xul:label anonid="label" xbl:inherits="value=label"/>
+    </content>
+
+    <implementation>
+      <property name="selected">
+        <getter>
+          <![CDATA[
+            return this.hasAttribute("selected");
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (val)
+              this.setAttribute("selected", "true");
+            else
+              this.removeAttribute("selected");
+            return val;
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+  </binding>
 </bindings>
