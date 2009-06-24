@@ -168,7 +168,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIXULDocument.h"
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
-#include "nsIDOMPageTransitionEvent.h"
+
 #include "nsFrameLoader.h"
 
 #include "mozAutoDocUpdate.h"
@@ -7055,24 +7055,14 @@ nsDocument::CheckAncestryAndGetFrame(nsIDocument* aDocument) const
 }
 
 void
-nsDocument::DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
-                                   const nsAString& aType,
-                                   PRBool aPersisted)
+nsDocument::DispatchEventToWindow(nsEvent *aEvent)
 {
-  if (aDispatchTarget) {
-    nsCOMPtr<nsIDOMEvent> event;
-    CreateEvent(NS_LITERAL_STRING("pagetransition"), getter_AddRefs(event));
-    nsCOMPtr<nsIDOMPageTransitionEvent> ptEvent = do_QueryInterface(event);
-    nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(ptEvent);
-    if (pEvent && NS_SUCCEEDED(ptEvent->InitPageTransitionEvent(aType, PR_TRUE,
-                                                                PR_TRUE,
-                                                                aPersisted))) {
-      pEvent->SetTrusted(PR_TRUE);
-      pEvent->SetTarget(this);
-      nsEventDispatcher::DispatchDOMEvent(aDispatchTarget, nsnull, event,
-                                          nsnull, nsnull);
-    }
-  }
+  nsPIDOMWindow *window = GetWindow();
+  if (!window)
+    return;
+
+  aEvent->target = static_cast<nsIDocument*>(this);
+  nsEventDispatcher::Dispatch(window, nsnull, aEvent);
 }
 
 void
@@ -7111,10 +7101,14 @@ nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
     mAnimationController->OnPageShow();
   }
 #endif
-  nsCOMPtr<nsPIDOMEventTarget> target =
-    aDispatchStartTarget ? do_QueryInterface(aDispatchStartTarget) :
-                           do_QueryInterface(GetWindow());
-  DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
+  
+  nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, aPersisted);
+  if (aDispatchStartTarget) {
+    event.target = static_cast<nsIDocument*>(this);
+    nsEventDispatcher::Dispatch(aDispatchStartTarget, nsnull, &event);
+  } else {
+    DispatchEventToWindow(&event);
+  }
 }
 
 void
@@ -7153,10 +7147,13 @@ nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
 #endif
   
   // Now send out a PageHide event.
-  nsCOMPtr<nsPIDOMEventTarget> target =
-    aDispatchStartTarget ? do_QueryInterface(aDispatchStartTarget) :
-                           do_QueryInterface(GetWindow());
-  DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
+  nsPageTransitionEvent event(PR_TRUE, NS_PAGE_HIDE, aPersisted);
+  if (aDispatchStartTarget) {
+    event.target = static_cast<nsIDocument*>(this);
+    nsEventDispatcher::Dispatch(aDispatchStartTarget, nsnull, &event);
+  } else {
+    DispatchEventToWindow(&event);
+  }
 
   mVisible = PR_FALSE;
 }
