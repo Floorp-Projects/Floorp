@@ -117,8 +117,8 @@
 
 /**
  * Fast approximate division by 255. It has the property that
- * for all 0 <= n <= 255*255, FAST_DIVIDE_BY_255(n) == n/255.
- * But it only uses two adds and two shifts instead of an 
+ * for all 0 <= n <= 255*255, GFX_DIVIDE_BY_255(n) == n/255.
+ * But it only uses two adds and two shifts instead of an
  * integer division (which is expensive on many processors).
  *
  * equivalent to ((v)/255)
