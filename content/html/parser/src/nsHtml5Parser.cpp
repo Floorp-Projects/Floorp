@@ -182,18 +182,15 @@ nsHtml5Parser::nsHtml5Parser()
 
 nsHtml5Parser::~nsHtml5Parser()
 {
-  while (mFirstBuffer->next) {
-    nsHtml5UTF16Buffer* oldBuf = mFirstBuffer;
-    mFirstBuffer = mFirstBuffer->next;
-    delete oldBuf;
+  while(mFirstBuffer) {
+     nsHtml5UTF16Buffer* old = mFirstBuffer;
+     mFirstBuffer = mFirstBuffer->next;
+     delete old;
   }
-  delete mFirstBuffer;
   
   delete mTokenizer;
   delete mTreeBuilder;
-  if (mSniffingBuffer) {
-    delete[] mSniffingBuffer;
-  }
+  delete[] mSniffingBuffer;
   delete mMetaScanner;
 #ifdef DEBUG
   delete mSnapshot;
