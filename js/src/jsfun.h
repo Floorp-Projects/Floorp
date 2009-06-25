@@ -354,10 +354,10 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, struct JSArenaPool *pool);
 extern void
 js_FreezeLocalNames(JSContext *cx, JSFunction *fun);
 
-extern JS_REQUIRES_STACK JSBool
+extern JSBool
 js_fun_apply(JSContext *cx, uintN argc, jsval *vp);
 
-extern JS_REQUIRES_STACK JSBool
+extern JSBool
 js_fun_call(JSContext *cx, uintN argc, jsval *vp);
 
 
