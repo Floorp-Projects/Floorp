@@ -45,7 +45,6 @@
     static PRUint32    sTreeOpQueueMaxLength;
     PRBool             mNeedsFlush;
     nsCOMPtr<nsITimer> mFlushTimer;
-    nsHtml5Parser*     mParser; // weak ref
     PRBool             mHasProcessedBase;
 #ifdef DEBUG
     PRBool             mActive;
@@ -58,10 +57,10 @@
       if (!mNeedsFlush) {
         mNeedsFlush = !!(mOpQueue.Length() >= sTreeOpQueueMaxLength);
       }
-      if (mParser->DidProcessATokenImpl() == NS_ERROR_HTMLPARSER_INTERRUPTED || mNeedsFlush) {
+      if (parser->DidProcessATokenImpl() == NS_ERROR_HTMLPARSER_INTERRUPTED || mNeedsFlush) {
         // We've been in the parser for too long and/or the op queue is becoming too
         // long to flush in one go it it grows further.
-        mParser->Suspend();
+        parser->Suspend();
         requestSuspension();
       }
     }
@@ -126,20 +125,20 @@
     }
     
     inline nsIDocument* GetDocument() {
-      return mParser->GetDocument();
+      return parser->GetDocument();
     }
     
     inline void SetScriptElement(nsIContent* aScript) {
-      mParser->SetScriptElement(aScript);
+      parser->SetScriptElement(aScript);
     }
     
     inline void UpdateStyleSheet(nsIContent* aSheet) {
-      mParser->UpdateStyleSheet(aSheet);
+      parser->UpdateStyleSheet(aSheet);
     }
     
     inline nsresult ProcessBase(nsIContent* aBase) {
       if (!mHasProcessedBase) {
-        nsresult rv = mParser->ProcessBASETag(aBase);
+        nsresult rv = parser->ProcessBASETag(aBase);
         NS_ENSURE_SUCCESS(rv, rv);
         mHasProcessedBase = PR_TRUE;
       }
@@ -147,11 +146,11 @@
     }
 
     inline nsresult ProcessMeta(nsIContent* aMeta) {
-      return mParser->ProcessMETATag(aMeta);
+      return parser->ProcessMETATag(aMeta);
     }
 
     inline nsresult ProcessOfflineManifest(nsIContent* aHtml) {
-      mParser->ProcessOfflineManifest(aHtml);
+      parser->ProcessOfflineManifest(aHtml);
       return NS_OK;
     }
     
@@ -159,7 +158,7 @@
       nsIDocument* doc = GetDocument();
       if (doc) {
         FlushPendingAppendNotifications();
-        mParser->StartLayout(PR_FALSE);
+        parser->StartLayout(PR_FALSE);
       }
     }
     

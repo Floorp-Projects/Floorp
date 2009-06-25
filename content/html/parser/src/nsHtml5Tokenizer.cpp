@@ -41,7 +41,6 @@
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
-#include "nsHtml5Parser.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 
@@ -57,6 +56,16 @@
 
 #include "nsHtml5Tokenizer.h"
 
+static PRUnichar const TITLE_ARR_DATA[] = { 't', 'i', 't', 'l', 'e' };
+static PRUnichar const SCRIPT_ARR_DATA[] = { 's', 'c', 'r', 'i', 'p', 't' };
+static PRUnichar const STYLE_ARR_DATA[] = { 's', 't', 'y', 'l', 'e' };
+static PRUnichar const PLAINTEXT_ARR_DATA[] = { 'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't' };
+static PRUnichar const XMP_ARR_DATA[] = { 'x', 'm', 'p' };
+static PRUnichar const TEXTAREA_ARR_DATA[] = { 't', 'e', 'x', 't', 'a', 'r', 'e', 'a' };
+static PRUnichar const IFRAME_ARR_DATA[] = { 'i', 'f', 'r', 'a', 'm', 'e' };
+static PRUnichar const NOEMBED_ARR_DATA[] = { 'n', 'o', 'e', 'm', 'b', 'e', 'd' };
+static PRUnichar const NOSCRIPT_ARR_DATA[] = { 'n', 'o', 's', 'c', 'r', 'i', 'p', 't' };
+static PRUnichar const NOFRAMES_ARR_DATA[] = { 'n', 'o', 'f', 'r', 'a', 'm', 'e', 's' };
 
 nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler)
   : tokenHandler(tokenHandler),
@@ -3228,26 +3237,16 @@ nsHtml5Tokenizer::setEncodingDeclarationHandler(nsHtml5Parser* encodingDeclarati
 void
 nsHtml5Tokenizer::initializeStatics()
 {
-  PRUnichar TITLE_ARR_DATA[] = { 't', 'i', 't', 'l', 'e' };
-  TITLE_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, TITLE_ARR_DATA);
-  PRUnichar SCRIPT_ARR_DATA[] = { 's', 'c', 'r', 'i', 'p', 't' };
-  SCRIPT_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, SCRIPT_ARR_DATA);
-  PRUnichar STYLE_ARR_DATA[] = { 's', 't', 'y', 'l', 'e' };
-  STYLE_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, STYLE_ARR_DATA);
-  PRUnichar PLAINTEXT_ARR_DATA[] = { 'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't' };
-  PLAINTEXT_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, PLAINTEXT_ARR_DATA);
-  PRUnichar XMP_ARR_DATA[] = { 'x', 'm', 'p' };
-  XMP_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, XMP_ARR_DATA);
-  PRUnichar TEXTAREA_ARR_DATA[] = { 't', 'e', 'x', 't', 'a', 'r', 'e', 'a' };
-  TEXTAREA_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, TEXTAREA_ARR_DATA);
-  PRUnichar IFRAME_ARR_DATA[] = { 'i', 'f', 'r', 'a', 'm', 'e' };
-  IFRAME_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, IFRAME_ARR_DATA);
-  PRUnichar NOEMBED_ARR_DATA[] = { 'n', 'o', 'e', 'm', 'b', 'e', 'd' };
-  NOEMBED_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, NOEMBED_ARR_DATA);
-  PRUnichar NOSCRIPT_ARR_DATA[] = { 'n', 'o', 's', 'c', 'r', 'i', 'p', 't' };
-  NOSCRIPT_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, NOSCRIPT_ARR_DATA);
-  PRUnichar NOFRAMES_ARR_DATA[] = { 'n', 'o', 'f', 'r', 'a', 'm', 'e', 's' };
-  NOFRAMES_ARR = J_ARRAY_STATIC(PRUnichar, PRInt32, NOFRAMES_ARR_DATA);
+  TITLE_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)TITLE_ARR_DATA, 5);
+  SCRIPT_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)SCRIPT_ARR_DATA, 6);
+  STYLE_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)STYLE_ARR_DATA, 5);
+  PLAINTEXT_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)PLAINTEXT_ARR_DATA, 9);
+  XMP_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)XMP_ARR_DATA, 3);
+  TEXTAREA_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)TEXTAREA_ARR_DATA, 8);
+  IFRAME_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)IFRAME_ARR_DATA, 6);
+  NOEMBED_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)NOEMBED_ARR_DATA, 7);
+  NOSCRIPT_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)NOSCRIPT_ARR_DATA, 8);
+  NOFRAMES_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)NOFRAMES_ARR_DATA, 8);
 }
 
 void
