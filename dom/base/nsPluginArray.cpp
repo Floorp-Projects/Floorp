@@ -49,14 +49,12 @@
 #include "nsPluginError.h"
 #include "nsContentUtils.h"
 
-static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-
 nsPluginArray::nsPluginArray(nsNavigator* navigator,
                              nsIDocShell *aDocShell)
 {
   nsresult rv;
   mNavigator = navigator; // don't ADDREF here, needed for parent of script object.
-  mPluginHost = do_GetService(kPluginManagerCID, &rv);
+  mPluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv);
   mPluginCount = 0;
   mPluginArray = nsnull;
   mDocShell = aDocShell;
@@ -175,7 +173,7 @@ nsPluginArray::GetPluginHost(nsIPluginHost** aPluginHost)
   nsresult rv = NS_OK;
 
   if (!mPluginHost) {
-    mPluginHost = do_GetService(kPluginManagerCID, &rv);
+    mPluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv);
 
     if (NS_FAILED(rv)) {
       return rv;
@@ -202,20 +200,18 @@ nsPluginArray::Refresh(PRBool aReloadDocuments)
     return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
 
   if (!mPluginHost) {
-    mPluginHost = do_GetService(kPluginManagerCID, &res);
+    mPluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res);
   }
 
   if(NS_FAILED(res)) {
     return res;
   }
 
-  nsCOMPtr<nsIPluginManager> pm(do_QueryInterface(mPluginHost));
-
   // NS_ERROR_PLUGINS_PLUGINSNOTCHANGED on reloading plugins indicates
   // that plugins did not change and was not reloaded
   PRBool pluginsNotChanged = PR_FALSE;
-  if(pm)
-    pluginsNotChanged = (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == pm->ReloadPlugins(aReloadDocuments));
+  if(mPluginHost)
+    pluginsNotChanged = (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == mPluginHost->ReloadPlugins(aReloadDocuments));
 
   // no need to reload the page if plugins have not been changed
   // in fact, if we do reload we can hit recursive load problem, see bug 93351
