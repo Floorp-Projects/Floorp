@@ -255,7 +255,7 @@ __attribute__((packed))
 ;
 
 #ifdef USE_TRACE_TYPE_ENUM
-typedef enum JSTraceType_ JSTraceType;
+typedef JSTraceType_ JSTraceType;
 #else
 typedef int8_t JSTraceType;
 #endif
