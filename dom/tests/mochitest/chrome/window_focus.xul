@@ -1054,7 +1054,7 @@ function framesetWindowLoaded(framesetWindow)
   }
   else {
     gNewExpectedWindow = null;
-    gRefocusCallback = doFrameSwitchingTests;
+    gRefocusCallback = doWindowNoRootTest;
     framesetWindow.close();
   }
 }
