@@ -382,6 +382,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             }                                                                 \
                                                                               \
             if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(entry->vcap))) {  \
+                JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);                      \
                 PCMETER(cache_->pchits++);                                    \
                 PCMETER(!PCVCAP_TAG(entry->vcap) || cache_->protopchits++);   \
                 pobj = OBJ_SCOPE(pobj)->object;                               \
