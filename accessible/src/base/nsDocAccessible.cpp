@@ -340,16 +340,16 @@ nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 }
 
 nsresult
-nsDocAccessible::GetARIAState(PRUint32 *aState)
+nsDocAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Combine with states from outer doc
   NS_ENSURE_ARG_POINTER(aState);
-  nsresult rv = nsAccessible::GetARIAState(aState);
+  nsresult rv = nsAccessible::GetARIAState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsAccessible> parent = nsAccUtils::QueryAccessible(mParent);
   if (parent)  // Allow iframe/frame etc. to have final state override via ARIA
-    return parent->GetARIAState(aState);
+    return parent->GetARIAState(aState, aExtraState);
 
   return rv;
 }
