@@ -43,14 +43,35 @@
 #include "prtypes.h"
 #include "nsAccessibilityAtoms.h"
 
-// Is nsIAccessible value supported for this role or not?
+#include "nsIContent.h"
+
+////////////////////////////////////////////////////////////////////////////////
+// Value constants
+
+/**
+ * Used to define if role requires to expose nsIAccessibleValue.
+ */
 enum EValueRule
 {
+  /**
+   * nsIAccessibleValue isn't exposed.
+   */
   eNoValue,
-  eHasValueMinMax    // Supports value, min and max from aria-valuenow, aria-valuemin and aria-valuemax
+
+  /**
+   * nsIAccessibleValue is implemented, supports value, min and max from
+   * aria-valuenow, aria-valuemin and aria-valuemax.
+   */
+  eHasValueMinMax
 };
 
-// Should we expose action based on the ARIA role?
+
+////////////////////////////////////////////////////////////////////////////////
+// Action constants
+
+/**
+ * Used to define if the role requires to expose action.
+ */
 enum EActionRule
 {
   eNoAction,
@@ -65,6 +86,13 @@ enum EActionRule
   eSwitchAction
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Live region constants
+
+/**
+ * Used to define if role exposes default value of aria-live attribute.
+ */
 enum ELiveAttrRule
 {
   eNoLiveAttr,
@@ -72,11 +100,23 @@ enum ELiveAttrRule
   ePoliteLiveAttr
 };
 
-// Role mapping rule
+
+////////////////////////////////////////////////////////////////////////////////
+// Role constants
+
+/**
+ * ARIA role overrides role from native markup.
+ */
 const PRBool kUseMapRole = PR_TRUE;
+
+/**
+ * ARIA role doesn't override the role from native markup.
+ */
 const PRBool kUseNativeRole = PR_FALSE;
 
-// ARIA attribute characteristic masks, grow as needed
+
+////////////////////////////////////////////////////////////////////////////////
+// ARIA attribute characteristic masks
 
 /**
  * This mask indicates the attribute should not be exposed as an object
@@ -92,29 +132,132 @@ const PRUint8 ATTR_BYPASSOBJ  = 0x0001;
  */
 const PRUint8 ATTR_VALTOKEN   = 0x0010;
 
-// Used for an nsStateMapEntry if a given state attribute supports "true" and "false"
-#define kBoolState 0
-
-// Used in nsRoleMapEntry.state if no nsIAccessibleStates are automatic for a given role
-#define kNoReqStates 0
-
-// For this name and value pair, what is the nsIAccessibleStates mapping.
-// nsStateMapEntry.state
-struct nsStateMapEntry
-{
-  nsIAtom** attributeName;  // nsnull indicates last entry in map
-  const char* attributeValue; // magic value of kBoolState (0) means supports "true" and "false"
-  PRUint32 state;             // If match, this is the nsIAccessibleStates to map to
-};
-
-// Small footprint storage of persistent aria attribute characteristics
+/**
+ * Small footprint storage of persistent aria attribute characteristics.
+ */
 struct nsAttributeCharacteristics
 {
   nsIAtom** attributeName;
   const PRUint8 characteristics;
 };
 
-// For each ARIA role, this maps the nsIAccessible information
+
+////////////////////////////////////////////////////////////////////////////////
+// State map entry
+
+/**
+ * Used in nsRoleMapEntry.state if no nsIAccessibleStates are automatic for
+ * a given role.
+ */
+#define kNoReqStates 0
+
+enum eStateValueType
+{
+  kBoolType,
+  kMixedType
+};
+
+/**
+ * ID for state map entry, used in nsRoleMapEntry.
+ */
+enum eStateMapEntryID
+{
+  eARIANone,
+  eARIAAutoComplete,
+  eARIABusy,
+  eARIACheckableBool,
+  eARIACheckableMixed,
+  eARIACheckedMixed,
+  eARIADisabled,
+  eARIAExpanded,
+  eARIAHasPopup,
+  eARIAInvalid,
+  eARIAMultiline,
+  eARIAMultiSelectable,
+  eARIAPressed,
+  eARIAReadonly,
+  eARIAReadonlyOrEditable,
+  eARIARequired,
+  eARIASelected
+};
+
+class nsStateMapEntry
+{
+public:
+  /**
+   * Used to create stub.
+   */
+  nsStateMapEntry() {}
+
+  /**
+   * Used for ARIA attributes having boolean or mixed values.
+   */
+  nsStateMapEntry(nsIAtom **aAttrName, eStateValueType aType,
+                  PRUint32 aPermanentState,
+                  PRUint32 aTrueState, PRUint32 aTrueExtraState,
+                  PRUint32 aFalseState = 0, PRUint32 aFalseExtraState = 0,
+                  PRBool aDefinedIfAbsent = PR_FALSE);
+
+  /**
+   * Used for ARIA attributes having enumerated values.
+   */
+  nsStateMapEntry(nsIAtom **aAttrName,
+                  const char *aValue1, PRUint32 aState1, PRUint32 aExtraState1,
+                  const char *aValue2, PRUint32 aState2, PRUint32 aExtraState2,
+                  const char *aValue3 = 0, PRUint32 aState3 = 0,
+                  PRUint32 aExtraState3 = 0);
+
+  /**
+   * Maps ARIA state map pointed by state map entry ID to accessible states.
+   *
+   * @param  aContent         [in] node of the accessible
+   * @param  aState           [in/out] accessible states
+   * @param  aExtraState      [in/out] accessible extra states
+   * @param  aStateMapEntryID [in] state map entry ID
+   * @return                   true if state map entry ID is valid
+   */
+  static PRBool MapToStates(nsIContent *aContent,
+                            PRUint32 *aState, PRUint32 *aExtraState,
+                            eStateMapEntryID aStateMapEntryID);
+
+private:
+  // ARIA attribute name
+  nsIAtom** attributeName;
+
+  // Indicates if attribute is token (can be undefined)
+  PRBool isToken;
+
+  // State applied always if attribute is defined
+  PRUint32 permanentState;
+
+  // States applied if attribute value is matched to the stored value
+  const char* value1;
+  PRUint32 state1;
+  PRUint32 extraState1;
+
+  const char* value2;
+  PRUint32 state2;
+  PRUint32 extraState2;
+
+  const char* value3;
+  PRUint32 state3;
+  PRUint32 extraState3;
+
+  // States applied if no stored values above are matched
+  PRUint32 defaultState;
+  PRUint32 defaultExtraState;
+
+  // Permanent and false states are applied if attribute is absent
+  PRBool definedIfAbsent;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Role map entry
+
+/**
+ * For each ARIA role, this maps the nsIAccessible information.
+ */
 struct nsRoleMapEntry
 {
   // ARIA role: string representation such as "button"
@@ -144,15 +287,14 @@ struct nsRoleMapEntry
   // Currently you cannot have unlimited mappings, because
   // a variable sized array would not allow the use of
   // C++'s struct initialization feature.
-  nsStateMapEntry attributeMap1;
-  nsStateMapEntry attributeMap2;
-  nsStateMapEntry attributeMap3;
-  nsStateMapEntry attributeMap4;
-  nsStateMapEntry attributeMap5;
-  nsStateMapEntry attributeMap6;
-  nsStateMapEntry attributeMap7;
-  nsStateMapEntry attributeMap8;
+  eStateMapEntryID attributeMap1;
+  eStateMapEntryID attributeMap2;
+  eStateMapEntryID attributeMap3;
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ARIA map
 
 /**
  *  These are currently initialized (hardcoded) in nsARIAMap.cpp, 
@@ -181,10 +323,15 @@ struct nsARIAMap
   static nsRoleMapEntry gEmptyRoleMap;
 
   /**
+   * State map of ARIA state attributes.
+   */
+  static nsStateMapEntry nsARIAMap::gWAIStateMap[];
+
+  /**
    * State map of ARIA states applied to any accessible not depending on
    * the role.
    */
-  static nsStateMapEntry gWAIUnivStateMap[];
+  static eStateMapEntryID gWAIUnivStateMap[];
   
   /**
    * Map of attribute to attribute characteristics.
