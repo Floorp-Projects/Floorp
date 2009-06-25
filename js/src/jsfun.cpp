@@ -784,7 +784,7 @@ JSClass js_DeclEnvClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
 {
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_CallClass ||
@@ -803,6 +803,8 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
          * still has an active stack frame associated with it.
          */
         if (fun->needsWrapper()) {
+            js_LeaveTrace(cx);
+
             JSStackFrame *fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
             if (fp) {
                 JSObject *wrapper = WrapEscapingClosure(cx, fp, funobj, fun);
@@ -820,7 +822,7 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
     return true;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 CalleeGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     return CheckForEscapingClosure(cx, obj, vp);
