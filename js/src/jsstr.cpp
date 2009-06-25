@@ -1552,7 +1552,7 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
     return NULL;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 {
     JSString *repstr;
@@ -1567,6 +1567,8 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         jsval *invokevp, *sp;
         void *mark;
         JSBool ok;
+
+        js_LeaveTrace(cx);
 
         /*
          * Save the regExpStatics from the current regexp, since they may be
@@ -1752,7 +1754,7 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     return JS_TRUE;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 str_replace(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *lambda;
@@ -1771,7 +1773,7 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     return js_StringReplaceHelper(cx, argc, lambda, repstr, vp);
 }
 
-JSBool JS_REQUIRES_STACK
+JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
                        JSString *repstr, jsval *vp)
 {
