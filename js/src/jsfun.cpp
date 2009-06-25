@@ -1929,7 +1929,7 @@ fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-JS_REQUIRES_STACK JSBool
+JSBool
 js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
@@ -1937,6 +1937,8 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     void *mark;
     JSBool ok;
+
+    js_LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &vp[1]))
@@ -1988,7 +1990,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 }
 
-JS_REQUIRES_STACK JSBool
+JSBool
 js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj, *aobj;
@@ -2003,6 +2005,8 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         /* Will get globalObject as 'this' and no other arguments. */
         return js_fun_call(cx, argc, vp);
     }
+
+    js_LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &vp[1]))
