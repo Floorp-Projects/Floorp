@@ -921,6 +921,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 421419-1.html 421419-1-ref.html
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
+== 421632-1.html 421632-1-ref.html
 != 421710-1.html about:blank     # assertion test (and crash test)
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
