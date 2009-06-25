@@ -56,7 +56,14 @@ public:
     static PRBool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                                        PRInt32 realWidth, PRInt32 realHeight)
     {
-        return nsIntRect(0, 0, realWidth, realHeight).Contains(nsIntRect(x, y, w, h));
+        if (w <= 0 || h <= 0 || x < 0 || y < 0)
+            return PR_FALSE;
+
+        if (x >= realWidth  || w > (realWidth - x) ||
+            y >= realHeight || h > (realHeight - y))
+            return PR_FALSE;
+
+        return PR_TRUE;
     }
 
     // Flag aCanvasElement as write-only if drawing an image with aPrincipal
