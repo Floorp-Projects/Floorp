@@ -321,6 +321,12 @@ js_InitJITLogController ( void )
     if (strstr(tmf, "assembly"))    bits |= LC_Assembly;
     if (strstr(tmf, "nocodeaddrs")) bits |= LC_NoCodeAddrs;
 
+    if (strstr(tmf, "full")) {
+        bits |= LC_TMMinimal | LC_TMTracer | LC_TMRecorder | LC_TMPatcher | LC_TMAbort |
+                LC_TMAbort   | LC_TMStats  | LC_TMRegexp   | LC_Liveness  | LC_ReadLIR |
+                LC_AfterSF_SP | LC_AfterSF_RP | LC_AfterDeadF | LC_RegAlloc | LC_Assembly;
+    }
+
     js_LogController.lcbits = bits;
     return;
 
@@ -336,6 +342,7 @@ js_InitJITLogController ( void )
     printf("   help         show this message\n");
     printf("   ------ options for jstracer & jsregexp ------\n");
     printf("   minimal      ultra-minimalist output; try this first\n");
+    printf("   full         everything (old verbosity)\n");
     printf("   tracer       tracer lifetime (FIXME:better description)\n");
     printf("   recorder     trace recording stuff (FIXME:better description)\n");
     printf("   patcher      patching stuff (FIXME:better description)\n");
