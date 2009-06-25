@@ -1404,7 +1404,7 @@ tabpanels {
   border: 1px dotted transparent;
 }
 
-.tabbrowser-tab[selected="true"]:focus > .tab-text {
+.tabbrowser-tab:focus > .tab-text {
   border: 1px dotted -moz-DialogText;
 }
 

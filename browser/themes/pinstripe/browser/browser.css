@@ -1561,7 +1561,7 @@ tabbrowser > tabbox {
   background-color: -moz-mac-chrome-active;
 }
 
-.tabbrowser-tab[selected="true"]:focus > .tab-text {
+.tabbrowser-tab:focus > .tab-text {
   -moz-box-shadow: 0 0 4px -moz-mac-focusring,
                    0 0 4px -moz-mac-focusring,
                    0 0 3px -moz-mac-focusring,
