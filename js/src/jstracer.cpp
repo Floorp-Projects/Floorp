@@ -366,8 +366,9 @@ js_InitJITLogController ( void )
 }
 #endif
 
+#if defined DEBUG
 static const char*
-js_ExitName(ExitType type)
+getExitName(ExitType type)
 {
     static const char* exitNames[] =
     {
@@ -380,6 +381,7 @@ js_ExitName(ExitType type)
     
     return exitNames[type];
 }
+#endif
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
    case cause performance regressions. */
@@ -2965,7 +2967,7 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
     debug_only_printf(LC_TMRecorder,
                       "    About to try emitting guard code for "
                       "SideExit=%p exitType=%s\n",
-                      (void*)exit, js_ExitName(exit->exitType));
+                      (void*)exit, getExitName(exit->exitType));
 
     LIns* guardRec = createGuardRecord(exit);
 
@@ -4780,7 +4782,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
         return js_AttemptToExtendTree(cx, lr, NULL, outer);
       default:
-        debug_only_printf(LC_TMTracer, "exit_type=%s\n", js_ExitName(lr->exitType));
+        debug_only_printf(LC_TMTracer, "exit_type=%s\n", getExitName(lr->exitType));
         js_AbortRecording(cx, "Inner tree not suitable for calling");
         return false;
     }
@@ -5334,7 +5336,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                       FramePCOffset(fp),
                       js_CodeName[fp->imacpc ? *fp->imacpc : *fp->regs->pc],
                       (void*)lr,
-                      js_ExitName(lr->exitType),
+                      getExitName(lr->exitType),
                       fp->regs->sp - StackBase(fp),
                       calldepth,
                       cycles);
