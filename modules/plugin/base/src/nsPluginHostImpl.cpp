@@ -195,8 +195,6 @@ static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
-// for the dialog
-static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 
 // Registry keys for caching plugin info
 static const char kPluginsRootKey[] = "software/plugins";
@@ -2512,9 +2510,7 @@ nsPluginHostImpl::~nsPluginHostImpl()
   sInst = nsnull;
 }
 
-NS_IMPL_ISUPPORTS6(nsPluginHostImpl,
-                   nsIPluginManager,
-                   nsIPluginManager2,
+NS_IMPL_ISUPPORTS4(nsPluginHostImpl,
                    nsIPluginHost,
                    nsIObserver,
                    nsPIPluginHost,
@@ -2551,32 +2547,6 @@ nsPluginHostImpl::GetPluginName(nsIPluginInstance *aPluginInstance)
     return plugin->mPluginTag->mName.get();
 
   return nsnull;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void *aValue)
-{
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_ARG_POINTER(aValue);
-
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && defined(MOZ_X11)
-  if (nsPluginManagerVariable_XDisplay == aVariable) {
-    Display** value = reinterpret_cast<Display**>(aValue);
-#if defined (MOZ_WIDGET_GTK2)
-    *value = GDK_DISPLAY();
-#endif
-    if (!(*value))
-      return NS_ERROR_FAILURE;
-  }
-#endif
-  if (nsPluginManagerVariable_SupportsXEmbed == aVariable) {
-#ifdef MOZ_WIDGET_GTK2
-    *(NPBool*)aValue = PR_TRUE;
-#else
-    *(NPBool*)aValue = PR_FALSE;
-#endif
-  }
-  return rv;
 }
 
 PRBool nsPluginHostImpl::IsRunningPlugin(nsPluginTag * plugin)
@@ -2767,7 +2737,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
                            altHost, referrer, forceJSEnabled, nsnull, nsnull);
 }
 
-NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
+nsresult nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
                      const char* url,
                      const char* target,
                      nsIPluginStreamListener* streamListener,
@@ -2902,43 +2872,6 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
 
   return rv;
 }
-
-NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
-                                               const char* aPluginName,
-                                               const char* aDescription,
-                                               const char** aMimeTypes,
-                                               const char** aMimeDescriptions,
-                                               const char** aFileExtensions,
-                                               PRInt32 aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::UnregisterPlugin(REFNSIID aCID)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::BeginWaitCursor(void)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::EndWaitCursor(void)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::SupportsURLProtocol(const char* protocol, PRBool *result)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPluginHostImpl::NotifyStatusChange(nsIPlugin* plugin, nsresult errorStatus)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 /* This method queries the prefs for proxy information.
  * It has been tested and is known to work in the following three cases
@@ -3618,7 +3551,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
                                          nsIURI *aURL,
                                          nsIPluginInstanceOwner *aOwner)
@@ -5260,15 +5193,14 @@ nsPluginHostImpl::EnsurePrivateDirServiceProvider()
 }
 #endif /* XP_WIN */
 
-// Called by GetURL and PostURL
-NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
-                                                   nsIPluginInstance *aInstance,
-                                                   nsIPluginStreamListener* aListener,
-                                                   const char *aPostData,
-                                                   PRBool aIsFile,
-                                                   PRUint32 aPostDataLen,
-                                                   const char *aHeadersData,
-                                                   PRUint32 aHeadersDataLen)
+nsresult nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
+                                              nsIPluginInstance *aInstance,
+                                              nsIPluginStreamListener* aListener,
+                                              const char *aPostData,
+                                              PRBool aIsFile,
+                                              PRUint32 aPostDataLen,
+                                              const char *aHeadersData,
+                                              PRUint32 aHeadersDataLen)
 {
   nsCOMPtr<nsIURI> url;
   nsAutoString absUrl;
@@ -5445,7 +5377,7 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
 
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
                                       PRUint32 aHeadersDataLen,
                                       nsIChannel *aGenericChannel)

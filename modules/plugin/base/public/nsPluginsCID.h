@@ -35,15 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPluginsCID_h__
-#define nsPluginsCID_h__
-
-#include "nsISupports.h"
-#include "nsIFactory.h"
-#include "nsIComponentManager.h"
+#ifndef nsPluginsCID_h_
+#define nsPluginsCID_h_
 
 #define NS_PLUGIN_HOST_CID \
-{ 0xadea1880, 0x1a8e, 0x11d2, \
-{ 0xa8, 0x2e, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+{ 0xA2D6DC70, 0x7456, 0x4422, \
+{ 0xA9, 0xF6, 0xD9, 0x6F, 0x46, 0x86, 0x8C, 0x0B } }
 
-#endif // nsPluginsCID_h__
+#endif // nsPluginsCID_h_

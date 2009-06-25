@@ -64,9 +64,7 @@
 #include "nsIParser.h"
 
 // plugins
-#include "nsIPluginManager.h"
 #include "nsIPluginHost.h"
-static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kPluginDocumentCID, NS_PLUGINDOCUMENT_CID);
 
 // Factory code for creating variations on html documents
@@ -291,7 +289,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
                           aDocListener, aDocViewer);
   }
 
-  nsCOMPtr<nsIPluginHost> ph (do_GetService(kPluginManagerCID));
+  nsCOMPtr<nsIPluginHost> ph (do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   if(ph && NS_SUCCEEDED(ph->IsPluginEnabledForType(aContentType))) {
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
@@ -615,4 +613,3 @@ PRBool nsContentDLF::IsImageContentType(const char* aContentType) {
   loader->SupportImageWithMimeType(aContentType, &isDecoderAvailable);
   return isDecoderAvailable;
 }
-
