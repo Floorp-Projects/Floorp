@@ -218,9 +218,52 @@ public:
     }
 };
 
+
+#if defined(_MSC_VER) || defined(__GNUC__)
+#define USE_TRACE_TYPE_ENUM
+#endif
+
+/*
+ * The types of values calculated during tracing, used to specialize operations
+ * to the types of those values.  These loosely correspond to the values of the
+ * JSVAL_* language types, but we add a few further divisions to enable further
+ * optimization at execution time.  Do not rely on this loose correspondence for
+ * correctness without adding static assertions!
+ *
+ * The ifdefs enforce that this enum occupies only one byte of memory, where
+ * possible.  If it doesn't, type maps will occupy more space but should
+ * otherwise work correctly.  A static assertion in jstracer.cpp verifies that
+ * this requirement is correctly enforced by these compilers.
+ */
+enum JSTraceType_
+#ifdef _MSC_VER
+: int8_t
+#endif
+{
+    TT_OBJECT         = 0, /* pointer to JSObject whose class is not js_FunctionClass */
+    TT_INT32          = 1, /* 32-bit signed integer */
+    TT_DOUBLE         = 2, /* pointer to jsdouble */
+    TT_JSVAL          = 3, /* arbitrary jsval */
+    TT_STRING         = 4, /* pointer to JSString */
+    TT_NULL           = 5, /* null */
+    TT_PSEUDOBOOLEAN  = 6, /* true, false, or undefined (0, 1, or 2) */
+    TT_FUNCTION       = 7  /* pointer to JSObject whose class is js_FunctionClass */
+}
+#ifdef __GNUC__
+__attribute__((packed))
+#endif
+;
+
+#ifdef USE_TRACE_TYPE_ENUM
+typedef enum JSTraceType_ JSTraceType;
+#else
+typedef int8_t JSTraceType;
+#endif
+
+
 typedef Queue<uint16> SlotList;
 
-class TypeMap : public Queue<uint8> {
+class TypeMap : public Queue<JSTraceType> {
 public:
     JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth);
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
@@ -305,17 +348,17 @@ struct VMSideExit : public nanojit::SideExit
     }
 };
 
-static inline uint8* getStackTypeMap(nanojit::SideExit* exit)
+static inline JSTraceType* getStackTypeMap(nanojit::SideExit* exit)
 {
-    return (uint8*)(((VMSideExit*)exit) + 1);
+    return (JSTraceType*)(((VMSideExit*)exit) + 1);
 }
 
-static inline uint8* getGlobalTypeMap(nanojit::SideExit* exit)
+static inline JSTraceType* getGlobalTypeMap(nanojit::SideExit* exit)
 {
     return getStackTypeMap(exit) + ((VMSideExit*)exit)->numStackSlots;
 }
 
-static inline uint8* getFullTypeMap(nanojit::SideExit* exit)
+static inline JSTraceType* getFullTypeMap(nanojit::SideExit* exit)
 {
     return getStackTypeMap(exit);
 }
@@ -353,7 +396,7 @@ struct FrameInfo {
     bool   is_constructing() const { return (argc & CONSTRUCTING_MASK) != 0; }
 
     // The typemap just before the callee is called.
-    uint8* get_typemap() { return (uint8*) (this+1); }
+    JSTraceType* get_typemap() { return (JSTraceType*) (this+1); }
 };
 
 struct UnstableExit
@@ -403,10 +446,10 @@ public:
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
     }
-    inline uint8* globalTypeMap() {
+    inline JSTraceType* globalTypeMap() {
         return typeMap.data() + nStackTypes;
     }
-    inline uint8* stackTypeMap() {
+    inline JSTraceType* stackTypeMap() {
         return typeMap.data();
     }
 };
@@ -531,10 +574,10 @@ class TraceRecorder : public avmplus::GCObject {
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(jsval* p) const;
-    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8 t,
+    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, JSTraceType t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned stackSlots,
-                                  unsigned callDepth, unsigned ngslots, uint8* typeMap);
+                                  unsigned callDepth, unsigned ngslots, JSTraceType* typeMap);
     void trackNativeStackUse(unsigned slots);
 
     JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
@@ -551,7 +594,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool known(jsval* p);
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation();
 
-    JS_REQUIRES_STACK bool checkType(jsval& v, uint8 t, jsval*& stage_val,
+    JS_REQUIRES_STACK bool checkType(jsval& v, JSTraceType t, jsval*& stage_val,
                                      nanojit::LIns*& stage_ins, unsigned& stage_count);
     JS_REQUIRES_STACK bool deduceTypeStability(nanojit::Fragment* root_peer,
                                                nanojit::Fragment** stable_peer,
@@ -688,7 +731,7 @@ class TraceRecorder : public avmplus::GCObject {
 public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
-                  unsigned stackSlots, unsigned ngslots, uint8* typeMap,
+                  unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
                   uint32 outerArgc);
     ~TraceRecorder();
@@ -696,7 +739,7 @@ public:
     static JS_REQUIRES_STACK JSRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr,
                                                                 JSOp op);
 
-    JS_REQUIRES_STACK uint8 determineSlotType(jsval* vp);
+    JS_REQUIRES_STACK JSTraceType determineSlotType(jsval* vp);
 
     /*
      * Examines current interpreter state to record information suitable for
