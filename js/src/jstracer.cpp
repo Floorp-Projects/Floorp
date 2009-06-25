@@ -378,8 +378,8 @@ getExitName(ExitType type)
     NULL
     };
 
-    JS_ASSERT(unsigned(type) < JS_ARRAY_LENGTH(exitNames));
-    
+    JS_ASSERT(unsigned(type) < TOTAL_EXIT_TYPES);
+
     return exitNames[type];
 }
 #endif
@@ -1915,7 +1915,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
         JS_ASSERT(JSVAL_TAG(v) == JSVAL_OBJECT); /* if this fails the pointer was not aligned */
         JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
-        debug_only_printf(LC_TMTracer, 
+        debug_only_printf(LC_TMTracer,
                           "object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                           JSVAL_IS_NULL(v)
                           ? "null"
@@ -3653,7 +3653,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
                 JS_ASSERT(!remove || fragment != peer);
                 debug_only_stmt(
                     if (remove) {
-                        debug_only_printf(LC_TMTracer, 
+                        debug_only_printf(LC_TMTracer,
                                           "Joining type-stable trace to target exit %p->%p.\n",
                                           (void*)uexit->fragment, (void*)uexit->exit);
                     }
@@ -4058,7 +4058,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
         /* Check the global shape matches the recorder's treeinfo's shape. */
         if (globalObj != root->globalObj || globalShape != root->globalShape) {
             AUDIT(globalShapeMismatchAtEntry);
-            debug_only_printf(LC_TMTracer, 
+            debug_only_printf(LC_TMTracer,
                               "Global object/shape mismatch (%p/%u vs. %p/%u), flushing cache.\n",
                               (void*)globalObj, globalShape, (void*)root->globalObj,
                               root->globalShape);
@@ -4095,7 +4095,7 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
 
     /* No currently-tracked-global found and no room to allocate, abort. */
     AUDIT(globalShapeMismatchAtEntry);
-    debug_only_printf(LC_TMTracer, 
+    debug_only_printf(LC_TMTracer,
                       "No global slotlist for global shape %u, flushing cache.\n",
                       globalShape);
     FlushJITCache(cx);
@@ -5109,7 +5109,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #endif
 
     debug_only_stmt(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
-    debug_only_printf(LC_TMTracer, 
+    debug_only_printf(LC_TMTracer,
                       "entering trace at %s:%u@%u, native stack slots: %u code: %p\n",
                       cx->fp->script->filename,
                       js_FramePCToLineNumber(cx, cx->fp),
