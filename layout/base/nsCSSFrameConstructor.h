@@ -470,7 +470,12 @@ private:
   (((PRUint32)(_type)) << FCDATA_PARENT_TYPE_OFFSET)
 
   /* Get the parent type that aParentFrame has. */
-  static ParentType GetParentType(nsIFrame* aParentFrame);
+  static ParentType GetParentType(nsIFrame* aParentFrame) {
+    return GetParentType(aParentFrame->GetType());
+  }
+
+  /* Get the parent type for the given nsIFrame type atom */
+  static ParentType GetParentType(nsIAtom* aFrameType);
 
   /* A constructor function that just creates an nsIFrame object.  The caller
      is responsible for initializing the object, adding it to frame lists,
