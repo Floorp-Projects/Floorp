@@ -1216,7 +1216,11 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                 /*
                  * Now loop forward through spvec, forking the property tree
                  * whenever we see a "parent gap" due to deletions from scope.
-                 * NB: sprop is null on first entry to the loop body.
+                 *
+                 * NB: sprop is null on first entry to the loop body only for
+                 * Object.prototype or an object orphaned from it by having its
+                 * __proto__ set to null (or via ES5 Object.create with a null
+                 * proto parameter).
                  */
                 do {
                     if (spvec[i]->parent == sprop) {
