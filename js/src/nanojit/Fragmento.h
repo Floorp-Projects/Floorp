@@ -94,7 +94,7 @@ namespace nanojit
 	class Fragmento : public avmplus::GCFinalizedObject
 	{
 		public:
-			Fragmento(AvmCore* core, uint32_t cacheSizeLog2);
+			Fragmento(AvmCore* core, LogControl* logc, uint32_t cacheSizeLog2);
 			~Fragmento();
 
 			void		addMemory(void* firstPage, uint32_t pageCount);  // gives memory to the Assembler

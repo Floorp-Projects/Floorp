@@ -154,10 +154,39 @@ public:
 };
 
 #ifdef JS_JIT_SPEW
-extern bool js_verboseDebug;
-#define debug_only_v(x) if (js_verboseDebug) { x; fflush(stdout); }
+
+enum LC_TMBits {
+    /* Output control bits for all non-Nanojit code.  Only use bits 16
+       and above, since Nanojit uses 0 .. 15 itself. */
+    LC_TMMinimal  = 1<<16,
+    LC_TMTracer   = 1<<17,
+    LC_TMRecorder = 1<<18,
+    LC_TMPatcher  = 1<<19,
+    LC_TMAbort    = 1<<20,
+    LC_TMStats    = 1<<21,
+    LC_TMRegexp   = 1<<22
+};
+
+// Top level logging controller object.
+extern nanojit::LogControl js_LogController;
+
+#define debug_only_stmt(stmt) \
+    stmt
+#define debug_only_printf(mask, fmt, ...) \
+    do { if ((js_LogController.lcbits & (mask)) > 0) {             \
+        js_LogController.printf(fmt, __VA_ARGS__); fflush(stdout); \
+    }} while (0)
+#define debug_only_print0(mask, str) \
+    do { if ((js_LogController.lcbits & (mask)) > 0) { \
+        js_LogController.printf(str); fflush(stdout);  \
+    }} while (0)
+
 #else
-#define debug_only_v(x)
+
+#define debug_only_stmt(action)            /* */
+#define debug_only_printf(mask, fmt, ...)  /* */
+#define debug_only_print0(mask, str)       /* */
+
 #endif
 
 /*

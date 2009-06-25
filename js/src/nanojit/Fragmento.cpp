@@ -57,7 +57,7 @@ namespace nanojit
 	/**
 	 * This is the main control center for creating and managing fragments.
 	 */
-	Fragmento::Fragmento(AvmCore* core, uint32_t cacheSizeLog2) 
+	Fragmento::Fragmento(AvmCore* core, LogControl* logc, uint32_t cacheSizeLog2) 
 		:
 #ifdef NJ_VERBOSE
 		  enterCounts(NULL),
@@ -99,7 +99,7 @@ namespace nanojit
 		NanoAssert(_max_pages > _pagesGrowth); // shrink growth if needed 
 		_core = core;
 		GC *gc = core->GetGC();
-		_assm = NJ_NEW(gc, nanojit::Assembler)(this);
+		_assm = NJ_NEW(gc, nanojit::Assembler)(this, logc);
 		verbose_only( enterCounts = NJ_NEW(gc, BlockHist)(gc); )
 		verbose_only( mergeCounts = NJ_NEW(gc, BlockHist)(gc); )
 
@@ -384,9 +384,6 @@ namespace nanojit
 
 	void Fragmento::dumpStats()
 	{
-		bool vsave = _assm->_verbose;
-		_assm->_verbose = true;
-
 		_assm->output("");
 		dumpRatio("inline", enterCounts);
 		dumpRatio("merges", mergeCounts);
@@ -403,7 +400,6 @@ namespace nanojit
 		if (!count)
 		{
 			_assm->outputf("No fragments in cache, %d flushes", flushes);
-    		_assm->_verbose = vsave;
             return;
 		}
 
@@ -468,14 +464,12 @@ namespace nanojit
 				labels->format(d.frag->ip));
 		}
 
-		_assm->_verbose = vsave;
-
 	}
 
 	void Fragmento::countBlock(BlockHist *hist, const void* ip)
 	{
 		int c = hist->count(ip);
-		if (_assm->_verbose)
+		if (_assm->_logc->lcbits & LC_Assembly)
 			_assm->outputf("++ %s %d", labels->format(ip), c);
 	}
 

@@ -157,8 +157,8 @@ Assembler::genPrologue()
     if (amt)
         SUBi(SP, SP, amt);
 
-    verbose_only( verbose_outputf("         %p:",_nIns); )
-    verbose_only( verbose_output("         patch entry"); )
+    verbose_only( asm_output("## %p:",(void*)_nIns); )
+    verbose_only( asm_output("## patch entry"); )
     NIns *patchEntry = _nIns;
 
     MOV(FP, SP);
@@ -694,8 +694,7 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
     }
 
     verbose_only(
-        if (_verbose)
-            outputf("        restore %s",_thisfrag->lirbuf->names->formatRef(i));
+        asm_output("        restore %s",_thisfrag->lirbuf->names->formatRef(i));
     )
 }
 
@@ -1076,7 +1075,7 @@ Assembler::JMP_far(NIns* addr)
         // B [PC+offs]
         *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((offs>>2) & 0xFFFFFF) );
 
-        asm_output("b %p", addr);
+        asm_output("b %p", (void*)addr);
     } else {
         // Insert the target address as a constant in the instruction stream.
         *(--_nIns) = (NIns)((addr));
@@ -1084,7 +1083,7 @@ Assembler::JMP_far(NIns* addr)
         // the next instruction)
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
 
-        asm_output("ldr pc, =%p", addr);
+        asm_output("ldr pc, =%p", (void*)addr);
     }
 }
 
@@ -1123,7 +1122,7 @@ Assembler::BranchWithLink(NIns* addr)
             // BL addr
             NanoAssert( ((offs>>2) & ~0xffffff) == 0);
             *(--_nIns) = (NIns)( (COND_AL) | (0xB<<24) | (offs>>2) );
-            asm_output("bl %p", addr);
+            asm_output("bl %p", (void*)addr);
         } else {
             // The target is Thumb, so emit a BLX.
 
@@ -1133,12 +1132,12 @@ Assembler::BranchWithLink(NIns* addr)
             // BLX addr
             NanoAssert( ((offs>>2) & ~0xffffff) == 0);
             *(--_nIns) = (NIns)( (0xF << 28) | (0x5<<25) | (H) | (offs>>2) );
-            asm_output("blx %p", addr);
+            asm_output("blx %p", (void*)addr);
         }
     } else {
         // BLX IP
         *(--_nIns) = (NIns)( (COND_AL) | (0x12<<20) | (0xFFF<<8) | (0x3<<4) | (IP) );
-        asm_output("blx ip (=%p)", addr);
+        asm_output("blx ip (=%p)", (void*)addr);
 
         // LDR IP, =addr
         LD32_nochk(IP, (int32_t)addr);
@@ -1193,7 +1192,7 @@ Assembler::LD32_nochk(Register r, int32_t imm)
 
     // Write the literal.
     *(++_nSlot) = imm;
-    asm_output("  (%d(PC) = 0x%x)", offset, imm);
+    asm_output("## imm= 0x%x", imm);
 
     // Load the literal.
     LDR_nochk(r,PC,offset);
