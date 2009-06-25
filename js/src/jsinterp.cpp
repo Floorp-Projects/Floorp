@@ -1673,7 +1673,8 @@ out:
 
 #ifdef JS_TRACER
     /* Possibly re-enable JIT, if disabled above. */
-    cx->options = oldOptions;
+    if (oldOptions & JSOPTION_JIT)
+        cx->options |= JSOPTION_JIT;
 #endif
 
     return ok;
