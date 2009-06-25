@@ -68,17 +68,11 @@ REQUIRES	= \
 		qcms \
 		$(NULL)
 
-# XXX some platforms can't handle building
-# an empty .a/lib.  Remove this dummy.cpp
-# whenever w have a rendering context
-# that doesn't depend on any non-default
-# libraries.
-CPPSRCS		= dummy.cpp \
-		$(NULL)
 
-ifdef MOZ_ENABLE_CANVAS
-CPPSRCS		+= nsCanvasRenderingContext2D.cpp
-endif
+CPPSRCS	= \
+	CanvasUtils.cpp \
+	nsCanvasRenderingContext2D.cpp \
+	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
