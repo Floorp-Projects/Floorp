@@ -19,7 +19,6 @@
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
         <xul:vbox flex="1">
           <xul:hbox anonid="details" align="center" flex="1">
-            <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
             <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
             <xul:spacer flex="1"/>
           </xul:hbox>
@@ -45,7 +44,6 @@
     <content>
       <xul:vbox class="notification-inner outset" flex="1" xbl:inherits="type">
         <xul:hbox anonid="details">
-          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
           <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
           <xul:spacer flex="1"/>
           <xul:label anonid="learnMore"
@@ -79,19 +77,6 @@
                 readonly="true"/>
 
     </implementation>
-  </binding>
-
-  <binding id="notification-button"
-           extends="chrome://global/content/bindings/button.xml#button-base">
-    <resources>
-      <stylesheet src="chrome://browser/skin/notification.css"/>
-    </resources>
-
-    <content orient="vertical">
-      <xul:image class="sn-button-icon" xbl:inherits="src=image"/>
-      <xul:label class="sn-button-text" xbl:inherits="value=label,accesskey,crop"/>
-      <xul:label class="sn-button-extra-text" xbl:inherits="value=sublabel"/>
-    </content>
   </binding>
 
 </bindings>

@@ -491,6 +491,10 @@ findbar {
   background: rgba(128, 128, 128, 0.75);
 }
 
+findbar .findbar-closebutton {
+  list-style-image: url("chrome://browser/skin/images/tab-close.png");
+}
+
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
   padding: 2.2mm; /* core spacing */
