@@ -251,6 +251,8 @@ var Browser = {
   },
 
   shutdown: function() {
+    this._canvasBrowser.setCurrentBrowser(null);
+    
     BrowserUI.uninit();
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);

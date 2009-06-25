@@ -155,6 +155,9 @@ CanvasBrowser.prototype = {
     }
 
     this._contentDOMWindowUtils = null;
+    
+    if (!browser)
+      return;
 
     browser.setAttribute("type", "content-primary");
     if (!skipZoom)
