@@ -60,8 +60,6 @@
 #include "nsAutoPtr.h"
 #include "nsTWeakRef.h"
 
-static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
-
 #define NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION TEXT("MozillaPluginWindowPropertyAssociation")
 #define NS_PLUGIN_CUSTOM_MSG_ID TEXT("MozFlashUserRelay")
 #define WM_USER_FLASH WM_USER+1
