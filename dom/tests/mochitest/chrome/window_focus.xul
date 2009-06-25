@@ -1053,6 +1053,7 @@ function framesetWindowLoaded(framesetWindow)
     window.openDialog("focus_window2.xul", "_blank", "chrome", switchWindowTest, framesetWindow);
   }
   else {
+    gOldExpectedWindow = null;
     gNewExpectedWindow = null;
     gRefocusCallback = doWindowNoRootTest;
     framesetWindow.close();
