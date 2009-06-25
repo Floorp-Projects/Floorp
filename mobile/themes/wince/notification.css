@@ -1,9 +1,8 @@
-.sn-button-text {
-  background: transparent !important;
-  color: black !important;
+notification {
+  background: rgb(255, 255, 176);
+  color: black;
 }
 
-.sn-button-extra-text {
-  color: grey;
-  font-size: 8pt !important;
+notification .messageCloseButton {
+  list-style-image: url("chrome://browser/skin/images/tab-close.png");
 }

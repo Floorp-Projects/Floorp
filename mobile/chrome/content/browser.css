@@ -52,10 +52,6 @@ notification[type="geo"] {
     -moz-binding: url("chrome://browser/content/notification.xml#geo-notification");
 }
 
-notification button {
-    -moz-binding: url("chrome://browser/content/notification.xml#notification-button");
-}
-
 #popup_autocomplete {
   -moz-binding: url("chrome://browser/content/bindings.xml#popup_autocomplete");
 }
