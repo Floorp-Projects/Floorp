@@ -150,6 +150,18 @@ ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
   return PL_DHASH_NEXT;
 }
 
+// What we want is: NS_INTERFACE_MAP_ENTRY(self) for static IID accessors,
+// but some of our classes have an ambiguous base class of nsISupports which
+// prevents this from working (the default macro converts it to nsISupports,
+// then addrefs it, then returns it). Therefore, we expand the macro here and
+// change it so that it works. Yuck.
+#define NS_INTERFACE_MAP_STATIC_AMBIGUOUS(_class) \
+  if (aIID.Equals(NS_GET_IID(_class))) { \
+    NS_ADDREF(this); \
+    *aInstancePtr = this; \
+    return NS_OK; \
+  } else
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
@@ -163,14 +175,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDocAccessible)
+  NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
-  NS_INTERFACE_MAP_ENTRY(nsPIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsHyperTextAccessible)
 
 NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsHyperTextAccessible)
@@ -553,7 +565,7 @@ NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNod
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
 {
   // If there is an access node for the given unique ID then let's shutdown it.
@@ -568,7 +580,6 @@ nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
   }
 
   PutCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode);
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
@@ -690,6 +701,15 @@ nsDocAccessible::GetFrame()
     root = shell->GetRootFrame();
 
   return root;
+}
+
+PRBool
+nsDocAccessible::IsDefunct()
+{
+  if (nsHyperTextAccessibleWrap::IsDefunct())
+    return PR_TRUE;
+
+  return !mDocument;
 }
 
 void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
@@ -822,11 +842,12 @@ nsresult nsDocAccessible::RemoveEventListeners()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::FireAnchorJumpEvent()
+void
+nsDocAccessible::FireAnchorJumpEvent()
 {
-  if (!mIsContentLoaded || !mDocument) {
-    return NS_OK;
-  }
+  if (!mIsContentLoaded || !mDocument)
+    return;
+
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
   nsCAutoString theURL;
@@ -854,15 +875,13 @@ NS_IMETHODIMP nsDocAccessible::FireAnchorJumpEvent()
     mIsAnchorJumped = PR_TRUE;
     lastAnchor.Assign(currentAnchor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
+void
+nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
 {
-  if (!mDocument || !mWeakShell) {
-    return NS_OK;  // Document has been shut down
-  }
+  if (IsDefunct())
+    return;
 
   PRBool isFinished = 
              (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE ||
@@ -871,15 +890,16 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
   mIsContentLoaded = isFinished;
   if (isFinished) {
     if (mIsLoadCompleteFired)
-      return NS_OK;
+      return;
+
     mIsLoadCompleteFired = PR_TRUE;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
-  if (!treeItem) {
-    return NS_OK;
-  }
+  if (!treeItem)
+    return;
+
   nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
   treeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
 
@@ -928,7 +948,6 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
 
     nsAccUtils::FireAccEvent(aEventType, this);
   }
-  return NS_OK;
 }
 
 void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
@@ -1569,14 +1588,14 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent)
     // so that event gets fired via FlushEventsCallback
     NS_ADDREF_THIS(); // Kung fu death grip to prevent crash in callback
     mFireEventTimer->InitWithFuncCallback(FlushEventsCallback,
-                                          static_cast<nsPIAccessibleDocument*>(this),
-                                          0, nsITimer::TYPE_ONE_SHOT);
+                                          this, 0, nsITimer::TYPE_ONE_SHOT);
   }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
+void
+nsDocAccessible::FlushPendingEvents()
 {
   mInFlushPendingEvents = PR_TRUE;
   PRUint32 length = mEventsToFire.Count();
@@ -1685,12 +1704,12 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
 
     if (accessible) {
       if (eventType == nsIAccessibleEvent::EVENT_INTERNAL_LOAD) {
-        nsCOMPtr<nsPIAccessibleDocument> docAccessible =
-          do_QueryInterface(accessible);
-        NS_ASSERTION(docAccessible, "No doc accessible for doc load event");
-        if (docAccessible) {
-          docAccessible->FireDocLoadEvents(nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
-        }
+        nsRefPtr<nsDocAccessible> docAcc =
+          nsAccUtils::QueryAccessibleDocument(accessible);
+        NS_ASSERTION(docAcc, "No doc accessible for doc load event");
+
+        if (docAcc)
+          docAcc->FireDocLoadEvents(nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
       }
       else if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
         nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
@@ -1759,12 +1778,11 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
   nsAccEvent::ResetLastInputState();
 
   mInFlushPendingEvents = PR_FALSE;
-  return NS_OK;
 }
 
 void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
 {
-  nsPIAccessibleDocument *accessibleDoc = static_cast<nsPIAccessibleDocument*>(aClosure);
+  nsDocAccessible *accessibleDoc = static_cast<nsDocAccessible*>(aClosure);
   NS_ASSERTION(accessibleDoc, "How did we get here without an accessible document?");
   if (accessibleDoc) {
     // A lot of crashes were happening here, so now we're reffing the doc
@@ -1880,8 +1898,9 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
   mAccessNodeCache.Remove(uniqueID);
 }
 
-NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
-                                                      PRUint32 aChangeEventType)
+void
+nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
+                                        PRUint32 aChangeEventType)
 {
   PRBool isHiding = 
     aChangeEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
@@ -1908,11 +1927,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   // instead of just the accessible tree, although that would be faster
   // Otherwise we might miss the nsAccessNode's that are not nsAccessible's.
 
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mDOMNode,);
+
   nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(presShell,);
   
   if (!mIsContentLoaded) {
     // Still loading document
@@ -1925,10 +1945,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       // Leave early, and ensure mAccChildCount stays uninitialized instead of 0,
       // which it is if anyone asks for its children right now.
       InvalidateChildren();
-      return NS_OK;
+      return;
     }
+
     nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
-    NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(esm,);
+
     if (!esm->IsHandlingUserInputExternal()) {
       // Changes during page load, but not caused by user input
       // Just invalidate accessible hierarchy and return,
@@ -1942,7 +1964,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       nsRefPtr<nsAccessible> containerAcc =
         nsAccUtils::QueryAccessible(containerAccessible);
       containerAcc->InvalidateChildren();
-      return NS_OK;
+      return;
     }     
     // else: user input, so we must fall through and for full handling,
     // e.g. fire the mutation events. Note: user input could cause DOM_CREATE
@@ -1998,7 +2020,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
             // This often happens when visibility is cleared for node,
             // which hides an entire subtree -- we get notified for each
             // node in the subtree and need to collate the hide events ourselves.
-            return NS_OK;
+            return;
           }
         }
       }
@@ -2010,7 +2032,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // Fire an event if the accessible existed for node being hidden, otherwise
     // for the first line accessible descendants. Fire before the accessible(s) away.
     nsresult rv = FireShowHideEvents(childNode, PR_FALSE, removalEventType, PR_TRUE, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv,);
+
     if (childNode != mDOMNode) { // Fire text change unless the node being removed is for this doc
       // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
       // At this point we still have the frame and accessible for this node if there was one
@@ -2102,11 +2125,9 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     new nsAccReorderEvent(containerAccessible, isAsynch,
                           isUnconditionalEvent,
                           aChild ? childNode.get() : nsnull);
-  NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(reorderEvent,);
 
   FireDelayedAccessibleEvent(reorderEvent);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
