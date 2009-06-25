@@ -158,9 +158,7 @@ interface nsIPluginInstance : nsISupports
     void getValue(in nsPluginInstanceVariable aVariable, in voidPtr aValue);
 
     /**
-     * Handles an event. An nsIEventHandler can also get registered with with
-     * nsIPluginManager2::RegisterWindow and will be called whenever an event
-     * comes in for that window.
+     * Handles an event.
      *
      * Note that for Unix and Mac the nsPluginEvent structure is different
      * from the old NPEvent structure -- it's no longer the native event

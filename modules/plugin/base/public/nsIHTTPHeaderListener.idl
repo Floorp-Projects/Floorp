@@ -41,7 +41,7 @@
 /**
  * The nsIHTTPHeaderListener interface allows plugin authors to
  * access HTTP Response headers after issuing an
- * nsIPluginManager::{GetURL,PostURL}() call. <P>
+ * nsIPluginHost::{GetURL,PostURL}() call. <P>
 
  * IMPORTANT NOTE: The plugin author must provide an instance to
  * {GetURL,PostURL}() that implements both nsIPluginStreamListener and
