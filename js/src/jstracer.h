@@ -270,6 +270,7 @@ enum ExitType {
     #define MAKE_EXIT_CODE(x) x##_EXIT,
     JS_TM_EXITCODES(MAKE_EXIT_CODE)
     #undef MAKE_EXIT_CODE
+    TOTAL_EXIT_TYPES
 };
 
 struct VMSideExit : public nanojit::SideExit
