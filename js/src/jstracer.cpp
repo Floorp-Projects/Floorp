@@ -375,6 +375,7 @@ getExitName(ExitType type)
     #define MAKE_EXIT_STRING(x) #x,
     JS_TM_EXITCODES(MAKE_EXIT_STRING)
     #undef MAKE_EXIT_STRING
+    NULL
     };
 
     JS_ASSERT(unsigned(type) < JS_ARRAY_LENGTH(exitNames));
