@@ -414,7 +414,9 @@ namespace nanojit
 	void Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 	{
         if (i->isop(LIR_alloc)) {
-			verbose_only( if (_verbose) { outputForEOL("  <= remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size()); } )
+			verbose_only( if (_logc->lcbits & LC_RegAlloc) {
+					        outputForEOL("  <= remat %s size %d",
+							_thisfrag->lirbuf->names->formatRef(i), i->size()); } )
             LEA(r, disp(resv), FP);
         }
         else if (i->isconst()) {
@@ -425,7 +427,9 @@ namespace nanojit
         }
         else {
             int d = findMemFor(i);
-			verbose_only( if (_verbose) { outputForEOL("  <= restore %s", _thisfrag->lirbuf->names->formatRef(i)); } )
+			verbose_only( if (_logc->lcbits & LC_RegAlloc) {
+					        outputForEOL("  <= restore %s", 
+							_thisfrag->lirbuf->names->formatRef(i)); } )
 			asm_load(d,r);
         }
 	}

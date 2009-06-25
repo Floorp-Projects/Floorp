@@ -181,20 +181,16 @@ namespace nanojit
 
 #if defined(_MSC_VER) && _MSC_VER < 1400
 	#include <stdio.h>
-	#define verbose_output						if (verbose_enabled()) Assembler::output
-	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf
-	#define verbose_enabled()					(_verbose)
-	#define verbose_only(x)						x
+	#define verbose_outputf			if (_logc->lcbits & LC_Assembly) \
+	                                    Assembler::outputf
+	#define verbose_only(x)		    x
 #elif defined(NJ_VERBOSE)
 	#include <stdio.h>
-	#define verbose_output						if (verbose_enabled()) Assembler::output
-	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf
-	#define verbose_enabled()					(_verbose)
-	#define verbose_only(...)					__VA_ARGS__
+	#define verbose_outputf			if (_logc->lcbits & LC_Assembly) \
+	                                    Assembler::outputf
+	#define verbose_only(...)		__VA_ARGS__
 #else
-	#define verbose_output
 	#define verbose_outputf
-	#define verbose_enabled()
 	#define verbose_only(...)
 #endif /*NJ_VERBOSE*/
 
@@ -243,11 +239,18 @@ namespace nanojit
 #define samepage(x,y)       ( pageTop(x) == pageTop(y) )
 
 
-/* Debug printing stuff.  All Nanojit debug printing should be routed
-   through this function.  Don't use ad-hoc calls to printf,
-   fprintf(stderr, ...) etc. */
+// -------------------------------------------------------------------
+// START debug-logging definitions
+// -------------------------------------------------------------------
 
-#if defined(NJ_VERBOSE)
+/* Debug printing stuff.  All Nanojit and jstracer debug printing
+   should be routed through LogControl::printf.  Don't use
+   ad-hoc calls to printf, fprintf(stderr, ...) etc.
+
+   Similarly, don't use ad-hoc getenvs etc to decide whether or not to
+   print debug output.  Instead consult the relevant control bit in
+   LogControl::lcbits in the LogControl object you are supplied with.
+*/
 
 # if defined(__GNUC__)
 # define PRINTF_CHECK(x, y) __attribute__((format(__printf__, x, y)))
@@ -255,10 +258,41 @@ namespace nanojit
 # define PRINTF_CHECK(x, y)
 # endif
 
-/* is in LIR.cpp */
-void nj_dprintf( const char* format, ... ) PRINTF_CHECK(1,2);
+namespace nanojit {
 
-#endif /* NJ_VERBOSE */
+	// LogControl, a class for controlling and routing debug output
+
+	enum LC_Bits {
+		/* Output control bits for Nanojit code.  Only use bits 15
+		   and below, so that callers can use bits 16 and above for
+		   themselves. */
+		// TODO: add entries for the writer pipeline
+		LC_Liveness    = 1<<7, // (show LIR liveness analysis)
+		LC_ReadLIR     = 1<<6, // As read from LirBuffer
+		LC_AfterSF_SP  = 1<<5, // After StackFilter(sp)
+		LC_AfterSF_RP  = 1<<4, // After StackFilter(rp)
+		LC_AfterDeadF  = 1<<3, // After DeadFilter
+		LC_RegAlloc    = 1<<2, // stuff to do with reg alloc
+		LC_Assembly    = 1<<1, // final assembly
+		LC_NoCodeAddrs = 1<<0  // (don't show code addresses on asm output)
+	};
+
+	class LogControl
+	{
+	public:
+		// All Nanojit and jstracer printing should be routed through
+		// this function.
+		void printf( const char* format, ... ) PRINTF_CHECK(2,3);
+
+		// An OR of LC_Bits values, indicating what should be output
+		uint32_t lcbits;
+	};
+
+}
+
+// -------------------------------------------------------------------
+// END debug-logging definitions
+// -------------------------------------------------------------------
 
 
 
