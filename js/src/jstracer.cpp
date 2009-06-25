@@ -7409,33 +7409,17 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     JS_ASSERT(cx->requestDepth);
 #endif
 
-    // Emit guard(s), common code for both hit and miss cases.
-    // Check for first-level cache hit and guard on kshape if possible.
-    // Otherwise guard on key object exact match.
-    if (PCVCAP_TAG(entry->vcap) <= 1) {
-        if (aobj != globalObj) {
-            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                      "shape");
-            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)(test_property_cache)"),
-                  BRANCH_EXIT);
-        }
-    } else {
-#ifdef DEBUG
-        JSOp op = js_GetOpcode(cx, cx->fp->script, pc);
-        JSAtom *pcatom;
-        if (op == JSOP_LENGTH) {
-            pcatom = cx->runtime->atomState.lengthAtom;
-        } else {
-            ptrdiff_t pcoff = (JOF_TYPE(js_CodeSpec[op].format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
-            GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, pcatom);
-        }
-        JS_ASSERT(entry->kpc == (jsbytecode *) pcatom);
-        JS_ASSERT(entry->kshape == jsuword(aobj));
-#endif
-        if (aobj != globalObj && !obj_ins->isconstp()) {
-            guard(true, addName(lir->ins2i(LIR_eq, obj_ins, entry->kshape), "guard(kobj)"),
-                  BRANCH_EXIT);
-        }
+    /*
+     * Guard on the shape of the directly accessed native object, unless it's
+     * the global object whose shape can't change on trace.
+     */
+    if (aobj != globalObj) {
+        LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
+                                  "shape");
+        guard(true,
+              addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape),
+                      "guard(kshape)(test_property_cache)"),
+              BRANCH_EXIT);
     }
 
     // For any hit that goes up the scope and/or proto chains, we will need to
