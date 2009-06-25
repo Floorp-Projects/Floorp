@@ -2022,6 +2022,15 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     return JS_TRUE;
 }
 
+typedef JSBool (JS_REQUIRES_STACK *JSRedComparator)(void*, const void*,
+                                                    const void*, int *);
+
+static inline JS_IGNORE_STACK JSComparator
+comparator_stack_cast(JSRedComparator func)
+{
+    return func;
+}
+
 static int
 sort_compare_strings(void *arg, const void *a, const void *b, int *result)
 {
@@ -2263,7 +2272,8 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
             goto out;
         }
         ok = js_MergeSort(vec, (size_t) newlen, sizeof(jsval),
-                          sort_compare, &ca, mergesort_tmp);
+                          comparator_stack_cast(sort_compare),
+                          &ca, mergesort_tmp);
         js_FreeStack(cx, mark);
         if (!ok)
             goto out;
