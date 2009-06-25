@@ -183,6 +183,7 @@ var BrowserUI = {
         urlString = "";
       this._edit.value = urlString;
 
+      this._edit.inputField.blur();
       this._edit.inputField.focus();
       this._edit.select();
     }
@@ -261,7 +262,6 @@ var BrowserUI = {
   init : function() {
     this._edit = document.getElementById("urlbar-edit");
     this._edit.addEventListener("click", this, false);
-    this._edit.addEventListener("blur", this, false);
     this._edit.addEventListener("keypress", this, true);
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
