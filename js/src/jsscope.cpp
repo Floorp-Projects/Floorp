@@ -110,8 +110,12 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 static void
 InitMinimalScope(JSContext *cx, JSScope *scope)
 {
-    js_LeaveTraceIfGlobalObject(cx, scope->object);
-    scope->shape = 0;
+    JSObject *obj = scope->object;
+    js_LeaveTraceIfGlobalObject(cx, obj);
+
+    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    scope->shape = (proto && OBJ_IS_NATIVE(proto)) ? OBJ_SHAPE(proto) : 0;
+
     scope->hashShift = JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2;
     scope->entryCount = scope->removedCount = 0;
     scope->table = NULL;
@@ -1018,7 +1022,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                     uintN attrs, uintN flags, intN shortid)
 {
     JSScopeProperty **spp, *sprop, *overwriting, **spvec, **spp2, child;
-    uint32 size, splen, i;
+    uintN size, splen, i;
     int change;
     JSTempValueRooter tvr;
 
@@ -1198,14 +1202,16 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                      * sprop, while the former simply tests whether sprop->id
                      * is bound in scope.
                      */
-                    if (!SCOPE_GET_PROPERTY(scope, sprop->id))
-                        continue;
+                    if (SCOPE_GET_PROPERTY(scope, sprop->id)) {
+                        JS_ASSERT(sprop != overwriting);
+                        spvec[--i] = sprop;
+                    }
+                    sprop = sprop->parent;
+                } while (i != 0);
 
-                    JS_ASSERT(sprop != overwriting);
-                    JS_ASSERT(i != 0);
-                    spvec[--i] = sprop;
-                } while ((sprop = sprop->parent) != NULL);
-                JS_ASSERT(i == 0);
+                JSObject *proto = OBJ_GET_PROTO(cx, scope->object);
+                if (proto && OBJ_IS_NATIVE(proto))
+                    sprop = OBJ_SCOPE(proto)->lastProp;
 
                 /*
                  * Now loop forward through spvec, forking the property tree

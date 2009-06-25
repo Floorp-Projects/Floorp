@@ -217,9 +217,6 @@ typedef struct JSInlineFrame {
 #define PROPERTY_CACHE_HASH_PC(pc,kshape)                                     \
     PROPERTY_CACHE_HASH(pc, kshape)
 
-#define PROPERTY_CACHE_HASH_ATOM(atom,obj,pobj)                               \
-    PROPERTY_CACHE_HASH((jsuword)(atom) >> 2, OBJ_SHAPE(obj))
-
 /*
  * Property cache value capability macros.
  */
@@ -282,8 +279,6 @@ typedef struct JSPropertyCache {
     uint32              noprotos;       /* resolve-returned non-proto pobj */
     uint32              longchains;     /* overlong scope and/or proto chain */
     uint32              recycles;       /* cache entries recycled by fills */
-    uint32              pcrecycles;     /* pc-keyed entries recycled by atom-
-                                           keyed fills */
     uint32              tests;          /* cache probes */
     uint32              pchits;         /* fast-path polymorphic op hits */
     uint32              protopchits;    /* pchits hitting immediate prototype */
@@ -297,8 +292,8 @@ typedef struct JSPropertyCache {
     uint32              slotchanges;    /* clasp->reserveSlots result variance-
                                            induced slot changes */
     uint32              setmisses;      /* JSOP_SET{NAME,PROP} total misses */
-    uint32              idmisses;       /* slow-path key id == atom misses */
-    uint32              komisses;       /* slow-path key object misses */
+    uint32              kpcmisses;      /* slow-path key pc misses */
+    uint32              kshmisses;      /* slow-path key shape misses */
     uint32              vcmisses;       /* value capability misses */
     uint32              misses;         /* cache misses */
     uint32              flushes;        /* cache flushes */
@@ -380,7 +375,6 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         if (entry->kpc == pc && entry->kshape == kshape_) {                   \
             JSObject *tmp_;                                                   \
             pobj = obj;                                                       \
-            JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);                          \
             if (PCVCAP_TAG(entry->vcap) == 1 &&                               \
                 (tmp_ = OBJ_GET_PROTO(cx, pobj)) != NULL &&                   \
                 OBJ_IS_NATIVE(tmp_)) {                                        \
@@ -395,7 +389,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                 break;                                                        \
             }                                                                 \
         }                                                                     \
-        atom = js_FullTestPropertyCache(cx, pc, &obj, &pobj, &entry);         \
+        atom = js_FullTestPropertyCache(cx, pc, &obj, &pobj, entry);          \
         if (atom)                                                             \
             PCMETER(cache_->misses++);                                        \
     } while (0)
@@ -403,7 +397,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 extern JS_REQUIRES_STACK JSAtom *
 js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
                          JSObject **objp, JSObject **pobjp,
-                         JSPropCacheEntry **entryp);
+                         JSPropCacheEntry *entry);
 
 /* The property cache does not need a destructor. */
 #define js_FinishPropertyCache(cache) ((void) 0)
