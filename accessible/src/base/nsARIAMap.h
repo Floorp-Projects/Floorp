@@ -325,7 +325,7 @@ struct nsARIAMap
   /**
    * State map of ARIA state attributes.
    */
-  static nsStateMapEntry nsARIAMap::gWAIStateMap[];
+  static nsStateMapEntry gWAIStateMap[];
 
   /**
    * State map of ARIA states applied to any accessible not depending on
