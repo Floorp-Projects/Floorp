@@ -582,9 +582,11 @@ namespace nanojit
 	{
 		InsList code;
 		DWB(LirNameMap*) names;
+		LogControl* logc;
     public:
-		VerboseWriter(avmplus::GC *gc, LirWriter *out, LirNameMap* names) 
-			: LirWriter(out), code(gc), names(names)
+		VerboseWriter(avmplus::GC *gc, LirWriter *out,
+					  LirNameMap* names, LogControl* logc)
+			: LirWriter(out), code(gc), names(names), logc(logc)
 		{}
 
 		LInsp add(LInsp i) {
@@ -604,10 +606,10 @@ namespace nanojit
             int n = code.size();
             if (n) {
 			    for (int i=0; i < n; i++)
-				    nj_dprintf("    %s\n",names->formatIns(code[i]));
+				    logc->printf("    %s\n",names->formatIns(code[i]));
 			    code.clear();
                 if (n > 1)
-        			nj_dprintf("\n");
+        			logc->printf("\n");
             }
 		}
 
