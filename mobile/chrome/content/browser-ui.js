@@ -304,8 +304,9 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        icons.setAttribute("mode", "loading");
         this.showToolbar(URLBAR_FORCE);
+        // Force the mode back to "loading"
+        icons.setAttribute("mode", "loading");
 
         this._favicon.src = "";
         this._faviconLink = null;
