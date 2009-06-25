@@ -39,6 +39,7 @@
 #ifndef NS_HTML5_PARSER__
 #define NS_HTML5_PARSER__
 
+#include "nsAutoPtr.h"
 #include "nsTimer.h"
 #include "nsIParser.h"
 #include "nsDeque.h"
@@ -62,10 +63,6 @@
 #include "nsDetectionConfident.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5MetaScanner.h"
-
-#define NS_HTML5_PARSER_CID \
-  {0x3113adb0, 0xe56d, 0x459e, \
-    {0xb9, 0x5b, 0xf1, 0xf2, 0x4a, 0xba, 0x2a, 0x80}}
 
 #define NS_HTML5_PARSER_READ_BUFFER_SIZE 1024
 
@@ -364,50 +361,50 @@ class nsHtml5Parser : public nsIParser,
   
   private:
     // State variables
-    PRBool                       mNeedsCharsetSwitch;
-    PRBool                       mLastWasCR;
-    PRBool                       mTerminated;
-    PRBool                       mLayoutStarted;
-    PRBool                       mFragmentMode;
-    PRBool                       mBlocked;
-    PRBool                       mSuspending;
-    eHtml5ParserLifecycle        mLifeCycle;
-    eStreamState                 mStreamListenerState;
+    PRBool                        mNeedsCharsetSwitch;
+    PRBool                        mLastWasCR;
+    PRBool                        mTerminated;
+    PRBool                        mLayoutStarted;
+    PRBool                        mFragmentMode;
+    PRBool                        mBlocked;
+    PRBool                        mSuspending;
+    eHtml5ParserLifecycle         mLifeCycle;
+    eStreamState                  mStreamListenerState;
 
     // script execution
-    nsCOMPtr<nsIContent>         mScriptElement;
-    PRUint32                     mScriptsExecuting;
+    nsCOMPtr<nsIContent>          mScriptElement;
+    PRUint32                      mScriptsExecuting;
      
     // Gecko integration
-    void*                        mRootContextKey;
-    nsCOMPtr<nsIRequest>         mRequest; 
-    nsCOMPtr<nsIRequestObserver> mObserver;
-    nsIRunnable*                 mContinueEvent;  // weak ref
+    void*                         mRootContextKey;
+    nsCOMPtr<nsIRequest>          mRequest; 
+    nsCOMPtr<nsIRequestObserver>  mObserver;
+    nsIRunnable*                  mContinueEvent;  // weak ref
  
     // tree-related stuff
-    nsIContent*                  mDocElement; // weak ref 
+    nsIContent*                   mDocElement; // weak ref 
   
     // encoding-related stuff
-    PRInt32                      mCharsetSource;
-    nsCString                    mCharset;
-    nsCString                    mPendingCharset;
-    nsCOMPtr<nsIUnicodeDecoder>  mUnicodeDecoder;
-    PRUint8*                     mSniffingBuffer;
-    PRUint32                     mSniffingLength; // number of meaningful bytes in mSniffingBuffer
-    eBomState                    mBomState;
-    nsHtml5MetaScanner*          mMetaScanner;
+    PRInt32                       mCharsetSource;
+    nsCString                     mCharset;
+    nsCString                     mPendingCharset;
+    nsCOMPtr<nsIUnicodeDecoder>   mUnicodeDecoder;
+    PRUint8*                      mSniffingBuffer;
+    PRUint32                      mSniffingLength; // number of meaningful bytes in mSniffingBuffer
+    eBomState                     mBomState;
+    nsHtml5MetaScanner*           mMetaScanner;
         
     // Portable parser objects    
-    nsHtml5UTF16Buffer*          mFirstBuffer; // manually managed strong ref
-    nsHtml5UTF16Buffer*          mLastBuffer; // weak ref; always points to 
+    nsHtml5UTF16Buffer*           mFirstBuffer; // manually managed strong ref
+    nsHtml5UTF16Buffer*           mLastBuffer; // weak ref; always points to 
                       // a buffer of the size NS_HTML5_PARSER_READ_BUFFER_SIZE
-    nsHtml5TreeBuilder*          mTreeBuilder; // manually managed strong ref
-    nsHtml5Tokenizer*            mTokenizer; // manually managed strong ref
+    nsAutoPtr<nsHtml5TreeBuilder> mTreeBuilder;
+    nsAutoPtr<nsHtml5Tokenizer>   mTokenizer;
 #ifdef DEBUG
-    nsHtml5StateSnapshot*        mSnapshot;
-    static PRUint32              sUnsafeDocWrites;
-    static PRUint32              sTokenSafeDocWrites;
-    static PRUint32              sTreeSafeDocWrites;
+    nsHtml5StateSnapshot*         mSnapshot;
+    static PRUint32               sUnsafeDocWrites;
+    static PRUint32               sTokenSafeDocWrites;
+    static PRUint32               sTreeSafeDocWrites;
 #endif
 };
 

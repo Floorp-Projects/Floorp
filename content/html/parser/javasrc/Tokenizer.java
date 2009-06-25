@@ -59,7 +59,7 @@ import org.xml.sax.SAXParseException;
  * can be configured to treat these conditions as fatal or to coerce the infoset
  * to something that XML 1.0 allows.
  * 
- * @version $Id: Tokenizer.java 538 2009-06-08 13:27:45Z hsivonen $
+ * @version $Id: Tokenizer.java 555 2009-06-25 07:17:28Z hsivonen $
  * @author hsivonen
  */
 public class Tokenizer implements Locator {
@@ -465,8 +465,6 @@ public class Tokenizer implements Locator {
     private int line;
 
     // [NOCPP[
-
-    private PushedLocation pushedLocation;
 
     protected LocatorImpl ampersandLocation;
 

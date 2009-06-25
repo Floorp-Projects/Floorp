@@ -64,7 +64,7 @@
 jArray<PRUnichar,PRInt32> nsHtml5TreeBuilder::ISINDEX_PROMPT = jArray<PRUnichar,PRInt32>();
 
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
-  : documentModeHandler(aParser)
+  : parser(aParser)
   , scriptingEnabled(PR_FALSE)
   , fragment(PR_FALSE)
   , contextNode(nsnull)
@@ -72,7 +72,6 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
   , headPointer(nsnull)
   , mNeedsFlush(PR_FALSE)
   , mFlushTimer(do_CreateInstance("@mozilla.org/timer;1"))
-  , mParser(aParser)
   , mHasProcessedBase(PR_FALSE)
 #ifdef DEBUG
   , mActive(PR_FALSE)
@@ -96,7 +95,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
 {
   // XXX recheck http://mxr.mozilla.org/mozilla-central/source/content/base/src/nsDocument.cpp#6660
   nsIContent* newContent;
-  nsCOMPtr<nsINodeInfo> nodeInfo = mParser->GetNodeInfoManager()->GetNodeInfo(aName, nsnull, aNamespace);
+  nsCOMPtr<nsINodeInfo> nodeInfo = parser->GetNodeInfoManager()->GetNodeInfo(aName, nsnull, aNamespace);
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
   NS_NewElement(&newContent, nodeInfo->NamespaceID(), nodeInfo, PR_TRUE);
   NS_ASSERTION(newContent, "Element creation created null pointer.");
@@ -186,7 +185,7 @@ void
 nsHtml5TreeBuilder::insertFosterParentedCharacters(PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength, nsIContent* aTable, nsIContent* aStackParent)
 {
   nsCOMPtr<nsIContent> text;
-  NS_NewTextNode(getter_AddRefs(text), mParser->GetNodeInfoManager());
+  NS_NewTextNode(getter_AddRefs(text), parser->GetNodeInfoManager());
   // XXX nsresult and comment null check?
   text->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
@@ -207,7 +206,7 @@ void
 nsHtml5TreeBuilder::appendCharacters(nsIContent* aParent, PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength)
 {
   nsCOMPtr<nsIContent> text;
-  NS_NewTextNode(getter_AddRefs(text), mParser->GetNodeInfoManager());
+  NS_NewTextNode(getter_AddRefs(text), parser->GetNodeInfoManager());
   // XXX nsresult and comment null check?
   text->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
@@ -220,7 +219,7 @@ void
 nsHtml5TreeBuilder::appendComment(nsIContent* aParent, PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength)
 {
   nsCOMPtr<nsIContent> comment;
-  NS_NewCommentNode(getter_AddRefs(comment), mParser->GetNodeInfoManager());
+  NS_NewCommentNode(getter_AddRefs(comment), parser->GetNodeInfoManager());
   // XXX nsresult and comment null check?
   comment->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
@@ -233,7 +232,7 @@ void
 nsHtml5TreeBuilder::appendCommentToDocument(PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength)
 {
   nsCOMPtr<nsIContent> comment;
-  NS_NewCommentNode(getter_AddRefs(comment), mParser->GetNodeInfoManager());
+  NS_NewCommentNode(getter_AddRefs(comment), parser->GetNodeInfoManager());
   // XXX nsresult and comment null check?
   comment->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
@@ -269,8 +268,8 @@ nsHtml5TreeBuilder::start(PRBool fragment)
     mHasProcessedBase = PR_TRUE;  
   } else {
     mHasProcessedBase = PR_FALSE;
-    mParser->WillBuildModelImpl();
-    mParser->GetDocument()->BeginLoad(); // XXX fragment?
+    parser->WillBuildModelImpl();
+    parser->GetDocument()->BeginLoad(); // XXX fragment?
   }
   mNeedsFlush = PR_FALSE;
 #ifdef DEBUG
@@ -304,7 +303,7 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
   nsCOMPtr<nsIDOMDocumentType> docType;
   nsAutoString voidString;
   voidString.SetIsVoid(PR_TRUE);
-  NS_NewDOMDocumentType(getter_AddRefs(docType), mParser->GetNodeInfoManager(), nsnull,
+  NS_NewDOMDocumentType(getter_AddRefs(docType), parser->GetNodeInfoManager(), nsnull,
                              aName, nsnull, nsnull, *aPublicId, *aSystemId,
                              voidString);
 //  if (NS_FAILED(rv) || !docType) {
@@ -344,14 +343,14 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   }
   #if 0
     else {
-    nsIDocShell* docShell = mParser->GetDocShell();
+    nsIDocShell* docShell = parser->GetDocShell();
     if (docShell) {
       nsresult rv = aElement->MaybeTriggerAutoLink(docShell);
       if (rv == NS_XML_AUTOLINK_REPLACE ||
           rv == NS_XML_AUTOLINK_UNDEFINED) {
         // If we do not terminate the parse, we just keep generating link trigger
         // events. We want to parse only up to the first replace link, and stop.
-        mParser->Terminate();
+        parser->Terminate();
       }
     }
   }
@@ -376,7 +375,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   if (aName == nsHtml5Atoms::script) {
 //    mConstrainSize = PR_TRUE; // XXX what is this?
     requestSuspension();
-    mParser->SetScriptElement(aElement);
+    parser->SetScriptElement(aElement);
     return;
   }
   
@@ -409,7 +408,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
       // For that matter, do we really want to try getting the prescontext?  Does
       // this event ever want one?
       nsRefPtr<nsPresContext> ctx;
-      nsCOMPtr<nsIPresShell> shell = mParser->GetDocument()->GetPrimaryShell();
+      nsCOMPtr<nsIPresShell> shell = parser->GetDocument()->GetPrimaryShell();
       if (shell) {
         ctx = shell->GetPresContext();
       }
@@ -487,7 +486,7 @@ void
 nsHtml5TreeBuilder::Flush()
 {
   mNeedsFlush = PR_FALSE;
-  MOZ_AUTO_DOC_UPDATE(mParser->GetDocument(), UPDATE_CONTENT_MODEL, PR_TRUE);
+  MOZ_AUTO_DOC_UPDATE(parser->GetDocument(), UPDATE_CONTENT_MODEL, PR_TRUE);
   
   PRTime flushStart = 0;
   

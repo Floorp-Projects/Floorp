@@ -64,7 +64,6 @@
 #include "nsHtml5Parser.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
-static NS_DEFINE_CID(kHtml5ParserCID, NS_HTML5_PARSER_CID);
 
 //-------------- Begin ParseContinue Event Definition ------------------------
 /*
@@ -188,8 +187,6 @@ nsHtml5Parser::~nsHtml5Parser()
      delete old;
   }
   
-  delete mTokenizer;
-  delete mTreeBuilder;
   delete[] mSniffingBuffer;
   delete mMetaScanner;
 #ifdef DEBUG
