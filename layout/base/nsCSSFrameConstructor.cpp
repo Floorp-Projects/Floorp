@@ -1977,19 +1977,18 @@ IsTablePseudo(nsIFrame* aFrame)
 
 /* static */
 nsCSSFrameConstructor::ParentType
-nsCSSFrameConstructor::GetParentType(nsIFrame* aParentFrame)
+nsCSSFrameConstructor::GetParentType(nsIAtom* aFrameType)
 {
-  nsIAtom* type = aParentFrame->GetType();
-  if (type == nsGkAtoms::tableFrame) {
+  if (aFrameType == nsGkAtoms::tableFrame) {
     return eTypeTable;
   }
-  if (type == nsGkAtoms::tableRowGroupFrame) {
+  if (aFrameType == nsGkAtoms::tableRowGroupFrame) {
     return eTypeRowGroup;
   }
-  if (type == nsGkAtoms::tableRowFrame) {
+  if (aFrameType == nsGkAtoms::tableRowFrame) {
     return eTypeRow;
   }
-  if (type == nsGkAtoms::tableColGroupFrame) {
+  if (aFrameType == nsGkAtoms::tableColGroupFrame) {
     return eTypeColGroup;
   }
 
@@ -7270,6 +7269,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
         return NS_OK;
       }
       parentFrame = childFrame->GetParent();
+      parentType = parentFrame->GetType();
 
 #ifdef NOISY_FIRST_LETTER
       printf("  ==> revised parentFrame=");
@@ -7353,9 +7353,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 
     // If we're just reconstructing frames for the element, then the
     // following ContentInserted notification on the element will
-    // take care of fixing up any adjacent text nodes.
+    // take care of fixing up any adjacent text nodes.  We don't need
+    // to do this if the table parent type of our parent type is not
+    // eTypeBlock, though, because in that case the whitespace isn't
+    // being suppressed due to us anyway.
     if (aContainer && aIndexInContainer >= 0 &&
-        aFlags != REMOVE_FOR_RECONSTRUCTION) {
+        aFlags != REMOVE_FOR_RECONSTRUCTION &&
+        GetParentType(parentType) == eTypeBlock) {
       // Adjacent whitespace-only text nodes might have been suppressed if
       // this node does not have inline ends. Create frames for them now
       // if necessary.
