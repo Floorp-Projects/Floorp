@@ -357,7 +357,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
     return entry;
 }
 
-static inline JSAtom *
+static inline JS_REQUIRES_STACK JSAtom *
 GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec *cs)
 {
     if (op == JSOP_LENGTH)
