@@ -33,6 +33,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsITimer.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -74,7 +75,7 @@ class nsHtml5TreeBuilder
   protected:
     nsHtml5Tokenizer* tokenizer;
   private:
-    nsHtml5Parser* documentModeHandler;
+    nsHtml5Parser* parser;
     PRBool scriptingEnabled;
     PRBool needToDropLF;
     PRBool fragment;
@@ -204,7 +205,6 @@ class nsHtml5TreeBuilder
   public:
     PRBool isScriptingEnabled();
     void setScriptingEnabled(PRBool scriptingEnabled);
-    void setDocumentModeHandler(nsHtml5Parser* documentModeHandler);
     PRBool inForeign();
   private:
     void flushCharacters();

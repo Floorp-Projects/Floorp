@@ -4451,15 +4451,15 @@ public abstract class TreeBuilder<T> implements TokenHandler {
                         }
                     }                    
                 } else {
-                    err("Attribute \u201C" + attributes.getLocalName(i) + "\u201D not allowed here.");                    
+                    err("Attribute \u201C" + attributes.getXmlnsLocalName(i) + "\u201D not allowed here.");                    
                     switch (namePolicy) {
                         case ALTER_INFOSET:
                             // fall through
                         case ALLOW:
-                            warn("Attribute with the local name \u201C" + attributes.getLocalName(i) + "\u201D is not serializable as XML 1.0.");
+                            warn("Attribute with the local name \u201C" + attributes.getXmlnsLocalName(i) + "\u201D is not serializable as XML 1.0.");
                             break;
                         case FATAL:
-                            fatal("Attribute with the local name \u201C" + attributes.getLocalName(i) + "\u201D is not serializable as XML 1.0.");
+                            fatal("Attribute with the local name \u201C" + attributes.getXmlnsLocalName(i) + "\u201D is not serializable as XML 1.0.");
                             break;
                     }
                 }
@@ -4975,8 +4975,6 @@ public abstract class TreeBuilder<T> implements TokenHandler {
         this.namePolicy = namePolicy;
     }
 
-    // ]NOCPP]
-
     /**
      * Sets the documentModeHandler.
      * 
@@ -4987,8 +4985,6 @@ public abstract class TreeBuilder<T> implements TokenHandler {
         this.documentModeHandler = documentModeHandler;
     }
 
-    // [NOCPP[
-    
     /**
      * Sets the reportingDoctype.
      * 

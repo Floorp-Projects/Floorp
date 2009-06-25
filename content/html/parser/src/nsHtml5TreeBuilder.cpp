@@ -32,6 +32,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsITimer.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -2690,8 +2691,8 @@ void
 nsHtml5TreeBuilder::documentModeInternal(nsHtml5DocumentMode m, nsString* publicIdentifier, nsString* systemIdentifier, PRBool html4SpecificAdditionalErrorChecks)
 {
   quirks = (m == QUIRKS_MODE);
-  if (!!documentModeHandler) {
-    documentModeHandler->documentMode(m);
+  if (!!parser) {
+    parser->documentMode(m);
   }
 }
 
@@ -3557,12 +3558,6 @@ void
 nsHtml5TreeBuilder::setScriptingEnabled(PRBool scriptingEnabled)
 {
   this->scriptingEnabled = scriptingEnabled;
-}
-
-void 
-nsHtml5TreeBuilder::setDocumentModeHandler(nsHtml5Parser* documentModeHandler)
-{
-  this->documentModeHandler = documentModeHandler;
 }
 
 PRBool 

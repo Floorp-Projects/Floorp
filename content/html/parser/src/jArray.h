@@ -39,7 +39,7 @@
 #define jArray_h__
 
 #define J_ARRAY_STATIC(T, L, arr) \
-  jArray<T,L>( (arr), (sizeof(arr)/sizeof(arr[0])) ) 
+  jArray<T,L>( ((T*)arr), (sizeof(arr)/sizeof(arr[0])) ) 
 
 template<class T, class L> 
 class jArray {
