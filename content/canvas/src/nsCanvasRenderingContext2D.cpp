@@ -374,7 +374,13 @@ protected:
      * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever
      * Redraw is called, reset to false when Render is called.
      */
-    PRBool mIsFrameInvalid;
+    PRBool mIsEntireFrameInvalid;
+
+    /**
+     * Number of times we've invalidated before calling redraw
+     */
+    PRUint32 mInvalidateCount;
+    static const PRUint32 kCanvasMaxInvalidateCount = 100;
 
     /**
      * Returns true iff the the given operator should affect areas of the
@@ -462,8 +468,11 @@ protected:
     /**
      * Draws the current path in the given style. Takes care of
      * any shadow drawing and will use intermediate surfaces as needed.
+     *
+     * If dirtyRect is given, it will contain the device-space dirty
+     * rectangle of the draw operation.
      */
-    nsresult DrawPath(Style style);
+    nsresult DrawPath(Style style, gfxRect *dirtyRect = nsnull);
 
     /**
      * Draws a rectangle in the given style; used by FillRect and StrokeRect.
@@ -653,8 +662,8 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mValid(PR_FALSE), mOpaque(PR_FALSE), mCanvasElement(nsnull),
-      mSaveCount(0), mIsFrameInvalid(PR_FALSE), mLastStyle(STYLE_MAX),
-      mStyleStack(20)
+      mSaveCount(0), mIsEntireFrameInvalid(PR_FALSE), mInvalidateCount(0),
+      mLastStyle(STYLE_MAX), mStyleStack(20)
 {
 }
 
@@ -669,7 +678,7 @@ nsCanvasRenderingContext2D::Destroy()
     mSurface = nsnull;
     mThebes = nsnull;
     mValid = PR_FALSE;
-    mIsFrameInvalid = PR_FALSE;
+    mIsEntireFrameInvalid = PR_FALSE;
 }
 
 nsresult
@@ -823,12 +832,11 @@ nsCanvasRenderingContext2D::Redraw()
     if (!mCanvasElement)
         return NS_OK;
 
-    if (!mIsFrameInvalid) {
-        mIsFrameInvalid = PR_TRUE;
-        return mCanvasElement->InvalidateFrame();
-    }
+    if (mIsEntireFrameInvalid)
+        return NS_OK;
 
-    return NS_OK;
+    mIsEntireFrameInvalid = PR_TRUE;
+    return mCanvasElement->InvalidateFrame();
 }
 
 nsresult
@@ -837,12 +845,13 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
     if (!mCanvasElement)
         return NS_OK;
 
-    if (!mIsFrameInvalid) {
-        mIsFrameInvalid = PR_TRUE;
-        return mCanvasElement->InvalidateFrameSubrect(r);
-    }
+    if (mIsEntireFrameInvalid)
+        return NS_OK;
 
-    return NS_OK;
+    if (++mInvalidateCount > kCanvasMaxInvalidateCount)
+        return Redraw();
+
+    return mCanvasElement->InvalidateFrameSubrect(r);
 }
 
 NS_IMETHODIMP
@@ -953,7 +962,9 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter a
     if (mOpaque)
         ctx->SetOperator(op);
 
-    mIsFrameInvalid = PR_FALSE;
+    mIsEntireFrameInvalid = PR_FALSE;
+    mInvalidateCount = 0;
+
     return rv;
 }
 
@@ -1458,7 +1469,7 @@ nsCanvasRenderingContext2D::ShadowFinalize(gfxAlphaBoxBlur& blur)
 }
 
 nsresult
-nsCanvasRenderingContext2D::DrawPath(Style style)
+nsCanvasRenderingContext2D::DrawPath(Style style, gfxRect *dirtyRect)
 {
     /*
      * Need an intermediate surface when:
@@ -1525,11 +1536,26 @@ nsCanvasRenderingContext2D::DrawPath(Style style)
     else
         mThebes->Stroke();
 
+    // XXX do some more work to calculate the extents of shadows
+    // XXX handle stroke extents
+    if (dirtyRect && style == STYLE_FILL && !doDrawShadow) {
+        *dirtyRect = mThebes->GetUserPathExtent();
+    }
+
     if (doUseIntermediateSurface) {
         mThebes->PopGroupToSource();
         DirtyAllStyles();
 
         mThebes->Paint(CurrentState().StyleIsColor(style) ? 1.0 : CurrentState().globalAlpha);
+    }
+
+    if (dirtyRect) {
+        if (style != STYLE_FILL || doDrawShadow) {
+            // just use the clip extents
+            *dirtyRect = mThebes->GetClipExtents();
+        }
+
+        *dirtyRect = mThebes->UserToDevice(*dirtyRect);
     }
 
     return NS_OK;
@@ -1553,7 +1579,8 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
     mThebes->Rectangle(gfxRect(x, y, w, h));
     mThebes->Fill();
 
-    return Redraw();
+    gfxRect dirty = mThebes->UserToDevice(mThebes->GetUserPathExtent());
+    return Redraw(dirty);
 }
 
 nsresult
@@ -1567,11 +1594,12 @@ nsCanvasRenderingContext2D::DrawRect(const gfxRect& rect, Style style)
     mThebes->NewPath();
     mThebes->Rectangle(rect);
 
-    nsresult rv = DrawPath(style);
+    gfxRect dirty;
+    nsresult rv = DrawPath(style, &dirty);
     if (NS_FAILED(rv))
         return rv;
 
-    return Redraw();
+    return Redraw(dirty);
 }
 
 NS_IMETHODIMP
@@ -1607,19 +1635,21 @@ nsCanvasRenderingContext2D::ClosePath()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Fill()
 {
-    nsresult rv = DrawPath(STYLE_FILL);
+    gfxRect dirty;
+    nsresult rv = DrawPath(STYLE_FILL, &dirty);
     if (NS_FAILED(rv))
         return rv;
-    return Redraw();
+    return Redraw(dirty);
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Stroke()
 {
-    nsresult rv = DrawPath(STYLE_STROKE);
+    gfxRect dirty;
+    nsresult rv = DrawPath(STYLE_STROKE, &dirty);
     if (NS_FAILED(rv))
         return rv;
-    return Redraw();
+    return Redraw(dirty);
 }
 
 NS_IMETHODIMP
@@ -2235,8 +2265,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     processor.mThebes = mThebes;
     processor.mOp = aOp;
     processor.mBoundingBox = gfxRect(0, 0, 0, 0);
-    // need to measure size if using an intermediate surface for drawing
-    processor.mDoMeasureBoundingBox = doDrawShadow;
+    processor.mDoMeasureBoundingBox = doDrawShadow || !mIsEntireFrameInvalid;
 
     processor.mFontgrp = GetCurrentFontStyle();
     NS_ASSERTION(processor.mFontgrp, "font group is null");
@@ -2330,6 +2359,9 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         mThebes->Translate(-trans);
     }
 
+    // save the previous bounding box
+    gfxRect boundingBox = processor.mBoundingBox;
+
     // don't ever need to measure the bounding box twice
     processor.mDoMeasureBoundingBox = PR_FALSE;
 
@@ -2411,6 +2443,9 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     } else if (doUseIntermediateSurface)
         mThebes->Paint(CurrentState().StyleIsColor(STYLE_FILL) ? 1.0 : CurrentState().globalAlpha);
 
+    if (aOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_FILL && !doDrawShadow)
+        return Redraw(mThebes->UserToDevice(boundingBox));
+
     return Redraw();
 }
 
@@ -2476,7 +2511,8 @@ nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
                   nsnull,
                   nsnull,
                   nsnull);
-    return NS_OK;
+
+    return Redraw();
 }
 
 NS_IMETHODIMP
@@ -2585,10 +2621,12 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
         x += 2 * halfAdvance;
     }
 
-    if(stroke)
+    if (stroke) {
         ApplyStyle(STYLE_STROKE);
-    else
+        mThebes->NewPath();
+    } else {
         ApplyStyle(STYLE_FILL);
+    }
 
     for(PRUint32 i = 0; i < strLength; i++)
     {
@@ -2613,9 +2651,12 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
         mThebes->SetMatrix(matrix);
     }
 
+    if (stroke)
+        mThebes->Stroke();
+
     delete [] cp;
 
-    return NS_OK;
+    return Redraw();
 }
 
 //
@@ -2853,6 +2894,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::DrawImage()
 {
     nsresult rv;
+    gfxRect dirty;
 
     // we can't do a security check without a canvas element, so
     // just skip this entirely
@@ -3063,6 +3105,8 @@ nsCanvasRenderingContext2D::DrawImage()
         } else
             mThebes->Clip(clip);
 
+        dirty = mThebes->UserToDevice(clip);
+
         mThebes->Paint(CurrentState().globalAlpha);
     }
 
@@ -3079,7 +3123,7 @@ nsCanvasRenderingContext2D::DrawImage()
 
 FINISH:
     if (NS_SUCCEEDED(rv))
-        rv = Redraw();
+        rv = Redraw(dirty);
 
     return rv;
 }
@@ -3325,7 +3369,6 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     // we're drawing; aX and aY are drawn to 0,0 in current user
     // space.
     gfxRect damageRect = mThebes->UserToDevice(gfxRect(0, 0, aW, aH));
-    damageRect.RoundOut();
 
     Redraw(damageRect);
 
