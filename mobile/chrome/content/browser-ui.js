@@ -445,7 +445,7 @@ var BrowserUI = {
   },
 
   newTab : function newTab() {
-    this.hideTabs();
+    ws.panTo(0, -this.toolbarH);
     Browser.addTab("about:blank", true);
   },
 
