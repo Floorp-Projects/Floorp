@@ -366,6 +366,21 @@ js_InitJITLogController ( void )
 }
 #endif
 
+static const char*
+js_ExitName(ExitType type)
+{
+    static const char* exitNames[] =
+    {
+    #define MAKE_EXIT_STRING(x) #x,
+    JS_TM_EXITCODES(MAKE_EXIT_STRING)
+    #undef MAKE_EXIT_STRING
+    };
+
+    JS_ASSERT(unsigned(type) < JS_ARRAY_LENGTH(exitNames));
+    
+    return exitNames[type];
+}
+
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
    case cause performance regressions. */
 static Oracle oracle;
@@ -2949,8 +2964,8 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
 {
     debug_only_printf(LC_TMRecorder,
                       "    About to try emitting guard code for "
-                      "SideExit=%p exitType=%d\n",
-                      (void*)exit, exit->exitType);
+                      "SideExit=%p exitType=%s\n",
+                      (void*)exit, js_ExitName(exit->exitType));
 
     LIns* guardRec = createGuardRecord(exit);
 
@@ -4765,7 +4780,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
         return js_AttemptToExtendTree(cx, lr, NULL, outer);
       default:
-        debug_only_printf(LC_TMTracer, "exit_type=%d\n", lr->exitType);
+        debug_only_printf(LC_TMTracer, "exit_type=%s\n", js_ExitName(lr->exitType));
         js_AbortRecording(cx, "Inner tree not suitable for calling");
         return false;
     }
@@ -5312,14 +5327,14 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 #endif
 
     debug_only_printf(LC_TMTracer,
-                      "leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, "
+                      "leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%s, sp=%d, "
                       "calldepth=%d, cycles=%llu\n",
                       fp->script->filename,
                       js_FramePCToLineNumber(cx, fp),
                       FramePCOffset(fp),
                       js_CodeName[fp->imacpc ? *fp->imacpc : *fp->regs->pc],
                       (void*)lr,
-                      lr->exitType,
+                      js_ExitName(lr->exitType),
                       fp->regs->sp - StackBase(fp),
                       calldepth,
                       cycles);
