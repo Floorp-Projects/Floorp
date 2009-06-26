@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  {0x282f1cd0, 0x6dfb, 0x4cff, \
-      {0x83, 0x3e, 0x05, 0x98, 0x52, 0xe6, 0xd8, 0x59 } }
+  {0x2c155ed0, 0x3302, 0x4cff, \
+      {0x9d, 0xb3, 0xed, 0x0c, 0xcd, 0xfc, 0x50, 0x06 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -635,6 +635,7 @@ public:
 
   enum ReadyState { READYSTATE_UNINITIALIZED = 0, READYSTATE_LOADING = 1, READYSTATE_INTERACTIVE = 3, READYSTATE_COMPLETE = 4};
   virtual void SetReadyStateInternal(ReadyState rs) = 0;
+  virtual ReadyState GetReadyStateEnum() = 0;
 
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
