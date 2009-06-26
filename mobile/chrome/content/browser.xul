@@ -242,7 +242,6 @@
                    autocompletepopup="popup_autocomplete"
                    enablehistory="false"
                    maxrows="6"
-                   readonly="true"
                    completeselectedindex="true"
                    minresultsforpopup="0"
                    flex="1"

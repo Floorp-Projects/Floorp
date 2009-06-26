@@ -174,9 +174,8 @@ var BrowserUI = {
 
   _editToolbar : function _editToolbar(aEdit) {
     var icons = document.getElementById("urlbar-icons");
-    if (aEdit && this._edit.readOnly) {
+    if (aEdit && icons.getAttribute("mode") != "edit") {
       icons.setAttribute("mode", "edit");
-      this._edit.readOnly = false;
       this._edit.defaultValue = this._edit.value;
 
       let urlString = this.getDisplayURI(Browser.selectedBrowser);
@@ -184,13 +183,16 @@ var BrowserUI = {
         urlString = "";
       this._edit.value = urlString;
 
+      // This is a workaround for bug 488420, needed to cycle focus for the
+      // IME state to be set properly. Testing shows we only really need to
+      // do this the first time.
       this._edit.inputField.blur();
+      
       this._edit.inputField.focus();
       this._edit.select();
     }
-    else if (!aEdit && !this._edit.readOnly) {
+    else if (!aEdit && icons.getAttribute("mode") != "view") {
       icons.setAttribute("mode", "view");
-      this._edit.readOnly = true;
       this._edit.inputField.blur();
       this._edit.reallyClosePopup();
     }
