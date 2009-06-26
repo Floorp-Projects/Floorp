@@ -233,7 +233,7 @@ nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
     if (!aMayHaveNewListenerManagers) {
       return NS_OK;
     }
-    mTarget->GetListenerManager(PR_FALSE, getter_AddRefs(mManager));
+    mManager = mTarget->GetListenerManager(PR_FALSE);
   }
   if (mManager) {
     NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
@@ -325,8 +325,6 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
     if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE) || newTarget) {
       if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
            item->ForceContentDispatch()) &&
-          (!(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) ||
-           aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) &&
           !(aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
         item->HandleEvent(aVisitor, aFlags & NS_EVENT_BUBBLE_MASK,
                           createdELMs != nsEventListenerManager::sCreatedCount);
@@ -643,15 +641,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
                                 static_cast<nsTextEvent*>(aEvent));
-    case NS_BEFORE_PAGE_UNLOAD_EVENT:
-      return
-        NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext,
-                                   static_cast<nsBeforePageUnloadEvent*>
-                                              (aEvent));
-    case NS_PAGETRANSITION_EVENT:
-      return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext,
-                                          static_cast<nsPageTransitionEvent*>
-                                                     (aEvent));
 #ifdef MOZ_SVG
     case NS_SVG_EVENT:
       return NS_NewDOMSVGEvent(aDOMEvent, aPresContext,
@@ -668,10 +657,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_COMMAND_EVENT:
       return NS_NewDOMCommandEvent(aDOMEvent, aPresContext,
                                    static_cast<nsCommandEvent*>(aEvent));
-    case NS_NOTIFYPAINT_EVENT:
-      return NS_NewDOMNotifyPaintEvent(aDOMEvent, aPresContext,
-                                       static_cast<nsNotifyPaintEvent*>
-                                                     (aEvent));
     case NS_SIMPLE_GESTURE_EVENT:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aPresContext,
                                          static_cast<nsSimpleGestureEvent*>(aEvent));
@@ -735,6 +720,10 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMNotifyPaintEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("simplegestureevent"))
     return NS_NewDOMSimpleGestureEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("beforeunloadevent"))
+    return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("pagetransition"))
+    return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

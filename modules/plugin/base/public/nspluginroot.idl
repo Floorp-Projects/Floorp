@@ -55,7 +55,6 @@ native nsPluginWindow(nsPluginWindow);
 native nsByteRange(nsByteRange);
 [ptr] native nsByteRangePtr(nsByteRange);
 [ptr] native nsPluginEventPtr(nsPluginEvent);
-native nsPluginManagerVariable(nsPluginManagerVariable);
 native nsPluginVariable(nsPluginVariable);
 native nsPluginInstanceVariable(nsPluginInstanceVariable);
 native nsPluginInstancePeerVariable(nsPluginInstancePeerVariable);

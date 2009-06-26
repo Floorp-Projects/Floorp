@@ -9,7 +9,7 @@
 == border-breaking-001-cols.xhtml border-breaking-001-cols.ref.xhtml
 == border-breaking-002-cols.xhtml border-breaking-002-cols.ref.xhtml
 == border-breaking-003-cols.xhtml border-breaking-003-cols.ref.xhtml
-== border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
+fails == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
 == content-inserted-000.xhtml content-inserted-000.ref.xhtml
 == content-inserted-001.xhtml content-inserted-001.ref.xhtml
 == content-inserted-002.xhtml content-inserted-002.ref.xhtml

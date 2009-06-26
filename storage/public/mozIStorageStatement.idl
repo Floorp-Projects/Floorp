@@ -43,8 +43,9 @@
 interface mozIStorageConnection;
 interface mozIStorageStatementCallback;
 interface mozIStoragePendingStatement;
+interface mozIStorageBindingParamsArray;
 
-[scriptable, uuid(52d740cd-1c25-471f-a848-98d1a00a2963)]
+[scriptable, uuid(20c45bdd-51d4-4f07-b70e-5feaa6302197)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Finalizes a statement so you can successfully close a database connection.
@@ -128,6 +129,24 @@ interface mozIStorageStatement : mozIStorageValueArray {
   void bindBlobParameter(in unsigned long aParamIndex,
                          [array,const,size_is(aValueSize)] in octet aValue,
                          in unsigned long aValueSize);
+
+  /**
+   * Binds the array of parameters to the statement.  When executeAsync is
+   * called, all the parameters in aParameters are bound and then executed.
+   *
+   * @param aParameters
+   *        The array of parameters to bind to the statement upon execution.
+   */
+  void bindParameters(in mozIStorageBindingParamsArray aParameters);
+
+  /**
+   * Creates a new mozIStorageBindingParamsArray that can be used to bind
+   * multiple sets of data to a statement.
+   *
+   * @returns a mozIStorageBindingParamsArray that multiple sets of parameters
+   *          can be bound to.
+   */
+  mozIStorageBindingParamsArray newBindingParamsArray();
 
   /**
    * Execute the query, ignoring any results.  This is accomplished by

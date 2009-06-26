@@ -816,8 +816,7 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult);
+  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
   virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
                                          const nsIID& aIID);
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
@@ -1079,8 +1078,9 @@ protected:
     return kNameSpaceID_None;
   }
 
-  // Dispatch an event to the ScriptGlobalObject for this document
-  void DispatchEventToWindow(nsEvent *aEvent);
+  void DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
+                              const nsAString& aType,
+                              PRBool aPersisted);
 
   // nsContentList match functions for GetElementsByClassName
   static PRBool MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID,

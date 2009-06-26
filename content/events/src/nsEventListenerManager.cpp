@@ -49,15 +49,12 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMLoadListener.h"
-#include "nsIDOMDragListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMXULListener.h"
 #include "nsIDOMUIListener.h"
 #include "nsITextControlFrame.h"
 #ifdef MOZ_SVG
-#include "nsIDOMSVGListener.h"
-#include "nsIDOMSVGZoomListener.h"
 #include "nsGkAtoms.h"
 #endif // MOZ_SVG
 #include "nsIEventStateManager.h"
@@ -247,19 +244,6 @@ static const EventDispatchData sLoadEvents[] = {
   { NS_BEFORE_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::BeforeUnload) }
 };
 
-static const EventDispatchData sDragEvents[] = {
-  { NS_DRAGDROP_ENTER,       HANDLER(&nsIDOMDragListener::DragEnter)   },
-  { NS_DRAGDROP_OVER_SYNTH,  HANDLER(&nsIDOMDragListener::DragOver)    },
-  { NS_DRAGDROP_EXIT_SYNTH,  HANDLER(&nsIDOMDragListener::DragExit)    },
-  { NS_DRAGDROP_DRAGDROP,    HANDLER(&nsIDOMDragListener::DragDrop)    },
-  { NS_DRAGDROP_GESTURE,     HANDLER(&nsIDOMDragListener::DragGesture) },
-  { NS_DRAGDROP_DRAG,        HANDLER(&nsIDOMDragListener::Drag)        },
-  { NS_DRAGDROP_END,         HANDLER(&nsIDOMDragListener::DragEnd)     },
-  { NS_DRAGDROP_START,       HANDLER(&nsIDOMDragListener::DragStart)   },
-  { NS_DRAGDROP_LEAVE_SYNTH, HANDLER(&nsIDOMDragListener::DragLeave)   },
-  { NS_DRAGDROP_DROP,        HANDLER(&nsIDOMDragListener::Drop)        }
-};
-
 static const EventDispatchData sXULEvents[] = {
   { NS_XUL_POPUP_SHOWING,  HANDLER(&nsIDOMXULListener::PopupShowing)  },
   { NS_XUL_POPUP_SHOWN,    HANDLER(&nsIDOMXULListener::PopupShown)    },
@@ -276,21 +260,6 @@ static const EventDispatchData sUIEvents[] = {
   { NS_UI_FOCUSIN,  HANDLER(&nsIDOMUIListener::FocusIn)  },
   { NS_UI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut) }
 };
-
-#ifdef MOZ_SVG
-static const EventDispatchData sSVGEvents[] = {
-  { NS_SVG_LOAD,   HANDLER(&nsIDOMSVGListener::Load)   },
-  { NS_SVG_UNLOAD, HANDLER(&nsIDOMSVGListener::Unload) },
-  { NS_SVG_ABORT,  HANDLER(&nsIDOMSVGListener::Abort)  },
-  { NS_SVG_ERROR,  HANDLER(&nsIDOMSVGListener::Error)  },
-  { NS_SVG_RESIZE, HANDLER(&nsIDOMSVGListener::Resize) },
-  { NS_SVG_SCROLL, HANDLER(&nsIDOMSVGListener::Scroll) }
-};
-
-static const EventDispatchData sSVGZoomEvents[] = {
-  { NS_SVG_ZOOM, HANDLER(&nsIDOMSVGZoomListener::Zoom) }
-};
-#endif // MOZ_SVG
 
 #define IMPL_EVENTTYPEDATA(type) \
 { \
@@ -309,16 +278,10 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(Load),
   IMPL_EVENTTYPEDATA(Focus),
   IMPL_EVENTTYPEDATA(Form),
-  IMPL_EVENTTYPEDATA(Drag),
   IMPL_EVENTTYPEDATA(Text),
   IMPL_EVENTTYPEDATA(Composition),
   IMPL_EVENTTYPEDATA(XUL),
   IMPL_EVENTTYPEDATA(UI)
-#ifdef MOZ_SVG
- ,
-  IMPL_EVENTTYPEDATA(SVG),
-  IMPL_EVENTTYPEDATA(SVGZoom)
-#endif // MOZ_SVG
 };
 
 // Strong references to event groups
@@ -564,6 +527,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         (EVENT_TYPE_EQUALS(ls, aType, aUserType) ||
          (!(ls->mEventType) &&
           EVENT_TYPE_DATA_EQUALS(ls->mTypeData, aTypeData)))) {
+      nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
       mListeners.RemoveElementAt(i);
       mNoListenerForEvent = NS_EVENT_TYPE_NULL;
       mNoListenerForEventAtom = nsnull;

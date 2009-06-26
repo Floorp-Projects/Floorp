@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> 
+
+<head>
+<title></title>
+
+<style>
+
+body {
+ margin: 20px;
+}
+
+tr {
+ background: gray;
+}
+
+.t2 tr {
+ outline: 1px solid gray;
+ -moz-outline-radius: .3em;
+}
+
+.t1 tr {
+ outline: 1px solid red;
+ -moz-outline-radius: .3em;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<table id="table1" class="t1">
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+</table>
+
+<table class="t2">
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+
+  <tr><td>AAAA</td></tr>
+</table>
+
+<br/>
+<form method="get" action="#">
+  <input type="button" onclick="showBug(); return false;" value="Trigger bug"/>
+</form>
+
+</body> </html>

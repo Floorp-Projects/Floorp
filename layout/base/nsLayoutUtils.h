@@ -1033,6 +1033,45 @@ public:
       !aFrame->GetFirstContinuation()->
         GetProperty(nsGkAtoms::IBSplitSpecialSibling);
   }
+
+  /**
+   * Obtain a gfxASurface from the given DOM element, if possible.
+   * This obtains the most natural surface from the element; that
+   * is, the one that can be obtained with the fewest conversions.
+   *
+   * The flags below can modify the behaviour of this function.  The
+   * result is returned as a SurfaceFromElementResult struct, also
+   * defined below.
+   *
+   * Currently, this will do:
+   *  - HTML Canvas elements: will return the underlying canvas surface
+   *  - HTML Video elements: will return the current video frame
+   *  - Image elements: will return the image
+   *
+   * The above results are modified by the below flags (copying,
+   * forcing image surface, etc.).
+   */
+
+  enum {
+    /* Always create a new surface for the result */
+    SFE_WANT_NEW_SURFACE   = 1 << 0,
+    /* When creating a new surface, create an image surface */
+    SFE_WANT_IMAGE_SURFACE = 1 << 1
+  };
+
+  struct SurfaceFromElementResult {
+    /* mSurface will contain the resulting surface, or will be NULL on error */
+    nsRefPtr<gfxASurface> mSurface;
+    /* The size of the surface */
+    gfxIntSize mSize;
+    /* The principal associated with the element whose surface was returned */
+    nsCOMPtr<nsIPrincipal> mPrincipal;
+    /* Whether the element was "write only", that is, the bits should not be exposed to content */
+    PRBool mIsWriteOnly;
+  };
+
+  static SurfaceFromElementResult SurfaceFromElement(nsIDOMElement *aElement,
+                                                     PRUint32 aSurfaceFlags = 0);
 };
 
 class nsAutoDisableGetUsedXAssertions

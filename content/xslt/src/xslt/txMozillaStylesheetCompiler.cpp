@@ -109,7 +109,6 @@ public:
 
     // nsIContentSink
     NS_IMETHOD WillParse(void) { return NS_OK; }
-    NS_IMETHOD WillBuildModel(void) { return NS_OK; }
     NS_IMETHOD DidBuildModel();
     NS_IMETHOD WillInterrupt(void) { return NS_OK; }
     NS_IMETHOD WillResume(void) { return NS_OK; }

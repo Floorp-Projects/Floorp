@@ -538,16 +538,6 @@ nsHtml5Parser::BuildModel(void)
   return NS_OK;
 }
 
-/**
- * This method is dead code. Here only for interface compat.
- */
-NS_IMETHODIMP_(nsDTDMode)
-nsHtml5Parser::GetParseMode(void)
-{
-  NS_NOTREACHED("No one is supposed to call GetParseMode!");
-  return eDTDMode_unknown;
-}
-
 NS_IMETHODIMP
 nsHtml5Parser::CancelParsingEvents()
 {
@@ -784,7 +774,7 @@ nsHtml5Parser::WillParse()
 }
 
 NS_IMETHODIMP
-nsHtml5Parser::WillBuildModel()
+nsHtml5Parser::WillBuildModel(nsDTDMode aDTDMode)
 {
   NS_NOTREACHED("No one shuld call this");
   return NS_ERROR_NOT_IMPLEMENTED;

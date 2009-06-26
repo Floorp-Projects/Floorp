@@ -56,6 +56,7 @@ CPPSRCS = \
 		LangGreekModel.cpp \
 		LangHungarianModel.cpp \
 		LangHebrewModel.cpp \
+		LangThaiModel.cpp \
 		nsHebrewProber.cpp \
 		nsCharSetProber.cpp \
 		nsBig5Prober.cpp \
@@ -74,11 +75,6 @@ CPPSRCS = \
 		nsLatin1Prober.cpp \
 		nsUniversalDetector.cpp \
                $(NULL)
-
-# Not built on win32. Not sure why not
-ifneq ($(OS_ARCH),WINNT)
-CPPSRCS	+= LangThaiModel.cpp
-endif
 
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs in a static build

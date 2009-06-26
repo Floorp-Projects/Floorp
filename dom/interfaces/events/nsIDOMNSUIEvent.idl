@@ -37,15 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMNSEvent.idl"
 
-[scriptable, uuid(a6cf90c4-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMNSUIEvent : nsISupports
+[scriptable, uuid(72c9f79c-98cd-4224-a467-86b59c0a38f7)]
+interface nsIDOMNSUIEvent : nsIDOMNSEvent
 {
   const long SCROLL_PAGE_UP = -32768;
   const long SCROLL_PAGE_DOWN = 32768;
-
-  boolean                   getPreventDefault();
 
   readonly attribute long             layerX;
   readonly attribute long             layerY;

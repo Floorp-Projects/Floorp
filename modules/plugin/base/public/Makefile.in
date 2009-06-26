@@ -66,8 +66,6 @@ SDK_HEADERS	 = \
 XPIDLSRCS 	= \
 		nspluginroot.idl \
 		nsIPluginStreamInfo.idl \
-		nsIPluginManager.idl \
-		nsIPluginManager2.idl \
 		nsIPluginInstancePeer.idl \
 		nsIPluginInstancePeer2.idl \
 		nsIPluginInstanceOwner.idl \

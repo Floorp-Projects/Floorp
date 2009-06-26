@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<!-- Test that suppression works (or is turned off) for XBL content -->
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="before">
+    <content>Hello<children/></content>
+  </binding>
+  <binding id="after">
+    <content><children/>Kitty</content>
+  </binding>
+  <binding id="empty1">
+    <content><div xmlns="http://www.w3.org/1999/xhtml">Hello</div><children/></content>
+  </binding>
+  <binding id="empty2">
+    <content><children/><div xmlns="http://www.w3.org/1999/xhtml">Kitty</div></content>
+  </binding>
+</bindings>
+<style>
+body > div { border:1px solid black; margin:1em; }
+#d1 { -moz-binding:url(#before); }
+#d2 { -moz-binding:url(#after); }
+#d3 { -moz-binding:url(#empty1); }
+#d4 { -moz-binding:url(#empty2); }
+</style>
+<script>
+function loaded() {
+  document.body.offsetHeight;
+  document.getAnonymousNodes(document.getElementById("d3"))[0].style.display = 'inline';
+  document.getAnonymousNodes(document.getElementById("d4"))[2].style.display = 'inline';
+}
+</script>
+</head>
+<body onload="loaded()">
+  <div id="d1"> <span>Kitty</span></div>
+  <div id="d2"><span>Hello</span> </div>
+  <div id="d3"> <span>Kitty</span></div>
+  <div id="d4"><span>Hello</span> </div>
+</body>
+</html>

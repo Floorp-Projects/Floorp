@@ -68,7 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var normalHyperlinkAcc = getAccessible("NormalHyperlink",
                                              [nsIAccessibleHyperLink]);
       testThis("NormalHyperlink", normalHyperlinkAcc, ROLE_LINK, 1,
-               "Mozilla Foundation", true, 18, 19);
+               "Mozilla Foundation", true, 17, 18);
       is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/", 
          "URI wrong for normalHyperlinkElement!");
       testStates(normalHyperlinkAcc,
@@ -84,7 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var ariaHyperlinkAcc = getAccessible("AriaHyperlink",
                                            [nsIAccessibleHyperLink]);
       testThis("AriaHyperlink", ariaHyperlinkAcc, ROLE_LINK, 1,
-               "Mozilla Foundation Home", true, 32, 33);
+               "Mozilla Foundation Home", true, 30, 31);
       testStates(ariaHyperlinkAcc,
                  (STATE_FOCUSABLE | STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -110,7 +110,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var imageMapHyperlinkAcc = getAccessible("imgmap",
                                                [nsIAccessibleHyperLink]);
       testThis("imgmap", imageMapHyperlinkAcc, ROLE_IMAGE_MAP, 2, "b", true,
-               83, 84);
+               79, 80);
       is(imageMapHyperlinkAcc.getURI(0).spec,
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
       is(imageMapHyperlinkAcc.getURI(1).spec,
@@ -137,7 +137,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // empty hyperlink
       var EmptyHLAcc = getAccessible("emptyLink",
                                      [nsIAccessibleHyperLink]);
-      testThis("emptyLink", EmptyHLAcc, ROLE_LINK, 1, null, true, 98, 99);
+      testThis("emptyLink", EmptyHLAcc, ROLE_LINK, 1, null, true, 93, 94);
       testStates(EmptyHLAcc,
                  (STATE_FOCUSABLE | STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -148,7 +148,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var hyperlinkWithSpanAcc = getAccessible("LinkWithSpan",
                                                [nsIAccessibleHyperLink]);
       testThis("LinkWithSpan", hyperlinkWithSpanAcc, ROLE_LINK, 1,
-               "Heise Online", true, 124, 125);
+               "Heise Online", true, 119, 120);
       is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/", 
          "URI wrong for hyperlinkElementWithSpan!");
       testStates(hyperlinkWithSpanAcc,
@@ -165,7 +165,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var namedAnchorAcc = getAccessible("namedAnchor",
                                          [nsIAccessibleHyperLink]);
       testThis("namedAnchor", namedAnchorAcc, ROLE_LINK, 1,
-               "This should never be of state_linked", true, 202, 203);
+               "This should never be of state_linked", true, 196, 197);
       testStates(namedAnchorAcc,
                  (STATE_SELECTABLE),
                  (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
@@ -176,7 +176,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var noLinkAcc = getAccessible("noLink",
                                     [nsIAccessibleHyperLink]);
       testThis("noLink", noLinkAcc, ROLE_LINK, 1,
-               "This should never be of state_linked", true, 262, 263);
+               "This should never be of state_linked", true, 254, 255);
       testStates(noLinkAcc,
                  0,
                  (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
@@ -187,7 +187,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var linkWithClickAcc = getAccessible("linkWithClick",
                                            [nsIAccessibleHyperLink]);
       testThis("linkWithClick", linkWithClickAcc, ROLE_LINK, 1,
-               "This should have state_linked", true, 301, 302);
+               "This should have state_linked", true, 292, 293);
       testStates(linkWithClickAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -201,7 +201,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // Link with title attribute, no name from the subtree (bug 438325).
       var id = "linkWithTitleNoNameFromSubtree";
       var linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
-      testThis(id, linkAcc, ROLE_LINK, 1, "Link with title", true, 354, 355);
+      testThis(id, linkAcc, ROLE_LINK, 1, "Link with title", true, 344, 345);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -212,8 +212,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // (bug 438325).
       id = "linkWithTitleNameFromSubtree";
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
-      testThis(id, linkAcc, ROLE_LINK, 1, "the name from subtree", true, 403,
-               404);
+      testThis(id, linkAcc, ROLE_LINK, 1, "the name from subtree", true, 393,
+               394);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -223,8 +223,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // Link with title attribute, name from the nested html:img (bug 438325).
       id = "linkWithTitleNameFromImg";
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
-      testThis(id, linkAcc, ROLE_LINK, 1, "The title for link", true, 458,
-               459);
+      testThis(id, linkAcc, ROLE_LINK, 1, "The title for link", true, 447,
+               448);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -235,7 +235,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       id = "linkWithLabelNoNameFromSubtree";
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
       testThis(id, linkAcc, ROLE_LINK, 1, "Link with label and nested image:",
-               true, 462, 463);
+               true, 450, 451);
       testStates(linkAcc,
                  (STATE_LINKED),
                  (EXT_STATE_HORIZONTAL));
@@ -250,78 +250,64 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
     addLoadEvent(doTest);
   </script>
 </head>
-<body>
-
-  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418368">Mozilla Bug 418368</a>
-  <p id="display"></p>
-  <div id="content" style="display: none"></div>
-  <pre id="test">
-  </pre>
-
-  <br>Simple link:<br>
-  <a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a>
-  <br>ARIA link:<br>
-  <span id="AriaHyperlink" role="link"
+<body><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418368">Mozilla Bug 418368</a
+  ><p id="display"></p
+  ><div id="content" style="display: none"></div
+  ><pre id="test">
+  </pre
+  ><br
+  >Simple link:<br
+  ><a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a
+  ><br>ARIA link:<br
+  ><span id="AriaHyperlink" role="link"
          onclick="window.open('http://www.mozilla.org/');"
-         tabindex="0">Mozilla Foundation Home</span>
-  <br>Invalid, non-focusable hyperlink:<br>
-  <span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
-        onclick="window.open('http:/www.mozilla.org/');">Invalid link</span>
-  <br>Image map:<br>
-  <map name="atoz_map">
-    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+         tabindex="0">Mozilla Foundation Home</span
+  ><br
+  >Invalid, non-focusable hyperlink:<br
+  ><span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
+         onclick="window.open('http:/www.mozilla.org/');">Invalid link</span
+  ><br>Image map:<br
+  ><map name="atoz_map"
+    ><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
           coords="17,0,30,14"
           alt="b"
-          shape="rect"></area>
-    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
-          coords="0,0,13,14"
-          alt="a"
-          shape="rect"></area>
-  </map>
-  <img width="447" id="imgmap"
-       height="15"
-       usemap="#atoz_map"
-       src="letters.gif"></img>
-
-  <br>Empty link:<br>
-  <a id="emptyLink" href=""><img src=""></img></a>
-
-  <br>Link with embedded span<br>
-  <a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a>
-
-  <br>Named anchor, must not have "linked" state for it to be exposed correctly:<br>
-  <a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
-
-  <br>Link having no attributes, must not have "linked" state:</br>
-  <a id="noLink">This should never be of state_linked</a>
-
-  <br>Link with registered 'click' event: </br>
-  <a id="linkWithClick" onclick="var clicked = true;">This should have state_linked</a>
-
-  <br>Link with title attribute (no name from subtree): </br>
-  <a id="linkWithTitleNoNameFromSubtree" href="http://www.heise.de/"
-     title="Link with title"><img src=""/></a>
-
-  <br>Link with title attribute (name from subtree): </br>
-  <a id="linkWithTitleNameFromSubtree" href="http://www.heise.de/"
-     title="Link with title">the name from subtree</a>
-
-  <br>Link with title attribute (name from nested image): </br>
-  <a id="linkWithTitleNameFromImg" href="http://www.heise.de/"
-     title="Link with title"><img src="" alt="The title for link"/></a>
-
-  <br><label for="linkWithLabelNoNameFromSubtree">Link with label and nested image: </label></br>
-  <a id="linkWithLabelNoNameFromSubtree"
-     href="http://www.heise.de/"><img src=""/></a>
-
-  <br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass),
-   also see the bug 431615:<br>
-  <map id="linksmap" title="Site navigation">
-    <ul>
-      <li><a href="http://mozilla.org">About the project</a></li>
-      <li><a href="http://mozilla.org">Sites and sounds</a></li>
-    </ul>
-  </map>
-
-</body>
+          shape="rect"></area
+    ><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+           coords="0,0,13,14"
+           alt="a"
+           shape="rect"></area
+    ></map
+  ><img width="447" id="imgmap"
+        height="15"
+        usemap="#atoz_map"
+        src="letters.gif"></img
+  ><br>Empty link:<br
+  ><a id="emptyLink" href=""><img src=""></img></a
+  ><br>Link with embedded span<br
+  ><a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a
+  ><br>Named anchor, must not have "linked" state for it to be exposed correctly:<br
+  ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a
+  ><br>Link having no attributes, must not have "linked" state:</br
+  ><a id="noLink">This should never be of state_linked</a
+  ><br>Link with registered 'click' event: </br
+  ><a id="linkWithClick" onclick="var clicked = true;">This should have state_linked</a
+  ><br>Link with title attribute (no name from subtree): </br
+  ><a id="linkWithTitleNoNameFromSubtree" href="http://www.heise.de/"
+      title="Link with title"><img src=""/></a
+  ><br>Link with title attribute (name from subtree): </br
+  ><a id="linkWithTitleNameFromSubtree" href="http://www.heise.de/"
+      title="Link with title">the name from subtree</a
+  ><br>Link with title attribute (name from nested image): </br
+  ><a id="linkWithTitleNameFromImg" href="http://www.heise.de/"
+      title="Link with title"><img src="" alt="The title for link"/></a
+  ><br><label for="linkWithLabelNoNameFromSubtree">Link with label and nested image: </label></br
+  ><a id="linkWithLabelNoNameFromSubtree"
+      href="http://www.heise.de/"><img src=""/></a
+  ><br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass), also see the bug 431615:<br
+  ><map id="linksmap" title="Site navigation"><ul
+    ><li><a href="http://mozilla.org">About the project</a></li
+    ><li><a href="http://mozilla.org">Sites and sounds</a></li
+    ></ul
+  ></map
+></body>
 </html>

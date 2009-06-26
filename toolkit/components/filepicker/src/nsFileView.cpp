@@ -61,6 +61,8 @@
 
 #include "nsWildCard.h"
 
+class nsIDOMDataTransfer;
+ 
 #define NS_FILECOMPLETE_CID { 0xcb60980e, 0x18a5, 0x4a77, \
                             { 0x91, 0x10, 0x81, 0x46, 0x61, 0x4c, 0xa7, 0xf0 } }
 #define NS_FILECOMPLETE_CONTRACTID "@mozilla.org/autocomplete/search;1?name=file"
@@ -673,14 +675,15 @@ nsFileView::IsSorted(PRBool* aIsSorted)
 }
 
 NS_IMETHODIMP
-nsFileView::CanDrop(PRInt32 aIndex, PRInt32 aOrientation, PRBool* aCanDrop)
+nsFileView::CanDrop(PRInt32 aIndex, PRInt32 aOrientation,
+                    nsIDOMDataTransfer* dataTransfer, PRBool* aCanDrop)
 {
   *aCanDrop = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::Drop(PRInt32 aRow, PRInt32 aOrientation)
+nsFileView::Drop(PRInt32 aRow, PRInt32 aOrientation, nsIDOMDataTransfer* dataTransfer)
 {
   return NS_OK;
 }

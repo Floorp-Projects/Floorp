@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDTD.h"
 
 class nsIDocument;
 class nsIURI;
@@ -91,7 +92,7 @@ public:
 
   // nsIContentSink
   NS_IMETHOD WillParse(void);
-  NS_IMETHOD WillBuildModel(void);
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
   NS_IMETHOD DidBuildModel(void);
   virtual PRBool ReadyToCallDidBuildModel(PRBool aTerminated);
   NS_IMETHOD WillInterrupt(void);

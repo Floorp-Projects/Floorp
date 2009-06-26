@@ -43,8 +43,7 @@
  * This class wraps up the creation (and destruction) of the standard
  * set of atoms used in the accessibility module. These objects
  * are created when the are needed by accessibility is being used and they
- * are destroyed when the last nsRootAccessible is destroyed via 
- * nsRootAccessible::ShutdownAll()
+ * are destroyed when the last nsRootAccessible is destroyed.
  */
 
 class nsAccessibilityAtoms {

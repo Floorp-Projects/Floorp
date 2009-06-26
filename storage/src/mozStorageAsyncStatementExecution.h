@@ -44,6 +44,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Mutex.h"
 
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageStatementCallback.h"
@@ -56,6 +57,7 @@ namespace storage {
 
 class Connection;
 class ResultSet;
+class StatementData;
 
 class AsyncExecuteStatements : public nsIRunnable
                              , public mozIStoragePendingStatement
@@ -75,15 +77,15 @@ public:
     ERROR = mozIStorageStatementCallback::REASON_ERROR
   };
 
-  typedef nsTArray<sqlite3_stmt *> sqlite3_stmt_array;
+  typedef nsTArray<StatementData> StatementDataArray;
 
   /**
    * Executes a statement in the background, and passes results back to the
    * caller.
    *
    * @param aStatements
-   *        The SQLite statements to execute in the background.  Ownership is
-   *        transfered from the caller.
+   *        The statements to execute and possibly bind in the background.
+   *        Ownership is transfered from the caller.
    * @param aConnection
    *        The connection that created the statements to execute.
    * @param aCallback
@@ -91,7 +93,7 @@ public:
    * @param _stmt
    *        The handle to control the execution of the statements.
    */
-  static nsresult execute(sqlite3_stmt_array &aStatements,
+  static nsresult execute(StatementDataArray &aStatements,
                           Connection *aConnection,
                           mozIStorageStatementCallback *aCallback,
                           mozIStoragePendingStatement **_stmt);
@@ -106,22 +108,32 @@ public:
   bool shouldNotify();
 
 private:
-  AsyncExecuteStatements(sqlite3_stmt_array &aStatements,
-                         mozIStorageConnection *aConnection,
+  AsyncExecuteStatements(StatementDataArray &aStatements,
+                         Connection *aConnection,
                          mozIStorageStatementCallback *aCallback);
 
   /**
-   * Initializes the object so it can be run on the background thread.
+   * Binds and then executes a given statement until completion, an error
+   * occurs, or we are canceled.  If aLastStatement is true, we should set
+   * mState accordingly.
+   *
+   * @pre mMutex is not held
+   *
+   * @param aData
+   *        The StatementData to bind, execute, and then process.
+   * @param aLastStatement
+   *        Indicates if this is the last statement or not.  If it is, we have
+   *        to set the proper state.
+   * @returns true if we should continue to process statements, false otherwise.
    */
-  nsresult initialize();
-
-  ~AsyncExecuteStatements();
+  bool bindExecuteAndProcessStatement(StatementData &aData,
+                                      bool aLastStatement);
 
   /**
    * Executes a given statement until completion, an error occurs, or we are
    * canceled.  If aLastStatement is true, we should set mState accordingly.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    *
    * @param aStatement
    *        The statement to execute and then process.
@@ -134,10 +146,21 @@ private:
                                   bool aLastStatement);
 
   /**
+   * Executes a statement to completion, properly handling any error conditions.
+   *
+   * @pre mMutex is held
+   *
+   * @param aStatement
+   *        The statement to execute to completion.
+   * @returns true if results were obtained, false otherwise.
+   */
+  bool executeStatement(sqlite3_stmt *aStatement);
+
+  /**
    * Builds a result set up with a row from a given statement.  If we meet the
    * right criteria, go ahead and notify about this results too.
    *
-   * @pre mLock is held
+   * @pre mMutex is held
    *
    * @param aStatement
    *        The statement to get the row data from.
@@ -147,31 +170,34 @@ private:
   /**
    * Notifies callback about completion, and does any necessary cleanup.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    */
   nsresult notifyComplete();
 
   /**
    * Notifies callback about an error.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    *
    * @param aErrorCode
    *        The error code defined in mozIStorageError for the error.
    * @param aMessage
    *        The error string, if any.
+   * @param aError
+   *        The error object to notify the caller with.
    */
   nsresult notifyError(PRInt32 aErrorCode, const char *aMessage);
+  nsresult notifyError(mozIStorageError *aError);
 
   /**
    * Notifies the callback about a result set.
    *
-   * @pre mLock is not held
+   * @pre mMutex is not held
    */
   nsresult notifyResults();
 
-  sqlite3_stmt_array mStatements;
-  mozIStorageConnection *mConnection;
+  StatementDataArray mStatements;
+  nsRefPtr<Connection> mConnection;
   mozStorageTransaction *mTransactionManager;
   mozIStorageStatementCallback *mCallback;
   nsCOMPtr<nsIThread> mCallingThread;
@@ -206,7 +232,7 @@ private:
    *     held.  It is always read from within the lock on the background thread,
    *     but not on the calling thread (see shouldNotify for why).
    */
-  PRLock *mLock;
+  Mutex &mMutex;
 };
 
 } // namespace storage
