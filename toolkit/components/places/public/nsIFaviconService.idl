@@ -260,11 +260,10 @@ interface nsIFaviconService : nsISupports
   /**
    * For a given icon URI, this will return a URI that will result in the image.
    * In most cases, this is an annotation URI. For chrome, this will do nothing
-   * and return the input URI. For NULL input, this will return the URI of
-   * the default favicon.
+   * and return the input URI.
    *
    * @param aFaviconURI
-   *        The URI of an icon in the favicon service. Can be NULL.
+   *        The URI of an icon in the favicon service.
    * @returns A URI that will load the desired icon. This is NOT the URI of the
    *          icon as set on the page, but a URI that will give you the data
    *          out of the favicon service. For a normal page with a favicon
@@ -272,8 +271,7 @@ interface nsIFaviconService : nsISupports
    *          cause the corresponding favicon data to be loaded from this
    *          service. For pages where we don't have a favicon, this will be a
    *          chrome URI of the default icon for a web page. For chrome, the
-   *          output will be the same as the input. For NULL input, this will
-   *          be the URI of the default favicon.
+   *          output will be the same as the input.
    *
    *          No validity checking is done. If you pass an icon URI that we've
    *          never seen, you'll get back a URI that references an invalid
