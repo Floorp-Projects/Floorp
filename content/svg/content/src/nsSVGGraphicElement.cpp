@@ -75,7 +75,8 @@ nsSVGGraphicElement::nsSVGGraphicElement(nsINodeInfo *aNodeInfo)
 /* readonly attribute nsIDOMSVGElement nearestViewportElement; */
 NS_IMETHODIMP nsSVGGraphicElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  return nsSVGUtils::GetNearestViewportElement(this, aNearestViewportElement);
+  nsSVGUtils::GetNearestViewportElement(this, aNearestViewportElement);
+  return NS_OK; // we can't throw exceptions from this API.
 }
 
 /* readonly attribute nsIDOMSVGElement farthestViewportElement; */
@@ -103,8 +104,8 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 
 /* Helper for GetCTM and GetScreenCTM */
 nsresult
-nsSVGGraphicElement::AppendLocalTransform(nsIDOMSVGMatrix *aCTM,
-                                          nsIDOMSVGMatrix **_retval)
+nsSVGGraphicElement::AppendTransform(nsIDOMSVGMatrix *aCTM,
+                                     nsIDOMSVGMatrix **_retval)
 {
   if (!mTransforms) {
     *_retval = aCTM;
@@ -127,61 +128,15 @@ nsSVGGraphicElement::AppendLocalTransform(nsIDOMSVGMatrix *aCTM,
 }
 
 /* nsIDOMSVGMatrix getCTM (); */
-NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
+NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix * *aCTM)
 {
-  nsresult rv;
-  *_retval = nsnull;
-
-  nsIDocument* currentDoc = GetCurrentDoc();
-  if (currentDoc) {
-    // Flush all pending notifications so that our frames are uptodate
-    currentDoc->FlushPendingNotifications(Flush_Layout);
-  }
-
-  nsIContent* parent = nsSVGUtils::GetParentElement(this);
-
-  nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
-  if (!locatableElement) {
-    // we don't have an SVGLocatable parent so we aren't even rendered
-    NS_WARNING("SVGGraphicElement without an SVGLocatable parent");
-    return NS_ERROR_FAILURE;
-  }
-
-  // get our parent's CTM
-  nsCOMPtr<nsIDOMSVGMatrix> parentCTM;
-  rv = locatableElement->GetCTM(getter_AddRefs(parentCTM));
-  if (NS_FAILED(rv)) return rv;
-
-  return AppendLocalTransform(parentCTM, _retval);
+  return nsSVGUtils::GetCTM(this, aCTM);
 }
 
 /* nsIDOMSVGMatrix getScreenCTM (); */
-NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
+NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix * *aCTM)
 {
-  nsresult rv;
-  *_retval = nsnull;
-
-  nsIDocument* currentDoc = GetCurrentDoc();
-  if (currentDoc) {
-    // Flush all pending notifications so that our frames are uptodate
-    currentDoc->FlushPendingNotifications(Flush_Layout);
-  }
-
-  nsIContent* parent = nsSVGUtils::GetParentElement(this);
-
-  nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
-  if (!locatableElement) {
-    // we don't have an SVGLocatable parent so we aren't even rendered
-    NS_WARNING("SVGGraphicElement without an SVGLocatable parent");
-    return NS_ERROR_FAILURE;
-  }
-
-  // get our parent's "screen" CTM
-  nsCOMPtr<nsIDOMSVGMatrix> parentScreenCTM;
-  rv = locatableElement->GetScreenCTM(getter_AddRefs(parentScreenCTM));
-  if (NS_FAILED(rv)) return rv;
-
-  return AppendLocalTransform(parentScreenCTM, _retval);
+  return nsSVGUtils::GetScreenCTM(this, aCTM);
 }
 
 /* nsIDOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
