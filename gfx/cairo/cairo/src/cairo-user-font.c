@@ -118,7 +118,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 							     _cairo_scaled_glyph_index(scaled_glyph),
 							     cr, &extents);
 	else
-	    status = CAIRO_STATUS_USER_FONT_ERROR;
+	    status = CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED;
 
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = cairo_status (cr);
@@ -260,12 +260,16 @@ _cairo_user_ucs4_to_index (void	    *abstract_font,
 	status = face->scaled_font_methods.unicode_to_glyph (&scaled_font->base,
 							     ucs4, &glyph);
 
+	if (status == CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED)
+	    goto not_implemented;
+
 	if (status != CAIRO_STATUS_SUCCESS) {
 	    status = _cairo_scaled_font_set_error (&scaled_font->base, status);
 	    glyph = 0;
 	}
 
     } else {
+not_implemented:
 	glyph = ucs4;
     }
 
@@ -300,10 +304,11 @@ _cairo_user_text_to_glyphs (void		      *abstract_font,
 							   glyphs, num_glyphs,
 							   clusters, num_clusters, cluster_flags);
 
-	if (status != CAIRO_STATUS_SUCCESS)
+	if (status != CAIRO_STATUS_SUCCESS &&
+	    status != CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED)
 	    return status;
 
-	if (*num_glyphs < 0) {
+	if (status == CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED || *num_glyphs < 0) {
 	    if (orig_glyphs != *glyphs) {
 		cairo_glyph_free (*glyphs);
 		*glyphs = orig_glyphs;
@@ -433,6 +438,9 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	    status = font_face->scaled_font_methods.init (&user_scaled_font->base,
 							  cr,
 							  &font_extents);
+
+	    if (status == CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED)
+		status = CAIRO_STATUS_SUCCESS;
 
 	    if (status == CAIRO_STATUS_SUCCESS)
 		status = cairo_status (cr);
