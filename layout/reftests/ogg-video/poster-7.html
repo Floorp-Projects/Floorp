@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;">
+<!-- Test that poster frame changes when you change the poster attribute. -->
+<video src="black140x100.ogv"
+       autobuffer
+       id="v"
+       onload="document.getElementById('v').poster = 'red160x120.png'; setTimeout(function(){document.documentElement.className = '';}, 0);"
+       poster="blue250x200.png"></video>
+</body>
+</html>
