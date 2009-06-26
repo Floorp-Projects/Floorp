@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="background:white;" >
+<!-- Test that poster displays all the time when <video> is showing an audio-only media. -->
+<video src="../../../content/media/test/bug461281.ogg"
+       poster="blue250x200.png"
+       id="v"
+       autobuffer
+       autoplay
+       onended="setTimeout(function(){document.documentElement.className = '';},0);">
+</video>
+</body>
+</html>

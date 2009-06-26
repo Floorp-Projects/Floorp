@@ -413,6 +413,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
 {
   if (mIsRunningLoadMethod)
     return NS_OK;
+  SetPlayedOrSeeked(PR_FALSE);
   mIsRunningLoadMethod = PR_TRUE;
   AbortExistingLoads();
   QueueSelectResourceTask();
@@ -784,7 +785,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
     mDelayingLoadEvent(PR_FALSE),
     mIsRunningSelectResource(PR_FALSE),
     mSuspendedAfterFirstFrame(PR_FALSE),
-    mAllowSuspendAfterFirstFrame(PR_TRUE)
+    mAllowSuspendAfterFirstFrame(PR_TRUE),
+    mHasPlayedOrSeeked(PR_FALSE)
 {
   RegisterFreezableElement();
 }
@@ -813,9 +815,29 @@ void nsHTMLMediaElement::StopSuspendingAfterFirstFrame()
   }
 }
 
+void nsHTMLMediaElement::SetPlayedOrSeeked(PRBool aValue)
+{
+  if (aValue == mHasPlayedOrSeeked)
+    return;
+
+  mHasPlayedOrSeeked = aValue;
+
+  // Force a reflow so that the poster frame hides or shows immediately.
+  nsIDocument *doc = GetDocument();
+  if (!doc) return;
+  nsIPresShell *presShell = doc->GetPrimaryShell();  
+  if (!presShell) return;
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  if (!frame) return;
+  presShell->FrameNeedsReflow(frame,
+                              nsIPresShell::eTreeChange,
+                              NS_FRAME_IS_DIRTY);
+}
+
 NS_IMETHODIMP nsHTMLMediaElement::Play()
 {
   StopSuspendingAfterFirstFrame();
+  SetPlayedOrSeeked(PR_TRUE);
 
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     nsresult rv = Load();
@@ -1204,6 +1226,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
 
   if (!mPaused) {
+    SetPlayedOrSeeked(PR_TRUE);
     rv = mDecoder->Play();
   }
 
@@ -1301,6 +1324,7 @@ void nsHTMLMediaElement::SeekStarted()
 void nsHTMLMediaElement::SeekCompleted()
 {
   mPlayingBeforeSeek = PR_FALSE;
+  SetPlayedOrSeeked(PR_TRUE);
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeked"));
 }
 
@@ -1454,6 +1478,7 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
       mAutoplayEnabled) {
     mPaused = PR_FALSE;
     if (mDecoder) {
+      SetPlayedOrSeeked(PR_TRUE);
       mDecoder->Play();
     }
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
