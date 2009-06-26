@@ -108,6 +108,7 @@ function runTest()
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       switch(testPhase++) {
         case 0:
           testCloseDMWithEscKey(win);
