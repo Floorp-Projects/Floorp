@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is nsFind test code
+   -
+   - The Initial Developer of the Original Code is 
+   - Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>
+   - Portions created by the Initial Developer are Copyright (C) 2009
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=499115
+-->
+<head>
+  <title>Test for Bug 499115</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="onLoad();">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=499115">Mozilla Bug 499115</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 499115 **/
+      SimpleTest.waitForExplicitFinish();
+
+      const SEARCH_TEXT="minefield";
+
+      function getMatches() {
+        var numMatches = 0;
+
+        var searchRange = document.createRange();
+        searchRange.selectNodeContents(document.body);
+
+        var startPoint = searchRange.cloneRange();
+        startPoint.collapse(true);
+
+        var endPoint = searchRange.cloneRange();
+        endPoint.collapse(false);
+
+        var retRange = null;
+        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+        var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
+                               .createInstance(Components.interfaces.nsIFind);
+
+        finder.caseSensitive = false;
+
+        while ((retRange = finder.Find(SEARCH_TEXT, searchRange,
+                                       startPoint, endPoint))) {
+          numMatches++;
+
+          // Start next search from end of current match
+          startPoint = retRange.cloneRange();
+          startPoint.collapse(false);
+        }
+
+        return numMatches;
+       }
+
+       function onLoad() {
+         var matches = getMatches();
+         is(matches, 2, "found second match in anonymous content");
+         SimpleTest.finish();
+       }
+   </script>
+  </pre>
+<input type="text" value="minefield minefield"></body>
+</html>

@@ -660,14 +660,15 @@ inDOMView::IsSorted(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-inDOMView::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
+inDOMView::CanDrop(PRInt32 index, PRInt32 orientation,
+                   nsIDOMDataTransfer* aDataTransfer, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::Drop(PRInt32 row, PRInt32 orientation)
+inDOMView::Drop(PRInt32 row, PRInt32 orientation, nsIDOMDataTransfer* aDataTransfer)
 {
   return NS_OK;
 }

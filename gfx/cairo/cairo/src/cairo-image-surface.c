@@ -1250,7 +1250,7 @@ _cairo_image_surface_span_render_row (
     /* Make sure we're within y-range. */
     y -= rects->mask.y;
     if (y < 0 || y >= rects->height)
-	return CAIRO_STATUS_SUCCESS;
+	return;
 
     row = (uint8_t*)(mask->data) + y*(size_t)mask->stride - xmin;
 

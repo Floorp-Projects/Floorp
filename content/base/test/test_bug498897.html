@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=498897
+-->
+<head>
+  <title>Test for Bug 498897</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=498897">Mozilla Bug 498897</a>
+<p id="display"><iframe id="testframe"></iframe></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 498897 **/
+
+var checkedLoad = false;
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+// Content policy / factory implementation for the test
+var policyID = Components.ID("{65944d64-2390-422e-bea3-80d0af7f69ef}");
+var policyName = "@mozilla.org/498897_testpolicy;1";
+var policy = {
+  // nsISupports implementation
+  QueryInterface: function(iid) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIContentPolicy))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIContentPolicy implementation
+  shouldLoad: function(contentType, contentLocation, requestOrigin, context,
+                       mimeTypeGuess, extra) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    if (contentLocation instanceof Ci.nsIURL &&
+        contentLocation.fileName == "file_bug498897.css" &&
+        requestOrigin instanceof Ci.nsIURL &&
+        requestOrigin.fileName == "file_bug498897.html") {
+      checkedLoad = true;
+    }
+
+    return Ci.nsIContentPolicy.ACCEPT;
+  },
+
+  shouldProcess: function(contentType, contentLocation, requestOrigin, context,
+                          mimeTypeGuess, extra) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    return Ci.nsIContentPolicy.ACCEPT;
+  }
+}
+
+var componentManager = Components.manager
+                                 .QueryInterface(Ci.nsIComponentRegistrar);
+componentManager.registerFactory(policyID, "Test content policy for bug 498897",
+                                 policyName, policy);
+
+var categoryManager =
+  Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+categoryManager.addCategoryEntry("content-policy", policyName, policyName,
+                                 false, true);
+
+function testFinished()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  ok(checkedLoad, "Content policy didn't get called!");
+
+  categoryManager.deleteCategoryEntry("content-policy", policyName, false);
+
+  setTimeout(function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    componentManager.unregisterFactory(policyID, policy);
+
+    SimpleTest.finish();
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+document.getElementById("testframe").src = "file_bug498897.html";
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,204 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla code.
+#
+# The Initial Developer of the Original Code is the Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Chris Double <chris.double@double.co.nz>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = content/media/test
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES = \
+		can_play_type_ogg.js \
+		can_play_type_wave.js \
+		test_autobuffer.html \
+		test_autoplay.html \
+		test_can_play_type.html \
+		test_constants.html \
+		test_controls.html \
+		test_currentTime.html \
+		test_networkState.html \
+		test_paused.html \
+		test_readyState.html \
+		test_seek2.html \
+		test_volume.html \
+		use_large_cache.js \
+		$(NULL)
+
+ifdef MOZ_OGG
+_TEST_FILES += \
+		dynamic_redirect.sjs \
+		test_access_control.html \
+		file_access_controls.html \
+		test_audio1.html \
+		test_audio2.html \
+		test_bug448534.html \
+		test_bug461281.html \
+		test_bug468190.html \
+		test_bug482461.html \
+		test_bug493187.html \
+		test_bug495145.html \
+		test_bug495300.html \
+		test_bug495319.html \
+		test_can_play_type_ogg.html \
+		test_closing_connections.html \
+		test_contentDuration1.html \
+		test_contentDuration2.html \
+		test_contentDuration3.html \
+		test_contentDuration4.html \
+		test_contentDuration5.html \
+		test_contentDuration6.html \
+		test_delay_load.html \
+		test_duration1.html \
+		test_ended1.html \
+		test_ended2.html \
+		test_error_on_404.html \
+		test_info_leak.html \
+		test_onloadedmetadata.html \
+		test_load_candidates.html \
+		test_mixed_principals.html \
+		test_play.html \
+		test_progress1.html \
+		test_progress3.html \
+		test_source.html \
+		test_source_write.html \
+		test_standalone.html \
+		test_timeupdate1.html \
+		test_timeupdate2.html \
+		320x240.ogv \
+		320x240.allow-origin.ogv \
+		320x240.allow-origin.ogv^headers^ \
+		bug461281.ogg \
+		bug482461.ogv \
+		redirect.sjs \
+		contentDuration1.sjs \
+		contentDuration2.sjs \
+		contentDuration3.sjs \
+		contentDuration4.sjs \
+		contentDuration5.sjs \
+		contentDuration6.sjs \
+		seek.ogv \
+		small-shot.ogg \
+		sound.ogg \
+		$(NULL)
+
+# These tests disabled until we figure out random failures.
+# Bug 492821:
+# test_videoDocumentTitle.html
+# Bug 493692:
+# test_autobuffer2.html
+
+ifneq ($(OS_ARCH),WINNT)
+# These tests are disabled on windows until we
+# figure out the random failures. See bug 475369.
+_TEST_FILES += \
+		test_seek1.html \
+		test_seek3.html \
+		test_seek4.html \
+		test_seek5.html \
+		test_seek6.html \
+		test_seek7.html \
+		test_seek8.html \
+		test_seek9.html \
+		test_timeupdate3.html \
+		$(NULL)
+endif
+else
+_TEST_FILES += \
+		test_can_play_type_no_ogg.html \
+		$(NULL)
+endif
+
+ifdef MOZ_WAVE
+_TEST_FILES += \
+		big.wav \
+		test_bug463162.xhtml \
+		test_bug465498.html \
+		test_bug468190_wav.html \
+		test_bug495145_wav.html \
+		test_can_play_type_wave.html \
+		test_paused_after_ended.html \
+		test_progress2.html \
+		test_progress4.html \
+		test_wav_8bit.html \
+		test_wav_ended1.html \
+		test_wav_ended2.html \
+		test_wav_list.html \
+		test_wav_onloadedmetadata.html \
+		test_wav_seek1.html \
+		test_wav_seek3.html \
+		test_wav_seek4.html \
+		test_wav_seek5.html \
+		test_wav_seek6.html \
+		test_wav_seek7.html \
+		test_wav_seek8.html \
+		test_wav_seek_past_end.html \
+		test_wav_seek_then_play.html \
+		test_wav_timeupdate1.html \
+		test_wav_timeupdate2.html \
+		test_wav_trailing.html \
+		test_wav_trunc.html \
+		test_wav_trunc_seek.html \
+		r11025_s16_c1.wav \
+		r11025_s16_c1_trailing.wav \
+		r11025_u8_c1.wav \
+		r11025_u8_c1_trunc.wav \
+		r16000_u8_c1_list.wav \
+		$(NULL)
+else
+_TEST_FILES += \
+		test_can_play_type_no_wave.html \
+		$(NULL)
+endif
+
+# Disabled since we don't play Wave files standalone, for now
+#		test_wav_standalone.html
+#		test_audioDocumentTitle.html
+
+ifdef MOZ_OGG
+ifdef MOZ_WAVE
+_TEST_FILES += \
+		test_decoder_disable.html \
+		test_load.html \
+		test_media_selection.html \
+		$(NULL)
+endif
+endif
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

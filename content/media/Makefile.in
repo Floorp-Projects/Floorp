@@ -41,11 +41,83 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_MEDIA
-DIRS 		= \
-		video \
+MODULE		= content
+LIBRARY_NAME	= gkconmedia_s
+LIBXUL_LIBRARY 	= 1
+
+REQUIRES	= \
+		xpcom \
+		string \
+		gfx \
+		content \
+		thebes \
+		layout \
+		widget \
+		dom \
+		js \
+		locale \
+		unicharutil \
+		webshell \
+		uriloader \
+		htmlparser \
+		necko \
+		view \
+		pref \
+		docshell \
+		xpconnect \
+		xuldoc \
+		caps \
+		editor \
+		imglib2 \
+		mimetype \
+		exthandler \
+		uconv \
+		intl \
+		plugin \
+		cairo \
+		libpixman \
+		$(NULL)
+
+EXPORTS		= \
+		nsMediaDecoder.h \
+		nsMediaStream.h \
+		nsMediaCache.h \
+		$(NULL)
+
+CPPSRCS		= \
+		nsMediaDecoder.cpp \
+		nsMediaCache.cpp \
+		nsMediaStream.cpp \
+		$(NULL)
+
+ifdef MOZ_SYDNEYAUDIO
+EXPORTS		+= \
+		nsAudioStream.h \
+		$(NULL)
+CPPSRCS		+= \
+		nsAudioStream.cpp \
 		$(NULL)
 endif
 
+DIRS =
+
+ifdef MOZ_OGG
+DIRS += ogg
+endif
+
+ifdef MOZ_WAVE
+DIRS += wave
+endif
+
+ifdef ENABLE_TESTS
+DIRS += test
+endif
+
+FORCE_STATIC_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
+INCLUDES	+= \
+		-I$(srcdir)/../base/src \
+		-I$(srcdir)/../html/content/src \
+		$(NULL)

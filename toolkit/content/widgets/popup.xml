@@ -174,8 +174,6 @@
     </implementation>
 
     <handlers>
-      <handler event="contextmenu" action="event.preventDefault();"/>
-
       <handler event="popupshowing" phase="target">
         <![CDATA[
           var array = [];

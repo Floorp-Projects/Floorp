@@ -300,11 +300,6 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD BuildModel(void);
 
     /**
-     * Don't call. For interface backwards compat only.
-     */
-    NS_IMETHOD_(nsDTDMode) GetParseMode(void);
-
-    /**
      *  Removes continue parsing events
      */
     NS_IMETHODIMP CancelParsingEvents();
@@ -362,7 +357,7 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Unimplemented. For interface compat only.
      */
-    NS_IMETHOD WillBuildModel();
+    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
 
     /**
      * Emits EOF.

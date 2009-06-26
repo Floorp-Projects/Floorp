@@ -36,7 +36,7 @@ skip HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html
 
 # Postscript name lookup only supported on MacOS currently
 random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html
-random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == helveticaneue-ultra.html helveticaneue-ultra-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == helveticaneue-ultra.html helveticaneue-ultra-ref.html # 493976
 
 # Arabic support requires AAT fonts under Mac OS, OpenType otherwise
 random-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-format-arabic.html src-format-arabic-aat-ref.html

@@ -729,7 +729,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 // nsNavHistory::InitDB
 //
 
-#define PLACES_SCHEMA_VERSION 9
+#define PLACES_SCHEMA_VERSION 10
 
 nsresult
 nsNavHistory::InitDB()
@@ -891,7 +891,13 @@ nsNavHistory::InitDB()
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // XXX Upgrades >V9 must add migration code here.
+      // Migrate places up to V10
+      if (DBSchemaVersion < 10) {
+        rv = MigrateV10Up(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Schema Upgrades must add migration code here.
 
     } else {
       // Downgrading
@@ -1865,6 +1871,19 @@ nsNavHistory::MigrateV9Up(mozIStorageConnection *aDBConn)
   }
 
   return transaction.Commit();
+}
+
+nsresult
+nsNavHistory::MigrateV10Up(mozIStorageConnection *aDBConn)
+{
+  // LastModified is set to the same value as dateAdded on item creation.
+  // This way we can use lastModified index to sort.
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE moz_bookmarks SET lastModified = dateAdded "
+      "WHERE lastModified IS NULL"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
    
 // nsNavHistory::GetUrlIdFor

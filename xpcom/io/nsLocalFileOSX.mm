@@ -735,44 +735,32 @@ NS_IMETHODIMP nsLocalFile::Remove(PRBool recursive)
 
 NS_IMETHODIMP nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
   NS_ENSURE_ARG_POINTER(aPermissions);
 
   CHECK_mBaseURL();
 
-  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
-  NSDictionary *fileAttributes = [[NSFileManager defaultManager] fileAttributesAtPath:[(NSURL*)mBaseURL path] traverseLink:YES];
-  if (fileAttributes) {
-    NSNumber *permissions = [fileAttributes objectForKey:NSFilePosixPermissions];
-    if (permissions) {
-      *aPermissions = NORMALIZE_PERMS([permissions unsignedLongValue]);
-      [ap release];
-      return NS_OK;
-    }
-  }
-  [ap release];
+  struct STAT buf;
+  nsresult rv = FillStatBufferInternal(&buf);
+  if (NS_FAILED(rv))
+    return NSRESULT_FOR_ERRNO();
 
-  return NS_ERROR_FAILURE;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  *aPermissions = NORMALIZE_PERMS(buf.st_mode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsLocalFile::SetPermissions(PRUint32 aPermissions)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
   CHECK_mBaseURL();
 
-  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
-  NSNumber* pNumber = [NSNumber numberWithUnsignedInt:aPermissions];
-  NSDictionary* fileAttributes = [NSDictionary dictionaryWithObject:pNumber forKey:NSFilePosixPermissions];
-  // changeFileAttributes:atPath: follows symbolic links though the documentation doesn't mention it
-  BOOL success = [[NSFileManager defaultManager] changeFileAttributes:fileAttributes atPath:[(NSURL*)mBaseURL path]];
-  [ap release];
-  return (success ? NS_OK : NS_ERROR_FAILURE);
+  nsCAutoString path;
+  nsresult rv = GetPathInternal(path);
+  if (NS_FAILED(rv))
+    return rv;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  if (chmod(path.get(), aPermissions) < 0)
+    return NSRESULT_FOR_ERRNO();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissionsOfLink)

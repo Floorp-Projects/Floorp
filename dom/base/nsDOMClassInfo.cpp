@@ -460,7 +460,6 @@
 
 #include "nsIDOMNSMouseEvent.h"
 
-static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 static const char kDOMStringBundleURL[] =
@@ -641,11 +640,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // Misc Core related classes
 
-  // StyleSheet classes
-  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(DocumentStyleSheetList, StyleSheetList,
-                                     nsStyleSheetListSH,
-                                     ARRAY_SCRIPTABLE_FLAGS)
-
   // Event
   NS_DEFINE_CLASSINFO_DATA(Event, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -816,7 +810,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MediaList, nsMediaListSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(StyleSheetList, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(StyleSheetList, nsStyleSheetListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -2109,11 +2103,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DocumentStyleSheetList,
-                                      nsIDOMStyleSheetList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
-  DOM_CLASSINFO_MAP_END
-  
   DOM_CLASSINFO_MAP_BEGIN(Event, nsIDOMEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -4123,7 +4112,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
                  const nsDOMClassInfoData *ci_data,
                  const nsGlobalNameStruct *name_struct,
                  nsScriptNameSpaceManager *nameSpaceManager,
-                 JSObject *dot_prototype, PRBool *did_resolve);
+                 JSObject *dot_prototype, PRBool install, PRBool *did_resolve);
 
 
 NS_IMETHODIMP
@@ -4205,13 +4194,21 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
     }
   }
 
+  // Don't overwrite a property set by content.
+  JSBool found;
+  if (!::JS_AlreadyHasOwnUCProperty(cx, global, mData->mNameUTF16,
+                                    nsCRT::strlen(mData->mNameUTF16), &found)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsScriptNameSpaceManager *nameSpaceManager =
     nsJSRuntime::GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_OK);
 
   PRBool unused;
   return ResolvePrototype(sXPConnect, win, cx, global, mData->mNameUTF16,
-                          mData, nsnull, nameSpaceManager, proto, &unused);
+                          mData, nsnull, nameSpaceManager, proto, !found,
+                          &unused);
 }
 
 // static
@@ -5599,7 +5596,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
                  const nsDOMClassInfoData *ci_data,
                  const nsGlobalNameStruct *name_struct,
                  nsScriptNameSpaceManager *nameSpaceManager,
-                 JSObject *dot_prototype, PRBool *did_resolve)
+                 JSObject *dot_prototype, PRBool install, PRBool *did_resolve)
 {
   NS_ASSERTION(ci_data ||
                (name_struct &&
@@ -5625,8 +5622,10 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = constructor->Install(cx, obj, v);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (install) {
+    rv = constructor->Install(cx, obj, v);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   JSObject *class_obj;
   holder->GetJSObject(&class_obj);
@@ -5850,7 +5849,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // We don't have a XPConnect prototype object, let ResolvePrototype create
     // one.
     return ResolvePrototype(sXPConnect, aWin, cx, obj, class_name, nsnull,
-                            name_struct, nameSpaceManager, nsnull, did_resolve);
+                            name_struct, nameSpaceManager, nsnull, PR_TRUE,
+                            did_resolve);
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
@@ -5880,7 +5880,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     }
 
     return ResolvePrototype(sXPConnect, aWin, cx, obj, class_name, ci_data,
-                            name_struct, nameSpaceManager, nsnull, did_resolve);
+                            name_struct, nameSpaceManager, nsnull, PR_TRUE,
+                            did_resolve);
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
@@ -7333,8 +7334,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
   
-  nsCOMPtr<nsIEventListenerManager> manager;
-  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+  nsIEventListenerManager* manager = piTarget->GetListenerManager(PR_TRUE);
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));
@@ -9709,17 +9709,13 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     nsresult rv = iim->GetIIDForName(cstring, &iid);
 
     if (NS_SUCCEEDED(rv) && iid) {
-      // Notify the PluginManager that this one is scriptable -- it
+      // Notify the PluginHost that this one is scriptable -- it
       // will need some special treatment later
 
-      nsCOMPtr<nsIPluginHost> pluginManager =
-        do_GetService(kCPluginManagerCID);
-
-      nsCOMPtr<nsPIPluginHost> pluginHost(do_QueryInterface(pluginManager));
-
-      if (pluginHost) {
-        pluginHost->SetIsScriptableInstance(pi, PR_TRUE);
-      }
+      nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
+      nsCOMPtr<nsPIPluginHost> piPluginHost(do_QueryInterface(pluginHost));
+      if (piPluginHost)
+        piPluginHost->SetIsScriptableInstance(pi, PR_TRUE);
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
       rv = sXPConnect->WrapNative(cx, obj, pi, *iid, getter_AddRefs(holder));

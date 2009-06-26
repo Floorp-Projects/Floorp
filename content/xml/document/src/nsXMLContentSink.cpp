@@ -211,7 +211,7 @@ nsXMLContentSink::WillParse(void)
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::WillBuildModel(void)
+nsXMLContentSink::WillBuildModel(nsDTDMode aDTDMode)
 {
   WillBuildModelImpl();
 

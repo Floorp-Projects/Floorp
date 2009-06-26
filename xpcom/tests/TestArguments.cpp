@@ -1,7 +1,7 @@
 #include <string.h>
 
 int main(int argc, char* argv[]) {
-  if (argc != 7)
+  if (argc != 9)
       return -1;
 
   if (strcmp("mozilla", argv[1]) != 0)
@@ -16,6 +16,10 @@ int main(int argc, char* argv[]) {
       return 5;
   if (strcmp("bar", argv[6]) != 0)
       return 6;
+  if (strcmp("argument with spaces", argv[7]) != 0)
+      return 7;
+  if (strcmp("\"argument with quotes\"", argv[8]) != 0)
+      return 8;
   
   return 0;
 } 

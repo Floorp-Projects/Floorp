@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html class="reftest-wait"> 
+
+<head>
+<title></title>
+
+<style>
+
+body {
+ margin: 20px;
+}
+
+tr {
+ background: gray;
+}
+
+.t2 tr {
+ outline: 1px solid gray;
+ -moz-outline-radius: .3em;
+}
+
+.t1 tr {
+ outline: 1px solid red;
+ -moz-outline-radius: .3em;
+}
+
+</style>
+
+<script type="text/javascript">
+
+function showBug() {
+  document.getElementById("table1").setAttribute("class", "t1");
+}
+
+window.addEventListener("MozReftestInvalidate",
+  function() {
+    showBug();
+    document.documentElement.className = "";
+  }, false);
+
+</script>
+
+</head>
+
+<body>
+
+<table id="table1">
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+</table>
+
+<table class="t2">
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+  <tr><td>AAAA</td></tr>
+
+  <tr><td>AAAA</td></tr>
+</table>
+
+<br/>
+<form method="get" action="#">
+  <input type="button" onclick="showBug(); return false;" value="Trigger bug"/>
+</form>
+
+</body> </html>

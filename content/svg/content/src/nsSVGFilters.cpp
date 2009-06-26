@@ -4107,7 +4107,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
   if (orderX > NS_SVG_OFFSCREEN_MAX_DIMENSION ||
       orderY > NS_SVG_OFFSCREEN_MAX_DIMENSION)
     return NS_ERROR_FAILURE;
-  nsAutoPtr<float> kernel(new float[orderX * orderY]);
+  nsAutoArrayPtr<float> kernel(new float[orderX * orderY]);
   if (!kernel)
     return NS_ERROR_FAILURE;
   for (PRUint32 i = 0; i < num; i++) {
