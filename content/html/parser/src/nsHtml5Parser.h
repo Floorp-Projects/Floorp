@@ -217,7 +217,7 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD_(void) BlockParser();
 
     /**
-     * Don't call. For interface backwards compat only.
+     * Unblocks the parser.
      */
     NS_IMETHOD_(void) UnblockParser();
 
