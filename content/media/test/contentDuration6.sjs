@@ -7,7 +7,7 @@ function handleRequest(request, response)
                         createInstance(Components.interfaces.nsIFileInputStream);
   var bis  = Components.classes["@mozilla.org/binaryinputstream;1"].
                         createInstance(Components.interfaces.nsIBinaryInputStream);
-  var paths = "tests/content/media/video/test/320x240.ogv";
+  var paths = "tests/content/media/test/320x240.ogv";
   var split = paths.split("/");
   for(var i = 0; i < split.length; ++i) {
     file.append(split[i]);
