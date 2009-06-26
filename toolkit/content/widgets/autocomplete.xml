@@ -515,15 +515,6 @@
         ]]></body>
       </method>
 
-      <method name="ifSetAttribute">
-        <parameter name="aAttr"/>
-        <parameter name="aVal"/>
-        <body><![CDATA[
-          if (!this.hasAttribute(aAttr))
-            this.setAttribute(aAttr, aVal);
-        ]]></body>
-      </method>
-
       <method name="_focus">
         <!-- doesn't reset this.mController -->
         <body><![CDATA[
