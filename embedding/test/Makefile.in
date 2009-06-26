@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 	test_bug293834.html \
 	bug293834_form.html \
+	test_bug499115.html \
 	test_nsFind.html \
 	$(NULL)
 
