@@ -2264,11 +2264,11 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     nsCOMPtr<nsIPluginInstancePeer> peer;
     mInstance->GetPeer(getter_AddRefs(peer));
 
-    nsCOMPtr<nsIPluginInstancePeer2> peer2(do_QueryInterface(peer));
+    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
 
-    if (peer2) {
+    if (peer3) {
       // Tell the peer that its owner is going away.
-      peer2->InvalidateOwner();
+      peer3->InvalidateOwner();
     }
   }
 }

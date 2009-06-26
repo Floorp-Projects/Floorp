@@ -343,10 +343,10 @@ nsPluginInstanceTag::~nsPluginInstanceTag()
       if (owner)
         owner->SetInstance(nsnull);
 
-      nsCOMPtr<nsIPluginInstancePeer2> peer2(do_QueryInterface(peer));
+      nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
 
-      if (peer2)
-        peer2->InvalidateOwner();
+      if (peer3)
+        peer3->InvalidateOwner();
     }
 
     NS_RELEASE(mInstance);

@@ -46,7 +46,7 @@
 
 #include "nsCOMPtr.h"
 
-class nsPluginInstancePeerImpl : public nsIPluginInstancePeer2,
+class nsPluginInstancePeerImpl : public nsIPluginInstancePeer3,
                                  public nsIWindowlessPluginInstancePeer,
                                  public nsIPluginTagInfo2,
                                  public nsPIPluginInstancePeer
@@ -60,6 +60,7 @@ public:
   NS_DECL_NSIPLUGININSTANCEPEER
   NS_DECL_NSIWINDOWLESSPLUGININSTANCEPEER
   NS_DECL_NSIPLUGININSTANCEPEER2
+  NS_DECL_NSIPLUGININSTANCEPEER3
   NS_DECL_NSIPLUGINTAGINFO
   NS_DECL_NSIPLUGINTAGINFO2
 
