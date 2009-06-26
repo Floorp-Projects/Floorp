@@ -23,7 +23,6 @@ skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html
 == poster-6.html poster-ref-black140x100.html
 == poster-7.html poster-ref-red160x120.html
 == poster-8.html poster-ref-black140x100.html
-== poster-9.html poster-ref-blue250x200.html
 == poster-10.html poster-ref-blue250x200.html
 == poster-11.html poster-ref-blue250x200.html
 == poster-12.html poster-ref-blue250x200.html
