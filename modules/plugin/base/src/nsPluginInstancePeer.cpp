@@ -77,9 +77,10 @@ nsPluginInstancePeerImpl::~nsPluginInstancePeerImpl()
 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
-NS_IMPL_ISUPPORTS6(nsPluginInstancePeerImpl,
+NS_IMPL_ISUPPORTS7(nsPluginInstancePeerImpl,
                    nsIPluginInstancePeer,
                    nsIPluginInstancePeer2,
+                   nsIPluginInstancePeer3,
                    nsIWindowlessPluginInstancePeer,
                    nsIPluginTagInfo,
                    nsIPluginTagInfo2,
