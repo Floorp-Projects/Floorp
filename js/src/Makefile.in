@@ -362,9 +362,9 @@ check::
 endif
 
 ifdef ENABLE_JIT
-check:: default
-	$(wildcard $(RUN_TEST_PROGRAM)) ./js$(BIN_SUFFIX) -j -e \
-		"var gSrcdir='$(srcdir)'; var gSkipSlowTests=true; var gReportSummary=false;" \
+check::
+	$(wildcard $(RUN_TEST_PROGRAM)) $(DIST)/bin/js$(BIN_SUFFIX) -j -e \
+		"var gSrcdir='$(call normalizepath,$(srcdir))'; var gSkipSlowTests=true; var gReportSummary=false;" \
 		$(srcdir)/trace-test.js
 endif
 
