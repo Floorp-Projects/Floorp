@@ -294,7 +294,7 @@ nsHtml5Parser::BlockParser()
 NS_IMETHODIMP_(void)
 nsHtml5Parser::UnblockParser()
 {
-  NS_NOTREACHED("No one should call this");
+  mBlocked = PR_FALSE;
 }
 
 NS_IMETHODIMP_(PRBool)
