@@ -222,27 +222,22 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD_(void) UnblockParser();
 
     /**
-     * Call this to query whether the parser is enabled or not.
-     *
-     *  @update  vidur 4/12/99
-     *  @return  current state
+     * Query whether the parser is enabled or not.
      */
     NS_IMETHOD_(PRBool) IsParserEnabled();
 
     /**
-     * Call this to query whether the parser thinks it's done with parsing.
-     *
-     *  @update  rickg 5/12/01
-     *  @return  complete state
+     * Query whether the parser thinks it's done with parsing.
      */
     NS_IMETHOD_(PRBool) IsComplete();
 
     /**
-     * Cause parser to parse input from given URL
-     * @update	gess5/11/98
-     * @param   aURL is a descriptor for source document
-     * @param   aListener is a listener to forward notifications to
-     * @return  TRUE if all went well -- FALSE otherwise
+     * Set up request observer.
+     *
+     * @param   aURL ignored (for interface compat only)
+     * @param   aListener a listener to forward notifications to
+     * @param   aKey the root context key (used for document.write)
+     * @param   aMode ignored (for interface compat only)
      */
     NS_IMETHOD Parse(nsIURI* aURL,
                      nsIRequestObserver* aListener = nsnull,
@@ -250,21 +245,32 @@ class nsHtml5Parser : public nsIParser,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
     /**
-     * @update	gess5/11/98
-     * @param   anHTMLString contains a string-full of real HTML
-     * @param   appendTokens tells us whether we should insert tokens inline, or append them.
-     * @return  TRUE if all went well -- FALSE otherwise
+     * document.write and document.close
+     *
+     * @param   aSourceBuffer the argument of document.write (empty for .close())
+     * @param   aKey a key unique to the script element that caused this call
+     * @param   aContentType ignored (for interface compat only)
+     * @param   aLastCall true if .close() false if .write()
+     * @param   aMode ignored (for interface compat only)
      */
     NS_IMETHOD Parse(const nsAString& aSourceBuffer,
                      void* aKey,
                      const nsACString& aContentType,
                      PRBool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect);
+
+    /**
+     * Gets the key passed to initial Parse()
+     */
     NS_IMETHOD_(void *) GetRootContextKey();
+
+    /**
+     * Stops the parser prematurely
+     */
     NS_IMETHOD        Terminate(void);
 
     /**
-     * This method needs documentation
+     * Don't call. For interface backwards compat only.
      */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              void* aKey,
@@ -272,6 +278,16 @@ class nsHtml5Parser : public nsIParser,
                              PRBool aXMLMode,
                              const nsACString& aContentType,
                              nsDTDMode aMode = eDTDMode_autodetect);
+
+    /**
+     * Invoke the fragment parsing algorithm (innerHTML).
+     *
+     * @param aSourceBuffer the string being set as innerHTML
+     * @param aTargetNode the target container (must QI to nsIContent)
+     * @param aContextLocalName local name of context node
+     * @param aContextNamespace namespace of context node
+     * @param aQuirks true to make <table> not close <p>
+     */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              nsISupports* aTargetNode,
                              nsIAtom* aContextLocalName,
@@ -279,28 +295,30 @@ class nsHtml5Parser : public nsIParser,
                              PRBool aQuirks);
 
     /**
-     * This method gets called when the tokens have been consumed, and it's time
-     * to build the model via the content sink.
-     * @update	gess5/11/98
-     * @return  YES if model building went well -- NO otherwise.
+     * Calls ParseUntilSuspend()
      */
     NS_IMETHOD BuildModel(void);
 
     /**
-     *  Retrieve the scanner from the topmost parser context
-     *
-     *  @update  gess 6/9/98
-     *  @return  ptr to scanner
+     * Don't call. For interface backwards compat only.
      */
     NS_IMETHOD_(nsDTDMode) GetParseMode(void);
 
     /**
      *  Removes continue parsing events
-     *  @update  kmcclusk 5/18/98
      */
     NS_IMETHODIMP CancelParsingEvents();
+
+    /**
+     * Sets the state to initial values
+     */
     virtual void Reset();
+    
+    /**
+     * True in fragment mode and during synchronous document.write
+     */
     virtual PRBool CanInterrupt();
+    
     /* End nsIParser  */
      //*********************************************
       // These methods are callback methods used by
@@ -313,15 +331,27 @@ class nsHtml5Parser : public nsIParser,
 
     /**
      *  Fired when the continue parse event is triggered.
-     *  @update  kmcclusk 5/18/98
      */
     void HandleParserContinueEvent(class nsHtml5ParserContinueEvent *);
+
     // EncodingDeclarationHandler
+    /**
+     * Tree builder uses this to report a late <meta charset>
+     */
     void internalEncodingDeclaration(nsString* aEncoding);
+
     // DocumentModeHandler
+    /**
+     * Tree builder uses this to report quirkiness of the document
+     */
     void documentMode(nsHtml5DocumentMode m);
+
     // nsICharsetDetectionObserver
+    /**
+     * Chardet calls this to report the detection result
+     */
     NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf);
+
     // nsIContentSink
 
     /**
@@ -368,6 +398,7 @@ class nsHtml5Parser : public nsIParser,
      * Returns the document.
      */
     virtual nsISupports *GetTarget();
+    
     // Not from an external interface
   public:
     // nsContentSink methods
@@ -444,17 +475,41 @@ class nsHtml5Parser : public nsIParser,
                                   const char* aDecoderCharsetName);
 
     /**
-     *
+     * True when there is a Unicode decoder already
+     */
+    PRBool HasDecoder() {
+      return !!mUnicodeDecoder;
+    }
+
+    /**
+     * Push bytes from network when there is no Unicode decoder yet
      */
     nsresult SniffStreamBytes(const PRUint8* aFromSegment,
                               PRUint32 aCount,
                               PRUint32* aWriteCount);
+
+    /**
+     * Push bytes from network when there is a Unicode decoder already
+     */
     nsresult WriteStreamBytes(const PRUint8* aFromSegment,
                               PRUint32 aCount,
                               PRUint32* aWriteCount);
+
+    /**
+     * Request event loop spin as soon as the tokenizer returns
+     */
     void Suspend();
+    
+    /**
+     * Request execution of the script element when the tokenizer returns
+     */
     void SetScriptElement(nsIContent* aScript);
+
+    /**
+     * Sets up style sheet load / parse
+     */
     void UpdateStyleSheet(nsIContent* aElement);
+
     // Getters and setters for fields from nsContentSink
     nsIDocument* GetDocument() {
       return mDocument;
@@ -465,55 +520,147 @@ class nsHtml5Parser : public nsIParser,
     nsIDocShell* GetDocShell() {
       return mDocShell;
     }
-    PRBool HasDecoder() {
-      return !!mUnicodeDecoder;
-    }
+
   private:
+    /**
+     * Runs mScriptElement
+     */
     void ExecuteScript();
+
+    /**
+     * Posts a continue event if there isn't one already
+     */
     void MaybePostContinueEvent();
+
+    /**
+     * Renavigates to the document with a different charset
+     */
     nsresult PerformCharsetSwitch();
 
     /**
      * Parse until pending data is exhausted or tree builder suspends
      */
     void ParseUntilSuspend();
-    void Cleanup();
+
   private:
     // State variables
+    /**
+     * Call to PerformCharsetSwitch() needed
+     */
     PRBool                        mNeedsCharsetSwitch;
+
+    /**
+     * Whether the last character tokenized was a carriage return (for CRLF)
+     */
     PRBool                        mLastWasCR;
-    PRBool                        mTerminated;
-    PRBool                        mLayoutStarted;
+
+    /**
+     * The parser is in the fragment mode
+     */
     PRBool                        mFragmentMode;
+
+    /**
+     * The parser is blocking on a script
+     */
     PRBool                        mBlocked;
+
+    /**
+     * The event loop will spin ASAP
+     */
     PRBool                        mSuspending;
+
+    /**
+     * The current point on parser life cycle
+     */
     eHtml5ParserLifecycle         mLifeCycle;
-    eStreamState                  mStreamListenerState;
+
     // script execution
+    /**
+     * Script to run ASAP
+     */
     nsCOMPtr<nsIContent>          mScriptElement;
+
+    /**
+     * 
+     */
     PRBool                        mUninterruptibleDocWrite;
+
     // Gecko integration
     void*                         mRootContextKey;
     nsCOMPtr<nsIRequest>          mRequest;
     nsCOMPtr<nsIRequestObserver>  mObserver;
     nsIRunnable*                  mContinueEvent;  // weak ref
-    // tree-related stuff
-    nsIContent*                   mDocElement; // weak ref
+
     // encoding-related stuff
+    /**
+     * The source (confidence) of the character encoding in use
+     */
     PRInt32                       mCharsetSource;
+
+    /**
+     * The character encoding in use
+     */
     nsCString                     mCharset;
+
+    /**
+     * The character encoding to which to switch in a late <meta> renavigation
+     */
     nsCString                     mPendingCharset;
+
+    /**
+     * The Unicode decoder
+     */
     nsCOMPtr<nsIUnicodeDecoder>   mUnicodeDecoder;
+
+    /**
+     * The buffer for sniffing the character encoding
+     */
     nsAutoArrayPtr<PRUint8>       mSniffingBuffer;
-    PRUint32                      mSniffingLength; // number of meaningful bytes in mSniffingBuffer
+
+    /**
+     * The number of meaningful bytes in mSniffingBuffer
+     */
+    PRUint32                      mSniffingLength;
+
+    /**
+     * BOM sniffing state
+     */
     eBomState                     mBomState;
+
+    /**
+     * <meta> prescan implementation
+     */
     nsAutoPtr<nsHtml5MetaScanner> mMetaScanner;
+
     // Portable parser objects
+    /**
+     * The first buffer in the pending UTF-16 buffer queue
+     */
     nsHtml5UTF16Buffer*           mFirstBuffer; // manually managed strong ref
+
+    /**
+     * The last buffer in the pending UTF-16 buffer queue
+     */
     nsHtml5UTF16Buffer*           mLastBuffer; // weak ref; always points to
                       // a buffer of the size NS_HTML5_PARSER_READ_BUFFER_SIZE
+
+    /**
+     * The HTML5 tree builder
+     */
     nsAutoPtr<nsHtml5TreeBuilder> mTreeBuilder;
+
+    /**
+     * The HTML5 tokenizer
+     */
     nsAutoPtr<nsHtml5Tokenizer>   mTokenizer;
+
+#ifdef DEBUG
+    /**
+     * For asserting stream life cycle
+     */
+    eStreamState                  mStreamListenerState;
+#endif
+
 #ifdef GATHER_DOCWRITE_STATISTICS
     nsHtml5StateSnapshot*         mSnapshot;
     static PRUint32               sUnsafeDocWrites;

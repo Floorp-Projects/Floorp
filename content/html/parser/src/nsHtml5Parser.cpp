@@ -458,10 +458,9 @@ nsHtml5Parser::Terminate(void)
 {
   // We should only call DidBuildModel once, so don't do anything if this is
   // the second time that Terminate has been called.
-  if (mTerminated) {
+  if (mLifeCycle == TERMINATED) {
     return NS_OK;
   }
-  mTerminated = PR_TRUE;
   // XXX - [ until we figure out a way to break parser-sink circularity ]
   // Hack - Hold a reference until we are completely done...
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
@@ -473,7 +472,7 @@ nsHtml5Parser::Terminate(void)
 #endif
   ReadyToCallDidBuildModelImpl(PR_TRUE);
   NS_ASSERTION(ready, "Should always be ready to call DidBuildModel here.");
-  return DidBuildModel(); // nsIContentSink
+  return DidBuildModel();
 }
 
 NS_IMETHODIMP
@@ -561,21 +560,16 @@ nsHtml5Parser::Reset()
 {
     mNeedsCharsetSwitch = PR_FALSE;
     mLastWasCR = PR_FALSE;
-    mTerminated = PR_FALSE;
-    mLayoutStarted = PR_FALSE;
     mFragmentMode = PR_FALSE;
     mBlocked = PR_FALSE;
     mSuspending = PR_FALSE;
     mLifeCycle = NOT_STARTED;
-    mStreamListenerState = eNone;
     mScriptElement = nsnull;
     mUninterruptibleDocWrite = PR_FALSE;
     mRootContextKey = nsnull;
     mRequest = nsnull;
     mObserver = nsnull;
     mContinueEvent = nsnull;  // weak ref
-    // tree-related stuff
-    mDocElement = nsnull; // weak ref
     // encoding-related stuff
     mCharsetSource = kCharsetUninitialized;
     mCharset.Assign("");
@@ -593,6 +587,9 @@ nsHtml5Parser::Reset()
     }
     mFirstBuffer->setStart(0);
     mFirstBuffer->setEnd(0);
+#ifdef DEBUG
+    mStreamListenerState = eNone;
+#endif
 }
 
 PRBool
@@ -613,7 +610,9 @@ nsHtml5Parser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   if (mObserver) {
     mObserver->OnStartRequest(aRequest, aContext);
   }
+#ifdef DEBUG
   mStreamListenerState = eOnStart;
+#endif
   mRequest = aRequest;
   nsresult rv = NS_OK;
   if (mCharsetSource >= kCharsetFromChannel) {
@@ -659,7 +658,9 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest,
       mLifeCycle = STREAM_ENDING;
       break;
   }
+#ifdef DEBUG
   mStreamListenerState = eOnStop;
+#endif
   if (!IsScriptExecutingImpl()) {
     ParseUntilSuspend();
   }
@@ -1127,7 +1128,7 @@ nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
   if (mLastBuffer->getEnd() == NS_HTML5_PARSER_READ_BUFFER_SIZE) {
       mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
   }
-  PRInt32 totalByteCount = 0;
+  PRUint32 totalByteCount = 0;
   for (;;) {
     PRInt32 end = mLastBuffer->getEnd();
     PRInt32 byteCount = aCount - totalByteCount;
@@ -1157,9 +1158,9 @@ nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
       }
     } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
       mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
-      NS_ASSERTION((PRUint32)totalByteCount < aCount, "The Unicode decoder has consumed too many bytes.");
+      NS_ASSERTION(totalByteCount < aCount, "The Unicode decoder has consumed too many bytes.");
     } else {
-      NS_ASSERTION((PRUint32)totalByteCount == aCount, "The Unicode decoder consumed the wrong number of bytes.");
+      NS_ASSERTION(totalByteCount == aCount, "The Unicode decoder consumed the wrong number of bytes.");
       *aWriteCount = totalByteCount;
       return NS_OK;
     }
@@ -1207,8 +1208,6 @@ nsHtml5Parser::ParseUntilSuspend()
           case STREAM_ENDING:
             if (ReadyToCallDidBuildModelImpl(PR_FALSE)) {
               DidBuildModel();
-            } else {
-              MaybePostContinueEvent();
             }
             return; // no more data and not expecting more
           default:
@@ -1362,11 +1361,6 @@ void
 nsHtml5Parser::Suspend()
 {
   mSuspending = PR_TRUE;
-}
-
-void
-nsHtml5Parser::Cleanup()
-{
 }
 
 nsresult
