@@ -48,7 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		letters.gif \
 		moz.png \
-		$(topsrcdir)/content/media/video/test/bug461281.ogg \
+		$(topsrcdir)/content/media/test/bug461281.ogg \
 		longdesc_src.html \
 		actions.js \
 		attributes.js \
