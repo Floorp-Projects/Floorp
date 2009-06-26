@@ -64,8 +64,6 @@ vpath book%.inc @srcdir@/en-US/profile
 endif
 
 
-run_for_effects_too := if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
-
 ifdef MOZ_BRANDING_DIRECTORY
 SUBMAKEFILES += \
 	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
@@ -103,6 +101,11 @@ PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/firefox-l10n.js) \
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
+
+$(STAGEDIST): $(DIST)/branding
+
+$(DIST)/branding:
+	$(NSINSTALL) -D $@
 
 libs::
 	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
