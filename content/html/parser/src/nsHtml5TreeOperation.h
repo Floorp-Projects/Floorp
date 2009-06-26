@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 #ifndef nsHtml5TreeOperation_h__
 #define nsHtml5TreeOperation_h__
 
@@ -61,23 +61,34 @@ enum eHtml5TreeOperation {
 };
 
 class nsHtml5TreeOperation {
+
   public:
     nsHtml5TreeOperation();
+
     ~nsHtml5TreeOperation();
+
     inline void Init(nsIContent* aNode, nsIContent* aParent) {
       mNode = aNode;
       mParent = aParent;
     }
+
     inline void Init(eHtml5TreeOperation aOpCode, nsIContent* aNode) {
       mOpCode = aOpCode;
       mNode = aNode;
     }
-    inline void Init(eHtml5TreeOperation aOpCode, nsIContent* aNode, nsIContent* aParent) {
+
+    inline void Init(eHtml5TreeOperation aOpCode, 
+                     nsIContent* aNode,
+                     nsIContent* aParent) {
       mOpCode = aOpCode;
       mNode = aNode;
       mParent = aParent;
     }
-    inline void Init(eHtml5TreeOperation aOpCode, nsIContent* aNode, nsIContent* aParent, nsIContent* aTable) {
+
+    inline void Init(eHtml5TreeOperation aOpCode,
+                     nsIContent* aNode,
+                     nsIContent* aParent, 
+                     nsIContent* aTable) {
       mOpCode = aOpCode;
       mNode = aNode;
       mParent = aParent;
@@ -91,11 +102,12 @@ class nsHtml5TreeOperation {
     }
 
     nsresult Perform(nsHtml5TreeBuilder* aBuilder);
+
   private:
     eHtml5TreeOperation mOpCode;
     nsCOMPtr<nsIContent> mNode;
     nsCOMPtr<nsIContent> mParent;
-    nsCOMPtr<nsIContent> mTable;    
+    nsCOMPtr<nsIContent> mTable;
 };
 
 #endif // nsHtml5TreeOperation_h__

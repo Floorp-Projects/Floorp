@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 #ifndef nsHtml5DocumentMode_h__
 #define nsHtml5DocumentMode_h__
 

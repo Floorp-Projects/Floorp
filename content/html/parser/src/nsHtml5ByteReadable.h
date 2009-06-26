@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 #ifndef nsHtml5ByteReadable_h__
 #define nsHtml5ByteReadable_h__
 
@@ -46,11 +46,13 @@
 class nsHtml5ByteReadable
 {
   public:
+
     nsHtml5ByteReadable(const PRUint8* current, const PRUint8* end)
      : current(current),
        end(end)
     {
     }
+
     inline PRInt32 read() {
       if (current < end) {
         return *(current++);
@@ -58,9 +60,9 @@ class nsHtml5ByteReadable
         return -1;
       }
     }
+
   private:
     const PRUint8* current;
     const PRUint8* end;
 };
-
 #endif

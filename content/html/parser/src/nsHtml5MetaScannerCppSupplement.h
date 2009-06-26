@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 #include "nsICharsetConverterManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsICharsetAlias.h"
@@ -61,7 +61,7 @@ nsHtml5MetaScanner::~nsHtml5MetaScanner()
   strBuf.release();
 }
 
-void 
+void
 nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decoder, nsACString& charset)
 {
   readable = bytes;
@@ -73,7 +73,7 @@ nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decode
   }
 }
 
-PRBool 
+PRBool
 nsHtml5MetaScanner::tryCharset(nsString* charset)
 {
   nsresult res = NS_OK;
@@ -85,11 +85,11 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
   nsCAutoString encoding;
   CopyUTF16toUTF8(*charset, encoding);
   // XXX spec says only UTF-16
-  if (encoding.LowerCaseEqualsASCII("utf-16") || 
-      encoding.LowerCaseEqualsASCII("utf-16be") || 
-      encoding.LowerCaseEqualsASCII("utf-16le") || 
-      encoding.LowerCaseEqualsASCII("utf-32") || 
-      encoding.LowerCaseEqualsASCII("utf-32be") || 
+  if (encoding.LowerCaseEqualsASCII("utf-16") ||
+      encoding.LowerCaseEqualsASCII("utf-16be") ||
+      encoding.LowerCaseEqualsASCII("utf-16le") ||
+      encoding.LowerCaseEqualsASCII("utf-32") ||
+      encoding.LowerCaseEqualsASCII("utf-32be") ||
       encoding.LowerCaseEqualsASCII("utf-32le")) {
     mCharset.Assign("utf-8");
     res = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
@@ -109,16 +109,16 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
   if (NS_FAILED(res)) {
     return PR_FALSE;
   }
-  if (preferred.LowerCaseEqualsASCII("utf-16") || 
-      preferred.LowerCaseEqualsASCII("utf-16be") || 
-      preferred.LowerCaseEqualsASCII("utf-16le") || 
-      preferred.LowerCaseEqualsASCII("utf-32") || 
-      preferred.LowerCaseEqualsASCII("utf-32be") || 
-      preferred.LowerCaseEqualsASCII("utf-32le") || 
-      preferred.LowerCaseEqualsASCII("utf-7") || 
-      preferred.LowerCaseEqualsASCII("jis_x0212-1990") || 
-      preferred.LowerCaseEqualsASCII("x-jis0208") || 
-      preferred.LowerCaseEqualsASCII("x-imap4-modified-utf7") || 
+  if (preferred.LowerCaseEqualsASCII("utf-16") ||
+      preferred.LowerCaseEqualsASCII("utf-16be") ||
+      preferred.LowerCaseEqualsASCII("utf-16le") ||
+      preferred.LowerCaseEqualsASCII("utf-32") ||
+      preferred.LowerCaseEqualsASCII("utf-32be") ||
+      preferred.LowerCaseEqualsASCII("utf-32le") ||
+      preferred.LowerCaseEqualsASCII("utf-7") ||
+      preferred.LowerCaseEqualsASCII("jis_x0212-1990") ||
+      preferred.LowerCaseEqualsASCII("x-jis0208") ||
+      preferred.LowerCaseEqualsASCII("x-imap4-modified-utf7") ||
       preferred.LowerCaseEqualsASCII("x-user-defined")) {
     return PR_FALSE;
   }

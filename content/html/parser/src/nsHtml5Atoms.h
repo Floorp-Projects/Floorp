@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 /*
  * This class wraps up the creation (and destruction) of the standard
  * set of atoms used by gklayout; the atoms are created when gklayout
@@ -47,17 +47,13 @@
 #include "nsIAtom.h"
 
 class nsHtml5Atoms {
-public:
-
-  static void AddRefAtoms();
-
-  /* Declare all atoms
-
-     The atom names and values are stored in nsGkAtomList.h and
-     are brought to you by the magic of C preprocessing
-
-     Add new atoms to nsGkAtomList and all support logic will be auto-generated
-   */
+  public:
+    static void AddRefAtoms();
+    /* Declare all atoms
+       The atom names and values are stored in nsGkAtomList.h and
+       are brought to you by the magic of C preprocessing
+       Add new atoms to nsGkAtomList and all support logic will be auto-generated
+     */
 #define HTML5_ATOM(_name, _value) static nsIAtom* _name;
 #include "nsHtml5AtomList.h"
 #undef HTML5_ATOM
