@@ -63,10 +63,6 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aModType);
-
   void PaintVideo(nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect, nsPoint aPt);
                               
@@ -105,33 +101,14 @@ public:
 #endif
 
 protected:
-
-  // Returns PR_TRUE if we're rendering for a video element. We still create
-  // nsVideoFrame to render controls for an audio element.
-  PRBool HasVideoElement();
-
-  // Returns PR_TRUE if there is video data to render. Can return false
-  // when we're the frame for an audio element, or we've created a video
-  // element for a media which is audio-only.
+  // Returns true if there is video data to render. Can return false
+  // when we're the frame for an audio element.
   PRBool HasVideoData();
-  
-  // Returns PR_TRUE if we should display the poster. Note that once we show
-  // a video frame, the poster will never be displayed again.
-  PRBool ShouldDisplayPoster();
-
-  // Sets the mPosterImage's src attribute to be the video's poster attribute,
-  // if we're the frame for a video element.
-  nsresult UpdatePosterSource(PRBool aNotify);
 
   virtual ~nsVideoFrame();
 
   nsMargin mBorderPadding;
-  
-  // Anonymous child which is bound via XBL to the video controls.
   nsCOMPtr<nsIContent> mVideoControls;
-  
-  // Anonymous child which is the image element of the poster frame.
-  nsCOMPtr<nsIContent> mPosterImage;
 };
 
 #endif /* nsVideoFrame_h___ */

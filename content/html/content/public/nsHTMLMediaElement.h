@@ -256,23 +256,10 @@ public:
    */
   already_AddRefed<nsILoadGroup> GetDocumentLoadGroup();
 
-  /** 
-   * Returns PR_TRUE if the media has played or completed a seek.
-   * Used by video frame to determine whether to paint the poster.
-   */
-  PRBool GetPlayedOrSeeked() { return mHasPlayedOrSeeked; }
-
 protected:
   class MediaLoadListener;
   class LoadNextSourceEvent;
   class SelectResourceEvent;
-
-  /**
-   * Changes mHasPlayedOrSeeked to aValue. If mHasPlayedOrSeeked changes
-   * we'll force a reflow so that the video frame gets reflowed to reflect
-   * the poster hiding or showing immediately.
-   */
-  void SetPlayedOrSeeked(PRBool aValue);
 
   /**
    * Create a decoder for the given aMIMEType. Returns false if we
@@ -482,8 +469,4 @@ protected:
   // PR_TRUE if we are allowed to suspend the decoder because we were paused,
   // autobuffer and autoplay were not set, and we loaded the first frame.
   PRPackedBool mAllowSuspendAfterFirstFrame;
-
-  // PR_TRUE if we've played or completed a seek. We use this to determine
-  // when the poster frame should be shown.
-  PRPackedBool mHasPlayedOrSeeked;
 };
