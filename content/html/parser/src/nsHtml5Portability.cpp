@@ -39,9 +39,7 @@
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "jArray.h"
-
 #include "nsHtml5Portability.h"
-
 
 nsIAtom*
 nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length)
@@ -83,7 +81,7 @@ nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
   PRInt32 len = temp.Length();
   jArray<PRUnichar,PRInt32> rv = jArray<PRUnichar,PRInt32>(len);
   memcpy(rv, temp.BeginReading(), len * sizeof(PRUnichar));
-  return rv;  
+  return rv;
 }
 
 jArray<PRUnichar,PRInt32>

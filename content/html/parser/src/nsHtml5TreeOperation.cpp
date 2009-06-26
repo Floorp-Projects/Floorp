@@ -72,7 +72,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
         NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
         rv = parent->RemoveChildAt(pos, PR_TRUE, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
-//        nsNodeUtils::ContentRemoved(parent, mNode, pos);
       }
       return rv;
     }
@@ -82,9 +81,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       PRBool didAppend = PR_FALSE;
       while (mNode->GetChildCount()) {
         nsCOMPtr<nsIContent> child = mNode->GetChildAt(0);
-        rv = mNode->RemoveChildAt(0, PR_TRUE);
+        rv = mNode->RemoveChildAt(0, PR_TRUE, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
-//        nsNodeUtils::ContentRemoved(mNode, child, 0);
         rv = mParent->AppendChildTo(child, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
         didAppend = PR_TRUE;
@@ -104,7 +102,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
         nsNodeUtils::ContentInserted(parent, mNode, pos);
       } else {
         aBuilder->PostPendingAppendNotification(mParent, mNode);
-        rv = mParent->AppendChildTo(mNode, PR_FALSE);  
+        rv = mParent->AppendChildTo(mNode, PR_FALSE);
       }
       return rv;
     }
@@ -114,7 +112,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       PRUint32 childCount = doc->GetChildCount();
       rv = doc->AppendChildTo(mNode, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
-      nsNodeUtils::ContentInserted(doc, mNode, childCount);      
+      nsNodeUtils::ContentInserted(doc, mNode, childCount);
       return rv;
     }
     case eTreeOpAddAttributes: {
@@ -130,7 +128,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
           mParent->SetAttr(nsuri, localName, attrName->GetPrefix(), value, PR_TRUE);
           // XXX should not fire mutation event here
         }
-      }        
+      }
       return rv;
     }
     case eTreeOpDoneAddingChildren: {
@@ -139,7 +137,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
     }
     case eTreeOpDoneCreatingElement: {
       mNode->DoneCreatingElement();
-      return rv;    
+      return rv;
     }
     case eTreeOpUpdateStyleSheet: {
       aBuilder->UpdateStyleSheet(mNode);
@@ -151,11 +149,11 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
     }
     case eTreeOpProcessMeta: {
       rv = aBuilder->ProcessMeta(mNode);
-      return rv;    
+      return rv;
     }
     case eTreeOpProcessOfflineManifest: {
       rv = aBuilder->ProcessOfflineManifest(mNode);
-      return rv;    
+      return rv;
     }
     case eTreeOpStartLayout: {
       aBuilder->StartLayout(); // this causes a flush anyway
