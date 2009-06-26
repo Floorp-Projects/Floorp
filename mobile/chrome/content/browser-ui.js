@@ -177,6 +177,7 @@ var BrowserUI = {
     if (aEdit && this._edit.readOnly) {
       icons.setAttribute("mode", "edit");
       this._edit.readOnly = false;
+      this._edit.defaultValue = this._edit.value;
 
       let urlString = this.getDisplayURI(Browser.selectedBrowser);
       if (urlString == "about:blank")
@@ -510,9 +511,8 @@ var BrowserUI = {
         break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
-          this._edit.reallyClosePopup();
-          if (!ws.isWidgetFrozen('toolbar-main'))
-            this.showToolbar();
+          this._edit.reset();
+          this._editToolbar(false);
         }
         break;
       // Favicon events
