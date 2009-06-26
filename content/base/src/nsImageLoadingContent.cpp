@@ -109,8 +109,7 @@ nsImageLoadingContent::nsImageLoadingContent()
     // mBroken starts out true, since an image without a URI is broken....
     mBroken(PR_TRUE),
     mUserDisabled(PR_FALSE),
-    mSuppressed(PR_FALSE),
-    mIsImageStateForced(PR_FALSE)    
+    mSuppressed(PR_FALSE)
 {
   if (!nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = PR_FALSE;
@@ -618,18 +617,10 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   return NS_OK;
 }
 
-nsresult
-nsImageLoadingContent::ForceImageState(PRBool aForce, PRInt32 aState)
-{
-  mIsImageStateForced = aForce;
-  mForcedImageState = aState;
-  return NS_OK;
-}
-
 PRInt32
 nsImageLoadingContent::ImageState() const
 {
-  return mIsImageStateForced ? mForcedImageState :
+  return
     (mBroken * NS_EVENT_STATE_BROKEN) |
     (mUserDisabled * NS_EVENT_STATE_USERDISABLED) |
     (mSuppressed * NS_EVENT_STATE_SUPPRESSED) |
