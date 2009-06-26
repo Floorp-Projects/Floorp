@@ -7424,6 +7424,11 @@ nsDocument::SetReadyStateInternal(ReadyState rs)
   // TODO fire "readystatechange"
 }
 
+nsIDocument::ReadyState
+nsDocument::GetReadyStateEnum()
+{
+  return mReadyState;
+}
 
 NS_IMETHODIMP
 nsDocument::GetReadyState(nsAString& aReadyState)

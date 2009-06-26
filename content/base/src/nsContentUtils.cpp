@@ -402,6 +402,7 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onload,                        { NS_LOAD, EventNameType_All }},
     { &nsGkAtoms::onunload,                      { NS_PAGE_UNLOAD,
                                                  (EventNameType_HTMLXUL | EventNameType_SVGSVG) }},
+    { &nsGkAtoms::onhashchange,                  { NS_HASHCHANGE, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onbeforeunload,                { NS_BEFORE_PAGE_UNLOAD, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onabort,                       { NS_IMAGE_ABORT,
                                                  (EventNameType_HTMLXUL | EventNameType_SVGSVG) }},

@@ -62,6 +62,7 @@
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsContentUtils.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -6752,6 +6753,39 @@ nsGlobalWindow::PageHidden()
     fm->WindowHidden(this);
 
   mNeedsFocus = PR_TRUE;
+}
+
+nsresult
+nsGlobalWindow::DispatchAsyncHashchange()
+{
+  FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
+
+  nsIDocument::ReadyState readyState = mDoc->GetReadyStateEnum();
+
+  // We only queue up the event if the ready state is currently "complete"
+  if (readyState != nsIDocument::READYSTATE_COMPLETE)
+      return NS_OK;
+
+  nsCOMPtr<nsIRunnable> event =
+    NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, FireHashchange);
+   
+  return NS_DispatchToCurrentThread(event);
+}
+
+nsresult
+nsGlobalWindow::FireHashchange()
+{
+  NS_ENSURE_TRUE(IsInnerWindow(), NS_ERROR_FAILURE);
+
+  // Don't do anything if the window is frozen.
+  if (IsFrozen())
+      return NS_OK;
+
+  // Dispatch the hashchange event, which doesn't bubble and isn't cancelable,
+  // to the outer window.
+  return nsContentUtils::DispatchTrustedEvent(mDoc, GetOuterWindow(),
+                                              NS_LITERAL_STRING("hashchange"),
+                                              PR_FALSE, PR_FALSE);
 }
 
 // Find an nsICanvasFrame under aFrame.  Only search the principal
