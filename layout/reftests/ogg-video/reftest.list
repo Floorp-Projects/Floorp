@@ -15,3 +15,18 @@ HTTP(..) == offset-1.xhtml offset-1-ref.html
 random HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 random HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html
+== poster-1.html poster-ref-blue250x200.html
+== poster-2.html poster-ref-black140x100.html
+== poster-3.html poster-ref-black140x100.html
+== poster-4.html poster-ref-black140x100.html
+== poster-5.html poster-ref-black140x100.html
+== poster-6.html poster-ref-black140x100.html
+== poster-7.html poster-ref-red160x120.html
+== poster-8.html poster-ref-black140x100.html
+== poster-9.html poster-ref-blue250x200.html
+== poster-10.html poster-ref-blue250x200.html
+== poster-11.html poster-ref-blue250x200.html
+== poster-12.html poster-ref-blue250x200.html
+== poster-13.html poster-ref-blue400x300.html
+== poster-14.html poster-ref-blue250x200.html
+== poster-15.html poster-ref-green70x30.html
