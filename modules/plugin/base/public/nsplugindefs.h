@@ -399,7 +399,6 @@ class nsIPluginInstance;                // plugin instance
 
 // Classes that are implemented by the browser:
 class nsIPluginInstancePeer;            // parts of nsIPluginInstance implemented by the browser
-class nsIWindowlessPluginInstancePeer;  // subclass of nsIPluginInstancePeer for windowless plugins
 class nsIPluginTagInfo;                 // describes html tag (accessible from nsIPluginInstancePeer)
 ////////////////////////////////////////////////////////////////////////////////
 
