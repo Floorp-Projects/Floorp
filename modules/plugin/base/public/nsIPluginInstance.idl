@@ -44,24 +44,7 @@
 
 interface nsIPluginInstancePeer;
 
-/**
- * The nsIPluginInstance interface is the minimum interface plugin developers
- * need to support in order to implement a plugin instance. The plugin manager
- * may QueryInterface for more specific types, e.g. nsILiveConnectPluginInstance. 
- *
- * (Corresponds to NPP object.)
- *
- * The old NPP_Destroy call has been factored into two plugin instance 
- * methods:
- *
- * Stop -- called when the plugin instance is to be stopped (e.g. by 
- * displaying another plugin manager window, causing the page containing 
- * the plugin to become removed from the display).
- *
- * Destroy -- called once, before the plugin instance peer is to be 
- * destroyed. This method is used to destroy the plugin instance.
- */
-[uuid(ebe00f40-0199-11d2-815b-006008119d7a)]
+[uuid(89DF5288-1EDE-40BD-99CE-87B415DC0FED)]
 interface nsIPluginInstance : nsISupports
 {
     /**
@@ -105,17 +88,6 @@ interface nsIPluginInstance : nsISupports
      * @result - NS_OK if this operation was successful
      */
     void stop();
-
-    /**
-     * Called to instruct the plugin instance to destroy itself. This
-     * is called when it become no longer possible to return to the
-     * plugin instance, either because the browser window's history
-     * list of pages is being trimmed, or because the window
-     * containing this page in the history is being closed.
-     *
-     * @result - NS_OK if this operation was successful
-     */
-    void destroy();
 
     /**
      * Called when the window containing the plugin instance changes.
