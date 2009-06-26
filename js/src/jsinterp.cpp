@@ -115,10 +115,12 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
     JSPropertyCache *cache;
     jsbytecode *pc;
     JSScope *scope;
-    jsuword kshape, vshape;
+    jsuword kshape, vshape, khash;
     JSOp op;
     const JSCodeSpec *cs;
     jsuword vword;
+    ptrdiff_t pcoff;
+    JSAtom *atom;
     JSPropCacheEntry *entry;
 
     JS_ASSERT(!cx->runtime->gcRunning);
@@ -311,11 +313,19 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         vshape = scope->shape;
     }
 
+    khash = PROPERTY_CACHE_HASH_PC(pc, kshape);
     if (obj == pobj) {
         JS_ASSERT(scopeIndex == 0 && protoIndex == 0);
         JS_ASSERT(OBJ_SCOPE(obj)->object == obj);
         JS_ASSERT(kshape != 0);
     } else {
+        if (op == JSOP_LENGTH) {
+            atom = cx->runtime->atomState.lengthAtom;
+        } else {
+            pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
+            GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, atom);
+        }
+
 #ifdef DEBUG
         if (scopeIndex == 0) {
             JS_ASSERT(protoIndex != 0);
@@ -324,6 +334,12 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 #endif
 
         if (scopeIndex != 0 || protoIndex != 1) {
+            khash = PROPERTY_CACHE_HASH_ATOM(atom, obj, pobj);
+            PCMETER(if (PCVCAP_TAG(cache->table[khash].vcap) <= 1)
+                        cache->pcrecycles++);
+            pc = (jsbytecode *) atom;
+            kshape = (jsuword) obj;
+
             /*
              * Make sure that a later shadowing assignment will enter
              * PurgeProtoChain and invalidate this entry, bug 479198.
@@ -338,7 +354,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         }
     }
 
-    entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
+    entry = &cache->table[khash];
     PCMETER(PCVAL_IS_NULL(entry->vword) || cache->recycles++);
     entry->kpc = pc;
     entry->kshape = kshape;
@@ -357,41 +373,42 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
     return entry;
 }
 
-static inline JS_REQUIRES_STACK JSAtom *
-GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec *cs)
-{
-    if (op == JSOP_LENGTH)
-        return cx->runtime->atomState.lengthAtom;
-
-    ptrdiff_t pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
-    JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, atom);
-    return atom;
-}
-
 JS_REQUIRES_STACK JSAtom *
 js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
                          JSObject **objp, JSObject **pobjp,
-                         JSPropCacheEntry *entry)
+                         JSPropCacheEntry **entryp)
 {
+    JSOp op;
+    const JSCodeSpec *cs;
+    ptrdiff_t pcoff;
+    JSAtom *atom;
     JSObject *obj, *pobj, *tmp;
+    JSPropCacheEntry *entry;
     uint32 vcap;
 
     JS_ASSERT(uintN((cx->fp->imacpc ? cx->fp->imacpc : pc) - cx->fp->script->code)
               < cx->fp->script->length);
 
-    JSOp op = js_GetOpcode(cx, cx->fp->script, pc);
-    const JSCodeSpec *cs = &js_CodeSpec[op];
+    op = js_GetOpcode(cx, cx->fp->script, pc);
+    cs = &js_CodeSpec[op];
+    if (op == JSOP_LENGTH) {
+        atom = cx->runtime->atomState.lengthAtom;
+    } else {
+        pcoff = (JOF_TYPE(cs->format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
+        GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, atom);
+    }
 
     obj = *objp;
     JS_ASSERT(OBJ_IS_NATIVE(obj));
+    entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_ATOM(atom, obj, NULL)];
+    *entryp = entry;
     vcap = entry->vcap;
 
-    if (entry->kpc != pc) {
-        PCMETER(JS_PROPERTY_CACHE(cx).kpcmisses++);
+    if (entry->kpc != (jsbytecode *) atom) {
+        PCMETER(JS_PROPERTY_CACHE(cx).idmisses++);
 
-        JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
 #ifdef DEBUG_notme
+        entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_PC(pc, OBJ_SHAPE(obj))];
         fprintf(stderr,
                 "id miss for %s from %s:%u"
                 " (pc %u, kpc %u, kshape %u, shape %u)\n",
@@ -410,15 +427,11 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         return atom;
     }
 
-    if (entry->kshape != OBJ_SHAPE(obj)) {
-        PCMETER(JS_PROPERTY_CACHE(cx).kshmisses++);
-        return GetAtomFromBytecode(cx, pc, op, cs);
+    if (entry->kshape != (jsuword) obj) {
+        PCMETER(JS_PROPERTY_CACHE(cx).komisses++);
+        return atom;
     }
 
-    /*
-     * PROPERTY_CACHE_TEST handles only the direct and immediate-prototype hit
-     * cases, all others go here.
-     */
     pobj = obj;
 
     if (JOF_MODE(cs->format) == JOF_NAME) {
@@ -443,7 +456,6 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
     if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(vcap))) {
 #ifdef DEBUG
-        JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
         jsid id = ATOM_TO_JSID(atom);
 
         CHECK_FOR_STRING_INDEX(id);
@@ -455,7 +467,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     }
 
     PCMETER(JS_PROPERTY_CACHE(cx).vcmisses++);
-    return GetAtomFromBytecode(cx, pc, op, cs);
+    return atom;
 }
 
 #ifdef DEBUG
@@ -510,6 +522,7 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
         P(noprotos);
         P(longchains);
         P(recycles);
+        P(pcrecycles);
         P(tests);
         P(pchits);
         P(protopchits);
@@ -522,8 +535,8 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
         P(setpcmisses);
         P(slotchanges);
         P(setmisses);
-        P(kpcmisses);
-        P(kshmisses);
+        P(idmisses);
+        P(komisses);
         P(vcmisses);
         P(misses);
         P(flushes);
@@ -556,8 +569,9 @@ js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script)
          entry++) {
         if (JS_UPTRDIFF(entry->kpc, script->code) < script->length) {
             entry->kpc = NULL;
+            entry->kshape = 0;
 #ifdef DEBUG
-            entry->kshape = entry->vcap = entry->vword = 0;
+            entry->vcap = entry->vword = 0;
 #endif
         }
     }
@@ -4796,7 +4810,7 @@ js_Interpret(JSContext *cx)
                     }
 
                     atom = js_FullTestPropertyCache(cx, regs.pc, &obj, &obj2,
-                                                    entry);
+                                                    &entry);
                     if (atom) {
                         PCMETER(cache->misses++);
                         PCMETER(cache->setmisses++);
