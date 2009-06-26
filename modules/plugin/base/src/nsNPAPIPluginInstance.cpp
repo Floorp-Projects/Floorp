@@ -1459,3 +1459,48 @@ nsresult nsNPAPIPluginInstance::PrivateModeStateChanged()
   }
   return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::InvalidateRect(nsPluginRect *invalidRect)
+{
+  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
+  if (!pp)
+    return nsnull;
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  pp->GetOwner(getter_AddRefs(owner));
+  if (!owner)
+    return NS_ERROR_FAILURE;
+
+  return owner->InvalidateRect(invalidRect);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::InvalidateRegion(nsPluginRegion invalidRegion)
+{
+  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
+  if (!pp)
+    return nsnull;
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  pp->GetOwner(getter_AddRefs(owner));
+  if (!owner)
+    return NS_ERROR_FAILURE;
+
+  return owner->InvalidateRegion(invalidRegion);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::ForceRedraw()
+{
+  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
+  if (!pp)
+    return nsnull;
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  pp->GetOwner(getter_AddRefs(owner));
+  if (!owner)
+    return NS_ERROR_FAILURE;
+
+  return owner->ForceRedraw();
+}
