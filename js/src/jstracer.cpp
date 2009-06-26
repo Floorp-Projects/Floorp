@@ -10615,6 +10615,8 @@ TraceRecorder::record_JSOP_IN()
     bool cond = prop != NULL;
     if (prop)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
+    if (wasDeepAborted())
+        ABORT_TRACE("deep abort from property lookup");
 
     /* The interpreter fuses comparisons and the following branch,
        so we have to do that here as well. */
