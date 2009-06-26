@@ -342,12 +342,6 @@ nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
   return GetTarget(aOriginalTarget);
 }
 
-NS_IMETHODIMP_(PRBool)
-nsDOMEvent::HasOriginalTarget()
-{
-  return !!mEvent->originalTarget;
-}
-
 NS_IMETHODIMP
 nsDOMEvent::SetTrusted(PRBool aTrusted)
 {
@@ -532,6 +526,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsGkAtoms::oncompositionend)
       mEvent->message = NS_COMPOSITION_END;
   } else if (mEvent->eventStructType == NS_EVENT) {
+    if (atom == nsGkAtoms::onMozAfterPaint)
+      mEvent->message = NS_AFTERPAINT;
     if (atom == nsGkAtoms::onfocus)
       mEvent->message = NS_FOCUS_CONTENT;
     else if (atom == nsGkAtoms::onblur)
@@ -548,6 +544,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_LOAD;
     else if (atom == nsGkAtoms::onunload)
       mEvent->message = NS_PAGE_UNLOAD;
+    else if (atom == nsGkAtoms::onbeforeunload)
+      mEvent->message = NS_BEFORE_PAGE_UNLOAD;
     else if (atom == nsGkAtoms::onabort)
       mEvent->message = NS_IMAGE_ABORT;
     else if (atom == nsGkAtoms::onerror)
@@ -562,6 +560,10 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_CUT;
     else if (atom == nsGkAtoms::onpaste)
       mEvent->message = NS_PASTE;
+    else if (atom == nsGkAtoms::onpageshow)
+      mEvent->message = NS_PAGE_SHOW;
+    else if (atom == nsGkAtoms::onpagehide)
+      mEvent->message = NS_PAGE_HIDE;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsGkAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -586,11 +588,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_UI_FOCUSOUT;
     else if (atom == nsGkAtoms::oninput)
       mEvent->message = NS_FORM_INPUT;
-  } else if (mEvent->eventStructType == NS_PAGETRANSITION_EVENT) {
-    if (atom == nsGkAtoms::onpageshow)
-      mEvent->message = NS_PAGE_SHOW;
-    else if (atom == nsGkAtoms::onpagehide)
-      mEvent->message = NS_PAGE_HIDE;
   } else if (mEvent->eventStructType == NS_XUL_COMMAND_EVENT) {
     if (atom == nsGkAtoms::oncommand)
       mEvent->message = NS_XUL_COMMAND;
@@ -665,10 +662,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_MEDIA_ERROR;
   }
 #endif // MOZ_MEDIA
-  else if (mEvent->eventStructType == NS_NOTIFYPAINT_EVENT) {
-    if (atom == nsGkAtoms::onMozAfterPaint)
-      mEvent->message = NS_AFTERPAINT;
-  }
   else if (mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT) {
     if (atom == nsGkAtoms::onMozSwipeGesture)
       mEvent->message = NS_SIMPLE_GESTURE_SWIPE;
@@ -943,25 +936,10 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
-    case NS_BEFORE_PAGE_UNLOAD_EVENT:
-    {
-      newEvent = new nsBeforePageUnloadEvent(PR_FALSE, msg);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      static_cast<nsBeforePageUnloadEvent*>(newEvent)->text =
-        static_cast<nsBeforePageUnloadEvent*>(mEvent)->text;
-      break;
-    }
     case NS_UI_EVENT:
     {
       newEvent = new nsUIEvent(PR_FALSE, msg,
                                static_cast<nsUIEvent*>(mEvent)->detail);
-      break;
-    }
-    case NS_PAGETRANSITION_EVENT:
-    {
-      newEvent =
-        new nsPageTransitionEvent(PR_FALSE, msg,
-                                  ((nsPageTransitionEvent*) mEvent)->persisted);
       break;
     }
 #ifdef MOZ_SVG
@@ -988,14 +966,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent->eventStructType = NS_XUL_COMMAND_EVENT;
        static_cast<nsXULCommandEvent*>(newEvent)->sourceEvent =
          static_cast<nsXULCommandEvent*>(mEvent)->sourceEvent;
-      break;
-    }
-    case NS_NOTIFYPAINT_EVENT:
-    {
-      nsNotifyPaintEvent* event = static_cast<nsNotifyPaintEvent*>(mEvent);
-      newEvent =
-        new nsNotifyPaintEvent(PR_FALSE, msg,
-                               event->sameDocRegion, event->crossDocRegion);
       break;
     }
     case NS_SIMPLE_GESTURE_EVENT:
@@ -1056,36 +1026,6 @@ NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 #endif
 
   mEvent->target = aTarget;
-  return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
-{
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aCurrentTarget);
-
-    NS_ASSERTION(!win || !win->IsInnerWindow(),
-                 "Uh, inner window set as event target!");
-  }
-#endif
-
-  mEvent->currentTarget = aCurrentTarget;
-  return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
-{
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aOriginalTarget);
-
-    NS_ASSERTION(!win || !win->IsInnerWindow(),
-                 "Uh, inner window set as event target!");
-  }
-#endif
-
-  mEvent->originalTarget = aOriginalTarget;
   return NS_OK;
 }
 
@@ -1555,6 +1495,14 @@ nsDOMEvent::ReportWrongPropertyAccessWarning(const char* aPropertyName)
                                          EmptyString(), 0, 0,
                                          nsIScriptError::warningFlag,
                                          "DOM Events");
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetPreventDefault(PRBool* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
+  return NS_OK;
 }
 
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,

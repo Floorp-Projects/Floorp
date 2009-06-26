@@ -168,7 +168,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIXULDocument.h"
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
-
+#include "nsIDOMPageTransitionEvent.h"
 #include "nsFrameLoader.h"
 
 #include "mozAutoDocUpdate.h"
@@ -572,7 +572,7 @@ NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetList)
                       nsIDocumentObserver,
                       nsIMutationObserver)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentStyleSheetList)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(StyleSheetList)
 NS_INTERFACE_MAP_END
 
 
@@ -6018,42 +6018,27 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
-nsresult
-nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
-                               nsIEventListenerManager** aInstancePtrResult)
+nsIEventListenerManager*
+nsDocument::GetListenerManager(PRBool aCreateIfNotFound)
 {
-  if (mListenerManager) {
-    *aInstancePtrResult = mListenerManager;
-    NS_ADDREF(*aInstancePtrResult);
-
-    return NS_OK;
-  }
-  if (!aCreateIfNotFound) {
-    *aInstancePtrResult = nsnull;
-    return NS_OK;
+  if (mListenerManager || !aCreateIfNotFound) {
+    return mListenerManager;
   }
 
   nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   mListenerManager->SetListenerTarget(static_cast<nsIDocument *>(this));
 
-  *aInstancePtrResult = mListenerManager;
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
+  return mListenerManager;
 }
 
 nsresult
 nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager))) &&
-      manager) {
-    return manager->GetSystemEventGroupLM(aGroup);
-  }
-
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->GetSystemEventGroupLM(aGroup);
 }
 
 nsresult
@@ -6093,28 +6078,19 @@ nsresult
 nsDocument::AddEventListenerByIID(nsIDOMEventListener *aListener,
                                   const nsIID& aIID)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  if (manager) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
 
 nsresult
 nsDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                      const nsIID& aIID)
 {
-  if (!mListenerManager) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mListenerManager->RemoveEventListenerByIID(aListener, aIID,
-                                             NS_EVENT_FLAG_BUBBLE);
-  return NS_OK;
+  return mListenerManager ?
+    mListenerManager->RemoveEventListenerByIID(aListener, aIID,
+                                               NS_EVENT_FLAG_BUBBLE) :
+    NS_OK;
 }
 
 nsresult
@@ -6159,17 +6135,10 @@ nsDocument::AddGroupedEventListener(const nsAString& aType,
                                     PRBool aUseCapture,
                                     nsIDOMEventGroup *aEvtGrp)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  if (NS_SUCCEEDED(rv) && manager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
-  }
-
-  return rv;
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
 }
 
 NS_IMETHODIMP
@@ -6178,14 +6147,11 @@ nsDocument::RemoveGroupedEventListener(const nsAString& aType,
                                        PRBool aUseCapture,
                                        nsIDOMEventGroup *aEvtGrp)
 {
-  if (!mListenerManager) {
-    return NS_ERROR_FAILURE;
+  if (mListenerManager) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
+                                                aEvtGrp);
   }
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
-                                              aEvtGrp);
   return NS_OK;
 }
 
@@ -6206,9 +6172,8 @@ nsDocument::AddEventListener(const nsAString& aType,
                              nsIDOMEventListener *aListener,
                              PRBool aUseCapture, PRBool aWantsUntrusted)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
@@ -6853,8 +6818,8 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (piTarget) {
-    nsCOMPtr<nsIEventListenerManager> manager;
-    piTarget->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    nsIEventListenerManager* manager =
+      piTarget->GetListenerManager(PR_FALSE);
     if (manager && manager->HasUnloadListeners()) {
       return PR_FALSE;
     }
@@ -7092,14 +7057,24 @@ nsDocument::CheckAncestryAndGetFrame(nsIDocument* aDocument) const
 }
 
 void
-nsDocument::DispatchEventToWindow(nsEvent *aEvent)
+nsDocument::DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
+                                   const nsAString& aType,
+                                   PRBool aPersisted)
 {
-  nsPIDOMWindow *window = GetWindow();
-  if (!window)
-    return;
-
-  aEvent->target = static_cast<nsIDocument*>(this);
-  nsEventDispatcher::Dispatch(window, nsnull, aEvent);
+  if (aDispatchTarget) {
+    nsCOMPtr<nsIDOMEvent> event;
+    CreateEvent(NS_LITERAL_STRING("pagetransition"), getter_AddRefs(event));
+    nsCOMPtr<nsIDOMPageTransitionEvent> ptEvent = do_QueryInterface(event);
+    nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(ptEvent);
+    if (pEvent && NS_SUCCEEDED(ptEvent->InitPageTransitionEvent(aType, PR_TRUE,
+                                                                PR_TRUE,
+                                                                aPersisted))) {
+      pEvent->SetTrusted(PR_TRUE);
+      pEvent->SetTarget(this);
+      nsEventDispatcher::DispatchDOMEvent(aDispatchTarget, nsnull, event,
+                                          nsnull, nsnull);
+    }
+  }
 }
 
 void
@@ -7138,14 +7113,10 @@ nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
     mAnimationController->OnPageShow();
   }
 #endif
-  
-  nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, aPersisted);
-  if (aDispatchStartTarget) {
-    event.target = static_cast<nsIDocument*>(this);
-    nsEventDispatcher::Dispatch(aDispatchStartTarget, nsnull, &event);
-  } else {
-    DispatchEventToWindow(&event);
-  }
+  nsCOMPtr<nsPIDOMEventTarget> target =
+    aDispatchStartTarget ? do_QueryInterface(aDispatchStartTarget) :
+                           do_QueryInterface(GetWindow());
+  DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
 }
 
 void
@@ -7184,13 +7155,10 @@ nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
 #endif
   
   // Now send out a PageHide event.
-  nsPageTransitionEvent event(PR_TRUE, NS_PAGE_HIDE, aPersisted);
-  if (aDispatchStartTarget) {
-    event.target = static_cast<nsIDocument*>(this);
-    nsEventDispatcher::Dispatch(aDispatchStartTarget, nsnull, &event);
-  } else {
-    DispatchEventToWindow(&event);
-  }
+  nsCOMPtr<nsPIDOMEventTarget> target =
+    aDispatchStartTarget ? do_QueryInterface(aDispatchStartTarget) :
+                           do_QueryInterface(GetWindow());
+  DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
 
   mVisible = PR_FALSE;
 }

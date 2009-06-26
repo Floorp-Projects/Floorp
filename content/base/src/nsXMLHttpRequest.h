@@ -465,14 +465,6 @@ public:
   {
     return mInner->SetTarget(aTarget);
   }
-  NS_IMETHOD SetCurrentTarget(nsIDOMEventTarget* aTarget)
-  {
-    return mInner->SetCurrentTarget(aTarget);
-  }
-  NS_IMETHOD SetOriginalTarget(nsIDOMEventTarget* aTarget)
-  {
-    return mInner->SetOriginalTarget(aTarget);
-  }
   NS_IMETHOD_(PRBool) IsDispatchStopped()
   {
     return mInner->IsDispatchStopped();
@@ -480,10 +472,6 @@ public:
   NS_IMETHOD_(nsEvent*) GetInternalNSEvent()
   {
     return mInner->GetInternalNSEvent();
-  }
-  NS_IMETHOD_(PRBool) HasOriginalTarget()
-  {
-    return mInner->HasOriginalTarget();
   }
   NS_IMETHOD SetTrusted(PRBool aTrusted)
   {

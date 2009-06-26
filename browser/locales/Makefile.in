@@ -284,7 +284,12 @@ endif
 
 
 ident:
-	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(STAGEDIST)/application.ini App SourceStamp
+	@printf "fx_revision "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
+	    $(STAGEDIST)/application.ini App SourceStamp
+	@printf "buildid "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
+	    $(STAGEDIST)/application.ini App BuildID
 
 #These make targets call prepare-repackages by setting different UPLOAD_DIR
 prepare-upload-latest-%:

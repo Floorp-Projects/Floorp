@@ -42,8 +42,8 @@
 
 #define XPCOM_DEPENDENT_LIBS_LIST "dependentlibs.list"
 
-NS_HIDDEN_(GetFrozenFunctionsFunc)
-XPCOMGlueLoad(const char *xpcomFile);
+NS_HIDDEN_(nsresult)
+XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func NS_OUTPARAM);
 
 NS_HIDDEN_(void)
 XPCOMGlueUnload();

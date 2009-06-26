@@ -90,9 +90,8 @@ class nsHashKey;
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
 
-#define NS_BEFORE_PAGE_UNLOAD_EVENT       26
+
 #define NS_UI_EVENT                       27
-#define NS_PAGETRANSITION_EVENT           29
 #ifdef MOZ_SVG
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
@@ -534,17 +533,6 @@ public:
   PRInt32           lineNr;
   const PRUnichar*  errorMsg;
   const PRUnichar*  fileName;
-};
-
-class nsBeforePageUnloadEvent : public nsEvent
-{
-public:
-  nsBeforePageUnloadEvent(PRBool isTrusted, PRUint32 msg)
-    : nsEvent(isTrusted, msg, NS_BEFORE_PAGE_UNLOAD_EVENT)
-  {
-  }
-
-  nsString text;
 };
 
 /**
@@ -1218,38 +1206,6 @@ public:
   }
 
   PRInt32 detail;
-};
-
-/**
- * NotifyPaint event
- */
-class nsNotifyPaintEvent : public nsEvent
-{
-public:
-  nsNotifyPaintEvent(PRBool isTrusted, PRUint32 msg,
-                     const nsRegion& aSameDocRegion, const nsRegion& aCrossDocRegion)
-    : nsEvent(isTrusted, msg, NS_NOTIFYPAINT_EVENT),
-      sameDocRegion(aSameDocRegion), crossDocRegion(aCrossDocRegion)
-  {
-  }
-
-  nsRegion sameDocRegion;
-  nsRegion crossDocRegion;
-};
-
-/**
- * PageTransition event
- */
-class nsPageTransitionEvent : public nsEvent
-{
-public:
-  nsPageTransitionEvent(PRBool isTrusted, PRUint32 msg, PRBool p)
-    : nsEvent(isTrusted, msg, NS_PAGETRANSITION_EVENT),
-      persisted(p)
-  {
-  }
-
-  PRBool persisted;
 };
 
 /**

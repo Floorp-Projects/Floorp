@@ -260,9 +260,20 @@ private:
    */
   ImageObserver mObserverList;
 
+  /**
+   * When mIsImageStateForced is true, this holds the ImageState that we'll
+   * return in ImageState().
+   */
+  PRInt32 mForcedImageState;
+
   PRInt16 mImageBlockingStatus;
   PRPackedBool mLoadingEnabled : 1;
   PRPackedBool mStartingLoad : 1;
+
+  /**
+   * When true, we return mForcedImageState from ImageState().
+   */
+  PRPackedBool mIsImageStateForced : 1;
 
   /**
    * The state we had the last time we checked whether we needed to notify the

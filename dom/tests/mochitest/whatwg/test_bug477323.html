@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dynamically assigned drag and drop handlers</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="start()">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function start()
+{
+  var element = document.getElementById("draggable_img");
+  
+  var gotdragstart = false, gotdrag = false, 
+      gotdragenter = false, gotdragover = false, gotdragleave = false, 
+      gotdrop = false, gotdragend = false;
+  
+  element.ondragstart = function(event) {gotdragstart = true;}
+  element.ondrag = function(event) {gotdrag = true;}
+  element.ondragenter = function(event) {gotdragenter = true;}
+  element.ondragover = function(event) {gotdragover = true;}
+  element.ondragleave = function(event) {gotdragleave = true;}
+  element.ondrop = function(event) {gotdrop = true;}
+  element.ondragend = function(event) {gotdragend = true;}
+  
+  function dispatch(eventName)
+  {
+    var event = document.createEvent("DragEvents");
+    event.initDragEvent(eventName, true, true, window, 0, 5, 5, 5, 5,
+                        false, false, false, false, 0, null, null);
+    element.dispatchEvent(event);
+  }
+  
+  dispatch("dragstart");
+  dispatch("drag");
+  dispatch("dragenter");
+  dispatch("dragover");
+  dispatch("dragleave");
+  dispatch("drop");
+  dispatch("dragend");
+
+  ok(gotdragstart, "Got ondragstart event");
+  ok(gotdrag, "Got ondrag event");
+  ok(gotdragenter, "Got ondragenter event");
+  ok(gotdragover, "Got ondragover event");
+  ok(gotdragleave, "Got ondragleave event");
+  ok(gotdrop, "Got ondrop event");
+  ok(gotdragend, "Got ondragend event");
+  
+  SimpleTest.finish();
+}
+
+</script>
+
+<img src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82" 
+     draggable="true" id="draggable_img"/>
+
+</body>
+</html>

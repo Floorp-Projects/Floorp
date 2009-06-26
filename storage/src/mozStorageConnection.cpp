@@ -50,6 +50,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
+#include "nsAutoLock.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
@@ -61,6 +62,7 @@
 #include "mozStorageStatement.h"
 #include "mozStorageArgValueArray.h"
 #include "mozStoragePrivateHelpers.h"
+#include "mozStorageStatementData.h"
 
 #include "prlog.h"
 #include "prprf.h"
@@ -241,7 +243,8 @@ sqlite3_T_blob(sqlite3_context *aCtx,
 //// Connection
 
 Connection::Connection(mozIStorageService *aService)
-: mDBConn(nsnull)
+: sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
+, mDBConn(nsnull)
 , mAsyncExecutionMutex(nsAutoLock::NewLock("AsyncExecutionMutex"))
 , mAsyncExecutionThreadShuttingDown(PR_FALSE)
 , mTransactionMutex(nsAutoLock::NewLock("TransactionMutex"))
@@ -625,7 +628,7 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
                          mozIStoragePendingStatement **_handle)
 {
   int rc = SQLITE_OK;
-  nsTArray<sqlite3_stmt *> stmts(aNumStatements);
+  nsTArray<StatementData> stmts(aNumStatements);
   for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
     sqlite3_stmt *old_stmt =
         static_cast<Statement *>(aStatements[i])->nativeStatement();
@@ -655,7 +658,9 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
     if (rc != SQLITE_OK)
       break;
 
-    if (!stmts.AppendElement(new_stmt)) {
+    Statement *storageStmt = static_cast<Statement *>(aStatements[i]);
+    StatementData data(new_stmt, storageStmt->bindingParamsArray());
+    if (!stmts.AppendElement(data)) {
       rc = SQLITE_NOMEM;
       break;
     }

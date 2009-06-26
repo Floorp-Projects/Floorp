@@ -1,3 +1,11 @@
+////////////////////////////////////////////////////////////////////////////////
+// Helper functions for accessible states testing.
+//
+// requires:
+//   common.js
+//
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Tests the states and extra states of the given accessible.
  * Also tests for unwanted states and extra states.
@@ -17,55 +25,73 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
 
   var id = prettyName(aAccOrElmOrID);
 
-  is(state & aState, aState,
-     "wrong state bits for " + id + "!");
+  // Primary test.
+  isState(state & aState, aState, false,
+          "wrong state bits for " + id + "!");
 
   if (aExtraState)
-    is(extraState & aExtraState, aExtraState,
-       "wrong extra state bits for " + id + "!");
+    isState(extraState & aExtraState, aExtraState, true,
+            "wrong extra state bits for " + id + "!");
 
   if (aAbsentState)
-    is(state & aAbsentState, 0,
-       "state bits should not be present in ID " + id + "!");
+    isState(state & aAbsentState, 0, false,
+            "state bits should not be present in ID " + id + "!");
 
   if (aAbsentExtraState)
-    is(extraState & aAbsentExtraState, 0,
-       "extraState bits should not be present in ID " + id + "!");
+    isState(extraState & aAbsentExtraState, 0, true,
+            "extraState bits should not be present in ID " + id + "!");
 
+  // Additional test.
+
+  // readonly/editable
   if (state & STATE_READONLY)
-    is(extraState & EXT_STATE_EDITABLE, 0,
-       "Read-only " + id + " cannot be editable!");
+    isState(extraState & EXT_STATE_EDITABLE, 0, true,
+            "Read-only " + id + " cannot be editable!");
 
   if (extraState & EXT_STATE_EDITABLE)
-    is(state & STATE_READONLY, 0,
-       "Editable " + id + " cannot be readonly!");
+    isState(state & STATE_READONLY, 0, true,
+            "Editable " + id + " cannot be readonly!");
 
+  // multiline/singleline
+  if (extraState & EXT_STATE_MULTI_LINE)
+    isState(extraState & EXT_STATE_SINGLE_LINE, 0, true,
+            "Multiline " + id + " cannot be singleline!");
+
+  if (extraState & EXT_STATE_SINGLE_LINE)
+    isState(extraState & EXT_STATE_MULTI_LINE, 0, true,
+            "Singleline " + id + " cannot be multiline!");
+
+  // expanded/collapsed/expandable
   if (state & STATE_COLLAPSED || state & STATE_EXPANDED)
-    is(extraState & EXT_STATE_EXPANDABLE, EXT_STATE_EXPANDABLE,
-       "Collapsed or expanded " + id + " should be expandable!");
+    isState(extraState & EXT_STATE_EXPANDABLE, EXT_STATE_EXPANDABLE, true,
+            "Collapsed or expanded " + id + " should be expandable!");
 
   if (state & STATE_COLLAPSED)
-    is(state & STATE_EXPANDED, 0,
-       "Collapsed " + id + " cannot be expanded!");
+    isState(state & STATE_EXPANDED, 0, false,
+            "Collapsed " + id + " cannot be expanded!");
 
   if (state & STATE_EXPANDED)
-    is(state & STATE_COLLAPSED, 0,
-       "Expanded " + id + " cannot be collapsed!");
+    isState(state & STATE_COLLAPSED, 0, false,
+            "Expanded " + id + " cannot be collapsed!");
 
+  // checked/mixed/checkable
   if (state & STATE_CHECKED || state & STATE_MIXED)
-    is(state & STATE_CHECKABLE, STATE_CHECKABLE,
-       "Checked or mixed element must be checkable!");
+    isState(state & STATE_CHECKABLE, STATE_CHECKABLE, false,
+            "Checked or mixed element must be checkable!");
 
   if (state & STATE_CHECKED)
-    is(state & STATE_MIXED, 0, "Checked element cannot be state mixed!");
+    isState(state & STATE_MIXED, 0, false,
+            "Checked element cannot be state mixed!");
 
   if (state & STATE_MIXED)
-    is(state & STATE_CHECKED, 0, "Mixed element cannot be state checked!");
+    isState(state & STATE_CHECKED, 0, false,
+            "Mixed element cannot be state checked!");
 
+  // unavailable
   if ((state & STATE_UNAVAILABLE)
       && (getRole(aAccOrElmOrID) != ROLE_GROUPING))
-    is(state & STATE_FOCUSABLE, STATE_FOCUSABLE,
-       "Disabled " + id + " must be focusable!");
+    isState(state & STATE_FOCUSABLE, STATE_FOCUSABLE, false,
+            "Disabled " + id + " must be focusable!");
 }
 
 /**
@@ -121,4 +147,32 @@ function getStates(aAccOrElmOrID)
   acc.getState(state, extraState);
 
   return [state.value, extraState.value];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Private implementation details
+
+/**
+ * Analogy of SimpleTest.is function used to compare states.
+ */
+function isState(aState1, aState2, aIsExtraStates, aMsg)
+{
+  if (aState1 == aState2) {
+    ok(true, aMsg);
+    return;
+  }
+
+  var got = "0";
+  if (aState1) {
+    got = statesToString(aIsExtraStates ? 0 : aState1,
+                         aIsExtraStates ? aState1 : 0);
+  }
+
+  var expected = "0";
+  if (aState2) {
+    expected = statesToString(aIsExtraStates ? 0 : aState2,
+                              aIsExtraStates ? aState2 : 0);
+  }
+
+  ok(false, aMsg + "got '" + got + "', expected '" + expected + "'");
 }

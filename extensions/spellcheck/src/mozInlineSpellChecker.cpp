@@ -645,8 +645,7 @@ mozInlineSpellChecker::RegisterEventListeners()
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIEventListenerManager> elmP;
-  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   if (elmP) {
     // Focus event doesn't bubble so adding the listener to capturing phase
     elmP->AddEventListenerByIID(static_cast<nsIDOMFocusListener *>(this),
@@ -679,8 +678,8 @@ mozInlineSpellChecker::UnregisterEventListeners()
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc);
   NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIEventListenerManager> elmP;
-  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+  nsCOMPtr<nsIEventListenerManager> elmP =
+    piTarget->GetListenerManager(PR_TRUE);
   if (elmP) {
     elmP->RemoveEventListenerByIID(static_cast<nsIDOMFocusListener *>(this),
                                    NS_GET_IID(nsIDOMFocusListener),

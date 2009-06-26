@@ -3449,6 +3449,33 @@ void nsWindow::RemoveFromStyle( ULONG style)
 }
 
 // --------------------------------------------------------------------------
+
+NS_IMETHODIMP nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
+{
+  PRUint32  vkey;
+
+  NS_ENSURE_ARG_POINTER(aLEDState);
+
+  switch (aKeyCode) {
+    case NS_VK_CAPS_LOCK:
+      vkey = VK_CAPSLOCK;
+      break;
+    case NS_VK_NUM_LOCK:
+      vkey = VK_NUMLOCK;
+      break;
+    case NS_VK_SCROLL_LOCK:
+      vkey = VK_SCRLLOCK;
+      break;
+    default:
+      *aLEDState = PR_FALSE;
+      return NS_OK;
+  }
+
+  *aLEDState = (::WinGetKeyState(HWND_DESKTOP, vkey) & 1) != 0;
+  return NS_OK;
+}
+
+// --------------------------------------------------------------------------
 // Drag & Drop - Target methods
 // --------------------------------------------------------------------------
 //

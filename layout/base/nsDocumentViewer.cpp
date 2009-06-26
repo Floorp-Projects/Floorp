@@ -51,7 +51,9 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentViewerPrint.h"
-
+#include "nsIDOMDocumentEvent.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -1078,12 +1080,21 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 
   // Now, fire an BeforeUnload event to the document and see if it's ok
   // to unload...
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMEvent> event;
+  docEvent->CreateEvent(NS_LITERAL_STRING("beforeunloadevent"),
+                        getter_AddRefs(event));
+  nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(event);
+  nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(beforeUnload);
+  NS_ENSURE_STATE(pEvent);
+  nsresult rv = event->InitEvent(NS_LITERAL_STRING("beforeunload"),
+                                 PR_FALSE, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // XXX Dispatching to |window|, but using |document| as the target.
-  event.target = mDocument;
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mDocument);
+  pEvent->SetTarget(target);
+  pEvent->SetTrusted(PR_TRUE);
 
   // In evil cases we might be destroyed while handling the
   // onbeforeunload event, don't let that happen. (see also bug#331040)
@@ -1095,14 +1106,16 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
     mInPermitUnload = PR_TRUE;
-    nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
+    nsEventDispatcher::DispatchDOMEvent(window, nsnull, event, mPresContext,
+                                        nsnull);
     mInPermitUnload = PR_FALSE;
   }
 
   nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
-
-  if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
-                           !event.text.IsEmpty())) {
+  nsAutoString text;
+  beforeUnload->GetReturnValue(text);
+  if (pEvent->GetInternalNSEvent()->flags & NS_EVENT_FLAG_NO_DEFAULT ||
+      !text.IsEmpty()) {
     // Ask the user if it's ok to unload the current page
 
     nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShellNode);
@@ -1124,14 +1137,14 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 
       // Limit the length of the text the page can inject into this
       // dialogue to 1024 characters.
-      PRInt32 len = PR_MIN(event.text.Length(), 1024);
+      PRInt32 len = PR_MIN(text.Length(), 1024);
 
       nsAutoString msg;
       if (len == 0) {
         msg = preMsg + NS_LITERAL_STRING("\n\n") + postMsg;
       } else {
         msg = preMsg + NS_LITERAL_STRING("\n\n") +
-              StringHead(event.text, len) +
+              StringHead(text, len) +
               NS_LITERAL_STRING("\n\n") + postMsg;
       } 
 

@@ -181,14 +181,6 @@ class nsParser : public nsIParser,
     NS_IMETHOD_(void) SetParserFilter(nsIParserFilter* aFilter);
 
     /**
-     *  Retrieve the scanner from the topmost parser context
-     *  
-     *  @update  gess 6/9/98
-     *  @return  ptr to scanner
-     */
-    NS_IMETHOD_(nsDTDMode) GetParseMode(void);
-
-    /**
      * Cause parser to parse input from given URL 
      * @update	gess5/11/98
      * @param   aURL is a descriptor for source document

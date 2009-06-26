@@ -2092,8 +2092,9 @@ nsNavHistoryQueryResultNode::CanExpand()
   if (IsContainersQuery())
     return PR_TRUE;
 
-  // if we are child of an ExcludeItems root, we should not expand
-  if (mResult && mResult->mRootNode->mOptions->ExcludeItems())
+  // If we are child of an ExcludeItems parent or root, we should not expand.
+  if ((mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+      (mParent && mParent->mOptions->ExcludeItems()))
     return PR_FALSE;
 
   nsNavHistoryQueryOptions* options = GetGeneratingOptions();
@@ -3482,6 +3483,10 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
 {
   NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
 
+  PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+                        (mParent && mParent->mOptions->ExcludeItems()) ||
+                        mOptions->ExcludeItems();
+
   // here, try to do something reasonable if the bookmark service gives us
   // a bogus index.
   if (aIndex < 0) {
@@ -3489,15 +3494,10 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     aIndex = 0;
   }
   else if (aIndex > mChildren.Count()) {
-    PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
-                          (mParent && mParent->mOptions->ExcludeItems()) ||
-                          mOptions->ExcludeItems();
-    if (excludeItems &&
-        (aItemType == nsINavBookmarksService::TYPE_BOOKMARK ||
-         aItemType == nsINavBookmarksService::TYPE_SEPARATOR))
-      return NS_OK;
-
-    NS_NOTREACHED("Invalid index for item adding: greater than count");
+    if (!excludeItems) {
+      // Something wrong happened while updating indexes.
+      NS_NOTREACHED("Invalid index for item adding: greater than count");
+    }
     aIndex = mChildren.Count();
   }
 
@@ -3520,7 +3520,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   }
 
   if (aItemType != nsINavBookmarksService::TYPE_FOLDER &&
-      !isQuery && mOptions->ExcludeItems()) {
+      !isQuery && excludeItems) {
     // don't update items when we aren't displaying them, but we still need
     // to adjust bookmark indices to account for the insertion
     ReindexRange(aIndex, PR_INT32_MAX, 1);
@@ -3725,7 +3725,10 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnItemVisited(PRInt64 aItemId,
                                             PRInt64 aVisitId, PRTime aTime)
 {
-  if (mOptions->ExcludeItems())
+  PRBool excludeItems = (mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+                        (mParent && mParent->mOptions->ExcludeItems()) ||
+                        mOptions->ExcludeItems();
+  if (excludeItems)
     return NS_OK; // don't update items when we aren't displaying them
   if (! StartIncrementalUpdate())
     return NS_OK;
@@ -4453,8 +4456,37 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
   ENUMERATE_HISTORY_OBSERVERS(OnVisit(aURI, aVisitId, aTime, aSessionId,
                                       aReferringId, aTransitionType, &added));
 
-  if (!added && mRootNode->mExpanded) {
-    // None of registered query observers has accepted our URI, this means,
+  if (!mRootNode->mExpanded)
+    return NS_OK;
+
+  // If this visit is accepted by an overlapped container, and not all
+  // overlapped containers are visible, we should still call Refresh if the
+  // visit falls into any of them.
+  PRBool todayIsMissing = PR_FALSE;
+  PRUint32 resultType = mRootNode->mOptions->ResultType();
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
+      resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY) {
+    PRUint32 childCount;
+    nsresult rv = mRootNode->GetChildCount(&childCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (childCount) {
+      nsCOMPtr<nsINavHistoryResultNode> firstChild;
+      rv = mRootNode->GetChild(0, getter_AddRefs(firstChild));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCAutoString title;
+      rv = firstChild->GetTitle(title);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsNavHistory* history = nsNavHistory::GetHistoryService();
+      NS_ENSURE_TRUE(history, 0);
+      nsCAutoString todayLabel;
+      history->GetStringFromName(
+        NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), todayLabel);
+      todayIsMissing = !todayLabel.Equals(title);
+    }
+  }
+
+  if (!added || todayIsMissing) {
+    // None of registered query observers has accepted our URI.  This means,
     // that a matching query either was not expanded or it does not exist.
     PRUint32 resultType = mRootNode->mOptions->ResultType();
     if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||

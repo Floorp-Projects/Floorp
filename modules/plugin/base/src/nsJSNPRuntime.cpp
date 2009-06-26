@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -152,7 +153,7 @@ static JSBool
 NPObjWrapper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                        jsval *rval);
 
-static bool
+static JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
                      NPObject *npobj, jsval id, jsval *vp);
 
@@ -1429,7 +1430,10 @@ CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   if (!ok) {
-    ThrowJSException(cx, msg);
+    // ReportExceptionIfPending returns a return value, which is JS_TRUE
+    // if no exception was thrown. In that case, throw our own.
+    if (ReportExceptionIfPending(cx))
+      ThrowJSException(cx, msg);
 
     return JS_FALSE;
   }
@@ -1488,9 +1492,14 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
       enum_value = 0;
       length = 0;
     } else if (!npobj->_class->enumerate(npobj, &enum_value, &length)) {
-      ThrowJSException(cx, "Error enumerating properties on scriptable "
-                       "plugin object");
       delete state;
+
+      if (ReportExceptionIfPending(cx)) {
+        // ReportExceptionIfPending returns a return value, which is JS_TRUE
+        // if no exception was thrown. In that case, throw our own.
+        ThrowJSException(cx, "Error enumerating properties on scriptable "
+                             "plugin object");
+      }
 
       return JS_FALSE;
     }
@@ -1543,7 +1552,11 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
-  if (npobj->_class->hasProperty(npobj, (NPIdentifier)id)) {
+  PRBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
+
+  if (hasProperty) {
     JSBool ok;
 
     if (JSVAL_IS_STRING(id)) {
@@ -1562,7 +1575,15 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     }
 
     *objp = obj;
-  } else if (npobj->_class->hasMethod(npobj, (NPIdentifier)id)) {
+
+    return JS_TRUE;
+  }
+
+  PRBool hasMethod = npobj->_class->hasMethod(npobj, (NPIdentifier)id);
+  if (!ReportExceptionIfPending(cx))
+    return JS_FALSE;
+
+  if (hasMethod) {
     JSString *str = nsnull;
 
     if (JSVAL_IS_STRING(id)) {
@@ -1589,7 +1610,8 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return fnc != nsnull;
   }
 
-  return ReportExceptionIfPending(cx);
+  // no property or method
+  return JS_TRUE;
 }
 
 static JSBool
@@ -2002,23 +2024,23 @@ LookupNPP(NPObject *npobj)
   return entry->mNpp;
 }
 
-bool
+JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
                      NPObject* npobj, jsval id, jsval *vp)
 {
-  NS_ENSURE_TRUE(vp, false);
+  NS_ENSURE_TRUE(vp, JS_FALSE);
 
   if (!npobj || !npobj->_class || !npobj->_class->getProperty ||
       !npobj->_class->invoke) {
     ThrowJSException(cx, "Bad NPObject");
 
-    return false;
+    return JS_FALSE;
   }
 
   NPObjectMemberPrivate *memberPrivate =
     (NPObjectMemberPrivate *)PR_Malloc(sizeof(NPObjectMemberPrivate));
   if (!memberPrivate)
-    return false;
+    return JS_FALSE;
 
   // Make sure to clear all members in case something fails here
   // during initialization.
@@ -2027,7 +2049,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
   JSObject *memobj = ::JS_NewObject(cx, &sNPObjectMemberClass, nsnull, nsnull);
   if (!memobj) {
     PR_Free(memberPrivate);
-    return false;
+    return JS_FALSE;
   }
 
   *vp = OBJECT_TO_JSVAL(memobj);
@@ -2038,9 +2060,17 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
   jsval fieldValue;
   NPVariant npv;
   VOID_TO_NPVARIANT(npv);
-  if (!npobj->_class->getProperty(npobj, (NPIdentifier)id, &npv)) {
+
+  NPBool hasProperty = npobj->_class->getProperty(npobj, (NPIdentifier)id,
+                                                  &npv);
+  if (ReportExceptionIfPending(cx)) {
     ::JS_RemoveRoot(cx, vp);
-    return false;
+    return JS_FALSE;
+  }
+
+  if (!hasProperty) {
+    ::JS_RemoveRoot(cx, vp);
+    return JS_FALSE;
   }
 
   fieldValue = NPVariantToJSVal(npp, cx, &npv);
@@ -2060,7 +2090,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
 
   ::JS_RemoveRoot(cx, vp);
 
-  return true;
+  return JS_TRUE;
 }
 
 static JSBool
@@ -2166,7 +2196,10 @@ NPObjectMember_Call(JSContext *cx, JSObject *obj,
   }
 
   if (!ok) {
-    ThrowJSException(cx, "Error calling method on NPObject!");
+    // ReportExceptionIfPending returns a return value, which is JS_TRUE
+    // if no exception was thrown. In that case, throw our own.
+    if (ReportExceptionIfPending(cx))
+      ThrowJSException(cx, "Error calling method on NPObject!");
 
     return JS_FALSE;
   }

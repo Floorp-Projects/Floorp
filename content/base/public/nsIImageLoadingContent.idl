@@ -64,7 +64,7 @@ interface nsIURI;
  * sufficient, when combined with the imageBlockingStatus information.)
  */
 
-[scriptable, uuid(7744c6d3-5c60-4b7b-a526-4fe9d5ac7e97)]
+[scriptable, uuid(e036857e-3417-4812-a5f2-89668a616781)]
 interface nsIImageLoadingContent : imgIDecoderObserver
 {
   /**
@@ -167,4 +167,12 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * @throws NS_ERROR_NOT_AVAILABLE if there is no current URI to reload
    */
   void forceReload();
+
+  /**
+   * Enables/disables image state forcing. When |aForce| is PR_TRUE, we force
+   * nsImageLoadingContent::ImageState() to return |aState|. Call again with |aForce|
+   * as PR_FALSE to revert ImageState() to its original behaviour.
+   */
+  void forceImageState(in boolean aForce, in long aState);
+  
 };

@@ -2758,7 +2758,8 @@ Downloader.prototype = {
       um.activeUpdate = null;
     }
     else {
-      um.activeUpdate.state = state;
+      if (um.activeUpdate)
+        um.activeUpdate.state = state;
     }
     um.saveUpdates();
 

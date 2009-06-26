@@ -31,9 +31,24 @@
   <script type="application/javascript">
     function doTest()
     {
+      // aria_autocomplete
+      testStates("textbox_autocomplete_inline", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("textbox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("textbox_autocomplete_both", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_inline", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_both", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
+      // aria-busy
+      testStates("textbox_busy_false", 0, 0, STATE_BUSY);
+      testStates("textbox_busy_true", STATE_BUSY);
+      testStates("textbox_busy_error", STATE_INVALID);
+
+      // aria-expanded
       testStates("combobox", STATE_COLLAPSED);
       testStates("combobox_expanded", STATE_EXPANDED);
 
+      // tri-state checkbox
       var checkboxElem = getNode("check1");
       if (checkboxElem) {
         testStates(checkboxElem, STATE_CHECKED);
@@ -43,6 +58,7 @@
         testStates(checkboxElem, STATE_MIXED, 0);
       }
 
+      // aria-checked
       testStates("aria_checked_checkbox", STATE_CHECKED);
       testStates("aria_mixed_checkbox", STATE_MIXED);
 
@@ -50,6 +66,7 @@
       // disabled, too. See bug 429285.
       testStatesInSubtree("group", STATE_UNAVAILABLE);
 
+      // offscreen test
       testStates("aria_offscreen_textbox", STATE_OFFSCREEN);
 
       SimpleTest.finish();
@@ -73,13 +90,28 @@
      title="Propagate aria-disabled to descendants">
     Mozilla Bug 429285
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=499653"
+     title="Unify ARIA state attributes mapping rules">
+    Mozilla Bug 499653
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <div id="combobox" role="combobox">combobox</div>
+  <div id="textbox_autocomplete_inline" role="textbox" aria-autocomplete="inline"></div>
+  <div id="textbox_autocomplete_list" role="textbox" aria-autocomplete="list"></div>
+  <div id="textbox_autocomplete_both" role="textbox" aria-autocomplete="both"></div>
+  <div id="combobox_autocomplete_inline" role="combobox" aria-autocomplete="inline"></div>
+  <div id="combobox_autocomplete_list" role="combobox" aria-autocomplete="list"></div>
+  <div id="combobox_autocomplete_both" role="combobox" aria-autocomplete="both"></div>
 
+  <div id="textbox_busy_false" role="textbox" aria-busy="false"></div>
+  <div id="textbox_busy_true" role="textbox" aria-busy="true"></div>
+  <div id="textbox_busy_error" role="textbox" aria-busy="error"></div>
+
+  <div id="combobox" role="combobox">combobox</div>
   <div id="combobox_expanded" role="combobox"
        aria-expanded="true">combobox</div>
 

@@ -55,7 +55,6 @@
 
 #include "nsJSNPRuntime.h"
 
-static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 // nsNPAPIPluginStreamListener Methods

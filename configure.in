@@ -1139,42 +1139,9 @@ HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
 #######################################################################
 
 #
-# Note: OS_TARGET should be specified on the command line for gmake.
-# When OS_TARGET=WIN95 is specified, then a Windows 95 target is built.
-# The difference between the Win95 target and the WinNT target is that
-# the WinNT target uses Windows NT specific features not available
-# in Windows 95. The Win95 target will run on Windows NT, but (supposedly)
-# at lesser performance (the Win95 target uses threads; the WinNT target
-# uses fibers).
-#
 # If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
 # cross-compilation.
 #
-
-#
-# The following hack allows one to build on a WIN95 machine (as if
-# s/he were cross-compiling on a WINNT host for a WIN95 target).
-# It also accomodates for MKS's uname.exe.  If you never intend
-# to do development on a WIN95 machine, you don't need this hack.
-#
-case "$OS_ARCH" in
-WIN95)
-    OS_ARCH=WINNT
-    OS_TARGET=WIN95
-    ;;
-Windows_95)
-    OS_ARCH=Windows_NT
-    OS_TARGET=WIN95
-    ;;
-Windows_98)
-    OS_ARCH=Windows_NT
-    OS_TARGET=WIN95
-    ;;
-CYGWIN_9*|CYGWIN_ME*)
-    OS_ARCH='CYGWIN_NT-4.0'
-    OS_TARGET=WIN95
-    ;;
-esac
 
 #
 # Define and override various archtecture-specific variables, including
@@ -1419,9 +1386,6 @@ esac
 
 if test -z "$OS_TARGET"; then
     OS_TARGET=$OS_ARCH
-fi
-if test "$OS_TARGET" = "WIN95"; then
-    OS_RELEASE="4.0"
 fi
 OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
@@ -2123,7 +2087,7 @@ case "$target" in
     AC_DEFINE(HAVE_LOCALTIME_R)
 
     TARGET_MD_ARCH=win32
-    _PLATFORM_DEFAULT_TOOLKIT='windows'
+    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
@@ -2193,8 +2157,8 @@ case "$target" in
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS
         _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
+        _DEFINES_CFLAGS='-FI mozilla-config.h -DMOZILLA_CLIENT'
+        _DEFINES_CXXFLAGS='-FI mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
@@ -3068,7 +3032,7 @@ EOF
                        ])
         if test "$ac_cv_have_visibility_builtin_bug" = "no" -a \
                 "$ac_cv_have_visibility_class_bug" = "no"; then
-          VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+          VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
         else
           VISIBILITY_FLAGS='-fvisibility=hidden'
@@ -4828,8 +4792,7 @@ MOZ_ARG_HEADER(Toolkit Options)
                             Mac OS X - cairo-cocoa
                             Neutrino/QNX - photon
                             OS/2 - cairo-os2
-                            Win32 - cairo-windows
-                            WinCE - windows
+                            Win32/WinCE - cairo-windows
                             Gtk2 with DirectFB - cairo-gtk2-dfb
                             * - cairo-gtk2
                             * - cairo-qt],
@@ -7657,15 +7620,15 @@ if test "$MOZ_TREE_CAIRO"; then
            DDRAW_SURFACE_FEATURE=
         else
            WIN32_FONT_FEATURE=
+        fi
 
-           AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
-           if test -z "$HAS_DDRAW"; then
-               AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
-             DDRAW_SURFACE_FEATURE=
-           else
-             DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
-           fi
-        fi  
+        AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
+        if test -z "$HAS_DDRAW"; then
+          AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
+           DDRAW_SURFACE_FEATURE=
+        else
+          DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
+        fi
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then

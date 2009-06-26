@@ -388,10 +388,19 @@ function test_date_liveupdate(aResultType) {
   // Remove "Today".
   hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
   do_check_eq(root.childCount, visibleContainers.length - 1);
-  // Add a visit for "Today".
+
+  // Open "Last 7 days" container, this way we will have a container accepting
+  // the new visit, but we should still add back "Today" container.
+  var last7Days = root.getChild(1)
+                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  last7Days.containerOpen = true;
+
+  // Add a visit for "Today".  This should add back the missing "Today"
+  // container.
   add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
   do_check_eq(root.childCount, visibleContainers.length);
 
+  last7Days.containerOpen = false;
   root.containerOpen = false;
 
   // TEST 2. Test that the query correctly updates even if it is not root.

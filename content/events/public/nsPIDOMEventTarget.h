@@ -50,10 +50,10 @@ class nsIDOMEventListener;
 class nsIDOMEventGroup;
 class nsIScriptContext;
 
-// 25982813-af2e-4ab6-b512-e6c6ada6d0ec
+// e6579895-a23c-4afc-872a-d53da71def5d
 #define NS_PIDOMEVENTTARGET_IID \
-  { 0x358f2990, 0x5107, 0x49ba, \
-    { 0x88, 0x94, 0x14, 0x34, 0x86, 0xd5, 0x99, 0x85 } }
+  { 0xe6579895, 0xa23c, 0x4afc, \
+    { 0x87, 0x2a, 0xd5, 0x3d, 0xa7, 0x1d, 0xef, 0x5d } }
 
 class nsPIDOMEventTarget : public nsISupports
 {
@@ -137,12 +137,10 @@ public:
   /**
    * Get the event listener manager, the guy you talk to to register for events
    * on this node.
-   * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
-   *                          one already exists. [IN]
-   * @param aResult           The event listener manager [OUT]
+   * @param aMayCreate If PR_FALSE, returns a listener manager only if
+   *                   one already exists.
    */
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult) = 0;
+  virtual nsIEventListenerManager* GetListenerManager(PRBool aMayCreate) = 0;
 
   /**
    * Add an event listener for nsIID.

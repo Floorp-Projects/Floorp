@@ -327,8 +327,7 @@ public:
                                                 nsIDOMEvent* aDOMEvent,
                                                 nsPresContext* aPresContext,
                                                 nsEventStatus* aEventStatus);
-  virtual NS_HIDDEN_(nsresult) GetListenerManager(PRBool aCreateIfNotFound,
-                                                  nsIEventListenerManager** aResult);
+  virtual NS_HIDDEN_(nsIEventListenerManager*) GetListenerManager(PRBool aCreateIfNotFound);
   virtual NS_HIDDEN_(nsresult) AddEventListenerByIID(nsIDOMEventListener *aListener,
                                                      const nsIID& aIID);
   virtual NS_HIDDEN_(nsresult) RemoveEventListenerByIID(nsIDOMEventListener *aListener,

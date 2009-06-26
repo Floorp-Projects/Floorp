@@ -753,6 +753,9 @@ protected:
     static const nsIContent::AttrValuesArray values[] =
       { &nsGkAtoms::_false, &nsGkAtoms::_true, &nsGkAtoms::_empty, nsnull };
 
+    if (!HasFlag(NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR))
+      return eInherit;
+
     PRInt32 value = FindAttrValueIn(kNameSpaceID_None,
                                     nsGkAtoms::contenteditable, values,
                                     eIgnoreCase);

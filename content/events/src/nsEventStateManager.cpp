@@ -2838,7 +2838,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
           // filter the drop effect based on the action. Use UNINITIALIZED as
           // any effect is allowed.
-          dropEffect = nsDOMDragEvent::FilterDropEffect(action,
+          dropEffect = nsContentUtils::FilterDropEffect(action,
                          nsIDragService::DRAGDROP_ACTION_UNINITIALIZED);
         }
 
