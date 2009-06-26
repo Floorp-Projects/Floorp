@@ -1960,47 +1960,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
-  case NPNVserviceManager: {
-    nsIServiceManager * sm;
-    res = NS_GetServiceManager(&sm);
-    if (NS_SUCCEEDED(res)) {
-      *(nsIServiceManager**)result = sm;
-      return NPERR_NO_ERROR;
-    } else {
-      return NPERR_GENERIC_ERROR;
-    }
-  }
-
-  case NPNVDOMElement: {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
-    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
-
-    nsCOMPtr<nsIPluginInstancePeer> pip;
-    inst->GetPeer(getter_AddRefs(pip));
-    nsCOMPtr<nsIPluginTagInfo2> pti2 (do_QueryInterface(pip));
-    if (pti2) {
-      nsCOMPtr<nsIDOMElement> e;
-      pti2->GetDOMElement(getter_AddRefs(e));
-      if (e) {
-        NS_ADDREF(*(nsIDOMElement**)result = e.get());
-        return NPERR_NO_ERROR;
-      }
-    }
-    return NPERR_GENERIC_ERROR;
-  }
-
+  case NPNVserviceManager:
+  case NPNVDOMElement:
   case NPNVDOMWindow: {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
-    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
-
-    nsIDOMWindow *domWindow = inst->GetDOMWindow().get();
-
-    if (domWindow) {
-      // Pass over ownership of domWindow to the caller.
-      (*(nsIDOMWindow**)result) = domWindow;
-
-      return NPERR_NO_ERROR;
-    }
+    // we no longer hand out any XPCOM objects
     return NPERR_GENERIC_ERROR;
   }
 
