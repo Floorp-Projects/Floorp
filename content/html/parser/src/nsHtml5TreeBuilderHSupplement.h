@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
   private:
+
 #ifdef DEBUG_hsivonen
     static PRUint32    sInsertionBatchMaxLength;
     static PRUint32    sAppendBatchMaxSize;
@@ -52,7 +53,7 @@
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
     nsTArray<nsHtml5PendingNotification> mPendingNotifications;
-    
+
     inline void    MaybeSuspend() {
       if (!mNeedsFlush) {
         mNeedsFlush = !!(mOpQueue.Length() >= sTreeOpQueueMaxLength);
@@ -64,24 +65,27 @@
         requestSuspension();
       }
     }
-    
+
   public:
+
     nsHtml5TreeBuilder(nsHtml5Parser* aParser);
+
     ~nsHtml5TreeBuilder();
+
     void Flush();
-    
+
     inline void MaybeFlush() {
       if (mNeedsFlush) {
         Flush();
       }
     }
-    
+
     inline void DeferredTimerFlush() {
       if (!mOpQueue.IsEmpty()) {
         mNeedsFlush = PR_TRUE;
       }
     }
-    
+
     inline void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
       PRBool newParent = PR_TRUE;
       const nsIContentPtr* first = mElementsSeenInThisAppendBatch.Elements();
@@ -102,13 +106,11 @@
       if (newParent) {
         mPendingNotifications.AppendElement(aParent);
       }
-
 #ifdef DEBUG_hsivonen
       sAppendBatchExaminations++;
 #endif
-
     }
-    
+
     inline void FlushPendingAppendNotifications() {
       const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
       const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
@@ -123,19 +125,19 @@
 #endif
       mElementsSeenInThisAppendBatch.Clear();
     }
-    
+
     inline nsIDocument* GetDocument() {
       return parser->GetDocument();
     }
-    
+
     inline void SetScriptElement(nsIContent* aScript) {
       parser->SetScriptElement(aScript);
     }
-    
+
     inline void UpdateStyleSheet(nsIContent* aSheet) {
       parser->UpdateStyleSheet(aSheet);
     }
-    
+
     inline nsresult ProcessBase(nsIContent* aBase) {
       if (!mHasProcessedBase) {
         nsresult rv = parser->ProcessBASETag(aBase);
@@ -153,7 +155,7 @@
       parser->ProcessOfflineManifest(aHtml);
       return NS_OK;
     }
-    
+
     inline void StartLayout() {
       nsIDocument* doc = GetDocument();
       if (doc) {
@@ -161,7 +163,7 @@
         parser->StartLayout(PR_FALSE);
       }
     }
-    
-    void DoUnlink();
-    void DoTraverse(nsCycleCollectionTraversalCallback &cb);
 
+    void DoUnlink();
+
+    void DoTraverse(nsCycleCollectionTraversalCallback &cb);

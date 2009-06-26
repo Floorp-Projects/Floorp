@@ -45,9 +45,9 @@
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5UTF16Buffer.h"
-
 #include "nsHtml5Module.h"
 
+// static
 PRBool nsHtml5Module::Enabled = PR_FALSE;
 
 // static
@@ -89,21 +89,20 @@ nsHtml5Module::ReleaseStatics()
 }
 
 // static
-already_AddRefed<nsIParser> 
+already_AddRefed<nsIParser>
 nsHtml5Module::NewHtml5Parser()
 {
   NS_ABORT_IF_FALSE(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   nsIParser* rv = static_cast<nsIParser*> (new nsHtml5Parser());
   NS_ADDREF(rv);
   for (PRInt32 i = 0; i < 1000; i++) {
-    NS_ADDREF(rv);  
+    NS_ADDREF(rv);
   }
   return rv;
 }
 
 // static
-
-nsresult 
+nsresult
 nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer, nsIChannel* aChannel)
 {
   NS_ABORT_IF_FALSE(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
