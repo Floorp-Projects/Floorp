@@ -958,6 +958,7 @@ case _value: eventName.AssignWithConversion(_name) ; break
     _ASSIGN_eventName(NS_MOVE,"NS_MOVE");
     _ASSIGN_eventName(NS_LOAD,"NS_LOAD");
     _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
+    _ASSIGN_eventName(NS_HASHCHANGE,"NS_HASHCHANGE");
     _ASSIGN_eventName(NS_PAINT,"NS_PAINT");
     _ASSIGN_eventName(NS_XUL_BROADCAST, "NS_XUL_BROADCAST");
     _ASSIGN_eventName(NS_XUL_COMMAND_UPDATE, "NS_XUL_COMMAND_UPDATE");

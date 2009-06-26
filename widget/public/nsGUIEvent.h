@@ -230,6 +230,7 @@ class nsHashKey;
 #define NS_STREAM_EVENT_START           1100
 #define NS_LOAD                         (NS_STREAM_EVENT_START)
 #define NS_PAGE_UNLOAD                  (NS_STREAM_EVENT_START + 1)
+#define NS_HASHCHANGE                   (NS_STREAM_EVENT_START + 2)
 #define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
 #define NS_LOAD_ERROR                   (NS_STREAM_EVENT_START + 4)
 #define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)

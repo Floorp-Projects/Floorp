@@ -1401,6 +1401,7 @@ jsval nsDOMClassInfo::sOnselect_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnload_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnbeforeunload_id  = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnunload_id        = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnhashchange_id    = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnpageshow_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnpagehide_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnabort_id         = JSVAL_VOID;
@@ -1597,6 +1598,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnload_id,          cx, "onload");
   SET_JSVAL_TO_STRING(sOnbeforeunload_id,  cx, "onbeforeunload");
   SET_JSVAL_TO_STRING(sOnunload_id,        cx, "onunload");
+  SET_JSVAL_TO_STRING(sOnhashchange_id,    cx, "onhashchange");
   SET_JSVAL_TO_STRING(sOnpageshow_id,      cx, "onpageshow");
   SET_JSVAL_TO_STRING(sOnpagehide_id,      cx, "onpagehide");
   SET_JSVAL_TO_STRING(sOnabort_id,         cx, "onabort");
@@ -4360,6 +4362,7 @@ nsDOMClassInfo::ShutDown()
   sOnload_id          = JSVAL_VOID;
   sOnbeforeunload_id  = JSVAL_VOID;
   sOnunload_id        = JSVAL_VOID;
+  sOnhashchange_id    = JSVAL_VOID;
   sOnpageshow_id      = JSVAL_VOID;
   sOnpagehide_id      = JSVAL_VOID;
   sOnabort_id         = JSVAL_VOID;
@@ -7166,6 +7169,8 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
             id == sOndragover_id     ||
             id == sOndragstart_id    ||
             id == sOndrop_id);
+  case 'h' :
+    return id == sOnhashchange_id;
   case 'l' :
     return id == sOnload_id;
   case 'p' :

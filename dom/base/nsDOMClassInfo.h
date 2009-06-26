@@ -291,6 +291,7 @@ protected:
   static jsval sOnload_id;
   static jsval sOnbeforeunload_id;
   static jsval sOnunload_id;
+  static jsval sOnhashchange_id;
   static jsval sOnpageshow_id;
   static jsval sOnpagehide_id;
   static jsval sOnabort_id;
