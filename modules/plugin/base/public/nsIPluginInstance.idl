@@ -145,4 +145,19 @@ interface nsIPluginInstance : nsISupports
      * @result - NS_OK if this operation was successful
      */
     void handleEvent(in nsPluginEventPtr aEvent, out boolean aHandled);
+
+    /** 
+     * Corresponds to NPN_InvalidateRect
+     */
+    void invalidateRect(in nsPluginRectPtr aRect);
+
+    /** 
+     * Corresponds to NPN_InvalidateRegion
+     */
+    void invalidateRegion(in nsPluginRegion aRegion);
+
+    /** 
+     * Corresponds to NPN_ForceRedraw
+     */
+    void forceRedraw();
 };

@@ -1070,14 +1070,7 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      // XXX nsRect & NPRect are structurally equivalent
-      wpeer->InvalidateRect((nsPluginRect *)invalidRect);
-    }
-  }
+  inst->InvalidateRect((nsPluginRect *)invalidRect);
 }
 
 void NP_CALLBACK
@@ -1100,14 +1093,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      // nsPluginRegion & NPRegion are typedef'd to the same thing
-      wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
-    }
-  }
+  inst->InvalidateRegion((nsPluginRegion)invalidRegion);
 }
 
 void NP_CALLBACK
@@ -1128,13 +1114,7 @@ _forceredraw(NPP npp)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      wpeer->ForceRedraw();
-    }
-  }
+  inst->ForceRedraw();
 }
 
 static nsIDocument *

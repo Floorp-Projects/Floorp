@@ -77,11 +77,10 @@ nsPluginInstancePeerImpl::~nsPluginInstancePeerImpl()
 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
-NS_IMPL_ISUPPORTS7(nsPluginInstancePeerImpl,
+NS_IMPL_ISUPPORTS6(nsPluginInstancePeerImpl,
                    nsIPluginInstancePeer,
                    nsIPluginInstancePeer2,
                    nsIPluginInstancePeer3,
-                   nsIWindowlessPluginInstancePeer,
                    nsIPluginTagInfo,
                    nsIPluginTagInfo2,
                    nsPIPluginInstancePeer)
@@ -750,31 +749,4 @@ nsPluginInstancePeerImpl::GetOwner(nsIPluginInstanceOwner **aOwner)
   *aOwner = mOwner;
   NS_IF_ADDREF(mOwner);
   return (mOwner) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::InvalidateRect(nsPluginRect *invalidRect)
-{
-  if(!mOwner)
-    return NS_ERROR_FAILURE;
-
-  return mOwner->InvalidateRect(invalidRect);
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::InvalidateRegion(nsPluginRegion invalidRegion)
-{
-  if(!mOwner)
-    return NS_ERROR_FAILURE;
-
-  return mOwner->InvalidateRegion(invalidRegion);
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::ForceRedraw(void)
-{
-  if(!mOwner)
-    return NS_ERROR_FAILURE;
-
-  return mOwner->ForceRedraw();
 }
