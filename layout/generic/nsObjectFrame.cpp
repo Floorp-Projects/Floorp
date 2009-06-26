@@ -1906,7 +1906,6 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
         // XXXjst: ns4xPluginInstance::Destroy() is a no-op, clean
         // this mess up when there are no other instance types.
         inst->Stop();
-        inst->Destroy();
 
         if (window) 
           window->CallSetWindow(nullinst);
@@ -1923,7 +1922,6 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
           return;
 
         inst->Stop();
-        inst->Destroy();
       }
     }
     else {
