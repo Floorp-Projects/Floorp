@@ -44,13 +44,8 @@
 nsIAtom*
 nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length)
 {
-  // Optimization opportunity: make buf itself null-terminated
-  PRUnichar* nullTerminated = new PRUnichar[length + 1];
-  memcpy(nullTerminated,buf, length * sizeof(PRUnichar));
-  nullTerminated[length] = 0;
-  nsIAtom* rv = NS_NewAtom(nullTerminated);
-  delete[] nullTerminated;
-  return rv;
+  NS_ASSERTION(!offset, "The offset should always be zero here.");
+  return NS_NewAtom(nsDependentSubstring(buf, buf + length));
 }
 
 nsString*
@@ -126,8 +121,7 @@ nsHtml5Portability::releaseElement(nsIContent* element)
 PRBool
 nsHtml5Portability::localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length)
 {
-  nsAutoString temp = nsAutoString(buf + offset, length);
-  return local->Equals(temp);
+  return local->Equals(nsDependentString(buf + offset, buf + offset + length));
 }
 
 PRBool
@@ -140,7 +134,11 @@ nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* 
   const PRUnichar* strPtr = string->BeginReading();
   const PRUnichar* end = string->EndReading();
   PRUnichar litChar;
-  while ((litChar = (PRUnichar)*litPtr) && (strPtr < end)) {
+  while (litChar = *litPtr) {
+    NS_ASSERTION(!(litChar >= 'A' && litChar <= 'Z'), "Literal isn't in lower case.");
+    if (strPtr = end) {
+      return PR_FALSE;
+    }
     PRUnichar strChar = *strPtr;
     if (strChar >= 'A' && strChar <= 'Z') {
       strChar += 0x20;

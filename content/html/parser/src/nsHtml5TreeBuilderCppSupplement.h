@@ -158,6 +158,7 @@ nsHtml5TreeBuilder::shallowClone(nsIContent* aElement)
   nsINode* clone;
   aElement->Clone(aElement->NodeInfo(), &clone);
   // XXX nsresult
+  NS_ASSERTION(clone->IsNodeOfType(nsINode::eCONTENT), "Cloning an element didn't yield a content node.");
   return static_cast<nsIContent*>(clone);
 }
 
@@ -361,7 +362,6 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   }
   // we now have only SVG and HTML
   if (aName == nsHtml5Atoms::script) {
-//    mConstrainSize = PR_TRUE; // XXX what is this?
     requestSuspension();
     parser->SetScriptElement(aElement);
     return;
