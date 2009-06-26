@@ -370,7 +370,7 @@ getExitName(ExitType type)
     NULL
     };
 
-    JS_ASSERT(unsigned(type) < TOTAL_EXIT_TYPES);
+    JS_ASSERT(type < TOTAL_EXIT_TYPES);
 
     return exitNames[type];
 }
@@ -1540,13 +1540,13 @@ specializeTreesToMissingGlobals(JSContext* cx, JSObject* globalObj, TreeInfo* ro
     JS_ASSERT(ti->globalSlots->length() == ti->typeMap.length() - ti->nStackTypes);
 
     for (unsigned i = 0; i < root->dependentTrees.length(); i++) {
-        ti = (TreeInfo*)root->dependentTrees.data()[i]->vmprivate;
+        ti = (TreeInfo*)root->dependentTrees[i]->vmprivate;
         /* ti can be NULL if we hit the recording tree in emitTreeCall; this is harmless. */
         if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
             specializeTreesToMissingGlobals(cx, globalObj, ti);
     }
     for (unsigned i = 0; i < root->linkedTrees.length(); i++) {
-        ti = (TreeInfo*)root->linkedTrees.data()[i]->vmprivate;
+        ti = (TreeInfo*)root->linkedTrees[i]->vmprivate;
         if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
             specializeTreesToMissingGlobals(cx, globalObj, ti);
     }
@@ -1680,7 +1680,7 @@ TraceRecorder::~TraceRecorder()
             js_TrashTree(cx, fragment->root);
 
         for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
-            js_TrashTree(cx, whichTreesToTrash.get(i));
+            js_TrashTree(cx, whichTreesToTrash[i]);
     } else if (wasRootFragment) {
         delete treeInfo;
     }
@@ -3700,7 +3700,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
                         for (unsigned i = 0; i < stackCount; i++)
                             oracle.markStackSlotUndemotable(cx, stackDemotes[i]);
                         for (unsigned i = 0; i < globalCount; i++)
-                            oracle.markGlobalSlotUndemotable(cx, ti->globalSlots->data()[globalDemotes[i]]);
+                            oracle.markGlobalSlotUndemotable(cx, ti->globalSlots->get(globalDemotes[i]));
                         JS_ASSERT(peer == uexit->fragment->root);
                         if (fragment == peer)
                             trashSelf = true;
