@@ -612,7 +612,7 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     jsval *sp;
 
     JS_ASSERT(nslots != 0);
-    js_LeaveTrace(cx);
+    JS_ASSERT_NOT_ON_TRACE(cx);
 
     if (!cx->stackPool.first.next) {
         int64 *timestamp;
@@ -1448,6 +1448,17 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     JSBool ok;
 
     js_LeaveTrace(cx);
+
+#ifdef JS_TRACER
+    /*
+     * The JIT requires that the scope chain here is equal to its global
+     * object. Disable the JIT for this call if this condition is not true.
+     */
+    uint32 oldOptions = cx->options;
+    if ((oldOptions & JSOPTION_JIT) && obj != JS_GetGlobalForObject(cx, obj))
+        cx->options &= ~JSOPTION_JIT;
+#endif
+
     invokevp = js_AllocStack(cx, 2 + argc, &mark);
     if (!invokevp)
         return JS_FALSE;
@@ -1477,6 +1488,13 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     }
 
     js_FreeStack(cx, mark);
+
+#ifdef JS_TRACER
+    /* Possibly re-enable JIT, if disabled above. */
+    if (oldOptions & JSOPTION_JIT)
+        cx->options |= JSOPTION_JIT;
+#endif
+
     return ok;
 }
 
@@ -1536,15 +1554,12 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
 #ifdef JS_TRACER
     /* 
-     * The JIT requires that the scope chain here is equal to
-     * its global object. Disable the JIT for this call if this 
-     * condition is not true. 
+     * The JIT requires that the scope chain here is equal to its global
+     * object. Disable the JIT for this call if this condition is not true.
      */
     uint32 oldOptions = cx->options;
-    if ((oldOptions & JSOPTION_JIT) &&
-        chain != JS_GetGlobalForObject(cx, chain)) {
+    if ((oldOptions & JSOPTION_JIT) && chain != JS_GetGlobalForObject(cx, chain))
         cx->options &= ~JSOPTION_JIT;
-    }
 #endif
 
 #ifdef INCLUDE_MOZILLA_DTRACE
@@ -1673,7 +1688,8 @@ out:
 
 #ifdef JS_TRACER
     /* Possibly re-enable JIT, if disabled above. */
-    cx->options = oldOptions;
+    if (oldOptions & JSOPTION_JIT)
+        cx->options |= JSOPTION_JIT;
 #endif
 
     return ok;

@@ -1202,10 +1202,9 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
         return principals->codebase;
     }
 
-    jsbytecode *pc = caller->regs->pc;
-    if (caller->regs && js_GetOpcode(cx, caller->script, pc) == JSOP_EVAL) {
-        JS_ASSERT(js_GetOpcode(cx, caller->script, pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
-        *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
+    if (caller->regs && js_GetOpcode(cx, caller->script, caller->regs->pc) == JSOP_EVAL) {
+        JS_ASSERT(js_GetOpcode(cx, caller->script, caller->regs->pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+        *linenop = GET_UINT16(caller->regs->pc + JSOP_EVAL_LENGTH);
     } else {
         *linenop = js_FramePCToLineNumber(cx, caller);
     }
