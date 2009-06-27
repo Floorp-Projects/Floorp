@@ -38,8 +38,6 @@
 #ifndef nsPluginHostImpl_h_
 #define nsPluginHostImpl_h_
 
-#include "nsIPluginManager.h"
-#include "nsIPluginManager2.h"
 #include "nsIPluginHost.h"
 #include "nsIObserver.h"
 #include "nsPIPluginHost.h"
@@ -214,8 +212,7 @@ public:
   PRBool IsLastInstance(nsPluginInstanceTag *plugin);
 };
 
-class nsPluginHostImpl : public nsIPluginManager2,
-                         public nsIPluginHost,
+class nsPluginHostImpl : public nsIPluginHost,
                          public nsIObserver,
                          public nsPIPluginHost,
                          public nsSupportsWeakReference
@@ -225,23 +222,15 @@ public:
   virtual ~nsPluginHostImpl();
 
   static nsPluginHostImpl* GetInst();
+  static const char *GetPluginName(nsIPluginInstance *aPluginInstance);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
-
-  static const char *GetPluginName(nsIPluginInstance *aPluginInstance);
-
-  //nsIPluginManager interface - the main interface nsIPlugin communicates to
-
-  NS_IMETHOD
-  GetValue(nsPluginManagerVariable variable, void *value);
-
-  NS_IMETHOD
-  ReloadPlugins(PRBool reloadPages);
-
-  NS_IMETHOD
-  UserAgent(const char* *resultingAgentString);
+  NS_DECL_NSIPLUGINHOST
+  NS_DECL_NSIFACTORY
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSPIPLUGINHOST
 
   NS_IMETHOD
   GetURL(nsISupports* pluginInst, 
@@ -251,17 +240,6 @@ public:
            const char* altHost = NULL,
            const char* referrer = NULL,
            PRBool forceJSEnabled = PR_FALSE);
-
-  NS_IMETHOD
-  GetURLWithHeaders(nsISupports* pluginInst, 
-                    const char* url, 
-                    const char* target = NULL,
-                    nsIPluginStreamListener* streamListener = NULL,
-                    const char* altHost = NULL,
-                    const char* referrer = NULL,
-                    PRBool forceJSEnabled = PR_FALSE,
-                    PRUint32 getHeadersLength = 0, 
-                    const char* getHeaders = NULL);
   
   NS_IMETHOD
   PostURL(nsISupports* pluginInst,
@@ -277,27 +255,7 @@ public:
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL);
 
-  NS_IMETHOD
-  RegisterPlugin(REFNSIID aCID,
-                 const char* aPluginName,
-                 const char* aDescription,
-                 const char** aMimeTypes,
-                 const char** aMimeDescriptions,
-                 const char** aFileExtensions,
-                 PRInt32 aCount);
-
-  NS_IMETHOD
-  UnregisterPlugin(REFNSIID aCID);
-
-  NS_DECL_NSIPLUGINHOST
-  NS_DECL_NSIPLUGINMANAGER2
-  NS_DECL_NSIFACTORY
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSPIPLUGINHOST
-
-  /* Called by GetURL and PostURL */
-
-  NS_IMETHOD
+  nsresult
   NewPluginURLStream(const nsString& aURL, 
                      nsIPluginInstance *aInstance, 
                      nsIPluginStreamListener *aListener,
@@ -308,14 +266,25 @@ public:
                      PRUint32 aHeadersDataLen = 0);
 
   nsresult
+  GetURLWithHeaders(nsISupports* pluginInst, 
+                    const char* url, 
+                    const char* target = NULL,
+                    nsIPluginStreamListener* streamListener = NULL,
+                    const char* altHost = NULL,
+                    const char* referrer = NULL,
+                    PRBool forceJSEnabled = PR_FALSE,
+                    PRUint32 getHeadersLength = 0, 
+                    const char* getHeaders = NULL);
+
+  nsresult
   DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
                          const char* aURL);
 
-  NS_IMETHOD
+  nsresult
   AddHeadersToChannel(const char *aHeadersData, PRUint32 aHeadersDataLen, 
                       nsIChannel *aGenericChannel);
 
-  NS_IMETHOD
+  nsresult
   AddUnusedLibrary(PRLibrary * aLibrary);
 
   static nsresult GetPluginTempDir(nsIFile **aDir);
@@ -331,7 +300,7 @@ public:
   static nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
 
 private:
-  NS_IMETHOD
+  nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
   nsresult

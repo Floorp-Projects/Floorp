@@ -3372,7 +3372,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   if (EnableExistingStyleSheet(aURL))
   {
     // Disable last sheet if not the same as new one
-    if (!mLastStyleSheetURL.IsEmpty() && mLastStyleSheetURL.Equals(aURL))
+    if (!mLastStyleSheetURL.IsEmpty() && !mLastStyleSheetURL.Equals(aURL))
         return EnableStyleSheet(mLastStyleSheetURL, PR_FALSE);
 
     return NS_OK;

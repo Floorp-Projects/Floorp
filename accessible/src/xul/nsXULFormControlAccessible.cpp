@@ -873,6 +873,18 @@ already_AddRefed<nsIDOMNode> nsXULTextFieldAccessible::GetInputField()
 }
 
 nsresult
+nsXULTextFieldAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  nsresult rv = nsHyperTextAccessibleWrap::GetARIAState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsStateMapEntry::MapToStates(content, aState, aExtraState, eARIAAutoComplete);
+
+  return NS_OK;
+}
+
+nsresult
 nsXULTextFieldAccessible::GetStateInternal(PRUint32 *aState,
                                            PRUint32 *aExtraState)
 {

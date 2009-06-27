@@ -69,6 +69,7 @@
 #include "nsSVGContainerFrame.h"
 #include "nsSVGLength2.h"
 #include "nsGenericElement.h"
+#include "nsSVGGraphicElement.h"
 #include "nsAttrValue.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsIScriptError.h"
@@ -457,8 +458,102 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent,
 
     ancestor = GetParentElement(ancestor);
   }
+  if (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
+                  ancestor->Tag() == nsGkAtoms::foreignObject )
+    return NS_ERROR_FAILURE;
 
   return NS_OK;
+}
+
+nsresult
+nsSVGUtils::AppendTransformUptoElement(nsIContent *aContent, nsIDOMSVGElement *aElement, nsIDOMSVGMatrix * *aCTM){
+  nsresult rv;
+  nsCOMPtr<nsIDOMSVGElement> element = do_QueryInterface(aContent);
+  nsIContent *ancestor = GetParentElement(aContent);
+  if (!aElement) {
+    // calculating GetScreenCTM(): traverse upto the root or non-SVG content.
+    if (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG) {
+      if (ancestor->Tag() == nsGkAtoms::foreignObject && aContent->Tag() != nsGkAtoms::svg)
+        return NS_ERROR_FAILURE;
+      rv = AppendTransformUptoElement(ancestor, aElement, aCTM);
+      if (NS_FAILED(rv)) return rv;
+    }
+  } else if (element != aElement) { // calculating GetCTM(): stop at aElement.
+    NS_ASSERTION(ancestor != nsnull, "ancestor shouldn't be null.");
+    if (!ancestor)
+      return NS_ERROR_FAILURE;
+    rv = AppendTransformUptoElement(ancestor, aElement, aCTM);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  if (nsCOMPtr<nsIDOMSVGSVGElement>(do_QueryInterface(aContent))) {
+    nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(aContent);
+    rv = svgElement->AppendTransform(*aCTM, getter_AddRefs(tmp));
+    if (NS_FAILED(rv)) return rv;
+  } else if (nsCOMPtr<nsIDOMSVGTransformable>(do_QueryInterface(aContent))) {
+    nsSVGGraphicElement *graphicElement = static_cast<nsSVGGraphicElement*>(aContent);
+    rv = graphicElement->AppendTransform(*aCTM, getter_AddRefs(tmp));
+    if (NS_FAILED(rv)) return rv;
+  } else {
+    //XXX aContent may be other type of viewport-establising elements
+    //    (e.g. <use> and <symbol>) and handle them?
+  }
+  if (tmp)
+    tmp.swap(*aCTM);
+
+  return NS_OK;
+}
+
+nsresult
+nsSVGUtils::GetCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM)
+{
+  nsresult rv;
+  nsIDocument* currentDoc = aContent->GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
+
+  *aCTM = nsnull;
+  nsCOMPtr<nsIDOMSVGElement> nearestViewportElement;
+  rv = GetNearestViewportElement(aContent, getter_AddRefs(nearestViewportElement));
+  // According to the spec(http://www.w3.org/TR/SVG11/types.html#InterfaceSVGLocatable),
+  // GetCTM is strictly defined to be the CTM for nearestViewportElement,
+  // Thus, if it is null, this is null, too.
+  if (NS_FAILED(rv) || !nearestViewportElement)
+    return NS_OK; // we can't throw exceptions from this API.
+
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  rv = NS_NewSVGMatrix(getter_AddRefs(tmp), 1, 0, 0, 1, 0, 0);
+  if (NS_FAILED(rv)) return NS_OK; // we can't throw exceptions from this API.
+  tmp.swap(*aCTM);
+  rv = AppendTransformUptoElement(aContent, nearestViewportElement, aCTM);
+  if (NS_FAILED(rv))
+    tmp.swap(*aCTM);
+  return NS_OK; // we can't throw exceptions from this API.
+}
+
+nsresult
+nsSVGUtils::GetScreenCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM)
+{
+  nsresult rv;
+  nsIDocument* currentDoc = aContent->GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
+
+  *aCTM = nsnull;
+
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  rv = NS_NewSVGMatrix(getter_AddRefs(tmp), 1, 0, 0, 1, 0, 0);
+  if (NS_FAILED(rv)) return NS_OK; // we can't throw exceptions from this API.
+  tmp.swap(*aCTM);
+  rv = AppendTransformUptoElement(aContent, nsnull, aCTM);
+  if (NS_FAILED(rv))
+    tmp.swap(*aCTM);
+  return NS_OK; // we can't throw exceptions from this API.
 }
 
 nsSVGDisplayContainerFrame*

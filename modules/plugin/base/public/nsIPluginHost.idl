@@ -49,6 +49,9 @@
 #include "nsNetUtil.h"
 #endif
 #include "prlink.h"  // for PRLibrary
+
+#define MOZ_PLUGIN_HOST_CONTRACTID \
+  "@mozilla.org/plugin/host;1"
 %}
 
 interface nsIPlugin;
@@ -59,7 +62,7 @@ interface nsIChannel;
 [ptr] native PRLibraryPtr(PRLibrary);
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 
-[scriptable, uuid(2af1c32d-38dd-4f72-b0ab-24697d836e61)]
+[scriptable, uuid(A2D6DC70-7456-4422-A9F6-D96F46868C0B)]
 interface nsIPluginHost : nsIFactory
 {
   [noscript] void init();
@@ -67,7 +70,16 @@ interface nsIPluginHost : nsIFactory
   [noscript] void destroy();
 
   [noscript] void loadPlugins();
-  
+
+  /**
+   * Causes the plugins directory to be searched again for new plugin 
+   * libraries.
+   *
+   * @param reloadPages - indicates whether currently visible pages should 
+   * also be reloaded
+   */
+  void reloadPlugins(in boolean reloadPages);
+
   [noscript] nsIPlugin getPluginFactory(in string aMimeType);
 
   [noscript] void instantiateEmbeddedPlugin(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
@@ -102,6 +114,102 @@ interface nsIPluginHost : nsIFactory
   [noscript] void stopPluginInstance(in nsIPluginInstance aInstance);
 
   [noscript] void handleBadPlugin(in PRLibraryPtr aLibrary, in nsIPluginInstance instance);
+  
+  /**
+   * Fetches a URL.
+   *
+   * (Corresponds to NPN_GetURL and NPN_GetURLNotify.)
+   *
+   * @param pluginInst - the plugin making the request. If NULL, the URL
+   *  is fetched in the background.
+   * @param url - the URL to fetch
+   * @param target - the target window into which to load the URL, or NULL if
+   *  the data should be returned to the plugin via streamListener.
+   * @param streamListener - a stream listener to be used to return data to
+   *  the plugin. May be NULL if target is not NULL.
+   * @param altHost - an IP-address string that will be used instead of the 
+   *  host specified in the URL. This is used to prevent DNS-spoofing 
+   *  attacks. Can be defaulted to NULL meaning use the host in the URL.
+   * @param referrer - the referring URL (may be NULL)
+   * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
+   *  URLs, even if the user currently has JavaScript disabled (usually 
+   *  specify PR_FALSE) 
+   * @result - NS_OK if this operation was successful
+   */
+%{C++
+  NS_IMETHOD
+  GetURL(nsISupports* pluginInst,
+     const char* url,
+     const char* target = NULL,
+     nsIPluginStreamListener* streamListener = NULL,
+     const char* altHost = NULL,
+     const char* referrer = NULL,
+     PRBool forceJSEnabled = PR_FALSE) = 0;
+%}
+
+  /**
+   * Posts to a URL with post data and/or post headers.
+   *
+   * (Corresponds to NPN_PostURL and NPN_PostURLNotify.)
+   *
+   * @param pluginInst - the plugin making the request. If NULL, the URL
+   *  is fetched in the background.
+   * @param url - the URL to fetch
+   * @param postDataLength - the length of postData (if non-NULL)
+   * @param postData - the data to POST. NULL specifies that there is not post
+   *  data
+   * @param isFile - whether the postData specifies the name of a file to 
+   *  post instead of data. The file will be deleted afterwards.
+   * @param target - the target window into which to load the URL, or NULL if
+   *  the data should be returned to the plugin via streamListener.
+   * @param streamListener - a stream listener to be used to return data to
+   *  the plugin. May be NULL if target is not NULL.
+   * @param altHost - an IP-address string that will be used instead of the 
+   *  host specified in the URL. This is used to prevent DNS-spoofing 
+   *  attacks. Can be defaulted to NULL meaning use the host in the URL.
+   * @param referrer - the referring URL (may be NULL)
+   * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
+   *  URLs, even if the user currently has JavaScript disabled (usually 
+   *  specify PR_FALSE) 
+   * @param postHeadersLength - the length of postHeaders (if non-NULL)
+   * @param postHeaders - the headers to POST. Must be in the form of
+   * "HeaderName: HeaderValue\r\n".  Each header, including the last,
+   * must be followed by "\r\n".  NULL specifies that there are no
+   * post headers
+   * @result - NS_OK if this operation was successful
+   */
+%{C++
+  NS_IMETHOD
+  PostURL(nsISupports* pluginInst,
+    const char* url,
+    PRUint32 postDataLen,
+    const char* postData,
+    PRBool isFile = PR_FALSE,
+    const char* target = NULL,
+    nsIPluginStreamListener* streamListener = NULL,
+    const char* altHost = NULL,
+    const char* referrer = NULL,
+    PRBool forceJSEnabled = PR_FALSE,
+    PRUint32 postHeadersLength = 0,
+    const char* postHeaders = NULL) = 0;
+%}
+
+  /**
+   * Returns the proxy info for a given URL. The caller is required to
+   * free the resulting memory with nsIMalloc::Free. The result will be in the
+   * following format
+   * 
+   *   i)   "DIRECT"  -- no proxy
+   *   ii)  "PROXY xxx.xxx.xxx.xxx"   -- use proxy
+   *   iii) "SOCKS xxx.xxx.xxx.xxx"  -- use SOCKS
+   *   iv)  Mixed. e.g. "PROXY 111.111.111.111;PROXY 112.112.112.112",
+   *                    "PROXY 111.111.111.111;SOCKS 112.112.112.112"....
+   *
+   * Which proxy/SOCKS to use is determined by the plugin.
+   */
+  void findProxyForURL(in string aURL, out string aResult);
+   
+  [noscript] void UserAgent(in nativeChar resultingAgentString);
 };
 
 %{C++
@@ -143,20 +251,19 @@ NS_NewPluginPostDataStream(nsIInputStream **result,
       sis->AdoptData(buf, contentLength);  // let the string stream manage our data
       rv = CallQueryInterface(sis, result);
     }
-    else if (headers)
+    else if (headers) {
       nsMemory::Free(buf); // Cleanup the memory if the data was copied.
+    }
   } else {
     nsCOMPtr<nsILocalFile> file; // tmp file will be deleted on release of stream
     nsCOMPtr<nsIInputStream> fileStream;
     if (NS_SUCCEEDED(rv = NS_NewNativeLocalFile(nsDependentCString(data), PR_FALSE, getter_AddRefs(file))) &&
         NS_SUCCEEDED(rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
-                                     file,
-                                     PR_RDONLY,
-                                     0600,
-                                     nsIFileInputStream::DELETE_ON_CLOSE |
-                                     nsIFileInputStream::CLOSE_ON_EOF))
-                                     ) 
-    {
+                                                     file,
+                                                     PR_RDONLY,
+                                                     0600,
+                                                     nsIFileInputStream::DELETE_ON_CLOSE |
+                                                     nsIFileInputStream::CLOSE_ON_EOF))) {
       // wrap the file stream with a buffered input stream
       return NS_NewBufferedInputStream(result, fileStream, 8192);
     }

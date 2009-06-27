@@ -40,11 +40,14 @@
 
 #include <stdio.h>
 
-GetFrozenFunctionsFunc
-XPCOMGlueLoad(const char *xpcomFile)
+nsresult
+XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func)
 {
     fprintf(stderr, "XPCOM glue dynamic linking is not implemented on this platform!");
-    return nsnull;
+
+    *func = nsnull;
+
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void

@@ -80,6 +80,8 @@ categoryManager.addCategoryEntry("content-policy", policyName, policyName, false
 var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "OBJECT", "DOCUMENT", "SUBDOCUMENT", "XBL", "XMLHTTPREQUEST"];
 var curTest = -1;
 
+var div;
+
 SimpleTest.waitForExplicitFinish();
 setTimeout(runNextTest, 0);
 
@@ -89,6 +91,12 @@ function runNextTest() {
   if (curTest >= 0) {
     var type = "TYPE_" + tests[curTest];
     is(lastContentType, Ci.nsIContentPolicy[type], "Content policies triggered for " + type);
+
+    if (tests[curTest] == "XBL")
+    {
+      //XXX Removing binding to work-around a memory leak (bugs 478528, 499735).
+      document.removeBinding(div, testURL);
+    }
   }
 
   curTest++;
@@ -165,7 +173,7 @@ function request_subdocument() {
 function request_xbl() {
   var content = $("content");
 
-  var div = document.createElement("div");
+  div = document.createElement("div");
   content.appendChild(div);
 
   document.addBinding(div, testURL);

@@ -101,36 +101,40 @@ function run_test()
   do_check_eq(cr.minidumpPath.path, cwd.path);
 
   try {
-    cr.annotateCrashReport("=", "");
-    do_throw("Calling annotateCrashReport() with an '=' key should have thrown!");
+    cr.annotateCrashReport("equal=equal", "");
+    do_throw("Calling annotateCrashReport() with an '=' in key should have thrown!");
   }
   catch (ex) {
     do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
   try {
-    cr.annotateCrashReport("\n", "");
-    do_throw("Calling annotateCrashReport() with a '\\n' key should have thrown!");
+    cr.annotateCrashReport("new\nline", "");
+    do_throw("Calling annotateCrashReport() with a '\\n' in key should have thrown!");
   }
   catch (ex) {
     do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
   try {
-    cr.annotateCrashReport("", "\0");
-    do_throw("Calling annotateCrashReport() with a '\\0' data should have thrown!");
+    cr.annotateCrashReport("", "da\0ta");
+    do_throw("Calling annotateCrashReport() with a '\\0' in data should have thrown!");
   }
   catch (ex) {
     do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
-  cr.annotateCrashReport("testKey", "testData");
+  cr.annotateCrashReport("testKey", "testData1");
+  // Replace previous data.
+  cr.annotateCrashReport("testKey", "testData2");
 
   try {
-    cr.appendAppNotesToCrashReport("\0");
-    do_throw("Calling appendAppNotesToCrashReport() with a '\\0' data should have thrown!");
+    cr.appendAppNotesToCrashReport("da\0ta");
+    do_throw("Calling appendAppNotesToCrashReport() with a '\\0' in data should have thrown!");
   }
   catch (ex) {
     do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
-  cr.appendAppNotesToCrashReport("additional testData");
+  cr.appendAppNotesToCrashReport("additional testData3");
+  // Add more data.
+  cr.appendAppNotesToCrashReport("additional testData4");
 
   // check that we can disable the crashreporter
   cr.enabled = false;

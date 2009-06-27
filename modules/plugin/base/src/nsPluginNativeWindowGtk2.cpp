@@ -174,17 +174,8 @@ nsPluginNativeWindowGtk2::plugin_composite_filter_func (GdkXEvent *xevent,
   rect.right = ev->area.x + ev->area.width;
   rect.bottom = ev->area.y + ev->area.height;
 
-  /* There might be a better way to do this? */
-  if (native_window->mPluginInstance) {
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-    if (NS_SUCCEEDED(native_window->mPluginInstance->GetPeer(getter_AddRefs(peer))) && peer) {
-      nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-      if (wpeer) {
-        // XXX nsRect & NPRect are structurally equivalent
-        wpeer->InvalidateRect(&rect);
-      }
-    }
-  }
+  if (native_window->mPluginInstance)
+    native_window->mPluginInstance->InvalidateRect(&rect);
 
   return GDK_FILTER_REMOVE;
 }

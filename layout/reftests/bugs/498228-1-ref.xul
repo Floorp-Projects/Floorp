@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<window id="list-testcase" title="Testcase"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="reftest-wait">
+
+<script>
+function dotest() {
+  var list = document.getElementById('list');
+  list.ensureIndexIsVisible(4);
+  setTimeout("document.documentElement.className = ''", 0);
+}
+
+window.addEventListener("load", dotest, false);
+
+</script>
+		
+<listbox id="list" rows="3" seltype="single">
+<listitem label="Item 1"/>
+<listitem label="Item 2"/>
+<listitem label="Item 3"/>
+<listitem label="Item 4"/>
+<listitem label="Item 5" selected="true"/>
+</listbox>
+
+</window>

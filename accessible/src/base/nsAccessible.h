@@ -148,8 +148,9 @@ public:
    * method.
    *
    * @param  [in/out] where to fill the states into.
+   * @param  [in/out] where to fill the extra states into
    */
-  virtual nsresult GetARIAState(PRUint32 *aState);
+  virtual nsresult GetARIAState(PRUint32 *aState, PRUint32 *aExtraState);
 
   /**
    * Returns the accessible name provided by native markup. It doesn't take
@@ -279,7 +280,6 @@ public:
   }
 
 protected:
-  PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsVisible(PRBool *aIsOffscreen); 

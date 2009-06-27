@@ -42,7 +42,6 @@
 #include "nsHashtable.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
-#include "nsPIAccessibleDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
@@ -192,10 +191,10 @@ nsAccessNode::Init()
 
   void* uniqueID;
   GetUniqueID(&uniqueID);
-  nsCOMPtr<nsPIAccessibleDocument> privateDocAccessible =
-    do_QueryInterface(docAccessible);
-  NS_ASSERTION(privateDocAccessible, "No private docaccessible for docaccessible");
-  privateDocAccessible->CacheAccessNode(uniqueID, this);
+  nsRefPtr<nsDocAccessible> docAcc =
+    nsAccUtils::QueryAccessibleDocument(docAccessible);
+  NS_ASSERTION(docAcc, "No nsDocAccessible for document accessible!");
+  docAcc->CacheAccessNode(uniqueID, this);
 
   // Make sure an ancestor in real content is cached
   // so that nsDocAccessible::RefreshNodes() can find the anonymous subtree to release when

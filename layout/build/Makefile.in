@@ -143,7 +143,7 @@ SHARED_LIBRARY_LIBS = \
 
 ifdef MOZ_MEDIA
 SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/video/src/$(LIB_PREFIX)gkconvideo_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/media/$(LIB_PREFIX)gkconmedia_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
@@ -155,6 +155,13 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/liboggz/src/liboggz/$(LIB_PREFIX)oggz.$(LIB_SUFFIX) \
 	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
 	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
+	$(DEPTH)/content/media/ogg/$(LIB_PREFIX)gkconogg_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef MOZ_WAVE
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/wave/$(LIB_PREFIX)gkconwave_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 

@@ -385,6 +385,9 @@ nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
           }
         }
       } break; // case eRemoveDupes
+
+      default:
+        break; // case eAllowDupes, eDoNotEmit
     } // switch
   } // for (tail)
 }
