@@ -307,7 +307,22 @@
             return newItem;
           ]]>
         </body>
-      </method>      
+      </method>
+
+      <method name="hasCustomInteractiveItems">
+        <parameter name="aCurrentSet"/>
+        <body><![CDATA[
+          if (aCurrentSet == "__empty")
+            return false;
+
+          var defaultOrNoninteractive = (this.getAttribute("defaultset") || "")
+                                          .split(",")
+                                          .concat(["separator", "spacer", "spring"]);
+          return aCurrentSet.split(",").some(function (item) {
+            return defaultOrNoninteractive.indexOf(item) == -1;
+          });
+        ]]></body>
+      </method>
     </implementation>
   </binding>
 
@@ -366,26 +381,10 @@
       <method name="currentSetChanged">
         <parameter name="aCurrentSet"/>
         <body><![CDATA[
-          var defaultSet = this.getAttribute("defaultset");
-          if (!defaultSet || aCurrentSet == defaultSet) {
+          if (this.hasCustomInteractiveItems(aCurrentSet))
+            this.setAttribute("customized", "true");
+          else
             this.removeAttribute("customized");
-            return;
-          }
-
-          function normalize(aSet) {
-            return aSet.split(",").filter(function (element) {
-              return element != "separator" &&
-                     element != "spacer" &&
-                     element != "spring" &&
-                     element != "__empty";
-            }).sort().join(",");
-          }
-          if (normalize(aCurrentSet) == normalize(defaultSet)) {
-            this.removeAttribute("customized");
-            return;
-          }
-
-          this.setAttribute("customized", "true");
         ]]></body>
       </method>
 

@@ -81,6 +81,13 @@
 #include "gfxUserFontSet.h"
 #include "nsTArray.h"
 #include "nsTextFragment.h"
+#include "nsICanvasElement.h"
+#include "nsICanvasRenderingContextInternal.h"
+#include "gfxPlatform.h"
+#include "nsHTMLVideoElement.h"
+#include "imgIRequest.h"
+#include "imgIContainer.h"
+#include "nsIImageLoadingContent.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -3288,6 +3295,190 @@ nsLayoutUtils::GetTextFragmentForPrinting(const nsIFrame* aFrame)
   }
 
   return frag;
+}
+
+nsLayoutUtils::SurfaceFromElementResult
+nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
+                                  PRUint32 aSurfaceFlags)
+{
+  SurfaceFromElementResult result;
+  nsresult rv;
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(aElement);
+
+  PRBool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
+  PRBool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
+
+  // If it's a <canvas>, we may be able to just grab its internal surface
+  nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(aElement);
+  if (node && canvas) {
+    PRUint32 w, h;
+    rv = canvas->GetSize(&w, &h);
+    if (NS_FAILED(rv))
+      return result;
+
+    nsRefPtr<gfxASurface> surf;
+
+    if (!forceCopy && canvas->CountContexts() == 1) {
+      nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
+      rv = srcCanvas->GetThebesSurface(getter_AddRefs(surf));
+
+      if (NS_FAILED(rv))
+        surf = nsnull;
+    }
+
+    if (surf && wantImageSurface && surf->GetType() != gfxASurface::SurfaceTypeImage)
+      surf = nsnull;
+
+    if (!surf) {
+      if (wantImageSurface) {
+        surf = new gfxImageSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+      } else {
+        surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+      }
+                
+      nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+      rv = canvas->RenderContexts(ctx, gfxPattern::FILTER_NEAREST);
+      if (NS_FAILED(rv))
+        return result;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
+
+    result.mSurface = surf;
+    result.mSize = gfxIntSize(w, h);
+    result.mPrincipal = node->NodePrincipal();
+    result.mIsWriteOnly = canvas->IsWriteOnly();
+
+    return result;
+  }
+
+#ifdef MOZ_MEDIA
+  // Maybe it's <video>?
+  nsCOMPtr<nsIDOMHTMLVideoElement> ve = do_QueryInterface(aElement);
+  if (node && ve) {
+    nsHTMLVideoElement *video = static_cast<nsHTMLVideoElement*>(ve.get());
+
+    // If it doesn't have a principal, just bail
+    nsCOMPtr<nsIPrincipal> principal = video->GetCurrentPrincipal();
+    if (!principal)
+      return result;
+
+    PRUint32 w, h;
+    rv = video->GetVideoWidth(&w);
+    rv |= video->GetVideoHeight(&h);
+    if (NS_FAILED(rv))
+      return result;
+
+    nsRefPtr<gfxASurface> surf;
+    if (wantImageSurface) {
+      surf = new gfxImageSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+    } else {
+      surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+    }
+
+    nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    video->Paint(ctx, gfxPattern::FILTER_NEAREST, gfxRect(0, 0, w, h));
+
+    result.mSurface = surf;
+    result.mSize = gfxIntSize(w, h);
+    result.mPrincipal = principal;
+    result.mIsWriteOnly = PR_FALSE;
+
+    return result;
+  }
+#endif
+
+  // Finally, check if it's a normal image
+  nsCOMPtr<imgIContainer> imgContainer;
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aElement);
+
+  if (!imageLoader)
+    return result;
+
+  nsCOMPtr<imgIRequest> imgRequest;
+  rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                               getter_AddRefs(imgRequest));
+  if (NS_FAILED(rv) || !imgRequest)
+    return result;
+
+  PRUint32 status;
+  imgRequest->GetImageStatus(&status);
+  if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
+    return result;
+
+  // In case of data: URIs, we want to ignore principals;
+  // they should have the originating content's principal,
+  // but that's broken at the moment in imgLib.
+  nsCOMPtr<nsIURI> uri;
+  rv = imgRequest->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv))
+    return result;
+
+  PRBool isDataURI = PR_FALSE;
+  rv = uri->SchemeIs("data", &isDataURI);
+  if (NS_FAILED(rv))
+    return result;
+    
+  // Data URIs are always OK; set the principal
+  // to null to indicate that.
+  nsCOMPtr<nsIPrincipal> principal;
+  if (!isDataURI) {
+    rv = imgRequest->GetImagePrincipal(getter_AddRefs(principal));
+    if (NS_FAILED(rv) || !principal)
+      return result;
+  }
+
+  rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
+  if (NS_FAILED(rv) || !imgContainer)
+    return result;
+
+  nsCOMPtr<gfxIImageFrame> frame;
+  rv = imgContainer->GetCurrentFrame(getter_AddRefs(frame));
+  if (NS_FAILED(rv))
+    return result;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(frame));
+  if (!img)
+    return result;
+
+  PRInt32 imgWidth, imgHeight;
+  rv = frame->GetWidth(&imgWidth);
+  rv |= frame->GetHeight(&imgHeight);
+  if (NS_FAILED(rv))
+    return result;
+
+  nsRefPtr<gfxPattern> gfxpattern;
+  img->GetPattern(getter_AddRefs(gfxpattern));
+  nsRefPtr<gfxASurface> gfxsurf = gfxpattern->GetSurface();
+
+  if (wantImageSurface && gfxsurf->GetType() != gfxASurface::SurfaceTypeImage) {
+    forceCopy = PR_TRUE;
+  }
+
+  if (forceCopy || !gfxsurf) {
+    if (wantImageSurface) {
+      gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxASurface::ImageFormatARGB32);
+    } else {
+      gfxsurf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(imgWidth, imgHeight),
+                                                                   gfxASurface::ImageFormatARGB32);
+    }
+
+    nsRefPtr<gfxContext> ctx = new gfxContext(gfxsurf);
+
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->SetPattern(gfxpattern);
+    ctx->Paint();
+  }
+
+  result.mSurface = gfxsurf;
+  result.mSize = gfxIntSize(imgWidth, imgHeight);
+  result.mPrincipal = principal;
+  result.mIsWriteOnly = PR_FALSE;
+
+  return result;
 }
 
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,

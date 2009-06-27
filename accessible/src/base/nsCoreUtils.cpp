@@ -201,7 +201,7 @@ nsCoreUtils::GetDOMNodeFromDOMPoint(nsIDOMNode *aNode, PRUint32 aOffset)
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
 
-    PRInt32 childCount = static_cast<PRInt32>(content->GetChildCount());
+    PRUint32 childCount = content->GetChildCount();
     NS_ASSERTION(aOffset >= 0 && aOffset <= childCount,
                  "Wrong offset of the DOM point!");
 

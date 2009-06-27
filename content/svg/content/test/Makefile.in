@@ -50,6 +50,8 @@ _TEST_FILES = \
 		bounds-helper.svg \
 		test_dataTypes.html \
 		dataTypes-helper.svg \
+		getCTM-helper.svg \
+		test_getCTM.html \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
 		test_pathSeg.xhtml \

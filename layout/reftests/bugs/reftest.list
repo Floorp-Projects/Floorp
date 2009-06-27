@@ -921,6 +921,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 421419-1.html 421419-1-ref.html
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
+== 421632-1.html 421632-1-ref.html
 != 421710-1.html about:blank     # assertion test (and crash test)
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
@@ -947,8 +948,10 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 424236-10.html 424236-10-ref.html
 == 424236-11.html 424236-3-ref.html
 == 424434-1.html 424434-1-ref.html
+== 424465-1.html 424465-1-ref.html
 == 424631-1.html 424631-1-ref.html
 == 424710-1.html 424710-1-ref.html
+== 424766-1.html 424766-1-ref.html
 == 425972-1.html 425972-1-ref.html
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
@@ -1264,4 +1267,5 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 495385-3.html 495385-3-ref.html
 == 495385-4.html 495385-4-ref.html
 == 495385-5.html 495385-5-ref.html
+== 498228-1.xul 498228-1-ref.xul
 == 496032-1.html 496032-1-ref.html

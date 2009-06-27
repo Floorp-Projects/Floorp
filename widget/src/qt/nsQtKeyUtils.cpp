@@ -54,6 +54,7 @@ static struct nsKeyConverter nsKeycodes[] =
 //  { NS_VK_CANCEL,        Qt::Key_Cancel },
     { NS_VK_BACK,          Qt::Key_Backspace },
     { NS_VK_TAB,           Qt::Key_Tab },
+    { NS_VK_TAB,           Qt::Key_Backtab },
 //  { NS_VK_CLEAR,         Qt::Key_Clear },
     { NS_VK_RETURN,        Qt::Key_Return },
     { NS_VK_RETURN,        Qt::Key_Enter },

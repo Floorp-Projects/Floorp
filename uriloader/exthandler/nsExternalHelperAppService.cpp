@@ -154,8 +154,6 @@ static const char NEVER_ASK_PREF_BRANCH[] = "browser.helperApps.neverAsk.";
 static const char NEVER_ASK_FOR_SAVE_TO_DISK_PREF[] = "saveToDisk";
 static const char NEVER_ASK_FOR_OPEN_FILE_PREF[]    = "openFile";
 
-static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-
 /**
  * Contains a pointer to the helper app service, set in its constructor
  */
@@ -2563,10 +2561,9 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
   // Try the plugins
   const char* mimeType;
-  nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID, &rv));
+  nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(flatExt.get(), mimeType)))
-    {
+    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(flatExt.get(), mimeType))) {
       aContentType = mimeType;
       return NS_OK;
     }

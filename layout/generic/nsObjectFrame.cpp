@@ -585,7 +585,6 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 
 
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
@@ -1727,7 +1726,7 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   nsresult rv = PrepareInstanceOwner();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(kCPluginManagerCID, &rv));
+  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
   mInstanceOwner->SetPluginHost(pluginHost);
@@ -1776,7 +1775,7 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
   FixupWindow(mRect.Size());
 
   // get the nsIPluginHost service
-  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(kCPluginManagerCID, &rv));
+  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
   mInstanceOwner->SetPluginHost(pluginHost);
@@ -1907,7 +1906,6 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
         // XXXjst: ns4xPluginInstance::Destroy() is a no-op, clean
         // this mess up when there are no other instance types.
         inst->Stop();
-        inst->Destroy();
 
         if (window) 
           window->CallSetWindow(nullinst);
@@ -1924,7 +1922,6 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
           return;
 
         inst->Stop();
-        inst->Destroy();
       }
     }
     else {
@@ -1939,7 +1936,7 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
       inst->Stop();
     }
 
-    nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
+    nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
     if (pluginHost)
       pluginHost->StopPluginInstance(inst);
 
@@ -2185,7 +2182,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 {
   // create nsPluginNativeWindow object, it is derived from nsPluginWindow
   // struct and allows to manipulate native window procedure
-  nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
+  nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
   nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
   if (pph)
     pph->NewPluginNativeWindow(&mPluginWindow);
@@ -2256,7 +2253,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 
   // clean up plugin native window object
-  nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
+  nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
   nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
   if (pph) {
     pph->DeletePluginNativeWindow(mPluginWindow);
@@ -2267,11 +2264,11 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     nsCOMPtr<nsIPluginInstancePeer> peer;
     mInstance->GetPeer(getter_AddRefs(peer));
 
-    nsCOMPtr<nsIPluginInstancePeer2> peer2(do_QueryInterface(peer));
+    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
 
-    if (peer2) {
+    if (peer3) {
       // Tell the peer that its owner is going away.
-      peer2->InvalidateOwner();
+      peer3->InvalidateOwner();
     }
   }
 }
