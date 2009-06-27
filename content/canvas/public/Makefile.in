@@ -49,4 +49,8 @@ EXPORTS		= \
 		nsICanvasElement.h \
 		$(NULL)
 
+XPIDLSRCS	= \
+		nsICanvasGLPrivate.idl \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
