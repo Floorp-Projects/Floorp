@@ -129,8 +129,10 @@
       <field name="_chevron">document.getAnonymousElementByAttribute(this, "class", "chevron")</field>
 
       <field name="_openedMenuButton">null</field>
+      <field name="_allowPopupShowing">true</field>
 
       <field name="_result">null</field>
+      <field name="_resultNode">null</field>
 
       <!-- nsIPlacesView -->
       <method name="getResult">
@@ -559,7 +561,7 @@
                 this._self.insertBefore(button, children[aNewIndex]);
                 if (chevronPopup) {
                   // Maintain chevron in sync
-                  menuitem = chevronPopup.childNodes[i];
+                  var menuitem = chevronPopup.childNodes[i];
                   chevronPopup.removeChild(menuitem);
                   chevronPopup.insertBefore(menuitem,
                                             chevronPopup.childNodes[aNewIndex]);
@@ -950,7 +952,7 @@
 
           // * Timer to turn off indicator bar.
           if (aTimer == this._ibTimer) {
-            ib = this._dropIndicatorBar.removeAttribute('dragging');
+            this._dropIndicatorBar.removeAttribute('dragging');
             this._ibTimer = null;
           }
 
@@ -1195,14 +1197,17 @@
         }
       ]]></handler>
 
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
       <handler event="mousedown"><![CDATA[
         var target = event.target;
         if (event.button == 0 &&
             target.localName == "toolbarbutton" &&
             target.getAttribute("type") == "menu") {
           this._allowPopupShowing = false;
-          // This is a container, we will open the menu if the user clicks
-          // or drag toward down or after a delay
+          // On Linux we can open the popup only after a delay.
+          // Indeed as soon as the menupopup opens we are unable to start a
+          // drag event.  See bug 500081 for details.
           this._mouseDownTimer = Cc["@mozilla.org/timer;1"]
                                    .createInstance(Ci.nsITimer);
           var callback = {
@@ -1214,15 +1219,12 @@
             }
           };
 
-          this._mouseDownTimer.initWithCallback(callback, 500,
+          this._mouseDownTimer.initWithCallback(callback, 300,
                                                 Ci.nsITimer.TYPE_ONE_SHOT);
         }
-        else {
-          // allow opening popups, like the chevron and context menus
-          this._allowPopupShowing = true;
-        }
       ]]></handler>
-
+#endif
+#endif
       <handler event="mouseup"><![CDATA[
         if (event.button != 0)
           return;

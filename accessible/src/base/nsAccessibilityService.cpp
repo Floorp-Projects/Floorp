@@ -242,9 +242,11 @@ NS_IMETHODIMP nsAccessibilityService::ProcessDocLoadEvent(nsITimer *aTimer, void
 
   nsCOMPtr<nsIAccessible> accessible;
   GetAccessibleFor(docNode, getter_AddRefs(accessible));
-  nsCOMPtr<nsPIAccessibleDocument> privDocAccessible = do_QueryInterface(accessible);
-  NS_ENSURE_STATE(privDocAccessible);
-  privDocAccessible->FireDocLoadEvents(aEventType);
+  nsRefPtr<nsDocAccessible> docAcc =
+    nsAccUtils::QueryAccessibleDocument(accessible);
+  NS_ENSURE_STATE(docAcc);
+
+  docAcc->FireDocLoadEvents(aEventType);
 
   return NS_OK;
 }
@@ -307,12 +309,12 @@ NS_IMETHODIMP nsAccessibilityService::OnLocationChange(nsIWebProgress *aWebProgr
 
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
     nsAccessNode::GetDocAccessibleFor(domDocRootNode);
-  nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
-    do_QueryInterface(accessibleDoc);
-  if (!privateAccessibleDoc) {
-    return NS_OK;
-  }
-  return privateAccessibleDoc->FireAnchorJumpEvent();
+  nsRefPtr<nsDocAccessible> docAcc =
+    nsAccUtils::QueryAccessibleDocument(accessibleDoc);
+  if (docAcc)
+    docAcc->FireAnchorJumpEvent();
+
+  return NS_OK;
 }
 
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
@@ -2040,12 +2042,12 @@ NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
   NS_ENSURE_ARG_POINTER(aShell);
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
     nsAccessNode::GetDocAccessibleFor(aShell->GetDocument());
-  nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
-    do_QueryInterface(accessibleDoc);
-  if (!privateAccessibleDoc) {
-    return NS_OK;
-  }
-  return privateAccessibleDoc->InvalidateCacheSubtree(aChangeContent, aEvent);
+  nsRefPtr<nsDocAccessible> docAcc =
+    nsAccUtils::QueryAccessibleDocument(accessibleDoc);
+  if (docAcc)
+    docAcc->InvalidateCacheSubtree(aChangeContent, aEvent);
+
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////

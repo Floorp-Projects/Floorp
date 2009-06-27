@@ -133,6 +133,11 @@ int remove(const char* inPath)
     #include <unistd.h>
 #endif
 
+#ifdef __SYMBIAN32__
+    #include <sys/syslimits.h>
+#endif /*__SYMBIAN32__*/
+
+
 #ifndef XP_UNIX /* we need some constants defined in limits.h and unistd.h */
 #  ifndef S_IFMT
 #    define S_IFMT 0170000

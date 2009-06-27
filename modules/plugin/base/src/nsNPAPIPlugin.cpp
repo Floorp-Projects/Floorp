@@ -98,8 +98,6 @@ enum eNPPStreamTypeInternal {
   eNPPStreamTypeInternal_Post
 };
 
-static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 
 // Static stub functions that are exported to the 4.x plugin as entry
@@ -693,9 +691,9 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   if (!inst)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  nsCOMPtr<nsIPluginManager> pm = do_GetService(kPluginManagerCID);
-  NS_ASSERTION(pm, "failed to get plugin manager");
-  if (!pm) return NPERR_GENERIC_ERROR;
+  nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
+  NS_ASSERTION(pluginHost, "failed to get plugin host");
+  if (!pluginHost) return NPERR_GENERIC_ERROR;
 
   nsCOMPtr<nsIPluginStreamListener> listener;
   if (!target)
@@ -706,13 +704,13 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   switch (type) {
   case eNPPStreamTypeInternal_Get:
     {
-      if (NS_FAILED(pm->GetURL(inst, relativeURL, target, listener)))
+      if (NS_FAILED(pluginHost->GetURL(inst, relativeURL, target, listener)))
         return NPERR_GENERIC_ERROR;
       break;
     }
   case eNPPStreamTypeInternal_Post:
     {
-      if (NS_FAILED(pm->PostURL(inst, relativeURL, len, buf, file, target,
+      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file, target,
                                 listener)))
         return NPERR_GENERIC_ERROR;
       break;
@@ -1044,11 +1042,11 @@ _reloadplugins(NPBool reloadPages)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_ReloadPlugins: reloadPages=%d\n", reloadPages));
 
-  nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
-  if (!pm)
+  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  if (!pluginHost)
     return;
 
-  pm->ReloadPlugins(reloadPages);
+  pluginHost->ReloadPlugins(reloadPages);
 }
 
 void NP_CALLBACK
@@ -1072,14 +1070,7 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      // XXX nsRect & NPRect are structurally equivalent
-      wpeer->InvalidateRect((nsPluginRect *)invalidRect);
-    }
-  }
+  inst->InvalidateRect((nsPluginRect *)invalidRect);
 }
 
 void NP_CALLBACK
@@ -1102,14 +1093,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      // nsPluginRegion & NPRegion are typedef'd to the same thing
-      wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
-    }
-  }
+  inst->InvalidateRegion((nsPluginRegion)invalidRegion);
 }
 
 void NP_CALLBACK
@@ -1130,13 +1114,7 @@ _forceredraw(NPP npp)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      wpeer->ForceRedraw();
-    }
-  }
+  inst->ForceRedraw();
 }
 
 static nsIDocument *
@@ -1962,47 +1940,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
-  case NPNVserviceManager: {
-    nsIServiceManager * sm;
-    res = NS_GetServiceManager(&sm);
-    if (NS_SUCCEEDED(res)) {
-      *(nsIServiceManager**)result = sm;
-      return NPERR_NO_ERROR;
-    } else {
-      return NPERR_GENERIC_ERROR;
-    }
-  }
-
-  case NPNVDOMElement: {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
-    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
-
-    nsCOMPtr<nsIPluginInstancePeer> pip;
-    inst->GetPeer(getter_AddRefs(pip));
-    nsCOMPtr<nsIPluginTagInfo2> pti2 (do_QueryInterface(pip));
-    if (pti2) {
-      nsCOMPtr<nsIDOMElement> e;
-      pti2->GetDOMElement(getter_AddRefs(e));
-      if (e) {
-        NS_ADDREF(*(nsIDOMElement**)result = e.get());
-        return NPERR_NO_ERROR;
-      }
-    }
-    return NPERR_GENERIC_ERROR;
-  }
-
+  case NPNVserviceManager:
+  case NPNVDOMElement:
   case NPNVDOMWindow: {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
-    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
-
-    nsIDOMWindow *domWindow = inst->GetDOMWindow().get();
-
-    if (domWindow) {
-      // Pass over ownership of domWindow to the caller.
-      (*(nsIDOMWindow**)result) = domWindow;
-
-      return NPERR_NO_ERROR;
-    }
+    // we no longer hand out any XPCOM objects
     return NPERR_GENERIC_ERROR;
   }
 
@@ -2250,12 +2191,12 @@ _useragent(NPP npp)
   }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_UserAgent: npp=%p\n", (void*)npp));
 
-  nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
-  if (!pm)
+  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  if (!pluginHost)
     return nsnull;
 
   const char *retstr;
-  nsresult rv = pm->UserAgent(&retstr);
+  nsresult rv = pluginHost->UserAgent(&retstr);
   if (NS_FAILED(rv))
     return nsnull;
 
@@ -2426,9 +2367,9 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
   switch (variable) {
   case NPNURLVProxy:
     {
-      nsCOMPtr<nsIPluginManager2> pm(do_GetService(kPluginManagerCID));
+      nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
 
-      if (pm && NS_SUCCEEDED(pm->FindProxyForURL(url, value))) {
+      if (pluginHost && NS_SUCCEEDED(pluginHost->FindProxyForURL(url, value))) {
         *len = *value ? PL_strlen(*value) : 0;
         return NPERR_NO_ERROR;
       }

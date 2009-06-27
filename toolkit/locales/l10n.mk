@@ -145,6 +145,7 @@ ifdef MOZ_MAKE_COMPLETE_MAR
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
 	  PACKAGE_BASE_DIR="$(_ABS_DIST)/l10n-stage" \
 	  DIST="$(_ABS_DIST)"
+	$(MAKE) generate-snippet-$(AB_CD)  
 endif
 # packaging done, undo l10n stuff
 ifneq (en,$(AB))
@@ -195,3 +196,12 @@ ifeq ($(OS_ARCH), WINNT)
 	(cd $(_ABS_DIST)/$(PKG_INST_PATH) && $(WGET) -nv -N "$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe")
 	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 endif
+
+generate-snippet-%:
+	$(PYTHON) $(topsrcdir)/tools/update-packaging/generatesnippet.py \
+          --mar-path=$(_ABS_DIST)/update \
+          --application-ini-file=$(STAGEDIST)/application.ini \
+          --locale=$* \
+          --product=$(MOZ_PKG_APPNAME) \
+          --download-base-URL=$(DOWNLOAD_BASE_URL) \
+          --verbose

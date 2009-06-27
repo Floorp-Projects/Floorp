@@ -46,82 +46,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = crashreporter
 XPCSHELL_TESTS = unit
 
-ifndef MOZ_ENABLE_LIBXUL
-PROGRAM = TestCrashReporterAPI$(BIN_SUFFIX)
-
-CPPSRCS = TestCrashReporterAPI.cpp
-endif
-
-REQUIRES = \
-	xpcom \
-	string \
-	crashreporter \
-	$(NULL)
-
-LIBS = \
-	$(EXTRA_DSO_LIBS) \
-	$(XPCOM_GLUE_LDOPTS) \
-	$(XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-        $(DEPTH)/toolkit/crashreporter/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(NULL)
-
-MOZILLA_INTERNAL_API = 1
-
 include $(topsrcdir)/config/rules.mk
-
-ifeq ($(OS_ARCH),WINNT)
-LIBS += \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
-LIBS += $(call expand_libname shell32)
-OS_LIBS += $(call EXPAND_LIBNAME,ole32)
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-OS_LIBS += -framework Cocoa -lcrypto
-LIBS += \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
-	$(NULL)
-LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
-endif
-
-ifeq ($(OS_ARCH),Linux)
-LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifeq ($(OS_ARCH),SunOS)
-OS_LIBS += -lelf
-LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/solaris/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/solaris/$(LIB_PREFIX)breakpad_solaris_common_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifndef MOZ_ENABLE_LIBXUL
-# XXX TestCrashReporterAPI gives random failures on exit for unexplained reason
-# therefore it is disabled. See Bug 474688.
-#check:: $(PROGRAM)
-#	$(RUN_TEST_PROGRAM) $(DIST)/bin/TestCrashReporterAPI
-endif
 
 _BROWSER_FILES = \
   browser/aboutcrashes_utils.js \
   browser/browser_aboutCrashes.js \
   browser/browser_bug471404.js \
   $(NULL)
-
 
 libs::  $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser

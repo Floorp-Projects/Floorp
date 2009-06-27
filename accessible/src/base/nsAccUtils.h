@@ -55,6 +55,7 @@
 class nsAccessNode;
 class nsAccessible;
 class nsHTMLTableAccessible;
+class nsDocAccessible;
 
 class nsAccUtils
 {
@@ -340,7 +341,19 @@ public:
    */
   static already_AddRefed<nsHTMLTableAccessible>
     QueryAccessibleTable(nsIAccessibleTable *aAccessibleTable);
-  
+
+  /**
+   * Query nsDocAccessible from the given nsIAccessible.
+   */
+  static already_AddRefed<nsDocAccessible>
+    QueryAccessibleDocument(nsIAccessible *aAccessible);
+
+  /**
+   * Query nsDocAccessible from the given nsIAccessibleDocument.
+   */
+  static already_AddRefed<nsDocAccessible>
+    QueryAccessibleDocument(nsIAccessibleDocument *aAccessibleDocument);
+
 #ifdef DEBUG_A11Y
   /**
    * Detect whether the given accessible object implements nsIAccessibleText,
