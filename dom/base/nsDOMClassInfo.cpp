@@ -431,6 +431,9 @@
 
 #ifdef MOZ_ENABLE_CANVAS
 #include "nsIDOMCanvasRenderingContext2D.h"
+#ifdef MOZ_ENABLE_CANVAS3D
+#include "nsICanvasRenderingContextGLWeb20.h"
+#endif
 #endif
 
 #include "nsIImageDocument.h"
@@ -1309,6 +1312,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(Worker, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+#ifdef MOZ_ENABLE_CANVAS3D
+  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContextGLWeb20, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -3591,6 +3599,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
+
+#ifdef MOZ_ENABLE_CANVAS3D
+  DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContextGLWeb20, nsICanvasRenderingContextGLWeb20)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasRenderingContextGLWeb20)
+    DOM_CLASSINFO_MAP_ENTRY(nsICanvasRenderingContextGL)
+  DOM_CLASSINFO_MAP_END
+#endif
 
 #ifdef NS_DEBUG
   {
