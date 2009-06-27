@@ -2130,15 +2130,15 @@ moz_gtk_resizer_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkStyle* style;
     GtkStateType state_type = ConvertGtkState(state);
 
-    ensure_window_widget();
-    gtk_widget_set_direction(gProtoWindow, direction);
+    ensure_frame_widget();
+    gtk_widget_set_direction(gStatusbarWidget, direction);
 
-    style = gProtoWindow->style;
+    style = gStatusbarWidget->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
-    gtk_paint_resize_grip(style, drawable, state_type, cliprect, gProtoWindow,
-                          NULL, (direction == GTK_TEXT_DIR_LTR) ?
+    gtk_paint_resize_grip(style, drawable, state_type, cliprect, gStatusbarWidget,
+                          "statusbar", (direction == GTK_TEXT_DIR_LTR) ?
                           GDK_WINDOW_EDGE_SOUTH_EAST :
                           GDK_WINDOW_EDGE_SOUTH_WEST,
                           rect->x, rect->y, rect->width, rect->height);
