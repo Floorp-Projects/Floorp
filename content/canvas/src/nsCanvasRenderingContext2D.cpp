@@ -3243,22 +3243,6 @@ nsCanvasRenderingContext2D::ConvertJSValToXPCObject(nsISupports** aSupports, REF
   return JS_FALSE;
 }
 
-/* Check that the rect [x,y,w,h] is a valid subrect of [0,0,realWidth,realHeight]
- * without overflowing any integers and the like.
- */
-PRBool
-CheckSaneSubrectSize (PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, PRInt32 realWidth, PRInt32 realHeight)
-{
-    if (w <= 0 || h <= 0 || x < 0 || y < 0)
-        return PR_FALSE;
-
-    if (x >= realWidth  || w > (realWidth - x) ||
-        y >= realHeight || h > (realHeight - y))
-        return PR_FALSE;
-
-    return PR_TRUE;
-}
-
 static void
 FlushLayoutForTree(nsIDOMWindow* aWindow)
 {
