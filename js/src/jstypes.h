@@ -198,9 +198,14 @@
  */
 # define JS_REQUIRES_STACK   __attribute__((user("JS_REQUIRES_STACK")))
 # define JS_FORCES_STACK     __attribute__((user("JS_FORCES_STACK")))
+/*
+ * Skip the JS_REQUIRES_STACK analysis within functions with this annotation.
+ */
+# define JS_IGNORE_STACK     __attribute__((user("JS_IGNORE_STACK")))
 #else
 # define JS_REQUIRES_STACK
 # define JS_FORCES_STACK
+# define JS_IGNORE_STACK
 #endif
 
 /***********************************************************************
