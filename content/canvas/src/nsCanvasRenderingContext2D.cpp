@@ -3748,12 +3748,15 @@ nsCanvasRenderingContext2D::CreateImageData()
 
     JSAutoRequest ar(ctx);
 
-    int32 w, h;
-    if (!JS_ConvertArguments (ctx, argc, argv, "jj", &w, &h))
+    int32 width, height;
+    if (!JS_ConvertArguments (ctx, argc, argv, "jj", &width, &height))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (w <= 0 || h <= 0)
+    if (width <= 0 || height <= 0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+    PRUint32 w = (PRUint32) width;
+    PRUint32 h = (PRUint32) height;
 
     // check for overflow when calculating len
     PRUint32 len0 = w * h;
