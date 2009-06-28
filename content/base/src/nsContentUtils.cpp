@@ -176,6 +176,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIConsoleService.h"
 
 #include "mozAutoDocUpdate.h"
+#include "jsinterp.h"
 
 const char kLoadAsData[] = "loadAsData";
 
@@ -4942,4 +4943,56 @@ nsContentTypeParser::GetParameter(const char* aParameterName, nsAString& aResult
   return mService->GetParameter(mString, aParameterName,
                                 EmptyCString(), PR_FALSE, nsnull,
                                 aResult);
+}
+
+/* static */
+
+// If you change this code, change also AllowedToAct() in
+// XPCSystemOnlyWrapper.cpp!
+PRBool
+nsContentUtils::CanAccessNativeAnon()
+{
+  JSContext* cx = nsnull;
+  sThreadJSContextStack->Peek(&cx);
+  if (!cx) {
+    return PR_TRUE;
+  }
+  JSStackFrame* fp;
+  nsIPrincipal* principal =
+    sSecurityManager->GetCxSubjectPrincipalAndFrame(cx, &fp);
+  NS_ENSURE_TRUE(principal, PR_FALSE);
+
+  if (!fp) {
+    if (!JS_FrameIterator(cx, &fp)) {
+      // No code at all is running. So we must be arriving here as the result
+      // of C++ code asking us to do something. Allow access.
+      return PR_TRUE;
+    }
+
+    // Some code is running, we can't make the assumption, as above, but we
+    // can't use a native frame, so clear fp.
+    fp = nsnull;
+  }
+
+  void *annotation = fp ? JS_GetFrameAnnotation(cx, fp) : nsnull;
+  PRBool privileged;
+  if (NS_SUCCEEDED(principal->IsCapabilityEnabled("UniversalXPConnect",
+                                                  annotation,
+                                                  &privileged)) &&
+      privileged) {
+    // UniversalXPConnect things are allowed to touch us.
+    return PR_TRUE;
+  }
+
+  // XXX HACK EWW! Allow chrome://global/ access to these things, even
+  // if they've been cloned into less privileged contexts.
+  static const char prefix[] = "chrome://global/";
+  const char *filename;
+  if (fp && fp->script &&
+      (filename = fp->script->filename) &&
+      !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
