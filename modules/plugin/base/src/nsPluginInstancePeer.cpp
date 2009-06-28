@@ -64,23 +64,16 @@
 
 nsPluginInstancePeerImpl::nsPluginInstancePeerImpl()
 {
-  mMIMEType = nsnull;
 }
 
 nsPluginInstancePeerImpl::~nsPluginInstancePeerImpl()
 {
-  if (nsnull != mMIMEType) {
-    PR_Free((void *)mMIMEType);
-    mMIMEType = nsnull;
-  }
 }
 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
-NS_IMPL_ISUPPORTS6(nsPluginInstancePeerImpl,
+NS_IMPL_ISUPPORTS4(nsPluginInstancePeerImpl,
                    nsIPluginInstancePeer,
-                   nsIPluginInstancePeer2,
-                   nsIPluginInstancePeer3,
                    nsIPluginTagInfo,
                    nsIPluginTagInfo2,
                    nsPIPluginInstancePeer)
@@ -93,17 +86,6 @@ nsPluginInstancePeerImpl::GetValue(nsPluginInstancePeerVariable variable,
     return NS_ERROR_FAILURE;
 
   return mOwner->GetValue(variable, value);
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetMIMEType(nsMIMEType *result)
-{
-  if (nsnull == mMIMEType)
-    *result = "";
-  else
-    *result = mMIMEType;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -616,101 +598,6 @@ nsPluginInstancePeerImpl::GetUniqueID(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetCode(const char* *result)
-{
-  *result = 0;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetCodeBase(const char* *result)
-{
-  *result = 0;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetArchive(const char* *result)
-{
-  *result = 0;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetName(const char* *result)
-{
-  *result = 0;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetMayScript(PRBool *result)
-{
-  *result = 0;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::SetWindowSize(PRUint32 width, PRUint32 height)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
-{
-  *outJSWindow = NULL;
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDocument> document;   
-
-  rv = mOwner->GetDocument(getter_AddRefs(document));
-
-  if (NS_SUCCEEDED(rv) && document) {
-    nsPIDOMWindow *win = document->GetWindow();
-
-    nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(win);
-    if(global) {
-      *outJSWindow = global->GetGlobalJSObject();
-    }
-  } 
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetJSThread(PRUint32 *outThreadID)
-{
-	*outThreadID = mThreadID;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
-{
-  *outContext = NULL;
-  nsresult rv = NS_ERROR_FAILURE;
-  if (!mOwner)
-    return rv;
-
-  nsCOMPtr<nsIDocument> document;
-  rv = mOwner->GetDocument(getter_AddRefs(document));
-
-  if (NS_SUCCEEDED(rv) && document) {
-    nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
-
-    if (global) {
-      nsIScriptContext *context = global->GetContext();
-
-      if (context) {
-        *outContext = (JSContext*) context->GetNativeContext();
-      }
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsPluginInstancePeerImpl::InvalidateOwner()
 {
   mOwner = nsnull;
@@ -719,21 +606,9 @@ nsPluginInstancePeerImpl::InvalidateOwner()
 }
 
 nsresult
-nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
-                                     const nsMIMEType aMIMEType)
+nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner)
 {
   mOwner = aOwner;
-
-  if (nsnull != aMIMEType) {
-    mMIMEType = (nsMIMEType)PR_Malloc(PL_strlen(aMIMEType) + 1);
-
-    if (nsnull != mMIMEType)
-      PL_strcpy((char *)mMIMEType, aMIMEType);
-  }
-  
-  // record the thread we were created in.
-  mThreadID = NS_PTR_TO_INT32(PR_GetCurrentThread());
-
   return NS_OK;
 }
 

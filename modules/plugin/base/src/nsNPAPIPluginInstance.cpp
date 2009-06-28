@@ -52,6 +52,8 @@
 
 #include "nsPIPluginInstancePeer.h"
 #include "nsIDocument.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 
 #include "nsJSNPRuntime.h"
 
@@ -765,7 +767,8 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
     mWantsAllNetworkStreams(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
     fLibrary(aLibrary),
-    mStreams(nsnull)
+    mStreams(nsnull),
+    mMIMEType(nsnull)
 {
   NS_ASSERTION(fCallbacks != NULL, "null callbacks");
 
@@ -787,6 +790,11 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance(void)
     delete is;
     is = next;
   }
+
+  if (mMIMEType) {
+    PR_Free((void *)mMIMEType);
+    mMIMEType = nsnull;
+  }
 }
 
 PRBool
@@ -795,9 +803,16 @@ nsNPAPIPluginInstance::IsStarted(void)
   return mStarted;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstancePeer* peer)
+NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstancePeer* peer, const nsMIMEType aMIMEType)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Initialize this=%p\n",this));
+  
+  if (aMIMEType) {
+    mMIMEType = (nsMIMEType)PR_Malloc(PL_strlen(aMIMEType) + 1);
+
+    if (mMIMEType)
+      PL_strcpy((char *)mMIMEType, aMIMEType);
+  }
 
   return InitializePlugin(peer);
 }
@@ -957,7 +972,7 @@ nsresult nsNPAPIPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   NPError       error;
 
   peer->GetMode(&mode);
-  peer->GetMIMEType(&mimetype);
+  GetMIMEType(&mimetype);
 
   // Some older versions of Flash have a bug in them
   // that causes the stack to become currupt if we
@@ -1503,4 +1518,47 @@ nsNPAPIPluginInstance::ForceRedraw()
     return NS_ERROR_FAILURE;
 
   return owner->ForceRedraw();
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetMIMEType(nsMIMEType *result)
+{
+  if (!mMIMEType)
+    *result = "";
+  else
+    *result = mMIMEType;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
+{
+  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
+  if (!pp)
+    return nsnull;
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  pp->GetOwner(getter_AddRefs(owner));
+  if (!owner)
+    return NS_ERROR_FAILURE;
+
+  *outContext = NULL;
+  nsCOMPtr<nsIDocument> document;
+
+  nsresult rv = owner->GetDocument(getter_AddRefs(document));
+
+  if (NS_SUCCEEDED(rv) && document) {
+    nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
+
+    if (global) {
+      nsIScriptContext *context = global->GetContext();
+
+      if (context) {
+        *outContext = (JSContext*) context->GetNativeContext();
+      }
+    }
+  }
+
+  return rv;
 }

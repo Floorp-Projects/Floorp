@@ -73,7 +73,7 @@
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
-#include "nsIPluginInstancePeer2.h"
+#include "nsIPluginInstancePeer.h"
 #include "nsGeolocation.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
@@ -441,11 +441,9 @@ nsDummyJavaPluginOwner::Destroy()
     nsCOMPtr<nsIPluginInstancePeer> peer;
     mInstance->GetPeer(getter_AddRefs(peer));
 
-    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
-
     // This plugin owner is going away, tell the peer.
-    if (peer3)
-      peer3->InvalidateOwner();
+    if (peer)
+      peer->InvalidateOwner();
 
     mInstance = nsnull;
   }

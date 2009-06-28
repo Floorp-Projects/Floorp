@@ -39,7 +39,7 @@
 #include "nsJSNPRuntime.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIPluginInstancePeer2.h"
+#include "nsIPluginInstancePeer.h"
 #include "nsPIPluginInstancePeer.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
