@@ -598,12 +598,26 @@ NS_IMETHODIMP
 nsNSSSocketInfo::Write(nsIObjectOutputStream* stream) {
   stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsIX509Cert*, mCert),
                               NS_GET_IID(nsISupports), PR_TRUE);
+
+  // Store the version number of the binary stream data format.
+  // The 0xFFFF0000 mask is included to the version number
+  // to distinguish version number from mSecurityState
+  // field stored in times before versioning has been introduced.
+  // This mask value has been chosen as mSecurityState could
+  // never be assigned such value.
+  PRUint32 version = 2;
+  stream->Write32(version | 0xFFFF0000);
   stream->Write32(mSecurityState);
   stream->WriteWStringZ(mShortDesc.get());
   stream->WriteWStringZ(mErrorMessage.get());
 
   stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsISSLStatus*, mSSLStatus),
                               NS_GET_IID(nsISupports), PR_TRUE);
+
+  stream->Write32((PRUint32)mSubRequestsHighSecurity);
+  stream->Write32((PRUint32)mSubRequestsLowSecurity);
+  stream->Write32((PRUint32)mSubRequestsBrokenSecurity);
+  stream->Write32((PRUint32)mSubRequestsNoSecurity);
   return NS_OK;
 }
 
@@ -613,12 +627,37 @@ nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
   stream->ReadObject(PR_TRUE, getter_AddRefs(obj));
   mCert = reinterpret_cast<nsNSSCertificate*>(obj.get());
 
-  stream->Read32(&mSecurityState);
+  PRUint32 version;
+  stream->Read32(&version);
+  // If the version field we have just read is not masked with 0xFFFF0000
+  // then it is stored mSecurityState field and this is version 1 of
+  // the binary data stream format.
+  if ((version & 0xFFFF0000) == 0xFFFF0000) {
+      version &= ~0xFFFF0000;
+      stream->Read32(&mSecurityState);
+  }
+  else {
+      mSecurityState = version;
+      version = 1;
+  }
   stream->ReadString(mShortDesc);
   stream->ReadString(mErrorMessage);
 
   stream->ReadObject(PR_TRUE, getter_AddRefs(obj));
   mSSLStatus = reinterpret_cast<nsSSLStatus*>(obj.get());
+
+  if (version >= 2) {
+    stream->Read32((PRUint32*)&mSubRequestsHighSecurity);
+    stream->Read32((PRUint32*)&mSubRequestsLowSecurity);
+    stream->Read32((PRUint32*)&mSubRequestsBrokenSecurity);
+    stream->Read32((PRUint32*)&mSubRequestsNoSecurity);
+  }
+  else {
+    mSubRequestsHighSecurity = 0;
+    mSubRequestsLowSecurity = 0;
+    mSubRequestsBrokenSecurity = 0;
+    mSubRequestsNoSecurity = 0;
+  }
   return NS_OK;
 }
 
