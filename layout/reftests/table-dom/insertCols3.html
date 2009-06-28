@@ -4,12 +4,11 @@
 <SCRIPT>
 
 function doIt() {
+  var table = document.getElementsByTagName("TABLE")[0];
   var refCol = document.getElementsByTagName("COL")[2];
   var col = document.createElement("COL", null);
   col.width = 150;
-  refCol.parentNode.insertBefore(col, refCol);
-  // HTML5 parser implies a colgroup around col, so this test 
-  // case should really be XHTML
+  table.insertBefore(col, refCol);
 }
 </SCRIPT>  
 </HEAD>

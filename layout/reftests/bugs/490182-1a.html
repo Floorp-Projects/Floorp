@@ -4,13 +4,13 @@
 <script type="text/javascript">
 function boom()
 {
+  var table = document.getElementById("table");
   var col1 = document.getElementById("col1");
-  var parent = col1.parentNode;
   var next = col1.nextSibling;
   
-  parent.removeChild(col1);
+  table.removeChild(col1);
   reflow();
-  parent.insertBefore(col1, next);
+  table.insertBefore(col1, next);
   reflow();  
   col1.removeAttribute("width");
 }
