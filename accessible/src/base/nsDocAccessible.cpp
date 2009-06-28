@@ -807,8 +807,26 @@ nsresult nsDocAccessible::RemoveEventListeners()
   // Remove scroll position listener
   RemoveScrollListener();
 
-  // Remove document observer
-  mDocument->RemoveObserver(this);
+  NS_ASSERTION(mDocument, "No document during removal of listeners.");
+
+  if (mDocument) {
+    mDocument->RemoveObserver(this);
+
+    nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+    NS_ASSERTION(docShellTreeItem, "doc should support nsIDocShellTreeItem.");
+
+    if (docShellTreeItem) {
+      PRInt32 itemType;
+      docShellTreeItem->GetItemType(&itemType);
+      if (itemType == nsIDocShellTreeItem::typeContent) {
+        nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
+        if (commandManager) {
+          commandManager->RemoveCommandObserver(this, "obs_documentCreated");
+        }
+      }
+    }
+  }
 
   if (mScrollWatchTimer) {
     mScrollWatchTimer->Cancel();
@@ -823,19 +841,6 @@ nsresult nsDocAccessible::RemoveEventListeners()
       // Don't use GetPresShell() which can call Shutdown() if it sees dead pres shell
       nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
       caretAccessible->RemoveDocSelectionListener(presShell);
-    }
-  }
-
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
-  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
-
-  PRInt32 itemType;
-  docShellTreeItem->GetItemType(&itemType);
-  if (itemType == nsIDocShellTreeItem::typeContent) {
-    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
-    if (commandManager) {
-      commandManager->RemoveCommandObserver(this, "obs_documentCreated");
     }
   }
 
