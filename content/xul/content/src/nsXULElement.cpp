@@ -913,8 +913,9 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 nsresult
-nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
 {
+    NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on XUL child removal.");
     nsresult rv;
     nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
     if (!oldKid) {
@@ -981,7 +982,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       }
     }
 
-    rv = nsGenericElement::RemoveChildAt(aIndex, aNotify);
+    rv = nsGenericElement::RemoveChildAt(aIndex, aNotify, aMutationEvent);
     
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nsnull);

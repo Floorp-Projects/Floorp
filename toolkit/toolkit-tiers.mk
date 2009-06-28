@@ -133,9 +133,7 @@ tier_gecko_dirs	+= \
 		uriloader \
 		modules/libimg \
 		caps \
-		parser/expat \
-		parser/xml \
-		parser/htmlparser \
+		parser \
 		gfx \
 		modules/libpr0n \
 		modules/plugin \
