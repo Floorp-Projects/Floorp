@@ -587,9 +587,9 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  // Unset FRAMETREE_DEPENDS_ON_CHARS; if we need it again later, it'll get set
-  // again.
-  UnsetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  // Unset frame flags; if we need them again later, they'll get set again.
+  UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
+             NS_REFRAME_IF_WHITESPACE);
   
   nsIDocument *document = GetCurrentDoc();
   if (document) {
