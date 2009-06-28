@@ -346,7 +346,7 @@ public:
 #ifdef XP_WIN
   void Paint(const RECT& aDirty, HDC aDC);
 #elif defined(XP_MACOSX)
-  void Paint(const nsRect& aDirtyRect);  
+  void Paint();  
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
@@ -536,11 +536,6 @@ private:
   // Mac specific code to fix up port position and clip during paint
 #ifdef XP_MACOSX
 
-#ifdef DO_DIRTY_INTERSECT
-  // convert relative coordinates to absolute
-  static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
-#endif
-
   enum { ePluginPaintIgnore, ePluginPaintEnable, ePluginPaintDisable };
 
 #endif // XP_MACOSX
@@ -585,8 +580,6 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 
 
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
-
-// #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
 NS_IMETHODIMP 
 nsObjectFrame::Init(nsIContent*      aContent,
@@ -1324,17 +1317,27 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 #if defined(XP_MACOSX)
   // delegate all painting to the plugin instance.
   if (mInstanceOwner) {
-    // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-    nsIRenderingContext::AutoPushTranslation
-      translate(&aRenderingContext, aFramePt.x, aFramePt.y);
-
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics) {
-      PRInt32 p2a = PresContext()->AppUnitsPerDevPixel();
-      gfxRect nativeClipRect(aDirtyRect.x, aDirtyRect.y,
-                             aDirtyRect.width, aDirtyRect.height);
-      nativeClipRect.ScaleInverse(gfxFloat(p2a));
+      PRInt32 appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+      // Clip to the content area where the plugin should be drawn. If
+      // we don't do this, the plugin can draw outside its bounds.
+      nsRect content = GetContentRect() - GetPosition() + aFramePt;
+      nsIntRect contentPixels = content.ToNearestPixels(appUnitsPerDevPixel);
+      nsIntRect dirtyPixels = aDirtyRect.ToOutsidePixels(appUnitsPerDevPixel);
+      nsIntRect clipPixels;
+      clipPixels.IntersectRect(contentPixels, dirtyPixels);
+      gfxRect nativeClipRect(clipPixels.x, clipPixels.y,
+                             clipPixels.width, clipPixels.height);
       gfxContext* ctx = aRenderingContext.ThebesContext();
-      gfxQuartzNativeDrawing nativeDrawing(ctx, nativeClipRect);
+
+      gfxContextAutoSaveRestore save(ctx);
+      ctx->NewPath();
+      ctx->Rectangle(nativeClipRect);
+      ctx->Clip();
+      gfxPoint offset(contentPixels.x, contentPixels.y);
+      ctx->Translate(offset);
+
+      gfxQuartzNativeDrawing nativeDrawing(ctx, nativeClipRect - offset);
 
       CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
       if (!cgContext) {
@@ -1381,12 +1384,16 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       }
 
       mInstanceOwner->BeginCGPaint();
-      mInstanceOwner->Paint(aDirtyRect);
+      mInstanceOwner->Paint();
       mInstanceOwner->EndCGPaint();
 
       nativeDrawing.EndNativeDrawing();
     } else {
-      mInstanceOwner->Paint(aDirtyRect);
+      // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
+      nsIRenderingContext::AutoPushTranslation
+        translate(&aRenderingContext, aFramePt.x, aFramePt.y);
+
+      mInstanceOwner->Paint();
     }
   }
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
@@ -4274,23 +4281,11 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 // Paints are handled differently, so we just simulate an update event.
 
 #ifdef XP_MACOSX
-void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
+void nsPluginInstanceOwner::Paint()
 {
   if (!mInstance || !mOwner)
     return;
  
-#ifdef DO_DIRTY_INTERSECT   // aDirtyRect isn't always correct, see bug 56128
-  nsPoint rel(aDirtyRect.x, aDirtyRect.y);
-  nsPoint abs(0,0);
-  nsCOMPtr<nsIWidget> containerWidget;
-
-  // Convert dirty rect relative coordinates to absolute and also get the containerWidget
-  ConvertRelativeToWindowAbsolute(mOwner, rel, abs, *getter_AddRefs(containerWidget));
-
-  // Convert to absolute pixel values for the dirty rect
-  nsIntRect absDirtyRect = nsRect(abs, aDirtyRect.Size()).ToOutsidePixels(*mOwner->GetPresContext()->AppUnitsPerDevPixel());
-#endif
-
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
     WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
@@ -4866,40 +4861,6 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 
   // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MACOSX
-
-#ifdef DO_DIRTY_INTERSECT
-// Convert from a frame relative coordinate to a coordinate relative to its
-// containing window
-static void ConvertRelativeToWindowAbsolute(nsIFrame*   aFrame,
-                                            nsPoint&    aRel, 
-                                            nsPoint&    aAbs,
-                                            nsIWidget*& aContainerWidget)
-{
-  // See if this frame has a view
-  nsIView *view = aFrame->GetView();
-  if (!view) {
-    aAbs.x = 0;
-    aAbs.y = 0;
-    // Calculate frames offset from its nearest view
-    aFrame->GetOffsetFromView(aAbs, &view);
-  } else {
-    // Store frames offset from its view.
-    aAbs = aFrame->GetPosition();
-  }
-
-  NS_ASSERTION(view, "the object frame does not have a view");
-  if (view) {
-    // Calculate the view's offset from its nearest widget
-    nsPoint viewOffset;
-    aContainerWidget = view->GetNearestWidget(&viewOffset);
-    NS_IF_ADDREF(aContainerWidget);
-    aAbs += viewOffset;
-  }
-
-  // Add relative coordinate to the absolute coordinate that has been calculated
-  aAbs += aRel;
-}
-#endif // DO_DIRTY_INTERSECT
 
 WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 {
