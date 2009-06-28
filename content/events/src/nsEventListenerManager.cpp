@@ -288,8 +288,6 @@ static const EventTypeData sEventTypes[] = {
 nsIDOMEventGroup* gSystemEventGroup = nsnull;
 nsIDOMEventGroup* gDOM2EventGroup = nsnull;
 
-nsDataHashtable<nsISupportsHashKey, PRUint32>* gEventIdTable = nsnull;
-
 PRUint32 nsEventListenerManager::mInstanceCount = 0;
 PRUint32 nsEventListenerManager::sCreatedCount = 0;
 
@@ -309,8 +307,6 @@ nsEventListenerManager::~nsEventListenerManager()
   if(mInstanceCount == 0) {
     NS_IF_RELEASE(gSystemEventGroup);
     NS_IF_RELEASE(gDOM2EventGroup);
-    delete gEventIdTable;
-    gEventIdTable = nsnull;
   }
 }
 
