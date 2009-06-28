@@ -113,7 +113,7 @@ function test() {
   
   function test_behavior (callback) {
     // helper function that does the actual testing
-    function openWindowRec(windowsToOpen, expectedResults) {
+    function openWindowRec(windowsToOpen, expectedResults, recCallback) {
       // do actual checking
       if (!windowsToOpen.length) {
         let closedWindowData = JSON.parse(ss.getClosedWindowData());
@@ -130,7 +130,7 @@ function test() {
            "There were " + oResults.normal + " normal windows to repoen");
 
         // cleanup & return
-        executeSoon(callback);
+        executeSoon(recCallback);
         return;
       }
       // hack to force window to be considered a popup (toolbar=no didn't work)
@@ -149,7 +149,7 @@ function test() {
           executeSoon(function() {
             window.close();
             executeSoon(function() {
-              openWindowRec(windowsToOpen, expectedResults);
+              openWindowRec(windowsToOpen, expectedResults, recCallback);
             });
           });
         }, true);

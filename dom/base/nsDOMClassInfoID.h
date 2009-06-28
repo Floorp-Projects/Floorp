@@ -461,6 +461,10 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_Worker_id,
 
+#ifdef MOZ_ENABLE_CANVAS3D
+  eDOMClassInfo_CanvasRenderingContextGLWeb20_id,
+#endif
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

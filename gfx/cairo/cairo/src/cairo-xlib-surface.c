@@ -208,7 +208,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     Pixmap pix;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_INVALID_SIZE));
+	return NULL;
 
     _cairo_xlib_display_notify (src->display);
 
@@ -952,7 +952,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     ximage.blue_mask = surface->b_mask;
     ximage.xoffset = 0;
 
-    if (image_masks.red_mask   == surface->r_mask &&
+    if (image_masks.alpha_mask == surface->a_mask &&
+	image_masks.red_mask   == surface->r_mask &&
 	image_masks.green_mask == surface->g_mask &&
 	image_masks.blue_mask  == surface->b_mask)
     {
@@ -1018,8 +1019,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		goto BAIL;
 	}
 
-	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
-	row = (uint32_t *) cairo_image_surface_get_data (&image->base);
+	rowstride = image->stride >> 2;
+	row = (uint32_t *) image->data;
 	x0 = dst_x + surface->base.device_transform.x0;
 	y0 = dst_y + surface->base.device_transform.y0;
 	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
@@ -1196,16 +1197,17 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	}
     } else if (_cairo_surface_is_image (src)) {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
-
-	if (! CAIRO_FORMAT_VALID (image_src->format))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	cairo_format_t format;
 
 	if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	    return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
+	format = image_src->format;
+	if (format == CAIRO_FORMAT_INVALID)
+	    format = _cairo_format_from_content (image_src->base.content);
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar_with_format (surface,
-		                                            image_src->format,
+							    format,
 							    width, height);
 	if (clone == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;

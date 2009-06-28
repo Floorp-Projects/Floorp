@@ -208,7 +208,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   if (!sizeString.IsEmpty())
   {
     const char *sizeStr = sizeString.get();
-    for (PRInt32 i = 0; i < NS_ARRAY_LENGTH(kSizeStrings); i++)
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kSizeStrings); i++)
     {
       if (PL_strcasecmp(sizeStr, kSizeStrings[i]) == 0)
       {
@@ -221,7 +221,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   if (!stateString.IsEmpty())
   {
     const char *stateStr = stateString.get();
-    for (PRInt32 i = 0; i < NS_ARRAY_LENGTH(kStateStrings); i++)
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kStateStrings); i++)
     {
       if (PL_strcasecmp(stateStr, kStateStrings[i]) == 0)
       {

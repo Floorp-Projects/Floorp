@@ -1449,6 +1449,8 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 
     pixman_image_unref (pixman_image);
 
+    _cairo_debug_check_image_surface_is_defined (&image->base);
+
     status = _cairo_surface_clone_similar (dst, &image->base,
 					   0, 0, width, height,
 					   &clone_offset_x,

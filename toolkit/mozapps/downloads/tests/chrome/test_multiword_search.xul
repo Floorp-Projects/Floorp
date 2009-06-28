@@ -110,7 +110,7 @@ function test()
             getService(Ci.nsIObserverService);
   const DLMGR_UI_DONE = "download-manager-ui-done";
 
-  let testPhase = 0;
+  let testPhase = -1;
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
       if (aTopic != DLMGR_UI_DONE)
@@ -126,8 +126,13 @@ function test()
         searchbox.doCommand();
       };
 
+      let testResults = function(aExpected) {
+        is(downloadView.itemCount, aExpected,
+           "Phase " + testPhase + ": search matched " + aExpected + " download(s)");
+      };
+
       // The list must have built, so figure out what test to do
-      switch (testPhase++) {
+      switch (++testPhase) {
         case 0:
           // Search for multiple words in any order in all places
           search("download super pimped 104 GB august 2");
@@ -135,15 +140,23 @@ function test()
           break;
         case 1:
           // Done populating the two items
-          ok(downloadView.itemCount == 2, "Search matched both downloads");
+          testResults(2);
 
           // Do partial word matches including the site
-          search("agadak aug 2 downl 104");
+          search("Agadak.net aug 2 downl 104");
 
           break;
         case 2:
           // Done populating the one result
-          ok(downloadView.itemCount == 1, "Found the single download");
+          testResults(1);
+
+          // The search term shouldn't be treated like a regular expression,
+          // e.g. "D.wnload" shouldn't match "Download".
+          search("D.wnload");
+
+          break;
+        case 3:
+          testResults(0);
 
           // We're done!
           win.close();

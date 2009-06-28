@@ -64,6 +64,9 @@ public:
 
   virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
 
+  // public helpers
+  virtual nsresult AppendTransform(nsIDOMSVGMatrix *aCTM,
+                                   nsIDOMSVGMatrix **_retval);
 protected:
   // nsSVGElement overrides
   virtual PRBool IsEventName(nsIAtom* aName);
@@ -75,8 +78,6 @@ protected:
 
   // helper
   nsresult CreateTransformList();
-  nsresult AppendLocalTransform(nsIDOMSVGMatrix *aCTM,
-                                nsIDOMSVGMatrix **_retval);
 };
 
 #endif // __NS_SVGGRAPHICELEMENT_H__

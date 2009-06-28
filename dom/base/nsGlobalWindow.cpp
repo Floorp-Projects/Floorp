@@ -437,16 +437,15 @@ nsDummyJavaPluginOwner::Destroy()
   // If we have a plugin instance, stop it and destroy it now.
   if (mInstance) {
     mInstance->Stop();
-    mInstance->Destroy();
 
     nsCOMPtr<nsIPluginInstancePeer> peer;
     mInstance->GetPeer(getter_AddRefs(peer));
 
-    nsCOMPtr<nsIPluginInstancePeer2> peer2(do_QueryInterface(peer));
+    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
 
     // This plugin owner is going away, tell the peer.
-    if (peer2)
-      peer2->InvalidateOwner();
+    if (peer3)
+      peer3->InvalidateOwner();
 
     mInstance = nsnull;
   }
