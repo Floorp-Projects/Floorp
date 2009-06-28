@@ -94,7 +94,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  txtsvc \
 		  thebes \
-		  html5 \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -140,7 +139,6 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/threads/$(LIB_PREFIX)domthreads_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
-	$(DEPTH)/parser/html/$(LIB_PREFIX)html5p_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifdef MOZ_MEDIA

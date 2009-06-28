@@ -3221,9 +3221,8 @@ nsDocument::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 }
 
 nsresult
-nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
+nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on document child removal.");
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
   if (!oldKid) {
     return NS_OK;
@@ -3235,8 +3234,7 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent
   }
 
   nsresult rv = nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
-                                                  nsnull, this, mChildren, 
-                                                  aMutationEvent);
+                                                  nsnull, this, mChildren);
   mCachedRootContent = nsnull;
   return rv;
 }

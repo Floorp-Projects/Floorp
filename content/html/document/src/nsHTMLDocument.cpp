@@ -141,7 +141,6 @@
 #include "nsRange.h"
 #include "mozAutoDocUpdate.h"
 #include "nsCCUncollectableMarker.h"
-#include "nsHtml5Module.h"
 #include "prprf.h"
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
@@ -655,11 +654,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   PRBool aReset,
                                   nsIContentSink* aSink)
 {
-  PRBool loadAsHtml5 = nsHtml5Module::Enabled;
-  if (aSink) {
-    loadAsHtml5 = PR_FALSE;
-  }
-
   nsCAutoString contentType;
   aChannel->GetContentType(contentType);
 
@@ -669,11 +663,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     mIsRegularHTML = PR_FALSE;
     mCompatMode = eCompatibility_FullStandards;
-    loadAsHtml5 = PR_FALSE;
-  }
-  
-  if (!(contentType.Equals("text/html") && aCommand && !nsCRT::strcmp(aCommand, "view"))) {
-    loadAsHtml5 = PR_FALSE;
   }
 #ifdef DEBUG
   else {
@@ -720,12 +709,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   if (needsParser) {
-    if (loadAsHtml5) {
-      mParser = nsHtml5Module::NewHtml5Parser();
-    } else {
-      mParser = do_CreateInstance(kCParserCID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    mParser = do_CreateInstance(kCParserCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   PRInt32 textType = GET_BIDI_OPTION_TEXTTYPE(GetBidiOptions());
@@ -940,10 +925,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // create the content sink
     nsCOMPtr<nsIContentSink> sink;
 
-    if (aSink) {
-      NS_ASSERTION((!loadAsHtml5), "Panic: We are loading as HTML5 and someone tries to set an external sink!");
+    if (aSink)
       sink = aSink;
-    } else {
+    else {
       if (IsXHTML()) {
         nsCOMPtr<nsIXMLContentSink> xmlsink;
         rv = NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, uri,
@@ -951,17 +935,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
         sink = xmlsink;
       } else {
-        if (loadAsHtml5) {
-          nsHtml5Module::Initialize(mParser, this, uri, docShell, aChannel);
-          sink = mParser->GetContentSink();
-        } else {
-          nsCOMPtr<nsIHTMLContentSink> htmlsink;
+        nsCOMPtr<nsIHTMLContentSink> htmlsink;
 
-          rv = NS_NewHTMLContentSink(getter_AddRefs(htmlsink), this, uri,
-                                     docShell, aChannel);
+        rv = NS_NewHTMLContentSink(getter_AddRefs(htmlsink), this, uri,
+                                   docShell, aChannel);
 
-          sink = htmlsink;
-        }
+        sink = htmlsink;
       }
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1805,8 +1784,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  PRBool loadAsHtml5 = nsHtml5Module::Enabled;
-
   nsresult rv = NS_OK;
 
   // If we already have a parser we ignore the document.open call.
@@ -1958,12 +1935,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // resetting the document.
   mSecurityInfo = securityInfo;
 
-  if (loadAsHtml5) {
-    mParser = nsHtml5Module::NewHtml5Parser();
-    rv = NS_OK;
-  } else {
-    mParser = do_CreateInstance(kCParserCID, &rv);  
-  }
+  mParser = do_CreateInstance(kCParserCID, &rv);
 
   // This will be propagated to the parser when someone actually calls write()
   mContentType = aContentType;
@@ -1971,22 +1943,18 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   mWriteState = eDocumentOpened;
 
   if (NS_SUCCEEDED(rv)) {
-    if (loadAsHtml5) {
-      nsHtml5Module::Initialize(mParser, this, uri, shell, channel);
-    } else {
-      nsCOMPtr<nsIHTMLContentSink> sink;
+    nsCOMPtr<nsIHTMLContentSink> sink;
 
-      rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, uri, shell,
-                                 channel);
-      if (NS_FAILED(rv)) {
-        // Don't use a parser without a content sink.
-        mParser = nsnull;
-        mWriteState = eNotWriting;
-        return rv;
-      }
-
-      mParser->SetContentSink(sink);
+    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, uri, shell,
+                               channel);
+    if (NS_FAILED(rv)) {
+      // Don't use a parser without a content sink.
+      mParser = nsnull;
+      mWriteState = eNotWriting;
+      return rv;
     }
+
+    mParser->SetContentSink(sink);
   }
 
   // Prepare the docshell and the document viewer for the impending
