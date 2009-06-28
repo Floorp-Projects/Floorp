@@ -67,7 +67,6 @@ XPIDLSRCS 	= \
 		nspluginroot.idl \
 		nsIPluginStreamInfo.idl \
 		nsIPluginInstancePeer.idl \
-		nsIPluginInstancePeer2.idl \
 		nsIPluginInstanceOwner.idl \
 		nsIPlugin.idl \
 		nsIHTTPHeaderListener.idl \

@@ -73,7 +73,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsIPluginInstancePeer2.h"
+#include "nsIPluginInstancePeer.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
 #include "nsIEventListener.h"
@@ -1850,11 +1850,9 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
 static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  aPluginInstance->GetPeer(getter_AddRefs(peer));
-  if (peer) {
+  if (aPluginInstance) {
     nsMIMEType mime = NULL;
-    if (NS_SUCCEEDED(peer->GetMIMEType(&mime)) && mime)
+    if (NS_SUCCEEDED(aPluginInstance->GetMIMEType(&mime)) && mime)
       return mime;
   }
   return "";
@@ -2263,13 +2261,8 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   if (mInstance) {
     nsCOMPtr<nsIPluginInstancePeer> peer;
     mInstance->GetPeer(getter_AddRefs(peer));
-
-    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
-
-    if (peer3) {
-      // Tell the peer that its owner is going away.
-      peer3->InvalidateOwner();
-    }
+    if (peer)
+      peer->InvalidateOwner();
   }
 }
 

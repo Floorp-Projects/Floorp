@@ -38,17 +38,15 @@
 #ifndef nsPluginInstancePeer_h_
 #define nsPluginInstancePeer_h_
 
-#include "nsIPluginInstancePeer2.h"
 #include "nsIPluginTagInfo2.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsPIPluginInstancePeer.h"
 
 #include "nsCOMPtr.h"
 
-class nsPluginInstancePeerImpl : public nsIPluginInstancePeer3,
-                                 public nsIPluginTagInfo2,
-                                 public nsPIPluginInstancePeer
-								
+class nsPluginInstancePeerImpl : public nsIPluginTagInfo2,
+                                 public nsPIPluginInstancePeer,
+                                 public nsIPluginInstancePeer
 {
 public:
   nsPluginInstancePeerImpl();
@@ -56,45 +54,17 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCEPEER
-  NS_DECL_NSIPLUGININSTANCEPEER2
-  NS_DECL_NSIPLUGININSTANCEPEER3
   NS_DECL_NSIPLUGINTAGINFO
   NS_DECL_NSIPLUGINTAGINFO2
-
-  //XXX Why isn't this ifdef'd like the class declaration?
-  //nsIJVMPluginTagInfo interface
-
-  NS_IMETHOD
-  GetCode(const char* *result);
-
-  NS_IMETHOD
-  GetCodeBase(const char* *result);
-
-  NS_IMETHOD
-  GetArchive(const char* *result);
-
-  NS_IMETHOD
-  GetName(const char* *result);
-
-  NS_IMETHOD
-  GetMayScript(PRBool *result);
-
   NS_DECL_NSPIPLUGININSTANCEPEER
 
-  //locals
-
-  nsresult Initialize(nsIPluginInstanceOwner *aOwner,
-                      const nsMIMEType aMimeType);
-
+  nsresult Initialize(nsIPluginInstanceOwner *aOwner);
   nsresult SetOwner(nsIPluginInstanceOwner *aOwner);
 
 private:
   // Weak pointer to the owner. The owner nulls this out (by calling
   // InvalidateOwner()) when it's no longer our owner.
   nsIPluginInstanceOwner  *mOwner;
-  nsMIMEType              mMIMEType;
-  PRUint32                mThreadID;
-  PRBool                  mStopped;
 };
 
 #endif

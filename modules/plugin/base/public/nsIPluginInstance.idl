@@ -40,11 +40,14 @@
 
 %{C++
 #include "nsplugindefs.h"
+struct JSContext;
 %}
+
+[ptr] native JSContextPtr(JSContext);
 
 interface nsIPluginInstancePeer;
 
-[uuid(89DF5288-1EDE-40BD-99CE-87B415DC0FED)]
+[uuid(300683AC-AB8E-4B73-99A0-10DDD325F708)]
 interface nsIPluginInstance : nsISupports
 {
     /**
@@ -53,9 +56,10 @@ interface nsIPluginInstance : nsISupports
      * back to the browser.
      * 
      * @param aPeer - the corresponding plugin instance peer
+     * @param aMime - the mime type for the instance
      * @result      - NS_OK if this operation was successful
      */
-    void initialize(in nsIPluginInstancePeer aPeer);
+    void initialize(in nsIPluginInstancePeer aPeer, in nsMIMEType aMIMEType);
 
     /**
      * Returns a reference back to the plugin instance peer. This method is
@@ -160,4 +164,22 @@ interface nsIPluginInstance : nsISupports
      * Corresponds to NPN_ForceRedraw
      */
     void forceRedraw();
+    
+    /**
+     * Returns the MIME type of the plugin instance. 
+     *
+     * (Corresponds to NPP_New's MIMEType argument.)
+     *
+     * @param aMIMEType - resulting MIME type
+     * @result          - NS_OK if this operation was successful
+     */
+    readonly attribute nsMIMEType MIMEType;
+
+    /**
+     * Get the JavaScript context to this plugin instance.
+     *
+     * @param aJSContext - the resulting JavaScript context
+     * @result           - NS_OK if this operation was successful
+     */
+    readonly attribute JSContextPtr JSContext;
 };

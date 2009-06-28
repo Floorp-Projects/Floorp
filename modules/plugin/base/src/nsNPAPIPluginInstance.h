@@ -167,6 +167,8 @@ public:
     nsInstanceStream *mStreams;
 
     nsTArray<PopupControlState> mPopupStates;
+
+    nsMIMEType mMIMEType;
 };
 
 #endif // nsNPAPIPluginInstance_h_

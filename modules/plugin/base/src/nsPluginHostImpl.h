@@ -51,7 +51,6 @@
 #include "nsIPlugin.h"
 #include "nsIPluginTag.h"
 #include "nsIPluginTagInfo2.h"
-#include "nsIPluginInstancePeer2.h"
 
 #include "nsPluginsDir.h"
 #include "nsPluginDirServiceProvider.h"

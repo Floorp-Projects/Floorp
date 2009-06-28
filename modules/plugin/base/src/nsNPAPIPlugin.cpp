@@ -54,7 +54,6 @@
 #include "nsIPrefBranch.h"
 #include "nsPluginLogging.h"
 
-#include "nsIPluginInstancePeer2.h"
 #include "nsIJSContextStack.h"
 
 #include "nsPIPluginInstancePeer.h"
@@ -2085,23 +2084,11 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
         if (NS_SUCCEEDED(rv)) {
           NPBool bPushCaller = (result != nsnull);
-
           if (bPushCaller) {
-            rv = NS_ERROR_FAILURE;
-
-            nsCOMPtr<nsIPluginInstancePeer> peer;
-            if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-              nsCOMPtr<nsIPluginInstancePeer2> peer2 =
-                do_QueryInterface(peer);
-
-              if (peer2) {
-                JSContext *cx;
-                rv = peer2->GetJSContext(&cx);
-
-                if (NS_SUCCEEDED(rv))
-                  rv = contextStack->Push(cx);
-              }
-            }
+            JSContext *cx;
+            rv = inst->GetJSContext(&cx);
+            if (NS_SUCCEEDED(rv))
+              rv = contextStack->Push(cx);
           } else {
             rv = contextStack->Pop(nsnull);
           }

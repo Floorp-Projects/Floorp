@@ -48,6 +48,7 @@
 #include "prmem.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
+#include "nsIPluginInstancePeer.h"
 #include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstanceInternal.h"
@@ -342,11 +343,7 @@ nsPluginInstanceTag::~nsPluginInstanceTag()
       rv = peer->GetOwner(getter_AddRefs(owner));
       if (owner)
         owner->SetInstance(nsnull);
-
-      nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
-
-      if (peer3)
-        peer3->InvalidateOwner();
+      mPeer->InvalidateOwner();
     }
 
     NS_RELEASE(mInstance);
@@ -558,14 +555,12 @@ nsPluginInstanceTag * nsPluginInstanceTagList::find(const char * mimetype)
     if (defaultplugin && p->mDefaultPlugin)
       return p;
 
-    if (!p->mPeer)
+    if (!p->mInstance)
       continue;
 
     nsMIMEType mt;
-
-    nsresult res = p->mPeer->GetMIMEType(&mt);
-
-    if (NS_FAILED(res))
+    nsresult rv = p->mInstance->GetMIMEType(&mt);
+    if (NS_FAILED(rv))
       continue;
 
     if (PL_strcasecmp(mt, mimetype) == 0) {
@@ -574,7 +569,7 @@ nsPluginInstanceTag * nsPluginInstanceTagList::find(const char * mimetype)
       p->mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
       NS_ASSERTION(!p->mStopped || doCache, "This plugin is not supposed to be cached!");
 #endif
-       return p;
+      return p;
     }
   }
   return nsnull;
@@ -3627,9 +3622,9 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     return NS_ERROR_OUT_OF_MEMORY;
 
   // set up the peer for the instance
-  peer->Initialize(aOwner, mimetype);
+  peer->Initialize(aOwner);
 
-  result = instance->Initialize(peer);  // this should addref the peer but not the instance or owner
+  result = instance->Initialize(peer, mimetype);  // this should addref the peer but not the instance or owner
   if (NS_FAILED(result))                // except in some cases not Java, see bug 140931
     return result;                      // our COM pointer will free the peer
 
@@ -3697,12 +3692,12 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
   }
 
   // set up the peer for the instance
-  peer->Initialize(aOwner, mimetype);
+  peer->Initialize(aOwner);
 
   // this should addref the peer but not the instance or owner except
   // in some cases not Java, see bug 140931 our COM pointer will free
   // the peer
-  result = instance->Initialize(peer);
+  result = instance->Initialize(peer, mimetype);
   if (NS_FAILED(result))
     return result;
 
