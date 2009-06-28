@@ -2550,6 +2550,7 @@ nsNSSComponent::IsNSSInitialized(PRBool *initialized)
 
 nsCryptoHash::nsCryptoHash()
   : mHashContext(nsnull)
+  , mInitialized(PR_FALSE)
 {
 }
 
@@ -2564,14 +2565,28 @@ NS_IMPL_ISUPPORTS1(nsCryptoHash, nsICryptoHash)
 NS_IMETHODIMP 
 nsCryptoHash::Init(PRUint32 algorithm)
 {
+  HASH_HashType hashType = (HASH_HashType)algorithm;
   if (mHashContext)
-    HASH_Destroy(mHashContext);
+  {
+    if ((!mInitialized) && (HASH_GetType(mHashContext) == hashType))
+    {
+      mInitialized = PR_TRUE;
+      HASH_Begin(mHashContext);
+      return NS_OK;
+    }
 
-  mHashContext = HASH_Create((HASH_HashType) algorithm);
+    // Destroy current hash context if the type was different
+    // or Finish method wasn't called.
+    HASH_Destroy(mHashContext);
+    mInitialized = PR_FALSE;
+  }
+
+  mHashContext = HASH_Create(hashType);
   if (!mHashContext)
     return NS_ERROR_INVALID_ARG;
 
   HASH_Begin(mHashContext);
+  mInitialized = PR_TRUE;
   return NS_OK; 
 }
 
@@ -2602,7 +2617,7 @@ nsCryptoHash::InitWithString(const nsACString & aAlgorithm)
 NS_IMETHODIMP
 nsCryptoHash::Update(const PRUint8 *data, PRUint32 len)
 {
-  if (!mHashContext)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   HASH_Update(mHashContext, data, len);
@@ -2612,7 +2627,7 @@ nsCryptoHash::Update(const PRUint8 *data, PRUint32 len)
 NS_IMETHODIMP
 nsCryptoHash::UpdateFromStream(nsIInputStream *data, PRUint32 len)
 {
-  if (!mHashContext)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   if (!data)
@@ -2660,7 +2675,7 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, PRUint32 len)
 NS_IMETHODIMP
 nsCryptoHash::Finish(PRBool ascii, nsACString & _retval)
 {
-  if (!mHashContext)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
   
   PRUint32 hashLen = 0;
@@ -2668,9 +2683,8 @@ nsCryptoHash::Finish(PRBool ascii, nsACString & _retval)
   unsigned char* pbuffer = buffer;
 
   HASH_End(mHashContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
-  HASH_Destroy(mHashContext);
 
-  mHashContext = nsnull;
+  mInitialized = PR_FALSE;
 
   if (ascii)
   {
