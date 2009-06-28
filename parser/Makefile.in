@@ -42,7 +42,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= parser
-DIRS            = expat htmlparser html xml
+DIRS            = expat htmlparser xml
 
 include $(topsrcdir)/config/rules.mk
