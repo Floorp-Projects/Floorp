@@ -99,7 +99,7 @@
             newitem.setAttribute("label", aLabel);
             newitem.setAttribute("value", aValue);
             if (aImage)
-                newitem.setAttribute("image", aImage);
+              newitem.setAttribute("image", aImage);
             if (!insertPos) {
               newitem.style.position = "fixed";
               newitem.style.top = "100%";
