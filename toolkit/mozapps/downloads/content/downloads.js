@@ -1295,7 +1295,7 @@ function downloadMatchesSearch(aItem)
 
   // Make sure each of the terms are found
   for each (let term in gSearchTerms)
-    if (combinedSearch.search(term) == -1)
+    if (combinedSearch.indexOf(term) == -1)
       return false;
 
   return true;
