@@ -372,18 +372,6 @@ NS_IMETHODIMP nsScrollPortView::GetScrollPosition(nscoord &aX, nscoord &aY) cons
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollPortView::SetScrollProperties(PRUint32 aProperties)
-{
-  mScrollProperties = aProperties;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScrollPortView::GetScrollProperties(PRUint32 *aProperties)
-{
-  *aProperties = mScrollProperties;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsScrollPortView::SetLineHeight(nscoord aHeight)
 {
   mLineHeight = aHeight;
@@ -579,8 +567,7 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsIntP
     nsIWidget *scrollWidget = GetWidget();
     nsRegion updateRegion;
     PRBool canBitBlit = scrollWidget &&
-                        ((mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT) ||
-                         mViewManager->CanScrollWithBitBlt(aScrolledView, aTwipsDelta, &updateRegion)) &&
+                        mViewManager->CanScrollWithBitBlt(aScrolledView, aTwipsDelta, &updateRegion) &&
                         scrollWidget->GetTransparencyMode() != eTransparencyTransparent;
 
     if (canBitBlit) {
