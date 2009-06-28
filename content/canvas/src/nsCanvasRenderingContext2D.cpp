@@ -3028,23 +3028,26 @@ nsCanvasRenderingContext2D::DrawImage()
      * itself. Specifically, pixman will not preserve the contents when doing
      * the copy. So to get the desired semantics a temporary copy would be needed.
      * Instead we optimize opaque self copies here */
-    if (mThebes->CurrentSurface() == imgsurf) {
-        if (imgsurf->GetType() == gfxASurface::SurfaceTypeImage) {
-            gfxImageSurface *surf = static_cast<gfxImageSurface*>(imgsurf.get());
-            gfxContext::GraphicsOperator op = mThebes->CurrentOperator();
-            PRBool opaque, unscaled;
+    {
+        nsRefPtr<gfxASurface> csurf = mThebes->CurrentSurface();
+        if (csurf == imgsurf) {
+            if (imgsurf->GetType() == gfxASurface::SurfaceTypeImage) {
+                gfxImageSurface *surf = static_cast<gfxImageSurface*>(imgsurf.get());
+                gfxContext::GraphicsOperator op = mThebes->CurrentOperator();
+                PRBool opaque, unscaled;
 
-            opaque  = surf->Format() == gfxASurface::ImageFormatARGB32 &&
-                (op == gfxContext::OPERATOR_SOURCE);
-            opaque |= surf->Format() == gfxASurface::ImageFormatRGB24  &&
-                (op == gfxContext::OPERATOR_SOURCE || op == gfxContext::OPERATOR_OVER);
+                opaque  = surf->Format() == gfxASurface::ImageFormatARGB32 &&
+                    (op == gfxContext::OPERATOR_SOURCE);
+                opaque |= surf->Format() == gfxASurface::ImageFormatRGB24  &&
+                    (op == gfxContext::OPERATOR_SOURCE || op == gfxContext::OPERATOR_OVER);
 
-            unscaled = sw == dw && sh == dh;
+                unscaled = sw == dw && sh == dh;
 
-            if (opaque && unscaled) {
-                bitblt(surf, sx, sy, sw, sh, dx, dy);
-                rv = NS_OK;
-                goto FINISH;
+                if (opaque && unscaled) {
+                    bitblt(surf, sx, sy, sw, sh, dx, dy);
+                    rv = NS_OK;
+                    goto FINISH;
+                }
             }
         }
     }
