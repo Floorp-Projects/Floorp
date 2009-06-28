@@ -68,7 +68,6 @@
 #include "nsLWBrkCIID.h"
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
-#include "nsHtml5Module.h"
 
 static const char kMozStr[] = "moz";
 
@@ -101,7 +100,6 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
   return NS_OK;
 }
 
-#include "nsIHTMLDocument.h"
 void 
 nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                              nsIDOMElement *aOriginalElement,
@@ -110,40 +108,19 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                              nsIAtom* aTagName,
                                              nsAString& aStr)
 {
-  PRInt32 count = aContent->GetAttrCount();
-  if (!count)
-    return;
-
   nsresult rv;
+  PRUint32 index, count;
   nsAutoString nameStr, valueStr;
+
+  count = aContent->GetAttrCount();
+
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
-  // HTML5 parser stored them in the order they were parsed so we want to
-  // loop forward in that case.
-  nsIDocument* doc = aContent->GetOwnerDocument();
-  PRBool caseSensitive = doc && doc->IsCaseSensitive();
-  PRBool loopForward = PR_FALSE;
-  if (!caseSensitive) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
-    if (htmlDoc) {
-      loopForward = nsHtml5Module::Enabled;
-    }
-  }
-  PRInt32 index, limit, step;
-  if (loopForward) {
-    index = 0;
-    limit = count;
-    step = 1;
-  }
-  else {
-    // Loop backward over the attributes, since the order they are stored in is
-    // the opposite of the order they were parsed in (see bug 213347 for reason).
-    index = count - 1;
-    limit = -1;
-    step = -1;
-  }
-  
-  for (; index != limit; index += step) {
+  // Loop backward over the attributes, since the order they are stored in is
+  // the opposite of the order they were parsed in (see bug 213347 for reason).
+  // index is unsigned, hence index >= 0 is always true.
+  for (index = count; index > 0; ) {
+    --index;
     const nsAttrName* name = aContent->GetAttrNameAt(index);
     PRInt32 namespaceID = name->NamespaceID();
     nsIAtom* attrName = name->LocalName();

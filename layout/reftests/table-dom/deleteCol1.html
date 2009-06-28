@@ -4,11 +4,9 @@
 <SCRIPT>
 
 function doIt() {
+  var table = document.getElementsByTagName("TABLE")[0];
   var col = document.getElementsByTagName("COL")[0];
-  col.parentNode.removeChild(col);
-  // HTML5 implies a colgroup around the cols,
-  // so this test case should really be XHTML
-  // in order to test bare col
+  table.removeChild(col);
 }
 </SCRIPT>  
 </HEAD>
