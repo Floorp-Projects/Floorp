@@ -190,7 +190,7 @@ NSView* nsFilePicker::GetAccessoryView()
     [popupButton addItemWithTitle:titleString];
     [titleString release];
   }
-  if (mSelectedTypeIndex >= 0 && mSelectedTypeIndex < numMenuItems)
+  if (mSelectedTypeIndex >= 0 && (PRUint32)mSelectedTypeIndex < numMenuItems)
     [popupButton selectItemAtIndex:mSelectedTypeIndex];
   [popupButton setTag:kSaveTypeControlTag];
   [popupButton sizeToFit]; // we have to do sizeToFit to get the height calculated for us
