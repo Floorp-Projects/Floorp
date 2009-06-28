@@ -57,14 +57,14 @@ fails == table-sibling-2a.html table-sibling-2-ref.html # Bug 87277
 fails == table-sibling-2b.html table-sibling-2-ref.html # Bug 87277
 fails == table-sibling-2c.html table-sibling-2-ref.html # Bug 87277
 == table-caption-1a.html table-caption-1-ref.html
-fails == table-caption-1b.html table-caption-1-ref.html # Bug 297676 and 478614
-fails == table-caption-2a.html table-caption-2-ref.html # Bug 297676 and 478614
-fails == table-caption-2b.html table-caption-2-ref.html # Bug 297676 and 478614
-fails == table-caption-2c.html table-caption-2-ref.html # Bug 297676 and 478614
+== table-caption-1b.html table-caption-1-ref.html
+== table-caption-2a.html table-caption-2-ref.html
+== table-caption-2b.html table-caption-2-ref.html
+== table-caption-2c.html table-caption-2-ref.html
 == table-caption-top-1.html table-caption-top-1-ref.html
-fails == table-caption-top-2.html table-caption-top-2-ref.html # Bug 478614
+== table-caption-top-2.html table-caption-top-2-ref.html
 == table-caption-bottom-1.html table-caption-bottom-1-ref.html
-fails == table-caption-bottom-2.html table-caption-bottom-2-ref.html # Bug 478614
+== table-caption-bottom-2.html table-caption-bottom-2-ref.html
 fails == caption-sibling-1a.html caption-sibling-1-ref.html # Bug 144517
 fails == caption-sibling-1b.html caption-sibling-1-ref.html # Bug 144517
 fails == caption-sibling-1c.html caption-sibling-1-ref.html # Bug 144517
