@@ -1190,6 +1190,13 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 476598-1b.html 476598-1-ref.html
 == 476598-1b.html 476598-1-ref2.html
 != 476598-1-ref.html about:blank
+== 478614-1.html 478614-1-ref.html
+== 478614-2.html 478614-1-ref.html
+== 478614-3.html 478614-3-ref.html
+== 478614-4.html 478614-4-ref.html
+== 478614-5.html 478614-5-ref.html
+== 478614-6.html 478614-6-ref.html
+== 478614-7.html 478614-7-ref.html
 == 478377-1.xul 478377-1-ref.xul
 == 478811-1.html 478811-1-ref.html
 == 478811-2.html 478811-2-ref.html
