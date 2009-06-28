@@ -1411,6 +1411,12 @@ public:
   static already_AddRefed<nsIDocument>
   GetDocumentFromScriptContext(nsIScriptContext *aScriptContext);
 
+  /**
+   * The method checks whether the caller can access native anonymous content.
+   * If there is no JS in the stack or privileged JS is running, this
+   * method returns PR_TRUE, otherwise PR_FALSE.
+   */
+  static PRBool CanAccessNativeAnon();
 private:
 
   static PRBool InitializeEventTable();
