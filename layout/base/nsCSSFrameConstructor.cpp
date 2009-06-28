@@ -2377,7 +2377,8 @@ NeedFrameFor(nsIFrame*   aParentFrame,
     return PR_TRUE;
   }
 
-  aChildContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  aChildContent->SetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
+                          NS_REFRAME_IF_WHITESPACE);
   return !aChildContent->TextIsOnlyWhitespace();
 }
 
@@ -5520,8 +5521,9 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
 
   if (item.mIsText) {
     // If this is collapsible whitespace next to a line boundary,
-    // don't create a frame. This also sets the
-    // FRAMETREE_DEPENDS_ON_CHARS flag in the text node.
+    // don't create a frame. item.IsWhitespace() also sets the
+    // NS_CREATE_FRAME_IF_NON_WHITESPACE flag in the text node. (If we
+    // end up creating a frame, nsTextFrame::Init will clear the flag.)
     // We don't do this for generated content, because some generated
     // text content is empty text nodes that are about to be initialized.
     // (We check mAdditionalStateBits because only the generated content
@@ -6147,17 +6149,14 @@ nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
                "child index out of range");
   nsIContent* content = aParentContent->GetChildAt(aContentIndex);
   if (!content->IsNodeOfType(nsINode::eTEXT) ||
-      !content->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+      !content->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
     // Not text, or not suppressed due to being all-whitespace (if it
-    // were being suppressed, it would have the FRAMETREE_DEPENDS_ON_CHARS
-    // flag)
+    // were being suppressed, it would have the
+    // NS_CREATE_FRAME_IF_NON_WHITESPACE flag)
     return;
   }
-  if (mPresShell->GetPrimaryFrameFor(content)) {
-    // Already has a frame, don't do anything.
-    return;
-  }
-
+  NS_ASSERTION(!mPresShell->GetPrimaryFrameFor(content),
+               "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
   AddFrameConstructionItems(aState, content, aContentIndex, aParentFrame, aItems);
 }
 
@@ -6170,16 +6169,14 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
                "child index out of range");
   nsIContent* content = aParentContent->GetChildAt(aContentIndex);
   if (!content->IsNodeOfType(nsINode::eTEXT) ||
-      !content->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+      !content->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
     // Not text, or not suppressed due to being all-whitespace (if it
-    // were being suppressed, it would have the FRAMETREE_DEPENDS_ON_CHARS
-    // flag)
+    // were being suppressed, it would have the
+    // NS_CREATE_FRAME_IF_NON_WHITESPACE flag)
     return;
   }
-  if (mPresShell->GetPrimaryFrameFor(content)) {
-    // Already has a frame, don't do anything.
-    return;
-  }
+  NS_ASSERTION(!mPresShell->GetPrimaryFrameFor(content),
+               "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
   ContentInserted(aParentContent, content, aContentIndex, nsnull);
 }
 
@@ -7631,7 +7628,10 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsresult      rv = NS_OK;
 
-  if (aContent->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+  if ((aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) &&
+       !aContent->TextIsOnlyWhitespace()) ||
+      (aContent->HasFlag(NS_REFRAME_IF_WHITESPACE) &&
+       aContent->TextIsOnlyWhitespace())) {
 #ifdef DEBUG
     nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
     NS_ASSERTION(!frame || !frame->IsGeneratedContentFrame(),
@@ -11788,7 +11788,8 @@ nsCSSFrameConstructor::FrameConstructionItem::IsWhitespace() const
   if (!mIsText) {
     return PR_FALSE;
   }
-  mContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  mContent->SetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
+                     NS_REFRAME_IF_WHITESPACE);
   return mContent->TextIsOnlyWhitespace();
 }
 
