@@ -157,7 +157,7 @@
                 onget="return parseInt(this.getAttribute('timeout')) || 50;"/>
 
       <property name="searchParam"
-                onget="return this.getAttribute('autocompletesearchparam');"
+                onget="return this.getAttribute('autocompletesearchparam') || '';"
                 onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
 
       <property name="searchCount" readonly="true"
@@ -512,15 +512,6 @@
             else
               this.mSearchNames = names.split(" ");
           }
-        ]]></body>
-      </method>
-
-      <method name="ifSetAttribute">
-        <parameter name="aAttr"/>
-        <parameter name="aVal"/>
-        <body><![CDATA[
-          if (!this.hasAttribute(aAttr))
-            this.setAttribute(aAttr, aVal);
         ]]></body>
       </method>
 

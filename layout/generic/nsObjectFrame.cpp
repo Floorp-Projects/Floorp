@@ -1906,7 +1906,6 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
         // XXXjst: ns4xPluginInstance::Destroy() is a no-op, clean
         // this mess up when there are no other instance types.
         inst->Stop();
-        inst->Destroy();
 
         if (window) 
           window->CallSetWindow(nullinst);
@@ -1923,7 +1922,6 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
           return;
 
         inst->Stop();
-        inst->Destroy();
       }
     }
     else {
@@ -2266,11 +2264,11 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     nsCOMPtr<nsIPluginInstancePeer> peer;
     mInstance->GetPeer(getter_AddRefs(peer));
 
-    nsCOMPtr<nsIPluginInstancePeer2> peer2(do_QueryInterface(peer));
+    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
 
-    if (peer2) {
+    if (peer3) {
       // Tell the peer that its owner is going away.
-      peer2->InvalidateOwner();
+      peer3->InvalidateOwner();
     }
   }
 }

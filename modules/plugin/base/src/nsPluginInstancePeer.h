@@ -39,15 +39,13 @@
 #define nsPluginInstancePeer_h_
 
 #include "nsIPluginInstancePeer2.h"
-#include "nsIWindowlessPlugInstPeer.h"
 #include "nsIPluginTagInfo2.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsPIPluginInstancePeer.h"
 
 #include "nsCOMPtr.h"
 
-class nsPluginInstancePeerImpl : public nsIPluginInstancePeer2,
-                                 public nsIWindowlessPluginInstancePeer,
+class nsPluginInstancePeerImpl : public nsIPluginInstancePeer3,
                                  public nsIPluginTagInfo2,
                                  public nsPIPluginInstancePeer
 								
@@ -58,8 +56,8 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCEPEER
-  NS_DECL_NSIWINDOWLESSPLUGININSTANCEPEER
   NS_DECL_NSIPLUGININSTANCEPEER2
+  NS_DECL_NSIPLUGININSTANCEPEER3
   NS_DECL_NSIPLUGINTAGINFO
   NS_DECL_NSIPLUGINTAGINFO2
 
