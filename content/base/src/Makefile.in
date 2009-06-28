@@ -84,7 +84,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  editor \
 		  windowwatcher \
-		  html5 \
 		  $(NULL)
 
 ifdef ACCESSIBILITY
