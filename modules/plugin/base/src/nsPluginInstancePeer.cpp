@@ -689,8 +689,10 @@ nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
 {
   *outContext = NULL;
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDocument> document;
+  if (!mOwner)
+    return rv;
 
+  nsCOMPtr<nsIDocument> document;
   rv = mOwner->GetDocument(getter_AddRefs(document));
 
   if (NS_SUCCEEDED(rv) && document) {
