@@ -280,56 +280,47 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 }
 
 
+static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle)
+{
+  PRBool allOrDefault = (aBorderStyle == eBorderStyle_all ||
+                         aBorderStyle == eBorderStyle_default);
+
+  /* Apple's docs on NSWindow styles say that "a window's style mask should
+   * include NSTitledWindowMask if it includes any of the others [besides
+   * NSBorderlessWindowMask]".  This implies that a borderless window
+   * shouldn't have any other styles than NSBorderlessWindowMask.
+   */
+  if (!allOrDefault && !(aBorderStyle & eBorderStyle_title))
+    return NSBorderlessWindowMask;
+
+  unsigned int mask = NSTitledWindowMask | NSMiniaturizableWindowMask;
+  if (allOrDefault || aBorderStyle & eBorderStyle_close)
+    mask |= NSClosableWindowMask;
+  if (allOrDefault || aBorderStyle & eBorderStyle_resizeh)
+    mask |= NSResizableWindowMask;
+
+  return mask;
+}
+
+
 nsresult nsCocoaWindow::CreateNativeWindow(const nsIntRect &aRect,
                                            nsBorderStyle aBorderStyle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-
-  PRBool allOrDefault = aBorderStyle == eBorderStyle_all ||
-                        aBorderStyle == eBorderStyle_default;
-
-  // if a toplevel window was requested without a titlebar, use a dialog
-  if (mWindowType == eWindowType_toplevel &&
-      (aBorderStyle == eBorderStyle_none ||
-       !allOrDefault &&
-       !(aBorderStyle & eBorderStyle_title)))
-    mWindowType = eWindowType_dialog;
-
-  // we default to NSBorderlessWindowMask, add features if needed
+  // We default to NSBorderlessWindowMask, add features if needed.
   unsigned int features = NSBorderlessWindowMask;
 
-  // Configure the window we will create based on the window type
+  // Configure the window we will create based on the window type.
   switch (mWindowType)
   {
     case eWindowType_invisible:
     case eWindowType_child:
+    case eWindowType_popup:
       break;
+    case eWindowType_toplevel:
     case eWindowType_dialog:
-      switch (aBorderStyle)
-      {
-        case eBorderStyle_none:
-          break;
-        case eBorderStyle_default:
-          features |= NSTitledWindowMask;
-          break;
-        case eBorderStyle_all:
-          features |= NSClosableWindowMask;
-          features |= NSTitledWindowMask;
-          features |= NSResizableWindowMask;
-          features |= NSMiniaturizableWindowMask;
-          break;
-        default:
-          if (aBorderStyle & eBorderStyle_title) {
-            features |= NSTitledWindowMask;
-            features |= NSMiniaturizableWindowMask;
-          }
-          if (aBorderStyle & eBorderStyle_resizeh)
-            features |= NSResizableWindowMask;
-          if (aBorderStyle & eBorderStyle_close)
-            features |= NSClosableWindowMask;
-          break;
-      }
+      features = WindowMaskForBorderStyle(aBorderStyle);
       break;
     case eWindowType_sheet:
       nsWindowType parentType;
@@ -343,29 +334,10 @@ nsresult nsCocoaWindow::CreateNativeWindow(const nsIntRect &aRect,
       }
       features |= NSTitledWindowMask;
       break;
-    case eWindowType_popup:
-      features |= NSBorderlessWindowMask;
-      break;
-    case eWindowType_toplevel:
-      features |= NSTitledWindowMask;
-      features |= NSMiniaturizableWindowMask;
-      if (allOrDefault || aBorderStyle & eBorderStyle_close)
-        features |= NSClosableWindowMask;
-      if (allOrDefault || aBorderStyle & eBorderStyle_resizeh)
-        features |= NSResizableWindowMask;
-      break;
     default:
       NS_ERROR("Unhandled window type!");
       return NS_ERROR_FAILURE;
   }
-
-  /* Apple's docs on NSWindow styles say that "a window's style mask should
-   * include NSTitledWindowMask if it includes any of the others [besides
-   * NSBorderlessWindowMask]".  This implies that a borderless window
-   * shouldn't have any other styles than NSBorderlessWindowMask.
-   */
-  if (!(features & NSTitledWindowMask))
-    features = NSBorderlessWindowMask;
 
   /* 
    * We pass a content area rect to initialize the native Cocoa window. The

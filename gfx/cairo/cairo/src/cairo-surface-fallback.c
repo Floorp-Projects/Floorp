@@ -1115,6 +1115,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 {
     cairo_surface_t *snapshot;
     cairo_status_t status;
+    cairo_format_t format;
     cairo_surface_pattern_t pattern;
     cairo_image_surface_t *image;
     void *image_extra;
@@ -1124,7 +1125,14 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
-    snapshot = cairo_image_surface_create (image->format,
+    format = image->format;
+    if (format == CAIRO_FORMAT_INVALID) {
+	/* Non-standard images formats can be generated when retrieving
+	 * images from unusual xservers, for example.
+	 */
+	format = _cairo_format_from_content (image->base.content);
+    }
+    snapshot = cairo_image_surface_create (format,
 					   image->width,
 					   image->height);
     if (cairo_surface_status (snapshot)) {

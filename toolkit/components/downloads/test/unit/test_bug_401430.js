@@ -40,16 +40,19 @@
 const nsIDownloadManager = Ci.nsIDownloadManager;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 
-const resultFileName = "test" + Date.now() + ".doc";
+// Make sure Unicode is supported:
+// U+00E3 : LATIN SMALL LETTER A WITH TILDE
+// U+041B : CYRILLIC CAPITAL LETTER EL
+// U+3056 : HIRAGANA LETTER ZA
+const resultFileName = "test\u00e3\u041b\u3056" + Date.now() + ".doc";
 
 function checkResult() {
-  do_check_true(checkRecentDocsFor(resultFileName));
-
-  // delete the saved file
+  // delete the saved file (this doesn't affect the "recent documents" list)
   var resultFile = dirSvc.get("ProfD", Ci.nsIFile);
   resultFile.append(resultFileName);
   resultFile.remove(false);
 
+  do_check_true(checkRecentDocsFor(resultFileName));
   do_test_finished();
 }
 
@@ -66,11 +69,15 @@ function checkRecentDocsFor(aFileName) {
     var valueName = recentDocsKey.getValueName(i);
     var binValue = recentDocsKey.readBinaryValue(valueName);
 
-    // "fields" in the data are separated by double nulls, use only the first
-    var fileName = binValue.split("\0\0")[0];
+    // "fields" in the data are separated by \0 wide characters, which are
+    // returned as two \0 "bytes" by readBinaryValue. Use only the first field.
+    var fileNameRaw = binValue.split("\0\0")[0];
 
-    // Remove any embeded single nulls
-    fileName = fileName.replace(/\x00/g, "");
+    // Convert the filename from UTF-16LE.
+    var fileName = "";
+    for (var c = 0; c < fileNameRaw.length; c += 2)
+      fileName += String.fromCharCode(fileNameRaw.charCodeAt(c) |
+                                      fileNameRaw.charCodeAt(c+1) * 256);
 
     if (aFileName == fileName)
       return true;

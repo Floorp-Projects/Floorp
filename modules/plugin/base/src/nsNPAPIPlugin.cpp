@@ -1070,14 +1070,7 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      // XXX nsRect & NPRect are structurally equivalent
-      wpeer->InvalidateRect((nsPluginRect *)invalidRect);
-    }
-  }
+  inst->InvalidateRect((nsPluginRect *)invalidRect);
 }
 
 void NP_CALLBACK
@@ -1100,14 +1093,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      // nsPluginRegion & NPRegion are typedef'd to the same thing
-      wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
-    }
-  }
+  inst->InvalidateRegion((nsPluginRegion)invalidRegion);
 }
 
 void NP_CALLBACK
@@ -1128,13 +1114,7 @@ _forceredraw(NPP npp)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
-    if (wpeer) {
-      wpeer->ForceRedraw();
-    }
-  }
+  inst->ForceRedraw();
 }
 
 static nsIDocument *
@@ -1960,47 +1940,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
-  case NPNVserviceManager: {
-    nsIServiceManager * sm;
-    res = NS_GetServiceManager(&sm);
-    if (NS_SUCCEEDED(res)) {
-      *(nsIServiceManager**)result = sm;
-      return NPERR_NO_ERROR;
-    } else {
-      return NPERR_GENERIC_ERROR;
-    }
-  }
-
-  case NPNVDOMElement: {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
-    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
-
-    nsCOMPtr<nsIPluginInstancePeer> pip;
-    inst->GetPeer(getter_AddRefs(pip));
-    nsCOMPtr<nsIPluginTagInfo2> pti2 (do_QueryInterface(pip));
-    if (pti2) {
-      nsCOMPtr<nsIDOMElement> e;
-      pti2->GetDOMElement(getter_AddRefs(e));
-      if (e) {
-        NS_ADDREF(*(nsIDOMElement**)result = e.get());
-        return NPERR_NO_ERROR;
-      }
-    }
-    return NPERR_GENERIC_ERROR;
-  }
-
+  case NPNVserviceManager:
+  case NPNVDOMElement:
   case NPNVDOMWindow: {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
-    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
-
-    nsIDOMWindow *domWindow = inst->GetDOMWindow().get();
-
-    if (domWindow) {
-      // Pass over ownership of domWindow to the caller.
-      (*(nsIDOMWindow**)result) = domWindow;
-
-      return NPERR_NO_ERROR;
-    }
+    // we no longer hand out any XPCOM objects
     return NPERR_GENERIC_ERROR;
   }
 

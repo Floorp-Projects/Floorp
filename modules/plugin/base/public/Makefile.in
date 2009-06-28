@@ -71,7 +71,6 @@ XPIDLSRCS 	= \
 		nsIPluginInstanceOwner.idl \
 		nsIPlugin.idl \
 		nsIHTTPHeaderListener.idl \
-		nsIWindowlessPlugInstPeer.idl \
 		nsIPluginTag.idl \
 		nsIPluginTagInfo.idl \
 		nsIPluginTagInfo2.idl \

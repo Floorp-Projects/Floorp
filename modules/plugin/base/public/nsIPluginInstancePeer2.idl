@@ -61,7 +61,7 @@ struct JSContext;
  * All functionality in nsIPluginInstancePeer can be mapped to the 4.X
  * plugin API.
  */
-[uuid(79a2d210-55e4-4687-bd87-64b10c2466cc)]
+[uuid(e7d48c00-e1f1-11d2-8360-fbc8abc4ae7c)]
 interface nsIPluginInstancePeer2 : nsIPluginInstancePeer
 {
     /**
@@ -88,7 +88,11 @@ interface nsIPluginInstancePeer2 : nsIPluginInstancePeer
      * @result           - NS_OK if this operation was successful
      */
     readonly attribute JSContextPtr JSContext;
+};
 
+[uuid(79a2d210-55e4-4687-bd87-64b10c2466cc)]
+interface nsIPluginInstancePeer3 : nsIPluginInstancePeer2
+{
     /**
      * Drop our reference to our owner.
      */

@@ -128,14 +128,6 @@
  */
 #include "nsIPluginTagInfo.h"
 
-/**
- * The nsIWindowlessPluginInstancePeer provides additional operations for 
- * windowless plugins. 
- *
- * To obtain: QueryInterface on nsIPluginInstancePeer
- */
-#include "nsIWindowlessPlugInstPeer.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * <B>Interfaces implemented by the browser (new for 5.0):
