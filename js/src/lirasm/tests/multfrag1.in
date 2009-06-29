@@ -1,3 +1,4 @@
+.begin a
 ptr = alloc 8
 a = int 65
 sti a ptr 0
@@ -9,3 +10,17 @@ zero = int 0
 sti zero ptr 3
 ss = call puts cdecl ptr
 ret ss
+.end
+
+.begin b
+rr = call a fastcall
+ret rr
+.end
+
+.begin main
+ans = call b fastcall
+five = int 5
+res = add five ans
+ret res
+.end
+

@@ -1,0 +1,15 @@
+.begin avg
+p1 = param 0 0
+p2 = param 1 0
+sum = add p1 p2
+two = int 2
+avg = div sum two
+ret avg
+.end
+
+.begin main
+oneh = int 100
+twoh = int 200
+res = call avg fastcall twoh oneh
+ret res
+.end
