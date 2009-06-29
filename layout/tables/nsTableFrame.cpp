@@ -4038,7 +4038,7 @@ nsTableFrame::GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn,
     return NS_ERROR_NOT_INITIALIZED;
 
   *aIndex = cellMap->GetIndexByRowAndColumn(aRow, aColumn);
-  return NS_OK;
+  return (*aIndex == -1) ? NS_TABLELAYOUT_CELL_NOT_FOUND : NS_OK;
 }
 
 NS_IMETHODIMP
