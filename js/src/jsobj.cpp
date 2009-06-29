@@ -4344,6 +4344,8 @@ JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
              jsval *vp)
 {
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+
     if (obj->map->ops == &js_ObjectOps ||
         obj->map->ops->getProperty == js_GetProperty) {
         return js_GetPropertyHelper(cx, obj, id, cacheResult, vp);
