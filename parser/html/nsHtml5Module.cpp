@@ -95,9 +95,6 @@ nsHtml5Module::NewHtml5Parser()
   NS_ABORT_IF_FALSE(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   nsIParser* rv = static_cast<nsIParser*> (new nsHtml5Parser());
   NS_ADDREF(rv);
-  for (PRInt32 i = 0; i < 1000; i++) {
-    NS_ADDREF(rv);
-  }
   return rv;
 }
 
