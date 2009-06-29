@@ -56,7 +56,6 @@
 
 #include "nsIJSContextStack.h"
 
-#include "nsPIPluginInstancePeer.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
@@ -685,8 +684,6 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   PluginDestructionGuard guard(npp);
 
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-
-  NS_ASSERTION(inst, "null instance");
   if (!inst)
     return NPERR_INVALID_INSTANCE_ERROR;
 
@@ -883,11 +880,8 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
     PluginDestructionGuard guard(inst);
 
     nsCOMPtr<nsIOutputStream> stream;
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-    if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) &&
-      peer &&
-      NS_SUCCEEDED(peer->NewStream((const char*) type, target,
-                                   getter_AddRefs(stream)))) {
+    if (NS_SUCCEEDED(inst->NewStreamFromPlugin((const char*) type, target,
+                                               getter_AddRefs(stream)))) {
       nsNPAPIStreamWrapper* wrapper = new nsNPAPIStreamWrapper(stream);
       if (wrapper) {
         (*result) = wrapper->GetNPStream();
@@ -1001,10 +995,7 @@ _status(NPP npp, const char *message)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
-    peer->ShowStatus(message);
-  }
+  inst->ShowStatus(message);
 }
 
 void NP_CALLBACK
@@ -1126,13 +1117,8 @@ GetDocumentFromNPP(NPP npp)
 
   PluginDestructionGuard guard(inst);
 
-  nsCOMPtr<nsIPluginInstancePeer> pip;
-  inst->GetPeer(getter_AddRefs(pip));
-  nsCOMPtr<nsPIPluginInstancePeer> pp(do_QueryInterface(pip));
-  NS_ENSURE_TRUE(pp, nsnull);
-
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  pp->GetOwner(getter_AddRefs(owner));
+  inst->GetOwner(getter_AddRefs(owner));
   NS_ENSURE_TRUE(owner, nsnull);
 
   nsCOMPtr<nsIDocument> doc;
@@ -1899,11 +1885,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-    if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) &&
-        peer &&
-        NS_SUCCEEDED(peer->GetValue(nsPluginInstancePeerVariable_NetscapeWindow,
-                                    result))) {
+    nsCOMPtr<nsIPluginInstanceOwner> owner;
+    inst->GetOwner(getter_AddRefs(owner));
+    NS_ENSURE_TRUE(owner, nsnull);
+
+    if (NS_SUCCEEDED(owner->GetNetscapeWindow(result))) {
       return NPERR_NO_ERROR;
     }
     return NPERR_GENERIC_ERROR;

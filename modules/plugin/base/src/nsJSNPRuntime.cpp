@@ -39,8 +39,6 @@
 #include "nsJSNPRuntime.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIPluginInstancePeer.h"
-#include "nsPIPluginInstancePeer.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
@@ -296,11 +294,8 @@ GetJSContext(NPP npp)
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
   NS_ENSURE_TRUE(inst, nsnull);
 
-  nsCOMPtr<nsPIPluginInstancePeer> pp(do_QueryInterface(inst->Peer()));
-  NS_ENSURE_TRUE(pp, nsnull);
-
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  pp->GetOwner(getter_AddRefs(owner));
+  inst->GetOwner(getter_AddRefs(owner));
   NS_ENSURE_TRUE(owner, nsnull);
 
   nsCOMPtr<nsIDocument> doc;
@@ -1926,28 +1921,18 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
   // Find the plugin instance so that we can (eventually) get to the
   // DOM element
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
-  if (!inst) {
+  if (!inst)
     return;
-  }
-
-  nsCOMPtr<nsIPluginInstancePeer> pip;
-  inst->GetPeer(getter_AddRefs(pip));
-  nsCOMPtr<nsIPluginTagInfo2> pti2(do_QueryInterface(pip));
-  if (!pti2) {
-    return;
-  }
 
   nsCOMPtr<nsIDOMElement> element;
-  pti2->GetDOMElement(getter_AddRefs(element));
-  if (!element) {
+  inst->GetDOMElement(getter_AddRefs(element));
+  if (!element)
     return;
-  }
 
   // Get the DOM element's JS object.
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-  if (!xpc) {
+  if (!xpc)
     return;
-  }
 
   // OK.  Now we have to get our hands on the right scope object, since
   // GetWrappedNativeOfNativeObject doesn't call PreCreate and hence won't get

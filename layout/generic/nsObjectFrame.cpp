@@ -73,7 +73,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsIPluginInstancePeer.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
 #include "nsIEventListener.h"
@@ -277,7 +276,7 @@ public:
 
   NS_IMETHOD ForceRedraw();
 
-  NS_IMETHOD GetValue(nsPluginInstancePeerVariable variable, void *value);
+  NS_IMETHOD GetNetscapeWindow(void *value);
 
   //nsIPluginTagInfo interface
 
@@ -600,7 +599,7 @@ void
 nsObjectFrame::Destroy()
 {
   NS_ASSERTION(!mPreventInstantiation ||
-               mContent && mContent->GetCurrentDoc()->GetDisplayDocument(),
+               (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
                "about to crash due to bug 136927");
 
   // we need to finish with the plugin before native window is destroyed
@@ -2266,10 +2265,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 
   if (mInstance) {
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-    mInstance->GetPeer(getter_AddRefs(peer));
-    if (peer)
-      peer->InvalidateOwner();
+    mInstance->InvalidateOwner();
   }
 }
 
@@ -2519,94 +2515,91 @@ NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable variable, void *value)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  switch(variable) {
-    case nsPluginInstancePeerVariable_NetscapeWindow:
-    {      
-      if (mOwner) {
-#if defined(XP_WIN) || defined(XP_OS2)
-        void** pvalue = (void**)value;
-        nsIViewManager* vm = mOwner->PresContext()->GetPresShell()->GetViewManager();
-        if (vm) {
-#if defined(XP_WIN)
-          // This property is provided to allow a "windowless" plugin to determine the window it is drawing
-          // in, so it can translate mouse coordinates it receives directly from the operating system
-          // to coordinates relative to itself.
-        
-          // The original code (outside this #if) returns the document's window, which is OK if the window the "windowless" plugin
-          // is drawing into has the same origin as the document's window, but this is not the case for "windowless" plugins inside of scrolling DIVs etc
-
-          // To make sure "windowless" plugins always get the right origin for translating mouse coordinates, this code
-          // determines the window handle of the mozilla window containing the "windowless" plugin.
-
-          // Given that this HWND may not be that of the document's window, there is a slight risk
-          // of confusing a plugin that is using this HWND for illicit purposes, but since the documentation
-          // does not suggest this HWND IS that of the document window, rather that of the window
-          // the plugin is drawn in, this seems like a safe fix.
-         
-          // we only attempt to get the nearest window if this really is a "windowless" plugin so as not
-          // to change any behaviour for the much more common windowed plugins,
-          // though why this method would even be being called for a windowed plugin escapes me.
-          if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
-              // it turns out that flash also uses this window for determining focus, and is currently
-              // unable to show a caret correctly if we return the enclosing window. Therefore for
-              // now we only return the enclosing window when there is an actual offset which
-              // would otherwise cause coordinates to be offset incorrectly. (i.e.
-              // if the enclosing window if offset from the document window)
-              //
-              // fixing both the caret and ability to interact issues for a windowless control in a non document aligned windw
-              // does not seem to be possible without a change to the flash plugin
-    
-              nsIWidget* win = mOwner->GetWindow();
-              if (win) {
-                nsIView *view = nsIView::GetViewFor(win);
-                NS_ASSERTION(view, "No view for widget");
-                nsIView *rootView = nsnull;
-                vm->GetRootView(rootView);
-                NS_ASSERTION(rootView, "No root view");
-                nsPoint offset = view->GetOffsetTo(rootView);
-      
-                if (offset.x || offset.y) {
-                  // in the case the two windows are offset from eachother, we do go ahead and return the correct enclosing window
-                  // so that mouse co-ordinates are not messed up.
-                  *pvalue = (void*)win->GetNativeData(NS_NATIVE_WINDOW);
-                  if (*pvalue)
-                    return NS_OK;
-                }
-              }
-          }
-#endif
-          // simply return the document window
-          nsCOMPtr<nsIWidget> widget;
-          rv = vm->GetWidget(getter_AddRefs(widget));            
-          if (widget) {
-            *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
-          } else NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
-        } else NS_ASSERTION(vm, "couldn't get view manager in getting doc's window handle");
-#elif defined(MOZ_WIDGET_GTK2)
-        // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
-        nsIWidget* win = mOwner->GetWindow();
-        if (!win)
-          return rv;
-        GdkWindow* gdkWindow =
-          static_cast<GdkWindow*>(win->GetNativeData(NS_NATIVE_WINDOW));
-        if (!gdkWindow)
-          return rv;
-        gdkWindow = gdk_window_get_toplevel(gdkWindow);
-#ifdef MOZ_X11
-        *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
-#endif
-        return NS_OK;
-#endif
-      } else NS_ASSERTION(mOwner, "plugin owner has no owner in getting doc's window handle");
-      break;
-    }
+NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
+{  
+  if (!mOwner) {
+    NS_WARNING("plugin owner has no owner in getting doc's window handle");
+    return NS_ERROR_FAILURE;
   }
+  
+#if defined(XP_WIN) || defined(XP_OS2)
+  void** pvalue = (void**)value;
+  nsIViewManager* vm = mOwner->PresContext()->GetPresShell()->GetViewManager();
+  if (!vm)
+    return NS_ERROR_FAILURE;
+#if defined(XP_WIN)
+  // This property is provided to allow a "windowless" plugin to determine the window it is drawing
+  // in, so it can translate mouse coordinates it receives directly from the operating system
+  // to coordinates relative to itself.
+  
+  // The original code (outside this #if) returns the document's window, which is OK if the window the "windowless" plugin
+  // is drawing into has the same origin as the document's window, but this is not the case for "windowless" plugins inside of scrolling DIVs etc
+  
+  // To make sure "windowless" plugins always get the right origin for translating mouse coordinates, this code
+  // determines the window handle of the mozilla window containing the "windowless" plugin.
+  
+  // Given that this HWND may not be that of the document's window, there is a slight risk
+  // of confusing a plugin that is using this HWND for illicit purposes, but since the documentation
+  // does not suggest this HWND IS that of the document window, rather that of the window
+  // the plugin is drawn in, this seems like a safe fix.
+  
+  // we only attempt to get the nearest window if this really is a "windowless" plugin so as not
+  // to change any behaviour for the much more common windowed plugins,
+  // though why this method would even be being called for a windowed plugin escapes me.
+  if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
+    // it turns out that flash also uses this window for determining focus, and is currently
+    // unable to show a caret correctly if we return the enclosing window. Therefore for
+    // now we only return the enclosing window when there is an actual offset which
+    // would otherwise cause coordinates to be offset incorrectly. (i.e.
+    // if the enclosing window if offset from the document window)
+    //
+    // fixing both the caret and ability to interact issues for a windowless control in a non document aligned windw
+    // does not seem to be possible without a change to the flash plugin
+    
+    nsIWidget* win = mOwner->GetWindow();
+    if (win) {
+      nsIView *view = nsIView::GetViewFor(win);
+      NS_ASSERTION(view, "No view for widget");
+      nsIView *rootView = nsnull;
+      vm->GetRootView(rootView);
+      NS_ASSERTION(rootView, "No root view");
+      nsPoint offset = view->GetOffsetTo(rootView);
+      
+      if (offset.x || offset.y) {
+        // in the case the two windows are offset from eachother, we do go ahead and return the correct enclosing window
+        // so that mouse co-ordinates are not messed up.
+        *pvalue = (void*)win->GetNativeData(NS_NATIVE_WINDOW);
+        if (*pvalue)
+          return NS_OK;
+      }
+    }
+#endif
+    // simply return the document window
+    nsCOMPtr<nsIWidget> widget;
+    nsresult rv = vm->GetWidget(getter_AddRefs(widget));            
+    if (widget) {
+      *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
+    } else {
+      NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
+    }
 
-  return rv;
+    return rv;
+#elif defined(MOZ_WIDGET_GTK2)
+  // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
+  nsIWidget* win = mOwner->GetWindow();
+  if (!win)
+    return NS_ERROR_FAILURE;
+  GdkWindow* gdkWindow = static_cast<GdkWindow*>(win->GetNativeData(NS_NATIVE_WINDOW));
+  if (!gdkWindow)
+    return NS_ERROR_FAILURE;
+  gdkWindow = gdk_window_get_toplevel(gdkWindow);
+#ifdef MOZ_X11
+  *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
+#endif
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
