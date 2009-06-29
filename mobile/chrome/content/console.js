@@ -160,7 +160,7 @@ let ConsoleView = {
     row.setAttribute("type", "message");
     row.setAttribute("msg", aMessage);
 
-    let mode = document.getElementById("console-filter").value
+    let mode = document.getElementById("console-filter").value;
     if (mode != "all" && mode != "message")
       row.collapsed = false;
 
