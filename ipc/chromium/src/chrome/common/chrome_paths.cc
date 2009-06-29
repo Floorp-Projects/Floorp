@@ -127,7 +127,11 @@ bool PathProvider(int key, FilePath* result) {
     case chrome::FILE_LOCAL_STATE:
       if (!PathService::Get(chrome::DIR_USER_DATA, &cur))
         return false;
+#ifdef CHROMIUM_MOZILLA_BUILD
+      cur = cur.Append(FILE_PATH_LITERAL("Local State"));
+#else
       cur = cur.Append(chrome::kLocalStateFilename);
+#endif
       break;
     case chrome::FILE_RECORDED_SCRIPT:
       if (!PathService::Get(chrome::DIR_USER_DATA, &cur))

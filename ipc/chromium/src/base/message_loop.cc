@@ -23,6 +23,10 @@
 #include "base/message_pump_glib.h"
 #endif
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+#include "MessagePump.h"
+#endif
+
 using base::Time;
 using base::TimeDelta;
 
@@ -84,6 +88,16 @@ MessageLoop::MessageLoop(Type type)
   DCHECK(!current()) << "should only have one message loop per thread";
   lazy_tls_ptr.Pointer()->Set(this);
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+  if (type_ == TYPE_UI) {
+    pump_ = new mozilla::ipc::MessagePump();
+    return;
+  }
+  if (type_ == TYPE_MOZILLA_CHILD) {
+    pump_ = new mozilla::ipc::MessagePumpForChildProcess();
+    return;
+  }
+#endif
 #if defined(OS_WIN)
   // TODO(rvargas): Get rid of the OS guards.
   if (type_ == TYPE_DEFAULT) {
@@ -187,7 +201,7 @@ void MessageLoop::RunInternal() {
 
   StartHistogrammer();
 
-#if defined(OS_WIN)
+#if defined(OS_WIN) && !defined(CHROMIUM_MOZILLA_BUILD)
   if (state_->dispatcher) {
     pump_win()->RunWithDispatcher(this, state_->dispatcher);
     return;

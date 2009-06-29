@@ -5,11 +5,15 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "base/gfx/rect.h"
+#ifndef CHROMIUM_MOZILLA_BUILD
 #include "googleurl/src/gurl.h"
+#endif
 #ifndef EXCLUDE_SKIA_DEPENDENCIES
 #include "SkBitmap.h"
 #endif
+#ifndef CHROMIUM_MOZILLA_BUILD
 #include "webkit/glue/dom_operations.h"
+#endif
 
 namespace IPC {
 
@@ -96,6 +100,7 @@ void ParamTraits<SkBitmap>::Log(const SkBitmap& p, std::wstring* l) {
 
 #endif  // EXCLUDE_SKIA_DEPENDENCIES
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 void ParamTraits<GURL>::Write(Message* m, const GURL& p) {
   m->WriteString(p.possibly_invalid_spec());
   // TODO(brettw) bug 684583: Add encoding for query params.
@@ -220,5 +225,7 @@ void ParamTraits<webkit_glue::WebApplicationInfo>::Log(
     const webkit_glue::WebApplicationInfo& p, std::wstring* l) {
   l->append(L"<WebApplicationInfo>");
 }
+
+#endif // CHROMIUM_MOZILLA_BUILD
 
 }  // namespace IPC
