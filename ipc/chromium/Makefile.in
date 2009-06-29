@@ -291,5 +291,3 @@ endif # }
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS += $(MOZ_RTTI_FLAGS_ON)
