@@ -1,0 +1,8 @@
+# Probably a Purify error.  See bug 1076843.
+WideCharToMultiByte: Invalid size (0x27) for destination buffer.
+Error Location
+   ...  
+   base/file_util_unittest.cc  FileUtilTest_ResolveShortcutTest_Test::TestBody(void)
+   testing/gtest/src/gtest.cc  testing::Test::Run(void)
+   ^^^  
+
