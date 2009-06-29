@@ -50,6 +50,7 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsAccessible.h"
 #include "nsARIAMap.h"
+#include "nsXULTreeAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -767,6 +768,28 @@ nsAccUtils::QueryAccessibleDocument(nsIAccessibleDocument *aAccessibleDocument)
 
   return accessible;
 }
+
+#ifdef MOZ_XUL
+already_AddRefed<nsXULTreeAccessible>
+nsAccUtils::QueryAccessibleTree(nsIAccessible *aAccessible)
+{
+  nsXULTreeAccessible* accessible = nsnull;
+  if (aAccessible)
+    CallQueryInterface(aAccessible, &accessible);
+
+  return accessible;
+}
+
+already_AddRefed<nsXULTreeitemAccessible>
+nsAccUtils::QueryAccessibleTreeitem(nsIAccessNode *aAccessNode)
+{
+  nsXULTreeitemAccessible* accessible = nsnull;
+  if (aAccessNode)
+    CallQueryInterface(aAccessNode, &accessible);
+
+  return accessible;
+}
+#endif
 
 #ifdef DEBUG_A11Y
 
