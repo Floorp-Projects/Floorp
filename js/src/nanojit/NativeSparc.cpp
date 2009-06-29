@@ -289,7 +289,7 @@ namespace nanojit
                 }
         else if (i->isconst()) {
             if (!resv->arIndex) {
-                i->clearResv();
+                i->resv()->clear();
             }
             int v = i->imm32();
             SET32(v, r);
