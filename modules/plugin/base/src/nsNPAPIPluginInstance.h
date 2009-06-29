@@ -44,10 +44,10 @@
 #include "nsTArray.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
-#include "nsIPluginInstancePeer.h"
 #include "nsIPluginTagInfo2.h"
 #include "nsIPluginInstanceInternal.h"
 #include "nsPIDOMWindow.h"
+#include "nsIPluginInstanceOwner.h"
 
 #include "npfunctions.h"
 #include "prlink.h"
@@ -119,24 +119,25 @@ public:
     // cache this NPAPI plugin like an XPCOM plugin
     nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; }
 
-    // Non-refcounting accessor for faster access to the peer.
-    nsIPluginInstancePeer *Peer()
-    {
-        return mPeer;
-    }
-
     already_AddRefed<nsPIDOMWindow> GetDOMWindow();
 
     nsresult PrivateModeStateChanged();
+
+    nsresult GetDOMElement(nsIDOMElement* *result);
+
 protected:
 
-    nsresult InitializePlugin(nsIPluginInstancePeer* peer);
+    nsresult InitializePlugin();
 
     // Calls NPP_GetValue
     nsresult GetValueInternal(NPPVariable variable, void* value);
 
-    // The plugin instance peer for this instance.
-    nsCOMPtr<nsIPluginInstancePeer> mPeer;
+    nsresult GetTagType(nsPluginTagType *result);
+    nsresult GetAttributes(PRUint16& n, const char*const*& names,
+                           const char*const*& values);
+    nsresult GetParameters(PRUint16& n, const char*const*& names,
+                           const char*const*& values);
+    nsresult GetMode(nsPluginMode *result);
 
     // A pointer to the plugin's callback functions. This information
     // is actually stored in the plugin class (<b>nsPluginClass</b>),
@@ -169,6 +170,10 @@ public:
     nsTArray<PopupControlState> mPopupStates;
 
     nsMIMEType mMIMEType;
+
+    // Weak pointer to the owner. The owner nulls this out (by calling
+    // InvalidateOwner()) when it's no longer our owner.
+    nsIPluginInstanceOwner  *mOwner;
 };
 
 #endif // nsNPAPIPluginInstance_h_

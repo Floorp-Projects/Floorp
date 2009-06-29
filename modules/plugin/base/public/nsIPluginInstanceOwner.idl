@@ -125,7 +125,7 @@ interface nsIPluginInstanceOwner : nsISupports
   void forceRedraw();
 
   /**
-   * Get the specified variable
+   * Get NetscapeWindow, corresponds to NPNVnetscapeWindow
    */
-  void getValue(in nsPluginInstancePeerVariable aVariable, in voidPtr aValue);
+  void getNetscapeWindow(in voidPtr aValue);
 };

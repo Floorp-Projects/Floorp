@@ -114,17 +114,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * A plugin instance peer gets created by the browser and associated with each
- * plugin instance to represent tag information and other callbacks needed by
- * the plugin instance.
- */
-#include "nsIPluginInstancePeer.h"
-
-/**
  * The nsIPluginTagInfo interface provides information about the html tag
  * that was used to instantiate the plugin instance. 
- *
- * To obtain: QueryInterface on nsIPluginInstancePeer
  */
 #include "nsIPluginTagInfo.h"
 

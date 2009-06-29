@@ -48,10 +48,9 @@
 #include "prmem.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
-#include "nsIPluginInstancePeer.h"
-#include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstanceInternal.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -312,20 +311,15 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
 nsPluginInstanceTag::nsPluginInstanceTag(nsPluginTag* aPluginTag,
                                nsIPluginInstance* aInstance,
                                const char * url,
-                               PRBool aDefaultPlugin,
-                               nsIPluginInstancePeer* peer)
+                               PRBool aDefaultPlugin)
 {
   mNext = nsnull;
-  mPeer = nsnull;
   mPluginTag = aPluginTag;
 
   mURL = PL_strdup(url);
   mInstance = aInstance;
-  if (aInstance && peer) {
-    mPeer = peer;
-    NS_ADDREF(mPeer);
+  if (aInstance)
     NS_ADDREF(aInstance);
-  }
   mXPConnected = PR_FALSE;
   mDefaultPlugin = aDefaultPlugin;
   mStopped = PR_FALSE;
@@ -336,18 +330,13 @@ nsPluginInstanceTag::~nsPluginInstanceTag()
 {
   mPluginTag = nsnull;
   if (mInstance) {
-    if (mPeer) {
-      nsresult rv = NS_OK;
-      nsCOMPtr<nsPIPluginInstancePeer> peer(do_QueryInterface(mPeer));
-      nsCOMPtr<nsIPluginInstanceOwner> owner;
-      rv = peer->GetOwner(getter_AddRefs(owner));
-      if (owner)
-        owner->SetInstance(nsnull);
-      mPeer->InvalidateOwner();
-    }
+    nsCOMPtr<nsIPluginInstanceOwner> owner;
+    mInstance->GetOwner(getter_AddRefs(owner));
+    if (owner)
+      owner->SetInstance(nsnull);
+    mInstance->InvalidateOwner();
 
     NS_RELEASE(mInstance);
-    NS_IF_RELEASE(mPeer);
   }
   PL_strfree(mURL);
 }
@@ -497,10 +486,9 @@ void nsPluginInstanceTagList::stopRunning(nsISupportsArray* aReloadDocs,
       // If we've been passed an array to return, lets collect all our documents,
       // removing duplicates. These will be reframed (embedded) or reloaded (full-page) later
       // to kickstart our instances.
-      if (aReloadDocs && p->mPeer) {
-        nsCOMPtr<nsPIPluginInstancePeer> peer(do_QueryInterface(p->mPeer));
+      if (aReloadDocs && p->mInstance) {
         nsCOMPtr<nsIPluginInstanceOwner> owner;
-        peer->GetOwner(getter_AddRefs(owner));
+        p->mInstance->GetOwner(getter_AddRefs(owner));
         if (owner) {
           nsCOMPtr<nsIDocument> doc;
           owner->GetDocument(getter_AddRefs(doc));
@@ -551,7 +539,7 @@ nsPluginInstanceTag * nsPluginInstanceTagList::find(const char * mimetype)
 
   for (nsPluginInstanceTag * p = mFirst; p != nsnull; p = p->mNext) {
     // give it some special treatment for the default plugin first
-    // because we cannot tell the default plugin by asking peer for a mime type
+    // because we cannot tell the default plugin by asking instance for a mime type
     if (defaultplugin && p->mDefaultPlugin)
       return p;
 
@@ -1209,7 +1197,7 @@ private:
   PRPackedBool            mRequestFailed;
 
   /*
-   * Set to PR_TRUE after nsIPluginInstancePeer::OnStartBinding() has
+   * Set to PR_TRUE after nsIPluginStreamListener::OnStartBinding() has
    * been called.  Checked in ::OnStopRequest so we can call the
    * plugin's OnStartBinding if, for some reason, it has not already
    * been called.
@@ -2258,13 +2246,13 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   // NOTE: this should only happen when a stream was NOT created
   // with GetURL or PostURL (i.e. it's the initial stream we
   // send to the plugin as determined by the SRC or DATA attribute)
-  if (mPStreamListener == nsnull && mInstance != nsnull)
-    rv = mInstance->NewStream(&mPStreamListener);
+  if (!mPStreamListener && mInstance)
+    rv = mInstance->NewStreamToPlugin(&mPStreamListener);
 
-  if (rv != NS_OK)
+  if (NS_FAILED(rv))
     return rv;
 
-  if (mPStreamListener == nsnull)
+  if (!mPStreamListener)
     return NS_ERROR_NULL_POINTER;
 
   PRBool useLocalCache = PR_FALSE;
@@ -2536,7 +2524,7 @@ PRBool nsPluginHostImpl::IsRunningPlugin(nsPluginTag * plugin)
   if (!plugin)
     return PR_FALSE;
 
-  // we can check for mLibrary to be non-zero and then querry nsIPluginInstancePeer
+  // we can check for mLibrary to be non-zero and then ask nsIPluginInstance
   // in nsPluginInstanceTagList to see if plugin with matching mime type is not stopped
   if (!plugin->mLibrary)
     return PR_FALSE;
@@ -2744,21 +2732,16 @@ nsresult nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
 
   if (NS_SUCCEEDED(rv)) {
     if (target) {
-      nsCOMPtr<nsIPluginInstancePeer> peer;
-      rv = instance->GetPeer(getter_AddRefs(peer));
-      if (NS_SUCCEEDED(rv) && peer) {
-        nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
-        nsCOMPtr<nsIPluginInstanceOwner> owner;
-        rv = privpeer->GetOwner(getter_AddRefs(owner));
-        if (owner) {
-          if ((0 == PL_strcmp(target, "newwindow")) ||
-              (0 == PL_strcmp(target, "_new")))
-            target = "_blank";
-          else if (0 == PL_strcmp(target, "_current"))
-            target = "_self";
+      nsCOMPtr<nsIPluginInstanceOwner> owner;
+      rv = instance->GetOwner(getter_AddRefs(owner));
+      if (owner) {
+        if ((0 == PL_strcmp(target, "newwindow")) ||
+            (0 == PL_strcmp(target, "_new")))
+          target = "_blank";
+        else if (0 == PL_strcmp(target, "_current"))
+          target = "_self";
 
-          rv = owner->GetURL(url, target, nsnull, 0, (void *) getHeaders, getHeadersLength);
-        }
+        rv = owner->GetURL(url, target, nsnull, 0, (void *) getHeaders, getHeadersLength);
       }
     }
 
@@ -2817,28 +2800,21 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
     }
 
     if (target) {
-      nsCOMPtr<nsIPluginInstancePeer> peer;
-      rv = instance->GetPeer(getter_AddRefs(peer));
-      if (NS_SUCCEEDED(rv) && peer) {
-        nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
-        nsCOMPtr<nsIPluginInstanceOwner> owner;
-        rv = privpeer->GetOwner(getter_AddRefs(owner));
-        if (owner) {
-          if (!target) {
+      nsCOMPtr<nsIPluginInstanceOwner> owner;
+      rv = instance->GetOwner(getter_AddRefs(owner));
+      if (owner) {
+        if (!target) {
+          target = "_self";
+        } else {
+          if ((0 == PL_strcmp(target, "newwindow")) ||
+              (0 == PL_strcmp(target, "_new"))) {
+            target = "_blank";
+          } else if (0 == PL_strcmp(target, "_current")) {
             target = "_self";
           }
-          else {
-            if ((0 == PL_strcmp(target, "newwindow")) ||
-                (0 == PL_strcmp(target, "_new"))) {
-              target = "_blank";
-            }
-            else if (0 == PL_strcmp(target, "_current")) {
-              target = "_self";
-            }
-          }
-          rv = owner->GetURL(url, target, (void*)dataToPost, postDataLen,
-                             (void*)postHeaders, postHeadersLength, isFile);
         }
+        rv = owner->GetURL(url, target, (void*)dataToPost, postDataLen,
+                           (void*)postHeaders, postHeadersLength, isFile);
       }
     }
 
@@ -3368,10 +3344,7 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
     aOwner->GetWindow(window);
 
     aOwner->SetInstance(instance);
-
-    // we have to reset the owner and instance in the plugin instance peer
-    //instance->GetPeer(&peer);
-    ((nsPluginInstancePeerImpl*)plugin->mPeer)->SetOwner(aOwner);
+    instance->SetOwner(aOwner);
 
     instance->Start();
     aOwner->CreateWidget();
@@ -3391,8 +3364,7 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 nsresult nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                                                nsIPluginInstance* aInstance,
                                                nsIURI* aURL,
-                                               PRBool aDefaultPlugin,
-                                               nsIPluginInstancePeer* peer)
+                                               PRBool aDefaultPlugin)
 
 {
   nsCAutoString url;
@@ -3413,7 +3385,7 @@ nsresult nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
     NS_ASSERTION(pluginTag, "Plugin tag not found");
   }
 
-  nsPluginInstanceTag * plugin = new nsPluginInstanceTag(pluginTag, aInstance, url.get(), aDefaultPlugin, peer);
+  nsPluginInstanceTag * plugin = new nsPluginInstanceTag(pluginTag, aInstance, url.get(), aDefaultPlugin);
 
   if (!plugin)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3617,19 +3589,12 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   // it is adreffed here
   aOwner->SetInstance(instance);
 
-  nsRefPtr<nsPluginInstancePeerImpl> peer = new nsPluginInstancePeerImpl();
-  if (!peer)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // set up the peer for the instance
-  peer->Initialize(aOwner);
-
-  result = instance->Initialize(peer, mimetype);  // this should addref the peer but not the instance or owner
+  result = instance->Initialize(aOwner, mimetype);  // this should not addref the instance or owner
   if (NS_FAILED(result))                // except in some cases not Java, see bug 140931
     return result;                      // our COM pointer will free the peer
 
   // instance and peer will be addreffed here
-  result = AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, peer);
+  result = AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE);
 
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec2;
@@ -3675,10 +3640,6 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
   // it is adreffed here
   aOwner->SetInstance(instance);
 
-  nsRefPtr<nsPluginInstancePeerImpl> peer = new nsPluginInstancePeerImpl();
-  if (!peer)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   // if we don't have a mimetype, check by file extension
   nsXPIDLCString mt;
   if (!mimetype || !*mimetype) {
@@ -3691,18 +3652,13 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
     }
   }
 
-  // set up the peer for the instance
-  peer->Initialize(aOwner);
-
-  // this should addref the peer but not the instance or owner except
-  // in some cases not Java, see bug 140931 our COM pointer will free
-  // the peer
-  result = instance->Initialize(peer, mimetype);
+  // this should not addref the instance or owner
+  result = instance->Initialize(aOwner, mimetype);
   if (NS_FAILED(result))
     return result;
 
-  // instance and peer will be addreffed here
-  result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE, peer);
+  // instance will be addreffed here
+  result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE);
 
   return result;
 }
@@ -5187,18 +5143,13 @@ nsresult nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   // get the full URL of the document that the plugin is embedded
   //   in to create an absolute url in case aURL is relative
   nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIPluginInstancePeer> peer;
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  rv = aInstance->GetPeer(getter_AddRefs(peer));
-  if (NS_SUCCEEDED(rv) && peer) {
-    nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
-    rv = privpeer->GetOwner(getter_AddRefs(owner));
-    if (owner) {
-      rv = owner->GetDocument(getter_AddRefs(doc));
-      if (NS_SUCCEEDED(rv) && doc) {
-        // Create an absolute URL
-        rv = NS_MakeAbsoluteURI(absUrl, aURL, doc->GetBaseURI());
-      }
+  aInstance->GetOwner(getter_AddRefs(owner));
+  if (owner) {
+    rv = owner->GetDocument(getter_AddRefs(doc));
+    if (NS_SUCCEEDED(rv) && doc) {
+      // Create an absolute URL
+      rv = NS_MakeAbsoluteURI(absUrl, aURL, doc->GetBaseURI());
     }
   }
 
@@ -5313,35 +5264,27 @@ nsresult
 nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
                                          const char* aURL)
 {
-  nsresult rv;
-
   if (!aURL || *aURL == '\0')
     return NS_OK;
 
   // get the URL of the document that loaded the plugin
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  rv = aInstance->GetPeer(getter_AddRefs(peer));
-  if (NS_FAILED(rv) || !peer)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  rv = privpeer->GetOwner(getter_AddRefs(owner));
+  aInstance->GetOwner(getter_AddRefs(owner));
   if (!owner)
     return NS_ERROR_FAILURE;
 
-  rv = owner->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc;
+  owner->GetDocument(getter_AddRefs(doc));
   if (!doc)
     return NS_ERROR_FAILURE;
 
   // Create an absolute URL for the target in case the target is relative
   nsCOMPtr<nsIURI> targetURL;
-  rv = NS_NewURI(getter_AddRefs(targetURL), aURL, doc->GetBaseURI());
-
+  NS_NewURI(getter_AddRefs(targetURL), aURL, doc->GetBaseURI());
   if (!targetURL)
     return NS_ERROR_FAILURE;
 
+  nsresult rv;
   nsCOMPtr<nsIScriptSecurityManager> secMan(
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
@@ -5605,15 +5548,8 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
     return rv;
 
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-
-  if (aInstance) {
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-    rv = aInstance->GetPeer(getter_AddRefs(peer));
-    if (NS_SUCCEEDED(rv) && peer) {
-      nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
-      privpeer->GetOwner(getter_AddRefs(owner));
-    }
-  }
+  if (aInstance)
+    aInstance->GetOwner(getter_AddRefs(owner));
 
   nsCOMPtr<nsIPrompt> prompt;
   GetPrompt(owner, getter_AddRefs(prompt));
@@ -6035,29 +5971,23 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   // mInstance->Stop calls mPStreamListener->CleanUpStream(), so stream will be properly clean up
   mInstance->Stop();
   mInstance->Start();
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  mInstance->GetPeer(getter_AddRefs(peer));
-  if (peer) {
-    nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
-    nsCOMPtr<nsIPluginInstanceOwner> owner;
-    privpeer->GetOwner(getter_AddRefs(owner));
-    if (owner) {
-      nsPluginWindow    *window = nsnull;
-      owner->GetWindow(window);
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  mInstance->GetOwner(getter_AddRefs(owner));
+  if (owner) {
+    nsPluginWindow    *window = nsnull;
+    owner->GetWindow(window);
 #if defined (MOZ_WIDGET_GTK2)
-      // Should call GetPluginPort() here.
-      // This part is copied from nsPluginInstanceOwner::GetPluginPort(). 
-      nsCOMPtr<nsIWidget> widget;
-      ((nsPluginNativeWindow*)window)->GetPluginWidget(getter_AddRefs(widget));
-      if (widget) {
-        window->window = (nsPluginPort*) widget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-      }
+    // Should call GetPluginPort() here.
+    // This part is copied from nsPluginInstanceOwner::GetPluginPort(). 
+    nsCOMPtr<nsIWidget> widget;
+    ((nsPluginNativeWindow*)window)->GetPluginWidget(getter_AddRefs(widget));
+    if (widget) {
+      window->window = (nsPluginPort*) widget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+    }
 #endif
-      if (window->window)
-      {
-        nsCOMPtr<nsIPluginInstance> inst = mInstance;
-        ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
-      }
+    if (window->window) {
+      nsCOMPtr<nsIPluginInstance> inst = mInstance;
+      ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
     }
   }
 
