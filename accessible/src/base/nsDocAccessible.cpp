@@ -1055,6 +1055,17 @@ NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsDocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsDocAccessible)
 
 void
+nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
+                                     nsIContent* aContent, PRInt32 aNameSpaceID,
+                                     nsIAtom* aAttribute, PRInt32 aModType)
+{
+  // XXX TODO: bugs 381599 467143 472142 472143
+  // Here we will want to cache whatever state we are potentially interested in,
+  // such as the existence of aria-pressed for button (so we know if we need to
+  // newly expose it as a toggle button) etc.
+}
+
+void
 nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType, PRUint32 aStateMask)

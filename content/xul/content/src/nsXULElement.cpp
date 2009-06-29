@@ -1317,10 +1317,9 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     PRUint32 stateMask;
     if (aNotify) {
         stateMask = PRUint32(IntrinsicState());
-
-        if (doc) {
-            doc->AttributeWillChange(this, aNameSpaceID, aName);
-        }
+ 
+        nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
+                                         nsIDOMMutationEvent::REMOVAL);
     }
 
     PRBool hasMutationListeners = aNotify &&
