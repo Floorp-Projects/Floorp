@@ -40,7 +40,6 @@
 
 #include "nsIFactory.h"
 #include "nsIPlugin.h"
-#include "nsIPluginInstancePeer.h"
 #include "prlink.h"
 #include "npfunctions.h"
 #include "nsPluginHostImpl.h"

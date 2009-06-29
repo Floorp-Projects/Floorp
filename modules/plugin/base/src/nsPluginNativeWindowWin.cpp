@@ -52,7 +52,6 @@
 
 #include "nsGUIEvent.h"
 
-#include "nsIPluginInstancePeer.h"
 #include "nsIPluginInstanceInternal.h"
 #include "nsPluginSafety.h"
 #include "nsPluginNativeWindow.h"

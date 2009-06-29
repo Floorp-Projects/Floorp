@@ -50,14 +50,133 @@
 #include "nsPluginLogging.h"
 #include "nsIPrivateBrowsingService.h"
 
-#include "nsPIPluginInstancePeer.h"
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsJSNPRuntime.h"
 
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
+
+// nsPluginStreamToFile
+// --------------------
+// Used to handle NPN_NewStream() - writes the stream as received by the plugin
+// to a file and at completion (NPN_DestroyStream), tells the browser to load it into
+// a plugin-specified target
+
+static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
+
+class nsPluginStreamToFile : public nsIOutputStream
+{
+public:
+  nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner);
+  virtual ~nsPluginStreamToFile();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOUTPUTSTREAM
+protected:
+  char* mTarget;
+  nsCString mFileURL;
+  nsCOMPtr<nsILocalFile> mTempFile;
+  nsCOMPtr<nsIOutputStream> mOutputStream;
+  nsIPluginInstanceOwner* mOwner;
+};
+
+NS_IMPL_ISUPPORTS1(nsPluginStreamToFile, nsIOutputStream)
+
+nsPluginStreamToFile::nsPluginStreamToFile(const char* target,
+                                           nsIPluginInstanceOwner* owner)
+: mTarget(PL_strdup(target)),
+mOwner(owner)
+{
+  nsresult rv;
+  nsCOMPtr<nsIFile> pluginTmp;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
+  if (NS_FAILED(rv)) return;
+  
+  mTempFile = do_QueryInterface(pluginTmp, &rv);
+  if (NS_FAILED(rv)) return;
+  
+  // need to create a file with a unique name - use target as the basis
+  rv = mTempFile->AppendNative(nsDependentCString(target));
+  if (NS_FAILED(rv)) return;
+  
+  // Yes, make it unique.
+  rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700); 
+  if (NS_FAILED(rv)) return;
+  
+  // create the file
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), mTempFile, -1, 00600);
+  if (NS_FAILED(rv))
+    return;
+	
+  mOutputStream->Close();
+  
+  // construct the URL we'll use later in calls to GetURL()
+  NS_GetURLSpecFromFile(mTempFile, mFileURL);
+  
+#ifdef NS_DEBUG
+  printf("File URL = %s\n", mFileURL.get());
+#endif
+}
+
+nsPluginStreamToFile::~nsPluginStreamToFile()
+{
+  // should we be deleting mTempFile here?
+  if (nsnull != mTarget)
+    PL_strfree(mTarget);
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::Flush()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount,
+                            PRUint32 *aWriteCount)
+{
+  PRUint32 actualCount;
+  mOutputStream->Write(aBuf, aCount, &actualCount);
+  mOutputStream->Flush();
+  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, 0, nsnull, 0);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::WriteFrom(nsIInputStream *inStr, PRUint32 count,
+                                PRUint32 *_retval)
+{
+  NS_NOTREACHED("WriteFrom");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::WriteSegments(nsReadSegmentFun reader, void * closure,
+                                    PRUint32 count, PRUint32 *_retval)
+{
+  NS_NOTREACHED("WriteSegments");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::IsNonBlocking(PRBool *aNonBlocking)
+{
+  *aNonBlocking = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginStreamToFile::Close(void)
+{
+  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, 0, nsnull, 0);
+  return NS_OK;
+}
+
+// end of nsPluginStreamToFile
 
 // nsNPAPIPluginStreamListener Methods
 
@@ -803,10 +922,12 @@ nsNPAPIPluginInstance::IsStarted(void)
   return mStarted;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstancePeer* peer, const nsMIMEType aMIMEType)
+NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, const nsMIMEType aMIMEType)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Initialize this=%p\n",this));
-  
+
+  mOwner = aOwner;
+
   if (aMIMEType) {
     mMIMEType = (nsMIMEType)PR_Malloc(PL_strlen(aMIMEType) + 1);
 
@@ -814,15 +935,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstancePeer* peer, con
       PL_strcpy((char *)mMIMEType, aMIMEType);
   }
 
-  return InitializePlugin(peer);
-}
-
-NS_IMETHODIMP nsNPAPIPluginInstance::GetPeer(nsIPluginInstancePeer* *resultingPeer)
-{
-  *resultingPeer = mPeer;
-  NS_IF_ADDREF(*resultingPeer);
-  
-  return NS_OK;
+  return InitializePlugin();
 }
 
 NS_IMETHODIMP nsNPAPIPluginInstance::Start(void)
@@ -832,7 +945,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Start(void)
   if (mStarted)
     return NS_OK;
 
-  return InitializePlugin(mPeer); 
+  return InitializePlugin();
 }
 
 NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
@@ -905,12 +1018,8 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
 already_AddRefed<nsPIDOMWindow>
 nsNPAPIPluginInstance::GetDOMWindow()
 {
-  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
-  if (!pp)
-    return nsnull;
-
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  pp->GetOwner(getter_AddRefs(owner));
+  GetOwner(getter_AddRefs(owner));
   if (!owner)
     return nsnull;
 
@@ -925,23 +1034,66 @@ nsNPAPIPluginInstance::GetDOMWindow()
   return window;
 }
 
-nsresult nsNPAPIPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
+nsresult
+nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
 {
-  NS_ENSURE_ARG_POINTER(peer);
- 
-  nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(peer);
-  NS_ENSURE_TRUE(taginfo, NS_ERROR_NO_INTERFACE);
-  
+  if (mOwner) {
+    nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+    if (tinfo)
+      return tinfo->GetTagType(result);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsNPAPIPluginInstance::GetAttributes(PRUint16& n, const char*const*& names,
+                                     const char*const*& values)
+{
+  if (mOwner) {
+    nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+    if (tinfo)
+      return tinfo->GetAttributes(n, names, values);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsNPAPIPluginInstance::GetParameters(PRUint16& n, const char*const*& names,
+                                     const char*const*& values)
+{
+  if (mOwner) {
+    nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+    if (tinfo)
+      return tinfo->GetParameters(n, names, values);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsNPAPIPluginInstance::GetMode(nsPluginMode *result)
+{
+  if (mOwner)
+    return mOwner->GetMode(result);
+  else
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsNPAPIPluginInstance::InitializePlugin()
+{ 
   PluginDestructionGuard guard(this);
 
   PRUint16 count = 0;
   const char* const* names = nsnull;
   const char* const* values = nsnull;
   nsPluginTagType tagtype;
-  nsresult rv = taginfo->GetTagType(&tagtype);
+  nsresult rv = GetTagType(&tagtype);
   if (NS_SUCCEEDED(rv)) {
     // Note: If we failed to get the tag type, we may be a full page plugin, so no arguments
-    rv = taginfo->GetAttributes(count, names, values);
+    rv = GetAttributes(count, names, values);
     NS_ENSURE_SUCCESS(rv, rv);
     
     // nsPluginTagType_Object or Applet may also have PARAM tags
@@ -953,7 +1105,7 @@ nsresult nsNPAPIPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
       PRUint16 pcount = 0;
       const char* const* pnames = nsnull;
       const char* const* pvalues = nsnull;    
-      if (NS_SUCCEEDED(taginfo->GetParameters(pcount, pnames, pvalues))) {
+      if (NS_SUCCEEDED(GetParameters(pcount, pnames, pvalues))) {
         NS_ASSERTION(!values[count], "attribute/parameter array not setup correctly for NPAPI plugins");
         if (pcount)
           count += ++pcount; // if it's all setup correctly, then all we need is to
@@ -971,7 +1123,7 @@ nsresult nsNPAPIPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   nsMIMEType    mimetype;
   NPError       error;
 
-  peer->GetMode(&mode);
+  GetMode(&mode);
   GetMIMEType(&mimetype);
 
   // Some older versions of Flash have a bug in them
@@ -1026,11 +1178,9 @@ nsresult nsNPAPIPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
 
   mIsJavaPlugin = nsPluginHostImpl::IsJavaMIMEType(mimetype);
 
-  // Assign mPeer now and mark this instance as started before calling NPP_New 
-  // because the plugin may call other NPAPI functions, like NPN_GetURLNotify,
-  // that assume these are set before returning. If the plugin returns failure,
-  // we'll clear them out below.
-  mPeer = peer;
+  // Mark this instance as started before calling NPP_New because the plugin may
+  // call other NPAPI functions, like NPN_GetURLNotify, that assume this is set
+  // before returning. If the plugin returns failure, we'll clear it out below.
   mStarted = PR_TRUE;
 
   PRBool oldVal = mInPluginInitCall;
@@ -1045,10 +1195,7 @@ nsresult nsNPAPIPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   this, &fNPP, mimetype, mode, count, error));
 
   if (error != NPERR_NO_ERROR) {
-    // since the plugin returned failure, these should not be set
-    mPeer = nsnull;
     mStarted = PR_FALSE;
-
     return NS_ERROR_FAILURE;
   }
   
@@ -1101,9 +1248,21 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
 
 /* NOTE: the caller must free the stream listener */
 // Create a normal stream, one without a urlnotify callback
-NS_IMETHODIMP nsNPAPIPluginInstance::NewStream(nsIPluginStreamListener** listener)
+NS_IMETHODIMP
+nsNPAPIPluginInstance::NewStreamToPlugin(nsIPluginStreamListener** listener)
 {
   return NewNotifyStream(listener, nsnull, PR_FALSE, nsnull);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::NewStreamFromPlugin(nsMIMEType type, const char* target,
+                                           nsIOutputStream* *result)
+{
+  nsPluginStreamToFile* stream = new nsPluginStreamToFile(target, mOwner);
+  if (!stream)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return stream->QueryInterface(kIOutputStreamIID, (void**)result);
 }
 
 // Create a stream that will notify when complete
@@ -1475,15 +1634,26 @@ nsresult nsNPAPIPluginInstance::PrivateModeStateChanged()
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
+{
+  if (!mOwner) {
+    *result = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+  if (tinfo)
+    return tinfo->GetDOMElement(result);
+
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsNPAPIPluginInstance::InvalidateRect(nsPluginRect *invalidRect)
 {
-  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
-  if (!pp)
-    return nsnull;
-
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  pp->GetOwner(getter_AddRefs(owner));
+  GetOwner(getter_AddRefs(owner));
   if (!owner)
     return NS_ERROR_FAILURE;
 
@@ -1493,12 +1663,8 @@ nsNPAPIPluginInstance::InvalidateRect(nsPluginRect *invalidRect)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::InvalidateRegion(nsPluginRegion invalidRegion)
 {
-  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
-  if (!pp)
-    return nsnull;
-
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  pp->GetOwner(getter_AddRefs(owner));
+  GetOwner(getter_AddRefs(owner));
   if (!owner)
     return NS_ERROR_FAILURE;
 
@@ -1508,12 +1674,8 @@ nsNPAPIPluginInstance::InvalidateRegion(nsPluginRegion invalidRegion)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::ForceRedraw()
 {
-  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
-  if (!pp)
-    return nsnull;
-
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  pp->GetOwner(getter_AddRefs(owner));
+  GetOwner(getter_AddRefs(owner));
   if (!owner)
     return NS_ERROR_FAILURE;
 
@@ -1534,12 +1696,8 @@ nsNPAPIPluginInstance::GetMIMEType(nsMIMEType *result)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
 {
-  nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
-  if (!pp)
-    return nsnull;
-
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  pp->GetOwner(getter_AddRefs(owner));
+  GetOwner(getter_AddRefs(owner));
   if (!owner)
     return NS_ERROR_FAILURE;
 
@@ -1561,4 +1719,37 @@ nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetOwner(nsIPluginInstanceOwner **aOwner)
+{
+  NS_ENSURE_ARG_POINTER(aOwner);
+  *aOwner = mOwner;
+  NS_IF_ADDREF(mOwner);
+  return (mOwner ? NS_OK : NS_ERROR_FAILURE);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::SetOwner(nsIPluginInstanceOwner *aOwner)
+{
+  mOwner = aOwner;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::ShowStatus(const char* message)
+{
+  if (mOwner)
+    return mOwner->ShowStatus(message);
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::InvalidateOwner()
+{
+  mOwner = nsnull;
+
+  return NS_OK;
 }
