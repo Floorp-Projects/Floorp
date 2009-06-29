@@ -75,18 +75,20 @@ REQUIRES	= xpcom \
 			$(NULL)
 
 CPPSRCS		= \
-	nsWindow.cpp         \
-	nsAppShell.cpp       \
-	nsToolkit.cpp        \
-	nsFilePicker.cpp     \
+	nsWindow.cpp \
+	nsWindowGfx.cpp \
+	nsWindowDbg.cpp \
+	nsAppShell.cpp \
+	nsToolkit.cpp \
+	nsFilePicker.cpp \
 	nsScreenWin.cpp	\
 	nsScreenManagerWin.cpp \
-	nsLookAndFeel.cpp    \
+	nsLookAndFeel.cpp \
 	nsUXThemeData.cpp \
 	nsNativeThemeWin.cpp \
 	nsWinGesture.cpp \
 	nsIdleServiceWin.cpp \
-	nsSound.cpp          \
+	nsSound.cpp \
 	nsIMM32Handler.cpp \
 	$(NULL)
 
@@ -100,6 +102,7 @@ endif
 
 ifeq ($(OS_ARCH), WINCE)
 CPPSRCS += \
+	nsWindowCE.cpp \
 	nsClipboardCE.cpp \
 	$(NULL)
 else
