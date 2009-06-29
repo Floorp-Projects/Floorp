@@ -1366,7 +1366,7 @@ var PlacesUIUtils = {
       aPopup._lmStatusMenuItem.setAttribute("label", this.getString(lmStatus));
       aPopup._lmStatusMenuItem.setAttribute("disabled", true);
       aPopup.insertBefore(aPopup._lmStatusMenuItem,
-                          aPopup.childNodes[aPopup._startMarker + 1]);
+                          aPopup.childNodes.item(aPopup._startMarker + 1));
       aPopup._startMarker++;
     }
     else if (lmStatus &&
