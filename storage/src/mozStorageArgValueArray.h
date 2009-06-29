@@ -42,7 +42,7 @@
 
 #include "mozIStorageValueArray.h"
 
-#include <sqlite3.h>
+#include "sqlite3.h"
 
 namespace mozilla {
 namespace storage {
