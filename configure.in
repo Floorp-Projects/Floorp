@@ -5316,6 +5316,17 @@ MOZ_ARG_DISABLE_BOOL(jsd,
 
 
 dnl ========================================================
+dnl = Disable IPC support for tabs and plugins
+dnl ========================================================
+MOZ_IPC=1
+MOZ_ARG_DISABLE_BOOL(ipc,
+[  --disable-ipc           Disable IPC supports for tabs and plugins],
+    MOZ_IPC=,
+    MOZ_IPC=1)
+
+AC_SUBST(MOZ_IPC)
+
+dnl ========================================================
 dnl = Disable plugin support
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(plugins,
