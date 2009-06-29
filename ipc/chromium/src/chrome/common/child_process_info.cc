@@ -6,12 +6,16 @@
 
 #include <limits>
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 #include "app/l10n_util.h"
+#endif
 #include "base/logging.h"
 #include "base/process_util.h"
 #include "base/rand_util.h"
 #include "base/string_util.h"
+#ifndef CHROMIUM_MOZILLA_BUILD
 #include "grit/generated_resources.h"
+#endif
 
 std::wstring ChildProcessInfo::GetTypeNameInEnglish(
     ChildProcessInfo::ProcessType type) {
@@ -32,6 +36,9 @@ std::wstring ChildProcessInfo::GetTypeNameInEnglish(
 }
 
 std::wstring ChildProcessInfo::GetLocalizedTitle() const {
+#ifdef CHROMIUM_MOZILLA_BUILD
+  return name_;
+#else
   std::wstring title = name_;
   if (type_ == ChildProcessInfo::PLUGIN_PROCESS && title.empty())
     title = l10n_util::GetString(IDS_TASK_MANAGER_UNKNOWN_PLUGIN_NAME);
@@ -52,6 +59,7 @@ std::wstring ChildProcessInfo::GetLocalizedTitle() const {
   // or Arabic word for "plugin".
   l10n_util::AdjustStringForLocaleDirection(title, &title);
   return l10n_util::GetStringF(message_id, title);
+#endif
 }
 
 ChildProcessInfo::ChildProcessInfo(ProcessType type) {

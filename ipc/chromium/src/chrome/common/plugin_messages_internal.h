@@ -4,9 +4,7 @@
 
 #include "base/shared_memory.h"
 #include "chrome/common/ipc_message_macros.h"
-#include "webkit/glue/webcursor.h"
 
-//-----------------------------------------------------------------------------
 // PluginProcess messages
 // These are messages sent from the browser to the plugin process.
 IPC_BEGIN_MESSAGES(PluginProcess)

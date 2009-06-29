@@ -331,6 +331,9 @@ bool IsWprintfFormatPortable(const wchar_t* format) {
 
 }  // namespace base
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+namespace base {
+#endif
 
 const std::string& EmptyString() {
   return Singleton<EmptyStrings>::get()->s;
@@ -343,6 +346,10 @@ const std::wstring& EmptyWString() {
 const string16& EmptyString16() {
   return Singleton<EmptyStrings>::get()->s16;
 }
+
+#ifdef CHROMIUM_MOZILLA_BUILD
+}
+#endif
 
 const wchar_t kWhitespaceWide[] = {
   0x0009,  // <control-0009> to <control-000D>

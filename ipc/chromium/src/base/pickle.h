@@ -65,8 +65,12 @@ class Pickle {
   // true.  Otherwise, false is returned to indicate that the result could not
   // be extracted.
   bool ReadBool(void** iter, bool* result) const;
+  bool ReadInt16(void** iter, int16* result) const;
+  bool ReadUInt16(void** iter, uint16* result) const;
+  bool ReadShort(void** iter, short* result) const;
   bool ReadInt(void** iter, int* result) const;
   bool ReadLong(void** iter, long* result) const;
+  bool ReadULong(void** iter, unsigned long* result) const;
   bool ReadSize(void** iter, size_t* result) const;
   bool ReadUInt32(void** iter, uint32* result) const;
   bool ReadInt64(void** iter, int64* result) const;
@@ -88,10 +92,19 @@ class Pickle {
   bool WriteBool(bool value) {
     return WriteInt(value ? 1 : 0);
   }
+  bool WriteInt16(int16 value) {
+    return WriteBytes(&value, sizeof(value));
+  }
+  bool WriteUInt16(uint16 value) {
+    return WriteBytes(&value, sizeof(value));
+  }
   bool WriteInt(int value) {
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteLong(long value) {
+    return WriteBytes(&value, sizeof(value));
+  }
+  bool WriteULong(unsigned long value) {
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteSize(size_t value) {

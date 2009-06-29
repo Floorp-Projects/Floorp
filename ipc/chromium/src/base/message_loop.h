@@ -185,6 +185,9 @@ class MessageLoop : public base::MessagePump::Delegate {
     TYPE_DEFAULT,
     TYPE_UI,
     TYPE_IO
+#ifdef CHROMIUM_MOZILLA_BUILD
+    , TYPE_MOZILLA_CHILD
+#endif
   };
 
   // Normally, it is not necessary to instantiate a MessageLoop.  Instead, it

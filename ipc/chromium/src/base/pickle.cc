@@ -88,6 +88,34 @@ bool Pickle::ReadBool(void** iter, bool* result) const {
   return true;
 }
 
+bool Pickle::ReadInt16(void** iter, int16* result) const {
+  DCHECK(iter);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
+
+  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
+    return false;
+
+  memcpy(result, *iter, sizeof(*result));
+
+  UpdateIter(iter, sizeof(*result));
+  return true;
+}
+
+bool Pickle::ReadUInt16(void** iter, uint16* result) const {
+  DCHECK(iter);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
+
+  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
+    return false;
+
+  memcpy(result, *iter, sizeof(*result));
+
+  UpdateIter(iter, sizeof(*result));
+  return true;
+}
+
 bool Pickle::ReadInt(void** iter, int* result) const {
   DCHECK(iter);
   if (!*iter)
@@ -106,6 +134,22 @@ bool Pickle::ReadInt(void** iter, int* result) const {
 }
 
 bool Pickle::ReadLong(void** iter, long* result) const {
+  DCHECK(iter);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
+
+  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
+    return false;
+
+  // TODO(jar) bug 1129285: Pickle should be cleaned up, and not dependent on
+  // alignment.
+  memcpy(result, *iter, sizeof(*result));
+
+  UpdateIter(iter, sizeof(*result));
+  return true;
+}
+
+bool Pickle::ReadULong(void** iter, unsigned long* result) const {
   DCHECK(iter);
   if (!*iter)
     *iter = const_cast<char*>(payload());
@@ -188,6 +232,8 @@ bool Pickle::ReadIntPtr(void** iter, intptr_t* result) const {
 
 bool Pickle::ReadString(void** iter, std::string* result) const {
   DCHECK(iter);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
 
   int len;
   if (!ReadLength(iter, &len))
@@ -204,6 +250,8 @@ bool Pickle::ReadString(void** iter, std::string* result) const {
 
 bool Pickle::ReadWString(void** iter, std::wstring* result) const {
   DCHECK(iter);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
 
   int len;
   if (!ReadLength(iter, &len))
@@ -220,6 +268,8 @@ bool Pickle::ReadWString(void** iter, std::wstring* result) const {
 
 bool Pickle::ReadString16(void** iter, string16* result) const {
   DCHECK(iter);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
 
   int len;
   if (!ReadLength(iter, &len))
@@ -237,6 +287,8 @@ bool Pickle::ReadString16(void** iter, string16* result) const {
 bool Pickle::ReadBytes(void** iter, const char** data, int length) const {
   DCHECK(iter);
   DCHECK(data);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
 
   if (!IteratorHasRoomFor(*iter, length))
     return false;
@@ -251,6 +303,8 @@ bool Pickle::ReadData(void** iter, const char** data, int* length) const {
   DCHECK(iter);
   DCHECK(data);
   DCHECK(length);
+  if (!*iter)
+    *iter = const_cast<char*>(payload());
 
   if (!ReadLength(iter, length))
     return false;
