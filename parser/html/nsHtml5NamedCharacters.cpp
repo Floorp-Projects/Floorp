@@ -12865,7 +12865,7 @@ static PRUnichar const VALUE_2136[] = {
   0x200c
 };
 
-// XXX for some reason, it takes forever for msvc to optimize this function
+// XXX bug 501082: for some reason, msvc takes forever to optimize this function
 #ifdef _MSC_VER
 #pragma optimize("", off)
 #endif
