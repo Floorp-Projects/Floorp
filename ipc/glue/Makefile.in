@@ -11,10 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla platform.
+# The Original Code is Mozilla IPC.
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
+#   Ben Turner <bent.mozilla@gmail.com>.
 # Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -34,82 +34,54 @@
 #
 # ***** END LICENSE BLOCK *****
 
-ifndef INCLUDED_CONFIG_MK
-$(error Must include config.mk before this file.)
-endif
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
-ifdef CHROMIUM_CONFIG_INCLUDED
-$(error Must not include chromium-config.mk twice.)
-endif
+include $(DEPTH)/config/autoconf.mk
 
-CHROMIUM_CONFIG_INCLUDED = 1
+MODULE = ipc
+LIBRARY_NAME = mozipc_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
 
-EXTRA_DEPS += $(topsrcdir)/ipc/chromium/chromium-config.mk
+EXPORTS_NAMESPACES = IPC mozilla/ipc
 
-DEFINES += \
-  -DEXCLUDE_SKIA_DEPENDENCIES \
-  -DCHROMIUM_MOZILLA_BUILD \
+EXPORTS_IPC =					\
+  IPCMessageUtils.h 				\
   $(NULL)
 
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/ipc/chromium/src \
-  -I$(topsrcdir)/ipc/glue \
+# FIXME/cjones: "ChromeThread" is a misnomer
+EXPORTS_mozilla/ipc =				\
+  GeckoChildProcessHost.h			\
+  GeckoThread.h 				\
+  MessageTypes.h 				\
+  RPCChannel.h					\
+  ScopedXREEmbed.h				\
   $(NULL)
 
-ifeq ($(OS_ARCH),Darwin) # {
+ENABLE_CXX_EXCEPTIONS = 1
+DEFINES += -DNO_NSPR_10_SUPPORT=1
 
-OS_MACOSX = 1
-OS_POSIX = 1
-
-DEFINES += \
-  -DOS_MACOSX=1 \
-  -DOS_POSIX=1 \
+REQUIRES += \
+  string \
+  widget \
+  xpcom \
+  xulapp \
   $(NULL)
 
-else # } {
-ifeq ($(OS_ARCH),WINNT) # {
-OS_LIBS += $(call EXPAND_LIBNAME,psapi shell32 dbghelp)
-
-OS_WIN = 1
-
-DEFINES += \
-  -DUNICODE \
-  -D_UNICODE \
-  -DNOMINMAX \
-  -D_CRT_RAND_S \
-  -DCERT_CHAIN_PARA_HAS_EXTRA_FIELDS \
-  -D_SECURE_ATL \
-  -D_HAS_TR1=0 \
-  -DCHROMIUM_BUILD \
-  -DU_STATIC_IMPLEMENTATION \
-  -DCOMPILER_MSVC \
-  -DOS_WIN=1 \
-  -DWIN32 \
-  -D_WIN32 \
-  -D_WINDOWS \
-  -DWIN32_LEAN_AND_MEAN \
+CPPSRCS += \
+  GeckoChildProcessHost.cpp \
+  GeckoThread.cpp \
+  MessagePump.cpp \
+  RPCChannel.cpp \
+  ScopedXREEmbed.cpp \
+  StringUtil.cpp \
   $(NULL)
 
-else # } {
+#  ChromeThread.cpp \
 
-OS_LINUX = 1
-OS_POSIX = 1
-
-DEFINES += \
-  -DOS_LINUX=1 \
-  -DOS_POSIX=1 \
-  $(NULL)
-
-# NB: to stop gcc warnings about exporting template instantiation
-OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
-
-# TODO support !GTK
-OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS)
-OS_CFLAGS += $(MOZ_GTK2_CFLAGS)
-
-endif # }
-endif # }
-
-ifdef OS_POSIX
-CXXFLAGS += $(MOZ_RTTI_FLAGS_ON)
-endif
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
