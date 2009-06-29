@@ -187,7 +187,7 @@ var BrowserUI = {
       // IME state to be set properly. Testing shows we only really need to
       // do this the first time.
       this._edit.inputField.blur();
-      
+
       this._edit.inputField.focus();
       this._edit.select();
     }
@@ -221,9 +221,9 @@ var BrowserUI = {
     let controls = document.getElementById("browser-controls");
     if (!this._initControls) {
       this._initControls = true;
-      ws.moveUnfrozenTo("toolbar-main", null, -this.toolbarH)
-      ws.moveUnfrozenTo("tabs-container", -tabs.boxObject.width, this.toolbarH)
-      ws.moveUnfrozenTo("browser-controls", null, this.toolbarH)
+      ws.moveUnfrozenTo("toolbar-main", null, -this.toolbarH);
+      ws.moveUnfrozenTo("tabs-container", -tabs.boxObject.width, this.toolbarH);
+      ws.moveUnfrozenTo("browser-controls", null, this.toolbarH);
     }
 
     toolbar.width = windowW;
@@ -804,7 +804,7 @@ var SelectHelper = {
     this._selectedIndex = this._control.selectedIndex;
 
     this._list = document.getElementById("select-list");
-    this._list.setAttribute("multiple", this._control.multiple ? "true" : "false")
+    this._list.setAttribute("multiple", this._control.multiple ? "true" : "false");
 
     let optionIndex = 0;
     let children = this._control.children;
@@ -812,7 +812,7 @@ var SelectHelper = {
       let child = children[i];
       if (child instanceof HTMLOptGroupElement) {
         let group = document.createElement("option");
-        group.setAttribute("label", child.label)
+        group.setAttribute("label", child.label);
         this._list.appendChild(group);
         group.className = "optgroup";
 
@@ -820,7 +820,7 @@ var SelectHelper = {
         for (let ii=0; ii<subchildren.length; ii++) {
           let subchild = subchildren[ii];
           let item = document.createElement("option");
-          item.setAttribute("label", subchild.text)
+          item.setAttribute("label", subchild.text);
           this._list.appendChild(item);
           item.className = "in-optgroup";
           item.optionIndex = optionIndex++;
@@ -829,7 +829,7 @@ var SelectHelper = {
         }
       } else if (child instanceof HTMLOptionElement) {
         let item = document.createElement("option");
-        item.setAttribute("label", child.textContent)
+        item.setAttribute("label", child.textContent);
         this._list.appendChild(item);
         item.optionIndex = optionIndex++;
         if (child.selected)

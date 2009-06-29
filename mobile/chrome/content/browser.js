@@ -252,7 +252,7 @@ var Browser = {
 
   shutdown: function() {
     this._canvasBrowser.setCurrentBrowser(null);
-    
+
     BrowserUI.uninit();
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -270,7 +270,7 @@ var Browser = {
         w != this._currentViewportBounds.width ||
         h != this._currentViewportBounds.height) {
       this._currentViewportBounds = {width: w, height: h};
-      let bounds = { top: 0, left: 0, right: Math.max(800, w), bottom: Math.max(480, h) }
+      let bounds = { top: 0, left: 0, right: Math.max(800, w), bottom: Math.max(480, h) };
       ws.setViewportBounds(bounds);
     }
   },
@@ -460,7 +460,7 @@ var Browser = {
                                  XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
                                  null);
     let s, node, lastLastIndex;
-    let re = /(\+?1? ?-?\(?\d{3}\)?[ +-\.]\d{3}[ +-\.]\d{4})/
+    let re = /(\+?1? ?-?\(?\d{3}\)?[ +-\.]\d{3}[ +-\.]\d{4})/;
     for (var i = 0; i < textnodes.snapshotLength; i++) {
       node = textnodes.snapshotItem(i);
       s = node.data;
@@ -600,7 +600,7 @@ nsBrowserAccess.prototype = {
   isTabContentWindow: function(aWindow) {
     return Browser.browsers.some(function (browser) browser.contentWindow == aWindow);
   }
-}
+};
 
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
@@ -980,7 +980,7 @@ const gXPInstallObserver = {
         var brandShortName = brandBundle.getString("brandShortName");
         var notificationName, messageString, buttons;
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
-          notificationName = "xpinstall-disabled"
+          notificationName = "xpinstall-disabled";
           if (gPrefService.prefIsLocked("xpinstall.enabled")) {
             messageString = browserBundle.getString("xpinstallDisabledMessageLocked");
             buttons = [];
@@ -1000,7 +1000,7 @@ const gXPInstallObserver = {
           }
         }
         else {
-          notificationName = "xpinstall"
+          notificationName = "xpinstall";
           messageString = browserBundle.getFormattedString("xpinstallPromptWarning",
                                                            [brandShortName, host]);
 
@@ -1041,7 +1041,7 @@ const gSessionHistoryObserver = {
     let urlbar = document.getElementById("urlbar-edit");
     if (urlbar) {
       // Clear undo history of the URL bar
-      urlbar.editor.transactionManager.clear()
+      urlbar.editor.transactionManager.clear();
     }
   }
 };
@@ -1103,7 +1103,7 @@ var AlertsHelper = {
       this._timeoutAlert();
     }
   }
-}
+};
 
 var HelperAppDialog = {
   _launcher: null,
@@ -1137,7 +1137,7 @@ var HelperAppDialog = {
     let container = document.getElementById("helperapp-container");
     container.hidden = true;
   }
-}
+};
 
 function ProgressController(tab) {
   this._tab = tab;
@@ -1451,4 +1451,4 @@ Tab.prototype = {
     let srcCanvas = (Browser.selectedBrowser == this._browser) ? document.getElementById("browser-canvas") : null;
     this._chromeTab.updateThumbnail(this._browser, srcCanvas);
   }
-}
+};
