@@ -4255,9 +4255,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   if (aNotify) {
     stateMask = PRUint32(IntrinsicState());
     
-    if (document) {
-      document->AttributeWillChange(this, aNamespaceID, aName);
-    }
+    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -4495,15 +4493,16 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   
   nsIDocument *document = GetCurrentDoc();    
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
-  if (document) {
-    if (kNameSpaceID_XLink == aNameSpaceID && nsGkAtoms::href == aName) {
-      // XLink URI might be changing.
-      document->ForgetLink(this);
-    }
 
-    if (aNotify) {
-      document->AttributeWillChange(this, aNameSpaceID, aName);
-    }
+  if (aNotify) {
+    nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
+                                     nsIDOMMutationEvent::REMOVAL);
+  }
+
+  if (document && kNameSpaceID_XLink == aNameSpaceID &&
+      nsGkAtoms::href == aName) {
+    // XLink URI might be changing.
+    document->ForgetLink(this);
   }
 
   // When notifying, make sure to keep track of states whose value

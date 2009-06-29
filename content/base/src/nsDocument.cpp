@@ -2397,8 +2397,9 @@ nsDocument::ContentRemoved(nsIDocument* aDocument,
 }
 
 void
-nsDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute)
+nsDocument::AttributeWillChange(nsIDocument* aDocument,
+                                nsIContent* aContent, PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");

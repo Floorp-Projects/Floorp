@@ -98,6 +98,18 @@ nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
 }
 
 void
+nsNodeUtils::AttributeWillChange(nsIContent* aContent,
+                                 PRInt32 aNameSpaceID,
+                                 nsIAtom* aAttribute,
+                                 PRInt32 aModType)
+{
+  nsIDocument* doc = aContent->GetOwnerDoc();
+  IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aContent,
+                             (doc, aContent, aNameSpaceID, aAttribute,
+                              aModType));
+}
+
+void
 nsNodeUtils::AttributeChanged(nsIContent* aContent,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
