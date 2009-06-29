@@ -151,7 +151,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       testStates("treeitem_selected_false", STATE_SELECTABLE, 0, STATE_SELECTED);
       testStates("treeitem_selected_empty", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
       testStates("treeitem_selected_undefined", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
-      testStates("treeitem_selected_absent", 0, 0, (STATE_SELECTABLE | STATE_SELECTED));
+      testStates("treeitem_selected_absent", STATE_SELECTABLE, 0, STATE_SELECTED);
 
       // test (treeitem) haspopup states
       testStates("treeitem_haspopup_true", STATE_HASPOPUP);
