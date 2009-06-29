@@ -3336,34 +3336,34 @@ PlacesSQLQueryBuilder::SelectAsURI()
             "h.visit_count, h.last_visit_date, f.url, null, b2.id, "
             "b2.dateAdded, b2.lastModified "
           "FROM moz_bookmarks b2 "
-          "JOIN moz_places_temp h ON b2.fk = h.id AND b2.type = 1 "
+          "JOIN (SELECT b.fk "
+                "FROM moz_bookmarks b "
+                // ADDITIONAL_CONDITIONS will filter on parent.
+                "WHERE b.type = 1 {ADDITIONAL_CONDITIONS} "
+                ") AS seed ON b2.fk = seed.fk "
+          "JOIN moz_places_temp h ON h.id = b2.fk "
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-          "WHERE b2.id IN ( "
-            "SELECT b1.id FROM moz_bookmarks b1 "
-            "WHERE b1.fk IN "
-              "(SELECT b.fk FROM moz_bookmarks b WHERE b.type = 1 {ADDITIONAL_CONDITIONS}) "
-            "AND NOT EXISTS ( "
-              "SELECT id FROM moz_bookmarks WHERE id = b1.parent AND parent = ") +
+          "WHERE NOT EXISTS ( "
+            "SELECT id FROM moz_bookmarks WHERE id = b2.parent AND parent = ") +
                 nsPrintfCString("%lld", history->GetTagsFolder()) +
-              NS_LITERAL_CSTRING(") "
-          ") "
+          NS_LITERAL_CSTRING(") "
           "UNION ALL "
           "SELECT b2.fk, h.url, COALESCE(b2.title, h.title), h.rev_host, "
             "h.visit_count, h.last_visit_date, f.url, null, b2.id, "
             "b2.dateAdded, b2.lastModified "
           "FROM moz_bookmarks b2 "
-          "JOIN moz_places h ON b2.fk = h.id AND b2.type = 1 "
+          "JOIN (SELECT b.fk "
+                "FROM moz_bookmarks b "
+                // ADDITIONAL_CONDITIONS will filter on parent.
+                "WHERE b.type = 1 {ADDITIONAL_CONDITIONS} "
+                ") AS seed ON b2.fk = seed.fk "
+          "JOIN moz_places h ON h.id = b2.fk "
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-          "WHERE b2.id IN ( "
-            "SELECT b1.id FROM moz_bookmarks b1 "
-            "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-            "AND b1.fk IN "
-              "(SELECT b.fk FROM moz_bookmarks b WHERE b.type = 1 {ADDITIONAL_CONDITIONS}) "
-            "AND NOT EXISTS ( "
-              "SELECT id FROM moz_bookmarks WHERE id = b1.parent AND parent = ") +
+          "WHERE NOT EXISTS ( "
+            "SELECT id FROM moz_bookmarks WHERE id = b2.parent AND parent = ") +
                 nsPrintfCString("%lld", history->GetTagsFolder()) +
-              NS_LITERAL_CSTRING(") "
-          ") "          
+          NS_LITERAL_CSTRING(") "
+            "AND h.id NOT IN (SELECT id FROM moz_places_temp) "
           "ORDER BY b2.fk DESC, b2.lastModified DESC");
       }
       else {
