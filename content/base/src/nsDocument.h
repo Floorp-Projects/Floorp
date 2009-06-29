@@ -773,10 +773,6 @@ public:
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
 
-  virtual void AttributeWillChange(nsIContent* aChild,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute);
-
   virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aOldStyleRule,
                                 nsIStyleRule* aNewStyleRule);
@@ -914,6 +910,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
