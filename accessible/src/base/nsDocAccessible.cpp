@@ -257,12 +257,11 @@ nsDocAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
 
   mRoleMapEntry = aRoleMapEntry;
 
-  // Allow use of ARIA role from outer to override
   nsIDocument *parentDoc = mDocument->GetParentDocument();
-  NS_ASSERTION(parentDoc, "No parent document during initialization!");
   if (!parentDoc)
-    return;
+    return; // No parent document for the root document
 
+  // Allow use of ARIA role from outer to override
   nsIContent *ownerContent = parentDoc->FindContentForSubDocument(mDocument);
   nsCOMPtr<nsIDOMNode> ownerNode(do_QueryInterface(ownerContent));
   if (ownerNode) {
