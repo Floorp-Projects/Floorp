@@ -22,7 +22,11 @@ class MessagePumpDefault : public MessagePump {
   virtual void ScheduleWork();
   virtual void ScheduleDelayedWork(const Time& delayed_work_time);
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+ protected:
+#else
  private:
+#endif
   // This flag is set to false when Run should return.
   bool keep_running_;
 
@@ -32,6 +36,9 @@ class MessagePumpDefault : public MessagePump {
   // The time at which we should call DoDelayedWork.
   Time delayed_work_time_;
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+ private:
+#endif
   DISALLOW_COPY_AND_ASSIGN(MessagePumpDefault);
 };
 

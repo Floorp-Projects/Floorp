@@ -107,6 +107,9 @@ bool IsWprintfFormatPortable(const wchar_t* format);
 #error Define string operations appropriately for your platform
 #endif
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+namespace base {
+#endif
 // Returns a reference to a globally unique empty string that functions can
 // return.  Use this to avoid static construction of strings, not to replace
 // any and all uses of "std::string()" as nicer-looking sugar.
@@ -114,6 +117,9 @@ bool IsWprintfFormatPortable(const wchar_t* format);
 const std::string& EmptyString();
 const std::wstring& EmptyWString();
 const string16& EmptyString16();
+#ifdef CHROMIUM_MOZILLA_BUILD
+}
+#endif
 
 extern const wchar_t kWhitespaceWide[];
 extern const char kWhitespaceASCII[];

@@ -19,6 +19,7 @@
 #include "chrome/common/ipc_sync_message.h"
 #include "chrome/common/thumbnail_score.h"
 #include "chrome/common/transport_dib.h"
+#ifndef CHROMIUM_MOZILLA_BUILD
 #include "webkit/glue/webcursor.h"
 #include "webkit/glue/window_open_disposition.h"
 
@@ -66,6 +67,8 @@ enum IPCMessageStart {
 };
 
 COMPILE_ASSERT(LastMsgIndex <= 16, need_to_update_IPC_MESSAGE_MACRO);
+
+#endif /* CHROMIUM_MOZILLA_BUILD */
 
 namespace IPC {
 
@@ -146,6 +149,34 @@ struct ParamTraits<bool> {
 };
 
 template <>
+struct ParamTraits<int16> {
+  typedef int16 param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteInt(p);
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadInt16(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%hd", p));
+  }
+};
+
+template <>
+struct ParamTraits<uint16> {
+  typedef uint16 param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteInt(p);
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadUInt16(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%hu", p));
+  }
+};
+
+template <>
 struct ParamTraits<int> {
   typedef int param_type;
   static void Write(Message* m, const param_type& p) {
@@ -170,6 +201,20 @@ struct ParamTraits<long> {
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%l", p));
+  }
+};
+
+template <>
+struct ParamTraits<unsigned long> {
+  typedef unsigned long param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteULong(p);
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadULong(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%ul", p));
   }
 };
 
@@ -257,6 +302,7 @@ struct ParamTraits<double> {
   }
 };
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 template <>
 struct ParamTraits<wchar_t> {
   typedef wchar_t param_type;
@@ -280,6 +326,7 @@ struct ParamTraits<wchar_t> {
     l->append(StringPrintf(L"%lc", p));
   }
 };
+#endif /* CHROMIUM_MOZILLA_BUILD */
 
 template <>
 struct ParamTraits<base::Time> {
@@ -346,6 +393,7 @@ struct ParamTraits<MSG> {
 };
 #endif  // defined(OS_WIN)
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 template <>
 struct ParamTraits<SkBitmap> {
   typedef SkBitmap param_type;
@@ -357,6 +405,7 @@ struct ParamTraits<SkBitmap> {
 
   static void Log(const param_type& p, std::wstring* l);
 };
+#endif /* CHROMIUM_MOZILLA_BUILD */
 
 template <>
 struct ParamTraits<std::string> {
@@ -527,6 +576,7 @@ struct ParamTraits<string16> {
 };
 #endif
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 template <>
 struct ParamTraits<GURL> {
   typedef GURL param_type;
@@ -534,6 +584,7 @@ struct ParamTraits<GURL> {
   static bool Read(const Message* m, void** iter, param_type* p);
   static void Log(const param_type& p, std::wstring* l);
 };
+#endif /* CHROMIUM_MOZILLA_BUILD */
 
 // and, a few more useful types...
 #if defined(OS_WIN)
@@ -633,6 +684,7 @@ struct ParamTraits<FilePath> {
   }
 };
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 template <>
 struct ParamTraits<gfx::Point> {
   typedef gfx::Point param_type;
@@ -656,6 +708,7 @@ struct ParamTraits<gfx::Size> {
   static bool Read(const Message* m, void** iter, param_type* r);
   static void Log(const param_type& p, std::wstring* l);
 };
+#endif /* CHROMIUM_MOZILLA_BUILD */
 
 #if defined(OS_POSIX)
 // FileDescriptors may be serialised over IPC channels on POSIX. On the
@@ -739,6 +792,7 @@ struct ParamTraits<ThumbnailScore> {
   }
 };
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 template <>
 struct ParamTraits<WindowOpenDisposition> {
   typedef WindowOpenDisposition param_type;
@@ -755,6 +809,7 @@ struct ParamTraits<WindowOpenDisposition> {
     l->append(StringPrintf(L"%d", p));
   }
 };
+#endif
 
 #if defined(OS_WIN)
 template <>
@@ -782,6 +837,7 @@ struct ParamTraits<XFORM> {
 };
 #endif  // defined(OS_WIN)
 
+#ifndef CHROMIUM_MOZILLA_BUILD
 template <>
 struct ParamTraits<WebCursor> {
   typedef WebCursor param_type;
@@ -795,6 +851,7 @@ struct ParamTraits<WebCursor> {
     l->append(L"<WebCursor>");
   }
 };
+#endif
 
 struct LogData {
   std::wstring channel;
@@ -842,7 +899,7 @@ struct ParamTraits<LogData> {
   }
 };
 
-
+#ifndef CHROMIUM_MOZILLA_BUILD
 template <>
 struct ParamTraits<webkit_glue::WebApplicationInfo> {
   typedef webkit_glue::WebApplicationInfo param_type;
@@ -850,7 +907,7 @@ struct ParamTraits<webkit_glue::WebApplicationInfo> {
   static bool Read(const Message* m, void** iter, param_type* r);
   static void Log(const param_type& p, std::wstring* l);
 };
-
+#endif /* CHROMIUM_MOZILLA_BUILD */
 
 #if defined(OS_WIN)
 template<>
