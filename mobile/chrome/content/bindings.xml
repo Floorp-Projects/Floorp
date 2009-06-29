@@ -154,6 +154,7 @@
             }
 
             label._index = i;
+            label._empty = false;
 
             // Use the third item as a "no results" entry if needed.
             // Kind of gross, but using a separate element makes layout more
@@ -173,6 +174,7 @@
               // Just clear out the old item
               label.setAttribute("class", "");
               label.setAttribute("value", "");
+              label._empty = true;
 
               continue;
             }
@@ -254,7 +256,8 @@
         <![CDATA[
           let originalTarget = event.originalTarget;
           if (event.button == 0 &&
-              originalTarget.localName == "label") {
+              originalTarget.localName == "label" &&
+              originalTarget._empty != true) {
             this._selectedIndex = originalTarget._index;
             this.input.controller.handleEnter(true);
           } else
