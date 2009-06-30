@@ -72,7 +72,6 @@
 #include "nsICachingChannel.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
-#include "nsPIPluginHost.h"
 #include "nsGeolocation.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
@@ -5802,7 +5801,7 @@ nsGlobalWindow::InitJavaProperties()
   // Check whether the plugin supports NPRuntime, if so, init through
   // it, else use liveconnect.
 
-  nsCOMPtr<nsPIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
+  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   if (!host) {
     return;
   }

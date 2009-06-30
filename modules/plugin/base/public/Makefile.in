@@ -74,7 +74,6 @@ XPIDLSRCS 	= \
 		nsIPluginInputStream.idl \
 		nsIPluginStreamListener.idl \
 		nsIPluginInstance.idl \
-		nsPIPluginHost.idl \
 		nsIPluginHost.idl \
 		nsIPluginDocument.idl \
 		$(NULL)

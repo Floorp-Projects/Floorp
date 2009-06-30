@@ -127,7 +127,6 @@
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
 #include "nsPluginNativeWindow.h"
-#include "nsPIPluginHost.h"
 #include "nsIPluginDocument.h"
 
 #include "nsThreadUtils.h"
@@ -423,10 +422,8 @@ public:
   const char* GetPluginName()
   {
     if (mInstance && mPluginHost) {
-      nsCOMPtr<nsPIPluginHost> piPluginHost = do_QueryInterface(mPluginHost);
       const char* name = NULL;
-      if (NS_SUCCEEDED(piPluginHost->GetPluginName(mInstance, &name)) &&
-          name)
+      if (NS_SUCCEEDED(mPluginHost->GetPluginName(mInstance, &name)) && name)
         return name;
     }
     return "";
@@ -2189,9 +2186,8 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   // create nsPluginNativeWindow object, it is derived from nsPluginWindow
   // struct and allows to manipulate native window procedure
   nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
-  if (pph)
-    pph->NewPluginNativeWindow(&mPluginWindow);
+  if (ph)
+    ph->NewPluginNativeWindow(&mPluginWindow);
   else
     mPluginWindow = nsnull;
 
@@ -2260,9 +2256,8 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   // clean up plugin native window object
   nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
-  if (pph) {
-    pph->DeletePluginNativeWindow(mPluginWindow);
+  if (ph) {
+    ph->DeletePluginNativeWindow(mPluginWindow);
     mPluginWindow = nsnull;
   }
 
