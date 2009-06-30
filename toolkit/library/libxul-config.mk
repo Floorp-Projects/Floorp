@@ -96,6 +96,8 @@ STATIC_LIBS += \
   mozipc_s \
   chromium_s \
   $(NULL)
+
+OS_LIBS += -lrt
 endif
 
 STATIC_LIBS += \
