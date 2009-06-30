@@ -53,7 +53,6 @@ EXPORTS =				\
 	nsIDOMMouseMotionListener.h	\
 	nsIDOMTextListener.h		\
 	nsIDOMCompositionListener.h	\
-	nsIDOMXULListener.h		\
 	nsIDOMContextMenuListener.h	\
 	nsIDOMUIListener.h		\
 	$(NULL)
