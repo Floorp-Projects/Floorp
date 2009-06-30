@@ -207,10 +207,9 @@ typedef struct InterpStruct InterpStruct;
 # define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
 # define identity(x)                x
 
-/* Have to typedef this for LiveConnect C code, which includes us. */
-typedef struct JSEvalCacheMeter {
+struct JSEvalCacheMeter {
     uint64 EVAL_CACHE_METER_LIST(identity);
-} JSEvalCacheMeter;
+};
 
 # undef identity
 #endif

@@ -416,7 +416,6 @@ linux/version.h
 list
 List.h
 Lists.h
-LiveConnectManagerTests.h
 LListBox.h
 LListener.h
 LMenuBar.h

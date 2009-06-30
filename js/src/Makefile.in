@@ -292,20 +292,6 @@ ifndef BUILD_OPT
 MOCHAFILE	= 1
 endif
 
-ifndef NSBUILDROOT
-JSJAVA_STUBHEADERS = \
-		-I$(topsrcdir)/sun-java/include/_gen \
-		-I$(topsrcdir)/sun-java/netscape/javascript/_jri \
-		-I$(topsrcdir)/sun-java/netscape/security/_jri
-else
-JSJAVA_STUBHEADERS = -I$(JRI_GEN_DIR) -I$(JDK_GEN_DIR)
-endif
-
-JSJAVA_CFLAGS	= \
-		-I$(topsrcdir)/sun-java/md-include \
-		-I$(topsrcdir)/sun-java/include \
-		$(JSJAVA_STUBHEADERS)
-
 # Define keyword generator before rules.mk, see bug 323979 comment 50
 
 HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)

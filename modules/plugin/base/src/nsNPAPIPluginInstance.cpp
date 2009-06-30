@@ -1128,7 +1128,7 @@ nsNPAPIPluginInstance::InitializePlugin()
 
   // Some older versions of Flash have a bug in them
   // that causes the stack to become currupt if we
-  // pass swliveconect=1 in the NPP_NewProc arrays.
+  // pass swliveconnect=1 in the NPP_NewProc arrays.
   // See bug 149336 (UNIX), bug 186287 (Mac)
   //
   // The code below disables the attribute unless
