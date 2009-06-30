@@ -393,6 +393,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const nsIntRect &aRect,
 
   if (mWindowType == eWindowType_invisible) {
     [mWindow setLevel:kCGDesktopWindowLevelKey];
+  } else if (mWindowType == eWindowType_popup) {
+    [mWindow setLevel:NSPopUpMenuWindowLevel];
+    [mWindow setHasShadow:YES];
   }
 
   [mWindow setBackgroundColor:[NSColor whiteColor]];
