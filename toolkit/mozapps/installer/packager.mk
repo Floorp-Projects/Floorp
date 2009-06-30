@@ -246,6 +246,7 @@ NO_PKG_FILES += \
 	msmap* \
 	nm2tsv* \
 	nsinstall* \
+	nspr-config \
 	rebasedlls* \
 	res/samples \
 	res/throbber \
