@@ -202,6 +202,15 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
 
+#include "base/at_exit.h"
+#include "base/command_line.h"
+#include "base/message_loop.h"
+#include "base/thread.h"
+#include "mozilla/ipc/GeckoThread.h"
+
+using mozilla::ipc::BrowserProcessSubThread;
+using mozilla::ipc::GeckoThread;
+
 // on x86 linux, the current builds of some popular plugins (notably
 // flashplayer and real) expect a few builtin symbols from libgcc
 // which were available in some older versions of gcc.  However,
