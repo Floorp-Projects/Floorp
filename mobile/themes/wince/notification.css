@@ -5,4 +5,5 @@ notification {
 
 notification .messageCloseButton {
   list-style-image: url("chrome://browser/skin/images/tab-close.png");
+  -moz-image-region: -moz-initial;
 }
