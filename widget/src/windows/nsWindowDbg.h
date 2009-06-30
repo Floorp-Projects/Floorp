@@ -39,6 +39,10 @@
 #ifndef WindowDbg_h__
 #define WindowDbg_h__
 
+/*
+ * nsWindowDbg - Debug related utilities for nsWindow.
+ */
+
 #include "nsWindowDefs.h"
 
 // Enabled main event loop debug event output

@@ -52,6 +52,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
+ * nsWindow - Native window management and event handling.
+ * 
  * nsWindow is organized into a set of major blocks and
  * block subsections. The layout is as follows:
  *
@@ -410,26 +412,26 @@ nsWindow::~nsWindow()
   sInstanceCount--;
 
   // Global shutdown
-  if (!sInstanceCount) {
+  if (sInstanceCount == 0) {
 #ifdef NS_ENABLE_TSF
     nsTextStore::Terminate();
 #endif
 
 #if !defined(WINCE)
     NS_IF_RELEASE(sCursorImgContainer);
-
     if (sIsOleInitialized) {
       ::OleFlushClipboard();
       ::OleUninitialize();
       sIsOleInitialized = FALSE;
     }
-
     // delete any of the IME structures that we allocated
     nsIMM32Handler::Terminate();
-
-    NS_IF_RELEASE(mNativeDragTarget);
 #endif // !defined(WINCE)
   }
+
+#if !defined(WINCE)
+  NS_IF_RELEASE(mNativeDragTarget);
+#endif // !defined(WINCE)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)

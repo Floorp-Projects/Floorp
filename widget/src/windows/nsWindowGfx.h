@@ -38,6 +38,10 @@
 #ifndef WindowGfx_h__
 #define WindowGfx_h__
 
+/*
+ * nsWindowGfx - Painting and aceleration.
+ */
+
 #include "nsWindow.h"
 
 // This isn't ideal, we should figure out how to export
