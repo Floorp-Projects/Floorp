@@ -63,8 +63,7 @@
 
 /**
  * The nsIPlugin interface is the minimum interface plugin developers need to 
- * support in order to implement a plugin. The plugin manager may QueryInterface 
- * for more specific plugin types, e.g. nsILiveConnectPlugin.
+ * support in order to implement a plugin.
  *
  * The old NPP_New plugin operation is now subsumed by two operations:
  *
@@ -117,7 +116,7 @@ interface nsIPlugin : nsIFactory
      * is a colon-separated string containg the plugin MIME type, plugin
      * data file extension, and plugin name, e.g.:
      *
-     * "application/x-simple-plugin:smp:Simple LiveConnect Sample Plug-in"
+     * "application/x-simple-plugin:smp:Simple Sample Plug-in"
      *
      * (Corresponds to NPP_GetMIMEDescription.)
      *

@@ -5799,7 +5799,7 @@ nsGlobalWindow::InitJavaProperties()
   mDidInitJavaProperties = PR_TRUE;
 
   // Check whether the plugin supports NPRuntime, if so, init through
-  // it, else use liveconnect.
+  // it.
 
   nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   if (!host) {

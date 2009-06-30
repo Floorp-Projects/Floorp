@@ -45,8 +45,6 @@ gTestfile = 'try-001.js';
  *  This test contains try, catch, and finally blocks.  An exception is
  *  sometimes thrown by a function called from within the try block.
  *
- *  This test doesn't actually make any LiveConnect calls.
- *
  *
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
