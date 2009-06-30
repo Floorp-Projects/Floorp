@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * nsWindowGfx - Painting and aceleration.
+ */
+
 // XXX Future: this should really be a stand alone class stored as
 // a member of nsWindow with getters and setters for things like render
 // mode and methods for handling paint.

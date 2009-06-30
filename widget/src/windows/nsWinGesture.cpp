@@ -36,8 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef WinGesture_cpp__
-#define WinGesture_cpp__
+/*
+ * nsWinGesture - Touch input handling for tablet displays.
+ */
 
 #include "nscore.h"
 #include "nsWinGesture.h"
@@ -598,7 +599,3 @@ nsWinGesture::PanDeltaToPixelScrollY(nsMouseScrollEvent& evt)
   }
   return PR_FALSE;
 }
-
-#endif /* WinGesture_cpp__ */
-
-

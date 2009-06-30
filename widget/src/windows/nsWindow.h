@@ -45,6 +45,10 @@
 #ifndef Window_h__
 #define Window_h__
 
+/*
+ * nsWindow - Native window management and event handling.
+ */
+
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
 #include "nsSwitchToUIThread.h"

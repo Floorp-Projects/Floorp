@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * nsWindowCE - Windows CE specific code related to nsWindow. 
+ */
+
 #include "nsWindowCE.h"
 #include "nsIObserverService.h"
 #include "resource.h"
