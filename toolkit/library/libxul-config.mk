@@ -93,6 +93,7 @@ endif
 # dependent libraries
 ifdef MOZ_IPC
 STATIC_LIBS += \
+  domplugins_s \
   mozipc_s \
   chromium_s \
   $(NULL)
