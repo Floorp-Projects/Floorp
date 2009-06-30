@@ -1287,9 +1287,18 @@ typedef struct GlobData {
                                           does not pass to caller */
 #define GLOBAL_REGEXP   0x10    /* out: regexp had the 'g' flag */
 
+typedef JSBool (*GlobFunc)(JSContext *cx, jsint count, GlobData *data);
+typedef JSBool (JS_REQUIRES_STACK *RedGlobFunc)(JSContext *cx, jsint count, GlobData *data);
+
+static inline JS_IGNORE_STACK GlobFunc
+globfunc_stack_cast(RedGlobFunc f)
+{
+    return f;
+}
+
 static JSBool
 match_or_replace(JSContext *cx,
-                 JSBool (*glob)(JSContext *cx, jsint count, GlobData *data),
+                 GlobFunc glob,
                  void (*destroy)(JSContext *cx, GlobData *data),
                  GlobData *data, uintN argc, jsval *vp)
 {
@@ -1543,7 +1552,7 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
     return NULL;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 {
     JSString *repstr;
@@ -1558,6 +1567,8 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         jsval *invokevp, *sp;
         void *mark;
         JSBool ok;
+
+        js_LeaveTrace(cx);
 
         /*
          * Save the regExpStatics from the current regexp, since they may be
@@ -1743,7 +1754,7 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     return JS_TRUE;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 str_replace(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *lambda;
@@ -1762,7 +1773,7 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     return js_StringReplaceHelper(cx, argc, lambda, repstr, vp);
 }
 
-JSBool JS_REQUIRES_STACK
+JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
                        JSString *repstr, jsval *vp)
 {
@@ -1794,8 +1805,8 @@ js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
     rdata.index = 0;
     rdata.leftIndex = 0;
 
-    ok = match_or_replace(cx, replace_glob, replace_destroy, &rdata.base,
-                          argc, vp);
+    ok = match_or_replace(cx, globfunc_stack_cast(replace_glob),
+                          replace_destroy, &rdata.base, argc, vp);
     if (!ok)
         return JS_FALSE;
 

@@ -50,6 +50,18 @@ REDGREEN_FAILURE_TESTCASES = \
   green-callred.cpp \
   green-accessred.cpp \
   green-tored-badpath.cpp \
+  misdeclared-red-funcptr.cpp \
+  misdeclared-red-funcptr2.cpp \
+  red-togreenptr.cpp \
+  red-togreenptr-return.cpp \
+  red-togreenptr-arg.cpp \
+  red-togreenptr-field.cpp \
+  red-togreenptr-initializer.cpp \
+  red-togreenptr-initializer-struct.cpp \
+  red-togreenptr-initializer-array.cpp \
+  red-togreenptr-initializer-nested.cpp \
+  red-togreenptr-initializer-cast.cpp \
+  green-callredptr.cpp \
   $(NULL)
 
 REDGREEN_SUCCESS_TESTCASES = \
@@ -57,6 +69,7 @@ REDGREEN_SUCCESS_TESTCASES = \
   red-callgreen.cpp \
   red-accessred.cpp \
   green-tored.cpp \
+  green-toredptr.cpp \
   $(NULL)
 
 STATIC_FAILURE_TESTCASES = \

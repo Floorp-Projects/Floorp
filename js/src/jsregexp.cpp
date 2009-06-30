@@ -2343,7 +2343,7 @@ class RegExpNativeCompiler {
     addName(LirBuffer* lirbuf, LIns* ins, const char* name)
     {
 #ifdef NJ_VERBOSE
-        debug_only_v(lirbuf->names->addName(ins, name);)
+        debug_only_stmt(lirbuf->names->addName(ins, name);)
 #endif
         return ins;
     }
@@ -2401,11 +2401,12 @@ class RegExpNativeCompiler {
 
         /* FIXME Use bug 463260 smart pointer when available. */
 #ifdef NJ_VERBOSE
-        debug_only_v(fragment->lirbuf->names = new (&gc) LirNameMap(&gc, fragmento->labels);)
-#endif
-        /* FIXME Use bug 463260 smart pointer when available. */
-#ifdef NJ_VERBOSE
-        debug_only_v(lir = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
+        debug_only_stmt(
+            if (js_LogController.lcbits & LC_TMRegexp) {
+                lir = new (&gc) VerboseWriter(&gc, lir, lirbuf->names,
+                                              &js_LogController);
+            }
+        )
 #endif
 
         lir->ins0(LIR_start);
@@ -2434,7 +2435,8 @@ class RegExpNativeCompiler {
 
         delete lirBufWriter;
 #ifdef NJ_VERBOSE
-        debug_only_v(delete lir;)
+        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+                             delete lir; )
 #endif
         return JS_TRUE;
     fail:
@@ -2448,7 +2450,8 @@ class RegExpNativeCompiler {
         }
         delete lirBufWriter;
 #ifdef NJ_VERBOSE
-        debug_only_v(delete lir;)
+        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+                             delete lir; )
 #endif
         return JS_FALSE;
     }
@@ -3923,16 +3926,17 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
         gData->skipped = (ptrdiff_t) x->cp;
 
 #ifdef JS_JIT_SPEW
-        debug_only_v({
+        debug_only_stmt({
             VOUCH_DOES_NOT_REQUIRE_STACK();
             JSStackFrame *caller = (JS_ON_TRACE(gData->cx))
                                    ? NULL
                                    : js_GetScriptedCaller(gData->cx, NULL);
-            printf("entering REGEXP trace at %s:%u@%u, code: %p\n",
-                   caller ? caller->script->filename : "<unknown>",
-                   caller ? js_FramePCToLineNumber(gData->cx, caller) : 0,
-                   caller ? FramePCOffset(caller) : 0,
-                   JS_FUNC_TO_DATA_PTR(void *, native));
+            debug_only_printf(LC_TMRegexp,
+                              "entering REGEXP trace at %s:%u@%u, code: %p\n",
+                              caller ? caller->script->filename : "<unknown>",
+                              caller ? js_FramePCToLineNumber(gData->cx, caller) : 0,
+                              caller ? FramePCOffset(caller) : 0,
+                              JS_FUNC_TO_DATA_PTR(void *, native));
         })
 #endif
 
@@ -3942,7 +3946,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
         result = native(x, gData);
 #endif
 
-        debug_only_v(printf("leaving REGEXP trace\n"));
+        debug_only_print0(LC_TMRegexp, "leaving  REGEXP trace\n");
 
         gData->skipped = ((const jschar *) gData->skipped) - cp;
         return result;

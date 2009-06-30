@@ -225,6 +225,13 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 #endif
 }
 
+#ifdef EDITLINE
+extern "C" {
+extern char     *readline(const char *prompt);
+extern void     add_history(char *line);
+}
+#endif
+
 static JSBool
 GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
 #ifdef EDITLINE
@@ -809,13 +816,6 @@ my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
         else
             return NULL;
 }
-
-#ifdef EDITLINE
-extern "C" {
-extern char     *readline(const char *prompt);
-extern void     add_history(char *line);
-}
-#endif
 
 static void
 ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,

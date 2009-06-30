@@ -53,6 +53,7 @@
 #endif
 
 #include <stdlib.h>
+#include <math.h>
 
 #include "nanojit/nanojit.h"
 #include "jstracer.h"
@@ -64,6 +65,94 @@ using namespace std;
 static GC gc;
 static avmplus::AvmCore s_core;
 static avmplus::AvmCore* core = &s_core;
+Fragment *frag;
+
+typedef JS_FASTCALL int32_t (*RetInt)();
+typedef JS_FASTCALL double (*RetFloat)();
+
+struct Rfunc {
+    union {
+        RetFloat rfloat;
+        RetInt rint;
+    };
+    bool isFloat;
+    Fragment *fragptr;
+};
+typedef map<string, Rfunc> Fragments;
+
+struct Pipeline {
+    LirWriter *lir;
+    LirBufWriter *w;
+    LirWriter *cse_filter;
+    LirWriter *expr_filter;
+    LirWriter *verb;
+};
+
+struct Function {
+    const char *name;
+    struct nanojit::CallInfo callInfo;
+};
+
+#ifdef DEBUG
+#define DEBUG_ONLY_NAME(name)   ,#name
+#else
+#define DEBUG_ONLY_NAME(name)
+#endif
+
+#define FN(name, args) \
+    {#name, \
+     {(uintptr_t) (&name), args, 0, 0, nanojit::ABI_CDECL \
+      DEBUG_ONLY_NAME(name)}}
+
+const int I32 = nanojit::ARGSIZE_LO;
+const int I64 = nanojit::ARGSIZE_Q;
+const int F64 = nanojit::ARGSIZE_F;
+const int PTRARG = nanojit::ARGSIZE_LO;
+
+const int PTRRET =
+#if defined AVMPLUS_64BIT
+    nanojit::ARGSIZE_Q
+#else
+    nanojit::ARGSIZE_LO
+#endif
+    ;
+Function functions[] = {
+    FN(puts, I32 | (PTRARG<<2)),
+    FN(sin, F64 | (F64<<2)),
+    FN(malloc, PTRRET | (PTRARG<<2)),
+    FN(free, I32 | (PTRARG<<2))
+};
+
+void
+lookupFunction(const char *name,
+               const Fragments &frags,
+               CallInfo *&ci)
+{
+    const size_t nfuns = sizeof(functions) / sizeof(functions[0]);
+    Fragments::const_iterator func;
+
+    for (size_t i = 0; i < nfuns; i++)
+        if (strcmp(name, functions[i].name) == 0) {
+            *ci = functions[i].callInfo;
+            return;
+        }
+
+    if ((func = frags.find(name)) != frags.end()) {
+        if (func->second.isFloat) {
+            CallInfo FragCall = {(uintptr_t) func->second.rfloat, ARGSIZE_F, 0,
+                                 0, nanojit::ABI_FASTCALL, func->first.c_str()};
+            *ci = FragCall;
+
+        } else {
+            CallInfo FragCall = {(uintptr_t) func->second.rint, ARGSIZE_LO, 0,
+                                 0, nanojit::ABI_FASTCALL, func->first.c_str()};
+            *ci = FragCall;
+        }
+
+        return;
+    }
+    ci = NULL;
+}
 
 istream &
 read_and_tokenize_line(istream &in, vector<string> &toks, size_t &linenum)
@@ -243,10 +332,12 @@ assemble_call(string const &op,
               LirWriter *lir,
               map<string,LIns*> const &labels,
               vector<CallInfo*> &callinfos,
-              size_t line)
+              size_t line,
+              const Fragments &frags)
 {
     CallInfo *ci = new CallInfo();
     callinfos.push_back(ci);
+    LIns* args[MAXARGS];
 
     // Assembler synax for a call:
     //
@@ -264,25 +355,45 @@ assemble_call(string const &op,
 
     if (toks.size() < 2)
         bad("need at least address and ABI code for " + op, line);
-    ci->_address = imm(pop_front(toks));
 
+    string func = pop_front(toks);
     string abi = pop_front(toks);
+
+    AbiKind _abi;
     if (abi == "fastcall")
-        ci->_abi = ABI_FASTCALL;
+        _abi = ABI_FASTCALL;
     else if (abi == "stdcall")
-        ci->_abi = ABI_STDCALL;
+        _abi = ABI_STDCALL;
     else if (abi == "thiscall")
-        ci->_abi = ABI_THISCALL;
+        _abi = ABI_THISCALL;
     else if (abi == "cdecl")
-        ci->_abi = ABI_CDECL;
+        _abi = ABI_CDECL;
     else
         bad("call abi name '" + abi + "'", line);
+    ci->_abi = _abi;
+
+    if (toks.size() > MAXARGS)
+    bad("too many args to " + op, line);
+
+    if (func.find("0x") == 0) {
+        ci->_address = imm(func);
+
+        ci->_cse = 0;
+        ci->_fold = 0;
+
+#ifdef DEBUG
+        ci->_name = "fn";
+#endif
+
+    } else {
+        lookupFunction(func.c_str(), frags, ci);
+        if (ci == NULL)
+            bad("invalid function reference " + func, line);
+        if (_abi != ci->_abi)
+            bad("invalid calling convention for " + func, line);
+    }
 
     ci->_argtypes = 0;
-
-    LIns* args[MAXARGS];
-    if (toks.size() > MAXARGS)
-        bad("too many args to " + op, line);
 
     for (size_t i = 0; i < toks.size(); ++i) {
         args[i] = ref(labels, toks[toks.size() - (i+1)], line);
@@ -293,17 +404,10 @@ assemble_call(string const &op,
     // Select return type from opcode.
     // FIXME: callh needs special treatment currently
     // missing from here.
-    if (opcode == LIR_call || opcode == LIR_calli)
+    if (opcode == LIR_call)
         ci->_argtypes |= ARGSIZE_LO;
     else
         ci->_argtypes |= ARGSIZE_F;
-
-    ci->_cse = 0;
-    ci->_fold = 0;
-
-#ifdef DEBUG
-    ci->_name = "fn";
-#endif
 
     return lir->insCall(ci, args);
 }
@@ -323,7 +427,7 @@ assemble_general(size_t opcount,
         LIns *ins = lir->ins0(opcode);
         if (toks.size() > 0) {
             assert(toks.size() == 1);
-            ins->setimm32(imm(toks[0]));
+            ins->setImm(opcode, imm(toks[0]));
         }
         return ins;
     } else {
@@ -341,6 +445,70 @@ assemble_general(size_t opcount,
     }
     // Never get here.
     return NULL;
+}
+
+void
+dep_u8(char *&buf, uint8_t byte, uint32_t &cksum)
+{
+    sprintf(buf, "%2.2X", byte);
+    cksum += byte;
+    buf += 2;
+}
+
+void
+dep_u32(char *&buf, uint32_t word, uint32_t &cksum)
+{
+    dep_u8(buf, (uint8_t)((word >> 24) & 0xff), cksum);
+    dep_u8(buf, (uint8_t)((word >> 16) & 0xff), cksum);
+    dep_u8(buf, (uint8_t)((word >> 8) & 0xff), cksum);
+    dep_u8(buf, (uint8_t)((word) & 0xff), cksum);
+}
+
+void
+dump_srecords(ostream &out, Fragment *frag)
+{
+    // Write S-records. Can only do 4-byte addresses at the moment.
+
+    // FIXME: this presently dumps out the entire set of code pages
+    // written-to, which means it often dumps *some* bytes on the last
+    // page that are not necessarily initialized at all; they're
+    // beyond the last instruction written. Fix this to terminate
+    // s-record writing early.
+
+    assert(sizeof(uintptr_t) == 4);
+    for (Page *page = frag->pages(); page; page = page->next) {
+        size_t step = 32;
+        uintptr_t p0 = (uintptr_t) &(page->code);
+        for (uintptr_t p = p0; p < p0 + sizeof(page->code); p += step) {
+            char buf[1024];
+
+            // S-record type S3: 8-char / 4-byte address.
+            //
+            //     +2 char code 'S3'.
+            //     +2 char / 1 byte count of remaining bytes (37 = addr, payload, cksum).
+            //     +8 char / 4 byte addr.
+            //    ---
+            //    +64 char / 32 byte payload.
+            //    ---
+            //     +2 char / 1 byte checksum.
+
+            uint32_t cksum = 0;
+            size_t count = sizeof(p) + step + 1;
+
+            sprintf(buf, "S3");
+
+            char *b = buf + 2; // 2 chars for the "S3" code.
+
+            dep_u8(b, (uint8_t) count, cksum); // Count of data bytes
+            dep_u32(b, p, cksum); // Address of the data byte being emitted
+            uint8_t *c = (uint8_t*) p;
+            for (size_t i = 0; i < step; ++i) { // Actual object code being emitted
+                dep_u8(b, c[i], cksum);
+            }
+            dep_u8(b, (uint8_t)((~cksum) & 0xff), cksum);
+            out << string(buf) << endl;
+        }
+    }
 }
 
 void
@@ -365,14 +533,111 @@ extract_any_label(string &op,
 }
 
 void
+beginFragment(Pipeline &writer,
+              LirBuffer *lirbuf,
+              Fragmento *fragmento,
+              LogControl *logc,
+              bool verbose,
+              bool &inFrag,
+              bool &isFloat)
+{
+    frag = new (&gc) Fragment(NULL);
+    frag->lirbuf = lirbuf;
+    frag->anchor = frag;
+    frag->root = frag;
+
+    writer.w = new (&gc) LirBufWriter(lirbuf);
+    writer.cse_filter = new (&gc) CseFilter(writer.w, &gc);
+    writer.expr_filter = new (&gc) ExprFilter(writer.cse_filter);
+#ifdef DEBUG
+    writer.verb = new (&gc) VerboseWriter(&gc, writer.expr_filter, lirbuf->names, logc);
+#endif
+
+    writer.lir = writer.expr_filter;
+#ifdef DEBUG
+    if (verbose)
+        writer.lir = writer.verb;
+#endif
+    inFrag = true;
+    isFloat = false;
+    writer.lir->ins0(LIR_start);
+}
+
+void
+endFragment(const Pipeline &writer,
+            Fragmento *fragmento,
+            vector<CallInfo*> &callinfos,
+            bool isFloat,
+            map<string, LIns*> &labels,
+            Fragments &frags,
+            string fragname,
+            bool &inFrag)
+{
+
+    inFrag = false;
+
+    LIns *exitIns = do_skip(writer.lir, sizeof(VMSideExit));
+    VMSideExit* exit = (VMSideExit*) exitIns->payload();
+    memset(exit, 0, sizeof(VMSideExit));
+    exit->guards = NULL;
+    exit->from = exit->target = frag;
+    frag->lastIns = writer.lir->insGuard(LIR_loop, writer.lir->insImm(1), exitIns);
+
+    ::compile(fragmento->assm(), frag);
+
+    for (size_t i = 0; i < callinfos.size(); ++i)
+        delete callinfos[i];
+    callinfos.clear();
+
+    if (fragmento->assm()->error() != nanojit::None) {
+        cerr << "error during assembly: ";
+        switch (fragmento->assm()->error()) {
+        case nanojit::OutOMem: cerr << "OutOMem"; break;
+        case nanojit::StackFull: cerr << "StackFull"; break;
+        case nanojit::RegionFull: cerr << "RegionFull"; break;
+        case nanojit::MaxLength: cerr << "MaxLength"; break;
+        case nanojit::MaxExit: cerr << "MaxExit"; break;
+        case nanojit::MaxXJump: cerr << "MaxXJump"; break;
+        case nanojit::UnknownPrim: cerr << "UnknownPrim"; break;
+        case nanojit::UnknownBranch: cerr << "UnknownBranch"; break;
+        case nanojit::None: cerr << "None"; break;
+        }
+        cerr << endl;
+        std::exit(1);
+    }
+
+    Rfunc f;
+    if (isFloat) {
+        f.rfloat = reinterpret_cast<RetFloat>(frag->code());
+        f.isFloat = true;
+    } else {
+        f.rint = reinterpret_cast<RetInt>(frag->code());
+        f.isFloat = false;
+    }
+    f.fragptr = frag;
+
+    if (fragname.empty())
+        fragname = "main";
+    frags[fragname] = f;
+
+    delete writer.expr_filter;
+    delete writer.cse_filter;
+    delete writer.w;
+    delete writer.verb;
+    labels.clear();
+}
+
+void
 assemble(istream &in,
          LirBuffer *lirbuf,
-         LirWriter *lir,
-         Fragment *frag,
+         Fragmento *fragmento,
+         LogControl *logc,
          vector<CallInfo*> &callinfos,
-         bool *isFloat)
+         Fragments &frags,
+         bool verbose)
 {
-    lir->ins0(LIR_start);
+
+    Pipeline writer;
 
     multimap<string,LIns*> fwd_jumps;
     map<string,LIns*> labels;
@@ -388,7 +653,12 @@ assemble(istream &in,
 
     vector<string> toks;
     size_t line = 0;
-    *isFloat = false;
+
+    bool isFloat = false;
+    bool inFrag = false;
+    bool singleFrag = false;
+    bool first = true;
+    string fragname;
 
     while(read_and_tokenize_line(in, toks, line)) {
 
@@ -396,11 +666,43 @@ assemble(istream &in,
             cerr << "lirbuf out of memory" << endl;
             exit(1);
         }
-
         if (toks.empty())
             continue;
 
         string op = pop_front(toks);
+
+        if (!singleFrag) {
+            if (op == ".begin") {
+                if (toks.size() != 1)
+                    bad("missing fragment name", line);
+                if (inFrag)
+                    bad("nested fragments are not supported", line);
+
+                fragname = pop_front(toks);
+
+                beginFragment(writer, lirbuf, fragmento, logc,
+                              verbose, inFrag, isFloat);
+                first = false;
+                continue;
+            } else if (op == ".end") {
+                if (!inFrag)
+                    bad("expecting .begin before .end", line);
+                if (!toks.empty())
+                    bad("too many tokens", line);
+                endFragment(writer, fragmento, callinfos, isFloat,
+                            labels, frags, fragname, inFrag);
+                continue;
+            }
+        }
+        if (first) {
+            first = false;
+            singleFrag = true;
+
+            beginFragment(writer, lirbuf, fragmento, logc,
+                          verbose, inFrag, isFloat);
+        }
+
+        LirWriter *lir = writer.lir;
         string lab;
         LIns *ins = NULL;
         extract_any_label(op, toks, lab, labels, line, ':');
@@ -487,16 +789,15 @@ assemble(istream &in,
             break;
 
         case LIR_call:
-        case LIR_calli:
         case LIR_callh:
         case LIR_fcall:
-        case LIR_fcalli:
             ins = assemble_call(op, opcode, toks, lir,
-                                labels, callinfos, line);
+                                labels, callinfos, line,
+                                frags);
             break;
 
         case LIR_fret:
-            *isFloat = true;
+            isFloat = true;
             /* FALL THROUGH */
         default:
             ins = assemble_general(opcount, opcode, toks,
@@ -508,80 +809,15 @@ assemble(istream &in,
         if (!lab.empty())
             labels.insert(make_pair(lab, ins));
     }
+    if (inFrag && singleFrag)
+        endFragment(writer, fragmento, callinfos, isFloat,
+                    labels, frags, fragname, inFrag);
+
+    if (inFrag)
+        bad("unexpected EOF", line);
     if (lirbuf->outOMem()) {
         cerr << "lirbuf out of memory" << endl;
         exit(1);
-    }
-
-    LIns *exitIns = do_skip(lir, sizeof(VMSideExit));
-    VMSideExit* exit = (VMSideExit*) exitIns->payload();
-    memset(exit, 0, sizeof(VMSideExit));
-    exit->guards = NULL;
-    exit->from = exit->target = frag;
-    frag->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exitIns);
-}
-
-void
-dep_u8(char *&buf, uint8_t byte, uint32_t &cksum)
-{
-    sprintf(buf, "%2.2X", byte);
-    cksum += byte;
-    buf += 2;
-}
-
-void
-dep_u32(char *&buf, uint32_t word, uint32_t &cksum)
-{
-    dep_u8(buf, (uint8_t)((word >> 24) & 0xff), cksum);
-    dep_u8(buf, (uint8_t)((word >> 16) & 0xff), cksum);
-    dep_u8(buf, (uint8_t)((word >> 8) & 0xff), cksum);
-    dep_u8(buf, (uint8_t)((word) & 0xff), cksum);
-}
-
-void
-dump_srecords(ostream &out, Fragment *frag)
-{
-    // Write S-records. Can only do 4-byte addresses at the moment.
-
-    // FIXME: this presently dumps out the entire set of code pages
-    // written-to, which means it often dumps *some* bytes on the last
-    // page that are not necessarily initialized at all; they're
-    // beyond the last instruction written. Fix this to terminate
-    // s-record writing early.
-
-    assert(sizeof(uintptr_t) == 4);
-    for (Page *page = frag->pages(); page; page = page->next) {
-        size_t step = 32;
-        uintptr_t p0 = (uintptr_t) &(page->code);
-        for (uintptr_t p = p0; p < p0 + sizeof(page->code); p += step) {
-            char buf[1024];
-
-            // S-record type S3: 8-char / 4-byte address.
-            //
-            //     +2 char code 'S3'.
-            //     +2 char / 1 byte count of remaining bytes (37 = addr, payload, cksum).
-            //     +8 char / 4 byte addr.
-            //    ---
-            //    +64 char / 32 byte payload.
-            //    ---
-            //     +2 char / 1 byte checksum.
-
-            uint32_t cksum = 0;
-            size_t count = sizeof(p) + step + 1;
-
-            sprintf(buf, "S3");
-
-            char *b = buf + 2; // 2 chars for the "S3" code.
-
-            dep_u8(b, (uint8_t) count, cksum);
-            dep_u32(b, p, cksum);
-            uint8_t *c = (uint8_t*) p;
-            for (size_t i = 0; i < step; ++i) {
-                dep_u8(b, c[i], cksum);
-            }
-            dep_u8(b, (uint8_t)((~cksum) & 0xff), cksum);
-            out << string(buf) << endl;
-        }
     }
 }
 
@@ -612,10 +848,18 @@ main(int argc, char **argv)
         has_flag(args, "--sse");
 #endif
     bool execute = has_flag(args, "--execute");
+    bool verbose = has_flag(args, "-v");
+
+#if defined NANOJIT_IA32
+    if (verbose && !execute) {
+        cerr << "usage: " << prog << " [--sse | --execute [-v]] <filename>" << endl;
+        exit(1);
+    }
+#endif
 
     if (args.empty()) {
 #if defined NANOJIT_IA32
-        cerr << "usage: " << prog << " [--sse] [--execute] <filename>" << endl;
+        cerr << "usage: " << prog << " [--sse | --execute [-v]] <filename>" << endl;
 #else
         cerr << "usage: " << prog << " <filename>" << endl;
 #endif
@@ -624,88 +868,60 @@ main(int argc, char **argv)
 
     nanojit::AvmCore::config.tree_opt = true;
 
-    Fragmento *fragmento = new (&gc) Fragmento(core, 32);
+    LogControl logc;
+    logc.lcbits = 0;
 #ifdef DEBUG
-    fragmento->labels = new (&gc) LabelMap(core, NULL);
+    if (verbose)
+        logc.lcbits = LC_Assembly;
 #endif
-    LirBuffer *lirbuf = new (&gc) LirBuffer(fragmento, NULL);
+
+    Fragmento *fragmento = new (&gc) Fragmento(core, &logc, 32);
+    LirBuffer *lirbuf = new (&gc) LirBuffer(fragmento);
 #ifdef DEBUG
-    lirbuf->names = new (&gc) LirNameMap(&gc, fragmento->labels);
+    if (verbose) {
+        fragmento->labels = new (&gc) LabelMap(core);
+        lirbuf->names = new (&gc) LirNameMap(&gc, fragmento->labels);
+    }
 #endif
-    LirBufWriter *lir = new (&gc) LirBufWriter(lirbuf);
-    LirWriter *cse_filter = new (&gc) CseFilter(lir, &gc);
-    LirWriter *expr_filter = new (&gc) ExprFilter(cse_filter);
-#ifdef DEBUG
-    LirWriter *verb = new (&gc) VerboseWriter(&gc, expr_filter, lirbuf->names);
-#endif
-    Fragment *frag = new (&gc) Fragment(NULL);
+
     vector<CallInfo*> callinfos;
-
-    frag->lirbuf = lirbuf;
-    frag->anchor = frag;
-    frag->root = frag;
-
-    LirWriter *w = expr_filter;
-#ifdef DEBUG
-    w = verb;
-#endif
 
     ifstream in(args[0].c_str());
     if (!in) {
-        cerr << "unable to open file " << args[0] << endl;
+        cerr << prog << ": error: unable to open file " << args[0] << endl;
         exit(1);
     }
-    bool isFloat;
-    assemble(in, lirbuf, w, frag, callinfos, &isFloat);
+    Fragments frags;
 
-    ::compile(fragmento->assm(), frag);
+    assemble(in, lirbuf, fragmento, &logc,
+             callinfos, frags, verbose);
 
-    for (size_t i = 0; i < callinfos.size(); ++i) {
-        delete callinfos[i];
-    }
-
-    if (fragmento->assm()->error() != nanojit::None) {
-        cerr << "error during assembly: ";
-        switch (fragmento->assm()->error()) {
-        case nanojit::OutOMem: cerr << "OutOMem"; break;
-        case nanojit::StackFull: cerr << "StackFull"; break;
-        case nanojit::RegionFull: cerr << "RegionFull"; break;
-        case nanojit::MaxLength: cerr << "MaxLength"; break;
-        case nanojit::MaxExit: cerr << "MaxExit"; break;
-        case nanojit::MaxXJump: cerr << "MaxXJump"; break;
-        case nanojit::UnknownPrim: cerr << "UnknownPrim"; break;
-        case nanojit::UnknownBranch: cerr << "UnknownBranch"; break;
-        case nanojit::None: cerr << "None"; break;
-        }
-        cerr << endl;
-        exit(1);
-    }
-
+    Fragments::iterator i;
     if (execute) {
-        if (isFloat) {
-            typedef JS_FASTCALL double (*RetDouble)();
-            RetDouble f = reinterpret_cast<RetDouble>(frag->code());
-            cout << "Output is: " << f() << endl;
-        } else {
-            typedef JS_FASTCALL int32_t (*RetInt)();
-            RetInt f = reinterpret_cast<RetInt>(frag->code());
-            cout << "Output is: " << f() << endl;
+        i = frags.find("main");
+        if (i == frags.end()) {
+            cerr << prog << ": error: atleast one fragment must be named main" << endl;
+            exit(1);
         }
+        if (i->second.isFloat)
+            cout << "Output is: " << i->second.rfloat() << endl;
+        else
+            cout << "Output is: " << i->second.rint() << endl;
     } else {
-        dump_srecords(cout, frag);
+        Fragments::const_iterator i = frags.begin();
+        for ( i = frags.begin(); i != frags.end(); i++)
+            dump_srecords(cout, i->second.fragptr);
     }
 
-    frag->releaseCode(fragmento);
-    delete frag;
-#ifdef DEBUG
-    delete verb;
-#endif
-    delete expr_filter;
-    delete cse_filter;
-    delete lir;
+    for (i = frags.begin(); i != frags.end(); ++i) {
+        i->second.fragptr->releaseCode(fragmento);
+        delete i->second.fragptr;
+    }
+
     delete lirbuf;
 #ifdef DEBUG
-    delete fragmento->labels;
+    if (verbose)
+        delete fragmento->labels;
 #endif
     delete fragmento;
 }

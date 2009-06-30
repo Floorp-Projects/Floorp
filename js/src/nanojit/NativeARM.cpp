@@ -77,6 +77,52 @@ const Register Assembler::argRegs[] = { R0, R1, R2, R3 };
 const Register Assembler::retRegs[] = { R0, R1 };
 const Register Assembler::savedRegs[] = { R4, R5, R6, R7, R8, R9, R10 };
 
+// --------------------------------
+// ARM-specific utility functions.
+// --------------------------------
+
+// Calculate the number of leading zeroes in data.
+uint32_t
+Assembler::CountLeadingZeroes(uint32_t data)
+{
+    uint32_t    leading_zeroes;
+#if defined(__ARMCC__)
+    // ARMCC can do this with an intrinsic.
+    leading_zeroes = __clz(data);
+#elif defined(__GNUC__)
+    // GCC can use inline assembler to insert a CLZ instruction.
+    __asm (
+        "   clz     %0, %1  \n"
+        :   "=r"    (leading_zeroes)
+        :   "r"     (data)
+    );
+#elif defined(WINCE)
+    // WinCE can do this with an intrinsic.
+    leading_zeroes = _CountLeadingZeros(data);
+#else
+    // Other platforms must fall back to a C routine. This won't be as
+    // efficient as the CLZ instruction, but it is functional.
+    uint32_t    try_shift;
+
+    leading_zeroes = 0;
+
+    // This loop does a bisection search rather than the obvious rotation loop.
+    // This should be faster, though it will still be no match for CLZ.
+    for (try_shift = 16; try_shift != 0; try_shift /= 2) {
+        uint32_t    shift = leading_zeroes + try_shift;
+        if (((data << shift) >> shift) == data) {
+            leading_zeroes = shift;
+        }
+    }
+#endif
+
+    return leading_zeroes;
+}
+
+// --------------------------------
+// Assembler functions.
+// --------------------------------
+
 void
 Assembler::nInit(AvmCore*)
 {
@@ -111,8 +157,8 @@ Assembler::genPrologue()
     if (amt)
         SUBi(SP, SP, amt);
 
-    verbose_only( verbose_outputf("         %p:",_nIns); )
-    verbose_only( verbose_output("         patch entry"); )
+    verbose_only( asm_output("## %p:",(void*)_nIns); )
+    verbose_only( asm_output("## patch entry"); )
     NIns *patchEntry = _nIns;
 
     MOV(FP, SP);
@@ -123,27 +169,37 @@ Assembler::genPrologue()
 void
 Assembler::nFragExit(LInsp guard)
 {
-    SideExit* exit = guard->record()->exit;
-    Fragment *frag = exit->target;
-    GuardRecord *lr;
+    SideExit *  exit = guard->record()->exit;
+    Fragment *  frag = exit->target;
 
-    if (frag && frag->fragEntry) {
+    bool        target_is_known = frag && frag->fragEntry;
+
+    if (target_is_known) {
+        // The target exists so we can simply emit a branch to its location.
         JMP_far(frag->fragEntry);
-        lr = 0;
     } else {
-        // target doesn't exit yet.  emit jump to epilog, and set up to patch later.
-        lr = guard->record();
+        // The target doesn't exit yet, so emit a jump to the epilogue. If the
+        // target is created later on, the jump will be patched.
 
-        // jump to the epilogue; JMP_far will insert an extra dummy insn for later
-        // patching.
+        GuardRecord *   gr = guard->record();
+
+        // Jump to the epilogue. This may get patched later, but JMP_far always
+        // emits two instructions even when only one is required, so patching
+        // will work correctly.
         JMP_far(_epilogue);
 
-        // stick the jmp pointer to the start of the sequence
-        lr->jmp = _nIns;
-    }
+        // Load the guard record pointer into R2. We want it in R0 but we can't
+        // do this at this stage because R0 is used for something else.
+        // I don't understand why I can't load directly into R0. It works for
+        // the JavaScript JIT but not for the Regular Expression compiler.
+        // However, I haven't pushed this further as it only saves a single MOV
+        // instruction in genEpilogue.
+        LDi(R2, int(gr));
 
-    // pop the stack frame first
-    MOV(SP, FP);
+        // Set the jmp pointer to the start of the sequence so that patched
+        // branches can skip the LDi sequence.
+        gr->jmp = _nIns;
+    }
 
 #ifdef NJ_VERBOSE
     if (_frago->core()->config.show_stats) {
@@ -154,11 +210,8 @@ Assembler::nFragExit(LInsp guard)
     }
 #endif
 
-    // return value is GuardRecord*; note that this goes into
-    // R2, not R0 -- genEpilogue will move it into R0.  Otherwise
-    // we want R0 to have the original value that it had at the
-    // start of trace.
-    LDi(R2, int(lr));
+    // Pop the stack frame.
+    MOV(SP, FP);
 }
 
 NIns*
@@ -175,11 +228,17 @@ Assembler::genEpilogue()
 
     POP_mask(savingMask); // regs
 
+    // Pop the stack frame.
+    // As far as I can tell, the generated code doesn't use the stack between
+    // popping the stack frame in nFragExit and getting here and so this MOV
+    // should be redundant. However, removing this seems to break some regular
+    // expression stuff.
     MOV(SP,FP);
 
-    // this is needed if we jump here from nFragExit
-    MOV(R0,R2); // return LinkRecord*
-
+    // nFragExit loads the guard record pointer into R2, but we need it in R0
+    // so it must be moved here.
+    MOV(R0,R2); // return GuardRecord*
+    
     return _nIns;
 }
 
@@ -238,6 +297,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
 
         // handle qjoin first; won't ever show up if VFP is available
         if (arg->isop(LIR_qjoin)) {
+            NanoAssert(!AvmCore::config.vfp);
             asm_arg(ARGSIZE_LO, arg->oprnd1(), r, stkd);
             asm_arg(ARGSIZE_LO, arg->oprnd2(), r, stkd);
         } else if (!argRes || argRes->reg == UnknownReg || !AvmCore::config.vfp) {
@@ -351,7 +411,6 @@ Assembler::asm_call(LInsp ins)
     Reservation *callRes = getresv(ins);
 
     uint32_t atypes = call->_argtypes;
-    uint32_t roffset = 0;
 
     // skip return type
     ArgSize rsize = (ArgSize)(atypes & 3);
@@ -380,8 +439,9 @@ Assembler::asm_call(LInsp ins)
         }
     }
 
-    // make the call
-    BL((NIns*)(call->_address));
+    // Make the call using BLX (when necessary) so that we can interwork with
+    // Thumb(-2) code.
+    BranchWithLink((NIns*)(call->_address));
 
     ArgSize sizes[MAXARGS];
     uint32_t argc = call->get_sizes(sizes);
@@ -443,27 +503,12 @@ Assembler::nMarkExecute(Page* page, int flags)
 Register
 Assembler::nRegisterAllocFromSet(int set)
 {
-    // Note: The clz instruction only works on armv5 and up.
-#if defined(UNDER_CE)
-    Register r;
-    r = (Register)_CountLeadingZeros(set);
-    r = (Register)(31-r);
+    // The CountLeadingZeroes function will use the CLZ instruction where
+    // available. In other cases, it will fall back to a (slower) C
+    // implementation.
+    Register r = (Register)(31-CountLeadingZeroes(set));
     _allocator.free &= ~rmask(r);
     return r;
-#elif defined(__ARMCC__)
-    register int i;
-    __asm { clz i,set }
-    Register r = Register(31-i);
-    _allocator.free &= ~rmask(r);
-    return r;
-#else
-    // need to implement faster way
-    int i=0;
-    while (!(set & rmask((Register)i)))
-        i ++;
-    _allocator.free &= ~rmask((Register)i);
-    return (Register) i;
-#endif
 }
 
 void
@@ -490,25 +535,57 @@ Assembler::nPatchBranch(NIns* at, NIns* target)
 
     NIns* was = 0;
 
-    if (at[0] == (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) )) {
-        // this needed to be emitted with a 32-bit immediate.
-        was = (NIns*) at[1];
-    } else {
-        // nope, just a regular PC-relative B; calculate the destination address
-        // based on at and the offset.
-        NanoAssert((at[0] & 0xff000000) == (COND_AL | (0xA<<24)));
-        was = (NIns*) (((intptr_t)at + 8) + (intptr_t)((at[0] & 0xffffff) << 2));
-    }
+    // Determine how the existing branch was emitted so we can report the
+    // original destination. Note that this is only useful for debug purposes;
+    // no real code uses this result.
+    debug_only(
+        if (at[0] == (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) )) {
+            // The existing branch looks like this:
+            //  at[0]           LDR pc, [addr]
+            //  at[1]   addr:   target
+            was = (NIns*) at[1];
+        } else if ((at[0] && 0xff000000) == (NIns)( COND_AL | (0xA<<24))) {
+            // The existing branch looks like this:
+            //  at[0]           B target
+            //  at[1]           BKPT (dummy instruction).
+            was = (NIns*) (((intptr_t)at + 8) + (intptr_t)((at[0] & 0xffffff) << 2));
+        } else {
+            // The existing code is not a branch. This can occur, for example,
+            // when patching exit code generated by nFragExit. Exit branches to
+            // an epilogue load a value into R2 (using LDi), but this is not
+            // required for other exit branches so the new branch can be
+            // emitted over the top of the LDi sequence. It would be nice to
+            // assert that we're looking at an LDi sequence, but this is not
+            // trivial because the output of LDi is both platform- and
+            // context-dependent.
+            was = (NIns*)-1;    // Return an obviously incorrect target address.
+        }
+    );
 
-    // let's see how we have to emit it
+    // Assert that the existing placeholder is not conditional.
+    NanoAssert((at[0] & 0xf0000000) == COND_AL);
+    
+    // We only have to patch unconditional branches, but these may take one of
+    // the following patterns:
+    //
+    //  --- Short branch.
+    //          B       ±32MB
+    //
+    //  --- Long branch.
+    //          LDR     PC, #lit
+    //  lit:    #target
+    
     intptr_t offs = PC_OFFSET_FROM(target, at);
     if (isS24(offs>>2)) {
-        // great, just stick it in at[0]
+        // Emit a simple branch (B) in the first of the two available
+        // instruction addresses.
         at[0] = (NIns)( COND_AL | (0xA<<24) | ((offs >> 2) & 0xffffff) );
         // and reset at[1] for good measure
         at[1] = BKPT_insn;
     } else {
-        at[0] = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) );
+        // at[0] should already hold the correct instruction, so we just need
+        // to update the target.
+        NanoAssert(at[0] == (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) ));
         at[1] = (NIns)(target);
     }
     VALGRIND_DISCARD_TRANSLATIONS(at, 2*sizeof(NIns));
@@ -608,7 +685,7 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
         // asm_ld_imm will automatically select between LDR and MOV as
         // appropriate.
         if (!resv->arIndex)
-            i->clearResv();
+            i->resv()->clear();
         asm_ld_imm(r, i->imm32());
 #endif
     } else {
@@ -617,8 +694,7 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
     }
 
     verbose_only(
-        if (_verbose)
-            outputf("        restore %s",_thisfrag->lirbuf->names->formatRef(i));
+        asm_output("        restore %s",_thisfrag->lirbuf->names->formatRef(i));
     )
 }
 
@@ -644,18 +720,23 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
 void
 Assembler::asm_load64(LInsp ins)
 {
-    ///asm_output("<<< load64");
+    //output("<<< load64");
+
+    NanoAssert(ins->isQuad());
 
     LIns* base = ins->oprnd1();
     int offset = ins->oprnd2()->imm32();
 
     Reservation *resv = getresv(ins);
+    NanoAssert(resv);
     Register rr = resv->reg;
     int d = disp(resv);
 
-    freeRsrcOf(ins, false);
     Register rb = findRegFor(base, GpRegs);
     NanoAssert(IsGpReg(rb));
+    freeRsrcOf(ins, false);
+ 
+    //output("--- load64: Finished register allocation.");
 
     if (AvmCore::config.vfp && rr != UnknownReg) {
         // VFP is enabled and the result will go into a register.
@@ -674,11 +755,14 @@ Assembler::asm_load64(LInsp ins)
         NanoAssert(resv->reg == UnknownReg);
         NanoAssert(d != 0);
 
-        // *(FP+dr) <- *(rb+db)
+        // Check that the offset is 8-byte (64-bit) aligned.
+        NanoAssert((d & 0x7) == 0);
+
+        // *(uint64_t*)(FP+d) = *(uint64_t*)(rb+offset)
         asm_mmq(FP, d, rb, offset);
     }
 
-    //asm_output(">>> load64");
+    //output(">>> load64");
 }
 
 void
@@ -730,6 +814,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     } else {
         int da = findMemFor(value);
         Register rb = findRegFor(base, GpRegs);
+        // *(uint64_t*)(rb+dr) = *(uint64_t*)(FP+da)
         asm_mmq(rb, dr, FP, da);
     }
 
@@ -811,25 +896,79 @@ Assembler::asm_binop_rhs_reg(LInsp)
 void
 Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
 {
-    // value is either a 64bit struct or maybe a float
-    // that isn't live in an FPU reg.  Either way, don't
-    // put it in an FPU reg just to load & store it.
+    // The value is either a 64bit struct or maybe a float that isn't live in
+    // an FPU reg.  Either way, don't put it in an FPU reg just to load & store
+    // it.
+    // This operation becomes a simple 64-bit memcpy.
 
-    // Don't use this with PC-relative loads; the registerAlloc might
-    // end up spilling a reg (and thus the offset could end up being
-    // bogus)!
+    // In order to make the operation optimal, we will require two GP
+    // registers. We can't allocate a register here because the caller may have
+    // called freeRsrcOf, and allocating a register here may cause something
+    // else to spill onto the stack which has just be conveniently freed by
+    // freeRsrcOf (resulting in stack corruption).
+    //
+    // Falling back to a single-register implementation of asm_mmq is better
+    // than adjusting the callers' behaviour (to allow us to allocate another
+    // register here) because spilling a register will end up being slower than
+    // just using the same register twice anyway.
+    //
+    // Thus, if there is a free register which we can borrow, we will emit the
+    // following code:
+    //  LDR rr, [rs, #ds]
+    //  LDR ip, [rs, #(ds+4)]
+    //  STR rr, [rd, #dd]
+    //  STR ip, [rd, #(dd+4)]
+    // (Where rr is the borrowed register.)
+    //
+    // If there is no free register, don't spill an existing allocation. Just
+    // do the following:
+    //  LDR ip, [rs, #ds]
+    //  STR ip, [rd, #dd]
+    //  LDR ip, [rs, #(ds+4)]
+    //  STR ip, [rd, #(dd+4)]
+
+    // Ensure that the PC is not used as either base register. The instruction
+    // generation macros call underrunProtect, and a side effect of this is
+    // that we may be pushed onto another page, so the PC is not a reliable
+    // base register.
     NanoAssert(rs != PC);
+    NanoAssert(rd != PC);
 
-    // use both IP and a second scratch reg
-    Register t = registerAlloc(GpRegs & ~(rmask(rd)|rmask(rs)));
-    _allocator.addFree(t);
+    // Find the list of free registers from the allocator's free list and the
+    // GpRegs mask. This excludes any floating-point registers that may be on
+    // the free list.
+    RegisterMask    free = _allocator.free & GpRegs;
 
-    // XXX maybe figure out if we can use LDRD/STRD -- hard to
-    // ensure right register allocation
-    STR(IP, rd, dd+4);
-    STR(t, rd, dd);
-    LDR(IP, rs, ds+4);
-    LDR(t, rs, ds);
+    if (free) {
+        // There is at least one register on the free list, so grab one for
+        // temporary use. There is no need to allocate it explicitly because
+        // we won't need it after this function returns.
+
+        // The CountLeadingZeroes can be used to quickly find a set bit in the
+        // free mask.
+        Register    rr = (Register)(31-CountLeadingZeroes(free));
+
+        // Note: Not every register in GpRegs is usable here. However, these
+        // registers will never appear on the free list.
+        NanoAssert((free & rmask(PC)) == 0);
+        NanoAssert((free & rmask(LR)) == 0);
+        NanoAssert((free & rmask(SP)) == 0);
+        NanoAssert((free & rmask(IP)) == 0);
+        NanoAssert((free & rmask(FP)) == 0);
+
+        // Emit the actual instruction sequence.
+
+        STR(IP, rd, dd+4);
+        STR(rr, rd, dd);
+        LDR(IP, rs, ds+4);
+        LDR(rr, rs, ds);
+    } else {
+        // There are no free registers, so fall back to using IP twice.
+        STR(IP, rd, dd+4);
+        LDR(IP, rs, ds+4);
+        STR(IP, rd, dd);
+        LDR(IP, rs, ds);
+    }
 }
 
 void
@@ -922,55 +1061,86 @@ Assembler::underrunProtect(int bytes)
 void
 Assembler::JMP_far(NIns* addr)
 {
-    // we may have to stick an immediate into the stream, so always
-    // reserve space
+    // Even if a simple branch is all that is required, this function must emit
+    // two words so that the branch can be arbitrarily patched later on.
     underrunProtect(8);
 
     intptr_t offs = PC_OFFSET_FROM(addr,_nIns-2);
 
     if (isS24(offs>>2)) {
+        // Emit a BKPT to ensure that we reserve enough space for a full 32-bit
+        // branch patch later on. The BKPT should never be executed.
         BKPT_nochk();
+
+        // B [PC+offs]
         *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((offs>>2) & 0xFFFFFF) );
 
-        asm_output("b %p", addr);
+        asm_output("b %p", (void*)addr);
     } else {
-        // the address
+        // Insert the target address as a constant in the instruction stream.
         *(--_nIns) = (NIns)((addr));
-        // ldr pc, [pc - #4] // load the address into pc, reading it from [pc-4] (e.g.,
+        // ldr pc, [pc, #-4] // load the address into pc, reading it from [pc-4] (e.g.,
         // the next instruction)
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
 
-        asm_output("b %p (32-bit)", addr);
+        asm_output("ldr pc, =%p", (void*)addr);
     }
 }
 
+// Perform a branch with link, and ARM/Thumb exchange if necessary. The actual
+// BLX instruction is only available from ARMv5 onwards, but as we don't
+// support anything older than that this function will not attempt to output
+// pre-ARMv5 sequences.
+//
+// Note: This function is not designed to be used with branches which will be
+// patched later, though it will work if the patcher knows how to patch the
+// generated instruction sequence.
 void
-Assembler::BL(NIns* addr)
+Assembler::BranchWithLink(NIns* addr)
 {
+    // Most branches emitted by TM are loaded through a register, so always
+    // reserve enough space for the LDR sequence. This should give us a slight
+    // net gain over reserving the exact amount required for shorter branches.
+    // This _must_ be called before PC_OFFSET_FROM as it can move _nIns!
+    underrunProtect(4+LD32_size);
+
+    // We don't support ARMv4(T) and will emit ARMv5+ instruction, so assert
+    // that we have a suitable processor.
+    NanoAssert(AvmCore::config.arch >= 5);
+
+    // Calculate the offset from the instruction that is about to be
+    // written (at _nIns-1) to the target.
     intptr_t offs = PC_OFFSET_FROM(addr,_nIns-1);
 
-    //nj_dprintf ("BL: 0x%x (offs: %d [%x]) @ 0x%08x\n", addr, offs, offs, (intptr_t)(_nIns-1));
-
-    // try to do this with a single S24 call
+    // ARMv5 and above can use BLX <imm> for branches within ±32MB of the
+    // PC and BLX Rm for long branches.
     if (isS24(offs>>2)) {
-        underrunProtect(4);
 
-        // recompute offset in case underrunProtect had to allocate a new page.
-        offs = PC_OFFSET_FROM(addr,_nIns-1);
-        *(--_nIns) = (NIns)( COND_AL | (0xB<<24) | ((offs>>2) & 0xFFFFFF) );
+        if (((intptr_t)addr & 1) == 0) {
+            // The target is ARM, so just emit a BL.
 
-        asm_output("bl %p", addr);
+            // BL addr
+            NanoAssert( ((offs>>2) & ~0xffffff) == 0);
+            *(--_nIns) = (NIns)( (COND_AL) | (0xB<<24) | (offs>>2) );
+            asm_output("bl %p", (void*)addr);
+        } else {
+            // The target is Thumb, so emit a BLX.
+
+            // The (pre-shifted) value of the "H" bit in the BLX encoding.
+            uint32_t    H = (offs & 0x2) << 23;
+
+            // BLX addr
+            NanoAssert( ((offs>>2) & ~0xffffff) == 0);
+            *(--_nIns) = (NIns)( (0xF << 28) | (0x5<<25) | (H) | (offs>>2) );
+            asm_output("blx %p", (void*)addr);
+        }
     } else {
-        underrunProtect(12);
+        // BLX IP
+        *(--_nIns) = (NIns)( (COND_AL) | (0x12<<20) | (0xFFF<<8) | (0x3<<4) | (IP) );
+        asm_output("blx ip (=%p)", (void*)addr);
 
-        // the address
-        *(--_nIns) = (NIns)((addr));
-        // ldr pc, [pc - #4] // load the address into ip, reading it from [pc-4]
-        *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4));
-        // add lr, pc, #4    // set lr to be past the address that we wrote
-        *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
-
-        asm_output("bl %p (32-bit)", addr);
+        // LDR IP, =addr
+        LD32_nochk(IP, (int32_t)addr);
     }
 }
 
@@ -997,7 +1167,7 @@ Assembler::LD32_nochk(Register r, int32_t imm)
         return;
     }
 
-    if (AvmCore::config.thumb2) {
+    if (AvmCore::config.thumb2 && (r != PC)) {
         // On ARMv6T2 and above, we can just emit a movw/movt pair.
         // Note: The movt is only necessary if the high 16 bits are non-zero.
         if (((imm >> 16) & 0xFFFF) != 0)
@@ -1022,7 +1192,7 @@ Assembler::LD32_nochk(Register r, int32_t imm)
 
     // Write the literal.
     *(++_nSlot) = imm;
-    asm_output("  (%d(PC) = 0x%x)", offset, imm);
+    asm_output("## imm= 0x%x", imm);
 
     // Load the literal.
     LDR_nochk(r,PC,offset);
@@ -1086,7 +1256,11 @@ Assembler::asm_ld_imm(Register d, int32_t imm)
 // Branch to target address _t with condition _c, doing underrun
 // checks (_chk == 1) or skipping them (_chk == 0).
 //
-// If the jump fits in a relative jump (+/-32MB), emit that.
+// Set the target address (_t) to 0 if the target is not yet known and the
+// branch will be patched up later.
+//
+// If the jump is to a known address (with _t != 0) and it fits in a relative
+// jump (±32MB), emit that.
 // If the jump is unconditional, emit the dest address inline in
 // the instruction stream and load it into pc.
 // If the jump has a condition, but noone's mucked with _nIns and our _nSlot
@@ -1102,22 +1276,49 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
     int32_t offs = PC_OFFSET_FROM(_t,_nIns-1);
     //nj_dprintf("B_cond_chk target: 0x%08x offset: %d @0x%08x\n", _t, offs, _nIns-1);
 
+    // We don't patch conditional branches, and nPatchBranch can't cope with
+    // them. We should therefore check that they are not generated at this
+    // stage.
+    NanoAssert((_t != 0) || (_c == AL));
+
     // optimistically check if this will fit in 24 bits
-    if (isS24(offs>>2)) {
-        if (_chk) underrunProtect(4);
+    if (_chk && isS24(offs>>2) && (_t != 0)) {
+        underrunProtect(4);
         // recalculate the offset, because underrunProtect may have
         // moved _nIns to a new page
         offs = PC_OFFSET_FROM(_t,_nIns-1);
     }
 
-    if (isS24(offs>>2)) {
-        // the underrunProtect for this was done above
+    // Emit one of the following patterns:
+    //
+    //  --- Short branch. This can never be emitted if the branch target is not
+    //      known.
+    //          B(cc)   ±32MB
+    //
+    //  --- Long unconditional branch.
+    //          LDR     PC, #lit
+    //  lit:    #target
+    //
+    //  --- Long conditional branch. Note that conditional branches will never
+    //      be patched, so the nPatchBranch function doesn't need to know where
+    //      the literal pool is located.
+    //          LDRcc   PC, #lit
+    //          ; #lit is in the literal pool at ++_nSlot
+    //
+    //  --- Long conditional branch (if !samepage(_nIns-1, _nSlot)).
+    //          LDRcc   PC, #lit
+    //          B       skip        ; Jump over the literal data.
+    //  lit:    #target
+    //  skip:   [...]
+
+    if (isS24(offs>>2) && (_t != 0)) {
+        // The underrunProtect for this was done above (if required by _chk).
         *(--_nIns) = (NIns)( ((_c)<<28) | (0xA<<24) | (((offs)>>2) & 0xFFFFFF) );
     } else if (_c == AL) {
         if(_chk) underrunProtect(8);
         *(--_nIns) = (NIns)(_t);
         *(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | 0x4 );
-    } else if (samepage(_nIns,_nSlot)) {
+    } else if (samepage(_nIns-1,_nSlot)) {
         if(_chk) underrunProtect(8);
         *(++_nSlot) = (NIns)(_t);
         offs = PC_OFFSET_FROM(_nSlot,_nIns-1);
@@ -1125,8 +1326,13 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
         *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | ((-offs) & 0xFFFFFF) );
     } else {
         if(_chk) underrunProtect(12);
+        // Emit a pointer to the target as a literal in the instruction stream.
         *(--_nIns) = (NIns)(_t);
-        *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((-4)>>2) & 0xFFFFFF );
+        // Emit a branch to skip over the literal. The PC value is 8 bytes
+        // ahead of the executing instruction, so to branch two instructions
+        // forward this must branch 8-8=0 bytes.
+        *(--_nIns) = (NIns)( COND_AL | (0xA<<24) | 0x0 );
+        // Emit the conditional branch.
         *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | 0x0 );
     }
 
@@ -1333,93 +1539,67 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
     // XXX noone actually uses the far param in nj anyway... (always false)
     (void)isfar;
 
-    NIns* at = 0;
     LOpcode condop = cond->opcode();
     NanoAssert(cond->isCond());
 
-    if (condop >= LIR_feq && condop <= LIR_fge)
+    // The old "never" condition code has special meaning on newer ARM cores,
+    // so use "always" as a sensible default code.
+    ConditionCode cc = AL;
+
+    // Detect whether or not this is a floating-point comparison.
+    bool    fp_cond;
+
+    // Select the appropriate ARM condition code to match the LIR instruction.
+    switch (condop)
     {
-        ConditionCode cc = NV;
+        // Floating-point conditions. Note that the VFP LT/LE conditions
+        // require use of the unsigned condition codes, even though
+        // float-point comparisons are always signed.
+        case LIR_feq:   cc = EQ;    fp_cond = true;     break;
+        case LIR_flt:   cc = LO;    fp_cond = true;     break;
+        case LIR_fle:   cc = LS;    fp_cond = true;     break;
+        case LIR_fge:   cc = GE;    fp_cond = true;     break;
+        case LIR_fgt:   cc = GT;    fp_cond = true;     break;
 
-        if (branchOnFalse) {
-            switch (condop) {
-                case LIR_feq: cc = NE; break;
-                case LIR_flt: cc = PL; break;
-                case LIR_fgt: cc = LE; break;
-                case LIR_fle: cc = HI; break;
-                case LIR_fge: cc = LT; break;
-                default: NanoAssert(0); break;
-            }
-        } else {
-            switch (condop) {
-                case LIR_feq: cc = EQ; break;
-                case LIR_flt: cc = MI; break;
-                case LIR_fgt: cc = GT; break;
-                case LIR_fle: cc = LS; break;
-                case LIR_fge: cc = GE; break;
-                default: NanoAssert(0); break;
-            }
-        }
+        // Standard signed and unsigned integer comparisons.
+        case LIR_eq:    cc = EQ;    fp_cond = false;    break;
+        case LIR_ov:    cc = VS;    fp_cond = false;    break;
+        case LIR_cs:    cc = CS;    fp_cond = false;    break;
+        case LIR_lt:    cc = LT;    fp_cond = false;    break;
+        case LIR_le:    cc = LE;    fp_cond = false;    break;
+        case LIR_gt:    cc = GT;    fp_cond = false;    break;
+        case LIR_ge:    cc = GE;    fp_cond = false;    break;
+        case LIR_ult:   cc = LO;    fp_cond = false;    break;
+        case LIR_ule:   cc = LS;    fp_cond = false;    break;
+        case LIR_ugt:   cc = HI;    fp_cond = false;    break;
+        case LIR_uge:   cc = HS;    fp_cond = false;    break;
 
-        B_cond(cc, targ);
-        asm_output("b(%d) 0x%08x", cc, (unsigned int) targ);
+        // Default case for invalid or unexpected LIR instructions.
+        default:        cc = AL;    fp_cond = false;    break;
+    }
 
-        NIns *at = _nIns;
+    // Invert the condition if required.
+    if (branchOnFalse)
+        cc = OppositeCond(cc);
+
+    // Ensure that we got a sensible condition code.
+    NanoAssert((cc != AL) && (cc != NV));
+    
+    // Ensure that we don't hit floating-point LIR codes if VFP is disabled.
+    NanoAssert(AvmCore::config.vfp || !fp_cond);
+
+    // Emit a suitable branch instruction.
+    B_cond(cc, targ);
+    
+    // Store the address of the branch instruction so that we can return it.
+    // asm_[f]cmp will move _nIns so we must do this now.
+    NIns *at = _nIns;
+
+    if (fp_cond)
         asm_fcmp(cond);
-        return at;
-    }
+    else
+        asm_cmp(cond);
 
-    // produce the branch
-    if (branchOnFalse) {
-        if (condop == LIR_eq)
-            JNE(targ);
-        else if (condop == LIR_ov)
-            JNO(targ);
-        else if (condop == LIR_cs)
-            JNC(targ);
-        else if (condop == LIR_lt)
-            JNL(targ);
-        else if (condop == LIR_le)
-            JNLE(targ);
-        else if (condop == LIR_gt)
-            JNG(targ);
-        else if (condop == LIR_ge)
-            JNGE(targ);
-        else if (condop == LIR_ult)
-            JNB(targ);
-        else if (condop == LIR_ule)
-            JNBE(targ);
-        else if (condop == LIR_ugt)
-            JNA(targ);
-        else //if (condop == LIR_uge)
-            JNAE(targ);
-    } else // op == LIR_xt
-    {
-        if (condop == LIR_eq)
-            JE(targ);
-        else if (condop == LIR_ov)
-            JO(targ);
-        else if (condop == LIR_cs)
-            JC(targ);
-        else if (condop == LIR_lt)
-            JL(targ);
-        else if (condop == LIR_le)
-            JLE(targ);
-        else if (condop == LIR_gt)
-            JG(targ);
-        else if (condop == LIR_ge)
-            JGE(targ);
-        else if (condop == LIR_ult)
-            JB(targ);
-        else if (condop == LIR_ule)
-            JBE(targ);
-        else if (condop == LIR_ugt)
-            JA(targ);
-        else //if (condop == LIR_uge)
-            JAE(targ);
-    }
-    at = _nIns;
-    asm_cmp(cond);
     return at;
 }
 
@@ -1501,11 +1681,11 @@ Assembler::asm_fcond(LInsp ins)
     Register r = prepResultReg(ins, AllowableFlagRegs);
 
     switch (ins->opcode()) {
-        case LIR_feq: SET(r,EQ,NE); break;
-        case LIR_flt: SET(r,MI,PL); break;
-        case LIR_fgt: SET(r,GT,LE); break;
-        case LIR_fle: SET(r,LS,HI); break;
-        case LIR_fge: SET(r,GE,LT); break;
+        case LIR_feq: SET(r,EQ); break;
+        case LIR_flt: SET(r,LO); break;
+        case LIR_fle: SET(r,LS); break;
+        case LIR_fge: SET(r,GE); break;
+        case LIR_fgt: SET(r,GT); break;
         default: NanoAssert(0); break;
     }
 
@@ -1515,33 +1695,22 @@ Assembler::asm_fcond(LInsp ins)
 void
 Assembler::asm_cond(LInsp ins)
 {
-    // only want certain regs
-    LOpcode op = ins->opcode();
     Register r = prepResultReg(ins, AllowableFlagRegs);
-    // SETcc only sets low 8 bits, so extend
-    MOVZX8(r,r);
-    if (op == LIR_eq)
-        SETE(r);
-    else if (op == LIR_ov)
-        SETO(r);
-    else if (op == LIR_cs)
-        SETC(r);
-    else if (op == LIR_lt)
-        SETL(r);
-    else if (op == LIR_le)
-        SETLE(r);
-    else if (op == LIR_gt)
-        SETG(r);
-    else if (op == LIR_ge)
-        SETGE(r);
-    else if (op == LIR_ult)
-        SETB(r);
-    else if (op == LIR_ule)
-        SETBE(r);
-    else if (op == LIR_ugt)
-        SETA(r);
-    else // if (op == LIR_uge)
-        SETAE(r);
+    switch(ins->opcode())
+    {
+        case LIR_eq:    SET(r,EQ);      break;
+        case LIR_ov:    SET(r,VS);      break;
+        case LIR_cs:    SET(r,CS);      break;
+        case LIR_lt:    SET(r,LT);      break;
+        case LIR_le:    SET(r,LE);      break;
+        case LIR_gt:    SET(r,GT);      break;
+        case LIR_ge:    SET(r,GE);      break;
+        case LIR_ult:   SET(r,LO);      break;
+        case LIR_ule:   SET(r,LS);      break;
+        case LIR_ugt:   SET(r,HI);      break;
+        case LIR_uge:   SET(r,HS);      break;
+        default:        NanoAssert(0);  break; 
+    }
     asm_cmp(ins);
 }
 
@@ -1663,6 +1832,7 @@ Assembler::asm_ld(LInsp ins)
     LOpcode op = ins->opcode();
     LIns* base = ins->oprnd1();
     LIns* disp = ins->oprnd2();
+
     Register rr = prepResultReg(ins, GpRegs);
     int d = disp->imm32();
     Register ra = getBaseReg(base, d, GpRegs);
@@ -1743,26 +1913,7 @@ Assembler::asm_qlo(LInsp ins)
     LIns *q = ins->oprnd1();
     int d = findMemFor(q);
     LD(rr, d, FP);
-
-#if 0
-    LIns *q = ins->oprnd1();
-
-    Reservation *resv = getresv(ins);
-    Register rr = resv->reg;
-    if (rr == UnknownReg) {
-        // store quad in spill loc
-        int d = disp(resv);
-        freeRsrcOf(ins, false);
-        Register qr = findRegFor(q, XmmRegs);
-        SSE_MOVDm(d, FP, qr);
-    } else {
-        freeRsrcOf(ins, false);
-        Register qr = findRegFor(q, XmmRegs);
-        SSE_MOVD(rr,qr);
-    }
-#endif
 }
-
 
 void
 Assembler::asm_param(LInsp ins)

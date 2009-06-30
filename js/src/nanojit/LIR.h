@@ -1,4 +1,4 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -164,6 +164,17 @@ namespace nanojit
         Register reg:7;         // register UnknownReg implies not in register
         uint32_t used:1;        // when set, the reservation is active
         LOpcode  code:8;
+
+		inline void init() {
+			reg = UnknownReg;
+			arIndex = 0;
+			used = 1;
+		}
+
+		inline void clear()
+		{
+			used = 0;
+		}
 	};
 
     // Low-level Instruction.  4 words per instruction -- it's important this
@@ -172,8 +183,6 @@ namespace nanojit
     // The first word is the same for all LIns kinds;  the last three differ.
 	class LIns
 	{
-        friend class LirBufWriter;
-
         // 2-operand form.  Used for most LIns kinds, including LIR_skip (for
         // which oprnd_1 is the target).
 		struct u_type
@@ -254,9 +263,9 @@ namespace nanojit
         uint64_t       imm64()    const;
         double         imm64f()   const;
         Reservation*   resv()           { return &firstWord; }
-        void*	payload() const;
-        inline Page*	page()			{ return (Page*) alignTo(this,NJ_PAGE_SIZE); }
-        inline int32_t  size() const {
+        void*	       payload() const;
+        inline Page*   page()			{ return (Page*) alignTo(this,NJ_PAGE_SIZE); }
+        inline int32_t size() const {
             NanoAssert(isop(LIR_alloc));
             return i.imm32<<2;
         }
@@ -282,7 +291,7 @@ namespace nanojit
         #endif      
 		}
 		
-		bool isCse(const CallInfo *functions) const;
+		bool isCse() const;
         bool isRet() const { return nanojit::isRetOpcode(firstWord.code); }
 		bool isop(LOpcode o) const { return firstWord.code == o; }
         #if defined(_DEBUG)
@@ -323,25 +332,70 @@ namespace nanojit
 		bool isBranch() const {
 			return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
 		}
-        void setimm32(int32_t x) { NanoAssert(isconst()); i.imm32 = x; }
-        // Set the opcode and clear resv.
-        void initOpcodeAndClearResv(LOpcode);
-        Reservation* initResv();
-        void         clearResv();
 
-		// operand-setting methods
-        void setOprnd1(LIns* r) {
-            NanoAssert(isOp1() || isOp2() || isLoad() || isStore());
-            u.oprnd_1 = r;
+        void setIns0(LOpcode op) {
+            firstWord.code = op;
+		}
+        void setIns1(LOpcode op, LIns* oprnd1) {
+            firstWord.code = op;
+            u.oprnd_1 = oprnd1;
+            NanoAssert(isOp1());
         }
-        void setOprnd2(LIns* r) {
-            NanoAssert(isOp2() || isLoad() || isStore());
-            u.oprnd_2 = r;
+        void setIns2(LOpcode op, LIns* oprnd1, LIns* oprnd2) {
+            firstWord.code = op;
+            u.oprnd_1 = oprnd1;
+            u.oprnd_2 = oprnd2;
+            NanoAssert(isOp2() || isLoad() || isGuard() || isBranch());
         }
-        void setDisp(int32_t d) {
-            NanoAssert(isStore());
+        void setLoad(LOpcode op, LIns* base, LIns* d) {
+            setIns2(op, base, d);
+        }
+		void setGuard(LOpcode op, LIns* cond, LIns* data) {
+			setIns2(op, cond, data);
+		}
+		void setBranch(LOpcode op, LIns* cond, LIns* target) {
+			setIns2(op, cond, target);
+		}
+        void setStorei(LOpcode op, LIns* val, LIns* base, int32_t d) {
+            firstWord.code = op;
+            u.oprnd_1 = val;
+            u.oprnd_2 = base;
             sti.disp = d;
+            NanoAssert(isStore());
         }
+		void setImm(LOpcode op, int32_t imm32) {
+			firstWord.code = op;
+			i.imm32 = imm32;
+			NanoAssert(op == LIR_alloc || op == LIR_int);
+		}
+		void setAlloc(LOpcode op, int32_t size) {
+			setImm(op, size);
+		}
+		void setParam(LOpcode op, int32_t arg, int32_t kind)
+		{
+			firstWord.code = op;
+			NanoAssert(isU8(arg) && isU8(kind));
+			c.imm8a = arg;
+			c.imm8b = kind;
+			c.ci = NULL;
+			NanoAssert(op == LIR_param);
+		}
+		void setCall(LOpcode op, int32_t argc, const CallInfo* ci)
+		{
+			firstWord.code = op;
+			NanoAssert(isU8(argc));
+			c.imm8a = 0;
+			c.imm8b = argc;
+			c.ci = ci;
+			NanoAssert(op == LIR_call || op == LIR_fcall);
+		}
+		void setImmq(LOpcode op, int64_t imm64) {
+			firstWord.code = op;
+			i64.imm64_0 = int32_t(imm64);
+			i64.imm64_1 = int32_t(imm64>>32);
+			NanoAssert(op == LIR_quad);
+		}
+
 		void setTarget(LIns* t);
 		LIns* getTarget();
 
@@ -366,11 +420,10 @@ namespace nanojit
 	{
 	public:
 		LirWriter *out;
-        const CallInfo *_functions;
 
 		virtual ~LirWriter() {}
 		LirWriter(LirWriter* out) 
-			: out(out), _functions(out?out->_functions : 0) {}
+			: out(out) {}
 
 		virtual LInsp ins0(LOpcode v) {
 			return out->ins0(v);
@@ -453,7 +506,6 @@ namespace nanojit
 	 */
     class LabelMap MMGC_SUBCLASS_DECL
     {
-		LabelMap* parent;
 		class Entry MMGC_SUBCLASS_DECL
 		{
 		public:
@@ -469,13 +521,12 @@ namespace nanojit
         void formatAddr(const void *p, char *buf);
     public:
         avmplus::AvmCore *core;
-        LabelMap(avmplus::AvmCore *, LabelMap* parent);
+        LabelMap(avmplus::AvmCore *);
         ~LabelMap();
         void add(const void *p, size_t size, size_t align, const char *name);
 		void add(const void *p, size_t size, size_t align, avmplus::String*);
 		const char *dup(const char *);
 		const char *format(const void *p);
-		void promoteAll(const void *newbase);
 		void clear();
     };
 
@@ -531,9 +582,11 @@ namespace nanojit
 	{
 		InsList code;
 		DWB(LirNameMap*) names;
+		LogControl* logc;
     public:
-		VerboseWriter(avmplus::GC *gc, LirWriter *out, LirNameMap* names) 
-			: LirWriter(out), code(gc), names(names)
+		VerboseWriter(avmplus::GC *gc, LirWriter *out,
+					  LirNameMap* names, LogControl* logc)
+			: LirWriter(out), code(gc), names(names), logc(logc)
 		{}
 
 		LInsp add(LInsp i) {
@@ -553,10 +606,10 @@ namespace nanojit
             int n = code.size();
             if (n) {
 			    for (int i=0; i < n; i++)
-				    nj_dprintf("    %s\n",names->formatIns(code[i]));
+				    logc->printf("    %s\n",names->formatIns(code[i]));
 			    code.clear();
                 if (n > 1)
-        			nj_dprintf("\n");
+        			logc->printf("\n");
             }
 		}
 
@@ -672,12 +725,11 @@ namespace nanojit
 	{
 		public:
 			DWB(Fragmento*)		_frago;
-			LirBuffer(Fragmento* frago, const CallInfo* functions);
+			LirBuffer(Fragmento* frago);
 			virtual ~LirBuffer();
 			void        clear();
             void        rewind();
             uintptr_t   makeRoom(size_t szB);   // make room for an instruction
-            LInsp       lastWritten();          // most recently written instruction
 			bool		outOMem() { return _noMem != 0; }
 			
 			debug_only (void validate() const;)
@@ -693,7 +745,6 @@ namespace nanojit
 			}
 			_stats;
 
-			const CallInfo* _functions;
             AbiKind abi;
             LInsp state,param1,sp,rp;
             LInsp savedRegs[NumSavedRegs];
@@ -716,7 +767,6 @@ namespace nanojit
         public:			
 			LirBufWriter(LirBuffer* buf)
 				: LirWriter(0), _buf(buf) {
-				_functions = buf->_functions;
 			}
 
 			// LirWriter interface
@@ -756,7 +806,6 @@ namespace nanojit
 		LInsp _i; // current instruction that this decoder is operating on.
 
 	public:
-        LirReader(LirBuffer* buf) : LirFilter(0), _i(buf->lastWritten()) { }
 		LirReader(LInsp i) : LirFilter(0), _i(i) { }
 		virtual ~LirReader() {}
 
@@ -792,9 +841,8 @@ namespace nanojit
 	class CseReader: public LirFilter
 	{
 		LInsHashSet *exprs;
-		const CallInfo *functions;
 	public:
-		CseReader(LirFilter *in, LInsHashSet *exprs, const CallInfo*);
+		CseReader(LirFilter *in, LInsHashSet *exprs);
 		LInsp read();
 	};
 
