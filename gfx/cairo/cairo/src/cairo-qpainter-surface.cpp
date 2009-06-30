@@ -602,6 +602,7 @@ _cairo_qpainter_surface_release_dest_image (void *abstract_surface,
 static cairo_status_t
 _cairo_qpainter_surface_clone_similar (void             *abstract_surface,
                                        cairo_surface_t  *src,
+                                       cairo_content_t   content,
                                        int               src_x,
                                        int               src_y,
                                        int               width,
@@ -614,11 +615,11 @@ _cairo_qpainter_surface_clone_similar (void             *abstract_surface,
     cairo_surface_t *new_surf = NULL;
 
     // For non-image targets, always try to create a QPixmap first
-    if (qs->image == NULL && (!_qpixmaps_have_no_alpha || src->content == CAIRO_CONTENT_COLOR))
+    if (qs->image == NULL && (!_qpixmaps_have_no_alpha || content == CAIRO_CONTENT_COLOR))
     {
         new_surf = cairo_qpainter_surface_create_with_qpixmap
-            (src->content, width, height);
-        if (cairo_surface_get_content (new_surf) != src->content) {
+            (content, width, height);
+        if (cairo_surface_get_content (new_surf) != content) {
             cairo_surface_destroy (new_surf);
             _qpixmaps_have_no_alpha = TRUE;
             new_surf = NULL;
@@ -627,7 +628,7 @@ _cairo_qpainter_surface_clone_similar (void             *abstract_surface,
 
     if (new_surf == NULL) {
         new_surf = cairo_qpainter_surface_create_with_qimage
-                   (_cairo_format_from_content (src->content), width, height);
+                   (_cairo_format_from_content (content), width, height);
     }
 
     if (new_surf->status)
