@@ -38,6 +38,7 @@
 
 #include "prtypes.h"
 #include "prmem.h"
+#include "prenv.h"
 #include "prclist.h"
 #include "nsAutoLock.h"
 #include "nsNPAPIPlugin.h"
@@ -86,6 +87,11 @@
 #include "nsJSNPRuntime.h"
 #include "nsIHttpAuthManager.h"
 #include "nsICookieService.h"
+
+#  include "mozilla/SharedPRLibrary.h"
+using mozilla::SharedPRLibrary;
+#  include "mozilla/plugins/NPAPIPluginParent.h"
+using mozilla::plugins::NPAPIPluginParent;
 
 static PRLock *sPluginThreadAsyncCallLock = nsnull;
 static PRCList sPendingAsyncCalls = PR_INIT_STATIC_CLIST(&sPendingAsyncCalls);
@@ -264,7 +270,9 @@ nsNPAPIPlugin::CheckClassInitialized(void)
 
 NS_IMPL_ISUPPORTS2(nsNPAPIPlugin, nsIPlugin, nsIFactory)
 
-nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
+nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, 
+                             SharedLibrary* aLibrary,
+                             PRLibrary* aPRLibrary,
                              NP_PLUGINSHUTDOWN aShutdown)
 {
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
@@ -361,12 +369,18 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   memset((void*) &callbacks, 0, sizeof(callbacks));
   callbacks.size = sizeof(callbacks);
 
+  SharedLibrary* pluginLib;
+  if (PR_GetEnv("DISABLE_OOP_PLUGINS"))
+    pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
+  else
+    pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
+
   NP_PLUGINSHUTDOWN pfnShutdown =
-    (NP_PLUGINSHUTDOWN)PR_FindFunctionSymbol(aLibrary, "NP_Shutdown");
+    (NP_PLUGINSHUTDOWN) pluginLib->FindFunctionSymbol("NP_Shutdown");
 
   // create the new plugin handler
   *aResult = plptr =
-    new nsNPAPIPlugin(&callbacks, aLibrary, pfnShutdown);
+    new nsNPAPIPlugin(&callbacks, pluginLib, aLibrary, pfnShutdown);
 
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -383,7 +397,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   plptr->Initialize();
 
   NP_PLUGINUNIXINIT pfnInitialize =
-    (NP_PLUGINUNIXINIT)PR_FindFunctionSymbol(aLibrary, "NP_Initialize");
+    (NP_PLUGINUNIXINIT) pluginLib->FindFunctionSymbol("NP_Initialize");
 
   if (!pfnInitialize)
     return NS_ERROR_UNEXPECTED;
@@ -585,7 +599,7 @@ nsNPAPIPlugin::CreateInstance(nsISupports *aOuter, const nsIID &aIID,
 
   // XXX This is suspicuous!
   nsRefPtr<nsNPAPIPluginInstance> inst =
-    new nsNPAPIPluginInstance(&fCallbacks, fLibrary);
+    new nsNPAPIPluginInstance(&fCallbacks, fPRLibrary);
 
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -631,7 +645,6 @@ nsNPAPIPlugin::Shutdown(void)
 #endif
     fShutdownEntry = nsnull;
   }
-
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
              ("NPAPIPlugin Shutdown done, this=%p", this));
   return NS_OK;
@@ -640,9 +653,9 @@ nsNPAPIPlugin::Shutdown(void)
 nsresult
 nsNPAPIPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
-  const char* (*npGetMIMEDescription)() =
-    (const char* (*)()) PR_FindFunctionSymbol(fLibrary, "NP_GetMIMEDescription");
 
+  const char* (*npGetMIMEDescription)() = (const char* (*)())
+      fLibrary->FindFunctionSymbol("NP_GetMIMEDescription");
   *resultingDesc = npGetMIMEDescription ? npGetMIMEDescription() : "";
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -658,15 +671,15 @@ nsNPAPIPlugin::GetValue(nsPluginVariable variable, void *value)
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsNPAPIPlugin::GetValue called: this=%p, variable=%d\n", this, variable));
 
-  NPError (*npGetValue)(void*, nsPluginVariable, void*) =
-    (NPError (*)(void*, nsPluginVariable, void*)) PR_FindFunctionSymbol(fLibrary,
-                                                                "NP_GetValue");
+  NPError rv = NPERR_NO_ERROR;;
 
-  if (npGetValue && NPERR_NO_ERROR == npGetValue(nsnull, variable, value)) {
-    return NS_OK;
+  NPError (*npGetValue)(void*, nsPluginVariable, void*) = 
+    (NPError (*)(void*, nsPluginVariable, void*))
+    fLibrary->FindFunctionSymbol("NP_GetValue");
+  if (npGetValue) {
+    rv = npGetValue(nsnull, variable, value);
   }
-
-  return NS_ERROR_FAILURE;
+  return (rv == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // Create a new NPP GET or POST (given in the type argument) url

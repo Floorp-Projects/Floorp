@@ -44,6 +44,8 @@
 #include "npfunctions.h"
 #include "nsPluginHostImpl.h"
 
+#include "mozilla/SharedLibrary.h"
+
 /*
  * Use this macro before each exported function
  * (between the return address and the function
@@ -74,8 +76,16 @@ typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, 
 
 class nsNPAPIPlugin : public nsIPlugin
 {
+private:
+  typedef mozilla::SharedLibrary SharedLibrary;
+
 public:
-  nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
+  // FIXME/cjones: the PRLibrary* param should go away, and we should
+  // move to the SharedLibrary* one only.  requires modifying the
+  // nsNPAPIPluginInstance
+  nsNPAPIPlugin(NPPluginFuncs* callbacks,
+                SharedLibrary* aLibrary,
+                PRLibrary* aPRLibrary,
                 NP_PLUGINSHUTDOWN aShutdown);
   virtual ~nsNPAPIPlugin(void);
 
@@ -102,7 +112,8 @@ protected:
   // The plugin-side callbacks that the browser calls. One set of
   // plugin callbacks for each plugin.
   NPPluginFuncs fCallbacks;
-  PRLibrary*    fLibrary;
+  SharedLibrary* fLibrary;
+  PRLibrary* fPRLibrary;
 
   NP_PLUGINSHUTDOWN fShutdownEntry;
 
