@@ -435,13 +435,13 @@
     </vbox>
 
     <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0" left="0">
-      <label id="helperapp-prompt" value="What would you like to do with"/>
+      <label id="helperapp-prompt" value="&helperApp.prompt;"/>
       <label id="helperapp-target" value=""/>
       <separator/>
       <hbox pack="center">
-        <button id="helperapp-open" label="Open" oncommand="HelperAppDialog.open();"/>
-        <button id="helperapp-save" label="Save" oncommand="HelperAppDialog.save();"/>
-        <button id="helperapp-nothing" label="Nothing" oncommand="HelperAppDialog.close();"/>
+        <button id="helperapp-open" label="&helperApp.open;" oncommand="HelperAppDialog.open();"/>
+        <button id="helperapp-save" label="&helperApp.save;" oncommand="HelperAppDialog.save();"/>
+        <button id="helperapp-nothing" label="&helperApp.nothing;" oncommand="HelperAppDialog.close();"/>
       </hbox>
     </vbox>
 
