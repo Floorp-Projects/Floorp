@@ -49,7 +49,7 @@
           <xul:label anonid="learnMore"
                      class="text-link"
                      value="&geolocation.learnMore;"
-                     onclick="Browser.addTab(this.href, true); return false;"/>
+                     onclick="BrowserUI.newTab(this.href); return false;"/>
         </xul:hbox>
         
         <xul:hbox pack="center"
