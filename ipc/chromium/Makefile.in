@@ -41,8 +41,12 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+OS_CXXFLAGS := $(filter-out -fshort-wchar,$(OS_CXXFLAGS))
+
 LIBRARY_NAME = chromium_s
 FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
 
 ENABLE_CXX_EXCEPTIONS = 1
 ACDEFINES =
@@ -63,6 +67,9 @@ vpath %.mm \
   $(srcdir)/src/base \
   $(srcdir)/src/chrome/common \
   $(NULL)
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CPPSRCS += \
   dtoa.cc \
@@ -254,7 +261,7 @@ endif # } OS_LINUX
 
 ifdef OS_POSIX # {
 
-LOCAL_INCLUDES += $(srcdir)/src/third_party/libevent
+LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent
 DEFINES += -DHAVE_CONFIG_H
 
 CSRCS += \
@@ -274,12 +281,12 @@ CSRCS += \
   $(NULL)
 
 ifdef OS_MACOSX # {
-LOCAL_INCLUDES += $(srcdir)/src/third_party/libevent/mac
+LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/mac
 CSRCS += kqueue.c
 endif # }
 
 ifdef OS_LINUX # {
-LOCAL_INCLUDES += $(srcdir)/src/third_party/libevent/linux
+LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/linux
 CSRCS += \
   epoll.c \
   epoll_sub.c \
@@ -288,6 +295,4 @@ endif # }
 
 endif # }
 
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
