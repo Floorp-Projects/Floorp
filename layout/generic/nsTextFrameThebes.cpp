@@ -4091,6 +4091,22 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   }
 }
 
+static gfxFloat
+ComputeDescentLimitForSelectionUnderline(nsPresContext* aPresContext,
+                                         nsTextFrame* aFrame,
+                                         const gfxFont::Metrics& aFontMetrics)
+{
+  gfxFloat app = aPresContext->AppUnitsPerDevPixel();
+  nscoord lineHeightApp =
+    nsHTMLReflowState::CalcLineHeight(aFrame->GetStyleContext(), NS_AUTOHEIGHT);
+  gfxFloat lineHeight = gfxFloat(lineHeightApp) / app;
+  if (lineHeight <= aFontMetrics.maxHeight) {
+    return aFontMetrics.maxDescent;
+  }
+  return aFontMetrics.maxDescent + (lineHeight - aFontMetrics.maxHeight) / 2;
+}
+
+
 // Make sure this stays in sync with DrawSelectionDecorations below
 static const SelectionType SelectionTypesWithDecorations =
   nsISelectionController::SELECTION_SPELLCHECK |
@@ -4128,6 +4144,7 @@ GetTextDecorationStyle(const nsTextRangeStyle &aRangeStyle)
  * drawing text decoration for selections.
  */
 static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
+    nsTextFrame* aFrame,
     nsTextPaintStyle& aTextPaintStyle,
     const nsTextRangeStyle &aRangeStyle,
     const gfxPoint& aPt, gfxFloat aWidth,
@@ -4135,7 +4152,9 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
 {
   gfxPoint pt(aPt);
   gfxSize size(aWidth, aFontMetrics.underlineSize);
-  gfxFloat descentLimit = aFontMetrics.maxDescent;
+  gfxFloat descentLimit =
+    ComputeDescentLimitForSelectionUnderline(aTextPaintStyle.PresContext(),
+                                             aFrame, aFontMetrics);
 
   float relativeSize;
   PRUint8 style;
@@ -4595,7 +4614,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
       pt.x = (aFramePt.x + xOffset -
              (mTextRun->IsRightToLeft() ? advance : 0)) / app;
       gfxFloat width = PR_ABS(advance) / app;
-      DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
+      DrawSelectionDecorations(aCtx, aSelectionType, this, aTextPaintStyle,
                                selectedStyle,
                                pt, width, mAscent / app, decorationMetrics);
     }
@@ -4900,7 +4919,8 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   const gfxFont::Metrics& metrics = firstFont->GetMetrics();
   gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
   gfxFloat ascent = aPresContext->AppUnitsToGfxUnits(mAscent);
-  gfxFloat descentLimit = metrics.maxDescent;
+  gfxFloat descentLimit =
+    ComputeDescentLimitForSelectionUnderline(aPresContext, this, metrics);
 
   SelectionDetails *details = GetSelectionDetails();
   for (SelectionDetails *sd = details; sd; sd = sd->mNext) {
