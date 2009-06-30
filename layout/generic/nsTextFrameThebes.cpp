@@ -97,6 +97,7 @@
 #include "nsContentUtils.h"
 #include "nsLineBreaker.h"
 #include "nsIWordBreaker.h"
+#include "nsGenericDOMDataNode.h"
 
 #include "nsILineIterator.h"
 
@@ -3414,6 +3415,8 @@ nsTextFrame::Init(nsIContent*      aContent,
     AddStateBits(TEXT_BLINK_ON_OR_PRINTING);
   }
 
+  // Since our content has a frame now, this flag is no longer needed.
+  aContent->UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE);
   // We're not a continuing frame.
   // mContentOffset = 0; not necessary since we get zeroed out at init
   return nsFrame::Init(aContent, aParent, aPrevInFlow);
@@ -3422,8 +3425,9 @@ nsTextFrame::Init(nsIContent*      aContent,
 void
 nsTextFrame::Destroy()
 {
-  // We might want to clear FRAMETREE_DEPENDS_ON_CHARS on mContent here, since
-  // our parent frame type might be changing.  Not clear whether it's worth it.
+  // We might want to clear NS_CREATE_FRAME_IF_NON_WHITESPACE or
+  // NS_REFRAME_IF_WHITESPACE on mContent here, since our parent frame
+  // type might be changing.  Not clear whether it's worth it.
   ClearTextRun();
   if (mNextContinuation) {
     mNextContinuation->SetPrevInFlow(nsnull);

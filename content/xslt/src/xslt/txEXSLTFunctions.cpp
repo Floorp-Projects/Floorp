@@ -544,7 +544,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRInt32 tailIndex;
+            PRUint32 tailIndex;
 
             // Start splitting
             if (pattern.IsEmpty()) {
@@ -596,7 +596,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             }
 
             // Add tail if needed
-            if (tailIndex != string.Length()) {
+            if (tailIndex != (PRUint32)string.Length()) {
                 rv = createAndAddToResult(txXSLTAtoms::token,
                                           Substring(string, tailIndex),
                                           resultSet, docFrag);

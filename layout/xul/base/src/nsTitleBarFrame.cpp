@@ -52,6 +52,7 @@
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
+#include "nsContentUtils.h"
 
 //
 // NS_NewTitleBarFrame
@@ -242,10 +243,7 @@ void
 nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 {
   // Execute the oncommand event handler.
-  nsEventStatus status = nsEventStatus_eIgnore;
-
-  nsXULCommandEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) : PR_FALSE,
-                          NS_XUL_COMMAND, nsnull);
-
-  nsEventDispatcher::Dispatch(mContent, aPresContext, &event, nsnull, &status);
+  nsContentUtils::DispatchXULCommand(mContent,
+                                     aEvent ?
+                                       NS_IS_TRUSTED_EVENT(aEvent) : PR_FALSE);
 }

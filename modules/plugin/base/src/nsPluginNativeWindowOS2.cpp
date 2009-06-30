@@ -42,14 +42,11 @@
 
 #include "nsDebug.h"
 
-#include "nsIPluginInstancePeer.h"
 #include "nsPluginSafety.h"
 #include "nsPluginNativeWindow.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsTWeakRef.h"
-
-static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 
 #define NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION "MozillaPluginWindowPropertyAssociation"
 
@@ -181,19 +178,15 @@ MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
     nsCOMPtr<nsIPluginInstance> inst;
     win->GetPluginInstance(inst);
     if (inst) {
-      nsCOMPtr<nsIPluginInstancePeer> pip;
-      inst->GetPeer(getter_AddRefs(pip));
-      if (pip) {
-        nsMIMEType mimetype = nsnull;
-        pip->GetMIMEType(&mimetype);
-        if (mimetype) { 
-          if (!strcmp(mimetype, "application/x-shockwave-flash"))
-            win->mPluginType = nsPluginType_Flash;
-          else if (!strcmp(mimetype, "application/x-java-vm"))
-            win->mPluginType = nsPluginType_Java_vm;
-          else
-            win->mPluginType = nsPluginType_Other;
-        }
+      nsMIMEType mimetype = nsnull;
+      inst->GetMIMEType(&mimetype);
+      if (mimetype) {
+        if (!strcmp(mimetype, "application/x-shockwave-flash"))
+          win->mPluginType = nsPluginType_Flash;
+        else if (!strcmp(mimetype, "application/x-java-vm"))
+          win->mPluginType = nsPluginType_Java_vm;
+        else
+          win->mPluginType = nsPluginType_Other;
       }
     }
   }

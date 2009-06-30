@@ -62,6 +62,7 @@ be/kernel/image.h
 be/kernel/OS.h
 bfd.h
 Bitmap.h
+blapi.h
 bsd/libc.h
 bsd/syscall.h
 bstring.h
@@ -251,6 +252,7 @@ Finder.h
 FinderRegistry.h
 FixMath.h
 float.h
+fnmatch.h
 Folders.h
 fontconfig/fontconfig.h
 fontconfig/fcfreetype.h
@@ -272,6 +274,7 @@ fribidi/fribidi.h
 FSp_fopen.h
 fstream.h
 ft2build.h
+fts.h
 gconf/gconf-client.h
 Gdiplus.h
 gdk/gdk.h
@@ -789,6 +792,7 @@ time.h
 Timer.h
 tlhelp32.h
 ToolUtils.h
+tr1/functional
 trace.h
 Traps.h
 typeinfo

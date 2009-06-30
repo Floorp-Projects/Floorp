@@ -143,6 +143,7 @@ write_png (cairo_surface_t	*surface,
     int i;
     cairo_status_t status;
     cairo_image_surface_t *image;
+    cairo_image_surface_t * volatile clone;
     void *image_extra;
     png_struct *png;
     png_info *info;
@@ -166,40 +167,52 @@ write_png (cairo_surface_t	*surface,
 	goto BAIL1;
     }
 
-    rows = _cairo_malloc_ab (image->height, sizeof (png_byte*));
+    /* Handle the various fallback formats (e.g. low bit-depth XServers)
+     * by coercing them to a simpler format using pixman.
+     */
+    if (image->format == CAIRO_FORMAT_INVALID) {
+	clone = _cairo_image_surface_coerce (image,
+					     _cairo_format_from_content (image->base.content));
+	status = clone->base.status;
+	if (unlikely (status))
+	    goto BAIL1;
+    } else
+	clone = image;
+
+    rows = _cairo_malloc_ab (clone->height, sizeof (png_byte*));
     if (unlikely (rows == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto BAIL1;
+	goto BAIL2;
     }
 
-    for (i = 0; i < image->height; i++)
-	rows[i] = (png_byte *) image->data + i * image->stride;
+    for (i = 0; i < clone->height; i++)
+	rows[i] = (png_byte *) clone->data + i * clone->stride;
 
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, &status,
 	                           png_simple_error_callback,
 	                           png_simple_warning_callback);
     if (unlikely (png == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto BAIL2;
+	goto BAIL3;
     }
 
     info = png_create_info_struct (png);
     if (unlikely (info == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto BAIL3;
+	goto BAIL4;
     }
 
 #ifdef PNG_SETJMP_SUPPORTED
     if (setjmp (png_jmpbuf (png)))
-	goto BAIL3;
+	goto BAIL4;
 #endif
 
     png_set_write_fn (png, closure, write_func, png_simple_output_flush_fn);
 
-    switch (image->format) {
+    switch (clone->format) {
     case CAIRO_FORMAT_ARGB32:
 	depth = 8;
-	if (_cairo_image_analyze_transparency (image) == CAIRO_IMAGE_IS_OPAQUE)
+	if (_cairo_image_analyze_transparency (clone) == CAIRO_IMAGE_IS_OPAQUE)
 	    png_color_type = PNG_COLOR_TYPE_RGB;
 	else
 	    png_color_type = PNG_COLOR_TYPE_RGB_ALPHA;
@@ -221,12 +234,12 @@ write_png (cairo_surface_t	*surface,
 	break;
     default:
 	status = _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
-	goto BAIL3;
+	goto BAIL4;
     }
 
     png_set_IHDR (png, info,
-		  image->width,
-		  image->height, depth,
+		  clone->width,
+		  clone->height, depth,
 		  png_color_type,
 		  PNG_INTERLACE_NONE,
 		  PNG_COMPRESSION_TYPE_DEFAULT,
@@ -259,10 +272,13 @@ write_png (cairo_surface_t	*surface,
     png_write_image (png, rows);
     png_write_end (png, info);
 
-BAIL3:
+BAIL4:
     png_destroy_write_struct (&png, &info);
-BAIL2:
+BAIL3:
     free (rows);
+BAIL2:
+    if (clone != image)
+	cairo_surface_destroy (&clone->base);
 BAIL1:
     _cairo_surface_release_source_image (surface, image, image_extra);
 
@@ -637,6 +653,8 @@ read_png (struct png_read_closure_t *png_closure)
 
     _cairo_image_surface_assume_ownership_of_data ((cairo_image_surface_t*)surface);
     data = NULL;
+
+    _cairo_debug_check_image_surface_is_defined (surface);
 
     status = _cairo_memory_stream_destroy (png_closure->png_data,
 					   &mime_data,

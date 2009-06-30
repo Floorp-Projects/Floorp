@@ -186,12 +186,6 @@ enum nsPluginManagerVariable {
     nsPluginManagerVariable_SupportsXEmbed            = 14
 };
 
-enum nsPluginInstancePeerVariable {
-    nsPluginInstancePeerVariable_NetscapeWindow      = 3
-//    nsPluginInstancePeerVariable_JavaClass              = 5,
-//    nsPluginInstancePeerVariable_TimerInterval          = 7
-};
-
 enum nsPluginInstanceVariable {
     nsPluginInstanceVariable_WindowlessBool          = 3,
     nsPluginInstanceVariable_TransparentBool         = 4,
@@ -398,8 +392,7 @@ class nsIPlugin;                        // plugin class (MIME-type handler)
 class nsIPluginInstance;                // plugin instance
 
 // Classes that are implemented by the browser:
-class nsIPluginInstancePeer;            // parts of nsIPluginInstance implemented by the browser
-class nsIPluginTagInfo;                 // describes html tag (accessible from nsIPluginInstancePeer)
+class nsIPluginTagInfo;                 // describes html tag
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif /* RC_INVOKED */

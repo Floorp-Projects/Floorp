@@ -545,7 +545,7 @@
 
   <hbox flex="1" id="browser">
     <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
-      <sidebarheader align="center">
+      <sidebarheader id="sidebar-header" align="center">
         <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
         <image id="sidebar-throbber"/>
         <toolbarbutton class="tabs-closebutton" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>

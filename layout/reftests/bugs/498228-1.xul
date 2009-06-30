@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<window id="list-testcase" title="Testcase"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="reftest-wait">
+
+<script>
+function fill() {
+  var list = document.getElementById('list');
+  for (var i = 1; i != 6; i++) {
+    list.appendItem("Item " + i, "");
+  }
+}
+
+function dotest() {
+  fill();
+  var list = document.getElementById('list');
+  list.ensureIndexIsVisible(4);
+  list.selectItem(list.getItemAtIndex(4));
+  setTimeout("document.documentElement.className = ''", 0);
+}
+
+window.addEventListener("load", dotest, false);
+
+</script>
+		
+<listbox id="list" rows="3" seltype="single">
+</listbox>
+
+</window>

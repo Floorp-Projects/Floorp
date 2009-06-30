@@ -44,19 +44,41 @@
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
 #include "nsWidgetAtoms.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMXULCommandEvent.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMAbstractView.h"
 
-nsEventStatus nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
+void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
 
-  nsEventStatus status = nsEventStatus_eConsumeNoDefault;
-  nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
+  nsIDocument* doc = aTargetContent->GetOwnerDoc();
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTargetContent);
+  if (docEvent && target) {
+    nsCOMPtr<nsIDOMEvent> event;
+    docEvent->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
+                          getter_AddRefs(event));
+    nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryInterface(event);
+    nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(command);
+    nsCOMPtr<nsIDOMAbstractView> view = do_QueryInterface(doc->GetWindow());
 
-  // FIXME: Should probably figure out how to init this with the actual
-  // pressed keys, but this is a big old edge case anyway. -dwh
-
-  aTargetContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
-  return status;
+    // FIXME: Should probably figure out how to init this with the actual
+    // pressed keys, but this is a big old edge case anyway. -dwh
+    if (pEvent &&
+        NS_SUCCEEDED(command->InitCommandEvent(NS_LITERAL_STRING("command"),
+                                               PR_TRUE, PR_TRUE, view, 0,
+                                               PR_FALSE, PR_FALSE, PR_FALSE,
+                                               PR_FALSE, nsnull))) {
+      pEvent->SetTrusted(PR_TRUE);
+      PRBool dummy;
+      target->DispatchEvent(event, &dummy);
+    }
+  }
 }
 
 

@@ -52,7 +52,6 @@
 
 #include "nsGUIEvent.h"
 
-#include "nsIPluginInstancePeer.h"
 #include "nsIPluginInstanceInternal.h"
 #include "nsPluginSafety.h"
 #include "nsPluginNativeWindow.h"
@@ -227,19 +226,15 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   // Flash will need special treatment later
   if (win->mPluginType == nsPluginType_Unknown) {
     if (inst) {
-      nsCOMPtr<nsIPluginInstancePeer> pip;
-      inst->GetPeer(getter_AddRefs(pip));
-      if (pip) {
-        nsMIMEType mimetype = nsnull;
-        pip->GetMIMEType(&mimetype);
-        if (mimetype) { 
-          if (!strcmp(mimetype, "application/x-shockwave-flash"))
-            win->mPluginType = nsPluginType_Flash;
-          else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
-            win->mPluginType = nsPluginType_Real;
-          else
-            win->mPluginType = nsPluginType_Other;
-        }
+      nsMIMEType mimetype = nsnull;
+      inst->GetMIMEType(&mimetype);
+      if (mimetype) { 
+        if (!strcmp(mimetype, "application/x-shockwave-flash"))
+          win->mPluginType = nsPluginType_Flash;
+        else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
+          win->mPluginType = nsPluginType_Real;
+        else
+          win->mPluginType = nsPluginType_Other;
       }
     }
   }
