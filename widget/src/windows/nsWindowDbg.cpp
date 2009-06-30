@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * nsWindowDbg - Debug related utilities for nsWindow.
+ */
+
 #include "nsWindowDbg.h"
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT)
