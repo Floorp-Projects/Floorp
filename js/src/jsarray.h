@@ -97,6 +97,9 @@ js_GetProtoIfDenseArray(JSContext *cx, JSObject *obj)
 extern JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj);
 
+extern JSBool
+js_InitContextBusyArrayTable(JSContext *);
+
 extern JSObject *
 js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector,
                   JSBool holey = JS_FALSE);
