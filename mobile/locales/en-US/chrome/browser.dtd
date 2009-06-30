@@ -41,6 +41,11 @@
 <!ENTITY editBookmarkDone.label    "Done">
 <!ENTITY editBookmarkTags.label    "Add tags here">
 
+<!ENTITY helperApp.prompt          "What would you like to do with">
+<!ENTITY helperApp.open            "Open">
+<!ENTITY helperApp.save            "Save">
+<!ENTITY helperApp.nothing         "Nothing">
+
 <!ENTITY findOnCmd.label     "Find in This Page…">
 <!ENTITY findOnCmd.accesskey "F">
 <!ENTITY findOnCmd.commandkey "f">
