@@ -599,6 +599,7 @@ struct _cairo_surface_backend {
     cairo_warn cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
+				 cairo_content_t	 content,
 				 int                     src_x,
 				 int                     src_y,
 				 int                     width,
@@ -1971,6 +1972,7 @@ _cairo_surface_release_dest_image (cairo_surface_t        *surface,
 cairo_private cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
+			      cairo_content_t	content,
 			      int               src_x,
 			      int               src_y,
 			      int               width,
@@ -2499,6 +2501,7 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern);
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   *dst,
+				cairo_content_t		    content,
 				int			   x,
 				int			   y,
 				unsigned int		   width,
@@ -2515,6 +2518,7 @@ cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 				 const cairo_pattern_t	    *mask,
 				 cairo_surface_t	    *dst,
+				 cairo_content_t	    src_content,
 				 int			    src_x,
 				 int			    src_y,
 				 int			    mask_x,
