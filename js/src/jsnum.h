@@ -189,6 +189,13 @@ js_NewWeaklyRootedNumber(JSContext *cx, jsdouble d, jsval *vp);
 extern JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d);
 
+/* 
+ * Convert an integer or double (contained in the given jsval) to a string and 
+ * append to the given buffer.
+ */
+extern JSBool JS_FASTCALL
+js_NumberValueToStringBuffer(JSContext *, jsval, JSTempVector<jschar> &);
+
 /*
  * Convert a value to a number. On exit JSVAL_IS_NULL(*vp) iff there was an
  * error. If on exit JSVAL_IS_NUMBER(*vp), then *vp holds the jsval that
