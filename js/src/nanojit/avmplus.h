@@ -323,7 +323,7 @@ namespace avmplus {
         Config() {
             memset(this, 0, sizeof(Config));
 #ifdef DEBUG
-            verbose = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
+            verbose = false;
             verbose_addrs = 1;
             verbose_exits = 1;
             verbose_live = 1;

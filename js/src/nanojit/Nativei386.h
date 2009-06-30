@@ -338,18 +338,18 @@ namespace nanojit
 
 #define LAHF()		do { count_alu(); ALU0(0x9F);					asm_output("lahf"); } while(0)
 #define SAHF()		do { count_alu(); ALU0(0x9E);					asm_output("sahf"); } while(0)
-#define OR(l,r)		do { count_alu(); ALU(0x0b, (l),(r));			asm_output("or %s,%s",gpn(l),gpn(r)); } while(0)
-#define AND(l,r)	do { count_alu(); ALU(0x23, (l),(r));			asm_output("and %s,%s",gpn(l),gpn(r)); } while(0)
-#define XOR(l,r)	do { count_alu(); ALU(0x33, (l),(r));			asm_output("xor %s,%s",gpn(l),gpn(r)); } while(0)
-#define ADD(l,r)	do { count_alu(); ALU(0x03, (l),(r));			asm_output("add %s,%s",gpn(l),gpn(r)); } while(0)
-#define SUB(l,r)	do { count_alu(); ALU(0x2b, (l),(r));			asm_output("sub %s,%s",gpn(l),gpn(r)); } while(0)
-#define MUL(l,r)	do { count_alu(); ALU2(0x0faf,(l),(r));         asm_output("mul %s,%s",gpn(l),gpn(r)); } while(0)
-#define DIV(r)      do { count_alu(); ALU(0xf7, (Register)7,(r));   asm_output("idiv edx:eax, %s",gpn(r)); } while(0)
-#define NOT(r)		do { count_alu(); ALU(0xf7, (Register)2,(r));	asm_output("not %s",gpn(r)); } while(0)
-#define NEG(r)		do { count_alu(); ALU(0xf7, (Register)3,(r));	asm_output("neg %s",gpn(r)); } while(0)
-#define SHR(r,s)	do { count_alu(); ALU(0xd3, (Register)5,(r));	asm_output("shr %s,%s",gpn(r),gpn(s)); } while(0)
-#define SAR(r,s)	do { count_alu(); ALU(0xd3, (Register)7,(r));	asm_output("sar %s,%s",gpn(r),gpn(s)); } while(0)
-#define SHL(r,s)	do { count_alu(); ALU(0xd3, (Register)4,(r));	asm_output("shl %s,%s",gpn(r),gpn(s)); } while(0)
+#define OR(l,r)		do { count_alu(); ALU(0x0b, (l),(r));			asm_output("or    %s,%s",gpn(l),gpn(r)); } while(0)
+#define AND(l,r)	do { count_alu(); ALU(0x23, (l),(r));			asm_output("and   %s,%s",gpn(l),gpn(r)); } while(0)
+#define XOR(l,r)	do { count_alu(); ALU(0x33, (l),(r));			asm_output("xor   %s,%s",gpn(l),gpn(r)); } while(0)
+#define ADD(l,r)	do { count_alu(); ALU(0x03, (l),(r));			asm_output("add   %s,%s",gpn(l),gpn(r)); } while(0)
+#define SUB(l,r)	do { count_alu(); ALU(0x2b, (l),(r));			asm_output("sub   %s,%s",gpn(l),gpn(r)); } while(0)
+#define MUL(l,r)	do { count_alu(); ALU2(0x0faf,(l),(r));         asm_output("mul   %s,%s",gpn(l),gpn(r)); } while(0)
+#define DIV(r)      do { count_alu(); ALU(0xf7, (Register)7,(r));   asm_output("idiv  edx:eax, %s",gpn(r)); } while(0)
+#define NOT(r)		do { count_alu(); ALU(0xf7, (Register)2,(r));	asm_output("not   %s",gpn(r)); } while(0)
+#define NEG(r)		do { count_alu(); ALU(0xf7, (Register)3,(r));	asm_output("neg   %s",gpn(r)); } while(0)
+#define SHR(r,s)	do { count_alu(); ALU(0xd3, (Register)5,(r));	asm_output("shr   %s,%s",gpn(r),gpn(s)); } while(0)
+#define SAR(r,s)	do { count_alu(); ALU(0xd3, (Register)7,(r));	asm_output("sar   %s,%s",gpn(r),gpn(s)); } while(0)
+#define SHL(r,s)	do { count_alu(); ALU(0xd3, (Register)4,(r));	asm_output("shl   %s,%s",gpn(r),gpn(s)); } while(0)
 
 #define SHIFT(c,r,i) \
 		underrunProtect(3);\
@@ -357,44 +357,44 @@ namespace nanojit
 		MODRM((Register)c,r);\
 		*--_nIns = 0xc1;
 
-#define SHLi(r,i)	do { count_alu(); SHIFT(4,r,i);	asm_output("shl %s,%d", gpn(r),i); } while(0)
-#define SHRi(r,i)	do { count_alu(); SHIFT(5,r,i);	asm_output("shr %s,%d", gpn(r),i); } while(0)
-#define SARi(r,i)	do { count_alu(); SHIFT(7,r,i);	asm_output("sar %s,%d", gpn(r),i); } while(0)
+#define SHLi(r,i)	do { count_alu(); SHIFT(4,r,i);	asm_output("shl   %s,%d", gpn(r),i); } while(0)
+#define SHRi(r,i)	do { count_alu(); SHIFT(5,r,i);	asm_output("shr   %s,%d", gpn(r),i); } while(0)
+#define SARi(r,i)	do { count_alu(); SHIFT(7,r,i);	asm_output("sar   %s,%d", gpn(r),i); } while(0)
 
 #define MOVZX8(d,s) do { count_alu(); ALU2(0x0fb6,d,s); asm_output("movzx %s,%s", gpn(d),gpn(s)); } while(0)
 
-#define SUBi(r,i)	do { count_alu(); ALUi(0x2d,r,i);				asm_output("sub %s,%d",gpn(r),i); } while(0)
-#define ADDi(r,i)	do { count_alu(); ALUi(0x05,r,i);				asm_output("add %s,%d",gpn(r),i); } while(0)
-#define ANDi(r,i)	do { count_alu(); ALUi(0x25,r,i);				asm_output("and %s,%d",gpn(r),i); } while(0)
-#define ORi(r,i)	do { count_alu(); ALUi(0x0d,r,i);				asm_output("or %s,%d",gpn(r),i); } while(0)
-#define XORi(r,i)	do { count_alu(); ALUi(0x35,r,i);				asm_output("xor %s,%d",gpn(r),i); } while(0)
+#define SUBi(r,i)	do { count_alu(); ALUi(0x2d,r,i);				asm_output("sub   %s,%d",gpn(r),i); } while(0)
+#define ADDi(r,i)	do { count_alu(); ALUi(0x05,r,i);				asm_output("add   %s,%d",gpn(r),i); } while(0)
+#define ANDi(r,i)	do { count_alu(); ALUi(0x25,r,i);				asm_output("and   %s,%d",gpn(r),i); } while(0)
+#define ORi(r,i)	do { count_alu(); ALUi(0x0d,r,i);				asm_output("or    %s,%d",gpn(r),i); } while(0)
+#define XORi(r,i)	do { count_alu(); ALUi(0x35,r,i);				asm_output("xor   %s,%d",gpn(r),i); } while(0)
 
-#define ADDmi(d,b,i) do { count_alust(); ALUmi(0x05, d, b, i); asm_output("add %d(%s), %d", d, gpn(b), i); } while(0)
+#define ADDmi(d,b,i) do { count_alust(); ALUmi(0x05, d, b, i); asm_output("add   %d(%s), %d", d, gpn(b), i); } while(0)
 
-#define TEST(d,s)	do { count_alu(); ALU(0x85,d,s);				asm_output("test %s,%s",gpn(d),gpn(s)); } while(0)
-#define CMP(l,r)	do { count_alu(); ALU(0x3b, (l),(r));			asm_output("cmp %s,%s",gpn(l),gpn(r)); } while(0)
-#define CMPi(r,i)	do { count_alu(); ALUi(0x3d,r,i);				asm_output("cmp %s,%d",gpn(r),i); } while(0)
+#define TEST(d,s)	do { count_alu(); ALU(0x85,d,s);				asm_output("test  %s,%s",gpn(d),gpn(s)); } while(0)
+#define CMP(l,r)	do { count_alu(); ALU(0x3b, (l),(r));			asm_output("cmp   %s,%s",gpn(l),gpn(r)); } while(0)
+#define CMPi(r,i)	do { count_alu(); ALUi(0x3d,r,i);				asm_output("cmp   %s,%d",gpn(r),i); } while(0)
 
-#define MR(d,s)		do { count_mov(); ALU(0x8b,d,s);				asm_output("mov %s,%s",gpn(d),gpn(s)); } while(0)
-#define LEA(r,d,b)	do { count_alu(); ALUm(0x8d, r,d,b);			asm_output("lea %s,%d(%s)",gpn(r),d,gpn(b)); } while(0)
+#define MR(d,s)		do { count_mov(); ALU(0x8b,d,s);				asm_output("mov   %s,%s",gpn(d),gpn(s)); } while(0)
+#define LEA(r,d,b)	do { count_alu(); ALUm(0x8d, r,d,b);			asm_output("lea   %s,%d(%s)",gpn(r),d,gpn(b)); } while(0)
 // lea %r, d(%i*4)
 // This addressing mode is not supported by the MODRMSIB macro.
 #define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|(i<<3)|5; *(--_nIns) = (0<<6)|(r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
 
 #define CDQ()       do { SARi(EDX, 31); MR(EDX, EAX); } while(0)
 
-#define SETE(r)		do { count_alu(); ALU2(0x0f94,(r),(r));			asm_output("sete %s",gpn(r)); } while(0)
+#define SETE(r)		do { count_alu(); ALU2(0x0f94,(r),(r));			asm_output("sete  %s",gpn(r)); } while(0)
 #define SETNP(r)	do { count_alu(); ALU2(0x0f9B,(r),(r));			asm_output("setnp %s",gpn(r)); } while(0)
-#define SETL(r)		do { count_alu(); ALU2(0x0f9C,(r),(r));			asm_output("setl %s",gpn(r)); } while(0)
+#define SETL(r)		do { count_alu(); ALU2(0x0f9C,(r),(r));			asm_output("setl  %s",gpn(r)); } while(0)
 #define SETLE(r)	do { count_alu(); ALU2(0x0f9E,(r),(r));			asm_output("setle %s",gpn(r)); } while(0)
-#define SETG(r)		do { count_alu(); ALU2(0x0f9F,(r),(r));			asm_output("setg %s",gpn(r)); } while(0)
+#define SETG(r)		do { count_alu(); ALU2(0x0f9F,(r),(r));			asm_output("setg  %s",gpn(r)); } while(0)
 #define SETGE(r)	do { count_alu(); ALU2(0x0f9D,(r),(r));			asm_output("setge %s",gpn(r)); } while(0)
-#define SETB(r)     do { count_alu(); ALU2(0x0f92,(r),(r));          asm_output("setb %s",gpn(r)); } while(0)
+#define SETB(r)     do { count_alu(); ALU2(0x0f92,(r),(r));          asm_output("setb  %s",gpn(r)); } while(0)
 #define SETBE(r)    do { count_alu(); ALU2(0x0f96,(r),(r));          asm_output("setbe %s",gpn(r)); } while(0)
-#define SETA(r)     do { count_alu(); ALU2(0x0f97,(r),(r));          asm_output("seta %s",gpn(r)); } while(0)
+#define SETA(r)     do { count_alu(); ALU2(0x0f97,(r),(r));          asm_output("seta  %s",gpn(r)); } while(0)
 #define SETAE(r)    do { count_alu(); ALU2(0x0f93,(r),(r));          asm_output("setae %s",gpn(r)); } while(0)
-#define SETC(r)     do { count_alu(); ALU2(0x0f90,(r),(r));          asm_output("setc %s",gpn(r)); } while(0)
-#define SETO(r)     do { count_alu(); ALU2(0x0f92,(r),(r));          asm_output("seto %s",gpn(r)); } while(0)
+#define SETC(r)     do { count_alu(); ALU2(0x0f90,(r),(r));          asm_output("setc  %s",gpn(r)); } while(0)
+#define SETO(r)     do { count_alu(); ALU2(0x0f92,(r),(r));          asm_output("seto  %s",gpn(r)); } while(0)
 
 #define MREQ(dr,sr)	do { count_alu(); ALU2(0x0f44,dr,sr); asm_output("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRNE(dr,sr)	do { count_alu(); ALU2(0x0f45,dr,sr); asm_output("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
@@ -416,12 +416,12 @@ namespace nanojit
 #define LD(reg,disp,base)	do { 	\
 	count_ld();\
 	ALUm(0x8b,reg,disp,base);	\
-	asm_output("mov %s,%d(%s)",gpn(reg),disp,gpn(base)); } while(0)
+	asm_output("mov   %s,%d(%s)",gpn(reg),disp,gpn(base)); } while(0)
 
 #define LDdm(reg,addr) do {		\
 	count_ld();                 \
 	ALUdm(0x8b,reg,addr);		\
-	asm_output("mov %s,0(%lx)",gpn(reg),(unsigned long)addr); \
+	asm_output("mov   %s,0(%lx)",gpn(reg),(unsigned long)addr); \
 	} while (0)
 
 
@@ -430,7 +430,7 @@ namespace nanojit
 #define LDsib(reg,disp,base,index,scale) do {	\
 	count_ld();                                 \
 	ALUsib(0x8b,reg,base,index,scale,disp);		\
-	asm_output("mov %s,%d(%s+%s*%c)",gpn(reg),disp,gpn(base),gpn(index),SIBIDX(scale)); \
+	asm_output("mov   %s,%d(%s+%s*%c)",gpn(reg),disp,gpn(base),gpn(index),SIBIDX(scale)); \
 	} while (0)
 
 // load 16-bit, sign extend
@@ -473,12 +473,12 @@ namespace nanojit
 	IMM32(i);					\
 	NanoAssert(((unsigned)r)<8); \
 	*(--_nIns) = (uint8_t) (0xb8 | (r) );		\
-	asm_output("mov %s,%d",gpn(r),i); } while(0)
+	asm_output("mov   %s,%d",gpn(r),i); } while(0)
 
 #define ST(base,disp,reg) do {  \
 	count_st();\
 	ALUm(0x89,reg,disp,base);	\
-    asm_output("mov %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
+    asm_output("mov   %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
 
 #define STi(base,disp,imm)	do { \
 	count_st();\
@@ -486,7 +486,7 @@ namespace nanojit
 	IMM32(imm);				\
 	MODRMm(0, disp, base);	\
 	*(--_nIns) = 0xc7;		\
-	asm_output("mov %d(%s),%d",disp,gpn(base),imm); } while(0)
+	asm_output("mov   %d(%s),%d",disp,gpn(base),imm); } while(0)
 
 #define RET()   do { count_ret(); ALU0(0xc3); asm_output("ret"); } while(0)
 #define NOP() 	do { count_alu(); ALU0(0x90); asm_output("nop"); } while(0)
@@ -497,7 +497,7 @@ namespace nanojit
 	if (isS8(i)) { \
 		underrunProtect(2);			\
 		_nIns-=2; _nIns[0] = 0x6a; _nIns[1] = (uint8_t)(i); \
-		asm_output("push %d",i); \
+		asm_output("push  %d",i); \
 	} else \
 		{ PUSHi32(i); } } while(0)
 
@@ -506,26 +506,26 @@ namespace nanojit
 	underrunProtect(5);	\
 	IMM32(i);			\
 	*(--_nIns) = 0x68;	\
-	asm_output("push %d",i); } while(0)
+	asm_output("push  %d",i); } while(0)
 
 #define PUSHr(r) do {  \
 	count_push();\
 	underrunProtect(1);			\
 	NanoAssert(((unsigned)r)<8); \
 	*(--_nIns) = (uint8_t) ( 0x50 | (r) );	\
-	asm_output("push %s",gpn(r)); } while(0)
+	asm_output("push  %s",gpn(r)); } while(0)
 
 #define PUSHm(d,b) do { \
 	count_pushld();\
 	ALUm(0xff, 6, d, b);		\
-	asm_output("push %d(%s)",d,gpn(b)); } while(0)
+	asm_output("push  %d(%s)",d,gpn(b)); } while(0)
 
 #define POPr(r) do { \
 	count_pop();\
 	underrunProtect(1);			\
 	NanoAssert(((unsigned)r)<8); \
 	*(--_nIns) = (uint8_t) ( 0x58 | (r) ); \
-	asm_output("pop %s",gpn(r)); } while(0)
+	asm_output("pop   %s",gpn(r)); } while(0)
 
 #define JCC32 0x0f
 #define JMP8  0xeb
@@ -540,14 +540,14 @@ namespace nanojit
 		_nIns -= 2; \
 		_nIns[0] = (uint8_t) ( 0x70 | (o) ); \
 		_nIns[1] = (uint8_t) (tt); \
-		asm_output("%s %p",(n),(next+tt)); \
+		asm_output("%-5s %p",(n),(next+tt)); \
 	} else { \
 		verbose_only( NIns* next = _nIns; ) \
 		IMM32(tt); \
 		_nIns -= 2; \
 		_nIns[0] = JCC32; \
 		_nIns[1] = (uint8_t) ( 0x80 | (o) ); \
-		asm_output("%s %p",(n),(next+tt)); \
+		asm_output("%-5s %p",(n),(next+tt)); \
 	} } while(0)
 
 #define JMP_long(t) do { \
@@ -555,7 +555,7 @@ namespace nanojit
 	underrunProtect(5);	\
 	intptr_t tt = (intptr_t)t - (intptr_t)_nIns;	\
 	JMP_long_nochk_offset(tt);	\
-    verbose_only( verbose_outputf("        %p:",_nIns); ) \
+    verbose_only( verbose_outputf("%010lx:", (unsigned long)_nIns); )	\
 	} while(0)
 
 #define JMP(t)		do { 	\
@@ -567,7 +567,7 @@ namespace nanojit
 		_nIns -= 2; \
 		_nIns[0] = JMP8; \
 		_nIns[1] = (uint8_t) ( (tt)&0xff ); \
-		asm_output("jmp %p",(next+tt)); \
+		asm_output("jmp   %p",(next+tt)); \
 	} else { \
 		JMP_long_nochk_offset(tt);	\
 	} } while(0)
@@ -577,13 +577,13 @@ namespace nanojit
 		verbose_only( NIns* next = _nIns; (void)next; ) \
  		IMM32((o)); \
  		*(--_nIns) = JMP32; \
-		asm_output("jmp %p",(next+(o))); } while(0)
+		asm_output("jmp   %p",(next+(o))); } while(0)
 
 #define JMP_indirect(r) do { \
         underrunProtect(2);  \
         MODRMm(4, 0, r);     \
         *(--_nIns) = 0xff;   \
-        asm_output("jmp *(%s)", gpn(r)); } while (0)
+        asm_output("jmp   *(%s)", gpn(r)); } while (0)
 
 #define JE(t, isfar)	   JCC(0x04, t, isfar, "je")
 #define JNE(t, isfar)	   JCC(0x05, t, isfar, "jne")
@@ -659,13 +659,13 @@ namespace nanojit
 #define SSE_LDQ(r,d,b)do {  \
 	count_ldq();\
     SSEm(0xf30f7e, (r)&7, (d), (b)); \
-    asm_output("movq %s,%d(%s)",gpn(r),d,gpn(b)); \
+    asm_output("movq  %s,%d(%s)",gpn(r),d,gpn(b)); \
     } while(0)
 
 #define SSE_STQ(d,b,r)do {  \
 	count_stq();\
     SSEm(0x660fd6, (r)&7, (d), (b)); \
-    asm_output("movq %d(%s),%s",(d),gpn(b),gpn(r)); \
+    asm_output("movq  %d(%s),%s",(d),gpn(b),gpn(r)); \
     } while(0)
 
 #define SSE_CVTSI2SD(xr,gr) do{ \
@@ -691,7 +691,7 @@ namespace nanojit
 		NanoAssert(_is_xmm_reg_(d)); \
 		SSE(0x660f6e, (d)&7, (s)&7); \
 	} \
-    asm_output("movd %s,%s",gpn(d),gpn(s)); \
+    asm_output("movd  %s,%s",gpn(d),gpn(s)); \
     } while(0)
 
 #define SSE_MOVSD(rd,rs) do{ \
@@ -705,7 +705,7 @@ namespace nanojit
 	count_st();\
     NanoAssert(_is_xmm_reg_(xrs) && _is_gp_reg_(b));\
     SSEm(0x660f7e, (xrs)&7, d, b);\
-    asm_output("movd %d(%s),%s", d, gpn(b), gpn(xrs));\
+    asm_output("movd  %d(%s),%s", d, gpn(b), gpn(xrs));\
     } while(0)
 
 #define SSE_ADDSD(rd,rs) do{ \
@@ -799,7 +799,7 @@ namespace nanojit
 		*(--_nIns) = ((uint8_t)(i));			\
 		*(--_nIns) = 0xc4;					\
 		*(--_nIns) = 0xf6;					\
-		asm_output("test ah, %d",i); } while(0)
+		asm_output("test  ah, %d",i); } while(0)
 
 #define TEST_AX(i) do { 							\
 		count_fpu();\
@@ -809,7 +809,7 @@ namespace nanojit
 		*(--_nIns) = ((uint8_t)((i)>>8));		\
 		*(--_nIns) = (0);		\
 		*(--_nIns) = 0xa9;					\
-		asm_output("test ax, %d",i); } while(0)
+		asm_output("test  ax, %d",i); } while(0)
 
 #define FNSTSW_AX()	do { count_fpu(); FPUc(0xdfe0);				asm_output("fnstsw_ax"); } while(0)
 #define FCHS()		do { count_fpu(); FPUc(0xd9e0);				asm_output("fchs"); } while(0)
@@ -819,20 +819,20 @@ namespace nanojit
 #define FSTQ(p,d,b)	do { count_stq(); FPUm(0xdd02|(p), d, b);	asm_output("fst%sq %d(%s)",((p)?"p":""),d,gpn(b)); if (p) fpu_pop(); } while(0)
 #define FSTPQ(d,b)  FSTQ(1,d,b)
 #define FCOM(p,d,b)	do { count_fpuld(); FPUm(0xdc02|(p), d, b);	asm_output("fcom%s %d(%s)",((p)?"p":""),d,gpn(b)); if (p) fpu_pop(); } while(0)
-#define FLDQ(d,b)	do { count_ldq(); FPUm(0xdd00, d, b);		asm_output("fldq %d(%s)",d,gpn(b)); fpu_push();} while(0)
+#define FLDQ(d,b)	do { count_ldq(); FPUm(0xdd00, d, b);		asm_output("fldq  %d(%s)",d,gpn(b)); fpu_push();} while(0)
 #define FILDQ(d,b)	do { count_fpuld(); FPUm(0xdf05, d, b);		asm_output("fildq %d(%s)",d,gpn(b)); fpu_push(); } while(0)
-#define FILD(d,b)	do { count_fpuld(); FPUm(0xdb00, d, b);		asm_output("fild %d(%s)",d,gpn(b)); fpu_push(); } while(0)
-#define FADD(d,b)	do { count_fpu(); FPUm(0xdc00, d, b);		asm_output("fadd %d(%s)",d,gpn(b)); } while(0)
-#define FSUB(d,b)	do { count_fpu(); FPUm(0xdc04, d, b);		asm_output("fsub %d(%s)",d,gpn(b)); } while(0)
+#define FILD(d,b)	do { count_fpuld(); FPUm(0xdb00, d, b);		asm_output("fild  %d(%s)",d,gpn(b)); fpu_push(); } while(0)
+#define FADD(d,b)	do { count_fpu(); FPUm(0xdc00, d, b);		asm_output("fadd  %d(%s)",d,gpn(b)); } while(0)
+#define FSUB(d,b)	do { count_fpu(); FPUm(0xdc04, d, b);		asm_output("fsub  %d(%s)",d,gpn(b)); } while(0)
 #define FSUBR(d,b)	do { count_fpu(); FPUm(0xdc05, d, b);		asm_output("fsubr %d(%s)",d,gpn(b)); } while(0)
-#define FMUL(d,b)	do { count_fpu(); FPUm(0xdc01, d, b);		asm_output("fmul %d(%s)",d,gpn(b)); } while(0)
-#define FDIV(d,b)	do { count_fpu(); FPUm(0xdc06, d, b);		asm_output("fdiv %d(%s)",d,gpn(b)); } while(0)
+#define FMUL(d,b)	do { count_fpu(); FPUm(0xdc01, d, b);		asm_output("fmul  %d(%s)",d,gpn(b)); } while(0)
+#define FDIV(d,b)	do { count_fpu(); FPUm(0xdc06, d, b);		asm_output("fdiv  %d(%s)",d,gpn(b)); } while(0)
 #define FDIVR(d,b)	do { count_fpu(); FPUm(0xdc07, d, b);		asm_output("fdivr %d(%s)",d,gpn(b)); } while(0)
 #define FINCSTP()	do { count_fpu(); FPUc(0xd9f7);				asm_output("fincstp"); } while(0)
-#define FSTP(r)		do { count_fpu(); FPU(0xddd8, r&7);			asm_output("fstp %s",fpn(r)); fpu_pop();} while(0)
+#define FSTP(r)		do { count_fpu(); FPU(0xddd8, r&7);			asm_output("fstp  %s",fpn(r)); fpu_pop();} while(0)
 #define FCOMP()		do { count_fpu(); FPUc(0xD8D9);				asm_output("fcomp"); fpu_pop();} while(0)
 #define FCOMPP()	do { count_fpu(); FPUc(0xDED9);				asm_output("fcompp"); fpu_pop();fpu_pop();} while(0)
-#define FLDr(r)		do { count_ldq(); FPU(0xd9c0,r);				asm_output("fld %s",fpn(r)); fpu_push(); } while(0)
+#define FLDr(r)		do { count_ldq(); FPU(0xd9c0,r);				asm_output("fld   %s",fpn(r)); fpu_push(); } while(0)
 #define EMMS()		do { count_fpu(); FPUc(0x0f77);				asm_output("emms"); } while (0)
 
 // standard direct call
@@ -842,7 +842,7 @@ namespace nanojit
   int offset = (c->_address) - ((int)_nIns); \
   IMM32( (uint32_t)offset );	\
   *(--_nIns) = 0xE8;		\
-  verbose_only(asm_output("call %s",(c->_name));) \
+  verbose_only(asm_output("call  %s",(c->_name));) \
   debug_only(if ((c->_argtypes&3)==ARGSIZE_F) fpu_push();)\
 } while (0)
 
@@ -851,7 +851,7 @@ namespace nanojit
   count_calli();\
   underrunProtect(2);\
   ALU(0xff, 2, (r));\
-  verbose_only(asm_output("call %s",gpn(r));) \
+  verbose_only(asm_output("call  %s",gpn(r));) \
   debug_only(if ((c->_argtypes&3)==ARGSIZE_F) fpu_push();)\
 } while (0)
 

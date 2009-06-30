@@ -1,4 +1,4 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,18 +45,6 @@
 #endif /* PERFM */
 
 
-#if defined(NJ_VERBOSE)
-void nj_dprintf( const char* format, ... )
-{
-	va_list vargs;
-	va_start(vargs, format);
-	vfprintf(stdout, format, vargs);
-	va_end(vargs);
-}
-#endif /* NJ_VERBOSE */
-
-
-
 namespace nanojit
 {
     using namespace avmplus;
@@ -98,12 +86,12 @@ namespace nanojit
 #endif /* NJ_PROFILE */
 
 	// LCompressedBuffer
-	LirBuffer::LirBuffer(Fragmento* frago, const CallInfo* functions)
+	LirBuffer::LirBuffer(Fragmento* frago)
 		: _frago(frago),
 #ifdef NJ_VERBOSE
 		  names(NULL),
 #endif
-		  _functions(functions), abi(ABI_FASTCALL),
+		  abi(ABI_FASTCALL),
 		  state(NULL), param1(NULL), sp(NULL), rp(NULL),
 		  _pages(frago->core()->GetGC())
 	{
@@ -163,13 +151,6 @@ namespace nanojit
 		return page;
 	}
 	
-    LInsp LirBuffer::lastWritten()
-	{
-        // Make sure there is a most-recently-written instruction.
-        NanoAssert(_unused >= pageDataStart(_unused));
-        return (LInsp)(_unused - sizeof(LIns));     // step back one instruction
-	}
-
     // Allocate a new page, and write the first instruction to it -- a skip
     // linking to last instruction of the previous page.
     void LirBuffer::moveToNewPage(uintptr_t addrOfLastLInsOnCurrentPage)
@@ -185,8 +166,8 @@ namespace nanojit
         // because we know we have enough space, having just started a new
         // page.
         LInsp l = (LInsp)_unused;
-        l->initOpcodeAndClearResv(LIR_skip);
-        l->setOprnd1((LInsp)addrOfLastLInsOnCurrentPage);
+		l->setIns1(LIR_skip, (LInsp)addrOfLastLInsOnCurrentPage);
+		l->resv()->clear();
         _unused += sizeof(LIns);
         _stats.lir++;
     }
@@ -202,8 +183,10 @@ namespace nanojit
 
         // If the instruction won't fit on the current page, move to the next
         // page.
-        if (_unused + szB - 1 > pageBottom(_unused))
-            moveToNewPage((uintptr_t)lastWritten());
+        if (_unused + szB - 1 > pageBottom(_unused)) {
+            uintptr_t addrOfLastLInsOnPage = _unused - sizeof(LIns);
+            moveToNewPage(addrOfLastLInsOnPage);
+        }
 
         // We now know that we are on a page that has the requested amount of
         // room: record the starting address of the requested space and bump
@@ -232,34 +215,32 @@ namespace nanojit
 	{
         LOpcode op = val->isQuad() ? LIR_stqi : LIR_sti;
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
-		l->setOprnd1(val);
-		l->setOprnd2(base);
-        l->setDisp(d);
+		l->setStorei(op, val, base, d);
+		l->resv()->clear();
 		return l;
 	}
 
 	LInsp LirBufWriter::ins0(LOpcode op)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
+		l->setIns0(op);
+		l->resv()->clear();
 		return l;
 	}
 	
 	LInsp LirBufWriter::ins1(LOpcode op, LInsp o1)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
-		l->setOprnd1(o1);
+		l->setIns1(op, o1);
+		l->resv()->clear();
 		return l;
 	}
 	
 	LInsp LirBufWriter::ins2(LOpcode op, LInsp o1, LInsp o2)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(op);
-		l->setOprnd1(o1);
-		l->setOprnd2(o2);		
+		l->setIns2(op, o1, o2);
+		l->resv()->clear();
 		return l;
 	}
 
@@ -283,19 +264,16 @@ namespace nanojit
     {
         size = (size+3)>>2; // # of required 32bit words
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_alloc);
-        l->i.imm32 = size;
+		l->setAlloc(LIR_alloc, size);
+		l->resv()->clear();
 		return l;
     }
 
     LInsp LirBufWriter::insParam(int32_t arg, int32_t kind)
     {
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_param);
-        NanoAssert(isU8(arg) && isU8(kind));
-		l->c.imm8a = arg;
-        l->c.imm8b = kind;
-        l->c.ci = NULL;
+		l->setParam(LIR_param, arg, kind);
+		l->resv()->clear();
         if (kind) {
             NanoAssert(arg < NumSavedRegs);
             _buf->savedRegs[arg] = l;
@@ -307,17 +285,16 @@ namespace nanojit
 	LInsp LirBufWriter::insImm(int32_t imm)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_int);
-        l->setimm32(imm);
+		l->setImm(LIR_int, imm);
+		l->resv()->clear();
         return l;
 	}
 	
 	LInsp LirBufWriter::insImmq(uint64_t imm)
 	{
         LInsp l = (LInsp)_buf->makeRoom(sizeof(LIns));
-        l->initOpcodeAndClearResv(LIR_quad);
-        l->i64.imm64_0 = int32_t(imm);
-        l->i64.imm64_1 = int32_t(imm>>32);
+		l->setImmq(LIR_quad, imm);
+		l->resv()->clear();
         return l;
 	}
 
@@ -336,8 +313,8 @@ namespace nanojit
         LInsp l = (LInsp)(payload + payload_szB);
         NanoAssert(prevLInsAddr >= pageDataStart(prevLInsAddr));
         NanoAssert(samepage(prevLInsAddr, l));
-        l->initOpcodeAndClearResv(LIR_skip);
-        l->setOprnd1((LInsp)prevLInsAddr);
+		l->setIns1(LIR_skip, (LInsp)prevLInsAddr);
+		l->resv()->clear();
         return l;
 	}
 
@@ -349,9 +326,19 @@ namespace nanojit
 			return 0;
         uintptr_t i = uintptr_t(cur);
         LOpcode iop = ((LInsp)i)->opcode();
-        // We pass over skip instructions below, which means we shouldn't see
-        // one here.
+
+        // We pass over skip instructions below.  Also, the last instruction
+        // for a fragment shouldn't be a skip(*).  Therefore we shouldn't see
+        // a skip here.
+        //
+        // (*) Actually, if the last *inserted* instruction exactly fills up a
+        // page, a new page will be created, and thus the last *written*
+        // instruction will be a skip -- the one needed for the cross-page
+        // link.  But the last *inserted* instruction is what is recorded and
+        // used to initialise each LirReader, and that is what is seen here,
+        // and therefore this assertion holds.
         NanoAssert(iop != LIR_skip);
+
 		do
 		{
 			switch (iop)
@@ -528,36 +515,16 @@ namespace nanojit
 #endif
 	}
 
-    bool LIns::isCse(const CallInfo *functions) const
+    bool LIns::isCse() const
     { 
         return nanojit::isCseOpcode(firstWord.code) || (isCall() && callInfo()->_cse);
     }
-
-    void LIns::initOpcodeAndClearResv(LOpcode op)
-	{
-        NanoAssert(4*sizeof(void*) == sizeof(LIns));
-        firstWord.code = op;
-        firstWord.used = 0;
-	}
-
-    Reservation* LIns::initResv()
-	{
-        firstWord.reg     = UnknownReg;
-        firstWord.arIndex = 0;
-        firstWord.used    = 1;
-        return &firstWord;
-	}
-
-    void LIns::clearResv()
-	{
-        firstWord.used = 0;
-	}
 
     void LIns::setTarget(LInsp label)
     {
         NanoAssert(label && label->isop(LIR_label));
 		NanoAssert(isBranch());
-        setOprnd2(label);
+        u.oprnd_2 = label;
 	}
 
 	LInsp LIns::getTarget()
@@ -1070,13 +1037,11 @@ namespace nanojit
         // Write the call instruction itself.
         LInsp l = (LInsp)(uintptr_t(newargs) + argc*sizeof(LInsp));
 #ifndef NANOJIT_64BIT
-        l->initOpcodeAndClearResv(op==LIR_callh ? LIR_call : op);
+        l->setCall(op==LIR_callh ? LIR_call : op, argc, ci);
 #else
-        l->initOpcodeAndClearResv(op);
+        l->setCall(op, argc, ci);
 #endif
-        l->c.imm8a = 0;
-        l->c.imm8b = argc;
-        l->c.ci = ci;
+        l->resv()->clear();
         return l;
 	}
 
@@ -1509,24 +1474,24 @@ namespace nanojit
 		}
 	};
 
-    void live(GC *gc, LirBuffer *lirbuf)
+    void live(GC *gc, Fragment *frag, LogControl *logc)
 	{
 		// traverse backwards to find live exprs and a few other stats.
 
 		LiveTable live(gc);
 		uint32_t exits = 0;
-        LirReader br(lirbuf);
-		StackFilter sf(&br, gc, lirbuf, lirbuf->sp);
-		StackFilter r(&sf, gc, lirbuf, lirbuf->rp);
+        LirReader br(frag->lastIns);
+		StackFilter sf(&br, gc, frag->lirbuf, frag->lirbuf->sp);
+		StackFilter r(&sf, gc, frag->lirbuf, frag->lirbuf->rp);
         int total = 0;
-        if (lirbuf->state)
-            live.add(lirbuf->state, r.pos());
+        if (frag->lirbuf->state)
+            live.add(frag->lirbuf->state, r.pos());
 		for (LInsp i = r.read(); i != 0; i = r.read())
 		{
             total++;
 
             // first handle side-effect instructions
-			if (!i->isCse(lirbuf->_functions))
+			if (!i->isCse())
 			{
 				live.add(i,0);
                 if (i->isGuard())
@@ -1561,12 +1526,14 @@ namespace nanojit
 			}
 		}
  
-		nj_dprintf("live instruction count %d, total %u, max pressure %d\n",
-			live.retired.size(), total, live.maxlive);
-        nj_dprintf("side exits %u\n", exits);
+		logc->printf("  Live instruction count %d, total %u, max pressure %d\n",
+					 live.retired.size(), total, live.maxlive);
+        logc->printf("  Side exits %u\n", exits);
+		logc->printf("  Showing LIR instructions with live-after variables\n");
+		logc->printf("\n");
 
 		// print live exprs, going forwards
-		LirNameMap *names = lirbuf->names;
+		LirNameMap *names = frag->lirbuf->names;
         bool newblock = true;
 		for (int j=live.retired.size()-1; j >= 0; j--) 
         {
@@ -1574,7 +1541,7 @@ namespace nanojit
             char livebuf[4000], *s=livebuf;
             *s = 0;
             if (!newblock && e->i->isop(LIR_label)) {
-                nj_dprintf("\n");
+                logc->printf("\n");
             }
             newblock = false;
             for (int k=0,n=e->live.size(); k < n; k++) {
@@ -1583,9 +1550,18 @@ namespace nanojit
 				*s++ = ' '; *s = 0;
 				NanoAssert(s < livebuf+sizeof(livebuf));
             }
-			nj_dprintf("%-60s %s\n", livebuf, names->formatIns(e->i));
+			/* If the LIR insn is pretty short, print it and its
+			   live-after set on the same line.  If not, put
+			   live-after set on a new line, suitably indented. */
+			const char* insn_text = names->formatIns(e->i);
+			if (strlen(insn_text) >= 30-2) {
+				logc->printf("  %-30s\n  %-30s %s\n", names->formatIns(e->i), "", livebuf);
+			} else {
+				logc->printf("  %-30s %s\n", names->formatIns(e->i), livebuf);
+			}
+
             if (e->i->isGuard() || e->i->isBranch() || e->i->isRet()) {
-				nj_dprintf("\n");
+				logc->printf("\n");
                 newblock = true;
             }
 		}
@@ -1963,15 +1939,15 @@ namespace nanojit
 		return out->insCall(ci, args);
 	}
 
-	CseReader::CseReader(LirFilter *in, LInsHashSet *exprs, const CallInfo *functions)
-		: LirFilter(in), exprs(exprs), functions(functions)
+	CseReader::CseReader(LirFilter *in, LInsHashSet *exprs)
+		: LirFilter(in), exprs(exprs)
 	{}
 
 	LInsp CseReader::read()
 	{
 		LInsp i = in->read();
 		if (i) {
-			if (i->isCse(functions))
+			if (i->isCse())
 				exprs->replace(i);
 		}
 		return i;
@@ -1988,11 +1964,34 @@ namespace nanojit
         AvmCore *core = frago->core();
         GC *gc = core->gc;
 
+		verbose_only(
+		LogControl *logc = assm->_logc;
+		bool anyVerb = (logc->lcbits & 0xFFFF) > 0;
+		bool asmVerb = (logc->lcbits & 0xFFFF & LC_Assembly) > 0;
+		bool liveVerb = (logc->lcbits & 0xFFFF & LC_Liveness) > 0;
+		)
+
+		/* BEGIN decorative preamble */
+		verbose_only( 
+        if (anyVerb) {
+			logc->printf("========================================"
+						 "========================================\n");
+			logc->printf("=== BEGIN LIR::compile(%p, %p)\n",
+						 (void*)assm, (void*)triggerFrag);
+		    logc->printf("===\n");
+		})
+		/* END decorative preamble */
+
+		verbose_only( if (liveVerb) {
+		    logc->printf("\n");
+			logc->printf("=== Results of liveness analysis:\n");
+		    logc->printf("===\n");
+			live(gc, triggerFrag, logc);
+		})
+
+		/* Set up the generic text output cache for the assembler */
 		verbose_only( StringList asmOutput(gc); )
 		verbose_only( assm->_outputCache = &asmOutput; )
-
-		verbose_only(if (assm->_verbose && core->config.verbose_live)
-			live(gc, triggerFrag->lirbuf);)
 
 		bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
 		RegAllocMap regMap(gc);
@@ -2004,28 +2003,44 @@ namespace nanojit
 		if (assm->error())
 			return;
 
-		//nj_dprintf("recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
+		//logc->printf("recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
+
+		verbose_only( if (anyVerb) {
+		    logc->printf("=== Translating LIR fragments into assembly:\n");
+		})
+
 		Fragment* root = triggerFrag;
 		if (treeCompile)
 		{
 			// recompile the entire tree
+			verbose_only( if (anyVerb) {
+			   logc->printf("=== -- Compile the entire tree: begin\n");
+			})
 			root = triggerFrag->root;
 			root->fragEntry = 0;
 			root->loopEntry = 0;
 			root->releaseCode(frago);
 			
 			// do the tree branches
+			verbose_only( if (anyVerb) {
+			   logc->printf("=== -- Do the tree branches\n");
+			})
 			Fragment* frag = root->treeBranches;
-			while(frag)
+			while (frag)
 			{
 				// compile til no more frags
 				if (frag->lastIns)
 				{
+        			verbose_only( if (anyVerb) {
+					    logc->printf("=== -- Compiling branch %s ip %s\n",
+									 frago->labels->format(frag),
+									 frago->labels->format(frag->ip));
+					})
 					assm->assemble(frag, loopJumps);
-					verbose_only(if (assm->_verbose) 
-						assm->outputf("compiling branch %s ip %s",
-							frago->labels->format(frag),
-							frago->labels->format(frag->ip)); )
+					verbose_only(if (asmVerb) 
+						assm->outputf("## compiling branch %s ip %s",
+									  frago->labels->format(frag),
+									  frago->labels->format(frag->ip)); )
 					
 					NanoAssert(frag->kind == BranchTrace);
 					RegAlloc* regs = NJ_NEW(gc, RegAlloc)();
@@ -2036,14 +2051,29 @@ namespace nanojit
 				}
 				frag = frag->treeBranches;
 			}
+			verbose_only( if (anyVerb) {
+			   logc->printf("=== -- Compile the entire tree: end\n");
+			})
 		}
 		
 		// now the the main trunk
+		verbose_only( if (anyVerb) {
+		    logc->printf("=== -- Compile trunk %s: begin\n",
+						 frago->labels->format(root));
+		})
 		assm->assemble(root, loopJumps);
-		verbose_only(if (assm->_verbose) 
-			assm->outputf("compiling trunk %s",
-				frago->labels->format(root));)
-		NanoAssert(!frago->core()->config.tree_opt || root == root->anchor || root->kind == MergeTrace);			
+		verbose_only( if (anyVerb) {
+		    logc->printf("=== -- Compile trunk %s: end\n",
+						 frago->labels->format(root));
+		})
+
+		verbose_only(
+		    if (asmVerb) 
+				assm->outputf("## compiling trunk %s",
+							  frago->labels->format(root));
+		)
+		NanoAssert(!frago->core()->config.tree_opt
+				   || root == root->anchor || root->kind == MergeTrace);
 		assm->endAssembly(root, loopJumps);
 			
 		// reverse output so that assembly is displayed low-to-high
@@ -2051,14 +2081,37 @@ namespace nanojit
 		// has been accumulating output.  Now we set it to NULL, traverse
 		// the entire list of stored strings, and hand them a second time
 		// to assm->output.  Since _outputCache is now NULL, outputf just
-		// hands these strings directly onwards to nj_dprintf.
-		verbose_only( assm->_outputCache = 0; )
-		verbose_only(for(int i=asmOutput.size()-1; i>=0; --i) { assm->outputf("%s",asmOutput.get(i)); } );
+		// hands these strings directly onwards to logc->printf.
+		verbose_only( if (anyVerb) {
+   		    logc->printf("\n");
+			logc->printf("=== Aggregated assembly output: BEGIN\n");
+   		    logc->printf("===\n");
+		    assm->_outputCache = 0;
+			for (int i = asmOutput.size() - 1; i >= 0; --i) { 
+				char* str = asmOutput.get(i);
+				assm->outputf("  %s", str);
+				gc->Free(str);
+			}
+   		    logc->printf("===\n");
+			logc->printf("=== Aggregated assembly output: END\n");
+		});
 
 		if (assm->error()) {
 			root->fragEntry = 0;
 			root->loopEntry = 0;
 		}
+
+		/* BEGIN decorative postamble */
+		verbose_only( if (anyVerb) {
+		    logc->printf("\n");
+		    logc->printf("===\n");
+		    logc->printf("=== END LIR::compile(%p, %p)\n",
+						 (void*)assm, (void*)triggerFrag);
+			logc->printf("========================================"
+						 "========================================\n");
+			logc->printf("\n");
+		});
+		/* END decorative postamble */
     }
 
     LInsp LoadFilter::insLoad(LOpcode v, LInsp base, LInsp disp)
@@ -2102,8 +2155,8 @@ namespace nanojit
 	#endif /* FEATURE_NANOJIT */
 
 #if defined(NJ_VERBOSE)
-    LabelMap::LabelMap(AvmCore *core, LabelMap* parent)
-        : parent(parent), names(core->gc), addrs(core->config.verbose_addrs), end(buf), core(core)
+    LabelMap::LabelMap(AvmCore *core)
+        : names(core->gc), addrs(core->config.verbose_addrs), end(buf), core(core)
 	{}
 
     LabelMap::~LabelMap()
@@ -2161,16 +2214,10 @@ namespace nanojit
 				return dup(b);
 			}
 			else {
-				if (parent)
-					return parent->format(p);
-
 				sprintf(b, "%p", p);
 				return dup(b);
 			}
 		}
-		if (parent)
-			return parent->format(p);
-
 		sprintf(b, "%p", p);
 		return dup(b);
     }
@@ -2188,14 +2235,18 @@ namespace nanojit
 		return s;
 	}
 
-	// copy all labels to parent, adding newbase to label addresses
-	void LabelMap::promoteAll(const void *newbase)
+	// ---------------------------------------------------------------
+	// START debug-logging definitions
+	// ---------------------------------------------------------------
+
+	void LogControl::printf( const char* format, ... )
 	{
-		for (int i=0, n=names.size(); i < n; i++) {
-			void *base = (char*)newbase + (intptr_t)names.keyAt(i);
-			parent->names.put(base, names.at(i));
-		}
+        va_list vargs;
+        va_start(vargs, format);
+        vfprintf(stdout, format, vargs);
+        va_end(vargs);
 	}
+
 #endif // NJ_VERBOSE
 }
 	

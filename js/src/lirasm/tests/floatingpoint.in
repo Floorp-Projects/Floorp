@@ -1,0 +1,4 @@
+pi = quad 3.14
+two = quad 2.0
+TwoPi = fmul pi two
+fret two

@@ -833,6 +833,10 @@ JS_DestroyRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
+    if (rt->nativeEnumerators) {
+        fprintf(stderr,
+                "JS engine warning: leak of native enumerators is detected.\n");
+    }
     if (!JS_CLIST_IS_EMPTY(&rt->contextList)) {
         JSContext *cx, *iter = NULL;
         uintN cxcount = 0;
@@ -3557,8 +3561,6 @@ JS_PUBLIC_API(JSBool)
 JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  jsval *vp)
 {
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-
     CHECK_REQUEST(cx);
     if (!js_GetMethod(cx, obj, id, false, vp))
         return JS_FALSE;

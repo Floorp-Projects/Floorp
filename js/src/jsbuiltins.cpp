@@ -197,8 +197,12 @@ js_StringToInt32(JSContext* cx, JSString* str)
     jsdouble d;
 
     str->getCharsAndEnd(bp, end);
-    if (!js_strtod(cx, bp, end, &ep, &d) || js_SkipWhiteSpace(ep, end) != end)
+    if ((!js_strtod(cx, bp, end, &ep, &d) ||
+         js_SkipWhiteSpace(ep, end) != end) &&
+        (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
+         js_SkipWhiteSpace(ep, end) != end)) {
         return 0;
+    }
     return js_DoubleToECMAInt32(d);
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, 1)
