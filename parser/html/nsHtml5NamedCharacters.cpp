@@ -17165,4 +17165,5 @@ nsHtml5NamedCharacters::releaseStatics()
 {
   NAMES.release();
   delete[] VALUES;
+  delete[] WINDOWS_1252;
 }
