@@ -6055,6 +6055,9 @@ js_InitJIT(JSTraceMonitor *tm)
         verbose_only(fragmento->labels = new (&gc) LabelMap(core);)
         tm->reFragmento = fragmento;
         tm->reLirBuf = new (&gc) LirBuffer(fragmento);
+#ifdef DEBUG
+        tm->reLirBuf->names = new (&gc) LirNameMap(&gc, fragmento->labels);
+#endif
     }
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
