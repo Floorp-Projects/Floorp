@@ -2480,10 +2480,9 @@ nsPluginHostImpl::~nsPluginHostImpl()
   sInst = nsnull;
 }
 
-NS_IMPL_ISUPPORTS4(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS3(nsPluginHostImpl,
                    nsIPluginHost,
                    nsIObserver,
-                   nsPIPluginHost,
                    nsISupportsWeakReference)
 
 nsPluginHostImpl*
@@ -5618,8 +5617,6 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
   return rv;
 }
 
-// nsPIPluginHost interface
-
 NS_IMETHODIMP
 nsPluginHostImpl::SetIsScriptableInstance(nsIPluginInstance * aPluginInstance, PRBool aScriptable)
 {
@@ -5943,8 +5940,6 @@ nsPluginHostImpl::GetPluginName(nsIPluginInstance *aPluginInstance,
   *aPluginName = GetPluginName(aPluginInstance);
   return NS_OK;
 }
-
-// end of nsPIPluginHost implementation
 
 nsresult nsPluginHostImpl::AddUnusedLibrary(PRLibrary * aLibrary)
 {

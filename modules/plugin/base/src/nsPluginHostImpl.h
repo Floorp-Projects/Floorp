@@ -40,7 +40,6 @@
 
 #include "nsIPluginHost.h"
 #include "nsIObserver.h"
-#include "nsPIPluginHost.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "prlink.h"
@@ -211,7 +210,6 @@ public:
 
 class nsPluginHostImpl : public nsIPluginHost,
                          public nsIObserver,
-                         public nsPIPluginHost,
                          public nsSupportsWeakReference
 {
 public:
@@ -227,30 +225,29 @@ public:
   NS_DECL_NSIPLUGINHOST
   NS_DECL_NSIFACTORY
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSPIPLUGINHOST
 
   NS_IMETHOD
   GetURL(nsISupports* pluginInst, 
-           const char* url, 
-           const char* target = NULL,
-           nsIPluginStreamListener* streamListener = NULL,
-           const char* altHost = NULL,
-           const char* referrer = NULL,
-           PRBool forceJSEnabled = PR_FALSE);
+         const char* url, 
+         const char* target = NULL,
+         nsIPluginStreamListener* streamListener = NULL,
+         const char* altHost = NULL,
+         const char* referrer = NULL,
+         PRBool forceJSEnabled = PR_FALSE);
   
   NS_IMETHOD
   PostURL(nsISupports* pluginInst,
-            const char* url,
-            PRUint32 postDataLen, 
-            const char* postData,
-            PRBool isFile = PR_FALSE,
-            const char* target = NULL,
-            nsIPluginStreamListener* streamListener = NULL,
-            const char* altHost = NULL, 
-            const char* referrer = NULL,
-            PRBool forceJSEnabled = PR_FALSE,
-            PRUint32 postHeadersLength = 0, 
-            const char* postHeaders = NULL);
+          const char* url,
+          PRUint32 postDataLen, 
+          const char* postData,
+          PRBool isFile = PR_FALSE,
+          const char* target = NULL,
+          nsIPluginStreamListener* streamListener = NULL,
+          const char* altHost = NULL, 
+          const char* referrer = NULL,
+          PRBool forceJSEnabled = PR_FALSE,
+          PRUint32 postHeadersLength = 0, 
+          const char* postHeaders = NULL);
 
   nsresult
   NewPluginURLStream(const nsString& aURL, 
