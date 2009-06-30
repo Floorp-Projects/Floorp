@@ -919,6 +919,9 @@ public:
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                       nsEvent* aEvent,
                                       nsEventStatus* aStatus);
+  NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                      nsIDOMEvent* aEvent,
+                                      nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
@@ -6375,6 +6378,23 @@ PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent,
     // Dispatch event to content
     nsEventDispatcher::Dispatch(aTargetContent, mPresContext, aEvent, nsnull,
                                 aStatus);
+  }
+
+  PopCurrentEventInfo();
+  return NS_OK;
+}
+
+// See the method above.
+NS_IMETHODIMP
+PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                    nsIDOMEvent* aEvent,
+                                    nsEventStatus* aStatus)
+{
+  PushCurrentEventInfo(nsnull, aTargetContent);
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (container) {
+    nsEventDispatcher::DispatchDOMEvent(aTargetContent, nsnull, aEvent,
+                                        mPresContext, aStatus);
   }
 
   PopCurrentEventInfo();

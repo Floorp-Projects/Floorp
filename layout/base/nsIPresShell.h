@@ -97,14 +97,15 @@ class nsIScrollableFrame;
 class gfxASurface;
 class gfxContext;
 class nsPIDOMEventTarget;
+class nsIDOMEvent;
 
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 41FE90F8-88DF-476E-A3B0-60916234F791
+// 189d234b-3823-4e8f-bbd2-63c0282b9fac
 #define NS_IPRESSHELL_IID \
-{ 0x41fe90f8, 0x88df, 0x476e, \
-  { 0xa3, 0xb0, 0x60, 0x91, 0x62, 0x34, 0xf7, 0x91 } }
+  { 0x189d234b, 0x3823, 0x4e8f, \
+    { 0xbb, 0xd2, 0x63, 0xc0, 0x28, 0x2b, 0x9f, 0xac } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -572,6 +573,14 @@ public:
    */
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                       nsEvent* aEvent,
+                                      nsEventStatus* aStatus) = 0;
+
+  /**
+   * Dispatch event to content only (NOT full processing)
+   * @note The caller must have a strong reference to the PresShell.
+   */
+  NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                      nsIDOMEvent* aEvent,
                                       nsEventStatus* aStatus) = 0;
 
   /**

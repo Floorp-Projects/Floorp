@@ -51,7 +51,6 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
-#include "nsIDOMXULListener.h"
 #include "nsIDOMUIListener.h"
 #include "nsITextControlFrame.h"
 #ifdef MOZ_SVG
@@ -244,17 +243,6 @@ static const EventDispatchData sLoadEvents[] = {
   { NS_BEFORE_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::BeforeUnload) }
 };
 
-static const EventDispatchData sXULEvents[] = {
-  { NS_XUL_POPUP_SHOWING,  HANDLER(&nsIDOMXULListener::PopupShowing)  },
-  { NS_XUL_POPUP_SHOWN,    HANDLER(&nsIDOMXULListener::PopupShown)    },
-  { NS_XUL_POPUP_HIDING,   HANDLER(&nsIDOMXULListener::PopupHiding)   },
-  { NS_XUL_POPUP_HIDDEN,   HANDLER(&nsIDOMXULListener::PopupHidden)   },
-  { NS_XUL_CLOSE,          HANDLER(&nsIDOMXULListener::Close)         },
-  { NS_XUL_COMMAND,        HANDLER(&nsIDOMXULListener::Command)       },
-  { NS_XUL_BROADCAST,      HANDLER(&nsIDOMXULListener::Broadcast)     },
-  { NS_XUL_COMMAND_UPDATE, HANDLER(&nsIDOMXULListener::CommandUpdate) }
-};
-
 static const EventDispatchData sUIEvents[] = {
   { NS_UI_ACTIVATE, HANDLER(&nsIDOMUIListener::Activate) },
   { NS_UI_FOCUSIN,  HANDLER(&nsIDOMUIListener::FocusIn)  },
@@ -280,7 +268,6 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(Form),
   IMPL_EVENTTYPEDATA(Text),
   IMPL_EVENTTYPEDATA(Composition),
-  IMPL_EVENTTYPEDATA(XUL),
   IMPL_EVENTTYPEDATA(UI)
 };
 

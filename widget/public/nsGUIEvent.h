@@ -62,7 +62,6 @@ class nsIMenuItem;
 class nsIAccessible;
 class nsIContent;
 class nsIURI;
-class nsIDOMEvent;
 class nsHashKey;
 
 /**
@@ -96,7 +95,7 @@ class nsHashKey;
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
 #endif // MOZ_SVG
-#define NS_XUL_COMMAND_EVENT              32
+
 #define NS_QUERY_CONTENT_EVENT            33
 #ifdef MOZ_MEDIA
 #define NS_MEDIA_EVENT                    34
@@ -1206,20 +1205,6 @@ public:
   }
 
   PRInt32 detail;
-};
-
-/**
- * XUL command event
- */
-class nsXULCommandEvent : public nsInputEvent
-{
-public:
-  nsXULCommandEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_XUL_COMMAND_EVENT)
-  {
-  }
-
-  nsCOMPtr<nsIDOMEvent> sourceEvent;
 };
 
 /**

@@ -218,10 +218,7 @@ void nsMenuItemX::DoCommand()
     /* the AttributeChanged code will update all the internal state */
   }
 
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
-
-  mContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  nsMenuUtilsX::DispatchCommandTo(mContent);
 }
     
 
