@@ -83,6 +83,17 @@
 #include "nsINameSpaceManager.h"
 
 #include "nsThreadUtils.h"
+#include "nsIView.h"
+
+#include "TabParent.h"
+
+#include "mozcontainer.h"
+
+#include <gdk/gdkx.h>
+#include <gtk/gtk.h>
+
+using namespace mozilla;
+using namespace mozilla::tabs;
 
 class nsAsyncDocShellDestroyer : public nsRunnable
 {
@@ -193,6 +204,18 @@ nsresult
 nsFrameLoader::ReallyStartLoading()
 {
   NS_ENSURE_STATE(mURIToLoad && mOwnerContent && mOwnerContent->IsInDoc());
+
+  if (!mTriedNewProcess) {
+    TryNewProcess();
+    mTriedNewProcess = PR_TRUE;
+  }
+
+  if (mChildProcess) {
+    // FIXME get error codes from child
+    mChildProcess->LoadURL(mURIToLoad);
+    return NS_OK;
+  }
+  
   // Just to be safe, recheck uri.
   nsresult rv = CheckURILoad(mURIToLoad);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1006,4 +1029,104 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   }
 
   return NS_OK;
+}
+
+PRBool
+nsFrameLoader::TryNewProcess()
+{
+  nsIDocument* doc = mOwnerContent->GetDocument();
+  if (!doc) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (doc->GetDisplayDocument()) {
+    // Don't allow subframe loads in external reference documents
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsIWebNavigation> parentAsWebNav =
+    do_GetInterface(doc->GetScriptGlobalObject());
+
+  if (!parentAsWebNav) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsWebNav));
+
+  PRInt32 parentType;
+  parentAsItem->GetItemType(&parentType);
+
+  if (parentType != nsIDocShellTreeItem::typeChrome) {
+    return PR_FALSE;
+  }
+
+  if (!mOwnerContent->IsNodeOfType(nsINode::eXUL)) {
+    return PR_FALSE;
+  }
+
+  NS_ERROR("trying to start new process");
+  nsAutoString value;
+  mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
+
+  if (!value.LowerCaseEqualsLiteral("content") &&
+      !StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                        nsCaseInsensitiveStringComparator())) {
+    return PR_FALSE;
+  }
+
+  // FIXME shouldn't need to launch a new process every time get here
+
+  // XXXnasty hack get our (parent) widget
+  doc->FlushPendingNotifications(Flush_Layout);
+  nsIFrame* ourFrame =
+    doc->GetPrimaryShell()->GetPrimaryFrameFor(mOwnerContent);
+  nsIView* ancestorView = ourFrame->GetView();
+
+  nsIView* firstChild = ancestorView->GetFirstChild();
+  if (!firstChild) {
+    NS_ERROR("no first child");
+    return PR_FALSE;
+  }
+
+  nsIWidget* w = firstChild->GetWidget();
+  if (!w) {
+    NS_ERROR("we're stuffed!");
+    return PR_FALSE;
+  }
+  // FIXME check that this widget has the size and position we expect for
+  // this iframe?
+
+  GdkWindow* parent_win =
+    static_cast<GdkWindow*>(w->GetNativeData(NS_NATIVE_WINDOW));
+  
+  gpointer user_data = nsnull;
+  gdk_window_get_user_data(parent_win, &user_data);
+
+  MozContainer* parentMozContainer = MOZ_CONTAINER(user_data);
+  GtkContainer* container = GTK_CONTAINER(parentMozContainer);
+
+  // create the widget for the child and add it to the parent's window
+  GtkWidget* socket = gtk_socket_new();
+  gtk_widget_set_parent_window(socket, parent_win);
+  gtk_container_add(container, socket);
+  gtk_widget_realize(socket);
+
+  // set the child window's size and position
+  nsPresContext* presContext = ourFrame->PresContext();
+  GtkAllocation alloc;
+  alloc.x = 0;                  // setting position doesn't look necessary
+  alloc.y = 0;
+  alloc.width = presContext->AppUnitsToDevPixels(ourFrame->GetSize().width);
+  alloc.height = presContext->AppUnitsToDevPixels(ourFrame->GetSize().height);
+  gtk_widget_size_allocate(socket, &alloc);
+
+  gtk_widget_show(socket);
+
+  GdkNativeWindow id = gtk_socket_get_id((GtkSocket*)socket);
+
+  mChildProcess = new TabParent(id);
+
+  mChildProcess->Move(0, 0, alloc.width, alloc.height);
+
+  return PR_TRUE;
 }

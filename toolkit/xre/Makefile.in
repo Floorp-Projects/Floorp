@@ -209,6 +209,8 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES += -I$(topsrcdir)/dom/ipc
+
 ifdef BUILD_STATIC_LIBS
 export::
 	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMP_NAMES) Apprunner
