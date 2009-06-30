@@ -42,16 +42,10 @@
 #import <Cocoa/Cocoa.h>
 class nsIWidget;
 
-
-//
-// protocol mozView
-//
 // A protocol listing all the methods that an object which wants
 // to live in gecko's widget hierarchy must implement. |nsChildView|
 // makes assumptions that any NSView with which it comes in contact will
 // implement this protocol.
-//
-
 @protocol mozView
 
   // access the nsIWidget associated with this view. DOES NOT ADDREF.
@@ -78,15 +72,11 @@ class nsIWidget;
 
 @end
 
-
-// 
 // An informal protocol implemented by the NSWindow of the host application.
 // 
 // It's used to prevent re-entrant calls to -makeKeyAndOrderFront: when gecko
 // focus/activate events propagate out to the embedder's
 // nsIEmbeddingSiteWindow::SetFocus implementation.
-// 
-
 @interface NSObject(mozWindow)
 
 - (BOOL)suppressMakeKeyFront;

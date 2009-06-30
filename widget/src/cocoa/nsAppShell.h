@@ -78,7 +78,6 @@ private:
   nsTArray<nsCocoaAppModalWindowListItem> mList;
 };
 
-
 @class AppShellDelegate;
 
 class nsAppShell : public nsBaseAppShell
