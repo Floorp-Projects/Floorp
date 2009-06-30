@@ -4165,7 +4165,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_ENABLE_LIBXUL=
+MOZ_ENABLE_LIBXUL=1
 
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
@@ -5323,6 +5323,10 @@ MOZ_ARG_DISABLE_BOOL(ipc,
 [  --disable-ipc           Disable IPC supports for tabs and plugins],
     MOZ_IPC=,
     MOZ_IPC=1)
+
+if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
+    AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
+fi
 
 AC_SUBST(MOZ_IPC)
 
@@ -7404,11 +7408,6 @@ MOZ_ARG_ENABLE_BOOL(static,
 [  --enable-static         Enable building of internal static libs],
     BUILD_STATIC_LIBS=1,
     BUILD_STATIC_LIBS=)
-
-dnl Disable libxul in debug builds, but not for xulrunner.
-if test -n "$MOZ_DEBUG" -a "$MOZ_BUILD_APP" != "xulrunner"; then
-   MOZ_ENABLE_LIBXUL=
-fi
 
 MOZ_ARG_ENABLE_BOOL(libxul,
 [  --enable-libxul         Enable building of libxul],
