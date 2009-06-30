@@ -123,7 +123,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eSortAction,
     eNoLiveAttr,
     kNoReqStates,
-    eARIASelected,
+    eARIASelectable,
     eARIAReadonly
   },
   {
@@ -174,7 +174,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoAction,
     eNoLiveAttr,
     kNoReqStates,
-    eARIASelected,
+    eARIASelectable,
     eARIAReadonly
   },
   {
@@ -251,7 +251,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoAction, // XXX: should depend on state, parent accessible
     eNoLiveAttr,
     nsIAccessibleStates::STATE_READONLY,
-    eARIASelected,
+    eARIASelectable,
     eARIACheckedMixed
   },
   {
@@ -338,7 +338,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eSelectAction,
     eNoLiveAttr,
     kNoReqStates,
-    eARIASelected,
+    eARIASelectable,
     eARIACheckedMixed
   },
   {
@@ -395,7 +395,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoAction,
     eNoLiveAttr,
     kNoReqStates,
-    eARIASelected
+    eARIASelectable
   },
   {
     "rowheader",
@@ -405,7 +405,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eSortAction,
     eNoLiveAttr,
     kNoReqStates,
-    eARIASelected,
+    eARIASelectable,
     eARIAReadonly
   },
   {
@@ -552,7 +552,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
                      // on states
     eNoLiveAttr,
     kNoReqStates,
-    eARIASelected,
+    eARIASelectable,
     eARIACheckedMixed
   }
 };
@@ -655,10 +655,11 @@ nsStateMapEntry nsARIAMap::gWAIStateMap[] = {
   nsStateMapEntry(&nsAccessibilityAtoms::aria_required, kBoolType, 0,
                   nsIAccessibleStates::STATE_REQUIRED, 0),
 
-  // eARIASelected
+  // eARIASelectable
   nsStateMapEntry(&nsAccessibilityAtoms::aria_selected, kBoolType,
                   nsIAccessibleStates::STATE_SELECTABLE,
-                  nsIAccessibleStates::STATE_SELECTED, 0)
+                  nsIAccessibleStates::STATE_SELECTED, 0,
+                  0, 0, PR_TRUE)
 };
 
 /**

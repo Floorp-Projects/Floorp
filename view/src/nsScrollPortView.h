@@ -67,8 +67,6 @@ public:
 
   NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord &aY) const;
   NS_IMETHOD  ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
-  NS_IMETHOD  SetScrollProperties(PRUint32 aProperties);
-  NS_IMETHOD  GetScrollProperties(PRUint32 *aProperties);
   NS_IMETHOD  SetLineHeight(nscoord aHeight);
   NS_IMETHOD  GetLineHeight(nscoord *aHeight);
   NS_IMETHOD  ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY,
@@ -115,7 +113,6 @@ protected:
 
   nscoord             mOffsetX, mOffsetY;
   nscoord             mDestinationX, mDestinationY;
-  PRUint32            mScrollProperties;
   nscoord             mLineHeight;
   nsISupportsArray   *mListeners;
 };

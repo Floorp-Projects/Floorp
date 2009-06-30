@@ -106,6 +106,7 @@ class nsIWidget;
 class nsIDragSession;
 class nsPIDOMWindow;
 class nsPIDOMEventTarget;
+class nsIPresShell;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -1402,6 +1403,21 @@ public:
   static nsresult GetUTFOrigin(nsIURI* aURI, nsString& aOrigin);
 
   /**
+   * This method creates and dispatches "command" event, which implements
+   * nsIDOMXULCommandEvent.
+   * If aShell is not null, dispatching goes via
+   * nsIPresShell::HandleDOMEventWithTarget.
+   */
+  static nsresult DispatchXULCommand(nsIContent* aTarget,
+                                     PRBool aTrusted,
+                                     nsIDOMEvent* aSourceEvent = nsnull,
+                                     nsIPresShell* aShell = nsnull,
+                                     PRBool aCtrl = PR_FALSE,
+                                     PRBool aAlt = PR_FALSE,
+                                     PRBool aShift = PR_FALSE,
+                                     PRBool aMeta = PR_FALSE);
+
+  /**
    * Gets the nsIDocument given the script context. Will return nsnull on failure.
    *
    * @param aScriptContext the script context to get the document for; can be null
@@ -1411,6 +1427,12 @@ public:
   static already_AddRefed<nsIDocument>
   GetDocumentFromScriptContext(nsIScriptContext *aScriptContext);
 
+  /**
+   * The method checks whether the caller can access native anonymous content.
+   * If there is no JS in the stack or privileged JS is running, this
+   * method returns PR_TRUE, otherwise PR_FALSE.
+   */
+  static PRBool CanAccessNativeAnon();
 private:
 
   static PRBool InitializeEventTable();

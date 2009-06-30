@@ -671,6 +671,7 @@ _cairo_xcb_surface_same_screen (cairo_xcb_surface_t *dst,
 static cairo_status_t
 _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 				  cairo_surface_t	*src,
+				  cairo_content_t	 content,
 				  int                    src_x,
 				  int                    src_y,
 				  int                    width,
@@ -1119,6 +1120,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 
     status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
 					      &dst->base,
+					      CAIRO_CONTENT_COLOR_ALPHA,
 					      src_x, src_y,
 					      mask_x, mask_y,
 					      width, height,
@@ -1407,6 +1409,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
+					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &attributes);
@@ -2499,6 +2502,7 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 
     if (src_pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  0, 0, 1, 1,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
@@ -2513,6 +2517,7 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 	    goto BAIL;
 
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  glyph_extents.x, glyph_extents.y,
                                                  glyph_extents.width, glyph_extents.height,
                                                  (cairo_surface_t **) &src,

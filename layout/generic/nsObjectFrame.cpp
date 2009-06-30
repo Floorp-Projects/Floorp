@@ -62,7 +62,6 @@
 #endif
 #endif
 #include "nsIPluginHost.h"
-#include "nsplugin.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prmem.h"
@@ -73,7 +72,9 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsIPluginInstancePeer2.h"
+#include "nsIPluginInstance.h"
+#include "nsIPluginTagInfo.h"
+#include "nsIPluginTagInfo2.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
 #include "nsIEventListener.h"
@@ -277,7 +278,7 @@ public:
 
   NS_IMETHOD ForceRedraw();
 
-  NS_IMETHOD GetValue(nsPluginInstancePeerVariable variable, void *value);
+  NS_IMETHOD GetNetscapeWindow(void *value);
 
   //nsIPluginTagInfo interface
 
@@ -346,7 +347,7 @@ public:
 #ifdef XP_WIN
   void Paint(const RECT& aDirty, HDC aDC);
 #elif defined(XP_MACOSX)
-  void Paint(const nsRect& aDirtyRect);  
+  void Paint();  
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
@@ -536,11 +537,6 @@ private:
   // Mac specific code to fix up port position and clip during paint
 #ifdef XP_MACOSX
 
-#ifdef DO_DIRTY_INTERSECT
-  // convert relative coordinates to absolute
-  static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
-#endif
-
   enum { ePluginPaintIgnore, ePluginPaintEnable, ePluginPaintDisable };
 
 #endif // XP_MACOSX
@@ -586,8 +582,6 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
-// #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
-
 NS_IMETHODIMP 
 nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
@@ -607,7 +601,7 @@ void
 nsObjectFrame::Destroy()
 {
   NS_ASSERTION(!mPreventInstantiation ||
-               mContent && mContent->GetCurrentDoc()->GetDisplayDocument(),
+               (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
                "about to crash due to bug 136927");
 
   // we need to finish with the plugin before native window is destroyed
@@ -1324,17 +1318,27 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 #if defined(XP_MACOSX)
   // delegate all painting to the plugin instance.
   if (mInstanceOwner) {
-    // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-    nsIRenderingContext::AutoPushTranslation
-      translate(&aRenderingContext, aFramePt.x, aFramePt.y);
-
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics) {
-      PRInt32 p2a = PresContext()->AppUnitsPerDevPixel();
-      gfxRect nativeClipRect(aDirtyRect.x, aDirtyRect.y,
-                             aDirtyRect.width, aDirtyRect.height);
-      nativeClipRect.ScaleInverse(gfxFloat(p2a));
+      PRInt32 appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+      // Clip to the content area where the plugin should be drawn. If
+      // we don't do this, the plugin can draw outside its bounds.
+      nsRect content = GetContentRect() - GetPosition() + aFramePt;
+      nsIntRect contentPixels = content.ToNearestPixels(appUnitsPerDevPixel);
+      nsIntRect dirtyPixels = aDirtyRect.ToOutsidePixels(appUnitsPerDevPixel);
+      nsIntRect clipPixels;
+      clipPixels.IntersectRect(contentPixels, dirtyPixels);
+      gfxRect nativeClipRect(clipPixels.x, clipPixels.y,
+                             clipPixels.width, clipPixels.height);
       gfxContext* ctx = aRenderingContext.ThebesContext();
-      gfxQuartzNativeDrawing nativeDrawing(ctx, nativeClipRect);
+
+      gfxContextAutoSaveRestore save(ctx);
+      ctx->NewPath();
+      ctx->Rectangle(nativeClipRect);
+      ctx->Clip();
+      gfxPoint offset(contentPixels.x, contentPixels.y);
+      ctx->Translate(offset);
+
+      gfxQuartzNativeDrawing nativeDrawing(ctx, nativeClipRect - offset);
 
       CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
       if (!cgContext) {
@@ -1381,12 +1385,16 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       }
 
       mInstanceOwner->BeginCGPaint();
-      mInstanceOwner->Paint(aDirtyRect);
+      mInstanceOwner->Paint();
       mInstanceOwner->EndCGPaint();
 
       nativeDrawing.EndNativeDrawing();
     } else {
-      mInstanceOwner->Paint(aDirtyRect);
+      // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
+      nsIRenderingContext::AutoPushTranslation
+        translate(&aRenderingContext, aFramePt.x, aFramePt.y);
+
+      mInstanceOwner->Paint();
     }
   }
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
@@ -1850,11 +1858,9 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
 static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
-  nsCOMPtr<nsIPluginInstancePeer> peer;
-  aPluginInstance->GetPeer(getter_AddRefs(peer));
-  if (peer) {
+  if (aPluginInstance) {
     nsMIMEType mime = NULL;
-    if (NS_SUCCEEDED(peer->GetMIMEType(&mime)) && mime)
+    if (NS_SUCCEEDED(aPluginInstance->GetMIMEType(&mime)) && mime)
       return mime;
   }
   return "";
@@ -2261,15 +2267,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 
   if (mInstance) {
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-    mInstance->GetPeer(getter_AddRefs(peer));
-
-    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
-
-    if (peer3) {
-      // Tell the peer that its owner is going away.
-      peer3->InvalidateOwner();
-    }
+    mInstance->InvalidateOwner();
   }
 }
 
@@ -2519,94 +2517,92 @@ NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable variable, void *value)
+NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  switch(variable) {
-    case nsPluginInstancePeerVariable_NetscapeWindow:
-    {      
-      if (mOwner) {
+  if (!mOwner) {
+    NS_WARNING("plugin owner has no owner in getting doc's window handle");
+    return NS_ERROR_FAILURE;
+  }
+  
 #if defined(XP_WIN) || defined(XP_OS2)
-        void** pvalue = (void**)value;
-        nsIViewManager* vm = mOwner->PresContext()->GetPresShell()->GetViewManager();
-        if (vm) {
+  void** pvalue = (void**)value;
+  nsIViewManager* vm = mOwner->PresContext()->GetPresShell()->GetViewManager();
+  if (!vm)
+    return NS_ERROR_FAILURE;
 #if defined(XP_WIN)
-          // This property is provided to allow a "windowless" plugin to determine the window it is drawing
-          // in, so it can translate mouse coordinates it receives directly from the operating system
-          // to coordinates relative to itself.
-        
-          // The original code (outside this #if) returns the document's window, which is OK if the window the "windowless" plugin
-          // is drawing into has the same origin as the document's window, but this is not the case for "windowless" plugins inside of scrolling DIVs etc
-
-          // To make sure "windowless" plugins always get the right origin for translating mouse coordinates, this code
-          // determines the window handle of the mozilla window containing the "windowless" plugin.
-
-          // Given that this HWND may not be that of the document's window, there is a slight risk
-          // of confusing a plugin that is using this HWND for illicit purposes, but since the documentation
-          // does not suggest this HWND IS that of the document window, rather that of the window
-          // the plugin is drawn in, this seems like a safe fix.
-         
-          // we only attempt to get the nearest window if this really is a "windowless" plugin so as not
-          // to change any behaviour for the much more common windowed plugins,
-          // though why this method would even be being called for a windowed plugin escapes me.
-          if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
-              // it turns out that flash also uses this window for determining focus, and is currently
-              // unable to show a caret correctly if we return the enclosing window. Therefore for
-              // now we only return the enclosing window when there is an actual offset which
-              // would otherwise cause coordinates to be offset incorrectly. (i.e.
-              // if the enclosing window if offset from the document window)
-              //
-              // fixing both the caret and ability to interact issues for a windowless control in a non document aligned windw
-              // does not seem to be possible without a change to the flash plugin
+  // This property is provided to allow a "windowless" plugin to determine the window it is drawing
+  // in, so it can translate mouse coordinates it receives directly from the operating system
+  // to coordinates relative to itself.
+  
+  // The original code (outside this #if) returns the document's window, which is OK if the window the "windowless" plugin
+  // is drawing into has the same origin as the document's window, but this is not the case for "windowless" plugins inside of scrolling DIVs etc
+  
+  // To make sure "windowless" plugins always get the right origin for translating mouse coordinates, this code
+  // determines the window handle of the mozilla window containing the "windowless" plugin.
+  
+  // Given that this HWND may not be that of the document's window, there is a slight risk
+  // of confusing a plugin that is using this HWND for illicit purposes, but since the documentation
+  // does not suggest this HWND IS that of the document window, rather that of the window
+  // the plugin is drawn in, this seems like a safe fix.
+  
+  // we only attempt to get the nearest window if this really is a "windowless" plugin so as not
+  // to change any behaviour for the much more common windowed plugins,
+  // though why this method would even be being called for a windowed plugin escapes me.
+  if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
+    // it turns out that flash also uses this window for determining focus, and is currently
+    // unable to show a caret correctly if we return the enclosing window. Therefore for
+    // now we only return the enclosing window when there is an actual offset which
+    // would otherwise cause coordinates to be offset incorrectly. (i.e.
+    // if the enclosing window if offset from the document window)
+    //
+    // fixing both the caret and ability to interact issues for a windowless control in a non document aligned windw
+    // does not seem to be possible without a change to the flash plugin
     
-              nsIWidget* win = mOwner->GetWindow();
-              if (win) {
-                nsIView *view = nsIView::GetViewFor(win);
-                NS_ASSERTION(view, "No view for widget");
-                nsIView *rootView = nsnull;
-                vm->GetRootView(rootView);
-                NS_ASSERTION(rootView, "No root view");
-                nsPoint offset = view->GetOffsetTo(rootView);
+    nsIWidget* win = mOwner->GetWindow();
+    if (win) {
+      nsIView *view = nsIView::GetViewFor(win);
+      NS_ASSERTION(view, "No view for widget");
+      nsIView *rootView = nsnull;
+      vm->GetRootView(rootView);
+      NS_ASSERTION(rootView, "No root view");
+      nsPoint offset = view->GetOffsetTo(rootView);
       
-                if (offset.x || offset.y) {
-                  // in the case the two windows are offset from eachother, we do go ahead and return the correct enclosing window
-                  // so that mouse co-ordinates are not messed up.
-                  *pvalue = (void*)win->GetNativeData(NS_NATIVE_WINDOW);
-                  if (*pvalue)
-                    return NS_OK;
-                }
-              }
-          }
-#endif
-          // simply return the document window
-          nsCOMPtr<nsIWidget> widget;
-          rv = vm->GetWidget(getter_AddRefs(widget));            
-          if (widget) {
-            *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
-          } else NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
-        } else NS_ASSERTION(vm, "couldn't get view manager in getting doc's window handle");
-#elif defined(MOZ_WIDGET_GTK2)
-        // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
-        nsIWidget* win = mOwner->GetWindow();
-        if (!win)
-          return rv;
-        GdkWindow* gdkWindow =
-          static_cast<GdkWindow*>(win->GetNativeData(NS_NATIVE_WINDOW));
-        if (!gdkWindow)
-          return rv;
-        gdkWindow = gdk_window_get_toplevel(gdkWindow);
-#ifdef MOZ_X11
-        *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
-#endif
-        return NS_OK;
-#endif
-      } else NS_ASSERTION(mOwner, "plugin owner has no owner in getting doc's window handle");
-      break;
+      if (offset.x || offset.y) {
+        // in the case the two windows are offset from eachother, we do go ahead and return the correct enclosing window
+        // so that mouse co-ordinates are not messed up.
+        *pvalue = (void*)win->GetNativeData(NS_NATIVE_WINDOW);
+        if (*pvalue)
+          return NS_OK;
+      }
     }
+  }
+#endif
+  // simply return the document window
+  nsCOMPtr<nsIWidget> widget;
+  nsresult rv = vm->GetWidget(getter_AddRefs(widget));            
+  if (widget) {
+    *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
+  } else {
+    NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
   }
 
   return rv;
+#elif defined(MOZ_WIDGET_GTK2)
+  // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
+  nsIWidget* win = mOwner->GetWindow();
+  if (!win)
+    return NS_ERROR_FAILURE;
+  GdkWindow* gdkWindow = static_cast<GdkWindow*>(win->GetNativeData(NS_NATIVE_WINDOW));
+  if (!gdkWindow)
+    return NS_ERROR_FAILURE;
+  gdkWindow = gdk_window_get_toplevel(gdkWindow);
+#ifdef MOZ_X11
+  *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
+#endif
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
@@ -4281,23 +4277,11 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 // Paints are handled differently, so we just simulate an update event.
 
 #ifdef XP_MACOSX
-void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
+void nsPluginInstanceOwner::Paint()
 {
   if (!mInstance || !mOwner)
     return;
  
-#ifdef DO_DIRTY_INTERSECT   // aDirtyRect isn't always correct, see bug 56128
-  nsPoint rel(aDirtyRect.x, aDirtyRect.y);
-  nsPoint abs(0,0);
-  nsCOMPtr<nsIWidget> containerWidget;
-
-  // Convert dirty rect relative coordinates to absolute and also get the containerWidget
-  ConvertRelativeToWindowAbsolute(mOwner, rel, abs, *getter_AddRefs(containerWidget));
-
-  // Convert to absolute pixel values for the dirty rect
-  nsIntRect absDirtyRect = nsRect(abs, aDirtyRect.Size()).ToOutsidePixels(*mOwner->GetPresContext()->AppUnitsPerDevPixel());
-#endif
-
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
     WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
@@ -4873,40 +4857,6 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 
   // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MACOSX
-
-#ifdef DO_DIRTY_INTERSECT
-// Convert from a frame relative coordinate to a coordinate relative to its
-// containing window
-static void ConvertRelativeToWindowAbsolute(nsIFrame*   aFrame,
-                                            nsPoint&    aRel, 
-                                            nsPoint&    aAbs,
-                                            nsIWidget*& aContainerWidget)
-{
-  // See if this frame has a view
-  nsIView *view = aFrame->GetView();
-  if (!view) {
-    aAbs.x = 0;
-    aAbs.y = 0;
-    // Calculate frames offset from its nearest view
-    aFrame->GetOffsetFromView(aAbs, &view);
-  } else {
-    // Store frames offset from its view.
-    aAbs = aFrame->GetPosition();
-  }
-
-  NS_ASSERTION(view, "the object frame does not have a view");
-  if (view) {
-    // Calculate the view's offset from its nearest widget
-    nsPoint viewOffset;
-    aContainerWidget = view->GetNearestWidget(&viewOffset);
-    NS_IF_ADDREF(aContainerWidget);
-    aAbs += viewOffset;
-  }
-
-  // Add relative coordinate to the absolute coordinate that has been calculated
-  aAbs += aRel;
-}
-#endif // DO_DIRTY_INTERSECT
 
 WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 {

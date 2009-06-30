@@ -58,21 +58,31 @@ fi
 add_makefiles "
 Makefile
 build/Makefile
+build/pgo/Makefile
+build/pgo/blueprint/Makefile
+build/pgo/js-input/Makefile
 build/unix/Makefile
+build/win32/Makefile
 config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
+config/nspr/Makefile
 config/doxygen.cfg
 config/tests/src-simple/Makefile
 probes/Makefile
 extensions/Makefile
-build/wince/tools/Makefile
-build/wince/shunt/Makefile
-build/wince/shunt/include/windows.h
-build/wince/shunt/include/ymath.h
-build/wince/shunt/include/stdlib.h
-build/wince/shunt/include/sys/Makefile
 "
+
+if [ "$WINCE" ]; then
+  add_makefiles "
+    build/wince/tools/Makefile
+    build/wince/shunt/Makefile
+    build/wince/shunt/include/windows.h
+    build/wince/shunt/include/ymath.h
+    build/wince/shunt/include/stdlib.h
+    build/wince/shunt/include/sys/Makefile
+  "
+fi
 
 if [ "$MOZ_MEMORY" ]; then
   add_makefiles "

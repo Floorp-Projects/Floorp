@@ -145,10 +145,7 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-
-    virtual void AttributeWillChange(nsIContent* aChild,
-                                     PRInt32 aNameSpaceID,
-                                     nsIAtom* aAttribute);
+    NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
 
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(nsIContent* aElement);

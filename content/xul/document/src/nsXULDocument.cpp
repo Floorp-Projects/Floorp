@@ -960,8 +960,9 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 }
 
 void
-nsXULDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute)
+nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
+                                   nsIContent* aContent, PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute, PRInt32 aModType)
 {
     NS_ABORT_IF_FALSE(aContent, "Null content!");
     NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
@@ -973,7 +974,8 @@ nsXULDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
         RemoveElementFromRefMap(aContent);
     }
     
-    nsXMLDocument::AttributeWillChange(aContent, aNameSpaceID, aAttribute);
+    nsXMLDocument::AttributeWillChange(aDocument, aContent, aNameSpaceID,
+                                       aAttribute, aModType);
 }
 
 void

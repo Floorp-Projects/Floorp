@@ -849,7 +849,11 @@ nsHTMLTableAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return tableLayout->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
+  rv = tableLayout->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
+  if (rv == NS_TABLELAYOUT_CELL_NOT_FOUND)
+    return NS_ERROR_INVALID_ARG;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

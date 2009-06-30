@@ -51,7 +51,7 @@
 
 #include "nsIMutableArray.h"
 
-#include <sqlite3.h>
+#include "sqlite3.h"
 
 struct PRLock;
 class nsIFile;

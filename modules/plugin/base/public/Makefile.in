@@ -46,7 +46,6 @@ MODULE		= plugin
 GRE_MODULE	= 1
 
 EXPORTS		= \
-		nsplugin.h \
 		nsplugindefs.h \
 		nsPluginLogging.h \
 		nsPluginError.h \
@@ -66,8 +65,6 @@ SDK_HEADERS	 = \
 XPIDLSRCS 	= \
 		nspluginroot.idl \
 		nsIPluginStreamInfo.idl \
-		nsIPluginInstancePeer.idl \
-		nsIPluginInstancePeer2.idl \
 		nsIPluginInstanceOwner.idl \
 		nsIPlugin.idl \
 		nsIHTTPHeaderListener.idl \
@@ -78,7 +75,6 @@ XPIDLSRCS 	= \
 		nsIPluginStreamListener.idl \
 		nsIPluginInstance.idl \
 		nsPIPluginHost.idl \
-		nsPIPluginInstancePeer.idl \
 		nsIPluginHost.idl \
 		nsIPluginDocument.idl \
 		$(NULL)

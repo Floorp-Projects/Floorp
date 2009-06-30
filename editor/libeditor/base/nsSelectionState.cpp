@@ -59,7 +59,6 @@ nsSelectionState::~nsSelectionState()
 void
 nsSelectionState::DoTraverse(nsCycleCollectionTraversalCallback &cb)
 {
-  nsRangeStore *item;
   for (PRUint32 i = 0, iEnd = mArray.Length(); i < iEnd; ++i)
   {
     nsRangeStore &item = mArray[i];

@@ -11,3 +11,4 @@
 == boxshadow-inner-basic.html boxshadow-inner-basic-ref.html
 == boxshadow-mixed.html boxshadow-mixed-ref.html
 == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
+HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
