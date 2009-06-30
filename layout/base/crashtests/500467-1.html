@@ -5,9 +5,10 @@
       function doIt() {
         var p = document.getElementById("p").tBodies[0];
         var nodes = Array.prototype.slice.call(document.getElementsByTagName("tr"));
-        while (nodes.length > 1) {
-          p.removeChild(nodes[1]);
-          nodes.splice(1, 1);
+        for (var i = 0; i < nodes.length; ++i) {
+          var n = nodes[i].nextSibling;
+          p.removeChild(nodes[i]);
+          p.insertBefore(nodes[i], n);
         }
         setTimeout('document.documentElement.className = ""', 0);
       }
