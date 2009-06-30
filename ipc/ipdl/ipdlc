@@ -1,0 +1,141 @@
+#!/usr/bin/env python
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# Contributor(s):
+#   Chris Jones <jones.chris.g@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+import getopt, os, re, sys
+
+_verbosity = 1
+def log(minv, fmt, *args):
+    if _verbosity >= minv:
+        print >>sys.stderr, fmt % args
+
+def getcallerpath():
+    '''Return the absolute path of the file containing the code that
+**CALLED** this function.'''
+    return os.path.abspath(sys._getframe(1).f_code.co_filename)
+
+# auto-add the compiler modules to the pythonpath
+installdir, _ = os.path.split(getcallerpath())
+sys.path.append(installdir)
+
+import ipdl
+
+# process command line
+
+def usage(err):
+    if err:
+        out, rv = (sys.stderr, 1)
+    else:
+        out, rv = (sys.stdout, 0)
+    print >>out, '''
+Usage:  ipdlc [OPTIONS...] SPECIFICATION
+
+where OPTIONS are zero or more of
+  -h, --help
+          : print this message and exit
+  -d DIR, --output-dir=DIR
+          : directory in which to put generated code.
+              Created if it doesn't exist.
+            default: use current working directory.
+  -v N, --verbosity=N
+          : be as verbose as N.  set to 0 for no output, and higher than 1
+              for more output.
+            default: -v 1
+
+and SPECIFICATION is a single IPDL specification file.  '-' = read from stdin.
+  default : read specification from stdin
+'''
+    sys.exit(rv)
+
+try:
+    opts, args = getopt.gnu_getopt(
+        sys.argv[1:],
+        'd:hv:',
+        ['help',
+         'output-dir=',
+         'verbosity='])
+except getopt.GetoptError, err:
+    print >>sys.stderr, str(err), '\n'
+    usage(err=True)
+
+codedir = os.getcwd()
+spec = '-'
+
+for o, a in opts:
+    if o in ('-h', '--help'):
+        usage(err=False)
+    elif o in ('-d', '--output-dir'):
+        codedir = a
+    elif o in ('-v', '--verbosity'):
+        _verbosity = int(a)
+
+if 1 < len(args):
+   usage(err=True)
+if 1 == len(args):
+    spec = args[0]
+
+specstring = None
+specfilename = None
+if spec != '-':
+    log (1, 'using specification %s', spec)
+    specstring = open(spec, 'r').read()
+    specfilename = spec
+else:
+    log(1, 'reading specification from stdin')
+    specstring = sys.stdin.read()
+    specfilename = '<stdin>'
+
+log(3, '  specification:\n%s', specstring)
+
+log(1, 'parsing specification')
+ast = ipdl.parse(specstring, specfilename)
+
+log(1, 'checking types')
+if not ipdl.typecheck(ast):
+    print >>sys.stderr, 'Specification is not well typed.'
+    sys.exit(1)
+
+if _verbosity >= 3:
+    log(3, '  pretty printed code:')
+    ipdl.genipdl(ast, codedir)
+
+log(1, 'generating code to "%s"', codedir)
+ipdl.gencxx(ast, codedir)
+
+log(1, '''\nIMPORTANT: remember to add the new enum value
+
+  %sMsgStart,
+
+to the |IPCMessageStart| enum in "ipc/glue/IPCMessageUtils.h".
+Your code will not compile until this value is added.
+'''% (ast.protocol.name))
