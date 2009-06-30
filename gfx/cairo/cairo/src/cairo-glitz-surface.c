@@ -352,6 +352,7 @@ _cairo_glitz_surface_release_dest_image (void                    *abstract_surfa
 static cairo_status_t
 _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 				    cairo_surface_t *src,
+				    cairo_content_t  content,
 				    int              src_x,
 				    int              src_y,
 				    int              width,
@@ -716,6 +717,7 @@ _cairo_glitz_pattern_acquire_surface (const cairo_pattern_t	       *pattern,
 	cairo_int_status_t status;
 
 	status = _cairo_pattern_acquire_surface (pattern, &dst->base,
+						 CAIRO_CONTENT_COLOR_ALPHA,
 						 x, y, width, height,
 						 (cairo_surface_t **) &src,
 						 &attr->base);
@@ -2133,6 +2135,7 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 		status =
 		    _cairo_glitz_surface_clone_similar (abstract_surface,
 							image,
+							CAIRO_CONTENT_COLOR_ALPHA,
 							0,
 							0,
 							glyph_width,
