@@ -1,0 +1,27 @@
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = dom
+LIBRARY_NAME = domipc_s
+LIBXUL_LIBRARY = 1
+FORCE_STATIC_LIB = 1
+EXPORT_LIBRARY = 1
+
+CPPSRCS = \
+  TabParent.cpp \
+  TabProcessParent.cpp \
+  TabChild.cpp \
+  TabThread.cpp \
+  $(NULL)
+
+TOOL_DIRS = app
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

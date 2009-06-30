@@ -9845,10 +9845,13 @@ nsDocShell::EnsureScriptEnvironment()
     NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
-    NS_ENSURE_TRUE(browserChrome, NS_ERROR_NOT_AVAILABLE);
 
     PRUint32 chromeFlags;
-    browserChrome->GetChromeFlags(&chromeFlags);
+    if (browserChrome) {
+        browserChrome->GetChromeFlags(&chromeFlags);
+    } else {
+        chromeFlags = 0;
+    }
 
     PRBool isModalContentWindow =
         (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
