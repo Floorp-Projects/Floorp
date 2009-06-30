@@ -134,9 +134,6 @@ typedef struct JSXML                JSXML;
 typedef struct JSXMLArray           JSXMLArray;
 typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 
-/* Template forward declarations. */
-template <class T> class JSTempVector;
-
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
 typedef enum JSTrapStatus {
     JSTRAP_ERROR,

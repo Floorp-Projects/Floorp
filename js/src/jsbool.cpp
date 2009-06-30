@@ -52,7 +52,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"
-#include "jsvector.h"
 
 /* Check pseudo-booleans values. */
 JS_STATIC_ASSERT(!(JSVAL_TRUE & JSVAL_HOLE_FLAG));
@@ -161,16 +160,6 @@ JSString *
 js_BooleanToString(JSContext *cx, JSBool b)
 {
     return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[b ? 1 : 0]);
-}
-
-/* This function implements E-262-3 section 9.8, toString. */
-JSBool
-js_BooleanToStringBuffer(JSContext *cx, JSBool b, JSTempVector<jschar> &buf) 
-{
-    static const jschar trueChars[] = { 't', 'r', 'u', 'e' },
-                        falseChars[] = { 'f', 'a', 'l', 's', 'e' };
-    return b ? buf.pushBack(trueChars, trueChars + JS_ARRAY_LENGTH(trueChars))
-             : buf.pushBack(falseChars, falseChars + JS_ARRAY_LENGTH(falseChars));
 }
 
 JSBool
