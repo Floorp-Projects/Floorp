@@ -1202,10 +1202,9 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
         return principals->codebase;
     }
 
-    jsbytecode *pc = caller->regs->pc;
-    if (caller->regs && js_GetOpcode(cx, caller->script, pc) == JSOP_EVAL) {
-        JS_ASSERT(js_GetOpcode(cx, caller->script, pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
-        *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
+    if (caller->regs && js_GetOpcode(cx, caller->script, caller->regs->pc) == JSOP_EVAL) {
+        JS_ASSERT(js_GetOpcode(cx, caller->script, caller->regs->pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+        *linenop = GET_UINT16(caller->regs->pc + JSOP_EVAL_LENGTH);
     } else {
         *linenop = js_FramePCToLineNumber(cx, caller);
     }
@@ -4345,6 +4344,8 @@ JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
              jsval *vp)
 {
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+
     if (obj->map->ops == &js_ObjectOps ||
         obj->map->ops->getProperty == js_GetProperty) {
         return js_GetPropertyHelper(cx, obj, id, cacheResult, vp);
@@ -5007,7 +5008,16 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 *statep = JSVAL_ZERO;
         } else {
             /* The enumerator has not iterated over all ids. */
+            JS_ASSERT(enum_op == JSENUMERATE_DESTROY);
             ne->cursor = 0;
+
+            /*
+             * Force on shutdown an extra GC cycle so all native enumerators
+             * on the rt->nativeEnumerators list will be removed when the GC
+             * calls js_TraceNativeEnumerators. See bug 499570.
+             */
+            if (cx->runtime->state == JSRTS_LANDING)
+                cx->runtime->gcPoke = true;
         }
         break;
     }

@@ -53,6 +53,7 @@ function jitstatHandler(f)
     f("returnLoopExits");
     f("mergedLoopExits")
     f("noCompatInnerTrees");
+    f("blacklisted");
 }
 
 var jitProps = {};

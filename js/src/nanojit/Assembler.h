@@ -159,13 +159,19 @@ namespace nanojit
 			void FASTCALL outputf(const char* format, ...); 
 			void FASTCALL output_asm(const char* s); 
 			
-			bool _verbose, outputAddr, vpad[2];  // if outputAddr=true then next asm instr. will include address in output
+			// if outputAddr=true then next asm instr. will include
+			// address in output
+			bool outputAddr, vpad[2];
 			void printActivationState();
 
 			StringList* _outputCache;
+
+			// Log controller object.  Contains what-stuff-should-we-print
+			// bits, and a sink function for debug printing
+			LogControl* _logc;
 			#endif
 
-			Assembler(Fragmento* frago);
+			Assembler(Fragmento* frago, LogControl* logc);
             ~Assembler() {}
 
 			void		assemble(Fragment* frag, NInsList& loopJumps);
@@ -180,7 +186,6 @@ namespace nanojit
 #endif
 			AssmError   error()	{ return _err; }
 			void		setError(AssmError e) { _err = e; }
-			void		setCallTable(const CallInfo *functions);
 			void		pageReset();
 			int32_t		codeBytes();
 			Page*		handoverPages(bool exitPages=false);
