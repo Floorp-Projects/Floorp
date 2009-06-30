@@ -40,7 +40,7 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-include $(topsrcdir)/ipc/chromium/chromium-defs.mk
+include $(DEPTH)/config/autoconf.mk
 
 MODULE = dom
 
@@ -80,6 +80,7 @@ endif
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
@@ -93,19 +94,6 @@ endif
 
 ifdef WINCE
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,corelibc)
-endif
-
-ifdef BUILD_STATIC_LIBS
-include $(topsrcdir)/config/static-config.mk
-
-EXTRA_DEPS += \
-  $(STATIC_EXTRA_DEPS) \
-  $(NULL)
-DEFINES += $(STATIC_DEFINES)
-CPPSRCS += $(STATIC_CPPSRCS)
-EXTRA_DSO_LIBS += $(STATIC_EXTRA_DSO_LIBS)
-REQUIRES += $(STATIC_REQUIRES)
-EXTRA_LIBS += $(STATIC_EXTRA_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -129,32 +117,4 @@ ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
 LDFLAGS += /HEAP:0x40000
 endif
-endif
-
-ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-
-libs:: $(PROGRAM)
-	$(INSTALL) $< $(DIST)/bin
-
-install:: $(PROGRAM)
-	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
-
-endif
-
-ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-
-APP_NAME = $(MOZ_APP_DISPLAYNAME)
-
-ifdef MOZ_DEBUG
-APP_NAME := $(APP_NAME)Debug
-endif
-
-ifdef LIBXUL_SDK
-APPFILES = Resources
-else
-APPFILES = MacOS
-endif
-
-libs::
-	$(INSTALL) $(IFLAGS1) $(PROGRAM) $(DIST)/bin
 endif
