@@ -162,6 +162,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsCPrefetchService.h"
 #include "nsIChromeRegistry.h"
 #include "nsIMIMEHeaderParam.h"
+#include "nsIDOMXULCommandEvent.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMDragEvent.h"
 #include "nsDOMDataTransfer.h"
 #include "nsHtml5Module.h"
@@ -5043,4 +5045,43 @@ nsContentUtils::CanAccessNativeAnon()
   }
 
   return PR_FALSE;
+}
+
+/* static */ nsresult
+nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
+                                   PRBool aTrusted,
+                                   nsIDOMEvent* aSourceEvent,
+                                   nsIPresShell* aShell,
+                                   PRBool aCtrl,
+                                   PRBool aAlt,
+                                   PRBool aShift,
+                                   PRBool aMeta)
+{
+  NS_ENSURE_STATE(aTarget);
+  nsIDocument* doc = aTarget->GetOwnerDoc();
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(doc);
+  NS_ENSURE_STATE(docEvent);
+  nsCOMPtr<nsIDOMEvent> event;
+  docEvent->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
+                        getter_AddRefs(event));
+  nsCOMPtr<nsIDOMXULCommandEvent> xulCommand = do_QueryInterface(event);
+  nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(xulCommand);
+  NS_ENSURE_STATE(pEvent);
+  nsCOMPtr<nsIDOMAbstractView> view = do_QueryInterface(doc->GetWindow());
+  nsresult rv = xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"),
+                                             PR_TRUE, PR_TRUE, view,
+                                             0, aCtrl, aAlt, aShift, aMeta,
+                                             aSourceEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aShell) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip = aShell;
+    return aShell->HandleDOMEventWithTarget(aTarget, event, &status);
+  }
+
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
+  NS_ENSURE_STATE(target);
+  PRBool dummy;
+  return target->DispatchEvent(event, &dummy);
 }

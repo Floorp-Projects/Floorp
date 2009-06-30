@@ -51,7 +51,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
-#include "nsIDOMXULListener.h"
 #include "nsITimer.h"
 
 #define NS_ROOTACCESSIBLE_IMPL_CID                      \

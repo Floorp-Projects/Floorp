@@ -650,10 +650,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
                                    static_cast<nsGUIEvent*>(aEvent));
 #endif // MOZ_SVG
 
-    case NS_XUL_COMMAND_EVENT:
-      return NS_NewDOMXULCommandEvent(aDOMEvent, aPresContext,
-                                      static_cast<nsXULCommandEvent*>
-                                                 (aEvent));
     case NS_COMMAND_EVENT:
       return NS_NewDOMCommandEvent(aDOMEvent, aPresContext,
                                    static_cast<nsCommandEvent*>(aEvent));
