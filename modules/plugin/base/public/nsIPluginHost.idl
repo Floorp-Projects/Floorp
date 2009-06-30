@@ -58,6 +58,7 @@ interface nsIPlugin;
 interface nsIURI;
 interface nsIDOMPlugin;
 interface nsIChannel;
+interface nsIPluginStreamListener;
 
 [ptr] native PRLibraryPtr(PRLibrary);
 [ref] native nsIStreamListenerRef(nsIStreamListener *);

@@ -62,7 +62,6 @@
 #endif
 #endif
 #include "nsIPluginHost.h"
-#include "nsplugin.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prmem.h"
@@ -73,6 +72,9 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
+#include "nsIPluginInstance.h"
+#include "nsIPluginTagInfo.h"
+#include "nsIPluginTagInfo2.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
 #include "nsIEventListener.h"

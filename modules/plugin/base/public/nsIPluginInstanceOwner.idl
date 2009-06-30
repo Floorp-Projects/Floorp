@@ -37,10 +37,7 @@
 
 #include "nsISupports.idl"
 #include "nspluginroot.idl"
-
-%{C++
-#include "nsplugin.h"
-%}
+#include "nsIPlugin.idl"
 
 interface nsIPluginInstance;
 interface nsIDocument;
