@@ -67,6 +67,7 @@
 #include "nsGfxCIID.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMSimpleGestureEvent.h"
+#include "nsIPluginInstance.h"
 
 #include "nsDragService.h"
 #include "nsClipboard.h"
