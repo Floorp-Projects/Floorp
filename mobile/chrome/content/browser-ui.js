@@ -447,9 +447,9 @@ var BrowserUI = {
     BookmarkList.show();
   },
 
-  newTab : function newTab() {
+  newTab : function newTab(aURI) {
     ws.panTo(0, -this.toolbarH);
-    Browser.addTab("about:blank", true);
+    return Browser.addTab(aURI || "about:blank", true);
   },
 
   closeTab : function closeTab(aTab) {
