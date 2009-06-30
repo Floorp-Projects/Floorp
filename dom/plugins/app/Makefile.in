@@ -1,0 +1,160 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Plugin App.
+#
+# The Initial Developer of the Original Code is
+#   Ben Turner <bent.mozilla@gmail.com>.
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#   Chris Jones <jones.chris.g@gmail.com>
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(topsrcdir)/ipc/chromium/chromium-defs.mk
+
+MODULE = dom
+
+##
+## Build the child process that runs plugins
+##
+DEFINES += -DNO_NSPR_10_SUPPORT=1
+
+PROGRAM = gecko-plugin$(BIN_SUFFIX)
+
+REQUIRES = \
+  string \
+  xpcom \
+  xulapp \
+  widget \
+  $(NULL)
+
+CPPSRCS = \
+  PluginApp.cpp \
+  $(NULL)
+
+LIBS += \
+  $(XPCOM_LIBS) \
+  $(NSPR_LIBS) \
+  $(NULL)
+
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
+# This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
+# shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
+NSDISTMODE = copy
+
+include $(topsrcdir)/config/config.mk
+
+ifdef _MSC_VER
+# Always enter a Windows program through wmain, whether or not we're
+# a console application.
+ifdef WINCE
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
+else
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
+endif
+
+ifdef WINCE
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,corelibc)
+endif
+
+ifdef BUILD_STATIC_LIBS
+include $(topsrcdir)/config/static-config.mk
+
+EXTRA_DEPS += \
+  $(STATIC_EXTRA_DEPS) \
+  $(NULL)
+DEFINES += $(STATIC_DEFINES)
+CPPSRCS += $(STATIC_CPPSRCS)
+EXTRA_DSO_LIBS += $(STATIC_EXTRA_DSO_LIBS)
+REQUIRES += $(STATIC_REQUIRES)
+EXTRA_LIBS += $(STATIC_EXTRA_LIBS)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),WINNT)
+#
+# Control the default heap size.
+# This is the heap returned by GetProcessHeap().
+# As we use the CRT heap, the default size is too large and wastes VM.
+#
+# The default heap size is 1MB on Win32.
+# The heap will grow if need be.
+#
+# Set it to 256k.  See bug 127069.
+#
+ifndef GNU_CC
+LDFLAGS += /HEAP:0x40000
+endif
+endif
+
+ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+
+libs:: $(PROGRAM)
+	$(INSTALL) $< $(DIST)/bin
+
+install:: $(PROGRAM)
+	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
+
+endif
+
+ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+
+APP_NAME = $(MOZ_APP_DISPLAYNAME)
+
+ifdef MOZ_DEBUG
+APP_NAME := $(APP_NAME)Debug
+endif
+
+ifdef LIBXUL_SDK
+APPFILES = Resources
+else
+APPFILES = MacOS
+endif
+
+libs::
+	$(INSTALL) $(IFLAGS1) $(PROGRAM) $(DIST)/bin
+endif
