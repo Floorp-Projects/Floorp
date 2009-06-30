@@ -43,6 +43,7 @@
 #include "nsIPluginTag.idl"
 
 %{C++
+#include "nsPluginNativeWindow.h"
 #include "nsplugindefs.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
@@ -62,6 +63,7 @@ interface nsIPluginStreamListener;
 
 [ptr] native PRLibraryPtr(PRLibrary);
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
+[ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
 [scriptable, uuid(A2D6DC70-7456-4422-A9F6-D96F46868C0B)]
 interface nsIPluginHost : nsIFactory
@@ -140,12 +142,12 @@ interface nsIPluginHost : nsIFactory
 %{C++
   NS_IMETHOD
   GetURL(nsISupports* pluginInst,
-     const char* url,
-     const char* target = NULL,
-     nsIPluginStreamListener* streamListener = NULL,
-     const char* altHost = NULL,
-     const char* referrer = NULL,
-     PRBool forceJSEnabled = PR_FALSE) = 0;
+         const char* url,
+         const char* target = NULL,
+         nsIPluginStreamListener* streamListener = NULL,
+         const char* altHost = NULL,
+         const char* referrer = NULL,
+         PRBool forceJSEnabled = PR_FALSE) = 0;
 %}
 
   /**
@@ -182,17 +184,17 @@ interface nsIPluginHost : nsIFactory
 %{C++
   NS_IMETHOD
   PostURL(nsISupports* pluginInst,
-    const char* url,
-    PRUint32 postDataLen,
-    const char* postData,
-    PRBool isFile = PR_FALSE,
-    const char* target = NULL,
-    nsIPluginStreamListener* streamListener = NULL,
-    const char* altHost = NULL,
-    const char* referrer = NULL,
-    PRBool forceJSEnabled = PR_FALSE,
-    PRUint32 postHeadersLength = 0,
-    const char* postHeaders = NULL) = 0;
+          const char* url,
+          PRUint32 postDataLen,
+          const char* postData,
+          PRBool isFile = PR_FALSE,
+          const char* target = NULL,
+          nsIPluginStreamListener* streamListener = NULL,
+          const char* altHost = NULL,
+          const char* referrer = NULL,
+          PRBool forceJSEnabled = PR_FALSE,
+          PRUint32 postHeadersLength = 0,
+          const char* postHeaders = NULL) = 0;
 %}
 
   /**
@@ -209,8 +211,74 @@ interface nsIPluginHost : nsIFactory
    * Which proxy/SOCKS to use is determined by the plugin.
    */
   void findProxyForURL(in string aURL, out string aResult);
-   
+
   [noscript] void UserAgent(in nativeChar resultingAgentString);
+
+  /**
+   * To notify the plugin manager that the plugin created a script object 
+   */
+  [noscript] void setIsScriptableInstance(in nsIPluginInstance aInstance, in boolean aScriptable);
+
+  /**
+   * This method parses post buffer to find out case insensitive "Content-length" string
+   * and CR or LF some where after that, then it assumes there is http headers in
+   * the input buffer and continue to search for end of headers (CRLFCRLF or LFLF).
+   * It will *always malloc()* output buffer (caller is responsible to free it) 
+   * if input buffer starts with LF, which comes from 4.x spec 
+   * http://developer.netscape.com/docs/manuals/communicator/plugin/pgfn2.htm#1007754
+   * "If no custom headers are required, simply add a blank
+   * line ('\n') to the beginning of the file or buffer.",
+   * it skips that '\n' and considers rest of the input buffer as data.
+   * If "Content-length" string and end of headers is found 
+   *   it substitutes single LF with CRLF in the headers, so the end of headers
+   *   always will be CRLFCRLF (single CR in headers, if any, remain untouched)
+   * else
+   *   it puts "Content-length: "+size_of_data+CRLFCRLF at the beginning of the output buffer
+   * and memcpy data to the output buffer 
+   *
+   * On failure outPostData and outPostDataLen will be set in 0.  
+   * @param aInPostData      - the post data
+   * @param aInPostDataLen   - the length aInPostData
+   * @param aOutPostData     - the buffer
+   * @param aOutPostDataLen  - the length of aOutPostData
+   */
+  [noscript] void parsePostBufferToFixHeaders(in string aInPostData, 
+                                              in unsigned long aInPostDataLen, 
+                                              out string aOutPostData, 
+                                              out unsigned long aOutPostDataLen);
+
+  /**
+   * To create tmp file with Content len header in, it will use by http POST
+   */
+  [noscript] void createTmpFileToPost(in string aPostDataURL, out string aTmpFileName);
+
+  /**
+   *  Creates a new plugin native window object
+   */
+  [noscript] void newPluginNativeWindow(out nsPluginNativeWindowPtr aPluginNativeWindow);
+
+  /**
+   *  Deletes plugin native window object created by NewPluginNativeWindow
+   */
+  [noscript] void deletePluginNativeWindow(in nsPluginNativeWindowPtr aPluginNativeWindow);
+
+  /**
+   * Instantiate a "dummy" java plugin if a java plugin that supports
+   * NPRuntime is installed. This plugin is used for exposing
+   * window.java and window.Packages. If the java plugin supports
+   * NPRuntime and instantiation was successful, aOwners instance will
+   * be non-null, if not, it will be null.
+   */
+  [noscript] void instantiateDummyJavaPlugin(in nsIPluginInstanceOwner aOwner);
+
+  /**
+   * Get the plugin name for the plugin instance.
+   * @param aInstance the plugin instance object
+   * @param aPluginName returns a pointer to a shared readonly string value,
+   *        it's only valid for the lifetime of the plugin instance - you must
+   *        copy the string value if you need it longer than that.
+   */
+  [noscript] void getPluginName(in nsIPluginInstance aInstance, [shared] out string aPluginName);
 };
 
 %{C++
