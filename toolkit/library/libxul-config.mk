@@ -91,6 +91,13 @@ LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
 endif
 
 # dependent libraries
+ifdef MOZ_IPC
+STATIC_LIBS += \
+  mozipc_s \
+  chromium_s \
+  $(NULL)
+endif
+
 STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
