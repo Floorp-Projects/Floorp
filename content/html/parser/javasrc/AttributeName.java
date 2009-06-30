@@ -439,7 +439,7 @@ public final class AttributeName
     }
 
     // START CODE ONLY USED FOR GENERATING CODE uncomment to regenerate
-//
+
 //    /**
 //     * @see java.lang.Object#toString()
 //     */
@@ -550,11 +550,7 @@ public final class AttributeName
 //                buf[i] = c;
 //            }
 //        }
-//        String rv = new String(buf);
-//        if ("UNICODE".equals(rv)) {
-//            return "UNI_CODE"; 
-//        }
-//        return rv;
+//        return new String(buf);
 //    }
 //
 //    private int hash() {
@@ -1241,7 +1237,7 @@ public final class AttributeName
     public static final AttributeName LARGEOP = new AttributeName(ALL_NO_NS,
             SAME_LOCAL("largeop"), ALL_NO_PREFIX, ALL_NCNAME, false);
 
-    public static final AttributeName UNI_CODE = new AttributeName(ALL_NO_NS,
+    public static final AttributeName UNICODE = new AttributeName(ALL_NO_NS,
             SAME_LOCAL("unicode"), ALL_NO_PREFIX, ALL_NCNAME, false);
 
     public static final AttributeName TARGETX = new AttributeName(ALL_NO_NS,
@@ -2607,7 +2603,7 @@ public final class AttributeName
             DATAFLD, DECLARE, DISPLAY, DIVISOR, DEFAULT, DESCENT, KERNING,
             HANGING, HEADERS, ONPASTE, ONCLICK, OPTIMUM, ONBEGIN, ONKEYUP,
             ONFOCUS, ONERROR, ONINPUT, ONABORT, ONSTART, ONRESET, OPACITY,
-            NOSHADE, MINSIZE, MAXSIZE, LOOPEND, LARGEOP, UNI_CODE, TARGETX,
+            NOSHADE, MINSIZE, MAXSIZE, LOOPEND, LARGEOP, UNICODE, TARGETX,
             TARGETY, VIEWBOX, VERSION, PATTERN, PROFILE, SPACING, RESTART,
             ROWSPAN, SANDBOX, SUMMARY, STANDBY, REPLACE, AUTOPLAY, ADDITIVE,
             CALCMODE, CODETYPE, CODEBASE, CONTROLS, BEVELLED, BASELINE,
