@@ -9420,9 +9420,9 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
       return NS_ERROR_UNEXPECTED;
     }
   } else {
-    // 'pi' didn't have a prototype, or pi's proto was 'Object.prototype'
-    // (i.e. pi is an LiveConnect wrapped Java applet), set
-    // 'pi.__proto__' to the original 'this.__proto__'
+    // 'pi' didn't have a prototype, or pi's proto was
+    // 'Object.prototype' (i.e. pi is an NPRuntime wrapped JS object)
+    // set 'pi.__proto__' to the original 'this.__proto__'
     if (!::JS_SetPrototype(cx, pi_obj, my_proto)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -9471,8 +9471,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
   //   |      |         |
   //   |      |         |__ xpc embed wrapper proto (shared)
   //   |      |
-  //   |      |__ pi (plugin instance) wrapper, most likely wrapped
-  //   |          by LiveConnect
+  //   |      |__ pi (plugin instance) NPRuntime JS object wrapper
   //   |
   //   |__ xpc wrapped native embed node
   //

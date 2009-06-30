@@ -166,14 +166,6 @@
                   <th>Engine</th>
                 </tr>
                 <tr>
-                  <td>lcopt</td>
-                  <td>LiveConnect, optimized</td>
-                </tr>
-                <tr>
-                  <td>lcdebug</td>
-                  <td>LiveConnect, debug</td>
-                </tr>
-                <tr>
                   <td>rhino</td>
                   <td>Rhino compiled mode</td>
                 </tr>
@@ -271,12 +263,10 @@
             <a href="#classpath">CLASSPATH</a>.  For the 
             <b>SpiderMonkey</b> shells, this value defaults to
             ../src/&lt;Platform-and-buildtype-specific-directory&gt;/[js|jsshell],
-            for the
-            <b>LiveConnect</b> shells,
-            ../src/liveconnect/src/&lt;Platform-and-buildtype-specific-directory&gt;/lschell
-            and for the <b>xpcshell</b> the default is the value of your 
-            <code>MOZILLA_FIVE_HOME</code> environment variable.  There is no
-            default (as it is usually not needed) for the <b>Rhino</b> shell.
+            and for the <b>xpcshell</b> the default is the value of
+            your <code>MOZILLA_FIVE_HOME</code> environment variable.
+            There is no default (as it is usually not needed) for
+            the <b>Rhino</b> shell.
             <br>
             <br>
           <dt><b>-t, --trace</b></dt>
@@ -315,26 +305,17 @@
         <br>
       <dt><b>EXAMPLES</b></dt>
       <dd>
-          <code>perl jsDriver.pl -e smdebug -L lc*</code><br>
-          Executes all tests EXCEPT the liveconnect tests against the
+          <code>perl jsDriver.pl -e smdebug -L ecma_3*</code><br>
+          Executes all tests EXCEPT the ecma_3 tests against the
           SpiderMonkey debug shell, writing the results
           to the default result file.  (NOTE: Unix shells take care of wildcard
-          expansion, turning <code>lc*</code> into <code>lc2 lc3</code>.  Under
-          a DOS shell, you must explicitly list the directories.)
+          expansion, turning <code>ecma_3*</code> into
+	  <code>ecma_3 ecma_3_1</code>.  Under a DOS shell, you must explicitly
+	  list the directories.)
         <p>
           <code>perl jsDriver.pl -e rhino -L rhino-n.tests</code><br>
           Executes all tests EXCEPT those listed in the
           <code>rhino-n.tests</code> file.
-        <p>
-          <code>perl -I/home/rginda/perl/lib/ jsDriver.pl -e lcopt -l lc2
-            lc3 -f lcresults.html -k</code><br>
-          Executes ONLY the tests under the <code>lc2</code> and <code>lc3</code>
-          directories against the LiveConnect shell.  Results will be written to
-          the file <code>lcresults.html</code> <b>AND</b> the console.  The 
-          <code>-I</code> option tells perl to look for modules in the
-          <code>/home/rginda/perl/lib</code> directory (in addition to the
-          usual places), useful if you do not have root access to install new
-          modules on the system.
     </dl>
     <hr>
     Author: Robert Ginda<br>

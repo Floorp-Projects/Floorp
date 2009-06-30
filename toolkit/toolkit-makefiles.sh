@@ -188,11 +188,6 @@ MAKEFILES_intl="
   intl/strres/tests/Makefile
 "
 
-MAKEFILES_liveconnect="
-  js/src/liveconnect/Makefile
-  js/src/liveconnect/classes/Makefile
-"
-
 MAKEFILES_xpconnect="
   js/src/xpconnect/Makefile
   js/src/xpconnect/public/Makefile
@@ -864,7 +859,6 @@ add_makefiles "
   $MAKEFILES_gfx
   $MAKEFILES_htmlparser
   $MAKEFILES_intl
-  $MAKEFILES_liveconnect
   $MAKEFILES_xpconnect
   $MAKEFILES_jsdebugger
   $MAKEFILES_content

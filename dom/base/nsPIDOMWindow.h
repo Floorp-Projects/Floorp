@@ -402,8 +402,7 @@ public:
   }
   
   /**
-   * Initialize window.java and window.Packages, and start LiveConnect
-   * if we're running with a non-NPRuntime enabled Java plugin.
+   * Initialize window.java and window.Packages.
    */
   virtual void InitJavaProperties() = 0;
 
