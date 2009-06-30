@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -16,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,30 +34,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = js/src/xpconnect/tests/mochitest
+DEPTH     = ../../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+relativesrcdir  = js/src/xpconnect/tests/chrome
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	bug500931_helper.html \
-		inner.html \
-		test_bug361111.xul \
-		test_bug390488.html \
-		test_bug393269.html \
-		test_bug396851.html \
-		test_bug428021.html \
-		test_bug448587.html \
-		test_wrappers.html \
-		test_bug446584.html \
-		test_bug462428.html \
-		test_bug478438.html \
-		test_bug484107.html \
-		test_bug484459.html \
+_CHROME_FILES = \
+		test_bug500931.xul \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
