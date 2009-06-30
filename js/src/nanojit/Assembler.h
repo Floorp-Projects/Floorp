@@ -186,7 +186,6 @@ namespace nanojit
 #endif
 			AssmError   error()	{ return _err; }
 			void		setError(AssmError e) { _err = e; }
-			void		setCallTable(const CallInfo *functions);
 			void		pageReset();
 			int32_t		codeBytes();
 			Page*		handoverPages(bool exitPages=false);
