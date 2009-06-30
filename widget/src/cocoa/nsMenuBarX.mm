@@ -697,6 +697,12 @@ void nsMenuBarX::NodeWillBeDestroyed(const nsINode * aNode)
 }
 
 
+void nsMenuBarX::AttributeWillChange(nsIDocument* aDocument,
+                                     nsIContent* aContent, PRInt32 aNameSpaceID,
+                                     nsIAtom* aAttribute, PRInt32 aModType)
+{
+}
+
 void nsMenuBarX::AttributeChanged(nsIDocument * aDocument, nsIContent * aContent,
                                   PRInt32 aNameSpaceID, nsIAtom * aAttribute,
                                   PRInt32 aModType, PRUint32 aStateMask)

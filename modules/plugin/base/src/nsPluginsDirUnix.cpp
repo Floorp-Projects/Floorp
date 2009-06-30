@@ -43,7 +43,6 @@
 	by Alex Musil
  */
 
-#include "nsplugin.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIServiceManager.h"

@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  { 0x9abf0b96, 0xc9e2, 0x4d49, \
-    { 0x9c, 0x0a, 0x37, 0xc1, 0x22, 0x39, 0x83, 0x50 } }
+  {0x282f1cd0, 0x6dfb, 0x4cff, \
+      {0x83, 0x3e, 0x05, 0x98, 0x52, 0xe6, 0xd8, 0x59 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -651,13 +651,6 @@ public:
                               nsIStyleRule* aStyleRule) = 0;
   virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule) = 0;
-
-  /**
-   * Notify document of pending attribute change
-   */
-  virtual void AttributeWillChange(nsIContent* aChild,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute) = 0;
 
   /**
    * Flush notifications for this document and its parent documents

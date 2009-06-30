@@ -2,70 +2,91 @@
  * Test table indexes.
  *
  * @param  aIdentifier  [in] table accessible identifier
- * @param  aLen         [in] cells count
- * @param  aRowIdxes    [in] array of row indexes for each cell index
- * @param  aColIdxes    [in] array of column indexes for each cell index
+ * @param  aIdxes       [in] two dimensional array of cell indexes
  */
-function testTableIndexes(aIdentifier, aLen, aRowIdxes, aColIdxes)
+function testTableIndexes(aIdentifier, aIdxes)
 {
   var tableAcc = getAccessible(aIdentifier, [nsIAccessibleTable]);
   if (!tableAcc)
     return;
 
-  var row, column, index;
+  var obtainedRowIdx, obtainedColIdx, obtainedIdx;
   var cellAcc;
 
   var id = prettyName(aIdentifier);
 
-  for (var i = 0; i < aLen; i++) {
-    try {
-      row = tableAcc.getRowAtIndex(i);
-    } catch (e) {
-      ok(false, id + ": can't get row index for cell index " + i + "," + e);
-    }
+  var rowCount = aIdxes.length;
+  for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+    var colCount = aIdxes[rowIdx].length;
+    for (var colIdx = 0; colIdx < colCount; colIdx++) {
+      var idx = aIdxes[rowIdx][colIdx];
+      if (idx != - 1) {
+        // getRowAtIndex
+        var origRowIdx = rowIdx;
+        while (origRowIdx > 0 &&
+               aIdxes[rowIdx][colIdx] == aIdxes[origRowIdx - 1][colIdx])
+          origRowIdx--;
 
-    try {
-      column = tableAcc.getColumnAtIndex(i);
-    } catch (e) {
-      ok(false, id + ": can't get column index for cell index " + i + "," + e);
-    }
+        try {
+          obtainedRowIdx = tableAcc.getRowAtIndex(idx);
+        } catch (e) {
+          ok(false, id + ": can't get row index for cell index " + idx + "," + e);
+        }
 
-    try {
-      index = tableAcc.getIndexAt(aRowIdxes[i], aColIdxes[i]);
-    } catch (e) {
-      ok(false,
-         id + ": can't get cell index by row index " + aRowIdxes[i] +
-           " and column index: " + aColIdxes[i]  + ", " + e);
-    }
+        is(obtainedRowIdx, origRowIdx,
+           id + ": row  for index " + idx +" is not correct");
 
-    is(row, aRowIdxes[i], id + ": row  for index " + i +" is nor correct");
-    is(column, aColIdxes[i],
-       id + ": column  for index " + i +" is not correct");
-    is(index, i,
-       id + ": row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
+        // getColumnAtIndex
+        var origColIdx = colIdx;
+        while (origColIdx > 0 &&
+               aIdxes[rowIdx][colIdx] == aIdxes[rowIdx][origColIdx - 1])
+          origColIdx--;
 
-    try {
-      cellAcc = null;
-      cellAcc = tableAcc.cellRefAt(row, column);
-    } catch (e) { }
+        try {
+          obtainedColIdx = tableAcc.getColumnAtIndex(idx);
+        } catch (e) {
+          ok(false, id + ": can't get column index for cell index " + idx + "," + e);
+        }
 
-    ok(cellAcc,
-       id + ": Can't get cell accessible at row = " + row + ", column = " + column);
+        is(obtainedColIdx, origColIdx,
+           id + ": column  for index " + idx +" is not correct");
 
-    if (cellAcc) {
-      var attrs = cellAcc.attributes;
-      var strIdx = "";
+        // cellRefAt
+        try {
+          cellAcc = null;
+          cellAcc = tableAcc.cellRefAt(rowIdx, colIdx);
+        } catch (e) { }
+
+        ok(cellAcc,
+           id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
+
+        // 'table-cell-index' attribute
+        if (cellAcc) {
+          var attrs = cellAcc.attributes;
+          var strIdx = "";
+          try {
+            strIdx = attrs.getStringProperty("table-cell-index");
+          } catch (e) {
+            ok(false,
+               id + ": no cell index from object attributes on the cell accessible at index " + idx + ".");
+          }
+
+          if (strIdx) {
+            is (parseInt(strIdx), idx,
+                id + ": cell index from object attributes of cell accessible isn't corrent.");
+          }
+        }
+      }
+
+      // getIndexAt
       try {
-        strIdx = attrs.getStringProperty("table-cell-index");
+        obtainedIdx = tableAcc.getIndexAt(rowIdx, colIdx);
       } catch (e) {
-        ok(false,
-           id + ": no cell index from object attributes on the cell accessible at index " + index + ".");
+        obtainedIdx = -1;
       }
 
-      if (strIdx) {
-        is (parseInt(strIdx), index,
-            id + ": cell index from object attributes of cell accessible isn't corrent.");
-      }
+      is(obtainedIdx, idx,
+         id + ": row " + rowIdx + " /column " + colIdx + " and index " + obtainedIdx + " aren't inconsistent.");
     }
   }
 }

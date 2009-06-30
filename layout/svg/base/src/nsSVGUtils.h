@@ -250,6 +250,28 @@ public:
   static float CoordToFloat(nsPresContext *aPresContext,
                             nsSVGElement *aContent,
                             const nsStyleCoord &aCoord);
+
+  /*
+   * This does the actual job for GetCTM and GetScreenCTM. When called,
+   * this goes up the tree starting from aContent, until reaching to aElement.
+   * When aElement is null, this goes up to the outermost SVG parent. Then,
+   * this post-multiplies aCTM by each parent node's transformation matrix,
+   * going down the tree from aElement to aContent.
+   * This doesn't initialize aCTM. So callers usually should pass
+   * the identity matrix by aCTM.
+   */
+  static nsresult AppendTransformUptoElement(nsIContent *aContent,
+                                             nsIDOMSVGElement *aElement,
+                                             nsIDOMSVGMatrix * *aCTM);
+  /*
+   * Return the CTM
+   */
+  static nsresult GetCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM);
+
+  /*
+   * Return the screen CTM
+   */
+  static nsresult GetScreenCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM);
   /*
    * Return the nearest viewport element
    */

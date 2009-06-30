@@ -65,7 +65,8 @@ inline
 NS_IMETHODIMP
 Variant_base::GetDataType(PRUint16 *_type)
 {
-  *_type = nsIDataType::VTYPE_EMPTY;
+  NS_ENSURE_ARG_POINTER(_type);
+  *_type = nsIDataType::VTYPE_VOID;
   return NS_OK;
 }
 

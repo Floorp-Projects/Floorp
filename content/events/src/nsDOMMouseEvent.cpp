@@ -196,6 +196,15 @@ nsDOMMouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
   }
 
   if (relatedTarget) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(relatedTarget);
+    if (content && content->IsInNativeAnonymousSubtree() &&
+        !nsContentUtils::CanAccessNativeAnon()) {
+      relatedTarget = content->FindFirstNonNativeAnonymous();
+      if (!relatedTarget) {
+        return NS_OK;
+      }
+    }
+
     CallQueryInterface(relatedTarget, aRelatedTarget);
   }
   return NS_OK;

@@ -167,21 +167,25 @@ function test_get_data()
       do_check_neq(null, tuple);
 
       // Check that it's what we expect
+      do_check_false(tuple.getIsNull(0));
       do_check_eq(tuple.getResultByName("string"), tuple.getResultByIndex(0));
       do_check_eq(TEXT, tuple.getResultByName("string"));
       do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_TEXT,
                   tuple.getTypeOfIndex(0));
 
+      do_check_false(tuple.getIsNull(1));
       do_check_eq(tuple.getResultByName("number"), tuple.getResultByIndex(1));
       do_check_eq(REAL, tuple.getResultByName("number"));
       do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT,
                   tuple.getTypeOfIndex(1));
 
+      do_check_true(tuple.getIsNull(2));
       do_check_eq(tuple.getResultByName("nuller"), tuple.getResultByIndex(2));
       do_check_eq(null, tuple.getResultByName("nuller"));
       do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_NULL,
                   tuple.getTypeOfIndex(2));
 
+      do_check_false(tuple.getIsNull(3));
       var blobByName = tuple.getResultByName("blober");
       do_check_eq(BLOB.length, blobByName.length);
       var blobByIndex = tuple.getResultByIndex(3);
@@ -199,6 +203,7 @@ function test_get_data()
       do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_BLOB,
                   tuple.getTypeOfIndex(3));
 
+      do_check_false(tuple.getIsNull(4));
       do_check_eq(tuple.getResultByName("id"), tuple.getResultByIndex(4));
       do_check_eq(INTEGER, tuple.getResultByName("id"));
       do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,

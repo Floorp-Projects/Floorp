@@ -54,8 +54,6 @@
 #endif
 
 #ifdef MOZ_COMPOSITED_PLUGINS
-#include "nsPluginInstancePeer.h"
-
 extern "C" {
 #include <X11/extensions/Xdamage.h>
 #include <X11/extensions/Xcomposite.h>

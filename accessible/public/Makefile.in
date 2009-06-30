@@ -73,11 +73,5 @@ XPIDLSRCS = \
       nsIXBLAccessible.idl \
       $(NULL)
 
-ifdef MOZ_XUL
-XPIDLSRCS += \
-      nsIAccessibleTreeCache.idl \
-      $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 

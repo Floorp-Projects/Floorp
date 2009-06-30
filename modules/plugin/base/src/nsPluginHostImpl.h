@@ -51,7 +51,6 @@
 #include "nsIPlugin.h"
 #include "nsIPluginTag.h"
 #include "nsIPluginTagInfo2.h"
-#include "nsIPluginInstancePeer2.h"
 
 #include "nsPluginsDir.h"
 #include "nsPluginDirServiceProvider.h"
@@ -169,7 +168,6 @@ struct nsPluginInstanceTag
 {
   nsPluginInstanceTag*   mNext;
   char*                  mURL;
-  nsIPluginInstancePeer* mPeer;
   nsRefPtr<nsPluginTag>  mPluginTag;
   nsIPluginInstance*     mInstance;
   PRTime                 mllStopTime;
@@ -182,8 +180,7 @@ struct nsPluginInstanceTag
   nsPluginInstanceTag(nsPluginTag* aPluginTag,
                       nsIPluginInstance* aInstance, 
                       const char * url,
-                      PRBool aDefaultPlugin,
-                      nsIPluginInstancePeer *peer);
+                      PRBool aDefaultPlugin);
   ~nsPluginInstanceTag();
 
   void setStopped(PRBool stopped);
@@ -331,8 +328,7 @@ private:
   nsresult
   AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                           nsIPluginInstance* aInstance,
-                          nsIURI* aURL, PRBool aDefaultPlugin,
-                          nsIPluginInstancePeer *peer);
+                          nsIURI* aURL, PRBool aDefaultPlugin);
 
   nsresult
   FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged);

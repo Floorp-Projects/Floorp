@@ -246,6 +246,7 @@ NO_PKG_FILES += \
 	msmap* \
 	nm2tsv* \
 	nsinstall* \
+	nspr-config \
 	rebasedlls* \
 	res/samples \
 	res/throbber \
@@ -271,7 +272,7 @@ ifndef PACKAGER_NO_LIBS
 libs:: make-package
 endif
 
-DEFINES += -DDLL_PREFIX=$(DLL_PREFIX) -DDLL_SUFFIX=$(DLL_SUFFIX)
+DEFINES += -DDLL_PREFIX=$(DLL_PREFIX) -DDLL_SUFFIX=$(DLL_SUFFIX) -DBIN_SUFFIX=$(BIN_SUFFIX)
 
 ifdef MOZ_PKG_REMOVALS
 MOZ_PKG_REMOVALS_GEN = removed-files

@@ -317,6 +317,8 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug498897.html \
 		file_bug498897.html^headers^ \
 		file_bug498897.css \
+		test_bug493881.js \
+		test_bug493881.html \
 		$(NULL)
 # Disabled; see bug 492181
 #		test_plugin_freezing.html

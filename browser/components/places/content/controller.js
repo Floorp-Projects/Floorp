@@ -546,11 +546,14 @@ PlacesController.prototype = {
     if (selectiontype == "single" && aMetaData.length != 1)
       return false;
 
-    var forceHideRules = aMenuItem.getAttribute("forcehideselection").split("|");
-    for (var i = 0; i < aMetaData.length; ++i) {
-      for (var j=0; j < forceHideRules.length; ++j) {
-        if (forceHideRules[j] in aMetaData[i])
-          return false;
+    var forceHideAttr = aMenuItem.getAttribute("forcehideselection");
+    if (forceHideAttr) {
+      var forceHideRules = forceHideAttr.split("|");
+      for (var i = 0; i < aMetaData.length; ++i) {
+        for (var j=0; j < forceHideRules.length; ++j) {
+          if (forceHideRules[j] in aMetaData[i])
+            return false;
+        }
       }
     }
 

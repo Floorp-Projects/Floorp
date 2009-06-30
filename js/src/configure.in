@@ -5206,16 +5206,6 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
-# Used for LD_LIBRARY_PATH of run_viewer target
-LIBS_PATH=
-for lib_arg in $NSPR_LIBS $TK_LIBS; do
-  case $lib_arg in
-    -L* ) LIBS_PATH="${LIBS_PATH:+$LIBS_PATH:}"`expr $lib_arg : "-L\(.*\)"` ;;
-      * ) ;;
-  esac
-done
-AC_SUBST(LIBS_PATH)
-
 dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================
