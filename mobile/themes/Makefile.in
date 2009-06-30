@@ -50,11 +50,11 @@ include $(DEPTH)/config/autoconf.mk
 # Windows Mobile        wince
 #
 
+#ifdef WINCE
+DIRS = wince
+#else
 # default to hildon for desktop builds too
 DIRS = hildon
-
-ifdef WINCE
-DIRS = wince
-endif
+#endif
 
 include $(topsrcdir)/config/rules.mk
