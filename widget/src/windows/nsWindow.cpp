@@ -4388,8 +4388,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #if !defined(WINCE)
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
-    if (OnMouseWheel(msg, wParam, lParam, getWheelInfo, result, aRetValue))
-      return result;
+    {
+      // If OnMouseWheel returns true, the event was forwarded directly to another
+      // mozilla window message handler (ProcessMessage). In this case the return
+      // value of the forwarded event is in 'result' which we should return immediately.
+      // If OnMouseWheel returns false, OnMouseWheel processed the event internally.
+      // 'result' and 'aRetValue' will be set based on what we did with the event, so
+      // we should fall through.
+      if (OnMouseWheel(msg, wParam, lParam, getWheelInfo, result, aRetValue))
+        return result;
+    }
     break;
 #endif
 
@@ -5027,7 +5035,7 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
   // But if we process WM_MOUSEHWHEEL, we should return non-zero.
 
   if (result)
-    result = isVertical ? 0 : TRUE;
+    *aRetValue = isVertical ? 0 : TRUE;
   
   return PR_FALSE; // break;
 } 
