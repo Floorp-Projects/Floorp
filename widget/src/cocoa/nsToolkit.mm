@@ -74,7 +74,6 @@ static io_connect_t gRootPort = MACH_PORT_NULL;
 // object associated with a given thread...
 static PRUintn gToolkitTLSIndex = 0;
 
-
 nsToolkit::nsToolkit()
 : mInited(false)
 , mSleepWakeNotificationRLS(nsnull)
@@ -84,7 +83,6 @@ nsToolkit::nsToolkit()
 {
 }
 
-
 nsToolkit::~nsToolkit()
 {
   RemoveSleepWakeNotifcations();
@@ -93,9 +91,7 @@ nsToolkit::~nsToolkit()
   PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
-
 
 NS_IMETHODIMP
 nsToolkit::Init(PRThread * aThread)
@@ -110,12 +106,10 @@ nsToolkit::Init(PRThread * aThread)
   return NS_OK;
 }
 
-
 nsToolkit* NS_CreateToolkitInstance()
 {
   return new nsToolkit();
 }
-
 
 void
 nsToolkit::PostSleepWakeNotification(const char* aNotification)
@@ -124,7 +118,6 @@ nsToolkit::PostSleepWakeNotification(const char* aNotification)
   if (observerService)
     observerService->NotifyObservers(nsnull, aNotification, nsnull);
 }
-
 
 // http://developer.apple.com/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/PowerMgmt/chapter_10_section_3.html
 static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural_t messageType, void * messageArgument)
@@ -157,7 +150,6 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 nsresult
 nsToolkit::RegisterForSleepWakeNotifcations()
 {
@@ -183,7 +175,6 @@ nsToolkit::RegisterForSleepWakeNotifcations()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 void
 nsToolkit::RemoveSleepWakeNotifcations()
 {
@@ -200,7 +191,6 @@ nsToolkit::RemoveSleepWakeNotifcations()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // We shouldn't do anything here.  See RegisterForAllProcessMouseEvents() for
 // the reason why.
@@ -220,7 +210,6 @@ static NSPoint ConvertCGGlobalToCocoaScreen(CGPoint aPoint)
   cocoaPoint.y = nsCocoaUtils::FlippedScreenY(aPoint.y);
   return cocoaPoint;
 }
-
 
 // Since our event tap is "listen only", events arrive here a little after
 // they've already been processed.
@@ -253,7 +242,6 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NULL);
 }
-
 
 // Cocoa Firefox's use of custom context menus requires that we explicitly
 // handle mouse events from other processes that the OS handles
@@ -326,7 +314,6 @@ nsToolkit::RegisterForAllProcessMouseEvents()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void
 nsToolkit::UnregisterAllProcessMouseEventHandlers()
 {
@@ -353,7 +340,6 @@ nsToolkit::UnregisterAllProcessMouseEventHandlers()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // Return the nsIToolkit for the current thread.  If a toolkit does not
 // yet exist, then one will be created...
@@ -395,7 +381,6 @@ NS_IMETHODIMP NS_GetCurrentToolkit(nsIToolkit* *aResult)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 long nsToolkit::OSXVersion()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -414,12 +399,10 @@ long nsToolkit::OSXVersion()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-
 PRBool nsToolkit::OnLeopardOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_5_HEX) ? PR_TRUE : PR_FALSE;
 }
-
 
 // An alternative to [NSObject poseAsClass:] that isn't deprecated on OS X
 // Leopard and is available to 64-bit binaries on Leopard and above.  Based on

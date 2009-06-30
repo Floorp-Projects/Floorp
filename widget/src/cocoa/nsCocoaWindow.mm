@@ -97,12 +97,10 @@ extern BOOL                gSomeMenuBarPainted;
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
-
 // A note on testing to see if your object is a sheet...
 // |mWindowType == eWindowType_sheet| is true if your gecko nsIWidget is a sheet
 // widget - whether or not the sheet is showing. |[mWindow isSheet]| will return
 // true *only when the sheet is actually showing*. Choose your test wisely.
-
 
 // roll up any popup windows
 static void RollUpPopups()
@@ -110,7 +108,6 @@ static void RollUpPopups()
   if (gRollupListener && gRollupWidget)
     gRollupListener->Rollup(nsnull, nsnull);
 }
-
 
 nsCocoaWindow::nsCocoaWindow()
 : mParent(nsnull)
@@ -126,7 +123,6 @@ nsCocoaWindow::nsCocoaWindow()
 {
 
 }
-
 
 // Under unusual circumstances, an nsCocoaWindow object can be destroyed
 // before the nsChildView objects it contains are destroyed.  But this will
@@ -146,7 +142,6 @@ static void TellNativeViewsGoodbye(NSView *aNativeView)
     TellNativeViewsGoodbye((NSView *)[immediateSubviews objectAtIndex:i]);
 }
 
-
 void nsCocoaWindow::DestroyNativeWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -159,7 +154,6 @@ void nsCocoaWindow::DestroyNativeWindow()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 nsCocoaWindow::~nsCocoaWindow()
 {
@@ -199,7 +193,6 @@ nsCocoaWindow::~nsCocoaWindow()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // Very large windows work in Cocoa, but can take a long time to
 // process (multiple minutes), during which time the system is
 // unresponsive and seems hung. Although it's likely that windows
@@ -221,7 +214,6 @@ static bool WindowSizeAllowed(PRInt32 aWidth, PRInt32 aHeight)
   return true;
 }
 
-
 // Some applications like Camino use native popup windows
 // (native context menus, native tooltips)
 static PRBool UseNativePopupWindows()
@@ -234,7 +226,6 @@ static PRBool UseNativePopupWindows()
   nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativePopupWindows);
   return (NS_SUCCEEDED(rv) && useNativePopupWindows);
 }
-
 
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
@@ -279,7 +270,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle)
 {
   PRBool allOrDefault = (aBorderStyle == eBorderStyle_all ||
@@ -301,7 +291,6 @@ static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle)
 
   return mask;
 }
-
 
 nsresult nsCocoaWindow::CreateNativeWindow(const nsIntRect &aRect,
                                            nsBorderStyle aBorderStyle)
@@ -412,7 +401,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const nsIntRect &aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
                              EVENT_CALLBACK aHandleEventFunction,
                              nsIDeviceContext *aContext,
@@ -440,7 +428,6 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // Create a nsCocoaWindow using a native window provided by the application
 NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
                       const nsIntRect &aRect,
@@ -454,7 +441,6 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
                         aAppShell, aToolkit, aInitData, aNativeWindow));
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
                       const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -467,7 +453,6 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
                         aAppShell, aToolkit, aInitData, nsnull));
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::Destroy()
 {
   if (mPopupContentView)
@@ -479,7 +464,6 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   return NS_OK;
 }
 
-
 nsIWidget* nsCocoaWindow::GetSheetWindowParent(void)
 {
   if (mWindowType != eWindowType_sheet)
@@ -489,7 +473,6 @@ nsIWidget* nsCocoaWindow::GetSheetWindowParent(void)
     parent = static_cast<nsCocoaWindow*>(parent->mParent);
   return parent;
 }
-
 
 void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 {
@@ -521,7 +504,6 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -531,7 +513,6 @@ NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
 {
@@ -601,7 +582,6 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
   }
   return NS_OK;
 }
-
 
 // Hide or show this window
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
@@ -839,7 +819,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -853,7 +832,6 @@ void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -862,7 +840,6 @@ nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(eTransparencyOpaque);
 }
-
 
 // This is called from nsMenuPopupFrame when making a popup transparent.
 // For other window types, nsChildView::SetTransparencyMode is used.
@@ -888,7 +865,6 @@ void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
 {
   nsBaseWidget::AddEventListener(aListener);
@@ -899,12 +875,10 @@ NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::Enable(PRBool aState)
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::IsEnabled(PRBool *aState)
 {
@@ -913,13 +887,11 @@ NS_IMETHODIMP nsCocoaWindow::IsEnabled(PRBool *aState)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRBool aAllowSlop,
                                                PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 {
@@ -934,14 +906,12 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
-
 // Position the window behind the given window
 NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                      nsIWidget *aWidget, PRBool aActivate)
 {
   return NS_OK;
 }
-
 
 // Note bug 278777, we need to update state when the window is unminimized
 // from the dock by users.
@@ -976,7 +946,6 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
@@ -1024,7 +993,6 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1038,7 +1006,6 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1050,12 +1017,10 @@ NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 PRBool nsCocoaWindow::OnPaint(nsPaintEvent &event)
 {
   return PR_TRUE; // don't dispatch the update event
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 {
@@ -1070,7 +1035,6 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
 {
   if (mPopupContentView)
@@ -1078,7 +1042,6 @@ NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynch
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::Invalidate(PRBool aIsSynchronous)
 {
@@ -1088,7 +1051,6 @@ NS_IMETHODIMP nsCocoaWindow::Invalidate(PRBool aIsSynchronous)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::Update()
 {
   if (mPopupContentView)
@@ -1096,7 +1058,6 @@ NS_IMETHODIMP nsCocoaWindow::Update()
 
   return NS_OK;
 }
-
 
 // Pass notification of some drag event to Gecko
 //
@@ -1109,7 +1070,6 @@ PRBool nsCocoaWindow::DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt1
 {
   return PR_FALSE;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
 {
@@ -1126,7 +1086,6 @@ NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retval)
 {
@@ -1151,13 +1110,11 @@ NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retva
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::GetRealParent(nsIWidget** parent)
 {
   *parent = mParent;
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::GetIsSheet(PRBool* isSheet)
 {
@@ -1165,19 +1122,16 @@ NS_IMETHODIMP nsCocoaWindow::GetIsSheet(PRBool* isSheet)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::GetSheetWindowParent(NSWindow** sheetWindowParent)
 {
   *sheetWindowParent = mSheetWindowParent;
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::ResetInputState()
 {
   return NS_OK;
 }
-
 
 // Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP 
@@ -1199,7 +1153,6 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   return NS_OK;
 }
-
 
 void
 nsCocoaWindow::DispatchSizeModeEvent(nsSizeMode aSizeMode)
@@ -1238,7 +1191,6 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
 {
   if (mMenuBar)
@@ -1255,7 +1207,6 @@ void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
     mMenuBar->Paint();
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
 {
   if (mPopupContentView) {
@@ -1271,7 +1222,6 @@ NS_IMETHODIMP nsCocoaWindow::SetFocus(PRBool aState)
   return NS_OK;
 }
 
-
 nsIntPoint nsCocoaWindow::WidgetToScreenOffset()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -1283,12 +1233,10 @@ nsIntPoint nsCocoaWindow::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
 }
 
-
 nsMenuBarX* nsCocoaWindow::GetMenuBar()
 {
   return mMenuBar;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
                                                  PRBool aDoCapture, 
@@ -1332,7 +1280,6 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1359,7 +1306,6 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
 {
@@ -1404,14 +1350,12 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 gfxASurface* nsCocoaWindow::GetThebesSurface()
 {
   if (mPopupContentView)
     return mPopupContentView->GetThebesSurface();
   return nsnull;
 }
-
 
 NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()
 {
@@ -1425,7 +1369,6 @@ NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1437,7 +1380,6 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 // Callback used by the default titlebar and toolbar shading.
 // *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
@@ -1459,9 +1401,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   aOut[3] = 1.0f;
 }
 
-
 @implementation WindowDelegate
-
 
 // We try to find a gecko menu bar to paint. If one does not exist, just paint
 // the application menu by itself so that a window doesn't have some other
@@ -1510,7 +1450,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -1523,14 +1462,12 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
 {
   RollUpPopups();
   
   return proposedFrameSize;
 }
-
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
@@ -1539,7 +1476,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 
   mGeckoWindow->ReportSizeEvent();
 }
-
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
@@ -1558,7 +1494,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)windowDidResignMain:(NSNotification *)aNotification
 {
   RollUpPopups();
@@ -1574,7 +1509,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   }
 }
 
-
 - (void)windowDidBecomeKey:(NSNotification *)aNotification
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1585,7 +1519,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 - (void)windowDidResignKey:(NSNotification *)aNotification
 {
@@ -1600,12 +1533,10 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)windowWillMove:(NSNotification *)aNotification
 {
   RollUpPopups();
 }
-
 
 - (void)windowDidMove:(NSNotification *)aNotification
 {
@@ -1620,7 +1551,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   mGeckoWindow->DispatchEvent(&guiEvent, status);
 }
 
-
 - (BOOL)windowShouldClose:(id)sender
 {
   // We only want to send NS_XUL_CLOSE and let gecko close the window
@@ -1631,18 +1561,15 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   return NO; // gecko will do it
 }
 
-
 - (void)windowWillClose:(NSNotification *)aNotification
 {
   RollUpPopups();
 }
 
-
 - (void)windowWillMiniaturize:(NSNotification *)aNotification
 {
   RollUpPopups();
 }
-
 
 - (void)windowDidMiniaturize:(NSNotification *)aNotification
 {
@@ -1650,13 +1577,11 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
     mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Minimized);
 }
 
-
 - (void)windowDidDeminiaturize:(NSNotification *)aNotification
 {
   if (mGeckoWindow)
     mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Normal);
 }
-
 
 - (void)sendFocusEvent:(PRUint32)eventType
 {
@@ -1668,7 +1593,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   focusGuiEvent.time = PR_IntervalNow();
   mGeckoWindow->DispatchEvent(&focusGuiEvent, status);
 }
-
 
 - (void)didEndSheet:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
@@ -1689,18 +1613,15 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (nsCocoaWindow*)geckoWidget
 {
   return mGeckoWindow;
 }
 
-
 - (PRBool)toplevelActiveState
 {
   return mToplevelActiveState;
 }
-
 
 - (void)sendToplevelActivateEvents
 {
@@ -1709,7 +1630,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
     mToplevelActiveState = PR_TRUE;
   }
 }
-
 
 - (void)sendToplevelDeactivateEvents
 {
@@ -1720,7 +1640,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 }
 
 @end
-
 
 // Category on NSWindow so callers can use the same method on both ToolbarWindows
 // and NSWindows for accessing the background color.
@@ -1737,13 +1656,11 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 
 @end
 
-
 @interface ToolbarWindow(Private)
 
 - (void)redrawTitlebar;
 
 @end
-
 
 // This class allows us to have a "unified toolbar" style window. It works like this:
 // 1) We set the window's style to textured.
@@ -1805,7 +1722,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 - (void)dealloc
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1815,7 +1731,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // We don't provide our own implementation of -backgroundColor because NSWindow
 // looks at it, apparently. This is here to keep someone from messing with our
@@ -1829,7 +1744,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // If you need to get at the background color of the window (in the traditional
 // sense) use this method instead.
 - (NSColor*)windowBackgroundColor
@@ -1840,7 +1754,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
 
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
@@ -1864,7 +1777,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   [self redrawTitlebar];
 }
 
-
 - (float)unifiedToolbarHeight
 {
   return mUnifiedToolbarHeight;
@@ -1886,7 +1798,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 {
   return YES;
 }
-
 
 // Dispatch a toolbar pill button clicked message to Gecko.
 - (void)_toolbarPillButtonClicked:(id)sender
@@ -1997,7 +1908,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 - (void)dealloc
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2068,7 +1978,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)setFill
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2094,7 +2003,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
 {
@@ -2111,18 +2019,15 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (NSColor*)activeTitlebarColor
 {
   return mActiveTitlebarColor;
 }
 
-
 - (NSColor*)inactiveTitlebarColor
 {
   return mInactiveTitlebarColor;
 }
-
 
 - (void)setBackgroundColor:(NSColor*)aColor
 {
@@ -2134,24 +2039,20 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (NSColor*)backgroundColor
 {
   return mBackgroundColor;
 }
-
 
 - (NSWindow*)window
 {
   return mWindow;
 }
 
-
 - (NSString*)colorSpaceName
 {
   return NSDeviceRGBColorSpace;
 }
-
 
 - (void)set
 {
@@ -2163,7 +2064,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 }
 
 @end
-
 
 @implementation PopupWindow
 
@@ -2295,7 +2195,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
 {
@@ -2308,18 +2207,15 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 - (BOOL)isContextMenu
 {
   return mIsContextMenu;
 }
 
-
 - (void)setIsContextMenu:(BOOL)flag
 {
   mIsContextMenu = flag;
 }
-
 
 @end
 
@@ -2335,7 +2231,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 {
   return YES;
 }
-
 
 - (void)sendEvent:(NSEvent *)anEvent
 {
@@ -2375,7 +2270,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
   [super sendEvent:anEvent];
 }
-
 
 // Apple's doc on this method says that the NSWindow class's default is not to
 // become main if the window isn't "visible" -- so we should replicate that
