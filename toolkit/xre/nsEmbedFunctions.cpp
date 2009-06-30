@@ -68,6 +68,7 @@
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginThreadChild.h"
+#include "TabThread.h"
 
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
@@ -75,6 +76,7 @@ using mozilla::ipc::GeckoThread;
 using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::plugins::PluginThreadChild;
+using mozilla::tabs::TabThread;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -213,6 +215,8 @@ XRE_InitChildProcess(int aArgc,
       mainThread = new GeckoThread();
     else if (!strcmp("PluginThreadChild", aMainThreadClass))
       mainThread = new PluginThreadChild();
+    else if (!strcmp("TabThread", aMainThreadClass))
+      mainThread = new TabThread();
     else {
         NS_RUNTIMEABORT("Unknown main thread class");
     }

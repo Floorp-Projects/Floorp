@@ -84,6 +84,7 @@ DIRS += \
 ifdef MOZ_IPC
 DIRS += \
   plugins \
+  ipc \
   $(NULL)
 endif
 

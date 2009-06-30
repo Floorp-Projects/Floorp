@@ -48,9 +48,15 @@
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
 #include "nsIURI.h"
+#include "nsAutoPtr.h"
 
 class nsIContent;
 class nsIURI;
+namespace mozilla {
+  namespace tabs {
+    class TabParent;
+  }
+}
 
 class nsFrameLoader : public nsIFrameLoader
 {
@@ -61,7 +67,9 @@ public:
     mIsTopLevelContent(PR_FALSE),
     mDestroyCalled(PR_FALSE),
     mNeedsAsyncDestroy(PR_FALSE),
-    mInSwap(PR_FALSE)
+    mInSwap(PR_FALSE),
+    mChildProcess(nsnull),
+    mTriedNewProcess(PR_FALSE)
   {}
 
   ~nsFrameLoader() {
@@ -89,6 +97,9 @@ private:
   NS_HIDDEN_(void) GetURL(nsString& aURL);
   nsresult CheckURILoad(nsIURI* aURI);
 
+  // True means new process started; nothing else to do
+  PRBool TryNewProcess();
+
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
@@ -97,6 +108,10 @@ private:
   PRPackedBool mDestroyCalled : 1;
   PRPackedBool mNeedsAsyncDestroy : 1;
   PRPackedBool mInSwap : 1;
+
+  // XXX leaking
+  mozilla::tabs::TabParent* mChildProcess;
+  PRBool mTriedNewProcess;
 };
 
 #endif
