@@ -2582,6 +2582,7 @@ SessionStoreService.prototype = {
   _getWindowDimension: function sss_getWindowDimension(aWindow, aAttribute) {
     if (aAttribute == "sizemode") {
       switch (aWindow.windowState) {
+      case aWindow.STATE_FULLSCREEN:
       case aWindow.STATE_MAXIMIZED:
         return "maximized";
       case aWindow.STATE_MINIMIZED:
