@@ -49,6 +49,7 @@ _TEST_FILES = \
 		test_npruntime.xul   \
 		test_privatemode.xul \
 		test_wmode.xul \
+		test_npapi_timers.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

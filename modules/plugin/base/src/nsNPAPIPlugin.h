@@ -212,6 +212,12 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
                        char **username, uint32_t *ulen, char **password,
                        uint32_t *plen);
 
+uint32_t NP_CALLBACK
+_scheduletimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
+
+void NP_CALLBACK
+_unscheduletimer(NPP instance, uint32_t timerID);
+
 PR_END_EXTERN_C
 
 const char *
