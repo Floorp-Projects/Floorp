@@ -58,9 +58,9 @@ namespace nanojit
 		// flags; upper bits reserved
 		LIR64	= 0x40,			// result is double or quad
 		
-#define OPDEF(op, number, args) \
+#define OPDEF(op, number, args, repkind) \
         LIR_##op = (number),
-#define OPDEF64(op, number, args) \
+#define OPDEF64(op, number, args, repkind) \
         LIR_##op = ((number) | LIR64),
 #include "LIRopcode.tbl"
         LIR_sentinel
@@ -70,7 +70,6 @@ namespace nanojit
 
 	#if defined NANOJIT_64BIT
 	#define LIR_ldp     LIR_ldq
-	#define LIR_stp     LIR_stq
     #define LIR_piadd   LIR_qiadd
     #define LIR_piand   LIR_qiand
     #define LIR_pilsh   LIR_qilsh
@@ -78,7 +77,6 @@ namespace nanojit
     #define LIR_pior    LIR_qior
 	#else
 	#define LIR_ldp     LIR_ld
-	#define LIR_stp     LIR_st
     #define LIR_piadd   LIR_add
     #define LIR_piand   LIR_and
     #define LIR_pilsh   LIR_lsh
@@ -148,13 +146,6 @@ namespace nanojit
         return (op & ~LIR64) == LIR_ret;
     }
 
-	// Sun Studio requires explicitly declaring signed int bit-field
-	#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-	#define _sign_int signed int
-	#else
-	#define _sign_int int32_t
-	#endif
-
     // The opcode is not logically part of the Reservation, but we include it
     // in this struct to ensure that opcode plus the Reservation fits in a
     // single word.  Yuk.
@@ -163,7 +154,7 @@ namespace nanojit
         uint32_t arIndex:16;    // index into stack frame.  displ is -4*arIndex
         Register reg:7;         // register UnknownReg implies not in register
         uint32_t used:1;        // when set, the reservation is active
-        LOpcode  code:8;
+        LOpcode  opcode:8;
 
 		inline void init() {
 			reg = UnknownReg;
@@ -171,107 +162,425 @@ namespace nanojit
 			used = 1;
 		}
 
-		inline void clear()
-		{
+        inline void clear() {
 			used = 0;
 		}
 	};
 
-    // Low-level Instruction.  4 words per instruction -- it's important this
-    // doesn't change unintentionally, so it is checked in LIR.cpp by an
-    // assertion in initOpcodeAndClearResv().
-    // The first word is the same for all LIns kinds;  the last three differ.
+    //-----------------------------------------------------------------------
+    // Low-level instructions.  This is a bit complicated, because we have a
+    // variable-width representation to minimise space usage.
+    //
+    // - Instruction size is always an integral multiple of word size.
+    //
+    // - Every instruction has at least one word, holding the opcode and the
+    //   reservation info.  That word is in class LIns.
+    //
+    // - Beyond that, most instructions have 1, 2 or 3 extra words.  These
+    //   extra words are in classes LInsOp1, LInsOp2, etc (collectively called
+    //   "LInsXYZ" in what follows).  Each LInsXYZ class also contains a word,
+    //   accessible by the 'ins' member, which holds the LIns data;  its type
+    //   is void* (which is the same size as LIns) rather than LIns to avoid a
+    //   recursive dependency between LIns and LInsXYZ.
+    //
+    // - LIR is written forward, but read backwards.  When reading backwards,
+    //   in order to find the opcode, it must be in a predictable place in the
+    //   LInsXYZ isn't affected by instruction width.  Therefore, the LIns
+    //   word (which contains the opcode) is always the *last* word in an
+    //   instruction.
+    //
+    // - Each instruction is created by casting pre-allocated bytes from a
+    //   LirBuffer to the LInsXYZ type.  Therefore there are no constructors
+    //   for LIns or LInsXYZ.
+    //
+    // - The standard handle for an instruction is a LIns*.  This actually
+    //   points to the LIns word, ie. to the final word in the instruction.
+    //   This is a bit odd, but it allows the instruction's opcode to be
+    //   easily accessed.  Once you've looked at the opcode and know what kind
+    //   of instruction it is, if you want to access any of the other words,
+    //   you need to use toLInsXYZ(), which takes the LIns* and gives you an
+    //   LInsXYZ*, ie. the pointer to the actual start of the instruction's
+    //   bytes.  From there you can access the instruction-specific extra
+    //   words.
+    //
+    // - However, from outside class LIns, LInsXYZ isn't visible, nor is
+    //   toLInsXYZ() -- from outside LIns, all LIR instructions are handled
+    //   via LIns pointers and get/set methods are used for all LIns/LInsXYZ
+    //   accesses.  In fact, all data members in LInsXYZ are private and can
+    //   only be accessed by LIns, which is a friend class.  The only thing
+    //   anyone outside LIns can do with a LInsXYZ is call getLIns().
+    //
+    // - An example Op2 instruction and the likely pointers to it (each line
+    //   represents a word, and pointers to a line point to the start of the
+    //   word on that line):
+    //
+    //      [ oprnd_2         <-- LInsOp2* insOp2 == toLInsOp2(ins)
+    //        oprnd_1
+    //        opcode + resv ] <-- LIns* ins
+    //
+    // - LIR_skip instructions are more complicated.  They allow an arbitrary
+    //   blob of data (the "payload") to be placed in the LIR stream.  The
+    //   size of the payload is always a multiple of the word size.  A skip
+    //   instruction's operand points to the previous instruction, which lets
+    //   the payload be skipped over when reading backwards.  Here's an
+    //   example of a skip instruction with a 3-word payload preceded by an
+    //   LInsOp1:
+    //
+    //      [ oprnd_1
+    //  +->   opcode + resv           ]
+    //  |   [ data
+    //  |     data
+    //  |     data
+    //  +---- prevLIns                  <-- LInsSk* insSk == toLInsSk(ins)
+    //        opcode==LIR_skip + resv ] <-- LIns* ins
+    //
+    //   Skips are also used to link code pages.  If the first instruction on
+    //   a page isn't a LIR_start, it will be a skip, and the skip's operand
+    //   will point to the last LIns on the previous page.  In this case there
+    //   isn't a payload as such;  in fact, the previous page might be at a
+    //   higher address, ie. the operand might point forward rather than
+    //   backward.
+    //
+    //   LInsSk has the same layout as LInsOp1, but we represent it as a
+    //   different class because there are some places where we treat
+    //   skips specially and so having it separate seems like a good idea.
+    //
+    // - Call instructions (LIR_call, LIR_fcall, LIR_calli, LIR_fcalli) are
+    //   also more complicated.  They are preceded by the arguments to the
+    //   call, which are laid out in reverse order.  For example, a call with
+    //   3 args will look like this:
+    //
+    //      [ arg #2
+    //        arg #1
+    //        arg #0
+    //        argc            <-- LInsC insC == toLInsC(ins)
+    //        ci
+    //        opcode + resv ] <-- LIns* ins 
+    //
+    // - Various things about the size and layout of LIns and LInsXYZ are
+    //   statically checked in staticSanityCheck().  In particular, this is
+    //   worthwhile because there's nothing that guarantees that all the
+    //   LInsXYZ classes have a size that is a multiple of word size (but in
+    //   practice all sane compilers use a layout that results in this).  We
+    //   also check that every LInsXYZ is word-aligned in
+    //   LirBuffer::makeRoom();  this seems sensible to avoid potential
+    //   slowdowns due to misalignment.  It relies on pages themselves being
+    //   word-aligned, which is extremely likely.
+    //
+    // - There is an enum, LInsRepKind, with one member for each of the
+    //   LInsXYZ kinds.  Each opcode is categorised with its LInsRepKind value
+    //   in LIRopcode.tbl, and this is used in various places.
+    //-----------------------------------------------------------------------
+
+    enum LInsRepKind {
+        // LRK_XYZ corresponds to class LInsXYZ.
+        LRK_Op0,
+        LRK_Op1,
+        LRK_Op2,
+        LRK_Sti,
+        LRK_Sk,
+        LRK_C,
+        LRK_P,
+        LRK_I,
+        LRK_I64,
+        LRK_None    // this one is used for unused opcode numbers
+    };
+
+    // 0-operand form.  Used for LIR_start and LIR_label.
+    class LInsOp0
+    {
+    private:
+        friend class LIns;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // 1-operand form.  Used for LIR_ret, LIR_ov, unary arithmetic/logic ops,
+    // etc.
+    class LInsOp1
+    {
+    private:
+        friend class LIns;
+
+        // Nb: oprnd_1 position relative to 'ins' must match that in
+        // LIns{Op2,Sti}.  Checked in LirBufWriter::LirBufWriter().
+        LIns*       oprnd_1;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // 2-operand form.  Used for loads, guards, branches, comparisons, binary
+    // arithmetic/logic ops, etc.
+    class LInsOp2
+    {
+    private:
+        friend class LIns;
+
+        // Nb: oprnd_{1,2} position relative to 'ins' must match that in
+        // LIns{Op1,Sti}.  Checked in LirBufWriter::LirBufWriter().
+        LIns*       oprnd_2;
+
+        LIns*       oprnd_1;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // Used for LIR_sti and LIR_stqi.
+    class LInsSti
+    {
+    private:
+        friend class LIns;
+
+        int32_t     disp;
+
+        // Nb: oprnd_{1,2} position relative to 'ins' must match that in
+        // LIns{Op1,Op2}.  Checked in LIns::staticSanityCheck().
+        LIns*       oprnd_2;
+
+        LIns*       oprnd_1;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // Used for LIR_skip.
+    class LInsSk
+    {
+    private:
+        friend class LIns;
+
+        LIns*       prevLIns;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // Used for all variants of LIR_call.
+    class LInsC
+    {
+    private:
+        friend class LIns;
+
+        uintptr_t   argc:8;
+
+        const CallInfo* ci;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // Used for LIR_param.
+    class LInsP
+    {
+    private:
+        friend class LIns;
+
+        uintptr_t   arg:8;
+        uintptr_t   kind:8;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // Used for LIR_int and LIR_alloc.
+    class LInsI
+    {
+    private:
+        friend class LIns;
+
+        int32_t     imm32;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // Used for LIR_quad.
+    class LInsI64
+    {
+    private:
+        friend class LIns;
+
+        int32_t     imm64_0;
+
+        int32_t     imm64_1;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // Used only as a placeholder for OPDEF macros for unused opcodes in
+    // LIRopcode.tbl.
+    class LInsNone
+    {
+    };
+
 	class LIns
 	{
-        // 2-operand form.  Used for most LIns kinds, including LIR_skip (for
-        // which oprnd_1 is the target).
-		struct u_type
-		{
-            // Nb: oprnd_1 and oprnd_2 layout must match that in sti_type
-            // because oprnd1() and oprnd2() are used for both.
-            LIns*       oprnd_1;
-
-            LIns*       oprnd_2;  
-		};
-
-        // Used for LIR_sti and LIR_stqi.
-        struct sti_type
-        {
-            // Nb: oprnd_1 and oprnd_2 layout must match that in u_type
-            // because oprnd1() and oprnd2() are used for both.
-            LIns*       oprnd_1;
-
-            LIns*       oprnd_2;  
-
-            int32_t     disp;
-        };
-
-        // Used for LIR_call and LIR_param.
-		struct c_type
-		{
-            uintptr_t   imm8a:8;    // call: 0 (not used);  param: arg
-            uintptr_t   imm8b:8;    // call: argc;  param: kind
-
-            const CallInfo* ci;     // call: callInfo;  param: NULL (not used)
-		};
-
-        // Used for LIR_int.
-		struct i_type
-		{
-            int32_t     imm32;
-		};
-
-        // Used for LIR_quad.
-        struct i64_type
-		{
-            int32_t     imm64_0;
-            int32_t     imm64_1;
-		};
-
-        #undef _sign_int
-		
-        // 1st word: fields shared by all LIns kinds.  The reservation fields
+    private:
+        // Last word: fields shared by all LIns kinds.  The reservation fields
         // are read/written during assembly.
-        Reservation firstWord;
+        Reservation lastWord;
 
-        // 2nd, 3rd and 4th words: differ depending on the LIns kind.
-		union
-		{
-            u_type      u;
-            c_type      c;
-            i_type      i;
-            i64_type    i64;
-            sti_type    sti;
-		};
+        // LIns-to-LInsXYZ converters.
+        LInsOp0* toLInsOp0() const { return (LInsOp0*)( uintptr_t(this+1) - sizeof(LInsOp0) ); }
+        LInsOp1* toLInsOp1() const { return (LInsOp1*)( uintptr_t(this+1) - sizeof(LInsOp1) ); }
+        LInsOp2* toLInsOp2() const { return (LInsOp2*)( uintptr_t(this+1) - sizeof(LInsOp2) ); }
+        LInsSti* toLInsSti() const { return (LInsSti*)( uintptr_t(this+1) - sizeof(LInsSti) ); }
+        LInsSk*  toLInsSk()  const { return (LInsSk* )( uintptr_t(this+1) - sizeof(LInsSk ) ); }
+        LInsC*   toLInsC()   const { return (LInsC*  )( uintptr_t(this+1) - sizeof(LInsC  ) ); }
+        LInsP*   toLInsP()   const { return (LInsP*  )( uintptr_t(this+1) - sizeof(LInsP  ) ); }
+        LInsI*   toLInsI()   const { return (LInsI*  )( uintptr_t(this+1) - sizeof(LInsI  ) ); }
+        LInsI64* toLInsI64() const { return (LInsI64*)( uintptr_t(this+1) - sizeof(LInsI64) ); }
 
-	public:
+        // This is never called, but that's ok because it contains only static
+        // assertions.
+        void staticSanityCheck()
+        {
+            // LIns must be word-sized.
+            NanoStaticAssert(sizeof(LIns) == 1*sizeof(void*));
+
+            // LInsXYZ have expected sizes too.
+            NanoStaticAssert(sizeof(LInsOp0) == 1*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsOp1) == 2*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsOp2) == 3*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsSti) == 4*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsSk)  == 2*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsC)   == 3*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsP)   == 2*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsI)   == 2*sizeof(void*));
+        #if defined NANOJIT_64BIT
+            NanoStaticAssert(sizeof(LInsI64) == 2*sizeof(void*));
+        #else
+            NanoStaticAssert(sizeof(LInsI64) == 3*sizeof(void*));
+        #endif
+
+            // oprnd_1 must be in the same position in LIns{Op1,Op2,Sti}
+            // because oprnd1() is used for all of them.
+            NanoStaticAssert( (offsetof(LInsOp1, ins) - offsetof(LInsOp1, oprnd_1)) ==
+                              (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) );
+            NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) ==
+                              (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_1)) );
+
+            // oprnd_2 must be in the same position in LIns{Op2,Sti}
+            // because oprnd2() is used for both of them.
+            NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_2)) ==
+                              (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_2)) );
+        }
+
+    public:
+        void initLInsOp0(LOpcode opcode) {
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            NanoAssert(isLInsOp0());
+        }
+        void initLInsOp1(LOpcode opcode, LIns* oprnd1) {
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            toLInsOp1()->oprnd_1 = oprnd1;
+            NanoAssert(isLInsOp1());
+        }
+        void initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2) {
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            toLInsOp2()->oprnd_1 = oprnd1;
+            toLInsOp2()->oprnd_2 = oprnd2;
+            NanoAssert(isLInsOp2());
+        }
+        void initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d) {
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            toLInsSti()->oprnd_1 = val;
+            toLInsSti()->oprnd_2 = base;
+            toLInsSti()->disp = d;
+            NanoAssert(isLInsSti());
+        }
+        void initLInsSk(LIns* prevLIns) {
+            lastWord.clear();
+            lastWord.opcode = LIR_skip;
+            toLInsSk()->prevLIns = prevLIns;
+            NanoAssert(isLInsSk());
+        }
+        // Nb: this does NOT initialise the arguments.  That must be done
+        // separately.
+        void initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci) {
+            NanoAssert(isU8(argc));
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            toLInsC()->argc = argc;
+            toLInsC()->ci = ci;
+            NanoAssert(isLInsC());
+        }
+        void initLInsP(int32_t arg, int32_t kind) {
+            lastWord.clear();
+            lastWord.opcode = LIR_param;
+            NanoAssert(isU8(arg) && isU8(kind));
+            toLInsP()->arg = arg;
+            toLInsP()->kind = kind;
+            NanoAssert(isLInsP());
+        }
+        void initLInsI(LOpcode opcode, int32_t imm32) {
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            toLInsI()->imm32 = imm32;
+            NanoAssert(isLInsI());
+        }
+        void initLInsI64(LOpcode opcode, int64_t imm64) {
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            toLInsI64()->imm64_0 = int32_t(imm64);
+            toLInsI64()->imm64_1 = int32_t(imm64 >> 32);
+            NanoAssert(isLInsI64());
+        }
+
         LIns* oprnd1() const {
-            NanoAssert(isOp1() || isOp2() || isLoad() || isStore());
-            return u.oprnd_1;
+            NanoAssert(isLInsOp1() || isLInsOp2() || isStore());
+            return toLInsOp2()->oprnd_1;
         }
         LIns* oprnd2() const {
-            NanoAssert(isOp2() || isLoad() || isStore());
-            return u.oprnd_2;
+            NanoAssert(isLInsOp2() || isStore());
+            return toLInsOp2()->oprnd_2;
         }
 
-        inline LOpcode opcode()   const { return firstWord.code; }
-        inline uint8_t imm8()     const { NanoAssert(isop(LIR_param)); return c.imm8a; }
-        inline uint8_t imm8b()    const { NanoAssert(isop(LIR_param)); return c.imm8b; }
-        inline int32_t imm32()    const { NanoAssert(isconst());  return i.imm32; }
-        inline int32_t imm64_0()  const { NanoAssert(isconstq()); return i64.imm64_0; }
-        inline int32_t imm64_1()  const { NanoAssert(isconstq()); return i64.imm64_1; }
-        uint64_t       imm64()    const;
-        double         imm64f()   const;
-        Reservation*   resv()           { return &firstWord; }
-        void*	       payload() const;
-        inline Page*   page()			{ return (Page*) alignTo(this,NJ_PAGE_SIZE); }
-        inline int32_t size() const {
-            NanoAssert(isop(LIR_alloc));
-            return i.imm32<<2;
+        LIns* prevLIns() const {
+            NanoAssert(isop(LIR_skip));
+            return toLInsSk()->prevLIns;
         }
-        inline void setSize(int32_t bytes) {
-            NanoAssert(isop(LIR_alloc) && (bytes&3)==0 && isU16(bytes>>2));
-            i.imm32 = bytes>>2;
+
+        inline LOpcode opcode()    const { return lastWord.opcode; }
+        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_param)); return toLInsP()->arg; }
+        inline uint8_t paramKind() const { NanoAssert(isop(LIR_param)); return toLInsP()->kind; }
+        inline int32_t imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
+        inline int32_t imm64_0()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_0; }
+        inline int32_t imm64_1()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_1; }
+        uint64_t       imm64()     const;
+        double         imm64f()    const;
+        Reservation*   resv()            { return &lastWord; }
+        void*          payload()   const;
+        inline Page*   page()            { return (Page*) alignTo(this,NJ_PAGE_SIZE); }
+        inline int32_t size()      const {
+            NanoAssert(isop(LIR_alloc));
+            return toLInsI()->imm32 << 2;
         }
 
 		LIns* arg(uint32_t i);
@@ -279,7 +588,7 @@ namespace nanojit
         inline int32_t immdisp() const 
         {
             NanoAssert(isStore());
-            return sti.disp;
+            return toLInsSti()->disp;
         }
     
 		inline void* constvalp() const
@@ -292,36 +601,49 @@ namespace nanojit
 		}
 		
 		bool isCse() const;
-        bool isRet() const { return nanojit::isRetOpcode(firstWord.code); }
-		bool isop(LOpcode o) const { return firstWord.code == o; }
+        bool isRet() const { return nanojit::isRetOpcode(opcode()); }
+        bool isop(LOpcode o) const { return opcode() == o; }
         #if defined(_DEBUG)
-        bool isOp1() const;     // true for unary ops
-        bool isOp2() const;     // true for binary ops
+        // isLInsXYZ() returns true if the instruction has the LInsXYZ form.
+        // Note that there is some overlap with other predicates, eg.
+        // isStore()==isLInsSti(), isCall()==isLInsC(), but that's ok;  these
+        // ones are used only to check that opcodes are appropriate for
+        // instruction layouts, the others are used for non-debugging
+        // purposes.
+        bool isLInsOp0() const;
+        bool isLInsOp1() const;
+        bool isLInsOp2() const;
+        bool isLInsSti() const;
+        bool isLInsSk()  const;
+        bool isLInsC()   const;
+        bool isLInsP()   const;
+        bool isLInsI()   const;
+        bool isLInsI64() const;
         #endif
 		bool isQuad() const;
 		bool isCond() const;
         bool isFloat() const;
 		bool isCmp() const;
         bool isCall() const { 
-            LOpcode op = LOpcode(firstWord.code & ~LIR64);
+            LOpcode op = LOpcode(opcode() & ~LIR64);
             return op == LIR_call;
         }
         bool isStore() const {
-            LOpcode op = LOpcode(firstWord.code & ~LIR64);
+            LOpcode op = LOpcode(opcode() & ~LIR64);
             return op == LIR_sti;
         }
         bool isLoad() const { 
-            LOpcode op = firstWord.code;
+            LOpcode op = opcode();
             return op == LIR_ldq  || op == LIR_ld || op == LIR_ldc || 
                    op == LIR_ldqc || op == LIR_ldcs || op == LIR_ldcb;
         }
         bool isGuard() const {
-            LOpcode op = firstWord.code;
+            LOpcode op = opcode();
             return op == LIR_x || op == LIR_xf || op == LIR_xt || 
                    op == LIR_loop || op == LIR_xbarrier || op == LIR_xtbl;
         }
 		// True if the instruction is a 32-bit or smaller constant integer.
-        bool isconst() const { return firstWord.code == LIR_int; }
+        bool isconst() const { return opcode() == LIR_int; }
 		// True if the instruction is a 32-bit or smaller constant integer and
 		// has the value val when treated as a 32-bit signed integer.
 		bool isconstval(int32_t val) const;
@@ -333,69 +655,6 @@ namespace nanojit
 			return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
 		}
 
-        void setIns0(LOpcode op) {
-            firstWord.code = op;
-		}
-        void setIns1(LOpcode op, LIns* oprnd1) {
-            firstWord.code = op;
-            u.oprnd_1 = oprnd1;
-            NanoAssert(isOp1());
-        }
-        void setIns2(LOpcode op, LIns* oprnd1, LIns* oprnd2) {
-            firstWord.code = op;
-            u.oprnd_1 = oprnd1;
-            u.oprnd_2 = oprnd2;
-            NanoAssert(isOp2() || isLoad() || isGuard() || isBranch());
-        }
-        void setLoad(LOpcode op, LIns* base, LIns* d) {
-            setIns2(op, base, d);
-        }
-		void setGuard(LOpcode op, LIns* cond, LIns* data) {
-			setIns2(op, cond, data);
-		}
-		void setBranch(LOpcode op, LIns* cond, LIns* target) {
-			setIns2(op, cond, target);
-		}
-        void setStorei(LOpcode op, LIns* val, LIns* base, int32_t d) {
-            firstWord.code = op;
-            u.oprnd_1 = val;
-            u.oprnd_2 = base;
-            sti.disp = d;
-            NanoAssert(isStore());
-        }
-		void setImm(LOpcode op, int32_t imm32) {
-			firstWord.code = op;
-			i.imm32 = imm32;
-			NanoAssert(op == LIR_alloc || op == LIR_int);
-		}
-		void setAlloc(LOpcode op, int32_t size) {
-			setImm(op, size);
-		}
-		void setParam(LOpcode op, int32_t arg, int32_t kind)
-		{
-			firstWord.code = op;
-			NanoAssert(isU8(arg) && isU8(kind));
-			c.imm8a = arg;
-			c.imm8b = kind;
-			c.ci = NULL;
-			NanoAssert(op == LIR_param);
-		}
-		void setCall(LOpcode op, int32_t argc, const CallInfo* ci)
-		{
-			firstWord.code = op;
-			NanoAssert(isU8(argc));
-			c.imm8a = 0;
-			c.imm8b = argc;
-			c.ci = ci;
-			NanoAssert(op == LIR_call || op == LIR_fcall);
-		}
-		void setImmq(LOpcode op, int64_t imm64) {
-			firstWord.code = op;
-			i64.imm64_0 = int32_t(imm64);
-			i64.imm64_1 = int32_t(imm64>>32);
-			NanoAssert(op == LIR_quad);
-		}
-
 		void setTarget(LIns* t);
 		LIns* getTarget();
 
@@ -403,17 +662,17 @@ namespace nanojit
 
 		inline uint32_t argc() const {
 			NanoAssert(isCall());
-			return c.imm8b;
+            return toLInsC()->argc;
 		}
 		const CallInfo *callInfo() const;
 	};
-	typedef LIns*		LInsp;
+
+    typedef LIns* LInsp;
 
 	LIns* FASTCALL callArgN(LInsp i, uint32_t n);
 	extern const uint8_t operandCount[];
 
 	class Fragmento;	// @todo remove this ; needed for minbuild for some reason?!?  Should not be compiling this code at all
-	class LirFilter;
 
 	// make it a GCObject so we can explicitly delete it early
 	class LirWriter : public avmplus::GCObject
@@ -490,12 +749,12 @@ namespace nanojit
     // The first instruction on a page is always a start instruction, or a
     // payload-less skip instruction linking to the previous page.  The
     // biggest possible instruction would take up the entire rest of the page.
-    #define NJ_MAX_LINS_SZB             (NJ_PAGE_CODE_AREA_SZB - sizeof(LIns))
+    #define NJ_MAX_LINS_SZB             (NJ_PAGE_CODE_AREA_SZB - sizeof(LInsSk))
 
     // The maximum skip payload size is determined by the maximum instruction
     // size.  We require that a skip's payload be adjacent to the skip LIns
     // itself.
-    #define NJ_MAX_SKIP_PAYLOAD_SZB     (NJ_MAX_LINS_SZB - sizeof(LIns))
+    #define NJ_MAX_SKIP_PAYLOAD_SZB     (NJ_MAX_LINS_SZB - sizeof(LInsSk))
  
 
 #ifdef NJ_VERBOSE

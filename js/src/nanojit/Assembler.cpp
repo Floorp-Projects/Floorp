@@ -1565,7 +1565,7 @@ namespace nanojit
         for (int i=0, n = NumSavedRegs; i < n; i++) {
             LIns *p = b->savedRegs[i];
             if (p)
-                findSpecificRegFor(p, savedRegs[p->imm8()]);
+                findSpecificRegFor(p, savedRegs[p->paramArg()]);
         }
     }
 
@@ -1584,10 +1584,10 @@ namespace nanojit
     {
         LInsp state = _thisfrag->lirbuf->state;
         if (state)
-            findSpecificRegFor(state, argRegs[state->imm8()]); 
+            findSpecificRegFor(state, argRegs[state->paramArg()]); 
         LInsp param1 = _thisfrag->lirbuf->param1;
         if (param1)
-            findSpecificRegFor(param1, argRegs[param1->imm8()]);
+            findSpecificRegFor(param1, argRegs[param1->paramArg()]);
     }
     
     void Assembler::handleLoopCarriedExprs()
