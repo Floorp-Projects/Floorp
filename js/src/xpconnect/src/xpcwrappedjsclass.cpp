@@ -1244,7 +1244,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSBool success;
     JSBool readyToDoTheCall = JS_FALSE;
     nsID  param_iid;
-    uint8 outConversionFailedIndex;
     JSObject* obj;
     const char* name = info->name;
     jsval fval;
@@ -1433,12 +1432,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     {
         *sp++ = fval;
         *sp++ = OBJECT_TO_JSVAL(thisObj);
-    }
-
-    // make certain we leave no garbage in the stack
-    for(i = 0; i < argc; i++)
-    {
-        sp[i] = JSVAL_VOID;
     }
 
     // build the args
@@ -1692,9 +1685,6 @@ pre_call_clean_up:
 
     ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
 
-#define HANDLE_OUT_CONVERSION_FAILURE       \
-        {outConversionFailedIndex = i; break;}
-
     // convert out args and result
     // NOTE: this is the total number of native params, not just the args
     // Convert independent params only.
@@ -1702,7 +1692,6 @@ pre_call_clean_up:
     // the params upon which they depend will have already been converted -
     // regardless of ordering.
 
-    outConversionFailedIndex = paramCount;
     foundDependentParam = JS_FALSE;
     for(i = 0; i < paramCount; i++)
     {
@@ -1733,7 +1722,7 @@ pre_call_clean_up:
                 !JS_GetPropertyById(cx, JSVAL_TO_OBJECT(stackbase[i+2]),
                     mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
                     &val))
-            HANDLE_OUT_CONVERSION_FAILURE
+            break;
 
         // setup allocator and/or iid
 
@@ -1742,18 +1731,18 @@ pre_call_clean_up:
             if(NS_FAILED(GetInterfaceInfo()->
                             GetIIDForParamNoAlloc(methodIndex, &param,
                                                   &param_iid)))
-                HANDLE_OUT_CONVERSION_FAILURE
+                break;
         }
         else if(type.IsPointer() && !param.IsShared() && !param.IsDipper())
             useAllocator = JS_TRUE;
 
         if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
                                       useAllocator, &param_iid, nsnull))
-            HANDLE_OUT_CONVERSION_FAILURE
+            break;
     }
 
     // if any params were dependent, then we must iterate again to convert them.
-    if(foundDependentParam && outConversionFailedIndex == paramCount)
+    if(foundDependentParam && i == paramCount)
     {
         for(i = 0; i < paramCount; i++)
         {
@@ -1783,7 +1772,7 @@ pre_call_clean_up:
             else if(!JS_GetPropertyById(cx, JSVAL_TO_OBJECT(stackbase[i+2]),
                         mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
                         &val))
-                HANDLE_OUT_CONVERSION_FAILURE
+                break;
 
             // setup allocator and/or iid
 
@@ -1791,7 +1780,7 @@ pre_call_clean_up:
             {
                 if(NS_FAILED(mInfo->GetTypeForParam(methodIndex, &param, 1,
                                                     &datum_type)))
-                    HANDLE_OUT_CONVERSION_FAILURE
+                    break;
             }
             else
                 datum_type = type;
@@ -1801,7 +1790,7 @@ pre_call_clean_up:
                if(!GetInterfaceTypeFromParam(cx, info, param, methodIndex,
                                              datum_type, nativeParams,
                                              &param_iid))
-                    HANDLE_OUT_CONVERSION_FAILURE
+                   break;
             }
             else if(type.IsPointer() && !param.IsShared())
                 useAllocator = JS_TRUE;
@@ -1811,7 +1800,7 @@ pre_call_clean_up:
                 if(!GetArraySizeFromParam(cx, info, param, methodIndex,
                                           i, GET_LENGTH, nativeParams,
                                           &array_count))
-                    HANDLE_OUT_CONVERSION_FAILURE
+                    break;
             }
 
             if(isArray)
@@ -1822,7 +1811,7 @@ pre_call_clean_up:
                                                datum_type,
                                                useAllocator, &param_iid,
                                                nsnull))
-                    HANDLE_OUT_CONVERSION_FAILURE
+                    break;
             }
             else if(isSizedString)
             {
@@ -1831,19 +1820,19 @@ pre_call_clean_up:
                                                    array_count, array_count,
                                                    datum_type, useAllocator,
                                                    nsnull))
-                    HANDLE_OUT_CONVERSION_FAILURE
+                    break;
             }
             else
             {
                 if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
                                               useAllocator, &param_iid,
                                               nsnull))
-                    HANDLE_OUT_CONVERSION_FAILURE
+                    break;
             }
         }
     }
 
-    if(outConversionFailedIndex != paramCount)
+    if(i != paramCount)
     {
         // We didn't manage all the result conversions!
         // We have to cleanup any junk that *did* get converted.
