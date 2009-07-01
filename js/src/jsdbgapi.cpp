@@ -631,18 +631,27 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     memset(&frame, 0, sizeof(frame));
                     frame.script = script;
                     frame.regs = NULL;
+                    frame.callee = closure;
+                    frame.fun = fun;
+                    frame.argv = argv + 2;
+                    frame.down = js_GetTopStackFrame(cx);
+                    frame.scopeChain = OBJ_GET_PARENT(cx, closure);
                     if (script) {
                         JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
                         regs.pc = script->code + script->length
                                   - JSOP_STOP_LENGTH;
                         regs.sp = NULL;
                         frame.regs = &regs;
+                        if (fun &&
+                            JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
+                            !js_GetCallObject(cx, &frame)) {
+                            if (argv != smallv)
+                                JS_free(cx, argv);
+                            DBG_LOCK(rt);
+                            DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
+                            return JS_FALSE;
+                        }
                     }
-                    frame.callee = closure;
-                    frame.fun = fun;
-                    frame.argv = argv + 2;
-                    frame.down = js_GetTopStackFrame(cx);
-                    frame.scopeChain = OBJ_GET_PARENT(cx, closure);
 
                     cx->fp = &frame;
                 }
