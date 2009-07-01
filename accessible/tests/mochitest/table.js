@@ -29,6 +29,16 @@ function testTableIndexes(aIdentifier, aIdxes)
     var colCount = aIdxes[rowIdx].length;
     for (var colIdx = 0; colIdx < colCount; colIdx++) {
       var idx = aIdxes[rowIdx][colIdx];
+
+      // cellRefAt
+      try {
+        cellAcc = null;
+        cellAcc = tableAcc.cellRefAt(rowIdx, colIdx);
+      } catch (e) { }
+      
+      ok(idx != -1 && cellAcc || idx == -1 && !cellAcc,
+         id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
+
       if (idx != - 1) {
         // getRowAtIndex
         var origRowIdx = rowIdx;
@@ -59,15 +69,6 @@ function testTableIndexes(aIdentifier, aIdxes)
 
         is(obtainedColIdx, origColIdx,
            id + ": column  for index " + idx +" is not correct");
-
-        // cellRefAt
-        try {
-          cellAcc = null;
-          cellAcc = tableAcc.cellRefAt(rowIdx, colIdx);
-        } catch (e) { }
-
-        ok(cellAcc,
-           id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
 
         // 'table-cell-index' attribute
         if (cellAcc) {
