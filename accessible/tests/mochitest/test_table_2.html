@@ -20,8 +20,6 @@ function doTest()
   var accTable = getAccessible("table", [nsIAccessibleTable]);
 
   is(accTable.getIndexAt(2,4), 17, "wrong index returned");
-  is(accTable.getColumnAtIndex(18), 5, "got wrong column");
-  is(accTable.getRowAtIndex(10), 1, "wrong row");
   is(accTable.getColumnExtentAt(2,2), 2, "colspan wrong");
   is(accTable.getColumnExtentAt(0,3), 2, "colspan wrong");
   is(accTable.getColumnExtentAt(3,5), 1, "colspan");
@@ -30,29 +28,7 @@ function doTest()
   is(accTable.getColumnExtentAt(2,3), 1, "colspan wrong");
   is(accTable.cellRefAt(2,1).firstChild.name, "c1", "wrong cell");
 
-  // bug 417912
-  var accTable2 = getAccessible("table2", [nsIAccessibleTable]);
-  testCellAt(accTable2, 0, 0, true);
-  testCellAt(accTable2, 0, 1, true);
-  testCellAt(accTable2, 0, 2, true);
-  testCellAt(accTable2, 1, 0, true);
-  testCellAt(accTable2, 1, 1, false);
-  testCellAt(accTable2, 1, 2, true);
-  testCellAt(accTable2, 2, 0, true);
-  testCellAt(accTable2, 2, 1, true);
-  testCellAt(accTable2, 2, 2, true);
-
   SimpleTest.finish();
-}
-
-function testCellAt(aTable, aRow, aColumn, aSucceeded)
-{
-  try {
-    aTable.cellRefAt(aRow, aColumn);
-    ok(aSucceeded, "cell is available at (" + aRow + ", " + aColumn + ").");
-  } catch (e) {
-    ok(!aSucceeded, "cell is not available at (" + aRow + ", " + aColumn + ").");
-  }
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -110,15 +86,6 @@ addLoadEvent(doTest);
      </tr>
     </tbody>
    </table>
-  </center>
-
-  <br><br><b>Testing Table 2:</b><br><br>
-  <center>
-    <table cellpadding="2" cellspacing="2" border="1" width="50%" id="table2">
-      <tr><td>1</td><td>2</td><td rowspan=3>3</td>
-      <tr><td>4</td>
-      <tr><td>5</td><td>6</td>
-    </table>
   </center>
  </body>
 </html>
