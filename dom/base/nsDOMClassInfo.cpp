@@ -1449,16 +1449,21 @@ const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
 
 static PRBool sDoSecurityCheckInAddProperty = PR_TRUE;
 
-const JSClass*
-NS_DOMClassInfo_GetXPCNativeWrapperClass()
+/**
+ * Set our JSClass pointer for the Object class
+ */
+static void
+FindObjectClass(JSObject* aGlobalObject)
 {
-  return nsDOMClassInfo::GetXPCNativeWrapperClass();
-}
+  NS_ASSERTION(!sObjectClass,
+               "Double set of sObjectClass");
+  JSObject *obj, *proto = aGlobalObject;
+  do {
+    obj = proto;
+    proto = STOBJ_GET_PROTO(obj);
+  } while (proto);
 
-void
-NS_DOMClassInfo_SetXPCNativeWrapperClass(JSClass* aClass)
-{
-  nsDOMClassInfo::SetXPCNativeWrapperClass(aClass);
+  sObjectClass = STOBJ_GET_CLASS(obj);
 }
 
 static void
@@ -4154,6 +4159,15 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
     return NS_OK;
   }
 
+  // This is called before any other location that requires
+  // sObjectClass, so compute it here. We assume that nobody has had a
+  // chance to monkey around with proto's prototype chain before this.
+  if (!sObjectClass) {
+    FindObjectClass(proto);
+    NS_ASSERTION(sObjectClass && !strcmp(sObjectClass->name, "Object"),
+                 "Incorrect object class!");
+  }
+
   NS_ASSERTION(::JS_GetPrototype(cx, proto) &&
                JS_GET_CLASS(cx, ::JS_GetPrototype(cx, proto)) == sObjectClass,
                "Hmm, somebody did something evil?");
@@ -4399,21 +4413,6 @@ NS_IMETHODIMP
 nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                       JSObject *globalObj, JSObject **parentObj)
 {
-  // Since this is one of the first calls we'll get from XPConnect,
-  // grab the pointer to the Object class so we'll have it later on.
-
-  if (!sObjectClass) {
-    JSObject *obj, *proto = globalObj;
-    JSAutoRequest ar(cx);
-
-    do {
-      obj = proto;
-      proto = ::JS_GetPrototype(cx, obj);
-    } while (proto);
-
-    sObjectClass = JS_GET_CLASS(cx, obj);
-  }
-
   // Normally ::PreCreate() is used to give XPConnect the parent
   // object for the object that's being wrapped, this parent object is
   // set as the parent of the wrapper and it's also used to find the
@@ -5745,7 +5744,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
     if (proto &&
         (!xpc_proto_proto ||
-         JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
+         JS_GET_CLASS(cx, xpc_proto_proto) == nsDOMClassInfo::GetObjectClass())) {
       if (!::JS_SetPrototype(cx, dot_prototype, proto)) {
         return NS_ERROR_UNEXPECTED;
       }

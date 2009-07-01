@@ -43,6 +43,7 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIXPCScriptable.h"
 #include "jsapi.h"
+#include "jsobj.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
@@ -156,7 +157,7 @@ public:
   static const JSClass* GetXPCNativeWrapperClass() {
     return sXPCNativeWrapperClass;
   }
-  
+
   /**
    * Set our JSClass pointer for the XPCNativeWrapper class
    */

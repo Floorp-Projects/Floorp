@@ -2455,9 +2455,6 @@ nsJSContext::GetNativeContext()
   return mContext;
 }
 
-const JSClass* NS_DOMClassInfo_GetXPCNativeWrapperClass();
-void NS_DOMClassInfo_SetXPCNativeWrapperClass(JSClass* aClass);
-
 nsresult
 nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
@@ -2517,7 +2514,7 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
     // Now check whether we need to grab a pointer to the
     // XPCNativeWrapper class
-    if (!NS_DOMClassInfo_GetXPCNativeWrapperClass()) {
+    if (!nsDOMClassInfo::GetXPCNativeWrapperClass()) {
       JSAutoRequest ar(mContext);
       rv = FindXPCNativeWrapperClass(holder);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2927,7 +2924,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 nsresult
 nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
 {
-  NS_ASSERTION(!NS_DOMClassInfo_GetXPCNativeWrapperClass(),
+  NS_ASSERTION(!nsDOMClassInfo::GetXPCNativeWrapperClass(),
                "Why was this called?");
 
   JSObject *globalObj;
@@ -2964,8 +2961,9 @@ nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
 
   NS_ASSERTION(JSVAL_IS_OBJECT(wrapper), "This should be an object!");
 
-  NS_DOMClassInfo_SetXPCNativeWrapperClass(
+  nsDOMClassInfo::SetXPCNativeWrapperClass(
     ::JS_GET_CLASS(mContext, JSVAL_TO_OBJECT(wrapper)));
+
   return NS_OK;
 }
 
