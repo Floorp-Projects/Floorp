@@ -59,7 +59,7 @@
         titlemodifier="&brandShortName;"
         titleseparator="&mainWindow.titleseparator;"
 #ifdef WINCE
-        sizemode="maximized"
+        sizemode="fullscreen"
 #elifdef MOZ_PLATFORM_HILDON
         sizemode="maximized"
 #else
