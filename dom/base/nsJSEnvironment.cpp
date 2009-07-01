@@ -2416,11 +2416,6 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
   JSObject *newInnerJSObject = (JSObject *)aNewInner->GetScriptGlobal(JAVASCRIPT);
   JSObject *myobject = (JSObject *)aOuterGlobal;
 
-  // Call ClearScope to nuke any properties (e.g. Function and Object) on the
-  // outer object. From now on, anybody asking the outer object for these
-  // properties will be forwarded to the inner window.
-  ::JS_ClearScope(mContext, myobject);
-
   // Make the inner and outer window both share the same
   // prototype. The prototype we share is the outer window's
   // prototype, this way XPConnect can still find the wrapper to
@@ -2520,11 +2515,23 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else {
-    // If there's already a global object in mContext we're called
-    // after ::JS_ClearScope() was called. We'll have to tell
-    // XPConnect to re-initialize the global object to do things like
+    // There's already a global object. We are preparing this outer window
+    // object for use as a real outer window (i.e. everything needs to live on
+    // the inner window).
+
+    // Call ClearScope to nuke any properties (e.g. Function and Object) on the
+    // outer object. From now on, anybody asking the outer object for these
+    // properties will be forwarded to the inner window.
+    ::JS_ClearScope(mContext, global);
+
+    // Tell XPConnect to re-initialize the global object to do things like
     // define the Components object on the global again and forget all
     // old prototypes in this scope.
+    // XXX Except that now, the global is thawed and has an inner window. So
+    // anything that XPConnect does to our global will be forwarded. So I
+    // think the only thing that this does for real is to call SetGlobal on
+    // our XPCWrappedNativeScope. Perhaps XPConnect should have a more
+    // targeted API?
     rv = xpc->InitClasses(mContext, global);
     NS_ENSURE_SUCCESS(rv, rv);
 
