@@ -253,6 +253,8 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   CALLBACKS.getvalueforurl = ((NPN_GetValueForURLPtr)_getvalueforurl);
   CALLBACKS.setvalueforurl = ((NPN_SetValueForURLPtr)_setvalueforurl);
   CALLBACKS.getauthenticationinfo = ((NPN_GetAuthenticationInfoPtr)_getauthenticationinfo);
+  CALLBACKS.scheduletimer = ((NPN_ScheduleTimerPtr)_scheduletimer);
+  CALLBACKS.unscheduletimer = ((NPN_UnscheduleTimerPtr)_unscheduletimer);
 
   if (!sPluginThreadAsyncCallLock)
     sPluginThreadAsyncCallLock = nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
@@ -2487,6 +2489,26 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
   *plen = *password ? pwd8.Length() : 0;
 
   return NPERR_NO_ERROR;
+}
+
+uint32_t NP_CALLBACK
+_scheduletimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID))
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return 0;
+
+  return inst->ScheduleTimer(interval, repeat, timerFunc);
+}
+
+void NP_CALLBACK
+_unscheduletimer(NPP instance, uint32_t timerID)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return;
+
+  inst->UnscheduleTimer(timerID);
 }
 
 void

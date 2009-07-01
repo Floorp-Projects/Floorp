@@ -675,6 +675,8 @@ NPError     NP_LOADDS NPN_GetAuthenticationInfo(NPP instance,
                                                 char **username, uint32_t *ulen,
                                                 char **password,
                                                 uint32_t *plen);
+uint32_t    NPN_ScheduleTimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
+void        NPN_UnscheduleTimer(NPP instance, uint32_t timerID);
 
 #ifdef __cplusplus
 }  /* end extern "C" */
