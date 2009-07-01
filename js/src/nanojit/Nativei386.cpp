@@ -343,8 +343,8 @@ namespace nanojit
         }
         else if (op == LIR_param) {
             uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
-            if (i->paramArg() < max_regs)
-    			prefer &= rmask(Register(i->paramArg()));
+            if (i->imm8() < max_regs)
+    			prefer &= rmask(Register(i->imm8()));
         }
         else if (op == LIR_callh || (op == LIR_rsh && i->oprnd1()->opcode()==LIR_callh)) {
             prefer &= rmask(retRegs[1]);
@@ -1114,8 +1114,8 @@ namespace nanojit
 
 	void Assembler::asm_param(LInsp ins)
 	{
-		uint32_t a = ins->paramArg();
-		uint32_t kind = ins->paramKind();
+		uint32_t a = ins->imm8();
+		uint32_t kind = ins->imm8b();
 		if (kind == 0) {
 			// ordinary param
 			AbiKind abi = _thisfrag->lirbuf->abi;
