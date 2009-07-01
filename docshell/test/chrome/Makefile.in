@@ -78,8 +78,16 @@ _TEST_FILES =	\
 		test_bug456980.xul \
 		$(NULL)
 
+_DOCSHELL_SUBHARNESS = \
+    docshell_helpers.js \
+    generic.html \
+    $(NULL)
+
 libs:: $(_HTTP_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+
+libs:: $(_DOCSHELL_SUBHARNESS)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
