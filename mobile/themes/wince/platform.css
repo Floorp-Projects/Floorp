@@ -48,9 +48,9 @@
 .dialog-dark {
   color: #fff;
   background-color: #36373b;
-  -moz-border-radius: 0 0 2mm 2mm;
+  -moz-border-radius: 0 0 1.0mm 1.0mm;
   padding: 8px;
-  -moz-box-shadow: black 0 0.5mm 0.5mm;
+  -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
 
 /* buttons ----------------------------------------------------------------- */
@@ -61,16 +61,16 @@
 }
 
 button {
-  min-width: 12mm !important; /* button size */
-  min-height: 12mm !important; /* button size */
+  min-width: 6.0mm !important; /* button size */
+  min-height: 6.0mm !important; /* button size */
   color: #36373b;
-  padding: 0.5mm 1mm;
-  -moz-border-radius: 2mm;
+  padding: 0.25mm 0.5mm;
+  -moz-border-radius: 1.0mm;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
-  border: 0.1mm solid #36373b;
+  border: 0.05mm solid #36373b;
   background: #efefef;
 }
 
@@ -80,7 +80,7 @@ button[disabled="true"] {
   -moz-border-right-colors: -moz-initial !important;
   -moz-border-left-colors: -moz-initial !important;
   -moz-border-bottom-colors: -moz-initial !important;
-  border: 0.1mm solid #ccc;
+  border: 0.05mm solid #ccc;
   background: #fff;
 }
 
@@ -90,16 +90,16 @@ button:active {
   -moz-border-right-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
-  border: 0.1mm solid #aaa;
+  border: 0.05mm solid #aaa;
   background: #ddd;
 }
 
 toolbarbutton {
-  min-width: 14.4mm !important; /* primary button size */
-  min-height: 14.4mm !important; /* primary button size */
+  min-width: 7.2mm !important; /* primary button size */
+  min-height: 7.2mm !important; /* primary button size */
   -moz-appearance: none !important;
   margin: 0;
-  padding: 0.5mm;
+  padding: 0.25mm;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
@@ -119,8 +119,8 @@ toolbarbutton[open="true"] {
 /* dark buttons ------------------------------------------------------------ */
 .button-dark {
   color: #fff;
-  padding: 0.5mm 1mm;
-  -moz-border-radius: 2mm;
+  padding: 0.25mm 0.5mm;
+  -moz-border-radius: 1.0mm;
   border: 1px solid #777 !important;
   background: #525252;
 }
@@ -138,9 +138,9 @@ toolbarbutton[open="true"] {
 
 .button-dark[checked="true"] {
   /* checked overrides */
-  border: 0.1mm solid #202020 !important;
+  border: 0.05mm solid #202020 !important;
   background: #303030 !important;
-  padding: 0.5mm 1mm !important;
+  padding: 0.25mm 0.5mm !important;
 }
 
 /* image buttons ----------------------------------------------------------- */
@@ -161,12 +161,12 @@ radiogroup {
 }
 
 radio {
-  min-width: 12mm !important; /* button size */
-  min-height: 12mm !important; /* button size */
+  min-width: 6.0mm !important; /* button size */
+  min-height: 6.0mm !important; /* button size */
   color: #36373b;
-  padding: 0.2mm 2.2mm 0.2mm 1mm !important;
+  padding: 0.0.5mm 1.1mm 0.1mm 0.5mm !important;
   margin: 0;
-  border: 0.1mm solid #36373b;
+  border: 0.05mm solid #36373b;
   -moz-box-align: center;
   -moz-appearance: none;
   background: #fff;
@@ -174,7 +174,7 @@ radio {
 
 radio[selected] {
   color: #fff;
-  border: 0.1mm solid #91875a;
+  border: 0.05mm solid #91875a;
   background-color: #DDC763;
 }
 
@@ -183,34 +183,34 @@ radio .radio-check-box1, radio .radio-icon, radio .radio-check {
 }
 
 radio:first-child {
-  -moz-border-radius-topleft: 2mm;
-  -moz-border-radius-bottomleft: 2mm;
+  -moz-border-radius-topleft: 1.0mm;
+  -moz-border-radius-bottomleft: 1.0mm;
 }
 
 radio:last-child {
-  -moz-border-radius-topright: 2mm;
-  -moz-border-radius-bottomright: 2mm;
+  -moz-border-radius-topright: 1.0mm;
+  -moz-border-radius-bottomright: 1.0mm;
 }
 
 radiogroup[orient=vertical] radio:first-child {
-  -moz-border-radius-topright: 2mm;
+  -moz-border-radius-topright: 1.0mm;
   -moz-border-radius-bottomleft: 0;
 }
 
 radiogroup[orient=vertical] radio:last-child {
-  -moz-border-radius-bottomleft: 2mm;
+  -moz-border-radius-bottomleft: 1.0mm;
   -moz-border-radius-topright: 0;
 }
 
 /* dark radios ------------------------------------------------------------- */
 .toggle-dark radio {
   color: #fff;
-  border: 0.1mm solid #777;
+  border: 0.05mm solid #777;
   background-color: #525252;
 }
 
 .toggle-dark radio[selected] {
-  border: 0.1mm solid #202020;
+  border: 0.05mm solid #202020;
   background-color: #303030;
 }
 
@@ -220,7 +220,7 @@ richlistbox {
 }
 
 richlistitem {
-  min-height: 14.4mm; /* row size */
+  min-height: 7.2mm; /* row size */
 }
 
 /* colorpicker ------------------------------------------------------------- */

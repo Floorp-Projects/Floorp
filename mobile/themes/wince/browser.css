@@ -44,14 +44,14 @@
 #toolbar-main {
   -moz-appearance: none;
   -moz-box-align: center;
-  padding: 2.2mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
   border: none;
 }
 
 /* main toolbar buttons */
 toolbarbutton.urlbar-button {
   /* space out the buttons a bit horizontally */
-  margin-left: 2.2mm; /* core spacing */
+  margin-left: 1.1mm; /* core spacing */
 }
 
 #tool-bookmarks {
@@ -175,7 +175,7 @@ toolbarbutton.urlbar-cap-button {
 /* right toolbar (browser controls) ---------------------------------------- */
 #browser-controls {
   -moz-box-align: start;
-  padding: 0 2.2mm; /* core spacing + tiny bit for a rounding issue? */
+  padding: 0 1.1mm; /* core spacing + tiny bit for a rounding issue? */
   border-left: 3px solid #262629; /* keep pixels */
 }
 
@@ -183,7 +183,7 @@ toolbarbutton.browser-control-button,
 toolbarbutton.panel-button,
 toolbarbutton.page-button {
   /* space out the buttons a bit vertically */
-  margin-bottom: 2.2mm; /* core spacing */
+  margin-bottom: 1.1mm; /* core spacing */
 }
 
 #tool-star {
@@ -243,12 +243,12 @@ toolbarbutton.page-button {
 /* "extras" panel UI   ----------------------------------------------------- */
 #panel-controls {
   /* match #browser-controls end padding */
-  padding: 0 2.2mm; /* core spacing */
+  padding: 0 1.1mm; /* core spacing */
   -moz-box-align: end;
 }
 
 .panel-header {
-  padding: 2.2mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
 }
 
 #tool-addons {
@@ -300,7 +300,7 @@ toolbarbutton.page-button {
 #bookmarklist-header, #folder-header {
   color: rgb(255,255,255);
   -moz-box-align: center;
-  padding: 2.2mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
 }
 
 #bookmark-items, #folder-items {
@@ -311,7 +311,7 @@ toolbarbutton.page-button {
 
 .place-list-parents {
   background-color: rgb(207,207,207);
-  padding: 0.5mm;
+  padding: 0.25mm;
 }
 
 .place-list-children {
@@ -321,9 +321,9 @@ toolbarbutton.page-button {
 }
 
 .bookmark-folder, .bookmark-item {
-  padding: 0.5mm 0.2mm;
-  border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 14.4mm; /* row size */
+  padding: 0.25mm 0.1mm;
+  border-bottom: 0.05mm solid rgb(207,207,207);
+  min-height: 7.2mm; /* row size */
   -moz-box-align: center;
 }
 
@@ -335,7 +335,7 @@ toolbarbutton.page-button {
 }
 
 placelabel.bookmark-folder {
-  border-bottom: 0.1mm solid rgb(255,255,255);
+  border-bottom: 0.05mm solid rgb(255,255,255);
 }
 
 .bookmark-item-image, .bookmark-folder-image {
@@ -365,7 +365,7 @@ placeitem[ui="manage"] .bookmark-item-image {
 
 /* be consistent with the size of placeitem */
 placelabel {
-  min-height: 14.4mm; /* row size */
+  min-height: 7.2mm; /* row size */
   -moz-box-align: center;
 }
 
@@ -391,8 +391,8 @@ placeitem .button-text {
 }
 
 #autocomplete_navbuttons {
-  margin: 2.2mm; /* core spacing */
-  min-height: 14.4mm; /* row size */
+  margin: 1.1mm; /* core spacing */
+  min-height: 7.2mm; /* row size */
 }
 
 .autocomplete-items {
@@ -402,9 +402,9 @@ placeitem .button-text {
 
 .autocomplete-item,
 .autocomplete-item-selected {
-  padding: 0.5mm 0.2mm;
-  border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 14.4mm; /* row size */
+  padding: 0.25mm 0.1mm;
+  border-bottom: 0.05mm solid rgb(207,207,207);
+  min-height: 7.2mm; /* row size */
   -moz-box-pack: center;
 }
 
@@ -431,8 +431,8 @@ placeitem .button-text {
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
-  -moz-padding-start: 1.2mm; /* allow the thumbnails to get close to the edge */
-  -moz-padding-end: 2.2mm; /* core spacing */
+  -moz-padding-start: 0.6mm; /* allow the thumbnails to get close to the edge */
+  -moz-padding-end: 1.1mm; /* core spacing */
   border-right: 3px solid #262629; /* keep pixels */
 }
 
@@ -444,7 +444,7 @@ placeitem .button-text {
 }
 
 #tabs-controls {
-  margin-top: 2.2mm; /* core spacing */
+  margin-top: 1.1mm; /* core spacing */
   -moz-box-pack: center;
 }
 
@@ -456,7 +456,7 @@ richlistitem[type="documenttab"] {
 
 richlistitem[type="documenttab"] .documenttab-canvas {
   /* keep the unselected thumbnails aligned with the selected one */
-  border: 2mm solid transparent;
+  border: 1.0mm solid transparent;
 }
 
 richlistitem[type="documenttab"][selected="true"] {
@@ -464,7 +464,7 @@ richlistitem[type="documenttab"][selected="true"] {
 }
 
 richlistitem[type="documenttab"][selected="true"] .documenttab-canvas {
-  border: 2mm solid #262629;
+  border: 1.0mm solid #262629;
   -moz-border-radius: 4px;
 }
 
@@ -497,17 +497,17 @@ findbar .findbar-closebutton {
 
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  padding: 2.2mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
 }
 
 #bookmark-form {
   background-color: #fff;
-  padding: 2.2mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
 }
 
 /* Identity popup   -------------------------------------------------------- */
 #identity-container {
-  padding: 2.2mm; /* core spacing */
+  padding: 1.1mm; /* core spacing */
 }
 
 /* Popup Icons */
@@ -526,7 +526,7 @@ findbar .findbar-closebutton {
 
 /* Popup Body Text */
 #identity-popup-content-box {
-  -moz-padding-start: 2.2mm; /* core spacing */
+  -moz-padding-start: 1.1mm; /* core spacing */
 }
 
 #identity-popup-content-box.unknownIdentity > hbox > #identity-popup-connectedToLabel,
@@ -575,14 +575,14 @@ richpref {
   font-weight: bold;
   color: #000;
   background-color: lightgray;
-  padding: 0.5mm;
+  padding: 0.25mm;
 }
 
 /* XXX should be a richlistitem */
 .prefbox {
-  padding: 0.5mm;
-  border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 14.4mm; /* row size */
+  padding: 0.25mm;
+  border-bottom: 0.05mm solid rgb(207,207,207);
+  min-height: 7.2mm; /* row size */
   -moz-box-align: center;
 }
 
@@ -602,10 +602,10 @@ richpref {
 #alerts-container {
   color: #000;
   background-color: #fff;
-  border: 0.5mm solid gray;
-  -moz-border-radius: 2mm;
-  padding: 2.2mm; /* core spacing */
-  -moz-box-shadow: black 0.5mm 0.5mm 1mm;
+  border: 0.25mm solid gray;
+  -moz-border-radius: 1.0mm;
+  padding: 1.1mm; /* core spacing */
+  -moz-box-shadow: black 0.25mm 0.25mm 0.5mm;
 }
 
 #alerts-text {
@@ -615,9 +615,9 @@ richpref {
 
 /* select popup ------------------------------------------------------------ */
 #select-container {
-  border: 1mm solid #36373b;
-  -moz-border-radius: 2mm;
-  padding-top: 2.2mm; /* core spacing */
+  border: 0.5mm solid #36373b;
+  -moz-border-radius: 1.0mm;
+  padding-top: 1.1mm; /* core spacing */
 }
 
 #select-list > option {
@@ -625,7 +625,7 @@ richpref {
   background-color: #fff;
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
-  min-height: 14.4mm; /* row size */
+  min-height: 7.2mm; /* row size */
   -moz-box-align: center;
 }
 
@@ -648,7 +648,7 @@ richpref {
 }
 
 #select-buttons {
-  padding: 1.1mm 2.2mm; /* row size & core spacing */
+  padding: 0.55mm 1.1mm; /* row size & core spacing */
   -moz-box-pack: center;
 }
 
