@@ -591,7 +591,7 @@ namespace nanojit
 
         // restore first parameter, the only one we use
         LInsp state = _thisfrag->lirbuf->state;
-        findSpecificRegFor(state, argRegs[state->imm8()]); 
+        findSpecificRegFor(state, argRegs[state->paramArg()]); 
     }    
 
     void Assembler::asm_fcond(LInsp ins)
@@ -817,8 +817,8 @@ namespace nanojit
 
     void Assembler::asm_param(LInsp ins)
     {
-        uint32_t a = ins->imm8();
-        uint32_t kind = ins->imm8b();
+        uint32_t a = ins->paramArg();
+        uint32_t kind = ins->paramKind();
         //        prepResultReg(ins, rmask(argRegs[a]));
         if (kind == 0) {
             prepResultReg(ins, rmask(argRegs[a]));
