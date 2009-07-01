@@ -85,6 +85,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       testTableIndexes("tableinsane3", idxes);
 
       //////////////////////////////////////////////////////////////////////////
+      // tableinsane3.2 (cell holes, row spans, fixed in bug 417912)
+      idxes = [
+        [0,  1, 2],
+        [3, -1, 2],
+        [4,  5, 2]
+      ];
+
+      testTableIndexes("tableinsane3.2", idxes);
+
+      //////////////////////////////////////////////////////////////////////////
       // tableinsane4 (empty row groups/rows and cell holes)
       idxes = [
         [ 0,  1,  2],
@@ -274,6 +284,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
         <td>4</td>
       </tr>
     </tbody>
+  </table>
+
+  <table cellpadding="2" cellspacing="2" border="1" id="tableinsane3.2">
+    <tr><td>1</td><td>2</td><td rowspan=3>3</td>
+    <tr><td>4</td>
+    <tr><td>5</td><td>6</td>
   </table>
 
   <table border="1" id="tableinsane4">
