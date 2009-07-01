@@ -967,6 +967,10 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
     return NS_OK;
   }
 
+  // clean up all outstanding timers
+  for (PRUint32 i = mTimers.Length(); i > 0; i--)
+    UnscheduleTimer(mTimers[i - 1]->id);
+
   // If there's code from this plugin instance on the stack, delay the
   // destroy.
   if (PluginDestructionGuard::DelayDestroy(this)) {
@@ -1609,7 +1613,8 @@ nsNPAPIPluginInstance::GetPluginAPIVersion()
   return fCallbacks->version;
 }
 
-nsresult nsNPAPIPluginInstance::PrivateModeStateChanged()
+nsresult
+nsNPAPIPluginInstance::PrivateModeStateChanged()
 {
   if (!mStarted)
     return NS_OK;
@@ -1632,6 +1637,92 @@ nsresult nsNPAPIPluginInstance::PrivateModeStateChanged()
     }
   }
   return NS_ERROR_FAILURE;
+}
+
+static void
+PluginTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsNPAPITimer* t = (nsNPAPITimer*)aClosure;
+  NPP npp = t->npp;
+  uint32_t id = t->id;
+
+  (*(t->callback))(npp, id);
+
+  // Make sure we still have an instance and the timer is still alive
+  // after the callback.
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance*)npp->ndata;
+  if (!inst || !inst->TimerWithID(id, NULL))
+    return;
+
+  // use UnscheduleTimer to clean up if this is a one-shot timer
+  PRUint32 timerType;
+  t->timer->GetType(&timerType);
+  if (timerType == nsITimer::TYPE_ONE_SHOT)
+      inst->UnscheduleTimer(id);
+}
+
+nsNPAPITimer*
+nsNPAPIPluginInstance::TimerWithID(uint32_t id, PRUint32* index)
+{
+  PRUint32 len = mTimers.Length();
+  for (PRUint32 i = 0; i < len; i++) {
+    if (mTimers[i]->id == id) {
+      if (index)
+        *index = i;
+      return mTimers[i];
+    }
+  }
+  return nsnull;
+}
+
+uint32_t
+nsNPAPIPluginInstance::ScheduleTimer(uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID))
+{
+  nsNPAPITimer *newTimer = new nsNPAPITimer();
+
+  newTimer->npp = &fNPP;
+
+  // generate ID that is unique to this instance
+  uint32_t uniqueID = mTimers.Length();
+  while ((uniqueID == 0) || TimerWithID(uniqueID, NULL))
+    uniqueID++;
+  newTimer->id = uniqueID;
+
+  // create new xpcom timer, scheduled correctly
+  nsresult rv;
+  nsCOMPtr<nsITimer> xpcomTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return 0;
+  const short timerType = (repeat ? (short)nsITimer::TYPE_REPEATING_SLACK : (short)nsITimer::TYPE_ONE_SHOT);
+  xpcomTimer->InitWithFuncCallback(PluginTimerCallback, newTimer, interval, timerType);
+  newTimer->timer = xpcomTimer;
+
+  // save callback function
+  newTimer->callback = timerFunc;
+
+  // add timer to timers array
+  mTimers.AppendElement(newTimer);
+
+  return newTimer->id;
+}
+
+void
+nsNPAPIPluginInstance::UnscheduleTimer(uint32_t timerID)
+{
+  // find the timer struct by ID
+  PRUint32 index;
+  nsNPAPITimer* t = TimerWithID(timerID, &index);
+  if (!t)
+    return;
+
+  // cancel the timer
+  t->timer->Cancel();
+
+  // remove timer struct from array
+  mTimers.RemoveElementAt(index);
+
+  // delete timer
+  delete t;
 }
 
 nsresult
