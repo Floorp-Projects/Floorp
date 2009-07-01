@@ -85,8 +85,8 @@ function InputHandler() {
   /* when true, don't process any events */
   this._ignoreEvents = false;
 
-  /* if set, allow a click event to get through */
-  this._allowNextClick = false;
+  /* when set to true, next click won't be dispatched */
+  this._suppressNextClick = true;
 
   /* used to stop everything if mouse leaves window on desktop */
   window.addEventListener("mouseout", this, true);
@@ -135,6 +135,14 @@ InputHandler.prototype = {
       this._grabbed = null;
   },
 
+  suppressNextClick: function suppressNextClick() {
+    this._suppressNextClick = true;
+  },
+
+  allowClicks: function allowClicks() {
+    this._suppressNextClick = false;
+  },
+
   startListening: function startListening() {
     this._ignoreEvents = false;
   },
@@ -143,25 +151,15 @@ InputHandler.prototype = {
     this._ignoreEvents = true;
   },
 
-  allowNextClick: function allowNextClick() {
-    this._allowNextClick = true;
-  },
-
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
 
-    // to allow supressing most clicks we don't generate ourselves,
-    // filter them here unless handler code has asked us to allow it
-    // through one time
-    if (aEvent.type == "click") {
-      if (this._allowNextClick) {
-        this._allowNextClick = false;
-      } else {
-        aEvent.stopPropagation();
-        aEvent.preventDefault();
-        return;
-      }
+    if (this._suppressNextClick && aEvent.type == "click") {
+      this._suppressNextClick = false;
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
+      return;
     }
 
     if (this._grabbed) {
@@ -320,6 +318,9 @@ ChromeInputModule.prototype = {
       return;
     }
 
+    // if we get a new mouseDown, we should allow the click to happen
+    this._owner.allowClicks();
+
     let dragData = this._dragData;
 
     this._targetScrollbox = getScrollboxFromElement(aEvent.target);
@@ -346,14 +347,22 @@ ChromeInputModule.prototype = {
 
   _onMouseUp: function _onMouseUp(aEvent) {
     // only process if original mousedown was on a scrollable element
-    if (!this._targetScrollbox) {
-      this._owner.allowNextClick();
+    if (!this._targetScrollbox)
       return;
-    }
+
+    aEvent.stopPropagation();
+    aEvent.preventDefault();
+
+    let dragData = this._dragData;
+    if (dragData.dragging)
+      this._dragStop(aEvent.screenX, aEvent.screenY);
+
+    dragData.reset(); // be sure to reset the timer
 
     // keep an eye out for mouseups that didn't start with a mousedown
     if (!(this._clickEvents.length % 2)) {
       this._clickEvents = [];
+      this._owner.suppressNextClick();
     } else {
       let clickEvent = document.createEvent("MouseEvent");
       clickEvent.initMouseEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
@@ -364,17 +373,9 @@ ChromeInputModule.prototype = {
       this._clickEvents.push({event: clickEvent, target: aEvent.target, time: Date.now()});
 
       this._sendSingleClick();
-      this._targetScrollbox = null;
+      this._owner.suppressNextClick();
     }
 
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-
-    let dragData = this._dragData;
-    if (dragData.dragging)
-      this._dragStop(aEvent.screenX, aEvent.screenY);
-
-    dragData.reset(); // be sure to reset the timer
     this._targetScrollbox = null;
     this._owner.ungrab(this);
   },
@@ -794,8 +795,6 @@ ContentClickingModule.prototype = {
   },
 
   _sendSingleClick: function _sendSingleClick() {
-    this._owner.allowNextClick();
-
     this._owner.grab(this);
     this._dispatchContentMouseEvent(this._events[0].event);
     this._dispatchContentMouseEvent(this._events[1].event);
