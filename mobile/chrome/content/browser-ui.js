@@ -44,7 +44,7 @@ const TOOLBARSTATE_LOADED   = 2;
 const URLBAR_FORCE  = 1;
 const URLBAR_EDIT   = 2;
 
-const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
+const kDefaultFavIconURL = "chrome://browser/skin/images/favicon-default-30.png";
 
 [
   [
