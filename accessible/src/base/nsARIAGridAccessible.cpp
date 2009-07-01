@@ -926,6 +926,41 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsARIAGridCellAccessible,
 // nsAccessible
 
 nsresult
+nsARIAGridCellAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  nsresult rv = nsHyperTextAccessibleWrap::GetARIAState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Return if the gridcell has aria-selected="true".
+  if (*aState & nsIAccessibleStates::STATE_SELECTED)
+    return NS_OK;
+
+  // Check aria-selected="true" on the row.
+  nsCOMPtr<nsIAccessible> row;
+  GetParent(getter_AddRefs(row));
+  if (nsAccUtils::Role(row) != nsIAccessibleRole::ROLE_ROW)
+    return NS_OK;
+
+  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(row);
+  nsCOMPtr<nsIDOMNode> rowNode;
+  acc->GetDOMNode(getter_AddRefs(rowNode));
+  NS_ENSURE_STATE(rowNode);
+
+  nsCOMPtr<nsIContent> rowContent(do_QueryInterface(rowNode));
+  if (nsAccUtils::HasDefinedARIAToken(rowContent,
+                                      nsAccessibilityAtoms::aria_selected) &&
+      !rowContent->AttrValueIs(kNameSpaceID_None,
+                               nsAccessibilityAtoms::aria_selected,
+                               nsAccessibilityAtoms::_false, eCaseMatters)) {
+
+    *aState |= nsIAccessibleStates::STATE_SELECTABLE |
+      nsIAccessibleStates::STATE_SELECTED;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   if (IsDefunct())

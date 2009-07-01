@@ -1,4 +1,13 @@
 /**
+ * This file provides set of helper functions to test nsIAccessibleTable
+ * interface.
+ *
+ * Required:
+ *   common.js
+ *   states.js
+ */
+
+/**
  * Test table indexes.
  *
  * @param  aIdentifier  [in] table accessible identifier
@@ -219,6 +228,18 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var i = 0; i < actualSelCellsCount; i++) {
     is (actualSelCells[i], selCells[i],
         msg + "Cell at index " + selCells[i] + " should be selected.");
+  }
+
+  // selected states tests
+  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      var cell = acc.cellRefAt(rowIdx, colIdx);
+      var isSel = aCellsArray[rowIdx][colIdx];
+      if (isSel)
+        testStates(cell, STATE_SELECTED);
+      else
+        testStates(cell, 0, 0, STATE_SELECTED);
+    }
   }
 }
 
