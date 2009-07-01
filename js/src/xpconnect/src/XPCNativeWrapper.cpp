@@ -1159,7 +1159,9 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
 
-  if (!EnsureLegalActivity(cx, obj)) {
+  if (!EnsureLegalActivity(cx, obj,
+                           GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING),
+                           XPCWrapper::sSecMgrGetProp)) {
     return JS_FALSE;
   }
 
