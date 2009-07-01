@@ -168,6 +168,7 @@ _TEST_FILES += \
 		test_bug467672-5g.html \
 		bug467672-5.html \
 		bug467672-5-ref.html \
+		test_bug499538-1.html \
 		$(NULL)
 endif
 
