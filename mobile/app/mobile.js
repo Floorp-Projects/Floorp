@@ -64,7 +64,7 @@ pref("browser.cache.memory.enable", true);
 pref("browser.cache.memory.capacity", 1024); // kilobytes
 
 /* image cache prefs */
-pref("image.cache.size", 1048576) // bytes
+pref("image.cache.size", 1048576); // bytes
 
 /* offline cache prefs */
 pref("browser.cache.offline.enable", true);
