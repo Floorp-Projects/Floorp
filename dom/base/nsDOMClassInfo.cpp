@@ -5744,7 +5744,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
     if (proto &&
         (!xpc_proto_proto ||
-         JS_GET_CLASS(cx, xpc_proto_proto) == nsDOMClassInfo::GetObjectClass())) {
+         JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
       if (!::JS_SetPrototype(cx, dot_prototype, proto)) {
         return NS_ERROR_UNEXPECTED;
       }
