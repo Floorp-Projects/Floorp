@@ -914,7 +914,6 @@ NPAPIPluginChild::AnswerNP_Initialize(NPError* rv)
 
 NPPProtocolChild*
 NPAPIPluginChild::NPPConstructor(const String& aMimeType,
-                                 /*const NPPParent*&*/const int& aHandle,
                                  const uint16_t& aMode,
                                  const StringArray& aNames,
                                  const StringArray& aValues,
@@ -923,7 +922,12 @@ NPAPIPluginChild::NPPConstructor(const String& aMimeType,
     _MOZ_LOG(__FUNCTION__);
 
     // create our wrapper instance
-    NPPInstanceChild* childInstance = new NPPInstanceChild(&mFunctions);
+    nsAutoPtr<NPPInstanceChild> childInstance(
+        new NPPInstanceChild(&mFunctions));
+    if (!childInstance->Initialize()) {
+        *rv = NPERR_GENERIC_ERROR;
+        return 0;
+    }
 
     // unpack the arguments into a C format
     int argc = aNames.size();
@@ -967,13 +971,19 @@ out:
     free(argn);
     free(argv);
 
-    return childInstance;
+    return childInstance.forget();
 }
-
 
 nsresult
 NPAPIPluginChild::NPPDestructor(NPPProtocolChild* actor, NPError* rv)
 {
+    _MOZ_LOG(__FUNCTION__);
+
+    NPPInstanceChild* inst = static_cast<NPPInstanceChild*>(actor);
+    *rv = mFunctions.destroy(inst->GetNPP(), 0);
+    delete actor;
+    inst->GetNPP()->ndata = 0;
+
     return NS_OK;
 }
 

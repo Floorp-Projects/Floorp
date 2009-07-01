@@ -58,6 +58,8 @@
 #include "mozilla/plugins/NPPInstanceParent.h"
 #include "mozilla/plugins/PluginProcessParent.h"
 
+#include "nsAutoPtr.h"
+
 #undef _MOZ_LOG
 #define _MOZ_LOG(s) printf("[NPAPIPluginParent] %s\n", s)
 
@@ -84,7 +86,6 @@ private:
 protected:
     NPPProtocolParent* NPPConstructor(
                 const String& aMimeType,
-                const int& aHandle,
                 const uint16_t& aMode,
                 const StringArray& aNames,
                 const StringArray& aValues,
@@ -161,17 +162,7 @@ private:
                     int16_t argc, char* argn[], char* argv[],
                     NPSavedData* saved);
 
-    NPError NPP_Destroy(NPP instance, NPSavedData** save)
-    {
-        // FIXME/cjones:
-        //  (1) send a "destroy" message to the child
-        //  (2) the child shuts down its instance
-        //  (3) remove both parent and child IDs from map
-        //  (4) free parent
-
-        _MOZ_LOG(__FUNCTION__);
-        return 1;
-    }
+    NPError NPP_Destroy(NPP instance, NPSavedData** save);
 
     static inline NPPInstanceParent& InstCast(void* p)
     {

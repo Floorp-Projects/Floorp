@@ -39,15 +39,29 @@
 
 #include "base/message_pump_default.h"
 
+#include "prtypes.h"
+#include "nsCOMPtr.h"
+
+class nsIRunnable;
+class nsIThread;
+
 namespace mozilla {
 namespace ipc {
 
 class MessagePump : public base::MessagePumpDefault
 {
 public:
-  friend class UIThreadObserver;
+  MessagePump();
+  ~MessagePump();
 
   virtual void Run(base::MessagePump::Delegate* aDelegate);
+  virtual void ScheduleWork();
+
+private:
+  nsIRunnable* mDummyEvent;
+
+  // Weak!
+  nsIThread* mThread;
 };
 
 class MessagePumpForChildProcess : public MessagePump

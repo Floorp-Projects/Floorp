@@ -38,13 +38,15 @@
 
 #include "nsIAppShell.h"
 #include "nsIThread.h"
-#include "nsIThreadInternal.h"
+#include "nsITimer.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
 #include "nsWidgetsCID.h"
+#include "pratom.h"
 #include "prthread.h"
 
 #include "base/logging.h"
@@ -55,74 +57,29 @@ using mozilla::ipc::MessagePumpForChildProcess;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
-namespace mozilla {
-namespace ipc {
+namespace {
 
-class UIThreadObserver : public nsIThreadObserver
+void
+TimerCallback(nsITimer* aTimer,
+              void* aClosure)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITHREADOBSERVER
-
-  UIThreadObserver(MessagePump& aPump,
-                   nsIThreadObserver* aRealObserver)
-  : mPump(aPump),
-    mRealObserver(aRealObserver),
-    mPRThread(PR_GetCurrentThread())
-  {
-    NS_ASSERTION(aRealObserver, "This should never be null!");
-  }
-
-private:
-  MessagePump& mPump;
-  nsIThreadObserver* mRealObserver;
-  PRThread* mPRThread;
-};
-
-} /* namespace ipc */
-} /* namespace mozilla */
-
-using mozilla::ipc::UIThreadObserver;
-
-NS_IMETHODIMP_(nsrefcnt)
-UIThreadObserver::AddRef()
-{
-  return 2;
+  MessagePump* messagePump = reinterpret_cast<MessagePump*>(aClosure);
+  messagePump->ScheduleWork();
 }
 
-NS_IMETHODIMP_(nsrefcnt)
-UIThreadObserver::Release()
+} /* anonymous namespace */
+
+MessagePump::MessagePump()
+: mThread(nsnull)
 {
-  return 1;
+  mDummyEvent = new nsRunnable();
+  // I'm tired of adding OOM checks.
+  NS_ADDREF(mDummyEvent);
 }
 
-NS_IMPL_QUERY_INTERFACE1(UIThreadObserver, nsIThreadObserver)
-
-NS_IMETHODIMP
-UIThreadObserver::OnDispatchedEvent(nsIThreadInternal* aThread)
+MessagePump::~MessagePump()
 {
-  // XXXbent See if we can figure out some faster way of doing this. On posix
-  // the Signal() call grabs a lock and on windows it calls SetEvent. Seems
-  // like a good idea to avoid calling Signal if we're on the main thead.
-  if (PR_GetCurrentThread() != mPRThread) {
-    mPump.event_.Signal();
-  }
-  return mRealObserver->OnDispatchedEvent(aThread);
-}
-
-NS_IMETHODIMP
-UIThreadObserver::OnProcessNextEvent(nsIThreadInternal* aThread,
-                                     PRBool aMayWait,
-                                     PRUint32 aRecursionDepth)
-{
-  return mRealObserver->OnProcessNextEvent(aThread, aMayWait, aRecursionDepth);
-}
-
-NS_IMETHODIMP
-UIThreadObserver::AfterProcessNextEvent(nsIThreadInternal* aThread,
-                                        PRUint32 aRecursionDepth)
-{
-  return mRealObserver->AfterProcessNextEvent(aThread, aRecursionDepth);
+  NS_RELEASE(mDummyEvent);
 }
 
 void
@@ -130,33 +87,22 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
 {
   NS_ASSERTION(keep_running_, "Quit must have been called outside of Run!");
 
-  nsCOMPtr<nsIThread> thread(do_GetCurrentThread());
-  NS_ASSERTION(thread, "This should never be null!");
+  NS_ASSERTION(NS_IsMainThread(),
+               "This should only ever happen on Gecko's main thread!");
 
-  nsCOMPtr<nsIThreadInternal> threadInternal(do_QueryInterface(thread));
-  NS_ASSERTION(threadInternal, "QI failed?!");
+  mThread = NS_GetCurrentThread();
+  NS_ASSERTION(mThread, "This should never be null!");
 
-  nsCOMPtr<nsIThreadObserver> realObserver;
-  threadInternal->GetObserver(getter_AddRefs(realObserver));
-  NS_ASSERTION(realObserver, "This should never be null!");
+  nsCOMPtr<nsITimer> timer(do_CreateInstance(NS_TIMER_CONTRACTID));
+  NS_ASSERTION(timer, "Failed to create timer!");
 
-  UIThreadObserver observer(*this, realObserver);
-  threadInternal->SetObserver(&observer);
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIAppShell> appShell(do_QueryInterface(realObserver));
-    NS_ASSERTION(appShell, "Should be the app shell!");
-  }
-#endif
-
+  base::ScopedNSAutoreleasePool autoReleasePool;
 
   for (;;) {
-    // XXXbent This looks fishy... Maybe have one that calls Recycle each time
-    // through the loop? Copied straight from message_pump_default.
-    base::ScopedNSAutoreleasePool autorelease_pool;
+    autoReleasePool.Recycle();
+    timer->Cancel();
 
-    bool did_work = NS_ProcessNextEvent(thread, PR_FALSE) ? true : false;
+    bool did_work = NS_ProcessNextEvent(mThread, PR_FALSE) ? true : false;
     if (!keep_running_)
       break;
 
@@ -179,24 +125,40 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
       continue;
 
     if (delayed_work_time_.is_null()) {
-      event_.Wait();
-    } else {
-      base::TimeDelta delay = delayed_work_time_ - base::Time::Now();
-      if (delay > base::TimeDelta()) {
-        event_.TimedWait(delay);
-      } else {
-        // It looks like delayed_work_time_ indicates a time in the past, so we
-        // need to call DoDelayedWork now.
-        delayed_work_time_ = base::Time();
-      }
+      // This will sleep or process native events.
+      NS_ProcessNextEvent(mThread, PR_TRUE);
+      continue;
     }
-    // Since event_ is auto-reset, we don't need to do anything special here
-    // other than service each delegate method.
+
+    base::TimeDelta delay = delayed_work_time_ - base::Time::Now();
+    if (delay > base::TimeDelta()) {
+      PRUint32 delayMS = PRUint32(delay.InMilliseconds());
+      timer->InitWithFuncCallback(TimerCallback, this, delayMS,
+                                  nsITimer::TYPE_ONE_SHOT);
+      // This will sleep or process native events. The timer should wake us up
+      // if nothing else does.
+      NS_ProcessNextEvent(mThread, PR_TRUE);
+      continue;
+    }
+
+    // It looks like delayed_work_time_ indicates a time in the past, so we
+    // need to call DoDelayedWork now.
+    delayed_work_time_ = base::Time();
   }
 
-  threadInternal->SetObserver(realObserver);
+  timer->Cancel();
 
   keep_running_ = true;
+}
+
+void
+MessagePump::ScheduleWork()
+{
+  // Make sure the event loop wakes up.
+  if (mThread) {
+    mThread->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
+    event_.Signal();
+  }
 }
 
 #ifdef DEBUG
@@ -228,8 +190,10 @@ MessagePumpForChildProcess::Run(MessagePump::Delegate* aDelegate)
 #endif
     return;
   }
+
 #ifdef DEBUG
   NS_ASSERTION(aDelegate && aDelegate == gFirstDelegate, "Huh?!");
 #endif
+  // Really run.
   mozilla::ipc::MessagePump::Run(aDelegate);
 }

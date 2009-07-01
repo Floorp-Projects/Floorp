@@ -96,7 +96,6 @@ public:
     };
     Msg_NPPConstructor(
                 const String& aMimeType,
-                const int& aHandle,
                 const uint16_t& aMode,
                 const StringArray& aNames,
                 const StringArray& aValues,
@@ -104,7 +103,6 @@ public:
         IPC::Message(MSG_ROUTING_NONE, ID, PRIORITY_NORMAL)
     {
         IPC::WriteParam(this, aMimeType);
-        IPC::WriteParam(this, aHandle);
         IPC::WriteParam(this, aMode);
         IPC::WriteParam(this, aNames);
         IPC::WriteParam(this, aValues);
@@ -114,7 +112,6 @@ public:
     static bool Read(
                 const Message* msg,
                 String* aMimeType,
-                int* aHandle,
                 uint16_t* aMode,
                 StringArray* aNames,
                 StringArray* aValues,
@@ -123,10 +120,6 @@ public:
         void* iter = 0;
 
         if (!(IPC::ReadParam(msg, &(iter), aMimeType))) {
-            return false;
-        }
-
-        if (!(IPC::ReadParam(msg, &(iter), aHandle))) {
             return false;
         }
 

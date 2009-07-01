@@ -17,7 +17,6 @@ rpc protocol NPAPI
 
 
     rpc out NPP(String aMimeType,
-                int aHandle,
                 uint16_t aMode,
                 StringArray aNames,
                 StringArray aValues) returns (NPError rv);
