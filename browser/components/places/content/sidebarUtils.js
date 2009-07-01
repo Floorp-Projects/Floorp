@@ -55,7 +55,16 @@ var SidebarUtils = {
       var x = { }, y = { }, w = { }, h = { };
       tbo.getCoordsForCellItem(row.value, col.value, "image",
                                x, y, w, h);
-      mouseInGutter = aEvent.clientX < x.value;
+      // getCoordsForCellItem returns the x coordinate in logical coordinates
+      // (i.e., starting from the left and right sides in LTR and RTL modes,
+      // respectively.)  Therefore, we make sure to exclude the blank area
+      // before the tree item icon (that is, to the left or right of it in
+      // LTR and RTL modes, respectively) from the click target area.
+      var isRTL = window.getComputedStyle(aTree, null).direction == "rtl";
+      if (isRTL)
+        mouseInGutter = aEvent.clientX > x.value;
+      else
+        mouseInGutter = aEvent.clientX < x.value;
     }
 
 #ifdef XP_MACOSX
