@@ -51,10 +51,29 @@ pref("browser.ui.panning.fixup.mousemove", false);
 pref("javascript.options.showInConsole", false);
 
 /* cache prefs */
+#ifdef MOZ_PLATFORM_HILDON
+pref("browser.cache.disk.enable", true);
+pref("browser.cache.disk.capacity", 10240); // kilobytes
+pref("browser.cache.disk.parent_directory", "/media/mmc2/.mozilla/@APP_NAME@");
+#endif
+#ifdef WINCE
 pref("browser.cache.disk.enable", false);
-pref("browser.cache.disk.capacity", 0);
+pref("browser.cache.disk.capacity", 0); // kilobytes
+#endif
 pref("browser.cache.memory.enable", true);
-pref("browser.cache.memory.capacity", 1024);
+pref("browser.cache.memory.capacity", 1024); // kilobytes
+
+/* image cache prefs */
+pref("image.cache.size", 1048576) // bytes
+
+/* offline cache prefs */
+pref("browser.cache.offline.enable", true);
+pref("browser.cache.offline.capacity", 5120); // kilobytes
+pref("offline-apps.quota.max", 2048); // kilobytes
+pref("offline-apps.quota.warn", 1024); // kilobytes
+#ifdef MOZ_PLATFORM_HILDON
+pref("browser.cache.offline.parent_directory", "/media/mmc2/.mozilla/@APP_NAME@");
+#endif
 
 /* http prefs */
 pref("network.http.pipelining", true);
