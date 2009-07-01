@@ -603,6 +603,14 @@ extern JS_FRIEND_API(JSString *)
 js_ValueToString(JSContext *cx, jsval v);
 
 /*
+ * This function implements E-262-3 section 9.8, toString.  Convert the given
+ * value to a string of jschars appended to the given buffer.  On error, the
+ * passed buffer may have partial results appended.
+ */
+extern JS_FRIEND_API(JSBool)
+js_ValueToStringBuffer(JSContext *, jsval, JSTempVector<jschar> &);
+
+/*
  * Convert a value to its source expression, returning null after reporting
  * an error, otherwise returning a new string reference.
  */
