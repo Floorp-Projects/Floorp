@@ -615,7 +615,7 @@ Assembler::hint(LIns* i, RegisterMask allow /* = ~0 */)
     else if (op == LIR_callh)
         prefer = rmask(R1);
     else if (op == LIR_param)
-        prefer = rmask(imm2register(i->paramArg()));
+        prefer = rmask(imm2register(i->imm8()));
 
     if (_allocator.free & allow & prefer)
         allow &= prefer;
@@ -1918,8 +1918,8 @@ Assembler::asm_qlo(LInsp ins)
 void
 Assembler::asm_param(LInsp ins)
 {
-    uint32_t a = ins->paramArg();
-    uint32_t kind = ins->paramKind();
+    uint32_t a = ins->imm8();
+    uint32_t kind = ins->imm8b();
     if (kind == 0) {
         // ordinary param
         AbiKind abi = _thisfrag->lirbuf->abi;
