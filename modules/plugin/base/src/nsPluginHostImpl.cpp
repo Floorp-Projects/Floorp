@@ -4501,15 +4501,8 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   if (NS_FAILED(rv))
     return rv;
 
-  // only if plugins have changed will we ask XPTI to refresh
+  // only if plugins have changed will we notify plugin-change observers
   if (pluginschanged) {
-    // rescan XPTI to catch any newly installed interfaces
-    nsCOMPtr<nsIInterfaceInfoManager>
-      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-
-    if (iim)
-      iim->AutoRegisterInterfaces();
-
     nsCOMPtr<nsIObserverService>
       obsService(do_GetService("@mozilla.org/observer-service;1"));
     if (obsService)
