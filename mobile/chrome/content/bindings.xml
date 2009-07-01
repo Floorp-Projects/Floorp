@@ -358,7 +358,7 @@
             if (!this._itemId)
               return;
 
-            if (this.hasAttribute("uri")) {
+            if (this.hasAttribute("uri") && this.type != "folder") {
               this._uri = this._ioService.newURI(this.getAttribute("uri"), null, null);
               let icon = document.getAnonymousElementByAttribute(this, "anonid", "favicon");
               icon.src = this._faviconService.getFaviconImageForPage(this._uri).spec;
