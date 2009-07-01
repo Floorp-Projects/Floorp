@@ -170,7 +170,6 @@ var Browser = {
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
-    os.addObserver(gXPInstallObserver, "xpinstall-download-started", false);
     os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
 
     // XXX hook up memory-pressure notification to clear out tab browsers
@@ -257,7 +256,6 @@ var Browser = {
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
-    os.removeObserver(gXPInstallObserver, "xpinstall-download-started");
     os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);
