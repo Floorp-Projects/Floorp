@@ -1826,7 +1826,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
 
   aStatus = nsEventStatus_eIgnore;
 
-  nsCOMPtr<nsIWidget> kungFuDeathGrip(mParentWidget ? mParentWidget : this);
+  nsCOMPtr<nsIWidget> kungFuDeathGrip = do_QueryInterface(mParentWidget ? mParentWidget : this);
   if (mParentWidget) {
     nsWindowType type;
     mParentWidget->GetWindowType(type);
