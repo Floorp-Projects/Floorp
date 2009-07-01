@@ -599,8 +599,8 @@ function open_properties_dialog() {
         if (aTopic === "domwindowopened") {
           ww.unregisterNotification(this);
           var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-          win.addEventListener("load", function onLoad(event) {
-            win.removeEventListener("load", onLoad, false);
+          win.addEventListener("focus", function(event) {
+            win.removeEventListener("focus", arguments.callee, false);
             // Windows has been loaded, execute our test now.
             executeSoon(function () {
               // Ensure overlay is loaded
