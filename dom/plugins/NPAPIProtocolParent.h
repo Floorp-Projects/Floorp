@@ -25,7 +25,6 @@ protected:
 
     virtual NPPProtocolParent* NPPConstructor(
                 const String& aMimeType,
-                const int& aHandle,
                 const uint16_t& aMode,
                 const StringArray& aNames,
                 const StringArray& aValues,
@@ -77,14 +76,13 @@ public:
 
     NPPProtocolParent* CallNPPConstructor(
                 const String& aMimeType,
-                const int& aHandle,
                 const uint16_t& aMode,
                 const StringArray& aNames,
                 const StringArray& aValues,
                 NPError* rv)
     {
         NPPProtocolParent* __a;
-        __a = NPPConstructor(aMimeType, aHandle, aMode, aNames, aValues, rv);
+        __a = NPPConstructor(aMimeType, aMode, aNames, aValues, rv);
         if (!(__a)) {
             return 0;
         }
@@ -94,7 +92,7 @@ public:
 
         Message __reply;
         Message* __msg;
-        __msg = new NPAPIProtocol::Msg_NPPConstructor(aMimeType, aHandle, aMode, aNames, aValues, __ah);
+        __msg = new NPAPIProtocol::Msg_NPPConstructor(aMimeType, aMode, aNames, aValues, __ah);
         __msg->set_routing_id(MSG_ROUTING_CONTROL);
         if (!(mChannel.Call(__msg, &(__reply)))) {
             return 0;
