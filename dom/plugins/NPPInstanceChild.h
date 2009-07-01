@@ -52,6 +52,13 @@ namespace plugins {
 
 class NPPInstanceChild : public NPPProtocolChild
 {
+#ifdef OS_WIN
+    friend LRESULT CALLBACK PluginWindowProc(HWND hWnd,
+                                             UINT message,
+                                             WPARAM wParam,
+                                             LPARAM lParam);
+#endif
+
 protected:
     virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
@@ -60,15 +67,24 @@ protected:
 public:
     NPPInstanceChild(const NPPluginFuncs* aPluginIface) :
         mPluginIface(aPluginIface)
+#if defined(OS_LINUX)
+        , mPlug(0)
+#elif defined(OS_WIN)
+        , mPluginWindowHWND(0)
+        , mPluginWndProc(0)
+        , mPluginParentHWND(0)
+#endif
     {
         memset(&mWindow, 0, sizeof(mWindow));
         mData.ndata = (void*) this;
+#if defined(OS_LINUX)
+        memset(&mWsInfo, 0, sizeof(mWsInfo));
+#endif
     }
 
-    virtual ~NPPInstanceChild()
-    {
+    virtual ~NPPInstanceChild();
 
-    }
+    bool Initialize();
 
     NPP GetNPP()
     {
@@ -78,6 +94,23 @@ public:
     NPError NPN_GetValue(NPNVariable aVariable, void* aValue);
 
 private:
+
+#if defined(OS_WIN)
+    static bool RegisterWindowClass();
+    bool CreatePluginWindow();
+    void DestroyPluginWindow();
+    void ReparentPluginWindow(HWND hWndParent);
+    void SizePluginWindow(int width, int height);
+    static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
+                                            UINT message,
+                                            WPARAM wParam,
+                                            LPARAM lParam);
+    static LRESULT CALLBACK PluginWindowProc(HWND hWnd,
+                                             UINT message,
+                                             WPARAM wParam,
+                                             LPARAM lParam);
+#endif
+
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
 #ifdef OS_LINUX
@@ -86,6 +119,10 @@ private:
     NPWindow mWindow;
 #ifdef OS_LINUX
     NPSetWindowCallbackStruct mWsInfo;
+#elif defined(OS_WIN)
+    HWND mPluginWindowHWND;
+    WNDPROC mPluginWndProc;
+    HWND mPluginParentHWND;
 #endif
 };
 

@@ -106,12 +106,12 @@ NPAPIPluginParent::LaunchSubprocess()
 
 NPPProtocolParent*
 NPAPIPluginParent::NPPConstructor(const String& aMimeType,
-                                  const int& aHandle,
                                   const uint16_t& aMode,
                                   const StringArray& aNames,
                                   const StringArray& aValues,
                                   NPError* rv)
 {
+    _MOZ_LOG(__FUNCTION__);
     return new NPPInstanceParent(mNPNIface);
 }
 
@@ -119,7 +119,8 @@ nsresult
 NPAPIPluginParent::NPPDestructor(NPPProtocolParent* __a,
                                  NPError* rv)
 {
-    return NS_OK;
+    _MOZ_LOG(__FUNCTION__);
+    delete __a;
 }
 
 void
@@ -205,12 +206,11 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
     }
 
     NPError prv;
-    NPPInstanceParent* parentInstance = static_cast<NPPInstanceParent*>(
-        CallNPPConstructor(pluginType,
-                           /*instance*/42,
-                           mode, names,
-                           values,
-                           &prv));
+    nsAutoPtr<NPPInstanceParent> parentInstance(
+        static_cast<NPPInstanceParent*>(CallNPPConstructor(pluginType,
+                                                           mode, names,
+                                                           values,
+                                                           &prv)));
     printf ("[NPAPIPluginParent] %s: got return value %hd\n", __FUNCTION__,
             prv);
 
@@ -219,14 +219,33 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
     NS_ASSERTION(parentInstance,
                  "if there's no parentInstance, there should be an error");
 
-    // FIXME/cjones: HACK ALERT!  kill this and manage through NPAPI
-//    parentInstance->mNpp.SetChannel(mNpapi.HACK_getchannel_please());
-//    mNpapi.HACK_npp = &(parentInstance->mNpp);
-
-
-    instance->pdata = (void*) parentInstance;
+    instance->pdata = (void*) parentInstance.forget();
     return prv;
 }
+
+NPError
+NPAPIPluginParent::NPP_Destroy(NPP instance,
+                               NPSavedData** save)
+{
+    // FIXME/cjones:
+    //  (1) send a "destroy" message to the child
+    //  (2) the child shuts down its instance
+    //  (3) remove both parent and child IDs from map
+    //  (4) free parent
+
+    _MOZ_LOG(__FUNCTION__);
+
+    NPPInstanceParent* parentInstance =
+        static_cast<NPPInstanceParent*>(instance->pdata);
+
+    NPError prv;
+    if (CallNPPDestructor(parentInstance, &prv)) {
+        prv = NPERR_GENERIC_ERROR;
+    }
+    instance->pdata = nsnull;
+
+    return prv;
+ }
 
 // HACKS
 NPAPIPluginParent* NPAPIPluginParent::Shim::HACK_target;
