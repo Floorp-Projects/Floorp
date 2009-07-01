@@ -139,20 +139,14 @@ typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
  *
  * jsprvtd.h can be included in both C and C++ translation units.  For C++, it
  * may possibly be wrapped in an extern "C" block which does not agree with
- * templates.  Since there is no way to auto-detect whether or not we are in an
- * extern block, we rely on the C++/extern user to #define WRAPPED_IN_EXTERN_C
- * to let us know to temporarily exit the block.
+ * templates.
  */
 #ifdef __cplusplus
-# ifdef WRAPPED_IN_EXTERN_C
-}
-# endif
+extern "C++" {
 
 template <class T> class JSTempVector;
 
-# ifdef WRAPPED_IN_EXTERN_C
-extern "C" {
-# endif
+}
 #endif  /* __cplusplus */
 
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
