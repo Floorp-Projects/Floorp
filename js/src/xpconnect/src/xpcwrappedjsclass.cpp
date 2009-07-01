@@ -1434,6 +1434,41 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         *sp++ = OBJECT_TO_JSVAL(thisObj);
     }
 
+    // Figure out what our callee is
+    if(XPT_MD_IS_GETTER(info->flags) || XPT_MD_IS_SETTER(info->flags))
+    {
+        // Pull the getter or setter off of |obj|
+        uintN attrs;
+        JSBool found;
+        JSPropertyOp getter;
+        JSPropertyOp setter;
+        if(!JS_GetPropertyAttrsGetterAndSetter(cx, obj, name,
+                                               &attrs, &found,
+                                               &getter, &setter))
+        {
+            // XXX Do we want to report this exception?
+            JS_ClearPendingException(cx);
+            goto pre_call_clean_up;
+        }
+
+        if(XPT_MD_IS_GETTER(info->flags) && (attrs & JSPROP_GETTER))
+        {
+            // JSPROP_GETTER means the getter is actually a
+            // function object.
+            ccx.SetCallee(JS_FUNC_TO_DATA_PTR(JSObject*, getter));
+        }
+        else if(XPT_MD_IS_SETTER(info->flags) && (attrs & JSPROP_SETTER))
+        {
+            // JSPROP_SETTER means the setter is actually a
+            // function object.
+            ccx.SetCallee(JS_FUNC_TO_DATA_PTR(JSObject*, setter));
+        }
+    }
+    else if(JSVAL_IS_OBJECT(fval))
+    {
+        ccx.SetCallee(JSVAL_TO_OBJECT(fval));
+    }
+
     // build the args
     for(i = 0; i < argc; i++)
     {
@@ -1487,39 +1522,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                           i, GET_LENGTH, nativeParams,
                                           &array_count))
                     goto pre_call_clean_up;
-            }
-
-            // Figure out what our callee is
-            if(XPT_MD_IS_GETTER(info->flags) || XPT_MD_IS_SETTER(info->flags))
-            {
-                // Pull the getter or setter off of |obj|
-                uintN attrs;
-                JSBool found;
-                JSPropertyOp getter;
-                JSPropertyOp setter;
-                JSBool ok =
-                    JS_GetPropertyAttrsGetterAndSetter(cx, obj, name,
-                                                       &attrs, &found,
-                                                       &getter, &setter);
-                if(ok)
-                {
-                    if(XPT_MD_IS_GETTER(info->flags) && (attrs & JSPROP_GETTER))
-                    {
-                        // JSPROP_GETTER means the getter is actually a
-                        // function object.
-                        ccx.SetCallee(JS_FUNC_TO_DATA_PTR(JSObject*, getter));
-                    }
-                    else if(XPT_MD_IS_SETTER(info->flags) && (attrs & JSPROP_SETTER))
-                    {
-                        // JSPROP_SETTER means the setter is actually a
-                        // function object.
-                        ccx.SetCallee(JS_FUNC_TO_DATA_PTR(JSObject*, setter));
-                    }
-                }
-            }
-            else if(JSVAL_IS_OBJECT(fval))
-            {
-                ccx.SetCallee(JSVAL_TO_OBJECT(fval));
             }
 
             if(isArray)
