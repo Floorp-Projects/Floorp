@@ -347,7 +347,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // normal browser windows. here we just drop a raised window
         // to the normal zlevel if it's maximized. we make no provision
         // for automatically re-raising it when restored.
-        if (modeEvent->mSizeMode == nsSizeMode_Maximized) {
+        if (modeEvent->mSizeMode == nsSizeMode_Maximized ||
+            modeEvent->mSizeMode == nsSizeMode_Fullscreen) {
           PRUint32 zLevel;
           eventWindow->GetZLevel(&zLevel);
           if (zLevel > nsIXULWindow::normalZ)

@@ -95,9 +95,10 @@
 
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
-#define SIZEMODE_NORMAL    NS_LITERAL_STRING("normal")
-#define SIZEMODE_MAXIMIZED NS_LITERAL_STRING("maximized")
-#define SIZEMODE_MINIMIZED NS_LITERAL_STRING("minimized")
+#define SIZEMODE_NORMAL     NS_LITERAL_STRING("normal")
+#define SIZEMODE_MAXIMIZED  NS_LITERAL_STRING("maximized")
+#define SIZEMODE_MINIMIZED  NS_LITERAL_STRING("minimized")
+#define SIZEMODE_FULLSCREEN NS_LITERAL_STRING("fullscreen")
 
 #define WINDOWTYPE_ATTRIBUTE NS_LITERAL_STRING("windowtype")
 
@@ -255,7 +256,7 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
     PRInt32 sizeMode;
     if (mWindow) {
       mWindow->GetSizeMode(&sizeMode);
-      if (sizeMode == nsSizeMode_Maximized)
+      if (sizeMode == nsSizeMode_Maximized || sizeMode == nsSizeMode_Fullscreen)
         return NS_ERROR_FAILURE;
     }
   }
@@ -275,30 +276,7 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
   SavePersistentAttributes();
 
   // finally, send a notification DOM event
-  nsCOMPtr<nsIContentViewer> cv;
-  mDocShell->GetContentViewer(getter_AddRefs(cv));
-  nsCOMPtr<nsIDocumentViewer> dv(do_QueryInterface(cv));
-  if (dv) {
-    nsCOMPtr<nsIDocument> doc;
-    dv->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(doc));
-    if (docEvent) {
-      nsCOMPtr<nsIDOMEvent> event;
-      docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-      if (event) {
-        event->InitEvent(NS_LITERAL_STRING("windowZLevel"), PR_TRUE, PR_FALSE);
-
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-        privateEvent->SetTrusted(PR_TRUE);
-
-        nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(doc));
-        if (targ) {
-          PRBool defaultActionEnabled;
-          targ->DispatchEvent(event, &defaultActionEnabled);
-        }
-      }
-    }
-  }
+  DispatchCustomEvent(NS_LITERAL_STRING("windowZLevel"));
   
   return NS_OK;
 }
@@ -1202,17 +1180,33 @@ PRBool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
     if (stateString.Equals(SIZEMODE_MINIMIZED))
       sizeMode = nsSizeMode_Minimized;
     */
-    if (stateString.Equals(SIZEMODE_MAXIMIZED)) {
+    if (stateString.Equals(SIZEMODE_MAXIMIZED) || stateString.Equals(SIZEMODE_FULLSCREEN)) {
       /* Honor request to maximize only if the window is sizable.
          An unsizable, unmaximizable, yet maximized window confuses
          Windows OS and is something of a travesty, anyway. */
       if (mChromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
         mIntrinsicallySized = PR_FALSE;
-        sizeMode = nsSizeMode_Maximized;
+        
+        if (stateString.Equals(SIZEMODE_MAXIMIZED))
+          sizeMode = nsSizeMode_Maximized;
+        else
+          sizeMode = nsSizeMode_Fullscreen;
       }
     }
+
+    // Dispatch fullscreen event
+    if (sizeMode == nsSizeMode_Fullscreen) {
+      if (!DispatchCustomEvent(NS_LITERAL_STRING("fullscreen"), PR_TRUE, PR_FALSE)) {
+        // fullscreen event prevented the default, set the window to
+        // maximized instead of fullscreen.
+        sizeMode = nsSizeMode_Maximized;
+        mWindow->SetSizeMode(sizeMode);
+      }
+    }
+
     // the widget had better be able to deal with not becoming visible yet
     mWindow->SetSizeMode(sizeMode);
+
     gotState = PR_TRUE;
   }
 
@@ -1522,6 +1516,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         persistString.Find("sizemode") >= 0) {
       if (sizeMode == nsSizeMode_Maximized)
         sizeString.Assign(SIZEMODE_MAXIMIZED);
+      else if (sizeMode == nsSizeMode_Fullscreen)
+        sizeString.Assign(SIZEMODE_FULLSCREEN);
       else
         sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
@@ -2137,6 +2133,48 @@ PRInt32 nsXULWindow::AppUnitsPerDevPixel()
              "or no dev context");
   }
   return mAppPerDev;
+}
+
+
+PRBool nsXULWindow::DispatchCustomEvent(const nsAString& eventName, PRBool cancelable, PRBool toDocument)
+{
+  nsCOMPtr<nsIContentViewer> cv;
+  mDocShell->GetContentViewer(getter_AddRefs(cv));
+  nsCOMPtr<nsIDocumentViewer> dv(do_QueryInterface(cv));
+  if (dv) {
+    nsCOMPtr<nsIDocument> doc;
+    dv->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(doc));
+    if (docEvent) {
+      nsCOMPtr<nsIDOMEvent> event;
+      docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+      if (event) {
+        event->InitEvent(eventName, PR_TRUE, cancelable);
+        
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+        privateEvent->SetTrusted(PR_TRUE);
+        
+        if (toDocument) {
+          nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(doc));
+          if (targ) {
+            PRBool defaultActionEnabled;
+            targ->DispatchEvent(event, &defaultActionEnabled);
+            return defaultActionEnabled;
+          }
+        } else {
+          nsCOMPtr<nsIDOMWindowInternal> ourWindow;
+          GetWindowDOMWindow(getter_AddRefs(ourWindow));
+          nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(ourWindow));
+          if (targ) {
+            PRBool defaultActionEnabled;
+            targ->DispatchEvent(event, &defaultActionEnabled);
+            return defaultActionEnabled;
+          }
+        }
+      }
+    }
+  }
+  return PR_TRUE;
 }
 
 //*****************************************************************************

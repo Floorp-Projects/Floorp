@@ -670,7 +670,6 @@ protected:
   
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
-  PRPackedBool                  mFullScreen : 1;
   PRPackedBool                  mIsClosed : 1;
   PRPackedBool                  mInClose : 1;
   // mHavePendingClose means we've got a termination function set to
