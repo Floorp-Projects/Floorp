@@ -252,7 +252,6 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
         return PR_FALSE;
     }
 
-    // Add additional plugins dirs
     // No error checking here since this is optional in some embeddings
     
     // Add the GRE's component directory to searchPath if the 
@@ -277,7 +276,6 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     }
 
     (void)AppendFromDirServiceList(NS_XPCOM_COMPONENT_DIR_LIST, searchPath);
-    (void)AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
 
     NS_ADDREF(*aPath = searchPath);
     return PR_TRUE;
