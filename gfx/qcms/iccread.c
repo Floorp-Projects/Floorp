@@ -223,18 +223,37 @@ static struct tag_index read_tag_table(qcms_profile *profile, struct mem_source 
 qcms_bool qcms_profile_is_bogus(qcms_profile *profile)
 {
        float sum[3], target[3], tolerance[3];
+       float rX, rY, rZ, gX, gY, gZ, bX, bY, bZ;
+       bool negative;
        unsigned i;
 
-       // Sum the values
-       sum[0] = s15Fixed16Number_to_float(profile->redColorant.X) +
-	       s15Fixed16Number_to_float(profile->greenColorant.X) +
-	       s15Fixed16Number_to_float(profile->blueColorant.X);
-       sum[1] = s15Fixed16Number_to_float(profile->redColorant.Y) +
-	       s15Fixed16Number_to_float(profile->greenColorant.Y) +
-	       s15Fixed16Number_to_float(profile->blueColorant.Y);
-       sum[2] = s15Fixed16Number_to_float(profile->redColorant.Z) +
-	       s15Fixed16Number_to_float(profile->greenColorant.Z) +
-	       s15Fixed16Number_to_float(profile->blueColorant.Z);
+       rX = s15Fixed16Number_to_float(profile->redColorant.X);
+       rY = s15Fixed16Number_to_float(profile->redColorant.Y);
+       rZ = s15Fixed16Number_to_float(profile->redColorant.Z);
+
+       gX = s15Fixed16Number_to_float(profile->greenColorant.X);
+       gY = s15Fixed16Number_to_float(profile->greenColorant.Y);
+       gZ = s15Fixed16Number_to_float(profile->greenColorant.Z);
+
+       bX = s15Fixed16Number_to_float(profile->blueColorant.X);
+       bY = s15Fixed16Number_to_float(profile->blueColorant.Y);
+       bZ = s15Fixed16Number_to_float(profile->blueColorant.Z);
+
+       // Check if any of the XYZ values are negative (see mozilla bug 498245)
+       // CIEXYZ tristimulus values cannot be negative according to the spec.
+       negative =
+	       (rX < 0) || (rY < 0) || (rZ < 0) ||
+	       (gX < 0) || (gY < 0) || (gZ < 0) ||
+	       (bX < 0) || (bY < 0) || (bZ < 0);
+
+       if (negative)
+	       return true;
+
+
+       // Sum the values; they should add up to something close to white
+       sum[0] = rX + gX + bX;
+       sum[1] = rY + gY + bY;
+       sum[2] = rZ + gZ + bZ;
 
        // Build our target vector (see mozilla bug 460629)
        target[0] = 0.96420;
