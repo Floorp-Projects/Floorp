@@ -432,7 +432,7 @@
 
     <vbox id="helperapp-container" class="dialog-dark" hidden="true" align="center" top="0" left="0">
       <label id="helperapp-prompt" value="&helperApp.prompt;"/>
-      <label id="helperapp-target" value=""/>
+      <label id="helperapp-target" value="" crop="center"/>
       <separator/>
       <hbox pack="center">
         <button id="helperapp-open" label="&helperApp.open;" oncommand="HelperAppDialog.open();"/>
