@@ -81,6 +81,7 @@ public:
   static void ToggleSoftKB(PRBool show);
   static void CreateSoftKeyMenuBar(HWND wnd);
   static void NotifySoftKbObservers();
+  static TriStateBool sShowSIPButton;
 #endif
 };
 

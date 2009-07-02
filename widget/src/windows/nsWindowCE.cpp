@@ -42,6 +42,8 @@
 #include "nsWindowCE.h"
 #include "nsIObserverService.h"
 #include "resource.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 /**************************************************************
  **************************************************************
@@ -62,6 +64,7 @@
 #if defined(WINCE_HAVE_SOFTKB)
 PRBool          nsWindow::sSoftKeyMenuBar         = PR_FALSE;
 PRBool          nsWindow::sSoftKeyboardState      = PR_FALSE;
+TriStateBool    nsWindowCE::sShowSIPButton        = TRI_UNKNOWN;
 #endif
 
 /**************************************************************
@@ -99,13 +102,38 @@ void nsWindowCE::ToggleSoftKB(PRBool show)
 {
   HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
   if (hWndSIP)
-    ::ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
-
-  hWndSIP = FindWindowW(L"MS_SIPBUTTON", NULL ); 
-  if (hWndSIP)
     ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
 
+  HWND hWndSIPB = FindWindowW(L"MS_SIPBUTTON", NULL ); 
+  if (hWndSIPB)
+      ShowWindow(hWndSIPB, show ? SW_SHOW: SW_HIDE);
+
   SipShowIM(show ? SIPF_ON : SIPF_OFF);
+
+  if (sShowSIPButton == TRI_UNKNOWN) {
+    PRBool tmpBool = PR_FALSE;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+      nsCOMPtr<nsIPrefBranch> prefBranch;
+      prefs->GetBranch(0, getter_AddRefs(prefBranch));
+      if (prefBranch) {
+        nsresult rv = prefBranch->GetBoolPref("ui.sip.showSIPButton", &tmpBool);
+        if (NS_SUCCEEDED(rv))
+          sShowSIPButton = tmpBool ? TRI_TRUE : TRI_FALSE;
+      }
+    }
+  }
+  if (sShowSIPButton != TRI_TRUE && hWndSIPB && hWndSIP) {
+    ShowWindow(hWndSIPB, SW_HIDE);
+    int sX = GetSystemMetrics(SM_CXSCREEN);
+    int sY = GetSystemMetrics(SM_CYSCREEN);
+    RECT sipRect;
+    GetWindowRect(hWndSIP, &sipRect);
+    int sipH = sipRect.bottom - sipRect.top;
+    int sipW = sipRect.right - sipRect.left;
+    MoveWindow(hWndSIP, (sX - sipW)/2, sY - sipH, sX, sY, TRUE);
+  } 
+
   NotifySoftKbObservers();
 }
 
