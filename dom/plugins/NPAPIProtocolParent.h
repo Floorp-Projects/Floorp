@@ -114,7 +114,7 @@ public:
             return NS_ERROR_ILLEGAL_VALUE;
         }
         NPPProtocolParent* __b;
-        __b = dynamic_cast<NPPProtocolParent*>(Lookup(__a->mId));
+        __b = static_cast<NPPProtocolParent*>(Lookup(__a->mId));
         if ((__a) != (__b)) {
             return NS_ERROR_ILLEGAL_VALUE;
         }

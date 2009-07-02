@@ -890,12 +890,12 @@ _getauthenticationinfo(NPP aNPP,
 #endif /* NP_VERSION_MINOR > 19 */
 
 nsresult
-NPAPIPluginChild::AnswerNP_Initialize(NPError* rv)
+NPAPIPluginChild::AnswerNP_Initialize(NPError* _retval)
 {
     _MOZ_LOG(__FUNCTION__);
 
 #if defined(OS_LINUX)
-    *rv = mInitializeFunc(&sBrowserFuncs, &mFunctions);
+    *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
     return NS_OK;
 
 #elif defined(OS_WIN)
@@ -905,7 +905,7 @@ NPAPIPluginChild::AnswerNP_Initialize(NPError* rv)
     NS_ASSERTION(HIBYTE(mFunctions.version) >= NP_VERSION_MAJOR,
                  "callback version is less than NP version");
 
-    *rv = mInitializeFunc(&sBrowserFuncs);
+    *_retval = mInitializeFunc(&sBrowserFuncs);
     return NS_OK;
 #else
 #  error Please implement me for your platform
