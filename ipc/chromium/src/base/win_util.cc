@@ -450,7 +450,7 @@ COMPILE_ASSERT(sizeof(&VisualStudio2005ServicePack1Detection) == sizeof(void*),
 //
 #endif  // _MSC_VER
 
-#ifndef COPY_FILE_COPY_SYMLINK
+#if 0
 #error You must install the Windows 2008 or Vista Software Development Kit and \
 set it as your default include path to build this library. You can grab it by \
 searching for "download windows sdk 2008" in your favorite web search engine.  \
