@@ -503,7 +503,6 @@ enum {
 #define MOVHS(dr,sr) MOV_cond(HS, dr, sr) // Equivalent to MOVCS
 #define MOVCS(dr,sr) MOV_cond(CS, dr, sr) // Equivalent to MOVHS
 #define MOVVC(dr,sr) MOV_cond(VC, dr, sr) // overflow clear
-#define MOVNC(dr,sr) MOV_cond(CC, dr, sr) // carry clear
 
 // _d = [_b+off]
 #define LDR(_d,_b,_off)        asm_ldr_chk(_d,_b,_off,1)
@@ -666,8 +665,6 @@ enum {
 #define JNGE(t) B_cond(LT,t)
 #define JG(t)   B_cond(GT,t)
 #define JNG(t)  B_cond(LE,t)
-#define JC(t)   B_cond(CS,t)
-#define JNC(t)  B_cond(CC,t)
 #define JO(t)   B_cond(VS,t)
 #define JNO(t)  B_cond(VC,t)
 

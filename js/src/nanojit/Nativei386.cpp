@@ -657,8 +657,6 @@ namespace nanojit
 				JNE(targ, isfar);
 			else if (condop == LIR_ov)
 				JNO(targ, isfar);
-			else if (condop == LIR_cs)
-				JNC(targ, isfar);
 			else if (condop == LIR_lt)
 				JNL(targ, isfar);
 			else if (condop == LIR_le)
@@ -682,8 +680,6 @@ namespace nanojit
 				JE(targ, isfar);
 			else if (condop == LIR_ov)
 				JO(targ, isfar);
-			else if (condop == LIR_cs)
-				JC(targ, isfar);
 			else if (condop == LIR_lt)
 				JL(targ, isfar);
 			else if (condop == LIR_le)
@@ -718,8 +714,8 @@ namespace nanojit
 	{
         LOpcode condop = cond->opcode();
         
-        // LIR_ov and LIR_cs recycle the flags set by arithmetic ops
-        if ((condop == LIR_ov) || (condop == LIR_cs))
+        // LIR_ov recycles the flags set by arithmetic ops
+        if ((condop == LIR_ov))
             return;
         
         LInsp lhs = cond->oprnd1();
@@ -788,8 +784,6 @@ namespace nanojit
 			SETE(r);
 		else if (op == LIR_ov)
 			SETO(r);
-		else if (op == LIR_cs)
-			SETC(r);
 		else if (op == LIR_lt)
 			SETL(r);
 		else if (op == LIR_le)
@@ -1086,7 +1080,6 @@ namespace nanojit
 				// note that these are all opposites...
 				case LIR_eq:	MRNE(rr, iffalsereg);	break;
 				case LIR_ov:    MRNO(rr, iffalsereg);   break;
-				case LIR_cs:    MRNC(rr, iffalsereg);   break;
 				case LIR_lt:	MRGE(rr, iffalsereg);	break;
 				case LIR_le:	MRG(rr, iffalsereg);	break;
 				case LIR_gt:	MRLE(rr, iffalsereg);	break;
