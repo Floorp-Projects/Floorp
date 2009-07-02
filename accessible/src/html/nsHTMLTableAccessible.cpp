@@ -619,16 +619,30 @@ nsHTMLTableAccessible::GetSelectedCellsCount(PRUint32* aCount)
   rv = GetColumns(&columnsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsITableLayout *tableLayout = nsnull;
+  rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMElement> domElement;
+  PRInt32 startRowIndex = 0, startColIndex = 0,
+    rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool isSelected = PR_FALSE;
+
   PRInt32 rowIndex;
   for (rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
     PRInt32 columnIndex;
     for (columnIndex = 0; columnIndex < columnsCount; columnIndex++) {
-      PRBool state = PR_FALSE;
-      rv = IsCellSelected(rowIndex, columnIndex, &state);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tableLayout->GetCellDataAt(rowIndex, columnIndex,
+                                      *getter_AddRefs(domElement),
+                                      startRowIndex, startColIndex,
+                                      rowSpan, colSpan,
+                                      actualRowSpan, actualColSpan,
+                                      isSelected);
 
-      if (state)
+      if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
+          startColIndex == columnIndex && isSelected) {
         (*aCount)++;
+      }
     }
   }
 
@@ -698,6 +712,15 @@ nsHTMLTableAccessible::GetSelectedCells(PRUint32 *aNumCells,
   rv = GetColumns(&columnsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsITableLayout *tableLayout = nsnull;
+  rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMElement> domElement;
+  PRInt32 startRowIndex = 0, startColIndex = 0,
+  rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool isSelected = PR_FALSE;
+
   PRInt32 cellsCount = columnsCount * rowsCount;
   nsAutoArrayPtr<PRBool> states(new PRBool[cellsCount]);
   NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
@@ -706,11 +729,20 @@ nsHTMLTableAccessible::GetSelectedCells(PRUint32 *aNumCells,
   for (rowIndex = 0, index = 0; rowIndex < rowsCount; rowIndex++) {
     PRInt32 columnIndex;
     for (columnIndex = 0; columnIndex < columnsCount; columnIndex++, index++) {
-      rv = IsCellSelected(rowIndex, columnIndex, &states[index]);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tableLayout->GetCellDataAt(rowIndex, columnIndex,
+                                      *getter_AddRefs(domElement),
+                                      startRowIndex, startColIndex,
+                                      rowSpan, colSpan,
+                                      actualRowSpan, actualColSpan,
+                                      isSelected);
 
-      if (states[index])
+      if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
+          startColIndex == columnIndex && isSelected) {
+        states[index] = PR_TRUE;
         (*aNumCells)++;
+      } else {
+        states[index] = PR_FALSE;
+      }
     }
   }
 
