@@ -43,12 +43,17 @@ interface nsIOutputStream;
 
 %{C++
 #include "nsplugindefs.h"
+#include "nsString.h"
 struct JSContext;
+struct JSObject;
+
+#define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 %}
 
 [ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
 
-[uuid(98FB9D00-49F5-4868-B187-E7DDF7ED23F9)]
+[uuid(67D606F4-1D6D-4FE2-A2D6-10BDA65788E1)]
 interface nsIPluginInstance : nsISupports
 {
     /**
@@ -203,4 +208,15 @@ interface nsIPluginInstance : nsISupports
      * Drop our reference to our owner.
      */
     void invalidateOwner();
+
+    JSObjectPtr GetJSObject(in JSContextPtr cx);
+
+    readonly attribute AString formValue;
+
+    void pushPopupsEnabledState(in boolean aEnabled);
+    void popPopupsEnabledState();
+
+    readonly attribute PRUint16 pluginAPIVersion;
+
+    void defineJavaProperties();
 };
