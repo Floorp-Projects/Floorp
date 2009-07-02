@@ -140,7 +140,6 @@
 
 // HTMLEmbed/ObjectElement helper includes
 #include "nsIPluginInstance.h"
-#include "nsIPluginInstanceInternal.h"
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIPluginHost.h"
@@ -9659,14 +9658,10 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   *plugin_obj = nsnull;
   *plugin_proto = nsnull;
 
-  nsCOMPtr<nsIPluginInstanceInternal> plugin_internal =
-    do_QueryInterface(plugin_inst);
-
   JSAutoRequest ar(cx);
 
-  if (plugin_internal) {
-    *plugin_obj = plugin_internal->GetJSObject(cx);
-
+  if (plugin_inst) {
+    plugin_inst->GetJSObject(cx, plugin_obj);
     if (*plugin_obj) {
       *plugin_proto = ::JS_GetPrototype(cx, *plugin_obj);
     }
@@ -9694,12 +9689,12 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   nsresult rv = GetPluginInstanceIfSafe(wrapper, getter_AddRefs(pi));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPluginInstanceInternal> plugin_internal =
-    do_QueryInterface(pi);
-
   // Bail if we don't have a plugin instance or this is an NPRuntime or Java
   // plugin since the following code is only useful for XPCOM plugins.
-  if (!pi || (plugin_internal && plugin_internal->GetJSObject(cx))) {
+  JSObject *jsobj;
+  if (pi)
+    pi->GetJSObject(cx, &jsobj);
+  if (!pi || jsobj) {
     return nsHTMLElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
                                        _retval);
   }

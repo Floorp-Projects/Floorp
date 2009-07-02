@@ -44,7 +44,6 @@
 #include "nsTArray.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
-#include "nsIPluginInstanceInternal.h"
 #include "nsIPluginTagInfo.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPluginInstanceOwner.h"
@@ -74,27 +73,11 @@ public:
   void (*callback)(NPP npp, uint32_t timerID);
 };
 
-class nsNPAPIPluginInstance : public nsIPluginInstance,
-                              public nsIPluginInstanceInternal
+class nsNPAPIPluginInstance : public nsIPluginInstance
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCE
-
-  // nsIPluginInstanceInternal methods
-
-  virtual JSObject *GetJSObject(JSContext *cx);
-
-  virtual nsresult GetFormValue(nsAString& aValue);
-
-  virtual void PushPopupsEnabledState(PRBool aEnabled);
-  virtual void PopPopupsEnabledState();
-
-  virtual PRUint16 GetPluginAPIVersion();
-
-  virtual void DefineJavaProperties();
-
-  // nsNPAPIPluginInstance-specific methods
 
   nsresult GetNPP(NPP * aNPP);
 

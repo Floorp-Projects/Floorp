@@ -865,8 +865,7 @@ nsInstanceStream::~nsInstanceStream()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsNPAPIPluginInstance, nsIPluginInstance,
-                   nsIPluginInstanceInternal)
+NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
                                        PRLibrary* aLibrary)
@@ -1481,24 +1480,22 @@ NPDrawingModel nsNPAPIPluginInstance::GetDrawingModel()
 }
 #endif
 
-JSObject *
-nsNPAPIPluginInstance::GetJSObject(JSContext *cx)
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
-  JSObject *obj = nsnull;
   NPObject *npobj = nsnull;
-
   nsresult rv = GetValueInternal(NPPVpluginScriptableNPObject, &npobj);
+  if (NS_FAILED(rv) || !npobj)
+    return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(rv) && npobj) {
-    obj = nsNPObjWrapper::GetNewOrUsed(&fNPP, cx, npobj);
+  *outObject = nsNPObjWrapper::GetNewOrUsed(&fNPP, cx, npobj);
 
-    _releaseobject(npobj);
-  }
+  _releaseobject(npobj);
 
-  return obj;
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsNPAPIPluginInstance::DefineJavaProperties()
 {
   NPObject *plugin_obj = nsnull;
@@ -1511,7 +1508,7 @@ nsNPAPIPluginInstance::DefineJavaProperties()
   nsresult rv = GetValueInternal(NPPVpluginScriptableNPObject, &plugin_obj);
 
   if (NS_FAILED(rv) || !plugin_obj) {
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   // Get the NPObject wrapper for window.
@@ -1520,7 +1517,7 @@ nsNPAPIPluginInstance::DefineJavaProperties()
   if (!window_obj) {
     _releaseobject(plugin_obj);
 
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   NPIdentifier java_id = _getstringidentifier("java");
@@ -1548,69 +1545,81 @@ nsNPAPIPluginInstance::DefineJavaProperties()
   _releaseobject(window_obj);
   _releaseobject(plugin_obj);
   _releaseobject(java_obj);
+
+  if (!ok)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
 {
   aValue.Truncate();
 
   char *value = nsnull;
   nsresult rv = GetValueInternal(NPPVformValue, &value);
+  if (NS_FAILED(rv) || !value)
+    return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(rv) && value) {
-    CopyUTF8toUTF16(value, aValue);
+  CopyUTF8toUTF16(value, aValue);
 
-    // NPPVformValue allocates with NPN_MemAlloc(), which uses
-    // nsMemory.
-    nsMemory::Free(value);
-  }
+  // NPPVformValue allocates with NPN_MemAlloc(), which uses
+  // nsMemory.
+  nsMemory::Free(value);
 
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
 {
   nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
   if (!window)
-    return;
+    return NS_ERROR_FAILURE;
 
   PopupControlState oldState =
     window->PushPopupControlState(aEnabled ? openAllowed : openAbused,
                                   PR_TRUE);
 
   if (!mPopupStates.AppendElement(oldState)) {
-    // Appending to our state stack failed, push what we just popped.
+    // Appending to our state stack failed, pop what we just pushed.
     window->PopPopupControlState(oldState);
+    return NS_ERROR_FAILURE;
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsNPAPIPluginInstance::PopPopupsEnabledState()
 {
   PRInt32 last = mPopupStates.Length() - 1;
 
   if (last < 0) {
     // Nothing to pop.
-    return;
+    return NS_OK;
   }
 
   nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
   if (!window)
-    return;
+    return NS_ERROR_FAILURE;
 
   PopupControlState &oldState = mPopupStates[last];
 
   window->PopPopupControlState(oldState);
 
   mPopupStates.RemoveElementAt(last);
+  
+  return NS_OK;
 }
 
-PRUint16
-nsNPAPIPluginInstance::GetPluginAPIVersion()
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetPluginAPIVersion(PRUint16* version)
 {
-  return fCallbacks->version;
+  NS_ENSURE_ARG_POINTER(version);
+  *version = fCallbacks->version;
+  return NS_OK;
 }
 
 nsresult
