@@ -98,7 +98,7 @@ enum eNPPStreamTypeInternal {
 
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 
-// Static stub functions that are exported to the 4.x plugin as entry
+// Static stub functions that are exported to the plugin as entry
 // points via the CALLBACKS variable.
 PR_BEGIN_EXTERN_C
 
@@ -578,14 +578,13 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 
 nsresult
 nsNPAPIPlugin::CreateInstance(nsISupports *aOuter, const nsIID &aIID,
-                           void **aResult)
+                              void **aResult)
 {
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
   *aResult = NULL;
 
-  // XXX This is suspicuous!
   nsRefPtr<nsNPAPIPluginInstance> inst =
     new nsNPAPIPluginInstance(&fCallbacks, fLibrary);
 
