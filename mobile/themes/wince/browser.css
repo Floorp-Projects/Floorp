@@ -613,6 +613,11 @@ richpref {
   white-space: pre-wrap;
 }
 
+/* helperapp (save-as) popup ----------------------------------------------- */
+#helperapp-target {
+  font-size: 8pt !important;
+}
+
 /* select popup ------------------------------------------------------------ */
 #select-container {
   border: 0.5mm solid #36373b;
