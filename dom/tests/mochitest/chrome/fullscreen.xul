@@ -7,23 +7,21 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         sizemode="fullscreen">
 
-  <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" 
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-
 <script>
 
 window.addEventListener("fullscreen", onFullScreen, true);
 
-function onFullScreen()
+function onFullScreen(event)
 {
-  window.opener.wrappedJSObject.done();
+  window.opener.wrappedJSObject.done(window.fullScreen);
 }
 
 </script>
 
+<body xmlns="http://www.w3.org/1999/xhtml">
+
 <button id="find-button" label="Find"/>
 <button id="cancel-button" label="Cancel"/>
 
+</body>
 </window>

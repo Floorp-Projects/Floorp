@@ -1194,18 +1194,19 @@ PRBool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
       }
     }
 
+    // the widget had better be able to deal with not becoming visible yet.
+    // also, we set this before the dispatchcustomevent so that window.fullScreen
+    // is already set to true.
+    mWindow->SetSizeMode(sizeMode);
+
     // Dispatch fullscreen event
     if (sizeMode == nsSizeMode_Fullscreen) {
       if (!DispatchCustomEvent(NS_LITERAL_STRING("fullscreen"), PR_TRUE, PR_FALSE)) {
         // fullscreen event prevented the default, set the window to
         // maximized instead of fullscreen.
-        sizeMode = nsSizeMode_Maximized;
-        mWindow->SetSizeMode(sizeMode);
+        mWindow->SetSizeMode(nsSizeMode_Maximized);
       }
     }
-
-    // the widget had better be able to deal with not becoming visible yet
-    mWindow->SetSizeMode(sizeMode);
 
     gotState = PR_TRUE;
   }
