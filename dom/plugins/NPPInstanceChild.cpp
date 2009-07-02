@@ -236,7 +236,7 @@ NPPInstanceChild::RegisterWindowClass()
     wcex.hInstance      = GetModuleHandle(NULL);
     wcex.hIcon          = 0;
     wcex.hCursor        = 0;
-    wcex.hbrBackground  = reinterpret_cast<HBRUSH>(COLOR_WINDOW1);
+    wcex.hbrBackground  = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     wcex.lpszMenuName   = 0;
     wcex.lpszClassName  = kWindowClassName;
     wcex.hIconSm        = 0;
@@ -354,7 +354,6 @@ NPPInstanceChild::PluginWindowProc(HWND hWnd,
 }
 
 #endif // OS_WIN
-
 
 } // namespace plugins
 } // namespace mozilla
