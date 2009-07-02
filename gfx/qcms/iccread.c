@@ -227,6 +227,10 @@ qcms_bool qcms_profile_is_bogus(qcms_profile *profile)
        bool negative;
        unsigned i;
 
+       // We currently only check the bogosity of RGB profiles
+       if (profile->color_space != RGB_SIGNATURE)
+	       return false;
+
        rX = s15Fixed16Number_to_float(profile->redColorant.X);
        rY = s15Fixed16Number_to_float(profile->redColorant.Y);
        rZ = s15Fixed16Number_to_float(profile->redColorant.Z);
