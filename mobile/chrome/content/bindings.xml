@@ -60,6 +60,10 @@
                 readonly="true"
                 onget="return this._items.boxObject;"/>
 
+      <field name="_scrollBoxObject">
+        this.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+      </field>
+
       <!-- nsIAutocompleteInput -->
       <property name="overrideValue"
                 readonly="true"
@@ -138,6 +142,9 @@
 
           let controller = this.input.controller;
           let searchString = controller.searchString;
+
+          if (this._items.scrollTop || this._items.scrollLeft)
+            this._scrollBoxObject.scrollTo(0, 0);
 
           // Need to iterate over all our existing entries at a minimum, to make
           // sure they're either updated or cleared out. We might also have to
