@@ -192,7 +192,7 @@ static const char *kMinimumRegistryVersion = "0.9";
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
-static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
+static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 // Registry keys for caching plugin info
@@ -1863,10 +1863,10 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   // by getting the tag type and checking for an error, we can determine if
   // the frame is gone
   if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo2> pti2 = do_QueryInterface(mOwner);
-    NS_ENSURE_TRUE(pti2, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIPluginTagInfo> pti = do_QueryInterface(mOwner);
+    NS_ENSURE_TRUE(pti, NS_ERROR_FAILURE);
     nsPluginTagType tagType;
-    if (NS_FAILED(pti2->GetTagType(&tagType)))
+    if (NS_FAILED(pti->GetTagType(&tagType)))
       return NS_ERROR_FAILURE;  // something happened to our object frame, so bail!
   }
 
@@ -3043,8 +3043,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiatePluginForChannel(nsIChannel* aChannel
 
 // Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embedded case)
 NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
-                                                         nsIURI* aURL,
-                                                         nsIPluginInstanceOwner *aOwner)
+                                                          nsIURI* aURL,
+                                                          nsIPluginInstanceOwner *aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
@@ -3062,15 +3062,15 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
 
   nsresult  rv;
   nsIPluginInstance *instance = nsnull;
-  nsCOMPtr<nsIPluginTagInfo2> pti2;
+  nsCOMPtr<nsIPluginTagInfo> pti;
   nsPluginTagType tagType;
 
-  rv = aOwner->QueryInterface(kIPluginTagInfo2IID, getter_AddRefs(pti2));
+  rv = aOwner->QueryInterface(kIPluginTagInfoIID, getter_AddRefs(pti));
 
   if (rv != NS_OK)
     return rv;
 
-  rv = pti2->GetTagType(&tagType);
+  rv = pti->GetTagType(&tagType);
 
   if ((rv != NS_OK) || !((tagType == nsPluginTagType_Embed)
                         || (tagType == nsPluginTagType_Applet)
@@ -3097,7 +3097,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
       return rv;
 
     nsCOMPtr<nsIDOMElement> elem;
-    pti2->GetDOMElement(getter_AddRefs(elem));
+    pti->GetDOMElement(getter_AddRefs(elem));
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT; // default permit
     nsresult rv =
@@ -3180,11 +3180,11 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
     */
 
     PRBool bHasPluginURL = PR_FALSE;
-    nsCOMPtr<nsIPluginTagInfo2> pti2(do_QueryInterface(aOwner));
+    nsCOMPtr<nsIPluginTagInfo> pti(do_QueryInterface(aOwner));
 
-    if (pti2) {
+    if (pti) {
       const char *value;
-      bHasPluginURL = NS_SUCCEEDED(pti2->GetParameter("PLUGINURL", &value));
+      bHasPluginURL = NS_SUCCEEDED(pti->GetParameter("PLUGINURL", &value));
     }
 
     // if we didn't find a pluginURL param on the object tag,
@@ -5148,10 +5148,10 @@ nsresult nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   rv = NS_NewURI(getter_AddRefs(url), absUrl);
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPluginTagInfo2> pti2 = do_QueryInterface(owner);
+    nsCOMPtr<nsIPluginTagInfo> pti = do_QueryInterface(owner);
     nsCOMPtr<nsIDOMElement> element;
-    if (pti2)
-      pti2->GetDOMElement(getter_AddRefs(element));
+    if (pti)
+      pti->GetDOMElement(getter_AddRefs(element));
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
