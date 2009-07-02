@@ -109,7 +109,8 @@ function testTableIndexes(aIdentifier, aIdxes)
  *                       cells states.
  * @param  aMsg         [in] text appended before every message
  */
-function testTableSelection(aIdentifier, aCellsArray, aMsg)
+function testTableSelection(aIdentifier, aCellsArray, aMsg,
+                            aSkipStatesTesting) // bug 501656
 {
   var msg = aMsg ? aMsg : "";
   var acc = getAccessible(aIdentifier, [nsIAccessibleTable]);
@@ -126,7 +127,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var colIdx = 0; colIdx < colsCount; colIdx++) {
     var isColSelected = true;
     for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-      if (!aCellsArray[rowIdx][colIdx]) {
+      if (aCellsArray[rowIdx][colIdx] == false) {
         isColSelected = false;
         break;
       }
@@ -166,7 +167,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     var isRowSelected = true;
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (!aCellsArray[rowIdx][colIdx]) {
+      if (aCellsArray[rowIdx][colIdx] == false) {
         isRowSelected = false;
         break;
       }
@@ -204,6 +205,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   // isCellSelected test
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] == undefined)
+        continue;
+  
       is(acc.isCellSelected(rowIdx, colIdx), aCellsArray[rowIdx][colIdx],
          msg + "Wrong selection state of cell at " + rowIdx + " row and " +
          colIdx + " column for " + prettyName(aIdentifier));
@@ -231,9 +235,15 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
         msg + "Cell at index " + selCells[i] + " should be selected.");
   }
 
+  if (aSkipStatesTesting)
+    return;
+
   // selected states tests
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] == undefined)
+        continue;
+
       var cell = acc.cellRefAt(rowIdx, colIdx);
       var isSel = aCellsArray[rowIdx][colIdx];
       if (isSel)
@@ -254,8 +264,10 @@ function testUnselectTableColumn(aIdentifier, aColIdx, aCellsArray)
     return;
 
   var rowsCount = aCellsArray.length;
-  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++)
-    aCellsArray[rowIdx][aColIdx] = false;
+  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+    if (aCellsArray[rowIdx][aColIdx] != undefined)
+      aCellsArray[rowIdx][aColIdx] = false;
+  }
 
   acc.unselectColumn(aColIdx);
   testTableSelection(aIdentifier, aCellsArray,
@@ -275,8 +287,10 @@ function testSelectTableColumn(aIdentifier, aColIdx, aCellsArray)
   var colsCount = aCellsArray[0].length;
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-    for (var colIdx = 0; colIdx < colsCount; colIdx++)
-      aCellsArray[rowIdx][colIdx] = (colIdx == aColIdx);
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] != undefined)
+        aCellsArray[rowIdx][colIdx] = (colIdx == aColIdx);
+    }
   }
 
   acc.selectColumn(aColIdx);
@@ -294,8 +308,10 @@ function testUnselectTableRow(aIdentifier, aRowIdx, aCellsArray)
     return;
 
   var colsCount = aCellsArray[0].length;
-  for (var colIdx = 0; colIdx < colsCount; colIdx++)
-    aCellsArray[aRowIdx][colIdx] = false;
+  for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+    if (aCellsArray[aRowIdx][colIdx] != undefined)
+      aCellsArray[aRowIdx][colIdx] = false;
+  }
 
   acc.unselectRow(aRowIdx);
   testTableSelection(aIdentifier, aCellsArray,
@@ -305,7 +321,8 @@ function testUnselectTableRow(aIdentifier, aRowIdx, aCellsArray)
 /**
  * Test selectRow method of accessible table.
  */
-function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray)
+function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray,
+                            aSkipStatesTesting) // bug 501656
 {
   var acc = getAccessible(aIdentifier, [nsIAccessibleTable]);
   if (!acc)
@@ -315,11 +332,14 @@ function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray)
   var colsCount = aCellsArray[0].length;
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-    for (var colIdx = 0; colIdx < colsCount; colIdx++)
-      aCellsArray[rowIdx][colIdx] = (rowIdx == aRowIdx);
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] != undefined)
+        aCellsArray[rowIdx][colIdx] = (rowIdx == aRowIdx);
+    }
   }
 
   acc.selectRow(aRowIdx);
   testTableSelection(aIdentifier, aCellsArray,
-                     "Select " + aRowIdx + " row: ");
+                     "Select " + aRowIdx + " row: ",
+                     aSkipStatesTesting);
 }
