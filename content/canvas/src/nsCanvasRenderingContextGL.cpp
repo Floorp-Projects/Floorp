@@ -443,13 +443,13 @@ CanvasGLTexture::SetWrap(PRUint32 wrapType, PRUint32 wrapMode)
 
 #define FOO(_x,_y) JSBool _x (JSContext *cx, JSObject *obj, jsuint offset, jsuint count, _y *dest) { return 0; }
 
-FOO(js_ArrayToJSUint8Buffer, JSUint8);
-FOO(js_ArrayToJSUint16Buffer, JSUint16);
-FOO(js_ArrayToJSUint32Buffer, JSUint32);
-FOO(js_ArrayToJSInt8Buffer, JSInt8);
-FOO(js_ArrayToJSInt16Buffer, JSInt16);
-FOO(js_ArrayToJSInt32Buffer, JSInt32);
-FOO(js_ArrayToJSDoubleBuffer, jsdouble);
+FOO(js_ArrayToJSUint8Buffer, JSUint8)
+FOO(js_ArrayToJSUint16Buffer, JSUint16)
+FOO(js_ArrayToJSUint32Buffer, JSUint32)
+FOO(js_ArrayToJSInt8Buffer, JSInt8)
+FOO(js_ArrayToJSInt16Buffer, JSInt16)
+FOO(js_ArrayToJSInt32Buffer, JSInt32)
+FOO(js_ArrayToJSDoubleBuffer, jsdouble)
 
 
 PRBool
