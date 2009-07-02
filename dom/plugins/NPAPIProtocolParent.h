@@ -165,7 +165,7 @@ public:
     // ...
 
     // Implement the RPCChannel::Listener interface
-    virtual Result OnCallReceived(const Message& msg, Message** reply)
+    virtual Result OnCallReceived(const Message& msg, Message*& reply)
     {
         switch(msg.type()) {
         default:

@@ -107,6 +107,10 @@ class Visitor:
     def visitExprPrefixUnop(self, e):
         e.expr.accept(self)
 
+    def visitExprBinary(self, e):
+        e.left.accept(self)
+        e.right.accept(self)
+
     def visitExprAddrOf(self, eao):
         self.visitExprPrefixUnop(eao)
 
@@ -257,13 +261,16 @@ class Decl(Node):
 # class stuff
 class Class(Block):
     def __init__(self, name, inherits=[ ],
-                 interface=False, final=False):
+                 interface=False, abstract=False, final=False):
+        assert not (interface and abstract)
+        assert not (abstract and final)
         assert not (interface and final)
 
         Block.__init__(self)
         self.name = name
         self.inherits = inherits # array of (viz, Type) pairs
         self.interface = interface
+        self.abstract = abstract
         self.final = final
 
 class Inherit(Node):
@@ -271,6 +278,11 @@ class Inherit(Node):
         Node.__init__(self)
         self.name = name
         self.viz = viz
+
+class FriendClassDecl(Node):
+    def __init__(self, friend):
+        Node.__init__(self)
+        self.friend = friend
 
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
@@ -317,6 +329,16 @@ class DestructorDefn(MethodDefn):
 
 ##------------------------------
 # expressions
+class ExprLiteral(Node):
+    def __init__(self, value, type):
+        '''|type| is a Python format specifier; 'd' for example'''
+        Node.__init__(self)
+        self.value = value
+        self.type = type
+    def __str__(self):
+        return ('%'+ self.type)% (self.value)
+ExprLiteral.ZERO = ExprLiteral(0, 'd')
+
 class ExprVar(Node):
     def __init__(self, name):
         Node.__init__(self)
@@ -334,6 +356,26 @@ class ExprAddrOf(ExprPrefixUnop):
 class ExprDeref(ExprPrefixUnop):
     def __init__(self, expr):
         ExprPrefixUnop.__init__(self, expr, '*')
+
+class ExprCast(Node):
+    def __init__(self, expr, type,
+                 dynamic=0, static=0, reinterpret=0, const=0, C=0):
+        assert 1 == reduce(lambda a, x: a+x, [ dynamic, static, reinterpret, const, C ])
+
+        Node.__init__(self)
+        self.expr = expr
+        self.type = type
+        self.dynamic = dynamic
+        self.static = static
+        self.reinterpret = reinterpret
+        self.const = const
+        self.C = C
+
+class ExprBinary(Node):
+    def __init__(self, left, op, right):
+        self.left = left
+        self.op = op
+        self.right = right
 
 class ExprSelect(Node):
     def __init__(self, obj, op, field):

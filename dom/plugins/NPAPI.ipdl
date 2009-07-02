@@ -1,0 +1,30 @@
+include "npapi.h";
+
+include protocol "NPP.ipdl";
+//include protocol "NPObject.ipdl";
+
+using NPError;
+
+namespace mozilla {
+namespace plugins {
+
+rpc protocol NPAPI
+{
+    manages NPP;
+//    manages NPObject;
+
+    rpc out NP_Initialize() returns (NPError rv);
+
+
+    rpc out NPP(String aMimeType,
+                int aHandle,
+                uint16_t aMode,
+                StringArray aNames,
+                StringArray aValues) returns (NPError rv);
+    rpc out ~NPP() returns (NPError rv);
+
+//    rpc in TradeNPPsForSomeReason(NPP n) returns (NPP n2);
+};
+
+} // namespace plugins
+} // namespace mozilla

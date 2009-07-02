@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/ipc/GeckoThread.h"
 #include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/GeckoThread.h"
 
 #include "nsDebug.h"
 
@@ -99,6 +99,8 @@ RPCChannel::Close()
 bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
+    NS_PRECONDITION(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
+
     mMutex.Lock();
 
     mPending.push(*msg);
@@ -145,7 +147,7 @@ RPCChannel::ProcessIncomingCall(Message call)
 {
    Message* reply;
 
-    switch (mListener->OnCallReceived(call, &reply)) {
+    switch (mListener->OnCallReceived(call, reply)) {
     case Listener::MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
@@ -155,6 +157,9 @@ RPCChannel::ProcessIncomingCall(Message call)
 
     case Listener::MsgNotKnown:
     case Listener::MsgNotAllowed:
+    case Listener::MsgPayloadError:
+    case Listener::MsgRouteError:
+    case Listener::MsgValueError:
         //OnError()?
         return false;
 
@@ -195,7 +200,7 @@ RPCChannel::OnMessageReceived(const Message& msg)
 }
 
 void
-RPCChannel::OnChannelConnected(int peer_pid)
+RPCChannel::OnChannelConnected(int32 peer_pid)
 {
     mChannelState = ChannelConnected;
 }

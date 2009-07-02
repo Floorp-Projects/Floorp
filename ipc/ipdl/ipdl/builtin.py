@@ -65,4 +65,5 @@ Includes = (
     'nscore.h',
     'IPC/IPCMessageUtils.h',
     'mozilla/ipc/MessageTypes.h',
+    'mozilla/ipc/ProtocolUtils.h',
 )

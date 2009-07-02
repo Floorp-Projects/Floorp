@@ -58,6 +58,7 @@ EXPORTS_mozilla/ipc =				\
   GeckoChildProcessHost.h			\
   GeckoThread.h 				\
   MessageTypes.h 				\
+  ProtocolUtils.h				\
   RPCChannel.h					\
   ScopedXREEmbed.h				\
   $(NULL)

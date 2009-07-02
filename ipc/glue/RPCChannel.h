@@ -42,6 +42,7 @@
 // FIXME/cjones probably shouldn't depend on this
 #include <stack>
 
+#include "base/basictypes.h"
 #include "base/message_loop.h"
 #include "chrome/common/ipc_channel.h"
 
@@ -73,17 +74,17 @@ public:
     {
     public:
         enum Result {
-            // We processed the message, and it can be forgotten
             MsgProcessed,
-            // We haven't heard of this message type
             MsgNotKnown,
-            // We weren't in a state to receive this message
-            MsgNotAllowed
+            MsgNotAllowed,
+            MsgPayloadError,
+            MsgRouteError,
+            MsgValueError,
         };
 
         virtual ~Listener() { }
         virtual Result OnCallReceived(const Message& aMessage,
-                                      Message** aReply) = 0;
+                                      Message*& aReply) = 0;
     };
 
     /**
