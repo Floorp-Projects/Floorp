@@ -60,6 +60,7 @@ class nsIFontMetrics;
 #include "nsIFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIPresShell.h"
+#include "nsIPrincipal.h"
 #include "gfxPattern.h"
 
 class nsBlockFrame;
