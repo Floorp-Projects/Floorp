@@ -172,8 +172,6 @@
   <popupset id="mainPopupSet">
   </popupset>
 
-  <!-- stupid stack needs to be in a box. not sure why -->
-  <box>
   <stack id="browser-container" flex="1">
 
     <!-- begin: Browser View -->
@@ -452,7 +450,6 @@
       </vbox>
     </hbox>
   </stack>
-  </box>
 
   <!-- where all the (hidden) <browser> elements go; I wish this could be display: none -->
   <box id="browsers"/>

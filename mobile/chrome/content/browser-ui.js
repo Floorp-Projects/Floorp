@@ -471,11 +471,10 @@ var BrowserUI = {
 
   showPanel: function showPanel(aPage) {
     let panelUI = document.getElementById("panel-container");
-    let container = document.getElementById("browser-container");
 
     panelUI.hidden = false;
-    panelUI.width = container.boxObject.width;
-    panelUI.height = container.boxObject.height;
+    panelUI.width = window.innerWidth;
+    panelUI.height = window.innerHeight;
 
     if (aPage != undefined)
       this.switchPane(aPage);
@@ -708,10 +707,9 @@ var BookmarkList = {
   _bookmarks: null,
 
   show: function() {
-    let container = document.getElementById("browser-container");
     this._panel = document.getElementById("bookmarklist-container");
-    this._panel.width = container.boxObject.width;
-    this._panel.height = container.boxObject.height;
+    this._panel.width = window.innerWidth;
+    this._panel.height = window.innerHeight;
     this._panel.hidden = false;
 
     this._bookmarks = document.getElementById("bookmark-items");
@@ -755,11 +753,10 @@ var FolderPicker = {
   _panel: null,
 
   show: function(aControl) {
-    let container = document.getElementById("browser-container");
     this._panel = document.getElementById("folder-container");
     this._panel.hidden = false;
-    this._panel.width = container.boxObject.width;
-    this._panel.height = container.boxObject.height;
+    this._panel.width = window.innerWidth;
+    this._panel.height = window.innerHeight;
 
     this._control = aControl;
 
