@@ -242,7 +242,7 @@ int wmain(int argc, PRUnichar *argv[])
         wprintf(L"TEST-UNEXPECTED-FAIL | %s | see following explanation:\n", TEST_NAME);
         wprintf(L"ERROR: Either the TestXREMakeCommandLineWin.ini file doesn't exist\n");
         if (argc > 1 && _wcsicmp(argv[1], L"-check-one") == 0 && argc == 3) {
-          wprintf(L"ERROR: or the test is not defined in the MakeCommandLineTests section.\n\n");
+          wprintf(L"ERROR: or the test is not defined in the MakeCommandLineTests section.\n");
         } else {
           wprintf(L"ERROR: or it has no tests defined in the MakeCommandLineTests section.\n");
         }
