@@ -45,7 +45,7 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
-#include "nsPluginHostImpl.h"
+#include "nsPluginHost.h"
 #include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
 #include "nsIPrivateBrowsingService.h"
@@ -1179,7 +1179,7 @@ nsNPAPIPluginInstance::InitializePlugin()
     }
   }
 
-  mIsJavaPlugin = nsPluginHostImpl::IsJavaMIMEType(mimetype);
+  mIsJavaPlugin = nsPluginHost::IsJavaMIMEType(mimetype);
 
   // Mark this instance as started before calling NPP_New because the plugin may
   // call other NPAPI functions, like NPN_GetURLNotify, that assume this is set

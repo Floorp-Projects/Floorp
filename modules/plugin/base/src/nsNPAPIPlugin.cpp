@@ -746,7 +746,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
       (strncmp(relativeURL, "ftp:", 4) != 0)) {
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
-    const char *name = nsPluginHostImpl::GetPluginName(inst);
+    const char *name = nsPluginHost::GetPluginName(inst);
 
     if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
       return NPERR_NO_ERROR;
@@ -2422,7 +2422,7 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
         return NPERR_GENERIC_ERROR;
 
       nsCOMPtr<nsIPrompt> prompt;
-      nsPluginHostImpl::GetPrompt(nsnull, getter_AddRefs(prompt));
+      nsPluginHost::GetPrompt(nsnull, getter_AddRefs(prompt));
 
       char *cookie = (char*)value;
       char c = cookie[len];
