@@ -84,7 +84,9 @@
 #include "nsICanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "gfxPlatform.h"
+#ifdef MOZ_MEDIA
 #include "nsHTMLVideoElement.h"
+#endif
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
