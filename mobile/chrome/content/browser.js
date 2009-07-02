@@ -446,7 +446,7 @@ var Browser = {
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
 
     var panel = document.getElementById("findbar-container");
-    panel.top = window.innerHeight - findbar.getBoundingClientRect().height;
+    panel.top = window.innerHeight - Math.floor(findbar.getBoundingClientRect().height);
   },
 
   translatePhoneNumbers: function() {
