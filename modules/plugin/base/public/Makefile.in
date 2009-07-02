@@ -52,7 +52,6 @@ EXPORTS		= \
 		nsDefaultPlugin.h \
 		nsPluginNativeWindow.h \
 		nsPluginsCID.h \
-		nsIPluginInstanceInternal.h \
 		$(NULL)
 
 SDK_HEADERS	 = \

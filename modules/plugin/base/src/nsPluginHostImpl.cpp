@@ -49,7 +49,6 @@
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsIPlugin.h"
-#include "nsIPluginInstanceInternal.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h"
@@ -5910,15 +5909,10 @@ nsPluginHostImpl::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
 
   nsCOMPtr<nsIPluginInstance> instance;
   aOwner->GetInstance(*getter_AddRefs(instance));
-
-  nsCOMPtr<nsIPluginInstanceInternal> plugin_internal =
-    do_QueryInterface(instance);
-
-  if (!plugin_internal) {
+  if (!instance)
     return NS_OK;
-  }
 
-  plugin_internal->DefineJavaProperties();
+  instance->DefineJavaProperties();
 
   return NS_OK;
 }
