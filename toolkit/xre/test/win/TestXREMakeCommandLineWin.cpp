@@ -49,8 +49,21 @@
 // quoted with a space to prevent argv[1] being appended to argv[0].
 #define DUMMY_ARG1 L"\"arg 1\" "
 
-#define MAXPATHLEN 1024
-#define LOG_PREFIX L"XRE MakeCommandLine"
+#ifndef MAXPATHLEN
+# ifdef PATH_MAX
+#  define MAXPATHLEN PATH_MAX
+# elif defined(MAX_PATH)
+#  define MAXPATHLEN MAX_PATH
+# elif defined(_MAX_PATH)
+#  define MAXPATHLEN _MAX_PATH
+# elif defined(CCHMAXPATH)
+#  define MAXPATHLEN CCHMAXPATH
+# else
+#  define MAXPATHLEN 1024
+# endif
+#endif
+
+#define TEST_NAME L"XRE MakeCommandLine"
 #define MAX_TESTS 100
 
 // Verbose output can be enabled by defining VERBOSE 1
@@ -117,8 +130,8 @@ verifyCmdLineCreation(PRUnichar *inCmdLine,
 
   isEqual = (inArgc == outArgc);
   if (!isEqual) {
-    wprintf(L"*** TEST-%s-FAIL | %s ARGC Comparison | Test %2d\n",
-            passes ? L"UNEXPECTED" : L"KNOWN", LOG_PREFIX, testNum);
+    wprintf(L"TEST-%s-FAIL | %s | ARGC Comparison (check %2d)\n",
+            passes ? L"UNEXPECTED" : L"KNOWN", TEST_NAME, testNum);
     if (passes) {
       rv = 1;
     }
@@ -133,8 +146,8 @@ verifyCmdLineCreation(PRUnichar *inCmdLine,
   for (i = 1; i < inArgc; ++i) {
     isEqual = (wcscmp(inArgv[i], outArgv[i]) == 0);
     if (!isEqual) {
-      wprintf(L"*** TEST-%s-FAIL | %s ARGV Comparison | Test %2d\n",
-              passes ? L"UNEXPECTED" : L"KNOWN", LOG_PREFIX, testNum);
+      wprintf(L"TEST-%s-FAIL | %s | ARGV Comparison (check %2d)\n",
+              passes ? L"UNEXPECTED" : L"KNOWN", TEST_NAME, testNum);
       if (passes) {
         rv = 1;
       }
@@ -149,8 +162,8 @@ verifyCmdLineCreation(PRUnichar *inCmdLine,
 
   isEqual = (wcscmp(outCmdLine, compareCmdLine) == 0);
   if (!isEqual) {
-    wprintf(L"*** TEST-%s-FAIL | %s Command Line Comparison | Test %2d\n",
-            passes ? L"UNEXPECTED" : L"KNOWN", LOG_PREFIX, testNum);
+    wprintf(L"TEST-%s-FAIL | %s | Command Line Comparison (check %2d)\n",
+            passes ? L"UNEXPECTED" : L"KNOWN", TEST_NAME, testNum);
     if (passes) {
       rv = 1;
     }
@@ -164,9 +177,9 @@ verifyCmdLineCreation(PRUnichar *inCmdLine,
 
   if (rv == 0) {
     if (passes) {
-      wprintf(L"*** TEST-PASS | %s | Test %2d\n", LOG_PREFIX, testNum);
+      wprintf(L"TEST-PASS | %s | check %2d\n", TEST_NAME, testNum);
     } else {
-      wprintf(L"*** TEST-UNEXPECTED-PASS | %s | Test %2d\n", LOG_PREFIX, testNum);
+      wprintf(L"TEST-UNEXPECTED-PASS | %s | check %2d\n", TEST_NAME, testNum);
       rv = 1;
     }
   }
@@ -195,13 +208,13 @@ int wmain(int argc, PRUnichar *argv[])
 
   PRUnichar inifile[MAXPATHLEN];
   if (!::GetModuleFileNameW(0, inifile, MAXPATHLEN)) {
-    wprintf(L"*** TEST-FAIL | %s | GetModuleFileNameW\n", LOG_PREFIX);
+    wprintf(L"TEST-UNEXPECTED-FAIL | %s | GetModuleFileNameW\n", TEST_NAME);
     return 2;
   }
 
   WCHAR *slash = wcsrchr(inifile, '\\');
   if (!slash) {
-    wprintf(L"*** TEST-FAIL | %s | wcsrchr\n", LOG_PREFIX);
+    wprintf(L"TEST-UNEXPECTED-FAIL | %s | wcsrchr\n", TEST_NAME);
     return 3;
   }
 
@@ -226,16 +239,14 @@ int wmain(int argc, PRUnichar *argv[])
     if (!GetPrivateProfileStringW(L"MakeCommandLineTests", sInputKey, nsnull,
                                   sInputVal, MAXPATHLEN, inifile)) {
       if (i == 0 || argc > 2 && _wcsicmp(argv[1], L"-check-one") == 0) {
+        wprintf(L"TEST-UNEXPECTED-FAIL | %s | see following explanation:\n", TEST_NAME);
+        wprintf(L"ERROR: Either the TestXREMakeCommandLineWin.ini file doesn't exist\n");
         if (argc > 1 && _wcsicmp(argv[1], L"-check-one") == 0 && argc == 3) {
-          wprintf(L"\nERROR: either the TestXREMakeCommandLineWin.ini file doesn't exist\n");
-          wprintf(L"       or the test is not defined in the MakeCommandLineTests section.\n\n");
-          wprintf(L"File: %s\n", inifile);
+          wprintf(L"ERROR: or the test is not defined in the MakeCommandLineTests section.\n\n");
         } else {
-          wprintf(L"*** TEST-FAIL | %s\n", LOG_PREFIX);
-          wprintf(L"*** Either the TestXREMakeCommandLineWin.ini file doesn't exist\n");
-          wprintf(L"*** or it has no tests defined in the MakeCommandLineTests section.\n");
-          wprintf(L"*** File: %s\n", inifile);
+          wprintf(L"ERROR: or it has no tests defined in the MakeCommandLineTests section.\n");
         }
+        wprintf(L"ERROR: File: %s\n", inifile);
         return 4;
       }
       break;
@@ -256,9 +267,9 @@ int wmain(int argc, PRUnichar *argv[])
   }
 
   if (rv == 0) {
-    wprintf(L"*** TEST-PASS | %s | all tests passed\n", LOG_PREFIX);
+    wprintf(L"TEST-PASS | %s | all checks passed\n", TEST_NAME);
   } else {
-    wprintf(L"*** TEST-FAIL | %s | some tests failed\n", LOG_PREFIX);
+    wprintf(L"TEST-UNEXPECTED-FAIL | %s | some checks failed\n", TEST_NAME);
   }
 
   return rv;
