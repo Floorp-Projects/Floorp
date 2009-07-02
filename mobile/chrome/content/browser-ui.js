@@ -93,12 +93,6 @@ var BrowserUI = {
         caption = "";
     }
     this._edit.value = caption;
-
-    var docElem = document.documentElement;
-    var title = "";
-    if (aDocument.title)
-      title = aDocument.title + docElem.getAttribute("titleseparator");
-    document.title = title + docElem.getAttribute("titlemodifier");
   },
 
   _linkAdded : function(aEvent) {

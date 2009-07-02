@@ -56,8 +56,6 @@
         onunload="Browser.shutdown();"
         windowtype="navigator:browser"
         title="&brandShortName;"
-        titlemodifier="&brandShortName;"
-        titleseparator="&mainWindow.titleseparator;"
 #ifdef WINCE
         sizemode="fullscreen"
 #elifdef MOZ_PLATFORM_HILDON
