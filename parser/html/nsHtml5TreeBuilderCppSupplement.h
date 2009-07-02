@@ -55,7 +55,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIScriptElement.h"
 
-#define NS_HTML5_TREE_BUILDER_MAX_QUEUE_TIME 3000000UL // microseconds
+#define NS_HTML5_TREE_BUILDER_MAX_QUEUE_TIME 3000UL // milliseconds
 #define NS_HTML5_TREE_BUILDER_DEFAULT_QUEUE_LENGTH 200
 #define NS_HTML5_TREE_BUILDER_MIN_QUEUE_LENGTH 100
 #define NS_HTML5_TREE_BUILDER_MAX_TIME_WITHOUT_FLUSH 5000 // milliseconds
@@ -464,10 +464,10 @@ nsHtml5TreeBuilder::Flush()
 {
   mNeedsFlush = PR_FALSE;
   MOZ_AUTO_DOC_UPDATE(parser->GetDocument(), UPDATE_CONTENT_MODEL, PR_TRUE);
-  PRTime flushStart = 0;
+  PRIntervalTime flushStart = 0;
   PRUint32 opQueueLength = mOpQueue.Length();
   if (opQueueLength > NS_HTML5_TREE_BUILDER_MIN_QUEUE_LENGTH) { // avoid computing averages with too few ops
-    flushStart = PR_Now();
+    flushStart = PR_IntervalNow();
   }
   mElementsSeenInThisAppendBatch.SetCapacity(opQueueLength * 2);
   // XXX alloc failure
@@ -484,7 +484,10 @@ nsHtml5TreeBuilder::Flush()
 #endif
   mOpQueue.Clear();
   if (flushStart) {
-    sTreeOpQueueMaxLength = (PRUint32)((NS_HTML5_TREE_BUILDER_MAX_QUEUE_TIME * (PRUint64)opQueueLength) / (PR_Now() - flushStart));
+    PRUint32 delta = PR_IntervalToMilliseconds(PR_IntervalNow() - flushStart);
+    sTreeOpQueueMaxLength = delta ?
+      (PRUint32)((NS_HTML5_TREE_BUILDER_MAX_QUEUE_TIME * (PRUint64)opQueueLength) / delta) :
+      0;
     if (sTreeOpQueueMaxLength < NS_HTML5_TREE_BUILDER_MIN_QUEUE_LENGTH) {
       sTreeOpQueueMaxLength = NS_HTML5_TREE_BUILDER_MIN_QUEUE_LENGTH;
     }
