@@ -585,7 +585,7 @@
                       command="Tools:Downloads"/>
       <statusbarpanel id="security-button" class="statusbarpanel-iconic-text"
                       hidden="true"
-                      ondblclick="if (event.button == 0) displaySecurityInfo();"/>
+                      onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
       <statusbarpanel id="page-report-button" type="menu"
                       class="statusbarpanel-menu-iconic"
                       hidden="true"
