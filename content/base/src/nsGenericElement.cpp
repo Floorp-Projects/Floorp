@@ -3985,6 +3985,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
       slots->mChildrenList = nsnull;
     }
   }
+
+  {
+    nsIDocument *doc;
+    if (!tmp->GetNodeParent() && (doc = tmp->GetOwnerDoc()) &&
+        tmp->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+      doc->BindingManager()->ChangeDocumentFor(tmp, doc, nsnull);
+    }
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
