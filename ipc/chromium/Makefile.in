@@ -132,11 +132,6 @@ CPPSRCS += \
 
 ifdef OS_WIN # {
 
-DEFINES += \
-  -D_WIN32_WINNT=0x0600 \
-  -DWINVER=0x0600 \
-  $(NULL)
-
 CPPSRCS += \
   base_paths_win.cc \
   cpu.cc \
