@@ -62,6 +62,7 @@ EXPORTS_mozilla/plugins =			\
   NPPProtocol.h					\
   NPPProtocolChild.h				\
   NPPProtocolParent.h				\
+  PluginMessageUtils.h				\
   PluginProcessParent.h				\
   PluginThreadChild.h				\
   $(NULL)

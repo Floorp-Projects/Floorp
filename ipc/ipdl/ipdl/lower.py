@@ -578,7 +578,8 @@ class GenerateProtocolActorHeader(Visitor):
             mdefn.addstmt(cxx.Whitespace.NL)
 
 
-        if p.decl.type.isToplevel():
+        # FIXME/cjones: re-enable when we have AsyncChannel
+        if 0 and p.decl.type.isToplevel():
             addDispatcher(asynchandler, 'OnMessageReceived',
                           [ cxx.ExprVar('msg') ])
         asynchandler.addstmt(self.asyncswitch)
@@ -586,7 +587,8 @@ class GenerateProtocolActorHeader(Visitor):
         cls.addstmt(cxx.Whitespace.NL)
 
         if p.decl.type.talksSync():
-            if p.decl.type.isToplevel():
+            # FIXME/cjones: re-enable when we have SyncChannel
+            if 0 and p.decl.type.isToplevel():
                 addDispatcher(synchandler, 'OnMessageReceived',
                               [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
             synchandler.addstmt(self.syncswitch)

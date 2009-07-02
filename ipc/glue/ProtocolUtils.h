@@ -58,7 +58,7 @@ class /*NS_INTERFACE_CLASS*/ IProtocolManager
 {
 public:
     virtual int32 Register(RPCChannel::Listener*) = 0;
-    RPCChannel::Listener* Lookup(int32) = 0;
+    virtual RPCChannel::Listener* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
 };
 

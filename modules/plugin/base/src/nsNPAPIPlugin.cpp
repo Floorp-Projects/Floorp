@@ -88,9 +88,10 @@
 #include "nsIHttpAuthManager.h"
 #include "nsICookieService.h"
 
-#  include "mozilla/SharedPRLibrary.h"
+#include "mozilla/SharedPRLibrary.h"
+#include "mozilla/plugins/NPAPIPluginParent.h"
+
 using mozilla::SharedPRLibrary;
-#  include "mozilla/plugins/NPAPIPluginParent.h"
 using mozilla::plugins::NPAPIPluginParent;
 
 static PRLock *sPluginThreadAsyncCallLock = nsnull;
@@ -283,7 +284,7 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   // fCallbacks and NOT just copy the struct. See Bugzilla 85334
 
   NP_GETENTRYPOINTS pfnGetEntryPoints =
-    (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
+    (NP_GETENTRYPOINTS)aLibrary->FindSymbol("NP_GetEntryPoints");
 
   if (!pfnGetEntryPoints)
     return;
@@ -296,7 +297,7 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   NS_ASSERTION(HIBYTE(fCallbacks.version) >= NP_VERSION_MAJOR,
                "callback version is less than NP version");
 
-  fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
+  fShutdownEntry = (NP_PLUGINSHUTDOWN)aLibrary->FindSymbol("NP_Shutdown");
 #elif defined(XP_MACOSX)
   NPPluginFuncs np_callbacks;
   memset((void*) &np_callbacks, 0, sizeof(np_callbacks));
@@ -370,7 +371,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   callbacks.size = sizeof(callbacks);
 
   SharedLibrary* pluginLib;
-  if (PR_GetEnv("DISABLE_OOP_PLUGINS"))
+  if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
     pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
   else
     pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
@@ -410,6 +411,12 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 #endif
 
 #ifdef XP_WIN
+  SharedLibrary* pluginLib;
+  if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
+    pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
+  else
+    pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
+
   // Note: on Windows, we must use the fCallback because plugins may
   // change the function table. The Shockwave installer makes changes
   // in the table while running
@@ -429,7 +436,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   }
 
   NP_PLUGININIT pfnInitialize =
-    (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+    (NP_PLUGININIT)pluginLib->FindSymbol("NP_Initialize");
 
   if (!pfnInitialize)
     return NS_ERROR_UNEXPECTED;
