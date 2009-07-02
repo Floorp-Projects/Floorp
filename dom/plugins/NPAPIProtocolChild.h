@@ -116,15 +116,15 @@ public:
     // ...
 
     // Implement the RPCChannel::Listener interface
-    virtual Result OnCallReceived(const Message& msg, Message** reply)
+    virtual Result OnCallReceived(const Message& msg, Message*& reply)
     {
         switch(msg.type()) {
         case NPAPI_ParentToChildMsg_NP_Initialize__ID: {
             _MSG_LOG("incall NP_Initialize()");
 
             NPError val0 = mChild->NP_Initialize();
-            *reply = new NPAPI_ChildToParentMsg_Reply_NP_Initialize(val0);
-            (*reply)->set_reply();
+            reply = new NPAPI_ChildToParentMsg_Reply_NP_Initialize(val0);
+            reply->set_reply();
             return MsgProcessed;
         }
 
@@ -152,8 +152,8 @@ public:
                                            aMode,
                                            aNames,
                                            aValues);
-            *reply = new NPAPI_ChildToParentMsg_Reply_NPP_New(val0);
-            (*reply)->set_reply();
+            reply = new NPAPI_ChildToParentMsg_Reply_NPP_New(val0);
+            reply->set_reply();
             return MsgProcessed;
         }
 

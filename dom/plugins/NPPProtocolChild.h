@@ -117,7 +117,7 @@ public:
         return;
     }
 
-    virtual Result OnCallReceived(const Message& msg, Message** reply)
+    virtual Result OnCallReceived(const Message& msg, Message*& reply)
     {
         switch(msg.type()) {
         case NPP_ParentToChildMsg_NPP_SetWindow__ID: {
@@ -136,8 +136,8 @@ public:
                      aWindow, aWidth, aHeight);
 
             NPError val0 = mChild->NPP_SetWindow(aWindow, aWidth, aHeight);
-            *reply = new NPP_ChildToParentMsg_Reply_NPP_SetWindow(val0);
-            (*reply)->set_reply();
+            reply = new NPP_ChildToParentMsg_Reply_NPP_SetWindow(val0);
+            reply->set_reply();
             return MsgProcessed;
         }
 

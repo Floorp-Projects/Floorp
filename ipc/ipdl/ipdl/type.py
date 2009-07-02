@@ -152,6 +152,9 @@ class MessageType(IPDLType):
     def isOut(self): return self.direction is OUT
     def isInout(self): return self.direction is INOUT
 
+    def hasImplicitActorParam(self):
+        return self.isCtor() or self.isDtor()
+
 class ProtocolType(IPDLType):
     def __init__(self, qname, sendSemantics):
         self.qname = qname
@@ -168,12 +171,13 @@ class ProtocolType(IPDLType):
     def managedBy(self, mgr):
         self.manager = mgr
 
-    def isManager(self, pt):
+    def isManagerOf(self, pt):
         for managed in self.manages:
             if pt is managed:
                 return True
         return False
-
+    def isManager(self):
+        return len(self.manages) > 0
     def isManaged(self):
         return self.manager is not None
     def isToplevel(self):
@@ -644,7 +648,7 @@ class CheckTypes(Visitor):
         loc = mgr.loc
 
         # check that the "manager" protocol agrees
-        if not mgrtype.isManager(ptype):
+        if not mgrtype.isManagerOf(ptype):
             self.errors.append(errormsg(
                     loc,
                     "|manager| declaration in protocol `%s' does not match any |manages| declaration in protocol `%s'",
@@ -671,7 +675,7 @@ class CheckTypes(Visitor):
                     "asynchronous message `%s' requests returned values",
                     mname))
 
-        if (mtype.isCtor() or mtype.isDtor()) and not ptype.isManager(mtype.constructedType()):
+        if (mtype.isCtor() or mtype.isDtor()) and not ptype.isManagerOf(mtype.constructedType()):
             self.errors.append(errormsg(
                     loc,
                     "ctor/dtor for protocol `%s', which is not managed by protocol `%s'", 

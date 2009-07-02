@@ -28,7 +28,7 @@ public:
         mRpc.Close();
     }
 
-    virtual Result OnCallReceived(const Message& msg, Message** reply)
+    virtual Result OnCallReceived(const Message& msg, Message*& reply)
     {
         switch (msg.type()) {
         case IFrameEmbedding_ParentToChildMsg_init__ID: {
@@ -40,8 +40,8 @@ public:
 
             nsresult _rv = mChild->init(
                 parentWidget);
-            *reply = new IFrameEmbedding_ChildToParentMsg_Reply_init();
-            (*reply)->set_reply();
+            reply = new IFrameEmbedding_ChildToParentMsg_Reply_init();
+            reply->set_reply();
             return MsgProcessed;
         }
         case IFrameEmbedding_ParentToChildMsg_loadURL__ID: {
@@ -53,8 +53,8 @@ public:
 
             nsresult _rv = mChild->loadURL(
                 uri);
-            *reply = new IFrameEmbedding_ChildToParentMsg_Reply_loadURL();
-            (*reply)->set_reply();
+            reply = new IFrameEmbedding_ChildToParentMsg_Reply_loadURL();
+            reply->set_reply();
             return MsgProcessed;
         }
         case IFrameEmbedding_ParentToChildMsg_move__ID: {
@@ -72,8 +72,8 @@ public:
 
             nsresult _rv = mChild->move(
                 x, y, width, height);
-            *reply = new IFrameEmbedding_ChildToParentMsg_Reply_move();
-            (*reply)->set_reply();
+            reply = new IFrameEmbedding_ChildToParentMsg_Reply_move();
+            reply->set_reply();
             return MsgProcessed;
         }
         default: {
