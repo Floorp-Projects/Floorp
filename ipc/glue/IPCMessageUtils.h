@@ -46,15 +46,8 @@
 // Used by chrome code, we override this here and #ifdef theirs out. See the
 // comments in chrome/common/ipc_message_utils.h for info about this enum.
 enum IPCMessageStart {
-  //NPAPIProtocolMsgStart = 0,
-  //NPPProtocolMsgStart = 0,
-  // FIXME/cjones: blow these away when plugin fixes are merged
-  NPAPI_ParentToChildMsgStart = 0,
-  NPAPI_ChildToParentMsgStart,
-  NPP_ParentToChildMsgStart,
-  NPP_ChildToParentMsgStart,
-  NPObject_ParentToChildMsgStart,
-  NPObject_ChildToParentMsgStart,
+  NPAPIProtocolMsgStart = 0,
+  NPPProtocolMsgStart = 0,
 
   IFrameEmbedding_ParentToChildMsgStart,
   IFrameEmbedding_ChildToParentMsgStart,

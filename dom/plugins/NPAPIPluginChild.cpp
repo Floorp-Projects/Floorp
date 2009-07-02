@@ -39,6 +39,10 @@
 
 #include "mozilla/plugins/NPAPIPluginChild.h"
 
+#ifdef OS_LINUX
+#include <gtk/gtk.h>
+#endif
+
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 
@@ -53,10 +57,12 @@ namespace plugins {
 
 
 NPAPIPluginChild::NPAPIPluginChild() :
-    mNpapi(this),
-    mLibrary(0)
-//    ,mInitializeFunc(0),
-//    mShutdownFunc(0)
+    mLibrary(0),
+    mInitializeFunc(0),
+    mShutdownFunc(0)
+#ifdef OS_WIN
+  , mGetEntryPointsFunc(0)
+#endif
 //  ,mNextInstanceId(0)
 {
     memset(&mFunctions, 0, sizeof(mFunctions));
@@ -79,6 +85,9 @@ NPAPIPluginChild::Init(const std::string& aPluginFilename,
 
     NS_ASSERTION(aChannel, "need a channel");
 
+    if (!InitGraphics())
+        return false;
+
     nsCString filename;
     filename = aPluginFilename.c_str();
     nsCOMPtr<nsILocalFile> pluginFile;
@@ -95,18 +104,18 @@ NPAPIPluginChild::Init(const std::string& aPluginFilename,
 
     nsPluginFile lib(pluginIfile);
 
-    int rv = lib.LoadPlugin(mLibrary);
+    nsresult rv = lib.LoadPlugin(mLibrary);
     NS_ASSERTION(NS_OK == rv, "trouble with mPluginFile");
     NS_ASSERTION(mLibrary, "couldn't open shared object");
 
-    if (!mNpapi.Open(aChannel, aIOLoop))
+    if (!Open(aChannel, aIOLoop))
         return false;
 
     memset((void*) &mFunctions, 0, sizeof(mFunctions));
     mFunctions.size = sizeof(mFunctions);
 
 
-#ifdef OS_LINUX
+#if defined(OS_LINUX)
     mShutdownFunc =
         (NP_PLUGINSHUTDOWN) PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
 
@@ -116,13 +125,36 @@ NPAPIPluginChild::Init(const std::string& aPluginFilename,
         (NP_PLUGINUNIXINIT) PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
     NS_ASSERTION(mInitializeFunc, "couldn't find NP_Initialize()");
 
-    return true;
+#elif defined(OS_WIN)
+    mShutdownFunc =
+        (NP_PLUGINSHUTDOWN)PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
 
+    mGetEntryPointsFunc =
+        (NP_GETENTRYPOINTS)PR_FindSymbol(mLibrary, "NP_GetEntryPoints");
+    NS_ENSURE_TRUE(mGetEntryPointsFunc, false);
+
+    mInitializeFunc =
+        (NP_PLUGININIT)PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
+    NS_ENSURE_TRUE(mInitializeFunc, false);
 #else
 
 #error Please copy the initialization code from nsNPAPIPlugin.cpp
 
 #endif
+    return true;
+}
+
+bool
+NPAPIPluginChild::InitGraphics()
+{
+    // FIXME/cjones: is this the place for this?
+#if defined(OS_LINUX)
+    gtk_init(0, 0);
+#else
+    // may not be necessary on all platforms
+#endif
+
+    return true;
 }
 
 void
@@ -857,24 +889,36 @@ _getauthenticationinfo(NPP aNPP,
 
 #endif /* NP_VERSION_MINOR > 19 */
 
-NPError
-NPAPIPluginChild::NP_Initialize()
+nsresult
+NPAPIPluginChild::AnswerNP_Initialize(NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
 
-#ifdef OS_LINUX
-    return mInitializeFunc(&sBrowserFuncs, &mFunctions);
+#if defined(OS_LINUX)
+    *rv = mInitializeFunc(&sBrowserFuncs, &mFunctions);
+    return NS_OK;
+
+#elif defined(OS_WIN)
+    nsresult rv = mGetEntryPointsFunc(&mFunctions);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(HIBYTE(mFunctions.version) >= NP_VERSION_MAJOR,
+                 "callback version is less than NP version");
+
+    *rv = mInitializeFunc(&sBrowserFuncs);
+    return NS_OK;
 #else
 #  error Please implement me for your platform
 #endif
 }
 
-NPError
-NPAPIPluginChild::NPP_New(const String& aMimeType,
-                          /*const NPPParent*&*/const int& aHandle,
-                          const uint16_t& aMode,
-                          const StringArray& aNames,
-                          const StringArray& aValues)
+NPPProtocolChild*
+NPAPIPluginChild::NPPConstructor(const String& aMimeType,
+                                 /*const NPPParent*&*/const int& aHandle,
+                                 const uint16_t& aMode,
+                                 const StringArray& aNames,
+                                 const StringArray& aValues,
+                                 NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
 
@@ -902,24 +946,20 @@ NPAPIPluginChild::NPP_New(const String& aMimeType,
     NPP npp = childInstance->GetNPP();
 
     // FIXME/cjones: use SAFE_CALL stuff
-    NPError rv = mFunctions.newp((char*) aMimeType.c_str(),
-                                 npp,
-                                 aMode,
-                                 argc,
-                                 argn,
-                                 argv,
-                                 0);
-    if (NPERR_NO_ERROR != rv)
+    *rv = mFunctions.newp((char*) aMimeType.c_str(),
+                          npp,
+                          aMode,
+                          argc,
+                          argn,
+                          argv,
+                          0);
+    if (NPERR_NO_ERROR != *rv) {
+        childInstance = 0;
         goto out;
-
-
-    // FIXME/cjones: HACK ALERT!  kill this and manage through NPAPI
-    childInstance->mNpp.SetChannel(mNpapi.HACK_getchannel_please());
-    mNpapi.HACK_npp = &(childInstance->mNpp);
-
+    }
 
 out:
-    printf ("[NPAPIPluginChild] %s: returning %hd\n", __FUNCTION__, rv);
+    printf ("[NPAPIPluginChild] %s: returning %hd\n", __FUNCTION__, *rv);
     for (int i = 0; i < argc; ++i) {
         free(argn[i]);
         free(argv[i]);
@@ -927,7 +967,14 @@ out:
     free(argn);
     free(argv);
 
-    return rv;
+    return childInstance;
+}
+
+
+nsresult
+NPAPIPluginChild::NPPDestructor(NPPProtocolChild* actor, NPError* rv)
+{
+    return NS_OK;
 }
 
 

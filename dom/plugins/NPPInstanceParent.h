@@ -50,13 +50,11 @@ namespace mozilla {
 namespace plugins {
 //-----------------------------------------------------------------------------
 
-class NPPInstanceParent : public NPPProtocol::Parent
+class NPPInstanceParent :
+    public NPPProtocolParent
 {
-    friend class NPAPIPluginParent;
-
 public:
     NPPInstanceParent(const NPNetscapeFuncs* mNPNIface) :
-        mNpp(this),
         mNPNIface(mNPNIface)
     {
 
@@ -67,10 +65,9 @@ public:
 
     }
 
-    // Implement the NPPProtocol::Parent interface
-    virtual void NPN_GetValue()
+    virtual nsresult AnswerNPN_GetValue(const String& in, String* out)
     {
-        
+        return NS_OK;
     }
 
     NPError NPP_SetWindow(NPWindow* aWindow);
@@ -131,7 +128,6 @@ public:
     }
 
 private:
-    NPPProtocolParent mNpp;
     const NPNetscapeFuncs* mNPNIface;
 };
 

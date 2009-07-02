@@ -40,6 +40,8 @@
 #ifndef dom_plugins_PluginThreadChild_h
 #define dom_plugins_PluginThreadChild_h 1
 
+#include "base/basictypes.h"
+
 #include "chrome/common/child_thread.h"
 #include "base/file_path.h"
 

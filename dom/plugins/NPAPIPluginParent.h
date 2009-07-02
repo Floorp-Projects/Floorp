@@ -41,6 +41,8 @@
 
 #include <cstring>
 
+#include "base/basictypes.h"
+
 #include "prlink.h"
 
 #include "npapi.h"
@@ -74,15 +76,26 @@ namespace plugins {
  * child process needs to make these calls back into Gecko proper.
  * This class is responsible for "actually" making those function calls.
  */
-class NPAPIPluginParent : public NPAPIProtocol::Parent
+class NPAPIPluginParent : public NPAPIProtocolParent
 {
 private:
     typedef mozilla::SharedLibrary SharedLibrary;
-    typedef mozilla::ipc::String String;
-    typedef mozilla::ipc::StringArray StringArray;
+
+protected:
+    NPPProtocolParent* NPPConstructor(
+                const String& aMimeType,
+                const int& aHandle,
+                const uint16_t& aMode,
+                const StringArray& aNames,
+                const StringArray& aValues,
+                NPError* rv);
+
+    virtual nsresult NPPDestructor(
+                NPPProtocolParent* __a,
+                NPError* rv);
 
 public:
-    NPAPIPluginParent(const char* aFullPath);
+    NPAPIPluginParent(const char* aFilePath);
 
     virtual ~NPAPIPluginParent();
 
@@ -93,20 +106,23 @@ public:
      * resolved.  This may or may not launch a plugin child process,
      * and may or may not be very expensive.
      */
-    static SharedLibrary* LoadModule(const char* aFullPath,
+    static SharedLibrary* LoadModule(const char* aFilePath,
                                      PRLibrary* aLibrary);
-
-    // Implement the NPAPIProtocol::Parent interface
-    virtual void NPN_GetValue();
 
 private:
     void LaunchSubprocess();
 
+    void SetPluginFuncs(NPPluginFuncs* aFuncs);
+
     // Implement the module-level functions from NPAPI; these are
     // normally resolved directly from the DSO.
-     
+#ifdef OS_LINUX
     NPError NP_Initialize(const NPNetscapeFuncs* npnIface,
                           NPPluginFuncs* nppIface);
+#else
+    NPError NP_Initialize(const NPNetscapeFuncs* npnIface);
+    NPError NP_GetEntryPoints(NPPluginFuncs* nppIface);
+#endif
 
     NPError NP_Shutdown()
     {
@@ -466,12 +482,9 @@ private:
 
 
 private:
-    const char* mFullPath;
+    const char* mFilePath;
     PluginProcessParent mSubprocess;
-    NPAPIProtocolParent mNpapi;
     const NPNetscapeFuncs* mNPNIface;
-    uint16_t mVersion;
-    void* mJavaClass;
 
     mozilla::Monitor mMonitor;
 
@@ -528,16 +541,19 @@ private:
         {
             if (!strcmp("NP_Shutdown", aSymbolName))
                 return (symbol_type) NP_Shutdown;
-            else if (!strcmp("NP_Initialize", aSymbolName))
+            if (!strcmp("NP_Initialize", aSymbolName))
                 return (symbol_type) NP_Initialize;
-            else if (!strcmp("NP_GetMIMEDescription", aSymbolName))
+            if (!strcmp("NP_GetMIMEDescription", aSymbolName))
                 return (symbol_type) NP_GetMIMEDescription;
-            else if (!strcmp("NP_GetValue", aSymbolName))
+            if (!strcmp("NP_GetValue", aSymbolName))
                 return (symbol_type) NP_GetValue;
-            else {
-                _MOZ_LOG("WARNING! FAILED TO FIND SYMBOL");
-                return 0;
-            }
+#ifdef OS_WINDOWS
+            if (!strcmp("NP_GetEntryPoints", aSymbolName))
+                return (symbol_type) NP_GetEntryPoints;
+#endif
+
+            _MOZ_LOG("WARNING! FAILED TO FIND SYMBOL");
+            return 0;
         }
 
         virtual function_type
@@ -545,16 +561,19 @@ private:
         {
             if (!strcmp("NP_Shutdown", aSymbolName))
                 return (function_type) NP_Shutdown;
-            else if (!strcmp("NP_Initialize", aSymbolName))
+            if (!strcmp("NP_Initialize", aSymbolName))
                 return (function_type) NP_Initialize;
-            else if (!strcmp("NP_GetMIMEDescription", aSymbolName))
+            if (!strcmp("NP_GetMIMEDescription", aSymbolName))
                 return (function_type) NP_GetMIMEDescription;
-            else if (!strcmp("NP_GetValue", aSymbolName))
+            if (!strcmp("NP_GetValue", aSymbolName))
                 return (function_type) NP_GetValue;
-            else {
-                _MOZ_LOG("WARNING! FAILED TO FIND SYMBOL");
-                return 0;
-            }
+#ifdef OS_WINDOWS
+            if (!strcmp("NP_GetEntryPoints", aSymbolName))
+                return (function_type) NP_GetEntryPoints;
+#endif
+
+            _MOZ_LOG("WARNING! FAILED TO FIND SYMBOL");
+            return 0;
         }
 
     private:
@@ -562,11 +581,22 @@ private:
 
         // HACKS HACKS HACKS! from here on down
 
+#ifdef OS_LINUX
         static NPError NP_Initialize(const NPNetscapeFuncs* npnIface,
                                      NPPluginFuncs* nppIface)
         {
             return HACK_target->NP_Initialize(npnIface, nppIface);
         }
+#else
+        static NPError NP_Initialize(const NPNetscapeFuncs* npnIface)
+        {
+            return HACK_target->NP_Initialize(npnIface);
+        }
+        static NPError NP_GetEntryPoints(NPPluginFuncs* nppIface)
+        {
+            return HACK_target->NP_GetEntryPoints(nppIface);
+        }
+#endif
         static NPError NP_Shutdown()
         {
             return HACK_target->NP_Shutdown();

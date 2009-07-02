@@ -36,10 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/plugins/NPAPIPluginParent.h"
+
 #include "base/task.h"
 
 #include "mozilla/ipc/GeckoThread.h"
-#include "mozilla/plugins/NPAPIPluginParent.h"
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoEnter;
@@ -57,13 +58,12 @@ namespace plugins {
 
 
 SharedLibrary*
-NPAPIPluginParent::LoadModule(const char* aFullPath,
-                              PRLibrary* aLibrary)
+NPAPIPluginParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
 {
     _MOZ_LOG(__FUNCTION__);
 
     // Block on the child process being launched and initialized.
-    NPAPIPluginParent* parent = new NPAPIPluginParent(aFullPath);
+    NPAPIPluginParent* parent = new NPAPIPluginParent(aFilePath);
 
     // launch the process synchronously
     {MonitorAutoEnter mon(parent->mMonitor);
@@ -75,19 +75,18 @@ NPAPIPluginParent::LoadModule(const char* aFullPath,
         mon.Wait();
     }
 
-    parent->mNpapi.Open(parent->mSubprocess.GetChannel());
+    parent->Open(parent->mSubprocess.GetChannel());
 
     // FIXME/cjones: leaking NPAPIPluginParents ...
     return parent->mShim;
 }
 
 
-NPAPIPluginParent::NPAPIPluginParent(const char* aFullPath) :
-    mFullPath(aFullPath),       // what's this for?
-    mSubprocess(aFullPath),
-    mNpapi(this),
+NPAPIPluginParent::NPAPIPluginParent(const char* aFilePath) :
+    mFilePath(aFilePath),
+    mSubprocess(aFilePath),
     mMonitor("mozilla.plugins.NPAPIPluginParent.LaunchPluginProcess"),
-    mShim(new Shim(this))
+    ALLOW_THIS_IN_INITIALIZER_LIST(mShim(new Shim(this)))
 {
 }
 
@@ -105,43 +104,89 @@ NPAPIPluginParent::LaunchSubprocess()
     mon.Notify();
 }
 
-void
-NPAPIPluginParent::NPN_GetValue()
+NPPProtocolParent*
+NPAPIPluginParent::NPPConstructor(const String& aMimeType,
+                                  const int& aHandle,
+                                  const uint16_t& aMode,
+                                  const StringArray& aNames,
+                                  const StringArray& aValues,
+                                  NPError* rv)
 {
-    _MOZ_LOG(__FUNCTION__);
+    return new NPPInstanceParent(mNPNIface);
 }
 
+nsresult
+NPAPIPluginParent::NPPDestructor(NPPProtocolParent* __a,
+                                 NPError* rv)
+{
+    return NS_OK;
+}
+
+void
+NPAPIPluginParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
+{
+    aFuncs->version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
+    aFuncs->javaClass = nsnull;
+
+    // FIXME/cjones: /should/ dynamically allocate shim trampoline.
+    // but here we just HACK
+    aFuncs->newp = Shim::NPP_New;
+    aFuncs->destroy = Shim::NPP_Destroy;
+    aFuncs->setwindow = Shim::NPP_SetWindow;
+    aFuncs->newstream = Shim::NPP_NewStream;
+    aFuncs->destroystream = Shim::NPP_DestroyStream;
+    aFuncs->asfile = Shim::NPP_StreamAsFile;
+    aFuncs->writeready = Shim::NPP_WriteReady;
+    aFuncs->write = Shim::NPP_Write;
+    aFuncs->print = Shim::NPP_Print;
+    aFuncs->event = Shim::NPP_HandleEvent;
+    aFuncs->urlnotify = Shim::NPP_URLNotify;
+    aFuncs->getvalue = Shim::NPP_GetValue;
+    aFuncs->setvalue = Shim::NPP_SetValue;
+}
+
+#ifdef OS_LINUX
 NPError
 NPAPIPluginParent::NP_Initialize(const NPNetscapeFuncs* npnIface,
                                  NPPluginFuncs* nppIface)
 {
     _MOZ_LOG(__FUNCTION__);
 
-    NPError rv = mNpapi.NP_Initialize();
-    if (NPERR_NO_ERROR != rv)
+    NPError prv;
+    nsresult rv = CallNP_Initialize(&prv);
+    if (NS_OK != rv)
+        return NPERR_GENERIC_ERROR;
+    else if (NPERR_NO_ERROR != prv)
+        return prv;
+
+    SetPluginFuncs(nppIface);
+    return NPERR_NO_ERROR;
+}
+#else
+NPError
+NPAPIPluginParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
+{
+    _MOZ_LOG(__FUNCTION__);
+
+    NPError prv;
+    nsresult rv = CallNP_Initialize(&prv);
+    if (NS_OK != rv)
         return rv;
-
-    nppIface->version = mVersion;
-    nppIface->javaClass = mJavaClass;
-
-    // FIXME/cjones: /should/ dynamically allocate shim trampoline.
-    // but here we just HACK
-    nppIface->newp = Shim::NPP_New;
-    nppIface->destroy = Shim::NPP_Destroy;
-    nppIface->setwindow = Shim::NPP_SetWindow;
-    nppIface->newstream = Shim::NPP_NewStream;
-    nppIface->destroystream = Shim::NPP_DestroyStream;
-    nppIface->asfile = Shim::NPP_StreamAsFile;
-    nppIface->writeready = Shim::NPP_WriteReady;
-    nppIface->write = Shim::NPP_Write;
-    nppIface->print = Shim::NPP_Print;
-    nppIface->event = Shim::NPP_HandleEvent;
-    nppIface->urlnotify = Shim::NPP_URLNotify;
-    nppIface->getvalue = Shim::NPP_GetValue;
-    nppIface->setvalue = Shim::NPP_SetValue;
+    else if (NPERR_NO_ERROR != prv)
+        return prv
 
     return NPERR_NO_ERROR;
 }
+
+NPError
+NPAPIPluginParent::NP_GetEntryPoints(NPPluginFuncs* nppIface)
+{
+    NS_ASSERTION(nppIface, "Null pointer!");
+
+    SetPluginFuncs(nppIface);
+    return NPERR_NO_ERROR;
+}
+#endif
 
 NPError
 NPAPIPluginParent::NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
@@ -149,9 +194,6 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
                            NPSavedData* saved)
 {
     _MOZ_LOG(__FUNCTION__);
-
-    // create our wrapper instance
-    NPPInstanceParent* parentInstance = new NPPInstanceParent(mNPNIface);
 
     // create the instance on the other side
     StringArray names;
@@ -162,24 +204,28 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
         values.push_back(argv[i]);
     }
 
-    NPError rv = mNpapi.NPP_New(pluginType,
-                                /*instance*/42,
-                                mode, names,
-                                values);
+    NPError prv;
+    NPPInstanceParent* parentInstance = static_cast<NPPInstanceParent*>(
+        CallNPPConstructor(pluginType,
+                           /*instance*/42,
+                           mode, names,
+                           values,
+                           &prv));
     printf ("[NPAPIPluginParent] %s: got return value %hd\n", __FUNCTION__,
-            rv);
+            prv);
 
-    if (NPERR_NO_ERROR != rv)
-        return rv;
-
+    if (NPERR_NO_ERROR != prv)
+        return prv;
+    NS_ASSERTION(parentInstance,
+                 "if there's no parentInstance, there should be an error");
 
     // FIXME/cjones: HACK ALERT!  kill this and manage through NPAPI
-    parentInstance->mNpp.SetChannel(mNpapi.HACK_getchannel_please());
-    mNpapi.HACK_npp = &(parentInstance->mNpp);
+//    parentInstance->mNpp.SetChannel(mNpapi.HACK_getchannel_please());
+//    mNpapi.HACK_npp = &(parentInstance->mNpp);
 
 
     instance->pdata = (void*) parentInstance;
-    return rv;
+    return prv;
 }
 
 // HACKS

@@ -50,15 +50,18 @@ namespace mozilla {
 namespace plugins {
 //-----------------------------------------------------------------------------
 
-class NPPInstanceChild : public NPPProtocol::Child
+class NPPInstanceChild : public NPPProtocolChild
 {
-    friend class NPAPIPluginChild;
+protected:
+    virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
+
+    virtual nsresult AnswerNPP_GetValue(const String& key, String* value);
 
 public:
     NPPInstanceChild(const NPPluginFuncs* aPluginIface) :
-        mPluginIface(aPluginIface),
-        mNpp(this)
+        mPluginIface(aPluginIface)
     {
+        memset(&mWindow, 0, sizeof(mWindow));
         mData.ndata = (void*) this;
     }
 
@@ -72,25 +75,19 @@ public:
         return &mData;
     }
 
-    // NB: not part of NPP since we can't ship all these requests
-    // across the wire.  some are handled locally, and some are passed
-    // back to the parent through our mNpp
-    NPError NPN_GetValue(NPNVariable aVar, void* aValue);
-
-    // Implement the NPPProtocol::Child interface
-    virtual NPError NPP_SetWindow(XID aWindow,
-                                  int32_t aWidth,
-                                  int32_t aHeight);
+    NPError NPN_GetValue(NPNVariable aVariable, void* aValue);
 
 private:
     const NPPluginFuncs* mPluginIface;
-    NPPProtocolChild mNpp;
     NPP_t mData;
+#ifdef OS_LINUX
     GtkWidget* mPlug;
+#endif
     NPWindow mWindow;
+#ifdef OS_LINUX
     NPSetWindowCallbackStruct mWsInfo;
+#endif
 };
-
 
 } // namespace plugins
 } // namespace mozilla
