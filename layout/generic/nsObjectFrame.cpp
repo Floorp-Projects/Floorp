@@ -74,7 +74,6 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsIPluginInstance.h"
 #include "nsIPluginTagInfo.h"
-#include "nsIPluginTagInfo2.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
 #include "nsIEventListener.h"
@@ -233,7 +232,7 @@ public:
 
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
-                              public nsIPluginTagInfo2,
+                              public nsIPluginTagInfo,
                               public nsIEventListener,
                               public nsITimerCallback,
                               public nsIDOMMouseListener,
@@ -241,7 +240,6 @@ class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIDOMKeyListener,
                               public nsIDOMFocusListener,
                               public nsIScrollPositionListener
-
 {
 public:
   nsPluginInstanceOwner();
@@ -285,8 +283,6 @@ public:
                            const char*const*& values);
 
   NS_IMETHOD GetAttribute(const char* name, const char* *result);
-
-  //nsIPluginTagInfo2 interface
 
   NS_IMETHOD GetTagType(nsPluginTagType *result);
 
@@ -2276,7 +2272,6 @@ NS_IMPL_RELEASE(nsPluginInstanceOwner)
 NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo2)
   NS_INTERFACE_MAP_ENTRY(nsIEventListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
