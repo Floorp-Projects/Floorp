@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPluginHostImpl_h_
-#define nsPluginHostImpl_h_
+#ifndef nsPluginHost_h_
+#define nsPluginHost_h_
 
 #include "nsIPluginHost.h"
 #include "nsIObserver.h"
@@ -68,7 +68,7 @@ class nsIComponentManager;
 class nsIFile;
 class nsIChannel;
 class nsIRegistry;
-class nsPluginHostImpl;
+class nsPluginHost;
 
 #define NS_PLUGIN_FLAG_ENABLED      0x0001    // is this plugin enabled?
 #define NS_PLUGIN_FLAG_NPAPI        0x0002    // is this an NPAPI plugin?
@@ -102,7 +102,7 @@ public:
 
   ~nsPluginTag();
 
-  void SetHost(nsPluginHostImpl * aHost);
+  void SetHost(nsPluginHost * aHost);
   void TryUnloadPlugin();
   void Mark(PRUint32 mask) {
     PRBool wasEnabled = IsEnabled();
@@ -139,7 +139,7 @@ public:
                                    nsRegisterType aType = ePluginRegister);
 
   nsRefPtr<nsPluginTag>   mNext;
-  nsPluginHostImpl *mPluginHost;
+  nsPluginHost *mPluginHost;
   nsCString     mName; // UTF-8
   nsCString     mDescription; // UTF-8
   PRInt32       mVariants;
@@ -207,15 +207,15 @@ public:
   PRBool IsLastInstance(nsPluginInstanceTag *plugin);
 };
 
-class nsPluginHostImpl : public nsIPluginHost,
-                         public nsIObserver,
-                         public nsSupportsWeakReference
+class nsPluginHost : public nsIPluginHost,
+                     public nsIObserver,
+                     public nsSupportsWeakReference
 {
 public:
-  nsPluginHostImpl();
-  virtual ~nsPluginHostImpl();
+  nsPluginHost();
+  virtual ~nsPluginHost();
 
-  static nsPluginHostImpl* GetInst();
+  static nsPluginHost* GetInst();
   static const char *GetPluginName(nsIPluginInstance *aPluginInstance);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -405,7 +405,7 @@ private:
 
   // We need to hold a global ptr to ourselves because we register for
   // two different CIDs for some reason...
-  static nsPluginHostImpl* sInst;
+  static nsPluginHost* sInst;
 };
 
 class NS_STACK_CLASS PluginDestructionGuard : protected PRCList
