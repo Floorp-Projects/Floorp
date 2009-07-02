@@ -401,6 +401,7 @@ DocumentInfoHashtableTraverser(nsIURI* key,
 {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mDocumentTable value");
   cb->NoteXPCOMChild(di);
   return PL_DHASH_NEXT;
 }
@@ -412,6 +413,7 @@ LoadingDocHashtableTraverser(nsIURI* key,
 {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mLoadingDocTable value");
   cb->NoteXPCOMChild(sl);
   return PL_DHASH_NEXT;
 }
@@ -1610,6 +1612,19 @@ nsBindingManager::DropDocumentReference()
   if (mProcessAttachedQueueEvent) {
     mProcessAttachedQueueEvent->Revoke();
   }
+
+  if (mContentListTable.ops)
+    PL_DHashTableFinish(&(mContentListTable));
+  mContentListTable.ops = nsnull;
+
+  if (mAnonymousNodesTable.ops)
+    PL_DHashTableFinish(&(mAnonymousNodesTable));
+  mAnonymousNodesTable.ops = nsnull;
+
+  if (mInsertionParentTable.ops)
+    PL_DHashTableFinish(&(mInsertionParentTable));
+  mInsertionParentTable.ops = nsnull;
+
   mDocument = nsnull;
 }
 
