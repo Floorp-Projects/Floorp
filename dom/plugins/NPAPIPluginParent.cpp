@@ -121,6 +121,7 @@ NPAPIPluginParent::NPPDestructor(NPPProtocolParent* __a,
 {
     _MOZ_LOG(__FUNCTION__);
     delete __a;
+    return NS_OK;
 }
 
 void
@@ -171,12 +172,9 @@ NPAPIPluginParent::NP_Initialize(const NPNetscapeFuncs* npnIface)
 
     NPError prv;
     nsresult rv = CallNP_Initialize(&prv);
-    if (NS_OK != rv)
+    if (NS_FAILED(rv))
         return rv;
-    else if (NPERR_NO_ERROR != prv)
-        return prv
-
-    return NPERR_NO_ERROR;
+    return prv;
 }
 
 NPError

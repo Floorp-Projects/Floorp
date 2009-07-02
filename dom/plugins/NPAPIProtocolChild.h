@@ -150,7 +150,7 @@ public:
                     return MsgPayloadError;
                 }
                 NPPProtocolChild* __a;
-                __a = dynamic_cast<NPPProtocolChild*>(Lookup(__ah.mChildId));
+                __a = static_cast<NPPProtocolChild*>(Lookup(__ah.mChildId));
                 if (!(__a)) {
                     return MsgValueError;
                 }

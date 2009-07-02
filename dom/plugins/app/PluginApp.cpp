@@ -42,8 +42,9 @@
 
 
 // FIXME/cjones testing
+#if !defined(OS_WIN)
 #include <unistd.h>
-
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -64,4 +65,5 @@ main(int argc, char* argv[])
     ScopedLogging log;
     nsresult rv = XRE_InitChildProcess(argc, argv, "PluginThreadChild");
     NS_ENSURE_SUCCESS(rv, 1);
+    return 0;
 }

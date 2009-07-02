@@ -5,6 +5,37 @@
 #ifndef BASE_BASICTYPES_H_
 #define BASE_BASICTYPES_H_
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+
+#ifndef NO_NSPR_10_SUPPORT
+#define NO_NSPR_10_SUPPORT
+#define NO_NSPR_10_SUPPORT_SAVE
+#endif
+
+#include "nspr/prtypes.h"
+
+#ifdef NO_NSPR_10_SUPPORT_SAVE
+#undef NO_NSPR_10_SUPPORT_SAVE
+#undef NO_NSPR_10_SUPPORT
+#endif
+
+#ifdef _WIN32
+#undef _WIN32
+#define _WIN32_SAVE
+#endif
+
+#include "nspr/obsolete/protypes.h"
+
+#define _INT32
+#define _UINT32
+
+#ifdef _WIN32_SAVE
+#undef _WIN32_SAVE
+#define _WIN32
+#endif
+
+#endif // CHROMIUM_MOZILLA_BUILD
+
 #include <limits.h>         // So we can set the bounds of our types
 #include <stddef.h>         // For size_t
 #include <string.h>         // for memcpy
