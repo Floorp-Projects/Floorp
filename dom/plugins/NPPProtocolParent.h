@@ -128,7 +128,7 @@ public:
         return ret0;
     }
 
-    virtual Result OnCallReceived(const Message& msg, Message** reply)
+    virtual Result OnCallReceived(const Message& msg, Message*& reply)
     {
         switch(msg.type()) {
         case NPP_ChildToParentMsg_NPN_GetValue__ID: {
@@ -137,7 +137,7 @@ public:
             // nothing to unpack
             mParent->NPN_GetValue();
 
-            *reply = new NPP_ParentToChildMsg_Reply_NPN_GetValue();
+            reply = new NPP_ParentToChildMsg_Reply_NPN_GetValue();
             return MsgProcessed;
         }
 

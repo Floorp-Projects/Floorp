@@ -1,0 +1,25 @@
+include protocol "NPAPI.ipdl";
+//include protocol "NPStream.ipdl";
+
+include "PluginMessageUtils.h";
+
+using NPError;
+using NPWindow;
+
+namespace mozilla {
+namespace plugins {
+
+rpc protocol NPP
+{
+    manager NPAPI;
+
+    // manages NPStream;
+
+    rpc out NPP_SetWindow(NPWindow window) returns (NPError rv);
+
+    rpc out NPP_GetValue(String key) returns (String value);
+    rpc in NPN_GetValue(String key) returns (String value);
+};
+
+} // namespace plugins
+} // namespace mozilla

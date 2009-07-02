@@ -67,7 +67,7 @@ public:
         return _rv;
     }
 
-    virtual Result OnCallReceived(const Message& msg, Message** reply)
+    virtual Result OnCallReceived(const Message& msg, Message*& reply)
     {
         switch (msg.type()) {
         default: {

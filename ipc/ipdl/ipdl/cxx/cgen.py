@@ -97,8 +97,11 @@ class CxxCodeGen(CodePrinter, Visitor):
         if c.interface:
             # FIXME/cjones: turn this "on" when we get the analysis
             self.write(' /*NS_INTERFACE_CLASS*/')
+        if c.abstract:
+            # FIXME/cjones: turn this "on" when we get the analysis
+            self.write(' /*NS_ABSTRACT_CLASS*/')
         if c.final:
-            self.write(' /*NS_FINAL_CLASS*/')
+            self.write(' NS_FINAL_CLASS')
         self.write(' '+ c.name)
 
         ninh = len(c.inherits)
@@ -124,6 +127,8 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitInherit(self, inh):
         self.write(inh.viz +' '+ inh.name)
 
+    def visitFriendClassDecl(self, fcd):
+        self.printdentln('friend class '+ fcd.friend +';')
 
     def visitMethodDecl(self, md):
         assert not (md.static and md.virtual)
@@ -201,6 +206,9 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.printdentln('}')
 
 
+    def visitExprLiteral(self, el):
+        self.write(str(el))
+
     def visitExprVar(self, ev):
         self.write(ev.name)
 
@@ -208,6 +216,26 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.write(e.op)
         self.write('(')
         e.expr.accept(self)
+        self.write(')')
+
+    def visitExprCast(self, c):
+        pfx, sfx = '', ''
+        if c.dynamic:        pfx, sfx = 'dynamic_cast<', '>'
+        elif c.static:       pfx, sfx = 'static_cast<', '>'
+        elif c.reinterpret:  pfx, sfx = 'reinterpret_cast<', '>'
+        elif c.const:        pfx, sfx = 'const_cast<', '>'
+        elif c.C:            pfx, sfx = '(', ')'
+        self.write(pfx)
+        c.type.accept(self)
+        self.write(sfx +'(')
+        c.expr.accept(self)
+        self.write(')')
+
+    def visitExprBinary(self, e):
+        self.write('(')
+        e.left.accept(self)
+        self.write(') '+ e.op +' (')
+        e.right.accept(self)
         self.write(')')
 
     def visitExprSelect(self, es):
