@@ -35,24 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * nsIPlugin
- *
- * @status DEPRECATED
- *
- * Originally published XPCOM Plugin API is now deprecated
- * Developers are welcome to use NPAPI, please refer to:
- * http://mozilla.org/projects/plugins/
- */
-
 #include "nsIFactory.idl"
 #include "nspluginroot.idl"
 
 %{C++
 #include "nsplugindefs.h"
-%}
 
-%{C++
 // {ffc63200-cf09-11d2-a5a0-bc8f7ad21dfc}
 #define NS_PLUGIN_CID \
 { 0xffc63200, 0xcf09, 0x11d2, { 0xa5, 0xa0, 0xbc, 0x8f, 0x7a, 0xd2, 0x1d, 0xfc } }
@@ -61,79 +49,62 @@
 #define NS_INLINE_PLUGIN_CONTRACTID_PREFIX "@mozilla.org/inline-plugin/"
 %}
 
-/**
- * The nsIPlugin interface is the minimum interface plugin developers need to 
- * support in order to implement a plugin.
- *
- * The old NPP_New plugin operation is now subsumed by two operations:
- *
- * CreateInstance -- called once, after the plugin instance is created. This 
- * method is used to initialize the new plugin instance (although the actual
- * plugin instance object will be created by the plugin manager).
- *
- * nsIPluginInstance::Start -- called when the plugin instance is to be
- * started. This happens in two circumstances: (1) after the plugin instance
- * is first initialized, and (2) after a plugin instance is returned to
- * (e.g. by going back in the window history) after previously being stopped
- * by the Stop method. 
- */
 [uuid(df773070-0199-11d2-815b-006008119d7a)]
 interface nsIPlugin : nsIFactory
 {
-    /**
-     * Creates a new plugin instance, based on a MIME type. This
-     * allows different impelementations to be created depending on
-     * the specified MIME type.
-     */
-    void createPluginInstance(in nsISupports aOuter, 
+  /**
+   * Creates a new plugin instance, based on a MIME type. This
+   * allows different impelementations to be created depending on
+   * the specified MIME type.
+   */
+  void createPluginInstance(in nsISupports aOuter, 
                             in nsIIDRef aIID,
                             in string aPluginMIMEType,
                             [retval, iid_is(aIID)] out nsQIResult aResult);
 
-    /**
-     * Initializes the plugin and will be called before any new instances are
+  /**
+   * Initializes the plugin and will be called before any new instances are
    * created. It is passed browserInterfaces on which QueryInterface
    * may be used to obtain an nsIPluginManager, and other interfaces.
    *
    * @param browserInterfaces - an object that allows access to other browser
    * interfaces via QueryInterface
    * @result - NS_OK if this operation was successful
-     */
-    void initialize();
+   */
+  void initialize();
 
-    /**
-     * Called when the browser is done with the plugin factory, or when
-     * the plugin is disabled by the user.
-     *
-     * (Corresponds to NPP_Shutdown.)
+  /**
+   * Called when the browser is done with the plugin factory, or when
+   * the plugin is disabled by the user.
+   *
+   * (Corresponds to NPP_Shutdown.)
    *
    * @result - NS_OK if this operation was successful
-     */
-    void shutdown();
+   */
+  void shutdown();
 
-    /**
-     * Returns the MIME description for the plugin. The MIME description 
-     * is a colon-separated string containg the plugin MIME type, plugin
-     * data file extension, and plugin name, e.g.:
-     *
-     * "application/x-simple-plugin:smp:Simple Sample Plug-in"
-     *
-     * (Corresponds to NPP_GetMIMEDescription.)
-     *
+  /**
+   * Returns the MIME description for the plugin. The MIME description 
+   * is a colon-separated string containg the plugin MIME type, plugin
+   * data file extension, and plugin name, e.g.:
+   *
+   * "application/x-simple-plugin:smp:Simple Sample Plug-in"
+   *
+   * (Corresponds to NPP_GetMIMEDescription.)
+   *
    * @param aMIMEDescription - the resulting MIME description 
    * @result                 - NS_OK if this operation was successful
-     */
-  //readonly attribute string MIMEDescription;
+   */
   void getMIMEDescription(out constCharPtr aMIMEDescription);
 
-    /**
+  /**
    * Returns the value of a variable associated with the plugin.
-     *
+   *
    * (Corresponds to NPP_GetValue.)
-     *
+   *
    * @param aVariable - the plugin variable to get
    * @param aValue    - the address of where to store the resulting value
    * @result          - NS_OK if this operation was successful
-     */
-   void getValue(in nsPluginVariable aVariable, in voidPtr aValue);
+   */
+  void getValue(in nsPluginVariable aVariable, in voidPtr aValue);
 };
