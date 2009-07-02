@@ -1042,7 +1042,7 @@ nsresult
 nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
 {
   if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+    nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
     if (tinfo)
       return tinfo->GetTagType(result);
   }
@@ -1055,7 +1055,7 @@ nsNPAPIPluginInstance::GetAttributes(PRUint16& n, const char*const*& names,
                                      const char*const*& values)
 {
   if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+    nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
     if (tinfo)
       return tinfo->GetAttributes(n, names, values);
   }
@@ -1068,7 +1068,7 @@ nsNPAPIPluginInstance::GetParameters(PRUint16& n, const char*const*& names,
                                      const char*const*& values)
 {
   if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+    nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
     if (tinfo)
       return tinfo->GetParameters(n, names, values);
   }
@@ -1733,7 +1733,7 @@ nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPluginTagInfo2> tinfo(do_QueryInterface(mOwner));
+  nsCOMPtr<nsIPluginTagInfo> tinfo(do_QueryInterface(mOwner));
   if (tinfo)
     return tinfo->GetDOMElement(result);
 

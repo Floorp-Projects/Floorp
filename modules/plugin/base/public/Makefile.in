@@ -70,7 +70,6 @@ XPIDLSRCS 	= \
 		nsIHTTPHeaderListener.idl \
 		nsIPluginTag.idl \
 		nsIPluginTagInfo.idl \
-		nsIPluginTagInfo2.idl \
 		nsIPluginInputStream.idl \
 		nsIPluginStreamListener.idl \
 		nsIPluginInstance.idl \
