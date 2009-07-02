@@ -1564,7 +1564,6 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
         // Standard signed and unsigned integer comparisons.
         case LIR_eq:    cc = EQ;    fp_cond = false;    break;
         case LIR_ov:    cc = VS;    fp_cond = false;    break;
-        case LIR_cs:    cc = CS;    fp_cond = false;    break;
         case LIR_lt:    cc = LT;    fp_cond = false;    break;
         case LIR_le:    cc = LE;    fp_cond = false;    break;
         case LIR_gt:    cc = GT;    fp_cond = false;    break;
@@ -1608,8 +1607,8 @@ Assembler::asm_cmp(LIns *cond)
 {
     LOpcode condop = cond->opcode();
 
-    // LIR_ov and LIR_cs recycle the flags set by arithmetic ops
-    if ((condop == LIR_ov) || (condop == LIR_cs))
+    // LIR_ov recycles the flags set by arithmetic ops
+    if ((condop == LIR_ov))
         return;
 
     LInsp lhs = cond->oprnd1();
@@ -1700,7 +1699,6 @@ Assembler::asm_cond(LInsp ins)
     {
         case LIR_eq:    SET(r,EQ);      break;
         case LIR_ov:    SET(r,VS);      break;
-        case LIR_cs:    SET(r,CS);      break;
         case LIR_lt:    SET(r,LT);      break;
         case LIR_le:    SET(r,LE);      break;
         case LIR_gt:    SET(r,GT);      break;
@@ -1882,7 +1880,6 @@ Assembler::asm_cmov(LInsp ins)
         // note that these are all opposites...
         case LIR_eq:    MOVNE(rr, iffalsereg);  break;
         case LIR_ov:    MOVVC(rr, iffalsereg);  break;
-        case LIR_cs:    MOVNC(rr, iffalsereg);  break;
         case LIR_lt:    MOVGE(rr, iffalsereg);  break;
         case LIR_le:    MOVGT(rr, iffalsereg);  break;
         case LIR_gt:    MOVLE(rr, iffalsereg);  break;

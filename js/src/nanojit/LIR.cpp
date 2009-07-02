@@ -475,7 +475,7 @@ namespace nanojit
 
     bool LIns::isCond() const {
         LOpcode op = opcode();
-        return (op == LIR_ov) || (op == LIR_cs) || isCmp();
+        return (op == LIR_ov) || isCmp();
     }
 	
 	bool LIns::isQuad() const {
@@ -688,8 +688,6 @@ namespace nanojit
 				return insImm(c1 == c2);
 			case LIR_ov:
                 return insImm((c2 != 0) && ((c1 + c2) <= c1)); 
-			case LIR_cs:
-                return insImm((c2 != 0) && ((uint32_t(c1) + uint32_t(c2)) <= uint32_t(c1)));
 			case LIR_lt:
 				return insImm(c1 < c2);
 			case LIR_gt:
@@ -1729,7 +1727,6 @@ namespace nanojit
 			case LIR_qlo:
 			case LIR_qhi:
             case LIR_ov:
-            case LIR_cs:
 			case LIR_not: 
 		    case LIR_mod:
 				sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
