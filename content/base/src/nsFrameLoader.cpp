@@ -43,6 +43,8 @@
  * handling of loads in it, recursion-checking).
  */
 
+#include "prenv.h"
+
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMWindow.h"
@@ -1034,14 +1036,18 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 PRBool
 nsFrameLoader::TryNewProcess()
 {
+  if (PR_GetEnv("DISABLE_OOP_IFRAME")) {
+      return PR_FALSE;
+  }
+
   nsIDocument* doc = mOwnerContent->GetDocument();
   if (!doc) {
-    return NS_ERROR_UNEXPECTED;
+    return PR_FALSE;
   }
 
   if (doc->GetDisplayDocument()) {
     // Don't allow subframe loads in external reference documents
-    return NS_ERROR_NOT_AVAILABLE;
+    return PR_FALSE;
   }
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =

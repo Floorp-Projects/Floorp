@@ -49,8 +49,7 @@ namespace mozilla {
 class SharedPRLibrary : public SharedLibrary
 {
 public:
-    SharedPRLibrary(const char* aFullPath,
-                    PRLibrary* aLibrary) :
+    SharedPRLibrary(const char* aFilePath, PRLibrary* aLibrary) :
         mLibrary(aLibrary)
     {
         NS_ASSERTION(mLibrary, "need non-null lib");

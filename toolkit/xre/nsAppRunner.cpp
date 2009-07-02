@@ -2927,6 +2927,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   MOZ_SPLASHSCREEN_UPDATE(20);
 
+  // Set up chromium libs
+  base::AtExitManager exitManager;
+  CommandLine::Init(gArgc, gArgv);
+  MessageLoopForUI mainMessageLoop;
+
   {
     nsXREDirProvider dirProvider;
     rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
@@ -3373,13 +3378,33 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           }
 
           MOZ_SPLASHSCREEN_UPDATE(90);
+          {
+#if 0 && defined(OS_LINUX)
+            // The lifetime of the BACKGROUND_X11 thread is a subset
+            // of the IO thread so we start it now.
+             scoped_ptr<base::Thread> x11Thread(
+               new BrowserProcessSubThread(BrowserProcessSubThread::BACKGROUND_X11));
+             if (NS_UNLIKELY(!x11Thread->Start())) {
+               NS_ERROR("Failed to create chromium's X11 thread!");
+               return NS_ERROR_FAILURE;
+             }
+#endif
+            scoped_ptr<base::Thread> ipcThread(
+              new BrowserProcessSubThread(BrowserProcessSubThread::IO));
+            base::Thread::Options options;
+            options.message_loop_type = MessageLoop::TYPE_IO;
+            if (NS_UNLIKELY(!ipcThread->StartWithOptions(options))) {
+              NS_ERROR("Failed to create chromium's IO thread!");
+              return NS_ERROR_FAILURE;
+            }
 
-          NS_TIMELINE_ENTER("appStartup->Run");
-          rv = appStartup->Run();
-          NS_TIMELINE_LEAVE("appStartup->Run");
-          if (NS_FAILED(rv)) {
-            NS_ERROR("failed to run appstartup");
-            gLogConsoleErrors = PR_TRUE;
+            NS_TIMELINE_ENTER("appStartup->Run");
+            rv = appStartup->Run();
+            NS_TIMELINE_LEAVE("appStartup->Run");
+            if (NS_FAILED(rv)) {
+              NS_ERROR("failed to run appstartup");
+              gLogConsoleErrors = PR_TRUE;
+            }
           }
 
           // Check for an application initiated restart.  This is one that

@@ -55,8 +55,8 @@ const char* PluginProcessParent::kPluginProcessName = "gecko-plugin"
 #endif
                                                     ;
 
-PluginProcessParent::PluginProcessParent(const std::string& aPluginFilename) :
-    mPluginFilename(aPluginFilename)
+PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
+    mPluginFilePath(aPluginFilePath)
 {
 }
 
@@ -84,7 +84,7 @@ PluginProcessParent::Launch()
 
     CommandLine cmdLine(exePath.ToWStringHack());
     cmdLine.AppendSwitchWithValue(switches::kProcessChannelID, channel_id());
-    cmdLine.AppendLooseValue(UTF8ToWide(mPluginFilename));
+    cmdLine.AppendLooseValue(UTF8ToWide(mPluginFilePath));
 
     base::ProcessHandle process;
 #if defined(OS_WIN)

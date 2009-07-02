@@ -40,6 +40,8 @@
 #ifndef dom_plugins_PluginProcessParent_h
 #define dom_plugins_PluginProcessParent_h 1
 
+#include "base/basictypes.h"
+
 #include "base/file_path.h"
 #include "base/scoped_ptr.h"
 #include "base/thread.h"
@@ -58,7 +60,7 @@ namespace plugins {
 class PluginProcessParent : mozilla::ipc::GeckoChildProcessHost
 {
 public:
-    PluginProcessParent(const std::string& aPluginFilename);
+    PluginProcessParent(const std::string& aPluginFilePath);
     ~PluginProcessParent();
 
     /**
@@ -82,7 +84,7 @@ public:
 
 private:
     static const char* kPluginProcessName;
-    std::string mPluginFilename;
+    std::string mPluginFilePath;
 
     DISALLOW_EVIL_CONSTRUCTORS(PluginProcessParent);
 };
