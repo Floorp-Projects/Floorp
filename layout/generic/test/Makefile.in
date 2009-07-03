@@ -53,6 +53,7 @@ _TEST_FILES = \
 		frame_selection_underline.css \
 		plugin_clipping_helper.xhtml \
 		test_backspace_delete.xul \
+		test_bug263683.html \
 		test_bug288789.html \
 		test_bug323656.html \
 		test_bug344830.html \
