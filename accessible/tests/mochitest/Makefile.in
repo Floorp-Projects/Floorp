@@ -127,6 +127,7 @@ _TEST_FILES =\
 		test_table_4.html \
 		test_table_indexes.html \
 		test_table_indexes_ariagrid.html \
+		test_table_layoutguess.html \
 		test_table_sels.html \
 		test_table_sels_ariagrid.html \
 		test_textattrs.html \
