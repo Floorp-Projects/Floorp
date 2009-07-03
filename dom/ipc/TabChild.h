@@ -13,7 +13,7 @@ namespace mozilla {
 namespace tabs {
 
 class TabChild
-    : public IFrameEmbeddingProtocol::Child
+    : public IFrameEmbeddingProtocolChild
 {
 private:
     typedef mozilla::ipc::String String;
@@ -24,16 +24,15 @@ public:
 
     bool Init(MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
-    virtual nsresult init(const MagicWindowHandle& parentWidget);
-    virtual nsresult loadURL(const String& uri);
-    virtual nsresult move(const uint32_t& x,
-                          const uint32_t& y,
-                          const uint32_t& width,
-                          const uint32_t& height);
+    virtual nsresult Answerinit(const MagicWindowHandle& parentWidget);
+    virtual nsresult AnswerloadURL(const String& uri);
+    virtual nsresult Answermove(const uint32_t& x,
+                                const uint32_t& y,
+                                const uint32_t& width,
+                                const uint32_t& height);
 
 private:
     MagicWindowHandle mWidget;
-    IFrameEmbeddingProtocolChild mChild;
     nsCOMPtr<nsIWebNavigation> mWebNav;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);

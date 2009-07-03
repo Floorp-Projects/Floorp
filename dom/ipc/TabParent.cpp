@@ -18,7 +18,6 @@ namespace tabs {
 
 TabParent::TabParent(MagicWindowHandle parentWidget)
     : mSubprocess()
-    , mParent(this)
     , mMonitor("mozilla.dom.ipc.TabParent")
 {
     {
@@ -28,9 +27,9 @@ TabParent::TabParent(MagicWindowHandle parentWidget)
         mon.Wait();
     }
 
-    mParent.Open(mSubprocess.GetChannel());
+    Open(mSubprocess.GetChannel());
 
-    mParent.init(parentWidget);
+    Callinit(parentWidget);
 }
 
 TabParent::~TabParent()
@@ -51,13 +50,13 @@ TabParent::LoadURL(nsIURI* aURI)
     nsCString spec;
     aURI->GetSpec(spec);
 
-    mParent.loadURL(spec.get());
+    CallloadURL(spec.get());
 }
 
 void
 TabParent::Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height)
 {
-    mParent.move(x, y, width, height);
+    Callmove(x, y, width, height);
 }
 
 } // namespace tabs

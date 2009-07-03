@@ -49,8 +49,7 @@ enum IPCMessageStart {
   NPAPIProtocolMsgStart = 0,
   NPPProtocolMsgStart = 0,
 
-  IFrameEmbedding_ParentToChildMsgStart,
-  IFrameEmbedding_ChildToParentMsgStart,
+  IFrameEmbeddingProtocolMsgStart,
 
   LastMsgIndex
 };
