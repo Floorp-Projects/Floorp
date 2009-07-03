@@ -17,7 +17,7 @@ namespace mozilla {
 namespace tabs {
 
 class TabParent
-    : private IFrameEmbeddingProtocol::Parent
+    : private IFrameEmbeddingProtocolParent
 {
 public:
     TabParent(MagicWindowHandle parentWidget);
@@ -30,7 +30,6 @@ private:
     void LaunchSubprocess();
 
     TabProcessParent mSubprocess;
-    IFrameEmbeddingProtocolParent mParent;
 
     mozilla::Monitor mMonitor;
 };
