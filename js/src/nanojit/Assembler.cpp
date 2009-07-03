@@ -1542,13 +1542,7 @@ namespace nanojit
 	void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
 	{
 		underrunProtect(si->count * sizeof(NIns*) + 20);
-		// Align for platform. The branch should be optimized away and is
-		// required to select the compatible int type.
-		if (sizeof(NIns*) == 8) {
-			_nIns = (NIns*) (uint64(_nIns) & ~7);
-		} else if (sizeof(NIns*) == 4) {
-		    _nIns = (NIns*) (uint32(_nIns) & ~3);
-		}
+		_nIns = reinterpret_cast<NIns*>(uintptr_t(_nIns) & ~(sizeof(NIns*) - 1));
 		for (uint32_t i = 0; i < si->count; ++i) {
 			_nIns = (NIns*) (((uint8*) _nIns) - sizeof(NIns*));
 			*(NIns**) _nIns = target;
