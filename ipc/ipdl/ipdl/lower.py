@@ -752,7 +752,7 @@ class GenerateProtocolActorHeader(Visitor):
                             bvar,
                             cxx.ExprCast(
                                 cxx.ExprCall(cxx.ExprVar('Lookup'), [ objid ]),
-                                objtype, dynamic=1))))
+                                objtype, static=1))))
                 failif = cxx.StmtIf(cxx.ExprBinary(objvar, '!=', bvar))
                 failif.ifb.addstmt(cxx.StmtReturn(valueerrcode))
                 impl.addstmt(failif)
@@ -923,7 +923,7 @@ class GenerateProtocolActorHeader(Visitor):
                 dcast = cxx.ExprCast(
                     cxx.ExprCall(cxx.ExprVar('Lookup'), [ routevar ]),
                     objtype,
-                    dynamic=1)
+                    static=1)
                 block.addstmt(cxx.StmtExpr(cxx.ExprAssn(objvar, dcast)))
 
                 failif = cxx.StmtIf(cxx.ExprPrefixUnop(objvar, '!'))
