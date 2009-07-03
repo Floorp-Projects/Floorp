@@ -327,14 +327,7 @@ nsPluginInstanceTag::nsPluginInstanceTag(nsPluginTag* aPluginTag,
 
 nsPluginInstanceTag::~nsPluginInstanceTag()
 {
-  // Iterate the list and null out mNext while holding a temp ref to avoid
-  // nsPluginTag::~nsPluginTag recursing (potentially blowing the stack).
-  while (mPluginTag) {
-    nsRefPtr<nsPluginTag> temp = mPluginTag->mNext;
-    mPluginTag->mNext = nsnull;
-    mPluginTag = temp;
-  }
-
+  mPluginTag = nsnull;
   if (mInstance) {
     nsCOMPtr<nsIPluginInstanceOwner> owner;
     mInstance->GetOwner(getter_AddRefs(owner));
@@ -434,30 +427,18 @@ PRBool nsPluginInstanceTagList::remove(nsPluginInstanceTag * plugin)
       if (prev && !prev->mNext)
         mLast = prev;
 
-      // see if this is going to be the last instance of a plugin
-      // if so we should perform nsIPlugin::Shutdown and unload the library
-      // by calling nsPluginTag::TryUnloadPlugin()
-      if (lastInstance) {
-        // cache some things as we are going to destroy it right now
-        nsRefPtr<nsPluginTag> pluginTag = p->mPluginTag;
+      delete p;
 
-        delete p; // plugin instance is destroyed here
+      if (lastInstance && pluginTag) {
+        nsresult rv;
+        nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (pluginTag) {
-          nsresult rv;                                                                                   
-          nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          PRBool unloadPluginsASAP = PR_FALSE;
-          rv = pref->GetBoolPref("plugins.unloadASAP", &unloadPluginsASAP);
-          if (NS_SUCCEEDED(rv) && unloadPluginsASAP)
-            pluginTag->TryUnloadPlugin();
-        } 
-        else
-          NS_ASSERTION(pluginTag, "pluginTag was not set, plugin not shutdown");
+        PRBool unloadPluginsASAP = PR_FALSE;
+        rv = pref->GetBoolPref("plugins.unloadASAP", &unloadPluginsASAP);
+        if (NS_SUCCEEDED(rv) && unloadPluginsASAP)
+          pluginTag->TryUnloadPlugin();
       }
-      else
-        delete p;
 
       mCount--;
       return PR_TRUE;
@@ -2424,10 +2405,15 @@ nsPluginStreamListenerPeer::VisitHeader(const nsACString &header, const nsACStri
 }
 
 nsPluginHost::nsPluginHost()
-  // No need to initialize members to nsnull, PR_FALSE etc because this class
-  // has a zeroing operator new.
-  : mJavaEnabled(PR_TRUE)
 {
+  mPluginsLoaded = PR_FALSE;
+  mDontShowBadPluginMessage = PR_FALSE;
+  mIsDestroyed = PR_FALSE;
+  mOverrideInternalTypes = PR_FALSE;
+  mAllowAlienStarHandler = PR_FALSE;
+  mDefaultPluginDisabled = PR_FALSE;
+  mJavaEnabled = PR_TRUE;
+
   gActivePluginList = &mPluginInstanceTagList;
 
   // check to see if pref is set at startup to let plugins take over in
@@ -2479,6 +2465,7 @@ nsPluginHost::nsPluginHost()
   PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("nsPluginHost::ctor\n"));
   PR_LogFlush();
 #endif
+  mCachedPlugins = nsnull;
 }
 
 nsPluginHost::~nsPluginHost()
@@ -2953,8 +2940,6 @@ NS_IMETHODIMP nsPluginHost::Destroy()
     mPluginPath = nsnull;
   }
 
-  // Iterate the list and null out mNext while holding a temp ref to avoid
-  // nsPluginTag::~nsPluginTag recursing (potentially blowing the stack).
   while (mPlugins) {
     nsRefPtr<nsPluginTag> temp = mPlugins->mNext;
     // while walking through the list of the plugins see if we still have anything
@@ -2966,13 +2951,8 @@ NS_IMETHODIMP nsPluginHost::Destroy()
     mPlugins = temp;
   }
 
-  // Iterate the list and null out mNext while holding a temp ref to avoid
-  // nsPluginTag::~nsPluginTag recursing (potentially blowing the stack).
-  while (mCachedPlugins) {
-    nsRefPtr<nsPluginTag> temp = mCachedPlugins->mNext;
-    mCachedPlugins->mNext = nsnull;
-    mCachedPlugins = temp;
-  }
+  // Delete any remaining cached plugins list
+  mCachedPlugins = nsnull;
 
   // Lets remove any of the temporary files that we created.
   if (sPluginTempDir) {
@@ -3514,7 +3494,6 @@ NS_IMETHODIMP nsPluginHost::SetUpPluginInstance(const char *aMimeType,
       return rv;
 
     // other failure return codes may be not fatal, so we can still try
-    aOwner->SetInstance(nsnull); // avoid assert about setting it twice
     rv = TrySetUpPluginInstance(aMimeType, aURL, aOwner);
   }
 
