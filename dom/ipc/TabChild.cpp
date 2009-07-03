@@ -15,7 +15,6 @@ using namespace mozilla::tabs;
 
 TabChild::TabChild()
     : mWidget(0)
-    , mChild(this)
 {
 }
 
@@ -27,12 +26,12 @@ TabChild::~TabChild()
 bool
 TabChild::Init(MessageLoop* aIOLoop, IPC::Channel* aChannel)
 {
-    mChild.Open(aChannel, aIOLoop);
+    Open(aChannel, aIOLoop);
     return true;
 }
 
 nsresult
-TabChild::init(const MagicWindowHandle& parentWidget)
+TabChild::Answerinit(const MagicWindowHandle& parentWidget)
 {
     printf("creating %d!\n", NS_IsMainThread());
 
@@ -60,7 +59,7 @@ TabChild::init(const MagicWindowHandle& parentWidget)
 }
 
 nsresult
-TabChild::loadURL(const String& uri)
+TabChild::AnswerloadURL(const String& uri)
 {
     printf("loading %s, %d\n", uri.c_str(), NS_IsMainThread());
 
@@ -70,10 +69,10 @@ TabChild::loadURL(const String& uri)
 }
 
 nsresult
-TabChild::move(const uint32_t& x,
-               const uint32_t& y,
-               const uint32_t& width,
-               const uint32_t& height)
+TabChild::Answermove(const uint32_t& x,
+                     const uint32_t& y,
+                     const uint32_t& width,
+                     const uint32_t& height)
 {
     printf("[TabChild] MOVE to (x,y)=(%ud, %ud), (w,h)= (%ud, %ud)\n",
            x, y, width, height);

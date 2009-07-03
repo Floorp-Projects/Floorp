@@ -577,9 +577,10 @@ class GenerateProtocolActorHeader(Visitor):
             mdefn.addstmt(routeif)
             mdefn.addstmt(cxx.Whitespace.NL)
 
+        dispatches = p.decl.type.isToplevel() and p.decl.type.isManager()
 
         # FIXME/cjones: re-enable when we have AsyncChannel
-        if 0 and p.decl.type.isToplevel():
+        if 0 and dispatches:
             addDispatcher(asynchandler, 'OnMessageReceived',
                           [ cxx.ExprVar('msg') ])
         asynchandler.addstmt(self.asyncswitch)
@@ -588,7 +589,7 @@ class GenerateProtocolActorHeader(Visitor):
 
         if p.decl.type.talksSync():
             # FIXME/cjones: re-enable when we have SyncChannel
-            if 0 and p.decl.type.isToplevel():
+            if 0 and dispatches:
                 addDispatcher(synchandler, 'OnMessageReceived',
                               [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
             synchandler.addstmt(self.syncswitch)
@@ -596,7 +597,7 @@ class GenerateProtocolActorHeader(Visitor):
             cls.addstmt(cxx.Whitespace.NL)
 
             if p.decl.type.talksRpc():
-                if p.decl.type.isToplevel():
+                if dispatches:
                     addDispatcher(rpchandler, 'OnCallReceived',
                                   [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
                 rpchandler.addstmt(self.rpcswitch)
@@ -661,7 +662,7 @@ class GenerateProtocolActorHeader(Visitor):
         if p.decl.type.isManaged():
             channeltype.ptr = True # subprotocols inherit this
         cls.addstmt(cxx.StmtDecl(cxx.Decl(channeltype, 'mChannel')))
-        if p.decl.type.isToplevel():
+        if p.decl.type.isToplevel() and p.decl.type.isManager():
             cls.addstmt(cxx.StmtDecl(cxx.Decl(
                         cxx.Type('IDMap<Channel::Listener>'), 'mActorMap')))
         else:
