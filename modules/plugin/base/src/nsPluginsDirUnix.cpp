@@ -45,12 +45,10 @@
 
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
 #include "nsPluginsDirUtils.h"
-#include "nsObsoleteModuleLoading.h"
 #include "prmem.h"
 #include "prenv.h"
 #include "prerror.h"
@@ -431,45 +429,13 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-    nsresult rv;
-
-    // No, this doesn't leak. GetGlobalServiceManager() doesn't addref
-    // it's out pointer. Maybe it should.
-    nsIServiceManagerObsolete* mgr;
-    nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&mgr);
-
-    nsFactoryProc nsGetFactory =
-        (nsFactoryProc) PR_FindFunctionSymbol(pLibrary, "NSGetFactory");
-
-    nsCOMPtr<nsIPlugin> plugin;
-
     info.fVersion = nsnull;
-    if (nsGetFactory) {
-        // This is an XPCOM plugin.
-        static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 
-        nsCOMPtr<nsIFactory> factory;
-        rv = nsGetFactory(mgr, kPluginCID, nsnull, nsnull, 
-			  getter_AddRefs(factory));
-
-        if (NS_FAILED(rv)) {
-            // HACK: The symbol lookup for "NSGetFactory" mistakenly returns
-            // a reference to an unrelated function when we have an NPAPI
-            // plugin linked to libxul.so.  Give this plugin another shot as
-            // an NPAPI plugin.
-            // Passing NULL for a file path will prevent a call to NP_Initialize.
-            rv = nsNPAPIPlugin::CreatePlugin(NULL, pLibrary, getter_AddRefs(plugin));
-            if (NS_FAILED(rv))
-                return rv;
-        } else {
-            plugin = do_QueryInterface(factory);
-        }
-    } else {
-        // This is an NPAPI plugin.
-        // Passing NULL for a file path will prevent a call to NP_Initialize.
-        rv = nsNPAPIPlugin::CreatePlugin(NULL, pLibrary, getter_AddRefs(plugin));
-        if (NS_FAILED(rv)) return rv;
-    }
+    // Passing NULL for a file path will prevent a call to NP_Initialize.
+    nsCOMPtr<nsIPlugin> plugin;
+    nsresult rv = nsNPAPIPlugin::CreatePlugin(NULL, pLibrary, getter_AddRefs(plugin));
+    if (NS_FAILED(rv))
+      return rv;
 
     if (plugin) {
         const char* (*npGetPluginVersion)() =
