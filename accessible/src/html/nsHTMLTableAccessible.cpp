@@ -1319,7 +1319,8 @@ PRBool nsHTMLTableAccessible::HasDescendant(const char *aTagName, PRBool aAllowE
   return length > 0;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
+NS_IMETHODIMP
+nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
 {
   // Implement a heuristic to determine if table is most likely used for layout
   // XXX do we want to look for rowspan or colspan, especialy that span all but a couple cells
@@ -1354,7 +1355,8 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     }
   }
 
-  // Check role and role attribute
+  // Check to see if an ARIA role overrides the role from native markup,
+  // but for which we still expose table semantics (treegrid, for example).
   PRBool hasNonTableRole =
     (nsAccUtils::Role(this) != nsIAccessibleRole::ROLE_TABLE);
   if (hasNonTableRole) {
@@ -1362,7 +1364,10 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   }
 
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has role attribute, and role is table");
+    // Role attribute is present, but overridden roles have already been dealt with.
+    // Only landmarks and other roles that don't override the role from native
+    // markup are left to deal with here.
+    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute, weak role, and role is table");
   }
   
   // Check for legitimate data table elements or attributes

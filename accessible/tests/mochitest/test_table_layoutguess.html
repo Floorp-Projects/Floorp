@@ -23,11 +23,11 @@
         "layout-guess": "true"
       };
 
-      // table with role of grid XXX bug 495388
-      testAttrs("table1", attr, true);
+      // table with role of grid
+      testAbsentAttrs("table1", attr);
 
-      // table with landmark role XXX bug 495388
-      testAttrs("table2", attr, true);
+      // table with landmark role
+      testAbsentAttrs("table2", attr);
 
       // table with summary
       testAbsentAttrs("table3", attr);
@@ -79,6 +79,9 @@
 
       // layout table with embedded iframe
       testAttrs("table19", attr, true);
+
+      // tree grid, no layout table
+      testAbsentAttrs("table20", attr);
 
       SimpleTest.finish();
     }
@@ -305,10 +308,15 @@
 
   <!-- layout table with embedded iframe -->
   <table id="table19">
-    <tr><td><iframe id="frame"/></td><td> </td><td> </td></tr>
+    <tr><td><iframe id="frame"></iframe></td><td> </td><td> </td></tr>
     <tr><td> </td><td> </td><td> </td></tr>
     <tr><td> </td><td> </td><td> </td></tr>
     <tr><td> </td><td> </td><td> </td></tr>
+  </table>
+
+  <!-- tree grid, no layout table -->
+  <table id="table20" role="treegrid">
+    <tr role="treeitem"><td>Cell1</td><td>Cell2</td></tr>
   </table>
 </body>
 </html>
