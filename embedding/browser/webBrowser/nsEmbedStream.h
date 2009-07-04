@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,16 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsISupports.h>
-#include <nsCOMPtr.h>
-#include <nsIOutputStream.h>
-#include <nsIInputStream.h>
-#include <nsILoadGroup.h>
-#include <nsIChannel.h>
-#include <nsIStreamListener.h>
-#include <nsIWebBrowser.h>
+#include "nsCOMPtr.h"
+#include "nsIOutputStream.h"
+#include "nsIURI.h"
+#include "nsIWebBrowser.h"
 
-class nsEmbedStream : public nsIInputStream 
+class nsEmbedStream : public nsISupports
 {
  public:
 
@@ -58,24 +55,10 @@ class nsEmbedStream : public nsIInputStream
   NS_METHOD AppendToStream (const PRUint8 *aData, PRUint32 aLen);
   NS_METHOD CloseStream    (void);
 
-  NS_METHOD Append         (const PRUint8 *aData, PRUint32 aLen);
-
-  // nsISupports
   NS_DECL_ISUPPORTS
-  // nsIInputStream
-  NS_DECL_NSIINPUTSTREAM
 
  private:
-  nsCOMPtr<nsIOutputStream>   mOutputStream;
-  nsCOMPtr<nsIInputStream>    mInputStream;
-
-  nsCOMPtr<nsILoadGroup>      mLoadGroup;
-  nsCOMPtr<nsIChannel>        mChannel;
-  nsCOMPtr<nsIStreamListener> mStreamListener;
-
-  PRUint32                    mOffset;
-  PRBool                      mDoingStream;
-
-  nsIWebBrowser              *mOwner;
+  nsIWebBrowser            *mOwner;
+  nsCOMPtr<nsIOutputStream> mOutputStream;
 
 };
