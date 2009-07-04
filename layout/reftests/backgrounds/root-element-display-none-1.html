@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html id="theroot" style="background-color: red" class="reftest-wait">
+  <head>
+    <script>
+      function dodisplaynone() {
+        document.getElementById('theroot').style.display = 'none';
+        document.documentElement.className = "";
+      }
+      document.addEventListener("MozReftestInvalidate", dodisplaynone, false);
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

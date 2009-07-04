@@ -168,6 +168,14 @@ struct nsCSSRendering {
                                PRBool aStartAtParent = PR_FALSE);
 
   /**
+   * Determine the background color to draw taking into account print settings.
+   */
+  static nscolor
+  DetermineBackgroundColor(nsPresContext* aPresContext,
+                           const nsStyleBackground& aBackground,
+                           nsIFrame* aFrame);
+
+  /**
    * Render the background for an element using css rendering rules
    * for backgrounds.
    *
@@ -199,7 +207,7 @@ struct nsCSSRendering {
                                     nsIFrame* aForFrame,
                                     const nsRect& aDirtyRect,
                                     const nsRect& aBorderArea,
-                                    const nsStyleBackground& aColor,
+                                    const nsStyleBackground& aBackground,
                                     const nsStyleBorder& aBorder,
                                     PRUint32 aFlags,
                                     nsRect* aBGClipRect = nsnull);
