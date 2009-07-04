@@ -1,26 +1,22 @@
-<html>
-<head>
-  <title>Test for print preview</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <style>
-    table {
-      border: 1px solid black;
-    }
-  </style>
-</head>
-<body onload="setTimeout(runTests, 0);">
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window onload="runTests()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<iframe height="200" width="600"></iframe>
+<script type="application/javascript">
+<![CDATA[
+var is = window.opener.wrappedJSObject.is;
+var isnot = window.opener.wrappedJSObject.isnot;
+var ok = window.opener.wrappedJSObject.ok;
+var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var gWbp;
 var ctx1;
 var ctx2;
 var counter = 0;
 
 function printpreview() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
   var listener = {
@@ -32,7 +28,7 @@ function printpreview() {
     onStateChange: function(webProgress, request, stateFlags, status) { },
     onStatusChange: function(webProgress, request, status, message) { },
     QueryInterface: function(iid) {
-      if (iid.equals(Components.interfaces.nsIWebProgessListener) ||
+      if (iid.equals(Components.interfaces.nsIWebProgressListener) ||
           iid.equals(Components.interfaces.nsISupportsWeakReference))
             return this;
       throw Components.results.NS_NOINTERFACE;
@@ -48,14 +44,12 @@ function printpreview() {
 }
 
 function exitprintpreview() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
    .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
 }
 
 function runTests()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                .getService(Components.interfaces.nsIPrintSettingsService);
 
@@ -77,7 +71,6 @@ function runTests()
 }
 
 function compareCanvases() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                .getInterface(Components.interfaces.nsIDOMWindowUtils)
                .compareCanvases(document.getElementsByTagName("canvas")[0],
@@ -98,7 +91,6 @@ function addHTMLContent(parent) {
 }
 
 function startTest1() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ctx1 = document.getElementsByTagName("canvas")[0].getContext("2d");
   ctx2 = document.getElementsByTagName("canvas")[1].getContext("2d");
   window.frames[0].document.body.innerHTML = "<div> </div><div>" + counter + " timers</div><div> </div>";
@@ -129,7 +121,6 @@ function startTest1() {
 }
 
 function finalizeTest1() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ctx2.drawWindow(window.frames[0], 0, 0, 300, 300, "rgb(256,256,256)");
   exitprintpreview();
   ok(compareCanvases(), "Canvas should be the same!");
@@ -195,10 +186,10 @@ function runTest3() {
   }
 
   SimpleTest.finish();
+  window.close();
 }
 
 function compareFormElementPrint(el1, el2, equals) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   window.frames[0].document.body.innerHTML = el1;
   window.frames[0].document.body.firstChild.value =
     window.frames[0].document.body.firstChild.getAttribute('value');
@@ -215,18 +206,11 @@ function compareFormElementPrint(el1, el2, equals) {
      "Comparing print preview didn't succeed [" + el1 + " : " + el2 + "]");
   setTimeout(runTest3, 100);
 }
-
-SimpleTest.waitForExplicitFinish();
-
-</script>
-<iframe height="200" width="600"></iframe>
-<table>
+]]></script>
+<table style="border: 1px solid black;" xmlns="http://www.w3.org/1999/xhtml">
 <tr><th>Print preview canvas 1</th><th>Print preview canvas 2</th></tr>
 <tr>
 <td><canvas height="300" width="300"></canvas></td>
 <td><canvas height="300" width="300"></canvas></td>
 </tr></table>
-</canvas>
-</pre>
-</body>
-</html>
+</window>

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=482976
+-->
+<window title="Mozilla Bug 482976" onload="run1()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<iframe src="data:text/html;charset=utf-8,&lt;body onload='window.parent.loadedChild()'&gt;&lt;q&gt;"></iframe>
+<script type="application/javascript">
+<![CDATA[
+var is = window.opener.wrappedJSObject.is;
+var ok = window.opener.wrappedJSObject.ok;
+var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var gWbp;
+function printpreview() {
+  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  var listener = {
+    onLocationChange: function(webProgress, request, location) { },
+    onProgressChange: function(webProgress, request, curSelfProgress, 
+                               maxSelfProgress, curTotalProgress,
+                               maxTotalProgress) { },
+    onSecurityChange: function(webProgress, request, state) { },
+    onStateChange: function(webProgress, request, stateFlags, status) { },
+    onStatusChange: function(webProgress, request, status, message) { },
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsIWebProgessListener) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference))
+            return this;
+      throw Components.results.NS_NOINTERFACE;
+    }
+  }
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref('print.show_print_progress', false);
+  //XXX I would have thought this would work, instead I'm forced to use prefs service
+  gWbp.globalPrintSettings.showPrintProgress = false; 
+  gWbp.printPreview(gWbp.globalPrintSettings, null, listener);
+  prefs.clearUserPref('print.show_print_progress');
+}
+
+function exitprintpreview() {
+  window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+   .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
+}
+
+function run1()
+{
+/** Test for Bug 482976 **/
+  var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                               .getService(Components.interfaces.nsIPrintSettingsService);
+
+  try {
+     var printerEnumerator = Components.classes["@mozilla.org/gfx/printerenumerator;1"]
+                             .getService(Components.interfaces.nsIPrinterEnumerator);
+  } catch(e) {
+     //don't try to test on Mac, since the print preview code doesn't work there
+     SimpleTest.finish();
+     return;
+  }
+
+  if (printService.defaultPrinterName != '') {
+    printpreview();
+    ok(gWbp.doingPrintPreview, "Should be doing print preview");
+    exitprintpreview();
+    ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore");
+    SimpleTest.finish();
+  } else {
+    todo(false, "No printer seems installed on this machine, that is necessary for this test");
+    SimpleTest.finish();
+  }
+  window.close();
+}
+]]></script>
+</window>

@@ -43,6 +43,10 @@ relativesrcdir	= layout/base/tests
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS += \
+  chrome \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_IMPL_NS_LAYOUT
@@ -55,7 +59,6 @@ _TEST_FILES =	\
 		test_bug386575.xhtml \
 		test_bug388019.html \
 		test_bug394057.html \
-		test_bug396024.html \
 		test_bug399284.html \
 		test_bug399951.html \
 		test_bug404209.xhtml \
@@ -72,8 +75,6 @@ _TEST_FILES =	\
 		test_bug435293-scale.html \
 		test_bug435293-interaction.html \
 		test_bug435293-skew.html \
-		test_printpreview.html \
-		test_bug482976.html \
 		decoration_line_rendering.js \
 		test_bug495648.xul \
 		bug495648.rdf \
