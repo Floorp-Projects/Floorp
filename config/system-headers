@@ -1011,6 +1011,7 @@ bzlib.h
 #endif
 #ifdef MOZ_PLATFORM_HILDON
 hildon-uri.h
+hildon-mime.h
 #endif
 #ifdef NS_OSSO
 libosso.h
