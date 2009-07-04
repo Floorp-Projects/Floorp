@@ -149,7 +149,7 @@ function checkClipRegionWithDoc(doc, offsetX, offsetY, id, rects) {
     ];
   }
 
-  ok(equalRegions(clipRects, rects), "Matching regions: expected " +
+  ok(equalRegions(clipRects, rects), "Matching regions for '" + id + "': expected " +
         dumpRegion(rects) + ", got " + dumpRegion(clipRects));
 }
 
