@@ -332,8 +332,8 @@ moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
  * returns:   MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint
-moz_gtk_button_get_default_border(gint* border_top, gint* border_left,
-                                  gint* border_bottom, gint* border_right);
+moz_gtk_button_get_default_overflow(gint* border_top, gint* border_left,
+                                    gint* border_bottom, gint* border_right);
 
 /**
  * Get the desired size of a GtkScale thumb
