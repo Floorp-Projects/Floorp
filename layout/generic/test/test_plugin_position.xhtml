@@ -22,11 +22,11 @@ var windowFrameX, windowFrameY;
 
 function checkGeometry(id) {
   var p = document.getElementById(id);
+  var bounds = p.getBoundingClientRect();
   var pX = p.getEdge(0);
   var pY = p.getEdge(1);
   var pWidth = p.getEdge(2) - pX;
   var pHeight = p.getEdge(3) - pY;
-  var bounds = p.getBoundingClientRect();
 
   is(pX, windowFrameX + bounds.left, id + " plugin X");
   is(pY, windowFrameY + bounds.top, id + " plugin Y");
@@ -50,6 +50,7 @@ function runTests() {
     SimpleTest.finish();
     return;
   }
+
   if (navigator.platform.indexOf("Win") >= 0) {
     todo(false, "Windows does not support windowed plugins (yet)");
     SimpleTest.finish();
@@ -65,7 +66,12 @@ function runTests() {
   SimpleTest.finish();
 }
 
-addLoadEvent(runTests);
+// When load events run, painting may still be suppressed for the window.
+// While painting is suppressed, plugins are hidden so won't be positioned
+// or sized as expected.
+// So call runTests after the load event has finished, when painting will
+// be unsuppressed.
+addLoadEvent(function() { setTimeout(runTests, 0); });
 SimpleTest.waitForExplicitFinish();
 
 ]]>
