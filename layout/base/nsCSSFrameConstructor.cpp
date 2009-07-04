@@ -5532,16 +5532,15 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // We don't do it for content that may have XBL anonymous siblings,
     // because they make it difficult to correctly create the frame
     // due to dynamic changes.
+    // We don't do it for text that's not a line participant (i.e. SVG text).
     if (AtLineBoundary(aIter) &&
         !styleContext->GetStyleText()->NewlineIsSignificant() &&
         aIter.List()->ParentHasNoXBLChildren() &&
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
+        (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
         item.IsWhitespace())
       return NS_OK;
 
-    // XXXroc Right now if you start with whitespace and then start adding chars
-    // (e.g. while editing) we reframe on every change, which seems dumb.
-    // Maybe we should use another flag here, or something.
     return ConstructTextFrame(item.mFCData, aState, item.mContent,
                               adjParentFrame, styleContext,
                               aFrameItems);
