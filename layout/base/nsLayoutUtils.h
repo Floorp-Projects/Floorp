@@ -474,11 +474,11 @@ public:
    * to pixel-aligned coordinates
    * @param aDirtyRegion the region that must be painted, in the coordinates
    * of aFrame
-   * @param aBackground paint the dirty area with this color before drawing
+   * @param aBackstop paint the dirty area with this color before drawing
    * the actual content; pass NS_RGBA(0,0,0,0) to draw no background
    */
   static nsresult PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                             const nsRegion& aDirtyRegion, nscolor aBackground);
+                             const nsRegion& aDirtyRegion, nscolor aBackstop);
 
   /**
    * @param aRootFrame the root frame of the tree to be displayed
