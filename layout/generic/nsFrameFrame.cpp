@@ -348,8 +348,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (f) {
     dirty = aDirtyRect - f->GetOffsetTo(this);
     aBuilder->EnterPresShell(f, dirty);
-
-    rv = f->BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
   }
 
   // Get the bounds of subdocView relative to the reference frame.
@@ -357,22 +355,20 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                        mInnerView->GetPosition() +
                        GetOffsetTo(aBuilder->ReferenceFrame());
 
-  if (NS_SUCCEEDED(rv) && (!f || suppressed) &&
-      !aBuilder->IsForEventDelivery()) {
-    // If we don't have a frame or painting of the PresShell is suppressed,
-    // try to draw the default background color. (Bug 485275)
-    rv = childItems.AppendNewToBottom(
-             new (aBuilder) nsDisplaySolidColor(
-                  f ? f : this,
-                  shellBounds,
-                  presShell->GetCanvasBackground()));
+  if (!aBuilder->IsForEventDelivery()) {
+    // Add the canvas background color.
+    rv = presShell->AddCanvasBackgroundColorItem(
+           *aBuilder, childItems, f ? f : this, &shellBounds);
+  }
+
+  if (f && NS_SUCCEEDED(rv)) {
+    rv = f->BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
   }
 
   if (NS_SUCCEEDED(rv)) {
     // Clip children to the child root frame's rectangle
     rv = aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(this, this, &childItems,
-              shellBounds));
+        new (aBuilder) nsDisplayClip(this, this, &childItems, shellBounds));
   }
   // delete childItems in case of OOM
   childItems.DeleteAll();

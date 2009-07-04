@@ -1023,6 +1023,12 @@ public:
 
   virtual void UpdateCanvasBackground();
 
+  virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
+                                                nsDisplayList& aList,
+                                                nsIFrame* aFrame,
+                                                nsRect* aBounds,
+                                                nscolor aBackstopColor);
+
 protected:
   virtual ~PresShell();
 
@@ -1391,6 +1397,14 @@ private:
   void EnumeratePlugins(nsIDOMDocument *aDocument,
                         const nsString &aPluginTag,
                         nsPluginEnumCallback aCallback);
+
+private:
+  /*
+   * Computes the backstop color for the view: transparent if in a transparent
+   * widget, otherwise the PresContext default background color. This color is
+   * only visible if the contents of the view as a whole are translucent.
+   */
+  nscolor ComputeBackstopColor(nsIView* aView);
 };
 
 class nsAutoCauseReflowNotifier
@@ -5278,7 +5292,14 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
     builder.SetBackgroundOnly(PR_FALSE);
     builder.EnterPresShell(rootFrame, rect);
 
-    nsresult rv = rootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);   
+    // Add the canvas background color.
+    nsresult rv =
+      rootFrame->PresContext()->PresShell()->AddCanvasBackgroundColorItem(
+        builder, list, rootFrame);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = rootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);
+    }
 
     builder.LeavePresShell(rootFrame, rect);
 
@@ -5679,6 +5700,21 @@ PresShell::RenderSelection(nsISelection* aSelection,
                              aScreenRect);
 }
 
+nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
+                                                 nsDisplayList&        aList,
+                                                 nsIFrame*             aFrame,
+                                                 nsRect*               aBounds,
+                                                 nscolor               aBackstopColor)
+{
+  nscolor bgcolor = NS_ComposeColors(aBackstopColor, mCanvasBackgroundColor);
+  nsRect bounds = aBounds == nsnull ?
+    nsRect(aBuilder.ToReferenceFrame(aFrame), aFrame->GetSize()) : *aBounds;
+  return aList.AppendNewToBottom(new (&aBuilder) nsDisplaySolidColor(
+           aFrame,
+           bounds,
+           bgcolor));
+}
+
 void PresShell::UpdateCanvasBackground()
 {
   // If we have a frame tree and it has style information that
@@ -5688,8 +5724,35 @@ void PresShell::UpdateCanvasBackground()
   if (rootFrame) {
     const nsStyleBackground* bgStyle =
       nsCSSRendering::FindRootFrameBackground(rootFrame);
-    mCanvasBackgroundColor = bgStyle->mBackgroundColor;
+    // XXX We should really be passing the canvasframe, not the root element
+    // style frame but we don't have access to the canvasframe here. It isn't
+    // a problem because only a few frames can return something other than true
+    // and none of them would be a canvas frame or root element style frame.
+    mCanvasBackgroundColor =
+      nsCSSRendering::DetermineBackgroundColor(GetPresContext(), *bgStyle,
+                                               rootFrame);
   }
+
+  // If the root element of the document (ie html) has style 'display: none'
+  // then the document's background color does not get drawn; cache the
+  // color we actually draw.
+  if (!FrameConstructor()->GetRootElementFrame()) {
+    mCanvasBackgroundColor = mPresContext->DefaultBackgroundColor();
+  }
+}
+
+nscolor PresShell::ComputeBackstopColor(nsIView* aView)
+{
+  nsIWidget* widget = aView->GetNearestWidget(nsnull);
+  if (widget && widget->GetTransparencyMode() != eTransparencyOpaque) {
+    // Within a transparent widget, so the backstop color must be
+    // totally transparent.
+    return NS_RGBA(0,0,0,0);
+  }
+  // Within an opaque widget (or no widget at all), so the backstop
+  // color must be totally opaque. The user's default background
+  // as reported by the prescontext is guaranteed to be opaque.
+  return GetPresContext()->DefaultBackgroundColor();
 }
 
 NS_IMETHODIMP
@@ -5702,30 +5765,13 @@ PresShell::Paint(nsIView*             aView,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aView, "null view");
 
-  UpdateCanvasBackground();
-
-  // Compute the backstop color for the view.
-  nscolor bgcolor;
-  nsIWidget* widget = aView->GetNearestWidget(nsnull);
-  if (widget && widget->GetTransparencyMode() != eTransparencyOpaque) {
-    // Within a transparent widget, so the backstop color must be
-    // totally transparent.
-    bgcolor = NS_RGBA(0,0,0,0);
-  } else {
-    // Within an opaque widget (or no widget at all), so the backstop
-    // color must be totally opaque.  The cached canvas background
-    // color is not guaranteed to be opaque, but the user's default
-    // background as reported by the prescontext is.  Composing the
-    // former on top of the latter prevents window flashing in between
-    // pages that use the same non-default background.
-    bgcolor = NS_ComposeColors(mPresContext->DefaultBackgroundColor(),
-                               mCanvasBackgroundColor);
-  }
+  nscolor bgcolor = ComputeBackstopColor(aView);
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
   if (frame) {
     nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion, bgcolor);
   } else {
+    bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
     aRenderingContext->SetColor(bgcolor);
     aRenderingContext->FillRect(aDirtyRegion.GetBounds());
   }
@@ -5735,19 +5781,17 @@ PresShell::Paint(nsIView*             aView,
 NS_IMETHODIMP
 PresShell::PaintDefaultBackground(nsIView*             aView,
                                   nsIRenderingContext* aRenderingContext,
-                                  const nsRect&       aDirtyRect)
+                                  const nsRect&        aDirtyRect)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Paint);
 
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aView, "null view");
 
-  // The view manager does not call this function if there is no
-  // widget or it is transparent.  We must not look at the frame tree,
-  // so all we have to use is the canvas default color as set above,
-  // or failing that, the user's default color.
-  
-  nscolor bgcolor = NS_ComposeColors(mPresContext->DefaultBackgroundColor(),
+  // We must not look at the frame tree, so all we have to use is the canvas
+  // default color as set above.
+
+  nscolor bgcolor = NS_ComposeColors(ComputeBackstopColor(aView),
                                      mCanvasBackgroundColor);
 
   aRenderingContext->SetColor(bgcolor);

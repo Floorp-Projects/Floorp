@@ -310,8 +310,7 @@ static void PaintBackgroundLayer(nsPresContext* aPresContext,
                                  const nsRect& aBGClipRect,
                                  const nsStyleBackground& aBackground,
                                  const nsStyleBackground::Layer& aLayer,
-                                 const nsStyleBorder& aBorder,
-                                 PRBool aUsePrintSettings);
+                                 const nsStyleBorder& aBorder);
 
 static void DrawBorderImage(nsPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
@@ -1332,9 +1331,9 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
-  const nsStyleBackground *color;
-  if (!FindBackground(aPresContext, aForFrame, &color)) {
-    // we don't want to bail out of moz-appearance is set on a root
+  const nsStyleBackground *background;
+  if (!FindBackground(aPresContext, aForFrame, &background)) {
+    // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
     // a root, other wise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
@@ -1347,12 +1346,12 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
     if (!content || content->GetParent()) {
       return;
     }
-        
-    color = aForFrame->GetStyleBackground();
+
+    background = aForFrame->GetStyleBackground();
   }
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                        aDirtyRect, aBorderArea, *color,
+                        aDirtyRect, aBorderArea, *background,
                         *aForFrame->GetStyleBorder(), aFlags,
                         aBGClipRect);
 }
@@ -1496,13 +1495,71 @@ SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
   }
 }
 
+static nscolor
+DetermineBackgroundColorInternal(nsPresContext* aPresContext,
+                                 const nsStyleBackground& aBackground,
+                                 nsIFrame* aFrame,
+                                 PRBool* aDrawBackgroundImage,
+                                 PRBool* aDrawBackgroundColor,
+                                 nsCOMPtr<imgIRequest>& aBottomImage)
+{
+  *aDrawBackgroundImage = PR_TRUE;
+  *aDrawBackgroundColor = PR_TRUE;
+
+  if (aFrame->HonorPrintBackgroundSettings()) {
+    *aDrawBackgroundImage = aPresContext->GetBackgroundImageDraw();
+    *aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
+  }
+
+  aBottomImage = aBackground.BottomLayer().mImage;
+
+  if (!aDrawBackgroundImage || !UseImageRequestForBackground(aBottomImage)) {
+    aBottomImage = nsnull;
+  }
+
+  nscolor bgColor;
+  if (*aDrawBackgroundColor) {
+    bgColor = aBackground.mBackgroundColor;
+    if (NS_GET_A(bgColor) == 0)
+      *aDrawBackgroundColor = PR_FALSE;
+  } else {
+    // If GetBackgroundColorDraw() is false, we are still expected to
+    // draw color in the background of any frame that's not completely
+    // transparent, but we are expected to use white instead of whatever
+    // color was specified.
+    bgColor = NS_RGB(255, 255, 255);
+    if (*aDrawBackgroundImage || !aBackground.IsTransparent())
+      *aDrawBackgroundColor = PR_TRUE;
+    else
+      bgColor = NS_RGBA(0,0,0,0);
+  }
+
+  return bgColor;
+}
+
+nscolor
+nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
+                                         const nsStyleBackground& aBackground,
+                                         nsIFrame* aFrame)
+{
+  PRBool drawBackgroundImage;
+  PRBool drawBackgroundColor;
+  nsCOMPtr<imgIRequest> bottomImage;
+  return DetermineBackgroundColorInternal(aPresContext,
+                                          aBackground,
+                                          aFrame,
+                                          &drawBackgroundImage,
+                                          &drawBackgroundColor,
+                                          bottomImage);
+}
+
 void
 nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       nsIFrame* aForFrame,
                                       const nsRect& aDirtyRect,
                                       const nsRect& aBorderArea,
-                                      const nsStyleBackground& aColor,
+                                      const nsStyleBackground& aBackground,
                                       const nsStyleBorder& aBorder,
                                       PRUint32 aFlags,
                                       nsRect* aBGClipRect)
@@ -1526,35 +1583,25 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     }
   }
 
+  // For canvas frames (in the CSS sense) we draw the background color using
+  // a solid color item that gets added in nsLayoutUtils::PaintFrame,
+  // PresShell::RenderDocument, or nsSubDocumentFrame::BuildDisplayList
+  // (bug 488242).
+  PRBool isCanvasFrame = IsCanvasFrame(aForFrame);
+
   // Determine whether we are drawing background images and/or
   // background colors.
-  PRBool drawBackgroundImage = PR_TRUE;
-  PRBool drawBackgroundColor = PR_TRUE;
-  PRBool usePrintSettings = aForFrame->HonorPrintBackgroundSettings();
-  if (usePrintSettings) {
-    drawBackgroundImage = aPresContext->GetBackgroundImageDraw();
-    drawBackgroundColor = aPresContext->GetBackgroundColorDraw();
-  }
+  PRBool drawBackgroundImage;
+  PRBool drawBackgroundColor;
 
-  imgIRequest *bottomImage = aColor.BottomLayer().mImage;
-  if (!drawBackgroundImage || !UseImageRequestForBackground(bottomImage)) {
-    bottomImage = nsnull;
-  }
+  nsCOMPtr<imgIRequest> bottomImage;
 
-  // If GetBackgroundColorDraw() is false, we are still expected to
-  // draw color in the background of any frame that's not completely
-  // transparent, but we are expected to use white instead of whatever
-  // color was specified.
-  nscolor bgColor;
-  if (drawBackgroundColor) {
-    bgColor = aColor.mBackgroundColor;
-    if (NS_GET_A(bgColor) == 0)
-      drawBackgroundColor = PR_FALSE;
-  } else {
-    bgColor = NS_RGB(255, 255, 255);
-    if (drawBackgroundImage || !aColor.IsTransparent())
-      drawBackgroundColor = PR_TRUE;
-  }
+  nscolor bgColor = DetermineBackgroundColorInternal(aPresContext,
+                                                     aBackground,
+                                                     aForFrame,
+                                                     &drawBackgroundImage,
+                                                     &drawBackgroundColor,
+                                                     bottomImage);
 
   // At this point, drawBackgroundImage and drawBackgroundColor are
   // true if and only if we are actually supposed to paint an image or
@@ -1603,7 +1650,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // radii as the border code will.
     // The background-color is drawn based on the bottom
     // background-clip.
-    currentBackgroundClip = aColor.BottomLayer().mClip;
+    currentBackgroundClip = aBackground.BottomLayer().mClip;
     isSolidBorder =
       (aFlags & PAINT_WILL_PAINT_BORDER) && IsSolidBorder(aBorder);
     if (isSolidBorder)
@@ -1615,14 +1662,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   }
 
   // If we might be using a background color, go ahead and set it now.
-  if (drawBackgroundColor)
+  if (drawBackgroundColor && !isCanvasFrame)
     ctx->SetColor(gfxRGBA(bgColor));
 
   // If there is no background image, draw a color.  (If there is
   // neither a background image nor a color, we wouldn't have gotten
   // this far.)
   if (!drawBackgroundImage) {
-    if (!dirtyRectGfx.IsEmpty()) {
+    if (!dirtyRectGfx.IsEmpty() && !isCanvasFrame) {
       ctx->NewPath();
       ctx->Rectangle(dirtyRectGfx, PR_TRUE);
       ctx->Fill();
@@ -1633,10 +1680,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // Ensure we get invalidated for loads of the image.  We need to do
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
-  aPresContext->SetupBackgroundImageLoaders(aForFrame, &aColor);
+  aPresContext->SetupBackgroundImageLoaders(aForFrame, &aBackground);
 
   if (bottomImage &&
-      aColor.BottomLayer().mRepeat == NS_STYLE_BG_REPEAT_XY &&
+      aBackground.BottomLayer().mRepeat == NS_STYLE_BG_REPEAT_XY &&
       drawBackgroundColor) {
     nsCOMPtr<imgIContainer> image;
     bottomImage->GetImage(getter_AddRefs(image));
@@ -1665,7 +1712,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   // The background color is rendered over the entire dirty area,
   // even if the image isn't.
-  if (drawBackgroundColor) {
+  if (drawBackgroundColor && !isCanvasFrame) {
     if (!dirtyRectGfx.IsEmpty()) {
       ctx->NewPath();
       ctx->Rectangle(dirtyRectGfx, PR_TRUE);
@@ -1674,8 +1721,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   }
 
   if (drawBackgroundImage) {
-    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, &aColor) {
-      const nsStyleBackground::Layer &layer = aColor.mLayers[i];
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, &aBackground) {
+      const nsStyleBackground::Layer &layer = aBackground.mLayers[i];
       if (!aBGClipRect) {
         PRUint8 newBackgroundClip =
           isSolidBorder ? NS_STYLE_BG_CLIP_PADDING : layer.mClip;
@@ -1689,8 +1736,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       }
       if (!dirtyRectGfx.IsEmpty()) {
         PaintBackgroundLayer(aPresContext, aRenderingContext, aForFrame,
-                             dirtyRect, aBorderArea, bgClipArea, aColor,
-                             layer, aBorder, usePrintSettings);
+                             dirtyRect, aBorderArea, bgClipArea, aBackground,
+                             layer, aBorder);
       }
     }
   }
@@ -1705,8 +1752,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
                      const nsRect& aBGClipRect,
                      const nsStyleBackground& aBackground,
                      const nsStyleBackground::Layer& aLayer,
-                     const nsStyleBorder& aBorder,
-                     PRBool aUsePrintSettings)
+                     const nsStyleBorder& aBorder)
 {
   // Lookup the image
   imgIRequest *req = aLayer.mImage;
