@@ -894,13 +894,6 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
   return breakType;
 }
 
-PRBool
-nsLayoutUtils::IsRootElementFrame(nsIFrame* aFrame)
-{
-  return aFrame ==
-    aFrame->PresContext()->PresShell()->FrameConstructor()->GetRootElementFrame();
-}
-
 #ifdef DEBUG
 #include <stdio.h>
 
