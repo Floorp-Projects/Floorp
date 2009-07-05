@@ -122,6 +122,7 @@ var BrowserUI = {
     var browser = Browser.selectedBrowser;
     this._titleChanged(browser.contentDocument);
     this._updateButtons(browser);
+    this.updateStar();
     this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
 
     // for new tabs, _tabSelect & update(TOOLBARSTATE_LOADED) are called when
@@ -586,11 +587,10 @@ var BrowserUI = {
 
         if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
           var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.unfiledBookmarksFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
-          BrowserUI.updateStar();
+          this.updateStar();
 
           var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-          var favicon = document.getElementById("urlbar-favicon");
-          var faviconURI = ios.newURI(favicon.src, null, null);
+          var faviconURI = ios.newURI(this._favicon.src, null, null);
 
           PlacesUtils.favicons.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
         }
