@@ -328,13 +328,14 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
   
   PRBool fileExists = PR_FALSE;
  
-  nsCAutoString filePath(fileExt);
+  nsAutoString filePath;
+  CopyASCIItoUTF16(fileExt, filePath);
   if (localFile)
   {
     rv = localFile->Normalize();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    localFile->GetNativePath(filePath);
+    localFile->GetPath(filePath);
     if (filePath.Length() < 2 || filePath[1] != ':')
       return NS_ERROR_MALFORMED_URI; // UNC
 
@@ -343,7 +344,7 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
     else {
       localFile->Exists(&fileExists);
       if (!fileExists)
-       localFile->GetNativeLeafName(filePath);
+       localFile->GetLeafName(filePath);
     }
   }
 
@@ -364,7 +365,7 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
     // If the mime service does not know about this mime type, we show
     // the generic icon.
     // In any case, we need to insert a '.' before the extension.
-    filePath = NS_LITERAL_CSTRING(".") + defFileExt;
+    filePath = NS_LITERAL_STRING(".") + NS_ConvertUTF8toUTF16(defFileExt);
   }
 
   // Is this the "Desktop" folder?
@@ -381,7 +382,7 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
 
   // Not a special folder, or something else failed above.
   if (!shellResult)
-    shellResult = ::SHGetFileInfoW(NS_ConvertUTF8toUTF16(filePath).get(),
+    shellResult = ::SHGetFileInfoW(filePath.get(),
                                    FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
 
   if (shellResult && sfi.hIcon)

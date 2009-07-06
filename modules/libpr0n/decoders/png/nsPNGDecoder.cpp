@@ -676,6 +676,13 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   
   if (png_get_first_frame_is_hidden(png_ptr, info_ptr))
     decoder->mFrame = nsnull;
+
+  /* Reject any ancillary chunk after IDAT with a bad CRC (bug #397593).
+   * It would be better to show the default frame (if one has already been
+   * successfully decoded) before bailing, but it's simpler to just bail
+   * out with an error message.
+   */
+  png_set_crc_action(png_ptr, NULL, PNG_CRC_ERROR_QUIT);
   
   return;
 }

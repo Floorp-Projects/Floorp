@@ -1,0 +1,26 @@
+<!--
+Inner frame for test of bug 385434.
+https://bugzilla.mozilla.org/show_bug.cgi?id=385434
+-->
+<html>
+<head>
+  <script type="application/javascript">
+    function hashchange(e) {
+      // pass the event back to the parent so it can check its properties.
+      parent.gSampleEvent = e;
+
+      parent.statusMsg("Hashchange in 2.");
+      parent.onIframeHashchange();
+    }
+
+    function load() {
+      parent.statusMsg("Loading 2.");
+      parent.onIframeLoad();
+    }
+  </script>
+</head>
+
+<frameset onload="load()" onhashchange="hashchange(event)">
+  <frame src="about:blank" />
+</frameset>
+</html>

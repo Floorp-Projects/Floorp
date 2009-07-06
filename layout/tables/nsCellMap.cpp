@@ -816,22 +816,22 @@ nsTableCellMap::GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn) const
       // If the rowCount is less than the rowIndex, this means that the index is
       // not within the current map. If so, get the index of the last cell in
       // the last row.
-      PRInt32 cellMapIdx = cellMap->GetIndexByRowAndColumn(colCount,
-                                                           rowCount - 1,
-                                                           colCount - 1);
-      if (cellMapIdx != -1) {
-        index += cellMapIdx  + 1;
-        rowIndex -= rowCount;
-      }
+      rowIndex -= rowCount;
+
+      PRInt32 cellMapIdx = cellMap->GetHighestIndex(colCount);
+      if (cellMapIdx != -1)
+        index += cellMapIdx + 1;
+
     } else {
       // Index is in valid range for this cellmap, so get the index of rowIndex
       // and aColumn.
       PRInt32 cellMapIdx = cellMap->GetIndexByRowAndColumn(colCount, rowIndex,
                                                            aColumn);
-      if (cellMapIdx != -1) {
-        index += cellMapIdx;
-        return index;  // no need to look through further maps here
-      }
+      if (cellMapIdx == -1)
+        return -1; // no cell at the given row and column.
+
+      index += cellMapIdx;
+      return index;  // no need to look through further maps here
     }
 
     cellMap = cellMap->GetNextSibling();
@@ -857,10 +857,12 @@ nsTableCellMap::GetRowAndColumnByIndex(PRInt32 aIndex,
     PRInt32 rowCount = cellMap->GetRowCount();
     // Determine the highest possible index in this map to see
     // if wanted index is in here.
-    PRInt32 cellMapIdx = cellMap->GetIndexByRowAndColumn(colCount,
-                                                         rowCount - 1,
-                                                         colCount - 1);
-    if (cellMapIdx != -1) {
+    PRInt32 cellMapIdx = cellMap->GetHighestIndex(colCount);
+    if (cellMapIdx == -1) {
+      // The index is not within this map, increase the total row index
+      // accordingly.
+      previousRows += rowCount;
+    } else {
       if (index > cellMapIdx) {
         // The index is not within this map, so decrease it by the cellMapIdx
         // determined index and increase the total row index accordingly.
@@ -1239,25 +1241,61 @@ nsCellMap::GetCellFrame(PRInt32   aRowIndexIn,
 }
 
 PRInt32
-nsCellMap::GetIndexByRowAndColumn(PRInt32 aColCount,
-                                  PRInt32 aRow, PRInt32 aColumn) const
+nsCellMap::GetHighestIndex(PRInt32 aColCount)
 {
   PRInt32 index = -1;
-
-  if (PRUint32(aRow) >= mRows.Length())
-    return index;
-
-  PRInt32 lastColsIdx = aColCount - 1;
-  for (PRInt32 rowIdx = 0; rowIdx <= aRow; rowIdx++) {
+  PRInt32 rowCount = mRows.Length();
+  for (PRInt32 rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     const CellDataArray& row = mRows[rowIdx];
-    PRInt32 colCount = (rowIdx == aRow) ? aColumn : lastColsIdx;
-
-    for (PRInt32 colIdx = 0; colIdx <= colCount; colIdx++) {
+    
+    for (PRInt32 colIdx = 0; colIdx < aColCount; colIdx++) {
       CellData* data = row.SafeElementAt(colIdx);
-      if (data && data->IsOrig())
+      // No data means row doesn't have more cells.
+      if (!data)
+        break;
+
+      if (data->IsOrig())
         index++;
     }
   }
+
+  return index;
+}
+
+PRInt32
+nsCellMap::GetIndexByRowAndColumn(PRInt32 aColCount,
+                                  PRInt32 aRow, PRInt32 aColumn) const
+{
+  if (PRUint32(aRow) >= mRows.Length())
+    return -1;
+
+  PRInt32 index = -1;
+  PRInt32 lastColsIdx = aColCount - 1;
+
+  // Find row index of the cell where row span is started.
+  const CellDataArray& row = mRows[aRow];
+  CellData* data = row.SafeElementAt(aColumn);
+  PRInt32 origRow = data ? aRow - data->GetRowSpanOffset() : aRow;
+
+  // Calculate cell index.
+  for (PRInt32 rowIdx = 0; rowIdx <= origRow; rowIdx++) {
+    const CellDataArray& row = mRows[rowIdx];
+    PRInt32 colCount = (rowIdx == origRow) ? aColumn : lastColsIdx;
+
+    for (PRInt32 colIdx = 0; colIdx <= colCount; colIdx++) {
+      data = row.SafeElementAt(colIdx);
+      // No data means row doesn't have more cells.
+      if (!data)
+        break;
+
+      if (data->IsOrig())
+        index++;
+    }
+  }
+
+  // Given row and column don't point to the cell.
+  if (!data)
+    return -1;
 
   return index;
 }
@@ -1277,7 +1315,12 @@ nsCellMap::GetRowAndColumnByIndex(PRInt32 aColCount, PRInt32 aIndex,
 
     for (PRInt32 colIdx = 0; colIdx < aColCount; colIdx++) {
       CellData* data = row.SafeElementAt(colIdx);
-      if (data && data->IsOrig())
+
+      // The row doesn't have more cells.
+      if (!data)
+        break;
+
+      if (data->IsOrig())
         index--;
 
       if (index < 0) {

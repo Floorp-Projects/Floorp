@@ -36,8 +36,6 @@ export::
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/document.png  $(DIST)/branding/document.png
 	$(NSINSTALL) -D $(DIST)/install
-	cp $(srcdir)/header.png    $(DIST)/install/header.png
-	cp $(srcdir)/watermark.png $(DIST)/install/watermark.png
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/firefox.icns  $(DIST)/branding/firefox.icns
@@ -57,6 +55,4 @@ ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/firefox-os2.ico  $(DIST)/branding/firefox.ico
 	cp $(srcdir)/firefox-os2.ico  $(DIST)/branding/app.ico
 	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
-	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
-	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
 endif

@@ -86,14 +86,14 @@ const kNone  = "none";
 
 function _onInputKeyPress (event, callback) {
 
+  // If it isn't enabled, bail.
+  if (!PrefObserver['enabled'])
+    return;
+
   // Use whatever key value is available (either keyCode or charCode).
   // It might be useful for addons or whoever wants to set different
   // key to be used here (e.g. "a", "F1", "arrowUp", ...).
   var key = event.which || event.keyCode;
-
-  // If it isn't enabled, bail.
-  if (!PrefObserver['enabled'])
-    return;
 
   if (key != PrefObserver['keyCodeDown']  &&
       key != PrefObserver['keyCodeRight'] &&
@@ -109,6 +109,13 @@ function _onInputKeyPress (event, callback) {
     return;
 
   if (!event.crtlKey && PrefObserver['modifierCtrl'])
+    return;
+
+  // In some special cases where charCode is equal to one of the default arrow keyCodes we
+  // should bail.
+  if (!event.keyCode && 
+      (key == Ci.nsIDOMKeyEvent.DOM_VK_LEFT  || key == Ci.nsIDOMKeyEvent.DOM_VK_DOWN ||
+       key == Ci.nsIDOMKeyEvent.DOM_VK_RIGHT || key == Ci.nsIDOMKeyEvent.DOM_VK_UP))
     return;
 
   var target = event.target;

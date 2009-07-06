@@ -7809,8 +7809,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
          aLoadType == LOAD_HISTORY ||
          aLoadType == LOAD_LINK) && allowScroll) {
         PRBool wasAnchor = PR_FALSE;
+        PRBool doHashchange = PR_FALSE;
         nscoord cx, cy;
-        NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType, &cx, &cy), NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType, &cx, &cy,
+                                         &doHashchange),
+                          NS_ERROR_FAILURE);
+
         if (wasAnchor) {
             mLoadType = aLoadType;
             mURIResultedInDocument = PR_TRUE;
@@ -7901,6 +7905,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
                 if (shEntry)
                     shEntry->SetTitle(mTitle);
+            }
+
+            if (doHashchange) {
+                nsCOMPtr<nsPIDOMWindow> window =
+                    do_QueryInterface(mScriptGlobal);
+
+                if (window)
+                    window->DispatchAsyncHashchange();
             }
 
             return NS_OK;
@@ -8520,18 +8532,21 @@ nsDocShell::CheckClassifier(nsIChannel *aChannel)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
-                           PRUint32 aLoadType, nscoord *cx, nscoord *cy)
+                           PRUint32 aLoadType, nscoord *cx, nscoord *cy,
+                           PRBool * aDoHashchange)
 {
     NS_ASSERTION(aURI, "null uri arg");
     NS_ASSERTION(aWasAnchor, "null anchor arg");
+    NS_PRECONDITION(aDoHashchange, "null hashchange arg");
 
-    if (aURI == nsnull || aWasAnchor == nsnull) {
+    if (!aURI || !aWasAnchor) {
         return NS_ERROR_FAILURE;
     }
 
     *aWasAnchor = PR_FALSE;
+    *aDoHashchange = PR_FALSE;
 
     if (!mCurrentURI) {
         return NS_OK;
@@ -8562,7 +8577,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     const char kHash = '#';
 
     // Split the new URI into a left and right part
-    // (assume we're parsing it out right
+    // (assume we're parsing it out right)
     nsACString::const_iterator urlStart, urlEnd, refStart, refEnd;
     newSpec.BeginReading(urlStart);
     newSpec.EndReading(refEnd);
@@ -8589,8 +8604,10 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     const nsACString& sNewRef =  Substring(refStart, refEnd);
                                           
     // Split the current URI in a left and right part
-    nsACString::const_iterator currentLeftStart, currentLeftEnd;
+    nsACString::const_iterator currentLeftStart, currentLeftEnd,
+                               currentRefStart, currentRefEnd;
     currentSpec.BeginReading(currentLeftStart);
+    currentSpec.EndReading(currentRefEnd);
 
     PRInt32 hashCurrent = currentSpec.FindChar(kHash);
     if (hashCurrent == 0) {
@@ -8600,9 +8617,13 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     if (hashCurrent > 0) {
         currentLeftEnd = currentLeftStart;
         currentLeftEnd.advance(hashCurrent);
+
+        currentRefStart = currentLeftEnd;
+        ++currentRefStart; // advance past '#'
     }
     else {
-        currentSpec.EndReading(currentLeftEnd);
+        // no hash at all in currentSpec
+        currentLeftEnd = currentRefStart = currentRefEnd;
     }
 
     // If we have no new anchor, we do not want to scroll, unless there is a
@@ -8631,6 +8652,10 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
 
     // Now we know we are dealing with an anchor
     *aWasAnchor = PR_TRUE;
+
+    // We should fire a hashchange event once we're done here if the two hashes
+    // are different.
+    *aDoHashchange = !Substring(currentRefStart, currentRefEnd).Equals(sNewRef);
 
     // Both the new and current URIs refer to the same page. We can now
     // browse to the hash stored in the new URI.

@@ -3,10 +3,6 @@ const Ci = Components.interfaces;
 const gCompleteState = Ci.nsIWebProgressListener.STATE_STOP +
                        Ci.nsIWebProgressListener.STATE_IS_NETWORK;
 
-function LOG(str) {
-  dump(str + "\n");
-}
-
 var gFrontProgressListener = {
   onProgressChange: function (aWebProgress, aRequest,
                               aCurSelfProgress, aMaxSelfProgress,
@@ -15,7 +11,7 @@ var gFrontProgressListener = {
 
   onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus) {
     var state = "onStateChange";
-    LOG("FrontProgress: " + state + " 0x" + aStateFlags.toString(16));
+    info("FrontProgress: " + state + " 0x" + aStateFlags.toString(16));
     ok(gFrontNotificationsPos < gFrontNotifications.length, "Got an expected notification for the front notifications listener");
     is(state, gFrontNotifications[gFrontNotificationsPos], "Got a notification for the front notifications listener");
     gFrontNotificationsPos++;
@@ -23,7 +19,7 @@ var gFrontProgressListener = {
 
   onLocationChange: function (aWebProgress, aRequest, aLocationURI) {
     var state = "onLocationChange";
-    LOG("FrontProgress: " + state + " " + aLocationURI.spec);
+    info("FrontProgress: " + state + " " + aLocationURI.spec);
     ok(gFrontNotificationsPos < gFrontNotifications.length, "Got an expected notification for the front notifications listener");
     is(state, gFrontNotifications[gFrontNotificationsPos], "Got a notification for the front notifications listener");
     gFrontNotificationsPos++;
@@ -34,7 +30,7 @@ var gFrontProgressListener = {
 
   onSecurityChange: function (aWebProgress, aRequest, aState) {
     var state = "onSecurityChange";
-    LOG("FrontProgress: " + state + " 0x" + aState.toString(16));
+    info("FrontProgress: " + state + " 0x" + aState.toString(16));
     ok(gFrontNotificationsPos < gFrontNotifications.length, "Got an expected notification for the front notifications listener");
     is(state, gFrontNotifications[gFrontNotificationsPos], "Got a notification for the front notifications listener");
     gFrontNotificationsPos++;
@@ -49,7 +45,7 @@ var gAllProgressListener = {
 
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     var state = "onStateChange";
-    LOG("AllProgress: " + state + " 0x" + aStateFlags.toString(16));
+    info("AllProgress: " + state + " 0x" + aStateFlags.toString(16));
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
     ok(gAllNotificationsPos < gAllNotifications.length, "Got an expected notification for the all notifications listener");
     is(state, gAllNotifications[gAllNotificationsPos], "Got a notification for the all notifications listener");
@@ -64,7 +60,7 @@ var gAllProgressListener = {
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
     var state = "onLocationChange";
-    LOG("AllProgress: " + state + " " + aLocationURI.spec);
+    info("AllProgress: " + state + " " + aLocationURI.spec);
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
     ok(gAllNotificationsPos < gAllNotifications.length, "Got an expected notification for the all notifications listener");
     is(state, gAllNotifications[gAllNotificationsPos], "Got a notification for the all notifications listener");
@@ -78,7 +74,7 @@ var gAllProgressListener = {
 
   onSecurityChange: function (aBrowser, aWebProgress, aRequest, aState) {
     var state = "onSecurityChange";
-    LOG("AllProgress: " + state + " 0x" + aState.toString(16));
+    info("AllProgress: " + state + " 0x" + aState.toString(16));
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
     ok(gAllNotificationsPos < gAllNotifications.length, "Got an expected notification for the all notifications listener");
     is(state, gAllNotifications[gAllNotificationsPos], "Got a notification for the all notifications listener");
@@ -92,7 +88,6 @@ var gTestPage = "/browser/browser/base/content/test/alltabslistener.html";
 var gNextTest;
 
 function test() {
-  LOG("Running tests from alltabslistener.js");
   waitForExplicitFinish();
 
   gBackgroundTab = gBrowser.addTab("about:blank");
@@ -120,7 +115,7 @@ function startTests() {
 }
 
 function startTest1() {
-  LOG("\nTest 1");
+  info("\nTest 1");
   gBrowser.addProgressListener(gFrontProgressListener);
   gBrowser.addTabsProgressListener(gAllProgressListener);
 
@@ -135,7 +130,7 @@ function startTest1() {
 }
 
 function startTest2() {
-  LOG("\nTest 2");
+  info("\nTest 2");
   gAllNotifications = [
     "onStateChange",
     "onLocationChange",
@@ -148,7 +143,7 @@ function startTest2() {
 }
 
 function startTest3() {
-  LOG("\nTest 3");
+  info("\nTest 3");
   gAllNotifications = [
     "onStateChange",
     "onLocationChange",
@@ -160,7 +155,7 @@ function startTest3() {
 }
 
 function startTest4() {
-  LOG("\nTest 4");
+  info("\nTest 4");
   gAllNotifications = [
     "onStateChange",
     "onLocationChange",
@@ -173,7 +168,7 @@ function startTest4() {
 }
 
 function startTest5() {
-  LOG("\nTest 5");
+  info("\nTest 5");
   // Switch the foreground browser
   [gForegroundBrowser, gBackgroundBrowser] = [gBackgroundBrowser, gForegroundBrowser];
   [gForegroundTab, gBackgroundTab] = [gBackgroundTab, gForegroundTab];
@@ -193,7 +188,7 @@ function startTest5() {
 }
 
 function startTest6() {
-  LOG("\nTest 6");
+  info("\nTest 6");
   gAllNotifications = [
     "onStateChange",
     "onLocationChange",
@@ -205,7 +200,6 @@ function startTest6() {
 }
 
 function finishTest() {
-  LOG("\nFinished tests from alltabslistener.js");
   gBrowser.removeProgressListener(gFrontProgressListener);
   gBrowser.removeTabsProgressListener(gAllProgressListener);
   gBrowser.removeTab(gBackgroundTab);

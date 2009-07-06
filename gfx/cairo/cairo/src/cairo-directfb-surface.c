@@ -617,6 +617,7 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
 static cairo_status_t
 _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                                        cairo_surface_t  *src,
+				       cairo_content_t	 content,
                                        int               src_x,
                                        int               src_y,
                                        int               width,
@@ -763,6 +764,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     }
 
     status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+					     CAIRO_CONTENT_COLOR_ALPHA,
 					     *src_x, *src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &src_attr);

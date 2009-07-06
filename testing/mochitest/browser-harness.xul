@@ -70,6 +70,10 @@
       background-color: orange;
     }
 
+    .info {
+      color: grey;
+    }
+
     .failed {
       color: red;
       font-weight: bold;
@@ -184,13 +188,13 @@
     }
     browserTest.prototype = {
       get passCount() {
-        return this.results.filter(function (t) !t.todo && t.pass).length;
+        return this.results.filter(function (t) !t.info && !t.todo && t.pass).length;
       },
       get todoCount() {
-        return this.results.filter(function (t) t.todo && t.pass).length;
+        return this.results.filter(function (t) !t.info && t.todo && t.pass).length;
       },
       get failCount() {
-        return this.results.filter(function (t) !t.pass).length;
+        return this.results.filter(function (t) !t.info && !t.pass).length;
       },
 
       addResult: function addResult(result) {
@@ -207,12 +211,10 @@
         }
         var path = _entityEncode(this.path);
         return this.results.map(function (t) {
-                                  var result = "<p class=\"result ";
-                                  result += t.pass ? "passed" : "failed";
-                                  result += "\">" + t.result + " | " + path +
-                                    " | " + _entityEncode( t.msg ) + "</p>";
-                                  return result;
-                                }).join("\n");
+          var class = t.info ? "info" : "result " + (t.pass ? "passed" : "failed");
+          return "<p class=\"" + class + "\">" + t.result + " | " + path +
+                 " | " + _entityEncode(t.msg) + "</p>";
+        }).join("\n");
       }
     };
 

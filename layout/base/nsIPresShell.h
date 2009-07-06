@@ -97,14 +97,16 @@ class nsIScrollableFrame;
 class gfxASurface;
 class gfxContext;
 class nsPIDOMEventTarget;
+class nsIDOMEvent;
+class nsDisplayList;
+class nsDisplayListBuilder;
 
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 41FE90F8-88DF-476E-A3B0-60916234F791
 #define NS_IPRESSHELL_IID \
-{ 0x41fe90f8, 0x88df, 0x476e, \
-  { 0xa3, 0xb0, 0x60, 0x91, 0x62, 0x34, 0xf7, 0x91 } }
+{ 0x5039364e, 0x6e3e, 0x4aae, \
+  { 0xb8, 0xac, 0xf1, 0xee, 0xf1, 0xcb, 0x85, 0x45 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -575,6 +577,14 @@ public:
                                       nsEventStatus* aStatus) = 0;
 
   /**
+   * Dispatch event to content only (NOT full processing)
+   * @note The caller must have a strong reference to the PresShell.
+   */
+  NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                      nsIDOMEvent* aEvent,
+                                      nsEventStatus* aStatus) = 0;
+
+  /**
     * Gets the current target event frame from the PresShell
     */
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame) = 0;
@@ -763,7 +773,7 @@ public:
                                                    nsIntPoint& aPoint,
                                                    nsIntRect* aScreenRect) = 0;
 
-  /*
+  /**
    * Renders a selection to a surface and returns it. This method is primarily
    * intended to create the drag feedback when dragging a selection.
    *
@@ -798,19 +808,33 @@ public:
    */
   NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable) = 0;
 
-  /* Record the background color of the most recently loaded canvas.
-   * This color is composited on top of the user's default background
-   * color whenever we need to provide an "ultimate" background color.
-   * See PresShell::Paint, PresShell::PaintDefaultBackground, and
-   * nsDocShell::SetupNewViewer; bug 476557 and other bugs mentioned there.
+  /**
+   * Record the background color of the most recently drawn canvas. This color
+   * is composited on top of the user's default background color and then used
+   * to draw the background color of the canvas. See PresShell::Paint,
+   * PresShell::PaintDefaultBackground, and nsDocShell::SetupNewViewer;
+   * bug 488242, bug 476557 and other bugs mentioned there.
    */
   void SetCanvasBackground(nscolor aColor) { mCanvasBackgroundColor = aColor; }
   nscolor GetCanvasBackground() { return mCanvasBackgroundColor; }
 
-  /* Use the current frame tree (if it exists) to update the background
-   * color of the most recent canvas.
+  /**
+   * Use the current frame tree (if it exists) to update the background
+   * color of the most recently drawn canvas.
    */
   virtual void UpdateCanvasBackground() = 0;
+
+  /**
+   * Add a solid color item to the bottom of aList with frame aFrame and
+   * bounds aBounds. If aBounds is null (the default) then the bounds
+   * will be derived from the frame. aBackstopColor is composed behind
+   * the background color of the canvas, it is transparent by default.
+   */
+  virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
+                                                nsDisplayList& aList,
+                                                nsIFrame* aFrame,
+                                                nsRect* aBounds = nsnull,
+                                                nscolor aBackstopColor = NS_RGBA(0,0,0,0)) = 0;
 
   void ObserveNativeAnonMutationsForPrint(PRBool aObserve)
   {

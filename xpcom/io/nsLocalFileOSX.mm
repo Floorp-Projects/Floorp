@@ -866,30 +866,18 @@ NS_IMETHODIMP nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 
 NS_IMETHODIMP nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  // Check we are correctly initialized.
   CHECK_mBaseURL();
 
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
+  nsCAutoString path;
+  nsresult rv = GetPathInternal(path);
   if (NS_FAILED(rv))
     return rv;
-  
-#ifdef __LP64__
-  FSIORefNum refNum;
-#else
-  SInt16 refNum;
-#endif
-  OSErr err = ::FSOpenFork(&fsRef, 0, nsnull, fsWrPerm, &refNum);
-  if (err != noErr)
-    return MacErrorMapper(err);
-  err = ::FSSetForkSize(refNum, fsFromStart, aFileSize);
-  ::FSCloseFork(refNum);  
-  
-  return MacErrorMapper(err);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  off_t size = (off_t)aFileSize;
+  if (truncate(path.get(), size) == -1)
+    return NSRESULT_FOR_ERRNO();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSizeOfLink)

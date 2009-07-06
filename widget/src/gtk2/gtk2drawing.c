@@ -784,93 +784,6 @@ TSOffsetStyleGCs(GtkStyle* style, gint xorigin, gint yorigin)
     return MOZ_GTK_SUCCESS;
 }
 
-static gint
-moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                     GdkRectangle* cliprect, GtkWidgetState* state,
-                     GtkReliefStyle relief, GtkWidget* widget,
-                     GtkTextDirection direction)
-{
-    GtkShadowType shadow_type;
-    GtkStyle* style = widget->style;
-    GtkStateType button_state = ConvertGtkState(state);
-    gint x = rect->x, y=rect->y, width=rect->width, height=rect->height;
-
-    gboolean interior_focus;
-    gint focus_width, focus_pad;
-
-    moz_gtk_widget_get_focus(widget, &interior_focus, &focus_width, &focus_pad);
-
-    if (WINDOW_IS_MAPPED(drawable)) {
-        gdk_window_set_back_pixmap(drawable, NULL, TRUE);
-        gdk_window_clear_area(drawable, cliprect->x, cliprect->y,
-                              cliprect->width, cliprect->height);
-    }
-
-    gtk_widget_set_state(widget, button_state);
-    gtk_widget_set_direction(widget, direction);
-
-    if (state->isDefault)
-        GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_DEFAULT);
-
-    GTK_BUTTON(widget)->relief = relief;
-
-    /* Some theme engines love to cause us pain in that gtk_paint_focus is a
-       no-op on buttons and button-like widgets. They only listen to this flag. */
-    if (state->focused && !state->disabled)
-        GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_FOCUS);
-
-    if (!interior_focus && state->focused) {
-        x += focus_width + focus_pad;
-        y += focus_width + focus_pad;
-        width -= 2 * (focus_width + focus_pad);
-        height -= 2 * (focus_width + focus_pad);
-    }
-
-    shadow_type = button_state == GTK_STATE_ACTIVE ||
-                      state->depressed ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
- 
-    if (state->isDefault && relief == GTK_RELIEF_NORMAL) {
-        gint default_top, default_left, default_bottom, default_right;
-        moz_gtk_button_get_default_border(&default_top, &default_left,
-                                          &default_bottom, &default_right);
-        gtk_paint_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
-                      widget, "buttondefault", x - default_left, y - default_top,
-                      width + default_left + default_right, height + default_top + default_bottom);                   
-    }
- 
-    if (relief != GTK_RELIEF_NONE || state->depressed ||
-        button_state == GTK_STATE_PRELIGHT) {
-        TSOffsetStyleGCs(style, x, y);
-        /* the following line can trigger an assertion (Crux theme)
-           file ../../gdk/gdkwindow.c: line 1846 (gdk_window_clear_area):
-           assertion `GDK_IS_WINDOW (window)' failed */
-        gtk_paint_box(style, drawable, button_state, shadow_type, cliprect,
-                      widget, "button", x, y, width, height);
-    }
-
-    if (state->focused) {
-        if (interior_focus) {
-            x += widget->style->xthickness + focus_pad;
-            y += widget->style->ythickness + focus_pad;
-            width -= 2 * (widget->style->xthickness + focus_pad);
-            height -= 2 * (widget->style->ythickness + focus_pad);
-        } else {
-            x -= focus_width + focus_pad;
-            y -= focus_width + focus_pad;
-            width += 2 * (focus_width + focus_pad);
-            height += 2 * (focus_width + focus_pad);
-        }
-
-        TSOffsetStyleGCs(style, x, y);
-        gtk_paint_focus(style, drawable, button_state, cliprect,
-                        widget, "button", x, y, width, height);
-    }
-
-    GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_DEFAULT);
-    GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_FOCUS);
-    return MOZ_GTK_SUCCESS;
-}
-
 gint
 moz_gtk_init()
 {
@@ -934,8 +847,8 @@ moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
 }
 
 gint
-moz_gtk_button_get_default_border(gint* border_top, gint* border_left,
-                                  gint* border_bottom, gint* border_right)
+moz_gtk_button_get_default_overflow(gint* border_top, gint* border_left,
+                                    gint* border_bottom, gint* border_right)
 {
     ensure_button_widget();
 
@@ -952,6 +865,30 @@ moz_gtk_button_get_default_border(gint* border_top, gint* border_left,
         gtk_border_free(default_outside_border);
     } else {
         *border_top = *border_left = *border_bottom = *border_right = 0;
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_button_get_default_border(gint* border_top, gint* border_left,
+                                  gint* border_bottom, gint* border_right)
+{
+    ensure_button_widget();
+
+    GtkBorder* default_border;
+    gtk_widget_style_get(gButtonWidget,
+                         "default-border", &default_border,
+                         NULL);
+
+    if (default_border) {
+        *border_top = default_border->top;
+        *border_left = default_border->left;
+        *border_bottom = default_border->bottom;
+        *border_right = default_border->right;
+        gtk_border_free(default_border);
+    } else {
+        /* see gtkbutton.c */
+        *border_top = *border_left = *border_bottom = *border_right = 1;
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -984,6 +921,104 @@ moz_gtk_button_get_inner_border(GtkWidget* widget, GtkBorder* inner_border)
     else
         *inner_border = default_inner_border;
 
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                     GdkRectangle* cliprect, GtkWidgetState* state,
+                     GtkReliefStyle relief, GtkWidget* widget,
+                     GtkTextDirection direction)
+{
+    GtkShadowType shadow_type;
+    GtkStyle* style = widget->style;
+    GtkStateType button_state = ConvertGtkState(state);
+    gint x = rect->x, y=rect->y, width=rect->width, height=rect->height;
+
+    gboolean interior_focus;
+    gint focus_width, focus_pad;
+
+    moz_gtk_widget_get_focus(widget, &interior_focus, &focus_width, &focus_pad);
+
+    if (WINDOW_IS_MAPPED(drawable)) {
+        gdk_window_set_back_pixmap(drawable, NULL, TRUE);
+        gdk_window_clear_area(drawable, cliprect->x, cliprect->y,
+                              cliprect->width, cliprect->height);
+    }
+
+    gtk_widget_set_state(widget, button_state);
+    gtk_widget_set_direction(widget, direction);
+
+    if (state->isDefault)
+        GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_DEFAULT);
+
+    GTK_BUTTON(widget)->relief = relief;
+
+    /* Some theme engines love to cause us pain in that gtk_paint_focus is a
+       no-op on buttons and button-like widgets. They only listen to this flag. */
+    if (state->focused && !state->disabled)
+        GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_FOCUS);
+
+    if (!interior_focus && state->focused) {
+        x += focus_width + focus_pad;
+        y += focus_width + focus_pad;
+        width -= 2 * (focus_width + focus_pad);
+        height -= 2 * (focus_width + focus_pad);
+    }
+
+    shadow_type = button_state == GTK_STATE_ACTIVE ||
+                      state->depressed ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+ 
+    if (state->isDefault && relief == GTK_RELIEF_NORMAL) {
+        /* handle default borders both outside and inside the button */
+        gint default_top, default_left, default_bottom, default_right;
+        moz_gtk_button_get_default_overflow(&default_top, &default_left,
+                                            &default_bottom, &default_right);
+        x -= default_left;
+        y -= default_top;
+        width += default_left + default_right;
+        height += default_top + default_bottom;
+        gtk_paint_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
+                      widget, "buttondefault", x, y, width, height);
+
+        moz_gtk_button_get_default_border(&default_top, &default_left,
+                                          &default_bottom, &default_right);
+        x += default_left;
+        y += default_top;
+        width -= (default_left + default_right);
+        height -= (default_top + default_bottom);
+    }
+ 
+    if (relief != GTK_RELIEF_NONE || state->depressed ||
+        button_state == GTK_STATE_PRELIGHT) {
+        TSOffsetStyleGCs(style, x, y);
+        /* the following line can trigger an assertion (Crux theme)
+           file ../../gdk/gdkwindow.c: line 1846 (gdk_window_clear_area):
+           assertion `GDK_IS_WINDOW (window)' failed */
+        gtk_paint_box(style, drawable, button_state, shadow_type, cliprect,
+                      widget, "button", x, y, width, height);
+    }
+
+    if (state->focused) {
+        if (interior_focus) {
+            x += widget->style->xthickness + focus_pad;
+            y += widget->style->ythickness + focus_pad;
+            width -= 2 * (widget->style->xthickness + focus_pad);
+            height -= 2 * (widget->style->ythickness + focus_pad);
+        } else {
+            x -= focus_width + focus_pad;
+            y -= focus_width + focus_pad;
+            width += 2 * (focus_width + focus_pad);
+            height += 2 * (focus_width + focus_pad);
+        }
+
+        TSOffsetStyleGCs(style, x, y);
+        gtk_paint_focus(style, drawable, button_state, cliprect,
+                        widget, "button", x, y, width, height);
+    }
+
+    GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_DEFAULT);
+    GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_FOCUS);
     return MOZ_GTK_SUCCESS;
 }
 

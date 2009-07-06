@@ -4224,7 +4224,6 @@ if test -n "$MOZ_NATIVE_NSPR"; then
                 AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
     CFLAGS=$_SAVE_CFLAGS
 else
-    NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix='${LIBXUL_DIST}' --includedir='${LIBXUL_DIST}'/include/nspr --cflags`'
     if test "$OS_ARCH" = "WINCE"; then
         NSPR_CFLAGS="-I${LIBXUL_DIST}/include/nspr"
         NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib "
@@ -4236,7 +4235,8 @@ else
             NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib "
         fi
     else
-        NSPR_LIBS='`$(DEPTH)/nsprpub/config/nspr-config --prefix='${LIBXUL_DIST}' --libdir='${LIBXUL_DIST}'/lib --libs`'
+        NSPR_CFLAGS='`$(LIBXUL_DIST)/bin/nspr-config --prefix='${LIBXUL_DIST}' --includedir='${LIBXUL_DIST}'/include/nspr --cflags`'
+        NSPR_LIBS='`$(LIBXUL_DIST)/bin/nspr-config --prefix='${LIBXUL_DIST}' --libdir='${LIBXUL_DIST}'/lib --libs`'
     fi
 fi
 
@@ -4491,6 +4491,7 @@ MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
+MOZ_ENABLE_CANVAS3D=
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -5914,6 +5915,15 @@ if test -n "$MOZ_ENABLE_CANVAS"; then
     AC_DEFINE(MOZ_ENABLE_CANVAS)
 fi
 AC_SUBST(MOZ_ENABLE_CANVAS)
+
+MOZ_ARG_ENABLE_BOOL(canvas3d,
+[  --enable-canvas3d        Enable canvas 3D context],
+    MOZ_ENABLE_CANVAS3D=1,
+    MOZ_ENABLE_CANVAS3D= )
+if test -n "$MOZ_ENABLE_CANVAS3D"; then
+    AC_DEFINE(MOZ_ENABLE_CANVAS3D)
+fi
+AC_SUBST(MOZ_ENABLE_CANVAS3D)
 
 dnl ========================================================
 dnl SVG
@@ -7919,7 +7929,7 @@ if test "$NECKO_WIFI"; then
   elif test "$OS_ARCH" = "WINCE"; then
     NECKO_WIFI=1    
   else
-    AC_MSG_WARN([Necko WiFi scanning not supported on your platform.])
+    AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
   fi
   AC_SUBST(NECKO_WIFI)
   

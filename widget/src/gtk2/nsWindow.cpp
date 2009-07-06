@@ -5225,12 +5225,6 @@ get_gtk_cursor(nsCursor aCursor)
     case eCursor_no_drop:
         newType = MOZ_CURSOR_NOT_ALLOWED;
         break;
-    case eCursor_col_resize:
-        newType = MOZ_CURSOR_COL_RESIZE;
-        break;
-    case eCursor_row_resize:
-        newType = MOZ_CURSOR_ROW_RESIZE;
-        break;
     case eCursor_vertical_text:
         newType = MOZ_CURSOR_VERTICAL_TEXT;
         break;
@@ -5244,9 +5238,11 @@ get_gtk_cursor(nsCursor aCursor)
         newType = MOZ_CURSOR_NWSE_RESIZE;
         break;
     case eCursor_ns_resize:
+    case eCursor_row_resize:
         gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
         break;
     case eCursor_ew_resize:
+    case eCursor_col_resize:
         gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
         break;
     case eCursor_none:

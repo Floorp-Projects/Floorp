@@ -431,6 +431,7 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
 cairo_status_t
 _cairo_win32_surface_clone_similar (void *abstract_surface,
 				    cairo_surface_t *src,
+				    cairo_content_t content,
 				    int src_x,
 				    int src_y,
 				    int width,
@@ -444,7 +445,7 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
     cairo_status_t status;
     cairo_surface_pattern_t pattern;
 
-    src_content = cairo_surface_get_content(src);
+    src_content = src->content & content;
     new_surface =
 	_cairo_win32_surface_create_similar_internal (abstract_surface,
 						      src_content,

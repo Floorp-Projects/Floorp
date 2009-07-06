@@ -106,7 +106,7 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
     LOG(("nsHttpConnectionMgr::Init\n"));
 
     nsresult rv;
-    nsCOMPtr<nsIEventTarget> sts = do_GetService(kSocketTransportServiceCID, &rv);
+    nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsAutoMonitor mon(mMonitor);

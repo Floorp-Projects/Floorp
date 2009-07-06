@@ -44,10 +44,10 @@
 #include "nsTArray.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
-#include "nsIPluginInstancePeer.h"
-#include "nsIPluginTagInfo2.h"
-#include "nsIPluginInstanceInternal.h"
+#include "nsIPluginTagInfo.h"
 #include "nsPIDOMWindow.h"
+#include "nsIPluginInstanceOwner.h"
+#include "nsITimer.h"
 
 #include "npfunctions.h"
 #include "prlink.h"
@@ -57,116 +57,120 @@ class nsPIDOMWindow;
 
 struct nsInstanceStream
 {
-    nsInstanceStream *mNext;
-    nsNPAPIPluginStreamListener *mPluginStreamListener;
+  nsInstanceStream *mNext;
+  nsNPAPIPluginStreamListener *mPluginStreamListener;
 
-    nsInstanceStream();
-    ~nsInstanceStream();
+  nsInstanceStream();
+  ~nsInstanceStream();
 };
 
-class nsNPAPIPluginInstance : public nsIPluginInstance,
-                              public nsIPluginInstanceInternal
+class nsNPAPITimer
 {
 public:
+  NPP npp;
+  uint32_t id;
+  nsCOMPtr<nsITimer> timer;
+  void (*callback)(NPP npp, uint32_t timerID);
+};
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPLUGININSTANCE
+class nsNPAPIPluginInstance : public nsIPluginInstance
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPLUGININSTANCE
 
-    // nsIPluginInstanceInternal methods
+  nsresult GetNPP(NPP * aNPP);
 
-    virtual JSObject *GetJSObject(JSContext *cx);
+  // Return the callbacks for the plugin instance.
+  nsresult GetCallbacks(const NPPluginFuncs ** aCallbacks);
 
-    virtual nsresult GetFormValue(nsAString& aValue);
+  NPError SetWindowless(PRBool aWindowless);
 
-    virtual void PushPopupsEnabledState(PRBool aEnabled);
-    virtual void PopPopupsEnabledState();
+  NPError SetTransparent(PRBool aTransparent);
 
-    virtual PRUint16 GetPluginAPIVersion();
-
-    virtual void DefineJavaProperties();
-
-    // nsNPAPIPluginInstance-specific methods
-
-    nsresult GetNPP(NPP * aNPP);
-
-    // Return the callbacks for the plugin instance.
-    nsresult GetCallbacks(const NPPluginFuncs ** aCallbacks);
-
-    NPError SetWindowless(PRBool aWindowless);
-
-    NPError SetTransparent(PRBool aTransparent);
-
-    NPError SetWantsAllNetworkStreams(PRBool aWantsAllNetworkStreams);
+  NPError SetWantsAllNetworkStreams(PRBool aWantsAllNetworkStreams);
 
 #ifdef XP_MACOSX
-    void SetDrawingModel(NPDrawingModel aModel);
-    NPDrawingModel GetDrawingModel();
+  void SetDrawingModel(NPDrawingModel aModel);
+  NPDrawingModel GetDrawingModel();
 #endif
 
-    nsresult NewNotifyStream(nsIPluginStreamListener** listener, 
-                             void* notifyData, 
-                             PRBool aCallNotify,
-                             const char * aURL);
+  nsresult NewNotifyStream(nsIPluginStreamListener** listener, 
+                           void* notifyData, 
+                           PRBool aCallNotify,
+                           const char * aURL);
 
-    nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aLibrary);
+  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aLibrary);
 
-    // Use Release() to destroy this
-    virtual ~nsNPAPIPluginInstance(void);
+  // Use Release() to destroy this
+  virtual ~nsNPAPIPluginInstance();
 
-    // returns the state of mStarted
-    PRBool IsStarted(void);
+  // returns the state of mStarted
+  PRBool IsStarted();
 
-    // cache this NPAPI plugin like an XPCOM plugin
-    nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; }
+  // cache this NPAPI plugin like an XPCOM plugin
+  nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; }
 
-    // Non-refcounting accessor for faster access to the peer.
-    nsIPluginInstancePeer *Peer()
-    {
-        return mPeer;
-    }
+  already_AddRefed<nsPIDOMWindow> GetDOMWindow();
 
-    already_AddRefed<nsPIDOMWindow> GetDOMWindow();
+  nsresult PrivateModeStateChanged();
 
-    nsresult PrivateModeStateChanged();
+  nsresult GetDOMElement(nsIDOMElement* *result);
+
+  nsNPAPITimer* TimerWithID(uint32_t id, PRUint32* index);
+  uint32_t      ScheduleTimer(uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
+  void          UnscheduleTimer(uint32_t timerID);
 protected:
+  nsresult InitializePlugin();
 
-    nsresult InitializePlugin(nsIPluginInstancePeer* peer);
+  // Calls NPP_GetValue
+  nsresult GetValueInternal(NPPVariable variable, void* value);
 
-    // Calls NPP_GetValue
-    nsresult GetValueInternal(NPPVariable variable, void* value);
+  nsresult GetTagType(nsPluginTagType *result);
+  nsresult GetAttributes(PRUint16& n, const char*const*& names,
+                         const char*const*& values);
+  nsresult GetParameters(PRUint16& n, const char*const*& names,
+                         const char*const*& values);
+  nsresult GetMode(nsPluginMode *result);
 
-    // The plugin instance peer for this instance.
-    nsCOMPtr<nsIPluginInstancePeer> mPeer;
+  // A pointer to the plugin's callback functions. This information
+  // is actually stored in the plugin class (<b>nsPluginClass</b>),
+  // and is common for all plugins of the class.
+  NPPluginFuncs* fCallbacks;
 
-    // A pointer to the plugin's callback functions. This information
-    // is actually stored in the plugin class (<b>nsPluginClass</b>),
-    // and is common for all plugins of the class.
-    NPPluginFuncs* fCallbacks;
-
-    // The structure used to communicate between the plugin instance and
-    // the browser.
-    NPP_t fNPP;
+  // The structure used to communicate between the plugin instance and
+  // the browser.
+  NPP_t fNPP;
 
 #ifdef XP_MACOSX
-    NPDrawingModel mDrawingModel;
+  NPDrawingModel mDrawingModel;
 #endif
 
-    // these are used to store the windowless properties
-    // which the browser will later query
-    PRPackedBool  mWindowless;
-    PRPackedBool  mTransparent;
-    PRPackedBool  mStarted;
-    PRPackedBool  mCached;
-    PRPackedBool  mIsJavaPlugin;
-    PRPackedBool  mWantsAllNetworkStreams;
+  // these are used to store the windowless properties
+  // which the browser will later query
+  PRPackedBool  mWindowless;
+  PRPackedBool  mTransparent;
+  PRPackedBool  mStarted;
+  PRPackedBool  mCached;
+  PRPackedBool  mIsJavaPlugin;
+  PRPackedBool  mWantsAllNetworkStreams;
 
 public:
-    // True while creating the plugin, or calling NPP_SetWindow() on it.
-    PRPackedBool  mInPluginInitCall;
-    PRLibrary* fLibrary;
-    nsInstanceStream *mStreams;
+  // True while creating the plugin, or calling NPP_SetWindow() on it.
+  PRPackedBool mInPluginInitCall;
+  PRLibrary* fLibrary;
+  nsInstanceStream *mStreams;
 
-    nsTArray<PopupControlState> mPopupStates;
+private:
+  nsTArray<PopupControlState> mPopupStates;
+
+  nsMIMEType mMIMEType;
+
+  // Weak pointer to the owner. The owner nulls this out (by calling
+  // InvalidateOwner()) when it's no longer our owner.
+  nsIPluginInstanceOwner *mOwner;
+
+  nsTArray<nsNPAPITimer*> mTimers;
 };
 
 #endif // nsNPAPIPluginInstance_h_

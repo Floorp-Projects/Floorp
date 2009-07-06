@@ -92,11 +92,11 @@
                 onget="return this.getAttribute('focused') == 'true';"/>
 
       <!-- space-delimited string of search session types to use -->
-      <property name="searchSessions" readonly="true" onget="return this.getAttribute('searchSessions')"/>
+      <property name="searchSessions" readonly="true" onget="return this.getAttribute('searchSessions') || ''"/>
 
       <method name="initSearchSessions">
         <body><![CDATA[
-          var list = this.getAttribute("searchSessions").split(" ");
+          var list = this.searchSessions.split(" ");
           for (var i = 0; i < list.length; i++) {
             var name = list[i];
             var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
@@ -314,7 +314,7 @@
           param: this,
           onStartLookup: function(aSearchString, aPreviousSearchResult, aListener) {
             this.session.startSearch(aSearchString,
-                         this.param.getAttribute("autocompletesearchparam"),
+                         this.param.getAttribute("autocompletesearchparam") || "",
                          aPreviousSearchResult && aPreviousSearchResult.lastResult,
                          aListener);
           },
@@ -1252,7 +1252,7 @@
         <parameter name="aAttr"/>
         <parameter name="aVal"/>
         <body><![CDATA[
-          if (this.getAttribute(aAttr) == "")
+          if (!this.hasAttribute(aAttr))
             this.setAttribute(aAttr, aVal);
         ]]></body>
       </method>

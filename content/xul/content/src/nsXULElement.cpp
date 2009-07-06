@@ -73,7 +73,6 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
-#include "nsIDOMXULListener.h"
 #include "nsIDOMContextMenuListener.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -913,8 +912,9 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 nsresult
-nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
 {
+    NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on XUL child removal.");
     nsresult rv;
     nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
     if (!oldKid) {
@@ -981,7 +981,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       }
     }
 
-    rv = nsGenericElement::RemoveChildAt(aIndex, aNotify);
+    rv = nsGenericElement::RemoveChildAt(aIndex, aNotify, aMutationEvent);
     
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nsnull);
@@ -1316,10 +1316,9 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     PRUint32 stateMask;
     if (aNotify) {
         stateMask = PRUint32(IntrinsicState());
-
-        if (doc) {
-            doc->AttributeWillChange(this, aNameSpaceID, aName);
-        }
+ 
+        nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
+                                         nsIDOMMutationEvent::REMOVAL);
     }
 
     PRBool hasMutationListeners = aNotify &&
@@ -1576,13 +1575,18 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         return NS_OK;
     }
     if (aVisitor.mEvent->message == NS_XUL_COMMAND &&
+        aVisitor.mEvent->eventStructType == NS_INPUT_EVENT &&
         aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this) &&
         tag != nsGkAtoms::command) {
+        // Check that we really have an xul command event. That will be handled
+        // in a special way.
+        nsCOMPtr<nsIDOMXULCommandEvent> xulEvent =
+            do_QueryInterface(aVisitor.mDOMEvent);
         // See if we have a command elt.  If so, we execute on the command
         // instead of on our content element.
         nsAutoString command;
-        GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
-        if (!command.IsEmpty()) {
+        if (xulEvent && GetAttr(kNameSpaceID_None, nsGkAtoms::command, command) &&
+            !command.IsEmpty()) {
             // Stop building the event target chain for the original event.
             // We don't want it to propagate to any DOM nodes.
             aVisitor.mCanHandle = PR_FALSE;
@@ -1598,29 +1602,6 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                 // pointed to by the command attribute.  The new event's
                 // sourceEvent will be the original command event that we're
                 // handling.
-
-                nsXULCommandEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
-                                        NS_XUL_COMMAND, nsnull);
-                if (aVisitor.mEvent->eventStructType == NS_XUL_COMMAND_EVENT) {
-                    nsXULCommandEvent *orig =
-                        static_cast<nsXULCommandEvent*>(aVisitor.mEvent);
-
-                    event.isShift = orig->isShift;
-                    event.isControl = orig->isControl;
-                    event.isAlt = orig->isAlt;
-                    event.isMeta = orig->isMeta;
-                } else {
-                    NS_WARNING("Incorrect eventStructType for command event");
-                }
-
-                if (!aVisitor.mDOMEvent) {
-                    // We need to create a new DOMEvent for the original event
-                    nsEventDispatcher::CreateEvent(aVisitor.mPresContext,
-                                                   aVisitor.mEvent,
-                                                   EmptyString(),
-                                                   &aVisitor.mDOMEvent);
-                }
-
                 nsCOMPtr<nsIDOMNSEvent> nsevent =
                     do_QueryInterface(aVisitor.mDOMEvent);
                 while (nsevent) {
@@ -1636,12 +1617,17 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                     nsevent = do_QueryInterface(tmp);
                 }
 
-                event.sourceEvent = aVisitor.mDOMEvent;
-
-                nsEventStatus status = nsEventStatus_eIgnore;
-                nsEventDispatcher::Dispatch(commandContent,
-                                            aVisitor.mPresContext,
-                                            &event, nsnull, &status);
+                nsInputEvent* orig =
+                    static_cast<nsInputEvent*>(aVisitor.mEvent);
+                nsContentUtils::DispatchXULCommand(
+                  commandContent,
+                  NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                  aVisitor.mDOMEvent,
+                  nsnull,
+                  orig->isControl,
+                  orig->isAlt,
+                  orig->isShift,
+                  orig->isMeta);
             } else {
                 NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
             }
@@ -2132,15 +2118,7 @@ nsXULElement::DoCommand()
 {
     nsCOMPtr<nsIDocument> doc = GetCurrentDoc(); // strong just in case
     if (doc) {
-        nsPresShellIterator iter(doc);
-        nsCOMPtr<nsIPresShell> shell;
-        while ((shell = iter.GetNextShell())) {
-            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
-            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                        context, &event, nsnull, &status);
-        }
+        nsContentUtils::DispatchXULCommand(this, PR_TRUE);
     }
 
     return NS_OK;

@@ -46,7 +46,6 @@
 
 class nsITransferable;
 
-
 class nsClipboard : public nsBaseClipboard
 {
 
