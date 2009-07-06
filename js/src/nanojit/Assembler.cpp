@@ -1482,7 +1482,6 @@ namespace nanojit
 				}
 				case LIR_eq:
                 case LIR_ov:
-                case LIR_cs:
 				case LIR_le:
 				case LIR_lt:
 				case LIR_gt:
@@ -1543,13 +1542,7 @@ namespace nanojit
 	void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
 	{
 		underrunProtect(si->count * sizeof(NIns*) + 20);
-		// Align for platform. The branch should be optimized away and is
-		// required to select the compatible int type.
-		if (sizeof(NIns*) == 8) {
-			_nIns = (NIns*) (uint64(_nIns) & ~7);
-		} else if (sizeof(NIns*) == 4) {
-		    _nIns = (NIns*) (uint32(_nIns) & ~3);
-		}
+		_nIns = reinterpret_cast<NIns*>(uintptr_t(_nIns) & ~(sizeof(NIns*) - 1));
 		for (uint32_t i = 0; i < si->count; ++i) {
 			_nIns = (NIns*) (((uint8*) _nIns) - sizeof(NIns*));
 			*(NIns**) _nIns = target;
@@ -1565,7 +1558,7 @@ namespace nanojit
         for (int i=0, n = NumSavedRegs; i < n; i++) {
             LIns *p = b->savedRegs[i];
             if (p)
-                findSpecificRegFor(p, savedRegs[p->imm8()]);
+                findSpecificRegFor(p, savedRegs[p->paramArg()]);
         }
     }
 
@@ -1584,10 +1577,10 @@ namespace nanojit
     {
         LInsp state = _thisfrag->lirbuf->state;
         if (state)
-            findSpecificRegFor(state, argRegs[state->imm8()]); 
+            findSpecificRegFor(state, argRegs[state->paramArg()]); 
         LInsp param1 = _thisfrag->lirbuf->param1;
         if (param1)
-            findSpecificRegFor(param1, argRegs[param1->imm8()]);
+            findSpecificRegFor(param1, argRegs[param1->paramArg()]);
     }
     
     void Assembler::handleLoopCarriedExprs()

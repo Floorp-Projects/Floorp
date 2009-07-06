@@ -121,7 +121,7 @@ nsHtml5Portability::releaseElement(nsIContent* element)
 PRBool
 nsHtml5Portability::localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length)
 {
-  return local->Equals(nsDependentString(buf + offset, buf + offset + length));
+  return local->Equals(nsDependentSubstring(buf + offset, buf + offset + length));
 }
 
 PRBool

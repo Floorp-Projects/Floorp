@@ -393,7 +393,6 @@ namespace nanojit
 #define SETBE(r)    do { count_alu(); ALU2(0x0f96,(r),(r));          asm_output("setbe %s",gpn(r)); } while(0)
 #define SETA(r)     do { count_alu(); ALU2(0x0f97,(r),(r));          asm_output("seta  %s",gpn(r)); } while(0)
 #define SETAE(r)    do { count_alu(); ALU2(0x0f93,(r),(r));          asm_output("setae %s",gpn(r)); } while(0)
-#define SETC(r)     do { count_alu(); ALU2(0x0f90,(r),(r));          asm_output("setc  %s",gpn(r)); } while(0)
 #define SETO(r)     do { count_alu(); ALU2(0x0f92,(r),(r));          asm_output("seto  %s",gpn(r)); } while(0)
 
 #define MREQ(dr,sr)	do { count_alu(); ALU2(0x0f44,dr,sr); asm_output("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
@@ -405,7 +404,6 @@ namespace nanojit
 #define MRB(dr,sr)	do { count_alu(); ALU2(0x0f42,dr,sr); asm_output("cmovb %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRBE(dr,sr)	do { count_alu(); ALU2(0x0f46,dr,sr); asm_output("cmovbe %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRA(dr,sr)	do { count_alu(); ALU2(0x0f47,dr,sr); asm_output("cmova %s,%s", gpn(dr),gpn(sr)); } while(0)
-#define MRNC(dr,sr)	do { count_alu(); ALU2(0x0f43,dr,sr); asm_output("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRAE(dr,sr)	do { count_alu(); ALU2(0x0f43,dr,sr); asm_output("cmovae %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRNO(dr,sr)	do { count_alu(); ALU2(0x0f41,dr,sr); asm_output("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
 
@@ -610,8 +608,6 @@ namespace nanojit
 #define JGE(t, isfar)	   JCC(0x0D, t, isfar, "jge")
 #define JNGE(t, isfar)   JCC(0x0C, t, isfar, "jnge")
 
-#define JC(t, isfar)     JCC(0x02, t, isfar, "jc")
-#define JNC(t, isfar)    JCC(0x03, t, isfar, "jnc")
 #define JO(t, isfar)     JCC(0x00, t, isfar, "jo")
 #define JNO(t, isfar)    JCC(0x01, t, isfar, "jno")
 

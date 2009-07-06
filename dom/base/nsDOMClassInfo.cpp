@@ -9273,12 +9273,6 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 
 // HTMLObject/EmbedElement helper
 
-// This resolve hook makes embed.nsIFoo work as if
-// QueryInterface(Components.interfaces.nsIFoo) was called on the
-// plugin instance, the result of calling QI, assuming it's
-// successful, will be defined on the embed element as a nsIFoo
-// property.
-
 // static
 nsresult
 nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wrapper,
@@ -9452,32 +9446,14 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
   //   |
   //   |__ xpc wrapped native embed node
   //
-  // pi.__proto__.__proto__
-  // ^      ^         ^
-  // |      |         |__ Object.prototype
-  // |      |
-  // |      |__ plugin proto (not shared in the xpc wrapper case)
+  // pi.__proto__
+  // ^      ^
+  // |      |__ Object.prototype
   // |
-  // |__ xpc wrapped native pi (plugin instance)
+  // |__ Plugin NPRuntime JS object wrapper
   //
   // Now, after the above prototype setup the prototype chain should
-  // look like this if the plugin had a proto (other than
-  // Object.prototype):
-  //
-  // this.__proto__.__proto__.__proto__.__proto__
-  //   ^      ^         ^         ^         ^
-  //   |      |         |         |         |__ Object.prototype
-  //   |      |         |         |
-  //   |      |         |         |__ xpc embed wrapper proto (shared)
-  //   |      |         |
-  //   |      |         |__ plugin proto (not shared in the xpc wrapper case)
-  //   |      |
-  //   |      |__ xpc wrapped native pi (plugin instance)
-  //   |
-  //   |__ xpc wrapped native embed node
-  //
-  // If the plugin's proto was Object.prototype, the prototype chain
-  // should look like this:
+  // look like this:
   //
   // this.__proto__.__proto__.__proto__
   //   ^      ^         ^         ^
@@ -9485,7 +9461,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
   //   |      |         |
   //   |      |         |__ xpc embed wrapper proto (shared)
   //   |      |
-  //   |      |__ pi (plugin instance) NPRuntime JS object wrapper
+  //   |      |__ Plugin NPRuntime JS object wrapper
   //   |
   //   |__ xpc wrapped native embed node
   //
@@ -9633,9 +9609,9 @@ nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
   nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, getter_AddRefs(pi));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!pi) {
-    // No plugin around for this object.
-
+  // If obj is a native wrapper, or if there's no plugin around for
+  // this object, throw.
+  if (!ObjectIsNativeWrapper(cx, obj) || !pi) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -9660,21 +9636,6 @@ nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
 }
 
 
-// HTMLAppletElement helper
-
-// static
-nsresult
-nsHTMLPluginObjElementSH::GetJavaPluginJSObject(JSContext *cx, JSObject *obj,
-                                                nsIPluginInstance *plugin_inst,
-                                                JSObject **plugin_obj,
-                                                JSObject **plugin_proto)
-{
-  return NS_OK;
-}
-
-
-// HTMLEmbed/ObjectElement helper
-
 nsresult
 nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
                                             nsIPluginInstance *plugin_inst,
@@ -9694,89 +9655,6 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                                     JSContext *cx, JSObject *obj, jsval id,
-                                     PRUint32 flags, JSObject **objp,
-                                     PRBool *_retval)
-{
-  if (!JSVAL_IS_STRING(id)) {
-    return NS_OK;
-  }
-
-  // This code resolves embed.nsIFoo to the nsIFoo wrapper of the
-  // plugin/applet instance. We only want to do that for plugin
-  // instances that are not scriptable using NPRuntime or are Java
-  // plugin instances.
-
-  nsCOMPtr<nsIPluginInstance> pi;
-  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, getter_AddRefs(pi));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Bail if we don't have a plugin instance or this is an NPRuntime or Java
-  // plugin since the following code is only useful for XPCOM plugins.
-  JSObject *jsobj;
-  if (pi)
-    pi->GetJSObject(cx, &jsobj);
-  if (!pi || jsobj) {
-    return nsHTMLElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                       _retval);
-  }
-
-  JSObject *proto = ::JS_GetPrototype(cx, obj);
-
-  if (!proto || strcmp(STOBJ_GET_CLASS(proto)->name, NPRUNTIME_JSCLASS_NAME)) {
-    // This is not an NPRuntime plugin or Java plugin, continue on...
-
-    JSString *str = JSVAL_TO_STRING(id);
-    char* cstring = ::JS_GetStringBytes(str);
-
-    nsCOMPtr<nsIInterfaceInfoManager>
-      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-    NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
-
-    nsIID* iid = nsnull;
-
-    nsresult rv = iim->GetIIDForName(cstring, &iid);
-
-    if (NS_SUCCEEDED(rv) && iid) {
-      // Notify the PluginHost that this one is scriptable -- it
-      // will need some special treatment later
-
-      nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-      if (pluginHost)
-        pluginHost->SetIsScriptableInstance(pi, PR_TRUE);
-
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = sXPConnect->WrapNative(cx, obj, pi, *iid, getter_AddRefs(holder));
-
-      if (NS_SUCCEEDED(rv)) {
-        JSObject* ifaceObj;
-
-        rv = holder->GetJSObject(&ifaceObj);
-
-        if (NS_SUCCEEDED(rv)) {
-          nsMemory::Free(iid);
-
-          *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                           ::JS_GetStringLength(str),
-                                           OBJECT_TO_JSVAL(ifaceObj), nsnull,
-                                           nsnull, JSPROP_ENUMERATE);
-
-          *objp = obj;
-
-          return *_retval ? NS_OK : NS_ERROR_FAILURE;
-        }
-      }
-    }
-
-    nsMemory::Free(iid);
-  }
-
-  return nsHTMLElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                     _retval);
 }
 
 
