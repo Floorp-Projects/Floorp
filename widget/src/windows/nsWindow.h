@@ -140,7 +140,6 @@ public:
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     PRUint32 aHotspotX, PRUint32 aHotspotY);
   NS_IMETHOD              SetCursor(nsCursor aCursor);
-  NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              Validate();
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
