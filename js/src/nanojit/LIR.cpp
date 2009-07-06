@@ -269,9 +269,12 @@ namespace nanojit
         return ins;
 	}
 
-	LInsp LirBufWriter::insLoad(LOpcode op, LInsp base, LInsp d)
+	LInsp LirBufWriter::insLoad(LOpcode op, LInsp base, int32_t d)
 	{
-		return ins2(op,base,d);
+        LInsLd* insLd = (LInsLd*)_buf->makeRoom(sizeof(LInsLd));
+        LIns*   ins   = insLd->getLIns();
+        ins->initLInsLd(op, base, d);
+        return ins;
 	}
 
 	LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, LInsp data)
@@ -435,6 +438,11 @@ namespace nanojit
     bool LIns::isLInsOp2() const {
         NanoAssert(LRK_None != repKinds[opcode()]);
         return LRK_Op2 == repKinds[opcode()];
+    }
+
+    bool LIns::isLInsLd() const {
+        NanoAssert(LRK_None != repKinds[opcode()]);
+        return LRK_Ld == repKinds[opcode()];
     }
 
     bool LIns::isLInsSti() const {
@@ -931,16 +939,6 @@ namespace nanojit
         return out->insBranch(v, c, t);
     }
 
-    LIns* LirWriter::insLoadi(LIns *base, int disp) 
-    { 
-        return insLoad(LIR_ld,base,disp);
-    }
-
-	LIns* LirWriter::insLoad(LOpcode op, LIns *base, int disp)
-	{
-		return insLoad(op, base, insImm(disp));
-	}
-
 	LIns* LirWriter::ins_eq0(LIns* oprnd1)
 	{
 		return ins2i(LIR_eq, oprnd1, 0);
@@ -1040,7 +1038,7 @@ namespace nanojit
 				if (base == sp) 
 				{
 					LInsp v = i->oprnd1();
-					int d = i->immdisp() >> 2;
+					int d = i->disp() >> 2;
 					if (d >= top) {
 						continue;
 					} else {
@@ -1151,8 +1149,10 @@ namespace nanojit
 		{
 			case LIR_int:
 				return hashimm(i->imm32());
+
 			case LIR_quad:
 				return hashimmq(i->imm64());
+
 			case LIR_call:
 			case LIR_fcall:
 #if defined NANOJIT_64BIT
@@ -1166,6 +1166,15 @@ namespace nanojit
 					args[j] = i->arg(j);
 				return hashcall(i->callInfo(), argc, args);
 			} 
+
+            case LIR_ld:
+            case LIR_ldcb:
+            case LIR_ldcs:
+            case LIR_ldc:
+            case LIR_ldq:
+            case LIR_ldqc:
+                return hashLoad(op, i->oprnd1(), i->disp());
+
 			default:
 				if (operandCount[op] == 2)
 					return hash2(op, i->oprnd1(), i->oprnd2());
@@ -1206,6 +1215,16 @@ namespace nanojit
 						return false;
 				return true;
 			} 
+
+            case LIR_ld:
+            case LIR_ldcb:
+            case LIR_ldcs:
+            case LIR_ldc:
+            case LIR_ldq:
+            case LIR_ldqc:
+                return 
+                    (a->oprnd1() == a->oprnd2() && a->disp() == b->disp() ? true : false );
+
 			default:
 			{
 				const uint32_t count = operandCount[op];
@@ -1296,6 +1315,12 @@ namespace nanojit
 		return _hashfinish(_hashptr(hash, b));
 	}
 
+	uint32_t LInsHashSet::hashLoad(LOpcode op, LInsp a, int32_t d) {
+		uint32_t hash = _hash8(0,uint8_t(op));
+		hash = _hashptr(hash, a);
+		return _hashfinish(_hash32(hash, d));
+	}
+
 	uint32_t LInsHashSet::hashcall(const CallInfo *ci, uint32_t argc, LInsp args[]) {
 		uint32_t hash = _hashptr(0, ci);
 		for (int32_t j=argc-1; j >= 0; j--)
@@ -1364,6 +1389,23 @@ namespace nanojit
 		LInsp k;
 		while ((k = list[hash]) != NULL && 
 			(k->opcode() != op || k->oprnd1() != a || k->oprnd2() != b))
+		{
+			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
+		}
+		i = hash;
+		return k;
+	}
+
+	LInsp LInsHashSet::findLoad(LOpcode op, LInsp a, int32_t d, uint32_t &i)
+	{
+		uint32_t cap = m_cap;
+		const LInsp *list = m_list;
+		const uint32_t bitmask = (cap - 1) & ~0x1;
+		uint32_t hash = hashLoad(op,a,d) & bitmask;  
+		uint32_t n = 7 << 1;
+		LInsp k;
+		while ((k = list[hash]) != NULL && 
+			(k->opcode() != op || k->oprnd1() != a || k->disp() != d))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
 		}
@@ -1807,7 +1849,7 @@ namespace nanojit
             case LIR_stqi:
 				sprintf(s, "%s %s[%d] = %s", lirNames[op],
 					formatRef(i->oprnd2()), 
-					i->immdisp(), 
+					i->disp(), 
 					formatRef(i->oprnd1()));
 				break;
 
@@ -1874,12 +1916,12 @@ namespace nanojit
 		return out->ins2(v,a,b);
 	}
 
-	LIns* CseFilter::insLoad(LOpcode v, LInsp base, LInsp disp)
+	LIns* CseFilter::insLoad(LOpcode v, LInsp base, int32_t disp)
 	{
         if (isCseOpcode(v)) {
-			NanoAssert(operandCount[v]==2);
+			NanoAssert(operandCount[v]==1);
 			uint32_t k;
-			LInsp found = exprs.find2(v, base, disp, k);
+			LInsp found = exprs.findLoad(v, base, disp, k);
 			if (found)
 				return found;
 			return exprs.add(out->insLoad(v,base,disp), k);
@@ -2089,11 +2131,11 @@ namespace nanojit
 		/* END decorative postamble */
     }
 
-    LInsp LoadFilter::insLoad(LOpcode v, LInsp base, LInsp disp)
+    LInsp LoadFilter::insLoad(LOpcode v, LInsp base, int32_t disp)
     {
         if (base != sp && base != rp && (v == LIR_ld || v == LIR_ldq)) {
             uint32_t k;
-            LInsp found = exprs.find2(v, base, disp, k);
+            LInsp found = exprs.findLoad(v, base, disp, k);
             if (found)
                 return found;
             return exprs.add(out->insLoad(v,base,disp), k);

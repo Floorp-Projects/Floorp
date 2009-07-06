@@ -494,7 +494,7 @@ namespace nanojit
 	void Assembler::asm_load64(LInsp ins)
 	{
 		LIns* base = ins->oprnd1();
-		int db = ins->oprnd2()->imm32();
+		int db = ins->disp();
 		Reservation *resv = getresv(ins);
 		Register rr = resv->reg;
 
@@ -983,9 +983,8 @@ namespace nanojit
 	{
 		LOpcode op = ins->opcode();			
 		LIns* base = ins->oprnd1();
-		LIns* disp = ins->oprnd2();
+		int32_t d = ins->disp();
 		Register rr = prepResultReg(ins, GpRegs);
-		int d = disp->imm32();
 
 		if (base->isconst()) {
 			intptr_t addr = base->imm32();

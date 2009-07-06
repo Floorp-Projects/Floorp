@@ -1633,7 +1633,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
          * We poll the operation callback request flag. It is updated asynchronously whenever
          * the callback is to be invoked.
          */
-        LIns* x = lir->insLoadi(cx_ins, offsetof(JSContext, operationCallbackFlag));
+        LIns* x = lir->insLoad(LIR_ld, cx_ins, offsetof(JSContext, operationCallbackFlag));
         guard(true, lir->ins_eq0(x), snapshot(TIMEOUT_EXIT));
     }
 
@@ -2325,7 +2325,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, JSTraceType t,
            read and promote it to double since all arithmetic operations expect
            to see doubles on entry. The first op to use this slot will emit a
            f2i cast which will cancel out the i2f we insert here. */
-        ins = lir->insLoadi(base, offset);
+        ins = lir->insLoad(LIR_ld, base, offset);
         ins = lir->ins1(LIR_i2f, ins);
     } else {
         JS_ASSERT_IF(t != TT_JSVAL, isNumber(*p) == (t == TT_DOUBLE));
@@ -2604,8 +2604,8 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
         : nativeGlobalOffset(p)));                                            \
 
         JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
-        ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->immdisp());
-        writeBack(i, x->oprnd2(), x->immdisp());
+        ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->disp());
+        writeBack(i, x->oprnd2(), x->disp());
     }
 #undef ASSERT_VALID_CACHE_HIT
 }
@@ -9463,7 +9463,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
         return NULL;
     }
 
-    LIns* result = lir->insLoad(loadOp, outp, lir->insImm(0));
+    LIns* result = lir->insLoad(loadOp, outp, 0);
     if (type == TT_INT32)
         result = lir->ins1(LIR_i2f, result);
     return result;

@@ -80,7 +80,7 @@ OPDEF(unused6,   6,-1, None)
 OPDEF(addp,      7, 2, Op2)     // integer addition for temporary pointer calculations
 OPDEF(param,     8, 0, P)       // load a parameter
 OPDEF(unused9,   9,-1, None)
-OPDEF(ld,       10, 2, Op2)     // 32-bit load
+OPDEF(ld,       10, 1, Ld)      // 32-bit load
 OPDEF(alloc,    11, 0, I)       // alloca some stack space
 OPDEF(sti,      12, 2, Sti)     // 32-bit store
 OPDEF(ret,      13, 1, Op1)     // return a word-sized value
@@ -129,9 +129,9 @@ OPDEF(fgt,      29, 2, Op2)     // floating-point greater-than
 OPDEF(fle,      30, 2, Op2)     // floating-point less-than-or-equal
 OPDEF(fge,      31, 2, Op2)     // floating-point greater-than-or-equal
 
-OPDEF(ldcb,     32, 2, Op2)     // non-volatile  8-bit load
-OPDEF(ldcs,     33, 2, Op2)     // non-volatile 16-bit load
-OPDEF(ldc,      34, 2, Op2)     // non-volatile 32-bit load
+OPDEF(ldcb,     32, 1, Ld)      // non-volatile  8-bit load
+OPDEF(ldcs,     33, 1, Ld)      // non-volatile 16-bit load
+OPDEF(ldc,      34, 1, Ld)      // non-volatile 32-bit load
 
 OPDEF(neg,      35, 1, Op1)     // integer negation
 OPDEF(add,      36, 2, Op2)     // integer addition
@@ -191,7 +191,7 @@ OPDEF64(unused7_64, 7,-1, None)
 OPDEF64(unused8_64, 8,-1, None)
 OPDEF64(unused9_64, 9,-1, None)
 
-OPDEF64(ldq,    LIR_ld, 2, Op2)     // 64-bit (quad) load
+OPDEF64(ldq,    LIR_ld, 1, Ld)      // 64-bit (quad) load
 
 OPDEF64(unused11_64, 11,-1, None)
 
@@ -227,7 +227,7 @@ OPDEF64(unused31_64, 31,-1, None)
 OPDEF64(unused32_64, 32,-1, None)
 OPDEF64(unused33_64, 33,-1, None)
 
-OPDEF64(ldqc,   LIR_ldc, 2, Op2)    // non-volatile 64-bit load
+OPDEF64(ldqc,   LIR_ldc, 1, Ld)     // non-volatile 64-bit load
 
 OPDEF64(fneg,   LIR_neg, 1, Op1)    // floating-point negation
 OPDEF64(fadd,   LIR_add, 2, Op2)    // floating-point addition
