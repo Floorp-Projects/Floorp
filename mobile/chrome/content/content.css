@@ -56,35 +56,11 @@ thumb {
 
 select {
   -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select");
-  -moz-user-focus: normal;
-
-  margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
 }
 
-.select-label-box {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  margin: 1px;
-  border: 1px solid transparent;
-}
-
-select:focus > .select-label-box {
-  border: 1px dotted #F5DB95;
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-select[disabled] > .select-label-box {
-  -moz-user-input: disabled;
-  -moz-user-focus: ignore;
-  color: GrayText;
-  background-color: ThreeDFace;
-  cursor: inherit;
+select:not([size]) > scrollbar,
+select[size="1"] > scrollbar,
+select:not([size]) scrollbarbutton,
+select[size="1"] scrollbarbutton {
+  display:block !important;
 }
