@@ -5360,10 +5360,10 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
             ptrdiff_t jmpoff = (type == JOF_JUMP) ? GET_JUMP_OFFSET(pc)
                                                   : GET_JUMPX_OFFSET(pc);
             LOCAL_ASSERT(jmpoff >= 0);
-            uintN tmp_pcdepth = SimulateImacroCFG(cx, script, pcdepth, pc + jmpoff,
-                                                  target, tmp_pcstack);
+            intN tmp_pcdepth = SimulateImacroCFG(cx, script, pcdepth, pc + jmpoff,
+                                                 target, tmp_pcstack);
             if (tmp_pcdepth >= 0) {
-                pcdepth = tmp_pcdepth;
+                pcdepth = uintN(tmp_pcdepth);
                 goto success;
             }
 
@@ -5378,7 +5378,6 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
     LOCAL_ASSERT(pc == target);
 
   success:
-    LOCAL_ASSERT(pcdepth >= 0);
     memcpy(pcstack, tmp_pcstack, nbytes);
     JS_free(cx, tmp_pcstack);
     return pcdepth;
@@ -5403,9 +5402,9 @@ ReconstructImacroPCStack(JSContext *cx, JSScript *script,
      */
     JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
     JS_ASSERT(fp->imacpc);
-    uintN pcdepth = ReconstructPCStack(cx, script, fp->imacpc, pcstack);
+    intN pcdepth = ReconstructPCStack(cx, script, fp->imacpc, pcstack);
     if (pcdepth < 0)
-        return pcdepth;
+        return uintN(pcdepth);
     return SimulateImacroCFG(cx, script, pcdepth, imacstart, target, pcstack);
 }
 
