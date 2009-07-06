@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: *unnormalized* fft transform
- last mod: $Id: smallft.c 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -94,10 +94,10 @@ static void drfti1(int n, float *wa, int *ifac){
       argld=(float)ld*argh;
       fi=0.f;
       for (ii=2;ii<ido;ii+=2){
-	fi+=1.f;
-	arg=fi*argld;
-	wa[i++]=cos(arg);
-	wa[i++]=sin(arg);
+        fi+=1.f;
+        arg=fi*argld;
+        wa[i++]=cos(arg);
+        wa[i++]=sin(arg);
       }
       is+=ido;
     }
@@ -167,7 +167,7 @@ static void dradf2(int ido,int l1,float *cc,float *ch,float *wa1){
 }
 
 static void dradf4(int ido,int l1,float *cc,float *ch,float *wa1,
-	    float *wa2,float *wa3){
+            float *wa2,float *wa3){
   static float hsqt2 = .70710678118654752f;
   int i,k,t0,t1,t2,t3,t4,t5,t6;
   float ci2,ci3,ci4,cr2,cr3,cr4,ti1,ti2,ti3,ti4,tr1,tr2,tr3,tr4;
@@ -747,7 +747,7 @@ static void dradb3(int ido,int l1,float *cc,float *ch,float *wa1,
 }
 
 static void dradb4(int ido,int l1,float *cc,float *ch,float *wa1,
-			  float *wa2,float *wa3){
+                          float *wa2,float *wa3){
   static float sqrt2=1.414213562373095f;
   int i,k,t0,t1,t2,t3,t4,t5,t6,t7,t8;
   float ci2,ci3,ci4,cr2,cr3,cr4,ti1,ti2,ti3,ti4,tr1,tr2,tr3,tr4;
