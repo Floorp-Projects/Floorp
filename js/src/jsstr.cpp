@@ -73,6 +73,7 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jsbit.h"
+#include "jsvector.h"
 
 #define JSSTRDEP_RECURSION_LIMIT        100
 
@@ -246,35 +247,36 @@ js_MakeStringImmutable(JSContext *cx, JSString *str)
 static JSString *
 ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
 {
-    JSObject *obj;
-    JSString *str;
-
     if (arg >= argc)
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     vp += 2 + arg;
 
-    if (JSVAL_IS_OBJECT(*vp)) {
-        obj = JSVAL_TO_OBJECT(*vp);
-        if (!obj)
-            return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
-        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_STRING, vp))
-            return NULL;
+    if (!JSVAL_IS_PRIMITIVE(*vp) &&
+        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(*vp), JSTYPE_STRING, vp)) {
+        return NULL;
     }
-    if (JSVAL_IS_STRING(*vp))
-        return JSVAL_TO_STRING(*vp);
-    if (JSVAL_IS_INT(*vp)) {
-        str = js_NumberToString(cx, JSVAL_TO_INT(*vp));
-    } else if (JSVAL_IS_DOUBLE(*vp)) {
-        str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(*vp));
+
+    JSString *str;
+    if (JSVAL_IS_STRING(*vp)) {
+        str = JSVAL_TO_STRING(*vp);
     } else if (JSVAL_IS_BOOLEAN(*vp)) {
-        return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[
+        str = ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[
                                   JSVAL_TO_BOOLEAN(*vp)? 1 : 0]);
-    } else {
-        JS_ASSERT(JSVAL_IS_VOID(*vp));
-        return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
+    } else if (JSVAL_IS_NULL(*vp)) {
+        str = ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
+    } else if (JSVAL_IS_VOID(*vp)) {
+        str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     }
-    if (str)
-        *vp = STRING_TO_JSVAL(str);
+    else {
+        if (JSVAL_IS_INT(*vp)) {
+            str = js_NumberToString(cx, JSVAL_TO_INT(*vp));
+        } else {
+            JS_ASSERT(JSVAL_IS_DOUBLE(*vp));
+            str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(*vp));
+        }
+        if (str)
+            *vp = STRING_TO_JSVAL(str);
+    }
     return str;
 }
 
@@ -2966,16 +2968,13 @@ js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun)
 JS_FRIEND_API(JSString *)
 js_ValueToString(JSContext *cx, jsval v)
 {
-    JSObject *obj;
     JSString *str;
 
-    if (JSVAL_IS_OBJECT(v)) {
-        obj = JSVAL_TO_OBJECT(v);
-        if (!obj)
-            return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
-        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_STRING, &v))
-            return NULL;
+    if (!JSVAL_IS_PRIMITIVE(v) &&
+        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v)) {
+        return NULL;
     }
+
     if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
     } else if (JSVAL_IS_INT(v)) {
@@ -2984,10 +2983,48 @@ js_ValueToString(JSContext *cx, jsval v)
         str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(v));
     } else if (JSVAL_IS_BOOLEAN(v)) {
         str = js_BooleanToString(cx, JSVAL_TO_BOOLEAN(v));
+    } else if (JSVAL_IS_NULL(v)) {
+        str = ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
     } else {
         str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     }
     return str;
+}
+
+static inline JSBool
+pushAtom(JSAtom *atom, JSTempVector<jschar> &buf)
+{
+    JSString *str = ATOM_TO_STRING(atom);
+    const jschar *chars;
+    size_t length;
+    str->getCharsAndLength(chars, length);
+    return buf.pushBack(chars, chars + length);
+}
+
+/* This function implements E-262-3 section 9.8, toString. */
+JS_FRIEND_API(JSBool)
+js_ValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
+{
+    if (!JSVAL_IS_PRIMITIVE(v) &&
+        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v)) {
+        return JS_FALSE;
+    }
+
+    if (JSVAL_IS_STRING(v)) {
+        JSString *str = JSVAL_TO_STRING(v);
+        const jschar *chars;
+        size_t length;
+        str->getCharsAndLength(chars, length);
+        return buf.pushBack(chars, chars + length);
+    }
+    if (JSVAL_IS_NUMBER(v))
+        return js_NumberValueToStringBuffer(cx, v, buf);
+    if (JSVAL_IS_BOOLEAN(v))
+        return js_BooleanToStringBuffer(cx, JSVAL_TO_BOOLEAN(v), buf);
+    if (JSVAL_IS_NULL(v))
+        return pushAtom(cx->runtime->atomState.nullAtom, buf);
+    JS_ASSERT(JSVAL_IS_VOID(v));
+    return pushAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], buf);
 }
 
 JS_FRIEND_API(JSString *)

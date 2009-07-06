@@ -2168,7 +2168,7 @@ JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, 
  * access is "object-detecting" in the sense used by web scripts, e.g., when
  * checking whether document.all is defined.
  */
-static JS_REQUIRES_STACK JSBool
+JS_REQUIRES_STACK JSBool
 Detecting(JSContext *cx, jsbytecode *pc)
 {
     JSScript *script;
@@ -2231,9 +2231,16 @@ Detecting(JSContext *cx, jsbytecode *pc)
  * does not indicate whether we are in a with statement. Return defaultFlags
  * if a currently executing bytecode cannot be determined.
  */
-static uintN
-InferFlags(JSContext *cx, uintN defaultFlags)
+uintN
+js_InferFlags(JSContext *cx, uintN defaultFlags)
 {
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx))
+        return cx->bailExit->lookupFlags;
+#endif
+
+    JS_ASSERT_NOT_ON_TRACE(cx);
+
     JSStackFrame *fp;
     jsbytecode *pc;
     const JSCodeSpec *cs;
@@ -2271,7 +2278,7 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     /* Fixes bug 463997 */
     uintN flags = cx->resolveFlags;
     if (flags == JSRESOLVE_INFER)
-        flags = InferFlags(cx, flags);
+        flags = js_InferFlags(cx, flags);
     flags |= JSRESOLVE_WITH;
     JSAutoResolveFlags rf(cx, flags);
     JSObject *proto = OBJ_GET_PROTO(cx, obj);
@@ -3837,7 +3844,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                     newresolve = (JSNewResolveOp)resolve;
                     if (flags == JSRESOLVE_INFER)
-                        flags = InferFlags(cx, flags);
+                        flags = js_InferFlags(cx, flags);
                     obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START)
                            ? start
                            : NULL;
