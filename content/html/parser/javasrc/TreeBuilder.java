@@ -2008,8 +2008,9 @@ public abstract class TreeBuilder<T> implements TokenHandler {
                                         );
                                         for (int i = 0; i < attributes.getLength(); i++) {
                                             AttributeName attributeQName = attributes.getAttributeName(i);
-                                            if (!(AttributeName.NAME == attributeQName
-                                                    || AttributeName.ACTION == attributeQName || AttributeName.PROMPT == attributeQName)) {
+                                            if (AttributeName.NAME == attributeQName || AttributeName.PROMPT == attributeQName) {
+                                                attributes.releaseValue(i);                                                
+                                            } else if (AttributeName.ACTION != attributeQName) {
                                                 inputAttributes.addAttribute(
                                                         attributeQName,
                                                         attributes.getValue(i)
@@ -2019,8 +2020,6 @@ public abstract class TreeBuilder<T> implements TokenHandler {
                                                 // ]NOCPP]
 
                                                 );
-                                            } else {
-                                                attributes.releaseValue(i);
                                             }
                                         }
                                         attributes.clearWithoutReleasingContents();

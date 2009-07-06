@@ -1094,10 +1094,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   inputAttributes->addAttribute(nsHtml5AttributeName::ATTR_NAME, nsHtml5Portability::newStringFromLiteral("isindex"));
                   for (PRInt32 i = 0; i < attributes->getLength(); i++) {
                     nsHtml5AttributeName* attributeQName = attributes->getAttributeName(i);
-                    if (!(nsHtml5AttributeName::ATTR_NAME == attributeQName || nsHtml5AttributeName::ATTR_ACTION == attributeQName || nsHtml5AttributeName::ATTR_PROMPT == attributeQName)) {
-                      inputAttributes->addAttribute(attributeQName, attributes->getValue(i));
-                    } else {
+                    if (nsHtml5AttributeName::ATTR_NAME == attributeQName || nsHtml5AttributeName::ATTR_PROMPT == attributeQName) {
                       attributes->releaseValue(i);
+                    } else if (nsHtml5AttributeName::ATTR_ACTION != attributeQName) {
+                      inputAttributes->addAttribute(attributeQName, attributes->getValue(i));
                     }
                   }
                   attributes->clearWithoutReleasingContents();
