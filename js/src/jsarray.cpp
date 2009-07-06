@@ -1552,7 +1552,11 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
         goto done;
 
   done:
-    JS_HashTableRawRemove(table, hep, he);
+    /*
+     * It is possible that 'hep' may have been invalidated by subsequent
+     * RawAdd/Remove.  Hence, 'RawRemove' must not be used.
+     */
+    JS_HashTableRemove(table, obj);
     return ok;
 }
 
