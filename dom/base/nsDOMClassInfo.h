@@ -1089,15 +1089,7 @@ protected:
                                     JSObject **plugin_obj,
                                     JSObject **plugin_proto);
 
-  static nsresult GetJavaPluginJSObject(JSContext *cx, JSObject *obj,
-                                        nsIPluginInstance *plugin_inst,
-                                        JSObject **plugin_obj,
-                                        JSObject **plugin_proto);
-
 public:
-  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, jsval id, PRUint32 flags,
-                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
