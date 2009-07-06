@@ -785,14 +785,31 @@ var SelectHelper = {
   _panel: null,
   _list: null,
   _control: null,
-  _selectedIndex: -1,
+  _selectedIndexes: [],
+
+  _getSelectedIndexes: function() {
+    let indexes = [];
+    let control = this._control;
+
+    if (control.type == 'select-one') {
+      indexes.push(control.selectedIndex);
+    }
+    else {
+      for (let i = 0; i < control.options.length; i++) {
+        if (control.options[i].selected)
+          indexes.push(i)
+      }
+    }
+
+    return indexes;
+  },
 
   show: function(aControl) {
     if (!aControl)
       return;
 
     this._control = aControl;
-    this._selectedIndex = this._control.selectedIndex;
+    this._selectedIndexes = this._getSelectedIndexes();
 
     this._list = document.getElementById("select-list");
     this._list.setAttribute("multiple", this._control.multiple ? "true" : "false");
@@ -856,10 +873,23 @@ var SelectHelper = {
   },
 
   _updateControl: function() {
-    // XXX For "multiple", we could check to see if the selected items were
-    // different than the original set of selected items
-    if (this._control.multiple || this._selectedIndex != this._control.selectedIndex)
-      this._control.wrappedJSObject._fireChange();
+    let currentSelectedIndexes = this._getSelectedIndexes();
+
+    let isIdentical = currentSelectedIndexes.length == this._selectedIndexes.length;
+    if (isIdentical) {
+      for (let i = 0; i < currentSelectedIndexes.length; i++) {
+        if (currentSelectedIndexes[i] != this._selectedIndexes[i]) {
+          isIdentical = false;
+          break;
+        }
+      }
+    }
+
+    if (!isIdentical) {
+      let control = this._control.wrappedJSObject;
+      if ("onchange" in control)
+        control.onchange();
+    }
   },
 
   close: function() {
@@ -886,7 +916,6 @@ var SelectHelper = {
             // Toggle the item state
             item.selected = !item.selected;
             selectElement.setOptionsSelectedByIndex(item.optionIndex, item.optionIndex, item.selected, false, false, true);
-            this._control.wrappedJSObject._updateLabel();
           }
           else {
             // Unselect all options
@@ -899,7 +928,6 @@ var SelectHelper = {
             // Select the new one and update the control
             item.selected = true;
             selectElement.setOptionsSelectedByIndex(item.optionIndex, item.optionIndex, true, true, false, true);
-            this._control.wrappedJSObject._updateLabel();
           }
         }
         break;
