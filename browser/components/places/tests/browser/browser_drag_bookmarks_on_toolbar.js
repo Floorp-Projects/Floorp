@@ -239,8 +239,7 @@ var gTests = [
 function nextTest() {
   if (gTests.length) {
     var test = gTests.shift();
-    dump("TEST: " + test.desc + "\n");
-    ok(true, "TEST: " + test.desc);
+    info("Start of test: " + test.desc);
     test.run();
 
     setTimeout(nextTest, 0);
