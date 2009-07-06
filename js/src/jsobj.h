@@ -639,8 +639,6 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                   JSProperty **propp);
 
-#ifdef __cplusplus /* FIXME: bug 442399 removes this LiveConnect requirement. */
-
 /*
  * Flags for the defineHow parameter of js_DefineNativeProperty.
  */
@@ -652,7 +650,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
                         uintN defineHow = 0);
-#endif
 
 /*
  * Unlike js_DefineProperty, propp must be non-null. On success, and if id was

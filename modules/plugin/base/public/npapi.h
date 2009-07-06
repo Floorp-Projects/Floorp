@@ -57,16 +57,6 @@
 # endif /* XP_WIN */
 #endif /* _WINDOWS */
 
-#ifdef __MWERKS__
-# define _declspec __declspec
-# ifdef __INTEL__
-#  undef NULL
-#  ifndef XP_WIN
-#   define XP_WIN 1
-#  endif /* XP_WIN */
-# endif /* __INTEL__ */
-#endif /* __MWERKS__ */
-
 #ifdef XP_MACOSX
 #ifdef __LP64__
 #define NP_NO_QUICKDRAW
@@ -675,6 +665,8 @@ NPError     NP_LOADDS NPN_GetAuthenticationInfo(NPP instance,
                                                 char **username, uint32_t *ulen,
                                                 char **password,
                                                 uint32_t *plen);
+uint32_t    NPN_ScheduleTimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
+void        NPN_UnscheduleTimer(NPP instance, uint32_t timerID);
 
 #ifdef __cplusplus
 }  /* end extern "C" */

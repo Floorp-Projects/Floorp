@@ -1636,6 +1636,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument,
                                                         nsIDocument,
                                                         nsNodeUtils::LastRelease(this))
 
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
 
 static PLDHashOperator
 SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
@@ -1716,6 +1719,10 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
+  // Always need to traverse script objects, so do that before we check
+  // if we're uncollectable.
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+
   if (nsCCUncollectableMarker::InGeneration(tmp->GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
@@ -1781,12 +1788,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   }
 #endif // MOZ_SMIL
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
-
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
     PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
@@ -1813,8 +1823,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
   tmp->mParentDocument = nsnull;
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 
   // nsDocument has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
@@ -2397,8 +2405,9 @@ nsDocument::ContentRemoved(nsIDocument* aDocument,
 }
 
 void
-nsDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute)
+nsDocument::AttributeWillChange(nsIDocument* aDocument,
+                                nsIContent* aContent, PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
@@ -3221,8 +3230,9 @@ nsDocument::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 }
 
 nsresult
-nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
 {
+  NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on document child removal.");
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
   if (!oldKid) {
     return NS_OK;
@@ -3234,7 +3244,8 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   }
 
   nsresult rv = nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
-                                                  nsnull, this, mChildren);
+                                                  nsnull, this, mChildren, 
+                                                  aMutationEvent);
   mCachedRootContent = nsnull;
   return rv;
 }
@@ -3535,33 +3546,27 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     mLayoutHistoryState = nsnull;
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
 
-    // If we already have a wrapper at this point, it might have the wrong
-    // parent and scope, so reparent it.
-    nsIXPConnectWrappedNative *wrapper =
-      static_cast<nsIXPConnectWrappedNative*>(GetWrapper());
-    if (wrapper) {
-      JSObject *obj = nsnull;
-      wrapper->GetJSObject(&obj);
-      if (obj) {
-        JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
-        nsIScriptContext *scx = aScriptGlobalObject->GetContext();
-        JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
+#ifdef DEBUG
+    // We really shouldn't have a wrapper here but if we do we need to make sure
+    // it has the correct parent.
+    JSObject *obj = GetWrapper();
+    if (obj) {
+      JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
+      nsIScriptContext *scx = aScriptGlobalObject->GetContext();
+      JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
+      if (!cx) {
+        nsContentUtils::ThreadJSContextStack()->Peek(&cx);
         if (!cx) {
-          nsContentUtils::ThreadJSContextStack()->Peek(&cx);
-          if (!cx) {
-            nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
-            NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
-          }
-        }
-        if (cx) {
-          nsCOMPtr<nsIXPConnectJSObjectHolder> newWrapper;
-          nsContentUtils::XPConnect()->
-            ReparentWrappedNativeIfFound(cx, JS_GetGlobalForObject(cx, obj),
-                                         newScope, wrapper->Native(),
-                                         getter_AddRefs(newWrapper));
+          nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+          NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
         }
       }
+      if (cx) {
+        NS_ASSERTION(JS_GetGlobalForObject(cx, obj) == newScope,
+                     "Wrong scope, this is really bad!");
+      }
     }
+#endif
 
     if (mAllowDNSPrefetch) {
       nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
@@ -6885,7 +6890,7 @@ nsDocument::Destroy()
 
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  ReleaseWrapper();
+  nsContentUtils::ReleaseWrapper(static_cast<nsINode*>(this), this);
 }
 
 void
@@ -7421,6 +7426,11 @@ nsDocument::SetReadyStateInternal(ReadyState rs)
   // TODO fire "readystatechange"
 }
 
+nsIDocument::ReadyState
+nsDocument::GetReadyStateEnum()
+{
+  return mReadyState;
+}
 
 NS_IMETHODIMP
 nsDocument::GetReadyState(nsAString& aReadyState)

@@ -125,11 +125,6 @@ public:
    * determine which frame is under the mouse position
    * @param aBuildCaret whether or not we should include the caret in any
    * display lists that we make.
-   * @param aMovingFrame a frame whose subtree should be regarded as
-   * moving; moving frames are not allowed to clip or cover (during
-   * OptimizeVisibility) non-moving frames. E.g. when we're constructing
-   * a display list to see what should be repainted during a scroll
-   * operation, we specify the scrolled frame as the moving frame.
    */
   nsDisplayListBuilder(nsIFrame* aReferenceFrame, PRBool aIsForEvents,
                        PRBool aBuildCaret);
@@ -162,7 +157,10 @@ public:
   /**
    * Indicate that we'll use this display list to analyze the effects
    * of aMovingFrame moving by aMoveDelta. The move has already been
-   * applied to the frame tree.
+   * applied to the frame tree. Moving frames are not allowed to clip or
+   * cover (during OptimizeVisibility) non-moving frames. E.g. when we're
+   * constructing a display list to see what should be repainted during a
+   * scroll operation, we specify the scrolled frame as the moving frame.
    */
   void SetMovingFrame(nsIFrame* aMovingFrame, const nsPoint& aMoveDelta) {
     mMovingFrame = aMovingFrame;
@@ -512,9 +510,6 @@ protected:
     mAbove = nsnull;
   }
   
-  static PRBool ComputeVisibilityFromBounds(nsIFrame* aFrame,
-      const nsRect& aRect, nsRegion& aCovered, PRBool aIsOpaque);
-
   nsIFrame* mFrame;
 };
 
@@ -1011,13 +1006,14 @@ public:
 
 /**
  * A simple display item that just renders a solid color across the
- * specified bounds. Used in cases where we can't draw the frame tree but
- * we want to draw something to avoid an ugly flash of white when
- * navigating between pages. Also used as a bottom item to ensure that
- * something is painted everywhere. The bounds can differ from the frame's
- * bounds -- this is needed when a frame/iframe is loading and there is not
- * yet a frame tree to go in the frame/iframe so we use the subdoc frame
- * of the parent document as a standin.
+ * specified bounds. For canvas frames (in the CSS sense) we split off the
+ * drawing of the background color into this class (from nsDisplayBackground
+ * via nsDisplayCanvasBackground). This is done so that we can always draw a
+ * background color to avoid ugly flashes of white when we can't draw a full
+ * frame tree (ie when a page is loading). The bounds can differ from the
+ * frame's bounds -- this is needed when a frame/iframe is loading and there
+ * is not yet a frame tree to go in the frame/iframe so we use the subdoc
+ * frame of the parent document as a standin.
  */
 class nsDisplaySolidColor : public nsDisplayItem {
 public:

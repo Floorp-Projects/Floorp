@@ -97,6 +97,7 @@
 #include "nsContentUtils.h"
 #include "nsLineBreaker.h"
 #include "nsIWordBreaker.h"
+#include "nsGenericDOMDataNode.h"
 
 #include "nsILineIterator.h"
 
@@ -3414,6 +3415,8 @@ nsTextFrame::Init(nsIContent*      aContent,
     AddStateBits(TEXT_BLINK_ON_OR_PRINTING);
   }
 
+  // Since our content has a frame now, this flag is no longer needed.
+  aContent->UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE);
   // We're not a continuing frame.
   // mContentOffset = 0; not necessary since we get zeroed out at init
   return nsFrame::Init(aContent, aParent, aPrevInFlow);
@@ -3422,8 +3425,9 @@ nsTextFrame::Init(nsIContent*      aContent,
 void
 nsTextFrame::Destroy()
 {
-  // We might want to clear FRAMETREE_DEPENDS_ON_CHARS on mContent here, since
-  // our parent frame type might be changing.  Not clear whether it's worth it.
+  // We might want to clear NS_CREATE_FRAME_IF_NON_WHITESPACE or
+  // NS_REFRAME_IF_WHITESPACE on mContent here, since our parent frame
+  // type might be changing.  Not clear whether it's worth it.
   ClearTextRun();
   if (mNextContinuation) {
     mNextContinuation->SetPrevInFlow(nsnull);
@@ -4087,6 +4091,22 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   }
 }
 
+static gfxFloat
+ComputeDescentLimitForSelectionUnderline(nsPresContext* aPresContext,
+                                         nsTextFrame* aFrame,
+                                         const gfxFont::Metrics& aFontMetrics)
+{
+  gfxFloat app = aPresContext->AppUnitsPerDevPixel();
+  nscoord lineHeightApp =
+    nsHTMLReflowState::CalcLineHeight(aFrame->GetStyleContext(), NS_AUTOHEIGHT);
+  gfxFloat lineHeight = gfxFloat(lineHeightApp) / app;
+  if (lineHeight <= aFontMetrics.maxHeight) {
+    return aFontMetrics.maxDescent;
+  }
+  return aFontMetrics.maxDescent + (lineHeight - aFontMetrics.maxHeight) / 2;
+}
+
+
 // Make sure this stays in sync with DrawSelectionDecorations below
 static const SelectionType SelectionTypesWithDecorations =
   nsISelectionController::SELECTION_SPELLCHECK |
@@ -4124,6 +4144,7 @@ GetTextDecorationStyle(const nsTextRangeStyle &aRangeStyle)
  * drawing text decoration for selections.
  */
 static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
+    nsTextFrame* aFrame,
     nsTextPaintStyle& aTextPaintStyle,
     const nsTextRangeStyle &aRangeStyle,
     const gfxPoint& aPt, gfxFloat aWidth,
@@ -4131,7 +4152,9 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
 {
   gfxPoint pt(aPt);
   gfxSize size(aWidth, aFontMetrics.underlineSize);
-  gfxFloat descentLimit = aFontMetrics.maxDescent;
+  gfxFloat descentLimit =
+    ComputeDescentLimitForSelectionUnderline(aTextPaintStyle.PresContext(),
+                                             aFrame, aFontMetrics);
 
   float relativeSize;
   PRUint8 style;
@@ -4591,7 +4614,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
       pt.x = (aFramePt.x + xOffset -
              (mTextRun->IsRightToLeft() ? advance : 0)) / app;
       gfxFloat width = PR_ABS(advance) / app;
-      DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
+      DrawSelectionDecorations(aCtx, aSelectionType, this, aTextPaintStyle,
                                selectedStyle,
                                pt, width, mAscent / app, decorationMetrics);
     }
@@ -4896,7 +4919,8 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   const gfxFont::Metrics& metrics = firstFont->GetMetrics();
   gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
   gfxFloat ascent = aPresContext->AppUnitsToGfxUnits(mAscent);
-  gfxFloat descentLimit = metrics.maxDescent;
+  gfxFloat descentLimit =
+    ComputeDescentLimitForSelectionUnderline(aPresContext, this, metrics);
 
   SelectionDetails *details = GetSelectionDetails();
   for (SelectionDetails *sd = details; sd; sd = sd->mNext) {

@@ -2377,7 +2377,8 @@ NeedFrameFor(nsIFrame*   aParentFrame,
     return PR_TRUE;
   }
 
-  aChildContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  aChildContent->SetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
+                          NS_REFRAME_IF_WHITESPACE);
   return !aChildContent->TextIsOnlyWhitespace();
 }
 
@@ -5520,8 +5521,9 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
 
   if (item.mIsText) {
     // If this is collapsible whitespace next to a line boundary,
-    // don't create a frame. This also sets the
-    // FRAMETREE_DEPENDS_ON_CHARS flag in the text node.
+    // don't create a frame. item.IsWhitespace() also sets the
+    // NS_CREATE_FRAME_IF_NON_WHITESPACE flag in the text node. (If we
+    // end up creating a frame, nsTextFrame::Init will clear the flag.)
     // We don't do this for generated content, because some generated
     // text content is empty text nodes that are about to be initialized.
     // (We check mAdditionalStateBits because only the generated content
@@ -5530,16 +5532,15 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // We don't do it for content that may have XBL anonymous siblings,
     // because they make it difficult to correctly create the frame
     // due to dynamic changes.
+    // We don't do it for text that's not a line participant (i.e. SVG text).
     if (AtLineBoundary(aIter) &&
         !styleContext->GetStyleText()->NewlineIsSignificant() &&
         aIter.List()->ParentHasNoXBLChildren() &&
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
+        (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
         item.IsWhitespace())
       return NS_OK;
 
-    // XXXroc Right now if you start with whitespace and then start adding chars
-    // (e.g. while editing) we reframe on every change, which seems dumb.
-    // Maybe we should use another flag here, or something.
     return ConstructTextFrame(item.mFCData, aState, item.mContent,
                               adjParentFrame, styleContext,
                               aFrameItems);
@@ -6147,17 +6148,14 @@ nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
                "child index out of range");
   nsIContent* content = aParentContent->GetChildAt(aContentIndex);
   if (!content->IsNodeOfType(nsINode::eTEXT) ||
-      !content->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+      !content->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
     // Not text, or not suppressed due to being all-whitespace (if it
-    // were being suppressed, it would have the FRAMETREE_DEPENDS_ON_CHARS
-    // flag)
+    // were being suppressed, it would have the
+    // NS_CREATE_FRAME_IF_NON_WHITESPACE flag)
     return;
   }
-  if (mPresShell->GetPrimaryFrameFor(content)) {
-    // Already has a frame, don't do anything.
-    return;
-  }
-
+  NS_ASSERTION(!mPresShell->GetPrimaryFrameFor(content),
+               "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
   AddFrameConstructionItems(aState, content, aContentIndex, aParentFrame, aItems);
 }
 
@@ -6170,16 +6168,14 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
                "child index out of range");
   nsIContent* content = aParentContent->GetChildAt(aContentIndex);
   if (!content->IsNodeOfType(nsINode::eTEXT) ||
-      !content->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+      !content->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
     // Not text, or not suppressed due to being all-whitespace (if it
-    // were being suppressed, it would have the FRAMETREE_DEPENDS_ON_CHARS
-    // flag)
+    // were being suppressed, it would have the
+    // NS_CREATE_FRAME_IF_NON_WHITESPACE flag)
     return;
   }
-  if (mPresShell->GetPrimaryFrameFor(content)) {
-    // Already has a frame, don't do anything.
-    return;
-  }
+  NS_ASSERTION(!mPresShell->GetPrimaryFrameFor(content),
+               "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
   ContentInserted(aParentContent, content, aContentIndex, nsnull);
 }
 
@@ -6377,11 +6373,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsIAtom* frameType = parentFrame->GetType();
 
   FrameConstructionItemList items;
-  if (aNewIndexInContainer > 0) {
-    // If there's a text node in the normal content list just before
-    // the new items, and it has no frame, make a frame construction item
-    // for it. If it doesn't need a frame, ConstructFramesFromItemList
-    // below won't give it one.
+  if (aNewIndexInContainer > 0 && GetParentType(frameType) == eTypeBlock) {
+    // If there's a text node in the normal content list just before the new
+    // items, and it has no frame, make a frame construction item for it. If it
+    // doesn't need a frame, ConstructFramesFromItemList below won't give it
+    // one.  No need to do all this if our parent type is not block, though,
+    // since WipeContainingBlock already handles that situation.
+    //
     // Because we're appending, we don't need to worry about any text
     // after the appended content; there can only be XBL anonymous content
     // (text in an XBL binding is not suppressed) or generated content
@@ -6720,6 +6718,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         GetInsertionPrevSibling(parentFrame, aContainer, aChild,
                                 aIndexInContainer, &isAppend);
       container = parentFrame->GetContent();
+      frameType = parentFrame->GetType();
     }
   }
 
@@ -6740,20 +6739,26 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   }
 
   FrameConstructionItemList items;
-  if (aIndexInContainer > 0) {
-    // If there's a text node in the normal content list just before
-    // the new node, and it has no frame, make a frame construction item
-    // for it, because it might need a frame now.
+  ParentType parentType = GetParentType(frameType);
+  if (aIndexInContainer > 0 && parentType == eTypeBlock) {
+    // If there's a text node in the normal content list just before the
+    // new node, and it has no frame, make a frame construction item for
+    // it, because it might need a frame now.  No need to do this if our
+    // parent type is not block, though, since WipeContainingBlock
+    // already handles that sitation.
     AddTextItemIfNeeded(state, parentFrame, aContainer, aIndexInContainer - 1,
                         items);
   }
 
   AddFrameConstructionItems(state, aChild, aIndexInContainer, parentFrame, items);
 
-  if (aIndexInContainer + 1 < PRInt32(aContainer->GetChildCount())) {
-    // If there's a text frame in the normal content list just after
-    // the new node, and it has no frame, make a frame construction item
-    // for it, because it might need a frame now.
+  if (aIndexInContainer + 1 < PRInt32(aContainer->GetChildCount()) &&
+      parentType == eTypeBlock) {
+    // If there's a text node in the normal content list just after the
+    // new node, and it has no frame, make a frame construction item for
+    // it, because it might need a frame now.  No need to do this if our
+    // parent type is not block, though, since WipeContainingBlock
+    // already handles that sitation.
     AddTextItemIfNeeded(state, parentFrame, aContainer, aIndexInContainer + 1,
                         items);
   }
@@ -7631,7 +7636,10 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsresult      rv = NS_OK;
 
-  if (aContent->HasFlag(FRAMETREE_DEPENDS_ON_CHARS)) {
+  if ((aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) &&
+       !aContent->TextIsOnlyWhitespace()) ||
+      (aContent->HasFlag(NS_REFRAME_IF_WHITESPACE) &&
+       aContent->TextIsOnlyWhitespace())) {
 #ifdef DEBUG
     nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
     NS_ASSERTION(!frame || !frame->IsGeneratedContentFrame(),
@@ -11026,31 +11034,44 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       //    elements, so should be collapsed out.
       // 2) We have a previous sibling which is a table pseudo.  It might have
       //    kids who want this whitespace, so we need to reframe.
-      // 3) We have no previous sibling and our parent either has a previous
-      //    continuation or is a table pseudo.  This might not be a real insert
-      //    at the beginning, then.  We need to reframe.
-      // 4) We have no previous sibling and our parent frame is its own first
-      //    continuation and is not a table pseudo.  That means that we'll be
-      //    at the beginning of our actual non-block-type parent, and the
-      //    whitespace is OK to collapse out.  If something is ever inserted
-      //    before us, it'll find our own parent as its parent and if it's
-      //    something that would care about the whitespace it'll want a block
-      //    parent, so it'll trigger a reframe at that point.
+      // 3) We have no previous sibling and our parent frame is not a table
+      //    pseudo.  That means that we'll be at the beginning of our actual
+      //    non-block-type parent, and the whitespace is OK to collapse out.
+      //    If something is ever inserted before us, it'll find our own parent
+      //    as its parent and if it's something that would care about the
+      //    whitespace it'll want a block parent, so it'll trigger a reframe at
+      //    that point.
+      // 4) We have no previous sibling and our parent frame is a table pseudo.
+      //    Need to reframe.
+      // All that is predicated on finding the correct previous sibling.  We
+      // might have to walk backwards along continuations from aFrame to do so.
       //
       // It's always OK to drop whitespace between any two items that want a
       // parent of type parentType.
       //
-      // For trailing whitespace, the situation is more complicated.  We might
-      // in fact have a next sibling that would care about the whitespace.  We
-      // just don't know anything about that here.  So leave trailing
-      // whitespace be, unless aIsAppend is true and we have no nextSibling.
-      // In that case, we have no next sibling, and if one ever gets added that
-      // would care about the whitespace it'll get us as a previous sibling and
-      // trigger a reframe.  Note that we do need to look at aIsAppend, unless
-      // we want to look at aFrame's next continuation and whether aFrame is a
-      // table pseudo or some such.  But that would be more annoying if we want
-      // to handle XHTML <tr> inside <table> with no table-row-groups around
-      // efficiently.
+      // For trailing whitespace preceded by a kid that wants our parent type,
+      // there are four cases:
+      // 1) We have a next sibling which is not a table pseudo.  That means
+      //    that next sibling wanted a (non-block) parent of the type we're
+      //    looking at.  Then the whitespace comes between two table-internal
+      //    elements, so should be collapsed out.
+      // 2) We have a next sibling which is a table pseudo.  It might have
+      //    kids who want this whitespace, so we need to reframe.
+      // 3) We have no next sibling and our parent frame is not a table
+      //    pseudo.  That means that we'll be at the end of our actual
+      //    non-block-type parent, and the whitespace is OK to collapse out.
+      //    If something is ever inserted after us, it'll find our own parent
+      //    as its parent and if it's something that would care about the
+      //    whitespace it'll want a block parent, so it'll trigger a reframe at
+      //    that point.
+      // 4) We have no next sibling and our parent frame is a table pseudo.
+      //    Need to reframe.
+      // All that is predicated on finding the correct next sibling.  We might
+      // have to walk forward along continuations from aFrame to do so.  That
+      // said, in the case when nextSibling is null at this point and aIsAppend
+      // is true, we know we're in case 3.  Furthermore, in that case we don't
+      // even have to worry about the table pseudo situation; we know our
+      // parent is not a table pseudo there.
       FCItemIterator iter(aItems);
       FCItemIterator start(iter);
       do {
@@ -11065,14 +11086,27 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
         }
 
         if (iter == start) {
-          // Leading whitespace.  How to handle this depends on aPrevSibling
-          // and aFrame.  See the long comment above.
-          if (aPrevSibling) {
-            if (IsTablePseudo(aPrevSibling)) {
+          // Leading whitespace.  How to handle this depends on our
+          // previous sibling and aFrame.  See the long comment above.
+          nsIFrame* prevSibling = aPrevSibling;
+          if (!prevSibling) {
+            // Try to find one after all
+            nsIFrame* parentPrevCont = aFrame->GetPrevContinuation();
+            while (parentPrevCont) {
+              prevSibling =
+                nsFrameList(parentPrevCont->GetFirstChild(nsnull)).LastChild();
+              if (prevSibling) {
+                break;
+              }
+              parentPrevCont = parentPrevCont->GetPrevContinuation();
+            }
+          };
+          if (prevSibling) {
+            if (IsTablePseudo(prevSibling)) {
               // need to reframe
               break;
             }
-          } else if (aFrame->GetPrevContinuation() || IsTablePseudo(aFrame)) {
+          } else if (IsTablePseudo(aFrame)) {
             // need to reframe
             break;
           }
@@ -11082,10 +11116,37 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
         // Advance spaceEndIter past any whitespace
         PRBool trailingSpaces = spaceEndIter.SkipWhitespace();
 
-        if ((!trailingSpaces &&
-             spaceEndIter.item().DesiredParentType() == parentType) ||
-            (trailingSpaces && aIsAppend && !nextSibling)) {
-          // Drop the whitespace
+        PRBool okToDrop;
+        if (trailingSpaces) {
+          // Trailing whitespace.  How to handle this depeds on aIsAppend, our
+          // next sibling and aFrame.  See the long comment above.
+          okToDrop = aIsAppend && !nextSibling;
+          if (!okToDrop) {
+            if (!nextSibling) {
+              // Try to find one after all
+              nsIFrame* parentNextCont = aFrame->GetNextContinuation();
+              while (parentNextCont) {
+                nextSibling = parentNextCont->GetFirstChild(nsnull);
+                if (nextSibling) {
+                  break;
+                }
+                parentNextCont = parentNextCont->GetNextContinuation();
+              }
+            }
+
+            okToDrop = (nextSibling && !IsTablePseudo(nextSibling)) ||
+                       (!nextSibling && !IsTablePseudo(aFrame));
+          }
+#ifdef DEBUG
+          else {
+            NS_ASSERTION(!IsTablePseudo(aFrame), "How did that happen?");
+          }
+#endif
+        } else {
+          okToDrop = (spaceEndIter.item().DesiredParentType() == parentType);
+        }
+
+        if (okToDrop) {
           iter.DeleteItemsTo(spaceEndIter);
         } else {
           // We're done: we don't want to drop the whitespace, and it has the
@@ -11788,7 +11849,8 @@ nsCSSFrameConstructor::FrameConstructionItem::IsWhitespace() const
   if (!mIsText) {
     return PR_FALSE;
   }
-  mContent->SetFlags(FRAMETREE_DEPENDS_ON_CHARS);
+  mContent->SetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
+                     NS_REFRAME_IF_WHITESPACE);
   return mContent->TextIsOnlyWhitespace();
 }
 

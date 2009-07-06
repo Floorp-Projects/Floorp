@@ -53,6 +53,10 @@
 #include "nsIPrefBranch2.h"
 #include "nsServiceManagerUtils.h"
 
+#ifdef WINCE
+#include <windows.h>
+#endif
+
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gSocketTransportLog = nsnull;
 #endif
@@ -554,6 +558,10 @@ nsSocketTransportService::Run()
     LOG(("STS thread init\n"));
 
     gSocketThread = PR_GetCurrentThread();
+
+#ifdef WINCE
+    SetThreadPriority(GetCurrentThread(), 116);
+#endif
 
     // add thread event to poll list (mThreadEvent may be NULL)
     mPollList[0].fd = mThreadEvent;

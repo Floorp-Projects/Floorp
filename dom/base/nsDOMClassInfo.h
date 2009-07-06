@@ -43,6 +43,7 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIXPCScriptable.h"
 #include "jsapi.h"
+#include "jsobj.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
@@ -156,7 +157,7 @@ public:
   static const JSClass* GetXPCNativeWrapperClass() {
     return sXPCNativeWrapperClass;
   }
-  
+
   /**
    * Set our JSClass pointer for the XPCNativeWrapper class
    */
@@ -183,6 +184,24 @@ public:
   }
 
   static void PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
+
+  static inline void *GetJSPrivate(JSObject *obj)
+  {
+    JS_ASSERT(STOBJ_GET_CLASS(obj)->flags & JSCLASS_HAS_PRIVATE);
+    jsval v = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
+    return JSVAL_IS_INT(v) ? JSVAL_TO_PRIVATE(v) : nsnull;
+  }
+  static inline nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper,
+                                       JSObject *obj)
+  {
+    return wrapper ? wrapper->Native() :
+                     static_cast<nsISupports*>(GetJSPrivate(obj));
+  }
+
+  static nsIXPConnect *XPConnect()
+  {
+    return sXPConnect;
+  }
 
 protected:
   friend nsIClassInfo* NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
@@ -290,6 +309,7 @@ protected:
   static jsval sOnload_id;
   static jsval sOnbeforeunload_id;
   static jsval sOnunload_id;
+  static jsval sOnhashchange_id;
   static jsval sOnpageshow_id;
   static jsval sOnpagehide_id;
   static jsval sOnabort_id;
@@ -334,6 +354,43 @@ protected:
 
   static const JSClass *sXPCNativeWrapperClass;
 };
+
+
+inline
+const nsQueryInterface
+do_QueryWrappedNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
+{
+  return nsQueryInterface(nsDOMClassInfo::GetNative(wrapper, obj));
+}
+
+inline
+const nsQueryInterfaceWithError
+do_QueryWrappedNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj,
+                      nsresult *aError)
+
+{
+  return nsQueryInterfaceWithError(nsDOMClassInfo::GetNative(wrapper, obj),
+                                   aError);
+}
+
+inline
+nsQueryInterface
+do_QueryWrapper(JSContext *cx, JSObject *obj)
+{
+  nsISupports *native =
+    nsDOMClassInfo::XPConnect()->GetNativeOfWrapper(cx, obj);
+  return nsQueryInterface(native);
+}
+
+inline
+nsQueryInterfaceWithError
+do_QueryWrapper(JSContext *cx, JSObject *obj, nsresult* error)
+{
+  nsISupports *native =
+    nsDOMClassInfo::XPConnect()->GetNativeOfWrapper(cx, obj);
+  return nsQueryInterfaceWithError(native, error);
+}
+
 
 typedef nsDOMClassInfo nsDOMGenericSH;
 
@@ -614,6 +671,8 @@ protected:
   }
 
 public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -1022,6 +1081,7 @@ protected:
   }
 
   static nsresult GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *aWrapper,
+                                          JSObject *obj,
                                           nsIPluginInstance **aResult);
 
   static nsresult GetPluginJSObject(JSContext *cx, JSObject *obj,
@@ -1038,6 +1098,8 @@ public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,

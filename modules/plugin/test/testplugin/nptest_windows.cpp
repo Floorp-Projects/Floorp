@@ -35,15 +35,11 @@
 #include "nptest_platform.h"
 
 #include <windows.h>
-#include <unknwn.h>
-#include <gdiplus.h>
-using namespace Gdiplus;
 
-#pragma comment(lib, "gdiplus.lib")
+#pragma comment(lib, "msimg32.lib")
 
 void SetSubclass(HWND hWnd, InstanceData* instanceData);
 void ClearSubclass(HWND hWnd);
-Color GetColorsFromRGBA(PRUint32 rgba);
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 bool
@@ -86,15 +82,95 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
   SetSubclass(hWnd, instanceData);
 }
 
+static void
+drawToDC(InstanceData* instanceData, HDC dc,
+         int x, int y, int width, int height)
+{
+  HBITMAP offscreenBitmap = ::CreateCompatibleBitmap(dc, width, height);
+  if (!offscreenBitmap)
+    return;
+  HDC offscreenDC = ::CreateCompatibleDC(dc);
+  if (!offscreenDC) {
+    ::DeleteObject(offscreenBitmap);
+    return;
+  }
+
+  HBITMAP oldOffscreenBitmap =
+    (HBITMAP)::SelectObject(offscreenDC, offscreenBitmap);
+  ::SetBkMode(offscreenDC, TRANSPARENT);
+  BYTE alpha = 255;
+  RECT fill = { 0, 0, width, height };
+
+  switch (instanceData->scriptableObject->drawMode) {
+    case DM_DEFAULT:
+    {
+      HBRUSH brush = ::CreateSolidBrush(RGB(0, 0, 0));
+      if (brush) {
+        ::FillRect(offscreenDC, &fill, brush);
+        ::DeleteObject(brush);
+      }
+      if (width > 6 && height > 6) {
+        brush = ::CreateSolidBrush(RGB(192, 192, 192));
+        if (brush) {
+          RECT inset = { 3, 3, width - 3, height - 3 };
+          ::FillRect(offscreenDC, &inset, brush);
+          ::DeleteObject(brush);
+        }
+      }
+
+      const char* uaString = NPN_UserAgent(instanceData->npp);
+      if (uaString && width > 10 && height > 10) {
+        HFONT font =
+          ::CreateFontA(20, 0, 0, 0, 400, FALSE, FALSE, FALSE,
+                        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                        CLIP_DEFAULT_PRECIS, 5, // CLEARTYPE_QUALITY
+                        DEFAULT_PITCH, "Arial");
+        if (font) {
+          HFONT oldFont = (HFONT)::SelectObject(offscreenDC, font);
+          RECT inset = { 5, 5, width - 5, height - 5 };
+          ::DrawTextA(offscreenDC, uaString, -1, &inset,
+                      DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
+          ::SelectObject(offscreenDC, oldFont);
+          ::DeleteObject(font);
+        }
+      }
+    }
+    break;
+
+    case DM_SOLID_COLOR:
+    {
+      PRUint32 rgba = instanceData->scriptableObject->drawColor;
+      BYTE r = ((rgba & 0xFF0000) >> 16);
+      BYTE g = ((rgba & 0xFF00) >> 8);
+      BYTE b = (rgba & 0xFF);
+      alpha = ((rgba & 0xFF000000) >> 24);
+
+      HBRUSH brush = ::CreateSolidBrush(RGB(r, g, b));
+      if (brush) {
+        ::FillRect(offscreenDC, &fill, brush);
+        ::DeleteObject(brush);
+      }
+    }
+    break;
+  }
+
+  BLENDFUNCTION blendFunc;
+  blendFunc.BlendOp = AC_SRC_OVER;
+  blendFunc.BlendFlags = 0;
+  blendFunc.SourceConstantAlpha = alpha;
+  blendFunc.AlphaFormat = 0;
+  ::AlphaBlend(dc, x, y, width, height, offscreenDC, 0, 0, width, height,
+               blendFunc);
+  ::SelectObject(offscreenDC, oldOffscreenBitmap);
+  ::DeleteObject(offscreenDC);
+  ::DeleteObject(offscreenBitmap);
+}
+
 void
 pluginDraw(InstanceData* instanceData)
 {
   NPP npp = instanceData->npp;
   if (!npp)
-    return;
-
-  const char* uaString = NPN_UserAgent(npp);
-  if (!uaString)
     return;
 
   HDC hdc = NULL;
@@ -112,74 +188,13 @@ pluginDraw(InstanceData* instanceData)
   // we share the drawing surface with the rest of the browser.
   int savedDCID = SaveDC(hdc);
 
-  // Reset the clipping region
-  SelectClipRgn(hdc, NULL);
-
-  // Initialize GDI+.
-  GdiplusStartupInput gdiplusStartupInput;
-  ULONG_PTR gdiplusToken;
-  GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-
   // When we have a widget, window.x/y are meaningless since our widget
   // is always positioned correctly and we just draw into it at 0,0.
   int x = instanceData->hasWidget ? 0 : instanceData->window.x;
   int y = instanceData->hasWidget ? 0 : instanceData->window.y;
   int width = instanceData->window.width;
   int height = instanceData->window.height;
-
-  // Calculate the rectangle coordinates from the instanceData information
-  Rect rect(x, y, width, height);
-
-  // Create a layout rect for the text
-  RectF boundRect((float)x, (float)y, (float)width, (float)height);
-  boundRect.Inflate(-10.0, -10.0);
-
-  switch(instanceData->scriptableObject->drawMode) {
-    case DM_DEFAULT:
-    {
-      Graphics graphics(hdc);
-
-      // Fill in the background and border
-      Pen blackPen(Color(255, 0, 0, 0), 1);
-      SolidBrush grayBrush(Color(255, 192, 192, 192));
-
-      graphics.FillRectangle(&grayBrush, rect);
-      graphics.DrawRectangle(&blackPen, rect);
-
-      // Load a nice font
-      FontFamily fontFamily(L"Helvetica");
-      Font font(&fontFamily, 20, FontStyleBold, UnitPoint);
-      StringFormat stringFormat;
-      SolidBrush solidBrush(Color(255, 0, 0, 0));
-
-      // Center the text string
-      stringFormat.SetAlignment(StringAlignmentCenter);
-      stringFormat.SetLineAlignment(StringAlignmentCenter);
-
-      // Request anti-aliased text
-      graphics.SetTextRenderingHint(TextRenderingHintAntiAlias);
-
-      WCHAR wBuf[1024];
-      memset(&wBuf, 0, sizeof(wBuf));
-      MultiByteToWideChar(CP_ACP, 0, uaString, -1, wBuf, 1024);
-
-      // Draw the string
-      graphics.DrawString(wBuf, -1, &font, boundRect, &stringFormat, &solidBrush);
-    }
-    break;
-
-    case DM_SOLID_COLOR:
-    {
-      // Fill the plugin window with a solid color specified by the params
-      Graphics graphics(hdc);
-      SolidBrush brush(GetColorsFromRGBA(instanceData->scriptableObject->drawColor));
-      graphics.FillRectangle(&brush, rect.X, rect.Y, rect.Width, rect.Height);
-    }
-    break;
-  }
-
-  // Shutdown GDI+
-  GdiplusShutdown(gdiplusToken);
+  drawToDC(instanceData, hdc, x, y, width, height);
 
   // Pop our hdc changes off the resource stack
   RestoreDC(hdc, savedDCID);
@@ -292,17 +307,4 @@ SetSubclass(HWND hWnd, InstanceData* instanceData)
   SetProp(hWnd, "InstanceData", (HANDLE)instanceData);
   WNDPROC origProc = (WNDPROC)::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)PluginWndProc);
   SetProp(hWnd, "MozillaWndProc", (HANDLE)origProc);
-}
-
-/* utils */
-
-Color
-GetColorsFromRGBA(PRUint32 rgba)
-{
-  BYTE r, g, b, a;
-  b = (rgba & 0xFF);
-  g = ((rgba & 0xFF00) >> 8);
-  r = ((rgba & 0xFF0000) >> 16);
-  a = ((rgba & 0xFF000000) >> 24);
-  return Color(a, r, g, b);
 }

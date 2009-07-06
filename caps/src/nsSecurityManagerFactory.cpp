@@ -309,8 +309,8 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     JSObject *securityObj;
     if (JSVAL_IS_OBJECT(v)) {
         /*
-         * "netscape" property of window object exists; must be LiveConnect
-         * package. Get the "security" property.
+         * "netscape" property of window object exists; get the
+         * "security" property.
          */
         obj = JSVAL_TO_OBJECT(v);
         if (!JS_GetProperty(cx, obj, "security", &v) || !JSVAL_IS_OBJECT(v))

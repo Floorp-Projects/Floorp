@@ -50,6 +50,7 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsAccessible.h"
 #include "nsARIAMap.h"
+#include "nsXULTreeAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -654,18 +655,18 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
   nsWhitespaceTokenizer tokenizer(roleString);
   while (tokenizer.hasMoreTokens()) {
     // Do a binary search through table for the next role in role list
-    const char *role = NS_LossyConvertUTF16toASCII(tokenizer.nextToken()).get();
-    PRInt32 low = 0;
-    PRInt32 high = nsARIAMap::gWAIRoleMapLength;
-    while (low <= high) {
-      PRInt32 index = low + ((high - low) / 2);
-      PRInt32 compare = PL_strcmp(role, nsARIAMap::gWAIRoleMap[index].roleString);
+    NS_LossyConvertUTF16toASCII role(tokenizer.nextToken());
+    PRUint32 low = 0;
+    PRUint32 high = nsARIAMap::gWAIRoleMapLength;
+    while (low < high) {
+      PRUint32 index = (low + high) / 2;
+      PRInt32 compare = PL_strcmp(role.get(), nsARIAMap::gWAIRoleMap[index].roleString);
       if (compare == 0) {
         // The  role attribute maps to an entry in the role table
         return &nsARIAMap::gWAIRoleMap[index];
       }
       if (compare < 0) {
-        high = index - 1;
+        high = index;
       }
       else {
         low = index + 1;
@@ -767,6 +768,28 @@ nsAccUtils::QueryAccessibleDocument(nsIAccessibleDocument *aAccessibleDocument)
 
   return accessible;
 }
+
+#ifdef MOZ_XUL
+already_AddRefed<nsXULTreeAccessible>
+nsAccUtils::QueryAccessibleTree(nsIAccessible *aAccessible)
+{
+  nsXULTreeAccessible* accessible = nsnull;
+  if (aAccessible)
+    CallQueryInterface(aAccessible, &accessible);
+
+  return accessible;
+}
+
+already_AddRefed<nsXULTreeitemAccessible>
+nsAccUtils::QueryAccessibleTreeitem(nsIAccessNode *aAccessNode)
+{
+  nsXULTreeitemAccessible* accessible = nsnull;
+  if (aAccessNode)
+    CallQueryInterface(aAccessNode, &accessible);
+
+  return accessible;
+}
+#endif
 
 #ifdef DEBUG_A11Y
 

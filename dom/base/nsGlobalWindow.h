@@ -361,10 +361,14 @@ public:
   // Object Management
   nsGlobalWindow(nsGlobalWindow *aOuterWindow);
 
-  static nsGlobalWindow *FromWrapper(nsIXPConnectWrappedNative *wrapper)
+  static nsGlobalWindow *FromSupports(nsISupports *supports)
   {
     // Make sure this matches the casts we do in QueryInterface().
-    return (nsGlobalWindow *)(nsIScriptGlobalObject *)wrapper->Native();
+    return (nsGlobalWindow *)(nsIScriptGlobalObject *)supports;
+  }
+  static nsGlobalWindow *FromWrapper(nsIXPConnectWrappedNative *wrapper)
+  {
+    return FromSupports(wrapper->Native());
   }
 
   nsIScriptContext *GetContextInternal()
@@ -439,6 +443,7 @@ public:
   virtual PRBool TakeFocus(PRBool aFocus, PRUint32 aFocusMethod);
   virtual void SetReadyForFocus();
   virtual void PageHidden();
+  virtual nsresult DispatchAsyncHashchange();
 
   static PRBool DOMWindowDumpEnabled();
 
@@ -567,6 +572,7 @@ protected:
                            const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures);
   void FireOfflineStatusEvent();
+  nsresult FireHashchange();
   
   void FlushPendingNotifications(mozFlushType aType);
   void EnsureReflowFlushAndPaint();

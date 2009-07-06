@@ -1886,19 +1886,25 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget, void *aScope, JSObject 
   }
   // Get the jsobject associated with this target
   nsresult rv;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> jsholder;
-  rv = nsContentUtils::XPConnect()->WrapNative(mContext, (JSObject *)aScope,
-                                               aTarget,
-                                               NS_GET_IID(nsISupports),
-                                               getter_AddRefs(jsholder));
+  jsval v;
+  rv = nsContentUtils::XPConnect()->WrapNativeToJSVal(mContext,
+                                                      (JSObject *)aScope,
+                                                      aTarget,
+                                                      &NS_GET_IID(nsISupports),
+                                                      &v, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef NS_DEBUG
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(jsholder);
-  NS_ASSERTION(wrapper, "wrapper must impl nsIXPConnectWrappedNative");
   nsCOMPtr<nsISupports> targetSupp = do_QueryInterface(aTarget);
-  NS_ASSERTION(wrapper->Native() == targetSupp, "Native should be the target!");
+  nsCOMPtr<nsISupports> native =
+    nsContentUtils::XPConnect()->GetNativeOfWrapper(mContext,
+                                                    JSVAL_TO_OBJECT(v));
+  NS_ASSERTION(native == targetSupp, "Native should be the target!");
 #endif
-  return jsholder->GetJSObject(aRet);
+
+  *aRet = JSVAL_TO_OBJECT(v);
+
+  return NS_OK;
 }
 
 
@@ -2416,11 +2422,6 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
   JSObject *newInnerJSObject = (JSObject *)aNewInner->GetScriptGlobal(JAVASCRIPT);
   JSObject *myobject = (JSObject *)aOuterGlobal;
 
-  // Call ClearScope to nuke any properties (e.g. Function and Object) on the
-  // outer object. From now on, anybody asking the outer object for these
-  // properties will be forwarded to the inner window.
-  ::JS_ClearScope(mContext, myobject);
-
   // Make the inner and outer window both share the same
   // prototype. The prototype we share is the outer window's
   // prototype, this way XPConnect can still find the wrapper to
@@ -2454,9 +2455,6 @@ nsJSContext::GetNativeContext()
 {
   return mContext;
 }
-
-const JSClass* NS_DOMClassInfo_GetXPCNativeWrapperClass();
-void NS_DOMClassInfo_SetXPCNativeWrapperClass(JSClass* aClass);
 
 nsresult
 nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
@@ -2517,17 +2515,29 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
     // Now check whether we need to grab a pointer to the
     // XPCNativeWrapper class
-    if (!NS_DOMClassInfo_GetXPCNativeWrapperClass()) {
+    if (!nsDOMClassInfo::GetXPCNativeWrapperClass()) {
       JSAutoRequest ar(mContext);
       rv = FindXPCNativeWrapperClass(holder);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else {
-    // If there's already a global object in mContext we're called
-    // after ::JS_ClearScope() was called. We'll have to tell
-    // XPConnect to re-initialize the global object to do things like
+    // There's already a global object. We are preparing this outer window
+    // object for use as a real outer window (i.e. everything needs to live on
+    // the inner window).
+
+    // Call ClearScope to nuke any properties (e.g. Function and Object) on the
+    // outer object. From now on, anybody asking the outer object for these
+    // properties will be forwarded to the inner window.
+    ::JS_ClearScope(mContext, global);
+
+    // Tell XPConnect to re-initialize the global object to do things like
     // define the Components object on the global again and forget all
     // old prototypes in this scope.
+    // XXX Except that now, the global is thawed and has an inner window. So
+    // anything that XPConnect does to our global will be forwarded. So I
+    // think the only thing that this does for real is to call SetGlobal on
+    // our XPCWrappedNativeScope. Perhaps XPConnect should have a more
+    // targeted API?
     rv = xpc->InitClasses(mContext, global);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2927,7 +2937,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 nsresult
 nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
 {
-  NS_ASSERTION(!NS_DOMClassInfo_GetXPCNativeWrapperClass(),
+  NS_ASSERTION(!nsDOMClassInfo::GetXPCNativeWrapperClass(),
                "Why was this called?");
 
   JSObject *globalObj;
@@ -2964,8 +2974,9 @@ nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
 
   NS_ASSERTION(JSVAL_IS_OBJECT(wrapper), "This should be an object!");
 
-  NS_DOMClassInfo_SetXPCNativeWrapperClass(
+  nsDOMClassInfo::SetXPCNativeWrapperClass(
     ::JS_GET_CLASS(mContext, JSVAL_TO_OBJECT(wrapper)));
+
   return NS_OK;
 }
 

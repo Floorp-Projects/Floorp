@@ -31,6 +31,8 @@ function Tester(aTests, aDumper, aCallback) {
   this.dumper = aDumper;
   this.tests = aTests;
   this.callback = aCallback;
+  this._cs = Cc["@mozilla.org/consoleservice;1"].
+             getService(Ci.nsIConsoleService);
 }
 Tester.prototype = {
   checker: null,
@@ -47,6 +49,7 @@ Tester.prototype = {
 
   start: function Tester_start() {
     this.dumper.dump("*** Start BrowserChrome Test Results ***\n");
+    this._cs.registerListener(this);
 
     if (this.tests.length)
       this.execTest();
@@ -55,6 +58,8 @@ Tester.prototype = {
   },
 
   finish: function Tester_finish(aSkipSummary) {
+    this._cs.unregisterListener(this);
+
     if (this.tests.length) {
       this.dumper.dump("\nBrowser Chrome Test Summary\n");
   
@@ -77,6 +82,11 @@ Tester.prototype = {
     this.callback(this.tests);
     this.callback = null;
     this.tests = null;
+  },
+
+  observe: function Tester_observe(aConsoleMessage) {
+    var msg = "Console message: " + aConsoleMessage.message;
+    this.currentTest.addResult(new testMessage(msg));
   },
 
   execTest: function Tester_execTest() {
@@ -118,15 +128,24 @@ Tester.prototype = {
         self.execTest();
       }, TIMEOUT_SECONDS * 1000);
     }
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIConsoleListener) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };
 
 function testResult(aCondition, aName, aDiag, aIsTodo) {
-  aName = aName || "";
+  this.msg = aName || "";
 
+  this.info = false;
   this.pass = !!aCondition;
   this.todo = aIsTodo;
-  this.msg = aName;
+
   if (this.pass) {
     if (aIsTodo)
       this.result = "TEST-KNOWN-FAIL";
@@ -140,6 +159,12 @@ function testResult(aCondition, aName, aDiag, aIsTodo) {
     else
       this.result = "TEST-UNEXPECTED-FAIL";
   }
+}
+
+function testMessage(aName) {
+  this.msg = aName || "";
+  this.info = true;
+  this.result = "TEST-INFO";
 }
 
 // Need to be careful adding properties to this object, since its properties
@@ -170,6 +195,9 @@ function testScope(aTester, aTest) {
   };
   this.todo_isnot = function test_todo_isnot(a, b, name) {
     self.todo(a != b, name, "Didn't expect " + a + ", but got it");
+  };
+  this.info = function test_info(name) {
+    self.__browserTest.addResult(new testMessage(name));
   };
 
   this.executeSoon = function test_executeSoon(func) {

@@ -322,10 +322,6 @@ ifndef BUILD_OPT
 #        $(NULL)
 endif
 
-ifdef JS_LIVECONNECT
-DIRS      += liveconnect
-endif
-
 ifdef JS_HAS_FILE_OBJECT
 JS_CPPFILES += jsfile.cpp
 JS_HFILES += jsfile.h

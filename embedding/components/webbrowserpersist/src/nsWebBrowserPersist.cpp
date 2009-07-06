@@ -3908,7 +3908,7 @@ static PRBool IsSpecialXHTMLTag(nsIDOMNode *aNode)
         return PR_FALSE;
 
     aNode->GetLocalName(tmp);
-    for (PRInt32 i = 0; i < NS_ARRAY_LENGTH(kSpecialXHTMLTags); i++) {
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kSpecialXHTMLTags); i++) {
         if (tmp.EqualsASCII(kSpecialXHTMLTags[i]))
         {
             // XXX This element MAY have URI attributes, but

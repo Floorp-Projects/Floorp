@@ -1301,12 +1301,74 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext * aJSContext,
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    SLIM_LOG_WILL_MORPH(aJSContext, aJSObj);
+    if(!IS_SLIM_WRAPPER(aJSObj) || MorphSlimWrapper(aJSContext, aJSObj))
+    {
+        nsIXPConnectWrappedNative* wrapper =
+            XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aJSObj);
+        if(wrapper)
+        {
+            NS_ADDREF(wrapper);
+            *_retval = wrapper;
+            return NS_OK;
+        }
+    }
+
+    // else...
+    *_retval = nsnull;
+    return NS_ERROR_FAILURE;
+}
+
+/* nsISupports getNativeOfWrapper(in JSContextPtr aJSContext, in JSObjectPtr  aJSObj); */
+NS_IMETHODIMP_(nsISupports*)
+nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
+                                JSObject * aJSObj)
+{
+    NS_ASSERTION(aJSContext, "bad param");
+    NS_ASSERTION(aJSObj, "bad param");
+
+    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
+    if(!ccx.IsValid())
+    {
+        UnexpectedFailure(NS_ERROR_FAILURE);
+        return nsnull;
+    }
+
+    JSObject* obj2 = nsnull;
     nsIXPConnectWrappedNative* wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aJSObj);
+        XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aJSObj, nsnull,
+                                                     &obj2);
+
+    return wrapper ? wrapper->Native() :
+                     (obj2 ? (nsISupports*)xpc_GetJSPrivate(obj2) : nsnull);
+}
+
+/* JSObjectPtr getJSObjectOfWrapper (in JSContextPtr aJSContext, in JSObjectPtr aJSObj); */
+NS_IMETHODIMP
+nsXPConnect::GetJSObjectOfWrapper(JSContext * aJSContext,
+                                  JSObject * aJSObj,
+                                  JSObject **_retval)
+{
+    NS_ASSERTION(aJSContext, "bad param");
+    NS_ASSERTION(aJSObj, "bad param");
+    NS_ASSERTION(_retval, "bad param");
+
+    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
+    if(!ccx.IsValid())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    JSObject* obj2 = nsnull;
+    nsIXPConnectWrappedNative* wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aJSObj, nsnull,
+                                                     &obj2);
     if(wrapper)
     {
-        NS_ADDREF(wrapper);
-        *_retval = wrapper;
+        wrapper->GetJSObject(_retval);
+        return NS_OK;
+    }
+    if(obj2)
+    {
+        *_retval = obj2;
         return NS_OK;
     }
     // else...
@@ -1885,19 +1947,16 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
 #endif /* XPCONNECT_STANDALONE */
 }
 
-/* void GetXPCWrappedNativeJSClassInfo(out JSClassConstPtr clazz, out JSObjectOpsConstPtr ops1, out JSObjectOpsConstPtr ops2); */
+/* void GetXPCWrappedNativeJSClassInfo(out JSEqualityOp equality1, JSEqualityOp *equality2); */
 NS_IMETHODIMP
-nsXPConnect::GetXPCWrappedNativeJSClassInfo(const JSClass **clazz,
-                                            JSGetObjectOps *ops1,
-                                            JSGetObjectOps *ops2)
+nsXPConnect::GetXPCWrappedNativeJSClassInfo(JSEqualityOp *equality1,
+                                            JSEqualityOp *equality2)
 {
-    // Expose the JSClass and JSGetObjectOps pointers used by
-    // IS_WRAPPER_CLASS(). If that macro ever changes, this function
-    // needs to stay in sync.
+    // Expose the equality pointer used by IS_WRAPPER_CLASS(). If that macro
+    // ever changes, this function needs to stay in sync.
 
-    *clazz = &XPC_WN_NoHelper_JSClass.base;
-    *ops1 = XPC_WN_GetObjectOpsNoCall;
-    *ops2 = XPC_WN_GetObjectOpsWithCall;
+    *equality1 = &XPC_WN_Equality;
+    *equality2 = &XPC_SWN_Equality;
 
     return NS_OK;
 }
@@ -2289,18 +2348,28 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
 
     JSAutoRequest ar(aJSContext);
 
-    XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aObject);
-    if(!wrapper)
+    XPCWrappedNativeScope *objectscope;
+    XPCWrappedNative *wrapper = nsnull;
+    if(IS_SLIM_WRAPPER(aObject))
     {
-        // Couldn't get the wrapped native (maybe a prototype?) so just return
-        // the original object.
-        *_retval = OBJECT_TO_JSVAL(aObject);
-        return NS_OK;
+        objectscope = GetSlimWrapperProto(aObject)->GetScope();
+    }
+    else
+    {
+        wrapper =
+            XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aObject);
+        if(!wrapper)
+        {
+            // Couldn't get the wrapped native (maybe a prototype?) so just return
+            // the original object.
+            *_retval = OBJECT_TO_JSVAL(aObject);
+            return NS_OK;
+        }
+        objectscope = wrapper->GetScope();
     }
 
     XPCWrappedNativeScope *xpcscope =
-        XPCWrappedNativeScope::FindInJSObjectScope(aJSContext, aScope);
+            XPCWrappedNativeScope::FindInJSObjectScope(aJSContext, aScope);
     if(!xpcscope)
         return NS_ERROR_FAILURE;
 
@@ -2313,7 +2382,6 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
     }
 #endif
 
-    XPCWrappedNativeScope *objectscope = wrapper->GetScope();
     {
         JSObject *possibleOuter = objectscope->GetGlobalJSObject();
         OBJ_TO_INNER_OBJECT(aJSContext, possibleOuter);
@@ -2346,6 +2414,15 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
        (sameScope &&
         (!forceXOW || (aFilenameFlags & JSFILENAME_SYSTEM))))
         return NS_OK;
+
+    if(!wrapper)
+    {
+        SLIM_LOG_WILL_MORPH(aJSContext, aObject);
+        if(!MorphSlimWrapper(aJSContext, aObject))
+            return NS_ERROR_FAILURE;
+
+        wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(aObject));
+    }
 
     JSObject* wrappedObj = nsnull;
 
@@ -2511,6 +2588,58 @@ nsXPConnect::SetSafeJSContext(JSContext * aSafeJSContext)
         return NS_ERROR_FAILURE;
 
     return data->GetJSContextStack()->SetSafeJSContext(aSafeJSContext);
+}
+
+nsIPrincipal*
+nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
+{
+    NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) || IS_SLIM_WRAPPER(obj),
+                 "What kind of wrapper is this?");
+
+    if(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)))
+    {
+        XPCWrappedNative *xpcWrapper =
+            (XPCWrappedNative *)xpc_GetJSPrivate(obj);
+        if (xpcWrapper) {
+            if (allowShortCircuit) {
+                nsIPrincipal *result = xpcWrapper->GetObjectPrincipal();
+                if (result) {
+                    return result;
+                }
+            }
+
+            // If not, check if it points to an nsIScriptObjectPrincipal
+            nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
+                do_QueryInterface(xpcWrapper->Native());
+            if (objPrin) {
+                nsIPrincipal *result = objPrin->GetPrincipal();
+                if (result) {
+                    return result;
+                }
+            }
+        }
+    }
+    else
+    {
+        if (allowShortCircuit) {
+            nsIPrincipal *result =
+                GetSlimWrapperProto(obj)->GetScope()->GetPrincipal();
+            if (result) {
+                return result;
+            }
+        }
+
+        nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
+            do_QueryInterface((nsISupports*)xpc_GetJSPrivate(obj));
+        if (objPrin) {
+            nsIPrincipal *result = objPrin->GetPrincipal();
+            if (result) {
+                return result;
+            }
+        }
+    }
+
+    return nsnull;
 }
 
 /* These are here to be callable from a debugger */

@@ -47,6 +47,26 @@
 #include "XPCWrapper.h"
 #include "XPCNativeWrapper.h"
 
+static inline QITableEntry *
+GetOffsets(nsISupports *identity, XPCWrappedNativeProto* proto)
+{
+    QITableEntry* offsets = proto ? proto->GetOffsets() : nsnull;
+    if(!offsets)
+    {
+        static NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
+        identity->QueryInterface(kThisPtrOffsetsSID, (void**)&offsets);
+    }
+    return offsets;
+}
+
+static inline QITableEntry *
+GetOffsetsFromSlimWrapper(JSObject *obj)
+{
+    NS_ASSERTION(IS_SLIM_WRAPPER(obj), "What kind of object is this?");
+    return GetOffsets(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)),
+                      GetSlimWrapperProto(obj));
+}
+
 static const xpc_qsHashEntry *
 LookupEntry(PRUint32 tableSize, const xpc_qsHashEntry *table, const nsID &iid)
 {
@@ -485,10 +505,19 @@ GetMemberInfo(JSObject *obj,
     *ifaceName = "Unknown";
 
     NS_ASSERTION(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) ||
-                 STOBJ_GET_CLASS(obj) == &XPC_WN_Tearoff_JSClass,
-                 "obj must be an XPCWrappedNative");
-    XPCWrappedNative *wrapper = (XPCWrappedNative *) STOBJ_GET_PRIVATE(obj);
-    XPCWrappedNativeProto *proto = wrapper->GetProto();
+                 STOBJ_GET_CLASS(obj) == &XPC_WN_Tearoff_JSClass ||
+                 IS_SLIM_WRAPPER(obj),
+                 "obj must be a wrapper");
+    XPCWrappedNativeProto *proto;
+    if(IS_SLIM_WRAPPER(obj))
+    {
+        proto = GetSlimWrapperProto(obj);
+    }
+    else
+    {
+        XPCWrappedNative *wrapper = (XPCWrappedNative *) STOBJ_GET_PRIVATE(obj);
+        proto = wrapper->GetProto();
+    }
     if(proto)
     {
         XPCNativeSet *set = proto->GetSet();
@@ -765,16 +794,15 @@ xpc_qsACString::xpc_qsACString(JSContext *cx, jsval *pval)
 }
 
 static nsresult
-getNativeFromWrapper(XPCWrappedNative *wrapper,
-                     const nsIID &iid,
-                     void **ppThis,
-                     nsISupports **pThisRef,
-                     jsval *vp)
+getNative(nsISupports *idobj,
+          QITableEntry* entries,
+          JSObject *obj,
+          const nsIID &iid,
+          void **ppThis,
+          nsISupports **pThisRef,
+          jsval *vp)
 {
-    nsISupports *idobj = wrapper->GetIdentityObject();
-
     // Try using the QITableEntry to avoid the extra AddRef and Release.
-    QITableEntry* entries = wrapper->GetOffsets();
     if(entries)
     {
         for(QITableEntry* e = entries; e->iid; e++)
@@ -782,7 +810,7 @@ getNativeFromWrapper(XPCWrappedNative *wrapper,
             if(e->iid->Equals(iid))
             {
                 *ppThis = (char*) idobj + e->offset - entries[0].offset;
-                *vp = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
+                *vp = OBJECT_TO_JSVAL(obj);
                 *pThisRef = nsnull;
                 return NS_OK;
             }
@@ -792,9 +820,21 @@ getNativeFromWrapper(XPCWrappedNative *wrapper,
     nsresult rv = idobj->QueryInterface(iid, ppThis);
     *pThisRef = static_cast<nsISupports*>(*ppThis);
     if(NS_SUCCEEDED(rv))
-        *vp = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
+        *vp = OBJECT_TO_JSVAL(obj);
     return rv;
 }
+
+static nsresult
+getNativeFromWrapper(XPCWrappedNative *wrapper,
+                     const nsIID &iid,
+                     void **ppThis,
+                     nsISupports **pThisRef,
+                     jsval *vp)
+{
+    return getNative(wrapper->GetIdentityObject(), wrapper->GetOffsets(),
+                     wrapper->GetFlatJSObject(), iid, ppThis, pThisRef, vp);
+}
+
 
 JSBool
 xpc_qsUnwrapThisImpl(JSContext *cx,
@@ -815,10 +855,22 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
     while(cur)
     {
         JSClass *clazz;
+
+        clazz = STOBJ_GET_CLASS(cur);
+        if(IS_SLIM_WRAPPER_CLASS(clazz))
+        {
+            nsISupports *native =
+                static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
+            if(NS_SUCCEEDED(getNative(native, GetOffsetsFromSlimWrapper(cur),
+                                      cur, iid, ppThis, pThisRef, vp)))
+                return JS_TRUE;
+            *pThisRef = nsnull;
+            return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
+        }
+
         XPCWrappedNative *wrapper;
         nsresult rv;
 
-        clazz = STOBJ_GET_CLASS(cur);
         if(IS_WRAPPER_CLASS(clazz))
         {
             wrapper = (XPCWrappedNative*) xpc_GetJSPrivate(cur);
@@ -887,13 +939,13 @@ xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
                             nsISupports **pThisRef,
                             jsval *vp)
 {
-    XPCWrappedNative *wrapper = ccx.GetWrapper();
-    if(!wrapper)
-        return xpc_qsThrow(ccx.GetJSContext(), NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
-    if(!wrapper->IsValid())
+    nsISupports *native = ccx.GetIdentityObject();
+    if(!native)
         return xpc_qsThrow(ccx.GetJSContext(), NS_ERROR_XPC_HAS_BEEN_SHUTDOWN);
 
-    nsresult rv = getNativeFromWrapper(wrapper, iid, ppThis, pThisRef, vp);
+    nsresult rv = getNative(native, GetOffsets(native, ccx.GetProto()),
+                            ccx.GetFlattenedJSObject(), iid, ppThis, pThisRef,
+                            vp);
     if(NS_FAILED(rv))
         return xpc_qsThrow(ccx.GetJSContext(), rv);
     return JS_TRUE;

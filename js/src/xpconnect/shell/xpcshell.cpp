@@ -175,7 +175,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRUnichar *start, *end;
 
         filenameString.BeginWriting(&start, &end);
-        
+
         while (start != end) {
             if (*start == L'/')
                 *start = L'\\';
@@ -410,6 +410,7 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!str)
             return JS_FALSE;
         fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
+        fflush(gOutFile);
     }
     n++;
     if (n)
@@ -423,16 +424,13 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     if (!argc)
         return JS_TRUE;
-    
+
     str = JS_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
 
-    char *bytes = JS_GetStringBytes(str);
-    bytes = strdup(bytes);
-
-    fputs(bytes, gOutFile);
-    free(bytes);
+    fputs(JS_GetStringBytes(str), gOutFile);
+    fflush(gOutFile);
     return JS_TRUE;
 }
 
@@ -494,10 +492,6 @@ BuildDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#ifdef LIVECONNECT
-    JSJ_SimpleShutdown();
-#endif
-
     gExitCode = 0;
     JS_ConvertArguments(cx, argc, argv,"/ i", &gExitCode);
 
@@ -639,7 +633,7 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         JS_ReportError(cx, "'clear' requires an object");
         return JS_FALSE;
-    }    
+    }
     return JS_TRUE;
 }
 
@@ -891,7 +885,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
             bufp += strlen(bufp);
             lineno++;
         } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
-        
+
         DoBeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
@@ -907,7 +901,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
                     older = JS_SetErrorReporter(cx, NULL);
                     str = JS_ValueToString(cx, result);
                     JS_SetErrorReporter(cx, older);
-    
+
                     if (str)
                         fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
                     else
@@ -1487,12 +1481,12 @@ nsXPCFunctionThisTranslator::~nsXPCFunctionThisTranslator()
 }
 
 /* nsISupports TranslateThis (in nsISupports aInitialThis, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, out PRBool aHideFirstParamFromJS, out nsIIDPtr aIIDOfResult); */
-NS_IMETHODIMP 
-nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis, 
-                                           nsIInterfaceInfo *aInterfaceInfo, 
-                                           PRUint16 aMethodIndex, 
-                                           PRBool *aHideFirstParamFromJS, 
-                                           nsIID * *aIIDOfResult, 
+NS_IMETHODIMP
+nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
+                                           nsIInterfaceInfo *aInterfaceInfo,
+                                           PRUint16 aMethodIndex,
+                                           PRBool *aHideFirstParamFromJS,
+                                           nsIID * *aIIDOfResult,
                                            nsISupports **_retval)
 {
     NS_IF_ADDREF(aInitialThis);
@@ -1629,7 +1623,7 @@ main(int argc, char **argv, char **envp)
             printf("failed to get nsJSRuntimeService!\n");
             return 1;
         }
-    
+
         if (NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
             printf("failed to get JSRuntime from nsJSRuntimeService!\n");
             return 1;
@@ -1686,7 +1680,7 @@ main(int argc, char **argv, char **envp)
             translator(new nsXPCFunctionThisTranslator);
         xpc->SetFunctionThisTranslator(NS_GET_IID(nsITestXPCFunctionCallback), translator, nsnull);
 #endif
-    
+
         nsCOMPtr<nsIJSContextStack> cxstack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
         if (!cxstack) {
             printf("failed to get the nsThreadJSContextStack service!\n");
@@ -1714,7 +1708,7 @@ main(int argc, char **argv, char **envp)
                                                   getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;
-        
+
         rv = holder->GetJSObject(&glob);
         if (NS_FAILED(rv)) {
             NS_ASSERTION(glob == nsnull, "bad GetJSObject?");

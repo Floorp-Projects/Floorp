@@ -22,10 +22,13 @@
     {
       //////////////////////////////////////////////////////////////////////////
       // ARIA grid
-      var tRow = new Array(0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3);
-      var tCol = new Array(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2);
-
-      testTableIndexes("grid", 12, tRow, tCol);
+      var idxes = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [9, 10, 11]
+      ];
+      testTableIndexes("grid", idxes);
 
       SimpleTest.finish();
     }

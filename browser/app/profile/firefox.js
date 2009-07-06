@@ -257,7 +257,14 @@ pref("browser.urlbar.default.behavior", 0);
 pref("browser.download.saveLinkAsFilenameTimeout", 1000);
 
 pref("browser.download.useDownloadDir", true);
+
+#ifdef WINCE
+pref("browser.download.folderList", 2);
+// Bug 499807: use Hard Disk filesystem because Desktop is short on space.
+pref("browser.download.dir", "\\Hard Disk");
+#else
 pref("browser.download.folderList", 1);
+#endif
 pref("browser.download.manager.showAlertOnComplete", true);
 pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 2);

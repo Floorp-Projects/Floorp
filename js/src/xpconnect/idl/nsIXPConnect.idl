@@ -63,8 +63,7 @@
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSValPtr(jsval);
       native JSVal(jsval);
-[ptr] native JSClassConstPtr(const JSClass);
-      native JSGetObjectOps(JSGetObjectOps);
+      native JSEqualityOp(JSEqualityOp);
       native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
 [ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
@@ -166,7 +165,7 @@ interface nsIXPConnectJSObjectHolder : nsISupports
     readonly attribute JSObjectPtr      JSObject;
 };
 
-[uuid(7021D99D-6344-4CC0-96E7-943ED58792B8)]
+[uuid(f819a95a-6ab5-4a02-bda6-32861e859581)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -203,16 +202,6 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      */
     nsISupports* Native() const { return mIdentity; }
 
-#ifndef XPCONNECT_STANDALONE
-    /**
-     * Get the object principal for this wrapper.  Note that this may well end
-     * up being null; in that case one should seek principals elsewhere.  Null
-     * here does NOT indicate system principal or no principals at all, just
-     * that this wrapper doesn't have an intrinsic one.
-     */
-    virtual nsIPrincipal* GetObjectPrincipal() const = 0;
-#endif
-    
 protected:
     nsISupports *mIdentity;
 public:
@@ -405,7 +394,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(b2ddc328-194b-45d6-95c6-52e487438096)]
+[uuid(f01af951-1e28-4499-9692-5a1432246a04)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -521,6 +510,14 @@ interface nsIXPConnect : nsISupports
     nsIXPConnectWrappedNative
     getWrappedNativeOfJSObject(in JSContextPtr aJSContext,
                                in JSObjectPtr  aJSObj);
+
+    [noscript, notxpcom] nsISupports
+    getNativeOfWrapper(in JSContextPtr aJSContext,
+                       in JSObjectPtr  aJSObj);
+
+    JSObjectPtr
+    getJSObjectOfWrapper(in JSContextPtr aJSContext,
+                         in JSObjectPtr  aJSObj);
 
     void setSecurityManagerForJSContext(in JSContextPtr aJSContext,
                                         in nsIXPCSecurityManager aManager,
@@ -745,14 +742,12 @@ interface nsIXPConnect : nsISupports
                                            in nsCCTraversalCallbackRef aCb);
 
     /**
-     * Get the JSClass and JSGetObjectOps pointers to use for
-     * identifying JSObjects that hold nsIXPConnectWrappedNative
-     * pointers in their private date. See IS_WRAPPER_CLASS in
-     * xpcprivate.h for details.
+     * Get the JSEqualityOp pointer to use for identifying JSObjects that hold
+     * a pointer to a nsIXPConnectWrappedNative or to the native in their
+     * private date. See IS_WRAPPER_CLASS in xpcprivate.h for details.
      */
-    void GetXPCWrappedNativeJSClassInfo(out JSClassConstPtr clazz,
-                                        out JSGetObjectOps ops1,
-                                        out JSGetObjectOps ops2);
+    void GetXPCWrappedNativeJSClassInfo(out JSEqualityOp equality1,
+                                        out JSEqualityOp equality2);
 
     /**
      * Whether or not XPConnect should report all JS exceptions when returning
@@ -816,4 +811,17 @@ interface nsIXPConnect : nsISupports
         in JSObjectPtr aScope,
         in nsIPrincipal aPrincipal,
         in unsigned long aFilenameFlags);
+
+%{C++
+#ifndef XPCONNECT_STANDALONE
+    /**
+     * Get the object principal for this wrapper.  Note that this may well end
+     * up being null; in that case one should seek principals elsewhere.  Null
+     * here does NOT indicate system principal or no principals at all, just
+     * that this wrapper doesn't have an intrinsic one.
+     */
+    virtual nsIPrincipal* GetPrincipal(JSObject* obj,
+                                       PRBool allowShortCircuit) const = 0;
+#endif
+%}
 };

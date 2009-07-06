@@ -619,16 +619,30 @@ nsHTMLTableAccessible::GetSelectedCellsCount(PRUint32* aCount)
   rv = GetColumns(&columnsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsITableLayout *tableLayout = nsnull;
+  rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMElement> domElement;
+  PRInt32 startRowIndex = 0, startColIndex = 0,
+    rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool isSelected = PR_FALSE;
+
   PRInt32 rowIndex;
   for (rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
     PRInt32 columnIndex;
     for (columnIndex = 0; columnIndex < columnsCount; columnIndex++) {
-      PRBool state = PR_FALSE;
-      rv = IsCellSelected(rowIndex, columnIndex, &state);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tableLayout->GetCellDataAt(rowIndex, columnIndex,
+                                      *getter_AddRefs(domElement),
+                                      startRowIndex, startColIndex,
+                                      rowSpan, colSpan,
+                                      actualRowSpan, actualColSpan,
+                                      isSelected);
 
-      if (state)
+      if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
+          startColIndex == columnIndex && isSelected) {
         (*aCount)++;
+      }
     }
   }
 
@@ -698,6 +712,15 @@ nsHTMLTableAccessible::GetSelectedCells(PRUint32 *aNumCells,
   rv = GetColumns(&columnsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsITableLayout *tableLayout = nsnull;
+  rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMElement> domElement;
+  PRInt32 startRowIndex = 0, startColIndex = 0,
+  rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool isSelected = PR_FALSE;
+
   PRInt32 cellsCount = columnsCount * rowsCount;
   nsAutoArrayPtr<PRBool> states(new PRBool[cellsCount]);
   NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
@@ -706,11 +729,20 @@ nsHTMLTableAccessible::GetSelectedCells(PRUint32 *aNumCells,
   for (rowIndex = 0, index = 0; rowIndex < rowsCount; rowIndex++) {
     PRInt32 columnIndex;
     for (columnIndex = 0; columnIndex < columnsCount; columnIndex++, index++) {
-      rv = IsCellSelected(rowIndex, columnIndex, &states[index]);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tableLayout->GetCellDataAt(rowIndex, columnIndex,
+                                      *getter_AddRefs(domElement),
+                                      startRowIndex, startColIndex,
+                                      rowSpan, colSpan,
+                                      actualRowSpan, actualColSpan,
+                                      isSelected);
 
-      if (states[index])
+      if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
+          startColIndex == columnIndex && isSelected) {
+        states[index] = PR_TRUE;
         (*aNumCells)++;
+      } else {
+        states[index] = PR_FALSE;
+      }
     }
   }
 
@@ -849,7 +881,11 @@ nsHTMLTableAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return tableLayout->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
+  rv = tableLayout->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
+  if (rv == NS_TABLELAYOUT_CELL_NOT_FOUND)
+    return NS_ERROR_INVALID_ARG;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1283,7 +1319,8 @@ PRBool nsHTMLTableAccessible::HasDescendant(const char *aTagName, PRBool aAllowE
   return length > 0;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
+NS_IMETHODIMP
+nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
 {
   // Implement a heuristic to determine if table is most likely used for layout
   // XXX do we want to look for rowspan or colspan, especialy that span all but a couple cells
@@ -1318,7 +1355,8 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     }
   }
 
-  // Check role and role attribute
+  // Check to see if an ARIA role overrides the role from native markup,
+  // but for which we still expose table semantics (treegrid, for example).
   PRBool hasNonTableRole =
     (nsAccUtils::Role(this) != nsIAccessibleRole::ROLE_TABLE);
   if (hasNonTableRole) {
@@ -1326,7 +1364,10 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   }
 
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has role attribute, and role is table");
+    // Role attribute is present, but overridden roles have already been dealt with.
+    // Only landmarks and other roles that don't override the role from native
+    // markup are left to deal with here.
+    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute, weak role, and role is table");
   }
   
   // Check for legitimate data table elements or attributes

@@ -326,13 +326,20 @@ public:
                                  PRBool    aUseRowSpanIfOverlap) const;
 
   /**
+   * Returns highest cell index within the cell map.
+   *
+   * @param  aColCount  [in] the number of columns in the table
+   */
+  PRInt32 GetHighestIndex(PRInt32 aColCount);
+
+  /**
    * Returns the index of the given row and column coordinates.
    *
    * @see  nsITableLayout::GetIndexByRowAndColumn()
    *
-   * @param aColCount  [in] the number of columns in a row
-   * @param aRow       [in] the row coordinate
-   * @param aColumn    [in] the column coordinate
+   * @param aColCount    [in] the number of columns in the table
+   * @param aRow         [in] the row coordinate
+   * @param aColumn      [in] the column coordinate
    */
   PRInt32 GetIndexByRowAndColumn(PRInt32 aColCount,
                                  PRInt32 aRow, PRInt32 aColumn) const;
@@ -342,7 +349,7 @@ public:
    *
    * @see  nsITableLayout::GetRowAndColumnByIndex()
    *
-   * @param aColCount  [in] the number of columns in a row
+   * @param aColCount  [in] the number of columns in the table
    * @param aIndex     [in] the index for which coordinates are to be retrieved
    * @param aRow       [out] the row coordinate to be returned
    * @param aColumn    [out] the column coordinate to be returned

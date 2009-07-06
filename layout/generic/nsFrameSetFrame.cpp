@@ -267,9 +267,9 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   nsIDocument* doc = frame->mContent->GetDocument();
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
   if (doc) {
-    doc->AttributeWillChange(frame->mContent,
-                             kNameSpaceID_None,
-                             nsGkAtoms::frameborder);
+    nsNodeUtils::AttributeWillChange(frame->mContent, kNameSpaceID_None,
+                                     nsGkAtoms::frameborder,
+                                     nsIDOMMutationEvent::MODIFICATION);
   }
 
   frame->mForceFrameResizability =

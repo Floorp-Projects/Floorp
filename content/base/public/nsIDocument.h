@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  { 0x9abf0b96, 0xc9e2, 0x4d49, \
-    { 0x9c, 0x0a, 0x37, 0xc1, 0x22, 0x39, 0x83, 0x50 } }
+  {0x2c155ed0, 0x3302, 0x4cff, \
+      {0x9d, 0xb3, 0xed, 0x0c, 0xcd, 0xfc, 0x50, 0x06 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -635,6 +635,7 @@ public:
 
   enum ReadyState { READYSTATE_UNINITIALIZED = 0, READYSTATE_LOADING = 1, READYSTATE_INTERACTIVE = 3, READYSTATE_COMPLETE = 4};
   virtual void SetReadyStateInternal(ReadyState rs) = 0;
+  virtual ReadyState GetReadyStateEnum() = 0;
 
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
@@ -651,13 +652,6 @@ public:
                               nsIStyleRule* aStyleRule) = 0;
   virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule) = 0;
-
-  /**
-   * Notify document of pending attribute change
-   */
-  virtual void AttributeWillChange(nsIContent* aChild,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute) = 0;
 
   /**
    * Flush notifications for this document and its parent documents

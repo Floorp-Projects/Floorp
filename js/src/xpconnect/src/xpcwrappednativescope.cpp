@@ -198,14 +198,14 @@ XPCWrappedNativeScope::SetComponents(nsXPCComponents* aComponents)
 // scopes. By doing this we avoid allocating a new scope for every
 // wrapper on creation of the wrapper, and most wrappers won't need
 // their own scope at all for the lifetime of the wrapper.
-// JSCLASS_HAS_PRIVATE is key here (even though there's never anything
+// WRAPPER_SLOTS is key here (even though there's never anything
 // in the private data slot in these prototypes), as the number of
 // reserved slots in this class needs to match that of the wrappers
 // for the JS engine to share scopes.
 
 JSClass XPC_WN_NoHelper_Proto_JSClass = {
     "XPC_WN_NoHelper_Proto_JSClass",// name;
-    JSCLASS_HAS_PRIVATE,            // flags;
+    WRAPPER_SLOTS,                  // flags;
 
     /* Mandatory non-null function pointer members. */
     JS_PropertyStub,                // addProperty;
@@ -720,6 +720,9 @@ GetScopeOfObject(JSObject* obj)
 {
     nsISupports* supports;
     JSClass* clazz = STOBJ_GET_CLASS(obj);
+
+    if(IS_SLIM_WRAPPER_CLASS(clazz))
+        return GetSlimWrapperProto(obj)->GetScope();
 
     if(!IS_WRAPPER_CLASS(clazz) ||
        !(supports = (nsISupports*) xpc_GetJSPrivate(obj)))

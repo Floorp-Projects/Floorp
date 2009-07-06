@@ -42,7 +42,6 @@
 #include "nsPrintSession.h"
 #include "nsIPrintSessionX.h"
 
-
 class nsPrintSessionX : public nsPrintSession,
                         public nsIPrintSessionX
 {
