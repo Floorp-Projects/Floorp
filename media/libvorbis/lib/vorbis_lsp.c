@@ -11,7 +11,7 @@
  ********************************************************************
 
   function: LSP (also called LSF) conversion routines
-  last mod: $Id: lsp.c 13293 2007-07-24 00:09:47Z xiphmont $
+  last mod: $Id$
 
   The LSP generation code is taken (with minimal modification and a
   few bugfixes) from "On the Computation of the LSP Frequencies" by
@@ -62,7 +62,7 @@
 
 /* side effect: changes *lsp to cosines of lsp */
 void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
-			    float amp,float ampoffset){
+                            float amp,float ampoffset){
   int i;
   float wdel=M_PI/ln;
   vorbis_fpu_control fpu;
@@ -100,9 +100,9 @@ void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
 
     q=frexp(p+q,&qexp);
     q=vorbis_fromdBlook(amp*             
-			vorbis_invsqlook(q)*
-			vorbis_invsq2explook(qexp+m)- 
-			ampoffset);
+                        vorbis_invsqlook(q)*
+                        vorbis_invsq2explook(qexp+m)- 
+                        ampoffset);
 
     do{
       curve[i++]*=q;
@@ -118,26 +118,26 @@ void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
                        compilers (like gcc) that can't inline across
                        modules */
 
-static int MLOOP_1[64]={
+static const int MLOOP_1[64]={
    0,10,11,11, 12,12,12,12, 13,13,13,13, 13,13,13,13,
   14,14,14,14, 14,14,14,14, 14,14,14,14, 14,14,14,14,
   15,15,15,15, 15,15,15,15, 15,15,15,15, 15,15,15,15,
   15,15,15,15, 15,15,15,15, 15,15,15,15, 15,15,15,15,
 };
 
-static int MLOOP_2[64]={
+static const int MLOOP_2[64]={
   0,4,5,5, 6,6,6,6, 7,7,7,7, 7,7,7,7,
   8,8,8,8, 8,8,8,8, 8,8,8,8, 8,8,8,8,
   9,9,9,9, 9,9,9,9, 9,9,9,9, 9,9,9,9,
   9,9,9,9, 9,9,9,9, 9,9,9,9, 9,9,9,9,
 };
 
-static int MLOOP_3[8]={0,1,2,2,3,3,3,3};
+static const int MLOOP_3[8]={0,1,2,2,3,3,3,3};
 
 
 /* side effect: changes *lsp to cosines of lsp */
 void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
-			    float amp,float ampoffset){
+                            float amp,float ampoffset){
 
   /* 0 <= m < 256 */
 
@@ -161,15 +161,15 @@ void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
 
     for(j=3;j<m;j+=2){
       if(!(shift=MLOOP_1[(pi|qi)>>25]))
-	if(!(shift=MLOOP_2[(pi|qi)>>19]))
-	  shift=MLOOP_3[(pi|qi)>>16];
+        if(!(shift=MLOOP_2[(pi|qi)>>19]))
+          shift=MLOOP_3[(pi|qi)>>16];
       qi=(qi>>shift)*labs(ilsp[j-1]-wi);
       pi=(pi>>shift)*labs(ilsp[j]-wi);
       qexp+=shift;
     }
     if(!(shift=MLOOP_1[(pi|qi)>>25]))
       if(!(shift=MLOOP_2[(pi|qi)>>19]))
-	shift=MLOOP_3[(pi|qi)>>16];
+        shift=MLOOP_3[(pi|qi)>>16];
 
     /* pi,qi normalized collectively, both tracked using qexp */
 
@@ -181,8 +181,8 @@ void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
       qexp+=shift;
 
       if(!(shift=MLOOP_1[(pi|qi)>>25]))
-	if(!(shift=MLOOP_2[(pi|qi)>>19]))
-	  shift=MLOOP_3[(pi|qi)>>16];
+        if(!(shift=MLOOP_2[(pi|qi)>>19]))
+          shift=MLOOP_3[(pi|qi)>>16];
       
       pi>>=shift;
       qi>>=shift;
@@ -199,7 +199,7 @@ void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
       /* even order filter; still symmetric */
 
       /* p*=p(1-w), q*=q(1+w), let normalization drift because it isn't
-	 worth tracking step by step */
+         worth tracking step by step */
       
       pi>>=shift;
       qi>>=shift;
@@ -224,13 +224,13 @@ void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
       qi>>=1; qexp++; 
     }else
       while(qi && !(qi&0x8000)){ /* checks for 0.0xxxxxxxxxxxxxxx or less*/
-	qi<<=1; qexp--; 
+        qi<<=1; qexp--; 
       }
 
     amp=vorbis_fromdBlook_i(ampi*                     /*  n.4         */
-			    vorbis_invsqlook_i(qi,qexp)- 
-			                              /*  m.8, m+n<=8 */
-			    ampoffseti);              /*  8.12[0]     */
+                            vorbis_invsqlook_i(qi,qexp)- 
+                                                      /*  m.8, m+n<=8 */
+                            ampoffseti);              /*  8.12[0]     */
 
     curve[i]*=amp;
     while(map[++i]==k)curve[i]*=amp;
@@ -245,7 +245,7 @@ void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
 
 /* side effect: changes *lsp to cosines of lsp */
 void vorbis_lsp_to_curve(float *curve,int *map,int n,int ln,float *lsp,int m,
-			    float amp,float ampoffset){
+                            float amp,float ampoffset){
   int i;
   float wdel=M_PI/ln;
   for(i=0;i<m;i++)lsp[i]=2.f*cos(lsp[i]);
@@ -321,22 +321,22 @@ static int Laguerre_With_Deflation(float *a,int ord,float *r){
       
       /* eval the polynomial and its first two derivatives */
       for(i=m;i>0;i--){
-	ppp = new*ppp + pp;
-	pp  = new*pp  + p;
-	p   = new*p   + defl[i-1];
+        ppp = new*ppp + pp;
+        pp  = new*pp  + p;
+        p   = new*p   + defl[i-1];
       }
       
       /* Laguerre's method */
       denom=(m-1) * ((m-1)*pp*pp - m*p*ppp);
       if(denom<0)
-	return(-1);  /* complex root!  The LPC generator handed us a bad filter */
+        return(-1);  /* complex root!  The LPC generator handed us a bad filter */
 
       if(pp>0){
-	denom = pp + sqrt(denom);
-	if(denom<EPSILON)denom=EPSILON;
+        denom = pp + sqrt(denom);
+        if(denom<EPSILON)denom=EPSILON;
       }else{
-	denom = pp - sqrt(denom);
-	if(denom>-(EPSILON))denom=-(EPSILON);
+        denom = pp - sqrt(denom);
+        if(denom>-(EPSILON))denom=-(EPSILON);
       }
 
       delta  = m*p/denom;
@@ -378,8 +378,8 @@ static int Newton_Raphson(float *a,int ord,float *r){
       double p=a[ord];
       for(k=ord-1; k>= 0; k--) {
 
-	pp= pp* rooti + p;
-	p = p * rooti + a[k];
+        pp= pp* rooti + p;
+        p = p * rooti + a[k];
       }
 
       delta = p/pp;
