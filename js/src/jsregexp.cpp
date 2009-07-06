@@ -2388,8 +2388,10 @@ class RegExpNativeCompiler {
          * If the regexp is too long nanojit will assert when we
          * try to insert the guard record.
          */
-        if (re_length > 1024)
+        if (re_length > 1024) {
+            re->flags |= JSREG_NOCOMPILE;
             return JS_FALSE;
+        }
 
         this->cx = cx;
         /* At this point we have an empty fragment. */
@@ -2446,7 +2448,7 @@ class RegExpNativeCompiler {
             lirbuf->rewind();
         } else {
             if (!guard) insertGuard(re_chars, re_length);
-            fragment->blacklist();
+            re->flags |= JSREG_NOCOMPILE;
         }
         delete lirBufWriter;
 #ifdef NJ_VERBOSE
@@ -2469,8 +2471,6 @@ CompileRegExpToNative(JSContext* cx, JSRegExp* re, Fragment* fragment)
     RegExpNativeCompiler rc(re, &state, fragment);
 
     JS_ASSERT(!fragment->code());
-    JS_ASSERT(!fragment->isBlacklisted());
-
     mark = JS_ARENA_MARK(&cx->tempPool);
     if (!CompileRegExpToAST(cx, NULL, re->source, re->flags, state)) {
         goto out;
@@ -2499,19 +2499,15 @@ GetNativeRegExp(JSContext* cx, JSRegExp* re)
     re->source->getCharsAndLength(re_chars, re_length);
     void* hash = HashRegExp(re->flags, re_chars, re_length);
     fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length);
-    if (fragment) {
-        if (fragment->code())
-            goto ok;
-        if (fragment->isBlacklisted())
-            return NULL;
-    } else {
+    if (!fragment) {
         fragment = fragmento->getAnchor(hash);
         fragment->lirbuf = JS_TRACE_MONITOR(cx).reLirBuf;
         fragment->root = fragment;
+    } 
+    if (!fragment->code()) {
+        if (!CompileRegExpToNative(cx, re, fragment))
+            return NULL;
     }
-        
-    if (!CompileRegExpToNative(cx, re, fragment))
-        return NULL;
  ok:
     union { NIns *code; NativeRegExp func; } u;
     u.code = fragment->code();
@@ -3922,6 +3918,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
 
     /* Run with native regexp if possible. */
     if (TRACING_ENABLED(gData->cx) && 
+        !(gData->regexp->flags & JSREG_NOCOMPILE) &&
         (native = GetNativeRegExp(gData->cx, gData->regexp))) {
         gData->skipped = (ptrdiff_t) x->cp;
 

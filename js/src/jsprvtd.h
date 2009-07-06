@@ -134,6 +134,21 @@ typedef struct JSXML                JSXML;
 typedef struct JSXMLArray           JSXMLArray;
 typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 
+/*
+ * Template declarations.
+ *
+ * jsprvtd.h can be included in both C and C++ translation units.  For C++, it
+ * may possibly be wrapped in an extern "C" block which does not agree with
+ * templates.
+ */
+#ifdef __cplusplus
+extern "C++" {
+
+template <class T> class JSTempVector;
+
+}
+#endif  /* __cplusplus */
+
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
 typedef enum JSTrapStatus {
     JSTRAP_ERROR,

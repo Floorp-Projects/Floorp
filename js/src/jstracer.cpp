@@ -2944,6 +2944,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     exit->nativeCalleeWord = 0;
+    exit->lookupFlags = js_InferFlags(cx, 0);
     memcpy(getFullTypeMap(exit), typemap, typemap_size);
     return exit;
 }
