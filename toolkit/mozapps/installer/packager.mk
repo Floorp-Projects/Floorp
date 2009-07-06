@@ -151,26 +151,20 @@ endif
 MAKE_PACKAGE	= $(_ABS_MOZSRCDIR)/build/package/mac_osx/pkg-dmg \
   --source "$(PKG_DMG_SOURCE)" --target "$(PACKAGE)" \
   --volname "$(MOZ_APP_DISPLAYNAME)" $(PKG_DMG_FLAGS)
+_ABS_DIST = $(call core_abspath,$(DIST))
 UNMAKE_PACKAGE	= \
   set -ex; \
-  function cleanup() { \
-    hdiutil detach $${DEV_NAME} || \
-     { sleep 5 && hdiutil detach $${DEV_NAME} -force; }; \
-    return $$1 && $$?; \
-  }; \
-  unset NEXT_ROOT; \
-  export PAGER=true; \
-  expect $(_ABS_MOZSRCDIR)/build/package/mac_osx/installdmg.ex $(UNPACKAGE) | tee hdi.output; \
-  DEV_NAME=`perl -n -e 'if($$_=~/(\/dev\/disk[^ ]*)/) {print $$1."\n";exit;}'< hdi.output`; \
-  MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.[^\r]*)/) {print $$1;exit;}'< hdi.output` || cleanup 1; \
-  rsync -a "$${MOUNTPOINT}/$(_APPNAME)" $(MOZ_PKG_DIR) || cleanup 1; \
+  rm -rf $(_ABS_DIST)/unpack.tmp; \
+  mkdir -p $(_ABS_DIST)/unpack.tmp; \
+  $(_ABS_MOZSRCDIR)/build/package/mac_osx/unpack-diskimage $(UNPACKAGE) /tmp/$(MOZ_PKG_APPNAME)-unpack $(_ABS_DIST)/unpack.tmp; \
+  rsync -a "$(_ABS_DIST)/unpack.tmp/$(_APPNAME)" $(MOZ_PKG_DIR); \
   test -n "$(MOZ_PKG_MAC_DSSTORE)" && \
-    { rsync -a "$${MOUNTPOINT}/.DS_Store" "$(MOZ_PKG_MAC_DSSTORE)" || cleanup 1; }; \
+    rsync -a "$(_ABS_DIST)/unpack.tmp/.DS_Store" "$(MOZ_PKG_MAC_DSSTORE)"; \
   test -n "$(MOZ_PKG_MAC_BACKGROUND)" && \
-    { rsync -a "$${MOUNTPOINT}/.background/`basename "$(MOZ_PKG_MAC_BACKGROUND)"`" "$(MOZ_PKG_MAC_BACKGROUND)" || cleanup 1; }; \
+    rsync -a "$(_ABS_DIST)/unpack.tmp/.background/`basename "$(MOZ_PKG_MAC_BACKGROUND)"`" "$(MOZ_PKG_MAC_BACKGROUND)"; \
   test -n "$(MOZ_PKG_MAC_ICON)" && \
-    { rsync -a "$${MOUNTPOINT}/.VolumeIcon.icns" "$(MOZ_PKG_MAC_ICON)" || cleanup 1; }; \
-  cleanup 0; \
+    rsync -a "$(_ABS_DIST)/unpack.tmp/.VolumeIcon.icns" "$(MOZ_PKG_MAC_ICON)"; \
+  rm -rf $(_ABS_DIST)/unpack.tmp; \
   if test -n "$(MOZ_PKG_MAC_RSRC)" ; then \
     cp $(UNPACKAGE) $(MOZ_PKG_APPNAME).tmp.dmg && \
     hdiutil unflatten $(MOZ_PKG_APPNAME).tmp.dmg && \
