@@ -150,7 +150,6 @@ protected:
    PRBool     GetContentScrollbarVisibility();
    void       PersistentAttributesDirty(PRUint32 aDirtyFlags);
    PRInt32    AppUnitsPerDevPixel();
-   PRBool     DispatchCustomEvent(const nsAString& eventName, PRBool cancelable = PR_FALSE, PRBool toDocument = PR_TRUE);
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;

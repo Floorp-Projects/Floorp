@@ -97,6 +97,7 @@ XPIDLSRCS	= \
 		nsIRollupListener.idl \
 		nsIBaseWindow.idl \
 		nsIBidiKeyboard.idl \
+		nsIFullScreen.idl \
 		nsIScreen.idl \
 		nsIScreenManager.idl \
 		nsIPrintSession.idl \
