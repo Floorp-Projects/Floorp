@@ -338,6 +338,7 @@ struct VMSideExit : public nanojit::SideExit
     uint32 numStackSlots;
     uint32 numStackSlotsBelowCurrentFrame;
     ExitType exitType;
+    uintN lookupFlags;
 
     /*
      * Ordinarily 0.  If a slow native function is atop the stack, the 1 bit is
