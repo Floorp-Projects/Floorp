@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: miscellaneous prototypes
- last mod: $Id: misc.h 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -24,11 +24,12 @@ extern int analysis_noisy;
 extern void *_vorbis_block_alloc(vorbis_block *vb,long bytes);
 extern void _vorbis_block_ripcord(vorbis_block *vb);
 extern void _analysis_output(char *base,int i,float *v,int n,int bark,int dB,
-			     ogg_int64_t off);
+                             ogg_int64_t off);
 
 #ifdef DEBUG_MALLOC
 
 #define _VDBG_GRAPHFILE "malloc.m"
+#undef _VDBG_GRAPHFILE
 extern void *_VDBG_malloc(void *ptr,long bytes,char *file,long line); 
 extern void _VDBG_free(void *ptr,char *file,long line); 
 
