@@ -2234,8 +2234,10 @@ Detecting(JSContext *cx, jsbytecode *pc)
 uintN
 js_InferFlags(JSContext *cx, uintN defaultFlags)
 {
+#ifdef JS_TRACER
     if (JS_ON_TRACE(cx))
         return cx->bailExit->lookupFlags;
+#endif
 
     JS_ASSERT_NOT_ON_TRACE(cx);
 
