@@ -77,6 +77,66 @@ namespace storage {
 #define PREF_TS_SYNCHRONOUS "toolkit.storage.synchronous"
 
 ////////////////////////////////////////////////////////////////////////////////
+//// sqlite3_context Specialization Functions
+
+template < >
+int
+sqlite3_T_int(sqlite3_context *aCtx,
+              int aValue)
+{
+  ::sqlite3_result_int(aCtx, aValue);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_int64(sqlite3_context *aCtx,
+                sqlite3_int64 aValue)
+{
+  ::sqlite3_result_int64(aCtx, aValue);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_double(sqlite3_context *aCtx,
+                 double aValue)
+{
+  ::sqlite3_result_double(aCtx, aValue);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_text16(sqlite3_context *aCtx,
+                 nsString aValue)
+{
+  ::sqlite3_result_text16(aCtx,
+                          PromiseFlatString(aValue).get(),
+                          aValue.Length() * 2, // Number of bytes.
+                          SQLITE_TRANSIENT);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_null(sqlite3_context *aCtx)
+{
+  ::sqlite3_result_null(aCtx);
+  return SQLITE_OK;
+}
+
+template < >
+int
+sqlite3_T_blob(sqlite3_context *aCtx,
+               const void *aData,
+               int aSize)
+{
+  ::sqlite3_result_blob(aCtx, aData, aSize, NS_Free);
+  return SQLITE_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //// Local Functions
 
 namespace {
@@ -178,66 +238,6 @@ aggregateFunctionFinalHelper(sqlite3_context *aCtx)
 
 
 } // anonymous namespace
-
-////////////////////////////////////////////////////////////////////////////////
-//// sqlite3_context Specialization Functions
-
-template < >
-int
-sqlite3_T_int(sqlite3_context *aCtx,
-              int aValue)
-{
-  ::sqlite3_result_int(aCtx, aValue);
-  return SQLITE_OK;
-}
-
-template < >
-int
-sqlite3_T_int64(sqlite3_context *aCtx,
-                sqlite3_int64 aValue)
-{
-  ::sqlite3_result_int64(aCtx, aValue);
-  return SQLITE_OK;
-}
-
-template < >
-int
-sqlite3_T_double(sqlite3_context *aCtx,
-                 double aValue)
-{
-  ::sqlite3_result_double(aCtx, aValue);
-  return SQLITE_OK;
-}
-
-template < >
-int
-sqlite3_T_text16(sqlite3_context *aCtx,
-                 nsString aValue)
-{
-  ::sqlite3_result_text16(aCtx,
-                          PromiseFlatString(aValue).get(),
-                          aValue.Length() * 2, // Number of bytes.
-                          SQLITE_TRANSIENT);
-  return SQLITE_OK;
-}
-
-template < >
-int
-sqlite3_T_null(sqlite3_context *aCtx)
-{
-  ::sqlite3_result_null(aCtx);
-  return SQLITE_OK;
-}
-
-template < >
-int
-sqlite3_T_blob(sqlite3_context *aCtx,
-               const void *aData,
-               int aSize)
-{
-  ::sqlite3_result_blob(aCtx, aData, aSize, NS_Free);
-  return SQLITE_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Connection

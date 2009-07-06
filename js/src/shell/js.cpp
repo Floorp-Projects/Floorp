@@ -72,10 +72,6 @@
 
 #include "prmjtime.h"
 
-#ifdef LIVECONNECT
-#include "jsjava.h"
-#endif
-
 #ifdef JSDEBUGGER
 #include "jsdebug.h"
 #ifdef JSDEBUGGER_JAVA_UI
@@ -1033,10 +1029,6 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool
 Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-#ifdef LIVECONNECT
-    JSJ_SimpleShutdown();
-#endif
-
     JS_ConvertArguments(cx, argc, argv,"/ i", &gExitCode);
 
     gQuitting = JS_TRUE;
@@ -4621,9 +4613,6 @@ main(int argc, char **argv, char **envp)
     JSContext *cx;
     JSObject *glob, *it, *envobj;
     int result;
-#ifdef LIVECONNECT
-    JavaVM *java_vm = NULL;
-#endif
 #ifdef JSDEBUGGER
     JSDContext *jsdc;
 #ifdef JSDEBUGGER_JAVA_UI
@@ -4725,10 +4714,6 @@ main(int argc, char **argv, char **envp)
         return 1;
     JSDJ_SetJSDContext(jsdjc, jsdc);
     java_env = JSDJ_CreateJavaVMAndStartDebugger(jsdjc);
-#ifdef LIVECONNECT
-    if (java_env)
-        (*java_env)->GetJavaVM(java_env, &java_vm);
-#endif
     /*
     * XXX This would be the place to wait for the debugger to start.
     * Waiting would be nice in general, but especially when a js file
@@ -4739,11 +4724,6 @@ main(int argc, char **argv, char **envp)
     jsdbc = JSDB_InitDebugger(rt, jsdc, 0);
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
-
-#ifdef LIVECONNECT
-    if (!JSJ_SimpleInit(cx, glob, java_vm, getenv("CLASSPATH")))
-        return 1;
-#endif
 
     envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
     if (!envobj || !JS_SetPrivate(cx, envobj, envp))

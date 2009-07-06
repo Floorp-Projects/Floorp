@@ -356,7 +356,7 @@ nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
 
 nsXBLStreamListener::~nsXBLStreamListener()
 {
-  for (PRInt32 i = 0; i < mBindingRequests.Length(); i++) {
+  for (PRUint32 i = 0; i < mBindingRequests.Length(); i++) {
     nsXBLBindingRequest* req = mBindingRequests.ElementAt(i);
     nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
   }

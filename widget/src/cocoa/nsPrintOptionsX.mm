@@ -45,23 +45,19 @@
 #include "plbase64.h"
 #include "prmem.h"
 
-
 nsPrintOptionsX::nsPrintOptionsX()
 {
 }
 
-
 nsPrintOptionsX::~nsPrintOptionsX()
 {
 }
-
 
 NS_IMETHODIMP
 nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 } 
-
 
 NS_IMETHODIMP
 nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void **_retval)
@@ -71,7 +67,6 @@ nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void **_retval)
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
 
 nsresult
 nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)
@@ -89,7 +84,6 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   
   return NS_OK;
 }
-
 
 nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
@@ -109,7 +103,6 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
   InitPrintSettingsFromPrefs(*_retval, PR_FALSE, nsIPrintSettings::kInitSaveAll);
   return rv;
 }
-
 
 nsresult
 nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)

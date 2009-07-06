@@ -111,9 +111,29 @@ function testDocument2() {
   ok(c1.isEqualNode(e1), "Wrong cloning or extracting!");
 }
 
+function testSurroundContents() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  div.innerHTML = '<div>hello</div>world';
+  var innerDiv = div.firstChild;
+  var hello = innerDiv.firstChild;
+  var range = document.createRange();
+  range.setStart(hello, 0);
+  range.setEnd(hello, 5);
+  range.surroundContents(document.createElement('code'));
+  is(innerDiv.childNodes.length, 3, "Wrong childNodes count");
+  is(innerDiv.childNodes[0].nodeName, "#text", "Wrong node name (1)");
+  is(innerDiv.childNodes[0].textContent, "", "Wrong textContent (1)");
+  is(innerDiv.childNodes[1].nodeName, "CODE", "Wrong node name (2)");
+  is(innerDiv.childNodes[1].textContent, "hello", "Wrong textContent (2)");
+  is(innerDiv.childNodes[2].nodeName, "#text", "Wrong node name (3)");
+  is(innerDiv.childNodes[2].textContent, "", "Wrong textContent (3)");
+}
+
 function runTest() {
   testDocument1();
   testDocument2();
+  testSurroundContents();
   SimpleTest.finish();
 }
 

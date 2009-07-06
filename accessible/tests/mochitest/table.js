@@ -1,71 +1,102 @@
 /**
+ * This file provides set of helper functions to test nsIAccessibleTable
+ * interface.
+ *
+ * Required:
+ *   common.js
+ *   states.js
+ */
+
+/**
  * Test table indexes.
  *
  * @param  aIdentifier  [in] table accessible identifier
- * @param  aLen         [in] cells count
- * @param  aRowIdxes    [in] array of row indexes for each cell index
- * @param  aColIdxes    [in] array of column indexes for each cell index
+ * @param  aIdxes       [in] two dimensional array of cell indexes
  */
-function testTableIndexes(aIdentifier, aLen, aRowIdxes, aColIdxes)
+function testTableIndexes(aIdentifier, aIdxes)
 {
   var tableAcc = getAccessible(aIdentifier, [nsIAccessibleTable]);
   if (!tableAcc)
     return;
 
-  var row, column, index;
+  var obtainedRowIdx, obtainedColIdx, obtainedIdx;
   var cellAcc;
 
   var id = prettyName(aIdentifier);
 
-  for (var i = 0; i < aLen; i++) {
-    try {
-      row = tableAcc.getRowAtIndex(i);
-    } catch (e) {
-      ok(false, id + ": can't get row index for cell index " + i + "," + e);
-    }
+  var rowCount = aIdxes.length;
+  for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+    var colCount = aIdxes[rowIdx].length;
+    for (var colIdx = 0; colIdx < colCount; colIdx++) {
+      var idx = aIdxes[rowIdx][colIdx];
 
-    try {
-      column = tableAcc.getColumnAtIndex(i);
-    } catch (e) {
-      ok(false, id + ": can't get column index for cell index " + i + "," + e);
-    }
-
-    try {
-      index = tableAcc.getIndexAt(aRowIdxes[i], aColIdxes[i]);
-    } catch (e) {
-      ok(false,
-         id + ": can't get cell index by row index " + aRowIdxes[i] +
-           " and column index: " + aColIdxes[i]  + ", " + e);
-    }
-
-    is(row, aRowIdxes[i], id + ": row  for index " + i +" is nor correct");
-    is(column, aColIdxes[i],
-       id + ": column  for index " + i +" is not correct");
-    is(index, i,
-       id + ": row " + row + " /column " + column + " and index " + index + " aren't inconsistent.");
-
-    try {
-      cellAcc = null;
-      cellAcc = tableAcc.cellRefAt(row, column);
-    } catch (e) { }
-
-    ok(cellAcc,
-       id + ": Can't get cell accessible at row = " + row + ", column = " + column);
-
-    if (cellAcc) {
-      var attrs = cellAcc.attributes;
-      var strIdx = "";
+      // cellRefAt
       try {
-        strIdx = attrs.getStringProperty("table-cell-index");
-      } catch (e) {
-        ok(false,
-           id + ": no cell index from object attributes on the cell accessible at index " + index + ".");
+        cellAcc = null;
+        cellAcc = tableAcc.cellRefAt(rowIdx, colIdx);
+      } catch (e) { }
+      
+      ok(idx != -1 && cellAcc || idx == -1 && !cellAcc,
+         id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
+
+      if (idx != - 1) {
+        // getRowAtIndex
+        var origRowIdx = rowIdx;
+        while (origRowIdx > 0 &&
+               aIdxes[rowIdx][colIdx] == aIdxes[origRowIdx - 1][colIdx])
+          origRowIdx--;
+
+        try {
+          obtainedRowIdx = tableAcc.getRowAtIndex(idx);
+        } catch (e) {
+          ok(false, id + ": can't get row index for cell index " + idx + "," + e);
+        }
+
+        is(obtainedRowIdx, origRowIdx,
+           id + ": row  for index " + idx +" is not correct");
+
+        // getColumnAtIndex
+        var origColIdx = colIdx;
+        while (origColIdx > 0 &&
+               aIdxes[rowIdx][colIdx] == aIdxes[rowIdx][origColIdx - 1])
+          origColIdx--;
+
+        try {
+          obtainedColIdx = tableAcc.getColumnAtIndex(idx);
+        } catch (e) {
+          ok(false, id + ": can't get column index for cell index " + idx + "," + e);
+        }
+
+        is(obtainedColIdx, origColIdx,
+           id + ": column  for index " + idx +" is not correct");
+
+        // 'table-cell-index' attribute
+        if (cellAcc) {
+          var attrs = cellAcc.attributes;
+          var strIdx = "";
+          try {
+            strIdx = attrs.getStringProperty("table-cell-index");
+          } catch (e) {
+            ok(false,
+               id + ": no cell index from object attributes on the cell accessible at index " + idx + ".");
+          }
+
+          if (strIdx) {
+            is (parseInt(strIdx), idx,
+                id + ": cell index from object attributes of cell accessible isn't corrent.");
+          }
+        }
       }
 
-      if (strIdx) {
-        is (parseInt(strIdx), index,
-            id + ": cell index from object attributes of cell accessible isn't corrent.");
+      // getIndexAt
+      try {
+        obtainedIdx = tableAcc.getIndexAt(rowIdx, colIdx);
+      } catch (e) {
+        obtainedIdx = -1;
       }
+
+      is(obtainedIdx, idx,
+         id + ": row " + rowIdx + " /column " + colIdx + " and index " + obtainedIdx + " aren't inconsistent.");
     }
   }
 }
@@ -78,7 +109,8 @@ function testTableIndexes(aIdentifier, aLen, aRowIdxes, aColIdxes)
  *                       cells states.
  * @param  aMsg         [in] text appended before every message
  */
-function testTableSelection(aIdentifier, aCellsArray, aMsg)
+function testTableSelection(aIdentifier, aCellsArray, aMsg,
+                            aSkipStatesTesting) // bug 501656
 {
   var msg = aMsg ? aMsg : "";
   var acc = getAccessible(aIdentifier, [nsIAccessibleTable]);
@@ -95,7 +127,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var colIdx = 0; colIdx < colsCount; colIdx++) {
     var isColSelected = true;
     for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-      if (!aCellsArray[rowIdx][colIdx]) {
+      if (aCellsArray[rowIdx][colIdx] == false) {
         isColSelected = false;
         break;
       }
@@ -135,7 +167,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     var isRowSelected = true;
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (!aCellsArray[rowIdx][colIdx]) {
+      if (aCellsArray[rowIdx][colIdx] == false) {
         isRowSelected = false;
         break;
       }
@@ -173,6 +205,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   // isCellSelected test
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] == undefined)
+        continue;
+  
       is(acc.isCellSelected(rowIdx, colIdx), aCellsArray[rowIdx][colIdx],
          msg + "Wrong selection state of cell at " + rowIdx + " row and " +
          colIdx + " column for " + prettyName(aIdentifier));
@@ -199,6 +234,24 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
     is (actualSelCells[i], selCells[i],
         msg + "Cell at index " + selCells[i] + " should be selected.");
   }
+
+  if (aSkipStatesTesting)
+    return;
+
+  // selected states tests
+  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] == undefined)
+        continue;
+
+      var cell = acc.cellRefAt(rowIdx, colIdx);
+      var isSel = aCellsArray[rowIdx][colIdx];
+      if (isSel)
+        testStates(cell, STATE_SELECTED);
+      else
+        testStates(cell, 0, 0, STATE_SELECTED);
+    }
+  }
 }
 
 /**
@@ -211,8 +264,10 @@ function testUnselectTableColumn(aIdentifier, aColIdx, aCellsArray)
     return;
 
   var rowsCount = aCellsArray.length;
-  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++)
-    aCellsArray[rowIdx][aColIdx] = false;
+  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+    if (aCellsArray[rowIdx][aColIdx] != undefined)
+      aCellsArray[rowIdx][aColIdx] = false;
+  }
 
   acc.unselectColumn(aColIdx);
   testTableSelection(aIdentifier, aCellsArray,
@@ -232,8 +287,10 @@ function testSelectTableColumn(aIdentifier, aColIdx, aCellsArray)
   var colsCount = aCellsArray[0].length;
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-    for (var colIdx = 0; colIdx < colsCount; colIdx++)
-      aCellsArray[rowIdx][colIdx] = (colIdx == aColIdx);
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] != undefined)
+        aCellsArray[rowIdx][colIdx] = (colIdx == aColIdx);
+    }
   }
 
   acc.selectColumn(aColIdx);
@@ -251,8 +308,10 @@ function testUnselectTableRow(aIdentifier, aRowIdx, aCellsArray)
     return;
 
   var colsCount = aCellsArray[0].length;
-  for (var colIdx = 0; colIdx < colsCount; colIdx++)
-    aCellsArray[aRowIdx][colIdx] = false;
+  for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+    if (aCellsArray[aRowIdx][colIdx] != undefined)
+      aCellsArray[aRowIdx][colIdx] = false;
+  }
 
   acc.unselectRow(aRowIdx);
   testTableSelection(aIdentifier, aCellsArray,
@@ -262,7 +321,8 @@ function testUnselectTableRow(aIdentifier, aRowIdx, aCellsArray)
 /**
  * Test selectRow method of accessible table.
  */
-function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray)
+function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray,
+                            aSkipStatesTesting) // bug 501656
 {
   var acc = getAccessible(aIdentifier, [nsIAccessibleTable]);
   if (!acc)
@@ -272,11 +332,14 @@ function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray)
   var colsCount = aCellsArray[0].length;
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-    for (var colIdx = 0; colIdx < colsCount; colIdx++)
-      aCellsArray[rowIdx][colIdx] = (rowIdx == aRowIdx);
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] != undefined)
+        aCellsArray[rowIdx][colIdx] = (rowIdx == aRowIdx);
+    }
   }
 
   acc.selectRow(aRowIdx);
   testTableSelection(aIdentifier, aCellsArray,
-                     "Select " + aRowIdx + " row: ");
+                     "Select " + aRowIdx + " row: ",
+                     aSkipStatesTesting);
 }

@@ -57,7 +57,6 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMElement.h"
 
-
 nsMenuItemX::nsMenuItemX()
 {
   mType           = eRegularMenuItemType;
@@ -68,7 +67,6 @@ nsMenuItemX::nsMenuItemX()
 
   MOZ_COUNT_CTOR(nsMenuItemX);
 }
-
 
 nsMenuItemX::~nsMenuItemX()
 {
@@ -87,7 +85,6 @@ nsMenuItemX::~nsMenuItemX()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
                              nsMenuBarX* aMenuBar, nsIContent* aNode)
@@ -175,7 +172,6 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 nsresult nsMenuItemX::SetChecked(PRBool aIsChecked)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -198,12 +194,10 @@ nsresult nsMenuItemX::SetChecked(PRBool aIsChecked)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 EMenuItemType nsMenuItemX::GetMenuItemType()
 {
   return mType;
 }
-
 
 // Executes the "cached" javaScript command.
 // Returns NS_OK if the command was executed properly, otherwise an error code.
@@ -218,12 +212,8 @@ void nsMenuItemX::DoCommand()
     /* the AttributeChanged code will update all the internal state */
   }
 
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
-
-  mContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  nsMenuUtilsX::DispatchCommandTo(mContent);
 }
-    
 
 nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled)
 {
@@ -268,7 +258,6 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *preven
   return NS_OK;  
 }
 
-
 // Walk the sibling list looking for nodes with the same name and
 // uncheck them all.
 void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
@@ -297,7 +286,6 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
   }
 }
 
-
 void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -315,11 +303,9 @@ void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 //
 // nsChangeObserver
 //
-
 
 void
 nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute)
@@ -382,7 +368,6 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void nsMenuItemX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
   if (aChild == mCommandContent) {
@@ -393,12 +378,10 @@ void nsMenuItemX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChi
   mMenuParent->SetRebuild(PR_TRUE);
 }
 
-
 void nsMenuItemX::ObserveContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
   mMenuParent->SetRebuild(PR_TRUE);
 }
-
 
 void nsMenuItemX::SetupIcon()
 {

@@ -51,15 +51,6 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-/**
- * WARNING!! The JEP needs to call GetOrigin()  to support
- * JavaScript-to-Java LiveConnect.  So every change to the  nsIPrincipal
- * interface (big enough to change its IID) also breaks JavaScript-to-Java
- * LiveConnect on mac.
- *
- * If you REALLY have to change this interface, please mark your bug as
- * blocking bug 293973.
- */
 [scriptable, uuid(b8268b9a-2403-44ed-81e3-614075c92034)]
 interface nsIPrincipal : nsISerializable
 {

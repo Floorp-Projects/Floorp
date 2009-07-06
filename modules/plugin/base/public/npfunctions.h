@@ -116,6 +116,8 @@ typedef bool         (*NPN_ConstructProcPtr)(NPP npp, NPObject* obj, const NPVar
 typedef NPError      (*NPN_GetValueForURLPtr)(NPP npp, NPNURLVariable variable, const char *url, char **value, uint32_t *len);
 typedef NPError      (*NPN_SetValueForURLPtr)(NPP npp, NPNURLVariable variable, const char *url, const char *value, uint32_t len);
 typedef NPError      (*NPN_GetAuthenticationInfoPtr)(NPP npp, const char *protocol, const char *host, int32_t port, const char *scheme, const char *realm, char **username, uint32_t *ulen, char **password, uint32_t *plen);
+typedef uint32_t     (*NPN_ScheduleTimerPtr)(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
+typedef void         (*NPN_UnscheduleTimerPtr)(NPP instance, uint32_t timerID);
 
 typedef struct _NPPluginFuncs {
   uint16_t size;
@@ -187,6 +189,8 @@ typedef struct _NPNetscapeFuncs {
   NPN_GetValueForURLPtr getvalueforurl;
   NPN_SetValueForURLPtr setvalueforurl;
   NPN_GetAuthenticationInfoPtr getauthenticationinfo;
+  NPN_ScheduleTimerPtr scheduletimer;
+  NPN_UnscheduleTimerPtr unscheduletimer;
 } NPNetscapeFuncs;
 
 #ifdef XP_MACOSX

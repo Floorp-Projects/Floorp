@@ -1,0 +1,29 @@
+<!--
+Inner frame for test of bug 385434.
+https://bugzilla.mozilla.org/show_bug.cgi?id=385434
+-->
+<html>
+<head>
+  <script type="application/javascript">
+    function hashchange() {
+      parent.onIframeHashchange();
+    }
+
+    function load() {
+      parent.onIframeLoad();
+    }
+
+    function scroll() {
+      parent.onIframeScroll();
+    }
+  </script>
+</head>
+
+<body onscroll="scroll()" onload="load()" onhashchange="hashchange()">
+<a href="#link1" id="link1">link1</a>
+<!-- Our parent loads us in an iframe with height 100px, so this spacer ensures
+     that switching between #link1 and #link2 causes us to scroll -->
+<div style="height:200px;"></div>
+<a href="#link2" id="link2">link2</a>
+</body>
+</html>

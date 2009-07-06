@@ -20,13 +20,6 @@
 greprefs\*
 
 ;
-; oji/LiveConnect support
-;
-components\oji.dll
-components\oji.xpt
-jsj3250.dll
-
-;
 ; Type info support for nsIController
 ;
 components\xuldoc.xpt

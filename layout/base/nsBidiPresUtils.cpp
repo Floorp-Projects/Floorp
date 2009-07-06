@@ -357,23 +357,21 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
   if (NS_FAILED(mSuccess) ) {
     return mSuccess;
   }
-  PRInt32                  runLength      = 0;
-  PRInt32                  fragmentLength = 0;
-  PRInt32                  temp;
-  PRInt32                  frameIndex     = -1;
-  PRInt32                  frameCount     = mLogicalFrames.Length();
-  PRInt32                  contentOffset  = 0;   // offset within current frame
-  PRInt32                  lineOffset     = 0;   // offset within mBuffer
-  PRInt32                  logicalLimit   = 0;
-  PRInt32                  numRun         = -1;
-  PRUint8                  charType;
-  PRUint8                  prevType       = eCharType_LeftToRight;
-  PRBool                   isTextFrame    = PR_FALSE;
-  nsIFrame*                frame = nsnull;
-  nsIFrame*                nextBidi;
-  nsIContent*              content = nsnull;
-  PRInt32                  contentTextLength;
-  nsIAtom*                 frameType = nsnull;
+  PRInt32     runLength      = 0;   // the length of the current run of text
+  PRInt32     lineOffset     = 0;   // the start of the current run
+  PRInt32     logicalLimit   = 0;   // the end of the current run + 1
+  PRInt32     numRun         = -1;
+  PRInt32     fragmentLength = 0;   // the length of the current text frame
+  PRInt32     frameIndex     = -1;  // index to the frames in mLogicalFrames
+  PRInt32     frameCount     = mLogicalFrames.Length();
+  PRInt32     contentOffset  = 0;   // offset of current frame in its content node
+  PRUint8     charType;
+  PRUint8     prevType       = eCharType_LeftToRight;
+  PRBool      isTextFrame    = PR_FALSE;
+  nsIFrame*   frame = nsnull;
+  nsIContent* content = nsnull;
+  PRInt32     contentTextLength;
+  nsIAtom*    frameType = nsnull;
 
   nsPropertyTable *propTable = presContext->PropertyTable();
 
@@ -387,6 +385,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
   
   for (; ;) {
     if (fragmentLength <= 0) {
+      // Get the next frame from mLogicalFrames
       if (++frameIndex >= frameCount) {
         break;
       }
@@ -416,13 +415,19 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         fragmentLength = end - start;
         contentOffset = start;
         isTextFrame = PR_TRUE;
-      } // if text frame
+      }
       else {
+        /*
+         * Any non-text frame corresponds to a single character in the text buffer
+         * (a bidi control character, LINE SEPARATOR, or OBJECT SUBSTITUTE)
+         */
         isTextFrame = PR_FALSE;
         fragmentLength = 1;
       }
     } // if (fragmentLength <= 0)
+
     if (runLength <= 0) {
+      // Get the next run of text from the Bidi engine
       if (++numRun >= runCount) {
         break;
       }
@@ -457,11 +462,16 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
+          /*
+           * The text in this frame continues beyond the end of this directional run.
+           * Create a non-fluid continuation frame for the next directional run.
+           */
           if (lineNeedsUpdate) {
             AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
             lineNeedsUpdate = PR_FALSE;
           }
           lineIter.GetLine()->MarkDirty();
+          nsIFrame* nextBidi;
           EnsureBidiContinuation(frame, &nextBidi, frameIndex,
                                  contentOffset,
                                  contentOffset + runLength);
@@ -473,15 +483,28 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         } // if (runLength < fragmentLength)
         else {
           if (contentOffset + fragmentLength == contentTextLength) {
+            /* 
+             * We have finished all the text in this content node. Convert any
+             * further non-fluid continuations to fluid continuations and advance
+             * frameIndex to the last frame in the content node
+             */
             PRInt32 newIndex = 0;
             mContentToFrameIndex.Get(content, &newIndex);
             if (newIndex > frameIndex) {
-              RemoveBidiContinuation(frame, frameIndex, newIndex, temp);
-              runLength -= temp;
-              fragmentLength -= temp;
-              lineOffset += temp;
+              RemoveBidiContinuation(frame, frameIndex, newIndex, lineOffset);
               frameIndex = newIndex;
             }
+          } else if (fragmentLength > 0 && runLength > fragmentLength) {
+            /*
+             * There is more text that belongs to this directional run in the next
+             * text frame: make sure it is a fluid continuation of the current frame.
+             * Do not advance frameIndex, because the next frame may contain
+             * multi-directional text and need to be split
+             */
+            PRInt32 newIndex = frameIndex;
+            do {
+            } while (mLogicalFrames[++newIndex]->GetType() == nsGkAtoms::directionalFrame);
+            RemoveBidiContinuation(frame, frameIndex, newIndex, lineOffset);
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
           if (lineNeedsUpdate) {
@@ -495,7 +518,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         ++lineOffset;
       }
     } // not directionalFrame
-    temp = runLength;
+    PRInt32 temp = runLength;
     runLength -= fragmentLength;
     fragmentLength -= temp;
 
@@ -1118,8 +1141,6 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIFrame*       aFrame,
                                         PRInt32         aLastIndex,
                                         PRInt32&        aOffset) const
 {
-  aOffset = 0;
-
   nsresult rv;
   nsBidiLevel embeddingLevel = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsGkAtoms::embeddingLevel, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "embeddingLevel attribute missing from aFrame");

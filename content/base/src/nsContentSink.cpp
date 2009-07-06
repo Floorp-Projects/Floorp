@@ -444,8 +444,19 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
   nsresult rv = httpchannel->GetResponseHeader(NS_LITERAL_CSTRING("link"),
                                                linkHeader);
   if (NS_SUCCEEDED(rv) && !linkHeader.IsEmpty()) {
-    ProcessHeaderData(nsGkAtoms::link,
-                      NS_ConvertASCIItoUTF16(linkHeader));
+    mDocument->SetHeaderData(nsGkAtoms::link,
+                             NS_ConvertASCIItoUTF16(linkHeader));
+
+    NS_ASSERTION(!mProcessLinkHeaderEvent.get(),
+                 "Already dispatched an event?");
+
+    mProcessLinkHeaderEvent =
+      new nsNonOwningRunnableMethod<nsContentSink>(this,
+                                           &nsContentSink::DoProcessLinkHeader);
+    rv = NS_DispatchToCurrentThread(mProcessLinkHeaderEvent.get());
+    if (NS_FAILED(rv)) {
+      mProcessLinkHeaderEvent.Forget();
+    }
   }
   
   return NS_OK;
@@ -539,6 +550,14 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
   return rv;
 }
 
+
+void
+nsContentSink::DoProcessLinkHeader()
+{
+  nsAutoString value;
+  mDocument->GetHeaderData(nsGkAtoms::link, value);
+  ProcessLinkHeader(nsnull, value);
+}
 
 static const PRUnichar kSemiCh = PRUnichar(';');
 static const PRUnichar kCommaCh = PRUnichar(',');
@@ -794,7 +813,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
 nsresult
 nsContentSink::ProcessMETATag(nsIContent* aContent)
 {
-  NS_ASSERTION(aContent, "missing base-element");
+  NS_ASSERTION(aContent, "missing meta-element");
 
   nsresult rv = NS_OK;
 
@@ -809,6 +828,16 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
       nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
       rv = ProcessHeaderData(fieldAtom, result, aContent); 
     }
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Look for the viewport meta tag. If we find it, process it and put the
+   * data into the document header. */
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                            nsGkAtoms::viewport, eIgnoreCase)) {
+    nsAutoString value;
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
+    rv = nsContentUtils::ProcessViewportInfo(mDocument, value);
   }
 
   return rv;
@@ -1717,6 +1746,12 @@ nsContentSink::WillBuildModelImpl()
   }
 
   mScrolledToRefAlready = PR_FALSE;
+
+  if (mProcessLinkHeaderEvent.get()) {
+    mProcessLinkHeaderEvent.Revoke();
+
+    DoProcessLinkHeader();
+  }
 }
 
 void

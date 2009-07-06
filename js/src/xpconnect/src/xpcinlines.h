@@ -168,7 +168,11 @@ inline nsISupports*
 XPCCallContext::GetIdentityObject() const
 {
     CHECK_STATE(HAVE_OBJECT);
-    return mWrapper->GetIdentityObject();
+    if(mWrapper)
+        return mWrapper->GetIdentityObject();
+    return mCurrentJSObject ?
+           static_cast<nsISupports*>(xpc_GetJSPrivate(mCurrentJSObject)) :
+           nsnull;
 }
 
 inline XPCWrappedNative*
@@ -179,6 +183,15 @@ XPCCallContext::GetWrapper() const
 
     CHECK_STATE(HAVE_OBJECT);
     return mWrapper;
+}
+
+inline XPCWrappedNativeProto*
+XPCCallContext::GetProto() const
+{
+    CHECK_STATE(HAVE_OBJECT);
+    if(mWrapper)
+        return mWrapper->GetProto();
+    return mCurrentJSObject ? GetSlimWrapperProto(mCurrentJSObject) : nsnull;
 }
 
 inline JSBool
@@ -533,8 +546,12 @@ XPCNativeSet::HasInterface(XPCNativeInterface* aInterface) const
 inline JSBool
 XPCNativeSet::HasInterfaceWithAncestor(XPCNativeInterface* aInterface) const
 {
-    const nsIID* iid = aInterface->GetIID();
+    return HasInterfaceWithAncestor(aInterface->GetIID());
+}
 
+inline JSBool
+XPCNativeSet::HasInterfaceWithAncestor(const nsIID* iid) const
+{
     // We can safely skip the first interface which is *always* nsISupports.
     XPCNativeInterface* const * pp = mInterfaces+1;
     for(int i = (int) mInterfaceCount; i > 1; i--, pp++)
@@ -660,12 +677,6 @@ XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 }
 
 /***************************************************************************/
-
-inline JSBool
-XPCWrappedNative::HasInterfaceNoQI(XPCNativeInterface* aInterface)
-{
-    return GetSet()->HasInterface(aInterface);
-}
 
 inline JSBool
 XPCWrappedNative::HasInterfaceNoQI(const nsIID& iid)

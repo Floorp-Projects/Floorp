@@ -70,11 +70,21 @@ function doHash(algo, value, cmp) {
   converter.charset = 'utf8';
   value = converter.convertToByteArray(value, {});
   hash.update(value, value.length);
-  hash = hexdigest(hash.finish(false));
-  if (cmp != hash) {
+  var hash1 = hexdigest(hash.finish(false));
+  if (cmp != hash1) {
     do_throw("Hash mismatch!\n" +
              "  Expected: " + cmp + "\n" +
-             "  Actual: " + hash + "\n" +
+             "  Actual: " + hash1 + "\n" +
+             "  Algo: " + algo);
+  }                                                                                                                                                                                                                                  
+
+  hash.initWithString(algo);
+  hash.update(value, value.length);
+  var hash2 = hexdigest(hash.finish(false));
+  if (cmp != hash2) {
+    do_throw("Hash mismatch after crypto hash re-init!\n" +
+             "  Expected: " + cmp + "\n" +
+             "  Actual: " + hash2 + "\n" +
              "  Algo: " + algo);
   }
 }

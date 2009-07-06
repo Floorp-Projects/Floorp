@@ -217,7 +217,7 @@ nsHttpHandler::Init()
     if (NS_FAILED(rv))
         return rv;
 
-    mIOService = do_GetService(kIOServiceCID, &rv);
+    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("unable to continue without io service");
         return rv;
@@ -463,7 +463,7 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
 {
     if (!mStreamConvSvc) {
         nsresult rv;
-        mStreamConvSvc = do_GetService(kStreamConverterServiceCID, &rv);
+        mStreamConvSvc = do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
     }
     *result = mStreamConvSvc;
@@ -475,7 +475,7 @@ nsICookieService *
 nsHttpHandler::GetCookieService()
 {
     if (!mCookieService)
-        mCookieService = do_GetService(kCookieServiceCID);
+        mCookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID);
     return mCookieService;
 }
 
@@ -1078,7 +1078,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             else {
                 // verify that this socket type is actually valid
                 nsCOMPtr<nsISocketProviderService> sps(
-                        do_GetService(kSocketProviderServiceCID));
+                        do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID));
                 if (sps) {
                     nsCOMPtr<nsISocketProvider> sp;
                     rv = sps->GetSocketProvider(sval, getter_AddRefs(sp));
@@ -1518,7 +1518,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 
         // HACK: make sure PSM gets initialized on the main thread.
         nsCOMPtr<nsISocketProviderService> spserv =
-                do_GetService(kSocketProviderServiceCID);
+                do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID);
         if (spserv) {
             nsCOMPtr<nsISocketProvider> provider;
             spserv->GetSocketProvider("ssl", getter_AddRefs(provider));

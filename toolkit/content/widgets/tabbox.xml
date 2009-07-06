@@ -526,29 +526,6 @@
     </implementation>
   </binding>
 
-  <!-- 
-  XXXben - this looks like something added specifically for tabbrowser.
-           if it turns out no one uses this that can't easily be evangelized to
-           use their own roll-your-own binding, then we should get rid of this
-           to tighten up the toolkit api. This binding made obsolete in Firefox
-           by 308396. 
-  -->
-  <binding id="tabs-closebutton" 
-           extends="chrome://global/content/bindings/tabbox.xml#tabs">
-    <content>
-      <xul:hbox flex="1" style="min-width: 1px; overflow: -moz-hidden-unscrollable;">
-        <children/>
-        <xul:spacer class="tabs-right" flex="1"/>
-      </xul:hbox>
-      <xul:stack>
-        <xul:spacer class="tabs-right"/>
-        <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
-          <xul:toolbarbutton ondblclick="event.stopPropagation();" class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
-        </xul:hbox>
-      </xul:stack>
-    </content>
-  </binding>
-
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation>

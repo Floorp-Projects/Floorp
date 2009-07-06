@@ -62,6 +62,7 @@
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsContentUtils.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -72,8 +73,6 @@
 #include "nsICachingChannel.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
-#include "nsPIPluginHost.h"
-#include "nsIPluginInstancePeer2.h"
 #include "nsGeolocation.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
@@ -437,16 +436,7 @@ nsDummyJavaPluginOwner::Destroy()
   // If we have a plugin instance, stop it and destroy it now.
   if (mInstance) {
     mInstance->Stop();
-
-    nsCOMPtr<nsIPluginInstancePeer> peer;
-    mInstance->GetPeer(getter_AddRefs(peer));
-
-    nsCOMPtr<nsIPluginInstancePeer3> peer3(do_QueryInterface(peer));
-
-    // This plugin owner is going away, tell the peer.
-    if (peer3)
-      peer3->InvalidateOwner();
-
+    mInstance->InvalidateOwner();
     mInstance = nsnull;
   }
 
@@ -540,8 +530,7 @@ nsDummyJavaPluginOwner::ForceRedraw()
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetValue(nsPluginInstancePeerVariable variable,
-                                 void *value)
+nsDummyJavaPluginOwner::GetNetscapeWindow(void *value)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -5811,9 +5800,9 @@ nsGlobalWindow::InitJavaProperties()
   mDidInitJavaProperties = PR_TRUE;
 
   // Check whether the plugin supports NPRuntime, if so, init through
-  // it, else use liveconnect.
+  // it.
 
-  nsCOMPtr<nsPIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
+  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   if (!host) {
     return;
   }
@@ -6800,6 +6789,39 @@ nsGlobalWindow::PageHidden()
     fm->WindowHidden(this);
 
   mNeedsFocus = PR_TRUE;
+}
+
+nsresult
+nsGlobalWindow::DispatchAsyncHashchange()
+{
+  FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
+
+  nsIDocument::ReadyState readyState = mDoc->GetReadyStateEnum();
+
+  // We only queue up the event if the ready state is currently "complete"
+  if (readyState != nsIDocument::READYSTATE_COMPLETE)
+      return NS_OK;
+
+  nsCOMPtr<nsIRunnable> event =
+    NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, FireHashchange);
+   
+  return NS_DispatchToCurrentThread(event);
+}
+
+nsresult
+nsGlobalWindow::FireHashchange()
+{
+  NS_ENSURE_TRUE(IsInnerWindow(), NS_ERROR_FAILURE);
+
+  // Don't do anything if the window is frozen.
+  if (IsFrozen())
+      return NS_OK;
+
+  // Dispatch the hashchange event, which doesn't bubble and isn't cancelable,
+  // to the outer window.
+  return nsContentUtils::DispatchTrustedEvent(mDoc, GetOuterWindow(),
+                                              NS_LITERAL_STRING("hashchange"),
+                                              PR_FALSE, PR_FALSE);
 }
 
 // Find an nsICanvasFrame under aFrame.  Only search the principal

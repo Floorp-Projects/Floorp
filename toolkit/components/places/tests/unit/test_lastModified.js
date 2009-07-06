@@ -48,13 +48,18 @@ function run_test() {
                                  uri("http://www.mozilla.org/"),
                                  bs.DEFAULT_INDEX,
                                  "itemTitle");
-  do_check_eq(bs.getItemDateAdded(itemId), bs.getItemLastModified(itemId));
+  var dateAdded = bs.getItemDateAdded(itemId);
+  do_check_eq(dateAdded, bs.getItemLastModified(itemId));
 
   // Change lastModified, then change dateAdded.  LastModified should be set
   // to the new dateAdded.
-  bs.setItemLastModified(itemId, Date.now() * 1000);
-  do_check_neq(bs.getItemDateAdded(itemId), bs.getItemLastModified(itemId));
-  bs.setItemDateAdded(itemId, Date.now() * 1000);
+  // This could randomly fail on virtual machines due to timing issues, so
+  // we manually increase the time value.  See bug 500640 for details.
+  bs.setItemLastModified(itemId, dateAdded + 1);
+  do_check_true(bs.getItemLastModified(itemId) === dateAdded + 1);
+  do_check_true(bs.getItemDateAdded(itemId) < bs.getItemLastModified(itemId));
+  bs.setItemDateAdded(itemId, dateAdded + 2);
+  do_check_true(bs.getItemDateAdded(itemId) === dateAdded + 2);
   do_check_eq(bs.getItemDateAdded(itemId), bs.getItemLastModified(itemId));
 
   bs.removeItem(itemId);

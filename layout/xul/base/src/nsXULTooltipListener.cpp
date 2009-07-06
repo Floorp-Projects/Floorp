@@ -107,7 +107,6 @@ NS_INTERFACE_MAP_BEGIN(nsXULTooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMXULListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseMotionListener)
 NS_INTERFACE_MAP_END
@@ -312,6 +311,9 @@ nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
   aEvent->GetType(type);
   if (type.EqualsLiteral("DOMMouseScroll") || type.EqualsLiteral("dragstart"))
     HideTooltip();
+  else if (type.EqualsLiteral("popuphiding"))
+    DestroyTooltip();
+
   return NS_OK;
 }
 
@@ -327,13 +329,6 @@ nsXULTooltipListener::ToolbarTipsPrefChanged(const char *aPref,
                                               sShowTooltips);
 
   return 0;
-}
-
-NS_IMETHODIMP
-nsXULTooltipListener::PopupHiding(nsIDOMEvent* aEvent)
-{
-  DestroyTooltip();
-  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////

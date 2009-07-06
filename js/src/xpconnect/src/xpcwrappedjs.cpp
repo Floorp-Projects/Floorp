@@ -307,6 +307,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     nsXPCWrappedJS* wrapper = nsnull;
     nsXPCWrappedJSClass* clazz = nsnull;
     XPCJSRuntime* rt = ccx.GetRuntime();
+    JSBool release_root = JS_FALSE;
 
     map = rt->GetWrappedJSMap();
     if(!map)
@@ -341,6 +342,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
             }
         }
     }
+
     if(!root)
     {
         // build the root wrapper
@@ -374,6 +376,9 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
 
             if(!root)
                 goto return_wrapper;
+
+            release_root = JS_TRUE;
+
             {   // scoped lock
 #if DEBUG_xpc_leaks
                 printf("Created nsXPCWrappedJS %p, JSObject is %p\n",
@@ -406,6 +411,9 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
 return_wrapper:
     if(clazz)
         NS_RELEASE(clazz);
+
+    if(release_root)
+        NS_RELEASE(root);
 
     if(!wrapper)
         return NS_ERROR_FAILURE;

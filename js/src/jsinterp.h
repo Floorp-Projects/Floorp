@@ -130,9 +130,7 @@ struct JSStackFrame {
     JSStackFrame    *displaySave;   /* previous value of display entry for
                                        script->staticLevel */
 
-#ifdef __cplusplus /* Aargh, LiveConnect, bug 442399. */
     inline void assertValidStackDepth(uintN depth);
-#endif
 };
 
 #ifdef __cplusplus
@@ -149,14 +147,12 @@ StackBase(JSStackFrame *fp)
     return fp->slots + fp->script->nfixed;
 }
 
-#ifdef __cplusplus /* Aargh, LiveConnect, bug 442399. */
 void
 JSStackFrame::assertValidStackDepth(uintN depth)
 {
     JS_ASSERT(0 <= regs->sp - StackBase(this));
     JS_ASSERT(depth <= uintptr_t(regs->sp - StackBase(this)));
 }
-#endif
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)

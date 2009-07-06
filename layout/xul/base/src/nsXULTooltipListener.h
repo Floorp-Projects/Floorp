@@ -42,7 +42,6 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMXULListener.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsITimer.h"
@@ -56,8 +55,7 @@
 
 class nsXULTooltipListener : public nsIDOMMouseListener,
                              public nsIDOMMouseMotionListener,
-                             public nsIDOMKeyListener,
-                             public nsIDOMXULListener
+                             public nsIDOMKeyListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -78,16 +76,6 @@ public:
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent) { return NS_OK; }
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent) { return NS_OK; }
-
-  // nsIDOMXULListener
-  NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD PopupShown(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
-  NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Close(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Command(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) { return NS_OK; }
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);

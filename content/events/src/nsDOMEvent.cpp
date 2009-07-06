@@ -59,7 +59,7 @@
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
-  "focus", "blur", "load", "beforeunload", "unload", "abort", "error",
+  "focus", "blur", "load", "beforeunload", "unload", "hashchange", "abort", "error",
   "submit", "reset", "change", "select", "input", "paint" ,"text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
@@ -184,9 +184,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
         static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer = nsnull;
         static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nsnull;
         break;
-      case NS_XUL_COMMAND_EVENT:
-        static_cast<nsXULCommandEvent*>(tmp->mEvent)->sourceEvent = nsnull;
-        break;
       case NS_MUTATION_EVENT:
         static_cast<nsMutationEvent*>(tmp->mEvent)->mRelatedNode = nsnull;
         break;
@@ -219,11 +216,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
           static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
-        break;
-      case NS_XUL_COMMAND_EVENT:
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->sourceEvent");
-        cb.NoteXPCOMChild(
-          static_cast<nsXULCommandEvent*>(tmp->mEvent)->sourceEvent);
         break;
       case NS_MUTATION_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
@@ -564,6 +556,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_PAGE_SHOW;
     else if (atom == nsGkAtoms::onpagehide)
       mEvent->message = NS_PAGE_HIDE;
+    else if (atom == nsGkAtoms::onhashchange)
+      mEvent->message = NS_HASHCHANGE;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsGkAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -588,7 +582,7 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_UI_FOCUSOUT;
     else if (atom == nsGkAtoms::oninput)
       mEvent->message = NS_FORM_INPUT;
-  } else if (mEvent->eventStructType == NS_XUL_COMMAND_EVENT) {
+  } else if (mEvent->eventStructType == NS_INPUT_EVENT) {
     if (atom == nsGkAtoms::oncommand)
       mEvent->message = NS_XUL_COMMAND;
   }
@@ -958,16 +952,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       break;
     }
 #endif // MOZ_SVG
-    case NS_XUL_COMMAND_EVENT:
-    {
-      newEvent = new nsXULCommandEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      isInputEvent = PR_TRUE;
-      newEvent->eventStructType = NS_XUL_COMMAND_EVENT;
-       static_cast<nsXULCommandEvent*>(newEvent)->sourceEvent =
-         static_cast<nsXULCommandEvent*>(mEvent)->sourceEvent;
-      break;
-    }
     case NS_SIMPLE_GESTURE_EVENT:
     {
       nsSimpleGestureEvent* oldSimpleGestureEvent = static_cast<nsSimpleGestureEvent*>(mEvent);
@@ -1130,6 +1114,9 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
         if (::PopupAllowedForEvent("change"))
           abuse = openControlled;
         break;
+      case NS_XUL_COMMAND:
+        abuse = openControlled;
+        break;
       }
     }
     break;
@@ -1211,10 +1198,6 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       }
     }
     break;
-  case NS_XUL_COMMAND_EVENT :
-    if (nsEventStateManager::IsHandlingUserInput()) {
-      abuse = openControlled;
-    }
   }
 
   return abuse;
@@ -1287,6 +1270,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_beforeunload];
   case NS_PAGE_UNLOAD:
     return sEventNames[eDOMEvents_unload];
+  case NS_HASHCHANGE:
+    return sEventNames[eDOMEvents_hashchange];
   case NS_IMAGE_ABORT:
     return sEventNames[eDOMEvents_abort];
   case NS_LOAD_ERROR:

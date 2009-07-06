@@ -3,6 +3,16 @@
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
 == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
+== viewport-translucent-color-1.html viewport-translucent-color-ref.html
+== viewport-translucent-color-2.html viewport-translucent-color-ref.html
+== viewport-translucent-color-3.html viewport-translucent-color-ref.html
+!= viewport-translucent-color-ref.html about:blank
+== iframe-translucent-color-1.html iframe-translucent-color-ref.html
+== translucent-color-1.html translucent-color-ref.html
+== translucent-color-2.html translucent-color-ref.html
+== translucent-color-3.html translucent-color-ref.html
+!= translucent-color-ref.html about:blank
+== root-element-display-none-1.html root-element-display-none-ref.html
 == continuous-inline-1a.html continuous-inline-1-ref.html
 == continuous-inline-1b.html continuous-inline-1-ref.html
 == continuous-inline-1c.html continuous-inline-1-ref.html

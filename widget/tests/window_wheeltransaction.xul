@@ -431,6 +431,7 @@ function initTestList()
         // be scrolled.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: true, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Don't reset transaction by a different direction wheel event (1-3)" }
       ]
     },
@@ -456,6 +457,7 @@ function initTestList()
         // be scrolled.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: true, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Don't reset transaction by a different direction wheel event (2-3)" }
       ]
     },
@@ -655,6 +657,7 @@ function initTestList()
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: false, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (v-4)" },
         // Send a mouse move event after |gIgnoreMoveDelay| milliseconds since
         // last wheel event, then, current transaction should be kept.
@@ -668,6 +671,7 @@ function initTestList()
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: false, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (v-6)" },
         // Send a wheel event after |gIgnoreMoveDelay| milliseconds since last
         // mouse move event but it is fired immediately after the last wheel
@@ -682,6 +686,7 @@ function initTestList()
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: false, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (v-8)" },
         // Send a wheel event after |gIgnoreMoveDelay| milliseconds have passed
         // since last mouse move event which is fired after |gIgnoreMoveDelay|
@@ -708,10 +713,12 @@ function initTestList()
         // Create a transaction which targets |gRootView|.
         { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
           isForward: true, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-1)" },
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
           isForward: false, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-2)" },
         // Send a mouse move event immediately after last wheel event, then,
         // current transaction should be kept.
@@ -719,6 +726,7 @@ function initTestList()
           description: "sendMouseMoveEvent" },
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: true, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-3)" },
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
@@ -737,6 +745,7 @@ function initTestList()
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: false, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-6)" },
         // Send a wheel event after |gIgnoreMoveDelay| milliseconds since last
         // mouse move event but it is fired immediately after the last wheel
@@ -751,6 +760,7 @@ function initTestList()
         // Scroll back to top-most for easy cursor position specifying.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: false, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Reset transaction by a mouse move event (h-8)" },
         // Send a wheel event after |gIgnoreMoveDelay| milliseconds have passed
         // since last mouse move event which is fired after |gIgnoreMoveDelay|
@@ -841,10 +851,12 @@ function initTestList()
         // transaction.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: true, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Timeout test (v-3)" },
         // Scroll back to top-most again.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: false, isVertical: true, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Timeout test (v-4)" },
         // A wheel event over |gSubView1| after timeout should scroll
         // |gSubView1|.
@@ -876,10 +888,12 @@ function initTestList()
         // transaction.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: true, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Timeout test (h-3)" },
         // Scroll back to left-most again.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: false, isVertical: false, expectedView: gRootView,
+          canFailRandomly: { possibleView: gSubView1 },
           description: "Timeout test (h-4)" },
         // A wheel event over |gSubView1| after timeout should scroll
         // |gSubView1|.
@@ -911,6 +925,7 @@ function initTestList()
         // Don't scroll any views before timeout.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
           isForward: true, isVertical: true, expectedView: null,
+          canFailRandomly: { possibleView: gRootView },
           description: "Timeout test even with many wheel events (v-2)" },
         // Recreate a transaction which is scrolling |gRootView| after time out.
         { func: testRestartScroll, delay: 0, offset: kPtInSubView1ForV,
@@ -934,6 +949,7 @@ function initTestList()
         // Don't scroll any views before timeout.
         { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
           isForward: true, isVertical: false, expectedView: null,
+          canFailRandomly: { possibleView: gRootView },
           description: "Timeout test even with many wheel events (h-2)" },
         // Recreate a transaction which is scrolling |gRootView| after time out.
         { func: testRestartScroll, delay: 0, offset: kPtInSubView1ForH,
