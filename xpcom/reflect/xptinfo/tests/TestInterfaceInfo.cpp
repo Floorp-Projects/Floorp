@@ -97,14 +97,14 @@ int main (int argc, char **argv) {
 
     fprintf(stderr, "\nparams work?\n");
     fprintf(stderr, "\ngetting info for name 'nsIServiceManager'\n");
-    iim->GetInfoForName("nsIServiceManager", &info5);
+    iim->GetInfoForName("nsIComponentManager", &info5);
 #ifdef DEBUG
 //    ((nsInterfaceInfo *)info5)->print(stderr);
 #endif
 
     // XXX: nsIServiceManager is no more; what do we test with?
     if (info5 == NULL) {
-        fprintf(stderr, "\nNo nsIServiceManager; cannot continue.\n");
+        fprintf(stderr, "\nNo nsIComponentManager; cannot continue.\n");
         return 1;
     }
 
@@ -116,32 +116,39 @@ int main (int argc, char **argv) {
         fprintf(stderr, "method %d, name %s\n", i, mi->GetName());
     }
 
-    // 7 is GetServiceWithListener, which has juicy params.
-    info5->GetMethodInfo(7, &mi);
-//    uint8 paramcount = mi->GetParamCount();
+    // 4 is getServiceByContractID, which has juicy params.
+    info5->GetMethodInfo(6, &mi);
 
-    nsXPTParamInfo param2 = mi->GetParam(2);
-    // should be IID for nsIShutdownListener
+    const nsXPTParamInfo& param2 = mi->GetParam(1);
+    // should be IID for the service
     nsIID *nsISL;
-    info5->GetIIDForParam(7, &param2, &nsISL);
-//      const nsIID *nsISL = param2.GetInterfaceIID(info5);
-    fprintf(stderr, "iid assoc'd with param 2 of method 7 of GetServiceWithListener - %s\n", nsISL->ToString());
+    info5->GetIIDForParam(6, &param2, &nsISL);
+    fprintf(stderr, "iid assoc'd with param 1 of method 6 - createInstanceByContractID - %s\n", nsISL->ToString());
     // if we look up the name?
     char *nsISLname;
     iim->GetNameForIID(nsISL, &nsISLname);
     fprintf(stderr, "which is called %s\n", nsISLname);
 
-    fprintf(stderr, "\nhow about one defined in a different typelib\n");
-    nsXPTParamInfo param3 = mi->GetParam(3);
-    // should be IID for nsIShutdownListener
-    nsIID *nsISS;
-    info5->GetIIDForParam(7, &param3, &nsISS);
-//      const nsIID *nsISS = param3.GetInterfaceIID(info5);
-    fprintf(stderr, "iid assoc'd with param 3 of method 7 of GetServiceWithListener - %s\n", nsISS->ToString());
-    // if we look up the name?
-    char *nsISSname;
-    iim->GetNameForIID(nsISS, &nsISSname);
-    fprintf(stderr, "which is called %s\n", nsISSname);
+    fprintf(stderr, "\nNow check the last param\n");
+    const nsXPTParamInfo& param3 = mi->GetParam(3);
+
+    if (param3.GetType().TagPart() != nsXPTType::T_INTERFACE_IS) {
+        fprintf(stderr, "Param 3 is not type interface is\n");
+        // Not returning an error, because this could legitamately change
+    }
+    // lets see what arg this refers to
+    uint8 argnum;
+    info5->GetInterfaceIsArgNumberForParam(6, &param3, &argnum);
+    fprintf(stderr, "param 3 referrs to param %d of method 6 - createInstanceByContractID\n", (PRUint32)argnum);
+    // Get the type of the parameter referred to
+    const nsXPTParamInfo& arg_param = mi->GetParam(argnum);
+    const nsXPTType& arg_type = arg_param.GetType();
+    // Check to make sure it refers to the proper param
+    if(!arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_IID) {
+        fprintf(stderr, "Param 3 of method 6 refers to a non IID parameter\n"); 
+        // Not returning an error, because this could legitamately change
+    }
+
 
     return 0;
 }    

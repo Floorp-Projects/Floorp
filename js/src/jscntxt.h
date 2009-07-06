@@ -56,6 +56,7 @@
 #include "jspubtd.h"
 #include "jsregexp.h"
 #include "jsutil.h"
+#include "jsarray.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -954,6 +955,7 @@ struct JSContext {
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
+    JSHashTable         *busyArrayTable;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;

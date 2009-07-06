@@ -861,6 +861,9 @@ JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
 JS_FRIEND_API(void) js_DumpStackFrame(JSStackFrame *fp);
 #endif
 
+extern uintN
+js_InferFlags(JSContext *cx, uintN defaultFlags);
+
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */
