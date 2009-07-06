@@ -1324,7 +1324,7 @@ namespace nanojit
 				case LIR_sti:
 				{
                     countlir_st();
-                    asm_store32(ins->oprnd1(), ins->immdisp(), ins->oprnd2());
+                    asm_store32(ins->oprnd1(), ins->disp(), ins->oprnd2());
                     break;
 				}
 				case LIR_stqi:
@@ -1332,7 +1332,7 @@ namespace nanojit
                     countlir_stq();
 					LIns* value = ins->oprnd1();
 					LIns* base = ins->oprnd2();
-					int dr = ins->immdisp();
+					int dr = ins->disp();
 					if (value->isop(LIR_qjoin)) 
 					{
 						// this is correct for little-endian only

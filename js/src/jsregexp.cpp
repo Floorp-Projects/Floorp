@@ -2109,7 +2109,7 @@ class RegExpNativeCompiler {
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
         fails.add(to_fail);
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
+        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
         LIns* comp_ch = useFastCI ? 
             lir->ins2(LIR_or, text_ch, lir->insImm(32)) : 
             text_ch;
@@ -2159,7 +2159,7 @@ class RegExpNativeCompiler {
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, lir->ins2(LIR_sub, cpend, lir->insImm(2))), 0);
         fails.add(to_fail);
-        LIns* text_word = lir->insLoad(LIR_ld, pos, lir->insImm(0));
+        LIns* text_word = lir->insLoad(LIR_ld, pos, 0);
         LIns* comp_word = useFastCI ?
             lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
             text_word;
@@ -2193,7 +2193,7 @@ class RegExpNativeCompiler {
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
         fails.add(to_fail);
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
+        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
         fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)), 0));
         LIns* byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
         LIns* bitmap = lir->insImmPtr(bitmapData);

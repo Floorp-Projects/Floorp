@@ -725,7 +725,7 @@ Assembler::asm_load64(LInsp ins)
     NanoAssert(ins->isQuad());
 
     LIns* base = ins->oprnd1();
-    int offset = ins->oprnd2()->imm32();
+    int offset = ins->disp();
 
     Reservation *resv = getresv(ins);
     NanoAssert(resv);
@@ -1829,10 +1829,9 @@ Assembler::asm_ld(LInsp ins)
 {
     LOpcode op = ins->opcode();
     LIns* base = ins->oprnd1();
-    LIns* disp = ins->oprnd2();
+    int d = ins->disp();
 
     Register rr = prepResultReg(ins, GpRegs);
-    int d = disp->imm32();
     Register ra = getBaseReg(base, d, GpRegs);
 
     // these will always be 4-byte aligned
