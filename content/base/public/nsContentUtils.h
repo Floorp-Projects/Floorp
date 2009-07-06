@@ -42,7 +42,7 @@
 #ifndef nsContentUtils_h___
 #define nsContentUtils_h___
 
-#include "jspubtd.h"
+#include "jsprvtd.h"
 #include "jsnum.h"
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"

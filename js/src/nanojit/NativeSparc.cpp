@@ -491,8 +491,6 @@ namespace nanojit
                     BNE(0, tt);
                 else if (condop == LIR_ov)
                     BVC(0, tt);
-                else if (condop == LIR_cs)
-                    BCC(0, tt);
                 else if (condop == LIR_lt)
                     BGE(0, tt);
                 else if (condop == LIR_le)
@@ -516,8 +514,6 @@ namespace nanojit
                     BE(0, tt);
                 else if (condop == LIR_ov)
                     BVS(0, tt);
-                else if (condop == LIR_cs)
-                    BCS(0, tt);
                 else if (condop == LIR_lt)
                     BL(0, tt);
                 else if (condop == LIR_le)
@@ -544,8 +540,8 @@ namespace nanojit
         underrunProtect(12);
         LOpcode condop = cond->opcode();
         
-        // LIR_ov and LIR_cs recycle the flags set by arithmetic ops
-        if ((condop == LIR_ov) || (condop == LIR_cs))
+        // LIR_ov recycles the flags set by arithmetic ops
+        if ((condop == LIR_ov))
             return;
         
         LInsp lhs = cond->oprnd1();
@@ -591,7 +587,7 @@ namespace nanojit
 
         // restore first parameter, the only one we use
         LInsp state = _thisfrag->lirbuf->state;
-        findSpecificRegFor(state, argRegs[state->imm8()]); 
+        findSpecificRegFor(state, argRegs[state->paramArg()]); 
     }    
 
     void Assembler::asm_fcond(LInsp ins)
@@ -612,8 +608,6 @@ namespace nanojit
             MOVEI(1, 1, 0, 0, r);
         else if (op == LIR_ov)
             MOVVSI(1, 1, 0, 0, r);
-        else if (op == LIR_cs)
-            MOVCSI(1, 1, 0, 0, r);
         else if (op == LIR_lt)
             MOVLI(1, 1, 0, 0, r);
         else if (op == LIR_le)
@@ -788,7 +782,6 @@ namespace nanojit
                 // note that these are all opposites...
             case LIR_eq:  MOVNE (iffalsereg, 1, 0, 0, rr); break;
             case LIR_ov:  MOVVC (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_cs:  MOVCC (iffalsereg, 1, 0, 0, rr); break;
             case LIR_lt:  MOVGE (iffalsereg, 1, 0, 0, rr); break;
             case LIR_le:  MOVG  (iffalsereg, 1, 0, 0, rr); break;
             case LIR_gt:  MOVLE (iffalsereg, 1, 0, 0, rr); break;
@@ -817,8 +810,8 @@ namespace nanojit
 
     void Assembler::asm_param(LInsp ins)
     {
-        uint32_t a = ins->imm8();
-        uint32_t kind = ins->imm8b();
+        uint32_t a = ins->paramArg();
+        uint32_t kind = ins->paramKind();
         //        prepResultReg(ins, rmask(argRegs[a]));
         if (kind == 0) {
             prepResultReg(ins, rmask(argRegs[a]));
