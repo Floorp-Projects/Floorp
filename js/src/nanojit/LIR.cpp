@@ -424,7 +424,6 @@ namespace nanojit
         }
     }
     
-#if defined(_DEBUG)
     bool LIns::isLInsOp0() const {
         NanoAssert(LRK_None != repKinds[opcode()]);
         return LRK_Op0 == repKinds[opcode()];
@@ -474,7 +473,6 @@ namespace nanojit
         NanoAssert(LRK_None != repKinds[opcode()]);
         return LRK_I64 == repKinds[opcode()];
     }
-#endif // defined(_DEBUG)
 
 	bool LIns::isCmp() const {
         LOpcode op = opcode();
