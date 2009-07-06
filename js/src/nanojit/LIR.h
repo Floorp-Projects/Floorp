@@ -629,7 +629,6 @@ namespace nanojit
 		bool isCse() const;
         bool isRet() const { return nanojit::isRetOpcode(opcode()); }
         bool isop(LOpcode o) const { return opcode() == o; }
-        #if defined(_DEBUG)
         // isLInsXYZ() returns true if the instruction has the LInsXYZ form.
         // Note that there is some overlap with other predicates, eg.
         // isStore()==isLInsSti(), isCall()==isLInsC(), but that's ok;  these
@@ -646,7 +645,6 @@ namespace nanojit
         bool isLInsP()   const;
         bool isLInsI()   const;
         bool isLInsI64() const;
-        #endif
 		bool isQuad() const;
 		bool isCond() const;
         bool isFloat() const;
