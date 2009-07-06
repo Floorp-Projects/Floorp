@@ -63,8 +63,7 @@ enum nsEventStatus {
 enum nsSizeMode {
   nsSizeMode_Normal = 0,
   nsSizeMode_Minimized,
-  nsSizeMode_Maximized,
-  nsSizeMode_Fullscreen
+  nsSizeMode_Maximized
 };
 
 class nsEvent;
