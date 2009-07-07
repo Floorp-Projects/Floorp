@@ -931,12 +931,14 @@ class GenerateProtocolActorHeader(Visitor):
                 failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
                 block.addstmt(failif)
 
+                calldtor = cxx.ExprCall(
+                    cxx.ExprVar(md._cxx.method.name),
+                    ([ objvar ]
+                     + [ cxx.ExprVar(p.name) for p in md._cxx.params ]
+                     + [ cxx.ExprAddrOf(cxx.ExprVar(r.name)) for
+                         r in md._cxx.returns ]))
                 failif = cxx.StmtIf(cxx.ExprCall(
-                        cxx.ExprVar(md._cxx.method.name),
-                        ([ objvar ]
-                         + [ cxx.ExprVar(p.name) for p in md._cxx.params ]
-                         + [ cxx.ExprAddrOf(cxx.ExprVar(r.name)) for
-                             r in md._cxx.returns ])))
+                        cxx.ExprVar('NS_FAILED'), [ calldtor ]))
                 failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
                 block.addstmt(failif)
                 block.addstmt(cxx.StmtExpr(
@@ -950,7 +952,8 @@ class GenerateProtocolActorHeader(Visitor):
                 callimpl.args += [ cxx.ExprVar(p.name) for p in md._cxx.params ]
                 callimpl.args += [ cxx.ExprAddrOf(cxx.ExprVar(r.name))
                                for r in md._cxx.returns ]
-                errhandle = cxx.StmtIf(callimpl)
+                errhandle = cxx.StmtIf(cxx.ExprCall(
+                        cxx.ExprVar('NS_FAILED'), [ callimpl ]))
                 errhandle.ifb.addstmt(cxx.StmtReturn(
                         cxx.ExprVar('MsgValueError')))
                 block.addstmt(errhandle)
