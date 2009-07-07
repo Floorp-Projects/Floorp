@@ -55,6 +55,10 @@
 #include "base/logging.h"
 #include "base/third_party/nspr/prtypes.h"
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+PR_BEGIN_EXTERN_C
+#endif
+
 #define PR_ASSERT DCHECK
 
 #define LL_I2L(l, i)    ((l) = (PRInt64)(i))
@@ -229,5 +233,9 @@ NSPR_API(PRStatus) PR_ParseTimeString (
 	const char *string,
 	PRBool default_to_gmt,
 	PRTime *result);
+
+#ifdef CHROMIUM_MOZILLA_BUILD
+PR_END_EXTERN_C
+#endif
 
 #endif  // BASE_PRTIME_H__
