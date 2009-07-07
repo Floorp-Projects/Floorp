@@ -1838,9 +1838,9 @@ namespace nanojit
 			case LIR_ldqc: 
 			case LIR_ldcb:
 			case LIR_ldcs:
-				sprintf(s, "%s = %s %s[%s]", formatRef(i), lirNames[op],
+				sprintf(s, "%s = %s %s[%d]", formatRef(i), lirNames[op],
 					formatRef(i->oprnd1()), 
-					formatRef(i->oprnd2()));
+					i->disp());
 				break;
 
             case LIR_sti:
