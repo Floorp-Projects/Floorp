@@ -29,6 +29,19 @@ To use TraceVis:
     python binlog.py <tracevis-file>
 
 
+Troubleshooting:
+
+- If you get this message when running the python scripts:
+
+    Traceback (most recent call last):
+      File "vis.py", line 2, in <module>
+        import Image, ImageDraw, ImageFont
+        ImportError: No module named Image
+
+  then you need to install libraries from
+  http://www.pythonware.com/products/pil/.
+
+
 TODO list:
 
 - Make the Python scripts more robust, e.g. handle file opening failures
