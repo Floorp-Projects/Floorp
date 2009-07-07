@@ -202,52 +202,43 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         /*
          * Check for a prototype "plain old method" callee computation. What
          * is a plain old method? It's a function-valued property with stub
-         * getter and setter, so get of a function is idempotent and set is
-         * transparent.
+         * getter, so get of a function is idempotent.
          */
-        if (cs->format & JOF_CALLOP) {
-            if (SPROP_HAS_STUB_GETTER(sprop) &&
-                SPROP_HAS_VALID_SLOT(sprop, scope)) {
-                jsval v;
+        if ((cs->format & JOF_CALLOP) &&
+            SPROP_HAS_STUB_GETTER(sprop) &&
+            SPROP_HAS_VALID_SLOT(sprop, scope)) {
+            jsval v;
 
-                v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
-                if (VALUE_IS_FUNCTION(cx, v)) {
-                    /*
-                     * Great, we have a function-valued prototype property
-                     * where the getter is JS_PropertyStub. The type id in
-                     * pobj's scope does not evolve with changes to property
-                     * values, however.
-                     *
-                     * So here, on first cache fill for this method, we brand
-                     * the scope with a new shape and set the SCOPE_BRANDED
-                     * flag. Once this scope flag is set, any write that adds
-                     * or deletes a function-valued plain old property in
-                     * scope->object will result in shape being regenerated.
-                     */
-                    if (!SCOPE_IS_BRANDED(scope)) {
-                        PCMETER(cache->brandfills++);
+            v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+            if (VALUE_IS_FUNCTION(cx, v)) {
+                /*
+                 * Great, we have a function-valued prototype property where
+                 * the getter is JS_PropertyStub. The type id in pobj's scope
+                 * does not evolve with changes to property values, however.
+                 *
+                 * So here, on first cache fill for this method, we brand the
+                 * scope with a new shape and set the SCOPE_BRANDED flag. Once
+                 * this scope flag is set, any write that adds or deletes a
+                 * function-valued plain old property in scope->object will
+                 * result in shape being regenerated.
+                 */
+                if (!SCOPE_IS_BRANDED(scope)) {
+                    PCMETER(cache->brandfills++);
 #ifdef DEBUG_notme
-                        fprintf(stderr,
+                    fprintf(stderr,
                             "branding %p (%s) for funobj %p (%s), shape %lu\n",
                             pobj, LOCKED_OBJ_GET_CLASS(pobj)->name,
                             JSVAL_TO_OBJECT(v),
-                            JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx,
-                                                 JSVAL_TO_OBJECT(v))),
+                            JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
                             OBJ_SHAPE(obj));
 #endif
-                        js_MakeScopeShapeUnique(cx, scope);
-                        if (js_IsPropertyCacheDisabled(cx)) {
-                            /*
-                             * js_GenerateShape could not recover from
-                             * rt->shapeGen's overflow.
-                             */
-                            return JS_NO_PROP_CACHE_FILL;
-                        }
-                        SCOPE_SET_BRANDED(scope);
-                    }
-                    vword = JSVAL_OBJECT_TO_PCVAL(v);
-                    break;
+                    js_MakeScopeShapeUnique(cx, scope);
+                    if (js_IsPropertyCacheDisabled(cx))  /* check for rt->shapeGen overflow */
+                        return JS_NO_PROP_CACHE_FILL;
+                    SCOPE_SET_BRANDED(scope);
                 }
+                vword = JSVAL_OBJECT_TO_PCVAL(v);
+                break;
             }
         }
 
