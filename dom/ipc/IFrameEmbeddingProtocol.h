@@ -6,6 +6,7 @@
 #ifndef IFrameEmbeddingProtocol_h
 #define IFrameEmbeddingProtocol_h
 
+#include "base/basictypes.h"
 #include "nscore.h"
 #include "IPC/IPCMessageUtils.h"
 #include "mozilla/ipc/MessageTypes.h"
@@ -142,10 +143,10 @@ public:
         ID = Msg_move__ID
     };
     Msg_move(
-                const uint32_t& x,
-                const uint32_t& y,
-                const uint32_t& width,
-                const uint32_t& height) :
+                const PRUint32& x,
+                const PRUint32& y,
+                const PRUint32& width,
+                const PRUint32& height) :
         IPC::Message(MSG_ROUTING_NONE, ID, PRIORITY_NORMAL)
     {
         IPC::WriteParam(this, x);
@@ -156,10 +157,10 @@ public:
 
     static bool Read(
                 const Message* msg,
-                uint32_t* x,
-                uint32_t* y,
-                uint32_t* width,
-                uint32_t* height)
+                PRUint32* x,
+                PRUint32* y,
+                PRUint32* width,
+                PRUint32* height)
     {
         void* iter = 0;
 
