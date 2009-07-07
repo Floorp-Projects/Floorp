@@ -68,6 +68,8 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifdef _MSC_VER
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
 ifdef WINCE

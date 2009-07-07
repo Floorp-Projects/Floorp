@@ -40,11 +40,6 @@
 #include "nsXPCOM.h"
 #include "nsXULAppAPI.h"
 
-
-// FIXME/cjones testing
-#include <unistd.h>
-
-
 #ifdef XP_WIN
 #include <windows.h>
 // we want a wmain entry point
@@ -64,4 +59,6 @@ main(int argc, char* argv[])
     ScopedLogging log;
     nsresult rv = XRE_InitChildProcess(argc, argv, "TabThread");
     NS_ENSURE_SUCCESS(rv, 1);
+
+    return 0;
 }
