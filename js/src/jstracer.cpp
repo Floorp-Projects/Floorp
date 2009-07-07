@@ -7322,6 +7322,12 @@ TraceRecorder::binary(LOpcode op)
 
 JS_STATIC_ASSERT(offsetof(JSObjectOps, objectMap) == 0);
 
+inline LIns*
+TraceRecorder::map(LIns *obj_ins)
+{
+    return addName(lir->insLoad(LIR_ldp, obj_ins, (int) offsetof(JSObject, map)), "map");
+}
+
 bool
 TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, size_t op_offset)
 {
@@ -7359,7 +7365,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
     }
 
-    LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
+    LIns* map_ins = map(obj_ins);
     LIns* ops_ins;
 
     // Interpreter calls to PROPERTY_CACHE_TEST guard on native object ops
@@ -7498,7 +7504,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         } else {
             obj2_ins = INS_CONSTPTR(obj2);
         }
-        map_ins = lir->insLoad(LIR_ldp, obj2_ins, (int)offsetof(JSObject, map));
+        map_ins = map(obj2_ins);
         if (!map_is_native(obj2->map, map_ins, ops_ins))
             ABORT_TRACE("non-native map");
 
@@ -7814,7 +7820,7 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
         return JSRS_STOP;
 
     while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit)) {
-        LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
+        LIns* map_ins = map(obj_ins);
         LIns* ops_ins;
         if (!map_is_native(obj->map, map_ins, ops_ins))
             ABORT_TRACE("non-native object involved along prototype chain");
@@ -9035,7 +9041,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     }
 
     // The global object's shape is guarded at trace entry, all others need a guard here.
-    LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
+    LIns* map_ins = map(obj_ins);
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
         ABORT_TRACE("non-native map");
@@ -9917,7 +9923,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
          */
         VMSideExit* exit = snapshot(BRANCH_EXIT);
         do {
-            LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
+            LIns* map_ins = map(obj_ins);
             LIns* ops_ins;
             if (map_is_native(obj->map, map_ins, ops_ins)) {
                 LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
