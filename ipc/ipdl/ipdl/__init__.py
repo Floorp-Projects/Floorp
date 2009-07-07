@@ -52,7 +52,7 @@ def typecheck(ast, errout=sys.stderr):
 def gencxx(ast, outdir):
     for hdr in LowerToCxx().lower(ast):
         path = os.path.join(outdir, hdr.filename)
-        CxxCodeGen(outf=open(path, 'w')).cgen(hdr)
+        CxxCodeGen(outf=open(path, 'wb')).cgen(hdr)
 
 def genipdl(ast, outdir):
     return IPDLCodeGen().cgen(ast)
