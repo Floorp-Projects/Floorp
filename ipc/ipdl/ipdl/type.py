@@ -114,6 +114,7 @@ class GeneratedCxxType(CxxType):
 class IPDLType(Type):
     def isIPDL(self):  return True
     def isVisible(self): return True
+    def isProtocol(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
@@ -307,14 +308,13 @@ class GatherDecls(Visitor):
         self.builtinUsing = builtinUsing
         self.symtab = symtab
         self.errors = errors
-        self.visited = set()    # set(filename)
         self.depth = 0
 
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
-        if tu.filename in self.visited:
+        if hasattr(tu, '_tchecked') and tu._tchecked:
             return
-        self.visited.add(tu.filename)
+        tu._tchecked = True
         self.depth += 1
 
         # bit of a hack here --- we want the builtin |using|
