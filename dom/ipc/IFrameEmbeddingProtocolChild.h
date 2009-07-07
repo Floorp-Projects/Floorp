@@ -21,10 +21,10 @@ protected:
     virtual nsresult Answerinit(const MagicWindowHandle& parentWidget) = 0;
     virtual nsresult AnswerloadURL(const String& uri) = 0;
     virtual nsresult Answermove(
-                const uint32_t& x,
-                const uint32_t& y,
-                const uint32_t& width,
-                const uint32_t& height) = 0;
+                const PRUint32& x,
+                const PRUint32& y,
+                const PRUint32& width,
+                const PRUint32& height) = 0;
 
 private:
     typedef IPC::Message Message;
@@ -111,10 +111,10 @@ public:
             }
         case IFrameEmbeddingProtocol::Msg_move__ID:
             {
-                uint32_t x;
-                uint32_t y;
-                uint32_t width;
-                uint32_t height;
+                PRUint32 x;
+                PRUint32 y;
+                PRUint32 width;
+                PRUint32 height;
 
                 if (!(IFrameEmbeddingProtocol::Msg_move::Read(&(msg), &(x), &(y), &(width), &(height)))) {
                     return MsgPayloadError;
