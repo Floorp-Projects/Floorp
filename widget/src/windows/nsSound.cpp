@@ -53,6 +53,68 @@
 
 #include "nsNativeCharsetUtils.h"
 
+class nsSoundPlayer: public nsRunnable {
+public:
+  nsSoundPlayer(nsISound *aSound, const wchar_t* aSoundName) :
+    mSound(aSound), mSoundName(aSoundName)
+  {
+    Init();
+  }
+
+  nsSoundPlayer(nsISound *aSound, const nsAString& aSoundName) :
+    mSound(aSound), mSoundName(aSoundName)
+  {
+    Init();
+  }
+
+  NS_DECL_NSIRUNNABLE
+
+protected:
+  nsString mSoundName;
+  nsISound *mSound; // Strong, but this will be released from SoundReleaser.
+  nsCOMPtr<nsIThread> mThread;
+
+  void Init()
+  {
+    NS_GetCurrentThread(getter_AddRefs(mThread));
+    NS_ASSERTION(mThread, "failed to get current thread");
+    NS_IF_ADDREF(mSound);
+  }
+
+  class SoundReleaser: public nsRunnable {
+  public:
+    SoundReleaser(nsISound* aSound) :
+      mSound(aSound)
+    {
+    }
+
+    NS_DECL_NSIRUNNABLE
+
+  protected:
+    nsISound *mSound;
+  };
+};
+
+NS_IMETHODIMP
+nsSoundPlayer::Run()
+{
+  NS_PRECONDITION(!mSoundName.IsEmpty(), "Sound name should not be empty");
+  ::PlaySoundW(mSoundName.get(), NULL, SND_NODEFAULT | SND_ALIAS | SND_ASYNC);
+  nsCOMPtr<nsIRunnable> releaser = new SoundReleaser(mSound);
+  // Don't release nsISound from here, because here is not an owning thread of
+  // the nsSound. nsSound must be released in its owning thread.
+  mThread->Dispatch(releaser, NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSoundPlayer::SoundReleaser::Run()
+{
+  NS_IF_RELEASE(mSound);
+  return NS_OK;
+}
+
+
 #ifndef SND_PURGE
 // Not available on Windows CE, and according to MSDN
 // doesn't do anything on recent windows either.
@@ -73,6 +135,10 @@ nsSound::~nsSound()
 }
 
 void nsSound::PurgeLastSound() {
+  if (mPlayerThread) {
+    mPlayerThread->Shutdown();
+    mPlayerThread = nsnull;
+  }
   if (mLastSound) {
     // Halt any currently playing sound.
     ::PlaySound(nsnull, nsnull, SND_PURGE);
@@ -171,8 +237,12 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   PurgeLastSound();
 
   if (!NS_IsMozAliasSound(aSoundAlias)) {
-    ::PlaySoundW(PromiseFlatString(aSoundAlias).get(), nsnull,
-                 SND_NODEFAULT | SND_ALIAS | SND_ASYNC);
+    if (aSoundAlias.IsEmpty())
+      return NS_OK;
+    nsCOMPtr<nsIRunnable> player = new nsSoundPlayer(this, aSoundAlias);
+    NS_ENSURE_TRUE(player, NS_ERROR_OUT_OF_MEMORY);
+    nsresult rv = NS_NewThread(getter_AddRefs(mPlayerThread), player);
+    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
@@ -189,10 +259,13 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
     sound = L"MenuCommand";
   else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_POPUP))
     sound = L"MenuPopup";
+  else
+    return NS_OK;
 
-  if (sound)
-    ::PlaySoundW(sound, nsnull, SND_NODEFAULT | SND_ALIAS | SND_ASYNC);
-
+  nsCOMPtr<nsIRunnable> player = new nsSoundPlayer(this, sound);
+  NS_ENSURE_TRUE(player, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = NS_NewThread(getter_AddRefs(mPlayerThread), player);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
