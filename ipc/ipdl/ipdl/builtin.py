@@ -62,6 +62,7 @@ Types = (
 
 
 Includes = (
+    'base/basictypes.h',
     'nscore.h',
     'IPC/IPCMessageUtils.h',
     'mozilla/ipc/MessageTypes.h',
